@@ -18,3 +18,17 @@ We are using crystal with capacitance of 20pF and ESR of 80R max. From the RP204
 ## USB
 
 
+
+
+## Sensors
+
+An RC filter is added to provide a bit cleaner voltage to the sensors in the top bar. The current consumption is as follows:
+
+- 1mA for BMI160
+- 20mA for BMM150
+- 1mA for LTR390UV
+- 10mA for HDC1080
+
+In total this gives us 32mA, say 40mA, which gives us 40mV voltage drop for 1Ohm resistor, that combined with 2x47uF capacitors makes a RC filter with cutoff frequency around 1.6kHz
+
+> If this proves not that great, the 1Ohm resistor is hand-solderable 0805 and can be replaced with 0Ohm.

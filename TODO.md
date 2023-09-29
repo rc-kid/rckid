@@ -1,15 +1,3 @@
-## Questions
-
-- for display the A/K do I need any resistors? 
-- is there anything wrong with the audio circuit? (speaker) it's a bit noisy
-- is the current headphones detection ok? Or would the double contacts on the GND ring be better? 
-- is the 4 layer PCB necessary? Is it better? 
-- is the stackup ok? (signal + power / GND / GND / signal + power). Would it work just fine with single ground plane? 
-- should I place GND copper pours even on the top / bottom layers? 
-- should I still have separate ground plane for audio and connect to gnd under the LDO? 
-- when do I need to match trace length? Do I need to do it for the QSPI? Display? SPI?
-- would the cartridge stuff work (connection via precission headers)
-
 ## Shopping List
 
 - buttons (https://www.tme.eu/cz/details/b3u-3000p/mikrospinace-tact/omron-ocb/b3u3000p/)
@@ -20,6 +8,14 @@
 
 ## PCB
 
+- make proper I2C pullups
+- make current limiting res for backlight
 - determine the cartridge insertion check mechanism
 
+## Extra Cartridges
 
+- simple cartridge (only FLASH)
+- add SRAM (maybe https://cz.mouser.com/ProductDetail/ISSI/IS66WVS2M8BLL-104NLI?qs=doiCPypUmgFx786bHGqGiQ%3D%3D)
+
+
+- add big cap to vclean and see if it changes stuff 
