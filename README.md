@@ -1,5 +1,38 @@
 # RCKid mk II
 
+## Building
+
+The following is necessary to build the RCKid firmware and cartridges on Windows 11 (WSL) with VS Code. Similar steps are required for other platforms. 
+
+    sudo apt-get install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib
+
+> This installs the prerequisites for crosscompiling the RP2040 code
+
+> TODO This installs the RP2040 SDK. 
+
+> TODO This installs the platformio toolchain for the AVR & ESP8266 chips. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 RCKid mk II is an RP2040 (the chip that powers RPi Pico) handheld device that can be used to play own games, emulate some very old consoles, play music and video files and act as a walkie-talkie or remote controller with the RCKid mk I protocol.
 
 To resemble the handheld game consoles of the past, RCKid mk II uses swappable cartridges that can extend its functionality. At minimum, the cartridge must provide the flash chip for the RP2040 inside, but extra power, I2C, SPI and 4 GPIO pins are provided for HW expansion. 

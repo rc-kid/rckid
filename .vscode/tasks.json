@@ -1,0 +1,24 @@
+{
+    "tasks": [
+        // builds the avr part of rckid locally
+        {
+            "label": "rckid-avr",
+            "type": "shell",
+            "command": "~/.platformio/penv/bin/pio",
+            "args": [
+                "run",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/avr",
+                "shell": {
+                    "executable" : "/bin/zsh",
+                    "args": ["-c"]
+                }
+            },
+            "problemMatcher": [
+                "$platformio"
+            ]
+        }
+    ],
+    "version": "2.0.0"
+}
