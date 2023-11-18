@@ -18,7 +18,41 @@
             "problemMatcher": [
                 "$platformio"
             ]
-        }
+        },
+        // builds the test-avr app locally
+        {
+            "label": "test-avr",
+            "type": "shell",
+            "command": "~/.platformio/penv/bin/pio",
+            "args": [
+                "run",
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/test-avr",
+                "shell": {
+                    "executable" : "/bin/zsh",
+                    "args": ["-c"]
+                }
+            },
+            "problemMatcher": [
+                "$platformio"
+            ]
+        },
+        // uploads the test-avr via UPDI on devserver
+        {
+            "label": "test-avr-upload",
+            "command": "bash",
+            "args": [
+                "utils/test-avr-upload.sh",
+            ],
+            "options": {
+                "cwd": "",
+            },
+            "problemMatcher": [
+                "$platformio"
+            ]
+        },
+
     ],
     "version": "2.0.0"
 }

@@ -6,11 +6,20 @@
 - precission headers ()
 - screw inserts ()
 
+## TODO 
+
+- LEDs don't work, could be timing issues with the level converter, or timing issues in general
+
+## Case
+
+- see if the cartridge insertion mechanism can be made reliable
+- check if the slim buttons are actually working reasonably well
+
 ## PCB
 
-- make proper I2C pullups
-- make current limiting res for backlight
-- determine the cartridge insertion check mechanism
+- increase pads for the bottom side button for easier hand solderablity
+- add pin help text to the GPIO and the programming interface
+- the logo on the back is a bit ugly & not very informative
 
 ## Extra Cartridges
 
