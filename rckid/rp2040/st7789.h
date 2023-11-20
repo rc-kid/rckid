@@ -13,85 +13,11 @@
 
 namespace rckid {
 
-    /** A single pixel. 
-     
-    */
-    class Pixel {
-    public:
-
-        Pixel():
-            raw_{0} {
-        }
-
-        static constexpr Pixel RGB(uint8_t r, uint8_t g, uint8_t b) {
-            g = (g >= 16) ? (g << 1) : ((g << 1) + 1);
-            return RGBFull(r, g, b);
-        }
-        static constexpr Pixel RGBFull(uint8_t r, uint8_t g, uint8_t b) {
-            return Pixel{
-                ((r & 31) << 3) |
-                ((g >> 3) & 7) | ((g & 7) << 13) |
-                (b & 31) << 8
-            };
-        }
-
-        static constexpr Pixel Black() { return Pixel::RGB(0,0,0); }
-        static constexpr Pixel Red() { return Pixel::RGB(31, 0, 0); };
-        static constexpr Pixel Green() { return Pixel::RGB(0, 31, 0); };
-        static constexpr Pixel Blue() { return Pixel::RGB(0, 0, 31); };
-        static constexpr Pixel White() { return Pixel::RGB(31, 31, 31); };
-
-        uint8_t r() const { return (raw_ >> 8) & 31; }
-        uint8_t g() const { return ((raw_ & 7) << 2) | (( raw_ >> 14) & 3); }
-        uint8_t b() const { return (raw_ >> 3) & 31; }
-
-        Pixel & r(uint8_t value) {
-            raw_ &= ~RED_MASK;
-            raw_ |= (value << 8) & RED_MASK;
-            return *this;
-        }
-
-        Pixel & g(uint8_t value) {
-            value = (value >= 16) ? (value << 1) : ((value << 1) + 1);
-            return gFull(value);
-        }
-
-        Pixel & b(uint8_t value) {
-            raw_ &= ~BLUE_MASK;
-            raw_ |= (value << 3) & BLUE_MASK;
-            return * this;
-        }
-
-        uint8_t gFull() const { return ((raw_ & 7) << 3) | (( raw_ >> 13) & 7); }
-
-        Pixel & gFull(uint8_t value) {
-            raw_ &= ~GREEN_MASK;
-            raw_ |= ((value >> 3) & 7) | ((value & 7) << 13);
-            return *this;
-        }
-
-        constexpr operator uint16_t () {
-            return raw_;
-        }
-
-    private:
-
-        constexpr Pixel(int raw):
-            raw_{static_cast<uint16_t>(raw)} {
-        }
-
-        // GGGRRRRRBBBBBGGG
-        static constexpr uint16_t RED_MASK = 0b0001111100000000;
-        static constexpr uint16_t GREEN_MASK = 0b1110000000000111;
-        static constexpr uint16_t BLUE_MASK = 0b0000000011111000;
-        uint16_t raw_;
-    };
-
-    static_assert(sizeof(Pixel) == 2, "Wrong pixel size!");
-
     /** ST7789 display driver
 
         The display used is the 2.8" IPS panel from aliexpress (https://www.aliexpress.com/item/1005004635814413.html?spm=a2g0o.order_list.order_list_main.5.1d8a1802PNYgMn). Other displays should technically work as well, the 8bit parallel interface is the same between ST7789 and the more common ILI9341 found in non-IPS panels, but the commands can differ. 
+
+        This is the low-level driver that provides basic display control capabilities.
 
         Pin   | Conn | Details
         ------|------|--------------     
@@ -136,27 +62,32 @@ namespace rckid {
             offset_ = pio_add_program(pio_, &st7789_program);
             sm_ = pio_claim_unused_sm(pio_, true);
             st7789_program_init(pio_, sm_, offset_, PIN_WRX, PIN_DATA);
-            overclock(100); // set base frequency
+            // set the base frequency 
+            overclock(100);
             // initialize the display
-            sendCommand8(VERTICAL_SCROLL_START, 0);
-            sendCommand8(PIXEL_FORMAT, PIXEL_FORMAT_16);
-            sendCommand8(TEARING_LINE_ON, TEARING_LINE_MODE_VSYNC);
-            sendCommand(SLEEP_OUT, nullptr, 0);
+            sendCommand(SWRESET);
             cpu::delayMs(150);
-            sendCommand(DISPLAY_ON, nullptr, 0);
+            sendCommand8(VSCSAD, 0);
+            sendCommand8(COLMOD, COLMOD_16);
+            sendCommand8(TEON, TE_VSYNC);
+            sendCommand(SLPOUT);
+            cpu::delayMs(150);
+            sendCommand(DISPON);
             cpu::delayMs(150);
 
-            rotate(90);
-
+            rotate(270);
+            fillBitBang(0);
+            /*
             uint8_t * data = new uint8_t[3200];
             for (size_t i = 0; i < sizeof(data); ++i)
                 data[i] = i;
 
             fillAsync(data, 3200);
+            */
             for (int i = 0; i < 5;++i) {
-                sendCommand(INVERSE_OFF, nullptr, 0);
+                sendCommand(INVOFF, nullptr, 0);
                 cpu::delayMs(500);
-                sendCommand(INVERSE_ON, nullptr, 0);
+                sendCommand(INVON, nullptr, 0);
                 cpu::delayMs(500);
             }
 
@@ -182,8 +113,27 @@ namespace rckid {
             sendCommand8(MADCTL, madctl);
         }
 
+        static void fillBitBang(uint16_t color) {
+            // enable the entire display
+            setColumnUpdateRange();
+            setRowUpdateRange(); 
+            // now send the deta
+            begin();
+            setCommandMode();
+            write(RAMWR);
+            setDataMode();
+            for (int i = 0; i < 320; ++i) {
+                for (int j = 0; j < 240; ++j) {
+                    write(0b11111000);
+                    write(0b00000000);
+                }
+            }
+            end();
+        }
+
         /** Fills the entire screet with given color. 
          */
+        /*
         static void fill(Pixel p) {
             setColumnUpdateRange();
             setRowUpdateRange();
@@ -193,18 +143,19 @@ namespace rckid {
             setDataMode();
             for (int i = 0; i < 240; ++i) {
                 for (int j = 0; j < 320; ++j) {
-                    /*
+                    / *
                     if (j <= 240 - i) 
                         p.r(i % 32).b(j % 32).g(0);
                     else
                         p.r(0).b(0).gFull(j % 64);
-                    */
+                    * /
                     write(static_cast<uint16_t>(p) >> 8);
                     write(static_cast<uint16_t>(p) & 0xff);
                 }
             }
             end();
         }
+        */
 
      /** Fills given area of the display with provided pixel data. 
      
@@ -221,7 +172,7 @@ namespace rckid {
         setRowUpdateRange(0, 10);
         begin();
         setCommandMode();
-        write(RAM_WRITE);
+        write(RAMWR);
         setDataMode();
         /*
         if (FMARK != gpio::UNUSED) {
@@ -235,36 +186,42 @@ namespace rckid {
     }        
 
         static void setColumnUpdateRange(unsigned start = 0, unsigned end = 319) {
-            sendCommand16(COLUMN_ADDRESS_SET, start, end);
+            sendCommand16(CASET, start, end);
         }
 
         static void setRowUpdateRange(unsigned start = 0, unsigned end = 239) {
-            sendCommand16(PAGE_ADDRESS_SET, start, end);
+            sendCommand16(RASET, start, end);
         }
 
 
     private:
 
+        static constexpr uint8_t SWRESET = 0x01;
 
-        static constexpr uint8_t SLEEP_IN = 0x10;
-        static constexpr uint8_t SLEEP_OUT = 0x11;
-        static constexpr uint8_t NORMAL_MODE = 0x13;
-        static constexpr uint8_t INVERSE_OFF = 0x20;
-        static constexpr uint8_t INVERSE_ON = 0x21;
-        static constexpr uint8_t DISPLAY_OFF = 0x28;
-        static constexpr uint8_t DISPLAY_ON = 0x29;
+        static constexpr uint8_t SLPIN = 0x10; // enters sleep mode
+        static constexpr uint8_t SLPOUT = 0x11; // leaves sleep mode, wait 120ms afterwards
+        static constexpr uint8_t PTLON = 0x12; // enters partial mode (described by 0x30h)
+        static constexpr uint8_t NORON = 0x13; // enters normal mode 
+        static constexpr uint8_t INVOFF = 0x20; // turns off the inverse mode
+        static constexpr uint8_t INVON = 0x21; // turns on the inverse mode
+        static constexpr uint8_t GAMSET = 0x26; 
+        static constexpr uint8_t DISPOFF = 0x28; // displays blank page (white), no change to memory
+        static constexpr uint8_t DISPON = 0x29; // displays the memory contents
 
-        static constexpr uint8_t COLUMN_ADDRESS_SET = 0x2a;
-        static constexpr uint8_t PAGE_ADDRESS_SET = 0x2b;
-        static constexpr uint8_t RAM_WRITE = 0x2c;
+        static constexpr uint8_t CASET = 0x2a; // column address set
+        static constexpr uint8_t RASET = 0x2b; // row address set
+        static constexpr uint8_t RAMWR = 0x2c; // ram data write
+
+        static constexpr uint8_t PTLAR = 0x30; // partial area specification
+        static constexpr uint8_t VSCRDEF = 0x33; // vertical scrolling definition
 
 
-        static constexpr uint8_t TEARING_LINE_OFF = 0x34;
-        static constexpr uint8_t TEARING_LINE_ON = 0x35;
-        static constexpr uint8_t TEARING_LINE_MODE_VSYNC = 0;
-        static constexpr uint8_t TEARING_LINE_MODE_V_AND_H_SYNC = 1;
+        static constexpr uint8_t TEOFF = 0x34; // tearing effect line off
+        static constexpr uint8_t TEON = 0x35; // tearing effect line off
+        static constexpr uint8_t TE_VSYNC = 0; // TE on vsync only
+        static constexpr uint8_t TE_V_AND_H_SYNC = 1; // TE on both V and H sync
 
-        static constexpr uint8_t MADCTL = 0x36;
+        static constexpr uint8_t MADCTL = 0x36; // Memory Area Data Access Control
         static constexpr uint8_t MADCTL_MY = 0x80;  // Bottom to top
         static constexpr uint8_t MADCTL_MX = 0x40;  // Right to left
         static constexpr uint8_t MADCTL_MV = 0x20;  // Reverse Mode
@@ -273,13 +230,16 @@ namespace rckid {
         static constexpr uint8_t MADCTL_BGR = 0x08; // Blue-Green-Red pixel order
         static constexpr uint8_t MADCTL_MH = 0x04;  // LCD refresh right to left    
 
-        static constexpr uint8_t VERTICAL_SCROLL_START = 0x37;
+        static constexpr uint8_t VSCSAD = 0x37; // vertical scroll start address of ram
 
+        static constexpr uint8_t IDMOFF = 0x38; // idle mode off
+        static constexpr uint8_t IDMON = 0x39; // idle mode on (fewer colors, etc.)
 
-        static constexpr uint8_t PIXEL_FORMAT = 0x3a;
-        static constexpr uint8_t PIXEL_FORMAT_16 = 0x05; // 16 bit pixel format
+        static constexpr uint8_t COLMOD = 0x3a; // Color mode
+        static constexpr uint8_t COLMOD_16 = 0x55; // 16 bit pixel format for both control and RGB interfaces to be sure
 
-
+        static constexpr uint8_t WRMEMC = 0x3c;
+        static constexpr uint8_t STE = 0x44; // set tear scanline
 
         static void sendCommand(uint8_t cmd, uint8_t const * params, uint8_t size) {
             begin();

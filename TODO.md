@@ -2,8 +2,11 @@
 
 ## TODO 
 
-- LEDs don't work, could be timing issues with the level converter, or timing issues in general
-- the level translator seems not to be working allright
+- the level translator seems not to be working allright. The rising edge up takes a *lot* of time from the vlow
+
+- use PIO to work with the byte swaps inside pixel
+- use PIO for pixel doubling on vline
+
 
 ## Case
 
