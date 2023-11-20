@@ -65,6 +65,29 @@ public:
 
     //@}
 
+    /** \name LevelShifter Test 
+     
+     */
+    //@{
+    static void initializeTestLevelShifter() __attribute__((always_inline)) {
+        initialize();
+        // turn on the 5V rail 
+        gpio::output(PIN_5V_ON);
+        gpio::high(PIN_5V_ON);
+        // mark the RGB pin as output and set low
+        gpio::output(PIN_RGB);
+        gpio::low(PIN_RGB);
+    }
+
+    static void loopTestLevelShifter() __attribute__((always_inline)) {
+        cpu::delayUs(10);
+        gpio::high(PIN_RGB);
+        cpu::delayUs(10);
+        gpio::low(PIN_RGB);
+    }
+
+    //@}    
+
     /** \name Neopixel Test 
      
         The simplest test, turns on the 5V rail and cycles the 4 neopixels and colors in one second intervals. 
@@ -82,6 +105,12 @@ public:
         // mark the RGB pin as output and set low
         gpio::output(PIN_RGB);
         gpio::low(PIN_RGB);
+        cpu::delayMs(100);
+        rgb.clear();
+        rgb[0].r = 10;
+        rgb[1].g = 10;
+        rgb[3].b = 10;
+        rgb.update();
     }
 
     static void loopTestNeopixel() __attribute__((always_inline)) {
@@ -123,6 +152,7 @@ public:
     static inline uint8_t buttonGroup = 0;
 
     static void initializeTestButtons() __attribute__((always_inline)) {
+        initialize();
         // change RTC frequency to 128Hz
         while (RTC.PITSTATUS & RTC_CTRLBUSY_bm);
         RTC.PITCTRLA = RTC_PERIOD_CYC256_gc | RTC_PITEN_bm;
@@ -192,10 +222,11 @@ public:
      */
     //@{
 
-    static inline bool rail3V3On = false;
-    static inline bool qspiSSLow = false;
+    static inline bool rail3V3Reset = true;
+    static inline bool qspiSSLow = true;
 
     static void initializeTestRP2040() __attribute__((always_inline)) {
+        initialize();
         // change RTC frequency to 128Hz
         while (RTC.PITSTATUS & RTC_CTRLBUSY_bm);
         RTC.PITCTRLA = RTC_PERIOD_CYC256_gc | RTC_PITEN_bm;
@@ -222,20 +253,32 @@ public:
 
         rgb.clear();
         rgb.update(true);
+
+        // enable the backlight at 25% intensity
+        static_assert(PIN_PWM_BACKLIGHT == 1); // PA5, TCB0 WO
+        gpio::input(PIN_PWM_BACKLIGHT);
+        TCB0.CTRLA = 0;
+        TCB0.CTRLB = TCB_CNTMODE_PWM8_gc | TCB_CCMPEN_bm;
+        TCB0.CCMPL = 255;
+        TCB0.CCMPH = 0; 
+        TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc;
+        gpio::output(PIN_PWM_BACKLIGHT);
+        TCB0.CCMPH = 128;
+        TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm;
     }
 
     static void loopTestRP2040() __attribute__((alwaysInline)) {
         if (tick) {
             tick = false;
-            if (gpio::read(PIN_BTN_3) == rail3V3On) {
-                rail3V3On = ! rail3V3On;
-                if (rail3V3On) {
+            if (gpio::read(PIN_BTN_3) == rail3V3Reset) {
+                rail3V3Reset = ! rail3V3Reset;
+                if (rail3V3Reset) {
+                    gpio::input(PIN_3V3_ON);
+                    rgb[0].r = 0;
+                } else {
                     gpio::output(PIN_3V3_ON);
                     gpio::high(PIN_3V3_ON);
                     rgb[0].r = 10;
-                } else {
-                    gpio::input(PIN_3V3_ON);
-                    rgb[0].r = 0;
                 }
             }
             if (gpio::read(PIN_BTN_4) == qspiSSLow) {
@@ -269,6 +312,7 @@ ISR(RTC_PIT_vect) {
     void setup() { RCKid::initializeTest ## NAME (); } \
     void loop() { RCKid::loopTest ## NAME (); }
 
-RUN_TEST(Neopixel)
+//RUN_TEST(LevelShifter)
+//RUN_TEST(Neopixel)
 //RUN_TEST(Buttons)
-//RUN_TEST(RP2040)
+RUN_TEST(RP2040)

@@ -1,5 +1,21 @@
 # RCKid mk II
 
+This repository is the RCKid mark II. Unlike the first version, the mark II attempts to mimic the olden handheld consoles more closely by using a much simpler main chip (RP2040 vs RPi Zero) and replaceable cartridges that can extend the handheld with both new software *and* hardware. 
+
+This also means that the chip is seriously "underpowered" for most tasks mark I handled with ease, such as playing videos and emulating old games. Mark II puts much more emphasis on own content creation and fun (at least for me) by recreating the feel of old consoles for the programmers as well. 
+
+That said, I am hopeful, that over time, the following will be possible:
+
+- music player
+- own games (2d platformers, etc.)
+- video player (not generic formats, but special preencoded videos tailodr toward the meagre processing power and memory of RP2040)
+- games emulator (I am hoping at least C64 or Gameboy, having GBC would be epic)
+- walkie talkie (like v1)
+- remote controller (like v1)
+- internet connectivity via either a WiFi to NRF beacon, or a dedicated ESP8266 cartridge (the later is more portable, but will drain battery)
+
+> Please note that this is my toy project and as such will likely move *veeeery* slowly as its requirements in almost every department exceed my current capabilities (and when mistakes appear, probably my buget as well since the main PCB must be machine-assembled). 
+
 ## Building
 
 The following is necessary to build the RCKid firmware and cartridges on Windows 11 (WSL) with VS Code. Similar steps are required for other platforms. 
@@ -22,16 +38,8 @@ The following is necessary to build the RCKid firmware and cartridges on Windows
 
 
 
-
-
-
-
-
-
-
-
-
-
+- screw inserts (https://www.prusa3d.com/product/threaded-inserts-m2-short-100-pcs/)
+- hole height 4mm, 3.2mm diameter and 1.3mm wall thickness around, this makes the actual structure thickness at least 1.6 + 1.3 = 2.9, which sort of barely fits, but ok:)
 
 RCKid mk II is an RP2040 (the chip that powers RPi Pico) handheld device that can be used to play own games, emulate some very old consoles, play music and video files and act as a walkie-talkie or remote controller with the RCKid mk I protocol.
 
