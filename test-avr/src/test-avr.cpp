@@ -223,7 +223,6 @@ public:
     //@{
 
     static inline bool rail3V3Reset = true;
-    static inline bool qspiSSLow = true;
 
     static void initializeTestRP2040() __attribute__((always_inline)) {
         initialize();
@@ -250,6 +249,7 @@ public:
         gpio::high(PIN_BTN_CTRL);
         // start the dpad
         gpio::low(PIN_BTN_ABXY);
+        
 
         rgb.clear();
         rgb.update(true);
@@ -281,7 +281,21 @@ public:
                     rgb[0].r = 10;
                 }
             }
-            if (gpio::read(PIN_BTN_4) == qspiSSLow) {
+            if (!gpio::read(PIN_BTN_4)) {
+                rgb[3].g = 128;
+                rgb.update();
+                gpio::input(PIN_3V3_ON); // turn rp2040 off
+                cpu::delayMs(100);
+                gpio::output(PIN_QSPI_SS); // pull QSPI_CS low
+                gpio::low(PIN_QSPI_SS);
+                cpu::delayMs(100); 
+                gpio::output(PIN_3V3_ON); // turn rpi on
+                gpio::high(PIN_3V3_ON);
+                cpu::delayMs(500);
+                gpio::input(PIN_QSPI_SS); // QSPI_CS can be used
+                cpu::delayMs(300); // so that the whole cycle takes 1 second
+                rgb[3].g = 0;
+                /*
                 qspiSSLow = ! qspiSSLow;
                 if (qspiSSLow) {
                     gpio::output(PIN_QSPI_SS);
@@ -291,6 +305,7 @@ public:
                     gpio::input(PIN_QSPI_SS);
                     rgb[1].g = 0;
                 }
+                */
             }
             rgb.update();
         }

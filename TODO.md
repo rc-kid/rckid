@@ -3,6 +3,7 @@
 ## TODO 
 
 - the level translator seems not to be working allright. The rising edge up takes a *lot* of time from the vlow
+- when no headphones are present, the headphones line only has about 2 volts, not 3volts it is supposed to have. Is this an issue? 
 
 - use PIO to work with the byte swaps inside pixel
 - use PIO for pixel doubling on vline
