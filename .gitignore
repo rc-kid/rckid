@@ -1,4 +1,6 @@
 avr/.pio
-pico-sdk
+libs/pico-sdk
+libs/pico-examples
+libs/sd-card
 build
 __OLD__

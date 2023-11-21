@@ -2,14 +2,14 @@
     "tasks": [
         // builds the avr part of rckid locally
         {
-            "label": "rckid-avr",
+            "label": "avr/rckid",
             "type": "shell",
             "command": "~/.platformio/penv/bin/pio",
             "args": [
                 "run",
             ],
             "options": {
-                "cwd": "${workspaceFolder}/rckid/avr",
+                "cwd": "${workspaceFolder}/avr/rckid",
                 "shell": {
                     "executable" : "/bin/zsh",
                     "args": ["-c"]
@@ -21,14 +21,14 @@
         },
         // builds the test-avr app locally
         {
-            "label": "test-avr",
+            "label": "avr/rckid-test",
             "type": "shell",
             "command": "~/.platformio/penv/bin/pio",
             "args": [
                 "run",
             ],
             "options": {
-                "cwd": "${workspaceFolder}/test-avr",
+                "cwd": "${workspaceFolder}/avr/rckid-test",
                 "shell": {
                     "executable" : "/bin/zsh",
                     "args": ["-c"]
@@ -40,10 +40,10 @@
         },
         // uploads the test-avr via UPDI on devserver
         {
-            "label": "test-avr-upload",
+            "label": "avr/rckid-test [UPLOAD]",
             "command": "bash",
             "args": [
-                "utils/test-avr-upload.sh",
+                "utils/avr-rckid-test-upload.sh",
             ],
             "options": {
                 "cwd": "",

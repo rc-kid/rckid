@@ -1,7 +1,8 @@
 #include "platform/platform.h"
 
-#include "serial.h"
-#include "ST7789.h"
+#include "rckid/serial.h"
+#include "rckid/ST7789.h"
+#include "rckid/sd.h"
 
 using namespace platform;
 
@@ -10,7 +11,8 @@ using namespace rckid;
 int main() {
     Serial::initialize();
     ST7789::initialize();
-    printf("Initialized\n");
+    printf("Initialized --test\n");
+    sd::test();
     gpio::initialize();
     gpio::output(15);
     while (true) {

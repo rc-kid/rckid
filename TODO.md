@@ -20,6 +20,7 @@
 - add pin help text to the GPIO and the programming interface
 - the logo on the back is a bit ugly & not very informative
 - display pins 11-15 maybe should be grounded (unused data pins)
+- pull-up resistors & termination resistors for the SD card (the sd card library has some info)
 
 ## Extra Cartridges
 

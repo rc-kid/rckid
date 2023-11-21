@@ -1,8 +1,11 @@
+
+
+
+
+
 /** I2C address of the AVR chip (always slave)
  */
 #define AVR_I2C_ADDRESS 0x43
-
-
 
 /** Duration of the home button press necessasy to power the device on. Measured in ADC cycles for the initial voltage detection, i.e. 1302 cycles per second. 
  */
