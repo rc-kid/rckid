@@ -11,6 +11,8 @@
 
 #include "rckid.h"
 
+#include "config.h"
+
 namespace rckid {
 
     /** ST7789 display driver
@@ -44,24 +46,25 @@ namespace rckid {
     class ST7789 {
     public:
 
-        static const platform::gpio::Pin PIN_CSX{2};
-        static const platform::gpio::Pin PIN_DCX{3};
-        static const platform::gpio::Pin PIN_WRX{4};
-        static const platform::gpio::Pin PIN_TE{5};
-        static const platform::gpio::Pin PIN_DATA{6}; // 6 - 13 for 8bits
-
+        /*
+        static const platform::gpio::Pin PIN_CSX{RP_PIN_DISP_CSX};
+        static const platform::gpio::Pin PIN_DCX{RP_PIN_DISP_DCX};
+        static const platform::gpio::Pin PIN_WRX{RP_PIN_DISP_WRX};
+        static const platform::gpio::Pin PIN_TE{RP_PIN_DISP_TE};
+        static const platform::gpio::Pin PIN_DATA{RP_PIN_DISP_DB8}; // 6 - 13 for 8bits
+        */
         static void initialize() {
             using namespace platform;
-            gpio::output(PIN_CSX);
-            gpio::high(PIN_CSX);
-            gpio::output(PIN_DCX);
-            gpio::high(PIN_DCX);
-            gpio::input(PIN_TE);
+            gpio::output(RP_PIN_DISP_CSX);
+            gpio::high(RP_PIN_DISP_CSX);
+            gpio::output(RP_PIN_DISP_DCX);
+            gpio::high(RP_PIN_DISP_DCX);
+            gpio::input(RP_PIN_DISP_TE);
             // load the pio code for writing data, which also initializes the WR and DATA pins
             pio_ = pio0;
             offset_ = pio_add_program(pio_, &st7789_program);
             sm_ = pio_claim_unused_sm(pio_, true);
-            st7789_program_init(pio_, sm_, offset_, PIN_WRX, PIN_DATA);
+            st7789_program_init(pio_, sm_, offset_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
             // set the base frequency 
             overclock(100);
             // initialize the display
@@ -274,25 +277,25 @@ namespace rckid {
         static void begin() {
             using namespace platform;
             st7789_wait_idle(pio_, sm_);
-            gpio::low(PIN_CSX);
+            gpio::low(RP_PIN_DISP_CSX);
         }
 
         static void end() {
             using namespace platform;
             st7789_wait_idle(pio_, sm_);
-            gpio::high(PIN_CSX);
+            gpio::high(RP_PIN_DISP_CSX);
         }
 
         static void setCommandMode() {
             using namespace platform;
             st7789_wait_idle(pio_, sm_);
-            gpio::low(PIN_DCX);
+            gpio::low(RP_PIN_DISP_DCX);
         }
 
         static void setDataMode() {
             using namespace platform;
             st7789_wait_idle(pio_, sm_);
-            gpio::high(PIN_DCX);
+            gpio::high(RP_PIN_DISP_DCX);
         }
 
         static void write(uint8_t data) {

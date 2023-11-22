@@ -2,6 +2,8 @@
 #include "platform/platform.h"
 #include "platform/peripherals/neopixel.h"
 
+#include "rckid/config.h"
+
 using namespace platform;
 
 /** AVR Test App
