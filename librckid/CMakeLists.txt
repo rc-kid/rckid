@@ -16,7 +16,7 @@ include_directories(${CMAKE_SOURCE_DIR/libs/sd-card/})
 
 add_library(librckid ${SRC})
 
-pico_generate_pio_header(librckid ${CMAKE_SOURCE_DIR}/librckid/rckid/st7789.pio)
+pico_generate_pio_header(librckid ${CMAKE_SOURCE_DIR}/librckid/rckid/gpu/st7789.pio)
 
 pico_enable_stdio_uart(librckid ENABLED)
 
@@ -29,6 +29,7 @@ target_link_libraries(librckid
     hardware_pio
     hardware_spi
     hardware_dma
+    hardware_pwm
     FatFs_SPI
 )
 

@@ -76,6 +76,17 @@
 #define RP_PIN_SD_RC 28
 #define RP_PIN_SD_CSN 29
 
+/* - pio for the display
+   - for PDM microphone
+   - ? timer ?  for sound out? 
+
+   - then other pio is left for the user
+
+
+*/
+
+
+
 /** I2C address of the AVR chip (always slave)
  */
 #define AVR_I2C_ADDRESS 0x43
