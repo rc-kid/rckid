@@ -2,24 +2,20 @@
 ; 
 ; Since in continuous mode we only send data bytes forewer
 
- .program st7789
+.program st7789
 ; set aside 1 bit for the WRX 
 .side_set 1
 
 
 .wrap_target
-;    pull         side 0
-;    out null, 16 side 0
     out pins, 8     side 0
-    nop          side 1
+    nop             side 1
     out pins, 8     side 0
-    nop          side 1
+    nop             side 1
 
-;.wrap_target
-    ; pull 2 pixels, i.e. the OSR contains 2 1 4 3
-;    pull
-;    out x, 16 ; move 2 bytes to X, thus X has 4 3, OSR has 2 1
-;    out pins, 8
+
+
+; .pro out pins, 8
 ;    nop
 ;    out pins, 8
 ;    mov osr, x 

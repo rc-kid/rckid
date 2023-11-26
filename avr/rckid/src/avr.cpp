@@ -2,10 +2,326 @@
 #include "platform/platform.h"
 #include "platform/peripherals/neopixel.h"
 
-#include "config.h"
-#include "common.h"
+#include "rckid/config.h"
+#include "rckid/state.h"
 
 using namespace platform;
+using namespace rckid;
+
+#define NO_ISR(...) do { cli(); __VA_ARGS__; sei(); } while (false)
+
+class RCKid {
+public:
+
+    static void initialize()  __attribute__((always_inline)) {
+        // immediately after startup, kill the power to 3V3 and 5V rails by ensuring they are configured as input pins w/o pull-up. (they should start as input pins anyways, but to be sure)
+        gpio::initialize();
+        gpio::input(AVR_PIN_3V3_ON);
+        gpio::input(AVR_PIN_5V_ON);
+        // enable 2 second watchdog so that the second tick resets it always with enough time to spare
+        while (WDT.STATUS & WDT_SYNCBUSY_bm); // required busy wait
+            _PROTECTED_WRITE(WDT.CTRLA, WDT_PERIOD_2KCLK_gc);                
+        // set CLK_PER prescaler to 2, i.e. 10Mhz, which is the maximum the chip supports at voltages as low as 3.0V
+        CCP = CCP_IOREG_gc;
+        CLKCTRL.MCLKCTRLB = CLKCTRL_PEN_bm;
+        // initialize the RTC that fires every second for a semi-accurate real time clock keeping on the AVR, also start the timer
+        RTC.CLKSEL = RTC_CLKSEL_INT32K_gc;
+        RTC.PITINTCTRL |= RTC_PI_bm; // enable the interrupt
+        while (RTC.PITSTATUS & RTC_CTRLBUSY_bm);
+        RTC.PITCTRLA = RTC_PERIOD_CYC32768_gc | RTC_PITEN_bm;
+        // initialize the button pins using the matrix configuration
+        // initialize the button pins to inputs with pullup
+        gpio::inputPullup(AVR_PIN_BTN_1);
+        gpio::inputPullup(AVR_PIN_BTN_2);
+        gpio::inputPullup(AVR_PIN_BTN_3);
+        gpio::inputPullup(AVR_PIN_BTN_4);
+        // initialize all button groups to ouput & set them high
+        gpio::output(AVR_PIN_BTN_DPAD);
+        gpio::output(AVR_PIN_BTN_ABXY);
+        gpio::output(AVR_PIN_BTN_CTRL);
+        gpio::high(AVR_PIN_BTN_DPAD);
+        gpio::high(AVR_PIN_BTN_ABXY);
+        gpio::low(AVR_PIN_BTN_CTRL); // start reading the ctrl buttons
+        // we use the ADC 0 for repeated measurements of VCC, TEMPSENSE and the presence of headphones (unless turned off)
+        //static_assert(PIN_HEADPHONES == 2); // PA6, ADC0 AIN6
+        //PORTA.PIN6CTRL &= ~PORT_ISC_gm;
+        //PORTA.PIN6CTRL |= PORT_ISC_INPUT_DISABLE_gc;
+        //PORTA.PIN6CTRL &= ~PORT_PULLUPEN_bm;
+
+        wakeup();
+
+        
+    }
+
+    static void loop()  __attribute__((always_inline)) {
+        tick();
+    }
+
+
+
+    /** \name Power Management
+     * 
+     */
+    //@{
+
+    static void wakeup() {
+        initializeADC0();
+        initializePWM();
+        initializeI2C();
+    }
+
+    static void sleep() {
+
+    }
+
+    static void power5v(bool state) {
+        if (state) {
+            gpio::output(AVR_PIN_5V_ON);
+            gpio::high(AVR_PIN_5V_ON);
+        } else {
+            gpio::input(AVR_PIN_5V_ON);
+        }
+    }
+
+    static void power3v3(bool state) {
+        if (state) {
+            gpio::output(AVR_PIN_3V3_ON);
+            gpio::high(AVR_PIN_3V3_ON);
+        } else {
+            gpio::input(AVR_PIN_3V3_ON);
+        }
+    }
+
+    //@}
+
+    /** \name I2C Comms 
+     
+        The communication is rather simple - an I2C slave that when read from returns the state buffer and when written to, stores data in the state's comms buffer. The data will be interpreted as a command and performed after the stop condition is received.
+
+        This mode simplifies the AVR part and prioritizes short communication burts for often needed data, while infrequent operations, such as full state and even EEPROM data reads take more time. 
+     */
+    //@{
+
+    static void initializeI2C() {
+        // initialize the I2C in alternate position
+        PORTMUX.CTRLB |= PORTMUX_TWI0_bm;
+        // initalize the i2c slave with our address
+        i2c::initializeSlave(AVR_I2C_ADDRESS);
+    }
+
+    //@}
+
+    /** \name Buttons and analog inputs
+     
+        ADC0 is used to continuously sample 3 channels: 
+        
+        - internal voltage to determine the AVR's voltage (which is poor man's approximation of the battery voltage when running on batteries and the DC voltage detection if greater than battery max)
+        - internal temperature sensor (because why not)
+        - headphones jack (because it runs on 3.0V tops, which may not triger as digital 1 at higher voltages)
+
+        Buttons are connected via a matrix with three groups (control, dpad and abxy) with 4 buttons in each group. 
+     */
+    //@{
+
+    // TODO maybe we want this only 32 accumulated samples for faster speed
+    static void initializeADC0() {
+        // initialize ADC1 to continuously read VCC, headphones and charging info
+        ADC0.CTRLA = 0; // turn off
+        ADC0.CTRLB = ADC_SAMPNUM_ACC64_gc;
+        ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm; // 1.25MHz, reduced capacitance for >1V voltages
+        ADC0.CTRLD = ADC_INITDLY_DLY32_gc;
+        ADC0.MUXPOS = ADC_MUXPOS_INTREF_gc; // start measuring VCC
+        ADC0.SAMPCTRL = 31;
+        ADC0.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc;
+        ADC0.COMMAND = ADC_STCONV_bm; // start the conversion
+    }
+
+    static bool tick() {
+        if (! (ADC0.INTFLAGS & ADC_RESRDY_bm))
+            return false;
+        uint16_t value = ADC0.RES / 64;
+        uint8_t muxpos = ADC0.MUXPOS;
+        // determine next muxpos and start next conversion 
+        switch (muxpos) {
+            case ADC_MUXPOS_INTREF_gc:
+                ADC0.MUXPOS = ADC_MUXPOS_TEMPSENSE_gc;
+                ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_INTREF_gc | ADC_SAMPCAP_bm; 
+                break;
+            case ADC_MUXPOS_TEMPSENSE_gc:
+                ADC0.MUXPOS = ADC_MUXPOS_AIN7_gc;
+                ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm; 
+            case ADC_MUXPOS_AIN6_gc:
+            default:
+                ADC0.MUXPOS = ADC_MUXPOS_INTREF_gc;
+                break;
+        }
+        ADC0.COMMAND = ADC_STCONV_bm;
+        // while already measuring next, process the currently measured value
+        switch (muxpos) {
+            case ADC_MUXPOS_INTREF_gc: {
+                value = 110 * 512 / value;
+                value = value * 2;
+                NO_ISR(state_.info.setVcc(value));
+                // TODO deal with threshold vcc values
+                break;
+            }
+            case ADC_MUXPOS_TEMPSENSE_gc: {
+                int8_t sigrow_offset = SIGROW.TEMPSENSE1; 
+                uint8_t sigrow_gain = SIGROW.TEMPSENSE0;
+                int32_t t = value - sigrow_offset; // Result might overflow 16 bit variable (10bit+8bit)
+                t *= sigrow_gain;
+                // temp is now in kelvin range, to convert to celsius, remove -273.15 (x256)
+                t -= 69926;
+                // and now loose precision to 0.5C (x10, i.e. -15 = -1.5C)
+                value = (t >>= 7) * 5;
+                NO_ISR(state_.info.setTemp(value));
+                break;
+            }
+            case ADC_MUXPOS_AIN6_gc: {
+                if (state_.status.audioEnabled()) {
+                    bool headphones = value > HEADPHONES_DETECTION_THRESHOLD;
+                    NO_ISR(state_.status.setHeadphones(headphones));
+                }
+                break;
+            }
+        }
+        // at each tick, measure one set of input buttons for their values
+        switch (muxpos) {
+            case ADC_MUXPOS_INTREF_gc:  
+                value = Status::calculateControlValue(
+                    !gpio::read(AVR_PIN_BTN_2), // home
+                    !gpio::read(AVR_PIN_BTN_3), // vol up
+                    !gpio::read(AVR_PIN_BTN_4) // vol down
+                );
+                NO_ISR(state_.status.setControlValue(value));
+                // move the matrix to dpad
+                gpio::high(AVR_PIN_BTN_CTRL);
+                gpio::low(AVR_PIN_BTN_DPAD);
+                // TODO deal with btn home presses
+                break;
+            case ADC_MUXPOS_TEMPSENSE_gc: 
+                value = Status::calculateDPadValue(
+                    !gpio::read(AVR_PIN_BTN_2), // left
+                    !gpio::read(AVR_PIN_BTN_4), // right
+                    !gpio::read(AVR_PIN_BTN_3), // up
+                    !gpio::read(AVR_PIN_BTN_1) // down
+                );
+                NO_ISR(state_.status.setDPadValue(value));
+                // move the matrix to ABXY
+                gpio::high(AVR_PIN_BTN_DPAD);
+                gpio::low(AVR_PIN_BTN_ABXY);
+                break;
+            case ADC_MUXPOS_AIN6_gc:
+                value = Status::calculateABXYValue(
+                    !gpio::read(AVR_PIN_BTN_2), // a
+                    !gpio::read(AVR_PIN_BTN_1), // b
+                    !gpio::read(AVR_PIN_BTN_4), // sel
+                    !gpio::read(AVR_PIN_BTN_3) // start
+                );
+                NO_ISR(state_.status.setABXYValue(value));
+                // move the matrix to ctrl
+                gpio::high(AVR_PIN_BTN_ABXY);
+                gpio::low(AVR_PIN_BTN_CTRL);
+                break;
+        }
+        return true;
+    }
+    //@}
+
+    /** \name PWM (rumbler and backlight)
+
+        The PWM signals used for backlight and rumbler control are generated by the TCB0 and TCB1 respectively.
+
+        Backlight is pulled low externally, setting the pin to 1 make the backlight work, hence the value is unchanged.  
+
+     */
+    //@{
+
+    static void initializePWM() {
+        // do not leak voltage and turn the pins as inputs
+        static_assert(AVR_PIN_PWM_BACKLIGHT == 1); // PA5, TCB0 WO
+        gpio::input(AVR_PIN_PWM_BACKLIGHT);
+        TCB0.CTRLA = 0;
+        TCB0.CTRLB = TCB_CNTMODE_PWM8_gc | TCB_CCMPEN_bm;
+        TCB0.CCMPL = 255;
+        TCB0.CCMPH = 0; 
+        TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc;
+        static_assert(AVR_PIN_PWM_RUMBLER == 16); // PA3, TCB1 WO
+        gpio::input(AVR_PIN_PWM_RUMBLER);
+        TCB1.CTRLA = 0;
+        TCB1.CTRLB = TCB_CNTMODE_PWM8_gc | TCB_CCMPEN_bm;
+        TCB1.CCMPL = 255;
+        TCB1.CCMPH = 0; 
+        TCB1.CTRLA = TCB_CLKSEL_CLKDIV2_gc;
+     }
+
+    static void setBacklightPWM(uint8_t value) {
+        NO_ISR(state_.info.setBacklight(value));
+        if (value == 0) {
+            TCB0.CTRLA = 0;
+            gpio::input(AVR_PIN_PWM_BACKLIGHT);
+        } else if (value == 255) {
+            TCB0.CTRLA = 0;
+            gpio::output(AVR_PIN_PWM_BACKLIGHT);
+            gpio::high(AVR_PIN_PWM_BACKLIGHT);
+        } else {
+            gpio::output(AVR_PIN_PWM_BACKLIGHT);
+            TCB0.CCMPH = value;
+            TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm;
+        }
+    }
+
+    static void setRumblerPWM(uint8_t value) {
+        if (value == 0) {
+            TCB1.CTRLA = 0;
+            gpio::input(AVR_PIN_PWM_RUMBLER);
+        } else if (value == 255) {
+            TCB1.CTRLA = 0;
+            gpio::output(AVR_PIN_PWM_RUMBLER);
+            gpio::high(AVR_PIN_PWM_RUMBLER);
+        } else {
+            gpio::output(AVR_PIN_PWM_BACKLIGHT);
+            TCB1.CCMPH = 255 - value;
+            TCB1.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm;
+        }
+    }
+    //@}
+
+    /** \name RGB LEDs
+
+        In total we have four LEDs (A & B buttons and dpad for light effects and the upper right corner for notifications). 
+
+        TODO effects /notifications
+     */
+    //@{
+
+    static inline NeopixelStrip<4> rgb_{AVR_PIN_RGB};
+    static inline ColorStrip<4> rgbTarget_;
+
+    static void rgbOn() {
+        power5v(true);
+        gpio::output(AVR_PIN_RGB);
+        gpio::low(AVR_PIN_RGB);
+    }
+
+    static void rgbOff() {
+        // note the order is important so that there are no stray voltages on the control line
+        gpio::input(AVR_PIN_RGB);
+        power5v(false);
+    }
+    //@}
+
+
+    static inline State state_;
+
+}; // RCKid
+
+
+void setup() { RCKid::initialize(); }
+void loop() { RCKid::loop(); }
+
+
+#ifdef OLD
 
 /** RCKid mk II
 
@@ -378,3 +694,6 @@ ISR(PORTB_PORT_vect) {
 
 void setup() { RCKid::initialize(); }
 void loop() { RCKid::loop(); }
+
+
+#endif // OLD

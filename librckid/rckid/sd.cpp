@@ -42,7 +42,15 @@ sd_card_t *sd_get_by_num(size_t num) {
     }
 }
 
-namespace rckid::sd {
+namespace rckid {
+
+    bool SD::mount() {
+        card_ = sd_get_by_num(0);
+        FRESULT r = f_mount(&card_->fatfs, card_->pcName, 1);
+        return r == FR_OK;
+    }
+
+
 
     void test() {
         sd_card_t *pSD = sd_get_by_num(0);
