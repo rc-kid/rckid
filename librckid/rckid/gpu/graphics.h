@@ -48,7 +48,14 @@ namespace rckid {
 
     static_assert(sizeof(Color) == 2);
 
+    class Point {
+    public:
+      uint16_t x;
+      uint16_t y;
 
+      constexpr Point(uint16_t x, uint16_t y): x{x}, y{y} {}
+
+    }; // rckid::Point
 
     class Rect {
     public:

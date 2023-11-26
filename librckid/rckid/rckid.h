@@ -6,6 +6,8 @@
 #include <hardware/pio.h>
 #include <hardware/clocks.h>
 #include <hardware/vreg.h>
+#include <hardware/i2c.h>
+#include <pico/binary_info.h>
 
 /** RCKid SDK
  */

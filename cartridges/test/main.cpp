@@ -1,15 +1,15 @@
-#include "platform/platform.h"
+//#include "platform/platform.h"
 
 #include "rckid/rckid.h"
 #include "rckid/config.h"
 #include "rckid/serial.h"
 #include "rckid/gpu/ST7789.h"
 #include "rckid/gpu/canvas.h"
+#include "rckid/fonts/Org_01.h"
+#include "rckid/fonts/TomThumb.h"
 #include "rckid/sd.h"
 
 #include "rckid/apu/pwm.h"
-
-using namespace platform;
 
 using namespace rckid;
 
@@ -18,33 +18,30 @@ int main() {
     ST7789::initialize();
     printf("Initialized --test\n");
     //sd::test();
-    gpio::initialize();
-    gpio::output(15);
+    //gpio::initialize();
+    //gpio::output(15);
 
     ST7789::enterContinuousMode(320, 50);
     Canvas c{320, 50};
     c.setFg(Color::White());
-    c.setFont(FreeMono12pt7b);
+    c.setFont(Org_01);
     //c.text("Hello world!", 0, 25);
     //c.pixel(0,0, Color::Blue());
     
     i2c_init(i2c0, 100000);
     gpio_set_function(RP_PIN_SDA, GPIO_FUNC_I2C);
     gpio_set_function(RP_PIN_SCL, GPIO_FUNC_I2C);
-    //gpio_pull_up(RP_PIN_SDA);
-    //gpio_pull_up(RP_PIN_SCL);    
     // Make the I2C pins available to picotool
     bi_decl(bi_2pins_with_func(RP_PIN_SDA, RP_PIN_SCL, GPIO_FUNC_I2C));  
     uint8_t rxd;
+    c.text(0,0) << "I2C Scan: ";
     for (uint8_t x = 0; x < 128; ++x) {
-        if (i2c_read_blocking(i2c0, x, &rxd, 1, false) >= 0) {
-            for (int y = 0; y < 20; ++y)
-                c.pixel(x, y, Color::Red());
-        }
+        if (i2c_read_blocking(i2c0, x, &rxd, 1, false) >= 0)
+            c.text() << " " << x;
     } 
-    c.pixel(0,0, Color::White());
     ST7789::updateContinuous(c.rawPixels(), c.rawPixelsCount());
 
+    while (true);
     /*
     ST7789::enterContinuousMode();
     Color * colors = new Color[320 * 10];
@@ -65,11 +62,12 @@ int main() {
 
 
     //PWM::initialize();
+    /*
     while (true) {
         gpio::high(15);
         cpu::delayMs(100);
         gpio::low(15);
         cpu::delayMs(100);
-    }
+    } */
     return 0;
 }
