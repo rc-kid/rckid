@@ -41,7 +41,9 @@ namespace rckid {
         sleep_ms(150);
         sendCommand(DISPON);
         sleep_ms(150);
-        sendCommand(MADCTL, (uint8_t)(MADCTL_MV));
+        //sendCommand(MADCTL, (uint8_t)(MADCTL_MV));
+        sendCommand(MADCTL, (uint8_t)(MADCTL_MY | MADCTL_MV ));
+        //sendCommand(MADCTL, (uint8_t)0);
         sendCommand(INVON);
 
         fill(Color::Black());
@@ -111,7 +113,7 @@ namespace rckid {
         initializePinsBitBang();
     }
 
-    void ST7789::updateContinuous(Color * data, size_t numPixels) {
+    void ST7789::updateContinuous(Color const * data, size_t numPixels) {
         dma_channel_configure(dma_, & dmaConf_, &pio_->txf[sm_], data, numPixels, true); // start
     }
 

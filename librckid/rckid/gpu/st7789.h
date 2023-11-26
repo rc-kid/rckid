@@ -60,7 +60,7 @@ namespace rckid {
 
         static void leaveContinuousMode();
 
-        static void updateContinuous(Color * data, size_t numPixels);
+        static void updateContinuous(Color const * data, size_t numPixels);
 
         static void waitUpdateDone() { while (dma_channel_is_busy(dma_)); }
         //@}
