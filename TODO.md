@@ -30,6 +30,9 @@
 - add big cap to vclean and see if it changes stuff 
 
 
+## AVR
+
+- on wakeup sequence, check that start & sel are pressed too to enter debug mode(s)
 
 ## Shopping List
 

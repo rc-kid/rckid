@@ -91,9 +91,10 @@
  */
 #define AVR_I2C_ADDRESS 0x43
 
-/** Duration of the home button press necessasy to power the device on. Measured in ADC cycles for the initial voltage detection, i.e. 1302 cycles per second. 
+/** Duration of the home button press necessasy to power the device on. Measured in ADC cycles for the initial voltage detection, i.e. 887 cycles per second. 
  */
-#define BTN_HOME_POWER_ON_DURATION 1302
+#define BTN_HOME_POWER_ON_DURATION 900
+#define BTN_HOME_POWER_OFF_DURATION 1800
 
 #define VCC_DC_POWER_THRESHOLD 430
 #define CHARGING_DETECTION_THRESHOLD 255

@@ -19,6 +19,22 @@
                 "$platformio"
             ]
         },
+        // uploads the avr part of rckid via UPDI on devserver
+        {
+            "label": "avr/rckid [UPLOAD]",
+            "command": "bash",
+            "args": [
+                "utils/avr-rckid-upload.sh",
+            ],
+            "options": {
+                "cwd": "",
+            },
+            "problemMatcher": [
+                "$platformio"
+            ]
+        },
+
+
         // builds the test-avr app locally
         {
             "label": "avr/rckid-test",

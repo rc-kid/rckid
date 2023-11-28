@@ -331,5 +331,5 @@ ISR(RTC_PIT_vect) {
 
 //RUN_TEST(LevelShifter)
 //RUN_TEST(Neopixel)
-//RUN_TEST(Buttons)
-RUN_TEST(RP2040)
+RUN_TEST(Buttons)
+//RUN_TEST(RP2040)
