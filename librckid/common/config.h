@@ -97,7 +97,8 @@
 #define BTN_HOME_POWER_OFF_DURATION 1800
 
 #define VCC_DC_POWER_THRESHOLD 430
-#define CHARGING_DETECTION_THRESHOLD 255
+
+#define VCC_CRITICAL_THRESHOLD 310
 /** Headphones detection threshold (when no headphones are inserted, the line is pulled up to 3V, i.e. some 930. 
  */
 #define HEADPHONES_DETECTION_THRESHOLD 512

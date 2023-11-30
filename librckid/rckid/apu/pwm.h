@@ -3,7 +3,7 @@
 #include "pico/stdlib.h"
 #include "hardware/pwm.h"
 
-#include "../config.h"
+#include "common/config.h"
 
 namespace rckid {
 

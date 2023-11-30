@@ -2,8 +2,9 @@
 #include "platform/platform.h"
 #include "platform/peripherals/neopixel.h"
 
-#include "rckid/config.h"
-#include "rckid/state.h"
+#include "common/config.h"
+#include "common/state.h"
+#include "common/commands.h"
 
 using namespace platform;
 using namespace rckid;
@@ -59,12 +60,7 @@ public:
         if (checkADC0()) {
             checkButtons();
             checkLongHomePress();
-            /*
-            if (mode_ == Mode::Wakeup)
-                checkWakeup();
-            else 
-                checkLongHomePress();
-            */
+            // TODO deal with charging info
         }
         if (secondTick_)
             secondTick();
@@ -74,13 +70,13 @@ public:
         secondTick_ = false;
         // reset the watchdog. Resetting here means that (a) the RTC interrupt is working and (b) the main loop is working and progressing. We don't care about the rp here - if it freezes, the home button can always be used to reset the entire system. 
         wdt::reset();
-        // TODO advance clock
+        // advance clocks
+        state_.time.secondTick();
     }
 
-
-
     /** \name Power Management
-     * 
+     
+        
      */
     //@{
  
@@ -93,6 +89,42 @@ public:
 
     static inline volatile Mode mode_;
     static inline volatile uint16_t homeCounter_ = 0;
+
+    static void updateVcc(uint16_t raw) {
+        raw = 110 * 512 / raw;
+        raw = raw * 2;
+        NO_ISR(state_.info.setVcc(raw));
+        // check dc power
+        if (raw >= VCC_DC_POWER_THRESHOLD) {
+            if (!state_.status.dcPower())
+                dcPowerPlugged(); 
+        } else if (state_.status.dcPower()) {
+            dcPowerUnplugged();
+        } 
+        // check critical battery level
+        if (raw < VCC_CRITICAL_THRESHOLD)
+            criticalBattery();
+    }
+
+    /** Called when the DC power is plugged in. 
+     */
+    static void dcPowerPlugged() {
+        NO_ISR(state_.status.setDCPower(true));
+        if (mode_ == Mode::Sleep)
+            mode_ = Mode::Charging;
+        // TODO
+    }
+
+    static void dcPowerUnplugged() {
+        NO_ISR(state_.status.setDCPower(false); state_.status.setCharging(false));
+        if (mode_ == Mode::Charging)
+            mode_ = Mode::Sleep;
+        // TODO
+    }
+
+    static void criticalBattery() {
+        // TODO
+    }
 
     static void sleep() {
         // disable power rails
@@ -112,11 +144,25 @@ public:
         // enable falling edge interrupt on the home button to power the device on 
         static_assert(AVR_PIN_BTN_2 == 5); // PB4
         PORTB.PIN4CTRL |= PORT_ISC_FALLING_gc;
+        // configure ADC1 for sampling the VCC (to detect DC in)
+        ADC1.CTRLA = 0; 
+        ADC1.CTRLB = ADC_SAMPNUM_ACC64_gc;
+        ADC1.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
+        ADC1.CTRLD = ADC_INITDLY_DLY32_gc;
+        ADC1.MUXPOS = ADC_MUXPOS_INTREF_gc;
+        ADC1.SAMPCTRL = 0;
         // resume sleep after each second tick
         while (mode_ == Mode::Sleep) {
             cpu::sleep();
+            ADC1.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc;
+            ADC1.COMMAND = ADC_STCONV_bm;
             if (secondTick_)
                 secondTick();
+            // wait for the ADC measurement 
+            while (! ADC1.INTFLAGS & ADC_RESRDY_bm);
+            uint16_t value = ADC1.RES / 64;
+            ADC1.CTRLA = 0;
+            updateVcc(value);
         }
         if (mode_ == Mode::Wakeup)
             wakeup();
@@ -129,13 +175,11 @@ public:
         // disable home interrupt
         static_assert(AVR_PIN_BTN_2 == 5); // PB4
         PORTB.PIN4CTRL &= ~PORT_ISC_gm;
-
-        state_.status.setBtnHome(true);
         initializeADC0();
         initializePWM();
-        i2c::initializeSlave(AVR_I2C_ADDRESS);
-        homeCounter_ = BTN_HOME_POWER_ON_DURATION;
+        // set btn home as pressed (since we came from the IRQ) for the long press countdown to work
         state_.status.setBtnHome(true);
+        homeCounter_ = BTN_HOME_POWER_ON_DURATION;
     }
 
     /** Checks that the wakeup condition (long press home button is pressed)
@@ -160,13 +204,13 @@ public:
     /** The poweron sequence that happens when the long enough home button press has been detected. Enables the 3V3 rail in normal mode for the RPI 
      */
     static void powerOn() {
-        homeCounter_ = 0;
-        mode_ = Mode::On;
-        // TODO do rumbler effect
+        i2c::initializeSlave(AVR_I2C_ADDRESS);
         power3v3(true);
+        mode_ = Mode::On;
         // when in debug mode, set the backlight to half power immediately so that we can see what's happening on the screen
         if (state_.info.debugMode())
             setBacklightPWM(128); 
+        // TODO do rumbler effect
     }
 
     static void power5v(bool state) {
@@ -310,7 +354,7 @@ public:
     static bool checkADC0() {
         if (! (ADC0.INTFLAGS & ADC_RESRDY_bm))
             return false;
-        uint16_t value = ADC0.RES / 64;
+        uint16_t value = ADC0.RES / 32;
         uint8_t muxpos = ADC0.MUXPOS;
         // determine next muxpos and start next conversion 
         switch (muxpos) {
@@ -330,10 +374,7 @@ public:
         // while already measuring next, process the currently measured value
         switch (muxpos) {
             case ADC_MUXPOS_INTREF_gc: {
-                value = 110 * 512 / value;
-                value = value * 2;
-                NO_ISR(state_.info.setVcc(value));
-                // TODO deal with threshold vcc values
+                updateVcc(value);
                 break;
             }
             case ADC_MUXPOS_TEMPSENSE_gc: {

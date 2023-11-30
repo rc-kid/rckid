@@ -1,5 +1,7 @@
 #pragma once
 
+#include "tinytime.h"
+
 namespace rckid {
 
     /** RCKid's status. 
@@ -165,6 +167,7 @@ namespace rckid {
         Status status;
         Info info;
         Config config;
+        TinyDate time;
         // this is page EEPROM page size (32bytes) + 1 byte for command / control
         uint8_t buffer[33];
 

@@ -37,6 +37,11 @@ namespace rckid {
             });
         }
 
+        void clear() {
+            for (unsigned i = 0, e = rawPixelsCount(); i < e; ++i)
+                buffer_[i] = bg_;
+        }
+
         void setFg(Color c) { fg_ = c; }
         void setBg(Color c) { bg_ = c; }
         void setFont(GFXfont const & font) { font_ = &font; }

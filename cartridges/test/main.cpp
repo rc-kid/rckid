@@ -1,13 +1,14 @@
 //#include "platform/platform.h"
 
+#include "common/config.h"
 #include "rckid/rckid.h"
-#include "rckid/config.h"
 #include "rckid/serial.h"
 #include "rckid/gpu/ST7789.h"
 #include "rckid/gpu/canvas.h"
 #include "rckid/fonts/Org_01.h"
 #include "rckid/fonts/TomThumb.h"
 #include "rckid/sd.h"
+#include "common/state.h"
 
 #include "rckid/apu/pwm.h"
 
@@ -21,18 +22,50 @@ int main() {
     //gpio::initialize();
     //gpio::output(15);
 
-    ST7789::enterContinuousMode(320, 50);
-    Canvas c{320, 50};
+    ST7789::enterContinuousMode(320, 240);
+    Canvas c{320, 60};
     c.setFg(Color::White());
+    c.setBg(Color::Black());
     c.setFont(Org_01);
     //c.text("Hello world!", 0, 25);
     //c.pixel(0,0, Color::Blue());
-    
     i2c_init(i2c0, 100000);
     gpio_set_function(RP_PIN_SDA, GPIO_FUNC_I2C);
     gpio_set_function(RP_PIN_SCL, GPIO_FUNC_I2C);
     // Make the I2C pins available to picotool
     bi_decl(bi_2pins_with_func(RP_PIN_SDA, RP_PIN_SCL, GPIO_FUNC_I2C));  
+    while (true) {
+        State state;
+        i2c_read_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t *)& state, sizeof(State), false);
+        c.text(0,0);
+        c.text() << (state.status.dpadLeft() ? "L " : "  ");
+        c.text() << (state.status.dpadRight() ? "R " : "  ");
+        c.text() << (state.status.dpadUp() ? "U " : "  ");
+        c.text() << (state.status.dpadDown() ? "D " : "  ");
+        c.text() << (state.status.btnA() ? "A " : "  ");
+        c.text() << (state.status.btnB() ? "B " : "  ");
+        c.text() << (state.status.btnSelect() ? "SEL " : "    ");
+        c.text() << (state.status.btnStart() ? "START " : "      ");
+        // first do I2C scan
+        c.text(0, 20);
+        c.text() << (state.status.dcPower() ? "DC " : "   ");
+        c.text() << (state.status.charging() ? "CHRG " : "     ");
+        c.text() << (state.status.headphones() ? "HP " : "   ");
+        c.text() << state.info.vcc() << " " << state.info.temp();
+        c.text(0, 40);
+        c.text() << state.time.minutes() << ":" << state.time.seconds();
+        ST7789::updateContinuous(c.rawPixels(), c.rawPixelsCount());
+        c.clear();
+        ST7789::waitUpdateDone();
+        ST7789::updateContinuous(c.rawPixels(), c.rawPixelsCount());
+        ST7789::waitUpdateDone();
+        ST7789::updateContinuous(c.rawPixels(), c.rawPixelsCount());
+        ST7789::waitUpdateDone();
+        ST7789::updateContinuous(c.rawPixels(), c.rawPixelsCount());
+        ST7789::waitUpdateDone();
+        sleep_ms(50);
+    }
+    /*
     uint8_t rxd;
     c.text(0,0) << "I2C Scan: ";
     for (uint8_t x = 0; x < 128; ++x) {
@@ -42,6 +75,7 @@ int main() {
     ST7789::updateContinuous(c.rawPixels(), c.rawPixelsCount());
 
     while (true);
+    */
     /*
     ST7789::enterContinuousMode();
     Color * colors = new Color[320 * 10];

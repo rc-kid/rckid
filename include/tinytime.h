@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 
 
 /** A simple date-time object that fits in just 4 bytes. 
@@ -17,9 +17,9 @@ public:
     static constexpr uint16_t YEAR_START = 2023;
     static constexpr uint16_t YEAR_END = YEAR_START + 64;
 
-    uint8_t second() const { return raw_[0] & SECOND_MASK; }
-    uint8_t minute() const { return raw_[1] & MINUTE_MASK; }
-    uint8_t hour() const { return raw_[2] & HOUR_MASK; }
+    uint8_t seconds() const { return raw_[0] & SECOND_MASK; }
+    uint8_t minutes() const { return raw_[1] & MINUTE_MASK; }
+    uint8_t hours() const { return raw_[2] & HOUR_MASK; }
     uint8_t day() const { return raw_[3] & DAY_MASK; }
     uint8_t month() const { 
         return ((raw_[0] & MONTH_MASK) >> 4) 
@@ -45,17 +45,17 @@ public:
     }
 
 
-    void setSecond(uint8_t value) { 
+    void setSeconds(uint8_t value) { 
         raw_[0] &= ~SECOND_MASK;
         raw_[0] |= value & SECOND_MASK;
     }
 
-    void setMinute(uint8_t value) {
+    void setMinutes(uint8_t value) {
         raw_[1] &= ~MINUTE_MASK;
         raw_[1] |= value & MINUTE_MASK;
     }
 
-    void setHour(uint8_t value) {
+    void setHours(uint8_t value) {
         raw_[2] &= ~HOUR_MASK;
         raw_[2] |= value & HOUR_MASK;
     }
@@ -84,21 +84,21 @@ public:
         raw_[3] |= y2;
     }
 
-    bool incSecond() {
-        uint8_t x = (second() + 1) % 60;
-        setSecond(x);
+    bool incSeconds() {
+        uint8_t x = (seconds() + 1) % 60;
+        setSeconds(x);
         return x == 0;
     }
 
-    bool incMinute() {
-        uint8_t x = (minute() + 1) % 60;
-        setMinute(x);
+    bool incMinutes() {
+        uint8_t x = (minutes() + 1) % 60;
+        setMinutes(x);
         return x == 0;
     }
 
-    bool incHour() {
-        uint8_t x = (hour() + 1) % 12;
-        setHour(x);
+    bool incHours() {
+        uint8_t x = (hours() + 1) % 12;
+        setHours(x);
         return x == 0;
     }
 
@@ -127,16 +127,16 @@ public:
     }
 
     bool secondTick() {
-        if (! incSecond())
-            return;
-        if (! incMinute())
-            return;
-        if (! incHour())
-            return;
+        if (! incSeconds())
+            return false;
+        if (! incMinutes())
+            return false;
+        if (! incHours())
+            return false;
         if (! incDay())
-            return;
+            return false;
         if (! incMonth())
-            return;
+            return false;
         return incYear();
     }
 
@@ -173,6 +173,6 @@ private:
 
     uint8_t raw_[4];
 
-}; // TinyDate
+} __attribute__((packed)); // TinyDate
 
 static_assert(sizeof(TinyDate) == 4);

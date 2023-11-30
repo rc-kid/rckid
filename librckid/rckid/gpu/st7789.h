@@ -5,8 +5,8 @@
 #include <hardware/dma.h>
 
 
-#include "../rckid.h"
-#include "../config.h"
+#include "rckid/rckid.h"
+#include "common/config.h"
 
 #include "graphics.h"
 

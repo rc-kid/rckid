@@ -33,6 +33,11 @@
 ## AVR
 
 - on wakeup sequence, check that start & sel are pressed too to enter debug mode(s)
+- add & test battery charging detection
+- add battery critical power off
+- add neopixel & rumbler effects
+- add I2C commands
+
 
 ## Shopping List
 

@@ -1,0 +1,70 @@
+#pragma once
+
+/**
+ 
+    - set brightness
+    - rgb 
+    - rumbler
+    - audio on/off (?)
+    - set time
+    - set alarms
+    - power off
+    - reset
+    - enter bootloader RP
+    - enter bootloader AVR
+
+
+ */
+namespace rckid::cmd {
+
+#define COMMAND(MSG_ID, NAME, ...) \
+    class NAME  { \
+    public: \
+        static uint8_t constexpr ID = MSG_ID; \
+        static NAME const & fromBuffer(uint8_t const * buffer) { \
+            return * reinterpret_cast<NAME const *>(buffer); \
+        } \
+        __VA_ARGS__ \
+    } __attribute__((packed))
+
+    COMMAND(0, Nop);
+    COMMAND(1, PowerOff);
+    COMMAND(2, ResetRP);
+    COMMAND(3, ResetAVR);
+    COMMAND(4, BootloaderRP);
+    COMMAND(5, BootloaderAVR);
+    
+    COMMAND(6, SetDebugMode,
+        bool enabled;
+        SetDebugMode(bool enabled = true):enabled{enabled} {}
+    );
+
+    COMMAND(6, SetBrightness,
+        uint8_t value;
+        SetBrightness(uint8_t value): value{value} {}
+    );
+
+    COMMAND(7, RumblerOk);
+    COMMAND(8, RumblerFail);
+
+    COMMAND(9, Rumbler,
+        uint8_t intensity;
+        uint16_t duration; // duration in 10ms intervals
+        Rumbler(uint8_t intensity, uint16_t duration): intensity{intensity}, duration{duration} {}
+    );
+
+
+    COMMAND(10, RGBOn);
+    COMMAND(11, RGBOff);
+
+    COMMAND(12, RGBColor, 
+        platform::Color color;
+        RGBColor(platform::Color color): color{color} {}
+    );
+
+
+
+
+
+
+} // namespace rckid::cmd
