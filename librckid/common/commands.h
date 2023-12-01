@@ -1,5 +1,7 @@
 #pragma once
 
+#include "tinytime.h"
+
 /**
  
     - set brightness
@@ -34,30 +36,35 @@ namespace rckid::cmd {
     COMMAND(4, BootloaderRP);
     COMMAND(5, BootloaderAVR);
     
-    COMMAND(6, SetDebugMode,
-        bool enabled;
-        SetDebugMode(bool enabled = true):enabled{enabled} {}
-    );
+    COMMAND(6, DebugModeOn);
+    COMMAND(7, DebugModeOff);
+    COMMAND(8, AudioEnabled);
+    COMMAND(9, AudioDisabled);
 
-    COMMAND(6, SetBrightness,
+    COMMAND(10, SetBrightness,
         uint8_t value;
         SetBrightness(uint8_t value): value{value} {}
     );
 
-    COMMAND(7, RumblerOk);
-    COMMAND(8, RumblerFail);
+    COMMAND(11, SetTime, 
+        TinyDate value;
+        SetTime(TinyDate value): value{value} {}
+    );
 
-    COMMAND(9, Rumbler,
+    COMMAND(40, RumblerOk);
+    COMMAND(41, RumblerFail);
+
+    COMMAND(42, Rumbler,
         uint8_t intensity;
         uint16_t duration; // duration in 10ms intervals
         Rumbler(uint8_t intensity, uint16_t duration): intensity{intensity}, duration{duration} {}
     );
 
 
-    COMMAND(10, RGBOn);
-    COMMAND(11, RGBOff);
+    COMMAND(100, RGBOn);
+    COMMAND(101, RGBOff);
 
-    COMMAND(12, RGBColor, 
+    COMMAND(102, RGBColor, 
         platform::Color color;
         RGBColor(platform::Color color): color{color} {}
     );

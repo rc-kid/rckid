@@ -47,6 +47,7 @@ public:
         static_assert(AVR_PIN_CHARGING == 11); // PC1
         PORTC.PIN1CTRL |= PORT_ISC_RISING_gc;
 
+        enableAudio(false);
 
         // TODO DELETE ME -- we want no debug mode & sleep instead of wakeup in the initialization in release 
         state_.info.setDebugMode();
@@ -55,6 +56,7 @@ public:
     }
 
     static void loop()  __attribute__((always_inline)) {
+        processI2CCommand();
         if (mode_ == Mode::Sleep)
             sleep();
         if (checkADC0()) {
@@ -223,6 +225,14 @@ public:
         // TODO do rumbler effect
     }
 
+    static void powerOff() {
+        power3v3(false);
+        mode_ = state_.status.dcPower() ? Mode::Charging : Mode::Sleep;
+        if (mode_ == Mode::Charging) {
+            // TODO enable the LEDs
+        }
+    }
+
     static void power5v(bool state) {
         if (state) {
             gpio::output(AVR_PIN_5V_ON);
@@ -326,6 +336,61 @@ public:
         }
     }
 
+    static void processI2CCommand() {
+        if (! i2cCommandReady_)
+            return;
+        switch (state_.buffer[0]) {
+            case cmd::Nop::ID:
+                break;
+            case cmd::PowerOff::ID:
+                powerOff();
+                break;
+            case cmd::ResetRP::ID:
+                rpReset();
+                break;
+            case cmd::ResetAVR::ID:
+                _PROTECTED_WRITE(RSTCTRL.SWRR, RSTCTRL_SWRE_bm);
+                // unreachable here
+            case cmd::BootloaderRP::ID:
+                rpBootloader(); 
+                break;
+            case cmd::BootloaderAVR::ID:
+                // TODO
+                break;
+            case cmd::DebugModeOn::ID:
+                NO_ISR(state_.info.setDebugMode(true));
+                break;
+            case cmd::DebugModeOff::ID:
+                NO_ISR(state_.info.setDebugMode(false));
+                break;
+            case cmd::AudioEnabled::ID:
+                enableAudio(true);
+                break;
+            case cmd::AudioDisabled::ID:
+                enableAudio(false);
+                break;
+            case cmd::SetBrightness::ID: {
+                uint8_t value = cmd::SetBrightness::fromBuffer(state_.buffer).value;
+                setBacklightPWM(value);
+                NO_ISR(state_.config.setBacklight(value));
+                break;
+            }
+            case cmd::SetTime::ID: {
+                TinyDate t = cmd::SetTime::fromBuffer(state_.buffer).value;
+                NO_ISR(state_.time = t);
+                break;
+            }
+            case cmd::RumblerOk::ID:
+            case cmd::RumblerFail::ID:
+            case cmd::Rumbler::ID:
+            default:
+                // unknown command
+                break;
+        }
+        // mark ready to get new command
+        i2cCommandReady_ = false;
+    }
+
     //@}
 
     /** \name Buttons and analog inputs
@@ -342,16 +407,14 @@ public:
 
     // TODO maybe we want this only 32 accumulated samples for faster speed
     static void initializeInputs() {
-        NO_ISR(state_.status.setAudioEnabled(true));
+        static_assert(AVR_PIN_HEADPHONES == 2); // PA6, ADC0 AIN6
         // set voltage reference for ADC0 to 1v1 (temp sensor & vcc checking)
         VREF.CTRLA &= ~ VREF_ADC0REFSEL_gm;
         VREF.CTRLA |= VREF_ADC0REFSEL_1V1_gc;
-        static_assert(AVR_PIN_HEADPHONES == 2); // PA6, ADC0 AIN6
         //PORTA.PIN6CTRL &= ~PORT_ISC_gm;
         //PORTA.PIN6CTRL |= PORT_ISC_INPUT_DISABLE_gc;
         //PORTA.PIN6CTRL &= ~PORT_PULLUPEN_bm;
         // do not disable digital circuitry on the pin as we are using it for output as well to turn off audio entirely (and we don't really care about ADC performance) 
-        gpio::input(AVR_PIN_HEADPHONES);
         // initialize ADC1 to continuously read VCC, headphones and charging info
         ADC0.CTRLA = 0; // turn off
         ADC0.CTRLB = ADC_SAMPNUM_ACC32_gc;
@@ -472,6 +535,21 @@ public:
         }
     }
     //@}
+
+    /** \name Audio 
+     */
+    //@{
+    static void enableAudio(bool value = true) {
+        NO_ISR(state_.status.setAudioEnabled(value));
+        if (value) {
+            gpio::input(AVR_PIN_HEADPHONES);
+        } else {
+            gpio::output(AVR_PIN_HEADPHONES);
+            gpio::low(AVR_PIN_HEADPHONES);
+        }
+    }
+
+    //@}    
 
     /** \name PWM (rumbler and backlight)
 
