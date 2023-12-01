@@ -168,6 +168,7 @@ namespace rckid {
         Info info;
         Config config;
         TinyDate time;
+        uint16_t dbg;
         // this is page EEPROM page size (32bytes) + 1 byte for command / control
         uint8_t buffer[33];
 

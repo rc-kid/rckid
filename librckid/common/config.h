@@ -101,7 +101,7 @@
 #define VCC_CRITICAL_THRESHOLD 310
 /** Headphones detection threshold (when no headphones are inserted, the line is pulled up to 3V, i.e. some 930. 
  */
-#define HEADPHONES_DETECTION_THRESHOLD 512
+#define HEADPHONES_DETECTION_THRESHOLD 100
 
 /** Determines the cartridge detection button is wired and working. If true, the device will not turn on if a cartridge is not present.  
 */

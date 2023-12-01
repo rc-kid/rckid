@@ -53,7 +53,7 @@ int main() {
         c.text() << (state.status.headphones() ? "HP " : "   ");
         c.text() << state.info.vcc() << " " << state.info.temp();
         c.text(0, 40);
-        c.text() << state.time.minutes() << ":" << state.time.seconds();
+        c.text() << state.time.minutes() << ":" << state.time.seconds() << " dbg:" << state.dbg;
         ST7789::updateContinuous(c.rawPixels(), c.rawPixelsCount());
         c.clear();
         ST7789::waitUpdateDone();

@@ -60,6 +60,7 @@ public:
         if (checkADC0()) {
             checkButtons();
             checkLongHomePress();
+            checkCharging();
             // TODO deal with charging info
         }
         if (secondTick_)
@@ -122,6 +123,12 @@ public:
         // TODO
     }
 
+    static void checkCharging() {
+        if (state_.status.dcPower() && (state_.status.charging() == gpio::read(AVR_PIN_CHARGING))) {
+            NO_ISR(state_.status.setCharging(! gpio::read(AVR_PIN_CHARGING)));
+        }
+    }
+
     static void criticalBattery() {
         // TODO
     }
@@ -144,6 +151,9 @@ public:
         // enable falling edge interrupt on the home button to power the device on 
         static_assert(AVR_PIN_BTN_2 == 5); // PB4
         PORTB.PIN4CTRL |= PORT_ISC_FALLING_gc;
+        // set voltage reference for ADC1 to 1v1 (vcc checking)
+        VREF.CTRLC &= ~ VREF_ADC1REFSEL_gm;
+        VREF.CTRLC |= VREF_ADC1REFSEL_1V1_gc;
         // configure ADC1 for sampling the VCC (to detect DC in)
         ADC1.CTRLA = 0; 
         ADC1.CTRLB = ADC_SAMPNUM_ACC64_gc;
@@ -175,7 +185,7 @@ public:
         // disable home interrupt
         static_assert(AVR_PIN_BTN_2 == 5); // PB4
         PORTB.PIN4CTRL &= ~PORT_ISC_gm;
-        initializeADC0();
+        initializeInputs();
         initializePWM();
         // set btn home as pressed (since we came from the IRQ) for the long press countdown to work
         state_.status.setBtnHome(true);
@@ -331,7 +341,11 @@ public:
     //@{
 
     // TODO maybe we want this only 32 accumulated samples for faster speed
-    static void initializeADC0() {
+    static void initializeInputs() {
+        NO_ISR(state_.status.setAudioEnabled(true));
+        // set voltage reference for ADC0 to 1v1 (temp sensor & vcc checking)
+        VREF.CTRLA &= ~ VREF_ADC0REFSEL_gm;
+        VREF.CTRLA |= VREF_ADC0REFSEL_1V1_gc;
         static_assert(AVR_PIN_HEADPHONES == 2); // PA6, ADC0 AIN6
         //PORTA.PIN6CTRL &= ~PORT_ISC_gm;
         //PORTA.PIN6CTRL |= PORT_ISC_INPUT_DISABLE_gc;
@@ -365,6 +379,7 @@ public:
             case ADC_MUXPOS_TEMPSENSE_gc:
                 ADC0.MUXPOS = ADC_MUXPOS_AIN6_gc;
                 ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm; 
+                break;
             case ADC_MUXPOS_AIN6_gc:
             default:
                 ADC0.MUXPOS = ADC_MUXPOS_INTREF_gc;
@@ -391,7 +406,7 @@ public:
             }
             case ADC_MUXPOS_AIN6_gc: {
                 if (state_.status.audioEnabled()) {
-                    bool headphones = value > HEADPHONES_DETECTION_THRESHOLD;
+                    bool headphones = value < HEADPHONES_DETECTION_THRESHOLD;
                     NO_ISR(state_.status.setHeadphones(headphones));
                 }
                 break;
