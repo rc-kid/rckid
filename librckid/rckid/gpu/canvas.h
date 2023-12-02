@@ -51,7 +51,7 @@ namespace rckid {
         size_t rawPixelsCount() const { return w_ * h_; }
     private:
 
-        size_t toOffset(int x, int y) { /*return x * h_ + y; */ return y * w_ + x; }
+        size_t toOffset(int x, int y) { return (w_ - x - 1) * h_ + y; /*return y * w_ + x; */ }
 
         int drawGlyph(int x, int y, char glyph, Color c, GFXfont const * f, int size);
 

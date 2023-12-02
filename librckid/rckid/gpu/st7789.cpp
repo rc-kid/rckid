@@ -42,8 +42,8 @@ namespace rckid {
         sendCommand(DISPON);
         sleep_ms(150);
         //sendCommand(MADCTL, (uint8_t)(MADCTL_MV));
-        sendCommand(MADCTL, (uint8_t)(MADCTL_MY | MADCTL_MV ));
-        //sendCommand(MADCTL, (uint8_t)0);
+        //sendCommand(MADCTL, (uint8_t)(MADCTL_MY | MADCTL_MV ));
+        sendCommand(MADCTL, (uint8_t)0);
         sendCommand(INVON);
 
         fill(Color::Black());
@@ -79,8 +79,8 @@ namespace rckid {
         uint16_t left = (320 - width) / 2;
         uint16_t top = (240 - height) / 2;
         // initiate a full screen rectangle update 
-        sendCommand(CASET, left, (uint16_t) left + width - 1);
-        sendCommand(RASET, left, (uint16_t) top + height - 1);
+        sendCommand(RASET, left, (uint16_t) left + width - 1);
+        sendCommand(CASET, top, (uint16_t) top + height - 1);
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
         // claim the resources required for the continuous mode

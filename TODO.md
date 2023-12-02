@@ -15,12 +15,14 @@
 
 ## PCB
 
+- where to put the rumbler? maybe used encolosed speaker and put rumbler underneath it 
 - try the backlight current limiting to be 3.7Ohm for ~90mA max current
 - increase pads for the bottom side button for easier hand solderablity
-- add pin help text to the GPIO and the programming interface
-- the logo on the back is a bit ugly & not very informative
 - display pins 11-15 maybe should be grounded (unused data pins)
 - pull-up resistors & termination resistors for the SD card (the sd card library has some info)
+
+- add pin help text to the GPIO and the programming interface
+- the logo on the back is a bit ugly & not very informative
 
 ## Extra Cartridges
 

@@ -23,7 +23,7 @@ int main() {
     //gpio::output(15);
 
     ST7789::enterContinuousMode(320, 240);
-    Canvas c{320, 60};
+    Canvas c{320, 240};
     c.setFg(Color::White());
     c.setBg(Color::Black());
     c.setFont(Org_01);
@@ -34,6 +34,7 @@ int main() {
     gpio_set_function(RP_PIN_SCL, GPIO_FUNC_I2C);
     // Make the I2C pins available to picotool
     bi_decl(bi_2pins_with_func(RP_PIN_SDA, RP_PIN_SCL, GPIO_FUNC_I2C));  
+    uint8_t bg = 0;
     while (true) {
         State state;
         i2c_read_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t *)& state, sizeof(State), false);
@@ -54,8 +55,13 @@ int main() {
         c.text() << state.info.vcc() << " " << state.info.temp();
         c.text(0, 40);
         c.text() << state.time.minutes() << ":" << state.time.seconds() << " dbg:" << state.dbg;
+        ST7789::waitVSync();
         ST7789::updateContinuous(c.rawPixels(), c.rawPixelsCount());
+        ST7789::waitUpdateDone();
+        c.setBg(Color::RGB(bg, 0, 0));
+        bg += 4;
         c.clear();
+        /*
         ST7789::waitUpdateDone();
         ST7789::updateContinuous(c.rawPixels(), c.rawPixelsCount());
         ST7789::waitUpdateDone();
@@ -63,6 +69,7 @@ int main() {
         ST7789::waitUpdateDone();
         ST7789::updateContinuous(c.rawPixels(), c.rawPixelsCount());
         ST7789::waitUpdateDone();
+        */
         sleep_ms(50);
     }
     /*
