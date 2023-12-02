@@ -19,14 +19,15 @@
  */
 namespace rckid::cmd {
 
-#define COMMAND(MSG_ID, NAME, ...) \
-    class NAME  { \
-    public: \
-        static uint8_t constexpr ID = MSG_ID; \
+#define COMMAND(MSG_ID, NAME, ...)                               \
+    class NAME  {                                                \
+    public:                                                      \
+        static uint8_t constexpr ID = MSG_ID;                    \
+        uint8_t const id = MSG_ID;                               \
         static NAME const & fromBuffer(uint8_t const * buffer) { \
-            return * reinterpret_cast<NAME const *>(buffer); \
-        } \
-        __VA_ARGS__ \
+            return * reinterpret_cast<NAME const *>(buffer);     \
+        }                                                        \
+        __VA_ARGS__                                              \
     } __attribute__((packed))
 
     COMMAND(0, Nop);
@@ -61,6 +62,7 @@ namespace rckid::cmd {
     );
 
 
+/*
     COMMAND(100, RGBOn);
     COMMAND(101, RGBOff);
 
@@ -68,6 +70,8 @@ namespace rckid::cmd {
         platform::Color color;
         RGBColor(platform::Color color): color{color} {}
     );
+
+*/
 
 
 

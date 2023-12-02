@@ -39,14 +39,7 @@ namespace rckid {
                     i = 0;
                 sleep_us(1);
             }
-              
-
-
-
         }
-
-
-
     }; // rckid::PWM
 
 

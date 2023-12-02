@@ -14,7 +14,8 @@ namespace rckid {
 
     /** Low level driver for the ST7789 display driver. 
      
-        The driver takes care of display initialization and provides basic function for display updates. 
+        The driver takes care of display initialization and provides basic functions for display updates in either direct, or continuous mode. The direct provides blocking interface for sending either commands, or data updates to the system, while the continous mode only supoorts sending data updates via DMA. 
+
      */
     class ST7789 {
     public:

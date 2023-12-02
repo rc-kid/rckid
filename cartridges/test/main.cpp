@@ -9,8 +9,12 @@
 #include "rckid/fonts/TomThumb.h"
 #include "rckid/sd.h"
 #include "common/state.h"
+#include "common/commands.h"
 
 #include "rckid/apu/pwm.h"
+
+//#include "tusb.h"
+//#include "tusb_msc_storage.h"
 
 using namespace rckid;
 
@@ -35,7 +39,17 @@ int main() {
     // Make the I2C pins available to picotool
     bi_decl(bi_2pins_with_func(RP_PIN_SDA, RP_PIN_SCL, GPIO_FUNC_I2C));  
     uint8_t bg = 0;
+    cmd::SetBrightness b{128};
     while (true) {
+        /*
+        if (bg < 128) {
+            b.value = 0;
+            i2c_write_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t*) & b, sizeof (b), false);
+        } else {
+            b.value = 128;
+            i2c_write_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t*) & b, sizeof (b), false);
+        }
+        */
         State state;
         i2c_read_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t *)& state, sizeof(State), false);
         c.text(0,0);
@@ -54,7 +68,7 @@ int main() {
         c.text() << (state.status.headphones() ? "HP " : "   ");
         c.text() << state.info.vcc() << " " << state.info.temp();
         c.text(0, 40);
-        c.text() << state.time.minutes() << ":" << state.time.seconds() << " dbg:" << state.dbg;
+        c.text() << state.time.minutes() << ":" << state.time.seconds() << " bright:" << state.config.backlight();
         ST7789::waitVSync();
         ST7789::updateContinuous(c.rawPixels(), c.rawPixelsCount());
         ST7789::waitUpdateDone();

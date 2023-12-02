@@ -31,6 +31,7 @@ target_link_libraries(librckid
     hardware_dma
     hardware_pwm
     FatFs_SPI
+    tinyusb_device
 )
 
 # create map/bin/hex file etc.

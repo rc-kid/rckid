@@ -157,6 +157,50 @@ namespace rckid {
 
     } __attribute__((packed)); // rckid::Config
 
+    /** LED effects 
+     
+        - StaticColor - display color (color, timer?)
+        - Fadedisplay color, vary brightness (color, speed, min, max)
+        - display color, vary hue (hue, speed)
+     
+     */
+    class RGBEffect {
+    public:
+        enum class Kind : uint8_t {
+            ColorStatic, 
+            ColorBreathe,
+            Rainbow,
+        }; 
+
+        class ColorStatic {
+            uint8_t r;
+            uint8_t g;
+            uint8_t b;
+            uint16_t timeout;
+        } __attribute__((packed)); 
+
+        class ColorBreathe {
+            uint8_t r;
+            uint8_t g;
+            uint8_t b;
+            uint8_t speed;
+        } __attribute__((packed)); 
+
+        class Rainbow {
+            uint8_t hueStart;
+            uint8_t speed;            
+        } __attribute__((packed));
+
+        Kind kind;
+        union {
+            ColorStatic colorStatic;
+            ColorBreathe colorBreathe;
+            Rainbow rainbox;
+        }  __attribute__((packed));
+    } __attribute__((packed)); 
+
+    
+
     /** The entire state of the device. 
         
         This is what the AVR chip will always return when asked to write data. Contains the status first, followed by all other data the AVR is in charge of or simply persisting. 
@@ -175,5 +219,7 @@ namespace rckid {
     } __attribute__((packed)); // rckid::State
 
     static_assert(sizeof(State) <= 256 && "I2C buffer counter on AVR is single byte");
+
+
 
 } // namespace rckid

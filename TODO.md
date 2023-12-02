@@ -42,6 +42,8 @@
 - add I2C commands
 
 
+
+
 ## Shopping List
 
 - buttons (https://www.tme.eu/cz/details/b3u-3000p/mikrospinace-tact/omron-ocb/b3u3000p/)
