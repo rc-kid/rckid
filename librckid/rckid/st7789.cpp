@@ -5,7 +5,7 @@
 #include <hardware/pio.h>
 #include <hardware/dma.h>
 
-#include "st7789.pio.h"
+#include "st7789_rgb.pio.h"
 
 namespace rckid {
 
@@ -22,7 +22,7 @@ namespace rckid {
 
         // load the pio program (we only do this once)
         pio_ = pio0;
-        offset_ = pio_add_program(pio_, &st7789_program);
+        offset_ = pio_add_program(pio_, &st7789_rgb_program);
         sm_ = pio_claim_unused_sm(pio_, true);
         dma_ = dma_claim_unused_channel(true);
         dmaConf_ = dma_channel_get_default_config(dma_); // create default channel config, write does not increment, read does increment, 32bits size
@@ -95,7 +95,7 @@ namespace rckid {
         pio_gpio_init(pio_, RP_PIN_DISP_DB14);
         pio_gpio_init(pio_, RP_PIN_DISP_DB15);
         pio_sm_set_consecutive_pindirs(pio_, sm_, RP_PIN_DISP_DB8, 8, true);
-        pio_sm_config c = st7789_program_get_default_config(offset_);
+        pio_sm_config c = st7789_rgb_program_get_default_config(offset_);
         sm_config_set_sideset_pins(&c, RP_PIN_DISP_WRX);
         sm_config_set_out_pins(&c, RP_PIN_DISP_DB8, 8);
         sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);

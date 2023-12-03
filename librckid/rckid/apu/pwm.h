@@ -13,7 +13,9 @@ namespace rckid {
     class PWM {
     public:
 
-        /** Initializes the PWM channel 
+        /** Initializes the PWM channels.
+
+            For stereo audio, we need three PWMs and 2 DMAs in total  
          */
         static void initialize() {
             gpio_set_function(RP_PIN_PWM_RIGHT, GPIO_FUNC_PWM);

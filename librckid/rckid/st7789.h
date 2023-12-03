@@ -5,10 +5,10 @@
 #include <hardware/dma.h>
 
 
-#include "rckid/rckid.h"
+#include "rckid.h"
 #include "common/config.h"
 
-#include "graphics.h"
+#include "gpu/graphics.h"
 
 namespace rckid {
 

@@ -1,24 +1,24 @@
 #include "hw_config.h"
 
-#include "hardware.h"
 #include "sd.h"
 
 #include <stdio.h>
 #include "pico/stdlib.h"
+#include "common/config.h"
 
 /* Configuration of RP2040 hardware SPI object */
 static spi_t spi = {  
-    .hw_inst = RCKID_SD_SPI,  
-    .miso_gpio = RCKID_PIN_SD_MISO,
-    .mosi_gpio = RCKID_PIN_SD_MOSI,
-    .sck_gpio = RCKID_PIN_SD_SCK,    
-    .baud_rate = RCKID_SD_BAUDRATE   
+    .hw_inst = RP_SD_SPI,  
+    .miso_gpio = RP_PIN_SD_RX,
+    .mosi_gpio = RP_PIN_SD_TX,
+    .sck_gpio = RP_PIN_SD_SCK,    
+    .baud_rate = RP_SD_SPI_BAUDRATE   
 };
 
 /* SPI Interface */
 static sd_spi_if_t spi_if = {
     .spi = &spi,
-    .ss_gpio = RCKID_PIN_SD_CSN
+    .ss_gpio = RP_PIN_SD_CSN
 };
 
 /* Configuration of the SD Card socket object */

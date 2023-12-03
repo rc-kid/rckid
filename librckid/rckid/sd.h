@@ -11,6 +11,11 @@ namespace rckid {
 
     class SD {
     public:
+
+        /** Initializes the SD card. 
+         */
+        static void initialize();
+
         static bool mount();
         static void unmount();
         static bool mounted() { return card_ != nullptr; }

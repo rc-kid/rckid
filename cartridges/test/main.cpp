@@ -3,7 +3,7 @@
 #include "common/config.h"
 #include "rckid/rckid.h"
 #include "rckid/serial.h"
-#include "rckid/gpu/ST7789.h"
+#include "rckid/ST7789.h"
 #include "rckid/gpu/canvas.h"
 #include "rckid/fonts/Org_01.h"
 #include "rckid/fonts/TomThumb.h"
@@ -19,6 +19,7 @@
 using namespace rckid;
 
 int main() {
+    //cpu_overclock_max();
     Serial::initialize();
     ST7789::initialize();
     printf("Initialized --test\n");

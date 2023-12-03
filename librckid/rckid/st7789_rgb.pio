@@ -2,24 +2,12 @@
 ; 
 ; Since in continuous mode we only send data bytes forewer
 
-.program st7789
+.program st7789_rgb
 ; set aside 1 bit for the WRX 
 .side_set 1
-
 
 .wrap_target
     out pins, 8     side 0
     nop             side 1
     out pins, 8     side 0
     nop             side 1
-
-
-
-; .pro out pins, 8
-;    nop
-;    out pins, 8
-;    mov osr, x 
-;    out pins, 8
-;    nop
-;    out pins, 8
-    

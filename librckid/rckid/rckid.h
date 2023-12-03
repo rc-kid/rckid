@@ -9,9 +9,27 @@
 #include <hardware/i2c.h>
 #include <pico/binary_info.h>
 
+
+#include "color.h"
+
 /** RCKid SDK
  */
 namespace rckid {
+
+    /** Initializes the basic I/O operations. 
+     
+        This must be the first function of the SDK being called. 
+     */
+    void initializeIO(); 
+
+    /** Initializes audio output mic input. 
+     */
+    void initializeAudio();
+
+    /** Initializes the display using the specified pixel format. 
+     */
+    template<typename PIXEL> 
+    void initializeDisplay();
 
     inline uint16_t swapBytes(uint16_t x) {
         return static_cast<uint16_t>((x & 0xff) << 8 | (x >> 8));
@@ -39,6 +57,12 @@ namespace rckid {
 	    sleep_ms(10);
     }
 
+    inline void cpu_overclock_max() {
+        vreg_set_voltage(VREG_VOLTAGE_1_20);
+	    sleep_ms(10);
+        set_sys_clock_khz(250000, true);
+    }
+
     /*
       #ifndef NO_OVERCLOCK
       // Apply a modest overvolt, default is 1.10v.
@@ -51,5 +75,12 @@ namespace rckid {
     */
 
 
+
+    /** Initializes the display for the native RGB 16bit pixels. 
+     */
+    template<>
+    inline void initializeDisplay<ColorRGB>() {
+        
+    }
 
 } // namespace rckid
