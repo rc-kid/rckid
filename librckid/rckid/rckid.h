@@ -10,7 +10,12 @@
 #include <pico/binary_info.h>
 
 
+#include "ST7789.h"
+#include "ST7789_rgb.pio.h"
+#include "ST7789_rgba.pio.h"
 #include "color.h"
+
+#include "utils.h"
 
 /** RCKid SDK
  */
@@ -23,23 +28,17 @@ namespace rckid {
     void initializeIO(); 
 
     /** Initializes audio output mic input. 
+     
+        Should be the second function called unless own audio driver is being used. 
      */
     void initializeAudio();
 
     /** Initializes the display using the specified pixel format. 
+     
+        See the actual implementations for the supported pixel formats below. Each initializer should first initialize the display itself, then enter the continuous mode and finally load the appropriate pio driver.  
      */
-    template<typename PIXEL> 
-    void initializeDisplay();
-
-    inline uint16_t swapBytes(uint16_t x) {
-        return static_cast<uint16_t>((x & 0xff) << 8 | (x >> 8));
-    }    
-
-    // TODO super dumb nanosecond-like delay. Should be changed to take into account the actual cpu clock speed etc
-    inline void sleep_ns(uint32_t ns) {
-        while (ns >= 8) 
-          ns -= 8;
-    }
+    template<typename PIXEL_FORMAT> 
+    void initializeDisplay(int width = 320, int height = 240);
 
     inline void pio_set_clock_speed(PIO pio, unsigned sm, unsigned hz) {
         uint clk = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_SYS) * 1000; // [Hz]
@@ -79,8 +78,11 @@ namespace rckid {
     /** Initializes the display for the native RGB 16bit pixels. 
      */
     template<>
-    inline void initializeDisplay<ColorRGB>() {
-        
+    inline void initializeDisplay<ColorRGB>(int width, int height) {
+        ST7789::initialize();
+        ST7789::enterContinuousMode(width, height);
+        ST7789::loadPIODriver(ST7789_rgb_program, ST7789_rgb_program_init);
+        ST7789::startPIODriver();
     }
 
 } // namespace rckid

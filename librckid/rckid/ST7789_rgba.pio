@@ -1,0 +1,24 @@
+; ST7789 continuous driver for RGBA colors (4444)
+; 
+; To combat the bit shifting in pio, we set the display to RGB666 mode where each channel is sent in a separate mode, then configure the pio with only the upper 4 bits as output, setting the 4 LSBs to 0. Then we simply discard the alpha channela and send the remaining channels out one by one. 
+
+.program ST7789_rgba
+; set aside 1 bit for the WRX 
+.side_set 1
+
+.wrap_target
+    out null, 4 side 0 ; discard the alpha channel
+    out pins, 4 side 0 
+    nop         side 1
+    out pins, 4 side 0
+    nop         side 1
+    out pins, 4 side 0
+    nop         side 1
+
+% c-sdk {
+
+inline void ST7789_rgba_program_init(PIO pio, uint sm, uint offset, uint wrPin, uint dataPin) {
+
+}
+
+%}

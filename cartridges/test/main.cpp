@@ -20,9 +20,11 @@ using namespace rckid;
 
 int main() {
     //cpu_overclock_max();
-    Serial::initialize();
-    ST7789::initialize();
-    printf("Initialized --test\n");
+    //Serial::initialize();
+    initializeIO();
+    initializeDisplay<ColorRGB>(320, 240);
+    //ST7789::initialize();
+    //printf("Initialized --test\n");
     //sd::test();
     //gpio::initialize();
     //gpio::output(15);

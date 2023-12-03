@@ -5,10 +5,11 @@
 #include <hardware/dma.h>
 
 
-#include "rckid.h"
-#include "common/config.h"
 
-#include "gpu/graphics.h"
+#include "common/config.h"
+#include "utils.h"
+
+//#include "gpu/graphics.h"
 
 namespace rckid {
 
@@ -20,31 +21,19 @@ namespace rckid {
     class ST7789 {
     public:
 
+        typedef void (*DriverInitializer)(PIO, uint, uint, uint, uint);
+
         /** Initializes the display. 
          
-            Can also be used to reset the display. 
+            Performs a full reset and initializes the display to 320x240 format with 565 RGB colors and clears the entire display black. 
          */
         static void initialize();
 
-        /** Fills given rectange with the specified color. 
+        /** Loads the specified pio driver. 
          */
-        static void fillRect(Rect r, Color c);
+        static void loadPIODriver(pio_program_t const & driver, DriverInitializer initializer); 
 
-        /** Fills the entire display with the specified color. 
-         */
-        static void fill(Color c) { fillRect(Rect::WH(320, 240), c); }
-
-        /** Copies given pixel data in row-wise format to the specified rectange. 
-         
-            The third argument specifies the size of the color aray (in pixels), and if smaller than the pixels in the rectange, the color data will be wrapped around. 
-         */
-        static void blitRect(Rect r, Color * data, size_t numPixels);
-
-        /** Copies given pixel data in row-wise format to the specified rectange. 
-         
-            The color data provided must contain at least as many pixels as are in the rectange. 
-         */
-        static void blitRect(Rect r, Color * data) { blitRect(r, data, r.width() * r.height()); }
+        static void startPIODriver();
 
         /** Busy waits for the rising edge on the TE display pin, signalling the beginning of the V-blank period. 
          */
@@ -61,7 +50,7 @@ namespace rckid {
 
         static void leaveContinuousMode();
 
-        static void updateContinuous(Color const * data, size_t numPixels);
+        static void updateContinuous(void const * data, size_t numPixels);
 
         static void waitUpdateDone() { while (dma_channel_is_busy(dma_)); }
         //@}

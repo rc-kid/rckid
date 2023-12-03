@@ -2,11 +2,7 @@
 
 ## TODO 
 
-- the level translator seems not to be working allright. The rising edge up takes a *lot* of time from the vlow
-- when no headphones are present, the headphones line only has about 2 volts, not 3volts it is supposed to have. Is this an issue? 
-
 - use PIO for pixel doubling on vline
-
 
 ## Case
 
@@ -14,6 +10,9 @@
 - check if the slim buttons are actually working reasonably well
 
 ## PCB
+
+- Q: the level translator seems not to be working allright. The rising edge up takes a *lot* of time from the vlow
+- Q: when no headphones are present, the headphones line only has about 2 volts, not 3volts it is supposed to have. Is this an issue? 
 
 - where to put the rumbler? maybe used encolosed speaker and put rumbler underneath it 
 - try the backlight current limiting to be 3.7Ohm for ~90mA max current
@@ -24,14 +23,15 @@
 - add pin help text to the GPIO and the programming interface
 - the logo on the back is a bit ugly & not very informative
 
-## Extra Cartridges
-
-- simple cartridge (only FLASH)
-- add SRAM (maybe https://cz.mouser.com/ProductDetail/ISSI/IS66WVS2M8BLL-104NLI?qs=doiCPypUmgFx786bHGqGiQ%3D%3D)
-
-
 - add big cap to vclean and see if it changes stuff 
 
+## RP
+
+- document ST7789
+- add PIO driver unload option
+- add RGBA canvas
+- test the RGBA pio mode 
+- test pixel doubling mode
 
 ## AVR
 
@@ -41,9 +41,6 @@
 - add neopixel & rumbler effects
 - add I2C commands
 
-
-
-
 ## Shopping List
 
 - buttons (https://www.tme.eu/cz/details/b3u-3000p/mikrospinace-tact/omron-ocb/b3u3000p/)
@@ -51,3 +48,10 @@
 - rumbler (maybe this - https://www.tme.eu/cz/details/oky3170/dc-motory/okystar/)
 - precission headers ()
 - screw inserts (https://www.prusa3d.com/product/threaded-inserts-m2-short-100-pcs/)
+
+## Extra Cartridges
+
+- simple cartridge (only FLASH)
+- add SRAM (maybe https://cz.mouser.com/ProductDetail/ISSI/IS66WVS2M8BLL-104NLI?qs=doiCPypUmgFx786bHGqGiQ%3D%3D)
+
+

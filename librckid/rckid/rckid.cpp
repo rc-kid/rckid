@@ -6,7 +6,8 @@ namespace rckid {
 
     void initializeIO() {
         i2c_init(i2c0, RP_I2C_BAUDRATE); 
-        // TODO serial 
+        // TODO detect and initialize the standard peripherals
+        // TODO serial if necessary
     }
 
     void initializeAudio() {

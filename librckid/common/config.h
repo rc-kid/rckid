@@ -54,6 +54,8 @@
 
 #define RP_I2C_BAUDRATE 100000
 
+#define RP_ST7789_BAUDRATE 30000000
+
 
 
 /** AVR Pinout

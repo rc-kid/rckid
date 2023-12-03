@@ -1,11 +1,12 @@
-#include "st7789.h"
+#include "ST7789.h"
 
 #include <pico/time.h>
 #include <hardware/gpio.h>
 #include <hardware/pio.h>
 #include <hardware/dma.h>
 
-#include "st7789_rgb.pio.h"
+
+#include "rckid.h"
 
 namespace rckid {
 
@@ -19,16 +20,6 @@ namespace rckid {
         gpio_put(RP_PIN_DISP_CSX, true);
 
         initializePinsBitBang();
-
-        // load the pio program (we only do this once)
-        pio_ = pio0;
-        offset_ = pio_add_program(pio_, &st7789_rgb_program);
-        sm_ = pio_claim_unused_sm(pio_, true);
-        dma_ = dma_claim_unused_channel(true);
-        dmaConf_ = dma_channel_get_default_config(dma_); // create default channel config, write does not increment, read does increment, 32bits size
-        channel_config_set_transfer_data_size(& dmaConf_, DMA_SIZE_16); // transfer 16 bytes
-        channel_config_set_dreq(& dmaConf_, pio_get_dreq(pio_, sm_, true)); // tell our PIO
-        channel_config_set_read_increment(& dmaConf_, true);
 
         // TODO check the init sequence
         //while (true)
@@ -46,33 +37,35 @@ namespace rckid {
         sendCommand(MADCTL, (uint8_t)0);
         sendCommand(INVON);
 
-        fill(Color::Black());
-    }
-
-    void ST7789::fillRect(Rect r, Color c) {
-        sendCommand(CASET, r.left(), r.right() - 1);
-        sendCommand(RASET, r.top(), r.bottom() - 1);
+        // now clear the entire display black
+        sendCommand(CASET, 0_u16, 240_u16);
+        sendCommand(RASET, 0_u16, 320_u16);
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
-        for (size_t i = 0, e = r.width() * r.height(); i < e; ++i) {
-            sendByte(c.rawValue16() >> 8 & 0xff);
-            sendByte(c.rawValue16() & 0xff);
+        for (size_t i = 0, e =320 * 240; i < e; ++i) {
+            sendByte(0);
+            sendByte(0);
         }
         end();
     }
 
-    void ST7789::blitRect(Rect r, Color * data, size_t numPixels) {
-        sendCommand(CASET, r.left(), r.right() - 1);
-        sendCommand(RASET, r.top(), r.bottom() - 1);
-        beginCommand(RAMWR);
-        gpio_put(RP_PIN_DISP_DCX, true);
-        size_t dIdx = 0;
-        for (size_t i = 0, e = r.width() * r.height(); i < e; ++i) {
-            sendByte(data[dIdx].rawValue16() >> 8 & 0xff);
-            sendByte(data[dIdx].rawValue16() & 0xff);
-            dIdx = (dIdx + 1) % numPixels;
-        }
-        end();
+    void ST7789::loadPIODriver(pio_program_t const & driver, DriverInitializer initializer) {
+        // load the pio program (we only do this once)
+        pio_ = pio0;
+        offset_ = pio_add_program(pio_, & driver);
+        sm_ = pio_claim_unused_sm(pio_, true);
+        dma_ = dma_claim_unused_channel(true);
+        dmaConf_ = dma_channel_get_default_config(dma_); // create default channel config, write does not increment, read does increment, 32bits size
+        channel_config_set_transfer_data_size(& dmaConf_, DMA_SIZE_16); // transfer 16 bytes
+        channel_config_set_dreq(& dmaConf_, pio_get_dreq(pio_, sm_, true)); // tell our PIO
+        channel_config_set_read_increment(& dmaConf_, true);
+        // and now start the driver
+        initializer(pio_, sm_, offset_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
+    }
+
+    void ST7789::startPIODriver() {
+        pio_set_clock_speed(pio_, sm_, RP_ST7789_BAUDRATE);
+        pio_sm_set_enabled(pio_, sm_, true);
     }
 
     void ST7789::enterContinuousMode(unsigned width, unsigned height) {
@@ -83,6 +76,7 @@ namespace rckid {
         sendCommand(CASET, top, (uint16_t) top + height - 1);
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
+        /*
         // claim the resources required for the continuous mode
         pio_gpio_init(pio_, RP_PIN_DISP_WRX);
         pio_sm_set_consecutive_pindirs(pio_, sm_, RP_PIN_DISP_WRX, 1, true);
@@ -95,7 +89,7 @@ namespace rckid {
         pio_gpio_init(pio_, RP_PIN_DISP_DB14);
         pio_gpio_init(pio_, RP_PIN_DISP_DB15);
         pio_sm_set_consecutive_pindirs(pio_, sm_, RP_PIN_DISP_DB8, 8, true);
-        pio_sm_config c = st7789_rgb_program_get_default_config(offset_);
+        pio_sm_config c = ST7789_rgb_program_get_default_config(offset_);
         sm_config_set_sideset_pins(&c, RP_PIN_DISP_WRX);
         sm_config_set_out_pins(&c, RP_PIN_DISP_DB8, 8);
         sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
@@ -105,6 +99,7 @@ namespace rckid {
         // start the pio
         pio_set_clock_speed(pio_, sm_, 30000000);
         pio_sm_set_enabled(pio_, sm_, true);
+        */
     }
 
     void ST7789::leaveContinuousMode() {
@@ -113,7 +108,7 @@ namespace rckid {
         initializePinsBitBang();
     }
 
-    void ST7789::updateContinuous(Color const * data, size_t numPixels) {
+    void ST7789::updateContinuous(void const * data, size_t numPixels) {
         dma_channel_configure(dma_, & dmaConf_, &pio_->txf[sm_], data, numPixels, true); // start
     }
 
