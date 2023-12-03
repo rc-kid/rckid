@@ -1,5 +1,5 @@
 #pragma once
-#include "../gpu/gfx.h"
+#include "rckid/graphics/gfx.h"
 
 // Picopixel by Sebastian Weber.  A tiny font
 // with all characters within a 6 pixel height.

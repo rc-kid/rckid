@@ -85,4 +85,13 @@ namespace rckid {
         ST7789::startPIODriver();
     }
 
+    template<>
+    inline void initializeDisplay<ColorRGBA>(int width, int height) {
+        ST7789::initialize();
+        ST7789::setColorMode(ST7789::ColorMode::RGB666);
+        ST7789::enterContinuousMode(width, height);
+        ST7789::loadPIODriver(ST7789_rgba_program, ST7789_rgba_program_init);
+        ST7789::startPIODriver();
+    }
+
 } // namespace rckid

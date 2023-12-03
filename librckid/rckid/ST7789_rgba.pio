@@ -6,18 +6,41 @@
 ; set aside 1 bit for the WRX 
 .side_set 1
 
+
+; B
 .wrap_target
-    out null, 4 side 0 ; discard the alpha channel
+    out pins, 4 side 0 ; blue
+    nop         side 1
     out pins, 4 side 0 
     nop         side 1
     out pins, 4 side 0
-    nop         side 1
-    out pins, 4 side 0
-    nop         side 1
+    out null, 4 side 1 ; discard the alpha channel
+    ;out pins, 4 side 0
+    ;nop         side 1
 
 % c-sdk {
 
 inline void ST7789_rgba_program_init(PIO pio, uint sm, uint offset, uint wrPin, uint dataPin) {
+    // initialize lower nibble to always low
+    gpio_init_mask(0xf << dataPin);
+    gpio_set_dir_masked(0xf << dataPin, 0xf << dataPin);
+    gpio_put(0xf << dataPin, false);
+    // claim the resources required for the continuous mode
+    pio_gpio_init(pio, wrPin);
+    pio_sm_set_consecutive_pindirs(pio, sm, wrPin, 1, true);
+    // initialize upper nibble to the pio driver
+    pio_gpio_init(pio, dataPin + 4);
+    pio_gpio_init(pio, dataPin + 5);
+    pio_gpio_init(pio, dataPin + 6);
+    pio_gpio_init(pio, dataPin + 7);
+    pio_sm_set_consecutive_pindirs(pio, sm, dataPin + 4, 4, true);
+    pio_sm_config c = ST7789_rgba_program_get_default_config(offset);
+    sm_config_set_sideset_pins(&c, wrPin);
+    sm_config_set_out_pins(&c, dataPin + 4, 4);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+    // enable autopull
+    sm_config_set_out_shift(&c, false, true, 16);
+    pio_sm_init(pio, sm, offset, &c);
 
 }
 

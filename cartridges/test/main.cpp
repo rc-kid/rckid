@@ -4,7 +4,8 @@
 #include "rckid/rckid.h"
 #include "rckid/serial.h"
 #include "rckid/ST7789.h"
-#include "rckid/gpu/canvas.h"
+//#include "rckid/gpu/canvas.h"
+#include "rckid/graphics/canvas.h"
 #include "rckid/fonts/Org_01.h"
 #include "rckid/fonts/TomThumb.h"
 #include "rckid/sd.h"
@@ -18,21 +19,22 @@
 
 using namespace rckid;
 
+using Color = ColorRGBA;
+
 int main() {
     //cpu_overclock_max();
     //Serial::initialize();
     initializeIO();
-    initializeDisplay<ColorRGB>(320, 240);
+    initializeDisplay<Color>(240, 240);
     //ST7789::initialize();
     //printf("Initialized --test\n");
     //sd::test();
     //gpio::initialize();
     //gpio::output(15);
 
-    ST7789::enterContinuousMode(320, 240);
-    Canvas c{320, 240};
-    c.setFg(Color::White());
-    c.setBg(Color::Black());
+    //ST7789::enterContinuousMode(320, 240);
+    Canvas<Color> c{240, 240};
+    c.setFg(Color{255,255,255});
     c.setFont(Org_01);
     //c.text("Hello world!", 0, 25);
     //c.pixel(0,0, Color::Blue());
@@ -75,9 +77,9 @@ int main() {
         ST7789::waitVSync();
         ST7789::updateContinuous(c.rawPixels(), c.rawPixelsCount());
         ST7789::waitUpdateDone();
-        c.setBg(Color::RGB(bg, 0, 0));
+        c.setBg(Color{bg, 0, 0});
         bg += 4;
-        c.clear();
+        c.fill();
         /*
         ST7789::waitUpdateDone();
         ST7789::updateContinuous(c.rawPixels(), c.rawPixelsCount());

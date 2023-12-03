@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef FOO
+
 #include "../rckid.h"
 #include "../writer.h"
 #include "graphics.h"
@@ -69,3 +71,5 @@ namespace rckid {
     }; // rckid::Canvas
 
 } // namespace rckid
+
+#endif

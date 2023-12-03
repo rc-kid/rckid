@@ -26,7 +26,7 @@ namespace rckid {
         sendCommand(SWRESET);
         sleep_ms(150);
         sendCommand(VSCSAD, (uint8_t)0);
-        sendCommand(COLMOD, COLMOD_16);
+        setColorMode(ColorMode::RGB565);
         sendCommand(TEON, TE_VSYNC);
         sendCommand(SLPOUT);
         sleep_ms(150);

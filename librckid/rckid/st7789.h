@@ -20,6 +20,10 @@ namespace rckid {
      */
     class ST7789 {
     public:
+        enum class ColorMode : uint8_t {
+            RGB565 = 0x55,
+            RGB666 = 0x66,
+        }; // ST7789::PixelMode
 
         typedef void (*DriverInitializer)(PIO, uint, uint, uint, uint);
 
@@ -34,6 +38,11 @@ namespace rckid {
         static void loadPIODriver(pio_program_t const & driver, DriverInitializer initializer); 
 
         static void startPIODriver();
+
+
+        static void setColorMode(ColorMode pm) {
+            sendCommand(COLMOD, static_cast<uint8_t>(pm));
+        }
 
         /** Busy waits for the rising edge on the TE display pin, signalling the beginning of the V-blank period. 
          */
@@ -160,8 +169,7 @@ namespace rckid {
         static constexpr uint8_t IDMOFF = 0x38; // idle mode off
         static constexpr uint8_t IDMON = 0x39; // idle mode on (fewer colors, etc.)
 
-        static constexpr uint8_t COLMOD = 0x3a; // Color mode
-        static constexpr uint8_t COLMOD_16 = 0x55; // 16 bit pixel format for both control and RGB interfaces to be sure
+        static constexpr uint8_t COLMOD = 0x3a; // Color mode 
 
         static constexpr uint8_t WRMEMC = 0x3c;
         static constexpr uint8_t STE = 0x44; // set tear scanline

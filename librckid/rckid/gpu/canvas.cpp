@@ -1,5 +1,7 @@
 #include "canvas.h"
 
+
+#ifdef FOO
 namespace rckid {
 
     int Canvas::text(int x, int y, char const * str) {
@@ -31,3 +33,6 @@ namespace rckid {
     }
 
 } // namespace rckid
+
+
+#endif

@@ -1,5 +1,5 @@
 #pragma once
-#include "../gpu/gfx.h"
+#include "rckid/graphics/gfx.h"
 
 /**
 ** The original 3x5 font is licensed under the 3-clause BSD license:
