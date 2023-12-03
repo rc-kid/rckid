@@ -37,11 +37,29 @@ namespace rckid {
          */
         static void loadPIODriver(pio_program_t const & driver, DriverInitializer initializer); 
 
+        /** Starts the previously loaded pio driver. 
+         */
         static void startPIODriver();
 
+        // TODO pio stop
 
+
+        /** Sets the color mode used by the driver. By default RGB565 is used, but RGB666 can be selected instead, in which case 3 bytes are sent per pixel, each containing 6bit color information in the MSBs. 
+         */
         static void setColorMode(ColorMode pm) {
             sendCommand(COLMOD, static_cast<uint8_t>(pm));
+        }
+
+        /** Enables the native rotation of the display, in which the display will be rendered from top right to bottom left in its native rotation. This mode is ideal for properly working vsync. RCKid's graphic primitives compensate for this by different mapping functions and the native mode is thus enabled by default. 
+         */
+        static void nativeRotation() {
+            sendCommand(MADCTL, 0_u8);
+        }
+
+        /** Enables the natural display orientation in which the display is updated from left top to bottom right in the way it is oriented inside RCKid. However, in this mode the vsync information is much less useful. 
+         */
+        static void naturalRotation() {
+            sendCommand(MADCTL, (uint8_t)(MADCTL_MY | MADCTL_MV ));
         }
 
         /** Busy waits for the rising edge on the TE display pin, signalling the beginning of the V-blank period. 

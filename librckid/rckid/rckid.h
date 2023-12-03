@@ -40,13 +40,6 @@ namespace rckid {
     template<typename PIXEL_FORMAT> 
     void initializeDisplay(int width = 320, int height = 240);
 
-    inline void pio_set_clock_speed(PIO pio, unsigned sm, unsigned hz) {
-        uint clk = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_SYS) * 1000; // [Hz]
-        uint clkdiv = (clk / hz);
-        uint clkfrac = (clk - (clkdiv * hz)) * 256 / hz;
-        pio_sm_set_clkdiv_int_frac(pio, sm, clkdiv & 0xffff, clkfrac & 0xff);
-    } 
-
     inline void cpu_overclock(unsigned hz) {
         set_sys_clock_khz(hz / 1000, true);
     }

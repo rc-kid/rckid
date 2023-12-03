@@ -29,9 +29,8 @@
 
 - document ST7789
 - add PIO driver unload option
-- add RGBA canvas
-- test the RGBA pio mode 
-- test pixel doubling mode
+- add pixel doubling mode
+- probably the ColorRGBA and picosystem color are not binary compatible, check
 
 ## AVR
 
@@ -40,6 +39,12 @@
 - add battery critical power off
 - add neopixel & rumbler effects
 - add I2C commands
+
+## Picosystem
+
+- clearing the screen does not work (perhaps overclocking issue)
+- IRQ does not work
+- add audio & friends and AVR integration
 
 ## Shopping List
 

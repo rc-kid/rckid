@@ -34,7 +34,7 @@ namespace rckid {
         sleep_ms(150);
         //sendCommand(MADCTL, (uint8_t)(MADCTL_MV));
         //sendCommand(MADCTL, (uint8_t)(MADCTL_MY | MADCTL_MV ));
-        sendCommand(MADCTL, (uint8_t)0);
+        sendCommand(MADCTL, 0_u8);
         sendCommand(INVON);
 
         // now clear the entire display black
