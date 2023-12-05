@@ -8,10 +8,34 @@
 
 #include "common/config.h"
 #include "utils.h"
+#include "ST7789_rgb.pio.h"
+#include "ST7789_rgb_double.pio.h"
+#include "ST7789_rgba.pio.h"
+#include "color.h"
 
 //#include "gpu/graphics.h"
 
 namespace rckid {
+
+    namespace display_profile {
+
+        struct RGB {
+            using Color = ColorRGB;
+            static constexpr int Width = 320;
+            static constexpr int Height = 240;
+            static constexpr bool NativeMode = true;
+            static constexpr bool Double = false;
+        }; 
+
+        struct RGBDouble {
+            using Color = ColorRGB;
+            static constexpr int Width = 160;
+            static constexpr int Height = 120;
+            static constexpr bool NativeMode = true;
+            static constexpr bool Double = false;
+        }; 
+
+    } // namespace rckid::display_config
 
     /** Low level driver for the ST7789 display driver. 
      
@@ -27,11 +51,21 @@ namespace rckid {
 
         typedef void (*DriverInitializer)(PIO, uint, uint, uint, uint);
 
+        /** Initializes the display with given profile. 
+         */
+        template<typename PROFILE>
+        static void initialize();
+
+        /** Updates the entire display area using given profile information. 
+         */
+        template<typename PROFILE>
+        static void update(typename PROFILE::Color const * pixels, int width, int height);
+
         /** Initializes the display. 
          
             Performs a full reset and initializes the display to 320x240 format with 565 RGB colors and clears the entire display black. 
          */
-        static void initialize();
+        static void reset();
 
         /** Loads the specified pio driver. 
          */
@@ -62,6 +96,18 @@ namespace rckid {
             sendCommand(MADCTL, (uint8_t)(MADCTL_MY | MADCTL_MV ));
         }
 
+        /** Sets the columns range for RAM updates. Columns are referenced in the native mode and can be from 0 to 239 inclusive. 
+        */
+        static void setColumnRange(uint16_t start, uint16_t end) {
+            sendCommand(CASET, start, end);
+        }
+
+        /** Sets the rows range for RAM updates. Rows are references in the native mode and can be from 0 to 319 inclusive. 
+         */
+        static void setRowRange(uint16_t start, uint16_t end) {
+            sendCommand(RASET, start, end);
+        }
+
         /** Busy waits for the rising edge on the TE display pin, signalling the beginning of the V-blank period. 
          */
         static void waitVSync() { while (gpio_get(RP_PIN_DISP_TE)); while (! gpio_get(RP_PIN_DISP_TE)); }
@@ -72,16 +118,13 @@ namespace rckid {
 
             The continuous mode is not intended to be used directly by the users, but rather should be utilized by various gpu modes, such as framebuffer or tiling engine. 
          */
-        //@{
-        static void enterContinuousMode(unsigned width = 320, unsigned height = 240);
+        static void enterContinuousMode();
 
         static void leaveContinuousMode();
 
         static void updateContinuous(void const * data, size_t numPixels);
 
-        static void waitUpdateDone() { while (dma_channel_is_busy(dma_)); }
-        //@}
-
+        static void waitUpdateDone() { while (transferStart_ != nullptr); }
 
     private:
 
@@ -136,16 +179,18 @@ namespace rckid {
             gpio_put(RP_PIN_DISP_WRX, false);
         }
 
+        static void irqDMADone();
+
         static inline PIO pio_;
         static inline uint sm_;
         static inline uint offset_;
         static inline uint dma_ = -1;
         static inline dma_channel_config dmaConf_;
 
-        /** Current size of the display. 
-         */
-        static inline uint16_t rows_;
-        static inline uint16_t cols_; 
+        static inline volatile uint8_t const * transferStart_ = nullptr;
+        static inline uint8_t const * transferEnd_;
+        static inline size_t lineSizeInBytes_;
+
 
 
         static constexpr uint8_t SWRESET = 0x01;
@@ -194,5 +239,45 @@ namespace rckid {
 
 
     }; // rckid::ST7789
+
+    /** Initializes the display for the native RGB 16bit pixels. 
+     */
+    template<>
+    inline void ST7789::initialize<display_profile::RGB>() {
+        reset();
+        setColumnRange(0, 239);
+        setRowRange(0, 319);
+        enterContinuousMode();
+        loadPIODriver(ST7789_rgb_program, ST7789_rgb_program_init);
+        startPIODriver();
+    }
+
+    template<>
+    inline void ST7789::update<display_profile::RGB>(ColorRGB const * pixels, int width, int height) {
+        transferEnd_ = (uint8_t const *)pixels;
+        transferStart_ = (uint8_t const *)pixels;
+        dma_channel_transfer_from_buffer_now(dma_, pixels, width * height);
+        //dma_channel_configure(dma_, & dmaConf_, &pio_->txf[sm_], pixels, width * height, true); // start
+    }
+
+    template<>
+    inline void ST7789::initialize<display_profile::RGBDouble>() {
+        reset();
+        setColumnRange(0, 239);
+        setRowRange(0, 319);
+        enterContinuousMode();
+        loadPIODriver(ST7789_rgb_double_program, ST7789_rgb_double_program_init);
+        startPIODriver();
+    }
+
+    template<>
+    inline void ST7789::update<display_profile::RGBDouble>(ColorRGB const * pixels, int width, int height) {
+        transferEnd_ = (uint8_t const *)(pixels + width * height);
+        transferStart_ = (uint8_t const *)(pixels + height);
+        lineSizeInBytes_ = height * 2;
+        dma_channel_transfer_from_buffer_now(dma_, pixels, height);
+        //dma_channel_configure(dma_, & dmaConf_, &pio_->txf[sm_], pixels, width * height, true); // start
+    }
+
 
 } // namespace rckid

@@ -55,7 +55,9 @@ namespace rckid {
 
     private:
 
-        size_t map(int x, int y) { return (w_ - x -1) * h_ + y; }
+        size_t map(int x, int y) __attribute__((always_inline)) { 
+            return (w_ - x - 1) * h_ + y; 
+        }
 
         int drawGlyph(int x, int y, char c, Color color, GFXfont const * f, int size) {
             GFXglyph * glyph = f->glyph + (c - f->first);

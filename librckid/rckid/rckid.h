@@ -11,15 +11,14 @@
 
 
 #include "ST7789.h"
-#include "ST7789_rgb.pio.h"
-#include "ST7789_rgba.pio.h"
-#include "color.h"
 
 #include "utils.h"
 
 /** RCKid SDK
  */
 namespace rckid {
+
+    using Display = ST7789;
 
     /** Initializes the basic I/O operations. 
      
@@ -37,8 +36,8 @@ namespace rckid {
      
         See the actual implementations for the supported pixel formats below. Each initializer should first initialize the display itself, then enter the continuous mode and finally load the appropriate pio driver.  
      */
-    template<typename PIXEL_FORMAT> 
-    void initializeDisplay(int width = 320, int height = 240);
+    template<typename DISPLAY_CONFIG> 
+    void initializeDisplay();
 
     inline void cpu_overclock(unsigned hz) {
         set_sys_clock_khz(hz / 1000, true);
@@ -68,23 +67,33 @@ namespace rckid {
 
 
 
-    /** Initializes the display for the native RGB 16bit pixels. 
-     */
-    template<>
-    inline void initializeDisplay<ColorRGB>(int width, int height) {
-        ST7789::initialize();
-        ST7789::enterContinuousMode(width, height);
-        ST7789::loadPIODriver(ST7789_rgb_program, ST7789_rgb_program_init);
-        ST7789::startPIODriver();
-    }
 
+    /*
     template<>
-    inline void initializeDisplay<ColorRGBA>(int width, int height) {
+    inline void initializeDisplay<DisplayRGBA>() {
         ST7789::initialize();
         ST7789::setColorMode(ST7789::ColorMode::RGB666);
-        ST7789::enterContinuousMode(width, height);
+        ST7789::setColumnRange(0, 239);
+        ST7789::setRowRange(0, 319);
+        ST7789::enterContinuousMode();
         ST7789::loadPIODriver(ST7789_rgba_program, ST7789_rgba_program_init);
         ST7789::startPIODriver();
     }
+    */
+
+    /*
+    template<>
+    inline void initializeDisplay<ColorPicosystem>(int width, int height) {
+        uint16_t left = (320 - width) / 2;
+        uint16_t top = (240 - height) / 2;
+        ST7789::initialize();
+        ST7789::setColorMode(ST7789::ColorMode::RGB666);
+        ST7789::setColumnRange(top, top + height - 1);
+        ST7789::setRowRange(left, left + width - 1);
+        ST7789::enterContinuousMode();
+        ST7789::loadPIODriver(ST7789_rgba_program, ST7789_rgba_program_init);
+        ST7789::startPIODriver();
+    }
+    */
 
 } // namespace rckid

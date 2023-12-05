@@ -73,6 +73,4 @@ namespace rckid {
 
     static_assert(sizeof(ColorRGBA) == 2);
 
-
-
 }; // namespace rckid

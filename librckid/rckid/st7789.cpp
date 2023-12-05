@@ -10,7 +10,7 @@
 
 namespace rckid {
 
-    void ST7789::initialize() {
+    void ST7789::reset() {
         gpio_init(RP_PIN_DISP_TE);
         gpio_set_dir(RP_PIN_DISP_TE, GPIO_IN);
         gpio_init(RP_PIN_DISP_DCX);
@@ -38,8 +38,8 @@ namespace rckid {
         sendCommand(INVON);
 
         // now clear the entire display black
-        sendCommand(CASET, 0_u16, 240_u16);
-        sendCommand(RASET, 0_u16, 320_u16);
+        setColumnRange(0, 239);
+        setRowRange(0, 319);
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
         for (size_t i = 0, e =320 * 240; i < e; ++i) {
@@ -59,6 +59,12 @@ namespace rckid {
         channel_config_set_transfer_data_size(& dmaConf_, DMA_SIZE_16); // transfer 16 bytes
         channel_config_set_dreq(& dmaConf_, pio_get_dreq(pio_, sm_, true)); // tell our PIO
         channel_config_set_read_increment(& dmaConf_, true);
+        dma_channel_configure(dma_, & dmaConf_, &pio_->txf[sm_], nullptr, 0, false); // start
+
+        // enable IRQ0 on the DMA channel
+        dma_channel_set_irq0_enabled(dma_, true);
+        irq_set_exclusive_handler(DMA_IRQ_0, irqDMADone);
+        irq_set_enabled(DMA_IRQ_0, true);
         // and now start the driver
         initializer(pio_, sm_, offset_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
     }
@@ -68,12 +74,12 @@ namespace rckid {
         pio_sm_set_enabled(pio_, sm_, true);
     }
 
-    void ST7789::enterContinuousMode(unsigned width, unsigned height) {
-        uint16_t left = (320 - width) / 2;
-        uint16_t top = (240 - height) / 2;
+    void ST7789::enterContinuousMode() {
+        //uint16_t left = (320 - width) / 2;
+        //uint16_t top = (240 - height) / 2;
         // initiate a full screen rectangle update 
-        sendCommand(RASET, left, (uint16_t) left + width - 1);
-        sendCommand(CASET, top, (uint16_t) top + height - 1);
+        //sendCommand(RASET, left, (uint16_t) left + width - 1);
+        //sendCommand(CASET, top, (uint16_t) top + height - 1);
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
         /*
@@ -119,5 +125,23 @@ namespace rckid {
         //gpio_put_masked(outputPinsMask, false);
         gpio_put(RP_PIN_DISP_WRX, false);
     }
+
+    void ST7789::irqDMADone() {
+        if(dma_channel_get_irq0_status(dma_)) {
+            dma_channel_acknowledge_irq0(dma_); // clear the flag
+            if (transferStart_ != nullptr) {
+                size_t cnt = transferEnd_ - transferStart_;
+                if (cnt > 2 * lineSizeInBytes_)
+                    cnt = 2 * lineSizeInBytes_;
+                if (cnt > 0) {
+                    dma_channel_transfer_from_buffer_now(dma_, transferStart_, cnt / 2);
+                    transferStart_ += lineSizeInBytes_;
+                }
+                if (transferStart_ >= transferEnd_)
+                    transferStart_ = nullptr;
+            }
+        }
+    }
+
 
 } // namespace rckid

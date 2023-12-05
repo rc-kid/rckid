@@ -19,13 +19,14 @@
 
 using namespace rckid;
 
-using Color = ColorRGBA;
+using DP = display_profile::RGBDouble;
+using Color = DP::Color;
 
 int main() {
     //cpu_overclock_max();
     //Serial::initialize();
     initializeIO();
-    initializeDisplay<Color>(240, 240);
+    Display::initialize<DP>();
     //ST7789::initialize();
     //printf("Initialized --test\n");
     //sd::test();
@@ -33,7 +34,7 @@ int main() {
     //gpio::output(15);
 
     //ST7789::enterContinuousMode(320, 240);
-    Canvas<Color> c{240, 240};
+    Canvas<DP::Color> c{DP::Width, DP::Height};
     c.setFg(Color{255,255,255});
     c.setFont(Org_01);
     //c.text("Hello world!", 0, 25);
@@ -74,9 +75,11 @@ int main() {
         c.text() << state.info.vcc() << " " << state.info.temp();
         c.text(0, 40);
         c.text() << state.time.minutes() << ":" << state.time.seconds() << " bright:" << state.config.backlight();
-        ST7789::waitVSync();
-        ST7789::updateContinuous(c.rawPixels(), c.rawPixelsCount());
-        ST7789::waitUpdateDone();
+        Display::waitVSync();
+        Display::update<DP>(c.rawPixels(), DP::Width, DP::Height);
+        //ST7789::waitVSync();
+        //ST7789::updateContinuous(c.rawPixels(), c.rawPixelsCount());
+        Display::waitUpdateDone();
         c.setBg(Color{bg, 0, 0});
         bg += 4;
         c.fill();
@@ -90,6 +93,7 @@ int main() {
         ST7789::waitUpdateDone();
         */
         sleep_ms(50);
+        //while (true);
     }
     /*
     uint8_t rxd;
