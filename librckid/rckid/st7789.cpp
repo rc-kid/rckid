@@ -129,16 +129,17 @@ namespace rckid {
     void ST7789::irqDMADone() {
         if(dma_channel_get_irq0_status(dma_)) {
             dma_channel_acknowledge_irq0(dma_); // clear the flag
-            if (transferStart_ != nullptr) {
-                size_t cnt = transferEnd_ - transferStart_;
-                if (cnt > 2 * lineSizeInBytes_)
-                    cnt = 2 * lineSizeInBytes_;
-                if (cnt > 0) {
-                    dma_channel_transfer_from_buffer_now(dma_, transferStart_, cnt / 2);
-                    transferStart_ += lineSizeInBytes_;
+            if (transferStart_ < transferEnd_) {
+                size_t numPixels = (transferEnd_ - transferStart_) / 2;
+                if (numPixels >= 2 * lineSizeInPixels_) {
+                    dma_channel_transfer_from_buffer_now(dma_, transferStart_, 2 * lineSizeInPixels_); // two lines
+                    transferStart_ += 2 * lineSizeInPixels_;  // line size in bytes
+                } else {
+                    dma_channel_transfer_from_buffer_now(dma_, transferStart_, numPixels);
+                    transferStart_ += numPixels * 2; // bytes
                 }
-                if (transferStart_ >= transferEnd_)
-                    transferStart_ = nullptr;
+            } else {
+                transferStart_ = nullptr;
             }
         }
     }

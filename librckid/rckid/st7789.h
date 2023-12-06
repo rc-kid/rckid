@@ -189,7 +189,7 @@ namespace rckid {
 
         static inline volatile uint8_t const * transferStart_ = nullptr;
         static inline uint8_t const * transferEnd_;
-        static inline size_t lineSizeInBytes_;
+        static inline size_t lineSizeInPixels_;
 
 
 
@@ -273,9 +273,9 @@ namespace rckid {
     template<>
     inline void ST7789::update<display_profile::RGBDouble>(ColorRGB const * pixels, int width, int height) {
         transferEnd_ = (uint8_t const *)(pixels + width * height);
-        transferStart_ = (uint8_t const *)(pixels + height);
-        lineSizeInBytes_ = height * 2;
-        dma_channel_transfer_from_buffer_now(dma_, pixels, height);
+        transferStart_ = (uint8_t const *)(pixels);
+        lineSizeInPixels_ = height;
+        dma_channel_transfer_from_buffer_now(dma_, pixels, lineSizeInPixels_);
         //dma_channel_configure(dma_, & dmaConf_, &pio_->txf[sm_], pixels, width * height, true); // start
     }
 
