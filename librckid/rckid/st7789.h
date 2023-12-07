@@ -11,6 +11,7 @@
 #include "ST7789_rgb.pio.h"
 #include "ST7789_rgb_double.pio.h"
 #include "ST7789_rgba.pio.h"
+#include "ST7789_rgba_double.pio.h"
 #include "color.h"
 
 //#include "gpu/graphics.h"
@@ -35,6 +36,22 @@ namespace rckid {
             static constexpr bool Double = false;
         }; 
 
+        struct RGBA {
+            using Color = ColorRGBA;
+            static constexpr int Width = 320;
+            static constexpr int Height = 240;
+            static constexpr bool NativeMode = true;
+            static constexpr bool Double = false;
+        };
+
+        struct RGBADouble {
+            using Color = ColorRGBA;
+            static constexpr int Width = 160;
+            static constexpr int Height = 120;
+            static constexpr bool NativeMode = true;
+            static constexpr bool Double = true;
+        };
+
     } // namespace rckid::display_config
 
     /** Low level driver for the ST7789 display driver. 
@@ -48,6 +65,13 @@ namespace rckid {
             RGB565 = 0x55,
             RGB666 = 0x66,
         }; // ST7789::PixelMode
+
+        enum class DisplayMode: uint8_t {
+            Native = 0, 
+            NativeBGR = 0x08, // MADCTL_BGR
+            Natural = 0x80 + 0x20, // MADCTL_MY | MADCTL_MV 
+            NaturalBGR = 0x80 + 0x20 + 0x08, // MADCTL_MY | MADCTL_MV | MADCTL_BGR
+        }; 
 
         typedef void (*DriverInitializer)(PIO, uint, uint, uint, uint);
 
@@ -84,16 +108,10 @@ namespace rckid {
             sendCommand(COLMOD, static_cast<uint8_t>(pm));
         }
 
-        /** Enables the native rotation of the display, in which the display will be rendered from top right to bottom left in its native rotation. This mode is ideal for properly working vsync. RCKid's graphic primitives compensate for this by different mapping functions and the native mode is thus enabled by default. 
+        /** Sets the corresponding display mode (orientation and color order). 
          */
-        static void nativeRotation() {
-            sendCommand(MADCTL, 0_u8);
-        }
-
-        /** Enables the natural display orientation in which the display is updated from left top to bottom right in the way it is oriented inside RCKid. However, in this mode the vsync information is much less useful. 
-         */
-        static void naturalRotation() {
-            sendCommand(MADCTL, (uint8_t)(MADCTL_MY | MADCTL_MV ));
+        static void setDisplayMode(DisplayMode dm) {
+            sendCommand(MADCTL, static_cast<uint8_t>(dm));
         }
 
         /** Sets the columns range for RAM updates. Columns are referenced in the native mode and can be from 0 to 239 inclusive. 
@@ -257,7 +275,6 @@ namespace rckid {
         transferEnd_ = (uint8_t const *)pixels;
         transferStart_ = (uint8_t const *)pixels;
         dma_channel_transfer_from_buffer_now(dma_, pixels, width * height);
-        //dma_channel_configure(dma_, & dmaConf_, &pio_->txf[sm_], pixels, width * height, true); // start
     }
 
     template<>
@@ -276,8 +293,47 @@ namespace rckid {
         transferStart_ = (uint8_t const *)(pixels);
         lineSizeInPixels_ = height;
         dma_channel_transfer_from_buffer_now(dma_, pixels, lineSizeInPixels_);
-        //dma_channel_configure(dma_, & dmaConf_, &pio_->txf[sm_], pixels, width * height, true); // start
     }
+
+    template<>
+    inline void ST7789::initialize<display_profile::RGBA>() {
+        reset();
+        setColumnRange(0, 239);
+        setRowRange(0, 319);
+        setColorMode(ColorMode::RGB666);
+        setDisplayMode(DisplayMode::Native);
+        enterContinuousMode();
+        loadPIODriver(ST7789_rgba_program, ST7789_rgba_program_init);
+        startPIODriver();
+    }
+
+    template<>
+    inline void ST7789::update<display_profile::RGBA>(ColorRGBA const * pixels, int width, int height) {
+        transferEnd_ = (uint8_t const *)pixels;
+        transferStart_ = (uint8_t const *)pixels;
+        dma_channel_transfer_from_buffer_now(dma_, pixels, width * height);
+    }
+
+    template<>
+    inline void ST7789::initialize<display_profile::RGBADouble>() {
+        reset();
+        setColumnRange(0, 239);
+        setRowRange(0, 319);
+        setColorMode(ColorMode::RGB666);
+        setDisplayMode(DisplayMode::Native);
+        enterContinuousMode();
+        loadPIODriver(ST7789_rgba_double_program, ST7789_rgba_double_program_init);
+        startPIODriver();
+    }
+
+    template<>
+    inline void ST7789::update<display_profile::RGBADouble>(ColorRGBA const * pixels, int width, int height) {
+        transferEnd_ = (uint8_t const *)(pixels + width * height);
+        transferStart_ = (uint8_t const *)(pixels);
+        lineSizeInPixels_ = height;
+        dma_channel_transfer_from_buffer_now(dma_, pixels, lineSizeInPixels_);
+    }
+
 
 
 } // namespace rckid

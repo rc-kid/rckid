@@ -30,7 +30,7 @@
 - document ST7789
 - add PIO driver unload option
 - add pixel doubling mode
-- probably the ColorRGBA and picosystem color are not binary compatible, check
+- rgba is not binary compatible with picosystem, fix - picosystem has its driver color-wise working now
 
 ## AVR
 

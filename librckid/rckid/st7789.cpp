@@ -70,7 +70,6 @@ namespace rckid {
     }
 
     void ST7789::startPIODriver() {
-        pio_set_clock_speed(pio_, sm_, RP_ST7789_BAUDRATE);
         pio_sm_set_enabled(pio_, sm_, true);
     }
 

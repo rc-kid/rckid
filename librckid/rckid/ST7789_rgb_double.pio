@@ -10,15 +10,18 @@
     pull            side 0 
     mov x, osr      side 0
     out pins, 8     side 0
-    nop             side 1
-    out pins, 8     side 0
-    mov osr, x      side 1
-    out pins, 8     side 0
-    nop             side 1
-    out pins, 8     side 0
-    nop             side 1
+    nop             side 1 [2]
+    out pins, 8     side 0 [2]
+    mov osr, x      side 1 [2]
+    out pins, 8     side 0 [2]
+    nop             side 1 [2]
+    out pins, 8     side 0 [2]
+    nop             side 1 [2]
 
 % c-sdk {
+
+#include "common/config.h"
+#include "rckid/utils.h"
 
 inline void ST7789_rgb_double_program_init(PIO pio, uint sm, uint offset, uint wrPin, uint dataPin) {
     // claim the resources required for the continuous mode
@@ -40,6 +43,8 @@ inline void ST7789_rgb_double_program_init(PIO pio, uint sm, uint offset, uint w
     // disable autopull
     sm_config_set_out_shift(&c, false, false, 32);
     pio_sm_init(pio, sm, offset, &c);
+    // increase pio clock by three (3 insns per cycle)
+    pio_set_clock_speed(pio, sm, RP_ST7789_BAUDRATE * 3);
 }
 
 %}

@@ -19,7 +19,7 @@
 
 using namespace rckid;
 
-using DP = display_profile::RGBDouble;
+using DP = display_profile::RGBADouble;
 using Color = DP::Color;
 
 int main() {
