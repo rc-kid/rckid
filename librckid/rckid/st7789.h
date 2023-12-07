@@ -12,6 +12,8 @@
 #include "ST7789_rgb_double.pio.h"
 #include "ST7789_rgba.pio.h"
 #include "ST7789_rgba_double.pio.h"
+#include "ST7789_picosystem.pio.h"
+#include "ST7789_picosystem_double.pio.h"
 #include "color.h"
 
 //#include "gpu/graphics.h"
@@ -49,6 +51,22 @@ namespace rckid {
             static constexpr int Width = 160;
             static constexpr int Height = 120;
             static constexpr bool NativeMode = true;
+            static constexpr bool Double = true;
+        };
+
+        struct Picosystem {
+            using Color = ColorRGBA;
+            static constexpr int Width = 240;
+            static constexpr int Height = 240;
+            static constexpr bool NativeMode = false;
+            static constexpr bool Double = false;
+        };
+
+        struct PicosystemDouble {
+            using Color = ColorRGBA;
+            static constexpr int Width = 120;
+            static constexpr int Height = 120;
+            static constexpr bool NativeMode = false;
             static constexpr bool Double = true;
         };
 
@@ -331,6 +349,45 @@ namespace rckid {
         transferEnd_ = (uint8_t const *)(pixels + width * height);
         transferStart_ = (uint8_t const *)(pixels);
         lineSizeInPixels_ = height;
+        dma_channel_transfer_from_buffer_now(dma_, pixels, lineSizeInPixels_);
+    }
+
+    template<>
+    inline void ST7789::initialize<display_profile::Picosystem>() {
+        reset();
+        setDisplayMode(DisplayMode::Natural);
+        setRowRange(0, 239);
+        setColumnRange(40, 279);
+        setColorMode(ColorMode::RGB666);
+        enterContinuousMode();
+        loadPIODriver(ST7789_picosystem_program, ST7789_picosystem_program_init);
+        startPIODriver();
+    }
+
+    template<>
+    inline void ST7789::update<display_profile::Picosystem>(ColorRGBA const * pixels, int width, int height) {
+        transferEnd_ = (uint8_t const *)pixels;
+        transferStart_ = (uint8_t const *)pixels;
+        dma_channel_transfer_from_buffer_now(dma_, pixels, width * height);
+    }
+
+    template<>
+    inline void ST7789::initialize<display_profile::PicosystemDouble>() {
+        reset();
+        setDisplayMode(DisplayMode::Natural);
+        setRowRange(0, 239);
+        setColumnRange(40, 279);
+        setColorMode(ColorMode::RGB666);
+        enterContinuousMode();
+        loadPIODriver(ST7789_picosystem_double_program, ST7789_picosystem_double_program_init);
+        startPIODriver();
+    }
+
+    template<>
+    inline void ST7789::update<display_profile::PicosystemDouble>(ColorRGBA const * pixels, int width, int height) {
+        transferEnd_ = (uint8_t const *)(pixels + width * height);
+        transferStart_ = (uint8_t const *)(pixels);
+        lineSizeInPixels_ = width;
         dma_channel_transfer_from_buffer_now(dma_, pixels, lineSizeInPixels_);
     }
 

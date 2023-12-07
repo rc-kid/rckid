@@ -1,24 +1,25 @@
-; ST7789 continuous driver for RGBA colors (4444)
-; 
-; To combat the bit shifting in pio, we set the display to RGB666 mode where each channel is sent in a separate mode, then configure the pio with only the upper 4 bits as output, setting the 4 LSBs to 0. Then we simply discard the alpha channela and send the remaining channels out one by one. 
 
-.program ST7789_rgba_double
+.program ST7789_picosystem
 ; set aside 1 bit for the WRX 
 .side_set 1
 
-
 .wrap_target
-    mov x, osr  side 0
-    out pins, 4 side 0 ; blue
-    nop         side 1
-    out pins, 4 side 0 
-    nop         side 1
-    out pins, 4 side 0
-    out null, 4 side 1 ; discard the alpha channel
+    pull          side 0
+    mov x, osr    side 0
+    out null, 4   side 0
+    out pins, 4   side 0
+    mov osr, x    side 1 [3]
+    out pins, 4   side 0 [3]
+    out null, 8   side 1 [3]
+    out pins, 4   side 0 [3]
+    nop           side 1 [3]
 
 % c-sdk {
 
-inline void ST7789_rgba_double_program_init(PIO pio, uint sm, uint offset, uint wrPin, uint dataPin) {
+#include "common/config.h"
+#include "rckid/utils.h"
+
+inline void ST7789_picosystem_program_init(PIO pio, uint sm, uint offset, uint wrPin, uint dataPin) {
     // initialize lower nibble to always low
     gpio_init_mask(0xf << dataPin);
     gpio_set_dir_masked(0xf << dataPin, 0xf << dataPin);
@@ -32,13 +33,14 @@ inline void ST7789_rgba_double_program_init(PIO pio, uint sm, uint offset, uint 
     pio_gpio_init(pio, dataPin + 6);
     pio_gpio_init(pio, dataPin + 7);
     pio_sm_set_consecutive_pindirs(pio, sm, dataPin + 4, 4, true);
-    pio_sm_config c = ST7789_rgba_double_program_get_default_config(offset);
+    pio_sm_config c = ST7789_picosystem_program_get_default_config(offset);
     sm_config_set_sideset_pins(&c, wrPin);
     sm_config_set_out_pins(&c, dataPin + 4, 4);
     sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
-    // enable autopull
-    sm_config_set_out_shift(&c, false, true, 16);
+    // disable autopull
+    sm_config_set_out_shift(&c, false, false, 32);
     pio_sm_init(pio, sm, offset, &c);
+    pio_set_clock_speed(pio, sm, RP_ST7789_BAUDRATE * 4);
 }
 
 %}
