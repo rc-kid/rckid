@@ -8,19 +8,24 @@ struct sd_card_t;
 
 namespace rckid {
 
-
     class SD {
     public:
-
-        /** Initializes the SD card. 
-         */
-        static void initialize();
 
         static bool mount();
         static void unmount();
         static bool mounted() { return card_ != nullptr; }
 
+        /** Returns the total number of bytes available on the card. 
+         */
+        static uint64_t totalBytes(); 
+
+        /** Returns the free number of bytes available on the card. Note that on larger cards, this function can actually take multiple seconds. 
+         */
+        static uint64_t freeBytes();
+
     private:
+
+        static constexpr size_t BYTES_PER_SECTOR = 512;
 
         static inline sd_card_t * card_ = nullptr;
 

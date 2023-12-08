@@ -19,10 +19,39 @@
 
 using namespace rckid;
 
-using DP = display_profile::PicosystemDouble;
+using DP = display_profile::RGBDouble;
 using Color = DP::Color;
 
+void sdtest();
+
 int main() {
+    //Serial::initialize();
+    //sdtest();
+
+    initializeIO();
+    Display::initialize<DP>();
+    Canvas<DP::Color> c{DP::Width, DP::Height};
+    c.setFg(Color{255,255,255});
+    c.setFont(Org_01);
+    SD::mount();
+    size_t sdBytes = SD::totalBytes() / 1000000_u64;
+    uint8_t bg = 0;
+    while (true) {
+        // show the SD card info
+        c.text(0,0);
+        c.text() << "Total: " << sdBytes << "\n";
+
+        Display::waitVSync();
+        Display::update<DP>(c.rawPixels(), DP::Width, DP::Height);
+        Display::waitUpdateDone();
+        c.setBg(Color{bg, 0, 0});
+        bg += 4;
+        c.fill();
+    }
+}
+
+
+int mainDisplay() {
     //cpu_overclock_max();
     //Serial::initialize();
     initializeIO();

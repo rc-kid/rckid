@@ -103,6 +103,10 @@ namespace rckid {
         template<typename PROFILE>
         static void update(typename PROFILE::Color const * pixels, int width, int height);
 
+        static bool updateDone() { return transferStart_ == nullptr; }
+
+        static void waitUpdateDone() { while (transferStart_ != nullptr); }
+
         /** Initializes the display. 
          
             Performs a full reset and initializes the display to 320x240 format with 565 RGB colors and clears the entire display black. 
@@ -157,10 +161,6 @@ namespace rckid {
         static void enterContinuousMode();
 
         static void leaveContinuousMode();
-
-        static void updateContinuous(void const * data, size_t numPixels);
-
-        static void waitUpdateDone() { while (transferStart_ != nullptr); }
 
     private:
 

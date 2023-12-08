@@ -37,7 +37,8 @@ namespace rckid {
 
         Writer text() {
             return Writer([this](char c){
-                x_ += drawGlyph(x_, y_, c, fg_, font_, 1);
+                if (c != '\n')
+                    x_ += drawGlyph(x_, y_, c, fg_, font_, 1);
                 if (x_ >= w_ || c == '\n') {
                     x_ = 0;
                     y_ += font_->yAdvance;

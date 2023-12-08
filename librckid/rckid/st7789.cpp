@@ -63,7 +63,8 @@ namespace rckid {
 
         // enable IRQ0 on the DMA channel
         dma_channel_set_irq0_enabled(dma_, true);
-        irq_set_exclusive_handler(DMA_IRQ_0, irqDMADone);
+        //irq_set_exclusive_handler(DMA_IRQ_0, irqDMADone);
+        irq_add_shared_handler(DMA_IRQ_0, irqDMADone,  PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY);
         irq_set_enabled(DMA_IRQ_0, true);
         // and now start the driver
         initializer(pio_, sm_, offset_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
@@ -74,47 +75,14 @@ namespace rckid {
     }
 
     void ST7789::enterContinuousMode() {
-        //uint16_t left = (320 - width) / 2;
-        //uint16_t top = (240 - height) / 2;
-        // initiate a full screen rectangle update 
-        //sendCommand(RASET, left, (uint16_t) left + width - 1);
-        //sendCommand(CASET, top, (uint16_t) top + height - 1);
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
-        /*
-        // claim the resources required for the continuous mode
-        pio_gpio_init(pio_, RP_PIN_DISP_WRX);
-        pio_sm_set_consecutive_pindirs(pio_, sm_, RP_PIN_DISP_WRX, 1, true);
-        pio_gpio_init(pio_, RP_PIN_DISP_DB8);
-        pio_gpio_init(pio_, RP_PIN_DISP_DB9);
-        pio_gpio_init(pio_, RP_PIN_DISP_DB10);
-        pio_gpio_init(pio_, RP_PIN_DISP_DB11);
-        pio_gpio_init(pio_, RP_PIN_DISP_DB12);
-        pio_gpio_init(pio_, RP_PIN_DISP_DB13);
-        pio_gpio_init(pio_, RP_PIN_DISP_DB14);
-        pio_gpio_init(pio_, RP_PIN_DISP_DB15);
-        pio_sm_set_consecutive_pindirs(pio_, sm_, RP_PIN_DISP_DB8, 8, true);
-        pio_sm_config c = ST7789_rgb_program_get_default_config(offset_);
-        sm_config_set_sideset_pins(&c, RP_PIN_DISP_WRX);
-        sm_config_set_out_pins(&c, RP_PIN_DISP_DB8, 8);
-        sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
-        // disable autopull
-        sm_config_set_out_shift(&c, false, true, 16);
-        pio_sm_init(pio_, sm_, offset_, &c);
-        // start the pio
-        pio_set_clock_speed(pio_, sm_, 30000000);
-        pio_sm_set_enabled(pio_, sm_, true);
-        */
     }
 
     void ST7789::leaveContinuousMode() {
         pio_sm_set_enabled(pio_, sm_, false);
         end(); // end the RAMWR command
         initializePinsBitBang();
-    }
-
-    void ST7789::updateContinuous(void const * data, size_t numPixels) {
-        dma_channel_configure(dma_, & dmaConf_, &pio_->txf[sm_], data, numPixels, true); // start
     }
 
     void ST7789::initializePinsBitBang() {

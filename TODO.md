@@ -31,6 +31,8 @@
 - add PIO driver unload option
 - add pixel doubling mode
 - rgba is not binary compatible with picosystem, fix - picosystem has its driver color-wise working now
+- the waiting for updating not working on picosystem
+- true picosystem is BGR
 
 ## AVR
 
