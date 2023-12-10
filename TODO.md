@@ -34,6 +34,9 @@
 - the waiting for updating not working on picosystem
 - true picosystem is BGR
 
+
+- have a main event loop and callbacks that the interrupts will designate to fire, but the main loop will actually execute, such as filling buffers, etc. This should keep the interrupts very very responsive and the number of tasks to be called is bounded by the number of peripherals that generate them, i.e. no malloc
+
 ## AVR
 
 - on wakeup sequence, check that start & sel are pressed too to enter debug mode(s)

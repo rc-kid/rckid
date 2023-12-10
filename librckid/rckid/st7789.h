@@ -6,8 +6,7 @@
 
 
 
-#include "common/config.h"
-#include "utils.h"
+#include "rckid.h"
 #include "ST7789_rgb.pio.h"
 #include "ST7789_rgb_double.pio.h"
 #include "ST7789_rgba.pio.h"

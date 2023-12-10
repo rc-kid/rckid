@@ -20,8 +20,7 @@
 
 % c-sdk {
 
-#include "common/config.h"
-#include "rckid/utils.h"
+#include "rckid/rckid.h"
 
 inline void ST7789_rgb_double_program_init(PIO pio, uint sm, uint offset, uint wrPin, uint dataPin) {
     // claim the resources required for the continuous mode

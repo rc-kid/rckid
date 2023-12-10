@@ -23,8 +23,7 @@
 
 % c-sdk {
 
-#include "common/config.h"
-#include "rckid/utils.h"
+#include "rckid/rckid.h"
 
 inline void ST7789_picosystem_double_program_init(PIO pio, uint sm, uint offset, uint wrPin, uint dataPin) {
     // initialize lower nibble to always low

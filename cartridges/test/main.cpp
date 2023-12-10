@@ -12,7 +12,7 @@
 #include "common/state.h"
 #include "common/commands.h"
 
-#include "rckid/apu/pwm.h"
+#include "rckid/audio.h"
 
 //#include "tusb.h"
 //#include "tusb_msc_storage.h"
@@ -28,8 +28,21 @@ int main() {
     //Serial::initialize();
     //sdtest();
 
+    //uint16_t val = 56;
+
+    /*
+    Audio::startPlayback(SampleRate::kHz8, nullptr, 0, [&](uint16_t * x, size_t l) {
+        x[0] = val;
+    });
+    */
+
     initializeIO();
-    Display::initialize<DP>();
+    //Audio::initialize();
+    //uint16_t buffer[200];
+    //for (size_t i = 0; i < 200; ++i)
+    //    buffer[i] = (i >= 100) ? 126 : 130;
+    //Audio::startPlayback(SampleRate::kHz44_1, buffer, sizeof(buffer) / 4, [](uint16_t * x, size_t l) {});
+    ST7789::initialize<DP>();
     Canvas<DP::Color> c{DP::Width, DP::Height};
     c.setFg(Color{255,255,255});
     c.setFont(Org_01);
@@ -41,9 +54,9 @@ int main() {
         c.text(0,0);
         c.text() << "Total: " << sdBytes << "\n";
 
-        Display::waitVSync();
-        Display::update<DP>(c.rawPixels(), DP::Width, DP::Height);
-        Display::waitUpdateDone();
+        ST7789::waitVSync();
+        ST7789::update<DP>(c.rawPixels(), DP::Width, DP::Height);
+        ST7789::waitUpdateDone();
         c.setBg(Color{bg, 0, 0});
         bg += 4;
         c.fill();
@@ -55,7 +68,7 @@ int mainDisplay() {
     //cpu_overclock_max();
     //Serial::initialize();
     initializeIO();
-    Display::initialize<DP>();
+    ST7789::initialize<DP>();
     //ST7789::initialize();
     //printf("Initialized --test\n");
     //sd::test();
@@ -104,11 +117,11 @@ int mainDisplay() {
         c.text() << state.info.vcc() << " " << state.info.temp();
         c.text(0, 40);
         c.text() << state.time.minutes() << ":" << state.time.seconds() << " bright:" << state.config.backlight();
-        Display::waitVSync();
-        Display::update<DP>(c.rawPixels(), DP::Width, DP::Height);
+        ST7789::waitVSync();
+        ST7789::update<DP>(c.rawPixels(), DP::Width, DP::Height);
         //ST7789::waitVSync();
         //ST7789::updateContinuous(c.rawPixels(), c.rawPixelsCount());
-        Display::waitUpdateDone();
+        ST7789::waitUpdateDone();
         c.setBg(Color{bg, 0, 0});
         bg += 4;
         c.fill();
