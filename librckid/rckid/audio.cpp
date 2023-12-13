@@ -53,6 +53,17 @@ namespace rckid {
 
     }
 
+    void Audio::processEvents() {
+        if (status_ & CALLBACK) {
+            status_ &= ~CALLBACK;
+            if (status_ & PLAYBACK) {
+                 cbPlay_(buffer_ + ((status_ & BUFFER_INDEX) ? 0 : bufferSize_), bufferSize_ / 2);
+            } else if (status_ & RECORDING) {
+
+            }
+        }
+    }
+
     void Audio::setSampleRate(SampleRate rate) { setSampleRate(static_cast<uint16_t>(rate)); }
 
     void Audio::setSampleRate(uint16_t rate) {
@@ -77,17 +88,6 @@ namespace rckid {
                 }
             } else if (status_ & RECORDING) {
                 status_ |= CALLBACK;
-            }
-        }
-    }
-
-    void Audio::tick() {
-        if (status_ & CALLBACK) {
-            status_ &= ~CALLBACK;
-            if (status_ & PLAYBACK) {
-                 cbPlay_(buffer_ + ((status_ & BUFFER_INDEX) ? 0 : bufferSize_), bufferSize_ / 2);
-            } else if (status_ & RECORDING) {
-
             }
         }
     }

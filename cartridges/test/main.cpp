@@ -14,17 +14,39 @@
 
 #include "rckid/audio.h"
 
+
+#include "rckid/apps/test/SDCardTest.h"
+#include "rckid/apps/test/AVRStatusTest.h"
+
 //#include "tusb.h"
 //#include "tusb_msc_storage.h"
 
 using namespace rckid;
 
+int main() {
+    while (true) {
+        initializeIO();
+
+        ST7789::initialize<display_profile::RGB>();
+
+        AVRStatusTest test;
+        test.run();
+    }
+}
+
+
+
+#ifdef HAHA
+
+
 using DP = display_profile::RGBDouble;
 using Color = DP::Color;
 
-void sdtest();
-
 int main() {
+    /*
+    SDCardTest sdTest;
+    sdTest.run();
+    */
     //Serial::initialize();
     //sdtest();
 
@@ -177,3 +199,5 @@ int mainDisplay() {
     } */
     return 0;
 }
+
+#endif

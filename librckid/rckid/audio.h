@@ -30,6 +30,9 @@ namespace rckid {
 
         static void stopRecording();
 
+        /** Called by the rckid's sdk as part of each frame to check if the playback or recording buffers have to be processed. 
+         */
+        static void processEvents();
 
     private:
 
@@ -46,10 +49,6 @@ namespace rckid {
         static void setSampleRate(uint16_t rate);
 
         static void irqDMADone();
-
-        /** Called by the rckid's sdk as part of each frame to check if the playback or recording buffers have to be processed. 
-         */
-        static void tick();
 
         static inline int dma_;
 

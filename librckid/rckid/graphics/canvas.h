@@ -1,9 +1,9 @@
 #pragma once
 
-#include "rckid/color.h"
 #include "rckid/writer.h"
 
 #include "gfx.h"
+#include "color.h"
 
 namespace rckid {
 
@@ -47,11 +47,19 @@ namespace rckid {
         }
 
         void fill() {
-            for (unsigned i = 0, e = rawPixelsCount(); i < e; ++i)
-                buffer_[i] = bg_;
+            Color c[] = { bg_, bg_ };
+            uint32_t x = *(reinterpret_cast<uint32_t*>(& c));
+            uint32_t * b = reinterpret_cast<uint32_t*>(buffer_);
+            for (unsigned i = 0, e = rawPixelsCount() / 2; i < e; ++i)
+                //buffer_[i] = bg_;
+                b[i] = x;
         }
 
-        Color const * rawPixels() const { return buffer_; }
+        uint16_t const * rawPixels() const { 
+            static_assert(sizeof(Color) == sizeof(uint16_t));
+            return reinterpret_cast<uint16_t const *>(buffer_); 
+        }
+
         size_t rawPixelsCount() const { return w_ * h_; }
 
     private:
@@ -76,7 +84,7 @@ namespace rckid {
                             buffer_[map(pixelX, pixelY)] = color;
                         //else
                         //    fill(Rect::XYWH(pixelX, pixelY, size, size), color);
-                    }
+                    } 
                 }
             }
             return glyph->xAdvance * size;
@@ -84,7 +92,7 @@ namespace rckid {
 
         Color fg_;
         Color bg_;
-        GFXfont const * font_;
+        GFXfont const * font_ = nullptr;
         int x_ = 0;
         int y_ = 0;
 

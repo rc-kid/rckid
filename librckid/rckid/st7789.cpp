@@ -96,6 +96,11 @@ namespace rckid {
     void ST7789::irqDMADone() {
         if(dma_channel_get_irq0_status(dma_)) {
             dma_channel_acknowledge_irq0(dma_); // clear the flag
+            if (cb_)
+                cb_();
+            else 
+                updating_ = false;
+            /*
             if (transferStart_ < transferEnd_) {
                 size_t numPixels = (transferEnd_ - transferStart_) / 2;
                 if (numPixels >= 2 * lineSizeInPixels_) {
@@ -108,6 +113,7 @@ namespace rckid {
             } else {
                 transferStart_ = nullptr;
             }
+            */
         }
     }
 

@@ -1,8 +1,12 @@
-## Checklist
+## TODO
 
-## TODO 
-
-- use PIO for pixel doubling on vline
+- make avr status part of Device class and read during system
+- time draw() in app
+- can start working on GPU Benchmarks? 
+- framebuffer clear with DMA right after drawing is done, or in parallel with drawing if requested
+- display mode agnostic ST7789 initialization
+- cleanup display modes
+- clean ST & renderer code
 
 ## Case
 
@@ -29,10 +33,7 @@
 
 - document ST7789
 - add PIO driver unload option
-- add pixel doubling mode
-- rgba is not binary compatible with picosystem, fix - picosystem has its driver color-wise working now
-- the waiting for updating not working on picosystem
-- true picosystem is BGR
+- rewrite the display code for the updatePixels modes (with callback, with no callback and with existing callback)
 
 
 - have a main event loop and callbacks that the interrupts will designate to fire, but the main loop will actually execute, such as filling buffers, etc. This should keep the interrupts very very responsive and the number of tasks to be called is bounded by the number of peripherals that generate them, i.e. no malloc
@@ -40,7 +41,6 @@
 ## AVR
 
 - on wakeup sequence, check that start & sel are pressed too to enter debug mode(s)
-- add & test battery charging detection
 - add battery critical power off
 - add neopixel & rumbler effects
 - add I2C commands
@@ -50,6 +50,9 @@
 - clearing the screen does not work (perhaps overclocking issue)
 - IRQ does not work
 - add audio & friends and AVR integration
+- rgba is not binary compatible with picosystem, fix - picosystem has its driver color-wise working now
+- the waiting for updating not working on picosystem
+- true picosystem is BGR
 
 ## Shopping List
 

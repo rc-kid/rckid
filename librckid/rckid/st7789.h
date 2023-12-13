@@ -13,7 +13,7 @@
 #include "ST7789_rgba_double.pio.h"
 #include "ST7789_picosystem.pio.h"
 #include "ST7789_picosystem_double.pio.h"
-#include "color.h"
+#include "rckid/graphics/color.h"
 
 //#include "gpu/graphics.h"
 
@@ -78,6 +78,9 @@ namespace rckid {
      */
     class ST7789 {
     public:
+
+        using UpdatePixelsCallback = std::function<void()>;
+
         enum class ColorMode : uint8_t {
             RGB565 = 0x55,
             RGB666 = 0x66,
@@ -97,14 +100,39 @@ namespace rckid {
         template<typename PROFILE>
         static void initialize();
 
+        static void updatePixels(uint16_t const * pixels, int numPixels) {
+            cb_ = [](){ 
+                ST7789::updating_ = false; 
+                updateUs_ = static_cast<unsigned>(to_us_since_boot(get_absolute_time()) - updateStart_);
+            };
+            updatePixelsPartial(pixels, numPixels);
+        }
+
+        static void updatePixelsPartial(uint16_t const * pixels, int numPixels, UpdatePixelsCallback cb) {
+            updateStart_ = to_us_since_boot(get_absolute_time());
+            cb_ = cb;
+            updatePixelsPartial(pixels, numPixels);
+        }
+
+        static void updatePixelsPartial(uint16_t const * pixels, int numPixels) {
+            if (!updating_)
+                updateStart_ = to_us_since_boot(get_absolute_time());
+            updating_ = true;
+            dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
+        }
+
         /** Updates the entire display area using given profile information. 
          */
-        template<typename PROFILE>
-        static void update(typename PROFILE::Color const * pixels, int width, int height);
+        //template<typename PROFILE>
+        //static void update(typename PROFILE::Color const * pixels, int width, int height);
 
-        static bool updateDone() { return transferStart_ == nullptr; }
+        static bool updateDone() { return !updating_; }
 
-        static void waitUpdateDone() { while (transferStart_ != nullptr); }
+        static void waitUpdateDone() { 
+            uint64_t t = to_us_since_boot(get_absolute_time());
+            while (updating_); 
+            updateWaitUs_ = static_cast<unsigned>(to_us_since_boot(get_absolute_time()) - t);
+        }
 
         /** Initializes the display. 
          
@@ -149,7 +177,13 @@ namespace rckid {
 
         /** Busy waits for the rising edge on the TE display pin, signalling the beginning of the V-blank period. 
          */
-        static void waitVSync() { while (gpio_get(RP_PIN_DISP_TE)); while (! gpio_get(RP_PIN_DISP_TE)); }
+        static void waitVSync() { 
+            uint64_t t = to_us_since_boot(get_absolute_time());
+            while (gpio_get(RP_PIN_DISP_TE)); 
+            while (! gpio_get(RP_PIN_DISP_TE)); 
+            vsyncWaitUs_ = static_cast<unsigned>(to_us_since_boot(get_absolute_time()) - t);
+            
+        }
 
         /** \name Continuous mode
          
@@ -160,6 +194,11 @@ namespace rckid {
         static void enterContinuousMode();
 
         static void leaveContinuousMode();
+
+
+        static unsigned lastUpdateUs() { return updateUs_; }
+        static unsigned lastUpdateWaitUs() { return updateWaitUs_; }
+        static unsigned lastVSyncWaitUs() { return vsyncWaitUs_; }
 
     private:
 
@@ -222,9 +261,19 @@ namespace rckid {
         static inline uint dma_ = -1;
         static inline dma_channel_config dmaConf_;
 
+        static inline UpdatePixelsCallback cb_;
+        static inline volatile bool updating_ = false;
+
+        static inline unsigned updateUs_ = 0;
+        static inline unsigned updateWaitUs_ = 0;
+        static inline unsigned vsyncWaitUs_ = 0;
+        static inline uint64_t updateStart_ = 0;
+
+        /*
         static inline volatile uint8_t const * transferStart_ = nullptr;
         static inline uint8_t const * transferEnd_;
         static inline size_t lineSizeInPixels_;
+        */
 
 
 
@@ -287,12 +336,14 @@ namespace rckid {
         startPIODriver();
     }
 
+    /*
     template<>
     inline void ST7789::update<display_profile::RGB>(ColorRGB const * pixels, int width, int height) {
         transferEnd_ = (uint8_t const *)pixels;
         transferStart_ = (uint8_t const *)pixels;
         dma_channel_transfer_from_buffer_now(dma_, pixels, width * height);
     }
+    */
 
     template<>
     inline void ST7789::initialize<display_profile::RGBDouble>() {
@@ -304,6 +355,7 @@ namespace rckid {
         startPIODriver();
     }
 
+    /*
     template<>
     inline void ST7789::update<display_profile::RGBDouble>(ColorRGB const * pixels, int width, int height) {
         transferEnd_ = (uint8_t const *)(pixels + width * height);
@@ -311,6 +363,7 @@ namespace rckid {
         lineSizeInPixels_ = height;
         dma_channel_transfer_from_buffer_now(dma_, pixels, lineSizeInPixels_);
     }
+    */
 
     template<>
     inline void ST7789::initialize<display_profile::RGBA>() {
@@ -324,12 +377,14 @@ namespace rckid {
         startPIODriver();
     }
 
+    /*
     template<>
     inline void ST7789::update<display_profile::RGBA>(ColorRGBA const * pixels, int width, int height) {
         transferEnd_ = (uint8_t const *)pixels;
         transferStart_ = (uint8_t const *)pixels;
         dma_channel_transfer_from_buffer_now(dma_, pixels, width * height);
     }
+    */
 
     template<>
     inline void ST7789::initialize<display_profile::RGBADouble>() {
@@ -343,6 +398,7 @@ namespace rckid {
         startPIODriver();
     }
 
+    /*
     template<>
     inline void ST7789::update<display_profile::RGBADouble>(ColorRGBA const * pixels, int width, int height) {
         transferEnd_ = (uint8_t const *)(pixels + width * height);
@@ -350,6 +406,7 @@ namespace rckid {
         lineSizeInPixels_ = height;
         dma_channel_transfer_from_buffer_now(dma_, pixels, lineSizeInPixels_);
     }
+    */
 
     template<>
     inline void ST7789::initialize<display_profile::Picosystem>() {
@@ -363,12 +420,14 @@ namespace rckid {
         startPIODriver();
     }
 
+    /*
     template<>
     inline void ST7789::update<display_profile::Picosystem>(ColorRGBA const * pixels, int width, int height) {
         transferEnd_ = (uint8_t const *)pixels;
         transferStart_ = (uint8_t const *)pixels;
         dma_channel_transfer_from_buffer_now(dma_, pixels, width * height);
     }
+    */
 
     template<>
     inline void ST7789::initialize<display_profile::PicosystemDouble>() {
@@ -382,6 +441,7 @@ namespace rckid {
         startPIODriver();
     }
 
+    /*
     template<>
     inline void ST7789::update<display_profile::PicosystemDouble>(ColorRGBA const * pixels, int width, int height) {
         transferEnd_ = (uint8_t const *)(pixels + width * height);
@@ -389,6 +449,7 @@ namespace rckid {
         lineSizeInPixels_ = width;
         dma_channel_transfer_from_buffer_now(dma_, pixels, lineSizeInPixels_);
     }
+    */
 
 
 
