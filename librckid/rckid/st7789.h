@@ -19,58 +19,6 @@
 
 namespace rckid {
 
-    namespace display_profile {
-
-        struct RGB {
-            using Color = ColorRGB;
-            static constexpr int Width = 320;
-            static constexpr int Height = 240;
-            static constexpr bool NativeMode = true;
-            static constexpr bool Double = false;
-        }; 
-
-        struct RGBDouble {
-            using Color = ColorRGB;
-            static constexpr int Width = 160;
-            static constexpr int Height = 120;
-            static constexpr bool NativeMode = true;
-            static constexpr bool Double = false;
-        }; 
-
-        struct RGBA {
-            using Color = ColorRGBA;
-            static constexpr int Width = 320;
-            static constexpr int Height = 240;
-            static constexpr bool NativeMode = true;
-            static constexpr bool Double = false;
-        };
-
-        struct RGBADouble {
-            using Color = ColorRGBA;
-            static constexpr int Width = 160;
-            static constexpr int Height = 120;
-            static constexpr bool NativeMode = true;
-            static constexpr bool Double = true;
-        };
-
-        struct Picosystem {
-            using Color = ColorRGBA;
-            static constexpr int Width = 240;
-            static constexpr int Height = 240;
-            static constexpr bool NativeMode = false;
-            static constexpr bool Double = false;
-        };
-
-        struct PicosystemDouble {
-            using Color = ColorRGBA;
-            static constexpr int Width = 120;
-            static constexpr int Height = 120;
-            static constexpr bool NativeMode = false;
-            static constexpr bool Double = true;
-        };
-
-    } // namespace rckid::display_config
-
     /** Low level driver for the ST7789 display driver. 
      
         The driver takes care of display initialization and provides basic functions for display updates in either direct, or continuous mode. The direct provides blocking interface for sending either commands, or data updates to the system, while the continous mode only supoorts sending data updates via DMA. 
@@ -95,9 +43,10 @@ namespace rckid {
 
         typedef void (*DriverInitializer)(PIO, uint, uint, uint, uint);
 
-        /** Initializes the display with given profile. 
+        /** Initializes the display. 
+         
+            Performs a full reset and initializes the display to 320x240 format with 565 RGB colors and clears the entire display black. 
          */
-        template<typename PROFILE>
         static void initialize();
 
         static void updatePixels(uint16_t const * pixels, int numPixels) {
@@ -133,12 +82,6 @@ namespace rckid {
             while (updating_); 
             updateWaitUs_ = static_cast<unsigned>(to_us_since_boot(get_absolute_time()) - t);
         }
-
-        /** Initializes the display. 
-         
-            Performs a full reset and initializes the display to 320x240 format with 565 RGB colors and clears the entire display black. 
-         */
-        static void reset();
 
         /** Loads the specified pio driver. 
          */
@@ -324,6 +267,8 @@ namespace rckid {
 
     }; // rckid::ST7789
 
+#ifdef FOO
+
     /** Initializes the display for the native RGB 16bit pixels. 
      */
     template<>
@@ -451,6 +396,7 @@ namespace rckid {
     }
     */
 
+#endif
 
 
 } // namespace rckid

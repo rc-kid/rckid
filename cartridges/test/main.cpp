@@ -27,7 +27,7 @@ int main() {
     while (true) {
         initializeIO();
 
-        ST7789::initialize<display_profile::RGB>();
+        ST7789::initialize();
 
         AVRStatusTest test;
         test.run();

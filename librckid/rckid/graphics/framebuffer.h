@@ -3,6 +3,7 @@
 #include "canvas.h"
 
 #include "../ST7789.h"
+#include "../display_profiles.h"
 #include "ST7789_rgb.pio.h"
 #include "ST7789_rgb_double.pio.h"
 #include "ST7789_rgba.pio.h"

@@ -10,7 +10,7 @@
 
 namespace rckid {
 
-    void ST7789::reset() {
+    void ST7789::initialize() {
         gpio_init(RP_PIN_DISP_TE);
         gpio_set_dir(RP_PIN_DISP_TE, GPIO_IN);
         gpio_init(RP_PIN_DISP_DCX);

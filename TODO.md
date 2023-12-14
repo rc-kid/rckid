@@ -4,8 +4,8 @@
 - time draw() in app
 - can start working on GPU Benchmarks? 
 - framebuffer clear with DMA right after drawing is done, or in parallel with drawing if requested
-- display mode agnostic ST7789 initialization
 - cleanup display modes
+- move the config code to the display profiles
 - clean ST & renderer code
 
 ## Case
