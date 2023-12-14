@@ -39,6 +39,8 @@ namespace rckid {
 
     //@}
 
+    inline uint64_t uptime_us() { return to_us_since_boot(get_absolute_time()); }
+
     /** \name Utility functions 
      */
     //@{

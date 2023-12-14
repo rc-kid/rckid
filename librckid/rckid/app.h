@@ -22,11 +22,15 @@ namespace rckid {
         virtual void onBlur() {}
         virtual void update() = 0;
         virtual void draw() = 0;
+        virtual void render() = 0;
 
         unsigned fps() const { return fps_; }
         unsigned systemUs() const { return systemUs_; }
         unsigned updateUs() const { return updateUs_; }
         unsigned drawUs() const { return drawUs_; }
+        unsigned frameUs() const { return frameUs_; }
+        unsigned idleUs() const { return frameUs_ - systemUs_ - updateUs_ - drawUs_; }
+        unsigned idlePct() const { return idleUs() * 100 / frameUs_; }
 
     private:
 
@@ -43,6 +47,7 @@ namespace rckid {
         static inline unsigned systemUs_;
         static inline unsigned updateUs_;
         static inline unsigned drawUs_;
+        static inline unsigned frameUs_;
     }; 
 
 
@@ -63,34 +68,29 @@ namespace rckid {
         App() = default;
         App(App * parent): renderer_{parent->renderer_}, parent_{parent} { parent->sharedWithChild_ = true; }
 
-        void onFocus() {
+        void onFocus() override {
             if (renderer_ == nullptr)
                 createRenderer();
             // when focused, the app is on top and hence its renderer cannot be shared with child
             sharedWithChild_ = false;
         }
 
-        void onBlur() {
+        void onBlur() override {
             if (!sharedWithChild_)
                 deleteRenderer();
         }
 
-        virtual void draw(RENDERER & r) = 0;
 
-    private:
+        void render() override { renderer_->startRendering(); }
 
-        void draw() override { 
-            ST7789::waitUpdateDone();
-            draw(*renderer_);
-            renderer_->startRendering();
-        }
+        RENDERER & renderer() { return *renderer_; }
 
     private:
 
         void createRenderer() {
             // create new renderer
             renderer_ = new RENDERER{};
-            renderer_->configureDisplay();
+            RENDERER::DisplayProfile::configureDisplay();
             // and propagate it to all parents of the same kind
             auto i = this->parent_;
             while (i != nullptr) {

@@ -27,7 +27,8 @@ namespace rckid {
         void update() override {
         }
 
-        void draw(Renderer & r) {
+        void draw() {
+            Renderer & r = renderer();
             r.text(0,0);
             r.text() << "Total: " << sdSize_ << "\n";
         }

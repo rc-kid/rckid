@@ -6,8 +6,6 @@
 #include "rckid/ST7789.h"
 //#include "rckid/gpu/canvas.h"
 #include "rckid/graphics/canvas.h"
-#include "rckid/fonts/Org_01.h"
-#include "rckid/fonts/TomThumb.h"
 #include "rckid/sd.h"
 #include "common/state.h"
 #include "common/commands.h"
@@ -24,14 +22,14 @@
 using namespace rckid;
 
 int main() {
-    while (true) {
+        //cpuOverclockMax();
+        //cpuOverclock(150000000);
         initializeIO();
 
         ST7789::initialize();
 
         AVRStatusTest test;
         test.run();
-    }
 }
 
 

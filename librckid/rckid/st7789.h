@@ -7,12 +7,6 @@
 
 
 #include "rckid.h"
-#include "ST7789_rgb.pio.h"
-#include "ST7789_rgb_double.pio.h"
-#include "ST7789_rgba.pio.h"
-#include "ST7789_rgba_double.pio.h"
-#include "ST7789_picosystem.pio.h"
-#include "ST7789_picosystem_double.pio.h"
 #include "rckid/graphics/color.h"
 
 //#include "gpu/graphics.h"
@@ -52,20 +46,20 @@ namespace rckid {
         static void updatePixels(uint16_t const * pixels, int numPixels) {
             cb_ = [](){ 
                 ST7789::updating_ = false; 
-                updateUs_ = static_cast<unsigned>(to_us_since_boot(get_absolute_time()) - updateStart_);
+                updateUs_ = static_cast<unsigned>(uptime_us() - updateStart_);
             };
             updatePixelsPartial(pixels, numPixels);
         }
 
         static void updatePixelsPartial(uint16_t const * pixels, int numPixels, UpdatePixelsCallback cb) {
-            updateStart_ = to_us_since_boot(get_absolute_time());
+            updateStart_ = uptime_us();
             cb_ = cb;
             updatePixelsPartial(pixels, numPixels);
         }
 
         static void updatePixelsPartial(uint16_t const * pixels, int numPixels) {
             if (!updating_)
-                updateStart_ = to_us_since_boot(get_absolute_time());
+                updateStart_ = uptime_us();
             updating_ = true;
             dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
         }
@@ -78,9 +72,9 @@ namespace rckid {
         static bool updateDone() { return !updating_; }
 
         static void waitUpdateDone() { 
-            uint64_t t = to_us_since_boot(get_absolute_time());
+            uint64_t t = uptime_us();
             while (updating_); 
-            updateWaitUs_ = static_cast<unsigned>(to_us_since_boot(get_absolute_time()) - t);
+            updateWaitUs_ = static_cast<unsigned>(uptime_us() - t);
         }
 
         /** Loads the specified pio driver. 
@@ -121,10 +115,10 @@ namespace rckid {
         /** Busy waits for the rising edge on the TE display pin, signalling the beginning of the V-blank period. 
          */
         static void waitVSync() { 
-            uint64_t t = to_us_since_boot(get_absolute_time());
+            uint64_t t = uptime_us();
             while (gpio_get(RP_PIN_DISP_TE)); 
             while (! gpio_get(RP_PIN_DISP_TE)); 
-            vsyncWaitUs_ = static_cast<unsigned>(to_us_since_boot(get_absolute_time()) - t);
+            vsyncWaitUs_ = static_cast<unsigned>(uptime_us() - t);
             
         }
 
@@ -212,14 +206,6 @@ namespace rckid {
         static inline unsigned vsyncWaitUs_ = 0;
         static inline uint64_t updateStart_ = 0;
 
-        /*
-        static inline volatile uint8_t const * transferStart_ = nullptr;
-        static inline uint8_t const * transferEnd_;
-        static inline size_t lineSizeInPixels_;
-        */
-
-
-
         static constexpr uint8_t SWRESET = 0x01;
 
         static constexpr uint8_t SLPIN = 0x10; // enters sleep mode
@@ -266,137 +252,5 @@ namespace rckid {
 
 
     }; // rckid::ST7789
-
-#ifdef FOO
-
-    /** Initializes the display for the native RGB 16bit pixels. 
-     */
-    template<>
-    inline void ST7789::initialize<display_profile::RGB>() {
-        reset();
-        setColumnRange(0, 239);
-        setRowRange(0, 319);
-        enterContinuousMode();
-        loadPIODriver(ST7789_rgb_program, ST7789_rgb_program_init);
-        startPIODriver();
-    }
-
-    /*
-    template<>
-    inline void ST7789::update<display_profile::RGB>(ColorRGB const * pixels, int width, int height) {
-        transferEnd_ = (uint8_t const *)pixels;
-        transferStart_ = (uint8_t const *)pixels;
-        dma_channel_transfer_from_buffer_now(dma_, pixels, width * height);
-    }
-    */
-
-    template<>
-    inline void ST7789::initialize<display_profile::RGBDouble>() {
-        reset();
-        setColumnRange(0, 239);
-        setRowRange(0, 319);
-        enterContinuousMode();
-        loadPIODriver(ST7789_rgb_double_program, ST7789_rgb_double_program_init);
-        startPIODriver();
-    }
-
-    /*
-    template<>
-    inline void ST7789::update<display_profile::RGBDouble>(ColorRGB const * pixels, int width, int height) {
-        transferEnd_ = (uint8_t const *)(pixels + width * height);
-        transferStart_ = (uint8_t const *)(pixels);
-        lineSizeInPixels_ = height;
-        dma_channel_transfer_from_buffer_now(dma_, pixels, lineSizeInPixels_);
-    }
-    */
-
-    template<>
-    inline void ST7789::initialize<display_profile::RGBA>() {
-        reset();
-        setColumnRange(0, 239);
-        setRowRange(0, 319);
-        setColorMode(ColorMode::RGB666);
-        setDisplayMode(DisplayMode::Native);
-        enterContinuousMode();
-        loadPIODriver(ST7789_rgba_program, ST7789_rgba_program_init);
-        startPIODriver();
-    }
-
-    /*
-    template<>
-    inline void ST7789::update<display_profile::RGBA>(ColorRGBA const * pixels, int width, int height) {
-        transferEnd_ = (uint8_t const *)pixels;
-        transferStart_ = (uint8_t const *)pixels;
-        dma_channel_transfer_from_buffer_now(dma_, pixels, width * height);
-    }
-    */
-
-    template<>
-    inline void ST7789::initialize<display_profile::RGBADouble>() {
-        reset();
-        setColumnRange(0, 239);
-        setRowRange(0, 319);
-        setColorMode(ColorMode::RGB666);
-        setDisplayMode(DisplayMode::Native);
-        enterContinuousMode();
-        loadPIODriver(ST7789_rgba_double_program, ST7789_rgba_double_program_init);
-        startPIODriver();
-    }
-
-    /*
-    template<>
-    inline void ST7789::update<display_profile::RGBADouble>(ColorRGBA const * pixels, int width, int height) {
-        transferEnd_ = (uint8_t const *)(pixels + width * height);
-        transferStart_ = (uint8_t const *)(pixels);
-        lineSizeInPixels_ = height;
-        dma_channel_transfer_from_buffer_now(dma_, pixels, lineSizeInPixels_);
-    }
-    */
-
-    template<>
-    inline void ST7789::initialize<display_profile::Picosystem>() {
-        reset();
-        setDisplayMode(DisplayMode::Natural);
-        setRowRange(0, 239);
-        setColumnRange(40, 279);
-        setColorMode(ColorMode::RGB666);
-        enterContinuousMode();
-        loadPIODriver(ST7789_picosystem_program, ST7789_picosystem_program_init);
-        startPIODriver();
-    }
-
-    /*
-    template<>
-    inline void ST7789::update<display_profile::Picosystem>(ColorRGBA const * pixels, int width, int height) {
-        transferEnd_ = (uint8_t const *)pixels;
-        transferStart_ = (uint8_t const *)pixels;
-        dma_channel_transfer_from_buffer_now(dma_, pixels, width * height);
-    }
-    */
-
-    template<>
-    inline void ST7789::initialize<display_profile::PicosystemDouble>() {
-        reset();
-        setDisplayMode(DisplayMode::Natural);
-        setRowRange(0, 239);
-        setColumnRange(40, 279);
-        setColorMode(ColorMode::RGB666);
-        enterContinuousMode();
-        loadPIODriver(ST7789_picosystem_double_program, ST7789_picosystem_double_program_init);
-        startPIODriver();
-    }
-
-    /*
-    template<>
-    inline void ST7789::update<display_profile::PicosystemDouble>(ColorRGBA const * pixels, int width, int height) {
-        transferEnd_ = (uint8_t const *)(pixels + width * height);
-        transferStart_ = (uint8_t const *)(pixels);
-        lineSizeInPixels_ = width;
-        dma_channel_transfer_from_buffer_now(dma_, pixels, lineSizeInPixels_);
-    }
-    */
-
-#endif
-
 
 } // namespace rckid

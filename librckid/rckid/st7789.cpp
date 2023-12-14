@@ -100,20 +100,6 @@ namespace rckid {
                 cb_();
             else 
                 updating_ = false;
-            /*
-            if (transferStart_ < transferEnd_) {
-                size_t numPixels = (transferEnd_ - transferStart_) / 2;
-                if (numPixels >= 2 * lineSizeInPixels_) {
-                    dma_channel_transfer_from_buffer_now(dma_, transferStart_, 2 * lineSizeInPixels_); // two lines
-                    transferStart_ += 2 * lineSizeInPixels_;  // line size in bytes
-                } else {
-                    dma_channel_transfer_from_buffer_now(dma_, transferStart_, numPixels);
-                    transferStart_ += numPixels * 2; // bytes
-                }
-            } else {
-                transferStart_ = nullptr;
-            }
-            */
         }
     }
 

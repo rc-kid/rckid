@@ -29,12 +29,12 @@ namespace rckid {
     }
 
     void BaseApp::loop_() {
-        nextFpsTick_ = to_us_since_boot(get_absolute_time()) + 1000000;
+        nextFpsTick_ = uptime_us() + 1000000;
         fps_ = 0;
         fpsCounter_ = 0;
         size_t initialSize = apps_.size();
         while (apps_.size() >= initialSize) {
-            uint64_t frameStart = to_us_since_boot(get_absolute_time());
+            uint64_t frameStart = uptime_us();
             if (frameStart >= nextFpsTick_) {
                 fps_ = fpsCounter_;
                 fpsCounter_ = 0;
@@ -43,22 +43,28 @@ namespace rckid {
             // process system events
             Audio::processEvents();
             
-            uint64_t afterSystem = to_us_since_boot(get_absolute_time());
-            systemUs_ = static_cast<unsigned>(afterSystem - frameStart);
+            uint64_t afterSystem = uptime_us();
             // update the current app
             currentApp_->update();
-            uint64_t afterUpdate = to_us_since_boot(get_absolute_time());
-            updateUs_ = static_cast<unsigned>(afterUpdate - afterSystem);
+            uint64_t afterUpdate = uptime_us();
             // if the update did not change the current application, draw, otherwise try to focus new app
             if (currentApp_ != nullptr) {
+                ST7789::waitUpdateDone();
+                uint64_t beforeDraw = uptime_us();
                 currentApp_->draw();
+                uint64_t afterDraw = uptime_us();
+                drawUs_ = static_cast<unsigned>(afterDraw - beforeDraw); 
+                ST7789::waitVSync();
+                currentApp_->render();
                 ++fpsCounter_;
             } else if (! apps_.empty()) {
                 currentApp_ = apps_.back();
                 currentApp_->onFocus();
+                drawUs_ = 0;
             }
-            uint64_t afterDraw = to_us_since_boot(get_absolute_time());
-            drawUs_ = static_cast<unsigned>(afterDraw - afterUpdate); 
+            systemUs_ = static_cast<unsigned>(afterSystem - frameStart);
+            updateUs_ = static_cast<unsigned>(afterUpdate - afterSystem);
+            frameUs_ = static_cast<unsigned>(uptime_us() - frameStart);
         }
     }
 }
