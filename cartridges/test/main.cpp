@@ -13,8 +13,10 @@
 #include "rckid/audio.h"
 
 
-#include "rckid/apps/test/SDCardTest.h"
+//#include "rckid/apps/test/SDCardTest.h"
 #include "rckid/apps/test/AVRStatusTest.h"
+#include "rckid/apps/games/SlidingPuzzle.h"
+
 
 
 //#include "tusb.h"
@@ -23,14 +25,16 @@
 using namespace rckid;
 
 int main() {
-        //cpuOverclockMax();
-        //cpuOverclock(150000000);
-        initializeIO();
+    //cpuOverclockMax();
+    //cpuOverclock(150000000);
+    initialize();
 
-        ST7789::initialize();
 
-        AVRStatusTest test;
-        test.run();
+    SlidingPuzzle game;
+    game.run();
+
+//    AVRStatusTest test;
+//    test.run();
 }
 
 

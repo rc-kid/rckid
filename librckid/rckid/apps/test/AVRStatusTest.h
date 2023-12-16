@@ -5,7 +5,6 @@
 #include "fonts/Iosevka_Mono6pt7b.h"
 
 #include "logo-16.h"
-#include "PNGdec.h"
 
 namespace rckid {
 
@@ -19,34 +18,32 @@ namespace rckid {
     protected:
 
         void update() override {
-            i2c_read_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t *)& state_, sizeof(State), false);
         }
 
         void draw() {
+            TinyDate t = time();
             Renderer & r = renderer();
             r.setFg(Color{255,255,255});
             r.setFont(Iosevka_Mono6pt7b);
             r.setBg(Color{bg_, 0, 0});
             bg_ += 4;
             r.fill();
-            r.text(0, 200);
-            r.text() << "Last error: " << png_.getLastError() << " uptime: " << decodeUs;
             r.text(0,0);
-            r.text() << (state_.status.dpadLeft() ? "L " : "  ");
-            r.text() << (state_.status.dpadRight() ? "R " : "  ");
-            r.text() << (state_.status.dpadUp() ? "U " : "  ");
-            r.text() << (state_.status.dpadDown() ? "D " : "  ");
-            r.text() << (state_.status.btnA() ? "A " : "  ");
-            r.text() << (state_.status.btnB() ? "B " : "  ");
-            r.text() << (state_.status.btnSelect() ? "SEL " : "    ");
-            r.text() << (state_.status.btnStart() ? "START " : "      ");
+            r.text() << (down(Btn::Left) ? "L " : "  ");
+            r.text() << (down(Btn::Right) ? "R " : "  ");
+            r.text() << (down(Btn::Up) ? "U " : "  ");
+            r.text() << (down(Btn::Down) ? "D " : "  ");
+            r.text() << (down(Btn::A) ? "A " : "  ");
+            r.text() << (down(Btn::B) ? "B " : "  ");
+            r.text() << (down(Btn::Select) ? "SEL " : "    ");
+            r.text() << (down(Btn::Start) ? "START " : "      ");
             r.text() << "\n";
-            r.text() << (state_.status.dcPower() ? "DC " : "   ");
-            r.text() << (state_.status.charging() ? "CHRG " : "     ");
-            r.text() << (state_.status.headphones() ? "HP " : "   ");
-            r.text() << state_.info.vcc() << " " << state_.info.temp();
+            r.text() << (dcPower() ? "DC " : "   ");
+            r.text() << (charging() ? "CHRG " : "     ");
+            r.text() << (Audio::headphones() ? "HP " : "   ");
+            r.text() << vcc() << " " << tempAvr();
             r.text() << "\n";
-            r.text() << state_.time.minutes() << ":" << state_.time.seconds() << " bright:" << state_.config.backlight();            
+            r.text() << t.minutes() << ":" << t.seconds();
             r.text() << "\n\n";
             r.text() << " FPS: " << fps() << " S:" << systemUs() << " U:" << (updateUs() / 1000) << " D:" << (drawUs() / 1000);
             r.text() << "\n";
@@ -57,7 +54,6 @@ namespace rckid {
 
     private:
 
-        State state_;
         uint8_t bg_ = 255;
 
     }; 

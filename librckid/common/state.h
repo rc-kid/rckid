@@ -4,24 +4,37 @@
 
 namespace rckid {
 
+    enum class Btn {
+        Left = 1 << 0, 
+        Right = 1 << 1,
+        Up = 1 << 2, 
+        Down = 1 << 3, 
+        A = 1 << 4, 
+        B = 1 << 5, 
+        Select = 1 << 6, 
+        Start = 1 << 7,
+        Home = 1 << 8, 
+        VolumeUp = 1 << 9, 
+        VolumeDown = 1 << 10,
+    }; // rckid::Btn
+
     /** RCKid's status. 
 
         Contains the current state of all buttons as well as the audio and power events, all monitored by the AVR. 
     */
     class Status {
     public:
-        bool dpadLeft() const { return raw_[0] & DPAD_LEFT; }
-        bool dpadRight() const { return raw_[0] & DPAD_RIGHT; }
-        bool dpadUp() const { return raw_[0] & DPAD_UP; }
-        bool dpadDown() const { return raw_[0] & DPAD_DOWN; }
-        bool btnA() const { return raw_[0] & BTN_A; }
-        bool btnB() const { return raw_[0] & BTN_B; }
-        bool btnSelect() const { return raw_[0] & BTN_SEL; }
-        bool btnStart() const { return raw_[0] & BTN_START; }
 
-        bool btnHome() const { return raw_[1] & BTN_HOME; }
-        bool btnVolUp() const { return raw_[1] & BTN_VOL_UP; }
-        bool btnVolDown() const { return raw_[1] & BTN_VOL_DOWN; }
+        bool down(Btn b) const {
+            unsigned x = static_cast<unsigned>(b);
+            if (x > 0xff) {
+                x >>= 8;
+                return raw_[1] & x;
+            } else {
+                return raw_[0] & x;
+            }
+        }
+
         bool charging() const { return raw_[1] & CHARGING; }
         bool dcPower() const { return raw_[1] & DC_POWER; }
         bool headphones() const { return raw_[1] & HEADPHONES; }
@@ -76,18 +89,18 @@ namespace rckid {
 
     private:
         // first byte 
-        static constexpr uint8_t DPAD_LEFT = 1 << 0;
-        static constexpr uint8_t DPAD_RIGHT = 1 << 1;
-        static constexpr uint8_t DPAD_UP = 1 << 2;
-        static constexpr uint8_t DPAD_DOWN = 1 << 3;
-        static constexpr uint8_t BTN_A = 1 << 4;
-        static constexpr uint8_t BTN_B = 1 << 5;
-        static constexpr uint8_t BTN_SEL = 1 << 6;
-        static constexpr uint8_t BTN_START = 1 << 7;
+        static constexpr uint8_t DPAD_LEFT = static_cast<unsigned>(Btn::Left);
+        static constexpr uint8_t DPAD_RIGHT = static_cast<unsigned>(Btn::Right);
+        static constexpr uint8_t DPAD_UP = static_cast<unsigned>(Btn::Up);
+        static constexpr uint8_t DPAD_DOWN = static_cast<unsigned>(Btn::Down);
+        static constexpr uint8_t BTN_A = static_cast<unsigned>(Btn::A);
+        static constexpr uint8_t BTN_B = static_cast<unsigned>(Btn::B);
+        static constexpr uint8_t BTN_SEL = static_cast<unsigned>(Btn::Select);
+        static constexpr uint8_t BTN_START = static_cast<unsigned>(Btn::Start);
         // second byte
-        static constexpr uint8_t BTN_HOME = 1 << 0;
-        static constexpr uint8_t BTN_VOL_UP = 1 << 1;
-        static constexpr uint8_t BTN_VOL_DOWN = 1 << 2;
+        static constexpr uint8_t BTN_HOME = static_cast<unsigned>(Btn::Home) >> 8;
+        static constexpr uint8_t BTN_VOL_UP = static_cast<unsigned>(Btn::VolumeUp) >> 8;
+        static constexpr uint8_t BTN_VOL_DOWN = static_cast<unsigned>(Btn::VolumeDown) >> 8;
         static constexpr uint8_t CHARGING = 1 << 3;
         static constexpr uint8_t DC_POWER = 1 << 4;
         static constexpr uint8_t HEADPHONES = 1 << 5;

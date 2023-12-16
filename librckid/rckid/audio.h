@@ -20,6 +20,13 @@ namespace rckid {
 
         static void initialize();
 
+        static bool headphones() { return Device::state_.status.headphones(); }
+        
+        static bool audioEnabled() { return Device::state_.status.audioEnabled(); }
+
+        static void setAudioEnabled(bool enabled = true) {
+            // TODO 
+        }
 
         /** number of stereo pairs, i.e. buffer size in uint16_t / 2 */
         static void startPlayback(SampleRate rate, uint16_t * buffer, size_t stereoSamples, CallbackPlay cb);
@@ -30,11 +37,13 @@ namespace rckid {
 
         static void stopRecording();
 
+    private:
+
+        friend class BaseApp;
+
         /** Called by the rckid's sdk as part of each frame to check if the playback or recording buffers have to be processed. 
          */
         static void processEvents();
-
-    private:
 
         // fixed because of the pwm pins
         static constexpr unsigned PWM_SLICE = 4; 

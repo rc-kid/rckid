@@ -4,8 +4,6 @@
 #include <hardware/pio.h>
 #include <hardware/dma.h>
 
-
-
 #include "rckid.h"
 #include "rckid/graphics/color.h"
 

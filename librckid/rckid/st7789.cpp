@@ -6,8 +6,6 @@
 #include <hardware/dma.h>
 
 
-#include "rckid.h"
-
 namespace rckid {
 
     void ST7789::initialize() {

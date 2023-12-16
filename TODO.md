@@ -1,6 +1,5 @@
 ## TODO
 
-- make avr status part of Device class and read during system
 - can start working on GPU Benchmarks? 
 - framebuffer clear with DMA right after drawing is done, or in parallel with drawing if requested
 

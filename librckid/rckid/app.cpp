@@ -40,6 +40,8 @@ namespace rckid {
                 fpsCounter_ = 0;
                 nextFpsTick_ += 1000000;
             }
+            // new tick (check with AVR and peripherals, etc.)
+            Device::tick();
             // process system events
             Audio::processEvents();
             

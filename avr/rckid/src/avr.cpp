@@ -198,7 +198,7 @@ public:
      */
     static void checkLongHomePress() {
         if (homeCounter_ > 0) {
-            if (state_.status.btnHome()) {
+            if (state_.status.down(Btn::Home)) {
                 if (--homeCounter_ == 0) {
                     if (mode_ == Mode::Wakeup)
                         powerOn();
@@ -500,7 +500,7 @@ public:
                 );
             }
             // if this is home button press, start the long press countdown
-            if (!state_.status.btnHome() && ! gpio::read(AVR_PIN_BTN_2))
+            if (!state_.status.down(Btn::Home) && ! gpio::read(AVR_PIN_BTN_2))
                 homeCounter_ = BTN_HOME_POWER_OFF_DURATION;
             NO_ISR(state_.status.setControlValue(value));
             // move the matrix to dpad

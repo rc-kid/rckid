@@ -2,7 +2,7 @@
 #include "platform/platform.h"
 #include "platform/peripherals/neopixel.h"
 
-#include "rckid/config.h"
+#include "common/config.h"
 
 using namespace platform;
 
