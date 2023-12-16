@@ -2,9 +2,11 @@
 
 #include "rckid/app.h"
 #include "rckid/graphics/framebuffer.h"
+//#include "rckid/graphics/png.h"
 #include "fonts/Iosevka_Mono6pt7b.h"
 
-
+#include "logo-16.h"
+#include "PNGdec.h"
 
 namespace rckid {
 
@@ -17,9 +19,25 @@ namespace rckid {
 
     protected:
 
+        static inline AVRStatusTest * t_ = nullptr;
+        static inline PNG png_;
+
+        static void PNGDraw(PNGDRAW *pDraw) {
+            uint16_t usPixels[320];
+            png_.getLineAsRGB565(pDraw, usPixels, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff);
+            Renderer & r = t_->renderer();
+            for (int i = 0; i < 320; ++i)
+                r.pixel(i, pDraw->y, ColorRGB::Raw565(usPixels[i]));
+        }
+
         void update() override {
             i2c_read_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t *)& state_, sizeof(State), false);
-
+            if (t_ == nullptr) {
+                t_ = this;
+                png_.openFLASH(const_cast<uint8_t *>(Logo16), sizeof(Logo16), PNGDraw);
+                png_.decode(nullptr, 0);
+            }
+            //PNG png{Logo16, sizeof(Logo16)};
         }
 
         void draw() {
@@ -28,7 +46,9 @@ namespace rckid {
             r.setFont(Iosevka_Mono6pt7b);
             r.setBg(Color{bg_, 0, 0});
             bg_ += 4;
-            r.fill();
+            //r.fill();
+            r.text(0, 200);
+            r.text() << "Last error: " << png_.getLastError();
             r.text(0,0);
             r.text() << (state_.status.dpadLeft() ? "L " : "  ");
             r.text() << (state_.status.dpadRight() ? "R " : "  ");

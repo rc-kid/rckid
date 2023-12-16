@@ -2,7 +2,10 @@
 
 #include <cstdint>
 
-/** Adafruit GFX Library */
+/** Adafruit GFX Library 
+ 
+    To add new fonts, the online tool available at https://rop.nl/truetype2gfx/ is really handy. 
+*/
 struct GFXglyph {
     uint16_t bitmapOffset; ///< Pointer into GFXfont->bitmap
     uint8_t width;         ///< Bitmap dimensions in pixels

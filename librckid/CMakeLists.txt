@@ -11,9 +11,7 @@ add_compile_options(-Wall
         -O2
 )
 
-file(GLOB_RECURSE SRC "rckid/./*.cpp" "rckid/*.h")
-
-include_directories(${CMAKE_SOURCE_DIR/libs/sd-card/})
+file(GLOB_RECURSE SRC "rckid/*.cpp" "rckid/*.h")
 
 add_library(librckid ${SRC})
 
@@ -38,6 +36,7 @@ target_link_libraries(librckid
     hardware_pwm
     FatFs_SPI
     tinyusb_device
+    PNGdec
 )
 
 # create map/bin/hex file etc.

@@ -20,6 +20,8 @@ namespace rckid {
 
         static constexpr ColorRGB RGB(uint8_t r, uint8_t g, uint8_t b) { return ColorRGB{r, g, b}; }
 
+        static constexpr ColorRGB Raw565(uint16_t rgb565) { return ColorRGB{rgb565}; }
+
         uint8_t r() const { return ((raw_ >> 11) & 0xff) << 3; }
         uint8_t g() const { return ((raw_ >> 5) & 0x3f) << 2; }
         uint8_t b() const { return (raw_ & 0xff) << 3; }
@@ -31,6 +33,9 @@ namespace rckid {
         uint16_t rawValue16() const { return raw_; }
 
     private:
+
+        constexpr ColorRGB(uint16_t raw): raw_{raw} {}
+
         uint16_t raw_;
 
     } __attribute__((packed)); // rckid::ColorRGB

@@ -2,5 +2,7 @@ avr/.pio
 libs/pico-sdk
 libs/pico-examples
 libs/sd-card
+libs/PNGDec
 build
 __OLD__
+utils/bytes-to-cpp
