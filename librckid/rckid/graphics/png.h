@@ -1,31 +1,49 @@
 #pragma once
 
+#include <functional>
+
 #include <PNGdec.h>
 
+#include "color.h"
 
 namespace rckid {
 
     /** PNG image wrapper. 
      */
-    class PNG {
+    class PNG : private PNGIMAGE  {
     public:
+
+        using DecodeCallback = std::function<void(ColorRGB * rgb, int lineNum, int lineWidth)>;
 
         static PNG fromBuffer(uint8_t const * buffer, size_t numBytes);
 
-        /** Opens a png file from the provided memory buffer. The entire file must be in the buffer. 
-         */
-        PNG(uint8_t const * buffer, size_t numBytes) {
-            png_.openRAM(const_cast<uint8_t*>(buffer), numBytes, nullptr);
+        /*
+        static PNG fromFile(char const * file) {
+
         }
+        */
 
-        int width() const { return png_.getWidth(); }
+        int width() const { return iWidth; }
 
-        int height() const { return png_.getHeight(); }
+        int height() const { return iHeight; }
 
-        void decode()
+        int decode(DecodeCallback cb);
+
+        PNG & operator == (PNG const &) = delete;
+        PNG & operator == (PNG &&) = delete;
 
     private:
-       mutable ::PNG png_;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+        PNG() {
+            memset(this, 0, sizeof(PNGIMAGE));
+        }
+#pragma GCC diagnostic pop
+
+        static void decodeLine_(PNGDRAW *pDraw);
+
+        DecodeCallback cb_;
 
     }; // rckid::PNG
 
