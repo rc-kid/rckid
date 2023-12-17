@@ -4,10 +4,11 @@
 
 #include "gfx.h"
 #include "color.h"
+#include "primitives.h"
 
 namespace rckid {
 
-    template<typename PIXEL_FORMAT>
+    template<typename PIXEL_FORMAT = ColorRGB>
     class Canvas {
     public:
         using Color = PIXEL_FORMAT;
@@ -21,6 +22,9 @@ namespace rckid {
         ~Canvas() { 
             delete [] buffer_;
         }
+
+        int width() const { return w_; }
+        int height() const { return h_; }
 
         void setFg(Color c) { fg_ = c; }
         void setBg(Color c) { bg_ = c; }
@@ -46,6 +50,8 @@ namespace rckid {
             });
         }
 
+        /** Fills entire screen with the selected background color. 
+         */
         void fill() {
             Color c[] = { bg_, bg_ };
             uint32_t x = *(reinterpret_cast<uint32_t*>(& c));
@@ -53,6 +59,32 @@ namespace rckid {
             for (unsigned i = 0, e = rawPixelsCount() / 2; i < e; ++i)
                 //buffer_[i] = bg_;
                 b[i] = x;
+        }
+
+        /** Fills the given rectangle with the selected background color. 
+         */
+        void fill(Rect rect) {
+            for (int x = rect.left(), xe = rect.right(); x < xe; ++x)
+                for (int y = rect.top(), ye = rect.bottom(); y < ye; ++y)
+                    buffer_[map(x, y)] = bg_;
+        }
+
+        void draw(Canvas const & from, int x, int y) { 
+            draw(from, x, y, Rect::WH(from.width(), from.height()));
+        }
+
+        void draw(Canvas const & from, Point where) {
+            draw(from, where.x(), where.y(), Rect::WH(from.width(), from.height()));
+        }
+
+        void draw(Canvas const & from, Point where, Rect fromRect) {
+            draw(from, where.x(),  where.y(), fromRect);
+        }
+
+        void draw(Canvas const & from, int x, int y, Rect fromRect) {
+            for (int xx = 0, xe = fromRect.width(); xx != xe; ++xx)
+                for (int yy = 0, ye = fromRect.height(); yy != ye; ++yy)
+                    buffer_[map(x + xx, y + yy)] = from.buffer_[from.map(fromRect.left() + xx, fromRect.top() + yy)];
         }
 
         uint16_t const * rawPixels() const { 
@@ -64,7 +96,7 @@ namespace rckid {
 
     private:
 
-        size_t map(int x, int y) __attribute__((always_inline)) { 
+        constexpr size_t map(int x, int y) const __attribute__((always_inline)){ 
             return (w_ - x - 1) * h_ + y; 
         }
 

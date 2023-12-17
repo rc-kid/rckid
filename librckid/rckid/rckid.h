@@ -10,6 +10,7 @@
 #include <hardware/vreg.h>
 #include <hardware/i2c.h>
 #include <pico/binary_info.h>
+#include <pico/rand.h>
 
 #include "common/config.h"
 #include "common/state.h"

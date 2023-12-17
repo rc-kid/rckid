@@ -1,0 +1,49 @@
+#pragma once
+
+namespace rckid {
+
+    class Point {
+    public:
+        Point() = default;
+        constexpr Point(int x, int y): x_{x}, y_{y} {}
+
+        constexpr int x() const { return x_; }
+        constexpr int y() const { return y_; }
+    private:
+        int x_ = 0;
+        int y_ = 0;
+    }; 
+
+    class Rect {
+    public:
+        static constexpr Rect WH(int width, int height) {
+            return Rect{Point{0,0}, Point{width, height}};
+        }
+
+        static constexpr Rect XYWH(Point topLeft, int width, int height) { return XYWH(topLeft.x(), topLeft.y(), width, height); }
+        
+        static constexpr Rect XYWH(int x, int y, int width, int height) {
+            return Rect{
+                Point{x, y}, 
+                Point{x + width, y + height}
+            };
+        }
+
+        constexpr int top() const { return topLeft_.y(); }
+        constexpr int left() const { return topLeft_.x(); }
+        constexpr int bottom() const { return bottomRight_.y(); }
+        constexpr int right() const { return bottomRight_.x(); }
+        constexpr int width() const { return right() - left(); }
+        constexpr int height() const { return bottom() - top(); }
+        constexpr Point const & topLeft() const { return topLeft_; }
+        constexpr Point const & bottomRight() const { return bottomRight_; }
+    private:
+
+        constexpr Rect(Point tl, Point br): topLeft_{tl}, bottomRight_{br} {}
+
+        Point topLeft_;
+        Point bottomRight_;
+    }; 
+
+
+} // namespace rckid

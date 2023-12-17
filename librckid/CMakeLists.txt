@@ -29,6 +29,7 @@ pico_enable_stdio_uart(librckid ENABLED)
 # pull in common dependencies
 target_link_libraries(librckid
     pico_stdlib
+    pico_rand
     hardware_i2c
     hardware_pio
     hardware_spi

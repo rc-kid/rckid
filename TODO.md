@@ -3,6 +3,8 @@
 - can start working on GPU Benchmarks? 
 - framebuffer clear with DMA right after drawing is done, or in parallel with drawing if requested
 
+- should we ditch other color modes than 565? 
+
 ## Case
 
 - see if the cartridge insertion mechanism can be made reliable
@@ -28,10 +30,7 @@
 
 - document ST7789
 - add PIO driver unload option
-- rewrite the display code for the updatePixels modes (with callback, with no callback and with existing callback)
-
-
-- have a main event loop and callbacks that the interrupts will designate to fire, but the main loop will actually execute, such as filling buffers, etc. This should keep the interrupts very very responsive and the number of tasks to be called is bounded by the number of peripherals that generate them, i.e. no malloc
+- make I2C non-blocking to avoid blocking main thread
 
 ## AVR
 
