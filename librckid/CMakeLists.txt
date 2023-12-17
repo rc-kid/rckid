@@ -38,6 +38,7 @@ target_link_libraries(librckid
     FatFs_SPI
     tinyusb_device
     PNGdec
+    libhelix-mp3
 )
 
 # create map/bin/hex file etc.

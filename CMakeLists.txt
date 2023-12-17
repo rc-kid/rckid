@@ -17,15 +17,15 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/librckid)
 include_directories(${CMAKE_SOURCE_DIR}/assets)
+include_directories(${CMAKE_SOURCE_DIR}/librckid)
 include_directories(${CMAKE_SOURCE_DIR}/libs/sd-card)
 include_directories(${CMAKE_SOURCE_DIR}/libs/PNGdec/src)
-
-
+include_directories(${CMAKE_SOURCE_DIR}/libs/libhelix-mp3)
 
 add_subdirectory("libs/sd-card/src")
 add_subdirectory("libs/PNGdec")
+add_subdirectory("libs/libhelix-mp3")
 
 add_subdirectory("avr/rckid")
 add_subdirectory("avr/rckid-test")

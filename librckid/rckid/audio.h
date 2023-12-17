@@ -8,6 +8,7 @@ namespace rckid {
         kHz8 = 8000, 
         kHz16 = 16000,
         kHz44_1 = 44100,
+        kHz48 = 48000,
     };
 
     class Audio {

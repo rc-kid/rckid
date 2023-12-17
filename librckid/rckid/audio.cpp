@@ -25,6 +25,7 @@ namespace rckid {
 }
 
     void Audio::startPlayback(SampleRate rate, uint16_t * buffer, size_t stereoSamples, CallbackPlay cb) {
+        cbPlay_ = cb;
         buffer_ = buffer;
         bufferSize_ = stereoSamples;
         setSampleRate(rate);

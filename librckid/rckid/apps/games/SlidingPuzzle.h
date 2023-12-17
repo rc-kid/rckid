@@ -77,6 +77,8 @@ namespace rckid {
                         holeY_ -= 1;
                     }
                     break;
+                default:
+                    break; // nothing to do for other controls
             }
             dir_ = Btn::Home;
         }

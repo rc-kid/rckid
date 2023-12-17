@@ -14,10 +14,9 @@
 
 
 //#include "rckid/apps/test/SDCardTest.h"
-#include "rckid/apps/test/AVRStatusTest.h"
+//#include "rckid/apps/test/AVRStatusTest.h"
 #include "rckid/apps/games/SlidingPuzzle.h"
-
-
+//#include "rckid/apps/test/RawAudioTest.h"
 
 //#include "tusb.h"
 //#include "tusb_msc_storage.h"
@@ -27,8 +26,11 @@ using namespace rckid;
 int main() {
     //cpuOverclockMax();
     //cpuOverclock(150000000);
+    //cpuOverclock();
     initialize();
 
+    //RawAudioTest test;
+    //test.run();
 
     SlidingPuzzle game;
     game.run();

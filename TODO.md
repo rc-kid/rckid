@@ -5,6 +5,9 @@
 
 - should we ditch other color modes than 565? 
 
+- sound quality is rather poor - is it the board? does it change if AVR leaves headphones open?
+- is the circuit wrong?
+
 ## Case
 
 - see if the cartridge insertion mechanism can be made reliable

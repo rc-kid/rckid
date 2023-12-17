@@ -10,6 +10,7 @@ add_compile_options(-Wall
         -Wno-maybe-uninitialized
 )
 
+
 file(GLOB_RECURSE SRC "./*.cpp" "./*.h")
 
 add_executable(rckid-test ${SRC})
@@ -29,4 +30,4 @@ target_link_libraries(rckid-test librckid)
 
 # create map/bin/hex file etc.
 pico_add_extra_outputs(rckid-test)
-
+pico_set_linker_script(rckid-test ${CMAKE_SOURCE_DIR}/librckid/memmap.ld)
