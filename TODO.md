@@ -6,7 +6,10 @@
 - should we ditch other color modes than 565? 
 
 - sound quality is rather poor - is it the board? does it change if AVR leaves headphones open?
-- is the circuit wrong?
+- is the circuit wrong? - https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf
+
+- microphone tested to work - sample code https://github.com/ArmDeveloperEcosystem/microphone-library-for-pico/tree/main 
+- needs integration and lots of amplification it seems 
 
 ## Case
 
@@ -17,12 +20,15 @@
 
 - Q: the level translator seems not to be working allright. The rising edge up takes a *lot* of time from the vlow
 - Q: when no headphones are present, the headphones line only has about 2 volts, not 3volts it is supposed to have. Is this an issue? 
+- Q: the audio is really very noisy. What could be improved?
 
 - where to put the rumbler? maybe used encolosed speaker and put rumbler underneath it 
 - try the backlight current limiting to be 3.7Ohm for ~90mA max current
 - increase pads for the bottom side button for easier hand solderablity
 - display pins 11-15 maybe should be grounded (unused data pins)
 - pull-up resistors & termination resistors for the SD card (the sd card library has some info)
+- swap PDM clk and data so that we can use PWM to count pulses in time window for dumb decimation?
+
 
 - add pin help text to the GPIO and the programming interface
 - the logo on the back is a bit ugly & not very informative

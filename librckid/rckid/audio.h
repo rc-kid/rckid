@@ -11,6 +11,8 @@ namespace rckid {
         kHz48 = 48000,
     };
 
+    /** Audio driver. 
+    */
     class Audio {
     public:
 

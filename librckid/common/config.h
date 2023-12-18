@@ -56,6 +56,10 @@
 
 #define RP_ST7789_BAUDRATE 30000000
 
+/** Goes down to 4.096MHz for the actual clock rate. 
+ */
+#define RP_MIC_BAUDRATE 8192000
+
 
 
 /** AVR Pinout

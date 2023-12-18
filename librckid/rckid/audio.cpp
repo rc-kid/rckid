@@ -22,7 +22,8 @@ namespace rckid {
         dma_channel_configure(dma_, & dmaConf, &pwm_hw->slice[PWM_SLICE].cc, nullptr, 0, false);
         // enable IRQ0 on the DMA channel (shared with SD card and display)
         dma_channel_set_irq0_enabled(dma_, true);
-}
+
+    }
 
     void Audio::startPlayback(SampleRate rate, uint16_t * buffer, size_t stereoSamples, CallbackPlay cb) {
         cbPlay_ = cb;
