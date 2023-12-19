@@ -30,6 +30,9 @@ namespace rckid {
                 for (int i = 0; i < lineWidth; ++i)
                     r.pixel(i, lineNum, line[i]);
             });
+            shuffle_ = 0;
+            holeX_ = -1;
+            holeY_ = -1;
             //Renderer & r = renderer();
             //r.setBg(Color::RGB(128, 128, 128));
             //r.fill(Rect::XYWH(320 - 40, 240 - 40, 40, 40));
@@ -37,7 +40,7 @@ namespace rckid {
 
         void update() override {
             if (pressed(Btn::Start))
-                shuffle();
+                shuffle_ = 100;
             if (dir_ == Btn::Home) {
                 if (pressed(Btn::Left)) {
                     dir_ = Btn::Left;
@@ -52,9 +55,25 @@ namespace rckid {
         }
 
         void draw() override {
+            if (shuffle_ > 0) {
+                int x1 = get_rand_32() % (320 / TILE_WIDTH);
+                int y1 = get_rand_32() % (240 / TILE_HEIGHT);
+                int x2 = get_rand_32() % (320 / TILE_WIDTH);
+                int y2 = get_rand_32() % (240 / TILE_HEIGHT);
+                swapTiles(x1, y1, x2, y2);
+                if (--shuffle_ == 0) {
+                    Renderer & r = renderer();
+                    holeX_ = MAX_X;
+                    holeY_ = MAX_Y;
+                    hole_.draw(r, 0, 0, tileRect(holeX_, holeY_));
+                    r.setBg(Color::RGB(128, 128, 128));
+                    r.fill(tileRect(holeX_, holeY_));
+                }
+
+            }
             switch (dir_) {
                 case Btn::Left:
-                    if (holeX_ < MAX_X) {
+                    if (holeX_ < MAX_X && holeX_ >= 0) {
                         swapTiles(holeX_, holeY_, holeX_ + 1, holeY_);
                         holeX_ += 1;
                     }
@@ -66,7 +85,7 @@ namespace rckid {
                     }
                     break;
                 case Btn::Up:
-                    if (holeY_ < MAX_Y) {
+                    if (holeY_ < MAX_Y && holeY_ >= 0) {
                         swapTiles(holeX_, holeY_, holeX_, holeY_ + 1);
                         holeY_ += 1;
                     }
@@ -131,6 +150,8 @@ namespace rckid {
 
         int holeX_;
         int holeY_;
+
+        size_t shuffle_ = 0;
 
         Btn dir_ = Btn::Home;
 

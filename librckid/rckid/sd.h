@@ -25,6 +25,10 @@ namespace rckid {
 
     private:
 
+        friend class BaseApp;
+
+        static void processEvents();
+
         static constexpr size_t BYTES_PER_SECTOR = 512;
 
         static inline sd_card_t * card_ = nullptr;

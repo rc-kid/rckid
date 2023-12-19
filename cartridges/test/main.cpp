@@ -44,6 +44,33 @@ int main() {
 #ifdef HAHA
 
 
+
+#ifdef FOO
+
+void sdtest() {
+    sd_card_t *pSD = sd_get_by_num(0);
+    
+
+    FRESULT fr = f_mount(&pSD->fatfs, pSD->pcName, 1);
+    if (FR_OK != fr) panic("f_mount error: %s (%d)\n", FRESULT_str(fr), fr);
+    FIL fil;
+    const char* const filename = "audio/test2.txt";
+    fr = f_open(&fil, filename, FA_OPEN_APPEND | FA_WRITE);
+    if (FR_OK != fr && FR_EXIST != fr)
+        panic("f_open(%s) error: %s (%d)\n", filename, FRESULT_str(fr), fr);
+    if (f_printf(&fil, "Hello, world!\n") < 0) {
+        printf("f_printf failed\n");
+    }
+    fr = f_close(&fil);
+    if (FR_OK != fr) {
+        printf("f_close error: %s (%d)\n", FRESULT_str(fr), fr);
+    }
+    f_unmount(pSD->pcName);
+
+}
+
+#endif
+
 using DP = display_profile::RGBDouble;
 using Color = DP::Color;
 

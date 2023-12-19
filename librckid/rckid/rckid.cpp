@@ -1,3 +1,5 @@
+#include "tusb.h"
+
 #include "common/config.h"
 
 #include "rckid.h"
@@ -19,6 +21,7 @@ namespace rckid {
         bi_decl(bi_2pins_with_func(RP_PIN_SDA, RP_PIN_SCL, GPIO_FUNC_I2C));  
         // TODO detect and initialize the standard peripherals
         // TODO serial if necessary
+        tud_init(BOARD_TUD_RHPORT);        
     }
 
     void cpuOverclock(unsigned hz, bool overvolt) {

@@ -1,4 +1,5 @@
 #include "audio.h"
+#include "sd.h"
 
 #include "app.h"
 
@@ -44,6 +45,7 @@ namespace rckid {
             Device::tick();
             // process system events
             Audio::processEvents();
+            SD::processEvents();
             
             uint64_t afterSystem = uptime_us();
             // update the current app
