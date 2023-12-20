@@ -1,3 +1,4 @@
+#include "bsp/board.h"
 #include "tusb.h"
 
 #include "common/config.h"
@@ -11,6 +12,8 @@ namespace rckid {
     size_t clockSpeed_ = 125000000;
 
     void initialize() {
+        // FIXME for reasons I do not completely understand, the board init must be before the other calls, or the device hangs? 
+        board_init();
         // initialize the display
         ST7789::initialize();
         // initialize the I2C bus

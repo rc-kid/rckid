@@ -57,7 +57,7 @@ const int samplerateTab[3][3] = {
  *   - bitrate index == 0 is "free" mode (bitrate determined on the fly by
  *       counting bits between successive sync words)
  */
-const int/*short*/ bitrateTab[3][3][15] = {
+const short bitrateTab[3][3][15] = {
 	{
 		/* MPEG-1 */
 		{  0, 32, 64, 96,128,160,192,224,256,288,320,352,384,416,448}, /* Layer 1 */
@@ -81,7 +81,7 @@ const int/*short*/ bitrateTab[3][3][15] = {
 /* indexing = [version][layer]
  * number of samples in one frame (per channel)
  */
-const int/*short*/ samplesPerFrameTab[3][3] = {
+const short samplesPerFrameTab[3][3] = {
 	{384, 1152, 1152 }, /* MPEG1 */
 	{384, 1152,  576 }, /* MPEG2 */
 	{384, 1152,  576 }, /* MPEG2.5 */
@@ -93,7 +93,7 @@ const short bitsPerSlotTab[3] = {32, 8, 8};
 /* indexing = [version][mono/stereo]
  * number of bytes in side info section of bitstream 
  */
-const int/*short*/ sideBytesTab[3][2] = {
+const short sideBytesTab[3][2] = {
 	{17, 32},	/* MPEG-1:   mono, stereo */
 	{ 9, 17},	/* MPEG-2:   mono, stereo */
 	{ 9, 17},	/* MPEG-2.5: mono, stereo */
@@ -103,7 +103,7 @@ const int/*short*/ sideBytesTab[3][2] = {
  * for layer3, nSlots = floor(samps/frame * bitRate / sampleRate / 8)
  *   - add one pad slot if necessary
  */
-const int/*short*/ slotTab[3][3][15] = {
+const short slotTab[3][3][15] = {
 	{
 		/* MPEG-1 */
 		{ 0, 104, 130, 156, 182, 208, 261, 313, 365, 417, 522, 626, 731, 835,1044 },	/* 44 kHz */

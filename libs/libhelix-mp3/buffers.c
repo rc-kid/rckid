@@ -64,8 +64,6 @@
  *
  * Notes:       slow, platform-independent equivalent to memset(buf, 0, nBytes)
  **************************************************************************************/
-#define ClearBuffer(buf, nBytes) memset(buf, 0, nBytes) //fb
-/*
 static void ClearBuffer(void *buf, int nBytes)
 {
 	int i;
@@ -74,12 +72,9 @@ static void ClearBuffer(void *buf, int nBytes)
 	for (i = 0; i < nBytes; i++)
 		cbuf[i] = 0;
 
-	//fb
-	memset(buf, 0, nBytes)
-		
 	return;
 }
-*/
+
 /**************************************************************************************
  * Function:    AllocateBuffers
  *

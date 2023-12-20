@@ -45,9 +45,6 @@
 
 #include "coder.h"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wnarrowing"
-
 /* post-IMDCT window, win[blockType][i]
  * format = Q31
  * Fused sin window with final stage of IMDCT
@@ -315,4 +312,3 @@ const int polyCoef[264] = {
 	0x000001a0, 0x0000187c, 0x000097fc, 0x0003e84c, 0xffff6424, 0xffffff4c, 0x00000248, 0xffffffec, 
 };
 
-#pragma GCC diagnostic pop

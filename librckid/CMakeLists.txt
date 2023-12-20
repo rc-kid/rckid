@@ -30,12 +30,14 @@ pico_enable_stdio_uart(librckid ENABLED)
 target_link_libraries(librckid
     pico_stdlib
     pico_rand
+    pico_unique_id
     hardware_i2c
     hardware_pio
     hardware_spi
     hardware_dma
     hardware_pwm
     FatFs_SPI
+    tinyusb_board
     tinyusb_device
     PNGdec
     libhelix-mp3

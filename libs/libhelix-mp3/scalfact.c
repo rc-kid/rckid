@@ -74,7 +74,7 @@ static const char SFLenTab[16][2] = {
  * Return:      none
  *
  * Notes:       set order of short blocks to s[band][window] instead of s[window][band]
- *                so that we index through consecutive memory locations when unpacking 
+ *                so that we index through consectutive memory locations when unpacking 
  *                (make sure dequantizer follows same convention)
  *              Illegal Intensity Position = 7 (always) for MPEG1 scale factors
  **************************************************************************************/
@@ -208,11 +208,10 @@ static const char NRTab[6][3][4] = {
 static void UnpackSFMPEG2(BitStreamInfo *bsi, SideInfoSub *sis, ScaleFactorInfoSub *sfis, int gr, int ch, int modeExt, ScaleFactorJS *sfjs)
 {
 
-	int i, sfb, sfcIdx, btIdx, nrIdx;// iipTest;
+	int i, sfb, sfcIdx, btIdx, nrIdx;
 	int slen[4], nr[4];
 	int sfCompress, preFlag, intensityScale;
-	(void)gr;
-
+	
 	sfCompress = sis->sfCompress;
 	preFlag = 0;
 	intensityScale = 0;
@@ -299,7 +298,6 @@ static void UnpackSFMPEG2(BitStreamInfo *bsi, SideInfoSub *sis, ScaleFactorInfoS
 	if(sis->blockType == 2) {
 		if(sis->mixedBlock) {
 			/* do long block portion */
-			//iipTest = (1 << slen[0]) - 1;
 			for (sfb=0; sfb < 6; sfb++) {
 				sfis->l[sfb] = (char)GetBits(bsi, slen[0]);
 			}
@@ -313,7 +311,6 @@ static void UnpackSFMPEG2(BitStreamInfo *bsi, SideInfoSub *sis, ScaleFactorInfoS
 
 		/* remaining short blocks, sfb just keeps incrementing */
 		for (    ; nrIdx <= 3; nrIdx++) {
-			//iipTest = (1 << slen[nrIdx]) - 1;
 			for (i=0; i < nr[nrIdx]; i++, sfb++) {
 				sfis->s[sfb][0] = (char)GetBits(bsi, slen[nrIdx]);
 				sfis->s[sfb][1] = (char)GetBits(bsi, slen[nrIdx]);
@@ -326,7 +323,6 @@ static void UnpackSFMPEG2(BitStreamInfo *bsi, SideInfoSub *sis, ScaleFactorInfoS
 		/* long blocks */
 		sfb = 0;
 		for (nrIdx = 0; nrIdx <= 3; nrIdx++) {
-			//iipTest = (1 << slen[nrIdx]) - 1;
 			for(i=0; i < nr[nrIdx]; i++, sfb++) {
 				sfis->l[sfb] = (char)GetBits(bsi, slen[nrIdx]);
 			}

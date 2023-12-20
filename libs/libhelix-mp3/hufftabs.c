@@ -40,6 +40,7 @@
  *
  * hufftabs.c - compressed Huffman code tables
  **************************************************************************************/
+
 #include "coder.h"
 
 /* NOTE - regenerated tables to use shorts instead of ints 
