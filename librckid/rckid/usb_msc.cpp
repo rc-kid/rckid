@@ -133,8 +133,8 @@ void tud_msc_inquiry_cb(uint8_t lun, uint8_t vendor_id[8], uint8_t product_id[16
 {
   (void) lun; // use same ID for both LUNs
 
-  const char vid[] = "TinyUSB";
-  const char pid[] = "Mass Storage";
+  const char vid[] = "RCKidII";
+  const char pid[] = "SD Card";
   const char rev[] = "1.0";
 
   memcpy(vendor_id  , vid, strlen(vid));

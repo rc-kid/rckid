@@ -24,7 +24,7 @@
 using namespace rckid;
 
 int main() {
-    cpuOverclock();
+    //cpuOverclock();
     //cpuOverclock(150000000);
     //cpuOverclock();
     initialize();

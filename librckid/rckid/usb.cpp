@@ -24,6 +24,7 @@
  */
 
 #include "pico/unique_id.h"
+#include "tusb_config.h"
 #include "tusb.h"
 
 /* A combination of interfaces must have a unique product id, since PC will save device driver after the first plug.
@@ -44,13 +45,13 @@ tusb_desc_device_t const desc_device =
     .bLength            = sizeof(tusb_desc_device_t),
     .bDescriptorType    = TUSB_DESC_DEVICE,
     .bcdUSB             = 0x0200,
-    .bDeviceClass       = 0x00,
-    .bDeviceSubClass    = 0x00,
-    .bDeviceProtocol    = 0x00,
+    .bDeviceClass       = TUSB_CLASS_MISC,
+    .bDeviceSubClass    = MISC_SUBCLASS_COMMON,
+    .bDeviceProtocol    = MISC_PROTOCOL_IAD,
     .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE,
 
-    .idVendor           = 0xCafe,
-    .idProduct          = USB_PID,
+    .idVendor           = 0xbabe, // 11914, // RaspberryPi 
+    .idProduct          = USB_PID + 67,
     .bcdDevice          = 0x0100,
 
     .iManufacturer      = 0x01,
@@ -151,7 +152,7 @@ char const* string_desc_arr [] =
   (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
   "RCKid",                       // 1: Manufacturer
   "RCKidII",                     // 2: Product
-  serial,                        // 3: Serials, uses the flash ID
+  serial,                      // 3: Serials, uses the flash ID
 };
 
 static uint16_t _desc_str[32];
