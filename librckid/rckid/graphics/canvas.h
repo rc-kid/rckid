@@ -53,8 +53,7 @@ namespace rckid {
         /** Fills entire screen with the selected background color. 
          */
         void fill() {
-            Color c[] = { bg_, bg_ };
-            uint32_t x = *(reinterpret_cast<uint32_t*>(& c));
+            uint32_t x = bg_.rawValue16() << 16 | bg_.rawValue16();
             uint32_t * b = reinterpret_cast<uint32_t*>(buffer_);
             for (unsigned i = 0, e = rawPixelsCount() / 2; i < e; ++i)
                 //buffer_[i] = bg_;

@@ -2,6 +2,7 @@
 
 #include "rckid/app.h"
 #include "rckid/graphics/framebuffer.h"
+#include "fonts/Iosevka_Mono6pt7b.h"
 
 namespace rckid {
 
@@ -23,6 +24,10 @@ namespace rckid {
             App::onFocus();
             // TODO: fill in the numBlocks and blockSize, unmount SD card
             numEvents_ = 0;
+            Renderer & r = renderer();
+            r.setFg(Color::RGB(255,255,255));
+            r.setBg(Color::RGB(0,128,0));
+            r.setFont(Iosevka_Mono6pt7b);
 
         }
 

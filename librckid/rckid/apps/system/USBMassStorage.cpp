@@ -9,14 +9,12 @@
 namespace rckid {
 
     void USBMassStorage::update() {
-
+        while (!ST7789::updateDone())
+            tud_task();
     }
 
     void USBMassStorage::draw() {
         Renderer & r = renderer();
-        r.setFg(Color{255,255,255});
-        r.setBg(Color{0,0,0});
-        r.setFont(Iosevka_Mono6pt7b);
         r.fill();
         r.text(0,0);
         r.text() << "USB MSC: " << numEvents_ << " events";
