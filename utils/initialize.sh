@@ -13,4 +13,4 @@ git clone https://github.com/raspberrypi/pico-examples.git --branch master -o pi
 
 git clone https://github.com/zduka/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico.git -o sd-card
 
-git clone https://github.com/rc-kid/PNGdec -o PNGdec
+#git clone https://github.com/rc-kid/PNGdec -o PNGdec

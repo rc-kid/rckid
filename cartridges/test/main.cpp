@@ -14,9 +14,11 @@
 
 
 //#include "rckid/apps/test/SDCardTest.h"
-//#include "rckid/apps/test/AVRStatusTest.h"
-#include "rckid/apps/games/SlidingPuzzle.h"
+#include "rckid/apps/test/AVRStatusTest.h"
+//#include "rckid/apps/games/SlidingPuzzle.h"
 //#include "rckid/apps/test/RawAudioTest.h"
+#include "rckid/apps/system/USBMassStorage.h"
+
 
 //#include "tusb.h"
 //#include "tusb_msc_storage.h"
@@ -32,7 +34,7 @@ int main() {
     //RawAudioTest test;
     //test.run();
 
-    SlidingPuzzle game;
+    USBMassStorage game;
     game.run();
 
 //    AVRStatusTest test;

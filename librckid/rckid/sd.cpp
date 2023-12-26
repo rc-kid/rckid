@@ -74,7 +74,7 @@ namespace rckid {
     }
 
     void SD::processEvents() {
-        tud_task();
+        //tud_task();
     }
 
 }

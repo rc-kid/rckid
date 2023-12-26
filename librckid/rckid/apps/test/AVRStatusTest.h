@@ -20,7 +20,7 @@ namespace rckid {
         void update() override {
         }
 
-        void draw() {
+        void draw() override {
             TinyDate t = time();
             Renderer & r = renderer();
             r.setFg(Color{255,255,255});
