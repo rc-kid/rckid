@@ -15,7 +15,8 @@ int main(int argc, char * argv[]) {
     input.close();   
     int i = 0; 
     for (char c : bytes) {
-        std::cout << (unsigned)c << ",";
+        unsigned x = *reinterpret_cast<unsigned char*>(& c);
+        std::cout << x << ",";
         if (++i % 16 == 0)
             std::cout << std::endl;
     }

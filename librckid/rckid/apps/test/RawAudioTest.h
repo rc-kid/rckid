@@ -16,14 +16,16 @@ namespace rckid {
 
     protected:
 
+        static constexpr size_t BUFFER_SIZE = 8192;
+
         void onFocus() override {
             App::onFocus();
-            buffer_ = new uint16_t[8192];
+            buffer_ = new uint16_t[BUFFER_SIZE];
             offset_ = 0;
-            refill(buffer_, 8192);
+            refill(buffer_, BUFFER_SIZE / 2);
             Audio::initialize();
             Audio::setAudioEnabled(true);
-            Audio::startPlayback(SampleRate::kHz44_1, buffer_, 4096, [this](uint16_t * buffer, size_t stereoSamples) {
+            Audio::startPlayback(SampleRate::kHz8, buffer_, BUFFER_SIZE / 2, [this](uint16_t * buffer, size_t stereoSamples) {
                 refill(buffer, stereoSamples * 2);
             });
             Renderer & r = renderer();
@@ -42,16 +44,19 @@ namespace rckid {
             r.fill();
             r.text(5, 10);
             r.text() << offset_; 
+            r.text() << "\n\n";
+            r.text() << " FPS: " << fps() << " S:" << systemUs() << " U:" << (updateUs() / 1000) << " D:" << (drawUs() / 1000);
         }
 
     private:
 
         void refill(uint16_t * buffer, size_t size) {
-            if (offset_ + size/2 >= sizeof(raw_))
-                offset_ = 0;
+
             for (size_t i = 0; i < size; i += 2) {
-                buffer[i] = raw_[offset_] / 5;
-                buffer[i + 1] = raw_[offset_++] / 5;
+                buffer[i] = raw_[offset_];
+                buffer[i + 1] = raw_[offset_];
+                if (++offset_ >= sizeof(raw_))
+                    offset_ = 0;
             }
         }
 
@@ -63,7 +68,7 @@ namespace rckid {
 
         // some sample music, from https://pixabay.com/music/main-title-cinematic-dark-trailer-43sec-178297/
         static inline const uint8_t raw_[] = {
-#include "dark-trailer.raw.data"
+#include "test/audio/8000.raw.data"
         };
 
     }; // rckid::RawAudiotest

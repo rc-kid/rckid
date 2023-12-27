@@ -15,14 +15,15 @@ namespace rckid {
         pwm_set_wrap(PWM_SLICE, 256); // set wrap to 8bit sound levels
         
         // set the PWM output to count to 256 441000 times per second
-        pwm_set_clkdiv(PWM_SLICE, 11.07);
+        //pwm_set_clkdiv(PWM_SLICE, 11.07);
+        //pwm_set_clkdiv(PWM_SLICE, 61.03);
         // acquire and configure the DMA
         dma_ = dma_claim_unused_channel(true);
         auto dmaConf = dma_channel_get_default_config(dma_);
         channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bytes (16 per channel, 2 channels)
         channel_config_set_read_increment(& dmaConf, true);
-        //channel_config_set_dreq(& dmaConf, pwm_get_dreq(TIMER_SLICE)); // DMA is driver by the sample rate PWM
-        channel_config_set_dreq(&dmaConf, pwm_get_dreq(PWM_SLICE));
+        channel_config_set_dreq(& dmaConf, pwm_get_dreq(TIMER_SLICE)); // DMA is driver by the sample rate PWM
+        //channel_config_set_dreq(&dmaConf, pwm_get_dreq(PWM_SLICE));
         dma_channel_configure(dma_, & dmaConf, &pwm_hw->slice[PWM_SLICE].cc, nullptr, 0, false);
         // enable IRQ0 on the DMA channel (shared with SD card and display)
         dma_channel_set_irq0_enabled(dma_, true);

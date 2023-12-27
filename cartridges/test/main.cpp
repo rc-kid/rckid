@@ -16,7 +16,7 @@
 //#include "rckid/apps/test/SDCardTest.h"
 #include "rckid/apps/test/AVRStatusTest.h"
 //#include "rckid/apps/games/SlidingPuzzle.h"
-//#include "rckid/apps/test/RawAudioTest.h"
+#include "rckid/apps/test/RawAudioTest.h"
 #include "rckid/apps/system/USBMassStorage.h"
 #include "rckid/apps/test/AudioTestTone.h"
 
@@ -31,8 +31,8 @@ int main() {
     //cpuOverclock();
     initialize();
 
-    AudioTestTone test;
-    test.run();
+//    AudioTestTone test;
+//    test.run();
 
 //    RawAudioTest test;
 //    test.run();
@@ -40,8 +40,8 @@ int main() {
     //USBMassStorage game;
     //game.run();
 
-//    AVRStatusTest test;
-//    test.run();
+    AVRStatusTest test;
+    test.run();
 }
 
 
