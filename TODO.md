@@ -22,6 +22,7 @@
 - can test different circuits on the cartridge boards (PWM through the cartridge)
 - verify that this is not due to some SW issue, because basic tone seems ok-ish
 - particularly the big resistors in parallel with headphones are something quite different from what I currently have
+- headphone volume is too high, speaker volume is too low
 
 ## PCB
 

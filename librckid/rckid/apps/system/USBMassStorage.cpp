@@ -211,7 +211,7 @@ extern "C" {
         TODO: We can in theory have two LUNs, the second being the FATFS in the flash chip. 
     */
     uint8_t tud_msc_get_maxlun_cb(void) {
-    return 1; 
+        return 1; 
     }
 
     /** Invoked when received SCSI_CMD_INQUIRY
@@ -232,11 +232,9 @@ extern "C" {
     /** Invoked when received Test Unit Ready command.
         
         Return true allowing host to read/write this LUN e.g SD card inserted
-
-        TODO: return true only when the MSD storage is the active app? Or only process USB events when the app is focused?
     */
     bool tud_msc_test_unit_ready_cb([[maybe_unused]] uint8_t lun) {
-        return true; // RAM disk is always ready
+        return USBMassStorage::available(); 
     }
 
     /** Invoked when received SCSI_CMD_READ_CAPACITY_10 and SCSI_CMD_READ_FORMAT_CAPACITY to determine the disk size

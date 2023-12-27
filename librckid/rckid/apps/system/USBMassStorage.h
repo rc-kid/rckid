@@ -17,6 +17,8 @@ namespace rckid {
         USBMassStorage(App * parent): App{parent} { }
 
 
+        static bool available() { return available_; }
+
         static uint32_t numBlocks() { return numBlocks_; }
         static uint16_t blockSize() { return blockSize_; }
         static void addEvent() { ++numEvents_; }
@@ -31,11 +33,13 @@ namespace rckid {
             r.setFg(Color::RGB(255,255,255));
             r.setBg(Color::RGB(0,128,0));
             r.setFont(Iosevka_Mono6pt7b);
+            available_ = true;
 
         }
 
         void onBlur() override {
             // TODO: remount the SD card
+            available_ = false;
         }
 
         void update() override;
@@ -43,6 +47,8 @@ namespace rckid {
         void draw() override;
 
     private:
+
+        static inline bool available_ = false;
 
         static inline uint32_t numBlocks_ = 16;
         static inline uint16_t blockSize_ = 512;

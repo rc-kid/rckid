@@ -31,6 +31,10 @@ namespace rckid {
      */
     void initialize();
 
+    /** Yields to the RCKid's device events. 
+     */
+    void yield();
+
     void setBrightness(uint8_t brightness);
 
     /** \name Controls 
@@ -106,6 +110,7 @@ namespace rckid {
 
         static inline size_t clockSpeed_ = 125000000;
 
+        static inline unsigned yieldCnt_ = 0;
         static inline State state_;
         static inline State lastState_;
 
@@ -122,6 +127,8 @@ namespace rckid {
         friend class BaseApp;
         friend class Audio;
         friend void initialize();
+
+        friend void yield();
 
         friend void setBrightness(uint8_t brightness) {
             Device::sendCommand(cmd::SetBrightness(brightness));

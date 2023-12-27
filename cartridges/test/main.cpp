@@ -37,8 +37,8 @@ int main() {
 //    RawAudioTest test;
 //    test.run();
 
-    //USBMassStorage game;
-    //game.run();
+//    USBMassStorage game;
+//    game.run();
 
     AVRStatusTest test;
     test.run();

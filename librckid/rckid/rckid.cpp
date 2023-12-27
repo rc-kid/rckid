@@ -2,14 +2,11 @@
 #include "tusb.h"
 
 #include "common/config.h"
-
 #include "rckid.h"
-
 #include "ST7789.h"
+#include "audio.h"
 
 namespace rckid {
-
-    size_t clockSpeed_ = 125000000;
 
     void initialize() {
         // FIXME for reasons I do not completely understand, the board init must be before the other calls, or the device hangs? 
@@ -27,6 +24,21 @@ namespace rckid {
         tud_init(BOARD_TUD_RHPORT);        
     }
 
+    void yield() {
+        switch (Device::yieldCnt_++) {
+            case 0:
+                tud_task();
+                break;
+            case 1:
+                Audio::processEvents();
+                break;
+            default:
+                Device::yieldCnt_ = 0;
+                break;
+
+        }
+    }
+
     void cpuOverclock(unsigned hz, bool overvolt) {
         if (overvolt) {
             vreg_set_voltage(VREG_VOLTAGE_1_20);
@@ -34,7 +46,7 @@ namespace rckid {
         } else {
             // TODO non-overvolt                
         }
-        clockSpeed_ = hz;
+        Device::clockSpeed_ = hz;
         set_sys_clock_khz(hz / 1000, true);
     }
 

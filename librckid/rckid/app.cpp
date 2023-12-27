@@ -1,3 +1,5 @@
+#include "tusb.h"
+
 #include "audio.h"
 #include "sd.h"
 
@@ -44,9 +46,12 @@ namespace rckid {
             // new tick (check with AVR and peripherals, etc.)
             Device::tick();
             // process system events
-            Audio::processEvents();
-            //SD::processEvents();
-            
+            tud_task(); // USB Mass Storage
+            Audio::processEvents(); // Audio buffers
+
+
+
+
             uint64_t afterSystem = uptime_us();
             // update the current app
             currentApp_->update();

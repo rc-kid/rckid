@@ -71,7 +71,8 @@ namespace rckid {
 
         static void waitUpdateDone() { 
             uint64_t t = uptime_us();
-            while (updating_); 
+            while (updating_)
+                yield();
             updateWaitUs_ = static_cast<unsigned>(uptime_us() - t);
         }
 
@@ -115,7 +116,8 @@ namespace rckid {
         static void waitVSync() { 
             uint64_t t = uptime_us();
             while (gpio_get(RP_PIN_DISP_TE)); 
-            while (! gpio_get(RP_PIN_DISP_TE)); 
+            while (! gpio_get(RP_PIN_DISP_TE))
+                yield();
             vsyncWaitUs_ = static_cast<unsigned>(uptime_us() - t);
             
         }
