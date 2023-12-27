@@ -20,6 +20,8 @@
 - add big cap to vclean and see if it changes stuff 
 - seem to be easily driven from PWM timer being the desired frequency
 - can test different circuits on the cartridge boards (PWM through the cartridge)
+- verify that this is not due to some SW issue, because basic tone seems ok-ish
+- particularly the big resistors in parallel with headphones are something quite different from what I currently have
 
 ## PCB
 
@@ -44,6 +46,7 @@
 - add PIO driver unload option
 - make I2C non-blocking to avoid blocking main thread
 
+
 ## AVR
 
 - on wakeup sequence, check that start & sel are pressed too to enter debug mode(s)
@@ -51,7 +54,32 @@
 - add neopixel & rumbler effects
 - add I2C commands
 
+## SDK
+
+> Audio:
+
+- mp3
+- opus
+- proper tone & music (sine, different audio sample rates, mixer), ADSR tone
+
+> Graphics
+
+- fonts with alpha
+- more stuff to the framebuffer
+- tiling engine 
+
+> Apps
+
+- some selector app that cycles through options, could this be carousel? 
+- cleanup the app stack and make it more natural not relying on calling super for basic events
+
+> FAT32
+
+- do own async FAT32 driver with DMA
+
 ## Picosystem
+
+> Maybe don't bother with Picosystem...
 
 - clearing the screen does not work (perhaps overclocking issue)
 - IRQ does not work
