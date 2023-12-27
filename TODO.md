@@ -5,9 +5,6 @@
 
 - should we ditch other color modes than 565? 
 
-- sound quality is rather poor - is it the board? does it change if AVR leaves headphones open?
-- is the circuit wrong? - https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf
-
 - microphone tested to work - sample code https://github.com/ArmDeveloperEcosystem/microphone-library-for-pico/tree/main 
 - needs integration and lots of amplification it seems 
 
@@ -15,6 +12,14 @@
 
 - see if the cartridge insertion mechanism can be made reliable
 - check if the slim buttons are actually working reasonably well
+
+## Audio Woes
+
+- sound quality is rather poor - is it the board? does it change if AVR leaves headphones open?
+- is the circuit wrong? - https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf
+- add big cap to vclean and see if it changes stuff 
+- seem to be easily driven from PWM timer being the desired frequency
+- can test different circuits on the cartridge boards (PWM through the cartridge)
 
 ## PCB
 
@@ -28,12 +33,10 @@
 - display pins 11-15 maybe should be grounded (unused data pins)
 - pull-up resistors & termination resistors for the SD card (the sd card library has some info)
 - swap PDM clk and data so that we can use PWM to count pulses in time window for dumb decimation?
-
-
 - add pin help text to the GPIO and the programming interface
 - the logo on the back is a bit ugly & not very informative
-
-- add big cap to vclean and see if it changes stuff 
+- AB buttons are not ceneterd right
+- enlarge the space around the sensors
 
 ## RP
 

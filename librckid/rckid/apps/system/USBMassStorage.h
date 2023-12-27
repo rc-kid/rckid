@@ -5,7 +5,10 @@
 #include "fonts/Iosevka_Mono6pt7b.h"
 
 namespace rckid {
-
+    /** USB Mass Storage device.  
+     
+        The app has to be active in order for the mass storage attachment to work. 
+     */
     class USBMassStorage : public App<Framebuffer<display_profile::RGB>> {
     public:
 

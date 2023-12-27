@@ -14,6 +14,7 @@
 
 #include "common/config.h"
 #include "common/state.h"
+#include "common/commands.h"
 
 inline uint8_t operator "" _u8(unsigned long long value) { return static_cast<uint8_t>(value); }
 inline uint16_t operator "" _u16(unsigned long long value) { return static_cast<uint16_t>(value); }
@@ -30,8 +31,9 @@ namespace rckid {
      */
     void initialize();
 
+    void setBrightness(uint8_t brightness);
+
     /** \name Controls 
-     
         
      */
     //@{
@@ -43,7 +45,7 @@ namespace rckid {
     bool released(Btn b);
 
     //@}
-
+   
     /** \name Power management 
      */
     //@{
@@ -97,12 +99,21 @@ namespace rckid {
         A static class is used to maintain encapsulation while providing inlinable, fast implementations of the friend functions from the RCKid's API described above. 
      */
     class Device {
+    public:
+
+  
     private:
 
         static inline size_t clockSpeed_ = 125000000;
 
         static inline State state_;
         static inline State lastState_;
+
+        template<typename T>
+        static void sendCommand(T const & cmd) {
+            /// TODO: ensure T is a command
+            i2c_write_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t const *) & cmd, sizeof(T), false);
+        }    
 
         /** Updates the device by talking to all common peripherals, etc. 
          */
@@ -111,6 +122,10 @@ namespace rckid {
         friend class BaseApp;
         friend class Audio;
         friend void initialize();
+
+        friend void setBrightness(uint8_t brightness) {
+            Device::sendCommand(cmd::SetBrightness(brightness));
+        }
 
         friend bool down(Btn b) { return state_.status.down(b); }
         friend bool pressed(Btn b) { return state_.status.down(b) && ! lastState_.status.down(b); }

@@ -28,7 +28,10 @@ namespace rckid {
         static bool audioEnabled() { return Device::state_.status.audioEnabled(); }
 
         static void setAudioEnabled(bool enabled = true) {
-            // TODO 
+            if (enabled) 
+                Device::sendCommand(cmd::AudioEnabled{});
+            else
+                Device::sendCommand(cmd::AudioDisabled{});
         }
 
         /** number of stereo pairs, i.e. buffer size in uint16_t / 2 */

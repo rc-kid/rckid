@@ -6,13 +6,14 @@
 #include "rckid/app.h"
 #include "rckid/graphics/framebuffer.h"
 #include "rckid/audio.h"
+#include "rckid/audio/tone.h"
 
 namespace rckid {
 
-    class RawAudioTest : public App<Framebuffer<display_profile::RGB>> {
+    class AudioTestTone : public App<Framebuffer<display_profile::RGB>> {
     public:
-        RawAudioTest() = default;
-        RawAudioTest(App * parent): App{parent} {}
+        AudioTestTone() = default;
+        AudioTestTone(App * parent): App{parent} {}
 
     protected:
 
@@ -20,11 +21,12 @@ namespace rckid {
             App::onFocus();
             buffer_ = new uint16_t[8192];
             offset_ = 0;
-            refill(buffer_, 8192);
+            tone_.play(440);
+            refill(buffer_, 4096);
             Audio::initialize();
             Audio::setAudioEnabled(true);
             Audio::startPlayback(SampleRate::kHz44_1, buffer_, 4096, [this](uint16_t * buffer, size_t stereoSamples) {
-                refill(buffer, stereoSamples * 2);
+                refill(buffer, stereoSamples);
             });
             Renderer & r = renderer();
             r.setFg(Color{255,255,255});
@@ -47,24 +49,15 @@ namespace rckid {
     private:
 
         void refill(uint16_t * buffer, size_t size) {
-            if (offset_ + size/2 >= sizeof(raw_))
-                offset_ = 0;
-            for (size_t i = 0; i < size; i += 2) {
-                buffer[i] = raw_[offset_] / 5;
-                buffer[i + 1] = raw_[offset_++] / 5;
-            }
+            tone_.fillBuffer(buffer, size);
+            offset_ += size / 2;
         }
 
-        bool ok_ = false;
+        Tone tone_;
+
         size_t offset_ = 0;
 
-
         uint16_t * buffer_ = nullptr;
-
-        // some sample music, from https://pixabay.com/music/main-title-cinematic-dark-trailer-43sec-178297/
-        static inline const uint8_t raw_[] = {
-#include "dark-trailer.raw.data"
-        };
 
     }; // rckid::RawAudiotest
 
