@@ -111,6 +111,8 @@ namespace rckid {
 
   
     private:
+        friend class BaseApp;
+        friend class Audio;
 
         static inline size_t clockSpeed_ = 125000000;
 
@@ -128,8 +130,6 @@ namespace rckid {
          */
         static void tick();
 
-        friend class BaseApp;
-        friend class Audio;
         friend void initialize();
 
         friend void yield();
