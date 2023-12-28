@@ -1,3 +1,5 @@
+#include "pico/binary_info.h"
+
 #include "hw_config.h"
 
 #include "tusb.h"
@@ -71,6 +73,27 @@ namespace rckid {
         f_getfree(card_->pcName, & freeClusters, &fs);
         uint64_t freeSectors = freeClusters * fs->csize;
         return freeSectors * BYTES_PER_SECTOR;
+    }
+
+    void SD::initialize() {
+        spi_init(RP_SD_SPI, 400000);
+        gpio_set_function(RP_PIN_SD_SCK, GPIO_FUNC_SPI);
+        gpio_set_function(RP_PIN_SD_TX, GPIO_FUNC_SPI);
+        gpio_set_function(RP_PIN_SD_RX, GPIO_FUNC_SPI);
+        // Make the SPI pins available to picotool
+        bi_decl(bi_3pins_with_func(RP_PIN_SD_SCK, RP_PIN_SD_TX, RP_PIN_SD_RX, GPIO_FUNC_SPI));
+        // initialize the chip select pin 
+        gpio_init(RP_PIN_SD_CSN);
+        gpio_set_dir(RP_PIN_SD_CSN, GPIO_OUT);
+        gpio_put(RP_PIN_SD_CSN, 1);
+        // Make the CS pin available to picotool
+        bi_decl(bi_1pin_with_name(RP_PIN_SD_CSN, "SPI CS"));
+        // initialize the SD card with SPI mode, this is done by sending the CMD0 (go to idle) while the CSN pin is low as per the datasheet
+        gpio_put(RP_PIN_SD_CSN, 0);
+        uint8_t resetCmd[] = {0x40, 0, 0, 0, 0, 0x95};
+        spi_write_blocking(RP_SD_SPI, resetCmd, sizeof(resetCmd));
+        gpio_put(RP_PIN_SD_CSN, 1);
+        // initialize the SD card, filing an error if stuff changes
     }
 
     void SD::processEvents() {

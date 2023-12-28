@@ -4,8 +4,6 @@
 #include "rckid/graphics/framebuffer.h"
 #include "fonts/Iosevka_Mono6pt7b.h"
 
-#include "logo-16.h"
-
 namespace rckid {
 
     class AVRStatusTest : public App<Framebuffer<display_profile::RGB>> {

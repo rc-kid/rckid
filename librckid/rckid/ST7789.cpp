@@ -5,6 +5,8 @@
 #include <hardware/pio.h>
 #include <hardware/dma.h>
 
+#include "images/logo-16.h"
+#include "graphics/png.h"
 
 namespace rckid {
 
@@ -32,18 +34,31 @@ namespace rckid {
         sleep_ms(150);
         //sendCommand(MADCTL, (uint8_t)(MADCTL_MV));
         //sendCommand(MADCTL, (uint8_t)(MADCTL_MY | MADCTL_MV ));
-        sendCommand(MADCTL, 0_u8);
+        //sendCommand(MADCTL, 0_u8);
+        setDisplayMode(DisplayMode::Natural);
         sendCommand(INVON);
 
         // now clear the entire display black
-        setColumnRange(0, 239);
-        setRowRange(0, 319);
+        setColumnRange(0, 319);
+        setRowRange(0, 239);
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
+#if (defined RCKID_SPLASHSCREEN_OFF)
         for (size_t i = 0, e =320 * 240; i < e; ++i) {
             sendByte(0);
             sendByte(0);
         }
+#else
+        PNG png = PNG::fromBuffer(Logo16, sizeof(Logo16));
+        png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
+            uint8_t const * raw = reinterpret_cast<uint8_t *>(line);
+            for (int i = 0; i < lineWidth; ++i) {
+                sendByte(raw[1]);
+                sendByte(raw[0]);
+                raw += 2;
+            }
+        });
+#endif
         end();
     }
 

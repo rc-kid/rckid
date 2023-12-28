@@ -11,6 +11,7 @@ namespace rckid {
     class SD {
     public:
 
+
         static bool mount();
         static void unmount();
         static bool mounted() { return card_ != nullptr; }
@@ -26,6 +27,14 @@ namespace rckid {
     private:
 
         friend class BaseApp;
+
+        static constexpr uint8_t CMD0 = 0; // reset the card, when sent with CS low, switches the card to SPI mode
+
+        /** Initializes the SD card in SPI mode. 
+         
+            This is to be executed once when the RCKid starts. 
+         */
+        static void initialize();
 
         static void processEvents();
 
