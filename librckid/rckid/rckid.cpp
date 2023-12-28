@@ -39,6 +39,11 @@ namespace rckid {
         }
     }
 
+    void powerOff() {
+        /// TODO: make sure sd and other things are done first, only then poweroff
+        Device::sendCommand(cmd::PowerOff{}); 
+    }
+
     void cpuOverclock(unsigned hz, bool overvolt) {
         if (overvolt) {
             vreg_set_voltage(VREG_VOLTAGE_1_20);

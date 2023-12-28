@@ -32,10 +32,10 @@ namespace rckid {
     void initialize();
 
     /** Yields to the RCKid's device events. 
+     
+         
      */
     void yield();
-
-    void setBrightness(uint8_t brightness);
 
     /** \name Controls 
         
@@ -54,12 +54,16 @@ namespace rckid {
      */
     //@{
 
+    void powerOff();
+
     bool charging();
     bool dcPower();
 
     /** Returns the voltage measured by the AVR in Volts x 100. The value can also be used as a battery gauge level. 
      */
     unsigned vcc();
+
+    void setBrightness(uint8_t brightness);
 
     //@}
 
@@ -130,17 +134,18 @@ namespace rckid {
 
         friend void yield();
 
-        friend void setBrightness(uint8_t brightness) {
-            Device::sendCommand(cmd::SetBrightness(brightness));
-        }
-
         friend bool down(Btn b) { return state_.status.down(b); }
         friend bool pressed(Btn b) { return state_.status.down(b) && ! lastState_.status.down(b); }
         friend bool released(Btn b) { return !state_.status.down(b) && lastState_.status.down(b); }
 
+        friend void powerOff();
         friend bool charging() { return state_.status.charging(); }
         friend bool dcPower() { return state_.status.dcPower(); }
         friend unsigned vcc() { return state_.info.vcc(); }
+        friend void setBrightness(uint8_t brightness) {
+            Device::sendCommand(cmd::SetBrightness(brightness));
+        }
+
 
         friend unsigned tempAvr() { return state_.info.temp(); }
 
