@@ -1,10 +1,8 @@
-//#include "platform/platform.h"
+
 
 #include "common/config.h"
 #include "rckid/rckid.h"
-#include "rckid/serial.h"
 #include "rckid/ST7789.h"
-//#include "rckid/gpu/canvas.h"
 #include "rckid/graphics/canvas.h"
 #include "rckid/sd.h"
 #include "common/state.h"

@@ -61,6 +61,11 @@
 #define RP_MIC_BAUDRATE 8192000
 
 
+#define RP_DEBUG_UART uart1
+#define RP_DEBUG_UART_BAUDRATE 115200
+#define RP_DEBUG_UART_TX_PIN 20
+#define RP_DEBUG_UART_RX_PIN 21
+
 
 /** AVR Pinout
 

@@ -9,8 +9,10 @@
 #include <hardware/clocks.h>
 #include <hardware/vreg.h>
 #include <hardware/i2c.h>
+#include <hardware/uart.h>
 #include <pico/binary_info.h>
 #include <pico/rand.h>
+//#include <stdio.h>
 
 #include "common/config.h"
 #include "common/state.h"
@@ -36,6 +38,21 @@ namespace rckid {
          
      */
     void yield();
+
+    /** Serial port interface for RCKid allowing for printf statements and somewhat easier debugging. 
+     
+        To use the serial port on Raspberry Pi, start minicom with the following arguments:
+
+        minicom -b 115200 -o -D /dev/ttyAMA0
+     */
+    inline void enableSerialPort() {
+        stdio_uart_init_full(
+            RP_DEBUG_UART, 
+            RP_DEBUG_UART_BAUDRATE, 
+            RP_DEBUG_UART_TX_PIN, 
+            RP_DEBUG_UART_RX_PIN
+        );
+    }
 
     /** \name Controls 
         

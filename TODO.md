@@ -1,5 +1,9 @@
 ## TODO
 
+- where to put rumbler? 
+- check audio circuit
+
+
 - can start working on GPU Benchmarks? 
 - framebuffer clear with DMA right after drawing is done, or in parallel with drawing if requested
 
@@ -12,6 +16,7 @@
 
 - see if the cartridge insertion mechanism can be made reliable
 - check if the slim buttons are actually working reasonably well
+- Select & Start buttons need repositioning to accomodate the speaker
 
 ## Audio Woes
 
@@ -24,29 +29,29 @@
 - particularly the big resistors in parallel with headphones are something quite different from what I currently have
 - headphone volume is too high, speaker volume is too low
 
+- check https://github.com/TuriSc/RP2040-PWM-DMA-Audio/tree/main and https://github.com/TuriSc/Dodepan for hints perhaps? 
+
 ## PCB
 
 - Q: the level translator seems not to be working allright. The rising edge up takes a *lot* of time from the vlow
 - Q: when no headphones are present, the headphones line only has about 2 volts, not 3volts it is supposed to have. Is this an issue? 
 - Q: the audio is really very noisy. What could be improved?
 
-- where to put the rumbler? maybe used encolosed speaker and put rumbler underneath it 
 - try the backlight current limiting to be 3.7Ohm for ~90mA max current
 - increase pads for the bottom side button for easier hand solderablity
 - display pins 11-15 maybe should be grounded (unused data pins)
 - pull-up resistors & termination resistors for the SD card (the sd card library has some info)
 - swap PDM clk and data so that we can use PWM to count pulses in time window for dumb decimation?
-- add pin help text to the GPIO and the programming interface
-- the logo on the back is a bit ugly & not very informative
-- AB buttons are not ceneterd right
-- enlarge the space around the sensors
+- AB buttons are not ceneterd right, fix
+- Select & Start buttons need to go a bit up
+- add labels to PGM and other headers on the bottom side of the PCB
+- where to put the rumbler? Can't be next to the speaker (two magnets)
 
 ## RP
 
 - document ST7789
 - add PIO driver unload option
 - make I2C non-blocking to avoid blocking main thread
-
 
 ## AVR
 
