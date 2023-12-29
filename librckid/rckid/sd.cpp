@@ -94,6 +94,7 @@ namespace rckid {
         spi_write_blocking(RP_SD_SPI, resetCmd, sizeof(resetCmd));
         gpio_put(RP_PIN_SD_CSN, 1);
         // initialize the SD card, filing an error if stuff changes
+                
     }
 
     void SD::processEvents() {

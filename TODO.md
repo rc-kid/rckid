@@ -1,12 +1,11 @@
 ## TODO
 
 - where to put rumbler? 
-- check audio circuit
+- ditch RGB modes we don't plan on using (RGBA & picosystem)
+- run common tasks between update and draw as well, and in any yield 
 
 - can start working on GPU Benchmarks? 
 - framebuffer clear with DMA right after drawing is done, or in parallel with drawing if requested
-
-- should we ditch other color modes than 565? 
 
 - microphone tested to work - sample code https://github.com/ArmDeveloperEcosystem/microphone-library-for-pico/tree/main 
 - needs integration and lots of amplification it seems 
@@ -45,14 +44,14 @@
 - Select & Start buttons need to go a bit up
 - add labels to PGM and other headers on the bottom side of the PCB
 - where to put the rumbler? Can't be next to the speaker (two magnets)
+- add holes for the display legs for lower profile
 
 ??? - add headers to the bottom side of the PCB for the solderable wires
 
 ## RP
 
 - document ST7789
-- add PIO driver unload option
-- make I2C non-blocking to avoid blocking main thread
+- add PIO driver unload option (or load them completely)
 
 ## AVR
 

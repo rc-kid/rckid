@@ -11,7 +11,6 @@ namespace rckid {
     class SD {
     public:
 
-
         static bool mount();
         static void unmount();
         static bool mounted() { return card_ != nullptr; }
