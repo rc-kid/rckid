@@ -15,6 +15,49 @@ namespace rckid {
      
         The driver takes care of display initialization and provides basic functions for display updates in either direct, or continuous mode. The direct provides blocking interface for sending either commands, or data updates to the system, while the continous mode only supoorts sending data updates via DMA. 
 
+        RCKid uses a 37pin hand-solderable version of 2.8" 320x240 TFT display with the following pinout:
+
+        1 - DBO
+        2 - DB1
+        3 - DP2
+        4 - DB3
+        5 - GND
+        6 - VDDI
+        7 - CSX
+        8 - DCX
+        9 - WRX
+        10 - RDX
+        11 - NC
+        12 - NC
+        13 - NC
+        14 - NC
+        15 - NC
+        16 - LED-A
+        17 - LED-K
+        18 - LED-K
+        19 - LED-K
+        20 - LED-K
+        21 - TE
+        22 - DB4
+        23 - DB8
+        24 - DB9
+        25 - DB10
+        26 - DB11
+        27 - DB12
+        28 - DB13
+        29 - DB14
+        30 - DB15
+        31 - RESX
+        32 - VDD
+        33 - VDDI
+        35 - DB5
+        36 - DB6
+        37 - DB7
+        
+
+
+
+
      */
     class ST7789 {
     public:

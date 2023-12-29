@@ -3,7 +3,6 @@
 - where to put rumbler? 
 - check audio circuit
 
-
 - can start working on GPU Benchmarks? 
 - framebuffer clear with DMA right after drawing is done, or in parallel with drawing if requested
 
@@ -36,16 +35,18 @@
 - Q: the level translator seems not to be working allright. The rising edge up takes a *lot* of time from the vlow
 - Q: when no headphones are present, the headphones line only has about 2 volts, not 3volts it is supposed to have. Is this an issue? 
 - Q: the audio is really very noisy. What could be improved?
+- Q: does a LC low pass filter before LDO help in any way?
 
 - try the backlight current limiting to be 3.7Ohm for ~90mA max current
-- increase pads for the bottom side button for easier hand solderablity
-- display pins 11-15 maybe should be grounded (unused data pins)
+- increase pads for the bottom side button for easier hand solderablity and maybe use the buttons with hole in the middle for better grip
 - pull-up resistors & termination resistors for the SD card (the sd card library has some info)
 - swap PDM clk and data so that we can use PWM to count pulses in time window for dumb decimation?
 - AB buttons are not ceneterd right, fix
 - Select & Start buttons need to go a bit up
 - add labels to PGM and other headers on the bottom side of the PCB
 - where to put the rumbler? Can't be next to the speaker (two magnets)
+
+??? - add headers to the bottom side of the PCB for the solderable wires
 
 ## RP
 

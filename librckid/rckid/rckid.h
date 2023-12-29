@@ -144,6 +144,14 @@ namespace rckid {
         }    
 
         /** Updates the device by talking to all common peripherals, etc. 
+         
+            For each tick we need to get the following:
+
+            - AVR status - 6 bytes for the buttons, info and config 
+            - Sensors
+
+            Each can be programmed by 
+         
          */
         static void tick();
 
@@ -159,10 +167,10 @@ namespace rckid {
         friend bool charging() { return state_.status.charging(); }
         friend bool dcPower() { return state_.status.dcPower(); }
         friend unsigned vcc() { return state_.info.vcc(); }
+
         friend void setBrightness(uint8_t brightness) {
             Device::sendCommand(cmd::SetBrightness(brightness));
         }
-
 
         friend unsigned tempAvr() { return state_.info.temp(); }
 

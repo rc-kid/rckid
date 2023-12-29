@@ -9,4 +9,10 @@
 
 ## Configuration
 
-- `RCKID_SPLASHSCREEN_OFF` disables the initial logo splashscreen (blank screen will be showed instead)
+`RCKID_SPLASHSCREEN_OFF` 
+
+Disables the initial logo splashscreen (blank screen will be showed instead), conserves a bit of flash memory. 
+
+`RCKID_AUDIO_DEBUG` 
+
+Enables the audio output on cartridge available pins 14 & 15 for further processing by the cartridge or easier debugging via the cartridge port. 

@@ -1,3 +1,5 @@
+#define RCKID_AUDIO_DEBUG
+
 /** RP2040 Pinout
 
  */
@@ -32,8 +34,13 @@
 #define RP_PIN_PDM_DATA 22
 #define RP_PIN_PDM_CLK 23
 // pwm4a, pwm4b audio output -- managed by SDK
-#define RP_PIN_PWM_RIGHT 24
-#define RP_PIN_PWM_LEFT 25
+#if (! defined RCKID_AUDIO_DEBUG)
+    #define RP_PIN_PWM_RIGHT 24
+    #define RP_PIN_PWM_LEFT 25
+#else // RCKID_AUDIO_DEBUG
+    #define RP_PIN_PWM_RIGHT 14
+    #define RP_PIN_PWM_LEFT 15
+#endif
 // spi1 connected to the SD card -- managed by SDK
 #define RP_PIN_SD_SCK 26
 #define RP_PIN_SD_TX 27

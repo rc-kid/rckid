@@ -1,0 +1,138 @@
+Void ST7789VBOE28panelinitialcode(void)
+{
+//-----------------------------------ST7789V reset sequence------------------------------------//
+LCD_RESET=1;
+delay (100); //Delay 100ms
+LCD_RESET=0;
+delay (200); //Delay 200ms
+LCD_RESET=1;
+delay (500); //Delay 500ms
+//---------------------------------------------------------------------------------------------------//
+LCD_WriteCommand(0x11);
+delay (120); //Delay 120ms
+//--------------------------------------Display Setting------------------------------------------//
+LCD_WriteCommand(0x36);
+LCD_WriteData(0x00);
+LCD_WriteCommand(0x3a);
+LCD_WriteData(0x05);
+//--------------------------------ST7789V Frame rate setting----------------------------------//
+LCD_WriteCommand(0xb2);
+LCD_WriteData(0x0c);
+LCD_WriteData(0x0c);
+LCD_WriteData(0x00);
+LCD_WriteData(0x33);
+LCD_WriteData(0x33);
+LCD_WriteCommand(0xb7);
+LCD_WriteData(0x35);
+//---------------------------------ST7789V Power setting--------------------------------------//
+LCD_WriteCommand(0xbb);
+LCD_WriteData(0x20);
+LCD_WriteCommand(0xc0);
+LCD_WriteData(0x2c);
+LCD_WriteCommand(0xc2);
+LCD_WriteData(0x01);
+LCD_WriteCommand(0xc3);
+LCD_WriteData(0x0b);
+LCD_WriteCommand(0xc4);
+LCD_WriteData(0x20);
+LCD_WriteCommand(0xc6);
+LCD_WriteData(0x0f);
+LCD_WriteCommand(0xd0);
+LCD_WriteData(0xa4);
+LCD_WriteData(0xa1);
+//--------------------------------ST7789V gamma setting---------------------------------------//
+LCD_WriteCommand(0xe0);
+LCD_WriteData(0xd0);
+LCD_WriteData(0x03);
+LCD_WriteData(0x09);
+LCD_WriteData(0x0e);
+LCD_WriteData(0x11);
+LCD_WriteData(0x3d);
+LCD_WriteData(0x47);
+LCD_WriteData(0x55);
+LCD_WriteData(0x53);
+LCD_WriteData(0x1a);
+LCD_WriteData(0x16);
+LCD_WriteData(0x14);
+LCD_WriteData(0x1f);
+LCD_WriteData(0x22);
+LCD_WriteCommand(0xe1);
+LCD_WriteData(0xd0);
+LCD_WriteData(0x02);
+LCD_WriteData(0x08);
+LCD_WriteData(0x0d);
+LCD_WriteData(0x12);
+LCD_WriteData(0x2c);
+LCD_WriteData(0x43);
+LCD_WriteData(0x55);
+LCD_WriteData(0x53);
+LCD_WriteData(0x1e);
+LCD_WriteData(0x1b);
+LCD_WriteData(0x19);
+LCD_WriteData(0x20);
+LCD_WriteData(0x22);
+LCD_WriteCommand(0x29);
+}
+
+Void ST7789VPanelTurnOnDisplay (void)
+{
+Write command 0x29;
+}
+Void ST7789VPanelTurnOffDisplay (void)
+{
+Write command 0x28;
+}
+Void ST7789VPanelTurnOnPartial (void)
+{
+Write command 0x30;
+Write data 0x00;
+Write PSL; //PSL: Start Line
+Write data 0x00;
+Write PEL; //PEL: End Line
+Write command 0x12;
+}
+Void ST7789VPanelTurnOffPartial (void)
+{
+Write command 0x13;
+}
+Void ST7789VPanelTurnOnIdle (void)
+{
+Write command 0x39;
+}
+Void ST7789VPanelTurnOffIdle (void)
+{
+Write command 0x38;
+}
+Void ST7789VPanelSleepInMode (void)
+{
+Write command 0x10;
+Delayms (120);
+}
+Void ST7789VPanelSleepOutMode (void)
+{
+Write command 0x11;
+Delayms (120);
+}
+
+
+//************ST7789¶ÁIDÈçÏÂ£¨MT6260)******************//
+kal_bool LCM_ID_check_ST7789S()
+{
+    kal_uint8 dummy, ST7789S_1, ST7789S_2, ST7789S_3;
+
+    MAIN_LCD_CtrlWrite(0x04);  //LCM ID
+    dummy = MAIN_LCD_DataRead;
+    ST7789S_1 = MAIN_LCD_DataRead;
+    ST7789S_2 = MAIN_LCD_DataRead;
+    ST7789S_3 = MAIN_LCD_DataRead;
+
+    if ((0x85== ST7789S_2) && (0x52 == ST7789S_3))
+     {
+#ifdef __FACTORY_GET_DRIVERS_INF__
+     LCM_INF="ST7789S ID=8552";
+#endif
+      return KAL_TRUE;
+    }
+    else
+      return KAL_FALSE;
+}

@@ -53,10 +53,14 @@ namespace rckid {
          */
         static void processEvents();
 
-        // fixed because of the pwm pins
+
+#if (RP_PIN_PWM_RIGHT == 24 && RP_PIN_PWM_LEFT == 25)
         static constexpr unsigned PWM_SLICE = 4; 
-        static_assert(RP_PIN_PWM_RIGHT == 24);
-        static_assert(RP_PIN_PWM_LEFT == 25);
+#elif (RP_PIN_PWM_RIGHT == 14 && RP_PIN_PWM_LEFT == 15) // RCKID_AUDIO_DEBUG
+        static constexpr unsigned PWM_SLICE = 7; 
+#else
+        #error "Unsupported audio PWM pins"
+#endif
 
         // slice 5 corresponds to pins 10,11, 26 and 27 which are not available as cartridge GPIO pins
         static constexpr unsigned TIMER_SLICE = 5;
