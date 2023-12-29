@@ -18,6 +18,10 @@
 
 ## Audio Woes
 
+- no need for resistors before the buffer (can accept up to 5V)
+- the new version on breadboard has markedly better audio quality (although not perfect) in headphones
+
+
 - sound quality is rather poor - is it the board? does it change if AVR leaves headphones open?
 - is the circuit wrong? - https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf
 - add big cap to vclean and see if it changes stuff 

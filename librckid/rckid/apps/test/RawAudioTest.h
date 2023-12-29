@@ -1,11 +1,9 @@
 #pragma once
 
-
-#include "fonts/Iosevka_Mono6pt7b.h"
-
 #include "rckid/app.h"
 #include "rckid/graphics/framebuffer.h"
 #include "rckid/audio.h"
+#include "fonts/Iosevka_Mono6pt7b.h"
 
 namespace rckid {
 
