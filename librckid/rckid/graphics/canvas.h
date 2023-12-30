@@ -8,10 +8,8 @@
 
 namespace rckid {
 
-    template<typename PIXEL_FORMAT = ColorRGB>
     class Canvas {
     public:
-        using Color = PIXEL_FORMAT;
 
         Canvas(int width, int height):
             buffer_{ new Color[ width * height] },

@@ -17,10 +17,6 @@ add_library(librckid ${SRC})
 
 pico_generate_pio_header(librckid ${CMAKE_SOURCE_DIR}/librckid/rckid/ST7789_rgb.pio)
 pico_generate_pio_header(librckid ${CMAKE_SOURCE_DIR}/librckid/rckid/ST7789_rgb_double.pio)
-pico_generate_pio_header(librckid ${CMAKE_SOURCE_DIR}/librckid/rckid/ST7789_rgba.pio)
-pico_generate_pio_header(librckid ${CMAKE_SOURCE_DIR}/librckid/rckid/ST7789_rgba_double.pio)
-pico_generate_pio_header(librckid ${CMAKE_SOURCE_DIR}/librckid/rckid/ST7789_picosystem.pio)
-pico_generate_pio_header(librckid ${CMAKE_SOURCE_DIR}/librckid/rckid/ST7789_picosystem_double.pio)
 
 pico_enable_stdio_uart(librckid ENABLED)
 

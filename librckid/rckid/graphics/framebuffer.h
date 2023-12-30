@@ -3,62 +3,52 @@
 #include "canvas.h"
 
 #include "../ST7789.h"
-#include "../display_profiles.h"
-
 
 namespace rckid {
 
     /** A framebuffer is nothing more than a canvas that knows how to display itself on the display. 
      */
-    template<typename DISPLAY_PROFILE> 
-    class Framebuffer : public Canvas<typename DISPLAY_PROFILE::Color> {
+    class FrameBuffer : public Canvas {
     public:
 
-        using DisplayProfile = DISPLAY_PROFILE;
+        static constexpr unsigned RENDERER_ID = 1;
 
-        Framebuffer(): Canvas<typename DisplayProfile::Color>{DISPLAY_PROFILE::Width, DISPLAY_PROFILE::Height} {}
+        FrameBuffer(): Canvas{320, 240} {
+            ST7789::enterContinuousMode(ST7789::Mode::Single);
+        }
 
-        void startRendering();
+        void startRendering() {
+            ST7789::waitVSync();
+            ST7789::updatePixels(rawPixels(), width() * height());
+        }
+    }; // rckid::FrameBuffer
 
-        uint16_t updateLine_ = 0;
-    }; // Framebuffer
+    /** Double framebuffer that uses 1/4 of the memory and doubles each pixel. Inspired by the picosystem for a pixelated look. 
+     */
+    class FrameBufferDouble : public Canvas {
+    public:    
 
+        static constexpr unsigned RENDERER_ID = 2;
 
-    template<>
-    inline void Framebuffer<display_profile::RGB>::startRendering() {
-        using namespace display_profile;
-        ST7789::updatePixels(rawPixels(), DisplayProfile::Width * DisplayProfile::Height);
-    }
+        FrameBufferDouble(): Canvas{160, 120} {
+            ST7789::enterContinuousMode(ST7789::Mode::Double);
+        }
 
-    template<>
-    inline void Framebuffer<display_profile::RGBDouble>::startRendering() {
-        using namespace display_profile;
-        updateLine_ = 0;
-        ST7789::updatePixelsPartial(rawPixels(), DisplayProfile::Height, [this](){
-            if (updateLine_ == DisplayProfile::Width - 1)
-                ST7789::updatePixels(rawPixels() + DisplayProfile::Height * (DisplayProfile::Width - 1), DisplayProfile::Height);
-            else 
-               ST7789::updatePixelsPartial(rawPixels() + DisplayProfile::Height * updateLine_++, DisplayProfile::Height * 2);
-        }); 
-    }
+        void startRendering() {
+            updateLine_ = 0;
+            ST7789::waitVSync();
+            ST7789::updatePixelsPartial(rawPixels(), height(), [this](){
+                if (updateLine_ == width() - 1)
+                    ST7789::updatePixels(rawPixels() + height() * (width() - 1), height());
+                else 
+                ST7789::updatePixelsPartial(rawPixels() + height() * updateLine_++, height() * 2);
+            }); 
+        }
 
-    template<>
-    inline void Framebuffer<display_profile::RGBA>::startRendering() {
-        using namespace display_profile;
-        ST7789::updatePixels(rawPixels(), DisplayProfile::Width * DisplayProfile::Height);
-    }
+    private:
 
-    template<>
-    inline void Framebuffer<display_profile::RGBADouble>::startRendering() {
-        using namespace display_profile;
-        updateLine_ = 0;
-        ST7789::updatePixelsPartial(rawPixels(), DisplayProfile::Height, [this](){
-            if (updateLine_ == DisplayProfile::Width - 1)
-                ST7789::updatePixels(rawPixels() + DisplayProfile::Height * (RGBDouble::Width - 1), DisplayProfile::Height);
-            else 
-               ST7789::updatePixelsPartial(rawPixels() + DisplayProfile::Height * updateLine_++, DisplayProfile::Height * 2);
-        }); 
-    }
+        uint16_t updateLine_;
 
+    }; // rckid::FrameBufferDouble
 
 } // namespace rckid

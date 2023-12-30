@@ -8,6 +8,9 @@
 #include "images/logo-16.h"
 #include "graphics/png.h"
 
+#include "ST7789_rgb.pio.h"
+#include "ST7789_rgb_double.pio.h"
+
 namespace rckid {
 
     void ST7789::initialize() {
@@ -50,7 +53,7 @@ namespace rckid {
         }
 #else
         PNG png = PNG::fromBuffer(Logo16, sizeof(Logo16));
-        png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
+        png.decode([&](Color * line, int lineNum, int lineWidth){
             uint8_t const * raw = reinterpret_cast<uint8_t *>(line);
             for (int i = 0; i < lineWidth; ++i) {
                 sendByte(raw[1]);
@@ -60,13 +63,13 @@ namespace rckid {
         });
 #endif
         end();
-    }
 
-    void ST7789::loadPIODriver(pio_program_t const & driver, DriverInitializer initializer) {
-        // load the pio program (we only do this once)
+        // load and initialize the PIO programs for single and double precission
         pio_ = pio0;
-        offset_ = pio_add_program(pio_, & driver);
         sm_ = pio_claim_unused_sm(pio_, true);
+        offsetSingle_ = pio_add_program(pio_, & ST7789_rgb_program);
+        offsetDouble_ = pio_add_program(pio_, & ST7789_rgb_double_program);
+        // initialize the DMA channel and set up interrupts
         dma_ = dma_claim_unused_channel(true);
         dmaConf_ = dma_channel_get_default_config(dma_); // create default channel config, write does not increment, read does increment, 32bits size
         channel_config_set_transfer_data_size(& dmaConf_, DMA_SIZE_16); // transfer 16 bytes
@@ -79,17 +82,37 @@ namespace rckid {
         //irq_set_exclusive_handler(DMA_IRQ_0, irqDMADone);
         irq_add_shared_handler(DMA_IRQ_0, irqDMADone,  PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY);
         irq_set_enabled(DMA_IRQ_0, true);
-        // and now start the driver
-        initializer(pio_, sm_, offset_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
+
     }
 
-    void ST7789::startPIODriver() {
+    void ST7789::enterContinuousMode(Mode mode) {
+        leaveContinuousMode();
+        switch (mode) {
+            case Mode::Single:
+                setColumnRange(0, 239);
+                setRowRange(0, 319);
+                setColorMode(ST7789::ColorMode::RGB565);
+                setDisplayMode(ST7789::DisplayMode::Native);
+                // start the continuous RAM write command
+                beginCommand(RAMWR);
+                gpio_put(RP_PIN_DISP_DCX, true);
+                // initialize the PIO program 
+                ST7789_rgb_program_init(pio_, sm_, offsetSingle_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
+                break;
+            case Mode::Double:
+                setColumnRange(0, 239);
+                setRowRange(0, 319);
+                setColorMode(ST7789::ColorMode::RGB565);
+                setDisplayMode(ST7789::DisplayMode::Native);
+                // start the continuous RAM write command
+                beginCommand(RAMWR);
+                gpio_put(RP_PIN_DISP_DCX, true);
+                // initialize the PIO program 
+                ST7789_rgb_double_program_init(pio_, sm_, offsetDouble_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
+                break;
+        }
+        // and start the pio
         pio_sm_set_enabled(pio_, sm_, true);
-    }
-
-    void ST7789::enterContinuousMode() {
-        beginCommand(RAMWR);
-        gpio_put(RP_PIN_DISP_DCX, true);
     }
 
     void ST7789::leaveContinuousMode() {

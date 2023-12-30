@@ -53,10 +53,6 @@ namespace rckid {
         35 - DB5
         36 - DB6
         37 - DB7
-        
-
-
-
 
      */
     class ST7789 {
@@ -74,7 +70,12 @@ namespace rckid {
             NativeBGR = 0x08, // MADCTL_BGR
             Natural = 0x80 + 0x20, // MADCTL_MY | MADCTL_MV 
             NaturalBGR = 0x80 + 0x20 + 0x08, // MADCTL_MY | MADCTL_MV | MADCTL_BGR
-        }; 
+        }; // ST7789::DisplayMode
+
+        enum class Mode {
+            Single, 
+            Double,
+        }; // ST7789::Mode
 
         typedef void (*DriverInitializer)(PIO, uint, uint, uint, uint);
 
@@ -83,6 +84,17 @@ namespace rckid {
             Performs a full reset and initializes the display to 320x240 format with 565 RGB colors and clears the entire display black. 
          */
         static void initialize();
+
+
+        /** \name Continuous mode
+         
+            The continous mode does not send any commands to the display and only updates the entire display area. When data for entire display are sent, new frame will begin. The continuous mode uses 32bit PIO tuned to high speed fast updates with minimal CPU intervention. 
+
+            The continuous mode is not intended to be used directly by the users, but rather should be utilized by various gpu modes, such as framebuffer or tiling engine. 
+         */
+        static void enterContinuousMode(Mode mode = Mode::Single);
+
+        static void leaveContinuousMode();
 
         static void updatePixels(uint16_t const * pixels, int numPixels) {
             cb_ = [](){ 
@@ -165,16 +177,6 @@ namespace rckid {
             
         }
 
-        /** \name Continuous mode
-         
-            The continous mode does not send any commands to the display and only updates the entire display area. When data for entire display are sent, new frame will begin. The continuous mode uses 32bit PIO tuned to high speed fast updates with minimal CPU intervention. 
-
-            The continuous mode is not intended to be used directly by the users, but rather should be utilized by various gpu modes, such as framebuffer or tiling engine. 
-         */
-        static void enterContinuousMode();
-
-        static void leaveContinuousMode();
-
 
         static unsigned lastUpdateUs() { return updateUs_; }
         static unsigned lastUpdateWaitUs() { return updateWaitUs_; }
@@ -237,7 +239,8 @@ namespace rckid {
 
         static inline PIO pio_;
         static inline uint sm_;
-        static inline uint offset_;
+        static inline uint offsetSingle_;
+        static inline uint offsetDouble_;
         static inline uint dma_ = -1;
         static inline dma_channel_config dmaConf_;
 

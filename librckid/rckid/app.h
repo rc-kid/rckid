@@ -2,27 +2,31 @@
 
 #include <vector>
 
-#include "ST7789.h"
+#include "graphics/framebuffer.h"
 
 namespace rckid {
 
-    /** Base class for applications. */
+    template<typename T>
+    class App;
+
+    /** Base class for all applications. 
+     */
     class BaseApp {
     public:
 
         virtual ~BaseApp() = default;
-      
-        void run();
 
+        void run();
         void exit();
 
     protected:
 
-        virtual void onFocus() {}
-        virtual void onBlur() {}
-        virtual void update() = 0;
-        virtual void draw() = 0;
-        virtual void render() = 0;
+        virtual void update() {}
+        virtual void draw() {}
+        virtual void onFocus(BaseApp * previous) {}
+        virtual void onBlur(BaseApp * next) {}
+
+        virtual bool takeRenderer(void * renderer, unsigned rendererId) { return false; }
 
         unsigned fps() const { return fps_; }
         unsigned systemUs() const { return systemUs_; }
@@ -34,12 +38,12 @@ namespace rckid {
 
     private:
 
-        virtual void render_() {};
+        template<typename T> friend class App;
 
         static void loop_();
 
-        static inline std::vector<BaseApp*> apps_;
-        static inline BaseApp* currentApp_ = nullptr;
+        static inline std::vector<BaseApp *> apps_;
+        static inline BaseApp * currentApp_ = nullptr;
 
         static inline uint64_t nextFpsTick_;
         static inline unsigned fps_;
@@ -48,77 +52,41 @@ namespace rckid {
         static inline unsigned updateUs_;
         static inline unsigned drawUs_;
         static inline unsigned frameUs_;
-    }; 
 
+    }; // rckid::BaseApp
 
     template<typename RENDERER>
     class App : public BaseApp {
     public:
 
         using Renderer = RENDERER;
-        using Color = typename RENDERER::Color;
 
-        ~App() override {
-            if (parent_ == nullptr)
-                delete renderer_;
+
+    protected:
+
+        void draw() override {
+            renderer_->startRendering();
         }
 
-    protected: 
-
-        App() = default;
-        App(App * parent): renderer_{parent->renderer_}, parent_{parent} { parent->sharedWithChild_ = true; }
-
-        void onFocus() override {
+        void onFocus([[maybe_unused]] BaseApp * previous) {
+            // if we do not have renderer, start it
             if (renderer_ == nullptr)
-                createRenderer();
-            // when focused, the app is on top and hence its renderer cannot be shared with child
-            sharedWithChild_ = false;
+                renderer_ = new RENDERER{};
         }
 
-        void onBlur() override {
-            if (!sharedWithChild_)
-                deleteRenderer();
+        void onBlur(BaseApp * next) {
+            // if next uses the same renderer, pass it, otherwise delete the renderer
+            if (next == nullptr || next->takeRenderer(renderer_, RENDERER::RENDERER_ID))
+                delete renderer_;
+            renderer_ = nullptr;
         }
 
-
-        void render() override { renderer_->startRendering(); }
-
-        RENDERER & renderer() { return *renderer_; }
+        RENDERER & renderer() { return * renderer_; }
 
     private:
 
-        void createRenderer() {
-            // create new renderer
-            renderer_ = new RENDERER{};
-            RENDERER::DisplayProfile::configureDisplay();
-            // and propagate it to all parents of the same kind
-            auto i = this->parent_;
-            while (i != nullptr) {
-                i->renderer_ = renderer_;
-                i = i->parent_;
-            }
-        }
-
-        void deleteRenderer() {
-            // delete the renderer
-            delete renderer_;
-            // and propagate the removal to all parents of the same renderer kind
-            auto i = this;
-            while (i != nullptr) {
-                i->renderer_ = nullptr;
-                i = i->parent_;
-            }
-        }
-
         RENDERER * renderer_ = nullptr;
-        App<RENDERER> * parent_ = nullptr;
-        bool sharedWithChild_ = false;
 
-    }; 
-
-
-
-
-
+    }; // rckid::App<RENDERER>
 
 } // namespace rckid

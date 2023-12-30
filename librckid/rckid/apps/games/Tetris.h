@@ -5,15 +5,38 @@
 
 namespace rckid {
 
-    class Tetris : public App<FrameBuffer<display_profile::RGB>> {
+    class Tetris : public App<FrameBuffer> {
     public:
 
     protected:
 
-        void onFocus() override {
-            App::onFocus();
+        void onFocus(BaseApp * previous) override {
+            App::onFocus(previous);
         }
 
+
+
+        void update() override {
+
+        }
+
+        void draw() override {
+            auto & r = renderer();
+
+            App::draw();
+        }
+
+    private:
+
+        enum class Tetromino {
+            Line, 
+            Square,
+            T,
+            L,
+            Lf,
+            S,
+            Sf
+        }; // Tetris::Tetromino
 
     }; // rckid::Tetris
 

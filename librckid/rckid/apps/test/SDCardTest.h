@@ -6,14 +6,10 @@
 
 namespace rckid {
 
-    class SDCardTest : public App<Framebuffer<display_profile::RGBDouble>> {
+    class SDCardTest : public App<FrameBuffer> {
     public:
 
         SDCardTest() {
-            initialize();
-        }
-
-        SDCardTest(App * parent): App{parent} {
             initialize();
         }
 
@@ -31,6 +27,7 @@ namespace rckid {
             Renderer & r = renderer();
             r.text(0,0);
             r.text() << "Total: " << sdSize_ << "\n";
+            App::draw();
         }
 
     private:

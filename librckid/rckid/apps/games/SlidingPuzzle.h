@@ -19,14 +19,15 @@ namespace rckid {
           - add accelerometer as input
 
      */
-    class SlidingPuzzle : public App<Framebuffer<display_profile::RGB>> {
+    class SlidingPuzzle : public App<FrameBuffer> {
     public:
+
     protected:
 
-        void onFocus() override {
-            App::onFocus();
+        void onFocus(BaseApp * previous) override {
+            App::onFocus(previous);
             PNG png = PNG::fromBuffer(defaultImage_, sizeof(defaultImage_));
-            png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
+            png.decode([&](Color * line, int lineNum, int lineWidth){
                 Renderer & r = renderer();
                 for (int i = 0; i < lineWidth; ++i)
                     r.pixel(i, lineNum, line[i]);
@@ -101,6 +102,7 @@ namespace rckid {
                     break; // nothing to do for other controls
             }
             dir_ = Btn::Home;
+            App::draw();
         }
 
         void shuffle() {
@@ -144,8 +146,8 @@ namespace rckid {
             return Point{ x * TILE_WIDTH, y * TILE_HEIGHT};
         }
 
-        Canvas<> hole_{TILE_WIDTH,TILE_HEIGHT};
-        Canvas<> tmp_{TILE_WIDTH,TILE_HEIGHT};
+        Canvas hole_{TILE_WIDTH,TILE_HEIGHT};
+        Canvas tmp_{TILE_WIDTH,TILE_HEIGHT};
 
         uint8_t * tileMap_ = nullptr;
 

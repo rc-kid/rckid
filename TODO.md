@@ -1,8 +1,10 @@
 ## TODO
 
+- simplify the yield & events
+- check sleep mode power consumption for pedometer
 - where to put rumbler? 
-- ditch RGB modes we don't plan on using (RGBA & picosystem)
 - run common tasks between update and draw as well, and in any yield 
+- app does not count idle properly
 
 - can start working on GPU Benchmarks? 
 - framebuffer clear with DMA right after drawing is done, or in parallel with drawing if requested
@@ -12,14 +14,17 @@
 
 ## Case
 
-- see if the cartridge insertion mechanism can be made reliable
+- see if the cartridge insertion mechanism can be made reliable (looks ok)
 - check if the slim buttons are actually working reasonably well
-- Select & Start buttons need repositioning to accomodate the speaker
+- Select & Start buttons need repositioning to accomodate the speaker and the SD card
+- top midframe does not fit around UPDI programmer and other headers, side buttons and the speaker
 
 ## Audio Woes
 
 - no need for resistors before the buffer (can accept up to 5V)
 - the new version on breadboard has markedly better audio quality (although not perfect) in headphones
+- try with 44.1 kHz
+- better audio? 
 
 
 - sound quality is rather poor - is it the board? does it change if AVR leaves headphones open?
@@ -86,17 +91,6 @@
 > FAT32
 
 - do own async FAT32 driver with DMA
-
-## Picosystem
-
-> Maybe don't bother with Picosystem...
-
-- clearing the screen does not work (perhaps overclocking issue)
-- IRQ does not work
-- add audio & friends and AVR integration
-- rgba is not binary compatible with picosystem, fix - picosystem has its driver color-wise working now
-- the waiting for updating not working on picosystem
-- true picosystem is BGR
 
 ## Shopping List
 

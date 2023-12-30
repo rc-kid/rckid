@@ -1,17 +1,16 @@
 #pragma once
 
 #include "rckid/app.h"
+#include "rckid/audio.h"
 #include "rckid/graphics/framebuffer.h"
 #include "fonts/Iosevka_Mono6pt7b.h"
 
 namespace rckid {
 
-    class AVRStatusTest : public App<Framebuffer<display_profile::RGB>> {
+    class AVRStatusTest : public App<FrameBuffer> {
     public:
 
         AVRStatusTest()  = default;
-
-        AVRStatusTest(App * parent): App{parent} { }
 
     protected:
 
@@ -48,6 +47,7 @@ namespace rckid {
             r.text() << " wU:" << ST7789::lastUpdateWaitUs() << " wS:" << ST7789::lastVSyncWaitUs() << " r: " << ST7789::lastUpdateUs();
             r.text() << "\n";
             r.text() << " idle:" << idlePct(); 
+            App::draw();
         }
 
     private:

@@ -7,17 +7,16 @@
 
 namespace rckid {
 
-    class RawAudioTest : public App<Framebuffer<display_profile::RGB>> {
+    class RawAudioTest : public App<FrameBuffer> {
     public:
         RawAudioTest() = default;
-        RawAudioTest(App * parent): App{parent} {}
 
     protected:
 
         static constexpr size_t BUFFER_SIZE = 8192;
 
-        void onFocus() override {
-            App::onFocus();
+        void onFocus(BaseApp * previous) override {
+            App::onFocus(previous);
             buffer_ = new uint16_t[BUFFER_SIZE];
             offset_ = 0;
             refill(buffer_, BUFFER_SIZE / 2);
@@ -44,6 +43,7 @@ namespace rckid {
             r.text() << offset_; 
             r.text() << "\n\n";
             r.text() << " FPS: " << fps() << " S:" << systemUs() << " U:" << (updateUs() / 1000) << " D:" << (drawUs() / 1000);
+            App::draw();
         }
 
     private:

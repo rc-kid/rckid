@@ -10,15 +10,14 @@
 
 namespace rckid {
 
-    class AudioTestTone : public App<Framebuffer<display_profile::RGB>> {
+    class AudioTestTone : public App<FrameBuffer> {
     public:
         AudioTestTone() = default;
-        AudioTestTone(App * parent): App{parent} {}
 
     protected:
 
-        void onFocus() override {
-            App::onFocus();
+        void onFocus(BaseApp * previous) override {
+            App::onFocus(previous);
             buffer_ = new uint16_t[8192];
             offset_ = 0;
             tone_.play(440);
@@ -44,6 +43,7 @@ namespace rckid {
             r.fill();
             r.text(5, 10);
             r.text() << offset_; 
+            App::draw();
         }
 
     private:
