@@ -1,10 +1,7 @@
 ## TODO
 
-- simplify the yield & events
 - check sleep mode power consumption for pedometer
 - where to put rumbler? 
-- run common tasks between update and draw as well, and in any yield 
-- app does not count idle properly
 
 - can start working on GPU Benchmarks? 
 - framebuffer clear with DMA right after drawing is done, or in parallel with drawing if requested
@@ -18,6 +15,7 @@
 - check if the slim buttons are actually working reasonably well
 - Select & Start buttons need repositioning to accomodate the speaker and the SD card
 - top midframe does not fit around UPDI programmer and other headers, side buttons and the speaker
+- and there is still warping when screwed together
 
 ## Audio Woes
 

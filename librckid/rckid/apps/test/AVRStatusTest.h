@@ -47,7 +47,6 @@ namespace rckid {
             r.text() << " wU:" << ST7789::lastUpdateWaitUs() << " wS:" << ST7789::lastVSyncWaitUs() << " r: " << ST7789::lastUpdateUs();
             r.text() << "\n";
             r.text() << " idle:" << idlePct(); 
-            App::draw();
         }
 
     private:

@@ -131,17 +131,6 @@ namespace rckid {
             updateWaitUs_ = static_cast<unsigned>(uptime_us() - t);
         }
 
-        /** Loads the specified pio driver. 
-         */
-        static void loadPIODriver(pio_program_t const & driver, DriverInitializer initializer); 
-
-        /** Starts the previously loaded pio driver. 
-         */
-        static void startPIODriver();
-
-        // TODO pio stop
-
-
         /** Sets the color mode used by the driver. By default RGB565 is used, but RGB666 can be selected instead, in which case 3 bytes are sent per pixel, each containing 6bit color information in the MSBs. 
          */
         static void setColorMode(ColorMode pm) {

@@ -102,7 +102,7 @@ namespace rckid {
             uint8_t const * bitmap = f->bitmap + glyph->bitmapOffset;
             int pixelY = y + glyph->yOffset * size + f->yAdvance;
             int bi = 0;
-            uint8_t bits;
+            uint8_t bits = *bitmap;
             for (int gy = 0; gy < glyph->height; ++gy, pixelY += size) {
                 int pixelX = x + glyph->xOffset * size;
                 for (int gx = 0; gx < glyph->width; ++gx, pixelX += size, bits <<= 1) {

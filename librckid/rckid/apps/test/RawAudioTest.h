@@ -43,7 +43,6 @@ namespace rckid {
             r.text() << offset_; 
             r.text() << "\n\n";
             r.text() << " FPS: " << fps() << " S:" << systemUs() << " U:" << (updateUs() / 1000) << " D:" << (drawUs() / 1000);
-            App::draw();
         }
 
     private:

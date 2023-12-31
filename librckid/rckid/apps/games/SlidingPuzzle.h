@@ -102,7 +102,6 @@ namespace rckid {
                     break; // nothing to do for other controls
             }
             dir_ = Btn::Home;
-            App::draw();
         }
 
         void shuffle() {

@@ -18,7 +18,6 @@ namespace rckid {
         r.fill();
         r.text(0,0);
         r.text() << "USB MSC: " << numEvents_ << " events";
-        App::draw();
     }
 
 }

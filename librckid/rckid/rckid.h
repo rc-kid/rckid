@@ -133,7 +133,6 @@ namespace rckid {
 
         static inline size_t clockSpeed_ = 125000000;
 
-        static inline unsigned yieldCnt_ = 0;
         static inline State state_;
         static inline State lastState_;
 

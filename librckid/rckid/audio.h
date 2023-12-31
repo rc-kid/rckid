@@ -45,8 +45,6 @@ namespace rckid {
 
     private:
 
-        friend class BaseApp;
-        
         friend void yield();
 
         /** Called by the rckid's sdk as part of each frame to check if the playback or recording buffers have to be processed. 

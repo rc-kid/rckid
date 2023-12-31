@@ -30,6 +30,8 @@ namespace rckid {
             next->onFocus(last);
     }
 
+#define CALCULATE_TIME(...) [&](){ uint64_t start__ = uptime_us(); __VA_ARGS__; return static_cast<unsigned>(uptime_us() - start__); }()
+
     void BaseApp::loop_() {
         nextFpsTick_ = uptime_us() + 1000000;
         fps_ = 0;
@@ -43,18 +45,31 @@ namespace rckid {
                 fpsCounter_ = 0;
                 nextFpsTick_ += 1000000;
             }
+            uint32_t tSys = CALCULATE_TIME(
+                Device::tick();
+            );
+            uint32_t tUpdate = CALCULATE_TIME(
+                currentApp_->update();
+            );
+            if (currentApp_ == nullptr) {
+                currentApp_ = apps_.back();
+                drawUs_ = 0;
+                continue;
+            }
+            ST7789::waitUpdateDone();
+            uint32_t tDraw = CALCULATE_TIME(
+                currentApp_->draw();
+            );
+            currentApp_->render();
+            ++fpsCounter_;
+            systemUs_ = tSys;
+            updateUs_ = tUpdate;
+            drawUs_ = tDraw; 
+            frameUs_ = static_cast<unsigned>(uptime_us() - frameStart);
+
+/*
             // new tick (check with AVR and peripherals, etc.)
-            Device::tick();
-            // process system events
-            tud_task(); // USB Mass Storage
-            Audio::processEvents(); // Audio buffers
-
-
-
-
             uint64_t afterSystem = uptime_us();
-            // update the current app
-            currentApp_->update();
             uint64_t afterUpdate = uptime_us();
             // if the update did not change the current application, draw, otherwise try to focus new app
             if (currentApp_ != nullptr) {
@@ -63,6 +78,8 @@ namespace rckid {
                 currentApp_->draw();
                 uint64_t afterDraw = uptime_us();
                 drawUs_ = static_cast<unsigned>(afterDraw - beforeDraw); 
+                // start rendering
+                currentApp_->render();
                 ++fpsCounter_;
             } else if (! apps_.empty()) {
                 currentApp_ = apps_.back();
@@ -71,6 +88,7 @@ namespace rckid {
             systemUs_ = static_cast<unsigned>(afterSystem - frameStart);
             updateUs_ = static_cast<unsigned>(afterUpdate - afterSystem);
             frameUs_ = static_cast<unsigned>(uptime_us() - frameStart);
+            */
         }
     }
 }

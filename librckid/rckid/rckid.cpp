@@ -25,18 +25,8 @@ namespace rckid {
     }
 
     void yield() {
-        switch (Device::yieldCnt_++) {
-            case 0:
-                tud_task();
-                break;
-            case 1:
-                Audio::processEvents();
-                break;
-            default:
-                Device::yieldCnt_ = 0;
-                break;
-
-        }
+        tud_task();
+        Audio::processEvents();
     }
 
     void powerOff() {
@@ -78,10 +68,8 @@ namespace rckid {
         i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
         i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
         i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_STOP_BITS; // 1 for read, stop
-        while (i2c0->hw->rxflr != 6) {
-            tud_task();
-            //Audio::processEvents();   
-        }
+        while (i2c0->hw->rxflr != 6) 
+            yield();
         uint8_t * raw = reinterpret_cast<uint8_t*>(&state_);
         for (int i = 0; i < 6; ++i)
             *(raw++) = i2c0->hw->data_cmd;

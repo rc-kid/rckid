@@ -23,7 +23,6 @@ namespace rckid {
         void draw() override {
             auto & r = renderer();
 
-            App::draw();
         }
 
     private:

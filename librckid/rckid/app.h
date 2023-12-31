@@ -21,8 +21,9 @@ namespace rckid {
 
     protected:
 
-        virtual void update() {}
-        virtual void draw() {}
+        virtual void update() = 0;
+        virtual void draw() = 0;
+        virtual void render() = 0;
         virtual void onFocus(BaseApp * previous) {}
         virtual void onBlur(BaseApp * next) {}
 
@@ -64,7 +65,7 @@ namespace rckid {
 
     protected:
 
-        void draw() override {
+        void render() override {
             renderer_->startRendering();
         }
 

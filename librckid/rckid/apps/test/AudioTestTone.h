@@ -43,7 +43,6 @@ namespace rckid {
             r.fill();
             r.text(5, 10);
             r.text() << offset_; 
-            App::draw();
         }
 
     private:

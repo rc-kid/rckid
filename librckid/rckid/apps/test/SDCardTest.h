@@ -27,7 +27,6 @@ namespace rckid {
             Renderer & r = renderer();
             r.text(0,0);
             r.text() << "Total: " << sdSize_ << "\n";
-            App::draw();
         }
 
     private:
