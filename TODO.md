@@ -1,5 +1,7 @@
 ## TODO
 
+
+- calculate longest distance between yields
 - check sleep mode power consumption for pedometer
 - where to put rumbler? 
 
@@ -14,12 +16,12 @@
 - see if the cartridge insertion mechanism can be made reliable (looks ok)
 - check if the slim buttons are actually working reasonably well
 - Select & Start buttons need repositioning to accomodate the speaker and the SD card
-- top midframe does not fit around UPDI programmer and other headers, side buttons and the speaker
+- top midframe does not fit around UPDI programmer and other headers, and the speaker
 - and there is still warping when screwed together
+- enlarge speaker hole
 
 ## Audio Woes
 
-- no need for resistors before the buffer (can accept up to 5V)
 - the new version on breadboard has markedly better audio quality (although not perfect) in headphones
 - try with 44.1 kHz
 - better audio? 
@@ -33,6 +35,7 @@
 - verify that this is not due to some SW issue, because basic tone seems ok-ish
 - particularly the big resistors in parallel with headphones are something quite different from what I currently have
 - headphone volume is too high, speaker volume is too low
+- can we do PDM instead? 
 
 - check https://github.com/TuriSc/RP2040-PWM-DMA-Audio/tree/main and https://github.com/TuriSc/Dodepan for hints perhaps? 
 
@@ -46,7 +49,6 @@
 - try the backlight current limiting to be 3.7Ohm for ~90mA max current
 - increase pads for the bottom side button for easier hand solderablity and maybe use the buttons with hole in the middle for better grip
 - pull-up resistors & termination resistors for the SD card (the sd card library has some info)
-- swap PDM clk and data so that we can use PWM to count pulses in time window for dumb decimation?
 - AB buttons are not ceneterd right, fix
 - Select & Start buttons need to go a bit up
 - add labels to PGM and other headers on the bottom side of the PCB
