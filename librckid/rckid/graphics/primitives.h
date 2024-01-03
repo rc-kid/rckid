@@ -9,6 +9,10 @@ namespace rckid {
 
         constexpr int x() const { return x_; }
         constexpr int y() const { return y_; }
+
+        Point operator + (Point other) const { return Point{x_ + other.x_, y_ + other.y_}; }
+        Point operator - (Point other) const { return Point{x_ - other.x_, y_ - other.y_}; }
+        
     private:
         int x_ = 0;
         int y_ = 0;

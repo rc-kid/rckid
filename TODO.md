@@ -1,6 +1,5 @@
 ## TODO
 
-
 - calculate longest distance between yields
 - check sleep mode power consumption for pedometer
 - where to put rumbler? 
@@ -60,7 +59,6 @@
 ## RP
 
 - document ST7789
-- add PIO driver unload option (or load them completely)
 
 ## AVR
 

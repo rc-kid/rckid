@@ -3,6 +3,7 @@
 #include "rckid/app.h"
 #include "rckid/graphics/framebuffer.h"
 #include "rckid/graphics/png.h"
+#include "rckid/graphics/animation.h"
 
 namespace rckid {
 
@@ -42,21 +43,32 @@ namespace rckid {
 
         void update() override {
             if (pressed(Btn::Start))
-                shuffle_ = 100;
+                shuffle_ = 20;
             if (dir_ == Btn::Home) {
-                if (pressed(Btn::Left)) {
+                Renderer & r = renderer();
+                if (pressed(Btn::Left) && (holeX_ < MAX_X) && (holeX_ >= 0)) {
+                    holeX_ += 1;
                     dir_ = Btn::Left;
-                } else if (pressed(Btn::Right)) {
+                } else if (pressed(Btn::Right) && (holeX_ > 0)) {
+                    holeX_ -= 1;
                     dir_ = Btn::Right;
-                } else if (pressed(Btn::Up)) {
+                } else if (pressed(Btn::Up) && (holeY_ < MAX_Y) && (holeY_ >= 0)) {
+                    holeY_ += 1;
                     dir_ = Btn::Up;
-                } else if (pressed(Btn::Down)) {
+                } else if (pressed(Btn::Down) && (holeY_ > 0)) {
+                    holeY_ -= 1;
                     dir_ = Btn::Down;
+                } else {
+                    return;
                 }
+                tmp_.draw(r, 0, 0, tileRect(holeX_, holeY_));
+                a_.start();
             }
         }
 
         void draw() override {
+            Renderer & r = renderer();
+            a_.update();
             if (shuffle_ > 0) {
                 int x1 = get_rand_32() % (320 / TILE_WIDTH);
                 int y1 = get_rand_32() % (240 / TILE_HEIGHT);
@@ -64,60 +76,35 @@ namespace rckid {
                 int y2 = get_rand_32() % (240 / TILE_HEIGHT);
                 swapTiles(x1, y1, x2, y2);
                 if (--shuffle_ == 0) {
-                    Renderer & r = renderer();
                     holeX_ = MAX_X;
                     holeY_ = MAX_Y;
                     hole_.draw(r, 0, 0, tileRect(holeX_, holeY_));
                     r.setBg(Color::RGB(128, 128, 128));
                     r.fill(tileRect(holeX_, holeY_));
                 }
-
             }
             switch (dir_) {
                 case Btn::Left:
-                    if (holeX_ < MAX_X && holeX_ >= 0) {
-                        swapTiles(holeX_, holeY_, holeX_ + 1, holeY_);
-                        holeX_ += 1;
-                    }
+                    r.fill(tileRect(holeX_, holeY_));
+                    r.draw(tmp_, tilePoint(holeX_, holeY_) - Point{a_.interpolate(0, TILE_WIDTH, Interpolation::Cos), 0});
                     break;
                 case Btn::Right:
-                    if (holeX_ > 0) {
-                        swapTiles(holeX_, holeY_, holeX_ - 1, holeY_);
-                        holeX_ -= 1;
-                    }
+                    r.fill(tileRect(holeX_, holeY_));
+                    r.draw(tmp_, tilePoint(holeX_, holeY_) + Point{a_.interpolate(0, TILE_WIDTH, Interpolation::Cos), 0});
                     break;
                 case Btn::Up:
-                    if (holeY_ < MAX_Y && holeY_ >= 0) {
-                        swapTiles(holeX_, holeY_, holeX_, holeY_ + 1);
-                        holeY_ += 1;
-                    }
+                    r.fill(tileRect(holeX_, holeY_));
+                    r.draw(tmp_, tilePoint(holeX_, holeY_) - Point{0, a_.interpolate(0, TILE_HEIGHT, Interpolation::Cos)});
                     break;
                 case Btn::Down: 
-                    if (holeY_ > 0) {
-                        swapTiles(holeX_, holeY_, holeX_, holeY_ - 1);
-                        holeY_ -= 1;
-                    }
+                    r.fill(tileRect(holeX_, holeY_));
+                    r.draw(tmp_, tilePoint(holeX_, holeY_) + Point{0, a_.interpolate(0, TILE_HEIGHT, Interpolation::Cos)});
                     break;
                 default:
                     break; // nothing to do for other controls
             }
-            dir_ = Btn::Home;
-        }
-
-        void shuffle() {
-            for (int i = 0; i < 100; ++i) {
-                int x1 = get_rand_32() % (320 / TILE_WIDTH);
-                int y1 = get_rand_32() % (240 / TILE_HEIGHT);
-                int x2 = get_rand_32() % (320 / TILE_WIDTH);
-                int y2 = get_rand_32() % (240 / TILE_HEIGHT);
-                swapTiles(x1, y1, x2, y2);
-            }
-            Renderer & r = renderer();
-            holeX_ = MAX_X;
-            holeY_ = MAX_Y;
-            hole_.draw(r, 0, 0, tileRect(holeX_, holeY_));
-            r.setBg(Color::RGB(128, 128, 128));
-            r.fill(tileRect(holeX_, holeY_));
+            if (!a_.running())
+                dir_ = Btn::Home;
         }
 
         void swapTiles(int x1, int y1, int x2, int y2) {
@@ -156,6 +143,8 @@ namespace rckid {
         size_t shuffle_ = 0;
 
         Btn dir_ = Btn::Home;
+
+        Animation a_{500};
 
         /** PNG image for the game. 
          

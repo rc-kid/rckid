@@ -30,16 +30,16 @@ namespace rckid {
             next->onFocus(last);
     }
 
-#define CALCULATE_TIME(...) [&](){ uint64_t start__ = uptime_us(); __VA_ARGS__; return static_cast<unsigned>(uptime_us() - start__); }()
+#define CALCULATE_TIME(...) [&](){ uint32_t start__ = time_us_32(); __VA_ARGS__; return static_cast<unsigned>(time_us_32() - start__); }()
 
     void BaseApp::loop_() {
-        nextFpsTick_ = uptime_us() + 1000000;
+        nextFpsTick_ = time_us_32() + 1000000;
         fps_ = 0;
         fpsCounter_ = 0;
         currentApp_ = apps_.back();
         size_t initialSize = apps_.size();
         while (apps_.size() >= initialSize) {
-            uint64_t frameStart = uptime_us();
+            uint32_t frameStart = time_us_32();
             if (frameStart >= nextFpsTick_) {
                 fps_ = fpsCounter_;
                 fpsCounter_ = 0;
@@ -65,7 +65,7 @@ namespace rckid {
             systemUs_ = tSys;
             updateUs_ = tUpdate;
             drawUs_ = tDraw; 
-            frameUs_ = static_cast<unsigned>(uptime_us() - frameStart);
+            frameUs_ = static_cast<unsigned>(time_us_32() - frameStart);
 
 /*
             // new tick (check with AVR and peripherals, etc.)
