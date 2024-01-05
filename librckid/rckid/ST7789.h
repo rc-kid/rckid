@@ -85,6 +85,16 @@ namespace rckid {
          */
         static void initialize();
 
+        /** Performs reeset of the display into bitbanging mode. 
+         
+            Called by the initialize function and might be useful in cases the display is in an unknown state, such as when the blue screen of death might occur. 
+         */
+        static void reset();
+
+        /** Clears the entire display with given color. 
+         */
+        static void fill(Color color);
+
 
         /** \name Continuous mode
          

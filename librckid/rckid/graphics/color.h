@@ -32,6 +32,9 @@ namespace rckid {
 
         uint16_t rawValue16() const { return raw_; }
 
+        static constexpr Color White() { return RGB(255, 255, 255); }
+        static constexpr Color Blue() { return RGB(0, 0, 255); }
+
     private:
 
         constexpr Color(uint16_t raw): raw_{raw} {}

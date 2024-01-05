@@ -54,6 +54,8 @@ namespace rckid {
                 case State::ContinuousDown:
                     /// TODO: Fix the continuous animation modes
                     break;
+                default: 
+                    break;
             }
             return false;
         }
@@ -70,7 +72,7 @@ namespace rckid {
         }
 
         template<typename T> 
-        T interpolate(T start, T end, Interpolation i = Interpolation::Linear) {
+        T interpolate(T start, T end, Interpolation i = Interpolation::Cos) {
             return rckid::interpolate(start, end, t_ * 1000 / duration_, i);
         }
 

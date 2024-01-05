@@ -1,8 +1,13 @@
 #pragma once
 
+#include <csetjmp>
+
 #include <vector>
 
 #include "graphics/framebuffer.h"
+#include "graphics/png.h"
+#include "fonts/Iosevka_Mono6pt7b.h"
+
 
 namespace rckid {
 
@@ -10,6 +15,8 @@ namespace rckid {
     class App;
 
     /** Base class for all applications. 
+     
+        Defines basic application API and implements the main loop and navigation stack. RCKid runs a single app at any given time, but apps may form a stack so that exitting the top app resumes execution of the app that launched it. 
      */
     class BaseApp {
     public:
@@ -18,6 +25,13 @@ namespace rckid {
 
         void run();
         void exit();
+
+
+
+        static PNG imgX() { return PNG::fromBuffer(Img_, sizeof(Img_)); }
+
+        virtual PNG img() { return PNG::fromBuffer(Img_, sizeof(Img_)); }
+        virtual char const * name() { return "App"; }
 
     protected:
 
@@ -37,11 +51,17 @@ namespace rckid {
         unsigned idleUs() const { return frameUs_ - systemUs_ - updateUs_ - drawUs_; }
         unsigned idlePct() const { return idleUs() * 100 / frameUs_; }
 
+        static __force_inline void FATAL_ERROR(int code) { longjmp(fatalError_, code); }
+
     private:
 
         template<typename T> friend class App;
 
         static void loop_();
+
+        static void BSOD(int code);
+
+        static inline jmp_buf fatalError_;
 
         static inline std::vector<BaseApp *> apps_;
         static inline BaseApp * currentApp_ = nullptr;
@@ -53,6 +73,10 @@ namespace rckid {
         static inline unsigned updateUs_;
         static inline unsigned drawUs_;
         static inline unsigned frameUs_;
+
+        static constexpr uint8_t const Img_[] = {
+#include "images/applications.png.raw"
+        };
 
     }; // rckid::BaseApp
 
@@ -66,6 +90,15 @@ namespace rckid {
     protected:
 
         void render() override {
+#ifdef RCKID_DEBUG_FPS
+            GFXfont const & f = renderer_->font();
+            renderer_->setFont(Iosevka_Mono6pt7b);
+            Color c = renderer_->fg();
+            renderer_->setFg(Color::White());
+            renderer_->text(0, 300) << fps() << " d: " << drawUs();
+            renderer_->setFont(f);
+            renderer_->setFg(c);
+#endif
             renderer_->startRendering();
         }
 

@@ -31,7 +31,7 @@ namespace rckid {
             png.decode([&](Color * line, int lineNum, int lineWidth){
                 Renderer & r = renderer();
                 for (int i = 0; i < lineWidth; ++i)
-                    r.pixel(i, lineNum, line[i]);
+                    r.setPixel(i, lineNum, line[i]);
             });
             shuffle_ = 0;
             holeX_ = -1;
@@ -86,19 +86,19 @@ namespace rckid {
             switch (dir_) {
                 case Btn::Left:
                     r.fill(tileRect(holeX_, holeY_));
-                    r.draw(tmp_, tilePoint(holeX_, holeY_) - Point{a_.interpolate(0, TILE_WIDTH, Interpolation::Cos), 0});
+                    r.draw(tmp_, tilePoint(holeX_, holeY_) - Point{a_.interpolate(0, TILE_WIDTH), 0});
                     break;
                 case Btn::Right:
                     r.fill(tileRect(holeX_, holeY_));
-                    r.draw(tmp_, tilePoint(holeX_, holeY_) + Point{a_.interpolate(0, TILE_WIDTH, Interpolation::Cos), 0});
+                    r.draw(tmp_, tilePoint(holeX_, holeY_) + Point{a_.interpolate(0, TILE_WIDTH), 0});
                     break;
                 case Btn::Up:
                     r.fill(tileRect(holeX_, holeY_));
-                    r.draw(tmp_, tilePoint(holeX_, holeY_) - Point{0, a_.interpolate(0, TILE_HEIGHT, Interpolation::Cos)});
+                    r.draw(tmp_, tilePoint(holeX_, holeY_) - Point{0, a_.interpolate(0, TILE_HEIGHT)});
                     break;
                 case Btn::Down: 
                     r.fill(tileRect(holeX_, holeY_));
-                    r.draw(tmp_, tilePoint(holeX_, holeY_) + Point{0, a_.interpolate(0, TILE_HEIGHT, Interpolation::Cos)});
+                    r.draw(tmp_, tilePoint(holeX_, holeY_) + Point{0, a_.interpolate(0, TILE_HEIGHT)});
                     break;
                 default:
                     break; // nothing to do for other controls

@@ -1,5 +1,10 @@
 ## TODO
 
+- fatal error cannot be called from onFocus, not sure why
+- carousel second image won't load - could it be oome?, likely not 
+- add menu font
+- implement png's translarent color in png load & drawing
+
 - calculate longest distance between yields
 - check sleep mode power consumption for pedometer
 - where to put rumbler? 

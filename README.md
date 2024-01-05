@@ -166,3 +166,8 @@ Optional cartridges in next generation would include:
 - rename the pins in the cartridge connector
 - INA3221 can tell me charging, VBUS and VSYS all at once. Maybe worth a try? 
 - can then use smaller I2C charger w/o the status 
+
+
+# Attributions
+
+Icons downloaded from www.flaticon.com. 

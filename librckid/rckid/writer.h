@@ -15,6 +15,12 @@ namespace rckid {
             return *this;
         }
 
+        Writer & operator << (std::string const & str) { 
+            for (size_t i = 0, e = str.size(); i != e; ++i)
+                putChar_(str[i]);
+            return *this;
+        }
+
         Writer & operator << (unsigned x) {
             unsigned order = 1000000000;
             while (x < order && order > 1)

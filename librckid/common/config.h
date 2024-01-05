@@ -1,5 +1,8 @@
 #define RCKID_AUDIO_DEBUG
 
+
+#define RCKID_DEBUG_FPS
+
 /** RP2040 Pinout
 
  */

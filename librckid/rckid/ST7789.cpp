@@ -14,32 +14,27 @@
 namespace rckid {
 
     void ST7789::initialize() {
-        gpio_init(RP_PIN_DISP_TE);
-        gpio_set_dir(RP_PIN_DISP_TE, GPIO_IN);
-        gpio_init(RP_PIN_DISP_DCX);
-        gpio_set_dir(RP_PIN_DISP_DCX, GPIO_OUT);
-        gpio_init(RP_PIN_DISP_CSX);
-        gpio_set_dir(RP_PIN_DISP_CSX, GPIO_OUT);
-        gpio_put(RP_PIN_DISP_CSX, true);
+        // load and initialize the PIO programs for single and double precission
+        pio_ = pio0;
+        sm_ = pio_claim_unused_sm(pio_, true);
+        offsetSingle_ = pio_add_program(pio_, & ST7789_rgb_program);
+        offsetDouble_ = pio_add_program(pio_, & ST7789_rgb_double_program);
+        // initialize the DMA channel and set up interrupts
+        dma_ = dma_claim_unused_channel(true);
+        dmaConf_ = dma_channel_get_default_config(dma_); // create default channel config, write does not increment, read does increment, 32bits size
+        channel_config_set_transfer_data_size(& dmaConf_, DMA_SIZE_16); // transfer 16 bytes
+        channel_config_set_dreq(& dmaConf_, pio_get_dreq(pio_, sm_, true)); // tell our PIO
+        channel_config_set_read_increment(& dmaConf_, true);
+        dma_channel_configure(dma_, & dmaConf_, &pio_->txf[sm_], nullptr, 0, false); // start
 
-        initializePinsBitBang();
+        // enable IRQ0 on the DMA channel
+        dma_channel_set_irq0_enabled(dma_, true);
+        //irq_set_exclusive_handler(DMA_IRQ_0, irqDMADone);
+        irq_add_shared_handler(DMA_IRQ_0, irqDMADone,  PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY);
+        irq_set_enabled(DMA_IRQ_0, true);
+        // reset the display
 
-        // TODO check the init sequence
-        //while (true)
-        sendCommand(SWRESET);
-        sleep_ms(150);
-        sendCommand(VSCSAD, (uint8_t)0);
-        setColorMode(ColorMode::RGB565);
-        sendCommand(TEON, TE_VSYNC);
-        sendCommand(SLPOUT);
-        sleep_ms(150);
-        sendCommand(DISPON);
-        sleep_ms(150);
-        //sendCommand(MADCTL, (uint8_t)(MADCTL_MV));
-        //sendCommand(MADCTL, (uint8_t)(MADCTL_MY | MADCTL_MV ));
-        //sendCommand(MADCTL, 0_u8);
-        setDisplayMode(DisplayMode::Natural);
-        sendCommand(INVON);
+        reset();
 
         // now clear the entire display black
         setColumnRange(0, 319);
@@ -64,25 +59,51 @@ namespace rckid {
 #endif
         end();
 
-        // load and initialize the PIO programs for single and double precission
-        pio_ = pio0;
-        sm_ = pio_claim_unused_sm(pio_, true);
-        offsetSingle_ = pio_add_program(pio_, & ST7789_rgb_program);
-        offsetDouble_ = pio_add_program(pio_, & ST7789_rgb_double_program);
-        // initialize the DMA channel and set up interrupts
-        dma_ = dma_claim_unused_channel(true);
-        dmaConf_ = dma_channel_get_default_config(dma_); // create default channel config, write does not increment, read does increment, 32bits size
-        channel_config_set_transfer_data_size(& dmaConf_, DMA_SIZE_16); // transfer 16 bytes
-        channel_config_set_dreq(& dmaConf_, pio_get_dreq(pio_, sm_, true)); // tell our PIO
-        channel_config_set_read_increment(& dmaConf_, true);
-        dma_channel_configure(dma_, & dmaConf_, &pio_->txf[sm_], nullptr, 0, false); // start
 
-        // enable IRQ0 on the DMA channel
-        dma_channel_set_irq0_enabled(dma_, true);
-        //irq_set_exclusive_handler(DMA_IRQ_0, irqDMADone);
-        irq_add_shared_handler(DMA_IRQ_0, irqDMADone,  PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY);
-        irq_set_enabled(DMA_IRQ_0, true);
+    }
 
+    void ST7789::reset() {
+        dma_channel_abort(dma_);
+        pio_sm_set_enabled(pio_, sm_, false);
+
+        gpio_init(RP_PIN_DISP_TE);
+        gpio_set_dir(RP_PIN_DISP_TE, GPIO_IN);
+        gpio_init(RP_PIN_DISP_DCX);
+        gpio_set_dir(RP_PIN_DISP_DCX, GPIO_OUT);
+        gpio_init(RP_PIN_DISP_CSX);
+        gpio_set_dir(RP_PIN_DISP_CSX, GPIO_OUT);
+        gpio_put(RP_PIN_DISP_CSX, true);
+
+        initializePinsBitBang();
+
+        // TODO check the init sequence
+        sendCommand(SWRESET);
+        sleep_ms(150);
+        sendCommand(VSCSAD, (uint8_t)0);
+        setColorMode(ColorMode::RGB565);
+        sendCommand(TEON, TE_VSYNC);
+        sendCommand(SLPOUT);
+        sleep_ms(150);
+        sendCommand(DISPON);
+        sleep_ms(150);
+        //sendCommand(MADCTL, (uint8_t)(MADCTL_MV));
+        //sendCommand(MADCTL, (uint8_t)(MADCTL_MY | MADCTL_MV ));
+        //sendCommand(MADCTL, 0_u8);
+        setDisplayMode(DisplayMode::Natural);
+        sendCommand(INVON);
+    }
+
+    void ST7789::fill(Color color) {
+        setColumnRange(0, 319);
+        setRowRange(0, 239);
+        beginCommand(RAMWR);
+        gpio_put(RP_PIN_DISP_DCX, true);
+        uint16_t x = color.rawValue16();
+        for (size_t i = 0, e =320 * 240; i < e; ++i) {
+            sendByte((x >> 8) & 0xff);
+            sendByte(x & 0xff);
+        }
+        end();
     }
 
     void ST7789::enterContinuousMode(Mode mode) {

@@ -38,6 +38,11 @@ namespace rckid {
         fpsCounter_ = 0;
         currentApp_ = apps_.back();
         size_t initialSize = apps_.size();
+        if (initialSize == 1) {
+            int errorCode = setjmp(fatalError_);
+            if (errorCode != 0) 
+                BSOD(errorCode);
+        }
         while (apps_.size() >= initialSize) {
             uint32_t frameStart = time_us_32();
             if (frameStart >= nextFpsTick_) {
@@ -66,29 +71,15 @@ namespace rckid {
             updateUs_ = tUpdate;
             drawUs_ = tDraw; 
             frameUs_ = static_cast<unsigned>(time_us_32() - frameStart);
-
-/*
-            // new tick (check with AVR and peripherals, etc.)
-            uint64_t afterSystem = uptime_us();
-            uint64_t afterUpdate = uptime_us();
-            // if the update did not change the current application, draw, otherwise try to focus new app
-            if (currentApp_ != nullptr) {
-                ST7789::waitUpdateDone();
-                uint64_t beforeDraw = uptime_us();
-                currentApp_->draw();
-                uint64_t afterDraw = uptime_us();
-                drawUs_ = static_cast<unsigned>(afterDraw - beforeDraw); 
-                // start rendering
-                currentApp_->render();
-                ++fpsCounter_;
-            } else if (! apps_.empty()) {
-                currentApp_ = apps_.back();
-                drawUs_ = 0;
-            }
-            systemUs_ = static_cast<unsigned>(afterSystem - frameStart);
-            updateUs_ = static_cast<unsigned>(afterUpdate - afterSystem);
-            frameUs_ = static_cast<unsigned>(uptime_us() - frameStart);
-            */
-        }
+       }
     }
-}
+
+    void BaseApp::BSOD(int code) {
+        // reset the display
+        ST7789::reset();
+        ST7789::fill(Color::Blue());
+
+        while(true) {}
+
+    }
+} // namespace rckid
