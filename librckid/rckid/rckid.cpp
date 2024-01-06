@@ -1,4 +1,5 @@
 #include "bsp/board.h"
+#include "tusb_config.h"
 #include "tusb.h"
 
 #include "common/config.h"
@@ -21,12 +22,21 @@ namespace rckid {
         bi_decl(bi_2pins_with_func(RP_PIN_SDA, RP_PIN_SCL, GPIO_FUNC_I2C));  
         // TODO detect and initialize the standard peripherals
         // TODO serial if necessary
-        tud_init(BOARD_TUD_RHPORT);        
+        tud_init(BOARD_TUD_RHPORT);    
+        LOG("RCKid initialized");
     }
 
     void yield() {
         tud_task();
         Audio::processEvents();
+    }
+
+    Writer writeToUSBSerial() {
+        return Writer{[](char x) {
+            tud_cdc_write(& x, 1);
+            if (x == '\n')
+                tud_cdc_write_flush();            
+        }};
     }
 
     void powerOff() {

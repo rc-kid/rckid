@@ -18,10 +18,14 @@
 #include "common/state.h"
 #include "common/commands.h"
 
+#include "writer.h"
+
 inline uint8_t operator "" _u8(unsigned long long value) { return static_cast<uint8_t>(value); }
 inline uint16_t operator "" _u16(unsigned long long value) { return static_cast<uint16_t>(value); }
 inline uint32_t operator "" _u32(unsigned long long value) { return static_cast<uint32_t>(value); }
 inline uint64_t operator "" _u64(unsigned long long value) { return static_cast<uint64_t>(value); }
+
+#define LOG(...) rckid::writeToUSBSerial() << __VA_ARGS__ << '\n'
 
 /** RCKid SDK
  */
@@ -53,6 +57,8 @@ namespace rckid {
             RP_DEBUG_UART_RX_PIN
         );
     }
+
+    Writer writeToUSBSerial();
 
     /** \name Controls 
         

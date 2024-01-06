@@ -80,11 +80,13 @@ namespace rckid {
                 if (pressed(Btn::Left)) {
                     dir_ = Btn::Left;
                     i_ = (i_ == 0) ? (numItems_ - 1) : (i_ - 1);
+                    LOG("Moving left");
                 } else if (pressed(Btn::Right)) {
                     dir_ = Btn::Right;
                     ++i_;
                     if (i_ == numItems_)
                         i_ = 0;
+                    LOG("Moving right");
                 } else {
                     // TODO back
                     return;
