@@ -37,7 +37,7 @@ namespace rckid {
 
             void set(PNG && img, char const * text) {
                 text_ = text;
-                img_.loadImage(img);
+                //img_.loadImage(img);
             }
 
         private:
@@ -47,7 +47,7 @@ namespace rckid {
             void swapWith(Item & other) {
                 std::swap(text_, other.text_);
                 std::swap(textWidth_, other.textWidth_);
-                img_.swapWith(other.img_);
+                //img_.swapWith(other.img_);
             }
 
             std::string text_;
@@ -94,10 +94,12 @@ namespace rckid {
                 getItem(i_, other_);
                 other_.textWidth_ = renderer().textWidth(other_.text());
                 a_.start();
+                /*
                 if (current_.img_.rawPixels() == nullptr)
                     FATAL_ERROR(10);
                 if (other_.img_.rawPixels() == nullptr)
                     FATAL_ERROR(12);
+                */
             }
         }
 
@@ -107,23 +109,23 @@ namespace rckid {
             a_.update();
             if (dir_ == Btn::Home) {
                 // TODO draw the current item only
-                r.draw(current_.img(), current_.imageOffset());
+                //r.draw(current_.img(), current_.imageOffset());
                 r.text(current_.textOffset()) << current_.text();
             } else {
                 int xImg = a_.interpolate(0, 320);
                 int xText = a_.interpolate(0, 640);
                 switch (dir_) {
                     case Btn::Left: {
-                        r.draw(current_.img(), current_.imageOffset() + Point{xImg, 0});
+                        //r.draw(current_.img(), current_.imageOffset() + Point{xImg, 0});
                         r.text(current_.textOffset() + Point{xText, 0}) << current_.text();
-                        r.draw(other_.img(), other_.imageOffset() - Point{320 - xImg, 0});
+                        //r.draw(other_.img(), other_.imageOffset() - Point{320 - xImg, 0});
                         r.text(other_.textOffset() - Point{640 - xText, 0}) << other_.text();
                         break;
                     }
                     case Btn::Right:
-                        r.draw(current_.img(), current_.imageOffset() - Point{xImg, 0});
+                        //r.draw(current_.img(), current_.imageOffset() - Point{xImg, 0});
                         r.text(current_.textOffset() - Point{xText, 0}) << current_.text();
-                        r.draw(other_.img(), other_.imageOffset() + Point{320 - xImg, 0});
+                        //r.draw(other_.img(), other_.imageOffset() + Point{320 - xImg, 0});
                         r.text(other_.textOffset() + Point{640 - xText, 0}) << other_.text();
                         break;
                     default:

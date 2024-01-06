@@ -1,7 +1,7 @@
 ## TODO
 
 - fatal error cannot be called from onFocus, not sure why
-- carousel second image won't load - could it be oome?, likely not 
+- carousel second image won't load - could it be oome?, likely yes
 - add menu font
 - implement png's translarent color in png load & drawing
 

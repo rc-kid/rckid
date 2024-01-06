@@ -21,7 +21,7 @@ namespace rckid {
         }
 
         void draw() override {
-            auto & r = renderer();
+            //auto & r = renderer();
 
         }
 

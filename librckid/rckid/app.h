@@ -4,7 +4,9 @@
 
 #include <vector>
 
-#include "graphics/framebuffer.h"
+//#include "graphics/framebuffer.h"
+#include "ST7789.h"
+
 #include "graphics/png.h"
 #include "fonts/Iosevka_Mono6pt7b.h"
 
@@ -33,6 +35,15 @@ namespace rckid {
         virtual PNG img() { return PNG::fromBuffer(Img_, sizeof(Img_)); }
         virtual char const * name() { return "App"; }
 
+        static unsigned fps() { return fps_; }
+        static unsigned systemUs() { return systemUs_; }
+        static unsigned updateUs() { return updateUs_; }
+        static unsigned drawUs() { return drawUs_; }
+        static unsigned frameUs() { return frameUs_; }
+        static unsigned idleUs() { return frameUs_ - systemUs_ - updateUs_ - drawUs_; }
+        static unsigned idlePct() { return idleUs() * 100 / frameUs_; }
+
+
     protected:
 
         virtual void update() = 0;
@@ -42,14 +53,6 @@ namespace rckid {
         virtual void onBlur(BaseApp * next) {}
 
         virtual bool takeRenderer(void * renderer, unsigned rendererId) { return false; }
-
-        unsigned fps() const { return fps_; }
-        unsigned systemUs() const { return systemUs_; }
-        unsigned updateUs() const { return updateUs_; }
-        unsigned drawUs() const { return drawUs_; }
-        unsigned frameUs() const { return frameUs_; }
-        unsigned idleUs() const { return frameUs_ - systemUs_ - updateUs_ - drawUs_; }
-        unsigned idlePct() const { return idleUs() * 100 / frameUs_; }
 
         static __force_inline void FATAL_ERROR(int code) { longjmp(fatalError_, code); }
 
@@ -90,15 +93,6 @@ namespace rckid {
     protected:
 
         void render() override {
-#ifdef RCKID_DEBUG_FPS
-            GFXfont const & f = renderer_->font();
-            renderer_->setFont(Iosevka_Mono6pt7b);
-            Color c = renderer_->fg();
-            renderer_->setFg(Color::White());
-            renderer_->text(0, 300) << fps() << " d: " << drawUs();
-            renderer_->setFont(f);
-            renderer_->setFg(c);
-#endif
             renderer_->startRendering();
         }
 

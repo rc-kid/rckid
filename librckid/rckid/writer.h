@@ -21,6 +21,15 @@ namespace rckid {
             return *this;
         }
 
+        Writer & operator << (char c) { 
+            putChar_(c); 
+            return *this; 
+        }
+
+        Writer & operator << (uint8_t x) { return *this << (unsigned) x; }
+        Writer & operator << (uint16_t x) { return *this << (unsigned) x; }
+        Writer & operator << (uint32_t x) { return *this << (unsigned) x; }
+
         Writer & operator << (unsigned x) {
             unsigned order = 1000000000;
             while (x < order && order > 1)

@@ -3,6 +3,7 @@
 #include "canvas.h"
 
 #include "../ST7789.h"
+#include "../app.h"
 
 namespace rckid {
 
@@ -18,6 +19,15 @@ namespace rckid {
         }
 
         void startRendering() {
+#ifdef RCKID_DEBUG_FPS
+            GFXfont const & f = font();
+            setFont(Iosevka_Mono6pt7b);
+            Color c = fg();
+            setFg(Color::White());
+            text(0, 220) << BaseApp::fps() << " d: " << BaseApp::drawUs();
+            setFont(f);
+            setFg(c);
+#endif
             ST7789::waitVSync();
             ST7789::updatePixels(rawPixels(), width() * height());
         }

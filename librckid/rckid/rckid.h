@@ -25,7 +25,7 @@ inline uint16_t operator "" _u16(unsigned long long value) { return static_cast<
 inline uint32_t operator "" _u32(unsigned long long value) { return static_cast<uint32_t>(value); }
 inline uint64_t operator "" _u64(unsigned long long value) { return static_cast<uint64_t>(value); }
 
-#define LOG(...) rckid::writeToUSBSerial() << __VA_ARGS__ << '\n'
+#define LOG(...) rckid::writeToUSBSerial() << __VA_ARGS__ << "\r\n"
 
 /** RCKid SDK
  */
@@ -43,6 +43,8 @@ namespace rckid {
      */
     void yield();
 
+    Writer writeToUSBSerial();
+
     /** Serial port interface for RCKid allowing for printf statements and somewhat easier debugging. 
      
         To use the serial port on Raspberry Pi, start minicom with the following arguments:
@@ -58,7 +60,6 @@ namespace rckid {
         );
     }
 
-    Writer writeToUSBSerial();
 
     /** \name Controls 
         
