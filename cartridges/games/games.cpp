@@ -7,8 +7,9 @@ using namespace rckid;
 
 int main() {
     initialize();
-    Menu menu;
-    menu.run();
+    start(Menu{});
+    //Menu menu;
+    //menu.run();
     //SlidingPuzzle game;
     //game.run();
 }

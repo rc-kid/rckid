@@ -32,7 +32,7 @@ namespace rckid {
 
             void set(PNG & img, char const * text) {
                 text_ = text;
-                img_.loadImage(img);
+                //img_.loadImage(img);
             }
 
             void set(PNG && img, char const * text) {
@@ -47,7 +47,7 @@ namespace rckid {
             void swapWith(Item & other) {
                 std::swap(text_, other.text_);
                 std::swap(textWidth_, other.textWidth_);
-                //img_.swapWith(other.img_);
+                img_.swapWith(other.img_);
             }
 
             std::string text_;
@@ -64,7 +64,6 @@ namespace rckid {
         virtual void getItem(size_t index, Item & item) = 0;
 
         void onFocus(BaseApp * previous) override {
-            //FATAL_ERROR(10);
             App::onFocus(previous);
             getItem(i_, current_);
             current_.textWidth_ = renderer().textWidth(current_.text());
@@ -112,7 +111,7 @@ namespace rckid {
                 //r.draw(current_.img(), current_.imageOffset());
                 r.text(current_.textOffset()) << current_.text();
             } else {
-                int xImg = a_.interpolate(0, 320);
+                //int xImg = a_.interpolate(0, 320);
                 int xText = a_.interpolate(0, 640);
                 switch (dir_) {
                     case Btn::Left: {

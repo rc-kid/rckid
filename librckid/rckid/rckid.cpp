@@ -6,6 +6,10 @@
 #include "rckid.h"
 #include "ST7789.h"
 #include "audio.h"
+#include "app.h"
+
+extern char __StackLimit, __bss_end__;
+
 
 namespace rckid {
 
@@ -31,6 +35,13 @@ namespace rckid {
         Audio::processEvents();
     }
 
+    void start(BaseApp && app) {
+        int errorCode = setjmp(Device::fatalError_);
+        if (errorCode != 0) 
+            Device::BSOD(errorCode);
+        app.run();
+    }
+
     Writer writeToUSBSerial() {
         return Writer{[](char x) {
             tud_cdc_write(& x, 1);
@@ -38,6 +49,14 @@ namespace rckid {
                 tud_cdc_write_flush();            
         }};
     }
+
+
+
+    size_t freeHeap() {
+        size_t heapSize = &__StackLimit  - &__bss_end__;    
+        return heapSize - mallinfo().uordblks;
+    }
+
 
     void powerOff() {
         /// TODO: make sure sd and other things are done first, only then poweroff
@@ -85,4 +104,12 @@ namespace rckid {
             *(raw++) = i2c0->hw->data_cmd;
         // i2c_read_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t *)& state_, sizeof(State), false);
     }
+
+    void Device::BSOD(int code) {
+        // reset the display
+        ST7789::reset();
+        ST7789::fill(Color::Blue());
+        while(true) {}
+    }
+
 } // namespace rckid

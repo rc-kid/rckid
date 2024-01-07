@@ -10,6 +10,8 @@ namespace rckid {
      */
     class Color {
     public:
+        static constexpr size_t BPP = 16;
+        
         constexpr Color():raw_{0} {}
 
         constexpr Color(uint8_t r, uint8_t g, uint8_t b): raw_{0} {
@@ -44,5 +46,9 @@ namespace rckid {
     } __attribute__((packed)); // rckid::ColorRGB
 
     static_assert(sizeof(Color) == 2);
+
+
+    using ColorRGB = Color;
+
 
 }; // namespace rckid

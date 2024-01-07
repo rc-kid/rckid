@@ -1,9 +1,8 @@
 ## TODO
 
-- fatal error cannot be called from onFocus, not sure why
 - carousel second image won't load - could it be oome?, likely yes
 - add menu font
-- implement png's translarent color in png load & drawing
+- implement png's transparent color in png load & drawing
 
 - calculate longest distance between yields
 - check sleep mode power consumption for pedometer
@@ -64,6 +63,8 @@
 ## RP
 
 - document ST7789
+- disable file & line information for fatal errors
+- print fatal error to USB serial
 
 ## AVR
 
@@ -108,4 +109,11 @@
 - simple cartridge (only FLASH)
 - add SRAM (maybe https://cz.mouser.com/ProductDetail/ISSI/IS66WVS2M8BLL-104NLI?qs=doiCPypUmgFx786bHGqGiQ%3D%3D)
 
+# Graphics
+
+Tile = bitmap with statically given dimensions (really only a storage format)
+Bitmap = bitmap with dynamically known dimensions 
+Canvas = bitmap with extra state
+
+Support 16,12,8,4,2 and 1 bitdepth
 

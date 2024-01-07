@@ -1,5 +1,8 @@
 #pragma once
 
+#include <malloc.h>
+#include <csetjmp>
+
 #include <functional>
 
 #include <pico.h>
@@ -12,7 +15,6 @@
 #include <hardware/uart.h>
 #include <pico/binary_info.h>
 #include <pico/rand.h>
-//#include <stdio.h>
 
 #include "common/config.h"
 #include "common/state.h"
@@ -26,10 +28,20 @@ inline uint32_t operator "" _u32(unsigned long long value) { return static_cast<
 inline uint64_t operator "" _u64(unsigned long long value) { return static_cast<uint64_t>(value); }
 
 #define LOG(...) rckid::writeToUSBSerial() << __VA_ARGS__ << "\r\n"
+#define ASSERT(...) if (!(__VA_ARGS__)) { FATAL_ERROR(rckid::ASSERTION_ERROR); }
+#define NOT_IMPLEMENTED FATAL_ERROR(rckid::NOT_IMPLEMENTED_ERROR)
+#define FATAL_ERROR(CODE) rckid::Device::fatalError(CODE, __FILE__, __LINE__)
 
 /** RCKid SDK
  */
 namespace rckid {
+
+    constexpr int INTERNAL_ERROR = 1;
+    constexpr int ASSERTION_ERROR = 2;
+    constexpr int NOT_IMPLEMENTED_ERROR = 3;
+    constexpr int MEMORY_ERROR = 4;
+
+    class BaseApp;
 
     /** Initializes the RCKid. 
      
@@ -38,11 +50,20 @@ namespace rckid {
     void initialize();
 
     /** Yields to the RCKid's device events. 
-     
          
      */
     void yield();
 
+    /** Starts the app loop with the provided application. 
+     */
+    void start(BaseApp && app);
+
+    /** \name Debugging Support
+     */
+    //@{
+
+    /** Returns a writes to the USB virtual COM port.
+     */
     Writer writeToUSBSerial();
 
     /** Serial port interface for RCKid allowing for printf statements and somewhat easier debugging. 
@@ -60,6 +81,11 @@ namespace rckid {
         );
     }
 
+    /** Returns the available heap memory.
+     */
+    size_t freeHeap();
+
+    //@}
 
     /** \name Controls 
         
@@ -133,6 +159,13 @@ namespace rckid {
     class Device {
     public:
 
+        static __force_inline void fatalError(int code, char const * file, int line) { 
+            fatalErrorFile_ = file;
+            fatalErrorLine_ = line;
+            longjmp(fatalError_, code); 
+        }
+
+        static __force_inline void fatalError(int code) { fatalError(code, nullptr, 0); }
   
     private:
         friend class BaseApp;
@@ -165,6 +198,8 @@ namespace rckid {
 
         friend void yield();
 
+        friend void start(BaseApp && app);
+
         friend bool down(Btn b) { return state_.status.down(b); }
         friend bool pressed(Btn b) { return state_.status.down(b) && ! lastState_.status.down(b); }
         friend bool released(Btn b) { return !state_.status.down(b) && lastState_.status.down(b); }
@@ -185,6 +220,12 @@ namespace rckid {
         friend void sleep_ns(uint32_t ns);
         friend size_t cpuClockSpeed() { return clockSpeed_; }
         friend void cpuOverclock(unsigned hz, bool overvolt);
+
+        static void BSOD(int code);
+
+        static inline jmp_buf fatalError_;
+        static inline int fatalErrorLine_ = 0;
+        static inline char const * fatalErrorFile_ = nullptr;
 
     }; 
 

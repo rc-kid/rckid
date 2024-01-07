@@ -24,7 +24,7 @@ namespace rckid {
             setFont(Iosevka_Mono6pt7b);
             Color c = fg();
             setFg(Color::White());
-            text(0, 220) << BaseApp::fps() << " d: " << BaseApp::drawUs();
+            text(0, 220) << BaseApp::fps() << " d: " << BaseApp::drawUs() << " mem: " << freeHeap();
             setFont(f);
             setFg(c);
 #endif

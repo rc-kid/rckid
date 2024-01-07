@@ -1,7 +1,5 @@
 #pragma once
 
-#include <csetjmp>
-
 #include <vector>
 
 //#include "graphics/framebuffer.h"
@@ -54,17 +52,11 @@ namespace rckid {
 
         virtual bool takeRenderer(void * renderer, unsigned rendererId) { return false; }
 
-        static __force_inline void FATAL_ERROR(int code) { longjmp(fatalError_, code); }
-
     private:
 
         template<typename T> friend class App;
 
         static void loop_();
-
-        static void BSOD(int code);
-
-        static inline jmp_buf fatalError_;
 
         static inline std::vector<BaseApp *> apps_;
         static inline BaseApp * currentApp_ = nullptr;

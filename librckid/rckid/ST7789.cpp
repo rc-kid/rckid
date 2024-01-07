@@ -37,8 +37,8 @@ namespace rckid {
         reset();
 
         // now clear the entire display black
-        setColumnRange(0, 319);
-        setRowRange(0, 239);
+        setColumnRange(0, 239);
+        setRowRange(0, 319);
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
 #if (defined RCKID_SPLASHSCREEN_OFF)
@@ -47,6 +47,7 @@ namespace rckid {
             sendByte(0);
         }
 #else
+        setDisplayMode(DisplayMode::Natural);
         PNG png = PNG::fromBuffer(Logo16, sizeof(Logo16));
         png.decode([&](Color * line, int lineNum, int lineWidth){
             uint8_t const * raw = reinterpret_cast<uint8_t *>(line);
@@ -56,10 +57,9 @@ namespace rckid {
                 raw += 2;
             }
         });
+        setDisplayMode(ST7789::DisplayMode::Native);
 #endif
         end();
-
-
     }
 
     void ST7789::reset() {
@@ -89,13 +89,13 @@ namespace rckid {
         //sendCommand(MADCTL, (uint8_t)(MADCTL_MV));
         //sendCommand(MADCTL, (uint8_t)(MADCTL_MY | MADCTL_MV ));
         //sendCommand(MADCTL, 0_u8);
-        setDisplayMode(DisplayMode::Natural);
+        setDisplayMode(ST7789::DisplayMode::Native);
         sendCommand(INVON);
     }
 
     void ST7789::fill(Color color) {
-        setColumnRange(0, 319);
-        setRowRange(0, 239);
+        setColumnRange(0, 239);
+        setRowRange(0, 319);
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
         uint16_t x = color.rawValue16();
@@ -106,6 +106,7 @@ namespace rckid {
         end();
     }
 
+    /*
     void ST7789::enterContinuousMode(Mode mode) {
         leaveContinuousMode();
         switch (mode) {
@@ -129,6 +130,27 @@ namespace rckid {
                 beginCommand(RAMWR);
                 gpio_put(RP_PIN_DISP_DCX, true);
                 // initialize the PIO program 
+                ST7789_rgb_double_program_init(pio_, sm_, offsetDouble_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
+                break;
+        }
+        // and start the pio
+        pio_sm_set_enabled(pio_, sm_, true);
+    }
+    */
+
+    void ST7789::enterContinuousMode(Rect rect, Mode mode) {
+        leaveContinuousMode();
+        setColumnRange(rect.top(), rect.height() - 1);
+        setRowRange(rect.left(), rect.width() - 1);
+        // start the continuous RAM write command
+        beginCommand(RAMWR);
+        gpio_put(RP_PIN_DISP_DCX, true);
+        // initialize the corresponding PIO program
+        switch (mode) {
+            case Mode::Single:
+                ST7789_rgb_program_init(pio_, sm_, offsetSingle_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
+                break;
+            case Mode::Double:
                 ST7789_rgb_double_program_init(pio_, sm_, offsetDouble_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
                 break;
         }

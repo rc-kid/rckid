@@ -180,4 +180,18 @@ namespace rckid {
 
     }; // rckid::Canvas
 
+    /** Image with fixed palette colors. 
+     */
+    class Image256 {
+    public:
+
+    protected:
+
+        uint8_t buffer_;
+        int w_;
+        int h_;
+
+
+    }; // Image256
+
 } // namespace rckid

@@ -38,11 +38,6 @@ namespace rckid {
         fpsCounter_ = 0;
         currentApp_ = apps_.back();
         size_t initialSize = apps_.size();
-        if (initialSize == 1) {
-            int errorCode = setjmp(fatalError_);
-            if (errorCode != 0) 
-                BSOD(errorCode);
-        }
         while (apps_.size() >= initialSize) {
             uint32_t frameStart = time_us_32();
             if (frameStart >= nextFpsTick_) {
@@ -74,12 +69,4 @@ namespace rckid {
        }
     }
 
-    void BaseApp::BSOD(int code) {
-        // reset the display
-        ST7789::reset();
-        ST7789::fill(Color::Blue());
-
-        while(true) {}
-
-    }
 } // namespace rckid

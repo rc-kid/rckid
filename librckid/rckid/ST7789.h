@@ -6,6 +6,7 @@
 
 #include "rckid.h"
 #include "rckid/graphics/color.h"
+#include "graphics/primitives.h"
 
 //#include "gpu/graphics.h"
 
@@ -102,7 +103,9 @@ namespace rckid {
 
             The continuous mode is not intended to be used directly by the users, but rather should be utilized by various gpu modes, such as framebuffer or tiling engine. 
          */
-        static void enterContinuousMode(Mode mode = Mode::Single);
+        static void enterContinuousMode(Mode mode = Mode::Single) { enterContinuousMode(Rect::WH(320, 240), mode); }
+
+        static void enterContinuousMode(Rect rect, Mode mode = Mode::Single); 
 
         static void leaveContinuousMode();
 
