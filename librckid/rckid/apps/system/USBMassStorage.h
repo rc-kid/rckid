@@ -27,8 +27,8 @@ namespace rckid {
             // TODO: fill in the numBlocks and blockSize, unmount SD card
             numEvents_ = 0;
             Renderer & r = renderer();
-            r.setFg(Color::RGB(255,255,255));
-            r.setBg(Color::RGB(0,128,0));
+            r.setFg(ColorRGB::White());
+            r.setBg(ColorRGB::White());
             r.setFont(Iosevka_Mono6pt7b);
             available_ = true;
 

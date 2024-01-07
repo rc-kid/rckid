@@ -33,7 +33,7 @@ namespace rckid {
         uint16_t line[320];
         PNG * png = reinterpret_cast<PNG*>(pDraw->pUser);
         PNGRGB565(pDraw, line, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff, png->iHasAlpha);
-        png->cb_(reinterpret_cast<Color *>(line), pDraw->y, pDraw->iWidth);
+        png->cb_(reinterpret_cast<ColorRGB *>(line), pDraw->y, pDraw->iWidth);
     }
 
 

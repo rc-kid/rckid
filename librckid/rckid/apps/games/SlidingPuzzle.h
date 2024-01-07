@@ -28,10 +28,10 @@ namespace rckid {
         void onFocus(BaseApp * previous) override {
             App::onFocus(previous);
             PNG png = PNG::fromBuffer(defaultImage_, sizeof(defaultImage_));
-            png.decode([&](Color * line, int lineNum, int lineWidth){
+            png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
                 Renderer & r = renderer();
                 for (int i = 0; i < lineWidth; ++i)
-                    r.setPixel(i, lineNum, line[i]);
+                    r.setPixelAt(i, lineNum, line[i]);
             });
             shuffle_ = 0;
             holeX_ = -1;
@@ -79,7 +79,7 @@ namespace rckid {
                     holeX_ = MAX_X;
                     holeY_ = MAX_Y;
                     hole_.draw(r, 0, 0, tileRect(holeX_, holeY_));
-                    r.setBg(Color::RGB(128, 128, 128));
+                    r.setBg(ColorRGB::RGB(128, 128, 128));
                     r.fill(tileRect(holeX_, holeY_));
                 }
             }

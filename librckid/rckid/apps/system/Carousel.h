@@ -4,6 +4,7 @@
 #include "rckid/graphics/framebuffer.h"
 #include "rckid/graphics/animation.h"
 #include "rckid/graphics/png.h"
+#include "rckid/graphics/bitmap.h"
 
 namespace rckid {
 
@@ -28,7 +29,7 @@ namespace rckid {
 
             std::string const & text() const { return text_; }
 
-            Image const & img() const { return img_; }
+            Bitmap<ColorRGB> const & img() const { return img_; }
 
             void set(PNG & img, char const * text) {
                 text_ = text;
@@ -47,11 +48,11 @@ namespace rckid {
             void swapWith(Item & other) {
                 std::swap(text_, other.text_);
                 std::swap(textWidth_, other.textWidth_);
-                img_.swapWith(other.img_);
+                //img_.swapWith(other.img_);
             }
 
             std::string text_;
-            Image img_{0,0};
+            Bitmap<ColorRGB> img_{0,0};
             int textWidth_{0}; 
         }; 
 
@@ -67,7 +68,7 @@ namespace rckid {
             App::onFocus(previous);
             getItem(i_, current_);
             current_.textWidth_ = renderer().textWidth(current_.text());
-            renderer().setFg(Color::White());
+            renderer().setFg(ColorRGB::White());
         }
 
         void onBlur(BaseApp * next) override {

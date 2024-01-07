@@ -3,11 +3,14 @@
 #include "rckid/apps/games/SlidingPuzzle.h"
 #include "rckid/apps/games/Tetris.h"
 
+#include "rckid/graphics/bitmap.h"
+
 using namespace rckid;
 
 int main() {
     initialize();
-    start(Menu{});
+    //start(Menu{});
+    start(SlidingPuzzle{});
     //Menu menu;
     //menu.run();
     //SlidingPuzzle game;

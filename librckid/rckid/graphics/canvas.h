@@ -6,14 +6,16 @@
 #include "color.h"
 #include "primitives.h"
 #include "png.h"
+#include "bitmap.h"
 #include "fonts/Iosevka_Mono6pt7b.h"
 
 namespace rckid {
 
+#ifdef FOOBAR
     class Image {
     public:
         Image(int width, int height):
-            buffer_{ width * height == 0 ? nullptr : new Color[ width * height] },
+            buffer_{ width * height == 0 ? nullptr : new ColorRGB[ width * height] },
             w_{width},
             h_{height} {
         }
@@ -26,7 +28,7 @@ namespace rckid {
         void resize(int width, int height) {
             if (w_ != width || h_ != height) {
                 delete [] buffer_;
-                buffer_ = new Color[width * height];
+                buffer_ = new ColorRGB[width * height];
                 w_ = width;
                 h_ = height;
             }
@@ -42,7 +44,7 @@ namespace rckid {
          */
         void loadImage(PNG & png) {
             resize(png.width(), png.height());
-            png.decode([this](Color * line, int lineNum, int lineWidth){
+            png.decode([this](ColorRGB * line, int lineNum, int lineWidth){
                 for (int i = 0; i < lineWidth; ++i)
                     setPixel(i, lineNum, line[i]);
             });
@@ -66,13 +68,13 @@ namespace rckid {
                     setPixel(x + xx, y + yy, from.buffer_[from.map(fromRect.left() + xx, fromRect.top() + yy)]);
         }
 
-        void setPixel(int x, int y, Color c) { 
+        void setPixel(int x, int y, ColorRGB c) { 
             if (x > 0 && x < w_ && y > 0 && y < h_)
                 buffer_[map(x, y)] = c; 
         }
 
         uint16_t const * rawPixels() const { 
-            static_assert(sizeof(Color) == sizeof(uint16_t));
+            static_assert(sizeof(ColorRGB) == sizeof(uint16_t));
             return reinterpret_cast<uint16_t const *>(buffer_); 
         }
 
@@ -84,22 +86,24 @@ namespace rckid {
             return (w_ - x - 1) * h_ + y; 
         }
 
-        Color * buffer_;
+        ColorRGB * buffer_;
         int w_;
         int h_;
 
     }; // rckid::Image
 
-    class Canvas : public Image {
+#endif
+
+    class Canvas : public Bitmap<ColorRGB> {
     public:
 
-        Canvas(int width, int height): Image{width, height} {}
+        Canvas(int width, int height): Bitmap{width, height} {}
 
-        Color bg() const { return bg_; }
-        Color fg() const { return fg_; }
+        ColorRGB bg() const { return bg_; }
+        ColorRGB fg() const { return fg_; }
 
-        void setFg(Color c) { fg_ = c; }
-        void setBg(Color c) { bg_ = c; }
+        void setFg(ColorRGB c) { fg_ = c; }
+        void setBg(ColorRGB c) { bg_ = c; }
 
         GFXfont const & font() const { return * font_; }
         void setFont(GFXfont const & font) { font_ = &font; }
@@ -134,7 +138,7 @@ namespace rckid {
         void fill() {
             uint32_t x = bg_.rawValue16() << 16 | bg_.rawValue16();
             uint32_t * b = reinterpret_cast<uint32_t*>(buffer_);
-            for (unsigned i = 0, e = rawPixelsCount() / 2; i < e; ++i)
+            for (unsigned i = 0, e = numPixels() / 2; i < e; ++i)
                 //buffer_[i] = bg_;
                 b[i] = x;
         }
@@ -144,12 +148,12 @@ namespace rckid {
         void fill(Rect rect) {
             for (int x = rect.left(), xe = rect.right(); x < xe; ++x)
                 for (int y = rect.top(), ye = rect.bottom(); y < ye; ++y)
-                    setPixel(x, y, bg_);
+                    setPixelAt(x, y, bg_);
         }
 
     private:
 
-        int drawGlyph(int x, int y, char c, Color color, GFXfont const * f, int size) {
+        int drawGlyph(int x, int y, char c, ColorRGB color, GFXfont const * f, int size) {
             GFXglyph * glyph = f->glyph + (c - f->first);
             uint8_t const * bitmap = f->bitmap + glyph->bitmapOffset;
             int pixelY = y + glyph->yOffset * size + f->yAdvance;
@@ -161,7 +165,7 @@ namespace rckid {
                     if ((bi++ % 8) == 0)
                         bits = *(bitmap++);
                     if (bits & 0x80) {
-                        setPixel(pixelX, pixelY, color);
+                        setPixelAt(pixelX, pixelY, color);
                         //if (size == 1)
                         //    buffer_[map(pixelX, pixelY)] = color;
                         //else
@@ -172,8 +176,8 @@ namespace rckid {
             return glyph->xAdvance * size;
         }
 
-        Color fg_;
-        Color bg_;
+        ColorRGB fg_;
+        ColorRGB bg_;
         GFXfont const * font_ = & Iosevka_Mono6pt7b;
         int x_ = 0;
         int y_ = 0;

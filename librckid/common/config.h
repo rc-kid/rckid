@@ -3,6 +3,8 @@
 
 #define RCKID_DEBUG_FPS
 
+#define RCKID_SPLASHSCREEN_OFF_
+
 /** RP2040 Pinout
 
  */

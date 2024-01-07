@@ -37,9 +37,10 @@ int main() {
 
 //    USBMassStorage game;
 //    game.run();
+    start(AVRStatusTest{});
 
-    AVRStatusTest test;
-    test.run();
+    //AVRStatusTest test;
+    //test.run();
 }
 
 

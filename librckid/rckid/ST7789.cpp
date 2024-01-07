@@ -37,19 +37,24 @@ namespace rckid {
         reset();
 
         // now clear the entire display black
+#if (defined RCKID_SPLASHSCREEN_OFF)
         setColumnRange(0, 239);
         setRowRange(0, 319);
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
-#if (defined RCKID_SPLASHSCREEN_OFF)
         for (size_t i = 0, e =320 * 240; i < e; ++i) {
             sendByte(0);
             sendByte(0);
         }
+        end();
 #else
         setDisplayMode(DisplayMode::Natural);
+        setColumnRange(0, 319);
+        setRowRange(0, 239);
+        beginCommand(RAMWR);
+        gpio_put(RP_PIN_DISP_DCX, true);
         PNG png = PNG::fromBuffer(Logo16, sizeof(Logo16));
-        png.decode([&](Color * line, int lineNum, int lineWidth){
+        png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
             uint8_t const * raw = reinterpret_cast<uint8_t *>(line);
             for (int i = 0; i < lineWidth; ++i) {
                 sendByte(raw[1]);
@@ -57,9 +62,9 @@ namespace rckid {
                 raw += 2;
             }
         });
+        end();
         setDisplayMode(ST7789::DisplayMode::Native);
 #endif
-        end();
     }
 
     void ST7789::reset() {
@@ -93,7 +98,7 @@ namespace rckid {
         sendCommand(INVON);
     }
 
-    void ST7789::fill(Color color) {
+    void ST7789::fill(ColorRGB color) {
         setColumnRange(0, 239);
         setRowRange(0, 319);
         beginCommand(RAMWR);

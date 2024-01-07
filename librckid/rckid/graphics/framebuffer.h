@@ -22,14 +22,14 @@ namespace rckid {
 #ifdef RCKID_DEBUG_FPS
             GFXfont const & f = font();
             setFont(Iosevka_Mono6pt7b);
-            Color c = fg();
-            setFg(Color::White());
+            ColorRGB c = fg();
+            setFg(ColorRGB::White());
             text(0, 220) << BaseApp::fps() << " d: " << BaseApp::drawUs() << " mem: " << freeHeap();
             setFont(f);
             setFg(c);
 #endif
             ST7789::waitVSync();
-            ST7789::updatePixels(rawPixels(), width() * height());
+            ST7789::updatePixels(reinterpret_cast<uint16_t const *>(buffer_), numPixels());
         }
     }; // rckid::FrameBuffer
 
@@ -47,11 +47,11 @@ namespace rckid {
         void startRendering() {
             updateLine_ = 0;
             ST7789::waitVSync();
-            ST7789::updatePixelsPartial(rawPixels(), height(), [this](){
+            ST7789::updatePixelsPartial(reinterpret_cast<uint16_t const *>(buffer_), height(), [this](){
                 if (updateLine_ == width() - 1)
-                    ST7789::updatePixels(rawPixels() + height() * (width() - 1), height());
+                    ST7789::updatePixels(reinterpret_cast<uint16_t const *>(buffer_) + height() * (width() - 1), height());
                 else 
-                ST7789::updatePixelsPartial(rawPixels() + height() * updateLine_++, height() * 2);
+                ST7789::updatePixelsPartial(reinterpret_cast<uint16_t const *>(buffer_) + height() * updateLine_++, height() * 2);
             }); 
         }
 

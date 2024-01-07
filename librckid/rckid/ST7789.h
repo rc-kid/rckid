@@ -94,7 +94,7 @@ namespace rckid {
 
         /** Clears the entire display with given color. 
          */
-        static void fill(Color color);
+        static void fill(ColorRGB color);
 
 
         /** \name Continuous mode
@@ -109,7 +109,7 @@ namespace rckid {
 
         static void leaveContinuousMode();
 
-        static void updatePixels(uint16_t const * pixels, int numPixels) {
+        static void updatePixels(uint16_t const * pixels, size_t numPixels) {
             cb_ = [](){ 
                 ST7789::updating_ = false; 
                 updateUs_ = static_cast<unsigned>(uptime_us() - updateStart_);
@@ -117,13 +117,13 @@ namespace rckid {
             updatePixelsPartial(pixels, numPixels);
         }
 
-        static void updatePixelsPartial(uint16_t const * pixels, int numPixels, UpdatePixelsCallback cb) {
+        static void updatePixelsPartial(uint16_t const * pixels, size_t numPixels, UpdatePixelsCallback cb) {
             updateStart_ = uptime_us();
             cb_ = cb;
             updatePixelsPartial(pixels, numPixels);
         }
 
-        static void updatePixelsPartial(uint16_t const * pixels, int numPixels) {
+        static void updatePixelsPartial(uint16_t const * pixels, size_t numPixels) {
             if (!updating_)
                 updateStart_ = uptime_us();
             updating_ = true;

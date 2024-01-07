@@ -1,5 +1,8 @@
 ## TODO
 
+- remove image and make canvas templated by the bitmap
+
+
 - carousel second image won't load - could it be oome?, likely yes
 - add menu font
 - implement png's transparent color in png load & drawing

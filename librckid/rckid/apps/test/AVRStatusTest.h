@@ -20,9 +20,9 @@ namespace rckid {
         void draw() override {
             TinyDate t = time();
             Renderer & r = renderer();
-            r.setFg(Color{255,255,255});
+            r.setFg(ColorRGB::White());
             r.setFont(Iosevka_Mono6pt7b);
-            r.setBg(Color{bg_, 0, 0});
+            r.setBg(ColorRGB::RGB(bg_, 0, 0));
             bg_ += 4;
             r.fill();
             r.text(0,0);

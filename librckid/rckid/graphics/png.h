@@ -13,7 +13,7 @@ namespace rckid {
     class PNG : private PNGIMAGE  {
     public:
 
-        using DecodeCallback = std::function<void(Color * rgb, int lineNum, int lineWidth)>;
+        using DecodeCallback = std::function<void(ColorRGB * rgb, int lineNum, int lineWidth)>;
 
         static PNG fromBuffer(uint8_t const * buffer, size_t numBytes);
 

@@ -108,7 +108,7 @@ namespace rckid {
     void Device::BSOD(int code) {
         // reset the display
         ST7789::reset();
-        ST7789::fill(Color::Blue());
+        ST7789::fill(ColorRGB::Blue());
         while(true) {}
     }
 

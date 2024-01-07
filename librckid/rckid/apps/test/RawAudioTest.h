@@ -26,9 +26,9 @@ namespace rckid {
                 refill(buffer, stereoSamples * 2);
             });
             Renderer & r = renderer();
-            r.setFg(Color{255,255,255});
+            r.setFg(ColorRGB::White());
             r.setFont(Iosevka_Mono6pt7b);
-            r.setBg(Color{0, 0, 0});
+            r.setBg(ColorRGB::Black());
 
         }
 

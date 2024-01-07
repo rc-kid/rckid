@@ -28,6 +28,7 @@ inline uint32_t operator "" _u32(unsigned long long value) { return static_cast<
 inline uint64_t operator "" _u64(unsigned long long value) { return static_cast<uint64_t>(value); }
 
 #define LOG(...) rckid::writeToUSBSerial() << __VA_ARGS__ << "\r\n"
+#define DEBUG(...) rckid::writeToUSBSerial() << __VA_ARGS__ << "\r\n"
 #define ASSERT(...) if (!(__VA_ARGS__)) { FATAL_ERROR(rckid::ASSERTION_ERROR); }
 #define NOT_IMPLEMENTED FATAL_ERROR(rckid::NOT_IMPLEMENTED_ERROR)
 #define FATAL_ERROR(CODE) rckid::Device::fatalError(CODE, __FILE__, __LINE__)
