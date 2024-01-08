@@ -10,7 +10,7 @@
 
 namespace rckid {
 
-    class AudioTestTone : public App<FrameBuffer> {
+    class AudioTestTone : public App<FrameBuffer<ColorRGB>> {
     public:
         AudioTestTone() = default;
 
@@ -40,8 +40,7 @@ namespace rckid {
         void draw() override {
             Renderer & r = renderer();
             r.fill();
-            r.text(5, 10);
-            r.text() << offset_; 
+            r.text(5, 10) << offset_;
         }
 
     private:

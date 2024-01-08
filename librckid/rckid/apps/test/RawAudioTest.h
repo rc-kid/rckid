@@ -7,7 +7,7 @@
 
 namespace rckid {
 
-    class RawAudioTest : public App<FrameBuffer> {
+    class RawAudioTest : public App<FrameBuffer<ColorRGB>> {
     public:
         RawAudioTest() = default;
 
@@ -39,10 +39,9 @@ namespace rckid {
         void draw() override {
             Renderer & r = renderer();
             r.fill();
-            r.text(5, 10);
-            r.text() << offset_; 
-            r.text() << "\n\n";
-            r.text() << " FPS: " << fps() << " S:" << systemUs() << " U:" << (updateUs() / 1000) << " D:" << (drawUs() / 1000);
+            r.text(5, 10) << offset_
+                          << "\n\n"
+                          << " FPS: " << fps() << " S:" << systemUs() << " U:" << (updateUs() / 1000) << " D:" << (drawUs() / 1000);
         }
 
     private:

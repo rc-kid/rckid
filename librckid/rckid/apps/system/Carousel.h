@@ -8,7 +8,7 @@
 
 namespace rckid {
 
-    class Carousel : public App<FrameBuffer> {
+    class Carousel : public App<FrameBuffer<ColorRGB>> {
     public:
         class Item {
         public:

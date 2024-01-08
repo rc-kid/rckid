@@ -9,7 +9,7 @@ namespace rckid {
      
         The app has to be active in order for the mass storage attachment to work. 
      */
-    class USBMassStorage : public App<FrameBuffer> {
+    class USBMassStorage : public App<FrameBuffer<ColorRGB>> {
     public:
 
         USBMassStorage()  = default;

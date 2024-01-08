@@ -20,7 +20,7 @@ namespace rckid {
           - add accelerometer as input
 
      */
-    class SlidingPuzzle : public App<FrameBuffer> {
+    class SlidingPuzzle : public App<FrameBuffer<ColorRGB>> {
     public:
 
     protected:
@@ -132,8 +132,8 @@ namespace rckid {
             return Point{ x * TILE_WIDTH, y * TILE_HEIGHT};
         }
 
-        Canvas hole_{TILE_WIDTH,TILE_HEIGHT};
-        Canvas tmp_{TILE_WIDTH,TILE_HEIGHT};
+        Canvas<ColorRGB> hole_{TILE_WIDTH,TILE_HEIGHT};
+        Canvas<ColorRGB> tmp_{TILE_WIDTH,TILE_HEIGHT};
 
         uint8_t * tileMap_ = nullptr;
 

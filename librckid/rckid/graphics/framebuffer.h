@@ -7,9 +7,40 @@
 
 namespace rckid {
 
+    template<typename COLOR>
+    class FrameBuffer : public Canvas<COLOR> {
+    public:
+        static unsigned const RENDERER_ID;
+
+        FrameBuffer(): Canvas<COLOR>{320, 240} {
+            ST7789::enterContinuousMode(ST7789::Mode::Single);
+        }
+
+        void startRendering();
+    }; 
+
+    template<>
+    inline unsigned const FrameBuffer<ColorRGB>::RENDERER_ID = 0;
+
+    template<> 
+    inline void FrameBuffer<ColorRGB>::startRendering() {
+#ifdef RCKID_DEBUG_FPS
+        GFXfont const & f = font();
+        setFont(Iosevka_Mono6pt7b);
+        ColorRGB c = fg();
+        setFg(ColorRGB::White());
+        text(0, 220) << BaseApp::fps() << " d: " << BaseApp::drawUs() << " mem: " << freeHeap();
+        setFont(f);
+        setFg(c);
+#endif
+        ST7789::waitVSync();
+        ST7789::updatePixels(reinterpret_cast<uint16_t const *>(buffer_), numPixels());
+    } 
+
     /** A framebuffer is nothing more than a canvas that knows how to display itself on the display. 
      */
-    class FrameBuffer : public Canvas {
+    /*
+    class FrameBuffer : public Canvas<ColorRGB> {
     public:
 
         static constexpr unsigned RENDERER_ID = 1;
@@ -32,10 +63,11 @@ namespace rckid {
             ST7789::updatePixels(reinterpret_cast<uint16_t const *>(buffer_), numPixels());
         }
     }; // rckid::FrameBuffer
+    */
 
     /** Double framebuffer that uses 1/4 of the memory and doubles each pixel. Inspired by the picosystem for a pixelated look. 
      */
-    class FrameBufferDouble : public Canvas {
+    class FrameBufferDouble : public Canvas<ColorRGB> {
     public:    
 
         static constexpr unsigned RENDERER_ID = 2;

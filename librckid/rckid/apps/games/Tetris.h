@@ -5,7 +5,7 @@
 
 namespace rckid {
 
-    class Tetris : public App<FrameBuffer> {
+    class Tetris : public App<FrameBuffer<ColorRGB>> {
     public:
 
     protected:
