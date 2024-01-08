@@ -27,12 +27,17 @@ namespace rckid {
 
         void onFocus(BaseApp * previous) override {
             App::onFocus(previous);
-            PNG png = PNG::fromBuffer(defaultImage_, sizeof(defaultImage_));
+            //PNG png = PNG::fromBuffer(defaultImage_, sizeof(defaultImage_));
+            renderer().loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
+            /*
             png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
                 Renderer & r = renderer();
-                for (int i = 0; i < lineWidth; ++i)
-                    r.setPixelAt(i, lineNum, line[i]);
+                for (int i = 0; i < lineWidth; ++i) {
+                    ColorRGB c = line[i];
+                    r.setPixelAt(i, lineNum, Color::RGB(c.r(), c.g(), c.b()));
+                }
             });
+            */
             shuffle_ = 0;
             holeX_ = -1;
             holeY_ = -1;
@@ -79,7 +84,7 @@ namespace rckid {
                     holeX_ = MAX_X;
                     holeY_ = MAX_Y;
                     hole_.draw(r, 0, 0, tileRect(holeX_, holeY_));
-                    r.setBg(ColorRGB::RGB(128, 128, 128));
+                    r.setBg(Color::RGB(128, 128, 128));
                     r.fill(tileRect(holeX_, holeY_));
                 }
             }
@@ -132,8 +137,8 @@ namespace rckid {
             return Point{ x * TILE_WIDTH, y * TILE_HEIGHT};
         }
 
-        Canvas<ColorRGB> hole_{TILE_WIDTH,TILE_HEIGHT};
-        Canvas<ColorRGB> tmp_{TILE_WIDTH,TILE_HEIGHT};
+        Canvas<Color> hole_{TILE_WIDTH,TILE_HEIGHT};
+        Canvas<Color> tmp_{TILE_WIDTH,TILE_HEIGHT};
 
         uint8_t * tileMap_ = nullptr;
 

@@ -37,33 +37,26 @@ namespace rckid {
         ST7789::updatePixels(reinterpret_cast<uint16_t const *>(buffer_), numPixels());
     } 
 
-    /** A framebuffer is nothing more than a canvas that knows how to display itself on the display. 
-     */
-    /*
-    class FrameBuffer : public Canvas<ColorRGB> {
-    public:
+    template<>
+    inline unsigned const FrameBuffer<Color256>::RENDERER_ID = 1;
 
-        static constexpr unsigned RENDERER_ID = 1;
-
-        FrameBuffer(): Canvas{320, 240} {
-            ST7789::enterContinuousMode(ST7789::Mode::Single);
-        }
-
-        void startRendering() {
-#ifdef RCKID_DEBUG_FPS
-            GFXfont const & f = font();
-            setFont(Iosevka_Mono6pt7b);
-            ColorRGB c = fg();
-            setFg(ColorRGB::White());
-            text(0, 220) << BaseApp::fps() << " d: " << BaseApp::drawUs() << " mem: " << freeHeap();
-            setFont(f);
-            setFg(c);
-#endif
-            ST7789::waitVSync();
-            ST7789::updatePixels(reinterpret_cast<uint16_t const *>(buffer_), numPixels());
-        }
-    }; // rckid::FrameBuffer
-    */
+    template<>
+    inline void FrameBuffer<Color256>::startRendering() {
+        /// TODO: This is extremely slow, we should process the line, start the transfer and process the second line while we are transferring still. Problems could be that the ISR will be too long thanks to the processing, can be made into an event? 
+        /// The static column is also not very good way of representing stuff
+        /// the color to RGB can be made faster with a palette lookup from index to color
+        static uint16_t column[240];
+        size_t updateCol = 319;
+        ST7789::waitVSync();
+        ST7789::updatePixelsPartial(reinterpret_cast<uint16_t const *>(column), height(), [this, updateCol]() mutable {
+            for (size_t i = 0; i < 240; ++i)
+                column[i] = pixelAt(updateCol, i).toRGB().rawValue16();
+            if (--updateCol == 0)
+                ST7789::updatePixels(column, height());
+            else
+                ST7789::updatePixelsPartial(column, height());
+        });
+    }
 
     /** Double framebuffer that uses 1/4 of the memory and doubles each pixel. Inspired by the picosystem for a pixelated look. 
      */

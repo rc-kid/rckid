@@ -14,10 +14,35 @@ namespace rckid {
             allocateBuffer(w, h);
         }
 
+        Bitmap(Bitmap const &) = delete;
+
+        Bitmap(Bitmap && other):
+            buffer_{other.buffer_},
+            w_{other.w_}, 
+            h_{other.h_} {
+                other.w_ = 0; other.h_ = 0; other.buffer_ = nullptr;
+        }
+
+        Bitmap & operator = (Bitmap && other) {
+            delete [] buffer_;
+            w_ = other.w_;
+            h_ = other.h_;
+            buffer_ = other.buffer_;
+            other.w_ = 0; other.h_ = 0; other.buffer_ = nullptr;
+            return *this;
+        }
+
         ~Bitmap() { delete [] buffer_; }
 
         int width() const { return w_; }
         int height() const { return h_; }
+
+        void resize(int width, int height) {
+            if (width != w_ || height != h_) {
+                delete [] buffer_;
+                allocateBuffer(width, height);
+            }
+        }
 
         size_t numPixels() const { return w_ * h_; }
 
@@ -71,6 +96,8 @@ namespace rckid {
             draw<T>(from.buffer_, from.w_, from.h_, where, fromRect);
         }
 
+        void loadImage(PNG && img);
+
     protected:
 
         template<typename T>
@@ -98,6 +125,15 @@ namespace rckid {
         int h_;
     }; 
 
+    template<>
+    inline void Bitmap<ColorRGB>::loadImage(PNG && png) {
+        resize(png.width(), png.height());
+        png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
+            for (int i = 0; i < lineWidth; ++i)
+                setPixelAt(i, lineNum, line[i]);
+        });
+    }
+
     template<> template<>
     inline void Bitmap<ColorRGB>::draw<ColorRGB>(uint32_t const * otherBuffer, int otherWidth, int otherHeight, Point where, Rect fromRect) {
         // TODO determine the actual rectangle to draw        
@@ -107,6 +143,38 @@ namespace rckid {
             for (int yy = 0, ye = fromRect.height(); yy != ye; ++yy) 
                 setPixelAt(where.x() + xx, where.y() + yy, otherColor[map(fromRect.left() + xx, fromRect.top() + yy, otherWidth, otherHeight)]);
     }
+
+    template<>
+    inline void Bitmap<Color256>::loadImage(PNG && png) {
+        resize(png.width(), png.height());
+        png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
+            for (int i = 0; i < lineWidth; ++i) {
+                ColorRGB c = line[i];
+                setPixelAt(i, lineNum, Color::RGB(c.r(), c.g(), c.b()));
+            }
+        });
+    }
+
+    template<> template<>
+    inline void Bitmap<Color256>::draw<Color256>(uint32_t const * otherBuffer, int otherWidth, int otherHeight, Point where, Rect fromRect) {
+        // TODO determine the actual rectangle to draw        
+        // TODO where possible do 32bit mem sets instead of per color via unrolling
+        Color const * otherColor = reinterpret_cast<Color const *>(otherBuffer);
+        for (int xx = 0, xe = fromRect.width(); xx != xe; ++xx)
+            for (int yy = 0, ye = fromRect.height(); yy != ye; ++yy) 
+                setPixelAt(where.x() + xx, where.y() + yy, otherColor[map(fromRect.left() + xx, fromRect.top() + yy, otherWidth, otherHeight)]);
+    }
+
+    template<> template<>
+    inline void Bitmap<Color256>::draw<ColorRGB>(uint32_t const * otherBuffer, int otherWidth, int otherHeight, Point where, Rect fromRect) {
+        // TODO determine the actual rectangle to draw        
+        // TODO where possible do 32bit mem sets instead of per color via unrolling
+        ColorRGB const * otherColor = reinterpret_cast<ColorRGB const *>(otherBuffer);
+        for (int xx = 0, xe = fromRect.width(); xx != xe; ++xx)
+            for (int yy = 0, ye = fromRect.height(); yy != ye; ++yy) 
+                setPixelAt(where.x() + xx, where.y() + yy, Color::RGB(otherColor[map(fromRect.left() + xx, fromRect.top() + yy, otherWidth, otherHeight)]));
+    }
+
 
 
 } // namespace rckid

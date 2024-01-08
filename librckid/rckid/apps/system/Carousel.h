@@ -8,7 +8,7 @@
 
 namespace rckid {
 
-    class Carousel : public App<FrameBuffer<ColorRGB>> {
+    class Carousel : public App<FrameBuffer<Color256>> {
     public:
         class Item {
         public:
@@ -29,30 +29,33 @@ namespace rckid {
 
             std::string const & text() const { return text_; }
 
-            Bitmap<ColorRGB> const & img() const { return img_; }
+            Bitmap<Color> const & img() const { return img_; }
 
             void set(PNG & img, char const * text) {
                 text_ = text;
-                //img_.loadImage(img);
+                img_.loadImage(std::move(img));
             }
 
             void set(PNG && img, char const * text) {
                 text_ = text;
-                //img_.loadImage(img);
+                img_.loadImage(std::move(img));
             }
 
         private:
 
             friend class Carousel;
 
+            /*
             void swapWith(Item & other) {
                 std::swap(text_, other.text_);
                 std::swap(textWidth_, other.textWidth_);
+                std::swap(img_, other.img_);
                 //img_.swapWith(other.img_);
             }
+            */
 
             std::string text_;
-            Bitmap<ColorRGB> img_{0,0};
+            Bitmap<Color> img_{0,0};
             int textWidth_{0}; 
         }; 
 
@@ -68,7 +71,7 @@ namespace rckid {
             App::onFocus(previous);
             getItem(i_, current_);
             current_.textWidth_ = renderer().textWidth(current_.text());
-            renderer().setFg(ColorRGB::White());
+            renderer().setFg(Color::White());
         }
 
         void onBlur(BaseApp * next) override {
@@ -109,23 +112,23 @@ namespace rckid {
             a_.update();
             if (dir_ == Btn::Home) {
                 // TODO draw the current item only
-                //r.draw(current_.img(), current_.imageOffset());
+                r.draw(current_.img(), current_.imageOffset());
                 r.text(current_.textOffset()) << current_.text();
             } else {
-                //int xImg = a_.interpolate(0, 320);
+                int xImg = a_.interpolate(0, 320);
                 int xText = a_.interpolate(0, 640);
                 switch (dir_) {
                     case Btn::Left: {
-                        //r.draw(current_.img(), current_.imageOffset() + Point{xImg, 0});
+                        r.draw(current_.img(), current_.imageOffset() + Point{xImg, 0});
                         r.text(current_.textOffset() + Point{xText, 0}) << current_.text();
-                        //r.draw(other_.img(), other_.imageOffset() - Point{320 - xImg, 0});
+                        r.draw(other_.img(), other_.imageOffset() - Point{320 - xImg, 0});
                         r.text(other_.textOffset() - Point{640 - xText, 0}) << other_.text();
                         break;
                     }
                     case Btn::Right:
-                        //r.draw(current_.img(), current_.imageOffset() - Point{xImg, 0});
+                        r.draw(current_.img(), current_.imageOffset() - Point{xImg, 0});
                         r.text(current_.textOffset() - Point{xText, 0}) << current_.text();
-                        //r.draw(other_.img(), other_.imageOffset() + Point{320 - xImg, 0});
+                        r.draw(other_.img(), other_.imageOffset() + Point{320 - xImg, 0});
                         r.text(other_.textOffset() + Point{640 - xText, 0}) << other_.text();
                         break;
                     default:
@@ -134,7 +137,7 @@ namespace rckid {
                 if (! a_.running()) {
                     // TODO swap other and current 
                     dir_ = Btn::Home;
-                    current_.swapWith(other_);
+                    std::swap(current_, other_); //current_.swapWith(other_);
                 }
             }
         }

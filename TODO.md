@@ -1,9 +1,7 @@
 ## TODO
 
-- remove image and make canvas templated by the bitmap
+- 256 color framebuffer is very slow
 
-
-- carousel second image won't load - could it be oome?, likely yes
 - add menu font
 - implement png's transparent color in png load & drawing
 
@@ -119,4 +117,7 @@ Bitmap = bitmap with dynamically known dimensions
 Canvas = bitmap with extra state
 
 Support 16,12,8,4,2 and 1 bitdepth
+
+- pngdec does not use malloc
+- libhelix does (but can be patched imo)
 

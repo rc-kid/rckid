@@ -80,6 +80,7 @@ namespace rckid {
     public:
 
         using Renderer = RENDERER;
+        using Color = typename Renderer::Color;
 
 
     protected:

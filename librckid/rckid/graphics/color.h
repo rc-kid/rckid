@@ -24,6 +24,8 @@ namespace rckid {
 
         static constexpr ColorRGB Raw565(uint16_t rgb565) { return ColorRGB{rgb565}; }
 
+        ColorRGB toRGB() const { return *this; }
+
         uint8_t r() const { return ((raw_ >> 11) & 0xff) << 3; }
         uint8_t g() const { return ((raw_ >> 5) & 0x3f) << 2; }
         uint8_t b() const { return (raw_ & 0xff) << 3; }
@@ -49,12 +51,47 @@ namespace rckid {
     static_assert(sizeof(ColorRGB) == 2);
 
     /** Color from a 256 color palette represented by a single byte (index to the palette). 
+     
+        Uses the 6-8-5 levels per channel for a total of 240 color + 16 true grays. The RGB To 
      */
     class Color256 {
     public:
         static constexpr size_t BPP = 8;
 
+        uint8_t index() const { return raw_; }
+
+        static Color256 RGB(uint8_t r, uint8_t g, uint8_t b) {
+            if (r == g && g == b)
+                return 240 + (r >> 4);
+            else
+                return 40 * (r / 43) + 5 * (g / 32) + (b / 52);
+        }
+
+        static Color256 RGB(ColorRGB rgb) { return RGB(rgb.r(), rgb.g(), rgb.b()); }
+
+        ColorRGB toRGB() const {
+            if (raw_ >= 240) {
+                uint8_t i = raw_ - 240;
+                i = (i << 4) + i;
+                return ColorRGB{i, i, i};
+            } else {
+                uint8_t b = raw_ % 5;
+                uint8_t g = raw_ / 5;
+                uint8_t r = g / 8;
+                g = g % 8;
+                // TODO this is not precise, revisit and fix
+                return ColorRGB{static_cast<uint8_t>(r * 43), static_cast<uint8_t>(g * 32), static_cast<uint8_t>(b * 52)};
+            }
+        }
+
+        static constexpr Color256 White() { return Color256{255}; }
+        static constexpr Color256 Black() { return Color256{0}; }
+        static constexpr Color256 Blue() { return Color256{4}; }
+
     private:
+
+        constexpr Color256(uint8_t index): raw_{index} {}
+
         uint8_t raw_;
     } __attribute__((packed)); // rckid::Color256
 
