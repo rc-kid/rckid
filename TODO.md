@@ -1,5 +1,6 @@
 ## TODO
 
+- check that we can launch apps from the carousel
 - 256 color framebuffer is very slow
 
 - add menu font
@@ -22,7 +23,7 @@
 - Select & Start buttons need repositioning to accomodate the speaker and the SD card
 - top midframe does not fit around UPDI programmer and other headers, and the speaker
 - and there is still warping when screwed together
-- enlarge speaker hole
+- enlarge speaker hole - maybe done already
 
 ## Audio Woes
 

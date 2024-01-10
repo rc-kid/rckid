@@ -52,7 +52,11 @@ namespace rckid {
 
     /** Color from a 256 color palette represented by a single byte (index to the palette). 
      
-        Uses the 6-8-5 levels per channel for a total of 240 color + 16 true grays. The RGB To 
+        Uses the 6-8-5 levels per channel for a total of 240 color + 16 true grays. This should give the best representation of the whole spectrum in a single byte according to [1].
+
+        The alternative would be to use a dedicated palette with editable colors, but this would greatly complicate the RGB constructor. 
+
+        [1] https://en.wikipedia.org/wiki/List_of_software_palettes
      */
     class Color256 {
     public:

@@ -104,9 +104,12 @@ namespace rckid {
         uint32_t x = bg_.rawValue16() << 16 | bg_.rawValue16();
         uint32_t * b = reinterpret_cast<uint32_t*>(buffer_);
         for (unsigned i = 0, e = numPixels() / 2; i < e; ++i)
-            //buffer_[i] = bg_;
             b[i] = x;
+    }
 
+    template<>
+    inline void Canvas<Color256>::fill() {
+        memset(buffer_, bg_.index(), 320 * 240);
     }
 
 

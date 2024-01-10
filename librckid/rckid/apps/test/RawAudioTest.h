@@ -22,7 +22,7 @@ namespace rckid {
             refill(buffer_, BUFFER_SIZE / 2);
             Audio::initialize();
             Audio::setAudioEnabled(true);
-            Audio::startPlayback(SampleRate::kHz8, buffer_, BUFFER_SIZE / 2, [this](uint16_t * buffer, size_t stereoSamples) {
+            Audio::startPlayback(SampleRate::kHz44_1, buffer_, BUFFER_SIZE / 2, [this](uint16_t * buffer, size_t stereoSamples) {
                 refill(buffer, stereoSamples * 2);
             });
             Renderer & r = renderer();
@@ -64,7 +64,7 @@ namespace rckid {
 
         // some sample music, from https://pixabay.com/music/main-title-cinematic-dark-trailer-43sec-178297/
         static inline const uint8_t raw_[] = {
-#include "test/audio/8000.raw.data"
+#include "test/audio/44100.raw.data"
         };
 
     }; // rckid::RawAudiotest

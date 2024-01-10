@@ -38,10 +38,62 @@ namespace rckid {
     } 
 
     template<>
+    class FrameBuffer<Color256> : public Canvas<Color256> {
+    public:
+        static inline unsigned const RENDERER_ID = 1;
+
+        FrameBuffer(): Canvas{320, 240} {
+            ST7789::enterContinuousMode(ST7789::Mode::Single);
+        }
+
+        void startRendering() {
+    #ifdef RCKID_DEBUG_FPS
+            GFXfont const & f = font();
+            setFont(Iosevka_Mono6pt7b);
+            Color c = fg();
+            setFg(Color::White());
+            text(0, 220) << BaseApp::fps() << " d: " << BaseApp::drawUs() << " mem: " << freeHeap();
+            setFont(f);
+            setFg(c);
+    #endif
+            /// TODO: This is extremely slow, we should process the line, start the transfer and process the second line while we are transferring still. Problems could be that the ISR will be too long thanks to the processing, can be made into an event? 
+            /// The static column is also not very good way of representing stuff
+            /// the color to RGB can be made faster with a palette lookup from index to color
+            size_t updateCol = 319;
+            ST7789::waitVSync();
+            ST7789::updatePixelsPartial(reinterpret_cast<uint16_t const *>(column_), height(), [this, updateCol]() mutable {
+                for (size_t i = 0; i < 240; ++i)
+                    column_[i] = pixelAt(updateCol, i).toRGB().rawValue16();
+                if (--updateCol == 0)
+                    ST7789::updatePixels(column_, height());
+                else
+                    ST7789::updatePixelsPartial(column_, height());
+            });
+
+        }
+
+
+    private:
+        uint16_t column_[240];
+
+    }; // FrameBuffer<Color256>
+
+/*
+
+    template<>
     inline unsigned const FrameBuffer<Color256>::RENDERER_ID = 1;
 
     template<>
     inline void FrameBuffer<Color256>::startRendering() {
+#ifdef RCKID_DEBUG_FPS
+        GFXfont const & f = font();
+        setFont(Iosevka_Mono6pt7b);
+        Color c = fg();
+        setFg(Color::White());
+        text(0, 220) << BaseApp::fps() << " d: " << BaseApp::drawUs() << " mem: " << freeHeap();
+        setFont(f);
+        setFg(c);
+#endif
         /// TODO: This is extremely slow, we should process the line, start the transfer and process the second line while we are transferring still. Problems could be that the ISR will be too long thanks to the processing, can be made into an event? 
         /// The static column is also not very good way of representing stuff
         /// the color to RGB can be made faster with a palette lookup from index to color
@@ -58,6 +110,7 @@ namespace rckid {
         });
     }
 
+*/
     /** Double framebuffer that uses 1/4 of the memory and doubles each pixel. Inspired by the picosystem for a pixelated look. 
      */
     class FrameBufferDouble : public Canvas<ColorRGB> {
