@@ -44,6 +44,12 @@ namespace rckid {
 
         FrameBuffer(): Canvas{320, 240} {
             ST7789::enterContinuousMode(ST7789::Mode::Single);
+            gpio_init(RP_PIN_GPIO_16);
+            gpio_set_dir(RP_PIN_GPIO_16, GPIO_OUT);
+            gpio_init(RP_PIN_GPIO_17);
+            gpio_set_dir(RP_PIN_GPIO_17, GPIO_OUT);
+            gpio_put(RP_PIN_GPIO_16, false);
+            gpio_put(RP_PIN_GPIO_17, false);
         }
 
         void startRendering() {
@@ -60,21 +66,38 @@ namespace rckid {
             /// The static column is also not very good way of representing stuff
             /// the color to RGB can be made faster with a palette lookup from index to color
             size_t updateCol = 319;
-            ST7789::waitVSync();
-            ST7789::updatePixelsPartial(reinterpret_cast<uint16_t const *>(column_), height(), [this, updateCol]() mutable {
-                for (size_t i = 0; i < 240; ++i)
-                    column_[i] = pixelAt(updateCol, i).toRGB().rawValue16();
-                if (--updateCol == 0)
-                    ST7789::updatePixels(column_, height());
-                else
-                    ST7789::updatePixelsPartial(column_, height());
-            });
+            colCurr_ = column_;
+            colNext_ = column_ + 240;
+            gpio_put(RP_PIN_GPIO_16, true);
+            for (size_t i = 0; i < 240; ++i) {
+                colCurr_[i] = pixelAt(updateCol, i).toRGB().rawValue16();
+                colNext_[i] = pixelAt(updateCol - 1, i).toRGB().rawValue16();
+            }
+            gpio_put(RP_PIN_GPIO_16, false);
+            updateCol -= 1;
 
+            ST7789::waitVSync();
+            gpio_put(RP_PIN_GPIO_17, true);
+            ST7789::updatePixelsPartial(colCurr_, height(), [this, updateCol]() mutable {
+                gpio_put(RP_PIN_GPIO_17, false);
+                std::swap(colCurr_, colNext_);
+                if (updateCol-- == 0) {
+                    ST7789::updatePixels(colCurr_, height());
+                } else {
+                    gpio_put(RP_PIN_GPIO_17, true);
+                    ST7789::updatePixelsPartial(colCurr_, height());
+                    gpio_put(RP_PIN_GPIO_16, true);
+                    for (size_t i = 0; i < 240; ++i)
+                        colNext_[i] = pixelAt(updateCol, i).toRGB().rawValue16();
+                    gpio_put(RP_PIN_GPIO_16, false);
+                }
+            });
         }
 
-
     private:
-        uint16_t column_[240];
+        uint16_t column_[240 * 2];
+        uint16_t * colCurr_;
+        uint16_t * colNext_;
 
     }; // FrameBuffer<Color256>
 

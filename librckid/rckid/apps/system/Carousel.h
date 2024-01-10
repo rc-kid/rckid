@@ -112,7 +112,7 @@ namespace rckid {
             a_.update();
             if (dir_ == Btn::Home) {
                 // TODO draw the current item only
-                r.draw(current_.img(), current_.imageOffset());
+                //r.draw(current_.img(), current_.imageOffset());
                 r.text(current_.textOffset()) << current_.text();
             } else {
                 int xImg = a_.interpolate(0, 320);
