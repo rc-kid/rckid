@@ -18,23 +18,19 @@ That said, I am hopeful, that over time, the following will be possible:
 
 ## Building
 
-The following is necessary to build the RCKid firmware and cartridges on Windows 11 (WSL) with VS Code. Similar steps are required for other platforms. 
+After cloning the repository, run the `setup.sh` file:
 
-    sudo apt-get install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib
+    git clone git@github.com:rc-kid/rckid
+    cd rckid
+    bash setup.sh
 
-> This installs the prerequisites for crosscompiling the RP2040 code
+This should install all necessary packages, including platformio and 3rd party libraries used by RCKid. 
 
-> TODO This installs the RP2040 SDK. 
-
-> TODO This installs the platformio toolchain for the AVR & ESP8266 chips. 
-
-
+> I'm building RCKid on Ubuntu 22.04 WSL, which is the only "officially" supported distribution, other linux flavours should work equally well, but the package manager commands must be updated.   
 
 
 
-
-
-
+==========
 
 
 

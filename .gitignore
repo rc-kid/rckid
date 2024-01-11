@@ -5,3 +5,4 @@ libs/sd-card
 build
 __OLD__
 utils/bytes-to-cpp
+libs/get-platformio.py
