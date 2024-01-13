@@ -1,7 +1,7 @@
 ## TODO
 
 - check that we can launch apps from the carousel
-- 256 color framebuffer is very slow
+- 256 color framebuffer is very slow, veeery slow
 
 - add menu font
 - implement png's transparent color in png load & drawing
@@ -27,20 +27,14 @@
 
 ## Audio Woes
 
-- the new version on breadboard has markedly better audio quality (although not perfect) in headphones
-- try with 44.1 kHz
-- better audio? 
+- 8bit PCM audio is very very noisy - this is probably ok for some synthesized tunes & stuff, but sounds horrible for music. This is not HW problem, but rather quantization error and some such
+- 12bit audio seems to be better, works reliably well with 250MHz overclock, but won't work for 8kHz, a resampling and PDM output via PIO would be much better
+- use new circuit? - https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf
+- for 12bit sound, no need for extra timer on PWM
 
-
-- sound quality is rather poor - is it the board? does it change if AVR leaves headphones open?
-- is the circuit wrong? - https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf
 - add big cap to vclean and see if it changes stuff 
 - seem to be easily driven from PWM timer being the desired frequency
-- can test different circuits on the cartridge boards (PWM through the cartridge)
-- verify that this is not due to some SW issue, because basic tone seems ok-ish
-- particularly the big resistors in parallel with headphones are something quite different from what I currently have
-- headphone volume is too high, speaker volume is too low
-- can we do PDM instead? 
+- headphone volume is too high, speaker volume is too low - is that still? 
 
 - check https://github.com/TuriSc/RP2040-PWM-DMA-Audio/tree/main and https://github.com/TuriSc/Dodepan for hints perhaps? 
 

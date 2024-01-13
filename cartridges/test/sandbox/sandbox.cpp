@@ -26,18 +26,17 @@ using namespace rckid;
 int main() {
     //cpuOverclock();
     //cpuOverclock(150000000);
-    //cpuOverclock();
+    cpuOverclock();
     initialize();
 
 //    AudioTestTone test;
 //    test.run();
 
-//    RawAudioTest test;
-//    test.run();
+    start(RawAudioTest{});
 
 //    USBMassStorage game;
 //    game.run();
-    start(AVRStatusTest{});
+//    start(AVRStatusTest{});
 
     //AVRStatusTest test;
     //test.run();

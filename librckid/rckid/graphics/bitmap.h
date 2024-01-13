@@ -55,7 +55,7 @@ namespace rckid {
                 case 4:
                 case 2:
                 case 1:
-                    NOT_IMPLEMENTED;
+                    UNIMPLEMENTED;
             }
         }
 
@@ -72,7 +72,7 @@ namespace rckid {
                 case 4:
                 case 2:
                 case 1:
-                    NOT_IMPLEMENTED;
+                    UNIMPLEMENTED;
             }
         }
 

@@ -5,6 +5,8 @@
 
 namespace rckid {
 
+    /** A simple formatter for writing human readable (ASCII) text to various places, such as the display, or serial debugging port, etc.
+     */
     class Writer {
     public:
 
@@ -25,7 +27,7 @@ namespace rckid {
         Writer & operator << (char c) { 
             putChar_(c); 
             return *this; 
-        }
+        } 
 
         Writer & operator << (uint8_t x) { return *this << (unsigned) x; }
         Writer & operator << (uint16_t x) { return *this << (unsigned) x; }

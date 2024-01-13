@@ -16,7 +16,7 @@ namespace rckid {
     class Audio {
     public:
 
-        /** Callback for audio playback takes the beginning of a buffer and the number of uint16_t pairs stored in it (for stereo sound). When called, the callback must populate the buffer with the new audio values. 
+        /** Callback for audio playback takes the beginning of a buffer and the length of the buffer in 2 byte elements. When called, the callback must populate the buffer with the new audio values. 
         */
         using CallbackPlay = std::function<void(uint16_t *, size_t)>;
 
@@ -34,8 +34,8 @@ namespace rckid {
                 Device::sendCommand(cmd::AudioDisabled{});
         }
 
-        /** number of stereo pairs, i.e. buffer size in uint16_t / 2 */
-        static void startPlayback(SampleRate rate, uint16_t * buffer, size_t stereoSamples, CallbackPlay cb);
+        /** Buffer size (num elements, i.e. stereoSamples * 2) */
+        static void startPlayback(SampleRate rate, uint16_t * buffer, size_t bufferSize, CallbackPlay cb);
 
         static void stopPlayback();
 
@@ -50,6 +50,8 @@ namespace rckid {
         /** Called by the rckid's sdk as part of each frame to check if the playback or recording buffers have to be processed. 
          */
         static void processEvents();
+
+        static void configureDMA(int dma, int other, uint16_t const * bufferStart, size_t bufferSamples);
 
 
 #if (RP_PIN_PWM_RIGHT == 24 && RP_PIN_PWM_LEFT == 25)
@@ -69,7 +71,8 @@ namespace rckid {
 
         static void irqDMADone();
 
-        static inline int dma_;
+        static inline int dma0_;
+        static inline int dma1_;    
 
         static inline uint16_t * buffer_;
 

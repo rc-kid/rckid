@@ -86,10 +86,10 @@ namespace rckid {
                 } else {
                     gpio_put(RP_PIN_GPIO_17, true);
                     ST7789::updatePixelsPartial(colCurr_, height());
-                    gpio_put(RP_PIN_GPIO_16, true);
+                    //gpio_put(RP_PIN_GPIO_16, true);
                     for (size_t i = 0; i < 240; ++i)
                         colNext_[i] = pixelAt(updateCol, i).toRGB().rawValue16();
-                    gpio_put(RP_PIN_GPIO_16, false);
+                    //gpio_put(RP_PIN_GPIO_16, false);
                 }
             });
         }

@@ -74,6 +74,7 @@ namespace rckid {
         static Color256 RGB(ColorRGB rgb) { return RGB(rgb.r(), rgb.g(), rgb.b()); }
 
         ColorRGB toRGB() const {
+            return raw_ == 0 ? ColorRGB::Black() : ColorRGB::White();
             if (raw_ >= 240) {
                 uint8_t i = raw_ - 240;
                 i = (i << 4) + i;
