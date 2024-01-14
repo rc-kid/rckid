@@ -1,7 +1,7 @@
 #define RCKID_AUDIO_DEBUG_
 
 
-#define RCKID_DEBUG_FPS_
+#define RCKID_DEBUG_FPS
 
 #define RCKID_SPLASHSCREEN_OFF_
 

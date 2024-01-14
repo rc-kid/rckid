@@ -58,7 +58,7 @@ namespace rckid {
             setFont(Iosevka_Mono6pt7b);
             Color c = fg();
             setFg(Color::White());
-            text(0, 220) << BaseApp::fps() << " d: " << BaseApp::drawUs() << " mem: " << freeHeap();
+            text(0, 220) << BaseApp::fps() << " d: " << BaseApp::drawUs() << " m: " << (freeHeap() / 1024) << " r: " << ST7789::lastUpdateUs();
             setFont(f);
             setFg(c);
     #endif
@@ -87,8 +87,27 @@ namespace rckid {
                     gpio_put(RP_PIN_GPIO_17, true);
                     ST7789::updatePixelsPartial(colCurr_, height());
                     //gpio_put(RP_PIN_GPIO_16, true);
-                    for (size_t i = 0; i < 240; ++i)
+                    // 10.3 (which is the length of transfer now)
+                    uint32_t * col = (uint32_t*) colNext_;
+                    uint32_t * from = buffer_ + 60 * (319 - updateCol);
+                    for (size_t i = 0; i < 60; ++i) {
+                        uint32_t x = *from++;
+                        uint32_t a = Color256::palette_[x & 0xff].rawValue16();
+                        a = a | (Color256::palette_[(x >> 8) & 0xff].rawValue16() << 16);
+                        col[i * 2] = a;
+                        a = Color256::palette_[(x >> 16) & 0xff].rawValue16();
+                        a = a | (Color256::palette_[(x >> 24) & 0xff].rawValue16() << 16);
+                        col[i * 2 + 1] = a;
+                    }
+                    /* 20.9
+                    uint32_t * col = (uint32_t*) colNext_;
+                    for (size_t i = 0; i < 120; ++i) 
+                        col[i] = pixelAt(updateCol, i * 2).toRGB().rawValue16() | (pixelAt(updateCol, i * 2 + 1).toRGB().rawValue16() << 16);   
+                    */
+                    /* 29.2
+                    for (size_t i = 0; i < 240; ++i) 
                         colNext_[i] = pixelAt(updateCol, i).toRGB().rawValue16();
+                    */
                     //gpio_put(RP_PIN_GPIO_16, false);
                 }
             });

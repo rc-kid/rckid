@@ -1,7 +1,13 @@
+## Questions
+
+- Q: the level translator seems not to be working allright. The rising edge up takes a *lot* of time from the vlow
+- Q: when no headphones are present, the headphones line only has about 2 volts, not 3volts it is supposed to have. Is this an issue? 
+- Q: Is the other audio schematic from above better, or worse? 
+- Q: does a LC low pass filter before LDO help in any way?
+
 ## TODO
 
 - check that we can launch apps from the carousel
-- 256 color framebuffer is very slow, veeery slow
 
 - add menu font
 - implement png's transparent color in png load & drawing
@@ -10,7 +16,6 @@
 - check sleep mode power consumption for pedometer
 - where to put rumbler? 
 
-- can start working on GPU Benchmarks? 
 - framebuffer clear with DMA right after drawing is done, or in parallel with drawing if requested
 
 - microphone tested to work - sample code https://github.com/ArmDeveloperEcosystem/microphone-library-for-pico/tree/main 
@@ -20,9 +25,7 @@
 
 - see if the cartridge insertion mechanism can be made reliable (looks ok)
 - check if the slim buttons are actually working reasonably well
-- Select & Start buttons need repositioning to accomodate the speaker and the SD card
-- top midframe does not fit around UPDI programmer and other headers, and the speaker
-- and there is still warping when screwed together
+- there is still warping when screwed together (Anton suggested heating up a bit and let the tensions equalize, also try larger PCB for v2 to improve digidity of the frame around it)
 - enlarge speaker hole - maybe done already
 
 ## Audio Woes
@@ -40,11 +43,6 @@
 
 ## PCB
 
-- Q: the level translator seems not to be working allright. The rising edge up takes a *lot* of time from the vlow
-- Q: when no headphones are present, the headphones line only has about 2 volts, not 3volts it is supposed to have. Is this an issue? 
-- Q: the audio is really very noisy. What could be improved?
-- Q: does a LC low pass filter before LDO help in any way?
-
 - try the backlight current limiting to be 3.7Ohm for ~90mA max current
 - increase pads for the bottom side button for easier hand solderablity and maybe use the buttons with hole in the middle for better grip
 - pull-up resistors & termination resistors for the SD card (the sd card library has some info)
@@ -53,8 +51,6 @@
 - add labels to PGM and other headers on the bottom side of the PCB
 - where to put the rumbler? Can't be next to the speaker (two magnets)
 - add holes for the display legs for lower profile
-
-??? - add headers to the bottom side of the PCB for the solderable wires
 
 ## RP
 
@@ -107,11 +103,28 @@
 
 # Graphics
 
+- 320x240x8 framebuffer with full resolution (~80Kb with palette & transfer buffers)
+- 320x240x16 framebuffer can be selected too (~153.6Kb)
+- 8x8 tiling engine 16bit depth (~40Kb)
+- 8x8 tiling engine 8bit depth (~20Kb)
+- 160x120x16 half resolution framebuffer (~38.4Kb)
+
+> Make the 320x240x8 the default framebuffer for menu & stuff. Support partial screen updates? Would be nice for things like menu so that we can keep the partial framebuffer of the game or what not visible-ish, but hard to do with menu in the bottom & header in the top (can also refresh header only when necessary at the expense of some tearing, etc. ) 
+
+> the app hierarchy does no recycle renderers, might keep the allocated VRAM, or maybe use static regions for the VRAM? later - but how to size VRAM? The cartridge can choose for sure
+
+> can put the extra buffers & palette and friends to the scrach memories 
+
+
+
+
+
+
 Tile = bitmap with statically given dimensions (really only a storage format)
 Bitmap = bitmap with dynamically known dimensions 
 Canvas = bitmap with extra state
 
-Support 16,12,8,4,2 and 1 bitdepth
+Support 16,8,4,2 and 1 bitdepth
 
 - pngdec does not use malloc
 - libhelix does (but can be patched imo)
