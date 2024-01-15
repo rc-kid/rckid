@@ -97,8 +97,7 @@ namespace rckid {
 
         void onBlur(BaseApp * next) {
             // if next uses the same renderer, pass it, otherwise delete the renderer
-            if (next == nullptr || next->takeRenderer(renderer_, RENDERER::RENDERER_ID))
-                delete renderer_;
+            delete renderer_;
             renderer_ = nullptr;
         }
 

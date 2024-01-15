@@ -10,7 +10,6 @@ namespace rckid {
     template<typename COLOR>
     class FrameBuffer : public Canvas<COLOR> {
     public:
-        static unsigned const RENDERER_ID;
 
         FrameBuffer(): Canvas<COLOR>{320, 240} {
             ST7789::enterContinuousMode(ST7789::Mode::Single);
@@ -18,9 +17,6 @@ namespace rckid {
 
         void startRendering();
     }; 
-
-    template<>
-    inline unsigned const FrameBuffer<ColorRGB>::RENDERER_ID = 0;
 
     template<> 
     inline void FrameBuffer<ColorRGB>::startRendering() {
@@ -40,7 +36,6 @@ namespace rckid {
     template<>
     class FrameBuffer<Color256> : public Canvas<Color256> {
     public:
-        static inline unsigned const RENDERER_ID = 1;
 
         FrameBuffer(): Canvas{320, 240} {
             ST7789::enterContinuousMode(ST7789::Mode::Single);
@@ -157,8 +152,6 @@ namespace rckid {
      */
     class FrameBufferDouble : public Canvas<ColorRGB> {
     public:    
-
-        static constexpr unsigned RENDERER_ID = 2;
 
         FrameBufferDouble(): Canvas{160, 120} {
             ST7789::enterContinuousMode(ST7789::Mode::Double);
