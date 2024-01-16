@@ -4,13 +4,15 @@
 #include "rckid/apps/games/Tetris.h"
 
 #include "rckid/graphics/bitmap.h"
+#include "rckid/Audio.h"
 
 using namespace rckid;
 
 int main() {
     initialize();
-    start(Menu{});
-    //start(SlidingPuzzle{});
+    Audio::setAudioEnabled(true);
+    //start(Menu{});
+    start(SlidingPuzzle{});
     //Menu menu;
     //menu.run();
     //SlidingPuzzle game;

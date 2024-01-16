@@ -33,13 +33,6 @@ namespace rckid {
         virtual PNG img() { return PNG::fromBuffer(Img_, sizeof(Img_)); }
         virtual char const * name() { return "App"; }
 
-        static unsigned fps() { return fps_; }
-        static unsigned systemUs() { return systemUs_; }
-        static unsigned updateUs() { return updateUs_; }
-        static unsigned drawUs() { return drawUs_; }
-        static unsigned frameUs() { return frameUs_; }
-        static unsigned idleUs() { return frameUs_ - systemUs_ - updateUs_ - drawUs_; }
-        static unsigned idlePct() { return idleUs() * 100 / frameUs_; }
 
 
     protected:
@@ -61,13 +54,6 @@ namespace rckid {
         static inline std::vector<BaseApp *> apps_;
         static inline BaseApp * currentApp_ = nullptr;
 
-        static inline uint64_t nextFpsTick_;
-        static inline unsigned fps_;
-        static inline unsigned fpsCounter_;
-        static inline unsigned systemUs_;
-        static inline unsigned updateUs_;
-        static inline unsigned drawUs_;
-        static inline unsigned frameUs_;
 
         static constexpr uint8_t const Img_[] = {
 #include "images/applications.png.raw"

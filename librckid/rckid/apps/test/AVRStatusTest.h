@@ -41,11 +41,11 @@ namespace rckid {
                         << "\n"
                         << t.minutes() << ":" << t.seconds()
                         << "\n\n"
-                        << " FPS: " << fps() << " S:" << systemUs() << " U:" << (updateUs() / 1000) << " D:" << (drawUs() / 1000)
+                        << " FPS: " << Stats::fps() << " S:" << Stats::systemUs() << " U:" << (Stats::updateUs() / 1000) << " D:" << (Stats::drawUs() / 1000)
                         << "\n"
-                        << " wU:" << ST7789::lastUpdateWaitUs() << " wS:" << ST7789::lastVSyncWaitUs() << " r: " << ST7789::lastUpdateUs()
+                        << " wU:" << Stats::lastUpdateWaitUs() << " wS:" << Stats::lastVSyncWaitUs() << " r: " << Stats::lastUpdateUs()
                         << "\n"
-                        << " idle:" << idlePct();
+                        << " idle:" << Stats::idlePct();
         }
 
     private:

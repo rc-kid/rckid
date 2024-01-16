@@ -82,10 +82,6 @@ namespace rckid {
         );
     }
 
-    /** Returns the available heap memory.
-     */
-    size_t freeHeap();
-
     //@}
 
     /** \name Controls 
@@ -230,7 +226,48 @@ namespace rckid {
 
     }; 
 
-    /** \name Utility functions 
+    /** Various performance metrics. 
+     */
+    class Stats {
+    public:
+
+        static unsigned fps() { return fps_; }
+        static unsigned systemUs() { return systemUs_; }
+        static unsigned updateUs() { return updateUs_; }
+        static unsigned drawUs() { return drawUs_; }
+        static unsigned frameUs() { return frameUs_; }
+        static unsigned idleUs() { return frameUs_ - systemUs_ - updateUs_ - drawUs_; }
+        static unsigned idlePct() { return idleUs() * 100 / frameUs_; }
+
+        static unsigned lastUpdateUs() { return updateUs_; }
+        static unsigned lastUpdateWaitUs() { return updateWaitUs_; }
+        static unsigned lastVSyncWaitUs() { return vsyncWaitUs_; }
+
+
+        static size_t freeHeap();
+    private:
+
+        friend class BaseApp;
+        friend class ST7789;
+
+        static inline unsigned fps_;
+        static inline unsigned fpsCounter_;
+        static inline unsigned systemUs_;
+        static inline unsigned updateUs_;
+        static inline unsigned drawUs_;
+        static inline unsigned frameUs_;
+
+        static inline uint64_t nextFpsTick_;
+
+
+        static inline unsigned displayUpdateUs_ = 0;
+        static inline unsigned updateWaitUs_ = 0;
+        static inline unsigned vsyncWaitUs_ = 0;
+        static inline uint64_t updateStart_ = 0;
+
+    }; // rckid::Stats
+
+    /** \name Utility functions and classes
      */
     //@{
 
@@ -281,6 +318,37 @@ namespace rckid {
                     return static_cast<T>((end - start) * (100 + SinTable[(promille - 510 + 5) / 10]) / 200 + start);
         }
     }
+
+    /** A simple timer utility with [us] precision. 
+     
+        The timer starts when initialized, total and lap times can be retrieved. Particularly useful for measuring various performance metrics. 
+    */
+    class Timer {
+    public:
+        Timer():
+            start_{time_us_32()},
+            lapStart_{start_} {
+        }
+
+        /** Returns total time in [us]. */
+        unsigned total() const { return time_us_32() - start_; }
+
+        /** Returns current lap time in [us]. */
+        unsigned lap() const { return time_us_32() - lapStart_; }
+
+        /** Retrurns the length of current lap and starts a new one in [us]. */
+        unsigned newLap() {
+            unsigned t = time_us_32();
+            unsigned result = t - lapStart_;
+            lapStart_ = t;
+            return result;
+        }
+
+    private:
+        
+        unsigned start_;
+        unsigned lapStart_;
+    }; 
 
     //@}
 } // namespace rckid

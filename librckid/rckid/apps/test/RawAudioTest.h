@@ -44,7 +44,7 @@ namespace rckid {
             r.fill();
             r.text(5, 10) << offset_
                           << "\n\n"
-                          << " FPS: " << fps() << " S:" << systemUs() << " U:" << (updateUs() / 1000) << " D:" << (drawUs() / 1000)
+                          << " FPS: " << Stats::fps() << " S:" << Stats::systemUs() << " U:" << (Stats::updateUs() / 1000) << " D:" << (Stats::drawUs() / 1000)
                           << "    \n\n ERR:"
                           << errors_;
         }

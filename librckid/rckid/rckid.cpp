@@ -52,12 +52,6 @@ namespace rckid {
 
 
 
-    size_t freeHeap() {
-        size_t heapSize = &__StackLimit  - &__bss_end__;    
-        return heapSize - mallinfo().uordblks;
-    }
-
-
     void powerOff() {
         /// TODO: make sure sd and other things are done first, only then poweroff
         Device::sendCommand(cmd::PowerOff{}); 
@@ -111,5 +105,11 @@ namespace rckid {
         ST7789::fill(ColorRGB::Blue());
         while(true) {}
     }
+
+    size_t Stats::freeHeap() {
+        size_t heapSize = &__StackLimit  - &__bss_end__;    
+        return heapSize - mallinfo().uordblks;
+    }
+
 
 } // namespace rckid

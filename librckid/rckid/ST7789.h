@@ -112,20 +112,20 @@ namespace rckid {
         static void updatePixels(uint16_t const * pixels, size_t numPixels) {
             cb_ = [](){ 
                 ST7789::updating_ = false; 
-                updateUs_ = static_cast<unsigned>(uptime_us() - updateStart_);
+                Stats::displayUpdateUs_ = static_cast<unsigned>(uptime_us() - Stats::updateStart_);
             };
             updatePixelsPartial(pixels, numPixels);
         }
 
         static void updatePixelsPartial(uint16_t const * pixels, size_t numPixels, UpdatePixelsCallback cb) {
-            updateStart_ = uptime_us();
+            Stats::updateStart_ = uptime_us();
             cb_ = cb;
             updatePixelsPartial(pixels, numPixels);
         }
 
         static void updatePixelsPartial(uint16_t const * pixels, size_t numPixels) {
             if (!updating_)
-                updateStart_ = uptime_us();
+                Stats::updateStart_ = uptime_us();
             updating_ = true;
             dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
         }
@@ -141,7 +141,7 @@ namespace rckid {
             uint64_t t = uptime_us();
             while (updating_)
                 yield();
-            updateWaitUs_ = static_cast<unsigned>(uptime_us() - t);
+            Stats::updateWaitUs_ = static_cast<unsigned>(uptime_us() - t);
         }
 
         /** Sets the color mode used by the driver. By default RGB565 is used, but RGB666 can be selected instead, in which case 3 bytes are sent per pixel, each containing 6bit color information in the MSBs. 
@@ -175,14 +175,9 @@ namespace rckid {
             while (gpio_get(RP_PIN_DISP_TE)); 
             while (! gpio_get(RP_PIN_DISP_TE))
                 yield();
-            vsyncWaitUs_ = static_cast<unsigned>(uptime_us() - t);
+            Stats::vsyncWaitUs_ = static_cast<unsigned>(uptime_us() - t);
             
         }
-
-
-        static unsigned lastUpdateUs() { return updateUs_; }
-        static unsigned lastUpdateWaitUs() { return updateWaitUs_; }
-        static unsigned lastVSyncWaitUs() { return vsyncWaitUs_; }
 
     private:
 
@@ -248,11 +243,6 @@ namespace rckid {
 
         static inline UpdatePixelsCallback cb_;
         static inline volatile bool updating_ = false;
-
-        static inline unsigned updateUs_ = 0;
-        static inline unsigned updateWaitUs_ = 0;
-        static inline unsigned vsyncWaitUs_ = 0;
-        static inline uint64_t updateStart_ = 0;
 
         static constexpr uint8_t SWRESET = 0x01;
 

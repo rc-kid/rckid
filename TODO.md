@@ -1,9 +1,9 @@
 ## Questions
 
-- Q: the level translator seems not to be working allright. The rising edge up takes a *lot* of time from the vlow
-- Q: when no headphones are present, the headphones line only has about 2 volts, not 3volts it is supposed to have. Is this an issue? 
-- Q: Is the other audio schematic from above better, or worse? 
-- Q: does a LC low pass filter before LDO help in any way?
+- Q: the level translator seems not to be working allright. The rising edge up takes a *lot* of time from the vlow - do one way only
+- Q: when no headphones are present, the headphones line only has about 2 volts, not 3volts it is supposed to have. Is this an issue? - could be internal pulldown in PAM8302
+- Q: Is the other audio schematic from above better, or worse? - better
+- Q: does a LC low pass filter before LDO help in any way? - no
 
 ## TODO
 

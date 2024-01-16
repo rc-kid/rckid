@@ -33,17 +33,17 @@ namespace rckid {
 #define CALCULATE_TIME(...) [&](){ uint32_t start__ = time_us_32(); __VA_ARGS__; return static_cast<unsigned>(time_us_32() - start__); }()
 
     void BaseApp::loop_() {
-        nextFpsTick_ = time_us_32() + 1000000;
-        fps_ = 0;
-        fpsCounter_ = 0;
+        Stats::nextFpsTick_ = time_us_32() + 1000000;
+        Stats::fps_ = 0;
+        Stats::fpsCounter_ = 0;
         currentApp_ = apps_.back();
         size_t initialSize = apps_.size();
         while (apps_.size() >= initialSize) {
             uint32_t frameStart = time_us_32();
-            if (frameStart >= nextFpsTick_) {
-                fps_ = fpsCounter_;
-                fpsCounter_ = 0;
-                nextFpsTick_ += 1000000;
+            if (frameStart >= Stats::nextFpsTick_) {
+                Stats::fps_ = Stats::fpsCounter_;
+                Stats::fpsCounter_ = 0;
+                Stats::nextFpsTick_ += 1000000;
             }
             uint32_t tSys = CALCULATE_TIME(
                 Device::tick();
@@ -53,7 +53,7 @@ namespace rckid {
             );
             if (currentApp_ == nullptr) {
                 currentApp_ = apps_.back();
-                drawUs_ = 0;
+                Stats::drawUs_ = 0;
                 continue;
             }
             ST7789::waitUpdateDone();
@@ -61,11 +61,11 @@ namespace rckid {
                 currentApp_->draw();
             );
             currentApp_->render();
-            ++fpsCounter_;
-            systemUs_ = tSys;
-            updateUs_ = tUpdate;
-            drawUs_ = tDraw; 
-            frameUs_ = static_cast<unsigned>(time_us_32() - frameStart);
+            ++Stats::fpsCounter_;
+            Stats::systemUs_ = tSys;
+            Stats::updateUs_ = tUpdate;
+            Stats::drawUs_ = tDraw; 
+            Stats::frameUs_ = static_cast<unsigned>(time_us_32() - frameStart);
        }
     }
 

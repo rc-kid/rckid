@@ -25,7 +25,7 @@ namespace rckid {
         setFont(Iosevka_Mono6pt7b);
         ColorRGB c = fg();
         setFg(ColorRGB::White());
-        text(0, 220) << BaseApp::fps() << " d: " << BaseApp::drawUs() << " mem: " << freeHeap();
+        text(0, 220) << Stats::fps() << " d: " << Stats::drawUs() << " mem: " << Stats::freeHeap();
         setFont(f);
         setFg(c);
 #endif
@@ -53,7 +53,7 @@ namespace rckid {
             setFont(Iosevka_Mono6pt7b);
             Color c = fg();
             setFg(Color::White());
-            text(0, 220) << BaseApp::fps() << " d: " << BaseApp::drawUs() << " m: " << (freeHeap() / 1024) << " r: " << ST7789::lastUpdateUs();
+            text(0, 220) << Stats::fps() << " d: " << Stats::drawUs() << " m: " << (Stats::freeHeap() / 1024) << " r: " << Stats::lastUpdateUs();
             setFont(f);
             setFg(c);
     #endif
