@@ -59,7 +59,8 @@ namespace rckid {
                 ++errors_;
             for (size_t i = 0; i < size; i += 2) {
                 unsigned x = raw_[offset_];
-                x = (x + 8) >> 4;
+                //x = (x + 8) >> 4;
+                x = ((x + 128) >> 8) << 4;
                 buffer[i] = x;
                 buffer[i + 1] = x;
                 if (++offset_ >= sizeof(raw_)/2)

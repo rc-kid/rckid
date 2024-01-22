@@ -43,23 +43,31 @@
 
 ## PCB
 
+- make room in the upper part so that the case is not warped
+- update audio, add more room
+- make distance between VBATT and GND larger
+- make level shifter resistor 0805 for hand solderability
+- move rumbler control to the lower board edge
 - try the backlight current limiting to be 3.7Ohm for ~90mA max current
 - increase pads for the bottom side button for easier hand solderablity and maybe use the buttons with hole in the middle for better grip
 - pull-up resistors & termination resistors for the SD card (the sd card library has some info)
 - AB buttons are not ceneterd right, fix
-- Select & Start buttons need to go a bit up
 - add labels to PGM and other headers on the bottom side of the PCB
 - where to put the rumbler? Can't be next to the speaker (two magnets)
 - add holes for the display legs for lower profile
+- R41 should be only 10k
 
 ## RP
 
 - document ST7789
 - disable file & line information for fatal errors
 - print fatal error to USB serial
+- SWAP MIC & PWM and mic CLK and DATA !!!!!
 
 ## AVR
 
+- on AVR ABXY and BTN2 pins are swapped
+- DPad buttons are swapped
 - on wakeup sequence, check that start & sel are pressed too to enter debug mode(s)
 - add battery critical power off
 - add neopixel & rumbler effects
