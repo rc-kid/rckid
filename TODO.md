@@ -27,6 +27,9 @@
 - check if the slim buttons are actually working reasonably well
 - there is still warping when screwed together (Anton suggested heating up a bit and let the tensions equalize, also try larger PCB for v2 to improve digidity of the frame around it)
 - enlarge speaker hole - maybe done already
+- move usbc port as low as hedphone
+- programmer hole is 0.5mm down
+
 
 ## Audio Woes
 
@@ -44,18 +47,18 @@
 ## PCB
 
 - make room in the upper part so that the case is not warped
-- update audio, add more room
 - make distance between VBATT and GND larger
 - make level shifter resistor 0805 for hand solderability
-- move rumbler control to the lower board edge
-- try the backlight current limiting to be 3.7Ohm for ~90mA max current
-- increase pads for the bottom side button for easier hand solderablity and maybe use the buttons with hole in the middle for better grip
+- try the backlight current limiting to be 3.7Ohm for ~90mA max current -- CHECK THIS VALUE ON V1
+- increase pads for the bottom side button for easier hand solderablity
 - pull-up resistors & termination resistors for the SD card (the sd card library has some info)
-- AB buttons are not ceneterd right, fix
 - add labels to PGM and other headers on the bottom side of the PCB
-- where to put the rumbler? Can't be next to the speaker (two magnets)
 - add holes for the display legs for lower profile
 - R41 should be only 10k
+- verify button positions
+
+- for final version make level shifter resistor small again and align the mosfet with above DCDC converter
+- backlight resistor should be small too
 
 ## RP
 
