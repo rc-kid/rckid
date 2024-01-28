@@ -21,14 +21,15 @@
 - microphone tested to work - sample code https://github.com/ArmDeveloperEcosystem/microphone-library-for-pico/tree/main 
 - needs integration and lots of amplification it seems 
 
+- create simpler version with 3 AAA batteries for power. Check if USB can be still used in this mode!!!
+
 ## Case
 
 - see if the cartridge insertion mechanism can be made reliable (looks ok)
 - check if the slim buttons are actually working reasonably well
 - there is still warping when screwed together (Anton suggested heating up a bit and let the tensions equalize, also try larger PCB for v2 to improve digidity of the frame around it)
 - enlarge speaker hole - maybe done already
-- move usbc port as low as hedphone
-- programmer hole is 0.5mm down
+- volume btn move 1mm up
 
 
 ## Audio Woes
@@ -46,15 +47,9 @@
 
 ## PCB
 
-- make room in the upper part so that the case is not warped
-- make distance between VBATT and GND larger
-- make level shifter resistor 0805 for hand solderability
-- try the backlight current limiting to be 3.7Ohm for ~90mA max current -- CHECK THIS VALUE ON V1
-- increase pads for the bottom side button for easier hand solderablity
-- pull-up resistors & termination resistors for the SD card (the sd card library has some info)
-- add labels to PGM and other headers on the bottom side of the PCB
-- add holes for the display legs for lower profile
-- R41 should be only 10k
+- try the backlight current limiting to be 3.7Ohm for ~90mA max current, or actually 10Ohm as per the datasheet -- CHECK THIS VALUE ON V1
+- increase pads for the bottom side button for easier hand solderablity (CHECK printed)
+- pull-up resistors & termination resistors for the SD card (the sd card library has some info) - check is right
 - verify button positions
 
 - for final version make level shifter resistor small again and align the mosfet with above DCDC converter
