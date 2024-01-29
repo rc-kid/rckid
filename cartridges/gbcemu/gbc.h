@@ -1,6 +1,8 @@
 #pragma once
-
+#include <cstdlib>
 #include <cstdint>
+
+#include "rckid/rckid.h"
 
 /** GameBoy Color Emulator.
 
@@ -8,12 +10,7 @@
 class GBC {
 public:
 
-    GBC():
-        af_{*reinterpret_cast<uint16_t*>(& a_)},
-        bc_{*reinterpret_cast<uint16_t*>(& b_)},
-        de_{*reinterpret_cast<uint16_t*>(& d_)},
-        hl_{*reinterpret_cast<uint16_t*>(& h_)} {
-    }
+    GBC() {}
 
 private:
 
@@ -21,30 +18,104 @@ private:
      */
     //@{
 
-    class Flags {
+    union {
+        // a f, b, c, d, e, h, l    
+        uint8_t rawRegs8_[8];
+        // af, bc, de, hl
+        uint16_t rawRegs16_[4];
+    }; 
 
-    private:
-        uint8_t raw_;
-    } __attribute__((packed));
+    size_t pc_; // this really is a 16bit number only
+    size_t sp_; 
 
-    uint8_t a_;
-    Flags f_;
-    uint8_t b_;
-    uint8_t c_;
-    uint8_t d_;
-    uint8_t e_;
-    uint8_t h_;
-    uint8_t l_;
-    uint16_t sp_;
-    uint16_t pc_;
-
-    uint16_t & af_;
-    uint16_t & bc_;
-    uint16_t & de_;
-    uint16_t & hl_;
 
     //@}
 
+    /** \name Memory (RAM & ROM)
+     
+        GBC provides the following memories:
+
+        - 16KB video ram, banked by 8KB
+        - 32KB work ram, banked by 4KB
+        - cartridge ROM, up to 8MB, banked by 16KB
+        - cartridge RAM, up to 128KB, banked by 8KB
+
+        Since only 64KB can be addressed at time, memory mapping is a must. To access cartridge data larger than 32KB, a memory mapper chip must be present in the cartridge. 
+
+        # Memory Map
+
+        0x0000 | 0x3fff | 16KB  | ROM Bank 00, from cartridge, usually fixed bank
+        0x4000 | 0x7fff | 16KB  | ROM bank 01-NN, from cartridge, switchable by mapper chip if any
+        0x8000 | 0x9fff |  8KB  | Video RAM
+        0xa000 | 0xbfff |  8KB  | External RAM
+        0xc000 | 0xcfff |  4KB  | WRAM bank 0
+        0xd000 | 0xdfff |  4KB  | WRAM bank 1..7
+        0xe000 | 0xfdff |  <8KB | Echo ram, mirror of 0xc000..0xddff, prohibited
+        0xfe00 | 0xfe9f |  160  | OAM memory
+        0xfea0 | 0xfeff |       | Prohibited
+        0xff00 | 0xff7f | 128   | IO Registers
+        0xff80 | 0xfffe | 127   | High RAM 
+        0xffff | 0xffff | 1     | Interrupt enable register        
+
+        The internal memory, in case
+     */
+    //@{
+
+    void setWorkRAMBank(size_t index) {
+    }
+
+
+    void setVideoRAMBank(size_t index) {
+    }
+
+    // depends on memory controller in cartridge
+    void setROMBank(size_t bank) {
+    }
+
+    // depends on memory controller in cartridge
+    void setExternalRAMBank(size_t index) {
+    }
+
+    uint8_t * memMap_[16];
+
+    uint8_t read8(size_t address) {
+        if (address < 0xfe00) {
+            return memMap_[address >> 12][address & 0xfff];
+        }
+        return 0;
+    }
+
+    uint16_t read16(size_t address) {
+        return 0;
+    }
+
+    void write8(size_t address, uint8_t value) {
+        UNIMPLEMENTED;
+    }
+
+    void write16(size_t address, uint16_t value) {
+        UNIMPLEMENTED;
+    }
+
+    uint8_t rd8(size_t & address) {
+        uint8_t result = memMap_[address >> 12][address & 0xfff];
+        ++address;
+        return result;
+    }
+
+    uint16_t rd16(size_t & address) {
+        uint16_t result = * reinterpret_cast<uint16_t*>(memMap_[address >> 12] + (address & 0xfff));
+        address += 2;
+        return result;
+    }
+
+    //@}
+
+    /** \name IO Registers 
+     */
+    //@{
+
+    //@}
 
 
     void loop();

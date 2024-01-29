@@ -1,9 +1,7 @@
 ## Questions
 
 - Q: the level translator seems not to be working allright. The rising edge up takes a *lot* of time from the vlow - do one way only
-- Q: when no headphones are present, the headphones line only has about 2 volts, not 3volts it is supposed to have. Is this an issue? - could be internal pulldown in PAM8302
-- Q: Is the other audio schematic from above better, or worse? - better
-- Q: does a LC low pass filter before LDO help in any way? - no
+- Q: when no headphones are present, the headphones line only has about 2 volts, not 3volts it is supposed to have. Is this an issue? - could be internal pulldown in PAM8302 & really weak pull-up in the specs
 
 ## TODO
 
@@ -14,23 +12,18 @@
 
 - calculate longest distance between yields
 - check sleep mode power consumption for pedometer
-- where to put rumbler? 
-
 - framebuffer clear with DMA right after drawing is done, or in parallel with drawing if requested
 
 - microphone tested to work - sample code https://github.com/ArmDeveloperEcosystem/microphone-library-for-pico/tree/main 
 - needs integration and lots of amplification it seems 
 
-- create simpler version with 3 AAA batteries for power. Check if USB can be still used in this mode!!!
+- create simpler version with 3 AAA batteries for power (https://www.gme.cz/v/1506937/bh431-1a-drzak-baterie-3xaaa). Check if USB can be still used in this mode!!!
 
 ## Case
 
 - see if the cartridge insertion mechanism can be made reliable (looks ok)
 - check if the slim buttons are actually working reasonably well
-- there is still warping when screwed together (Anton suggested heating up a bit and let the tensions equalize, also try larger PCB for v2 to improve digidity of the frame around it)
-- enlarge speaker hole - maybe done already
-- volume btn move 1mm up
-
+- there is still warping when screwed together (Anton suggested heating up a bit and let the tensions equalize, also try larger PCB for v2 to improve rigidity of the frame around it)
 
 ## Audio Woes
 
@@ -38,11 +31,7 @@
 - 12bit audio seems to be better, works reliably well with 250MHz overclock, but won't work for 8kHz, a resampling and PDM output via PIO would be much better
 - use new circuit? - https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf
 - for 12bit sound, no need for extra timer on PWM
-
-- add big cap to vclean and see if it changes stuff 
-- seem to be easily driven from PWM timer being the desired frequency
 - headphone volume is too high, speaker volume is too low - is that still? 
-
 - check https://github.com/TuriSc/RP2040-PWM-DMA-Audio/tree/main and https://github.com/TuriSc/Dodepan for hints perhaps? 
 
 ## PCB
@@ -120,11 +109,6 @@
 > the app hierarchy does no recycle renderers, might keep the allocated VRAM, or maybe use static regions for the VRAM? later - but how to size VRAM? The cartridge can choose for sure
 
 > can put the extra buffers & palette and friends to the scrach memories 
-
-
-
-
-
 
 Tile = bitmap with statically given dimensions (really only a storage format)
 Bitmap = bitmap with dynamically known dimensions 
