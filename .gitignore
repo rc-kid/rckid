@@ -2,7 +2,7 @@ avr/.pio
 libs/pico-sdk
 libs/pico-examples
 libs/sd-card
-build
+build*
 __OLD__
 utils/bytes-to-cpp
 libs/get-platformio.py

@@ -1,3 +1,5 @@
+#if (! defined LIBRCKID_MOCK)
+
 #include "ST7789.h"
 
 #include <pico/time.h>
@@ -6,7 +8,7 @@
 #include <hardware/dma.h>
 
 #include "images/logo-16.h"
-#include "graphics/png.h"
+#include "../graphics/png.h"
 
 #include "ST7789_rgb.pio.h"
 #include "ST7789_rgb_double.pio.h"
@@ -189,3 +191,5 @@ namespace rckid {
 
 
 } // namespace rckid
+
+#endif // !LIBRCKID_MOCK

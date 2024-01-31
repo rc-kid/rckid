@@ -2,13 +2,13 @@
 
 #include "common/config.h"
 #include "rckid/rckid.h"
-#include "rckid/ST7789.h"
+#include "rckid/drivers/ST7789.h"
 #include "rckid/graphics/canvas.h"
-#include "rckid/sd.h"
+#include "rckid/drivers/sd.h"
 #include "common/state.h"
 #include "common/commands.h"
 
-#include "rckid/audio.h"
+#include "rckid/drivers/audio.h"
 
 
 //#include "rckid/apps/test/SDCardTest.h"

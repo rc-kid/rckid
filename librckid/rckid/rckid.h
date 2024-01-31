@@ -2,19 +2,24 @@
 
 #include <malloc.h>
 #include <csetjmp>
+#include <cstdint>
 
 #include <functional>
 
-#include <pico.h>
-#include <pico/time.h>
-#include <pico/stdlib.h>
-#include <hardware/pio.h>
-#include <hardware/clocks.h>
-#include <hardware/vreg.h>
-#include <hardware/i2c.h>
-#include <hardware/uart.h>
-#include <pico/binary_info.h>
-#include <pico/rand.h>
+#if (! defined LIBRCKID_MOCK)
+    #include <pico.h>
+    #include <pico/time.h>
+    #include <pico/stdlib.h>
+    #include <hardware/pio.h>
+    #include <hardware/clocks.h>
+    #include <hardware/vreg.h>
+    #include <hardware/i2c.h>
+    #include <hardware/uart.h>
+    #include <pico/binary_info.h>
+    #include <pico/rand.h>
+#else // LIBRCKID_MOCK
+    #include "mock.h"
+#endif 
 
 #include "common/config.h"
 #include "common/state.h"
@@ -27,11 +32,11 @@ inline uint16_t operator "" _u16(unsigned long long value) { return static_cast<
 inline uint32_t operator "" _u32(unsigned long long value) { return static_cast<uint32_t>(value); }
 inline uint64_t operator "" _u64(unsigned long long value) { return static_cast<uint64_t>(value); }
 
-#define LOG(...) rckid::writeToUSBSerial() << __VA_ARGS__ << "\r\n"
-#define DEBUG(...) rckid::writeToUSBSerial() << __VA_ARGS__ << "\r\n"
+#define LOG(...) ::rckid::writeToUSBSerial() << __VA_ARGS__ << "\r\n"
+#define DEBUG(...) ::rckid::writeToUSBSerial() << __VA_ARGS__ << "\r\n"
 #define ASSERT(...) if (!(__VA_ARGS__)) { FATAL_ERROR(rckid::ASSERTION_ERROR); }
-#define UNIMPLEMENTED FATAL_ERROR(rckid::NOT_IMPLEMENTED_ERROR)
-#define FATAL_ERROR(CODE) rckid::Device::fatalError(CODE, __FILE__, __LINE__)
+#define UNIMPLEMENTED FATAL_ERROR(::rckid::NOT_IMPLEMENTED_ERROR)
+#define FATAL_ERROR(CODE) ::rckid::Device::fatalError(CODE, __FILE__, __LINE__)
 
 /** RCKid SDK
  */
@@ -73,14 +78,7 @@ namespace rckid {
 
         minicom -b 115200 -o -D /dev/ttyAMA0
      */
-    inline void enableSerialPort() {
-        stdio_uart_init_full(
-            RP_DEBUG_UART, 
-            RP_DEBUG_UART_BAUDRATE, 
-            RP_DEBUG_UART_TX_PIN, 
-            RP_DEBUG_UART_RX_PIN
-        );
-    }
+    void enableSerialPort();
 
     //@}
 
@@ -130,7 +128,23 @@ namespace rckid {
 
     /** Returns RP2040's uptime in microseconds. 
      */
-    inline uint64_t uptime_us() { return to_us_since_boot(get_absolute_time()); }
+    inline uint64_t uptime_us() { 
+#if (! defined LIBRCKID_MOCK)
+        return to_us_since_boot(get_absolute_time()); 
+#else
+        // TODO UNIMPLEMENTED;
+        return 0;
+#endif 
+    }
+
+    inline uint32_t uptime_us_32() {
+#if (! defined LIBRCKID_MOCK)
+        return time_us_32();
+#else
+        // TODO UNIMPLEMENTED;
+        return 0;
+#endif
+    }
 
     /** Returns the current time as kept by the AVR. 
      */
@@ -326,19 +340,19 @@ namespace rckid {
     class Timer {
     public:
         Timer():
-            start_{time_us_32()},
+            start_{uptime_us_32()},
             lapStart_{start_} {
         }
 
         /** Returns total time in [us]. */
-        unsigned total() const { return time_us_32() - start_; }
+        unsigned total() const { return uptime_us_32() - start_; }
 
         /** Returns current lap time in [us]. */
-        unsigned lap() const { return time_us_32() - lapStart_; }
+        unsigned lap() const { return uptime_us_32() - lapStart_; }
 
         /** Retrurns the length of current lap and starts a new one in [us]. */
         unsigned newLap() {
-            unsigned t = time_us_32();
+            unsigned t = uptime_us_32();
             unsigned result = t - lapStart_;
             lapStart_ = t;
             return result;
@@ -353,10 +367,6 @@ namespace rckid {
     //@}
 } // namespace rckid
 
-inline void pio_set_clock_speed(PIO pio, unsigned sm, unsigned hz) {
-    uint kHz = hz / 1000;
-    uint clk = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_SYS); // [kHz]
-    uint clkdiv = (clk / kHz);
-    uint clkfrac = (clk - (clkdiv * kHz)) * 256 / kHz;
-    pio_sm_set_clkdiv_int_frac(pio, sm, clkdiv & 0xffff, clkfrac & 0xff);
-} 
+/** Convenience function for setting PIO speed. 
+ */
+void pio_set_clock_speed(PIO pio, unsigned sm, unsigned hz);

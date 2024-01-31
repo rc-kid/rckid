@@ -1,16 +1,28 @@
 # RCKid mk II
 cmake_minimum_required(VERSION 3.12)
 
-# Pull in SDK (must be before project)
-include(${CMAKE_SOURCE_DIR}/libs/pico-sdk/pico_sdk_init.cmake)
-
-project(rckid2 C CXX ASM)
+if (NOT DEFINED ARCH)
+    set(ARCH "RP2040")
+elseif (ARCH STREQUAL "RP2040")
+elseif (ARCH STREQUAL "MOCK")
+else()
+    message(FATAL_ERROR "Invalid architecture specified")
+endif()
 
 # Initialize the SDK
-pico_sdk_init()
-
-if (PICO_SDK_VERSION_STRING VERSION_LESS "1.3.0")
-    message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
+if (ARCH STREQUAL "RP2040")
+    message("Building for RCKId hardware (RP2040)")
+    # Pull in SDK (must be before project)
+    include(${CMAKE_SOURCE_DIR}/libs/pico-sdk/pico_sdk_init.cmake)
+    project(rckid2 C CXX ASM)
+    pico_sdk_init()
+    if (PICO_SDK_VERSION_STRING VERSION_LESS "1.3.0")
+        message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
+    endif()
+else()
+    message("Building for local hw (mock)")
+    project(rckid2)
+    add_compile_definitions("LIBRCKID_MOCK")
 endif()
 
 set(CMAKE_C_STANDARD 11)
@@ -23,14 +35,17 @@ include_directories(${CMAKE_SOURCE_DIR}/libs/sd-card)
 include_directories(${CMAKE_SOURCE_DIR}/libs/PNGdec/src)
 include_directories(${CMAKE_SOURCE_DIR}/libs/libhelix-mp3)
 
-add_subdirectory("libs/sd-card/src")
+add_subdirectory("librckid")
+#add_subdirectory("libs/sd-card/src")
 add_subdirectory("libs/PNGdec")
 add_subdirectory("libs/libhelix-mp3")
-
-add_subdirectory("avr/rckid")
-add_subdirectory("avr/rckid-test")
-add_subdirectory("librckid")
-add_subdirectory("cartridges/test/audio-test")
-add_subdirectory("cartridges/test/sandbox")
-add_subdirectory("cartridges/games")
 add_subdirectory("cartridges/gbcemu")
+
+if (ARCH STREQUAL "RP2040")
+    add_subdirectory("avr/rckid")
+    add_subdirectory("avr/rckid-test")
+    add_subdirectory("cartridges/test/audio-test")
+    add_subdirectory("cartridges/test/sandbox")
+    add_subdirectory("cartridges/games")
+endif()
+

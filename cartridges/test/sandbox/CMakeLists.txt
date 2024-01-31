@@ -29,6 +29,9 @@ target_link_libraries(${TARGET} librckid)
 #    hardware_dma
 #)
 
+
 # create map/bin/hex file etc.
-pico_add_extra_outputs(${TARGET})
-pico_set_linker_script(${TARGET} ${CMAKE_SOURCE_DIR}/librckid/memmap.ld)
+if (ARCH STREQUAL "RP2040")
+    pico_add_extra_outputs(${TARGET})
+    pico_set_linker_script(${TARGET} ${CMAKE_SOURCE_DIR}/librckid/memmap.ld)
+endif()

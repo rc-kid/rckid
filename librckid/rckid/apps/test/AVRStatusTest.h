@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rckid/app.h"
-#include "rckid/audio.h"
+#include "rckid/drivers/audio.h"
 #include "rckid/graphics/framebuffer.h"
 #include "fonts/Iosevka_Mono6pt7b.h"
 

@@ -1,3 +1,6 @@
+#ifdef HAHA
+#if (! defined LIBRCKID_MOCK)
+
 #include "pico/binary_info.h"
 
 #include "hw_config.h"
@@ -103,3 +106,5 @@ namespace rckid {
 
 }
 
+#endif // !LIBRCKID_MOCK
+#endif // HAHA

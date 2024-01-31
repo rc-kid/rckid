@@ -1,12 +1,13 @@
 #pragma once
+#if (! defined LIBRCKID_MOCK)
 
 #include <hardware/gpio.h>
 #include <hardware/pio.h>
 #include <hardware/dma.h>
 
-#include "rckid.h"
-#include "rckid/graphics/color.h"
-#include "graphics/primitives.h"
+#include "../rckid.h"
+#include "../graphics/color.h"
+#include "../graphics/primitives.h"
 
 //#include "gpu/graphics.h"
 
@@ -78,8 +79,6 @@ namespace rckid {
             Double,
         }; // ST7789::Mode
 
-        typedef void (*DriverInitializer)(PIO, uint, uint, uint, uint);
-
         /** Initializes the display. 
          
             Performs a full reset and initializes the display to 320x240 format with 565 RGB colors and clears the entire display black. 
@@ -95,7 +94,6 @@ namespace rckid {
         /** Clears the entire display with given color. 
          */
         static void fill(ColorRGB color);
-
 
         /** \name Continuous mode
          
@@ -176,7 +174,6 @@ namespace rckid {
             while (! gpio_get(RP_PIN_DISP_TE))
                 yield();
             Stats::vsyncWaitUs_ = static_cast<unsigned>(uptime_us() - t);
-            
         }
 
     private:
@@ -292,3 +289,5 @@ namespace rckid {
     }; // rckid::ST7789
 
 } // namespace rckid
+
+#endif // !LIBRCKID_MOCK

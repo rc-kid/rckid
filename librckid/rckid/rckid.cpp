@@ -1,11 +1,13 @@
+#if (! defined LIBRCKID_MOCK)
+
 #include "bsp/board.h"
 #include "tusb_config.h"
 #include "tusb.h"
 
 #include "common/config.h"
 #include "rckid.h"
-#include "ST7789.h"
-#include "audio.h"
+#include "drivers/ST7789.h"
+#include "drivers/audio.h"
 #include "app.h"
 
 extern char __StackLimit, __bss_end__;
@@ -50,7 +52,14 @@ namespace rckid {
         }};
     }
 
-
+    void enableSerialPort() {
+        stdio_uart_init_full(
+            RP_DEBUG_UART, 
+            RP_DEBUG_UART_BAUDRATE, 
+            RP_DEBUG_UART_TX_PIN, 
+            RP_DEBUG_UART_RX_PIN
+        );
+    }
 
     void powerOff() {
         /// TODO: make sure sd and other things are done first, only then poweroff
@@ -113,3 +122,14 @@ namespace rckid {
 
 
 } // namespace rckid
+
+void pio_set_clock_speed(PIO pio, unsigned sm, unsigned hz) {
+    uint kHz = hz / 1000;
+    uint clk = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_SYS); // [kHz]
+    uint clkdiv = (clk / kHz);
+    uint clkfrac = (clk - (clkdiv * kHz)) * 256 / kHz;
+    pio_sm_set_clkdiv_int_frac(pio, sm, clkdiv & 0xffff, clkfrac & 0xff);
+} 
+
+
+#endif // !LIBRCKID_MOCK

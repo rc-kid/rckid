@@ -17,4 +17,3 @@ namespace rckid {
 }
 
 using namespace rckid;
-

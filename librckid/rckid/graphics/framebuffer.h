@@ -2,7 +2,7 @@
 
 #include "canvas.h"
 
-#include "../ST7789.h"
+#include "../drivers/ST7789.h"
 #include "../app.h"
 
 namespace rckid {
@@ -12,7 +12,9 @@ namespace rckid {
     public:
 
         FrameBuffer(): Canvas<COLOR>{320, 240} {
+#if (!defined LIBRCKID_MOCK)            
             ST7789::enterContinuousMode(ST7789::Mode::Single);
+#endif
         }
 
         void startRendering();
@@ -29,8 +31,10 @@ namespace rckid {
         setFont(f);
         setFg(c);
 #endif
+#if (!defined LIBRCKID_MOCK)            
         ST7789::waitVSync();
         ST7789::updatePixels(reinterpret_cast<uint16_t const *>(buffer_), numPixels());
+#endif
     } 
 
     template<>
@@ -38,6 +42,7 @@ namespace rckid {
     public:
 
         FrameBuffer(): Canvas{320, 240} {
+#if (!defined LIBRCKID_MOCK)            
             ST7789::enterContinuousMode(ST7789::Mode::Single);
             gpio_init(RP_PIN_GPIO_16);
             gpio_set_dir(RP_PIN_GPIO_16, GPIO_OUT);
@@ -45,6 +50,7 @@ namespace rckid {
             gpio_set_dir(RP_PIN_GPIO_17, GPIO_OUT);
             gpio_put(RP_PIN_GPIO_16, false);
             gpio_put(RP_PIN_GPIO_17, false);
+#endif
         }
 
         void startRendering() {
@@ -57,6 +63,7 @@ namespace rckid {
             setFont(f);
             setFg(c);
     #endif
+#if (!defined LIBRCKID_MOCK)            
             /// TODO: This is extremely slow, we should process the line, start the transfer and process the second line while we are transferring still. Problems could be that the ISR will be too long thanks to the processing, can be made into an event? 
             /// The static column is also not very good way of representing stuff
             /// the color to RGB can be made faster with a palette lookup from index to color
@@ -106,6 +113,7 @@ namespace rckid {
                     //gpio_put(RP_PIN_GPIO_16, false);
                 }
             });
+#endif            
         }
 
     private:
@@ -154,11 +162,14 @@ namespace rckid {
     public:    
 
         FrameBufferDouble(): Canvas{160, 120} {
+#if (!defined LIBRCKID_MOCK)            
             ST7789::enterContinuousMode(ST7789::Mode::Double);
+#endif
         }
 
         void startRendering() {
             updateLine_ = 0;
+#if (!defined LIBRCKID_MOCK)            
             ST7789::waitVSync();
             ST7789::updatePixelsPartial(reinterpret_cast<uint16_t const *>(buffer_), height(), [this](){
                 if (updateLine_ == width() - 1)
@@ -166,6 +177,7 @@ namespace rckid {
                 else 
                 ST7789::updatePixelsPartial(reinterpret_cast<uint16_t const *>(buffer_) + height() * updateLine_++, height() * 2);
             }); 
+#endif            
         }
 
     private:
@@ -175,3 +187,4 @@ namespace rckid {
     }; // rckid::FrameBufferDouble
 
 } // namespace rckid
+

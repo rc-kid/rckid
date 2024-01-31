@@ -1,11 +1,12 @@
 
 #include "rckid/rckid.h"
-#include "rckid/Audio.h"
+#include "rckid/drivers/audio.h"
 
 #include "rckid/app.h"
 #include "rckid/graphics/framebuffer.h"
 #include "fonts/Iosevka_Mono6pt7b.h"
 
+#include <iostream>
 
 #include "gbc.h"
 
@@ -13,6 +14,10 @@ using namespace rckid;
 
 class GBCEmu : public App<FrameBuffer<ColorRGB>> {
 public:
+
+    GBCEmu() {
+        DEBUG("GBCEmu started");
+    }
 
     void update() override {
 

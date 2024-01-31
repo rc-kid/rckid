@@ -27,13 +27,15 @@ namespace rckid {
         Writer & operator << (char c) { 
             putChar_(c); 
             return *this; 
-        } 
+        }
 
-        Writer & operator << (uint8_t x) { return *this << (unsigned) x; }
-        Writer & operator << (uint16_t x) { return *this << (unsigned) x; }
-        Writer & operator << (uint32_t x) { return *this << (unsigned) x; }
+        // TODO only works for real HW
+        Writer & operator << (size_t x) { return *this << (uint32_t) x; } 
 
-        Writer & operator << (unsigned x) {
+        Writer & operator << (uint8_t x) { return *this << (uint32_t) x; }
+        Writer & operator << (uint16_t x) { return *this << (uint32_t) x; }
+
+        Writer & operator << (uint32_t x) {
             unsigned order = 1000000000;
             while (x < order && order > 1)
                 order = order / 10;
@@ -45,6 +47,10 @@ namespace rckid {
             putChar_(x + '0');
             return *this;
         }
+
+        // TODO this is useful only for mock, should increase the precision
+        //Writer & operator << (uint64_t x) { return *this << (uint32_t) x; }
+
 
         std::function<void(char)> putChar_;
 

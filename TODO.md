@@ -5,6 +5,10 @@
 
 ## TODO
 
+- figure out how to do the librckid-mock library and easily link to it
+- using raylib, the mock library can even work with graphics & sound likely
+- make rckid.cpp the only file with platfiorm specific details and have two versions one for mock and one for rckid itself
+
 - check that we can launch apps from the carousel
 
 - add menu font
@@ -35,6 +39,9 @@
 - check https://github.com/TuriSc/RP2040-PWM-DMA-Audio/tree/main and https://github.com/TuriSc/Dodepan for hints perhaps? 
 
 ## PCB
+
+- should INA219 be added to battery protection and AVR changed to 3217 or some such for extra pins for battery management so that we can disconnect the charger programmaticaly? If yes, preorder the parts
+- see if the battery leads can also be different distances from the battery
 
 - try the backlight current limiting to be 3.7Ohm for ~90mA max current, or actually 10Ohm as per the datasheet -- CHECK THIS VALUE ON V1
 - increase pads for the bottom side button for easier hand solderablity (CHECK printed)

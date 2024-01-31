@@ -1,7 +1,12 @@
+#if (! defined LIBRCKID_MOCK)
+
 #include "tusb.h"
 
-#include "audio.h"
-#include "sd.h"
+
+#include "drivers/ST7789.h"
+
+#include "drivers/audio.h"
+#include "drivers/sd.h"
 
 #include "app.h"
 
@@ -70,3 +75,5 @@ namespace rckid {
     }
 
 } // namespace rckid
+
+#endif // !LIBRCKID_MOCK

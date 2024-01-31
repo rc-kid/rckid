@@ -1,4 +1,5 @@
 #pragma once
+#ifdef HAHA
 
 #include "f_util.h"
 #include "ff.h"
@@ -44,3 +45,5 @@ namespace rckid {
     }; // rckid::SD
 
 }; // namespace rckid::sd
+
+#endif // HAHA

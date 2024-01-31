@@ -4,7 +4,7 @@
 #include "rckid/apps/games/Tetris.h"
 
 #include "rckid/graphics/bitmap.h"
-#include "rckid/Audio.h"
+#include "rckid/drivers/audio.h"
 
 using namespace rckid;
 

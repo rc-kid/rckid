@@ -26,7 +26,26 @@ After cloning the repository, run the `setup.sh` file:
 
 This should install all necessary packages, including platformio and 3rd party libraries used by RCKid. 
 
-> I'm building RCKid on Ubuntu 22.04 WSL, which is the only "officially" supported distribution, other linux flavours should work equally well, but the package manager commands must be updated.   
+> I'm building RCKid on Ubuntu 22.04 WSL, which is the only "officially" supported distribution, other linux flavours should work equally well, but the package manager commands must be updated.  
+
+Building all cartridges that are part of this repo is then as easy as running the following:
+
+    mkdir build
+    cd build
+    cmake ..
+    cmake --build . 
+
+The various cartridges will then be available under the `build/cartridges` folder and its subfolders in the `UF2` format. 
+
+### Mock Builds
+
+Alternatively, several parts of the RCKid library can also build locally on your dev machine for easier debugging and testing. To do so, run the following from RCKid's root folder:
+
+    mkdir build-mock
+    cd build-mock
+    cmake .. -DARCH=MOCK
+    cmake --build . 
+
 
 
 

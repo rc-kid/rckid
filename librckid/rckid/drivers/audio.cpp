@@ -1,7 +1,7 @@
+#if (! defined LIBRCKID_MOCK)
+
 #include "hardware/pwm.h"
 #include "hardware/dma.h"
-
-#include "rckid.h"
 
 #include "audio.h"
 
@@ -135,3 +135,5 @@ namespace rckid {
     }
 
 } // namespace RCKid
+
+#endif // !LIBRCKID_MOCK
