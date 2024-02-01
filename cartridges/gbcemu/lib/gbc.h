@@ -12,9 +12,38 @@ public:
 
     GBC() {}
 
+    void setROM(uint8_t const * rom, size_t numBytes) {
+        rom_ = rom;
+        romSize_ = numBytes;
+        memMap_[0] = const_cast<uint8_t *>(rom_);
+        setROMBank(0);
+    }
+
+    void start(uint16_t pc = 0x100) {
+        pc_ = pc;
+        terminateAfterStop_ = false;
+        loop();
+    }
+
+    void startTest(uint16_t pc = 0x0) {
+        pc_ = pc;
+        terminateAfterStop_ = true;
+        loop();
+    }
+
+
+    uint16_t pc() const { return pc_; }
+
 private:
 
     /** \name CPU Registers and state
+     
+        Flags
+
+        - `Z` (zero flag) set only if the actual result is 0
+        - `N` (subtract flag) set to a constant it seems
+        - `H` (half carry flag) 
+        - `C` (carry flag)
      */
     //@{
 
@@ -28,6 +57,21 @@ private:
     size_t pc_; // this really is a 16bit number only
     size_t sp_; 
 
+    void setFlagZ(bool value) {
+
+    }
+
+    void setFlagN(bool value) {
+
+    }
+
+    void setFlagH(bool value) {
+
+    }
+
+    void setFlagC(bool value) {
+
+    }
 
     //@}
 
@@ -61,6 +105,12 @@ private:
      */
     //@{
 
+
+    uint8_t * memMap_[16];
+    uint8_t const * rom_;
+    size_t romSize_;
+
+
     void setWorkRAMBank(size_t index) {
     }
 
@@ -75,8 +125,6 @@ private:
     // depends on memory controller in cartridge
     void setExternalRAMBank(size_t index) {
     }
-
-    uint8_t * memMap_[16];
 
     uint8_t read8(size_t address) {
         if (address < 0xfe00) {
@@ -121,5 +169,7 @@ private:
     void loop();
 
 
+    // when true, the stop instruction terminates the program, useful for debugging & testing
+    bool terminateAfterStop_ = false;
 
 }; // GBC

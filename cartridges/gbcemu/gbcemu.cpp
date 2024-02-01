@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include "gbc.h"
+#include "lib/gbc.h"
 
 using namespace rckid;
 
