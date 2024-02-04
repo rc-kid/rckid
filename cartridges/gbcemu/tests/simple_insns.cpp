@@ -23,3 +23,11 @@ TEST(simple, regLoads) {
     EXPECT(gbc.bc(), 0x3456);
     EXPECT(gbc.hl(), 0xc000);
 }
+
+TEST(simple, scf) {
+    GBC gbc{};
+    RUN(
+        SCF,
+    );
+    EXPECT_FLAGS(C);
+}

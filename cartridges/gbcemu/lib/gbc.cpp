@@ -30,13 +30,13 @@ void GBC::loop() {
     while (true) {
         uint8_t opcode = rd8(pc_);
         switch (opcode) {
-#define INS(OPCODE, FLAG_Z, FLAG_N, GLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
+#define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
     case OPCODE: \
         cycles_ += CYCLES; \
-        if (val_ ## Z != -1) setFlagZ(val_ ## Z); \
-        if (val_ ## N != -1) setFlagN(val_ ## N); \
-        if (val_ ## H != -1) setFlagH(val_ ## H); \
-        if (val_ ## C != -1) setFlagC(val_ ## C); \
+        if (val_ ## FLAG_Z != -1) setFlagZ(val_ ## FLAG_Z); \
+        if (val_ ## FLAG_N != -1) setFlagN(val_ ## FLAG_N); \
+        if (val_ ## FLAG_H != -1) setFlagH(val_ ## FLAG_H); \
+        if (val_ ## FLAG_C != -1) setFlagC(val_ ## FLAG_C); \
         __VA_ARGS__ \
         break;
 #include "insns.inc.h"

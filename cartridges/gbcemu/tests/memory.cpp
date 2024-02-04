@@ -35,12 +35,12 @@ TEST(memory, storeload8) {
     RUN(
         LD_HL_imm16(0xc000),
         LD_A_imm8(0x12),
-        LD_ptrHL_A,
+        LD_incHL_A,
         INC_A,
-        INC_HL,
-        LD_ptrHL_A,
+        LD_incHL_A,
     );
     //uint8_t const * const * mmap = gbc.memMap();
+    EXPECT(gbc.hl(), 0xc002);
     EXPECT(gbc.readWRAM(0), 0x12);
     EXPECT(gbc.readWRAM(1), 0x13);
 }
