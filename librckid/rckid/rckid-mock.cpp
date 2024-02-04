@@ -3,6 +3,8 @@
 #include <iostream>
 
 #include "rckid.h"
+#include "app.h"
+
 
 namespace rckid {
 
@@ -15,7 +17,10 @@ namespace rckid {
     }
 
     void start(BaseApp && app) {
-        UNIMPLEMENTED;
+        int errorCode = setjmp(Device::fatalError_);
+        if (errorCode != 0) 
+            Device::BSOD(errorCode);
+        app.run();
     }
 
     Writer writeToUSBSerial() {
@@ -37,7 +42,7 @@ namespace rckid {
 
     void Device::tick() {
         // TODO get state
-        UNIMPLEMENTED;
+        // UNIMPLEMENTED;
     }
 
     void Device::BSOD(int code) {
@@ -45,6 +50,7 @@ namespace rckid {
         std::cout << "BSOD:" << std::endl << std::endl;
         std::cout << "If you ran this on RCKid, you would have been treated to its blue screen of death." << std::endl;
         std::cout << "Error code: " << code << std::endl;
+        std::cout << "File:       " << fatalErrorFile_ << ":" << fatalErrorLine_ << std::endl;
         exit(EXIT_FAILURE);
     }
 

@@ -1,8 +1,3 @@
-#if (! defined LIBRCKID_MOCK)
-
-#include "tusb.h"
-
-
 #include "drivers/ST7789.h"
 
 #include "drivers/audio.h"
@@ -61,7 +56,9 @@ namespace rckid {
                 Stats::drawUs_ = 0;
                 continue;
             }
+#if (! defined LIBRCKID_MOCK)
             ST7789::waitUpdateDone();
+#endif
             uint32_t tDraw = CALCULATE_TIME(
                 currentApp_->draw();
             );
@@ -75,5 +72,3 @@ namespace rckid {
     }
 
 } // namespace rckid
-
-#endif // !LIBRCKID_MOCK

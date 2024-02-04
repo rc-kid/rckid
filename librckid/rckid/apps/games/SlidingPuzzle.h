@@ -13,6 +13,7 @@ namespace rckid {
 
         TODO:
 
+          - actually the random random permutation cannot be always solved
           - support different picture sizes
           - support multiple tile sizes
           - animate transitions

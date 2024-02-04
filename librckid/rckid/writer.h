@@ -29,6 +29,11 @@ namespace rckid {
             return *this; 
         }
 
+        Writer & operator << (bool b) {
+            putChar_(b ? 'T' : 'F');
+            return *this;
+        }
+
         // TODO only works for real HW
         Writer & operator << (size_t x) { return *this << (uint32_t) x; } 
 
@@ -46,6 +51,14 @@ namespace rckid {
             }
             putChar_(x + '0');
             return *this;
+        }
+
+        Writer & operator << (int32_t x) {
+            if (x < 0) {
+                putChar_('-');
+                x = -x;
+            }
+            return (*this) << static_cast<uint32_t>(x);
         }
 
         // TODO this is useful only for mock, should increase the precision

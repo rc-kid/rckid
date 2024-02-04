@@ -161,7 +161,7 @@ protected:
     template<typename T, typename W>
     bool expect(char const * file, size_t line, char const * expr, T actual, W expected) {
         ++TotalChecks_;
-        if (actual != expected) {
+        if (actual != static_cast<T>(expected)) {
             ++FailedChecks_;
             std::cout << "\n" << file << "(" << line << "): " << expr << " evaluates to " << actual << " when " << expected << " expected" << std::endl;
             return false;
@@ -198,3 +198,15 @@ private:
     static inline std::unordered_map<std::string, Suite> Suites_;
 
 }; // Test
+
+template<>
+bool inline Test::expect(char const * file, size_t line, char const * expr, uint8_t const * actual, uint8_t const * expected) {
+    ++TotalChecks_;
+    if (actual != expected) {
+        ++FailedChecks_;
+        std::cout << "\n" << file << "(" << line << "): " << expr << " evaluates to " << (size_t)actual << " when " << (size_t)expected << " expected" << std::endl;
+        return false;
+    } else {
+        return true;
+    }
+}

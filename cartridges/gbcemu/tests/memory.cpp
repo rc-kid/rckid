@@ -1,0 +1,46 @@
+#include "gbctests.h"
+
+TEST(memory, initial_memmap) {
+    uint8_t const pgm[] = { STOP(0) };
+    GBC gbc{};
+    gbc.runTest(pgm, sizeof(pgm));
+    uint8_t const * const * mmap = gbc.memMap();
+    // first 16kb set to bank 0 of rom
+    EXPECT(mmap[0], pgm);
+    EXPECT(mmap[1], pgm + 1 * 4096);
+    EXPECT(mmap[2], pgm + 2 * 4096);
+    EXPECT(mmap[3], pgm + 3 * 4096);
+    // second 16kb set to bank 1 of rom
+    EXPECT(mmap[4], pgm + 4 * 4096);
+    EXPECT(mmap[5], pgm + 5 * 4096);
+    EXPECT(mmap[6], pgm + 6 * 4096);
+    EXPECT(mmap[7], pgm + 7 * 4096);
+    // video ram is set to bank 0
+    EXPECT(mmap[8], gbc.vram());
+    EXPECT(mmap[9], gbc.vram() + 4096);
+    // external ram is not present
+    EXPECT(mmap[10], nullptr);
+    EXPECT(mmap[11], nullptr);
+    // wram bank 0 fixed
+    EXPECT(mmap[12], gbc.wram());
+    // wram bank 1 set to 1
+    EXPECT(mmap[13], gbc.wram() + 4096);
+    // echo ram set to wram
+    EXPECT(mmap[14], gbc.wram());
+    EXPECT(mmap[15], gbc.wram() + 4096);
+}
+
+TEST(memory, storeload8) {
+    GBC gbc{};
+    RUN(
+        LD_HL_imm16(0xc000),
+        LD_A_imm8(0x12),
+        LD_ptrHL_A,
+        INC_A,
+        INC_HL,
+        LD_ptrHL_A,
+    );
+    //uint8_t const * const * mmap = gbc.memMap();
+    EXPECT(gbc.readWRAM(0), 0x12);
+    EXPECT(gbc.readWRAM(1), 0x13);
+}

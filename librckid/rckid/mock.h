@@ -17,6 +17,11 @@ inline uint32_t get_rand_32() {
     return std::rand();
 }
 
+inline uint32_t time_us_32() {
+    // TODO
+    return 0;
+}
+
 
 
 #endif
