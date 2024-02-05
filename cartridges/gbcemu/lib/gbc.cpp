@@ -27,6 +27,7 @@ static constexpr int val_0 = 0;
 static constexpr int val_1 = 1;
 
 void GBC::loop() {
+    cycles_ = 0;
     while (true) {
         uint8_t opcode = rd8(pc_);
         switch (opcode) {

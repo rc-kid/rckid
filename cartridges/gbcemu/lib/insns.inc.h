@@ -87,9 +87,7 @@ INS(0x2b, _,_,_,_, 1, 8 , "dec hl", { --HL; })
 INS(0x2c, Z,0,H,_, 1, 4 , "inc l", { L = inc8(L); })
 INS(0x2d, Z,1,H,_, 1, 4 , "dec l", { L = dec8(L); })
 INS(0x2e, _,_,_,_, 2, 8 , "ld l, n8", { L = rd8(PC); })
-INS(0x2f, _,1,1,_, 1, 4 , "cpl", {
-    UNIMPLEMENTED;
-})
+INS(0x2f, _,1,1,_, 1, 4 , "cpl", { A = ~A; })
 INS(0x30, _,_,_,_, 2, 8 + 4, "jr nc, e8", {
     // 3 cycles when taken, 2 when not taken
     int8_t offset = static_cast<int8_t>(rd8(PC));
@@ -256,13 +254,16 @@ INS(0xbe, Z,1,H,C, 1, 8 , "cp a, [hl]", { sub8(A, read8(HL)); })
 /** This literally does nothing but set the flags to consts. 
  */
 INS(0xbf, 1,1,0,0, 1, 4 , "cp a, a", { }) 
-INS(0xc0, _,_,_,_, 1, 3 + 2, "ret nz", {
+INS(0xc0, _,_,_,_, 1, 8 + 12, "ret nz", {
     // 5 cycles taken, 2 cyles not taken
-    UNIMPLEMENTED;
+    if (! flagZ()) {
+        PC = read16(SP);
+        SP += 2;
+    } else {
+        cycles_ -= 12;
+    }
 })
-INS(0xc1, _,_,_,_, 1, 12, "pop bc", {
-    UNIMPLEMENTED;
-})
+INS(0xc1, _,_,_,_, 1, 12, "pop bc", { BC = read16(SP); SP += 2; })
 INS(0xc2, _,_,_,_, 3, 12 + 4, "jp nz, a16", {
     // 4 cycles taken, 3 cycles not taken
     uint16_t addr = rd16(PC);
@@ -272,24 +273,34 @@ INS(0xc2, _,_,_,_, 3, 12 + 4, "jp nz, a16", {
         cycles_ -= 4;
 })
 INS(0xc3, _,_,_,_, 3, 16, "jp a16", { PC = rd16(PC); })
-INS(0xc4, _,_,_,_, 3, 3 + 3, "call nz, a16", {
+INS(0xc4, _,_,_,_, 3, 12 + 12, "call nz, a16", {
     // 6 cycles taken, 3 cycles not taken
-    UNIMPLEMENTED;
+    uint16_t addr = rd16(PC);
+    if (! flagZ()) {
+        SP -= 2;
+        write16(SP, PC);
+        PC = addr;
+    } else {
+        cycles_ -= 12;
+    }
 })
-INS(0xc5, _,_,_,_, 1, 16, "push bc", {
-    UNIMPLEMENTED;
-})
+INS(0xc5, _,_,_,_, 1, 16, "push bc", { SP -= 2; write16(SP, BC); })
 INS(0xc6, Z,0,H,C, 2, 8 , "add a, n8", { A = add8(A, rd8(PC)); })
 INS(0xc7, _,_,_,_, 1, 16, "rst $00", {
-    UNIMPLEMENTED;
+    SP -= 2; 
+    write16(SP, PC); 
+    PC = 0x00; 
 })
-INS(0xc8, _,_,_,_, 1, 3 + 2, "ret z", {
+INS(0xc8, _,_,_,_, 1, 8 + 12, "ret z", {
     // 5 cycles taken, 2 cyles not taken
-    UNIMPLEMENTED;
+    if (flagZ()) {
+        PC = read16(SP);
+        SP += 2;
+    } else {
+        cycles_ -= 12;
+    }
 })
-INS(0xc9, _,_,_,_, 1, 16, "ret", {
-    UNIMPLEMENTED;
-})
+INS(0xc9, _,_,_,_, 1, 16, "ret", { PC = read16(SP); SP += 2; })
 INS(0xca, _,_,_,_, 3, 12 + 4, "jp z, a16", {
     // 4 cycles taken, 3 cycles not taken
     uint16_t addr = rd16(PC);
@@ -298,28 +309,101 @@ INS(0xca, _,_,_,_, 3, 12 + 4, "jp z, a16", {
     else
         cycles_ -= 4;
 })
+/** The prefixed instructions. 
+ 
+    The follow a very simple decoding pattern whereas the 3 LSB identify a register (B, C, D, E, H,  L, [HL], A) and the upper 5 bits specify the operation. 
+*/
 INS(0xcb, _,_,_,_, 1, 4 , "prefix", {
-    UNIMPLEMENTED;
+    uint8_t eo = rd8(PC); 
+    uint8_t reg = eo & 7;
+    eo = eo >> 3;
+    uint8_t r;
+    switch (reg) {
+        case 0: r = B; break;
+        case 1: r = C; break;
+        case 2: r = D; break;
+        case 3: r = E; break;
+        case 4: r = H; break;
+        case 5: r = L; break;
+        case 6: r = read8(HL); break;
+        case 7: r = A; break;
+    }
+    switch (eo) {
+        case 0: // RLC
+        case 1: // RRC
+        case 2: // RL
+        case 3: // RR
+        case 4: // SLA
+        case 5: // SRA
+            UNIMPLEMENTED;
+        case 6: // SWAP
+            eo = r & 0xf;
+            r = (eo << 4) | (r >> 4);
+            break;
+        case 7: // SRL
+            UNIMPLEMENTED;
+        default: { // bit operations
+            unsigned bit = eo & 7;
+            eo = eo >> 3;
+            switch (eo) {
+                case 1: // BIT
+                    setFlagZ((r & (1 << bit)) == 0);
+                    setFlagN(0);
+                    setFlagH(0);
+                    break;
+                case 2: // RES
+                    r = r & ~(1 << bit);
+                    break;
+                case 3: // SET
+                    r = r | (1 << bit);
+                    break;
+            }
+        }
+    }
+    switch (reg) {
+        case 0: B = r; break;
+        case 1: C = r; break;
+        case 2: D = r; break;
+        case 3: E = r; break;
+        case 4: H = r; break;
+        case 5: L = r; break;
+        case 6: write8(HL, r); break;
+        case 7: A = r; break;
+    }
 })
-INS(0xcc, _,_,_,_, 3, 3 + 3, "call z, a16", {
+INS(0xcc, _,_,_,_, 3, 12 + 12, "call z, a16", {
     // 6 cycles taken, 3 cycles not taken
-    UNIMPLEMENTED;
+    uint16_t addr = rd16(PC);
+    if (flagZ()) {
+        SP -= 2;
+        write16(SP, PC);
+        PC = addr;
+    } else {
+        cycles_ -= 12;
+    }
 })
 INS(0xcd, _,_,_,_, 3, 24, "call a16", {
-    UNIMPLEMENTED;
+    uint16_t addr = rd16(PC);
+    SP -= 2;
+    write16(SP, PC);
+    PC = addr;
 })
-INS(0xce, Z,0,H,C, 2, 8 , "adc a, n8", { A = add8(A, rd8(PC), flagC());
-})
+INS(0xce, Z,0,H,C, 2, 8 , "adc a, n8", { A = add8(A, rd8(PC), flagC()); })
 INS(0xcf, _,_,_,_, 1, 16, "rst $08", {
-    UNIMPLEMENTED;
+    SP -= 2; 
+    write16(SP, PC); 
+    PC = 0x08; 
 })
-INS(0xd0, _,_,_,_, 1, 3 + 2, "ret nc", {
+INS(0xd0, _,_,_,_, 1, 8 + 12, "ret nc", {
     // 5 cycles taken, 2 cyles not taken
-    UNIMPLEMENTED;
+    if (! flagC()) {
+        PC = read16(SP);
+        SP += 2;
+    } else {
+        cycles_ -= 12;
+    }
 })
-INS(0xd1, _,_,_,_, 1, 12, "pop de", {
-    UNIMPLEMENTED;
-})
+INS(0xd1, _,_,_,_, 1, 12, "pop de", { DE = read16(SP); SP += 2; })
 INS(0xd2, _,_,_,_, 3, 12 + 4, "jp nc, a16", {
     // 4 cycles taken, 3 cycles not taken
     uint16_t addr = rd16(PC);
@@ -328,23 +412,37 @@ INS(0xd2, _,_,_,_, 3, 12 + 4, "jp nc, a16", {
     else
         cycles_ -= 4;
 })
-INS(0xd4, _,_,_,_, 3, 3 + 3, "call nc, a16", {
+INS(0xd4, _,_,_,_, 3, 12 + 12, "call nc, a16", {
     // 6 cycles taken, 3 cycles not taken
-    UNIMPLEMENTED;
+    uint16_t addr = rd16(PC);
+    if (! flagC()) {
+        SP -= 2;
+        write16(SP, PC);
+        PC = addr;
+    } else {
+        cycles_ -= 12;
+    }
 })
-INS(0xd5, _,_,_,_, 1, 16, "push de", {
-    UNIMPLEMENTED;
-})
+INS(0xd5, _,_,_,_, 1, 16, "push de", { SP -= 2; write16(SP, DE); })
 INS(0xd6, Z,1,H,C, 2, 8 , "sub a, n8", { A = sub8(A, rd8(PC)); })
 INS(0xd7, _,_,_,_, 1, 16, "rst $10", {
-    UNIMPLEMENTED;
+    SP -= 2; 
+    write16(SP, PC); 
+    PC = 0x10; 
 })
-INS(0xd8, _,_,_,_, 1, 3 + 2, "ret c", {
+INS(0xd8, _,_,_,_, 1, 8 + 12, "ret c", {
     // 5 cycles taken, 2 cyles not taken
-    UNIMPLEMENTED;
+    if (flagC()) {
+        PC = read16(SP);
+        SP += 2;
+    } else {
+        cycles_ -= 12;
+    }
 })
 INS(0xd9, _,_,_,_, 1, 16, "reti", {
-    UNIMPLEMENTED;
+    PC = read16(SP);
+    SP += 2;
+    ime_ = true;
 })
 INS(0xda, _,_,_,_, 3, 12 + 4, "jp c, a16", {
     // 4 cycles taken, 3 cycles not taken
@@ -354,29 +452,32 @@ INS(0xda, _,_,_,_, 3, 12 + 4, "jp c, a16", {
     else
         cycles_ -= 4;
 })
-INS(0xdc, _,_,_,_, 3, 3 + 3, "call c, a16", {
+INS(0xdc, _,_,_,_, 3, 12 + 12, "call c, a16", {
     // 6 cycles taken, 3 cycles not taken
-    UNIMPLEMENTED;
+    uint16_t addr = rd16(PC);
+    if (flagC()) {
+        SP -= 2;
+        write16(SP, PC);
+        PC = addr;
+    } else {
+        cycles_ -= 12;
+    }
 })
 INS(0xde, Z,1,H,C, 2, 8 , "sbc a, n8", { A = sub8(A, rd8(PC), flagC()); })
 INS(0xdf, _,_,_,_, 1, 16, "rst $18", {
-    UNIMPLEMENTED;
+    SP -= 2; 
+    write16(SP, PC); 
+    PC = 0x18; 
 })
-INS(0xe0, _,_,_,_, 2, 12, "ldh [a8], a", {
-    UNIMPLEMENTED;
-})
-INS(0xe1, _,_,_,_, 1, 12, "pop hl", {
-    UNIMPLEMENTED;
-})
-INS(0xe2, _,_,_,_, 1, 8 , "ld [c], a", { 
-    UNIMPLEMENTED;
-})
-INS(0xe5, _,_,_,_, 1, 16, "push hl", {
-    UNIMPLEMENTED;
-})
+INS(0xe0, _,_,_,_, 2, 12, "ldh [a8], a", { write8(0xff00 + rd8(PC), A); })
+INS(0xe1, _,_,_,_, 1, 12, "pop hl", { HL = read8(SP); SP += 2; })
+INS(0xe2, _,_,_,_, 1, 8 , "ld [c], a", {  write8(0xff00 + C, A); })
+INS(0xe5, _,_,_,_, 1, 16, "push hl", { SP -= 2; write16(SP, HL); })
 INS(0xe6, Z,0,1,0, 2, 8 , "and a, n8", { A = A & rd8(PC); setFlagZ(A == 0); })
 INS(0xe7, _,_,_,_, 1, 16, "rst $20", {
-    UNIMPLEMENTED;
+    SP -= 2; 
+    write16(SP, PC); 
+    PC = 0x20; 
 })
 INS(0xe8, 0,0,H,C, 2, 16, "add sp, e8", {
     UNIMPLEMENTED;
@@ -385,38 +486,32 @@ INS(0xe9, _,_,_,_, 1, 4 , "jp hl", { PC = HL; })
 INS(0xea, _,_,_,_, 3, 16, "ld [a16], a", { write8(rd16(PC), A); })
 INS(0xee, Z,0,0,0, 2, 8 , "xor a, n8", { A = A ^ rd8(PC); setFlagZ(A == 0); })
 INS(0xef, _,_,_,_, 1, 16, "rst $28", {
-    UNIMPLEMENTED;
+    SP -= 2; 
+    write16(SP, PC); 
+    PC = 0x28; 
 })
-INS(0xf0, _,_,_,_, 2, 12, "ldh a, [a8]", {
-    UNIMPLEMENTED;
-})
-INS(0xf1, Z,N,H,C, 1, 12, "pop af", {
-    UNIMPLEMENTED;
-})
-INS(0xf2, _,_,_,_, 1, 8 , "ld a, [c]", {
-    UNIMPLEMENTED;
-})
-INS(0xf3, _,_,_,_, 1, 4 , "di", {
-    UNIMPLEMENTED;
-})
-INS(0xf5, _,_,_,_, 1, 16, "push af", {
-    UNIMPLEMENTED;
-})
+INS(0xf0, _,_,_,_, 2, 12, "ldh a, [a8]", { A = read8(0xff00 + rd8(PC)); })
+INS(0xf1, Z,N,H,C, 1, 12, "pop af", { AF = read8(SP); SP += 2; })
+INS(0xf2, _,_,_,_, 1, 8 , "ld a, [c]", { A = read8(0xff00 + C); })
+INS(0xf3, _,_,_,_, 1, 4 , "di", { ime_ = false; })
+INS(0xf5, _,_,_,_, 1, 16, "push af", { SP -= 2; write16(SP, AF); })
 INS(0xf6, Z,0,0,0, 2, 8 , "or a, n8", { A = A | rd8(PC); setFlagZ(A == 0); })
-INS(0xf7, _,_,_,_, 1, 16, "rst $30", {
-    UNIMPLEMENTED;
+INS(0xf7, _,_,_,_, 1, 16, "rst $30", { 
+    SP -= 2; 
+    write16(SP, PC); 
+    PC = 0x30; 
 })
 INS(0xf8, 0,0,H,C, 2, 12, "ld hl, sp, e8", {
     UNIMPLEMENTED;
 })
 INS(0xf9, _,_,_,_, 1, 8 , "ld sp, hl", { SP = HL; })
 INS(0xfa, _,_,_,_, 3, 16, "ld a, [a16]", { A = rd16(PC); })
-INS(0xfb, _,_,_,_, 1, 4 , "ei", {
-    UNIMPLEMENTED;
-})
+INS(0xfb, _,_,_,_, 1, 4 , "ei", { ime_ = true; })
 INS(0xfe, Z,1,H,C, 2, 8 , "cp a, n8", { sub8(A, rd8(PC)); })
-INS(0xff, _,_,_,_, 1, 16, "rst $38", {
-    UNIMPLEMENTED;
+INS(0xff, _,_,_,_, 1, 16, "rst $38", { 
+    SP -= 2; 
+    write16(SP, PC); 
+    PC = 0x38; 
 })
 
 #undef INS

@@ -44,3 +44,22 @@ TEST(memory, storeload8) {
     EXPECT(gbc.readWRAM(0), 0x12);
     EXPECT(gbc.readWRAM(1), 0x13);
 }
+
+TEST(memory, stack) {
+    GBC gbc{};
+    RUN(
+        LD_SP_imm16(0xd000),
+        LD_HL_imm16(0xcffe),
+        LD_B_imm8(0x12),
+        LD_C_imm8(0x34),
+        PUSH_BC,
+        POP_DE,
+        LD_A_incHL,
+    );
+    EXPECT(gbc.sp(), 0xd000);
+    EXPECT(gbc.b(), 0x12);
+    EXPECT(gbc.c(), 0x34);
+    EXPECT(gbc.de(), 0x1234);
+    EXPECT(gbc.a(), 0x34);
+    EXPECT(gbc.hl(), 0xcfff);
+}

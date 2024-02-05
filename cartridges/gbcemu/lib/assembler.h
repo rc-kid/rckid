@@ -1,5 +1,7 @@
 #pragma once
 
+// basic instructions
+
 #define NOP                     0x00
 #define LD_BC_imm16(IMM)        0x01, (IMM & 0xff), (IMM >> 8)
 #define LD_ptrBC_A              0x02
@@ -196,8 +198,154 @@
 #define POP_BC                  0xc1
 #define JP_NZ(ABS)              0xc2, (ABS & 0xff), (ABS >> 8)
 #define JP(ABS)                 0xc3, (ABS & 0xff), (ABS >> 8)
-
+#define CALL_NZ(ABS)            0xc4, (ABS & 0xff), (ABS >> 8)
+#define PUSH_BC                 0xc5
+#define ADD_A_imm8(IMM)         0xc6, IMM
+#define RST_00                  0xc7
+#define RET_Z                   0xc8
+#define RET                     0xc9
 #define JP_Z(ABS)               0xca, (ABS & 0xff), (ABS >> 8)
+// prefix 0xcb
+#define CALL_Z(ABS)             0xcc, (ABS & 0xff), (ABS >> 8)
+#define CALL(ABS)               0xcd, (ABS & 0xff), (ABS >> 8)
+#define ADC_A_imm8(IMM)         0xce, IMM
+#define RST_08                  0xcf
+#define RET_NC                  0xd0
+#define POP_DE                  0xd1
 #define JP_NC(ABS)              0xd2, (ABS & 0xff), (ABS >> 8)       
+// 0xd3 not used
+#define CALL_NC(ABS)            0xd4, (ABS & 0xff), (ABS >> 8)
+#define PUSH_DE                 0xd5
+#define SUB_A_imm8(IMM)         0xd6, IMM
+#define RST_10                  0xd7
+#define RET_C                   0xd8
+#define RETI                    0xd9
 #define JP_C(ABS)               0xda, (ABS & 0xff), (ABS >> 8)
+// 0xdb not used
+#define CALL_C(ABS)             0xdc, (ABS & 0xff), (ABS >> 8)
+// 0xdd not used
+#define SBC_A_imm8(IMM)         0xde, IMM
+#define RST_18                  0xdf
+#define LDH_ptr8_A(IMM)          0xe0, IMM
+#define POP_HL                  0xe1
+#define LD_ptrC_A               0xe2
+// 0xe3 not used
+// 0xe4 not used
+#define PUSH_HL                 0xe5
+#define AND_A_imm8(IMM)         0xe6, IMM
+#define RST_20                  0xe7
+#define ADD_SP_imm8(IMM)        0xe8, static_cast<uint8_t>(IMM)   
 #define JP_HL                   0xe9
+#define LD_ptr16_A(ABS)         0xea, (ABS & 0xff), (ABS >> 8)
+// 0xeb not used
+// 0xec not used
+// 0xed not used
+#define XOR_A_imm8(IMM)         0xee, IMM
+#define RST_28                  0xef
+#define LDH_A_ptr8(IMM)         0xf0, IMM
+#define POP_AF                  0xf1
+#define LD_A_ptrC               0xf2
+#define DI                      0xf3
+// 0xf4 not used
+#define PUSH_AF                 0xf5
+#define OR_A_imm8(IMM)          0xf6, IMM
+#define RST_30                  0xf7
+#define LD_HL_SP_imm8(IMM)      0xf8, IMM
+#define LD_SP_HL                0xf9
+#define LD_A_ptr16(ABS)         0xfa, (ABS & 0xff), (ABS >> 8)
+#define EI                      0xfb
+// 0xfc not used
+// 0xfd not used
+#define CP_A_imm8(ABS)          0xfe
+#define RST_38                  0xff
+
+// extended instructions
+
+#define RLC_B                   0xcb, 0x00
+#define RLC_C                   0xcb, 0x01
+#define RLC_D                   0xcb, 0x02
+#define RLC_E                   0xcb, 0x03
+#define RLC_H                   0xcb, 0x04
+#define RLC_L                   0xcb, 0x05
+#define RLC_ptrHL               0xcb, 0x06
+#define RLC_A                   0xcb, 0x07
+#define RRC_B                   0xcb, 0x08
+#define RRC_C                   0xcb, 0x09
+#define RRC_D                   0xcb, 0x0a
+#define RRC_E                   0xcb, 0x0b
+#define RRC_H                   0xcb, 0x0c
+#define RRC_L                   0xcb, 0x0d
+#define RRC_ptrHL               0xcb, 0x0e
+#define RRC_A                   0xcb, 0x0f
+#define RL_B                    0xcb, 0x10
+#define RL_C                    0xcb, 0x11
+#define RL_D                    0xcb, 0x12
+#define RL_E                    0xcb, 0x13
+#define RL_H                    0xcb, 0x14
+#define RL_L                    0xcb, 0x15
+#define RL_ptrHL                0xcb, 0x16
+#define RL_A                    0xcb, 0x17
+#define RR_B                    0xcb, 0x18
+#define RR_C                    0xcb, 0x19
+#define RR_D                    0xcb, 0x1a
+#define RR_E                    0xcb, 0x1b
+#define RR_H                    0xcb, 0x1c
+#define RR_L                    0xcb, 0x1d
+#define RR_ptrHL                0xcb, 0x1e
+#define RR_A                    0xcb, 0x1f
+#define SLA_B                   0xcb, 0x20
+#define SLA_C                   0xcb, 0x21
+#define SLA_D                   0xcb, 0x22
+#define SLA_E                   0xcb, 0x23
+#define SLA_H                   0xcb, 0x24
+#define SLA_L                   0xcb, 0x25
+#define SLA_ptrHL               0xcb, 0x26
+#define SLA_A                   0xcb, 0x27
+#define STA_B                   0xcb, 0x28
+#define STA_C                   0xcb, 0x29
+#define STA_D                   0xcb, 0x2a
+#define STA_E                   0xcb, 0x2b
+#define STA_H                   0xcb, 0x2c
+#define STA_L                   0xcb, 0x2d
+#define STA_ptrHL               0xcb, 0x2e
+#define STA_A                   0xcb, 0x2f
+#define SWAP_B                  0xcb, 0x30
+#define SWAP_C                  0xcb, 0x31
+#define SWAP_D                  0xcb, 0x32
+#define SWAP_E                  0xcb, 0x33
+#define SWAP_H                  0xcb, 0x34
+#define SWAP_L                  0xcb, 0x35
+#define SWAP_ptrHL              0xcb, 0x36
+#define SWAP_A                  0xcb, 0x37
+#define SRL_B                   0xcb, 0x38
+#define SRL_C                   0xcb, 0x39
+#define SRL_D                   0xcb, 0x3a
+#define SRL_E                   0xcb, 0x3b
+#define SRL_H                   0xcb, 0x3c
+#define SRL_L                   0xcb, 0x3d
+#define SRL_ptrHL               0xcb, 0x3e
+#define SRL_A                   0xcb, 0x3f
+#define BIT_B(BI)               0xcb, (0x40 + BI * 8) 
+#define BIT_C(BI)               0xcb, (0x41 + BI * 8) 
+#define BIT_D(BI)               0xcb, (0x42 + BI * 8) 
+#define BIT_E(BI)               0xcb, (0x43 + BI * 8) 
+#define BIT_H(BI)               0xcb, (0x44 + BI * 8) 
+#define BIT_L(BI)               0xcb, (0x45 + BI * 8) 
+#define BIT_ptrHL(BI)           0xcb, (0x46 + BI * 8) 
+#define BIT_A(BI)               0xcb, (0x47 + BI * 8) 
+#define RES_B(BI)               0xcb, (0x80 + BI * 8) 
+#define RES_C(BI)               0xcb, (0x81 + BI * 8) 
+#define RES_D(BI)               0xcb, (0x82 + BI * 8) 
+#define RES_E(BI)               0xcb, (0x83 + BI * 8) 
+#define RES_H(BI)               0xcb, (0x84 + BI * 8) 
+#define RES_L(BI)               0xcb, (0x85 + BI * 8) 
+#define RES_ptrHL(BI)           0xcb, (0x86 + BI * 8) 
+#define RES_A(BI)               0xcb, (0x87 + BI * 8) 
+#define SET_B(BI)               0xcb, (0xc0 + BI * 8) 
+#define SET_C(BI)               0xcb, (0xc1 + BI * 8) 
+#define SET_D(BI)               0xcb, (0xc2 + BI * 8) 
+#define SET_E(BI)               0xcb, (0xc3 + BI * 8) 
+#define SET_H(BI)               0xcb, (0xc4 + BI * 8) 
+#define SET_L(BI)               0xcb, (0xc5 + BI * 8) 
+#define SET_ptrHL(BI)           0xcb, (0xc6 + BI * 8) 
+#define SET_A(BI)               0xcb, (0xc7 + BI * 8) 

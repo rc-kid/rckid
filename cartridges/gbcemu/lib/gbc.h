@@ -39,6 +39,8 @@ public:
         memMap_[MEMMAP_REGION_WRAM] = wram_;
         memMap_[MEMMAP_REGION_ECHO_RAM] = wram_;
         setWorkRAMBank(1);
+        // start with interrupts enabled
+        ime_ = true;
     }
 
     /** \name Debugging functions
@@ -110,7 +112,6 @@ private:
         - `C` (carry flag)
      */
     //@{
-
     static constexpr size_t REG_INDEX_A = 1;
     static constexpr size_t REG_INDEX_F = 0;
     static constexpr size_t REG_INDEX_B = 3;
@@ -129,7 +130,6 @@ private:
     static constexpr uint8_t FLAG_N = 1 << 6;
     static constexpr uint8_t FLAG_H = 1 << 5;
     static constexpr uint8_t FLAG_C = 1 << 4;    
-
 
     union {
         // a f, b, c, d, e, h, l    
@@ -235,8 +235,7 @@ private:
     }
 
     uint16_t read16(size_t address) {
-        UNIMPLEMENTED;
-        return 0;
+        return read8(address) | read8(address + 1) * 256;
     }
 
     void write8(uint16_t address, uint8_t value) {
@@ -256,7 +255,8 @@ private:
     }
 
     void write16(size_t address, uint16_t value) {
-        UNIMPLEMENTED;
+        write8(address, value & 0xff);
+        write8(address + 1, value >> 8);
     }
 
     /** Faster 8bit read with address increment. Does not work on IO registers, but very useful for PC. 
@@ -335,7 +335,11 @@ private:
 
 
 
+    // number of cycles ellapsed since last timed event
     size_t cycles_;
+
+    // interrupts enabled flag (cannot be read, only set by insns)
+    bool ime_;
 
     // when true, the stop instruction terminates the program, useful for debugging & testing
     bool terminateAfterStop_ = false;
