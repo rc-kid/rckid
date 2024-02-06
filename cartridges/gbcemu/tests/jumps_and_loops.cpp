@@ -11,7 +11,7 @@ TEST(jumps, jp) {
         LD_A_imm8(151),
         // 7
     );
-    EXPECT(gbc.a(), 123);
+    EXPECT(gbc.state().a(), 123);
     EXPECT(gbc.cyclesElapsed(), 8 + 16 + 4);
 }
 
@@ -26,7 +26,7 @@ TEST(jumps, jp_c_nc) {
         LD_A_imm8(151),
         // 7
     );
-    EXPECT(gbc.a(), 151);
+    EXPECT(gbc.state().a(), 151);
     EXPECT(gbc.cyclesElapsed(), 8 + 12 + 8 + 4);
     RUN(
         // 0
@@ -39,7 +39,7 @@ TEST(jumps, jp_c_nc) {
         LD_A_imm8(151),
         // 8
     );
-    EXPECT(gbc.a(), 123);
+    EXPECT(gbc.state().a(), 123);
     EXPECT(gbc.cyclesElapsed(), 8 + 4 + 16 + 4);
 }
 
@@ -50,7 +50,7 @@ TEST(jumps, jr) {
         JR(2),
         LD_A_imm8(151),
     );
-    EXPECT(gbc.a(), 123);
+    EXPECT(gbc.state().a(), 123);
     EXPECT(gbc.cyclesElapsed(), 8 + 12 + 4);
 }
 
@@ -61,7 +61,7 @@ TEST(jumps, jr_c_nc) {
         JR_C(2),
         LD_A_imm8(151),
     );
-    EXPECT(gbc.a(), 151);
+    EXPECT(gbc.state().a(), 151);
     EXPECT(gbc.cyclesElapsed(), 8 + 8 + 8 + 4);
     RUN(
         LD_A_imm8(123),
@@ -69,6 +69,6 @@ TEST(jumps, jr_c_nc) {
         JR_C(2),
         LD_A_imm8(151),
     );
-    EXPECT(gbc.a(), 123);
+    EXPECT(gbc.state().a(), 123);
     EXPECT(gbc.cyclesElapsed(), 8 + 4 + 12 + 4);
 }

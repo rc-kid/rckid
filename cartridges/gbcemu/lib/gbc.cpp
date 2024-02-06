@@ -1,22 +1,19 @@
 #include "gbc.h"
 
-#define A (rawRegs8_[REG_INDEX_A])
-#define B (rawRegs8_[REG_INDEX_B])
-#define C (rawRegs8_[REG_INDEX_C])
-#define D (rawRegs8_[REG_INDEX_D])
-#define E (rawRegs8_[REG_INDEX_E])
-#define H (rawRegs8_[REG_INDEX_H])
-#define L (rawRegs8_[REG_INDEX_L])
-#define AF (rawRegs16_[REG_INDEX_AF])
-#define BC (rawRegs16_[REG_INDEX_BC])
-#define DE (rawRegs16_[REG_INDEX_DE])
-#define HL (rawRegs16_[REG_INDEX_HL])
+#define A (state_.rawRegs8_[State::REG_INDEX_A])
+#define B (state_.rawRegs8_[State::REG_INDEX_B])
+#define C (state_.rawRegs8_[State::REG_INDEX_C])
+#define D (state_.rawRegs8_[State::REG_INDEX_D])
+#define E (state_.rawRegs8_[State::REG_INDEX_E])
+#define H (state_.rawRegs8_[State::REG_INDEX_H])
+#define L (state_.rawRegs8_[State::REG_INDEX_L])
+#define AF (state_.rawRegs16_[State::REG_INDEX_AF])
+#define BC (state_.rawRegs16_[State::REG_INDEX_BC])
+#define DE (state_.rawRegs16_[State::REG_INDEX_DE])
+#define HL (state_.rawRegs16_[State::REG_INDEX_HL])
 
-#define PC (pc_)
-#define SP (sp_)
-
-#define INC8(REG) ++REG; //setFlagsHNZ(REG & 0x0f == 0, 0, REG == 0);
-#define DEC8(REG) ++REG; //setFlagsHNZ(REG & 0x0f == 0, 1, REG == 0);
+#define PC (state_.pc_)
+#define SP (state_.sp_)
 
 static constexpr int val_Z = -1;
 static constexpr int val_N = -1;
@@ -29,15 +26,15 @@ static constexpr int val_1 = 1;
 void GBC::loop() {
     cycles_ = 0;
     while (true) {
-        uint8_t opcode = rd8(pc_);
+        uint8_t opcode = rd8(state_.pc_);
         switch (opcode) {
 #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
     case OPCODE: \
         cycles_ += CYCLES; \
-        if (val_ ## FLAG_Z != -1) setFlagZ(val_ ## FLAG_Z); \
-        if (val_ ## FLAG_N != -1) setFlagN(val_ ## FLAG_N); \
-        if (val_ ## FLAG_H != -1) setFlagH(val_ ## FLAG_H); \
-        if (val_ ## FLAG_C != -1) setFlagC(val_ ## FLAG_C); \
+        if (val_ ## FLAG_Z != -1) state_.setFlagZ(val_ ## FLAG_Z); \
+        if (val_ ## FLAG_N != -1) state_.setFlagN(val_ ## FLAG_N); \
+        if (val_ ## FLAG_H != -1) state_.setFlagH(val_ ## FLAG_H); \
+        if (val_ ## FLAG_C != -1) state_.setFlagC(val_ ## FLAG_C); \
         __VA_ARGS__ \
         break;
 #include "insns.inc.h"

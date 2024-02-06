@@ -4,7 +4,7 @@ TEST(memory, initial_memmap) {
     uint8_t const pgm[] = { STOP(0) };
     GBC gbc{};
     gbc.runTest(pgm, sizeof(pgm));
-    uint8_t const * const * mmap = gbc.memMap();
+    uint8_t const * const * mmap = gbc.state().memMap();
     // first 16kb set to bank 0 of rom
     EXPECT(mmap[0], pgm);
     EXPECT(mmap[1], pgm + 1 * 4096);
@@ -16,18 +16,18 @@ TEST(memory, initial_memmap) {
     EXPECT(mmap[6], pgm + 6 * 4096);
     EXPECT(mmap[7], pgm + 7 * 4096);
     // video ram is set to bank 0
-    EXPECT(mmap[8], gbc.vram());
-    EXPECT(mmap[9], gbc.vram() + 4096);
+    EXPECT(mmap[8], gbc.state().vram());
+    EXPECT(mmap[9], gbc.state().vram() + 4096);
     // external ram is not present
     EXPECT(mmap[10], nullptr);
     EXPECT(mmap[11], nullptr);
     // wram bank 0 fixed
-    EXPECT(mmap[12], gbc.wram());
+    EXPECT(mmap[12], gbc.state().wram());
     // wram bank 1 set to 1
-    EXPECT(mmap[13], gbc.wram() + 4096);
+    EXPECT(mmap[13], gbc.state().wram() + 4096);
     // echo ram set to wram
-    EXPECT(mmap[14], gbc.wram());
-    EXPECT(mmap[15], gbc.wram() + 4096);
+    EXPECT(mmap[14], gbc.state().wram());
+    EXPECT(mmap[15], gbc.state().wram() + 4096);
 }
 
 TEST(memory, storeload8) {
@@ -40,9 +40,9 @@ TEST(memory, storeload8) {
         LD_incHL_A,
     );
     //uint8_t const * const * mmap = gbc.memMap();
-    EXPECT(gbc.hl(), 0xc002);
-    EXPECT(gbc.readWRAM(0), 0x12);
-    EXPECT(gbc.readWRAM(1), 0x13);
+    EXPECT(gbc.state().hl(), 0xc002);
+    EXPECT(gbc.state().wram()[0], 0x12);
+    EXPECT(gbc.state().wram()[1], 0x13);
 }
 
 TEST(memory, stack) {
@@ -56,10 +56,10 @@ TEST(memory, stack) {
         POP_DE,
         LD_A_incHL,
     );
-    EXPECT(gbc.sp(), 0xd000);
-    EXPECT(gbc.b(), 0x12);
-    EXPECT(gbc.c(), 0x34);
-    EXPECT(gbc.de(), 0x1234);
-    EXPECT(gbc.a(), 0x34);
-    EXPECT(gbc.hl(), 0xcfff);
+    EXPECT(gbc.state().sp(), 0xd000);
+    EXPECT(gbc.state().b(), 0x12);
+    EXPECT(gbc.state().c(), 0x34);
+    EXPECT(gbc.state().de(), 0x1234);
+    EXPECT(gbc.state().a(), 0x34);
+    EXPECT(gbc.state().hl(), 0xcfff);
 }

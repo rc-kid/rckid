@@ -11,4 +11,4 @@
 #define C (1 << 4)
 
 #define RUN(...) do { uint8_t pgm[] = { __VA_ARGS__ STOP(0) }; gbc.runTest(pgm, sizeof(pgm)); } while (false)
-#define EXPECT_FLAGS(...) EXPECT((int)gbc.f(), (static_cast<int>(__VA_ARGS__)))
+#define EXPECT_FLAGS(...) EXPECT((int)gbc.state().f(), (static_cast<int>(__VA_ARGS__)))

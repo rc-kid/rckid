@@ -5,7 +5,7 @@ TEST(simple, nop) {
     RUN(
         NOP, 
     );
-    EXPECT(gbc.pc(), 3);
+    EXPECT(gbc.state().pc(), 3);
     EXPECT(gbc.cyclesElapsed(), 8);
 }
 
@@ -17,11 +17,11 @@ TEST(simple, regLoads) {
         LD_C_imm8(0x56),
         LD_HL_imm16(0xc000),
     );
-    EXPECT(gbc.a(), 0x12);
-    EXPECT(gbc.b(), 0x34);
-    EXPECT(gbc.c(), 0x56);
-    EXPECT(gbc.bc(), 0x3456);
-    EXPECT(gbc.hl(), 0xc000);
+    EXPECT(gbc.state().a(), 0x12);
+    EXPECT(gbc.state().b(), 0x34);
+    EXPECT(gbc.state().c(), 0x56);
+    EXPECT(gbc.state().bc(), 0x3456);
+    EXPECT(gbc.state().hl(), 0xc000);
 }
 
 TEST(simple, scf) {
