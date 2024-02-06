@@ -328,6 +328,67 @@ private:
         return static_cast<uint16_t>(r);
     }
 
+    /** Rotate left, set carry
+     */
+    uint8_t rlc8(uint8_t a) {
+        uint16_t r = a << 1;
+        setFlagC(r & 256);
+        r = r | flagC();
+        return (r & 0xff);
+    }
+
+    /** Rotate left through carry. 
+     */
+    uint8_t rl8(uint8_t a) {
+        uint16_t r = a << 1;
+        r = r | flagC();
+        setFlagC(r & 256);
+        return (r & 0xff);
+    }
+
+    /** Rotate right, set carry. 
+     */
+    uint8_t rrc8(uint8_t a) {
+        setFlagC(a & 1);
+        a = a >> 1;
+        a = a | (flagC() ? 128 : 0);
+        return a;
+    }
+
+    /** Rotate right, through carry. 
+     */
+    uint8_t rr8(uint8_t a) {
+        bool cf = flagC();
+        setFlagC(a & 1);
+        a = a >> 1;
+        a = a | (cf ? 128 : 0);
+        return a;
+    }
+
+    /** Shift left, overflow to carry.
+     */
+    uint8_t sla8(uint8_t a) {
+        uint16_t r = a * 2;
+        setFlagC(r & 256);
+        return r & 0xff;
+    }
+
+    /** Shift right, arithmetically, i.e. keep msb intact*/
+    uint8_t sra8(uint8_t a) {
+        setFlagC(a & 1);
+        a = a >> 1;
+        a |= (a & 64) ? 128 : 0;
+        return a;
+    }
+
+    /** Shift right, logically, i.e.msb set to 0. 
+     */
+    uint8_t srl8(uint8_t a) {
+        setFlagC(a & 1);
+        a = a >> 1;
+        return a;
+    }
+
     //@}
 
 

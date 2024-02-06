@@ -9,9 +9,7 @@ INS(0x03, _,_,_,_, 1, 8 , "inc bc", { ++BC; })
 INS(0x04, Z,0,H,_, 1, 4 , "inc b", { B = inc8(B); })
 INS(0x05, Z,1,H,_, 1, 4 , "dec b", { B = dec8(B); })
 INS(0x06, _,_,_,_, 2, 8 , "ld b, n8", { B = rd8(PC); })
-INS(0x07, 0,0,0,C, 1, 4 , "rlca", {
-    UNIMPLEMENTED;
-})
+INS(0x07, 0,0,0,C, 1, 4 , "rlca", { A = rlc8(A); })
 /** Stores stack pointer value at the different address. 
  
     addr = SP & 0xff
@@ -24,9 +22,7 @@ INS(0x0b, _,_,_,_, 1, 8 , "dec bc", { --BC; })
 INS(0x0c, Z,0,H,_, 1, 4 , "inc c", { C = inc8(C); })
 INS(0x0d, Z,1,H,_, 1, 4 , "dec c", { C = dec8(C); })
 INS(0x0e, _,_,_,_, 2, 8 , "ld c, n8", { C = rd8(PC); })
-INS(0x0f, 0,0,0,C, 1, 4 , "rrca", {
-    UNIMPLEMENTED;
-})
+INS(0x0f, 0,0,0,C, 1, 4 , "rrca", { A = rrc8(A); })
 /** The stop instruction is also used to stop a program when necessary, which is used for testing extensively. 
  */
 INS(0x10, _,_,_,_, 2, 4 , "stop n8", {
@@ -40,9 +36,7 @@ INS(0x13, _,_,_,_, 1, 8 , "inc de", { ++DE; })
 INS(0x14, Z,0,H,_, 1, 4 , "inc d", { D = inc8(D); })
 INS(0x15, Z,1,H,_, 1, 4 , "dec d", { D = dec8(D); })
 INS(0x16, _,_,_,_, 2, 8 , "ld d, n8", { D = rd8(PC); })
-INS(0x17, 0,0,0,C, 1, 4 , "rla", {
-    UNIMPLEMENTED;
-})
+INS(0x17, 0,0,0,C, 1, 4 , "rla", { A = rl8(A); })
 INS(0x18, _,_,_,_, 2, 12, "jr e8", {
     int8_t offset = static_cast<int8_t>(rd8(PC));
     PC += offset;
@@ -53,9 +47,7 @@ INS(0x1b, _,_,_,_, 1, 8 , "dec de", { --DE; })
 INS(0x1c, Z,0,H,_, 1, 4 , "inc e", { E = inc8(E); })
 INS(0x1d, Z,1,H,_, 1, 4 , "dec e", { E = dec8(E); })
 INS(0x1e, _,_,_,_, 2, 8 , "ld e, n8", { E = rd8(PC); })
-INS(0x1f, 0,0,0,C, 1, 4 , "rra", {
-    UNIMPLEMENTED;
-})
+INS(0x1f, 0,0,0,C, 1, 4 , "rra", { A = rr8(A); })
 INS(0x20, _,_,_,_, 2, 8 + 4, "jr nz, e8", {
     // 3 cycles when taken, 2 when not taken
     int8_t offset = static_cast<int8_t>(rd8(PC));
@@ -70,8 +62,25 @@ INS(0x23, _,_,_,_, 1, 8 , "inc hl", { ++HL; })
 INS(0x24, Z,0,H,_, 1, 4 , "inc h", { H = inc8(H); })
 INS(0x25, Z,1,H,_, 1, 4 , "dec h", { H = dec8(H); })
 INS(0x26, _,_,_,_, 2, 8 , "ld h, n8", { H = rd8(PC); })
+/** Actually quite fancy adjust instruction for BCD encoded values. 
+ 
+    Using the C, N and H flags, a value in the A register is reconstructed to proper BCD, assuming it has been formed by adding or subtracting BCD numbers before.
+ */
 INS(0x27, Z,_,0,C, 1, 4 , "daa", {
-    UNIMPLEMENTED;
+    if (flagN()) {
+        if (flagC())
+            A -= 0x60;
+        if (flagH())
+            A -= 0x06;
+    } else {
+        if (flagC() || A > 0x99) {
+            A += 0x60;
+            setFlagC(1);
+        }
+        if (flagH() || (A & 0xf) > 0x09) 
+            A += 0x06;
+    }
+    setFlagZ(A == 0);
 })
 INS(0x28, _,_,_,_, 2, 8 + 4, "jr z, e8", {
     // 3 cycles when taken, 2 when not taken
@@ -330,18 +339,30 @@ INS(0xcb, _,_,_,_, 1, 4 , "prefix", {
     }
     switch (eo) {
         case 0: // RLC
+            r = rlc8(r);
+            break;
         case 1: // RRC
+            r = rrc8(r);
+            break;
         case 2: // RL
+            r = rl8(r);
+            break;
         case 3: // RR
+            r = rr8(r);
+            break;
         case 4: // SLA
+            r = sla8(r);
+            break;
         case 5: // SRA
-            UNIMPLEMENTED;
+            r = sra8(r);
+            break;
         case 6: // SWAP
             eo = r & 0xf;
             r = (eo << 4) | (r >> 4);
             break;
         case 7: // SRL
-            UNIMPLEMENTED;
+            r = srl8(r);
+            break;
         default: { // bit operations
             unsigned bit = eo & 7;
             eo = eo >> 3;
