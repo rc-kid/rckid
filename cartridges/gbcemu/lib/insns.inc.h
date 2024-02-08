@@ -335,6 +335,7 @@ INS(0xcb, _,_,_,_, 1, 4 , "prefix", {
         case 4: r = H; break;
         case 5: r = L; break;
         case 6: r = read8(HL); break;
+        default:
         case 7: r = A; break;
     }
     switch (eo) {
@@ -522,8 +523,12 @@ INS(0xf7, _,_,_,_, 1, 16, "rst $30", {
     write16(SP, PC); 
     PC = 0x30; 
 })
-INS(0xf8, 0,0,H,C, 2, 12, "ld hl, sp, e8", {
-    UNIMPLEMENTED;
+INS(0xf8, 0,0,H,C, 2, 12, "ld hl, sp, e8", { 
+    int8_t imm = static_cast<int8_t>(rd8(PC));
+    HL = SP + imm;
+    // a bit weird, but internet suggests this is actually what the instruction does
+    state_.setFlagH((SP & 0xf) + (imm & 0xf) > 0xf);
+    state_.setFlagC((SP & 0xff) + (imm & 0xff) > 0xff);
 })
 INS(0xf9, _,_,_,_, 1, 8 , "ld sp, hl", { SP = HL; })
 INS(0xfa, _,_,_,_, 3, 16, "ld a, [a16]", { A = rd16(PC); })

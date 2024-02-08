@@ -341,7 +341,7 @@ private:
 
         The Z flag is set if the 8bit result is 0. The C flag is set if the result is greater than 256. Finally, the H flag is set if during 
     */
-    uint8_t add8(uint8_t a, uint8_t b, uint8_t c = 0) {
+    uint8_t __force_inline add8(uint8_t a, uint8_t b, uint8_t c = 0) {
         unsigned r = a + b + c;
         state_.setFlagZ((r & 0xff) == 0);
         state_.setFlagH(((a ^ b ^ r) & 0x10) != 0);
@@ -349,7 +349,7 @@ private:
         return static_cast<uint8_t>(r);
     }
 
-    uint8_t sub8(uint8_t a, uint8_t b, uint8_t c = 0) {
+    uint8_t __force_inline sub8(uint8_t a, uint8_t b, uint8_t c = 0) {
         unsigned r = a - (b + c);
         state_.setFlagZ((r & 0xff) == 0);
         state_.setFlagH(((a ^ b ^ r) & 0x10) != 0);
@@ -357,7 +357,7 @@ private:
         return static_cast<uint8_t>(r);
     }
 
-    uint16_t add16(uint16_t a, uint16_t b) {
+    uint16_t __force_inline add16(uint16_t a, uint16_t b) {
         uint32_t r = a + b;
         state_.setFlagC(r > 0xffff);
         state_.setFlagH(((r ^ a ^ b) & 0x1000) != 0);
@@ -366,7 +366,7 @@ private:
 
     /** Rotate left, set carry
      */
-    uint8_t rlc8(uint8_t a) {
+    uint8_t __force_inline rlc8(uint8_t a) {
         uint16_t r = a << 1;
         state_.setFlagC(r & 256);
         r = r | state().flagC();
@@ -375,7 +375,7 @@ private:
 
     /** Rotate left through carry. 
      */
-    uint8_t rl8(uint8_t a) {
+    uint8_t __force_inline rl8(uint8_t a) {
         uint16_t r = a << 1;
         r = r | state().flagC();
         state_.setFlagC(r & 256);
@@ -384,7 +384,7 @@ private:
 
     /** Rotate right, set carry. 
      */
-    uint8_t rrc8(uint8_t a) {
+    uint8_t __force_inline rrc8(uint8_t a) {
         state_.setFlagC(a & 1);
         a = a >> 1;
         a = a | (state().flagC() ? 128 : 0);
@@ -393,7 +393,7 @@ private:
 
     /** Rotate right, through carry. 
      */
-    uint8_t rr8(uint8_t a) {
+    uint8_t __force_inline rr8(uint8_t a) {
         bool cf = state().flagC();
         state_.setFlagC(a & 1);
         a = a >> 1;
@@ -403,14 +403,14 @@ private:
 
     /** Shift left, overflow to carry.
      */
-    uint8_t sla8(uint8_t a) {
+    uint8_t __force_inline sla8(uint8_t a) {
         uint16_t r = a * 2;
         state_.setFlagC(r & 256);
         return r & 0xff;
     }
 
     /** Shift right, arithmetically, i.e. keep msb intact*/
-    uint8_t sra8(uint8_t a) {
+    uint8_t __force_inline sra8(uint8_t a) {
         state_.setFlagC(a & 1);
         a = a >> 1;
         a |= (a & 64) ? 128 : 0;
@@ -419,7 +419,7 @@ private:
 
     /** Shift right, logically, i.e.msb set to 0. 
      */
-    uint8_t srl8(uint8_t a) {
+    uint8_t __force_inline srl8(uint8_t a) {
         state_.setFlagC(a & 1);
         a = a >> 1;
         return a;

@@ -12,9 +12,7 @@ namespace rckid {
     public:
 
         FrameBuffer(): Canvas<COLOR>{320, 240} {
-#if (!defined LIBRCKID_MOCK)            
             ST7789::enterContinuousMode(ST7789::Mode::Single);
-#endif
         }
 
         void startRendering();
@@ -31,10 +29,8 @@ namespace rckid {
         setFont(f);
         setFg(c);
 #endif
-#if (!defined LIBRCKID_MOCK)            
         ST7789::waitVSync();
         ST7789::updatePixels(reinterpret_cast<uint16_t const *>(buffer_), numPixels());
-#endif
     } 
 
     template<>
@@ -42,7 +38,6 @@ namespace rckid {
     public:
 
         FrameBuffer(): Canvas{320, 240} {
-#if (!defined LIBRCKID_MOCK)            
             ST7789::enterContinuousMode(ST7789::Mode::Single);
             gpio_init(RP_PIN_GPIO_16);
             gpio_set_dir(RP_PIN_GPIO_16, GPIO_OUT);
@@ -50,7 +45,6 @@ namespace rckid {
             gpio_set_dir(RP_PIN_GPIO_17, GPIO_OUT);
             gpio_put(RP_PIN_GPIO_16, false);
             gpio_put(RP_PIN_GPIO_17, false);
-#endif
         }
 
         void startRendering() {

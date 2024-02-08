@@ -4,12 +4,15 @@
 
 #include "rckid.h"
 #include "app.h"
+#include "drivers/ST7789.h"
+#include "drivers/audio.h"
 
 
 namespace rckid {
 
     void initialize() {
         // TODO initialize the mock display & friends
+        InitWindow(640, 480, "RCKid");
     }
 
     void yield() {
@@ -41,6 +44,17 @@ namespace rckid {
     }
 
     void Device::tick() {
+        lastState_ = state_;
+        state_.status.setBtnSelect(IsKeyDown(KEY_SPACE));    
+        state_.status.setBtnStart(IsKeyDown(KEY_ENTER));    
+        state_.status.setBtnA(IsKeyDown(KEY_A));    
+        state_.status.setBtnB(IsKeyDown(KEY_B));    
+        state_.status.setDpadLeft(IsKeyDown(KEY_LEFT));    
+        state_.status.setDpadRight(IsKeyDown(KEY_RIGHT));    
+        state_.status.setDpadUp(IsKeyDown(KEY_UP));    
+        state_.status.setDpadDown(IsKeyDown(KEY_DOWN));    
+        if (WindowShouldClose())
+            std::exit(-1);
         // TODO get state
         // UNIMPLEMENTED;
     }
@@ -60,6 +74,44 @@ namespace rckid {
         return 0;
     }
 
+    int x_ = 319; 
+    int y_ = 0;
+    int w_ = 320;
+    int h_ = 240;
+
+    void ST7789::enterContinuousMode(Rect rect, ST7789::Mode mode) {
+        // TODO set W H and stuff
+    }
+
+    void ST7789::leaveContinuousMode() {
+
+    }
+
+    void ST7789::sendMockPixels(uint16_t const * pixels, size_t numPixels) {
+        BeginDrawing();
+        while (numPixels-- != 0) {
+            ColorRGB rgb = ColorRGB::Raw565(*pixels++);
+            DrawRectangle(x_ * 2, y_ * 2, 2, 2, (Color) { rgb.r(), rgb.g(), rgb.b(), 255});
+            if (++y_ == h_) {
+                if (x_-- == 0)
+                    x_ = w_ - 1;
+                y_ = 0;
+            }
+        }
+        EndDrawing();
+    }
+
+    void Audio::initialize() {
+
+    }
+
+    void Audio::startPlayback(SampleRate rate, uint16_t * buffer, size_t bufferSize, CallbackPlay cb) {
+
+    }
+
+    void Audio::stopPlayback() {
+
+    }
 } // namespace rckid
 
 #endif // RCKID_MOCK

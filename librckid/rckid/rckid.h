@@ -14,6 +14,8 @@
     #include <hardware/clocks.h>
     #include <hardware/vreg.h>
     #include <hardware/i2c.h>
+    #include <hardware/gpio.h>
+    #include <hardware/dma.h>
     #include <hardware/uart.h>
     #include <pico/binary_info.h>
     #include <pico/rand.h>

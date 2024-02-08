@@ -32,11 +32,11 @@ int main() {
 //    AudioTestTone test;
 //    test.run();
 
-    start(RawAudioTest{});
+//    start(RawAudioTest{});
 
 //    USBMassStorage game;
 //    game.run();
-//    start(AVRStatusTest{});
+    start(AVRStatusTest{});
 
     //AVRStatusTest test;
     //test.run();

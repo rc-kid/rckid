@@ -40,7 +40,7 @@ namespace rckid {
         bool headphones() const { return raw_[1] & HEADPHONES; }
         bool audioEnabled() const { return raw_[1] & AUDIO_ENABLED; }
 
-#if (defined ARCH_AVR_MEGATINY)
+#if (defined ARCH_AVR_MEGATINY || defined LIBRCKID_MOCK)
 
         void setDpadLeft(bool value = true) { value ? raw_[0] |= DPAD_LEFT : raw_[0] &= ~DPAD_LEFT; }
         void setDpadRight(bool value = true) { value ? raw_[0] |= DPAD_RIGHT : raw_[0] &= ~DPAD_RIGHT; }

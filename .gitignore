@@ -2,6 +2,7 @@ avr/.pio
 libs/pico-sdk
 libs/pico-examples
 libs/sd-card
+libs/raylib
 build*
 __OLD__
 utils/bytes-to-cpp

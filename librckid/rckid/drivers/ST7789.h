@@ -1,9 +1,4 @@
 #pragma once
-#if (! defined LIBRCKID_MOCK)
-
-#include <hardware/gpio.h>
-#include <hardware/pio.h>
-#include <hardware/dma.h>
 
 #include "../rckid.h"
 #include "../graphics/color.h"
@@ -125,7 +120,11 @@ namespace rckid {
             if (!updating_)
                 Stats::updateStart_ = uptime_us();
             updating_ = true;
+#if (! defined LIBRCKID_MOCK)
             dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
+#else       
+            sendMockPixels(pixels, numPixels);
+#endif
         }
 
         /** Updates the entire display area using given profile information. 
@@ -169,11 +168,13 @@ namespace rckid {
         /** Busy waits for the rising edge on the TE display pin, signalling the beginning of the V-blank period. 
          */
         static void waitVSync() { 
+#if (! defined LIBRCKID_MOCK)
             uint64_t t = uptime_us();
             while (gpio_get(RP_PIN_DISP_TE)); 
             while (! gpio_get(RP_PIN_DISP_TE))
                 yield();
             Stats::vsyncWaitUs_ = static_cast<unsigned>(uptime_us() - t);
+#endif
         }
 
     private:
@@ -222,12 +223,18 @@ namespace rckid {
         }
 
         static void sendByte(uint32_t b) {
+#if (! defined LIBRCKID_MOCK)
             gpio_put_masked(0xff << RP_PIN_DISP_DB8, b << RP_PIN_DISP_DB8);
             sleep_ns(40);
             gpio_put(RP_PIN_DISP_WRX, true);
             sleep_ns(40);
             gpio_put(RP_PIN_DISP_WRX, false);
+#endif
         }
+
+#if (defined LIBRCKID_MOCK)
+        static void sendMockPixels(uint16_t const * pixels, size_t numPixels);
+#endif
 
         static void irqDMADone();
 
@@ -289,5 +296,3 @@ namespace rckid {
     }; // rckid::ST7789
 
 } // namespace rckid
-
-#endif // !LIBRCKID_MOCK

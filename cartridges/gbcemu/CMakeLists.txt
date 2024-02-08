@@ -47,7 +47,8 @@ endif()
 if (ARCH STREQUAL "MOCK")
     file(GLOB_RECURSE SRC_TESTS "tests/*.h" "tests/*.cpp")
     add_executable(gbcemu-test ${SRC_TESTS})
-    target_link_libraries(gbcemu-test libgbcemu librckid)
+    target_link_libraries(${TARGET} ${CMAKE_SOURCE_DIR}/libs/raylib/src/libraylib.a)
+    target_link_libraries(gbcemu-test libgbcemu librckid ${CMAKE_SOURCE_DIR}/libs/raylib/src/libraylib.a)
 endif()
 
 
