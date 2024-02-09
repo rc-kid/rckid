@@ -13,43 +13,11 @@ add_compile_options(-Wall
 file(GLOB_RECURSE SRC "rckid/*.cpp" "rckid/*.h")
 
 add_library(librckid ${SRC})
-
+rckid_configure_target(librckid)
 
 if (ARCH STREQUAL "RP2040")
-
     pico_generate_pio_header(librckid ${CMAKE_SOURCE_DIR}/librckid/rckid/drivers/ST7789_rgb.pio)
     pico_generate_pio_header(librckid ${CMAKE_SOURCE_DIR}/librckid/rckid/drivers/ST7789_rgb_double.pio)
-
-    pico_enable_stdio_uart(librckid ENABLED)
-
-    # pull in common dependencies
-    target_link_libraries(librckid
-        pico_stdlib
-        pico_rand
-        pico_unique_id
-        hardware_i2c
-        hardware_pio
-        hardware_spi
-        hardware_dma
-        hardware_pwm
-        #FatFs_SPI
-        tinyusb_board
-        tinyusb_device
-        PNGdec
-        libhelix-mp3
-    )
-
-    # create map/bin/hex file etc.
-    # pico_add_extra_outputs(rckid-test)
-
-else()
-    #target_compile_definitions(librckid PRIVATE LIBRCKID_MOCK)
-
-    # pull in common dependencies
-    target_link_libraries(librckid
-        PNGdec
-        libhelix-mp3
-    )
 endif()
 
 

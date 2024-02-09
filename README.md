@@ -46,8 +46,7 @@ Alternatively, several parts of the RCKid library can also build locally on your
     cmake .. -DARCH=MOCK
     cmake --build . 
 
-
-
+> Be careful, for debugging under WSL, read the following [bug](https://github.com/microsoft/WSL/issues/8516) for now (installing gdb from the PPA as suggested in the discussion works for now)
 
 ==========
 

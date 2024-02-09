@@ -68,6 +68,20 @@
                 "$platformio"
             ]
         },
+        // build-mock
+        {
+            "label": "rckid - local [MOCK]",
+            "command": "bash",
+            "args": [
+                "utils/rckid-mock.sh",
+            ],
+            "options": {
+                "cwd": "",
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
 
     ],
     "version": "2.0.0"

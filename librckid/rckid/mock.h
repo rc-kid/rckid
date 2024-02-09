@@ -22,10 +22,9 @@ inline uint32_t get_rand_32() {
     return std::rand();
 }
 
-inline uint32_t time_us_32() {
-    // TODO
-    return 0;
-}
+inline uint32_t time_us_32() { return static_cast<uint32_t>(GetTime() * 1000000); }
+inline uint64_t to_us_since_boot(double t) { return static_cast<uint64_t>(t * 1000000); }
+inline double get_absolute_time() { return GetTime(); }
 
 inline void gpio_put(int, int) {}
 inline void gpio_init(int) {}

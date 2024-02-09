@@ -9,6 +9,7 @@ if (ARCH STREQUAL "RP2040")
 elseif (ARCH STREQUAL "MOCK")
     message(INFO "Building for the Desktop (Raylib & X11)")
     include_directories(${CMAKE_SOURCE_DIR}/libs/raylib/src)
+    add_compile_definitions("LIBRCKID_MOCK")
 else()
     message(FATAL_ERROR "Invalid architecture specified")
 endif()
@@ -26,11 +27,45 @@ if (ARCH STREQUAL "RP2040")
 else()
     message("Building for local hw (mock)")
     project(rckid2)
-    add_compile_definitions("LIBRCKID_MOCK")
 endif()
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
+
+function(rckid_configure_target target_name) 
+    if (NOT ${target_name} STREQUAL "librckid")
+        target_link_libraries(${target_name} librckid)
+    endif()
+    target_compile_options(${target_name} PRIVATE -Wall)
+if (ARCH STREQUAL "RP2040")
+    get_target_property(target_type ${target_name} TYPE)
+    if (target_type STREQUAL "EXECUTABLE")
+        pico_add_extra_outputs(${target_name})
+        pico_set_linker_script(${target_name} ${CMAKE_SOURCE_DIR}/librckid/memmap.ld)
+    endif()
+    target_link_libraries(${target_name}
+        pico_stdlib
+        pico_rand
+        pico_unique_id
+        hardware_i2c
+        hardware_pio
+        hardware_spi
+        hardware_dma
+        hardware_pwm
+        #FatFs_SPI
+        tinyusb_board
+        tinyusb_device
+        PNGdec
+        libhelix-mp3
+    )
+elseif (ARCH STREQUAL "MOCK")
+    target_link_libraries(${target_name}
+        PNGdec
+        libhelix-mp3
+    )
+    target_link_libraries(${target_name} ${CMAKE_SOURCE_DIR}/libs/raylib/src/libraylib.a)
+endif()
+endfunction()
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/assets)
@@ -39,6 +74,7 @@ include_directories(${CMAKE_SOURCE_DIR}/libs/sd-card)
 include_directories(${CMAKE_SOURCE_DIR}/libs/PNGdec/src)
 include_directories(${CMAKE_SOURCE_DIR}/libs/libhelix-mp3)
 
+add_subdirectory("utils")
 add_subdirectory("librckid")
 #add_subdirectory("libs/sd-card/src")
 add_subdirectory("libs/PNGdec")
@@ -47,11 +83,11 @@ add_subdirectory("cartridges/gbcemu")
 
 add_subdirectory("cartridges/games")
 add_subdirectory("cartridges/test/sandbox")
+add_subdirectory("cartridges/test/audio-test")
 
 
 if (ARCH STREQUAL "RP2040")
     add_subdirectory("avr/rckid")
     add_subdirectory("avr/rckid-test")
-    add_subdirectory("cartridges/test/audio-test")
 endif()
 

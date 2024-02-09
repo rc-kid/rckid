@@ -131,21 +131,11 @@ namespace rckid {
     /** Returns RP2040's uptime in microseconds. 
      */
     inline uint64_t uptime_us() { 
-#if (! defined LIBRCKID_MOCK)
         return to_us_since_boot(get_absolute_time()); 
-#else
-        // TODO UNIMPLEMENTED;
-        return 0;
-#endif 
     }
 
     inline uint32_t uptime_us_32() {
-#if (! defined LIBRCKID_MOCK)
         return time_us_32();
-#else
-        // TODO UNIMPLEMENTED;
-        return 0;
-#endif
     }
 
     /** Returns the current time as kept by the AVR. 
