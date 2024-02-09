@@ -1,8 +1,5 @@
-#include "drivers/ST7789.h"
-
-#include "drivers/audio.h"
-#include "drivers/sd.h"
-
+#include "ST7789.h"
+#include "audio.h"
 #include "app.h"
 
 namespace rckid {

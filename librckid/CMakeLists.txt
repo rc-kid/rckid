@@ -16,8 +16,8 @@ add_library(librckid ${SRC})
 rckid_configure_target(librckid)
 
 if (ARCH STREQUAL "RP2040")
-    pico_generate_pio_header(librckid ${CMAKE_SOURCE_DIR}/librckid/rckid/drivers/ST7789_rgb.pio)
-    pico_generate_pio_header(librckid ${CMAKE_SOURCE_DIR}/librckid/rckid/drivers/ST7789_rgb_double.pio)
+    pico_generate_pio_header(librckid ${CMAKE_SOURCE_DIR}/librckid/rckid/ST7789_rgb.pio)
+    pico_generate_pio_header(librckid ${CMAKE_SOURCE_DIR}/librckid/rckid/ST7789_rgb_double.pio)
 endif()
 
 

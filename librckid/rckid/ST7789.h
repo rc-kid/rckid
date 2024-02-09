@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../rckid.h"
-#include "../graphics/color.h"
-#include "../graphics/primitives.h"
+#include "rckid.h"
+#include "graphics/color.h"
+#include "graphics/primitives.h"
 
 //#include "gpu/graphics.h"
 

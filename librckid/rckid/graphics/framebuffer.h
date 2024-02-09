@@ -2,7 +2,7 @@
 
 #include "canvas.h"
 
-#include "../drivers/ST7789.h"
+#include "../ST7789.h"
 #include "../app.h"
 
 namespace rckid {

@@ -4,15 +4,26 @@
 #include "tusb_config.h"
 #include "tusb.h"
 
+#include <pico/time.h>
+#include <hardware/gpio.h>
+#include <hardware/pio.h>
+#include <hardware/pwm.h>
+#include <hardware/dma.h>
+
 #include "common/config.h"
 #include "rckid.h"
-#include "drivers/ST7789.h"
-#include "drivers/audio.h"
+#include "ST7789.h"
+#include "audio.h"
 #include "app.h"
 
+#include "images/logo-16.h"
+#include "graphics/png.h"
+
+#include "ST7789_rgb.pio.h"
+#include "ST7789_rgb_double.pio.h"
+
+
 extern char __StackLimit, __bss_end__;
-
-
 namespace rckid {
 
     void initialize() {
@@ -120,7 +131,281 @@ namespace rckid {
         return heapSize - mallinfo().uordblks;
     }
 
+    // ============================================================================================
+    // ST7789 Driver
+    // ============================================================================================
 
+    void ST7789::initialize() {
+        // load and initialize the PIO programs for single and double precission
+        pio_ = pio0;
+        sm_ = pio_claim_unused_sm(pio_, true);
+        offsetSingle_ = pio_add_program(pio_, & ST7789_rgb_program);
+        offsetDouble_ = pio_add_program(pio_, & ST7789_rgb_double_program);
+        // initialize the DMA channel and set up interrupts
+        dma_ = dma_claim_unused_channel(true);
+        dmaConf_ = dma_channel_get_default_config(dma_); // create default channel config, write does not increment, read does increment, 32bits size
+        channel_config_set_transfer_data_size(& dmaConf_, DMA_SIZE_16); // transfer 16 bytes
+        channel_config_set_dreq(& dmaConf_, pio_get_dreq(pio_, sm_, true)); // tell our PIO
+        channel_config_set_read_increment(& dmaConf_, true);
+        dma_channel_configure(dma_, & dmaConf_, &pio_->txf[sm_], nullptr, 0, false); // start
+
+        // enable IRQ0 on the DMA channel
+        dma_channel_set_irq0_enabled(dma_, true);
+        //irq_set_exclusive_handler(DMA_IRQ_0, irqDMADone);
+        irq_add_shared_handler(DMA_IRQ_0, irqDMADone,  PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY);
+        irq_set_enabled(DMA_IRQ_0, true);
+        // reset the display
+
+        reset();
+
+        // now clear the entire display black
+#if (defined RCKID_SPLASHSCREEN_OFF)
+        setColumnRange(0, 239);
+        setRowRange(0, 319);
+        beginCommand(RAMWR);
+        gpio_put(RP_PIN_DISP_DCX, true);
+        for (size_t i = 0, e =320 * 240; i < e; ++i) {
+            sendByte(0);
+            sendByte(0);
+        }
+        end();
+#else
+        setDisplayMode(DisplayMode::Natural);
+        setColumnRange(0, 319);
+        setRowRange(0, 239);
+        beginCommand(RAMWR);
+        gpio_put(RP_PIN_DISP_DCX, true);
+        PNG png = PNG::fromBuffer(Logo16, sizeof(Logo16));
+        png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
+            uint8_t const * raw = reinterpret_cast<uint8_t *>(line);
+            for (int i = 0; i < lineWidth; ++i) {
+                sendByte(raw[1]);
+                sendByte(raw[0]);
+                raw += 2;
+            }
+        });
+        end();
+        setDisplayMode(ST7789::DisplayMode::Native);
+#endif
+    }
+
+    void ST7789::reset() {
+        dma_channel_abort(dma_);
+        pio_sm_set_enabled(pio_, sm_, false);
+
+        gpio_init(RP_PIN_DISP_TE);
+        gpio_set_dir(RP_PIN_DISP_TE, GPIO_IN);
+        gpio_init(RP_PIN_DISP_DCX);
+        gpio_set_dir(RP_PIN_DISP_DCX, GPIO_OUT);
+        gpio_init(RP_PIN_DISP_CSX);
+        gpio_set_dir(RP_PIN_DISP_CSX, GPIO_OUT);
+        gpio_put(RP_PIN_DISP_CSX, true);
+
+        initializePinsBitBang();
+
+        // TODO check the init sequence
+        sendCommand(SWRESET);
+        sleep_ms(150);
+        sendCommand(VSCSAD, (uint8_t)0);
+        setColorMode(ColorMode::RGB565);
+        sendCommand(TEON, TE_VSYNC);
+        sendCommand(SLPOUT);
+        sleep_ms(150);
+        sendCommand(DISPON);
+        sleep_ms(150);
+        //sendCommand(MADCTL, (uint8_t)(MADCTL_MV));
+        //sendCommand(MADCTL, (uint8_t)(MADCTL_MY | MADCTL_MV ));
+        //sendCommand(MADCTL, 0_u8);
+        setDisplayMode(ST7789::DisplayMode::Native);
+        sendCommand(INVON);
+    }
+
+    void ST7789::fill(ColorRGB color) {
+        setColumnRange(0, 239);
+        setRowRange(0, 319);
+        beginCommand(RAMWR);
+        gpio_put(RP_PIN_DISP_DCX, true);
+        uint16_t x = color.rawValue16();
+        for (size_t i = 0, e =320 * 240; i < e; ++i) {
+            sendByte((x >> 8) & 0xff);
+            sendByte(x & 0xff);
+        }
+        end();
+    }
+
+    void ST7789::enterContinuousMode(Rect rect, Mode mode) {
+        leaveContinuousMode();
+        setColumnRange(rect.top(), rect.height() - 1);
+        setRowRange(rect.left(), rect.width() - 1);
+        // start the continuous RAM write command
+        beginCommand(RAMWR);
+        gpio_put(RP_PIN_DISP_DCX, true);
+        // initialize the corresponding PIO program
+        switch (mode) {
+            case Mode::Single:
+                ST7789_rgb_program_init(pio_, sm_, offsetSingle_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
+                break;
+            case Mode::Double:
+                ST7789_rgb_double_program_init(pio_, sm_, offsetDouble_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
+                break;
+        }
+        // and start the pio
+        pio_sm_set_enabled(pio_, sm_, true);
+    }
+
+    void ST7789::leaveContinuousMode() {
+        pio_sm_set_enabled(pio_, sm_, false);
+        end(); // end the RAMWR command
+        initializePinsBitBang();
+    }
+
+    void ST7789::initializePinsBitBang() {
+        uint32_t outputPinsMask = (1 << RP_PIN_DISP_WRX) | (0xff << RP_PIN_DISP_DB8); // DB8..DB15 are consecutive
+        gpio_init_mask(outputPinsMask);
+        gpio_set_dir_masked(outputPinsMask, outputPinsMask);
+        //gpio_put_masked(outputPinsMask, false);
+        gpio_put(RP_PIN_DISP_WRX, false);
+    }
+
+    void __not_in_flash_func(ST7789::irqDMADone)() {
+        if(dma_channel_get_irq0_status(dma_)) {
+            dma_channel_acknowledge_irq0(dma_); // clear the flag
+            if (cb_)
+                cb_();
+            else 
+                updating_ = false;
+        }
+    }
+
+    // ============================================================================================
+    // Audio Driver
+    // ============================================================================================
+
+    void Audio::initialize() {
+        // configure the PWM pins
+        gpio_set_function(RP_PIN_PWM_RIGHT, GPIO_FUNC_PWM);
+        gpio_set_function(RP_PIN_PWM_LEFT, GPIO_FUNC_PWM);
+        // configure the audio out PWM
+        //pwm_set_wrap(PWM_SLICE, 254); // set wrap to 8bit sound levels
+        pwm_set_wrap(PWM_SLICE, 4096); // set wrap to 8bit sound levels
+        
+        pwm_set_clkdiv(PWM_SLICE, 1.38); // 12bit depth @ 44.1kHz and 250MHz
+        // set the PWM output to count to 256 441000 times per second
+        //pwm_set_clkdiv(PWM_SLICE, 11.07);
+        //pwm_set_clkdiv(PWM_SLICE, 61.03);
+        // acquire and configure the DMA
+        dma0_ = dma_claim_unused_channel(true);
+        dma1_ = dma_claim_unused_channel(true);
+        /*
+        auto dmaConf = dma_channel_get_default_config(dma_);
+        channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bytes (16 per channel, 2 channels)
+        channel_config_set_read_increment(& dmaConf, true);
+        channel_config_set_dreq(& dmaConf, pwm_get_dreq(TIMER_SLICE)); // DMA is driver by the sample rate PWM
+        //channel_config_set_dreq(&dmaConf, pwm_get_dreq(PWM_SLICE));
+        dma_channel_configure(dma_, & dmaConf, &pwm_hw->slice[PWM_SLICE].cc, nullptr, 0, false);
+        // enable IRQ0 on the DMA channel (shared with SD card and display)
+        dma_channel_set_irq0_enabled(dma_, true);
+        */
+    }
+
+    void Audio::startPlayback(SampleRate rate, uint16_t * buffer, size_t bufferSize, CallbackPlay cb) {
+        configureDMA(dma0_, dma1_, buffer, bufferSize / 2); 
+        configureDMA(dma1_, dma0_, buffer + bufferSize / 2, bufferSize / 2);
+        cbPlay_ = cb;
+        buffer_ = buffer;
+        bufferSize_ = bufferSize;
+        setSampleRate(rate);
+        // add shared IRQ handler on the DMA done
+        irq_add_shared_handler(DMA_IRQ_0, irqDMADone,  PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY);
+        status_ |= PLAYBACK;
+        status_ &= ~ BUFFER_INDEX; // transferring the first half of the buffer
+        dma_channel_start(dma0_);
+        //dma_channel_transfer_from_buffer_now(dma0_, buffer, bufferSize_ / 2);
+        pwm_set_enabled(PWM_SLICE, true);
+        //pwm_set_enabled(TIMER_SLICE, true);
+    }
+
+    void Audio::stopPlayback() {
+        pwm_set_enabled(PWM_SLICE, false);
+        pwm_set_enabled(TIMER_SLICE, false);
+        irq_remove_handler(DMA_IRQ_0, irqDMADone);
+        dma_channel_abort(dma0_);
+        dma_channel_abort(dma1_);
+        status_ &= ~PLAYBACK;
+    }
+
+    void Audio::startRecording(SampleRate rate) {
+
+    }
+
+    void Audio::stopRecording() {
+
+    }
+
+    void Audio::processEvents() {
+        if (status_ & CALLBACK) {
+            status_ &= ~CALLBACK;
+            if (status_ & PLAYBACK) {
+                cbPlay_(buffer_ + ((status_ & BUFFER_INDEX) ? 0 : bufferSize_ / 2), bufferSize_ / 2);
+            } else if (status_ & RECORDING) {
+                UNIMPLEMENTED; 
+            }
+        }
+    }
+
+    void Audio::configureDMA(int dma, int other, uint16_t const * buffer, size_t bufferSize) {
+        auto dmaConf = dma_channel_get_default_config(dma);
+        channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bytes (16 per channel, 2 channels)
+        channel_config_set_read_increment(& dmaConf, true);
+        //channel_config_set_dreq(& dmaConf, pwm_get_dreq(TIMER_SLICE)); // DMA is driver by the sample rate PWM
+        channel_config_set_dreq(&dmaConf, pwm_get_dreq(PWM_SLICE));
+        channel_config_set_chain_to(& dmaConf, other); // chain to the other channel
+        dma_channel_configure(dma, & dmaConf, &pwm_hw->slice[PWM_SLICE].cc, buffer, bufferSize / 2, false); // the buffer consists of stereo samples, (32bits), i.e. buffer size / 2
+        // enable IRQ0 on the DMA channel (shared with SD card and display)
+        dma_channel_set_irq0_enabled(dma, true);
+    }
+
+    void Audio::setSampleRate(uint16_t rate) {
+        // since even the lower frequency (8kHz) can be obtained with a 250MHz (max) sys clock and 16bit wrap, we keep clkdiv at 1 and only change wrap here
+        pwm_set_wrap(TIMER_SLICE, (cpuClockSpeed() * 10 / rate + 5) / 10); 
+    }
+
+    void __not_in_flash_func(Audio::irqDMADone)() {
+        if (dma_channel_get_irq0_status(dma0_)) {
+            dma_channel_acknowledge_irq0(dma0_); // clear the flag
+            // update dma0 address 
+            dma_channel_set_read_addr(dma0_, buffer_, false);
+            // we finished sending first part of buffer and are now sending the second part
+            status_ &= ~BUFFER_INDEX;
+            status_ |= CALLBACK;
+        } else if (dma_channel_get_irq0_status(dma1_)) {
+            dma_channel_acknowledge_irq0(dma1_); // clear the flag
+            // update dma1 address 
+            dma_channel_set_read_addr(dma1_, buffer_ + bufferSize_ / 2, false);
+            // and set the callback appropriately
+            status_ |= BUFFER_INDEX | CALLBACK;
+        }
+        /*
+        if(dma_channel_get_irq0_status(dma_)) {
+            dma_channel_acknowledge_irq0(dma_); // clear the flag
+            if (status_ & PLAYBACK) {
+                status_ |= CALLBACK;
+                if (status_ & BUFFER_INDEX) {
+                    // transfer first half of the buffer
+                    status_ &= ~ BUFFER_INDEX;
+                    dma_channel_transfer_from_buffer_now(dma_, buffer_, bufferSize_ / 2);
+                } else {
+                    // transfer the second half of the buffer
+                    status_ |= BUFFER_INDEX;
+                    // we add 16bit integers, but copy 32bit numbers (stereo)
+                    dma_channel_transfer_from_buffer_now(dma_, buffer_ + bufferSize_, bufferSize_ / 2);
+                }
+            } else if (status_ & RECORDING) {
+                status_ |= CALLBACK;
+            }
+        } */
+    }
+    
 } // namespace rckid
 
 void pio_set_clock_speed(PIO pio, unsigned sm, unsigned hz) {
@@ -130,6 +415,8 @@ void pio_set_clock_speed(PIO pio, unsigned sm, unsigned hz) {
     uint clkfrac = (clk - (clkdiv * kHz)) * 256 / kHz;
     pio_sm_set_clkdiv_int_frac(pio, sm, clkdiv & 0xffff, clkfrac & 0xff);
 } 
+
+
 
 
 #endif // !LIBRCKID_MOCK

@@ -3,7 +3,7 @@
 #include "pico/unique_id.h"
 #include "tusb_config.h"
 #include "tusb.h"
-#include "../apps/system/USBMassStorage.h"
+#include "apps/system/USBMassStorage.h"
 
 using namespace rckid;
 

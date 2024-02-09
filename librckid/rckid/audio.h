@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../rckid.h"
+#include "rckid.h"
 
 namespace rckid {
 
@@ -65,7 +65,7 @@ namespace rckid {
         // slice 5 corresponds to pins 10,11, 26 and 27 which are not available as cartridge GPIO pins
         static constexpr unsigned TIMER_SLICE = 5;
 
-        static void setSampleRate(SampleRate rate);
+        static void setSampleRate(SampleRate rate) { setSampleRate(static_cast<uint16_t>(rate)); }
 
         static void setSampleRate(uint16_t rate);
 

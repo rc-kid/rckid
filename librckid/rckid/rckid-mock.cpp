@@ -4,8 +4,8 @@
 
 #include "rckid.h"
 #include "app.h"
-#include "drivers/ST7789.h"
-#include "drivers/audio.h"
+#include "ST7789.h"
+#include "audio.h"
 
 
 namespace rckid {
@@ -74,16 +74,39 @@ namespace rckid {
         return 0;
     }
 
+
+    // ============================================================================================
+    // ST7789
+    // ============================================================================================
+
     int x_ = 319; 
     int y_ = 0;
     int w_ = 320;
     int h_ = 240;
+
+    void ST7789::initialize() {
+
+    }
+
+    void ST7789::reset() {
+
+    }
+
+    void ST7789::fill(ColorRGB color) {
+
+    }
 
     void ST7789::enterContinuousMode(Rect rect, ST7789::Mode mode) {
         // TODO set W H and stuff
     }
 
     void ST7789::leaveContinuousMode() {
+
+    }
+
+    void ST7789::initializePinsBitBang() {}
+
+    void ST7789::irqDMADone() {
 
     }
 
@@ -101,6 +124,10 @@ namespace rckid {
         EndDrawing();
     }
 
+    // ============================================================================================
+    // Audio Driver
+    // ============================================================================================
+
     void Audio::initialize() {
 
     }
@@ -110,6 +137,30 @@ namespace rckid {
     }
 
     void Audio::stopPlayback() {
+
+    }
+
+    void Audio::startRecording(SampleRate rate) {
+
+    }
+
+    void Audio::stopRecording() {
+
+    }
+
+    void Audio::processEvents() {
+
+    }
+
+    void Audio::configureDMA(int dma, int other, uint16_t const * buffer, size_t bufferSize) {
+
+    }
+
+    void Audio::setSampleRate(uint16_t rate) {
+
+    }
+
+    void Audio::irqDMADone() {
 
     }
 } // namespace rckid

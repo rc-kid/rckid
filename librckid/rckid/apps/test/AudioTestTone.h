@@ -5,7 +5,7 @@
 
 #include "rckid/app.h"
 #include "rckid/graphics/framebuffer.h"
-#include "rckid/drivers/audio.h"
+#include "rckid/audio.h"
 #include "rckid/audio/tone.h"
 
 namespace rckid {

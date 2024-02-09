@@ -5,10 +5,6 @@
 
 ## TODO
 
-- figure out how to do the librckid-mock library and easily link to it
-- using raylib, the mock library can even work with graphics & sound likely
-- make rckid.cpp the only file with platfiorm specific details and have two versions one for mock and one for rckid itself
-
 - check that we can launch apps from the carousel
 
 - add menu font

@@ -1,6 +1,6 @@
 
 #include "rckid/rckid.h"
-#include "rckid/drivers/audio.h"
+#include "rckid/audio.h"
 
 #include "rckid/app.h"
 #include "rckid/graphics/framebuffer.h"
