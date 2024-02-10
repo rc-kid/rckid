@@ -63,3 +63,55 @@ TEST(memory, stack) {
     EXPECT(gbc.state().a(), 0x34);
     EXPECT(gbc.state().hl(), 0xcfff);
 }
+
+TEST(memory, oam) {
+    GBC gbc{};
+    RUN(
+        LD_HL_imm16(0xfe00),
+        LD_A_L,
+        LD_incHL_A,        
+        LD_A_L,
+        LD_incHL_A,        
+        LD_A_L,
+        LD_incHL_A,        
+        LD_HL_imm16(0xfe00),
+        LD_A_incHL,
+        LD_B_A,
+        LD_A_incHL,
+        LD_C_A,
+        LD_A_incHL,
+    );
+    EXPECT(gbc.state().hl(), 0xfe03);
+    EXPECT(gbc.state().oam()[0], 0);
+    EXPECT(gbc.state().oam()[1], 1);
+    EXPECT(gbc.state().oam()[2], 2);
+    EXPECT(gbc.state().b(), 0);
+    EXPECT(gbc.state().c(), 1);
+    EXPECT(gbc.state().a(), 2);
+}
+
+TEST(memory, hram) {
+    GBC gbc{};
+    RUN(
+        LD_HL_imm16(0xff80),
+        LD_A_imm8(10),
+        LD_incHL_A,        
+        INC_A,
+        LD_incHL_A,        
+        INC_A,
+        LD_incHL_A,        
+        LD_HL_imm16(0xff80),
+        LD_A_incHL,
+        LD_B_A,
+        LD_A_incHL,
+        LD_C_A,
+        LD_A_incHL,
+    );
+    EXPECT(gbc.state().hl(), 0xff83);
+    EXPECT(gbc.state().hram()[0], 10);
+    EXPECT(gbc.state().hram()[1], 11);
+    EXPECT(gbc.state().hram()[2], 12);
+    EXPECT(gbc.state().b(), 10);
+    EXPECT(gbc.state().c(), 11);
+    EXPECT(gbc.state().a(), 12);
+}

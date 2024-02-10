@@ -82,6 +82,21 @@
                 "$gcc"
             ]
         },
+        // gbc-tests (mock)
+        {
+            "label": "gbc-tests [MOCK]",
+            "command": "bash",
+            "args": [
+                "utils/gbc-tests-mock.sh",
+            ],
+            "options": {
+                "cwd": "",
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+
 
     ],
     "version": "2.0.0"

@@ -21,6 +21,8 @@ public:
             delete [] vram_;
             delete [] wram_;
             delete [] eram_;
+            delete [] oam_;
+            delete [] highMem_;
         }
     
         /** \name Registers. 
@@ -114,6 +116,13 @@ public:
         size_t wramSize() const { return 32 * 1024; }
         uint8_t * eram() const { return eram_; };
         size_t eramSize() const { return eramSize_; }
+        uint8_t * oam() const { return oam_; }
+        size_t oamSize() const { return 160; }
+        uint8_t * ioRegs() const { return highMem_; }
+        uint8_t * hram() const { return highMem_ + 0x80; }
+        size_t hramSize() const { return 127; }
+        uint8_t * ieReg() const { return highMem_ + 0xff; }
+
         //@}
 
     private:
@@ -159,10 +168,14 @@ public:
             delete [] vram_;
             delete [] wram_;
             delete [] eram_;
+            delete [] oam_;
+            delete [] highMem_;
             vram_ = new uint8_t[VRAM_SIZE];
             wram_ = new uint8_t[WRAM_SIZE]; 
             eram_ = nullptr;
             eramSize_ = 0;
+            oam_ = new uint8_t[oamSize()];
+            highMem_ = new uint8_t[256]; 
             memMap_[MEMMAP_REGION_WRAM] = wram_;
             memMap_[MEMMAP_REGION_ECHO_RAM] = wram_;
             setVideoRAMBank(0);
@@ -220,6 +233,8 @@ public:
         uint8_t * vram_ = nullptr;
         uint8_t * wram_ = nullptr;
         uint8_t * eram_ = nullptr;
+        uint8_t * oam_ = nullptr;
+        uint8_t * highMem_ = nullptr;
         size_t eramSize_ = 0;
 
         bool ime_ = false;
@@ -268,19 +283,24 @@ private:
      */
     //@{
 
-    uint8_t read8(uint16_t address) {
+    uint8_t __force_inline read8(uint16_t address) {
         if (address < 0xfe00) {
             return state_.memMap_[address >> 12][address & 0xfff];
+        } else if (address < 0xfea0) {
+            return state_.oam_[address - 0xfe00];
+        } else if (address >= 0xff00) {
+            return state_.highMem_[address & 0xff];
+        } else {
+            // reading from elsewhere should not be allowed, but to be on the safe side, just return 0
+            return 0;
         }
-        UNIMPLEMENTED;
-        return 0;
     }
 
-    uint16_t read16(uint16_t address) {
+    uint16_t __force_inline read16(uint16_t address) {
         return read8(address) | read8(address + 1) * 256;
     }
 
-    void write8(uint16_t address, uint8_t value) {
+    void __force_inline write8(uint16_t address, uint8_t value) {
         // TODO order according to the most likely outcomes
         if (address < 0x8000) { // rom
             // do nothing 
@@ -291,19 +311,23 @@ private:
             UNIMPLEMENTED; 
         } else if (address < 0xfe00) { // wram & echo ram
             state_.memMap_[address >> 12][address & 0xfff] = value;
+        } else if (address < 0xfea0) { // oam
+            state_.oam_[address - 0xfe00] = value;
+        } else if (address >= 0xff00) { // hram & io
+            state_.highMem_[address & 0xff] = value;
         } else {
-            UNIMPLEMENTED;
+            // technically this is not allowed so ignore it and do nothing
         }
     }
 
-    void write16(uint16_t address, uint16_t value) {
+    void __force_inline write16(uint16_t address, uint16_t value) {
         write8(address, value & 0xff);
         write8(address + 1, value >> 8);
     }
 
     /** Faster 8bit read with address increment. Does not work on IO registers, but very useful for PC. 
      */
-    uint8_t rd8(uint16_t & address) {
+    uint8_t __force_inline rd8(uint16_t & address) {
         uint8_t result = state_.memMap_[address >> 12][address & 0xfff];
         ++address;
         return result;
@@ -311,7 +335,7 @@ private:
 
     /** Faster 16bit read with address increment. Does not work on IO registers, but very useful for PC. 
      */
-    uint16_t rd16(uint16_t & address) {
+    uint16_t __force_inline rd16(uint16_t & address) {
         uint16_t result = * reinterpret_cast<uint16_t*>(state_.memMap_[address >> 12] + (address & 0xfff));
         address += 2;
         return result;
@@ -323,14 +347,14 @@ private:
      */
     //@{
 
-    uint8_t inc8(uint8_t x) {
+    uint8_t __force_inline inc8(uint8_t x) {
         ++x;
         state_.setFlagZ(x == 0);
         state_.setFlagH((x & 0xf) == 0);
         return x;
     }
 
-    uint8_t dec8(uint8_t x) {
+    uint8_t __force_inline dec8(uint8_t x) {
         --x;
         state_.setFlagZ(x == 0);
         state_.setFlagH((x & 0xf) == 0xf);
