@@ -110,18 +110,25 @@ public:
         }
 
         uint8_t const * const * memMap() const { return memMap_; }
+
         uint8_t * vram() const { return vram_; }
         size_t vramSize() const { return 16 * 1024; }
+        
         uint8_t * wram() const { return wram_; };
         size_t wramSize() const { return 32 * 1024; }
+        
         uint8_t * eram() const { return eram_; };
         size_t eramSize() const { return eramSize_; }
+        
         uint8_t * oam() const { return oam_; }
         size_t oamSize() const { return 160; }
+        
         uint8_t * ioRegs() const { return highMem_; }
+        
         uint8_t * hram() const { return highMem_ + 0x80; }
         size_t hramSize() const { return 127; }
-        uint8_t * ieReg() const { return highMem_ + 0xff; }
+        
+        uint8_t & ieReg() const { return highMem_[0xff]; }
 
         //@}
 
@@ -239,6 +246,9 @@ public:
 
         bool ime_ = false;
 
+
+        unsigned rendererDots_ = 0;
+
     }; // GBC::State
 
 
@@ -277,69 +287,122 @@ public:
     //@}
 private:
 
+    static constexpr size_t ADDR_IO_JOYP = 0x00;
+    static constexpr size_t ADDR_IO_SB = 0x01;
+    static constexpr size_t ADDR_IO_SC = 0x02;
+    static constexpr size_t ADDR_IO_DIV = 0x04;
+    static constexpr size_t ADDR_IO_TIMA = 0x05;
+    static constexpr size_t ADDR_IO_TMA = 0x06;
+    static constexpr size_t ADDR_IO_TAC = 0x07;
+    /** The Interrupt Flag Register
+     
+        bit 4 = Joypad
+        bit 3 = Serial
+        bit 2 = Timer
+        bit 1 = LCD
+        bit 0 = VBLANK
+    */
+    static constexpr size_t ADDR_IO_IF = 0x0f;
+    static constexpr uint8_t IF_JOYPAD = 1 << 4;
+    static constexpr uint8_t IF_SERIAL = 1 << 3;
+    static constexpr uint8_t IF_TIMER = 1 << 2;
+    static constexpr uint8_t IF_LCD = 1 << 1;
+    static constexpr uint8_t IF_VBLANK = 1 << 0;
+    static constexpr size_t ADDR_IO_NR10 = 0x10;
+    static constexpr size_t ADDR_IO_NR11 = 0x11;
+    static constexpr size_t ADDR_IO_NR12 = 0x12;
+    static constexpr size_t ADDR_IO_NR13 = 0x13;
+    static constexpr size_t ADDR_IO_NR14 = 0x14;
+    //static constexpr size_t IO_NR20 = 0x15; // not used
+    static constexpr size_t ADDR_IO_NR21 = 0x16;
+    static constexpr size_t ADDR_IO_NR22 = 0x17;
+    static constexpr size_t ADDR_IO_NR23 = 0x18;
+    static constexpr size_t ADDR_IO_NR24 = 0x19;
+    static constexpr size_t ADDR_IO_NR30 = 0x1a;
+    static constexpr size_t ADDR_IO_NR31 = 0x1b;
+    static constexpr size_t ADDR_IO_NR32 = 0x1c;
+    static constexpr size_t ADDR_IO_NR33 = 0x1d;
+    static constexpr size_t ADDR_IO_NR34 = 0x1e;
+    //static constexpr size_t IO_NR40 = 0x1f; // not used
+    static constexpr size_t ADDR_IO_NR41 = 0x20;
+    static constexpr size_t ADDR_IO_NR42 = 0x21;
+    static constexpr size_t ADDR_IO_NR43 = 0x22;
+    static constexpr size_t ADDR_IO_NR44 = 0x23;
+    static constexpr size_t ADDR_IO_NR50 = 0x24;
+    static constexpr size_t ADDR_IO_NR51 = 0x25;
+    static constexpr size_t ADDR_IO_NR52 = 0x26;
+    static constexpr size_t ADDR_IO_WAVE_RAM_0 = 0x30; // 16 bytes
+    /** LCD Control Register
+
+        bit 7 = LCD & PPU enable / disable
+        bit 6 = window tilemap area ( 0 == 0x9800 - 9bff, 1 = 0x9c00 - 0x9fff)
+        bit 5 = window enable 
+        bit 4 = BG & Window tilemap area ( 0 = 0x9800 - 0x9bfff, 1 = 0x9c00 - 0x9fff)
+        bit 3 = BG tilemap area ( 0 = 0x9800 - 0x9bfff, 1 = 0x9c00 - 0x9fff)
+        bit 2 = OBJ size (0 = 8x8, 1 = 8x16)
+        bit 1 = OBJ enable
+        bit 0 = BG/Win enable / priority -- CGB Specific
+    */
+    static constexpr size_t ADDR_IO_LCDC = 0x40;
+    /** Status and interrupts for the LCD driver
+     
+        bit 6 = LYC int select
+        bit 5 = mode 2 int select 
+        bit 4 = mode 1 int select
+        bit 3 = mode 0 int select
+        bit 2 = LYC == LY
+        bits 0 & 1 = PPU mode 
+    */
+    static constexpr size_t ADDR_IO_STAT = 0x41;
+    static constexpr uint8_t STAT_WRITE_MASK = 0b01111100;
+    static constexpr uint8_t STAT_PPU_MODE = 3;
+    static constexpr uint8_t STAT_LYC_EQ_LY = 1 << 2;
+    static constexpr uint8_t STAT_INT_MODE0 = 1 << 3;
+    static constexpr uint8_t STAT_INT_MODE1 = 1 << 4;
+    static constexpr uint8_t STAT_INT_MODE2 = 1 << 5;
+    static constexpr uint8_t STAT_INT_LYC = 1 << 6;
+    static constexpr size_t ADDR_IO_SCY = 0x42;
+    static constexpr size_t ADDR_IO_SCX = 0x43;
+    /** LCD Y Coordinate
+     
+        Contains the current coordinate of the LCD renderer. 0 to 143 is acrtive renderering, 144 to 153 is VBLANK.  
+     */
+    static constexpr size_t ADDR_IO_LY = 0x44;
+    static constexpr size_t ADDR_IO_LYC = 0x45;
+    static constexpr size_t ADDR_IO_DMA = 0x46;
+    static constexpr size_t ADDR_IO_BGB = 0x47;
+    static constexpr size_t ADDR_IO_OBP0 = 0x48;
+    static constexpr size_t ADDR_IO_OBP1 = 0x49;
+    static constexpr size_t ADDR_IO_WY = 0x4a;
+    static constexpr size_t ADDR_IO_WX = 0x4b;
+    static constexpr size_t ADDR_IO_KEY1 = 0x4d;
+    static constexpr size_t ADDR_IO_WBK = 0x4f;
+    static constexpr size_t ADDR_IO_HDMA1 = 0x51;
+    static constexpr size_t ADDR_IO_HDMA2 = 0x52;
+    static constexpr size_t ADDR_IO_HDMA3 = 0x53;
+    static constexpr size_t ADDR_IO_HDMA4 = 0x54;
+    static constexpr size_t ADDR_IO_HDMA5 = 0x55;
+    static constexpr size_t ADDR_IO_RP = 0x56;
+    static constexpr size_t ADDR_IO_BCPS_BGPI = 0x68;
+    static constexpr size_t ADDR_IO_BCPD_BGPD = 0x69;
+    static constexpr size_t ADDR_IO_OCPS_OCPI = 0x6a;
+    static constexpr size_t ADDR_IO_OCPD_OBPD = 0x6b;
+    static constexpr size_t ADDR_IO_PCM12 = 0x76;
+    static constexpr size_t ADDR_IO_PCM34 = 0x77;
+    static constexpr size_t ADDR_IO_IE = 0xff;
+
     State state_;
 
     /** \name Memory Reads and Writes
      */
     //@{
 
-    uint8_t __force_inline read8(uint16_t address) {
-        if (address < 0xfe00) {
-            return state_.memMap_[address >> 12][address & 0xfff];
-        } else if (address < 0xfea0) {
-            return state_.oam_[address - 0xfe00];
-        } else if (address >= 0xff00) {
-            return state_.highMem_[address & 0xff];
-        } else {
-            // reading from elsewhere should not be allowed, but to be on the safe side, just return 0
-            return 0;
-        }
-    }
-
-    uint16_t __force_inline read16(uint16_t address) {
-        return read8(address) | read8(address + 1) * 256;
-    }
-
-    void __force_inline write8(uint16_t address, uint8_t value) {
-        // TODO order according to the most likely outcomes
-        if (address < 0x8000) { // rom
-            // do nothing 
-            // TODO this actually changes the rom bank & eram bank via cartridge mapper
-        } else if (address >= 0x8000 && address < 0xa000) { // vram
-            state_.memMap_[address >> 12][address & 0xfff] = value;
-        } else if (address >= 0xa000 && address < 0xc000) { // eram
-            UNIMPLEMENTED; 
-        } else if (address < 0xfe00) { // wram & echo ram
-            state_.memMap_[address >> 12][address & 0xfff] = value;
-        } else if (address < 0xfea0) { // oam
-            state_.oam_[address - 0xfe00] = value;
-        } else if (address >= 0xff00) { // hram & io
-            state_.highMem_[address & 0xff] = value;
-        } else {
-            // technically this is not allowed so ignore it and do nothing
-        }
-    }
-
-    void __force_inline write16(uint16_t address, uint16_t value) {
-        write8(address, value & 0xff);
-        write8(address + 1, value >> 8);
-    }
-
-    /** Faster 8bit read with address increment. Does not work on IO registers, but very useful for PC. 
-     */
-    uint8_t __force_inline rd8(uint16_t & address) {
-        uint8_t result = state_.memMap_[address >> 12][address & 0xfff];
-        ++address;
-        return result;
-    }
-
-    /** Faster 16bit read with address increment. Does not work on IO registers, but very useful for PC. 
-     */
-    uint16_t __force_inline rd16(uint16_t & address) {
-        uint16_t result = * reinterpret_cast<uint16_t*>(state_.memMap_[address >> 12] + (address & 0xfff));
-        address += 2;
-        return result;
-    }
+    uint8_t read8(uint16_t address);
+    uint16_t read16(uint16_t address);
+    void write8(uint16_t address, uint8_t value);
+    void write16(uint16_t address, uint16_t value);
+    uint8_t __force_inline rd8(uint16_t & address);
+    uint16_t __force_inline rd16(uint16_t & address);
 
     //@}
 
@@ -347,111 +410,42 @@ private:
      */
     //@{
 
-    uint8_t __force_inline inc8(uint8_t x) {
-        ++x;
-        state_.setFlagZ(x == 0);
-        state_.setFlagH((x & 0xf) == 0);
-        return x;
-    }
-
-    uint8_t __force_inline dec8(uint8_t x) {
-        --x;
-        state_.setFlagZ(x == 0);
-        state_.setFlagH((x & 0xf) == 0xf);
-        return x;
-    }
-
-    /** Adds two 8bit numbers, optinally including a carry flag and sets the Z, H and C flags accordingly. 
-
-        The Z flag is set if the 8bit result is 0. The C flag is set if the result is greater than 256. Finally, the H flag is set if during 
-    */
-    uint8_t __force_inline add8(uint8_t a, uint8_t b, uint8_t c = 0) {
-        unsigned r = a + b + c;
-        state_.setFlagZ((r & 0xff) == 0);
-        state_.setFlagH(((a ^ b ^ r) & 0x10) != 0);
-        state_.setFlagC(r > 0xff);
-        return static_cast<uint8_t>(r);
-    }
-
-    uint8_t __force_inline sub8(uint8_t a, uint8_t b, uint8_t c = 0) {
-        unsigned r = a - (b + c);
-        state_.setFlagZ((r & 0xff) == 0);
-        state_.setFlagH(((a ^ b ^ r) & 0x10) != 0);
-        state_.setFlagC(r > 0xff);
-        return static_cast<uint8_t>(r);
-    }
-
-    uint16_t __force_inline add16(uint16_t a, uint16_t b) {
-        uint32_t r = a + b;
-        state_.setFlagC(r > 0xffff);
-        state_.setFlagH(((r ^ a ^ b) & 0x1000) != 0);
-        return static_cast<uint16_t>(r);
-    }
-
-    /** Rotate left, set carry
-     */
-    uint8_t __force_inline rlc8(uint8_t a) {
-        uint16_t r = a << 1;
-        state_.setFlagC(r & 256);
-        r = r | state().flagC();
-        return (r & 0xff);
-    }
-
-    /** Rotate left through carry. 
-     */
-    uint8_t __force_inline rl8(uint8_t a) {
-        uint16_t r = a << 1;
-        r = r | state().flagC();
-        state_.setFlagC(r & 256);
-        return (r & 0xff);
-    }
-
-    /** Rotate right, set carry. 
-     */
-    uint8_t __force_inline rrc8(uint8_t a) {
-        state_.setFlagC(a & 1);
-        a = a >> 1;
-        a = a | (state().flagC() ? 128 : 0);
-        return a;
-    }
-
-    /** Rotate right, through carry. 
-     */
-    uint8_t __force_inline rr8(uint8_t a) {
-        bool cf = state().flagC();
-        state_.setFlagC(a & 1);
-        a = a >> 1;
-        a = a | (cf ? 128 : 0);
-        return a;
-    }
-
-    /** Shift left, overflow to carry.
-     */
-    uint8_t __force_inline sla8(uint8_t a) {
-        uint16_t r = a * 2;
-        state_.setFlagC(r & 256);
-        return r & 0xff;
-    }
-
-    /** Shift right, arithmetically, i.e. keep msb intact*/
-    uint8_t __force_inline sra8(uint8_t a) {
-        state_.setFlagC(a & 1);
-        a = a >> 1;
-        a |= (a & 64) ? 128 : 0;
-        return a;
-    }
-
-    /** Shift right, logically, i.e.msb set to 0. 
-     */
-    uint8_t __force_inline srl8(uint8_t a) {
-        state_.setFlagC(a & 1);
-        a = a >> 1;
-        return a;
-    }
+    uint8_t __force_inline inc8(uint8_t x);
+    uint8_t __force_inline dec8(uint8_t x);
+    uint8_t __force_inline add8(uint8_t a, uint8_t b, uint8_t c = 0);
+    uint8_t __force_inline sub8(uint8_t a, uint8_t b, uint8_t c = 0);
+    uint16_t __force_inline add16(uint16_t a, uint16_t b);
+    uint8_t __force_inline rlc8(uint8_t a);
+    uint8_t __force_inline rl8(uint8_t a);
+    uint8_t __force_inline rrc8(uint8_t a);
+    uint8_t __force_inline rr8(uint8_t a);
+    uint8_t __force_inline sla8(uint8_t a);
+    uint8_t __force_inline sra8(uint8_t a);
+    uint8_t __force_inline srl8(uint8_t a);
 
     //@}
 
+    /** \name PPU
+     
+        The PPU rendering happens in dots. One dot corresponds to 1 clock cycle on Original gameboy, or 2 clock cycles on the faster GBC. There are 144 scanlines with 160 pixels per scanline. Each scanline consists of 456 dots, which are distributed as follows:
 
+        - Mode 2: 80 dots are spent in OAM scan (OAM inaccessible)
+        - Mode 3: 172-289 dots for drawing pixel data  (OAM and VRAM inaccessible)
+        - Mode 0: 87-204 dots for hblank
+
+        The vblank itself is 4560 dots (10 lines), called Mode 1, during which all memory is accessible (same as hblank). 
+
+     */
+    //@{
+
+    void setMode(unsigned mode);
+    void setLY(uint8_t value);
+    void render(size_t dots);
+
+    //@}
+
+    /** The interpreter loop. 
+     */
     void loop();
 
 

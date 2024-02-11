@@ -20,7 +20,8 @@ public:
     }
 
     void update() override {
-
+        GBC gbc{};
+        gbc.start();
     }
 
     void draw() override {

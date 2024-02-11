@@ -79,10 +79,18 @@ namespace rckid {
     // ST7789
     // ============================================================================================
 
-    int x_ = 319; 
-    int y_ = 0;
-    int w_ = 320;
-    int h_ = 240;
+    // state so that we can render properly
+    namespace {
+        int xStart_ = 0;
+        int yStart_ = 0;
+        int x_ = 319; 
+        int y_ = 0;
+        int w_ = 320;
+        int h_ = 240;
+        ST7789::DisplayMode displayMode_ = ST7789::DisplayMode::Native;
+        ST7789::Mode mode_ = ST7789::Mode::Single;
+    }
+
 
     void ST7789::initialize() {
 
