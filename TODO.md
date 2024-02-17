@@ -36,16 +36,10 @@
 
 ## PCB
 
-- should INA219 be added to battery protection and AVR changed to 3217 or some such for extra pins for battery management so that we can disconnect the charger programmaticaly? If yes, preorder the parts
-- see if the battery leads can also be different distances from the battery
+- try the backlight current limiting to be 3.7Ohm for ~90mA max current, or actually 10Ohm as per the datasheet -- CHECK THIS VALUE ON V1, make the resistor smaller size
+- determine level shifter resistor value
+- update charging resistor value for the new charger
 
-- try the backlight current limiting to be 3.7Ohm for ~90mA max current, or actually 10Ohm as per the datasheet -- CHECK THIS VALUE ON V1
-- increase pads for the bottom side button for easier hand solderablity (CHECK printed)
-- pull-up resistors & termination resistors for the SD card (the sd card library has some info) - check is right
-- verify button positions
-
-- for final version make level shifter resistor small again and align the mosfet with above DCDC converter
-- backlight resistor should be small too
 
 ## RP
 
@@ -55,6 +49,8 @@
 - SWAP MIC & PWM and mic CLK and DATA !!!!!
 
 ## AVR
+
+- changed to ATTiny3217, new pinout and options
 
 - on AVR ABXY and BTN2 pins are swapped
 - DPad buttons are swapped

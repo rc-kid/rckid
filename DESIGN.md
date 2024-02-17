@@ -40,6 +40,12 @@ R2 should be lower than 500kOhm, so the values of `R1 = 390kOhm` and `R2 = 68kOh
 
 2k2 resistor gives us 450mA charging. 
 
+## Current Consumption
+
+INA219 is used to measure the current. Based on the datasheet, Current LSB (2)
+
+    CurrentLSB = 2 / 2^15
+
 
 ## Crystal
 
