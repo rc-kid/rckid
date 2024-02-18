@@ -41,6 +41,18 @@ namespace rckid {
 
         Writer text(Point p) { return text(p.x(), p.y()); }
 
+        Writer textMultiline(int x, int y) {
+            int startX = x;
+            return Writer{[this, x, y, startX] (char c) mutable {
+                if (c != '\n') {
+                    x += drawGlyph(x, y, c, fg_, font_, 1);
+                } else {
+                    x = startX;
+                    y += font().yAdvance;
+                }
+            }};
+        }
+
         /// TODO: Move this to font so that we can share this between different color bpps
         int textWidth(std::string const & text) const { return textWidth(text.c_str()); }
 

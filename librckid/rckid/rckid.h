@@ -28,6 +28,7 @@
 #include "common/commands.h"
 
 #include "writer.h"
+#include "sensors.h"
 
 inline uint8_t operator "" _u8(unsigned long long value) { return static_cast<uint8_t>(value); }
 inline uint16_t operator "" _u16(unsigned long long value) { return static_cast<uint16_t>(value); }
@@ -122,7 +123,67 @@ namespace rckid {
      */
     unsigned tempAvr();
 
+    unsigned tempAccel();
+
+    int16_t accelX(); 
+    int16_t accelY();
+    int16_t accelZ();
+    int16_t gyroX();
+    int16_t gyroY();
+    int16_t gyroZ();
+
+    uint16_t lightAmbient();
+    uint16_t lightUV(); 
+
     //}
+
+    /** \name I2C Communication 
+     */
+    //@{
+
+    inline bool i2cDevicePresent(uint8_t address) {
+        uint8_t x_;
+        return i2c_read_blocking(i2c0, address, & x_, 1, false) >= 0;
+    }
+
+    inline size_t i2cDeviceRead(uint8_t address, uint8_t * buffer, uint8_t numBytes) {
+        return i2c_read_blocking(i2c0, address, buffer, numBytes, false);
+    }
+
+    inline size_t i2cDeviceWrite(uint8_t address, uint8_t const * buffer, uint8_t numBytes) {
+        return i2c_write_blocking(i2c0, address, buffer, numBytes, false);
+    }
+
+    inline size_t i2cDeviceWriteThenRead(uint8_t address, uint8_t const * wrBuffer, size_t wrSize, uint8_t * rdBuffer, size_t rdSize) {
+        i2c_write_blocking(i2c0, address, wrBuffer, wrSize, true);
+        return i2c_read_blocking(i2c0, address, rdBuffer, rdSize, false);
+    }
+
+    inline uint8_t i2cRegisterRead8(uint8_t address, uint8_t reg) {
+        uint8_t result;
+        i2c_write_blocking(i2c0, address, & reg, 1, true);
+        i2c_read_blocking(i2c0, address, & result, 1, false);
+        return result;
+    }
+
+    inline bool i2cRegisterWrite8(uint8_t address, uint8_t reg, uint8_t value) {
+        uint8_t x[] = { reg, value };
+        return i2c_write_blocking(i2c0, address, x, 2, false) >= 0;
+    }
+
+    inline uint16_t i2cRegisterRead16(uint8_t address, uint8_t reg) {
+        uint16_t result;
+        i2c_write_blocking(i2c0, address, & reg, 1, true);
+        i2c_read_blocking(i2c0, address, reinterpret_cast<uint8_t *>(& result), 2, false);
+        return result;
+    }
+
+    inline bool i2cRegisterWrite16(uint8_t address, uint8_t reg, uint16_t value) {
+        uint8_t x[3] = { reg, static_cast<uint8_t>(value & 0xff), static_cast<uint8_t>(value >> 8)};
+        return i2c_write_blocking(i2c0, address, x, 3, false) >= 0;
+    }
+
+    //@}
 
     /** \name Real Time Clock
      */
@@ -150,6 +211,7 @@ namespace rckid {
     size_t cpuClockSpeed();
 
     void sleep_ns(uint32_t ns);
+    inline void delay_ms(uint32_t ms) { sleep_ms(ms); }
 
     void cpuOverclock(unsigned hz = 250000000, bool overvolt = true);
     //@}
@@ -174,11 +236,18 @@ namespace rckid {
         friend class BaseApp;
         friend class Audio;
 
+        static inline uint32_t ticks_ = 0;
+
         static inline size_t clockSpeed_ = 125000000;
 
         static inline State state_;
         static inline State lastState_;
 
+        static inline BMI160::State accelState_;
+
+        static inline uint16_t lightALS_ = 0;
+        static inline uint16_t lightUV_ = 0;
+       
         template<typename T>
         static void sendCommand(T const & cmd) {
             /// TODO: ensure T is a command
@@ -218,6 +287,17 @@ namespace rckid {
 
         friend unsigned tempAvr() { return state_.info.temp(); }
 
+        friend int16_t accelX() { return accelState_.accelX; }
+        friend int16_t accelY() { return accelState_.accelY; }
+        friend int16_t accelZ() { return accelState_.accelZ; }
+        friend int16_t gyroX() { return accelState_.gyroX; }
+        friend int16_t gyroY() { return accelState_.gyroY; }
+        friend int16_t gyroZ() { return accelState_.gyroZ; }
+
+
+        friend uint16_t lightAmbient() { return lightALS_; }
+        friend uint16_t lightUV() { return lightUV_; }
+
         friend TinyDate time() { return state_.time; }
 
         friend void sleep_ns(uint32_t ns);
@@ -230,6 +310,8 @@ namespace rckid {
         static inline int fatalErrorLine_ = 0;
         static inline char const * fatalErrorFile_ = nullptr;
 
+
+        static void initializeSensors();
     }; 
 
     /** Various performance metrics. 

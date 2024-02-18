@@ -83,6 +83,7 @@ add_subdirectory("cartridges/gbcemu")
 
 add_subdirectory("cartridges/games")
 add_subdirectory("cartridges/test/sandbox")
+add_subdirectory("cartridges/test/hw-test")
 add_subdirectory("cartridges/test/audio-test")
 
 

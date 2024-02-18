@@ -19,6 +19,7 @@
 #include "images/logo-16.h"
 #include "graphics/png.h"
 
+#include "sensors.h"
 #include "ST7789_rgb.pio.h"
 #include "ST7789_rgb_double.pio.h"
 
@@ -37,9 +38,9 @@ namespace rckid {
         gpio_set_function(RP_PIN_SCL, GPIO_FUNC_I2C);
         // Make the I2C pins available to picotool
         bi_decl(bi_2pins_with_func(RP_PIN_SDA, RP_PIN_SCL, GPIO_FUNC_I2C));  
-        // TODO detect and initialize the standard peripherals
+        Device::initializeSensors();
         // TODO serial if necessary
-        tud_init(BOARD_TUD_RHPORT);    
+        tud_init(BOARD_TUD_RHPORT);
         LOG("RCKid initialized");
     }
 
@@ -99,6 +100,7 @@ namespace rckid {
     // 4.4ms for system currently
 
     void Device::tick() {
+        ++ticks_;
         lastState_ = state_;
         // query the AVR for the status bytes, first set the address
         i2c0->hw->enable = 0;
@@ -117,6 +119,17 @@ namespace rckid {
         for (int i = 0; i < 6; ++i)
             *(raw++) = i2c0->hw->data_cmd;
         // i2c_read_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t *)& state_, sizeof(State), false);
+
+        BMI160::measure(accelState_);
+        if (ticks_ % 8 == 0) {
+            if ((ticks_ & 16) == 0) {
+                lightALS_ = LTR390UV::measureALS();
+                LTR390UV::startUV();
+            } else {
+                lightUV_ = LTR390UV::measureUV();
+                LTR390UV::startALS();
+            }
+        }
     }
 
     void Device::BSOD(int code) {
@@ -124,6 +137,12 @@ namespace rckid {
         ST7789::reset();
         ST7789::fill(ColorRGB::Blue());
         while(true) {}
+    }
+
+    void Device::initializeSensors() {
+        BMI160::initialize();
+        LTR390UV::initialize();
+        LTR390UV::startALS();
     }
 
     size_t Stats::freeHeap() {
@@ -405,7 +424,68 @@ namespace rckid {
             }
         } */
     }
-    
+
+    // ============================================================================================
+    // BMI160 Accelerometer & Gyro + BMI150 Magnetometer driver
+    // ============================================================================================
+
+    bool BMI160::isPresent() {
+        if (!i2cDevicePresent(I2C_ADDRESS))
+            return false;
+        return i2cRegisterRead8(I2C_ADDRESS, REG_CHIP_ID) == CHIP_ID;
+    }
+
+    void BMI160::initialize() {
+        // TODO the initialization does not work atm for magnetometer, maybe it needs to be initialized first using the manual interface?
+        i2cRegisterWrite8(I2C_ADDRESS, REG_CMD, CMD_ACCEL_ON);
+        delay_ms(5);
+        i2cRegisterWrite8(I2C_ADDRESS, REG_CMD, CMD_GYRO_ON);
+        delay_ms(90);
+    }
+
+    void BMI160::measure(State & state) {
+        // TODO make this non-blocking
+        i2c_write_blocking(i2c0, I2C_ADDRESS, & REG_DATA, 1, true);
+        i2c_read_blocking(i2c0, I2C_ADDRESS, reinterpret_cast<uint8_t *>(& state), sizeof(State), false);
+    }
+
+    // ============================================================================================
+    // LTR390UV Ambient & UV light Sensor driver
+    // ============================================================================================
+
+    bool LTR390UV::isPresent() {
+        if (!i2cDevicePresent(I2C_ADDRESS))
+            return false;
+        return (i2cRegisterRead8(I2C_ADDRESS, REG_PART_ID) & 0xf0) == PART_ID;
+    }
+
+    void LTR390UV::initialize() {
+        i2cRegisterWrite8(I2C_ADDRESS, REG_MEAS_RATE, MEAS_RATE_16bit_25ms);
+        i2cRegisterWrite8(I2C_ADDRESS, REG_GAIN, GAIN_18);
+    }
+
+    void LTR390UV::startALS() {
+        i2cRegisterWrite8(I2C_ADDRESS, REG_CTRL, CTRL_ALS_EN);
+    }
+
+    uint16_t LTR390UV::measureALS() {
+        uint8_t data[3];
+        i2c_write_blocking(i2c0, I2C_ADDRESS, & REG_DATA_ALS, 1, true);
+        i2c_read_blocking(i2c0, I2C_ADDRESS, data, 3, false);
+        return data[0] + data[1] * 256;
+    }
+
+    void LTR390UV::startUV() {
+        i2cRegisterWrite8(I2C_ADDRESS, REG_CTRL, CTRL_UV_EN);
+    }
+
+    uint16_t LTR390UV::measureUV() {
+        uint8_t data[3];
+        i2c_write_blocking(i2c0, I2C_ADDRESS, & REG_DATA_UV, 1, true);
+        i2c_read_blocking(i2c0, I2C_ADDRESS, data, 3, false);
+        return data[0] + data[1] * 256;
+    }
+
 } // namespace rckid
 
 void pio_set_clock_speed(PIO pio, unsigned sm, unsigned hz) {
@@ -415,8 +495,5 @@ void pio_set_clock_speed(PIO pio, unsigned sm, unsigned hz) {
     uint clkfrac = (clk - (clkdiv * kHz)) * 256 / kHz;
     pio_sm_set_clkdiv_int_frac(pio, sm, clkdiv & 0xffff, clkfrac & 0xff);
 } 
-
-
-
 
 #endif // !LIBRCKID_MOCK

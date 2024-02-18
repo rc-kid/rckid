@@ -53,6 +53,14 @@ namespace rckid {
             return *this;
         }
 
+        Writer & operator << (int16_t x) {
+            if (x < 0) {
+                putChar_('-');
+                x = -x;
+            }
+            return (*this) << static_cast<uint16_t>(x);
+        }
+
         Writer & operator << (int32_t x) {
             if (x < 0) {
                 putChar_('-');

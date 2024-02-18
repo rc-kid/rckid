@@ -5,6 +5,10 @@
 
 ## TODO
 
+- steps counter - might need battery to verify
+- accelerometer reported temperature
+- check UV light detector
+
 - check that we can launch apps from the carousel
 
 - add menu font
@@ -39,7 +43,8 @@
 - try the backlight current limiting to be 3.7Ohm for ~90mA max current, or actually 10Ohm as per the datasheet -- CHECK THIS VALUE ON V1, make the resistor smaller size
 - determine level shifter resistor value
 - update charging resistor value for the new charger
-
+- extra AVR pin can be used to pull the RDX display line down and we can also read the graphic data
+- center the above display stuff
 
 ## RP
 
