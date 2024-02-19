@@ -13,10 +13,8 @@ namespace rckid {
 
         TODO:
 
-          - actually the random random permutation cannot be always solved
           - support different picture sizes
           - support multiple tile sizes
-          - animate transitions
           - dpad wiring seems counterintuitive atm
           - add accelerometer as input
 
@@ -42,26 +40,26 @@ namespace rckid {
             shuffle_ = 0;
             holeX_ = -1;
             holeY_ = -1;
-            //Renderer & r = renderer();
-            //r.setBg(Color::RGB(128, 128, 128));
-            //r.fill(Rect::XYWH(320 - 40, 240 - 40, 40, 40));
         }
 
         void update() override {
             if (pressed(Btn::Start))
-                shuffle_ = 20;
+                resetGame(20);
+                // shuffle_ = 20;
             if (dir_ == Btn::Home) {
+                oldX_ = holeX_;
+                oldY_ = holeY_;
                 Renderer & r = renderer();
-                if (pressed(Btn::Left) && (holeX_ < MAX_X) && (holeX_ >= 0)) {
+                if (pressed(Btn::Left) && canMoveLeft()) {
                     holeX_ += 1;
                     dir_ = Btn::Left;
-                } else if (pressed(Btn::Right) && (holeX_ > 0)) {
+                } else if (pressed(Btn::Right) && canMoveRight()) {
                     holeX_ -= 1;
                     dir_ = Btn::Right;
-                } else if (pressed(Btn::Up) && (holeY_ < MAX_Y) && (holeY_ >= 0)) {
+                } else if (pressed(Btn::Up) && canMoveUp()) {
                     holeY_ += 1;
                     dir_ = Btn::Up;
-                } else if (pressed(Btn::Down) && (holeY_ > 0)) {
+                } else if (pressed(Btn::Down) && canMoveDown()) {
                     holeY_ -= 1;
                     dir_ = Btn::Down;
                 } else {
@@ -76,18 +74,10 @@ namespace rckid {
             Renderer & r = renderer();
             a_.update();
             if (shuffle_ > 0) {
-                int x1 = get_rand_32() % (320 / TILE_WIDTH);
-                int y1 = get_rand_32() % (240 / TILE_HEIGHT);
-                int x2 = get_rand_32() % (320 / TILE_WIDTH);
-                int y2 = get_rand_32() % (240 / TILE_HEIGHT);
-                swapTiles(x1, y1, x2, y2);
-                if (--shuffle_ == 0) {
-                    holeX_ = MAX_X;
-                    holeY_ = MAX_Y;
-                    hole_.draw(r, 0, 0, tileRect(holeX_, holeY_));
-                    r.setBg(Color::RGB(128, 128, 128));
-                    r.fill(tileRect(holeX_, holeY_));
-                }
+                shuffleMove();
+                shuffleMove();
+                shuffleMove();
+                --shuffle_;
             }
             switch (dir_) {
                 case Btn::Left:
@@ -109,18 +99,76 @@ namespace rckid {
                 default:
                     break; // nothing to do for other controls
             }
-            if (!a_.running())
+            if (dir_ != Btn::Home && !a_.running() && shuffle_ == 0) {
                 dir_ = Btn::Home;
+                if (swapTileMap(oldX_, oldY_, holeX_, holeY_)) {
+                    // tada, game is finished
+                    r.draw(hole_, tilePoint(holeX_, holeY_));
+                    holeX_ = -1;
+                    holeY_ = -1;
+                }
+            }
         }
 
-        void swapTiles(int x1, int y1, int x2, int y2) {
+        void resetGame(unsigned moves) {
             Renderer & r = renderer();
-            Rect t1 = tileRect(x1, y1);
-            Rect t2 = tileRect(x2, y2);
-            tmp_.draw(r, 0, 0, t1);
-            r.draw(r, tilePoint(x1, y1), t2);
-            r.draw(tmp_, tilePoint(x2, y2));
+            r.loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
+            // set the hole and fill in the hole canvas
+            holeX_ = MAX_X;
+            holeY_ = MAX_Y;
+            hole_.draw(r, 0, 0, tileRect(holeX_, holeY_));
+            r.setBg(Color::RGB(128, 128, 128));
+            r.fill(tileRect(holeX_, holeY_));
+            // reset the tilemap
+            for (int i = 0; i < NUM_TILES; ++i)
+                tileMap_[i] = i;
+            // set the number of shuffle moves
+            shuffle_ = moves;
         }
+
+        void shuffleMove() {
+            // figure out which move to make
+            int x = holeX_;
+            int y = holeY_;
+            int t = get_rand_32() % 4;
+            while (true) {
+                if (t == 0 && canMoveLeft())
+                    holeX_ += 1;
+                else if (t == 1 && canMoveRight())
+                    holeX_ -= 1;
+                else if (t == 2 && canMoveUp())
+                    holeY_ += 1;
+                else if (t == 3 && canMoveDown())
+                    holeY_ -= 1;
+                else {
+                    t = (t + 1) % 4;
+                    continue;
+                }
+                break;
+            }
+            // swap the tiles
+            Renderer & r = renderer();
+            Rect t1 = tileRect(x, y);
+            Rect t2 = tileRect(holeX_, holeY_);
+            tmp_.draw(r, 0, 0, t1);
+            r.draw(r, tilePoint(x, y), t2);
+            r.draw(tmp_, tilePoint(holeX_, holeY_));
+            // update the tilemap
+            swapTileMap(x, y, holeX_, holeY_);
+        }
+
+        bool swapTileMap(int x1, int y1, int x2, int y2) {
+            std::swap(tileMap_[y1 * MAX_X + x1], tileMap_[y2 * MAX_X + x2]);
+            for (int i = 0; i < NUM_TILES; ++i)
+                if (tileMap_[i] != i)
+                    return false;
+            return true;
+        }
+
+        bool canMoveLeft() { return holeX_ < MAX_X && holeX_ >= 0; }
+        bool canMoveRight() { return holeX_ > 0; }
+        bool canMoveUp() { return holeY_ < MAX_Y && holeY_ >= 0; }
+        bool canMoveDown() { return holeY_ > 0; }
 
     private:
 
@@ -129,6 +177,8 @@ namespace rckid {
 
         static constexpr int MAX_X = 320 / TILE_WIDTH - 1;
         static constexpr int MAX_Y = 240 / TILE_HEIGHT - 1;
+
+        static constexpr int NUM_TILES = (MAX_X + 1) * (MAX_Y + 1);
 
         Rect tileRect(int x, int y) {
             return Rect::XYWH(x * TILE_WIDTH, y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT);
@@ -141,10 +191,12 @@ namespace rckid {
         Canvas<Color> hole_{TILE_WIDTH,TILE_HEIGHT};
         Canvas<Color> tmp_{TILE_WIDTH,TILE_HEIGHT};
 
-        uint8_t * tileMap_ = nullptr;
+        uint8_t tileMap_[NUM_TILES];
 
-        int holeX_;
-        int holeY_;
+        int holeX_ = -1;
+        int holeY_ = -1;
+        int oldX_ = -1;
+        int oldY_ = -1;
 
         size_t shuffle_ = 0;
 
