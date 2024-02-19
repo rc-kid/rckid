@@ -138,27 +138,42 @@ namespace rckid {
     //}
 
     /** \name I2C Communication 
+     
+        Provides blocking implementation of the basic I2C transactions (check, read, write, reg read and reg write). As the I2C bus is shared between the user application and the RCKid's system, those functions should only be used in the update() method where the system is guaranteed not to use the I2C bus. 
+
+        The I2C bus is available on the cartridge as well and can therefore be used to communicate with various cartridge specific hardware. 
      */
     //@{
 
+    /** Determines if an I2C device responds on the given address. 
+     */
     inline bool i2cDevicePresent(uint8_t address) {
         uint8_t x_;
         return i2c_read_blocking(i2c0, address, & x_, 1, false) >= 0;
     }
 
+    /** Reads given number of bytes from the device. Returns the number of bytes received. 
+     */
     inline size_t i2cDeviceRead(uint8_t address, uint8_t * buffer, uint8_t numBytes) {
         return i2c_read_blocking(i2c0, address, buffer, numBytes, false);
     }
 
+    /** Writes the given number of bytes to the provided device. Returns the number of bytes successfully sent. 
+     
+        TODO is this true? 
+     */
     inline size_t i2cDeviceWrite(uint8_t address, uint8_t const * buffer, uint8_t numBytes) {
         return i2c_write_blocking(i2c0, address, buffer, numBytes, false);
     }
 
+    /** First writes, then reads immediately (w/o releasing the bus) provided bytes. Returns the number of bytes received.  */
     inline size_t i2cDeviceWriteThenRead(uint8_t address, uint8_t const * wrBuffer, size_t wrSize, uint8_t * rdBuffer, size_t rdSize) {
         i2c_write_blocking(i2c0, address, wrBuffer, wrSize, true);
         return i2c_read_blocking(i2c0, address, rdBuffer, rdSize, false);
     }
 
+    /** Reads 8bit register from device. 
+     */
     inline uint8_t i2cRegisterRead8(uint8_t address, uint8_t reg) {
         uint8_t result;
         i2c_write_blocking(i2c0, address, & reg, 1, true);
@@ -166,11 +181,15 @@ namespace rckid {
         return result;
     }
 
+    /** Writes value of given 8bit register. 
+     */
     inline bool i2cRegisterWrite8(uint8_t address, uint8_t reg, uint8_t value) {
         uint8_t x[] = { reg, value };
         return i2c_write_blocking(i2c0, address, x, 2, false) >= 0;
     }
 
+    /** Reads given 16 bit register (little endian). 
+     */
     inline uint16_t i2cRegisterRead16(uint8_t address, uint8_t reg) {
         uint16_t result;
         i2c_write_blocking(i2c0, address, & reg, 1, true);
@@ -178,10 +197,20 @@ namespace rckid {
         return result;
     }
 
+    /** Writes the given 16bit register (little endian). 
+     */
     inline bool i2cRegisterWrite16(uint8_t address, uint8_t reg, uint16_t value) {
         uint8_t x[3] = { reg, static_cast<uint8_t>(value & 0xff), static_cast<uint8_t>(value >> 8)};
         return i2c_write_blocking(i2c0, address, x, 3, false) >= 0;
     }
+
+    //@}
+
+    /** \name SPI Communications 
+     */
+    //@{
+
+    // TODO
 
     //@}
 
@@ -398,10 +427,10 @@ namespace rckid {
                 if (promille <= 500)
                     return static_cast<T>((end - start) * SinTable[(promille + 5) / 10] / 200 + start);
                 else
-                    return static_cast<T>((end - start) * (200 - SinTable[sizeof(SinTable) - (promille - 500 + 5) / 10]) / 200 + start);
+                    return static_cast<T>((end - start) * (200 - SinTable[sizeof(SinTable) - 1 - (promille - 500 + 5) / 10]) / 200 + start);
             case Interpolation::Cos:
                 if (promille <= 505)
-                    return static_cast<T>((end - start) * (100 - SinTable[sizeof(SinTable) - ((promille + 5) / 10)]) / 200 + start);
+                    return static_cast<T>((end - start) * (100 - SinTable[sizeof(SinTable) - 1 - ((promille + 5) / 10)]) / 200 + start);
                 else
                     return static_cast<T>((end - start) * (100 + SinTable[(promille - 510 + 5) / 10]) / 200 + start);
         }

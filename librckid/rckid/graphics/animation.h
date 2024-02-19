@@ -42,7 +42,6 @@ namespace rckid {
             switch (state_) {
                 case State::Single:
                     t_ += d;
-                    lastCheck_ = t;
                     if (t_ > duration_) {
                         t_ = duration_;
                         state_ = State::Off;

@@ -73,7 +73,7 @@
             "label": "rckid - local [MOCK]",
             "command": "bash",
             "args": [
-                "utils/rckid-mock.sh",
+                "utils/build-mock.sh",
             ],
             "options": {
                 "cwd": "",
@@ -82,12 +82,29 @@
                 "$gcc"
             ]
         },
+        // games (mock)
+        {
+            "label": "rckid-games [MOCK]",
+            "command": "bash",
+            "args": [
+                "utils/build-mock.sh",
+                "games/games"
+            ],
+            "options": {
+                "cwd": "",
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+
         // gbc-tests (mock)
         {
             "label": "gbc-tests [MOCK]",
             "command": "bash",
             "args": [
-                "utils/gbc-tests-mock.sh",
+                "utils/build-mock.sh",
+                "gbcemu/gbcemu-test"
             ],
             "options": {
                 "cwd": "",

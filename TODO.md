@@ -44,7 +44,6 @@
 - determine level shifter resistor value
 - update charging resistor value for the new charger
 - extra AVR pin can be used to pull the RDX display line down and we can also read the graphic data
-- center the above display stuff
 
 ## RP
 
