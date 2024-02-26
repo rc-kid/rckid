@@ -14,7 +14,16 @@ namespace rckid {
 
     protected:
 
+        void onFocus(BaseApp * prev) override {
+            setBrightness(32);
+            App::onFocus(prev);
+        }
+
         void update() override {
+            if (pressed(Btn::A))
+                setBrightness(254);
+            if (pressed(Btn::B))
+               setBrightness(32);
         }
 
         void draw() override {
@@ -25,7 +34,7 @@ namespace rckid {
             r.setBg(ColorRGB::RGB(bg_, 0, 0));
             bg_ += 4;
             r.fill();
-            r.text(0,0) << (down(Btn::Left) ? "L " : "  ")
+            r.textMultiline(0,0) << (down(Btn::Left) ? "L " : "  ")
                         << (down(Btn::Right) ? "R " : "  ")
                         << (down(Btn::Up) ? "U " : "  ")
                         << (down(Btn::Down) ? "D " : "  ")

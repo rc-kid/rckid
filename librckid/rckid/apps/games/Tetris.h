@@ -60,11 +60,18 @@ namespace rckid {
             );
         }
 
+        bool canPlaceTetromino(int x, int y) {
+            // TODO
+            return false;
+        }
+
         /** Places the given tetromino on the board at given coordinates. Returns true if the placement was successful (i.e. no collision), false otherwise. 
          
          */
         bool placeTetromino(int x, int y, int t, uint8_t tileColor) {
-            uint8_t const ** tData = tetrominos_[t];
+            // TODO
+            //uint8_t const ** tData = tetrominos_[t];
+            return false;
         }
 
 

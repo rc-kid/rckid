@@ -23,9 +23,11 @@
 using namespace rckid;
 
 int main() {
-    //cpuOverclock();
+    //cpuOverclock(133000000, false);
+    //cpuOverclock(150000000, true);
+
     //cpuOverclock(150000000);
-    cpuOverclock();
+    //cpuOverclock();
     initialize();
 
 //    AudioTestTone test;

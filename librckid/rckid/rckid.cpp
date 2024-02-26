@@ -92,9 +92,9 @@ namespace rckid {
 
     // TODO super dumb nanosecond-like delay. Should be changed to take into account the actual cpu clock speed etc
     void sleep_ns(uint32_t ns) {
-        //ns = ns * 2;
+        //ns = ns * 4;
         while (ns >= 8) 
-          ns -= 8;
+            ns -= 8;
     }
 
     // 4.4ms for system currently

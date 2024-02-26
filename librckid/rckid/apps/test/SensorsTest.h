@@ -21,7 +21,6 @@ namespace rckid {
             Renderer & r = renderer();
             r.setFg(ColorRGB::White());
             r.setFont(Iosevka_Mono6pt7b);
-            r.setFont(Iosevka_Mono6pt7b);
             r.setBg(ColorRGB::RGB(bg_, 0, 0));
             //bg_ += 4;
             r.fill();
