@@ -65,19 +65,15 @@ namespace rckid {
             return width;
         }
 
+        using Bitmap<COLOR>::fill;
+
         /** Fills entire screen with the selected background color. 
          */
-        void fill() {
-            fill(Rect::WH(w_, h_));
-        }
+        void fill() { fill(Rect::WH(w_, h_)); }
 
         /** Fills the given rectangle with the selected background color. 
          */
-        void fill(Rect rect) {
-            for (int x = rect.left(), xe = rect.right(); x < xe; ++x)
-                for (int y = rect.top(), ye = rect.bottom(); y < ye; ++y)
-                    setPixelAt(x, y, bg_);
-        }
+        void fill(Rect rect) { fill(rect, bg_); }
 
 
     private:

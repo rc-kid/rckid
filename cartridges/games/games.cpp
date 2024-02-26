@@ -12,7 +12,8 @@ int main() {
     initialize();
     Audio::setAudioEnabled(true);
     //start(Menu{});
-    start(SlidingPuzzle{});
+    //start(SlidingPuzzle{});
+    start(Tetris{});
     //Menu menu;
     //menu.run();
     //SlidingPuzzle game;

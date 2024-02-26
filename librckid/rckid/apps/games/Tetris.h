@@ -15,6 +15,7 @@ namespace rckid {
     protected:
 
         void onFocus(BaseApp * previous) override {
+            reset();
             App::onFocus(previous);
         }
 
@@ -25,13 +26,55 @@ namespace rckid {
         }
 
         void draw() override {
-            //auto & r = renderer();
+            auto & canvas = renderer();
+
+            // draw the area, we only draw the changed pieces
+            for (int i = 0, c = 0; c < 10; ++c) {
+                for (int r = 0; r < 24; ++r, ++i) {
+                    if (tiles_[i] & 0x80) {
+                        canvas.fill(getTileRect(c, r, tiles_[i]), getTileColor(tiles_[i]));
+                        tiles_[i] &= 0x7f;
+                    }
+                }
+            }
+            // draw the current tetromino
+        }
+
+
+        void reset() {
+            for (int i = 0; i < TILEMAP_ROWS * TILEMAP_COLS; ++i)
+                tiles_[i] = 0x80 + get_rand_32() % 7;
 
         }
 
+        Rect getTileRect(int col, int row, uint8_t tile) {
+            int b = (tile & 0x40) ? 0 : 1;
+            return Rect::XYWH(160 - TILEMAP_COLS * TILE_SIZE / 2 + col * TILE_SIZE + b, row * TILE_SIZE + b, TILE_SIZE - 2 * b, TILE_SIZE - 2 * b);
+        }
+
+        Color getTileColor(uint8_t tile) {
+            return Color::RGB(
+                (tile & 1) ? 255 : 0, 
+                (tile & 2) ? 255 : 0,
+                (tile & 4) ? 255 : 0 
+            );
+        }
+
+        /** Places the given tetromino on the board at given coordinates. Returns true if the placement was successful (i.e. no collision), false otherwise. 
+         
+         */
+        bool placeTetromino(int x, int y, int t, uint8_t tileColor) {
+            uint8_t const ** tData = tetrominos_[t];
+        }
+
+
     private:
 
-        static constexpr uint8_t tetrominos[][4][4] = {
+        static constexpr int TILE_SIZE = 12;
+        static constexpr int TILEMAP_ROWS = 240 / TILE_SIZE;
+        static constexpr int TILEMAP_COLS = 10;
+
+        static constexpr uint8_t tetrominos_[][4][4] = {
             { // 0 = -----
                 {1, 1, 1, 1},
                 {0, 0, 0, 0},
@@ -76,9 +119,10 @@ namespace rckid {
             },
         };
 
+        uint8_t tiles_[TILEMAP_ROWS * TILEMAP_COLS];
 
-
-        unsigned level_ = 1;
+        unsigned lines_ = 0;
+        unsigned score_ = 0;
 
     }; // rckid::Tetris
 

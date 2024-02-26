@@ -98,6 +98,12 @@ namespace rckid {
 
         void loadImage(PNG && img);
 
+        void fill(Rect rect, Color color) {
+            for (int x = rect.left(), xe = rect.right(); x < xe; ++x)
+                for (int y = rect.top(), ye = rect.bottom(); y < ye; ++y)
+                    setPixelAt(x, y, color);
+        }
+
     protected:
 
         template<typename T>
