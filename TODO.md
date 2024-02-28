@@ -5,13 +5,14 @@
 
 ## TODO
 
-- buy microphone
+- order displays
+- check UV light detector
+- buy INA219, BAT60
 
 - lost the ability to overclock - could it be discplay configuration problems, or other issues?
 
 - steps counter - might need battery to verify
 - accelerometer reported temperature
-- check UV light detector
 
 - check that we can launch apps from the carousel
 
@@ -43,6 +44,10 @@
 - check https://github.com/TuriSc/RP2040-PWM-DMA-Audio/tree/main and https://github.com/TuriSc/Dodepan for hints perhaps? 
 
 ## PCB
+
+- verify everything before ordering new versions
+- vias
+- inductor
 
 
 ## RP

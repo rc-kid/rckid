@@ -81,6 +81,29 @@
 
 
 /** AVR Pinout
+ 
+    PA1 -- CHARGE_EN (floating, pull low to disable charging, read voltage to determine charging I)
+    PA2 -- CHARGING (ADC0 channel 2)
+    PA3 -- PWM_RUMBLER (TCB1 WO)
+    PA4 --
+    PA5 -- PWM_BACKLIGHT (TCB0 WO)
+    PA6 -- 3V3_ON
+    PA7 -- 5V_ON
+    PB7 -- RGB
+    PB6 -- BTN_3
+    PB5 -- BTN_ABXY
+    PB4 -- BTN_2
+    PB3 -- BTN_1
+    PB2 -- BTN_HOME (-> GND, internal pullup)
+    PB1 -- SDA
+    PB0 -- SCL
+    PC0 -- BTN_CTRL
+    PC1 -- HEADPHONES (ADC 1 channel 7)
+    PC2 -- DISP_RDX
+    PC3 -- QSPI_SS
+    PC4 -- BTN_DPAD
+    PC5 -- BTN_4
+  
 
                        -- VDD             GND --
                  5V_ON -- (00) PA4   PA3 (16) -- PWM_RUMBLER
