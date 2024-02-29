@@ -1,13 +1,16 @@
-## Questions
+## Shopping List
 
-- Q: the level translator seems not to be working allright. The rising edge up takes a *lot* of time from the vlow - do one way only
-- Q: when no headphones are present, the headphones line only has about 2 volts, not 3volts it is supposed to have. Is this an issue? - could be internal pulldown in PAM8302 & really weak pull-up in the specs
+- displays from aliexpress (~27x, IPS 2.8")
+- buttons (https://cz.mouser.com/ProductDetail/Omron-Electronics/B3U-3000P-B?qs=AO7BQMcsEu4JAdtnbsGArA%3D%3D)
+- rumbler (https://cz.mouser.com/ProductDetail/DFRobot/FIT0774?qs=ljCeji4nMDmZzIiC0gR9iA%3D%3D)
+- battery (https://www.tme.eu/cz/details/accu-lp503759_cl/akumulatory/cellevia-batteries/l503759/)
+- precision headers rckid ()
+- precision headers cartridges ()
+- screw inserts (https://www.prusa3d.com/product/threaded-inserts-m2-short-100-pcs/)
 
 ## TODO
 
-- order displays
 - check UV light detector
-- buy INA219, BAT60
 
 - lost the ability to overclock - could it be discplay configuration problems, or other issues?
 
@@ -46,9 +49,6 @@
 ## PCB
 
 - verify everything before ordering new versions
-- vias
-- inductor
-
 
 ## RP
 

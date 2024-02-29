@@ -17,6 +17,10 @@ The ATTiny is always-on, responsible for power, user input and data retention. C
                  BTN_1 -- (07) PB2   PC0 (10) -- BTN_CTRL
              SDA (I2C) -- (08) PB1   PB0 (09) -- SCL (I2C)
 
+
+
+                       
+
 ## User Input
 
 When powered down, the BTN_CTRL pin is held high and 
