@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "rckid - games [mock]",
+            "name": "rckid - sandbox [mock]",
             "type": "cppdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/build-mock/cartridges/games/games",
+            "program": "${workspaceFolder}/build-mock/cartridges/test/sandbox/sandbox",
             "args": [],
             "stopAtEntry": false,
             "environment": [{ "name" : "DISPLAY", "value" : "0:0"}],

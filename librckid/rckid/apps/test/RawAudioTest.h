@@ -7,7 +7,7 @@
 
 namespace rckid {
 
-    class RawAudioTest : public App<FrameBuffer<ColorRGB>> {
+    class RawAudioTest : public FrameBufferApp<ColorRGB> {
     public:
         RawAudioTest() = default;
 
@@ -15,8 +15,8 @@ namespace rckid {
 
         static constexpr size_t BUFFER_SIZE = 2048 * 10;
 
-        void onFocus(BaseApp * previous) override {
-            App::onFocus(previous);
+        void onFocus() override {
+            FrameBufferApp::onFocus();
             buffer_ = new uint16_t[BUFFER_SIZE];
             bOther_ = buffer_ + BUFFER_SIZE / 2;
             for (size_t i = 0; i < BUFFER_SIZE; ++i)
@@ -28,10 +28,9 @@ namespace rckid {
             Audio::startPlayback(SampleRate::kHz44_1, buffer_, BUFFER_SIZE, [this](uint16_t * buffer, size_t bufSize) {
                 refill(buffer, bufSize);
             });
-            Renderer & r = renderer();
-            r.setFg(ColorRGB::White());
-            r.setFont(Iosevka_Mono6pt7b);
-            r.setBg(ColorRGB::Black());
+            fb_.setFg(ColorRGB::White());
+            fb_.setFont(Iosevka_Mono6pt7b);
+            fb_.setBg(ColorRGB::Black());
 
         }
 
@@ -40,9 +39,8 @@ namespace rckid {
         }
 
         void draw() override {
-            Renderer & r = renderer();
-            r.fill();
-            r.text(5, 10) << offset_
+            fb_.fill();
+            fb_.text(5, 10) << offset_
                           << "\n\n"
                           << " FPS: " << Stats::fps() << " S:" << Stats::systemUs() << " U:" << (Stats::updateUs() / 1000) << " D:" << (Stats::drawUs() / 1000)
                           << "    \n\n ERR:"

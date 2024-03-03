@@ -9,14 +9,14 @@ namespace rckid {
      
         Uses a full-color framebuffer, which is, especially for tetris a bit wasteful in terms of memory. 
      */
-    class Tetris : public App<FrameBuffer<ColorRGB>> {
+    class Tetris : public FrameBufferApp<ColorRGB> {
     public:
 
     protected:
 
-        void onFocus(BaseApp * previous) override {
+        void onFocus() override {
+            FrameBufferApp::onFocus();
             reset();
-            App::onFocus(previous);
         }
 
 
@@ -26,13 +26,12 @@ namespace rckid {
         }
 
         void draw() override {
-            auto & canvas = renderer();
 
             // draw the area, we only draw the changed pieces
             for (int i = 0, c = 0; c < 10; ++c) {
                 for (int r = 0; r < 24; ++r, ++i) {
                     if (tiles_[i] & 0x80) {
-                        canvas.fill(getTileRect(c, r, tiles_[i]), getTileColor(tiles_[i]));
+                        fb_.fill(getTileRect(c, r, tiles_[i]), getTileColor(tiles_[i]));
                         tiles_[i] &= 0x7f;
                     }
                 }

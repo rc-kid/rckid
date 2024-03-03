@@ -8,16 +8,16 @@
 
 namespace rckid {
 
-    class AVRStatusTest : public App<FrameBuffer<ColorRGB>> {
+    class AVRStatusTest : public FrameBufferApp<ColorRGB> {
     public:
 
         AVRStatusTest()  = default;
 
     protected:
 
-        void onFocus(BaseApp * prev) override {
+        void onFocus() override {
+            FrameBufferApp::onFocus();
             setBrightness(32);
-            App::onFocus(prev);
         }
 
         void update() override {
@@ -29,13 +29,12 @@ namespace rckid {
 
         void draw() override {
             TinyDate t = time();
-            Renderer & r = renderer();
-            r.setFg(ColorRGB::White());
-            r.setFont(Iosevka_Mono6pt7b);
-            r.setBg(ColorRGB::RGB(bg_, 0, 0));
+            fb_.setFg(ColorRGB::White());
+            fb_.setFont(Iosevka_Mono6pt7b);
+            fb_.setBg(ColorRGB::RGB(bg_, 0, 0));
             bg_ += 4;
-            r.fill();
-            r.textMultiline(0,0) << (down(Btn::Left) ? "L " : "  ")
+            fb_.fill();
+            fb_.textMultiline(0,0) << (down(Btn::Left) ? "L " : "  ")
                         << (down(Btn::Right) ? "R " : "  ")
                         << (down(Btn::Up) ? "U " : "  ")
                         << (down(Btn::Down) ? "D " : "  ")

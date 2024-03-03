@@ -19,15 +19,15 @@ namespace rckid {
           - add accelerometer as input
 
      */
-    class SlidingPuzzle : public App<FrameBuffer<ColorRGB>> {
+    class SlidingPuzzle : public FrameBufferApp<ColorRGB> {
     public:
 
     protected:
 
-        void onFocus(BaseApp * previous) override {
-            App::onFocus(previous);
+        void onFocus() override {
+            FrameBufferApp::onFocus();
             //PNG png = PNG::fromBuffer(defaultImage_, sizeof(defaultImage_));
-            renderer().loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
+            fb_.loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
             /*
             png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
                 Renderer & r = renderer();
@@ -49,7 +49,6 @@ namespace rckid {
             if (dir_ == Btn::Home) {
                 oldX_ = holeX_;
                 oldY_ = holeY_;
-                Renderer & r = renderer();
                 if (pressed(Btn::Left) && canMoveLeft()) {
                     holeX_ += 1;
                     dir_ = Btn::Left;
@@ -65,13 +64,12 @@ namespace rckid {
                 } else {
                     return;
                 }
-                tmp_.draw(r, 0, 0, tileRect(holeX_, holeY_));
+                tmp_.draw(fb_, 0, 0, tileRect(holeX_, holeY_));
                 a_.start();
             }
         }
 
         void draw() override {
-            Renderer & r = renderer();
             a_.update();
             if (shuffle_ > 0) {
                 shuffleMove();
@@ -81,20 +79,20 @@ namespace rckid {
             }
             switch (dir_) {
                 case Btn::Left:
-                    r.fill(tileRect(holeX_, holeY_));
-                    r.draw(tmp_, tilePoint(holeX_, holeY_) - Point{a_.interpolate(0, TILE_WIDTH), 0});
+                    fb_.fill(tileRect(holeX_, holeY_));
+                    fb_.draw(tmp_, tilePoint(holeX_, holeY_) - Point{a_.interpolate(0, TILE_WIDTH), 0});
                     break;
                 case Btn::Right:
-                    r.fill(tileRect(holeX_, holeY_));
-                    r.draw(tmp_, tilePoint(holeX_, holeY_) + Point{a_.interpolate(0, TILE_WIDTH), 0});
+                    fb_.fill(tileRect(holeX_, holeY_));
+                    fb_.draw(tmp_, tilePoint(holeX_, holeY_) + Point{a_.interpolate(0, TILE_WIDTH), 0});
                     break;
                 case Btn::Up:
-                    r.fill(tileRect(holeX_, holeY_));
-                    r.draw(tmp_, tilePoint(holeX_, holeY_) - Point{0, a_.interpolate(0, TILE_HEIGHT)});
+                    fb_.fill(tileRect(holeX_, holeY_));
+                    fb_.draw(tmp_, tilePoint(holeX_, holeY_) - Point{0, a_.interpolate(0, TILE_HEIGHT)});
                     break;
                 case Btn::Down: 
-                    r.fill(tileRect(holeX_, holeY_));
-                    r.draw(tmp_, tilePoint(holeX_, holeY_) + Point{0, a_.interpolate(0, TILE_HEIGHT)});
+                    fb_.fill(tileRect(holeX_, holeY_));
+                    fb_.draw(tmp_, tilePoint(holeX_, holeY_) + Point{0, a_.interpolate(0, TILE_HEIGHT)});
                     break;
                 default:
                     break; // nothing to do for other controls
@@ -103,7 +101,7 @@ namespace rckid {
                 dir_ = Btn::Home;
                 if (swapTileMap(oldX_, oldY_, holeX_, holeY_)) {
                     // tada, game is finished
-                    r.draw(hole_, tilePoint(holeX_, holeY_));
+                    fb_.draw(hole_, tilePoint(holeX_, holeY_));
                     holeX_ = -1;
                     holeY_ = -1;
                 }
@@ -111,14 +109,13 @@ namespace rckid {
         }
 
         void resetGame(unsigned moves) {
-            Renderer & r = renderer();
-            r.loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
+            fb_.loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
             // set the hole and fill in the hole canvas
             holeX_ = MAX_X;
             holeY_ = MAX_Y;
-            hole_.draw(r, 0, 0, tileRect(holeX_, holeY_));
-            r.setBg(Color::RGB(128, 128, 128));
-            r.fill(tileRect(holeX_, holeY_));
+            hole_.draw(fb_, 0, 0, tileRect(holeX_, holeY_));
+            fb_.setBg(Color::RGB(128, 128, 128));
+            fb_.fill(tileRect(holeX_, holeY_));
             // reset the tilemap
             for (int i = 0; i < NUM_TILES; ++i)
                 tileMap_[i] = i;
@@ -147,13 +144,12 @@ namespace rckid {
                 break;
             }
             // swap the tiles
-            Renderer & r = renderer();
             Rect t1 = tileRect(x, y);
             Rect t2 = tileRect(holeX_, holeY_);
-            tmp_.draw(r, 0, 0, t1);
-            r.draw(r, tilePoint(x, y), t2);
-            r.draw(tmp_, tilePoint(holeX_, holeY_));
-            // update the tilemap
+            tmp_.draw(fb_, 0, 0, t1);
+            fb_.draw(fb_, tilePoint(x, y), t2);
+            fb_.draw(tmp_, tilePoint(holeX_, holeY_));
+            // update th7e tilemap
             swapTileMap(x, y, holeX_, holeY_);
         }
 

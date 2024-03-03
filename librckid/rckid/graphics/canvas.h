@@ -23,6 +23,8 @@ namespace rckid {
 
         Canvas(int width, int height) : Bitmap<COLOR>{width, height} {}
 
+        Canvas(int width, int height, uint32_t * buffer) : Bitmap<COLOR>{width, height, buffer} {}
+
         Color bg() const { return bg_; }
         Color fg() const { return fg_; }
 

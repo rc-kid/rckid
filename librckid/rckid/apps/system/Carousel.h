@@ -8,7 +8,7 @@
 
 namespace rckid {
 
-    class Carousel : public App<FrameBuffer<Color256>> {
+    class Carousel : public FrameBufferApp<ColorRGB> {
     public:
         class Item {
         public:
@@ -67,15 +67,11 @@ namespace rckid {
 
         virtual void getItem(size_t index, Item & item) = 0;
 
-        void onFocus(BaseApp * previous) override {
-            App::onFocus(previous);
+        void onFocus() override {
+            FrameBufferApp::onFocus();;
             getItem(i_, current_);
-            current_.textWidth_ = renderer().textWidth(current_.text());
-            renderer().setFg(Color::White());
-        }
-
-        void onBlur(BaseApp * next) override {
-            App::onBlur(next);
+            current_.textWidth_ = fb_.textWidth(current_.text());
+            fb_.setFg(Color::White());
         }
 
         void update() override {
@@ -95,7 +91,7 @@ namespace rckid {
                     return;
                 }
                 getItem(i_, other_);
-                other_.textWidth_ = renderer().textWidth(other_.text());
+                other_.textWidth_ = fb_.textWidth(other_.text());
                 a_.start();
                 /*
                 if (current_.img_.rawPixels() == nullptr)
@@ -107,29 +103,28 @@ namespace rckid {
         }
 
         void draw() override {
-            Renderer & r = renderer();
-            r.fill();
+            fb_.fill();
             a_.update();
             if (dir_ == Btn::Home) {
                 // TODO draw the current item only
                 //r.draw(current_.img(), current_.imageOffset());
-                r.text(current_.textOffset()) << current_.text();
+                fb_.text(current_.textOffset()) << current_.text();
             } else {
                 int xImg = a_.interpolate(0, 320);
                 int xText = a_.interpolate(0, 640);
                 switch (dir_) {
                     case Btn::Left: {
-                        r.draw(current_.img(), current_.imageOffset() + Point{xImg, 0});
-                        r.text(current_.textOffset() + Point{xText, 0}) << current_.text();
-                        r.draw(other_.img(), other_.imageOffset() - Point{320 - xImg, 0});
-                        r.text(other_.textOffset() - Point{640 - xText, 0}) << other_.text();
+                        fb_.draw(current_.img(), current_.imageOffset() + Point{xImg, 0});
+                        fb_.text(current_.textOffset() + Point{xText, 0}) << current_.text();
+                        fb_.draw(other_.img(), other_.imageOffset() - Point{320 - xImg, 0});
+                        fb_.text(other_.textOffset() - Point{640 - xText, 0}) << other_.text();
                         break;
                     }
                     case Btn::Right:
-                        r.draw(current_.img(), current_.imageOffset() - Point{xImg, 0});
-                        r.text(current_.textOffset() - Point{xText, 0}) << current_.text();
-                        r.draw(other_.img(), other_.imageOffset() + Point{320 - xImg, 0});
-                        r.text(other_.textOffset() + Point{640 - xText, 0}) << other_.text();
+                        fb_.draw(current_.img(), current_.imageOffset() - Point{xImg, 0});
+                        fb_.text(current_.textOffset() - Point{xText, 0}) << current_.text();
+                        fb_.draw(other_.img(), other_.imageOffset() + Point{320 - xImg, 0});
+                        fb_.text(other_.textOffset() + Point{640 - xText, 0}) << other_.text();
                         break;
                     default:
                         break;
@@ -174,7 +169,7 @@ namespace rckid {
 
         void getItem(size_t index, Item & item) {
             static bool x;
-            item.set(BaseApp::imgX(), x ? "First Application" : "Second Is The Charm");
+            //item.set(BaseApp::imgX(), x ? "First Application" : "Second Is The Charm");
             x = !x;
         }
 

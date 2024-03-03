@@ -14,12 +14,20 @@ namespace rckid {
             allocateBuffer(w, h);
         }
 
+        Bitmap(int w, int h, uint32_t * buffer):
+            w_{w},
+            h_{h},
+            buffer_{buffer} {
+            ASSERT(w % 4 == 0);
+            ASSERT(h % 4 == 0);
+        }
+
         Bitmap(Bitmap const &) = delete;
 
         Bitmap(Bitmap && other):
-            buffer_{other.buffer_},
             w_{other.w_}, 
-            h_{other.h_} {
+            h_{other.h_},
+            buffer_{other.buffer_} {
                 other.w_ = 0; other.h_ = 0; other.buffer_ = nullptr;
         }
 
@@ -32,7 +40,10 @@ namespace rckid {
             return *this;
         }
 
-        ~Bitmap() { delete [] buffer_; }
+        ~Bitmap() { 
+            if (!isVRAMPtr(buffer_))
+                delete [] buffer_; 
+        }
 
         int width() const { return w_; }
         int height() const { return h_; }
@@ -42,6 +53,14 @@ namespace rckid {
                 delete [] buffer_;
                 allocateBuffer(width, height);
             }
+        }
+
+        void resize(int width, int height, uint32_t * buffer) {
+            if (! isVRAMPtr(buffer_))
+                delete buffer_;
+            buffer_ = buffer;
+            w_ = width;
+            h_ = height;
         }
 
         size_t numPixels() const { return w_ * h_; }
@@ -126,9 +145,9 @@ namespace rckid {
         template<typename T>
         void draw(uint32_t const * otherBuffer, int otherWidth, int otherHeight, Point where, Rect fromRect); 
 
-        uint32_t * buffer_;
         int w_;
         int h_;
+        uint32_t * buffer_;
     }; 
 
     template<>

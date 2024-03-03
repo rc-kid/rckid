@@ -44,7 +44,7 @@ namespace rckid {
         Audio::processEvents();
     }
 
-    void start(BaseApp && app) {
+    void start(App2 && app) {
         int errorCode = setjmp(Device::fatalError_);
         if (errorCode != 0) 
             Device::BSOD(errorCode);
@@ -97,7 +97,12 @@ namespace rckid {
         Device::vramNext_ += numBytes;
         return result;
     }
-    
+
+    bool isVRAMPtr(void * ptr) {
+        return (ptr >= & __vram_start__) && (ptr < & __vram_end__);
+    }
+
+    // 
 
     void cpuOverclock(unsigned hz, bool overvolt) {
         if (overvolt) {

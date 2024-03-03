@@ -97,6 +97,21 @@
                 "$gcc"
             ]
         },
+        // sandbox (mock)
+        {
+            "label": "rckid-sandbox [MOCK]",
+            "command": "bash",
+            "args": [
+                "utils/build-mock.sh",
+                "test/sandbox/sandbox"
+            ],
+            "options": {
+                "cwd": "",
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
 
         // gbc-tests (mock)
         {

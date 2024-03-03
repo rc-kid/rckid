@@ -11,9 +11,16 @@ namespace rckid {
     class FrameBuffer : public Canvas<COLOR> {
     public:
 
+        /*
         FrameBuffer(): Canvas<COLOR>{320, 240} {
             ST7789::enterContinuousMode(ST7789::Mode::Single);
+        }*/
+
+        FrameBuffer(int w, int h, uint32_t * buffer) : Canvas<COLOR>{w, h, buffer} {
+            ST7789::enterContinuousMode(ST7789::Mode::Single);
         }
+
+        FrameBuffer(): Canvas<COLOR>{0,0, nullptr} {}
 
         void startRendering();
     }; 
@@ -180,5 +187,41 @@ namespace rckid {
 
     }; // rckid::FrameBufferDouble
 
+    /** Base class for applications that render into a framebuffer. */
+    template<typename COLOR> 
+    class FrameBufferApp : public App2 {
+    public:
+
+        using Color = COLOR;
+        
+        FrameBufferApp(int w, int h):
+            fb_{w, h, nullptr} {
+        }
+
+        FrameBufferApp():
+            fb_{320, 240, nullptr} {
+        }
+    protected:
+
+        void onFocus() override {
+            int w = fb_.width();
+            int h = fb_.height();
+            fb_.resize(w, h, reinterpret_cast<uint32_t *>(allocateVRAM(w * h * COLOR::BPP / 8)));
+        }
+
+        void onBlur() override {
+            // nothing to do, the FB allocates on the VRAM and will be invalidated automatically
+        }
+
+        void render() override {
+            fb_.startRendering();
+        }
+
+        FrameBuffer<COLOR> fb_;
+
+    }; 
+
 } // namespace rckid
+
+
 

@@ -9,9 +9,8 @@ namespace rckid {
     }
 
     void USBMassStorage::draw() {
-        Renderer & r = renderer();
-        r.fill();
-        r.text(0,0) << "USB MSC: " << numEvents_ << " events";
+        fb_.fill();
+        fb_.text(0,0) << "USB MSC: " << numEvents_ << " events";
     }
 
 }

@@ -51,7 +51,7 @@ namespace rckid {
     constexpr int VRAM_OUT_OF_MEMORY = 4;
     constexpr int HEAP_OUT_OF_MEMORY = 5;
 
-    class BaseApp;
+    class App2;
 
     /** Initializes the RCKid. 
      
@@ -66,7 +66,7 @@ namespace rckid {
 
     /** Starts the app loop with the provided application. 
      */
-    void start(BaseApp && app);
+    void start(App2 && app);
 
     /** \name Debugging Support
      */
@@ -122,6 +122,10 @@ namespace rckid {
     /** Allocates given amount of bytes in VRAM and returns pointer. Will go immediately to BSOD if not enough memory is available in VRAM for the allocation. 
      */
     uint8_t * allocateVRAM(size_t numBytes); 
+
+    /** Returns true if the pointer points to VRAM area, false otherwise. 
+     */
+    bool isVRAMPtr(void * ptr); 
 
     //@}
 
@@ -286,7 +290,7 @@ namespace rckid {
         static __force_inline void fatalError(int code) { fatalError(code, nullptr, 0); }
   
     private:
-        friend class BaseApp;
+        friend class App2;
         friend class Audio;
 
         /** Pointer to the end of allocated VRAM. 
@@ -331,7 +335,7 @@ namespace rckid {
 
         friend void yield();
 
-        friend void start(BaseApp && app);
+        friend void start(App2 && app);
 
         // memory
         friend size_t freeHeap();
@@ -401,6 +405,7 @@ namespace rckid {
 
         friend class BaseApp;
         friend class ST7789;
+        friend class App2;
 
         static inline unsigned fps_;
         static inline unsigned fpsCounter_;

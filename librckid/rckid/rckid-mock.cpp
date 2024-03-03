@@ -66,6 +66,12 @@ namespace rckid {
         return result;
     }
 
+    bool isVRAMPtr(void * ptr) {
+        return (ptr >= _vram) && (ptr < _vram + sizeof(_vram));
+    }
+
+    // 
+  
     void cpuOverclock(unsigned hz, bool overvolt) {
         // does nothing, overclocking is ignored in mock mode 
     }

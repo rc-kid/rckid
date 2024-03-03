@@ -9,7 +9,7 @@ namespace rckid {
      
         The app has to be active in order for the mass storage attachment to work. 
      */
-    class USBMassStorage : public App<FrameBuffer<ColorRGB>> {
+    class USBMassStorage : public FrameBufferApp<ColorRGB> {
     public:
 
         USBMassStorage()  = default;
@@ -22,22 +22,21 @@ namespace rckid {
 
     protected:
 
-        void onFocus(BaseApp * previous) override {
-            App::onFocus(previous);
+        void onFocus() override {
+            FrameBufferApp::onFocus();;
             // TODO: fill in the numBlocks and blockSize, unmount SD card
             numEvents_ = 0;
-            Renderer & r = renderer();
-            r.setFg(ColorRGB::White());
-            r.setBg(ColorRGB::White());
-            r.setFont(Iosevka_Mono6pt7b);
+            fb_.setFg(ColorRGB::White());
+            fb_.setBg(ColorRGB::White());
+            fb_.setFont(Iosevka_Mono6pt7b);
             available_ = true;
 
         }
 
-        void onBlur(BaseApp * next) override {
+        void onBlur() override {
             // TODO: remount the SD card
             available_ = false;
-            App::onBlur(next);
+            App2::onBlur();
         }
 
         void update() override;
