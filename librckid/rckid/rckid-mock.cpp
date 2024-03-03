@@ -10,7 +10,17 @@
 
 extern uint8_t * _vram;
 
+extern void rckid_main();
+
+
 namespace rckid {
+
+    void start() {
+        int errorCode = setjmp(rckid::Device::fatalError_);
+        if (errorCode != 0) 
+            rckid::Device::BSOD(errorCode);
+        rckid_main();
+    }
 
     void initialize() {
         // TODO initialize the mock display & friends
@@ -19,13 +29,6 @@ namespace rckid {
 
     void yield() {
         // TODO do we do anything here actually? 
-    }
-
-    void start(BaseApp && app) {
-        int errorCode = setjmp(Device::fatalError_);
-        if (errorCode != 0) 
-            Device::BSOD(errorCode);
-        app.run();
     }
 
     Writer writeToUSBSerial() {
@@ -198,5 +201,11 @@ namespace rckid {
 
     }
 } // namespace rckid
+
+int main() {
+    rckid::initialize();
+    rckid::start();
+    return EXIT_SUCCESS;
+}
 
 #endif // RCKID_MOCK

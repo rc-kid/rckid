@@ -69,6 +69,12 @@ namespace rckid {
             return (*this) << static_cast<uint32_t>(x);
         }
 
+#if (!defined LIBRCKID_MOCK)
+        Writer & operator << (int x) {
+            return *this << static_cast<int32_t>(x);
+        }
+#endif
+
         // TODO this is useful only for mock, should increase the precision
         //Writer & operator << (uint64_t x) { return *this << (uint32_t) x; }
 

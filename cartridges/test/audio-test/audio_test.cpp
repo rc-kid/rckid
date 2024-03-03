@@ -3,9 +3,7 @@
 
 using namespace rckid;
 
-int main() {
-    initialize();
-    RawAudioTest test;
-    test.run();
+void rckid_main() {
+    RawAudioTest{}.run();
 }
 

@@ -23,8 +23,10 @@ namespace rckid {
         void update() override {
             if (pressed(Btn::A))
                 setBrightness(254);
-            if (pressed(Btn::B))
+            if (pressed(Btn::B)) {
                setBrightness(32);
+               FATAL_ERROR(45);
+            }
         }
 
         void draw() override {

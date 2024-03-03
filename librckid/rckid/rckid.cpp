@@ -22,13 +22,24 @@
 #include "sensors.h"
 #include "ST7789_rgb.pio.h"
 #include "ST7789_rgb_double.pio.h"
+#include "rckid/graphics/framebuffer.h"
+#include "fonts/Iosevka_Mono6pt7b.h"
 
 
 
 extern uint8_t __StackLimit, __bss_end__;
 extern uint8_t __vram_start__, __vram_end__;
 
+extern void rckid_main();
+
 namespace rckid {
+
+    void start() {
+        int errorCode = setjmp(rckid::Device::fatalError_);
+        if (errorCode != 0) 
+            rckid::Device::BSOD(errorCode);
+        rckid_main();
+    }
 
     void initialize() {
         // FIXME for reasons I do not completely understand, the board init must be before the other calls, or the device hangs? 
@@ -42,13 +53,6 @@ namespace rckid {
     void yield() {
         tud_task();
         Audio::processEvents();
-    }
-
-    void start(App2 && app) {
-        int errorCode = setjmp(Device::fatalError_);
-        if (errorCode != 0) 
-            Device::BSOD(errorCode);
-        app.run();
     }
 
     Writer writeToUSBSerial() {
@@ -175,9 +179,18 @@ namespace rckid {
     }
 
     void Device::BSOD(int code) {
-        // reset the display
+        resetVRAM();
         ST7789::reset();
-        ST7789::fill(ColorRGB::Blue());
+        FrameBuffer<ColorRGB> fb{320, 240, reinterpret_cast<uint32_t*>(& __vram_start__)};
+        fb.setFg(ColorRGB::White());
+        fb.setFont(Iosevka_Mono6pt7b);
+        fb.setBg(ColorRGB::Blue());
+        fb.fill();
+        fb.textMultiline(0,0) << ":(\n\n"
+            << "FATAL ERROR " << code << "\n\n"
+            << "File: " << fatalErrorFile_ << "\n"
+            << "Line: " << fatalErrorLine_; 
+        fb.startRendering();
         while(true) {}
     }
 
@@ -526,5 +539,12 @@ void pio_set_clock_speed(PIO pio, unsigned sm, unsigned hz) {
     uint clkfrac = (clk - (clkdiv * kHz)) * 256 / kHz;
     pio_sm_set_clkdiv_int_frac(pio, sm, clkdiv & 0xffff, clkfrac & 0xff);
 } 
+
+int main() {
+    rckid::initialize();
+    rckid::start();
+    return EXIT_SUCCESS;
+}
+
 
 #endif // !LIBRCKID_MOCK

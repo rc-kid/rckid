@@ -22,13 +22,12 @@
 
 using namespace rckid;
 
-int main() {
+void rckid_main() {
     //cpuOverclock(133000000, false);
     //cpuOverclock(150000000, true);
 
     //cpuOverclock(150000000);
     //cpuOverclock();
-    initialize();
 
 //    AudioTestTone test;
 //    test.run();
@@ -79,7 +78,7 @@ void sdtest() {
 using DP = display_profile::RGBDouble;
 using Color = DP::Color;
 
-int main() {
+void rckid_main() {
     /*
     SDCardTest sdTest;
     sdTest.run();

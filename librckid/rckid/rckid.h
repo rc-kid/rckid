@@ -57,16 +57,12 @@ namespace rckid {
      
         Starts the chip and ist subsystems, I2C communication with the AVR and other peripherals and the display. This must be the first function called by any RCKid cartridge. 
      */
-    void initialize();
+    //void initialize();
 
     /** Yields to the RCKid's device events. 
          
      */
     void yield();
-
-    /** Starts the app loop with the provided application. 
-     */
-    void start(App2 && app);
 
     /** \name Debugging Support
      */
@@ -330,6 +326,8 @@ namespace rckid {
          
          */
         static void tick();
+
+        friend void start();
 
         friend void initialize();
 

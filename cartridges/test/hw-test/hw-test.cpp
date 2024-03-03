@@ -3,7 +3,6 @@
 
 using namespace rckid;
 
-int main() {
-    initialize();
-    start(SensorsTest{});
+void rckid_main() {
+    SensorsTest{}.run();
 }

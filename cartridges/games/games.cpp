@@ -8,11 +8,10 @@
 
 using namespace rckid;
 
-int main() {
-    initialize();
+void rckid_main() {
     Audio::setAudioEnabled(true);
     //start(Menu{});
-    start(SlidingPuzzle{});
+    SlidingPuzzle{}.run();
     //start(Tetris{});
     //Menu menu;
     //menu.run();

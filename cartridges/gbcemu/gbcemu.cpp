@@ -37,10 +37,9 @@ public:
 }; 
 
 
-int main() {
-    initialize();
+void rckid_main() {
     Audio::setAudioEnabled(true);
-    start(GBCEmu{});
+    GBCEmu{}.run();
     //start(Menu{});
     //start(SlidingPuzzle{});
     //Menu menu;
