@@ -48,7 +48,8 @@ namespace rckid {
     constexpr int INTERNAL_ERROR = 1;
     constexpr int ASSERTION_ERROR = 2;
     constexpr int NOT_IMPLEMENTED_ERROR = 3;
-    constexpr int MEMORY_ERROR = 4;
+    constexpr int VRAM_OUT_OF_MEMORY = 4;
+    constexpr int HEAP_OUT_OF_MEMORY = 5;
 
     class BaseApp;
 
@@ -85,19 +86,6 @@ namespace rckid {
 
     //@}
 
-    /** \name Controls 
-        
-     */
-    //@{
-
-    bool down(Btn b);
-
-    bool pressed(Btn b);
-
-    bool released(Btn b);
-
-    //@}
-   
     /** \name Power management 
      */
     //@{
@@ -114,6 +102,42 @@ namespace rckid {
     void setBrightness(uint8_t brightness);
 
     //@}
+
+    /** \name Memory 
+     */
+    //@{
+
+    size_t freeHeap();
+
+    /** Returns the free VRAM memory available for new allocations. 
+     */
+    size_t freeVRAM(); 
+
+    /** Resets the VRAM memory, deallocating everything in the VRAM arena. 
+     
+        Use this function with *extreme* caution as it invalidates all pointers to VRAM memory held by the program.
+     */
+    void resetVRAM();
+
+    /** Allocates given amount of bytes in VRAM and returns pointer. Will go immediately to BSOD if not enough memory is available in VRAM for the allocation. 
+     */
+    uint8_t * allocateVRAM(size_t numBytes); 
+
+    //@}
+
+    /** \name Controls 
+        
+     */
+    //@{
+
+    bool down(Btn b);
+
+    bool pressed(Btn b);
+
+    bool released(Btn b);
+
+    //@}
+   
 
     /** \name Sensors
     */
@@ -265,6 +289,11 @@ namespace rckid {
         friend class BaseApp;
         friend class Audio;
 
+        /** Pointer to the end of allocated VRAM. 
+         */
+        static inline uint8_t * vramNext_ = 0;
+
+
         static inline uint32_t ticks_ = 0;
 
         static inline size_t clockSpeed_ = 125000000;
@@ -282,6 +311,9 @@ namespace rckid {
             /// TODO: ensure T is a command
             i2c_write_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t const *) & cmd, sizeof(T), false);
         }    
+
+        static void initialize();
+
 
         /** Updates the device by talking to all common peripherals, etc. 
          
@@ -301,6 +333,13 @@ namespace rckid {
 
         friend void start(BaseApp && app);
 
+        // memory
+        friend size_t freeHeap();
+        friend size_t freeVRAM(); 
+        friend void resetVRAM();
+        friend uint8_t * allocateVRAM(size_t numBytes); 
+
+        // controls
         friend bool down(Btn b) { return state_.status.down(b); }
         friend bool pressed(Btn b) { return state_.status.down(b) && ! lastState_.status.down(b); }
         friend bool released(Btn b) { return !state_.status.down(b) && lastState_.status.down(b); }
@@ -339,8 +378,6 @@ namespace rckid {
         static inline int fatalErrorLine_ = 0;
         static inline char const * fatalErrorFile_ = nullptr;
 
-
-        static void initializeSensors();
     }; 
 
     /** Various performance metrics. 
@@ -360,8 +397,6 @@ namespace rckid {
         static unsigned lastUpdateWaitUs() { return updateWaitUs_; }
         static unsigned lastVSyncWaitUs() { return vsyncWaitUs_; }
 
-
-        static size_t freeHeap();
     private:
 
         friend class BaseApp;

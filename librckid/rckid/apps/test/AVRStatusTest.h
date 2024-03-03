@@ -5,6 +5,7 @@
 #include "rckid/graphics/framebuffer.h"
 #include "fonts/Iosevka_Mono6pt7b.h"
 
+
 namespace rckid {
 
     class AVRStatusTest : public App<FrameBuffer<ColorRGB>> {
@@ -54,7 +55,9 @@ namespace rckid {
                         << "\n"
                         << " wU:" << Stats::lastUpdateWaitUs() << " wS:" << Stats::lastVSyncWaitUs() << " r: " << Stats::lastUpdateUs()
                         << "\n"
-                        << " idle:" << Stats::idlePct();
+                        << " idle:" << Stats::idlePct() << "\n"
+                        << " VRAM: " << freeVRAM() << "\n"
+                        << " heap: " << freeHeap();
         }
 
     private:

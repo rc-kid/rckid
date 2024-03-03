@@ -25,7 +25,7 @@ MEMORY
 {
     FLASH(rx) : ORIGIN = 0x10000000,  LENGTH = 12288k /* User Flash (12MiB) */
     FAT(r)    : ORIGIN = 0x10003000,  LENGTH = 4096K  /* Reserved for FAT (4MiB) */
-    RAM(rwx)  : ORIGIN = 0x20000000,  LENGTH = 256k
+    RAM(rwx)  : ORIGIN = 0x20000000,  LENGTH = 256k 
     SCRATCH_X(rwx) : ORIGIN = 0x20040000, LENGTH = 4k
     SCRATCH_Y(rwx) : ORIGIN = 0x20041000, LENGTH = 4k
 }
@@ -121,7 +121,15 @@ SECTIONS
     /* End of .text-like segments */
     __etext = .;
 
-   .ram_vector_table (COPY): {
+    /* VRAM part of the memory, arena-like allocation. */
+    .vram (COPY) : {
+        __vram_start__ = .;
+        KEEP(*(.vram))
+        . = ALIGN(4);
+        __vram_end__ = .;
+    } > RAM
+
+    .ram_vector_table (COPY): {
         *(.ram_vector_table)
     } > RAM
 

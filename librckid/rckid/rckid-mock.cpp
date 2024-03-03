@@ -8,6 +8,8 @@
 #include "audio.h"
 
 
+extern uint8_t * _vram;
+
 namespace rckid {
 
     void initialize() {
@@ -34,9 +36,34 @@ namespace rckid {
         });
     }
 
+    // power management ---------------------------------------------------------------------------
+
     void powerOff() {
         // TODO exit the app
         UNIMPLEMENTED;
+    }
+
+    // memory -------------------------------------------------------------------------------------
+
+    size_t freeHeap() {
+        UNIMPLEMENTED;
+        return 0;
+    }
+
+    size_t freeVRAM() {
+        return (_vram + sizeof(_vram)) - Device::vramNext_;
+    }
+
+    void resetVRAM() {
+        Device::vramNext_ = _vram;
+    }
+
+    uint8_t * allocateVRAM(size_t numBytes) {
+        if (numBytes > freeVRAM())
+            FATAL_ERROR(VRAM_OUT_OF_MEMORY);
+        uint8_t * result = Device::vramNext_;
+        Device::vramNext_ += numBytes;
+        return result;
     }
 
     void cpuOverclock(unsigned hz, bool overvolt) {
@@ -67,13 +94,6 @@ namespace rckid {
         std::cout << "File:       " << fatalErrorFile_ << ":" << fatalErrorLine_ << std::endl;
         exit(EXIT_FAILURE);
     }
-
-    size_t Stats::freeHeap() {
-        // TODO actually implement
-        UNIMPLEMENTED;
-        return 0;
-    }
-
 
     // ============================================================================================
     // ST7789

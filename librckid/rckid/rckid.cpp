@@ -24,24 +24,19 @@
 #include "ST7789_rgb_double.pio.h"
 
 
-extern char __StackLimit, __bss_end__;
+
+extern uint8_t __StackLimit, __bss_end__;
+extern uint8_t __vram_start__, __vram_end__;
+
 namespace rckid {
 
     void initialize() {
         // FIXME for reasons I do not completely understand, the board init must be before the other calls, or the device hangs? 
         board_init();
+        Device::initialize();
         // initialize the display
         ST7789::initialize();
-        // initialize the I2C bus
-        i2c_init(i2c0, RP_I2C_BAUDRATE); 
-        gpio_set_function(RP_PIN_SDA, GPIO_FUNC_I2C);
-        gpio_set_function(RP_PIN_SCL, GPIO_FUNC_I2C);
-        // Make the I2C pins available to picotool
-        bi_decl(bi_2pins_with_func(RP_PIN_SDA, RP_PIN_SCL, GPIO_FUNC_I2C));  
-        Device::initializeSensors();
-        // TODO serial if necessary
-        tud_init(BOARD_TUD_RHPORT);
-        LOG("RCKid initialized");
+        //LOG("VRAM start :" + )
     }
 
     void yield() {
@@ -73,10 +68,36 @@ namespace rckid {
         );
     }
 
+    // power management ---------------------------------------------------------------------------
+
     void powerOff() {
         /// TODO: make sure sd and other things are done first, only then poweroff
         Device::sendCommand(cmd::PowerOff{}); 
     }
+
+    // memory -------------------------------------------------------------------------------------
+
+    size_t freeHeap() {
+        size_t heapSize = &__StackLimit  - &__bss_end__;    
+        return heapSize - mallinfo().uordblks;
+    }
+
+    size_t freeVRAM() {
+        return &__vram_end__ - Device::vramNext_;
+    }
+
+    void resetVRAM() {
+        Device::vramNext_ = &__vram_start__;
+    }
+
+    uint8_t * allocateVRAM(size_t numBytes) {
+        if (numBytes > freeVRAM())
+            FATAL_ERROR(VRAM_OUT_OF_MEMORY);
+        uint8_t * result = Device::vramNext_;
+        Device::vramNext_ += numBytes;
+        return result;
+    }
+    
 
     void cpuOverclock(unsigned hz, bool overvolt) {
         if (overvolt) {
@@ -98,6 +119,22 @@ namespace rckid {
     }
 
     // 4.4ms for system currently
+
+    void Device::initialize() {
+        // initialize the I2C bus
+        i2c_init(i2c0, RP_I2C_BAUDRATE); 
+        gpio_set_function(RP_PIN_SDA, GPIO_FUNC_I2C);
+        gpio_set_function(RP_PIN_SCL, GPIO_FUNC_I2C);
+        // Make the I2C pins available to picotool
+        bi_decl(bi_2pins_with_func(RP_PIN_SDA, RP_PIN_SCL, GPIO_FUNC_I2C));  
+        // TODO serial if necessary
+        tud_init(BOARD_TUD_RHPORT);
+        LOG("RCKid initialized");
+        resetVRAM();
+        BMI160::initialize();
+        LTR390UV::initialize();
+        LTR390UV::startALS();
+    }
 
     void Device::tick() {
         ++ticks_;
@@ -137,17 +174,6 @@ namespace rckid {
         ST7789::reset();
         ST7789::fill(ColorRGB::Blue());
         while(true) {}
-    }
-
-    void Device::initializeSensors() {
-        BMI160::initialize();
-        LTR390UV::initialize();
-        LTR390UV::startALS();
-    }
-
-    size_t Stats::freeHeap() {
-        size_t heapSize = &__StackLimit  - &__bss_end__;    
-        return heapSize - mallinfo().uordblks;
     }
 
     // ============================================================================================
