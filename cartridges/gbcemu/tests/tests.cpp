@@ -8,7 +8,7 @@
 
 using namespace rckid;
 
-class GBCEmuTests : public FrameBufferApp<ColorRGB> {
+class GBCEmuTests : public FBApp<FrameBuffer<ColorRGB>> {
 public:
     GBCEmuTests(int argc, char ** argv): argc_{argc}, argv_{argv} {}
 private:
@@ -26,7 +26,8 @@ private:
     int status_ = 0;
 }; // GBCEmuTests
 
-void rckid_main(int argc, char ** argv) {
-    GBCEmuTests{argc, argv}.run();
+void rckid_main() {
+    // argc, argv
+    GBCEmuTests{0, nullptr}.run();
     std::cout << "KTHXBYE!" << std::endl;
 }

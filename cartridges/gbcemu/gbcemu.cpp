@@ -12,7 +12,7 @@
 
 using namespace rckid;
 
-class GBCEmu : public FrameBufferApp<ColorRGB> {
+class GBCEmu : public FBApp<FrameBuffer<ColorRGB>> {
 public:
 
     GBCEmu() {
@@ -29,7 +29,7 @@ public:
     }
 
     void onFocus() override {
-        FrameBufferApp::onFocus();
+        FBApp::onFocus();
         fb_.setBg(ColorRGB::Black());
         fb_.fill();
         fb_.setBg(ColorRGB::Blue());

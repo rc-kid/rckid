@@ -19,13 +19,13 @@ namespace rckid {
           - add accelerometer as input
 
      */
-    class SlidingPuzzle : public FrameBufferApp<ColorRGB> {
+    class SlidingPuzzle : public FBApp<FrameBuffer<ColorRGB>> {
     public:
 
     protected:
 
         void onFocus() override {
-            FrameBufferApp::onFocus();
+            FBApp::onFocus();
             //PNG png = PNG::fromBuffer(defaultImage_, sizeof(defaultImage_));
             fb_.loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
             /*

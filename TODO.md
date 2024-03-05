@@ -10,9 +10,16 @@
 
 ## TODO
 
+- make canvas similar api wrt bitmap
+- same for framebuffer
+- write optimized draw bitmap functions
+
+- make app system apps use 160x120x8bpp for minimal VRAM footprint for system
+- determine carousel with smaller footprint too
+
 - check UV light detector
 
-- lost the ability to overclock - could it be discplay configuration problems, or other issues?
+- display does not work when overclocked (rest works ok)
 
 - steps counter - might need battery to verify
 - accelerometer reported temperature

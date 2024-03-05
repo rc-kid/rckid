@@ -8,6 +8,186 @@ namespace rckid {
     template<typename COLOR>
     class Bitmap {
     public:
+
+        using Color = COLOR;
+
+        static Bitmap onHeap(int width, int height) { 
+            return Bitmap{width, height, new uint32_t[width * height * Color::BPP / 32]}; 
+        }
+
+        static Bitmap inVRAM(int width, int height) { 
+            return Bitmap{width, height, allocateVRAM(width * height * Color::BPP / 8)};
+        }
+
+        static Bitmap fromPNGonHeap(PNG && png) {
+            int w = png.width();
+            int h = png.height();
+            Bitmap result = Bitmap::onHeap(w, h);
+            result.loadPNG(std::move(png), Point{0,0});
+            return result;
+        }
+
+        static Bitmap fromPNGinVRAM(PNG && png) {
+            int w = png.width();
+            int h = png.height();
+            Bitmap result = Bitmap::inVRAM(w, h);
+            result.loadPNG(std::move(png), Point{0,0});
+            return result;
+        }
+
+        Bitmap() = default;
+        Bitmap(int w, int h):w_{w}, h_{h} {}
+
+        /** A very dangerous bitmap constructor with explicitly supplied memory buffer. The onHeap and inVRAM static methods should almost always be used instead, or the non-allocating constructors should be followed with explicit resize call or other means. 
+        */
+        Bitmap(int w, int h, uint32_t * buffer): w_{w}, h_{h}, buffer_{buffer} {
+            ASSERT(w * Color::BPP % 32 == 0);
+            ASSERT(h * Color::BPP % 32 == 0);
+        }
+
+        Bitmap(Bitmap && other):
+            w_{other.w_},
+            h_{other.h_} {
+            buffer_ = other.buffer_;
+            other.buffer_ = nullptr;
+        }
+
+        ~Bitmap() {
+            if (! isVRAMPtr(buffer_))
+                delete [] buffer_;
+        }
+
+        Bitmap & operator = (Bitmap && other) {
+            if (! isVRAMPtr(buffer_))
+                delete [] buffer_;
+            w_ = other.w_;
+            h_ = other.h_;
+            buffer_ = other.buffer_;
+            other.buffer_ = nullptr;
+            return *this;
+        }
+
+        bool isValid() const { return buffer_ != nullptr; }
+
+        int width() const { return w_; }
+        int height() const { return h_; }
+
+        size_t numPixels() const { return w_ * h_; }
+
+        Color pixelAt(int x, int y) const {
+            return reinterpret_cast<Color const *>(buffer_)[map(x, y)];
+        }
+
+        void setPixelAt(int x, int y, Color c) {
+            reinterpret_cast<Color*>(buffer_)[map(x, y)] = c;
+        }
+
+        /** \name Drawing operations
+
+            Methods for drawing bitmaps. 
+         */
+        //@{
+        template<typename SOURCE_COLOR>
+        void draw(Bitmap<SOURCE_COLOR> const & from, int x, int y) {
+            draw<SOURCE_COLOR>(from.buffer_, from.w_, from.h_, Point{x, y}, Rect::WH(from.w_, from.h_));
+        }
+
+        template<typename SOURCE_COLOR>
+        void draw(Bitmap<SOURCE_COLOR> const & from, Point where) {
+            draw<SOURCE_COLOR>(from.buffer_, from.w_, from.h_, where, Rect::WH(from.w_, from.h_));
+        }
+
+        template<typename SOURCE_COLOR>
+        void draw(Bitmap<SOURCE_COLOR> const & from, int x, int y, Rect fromRect) {
+            draw<SOURCE_COLOR>(from.buffer_, from.w_, from.h_, Point{x, y}, fromRect);
+        }   
+
+        template<typename SOURCE_COLOR>
+        void draw(Bitmap<SOURCE_COLOR> const & from, Point where, Rect fromRect) {
+            draw<SOURCE_COLOR>(from.buffer_, from.w_, from.h_, where, fromRect);
+        }
+        //@}
+
+        /** \name Fill 
+         */
+        //@{
+
+        void fill(Rect rect, Color color) {
+            // TODO this is very slow
+            for (int x = rect.left(), xe = rect.right(); x < xe; ++x)
+                for (int y = rect.top(), ye = rect.bottom(); y < ye; ++y)
+                    setPixelAt(x, y, color);
+        }
+
+        //@}
+
+
+        /** Loads PNG image into the canvas from given top left coordinates. 
+         */
+        void loadImage(PNG && png, Point from = Point{0,0});
+
+        // TODO make this protected - we don't really want resizing to be public
+        void resize(int w, int h, uint32_t * buffer) {
+            ASSERT(w * Color::BPP / 32 == 0);
+            ASSERT(h * Color::BPP / 32 == 0);
+            if ( isVRAMPtr(buffer_))
+                delete [] buffer_;
+            w_ = w;
+            h_ = h;
+            buffer_ = buffer;
+        }
+
+    protected:
+
+        static __force_inline size_t map(int x, int y, int w, int h) { return (w - x - 1) * h + y; }
+        constexpr __force_inline size_t map(int x, int y) const { return map(x, y, w_, h_); }
+
+        void setBuffer(Bitmap && other) {
+            if (! isVRAMPtr(buffer_))
+                delete [] buffer_;
+            w_ = other.w_;
+            h_ = other.h_;
+            buffer_ = other.buffer_;
+            other.buffer_ = nullptr;
+        }
+
+        /** Basic bitmap drawing and color conversion function. Takes the source bitmap, which may, or may not be the same color, and draws it on own canvas starting from _where_. The portion of source bitmap to be drawn is specified in the _fromRect_. This is the general, unoptimized implementation for all cases, but more performant specializations are provided for special cases below. 
+         */
+        template<typename SOURCE_COLOR>
+        void draw(uint32_t const * sourceBuffer, int sourceWidth, int sourceHeight, Point where, Rect fromRect) {
+            // TODO 
+        }
+
+        int w_ = 0;
+        int h_ = 0;
+        uint32_t * buffer_ = nullptr;
+    }; // rckid::Bitmap
+
+
+    template<>
+    inline void Bitmap<ColorRGB>::loadImage(PNG && png, Point where) {
+        png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
+            for (int i = 0; i < lineWidth; ++i)
+                setPixelAt(i + where.x(), lineNum + where.y(), line[i]);
+        });
+    }
+
+    template<>
+    inline void Bitmap<Color256>::loadImage(PNG && png, Point where) {
+        png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
+            for (int i = 0; i < lineWidth; ++i) {
+                ColorRGB c = line[i];
+                setPixelAt(i + where.x(), lineNum + where.y(), Color::RGB(c.r(), c.g(), c.b()));
+            }
+        });
+    }
+
+
+#ifdef FOO
+
+    template<typename COLOR>
+    class Bitmap {
+    public:
         using Color = COLOR;
 
         Bitmap(int w, int h) {
@@ -201,5 +381,6 @@ namespace rckid {
     }
 
 
+#endif
 
 } // namespace rckid

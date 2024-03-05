@@ -7,7 +7,7 @@
 
 namespace rckid {
 
-    class RawAudioTest : public FrameBufferApp<ColorRGB> {
+    class RawAudioTest : public FBApp<FrameBuffer<ColorRGB>> {
     public:
         RawAudioTest() = default;
 
@@ -16,7 +16,7 @@ namespace rckid {
         static constexpr size_t BUFFER_SIZE = 2048 * 10;
 
         void onFocus() override {
-            FrameBufferApp::onFocus();
+            FBApp::onFocus();
             buffer_ = new uint16_t[BUFFER_SIZE];
             bOther_ = buffer_ + BUFFER_SIZE / 2;
             for (size_t i = 0; i < BUFFER_SIZE; ++i)

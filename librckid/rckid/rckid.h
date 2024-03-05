@@ -115,9 +115,9 @@ namespace rckid {
      */
     void resetVRAM();
 
-    /** Allocates given amount of bytes in VRAM and returns pointer. Will go immediately to BSOD if not enough memory is available in VRAM for the allocation. 
+    /** Allocates given amount of bytes in VRAM and returns pointer. Will go immediately to BSOD if not enough memory is available in VRAM for the allocation. Although one byte granularity for the size is supported, the result is always aligned to 4 bytes and therefore returned as uint32_t pointer. 
      */
-    uint8_t * allocateVRAM(size_t numBytes); 
+    uint32_t * allocateVRAM(size_t numBytes); 
 
     /** Returns true if the pointer points to VRAM area, false otherwise. 
      */
@@ -291,7 +291,7 @@ namespace rckid {
 
         /** Pointer to the end of allocated VRAM. 
          */
-        static inline uint8_t * vramNext_ = 0;
+        static inline uint32_t * vramNext_ = 0;
 
 
         static inline uint32_t ticks_ = 0;
@@ -339,7 +339,7 @@ namespace rckid {
         friend size_t freeHeap();
         friend size_t freeVRAM(); 
         friend void resetVRAM();
-        friend uint8_t * allocateVRAM(size_t numBytes); 
+        friend uint32_t * allocateVRAM(size_t numBytes); 
 
         // controls
         friend bool down(Btn b) { return state_.status.down(b); }

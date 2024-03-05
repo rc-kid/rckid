@@ -10,14 +10,14 @@
 
 namespace rckid {
 
-    class AudioTestTone : public FrameBufferApp<ColorRGB> {
+    class AudioTestTone : public FBApp<FrameBuffer<ColorRGB>> {
     public:
         AudioTestTone() = default;
 
     protected:
 
         void onFocus() override {
-            FrameBufferApp::onFocus();
+            FBApp::onFocus();
             buffer_ = new uint16_t[8192];
             offset_ = 0;
             tone_.play(440);

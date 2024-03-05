@@ -92,9 +92,10 @@ namespace rckid {
 
         /** \name Continuous mode
          
-            The continous mode does not send any commands to the display and only updates the entire display area. When data for entire display are sent, new frame will begin. The continuous mode uses 32bit PIO tuned to high speed fast updates with minimal CPU intervention. 
+            The continous mode does not send any commands to the display and only updates the entire display area. When data for entire display are sent, new frame will begin. The continuous mode uses 32bit PIO tuned to high speed for fast updates with minimal CPU intervention. 
 
-            The continuous mode is not intended to be used directly by the users, but rather should be utilized by various gpu modes, such as framebuffer or tiling engine. 
+            When entering the continuous mode, a rectangle of the screen that will be updated can be specified (defaulting to full screen). This can speed rendering even more in cases where only partial screen updates are necessary. 
+            
          */
         static void enterContinuousMode(Mode mode = Mode::Single) { enterContinuousMode(Rect::WH(320, 240), mode); }
 
@@ -102,6 +103,31 @@ namespace rckid {
 
         static void leaveContinuousMode();
 
+        static void writePixels(uint16_t const * pixels, size_t numPixels) {
+            if (!updating_)
+                cb_ = [](){ ST7789::writePixelsDone(); };
+            writePixels(pixels, numPixels, cb_);
+        }
+
+        static void writePixels(uint16_t const * pixels, size_t numPixels, UpdatePixelsCallback cb) {
+            cb_ = cb;
+            if (!updating_) {
+                Stats::updateStart_ = uptime_us();
+                updating_ = true;
+            }
+#if (! defined LIBRCKID_MOCK)
+            dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
+#else       
+            sendMockPixels(pixels, numPixels);
+#endif
+        }
+
+        static void writePixelsDone() {
+            ST7789::updating_ = false;
+            Stats::displayUpdateUs_ = static_cast<unsigned>(uptime_us() - Stats::updateStart_);
+        }
+
+        /*
         static void updatePixels(uint16_t const * pixels, size_t numPixels) {
             cb_ = [](){ 
                 ST7789::updating_ = false; 
@@ -125,7 +151,7 @@ namespace rckid {
 #else       
             sendMockPixels(pixels, numPixels);
 #endif
-        }
+        } */
 
         /** Updates the entire display area using given profile information. 
          */

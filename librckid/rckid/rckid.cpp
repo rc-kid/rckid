@@ -28,7 +28,7 @@
 
 
 extern uint8_t __StackLimit, __bss_end__;
-extern uint8_t __vram_start__, __vram_end__;
+extern uint32_t __vram_start__, __vram_end__;
 
 extern void rckid_main();
 
@@ -87,18 +87,21 @@ namespace rckid {
     }
 
     size_t freeVRAM() {
-        return &__vram_end__ - Device::vramNext_;
+        return (&__vram_end__ - Device::vramNext_) * 4;
     }
 
     void resetVRAM() {
         Device::vramNext_ = &__vram_start__;
     }
 
-    uint8_t * allocateVRAM(size_t numBytes) {
+    uint32_t * allocateVRAM(size_t numBytes) {
+        // ensure alignment
+        if (numBytes % 4 != 0)
+            numBytes += 4 - (numBytes % 4);
         if (numBytes > freeVRAM())
             FATAL_ERROR(VRAM_OUT_OF_MEMORY);
-        uint8_t * result = Device::vramNext_;
-        Device::vramNext_ += numBytes;
+        uint32_t * result = Device::vramNext_;
+        Device::vramNext_ += numBytes / 4;
         return result;
     }
 
@@ -179,9 +182,7 @@ namespace rckid {
     }
 
     void Device::BSOD(int code) {
-        resetVRAM();
-        ST7789::reset();
-        FrameBuffer<ColorRGB> fb{320, 240, reinterpret_cast<uint32_t*>(& __vram_start__)};
+        FrameBuffer<ColorRGB> fb{Bitmap<ColorRGB>{320,240, reinterpret_cast<uint32_t*>(__vram_start__)}};
         fb.setFg(ColorRGB::White());
         fb.setFont(Iosevka_Mono6pt7b);
         fb.setBg(ColorRGB::Blue());
@@ -190,8 +191,11 @@ namespace rckid {
             << "FATAL ERROR " << code << "\n\n"
             << "File: " << fatalErrorFile_ << "\n"
             << "Line: " << fatalErrorLine_; 
-        fb.startRendering();
-        while(true) {}
+        ST7789::reset();
+        ST7789::enterContinuousMode(ST7789::Mode::Single);
+        fb.render();
+        while(true) {
+        }
     }
 
     // ============================================================================================
@@ -255,6 +259,7 @@ namespace rckid {
     void ST7789::reset() {
         dma_channel_abort(dma_);
         pio_sm_set_enabled(pio_, sm_, false);
+        updating_ = false;
 
         gpio_init(RP_PIN_DISP_TE);
         gpio_set_dir(RP_PIN_DISP_TE, GPIO_IN);

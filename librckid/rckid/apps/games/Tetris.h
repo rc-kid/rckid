@@ -9,13 +9,13 @@ namespace rckid {
      
         Uses a full-color framebuffer, which is, especially for tetris a bit wasteful in terms of memory. 
      */
-    class Tetris : public FrameBufferApp<ColorRGB> {
+    class Tetris : public FBApp<FrameBuffer<ColorRGB>> {
     public:
 
     protected:
 
         void onFocus() override {
-            FrameBufferApp::onFocus();
+            FBApp::onFocus();
             reset();
         }
 

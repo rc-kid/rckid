@@ -74,7 +74,8 @@ namespace rckid {
         static Color256 RGB(ColorRGB rgb) { return RGB(rgb.r(), rgb.g(), rgb.b()); }
 
         ColorRGB toRGB() const __attribute__((always_inline)) {
-            return palette_[raw_];
+            return palette[raw_];
+            /*
             return raw_ == 0 ? ColorRGB::Black() : ColorRGB::White();
             if (raw_ >= 240) {
                 uint8_t i = raw_ - 240;
@@ -87,12 +88,13 @@ namespace rckid {
                 g = g % 8;
                 // TODO this is not precise, revisit and fix
                 return ColorRGB{static_cast<uint8_t>(r * 43), static_cast<uint8_t>(g * 32), static_cast<uint8_t>(b * 52)};
-            }
+            }*/
         }
 
         static constexpr Color256 White() { return Color256{255}; }
         static constexpr Color256 Black() { return Color256{0}; }
         static constexpr Color256 Blue() { return Color256{4}; }
+
 
     private:
 
@@ -101,7 +103,7 @@ namespace rckid {
         uint8_t raw_;
 
     public:
-        static constexpr ColorRGB palette_[] = {
+        static constexpr ColorRGB palette[] = {
             ColorRGB{0x00,0x00,0x00},
             ColorRGB{0x00,0x00,0x40},
             ColorRGB{0x00,0x00,0x80},

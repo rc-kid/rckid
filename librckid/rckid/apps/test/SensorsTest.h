@@ -7,7 +7,7 @@
 
 namespace rckid {
 
-    class SensorsTest : public FrameBufferApp<ColorRGB> {
+    class SensorsTest : public FBApp<FrameBuffer<ColorRGB>> {
     public:
 
         SensorsTest()  = default;

@@ -8,7 +8,7 @@
 
 namespace rckid {
 
-    class Carousel : public FrameBufferApp<ColorRGB> {
+    class Carousel : public FBApp<FrameBuffer<ColorRGB>> {
     public:
         class Item {
         public:
@@ -33,12 +33,12 @@ namespace rckid {
 
             void set(PNG & img, char const * text) {
                 text_ = text;
-                img_.loadImage(std::move(img));
+                //img_.loadImage(std::move(img));
             }
 
             void set(PNG && img, char const * text) {
                 text_ = text;
-                img_.loadImage(std::move(img));
+                //img_.loadImage(std::move(img));
             }
 
         private:
@@ -68,7 +68,7 @@ namespace rckid {
         virtual void getItem(size_t index, Item & item) = 0;
 
         void onFocus() override {
-            FrameBufferApp::onFocus();;
+            FBApp::onFocus();;
             getItem(i_, current_);
             current_.textWidth_ = fb_.textWidth(current_.text());
             fb_.setFg(Color::White());

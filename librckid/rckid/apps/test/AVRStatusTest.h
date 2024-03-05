@@ -8,7 +8,7 @@
 
 namespace rckid {
 
-    class AVRStatusTest : public FrameBufferApp<ColorRGB> {
+    class AVRStatusTest : public FBApp<FrameBuffer<ColorRGB>> {
     public:
 
         AVRStatusTest()  = default;
@@ -16,7 +16,7 @@ namespace rckid {
     protected:
 
         void onFocus() override {
-            FrameBufferApp::onFocus();
+            FBApp::onFocus();
             setBrightness(32);
         }
 
@@ -31,9 +31,9 @@ namespace rckid {
 
         void draw() override {
             TinyDate t = time();
-            fb_.setFg(ColorRGB::White());
+            fb_.setFg(Color::White());
             fb_.setFont(Iosevka_Mono6pt7b);
-            fb_.setBg(ColorRGB::RGB(bg_, 0, 0));
+            fb_.setBg(Color::RGB(bg_, 0, 0));
             bg_ += 4;
             fb_.fill();
             fb_.textMultiline(0,0) << (down(Btn::Left) ? "L " : "  ")

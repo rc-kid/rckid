@@ -21,9 +21,19 @@ namespace rckid {
         using Bitmap<COLOR>::setPixelAt;
         using Bitmap<COLOR>::pixelAt;
 
-        Canvas(int width, int height) : Bitmap<COLOR>{width, height} {}
+        /** Creates new canvas by consuming already created bitmap. 
+         */
+        Canvas(Bitmap<COLOR> && bitmap):
+            Bitmap<COLOR>{std::move(bitmap)} {
+        }
 
-        Canvas(int width, int height, uint32_t * buffer) : Bitmap<COLOR>{width, height, buffer} {}
+        Canvas() = default;
+
+        Canvas(int width, int height):Bitmap<COLOR>{width, height} {}
+
+        //Canvas(int width, int height) : Bitmap<COLOR>{width, height} {}
+
+        //Canvas(int width, int height, uint32_t * buffer) : Bitmap<COLOR>{width, height, buffer} {}
 
         Color bg() const { return bg_; }
         Color fg() const { return fg_; }
@@ -66,6 +76,7 @@ namespace rckid {
             }
             return width;
         }
+
 
         using Bitmap<COLOR>::fill;
 
