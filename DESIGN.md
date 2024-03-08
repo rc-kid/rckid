@@ -8,6 +8,24 @@ Since we are using the same 1mm board as the reference HW design, we can keep th
 
 ## 3v3 Switching Regulator
 
+Uses `TPS63001` fixed at 3v3, therefore equations (1) and (2) for the divider and feed forward capacitor are moot. Boost duty cycle at 3V, which is the lowest operating voltage (under 3V the AVR's voltages will be low enough for the 3v3 I2C rail to cause problems) is thus calculated at as (3):
+
+    D = (Vout - Vin)/Vout 
+    D = (3.3 - 3.0)/3.3
+    D = 0.09
+
+Inductor peak current (4) is:
+
+    Ipeak = Iout / (efficiency * (1 -D)) + Vin * D / (2 * f * L)
+
+where efficiency is `0.8`, switching frequency is `2.5MHz` and inductor value is `0.7uH` (using 1uH inductor with 30% tolerance, this is the worst case), for max `Iout` of `1A` (this gives 20% margin over the maximum rated current of 800mA):
+
+    Ipeak = 1 / (0.8 * 0.91) + 3 * 0.09 / (2 * 2.5MHz * 0.7uH)
+    Ipeak = 1.37 + 0.077
+    IPeak = 1.45 A
+
+> OLD:
+
 Uses `TPS63060`, minimum input voltage is 3V, output voltage is 3.3V. From the application design procedure in the datasheet, duty cycle (1) is:
 
     D = (Vout - Vin)/Vout 

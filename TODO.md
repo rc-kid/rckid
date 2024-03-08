@@ -55,6 +55,7 @@
 
 ## PCB
 
+- figure out how whether to use thermal reliefs everywhere
 - verify everything before ordering new versions
 
 ## RP
