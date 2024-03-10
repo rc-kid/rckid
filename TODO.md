@@ -10,8 +10,6 @@
 
 ## TODO
 
-- make canvas similar api wrt bitmap
-- same for framebuffer
 - write optimized draw bitmap functions
 
 - make app system apps use 160x120x8bpp for minimal VRAM footprint for system

@@ -16,7 +16,7 @@ namespace rckid {
         }
 
         static Bitmap inVRAM(int width, int height) { 
-            return Bitmap{width, height, allocateVRAM(width * height * Color::BPP / 8)};
+            return Bitmap{width, height, static_cast<uint32_t*>(allocateVRAM(width * height * Color::BPP / 8))};
         }
 
         static Bitmap fromPNGonHeap(PNG && png) {
@@ -79,7 +79,8 @@ namespace rckid {
         }
 
         void setPixelAt(int x, int y, Color c) {
-            reinterpret_cast<Color*>(buffer_)[map(x, y)] = c;
+            if (x > 0 && x < width() && y > 0 && y < height())
+                reinterpret_cast<Color*>(buffer_)[map(x, y)] = c;
         }
 
         /** \name Drawing operations
@@ -130,7 +131,7 @@ namespace rckid {
         void resize(int w, int h, uint32_t * buffer) {
             ASSERT(w * Color::BPP / 32 == 0);
             ASSERT(h * Color::BPP / 32 == 0);
-            if ( isVRAMPtr(buffer_))
+            if (isVRAMPtr(buffer_))
                 delete [] buffer_;
             w_ = w;
             h_ = h;
@@ -143,7 +144,7 @@ namespace rckid {
         constexpr __force_inline size_t map(int x, int y) const { return map(x, y, w_, h_); }
 
         void setBuffer(Bitmap && other) {
-            if (! isVRAMPtr(buffer_))
+            if (!isVRAMPtr(buffer_))
                 delete [] buffer_;
             w_ = other.w_;
             h_ = other.h_;

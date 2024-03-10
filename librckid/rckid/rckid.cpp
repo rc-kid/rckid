@@ -28,7 +28,6 @@
 
 
 extern uint8_t __StackLimit, __bss_end__;
-extern uint32_t __vram_start__, __vram_end__;
 
 extern void rckid_main();
 
@@ -84,29 +83,6 @@ namespace rckid {
     size_t freeHeap() {
         size_t heapSize = &__StackLimit  - &__bss_end__;    
         return heapSize - mallinfo().uordblks;
-    }
-
-    size_t freeVRAM() {
-        return (&__vram_end__ - Device::vramNext_) * 4;
-    }
-
-    void resetVRAM() {
-        Device::vramNext_ = &__vram_start__;
-    }
-
-    uint32_t * allocateVRAM(size_t numBytes) {
-        // ensure alignment
-        if (numBytes % 4 != 0)
-            numBytes += 4 - (numBytes % 4);
-        if (numBytes > freeVRAM())
-            FATAL_ERROR(VRAM_OUT_OF_MEMORY);
-        uint32_t * result = Device::vramNext_;
-        Device::vramNext_ += numBytes / 4;
-        return result;
-    }
-
-    bool isVRAMPtr(void * ptr) {
-        return (ptr >= & __vram_start__) && (ptr < & __vram_end__);
     }
 
     // 
@@ -182,7 +158,8 @@ namespace rckid {
     }
 
     void Device::BSOD(int code) {
-        FrameBuffer<ColorRGB> fb{Bitmap<ColorRGB>{320,240, reinterpret_cast<uint32_t*>(__vram_start__)}};
+        resetVRAM();
+        FrameBuffer<ColorRGB> fb{Bitmap<ColorRGB>::inVRAM(320,240)};
         fb.setFg(ColorRGB::White());
         fb.setFont(Iosevka_Mono6pt7b);
         fb.setBg(ColorRGB::Blue());

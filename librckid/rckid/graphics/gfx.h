@@ -22,6 +22,10 @@ struct GFXfont {
     uint16_t first;   ///< ASCII extents (first char)
     uint16_t last;    ///< ASCII extents (last char)
     uint8_t yAdvance; ///< Newline distance (y axis)
+
+    uint8_t xAdvance(char c) const {
+        return (glyph + (c - first))->xAdvance;
+    }
 };
 
 

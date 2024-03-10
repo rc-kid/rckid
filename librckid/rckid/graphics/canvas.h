@@ -20,6 +20,7 @@ namespace rckid {
         using Bitmap<COLOR>::h_;
         using Bitmap<COLOR>::setPixelAt;
         using Bitmap<COLOR>::pixelAt;
+        using Bitmap<COLOR>::width;
 
         /** Creates new canvas by consuming already created bitmap. 
          */
@@ -57,6 +58,10 @@ namespace rckid {
             int startX = x;
             return Writer{[this, x, y, startX] (char c) mutable {
                 if (c != '\n') {
+                    if (x + font().xAdvance(c) > width()) {
+                        x = startX;
+                        y += font().yAdvance;
+                    } 
                     x += drawGlyph(x, y, c, fg_, font_, 1);
                 } else {
                     x = startX;

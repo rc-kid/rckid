@@ -30,6 +30,10 @@
 #include "writer.h"
 #include "sensors.h"
 
+/** VRAM beginning and end symbols. 
+ */
+extern uint8_t __vram_start__, __vram_end__;
+
 inline uint8_t operator "" _u8(unsigned long long value) { return static_cast<uint8_t>(value); }
 inline uint16_t operator "" _u16(unsigned long long value) { return static_cast<uint16_t>(value); }
 inline uint32_t operator "" _u32(unsigned long long value) { return static_cast<uint32_t>(value); }
@@ -107,21 +111,26 @@ namespace rckid {
 
     /** Returns the free VRAM memory available for new allocations. 
      */
-    size_t freeVRAM(); 
+    size_t freeVRAM();
 
     /** Resets the VRAM memory, deallocating everything in the VRAM arena. 
      
         Use this function with *extreme* caution as it invalidates all pointers to VRAM memory held by the program.
-     */
+    */
     void resetVRAM();
 
     /** Allocates given amount of bytes in VRAM and returns pointer. Will go immediately to BSOD if not enough memory is available in VRAM for the allocation. Although one byte granularity for the size is supported, the result is always aligned to 4 bytes and therefore returned as uint32_t pointer. 
      */
-    uint32_t * allocateVRAM(size_t numBytes); 
+    void * allocateVRAM(size_t numBytes);
+
+    /** Allocates VRAM for given type. 
+     */
+    template<typename T>
+    T * allocateVRAM() { return static_cast<T*>(allocateVRAM(sizeof(T))); }
 
     /** Returns true if the pointer points to VRAM area, false otherwise. 
      */
-    bool isVRAMPtr(void * ptr); 
+    bool isVRAMPtr(void * ptr);
 
     //@}
 
@@ -270,6 +279,7 @@ namespace rckid {
     //@}
 
 
+
     /** Encapsulates the state of the device and its basic peripherals. 
      
         A static class is used to maintain encapsulation while providing inlinable, fast implementations of the friend functions from the RCKid's API described above. 
@@ -337,9 +347,23 @@ namespace rckid {
 
         // memory
         friend size_t freeHeap();
-        friend size_t freeVRAM(); 
+        friend size_t freeVRAM();
         friend void resetVRAM();
-        friend uint32_t * allocateVRAM(size_t numBytes); 
+        friend void * allocateVRAM(size_t numBytes) {
+            if (numBytes % 4 != 0)
+                numBytes += 4 - (numBytes % 4);
+            if (numBytes > freeVRAM())
+                FATAL_ERROR(VRAM_OUT_OF_MEMORY);
+            void * result = static_cast<void*>(Device::vramPtr_);
+            // it's ok to disable the array bounds check here as we have checked the size already above
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+            Device::vramPtr_ += numBytes;
+#pragma GCC diagnostic pop            
+            return result;
+        }
+
+        static inline uint8_t * vramPtr_ = nullptr;
 
         // controls
         friend bool down(Btn b) { return state_.status.down(b); }
@@ -381,6 +405,14 @@ namespace rckid {
         static inline char const * fatalErrorFile_ = nullptr;
 
     }; 
+
+#if (!defined LIBRCKID_MOCK)
+    /* When not in mock mode, we have all we need in the header file and can inline the VRAM functions for maximum performance.*/
+
+    inline size_t freeVRAM() { return &__vram_end__ - Device::vramPtr_; }
+    inline void resetVRAM() { Device::vramPtr_ = &__vram_start__; }
+    inline bool isVRAMPtr(void * ptr) { return (ptr >= static_cast<void*>(& __vram_start__)) && (ptr < static_cast<void*>(& __vram_end__)); }
+#endif
 
     /** Various performance metrics. 
      */

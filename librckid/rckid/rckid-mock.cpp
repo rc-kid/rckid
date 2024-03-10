@@ -10,12 +10,7 @@
 #include "fonts/Iosevka_Mono6pt7b.h"
 
 
-extern uint8_t vram_[];
-extern size_t rckid_vram_size_;
-
 extern void rckid_main();
-
-
 
 namespace rckid {
 
@@ -58,29 +53,6 @@ namespace rckid {
         return 0;
     }
 
-    size_t freeVRAM() {
-        return (vram_ + rckid_vram_size_) - reinterpret_cast<uint8_t *>(Device::vramNext_);
-    }
-
-    void resetVRAM() {
-        Device::vramNext_ = reinterpret_cast<uint32_t*>(&vram_);
-    }
-
-    uint32_t * allocateVRAM(size_t numBytes) {
-        // ensure alignment
-        if (numBytes % 4 != 0)
-            numBytes += 4 - (numBytes % 4);
-        if (numBytes > freeVRAM())
-            FATAL_ERROR(VRAM_OUT_OF_MEMORY);
-        uint32_t * result = Device::vramNext_;
-        Device::vramNext_ += numBytes / 4;
-        return result;
-    }
-
-    bool isVRAMPtr(void * ptr) {
-        return (ptr >= vram_) && (ptr < vram_ + rckid_vram_size_);
-    }
-
     // 
   
     void cpuOverclock(unsigned hz, bool overvolt) {
@@ -109,7 +81,8 @@ namespace rckid {
         std::cout << "If you ran this on RCKid, you would have been treated to its blue screen of death." << std::endl;
         std::cout << "Error code: " << code << std::endl;
         std::cout << "File:       " << fatalErrorFile_ << ":" << fatalErrorLine_ << std::endl;
-        FrameBuffer<ColorRGB> fb{Bitmap<ColorRGB>{320,240, reinterpret_cast<uint32_t*>(&vram_)}};
+        resetVRAM();
+        FrameBuffer<ColorRGB> fb{Bitmap<ColorRGB>::inVRAM(320,240)};
         fb.setFg(ColorRGB::White());
         fb.setFont(Iosevka_Mono6pt7b);
         fb.setBg(ColorRGB::Blue());
