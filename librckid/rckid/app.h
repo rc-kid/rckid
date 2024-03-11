@@ -2,25 +2,19 @@
 
 #include <vector>
 
-//#include "graphics/framebuffer.h"
-
 #include "graphics/png.h"
 #include "fonts/Iosevka_Mono6pt7b.h"
 
-
 namespace rckid {
 
-    template<typename T>
-    class App;
+    /** Base app class. 
 
-    /** 
-     
         Apps are always run modally, i.e. the loop is new frame 
     */
-    class App2 {
+    class App {
     public:
 
-        virtual ~App2() = default;
+        virtual ~App() = default;
 
         /** Runs new app*/
         void run();
@@ -40,7 +34,7 @@ namespace rckid {
 
     private:
 
-        static inline App2 * currentApp_ = nullptr;
+        static inline App * currentApp_ = nullptr;
 
     }; // rckid::App
 

@@ -130,7 +130,7 @@ namespace rckid {
 
     /** Base class for applications that render into a framebuffer. */
     template<typename FB> 
-    class FBApp : public App2 {
+    class FBApp : public App {
     public:
 
         using Color = typename FB::Color;

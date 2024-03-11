@@ -36,7 +36,7 @@ namespace rckid {
         void onBlur() override {
             // TODO: remount the SD card
             available_ = false;
-            App2::onBlur();
+            FBApp::onBlur();
         }
 
         void update() override;

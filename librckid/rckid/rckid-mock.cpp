@@ -10,21 +10,17 @@
 #include "fonts/Iosevka_Mono6pt7b.h"
 
 
-extern void rckid_main();
-
 namespace rckid {
 
     void start() {
+        // TODO initialize the mock display & friends
+        InitWindow(640, 480, "RCKid");
+        resetVRAM();
+
         int errorCode = setjmp(rckid::Device::fatalError_);
         if (errorCode != 0) 
             rckid::Device::BSOD(errorCode);
         rckid_main();
-    }
-
-    void initialize() {
-        // TODO initialize the mock display & friends
-        InitWindow(640, 480, "RCKid");
-        resetVRAM();
     }
 
     void yield() {
@@ -214,9 +210,8 @@ namespace rckid {
 } // namespace rckid
 
 int main() {
-    rckid::initialize();
     rckid::start();
-    return EXIT_SUCCESS;
+    UNREACHABLE;
 }
 
 #endif // RCKID_MOCK

@@ -4,10 +4,8 @@
 
 namespace rckid {
 
-#define CALCULATE_TIME(...) [&](){ uint32_t start__ = time_us_32(); __VA_ARGS__; return static_cast<unsigned>(time_us_32() - start__); }()
-
-    void App2::run() {
-        App2 * last = currentApp_;
+    void App::run() {
+        App * last = currentApp_;
         if (last != nullptr)
             last->onBlur();
         resetVRAM();
@@ -35,9 +33,8 @@ namespace rckid {
             if (currentApp_ == nullptr)
                 break;
             
-#if (! defined LIBRCKID_MOCK)
             ST7789::waitUpdateDone();
-#endif
+
             uint32_t tDraw = CALCULATE_TIME(
                 draw();
             );
@@ -55,7 +52,7 @@ namespace rckid {
             currentApp_->onFocus();
     }
 
-    void App2::exit() {
+    void App::exit() {
         currentApp_ = nullptr;
     }
 

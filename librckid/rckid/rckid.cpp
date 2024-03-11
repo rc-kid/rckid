@@ -29,24 +29,19 @@
 
 extern uint8_t __StackLimit, __bss_end__;
 
-extern void rckid_main();
-
 namespace rckid {
 
     void start() {
-        int errorCode = setjmp(rckid::Device::fatalError_);
-        if (errorCode != 0) 
-            rckid::Device::BSOD(errorCode);
-        rckid_main();
-    }
-
-    void initialize() {
         // FIXME for reasons I do not completely understand, the board init must be before the other calls, or the device hangs? 
         board_init();
         Device::initialize();
         // initialize the display
         ST7789::initialize();
-        //LOG("VRAM start :" + )
+
+        int errorCode = setjmp(rckid::Device::fatalError_);
+        if (errorCode != 0) 
+            rckid::Device::BSOD(errorCode);
+        rckid_main();
     }
 
     void yield() {
@@ -523,9 +518,8 @@ void pio_set_clock_speed(PIO pio, unsigned sm, unsigned hz) {
 } 
 
 int main() {
-    rckid::initialize();
     rckid::start();
-    return EXIT_SUCCESS;
+    UNREACHABLE;
 }
 
 

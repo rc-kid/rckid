@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/build-mock/cartridges/test/sandbox/sandbox",
+            "program": "${workspaceFolder}/build-mock/cartridges/test/benchmarks/benchmarks",
             "args": [],
             "stopAtEntry": false,
             "environment": [{ "name" : "DISPLAY", "value" : "0:0"}],

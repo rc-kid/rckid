@@ -10,6 +10,9 @@
 
 ## TODO
 
+- buy buttons, batteries (2)
+- buy top glass
+
 - write optimized draw bitmap functions
 
 - make app system apps use 160x120x8bpp for minimal VRAM footprint for system

@@ -138,6 +138,8 @@ namespace rckid {
             buffer_ = buffer;
         }
 
+        Color * rawBuffer() { return reinterpret_cast<Color*>(buffer_); }
+
     protected:
 
         static __force_inline size_t map(int x, int y, int w, int h) { return (w - x - 1) * h + y; }

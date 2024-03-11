@@ -93,10 +93,12 @@ add_subdirectory("libs/PNGdec")
 add_subdirectory("libs/libhelix-mp3")
 add_subdirectory("cartridges/gbcemu")
 
+
 add_subdirectory("cartridges/games")
 add_subdirectory("cartridges/test/sandbox")
 add_subdirectory("cartridges/test/hw-test")
 add_subdirectory("cartridges/test/audio-test")
+add_subdirectory("cartridges/test/benchmarks")
 
 
 if (ARCH STREQUAL "RP2040")

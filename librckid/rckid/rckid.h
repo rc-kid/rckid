@@ -3,6 +3,7 @@
 #include <malloc.h>
 #include <csetjmp>
 #include <cstdint>
+#include <memory.h>
 
 #include <functional>
 
@@ -43,25 +44,33 @@ inline uint64_t operator "" _u64(unsigned long long value) { return static_cast<
 #define DEBUG(...) ::rckid::writeToUSBSerial() << __VA_ARGS__ << "\r\n"
 #define ASSERT(...) if (!(__VA_ARGS__)) { FATAL_ERROR(rckid::ASSERTION_ERROR); }
 #define UNIMPLEMENTED FATAL_ERROR(::rckid::NOT_IMPLEMENTED_ERROR)
+#define UNREACHABLE FATAL_ERROR(::rckid::UNREACHABLE_ERROR)
 #define FATAL_ERROR(CODE) ::rckid::Device::fatalError(CODE, __FILE__, __LINE__)
 
+#define CALCULATE_TIME(...) [&](){ uint32_t start__ = time_us_32(); __VA_ARGS__; return static_cast<unsigned>(time_us_32() - start__); }()
+
+
+/** The main function of the cartridge. 
+ 
+    This function *must* be implemented by each cartridge. Presumably, it will initialize any applications used by the cartridge and start the root app. When entered, all RCKid'd hardware has been properly initialized, but the cooperative nature of the SDK requires explicit peridodic update calls otherwise the hardware won't be responsive. 
+*/
+void rckid_main();
+
 /** RCKid SDK
+ 
+    
  */
 namespace rckid {
 
+    class App;
+
     constexpr int INTERNAL_ERROR = 1;
     constexpr int ASSERTION_ERROR = 2;
-    constexpr int NOT_IMPLEMENTED_ERROR = 3;
-    constexpr int VRAM_OUT_OF_MEMORY = 4;
-    constexpr int HEAP_OUT_OF_MEMORY = 5;
+    constexpr int VRAM_OUT_OF_MEMORY = 3;
+    constexpr int HEAP_OUT_OF_MEMORY = 4;
 
-    class App2;
-
-    /** Initializes the RCKid. 
-     
-        Starts the chip and ist subsystems, I2C communication with the AVR and other peripherals and the display. This must be the first function called by any RCKid cartridge. 
-     */
-    //void initialize();
+    constexpr int NOT_IMPLEMENTED_ERROR = 256;
+    constexpr int UNREACHABLE_ERROR = 257;
 
     /** Yields to the RCKid's device events. 
          
@@ -104,6 +113,10 @@ namespace rckid {
     //@}
 
     /** \name Memory 
+     
+        The two small memory baks (4KB each) are used for core 0 and core 1 stacks, while the rest 4 banks are split between data segment, heap and VRAM. VRAM is a special arena-allocated space designed to store the relatively large graphic buffers (framebuffers, tiles, aux buffers, etc.) that applications require without any fragmentation to the heap. 
+
+        The VRAM is cleaned every time an app goes out of focus and reinitialized when app gains focus and so can also be used for any app-wide objects to conserve heap if not all VRAM is necessary for a framebuffer. 
      */
     //@{
 
@@ -136,15 +149,30 @@ namespace rckid {
 
     /** \name Controls 
         
+        RCKid controls comprise of a dpad, buttons A and B, buttons Select and Start, side home button and volume up & down keys. Furthermore, RCKid is equipped with a 3axis accelerometer and gyroscope as well as an ambient and UV light sensor. 
+
      */
     //@{
 
+    /** Returns true if the given button is currently down. 
+     */
     bool down(Btn b);
 
+    /** Returns true if the given button has been pressed since last frame (i.e. its state went from up to down). The value is stable within one frame. */
     bool pressed(Btn b);
 
+    /** Returns true if the given button has been released since last frame (i.e. its state went from down to up). The value is stable within one frame. */
     bool released(Btn b);
 
+    int16_t accelX(); 
+    int16_t accelY();
+    int16_t accelZ();
+    int16_t gyroX();
+    int16_t gyroY();
+    int16_t gyroZ();
+
+    uint16_t lightAmbient();
+    uint16_t lightUV(); 
     //@}
    
 
@@ -157,16 +185,6 @@ namespace rckid {
     unsigned tempAvr();
 
     unsigned tempAccel();
-
-    int16_t accelX(); 
-    int16_t accelY();
-    int16_t accelZ();
-    int16_t gyroX();
-    int16_t gyroY();
-    int16_t gyroZ();
-
-    uint16_t lightAmbient();
-    uint16_t lightUV(); 
 
     //}
 
@@ -247,19 +265,15 @@ namespace rckid {
 
     //@}
 
-    /** \name Real Time Clock
+    /** \name Time Utilities
      */
     //@{
 
     /** Returns RP2040's uptime in microseconds. 
      */
-    inline uint64_t uptime_us() { 
-        return to_us_since_boot(get_absolute_time()); 
-    }
+    inline uint64_t uptime_us() { return to_us_since_boot(get_absolute_time()); }
 
-    inline uint32_t uptime_us_32() {
-        return time_us_32();
-    }
+    inline uint32_t uptime_us_32() { return time_us_32(); }
 
     /** Returns the current time as kept by the AVR. 
      */
@@ -278,8 +292,6 @@ namespace rckid {
     void cpuOverclock(unsigned hz = 250000000, bool overvolt = true);
     //@}
 
-
-
     /** Encapsulates the state of the device and its basic peripherals. 
      
         A static class is used to maintain encapsulation while providing inlinable, fast implementations of the friend functions from the RCKid's API described above. 
@@ -287,6 +299,10 @@ namespace rckid {
     class Device {
     public:
 
+        /** Throws a fatal error. 
+         
+            Fatal error stops the execution of current app and immediately enters the BSOD, displaying the diagnostic information. To throw a fatal error, the macro FATAL_ERROR should be used instead of calling the function directly as the macro automatically inserts the location information where appropriate.
+         */
         static __force_inline void fatalError(int code, char const * file, int line) { 
             fatalErrorFile_ = file;
             fatalErrorLine_ = line;
@@ -296,13 +312,12 @@ namespace rckid {
         static __force_inline void fatalError(int code) { fatalError(code, nullptr, 0); }
   
     private:
-        friend class App2;
+        friend class App;
         friend class Audio;
 
         /** Pointer to the end of allocated VRAM. 
          */
         static inline uint32_t * vramNext_ = 0;
-
 
         static inline uint32_t ticks_ = 0;
 
@@ -324,6 +339,11 @@ namespace rckid {
 
         static void initialize();
 
+        /** Initializes the RCKid. 
+         
+            Starts the chip and ist subsystems, I2C communication with the AVR and other peripherals and the display. Sets up any necessary structures and memory and then calls the rckid_main function which is never expected to return. 
+        */
+        friend void start();
 
         /** Updates the device by talking to all common peripherals, etc. 
          
@@ -337,13 +357,22 @@ namespace rckid {
          */
         static void tick();
 
-        friend void start();
 
-        friend void initialize();
-
+        // basic functions
         friend void yield();
+        friend void start(App && app);
 
-        friend void start(App2 && app);
+
+        // power management
+        friend void powerOff();
+        friend bool charging() { return state_.status.charging(); }
+        friend bool dcPower() { return state_.status.dcPower(); }
+        friend unsigned vcc() { return state_.info.vcc(); }
+
+        friend void setBrightness(uint8_t brightness) {
+            Device::sendCommand(cmd::SetBrightness(brightness));
+        }
+
 
         // memory
         friend size_t freeHeap();
@@ -362,36 +391,25 @@ namespace rckid {
 #pragma GCC diagnostic pop            
             return result;
         }
-
         static inline uint8_t * vramPtr_ = nullptr;
 
         // controls
         friend bool down(Btn b) { return state_.status.down(b); }
         friend bool pressed(Btn b) { return state_.status.down(b) && ! lastState_.status.down(b); }
         friend bool released(Btn b) { return !state_.status.down(b) && lastState_.status.down(b); }
-
-        friend void powerOff();
-        friend bool charging() { return state_.status.charging(); }
-        friend bool dcPower() { return state_.status.dcPower(); }
-        friend unsigned vcc() { return state_.info.vcc(); }
-
-        friend void setBrightness(uint8_t brightness) {
-            Device::sendCommand(cmd::SetBrightness(brightness));
-        }
-
-        friend unsigned tempAvr() { return state_.info.temp(); }
-
         friend int16_t accelX() { return accelState_.accelX; }
         friend int16_t accelY() { return accelState_.accelY; }
         friend int16_t accelZ() { return accelState_.accelZ; }
         friend int16_t gyroX() { return accelState_.gyroX; }
         friend int16_t gyroY() { return accelState_.gyroY; }
         friend int16_t gyroZ() { return accelState_.gyroZ; }
-
-
         friend uint16_t lightAmbient() { return lightALS_; }
         friend uint16_t lightUV() { return lightUV_; }
 
+        // sensors
+        friend unsigned tempAvr() { return state_.info.temp(); }
+
+        // time utilities
         friend TinyDate time() { return state_.time; }
 
         friend void sleep_ns(uint32_t ns);
@@ -408,7 +426,6 @@ namespace rckid {
 
 #if (!defined LIBRCKID_MOCK)
     /* When not in mock mode, we have all we need in the header file and can inline the VRAM functions for maximum performance.*/
-
     inline size_t freeVRAM() { return &__vram_end__ - Device::vramPtr_; }
     inline void resetVRAM() { Device::vramPtr_ = &__vram_start__; }
     inline bool isVRAMPtr(void * ptr) { return (ptr >= static_cast<void*>(& __vram_start__)) && (ptr < static_cast<void*>(& __vram_end__)); }
@@ -433,9 +450,8 @@ namespace rckid {
 
     private:
 
-        friend class BaseApp;
         friend class ST7789;
-        friend class App2;
+        friend class App;
 
         static inline unsigned fps_;
         static inline unsigned fpsCounter_;
@@ -458,7 +474,14 @@ namespace rckid {
      */
     //@{
 
-    inline uint16_t swapBytes(uint16_t x) { return static_cast<uint16_t>((x & 0xff) << 8 | (x >> 8)); }    
+    inline uint16_t swapBytes(uint16_t x) { return static_cast<uint16_t>((x & 0xff) << 8 | (x >> 8)); }   
+
+    /** Assumes that the given pointer is aligned to 4 bytes, which is required for speedy memory accesses. We have to roll our own because the std::assume_align is only available from C++20. 
+     */
+    template<typename T, typename W>
+    T assumeAligned(W x) {
+        return reinterpret_cast<T>(__builtin_assume_aligned(x, 4));
+    }
 
     /** Interpolation modes - see interpolate() for mode details. 
      
