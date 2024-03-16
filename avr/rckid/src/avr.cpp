@@ -1,3 +1,4 @@
+#ifdef OLD_VERSION
 
 #include "platform/platform.h"
 #include "platform/peripherals/neopixel.h"
@@ -670,3 +671,5 @@ ISR(PORTC_PORT_vect) {
 
 void setup() { RCKid::initialize(); }
 void loop() { RCKid::loop(); }
+
+#endif // OLD_VERSION

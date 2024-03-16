@@ -4,6 +4,7 @@
 
 namespace rckid {
 
+
     enum class Btn {
         Left = 1 << 0, 
         Right = 1 << 1,
@@ -40,52 +41,31 @@ namespace rckid {
         bool headphones() const { return raw_[1] & HEADPHONES; }
         bool audioEnabled() const { return raw_[1] & AUDIO_ENABLED; }
 
-#if (defined ARCH_AVR_MEGATINY || defined LIBRCKID_MOCK)
-
-        void setDpadLeft(bool value = true) { value ? raw_[0] |= DPAD_LEFT : raw_[0] &= ~DPAD_LEFT; }
-        void setDpadRight(bool value = true) { value ? raw_[0] |= DPAD_RIGHT : raw_[0] &= ~DPAD_RIGHT; }
-        void setDpadUp(bool value = true) { value ? raw_[0] |= DPAD_UP : raw_[0] &= ~DPAD_UP; }
-        void setDpadDown(bool value = true) { value ? raw_[0] |= DPAD_DOWN : raw_[0] &= ~DPAD_DOWN; }
-        void setBtnA(bool value = true) { value ? raw_[0] |= BTN_A : raw_[0] &= ~BTN_A; }
-        void setBtnB(bool value = true) { value ? raw_[0] |= BTN_B : raw_[0] &= ~BTN_B; }
-        void setBtnSelect(bool value = true) { value ? raw_[0] |= BTN_SEL : raw_[0] &= ~BTN_SEL; }
-        void setBtnStart(bool value = true) { value ? raw_[0] |= BTN_START : raw_[0] &= ~BTN_START; }
-
+        /** \name Setters 
+         */
+        //@{
         void setBtnHome(bool value = true) { value ? raw_[1] |= BTN_HOME : raw_[1] &= ~BTN_HOME; }
-        void setBtnVolUp(bool value = true) { value ? raw_[1] |= BTN_VOL_UP : raw_[1] &= ~BTN_VOL_UP; }
-        void setBtnVolDown(bool value = true) { value ? raw_[1] |= BTN_VOL_DOWN : raw_[1] &= ~BTN_VOL_DOWN; }
+
         void setCharging(bool value = true) { value ? raw_[1] |= CHARGING : raw_[1] &= ~CHARGING; }
         void setDCPower(bool value = true) { value ? raw_[1] |= DC_POWER : raw_[1] &= ~DC_POWER; }
         void setHeadphones(bool value = true) { value ? raw_[1] |= HEADPHONES : raw_[1] &= ~HEADPHONES; }
         void setAudioEnabled(bool value = true) { value ? raw_[1] |= AUDIO_ENABLED : raw_[1] &= ~AUDIO_ENABLED; }
 
-        static uint16_t calculateDPadValue(bool l, bool r, bool u, bool d) {
-            return (l ? DPAD_LEFT : 0) | ( r ? DPAD_RIGHT : 0) | (u ? DPAD_UP : 0) | (d ? DPAD_DOWN : 0);
-        }
-
-        void setDPadValue(uint8_t value) {
+        void setDPadKeys(bool l, bool r, bool u, bool d) {
             raw_[0] &= ~(DPAD_LEFT | DPAD_RIGHT | DPAD_UP | DPAD_DOWN);
-            raw_[0] |= value;
+            raw_[0] |= (l ? DPAD_LEFT : 0) | ( r ? DPAD_RIGHT : 0) | (u ? DPAD_UP : 0) | (d ? DPAD_DOWN : 0);
         }
 
-        static uint8_t calculateABXYValue(bool a, bool b, bool sel, bool start) {
-            return (a ? BTN_A : 0) | ( b ? BTN_B : 0) | (sel ? BTN_SEL : 0) | (start ? BTN_START : 0);
-        }
-
-        void setABXYValue(uint8_t value) {
+        void setABXYKeys(bool a, bool b, bool sel, bool start) {
             raw_[0] &= ~(BTN_A | BTN_B | BTN_SEL | BTN_START);
-            raw_[0] |= value;
+            raw_[0] |= (a ? BTN_A : 0) | ( b ? BTN_B : 0) | (sel ? BTN_SEL : 0) | (start ? BTN_START : 0);
         }
 
-        static uint8_t calculateControlValue(bool home, bool up, bool down) {
-            return (home ? BTN_HOME : 0) | ( up ? BTN_VOL_UP : 0) | (down ? BTN_VOL_DOWN : 0);
+        void setVolumeKeys(bool volUp, bool volDown) {
+            raw_[1] &= ~(BTN_VOL_UP | BTN_VOL_DOWN);
+            raw_[1] |= ( volUp ? BTN_VOL_UP : 0) | (volDown ? BTN_VOL_DOWN : 0);
         }
-
-        void setControlValue(uint8_t value) {
-            raw_[1] &= ~(BTN_HOME | BTN_VOL_UP | BTN_VOL_DOWN);
-            raw_[1] |= value;
-        }
-#endif
+        //@}
 
     private:
         // first byte 
@@ -234,5 +214,240 @@ namespace rckid {
     static_assert(sizeof(State) <= 256 && "I2C buffer counter on AVR is single byte");
 
 
+
+
+
+    /** RCKid mode of operation. 
+     
+        The device can be in one of the following modes:
+
+        Mode      | 3V3 | Ticks | RP2040
+        ----------|-----|-------|--------|
+        Normal    |  x  |   x   |    x   |
+        Sleep     |  x  |   x   |        |
+        PowerOff  |     |       |        |
+        Wakeup    |     |   x   |        |
+
+     */
+    enum class DeviceMode : uint8_t {
+        Normal, 
+        Sleep, 
+        PowerOff, 
+        Wakeup,
+    }; 
+
+
+
+    /** Device state
+
+        - 4 dpad buttons
+        - 4 abxy buttons
+
+        - 2 volume buttons
+        - 1 headphones
+        - 1 audio en
+
+        - 1 home button
+        - 1 alarm
+
+
+        - 3 bits mode
+        - 1 bit debug mode
+        - 1 DC pwr
+        - 1 charging
+
+        - 8 bits VCC
+        - 8 bits VBATT
+        - 8 bits temp
+        - 8 bits icharge
+     */
+    class State2 {
+    public:
+
+        /** \name Device Mode
+         */
+        //@{
+        DeviceMode deviceMode() const { return static_cast<DeviceMode>(data_[2] & DEVICE_MODE); }
+#ifdef RCKID_AVR
+        void setDeviceMode(DeviceMode mode) {
+            data_[2] &= ~DEVICE_MODE;
+            data_[2] |= static_cast<uint8_t>(mode) & DEVICE_MODE;
+        }
+#endif
+        //@}
+
+        /** \name Buttons
+         */
+        //@{
+        bool btnLeft() const { return data_[0] & BTN_LEFT; }
+        bool btnRight() const { return data_[0] & BTN_RIGHT; }
+        bool btnUp() const { return data_[0] & BTN_UP; }
+        bool btnDown() const { return data_[0] & BTN_DOWN; }
+        bool btnA() const { return data_[0] & BTN_A; }
+        bool btnB() const { return data_[0] & BTN_B; }
+        bool btnSel() const { return data_[0] & BTN_SELECT; }
+        bool btnStart() const { return data_[0] & BTN_START; }
+        bool btnVolUp() const { return data_[1] & BTN_VOL_UP; }
+        bool btnVolDown() const { return data_[1] & BTN_VOL_DOWN; }
+        bool btnHome() const { return data_[2] & BTN_HOME; }
+
+#ifdef RCKID_AVR
+        void setDPadKeys(bool l, bool r, bool u, bool d) {
+            data_[0] &= ~(BTN_LEFT | BTN_RIGHT | BTN_UP | BTN_DOWN);
+            data_[0] |= (l ? BTN_LEFT : 0) | ( r ? BTN_RIGHT : 0) | (u ? BTN_UP : 0) | (d ? BTN_DOWN : 0);
+        }
+
+        void setABXYKeys(bool a, bool b, bool sel, bool start) {
+            data_[0] &= ~(BTN_A | BTN_B | BTN_SELECT | BTN_START);
+            data_[0] |= (a ? BTN_A : 0) | ( b ? BTN_B : 0) | (sel ? BTN_SELECT : 0) | (start ? BTN_START : 0);
+        }
+
+        void setVolumeKeys(bool volUp, bool volDown) {
+            data_[1] &= ~(BTN_VOL_UP | BTN_VOL_DOWN);
+            data_[1] |= ( volUp ? BTN_VOL_UP : 0) | (volDown ? BTN_VOL_DOWN : 0);
+        }
+
+        void setBtnHome(bool value = true) { value ? data_[2] |= BTN_HOME : data_[2] &= ~BTN_HOME; }
+#endif
+        //@}
+
+        /** \name Current state flags
+         */
+        //@{
+        bool headphones() const { return data_[1] & HEADPHONES; }
+        bool audioEnabled() const { return data_[1] & AUDIO_EN; }
+        bool debugMode() const { return data_[2] & DEBUG_MODE; }
+        bool dcPower() const { return data_[2] & DC_PWR; }
+        bool charging() const { return data_[2] & CHARGING; }
+        bool alarm() const { return data_[2] & ALARM; }
+
+#ifdef RCKID_AVR
+        void setHeadphones(bool value) { value ? data_[1] |= HEADPHONES : data_[1] &= ~HEADPHONES; }
+        void setAudioEnabled(bool value) { value ? data_[1] |= AUDIO_EN : data_[1] &= ~AUDIO_EN; }
+        void setDebugMode(bool value) { value ? data_[2] |= DEBUG_MODE : data_[2] &= ~DEBUG_MODE; }
+        void setDCPower(bool value) { value ? data_[2] |= DC_PWR : data_[2] &= ~DC_PWR; }
+        void setCharging(bool value) { value ? data_[2] |= CHARGING : data_[2] &= ~CHARGING; }
+        void setAlarm(bool value) { value ? data_[2] |= ALARM : data_[2] &= ~ALARM; }
+#endif
+        //@}
+
+        /** \name VCC
+         
+            The voltage to the AVR measured in 0.01[V]. Value of 0 means any voltage below 2.46V, value of 500 5V or more, otherwise the number returnes is volatge * 100. 
+         */
+        //@{
+        uint16_t vcc() const { return (data_[3] == 0) ? 0 : (data_[3] + 245); }
+#ifdef RCKID_AVR
+        void setVcc(uint16_t vx100) {
+            if (vx100 < 250)
+                data_[3] = 0;
+            else if (vx100 >= 500)
+                data_[3] = 255;
+            else 
+                data_[3] = (vx100 - 245) & 0xff;
+        }
+#endif
+
+        //@}
+
+        /** \name Battery Voltage
+         */
+        //@{
+        uint16_t vBatt() const { return (data_[4] == 0) ? 0 : (data_[4] + 245); }
+
+#ifdef RCKID_AVR
+        void setVBatt(uint16_t vx100) {
+            if (vx100 < 250)
+                data_[4] = 0;
+            else if (vx100 >= 500)
+                data_[4] = 255;
+            else 
+                data_[4] = (vx100 - 245) & 0xff;
+        }
+#endif
+
+        //@}
+
+        /** \name Charging current 
+         */
+        //@{
+
+        uint16_t iCharge() const { return data_[5]; }
+
+#ifdef RCKID_AVR
+        void setICharge(uint16_t i100) {
+
+        }
+#endif
+        //@}
+
+        /** \name Temperature 
+         
+            Returns the temperature as measured by the chip with 0.1[C] intervals. -200 is -20C or less, 1080 is 108[C] or more. 0 is 0C. 
+         */
+        //@{
+        int16_t temp() const { return -200 + (data_[6] * 5); }
+
+#ifdef RCKID_AVR
+        void setTemp(int32_t tempx10) {
+            if (tempx10 <= -200)
+                data_[6] = 0;
+            else if (tempx10 >= 1080)
+                data_[6] = 255;
+            else 
+                data_[6] = (tempx10 + 200) / 5;
+        }
+#endif
+        //@}
+
+        /** \name Screen brightness
+        */
+        //@{
+        uint8_t brightness() const { return data_[8]; }
+#ifdef RCKID_AVR
+        void setBrightness(uint8_t value) { data_[8] = value; }
+#endif
+        //@}
+
+    private:
+
+        static constexpr uint8_t BTN_LEFT = 1 << 0;
+        static constexpr uint8_t BTN_RIGHT = 1 << 1;
+        static constexpr uint8_t BTN_UP = 1 << 2;
+        static constexpr uint8_t BTN_DOWN = 1 << 3;
+        static constexpr uint8_t BTN_A = 1 << 4;
+        static constexpr uint8_t BTN_B = 1 << 5;
+        static constexpr uint8_t BTN_SELECT = 1 << 6;
+        static constexpr uint8_t BTN_START = 1 << 7;
+
+        static constexpr uint8_t BTN_VOL_UP = 1 << 0;
+        static constexpr uint8_t BTN_VOL_DOWN = 1 << 1;
+        static constexpr uint8_t HEADPHONES = 1 << 2;
+        static constexpr uint8_t AUDIO_EN = 1 << 3;
+        // 4
+        // 5
+        // 6
+        // 7
+
+        static constexpr uint8_t DEVICE_MODE = 7; // 3
+        static constexpr uint8_t DEBUG_MODE = 1 << 3;
+        static constexpr uint8_t DC_PWR = 1 << 4;
+        static constexpr uint8_t CHARGING = 1 << 5;
+        static constexpr uint8_t BTN_HOME = 1 << 6;
+        static constexpr uint8_t ALARM = 1 << 7;
+
+        uint8_t data_[8];
+
+    } __attribute__((packed)); 
+
+    static_assert(sizeof(State2) == 8);
+
+
+
+    struct TransferrableState {
+        State2 state;
+        // TODO datetime
+        uint8_t buffer[33];
+    };
 
 } // namespace rckid

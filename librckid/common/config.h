@@ -82,10 +82,10 @@
 
 /** AVR Pinout
  
-    PA1 -- CHARGE_EN (floating, pull low to disable charging, read voltage to determine charging I)
-    PA2 -- CHARGING (ADC0 channel 2)
+    PA1 -- CHARGE_EN (floating, pull low to disable charging)
+    PA2 -- CHARGING (ADC0 channel 2, can also be just digital ?)
     PA3 -- PWM_RUMBLER (TCB1 WO)
-    PA4 --
+    PA4 -- VBATT (ADC0 channel 4)
     PA5 -- PWM_BACKLIGHT (TCB0 WO)
     PA6 -- 3V3_ON
     PA7 -- 5V_ON
@@ -103,7 +103,32 @@
     PC3 -- QSPI_SS
     PC4 -- BTN_DPAD
     PC5 -- BTN_4
-  
+*/
+#define AVR_PIN_CHARGE_EN A1
+#define AVR_PIN_CHARGING A2
+#define AVR_PIN_PWM_RUMBLER A3
+#define AVR_PIN_VBATT A4
+#define AVR_PIN_PWM_BACKLIGHT A5
+#define AVR_PIN_3V3_ON A6
+#define AVR_PIN_5V_ON A7
+
+#define AVR_PIN_SCL B0
+#define AVR_PIN_SDA B1
+#define AVR_PIN_BTN_HOME B2
+#define AVR_PIN_BTN_1 B3
+#define AVR_PIN_BTN_2 B4
+#define AVR_PIN_BTN_ABXY B5
+#define AVR_PIN_BTN_3 B6
+#define AVR_PIN_RGB B7
+
+#define AVR_PIN_BTN_CTRL C0
+#define AVR_PIN_HEADPHONES C1
+#define AVR_PIN_DISP_RDX C2
+#define AVR_PIN_QSPI_SS C3
+#define AVR_PIN_BTN_DPAD C4
+#define AVR_PIN_BTN_4 C5
+
+/*
 
                        -- VDD             GND --
                  5V_ON -- (00) PA4   PA3 (16) -- PWM_RUMBLER
@@ -116,7 +141,7 @@
                  BTN_1 -- (07) PB2   PC0 (10) -- BTN_CTRL
              SDA (I2C) -- (08) PB1   PB0 (09) -- SCL (I2C)
  */
-
+/*
 // PA4
 #define AVR_PIN_5V_ON 0
 // PA5
@@ -138,26 +163,34 @@
 #define AVR_PIN_BTN_4 14
 #define AVR_PIN_BTN_DPAD 15
 #define AVR_PIN_PWM_RUMBLER 16
-
+*/
 
 /** I2C address of the AVR chip (always slave)
  */
 #define AVR_I2C_ADDRESS 0x43
 
-/** Duration of the home button press necessasy to power the device on. Measured in ADC cycles for the initial voltage detection, i.e. 887 cycles per second. 
+/** Determines home button's long press duration in 4 tick multiples ticks (~10ms). Defaults to 1 second */
+#define BTN_HOME_LONG_PRESS_THRESHOLD 100
+
+/* Duration of the home button press necessasy to power the device on. Measured in ADC cycles for the initial voltage detection, i.e. 887 cycles per second. 
  */
-#define BTN_HOME_POWER_ON_DURATION 900
-#define BTN_HOME_POWER_OFF_DURATION 1800
+//#define BTN_HOME_POWER_ON_DURATION 900
+//#define BTN_HOME_POWER_OFF_DURATION 1800
 
 #define VCC_DC_POWER_THRESHOLD 430
 
 #define VCC_CRITICAL_THRESHOLD 310
+
+/** If defined, the RCKid is powered by a LiPo battery and when DC power is inserted, the battery will charge and must be monitored. 
+ 
+    THIS MUST BE SET TO FALSE FOR THE AAA POWERED VERSION. 
+  */
+#define RCKID_HAS_LIPO_CHARGER
+
+#define RCKID_VBATT_CHARGE_CUTOFF_VOLTAGE 435
+
+#define RCKID_VBATT_CUTOFF_TEMPERATURE 450
+
 /** Headphones detection threshold (when no headphones are inserted, the line is pulled up to 3V, i.e. some 930. 
  */
 #define HEADPHONES_DETECTION_THRESHOLD 100
-
-// TODO OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD OLD
-
-/** Determines the cartridge detection button is wired and working. If true, the device will not turn on if a cartridge is not present.  
-*/
-#define CARTRIDGE_DETECTION_ENABLED true

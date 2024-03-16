@@ -8,10 +8,14 @@
 - precision headers cartridges ()
 - screw inserts (https://www.prusa3d.com/product/threaded-inserts-m2-short-100-pcs/)
 
+- have 10 speakers (+20)
+- 24 flash (+ 10)
+- 4 rumblers  (+26)
+- 0 buttons (+100)
+
 ## TODO
 
-- buy buttons, batteries (2)
-- buy top glass
+- buy batteries
 
 - write optimized draw bitmap functions
 
@@ -56,6 +60,12 @@
 
 ## PCB
 
+- add inrush current limiting resistors to all mosfets!!! (around 1k)
+- add ground pads to side buttons (not in EasyEDA library yet, can be added manually after the buttons arrive)
+
+- maybe change charge_en to go to AVR directly thtough the RProg. That way to disable charging we can just let the pin float
+- can even be replaced with headphones so that we can use single ADC as the pin is no longer analog required
+
 ## RP
 
 - document ST7789
@@ -64,6 +74,22 @@
 - SWAP MIC & PWM and mic CLK and DATA !!!!!
 
 ## AVR
+
+- maybe the charging check should be done in the system or ADC ticks
+- add neopixel & rumbler effects 
+- talk to INA219
+- ensure wakeups work & check other connections 
+- does the charging actually fluctuate really? there is the pullup, so it should probably be fine and be close to 0 unless power is applied
+
+- do actual multi-master I2C where AVR talks to INA219 constantly to determine the power conditions and can enable/disable charging at any time, that way we do not need the DCSleep state and no need to support from RP2040 which is safer as the RP2040 code is supposed to be user programmable
+- check that the interrupt handling can be moved and remove the NO_ISRs
+- maybe all the interrupt handling can be moved to the main loop, in which case the I2C latency will be a bit worse, but we won't need to track the synchronization between ISR and AVR code 
+
+- check that setting out high when already high does not glitch
+
+- second tick in sleep mode runs adc0 on vcc to determine if we might be charging 
+- when DC power is detected, wake up RP2040
+
 
 - changed to ATTiny3217, new pinout and options
 

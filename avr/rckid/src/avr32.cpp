@@ -1,9 +1,668 @@
-using namespace platform;
-using namespace rckid;
+#include <avr/sleep.h>
+#include <avr/delay.h>
+#include <avr/interrupt.h>
 
+#include <platform.h>
+
+#include "common/config.h"
+#include "common/state.h"
+#include "common/commands.h"
+
+using namespace rckid;
 /** RCKid device controller
+ 
+    The following peripherals are used:
+
+    - RTC periodic interrupt in 1 second intervals for timekeeping and for system ticks
+    - TCB0 and TCB1 for PWM control of the rumbler and backlight
+    - ADC0 for reading charging status, vbatt & vcc and temperature
+    - TWI for communication with RP2040 via I2C or as GPIO pins to wake RP2040 up from sleep
+ 
+    
 */
 class RCKid {
+public:
+    /** System tick's type. 
+     */
+    static inline uint8_t tick;
+
+    static inline TransferrableState ts_;
+
+    /** Counter for the home button long press. 
+     */
+    static inline uint16_t btnHomeCounter_ = 0;
+
+    /** Tells */
+    static inline uint16_t wakeUp_ = false;
+
+    /** \name Device Management 
+     
+        When initialized (chip power on), the device 
+         
+     */
+    //@{
+
+    /** Initialize the peripherals. 
+     */
+    static void initialize() __attribute__((always_inline)) {
+        // on power on, we can assume chip is in a known state and all pins are in highZ state, which translates to both 3V3 and 5V rails powered off, no interference with charging and no bleeding into headphones, QSPI, display, or charge detect
+
+        // enable 2 second watchdog so that the second tick resets it always with enough time to spare
+        while (WDT.STATUS & WDT_SYNCBUSY_bm); // required busy wait
+            _PROTECTED_WRITE(WDT.CTRLA, WDT_PERIOD_2KCLK_gc);      
+        // set CLK_PER prescaler to 2, i.e. 10Mhz, which is the maximum the chip supports at voltages as low as 3.0V
+        CCP = CCP_IOREG_gc;
+        CLKCTRL.MCLKCTRLB = CLKCTRL_PEN_bm;
+        // initialize the RTC that fires every second for a semi-accurate real time clock keeping on the AVR and start counting
+        RTC.CLKSEL = RTC_CLKSEL_INT32K_gc; // run from the internal 32.768kHz oscillator
+        RTC.PITINTCTRL |= RTC_PI_bm; // enable the PIT interrupt
+        // enable the RTC PIT at 1 second interval
+        while (RTC.PITSTATUS & RTC_CTRLBUSY_bm);
+        RTC.PITCTRLA = RTC_PERIOD_CYC32768_gc | RTC_PITEN_bm;
+        // initialize ADC0 common properties without turning it on
+        ADC0.CTRLB = ADC_SAMPNUM_ACC64_gc;
+        ADC0.CTRLD = ADC_INITDLY_DLY32_gc;
+        ADC0.SAMPCTRL = 31;
+        // initialize the home button to input pullup and set its ISR
+        gpio::setAsInputPullup(AVR_PIN_BTN_HOME);
+        static_assert(AVR_PIN_BTN_HOME == B2); // otherwise the ISR won't work
+        PORTB.PIN2CTRL |= PORT_ISC_FALLING_gc;
+        // initialize the transferrable state, start in normal mode (power on on power on)
+        ts_.state.setDeviceMode(DeviceMode::Normal);
+    }
+
+    /** The main loop. 
+     
+        Making the AVR code really simple, the main loop simply runs and services any interrupts, while sleeping between the runs to conserve as much power as possible. 
+     */
+    static void loop() {
+        while (true) {
+            // if there is TWI interrupt, deal with it 
+            if (TWI0.SSTATUS & TWI_DIF_bm | TWI_APIF_bm)
+                i2cSlaveIRQHandler();
+            // if there is ADC0 reading, process
+            if (ADC0.INTFLAGS & ADC_RESRDY_bm)
+                adcDone();
+            // if we have system tick, do system tick
+            if (RTC_INTFLAGS & RTC_OVF_bm)
+                systemTick();
+            // if there is I2C message, process
+            if (i2cCommandReady_)
+                processI2CCommand();
+            // second tick
+            if (RTC.PITINTFLAGS & RTC_PI_bm)
+                secondTick();
+            // go to sleep now that all is done
+            set_sleep_mode(SLEEP_MODE_STANDBY);
+            sleep_enable();
+            sleep_cpu();
+        }
+    }
+
+    /** Triggered when the home button press down is detected. 
+     
+        If home button press is not in progress yet, set the home button press counter and update the device's mode accordingly. 
+     */
+    static void btnHomeDown() {
+        if (btnHomeCounter_ == 0) {
+            btnHomeCounter_ = BTN_HOME_LONG_PRESS_THRESHOLD;
+            if (ts_.state.deviceMode() == DeviceMode::PowerOff)
+                setDeviceMode(DeviceMode::Wakeup);
+        }
+    }
+
+    /** Home button long press. 
+     
+        In a normal state, long press is immediate powerOff. In all other states, it is a singnal to enter normal mode. 
+     */
+    static void btnHomeLongPress() {
+        if (ts_.state.deviceMode() == DeviceMode::Normal)
+            setDeviceMode(DeviceMode::PowerOff);
+        else
+            setDeviceMode(DeviceMode::Normal);
+    }
+
+    /** Long button press cancellation only matters in the wakeup mode where we need to transition back to the power off mode and turn off the system ticks. 
+     */
+    static void btnHomeLongPressCancelled() {
+        btnHomeCounter_ = 0; // disable the count
+        if (ts_.state.deviceMode() == DeviceMode::Wakeup)
+            setDeviceMode(DeviceMode::PowerOff);
+    }
+
+    static void setDeviceMode(DeviceMode mode) {
+        ts_.state.setDeviceMode(mode);
+        switch (mode) {
+            case DeviceMode::Normal:
+                ts_.state.setDebugMode(ts_.state.btnVolUp());
+                startSystemTicks();
+                power3v3(true);
+                // enable I2C slave mode so that we can talk to the RP and enable interrupts for wakeup
+                i2c::initializeSlave(AVR_I2C_ADDRESS);
+                TWI0.SCTRLA = TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm;
+                break;
+            case DeviceMode::Sleep:
+                i2c::disableSlave();
+                startSystemTicks();
+                power3v3(true);
+                break;
+            case DeviceMode::PowerOff:
+                i2c::disableSlave();
+                stopSystemTicks();
+                power3v3(false);
+                power5v(false);
+                break;
+            case DeviceMode::Wakeup:
+                i2c::disableSlave();
+                startSystemTicks();
+                break;
+        }
+    }
+
+    static bool systemTicksActive() { return RTC.CTRLA & RTC_RTCEN_bm; }
+
+    static void startSystemTicks() {
+        if (!systemTicksActive()) {
+
+            // pull all buttons up
+            gpio::setAsInputPullup(AVR_PIN_BTN_1);
+            gpio::setAsInputPullup(AVR_PIN_BTN_2);
+            gpio::setAsInputPullup(AVR_PIN_BTN_3);
+            gpio::setAsInputPullup(AVR_PIN_BTN_4);
+            // force all button groups to high 
+            gpio::outputHigh(AVR_PIN_BTN_DPAD);
+            gpio::outputHigh(AVR_PIN_BTN_ABXY);
+            gpio::outputHigh(AVR_PIN_BTN_CTRL);
+            // reset the tick id
+            tick = 0;
+            // start the syetem tick rtc
+            RTC.PER = 82; // gives 2.5ms overflow for the RTC
+            RTC.INTCTRL = RTC_OVF_bm; // enable the RTC tick interrupt 
+            while (RTC.STATUS);
+            RTC.CTRLA = RTC_RTCEN_bm;
+        }
+    }
+
+    static void stopSystemTicks() {
+        // stop the system tick rtc
+        while (RTC.STATUS);
+        RTC.CTRLA = 0;
+        // disable buttons by setting all lines high
+        gpio::setAsInputPullup(AVR_PIN_BTN_1);
+        gpio::setAsInputPullup(AVR_PIN_BTN_2);
+        gpio::setAsInputPullup(AVR_PIN_BTN_3);
+        gpio::setAsInputPullup(AVR_PIN_BTN_4);
+        gpio::setAsInputPullup(AVR_PIN_BTN_DPAD);
+        gpio::setAsInputPullup(AVR_PIN_BTN_ABXY);
+        gpio::setAsInputPullup(AVR_PIN_BTN_CTRL);
+    }
+
+    /** Periodic 200Hz system tick, i.e. every 5ms. 
+     */
+    static void systemTick() {
+        RTC_INTFLAGS = RTC_OVF_bm;
+        // update tick kind counter and start the ADC if necessary, also check the button matrix
+        switch (++tick & 3) {
+            case 0: {
+                // do effects, which we do at ~ 100Hz (i.e. 4 ticks)
+                // TODO check the effects & stuff
+                // check the home button state
+                bool home = !gpio::read(AVR_PIN_BTN_HOME);
+                NO_ISR(ts_.state.setBtnHome(!gpio::read(AVR_PIN_BTN_HOME)));
+                // verify if we have a long press, or a long press has been cancelled
+                if (btnHomeCounter_ != 0) {
+                    if (!home)
+                        btnHomeLongPressCancelled();
+                    else if (--btnHomeCounter_ == 0)
+                        btnHomeLongPress();
+                }
+                // set the stage for measuring the DPAD buttons
+                gpio::low(AVR_PIN_BTN_DPAD);
+                // sample internal voltage reference using VDD for reference to determine VCC 
+                ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
+                ADC0.MUXPOS = ADC_MUXPOS_INTREF_gc;
+                break;
+            }
+            case 1: {
+                // check the DPAD buttons and set the stage for ABXY buttons
+                NO_ISR(ts_.state.setDPadKeys(
+                    !gpio::read(AVR_PIN_BTN_2), // left
+                    !gpio::read(AVR_PIN_BTN_4), // right
+                    !gpio::read(AVR_PIN_BTN_3), // up
+                    !gpio::read(AVR_PIN_BTN_1) // down
+                ));
+                gpio::high(AVR_PIN_BTN_DPAD);
+                gpio::low(AVR_PIN_BTN_ABXY);
+                // sample the battery voltage using VDD ref 
+                ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
+                ADC0.MUXPOS = gpio::getADC0muxpos(AVR_PIN_VBATT);
+                break;
+            }
+            case 2: {
+                // check the ABXY buttons and set the stage for CTRL buttons
+                NO_ISR(ts_.state.setABXYKeys(
+                    !gpio::read(AVR_PIN_BTN_2), // a
+                    !gpio::read(AVR_PIN_BTN_1), // b
+                    !gpio::read(AVR_PIN_BTN_4), // sel
+                    !gpio::read(AVR_PIN_BTN_3) // start
+                ));
+                // move the matrix to ctrl
+                gpio::high(AVR_PIN_BTN_ABXY);
+                gpio::low(AVR_PIN_BTN_CTRL);
+                // check if headphones are present if audio is enabled
+                if (ts_.state.audioEnabled()) {
+                    return;
+                    // TODO enable the below code in final version when we have headphones on ADC0 pin
+                    //ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
+                    //ADC0.MUXPOS = gpio::getADC0muxpos(AVR_PIN_HEADPHONES);
+                // otherwise return immediately, i.e. don't start the ADC
+                } else {
+                    return;
+                }
+            }
+            case 3: {
+                // check the CTRL buttons (volume up & down) and pull all matrix up
+                NO_ISR(ts_.state.setVolumeKeys(
+                    !gpio::read(AVR_PIN_BTN_2), // vol up
+                    !gpio::read(AVR_PIN_BTN_3) // vol down
+                ));
+                gpio::high(AVR_PIN_BTN_CTRL);
+                // sample temperature
+                ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_INTREF_gc | ADC_SAMPCAP_bm;
+                ADC0.MUXPOS = ADC_MUXPOS_TEMPSENSE_gc;
+                break;
+            }
+            default:
+                UNREACHABLE;
+                return;
+        }
+        // start the ADC conversion
+        ADC0.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc;
+        ADC0.COMMAND = ADC_STCONV_bm;
+    }
+
+    /** A second tick. 
+     */
+    static void secondTick() {
+        RTC.PITINTFLAGS = RTC_PI_bm; // clear the interrupt
+        if (!systemTicksActive()) {
+            // sample internal voltage reference using VDD for reference to determine VCC 
+            ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
+            ADC0.MUXPOS = ADC_MUXPOS_INTREF_gc;
+            // start the ADC conversion
+            ADC0.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc;
+            ADC0.COMMAND = ADC_STCONV_bm;
+        }
+    }
+
+    /** ADC0 is done measuring. 
+     
+        Depending on the muxpos, process either the voltage, battery voltage, charging current, or temperature. 
+     */
+    static void adcDone() {
+        uint16_t value = ADC0.RES / 64;
+        uint8_t muxpos = ADC0.MUXPOS;
+        switch (muxpos) {
+            case ADC_MUXPOS_INTREF_gc:
+                value = 110 * 512 / value;
+                value = value * 2;
+                NO_ISR(ts_.state.setVcc(value));
+                // check power events
+                if (value < VCC_CRITICAL_THRESHOLD)
+                    criticalBattery();
+                else if (value > VCC_DC_POWER_THRESHOLD)
+                    dcPowerPlugged();
+                else
+                    dcPowerUnplugged();
+                break;
+            case gpio::getADC0muxpos(AVR_PIN_VBATT):
+                // convert the battery reading to voltage. The battery reading is relative to vcc, which we already have
+                // VBATT = VCC * VBATT / 255 
+                // but 500 * 255 is too high to fit in uint16, so we divide VCC by 2 and then divide by 128 instead
+                value >>= 2; // go for 8bit precision, which should be enough
+                value = (ts_.state.vcc() / 2 * value)  / 128; 
+                NO_ISR(ts_.state.setVBatt(value));
+#ifdef RCKID_HAS_LIPO_CHARGER
+                if (ts_.state.charging() && value >= RCKID_VBATT_CHARGE_CUTOFF_VOLTAGE)
+                    disableCharging();
+#endif
+                break;
+            case gpio::getADC0muxpos(AVR_PIN_HEADPHONES):
+                NO_ISR(ts_.state.setHeadphones(value < HEADPHONES_DETECTION_THRESHOLD));
+                break;
+            case ADC_MUXPOS_TEMPSENSE_gc: {
+                int8_t sigrow_offset = SIGROW.TEMPSENSE1; 
+                uint8_t sigrow_gain = SIGROW.TEMPSENSE0;
+                int32_t t = value - sigrow_offset; // Result might overflow 16 bit variable (10bit+8bit)
+                t *= sigrow_gain;
+                // temp is now in kelvin range, to convert to celsius, remove -273.15 (x256)
+                t -= 69926;
+                // and now loose precision to 0.5C (x10, i.e. -15 = -1.5C)
+                value = (t >>= 7) * 5;
+                NO_ISR(ts_.state.setTemp(value));
+                // check temp too high for charging
+#ifdef RCKID_HAS_LIPO_CHARGER
+                if (ts_.state.charging() && value >= RCKID_VBATT_CUTOFF_TEMPERATURE)
+                    disableCharging();
+#endif
+                break;
+            }
+            default:
+                UNREACHABLE;
+                break;
+        }
+        ADC0.CTRLA = 0; // turn ADC off, will be enabled by next tick
+    }
+
+    /** Turns the 3V3 power rail for RP2040, cartridge, sensors and audio on or off. 
+     */
+    static void power3v3(bool state) {
+        if (state) {
+            gpio::outputHigh(AVR_PIN_3V3_ON);
+        } else {
+            gpio::outputFloat(AVR_PIN_3V3_ON);
+        }
+    }
+
+    /** Turns the 5V power rail for the neopixels on or off. 
+     */
+    static void power5v(bool state) {
+
+    }
+ 
+    //@}
+
+    /** \name Power and control events
+     */
+    //@{
+
+    static void enableAudio(bool value) {
+        NO_ISR(ts_.state.setAudioEnabled(value));
+        if (value) {
+            gpio::outputFloat(AVR_PIN_HEADPHONES);
+        } else {
+            gpio::outputLow(AVR_PIN_HEADPHONES);
+        }
+    }
+
+    static void rpReset() {
+        power3v3(false);
+        rgbFill(/*Color::Blue()*/);
+        cpu::delayMs(1000);
+        power3v3(true);
+        setBacklightPWM(128);
+        // leave the RGBs on, the RP2040 should deal with them when it restarts
+    }
+
+    static void rpBootloader() {
+        power3v3(false);
+        rgbFill(/*Color::Green()*/);
+        gpio::outputLow(AVR_PIN_QSPI_SS);
+        cpu::delayMs(500);
+        power3v3(true);
+        setBacklightPWM(128);
+        cpu::delayMs(300);
+        gpio::outputFloat(AVR_PIN_QSPI_SS);
+        // keep the green lights on, the RP2040 app that has just been uploaded should turn them off
+    }
+
+    /** Triggered when DC power is detected. 
+
+        DC power is detected by VCC being above li-ion fully charged battery threshold (VCC_DC_POWER_THRESHOLD). When DC power is enabled, the  li-po charger must be monitored, so we need to enable the ticks if in powerDown mode and start monitoring the charging current, battery voltage and own temperature. 
+     */
+    static void dcPowerPlugged() {
+        // check if we are charging
+        NO_ISR(ts_.state.setCharging(!gpio::get(AVR_PIN_CHARGING)));
+        // don't do anything if already plugged
+        if (ts_.state.dcPower())
+            return;
+        // otherwise change state and get ready for charge monitoring
+        NO_ISR(ts_.state.setDCPower(true));
+    #ifdef RCKID_HAS_LIPO_CHARGER
+        NO_ISR(ts_.state.setCharging(true)); // we assume this
+        if (!systemTicksActive())
+            startSystemTicks();
+        // ensure the charge enable pin is configured as input so that we can read it to determine charging current
+        gpio::outputFloat(AVR_PIN_CHARGE_EN);
+        // TODO enable this in the final version when the charging pin is directly connected to RPROG on the charger via resistor, not to ground as it is now
+        //gpio::outputLow(AVR_PIN_CHARGE_EN);
+    #endif
+    }
+
+    static void dcPowerUnplugged() {
+        // don't do anything if already unplugged
+        if (!ts_.state.dcPower())
+            return;
+        // otherwise change state and disable the charger monitoring circuitry
+        NO_ISR(ts_.state.setDCPower(false));
+        NO_ISR(ts_.state.setCharging(false));
+#ifdef RCKID_HAS_LIPO_CHARGER
+        if (ts_.state.deviceMode() == DeviceMode::PowerOff)
+            stopSystemTicks();
+        NO_ISR(ts_.state.setCharging(false));
+        gpio::outputFloat(AVR_PIN_CHARGE_EN);
+#endif
+    }
+
+    static void criticalBattery() {
+        // TODO give warning and die
+    }
+
+    /** Programmatically disables the charger. 
+     
+        As per the charger's datasheet, section 5.2.2, charging can be terminated by applying logic 1 to the charger's prog pin. 
+     */
+    static void disableCharging() {
+        gpio::outputHigh(AVR_PIN_CHARGE_EN);
+        // TODO enable this in the final version when the charging pin is directly connected to RPROG on the charger via resistor, not to ground as it is now
+        //gpio::outputFloat(AVR_PIN_CHARGE_EN);
+        // TODO this is serious error and should be reported somewhere
+    }
+    //@}
+
+    /** \name PWM (rumbler and backlight)
+
+        The PWM signals used for backlight and rumbler control are generated by the TCB0 and TCB1 respectively.
+
+        Backlight is pulled low externally, setting the pin to 1 make the backlight work, hence the value is unchanged.  
+     */
+    //@{
+
+    static void initializePWM() {
+        // do not leak voltage and turn the pins as inputs
+        static_assert(AVR_PIN_PWM_BACKLIGHT == A5); // TCB0 WO
+        gpio::outputFloat(AVR_PIN_PWM_BACKLIGHT);
+        TCB0.CTRLA = 0;
+        TCB0.CTRLB = TCB_CNTMODE_PWM8_gc | TCB_CCMPEN_bm;
+        TCB0.CCMPL = 255;
+        TCB0.CCMPH = 0; 
+        TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc;
+        static_assert(AVR_PIN_PWM_RUMBLER == A3); //TCB1 WO
+        gpio::outputFloat(AVR_PIN_PWM_RUMBLER);
+        TCB1.CTRLA = 0;
+        TCB1.CTRLB = TCB_CNTMODE_PWM8_gc | TCB_CCMPEN_bm;
+        TCB1.CCMPL = 255;
+        TCB1.CCMPH = 0; 
+        TCB1.CTRLA = TCB_CLKSEL_CLKDIV2_gc;
+     }
+
+    static void setBacklightPWM(uint8_t value) {
+        if (value == 0) {
+            TCB0.CTRLA = 0;
+            gpio::outputFloat(AVR_PIN_PWM_BACKLIGHT);
+        } else if (value == 255) {
+            TCB0.CTRLA = 0;
+            gpio::outputHigh(AVR_PIN_PWM_BACKLIGHT);
+        } else {
+            gpio::outputLow(AVR_PIN_PWM_BACKLIGHT);
+            TCB0.CCMPH = value;
+            TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm;
+        }
+    }
+
+    static void setRumblerPWM(uint8_t value) {
+        if (value == 0) {
+            TCB1.CTRLA = 0;
+            gpio::outputFloat(AVR_PIN_PWM_RUMBLER);
+        } else if (value == 255) {
+            TCB1.CTRLA = 0;
+            gpio::outputHigh(AVR_PIN_PWM_RUMBLER);
+        } else {
+            gpio::outputLow(AVR_PIN_PWM_BACKLIGHT);
+            TCB1.CCMPH = 255 - value;
+            TCB1.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm;
+        }
+    }
+    //@}
+
+    /** \name RGB LEDs
+     */
+    //@{
+
+    static void rgbFill() {
+        // TODO
+        // TODO should also turn the lights on if necessary
+    }
+
+    //@}
+
+    /** \name I2C Comms 
+     
+        The communication is rather simple - an I2C slave that when read from returns the state buffer and when written to, stores data in the state's comms buffer. The data will be interpreted as a command and performed after the stop condition is received.
+
+        This mode simplifies the AVR part and prioritizes short communication burts for often needed data, while infrequent operations, such as full state and even EEPROM data reads take more time. 
+     */
+    //@{
+
+    static inline volatile uint8_t i2cTxIdx_ = 0;
+    static inline volatile uint8_t i2cRxIdx_ = 0;
+    static inline volatile bool i2cCommandReady_ = false;
+
+    /** The I2C interrupt handler. 
+     */
+    static inline void i2cSlaveIRQHandler() __attribute__((always_inline)) {
+        #define I2C_DATA_MASK (TWI_DIF_bm | TWI_DIR_bm) 
+        #define I2C_DATA_TX (TWI_DIF_bm | TWI_DIR_bm)
+        #define I2C_DATA_RX (TWI_DIF_bm)
+        #define I2C_START_MASK (TWI_APIF_bm | TWI_AP_bm | TWI_DIR_bm)
+        #define I2C_START_TX (TWI_APIF_bm | TWI_AP_bm | TWI_DIR_bm)
+        #define I2C_START_RX (TWI_APIF_bm | TWI_AP_bm)
+        #define I2C_STOP_MASK (TWI_APIF_bm | TWI_DIR_bm)
+        #define I2C_STOP_TX (TWI_APIF_bm | TWI_DIR_bm)
+        #define I2C_STOP_RX (TWI_APIF_bm)
+        uint8_t status = TWI0.SSTATUS;
+        // sending data to accepting master simply starts sending the ts_.state buffer. 
+        if ((status & I2C_DATA_MASK) == I2C_DATA_TX) {
+            TWI0.SDATA = ((uint8_t*) & ts_.state)[i2cTxIdx_];
+            TWI0.SCTRLB = TWI_SCMD_RESPONSE_gc;
+            ++i2cTxIdx_;
+            // TODO send nack when done sending all state
+        // a byte has been received from master. Store it and send either ACK if we can store more, or NACK if we can't store more
+        } else if ((status & I2C_DATA_MASK) == I2C_DATA_RX) {
+            ts_.buffer[i2cRxIdx_++] = TWI0.SDATA;
+            TWI0.SCTRLB = (i2cRxIdx_ == sizeof(ts_.buffer)) ? TWI_SCMD_COMPTRANS_gc : TWI_SCMD_RESPONSE_gc;
+        // master requests slave to write data, reset the sent bytes counter, initialize the actual read address from the read start and reset the IRQ
+        } else if ((status & I2C_START_MASK) == I2C_START_TX) {
+            TWI0.SCTRLB = TWI_ACKACT_ACK_gc + TWI_SCMD_RESPONSE_gc;
+        // master requests to write data itself. ACK if there is no pending I2C message, NACK otherwise. The buffer is reset to 
+        } else if ((status & I2C_START_MASK) == I2C_START_RX) {
+            TWI0.SCTRLB = (! i2cCommandReady_) ? TWI_SCMD_RESPONSE_gc : TWI_ACKACT_NACK_gc;
+        // sending finished, reset the tx address and when in recording mode determine if more data is available
+        } else if ((status & I2C_STOP_MASK) == I2C_STOP_TX) {
+            TWI0.SCTRLB = TWI_SCMD_COMPTRANS_gc;
+            i2cTxIdx_ = 0;
+        // receiving finished, inform main loop we have message waiting if we have received at laast one byte (0 bytes received is just I2C ping)
+        } else if ((status & I2C_STOP_MASK) == I2C_STOP_RX) {
+            TWI0.SCTRLB = TWI_SCMD_COMPTRANS_gc;
+            if (i2cRxIdx_ > 0)
+                i2cCommandReady_ = true;
+        } else {
+            // error - a state we do not know how to handle
+        }
+    }
+
+    static void processI2CCommand() {
+        switch (ts_.buffer[0]) {
+            case cmd::Nop::ID:
+                break;
+            case cmd::PowerOff::ID:
+                setDeviceMode(DeviceMode::PowerOff);
+                break;
+            case cmd::ResetRP::ID:
+                rpReset();
+                break;
+            case cmd::ResetAVR::ID:
+                cpu::reset();
+                // unreachable here
+            case cmd::BootloaderRP::ID:
+                rpBootloader(); 
+                break;
+            case cmd::BootloaderAVR::ID:
+                // TODO
+                break;
+            case cmd::DebugModeOn::ID:
+                NO_ISR(ts_.state.setDebugMode(true));
+                break;
+            case cmd::DebugModeOff::ID:
+                NO_ISR(ts_.state.setDebugMode(false));
+                break;
+            case cmd::AudioEnabled::ID:
+                enableAudio(true);
+                break;
+            case cmd::AudioDisabled::ID:
+                enableAudio(false);
+                break;
+            case cmd::SetBrightness::ID: {
+                uint8_t value = cmd::SetBrightness::fromBuffer(ts_.buffer).value;
+                setBacklightPWM(value);
+                NO_ISR(ts_.state.setBrightness(value));
+                break;
+            }
+            /*
+            case cmd::SetTime::ID: {
+                TinyDate t = cmd::SetTime::fromBuffer(ts_.buffer).value;
+                NO_ISR(ts_.state.time = t);
+                break;
+            }
+            case cmd::RumblerOk::ID:
+            case cmd::RumblerFail::ID:
+            case cmd::Rumbler::ID:
+            */
+            default:
+                // unknown command
+                break;
+        }
+        // mark ready to get new command and reset the rx buffer
+        i2cRxIdx_ = 0;
+        i2cCommandReady_ = false;
+    }
+
+    //@}
 
 
-} // class RCKid
+
+
+}; // class RCKid
+
+// handled by the main loop
+ISR(RTC_PIT_vect) {}
+
+// handled by the main loop
+ISR(RTC_CNT_vect) {}
+
+// handled by the main loop
+ISR(TWI0_TWIS_vect) {}
+    //RCKid::i2cSlaveIRQHandler(); 
+
+ISR(PORTB_PORT_vect) {
+    static_assert(AVR_PIN_BTN_HOME == B2);
+    VPORTB.INTFLAGS = (1 << 2);
+    RCKid::btnHomeDown();
+}
+
+
+int main() {
+    RCKid::initialize();
+    RCKid::loop();
+} 
+
