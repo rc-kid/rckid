@@ -138,8 +138,8 @@ namespace gpio {
         }
     }
 
-    void outputHigh(Pin p) { setAsOutput(p); write(p, true); }
-    void outputLow(Pin p) { setAsOutput(p), write(p, false); }
+    void outputHigh(Pin p) { write(p, true); setAsOutput(p); }
+    void outputLow(Pin p) { write(p, false); setAsOutput(p); }
     void outputFloat(Pin p) { setAsInput(p); }
 
     void high(Pin p) { write(p, true); }

@@ -18,6 +18,13 @@ using namespace rckid;
     - ADC0 for reading charging status, vbatt & vcc and temperature
     - TWI for communication with RP2040 via I2C or as GPIO pins to wake RP2040 up from sleep
  
+
+    Power consumption measured @5V:
+
+    - no sleep: 7.3mA
+    - idle : 4.6mA
+    - standby 3.8mA
+
     
 */
 class RCKid {
@@ -63,12 +70,15 @@ public:
         ADC0.CTRLB = ADC_SAMPNUM_ACC64_gc;
         ADC0.CTRLD = ADC_INITDLY_DLY32_gc;
         ADC0.SAMPCTRL = 31;
+        ADC0.INTCTRL = ADC_RESRDY_bm;
         // initialize the home button to input pullup and set its ISR
         gpio::setAsInputPullup(AVR_PIN_BTN_HOME);
         static_assert(AVR_PIN_BTN_HOME == B2); // otherwise the ISR won't work
         PORTB.PIN2CTRL |= PORT_ISC_FALLING_gc;
         // initialize the transferrable state, start in normal mode (power on on power on)
         ts_.state.setDeviceMode(DeviceMode::Normal);
+        set_sleep_mode(SLEEP_MODE_STANDBY);
+        sei();
     }
 
     /** The main loop. 
@@ -77,6 +87,8 @@ public:
      */
     static void loop() {
         while (true) {
+            //gpio::outputHigh(AVR_PIN_DISP_RDX);
+            cpu::wdtReset();
             // if there is TWI interrupt, deal with it 
             if (TWI0.SSTATUS & TWI_DIF_bm | TWI_APIF_bm)
                 i2cSlaveIRQHandler();
@@ -84,16 +96,19 @@ public:
             if (ADC0.INTFLAGS & ADC_RESRDY_bm)
                 adcDone();
             // if we have system tick, do system tick
-            if (RTC_INTFLAGS & RTC_OVF_bm)
+            if (RTC.INTFLAGS & RTC_OVF_bm)
                 systemTick();
             // if there is I2C message, process
             if (i2cCommandReady_)
                 processI2CCommand();
             // second tick
-            if (RTC.PITINTFLAGS & RTC_PI_bm)
+            if (RTC.PITINTFLAGS & RTC_PI_bm) {
                 secondTick();
+            }
             // go to sleep now that all is done
-            set_sleep_mode(SLEEP_MODE_STANDBY);
+            //gpio::outputLow(AVR_PIN_DISP_RDX);
+            // make sure interrupts are enabled or we won't wake up
+            sei();
             sleep_enable();
             sleep_cpu();
         }
@@ -163,7 +178,6 @@ public:
 
     static void startSystemTicks() {
         if (!systemTicksActive()) {
-
             // pull all buttons up
             gpio::setAsInputPullup(AVR_PIN_BTN_1);
             gpio::setAsInputPullup(AVR_PIN_BTN_2);
@@ -179,7 +193,7 @@ public:
             RTC.PER = 82; // gives 2.5ms overflow for the RTC
             RTC.INTCTRL = RTC_OVF_bm; // enable the RTC tick interrupt 
             while (RTC.STATUS);
-            RTC.CTRLA = RTC_RTCEN_bm;
+            RTC.CTRLA = RTC_RTCEN_bm | RTC_RUNSTDBY_bm;
         }
     }
 
@@ -200,7 +214,10 @@ public:
     /** Periodic 200Hz system tick, i.e. every 5ms. 
      */
     static void systemTick() {
-        RTC_INTFLAGS = RTC_OVF_bm;
+        RTC.INTFLAGS = RTC_OVF_bm;
+        // check if we are charging when DC power is available
+        if (ts_.state.dcPower())
+            NO_ISR(ts_.state.setCharging(!gpio::read(AVR_PIN_CHARGING)));
         // update tick kind counter and start the ADC if necessary, also check the button matrix
         switch (++tick & 3) {
             case 0: {
@@ -277,7 +294,7 @@ public:
                 return;
         }
         // start the ADC conversion
-        ADC0.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc;
+        ADC0.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc | ADC_RUNSTBY_bm;
         ADC0.COMMAND = ADC_STCONV_bm;
     }
 
@@ -290,7 +307,7 @@ public:
             ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
             ADC0.MUXPOS = ADC_MUXPOS_INTREF_gc;
             // start the ADC conversion
-            ADC0.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc;
+            ADC0.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc | ADC_RUNSTBY_bm;
             ADC0.COMMAND = ADC_STCONV_bm;
         }
     }
@@ -411,8 +428,6 @@ public:
         DC power is detected by VCC being above li-ion fully charged battery threshold (VCC_DC_POWER_THRESHOLD). When DC power is enabled, the  li-po charger must be monitored, so we need to enable the ticks if in powerDown mode and start monitoring the charging current, battery voltage and own temperature. 
      */
     static void dcPowerPlugged() {
-        // check if we are charging
-        NO_ISR(ts_.state.setCharging(!gpio::get(AVR_PIN_CHARGING)));
         // don't do anything if already plugged
         if (ts_.state.dcPower())
             return;
@@ -653,6 +668,8 @@ ISR(RTC_CNT_vect) {}
 // handled by the main loop
 ISR(TWI0_TWIS_vect) {}
     //RCKid::i2cSlaveIRQHandler(); 
+
+ISR(ADC0_RESRDY_vect) {}
 
 ISR(PORTB_PORT_vect) {
     static_assert(AVR_PIN_BTN_HOME == B2);

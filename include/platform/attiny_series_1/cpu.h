@@ -12,17 +12,17 @@ public:
     }
 
     static void sleep() {
-#if (defined ARCH_AVR_MEGATINY)
         set_sleep_mode(SLEEP_MODE_PWR_DOWN);
         sleep_enable();
         sleep_cpu();
-#endif
     }
 
     static void reset() {
-#if (defined ARCH_AVR_MEGATINY)
         _PROTECTED_WRITE(RSTCTRL.SWRR, RSTCTRL_SWRE_bm);
-#endif
+    }
+
+    static void wdtReset() __attribute__((always_inline)) {
+        __asm__ __volatile__ ("wdr"::);
     }
 
 }; // cpu

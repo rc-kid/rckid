@@ -75,7 +75,7 @@
 
 ## AVR
 
-- maybe the charging check should be done in the system or ADC ticks
+- in powerdown mode, we can go to deep sleep after the ADC is done, but standby sleep when waiting for the VCC adc results
 - add neopixel & rumbler effects 
 - talk to INA219
 - ensure wakeups work & check other connections 
