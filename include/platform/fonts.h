@@ -1,5 +1,4 @@
-#include "platform/platform.h"
-
+#pragma once
 namespace platform { 
 
     class Font {

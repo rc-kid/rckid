@@ -75,7 +75,6 @@
 
 ## AVR
 
-- in powerdown mode, we can go to deep sleep after the ADC is done, but standby sleep when waiting for the VCC adc results
 - add neopixel & rumbler effects 
 - talk to INA219
 - ensure wakeups work & check other connections 
@@ -83,12 +82,8 @@
 
 - do actual multi-master I2C where AVR talks to INA219 constantly to determine the power conditions and can enable/disable charging at any time, that way we do not need the DCSleep state and no need to support from RP2040 which is safer as the RP2040 code is supposed to be user programmable
 - check that the interrupt handling can be moved and remove the NO_ISRs
-- maybe all the interrupt handling can be moved to the main loop, in which case the I2C latency will be a bit worse, but we won't need to track the synchronization between ISR and AVR code 
 
 - check that setting out high when already high does not glitch
-
-- second tick in sleep mode runs adc0 on vcc to determine if we might be charging 
-- when DC power is detected, wake up RP2040
 
 
 - changed to ATTiny3217, new pinout and options

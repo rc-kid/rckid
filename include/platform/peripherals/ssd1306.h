@@ -1,6 +1,4 @@
 #pragma once
-#include "platform/platform.h"
-#include "platform/fonts.h"
 
 namespace platform { 
 

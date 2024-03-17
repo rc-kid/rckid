@@ -169,6 +169,8 @@
  */
 #define AVR_I2C_ADDRESS 0x43
 
+#define RCKID_INA219_I2C_ADDRESS 0x40
+
 /** Determines home button's long press duration in 4 tick multiples ticks (~10ms). Defaults to 1 second */
 #define BTN_HOME_LONG_PRESS_THRESHOLD 100
 
