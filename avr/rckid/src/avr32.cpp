@@ -10,11 +10,9 @@
 #include "common/state.h"
 #include "common/commands.h"
 
-#if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
-#include <ssd1306.h>
-#endif
-
-using namespace rckid;
+/** Displays AVR status and events on an external SSD1306 OLED display. Note this flag is only for debug purposes when writing own AVR code and that the AVR will hang & be reset via wdt if this is enabled and the oled display is not attached. 
+*/
+#define RCKID_AVR_DEBUG_OLED_DISPLAY
 
 /*
 #define BEGIN_ACTIVE_MODE do {} while (false) 
@@ -24,9 +22,15 @@ using namespace rckid;
 #define BEGIN_ACTIVE_MODE gpio::outputHigh(AVR_PIN_DISP_RDX)
 #define END_ACTIVE_MODE gpio::outputLow(AVR_PIN_DISP_RDX);
 
-/** Displays AVR status and events on an external SSD1306 OLED display. Note this flag is only for debug purposes when writing own AVR code and that the AVR will hang & be reset via wdt if this is enabled and the oled display is not attached. 
-*/
-#define RCKID_AVR_DEBUG_OLED_DISPLAY
+
+
+
+
+#if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
+#include <ssd1306.h>
+#endif
+
+using namespace rckid;
 
 
 /** RCKid device controller
@@ -94,6 +98,15 @@ public:
         ADC0.CTRLD = ADC_INITDLY_DLY32_gc;
         ADC0.SAMPCTRL = 31;
         ADC0.INTCTRL = ADC_RESRDY_bm;
+        // same for ADC1, which is now used for headphones detection. 
+        // TODO remove this in new version when headphones are reported on ADC0
+        ADC1.CTRLB = ADC_SAMPNUM_ACC32_gc;
+        ADC1.CTRLD = ADC_INITDLY_DLY32_gc;
+        ADC1.SAMPCTRL = 31;
+        ADC1.INTCTRL = ADC_RESRDY_bm;
+        // set voltage reference to 1v1 for temperature checking
+        VREF.CTRLA &= ~ VREF_ADC0REFSEL_gm;
+        VREF.CTRLA |= VREF_ADC0REFSEL_1V1_gc;
         // initialize the home button to input pullup and set its ISR
         gpio::setAsInputPullup(AVR_PIN_BTN_HOME);
         static_assert(AVR_PIN_BTN_HOME == B2); // otherwise the ISR won't work
@@ -103,14 +116,15 @@ public:
         setDeviceMode(DeviceMode::Normal);
         sei();
         i2c::initializeMaster();
+        // TODO Delete this when in production
+        gpio::setAsOutput(AVR_PIN_RGB);
+        rgbs_.fill(platform::Color::RGB(0, 0, 0));
+        rgbs_.update(true);
 #if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
         oled_.initialize128x32();
         oled_.clear32();
-        oled_.write(0, 0, "RCKid AVR - Initialize");        
+        oled_.write(0, 0, "RCKid AVR INIT_DONE");        
 #endif
-        // TODO Delete this when in production
-        gpio::setAsOutput(AVR_PIN_RGB);
-        rgbs_.fill(platform::Color::RGB(10, 0, 0));
     }
 
     /** The main loop. 
@@ -120,7 +134,7 @@ public:
     static void loop() {
         END_ACTIVE_MODE;
 #if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
-        //oled_.clear32();
+        oled_.clear32();
 #endif
         while (true) {
             //BEGIN_ACTIVE_MODE;
@@ -317,6 +331,12 @@ public:
                     gpio::low(AVR_PIN_BTN_CTRL);
                     // check if headphones are present if audio is enabled
                     if (ts_.state.audioEnabled()) {
+                        // TODO remove this when headphones are on ADC0
+                        ADC1.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
+                        ADC1.MUXPOS = gpio::getADC1muxpos(AVR_PIN_HEADPHONES);
+                        ADC1.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc | ADC_RUNSTBY_bm;
+                        ADC1.COMMAND = ADC_STCONV_bm;
+                        set_sleep_mode(SLEEP_MODE_STANDBY); // ADC is running
                         return;
                         // TODO enable the below code in final version when we have headphones on ADC0 pin
                         //ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
@@ -350,12 +370,25 @@ public:
     }
 
     /** A second tick. 
+     
+        MODE  VCC   VBATT TMP 
+        TICK  HOME  
+        DC CH AE HP AL DBG
      */
     static void secondTick() __attribute__((always_inline)) {
 #if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
-        oled_.write(0, 0, static_cast<uint8_t>(ts_.state.deviceMode()));
-        oled_.write(0, 1, tick_);
-        oled_.write(0, 2, btnHomeCounter_);
+        oled_.write(0, 0, static_cast<uint8_t>(ts_.state.deviceMode()), ' ');
+        oled_.write(32, 0, ts_.state.vcc(), ' ');
+        oled_.write(64, 0, ts_.state.vBatt(), ' ');
+        oled_.write(96, 0, ts_.state.temp(), ' ');
+        oled_.write(0, 1, tick_, ' ');
+        oled_.write(32, 1, btnHomeCounter_, ' ');
+        oled_.write(0, 2, ts_.state.dcPower() ? "DC" : "  ");
+        oled_.write(16, 2, ts_.state.charging() ? "CH" : "  ");
+        oled_.write(32, 2, ts_.state.audioEnabled() ? "AE" : "  ");
+        oled_.write(48, 2, ts_.state.headphones() ? "HP" : "  ");
+        oled_.write(64, 2, ts_.state.alarm() ? "AL" : "  ");
+        oled_.write(80, 2, ts_.state.debugMode() ? "DBG" : "   ");
 #endif
         // TODO keep time up
         /*
@@ -427,6 +460,25 @@ public:
                 break;
         }
         ADC0.CTRLA = 0; // turn ADC off, will be enabled by next tick and set sleep mode to power down 
+        set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+    }
+
+    /** ADC1 ready IRQ. Triggered for headphones only. 
+     
+        TODO Delete this when headphones are on ADC0 in never revision
+    */
+    static void adc1Done() {
+        uint16_t value = ADC1.RES / 32;
+        uint8_t muxpos = ADC1.MUXPOS;
+        switch (muxpos) {
+            case gpio::getADC1muxpos(AVR_PIN_HEADPHONES):
+                NO_ISR(ts_.state.setHeadphones(value < HEADPHONES_DETECTION_THRESHOLD));
+                break;
+            default:
+                UNREACHABLE;
+                break;
+        }
+        ADC1.CTRLA = 0; // turn ADC off, will be enabled by next tick and set sleep mode to power down 
         set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     }
 
@@ -732,6 +784,13 @@ ISR(ADC0_RESRDY_vect) {
    RCKid::adcDone(); 
 }
 
+// TODO delete when headphones are on ADC0 in never revision
+ISR(ADC1_RESRDY_vect) {
+   BEGIN_ACTIVE_MODE;
+   ADC1.INTFLAGS = ADC_RESRDY_bm;
+   RCKid::adc1Done(); 
+}
+
 ISR(PORTB_PORT_vect) {
     BEGIN_ACTIVE_MODE;
     static_assert(AVR_PIN_BTN_HOME == B2);
@@ -744,4 +803,3 @@ int main() {
     RCKid::initialize();
     RCKid::loop();
 } 
-

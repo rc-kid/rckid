@@ -119,7 +119,8 @@
 #define AVR_PIN_BTN_2 B4
 #define AVR_PIN_BTN_ABXY B5
 #define AVR_PIN_BTN_3 B6
-#define AVR_PIN_RGB B7
+//#define AVR_PIN_RGB B7
+#define AVR_PIN_RGB A7 
 
 #define AVR_PIN_BTN_CTRL C0
 #define AVR_PIN_HEADPHONES C1

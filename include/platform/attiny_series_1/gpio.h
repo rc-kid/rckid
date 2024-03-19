@@ -50,8 +50,8 @@ constexpr Pin C5 = Pin::C5;
 
 #define GPIO_PORT_INDEX(p) (static_cast<uint8_t>(p) >> 4)
 #define GPIO_PIN_INDEX(p) (static_cast<uint8_t>(p) & 0xf)
-#define GPIO_PIN_PORT(p) (GPIO_PIN_INDEX(p) == 0 ? PORTA : (GPIO_PIN_INDEX(p) == 1) ? PORTB : PORTC)
-#define GPIO_PIN_VPORT(p) (GPIO_PIN_INDEX(p) == 0 ? VPORTA : (GPIO_PIN_INDEX(p) == 1) ? VPORTB : VPORTC)
+#define GPIO_PIN_PORT(p) (GPIO_PORT_INDEX(p) == 0 ? PORTA : (GPIO_PORT_INDEX(p) == 1) ? PORTB : PORTC)
+#define GPIO_PIN_VPORT(p) (GPIO_PORT_INDEX(p) == 0 ? VPORTA : (GPIO_PORT_INDEX(p) == 1) ? VPORTB : VPORTC)
 #define GPIO_PIN_PINCTRL(PIN) *(& GPIO_PIN_PORT(PIN).DIR + 0x10 + GPIO_PIN_INDEX(PIN))
 
 namespace gpio {

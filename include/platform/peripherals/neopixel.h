@@ -19,7 +19,7 @@ namespace platform {
 
         NeopixelStrip(Pin pin): 
             pin_{pin}, 
-            port_{(GPIO_PIN_VPORT(pin_).OUT)} {
+            port_{& (GPIO_PIN_VPORT(pin_).OUT)} {
             //pinMode(pin,OUTPUT);
         }
 

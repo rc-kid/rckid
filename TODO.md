@@ -75,6 +75,7 @@
 
 ## AVR
 
+- neopixel works-ish (LSB or MSB is always on, does not seem to always update)
 - add neopixel & rumbler effects 
 - talk to INA219
 - ensure wakeups work & check other connections 

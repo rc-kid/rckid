@@ -368,34 +368,21 @@ namespace rckid {
 
         //@}
 
-        /** \name Charging current 
-         */
-        //@{
-
-        uint16_t iCharge() const { return data_[5]; }
-
-#ifdef RCKID_AVR
-        void setICharge(uint16_t i100) {
-
-        }
-#endif
-        //@}
-
         /** \name Temperature 
          
             Returns the temperature as measured by the chip with 0.1[C] intervals. -200 is -20C or less, 1080 is 108[C] or more. 0 is 0C. 
          */
         //@{
-        int16_t temp() const { return -200 + (data_[6] * 5); }
+        int16_t temp() const { return -200 + (data_[5] * 5); }
 
 #ifdef RCKID_AVR
         void setTemp(int32_t tempx10) {
             if (tempx10 <= -200)
-                data_[6] = 0;
+                data_[5] = 0;
             else if (tempx10 >= 1080)
-                data_[6] = 255;
+                data_[5] = 255;
             else 
-                data_[6] = (tempx10 + 200) / 5;
+                data_[5] = (tempx10 + 200) / 5;
         }
 #endif
         //@}
@@ -403,9 +390,9 @@ namespace rckid {
         /** \name Screen brightness
         */
         //@{
-        uint8_t brightness() const { return data_[8]; }
+        uint8_t brightness() const { return data_[6]; }
 #ifdef RCKID_AVR
-        void setBrightness(uint8_t value) { data_[8] = value; }
+        void setBrightness(uint8_t value) { data_[6] = value; }
 #endif
         //@}
 
