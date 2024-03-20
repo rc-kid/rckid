@@ -40,7 +40,7 @@ public:
             PORTA.OUTCLR = 0x06; // PA1, PA2
         else
             PORTB.OUTCLR = 0x03; // PB0, PB1
-        uint32_t baud = ((F_CPU/400000) - (((F_CPU* /* rise time */300)/1000)/1000)/1000 - 10)/2;
+        uint32_t baud = ((F_CPU/100000) - (((F_CPU* /* rise time */300)/1000)/1000)/1000 - 10)/2;
         TWI0.MBAUD = (uint8_t)baud;
         TWI0.MCTRLA = TWI_ENABLE_bm;         
         TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc;

@@ -56,7 +56,7 @@ namespace platform {
         /** Returns the current in mA. 
          */
         uint16_t current() {
-            return readRegister<uint16_t>(CURRENT) / 5;
+            return readRegister<uint16_t>(CURRENT);
         }
 
         uint16_t shuntVoltage() {
@@ -161,7 +161,8 @@ public:
     /** Returns the voltage in mV. 
 	 */
 	uint16_t voltage() {
-		return (readRegister16(BUS_VOLTAGE) >> 3) * 4;
+		//return (readRegister16(BUS_VOLTAGE) >> 3) * 4;
+		return readRegister16(BUS_VOLTAGE);
 	}
 	
 	uint16_t shuntVoltage() {
@@ -279,6 +280,7 @@ private:
 345 } */
 			
 } // namespace platform		
+
 
 
 #endif // FOOBAR

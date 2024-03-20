@@ -60,6 +60,12 @@ public:
      */
     static inline uint16_t btnHomeCounter_ = 0;
 
+    /** Counter to measure the current consumed by the device by the INA219. 
+     */
+    static inline uint8_t iMeasureCounter_ = 0;
+
+    static inline uint16_t current_ = 0;
+
     /** Tells */
     static inline uint16_t wakeUp_ = false;
 
@@ -115,7 +121,6 @@ public:
         set_sleep_mode(SLEEP_MODE_STANDBY);
         setDeviceMode(DeviceMode::Normal);
         sei();
-        i2c::initializeMaster();
         // TODO Delete this when in production
         gpio::setAsOutput(AVR_PIN_RGB);
         rgbs_.fill(platform::Color::RGB(0, 0, 0));
@@ -152,6 +157,10 @@ public:
             // if there is I2C message, process
             if (i2cCommandReady_)
                 processI2CCommand();
+            if (power3v3Active() && iMeasureCounter_ == 0) {
+                current_ = ina_.voltage(); // ina_.initialize(platform::INA219::Gain::mv_40, 10);
+                iMeasureCounter_ = RCKID_CURRENT_SENSE_TIMEOUT_TICKS;
+            }
             // second tick
             //if (RTC.PITINTFLAGS & RTC_PI_bm) {
             //    secondTick();
@@ -275,6 +284,8 @@ public:
         } else {
             // increase the system tick counter
             ++tick_;
+            if (iMeasureCounter_ > 0)
+                --iMeasureCounter_;
             // in case of the fast system tick, only do second every 512 ticks
             if (tick_ % 512 == 0)
                 secondTick();
@@ -372,7 +383,7 @@ public:
     /** A second tick. 
      
         MODE  VCC   VBATT TMP 
-        TICK  HOME  
+        TICK  HOME  IDEV
         DC CH AE HP AL DBG
      */
     static void secondTick() __attribute__((always_inline)) {
@@ -383,6 +394,7 @@ public:
         oled_.write(96, 0, ts_.state.temp(), ' ');
         oled_.write(0, 1, tick_, ' ');
         oled_.write(32, 1, btnHomeCounter_, ' ');
+        oled_.write(64, 1, current_, ' ');
         oled_.write(0, 2, ts_.state.dcPower() ? "DC" : "  ");
         oled_.write(16, 2, ts_.state.charging() ? "CH" : "  ");
         oled_.write(32, 2, ts_.state.audioEnabled() ? "AE" : "  ");
@@ -485,11 +497,22 @@ public:
     /** Turns the 3V3 power rail for RP2040, cartridge, sensors and audio on or off. 
      */
     static void power3v3(bool state) {
+        using namespace platform;
         if (state) {
             gpio::outputHigh(AVR_PIN_3V3_ON);
+            // allow some time for the voltages to stabilize
+            cpu::delayMs(50);
+            i2c::initializeMaster();
+            ina_.initialize(INA219::Gain::mv_40, 10);
+            iMeasureCounter_ = 0; 
         } else {
             gpio::outputFloat(AVR_PIN_3V3_ON);
+            i2c::disableMaster();
         }
+    }
+
+    static bool power3v3Active() {
+        return gpio::read(AVR_PIN_3V3_ON);
     }
 
     /** Turns the 5V power rail for the neopixels on or off. 
@@ -697,6 +720,8 @@ public:
         } else if ((status & I2C_STOP_MASK) == I2C_STOP_TX) {
             TWI0.SCTRLB = TWI_SCMD_COMPTRANS_gc;
             i2cTxIdx_ = 0;
+            // since we are done sending, time to check the INA219 for current measurements to avoid clashes on the bus
+            iMeasureCounter_ = 0;
         // receiving finished, inform main loop we have message waiting if we have received at laast one byte (0 bytes received is just I2C ping)
         } else if ((status & I2C_STOP_MASK) == I2C_STOP_RX) {
             TWI0.SCTRLB = TWI_SCMD_COMPTRANS_gc;

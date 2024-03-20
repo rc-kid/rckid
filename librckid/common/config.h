@@ -190,6 +190,10 @@
   */
 #define RCKID_HAS_LIPO_CHARGER
 
+/** When the 3V3 rail is on, the onboard current sensor is being checked each frame right after AVR is done sending status to master. Should this fail, this number of ticks provides a failsafe for current measurements even with frameskips, or RP2040 hangup. 
+*/
+#define RCKID_CURRENT_SENSE_TIMEOUT_TICKS 10
+
 #define RCKID_VBATT_CHARGE_CUTOFF_VOLTAGE 435
 
 #define RCKID_VBATT_CUTOFF_TEMPERATURE 450
