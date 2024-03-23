@@ -14,6 +14,10 @@
 */
 #define RCKID_AVR_DEBUG_OLED_DISPLAY
 
+
+/** Flag that enables code for the deprecated version 2.2. This includes having headphones on ADC1 instead of ADC2 and having the charger disable as high as opposed to floating. */
+#define DEPRECATED_VERSION_2_2
+
 /*
 #define BEGIN_ACTIVE_MODE do {} while (false) 
 #define END_ACTIVE_MODE do {} while (false)
@@ -330,6 +334,7 @@ public:
                     gpio::low(AVR_PIN_BTN_CTRL);
                     // check if headphones are present if audio is enabled
                     if (ts_.state.audioEnabled()) {
+#if (defined DEPRECATED_VERSION_2_2)                        
                         // TODO remove this when headphones are on ADC0
                         ADC1.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
                         ADC1.MUXPOS = gpio::getADC1muxpos(AVR_PIN_HEADPHONES);
@@ -337,9 +342,11 @@ public:
                         ADC1.COMMAND = ADC_STCONV_bm;
                         set_sleep_mode(SLEEP_MODE_STANDBY); // ADC is running
                         return;
-                        // TODO enable the below code in final version when we have headphones on ADC0 pin
-                        //ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
-                        //ADC0.MUXPOS = gpio::getADC0muxpos(AVR_PIN_HEADPHONES);
+#else
+                        // sample headphones
+                        ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
+                        ADC0.MUXPOS = gpio::getADC0muxpos(AVR_PIN_HEADPHONES);
+#endif
                     // otherwise return immediately, i.e. don't start the ADC
                     } else {
                         return;
@@ -411,6 +418,7 @@ public:
         // keep time & uptime
         ++ts_.uptime;
         ts_.time.secondTick();
+        // TODO delete me after testing
         /*
         if (!systemTicksActive()) {
             // sample internal voltage reference using VDD for reference to determine VCC 
@@ -483,6 +491,7 @@ public:
         set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     }
 
+#if (defined DEPRECATED_VERSION_2_2)
     /** ADC1 ready IRQ. Triggered for headphones only. 
      
         TODO Delete this when headphones are on ADC0 in never revision
@@ -501,6 +510,7 @@ public:
         ADC1.CTRLA = 0; // turn ADC off, will be enabled by next tick and set sleep mode to power down 
         set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     }
+#endif
 
     /** Turns the 3V3 power rail for RP2040, cartridge, sensors and audio on or off. 
      */
@@ -595,10 +605,13 @@ public:
         ts_.state.setCharging(true); // we assume this
         if (!systemTicksActive())
             startSystemTicks();
+#if (defined DEPRECATED_VERSION_2_2)
         // ensure the charge enable pin is configured as input so that we can read it to determine charging current
         gpio::outputFloat(AVR_PIN_CHARGE_EN);
-        // TODO enable this in the final version when the charging pin is directly connected to RPROG on the charger via resistor, not to ground as it is now
-        //gpio::outputLow(AVR_PIN_CHARGE_EN);
+#else
+        // set output low to enable charging
+        gpio::outputLow(AVR_PIN_CHARGE_EN);
+#endif
     #endif
     }
 
@@ -613,6 +626,7 @@ public:
         if (ts_.state.deviceMode() == DeviceMode::PowerOff)
             stopSystemTicks();
         ts_.state.setCharging(false);
+        // disable charging
         gpio::outputFloat(AVR_PIN_CHARGE_EN);
 #endif
     }
@@ -626,9 +640,12 @@ public:
         As per the charger's datasheet, section 5.2.2, charging can be terminated by applying logic 1 to the charger's prog pin. 
      */
     static void disableCharging() {
-        gpio::outputHigh(AVR_PIN_CHARGE_EN);
         // TODO enable this in the final version when the charging pin is directly connected to RPROG on the charger via resistor, not to ground as it is now
-        //gpio::outputFloat(AVR_PIN_CHARGE_EN);
+#if (defined DEPRECATED_VERSION_2_2)
+        gpio::outputHigh(AVR_PIN_CHARGE_EN);
+#else
+        gpio::outputFloat(AVR_PIN_CHARGE_EN);
+#endif
         // TODO this is serious error and should be reported somewhere
     }
     //@}
@@ -921,12 +938,14 @@ ISR(ADC0_RESRDY_vect) {
    RCKid::adcDone(); 
 }
 
+#if (defined DEPRECATED_VERSION_2_2)
 // TODO delete when headphones are on ADC0 in never revision
 ISR(ADC1_RESRDY_vect) {
    BEGIN_ACTIVE_MODE;
    ADC1.INTFLAGS = ADC_RESRDY_bm;
    RCKid::adc1Done(); 
 }
+#endif
 
 ISR(PORTB_PORT_vect) {
     BEGIN_ACTIVE_MODE;

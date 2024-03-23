@@ -76,15 +76,12 @@
 ## AVR
 
 - move rgb to different pin so that we can check 5v rail
-
-- check basic rumbler, check basic effects
-- measure the shunt resistor if the calculations are right
-- talk to charger
+- check basic rumbler
+- measure the shunt resistor if the calculations are right (?)
 - can talk to INA, voltage reads ok, current is wrong
 - I2C master can hang up, which is bad (wdt saves us)
 - neopixel works-ish (LSB or MSB is always on, does not seem to always update)
-- ensure wakeups work & check other connections 
-- does the charging actually fluctuate really? there is the pullup, so it should probably be fine and be close to 0 unless power is applied
+- charging fluctuates when there is no battery present (not an issue IMO)
 
 - check that setting out high when already high does not glitch
 
