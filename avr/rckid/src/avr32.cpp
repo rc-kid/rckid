@@ -68,8 +68,7 @@ public:
 
     static inline platform::NeopixelStrip<6> rgbs_{AVR_PIN_RGB}; 
     static inline platform::ColorStrip<6> rgbsTarget_;
-    static inline ColorEffect rgbEffects_[6];
-    static inline ColorEffect notificationEffect_;
+    static inline RGBEffect rgbEffects_[6];
 
 #if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
     static inline platform::SSD1306 oled_;
@@ -121,6 +120,7 @@ public:
         sei();
         // TODO Delete this when in production
         gpio::setAsOutput(AVR_PIN_RGB);
+        rgbEffects_[0] = RGBEffect::Breathe(platform::Color::RGB(255, 0, 0), 8);
         rgbs_.fill(platform::Color::RGB(0, 0, 0));
         rgbs_.update(true);
 #if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
@@ -270,6 +270,9 @@ public:
     /** Periodic ~500Hz system tick, i.e. every 2ms. In power down mode, the system tick is lowered to 1 second interval 
      */
     static void systemTick() __attribute__((always_inline)) {
+        // if the 5V rail is on, do RGB tick roughly 60 times per second
+        if (power5vActive() && tick_ % 6)
+            rgbTick();
         if (ts_.state.deviceMode() == DeviceMode::PowerOff) {
             secondTick();
             // sample internal voltage reference using VDD for reference to determine VCC 
@@ -516,7 +519,20 @@ public:
     /** Turns the 5V power rail for the neopixels on or off. 
      */
     static void power5v(bool state) {
+        // TODO enable this when out of breadboard 
+        /*
+        if (state) {
+            gpio::outputHigh(AVR_PIN_3V3_ON);
+        } else {
+            gpio::outputFloat(AVR_PIN_5V_ON);
+        }
+        */
+    }
 
+    static bool power5vActive() {
+        return true;
+        // TODO enable this when out of breadboard 
+        //return gpio::read(AVR_PIN_5V_ON);
     }
  
     //@}
@@ -663,14 +679,34 @@ public:
     //@}
 
     /** \name RGB LEDs
+
      */
     //@{
 
     static void rgbTick() {
+        // for all LEDs, move them towards their target at speed given by their effect
+        bool turnOff = true;
         for (int i = 0; i < 6; ++i) {
-            bool done = rgbs_[i].moveTowards(rgbsTarget_[i]);
+            bool done = rgbs_[i].moveTowards(rgbsTarget_[i], rgbEffects_[i].speed);
+            // see if the effect should end
+            if (rgbEffects_[i].duration > 0) {
+                if (--rgbEffects_[i].duration == 0) {
+                    rgbEffects_[i].turnOff();
+                }
+            }
+            // if the current transition is done, make next effect transition
+            if (done) {
+                if (rgbEffects_[i].active())
+                    rgbsTarget_[i] = rgbEffects_[i].nextColor(rgbsTarget_[i]);
+            } else {
+                turnOff = false;
+            }
         }
-
+        // if all the LEDs are off, turn the 5V rail off to save power, otherwise update the LEDs
+        if (turnOff)
+            power5v(false);
+        else
+            rgbs_.update(true);
     }
 
     static void rgbFill() {
