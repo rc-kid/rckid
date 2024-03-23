@@ -2,6 +2,13 @@
 
 namespace platform {
 
+    /** Endiannes of the platform. 
+     */
+    enum class Endian {
+        Little, 
+        Big, 
+    }; 
+
     inline uint8_t fromHex(char c) {
         if (c >= '0' && c <= '9')
             return c - '0';
@@ -20,6 +27,12 @@ namespace platform {
             return 'a' + value - 10;
         else 
             return '?'; // error
+    }
+
+    /** Swaps the high and low nibble of an uint16_t. 
+     */
+    inline uint16_t swap(uint16_t x) {
+        return (x >> 8) | (x << 8);
     }
 
 }

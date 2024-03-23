@@ -75,8 +75,9 @@
 
 ## AVR
 
+- measure the shunt resistor if the calculations are right
 - talk to charger
-- can talk to INA, but it reports back garbage (?)
+- can talk to INA, voltage reads ok, current is wrong
 - I2C master can hang up, which is bad (wdt saves us)
 - neopixel works-ish (LSB or MSB is always on, does not seem to always update)
 - add neopixel & rumbler effects 

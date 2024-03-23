@@ -26,45 +26,71 @@ namespace platform {
             mv_320 = 0x1800,
         }; // INA219::Gain
 
+        enum class Resolution : uint8_t {
+            bit9 = 0, 
+            bit10 = 1,
+            bit11 = 2, 
+            bit12 = 3,
+            bit12_samples2 = 9,
+            bit12_samples4 = 10,
+            bit12_samples8 = 11,
+            bit12_samples16 = 12,
+            bit12_samples32 = 13,
+            bit12_samples64 = 14,
+            bit12_samples128 = 15,
+        }; // INA219::Resolution
+
         INA219(uint8_t address): I2CDevice{address} {}
 
         void reset() {
-            writeRegister(CONFIG, 0x83ff);
+            writeRegister<uint16_t, Endian::Big>(CONFIG, 0x83ff);
         }
 
-        /** Sets the config & calibration registers for the given gain and shunt resistor value in mOhms. 
-         
-            The default configuration assumes 1mA current sensing resolution, which gives us huge range of +/- 32A. Per the datasheet, the configuration register is calculated as:
+        /** Initializes the device with 32V bus voltage max and 4A current. 
 
-            CAL = trunc(0.04096 / (Current_LSB * RShunt))
-                = trunc(0.04096 / (0.001 * rShunt / 1000)) --- rShunt to mOhm
-                = 40960 / rShunt --- integer arithmetics only
-
-            For config we use the larger 32V range for the bus voltage, giving us 4mV resolution. Continuous mode is enabled with 12bit accuracy and no accumulation. 
+            Min current LSB is 4/32767, i.e. some 122uA, so we say current LSB is 200uA.  
          */
-        void initialize(Gain gain, uint16_t rShunt) {
-            writeRegister<uint16_t>(CONFIG, 0x219f | static_cast<uint16_t>(gain));
-            writeRegister<uint16_t>(CALIBRATION, 40960 / rShunt);
+        void initialize_32V_4A(Resolution resolution, uint16_t rShunt_mOhm = 10) {
+            uint16_t cfg = 0b0010000000000111; // continuous vbus & vshunt, 32 volts input
+            cfg |= static_cast<uint16_t>(Gain::mv_40);
+            cfg |= static_cast<uint8_t>(resolution) << 3;
+            cfg |= static_cast<uint8_t>(resolution) << 7;
+            writeRegister<uint16_t, Endian::Big>(CONFIG, cfg);
+            writeRegister<uint16_t, Endian::Big>(CALIBRATION, 40960 / 10 * 5);
+            currentMultiplier_ = 5;
         }
+
+        /** Initializes the INA219 with resolution of 0.5mA, which allows us to measure up to 13A currents. 
+         */
+        /*
+        void initialize(Gain gain, Resolution resolution, uint16_t rShunt_mOhm) {
+            uint16_t cfg = 0b0010000000000111; // continuous vbus & vshunt, 32 volts input
+            cfg |= static_cast<uint16_t>(gain);
+            cfg |= static_cast<uint8_t>(resolution) << 3;
+            cfg |= static_cast<uint8_t>(resolution) << 7;
+            writeRegister<uint16_t, Endian::Big>(CONFIG, cfg);
+            // calculate the calibration, which gives us up to 
+            writeRegister<uint16_t, Endian::Big>(CALIBRATION, 40960/ rShunt_mOhm * 2);
+        }*/
 
         /** Returns the voltage in mV. 
          */
         uint16_t voltage() {
-            return (readRegister<uint16_t>(BUS_VOLTAGE) >> 3) * 4;
+            return (readRegister<uint16_t, Endian::Big>(BUS_VOLTAGE) >> 3) * 4;
         }
         
         /** Returns the current in mA. 
          */
         uint16_t current() {
-            return readRegister<uint16_t>(CURRENT);
+            return readRegister<uint16_t, Endian::Big>(CURRENT) * currentMultiplier_;
         }
 
         uint16_t shuntVoltage() {
-            return (readRegister<uint16_t>(SHUNT_VOLTAGE));
+            return (readRegister<uint16_t, Endian::Big>(SHUNT_VOLTAGE));
         }
         
         uint16_t power() {
-            return readRegister<uint16_t>(POWER);
+            return readRegister<uint16_t, Endian::Big>(POWER);
         }
 
 
@@ -75,6 +101,8 @@ namespace platform {
         static constexpr uint8_t POWER = 0x03;
         static constexpr uint8_t CURRENT = 0x04;
         static constexpr uint8_t CALIBRATION = 0x05;
+
+        uint16_t currentMultiplier_;
 
     }; // INA219
 

@@ -7,13 +7,18 @@
 #include <avr/interrupt.h>
 
 #define ARCH_AVR_MEGATINY
+#define LITTLE_ENDIAN
 
 #include "gpio.h"
 #include "cpu.h"
 #include "i2c.h"
+#include "../utils.h"
 #include "../I2CDevice.h"
 #include "../fonts.h"
-#include "../utils.h"
+
+namespace platform {
+
+}
 
 //#define NO_ISR(...) do { cli(); __VA_ARGS__; sei(); } while (false)
 #define NO_ISR(...) __VA_ARGS__

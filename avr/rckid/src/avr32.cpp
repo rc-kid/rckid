@@ -63,15 +63,13 @@ public:
     /** Counter to measure the current consumed by the device by the INA219. 
      */
     static inline uint8_t iMeasureCounter_ = 0;
-
     static inline uint16_t current_ = 0;
-
-    /** Tells */
-    static inline uint16_t wakeUp_ = false;
-
     static inline platform::INA219 ina_{RCKID_INA219_I2C_ADDRESS};
 
     static inline platform::NeopixelStrip<6> rgbs_{AVR_PIN_RGB}; 
+    static inline platform::ColorStrip<6> rgbsTarget_;
+    static inline ColorEffect rgbEffects_[6];
+    static inline ColorEffect notificationEffect_;
 
 #if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
     static inline platform::SSD1306 oled_;
@@ -158,7 +156,7 @@ public:
             if (i2cCommandReady_)
                 processI2CCommand();
             if (power3v3Active() && iMeasureCounter_ == 0) {
-                current_ = ina_.voltage(); // ina_.initialize(platform::INA219::Gain::mv_40, 10);
+                current_ = ina_.current(); // ina_.initialize(platform::INA219::Gain::mv_40, 10);
                 iMeasureCounter_ = RCKID_CURRENT_SENSE_TIMEOUT_TICKS;
             }
             // second tick
@@ -503,7 +501,7 @@ public:
             // allow some time for the voltages to stabilize
             cpu::delayMs(50);
             i2c::initializeMaster();
-            ina_.initialize(INA219::Gain::mv_40, 10);
+            ina_.initialize_32V_4A(INA219::Resolution::bit12_samples4, 10);
             iMeasureCounter_ = 0; 
         } else {
             gpio::outputFloat(AVR_PIN_3V3_ON);
@@ -667,6 +665,13 @@ public:
     /** \name RGB LEDs
      */
     //@{
+
+    static void rgbTick() {
+        for (int i = 0; i < 6; ++i) {
+            bool done = rgbs_[i].moveTowards(rgbsTarget_[i]);
+        }
+
+    }
 
     static void rgbFill() {
         // TODO

@@ -437,4 +437,21 @@ namespace rckid {
         uint8_t buffer[33];
     };
 
+    /** RGB color effect
+     
+        The color effect can 
+     */
+    struct ColorEffect {
+        enum class Kind {
+            Solid, 
+            Breathe, 
+            Rainbow, 
+        };
+        Kind kind;
+        //platform::ColorStrip::Color color;
+        //platform::ColorStrip::Color color2;
+        uint8_t speed;
+        uint16_t duration;
+    };
+
 } // namespace rckid
