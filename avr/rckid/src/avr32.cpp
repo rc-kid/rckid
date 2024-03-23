@@ -69,6 +69,11 @@ public:
     static inline platform::NeopixelStrip<6> rgbs_{AVR_PIN_RGB}; 
     static inline platform::ColorStrip<6> rgbsTarget_;
     static inline RGBEffect rgbEffects_[6];
+    static inline volatile bool rgbTick_ = false;
+
+    static inline RumblerEffect rumblerEffect_;
+    static inline RumblerEffect rumblerCurrent_;
+    static inline volatile bool rumblerTick_ = false;
 
 #if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
     static inline platform::SSD1306 oled_;
@@ -120,9 +125,7 @@ public:
         sei();
         // TODO Delete this when in production
         gpio::setAsOutput(AVR_PIN_RGB);
-        rgbEffects_[0] = RGBEffect::Breathe(platform::Color::RGB(255, 0, 0), 8);
-        rgbs_.fill(platform::Color::RGB(0, 0, 0));
-        rgbs_.update(true);
+        rgbEffects_[0] = RGBEffect::Solid(platform::Color::RGB(64, 0, 0), 1, 10);
 #if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
         oled_.initialize128x32();
         oled_.clear32();
@@ -143,15 +146,6 @@ public:
             //BEGIN_ACTIVE_MODE;
             //gpio::outputHigh(AVR_PIN_DISP_RDX);
             cpu::wdtReset();
-            // if there is TWI interrupt, deal with it 
-            //if (TWI0.SSTATUS & TWI_DIF_bm | TWI_APIF_bm)
-            //    i2cSlaveIRQHandler();
-            // if there is ADC0 reading, process
-            //if (ADC0.INTFLAGS & ADC_RESRDY_bm)
-            //    adcDone();
-            // if we have system tick, do system tick
-            //if (RTC.INTFLAGS & RTC_OVF_bm)
-            //    systemTick();
             // if there is I2C message, process
             if (i2cCommandReady_)
                 processI2CCommand();
@@ -159,13 +153,10 @@ public:
                 current_ = ina_.current(); // ina_.initialize(platform::INA219::Gain::mv_40, 10);
                 iMeasureCounter_ = RCKID_CURRENT_SENSE_TIMEOUT_TICKS;
             }
-            // second tick
-            //if (RTC.PITINTFLAGS & RTC_PI_bm) {
-            //    secondTick();
-            //}
-            // go to sleep now that all is done
-            //gpio::outputLow(AVR_PIN_DISP_RDX);
-
+            if (rgbTick_)
+                rgbTick();
+            if (rumblerTick_)
+                rumblerTick();
             // make sure interrupts are enabled or we won't wake up
             sei();
             sleep_enable();
@@ -223,9 +214,11 @@ public:
                 break;
             case DeviceMode::PowerOff:
                 i2c::disableSlave();
+                // kill all these always, they will be picked up on the next second tick and reenabled if on dc power
                 stopSystemTicks();
                 power3v3(false);
                 power5v(false);
+                ts_.state.setDCPower(false);
                 break;
             case DeviceMode::Wakeup:
                 i2c::disableSlave();
@@ -270,19 +263,13 @@ public:
     /** Periodic ~500Hz system tick, i.e. every 2ms. In power down mode, the system tick is lowered to 1 second interval 
      */
     static void systemTick() __attribute__((always_inline)) {
-        // if the 5V rail is on, do RGB tick roughly 60 times per second
-        if (power5vActive() && tick_ % 6)
-            rgbTick();
-        if (ts_.state.deviceMode() == DeviceMode::PowerOff) {
-            secondTick();
-            // sample internal voltage reference using VDD for reference to determine VCC 
-            ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
-            ADC0.MUXPOS = ADC_MUXPOS_INTREF_gc;
-            // start the ADC conversion
-            ADC0.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc | ADC_RUNSTBY_bm;
-            ADC0.COMMAND = ADC_STCONV_bm;
-            set_sleep_mode(SLEEP_MODE_STANDBY); // ADC is running
-        } else {
+        if (systemTicksActive()) {
+            // if the 5V rail is on, do RGB tick roughly 60 times per second
+            if (power5vActive() && (tick_ % 8) == 0)
+                rgbTick_ = true;
+            // do rumbler tick, if rumbler is on
+            if (rumblerCurrent_.active())
+                rumblerTick_ = true;
             // increase the system tick counter
             ++tick_;
             if (iMeasureCounter_ > 0)
@@ -292,7 +279,7 @@ public:
                 secondTick();
             // check if we are charging when DC power is available
             if (ts_.state.dcPower())
-                NO_ISR(ts_.state.setCharging(!gpio::read(AVR_PIN_CHARGING)));
+                ts_.state.setCharging(!gpio::read(AVR_PIN_CHARGING));
             // based on what tick we are, do what needs to be done             
             switch (tick_ % 4) {
                 case 0: {
@@ -300,7 +287,7 @@ public:
                     // TODO check the effects & stuff
                     // check the home button state
                     bool home = !gpio::read(AVR_PIN_BTN_HOME);
-                    NO_ISR(ts_.state.setBtnHome(!gpio::read(AVR_PIN_BTN_HOME)));
+                    ts_.state.setBtnHome(!gpio::read(AVR_PIN_BTN_HOME));
                     // verify if we have a long press, or a long press has been cancelled
                     if (btnHomeCounter_ != 0) {
                         if (!home)
@@ -317,12 +304,12 @@ public:
                 }
                 case 1: {
                     // check the DPAD buttons and set the stage for ABXY buttons
-                    NO_ISR(ts_.state.setDPadKeys(
+                    ts_.state.setDPadKeys(
                         !gpio::read(AVR_PIN_BTN_2), // left
                         !gpio::read(AVR_PIN_BTN_4), // right
                         !gpio::read(AVR_PIN_BTN_3), // up
                         !gpio::read(AVR_PIN_BTN_1) // down
-                    ));
+                    );
                     gpio::high(AVR_PIN_BTN_DPAD);
                     gpio::low(AVR_PIN_BTN_ABXY);
                     // sample the battery voltage using VDD ref 
@@ -332,12 +319,12 @@ public:
                 }
                 case 2: {
                     // check the ABXY buttons and set the stage for CTRL buttons
-                    NO_ISR(ts_.state.setABXYKeys(
+                    ts_.state.setABXYKeys(
                         !gpio::read(AVR_PIN_BTN_2), // a
                         !gpio::read(AVR_PIN_BTN_1), // b
                         !gpio::read(AVR_PIN_BTN_4), // sel
                         !gpio::read(AVR_PIN_BTN_3) // start
-                    ));
+                    );
                     // move the matrix to ctrl
                     gpio::high(AVR_PIN_BTN_ABXY);
                     gpio::low(AVR_PIN_BTN_CTRL);
@@ -360,10 +347,10 @@ public:
                 }
                 case 3: {
                     // check the CTRL buttons (volume up & down) and pull all matrix up
-                    NO_ISR(ts_.state.setVolumeKeys(
+                    ts_.state.setVolumeKeys(
                         !gpio::read(AVR_PIN_BTN_2), // vol up
                         !gpio::read(AVR_PIN_BTN_3) // vol down
-                    ));
+                    );
                     gpio::high(AVR_PIN_BTN_CTRL);
                     // sample temperature
                     ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_INTREF_gc | ADC_SAMPCAP_bm;
@@ -378,14 +365,24 @@ public:
             ADC0.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc | ADC_RUNSTBY_bm;
             ADC0.COMMAND = ADC_STCONV_bm;
             set_sleep_mode(SLEEP_MODE_STANDBY); // ADC is running
+        } else {
+            secondTick();
+            // sample internal voltage reference using VDD for reference to determine VCC 
+            ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
+            ADC0.MUXPOS = ADC_MUXPOS_INTREF_gc;
+            // start the ADC conversion
+            ADC0.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc | ADC_RUNSTBY_bm;
+            ADC0.COMMAND = ADC_STCONV_bm;
+            set_sleep_mode(SLEEP_MODE_STANDBY); // ADC is running
         }
     }
 
     /** A second tick. 
      
         MODE  VCC   VBATT TMP 
-        TICK  HOME  IDEV
-        DC CH AE HP AL DBG
+        TICK  HOME  IDEV SEC
+        DC CH AE HP AL DBG LED R
+        R G B 
      */
     static void secondTick() __attribute__((always_inline)) {
 #if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
@@ -396,14 +393,24 @@ public:
         oled_.write(0, 1, tick_, ' ');
         oled_.write(32, 1, btnHomeCounter_, ' ');
         oled_.write(64, 1, current_, ' ');
+        oled_.write(96, 1, ts_.time.seconds(), ' ');
         oled_.write(0, 2, ts_.state.dcPower() ? "DC" : "  ");
         oled_.write(16, 2, ts_.state.charging() ? "CH" : "  ");
         oled_.write(32, 2, ts_.state.audioEnabled() ? "AE" : "  ");
         oled_.write(48, 2, ts_.state.headphones() ? "HP" : "  ");
         oled_.write(64, 2, ts_.state.alarm() ? "AL" : "  ");
         oled_.write(80, 2, ts_.state.debugMode() ? "DBG" : "   ");
+        oled_.write(96, 2, power5vActive() ? "LED" : " ");
+        oled_.write(112, 2, rumblerCurrent_.active() ? "R" : " ");
+        oled_.write(0, 3, (uint8_t)rgbEffects_[0].color.r, ' ');
+        oled_.write(32, 3, rgbsTarget_[0].g, ' ');
+        oled_.write(64, 3, rgbsTarget_[0].b, ' ');
 #endif
-        // TODO keep time up
+        if (power5vActive())
+            rgbSecondTick();
+        // keep time & uptime
+        ++ts_.uptime;
+        ts_.time.secondTick();
         /*
         if (!systemTicksActive()) {
             // sample internal voltage reference using VDD for reference to determine VCC 
@@ -427,7 +434,7 @@ public:
             case ADC_MUXPOS_INTREF_gc:
                 value = 110 * 512 / value;
                 value = value * 2;
-                NO_ISR(ts_.state.setVcc(value));
+                ts_.state.setVcc(value);
                 // check power events
                 if (value < VCC_CRITICAL_THRESHOLD)
                     criticalBattery();
@@ -442,14 +449,14 @@ public:
                 // but 500 * 255 is too high to fit in uint16, so we divide VCC by 2 and then divide by 128 instead
                 value >>= 2; // go for 8bit precision, which should be enough
                 value = (ts_.state.vcc() / 2 * value)  / 128; 
-                NO_ISR(ts_.state.setVBatt(value));
+                ts_.state.setVBatt(value);
 #ifdef RCKID_HAS_LIPO_CHARGER
                 if (ts_.state.charging() && value >= RCKID_VBATT_CHARGE_CUTOFF_VOLTAGE)
                     disableCharging();
 #endif
                 break;
             case gpio::getADC0muxpos(AVR_PIN_HEADPHONES):
-                NO_ISR(ts_.state.setHeadphones(value < HEADPHONES_DETECTION_THRESHOLD));
+                ts_.state.setHeadphones(value < HEADPHONES_DETECTION_THRESHOLD);
                 break;
             case ADC_MUXPOS_TEMPSENSE_gc: {
                 int8_t sigrow_offset = SIGROW.TEMPSENSE1; 
@@ -460,7 +467,7 @@ public:
                 t -= 69926;
                 // and now loose precision to 0.5C (x10, i.e. -15 = -1.5C)
                 value = (t >>= 7) * 5;
-                NO_ISR(ts_.state.setTemp(value));
+                ts_.state.setTemp(value);
                 // check temp too high for charging
 #ifdef RCKID_HAS_LIPO_CHARGER
                 if (ts_.state.charging() && value >= RCKID_VBATT_CUTOFF_TEMPERATURE)
@@ -485,7 +492,7 @@ public:
         uint8_t muxpos = ADC1.MUXPOS;
         switch (muxpos) {
             case gpio::getADC1muxpos(AVR_PIN_HEADPHONES):
-                NO_ISR(ts_.state.setHeadphones(value < HEADPHONES_DETECTION_THRESHOLD));
+                ts_.state.setHeadphones(value < HEADPHONES_DETECTION_THRESHOLD);
                 break;
             default:
                 UNREACHABLE;
@@ -508,7 +515,10 @@ public:
             iMeasureCounter_ = 0; 
         } else {
             gpio::outputFloat(AVR_PIN_3V3_ON);
+#if (!defined RCKID_AVR_DEBUG_OLED_DISPLAY)
+            // we need I2C master for the oled debug display
             i2c::disableMaster();
+#endif
         }
     }
 
@@ -542,7 +552,7 @@ public:
     //@{
 
     static void enableAudio(bool value) {
-        NO_ISR(ts_.state.setAudioEnabled(value));
+        ts_.state.setAudioEnabled(value);
         if (value) {
             gpio::outputFloat(AVR_PIN_HEADPHONES);
         } else {
@@ -580,9 +590,9 @@ public:
         if (ts_.state.dcPower())
             return;
         // otherwise change state and get ready for charge monitoring
-        NO_ISR(ts_.state.setDCPower(true));
+        ts_.state.setDCPower(true);
     #ifdef RCKID_HAS_LIPO_CHARGER
-        NO_ISR(ts_.state.setCharging(true)); // we assume this
+        ts_.state.setCharging(true); // we assume this
         if (!systemTicksActive())
             startSystemTicks();
         // ensure the charge enable pin is configured as input so that we can read it to determine charging current
@@ -597,12 +607,12 @@ public:
         if (!ts_.state.dcPower())
             return;
         // otherwise change state and disable the charger monitoring circuitry
-        NO_ISR(ts_.state.setDCPower(false));
-        NO_ISR(ts_.state.setCharging(false));
+        ts_.state.setDCPower(false);
+        ts_.state.setCharging(false);
 #ifdef RCKID_HAS_LIPO_CHARGER
         if (ts_.state.deviceMode() == DeviceMode::PowerOff)
             stopSystemTicks();
-        NO_ISR(ts_.state.setCharging(false));
+        ts_.state.setCharging(false);
         gpio::outputFloat(AVR_PIN_CHARGE_EN);
 #endif
     }
@@ -676,6 +686,32 @@ public:
             TCB1.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm;
         }
     }
+
+    static void rumblerTick() {
+        rumblerTick_ = false;
+        if (rumblerCurrent_.strength != 0) {
+            if (rumblerCurrent_.timeOn > 0) {
+                if (--rumblerCurrent_.timeOn > 0) 
+                    return;
+                else 
+                    setRumblerPWM(0);
+            }
+            if (rumblerCurrent_.timeOff > 0) {
+                if (--rumblerCurrent_.timeOff > 0)
+                    return;
+            }
+            if (rumblerCurrent_.cycles != 0) {
+                --rumblerEffect_.cycles;
+                rumblerCurrent_ = rumblerEffect_;
+                if (rumblerCurrent_.timeOn > 0)
+                    setRumblerPWM(rumblerCurrent_.strength);
+                return;
+            }
+            // we are done
+            rumblerEffect_ = RumblerEffect::Off();
+            rumblerCurrent_ = RumblerEffect::Off();
+        }
+    }
     //@}
 
     /** \name RGB LEDs
@@ -684,20 +720,16 @@ public:
     //@{
 
     static void rgbTick() {
+        rgbTick_ = false;
         // for all LEDs, move them towards their target at speed given by their effect
         bool turnOff = true;
         for (int i = 0; i < 6; ++i) {
-            bool done = rgbs_[i].moveTowards(rgbsTarget_[i], rgbEffects_[i].speed);
-            // see if the effect should end
-            if (rgbEffects_[i].duration > 0) {
-                if (--rgbEffects_[i].duration == 0) {
-                    rgbEffects_[i].turnOff();
-                }
-            }
+            bool done = ! rgbs_[i].moveTowards(rgbsTarget_[i], rgbEffects_[i].speed);
             // if the current transition is done, make next effect transition
             if (done) {
+                rgbsTarget_[i] = rgbEffects_[i].nextColor(rgbsTarget_[i]);
                 if (rgbEffects_[i].active())
-                    rgbsTarget_[i] = rgbEffects_[i].nextColor(rgbsTarget_[i]);
+                    turnOff = false;
             } else {
                 turnOff = false;
             }
@@ -708,6 +740,17 @@ public:
         else
             rgbs_.update(true);
     }
+
+    static void rgbSecondTick() {
+        for (int i = 0; i < 6; ++i) {
+            // see if the effect should end
+            if (rgbEffects_[i].duration > 0) {
+                if (--rgbEffects_[i].duration == 0) {
+                    rgbEffects_[i].turnOff();
+                }
+            }
+        }
+   }
 
     static void rgbFill() {
         // TODO
@@ -799,10 +842,10 @@ public:
                 NO_ISR(ts_.state.setDebugMode(false));
                 break;
             case cmd::AudioEnabled::ID:
-                enableAudio(true);
+                NO_ISR(enableAudio(true));
                 break;
             case cmd::AudioDisabled::ID:
-                enableAudio(false);
+                NO_ISR(enableAudio(false));
                 break;
             case cmd::SetBrightness::ID: {
                 uint8_t value = cmd::SetBrightness::fromBuffer(ts_.buffer).value;
@@ -810,16 +853,44 @@ public:
                 NO_ISR(ts_.state.setBrightness(value));
                 break;
             }
-            /*
             case cmd::SetTime::ID: {
-                TinyDate t = cmd::SetTime::fromBuffer(ts_.buffer).value;
-                NO_ISR(ts_.state.time = t);
+                platform::TinyDate t = cmd::SetTime::fromBuffer(ts_.buffer).value;
+                NO_ISR(ts_.time = t);
                 break;
             }
-            case cmd::RumblerOk::ID:
-            case cmd::RumblerFail::ID:
-            case cmd::Rumbler::ID:
-            */
+            case cmd::Rumbler::ID: {
+                auto & c = cmd::Rumbler::fromBuffer(ts_.buffer);
+                if (c.effect.cycles > 0) {
+                    rumblerEffect_ = c.effect;
+                    --rumblerEffect_.cycles;
+                    rumblerCurrent_ = rumblerEffect_;
+                } else {
+                    rumblerEffect_ = RumblerEffect::Off();
+                    rumblerCurrent_ = RumblerEffect::Off();
+                }
+                break;
+            }
+            case cmd::RGBOff::ID: {
+                for (int i = 0; i < 6; ++i)
+                    rgbEffects_[i] = RGBEffect::Off();
+                break;
+            }
+            case cmd::SetRGBEffect::ID: {
+                auto & c = cmd::SetRGBEffect::fromBuffer(ts_.buffer);
+                rgbEffects_[c.index] = c.effect;
+                power5v(true);
+                break;
+            }
+            case cmd::SetRGBEffects::ID: {
+                auto & c = cmd::SetRGBEffects::fromBuffer(ts_.buffer);
+                rgbEffects_[0] = c.b;
+                rgbEffects_[1] = c.a;
+                rgbEffects_[3] = c.dpad;
+                rgbEffects_[4] = c.sel;
+                rgbEffects_[5] = c.start;
+                power5v(true);
+                break;
+            }
             default:
                 // unknown command
                 break;

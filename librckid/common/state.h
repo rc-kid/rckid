@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tinytime.h"
+//#include "tinytime.h"
 
 #include "platform.h"
 
@@ -165,7 +165,7 @@ namespace rckid {
         Status status;
         Info info;
         Config config;
-        TinyDate time;
+        platform::TinyDate time;
         uint16_t dbg;
         // this is page EEPROM page size (32bytes) + 1 byte for command / control
         uint8_t buffer[33];
@@ -394,9 +394,35 @@ namespace rckid {
 
     struct TransferrableState {
         State2 state;
+        platform::TinyDate time;
+        uint32_t uptime;
         // TODO datetime
         uint8_t buffer[33];
-    };
+    } __attribute__((packed));
+
+
+    class RumblerEffect {
+    public:
+        uint8_t strength = 0;
+        uint8_t timeOn = 0;
+        uint8_t timeOff = 0;
+        uint8_t cycles = 0;
+
+        RumblerEffect() = default;
+
+        RumblerEffect(uint8_t strength, uint8_t timeOn, uint8_t timeOff, uint8_t cycles):
+            strength{strength}, timeOn{timeOn}, timeOff{timeOff}, cycles{cycles} {}
+
+        bool active() const { return strength != 0; }
+
+
+        static RumblerEffect OK() { return RumblerEffect{RCKID_RUMBLER_DEFAULT_STRENGTH, RCKID_RUMBLER_OK_TIME_ON, RCKID_RUMBLER_OK_TIME_OFF, RCKID_RUMBLER_OK_CYCLES}; }
+
+        static RumblerEffect FAIL() { return RumblerEffect{RCKID_RUMBLER_DEFAULT_STRENGTH, RCKID_RUMBLER_FAIL_TIME_ON, RCKID_RUMBLER_FAIL_TIME_OFF, RCKID_RUMBLER_FAIL_CYCLES}; }
+
+        static RumblerEffect Off() { return RumblerEffect{}; }
+
+    } __attribute__((packed));
 
     /** RGB LED effects 
      
@@ -426,9 +452,9 @@ namespace rckid {
         /** Effect transition speed. 
          */
         uint8_t speed;
-        /** Duration of the effect. 
+        /** Duration of the effect in seconds. 
          */
-        uint16_t duration;
+        uint8_t duration;
 
         union {
             platform::Color color;
@@ -437,11 +463,14 @@ namespace rckid {
 
         RGBEffect(): kind{Kind::Off}, speed{255}, duration{0}, color{platform::Color::Black()} {} 
 
+
         RGBEffect(RGBEffect const & from):
             kind{from.kind}, speed{from.speed}, duration{from.duration}, color{from.color} {
             if (kind == Kind::Rainbow)
                 rainbow = from.rainbow;
         }
+
+        static RGBEffect Off() { return RGBEffect{}; }
 
         static RGBEffect Solid(platform::Color color, uint8_t speed, uint16_t duration = 0) {
             RGBEffect result(Kind::Solid, speed, duration);
@@ -452,6 +481,13 @@ namespace rckid {
         static RGBEffect Breathe(platform::Color color, uint8_t speed, uint16_t duration = 0) {
             RGBEffect result(Kind::Breathe, speed, duration);
             result.color = color;
+            return result;
+        }
+
+        static RGBEffect Rainbow(uint8_t hue, uint8_t step, uint8_t speed, uint16_t duration = 0) {
+            RGBEffect result(Kind::Rainbow, speed, duration);
+            result.rainbow.hue = hue;
+            result.rainbow.step = step;
             return result;
         }
 

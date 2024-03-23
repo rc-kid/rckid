@@ -75,17 +75,16 @@
 
 ## AVR
 
+- move rgb to different pin so that we can check 5v rail
+
+- check basic rumbler, check basic effects
 - measure the shunt resistor if the calculations are right
 - talk to charger
 - can talk to INA, voltage reads ok, current is wrong
 - I2C master can hang up, which is bad (wdt saves us)
 - neopixel works-ish (LSB or MSB is always on, does not seem to always update)
-- add neopixel & rumbler effects 
 - ensure wakeups work & check other connections 
 - does the charging actually fluctuate really? there is the pullup, so it should probably be fine and be close to 0 unless power is applied
-
-- do actual multi-master I2C where AVR talks to INA219 constantly to determine the power conditions and can enable/disable charging at any time, that way we do not need the DCSleep state and no need to support from RP2040 which is safer as the RP2040 code is supposed to be user programmable
-- remove the NO_ISRs except for commands
 
 - check that setting out high when already high does not glitch
 

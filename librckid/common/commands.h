@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tinytime.h"
+#include "platform.h"
 
 /**
  
@@ -28,7 +28,8 @@ namespace rckid::cmd {
             return * reinterpret_cast<NAME const *>(buffer);     \
         }                                                        \
         __VA_ARGS__                                              \
-    } __attribute__((packed))
+    } __attribute__((packed));                                   \
+    static_assert(sizeof(NAME) <= 32)              
 
     COMMAND(0, Nop);
     COMMAND(1, PowerOff);
@@ -48,34 +49,35 @@ namespace rckid::cmd {
     );
 
     COMMAND(11, SetTime, 
-        TinyDate value;
-        SetTime(TinyDate value): value{value} {}
+        platform::TinyDate value;
+        SetTime(platform::TinyDate value): value{value} {}
     );
 
-    COMMAND(40, RumblerOk);
-    COMMAND(41, RumblerFail);
-
-    COMMAND(42, Rumbler,
-        uint8_t intensity;
-        uint16_t duration; // duration in 10ms intervals
-        Rumbler(uint8_t intensity, uint16_t duration): intensity{intensity}, duration{duration} {}
+    COMMAND(40, Rumbler,
+        RumblerEffect effect;
+        Rumbler(RumblerEffect effect): effect{effect} {}
     );
 
+    /** Turns all LEDs off immediately. 
+     */
+    COMMAND(100, RGBOff);
 
-/*
-    COMMAND(100, RGBOn);
-    COMMAND(101, RGBOff);
-
-    COMMAND(102, RGBColor, 
-        platform::Color color;
-        RGBColor(platform::Color color): color{color} {}
+    /** Specifies the RGB effect for a particular LED. 
+    */
+    COMMAND(101, SetRGBEffect, 
+        uint8_t index;
+        RGBEffect effect;
+        SetRGBEffect(uint8_t index, RGBEffect const & effect): index{index}, effect{effect} {}
     );
 
-*/
-
-
-
-
-
+    COMMAND(102, SetRGBEffects, 
+        RGBEffect a;
+        RGBEffect b;
+        RGBEffect dpad;
+        RGBEffect sel;
+        RGBEffect start;
+        SetRGBEffects(RGBEffect const & a, RGBEffect const & b, RGBEffect const & dpad, RGBEffect const & sel, RGBEffect const & start):
+            a{a}, b{b}, dpad{dpad}, sel{sel}, start{start} {}
+    );
 
 } // namespace rckid::cmd
