@@ -7,7 +7,7 @@
 #include <avr/interrupt.h>
 
 #define ARCH_AVR_MEGATINY
-#define LITTLE_ENDIAN
+#define ARCH_LITTLE_ENDIAN
 
 #include "gpio.h"
 #include "cpu.h"
@@ -15,6 +15,7 @@
 #include "../utils.h"
 #include "../I2CDevice.h"
 #include "../fonts.h"
+#include "../peripherals/color_strip.h"
 
 namespace platform {
 

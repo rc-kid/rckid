@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <sstream>
+#include <string>
 
 using Timepoint = std::chrono::high_resolution_clock::time_point;
 using Duration = std::chrono::high_resolution_clock::duration;

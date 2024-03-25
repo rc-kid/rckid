@@ -49,7 +49,7 @@ namespace platform {
 
     template<>
     inline void I2CDevice::write<uint16_t, Endian::Little>(uint16_t data) {
-#if (defined LITTLE_ENDIAN)        
+#if (defined ARCH_LITTLE_ENDIAN)        
         i2c::masterTransmit(address, reinterpret_cast<uint8_t *>(& data), 2, nullptr, 0);
 #else
         #error "unimplemented"
@@ -58,7 +58,7 @@ namespace platform {
 
     template<>
     inline void I2CDevice::write<uint16_t, Endian::Big>(uint16_t data) {
-        uint8_t d[] = { data >> 8, data & 0xff };
+        uint8_t d[] = { static_cast<uint8_t>(data >> 8), static_cast<uint8_t>(data & 0xff) };
         i2c::masterTransmit(address, d, 2, nullptr, 0);
     }   
 
@@ -78,7 +78,7 @@ namespace platform {
 
     template<>
     inline uint16_t I2CDevice::read<uint16_t, Endian::Little>() {
-    #if (defined LITTLE_ENDIAN)
+    #if (defined ARCH_LITTLE_ENDIAN)
         uint16_t result = 0;
         i2c::masterTransmit(address, nullptr, 0, reinterpret_cast<uint8_t *>(result), 2);
         return result;
@@ -134,7 +134,7 @@ namespace platform {
 
     template<>
     inline uint16_t I2CDevice::readRegister<uint16_t, Endian::Little>(uint8_t reg) {
-#if (defined LITTLE_ENDIAN)
+#if (defined ARCH_LITTLE_ENDIAN)
         uint16_t result = 0;
         i2c::masterTransmit(address, & reg, 1, reinterpret_cast<uint8_t*>(& result), 2);
         return result;

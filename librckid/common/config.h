@@ -89,6 +89,11 @@
 #define RP_DEBUG_UART_RX_PIN 21
 
 
+/** I2C address of the RP2040 chip (to wake up from sleep)
+ */
+#define RP_I2C_ADDRESS 0x55
+
+
 /** AVR Pinout
  
     PA1 -- CHARGE_EN (floating, pull low to disable charging)
@@ -175,7 +180,7 @@
 #define AVR_PIN_PWM_RUMBLER 16
 */
 
-/** I2C address of the AVR chip (always slave)
+/** I2C address of the AVR chip for communications with RP2040
  */
 #define AVR_I2C_ADDRESS 0x43
 

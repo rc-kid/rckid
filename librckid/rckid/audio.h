@@ -23,9 +23,9 @@ namespace rckid {
 
         static void initialize();
 
-        static bool headphones() { return Device::state_.status.headphones(); }
+        static bool headphones() { return Device::state_.state.headphones(); }
         
-        static bool audioEnabled() { return Device::state_.status.audioEnabled(); }
+        static bool audioEnabled() { return Device::state_.state.audioEnabled(); }
 
         static void setAudioEnabled(bool enabled = true) {
             if (enabled) 

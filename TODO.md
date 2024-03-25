@@ -8,11 +8,6 @@
 - precision headers cartridges ()
 - screw inserts (https://www.prusa3d.com/product/threaded-inserts-m2-short-100-pcs/)
 
-- have 10 speakers (+20)
-- 24 flash (+ 10)
-- 4 rumblers  (+26)
-- 0 buttons (+100)
-
 ## TODO
 
 - buy batteries
@@ -66,6 +61,9 @@
 - maybe change charge_en to go to AVR directly thtough the RProg. That way to disable charging we can just let the pin float
 - can even be replaced with headphones so that we can use single ADC as the pin is no longer analog required
 
+- charging fluctuates when there is no battery present (not an issue IMO)
+
+
 ## RP
 
 - document ST7789
@@ -81,18 +79,8 @@
 - can talk to INA, voltage reads ok, current is wrong
 - I2C master can hang up, which is bad (wdt saves us)
 - neopixel works-ish (LSB or MSB is always on, does not seem to always update)
-- charging fluctuates when there is no battery present (not an issue IMO)
 
 - check that setting out high when already high does not glitch
-
-- changed to ATTiny3217, new pinout and options
-
-- on AVR ABXY and BTN2 pins are swapped
-- DPad buttons are swapped
-- on wakeup sequence, check that start & sel are pressed too to enter debug mode(s)
-- add battery critical power off
-- add neopixel & rumbler effects
-- add I2C commands
 
 ## SDK
 

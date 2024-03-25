@@ -121,7 +121,7 @@ namespace rckid {
 
     void Device::tick() {
         ++ticks_;
-        lastState_ = state_;
+        lastState_ = state_.state;
         // query the AVR for the status bytes, first set the address
         i2c0->hw->enable = 0;
         i2c0->hw->tar = AVR_I2C_ADDRESS;

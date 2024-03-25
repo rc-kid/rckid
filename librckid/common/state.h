@@ -6,177 +6,10 @@
 
 namespace rckid {
 
-
-    enum class Btn {
-        Left = 1 << 0, 
-        Right = 1 << 1,
-        Up = 1 << 2, 
-        Down = 1 << 3, 
-        A = 1 << 4, 
-        B = 1 << 5, 
-        Select = 1 << 6, 
-        Start = 1 << 7,
-        Home = 1 << 8, 
-        VolumeUp = 1 << 9, 
-        VolumeDown = 1 << 10,
-    }; // rckid::Btn
-
-    /** RCKid's status. 
-
-        Contains the current state of all buttons as well as the audio and power events, all monitored by the AVR. 
-    */
-    class Status {
-    public:
-
-        bool down(Btn b) const {
-            unsigned x = static_cast<unsigned>(b);
-            if (x > 0xff) {
-                x >>= 8;
-                return raw_[1] & x;
-            } else {
-                return raw_[0] & x;
-            }
-        }
-
-        bool charging() const { return raw_[1] & CHARGING; }
-        bool dcPower() const { return raw_[1] & DC_POWER; }
-        bool headphones() const { return raw_[1] & HEADPHONES; }
-        bool audioEnabled() const { return raw_[1] & AUDIO_ENABLED; }
-
-        /** \name Setters 
-         */
-        //@{
-        void setBtnHome(bool value = true) { value ? raw_[1] |= BTN_HOME : raw_[1] &= ~BTN_HOME; }
-
-        void setCharging(bool value = true) { value ? raw_[1] |= CHARGING : raw_[1] &= ~CHARGING; }
-        void setDCPower(bool value = true) { value ? raw_[1] |= DC_POWER : raw_[1] &= ~DC_POWER; }
-        void setHeadphones(bool value = true) { value ? raw_[1] |= HEADPHONES : raw_[1] &= ~HEADPHONES; }
-        void setAudioEnabled(bool value = true) { value ? raw_[1] |= AUDIO_ENABLED : raw_[1] &= ~AUDIO_ENABLED; }
-
-        void setDPadKeys(bool l, bool r, bool u, bool d) {
-            raw_[0] &= ~(DPAD_LEFT | DPAD_RIGHT | DPAD_UP | DPAD_DOWN);
-            raw_[0] |= (l ? DPAD_LEFT : 0) | ( r ? DPAD_RIGHT : 0) | (u ? DPAD_UP : 0) | (d ? DPAD_DOWN : 0);
-        }
-
-        void setABXYKeys(bool a, bool b, bool sel, bool start) {
-            raw_[0] &= ~(BTN_A | BTN_B | BTN_SEL | BTN_START);
-            raw_[0] |= (a ? BTN_A : 0) | ( b ? BTN_B : 0) | (sel ? BTN_SEL : 0) | (start ? BTN_START : 0);
-        }
-
-        void setVolumeKeys(bool volUp, bool volDown) {
-            raw_[1] &= ~(BTN_VOL_UP | BTN_VOL_DOWN);
-            raw_[1] |= ( volUp ? BTN_VOL_UP : 0) | (volDown ? BTN_VOL_DOWN : 0);
-        }
-        //@}
-
-    private:
-        // first byte 
-        static constexpr uint8_t DPAD_LEFT = static_cast<unsigned>(Btn::Left);
-        static constexpr uint8_t DPAD_RIGHT = static_cast<unsigned>(Btn::Right);
-        static constexpr uint8_t DPAD_UP = static_cast<unsigned>(Btn::Up);
-        static constexpr uint8_t DPAD_DOWN = static_cast<unsigned>(Btn::Down);
-        static constexpr uint8_t BTN_A = static_cast<unsigned>(Btn::A);
-        static constexpr uint8_t BTN_B = static_cast<unsigned>(Btn::B);
-        static constexpr uint8_t BTN_SEL = static_cast<unsigned>(Btn::Select);
-        static constexpr uint8_t BTN_START = static_cast<unsigned>(Btn::Start);
-        // second byte
-        static constexpr uint8_t BTN_HOME = static_cast<unsigned>(Btn::Home) >> 8;
-        static constexpr uint8_t BTN_VOL_UP = static_cast<unsigned>(Btn::VolumeUp) >> 8;
-        static constexpr uint8_t BTN_VOL_DOWN = static_cast<unsigned>(Btn::VolumeDown) >> 8;
-        static constexpr uint8_t CHARGING = 1 << 3;
-        static constexpr uint8_t DC_POWER = 1 << 4;
-        static constexpr uint8_t HEADPHONES = 1 << 5;
-        static constexpr uint8_t AUDIO_ENABLED = 1 << 6;
-        // 7
-
-        // we should use array of bytes to avoid endianess mess
-        uint8_t raw_[2] = {0, 0};
-    } __attribute__((packed)); // rckid::Status
-
-    /** Extra information gathered by the AVR. 
-     */
-    class Info {
-    public:
-
-        bool debugMode() const { return debugMode_; }
-
-        void setDebugMode(bool value = true) { debugMode_ = value; }
-
-        /** \name VCC
-         
-            The voltage to the AVR measured in 0.01[V]. Value of 0 means any voltage below 2.46V, value of 500 5V or more, otherwise the number returnes is volatge * 100. 
-         */
-        //@{
-        uint16_t vcc() const { return (vcc_ == 0) ? 0 : (vcc_ + 245); }
-
-        void setVcc(uint16_t vx100) {
-            if (vx100 < 250)
-                vcc_ = 0;
-            else if (vx100 >= 500)
-                vcc_ = 255;
-            else 
-                vcc_ = (vx100 - 245) & 0xff;
-        }
-        //@}
-
-        /** \name Temperature 
-         
-            Returns the temperature as measured by the chip with 0.1[C] intervals. -200 is -20C or less, 1080 is 108[C] or more. 0 is 0C. 
-         */
-        //@{
-        int16_t temp() const { return -200 + (temp_ * 5); }
-
-        void setTemp(int32_t tempx10) {
-            if (tempx10 <= -200)
-                temp_ = 0;
-            else if (tempx10 >= 1080)
-                temp_ = 255;
-            else 
-                temp_ = (tempx10 + 200) / 5;
-        }
-        //@}
-
-    private:
-        uint8_t debugMode_;
-        uint8_t vcc_;
-        uint8_t temp_;
-    } __attribute__((packed)); // rckid::Info
-
-    class Config {
-    public:
-        uint8_t backlight() const { return backlight_; }
-        void setBacklight(uint8_t value) { backlight_ = value; }
-
-    private:
-        uint8_t backlight_;
-
-    } __attribute__((packed)); // rckid::Config
-
-
-    
-
-    /** The entire state of the device. 
-        
-        This is what the AVR chip will always return when asked to write data. Contains the status first, followed by all other data the AVR is in charge of or simply persisting. 
-    */
-    class State {
-    public:
-
-        Status status;
-        Info info;
-        Config config;
-        platform::TinyDate time;
-        uint16_t dbg;
-        // this is page EEPROM page size (32bytes) + 1 byte for command / control
-        uint8_t buffer[33];
-
-    } __attribute__((packed)); // rckid::State
-
-    static_assert(sizeof(State) <= 256 && "I2C buffer counter on AVR is single byte");
-
-
-
-
+    static constexpr uint8_t AVR_NO_ERROR = 0;
+    static constexpr uint8_t AVR_ERROR_WDT = 1;
+    static constexpr uint8_t AVR_ERROR_BOD = 2;
+    static constexpr uint8_t AVR_POWER_ON = 3;
 
     /** RCKid mode of operation. 
      
@@ -196,8 +29,6 @@ namespace rckid {
         PowerOff, 
         Wakeup,
     }; 
-
-
 
     /** Device state
 
@@ -222,7 +53,7 @@ namespace rckid {
         - 8 bits temp
         - 8 bits icharge
      */
-    class State2 {
+    class State {
     public:
 
         /** \name Device Mode
@@ -252,7 +83,7 @@ namespace rckid {
         bool btnVolDown() const { return data_[1] & BTN_VOL_DOWN; }
         bool btnHome() const { return data_[2] & BTN_HOME; }
 
-#ifdef RCKID_AVR
+#if (defined RCKID_AVR)
         void setDPadKeys(bool l, bool r, bool u, bool d) {
             data_[0] &= ~(BTN_LEFT | BTN_RIGHT | BTN_UP | BTN_DOWN);
             data_[0] |= (l ? BTN_LEFT : 0) | ( r ? BTN_RIGHT : 0) | (u ? BTN_UP : 0) | (d ? BTN_DOWN : 0);
@@ -269,6 +100,18 @@ namespace rckid {
         }
 
         void setBtnHome(bool value = true) { value ? data_[2] |= BTN_HOME : data_[2] &= ~BTN_HOME; }
+#elif (defined ARCH_MOCK)
+        void setBtnLeft(bool value) { platform::writeMask(data_[0], BTN_LEFT, value); }
+        void setBtnRight(bool value) { platform::writeMask(data_[0], BTN_RIGHT, value); }
+        void setBtnUp(bool value) { platform::writeMask(data_[0], BTN_UP, value); }
+        void setBtnDown(bool value) { platform::writeMask(data_[0], BTN_DOWN, value); }
+        void setBtnA(bool value) { platform::writeMask(data_[0], BTN_A, value); }
+        void setBtnB(bool value) { platform::writeMask(data_[0], BTN_B, value); }
+        void setBtnSel(bool value) { platform::writeMask(data_[0], BTN_SELECT, value); }
+        void setBtnStart(bool value) { platform::writeMask(data_[0], BTN_START, value); }
+        void setBtnVolUp(bool value) { platform::writeMask(data_[1], BTN_VOL_UP, value); }
+        void setBtnVolDown(bool value) { platform::writeMask(data_[1], BTN_VOL_DOWN, value); }
+        void setBtnHome(bool value) { platform::writeMask(data_[2], BTN_HOME, value); }
 #endif
         //@}
 
@@ -388,15 +231,17 @@ namespace rckid {
 
     } __attribute__((packed)); 
 
-    static_assert(sizeof(State2) == 8);
+    static_assert(sizeof(State) == 8);
 
-
-
-    struct TransferrableState {
-        State2 state;
+    struct DeviceState {
+        State state;
         platform::TinyDate time;
         uint32_t uptime;
-        // TODO datetime
+        uint8_t error = AVR_NO_ERROR;
+    } __attribute__((packed));
+
+
+    struct TransferrableState : public DeviceState {
         uint8_t buffer[33];
     } __attribute__((packed));
 
@@ -444,7 +289,7 @@ namespace rckid {
             uint8_t hue;
             uint8_t step; 
             uint8_t brightness;
-        }; 
+        } __attribute__((packed)); 
 
         /** Kind of the effect. 
          */
@@ -459,7 +304,7 @@ namespace rckid {
         union {
             platform::Color color;
             Rainbow rainbow;
-        };
+        } __attribute__((packed));
 
         RGBEffect(): kind{Kind::Off}, speed{255}, duration{0}, color{platform::Color::Black()} {} 
 
@@ -529,7 +374,7 @@ namespace rckid {
 
     private:
 
-        RGBEffect(Kind kind, uint8_t speed, uint16_t duration):
+        RGBEffect(Kind kind, uint8_t speed, uint8_t duration):
             kind{kind}, speed{speed}, duration{duration}, color{platform::Color::Black()} {}
     } __attribute__((packed)); 
 

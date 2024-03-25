@@ -56,15 +56,15 @@ namespace rckid {
     }
 
     void Device::tick() {
-        lastState_ = state_;
-        state_.status.setBtnSelect(IsKeyDown(KEY_SPACE));    
-        state_.status.setBtnStart(IsKeyDown(KEY_ENTER));    
-        state_.status.setBtnA(IsKeyDown(KEY_A));    
-        state_.status.setBtnB(IsKeyDown(KEY_B));    
-        state_.status.setDpadLeft(IsKeyDown(KEY_LEFT));    
-        state_.status.setDpadRight(IsKeyDown(KEY_RIGHT));    
-        state_.status.setDpadUp(IsKeyDown(KEY_UP));    
-        state_.status.setDpadDown(IsKeyDown(KEY_DOWN));    
+        lastState_ = state_.state;
+        state_.state.setBtnSel(IsKeyDown(KEY_SPACE));    
+        state_.state.setBtnStart(IsKeyDown(KEY_ENTER));    
+        state_.state.setBtnA(IsKeyDown(KEY_A));    
+        state_.state.setBtnB(IsKeyDown(KEY_B));    
+        state_.state.setBtnLeft(IsKeyDown(KEY_LEFT));    
+        state_.state.setBtnRight(IsKeyDown(KEY_RIGHT));    
+        state_.state.setBtnUp(IsKeyDown(KEY_UP));    
+        state_.state.setBtnDown(IsKeyDown(KEY_DOWN));    
         if (WindowShouldClose())
             std::exit(-1);
         // TODO get state

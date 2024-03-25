@@ -30,7 +30,7 @@ namespace rckid {
         }
 
         void draw() override {
-            TinyDate t = time();
+            platform::TinyDate t = time();
             fb_.setFg(Color::White());
             fb_.setFont(Iosevka_Mono6pt7b);
             fb_.setBg(Color::RGB(bg_, 0, 0));

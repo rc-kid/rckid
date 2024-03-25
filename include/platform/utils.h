@@ -1,5 +1,14 @@
 #pragma once
 
+namespace gpio {
+    inline void outputHigh(Pin p) { write(p, true); setAsOutput(p); }
+    inline void outputLow(Pin p) { write(p, false); setAsOutput(p); }
+    inline void outputFloat(Pin p) { setAsInput(p); }
+
+    inline void high(Pin p) { write(p, true); }
+    inline void low(Pin p) { write(p, false); }
+}
+
 namespace platform {
 
     /** Endiannes of the platform. 
@@ -33,6 +42,11 @@ namespace platform {
      */
     inline uint16_t swap(uint16_t x) {
         return (x >> 8) | (x << 8);
+    }
+
+    template<typename T> 
+    void writeMask(T & where, T mask, bool value) {
+        where = value ? (where | mask) : (where & ~mask);
     }
 
     /** A simple date-time object that fits in just 4 bytes. 

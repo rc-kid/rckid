@@ -127,9 +127,13 @@ public:
         set_sleep_mode(SLEEP_MODE_STANDBY);
         setDeviceMode(DeviceMode::Normal);
         sei();
-        // TODO Delete this when in production
-        gpio::setAsOutput(AVR_PIN_RGB);
-        rgbEffects_[0] = RGBEffect::Solid(platform::Color::RGB(64, 0, 0), 1, 10);
+        // determine the last error
+        ts_.error = AVR_POWER_ON;
+        if (RSTCTRL.RSTFR & RSTCTRL_WDRF_bm)
+            ts_.error = AVR_ERROR_WDT;
+        if (RSTCTRL.RSTFR & RSTCTRL_BORF_bm)
+            ts_.error = AVR_ERROR_BOD;
+        // debug display
 #if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
         oled_.initialize128x32();
         oled_.clear32();
@@ -186,10 +190,18 @@ public:
         In a normal state, long press is immediate powerOff. In all other states, it is a singnal to enter normal mode. 
      */
     static void btnHomeLongPress() {
-        if (ts_.state.deviceMode() == DeviceMode::Normal)
-            setDeviceMode(DeviceMode::PowerOff);
-        else
-            setDeviceMode(DeviceMode::Normal);
+        switch (ts_.state.deviceMode()) {
+            case DeviceMode::Normal:
+                setDeviceMode(DeviceMode::PowerOff);
+                break;
+            case DeviceMode::Sleep:
+                rpWakeup();
+                setDeviceMode(DeviceMode::Normal);
+                break;
+            default:
+                setDeviceMode(DeviceMode::Normal);
+                break;
+        }
     }
 
     /** Long button press cancellation only matters in the wakeup mode where we need to transition back to the power off mode and turn off the system ticks. 
@@ -204,7 +216,8 @@ public:
         ts_.state.setDeviceMode(mode);
         switch (mode) {
             case DeviceMode::Normal:
-                ts_.state.setDebugMode(ts_.state.btnVolUp());
+                // TODO enable this when we are on real HW
+                //ts_.state.setDebugMode(ts_.state.btnSel());
                 startSystemTicks();
                 power3v3(true);
                 // enable I2C slave mode so that we can talk to the RP and enable interrupts for wakeup
@@ -223,6 +236,8 @@ public:
                 power3v3(false);
                 power5v(false);
                 ts_.state.setDCPower(false);
+                // disable potential ongoing btnHome counter 
+                btnHomeCounter_ = 0;
                 break;
             case DeviceMode::Wakeup:
                 i2c::disableSlave();
@@ -359,6 +374,13 @@ public:
                         !gpio::read(AVR_PIN_BTN_3) // vol down
                     );
                     gpio::high(AVR_PIN_BTN_CTRL);
+                    // if in debug mode, react to the volume keys by either resetting the RP, or entering its bootloader mode
+                    if (ts_.state.debugMode()) {
+                        if (ts_.state.btnVolUp())
+                            rpReset();
+                        else if (ts_.state.btnVolDown())
+                            rpBootloader();
+                    }
                     // sample temperature
                     ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_INTREF_gc | ADC_SAMPCAP_bm;
                     ADC0.MUXPOS = ADC_MUXPOS_TEMPSENSE_gc;
@@ -444,7 +466,7 @@ public:
                 value = value * 2;
                 ts_.state.setVcc(value);
                 // check power events
-                if (value < VCC_CRITICAL_THRESHOLD)
+                if ((ts_.state.deviceMode() != DeviceMode::PowerOff) && (value < VCC_CRITICAL_THRESHOLD))
                     criticalBattery();
                 else if (value > VCC_DC_POWER_THRESHOLD)
                     dcPowerPlugged();
@@ -540,13 +562,13 @@ public:
      */
     static void power5v(bool state) {
         // TODO enable this when out of breadboard 
-        /*
         if (state) {
-            gpio::outputHigh(AVR_PIN_3V3_ON);
+            //gpio::outputHigh(AVR_PIN_5V_ON);
+            gpio::setAsOutput(AVR_PIN_RGB);
         } else {
-            gpio::outputFloat(AVR_PIN_5V_ON);
+            //gpio::outputFloat(AVR_PIN_5V_ON);
+            gpio::outputFloat(AVR_PIN_RGB);
         }
-        */
     }
 
     static bool power5vActive() {
@@ -572,7 +594,8 @@ public:
 
     static void rpReset() {
         power3v3(false);
-        rgbFill(/*Color::Blue()*/);
+        rgbs_.fill(platform::Color::Blue());
+        rgbs_.update();
         cpu::delayMs(1000);
         power3v3(true);
         setBacklightPWM(128);
@@ -581,7 +604,8 @@ public:
 
     static void rpBootloader() {
         power3v3(false);
-        rgbFill(/*Color::Green()*/);
+        rgbs_.fill(platform::Color::Green());
+        rgbs_.update();
         gpio::outputLow(AVR_PIN_QSPI_SS);
         cpu::delayMs(500);
         power3v3(true);
@@ -589,6 +613,13 @@ public:
         cpu::delayMs(300);
         gpio::outputFloat(AVR_PIN_QSPI_SS);
         // keep the green lights on, the RP2040 app that has just been uploaded should turn them off
+    }
+
+    /** Signals to the RP2040 to wake up */
+    static void rpWakeup() {
+        using namespace platform;
+        // send the wakeup command to the RP2040 via I2C 
+        i2c::masterTransmit(RP_I2C_ADDRESS, nullptr, 0, nullptr, 0);
     }
 
     /** Triggered when DC power is detected. 
@@ -631,8 +662,25 @@ public:
 #endif
     }
 
+    /** Goes to the power off mode immediately while flashing some red colors. 
+     
+        Since this is called from the ADC0 done method, it will fire even when in the wakeup phase we detect a too low voltage. 
+     */
     static void criticalBattery() {
-        // TODO give warning and die
+        // turn off the 3v3 rail first
+        power3v3(false);
+        // flash the LEDs red three times
+        power5v(true);
+        for (int i = 0; i < 3; ++i) {
+            rgbs_.fill(platform::Color::Red().withBrightness(128));
+            rgbs_.update();
+            cpu::delayMs(200);
+            rgbs_.fill(platform::Color::Black());
+            rgbs_.update();
+            cpu::delayMs(200);
+            cpu::wdtReset(); 
+        }
+        setDeviceMode(DeviceMode::PowerOff);
     }
 
     /** Programmatically disables the charger. 
@@ -769,11 +817,6 @@ public:
         }
    }
 
-    static void rgbFill() {
-        // TODO
-        // TODO should also turn the lights on if necessary
-    }
-
     //@}
 
     /** \name I2C Comms 
@@ -840,6 +883,9 @@ public:
             case cmd::PowerOff::ID:
                 setDeviceMode(DeviceMode::PowerOff);
                 break;
+            case cmd::Sleep::ID:
+                setDeviceMode(DeviceMode::Sleep);
+                break;
             case cmd::ResetRP::ID:
                 rpReset();
                 break;
@@ -873,6 +919,18 @@ public:
             case cmd::SetTime::ID: {
                 platform::TinyDate t = cmd::SetTime::fromBuffer(ts_.buffer).value;
                 NO_ISR(ts_.time = t);
+                break;
+            }
+            case cmd::DisplayRead::ID: {
+                gpio::outputLow(AVR_PIN_DISP_RDX);
+                break;
+            }
+            case cmd::DisplayWrite::ID: {
+                gpio::outputFloat(AVR_PIN_DISP_RDX);
+                break;
+            }
+            case cmd::ResetAVRError::ID: {
+                ts_.error = AVR_NO_ERROR;
                 break;
             }
             case cmd::Rumbler::ID: {

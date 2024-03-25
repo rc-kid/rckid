@@ -62,6 +62,20 @@ void rckid_main();
  */
 namespace rckid {
 
+    enum class Btn {
+        Left, 
+        Right,
+        Up, 
+        Down, 
+        A, 
+        B, 
+        Select, 
+        Start,
+        Home, 
+        VolumeUp, 
+        VolumeDown,
+    }; // rckid::Btn
+
     class App;
 
     constexpr int INTERNAL_ERROR = 1;
@@ -277,7 +291,7 @@ namespace rckid {
 
     /** Returns the current time as kept by the AVR. 
      */
-    TinyDate time();
+    platform::TinyDate time();
 
     //@}
 
@@ -323,7 +337,7 @@ namespace rckid {
 
         static inline size_t clockSpeed_ = 125000000;
 
-        static inline State state_;
+        static inline DeviceState state_;
         static inline State lastState_;
 
         static inline BMI160::State accelState_;
@@ -357,6 +371,36 @@ namespace rckid {
          */
         static void tick();
 
+        static bool btnDown(Btn btn, State const & state) {
+            switch (btn) {
+                case Btn::Left:
+                    return state.btnLeft();
+                case Btn::Right:
+                    return state.btnRight();
+                case Btn::Up:
+                    return state.btnUp();
+                case Btn::Down:
+                    return state.btnDown();
+                case Btn::A:
+                    return state.btnA();
+                case Btn::B:
+                    return state.btnB();
+                case Btn::Select:
+                    return state.btnSel();
+                case Btn::Start:
+                    return state.btnStart();
+                case Btn::VolumeUp:
+                    return state.btnVolUp();
+                case Btn::VolumeDown:
+                    return state.btnVolDown();
+                case Btn::Home:
+                    return state.btnHome();
+                default:
+                    // unreachable
+                    return false;
+            }
+        }
+
 
         // basic functions
         friend void yield();
@@ -365,9 +409,9 @@ namespace rckid {
 
         // power management
         friend void powerOff();
-        friend bool charging() { return state_.status.charging(); }
-        friend bool dcPower() { return state_.status.dcPower(); }
-        friend unsigned vcc() { return state_.info.vcc(); }
+        friend bool charging() { return state_.state.charging(); }
+        friend bool dcPower() { return state_.state.dcPower(); }
+        friend unsigned vcc() { return state_.state.vcc(); }
 
         friend void setBrightness(uint8_t brightness) {
             Device::sendCommand(cmd::SetBrightness(brightness));
@@ -394,9 +438,9 @@ namespace rckid {
         static inline uint8_t * vramPtr_ = nullptr;
 
         // controls
-        friend bool down(Btn b) { return state_.status.down(b); }
-        friend bool pressed(Btn b) { return state_.status.down(b) && ! lastState_.status.down(b); }
-        friend bool released(Btn b) { return !state_.status.down(b) && lastState_.status.down(b); }
+        friend bool down(Btn b) { return btnDown(b, state_.state); }
+        friend bool pressed(Btn b) { return btnDown(b, state_.state) && ! btnDown(b, lastState_); }
+        friend bool released(Btn b) { return !btnDown(b, state_.state) && btnDown(b, lastState_); }
         friend int16_t accelX() { return accelState_.accelX; }
         friend int16_t accelY() { return accelState_.accelY; }
         friend int16_t accelZ() { return accelState_.accelZ; }
@@ -407,10 +451,10 @@ namespace rckid {
         friend uint16_t lightUV() { return lightUV_; }
 
         // sensors
-        friend unsigned tempAvr() { return state_.info.temp(); }
+        friend unsigned tempAvr() { return state_.state.temp(); }
 
         // time utilities
-        friend TinyDate time() { return state_.time; }
+        friend platform::TinyDate time() { return state_.time; }
 
         friend void sleep_ns(uint32_t ns);
         friend size_t cpuClockSpeed() { return clockSpeed_; }

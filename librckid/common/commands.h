@@ -33,25 +33,38 @@ namespace rckid::cmd {
 
     COMMAND(0, Nop);
     COMMAND(1, PowerOff);
-    COMMAND(2, ResetRP);
-    COMMAND(3, ResetAVR);
-    COMMAND(4, BootloaderRP);
-    COMMAND(5, BootloaderAVR);
+    COMMAND(2, Sleep);
+    COMMAND(4, ResetRP);
+    COMMAND(5, ResetAVR);
+    COMMAND(6, BootloaderRP);
+    COMMAND(7, BootloaderAVR);
     
-    COMMAND(6, DebugModeOn);
-    COMMAND(7, DebugModeOff);
-    COMMAND(8, AudioEnabled);
-    COMMAND(9, AudioDisabled);
+    COMMAND(8, DebugModeOn);
+    COMMAND(9, DebugModeOff);
+    COMMAND(10, AudioEnabled);
+    COMMAND(11, AudioDisabled);
 
-    COMMAND(10, SetBrightness,
+    COMMAND(12, SetBrightness,
         uint8_t value;
         SetBrightness(uint8_t value): value{value} {}
     );
 
-    COMMAND(11, SetTime, 
+    COMMAND(13, SetTime, 
         platform::TinyDate value;
         SetTime(platform::TinyDate value): value{value} {}
     );
+
+    /** Instructs the RPI to enable reading from the display by the RP data lines by pulling the DISP_RDX line low. 
+     */
+    COMMAND(20, DisplayRead);
+
+    /** Instructs the RPI to enable writing from the display by the RP data lines by letting the DISP_RDC lien float (pulled up externally). 
+     */
+    COMMAND(21, DisplayWrite);
+
+    /** Clears the AVR last error information. 
+     */
+    COMMAND(30, ResetAVRError);
 
     COMMAND(40, Rumbler,
         RumblerEffect effect;
