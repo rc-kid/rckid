@@ -17,10 +17,6 @@
 - make app system apps use 160x120x8bpp for minimal VRAM footprint for system
 - determine carousel with smaller footprint too
 
-- check UV light detector
-
-- display does not work when overclocked (rest works ok)
-
 - steps counter - might need battery to verify
 - accelerometer reported temperature
 
@@ -66,7 +62,13 @@
 
 ## RP
 
+- check the nanosecond timing
+
 - document ST7789
+- can Mode (single vs double be removed from display as its not really its inherent property)
+
+
+
 - disable file & line information for fatal errors
 - print fatal error to USB serial
 - SWAP MIC & PWM and mic CLK and DATA !!!!!

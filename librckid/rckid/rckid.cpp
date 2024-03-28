@@ -82,25 +82,6 @@ namespace rckid {
 
     // 
 
-    void cpuOverclock(unsigned hz, bool overvolt) {
-        if (overvolt) {
-            vreg_set_voltage(VREG_VOLTAGE_1_20);
-            sleep_ms(10);
-        } else {
-            // TODO non-overvolt                
-        }
-        Device::clockSpeed_ = hz;
-        set_sys_clock_khz(hz / 1000, true);
-    }
-
-
-    // TODO super dumb nanosecond-like delay. Should be changed to take into account the actual cpu clock speed etc
-    void sleep_ns(uint32_t ns) {
-        //ns = ns * 4;
-        while (ns >= 8) 
-            ns -= 8;
-    }
-
     // 4.4ms for system currently
 
     void Device::initialize() {
@@ -407,7 +388,7 @@ namespace rckid {
 
     void Audio::setSampleRate(uint16_t rate) {
         // since even the lower frequency (8kHz) can be obtained with a 250MHz (max) sys clock and 16bit wrap, we keep clkdiv at 1 and only change wrap here
-        pwm_set_wrap(TIMER_SLICE, (cpuClockSpeed() * 10 / rate + 5) / 10); 
+        pwm_set_wrap(TIMER_SLICE, (cpu::clockSpeed() * 10 / rate + 5) / 10); 
     }
 
     void __not_in_flash_func(Audio::irqDMADone)() {
@@ -459,9 +440,9 @@ namespace rckid {
     void BMI160::initialize() {
         // TODO the initialization does not work atm for magnetometer, maybe it needs to be initialized first using the manual interface?
         i2cRegisterWrite8(I2C_ADDRESS, REG_CMD, CMD_ACCEL_ON);
-        delay_ms(5);
+        cpu::delayMs(5);
         i2cRegisterWrite8(I2C_ADDRESS, REG_CMD, CMD_GYRO_ON);
-        delay_ms(90);
+        cpu::delayMs(90);
     }
 
     void BMI160::measure(State & state) {

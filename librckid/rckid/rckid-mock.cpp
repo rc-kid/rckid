@@ -51,10 +51,6 @@ namespace rckid {
 
     // 
   
-    void cpuOverclock(unsigned hz, bool overvolt) {
-        // does nothing, overclocking is ignored in mock mode 
-    }
-
     void Device::tick() {
         lastState_ = state_.state;
         state_.state.setBtnSel(IsKeyDown(KEY_SPACE));    

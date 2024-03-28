@@ -30,6 +30,7 @@ namespace rckid {
         }
 
         void draw() override {
+            gpio::high(GPIO21);
             platform::TinyDate t = time();
             fb_.setFg(Color::White());
             fb_.setFont(Iosevka_Mono6pt7b);
@@ -59,6 +60,8 @@ namespace rckid {
                         << " idle:" << Stats::idlePct() << "\n"
                         << " VRAM: " << freeVRAM() << "\n"
                         << " heap: " << freeHeap();
+            gpio::low(GPIO21);
+
         }
 
     private:

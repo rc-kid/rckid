@@ -55,24 +55,38 @@ namespace rckid {
     class ST7789 {
     public:
 
+        // TODO remove from display driver and rename to resolution
+        enum class Mode {
+            Single, 
+            Double,
+        }; // ST7789::Mode
+
+
         using UpdatePixelsCallback = std::function<void()>;
 
+        /** Pixel mode. 
+         
+            The default pixel mode (RGB565) corresponds to the 16bit per pixel 65k color resolution with 5 bits for the red and blue channels and 6 bits for the green channel. 
+
+            The RGB666 pixel mode is the maximum 274k colors the display is capable of and uses 3 bytes per pixel sending the red, green and blue channels separately. 
+         */
         enum class ColorMode : uint8_t {
             RGB565 = 0x55,
             RGB666 = 0x66,
         }; // ST7789::PixelMode
 
+        /** Display Mode
+         
+            The display mode specifies whether the display memory update follows the display's update beam (native mode), or follows the orientation of the display (natural). The native mode renders the contents from top right pixel columnwise to the bottom left one, while the natural mode starts in the top left position and goes row-wise to bottom right. Only the native mode can prevent tearing in all cases as the memory and beam updates in the same direction. 
+
+            The mode also controls whether the default RGB, or alternate BGR ordering of the color channels is used. 
+         */
         enum class DisplayMode: uint8_t {
             Native = 0, 
             NativeBGR = 0x08, // MADCTL_BGR
             Natural = 0x80 + 0x20, // MADCTL_MY | MADCTL_MV 
             NaturalBGR = 0x80 + 0x20 + 0x08, // MADCTL_MY | MADCTL_MV | MADCTL_BGR
         }; // ST7789::DisplayMode
-
-        enum class Mode {
-            Single, 
-            Double,
-        }; // ST7789::Mode
 
         /** Initializes the display. 
          
@@ -112,7 +126,7 @@ namespace rckid {
         static void writePixels(uint16_t const * pixels, size_t numPixels, UpdatePixelsCallback cb) {
             cb_ = cb;
             if (!updating_) {
-                Stats::updateStart_ = uptime_us();
+                Stats::updateStart_ = uptimeUs();
                 updating_ = true;
             }
 #if (! defined LIBRCKID_MOCK)
@@ -124,27 +138,27 @@ namespace rckid {
 
         static void writePixelsDone() {
             ST7789::updating_ = false;
-            Stats::displayUpdateUs_ = static_cast<unsigned>(uptime_us() - Stats::updateStart_);
+            Stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - Stats::updateStart_);
         }
 
         /*
         static void updatePixels(uint16_t const * pixels, size_t numPixels) {
             cb_ = [](){ 
                 ST7789::updating_ = false; 
-                Stats::displayUpdateUs_ = static_cast<unsigned>(uptime_us() - Stats::updateStart_);
+                Stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - Stats::updateStart_);
             };
             updatePixelsPartial(pixels, numPixels);
         }
 
         static void updatePixelsPartial(uint16_t const * pixels, size_t numPixels, UpdatePixelsCallback cb) {
-            Stats::updateStart_ = uptime_us();
+            Stats::updateStart_ = uptimeUs();
             cb_ = cb;
             updatePixelsPartial(pixels, numPixels);
         }
 
         static void updatePixelsPartial(uint16_t const * pixels, size_t numPixels) {
             if (!updating_)
-                Stats::updateStart_ = uptime_us();
+                Stats::updateStart_ = uptimeUs();
             updating_ = true;
 #if (! defined LIBRCKID_MOCK)
             dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
@@ -161,10 +175,10 @@ namespace rckid {
         static bool updateDone() { return !updating_; }
 
         static void waitUpdateDone() { 
-            uint64_t t = uptime_us();
+            uint64_t t = uptimeUs();
             while (updating_)
                 yield();
-            Stats::updateWaitUs_ = static_cast<unsigned>(uptime_us() - t);
+            Stats::updateWaitUs_ = static_cast<unsigned>(uptimeUs() - t);
         }
 
         /** Sets the color mode used by the driver. By default RGB565 is used, but RGB666 can be selected instead, in which case 3 bytes are sent per pixel, each containing 6bit color information in the MSBs. 
@@ -195,11 +209,11 @@ namespace rckid {
          */
         static void waitVSync() { 
 #if (! defined LIBRCKID_MOCK)
-            uint64_t t = uptime_us();
+            uint64_t t = uptimeUs();
             while (gpio_get(RP_PIN_DISP_TE)); 
             while (! gpio_get(RP_PIN_DISP_TE))
                 yield();
-            Stats::vsyncWaitUs_ = static_cast<unsigned>(uptime_us() - t);
+            Stats::vsyncWaitUs_ = static_cast<unsigned>(uptimeUs() - t);
 #endif
         }
 
@@ -248,12 +262,31 @@ namespace rckid {
             sendCommand(cmd, reinterpret_cast<uint8_t *>(params), 4);
         }
 
+        /** Sends single byte in the bit-banging mode. 
+         
+            According to the datasheet (page 41), the read byte cycle is at least 66ns with both high and low pulses being at least 15ns. To work in the worst supported case at 250MHz, we insert 17 NOP instructions in total for 68ns. This will double in the 125MHz default speed, since the driver should mostly utilize the PIO driven DMA access, it should not be a problem. 
+         */
         static void sendByte(uint32_t b) {
 #if (! defined LIBRCKID_MOCK)
             gpio_put_masked(0xff << RP_PIN_DISP_DB8, b << RP_PIN_DISP_DB8);
-            sleep_ns(40);
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
             gpio_put(RP_PIN_DISP_WRX, true);
-            sleep_ns(40);
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
             gpio_put(RP_PIN_DISP_WRX, false);
 #endif
         }

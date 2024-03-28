@@ -23,6 +23,8 @@
 using namespace rckid;
 
 void rckid_main() {
+    cpu::overclock();
+    gpio::setAsOutput(GPIO21); // 100 = 19.1 us per tick
     //cpuOverclock(133000000, false);
     //cpuOverclock(150000000, true);
 

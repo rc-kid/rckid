@@ -1,20 +1,5 @@
 #include "gbc.h"
 
-#define A (state_.rawRegs8_[State::REG_INDEX_A])
-#define B (state_.rawRegs8_[State::REG_INDEX_B])
-#define C (state_.rawRegs8_[State::REG_INDEX_C])
-#define D (state_.rawRegs8_[State::REG_INDEX_D])
-#define E (state_.rawRegs8_[State::REG_INDEX_E])
-#define H (state_.rawRegs8_[State::REG_INDEX_H])
-#define L (state_.rawRegs8_[State::REG_INDEX_L])
-#define AF (state_.rawRegs16_[State::REG_INDEX_AF])
-#define BC (state_.rawRegs16_[State::REG_INDEX_BC])
-#define DE (state_.rawRegs16_[State::REG_INDEX_DE])
-#define HL (state_.rawRegs16_[State::REG_INDEX_HL])
-
-#define PC (state_.pc_)
-#define SP (state_.sp_)
-
 #define IO_JOYP (state_.highMem_[ADDR_IO_JOYP])
 #define IO_SB (state_.highMem_[ADDR_IO_SB])
 #define IO_SC (state_.highMem_[ADDR_IO_SC])
@@ -83,12 +68,22 @@ static constexpr int val_1 = 1;
 
 
 uint8_t GBC::read8(uint16_t address) {
+    using namespace rckid;
     if (address < 0xfe00) {
         return state_.memMap_[address >> 12][address & 0xfff];
     } else if (address < 0xfea0) {
         return state_.oam_[address - 0xfe00];
     } else if (address >= 0xff00) {
-        return state_.highMem_[address & 0xff];
+        switch (address & 0xff) {
+            case ADDR_IO_JOYP: 
+                if (IO_JOYP & JOYP_DPAD)
+                    return JOYP_DPAD | (down(Btn::Down) ? 0 : 8) | (down(Btn::Up) ? 0 : 4) | (down(Btn::Left) ? 0 : 2) | (down(Btn::Right) ? 0 : 1);
+                else 
+                   return JOYP_BUTTONS | (down(Btn::Start) ? 0 : 8) | (down(Btn::Select) ? 0 : 4) | (down(Btn::B) ? 0 : 2) | (down(Btn::A) ? 0 : 1);
+                    
+            default:
+                return state_.highMem_[address & 0xff];
+        }
     } else {
         // reading from elsewhere should not be allowed, but to be on the safe side, just return 0
         return 0;
@@ -116,10 +111,13 @@ void GBC::write8(uint16_t address, uint8_t value) {
         // since some of the IO regs are readonly (or their portions), we have to ensure that those bits won't get overwritten
         size_t offset = address & 0xff;
         switch (offset) {
+            case ADDR_IO_JOYP:
+                IO_JOYP = value;
+                break;
             case ADDR_IO_STAT:
-               IO_STAT &= STAT_WRITE_MASK;
-               IO_STAT |= value & STAT_WRITE_MASK;
-               break;
+                 IO_STAT &= STAT_WRITE_MASK;
+                 IO_STAT |= value & STAT_WRITE_MASK;
+                 break;
             case ADDR_IO_LY: 
             case ADDR_IO_PCM12:
             case ADDR_IO_PCM34:
@@ -288,12 +286,33 @@ void GBC::setLY(uint8_t value) {
     }
 }
 
-void GBC::render(size_t dots) {
-    // TODO
-    // set the IO_LY register
+void GBC::render(size_t & dots) {
+    while (dots >= DOTS_PER_LINE) {
+        /*
+        size_t y = IO_LY;
+        for (size_t x = 0; x < 160; ++x) {
+
+        }
+        */
+    }
 }
 
 // main loop
+
+#define A (state_.rawRegs8_[State::REG_INDEX_A])
+#define B (state_.rawRegs8_[State::REG_INDEX_B])
+#define C (state_.rawRegs8_[State::REG_INDEX_C])
+#define D (state_.rawRegs8_[State::REG_INDEX_D])
+#define E (state_.rawRegs8_[State::REG_INDEX_E])
+#define H (state_.rawRegs8_[State::REG_INDEX_H])
+#define L (state_.rawRegs8_[State::REG_INDEX_L])
+#define AF (state_.rawRegs16_[State::REG_INDEX_AF])
+#define BC (state_.rawRegs16_[State::REG_INDEX_BC])
+#define DE (state_.rawRegs16_[State::REG_INDEX_DE])
+#define HL (state_.rawRegs16_[State::REG_INDEX_HL])
+
+#define PC (state_.pc_)
+#define SP (state_.sp_)
 
 void GBC::loop() {
     cycles_ = 0;

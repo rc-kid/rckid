@@ -287,13 +287,28 @@ public:
     //@}
 private:
 
+    /** The joypad register. 
+     
+        Writing to the register's upper nibble chooses between dpad (bit 4) and buttons (bit 5), while the lower nibble contains the values of the buttons. When button is pressed, it should read 0. 
+
+        bit 5 = select buttons (write)
+        bit 4 = select dpad (write)
+        bit 3 = start / down (read)
+        bit 2 = select / up (read)
+        bit 1 = B / left (read)
+        bit 0 = A / right (read)
+     */
     static constexpr size_t ADDR_IO_JOYP = 0x00;
+    static constexpr uint8_t JOYP_DPAD = 16;
+    static constexpr uint8_t JOYP_BUTTONS = 32;
+
     static constexpr size_t ADDR_IO_SB = 0x01;
     static constexpr size_t ADDR_IO_SC = 0x02;
     static constexpr size_t ADDR_IO_DIV = 0x04;
     static constexpr size_t ADDR_IO_TIMA = 0x05;
     static constexpr size_t ADDR_IO_TMA = 0x06;
     static constexpr size_t ADDR_IO_TAC = 0x07;
+
     /** The Interrupt Flag Register
      
         bit 4 = Joypad
@@ -365,7 +380,7 @@ private:
     static constexpr size_t ADDR_IO_SCX = 0x43;
     /** LCD Y Coordinate
      
-        Contains the current coordinate of the LCD renderer. 0 to 143 is acrtive renderering, 144 to 153 is VBLANK.  
+        Contains the current coordinate of the LCD renderer. 0 to 143 is active renderering, 144 to 153 is VBLANK.  
      */
     static constexpr size_t ADDR_IO_LY = 0x44;
     static constexpr size_t ADDR_IO_LYC = 0x45;
@@ -438,17 +453,18 @@ private:
      */
     //@{
 
+    static constexpr size_t DOTS_PER_LINE = 456;
+
     void setMode(unsigned mode);
+    /** Sets the Y LCD coordinate (currently drawn row)*/
     void setLY(uint8_t value);
-    void render(size_t dots);
+    void render(size_t & dots);
 
     //@}
 
     /** The interpreter loop. 
      */
     void loop();
-
-
 
     // number of cycles ellapsed since last timed event
     size_t cycles_;
@@ -458,6 +474,5 @@ private:
 
     // when true, the stop instruction terminates the program, useful for debugging & testing
     bool terminateAfterStop_ = false;
-
 
 }; // GBC

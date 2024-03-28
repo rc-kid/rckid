@@ -4,12 +4,13 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "rckid - sandbox [mock]",
             "type": "cppdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/build-mock/cartridges/test/benchmarks/benchmarks",
+            "program": "${workspaceFolder}/build-mock/cartridges/gbcemu/gbcemu",
             "args": [],
             "stopAtEntry": false,
             "environment": [{ "name" : "DISPLAY", "value" : "0:0"}],

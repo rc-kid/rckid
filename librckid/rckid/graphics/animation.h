@@ -14,7 +14,7 @@ namespace rckid {
         void start(unsigned duration) {
             t_ = 0;
             duration_ = duration_;
-            lastCheck_ = uptime_us_32();
+            lastCheck_ = uptimeUs32();
             state_ = State::Single;
         }
 
@@ -23,7 +23,7 @@ namespace rckid {
         void startContinuous(unsigned duration) {
             t_ = 0;
             duration_ = duration_;
-            lastCheck_ = uptime_us_32();
+            lastCheck_ = uptimeUs32();
             state_ = State::ContinuousUp;
         }
 
@@ -36,7 +36,7 @@ namespace rckid {
         bool update() {
             if (state_ == State::Off)
                 return true;
-            uint32_t t = uptime_us_32();      
+            uint32_t t = uptimeUs32();      
             uint32_t d = (t - lastCheck_) / 1000;
             lastCheck_ = t;
             switch (state_) {

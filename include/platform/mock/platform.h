@@ -9,6 +9,7 @@
 #define ARCH_LITTLE_ENDIAN
 
 namespace cpu {
+
     inline void delayUs(unsigned value) {
         std::this_thread::sleep_for(std::chrono::microseconds(value));        
     }
@@ -18,6 +19,9 @@ namespace cpu {
     }
 
     inline void sleep() {}
+
+    inline size_t clockSpeed() { return 100000000; }
+    inline void overclock(unsigned hz, bool overvolt = true) {}
 }
 
 
@@ -42,15 +46,16 @@ namespace gpio {
     inline void write(Pin pin, bool value) { }
 
     inline bool read(Pin pin) { return false; }
-
 }
 
 namespace i2c {
     inline void initializeMaster(unsigned sda, unsigned scl, unsigned baudrate = 400000) { }
 
-    static void initializeSlave(uint8_t address_) {}
+    inline void initializeSlave(uint8_t address_) {}
 
-    static bool masterTransmit(uint8_t address, uint8_t const * wb, uint8_t wsize, uint8_t * rb, uint8_t rsize) { }
+    inline bool masterTransmit(uint8_t address, uint8_t const * wb, uint8_t wsize, uint8_t * rb, uint8_t rsize) { 
+        return true;
+    }
 } // i2c
 
 namespace spi {
@@ -66,9 +71,11 @@ namespace spi {
     }
 
     inline uint8_t transfer(uint8_t value) {
+        return 0;
     }
 
     inline size_t transfer(uint8_t const * tx, uint8_t * rx, size_t numBytes) { 
+        return numBytes;
     }
 
     inline void send(uint8_t const * data, size_t numBytes) {

@@ -24,6 +24,8 @@
     #include "mock.h"
 #endif 
 
+#include <platform.h>
+
 #include "common/config.h"
 #include "common/state.h"
 #include "common/commands.h"
@@ -61,6 +63,19 @@ void rckid_main();
     
  */
 namespace rckid {
+
+    /** \name Cartridge pins. 
+     */
+    //@{
+    constexpr gpio::Pin GPIO14 = gpio::Pin{14};
+    constexpr gpio::Pin GPIO15 = gpio::Pin{15};
+    constexpr gpio::Pin GPIO16 = gpio::Pin{16};
+    constexpr gpio::Pin GPIO17 = gpio::Pin{17};
+    constexpr gpio::Pin GPIO18 = gpio::Pin{18};
+    constexpr gpio::Pin GPIO19 = gpio::Pin{19};
+    constexpr gpio::Pin GPIO20 = gpio::Pin{20};
+    constexpr gpio::Pin GPIO21 = gpio::Pin{21};
+    //@}
 
     enum class Btn {
         Left, 
@@ -283,27 +298,16 @@ namespace rckid {
      */
     //@{
 
-    /** Returns RP2040's uptime in microseconds. 
+        /** Returns RP2040's uptime in microseconds. 
      */
-    inline uint64_t uptime_us() { return to_us_since_boot(get_absolute_time()); }
+    inline uint64_t uptimeUs() { return to_us_since_boot(get_absolute_time()); }
 
-    inline uint32_t uptime_us_32() { return time_us_32(); }
+    inline uint32_t uptimeUs32() { return time_us_32(); }
 
     /** Returns the current time as kept by the AVR. 
      */
     platform::TinyDate time();
 
-    //@}
-
-    /** \name CPU Control
-     */
-    //@{
-    size_t cpuClockSpeed();
-
-    void sleep_ns(uint32_t ns);
-    inline void delay_ms(uint32_t ms) { sleep_ms(ms); }
-
-    void cpuOverclock(unsigned hz = 250000000, bool overvolt = true);
     //@}
 
     /** Encapsulates the state of the device and its basic peripherals. 
@@ -334,8 +338,6 @@ namespace rckid {
         static inline uint32_t * vramNext_ = 0;
 
         static inline uint32_t ticks_ = 0;
-
-        static inline size_t clockSpeed_ = 125000000;
 
         static inline DeviceState state_;
         static inline State lastState_;
@@ -455,10 +457,6 @@ namespace rckid {
 
         // time utilities
         friend platform::TinyDate time() { return state_.time; }
-
-        friend void sleep_ns(uint32_t ns);
-        friend size_t cpuClockSpeed() { return clockSpeed_; }
-        friend void cpuOverclock(unsigned hz, bool overvolt);
 
         static void BSOD(int code);
 
@@ -580,19 +578,19 @@ namespace rckid {
     class Timer {
     public:
         Timer():
-            start_{uptime_us_32()},
+            start_{uptimeUs32()},
             lapStart_{start_} {
         }
 
         /** Returns total time in [us]. */
-        unsigned total() const { return uptime_us_32() - start_; }
+        unsigned total() const { return uptimeUs32() - start_; }
 
         /** Returns current lap time in [us]. */
-        unsigned lap() const { return uptime_us_32() - lapStart_; }
+        unsigned lap() const { return uptimeUs32() - lapStart_; }
 
         /** Retrurns the length of current lap and starts a new one in [us]. */
         unsigned newLap() {
-            unsigned t = uptime_us_32();
+            unsigned t = uptimeUs32();
             unsigned result = t - lapStart_;
             lapStart_ = t;
             return result;
