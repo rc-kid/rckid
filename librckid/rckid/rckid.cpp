@@ -31,6 +31,9 @@ extern uint8_t __StackLimit, __bss_end__;
 
 namespace rckid {
 
+    // fake allocation for the VRAM of properly set size
+    uint8_t __attribute__((section (".vram"))) __vram__[RCKID_VRAM_SIZE];
+
     void start() {
         // FIXME for reasons I do not completely understand, the board init must be before the other calls, or the device hangs? 
         board_init();
@@ -432,16 +435,16 @@ namespace rckid {
     // ============================================================================================
 
     bool BMI160::isPresent() {
-        if (!i2cDevicePresent(I2C_ADDRESS))
+        if (!i2c::isPresent(I2C_ADDRESS))
             return false;
-        return i2cRegisterRead8(I2C_ADDRESS, REG_CHIP_ID) == CHIP_ID;
+        return i2c::readRegister<uint8_t>(I2C_ADDRESS, REG_CHIP_ID) == CHIP_ID;
     }
 
     void BMI160::initialize() {
         // TODO the initialization does not work atm for magnetometer, maybe it needs to be initialized first using the manual interface?
-        i2cRegisterWrite8(I2C_ADDRESS, REG_CMD, CMD_ACCEL_ON);
+        i2c::writeRegister<uint8_t>(I2C_ADDRESS, REG_CMD, CMD_ACCEL_ON);
         cpu::delayMs(5);
-        i2cRegisterWrite8(I2C_ADDRESS, REG_CMD, CMD_GYRO_ON);
+        i2c::writeRegister<uint8_t>(I2C_ADDRESS, REG_CMD, CMD_GYRO_ON);
         cpu::delayMs(90);
     }
 
@@ -456,18 +459,18 @@ namespace rckid {
     // ============================================================================================
 
     bool LTR390UV::isPresent() {
-        if (!i2cDevicePresent(I2C_ADDRESS))
+        if (!i2c::isPresent(I2C_ADDRESS))
             return false;
-        return (i2cRegisterRead8(I2C_ADDRESS, REG_PART_ID) & 0xf0) == PART_ID;
+        return (i2c::readRegister<uint8_t>(I2C_ADDRESS, REG_PART_ID) & 0xf0) == PART_ID;
     }
 
     void LTR390UV::initialize() {
-        i2cRegisterWrite8(I2C_ADDRESS, REG_MEAS_RATE, MEAS_RATE_16bit_25ms);
-        i2cRegisterWrite8(I2C_ADDRESS, REG_GAIN, GAIN_18);
+        i2c::writeRegister<uint8_t>(I2C_ADDRESS, REG_MEAS_RATE, MEAS_RATE_16bit_25ms);
+        i2c::writeRegister<uint8_t>(I2C_ADDRESS, REG_GAIN, GAIN_18);
     }
 
     void LTR390UV::startALS() {
-        i2cRegisterWrite8(I2C_ADDRESS, REG_CTRL, CTRL_ALS_EN);
+        i2c::writeRegister<uint8_t>(I2C_ADDRESS, REG_CTRL, CTRL_ALS_EN);
     }
 
     uint16_t LTR390UV::measureALS() {
@@ -478,7 +481,7 @@ namespace rckid {
     }
 
     void LTR390UV::startUV() {
-        i2cRegisterWrite8(I2C_ADDRESS, REG_CTRL, CTRL_UV_EN);
+        i2c::writeRegister<uint8_t>(I2C_ADDRESS, REG_CTRL, CTRL_UV_EN);
     }
 
     uint16_t LTR390UV::measureUV() {
@@ -489,14 +492,6 @@ namespace rckid {
     }
 
 } // namespace rckid
-
-void pio_set_clock_speed(PIO pio, unsigned sm, unsigned hz) {
-    uint kHz = hz / 1000;
-    uint clk = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_SYS); // [kHz]
-    uint clkdiv = (clk / kHz);
-    uint clkfrac = (clk - (clkdiv * kHz)) * 256 / kHz;
-    pio_sm_set_clkdiv_int_frac(pio, sm, clkdiv & 0xffff, clkfrac & 0xff);
-} 
 
 int main() {
     rckid::start();

@@ -36,6 +36,8 @@
 
 ## Case
 
+- holes in the top panel for rgb and sensor are on the wrong side
+- print the top holder for painting in a bright color so that the paint opacity can be checked
 - see if the cartridge insertion mechanism can be made reliable (looks ok)
 - check if the slim buttons are actually working reasonably well
 - there is still warping when screwed together (Anton suggested heating up a bit and let the tensions equalize, also try larger PCB for v2 to improve rigidity of the frame around it)
@@ -62,11 +64,8 @@
 
 ## RP
 
-- check the nanosecond timing
 
 - document ST7789
-- can Mode (single vs double be removed from display as its not really its inherent property)
-
 
 
 - disable file & line information for fatal errors

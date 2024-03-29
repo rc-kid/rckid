@@ -42,7 +42,7 @@ namespace rckid {
             fb_.fill();
             fb_.text(5, 10) << offset_
                           << "\n\n"
-                          << " FPS: " << Stats::fps() << " S:" << Stats::systemUs() << " U:" << (Stats::updateUs() / 1000) << " D:" << (Stats::drawUs() / 1000)
+                          << " FPS: " << stats::fps() << " S:" << stats::systemUs() << " U:" << (stats::updateUs() / 1000) << " D:" << (stats::drawUs() / 1000)
                           << "    \n\n ERR:"
                           << errors_;
         }

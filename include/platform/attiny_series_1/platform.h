@@ -12,8 +12,7 @@
 #include "gpio.h"
 #include "cpu.h"
 #include "i2c.h"
-#include "../utils.h"
-#include "../I2CDevice.h"
+#include "../common.h"
 #include "../fonts.h"
 #include "../peripherals/color_strip.h"
 

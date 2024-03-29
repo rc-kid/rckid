@@ -6,11 +6,11 @@ namespace platform {
      
         Supports monochrome OLED displays of 128x32 and 128x64 pixels connected via I2C bus. A fresh reimplementation for minimal footprint. 
     */
-    class SSD1306 : public I2CDevice {
+    class SSD1306 : public i2c::Device {
     public:
 
         SSD1306(uint8_t address = 0x3c):
-            I2CDevice{address} {
+            Device{address} {
         }
 
         void initialize128x32() {
@@ -32,43 +32,43 @@ namespace platform {
                 NORMAL_MODE, // set display normal mode
                 DISPLAY_ON // turn display on
             };
-            I2CDevice::write(cmd, sizeof(cmd));
+            i2c::write(address, cmd, sizeof(cmd));
         }
 
         void normalMode() {
             uint8_t cmd[] = { COMMAND_MODE, NORMAL_MODE };
-            I2CDevice::write(cmd, sizeof(cmd));
+            i2c::write(address, cmd, sizeof(cmd));
         }
 
         void inverseMode() {
             uint8_t cmd[] = { COMMAND_MODE, INVERSE_MODE };
-            I2CDevice::write(cmd, sizeof(cmd));
+            i2c::write(address, cmd, sizeof(cmd));
         }
 
         void setContrast(uint8_t value) {
             uint8_t cmd[] = { SET_CONTRAST, value };
-            I2CDevice::write(cmd, sizeof(cmd));
+            i2c::write(address, cmd, sizeof(cmd));
         }
 
         void clear32() {
             for (uint8_t row = 0; row < 4; ++row) {
                 uint8_t cmd[] = { COMMAND_MODE, SET_PAGE | row, SET_COLUMN_LOW, SET_COLUMN_HIGH };
-                I2CDevice::write(cmd, sizeof(cmd));
+                i2c::write(address, cmd, sizeof(cmd));
                 uint8_t data[] = {DATA_MODE, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
                 for (uint8_t i = 0; i < 4; ++i)
-                    I2CDevice::write(data, sizeof(data));
+                    i2c::write(address, data, sizeof(data));
             }
         }
 
         void gotoXY(uint8_t col, uint8_t row) {
             uint8_t cmd[] = { COMMAND_MODE, SET_PAGE | row, SET_COLUMN_LOW | (col & 0xf), SET_COLUMN_HIGH | ((col >> 4) & 0xf)};
-            I2CDevice::write(cmd, sizeof (cmd));
+            i2c::write(address, cmd, sizeof (cmd));
         }
 
         void writeChar(char x) {
             uint8_t * c = Font::basic + (x - 0x20) * 5;
             uint8_t data[] = { DATA_MODE, c[0], c[1], c[2], c[3], c[4]};
-            I2CDevice::write(data, sizeof(data));
+            i2c::write(address, data, sizeof(data));
         }
 
         void write(char const * x) {

@@ -16,7 +16,7 @@ namespace platform {
         VCC | VCC | 0x45
 
      */
-    class INA219 : I2CDevice {
+    class INA219 : public i2c::Device {
     public:
 
         enum class Gain : uint16_t {
@@ -40,10 +40,10 @@ namespace platform {
             bit12_samples128 = 15,
         }; // INA219::Resolution
 
-        INA219(uint8_t address): I2CDevice{address} {}
+        INA219(uint8_t address): i2c::Device{address} {}
 
         void reset() {
-            writeRegister<uint16_t, Endian::Big>(CONFIG, 0x83ff);
+            i2c::writeRegister<uint16_t, Endian::Big>(address, CONFIG, 0x83ff);
         }
 
         /** Initializes the device with 32V bus voltage max and 4A current. 
@@ -55,8 +55,8 @@ namespace platform {
             cfg |= static_cast<uint16_t>(Gain::mv_40);
             cfg |= static_cast<uint8_t>(resolution) << 3;
             cfg |= static_cast<uint8_t>(resolution) << 7;
-            writeRegister<uint16_t, Endian::Big>(CONFIG, cfg);
-            writeRegister<uint16_t, Endian::Big>(CALIBRATION, 40960 / 10 * 5);
+            i2c::writeRegister<uint16_t, Endian::Big>(address, CONFIG, cfg);
+            i2c::writeRegister<uint16_t, Endian::Big>(address, CALIBRATION, 40960 / 10 * 5);
             currentMultiplier_ = 5;
         }
 
@@ -76,21 +76,21 @@ namespace platform {
         /** Returns the voltage in mV. 
          */
         uint16_t voltage() {
-            return (readRegister<uint16_t, Endian::Big>(BUS_VOLTAGE) >> 3) * 4;
+            return (i2c::readRegister<uint16_t, Endian::Big>(address, BUS_VOLTAGE) >> 3) * 4;
         }
         
         /** Returns the current in mA. 
          */
         uint16_t current() {
-            return readRegister<uint16_t, Endian::Big>(CURRENT) * currentMultiplier_;
+            return i2c::readRegister<uint16_t, Endian::Big>(address, CURRENT) * currentMultiplier_;
         }
 
         uint16_t shuntVoltage() {
-            return (readRegister<uint16_t, Endian::Big>(SHUNT_VOLTAGE));
+            return (i2c::readRegister<uint16_t, Endian::Big>(address, SHUNT_VOLTAGE));
         }
         
         uint16_t power() {
-            return readRegister<uint16_t, Endian::Big>(POWER);
+            return i2c::readRegister<uint16_t, Endian::Big>(address,POWER);
         }
 
 

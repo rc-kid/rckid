@@ -8,7 +8,7 @@ public:
     }
 
     static void delayMs(uint16_t value) {
-        _delayMs(value);
+        _delay_ms(value);
     }
 
     static void sleep() {

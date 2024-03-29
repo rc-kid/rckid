@@ -54,7 +54,7 @@ namespace rckid {
                 }
                 case Mode::Full4:
                     full4_ = CALCULATE_TIME(
-                        uint32_t * c = assumeAligned<uint32_t*>(fb_.rawBuffer());
+                        uint32_t * c = platform::assumeAligned<uint32_t*>(fb_.rawBuffer());
                         uint32_t tgt = 0;
                         for (int i = 0; i < 100; ++i) {
                             tgt = (i << 8) | (i << 24);
@@ -66,7 +66,7 @@ namespace rckid {
                     break;
                 case Mode::Full4Unroll:
                     full4Unroll_ = CALCULATE_TIME(
-                        uint32_t * c = assumeAligned<uint32_t*>(fb_.rawBuffer());
+                        uint32_t * c = platform::assumeAligned<uint32_t*>(fb_.rawBuffer());
                         uint32_t tgt = 0;
                         for (int i = 0; i < 100; ++i) {
                             tgt = (i << 8) | (i << 24);

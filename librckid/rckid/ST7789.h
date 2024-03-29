@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rckid.h"
+#include "stats.h"
 #include "graphics/color.h"
 #include "graphics/primitives.h"
 
@@ -51,11 +52,14 @@ namespace rckid {
         36 - DB6
         37 - DB7
 
+        TODO reading from the display is a bit complicated, a single byte must be at least 450ns and the read time must be precisely timed, or the data is gone. We can read in chunks and repurpose the SDA as sync mechanism between AVR and RP (AVR will tell RP to read the data by pulling SDA low). This will be interpreted by all other I2C devices as reapeated start & stop conditions from the AVR and should therefore be ignored and not interfere with the correctness of the I2C bus. 
+
      */
     class ST7789 {
     public:
 
         // TODO remove from display driver and rename to resolution
+        // can't since this controls the PIO we use for double interaction, or we need to get smarter about it 
         enum class Mode {
             Single, 
             Double,
@@ -126,7 +130,7 @@ namespace rckid {
         static void writePixels(uint16_t const * pixels, size_t numPixels, UpdatePixelsCallback cb) {
             cb_ = cb;
             if (!updating_) {
-                Stats::updateStart_ = uptimeUs();
+                stats::updateStart_ = uptimeUs();
                 updating_ = true;
             }
 #if (! defined LIBRCKID_MOCK)
@@ -138,27 +142,27 @@ namespace rckid {
 
         static void writePixelsDone() {
             ST7789::updating_ = false;
-            Stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - Stats::updateStart_);
+            stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::updateStart_);
         }
 
         /*
         static void updatePixels(uint16_t const * pixels, size_t numPixels) {
             cb_ = [](){ 
                 ST7789::updating_ = false; 
-                Stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - Stats::updateStart_);
+                stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::updateStart_);
             };
             updatePixelsPartial(pixels, numPixels);
         }
 
         static void updatePixelsPartial(uint16_t const * pixels, size_t numPixels, UpdatePixelsCallback cb) {
-            Stats::updateStart_ = uptimeUs();
+            stats::updateStart_ = uptimeUs();
             cb_ = cb;
             updatePixelsPartial(pixels, numPixels);
         }
 
         static void updatePixelsPartial(uint16_t const * pixels, size_t numPixels) {
             if (!updating_)
-                Stats::updateStart_ = uptimeUs();
+                stats::updateStart_ = uptimeUs();
             updating_ = true;
 #if (! defined LIBRCKID_MOCK)
             dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
@@ -178,7 +182,7 @@ namespace rckid {
             uint64_t t = uptimeUs();
             while (updating_)
                 yield();
-            Stats::updateWaitUs_ = static_cast<unsigned>(uptimeUs() - t);
+            stats::updateWaitUs_ = static_cast<unsigned>(uptimeUs() - t);
         }
 
         /** Sets the color mode used by the driver. By default RGB565 is used, but RGB666 can be selected instead, in which case 3 bytes are sent per pixel, each containing 6bit color information in the MSBs. 
@@ -213,7 +217,7 @@ namespace rckid {
             while (gpio_get(RP_PIN_DISP_TE)); 
             while (! gpio_get(RP_PIN_DISP_TE))
                 yield();
-            Stats::vsyncWaitUs_ = static_cast<unsigned>(uptimeUs() - t);
+            stats::vsyncWaitUs_ = static_cast<unsigned>(uptimeUs() - t);
 #endif
         }
 
@@ -253,12 +257,12 @@ namespace rckid {
         }
 
         static void sendCommand(uint8_t cmd, uint16_t p) {
-            uint16_t d = swapBytes(p);
+            uint16_t d = platform::swapBytes(p);
             sendCommand(cmd, reinterpret_cast<uint8_t *>(&d), 2);
         }
 
         static void sendCommand(uint8_t cmd, uint16_t p1, uint16_t p2) {
-            uint16_t params[] = { swapBytes(p1), swapBytes(p2) };
+            uint16_t params[] = { platform::swapBytes(p1), platform::swapBytes(p2) };
             sendCommand(cmd, reinterpret_cast<uint8_t *>(params), 4);
         }
 

@@ -1,15 +1,14 @@
-class i2c {
-public:
+namespace i2c {
 
-    static void disableSlave() {
+    inline void disableSlave() {
         TWI0.SCTRLA = 0;
     }
 
-    static void disableMaster() {
+    inline void disableMaster() {
         TWI0.MCTRLA = 0;
     }
 
-    static void initializeSlave(uint8_t address) {
+    inline void initializeSlave(uint8_t address) {
         // turn I2C off in case it was running before
         disableSlave();
         //TWI0.MCTRLA = 0;
@@ -30,7 +29,7 @@ public:
         TWI0.MCTRLA = TWI_ENABLE_bm;   
     }
 
-    static void initializeMaster() {
+    inline void initializeMaster() {
         cli();
         // turn I2C off in case it was running before
         disableMaster();
@@ -47,7 +46,34 @@ public:
         sei();
     }
 
-    static bool masterTransmit(uint8_t address, uint8_t const * wb, uint8_t wsize, uint8_t * rb, uint8_t rsize) {
+    inline bool masterTransmit(uint8_t address, uint8_t const * wb, uint8_t wsize, uint8_t * rb, uint8_t rsize) {
+        auto wait = [](){
+            while (!(TWI0.MSTATUS & (TWI_WIF_bm | TWI_RIF_bm))) {}; 
+        };
+        auto waitIdle = [](){
+            while (!(TWI0.MSTATUS & TWI_BUSSTATE_IDLE_gc)) {}; 
+        };
+
+        auto busLostOrError = [](){
+            return TWI0.MSTATUS & (TWI_BUSERR_bm | TWI_ARBLOST_bm);
+        };
+        auto stop = [&](){
+            TWI0.MCTRLB = TWI_MCMD_STOP_gc;
+            waitIdle();
+        }; 
+        auto start = [&](uint8_t address, bool read) {
+            TWI0.MADDR = (address << 1) | read;
+            wait();
+            if (busLostOrError()) {
+                waitIdle();
+                return false;
+            }
+            if (TWI0.MSTATUS & TWI_RXACK_bm) {
+                stop();
+                return false;
+            }
+            return true;
+        };
         if (wsize > 0) {
             if (! start(address, false)) 
                 goto i2c_master_error;
@@ -80,37 +106,22 @@ public:
         return false;
     }
 
+#ifdef FOO
 private:
 
-    static bool start(uint8_t address, bool read) {
-        TWI0.MADDR = (address << 1) | read;
-        wait();
-        if (busLostOrError()) {
-            waitIdle();
-            return false;
-        }
-        if (TWI0.MSTATUS & TWI_RXACK_bm) {
-            stop();
-            return false;
-        }
-        return true;
-    }
-
+    
     static void stop() {
-        TWI0.MCTRLB = TWI_MCMD_STOP_gc;
-        waitIdle();
     }
 
     static void wait() {
-        while (!(TWI0.MSTATUS & (TWI_WIF_bm | TWI_RIF_bm))) {}; 
     }
 
     static void waitIdle() {
-        while (!(TWI0.MSTATUS & TWI_BUSSTATE_IDLE_gc)) {}; 
     }
 
     static bool busLostOrError() {
-        return TWI0.MSTATUS & (TWI_BUSERR_bm | TWI_ARBLOST_bm);
     }
+
+#endif
 
 }; // i2c

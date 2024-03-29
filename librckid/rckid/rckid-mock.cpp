@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "raylib.h"
+
 #include "rckid.h"
 #include "app.h"
 #include "ST7789.h"
@@ -9,10 +11,16 @@
 #include "rckid/graphics/framebuffer.h"
 #include "fonts/Iosevka_Mono6pt7b.h"
 
+// fake section start & end to keep linker happy
+
+uint8_t __vram_start__;
+uint8_t __vram_end__;
 
 namespace rckid {
 
     void start() {
+        // prepare the VRAM 
+
         // TODO initialize the mock display & friends
         InitWindow(640, 480, "RCKid");
         resetVRAM();
@@ -48,6 +56,14 @@ namespace rckid {
         //UNIMPLEMENTED;
         return 0;
     }
+
+    uint8_t __vram__[RCKID_VRAM_SIZE];
+
+    size_t freeVRAM() { return (__vram__ + RCKID_VRAM_SIZE) - Device::vramPtr_; }
+
+    void resetVRAM() { Device::vramPtr_ = __vram__; }
+
+    bool isVRAMPtr(void * ptr) { return (ptr >= static_cast<void*>(& __vram_start__)) && (ptr < static_cast<void*>(& __vram_end__)); }
 
     // 
   

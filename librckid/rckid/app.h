@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include "stats.h"
+
 #include "graphics/png.h"
 #include "fonts/Iosevka_Mono6pt7b.h"
 

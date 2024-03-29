@@ -1,6 +1,9 @@
 #pragma once
 
 #include "../rckid.h"
+#include "../timer.h"
+
+#include "utils/interpolation.h"
 
 namespace rckid {
 
@@ -14,7 +17,7 @@ namespace rckid {
         void start(unsigned duration) {
             t_ = 0;
             duration_ = duration_;
-            lastCheck_ = uptimeUs32();
+            lastCheck_ = uptimeUs();
             state_ = State::Single;
         }
 
@@ -23,7 +26,7 @@ namespace rckid {
         void startContinuous(unsigned duration) {
             t_ = 0;
             duration_ = duration_;
-            lastCheck_ = uptimeUs32();
+            lastCheck_ = uptimeUs();
             state_ = State::ContinuousUp;
         }
 
@@ -36,7 +39,7 @@ namespace rckid {
         bool update() {
             if (state_ == State::Off)
                 return true;
-            uint32_t t = uptimeUs32();      
+            uint32_t t = uptimeUs();      
             uint32_t d = (t - lastCheck_) / 1000;
             lastCheck_ = t;
             switch (state_) {
@@ -72,7 +75,7 @@ namespace rckid {
 
         template<typename T> 
         T interpolate(T start, T end, Interpolation i = Interpolation::Cos) {
-            return rckid::interpolate(start, end, t_ * 1000 / duration_, i);
+            return ::interpolate(start, end, t_ * 1000 / duration_, i);
         }
 
         

@@ -3,9 +3,7 @@
 namespace rckid {
 
     class BMI160 {
-    protected:
-
-        friend class Device;
+    public:
 
         struct State {
             int16_t gyroX;
@@ -40,9 +38,8 @@ namespace rckid {
     }; // rckid::BMI160
 
     class LTR390UV {
-    protected:
+    public:
 
-        friend class Device;
 
         static constexpr uint8_t I2C_ADDRESS = 0x53;
 

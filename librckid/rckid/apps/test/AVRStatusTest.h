@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rckid/app.h"
+#include "rckid/stats.h"
 #include "rckid/audio.h"
 #include "rckid/graphics/framebuffer.h"
 #include "fonts/Iosevka_Mono6pt7b.h"
@@ -31,7 +32,7 @@ namespace rckid {
 
         void draw() override {
             gpio::high(GPIO21);
-            platform::TinyDate t = time();
+            TinyDate t = time();
             fb_.setFg(Color::White());
             fb_.setFont(Iosevka_Mono6pt7b);
             fb_.setBg(Color::RGB(bg_, 0, 0));
@@ -53,11 +54,11 @@ namespace rckid {
                         << "\n"
                         << t.minutes() << ":" << t.seconds()
                         << "\n\n"
-                        << " FPS: " << Stats::fps() << " S:" << Stats::systemUs() << " U:" << (Stats::updateUs() / 1000) << " D:" << (Stats::drawUs() / 1000)
+                        << " FPS: " << stats::fps() << " S:" << stats::systemUs() << " U:" << (stats::updateUs() / 1000) << " D:" << (stats::drawUs() / 1000)
                         << "\n"
-                        << " wU:" << Stats::lastUpdateWaitUs() << " wS:" << Stats::lastVSyncWaitUs() << " r: " << Stats::lastUpdateUs()
+                        << " wU:" << stats::lastUpdateWaitUs() << " wS:" << stats::lastVSyncWaitUs() << " r: " << stats::lastUpdateUs()
                         << "\n"
-                        << " idle:" << Stats::idlePct() << "\n"
+                        << " idle:" << stats::idlePct() << "\n"
                         << " VRAM: " << freeVRAM() << "\n"
                         << " heap: " << freeHeap();
             gpio::low(GPIO21);

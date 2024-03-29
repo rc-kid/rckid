@@ -155,7 +155,7 @@ namespace rckid {
             setFont(Iosevka_Mono6pt7b);
             ColorRGB c = fg();
             setFg(ColorRGB::White());
-            text(0, 220) << Stats::fps() << " d: " << Stats::drawUs() << " mem: " << Stats::freeHeap();
+            text(0, 220) << stats::fps() << " d: " << stats::drawUs() << " mem: " << stats::freeHeap();
             setFont(f);
             setFg(c);
 #endif

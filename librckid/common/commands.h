@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform.h"
+#include "utils/tinydate.h"
 
 /**
  
@@ -50,8 +51,8 @@ namespace rckid::cmd {
     );
 
     COMMAND(13, SetTime, 
-        platform::TinyDate value;
-        SetTime(platform::TinyDate value): value{value} {}
+        TinyDate value;
+        SetTime(TinyDate value): value{value} {}
     );
 
     /** Instructs the RPI to enable reading from the display by the RP data lines by pulling the DISP_RDX line low. 

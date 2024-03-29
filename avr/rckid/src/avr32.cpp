@@ -917,7 +917,7 @@ public:
                 break;
             }
             case cmd::SetTime::ID: {
-                platform::TinyDate t = cmd::SetTime::fromBuffer(ts_.buffer).value;
+                TinyDate t = cmd::SetTime::fromBuffer(ts_.buffer).value;
                 NO_ISR(ts_.time = t);
                 break;
             }

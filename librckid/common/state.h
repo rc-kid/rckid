@@ -3,6 +3,7 @@
 //#include "tinytime.h"
 
 #include "platform.h"
+#include "utils/tinydate.h"
 
 namespace rckid {
 
@@ -235,7 +236,7 @@ namespace rckid {
 
     struct DeviceState {
         State state;
-        platform::TinyDate time;
+        TinyDate time;
         uint32_t uptime;
         uint8_t error = AVR_NO_ERROR;
     } __attribute__((packed));

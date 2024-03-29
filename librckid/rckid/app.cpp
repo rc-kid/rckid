@@ -11,17 +11,17 @@ namespace rckid {
         resetVRAM();
         onFocus();
         // reset stats
-        Stats::nextFpsTick_ = time_us_32() + 1000000;
-        Stats::fps_ = 0;
-        Stats::fpsCounter_ = 0;
+        stats::nextFpsTick_ = time_us_32() + 1000000;
+        stats::fps_ = 0;
+        stats::fpsCounter_ = 0;
         // do our loop 
         currentApp_ = this;
         while (true) {
             uint32_t frameStart = time_us_32();
-            if (frameStart >= Stats::nextFpsTick_) {
-                Stats::fps_ = Stats::fpsCounter_;
-                Stats::fpsCounter_ = 0;
-                Stats::nextFpsTick_ += 1000000;
+            if (frameStart >= stats::nextFpsTick_) {
+                stats::fps_ = stats::fpsCounter_;
+                stats::fpsCounter_ = 0;
+                stats::nextFpsTick_ += 1000000;
             }
             uint32_t tSys = CALCULATE_TIME(
                 Device::tick();
@@ -39,11 +39,11 @@ namespace rckid {
                 draw();
             );
             render();
-            ++Stats::fpsCounter_;
-            Stats::systemUs_ = tSys;
-            Stats::updateUs_ = tUpdate;
-            Stats::drawUs_ = tDraw; 
-            Stats::frameUs_ = static_cast<unsigned>(time_us_32() - frameStart);
+            ++stats::fpsCounter_;
+            stats::systemUs_ = tSys;
+            stats::updateUs_ = tUpdate;
+            stats::drawUs_ = tDraw; 
+            stats::frameUs_ = static_cast<unsigned>(time_us_32() - frameStart);
         }
         onBlur();
         resetVRAM();
