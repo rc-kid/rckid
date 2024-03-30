@@ -4,17 +4,11 @@ This repository is the RCKid mark II. Unlike the first version, the mark II atte
 
 This also means that the chip is seriously "underpowered" for most tasks mark I handled with ease, such as playing videos and emulating old games. Mark II puts much more emphasis on own content creation and fun (at least for me) by recreating the feel of old consoles for the programmers as well. 
 
-That said, I am hopeful, that over time, the following will be possible:
-
-- music player
-- own games (2d platformers, etc.)
-- video player (not generic formats, but special preencoded videos tailodr toward the meagre processing power and memory of RP2040)
-- games emulator (I am hoping at least C64 or Gameboy, having GBC would be epic)
-- walkie talkie (like v1)
-- remote controller (like v1)
-- internet connectivity via either a WiFi to NRF beacon, or a dedicated ESP8266 cartridge (the later is more portable, but will drain battery)
-
 > Please note that this is my toy project and as such will likely move *veeeery* slowly as its requirements in almost every department exceed my current capabilities (and when mistakes appear, probably my buget as well since the main PCB must be machine-assembled). 
+
+## Where to go from now
+
+This readme is intended for those who wish to develop their own cartridges for RCKid. When applicable, links will be put here for user guides, etc. 
 
 ## Building
 
@@ -48,6 +42,20 @@ Alternatively, several parts of the RCKid library can also build locally on your
 
 > Be careful, for debugging under WSL, read the following [bug](https://github.com/microsoft/WSL/issues/8516) for now (installing gdb from the PPA as suggested in the discussion works for now)
 
+## Overview
+
+The repository consists of various frameworks, libraries and executables for different architectures. The most important ones are:
+
+- `include/platform` contains header only very low level hardware abstraction layer unifying all the platforms used (RP2040, ATTiny, etc.). The platform framework supports basic gpio operations, cpu features and i2c/spi communication
+- `include/utils` various utilities
+- `cartridges` contains the cartridges built for the RCKid. Each cartridge has its own image that can be flashed (see below)
+- `avr/rckid` is the firmware for the AVR chip that takes care of reading user input, monitoring charging & power consumption and power modes
+- `librckid` contains the RCKid SDK, see its own readme for more details. 
+- `lbs` are 3rd party libraries used by the SDK
+- `utils` are various utilities for RCKid development
+- `hardware` contains schematics, PCB layout files and 3D models for the device and cartridges
+
+
 ## Quick Notes
 
 - Debug mode, activated when normal mode is entered while the select button is pressed
@@ -58,6 +66,15 @@ Alternatively, several parts of the RCKid library can also build locally on your
 
 
 
+That said, I am hopeful, that over time, the following will be possible:
+
+- music player
+- own games (2d platformers, etc.)
+- video player (not generic formats, but special preencoded videos tailodr toward the meagre processing power and memory of RP2040)
+- games emulator (I am hoping at least C64 or Gameboy, having GBC would be epic)
+- walkie talkie (like v1)
+- remote controller (like v1)
+- internet connectivity via either a WiFi to NRF beacon, or a dedicated ESP8266 cartridge (the later is more portable, but will drain battery)
 
 
 - screw inserts (https://www.prusa3d.com/product/threaded-inserts-m2-short-100-pcs/)

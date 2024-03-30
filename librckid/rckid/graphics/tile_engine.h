@@ -4,19 +4,16 @@
 
 namespace rckid {
 
-    /** Tiling engine renderer
+    /** Single tile. 
      */
-    template<typename COLOR, size_t W, size_t H>
+    template<int W, int H, typename COLOR = Color565> 
+    class Tile {
+
+    }; 
+
+    template<typename TILE>
     class TileEngine {
-    public:
-        using Color = COLOR;
-        
-        class Tile {
-        public:
-            Color buffer[W * H];
-        }; 
 
-
-    }; // rckid::TileEngine
+    };
 
 } // namespace rckid

@@ -4,9 +4,6 @@
 
 namespace rckid {
 
-    class App;
-    class ST7789;
-
     /** Statistics of the RP2040 runtime. 
      
         Namespace class that provides various metrics about the device's performance. Automatically populated by the apps. 
@@ -26,10 +23,13 @@ namespace rckid {
         static unsigned lastUpdateWaitUs() { return updateWaitUs_; }
         static unsigned lastVSyncWaitUs() { return vsyncWaitUs_; }
 
+        static unsigned displayUpdateUs() { return displayUpdateUs_; }
+
     private:
 
         friend class ST7789;
-        friend class App;
+        friend class BaseApp;
+        friend void irqDMADone_();
 
         static inline unsigned fps_;
         static inline unsigned fpsCounter_;

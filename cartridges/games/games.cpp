@@ -9,7 +9,7 @@
 using namespace rckid;
 
 void rckid_main() {
-    Audio::setAudioEnabled(true);
+    audio::setAudioEnabled(true);
     //start(Menu{});
     SlidingPuzzle{}.run();
     //start(Tetris{});

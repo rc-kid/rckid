@@ -13,7 +13,7 @@ namespace rckid {
 
     /** Audio driver. 
     */
-    class Audio {
+    class audio {
     public:
 
         /** Callback for audio playback takes the beginning of a buffer and the length of the buffer in 2 byte elements. When called, the callback must populate the buffer with the new audio values. 
@@ -69,8 +69,6 @@ namespace rckid {
 
         static void setSampleRate(uint16_t rate);
 
-        static void irqDMADone();
-
         static inline int dma0_;
         static inline int dma1_;    
 
@@ -86,6 +84,8 @@ namespace rckid {
         static constexpr unsigned RECORDING = 1 << 3;
 
         static inline unsigned volatile status_;
+
+        friend void irqDMADone_();
 
     }; // rckid::Audio
 

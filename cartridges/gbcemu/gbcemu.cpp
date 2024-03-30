@@ -12,7 +12,7 @@
 
 using namespace rckid;
 
-class GBCEmu : public FBApp<FrameBuffer<ColorRGB>> {
+class GBCEmu : public App<FrameBuffer<ColorRGB>> {
 public:
 
     GBCEmu() {
@@ -25,20 +25,20 @@ public:
     }
 
     void draw() override {
-        fb_.fill(Rect::XYWH(40, 12, 240, 216));
+        driver_.fill(Rect::XYWH(40, 12, 240, 216));
     }
 
     void onFocus() override {
-        FBApp::onFocus();
-        fb_.setBg(ColorRGB::Black());
-        fb_.fill();
-        fb_.setBg(ColorRGB::Blue());
+        App::onFocus();
+        driver_.setBg(ColorRGB::Black());
+        driver_.fill();
+        driver_.setBg(ColorRGB::Blue());
     }
 }; 
 
 
 void rckid_main() {
-    Audio::setAudioEnabled(true);
+    audio::setAudioEnabled(true);
     GBCEmu{}.run();
     //start(Menu{});
     //start(SlidingPuzzle{});

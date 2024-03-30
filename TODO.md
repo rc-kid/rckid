@@ -27,7 +27,6 @@
 
 - calculate longest distance between yields
 - check sleep mode power consumption for pedometer
-- framebuffer clear with DMA right after drawing is done, or in parallel with drawing if requested
 
 - microphone tested to work - sample code https://github.com/ArmDeveloperEcosystem/microphone-library-for-pico/tree/main 
 - needs integration and lots of amplification it seems 
@@ -64,9 +63,7 @@
 
 ## RP
 
-
 - document ST7789
-
 
 - disable file & line information for fatal errors
 - print fatal error to USB serial

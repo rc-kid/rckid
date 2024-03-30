@@ -7,7 +7,7 @@
 
 namespace rckid {
 
-    class RawAudioTest : public FBApp<FrameBuffer<ColorRGB>> {
+    class RawAudioTest : public App<FrameBuffer<ColorRGB>> {
     public:
         RawAudioTest() = default;
 
@@ -16,21 +16,21 @@ namespace rckid {
         static constexpr size_t BUFFER_SIZE = 2048 * 10;
 
         void onFocus() override {
-            FBApp::onFocus();
+            App::onFocus();
             buffer_ = new uint16_t[BUFFER_SIZE];
             bOther_ = buffer_ + BUFFER_SIZE / 2;
             for (size_t i = 0; i < BUFFER_SIZE; ++i)
                 buffer_[i] = 0;
             offset_ = 0;
             refill(buffer_, BUFFER_SIZE);
-            Audio::initialize();
-            Audio::setAudioEnabled(true);
-            Audio::startPlayback(SampleRate::kHz44_1, buffer_, BUFFER_SIZE, [this](uint16_t * buffer, size_t bufSize) {
+            audio::initialize();
+            audio::setAudioEnabled(true);
+            audio::startPlayback(SampleRate::kHz44_1, buffer_, BUFFER_SIZE, [this](uint16_t * buffer, size_t bufSize) {
                 refill(buffer, bufSize);
             });
-            fb_.setFg(ColorRGB::White());
-            fb_.setFont(Iosevka_Mono6pt7b);
-            fb_.setBg(ColorRGB::Black());
+            driver_.setFg(ColorRGB::White());
+            driver_.setFont(Iosevka_Mono6pt7b);
+            driver_.setBg(ColorRGB::Black());
 
         }
 
@@ -39,8 +39,8 @@ namespace rckid {
         }
 
         void draw() override {
-            fb_.fill();
-            fb_.text(5, 10) << offset_
+            driver_.fill();
+            driver_.text(5, 10) << offset_
                           << "\n\n"
                           << " FPS: " << stats::fps() << " S:" << stats::systemUs() << " U:" << (stats::updateUs() / 1000) << " D:" << (stats::drawUs() / 1000)
                           << "    \n\n ERR:"

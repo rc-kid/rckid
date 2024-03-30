@@ -9,7 +9,7 @@
 
 namespace rckid {
 
-    class AVRStatusTest : public FBApp<FrameBuffer<ColorRGB>> {
+    class AVRStatusTest : public App<FrameBuffer<Color256>> {
     public:
 
         AVRStatusTest()  = default;
@@ -17,7 +17,7 @@ namespace rckid {
     protected:
 
         void onFocus() override {
-            FBApp::onFocus();
+            App::onFocus();
             setBrightness(32);
         }
 
@@ -33,12 +33,12 @@ namespace rckid {
         void draw() override {
             gpio::high(GPIO21);
             TinyDate t = time();
-            fb_.setFg(Color::White());
-            fb_.setFont(Iosevka_Mono6pt7b);
-            fb_.setBg(Color::RGB(bg_, 0, 0));
+            driver_.setFg(Color::White());
+            driver_.setFont(Iosevka_Mono6pt7b);
+            driver_.setBg(Color::RGB(bg_, 0, 0));
             bg_ += 4;
-            fb_.fill();
-            fb_.textMultiline(0,0) << (down(Btn::Left) ? "L " : "  ")
+            driver_.fill();
+            driver_.textMultiline(0,0) << (down(Btn::Left) ? "L " : "  ")
                         << (down(Btn::Right) ? "R " : "  ")
                         << (down(Btn::Up) ? "U " : "  ")
                         << (down(Btn::Down) ? "D " : "  ")
@@ -49,7 +49,7 @@ namespace rckid {
                         << "\n"
                         << (dcPower() ? "DC " : "   ")
                         << (charging() ? "CHRG " : "     ")
-                        << (Audio::headphones() ? "HP " : "   ")
+                        << (audio::headphones() ? "HP " : "   ")
                         << vcc() << " " << tempAvr()
                         << "\n"
                         << t.minutes() << ":" << t.seconds()
@@ -58,6 +58,7 @@ namespace rckid {
                         << "\n"
                         << " wU:" << stats::lastUpdateWaitUs() << " wS:" << stats::lastVSyncWaitUs() << " r: " << stats::lastUpdateUs()
                         << "\n"
+                        << " dU: " << stats::displayUpdateUs() << "\n"
                         << " idle:" << stats::idlePct() << "\n"
                         << " VRAM: " << freeVRAM() << "\n"
                         << " heap: " << freeHeap();

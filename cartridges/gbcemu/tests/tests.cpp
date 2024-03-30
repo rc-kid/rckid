@@ -8,7 +8,7 @@
 
 using namespace rckid;
 
-class GBCEmuTests : public FBApp<FrameBuffer<ColorRGB>> {
+class GBCEmuTests : public App<FrameBuffer<ColorRGB>> {
 public:
     GBCEmuTests(int argc, char ** argv): argc_{argc}, argv_{argv} {}
 private:

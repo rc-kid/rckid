@@ -22,8 +22,8 @@ namespace rckid {
         static __force_inline void fatalError(int code) { fatalError(code, nullptr, 0); }
   
     private:
-        friend class App;
-        friend class Audio;
+        friend class BaseApp;
+        friend class audio;
 
         /** Pointer to the end of allocated VRAM. 
          */

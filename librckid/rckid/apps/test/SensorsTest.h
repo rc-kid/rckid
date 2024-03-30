@@ -7,7 +7,7 @@
 
 namespace rckid {
 
-    class SensorsTest : public FBApp<FrameBuffer<ColorRGB>> {
+    class SensorsTest : public App<FrameBuffer<ColorRGB>> {
     public:
 
         SensorsTest()  = default;
@@ -18,12 +18,12 @@ namespace rckid {
         }
 
         void draw() override {
-            fb_.setFg(ColorRGB::White());
-            fb_.setFont(Iosevka_Mono6pt7b);
-            fb_.setBg(ColorRGB::RGB(bg_, 0, 0));
+            driver_.setFg(ColorRGB::White());
+            driver_.setFont(Iosevka_Mono6pt7b);
+            driver_.setBg(ColorRGB::RGB(bg_, 0, 0));
             //bg_ += 4;
-            fb_.fill();
-            fb_.textMultiline(0,0)
+            driver_.fill();
+            driver_.textMultiline(0,0)
                 << "accX:  " << accelX() << "\n"
                 << "accY:  " << accelY() << "\n"
                 << "accZ:  " << accelZ() << "\n"

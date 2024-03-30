@@ -4,8 +4,8 @@
 
 namespace rckid {
 
-    void App::run() {
-        App * last = currentApp_;
+    void BaseApp::run() {
+        BaseApp * last = currentApp_;
         if (last != nullptr)
             last->onBlur();
         resetVRAM();
@@ -52,7 +52,7 @@ namespace rckid {
             currentApp_->onFocus();
     }
 
-    void App::exit() {
+    void BaseApp::exit() {
         currentApp_ = nullptr;
     }
 

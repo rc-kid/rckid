@@ -9,13 +9,13 @@ namespace rckid {
      
         Uses a full-color framebuffer, which is, especially for tetris a bit wasteful in terms of memory. 
      */
-    class Tetris : public FBApp<FrameBuffer<ColorRGB>> {
+    class Tetris : public App<FrameBuffer<ColorRGB>> {
     public:
 
     protected:
 
         void onFocus() override {
-            FBApp::onFocus();
+            App::onFocus();
             reset();
         }
 
@@ -31,7 +31,7 @@ namespace rckid {
             for (int i = 0, c = 0; c < 10; ++c) {
                 for (int r = 0; r < 24; ++r, ++i) {
                     if (tiles_[i] & 0x80) {
-                        fb_.fill(getTileRect(c, r, tiles_[i]), getTileColor(tiles_[i]));
+                        driver_.fill(getTileRect(c, r, tiles_[i]), getTileColor(tiles_[i]));
                         tiles_[i] &= 0x7f;
                     }
                 }

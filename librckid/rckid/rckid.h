@@ -73,8 +73,6 @@ namespace rckid {
         VolumeDown,
     }; // rckid::Btn
 
-    class App;
-
     constexpr int INTERNAL_ERROR = 1;
     constexpr int ASSERTION_ERROR = 2;
     constexpr int VRAM_OUT_OF_MEMORY = 3;

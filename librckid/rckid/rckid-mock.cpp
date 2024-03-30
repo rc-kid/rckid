@@ -18,6 +18,10 @@ uint8_t __vram_end__;
 
 namespace rckid {
 
+    void irqDMADone_();
+
+    bool dmaDoneDisplay_ = false;
+
     void start() {
         // prepare the VRAM 
 
@@ -100,7 +104,7 @@ namespace rckid {
             << "File: " << fatalErrorFile_ << "\n"
             << "Line: " << fatalErrorLine_; 
         ST7789::reset();
-        ST7789::enterContinuousMode(ST7789::Mode::Single);
+        ST7789::enterContinuousUpdate();
         fb.render();
         while(true) {
         }
@@ -119,8 +123,6 @@ namespace rckid {
         int y_ = 0;
         int w_ = 320;
         int h_ = 240;
-        ST7789::DisplayMode displayMode_ = ST7789::DisplayMode::Native;
-        ST7789::Mode mode_ = ST7789::Mode::Single;
     }
 
 
@@ -132,41 +134,37 @@ namespace rckid {
 
     }
 
+    void ST7789::configure(DisplayMode mode) {
+        displayMode_ = mode;
+    }
+
     void ST7789::fill(ColorRGB color) {
 
     }
 
-    void ST7789::enterContinuousMode(Rect rect, ST7789::Mode mode) {
+    void ST7789::enterContinuousUpdate(Rect rect) {
         // TODO set W H and stuff
-        mode_ = mode;
     }
 
-    void ST7789::leaveContinuousMode() {
+    void ST7789::leaveContinuousUpdate() {
 
     }
 
     void ST7789::initializePinsBitBang() {}
 
-    void ST7789::irqDMADone() {
-        if (cb_)
-            cb_();
-        else 
-            updating_ = false;
-    }
-
     void ST7789::sendMockPixels(uint16_t const * pixels, size_t numPixels) {
         BeginDrawing();
         while (numPixels-- != 0) {
             ColorRGB rgb = ColorRGB::Raw565(*pixels++);
-            switch (mode_) {
-                case Mode::Double:
+            switch (displayMode_) {
+                case DisplayMode::Native_2X_RGB565:
                     DrawRectangle(x_ * 2, y_ * 2, 2, 2, (Color) { rgb.r(), rgb.g(), rgb.b(), 255});
                     if (++y_ == h_) {
                         if (x_-- == 0)
                             x_ = w_ - 1;
                         y_ = 0;
                     }
-                case Mode::Single: 
+                case DisplayMode::Native_RGB565:
                     DrawRectangle(x_ * 2, y_ * 2, 2, 2, (Color) { rgb.r(), rgb.g(), rgb.b(), 255});
                     if (++y_ == h_) {
                         if (x_-- == 0)
@@ -174,51 +172,66 @@ namespace rckid {
                         y_ = 0;
                     }
                     break;
+                default:
+                    UNREACHABLE;
             }
         }
         EndDrawing();
-        irqDMADone();
+        dmaDoneDisplay_ = true;
+        irqDMADone_();
     }
 
     // ============================================================================================
     // Audio Driver
     // ============================================================================================
 
-    void Audio::initialize() {
+    void audio::initialize() {
 
     }
 
-    void Audio::startPlayback(SampleRate rate, uint16_t * buffer, size_t bufferSize, CallbackPlay cb) {
+    void audio::startPlayback(SampleRate rate, uint16_t * buffer, size_t bufferSize, CallbackPlay cb) {
 
     }
 
-    void Audio::stopPlayback() {
+    void audio::stopPlayback() {
 
     }
 
-    void Audio::startRecording(SampleRate rate) {
+    void audio::startRecording(SampleRate rate) {
 
     }
 
-    void Audio::stopRecording() {
+    void audio::stopRecording() {
 
     }
 
-    void Audio::processEvents() {
+    void audio::processEvents() {
 
     }
 
-    void Audio::configureDMA(int dma, int other, uint16_t const * buffer, size_t bufferSize) {
+    void audio::configureDMA(int dma, int other, uint16_t const * buffer, size_t bufferSize) {
 
     }
 
-    void Audio::setSampleRate(uint16_t rate) {
+    void audio::setSampleRate(uint16_t rate) {
 
     }
 
-    void Audio::irqDMADone() {
+    // ============================================================================================
+    // DMA handler
+    // ============================================================================================
 
+    void irqDMADone_() {
+        if (dmaDoneDisplay_) {
+            dmaDoneDisplay_ = false;
+            if (ST7789::cb_()) {
+                ST7789::updating_ = false;
+                stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::updateStart_);
+            }
+        }
+        // TODO audio
     }
+
 } // namespace rckid
 
 int main() {

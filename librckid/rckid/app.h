@@ -13,10 +13,10 @@ namespace rckid {
 
         Apps are always run modally, i.e. the loop is new frame 
     */
-    class App {
+    class BaseApp {
     public:
 
-        virtual ~App() = default;
+        virtual ~BaseApp() = default;
 
         /** Runs new app*/
         void run();
@@ -29,15 +29,44 @@ namespace rckid {
         virtual void render() = 0;
         /** Called by the app stack when the app gains focus. 
          */
-        virtual void onFocus() = 0;
+        virtual void onFocus() {}
         /** Called by the app stack when the app loses focus. 
          */
-        virtual void onBlur() = 0;
+        virtual void onBlur() {}
 
     private:
 
-        static inline App * currentApp_ = nullptr;
+        static inline BaseApp * currentApp_ = nullptr;
 
     }; // rckid::App
+
+
+    template<typename DISPLAY_DRIVER> 
+    class App : public BaseApp {
+    public:
+        using Color = typename DISPLAY_DRIVER::Color;
+
+        App(int w = DISPLAY_DRIVER::DEFAULT_WIDTH, int h = DISPLAY_DRIVER::DEFAULT_HEIGHT):
+            driver_{w, h} {
+        }
+
+    protected:
+
+        void onFocus() override {
+            driver_.enable();
+        }
+
+        void onBlur() override {
+            driver_.disable(); 
+        }
+
+        void render() override {
+            driver_.render();
+        }
+
+        DISPLAY_DRIVER driver_;
+
+    }; // App
+
 
 } // namespace rckid

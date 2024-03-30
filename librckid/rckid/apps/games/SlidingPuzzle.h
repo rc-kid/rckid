@@ -19,15 +19,15 @@ namespace rckid {
           - add accelerometer as input
 
      */
-    class SlidingPuzzle : public FBApp<FrameBuffer<ColorRGB>> {
+    class SlidingPuzzle : public App<FrameBuffer<ColorRGB>> {
     public:
 
     protected:
 
         void onFocus() override {
-            FBApp::onFocus();
+            App::onFocus();
             //PNG png = PNG::fromBuffer(defaultImage_, sizeof(defaultImage_));
-            fb_.loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
+            driver_.loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
             /*
             png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
                 Renderer & r = renderer();
@@ -64,7 +64,7 @@ namespace rckid {
                 } else {
                     return;
                 }
-                tmp_.draw(fb_, 0, 0, tileRect(holeX_, holeY_));
+                tmp_.draw(driver_, 0, 0, tileRect(holeX_, holeY_));
                 a_.start();
             }
         }
@@ -79,20 +79,20 @@ namespace rckid {
             }
             switch (dir_) {
                 case Btn::Left:
-                    fb_.fill(tileRect(holeX_, holeY_));
-                    fb_.draw(tmp_, tilePoint(holeX_, holeY_) - Point{a_.interpolate(0, TILE_WIDTH), 0});
+                    driver_.fill(tileRect(holeX_, holeY_));
+                    driver_.draw(tmp_, tilePoint(holeX_, holeY_) - Point{a_.interpolate(0, TILE_WIDTH), 0});
                     break;
                 case Btn::Right:
-                    fb_.fill(tileRect(holeX_, holeY_));
-                    fb_.draw(tmp_, tilePoint(holeX_, holeY_) + Point{a_.interpolate(0, TILE_WIDTH), 0});
+                    driver_.fill(tileRect(holeX_, holeY_));
+                    driver_.draw(tmp_, tilePoint(holeX_, holeY_) + Point{a_.interpolate(0, TILE_WIDTH), 0});
                     break;
                 case Btn::Up:
-                    fb_.fill(tileRect(holeX_, holeY_));
-                    fb_.draw(tmp_, tilePoint(holeX_, holeY_) - Point{0, a_.interpolate(0, TILE_HEIGHT)});
+                    driver_.fill(tileRect(holeX_, holeY_));
+                    driver_.draw(tmp_, tilePoint(holeX_, holeY_) - Point{0, a_.interpolate(0, TILE_HEIGHT)});
                     break;
                 case Btn::Down: 
-                    fb_.fill(tileRect(holeX_, holeY_));
-                    fb_.draw(tmp_, tilePoint(holeX_, holeY_) + Point{0, a_.interpolate(0, TILE_HEIGHT)});
+                    driver_.fill(tileRect(holeX_, holeY_));
+                    driver_.draw(tmp_, tilePoint(holeX_, holeY_) + Point{0, a_.interpolate(0, TILE_HEIGHT)});
                     break;
                 default:
                     break; // nothing to do for other controls
@@ -101,7 +101,7 @@ namespace rckid {
                 dir_ = Btn::Home;
                 if (swapTileMap(oldX_, oldY_, holeX_, holeY_)) {
                     // tada, game is finished
-                    fb_.draw(hole_, tilePoint(holeX_, holeY_));
+                    driver_.draw(hole_, tilePoint(holeX_, holeY_));
                     holeX_ = -1;
                     holeY_ = -1;
                 }
@@ -109,13 +109,13 @@ namespace rckid {
         }
 
         void resetGame(unsigned moves) {
-            fb_.loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
+            driver_.loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
             // set the hole and fill in the hole canvas
             holeX_ = MAX_X;
             holeY_ = MAX_Y;
-            hole_.draw(fb_, 0, 0, tileRect(holeX_, holeY_));
-            fb_.setBg(Color::RGB(128, 128, 128));
-            fb_.fill(tileRect(holeX_, holeY_));
+            hole_.draw(driver_, 0, 0, tileRect(holeX_, holeY_));
+            driver_.setBg(Color::RGB(128, 128, 128));
+            driver_.fill(tileRect(holeX_, holeY_));
             // reset the tilemap
             for (int i = 0; i < NUM_TILES; ++i)
                 tileMap_[i] = i;
@@ -146,9 +146,9 @@ namespace rckid {
             // swap the tiles
             Rect t1 = tileRect(x, y);
             Rect t2 = tileRect(holeX_, holeY_);
-            tmp_.draw(fb_, 0, 0, t1);
-            fb_.draw(fb_, tilePoint(x, y), t2);
-            fb_.draw(tmp_, tilePoint(holeX_, holeY_));
+            tmp_.draw(driver_, 0, 0, t1);
+            driver_.draw(driver_, tilePoint(x, y), t2);
+            driver_.draw(tmp_, tilePoint(holeX_, holeY_));
             // update th7e tilemap
             swapTileMap(x, y, holeX_, holeY_);
         }

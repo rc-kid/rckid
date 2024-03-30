@@ -10,26 +10,26 @@
 
 namespace rckid {
 
-    class AudioTestTone : public FBApp<FrameBuffer<ColorRGB>> {
+    class AudioTestTone : public App<FrameBuffer<ColorRGB>> {
     public:
         AudioTestTone() = default;
 
     protected:
 
         void onFocus() override {
-            FBApp::onFocus();
+            App::onFocus();
             buffer_ = new uint16_t[8192];
             offset_ = 0;
             tone_.play(440);
             refill(buffer_, 4096);
-            Audio::initialize();
-            Audio::setAudioEnabled(true);
-            Audio::startPlayback(SampleRate::kHz44_1, buffer_, 4096, [this](uint16_t * buffer, size_t stereoSamples) {
+            audio::initialize();
+            audio::setAudioEnabled(true);
+            audio::startPlayback(SampleRate::kHz44_1, buffer_, 4096, [this](uint16_t * buffer, size_t stereoSamples) {
                 refill(buffer, stereoSamples);
             });
-            fb_.setFg(ColorRGB::White());
-            fb_.setFont(Iosevka_Mono6pt7b);
-            fb_.setBg(ColorRGB::Black());
+            driver_.setFg(ColorRGB::White());
+            driver_.setFont(Iosevka_Mono6pt7b);
+            driver_.setBg(ColorRGB::Black());
         }
 
         void update() override {
@@ -37,8 +37,8 @@ namespace rckid {
         }
 
         void draw() override {
-            fb_.fill();
-            fb_.text(5, 10) << offset_;
+            driver_.fill();
+            driver_.text(5, 10) << offset_;
         }
 
     private:

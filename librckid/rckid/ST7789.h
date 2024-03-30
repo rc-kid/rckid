@@ -5,9 +5,17 @@
 #include "graphics/color.h"
 #include "graphics/primitives.h"
 
-//#include "gpu/graphics.h"
-
 namespace rckid {
+
+    enum class DisplayMode {
+        Native_RGB565,
+        Native_2X_RGB565, 
+        Natural_RGB565,
+        Natural_2X_RGB565,
+        // TODO other modes might have to be supported as well such as RGB666 or BGR alternatives, but these should be conditional on the 
+        //Native_RGB666,
+        //Native_BGR666,
+    }; 
 
     /** Low level driver for the ST7789 display driver. 
      
@@ -58,39 +66,11 @@ namespace rckid {
     class ST7789 {
     public:
 
-        // TODO remove from display driver and rename to resolution
-        // can't since this controls the PIO we use for double interaction, or we need to get smarter about it 
-        enum class Mode {
-            Single, 
-            Double,
-        }; // ST7789::Mode
-
-
-        using UpdatePixelsCallback = std::function<void()>;
-
-        /** Pixel mode. 
+        /** Callback function for continuous pixel update. 
          
-            The default pixel mode (RGB565) corresponds to the 16bit per pixel 65k color resolution with 5 bits for the red and blue channels and 6 bits for the green channel. 
-
-            The RGB666 pixel mode is the maximum 274k colors the display is capable of and uses 3 bytes per pixel sending the red, green and blue channels separately. 
+            The function takes no arguments and returns true if the application is done upating the pixels for the current frame, or false if more pixel updates will be scheduled for current frame. 
          */
-        enum class ColorMode : uint8_t {
-            RGB565 = 0x55,
-            RGB666 = 0x66,
-        }; // ST7789::PixelMode
-
-        /** Display Mode
-         
-            The display mode specifies whether the display memory update follows the display's update beam (native mode), or follows the orientation of the display (natural). The native mode renders the contents from top right pixel columnwise to the bottom left one, while the natural mode starts in the top left position and goes row-wise to bottom right. Only the native mode can prevent tearing in all cases as the memory and beam updates in the same direction. 
-
-            The mode also controls whether the default RGB, or alternate BGR ordering of the color channels is used. 
-         */
-        enum class DisplayMode: uint8_t {
-            Native = 0, 
-            NativeBGR = 0x08, // MADCTL_BGR
-            Natural = 0x80 + 0x20, // MADCTL_MY | MADCTL_MV 
-            NaturalBGR = 0x80 + 0x20 + 0x08, // MADCTL_MY | MADCTL_MV | MADCTL_BGR
-        }; // ST7789::DisplayMode
+        using UpdatePixelsCallback = std::function<bool()>;
 
         /** Initializes the display. 
          
@@ -104,7 +84,13 @@ namespace rckid {
          */
         static void reset();
 
+        /** Configures the display for the given mode. 
+         */
+        static void configure(DisplayMode mode);
+
         /** Clears the entire display with given color. 
+    
+            Mostly useful for barebones clearing the screen in debug mode as the fill rate is rather slow. A much better approach is to enter the continous mode and fill the screen using the pio.  
          */
         static void fill(ColorRGB color);
 
@@ -115,15 +101,20 @@ namespace rckid {
             When entering the continuous mode, a rectangle of the screen that will be updated can be specified (defaulting to full screen). This can speed rendering even more in cases where only partial screen updates are necessary. 
             
          */
-        static void enterContinuousMode(Mode mode = Mode::Single) { enterContinuousMode(Rect::WH(320, 240), mode); }
 
-        static void enterContinuousMode(Rect rect, Mode mode = Mode::Single); 
+        /** Returns true if the display is in the continuous update mode. 
+         */
+        static bool continuousUpdateActive(); 
 
-        static void leaveContinuousMode();
+        static void enterContinuousUpdate() { enterContinuousUpdate(Rect::WH(320, 240)); }
+
+        static void enterContinuousUpdate(Rect rect); 
+
+        static void leaveContinuousUpdate();
 
         static void writePixels(uint16_t const * pixels, size_t numPixels) {
             if (!updating_)
-                cb_ = [](){ ST7789::writePixelsDone(); };
+                cb_ = [](){ return true; }; // be done with the update
             writePixels(pixels, numPixels, cb_);
         }
 
@@ -140,73 +131,19 @@ namespace rckid {
 #endif
         }
 
-        static void writePixelsDone() {
-            ST7789::updating_ = false;
-            stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::updateStart_);
-        }
+        //@}
 
-        /*
-        static void updatePixels(uint16_t const * pixels, size_t numPixels) {
-            cb_ = [](){ 
-                ST7789::updating_ = false; 
-                stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::updateStart_);
-            };
-            updatePixelsPartial(pixels, numPixels);
-        }
-
-        static void updatePixelsPartial(uint16_t const * pixels, size_t numPixels, UpdatePixelsCallback cb) {
-            stats::updateStart_ = uptimeUs();
-            cb_ = cb;
-            updatePixelsPartial(pixels, numPixels);
-        }
-
-        static void updatePixelsPartial(uint16_t const * pixels, size_t numPixels) {
-            if (!updating_)
-                stats::updateStart_ = uptimeUs();
-            updating_ = true;
-#if (! defined LIBRCKID_MOCK)
-            dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
-#else       
-            sendMockPixels(pixels, numPixels);
-#endif
-        } */
-
-        /** Updates the entire display area using given profile information. 
+        /** Returns true if the display is currently being updated. 
          */
-        //template<typename PROFILE>
-        //static void update(typename PROFILE::Color const * pixels, int width, int height);
+        static bool updating() { return updating_; }
 
-        static bool updateDone() { return !updating_; }
-
+        /** Busy waits until the display finishes updating. 
+         */
         static void waitUpdateDone() { 
             uint64_t t = uptimeUs();
             while (updating_)
                 yield();
             stats::updateWaitUs_ = static_cast<unsigned>(uptimeUs() - t);
-        }
-
-        /** Sets the color mode used by the driver. By default RGB565 is used, but RGB666 can be selected instead, in which case 3 bytes are sent per pixel, each containing 6bit color information in the MSBs. 
-         */
-        static void setColorMode(ColorMode pm) {
-            sendCommand(COLMOD, static_cast<uint8_t>(pm));
-        }
-
-        /** Sets the corresponding display mode (orientation and color order). 
-         */
-        static void setDisplayMode(DisplayMode dm) {
-            sendCommand(MADCTL, static_cast<uint8_t>(dm));
-        }
-
-        /** Sets the columns range for RAM updates. Columns are referenced in the native mode and can be from 0 to 239 inclusive. 
-        */
-        static void setColumnRange(uint16_t start, uint16_t end) {
-            sendCommand(CASET, start, end);
-        }
-
-        /** Sets the rows range for RAM updates. Rows are references in the native mode and can be from 0 to 319 inclusive. 
-         */
-        static void setRowRange(uint16_t start, uint16_t end) {
-            sendCommand(RASET, start, end);
         }
 
         /** Busy waits for the rising edge on the TE display pin, signalling the beginning of the V-blank period. 
@@ -222,6 +159,18 @@ namespace rckid {
         }
 
     private:
+
+        /** Sets the columns range for RAM updates. Columns are referenced in the native mode and can be from 0 to 239 inclusive. 
+        */
+        static void setColumnRange(uint16_t start, uint16_t end) {
+            sendCommand(CASET, start, end);
+        }
+
+        /** Sets the rows range for RAM updates. Rows are references in the native mode and can be from 0 to 319 inclusive. 
+         */
+        static void setRowRange(uint16_t start, uint16_t end) {
+            sendCommand(RASET, start, end);
+        }
 
         static void initializePinsBitBang();
 
@@ -299,7 +248,7 @@ namespace rckid {
         static void sendMockPixels(uint16_t const * pixels, size_t numPixels);
 #endif
 
-        static void irqDMADone();
+        //static void irqDMADone();
 
         static inline PIO pio_;
         static inline uint sm_;
@@ -310,6 +259,8 @@ namespace rckid {
 
         static inline UpdatePixelsCallback cb_;
         static inline volatile bool updating_ = false;
+
+        static inline DisplayMode displayMode_ = DisplayMode::Native_RGB565;
 
         static constexpr uint8_t SWRESET = 0x01;
 
@@ -351,10 +302,13 @@ namespace rckid {
         static constexpr uint8_t IDMON = 0x39; // idle mode on (fewer colors, etc.)
 
         static constexpr uint8_t COLMOD = 0x3a; // Color mode 
+        static constexpr uint8_t COLMOD_565 = 0x55; // Color Mode 5-6-5
+        static constexpr uint8_t COLMOD_666 = 0x66; // Color Mode 6-6-6
 
         static constexpr uint8_t WRMEMC = 0x3c;
         static constexpr uint8_t STE = 0x44; // set tear scanline
 
+        friend void irqDMADone_();
 
     }; // rckid::ST7789
 
