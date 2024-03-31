@@ -10,9 +10,6 @@
 
 ## TODO
 
-- BMI and LTR use RP2040 specific I2C commands inside them
-- add i2c commands to read and write uint8_t* of given length from the device registers
-
 - buy batteries
 
 - write optimized draw bitmap functions

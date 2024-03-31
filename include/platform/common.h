@@ -106,6 +106,12 @@ namespace i2c {
     template<typename T, platform::Endian DEVICE_ENDIAN = platform::Endian::Little>
     T readRegister(uint8_t address, uint8_t reg);
 
+    /** Reads dynamically sized buffer starting at given register. 
+     */
+    inline void readRegister(uint8_t address, uint8_t reg, uint8_t * buffer, size_t size) {
+        masterTransmit(address, & reg, 1, buffer, size);
+    }
+
     template<>
     inline void write<uint8_t, platform::Endian::Little>(uint8_t address, uint8_t data) {
         masterTransmit(address, & data, 1, nullptr, 0);

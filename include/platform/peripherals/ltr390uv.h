@@ -52,8 +52,7 @@ namespace platform {
 
         uint16_t measureALS() {
             uint8_t data[3];
-            i2c_write_blocking(i2c0, address, & REG_DATA_ALS, 1, true);
-            i2c_read_blocking(i2c0, address, data, 3, false);
+            i2c::readRegister(address, REG_DATA_ALS, data, 3);
             return data[0] + data[1] * 256;
         }
 
@@ -63,8 +62,7 @@ namespace platform {
 
         uint16_t measureUV() {
             uint8_t data[3];
-            i2c_write_blocking(i2c0, address, & REG_DATA_UV, 1, true);
-            i2c_read_blocking(i2c0, address, data, 3, false);
+            i2c::readRegister(address, REG_DATA_UV, data, 3);
             return data[0] + data[1] * 256;
         }
 

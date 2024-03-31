@@ -48,9 +48,7 @@ namespace platform {
         }
 
         void measure(State & state) {
-            // TODO make this non-blocking
-            i2c_write_blocking(i2c0, address, & REG_DATA, 1, true);
-            i2c_read_blocking(i2c0, address, reinterpret_cast<uint8_t *>(& state), sizeof(State), false);
+            i2c::readRegister(address, REG_DATA, reinterpret_cast<uint8_t *>(& state), sizeof(State));
         }
         
     }; // BMI160
