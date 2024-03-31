@@ -106,8 +106,18 @@ namespace rckid {
          */
         static bool continuousUpdateActive(); 
 
+        /** Starts the continuous update of the entire screen. 
+         */
         static void enterContinuousUpdate() { enterContinuousUpdate(Rect::WH(320, 240)); }
 
+        /** Starts the continous update for part of the screen of given width and height that will be centered both vertically and horizotally on the screen. 
+         */
+        static void enterContinuousUpdate(int width, int height) { 
+            enterContinuousUpdate(Rect::XYWH((320 - width) / 2, (240 - height) / 2, width, height));
+        };
+
+        /** Enters continous update of the specified rectangle of the screen. The rectangle must be specified in the full resolution of the display (i.e. 320x240 max). 
+         */
         static void enterContinuousUpdate(Rect rect); 
 
         static void leaveContinuousUpdate();

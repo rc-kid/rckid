@@ -63,6 +63,8 @@
 
 ## RP
 
+- ensure VRAM is own bank
+
 - document ST7789
 
 - disable file & line information for fatal errors

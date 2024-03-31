@@ -9,10 +9,10 @@
 
 namespace rckid {
 
-    class AVRStatusTest : public App<FrameBuffer<Color256>> {
+    class AVRStatusTest : public App<FrameBuffer<ColorRGB>> {
     public:
 
-        AVRStatusTest()  = default;
+        AVRStatusTest(): App{268, 240} {}
 
     protected:
 

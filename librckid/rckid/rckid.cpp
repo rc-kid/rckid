@@ -297,8 +297,8 @@ namespace rckid {
 
     void ST7789::enterContinuousUpdate(Rect rect) {
         leaveContinuousUpdate();
-        setColumnRange(rect.top(), rect.height() - 1);
-        setRowRange(rect.left(), rect.width() - 1);
+        setColumnRange(rect.top(), rect.bottom() - 1);
+        setRowRange(rect.left(), rect.right() - 1);
         // start the continuous RAM write command
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);

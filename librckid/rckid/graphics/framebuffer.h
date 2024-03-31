@@ -23,7 +23,7 @@ namespace rckid {
         void enable() {
             setBuffer(Bitmap<ColorRGB>::inVRAM(width(), height()));
             ST7789::configure(DisplayMode::Native_RGB565);
-            ST7789::enterContinuousUpdate();
+            ST7789::enterContinuousUpdate(width(), height());
         }
 
         void disable() { }
@@ -46,7 +46,7 @@ namespace rckid {
 
         void enable() {
             setBuffer(Bitmap<Color256>::inVRAM(width(), height()));
-            ST7789::enterContinuousUpdate();
+            ST7789::enterContinuousUpdate(width(), height());
             renderBuffer1_ = reinterpret_cast<uint32_t*>(allocateVRAM(height() * 2)); // 
             renderBuffer2_ = reinterpret_cast<uint32_t*>(allocateVRAM(height() * 2)); // 
         }
@@ -113,7 +113,7 @@ namespace rckid {
         void enable() {
             setBuffer(Bitmap<ColorRGB>::inVRAM(width(), height()));
             ST7789::configure(DisplayMode::Native_2X_RGB565);
-            ST7789::enterContinuousUpdate();
+            ST7789::enterContinuousUpdate(width() * 2, height() * 2);
         }
 
         void render() {
