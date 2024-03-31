@@ -77,7 +77,7 @@ namespace i2c {
 
     protected:
 
-        Device(uint8_t addreess): address{address} { }
+        Device(uint8_t address): address{address} { }
 
     }; 
 

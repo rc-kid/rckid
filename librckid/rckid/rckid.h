@@ -12,7 +12,6 @@
 #include "common/commands.h"
 
 #include "writer.h"
-#include "sensors.h"
 
 /** VRAM beginning and end symbols. 
  */

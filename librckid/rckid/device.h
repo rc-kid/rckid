@@ -34,7 +34,12 @@ namespace rckid {
         static inline DeviceState state_;
         static inline State lastState_;
 
-        static inline BMI160::State accelState_;
+        static inline int16_t accelX_;
+        static inline int16_t accelY_;
+        static inline int16_t accelZ_;
+        static inline int16_t gyroX_;
+        static inline int16_t gyroY_;
+        static inline int16_t gyroZ_;
 
         static inline uint16_t lightALS_ = 0;
         static inline uint16_t lightUV_ = 0;
@@ -109,12 +114,12 @@ namespace rckid {
         friend bool down(Btn b) { return btnDown(b, state_.state); }
         friend bool pressed(Btn b) { return btnDown(b, state_.state) && ! btnDown(b, lastState_); }
         friend bool released(Btn b) { return !btnDown(b, state_.state) && btnDown(b, lastState_); }
-        friend int16_t accelX() { return accelState_.accelX; }
-        friend int16_t accelY() { return accelState_.accelY; }
-        friend int16_t accelZ() { return accelState_.accelZ; }
-        friend int16_t gyroX() { return accelState_.gyroX; }
-        friend int16_t gyroY() { return accelState_.gyroY; }
-        friend int16_t gyroZ() { return accelState_.gyroZ; }
+        friend int16_t accelX() { return accelX_; }
+        friend int16_t accelY() { return accelY_; }
+        friend int16_t accelZ() { return accelZ_; }
+        friend int16_t gyroX() { return gyroX_; }
+        friend int16_t gyroY() { return gyroY_; }
+        friend int16_t gyroZ() { return gyroZ_; }
         friend uint16_t lightAmbient() { return lightALS_; }
         friend uint16_t lightUV() { return lightUV_; }
         friend unsigned tempAvr() { return state_.state.temp(); }

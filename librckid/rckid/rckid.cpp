@@ -19,13 +19,13 @@
 #include "images/logo-16.h"
 #include "graphics/png.h"
 
-#include "sensors.h"
 #include "ST7789_rgb.pio.h"
 #include "ST7789_rgb_double.pio.h"
 #include "rckid/graphics/framebuffer.h"
 #include "fonts/Iosevka_Mono6pt7b.h"
 
-
+#include "ltr390uv.h"
+#include "bmi160.h"
 
 extern uint8_t __StackLimit, __bss_end__;
 
@@ -35,6 +35,9 @@ namespace rckid {
 
     // fake allocation for the VRAM of properly set size
     uint8_t __attribute__((section (".vram"))) __vram__[RCKID_VRAM_SIZE];
+
+    platform::LTR390UV alsSensor_{};
+    platform::BMI160 accelerometer_{};
 
     void start() {
         // FIXME for reasons I do not completely understand, the board init must be before the other calls, or the device hangs? 
@@ -98,9 +101,9 @@ namespace rckid {
         irq_set_exclusive_handler(DMA_IRQ_0, irqDMADone_);
         LOG("RCKid initialized");
         resetVRAM();
-        BMI160::initialize();
-        LTR390UV::initialize();
-        LTR390UV::startALS();
+        accelerometer_.initialize();
+        alsSensor_.initialize();
+        alsSensor_.startALS();
     }
 
     void Device::tick() {
@@ -124,14 +127,22 @@ namespace rckid {
             *(raw++) = i2c0->hw->data_cmd;
         // i2c_read_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t *)& state_, sizeof(State), false);
 
-        BMI160::measure(accelState_);
+        platform::BMI160::State aState;
+        accelerometer_.measure(aState);
+        accelX_ = aState.accelX;
+        accelY_ = aState.accelY;
+        accelZ_ = aState.accelZ;
+        gyroX_ = aState.gyroX;
+        gyroY_ = aState.gyroY;
+        gyroZ_ = aState.gyroZ;
+
         if (ticks_ % 8 == 0) {
             if ((ticks_ & 16) == 0) {
-                lightALS_ = LTR390UV::measureALS();
-                LTR390UV::startUV();
+                lightALS_ = alsSensor_.measureALS();
+                alsSensor_.startUV();
             } else {
-                lightUV_ = LTR390UV::measureUV();
-                LTR390UV::startALS();
+                lightUV_ = alsSensor_.measureUV();
+                alsSensor_.startALS();
             }
         }
     }
@@ -458,68 +469,6 @@ namespace rckid {
             audio::status_ |= audio::BUFFER_INDEX | audio::CALLBACK;
         }
 
-    }
-   
-
-    // ============================================================================================
-    // BMI160 Accelerometer & Gyro + BMI150 Magnetometer driver
-    // ============================================================================================
-
-    bool BMI160::isPresent() {
-        if (!i2c::isPresent(I2C_ADDRESS))
-            return false;
-        return i2c::readRegister<uint8_t>(I2C_ADDRESS, REG_CHIP_ID) == CHIP_ID;
-    }
-
-    void BMI160::initialize() {
-        // TODO the initialization does not work atm for magnetometer, maybe it needs to be initialized first using the manual interface?
-        i2c::writeRegister<uint8_t>(I2C_ADDRESS, REG_CMD, CMD_ACCEL_ON);
-        cpu::delayMs(5);
-        i2c::writeRegister<uint8_t>(I2C_ADDRESS, REG_CMD, CMD_GYRO_ON);
-        cpu::delayMs(90);
-    }
-
-    void BMI160::measure(State & state) {
-        // TODO make this non-blocking
-        i2c_write_blocking(i2c0, I2C_ADDRESS, & REG_DATA, 1, true);
-        i2c_read_blocking(i2c0, I2C_ADDRESS, reinterpret_cast<uint8_t *>(& state), sizeof(State), false);
-    }
-
-    // ============================================================================================
-    // LTR390UV Ambient & UV light Sensor driver
-    // ============================================================================================
-
-    bool LTR390UV::isPresent() {
-        if (!i2c::isPresent(I2C_ADDRESS))
-            return false;
-        return (i2c::readRegister<uint8_t>(I2C_ADDRESS, REG_PART_ID) & 0xf0) == PART_ID;
-    }
-
-    void LTR390UV::initialize() {
-        i2c::writeRegister<uint8_t>(I2C_ADDRESS, REG_MEAS_RATE, MEAS_RATE_16bit_25ms);
-        i2c::writeRegister<uint8_t>(I2C_ADDRESS, REG_GAIN, GAIN_18);
-    }
-
-    void LTR390UV::startALS() {
-        i2c::writeRegister<uint8_t>(I2C_ADDRESS, REG_CTRL, CTRL_ALS_EN);
-    }
-
-    uint16_t LTR390UV::measureALS() {
-        uint8_t data[3];
-        i2c_write_blocking(i2c0, I2C_ADDRESS, & REG_DATA_ALS, 1, true);
-        i2c_read_blocking(i2c0, I2C_ADDRESS, data, 3, false);
-        return data[0] + data[1] * 256;
-    }
-
-    void LTR390UV::startUV() {
-        i2c::writeRegister<uint8_t>(I2C_ADDRESS, REG_CTRL, CTRL_UV_EN);
-    }
-
-    uint16_t LTR390UV::measureUV() {
-        uint8_t data[3];
-        i2c_write_blocking(i2c0, I2C_ADDRESS, & REG_DATA_UV, 1, true);
-        i2c_read_blocking(i2c0, I2C_ADDRESS, data, 3, false);
-        return data[0] + data[1] * 256;
     }
 
 } // namespace rckid
