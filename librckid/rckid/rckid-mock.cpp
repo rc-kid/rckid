@@ -121,8 +121,8 @@ namespace rckid {
         int yStart_ = 0;
         int x_ = 319; 
         int y_ = 0;
-        int w_ = 320;
-        int h_ = 240;
+        int xEnd_ = 320;
+        int yEnd_ = 240;
     }
 
 
@@ -144,6 +144,11 @@ namespace rckid {
 
     void ST7789::enterContinuousUpdate(Rect rect) {
         // TODO set W H and stuff
+        xStart_ = rect.left();
+        yStart_ = rect.top();
+        xEnd_ = rect.right();
+        yEnd_ = rect.bottom();
+        x_ = xEnd_ - 1;
     }
 
     void ST7789::leaveContinuousUpdate() {
@@ -159,17 +164,17 @@ namespace rckid {
             switch (displayMode_) {
                 case DisplayMode::Native_2X_RGB565:
                     DrawRectangle(x_ * 2, y_ * 2, 2, 2, (Color) { rgb.r(), rgb.g(), rgb.b(), 255});
-                    if (++y_ == h_) {
-                        if (x_-- == 0)
-                            x_ = w_ - 1;
-                        y_ = 0;
+                    if (++y_ == yEnd_) {
+                        if (x_-- == xStart_)
+                            x_ = xEnd_ - 1;
+                        y_ = yStart_;
                     }
                 case DisplayMode::Native_RGB565:
                     DrawRectangle(x_ * 2, y_ * 2, 2, 2, (Color) { rgb.r(), rgb.g(), rgb.b(), 255});
-                    if (++y_ == h_) {
-                        if (x_-- == 0)
-                            x_ = w_ - 1;
-                        y_ = 0;
+                    if (++y_ == yEnd_) {
+                        if (x_-- == xStart_)
+                            x_ = xEnd_ - 1;
+                        y_ = yStart_;
                     }
                     break;
                 default:

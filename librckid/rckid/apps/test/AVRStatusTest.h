@@ -12,7 +12,7 @@ namespace rckid {
     class AVRStatusTest : public App<FrameBuffer<ColorRGB>> {
     public:
 
-        AVRStatusTest(): App{268, 240} {}
+        AVRStatusTest(): App{240, 216} {}
 
     protected:
 
