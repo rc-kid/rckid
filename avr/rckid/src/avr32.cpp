@@ -79,6 +79,14 @@ public:
     static inline RumblerEffect rumblerCurrent_;
     static inline volatile bool rumblerTick_ = false;
 
+    /** Determines if the AVR needs to sleep in standby mode alone, or if the power-down mode can be used. A non-zero value requires standby sleep mode. 
+     */
+    static inline uint8_t standbyRequired_ = 0;
+    static constexpr uint8_t STANDBY_REQUIRED_BRIGHTNESS = 1;
+    static constexpr uint8_t STANDBY_REQUIRED_RUMBLER = 2;
+    static constexpr uint8_t STANDBY_REQUIRED_ADC0 = 4;
+    static constexpr uint8_t STANDBY_REQUIRED_ADC1 = 8;
+
 #if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
     static inline platform::SSD1306 oled_;
 #endif
@@ -123,9 +131,13 @@ public:
         gpio::setAsInputPullup(AVR_PIN_BTN_HOME);
         static_assert(AVR_PIN_BTN_HOME == B2); // otherwise the ISR won't work
         PORTB.PIN2CTRL |= PORT_ISC_FALLING_gc;
+        // set sleep mode to power down optimistically
+        set_sleep_mode(SLEEP_MODE_PWR_DOWN);
         // initialize the transferrable state, start in normal mode (power on on power on)
-        set_sleep_mode(SLEEP_MODE_STANDBY);
+        // force the debug mode on startup
+        ts_.state.setABXYKeys(false, false, true, false);
         setDeviceMode(DeviceMode::Normal);
+        ts_.state.setABXYKeys(false, false, false, false);
         sei();
         // determine the last error
         ts_.error = AVR_POWER_ON;
@@ -147,7 +159,6 @@ public:
         rgbEffects_[3] = RGBEffect::Breathe(platform::Color::RGB(0, 0, 64), 1);
         rgbEffects_[4] = RGBEffect::Breathe(platform::Color::RGB(64, 64, 0), 1);
         rgbEffects_[5] = RGBEffect::Breathe(platform::Color::RGB(64, 0, 64), 1);
-        ts_.state.setDebugMode(true);
     }
 
     /** The main loop. 
@@ -174,12 +185,32 @@ public:
                 rgbTick();
             if (rumblerTick_)
                 rumblerTick();
-            // make sure interrupts are enabled or we won't wake up
+            // make sure interrupts are enabled or we won't wake up, the appropriate sleep mode has already been set by the various peripheral interactions so we can happily go to sleep here
             sei();
             sleep_enable();
             END_ACTIVE_MODE;
             sleep_cpu();
         }
+    }
+
+    /** Forces sleep mode to standby with given reason. Also sets the sleep mode if there is a change under disabled interrupts so that when AVR goes to sleep, it has the correct sleep mode set. 
+     */
+    static void requireSleepStandby(uint8_t reason) {
+        cli();
+        if (standbyRequired_ == 0)
+            set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+        standbyRequired_ |= reason;
+        sei();
+    }
+
+    /** Clears the given reason for standby sleep mode. If there are no more reasons for standby, sets the sleep mode to power down. Sets the sleep mode if there is a change under disabled interrupts so that when AVR goes to sleep, it has the correct sleep mode set. 
+     */
+    static void allowSleepPowerDown(uint8_t reason) {
+        cli();
+        standbyRequired_ &= ~ reason;
+        if (standbyRequired_ == 0)
+            set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+        sei();
     }
 
     /** Triggered when the home button press down is detected. 
@@ -227,12 +258,14 @@ public:
             case DeviceMode::Normal:
                 initializePWM();
                 ts_.state.setDebugMode(ts_.state.btnSel());
+                // if we are in the debug mode, set brightness to 1/2 so that the display contents are visible even if not set by the app
+                if (ts_.state.debugMode())
+                    setBacklightPWM(128);
                 startSystemTicks();
                 power3v3(true);
                 // enable I2C slave mode so that we can talk to the RP and enable interrupts for wakeup
                 i2c::initializeSlave(AVR_I2C_ADDRESS);
                 TWI0.SCTRLA = TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm;
-                setBacklightPWM(128);
                 break;
             case DeviceMode::Sleep:
                 i2c::disableSlave();
@@ -365,7 +398,7 @@ public:
                         ADC1.MUXPOS = gpio::getADC1muxpos(AVR_PIN_HEADPHONES);
                         ADC1.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc | ADC_RUNSTBY_bm;
                         ADC1.COMMAND = ADC_STCONV_bm;
-                        set_sleep_mode(SLEEP_MODE_STANDBY); // ADC is running
+                        requireSleepStandby(STANDBY_REQUIRED_ADC1);
                         return;
 #else
                         // sample headphones
@@ -403,7 +436,7 @@ public:
             // start the ADC conversion
             ADC0.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc | ADC_RUNSTBY_bm;
             ADC0.COMMAND = ADC_STCONV_bm;
-            set_sleep_mode(SLEEP_MODE_STANDBY); // ADC is running
+            requireSleepStandby(STANDBY_REQUIRED_ADC0);
         } else {
             secondTick();
             // sample internal voltage reference using VDD for reference to determine VCC 
@@ -412,7 +445,7 @@ public:
             // start the ADC conversion
             ADC0.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc | ADC_RUNSTBY_bm;
             ADC0.COMMAND = ADC_STCONV_bm;
-            set_sleep_mode(SLEEP_MODE_STANDBY); // ADC is running
+            requireSleepStandby(STANDBY_REQUIRED_ADC0);
         }
     }
 
@@ -523,7 +556,7 @@ public:
                 break;
         }
         ADC0.CTRLA = 0; // turn ADC off, will be enabled by next tick and set sleep mode to power down 
-        set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+        allowSleepPowerDown(STANDBY_REQUIRED_ADC0);
     }
 
 #if (defined DEPRECATED_VERSION_2_2)
@@ -543,7 +576,7 @@ public:
                 break;
         }
         ADC1.CTRLA = 0; // turn ADC off, will be enabled by next tick and set sleep mode to power down 
-        set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+        allowSleepPowerDown(STANDBY_REQUIRED_ADC1);
     }
 #endif
 
@@ -729,27 +762,29 @@ public:
         TCB0.CTRLB = TCB_CNTMODE_PWM8_gc | TCB_CCMPEN_bm;
         TCB0.CCMPL = 255;
         TCB0.CCMPH = 0; 
-        TCB0.CTRLA = TCB_CLKSEL_CLKDIV1_gc;
         static_assert(AVR_PIN_PWM_RUMBLER == A3); //TCB1 WO
         gpio::outputFloat(AVR_PIN_PWM_RUMBLER);
         TCB1.CTRLA = 0;
         TCB1.CTRLB = TCB_CNTMODE_PWM8_gc | TCB_CCMPEN_bm;
         TCB1.CCMPL = 255;
         TCB1.CCMPH = 0; 
-        TCB1.CTRLA = TCB_CLKSEL_CLKDIV2_gc;
+
      }
 
     static void setBacklightPWM(uint8_t value) {
         if (value == 0) {
             TCB0.CTRLA = 0;
             gpio::outputFloat(AVR_PIN_PWM_BACKLIGHT);
+            allowSleepPowerDown(STANDBY_REQUIRED_BRIGHTNESS);
         } else if (value == 255) {
             TCB0.CTRLA = 0;
             gpio::outputHigh(AVR_PIN_PWM_BACKLIGHT);
+            allowSleepPowerDown(STANDBY_REQUIRED_BRIGHTNESS);
         } else {
             gpio::outputLow(AVR_PIN_PWM_BACKLIGHT);
             TCB0.CCMPH = value;
-            TCB0.CTRLA = TCB_CLKSEL_CLKDIV1_gc | TCB_ENABLE_bm;
+            TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm | TCB_RUNSTDBY_bm;
+            requireSleepStandby(STANDBY_REQUIRED_BRIGHTNESS);
         }
     }
 
@@ -757,13 +792,16 @@ public:
         if (value == 0) {
             TCB1.CTRLA = 0;
             gpio::outputFloat(AVR_PIN_PWM_RUMBLER);
+            allowSleepPowerDown(STANDBY_REQUIRED_RUMBLER);
         } else if (value == 255) {
             TCB1.CTRLA = 0;
             gpio::outputHigh(AVR_PIN_PWM_RUMBLER);
+            allowSleepPowerDown(STANDBY_REQUIRED_RUMBLER);
         } else {
             gpio::outputLow(AVR_PIN_PWM_RUMBLER);
             TCB1.CCMPH = 255 - value;
-            TCB1.CTRLA = TCB_CLKSEL_CLKDIV1_gc | TCB_ENABLE_bm;
+            TCB1.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm | TCB_RUNSTDBY_bm;
+            requireSleepStandby(STANDBY_REQUIRED_RUMBLER);
         }
     }
 

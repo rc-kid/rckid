@@ -10,7 +10,7 @@
 
 ## TODO
 
-- avr PWM does not work and is erratic. Not sure why
+- avr PWM does not work and is erratic -- likely because disabled in standby and avr allowed to power down as well, should be fixed, check in HW
 - avr I2C slave does not work 
 - RCKid display mostly does not work, not sure why - are the connections allright? 
 
