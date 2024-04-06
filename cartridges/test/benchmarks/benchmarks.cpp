@@ -1,8 +1,8 @@
 
-#include "fb_fill.h"
+#include "fb.h"
 
 using namespace rckid;
 
 void rckid_main() {
-    FBFill{}.run();
+    FB{}.run();
 }

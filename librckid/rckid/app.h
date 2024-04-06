@@ -22,6 +22,12 @@ namespace rckid {
         void run();
         void exit();
 
+        /** Returns default app icon. 
+         */
+        static PNG appIcon() {
+            return PNG::fromBuffer(APP_ICON, sizeof(APP_ICON));
+        }
+
     protected:
 
         virtual void update() = 0;
@@ -37,6 +43,10 @@ namespace rckid {
     private:
 
         static inline BaseApp * currentApp_ = nullptr;
+
+        static constexpr uint8_t APP_ICON[] = {
+#include "icons/gameboy.inc"
+        };
 
     }; // rckid::App
 

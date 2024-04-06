@@ -39,6 +39,7 @@ namespace rckid {
         static constexpr ColorRGB White() { return RGB(255, 255, 255); }
         static constexpr ColorRGB Black() { return RGB(0,0,0); }
         static constexpr ColorRGB Blue() { return RGB(0, 0, 255); }
+        static constexpr ColorRGB Red() { return RGB(255, 0, 0); }
 
     private:
 

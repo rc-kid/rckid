@@ -10,6 +10,10 @@
 
 ## TODO
 
+- avr PWM does not work and is erratic. Not sure why
+- avr I2C slave does not work 
+- RCKid display mostly does not work, not sure why - are the connections allright? 
+
 - buy batteries
 
 - write optimized draw bitmap functions
@@ -126,15 +130,11 @@
 - 8x8 tiling engine 8bit depth (~20Kb)
 - 160x120x16 half resolution framebuffer (~38.4Kb)
 
-> Make the 320x240x8 the default framebuffer for menu & stuff. Support partial screen updates? Would be nice for things like menu so that we can keep the partial framebuffer of the game or what not visible-ish, but hard to do with menu in the bottom & header in the top (can also refresh header only when necessary at the expense of some tearing, etc. ) 
-
-> the app hierarchy does no recycle renderers, might keep the allocated VRAM, or maybe use static regions for the VRAM? later - but how to size VRAM? The cartridge can choose for sure
-
-> can put the extra buffers & palette and friends to the scrach memories 
-
 Tile = bitmap with statically given dimensions (really only a storage format)
 Bitmap = bitmap with dynamically known dimensions 
 Canvas = bitmap with extra state
+Sprite = bitmap with position & stuff
+
 
 Support 16,8,4,2 and 1 bitdepth
 

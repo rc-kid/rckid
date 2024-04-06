@@ -30,7 +30,7 @@ namespace rckid {
 
         Canvas() = default;
 
-        Canvas(int width, int height):Bitmap<COLOR>{width, height} {}
+        Canvas(int width, int height, MemArea where = MemArea::Heap):Bitmap<COLOR>{width, height, where} {}
 
         //Canvas(int width, int height) : Bitmap<COLOR>{width, height} {}
 

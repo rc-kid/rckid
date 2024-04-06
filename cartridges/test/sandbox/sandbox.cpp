@@ -10,8 +10,9 @@
 #include "rckid/audio.h"
 
 
+#include "rckid/apps/system/Carousel.h"
 //#include "rckid/apps/test/SDCardTest.h"
-#include "rckid/apps/test/AVRStatusTest.h"
+//#include "rckid/apps/test/AVRStatusTest.h"
 //#include "rckid/apps/games/SlidingPuzzle.h"
 #include "rckid/apps/test/RawAudioTest.h"
 #include "rckid/apps/system/USBMassStorage.h"
@@ -38,7 +39,8 @@ void rckid_main() {
 
 //    USBMassStorage game;
 //    game.run();
-    AVRStatusTest{}.run();
+    Menu{}.run();
+    //AVRStatusTest{}.run();
     //start(AVRStatusTest{});
 
     //AVRStatusTest test;

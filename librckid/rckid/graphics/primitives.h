@@ -7,6 +7,8 @@ namespace rckid {
         Point() = default;
         constexpr Point(int x, int y): x_{x}, y_{y} {}
 
+        constexpr static Point origin() { return Point{0,0}; }
+
         constexpr int x() const { return x_; }
         constexpr int y() const { return y_; }
 

@@ -94,7 +94,7 @@ namespace rckid {
         std::cout << "Error code: " << code << std::endl;
         std::cout << "File:       " << fatalErrorFile_ << ":" << fatalErrorLine_ << std::endl;
         resetVRAM();
-        FrameBuffer<ColorRGB> fb{Bitmap<ColorRGB>::inVRAM(320,240)};
+        FrameBuffer<ColorRGB> fb{Bitmap<ColorRGB>{320, 240, MemArea::VRAM}};
         fb.setFg(ColorRGB::White());
         fb.setFont(Iosevka_Mono6pt7b);
         fb.setBg(ColorRGB::Blue());

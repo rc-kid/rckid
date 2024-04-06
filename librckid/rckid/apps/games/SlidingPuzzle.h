@@ -64,7 +64,7 @@ namespace rckid {
                 } else {
                     return;
                 }
-                tmp_.draw(driver_, 0, 0, tileRect(holeX_, holeY_));
+                tmp_.draw(driver_, Point::origin(), tileRect(holeX_, holeY_));
                 a_.start();
             }
         }
@@ -113,7 +113,7 @@ namespace rckid {
             // set the hole and fill in the hole canvas
             holeX_ = MAX_X;
             holeY_ = MAX_Y;
-            hole_.draw(driver_, 0, 0, tileRect(holeX_, holeY_));
+            hole_.draw(driver_, Point::origin(), tileRect(holeX_, holeY_));
             driver_.setBg(Color::RGB(128, 128, 128));
             driver_.fill(tileRect(holeX_, holeY_));
             // reset the tilemap
@@ -146,7 +146,7 @@ namespace rckid {
             // swap the tiles
             Rect t1 = tileRect(x, y);
             Rect t2 = tileRect(holeX_, holeY_);
-            tmp_.draw(driver_, 0, 0, t1);
+            tmp_.draw(driver_, Point::origin(), t1);
             driver_.draw(driver_, tilePoint(x, y), t2);
             driver_.draw(tmp_, tilePoint(holeX_, holeY_));
             // update th7e tilemap

@@ -12,19 +12,19 @@
 
 /** Displays AVR status and events on an external SSD1306 OLED display. Note this flag is only for debug purposes when writing own AVR code and that the AVR will hang & be reset via wdt if this is enabled and the oled display is not attached. 
 */
-#define RCKID_AVR_DEBUG_OLED_DISPLAY
+#define RCKID_AVR_DEBUG_OLED_DISPLAY_
 
 
 /** Flag that enables code for the deprecated version 2.2. This includes having headphones on ADC1 instead of ADC2 and having the charger disable as high as opposed to floating. */
 #define DEPRECATED_VERSION_2_2
 
-/*
+// //*
 #define BEGIN_ACTIVE_MODE do {} while (false) 
 #define END_ACTIVE_MODE do {} while (false)
-*/
+//   */
 
-#define BEGIN_ACTIVE_MODE gpio::outputHigh(AVR_PIN_DISP_RDX)
-#define END_ACTIVE_MODE gpio::outputLow(AVR_PIN_DISP_RDX);
+//#define BEGIN_ACTIVE_MODE gpio::outputHigh(AVR_PIN_DISP_RDX)
+//#define END_ACTIVE_MODE gpio::outputLow(AVR_PIN_DISP_RDX);
 
 
 
@@ -139,6 +139,15 @@ public:
         oled_.clear32();
         oled_.write(0, 0, "RCKid AVR INIT_DONE");        
 #endif
+        // TODO Debug enable breathe effect on RGB 0
+        power5v(true);
+        cpu::delayMs(50);
+        rgbEffects_[0] = RGBEffect::Breathe(platform::Color::RGB(64, 0, 0), 1);
+        rgbEffects_[1] = RGBEffect::Breathe(platform::Color::RGB(0, 64, 0), 1);
+        rgbEffects_[3] = RGBEffect::Breathe(platform::Color::RGB(0, 0, 64), 1);
+        rgbEffects_[4] = RGBEffect::Breathe(platform::Color::RGB(64, 64, 0), 1);
+        rgbEffects_[5] = RGBEffect::Breathe(platform::Color::RGB(64, 0, 64), 1);
+        ts_.state.setDebugMode(true);
     }
 
     /** The main loop. 
@@ -216,13 +225,14 @@ public:
         ts_.state.setDeviceMode(mode);
         switch (mode) {
             case DeviceMode::Normal:
-                // TODO enable this when we are on real HW
-                //ts_.state.setDebugMode(ts_.state.btnSel());
+                initializePWM();
+                ts_.state.setDebugMode(ts_.state.btnSel());
                 startSystemTicks();
                 power3v3(true);
                 // enable I2C slave mode so that we can talk to the RP and enable interrupts for wakeup
                 i2c::initializeSlave(AVR_I2C_ADDRESS);
                 TWI0.SCTRLA = TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm;
+                setBacklightPWM(128);
                 break;
             case DeviceMode::Sleep:
                 i2c::disableSlave();
@@ -411,29 +421,32 @@ public:
         MODE  VCC   VBATT TMP 
         TICK  HOME  IDEV SEC
         DC CH AE HP AL DBG LED R
-        R G B 
+        Se S A B L R U D
      */
     static void secondTick() __attribute__((always_inline)) {
 #if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
-        oled_.write(0, 0, static_cast<uint8_t>(ts_.state.deviceMode()), ' ');
-        oled_.write(32, 0, ts_.state.vcc(), ' ');
-        oled_.write(64, 0, ts_.state.vBatt(), ' ');
-        oled_.write(96, 0, ts_.state.temp(), ' ');
-        oled_.write(0, 1, tick_, ' ');
-        oled_.write(32, 1, btnHomeCounter_, ' ');
-        oled_.write(64, 1, current_, ' ');
-        oled_.write(96, 1, ts_.time.seconds(), ' ');
-        oled_.write(0, 2, ts_.state.dcPower() ? "DC" : "  ");
-        oled_.write(16, 2, ts_.state.charging() ? "CH" : "  ");
-        oled_.write(32, 2, ts_.state.audioEnabled() ? "AE" : "  ");
-        oled_.write(48, 2, ts_.state.headphones() ? "HP" : "  ");
-        oled_.write(64, 2, ts_.state.alarm() ? "AL" : "  ");
-        oled_.write(80, 2, ts_.state.debugMode() ? "DBG" : "   ");
-        oled_.write(96, 2, power5vActive() ? "LED" : " ");
-        oled_.write(112, 2, rumblerCurrent_.active() ? "R" : " ");
-        oled_.write(0, 3, (uint8_t)rgbEffects_[0].color.r, ' ');
-        oled_.write(32, 3, rgbsTarget_[0].g, ' ');
-        oled_.write(64, 3, rgbsTarget_[0].b, ' ');
+        if (power3v3Active()) {
+            oled_.write(0, 0, static_cast<uint8_t>(ts_.state.deviceMode()), ' ');
+            oled_.write(32, 0, ts_.state.vcc(), ' ');
+            oled_.write(64, 0, ts_.state.vBatt(), ' ');
+            oled_.write(96, 0, ts_.state.temp(), ' ');
+            oled_.write(0, 1, tick_, ' ');
+            oled_.write(32, 1, btnHomeCounter_, ' ');
+            oled_.write(64, 1, current_, ' ');
+            oled_.write(96, 1, ts_.time.seconds(), ' ');
+            oled_.write(0, 2, ts_.state.dcPower() ? "DC" : "  ");
+            oled_.write(16, 2, ts_.state.charging() ? "CH" : "  ");
+            oled_.write(32, 2, ts_.state.audioEnabled() ? "AE" : "  ");
+            oled_.write(48, 2, ts_.state.headphones() ? "HP" : "  ");
+            oled_.write(64, 2, ts_.state.alarm() ? "AL" : "  ");
+            oled_.write(80, 2, ts_.state.debugMode() ? "DBG" : "   ");
+            oled_.write(96, 2, power5vActive() ? "LED" : " ");
+            oled_.write(112, 2, rumblerCurrent_.active() ? "R" : " ");
+            oled_.write(0, 3, ts_.state.btnSel() ? "Se" : "  ");
+            oled_.write(10, 3, ts_.state.btnStart() ? "St" : "  ");
+            oled_.write(20, 3, ts_.state.btnA() ? "A" : " ");
+            oled_.write(30, 3, ts_.state.btnB() ? "B" : " ");
+        }
 #endif
         if (power5vActive())
             rgbSecondTick();
@@ -561,20 +574,18 @@ public:
     /** Turns the 5V power rail for the neopixels on or off. 
      */
     static void power5v(bool state) {
-        // TODO enable this when out of breadboard 
         if (state) {
-            //gpio::outputHigh(AVR_PIN_5V_ON);
+            gpio::outputHigh(AVR_PIN_5V_ON);
             gpio::setAsOutput(AVR_PIN_RGB);
+            cpu::delayMs(50);
         } else {
-            //gpio::outputFloat(AVR_PIN_5V_ON);
+            gpio::outputFloat(AVR_PIN_5V_ON);
             gpio::outputFloat(AVR_PIN_RGB);
         }
     }
 
     static bool power5vActive() {
-        return true;
-        // TODO enable this when out of breadboard 
-        //return gpio::read(AVR_PIN_5V_ON);
+        return gpio::read(AVR_PIN_5V_ON);
     }
  
     //@}
@@ -594,21 +605,25 @@ public:
 
     static void rpReset() {
         power3v3(false);
+        power5v(true);
         rgbs_.fill(platform::Color::Blue());
         rgbs_.update();
         cpu::delayMs(1000);
         power3v3(true);
+        power5v(false);
         setBacklightPWM(128);
         // leave the RGBs on, the RP2040 should deal with them when it restarts
     }
 
     static void rpBootloader() {
         power3v3(false);
+        power5v(true);
         rgbs_.fill(platform::Color::Green());
         rgbs_.update();
         gpio::outputLow(AVR_PIN_QSPI_SS);
         cpu::delayMs(500);
         power3v3(true);
+        power5v(false);
         setBacklightPWM(128);
         cpu::delayMs(300);
         gpio::outputFloat(AVR_PIN_QSPI_SS);
@@ -714,7 +729,7 @@ public:
         TCB0.CTRLB = TCB_CNTMODE_PWM8_gc | TCB_CCMPEN_bm;
         TCB0.CCMPL = 255;
         TCB0.CCMPH = 0; 
-        TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc;
+        TCB0.CTRLA = TCB_CLKSEL_CLKDIV1_gc;
         static_assert(AVR_PIN_PWM_RUMBLER == A3); //TCB1 WO
         gpio::outputFloat(AVR_PIN_PWM_RUMBLER);
         TCB1.CTRLA = 0;
@@ -734,7 +749,7 @@ public:
         } else {
             gpio::outputLow(AVR_PIN_PWM_BACKLIGHT);
             TCB0.CCMPH = value;
-            TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm;
+            TCB0.CTRLA = TCB_CLKSEL_CLKDIV1_gc | TCB_ENABLE_bm;
         }
     }
 
@@ -746,9 +761,9 @@ public:
             TCB1.CTRLA = 0;
             gpio::outputHigh(AVR_PIN_PWM_RUMBLER);
         } else {
-            gpio::outputLow(AVR_PIN_PWM_BACKLIGHT);
+            gpio::outputLow(AVR_PIN_PWM_RUMBLER);
             TCB1.CCMPH = 255 - value;
-            TCB1.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm;
+            TCB1.CTRLA = TCB_CLKSEL_CLKDIV1_gc | TCB_ENABLE_bm;
         }
     }
 

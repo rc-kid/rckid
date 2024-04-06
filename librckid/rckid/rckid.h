@@ -17,7 +17,6 @@
  */
 extern uint8_t __vram_start__, __vram_end__;
 
-
 #define LOG(...) ::rckid::writeToUSBSerial() << __VA_ARGS__ << "\r\n"
 #define DEBUG(...) ::rckid::writeToUSBSerial() << __VA_ARGS__ << "\r\n"
 #define ASSERT(...) if (!(__VA_ARGS__)) { FATAL_ERROR(rckid::ASSERTION_ERROR); }
@@ -26,6 +25,7 @@ extern uint8_t __vram_start__, __vram_end__;
 #define FATAL_ERROR(CODE) ::rckid::Device::fatalError(CODE, __FILE__, __LINE__)
 
 #define CALCULATE_TIME(...) [&](){ uint32_t start__ = time_us_32(); __VA_ARGS__; return static_cast<unsigned>(time_us_32() - start__); }()
+
 
 /** RCKid SDK
  
@@ -180,6 +180,13 @@ namespace rckid {
      */
     //@{
 
+    enum class MemArea {
+        Heap, 
+        VRAM,
+        VRAMorHeap,
+        None, 
+    }; 
+
     size_t freeHeap();
 
     /** Returns the free VRAM memory available for new allocations. 
@@ -204,6 +211,34 @@ namespace rckid {
     /** Returns true if the pointer points to VRAM area, false otherwise. 
      */
     bool isVRAMPtr(void * ptr);
+
+    template<typename T>
+    void deallocate(T *  & ptr) {
+        if (!isVRAMPtr(ptr))
+            delete ptr;
+        ptr = nullptr;
+    }
+
+    inline void * allocate(size_t numBytes, MemArea where) {
+        switch (where) {
+            case MemArea::VRAMorHeap:
+                if (freeVRAM() >= numBytes) {
+                    return allocateVRAM(numBytes); 
+                    break;
+                }
+                // fallthorugh to heap allocation
+            case MemArea::Heap:
+                return new uint8_t[numBytes];
+                break;
+            case MemArea::VRAM:
+                return allocateVRAM(numBytes); 
+                break;
+            case MemArea::None:
+                return nullptr;
+            //default:
+            //    UNREACHABLE;
+        }
+    }
 
     //@}
 

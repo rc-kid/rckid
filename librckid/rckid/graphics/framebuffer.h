@@ -17,16 +17,18 @@ namespace rckid {
         static constexpr int DEFAULT_WIDTH = 320;
         static constexpr int DEFAULT_HEIGHT = 240; 
 
-        FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): Canvas{width, height} {}
+        FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): Canvas{width, height, MemArea::None} {}
         FrameBuffer(Bitmap<ColorRGB> && bitmap): Canvas{std::move(bitmap)} {}
 
         void enable() {
-            setBuffer(Bitmap<ColorRGB>::inVRAM(width(), height()));
+            allocate(MemArea::VRAM);
             ST7789::configure(DisplayMode::Native_RGB565);
             ST7789::enterContinuousUpdate(width(), height());
         }
 
-        void disable() { }
+        void disable() {
+            deallocate();
+        }
 
         void render() {
             ST7789::waitVSync();
@@ -40,13 +42,17 @@ namespace rckid {
         static constexpr int DEFAULT_WIDTH = 160;
         static constexpr int DEFAULT_HEIGHT = 120;
 
-        FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): Canvas{width, height} {}
+        FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): Canvas{width, height, MemArea::None} {}
         FrameBuffer(Bitmap<ColorRGB> && bitmap): Canvas{std::move(bitmap)} {}
 
         void enable() {
-            setBuffer(Bitmap<ColorRGB>::inVRAM(width(), height()));
+            allocate(MemArea::VRAM);
             ST7789::configure(DisplayMode::Native_2X_RGB565);
             ST7789::enterContinuousUpdate(width() * 2, height() * 2);
+        }
+
+        void disable() {
+            deallocate();
         }
 
         void render() {
@@ -81,18 +87,20 @@ namespace rckid {
         static constexpr int DEFAULT_WIDTH = 320;
         static constexpr int DEFAULT_HEIGHT = 240;
 
-        FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): Canvas{width, height} {}
+        FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): Canvas{width, height, MemArea::None} {}
         FrameBuffer(Bitmap<Color256> && bitmap): Canvas{std::move(bitmap)} {}
 
         void enable() {
-            setBuffer(Bitmap<Color256>::inVRAM(width(), height()));
+            allocate(MemArea::VRAM);
             ST7789::configure(DisplayMode::Native_RGB565);
             ST7789::enterContinuousUpdate(width(), height());
             renderBuffer1_ = reinterpret_cast<uint32_t*>(allocateVRAM(height() * 2)); // 
             renderBuffer2_ = reinterpret_cast<uint32_t*>(allocateVRAM(height() * 2)); // 
         }
 
-        void disable() { }
+        void disable() { 
+            deallocate();
+        }
 
         /** Renders the display using a 2 column buffer column by column so that while one columh is being rendered, the other column is being processed. 
          */
@@ -150,18 +158,20 @@ namespace rckid {
         static constexpr int DEFAULT_WIDTH = 160;
         static constexpr int DEFAULT_HEIGHT = 120;
 
-        FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): Canvas{width, height} {}
+        FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): Canvas{width, height, MemArea::None} {}
         FrameBuffer(Bitmap<Color256> && bitmap): Canvas{std::move(bitmap)} {}
 
         void enable() {
-            setBuffer(Bitmap<Color256>::inVRAM(width(), height()));
+            allocate(MemArea::VRAM);
             ST7789::configure(DisplayMode::Native_2X_RGB565);
             ST7789::enterContinuousUpdate(width() * 2, height() * 2);
             renderBuffer1_ = reinterpret_cast<uint32_t*>(allocateVRAM(height() * 2)); // 
             renderBuffer2_ = reinterpret_cast<uint32_t*>(allocateVRAM(height() * 2)); // 
         }
 
-        void disable() { }
+        void disable() { 
+            deallocate();
+        }
 
         /** Renders the display using a 2 column buffer column by column so that while one columh is being rendered, the other column is being processed. 
          */

@@ -47,7 +47,7 @@ namespace rckid {
         template<typename T>
         static void sendCommand(T const & cmd) {
             /// TODO: ensure T is a command
-            i2c_write_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t const *) & cmd, sizeof(T), false);
+            //i2c_write_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t const *) & cmd, sizeof(T), false);
         }    
 
         static void initialize();

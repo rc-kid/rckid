@@ -8,6 +8,10 @@
 
 namespace rckid {
 
+    /** Carousel for selecting menu items from a predefined list. 
+     
+        To conserve memory, the carousel uses only 80 rows, which at full color gives us 51.2k memory usage. 
+     */
     class Carousel : public App<FrameBuffer<ColorRGB>> {
     public:
         class Item {
@@ -16,14 +20,14 @@ namespace rckid {
             Point imageOffset() const { 
                 return Point{
                     160 - img_.width() / 2, 
-                    120 - img_.height() / 2
+                    40 - img_.height() / 2
                 };
             }
 
             Point textOffset() const {
                 return Point{
                     160 - textWidth_ / 2,
-                    200
+                    40
                 };
             }
 
@@ -33,12 +37,12 @@ namespace rckid {
 
             void set(PNG & img, char const * text) {
                 text_ = text;
-                //img_.loadImage(std::move(img));
+                img_.loadImage(std::move(img));
             }
 
             void set(PNG && img, char const * text) {
                 text_ = text;
-                //img_.loadImage(std::move(img));
+                img_.loadImage(std::move(img));
             }
 
         private:
@@ -55,20 +59,24 @@ namespace rckid {
             */
 
             std::string text_;
-            Bitmap<Color> img_{0,0};
+            Bitmap<Color> img_{64, 64, MemArea::None};
             int textWidth_{0}; 
         }; 
 
-        Carousel():
+        Carousel(): 
+            App{320, 80},
             numItems_{0} {
         }
 
     protected:
 
-        virtual void getItem(size_t index, Item & item) = 0;
+       virtual void getItem(size_t index, Item & item) = 0;
 
         void onFocus() override {
             App::onFocus();;
+            current_.img_.allocate(MemArea::VRAM);
+            other_.img_.allocate(MemArea::VRAM);
+            setNumItems(10);
             getItem(i_, current_);
             current_.textWidth_ = driver_.textWidth(current_.text());
             driver_.setFg(Color::White());
@@ -107,7 +115,7 @@ namespace rckid {
             a_.update();
             if (dir_ == Btn::Home) {
                 // TODO draw the current item only
-                //r.draw(current_.img(), current_.imageOffset());
+                driver_.draw(current_.img(), current_.imageOffset());
                 driver_.text(current_.textOffset()) << current_.text();
             } else {
                 int xImg = a_.interpolate(0, 320);
@@ -132,7 +140,7 @@ namespace rckid {
                 if (! a_.running()) {
                     // TODO swap other and current 
                     dir_ = Btn::Home;
-                    std::swap(current_, other_); //current_.swapWith(other_);
+                    //std::swap(current_, other_); //current_.swapWith(other_);
                 }
             }
         }
@@ -162,14 +170,13 @@ namespace rckid {
     public:
 
         Menu() {
-            setNumItems(10);
         }
 
     protected:
 
         void getItem(size_t index, Item & item) {
             static bool x;
-            //item.set(BaseApp::imgX(), x ? "First Application" : "Second Is The Charm");
+            item.set(BaseApp::appIcon(), x ? "First Application" : "Second Is The Charm");
             x = !x;
         }
 
