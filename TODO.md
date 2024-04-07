@@ -10,9 +10,11 @@
 
 ## TODO
 
-- avr PWM does not work and is erratic -- likely because disabled in standby and avr allowed to power down as well, should be fixed, check in HW
+- avr PWM does not work and is erratic -- check now
+
+- the display seems not to be the issue, rpi will not power on, although there is at the beginning some traffic on the QSPI. Rebooting to bootloader works, bootloader talks to the flash allright and after loading the app will start allright, but repeated power on will not work
+
 - avr I2C slave does not work 
-- RCKid display mostly does not work, not sure why - are the connections allright? 
 
 - buy batteries
 
@@ -77,13 +79,10 @@
 
 ## AVR
 
-- move rgb to different pin so that we can check 5v rail
 - check basic rumbler
 - measure the shunt resistor if the calculations are right (?)
 - can talk to INA, voltage reads ok, current is wrong
 - I2C master can hang up, which is bad (wdt saves us)
-- neopixel works-ish (LSB or MSB is always on, does not seem to always update)
-
 - check that setting out high when already high does not glitch
 
 ## SDK

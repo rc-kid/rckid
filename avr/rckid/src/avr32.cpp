@@ -64,6 +64,10 @@ public:
      */
     static inline uint16_t btnHomeCounter_ = 0;
 
+    /** Number of measurmeents for the VCC before reaction to prevent glitches. 
+     */
+    static inline uint8_t vccMeasurementCounter_ = 0;
+
     /** Counter to measure the current consumed by the device by the INA219. 
      */
     static inline uint8_t iMeasureCounter_ = 0;
@@ -134,8 +138,8 @@ public:
         gpio::setAsInputPullup(AVR_PIN_BTN_HOME);
         static_assert(AVR_PIN_BTN_HOME == B2); // otherwise the ISR won't work
         PORTB.PIN2CTRL |= PORT_ISC_FALLING_gc;
-        // set sleep mode to power down optimistically
-        set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+        // be a pessimist and ensure we sleep in standby first, only going to powerdown if really warranted
+        set_sleep_mode(SLEEP_MODE_STANDBY);
         // initialize the transferrable state, start in normal mode (power on on power on)
         // force the debug mode on startup
         ts_.state.setABXYKeys(false, false, true, false);
@@ -194,7 +198,7 @@ public:
             sei();
             sleep_enable();
             END_ACTIVE_MODE;
-            //sleep_cpu();
+            sleep_cpu();
         }
     }
 
@@ -203,7 +207,7 @@ public:
     static void requireSleepStandby(uint8_t reason) {
         cli();
         if (standbyRequired_ == 0)
-            set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+            set_sleep_mode(SLEEP_MODE_STANDBY);
         standbyRequired_ |= reason;
         sei();
     }
@@ -491,17 +495,6 @@ public:
         // keep time & uptime
         ++ts_.uptime;
         ts_.time.secondTick();
-        // TODO delete me after testing
-        /*
-        if (!systemTicksActive()) {
-            // sample internal voltage reference using VDD for reference to determine VCC 
-            ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
-            ADC0.MUXPOS = ADC_MUXPOS_INTREF_gc;
-            // start the ADC conversion
-            ADC0.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc | ADC_RUNSTBY_bm;
-            ADC0.COMMAND = ADC_STCONV_bm;
-        }
-        */
     }
 
     /** ADC0 is done measuring. 
@@ -722,20 +715,23 @@ public:
         Since this is called from the ADC0 done method, it will fire even when in the wakeup phase we detect a too low voltage. 
      */
     static void criticalBattery() {
-        // turn off the 3v3 rail first
-        power3v3(false);
-        // flash the LEDs red three times
-        power5v(true);
-        for (int i = 0; i < 3; ++i) {
-            rgbs_.fill(platform::Color::Red().withBrightness(128));
-            rgbs_.update();
-            cpu::delayMs(200);
-            rgbs_.fill(platform::Color::Black());
-            rgbs_.update();
-            cpu::delayMs(200);
-            cpu::wdtReset(); 
+        if (++vccMeasurementCounter_ >= RCKID_VCC_CRITICAL_REQUIRED_SAMPLES) {
+            vccMeasurementCounter_ = 0;
+            // turn off the 3v3 rail first
+            power3v3(false);
+            // flash the LEDs red three times
+            power5v(true);
+            for (int i = 0; i < 3; ++i) {
+                rgbs_.fill(platform::Color::Red().withBrightness(128));
+                rgbs_.update();
+                cpu::delayMs(200);
+                rgbs_.fill(platform::Color::Black());
+                rgbs_.update();
+                cpu::delayMs(200);
+                cpu::wdtReset(); 
+            }
+            setDeviceMode(DeviceMode::PowerOff);
         }
-        setDeviceMode(DeviceMode::PowerOff);
     }
 
     /** Programmatically disables the charger. 

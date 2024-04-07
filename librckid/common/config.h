@@ -162,7 +162,10 @@
 
 #define VCC_DC_POWER_THRESHOLD 430
 
+/** Critical voltage at which the device will not allow itself to be started (3v3 power rail). To prevent spurious measurements when the device is powering on or off, a configurable amount of consecutive vcc measurements must be below the threshold top trigger the reaction. 
+ */
 #define VCC_CRITICAL_THRESHOLD 310
+#define RCKID_VCC_CRITICAL_REQUIRED_SAMPLES 10
 
 /** If defined, the RCKid is powered by a LiPo battery and when DC power is inserted, the battery will charge and must be monitored. 
  
