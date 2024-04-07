@@ -59,8 +59,8 @@ namespace platform {
 /** GPIO helper functions. 
  */
 namespace gpio {
-    inline void outputHigh(Pin p) { write(p, true); setAsOutput(p); }
-    inline void outputLow(Pin p) { write(p, false); setAsOutput(p); }
+    inline void outputHigh(Pin p) { write(p, true); setAsOutput(p); write(p, true);  }
+    inline void outputLow(Pin p) { write(p, false); setAsOutput(p); write(p, false); }
     inline void outputFloat(Pin p) { setAsInput(p); }
 
     inline void high(Pin p) { write(p, true); }

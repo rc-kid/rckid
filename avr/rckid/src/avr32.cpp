@@ -68,7 +68,10 @@ public:
      */
     static inline uint8_t iMeasureCounter_ = 0;
     static inline uint16_t current_ = 0;
+
+#if (RCKID_INA219_I2C_ADDRESS != 0)
     static inline platform::INA219 ina_{RCKID_INA219_I2C_ADDRESS};
+#endif
 
     static inline platform::NeopixelStrip<6> rgbs_{AVR_PIN_RGB}; 
     static inline platform::ColorStrip<6> rgbsTarget_;
@@ -177,10 +180,12 @@ public:
             // if there is I2C message, process
             if (i2cCommandReady_)
                 processI2CCommand();
+#if (RCKID_INA219_I2C_ADDRESS != 0)
             if (power3v3Active() && iMeasureCounter_ == 0) {
                 current_ = ina_.current(); // ina_.initialize(platform::INA219::Gain::mv_40, 10);
                 iMeasureCounter_ = RCKID_CURRENT_SENSE_TIMEOUT_TICKS;
             }
+#endif
             if (rgbTick_)
                 rgbTick();
             if (rumblerTick_)
@@ -189,7 +194,7 @@ public:
             sei();
             sleep_enable();
             END_ACTIVE_MODE;
-            sleep_cpu();
+            //sleep_cpu();
         }
     }
 
@@ -588,8 +593,10 @@ public:
             gpio::outputHigh(AVR_PIN_3V3_ON);
             // allow some time for the voltages to stabilize
             cpu::delayMs(50);
+#if (RCKID_INA219_I2C_ADDRESS != 0)            
             i2c::initializeMaster();
             ina_.initialize_32V_4A(INA219::Resolution::bit12_samples4, 10);
+#endif
             iMeasureCounter_ = 0; 
         } else {
             gpio::outputFloat(AVR_PIN_3V3_ON);
