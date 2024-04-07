@@ -12,7 +12,7 @@
 
 - avr PWM does not work and is erratic -- check now
 
-- the display seems not to be the issue, rpi will not power on, although there is at the beginning some traffic on the QSPI. Rebooting to bootloader works, bootloader talks to the flash allright and after loading the app will start allright, but repeated power on will not work
+- the display seems not to be the issue, rpi will not power on, although there is at the beginning some traffic on the QSPI. Rebooting to bootloader works, bootloader talks to the flash allright and after loading the app will start allright, but repeated power on will not work - could be slow oscillator - see https://forums.raspberrypi.com/viewtopic.php?t=317631
 
 - avr I2C slave does not work 
 
@@ -58,6 +58,7 @@
 
 ## PCB
 
+- how to make the oscillator better? The capacitors are already ok-ish for 16.5 pF, but maybe the capcacitance of the traces is wrong? 
 - add inrush current limiting resistors to all mosfets!!! (around 1k)
 - add ground pads to side buttons (not in EasyEDA library yet, can be added manually after the buttons arrive)
 
