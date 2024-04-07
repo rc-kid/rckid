@@ -10,11 +10,7 @@
 
 ## TODO
 
-- avr PWM does not work and is erratic -- check now
-
 - the display seems not to be the issue, rpi will not power on, although there is at the beginning some traffic on the QSPI. Rebooting to bootloader works, bootloader talks to the flash allright and after loading the app will start allright, but repeated power on will not work - could be slow oscillator - see https://forums.raspberrypi.com/viewtopic.php?t=317631
-
-- avr I2C slave does not work 
 
 - buy batteries
 
@@ -82,8 +78,6 @@
 
 ## AVR
 
-- I2C slave does not seem to be working (can be tested on breadboard too)
-- rainbow effect does not work
 - add some better non-linear interpolation for the breathe effect
 - check basic rumbler
 - measure the shunt resistor if the calculations are right (?)

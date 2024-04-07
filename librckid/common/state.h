@@ -330,10 +330,11 @@ namespace rckid {
             return result;
         }
 
-        static RGBEffect Rainbow(uint8_t hue, uint8_t step, uint8_t speed, uint16_t duration = 0) {
+        static RGBEffect Rainbow(uint8_t hue, uint8_t step, uint8_t speed, uint8_t brightness = 255, uint16_t duration = 0) {
             RGBEffect result(Kind::Rainbow, speed, duration);
             result.rainbow.hue = hue;
             result.rainbow.step = step;
+            result.rainbow.brightness = brightness;
             return result;
         }
 

@@ -161,11 +161,11 @@ public:
         // TODO Debug enable breathe effect on RGB 0
         power5v(true);
         cpu::delayMs(50);
-        rgbEffects_[0] = RGBEffect::Breathe(platform::Color::RGB(64, 0, 0), 1);
-        rgbEffects_[1] = RGBEffect::Breathe(platform::Color::RGB(0, 64, 0), 1);
-        rgbEffects_[3] = RGBEffect::Breathe(platform::Color::RGB(0, 0, 64), 1);
-        rgbEffects_[4] = RGBEffect::Breathe(platform::Color::RGB(64, 64, 0), 1);
-        rgbEffects_[5] = RGBEffect::Breathe(platform::Color::RGB(64, 0, 64), 1);
+        rgbEffects_[0] = RGBEffect::Rainbow(0, 50, 1, 128);
+        rgbEffects_[1] = RGBEffect::Rainbow(75, 40, 1, 128);
+        rgbEffects_[3] = RGBEffect::Rainbow(180, 30, 1, 128);
+        rgbEffects_[4] = RGBEffect::Rainbow(110, 20, 1, 128);
+        rgbEffects_[5] = RGBEffect::Rainbow(230, 10, 1, 128);
     }
 
     /** The main loop. 
@@ -274,7 +274,7 @@ public:
                 power3v3(true);
                 // enable I2C slave mode so that we can talk to the RP and enable interrupts for wakeup
                 i2c::initializeSlave(AVR_I2C_ADDRESS);
-                TWI0.SCTRLA = TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm;
+                TWI0.SCTRLA |= TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm;
                 break;
             case DeviceMode::Sleep:
                 i2c::disableSlave();
@@ -378,8 +378,8 @@ public:
                     ts_.state.setDPadKeys(
                         !gpio::read(AVR_PIN_BTN_2), // left
                         !gpio::read(AVR_PIN_BTN_4), // right
-                        !gpio::read(AVR_PIN_BTN_3), // up
-                        !gpio::read(AVR_PIN_BTN_1) // down
+                        !gpio::read(AVR_PIN_BTN_1), // up
+                        !gpio::read(AVR_PIN_BTN_3) // down
                     );
                     gpio::high(AVR_PIN_BTN_DPAD);
                     gpio::low(AVR_PIN_BTN_ABXY);

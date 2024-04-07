@@ -110,7 +110,6 @@ namespace rckid {
     void Device::tick() {
         ++ticks_;
         lastState_ = state_.state;
-        /*
         // query the AVR for the status bytes, first set the address
         i2c0->hw->enable = 0;
         i2c0->hw->tar = AVR_I2C_ADDRESS;
@@ -128,7 +127,6 @@ namespace rckid {
         for (int i = 0; i < 6; ++i)
             *(raw++) = i2c0->hw->data_cmd;
         // i2c_read_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t *)& state_, sizeof(State), false);
-        */
 
         platform::BMI160::State aState;
         accelerometer_.measure(aState);

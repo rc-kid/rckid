@@ -318,6 +318,7 @@ namespace rckid {
         static constexpr uint8_t WRMEMC = 0x3c;
         static constexpr uint8_t STE = 0x44; // set tear scanline
 
+        // the global IRQ handler
         friend void irqDMADone_();
 
     }; // rckid::ST7789
