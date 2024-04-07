@@ -4,6 +4,9 @@
 
 namespace rckid {
 
+    class ColorRGB;
+    class Color256;
+
     /** Full RGB 565 color. 
      
         This is the native 5-6-5 bits per color channel (R, G, B) resolution of the display and the highest one that RCKid supports (the display also supports 6-6-6 3byte encoding which RCKid does not support). As a native color resolution, this is an equivalent of a true color resolution in the sense that each pixel contains its own color independent of any others. 
@@ -12,13 +15,16 @@ namespace rckid {
     public:
         static constexpr size_t BPP = 16;
 
-        constexpr ColorRGB():raw_{0} {}
+        constexpr ColorRGB() = default;
 
         constexpr ColorRGB(uint8_t r, uint8_t g, uint8_t b): raw_{0} {
             setR(r);
             setG(g);
             setB(b);
         }
+
+        constexpr ColorRGB(ColorRGB const & other): raw_{other.raw_} {}
+        constexpr ColorRGB(Color256 const & other); 
 
         static constexpr ColorRGB RGB(uint8_t r, uint8_t g, uint8_t b) { return ColorRGB{r, g, b}; }
 
@@ -45,7 +51,7 @@ namespace rckid {
 
         explicit constexpr ColorRGB(uint16_t raw): raw_{raw} {}
 
-        uint16_t raw_;
+        uint16_t raw_ = 0;
 
     } __attribute__((packed)); // rckid::ColorRGB
 
@@ -65,31 +71,24 @@ namespace rckid {
 
         uint8_t index() const { return raw_; }
 
-        static Color256 RGB(uint8_t r, uint8_t g, uint8_t b) {
+        constexpr Color256() = default;
+        constexpr Color256(Color256 const & from): raw_{from.raw_} {}
+        constexpr Color256(ColorRGB const & from) { setRGB(from.r(), from.g(), from.b()); }
+        constexpr Color256(uint8_t r, uint8_t g, uint8_t b) { setRGB(r, g, b); }
+
+        static constexpr Color256 RGB(uint8_t r, uint8_t g, uint8_t b) { return Color256{r, g, b}; }
+
+        constexpr void setRGB(uint8_t r, uint8_t g, uint8_t b) {
             if (r == g && g == b)
-                return 240 + (r >> 4);
+                raw_ = 240 + (r >> 4);
             else
-                return 40 * (r / 43) + 5 * (g / 32) + (b / 52);
+                raw_ = 40 * (r / 43) + 5 * (g / 32) + (b / 52);
         }
 
         static Color256 RGB(ColorRGB rgb) { return RGB(rgb.r(), rgb.g(), rgb.b()); }
 
         ColorRGB toRGB() const __attribute__((always_inline)) {
             return palette[raw_];
-            /*
-            return raw_ == 0 ? ColorRGB::Black() : ColorRGB::White();
-            if (raw_ >= 240) {
-                uint8_t i = raw_ - 240;
-                i = (i << 4) + i;
-                return ColorRGB{i, i, i};
-            } else {
-                uint8_t b = raw_ % 5;
-                uint8_t g = raw_ / 5;
-                uint8_t r = g / 8;
-                g = g % 8;
-                // TODO this is not precise, revisit and fix
-                return ColorRGB{static_cast<uint8_t>(r * 43), static_cast<uint8_t>(g * 32), static_cast<uint8_t>(b * 52)};
-            }*/
         }
 
         static constexpr Color256 White() { return Color256{255}; }
@@ -101,7 +100,7 @@ namespace rckid {
 
         constexpr Color256(uint8_t index): raw_{index} {}
 
-        uint8_t raw_;
+        uint8_t raw_ = 0;
 
     public:
         static constexpr ColorRGB palette[] = {
@@ -373,4 +372,12 @@ namespace rckid {
 
     static_assert(sizeof(Color256) == 1);
 
+
+    inline constexpr ColorRGB::ColorRGB(Color256 const & other) {
+        raw_ = other.toRGB().raw_;
+    }
+
+
 }; // namespace rckid
+
+

@@ -8,19 +8,6 @@ namespace rckid {
      */
     class Device {
     public:
-
-        /** Throws a fatal error. 
-         
-            Fatal error stops the execution of current app and immediately enters the BSOD, displaying the diagnostic information. To throw a fatal error, the macro FATAL_ERROR should be used instead of calling the function directly as the macro automatically inserts the location information where appropriate.
-         */
-        static __force_inline void fatalError(int code, char const * file, int line) { 
-            fatalErrorFile_ = file;
-            fatalErrorLine_ = line;
-            longjmp(fatalError_, code); 
-        }
-
-        static __force_inline void fatalError(int code) { fatalError(code, nullptr, 0); }
-  
     private:
         friend class BaseApp;
         friend class audio;
@@ -99,7 +86,13 @@ namespace rckid {
                     return false;
             }
         }
-        
+
+        friend __force_inline void fatalError(int code, char const * file, int line) { 
+            fatalErrorFile_ = file;
+            fatalErrorLine_ = line;
+            longjmp(fatalError_, code); 
+        }
+
         // basic functions
         friend void yield();
         

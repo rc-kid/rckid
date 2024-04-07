@@ -58,6 +58,9 @@
 
 ## PCB
 
+- add extra cartridge risers to the PCB because the cheap castellation process does not always work
+- enlarge holes so that they are more solderable
+- the cartridge riser mountholes should not connect to gnd for easier solderability
 - how to make the oscillator better? The capacitors are already ok-ish for 16.5 pF, but maybe the capcacitance of the traces is wrong? 
 - add inrush current limiting resistors to all mosfets!!! (around 1k)
 - add ground pads to side buttons (not in EasyEDA library yet, can be added manually after the buttons arrive)
@@ -66,7 +69,6 @@
 - can even be replaced with headphones so that we can use single ADC as the pin is no longer analog required
 
 - charging fluctuates when there is no battery present (not an issue IMO)
-
 
 ## RP
 
@@ -80,6 +82,9 @@
 
 ## AVR
 
+- I2C slave does not seem to be working (can be tested on breadboard too)
+- rainbow effect does not work
+- add some better non-linear interpolation for the breathe effect
 - check basic rumbler
 - measure the shunt resistor if the calculations are right (?)
 - can talk to INA, voltage reads ok, current is wrong

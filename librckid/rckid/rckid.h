@@ -22,7 +22,7 @@ extern uint8_t __vram_start__, __vram_end__;
 #define ASSERT(...) if (!(__VA_ARGS__)) { FATAL_ERROR(rckid::ASSERTION_ERROR); }
 #define UNIMPLEMENTED FATAL_ERROR(::rckid::NOT_IMPLEMENTED_ERROR)
 #define UNREACHABLE FATAL_ERROR(::rckid::UNREACHABLE_ERROR)
-#define FATAL_ERROR(CODE) ::rckid::Device::fatalError(CODE, __FILE__, __LINE__)
+#define FATAL_ERROR(CODE) ::rckid::fatalError(CODE, __FILE__, __LINE__)
 
 #define CALCULATE_TIME(...) [&](){ uint32_t start__ = time_us_32(); __VA_ARGS__; return static_cast<unsigned>(time_us_32() - start__); }()
 
@@ -80,16 +80,20 @@ namespace rckid {
     constexpr int NOT_IMPLEMENTED_ERROR = 256;
     constexpr int UNREACHABLE_ERROR = 257;
 
+    /** Throws a fatal error. 
+     
+        Fatal error stops the execution of current app and immediately enters the BSOD, displaying the diagnostic information. To throw a fatal error, the macro FATAL_ERROR should be used instead of calling the function directly as the macro automatically inserts the location information where appropriate.
+     */
+    [[noreturn]] void fatalError(int code, char const * file, int line);
+    [[noreturn]] void __force_inline fatalError(int code) { fatalError(code, nullptr, 0); }
 
     /** Yields to the RCKid's device events. 
      */
     void yield();
 
-
     /** \name Device management 
      */
     //@{
-
 
     void powerOff();
 
@@ -235,8 +239,8 @@ namespace rckid {
                 break;
             case MemArea::None:
                 return nullptr;
-            //default:
-            //    UNREACHABLE;
+            default:
+                UNREACHABLE;
         }
     }
 
