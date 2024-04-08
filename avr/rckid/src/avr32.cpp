@@ -161,11 +161,34 @@ public:
         // TODO Debug enable breathe effect on RGB 0
         power5v(true);
         cpu::delayMs(50);
+        /*
         rgbEffects_[0] = RGBEffect::Rainbow(0, 50, 1, 128);
         rgbEffects_[1] = RGBEffect::Rainbow(75, 40, 1, 128);
         rgbEffects_[3] = RGBEffect::Rainbow(180, 30, 1, 128);
         rgbEffects_[4] = RGBEffect::Rainbow(110, 20, 1, 128);
         rgbEffects_[5] = RGBEffect::Rainbow(230, 10, 1, 128);
+        */
+        platform::Color x = platform::Color::White();
+        switch (ts_.error) {
+            case AVR_POWER_ON:
+                // leave white
+                break;        
+            case AVR_ERROR_WDT:
+                x = platform::Color::Purple();    
+                break;
+            case AVR_ERROR_BOD:
+                x = platform::Color::Blue();
+                break;
+            default:
+                x = platform::Color::Red();
+        }
+        x = x.withBrightness(32);
+        rgbEffects_[0] = RGBEffect::Solid(x, 1);
+        rgbEffects_[1] = RGBEffect::Solid(x, 1);
+        rgbEffects_[3] = RGBEffect::Solid(x, 1);
+        rgbEffects_[4] = RGBEffect::Solid(x, 1);
+        rgbEffects_[5] = RGBEffect::Solid(x, 1);
+        rgbs_.update();
     }
 
     /** The main loop. 
@@ -639,28 +662,59 @@ public:
     static void rpReset() {
         power3v3(false);
         power5v(true);
-        rgbs_.fill(platform::Color::Blue());
-        rgbs_.update();
-        cpu::delayMs(1000);
+        rgbs_.fill(platform::Color::Black());
+        for (int i = 0; i < 5; ++i) {
+            rgbs_[i < 2 ? i : i + 1] = platform::Color::Red().withBrightness(32);
+            rgbs_.update();
+            cpu::delayMs(200);
+            cpu::wdtReset();
+        }
         power3v3(true);
         power5v(false);
         setBacklightPWM(128);
-        // leave the RGBs on, the RP2040 should deal with them when it restarts
     }
 
     static void rpBootloader() {
+        setBacklightPWM(0);
+        cli();
         power3v3(false);
         power5v(true);
-        rgbs_.fill(platform::Color::Green());
+        rgbs_.fill(platform::Color::Black());
+        rgbs_[0] = platform::Color::Green().withBrightness(32);
+        rgbsTarget_[0] = platform::Color::Green().withBrightness(32);
         rgbs_.update();
+        cpu::delayMs(200);
+        cpu::wdtReset();
+        rgbs_[1] = platform::Color::Green().withBrightness(32);
+        rgbsTarget_[1] = platform::Color::Green().withBrightness(32);
+        rgbs_.update();
+        cpu::delayMs(200);
+        cpu::wdtReset();
         gpio::outputLow(AVR_PIN_QSPI_SS);
-        cpu::delayMs(500);
+        rgbs_[3] = platform::Color::Green().withBrightness(32);
+        rgbsTarget_[3] = platform::Color::Green().withBrightness(32);
+        rgbs_.update();
+        cpu::delayMs(200);
+        cpu::wdtReset();
         power3v3(true);
-        power5v(false);
-        setBacklightPWM(128);
-        cpu::delayMs(300);
+        rgbs_[4] = platform::Color::Green().withBrightness(32);
+        rgbsTarget_[4] = platform::Color::Green().withBrightness(32);
+        rgbs_.update();
+        cpu::delayMs(200);
+        cpu::wdtReset();
+        rgbs_[5] = platform::Color::Green().withBrightness(32);
+        rgbsTarget_[5] = platform::Color::Green().withBrightness(32);
+        rgbs_.update();
+        cpu::delayMs(200);
+        cpu::wdtReset();
         gpio::outputFloat(AVR_PIN_QSPI_SS);
         // keep the green lights on, the RP2040 app that has just been uploaded should turn them off
+        rgbEffects_[0] = RGBEffect::Breathe(platform::Color::Green().withBrightness(32), 1);
+        rgbEffects_[1] = RGBEffect::Breathe(platform::Color::Green().withBrightness(32), 1);
+        rgbEffects_[3] = RGBEffect::Breathe(platform::Color::Green().withBrightness(32), 1);
+        rgbEffects_[4] = RGBEffect::Breathe(platform::Color::Green().withBrightness(32), 1);
+        rgbEffects_[5] = RGBEffect::Breathe(platform::Color::Green().withBrightness(32), 1);
+        sei();
     }
 
     /** Signals to the RP2040 to wake up */
@@ -909,6 +963,7 @@ public:
         // a byte has been received from master. Store it and send either ACK if we can store more, or NACK if we can't store more
         } else if ((status & I2C_DATA_MASK) == I2C_DATA_RX) {
             ts_.buffer[i2cRxIdx_++] = TWI0.SDATA;
+            rgbs_[2] = platform::Color::Green().withBrightness(32);
             TWI0.SCTRLB = (i2cRxIdx_ == sizeof(ts_.buffer)) ? TWI_SCMD_COMPTRANS_gc : TWI_SCMD_RESPONSE_gc;
         // master requests slave to write data, reset the sent bytes counter, initialize the actual read address from the read start and reset the IRQ
         } else if ((status & I2C_START_MASK) == I2C_START_TX) {
@@ -933,6 +988,8 @@ public:
     }
 
     static void processI2CCommand() {
+        rgbs_[2] = platform::Color::Red().withBrightness(32);
+        rgbs_.update();
         switch (ts_.buffer[0]) {
             case cmd::Nop::ID:
                 break;

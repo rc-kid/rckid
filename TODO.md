@@ -69,6 +69,7 @@
 ## RP
 
 - ensure VRAM is own bank
+- sometimes it seems display is sent garbage in avr status test, never seen with princesses
 
 - document ST7789
 
@@ -78,6 +79,8 @@
 
 ## AVR
 
+- looks like we get WDT reset every now & then with reset & bootloader delays, check watchdog timing
+- I2C on RP2040 hangs sometimes, could be bus errors? 
 - add some better non-linear interpolation for the breathe effect
 - check basic rumbler
 - measure the shunt resistor if the calculations are right (?)

@@ -12,13 +12,13 @@ namespace rckid {
     class AVRStatusTest : public App<FrameBuffer<ColorRGB>> {
     public:
 
-        AVRStatusTest(): App{240, 216} {}
+        AVRStatusTest(): App{} {}
 
     protected:
 
         void onFocus() override {
             App::onFocus();
-            setBrightness(32);
+            //setBrightness(32);
         }
 
         void update() override {

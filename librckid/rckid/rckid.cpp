@@ -42,10 +42,10 @@ namespace rckid {
     void start() {
         // FIXME for reasons I do not completely understand, the board init must be before the other calls, or the device hangs? 
         board_init();
-        gpio::outputHigh(GPIO21);
         Device::initialize();
         // initialize the display
         ST7789::initialize();
+        setBrightness(128);
 
         int errorCode = setjmp(rckid::Device::fatalError_);
         if (errorCode != 0) 
