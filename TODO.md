@@ -10,9 +10,8 @@
 
 ## TODO
 
-- the display seems not to be the issue, rpi will not power on, although there is at the beginning some traffic on the QSPI. Rebooting to bootloader works, bootloader talks to the flash allright and after loading the app will start allright, but repeated power on will not work - could be slow oscillator - see https://forums.raspberrypi.com/viewtopic.php?t=317631
-
-- buy batteries
+- carousel won't be happy with empty items (icons, etc.)
+- no clearing of items 
 
 - write optimized draw bitmap functions
 
@@ -101,7 +100,7 @@
 - fonts with alpha
 - more stuff to the framebuffer
 - tiling engine 
-
+- jpeg, Bitmap::loadImage to support jpeg too
 > Apps
 
 - some selector app that cycles through options, could this be carousel? 

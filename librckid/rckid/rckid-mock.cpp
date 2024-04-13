@@ -67,7 +67,9 @@ namespace rckid {
 
     void resetVRAM() { Device::vramPtr_ = __vram__; }
 
-    bool isVRAMPtr(void * ptr) { return (ptr >= static_cast<void*>(& __vram_start__)) && (ptr < static_cast<void*>(& __vram_end__)); }
+    bool isVRAMPtr(void * ptr) { 
+        return (ptr >= static_cast<void*>(__vram__)) && (ptr < static_cast<void*>(__vram__) + RCKID_VRAM_SIZE);
+    }
 
     // 
   

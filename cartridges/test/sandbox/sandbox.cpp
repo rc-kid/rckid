@@ -8,12 +8,16 @@
 #include "common/commands.h"
 
 #include "rckid/audio.h"
+#include "rckid/assets.h"
 
+
+#include "rckid/ui/menu.h"
 
 #include "rckid/apps/system/Carousel.h"
 //#include "rckid/apps/test/SDCardTest.h"
 #include "rckid/apps/test/AVRStatusTest.h"
-//#include "rckid/apps/games/SlidingPuzzle.h"
+#include "rckid/apps/test/SensorsTest.h"
+#include "rckid/apps/games/SlidingPuzzle.h"
 #include "rckid/apps/test/RawAudioTest.h"
 #include "rckid/apps/system/USBMassStorage.h"
 #include "rckid/apps/test/AudioTestTone.h"
@@ -24,8 +28,33 @@
 using namespace rckid;
 
 void rckid_main() {
-    cpu::overclock();
-    gpio::setAsOutput(GPIO21); // 100 = 19.1 us per tick
+    Menu m{{
+        MenuItem::create("AVR Status", assets::Gameboy), 
+        MenuItem::create("Sensors", assets::Gameboy), 
+        MenuItem::create("Sliding Puzzle", assets::Gameboy), 
+    }};
+    Carousel c{&m};
+    while (true) {
+        TRACE("Starting carousel");
+        auto r = c.run();
+        if (r.has_value()) {
+            switch (r.value()) {
+                case 0:
+                    TRACE("Starting AVR status");
+                    AVRStatusTest{}.run();
+                    break;
+                case 1:
+                    TRACE("Starting sensors");
+                    SensorsTest{}.run();
+                    break;
+                case 2: 
+                    TRACE("Starting game");
+                    SlidingPuzzle{}.run();
+                    break;
+            }
+        }
+    }
+    //cpu::overclock();
     //cpuOverclock(133000000, false);
     //cpuOverclock(150000000, true);
 
@@ -40,7 +69,7 @@ void rckid_main() {
 //    USBMassStorage game;
 //    game.run();
 //    Menu{}.run();
-    AVRStatusTest{}.run();
+    //AVRStatusTest{}.run();
     //start(AVRStatusTest{});
 
     //AVRStatusTest test;

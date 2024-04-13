@@ -26,6 +26,8 @@ struct GFXfont {
     uint8_t xAdvance(char c) const {
         return (glyph + (c - first))->xAdvance;
     }
+
+    int height() const { return yAdvance; }
 };
 
 

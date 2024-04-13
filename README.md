@@ -60,6 +60,7 @@ The repository consists of various frameworks, libraries and executables for dif
 
 - Debug mode, activated when normal mode is entered while the select button is pressed
 
+- the oscillator is slow to start, see https://forums.raspberrypi.com/viewtopic.php?t=317631
 
 
 ==========

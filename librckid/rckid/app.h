@@ -1,9 +1,10 @@
 #pragma once
 
 #include <vector>
+#include <optional>
 
 #include "stats.h"
-
+#include "rckid.h"
 #include "graphics/png.h"
 #include "fonts/Iosevka_Mono6pt7b.h"
 
@@ -18,15 +19,7 @@ namespace rckid {
 
         virtual ~BaseApp() = default;
 
-        /** Runs new app*/
-        void run();
         void exit();
-
-        /** Returns default app icon. 
-         */
-        static PNG appIcon() {
-            return PNG::fromBuffer(APP_ICON, sizeof(APP_ICON));
-        }
 
     protected:
 
@@ -40,24 +33,30 @@ namespace rckid {
          */
         virtual void onBlur() {}
 
+        /** Main loop. 
+         */
+        void loop(); 
+
     private:
 
         static inline BaseApp * currentApp_ = nullptr;
 
-        static constexpr uint8_t APP_ICON[] = {
-#include "icons/gameboy.inc"
-        };
-
     }; // rckid::App
 
 
-    template<typename DISPLAY_DRIVER> 
+    template<typename DISPLAY_DRIVER, typename MODAL_RESULT = void> 
     class App : public BaseApp {
     public:
         using Color = typename DISPLAY_DRIVER::Color;
 
         App(int w = DISPLAY_DRIVER::DEFAULT_WIDTH, int h = DISPLAY_DRIVER::DEFAULT_HEIGHT):
             driver_{w, h} {
+        }
+
+        std::optional<MODAL_RESULT> run() {
+            result_ = std::nullopt;
+            loop();
+            return result_;
         }
 
     protected:
@@ -74,9 +73,45 @@ namespace rckid {
             driver_.render();
         }
 
+        using BaseApp::exit;
+
+        void exit(MODAL_RESULT const & result) {
+            result_ = result;
+            exit();
+        }
+
         DISPLAY_DRIVER driver_;
+        std::optional<MODAL_RESULT> result_;
 
     }; // App
+
+    template<typename DISPLAY_DRIVER>
+    class App<DISPLAY_DRIVER, void> : public BaseApp {
+    public:
+        using Color = typename DISPLAY_DRIVER::Color;
+
+        App(int w = DISPLAY_DRIVER::DEFAULT_WIDTH, int h = DISPLAY_DRIVER::DEFAULT_HEIGHT):
+            driver_{w, h} {
+        }
+
+        void run() { loop(); }
+
+    protected:
+
+        void onFocus() override {
+            driver_.enable();
+        }
+
+        void onBlur() override {
+            driver_.disable(); 
+        }
+
+        void render() override {
+            driver_.render();
+        }
+
+        DISPLAY_DRIVER driver_;
+    }; // App<void>
 
 
 } // namespace rckid

@@ -54,6 +54,10 @@ namespace rckid {
 
         Writer text(Point p) { return text(p.x(), p.y()); }
 
+        void text(Point p, char const * text) {
+            this->text(p) << text;
+        }
+
         Writer textMultiline(int x, int y) {
             int startX = x;
             return Writer{[this, x, y, startX] (char c) mutable {

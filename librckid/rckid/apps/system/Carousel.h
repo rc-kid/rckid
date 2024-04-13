@@ -5,108 +5,60 @@
 #include "rckid/graphics/animation.h"
 #include "rckid/graphics/png.h"
 #include "rckid/graphics/bitmap.h"
+#include "rckid/ui/menu.h"
 
 namespace rckid {
 
-    /** Carousel for selecting menu items from a predefined list. 
-     
-        To conserve memory, the carousel uses only 80 rows, which at full color gives us 51.2k memory usage. 
-     */
-    class Carousel : public App<FrameBuffer<ColorRGB>> {
+    class Carousel : public App<FrameBuffer<ColorRGB>, size_t> {
     public:
-        class Item {
-        public:
 
-            Point imageOffset() const { 
-                return Point{
-                    160 - img_.width() / 2, 
-                    40 - img_.height() / 2
-                };
-            }
+        using EventOnSelect = std::function<void(size_t)>;
 
-            Point textOffset() const {
-                return Point{
-                    160 - textWidth_ / 2,
-                    40
-                };
-            }
+        Carousel(Menu * menu): menu_{menu} {}
 
-            std::string const & text() const { return text_; }
+        bool empty() const { return menu_ == nullptr ||  menu_->size() == 0; }
 
-            Bitmap<Color> const & img() const { return img_; }
-
-            void set(PNG & img, char const * text) {
-                text_ = text;
-                img_.loadImage(std::move(img));
-            }
-
-            void set(PNG && img, char const * text) {
-                text_ = text;
-                img_.loadImage(std::move(img));
-            }
-
-        private:
-
-            friend class Carousel;
-
-            /*
-            void swapWith(Item & other) {
-                std::swap(text_, other.text_);
-                std::swap(textWidth_, other.textWidth_);
-                std::swap(img_, other.img_);
-                //img_.swapWith(other.img_);
-            }
-            */
-
-            std::string text_;
-            Bitmap<Color> img_{64, 64, MemArea::None};
-            int textWidth_{0}; 
-        }; 
-
-        Carousel(): 
-            App{320, 80},
-            numItems_{0} {
-        }
+        bool idle() const { return dir_ == Btn::Home; }
 
     protected:
 
-       virtual void getItem(size_t index, Item & item) = 0;
-
         void onFocus() override {
-            App::onFocus();;
-            current_.img_.allocate(MemArea::VRAM);
-            other_.img_.allocate(MemArea::VRAM);
-            setNumItems(10);
-            getItem(i_, current_);
-            current_.textWidth_ = driver_.textWidth(current_.text());
-            driver_.setFg(Color::White());
+            App::onFocus();
+            icon_.allocate(MemArea::VRAMorHeap);
+            otherIcon_.allocate(MemArea::VRAMorHeap);
+            loadItem(i_, text_, textWidth_, icon_);
+        }
+
+        void onBlur() override {
+            TRACE("on blur begin");
+            icon_.deallocate();
+            otherIcon_.deallocate();
+            text_ = nullptr;
+            otherText_ = nullptr;
+            App::onBlur();
         }
 
         void update() override {
-            if (dir_ == Btn::Home && numItems_ > 0) {
+            if (idle() && !empty()) {
                 if (pressed(Btn::Left)) {
+                    TRACE("  left");
                     dir_ = Btn::Left;
-                    i_ = (i_ == 0) ? (numItems_ - 1) : (i_ - 1);
-                    LOG("Moving left");
+                    i_ = (i_ == 0) ? (menu_->size() - 1) : (i_ - 1);
+                    loadItem(i_, otherText_, otherTextWidth_, otherIcon_);
+                    a_.start();
                 } else if (pressed(Btn::Right)) {
+                    TRACE("  right");
                     dir_ = Btn::Right;
-                    ++i_;
-                    if (i_ == numItems_)
-                        i_ = 0;
-                    LOG("Moving right");
-                } else {
-                    // TODO back
-                    return;
+                    i_ = (i_ == menu_->size() - 1) ? 0 : (i_ + 1);
+                    loadItem(i_, otherText_, otherTextWidth_, otherIcon_);
+                    a_.start();
+                } else if (pressed(Btn::A)) { // select
+                    TRACE("  select" << i_);
+                    exit(i_);
+                } else if (pressed(Btn::B)) { // back
+                    TRACE("  back");
+                    exit();
                 }
-                getItem(i_, other_);
-                other_.textWidth_ = driver_.textWidth(other_.text());
-                a_.start();
-                /*
-                if (current_.img_.rawPixels() == nullptr)
-                    FATAL_ERROR(10);
-                if (other_.img_.rawPixels() == nullptr)
-                    FATAL_ERROR(12);
-                */
             }
         }
 
@@ -114,72 +66,55 @@ namespace rckid {
             driver_.fill();
             a_.update();
             if (dir_ == Btn::Home) {
-                // TODO draw the current item only
-                driver_.draw(current_.img(), current_.imageOffset());
-                driver_.text(current_.textOffset()) << current_.text();
+                drawItem(icon_, text_, textWidth_);
             } else {
-                int xImg = a_.interpolate(0, 320);
-                int xText = a_.interpolate(0, 640);
-                switch (dir_) {
-                    case Btn::Left: {
-                        driver_.draw(current_.img(), current_.imageOffset() + Point{xImg, 0});
-                        driver_.text(current_.textOffset() + Point{xText, 0}) << current_.text();
-                        driver_.draw(other_.img(), other_.imageOffset() - Point{320 - xImg, 0});
-                        driver_.text(other_.textOffset() - Point{640 - xText, 0}) << other_.text();
-                        break;
-                    }
-                    case Btn::Right:
-                        driver_.draw(current_.img(), current_.imageOffset() - Point{xImg, 0});
-                        driver_.text(current_.textOffset() - Point{xText, 0}) << current_.text();
-                        driver_.draw(other_.img(), other_.imageOffset() + Point{320 - xImg, 0});
-                        driver_.text(other_.textOffset() + Point{640 - xText, 0}) << other_.text();
-                        break;
-                    default:
-                        break;
+                int w = driver_.width();
+                int offset = a_.interpolate(0, w);
+                if (dir_ == Btn::Left) {
+                    drawItem(icon_, text_, textWidth_, offset, 1, 2);
+                    drawItem(otherIcon_, otherText_, otherTextWidth_, - (w - offset), 2, 1);
+                } else {
+                    drawItem(icon_, text_, textWidth_, -offset, 2, 1);
+                    drawItem(otherIcon_, otherText_, otherTextWidth_, + (w - offset), 1, 2);
                 }
-                if (! a_.running()) {
-                    // TODO swap other and current 
+                if (!a_.running()) {
                     dir_ = Btn::Home;
-                    //std::swap(current_, other_); //current_.swapWith(other_);
+                    std::swap(text_, otherText_);
+                    std::swap(textWidth_, otherTextWidth_);
+                    std::swap(icon_, otherIcon_);
                 }
             }
         }
 
-        void setNumItems(size_t n) {
-            numItems_ = n;
-            i_ = 0;
-            getItem(i_, current_);
+        void loadItem(size_t index, char const * & text, int textWidth, Bitmap<Color> & icon) {
+            if (empty())
+                return;
+            MenuItem const & i = (*menu_)[index];
+            text = i.text;
+            textWidth = driver_.textWidth(text);
+            icon.loadImage(i.icon, i.iconBytes);
         }
 
+        void drawItem( Bitmap<Color> const & icon, char const * text, int textWidth, int offset = 0, int iconSpeed = 1, int textSpeed = 1) {
+            int h = driver_.height();
+            Point iconStart{(driver_.width() - textWidth) / 2 - 72 + offset * iconSpeed, (h - icon_.height()) / 2};
+            Point textStart{(driver_.width() - textWidth) / 2 + (offset * textSpeed) , (h - driver_.font().height()) / 2};
+            driver_.draw(iconStart, icon);
+            driver_.text(textStart, text);
+        }
+    
 
-    private:
-
-        size_t numItems_ = 0;
-        size_t i_ = 0;
-
+        Menu * menu_ = nullptr;
         Btn dir_ = Btn::Home;
-
-        Item current_;
-        Item other_;
-
         Animation a_{500};
+        size_t i_ = 0;
+        char const * text_ = nullptr;
+        char const * otherText_ = nullptr;
+        int textWidth_ = 0;
+        int otherTextWidth_ = 0;
+        Bitmap<Color> icon_{64, 64, MemArea::None};
+        Bitmap<Color> otherIcon_{64, 64, MemArea::None};
+    };
 
-    }; // rckid::Carousel
-
-    class Menu : public Carousel {
-    public:
-
-        Menu() {
-        }
-
-    protected:
-
-        void getItem(size_t index, Item & item) {
-            static bool x;
-            item.set(BaseApp::appIcon(), x ? "First Application" : "Second Is The Charm");
-            x = !x;
-        }
-
-    }; // rckid::Menu
 
 } // namespace rckid

@@ -4,10 +4,11 @@
 
 namespace rckid {
 
-    void BaseApp::run() {
+    void BaseApp::loop() {
         BaseApp * last = currentApp_;
         if (last != nullptr)
             last->onBlur();
+        currentApp_ = this;
         resetVRAM();
         onFocus();
         // reset stats
@@ -15,7 +16,6 @@ namespace rckid {
         stats::fps_ = 0;
         stats::fpsCounter_ = 0;
         // do our loop 
-        currentApp_ = this;
         while (true) {
             uint32_t frameStart = time_us_32();
             if (frameStart >= stats::nextFpsTick_) {
@@ -45,6 +45,7 @@ namespace rckid {
             stats::drawUs_ = tDraw; 
             stats::frameUs_ = static_cast<unsigned>(time_us_32() - frameStart);
         }
+        currentApp_ = this;
         onBlur();
         resetVRAM();
         currentApp_ = last;

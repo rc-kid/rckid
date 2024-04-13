@@ -18,6 +18,7 @@
 extern uint8_t __vram_start__, __vram_end__;
 
 #define LOG(...) ::rckid::writeToUSBSerial() << __VA_ARGS__ << "\r\n"
+#define TRACE(...) ::rckid::writeToUSBSerial() << __VA_ARGS__ << "\r\n"
 #define DEBUG(...) ::rckid::writeToUSBSerial() << __VA_ARGS__ << "\r\n"
 #define ASSERT(...) if (!(__VA_ARGS__)) { FATAL_ERROR(rckid::ASSERTION_ERROR); }
 #define UNIMPLEMENTED FATAL_ERROR(::rckid::NOT_IMPLEMENTED_ERROR)
@@ -79,6 +80,24 @@ namespace rckid {
 
     constexpr int NOT_IMPLEMENTED_ERROR = 256;
     constexpr int UNREACHABLE_ERROR = 257;
+
+    /** \name Debugging Support
+     */
+    //@{
+
+    /** Returns a writes to the USB virtual COM port.
+     */
+    Writer writeToUSBSerial();
+
+    /** Serial port interface for RCKid allowing for printf statements and somewhat easier debugging. 
+     
+        To use the serial port on Raspberry Pi, start minicom with the following arguments:
+
+        minicom -b 115200 -o -D /dev/ttyAMA0
+     */
+    void enableSerialPort();
+
+    //@}
 
     /** Throws a fatal error. 
      
@@ -218,8 +237,11 @@ namespace rckid {
 
     template<typename T>
     void deallocate(T *  & ptr) {
-        if (!isVRAMPtr(ptr))
+        if (ptr == nullptr)
+            return;
+        if (!isVRAMPtr(ptr)) {
             delete ptr;
+        }
         ptr = nullptr;
     }
 
@@ -245,26 +267,6 @@ namespace rckid {
     }
 
     //@}
-
-
-    /** \name Debugging Support
-     */
-    //@{
-
-    /** Returns a writes to the USB virtual COM port.
-     */
-    Writer writeToUSBSerial();
-
-    /** Serial port interface for RCKid allowing for printf statements and somewhat easier debugging. 
-     
-        To use the serial port on Raspberry Pi, start minicom with the following arguments:
-
-        minicom -b 115200 -o -D /dev/ttyAMA0
-     */
-    void enableSerialPort();
-
-    //@}
-
 
 } // namespace rckid
 

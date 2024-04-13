@@ -27,6 +27,7 @@ namespace rckid {
         }
 
         void disable() {
+            ST7789::leaveContinuousUpdate();
             deallocate();
         }
 
@@ -52,6 +53,7 @@ namespace rckid {
         }
 
         void disable() {
+            ST7789::leaveContinuousUpdate();
             deallocate();
         }
 
@@ -99,6 +101,7 @@ namespace rckid {
         }
 
         void disable() { 
+            ST7789::leaveContinuousUpdate();
             deallocate();
         }
 
@@ -170,6 +173,7 @@ namespace rckid {
         }
 
         void disable() { 
+            ST7789::leaveContinuousUpdate();
             deallocate();
         }
 

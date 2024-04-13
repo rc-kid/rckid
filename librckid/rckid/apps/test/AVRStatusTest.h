@@ -9,7 +9,12 @@
 
 namespace rckid {
 
-    class AVRStatusTest : public App<FrameBuffer<ColorRGB>> {
+    /** AVR Status check 
+
+        Simply displays the AVR status Information. 
+             
+     */
+    class AVRStatusTest : public App<FrameBuffer<Color256/*, DisplayMode::Native_2X_RGB565 */>> {
     public:
 
         AVRStatusTest(): App{} {}
@@ -22,12 +27,10 @@ namespace rckid {
         }
 
         void update() override {
-            if (pressed(Btn::A))
-                setBrightness(254);
-            if (pressed(Btn::B)) {
-               setBrightness(32);
-               FATAL_ERROR(45);
-            }
+            //if (pressed(Btn::A))
+            //    setBrightness(254);
+            if (pressed(Btn::B))
+               exit();
         }
 
         void draw() override {

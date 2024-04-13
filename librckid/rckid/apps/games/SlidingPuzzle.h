@@ -43,6 +43,8 @@ namespace rckid {
         }
 
         void update() override {
+            if (pressed(Btn::B))
+                exit();
             if (pressed(Btn::Start))
                 resetGame(20);
                 // shuffle_ = 20;
@@ -64,7 +66,7 @@ namespace rckid {
                 } else {
                     return;
                 }
-                tmp_.draw(driver_, Point::origin(), tileRect(holeX_, holeY_));
+                tmp_.draw(Point::origin(), driver_, tileRect(holeX_, holeY_));
                 a_.start();
             }
         }
@@ -80,19 +82,19 @@ namespace rckid {
             switch (dir_) {
                 case Btn::Left:
                     driver_.fill(tileRect(holeX_, holeY_));
-                    driver_.draw(tmp_, tilePoint(holeX_, holeY_) - Point{a_.interpolate(0, TILE_WIDTH), 0});
+                    driver_.draw(tilePoint(holeX_, holeY_) - Point{a_.interpolate(0, TILE_WIDTH), 0}, tmp_);
                     break;
                 case Btn::Right:
                     driver_.fill(tileRect(holeX_, holeY_));
-                    driver_.draw(tmp_, tilePoint(holeX_, holeY_) + Point{a_.interpolate(0, TILE_WIDTH), 0});
+                    driver_.draw(tilePoint(holeX_, holeY_) + Point{a_.interpolate(0, TILE_WIDTH), 0}, tmp_);
                     break;
                 case Btn::Up:
                     driver_.fill(tileRect(holeX_, holeY_));
-                    driver_.draw(tmp_, tilePoint(holeX_, holeY_) - Point{0, a_.interpolate(0, TILE_HEIGHT)});
+                    driver_.draw(tilePoint(holeX_, holeY_) - Point{0, a_.interpolate(0, TILE_HEIGHT)}, tmp_);
                     break;
                 case Btn::Down: 
                     driver_.fill(tileRect(holeX_, holeY_));
-                    driver_.draw(tmp_, tilePoint(holeX_, holeY_) + Point{0, a_.interpolate(0, TILE_HEIGHT)});
+                    driver_.draw(tilePoint(holeX_, holeY_) + Point{0, a_.interpolate(0, TILE_HEIGHT)}, tmp_);
                     break;
                 default:
                     break; // nothing to do for other controls
@@ -101,7 +103,7 @@ namespace rckid {
                 dir_ = Btn::Home;
                 if (swapTileMap(oldX_, oldY_, holeX_, holeY_)) {
                     // tada, game is finished
-                    driver_.draw(hole_, tilePoint(holeX_, holeY_));
+                    driver_.draw(tilePoint(holeX_, holeY_), hole_);
                     holeX_ = -1;
                     holeY_ = -1;
                 }
@@ -109,11 +111,12 @@ namespace rckid {
         }
 
         void resetGame(unsigned moves) {
+            TRACE("  game reset");
             driver_.loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
             // set the hole and fill in the hole canvas
             holeX_ = MAX_X;
             holeY_ = MAX_Y;
-            hole_.draw(driver_, Point::origin(), tileRect(holeX_, holeY_));
+            hole_.draw(Point::origin(), driver_, tileRect(holeX_, holeY_));
             driver_.setBg(Color::RGB(128, 128, 128));
             driver_.fill(tileRect(holeX_, holeY_));
             // reset the tilemap
@@ -146,9 +149,9 @@ namespace rckid {
             // swap the tiles
             Rect t1 = tileRect(x, y);
             Rect t2 = tileRect(holeX_, holeY_);
-            tmp_.draw(driver_, Point::origin(), t1);
-            driver_.draw(driver_, tilePoint(x, y), t2);
-            driver_.draw(tmp_, tilePoint(holeX_, holeY_));
+            tmp_.draw( Point::origin(), driver_, t1);
+            driver_.draw(tilePoint(x, y), driver_, t2);
+            driver_.draw(tilePoint(holeX_, holeY_), tmp_);
             // update th7e tilemap
             swapTileMap(x, y, holeX_, holeY_);
         }

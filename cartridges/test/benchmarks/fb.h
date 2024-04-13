@@ -46,7 +46,7 @@ namespace rckid {
                     Bitmap<Color> bmp = Bitmap<Color>{64, 64, MemArea::Heap};//fromPNGonHeap(BaseApp::appIcon());
                     blit_ = BENCHMARK(
                         for (int j = 0; j < 10; ++j)
-                            driver_.draw(bmp, Point{(i + j) % 250, (i + j) % 170});
+                            driver_.draw(Point{(i + j) % 250, (i + j) % 170}, bmp);
                     );
                     mode_ = Mode::Done;
                     break;

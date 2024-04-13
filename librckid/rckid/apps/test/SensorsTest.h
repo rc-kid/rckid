@@ -15,6 +15,8 @@ namespace rckid {
     protected:
 
         void update() override {
+            if (pressed(Btn::B))
+               exit();
         }
 
         void draw() override {

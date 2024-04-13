@@ -163,7 +163,7 @@ namespace rckid {
         ST7789::enterContinuousUpdate();
         fb.render();
         while(true) {
-        }
+        };
     }
 
     // ============================================================================================
@@ -331,6 +331,11 @@ namespace rckid {
 
     void ST7789::leaveContinuousUpdate() {
         if (continuousUpdateActive()) {
+            // temporarily disable the IRQ on the DMA to ignore spurious complete events when aborting
+            dma_channel_set_irq0_enabled(dma_, false);
+            dma_channel_abort(dma_);
+            dma_channel_set_irq0_enabled(dma_, true);
+            updating_ = false;
             pio_sm_set_enabled(pio_, sm_, false);
             end(); // end the RAMWR command
             initializePinsBitBang();

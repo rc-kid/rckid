@@ -90,9 +90,9 @@ namespace rckid {
          */
         //@{
 
-        void draw(Bitmap const & src, Point where) { draw(src, where, Rect::WH(src.width(), src.height())); }
+        void draw(Point where, Bitmap const & src) { draw(where, src, Rect::WH(src.width(), src.height())); }
 
-        void draw(Bitmap const & src, Point where, Rect srcRect) {
+        void draw(Point where, Bitmap const & src, Rect srcRect) {
             // default, very slow implementation 
             int dy = where.y();
             for (int y = srcRect.top(), ye = srcRect.bottom(); y != ye; ++y, ++dy) {
@@ -108,9 +108,14 @@ namespace rckid {
             Bitmaps can load their contents from PNG and JPG images as part of the SDK. 
          */
         //@{
+
+        void loadImage(uint8_t const * buffer, size_t numBytes) {
+            loadImage(PNG::fromBuffer(buffer, numBytes));
+        }
+        
         void loadImage(PNG && png, Point where = Point::origin()) {
-            ASSERT(png.width() == width());
-            ASSERT(png.height() == height());
+            ASSERT(png.width() <= width());
+            ASSERT(png.height() <= height());
             ASSERT(buffer_ != nullptr);
             png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
                 for (int i = 0; i < lineWidth; ++i)
