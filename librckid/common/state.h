@@ -235,10 +235,10 @@ namespace rckid {
     static_assert(sizeof(State) == 8);
 
     struct DeviceState {
-        State state;
-        TinyDate time;
-        uint32_t uptime;
-        uint8_t error = AVR_NO_ERROR;
+        State state; // 8
+        TinyDate time; // 4
+        uint32_t uptime; // 4
+        uint8_t error = AVR_NO_ERROR; // 1
     } __attribute__((packed));
 
 

@@ -110,21 +110,25 @@ namespace rckid {
     void Device::tick() {
         ++ticks_;
         lastState_ = state_.state;
-        // query the AVR for the status bytes, first set the address
-        i2c0->hw->enable = 0;
-        i2c0->hw->tar = AVR_I2C_ADDRESS;
-        i2c0->hw->enable = 1;
-        // add commands for getting the blocks
-        i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-        i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-        i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-        i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-        i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-        i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_STOP_BITS; // 1 for read, stop
-        while (i2c0->hw->rxflr != 6) 
-            yield();
+        do {
+            // query the AVR for the status bytes, first set the address
+            i2c0->hw->enable = 0;
+            i2c0->hw->tar = AVR_I2C_ADDRESS;
+            i2c0->hw->enable = 1;
+            // add commands for getting the blocks
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_STOP_BITS; // 1 for read, stop
+            while (i2c0->hw->rxflr != 8 && (i2c0->hw->clr_tx_abrt == 0))
+                yield();
+        } while (i2c0->hw->rxflr != 8);        
         uint8_t * raw = reinterpret_cast<uint8_t*>(&state_);
-        for (int i = 0; i < 6; ++i)
+        for (int i = 0; i < 8; ++i)
             *(raw++) = i2c0->hw->data_cmd;
         // i2c_read_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t *)& state_, sizeof(State), false);
 
