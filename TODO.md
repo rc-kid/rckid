@@ -10,6 +10,8 @@
 
 ## TODO
 
+- 256 color mode does not work again, also in mock mode (needs separate-ish thread, or rewrite)
+
 - carousel won't be happy with empty items (icons, etc.)
 - no clearing of items 
 

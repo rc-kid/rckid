@@ -6,6 +6,7 @@
 #include "stats.h"
 #include "rckid.h"
 #include "graphics/png.h"
+#include "graphics/primitives.h"
 #include "fonts/Iosevka_Mono6pt7b.h"
 
 namespace rckid {
@@ -52,6 +53,7 @@ namespace rckid {
         App(int w = DISPLAY_DRIVER::DEFAULT_WIDTH, int h = DISPLAY_DRIVER::DEFAULT_HEIGHT):
             driver_{w, h} {
         }
+        App(Rect const & rect): driver_{rect} {}
 
         std::optional<MODAL_RESULT> run() {
             result_ = std::nullopt;

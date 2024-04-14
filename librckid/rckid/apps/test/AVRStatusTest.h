@@ -14,7 +14,7 @@ namespace rckid {
         Simply displays the AVR status Information. 
              
      */
-    class AVRStatusTest : public App<FrameBuffer<Color256/*, DisplayMode::Native_2X_RGB565 */>> {
+    class AVRStatusTest : public App<FrameBuffer<ColorRGB/*, DisplayMode::Native_2X_RGB565 */>> {
     public:
 
         AVRStatusTest(): App{} {}

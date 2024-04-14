@@ -269,6 +269,7 @@ namespace rckid {
 
         static inline UpdatePixelsCallback cb_;
         static inline volatile bool updating_ = false;
+        static inline volatile bool irqReady_ = false;
 
         static inline DisplayMode displayMode_ = DisplayMode::Native_RGB565;
 
@@ -320,6 +321,7 @@ namespace rckid {
 
         // the global IRQ handler
         friend void irqDMADone_();
+        friend void yield();
 
     }; // rckid::ST7789
 

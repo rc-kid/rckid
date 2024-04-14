@@ -30,6 +30,7 @@ namespace rckid {
         friend class ST7789;
         friend class BaseApp;
         friend void irqDMADone_();
+        friend void yield();
 
         static inline unsigned fps_;
         static inline unsigned fpsCounter_;

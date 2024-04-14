@@ -28,6 +28,7 @@
 using namespace rckid;
 
 void rckid_main() {
+    //cpu::overclock();
     Menu m{{
         MenuItem::create("AVR Status", assets::Gameboy), 
         MenuItem::create("Sensors", assets::Gameboy), 

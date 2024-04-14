@@ -452,6 +452,7 @@ namespace rckid {
      */
     void __not_in_flash_func(irqDMADone_)() {
         // display
+        gpio::outputHigh(GPIO19);
         if (dma_channel_get_irq0_status(ST7789::dma_)) {
             dma_channel_acknowledge_irq0(ST7789::dma_); // clear the flag
             if (ST7789::cb_()) {
@@ -474,7 +475,7 @@ namespace rckid {
             // and set the callback appropriately
             audio::status_ |= audio::BUFFER_INDEX | audio::CALLBACK;
         }
-
+        gpio::outputLow(GPIO19);
     }
 
 } // namespace rckid
