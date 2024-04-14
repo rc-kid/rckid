@@ -110,7 +110,7 @@ namespace rckid {
      */
     void yield();
 
-    /** \name Device management 
+    /** \name Power Management
      */
     //@{
 
@@ -134,13 +134,44 @@ namespace rckid {
      */
     unsigned vBatt(); 
 
+    //@}
+
+    /** \name Brightness, LEDs, notifications and rumbler. 
+    */
+    //@{
+
     /** Sets the LCD screen brightness. 
      
         0 for backlight off, 255 for maximum brightness. 
      */
     void setBrightness(uint8_t brightness);
 
+    /** Disables all LEDs. 
+     */
+    void disableLEDs(); 
+
+    /** Sets the LED effect for given button. Note that home button & volume keys do not have their own leds. 
+     */
+    void setButtonEffect(Btn btn, RGBEffect effect);
+
+    /** Sets LED effects for all available buttons. 
+     */
+    void setButtonsEffects(RGBEffect a, RGBEffect b, RGBEffect dpad, RGBEffect sel, RGBEffect start);
+
+    /** A rainbow RGB keyboard effect preset. 
+     */
+    inline void setButtonsRainbow(uint8_t brightness) {
+        setButtonsEffects(
+            RGBEffect::Rainbow(0, 5, 1, brightness),
+            RGBEffect::Rainbow(10, 5, 1, brightness),
+            RGBEffect::Rainbow(20, 5, 1, brightness),
+            RGBEffect::Rainbow(30, 5, 1, brightness),
+            RGBEffect::Rainbow(40, 5, 1, brightness)
+        );
+    }
+
     //@}
+
 
     /** \name Controls & Sensors
         

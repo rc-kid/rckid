@@ -45,17 +45,12 @@
 #define RP_PIN_SPI0_TX_GPIO_19 19
 #define RP_PIN_SPI0_RX_GPIO_20 20
 #define RP_PIN_SPI0_CSN_GPIO_21 21
+// pwm3a, pwm3b audio output -- managed by SDK
+#define RP_PIN_PWM_LEFT 22
+#define RP_PIN_PWM_RIGHT 23
 // PDM mic (via pio) -- managed by SDK
-#define RP_PIN_PDM_DATA 22
-#define RP_PIN_PDM_CLK 23
-// pwm4a, pwm4b audio output -- managed by SDK
-#if (! defined RCKID_AUDIO_DEBUG)
-    #define RP_PIN_PWM_RIGHT 24
-    #define RP_PIN_PWM_LEFT 25
-#else // RCKID_AUDIO_DEBUG
-    #define RP_PIN_PWM_RIGHT 14
-    #define RP_PIN_PWM_LEFT 15
-#endif
+#define RP_PIN_PDM_DATA 25
+#define RP_PIN_PDM_CLK 24
 // spi1 connected to the SD card -- managed by SDK
 #define RP_PIN_SD_SCK 26
 #define RP_PIN_SD_TX 27

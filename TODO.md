@@ -70,16 +70,11 @@
 ## RP
 
 - ensure VRAM is own bank
-- sometimes it seems display is sent garbage in avr status test, never seen with princesses
-
-- document ST7789
-
 - disable file & line information for fatal errors
-- print fatal error to USB serial
-- SWAP MIC & PWM and mic CLK and DATA !!!!!
 
 ## AVR
 
+- LED speed is too great
 - looks like we get WDT reset every now & then with reset & bootloader delays, check watchdog timing
 - I2C on RP2040 hangs sometimes, could be bus errors? 
 - add some better non-linear interpolation for the breathe effect

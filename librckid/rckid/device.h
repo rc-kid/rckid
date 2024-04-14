@@ -96,12 +96,51 @@ namespace rckid {
         // basic functions
         friend void yield();
         
-        // device management
+        // power management
         friend void powerOff();
         friend bool charging() { return state_.state.charging(); }
         friend bool dcPower() { return state_.state.dcPower(); }
         friend unsigned vcc() { return state_.state.vcc(); }
-        friend void setBrightness(uint8_t brightness) { Device::sendCommand(cmd::SetBrightness(brightness)); }
+        // brightness, notifications & LEDs
+        friend void setBrightness(uint8_t brightness) { 
+            Device::sendCommand(cmd::SetBrightness(brightness)); 
+        }
+        friend void disableLEDs() { 
+            Device::sendCommand(cmd::RGBOff{}); 
+        }
+        friend void setButtonEffect(Btn btn, RGBEffect effect) {
+            uint8_t index;
+            switch (btn) {
+                case Btn::B:
+                    index = 0;
+                    break;
+                case Btn::A:
+                    index = 1;
+                    break;
+                case Btn::Left:
+                case Btn::Right:
+                case Btn::Up:
+                case Btn::Down:
+                    index = 3;
+                    break;
+                case Btn::Select:
+                    index = 4;
+                    break;
+                case Btn::Start:
+                    index = 5;
+                    break;
+                default:
+                    // TODO can't really do anything here
+                    return;
+            }
+            Device::sendCommand(cmd::SetRGBEffect{index, effect});
+        }
+
+        friend void setButtonsEffects(RGBEffect a, RGBEffect b, RGBEffect dpad, RGBEffect sel, RGBEffect start) {
+            Device::sendCommand(cmd::SetRGBEffects{a, b, dpad, sel, start});
+        }
+
+
 
         // controls & sensors
         friend bool down(Btn b) { return btnDown(b, state_.state); }

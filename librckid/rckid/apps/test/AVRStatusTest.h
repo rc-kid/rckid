@@ -24,6 +24,7 @@ namespace rckid {
         void onFocus() override {
             App::onFocus();
             //setBrightness(32);
+            setButtonsRainbow(32);
         }
 
         void update() override {

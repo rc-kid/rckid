@@ -54,10 +54,8 @@ namespace rckid {
         static void configureDMA(int dma, int other, uint16_t const * bufferStart, size_t bufferSamples);
 
 
-#if (RP_PIN_PWM_RIGHT == 24 && RP_PIN_PWM_LEFT == 25)
-        static constexpr unsigned PWM_SLICE = 4; 
-#elif (RP_PIN_PWM_RIGHT == 14 && RP_PIN_PWM_LEFT == 15) // RCKID_AUDIO_DEBUG
-        static constexpr unsigned PWM_SLICE = 7; 
+#if (RP_PIN_PWM_RIGHT == 23 && RP_PIN_PWM_LEFT == 22)
+        static constexpr unsigned PWM_SLICE = 3; 
 #else
         #error "Unsupported audio PWM pins"
 #endif

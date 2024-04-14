@@ -159,6 +159,9 @@ namespace rckid {
             << "FATAL ERROR " << code << "\n\n"
             << "File: " << fatalErrorFile_ << "\n"
             << "Line: " << fatalErrorLine_; 
+        LOG("FATAL ERROR " << code << "\n\n"
+            << "File: " << fatalErrorFile_ << "\n"
+            << "Line: " << fatalErrorLine_); 
         ST7789::reset();
         ST7789::enterContinuousUpdate();
         fb.render();
