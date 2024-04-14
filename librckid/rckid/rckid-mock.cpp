@@ -37,6 +37,7 @@ namespace rckid {
 
     void yield() {
         // TODO do we do anything here actually? 
+        ST7789::processEvents();
     }
 
     Writer writeToUSBSerial() {
@@ -154,7 +155,8 @@ namespace rckid {
     }
 
     void ST7789::leaveContinuousUpdate() {
-
+        updating_ = false;
+        irqReady_ = false;
     }
 
     void ST7789::initializePinsBitBang() {}
@@ -184,8 +186,7 @@ namespace rckid {
             }
         }
         EndDrawing();
-        dmaDoneDisplay_ = true;
-        irqDMADone_();
+        irqReady_ = true;
     }
 
     // ============================================================================================
@@ -222,21 +223,6 @@ namespace rckid {
 
     void audio::setSampleRate(uint16_t rate) {
 
-    }
-
-    // ============================================================================================
-    // DMA handler
-    // ============================================================================================
-
-    void irqDMADone_() {
-        if (dmaDoneDisplay_) {
-            dmaDoneDisplay_ = false;
-            if (ST7789::cb_()) {
-                ST7789::updating_ = false;
-                stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::updateStart_);
-            }
-        }
-        // TODO audio
     }
 
 } // namespace rckid

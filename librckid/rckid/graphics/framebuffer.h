@@ -112,18 +112,16 @@ namespace rckid {
         /** Renders the display using a 2 column buffer column by column so that while one columh is being rendered, the other column is being processed. 
          */
         void render() {
-        //gpio::outputHigh(GPIO21);
-
             toRender_ = buffer_;
-            // translate one column
+            // translate first column
             toRender_ = translatePixels(buffer_, renderBuffer1_, height());
             column_ = 0;
+            gpio::outputHigh(GPIO21);
             ST7789::waitVSync();
-        //gpio::outputLow(GPIO21);
+            gpio::outputLow(GPIO21);
             ST7789::writePixels(reinterpret_cast<uint16_t const*>(renderBuffer1_), height(), [this]() {
                 if (++column_ == width())
                     return true;
-                gpio::outputHigh(GPIO20);
                 // write the already processed pixels
                 ST7789::writePixels(
                     reinterpret_cast<uint16_t const *>((column_ % 2 == 0) ? renderBuffer1_ : renderBuffer2_),
@@ -131,7 +129,6 @@ namespace rckid {
                 );
                 if (column_ + 1 < width())
                     toRender_ = translatePixels(toRender_, (column_ % 2 == 1) ? renderBuffer1_ : renderBuffer2_, height());
-                gpio::outputLow(GPIO20);
                 return false;
             });
             // process the next colum
@@ -140,8 +137,8 @@ namespace rckid {
 
     private:
 
+        // this lasts for 40us
         static uint32_t const * translatePixels(uint32_t const * src, uint32_t * dest, size_t numPixels) {
-            gpio::outputHigh(GPIO21);
             uint32_t x;
             uint32_t y[2];
             for (size_t i = 0; i < numPixels; i += 4) { // 4 pixels at a time
@@ -153,7 +150,6 @@ namespace rckid {
                 *dest++ = y[1];
                 *dest++ = y[0];
             }
-        gpio::outputLow(GPIO21);
             return src;
         }
 

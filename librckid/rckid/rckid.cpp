@@ -56,6 +56,7 @@ namespace rckid {
     void yield() {
         tud_task();
         audio::processEvents();
+        ST7789::processEvents();
     }
 
     Writer writeToUSBSerial() {
@@ -132,6 +133,7 @@ namespace rckid {
             *(raw++) = i2c0->hw->data_cmd;
         // i2c_read_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t *)& state_, sizeof(State), false);
 
+        /*
         platform::BMI160::State aState;
         accelerometer_.measure(aState);
         accelX_ = aState.accelX;
@@ -150,6 +152,7 @@ namespace rckid {
                 alsSensor_.startALS();
             }
         }
+        */
     }
 
     void Device::BSOD(int code) {
@@ -343,6 +346,7 @@ namespace rckid {
             dma_channel_abort(dma_);
             dma_channel_set_irq0_enabled(dma_, true);
             updating_ = false;
+            irqReady_ = false;
             pio_sm_set_enabled(pio_, sm_, false);
             end(); // end the RAMWR command
             initializePinsBitBang();
@@ -458,31 +462,25 @@ namespace rckid {
         Sharing the handler makes the dispatch a bit faster. 
      */
     void __not_in_flash_func(irqDMADone_)() {
+        unsigned irqs = dma_hw->ints0;
+        dma_hw->ints0 = irqs;
         // display
-        gpio::outputHigh(GPIO19);
-        if (dma_channel_get_irq0_status(ST7789::dma_)) {
-            dma_channel_acknowledge_irq0(ST7789::dma_); // clear the flag
-            if (ST7789::cb_()) {
-                ST7789::updating_ = false;
-                stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::updateStart_);
-            }
+        if (irqs & ( 1u << ST7789::dma_)) {
+            ST7789::irqReady_ = true;
         }
         // audio
-        if (dma_channel_get_irq0_status(audio::dma0_)) {
-            dma_channel_acknowledge_irq0(audio::dma0_); // clear the flag
+        if (irqs & (1u << audio::dma0_)) {
             // update dma0 address 
             dma_channel_set_read_addr(audio::dma0_, audio::buffer_, false);
             // we finished sending first part of buffer and are now sending the second part
             audio::status_ &= ~audio::BUFFER_INDEX;
             audio::status_ |= audio::CALLBACK;
-        } else if (dma_channel_get_irq0_status(audio::dma1_)) {
-            dma_channel_acknowledge_irq0(audio::dma1_); // clear the flag
+        } else if (irqs & (1u << audio::dma1_)) {
             // update dma1 address 
             dma_channel_set_read_addr(audio::dma1_, audio::buffer_ + audio::bufferSize_ / 2, false);
             // and set the callback appropriately
             audio::status_ |= audio::BUFFER_INDEX | audio::CALLBACK;
         }
-        gpio::outputLow(GPIO19);
     }
 
 } // namespace rckid

@@ -9,12 +9,12 @@
 
 namespace rckid {
 
-    class Carousel : public App<FrameBuffer<ColorRGB>, size_t> {
+    class Carousel : public App<FrameBuffer<Color256>, size_t> {
     public:
 
         using EventOnSelect = std::function<void(size_t)>;
 
-        Carousel(Menu * menu): App{Rect::XYWH(0, 160, 320, 80)}, menu_{menu} {}
+        Carousel(Menu * menu): /*App{Rect::XYWH(0, 160, 320, 80)} , */ menu_{menu} {}
 
         bool empty() const { return menu_ == nullptr ||  menu_->size() == 0; }
 
