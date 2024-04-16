@@ -76,13 +76,20 @@ namespace rckid {
          */
         //@{
         Color pixelAt(int x, int y) const {
-            return reinterpret_cast<Color const *>(buffer_)[map(x, y)];
+            Color const * buf = reinterpret_cast<Color const *>(buffer_);
+            //LOG("rd " << x << ", " << y << " [" << map(x, y) << "]: " << (int)*(reinterpret_cast<uint8_t const *>(buf + map(x, y))));
+            return buf[map(x, y)];
+            //return reinterpret_cast<Color const *>(buffer_)[map(x, y)];
         }
 
         template<typename SRC_COLOR>
         void setPixelAt(int x, int y, SRC_COLOR c) {
-            if (x >= 0 && x < width() && y >= 0 && y < height())
-                reinterpret_cast<Color*>(buffer_)[map(x, y)] = Color{c};
+            if (x >= 0 && x < width() && y >= 0 && y < height()) {
+                Color * buf = reinterpret_cast<Color*>(buffer_);
+                buf[map(x, y)] = c;
+                //LOG("wr " << x << "," << y << "[" << map(x, y) << "]: " << (int)*reinterpret_cast<uint8_t*>(buf + map(x, y)));
+                pixelAt(x, y);
+            }
         }
         //@}
 
@@ -139,7 +146,12 @@ namespace rckid {
 
         constexpr __force_inline size_t map(int x, int y) const { return map(x, y, w_, h_); }
 
-        static __force_inline size_t map(int x, int y, int w, int h) { return (w - x - 1) * h + y; }
+        static __force_inline size_t map(int x, int y, int w, int h) { 
+            size_t result = (w - x - 1) * h + y;
+            if (result >= 25600)
+                LOG("oopsies");
+            return (w - x - 1) * h + y; 
+            }
 
         int w_ = 0;
         int h_ = 0;

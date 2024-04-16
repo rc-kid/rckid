@@ -10,7 +10,7 @@
 
 ## TODO
 
-
+- 256 color does not show icons when not 240 columns - not sure why
 - sensors are not read properly (need non-blocking reads so that we can yield)
 - carousel won't be happy with empty items (icons, etc.)
 - no clearing of items 

@@ -94,12 +94,13 @@ namespace rckid {
         static constexpr int DEFAULT_HEIGHT = 240;
 
         FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): Canvas{width, height, MemArea::None} {}
+        FrameBuffer(Rect const & rect): Canvas{rect.width(), rect.height(), MemArea::None}, top_{rect.top()}, left_{rect.left()} {}
         FrameBuffer(Bitmap<Color256> && bitmap): Canvas{std::move(bitmap)} {}
 
         void enable() {
             allocate(MemArea::VRAM);
             ST7789::configure(DisplayMode::Native_RGB565);
-            ST7789::enterContinuousUpdate(width(), height());
+            ST7789::enterContinuousUpdate(Rect::XYWH(left_, top_, width(), height()));
             renderBuffer1_ = reinterpret_cast<uint32_t*>(allocateVRAM(height() * 2)); // 
             renderBuffer2_ = reinterpret_cast<uint32_t*>(allocateVRAM(height() * 2)); // 
         }
@@ -116,9 +117,7 @@ namespace rckid {
             // translate first column
             toRender_ = translatePixels(buffer_, renderBuffer1_, height());
             column_ = 0;
-            gpio::outputHigh(GPIO21);
             ST7789::waitVSync();
-            gpio::outputLow(GPIO21);
             ST7789::writePixels(reinterpret_cast<uint16_t const*>(renderBuffer1_), height(), [this]() {
                 if (++column_ == width())
                     return true;
@@ -153,10 +152,14 @@ namespace rckid {
             return src;
         }
 
+        int top_ = 0;
+        int left_ = 0;
         uint32_t * renderBuffer1_ = nullptr;
         uint32_t * renderBuffer2_ = nullptr;
         uint32_t const * toRender_ = nullptr;
         int column_ = 0;
+
+
 
     }; // FrameBuffer<Color256, DisplayMode::Native_RGB565> 
 

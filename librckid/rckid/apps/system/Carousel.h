@@ -14,7 +14,7 @@ namespace rckid {
 
         using EventOnSelect = std::function<void(size_t)>;
 
-        Carousel(Menu * menu): /*App{Rect::XYWH(0, 160, 320, 80)} , */ menu_{menu} {}
+        Carousel(Menu * menu): App{Rect::XYWH(0, 160, 320, 80)},  menu_{menu} {}
 
         bool empty() const { return menu_ == nullptr ||  menu_->size() == 0; }
 
