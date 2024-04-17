@@ -77,9 +77,7 @@ namespace rckid {
         //@{
         Color pixelAt(int x, int y) const {
             Color const * buf = reinterpret_cast<Color const *>(buffer_);
-            //LOG("rd " << x << ", " << y << " [" << map(x, y) << "]: " << (int)*(reinterpret_cast<uint8_t const *>(buf + map(x, y))));
             return buf[map(x, y)];
-            //return reinterpret_cast<Color const *>(buffer_)[map(x, y)];
         }
 
         template<typename SRC_COLOR>
@@ -87,8 +85,6 @@ namespace rckid {
             if (x >= 0 && x < width() && y >= 0 && y < height()) {
                 Color * buf = reinterpret_cast<Color*>(buffer_);
                 buf[map(x, y)] = c;
-                //LOG("wr " << x << "," << y << "[" << map(x, y) << "]: " << (int)*reinterpret_cast<uint8_t*>(buf + map(x, y)));
-                pixelAt(x, y);
             }
         }
         //@}

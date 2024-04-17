@@ -27,6 +27,7 @@ if (ARCH STREQUAL "RP2040")
 else()
     message("Building for local hw (mock)")
     project(rckid2)
+    find_package(Threads REQUIRED) 
 endif()
 
 set(CMAKE_C_STANDARD 11)
@@ -83,6 +84,7 @@ elseif (ARCH STREQUAL "MOCK")
         libhelix-mp3
     )
     target_link_libraries(${target_name} ${CMAKE_SOURCE_DIR}/libs/raylib/src/libraylib.a)
+    target_link_libraries(${target_name} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 endif()
 endfunction()
 

@@ -139,7 +139,7 @@ namespace rckid {
 
     template<>
     inline void Canvas<Color256>::fill() {
-        memset(buffer_, bg_.index(), 320 * 240);
+        memset(buffer_, bg_.index(), w_ * h_);
     }
 
 
