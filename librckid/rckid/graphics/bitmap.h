@@ -147,11 +147,8 @@ namespace rckid {
         constexpr __force_inline size_t map(int x, int y) const { return map(x, y, w_, h_); }
 
         static __force_inline size_t map(int x, int y, int w, int h) { 
-            size_t result = (w - x - 1) * h + y;
-            if (result >= 25600)
-                LOG("oopsies");
             return (w - x - 1) * h + y; 
-            }
+        }
 
         int w_ = 0;
         int h_ = 0;

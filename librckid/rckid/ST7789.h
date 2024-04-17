@@ -170,15 +170,7 @@ namespace rckid {
 
     private:
 
-        static void processEvents() {
-            if (irqReady_) {
-                irqReady_ = false;
-                if (cb_()) {
-                    updating_ = false;
-                    stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::updateStart_);
-                }
-            }
-        }
+        static void processEvents();
 
         /** Sets the columns range for RAM updates. Columns are referenced in the native mode and can be from 0 to 239 inclusive. 
         */

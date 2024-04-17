@@ -361,6 +361,17 @@ namespace rckid {
         gpio_put(RP_PIN_DISP_WRX, false);
     }
 
+    void ST7789::processEvents() {
+        if (irqReady_) {
+            irqReady_ = false;
+            if (cb_()) {
+                updating_ = false;
+                stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::updateStart_);
+            }
+        }
+    }
+
+
     // ============================================================================================
     // Audio Driver
     // ============================================================================================

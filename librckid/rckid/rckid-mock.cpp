@@ -20,13 +20,12 @@ namespace rckid {
 
     void irqDMADone_();
 
-    bool dmaDoneDisplay_ = false;
-
     void start() {
         // prepare the VRAM 
 
         // TODO initialize the mock display & friends
         InitWindow(640, 480, "RCKid");
+        SetTargetFPS(60);
         resetVRAM();
 
         int errorCode = setjmp(rckid::Device::fatalError_);
@@ -110,6 +109,7 @@ namespace rckid {
         ST7789::enterContinuousUpdate();
         fb.render();
         while(true) {
+            yield();
         }
         exit(EXIT_FAILURE);
     }
@@ -126,8 +126,8 @@ namespace rckid {
         int y_ = 0;
         int xEnd_ = 320;
         int yEnd_ = 240;
+        bool drawing_ = false;
     }
-
 
     void ST7789::initialize() {
 
@@ -152,6 +152,7 @@ namespace rckid {
         xEnd_ = rect.right();
         yEnd_ = rect.bottom();
         x_ = xEnd_ - 1;
+        y_ = 0;
     }
 
     void ST7789::leaveContinuousUpdate() {
@@ -162,7 +163,10 @@ namespace rckid {
     void ST7789::initializePinsBitBang() {}
 
     void ST7789::sendMockPixels(uint16_t const * pixels, size_t numPixels) {
-        BeginDrawing();
+        if (!drawing_) {
+            BeginDrawing();
+            drawing_ = true;
+        }
         while (numPixels-- != 0) {
             ColorRGB rgb = ColorRGB::Raw565(*pixels++);
             switch (displayMode_) {
@@ -185,9 +189,21 @@ namespace rckid {
                     UNREACHABLE;
             }
         }
-        EndDrawing();
         irqReady_ = true;
     }
+
+    void ST7789::processEvents() {
+        if (irqReady_) {
+            irqReady_ = false;
+            if (cb_()) {
+                updating_ = false;
+                drawing_ = false;
+                EndDrawing();
+                stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::updateStart_);
+            }
+        }
+    }
+
 
     // ============================================================================================
     // Audio Driver
