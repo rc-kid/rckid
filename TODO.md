@@ -10,7 +10,10 @@
 
 ## TODO
 
-- 256 color does not show icons when not 240 columns - not sure why
+- headphones work, speaker seems not to (always off) - seems bad GND connectiom for PAM8302
+- check rumbler
+- check audio quality wrt previous version 
+
 - sensors are not read properly (need non-blocking reads so that we can yield)
 - carousel won't be happy with empty items (icons, etc.)
 - no clearing of items 
@@ -55,6 +58,7 @@
 
 ## PCB
 
+- make sure PAM8302 GND connection is strong 
 - add extra cartridge risers to the PCB because the cheap castellation process does not always work
 - enlarge holes so that they are more solderable
 - the cartridge riser mountholes should not connect to gnd for easier solderability

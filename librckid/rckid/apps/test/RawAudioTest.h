@@ -35,16 +35,20 @@ namespace rckid {
         }
 
         void update() override {
-
+            if (pressed(Btn::A))
+                audio::setAudioEnabled(false);
+            if (pressed(Btn::B))
+                audio::setAudioEnabled(true);
         }
 
         void draw() override {
             driver_.fill();
-            driver_.text(5, 10) << offset_
-                          << "\n\n"
+            driver_.textMultiline(5, 10) << offset_
+                          << "    \n"
                           << " FPS: " << stats::fps() << " S:" << stats::systemUs() << " U:" << (stats::updateUs() / 1000) << " D:" << (stats::drawUs() / 1000)
-                          << "    \n\n ERR:"
-                          << errors_;
+                          << "    \n ERR:"
+                          << errors_ << "    \n"
+                          << " EN:" << (audio::audioEnabled() ? "Yes" : "No ") << " HP: " << (audio::headphones() ? "Yes" : "No ");
         }
 
     private:
@@ -57,8 +61,8 @@ namespace rckid {
                 ++errors_;
             for (size_t i = 0; i < size; i += 2) {
                 unsigned x = raw_[offset_];
-                //x = (x + 8) >> 4;
-                x = ((x + 128) >> 8) << 4;
+                x = (x + 8) >> 4;
+                //x = ((x + 128) >> 8) << 4;
                 buffer[i] = x;
                 buffer[i + 1] = x;
                 if (++offset_ >= sizeof(raw_)/2)

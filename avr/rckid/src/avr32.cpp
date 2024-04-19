@@ -202,7 +202,6 @@ public:
 #endif
         while (true) {
             //BEGIN_ACTIVE_MODE;
-            //gpio::outputHigh(AVR_PIN_DISP_RDX);
             cpu::wdtReset();
             // if there is I2C message, process
             if (i2cCommandReady_)
@@ -217,6 +216,7 @@ public:
                 rgbTick();
             if (rumblerTick_)
                 rumblerTick();
+
             // make sure interrupts are enabled or we won't wake up, the appropriate sleep mode has already been set by the various peripheral interactions so we can happily go to sleep here
             sei();
             sleep_enable();
@@ -816,30 +816,32 @@ public:
         static_assert(AVR_PIN_PWM_BACKLIGHT == A5); // TCB0 WO
         gpio::outputFloat(AVR_PIN_PWM_BACKLIGHT);
         TCB0.CTRLA = 0;
-        TCB0.CTRLB = TCB_CNTMODE_PWM8_gc | TCB_CCMPEN_bm;
+        TCB0.CTRLB = 0; 
         TCB0.CCMPL = 255;
         TCB0.CCMPH = 0; 
         static_assert(AVR_PIN_PWM_RUMBLER == A3); //TCB1 WO
         gpio::outputFloat(AVR_PIN_PWM_RUMBLER);
         TCB1.CTRLA = 0;
-        TCB1.CTRLB = TCB_CNTMODE_PWM8_gc | TCB_CCMPEN_bm;
+        TCB1.CTRLB = 0; 
         TCB1.CCMPL = 255;
         TCB1.CCMPH = 0; 
-
      }
 
     static void setBacklightPWM(uint8_t value) {
         if (value == 0) {
             TCB0.CTRLA = 0;
+            TCB0.CTRLB = 0;
             gpio::outputFloat(AVR_PIN_PWM_BACKLIGHT);
             allowSleepPowerDown(STANDBY_REQUIRED_BRIGHTNESS);
         } else if (value == 255) {
             TCB0.CTRLA = 0;
+            TCB0.CTRLB = 0;
             gpio::outputHigh(AVR_PIN_PWM_BACKLIGHT);
             allowSleepPowerDown(STANDBY_REQUIRED_BRIGHTNESS);
         } else {
             gpio::outputLow(AVR_PIN_PWM_BACKLIGHT);
             TCB0.CCMPH = value;
+            TCB0.CTRLB = TCB_CNTMODE_PWM8_gc | TCB_CCMPEN_bm;
             TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm | TCB_RUNSTDBY_bm;
             requireSleepStandby(STANDBY_REQUIRED_BRIGHTNESS);
         }
@@ -848,15 +850,18 @@ public:
     static void setRumblerPWM(uint8_t value) {
         if (value == 0) {
             TCB1.CTRLA = 0;
+            TCB1.CTRLB = 0;
             gpio::outputFloat(AVR_PIN_PWM_RUMBLER);
             allowSleepPowerDown(STANDBY_REQUIRED_RUMBLER);
         } else if (value == 255) {
             TCB1.CTRLA = 0;
+            TCB1.CTRLB = 0;
             gpio::outputHigh(AVR_PIN_PWM_RUMBLER);
             allowSleepPowerDown(STANDBY_REQUIRED_RUMBLER);
         } else {
             gpio::outputLow(AVR_PIN_PWM_RUMBLER);
             TCB1.CCMPH = 255 - value;
+            TCB1.CTRLB = TCB_CNTMODE_PWM8_gc | TCB_CCMPEN_bm;
             TCB1.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm | TCB_RUNSTDBY_bm;
             requireSleepStandby(STANDBY_REQUIRED_RUMBLER);
         }
