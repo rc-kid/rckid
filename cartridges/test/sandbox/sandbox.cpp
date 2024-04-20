@@ -18,9 +18,7 @@
 #include "rckid/apps/test/AVRStatusTest.h"
 #include "rckid/apps/test/SensorsTest.h"
 #include "rckid/apps/games/SlidingPuzzle.h"
-#include "rckid/apps/test/RawAudioTest.h"
 #include "rckid/apps/system/USBMassStorage.h"
-#include "rckid/apps/test/AudioTestTone.h"
 
 //#include "tusb.h"
 //#include "tusb_msc_storage.h"
