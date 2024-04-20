@@ -12,9 +12,8 @@
 
 - headphones work, speaker seems not to (always off) - seems bad GND connectiom for PAM8302
 - check rumbler
-- check audio quality wrt previous version 
+- check audio quality wrt previous version (built in delete)
 
-- sensors are not read properly (need non-blocking reads so that we can yield)
 - carousel won't be happy with empty items (icons, etc.)
 - no clearing of items 
 
@@ -25,8 +24,6 @@
 
 - steps counter - might need battery to verify
 - accelerometer reported temperature
-
-- check that we can launch apps from the carousel
 
 - add menu font
 - implement png's transparent color in png load & drawing

@@ -95,6 +95,22 @@ namespace rckid {
         static constexpr Color256 Black() { return Color256{0}; }
         static constexpr Color256 Blue() { return Color256{4}; }
 
+        /** TODO can this actually use proper types? would be great
+         */
+        static uint32_t const * translatePixelBuffer(uint32_t const * src, uint32_t * dest, size_t numPixels) {
+            uint32_t x;
+            uint32_t y[2];
+            for (size_t i = 0; i < numPixels; i += 4) { // 4 pixels at a time
+                x = *src++;
+                y[0] = Color256::palette[x >> 24].rawValue16() << 16;
+                y[0] |= Color256::palette[(x >> 16) & 0xff].rawValue16();
+                y[1] = Color256::palette[(x >> 8) & 0xff].rawValue16() << 16;
+                y[1] |= Color256::palette[x & 0xff].rawValue16();
+                *dest++ = y[1];
+                *dest++ = y[0];
+            }
+            return src;
+        }
 
     private:
 

@@ -7,7 +7,7 @@
 
 namespace rckid {
 
-    class SensorsTest : public App<FrameBuffer<ColorRGB>> {
+    class SensorsTest : public App<FrameBuffer<ColorRGB, DisplayMode::Native_2X_RGB565>> {
     public:
 
         SensorsTest()  = default;
@@ -32,7 +32,7 @@ namespace rckid {
                 << "gyroX: " << gyroX() << "\n"
                 << "gyroY: " << gyroY() << "\n"
                 << "gyroZ: " << gyroZ() << "\n\n"
-                << "als:  " << lightAmbient() << '\n'
+                << "als:  " << lightAmbient() << " "
                 << "uv:   " << lightUV();
        }
 

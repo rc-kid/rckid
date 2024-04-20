@@ -8,12 +8,12 @@ namespace platform {
     public:
 
         struct State {
-            int16_t gyroX;
-            int16_t gyroY;
-            int16_t gyroZ;
-            int16_t accelX;
-            int16_t accelY;
-            int16_t accelZ;
+            int16_t gyroX = 0;
+            int16_t gyroY = 0;
+            int16_t gyroZ = 0;
+            int16_t accelX = 0;
+            int16_t accelY = 0;
+            int16_t accelZ = 0;
         } __attribute__((packed)); 
 
         static constexpr uint8_t DEFAULT_I2C_ADDRESS = 0x68;

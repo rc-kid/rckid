@@ -108,6 +108,8 @@ namespace rckid {
         alsSensor_.startALS();
     }
 
+    /** During the device tick we simply talk to the AVR and sensors to obtain their data. This is done via the async I2C capability so that we can yield while waiting for the I2C to process so that the display or audio can be serviced properly. 
+    */
     void Device::tick() {
         ++ticks_;
         lastState_ = state_.state;
@@ -131,28 +133,58 @@ namespace rckid {
         uint8_t * raw = reinterpret_cast<uint8_t*>(&state_);
         for (int i = 0; i < 8; ++i)
             *(raw++) = i2c0->hw->data_cmd;
-        // i2c_read_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t *)& state_, sizeof(State), false);
-
-        /*
+        // read the accelerometer state in async mode 
+        do {
+            i2c0->hw->enable = 0;
+            i2c0->hw->tar = accelerometer_.address;
+            i2c0->hw->enable = 1;
+            i2c0->hw->data_cmd = platform::BMI160::REG_DATA;
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_RESTART_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_STOP_BITS; // 1 for read, stop
+            while (i2c0->hw->rxflr != 12 && (i2c0->hw->clr_tx_abrt == 0))
+                yield();
+        } while (i2c0->hw->rxflr != 12);        
         platform::BMI160::State aState;
-        accelerometer_.measure(aState);
+        raw = reinterpret_cast<uint8_t*>(&aState);
+        for (int i = 0; i < 12; ++i)
+            *(raw++) = i2c0->hw->data_cmd;
         accelX_ = aState.accelX;
         accelY_ = aState.accelY;
         accelZ_ = aState.accelZ;
         gyroX_ = aState.gyroX;
         gyroY_ = aState.gyroY;
         gyroZ_ = aState.gyroZ;
-
+        // and finally read the UV light sensor
         if (ticks_ % 8 == 0) {
-            if ((ticks_ & 16) == 0) {
-                lightALS_ = alsSensor_.measureALS();
-                alsSensor_.startUV();
-            } else {
-                lightUV_ = alsSensor_.measureUV();
-                alsSensor_.startALS();
-            }
+            do {
+                i2c0->hw->enable = 0;
+                i2c0->hw->tar = alsSensor_.address;
+                i2c0->hw->enable = 1;
+                i2c0->hw->data_cmd = platform::LTR390UV::REG_CTRL; 
+                i2c0->hw->data_cmd = ((ticks_ & 16) == 0) ? platform::LTR390UV::CTRL_UV_EN : platform::LTR390UV::CTRL_ALS_EN;
+                i2c0->hw->data_cmd = (((ticks_ & 16) == 0) ? platform::LTR390UV::REG_DATA_ALS : platform::LTR390UV::REG_DATA_UV) | I2C_IC_DATA_CMD_RESTART_BITS;
+                i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_RESTART_BITS; // 1 for read
+                i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_RESTART_BITS; // 1 for read
+                while (i2c0->hw->rxflr != 2 && (i2c0->hw->clr_tx_abrt == 0))
+                    yield();
+            } while (i2c0->hw->rxflr != 2);
+            uint16_t value = (i2c0->hw->data_cmd) & 0xff;
+            value += (i2c0->hw->data_cmd & 0xff) * 256;        
+            if ((ticks_ & 16) == 0)
+                lightALS_ = value;
+            else
+                lightUV_ = value;
         }
-        */
     }
 
     void Device::BSOD(int code) {
