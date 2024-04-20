@@ -17,6 +17,7 @@
 //#include "rckid/apps/test/SDCardTest.h"
 #include "rckid/apps/test/AVRStatusTest.h"
 #include "rckid/apps/test/SensorsTest.h"
+#include "rckid/apps/test/RumblerTest.h"
 #include "rckid/apps/games/SlidingPuzzle.h"
 #include "rckid/apps/system/USBMassStorage.h"
 
@@ -30,6 +31,7 @@ void rckid_main() {
     Menu m{{
         MenuItem::create("AVR Status", assets::Gameboy), 
         MenuItem::create("Sensors", assets::Gameboy), 
+        MenuItem::create("Rumbler", assets::Gameboy),
         MenuItem::create("Sliding Puzzle", assets::Gameboy), 
     }};
     Carousel c{&m};
@@ -46,7 +48,11 @@ void rckid_main() {
                     TRACE("Starting sensors");
                     SensorsTest{}.run();
                     break;
-                case 2: 
+                case 2:
+                    TRACE("Starting rumbler");
+                    RumblerTest{}.run();
+                    break;
+                case 3: 
                     TRACE("Starting game");
                     SlidingPuzzle{}.run();
                     break;

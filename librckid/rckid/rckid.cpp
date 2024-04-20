@@ -112,27 +112,6 @@ namespace rckid {
     */
     void Device::tick() {
         ++ticks_;
-        lastState_ = state_.state;
-        do {
-            // query the AVR for the status bytes, first set the address
-            i2c0->hw->enable = 0;
-            i2c0->hw->tar = AVR_I2C_ADDRESS;
-            i2c0->hw->enable = 1;
-            // add commands for getting the blocks
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_STOP_BITS; // 1 for read, stop
-            while (i2c0->hw->rxflr != 8 && (i2c0->hw->clr_tx_abrt == 0))
-                yield();
-        } while (i2c0->hw->rxflr != 8);        
-        uint8_t * raw = reinterpret_cast<uint8_t*>(&state_);
-        for (int i = 0; i < 8; ++i)
-            *(raw++) = i2c0->hw->data_cmd;
         // read the accelerometer state in async mode 
         do {
             i2c0->hw->enable = 0;
@@ -155,7 +134,7 @@ namespace rckid {
                 yield();
         } while (i2c0->hw->rxflr != 12);        
         platform::BMI160::State aState;
-        raw = reinterpret_cast<uint8_t*>(&aState);
+        uint8_t * raw = reinterpret_cast<uint8_t*>(&aState);
         for (int i = 0; i < 12; ++i)
             *(raw++) = i2c0->hw->data_cmd;
         accelX_ = aState.accelX;
@@ -164,7 +143,7 @@ namespace rckid {
         gyroX_ = aState.gyroX;
         gyroY_ = aState.gyroY;
         gyroZ_ = aState.gyroZ;
-        // and finally read the UV light sensor
+        // read the ALS & UV light sensor
         if (ticks_ % 8 == 0) {
             do {
                 i2c0->hw->enable = 0;
@@ -174,7 +153,7 @@ namespace rckid {
                 i2c0->hw->data_cmd = ((ticks_ & 16) == 0) ? platform::LTR390UV::CTRL_UV_EN : platform::LTR390UV::CTRL_ALS_EN;
                 i2c0->hw->data_cmd = (((ticks_ & 16) == 0) ? platform::LTR390UV::REG_DATA_ALS : platform::LTR390UV::REG_DATA_UV) | I2C_IC_DATA_CMD_RESTART_BITS;
                 i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_RESTART_BITS; // 1 for read
-                i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_RESTART_BITS; // 1 for read
+                i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_STOP_BITS; // 1 for read
                 while (i2c0->hw->rxflr != 2 && (i2c0->hw->clr_tx_abrt == 0))
                     yield();
             } while (i2c0->hw->rxflr != 2);
@@ -185,6 +164,29 @@ namespace rckid {
             else
                 lightUV_ = value;
         }
+        // and finally, read the AVR state
+        lastState_ = state_.state;
+        do {
+            // query the AVR for the status bytes, first set the address
+            i2c0->hw->enable = 0;
+            i2c0->hw->tar = AVR_I2C_ADDRESS;
+            i2c0->hw->enable = 1;
+            // add commands for getting the blocks
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_STOP_BITS; // 1 for read, stop
+            while (i2c0->hw->rxflr != 8 && (i2c0->hw->clr_tx_abrt == 0))
+                yield();
+        } while (i2c0->hw->rxflr != 8);        
+        raw = reinterpret_cast<uint8_t*>(&state_);
+        for (int i = 0; i < 8; ++i)
+            *(raw++) = i2c0->hw->data_cmd;
+
     }
 
     void Device::BSOD(int code) {

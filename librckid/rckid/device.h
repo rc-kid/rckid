@@ -101,6 +101,7 @@ namespace rckid {
         friend bool charging() { return state_.state.charging(); }
         friend bool dcPower() { return state_.state.dcPower(); }
         friend unsigned vcc() { return state_.state.vcc(); }
+        
         // brightness, notifications & LEDs
         friend void setBrightness(uint8_t brightness) { 
             Device::sendCommand(cmd::SetBrightness(brightness)); 
@@ -140,7 +141,9 @@ namespace rckid {
             Device::sendCommand(cmd::SetRGBEffects{a, b, dpad, sel, start});
         }
 
-
+        friend void setRumbler(RumblerEffect effect) {
+            Device::sendCommand(cmd::Rumbler{effect});
+        }
 
         // controls & sensors
         friend bool down(Btn b) { return btnDown(b, state_.state); }

@@ -11,8 +11,7 @@
 ## TODO
 
 - headphones work, speaker seems not to (always off) - seems bad GND connectiom for PAM8302
-- check rumbler
-- check audio quality wrt previous version (built in delete)
+- solder rumbler
 
 - carousel won't be happy with empty items (icons, etc.)
 - no clearing of items 

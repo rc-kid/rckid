@@ -94,6 +94,12 @@ public:
     static constexpr uint8_t STANDBY_REQUIRED_ADC0 = 4;
     static constexpr uint8_t STANDBY_REQUIRED_ADC1 = 8;
 
+    /** Reset mode, which is decided in the interrupt handler for the buttons, but should be executed from the main loop due to the long wait times which should not happen in IRQ handlers. 
+     */
+    static inline uint8_t resetMode_ = 0;
+    static constexpr uint8_t RESET_MODE_RP_RESET = 1;
+    static constexpr uint8_t RESET_MODE_RP_BOOTLOADER = 2;
+
 #if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
     static inline platform::SSD1306 oled_;
 #endif
@@ -216,6 +222,20 @@ public:
                 rgbTick();
             if (rumblerTick_)
                 rumblerTick();
+            if (resetMode_ != 0) {
+                switch (resetMode_) {
+                    case RESET_MODE_RP_RESET:
+                        rpReset();
+                        break;
+                    case RESET_MODE_RP_BOOTLOADER:
+                        rpBootloader();
+                        break;
+                    default:
+                        // TODO invalid reset mode
+                        break;
+                }
+                resetMode_ = 0;
+            }
 
             // make sure interrupts are enabled or we won't wake up, the appropriate sleep mode has already been set by the various peripheral interactions so we can happily go to sleep here
             sei();
@@ -452,9 +472,9 @@ public:
                     // if in debug mode, react to the volume keys by either resetting the RP, or entering its bootloader mode
                     if (ts_.state.debugMode()) {
                         if (ts_.state.btnVolUp())
-                            rpReset();
+                            resetMode_ = RESET_MODE_RP_RESET;
                         else if (ts_.state.btnVolDown())
-                            rpBootloader();
+                            resetMode_ = RESET_MODE_RP_BOOTLOADER;
                     }
                     // sample temperature
                     ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_INTREF_gc | ADC_SAMPCAP_bm;
@@ -683,31 +703,33 @@ public:
         rgbs_[0] = platform::Color::Green().withBrightness(32);
         rgbsTarget_[0] = platform::Color::Green().withBrightness(32);
         rgbs_.update();
-        cpu::delayMs(200);
         cpu::wdtReset();
+        cpu::delayMs(200);
         rgbs_[1] = platform::Color::Green().withBrightness(32);
         rgbsTarget_[1] = platform::Color::Green().withBrightness(32);
         rgbs_.update();
-        cpu::delayMs(200);
         cpu::wdtReset();
+        cpu::delayMs(200);
         gpio::outputLow(AVR_PIN_QSPI_SS);
         rgbs_[3] = platform::Color::Green().withBrightness(32);
         rgbsTarget_[3] = platform::Color::Green().withBrightness(32);
         rgbs_.update();
-        cpu::delayMs(200);
         cpu::wdtReset();
+        cpu::delayMs(200);
         power3v3(true);
         rgbs_[4] = platform::Color::Green().withBrightness(32);
         rgbsTarget_[4] = platform::Color::Green().withBrightness(32);
         rgbs_.update();
-        cpu::delayMs(200);
         cpu::wdtReset();
+        cpu::delayMs(200);
         rgbs_[5] = platform::Color::Green().withBrightness(32);
         rgbsTarget_[5] = platform::Color::Green().withBrightness(32);
         rgbs_.update();
-        cpu::delayMs(200);
         cpu::wdtReset();
+        cpu::delayMs(150);
         gpio::outputFloat(AVR_PIN_QSPI_SS);
+        cpu::wdtReset();
+        cpu::delayMs(50);
         // keep the green lights on, the RP2040 app that has just been uploaded should turn them off
         rgbEffects_[0] = RGBEffect::Breathe(platform::Color::Green().withBrightness(32), 1);
         rgbEffects_[1] = RGBEffect::Breathe(platform::Color::Green().withBrightness(32), 1);
@@ -1053,10 +1075,12 @@ public:
             }
             case cmd::Rumbler::ID: {
                 auto & c = cmd::Rumbler::fromBuffer(ts_.buffer);
-                if (c.effect.cycles > 0) {
+                if (c.effect.cycles > 0 && c.effect.strength > 0) {
                     rumblerEffect_ = c.effect;
-                    --rumblerEffect_.cycles;
+                    //--rumblerEffect_.cycles;
                     rumblerCurrent_ = rumblerEffect_;
+                    rumblerCurrent_.timeOn = 0;
+                    rumblerCurrent_.timeOff = 0;
                 } else {
                     rumblerEffect_ = RumblerEffect::Off();
                     rumblerCurrent_ = RumblerEffect::Off();

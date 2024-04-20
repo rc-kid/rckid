@@ -170,6 +170,10 @@ namespace rckid {
         );
     }
 
+    /** Sets the rumbler to given effect. 
+     */
+    void setRumbler(RumblerEffect effect);
+
     //@}
 
 
