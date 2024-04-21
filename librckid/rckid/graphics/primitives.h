@@ -43,6 +43,20 @@ namespace rckid {
         constexpr int height() const { return bottom() - top(); }
         constexpr Point const & topLeft() const { return topLeft_; }
         constexpr Point const & bottomRight() const { return bottomRight_; }
+
+        /** Rectangle intersection.
+         */
+        Rect operator && (Rect const & other) const {
+            int l = std::max(left(), other.left());
+            int r = std::min(right(), other.right());
+            int t = std::max(top(), other.top());
+            int b = std::min(bottom(), other.bottom());
+            if (r < l)
+                r = l;
+            if (b < t)
+                b = t;
+            return XYWH(l, t, r - l, b - t);
+        }
     private:
 
         constexpr Rect(Point tl, Point br): topLeft_{tl}, bottomRight_{br} {}

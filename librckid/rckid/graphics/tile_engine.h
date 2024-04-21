@@ -1,7 +1,7 @@
 #pragma once 
 
 #include "rckid/rckid.h"
-
+#include "rckid/graphics/color.h"
 namespace rckid {
 
     /** Single tile. 
@@ -12,6 +12,9 @@ namespace rckid {
     }; 
 
     /** 2D tile engine GPU. 
+     
+
+        
      */
     template<typename TILE>
     class TileEngine {

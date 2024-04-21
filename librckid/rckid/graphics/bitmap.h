@@ -128,6 +128,7 @@ namespace rckid {
         //@}
 
         /** Fills the portion of the bitmap with given color. 
+         
          */
         void fill(Rect rect, Color color) {
             // default, very slow implementation
@@ -151,5 +152,86 @@ namespace rckid {
         uint32_t * buffer_ = nullptr;
 
     }; // rckid::Bitmap
+
+    template<>
+    inline void Bitmap<ColorRGB>::fill(Color color) {
+        uint32_t c = (static_cast<uint32_t>(color.rawValue16()) << 16) | color.rawValue16();
+        int i = 0, e = w_ * h_ / 2;
+        for ( ; i <= e - 16; ) {
+            buffer_[i++] = c;
+            buffer_[i++] = c;
+            buffer_[i++] = c;
+            buffer_[i++] = c;
+            buffer_[i++] = c;
+            buffer_[i++] = c;
+            buffer_[i++] = c;
+            buffer_[i++] = c;
+            buffer_[i++] = c;
+            buffer_[i++] = c;
+            buffer_[i++] = c;
+            buffer_[i++] = c;
+            buffer_[i++] = c;
+            buffer_[i++] = c;
+            buffer_[i++] = c;
+            buffer_[i++] = c;
+        } 
+        for ( ; i < e; )
+            buffer_[i++] = c;
+    }
+
+    template<>
+    inline void Bitmap<ColorRGB>::fill(Rect rect, Color color) {
+        Rect r = Rect::WH(w_, h_) && rect;
+        if (r.right() == w_ && r.height() == h_ && r.top() == 0)
+            return fill(color);
+        // fill the first row if not even
+        int y = r.top(), ye = r.bottom();
+        if (y % 2 != 0) {
+            for (int x = r.left(), xe = r.right(); x < xe; ++x) {
+                Color * buf = reinterpret_cast<Color*>(buffer_);
+                buf[map(x, y)] = color;
+            }
+            ++y;
+        }
+        // now do the manually unrolled loop with two rows per color fixed
+        uint32_t c = (static_cast<uint32_t>(color.rawValue16()) << 16) | color.rawValue16();
+        for (; y <= ye - 16; y += 16) {
+            for (int x = r.left(), xe = r.right(); x < xe; ++x) {
+                uint32_t * b = buffer_ + map(x, y) / 2;
+                b[0] = c;
+                b[1] = c;
+                b[2] = c;
+                b[3] = c;
+                b[4] = c;
+                b[5] = c;
+                b[6] = c;
+                b[7] = c;
+            }
+        }
+
+        for (; y <= ye - 8; y += 8) {
+            for (int x = r.left(), xe = r.right(); x < xe; ++x) {
+                uint32_t * b = buffer_ + map(x, y) / 2;
+                b[0] = c;
+                b[1] = c;
+                b[2] = c;
+                b[3] = c;
+            }
+        }
+        // finish per two rows
+        for (; y <= ye - 2; y += 2) {
+            for (int x = r.left(), xe = r.right(); x < xe; ++x) {
+                uint32_t * b = buffer_ + map(x, y) / 2;
+                b[0] = c;
+            }
+        }
+        // and the optional single row access at the end
+        for (; y < ye; ++y) {
+            for (int x = r.left(), xe = r.right(); x < xe; ++x) {
+                Color * buf = reinterpret_cast<Color*>(buffer_);
+                buf[map(x, y)] = color;
+            }
+        }
+    }
 
 } // namespace rckid

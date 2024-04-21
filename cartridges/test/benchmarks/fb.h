@@ -4,13 +4,22 @@
 #include "rckid/audio.h"
 #include "rckid/graphics/framebuffer.h"
 #include "fonts/Iosevka_Mono6pt7b.h"
-
+#include "rckid/assets.h"
 
 #define BENCHMARK(...) CALCULATE_TIME( for (int i = 0; i < NUM_ITERATIONS; ++i) { __VA_ARGS__ }) / NUM_ITERATIONS
 
 namespace rckid {
 
     /** Framebuffer benchmark test. 
+     
+        Default: fill 11699
+                 blit 10646
+
+        Updated: fill 1230 x8
+                      925 x16
+
+        With fullscreen special : 712
+
      */
     class FB : public App<FrameBuffer<ColorRGB>> {
     public:
@@ -43,9 +52,10 @@ namespace rckid {
                     break;
                 }
                 case Mode::Blit: {
-                    Bitmap<Color> bmp = Bitmap<Color>{64, 64, MemArea::Heap};//fromPNGonHeap(BaseApp::appIcon());
+                    Bitmap<Color> bmp = Bitmap<Color>{64, 64, MemArea::Heap};
+                    bmp.loadImage(assets::Gameboy, sizeof(assets::Gameboy));
                     blit_ = BENCHMARK(
-                        for (int j = 0; j < 10; ++j)
+                        for (int j = 0; j < 10; j += 2)
                             driver_.draw(Point{(i + j) % 250, (i + j) % 170}, bmp);
                     );
                     mode_ = Mode::Done;
