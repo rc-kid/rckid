@@ -13,7 +13,6 @@
 - overclocking does not work again
 - check audio quality when overclocked
 - headphones work, speaker seems not to (always off) - seems bad GND connectiom for PAM8302
-- solder rumbler
 
 - carousel won't be happy with empty items (icons, etc.)
 - no clearing of items 

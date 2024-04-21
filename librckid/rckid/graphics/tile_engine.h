@@ -12,9 +12,6 @@ namespace rckid {
     }; 
 
     /** 2D tile engine GPU. 
-     
-
-        
      */
     template<typename TILE>
     class TileEngine {

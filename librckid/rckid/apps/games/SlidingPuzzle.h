@@ -68,6 +68,8 @@ namespace rckid {
                 }
                 tmp_.draw(Point::origin(), driver_, tileRect(holeX_, holeY_));
                 a_.start();
+                if (dir_ != Btn::Home)
+                    setRumbler(RumblerEffect::Nudge());
             }
         }
 
