@@ -229,7 +229,7 @@ namespace rckid {
 
         /** Sends single byte in the bit-banging mode. 
          
-            According to the datasheet (page 41), the read byte cycle is at least 66ns with both high and low pulses being at least 15ns. To work in the worst supported case at 250MHz, we insert 17 NOP instructions in total for 68ns. This will double in the 125MHz default speed, since the driver should mostly utilize the PIO driven DMA access, it should not be a problem. 
+            According to the datasheet (page 41), the read byte cycle is at least 66ns with both high and low pulses being at least 15ns. To work in the worst supported case at 250MHz, we insert 24 NOP instructions in total for 96ns, which adds about 30% safety margin. This will double in the 125MHz default speed, since the driver should mostly utilize the PIO driven DMA access, it should not be a problem. 
          */
         static void sendByte(uint32_t b) {
 #if (! defined LIBRCKID_MOCK)
@@ -242,7 +242,14 @@ namespace rckid {
             cpu::nop();
             cpu::nop();
             cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
             gpio_put(RP_PIN_DISP_WRX, true);
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
             cpu::nop();
             cpu::nop();
             cpu::nop();
