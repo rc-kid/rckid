@@ -3,6 +3,11 @@
 #include "../rckid.h"
 #include "primitives.h"
 
+
+extern "C" {
+    void rckid_mem_fill_32(uint32_t * target, size_t num, uint32_t source);
+}
+        
 namespace rckid {
 
     /** Pixel bitmap, templated by the underlying color type. 
@@ -156,6 +161,8 @@ namespace rckid {
     template<>
     inline void Bitmap<ColorRGB>::fill(Color color) {
         uint32_t c = (static_cast<uint32_t>(color.rawValue16()) << 16) | color.rawValue16();
+        rckid_mem_fill_32(buffer_, w_ * h_ / 2, c);        
+        /*
         int i = 0, e = w_ * h_ / 2;
         for ( ; i <= e - 16; ) {
             buffer_[i++] = c;
@@ -177,6 +184,7 @@ namespace rckid {
         } 
         for ( ; i < e; )
             buffer_[i++] = c;
+            */
     }
 
     template<>

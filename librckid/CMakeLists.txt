@@ -10,7 +10,7 @@ add_compile_options(-Wall
         -O2
 )
 
-file(GLOB_RECURSE SRC "rckid/*.cpp" "rckid/*.h")
+file(GLOB_RECURSE SRC "rckid/*.cpp" "rckid/*.h" "rckid/*.s")
 
 add_library(librckid ${SRC})
 rckid_configure_target(librckid)

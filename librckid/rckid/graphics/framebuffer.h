@@ -155,12 +155,14 @@ namespace rckid {
             allocate(MemArea::VRAM);
             ST7789::configure(DisplayMode::Native_2X_RGB565);
             ST7789::enterContinuousUpdate(width() * 2, height() * 2);
+            // TODO move this to allocate
             renderBuffer1_ = reinterpret_cast<uint32_t*>(allocateVRAM(height() * 2)); // 
             renderBuffer2_ = reinterpret_cast<uint32_t*>(allocateVRAM(height() * 2)); // 
         }
 
         void disable() { 
             ST7789::leaveContinuousUpdate();
+            // TODO deallocate buffers
             deallocate();
         }
 

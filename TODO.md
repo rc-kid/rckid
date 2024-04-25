@@ -10,6 +10,10 @@
 
 ## TODO
 
+- maybe start working on V2 that would not use VRAM, but resettable malloc & free (can copy code from newlib pretty much just add the reset option)
+- this can simplify the design a *lot*
+
+
 - headphones work, speaker seems not to (always off) - seems bad GND connectiom for PAM8302
 
 - carousel won't be happy with empty items (icons, etc.)
@@ -44,6 +48,7 @@
 
 ## Audio Woes
 
+- maybe 16bit at 22500 khz? 
 - 8bit PCM audio is very very noisy - this is probably ok for some synthesized tunes & stuff, but sounds horrible for music. This is not HW problem, but rather quantization error and some such
 - 12bit audio seems to be better, works reliably well with 250MHz overclock, but won't work for 8kHz, a resampling and PDM output via PIO would be much better
 - use new circuit? - https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf
