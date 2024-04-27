@@ -7,3 +7,4 @@ build*
 __OLD__
 utils/bytes-to-cpp
 libs/get-platformio.py
+librckid-old

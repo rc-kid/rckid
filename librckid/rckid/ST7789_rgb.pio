@@ -36,7 +36,7 @@ inline void ST7789_rgb_program_init(PIO pio, uint sm, uint offset, uint wrPin, u
     // enable autopull
     sm_config_set_out_shift(&c, false, true, 16);
     pio_sm_init(pio, sm, offset, &c);
-    pio_set_clock_speed(pio, sm, RP_ST7789_BAUDRATE);
+    pio_set_clock_speed(pio, sm, RP_ST7789_BAUDRATE * 2);
 }
 
 %}

@@ -10,9 +10,9 @@
 
 ## TODO
 
-- maybe start working on V2 that would not use VRAM, but resettable malloc & free (can copy code from newlib pretty much just add the reset option)
-- this can simplify the design a *lot*
-
+- make showing image on the screen a separate function and make it work in mock mode as well
+- see if framebuffer 256 using actual colors for the buffers will be slower and if not make the code nicer
+- 2x 256 framebuffer does not render correctly and likely the code is wrong
 
 - headphones work, speaker seems not to (always off) - seems bad GND connectiom for PAM8302
 

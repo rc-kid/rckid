@@ -43,7 +43,7 @@ inline void ST7789_rgb_double_program_init(PIO pio, uint sm, uint offset, uint w
     sm_config_set_out_shift(&c, false, false, 32);
     pio_sm_init(pio, sm, offset, &c);
     // increase pio clock by three (3 insns per cycle)
-    pio_set_clock_speed(pio, sm, RP_ST7789_BAUDRATE * 3);
+    pio_set_clock_speed(pio, sm, RP_ST7789_BAUDRATE * 6);
 }
 
 %}

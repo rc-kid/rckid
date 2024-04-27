@@ -17,6 +17,9 @@ namespace rckid {
 
         static PNG fromBuffer(uint8_t const * buffer, size_t numBytes);
 
+        template<size_t SIZE>
+        static PNG fromBuffer(uint8_t const (&buffer)[SIZE]) { return fromBuffer(buffer, SIZE); }
+
         /*
         static PNG fromFile(char const * file) {
 

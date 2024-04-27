@@ -73,7 +73,11 @@
 
 #define RP_I2C_BAUDRATE 100000
 
-#define RP_ST7789_BAUDRATE 30000000
+/** The baudrate for parallel data transfer to the display. 
+ 
+    15MHz gives us 66.7ns per byte cycle, which is just within the display's limit. 
+ */
+#define RP_ST7789_BAUDRATE 15000000
 
 /** Goes down to 4.096MHz for the actual clock rate. 
  */

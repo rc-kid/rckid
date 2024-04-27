@@ -1,13 +1,13 @@
 #pragma once
 
-#include "rckid/writer.h"
+#include "utils/writer.h"
 
-#include "gfx.h"
+#include "adafruit_gfx_wrapper.h"
 #include "color.h"
 #include "primitives.h"
 #include "png.h"
 #include "bitmap.h"
-#include "fonts/Iosevka_Mono6pt7b.h"
+#include "assets/fonts/Iosevka_Mono6pt7b.h"
 
 namespace rckid {
 
@@ -24,17 +24,9 @@ namespace rckid {
 
         /** Creates new canvas by consuming already created bitmap. 
          */
-        Canvas(Bitmap<COLOR> && bitmap):
-            Bitmap<COLOR>{std::move(bitmap)} {
-        }
+        Canvas(int w, int h): Bitmap<COLOR>{w, h} { }
 
         Canvas() = default;
-
-        Canvas(int width, int height, MemArea where = MemArea::Heap):Bitmap<COLOR>{width, height, where} {}
-
-        //Canvas(int width, int height) : Bitmap<COLOR>{width, height} {}
-
-        //Canvas(int width, int height, uint32_t * buffer) : Bitmap<COLOR>{width, height, buffer} {}
 
         Color bg() const { return bg_; }
         Color fg() const { return fg_; }

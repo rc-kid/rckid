@@ -1,5 +1,5 @@
-#include "ST7789.h"
-#include "audio.h"
+#include "graphics/ST7789.h"
+//#include "audio.h"
 #include "app.h"
 
 namespace rckid {
@@ -9,7 +9,6 @@ namespace rckid {
         if (last != nullptr)
             last->onBlur();
         currentApp_ = this;
-        resetVRAM();
         onFocus();
         // reset stats
         stats::nextFpsTick_ = time_us_32() + 1000000;
@@ -24,7 +23,7 @@ namespace rckid {
                 stats::nextFpsTick_ += 1000000;
             }
             uint32_t tSys = CALCULATE_TIME(
-                Device::tick();
+                tick();
             );
             uint32_t tUpdate = CALCULATE_TIME(
                 update();
@@ -47,7 +46,6 @@ namespace rckid {
         }
         currentApp_ = this;
         onBlur();
-        resetVRAM();
         currentApp_ = last;
         if (currentApp_)
             currentApp_->onFocus();

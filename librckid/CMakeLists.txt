@@ -1,24 +1,74 @@
+# RCKid Library
+#
+# A superset of the pico sdk that supports all the basic HW and SW of the handheld. The idea is for the library to be linked with the cartridge executables. 
 
 cmake_minimum_required(VERSION 3.12)
 
-# set(PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
-
-add_compile_options(-Wall
-        -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
-        -Wno-unused-function # we have some for the docs that aren't called
-        -Wno-maybe-uninitialized
-        -O2
-)
-
-file(GLOB_RECURSE SRC "rckid/*.cpp" "rckid/*.h" "rckid/*.s")
+file(GLOB_RECURSE SRC "rckid/*.cpp" "rckid/*.h" "rckid/*.s" "../usb.cpp")
 
 add_library(librckid ${SRC})
-rckid_configure_target(librckid)
+
+target_compile_options(librckid PRIVATE -Wall -O2)
 
 if (ARCH STREQUAL "RP2040")
-    pico_generate_pio_header(librckid ${CMAKE_SOURCE_DIR}/librckid/rckid/ST7789_rgb.pio)
-    pico_generate_pio_header(librckid ${CMAKE_SOURCE_DIR}/librckid/rckid/ST7789_rgb_double.pio)
+    pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/rckid/ST7789_rgb.pio)
+    pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/rckid/ST7789_rgb_double.pio)
 endif()
+
+function(link_with_librckid target_name)
+    get_target_property(target_type ${target_name} TYPE)
+    if (ARCH STREQUAL "RP2040")
+        
+        if (target_type STREQUAL "EXECUTABLE")
+            message("RCKID: Target executable ${target_name} will be linked with librckid")
+            target_compile_options(${target_name} PRIVATE "-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64")
+            pico_add_extra_outputs(${target_name})
+            target_link_libraries(${target_name} librckid)
+            #set_property(TARGET ${target_name} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+        endif()
+
+        target_link_libraries(${target_name}
+            pico_stdlib
+            pico_rand
+            pico_unique_id
+            hardware_i2c
+            hardware_pio
+            hardware_spi
+            hardware_dma
+            hardware_pwm
+            #FatFs_SPI
+            tinyusb_board
+            tinyusb_device
+            PNGdec
+            libhelix-mp3
+        )
+
+    elseif (ARCH STREQUAL "MOCK")
+
+        if (target_type STREQUAL "EXECUTABLE")
+            message("RCKID: Target executable ${target_name} will be linked with librckid")
+            target_link_libraries(${target_name} librckid)
+        endif()
+
+        target_link_libraries(${target_name}
+            PNGdec
+            libhelix-mp3
+        )
+
+        target_link_libraries(${target_name} ${CMAKE_SOURCE_DIR}/libs/raylib/src/libraylib.a)
+        target_link_libraries(${target_name} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+
+    endif()
+endfunction()
+
+link_with_librckid(librckid)
+
+pico_wrap_function(librckid malloc)
+pico_wrap_function(librckid calloc)
+pico_wrap_function(librckid realloc)
+pico_wrap_function(librckid free)
+
+target_include_directories(librckid PUBLIC ${CMAKE_SOURCE_DIR}/librckid)
 
 
 

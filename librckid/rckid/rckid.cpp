@@ -1,4 +1,6 @@
-#if (! defined LIBRCKID_MOCK)
+#include "rckid.h"
+
+#if (defined ARCH_RP2040)
 
 #include "bsp/board.h"
 #include "tusb_config.h"
@@ -10,87 +12,35 @@
 #include <hardware/pwm.h>
 #include <hardware/dma.h>
 
-#include "common/config.h"
-#include "rckid.h"
-#include "ST7789.h"
-#include "audio.h"
-#include "app.h"
-
-#include "images/logo-16.h"
+#include "assets.h"
+#include "graphics/ST7789.h"
 #include "graphics/png.h"
 
 #include "ST7789_rgb.pio.h"
 #include "ST7789_rgb_double.pio.h"
-#include "rckid/graphics/framebuffer.h"
-#include "fonts/Iosevka_Mono6pt7b.h"
 
 #include "ltr390uv.h"
 #include "bmi160.h"
 
-extern uint8_t __StackLimit, __bss_end__;
+
+namespace {
+    platform::LTR390UV alsSensor_{};
+    platform::BMI160 accelerometer_{};
+}
 
 namespace rckid {
 
-    void irqDMADone_();
+    void __not_in_flash_func(irqDMADone_)() {
+        unsigned irqs = dma_hw->ints0;
+        dma_hw->ints0 = irqs;
+        // display
+        if (irqs & ( 1u << ST7789::dma_))
+            ST7789::irqHandler();
 
-    // fake allocation for the VRAM of properly set size
-    uint8_t __attribute__((section (".vram"))) __vram__[RCKID_VRAM_SIZE];
-
-    platform::LTR390UV alsSensor_{};
-    platform::BMI160 accelerometer_{};
-
-    void start() {
-        // FIXME for reasons I do not completely understand, the board init must be before the other calls, or the device hangs? 
+    }
+ 
+    void initialize() {
         board_init();
-        Device::initialize();
-        // initialize the display
-        ST7789::initialize();
-        setBrightness(128);
-
-        int errorCode = setjmp(rckid::Device::fatalError_);
-        if (errorCode != 0) 
-            rckid::Device::BSOD(errorCode);
-        rckid_main();
-    }
-
-    void yield() {
-        tud_task();
-        audio::processEvents();
-        ST7789::processEvents();
-    }
-
-    Writer writeToUSBSerial() {
-        return Writer{[](char x) {
-            tud_cdc_write(& x, 1);
-            if (x == '\n')
-                tud_cdc_write_flush();            
-        }};
-    }
-
-    void enableSerialPort() {
-        stdio_uart_init_full(
-            RP_DEBUG_UART, 
-            RP_DEBUG_UART_BAUDRATE, 
-            RP_DEBUG_UART_TX_PIN, 
-            RP_DEBUG_UART_RX_PIN
-        );
-    }
-
-    // power management ---------------------------------------------------------------------------
-
-    void powerOff() {
-        /// TODO: make sure sd and other things are done first, only then poweroff
-        Device::sendCommand(cmd::PowerOff{}); 
-    }
-
-    // memory -------------------------------------------------------------------------------------
-
-    size_t freeHeap() {
-        size_t heapSize = &__StackLimit  - &__bss_end__;    
-        return heapSize - mallinfo().uordblks;
-    }
-
-    void Device::initialize() {
         // initialize the I2C bus
         i2c_init(i2c0, RP_I2C_BAUDRATE); 
         gpio_set_function(RP_PIN_SDA, GPIO_FUNC_I2C);
@@ -101,114 +51,29 @@ namespace rckid {
         tud_init(BOARD_TUD_RHPORT);
         // set the single DMA IRQ 0 handler reserved for the SDK
         irq_set_exclusive_handler(DMA_IRQ_0, irqDMADone_);
-        LOG("RCKid initialized");
-        resetVRAM();
+        // initialize the display
+        ST7789::initialize();
+        setBrightness(128);
+        // initialize accelerometer & ALS sensor peripherals
         accelerometer_.initialize();
         alsSensor_.initialize();
         alsSensor_.startALS();
-    }
-
-    /** During the device tick we simply talk to the AVR and sensors to obtain their data. This is done via the async I2C capability so that we can yield while waiting for the I2C to process so that the display or audio can be serviced properly. 
-    */
-    void Device::tick() {
-        ++ticks_;
-        // read the accelerometer state in async mode 
-        do {
-            i2c0->hw->enable = 0;
-            i2c0->hw->tar = accelerometer_.address;
-            i2c0->hw->enable = 1;
-            i2c0->hw->data_cmd = platform::BMI160::REG_DATA;
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_RESTART_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_STOP_BITS; // 1 for read, stop
-            while (i2c0->hw->rxflr != 12 && (i2c0->hw->clr_tx_abrt == 0))
-                yield();
-        } while (i2c0->hw->rxflr != 12);        
-        platform::BMI160::State aState;
-        uint8_t * raw = reinterpret_cast<uint8_t*>(&aState);
-        for (int i = 0; i < 12; ++i)
-            *(raw++) = i2c0->hw->data_cmd;
-        accelX_ = aState.accelX;
-        accelY_ = aState.accelY;
-        accelZ_ = aState.accelZ;
-        gyroX_ = aState.gyroX;
-        gyroY_ = aState.gyroY;
-        gyroZ_ = aState.gyroZ;
-        // read the ALS & UV light sensor
-        if (ticks_ % 8 == 0) {
-            do {
-                i2c0->hw->enable = 0;
-                i2c0->hw->tar = alsSensor_.address;
-                i2c0->hw->enable = 1;
-                i2c0->hw->data_cmd = platform::LTR390UV::REG_CTRL; 
-                i2c0->hw->data_cmd = ((ticks_ & 16) == 0) ? platform::LTR390UV::CTRL_UV_EN : platform::LTR390UV::CTRL_ALS_EN;
-                i2c0->hw->data_cmd = (((ticks_ & 16) == 0) ? platform::LTR390UV::REG_DATA_ALS : platform::LTR390UV::REG_DATA_UV) | I2C_IC_DATA_CMD_RESTART_BITS;
-                i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_RESTART_BITS; // 1 for read
-                i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_STOP_BITS; // 1 for read
-                while (i2c0->hw->rxflr != 2 && (i2c0->hw->clr_tx_abrt == 0))
-                    yield();
-            } while (i2c0->hw->rxflr != 2);
-            uint16_t value = (i2c0->hw->data_cmd) & 0xff;
-            value += (i2c0->hw->data_cmd & 0xff) * 256;        
-            if ((ticks_ & 16) == 0)
-                lightALS_ = value;
-            else
-                lightUV_ = value;
-        }
-        // and finally, read the AVR state
-        lastState_ = state_.state;
-        do {
-            // query the AVR for the status bytes, first set the address
-            i2c0->hw->enable = 0;
-            i2c0->hw->tar = AVR_I2C_ADDRESS;
-            i2c0->hw->enable = 1;
-            // add commands for getting the blocks
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_STOP_BITS; // 1 for read, stop
-            while (i2c0->hw->rxflr != 8 && (i2c0->hw->clr_tx_abrt == 0))
-                yield();
-        } while (i2c0->hw->rxflr != 8);        
-        raw = reinterpret_cast<uint8_t*>(&state_);
-        for (int i = 0; i < 8; ++i)
-            *(raw++) = i2c0->hw->data_cmd;
 
     }
 
-    void Device::BSOD(int code) {
-        resetVRAM();
-        FrameBuffer<ColorRGB> fb{Bitmap<ColorRGB>{320,240, MemArea::VRAM}};
-        fb.setFg(ColorRGB::White());
-        fb.setFont(Iosevka_Mono6pt7b);
-        fb.setBg(ColorRGB::Blue());
-        fb.fill();
-        fb.textMultiline(0,0) << ":(\n\n"
-            << "FATAL ERROR " << code << "\n\n"
-            << "File: " << fatalErrorFile_ << "\n"
-            << "Line: " << fatalErrorLine_; 
-        LOG("FATAL ERROR " << code << "\n\n"
-            << "File: " << fatalErrorFile_ << "\n"
-            << "Line: " << fatalErrorLine_); 
-        ST7789::reset();
-        ST7789::enterContinuousUpdate();
-        fb.render();
-        while(true) {
-        };
+    void yield() {
+        //ST7789::processEvents();
     }
+
+    void tick() {
+
+    }
+
+    void powerOff() {
+        /// TODO: make sure sd and other things are done first, only then poweroff
+        DeviceWrapper::sendCommand(cmd::PowerOff{}); 
+    }
+
 
     // ============================================================================================
     // ST7789 Driver
@@ -249,12 +114,11 @@ namespace rckid {
         end();
 #else
         configure(DisplayMode::Natural_RGB565);
-        //setDisplayMode(DisplayMode::Natural);
         setColumnRange(0, 319);
         setRowRange(0, 239);
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
-        PNG png = PNG::fromBuffer(Logo16, sizeof(Logo16));
+        PNG png = PNG::fromBuffer(assets::Logo16);
         png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
             uint8_t const * raw = reinterpret_cast<uint8_t *>(line);
             for (int i = 0; i < lineWidth; ++i) {
@@ -395,145 +259,12 @@ namespace rckid {
         gpio_put(RP_PIN_DISP_WRX, false);
     }
 
-    void ST7789::processEvents() {
-        if (irqReady_) {
-            irqReady_ = false;
-            if (cb_()) {
-                updating_ = false;
-                stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::updateStart_);
-            }
+    void ST7789::irqHandler() {
+        if (cb_()) {
+            updating_ = false;
+            stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::updateStart_);
         }
     }
-
-
-    // ============================================================================================
-    // Audio Driver
-    // ============================================================================================
-
-    void audio::initialize() {
-        // configure the PWM pins
-        gpio_set_function(RP_PIN_PWM_RIGHT, GPIO_FUNC_PWM);
-        gpio_set_function(RP_PIN_PWM_LEFT, GPIO_FUNC_PWM);
-        // configure the audio out PWM
-        //pwm_set_wrap(PWM_SLICE, 254); // set wrap to 8bit sound levels
-        pwm_set_wrap(PWM_SLICE, 4096); // set wrap to 8bit sound levels
-        
-        pwm_set_clkdiv(PWM_SLICE, 1.38); // 12bit depth @ 44.1kHz and 250MHz
-        // set the PWM output to count to 256 441000 times per second
-        //pwm_set_clkdiv(PWM_SLICE, 11.07);
-        //pwm_set_clkdiv(PWM_SLICE, 61.03);
-        // acquire and configure the DMA
-        dma0_ = dma_claim_unused_channel(true);
-        dma1_ = dma_claim_unused_channel(true);
-        /*
-        auto dmaConf = dma_channel_get_default_config(dma_);
-        channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bytes (16 per channel, 2 channels)
-        channel_config_set_read_increment(& dmaConf, true);
-        channel_config_set_dreq(& dmaConf, pwm_get_dreq(TIMER_SLICE)); // DMA is driver by the sample rate PWM
-        //channel_config_set_dreq(&dmaConf, pwm_get_dreq(PWM_SLICE));
-        dma_channel_configure(dma_, & dmaConf, &pwm_hw->slice[PWM_SLICE].cc, nullptr, 0, false);
-        // enable IRQ0 on the DMA channel (shared with SD card and display)
-        dma_channel_set_irq0_enabled(dma_, true);
-        */
-    }
-
-    void audio::startPlayback(SampleRate rate, uint16_t * buffer, size_t bufferSize, CallbackPlay cb) {
-        configureDMA(dma0_, dma1_, buffer, bufferSize / 2); 
-        configureDMA(dma1_, dma0_, buffer + bufferSize / 2, bufferSize / 2);
-        cbPlay_ = cb;
-        buffer_ = buffer;
-        bufferSize_ = bufferSize;
-        setSampleRate(rate);
-        status_ |= PLAYBACK;
-        status_ &= ~ BUFFER_INDEX; // transferring the first half of the buffer
-        dma_channel_start(dma0_);
-        //dma_channel_transfer_from_buffer_now(dma0_, buffer, bufferSize_ / 2);
-        pwm_set_enabled(PWM_SLICE, true);
-        //pwm_set_enabled(TIMER_SLICE, true);
-    }
-
-    void audio::stopPlayback() {
-        pwm_set_enabled(PWM_SLICE, false);
-        pwm_set_enabled(TIMER_SLICE, false);
-        //irq_remove_handler(DMA_IRQ_0, irqDMADone);
-        dma_channel_abort(dma0_);
-        dma_channel_abort(dma1_);
-        status_ &= ~PLAYBACK;
-    }
-
-    void audio::startRecording(SampleRate rate) {
-
-    }
-
-    void audio::stopRecording() {
-
-    }
-
-    void audio::processEvents() {
-        if (status_ & CALLBACK) {
-            status_ &= ~CALLBACK;
-            if (status_ & PLAYBACK) {
-                cbPlay_(buffer_ + ((status_ & BUFFER_INDEX) ? 0 : bufferSize_ / 2), bufferSize_ / 2);
-            } else if (status_ & RECORDING) {
-                UNIMPLEMENTED; 
-            }
-        }
-    }
-
-    void audio::configureDMA(int dma, int other, uint16_t const * buffer, size_t bufferSize) {
-        auto dmaConf = dma_channel_get_default_config(dma);
-        channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bytes (16 per channel, 2 channels)
-        channel_config_set_read_increment(& dmaConf, true);
-        //channel_config_set_dreq(& dmaConf, pwm_get_dreq(TIMER_SLICE)); // DMA is driver by the sample rate PWM
-        channel_config_set_dreq(&dmaConf, pwm_get_dreq(PWM_SLICE));
-        channel_config_set_chain_to(& dmaConf, other); // chain to the other channel
-        dma_channel_configure(dma, & dmaConf, &pwm_hw->slice[PWM_SLICE].cc, buffer, bufferSize / 2, false); // the buffer consists of stereo samples, (32bits), i.e. buffer size / 2
-        // enable IRQ0 on the DMA channel (shared with SD card and display)
-        dma_channel_set_irq0_enabled(dma, true);
-    }
-
-    void audio::setSampleRate(uint16_t rate) {
-        // since even the lower frequency (8kHz) can be obtained with a 250MHz (max) sys clock and 16bit wrap, we keep clkdiv at 1 and only change wrap here
-        pwm_set_wrap(TIMER_SLICE, (cpu::clockSpeed() * 10 / rate + 5) / 10); 
-    }
-
-    // ============================================================================================
-    // DMA handler
-    // ============================================================================================
-
-
-     /** Shared DMA interrupt handler for all SDK processes. 
-     
-        Sharing the handler makes the dispatch a bit faster. 
-     */
-    void __not_in_flash_func(irqDMADone_)() {
-        unsigned irqs = dma_hw->ints0;
-        dma_hw->ints0 = irqs;
-        // display
-        if (irqs & ( 1u << ST7789::dma_)) {
-            ST7789::irqReady_ = true;
-        }
-        // audio
-        if (irqs & (1u << audio::dma0_)) {
-            // update dma0 address 
-            dma_channel_set_read_addr(audio::dma0_, audio::buffer_, false);
-            // we finished sending first part of buffer and are now sending the second part
-            audio::status_ &= ~audio::BUFFER_INDEX;
-            audio::status_ |= audio::CALLBACK;
-        } else if (irqs & (1u << audio::dma1_)) {
-            // update dma1 address 
-            dma_channel_set_read_addr(audio::dma1_, audio::buffer_ + audio::bufferSize_ / 2, false);
-            // and set the callback appropriately
-            audio::status_ |= audio::BUFFER_INDEX | audio::CALLBACK;
-        }
-    }
-
-} // namespace rckid
-
-int main() {
-    rckid::start();
-    UNREACHABLE;
 }
 
-
-#endif // !LIBRCKID_MOCK
+#endif // ARCH_RP2040

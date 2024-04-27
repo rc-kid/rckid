@@ -1,9 +1,7 @@
 #pragma once
 
 #include "canvas.h"
-
-#include "../ST7789.h"
-#include "../app.h"
+#include "ST7789.h"
 
 namespace rckid {
 
@@ -17,19 +15,15 @@ namespace rckid {
         static constexpr int DEFAULT_WIDTH = 320;
         static constexpr int DEFAULT_HEIGHT = 240; 
 
-        FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): Canvas{width, height, MemArea::None} {}
-        FrameBuffer(Rect const & rect): Canvas{rect.width(), rect.height(), MemArea::None}, top_{rect.top()}, left_{rect.left()} {}
-        FrameBuffer(Bitmap<ColorRGB> && bitmap): Canvas{std::move(bitmap)} {}
+        FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): Canvas{width, height} {}
 
         void enable() {
-            allocate(MemArea::VRAM);
             ST7789::configure(DisplayMode::Native_RGB565);
             ST7789::enterContinuousUpdate(Rect::XYWH(left_, top_, width(), height()));
         }
 
         void disable() {
             ST7789::leaveContinuousUpdate();
-            deallocate();
         }
 
         void render() {
@@ -47,18 +41,15 @@ namespace rckid {
         static constexpr int DEFAULT_WIDTH = 160;
         static constexpr int DEFAULT_HEIGHT = 120;
 
-        FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): Canvas{width, height, MemArea::None} {}
-        FrameBuffer(Bitmap<ColorRGB> && bitmap): Canvas{std::move(bitmap)} {}
+        FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): Canvas{width, height} {}
 
         void enable() {
-            allocate(MemArea::VRAM);
             ST7789::configure(DisplayMode::Native_2X_RGB565);
             ST7789::enterContinuousUpdate(width() * 2, height() * 2);
         }
 
         void disable() {
             ST7789::leaveContinuousUpdate();
-            deallocate();
         }
 
         void render() {
@@ -89,21 +80,19 @@ namespace rckid {
         static constexpr int DEFAULT_WIDTH = 320;
         static constexpr int DEFAULT_HEIGHT = 240;
 
-        FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): Canvas{width, height, MemArea::None} {}
-        FrameBuffer(Rect const & rect): Canvas{rect.width(), rect.height(), MemArea::None}, top_{rect.top()}, left_{rect.left()} {}
-        FrameBuffer(Bitmap<Color256> && bitmap): Canvas{std::move(bitmap)} {}
+        FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): 
+            Canvas{width, height},
+            renderBuffer1_{new uint32_t[height / 2] }, 
+            renderBuffer2_{new uint32_t[height / 2] } {
+        }
 
         void enable() {
-            allocate(MemArea::VRAM);
             ST7789::configure(DisplayMode::Native_RGB565);
             ST7789::enterContinuousUpdate(Rect::XYWH(left_, top_, width(), height()));
-            renderBuffer1_ = reinterpret_cast<uint32_t*>(allocateVRAM(height() * 2)); // 
-            renderBuffer2_ = reinterpret_cast<uint32_t*>(allocateVRAM(height() * 2)); // 
         }
 
         void disable() { 
             ST7789::leaveContinuousUpdate();
-            deallocate();
         }
 
         /** Renders the display using a 2 column buffer column by column so that while one columh is being rendered, the other column is being processed. 
@@ -148,22 +137,19 @@ namespace rckid {
         static constexpr int DEFAULT_WIDTH = 160;
         static constexpr int DEFAULT_HEIGHT = 120;
 
-        FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): Canvas{width, height, MemArea::None} {}
-        FrameBuffer(Bitmap<Color256> && bitmap): Canvas{std::move(bitmap)} {}
+        FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): 
+            Canvas{width, height},
+            renderBuffer1_{new uint32_t[height / 2] }, 
+            renderBuffer2_{new uint32_t[height / 2] } {
+        }
 
         void enable() {
-            allocate(MemArea::VRAM);
             ST7789::configure(DisplayMode::Native_2X_RGB565);
             ST7789::enterContinuousUpdate(width() * 2, height() * 2);
-            // TODO move this to allocate
-            renderBuffer1_ = reinterpret_cast<uint32_t*>(allocateVRAM(height() * 2)); // 
-            renderBuffer2_ = reinterpret_cast<uint32_t*>(allocateVRAM(height() * 2)); // 
         }
 
         void disable() { 
             ST7789::leaveContinuousUpdate();
-            // TODO deallocate buffers
-            deallocate();
         }
 
         /** Renders the display using a 2 column buffer column by column so that while one columh is being rendered, the other column is being processed. 

@@ -1,13 +1,10 @@
 #pragma once
 
-#include "../rckid.h"
+#include "rckid/rckid.h"
 #include "primitives.h"
+#include "png.h"
 
 
-extern "C" {
-    void rckid_mem_fill_32(uint32_t * target, size_t num, uint32_t source);
-}
-        
 namespace rckid {
 
     /** Pixel bitmap, templated by the underlying color type. 
@@ -20,8 +17,10 @@ namespace rckid {
         using Color = COLOR;
 
         Bitmap() = default;
-        Bitmap(int w, int h, MemArea where = MemArea::Heap): w_{w}, h_{h} {
-            allocate(where);
+        Bitmap(int w, int h): 
+            w_{w}, 
+            h_{h},
+            buffer_{allocateBuffer(w_, h_)} {
         }
 
         Bitmap(Bitmap && from):
@@ -34,11 +33,11 @@ namespace rckid {
         }
 
         ~Bitmap() {
-            deallocate();
+            delete buffer_;
         }
 
         Bitmap & operator = (Bitmap && other) {
-            deallocate();
+            delete buffer_;
             w_ = other.w_;
             h_ = other.h_;
             buffer_ = other.buffer_;
@@ -46,26 +45,11 @@ namespace rckid {
             return *this;
         }
 
-        void allocate(MemArea where = MemArea::Heap) {
-            if (buffer_ != nullptr)
-                return;
-            ASSERT((w_ * Color::BPP) % 32 == 0);
-            ASSERT((h_ * Color::BPP) % 32 == 0);
-            if (w_ != 0 && h_ != 0) {
-                size_t numBytes = Color::BPP * w_ * h_ / 8;
-                buffer_ = static_cast<uint32_t *>(rckid::allocate(numBytes, where));
-            }
-        }
-
-        void deallocate() {
-            rckid::deallocate(buffer_);
-        }
-
-        void resize(int w, int h, MemArea where = MemArea::Heap) {
-            deallocate();
+        void resize(int w, int h) {
+            delete buffer_;
             w_ = w;
             h_ = h;
-            allocate(where);
+            buffer_ = allocateBuffer(w_, h_);
         }
 
         int width() const { return w_; }
@@ -146,6 +130,12 @@ namespace rckid {
 
     protected:
 
+        constexpr uint32_t * allocateBuffer(int w, int h) {
+            if (w ==0 || h == 0)
+                return nullptr;
+            return new uint32_t[w * h * Color::BPP / 8 / 4];
+        } 
+
         constexpr __force_inline size_t map(int x, int y) const { return map(x, y, w_, h_); }
 
         static __force_inline size_t map(int x, int y, int w, int h) { 
@@ -161,7 +151,7 @@ namespace rckid {
     template<>
     inline void Bitmap<ColorRGB>::fill(Color color) {
         uint32_t c = (static_cast<uint32_t>(color.rawValue16()) << 16) | color.rawValue16();
-        rckid_mem_fill_32(buffer_, w_ * h_ / 2, c);        
+        rckid_mem_fill_32x8(buffer_, w_ * h_ / 2, c);        
         /*
         int i = 0, e = w_ * h_ / 2;
         for ( ; i <= e - 16; ) {

@@ -1,6 +1,6 @@
 #include "common/config.h"
 #include "rckid/rckid.h"
-#include "rckid/ST7789.h"
+#include "rckid/graphics/ST7789.h"
 
 using namespace rckid;
 using namespace platform;
@@ -9,8 +9,10 @@ using namespace platform;
 
     Mostly useful for checking the display connection is stable and works all right.  
  */
-void rckid_main() {
+int main() {
+    rckid::initialize();
     gpio::outputHigh(GPIO21);
+    //malloc(100);
     while (true) {
         ST7789::reset();
         ST7789::fill(ColorRGB{255, 0, 0});
@@ -27,5 +29,5 @@ void rckid_main() {
         gpio::outputLow(GPIO21);
         cpu::delayMs(200);
         gpio::outputHigh(GPIO21);
-    }
+    } 
 }

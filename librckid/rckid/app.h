@@ -7,7 +7,7 @@
 #include "rckid.h"
 #include "graphics/png.h"
 #include "graphics/primitives.h"
-#include "fonts/Iosevka_Mono6pt7b.h"
+//#include "assets/fonts/Iosevka_Mono6pt7b.h"
 
 namespace rckid {
 

@@ -31,6 +31,8 @@ namespace rckid {
         friend class BaseApp;
         friend void irqDMADone_();
         friend void yield();
+        friend void * __wrap_malloc(size_t);
+        friend void __wrap_free(void *);
 
         static inline unsigned fps_;
         static inline unsigned fpsCounter_;

@@ -5,5 +5,6 @@ set(TARGET display-test)
 
 file(GLOB_RECURSE SRC "./*.cpp" "./*.h")
 add_executable(${TARGET} ${SRC})
-rckid_configure_target(${TARGET})
+
+link_with_librckid(${TARGET})
 
