@@ -12,6 +12,7 @@
 #include <hardware/pwm.h>
 #include <hardware/dma.h>
 
+#include "rckid.h"
 #include "assets.h"
 #include "graphics/ST7789.h"
 #include "graphics/png.h"
@@ -23,10 +24,15 @@
 #include "bmi160.h"
 
 
-namespace {
-    platform::LTR390UV alsSensor_{};
-    platform::BMI160 accelerometer_{};
-}
+platform::LTR390UV alsSensor_{};
+platform::BMI160 accelerometer_{};
+
+static constexpr unsigned TICK_DONE = 0;
+static constexpr unsigned TICK_ACCEL = 1;
+static constexpr unsigned TICK_ALS = 2;
+static constexpr unsigned TICK_AVR = 3;
+
+volatile unsigned tickInProgress_ = TICK_DONE;
 
 namespace rckid {
 
@@ -54,6 +60,7 @@ namespace rckid {
         // initialize the display
         ST7789::initialize();
         setBrightness(128);
+        setButtonsRainbow(16);
         // initialize accelerometer & ALS sensor peripherals
         accelerometer_.initialize();
         alsSensor_.initialize();
@@ -62,11 +69,35 @@ namespace rckid {
     }
 
     void yield() {
-        //ST7789::processEvents();
+        tud_task();
     }
 
-    void tick() {
 
+   void tick() {
+        MEASURE_TIME(stats::tickUs_, 
+            while (tickInProgress_ != TICK_DONE)
+                yield();
+            /*
+            tickInProgress_ = TICK_AVR; 
+            // initialize the I2C system 
+            i2c0->hw->enable = 0;
+            i2c0->hw->tar = accelerometer_.address;
+            i2c0->hw->data_cmd = platform::BMI160::REG_DATA;
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_RESTART_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
+            i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_STOP_BITS; // 1 for 
+            i2c0->hw->enable = 1;
+            */
+        );
     }
 
     void powerOff() {
@@ -74,6 +105,14 @@ namespace rckid {
         DeviceWrapper::sendCommand(cmd::PowerOff{}); 
     }
 
+    // ============================================================================================
+    // DeviceWrapper
+    // ============================================================================================
+
+    void DeviceWrapper::waitTickDone() {
+        while (tickInProgress_ != TICK_DONE)
+            yield();
+    }
 
     // ============================================================================================
     // ST7789 Driver

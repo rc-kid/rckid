@@ -1,51 +1,51 @@
 #include "graphics/ST7789.h"
 //#include "audio.h"
 #include "app.h"
+#include "device_wrapper.h"
+
+uint32_t nextFpsTick_ = 0;
+uint32_t fpsCounter_ = 0;
 
 namespace rckid {
 
     void BaseApp::loop() {
+        // handle the focus - blur previous app if any 
         BaseApp * last = currentApp_;
         if (last != nullptr)
             last->onBlur();
+        // switch to current app, set focus
         currentApp_ = this;
         onFocus();
-        // reset stats
-        stats::nextFpsTick_ = time_us_32() + 1000000;
-        stats::fps_ = 0;
-        stats::fpsCounter_ = 0;
-        // do our loop 
+        nextFpsTick_ = time_us_32() + 1000000;
+        fpsCounter_ = 0;
+        // the actual loop
         while (true) {
-            uint32_t frameStart = time_us_32();
-            if (frameStart >= stats::nextFpsTick_) {
-                stats::fps_ = stats::fpsCounter_;
-                stats::fpsCounter_ = 0;
-                stats::nextFpsTick_ += 1000000;
+            if (nextFpsTick_ <= time_us_32()) {
+                nextFpsTick_ += 1000000;
+                stats::fps_ = fpsCounter_;
+                fpsCounter_ = 0;
             }
-            uint32_t tSys = CALCULATE_TIME(
-                tick();
-            );
-            uint32_t tUpdate = CALCULATE_TIME(
-                update();
-            );
-            // exit the loop if we have exitted (currentApp_ is null)
+            // wait for the tick to be done so that I2C can be used while in update method
+            MEASURE_TIME(stats::waitTickUs_, DeviceWrapper::waitTickDone());
+            // call update
+            MEASURE_TIME(stats::updateUs_, update());
+            // check if we are no longer the app (exit was called during update)
             if (currentApp_ == nullptr)
                 break;
-            
-            ST7789::waitUpdateDone();
-
-            uint32_t tDraw = CALCULATE_TIME(
-                draw();
-            );
-            render();
-            ++stats::fpsCounter_;
-            stats::systemUs_ = tSys;
-            stats::updateUs_ = tUpdate;
-            stats::drawUs_ = tDraw; 
-            stats::frameUs_ = static_cast<unsigned>(time_us_32() - frameStart);
+            // start new tick (no I2C allowed after update)
+            tick();
+            // wait for the display update to be done so that draw has complete access
+            MEASURE_TIME(stats::waitRenderUs_, ST7789::waitUpdateDone());
+            MEASURE_TIME(stats::drawUs_, draw());
+            stats::waitVSyncUs_ = 0;
+            MEASURE_TIME(stats::renderUs_, render());
+            stats::renderUs_ -= stats::waitVSyncUs_; 
+            ++fpsCounter_;
         }
+        // patch current app to ourselves so that the state blur sees is consistent and blur the current app
         currentApp_ = this;
         onBlur();
+        // go back to previous app and handle its focus, if any
         currentApp_ = last;
         if (currentApp_)
             currentApp_->onFocus();

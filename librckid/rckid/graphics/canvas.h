@@ -24,9 +24,12 @@ namespace rckid {
 
         /** Creates new canvas by consuming already created bitmap. 
          */
-        Canvas(int w, int h): Bitmap<COLOR>{w, h} { }
-
-        Canvas() = default;
+        Canvas(int w, int h): 
+            Bitmap<COLOR>{w, h}, 
+            font_{& Iosevka_Mono6pt7b},
+            fg_{Color::White()}, 
+            bg_{Color::Black()} {
+        }
 
         Color bg() const { return bg_; }
         Color fg() const { return fg_; }

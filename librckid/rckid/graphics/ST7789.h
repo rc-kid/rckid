@@ -162,11 +162,11 @@ namespace rckid {
          */
         static void waitVSync() { 
 #if (! defined ARCH_MOCK)
-            uint64_t t = uptimeUs();
-            while (gpio_get(RP_PIN_DISP_TE)); 
-            while (! gpio_get(RP_PIN_DISP_TE))
-                yield();
-            stats::vsyncWaitUs_ = static_cast<unsigned>(uptimeUs() - t);
+            MEASURE_TIME(stats::waitVSyncUs_, 
+                while (gpio_get(RP_PIN_DISP_TE)); 
+                while (! gpio_get(RP_PIN_DISP_TE))
+                    yield();
+            );
 #endif
         }
 

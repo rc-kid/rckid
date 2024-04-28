@@ -9,6 +9,8 @@ template<typename COLOR, rckid::DisplayMode DISPLAY_MODE>
 void helloWorld() {
     using namespace rckid;
     size_t afterInit = getUsedHeap();
+    size_t afterInitMalloc = getMallocCalls();
+    size_t afterInitFree = getFreeCalls();
     rckid::initialize();
     FrameBuffer<COLOR, DISPLAY_MODE> fb{};
     fb.enable();
@@ -19,13 +21,13 @@ void helloWorld() {
     while (true) {
         fb.fill();
         fb.textMultiline(0,0) << "Hello world! " << t << "\n"
-            << "Heap:    " << afterInit << ", now: " << getUsedHeap() << "\n"
-            << "Calls:   " << getMallocCalls() << ", " << getFreeCalls() << "\n"
+            << "Init:    " << afterInit << " - " << afterInitMalloc << " - " << afterInitFree << "\n"
+            << "Heap:    " << getUsedHeap() << " - " << getMallocCalls() << " - " << getFreeCalls() << "\n"
             << "BPP:     " << COLOR::BPP << "\n"
             << "Draw:    " << stats::drawUs() << "\n"
             << "Display: " << stats::displayUpdateUs() << "\n";
         fb.render();
-        cpu::delayMs(1000);
+        cpu::delayMs(500);
         ++t;
     }
 }

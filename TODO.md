@@ -10,6 +10,12 @@
 
 ## TODO
 
+- ColorRGB framebuffer update is much slower than Color256, why? 
+
+- the issues with rebooting seem to be due to the I2C communication being at some weird state, and then probably hanging? When there is no comms, all works great it seems 
+
+- what is the allocation during startup - see how I can debug and if it poses a problem
+
 - make showing image on the screen a separate function and make it work in mock mode as well
 - see if framebuffer 256 using actual colors for the buffers will be slower and if not make the code nicer
 - 2x 256 framebuffer does not render correctly and likely the code is wrong

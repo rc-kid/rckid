@@ -11,13 +11,16 @@ namespace rckid {
     class stats {
     public:
 
-        static unsigned fps() { return fps_; }
-        static unsigned systemUs() { return systemUs_; }
+        // timings for the app loop elements
+        static unsigned waitTickUs() { return waitTickUs_; }
         static unsigned updateUs() { return updateUs_; }
+        static unsigned tickUs() { return tickUs_; }
+        static unsigned waitRenderUs() { return waitRenderUs_; }
         static unsigned drawUs() { return drawUs_; }
-        static unsigned frameUs() { return frameUs_; }
-        static unsigned idleUs() { return frameUs_ - systemUs_ - updateUs_ - drawUs_; }
-        static unsigned idlePct() { return idleUs() * 100 / frameUs_; }
+        static unsigned waitVSyncUs() { return waitVSyncUs_; }
+        static unsigned renderUs() { return renderUs_; }
+
+        static unsigned fps() { return fps_; }
 
         static unsigned lastUpdateUs() { return updateUs_; }
         static unsigned lastUpdateWaitUs() { return updateWaitUs_; }
@@ -31,17 +34,24 @@ namespace rckid {
         friend class BaseApp;
         friend void irqDMADone_();
         friend void yield();
+        friend void tick();
         friend void * __wrap_malloc(size_t);
         friend void __wrap_free(void *);
 
-        static inline unsigned fps_;
-        static inline unsigned fpsCounter_;
-        static inline unsigned systemUs_;
-        static inline unsigned updateUs_;
-        static inline unsigned drawUs_;
-        static inline unsigned frameUs_;
 
-        static inline uint32_t nextFpsTick_;
+
+        // time information for the app loop elements
+        static inline uint32_t waitTickUs_ = 0;
+        static inline uint32_t updateUs_ = 0;
+        static inline uint32_t tickUs_ = 0;
+        static inline uint32_t waitRenderUs_ = 0;
+        static inline uint32_t drawUs_ = 0;
+        static inline uint32_t waitVSyncUs_ = 0;
+        static inline uint32_t renderUs_ = 0;
+        
+        // fps rendered by the current app
+        static inline unsigned fps_;
+
 
         static inline unsigned displayUpdateUs_ = 0;
         static inline unsigned updateWaitUs_ = 0;

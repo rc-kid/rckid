@@ -101,6 +101,8 @@ namespace rckid {
             toRender_ = buffer_;
             // translate first column
             toRender_ = Color256::translatePixelBuffer(buffer_, renderBuffer1_, height());
+            // process the next colum
+            toRender_ = Color256::translatePixelBuffer(toRender_, renderBuffer2_, height()); 
             column_ = 0;
             ST7789::waitVSync();
             ST7789::writePixels(reinterpret_cast<uint16_t const*>(renderBuffer1_), height(), [this]() {
@@ -115,8 +117,6 @@ namespace rckid {
                     toRender_ = Color256::translatePixelBuffer(toRender_, (column_ % 2 == 1) ? renderBuffer1_ : renderBuffer2_, height());
                 return false;
             });
-            // process the next colum
-            toRender_ = Color256::translatePixelBuffer(toRender_, renderBuffer2_, height()); 
         }
 
     private:

@@ -5,6 +5,8 @@ namespace rckid {
 
     class DeviceWrapper {
 
+        friend class BaseApp;
+
         friend void initialize();
         friend void yield();
         
@@ -69,6 +71,8 @@ namespace rckid {
                     return false;
             }
         }
+
+        static void waitTickDone();
 
         // device & sensors state
         static inline DeviceState state_;

@@ -10,8 +10,11 @@
 #define ASSERT(...)
 
 
-
-#define CALCULATE_TIME(...) [&](){ uint32_t start__ = time_us_32(); __VA_ARGS__; return static_cast<unsigned>(time_us_32() - start__); }()
+#define MEASURE_TIME(whereTo, ...) { \
+    uint32_t start__ = time_us_32(); \
+    __VA_ARGS__; \
+    whereTo = time_us_32() - start__; \
+}
 
 
 namespace rckid {
@@ -23,9 +26,15 @@ namespace rckid {
     void initialize();
 
     /** Yields to the RCKid's device events. 
+     
+        TODO what events? can all be done in IRQ? Maybe the tinyUSB? 
      */
     void yield();
 
+    /** Performs single tick. 
+
+        During a tick, the framework talks to the AVR and attached sensors to determine the state of the attached peripherals. Since the I2C is very slow, performing the tick is actually expected to be done in parallel with the rendering and drawing and calling the tick function first finishes the previous tick, if any and then starts a new one, which will be handled v
+     */
     void tick();
 
     /** \name Controls & Sensors

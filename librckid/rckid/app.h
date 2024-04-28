@@ -14,6 +14,9 @@ namespace rckid {
     /** Base app class. 
 
         Apps are always run modally, i.e. the loop is new frame 
+
+        App:                 | update |                     | draw |
+        RCKid:  waitTickDone |        | tick waitRenderDone |      | render
     */
     class BaseApp {
     public:
