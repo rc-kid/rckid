@@ -11,9 +11,9 @@
 
 
 #define MEASURE_TIME(whereTo, ...) { \
-    uint32_t start__ = time_us_32(); \
+    uint32_t start__ = uptimeUs(); \
     __VA_ARGS__; \
-    whereTo = time_us_32() - start__; \
+    whereTo = uptimeUs() - start__; \
 }
 
 

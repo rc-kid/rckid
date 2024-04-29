@@ -1,5 +1,6 @@
 #pragma once
 
+#include "bmi160.h"
 namespace rckid {
 
 
@@ -13,12 +14,12 @@ namespace rckid {
         friend bool down(Btn b) { return btnDown(b, state_.state); }
         friend bool pressed(Btn b) { return btnDown(b, state_.state) && ! btnDown(b, lastState_); }
         friend bool released(Btn b) { return !btnDown(b, state_.state) && btnDown(b, lastState_); }
-        friend int16_t accelX() { return accelX_; }
-        friend int16_t accelY() { return accelY_; }
-        friend int16_t accelZ() { return accelZ_; }
-        friend int16_t gyroX() { return gyroX_; }
-        friend int16_t gyroY() { return gyroY_; }
-        friend int16_t gyroZ() { return gyroZ_; }
+        friend int16_t accelX() { return aState_.accelX; }
+        friend int16_t accelY() { return aState_.accelY; }
+        friend int16_t accelZ() { return aState_.accelZ; }
+        friend int16_t gyroX() { return aState_.gyroX; }
+        friend int16_t gyroY() { return aState_.gyroY; }
+        friend int16_t gyroZ() { return aState_.gyroZ; }
         friend uint16_t lightAmbient() { return lightALS_; }
         friend uint16_t lightUV() { return lightUV_; }
         friend unsigned tempAvr() { return state_.state.temp(); }
@@ -35,6 +36,8 @@ namespace rckid {
         friend unsigned vcc() { return state_.state.vcc(); }
 
     private:
+
+        friend void irqI2CDone_();
 
         template<typename T>
         static void sendCommand(T const & cmd) {
@@ -77,12 +80,7 @@ namespace rckid {
         // device & sensors state
         static inline DeviceState state_;
         static inline State lastState_;
-        static inline int16_t accelX_;
-        static inline int16_t accelY_;
-        static inline int16_t accelZ_;
-        static inline int16_t gyroX_;
-        static inline int16_t gyroY_;
-        static inline int16_t gyroZ_;
+        static inline platform::BMI160::State aState_;
         static inline uint16_t lightALS_ = 0;
         static inline uint16_t lightUV_ = 0;
 

@@ -133,7 +133,7 @@ namespace rckid {
         static void writePixels(uint16_t const * pixels, size_t numPixels, UpdatePixelsCallback cb) {
             cb_ = cb;
             if (!updating_) {
-                stats::updateStart_ = uptimeUs();
+                stats::displayUpdateStart_ = uptimeUs();
                 updating_ = true;
             }
 #if (! defined ARCH_MOCK)
@@ -152,10 +152,8 @@ namespace rckid {
         /** Busy waits until the display finishes updating. 
          */
         static void waitUpdateDone() { 
-            uint64_t t = uptimeUs();
             while (updating_)
                 yield();
-            stats::updateWaitUs_ = static_cast<unsigned>(uptimeUs() - t);
         }
 
         /** Busy waits for the rising edge on the TE display pin, signalling the beginning of the V-blank period. 

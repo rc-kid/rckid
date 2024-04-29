@@ -63,10 +63,13 @@ endfunction()
 
 link_with_librckid(librckid)
 
-pico_wrap_function(librckid malloc)
-pico_wrap_function(librckid calloc)
-pico_wrap_function(librckid realloc)
-pico_wrap_function(librckid free)
+
+if (ARCH STREQUAL "RP2040")
+    pico_wrap_function(librckid malloc)
+    pico_wrap_function(librckid calloc)
+    pico_wrap_function(librckid realloc)
+    pico_wrap_function(librckid free)
+endif()
 
 target_include_directories(librckid PUBLIC ${CMAKE_SOURCE_DIR}/librckid)
 

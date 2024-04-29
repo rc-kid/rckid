@@ -16,11 +16,11 @@ namespace rckid {
         // switch to current app, set focus
         currentApp_ = this;
         onFocus();
-        nextFpsTick_ = time_us_32() + 1000000;
+        nextFpsTick_ = uptimeUs() + 1000000;
         fpsCounter_ = 0;
         // the actual loop
         while (true) {
-            if (nextFpsTick_ <= time_us_32()) {
+            if (nextFpsTick_ <= uptimeUs()) {
                 nextFpsTick_ += 1000000;
                 stats::fps_ = fpsCounter_;
                 fpsCounter_ = 0;

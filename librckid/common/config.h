@@ -71,7 +71,7 @@
 // Actual frequency: 10416666. - ????????????
 #define RP_SD_SPI_BAUDRATE 12000000
 
-#define RP_I2C_BAUDRATE 100000
+#define RP_I2C_BAUDRATE 400000
 
 /** The baudrate for parallel data transfer to the display. 
  

@@ -1,4 +1,6 @@
-#if (! defined LIBRCKID_MOCK)
+#include "platform.h"
+
+#if (defined ARCH_RP2040)
 
 #include "pico/unique_id.h"
 #include "tusb_config.h"
@@ -372,4 +374,4 @@ extern "C" {
 }
 //@}
 
-#endif // ! LIBRCKID_MOCK
+#endif // ARCH_RP2040
