@@ -17,12 +17,24 @@ namespace rckid {
 
     void yield() {
         // TODO do we do anything here actually? 
-        ST7789::processEvents();
+        //ST7789::processEvents();
     }
 
     void tick() {
         MEASURE_TIME(stats::tickUs_, 
             ++stats::ticks_;
+            DeviceWrapper::lastState_ = DeviceWrapper::state_.state;
+            DeviceWrapper::state_.state.setBtnSel(IsKeyDown(KEY_SPACE));    
+            DeviceWrapper::state_.state.setBtnStart(IsKeyDown(KEY_ENTER));    
+            DeviceWrapper::state_.state.setBtnA(IsKeyDown(KEY_A));    
+            DeviceWrapper::state_.state.setBtnB(IsKeyDown(KEY_B));    
+            DeviceWrapper::state_.state.setBtnLeft(IsKeyDown(KEY_LEFT));    
+            DeviceWrapper::state_.state.setBtnRight(IsKeyDown(KEY_RIGHT));    
+            DeviceWrapper::state_.state.setBtnUp(IsKeyDown(KEY_UP));    
+            DeviceWrapper::state_.state.setBtnDown(IsKeyDown(KEY_DOWN));    
+            if (WindowShouldClose())
+                std::exit(-1);
+
         );
     }
 
@@ -50,7 +62,7 @@ namespace rckid {
         int y_ = 0;
         int xEnd_ = 320;
         int yEnd_ = 240;
-        bool drawing_ = false;
+        ColorRGB framebuffer_[320 * 240];
     }
 
     void ST7789::initialize() {
@@ -81,18 +93,34 @@ namespace rckid {
 
     void ST7789::leaveContinuousUpdate() {
         updating_ = false;
-        irqReady_ = false;
     }
 
     void ST7789::initializePinsBitBang() {}
 
     void ST7789::sendMockPixels(uint16_t const * pixels, size_t numPixels) {
-        if (!drawing_) {
-            BeginDrawing();
-            drawing_ = true;
-        }
         while (numPixels-- != 0) {
             ColorRGB rgb = ColorRGB::Raw565(*pixels++);
+            framebuffer_[x_ + y_ * (xEnd_ - xStart_)] = rgb;
+            if (++y_ == yEnd_) {
+                if (x_-- == xStart_)
+                    x_ = xEnd_ - 1;
+                y_ = yStart_;
+            }
+        }
+        if (cb_()) {
+            updating_ = false;
+            BeginDrawing();
+            for (int x = 0; x < 320; ++x) {
+                for (int y = 0; y < 240; ++y) {
+                    ColorRGB c = framebuffer_[x + y * 320];
+                    DrawRectangle(x * 2, y * 2, 2, 2, (Color) { c.r(), c.g(), c.b(), 255});
+                }
+            }
+            EndDrawing();
+
+        }
+            /*
+
             switch (displayMode_) {
                 case DisplayMode::Native_2X_RGB565:
                     DrawRectangle(x_ * 2, y_ * 2, 2, 2, (Color) { rgb.r(), rgb.g(), rgb.b(), 255});
@@ -112,22 +140,22 @@ namespace rckid {
                 default:
                     UNREACHABLE;
             }
-        }
-        irqReady_ = true;
-    }
-
-    void ST7789::processEvents() {
-        if (irqReady_) {
-            irqReady_ = false;
-            if (cb_()) {
-                updating_ = false;
-                drawing_ = false;
-                EndDrawing();
-                stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::updateStart_);
-            }
-        }
+            */
+        //irqReady_ = true;
     }
 
 } // namespace rckid
+
+// ============================================================================================
+// Assembly mocks
+// ============================================================================================
+
+extern "C" {
+    void rckid_mem_fill_32x8(uint32_t * buffer, size_t num, uint32_t value) {
+        while (num-- > 0)
+            *(buffer++) = value;
+    }
+}
+
 
 #endif // ARCH_MOCK

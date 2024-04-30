@@ -2,9 +2,17 @@
 #include "rckid.h"
 #include "stats.h"
 
+#if (defined ARCH_RP2040)
+
 extern char __bss_end__; 
 extern char __StackLimit;
 
+#else
+
+char __StackLimit;
+char __bss_end__;
+
+#endif
 namespace {
     struct Chunk {
         uint32_t size;
@@ -80,3 +88,4 @@ namespace rckid {
 
     }
 }
+

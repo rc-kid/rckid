@@ -10,6 +10,7 @@ namespace rckid {
 
         friend void initialize();
         friend void yield();
+        friend void tick();
         
         friend bool down(Btn b) { return btnDown(b, state_.state); }
         friend bool pressed(Btn b) { return btnDown(b, state_.state) && ! btnDown(b, lastState_); }

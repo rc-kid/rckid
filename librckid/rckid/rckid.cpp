@@ -381,7 +381,6 @@ namespace rckid {
             dma_channel_abort(dma_);
             dma_channel_set_irq0_enabled(dma_, true);
             updating_ = false;
-            irqReady_ = false;
             pio_sm_set_enabled(pio_, sm_, false);
             end(); // end the RAMWR command
             initializePinsBitBang();

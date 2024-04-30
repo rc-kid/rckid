@@ -278,7 +278,6 @@ namespace rckid {
 
         static inline UpdatePixelsCallback cb_;
         static inline volatile bool updating_ = false;
-        static inline volatile bool irqReady_ = false;
 
         static inline DisplayMode displayMode_ = DisplayMode::Native_RGB565;
 
