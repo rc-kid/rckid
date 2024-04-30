@@ -82,8 +82,7 @@ namespace rckid {
 
         FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): 
             Canvas{width, height},
-            renderBuffer1_{new uint32_t[height / 2] }, 
-            renderBuffer2_{new uint32_t[height / 2] } {
+            renderBuffer_{new uint32_t[height]} {
         }
 
         void enable() {
@@ -99,22 +98,22 @@ namespace rckid {
          */
         void render() {
             toRender_ = buffer_;
-            // translate first column
-            toRender_ = Color256::translatePixelBuffer(buffer_, renderBuffer1_, height());
+            // translate first two columns column
+            toRender_ = Color256::translatePixelBuffer(buffer_, renderBuffer_, height() * 2, Color256::palette);
             // process the next colum
-            toRender_ = Color256::translatePixelBuffer(toRender_, renderBuffer2_, height()); 
+//            toRender_ = Color256::translatePixelBuffer(toRender_, renderBuffer_ + (height() / 2), height(), Color256::palette);
             column_ = 0;
             ST7789::waitVSync();
-            ST7789::writePixels(reinterpret_cast<uint16_t const*>(renderBuffer1_), height(), [this]() {
+            ST7789::writePixels(reinterpret_cast<uint16_t const*>(renderBuffer_), height(), [this]() {
                 if (++column_ == width())
                     return true;
                 // write the already processed pixels
                 ST7789::writePixels(
-                    reinterpret_cast<uint16_t const *>((column_ % 2 == 0) ? renderBuffer1_ : renderBuffer2_),
+                    reinterpret_cast<uint16_t const *>((column_ % 2 == 0) ? renderBuffer_ : renderBuffer_ + (height() / 2)),
                     height()
                 );
                 if (column_ + 1 < width())
-                    toRender_ = Color256::translatePixelBuffer(toRender_, (column_ % 2 == 1) ? renderBuffer1_ : renderBuffer2_, height());
+                    toRender_ = Color256::translatePixelBuffer(toRender_, (column_ % 2 == 1) ? renderBuffer_ : renderBuffer_ + (height() / 2), height(), Color256::palette);
                 return false;
             });
         }
@@ -123,8 +122,7 @@ namespace rckid {
 
         int top_ = 0;
         int left_ = 0;
-        uint32_t * renderBuffer1_ = nullptr;
-        uint32_t * renderBuffer2_ = nullptr;
+        uint32_t * renderBuffer_ = nullptr;
         uint32_t const * toRender_ = nullptr;
         int column_ = 0;
 
@@ -157,7 +155,7 @@ namespace rckid {
         void render() {
             toRender_ = buffer_;
             // translate one column
-            toRender_ = Color256::translatePixelBuffer(buffer_, renderBuffer1_, height());
+            toRender_ = Color256::translatePixelBuffer(buffer_, renderBuffer1_, height(), Color256::palette);
             column_ = 0;
             ST7789::waitVSync();
             ST7789::writePixels(reinterpret_cast<uint16_t const*>(renderBuffer1_), height(), [this]() {
@@ -169,11 +167,11 @@ namespace rckid {
                     height()
                 );
                 if (column_ + 1 < width())
-                    toRender_ = Color256::translatePixelBuffer(toRender_, (column_ % 2 == 1) ? renderBuffer1_ : renderBuffer2_, height());
+                    toRender_ = Color256::translatePixelBuffer(toRender_, (column_ % 2 == 1) ? renderBuffer1_ : renderBuffer2_, height(), Color256::palette);
                 return false;
             });
             // process the next colum
-            toRender_ = Color256::translatePixelBuffer(toRender_, renderBuffer2_, height()); 
+            toRender_ = Color256::translatePixelBuffer(toRender_, renderBuffer2_, height(), Color256::palette); 
         }
 
     private:

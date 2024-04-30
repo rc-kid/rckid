@@ -1,15 +1,10 @@
 #include "rckid/rckid.h"
-#include "rckid/apps/system/Carousel.h"
-#include "rckid/apps/games/SlidingPuzzle.h"
-#include "rckid/apps/games/Tetris.h"
-
-#include "rckid/graphics/bitmap.h"
-#include "rckid/audio.h"
+#include "apps/games/SlidingPuzzle.h"
 
 using namespace rckid;
 
-void rckid_main() {
-    audio::setAudioEnabled(true);
+int main() {
+    rckid::initialize();
     //start(Menu{});
     SlidingPuzzle{}.run();
     //start(Tetris{});

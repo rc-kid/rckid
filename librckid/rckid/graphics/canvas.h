@@ -26,9 +26,9 @@ namespace rckid {
          */
         Canvas(int w, int h): 
             Bitmap<COLOR>{w, h}, 
-            font_{& Iosevka_Mono6pt7b},
             fg_{Color::White()}, 
-            bg_{Color::Black()} {
+            bg_{Color::Black()},
+            font_{& Iosevka_Mono6pt7b} {
         }
 
         Color bg() const { return bg_; }
