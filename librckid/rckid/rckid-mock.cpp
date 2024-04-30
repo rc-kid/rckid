@@ -117,31 +117,7 @@ namespace rckid {
                 }
             }
             EndDrawing();
-
         }
-            /*
-
-            switch (displayMode_) {
-                case DisplayMode::Native_2X_RGB565:
-                    DrawRectangle(x_ * 2, y_ * 2, 2, 2, (Color) { rgb.r(), rgb.g(), rgb.b(), 255});
-                    if (++y_ == yEnd_) {
-                        if (x_-- == xStart_)
-                            x_ = xEnd_ - 1;
-                        y_ = yStart_;
-                    }
-                case DisplayMode::Native_RGB565:
-                    DrawRectangle(x_ * 2, y_ * 2, 2, 2, (Color) { rgb.r(), rgb.g(), rgb.b(), 255});
-                    if (++y_ == yEnd_) {
-                        if (x_-- == xStart_)
-                            x_ = xEnd_ - 1;
-                        y_ = yStart_;
-                    }
-                    break;
-                default:
-                    UNREACHABLE;
-            }
-            */
-        //irqReady_ = true;
     }
 
 } // namespace rckid
@@ -156,6 +132,5 @@ extern "C" {
             *(buffer++) = value;
     }
 }
-
 
 #endif // ARCH_MOCK

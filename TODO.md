@@ -10,6 +10,8 @@
 
 ## TODO
 
+- make malloc work in mock
+
 - ColorRGB framebuffer update is much slower than Color256, why? can be due to more memory written for the fonts ?)
 
 - the issues with rebooting seem to be due to the I2C communication being at some weird state, and then probably hanging? When there is no comms, all works great it seems 
@@ -21,22 +23,15 @@
 
 - headphones work, speaker seems not to (always off) - seems bad GND connectiom for PAM8302
 
-- carousel won't be happy with empty items (icons, etc.)
-- no clearing of items 
-
 - write optimized draw bitmap functions
 
 - make app system apps use 160x120x8bpp for minimal VRAM footprint for system
-- determine carousel with smaller footprint too
 
 - steps counter - might need battery to verify
 - accelerometer reported temperature
 
 - add menu font
 - implement png's transparent color in png load & drawing
-
-- calculate longest distance between yields
-- check sleep mode power consumption for pedometer
 
 - microphone tested to work - sample code https://github.com/ArmDeveloperEcosystem/microphone-library-for-pico/tree/main 
 - needs integration and lots of amplification it seems 
