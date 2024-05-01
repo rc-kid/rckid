@@ -2,9 +2,9 @@
  
     Usage:
       
-        pack-assets OUTPUT ASSETS_ROOT {EXTENSIONS}
+        pack-assets ASSETS_ROOT OUTPUT
 
-    Takes all the files in the root (recursively) and converts them  
+    Takes all the files in the root (recursively) with `.inc` extension and generates a C++ header file that includes them all as definitions. This tool should be used after the `generate-assets` tool that converts binary assets to the `.inc` files. 
  */
 int main(int argc, char * argv[]) {
 

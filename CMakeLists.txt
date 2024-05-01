@@ -22,7 +22,6 @@ if (ARCH STREQUAL "RP2040")
 elseif (ARCH STREQUAL "MOCK")
     message("RCKID: Building for the Desktop (Raylib & X11)")
     include_directories(${CMAKE_SOURCE_DIR}/libs/raylib/src)
-    #add_compile_definitions("LIBRCKID_MOCK")
 
     project(rckid2)
     find_package(Threads REQUIRED) 
@@ -45,7 +44,6 @@ include_directories(${CMAKE_SOURCE_DIR}/libs/sd-card)
 include_directories(${CMAKE_SOURCE_DIR}/libs/PNGdec/src)
 include_directories(${CMAKE_SOURCE_DIR}/libs/libhelix-mp3)
 
-add_subdirectory("utils")
 add_subdirectory("librckid")
 add_subdirectory("libs/PNGdec")
 add_subdirectory("libs/libhelix-mp3")
@@ -100,53 +98,53 @@ endif()
 
 
 # configures the given target as RCKid project. Adds all required libraries and in case of a cartridge image also sets the VRAM size. The default size is 77760, which is enough for 320x240x8bpp + two rows of 16bpp (240 * 2 * 2)  
-function(deprecate_rckid_configure_target target_name) 
-    #set(rckid_vram_size 77760)
-    #set(rckid_vram_size 10240)
-    set(rckid_vram_size 153600)
-    if (${ARGV1})
-        set(rckid_vram_size ${ARGV1})
-    endif()
-    message("VRAM size for project ${target_name}: ${rckid_vram_size}")
-    #if (NOT ${target_name} STREQUAL "librckid")
-    #    target_link_libraries(${target_name} librckid)
-    #endif()
-    get_target_property(target_type ${target_name} TYPE)
-    if (target_type STREQUAL "EXECUTABLE")
-        target_sources(${target_name} PRIVATE ${LIBRCKID_SRC} "${CMAKE_SOURCE_DIR}/librckid/rckid/graphics/bitmap.s")
-        target_compile_options(${target_name} PRIVATE "-DRCKID_VRAM_SIZE=${rckid_vram_size}")
-        target_compile_options(${target_name} PRIVATE "-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64")
-    endif()
-if (ARCH STREQUAL "RP2040")
-    target_compile_options(${target_name} PRIVATE -Wall -O2)
-    pico_generate_pio_header(${target_name} ${CMAKE_SOURCE_DIR}/librckid/rckid/ST7789_rgb.pio)
-    pico_generate_pio_header(${target_name} ${CMAKE_SOURCE_DIR}/librckid/rckid/ST7789_rgb_double.pio)
-
-    if (target_type STREQUAL "EXECUTABLE")
-        pico_add_extra_outputs(${target_name})
-        pico_set_linker_script(${target_name} ${CMAKE_SOURCE_DIR}/librckid/memmap.ld)
-    endif()
-    target_link_libraries(${target_name}
-        pico_stdlib
-        pico_rand
-        pico_unique_id
-        hardware_i2c
-        hardware_pio
-        hardware_spi
-        hardware_dma
-        hardware_pwm
-        #FatFs_SPI
-        tinyusb_board
-        tinyusb_device
-        PNGdec
-        libhelix-mp3
-    )
-elseif (ARCH STREQUAL "MOCK")
-    target_link_libraries(${target_name}
-        PNGdec
-        libhelix-mp3
-    )
-    target_link_libraries(${target_name} ${CMAKE_SOURCE_DIR}/libs/raylib/src/libraylib.a)
-    target_link_libraries(${target_name} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
-endif()
-endfunction()
+#function(deprecate_rckid_configure_target target_name) 
+#    #set(rckid_vram_size 77760)
+#    #set(rckid_vram_size 10240)
+#    set(rckid_vram_size 153600)
+#    if (${ARGV1})
+#        set(rckid_vram_size ${ARGV1})
+#    endif()
+#    message("VRAM size for project ${target_name}: ${rckid_vram_size}")
+#    #if (NOT ${target_name} STREQUAL "librckid")
+#    #    target_link_libraries(${target_name} librckid)
+#    #endif()
+#    get_target_property(target_type ${target_name} TYPE)
+#    if (target_type STREQUAL "EXECUTABLE")
+#        target_sources(${target_name} PRIVATE ${LIBRCKID_SRC} "${CMAKE_SOURCE_DIR}/librckid/rckid/#graphics/bitmap.s")
+#        target_compile_options(${target_name} PRIVATE "-DRCKID_VRAM_SIZE=${rckid_vram_size}")
+#        target_compile_options(${target_name} PRIVATE "-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64")
+#    endif()
+#if (ARCH STREQUAL "RP2040")
+#    target_compile_options(${target_name} PRIVATE -Wall -O2)
+#    pico_generate_pio_header(${target_name} ${CMAKE_SOURCE_DIR}/librckid/rckid/ST7789_rgb.pio)
+#    pico_generate_pio_header(${target_name} ${CMAKE_SOURCE_DIR}/librckid/rckid/ST7789_rgb_double.pio)
+#
+#    if (target_type STREQUAL "EXECUTABLE")
+#        pico_add_extra_outputs(${target_name})
+#        pico_set_linker_script(${target_name} ${CMAKE_SOURCE_DIR}/librckid/memmap.ld)
+#    endif()
+#    target_link_libraries(${target_name}
+#        pico_stdlib
+#        pico_rand
+#        pico_unique_id
+#        hardware_i2c
+#        hardware_pio
+#        hardware_spi
+#        hardware_dma
+#        hardware_pwm
+#        #FatFs_SPI
+#        tinyusb_board
+#        tinyusb_device
+#        PNGdec
+#        libhelix-mp3
+#    )
+#elseif (ARCH STREQUAL "MOCK")
+#    target_link_libraries(${target_name}
+#        PNGdec
+#        libhelix-mp3
+#    )
+#    target_link_libraries(${target_name} ${CMAKE_SOURCE_DIR}/libs/raylib/src/libraylib.a)
+#    target_link_libraries(${target_name} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+#endif()
+#endfunction()

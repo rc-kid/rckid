@@ -10,6 +10,8 @@
 
 ## TODO
 
+- use raylib & mock to get font data
+
 - make malloc work in mock
 
 - ColorRGB framebuffer update is much slower than Color256, why? can be due to more memory written for the fonts ?)
