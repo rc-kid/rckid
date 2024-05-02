@@ -12,6 +12,15 @@
             ]
         },
         {
+            "label": "Generate assets",
+            "type": "shell",
+            "command": "build-utils/generate-assets assets/rckid librckid/assets",
+            "options": {
+                "cwd": ""
+            },
+            "problemMatcher": []
+        },
+        {
             "label": "avr/rckid",
             "type": "shell",
             "command": "~/.platformio/penv/bin/pio",

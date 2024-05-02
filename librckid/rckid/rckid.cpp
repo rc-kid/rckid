@@ -13,7 +13,7 @@
 #include <hardware/dma.h>
 
 #include "rckid.h"
-#include "assets.h"
+#include "assets/all.h"
 #include "graphics/ST7789.h"
 #include "graphics/png.h"
 
@@ -255,7 +255,7 @@ namespace rckid {
         setRowRange(0, 239);
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
-        PNG png = PNG::fromBuffer(assets::Logo16);
+        PNG png = PNG::fromBuffer(assets::images::logo_black_16);
         png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
             uint8_t const * raw = reinterpret_cast<uint8_t *>(line);
             for (int i = 0; i < lineWidth; ++i) {
