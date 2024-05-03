@@ -62,6 +62,9 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "i2c.h": "c"
+        "i2c.h": "c",
+        "ios": "cpp",
+        "codecvt": "cpp",
+        "semaphore": "cpp"
     }
 }
