@@ -22,6 +22,8 @@ namespace rckid {
         using Bitmap<COLOR>::pixelAt;
         using Bitmap<COLOR>::width;
 
+        using Bitmap<COLOR>::text;
+
         /** Creates new canvas by consuming already created bitmap. 
          */
         Canvas(int w, int h): 

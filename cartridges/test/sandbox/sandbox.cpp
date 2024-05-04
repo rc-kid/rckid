@@ -1,32 +1,37 @@
-
-
-#include "common/config.h"
-#include "rckid/rckid.h"
-#include "rckid/ST7789.h"
-#include "rckid/graphics/canvas.h"
-#include "common/state.h"
-#include "common/commands.h"
-
-#include "rckid/audio.h"
-#include "rckid/assets.h"
-
-
-#include "rckid/ui/menu.h"
-
-#include "rckid/apps/system/Carousel.h"
-//#include "rckid/apps/test/SDCardTest.h"
-#include "rckid/apps/test/AVRStatusTest.h"
-#include "rckid/apps/test/SensorsTest.h"
-#include "rckid/apps/test/RumblerTest.h"
-#include "rckid/apps/games/SlidingPuzzle.h"
-#include "rckid/apps/system/USBMassStorage.h"
-
-//#include "tusb.h"
-//#include "tusb_msc_storage.h"
+#include "rckid/app.h"
+#include "rckid/stats.h"
+#include "rckid/graphics/framebuffer.h"
+#include "rckid/graphics/font.h"
+#include "assets/fonts/IosevkaNF_16.h"
 
 using namespace rckid;
 
-void rckid_main() {
+
+constexpr Font Iosevka16 = Font::fromROM<IosevkaNF_20>();
+
+class SimpleApp : public App<FrameBuffer<ColorRGB>> {
+public:
+
+protected:
+
+    void update() override {
+
+    }
+
+    void draw() override {
+        driver_.fill();
+        driver_.text(0, 0, Iosevka16, Color::White()) << "Hello world! (font)";
+        driver_.text(0, 64) << "Hello world! (gfx)";
+    }
+
+
+
+}; // SimpleApp
+
+int main() {
+    rckid::initialize();
+    SimpleApp{}.run();
+   /*
     cpu::overclock();
     Menu m{{
         MenuItem::create("AVR Status", assets::Gameboy), 
@@ -59,6 +64,7 @@ void rckid_main() {
             }
         }
     }
+    */
     //cpu::overclock();
     //cpuOverclock(133000000, false);
     //cpuOverclock(150000000, true);

@@ -8,7 +8,7 @@
 
 // list of glyphs that will be part of the font
 int GLYPHS[] = {
-    32, 33, 34, 35, 36,37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, // space & various punctuations
+    32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, // space & various punctuations
     48, 49, 50, 51, 52, 53, 54, 55, 56, 57, // 0..9
     58, 59, 60, 61, 62, 63, 64, // more punctuations
     65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, // A-Z
@@ -76,7 +76,7 @@ int main(int argc, char * argv[]) {
         return EXIT_FAILURE;
     }
     BeginDrawing();
-    DrawTextEx(f, argv[1], Vector2{0,0}, fontSize, 1, WHITE);
+    DrawTextEx(f, "Hello world!" /* argv[1] */, Vector2{0,0}, fontSize, 1, WHITE);
     EndDrawing();
 
     std::cout << "Loaded " << f.glyphCount << " glyphs" << std::endl;
@@ -91,7 +91,7 @@ int main(int argc, char * argv[]) {
             gi.offsetX, 
             gi.offsetY,
             gi.image.width, 
-            gi.image.height
+            gi.image.height // will be changed to basically height / 4 
         };
         for (int x = 0; x < g.width; ++x) {
             uint32_t data = 0;
@@ -104,11 +104,27 @@ int main(int argc, char * argv[]) {
             }
             if (bytes % 4 != 0) {
                 while (bytes % 4 != 0) {
-                    data << 8;
+                    data = data << 8;
                     ++bytes;
                 }
                 g.pixels.push_back(data);
             }
+        }
+        std::cout << "Glyph " << i << ": (ASCII " << GLYPHS[i] << ")" << std::endl;
+        std::cout << "    aX: " << gi.advanceX << " x: " << gi.offsetX << " y: " << gi.offsetY << " w: " << gi.image.width << " h: " << gi.image.height << std::endl;
+        for (int y = 0; y < g.height; ++y) {
+            for (int x = 0; x < g.width; ++x) {
+                uint8_t c = GetImageColor(gi.image, x, y).a;
+                if (c < 64)
+                    std::cout << " ";
+                else if (c < 128)
+                    std::cout << "\u2591";
+                else if (c < 196)
+                    std::cout << "\u2592";
+                else 
+                    std::cout << "\u2588";
+            }
+            std::cout << std::endl;
         }
         pixelsOffset += g.pixels.size();
         glyphs.push_back(g);
@@ -127,7 +143,8 @@ int main(int argc, char * argv[]) {
     hdr << " */" << std::endl << std::endl;
     hdr << "#include \"rckid/graphics/font.h\"" << std::endl << std::endl;
     hdr << "namespace rckid {" << std::endl;
-    hdr << "    class " << className << "_" << argv[2] << "{" << std::endl << std::endl;
+    hdr << "    class " << className << "_" << argv[2] << " {" << std::endl;
+    hdr << "    public:" << std::endl << std::endl;
     hdr << "        static constexpr unsigned size = " << argv[2] << ";" << std::endl << std::endl;
     hdr << "        static constexpr unsigned padding = " << f.glyphPadding << ";" << std::endl << std::endl;
     hdr << "        static constexpr GlyphInfo glyphs[] = {" << std::endl;

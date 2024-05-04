@@ -10,6 +10,8 @@
 
 ## TODO
 
+- should the fonts be lowered to 4BPP? 
+
 - make malloc work in mock
 
 - ColorRGB framebuffer update is much slower than Color256, why? can be due to more memory written for the fonts ?)

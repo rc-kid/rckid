@@ -14,7 +14,7 @@ set(TARGET sandbox)
 
 file(GLOB_RECURSE SRC "./*.cpp" "./*.h")
 add_executable(${TARGET} ${SRC})
-rckid_configure_target(${TARGET})
+link_with_librckid(${TARGET})
 
 #pico_generate_pio_header(rckid-test ${CMAKE_SOURCE_DIR}/librckid/rckid/st7789.pio)
 

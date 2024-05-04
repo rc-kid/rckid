@@ -3,7 +3,7 @@
 #include "rckid/rckid.h"
 #include "primitives.h"
 #include "png.h"
-
+#include "font.h"
 
 namespace rckid {
 
@@ -127,6 +127,45 @@ namespace rckid {
         }
 
         void fill(Color color) { fill(Rect::WH(width(), height()), color); }
+
+
+        /** Text routines. 
+         */
+
+        //@{
+        int putChar(Point where, Font const & font, char c, Color color) {
+            GlyphInfo const & g = font.glyphs[static_cast<uint8_t>((c - 32 >= 0) ? (c - 32) : 0)];
+            uint32_t const * pixels = font.pixels + g.index;
+            for (int x = where.x() + g.x,xe = where.x() + g.x + g.width; x < xe; ++x) {
+                int y = where.y() + g.y;
+                uint32_t col;
+                for (int i = 0; i < g.height; ++i) {
+                    if (i % 4 == 0)
+                        col = *pixels++;
+                    //setPixelAt(x, y++, color);
+                    //uint8_t a = (col >> 28) & 0xf ;
+                    //a = a << 4;
+                    uint8_t a = (col >> 24) & 0xff;
+                    setPixelAt(x, y++, Color::RGB(
+                        color.r() * a / 255,
+                        color.g() * a / 255,
+                        color.b() * a / 255
+                    ));
+                     
+                    col = col << 8;
+                }
+            }
+            return g.advanceX;
+        }
+
+        Writer text(int x, int y, Font const & font, Color color) {
+            return Writer{[this, x, y, font, color](char c) mutable {
+                if (c != '\n')
+                    x += putChar(Point{x, y}, font, c, color);
+            }};
+        }
+        //@}
+
 
     protected:
 
