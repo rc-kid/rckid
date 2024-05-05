@@ -27,6 +27,7 @@ namespace rckid {
     class Font {
     public:
         int size; 
+        int bpp; 
         int padding;
         int numGlyphs;
         GlyphInfo const * glyphs;
@@ -36,6 +37,7 @@ namespace rckid {
         static constexpr Font const fromROM() {
             return Font {
                 T::size, 
+                T::bpp, 
                 T::padding, 
                 sizeof(T::glyphs) / sizeof(GlyphInfo),
                 T::glyphs, 

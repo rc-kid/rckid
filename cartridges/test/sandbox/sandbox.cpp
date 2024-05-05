@@ -2,12 +2,16 @@
 #include "rckid/stats.h"
 #include "rckid/graphics/framebuffer.h"
 #include "rckid/graphics/font.h"
-#include "assets/fonts/IosevkaNF_16.h"
+#include "assets/fonts/IosevkaNF_20_8.h"
+#include "assets/fonts/IosevkaNF_20_4.h"
+#include "assets/fonts/IosevkaNF_20_2.h"
 
 using namespace rckid;
 
 
-constexpr Font Iosevka16 = Font::fromROM<IosevkaNF_20>();
+constexpr Font Iosevka20_8 = Font::fromROM<IosevkaNF_20_8>();
+constexpr Font Iosevka20_4 = Font::fromROM<IosevkaNF_20_4>();
+constexpr Font Iosevka20_2 = Font::fromROM<IosevkaNF_20_2>();
 
 class SimpleApp : public App<FrameBuffer<ColorRGB>> {
 public:
@@ -20,8 +24,10 @@ protected:
 
     void draw() override {
         driver_.fill();
-        driver_.text(0, 0, Iosevka16, Color::White()) << "Hello world! (font)";
-        driver_.text(0, 64) << "Hello world! (gfx)";
+        driver_.text(0, 0, Iosevka20_8, Color::White()) << "Hello world! (8bpp)";
+        driver_.text(0, 20, Iosevka20_4, Color::White()) << "Hello world! (4bpp)";
+        driver_.text(0, 40, Iosevka20_2, Color::White()) << "Hello world! (2bpp)";
+        driver_.text(0, 60) << "Hello world! (gfx)";
     }
 
 

@@ -139,20 +139,38 @@ namespace rckid {
             for (int x = where.x() + g.x,xe = where.x() + g.x + g.width; x < xe; ++x) {
                 int y = where.y() + g.y;
                 uint32_t col;
+                uint32_t bits = 0;
                 for (int i = 0; i < g.height; ++i) {
-                    if (i % 4 == 0)
+                    if (bits == 0) {
+                        bits = 32;
                         col = *pixels++;
-                    //setPixelAt(x, y++, color);
-                    //uint8_t a = (col >> 28) & 0xf ;
-                    //a = a << 4;
-                    uint8_t a = (col >> 24) & 0xff;
+                    }
+                    uint8_t a;
+                    switch (font.bpp) {
+                        case 8: 
+                            a = (col >> 24) & 0xff;
+                            bits -= 8;
+                            col = col << 8;
+                            break;
+                        case 4:
+                            a = (col >> 28) & 0xf;
+                            a = (a << 4) | a;
+                            bits -= 4;
+                            col = col << 4;
+                            break;
+                        case 2:
+                            a = (col >> 30) & 0x3;
+                            a = (a << 2) | a;
+                            a = (a << 4) | a;
+                            bits -= 2;
+                            col = col << 2;
+                            break;
+                    }
                     setPixelAt(x, y++, Color::RGB(
                         color.r() * a / 255,
                         color.g() * a / 255,
                         color.b() * a / 255
                     ));
-                     
-                    col = col << 8;
                 }
             }
             return g.advanceX;

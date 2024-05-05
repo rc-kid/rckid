@@ -14,7 +14,7 @@
         {
             "label": "Generate assets",
             "type": "shell",
-            "command": "build-utils/generate-assets assets/rckid librckid/assets",
+            "command": "utils/generate-assets.sh",
             "options": {
                 "cwd": ""
             },

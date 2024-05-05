@@ -15,6 +15,9 @@ int GLYPHS[] = {
     91, 92, 93, 94, 95, 96, // more punctuations
     97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, // a-z
     123, 124, 125, 126, // more punctiations
+};
+
+int SYMBOLS[] = {
     0xf004, 0xf08a, //  
     0xf05a9, 0xf05aa, 0xf16c1, // 󰖩 󰖪 󱛁
     0xf244, 0xf243, 0xf242, 0xf241, 0xf240, 0xf0e7, //      
@@ -23,25 +26,7 @@ int GLYPHS[] = {
     0xf0e08, 0xf057f, 0xf0580, 0xf057e, // 󰸈 󰕿 󰖀 󰕾
     0xf04d, 0xf04c, 0xf04b, 0xf01e, //     
     0xf0e7a, 0xf0e74, 0xf047 // 󰹺󰹴 
-};
-
-/*
-
-    stored in column-ish format. Height is divided by four
-
-
-    Glyph:
-        u16 element index
-        u8 advanceX
-        u8 x
-        u8 y
-        u8 w
-        u8 h / 4
-        u8 free 
-
-
-
-*/
+}; 
 
 struct Glyph {
     size_t index;
@@ -51,80 +36,99 @@ struct Glyph {
     int width;
     int height;
     std::vector<uint32_t> pixels;
+    int codepoint;
+    std::string utf8;
 
-    Glyph(size_t index, int advanceX, int x, int y, int width, int height): index{index}, advanceX{advanceX}, x{x}, y{y}, width{width}, height{height} {}
+    Glyph(size_t index, int advanceX, int x, int y, int width, int height, int codepoint, std::string const & utf8): index{index}, advanceX{advanceX}, x{x}, y{y}, width{width}, height{height}, codepoint{codepoint}, utf8{utf8} {}
 };
 
-
-
-
-
 /** Generates font tiles from local fonts to be used on the RCKid. 
+ 
+    Usage
+
+        generate-font SOURCE_FONT SIZE BPP TARGET_DIRECTORY [--symbols]
+
+    When `--symbols` is used, the generated font will not contain the alphanumeric characters, but extra symbols. Otherwise codepoints 32 - 126 will be generated
  */
 int main(int argc, char * argv[]) {
-    InitWindow(640, 480, "RCKid");
-    SetTargetFPS(60);
+    //InitWindow(640, 480, "RCKid");
+    //SetTargetFPS(60);
     int fontSize = std::atoi(argv[2]);
+    int bpp = std::atoi(argv[3]);
+    if (bpp != 8 && bpp != 4 && bpp != 2) {
+        std::cout << "Invalid BPP setting: 8, 4 and 2 supported" << std::endl;
+        return EXIT_FAILURE;
+    }
+    int * glyphsToGenerate = GLYPHS;
+    int numGlyphs = sizeof (GLYPHS) / sizeof(int);
+    if (argc == 6 && std::string(argv[5]) == "--symbols") {
+        glyphsToGenerate = SYMBOLS;
+        numGlyphs = sizeof (SYMBOLS) / sizeof(int);
+    }
+    std::ifstream input(argv[1], std::ios::binary);
+    std::vector<unsigned char> bytes(
+         (std::istreambuf_iterator<char>(input)),
+         (std::istreambuf_iterator<char>()));
+    input.close();   
+    GlyphInfo * glyphInfos = LoadFontData(bytes.data(), bytes.size(), fontSize, glyphsToGenerate, numGlyphs, FONT_DEFAULT);
+
+    /*
     Font f = LoadFontEx(
         argv[1], 
         fontSize, 
-        GLYPHS, 
-        sizeof (GLYPHS) / sizeof(int)
-    );
+        glyphsToGenerate, 
+        numGlyphs
+    ); 
     if (!IsFontReady(f)) {
         std::cout << "ERROR: Failed to load the font" << std::endl;
         return EXIT_FAILURE;
-    }
-    BeginDrawing();
-    DrawTextEx(f, "Hello world!" /* argv[1] */, Vector2{0,0}, fontSize, 1, WHITE);
-    EndDrawing();
+    } */
+    //BeginDrawing();
+    //DrawTextEx(f, "Hello world!" /* argv[1] */, Vector2{0,0}, fontSize, 1, WHITE);
+    //EndDrawing();
 
-    std::cout << "Loaded " << f.glyphCount << " glyphs" << std::endl;
+    std::cout << "Loaded " << numGlyphs << " glyphs" << std::endl;
     std::cout << "Calculating glyph data..." << std::endl;
     std::vector<Glyph> glyphs;
     size_t pixelsOffset = 0;
-    for (int i = 0; i < f.glyphCount; ++i) {
-        GlyphInfo gi = f.glyphs[i];
+    for (int i = 0; i < numGlyphs; ++i) {
+        GlyphInfo gi = glyphInfos[i];
+        std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
+        std::string utf8 = converter.to_bytes(glyphsToGenerate[i]);
         Glyph g{
             pixelsOffset,
             gi.advanceX, 
             gi.offsetX, 
             gi.offsetY,
             gi.image.width, 
-            gi.image.height // will be changed to basically height / 4 
+            gi.image.height,
+            glyphsToGenerate[i],
+            utf8
+
         };
         for (int x = 0; x < g.width; ++x) {
             uint32_t data = 0;
-            int bytes = 0;
+            int bits = 0;
             for (int y = 0; y < g.height; ++y) {
-                ++bytes;
-                data = (data << 8) + GetImageColor(gi.image, x, y).a;
-                if (bytes % 4 == 0)
+                // get the value rounded to bpps
+                int c = GetImageColor(gi.image, x, y).r;
+                if (bpp == 4) 
+                    c = (std::min(255, (c + 8)) >> 4) & 0xf;
+                else if (bpp == 2)
+                    c = (std::min(255, (c + 32)) >> 6) & 3;
+                data = (data << bpp);
+                data = data | c;
+                bits += bpp;
+                if (bits == 32) {
                     g.pixels.push_back(data);
-            }
-            if (bytes % 4 != 0) {
-                while (bytes % 4 != 0) {
-                    data = data << 8;
-                    ++bytes;
+                    data = 0;
+                    bits = 0;
                 }
+            }
+            if (bits != 0) {
+                data = data << (32 - bits);
                 g.pixels.push_back(data);
             }
-        }
-        std::cout << "Glyph " << i << ": (ASCII " << GLYPHS[i] << ")" << std::endl;
-        std::cout << "    aX: " << gi.advanceX << " x: " << gi.offsetX << " y: " << gi.offsetY << " w: " << gi.image.width << " h: " << gi.image.height << std::endl;
-        for (int y = 0; y < g.height; ++y) {
-            for (int x = 0; x < g.width; ++x) {
-                uint8_t c = GetImageColor(gi.image, x, y).a;
-                if (c < 64)
-                    std::cout << " ";
-                else if (c < 128)
-                    std::cout << "\u2591";
-                else if (c < 196)
-                    std::cout << "\u2592";
-                else 
-                    std::cout << "\u2588";
-            }
-            std::cout << std::endl;
         }
         pixelsOffset += g.pixels.size();
         glyphs.push_back(g);
@@ -132,26 +136,44 @@ int main(int argc, char * argv[]) {
     std::cout << "Glyphs array byte size: " << glyphs.size() * 8 << std::endl;
     std::cout << "Pixel data size:        " << pixelsOffset * 4 << std::endl;
     std::cout << "Writing to output file... " << std::endl;
-    std::string className = baseNameOf(fs::path(argv[1]));
-    std::ofstream hdr{argv[3]};
+    std::string className = baseNameOf(fs::path(argv[1])) + "_" + argv[2] + "_" + argv[3];
+    std::ofstream hdr{std::string(argv[4]) + "/" + className + ".h"};
     hdr << "#pragma once" << std::endl << std::endl;
     hdr << "/* This is autogenerated font definition file. Do not edit manually." << std::endl;
     hdr << "   font file:      " << argv[1] << std::endl;
-    hdr << "   font size:      " << argv[2] << std::endl;
+    hdr << "   font size:      " << fontSize << std::endl;
+    hdr << "   font bpp:       " << bpp << std::endl;
     hdr << "   bytes (glyphs): " << glyphs.size() * 8 << std::endl;
     hdr << "   bytes (pixels): " << pixelsOffset * 4 << std::endl;
     hdr << " */" << std::endl << std::endl;
     hdr << "#include \"rckid/graphics/font.h\"" << std::endl << std::endl;
     hdr << "namespace rckid {" << std::endl;
-    hdr << "    class " << className << "_" << argv[2] << " {" << std::endl;
+    hdr << "    class " << className << " {" << std::endl;
     hdr << "    public:" << std::endl << std::endl;
-    hdr << "        static constexpr unsigned size = " << argv[2] << ";" << std::endl << std::endl;
-    hdr << "        static constexpr unsigned padding = " << f.glyphPadding << ";" << std::endl << std::endl;
+    hdr << "        static constexpr int size = " << argv[2] << ";" << std::endl << std::endl;
+    hdr << "        static constexpr int bpp = " << argv[3] << ";" << std::endl << std::endl;
+    //hdr << "        static constexpr int padding = " << f.glyphPadding << ";" << std::endl << std::endl;
     hdr << "        static constexpr GlyphInfo glyphs[] = {" << std::endl;
     {
         int i = 0;
         for (auto const & gi : glyphs) {
-            hdr << "            GlyphInfo{" << gi.index << ", " << gi.advanceX << ", " << gi.x << ", " << gi.y << ", " << gi.width << ", " << gi.height << "}, // " << i << std::endl; 
+            hdr << "            GlyphInfo{" << gi.index << ", " << gi.advanceX << ", " << gi.x << ", " << gi.y << ", " << gi.width << ", " << gi.height << "}, // " << i << " (codepoint: " << gi.codepoint << ", " << gi.utf8 << ")" << std::endl; 
+            for (int y = 0; y < gi.height; ++y) {
+                hdr << "            // ";
+                for (int x = 0; x < gi.width; ++x) {
+                    uint8_t c = GetImageColor(glyphInfos[i].image, x, y).r;
+                    if (c < 64)
+                        hdr << " ";
+                    else if (c < 128)
+                        hdr << "\u2591";
+                    else if (c < 196)
+                        hdr << "\u2592";
+                    else 
+                        hdr << "\u2588";
+                }
+                hdr << std::endl;
+            }
+            hdr << std::endl;
             ++i;
         }
     }
@@ -160,10 +182,11 @@ int main(int argc, char * argv[]) {
     {
         int i = 0;
         for (auto const & gi : glyphs) {
+            hdr << "            // " << i << " (codepoint: " << gi.codepoint << ", " << gi.utf8 << ")" << std::endl;
             hdr << "            ";
             for (uint32_t x : gi.pixels)
-                hdr << x << ", ";
-            hdr << "// " << i << std::endl;
+                hdr << x << ",";
+            hdr << std::endl;    
             ++i;
         }
     }
@@ -179,8 +202,8 @@ int main(int argc, char * argv[]) {
         EndDrawing();
     }*/
 
-    UnloadFont(f);
-    CloseWindow();
+    UnloadFontData(glyphInfos, numGlyphs);
+    //CloseWindow();
 
 
     return EXIT_SUCCESS;

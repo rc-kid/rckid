@@ -10,8 +10,6 @@
 
 ## TODO
 
-- should the fonts be lowered to 4BPP? 
-
 - make malloc work in mock
 
 - ColorRGB framebuffer update is much slower than Color256, why? can be due to more memory written for the fonts ?)
@@ -32,7 +30,6 @@
 - steps counter - might need battery to verify
 - accelerometer reported temperature
 
-- add menu font
 - implement png's transparent color in png load & drawing
 
 - microphone tested to work - sample code https://github.com/ArmDeveloperEcosystem/microphone-library-for-pico/tree/main 
@@ -100,7 +97,6 @@
 
 > Graphics
 
-- fonts with alpha
 - more stuff to the framebuffer
 - tiling engine 
 - jpeg, Bitmap::loadImage to support jpeg too
