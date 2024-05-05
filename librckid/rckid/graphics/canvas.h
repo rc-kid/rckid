@@ -2,12 +2,12 @@
 
 #include "utils/writer.h"
 
-#include "adafruit_gfx_wrapper.h"
 #include "color.h"
 #include "primitives.h"
 #include "png.h"
 #include "bitmap.h"
-#include "assets/fonts/Iosevka_Mono6pt7b.h"
+#include "font.h"
+#include "assets/fonts/Iosevka_16.h"
 
 namespace rckid {
 
@@ -23,6 +23,7 @@ namespace rckid {
         using Bitmap<COLOR>::width;
 
         using Bitmap<COLOR>::text;
+        using Bitmap<COLOR>::textMultiline;
 
         /** Creates new canvas by consuming already created bitmap. 
          */
@@ -30,7 +31,7 @@ namespace rckid {
             Bitmap<COLOR>{w, h}, 
             fg_{Color::White()}, 
             bg_{Color::Black()},
-            font_{& Iosevka_Mono6pt7b} {
+            font_{& Iosevka_16} {
         }
 
         Color bg() const { return bg_; }
@@ -39,50 +40,18 @@ namespace rckid {
         void setFg(Color c) { fg_ = c; }
         void setBg(Color c) { bg_ = c; }
 
-        GFXfont const & font() const { return * font_; }
-        void setFont(GFXfont const & font) { font_ = &font; }
+        Font const & font() const { return *font_; }
+        void setFont(Font const & font) { font_ = &font; }
 
         Writer text(int x, int y) {
-            return Writer{[this, x, y] (char c) mutable {
-                if (c != '\n')
-                    x += drawGlyph(x, y, c, fg_, font_, 1);
-            }};
+            return Bitmap<Color>::text(x, y, *font_, fg_);
         }
 
         Writer text(Point p) { return text(p.x(), p.y()); }
 
-        void text(Point p, char const * text) {
-            this->text(p) << text;
-        }
-
         Writer textMultiline(int x, int y) {
-            int startX = x;
-            return Writer{[this, x, y, startX] (char c) mutable {
-                if (c != '\n') {
-                    if (x + font().xAdvance(c) > width()) {
-                        x = startX;
-                        y += font().yAdvance;
-                    } 
-                    x += drawGlyph(x, y, c, fg_, font_, 1);
-                } else {
-                    x = startX;
-                    y += font().yAdvance;
-                }
-            }};
+            return Bitmap<Color>::textMultiline(x, y, *font_, fg_);
         }
-
-        /// TODO: Move this to font so that we can share this between different color bpps
-        int textWidth(std::string const & text) const { return textWidth(text.c_str()); }
-
-        /// TODO: Move this to font so that we can share this between different color bpps
-        int textWidth(char const * text) const {
-            int width = 0;
-            while (*text != 0) {
-                width += font_->glyph[(*text++ - font_->first)].xAdvance;
-            }
-            return width;
-        }
-
 
         using Bitmap<COLOR>::fill;
 
@@ -97,32 +66,9 @@ namespace rckid {
 
     private:
 
-        int drawGlyph(int x, int y, char c, Color color, GFXfont const * f, int size) {
-            GFXglyph * glyph = f->glyph + (c - f->first);
-            uint8_t const * bitmap = f->bitmap + glyph->bitmapOffset;
-            int pixelY = y + glyph->yOffset * size + f->yAdvance;
-            int bi = 0;
-            uint8_t bits = *bitmap;
-            for (int gy = 0; gy < glyph->height; ++gy, pixelY += size) {
-                int pixelX = x + glyph->xOffset * size;
-                for (int gx = 0; gx < glyph->width; ++gx, pixelX += size, bits <<= 1) {
-                    if ((bi++ % 8) == 0)
-                        bits = *(bitmap++);
-                    if (bits & 0x80) {
-                        setPixelAt(pixelX, pixelY, color);
-                        //if (size == 1)
-                        //    buffer_[map(pixelX, pixelY)] = color;
-                        //else
-                        //    fill(Rect::XYWH(pixelX, pixelY, size, size), color);
-                    } 
-                }
-            }
-            return glyph->xAdvance * size;
-        }
-
-        Color fg_ = Color::White();
-        Color bg_ = Color::Black();
-        GFXfont const * font_ = & Iosevka_Mono6pt7b;
+        Color fg_;
+        Color bg_;
+        Font const * font_;
 
     }; // rckid::Canvas
 
@@ -135,8 +81,8 @@ namespace rckid {
     }
 
     template<>
-    inline void Canvas<Color256>::fill() {
-        memset(buffer_, bg_.index(), w_ * h_);
+    inline void Canvas<ColorRGB_332>::fill() {
+        memset(buffer_, bg_.rawValue8(), w_ * h_);
     }
 
 

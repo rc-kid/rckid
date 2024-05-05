@@ -133,53 +133,61 @@ namespace rckid {
          */
 
         //@{
-        int putChar(Point where, Font const & font, char c, Color color) {
+
+        int putChar(Point where, Font const & font, char c, Color * colors) {
             GlyphInfo const & g = font.glyphs[static_cast<uint8_t>((c - 32 >= 0) ? (c - 32) : 0)];
             uint32_t const * pixels = font.pixels + g.index;
+            unsigned a;
+            unsigned col;
+            int ys = where.y() + g.y;
+            int ye = ys + g.height;
             for (int x = where.x() + g.x,xe = where.x() + g.x + g.width; x < xe; ++x) {
-                int y = where.y() + g.y;
                 uint32_t col;
                 uint32_t bits = 0;
-                for (int i = 0; i < g.height; ++i) {
+                for (int y = ys; y != ye; ++y) {
                     if (bits == 0) {
                         bits = 32;
                         col = *pixels++;
                     }
-                    uint8_t a;
-                    switch (font.bpp) {
-                        case 8: 
-                            a = (col >> 24) & 0xff;
-                            bits -= 8;
-                            col = col << 8;
-                            break;
-                        case 4:
-                            a = (col >> 28) & 0xf;
-                            a = (a << 4) | a;
-                            bits -= 4;
-                            col = col << 4;
-                            break;
-                        case 2:
-                            a = (col >> 30) & 0x3;
-                            a = (a << 2) | a;
-                            a = (a << 4) | a;
-                            bits -= 2;
-                            col = col << 2;
-                            break;
-                    }
-                    setPixelAt(x, y++, Color::RGB(
-                        color.r() * a / 255,
-                        color.g() * a / 255,
-                        color.b() * a / 255
-                    ));
+                    unsigned a = (col >> 30) & 0x3;
+                    if (a != 0)
+                        setPixelAt(x, y, colors[a]);
+                    col = col << 2;
+                    bits -= 2;
                 }
             }
             return g.advanceX;
         }
 
         Writer text(int x, int y, Font const & font, Color color) {
-            return Writer{[this, x, y, font, color](char c) mutable {
+            Color colors[] = {
+                Color::Black(), 
+                color.withAlpha(1), 
+                color.withAlpha(2), 
+                color.withAlpha(3), 
+            };
+            return Writer{[this, x, y, font, colors](char c) mutable {
                 if (c != '\n')
-                    x += putChar(Point{x, y}, font, c, color);
+                    x += putChar(Point{x, y}, font, c, colors);
+            }};
+        }
+
+        Writer textMultiline(int x, int y, Font const & font, Color color) {
+            Color colors[] = {
+                Color::Black(), 
+                color.withAlpha(1), 
+                color.withAlpha(2), 
+                color.withAlpha(3), 
+            };
+            int startX = x;
+            return Writer{[this, x, startX, y, font, colors](char c) mutable {
+                if (c != '\n') {
+                    x += putChar(Point{x, y}, font, c, colors);
+                    if (x < width())
+                        return; 
+                }
+                x = startX;
+                y += font.size;
             }};
         }
         //@}

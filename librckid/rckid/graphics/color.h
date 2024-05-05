@@ -1,11 +1,12 @@
 #pragma once
 
 #include <cstdint>
+#include "palette_332.h"
 
 namespace rckid {
 
     class ColorRGB;
-    class Color256;
+    class ColorRGB_332;
 
     /** Full RGB 565 color. 
      
@@ -24,7 +25,7 @@ namespace rckid {
         }
 
         constexpr ColorRGB(ColorRGB const & other): raw_{other.raw_} {}
-        constexpr ColorRGB(Color256 const & other); 
+        constexpr ColorRGB(ColorRGB_332 const & other); 
 
         static constexpr ColorRGB RGB(uint8_t r, uint8_t g, uint8_t b) { return ColorRGB{r, g, b}; }
 
@@ -42,6 +43,14 @@ namespace rckid {
 
         uint16_t rawValue16() const { return raw_; }
 
+        ColorRGB withAlpha(uint8_t a) {
+            return ColorRGB{
+                static_cast<uint8_t>(static_cast<unsigned>(r()) * a / 3 & 0xff),
+                static_cast<uint8_t>(static_cast<unsigned>(g()) * a / 3 & 0xff),
+                static_cast<uint8_t>(static_cast<unsigned>(b()) * a / 3 & 0xff) 
+            };
+        }
+
         static constexpr ColorRGB White() { return RGB(255, 255, 255); }
         static constexpr ColorRGB Black() { return RGB(0,0,0); }
         static constexpr ColorRGB Blue() { return RGB(0, 0, 255); }
@@ -57,6 +66,128 @@ namespace rckid {
 
     static_assert(sizeof(ColorRGB) == 2);
 
+
+    /** 332 Color Space
+
+        3bit values: 0 36 73 109 146 182 218 255
+        2bit values: 0 85 170 255    
+     */
+    class ColorRGB_332 {
+    public:
+        static constexpr size_t BPP = 8;
+
+        constexpr ColorRGB_332() = default;
+
+        constexpr ColorRGB_332(uint8_t r, uint8_t g, uint8_t b): raw_{0} {
+            setR(r);
+            setG(g);
+            setB(b); 
+        }
+
+        static constexpr ColorRGB_332 RGB(uint8_t r, uint8_t g, uint8_t b) {
+            return ColorRGB_332{r, g, b};
+        }
+
+        ColorRGB toRGB() const __attribute__((always_inline)) {
+            return ColorRGB{r(), g(), b()};
+        }
+
+        uint8_t r() const { return CH3[(raw_ >> 5) & 0x7]; }
+        uint8_t g() const { return CH3[(raw_ >> 2) & 0x7]; }
+        uint8_t b() const { return CH2[(raw_ & 0x3)]; }
+
+        constexpr void setR(uint8_t r) {
+            raw_ &= 0b00011111;
+            raw_ |= (std::min(255, static_cast<int>(r) + 16) & 0b11100000);
+        }
+
+        constexpr void setG(uint8_t g) {
+            raw_ &= 0b11100011;
+            raw_ |= (std::min(255, static_cast<int>(g) + 16) >> 3) & 0b00011100;
+        }
+
+        constexpr void setB(uint8_t b) {
+            raw_ &= 0b11111100;
+            raw_ |= (std::min(255, static_cast<int>(b) + 32) >> 6) & 0b00000011;
+        }
+
+        uint8_t rawValue8() const { return raw_; }
+
+        ColorRGB_332 withAlpha(uint8_t a) {
+            return ColorRGB_332{
+                static_cast<uint8_t>(static_cast<unsigned>(r()) * a / 3 & 0xff),
+                static_cast<uint8_t>(static_cast<unsigned>(g()) * a / 3 & 0xff),
+                static_cast<uint8_t>(static_cast<unsigned>(b()) * a / 3 & 0xff) 
+            };
+        }
+
+        static uint32_t const * translatePixelBuffer(uint32_t const * src, uint32_t * dest, size_t numPixels) {
+            uint32_t x;
+            uint32_t y[2];
+            for (size_t i = 0; i < numPixels; i += 8) { // 4 pixels at a time
+                x = *src++;
+                y[0] = Palette_332_to_565[x >> 24] << 16;
+                y[0] |= Palette_332_to_565[(x >> 16) & 0xff];
+                y[1] = Palette_332_to_565[(x >> 8) & 0xff] << 16;
+                y[1] |= Palette_332_to_565[x & 0xff];
+                *dest++ = y[1];
+                *dest++ = y[0];
+
+                x = *src++;
+                y[0] = Palette_332_to_565[x >> 24] << 16;
+                y[0] |= Palette_332_to_565[(x >> 16) & 0xff];
+                y[1] = Palette_332_to_565[(x >> 8) & 0xff] << 16;
+                y[1] |= Palette_332_to_565[x & 0xff];
+                *dest++ = y[1];
+                *dest++ = y[0];
+            }
+            return src;
+
+            /*
+            uint32_t x;
+            uint32_t y[2];
+            for (size_t i = 0; i < numPixels; i += 8) { // 4 pixels at a time
+                x = *src++;
+                y[0] = ColorRGB_332{x >> 24}.toRGB().rawValue16() << 16;
+                y[0] |= ColorRGB_332{(x >> 16) & 0xff}.toRGB().rawValue16();
+                y[1] = ColorRGB_332{(x >> 8) & 0xff}.toRGB().rawValue16() << 16;
+                y[1] |= ColorRGB_332{x & 0xff}.toRGB().rawValue16();
+                *dest++ = y[1];
+                *dest++ = y[0];
+
+                x = *src++;
+                y[0] = ColorRGB_332{x >> 24}.toRGB().rawValue16() << 16;
+                y[0] |= ColorRGB_332{(x >> 16) & 0xff}.toRGB().rawValue16();
+                y[1] = ColorRGB_332{(x >> 8) & 0xff}.toRGB().rawValue16() << 16;
+                y[1] |= ColorRGB_332{x & 0xff}.toRGB().rawValue16();
+                *dest++ = y[1];
+                *dest++ = y[0];
+            }
+            return src; */
+        }
+
+        static constexpr ColorRGB_332 White() { return RGB(255, 255, 255); }
+        static constexpr ColorRGB_332 Black() { return RGB(0,0,0); }
+        static constexpr ColorRGB_332 Blue() { return RGB(0, 0, 255); }
+        static constexpr ColorRGB_332 Red() { return RGB(255, 0, 0); }
+
+        
+    private:
+
+        ColorRGB_332(uint8_t raw): raw_{raw} {}
+
+        uint8_t raw_ = 0;
+
+        static constexpr uint8_t CH3[] = {0, 36, 73, 109, 146, 182, 218, 255};
+        static constexpr uint8_t CH2[] = {0, 85, 170, 255};
+
+
+    } __attribute__((packed)); // ColorRGB_332
+
+    static_assert(sizeof(ColorRGB_332) == 1);
+
+
+
     /** Color from a 256 color palette represented by a single byte (index to the palette). 
      
         Uses the 6-8-5 levels per channel for a total of 240 color + 16 true grays. This should give the best representation of the whole spectrum in a single byte according to [1].
@@ -65,6 +196,7 @@ namespace rckid {
 
         [1] https://en.wikipedia.org/wiki/List_of_software_palettes
      */
+    /*
     class Color256 {
     public:
         static constexpr size_t BPP = 8;
@@ -394,8 +526,10 @@ namespace rckid {
 
     static_assert(sizeof(Color256) == 1);
 
+    */
 
-    inline constexpr ColorRGB::ColorRGB(Color256 const & other) {
+
+    inline constexpr ColorRGB::ColorRGB(ColorRGB_332 const & other) {
         raw_ = other.toRGB().raw_;
     }
 

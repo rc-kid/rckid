@@ -4,7 +4,7 @@
 
 using namespace rckid;
 
-class SimpleApp : public App<FrameBuffer<Color256>> {
+class SimpleApp : public App<FrameBuffer<ColorRGB>> {
 public:
 
 protected:

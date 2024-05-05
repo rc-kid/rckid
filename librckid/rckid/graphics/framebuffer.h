@@ -74,7 +74,7 @@ namespace rckid {
     }; // FrameBuffer<Color565, DisplayMode::Native_2X_RGB565>
 
     template<>
-    class FrameBuffer<Color256, DisplayMode::Native_RGB565> : public Canvas<Color256> {
+    class FrameBuffer<ColorRGB_332, DisplayMode::Native_RGB565> : public Canvas<ColorRGB_332> {
     public:
 
         static constexpr int DEFAULT_WIDTH = 320;
@@ -99,9 +99,9 @@ namespace rckid {
         void render() {
             toRender_ = buffer_;
             // translate first two columns column
-            toRender_ = Color256::translatePixelBuffer(buffer_, renderBuffer_, height() * 2, Color256::palette);
+            toRender_ = ColorRGB_332::translatePixelBuffer(buffer_, renderBuffer_, height() * 2);
             // process the next colum
-//            toRender_ = Color256::translatePixelBuffer(toRender_, renderBuffer_ + (height() / 2), height(), Color256::palette);
+//            toRender_ = ColorRGB_332::translatePixelBuffer(toRender_, renderBuffer_ + (height() / 2), height(), ColorRGB_332::palette);
             column_ = 0;
             ST7789::waitVSync();
             ST7789::writePixels(reinterpret_cast<uint16_t const*>(renderBuffer_), height(), [this]() {
@@ -113,7 +113,7 @@ namespace rckid {
                     height()
                 );
                 if (column_ + 1 < width())
-                    toRender_ = Color256::translatePixelBuffer(toRender_, (column_ % 2 == 1) ? renderBuffer_ : renderBuffer_ + (height() / 2), height(), Color256::palette);
+                    toRender_ = ColorRGB_332::translatePixelBuffer(toRender_, (column_ % 2 == 1) ? renderBuffer_ : renderBuffer_ + (height() / 2), height());
                 return false;
             });
         }
@@ -126,10 +126,10 @@ namespace rckid {
         uint32_t const * toRender_ = nullptr;
         int column_ = 0;
 
-    }; // FrameBuffer<Color256, DisplayMode::Native_RGB565> 
+    }; // FrameBuffer<ColorRGB_332, DisplayMode::Native_RGB565> 
 
     template<>
-    class FrameBuffer<Color256, DisplayMode::Native_2X_RGB565> : public Canvas<Color256> {
+    class FrameBuffer<ColorRGB_332, DisplayMode::Native_2X_RGB565> : public Canvas<ColorRGB_332> {
     public:
 
         static constexpr int DEFAULT_WIDTH = 160;
@@ -155,7 +155,7 @@ namespace rckid {
         void render() {
             toRender_ = buffer_;
             // translate one column
-            toRender_ = Color256::translatePixelBuffer(buffer_, renderBuffer1_, height(), Color256::palette);
+            toRender_ = ColorRGB_332::translatePixelBuffer(buffer_, renderBuffer1_, height());
             column_ = 0;
             ST7789::waitVSync();
             ST7789::writePixels(reinterpret_cast<uint16_t const*>(renderBuffer1_), height(), [this]() {
@@ -167,11 +167,11 @@ namespace rckid {
                     height()
                 );
                 if (column_ + 1 < width())
-                    toRender_ = Color256::translatePixelBuffer(toRender_, (column_ % 2 == 1) ? renderBuffer1_ : renderBuffer2_, height(), Color256::palette);
+                    toRender_ = ColorRGB_332::translatePixelBuffer(toRender_, (column_ % 2 == 1) ? renderBuffer1_ : renderBuffer2_, height());
                 return false;
             });
             // process the next colum
-            toRender_ = Color256::translatePixelBuffer(toRender_, renderBuffer2_, height(), Color256::palette); 
+            toRender_ = ColorRGB_332::translatePixelBuffer(toRender_, renderBuffer2_, height()); 
         }
 
     private:
@@ -181,7 +181,7 @@ namespace rckid {
         uint32_t const * toRender_ = nullptr;
         int column_ = 0;
 
-    }; // FrameBuffer<Color256, DisplayMode::Native_2X_RGB565> 
+    }; // FrameBuffer<ColorRGB_332, DisplayMode::Native_2X_RGB565> 
 
 
 

@@ -27,8 +27,6 @@ namespace rckid {
     class Font {
     public:
         int size; 
-        int bpp; 
-        int padding;
         int numGlyphs;
         GlyphInfo const * glyphs;
         uint32_t const * pixels;
@@ -37,13 +35,21 @@ namespace rckid {
         static constexpr Font const fromROM() {
             return Font {
                 T::size, 
-                T::bpp, 
-                T::padding, 
                 sizeof(T::glyphs) / sizeof(GlyphInfo),
                 T::glyphs, 
                 T::pixels
             };
         }
+
+        int textWidth(char const * str) const {
+            int result = 0;
+            while(*str != 0)
+                result += glyphs[static_cast<unsigned>(*str++)].advanceX;
+            return result;
+        }
+
+        int textWidth(std::string const & str) const { return textWidth(str.c_str()); }
+
     }; // rckid::Font
 
 } // namespace rckid
