@@ -125,8 +125,6 @@ int main(int argc, char * argv[]) {
     hdr << "    class " << className << "_Data {" << std::endl;
     hdr << "    public:" << std::endl << std::endl;
     hdr << "        static constexpr int size = " << argv[2] << ";" << std::endl << std::endl;
-    hdr << "        static constexpr int bpp = " << argv[3] << ";" << std::endl << std::endl;
-    //hdr << "        static constexpr int padding = " << f.glyphPadding << ";" << std::endl << std::endl;
     hdr << "        static constexpr GlyphInfo glyphs[] = {" << std::endl;
     {
         int i = 0;

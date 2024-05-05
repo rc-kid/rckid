@@ -5,8 +5,17 @@
 #include <vector>
 #include <filesystem>
 #include <iomanip>
+#include <algorithm>
 
 #include "helpers.h"
+
+std::string toIdentifier(std::string from) {
+    std::replace(from.begin(), from.end(), '-', '_');
+    size_t i = 0;
+    while (i < from.size() && ((from[i] >= '0' && from[i] <= '9') || from[i] == '_'))
+        ++i;
+    return from.substr(i);
+}
 
 /** Generates single asset. Takes the src file and creates from it an inc file
  * 
@@ -51,7 +60,7 @@ size_t  generateAssetsIn(fs::path src, fs::path dst, fs::path dstRoot, std::ofst
         } else if (entry.is_regular_file()) {
             dstPath += ".inc";
             size_t bytes = generateAsset(entry.path(), dstPath);
-            hdr << std::setw(indent) << " " << "constexpr uint8_t " << baseNameOf(dstPath) << "[] = {" << std::endl;
+            hdr << std::setw(indent) << " " << "constexpr uint8_t " << toIdentifier(baseNameOf(dstPath)) << "[] = {" << std::endl;
             hdr << std::setw(indent) << " " << "    #include \"" << std::string{fs::relative(dstPath, dstRoot)} << "\"" << std::endl;
             hdr << std::setw(indent) << " " << "}; // " << bytes << " bytes" << std::endl;
             totalBytes += bytes;

@@ -4,6 +4,10 @@
 #include "rckid/graphics/font.h"
 #include "assets/fonts/Iosevka_16.h"
 
+#include "apps/system/MainMenu.h"
+
+#include "assets/all.h"
+
 using namespace rckid;
 
 
@@ -29,7 +33,15 @@ protected:
 
 int main() {
     rckid::initialize();
-    SimpleApp{}.run();
+    Menu m{{
+        MenuItem::create("AVR Status", assets::icons::gameboy), 
+        MenuItem::create("Sensors", assets::icons::unicorn), 
+        MenuItem::create("Rumbler", assets::icons::lynx),
+        MenuItem::create("Sliding Puzzle", assets::icons::fruits), 
+    }};
+    MainMenu{&m}.run();    
+
+    //SimpleApp{}.run();
    /*
     cpu::overclock();
     Menu m{{

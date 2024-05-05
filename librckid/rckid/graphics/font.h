@@ -44,7 +44,7 @@ namespace rckid {
         int textWidth(char const * str) const {
             int result = 0;
             while(*str != 0)
-                result += glyphs[static_cast<unsigned>(*str++)].advanceX;
+                result += glyphs[static_cast<unsigned>(*str++) - 32].advanceX;
             return result;
         }
 
