@@ -56,7 +56,7 @@ namespace rckid {
         int height() const { return h_; }
         size_t numPixels() const { return w_ * h_; }
 
-        Color * rawBuffer() { return reinterpret_cast<Color*>(buffer_); }
+        Color * rawBuffer() { return buffer_; }
 
 
         /** \name Per-pixel interface 
@@ -65,16 +65,13 @@ namespace rckid {
          */
         //@{
         Color pixelAt(int x, int y) const {
-            Color const * buf = reinterpret_cast<Color const *>(buffer_);
-            return buf[map(x, y)];
+            return buffer_[map(x, y)];
         }
 
         template<typename SRC_COLOR>
         void setPixelAt(int x, int y, SRC_COLOR c) {
-            if (x >= 0 && x < width() && y >= 0 && y < height()) {
-                Color * buf = reinterpret_cast<Color*>(buffer_);
-                buf[map(x, y)] = c;
-            }
+            if (x >= 0 && x < width() && y >= 0 && y < height())
+                buffer_[map(x, y)] = c;
         }
         //@}
 
@@ -205,10 +202,10 @@ namespace rckid {
 
     protected:
 
-        constexpr uint32_t * allocateBuffer(int w, int h) {
+        constexpr Color * allocateBuffer(int w, int h) {
             if (w ==0 || h == 0)
                 return nullptr;
-            return new uint32_t[w * h * Color::BPP / 8 / 4];
+            return new Color[w * h];
         } 
 
         constexpr __force_inline size_t map(int x, int y) const { return map(x, y, w_, h_); }
@@ -219,14 +216,14 @@ namespace rckid {
 
         int w_ = 0;
         int h_ = 0;
-        uint32_t * buffer_ = nullptr;
+        Color * buffer_ = nullptr;
 
     }; // rckid::Bitmap
 
     template<>
     inline void Bitmap<ColorRGB>::fill(Color color) {
         uint32_t c = (static_cast<uint32_t>(color.rawValue16()) << 16) | color.rawValue16();
-        rckid_mem_fill_32x8(buffer_, w_ * h_ / 2, c);        
+        rckid_mem_fill_32x8(reinterpret_cast<uint32_t*>(buffer_), w_ * h_ / 2, c);        
         /*
         int i = 0, e = w_ * h_ / 2;
         for ( ; i <= e - 16; ) {
@@ -260,17 +257,16 @@ namespace rckid {
         // fill the first row if not even
         int y = r.top(), ye = r.bottom();
         if (y % 2 != 0) {
-            for (int x = r.left(), xe = r.right(); x < xe; ++x) {
-                Color * buf = reinterpret_cast<Color*>(buffer_);
-                buf[map(x, y)] = color;
-            }
+            for (int x = r.left(), xe = r.right(); x < xe; ++x)
+                buffer_[map(x, y)] = color;
             ++y;
         }
         // now do the manually unrolled loop with two rows per color fixed
+        uint32_t * buffer = reinterpret_cast<uint32_t*>(buffer_);
         uint32_t c = (static_cast<uint32_t>(color.rawValue16()) << 16) | color.rawValue16();
         for (; y <= ye - 16; y += 16) {
             for (int x = r.left(), xe = r.right(); x < xe; ++x) {
-                uint32_t * b = buffer_ + map(x, y) / 2;
+                uint32_t * b = buffer + map(x, y) / 2;
                 b[0] = c;
                 b[1] = c;
                 b[2] = c;
@@ -284,7 +280,7 @@ namespace rckid {
 
         for (; y <= ye - 8; y += 8) {
             for (int x = r.left(), xe = r.right(); x < xe; ++x) {
-                uint32_t * b = buffer_ + map(x, y) / 2;
+                uint32_t * b = buffer + map(x, y) / 2;
                 b[0] = c;
                 b[1] = c;
                 b[2] = c;
@@ -294,16 +290,14 @@ namespace rckid {
         // finish per two rows
         for (; y <= ye - 2; y += 2) {
             for (int x = r.left(), xe = r.right(); x < xe; ++x) {
-                uint32_t * b = buffer_ + map(x, y) / 2;
+                uint32_t * b = buffer + map(x, y) / 2;
                 b[0] = c;
             }
         }
         // and the optional single row access at the end
         for (; y < ye; ++y) {
-            for (int x = r.left(), xe = r.right(); x < xe; ++x) {
-                Color * buf = reinterpret_cast<Color*>(buffer_);
-                buf[map(x, y)] = color;
-            }
+            for (int x = r.left(), xe = r.right(); x < xe; ++x)
+                buffer_[map(x, y)] = color;
         }
     }
 

@@ -14,6 +14,7 @@ namespace rckid {
      */
     class ColorRGB {
     public:
+        using RawType = uint16_t;
         static constexpr size_t BPP = 16;
 
         constexpr ColorRGB() = default;
@@ -75,6 +76,7 @@ namespace rckid {
      */
     class ColorRGB_332 {
     public:
+        using RawType = uint8_t;
         static constexpr size_t BPP = 8;
 
         constexpr ColorRGB_332() = default;

@@ -82,7 +82,7 @@ namespace rckid {
 
     template<>
     inline void Canvas<ColorRGB_332>::fill() {
-        memset(buffer_, bg_.rawValue8(), w_ * h_);
+        memset(static_cast<void*>(buffer_), bg_.rawValue8(), w_ * h_);
     }
 
 

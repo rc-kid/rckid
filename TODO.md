@@ -10,8 +10,6 @@
 
 ## TODO
 
-- make bitmap use the correct buffer raw values - there should be no speed penalty thanks to assembly
-
 - make malloc work in mock
 
 - ColorRGB framebuffer update is much slower than Color256, why? can be due to more memory written for the fonts ?)
