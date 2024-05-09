@@ -4,6 +4,11 @@
 
 namespace rckid {
 
+    namespace glyph {
+#define GLYPH(ID, NAME, ...) static constexpr char NAME = ID + 32;
+#include "symbols.inc"
+    } // namespace rckid::glyph
+
     /** Information about single glyph. 
      */
     class GlyphInfo {
@@ -49,6 +54,8 @@ namespace rckid {
         }
 
         int textWidth(std::string const & str) const { return textWidth(str.c_str()); }
+
+        GlyphInfo const & glyphInfoFor(char glyph) const { return glyphs[glyph - 32]; }
 
     }; // rckid::Font
 

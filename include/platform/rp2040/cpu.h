@@ -17,7 +17,7 @@ public:
 
     static size_t clockSpeed() { return clockSpeedkHz_ * 1000; } 
 
-    static void overclock(unsigned hz=250000000, bool overvolt = true) {
+    static void overclock(unsigned hz=200000000, bool overvolt = true) {
         if (overvolt) {
             vreg_set_voltage(VREG_VOLTAGE_1_20);
             sleep_ms(10);

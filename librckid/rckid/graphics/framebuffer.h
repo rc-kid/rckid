@@ -82,7 +82,7 @@ namespace rckid {
 
         FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): 
             Canvas{width, height},
-            renderBuffer_{new uint32_t[height]} {
+            renderBuffer_{new uint16_t[height * 2]} {
         }
 
         void enable() {
@@ -97,33 +97,41 @@ namespace rckid {
         /** Renders the display using a 2 column buffer column by column so that while one columh is being rendered, the other column is being processed. 
          */
         void render() {
-            toRender_ = buffer_;
+            //toRender_ = (uint16_t *)buffer_;
             // translate first two columns column
-            toRender_ = ColorRGB_332::translatePixelBuffer(buffer_, renderBuffer_, height() * 2);
-            // process the next colum
-//            toRender_ = ColorRGB_332::translatePixelBuffer(toRender_, renderBuffer_ + (height() / 2), height(), ColorRGB_332::palette);
+            toRender_ =  rckid_color256_to_rgb(
+                (uint8_t const *)buffer_, 
+                renderBuffer_, 
+                height() * 2, 
+                Palette_332_to_565
+            );
             column_ = 0;
             ST7789::waitVSync();
-            ST7789::writePixels(reinterpret_cast<uint16_t const*>(renderBuffer_), height(), [this]() {
+            ST7789::writePixels(renderBuffer_, height(), [this]() {
                 if (++column_ == width())
                     return true;
                 // write the already processed pixels
                 ST7789::writePixels(
-                    reinterpret_cast<uint16_t const *>((column_ % 2 == 0) ? renderBuffer_ : renderBuffer_ + (height() / 2)),
+                    renderBuffer_ + ((column_ % 2 == 0) ? 0 : height()), 
                     height()
                 );
                 if (column_ + 1 < width())
-                    toRender_ = ColorRGB_332::translatePixelBuffer(toRender_, (column_ % 2 == 1) ? renderBuffer_ : renderBuffer_ + (height() / 2), height());
+                    toRender_ = rckid_color256_to_rgb(
+                        toRender_,           
+                        renderBuffer_ + ((column_ % 2 == 1) ? 0 : height()), 
+                        height(), 
+                        Palette_332_to_565
+                    );
                 return false;
             });
-        }
+        } 
 
     private:
 
         int top_ = 0;
         int left_ = 0;
-        uint32_t * renderBuffer_ = nullptr;
-        uint32_t const * toRender_ = nullptr;
+        uint16_t * renderBuffer_ = nullptr;
+        uint8_t const * toRender_ = nullptr;
         int column_ = 0;
 
     }; // FrameBuffer<ColorRGB_332, DisplayMode::Native_RGB565> 
@@ -137,8 +145,7 @@ namespace rckid {
 
         FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): 
             Canvas{width, height},
-            renderBuffer1_{new uint32_t[height / 2] }, 
-            renderBuffer2_{new uint32_t[height / 2] } {
+            renderBuffer_{new uint16_t[height * 2] } {
         }
 
         void enable() {
@@ -153,32 +160,39 @@ namespace rckid {
         /** Renders the display using a 2 column buffer column by column so that while one columh is being rendered, the other column is being processed. 
          */
         void render() {
-            toRender_ = buffer_;
+            //toRender_ = buffer_;
             // translate one column
-            toRender_ = ColorRGB_332::translatePixelBuffer(buffer_, renderBuffer1_, height());
+            toRender_ =  rckid_color256_to_rgb(
+                (uint8_t const *)buffer_, 
+                renderBuffer_, 
+                height() * 2, 
+                Palette_332_to_565
+            );
             column_ = 0;
             ST7789::waitVSync();
-            ST7789::writePixels(reinterpret_cast<uint16_t const*>(renderBuffer1_), height(), [this]() {
+            ST7789::writePixels(reinterpret_cast<uint16_t const*>(renderBuffer_), height(), [this]() {
                 if (++column_ == width())
                     return true;
                 // write the already processed pixels
                 ST7789::writePixels(
-                    reinterpret_cast<uint16_t const *>((column_ % 2 == 0) ? renderBuffer1_ : renderBuffer2_),
+                    renderBuffer_ + ((column_ % 2 == 0) ? 0 : height()), 
                     height()
                 );
                 if (column_ + 1 < width())
-                    toRender_ = ColorRGB_332::translatePixelBuffer(toRender_, (column_ % 2 == 1) ? renderBuffer1_ : renderBuffer2_, height());
+                    toRender_ = rckid_color256_to_rgb(
+                        toRender_,           
+                        renderBuffer_ + ((column_ % 2 == 1) ? 0 : height()), 
+                        height(), 
+                        Palette_332_to_565
+                    );
                 return false;
             });
-            // process the next colum
-            toRender_ = ColorRGB_332::translatePixelBuffer(toRender_, renderBuffer2_, height()); 
         }
 
     private:
 
-        uint32_t * renderBuffer1_ = nullptr;
-        uint32_t * renderBuffer2_ = nullptr;
-        uint32_t const * toRender_ = nullptr;
+        uint16_t * renderBuffer_ = nullptr;
+        uint8_t const * toRender_ = nullptr;
         int column_ = 0;
 
     }; // FrameBuffer<ColorRGB_332, DisplayMode::Native_2X_RGB565> 

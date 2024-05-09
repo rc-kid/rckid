@@ -3,12 +3,20 @@
 #include <string>
 #include <functional>
 
+#define STR(...) 
+
 /** A simple formatter for writing human readable (ASCII) text to various places, such as the display, or serial debugging port, etc.
  */
 class Writer {
 public:
 
     Writer(std::function<void(char)> putChar):putChar_{putChar} {}
+
+    static Writer toString(std::string & str) {
+        return Writer([& str](char c) {
+            str = str + c;
+        });
+    }
     
     Writer & operator << (char const * str) {
         while (*str != 0)
@@ -66,6 +74,8 @@ public:
         }
         return (*this) << static_cast<uint32_t>(x);
     }
+
+private:
 
     std::function<void(char)> putChar_;
 

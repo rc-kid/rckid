@@ -73,12 +73,13 @@ namespace rckid {
     }
 
     void __not_in_flash_func(irqDMADone_)() {
+        //gpio::outputHigh(GPIO21);
         unsigned irqs = dma_hw->ints0;
         dma_hw->ints0 = irqs;
         // display
         if (irqs & ( 1u << ST7789::dma_))
             ST7789::irqHandler();
-
+        //gpio::outputLow(GPIO21);
     }
 
     void __not_in_flash_func(irqI2CDone_)() {

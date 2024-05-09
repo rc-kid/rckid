@@ -159,6 +159,16 @@ namespace rckid {
             return g.advanceX;
         }
 
+        int putChar(Point where, Font const & font, char c, Color color) {
+            Color colors[] = {
+                Color::Black(), 
+                color.withAlpha(1), 
+                color.withAlpha(2), 
+                color.withAlpha(3), 
+            };
+            return putChar(where, font, c, colors);
+        }
+
         Writer text(int x, int y, Font const & font, Color color) {
             Color colors[] = {
                 Color::Black(), 

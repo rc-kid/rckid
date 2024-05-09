@@ -19,6 +19,12 @@ namespace rckid {
         //Native_BGR666,
     }; 
 
+    enum class FPS : uint8_t {
+        FPS_60 = 0x0f,
+        FPS_50 = 0x15, 
+        FPS_40 = 0x1e,  
+    };
+
     /** Low level driver for the ST7789 display driver. 
      
         The driver takes care of display initialization and provides basic functions for display updates in either direct, or continuous mode. The direct provides blocking interface for sending either commands, or data updates to the system, while the continous mode only supoorts sending data updates via DMA. 
@@ -89,6 +95,14 @@ namespace rckid {
         /** Configures the display for the given mode. 
          */
         static void configure(DisplayMode mode);
+
+        /** Sets the framerate of the display.
+         
+            At startup, 60 fps is selected, but this can be lowered by the apps based on the preset value. 
+         */
+        static void setFPS(FPS fps) {
+            sendCommand(FRCTRL2, static_cast<uint8_t>(fps));
+        }
 
         /** Clears the entire display with given color. 
     
@@ -326,6 +340,9 @@ namespace rckid {
 
         static constexpr uint8_t WRMEMC = 0x3c;
         static constexpr uint8_t STE = 0x44; // set tear scanline
+
+        static constexpr uint8_t PORCTRL = 0xb2; // porch control
+        static constexpr uint8_t FRCTRL2 = 0xc6; // framerate control
 
         // the global IRQ handler
         friend void irqDMADone_();

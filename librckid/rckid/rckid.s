@@ -20,6 +20,66 @@ loop:
     bne loop
     pop     {r4-r5, PC}
 
+.global rckid_color256_to_rgb
+.section .time_critical.rckid_color256_to_rgb, "ax"
+.thumb_func
+rckid_color256_to_rgb:
+    @r0 = input buffer (uint8_t)
+    @r1 = output buffer (uint16_t)
+    @r2 = num pixels
+    @r3 = palette (uint16_t*)
+    @r4 = first two pixels
+    @r5 = second two pixels
+    @r6 - third two pixels? / tmp
+    @r7 - second two pixels
+    push    {r4-r6}
+loop256:
+    @ load first pixel index, multiply by two and load color from palette to r4
+    ldrb r4, [r0] 
+    lsls r4, r4, 1
+    ldrh r4, [r3, r4]
+    @ load second pixel index, multiply by wo and load color from palette to r5
+    ldrb r5, [r0, 1]
+    lsls r5, r5, 1
+    ldrh r5, [r3, r5]
+    @ join r4 and r5 into r4 (first 2 pixels (shift r4 by 16))
+    lsls r5, r5, 16
+    orrs r4, r4, r5
+    @ load third pixel index, multiply by wo and load color from palette to r5
+    ldrb r5, [r0, 2]
+    lsls r5, r5, 1
+    ldrh r5, [r3, r5]
+    @ load fourth pixel index, multiply by wo and load color from palette to r6
+    ldrb r6, [r0, 3]
+    lsls r6, r6, 1
+    ldrh r6, [r3, r6]
+    @ join r5 and r6 into r5 (second 2 pixels (shift r5 by 16))
+    lsls r6, r6, 16
+    orrs r5, r5, r6
+    # store the 4 pixels in r4 and r5
+    stm r1!,  { r4, r5 }
+    # move input index and num pixels to go
+    adds r0, r0, 4
+    subs r2, r2, 4
+    bne loop256
+    pop {r4-r6}
+    bx lr
+
+
+.global rckid_tile_3_layers
+.thumb_func
+rckid_tile_3_layers:
+    @r0 - address for layer 0 (background) (uint8_t *)
+    @r1 - address for layer 1 (middle) (uint8_t *)
+    @r2 - address for layer 2 (foreground) (uint8_t *)
+    @r3 - address for output (uint16_t *)
+
+    ldr r4, [r0]
+    ldr r5, [r1]
+    ldr r6, [r2]
+
+
+
 @.global rckid_color256_to_rgb
 @.thumb_func
 @rckid_color256_to_rgb:

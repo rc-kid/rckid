@@ -7,7 +7,7 @@
 #include "rckid/rckid.h"
 
 namespace rckid {
-    static constexpr uint32_t Palette_332_to_565[] = {
+    static constexpr uint16_t Palette_332_to_565[] = {
         0, // r: 0, g: 0, b: 0 (0)
         10, // r: 0, g: 0, b: 1 (1)
         21, // r: 0, g: 0, b: 2 (2)

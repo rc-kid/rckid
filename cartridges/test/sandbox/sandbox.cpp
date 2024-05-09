@@ -11,28 +11,67 @@
 using namespace rckid;
 
 
-class SimpleApp : public App<FrameBuffer<ColorRGB>> {
+class SimpleApp : public App<FrameBuffer<ColorRGB_332>> {
 public:
+
+    SimpleApp() {
+        for (int i = 0; i < 256; ++i) {
+            b8[i] = i;
+            palette[i] = i;
+        }
+    }
 
 protected:
 
     void update() override {
-
+        /*
+        errors = 0;
+        MEASURE_TIME(naive_, {
+            for (int i = 0; i < 240; ++i)
+                b16[i] = palette[b8[i]];
+        });
+        MEASURE_TIME(cpp_, {
+            ColorRGB_332::translatePixelBuffer((uint32_t*)b8, (uint32_t*)b16, 240);
+        });
+        MEASURE_TIME(asm_, {
+            uint8_t const * res = rckid_color256_to_rgb(b8, b16, 240, palette);
+            errors = b16[0];
+        });
+        */
     }
 
     void draw() override {
         driver_.fill();
-        driver_.textMultiline(0, 0, Iosevka_16, Color::White()) << "Hello world! (8bpp)\nAnd here is next line";
-        driver_.text(0, 120, Iosevka_16, Color::White()) << "Hello world! (4bpp)";
-        driver_.text(0, 140, Iosevka_16, Color::White()) << "Hello world! (2bpp)";
+        driver_.textMultiline(0, 0, Iosevka_16, Color::White()) << 
+            "naive:   " << naive_ << "\n" <<
+            "cpp:     " << cpp_ << "\n" <<
+            "cpp ram: " << cppRam_ << "\n" << 
+            "asm:     " << asm_ << "\n" << 
+            "errors:  " << errors; 
     }
 
+    uint32_t naive_;
+    uint32_t cpp_;
+    uint32_t cppRam_;
+    uint32_t asm_;
+    uint32_t errors = 0;
+
+
+    uint8_t * b8 = new uint8_t[1024];
+    uint16_t * b16 = new uint16_t[1024];
+    uint16_t * palette = new uint16_t[256];
 
 
 }; // SimpleApp
 
+
 int main() {
     rckid::initialize();
+    ST7789::setFPS(FPS::FPS_40);
+//    SimpleApp{}.run();
+
+
+    cpu::overclock();
     Menu m{{
         MenuItem::create("AVR Status", assets::icons::gameboy), 
         MenuItem::create("Sensors", assets::icons::unicorn), 
@@ -40,8 +79,6 @@ int main() {
         MenuItem::create("Sliding Puzzle", assets::icons::fruits), 
     }};
     MainMenu{&m}.run();    
-
-    //SimpleApp{}.run();
    /*
     cpu::overclock();
     Menu m{{

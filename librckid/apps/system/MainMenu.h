@@ -1,7 +1,8 @@
 #pragma once
 
 #include "rckid/app.h"
-#include "rckid/ui/Carousel.h"
+#include "rckid/ui/header.h"
+#include "rckid/ui/carousel.h"
 #include "rckid/graphics/framebuffer.h"
 #include "assets/fonts/OpenDyslexic_48.h"
 
@@ -25,11 +26,13 @@ namespace rckid {
 
         void draw() override {
             driver_.fill();
+            status_.drawOn(driver_, Rect::WH(320, 20));
             carousel_.drawOn(driver_, Rect::XYWH(0, 160, 320, 80));
         }
 
     private:
 
+        Header<Color> status_;
         Carousel<Color> carousel_; 
 
     }; 

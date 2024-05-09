@@ -145,6 +145,19 @@ namespace rckid {
     /** Returns the battery voltage in Volts x 100, i.e. full battery should read 420. 
      */
     unsigned vBatt(); 
+
+    /** Returns the battery level in pct. 
+     
+        
+     */
+    inline unsigned batteryLevel() {
+        unsigned v = vBatt();
+        if (v <= VCC_CRITICAL_THRESHOLD)
+            return 0;
+        if (v >= 420)
+            return 100;
+        return (v - VCC_CRITICAL_THRESHOLD) * (420 - VCC_CRITICAL_THRESHOLD) / 100;
+    }
     //@}
 
     /** \name Memory Management
@@ -174,6 +187,7 @@ namespace rckid {
 
 extern "C" {
     void rckid_mem_fill_32x8(uint32_t * target, size_t num, uint32_t source); 
+    uint8_t const * rckid_color256_to_rgb(uint8_t const * in, uint16_t * out, unsigned numPixels, uint16_t const * palette);
 }
 
 #include "../device_wrapper.h"

@@ -131,6 +131,13 @@ extern "C" {
         while (num-- > 0)
             *(buffer++) = value;
     }
+
+    uint8_t const * rckid_color256_to_rgb(uint8_t const * in, uint16_t * out, unsigned numPixels, uint16_t const * palette) {
+        while (numPixels-- > 0)
+            *(out++) = palette[*in++];
+        return in;
+    }
+    
 }
 
 #endif // ARCH_MOCK

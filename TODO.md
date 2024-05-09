@@ -10,6 +10,8 @@
 
 ## TODO
 
+- make bitmap use the correct buffer raw values - there should be no speed penalty thanks to assembly
+
 - make malloc work in mock
 
 - ColorRGB framebuffer update is much slower than Color256, why? can be due to more memory written for the fonts ?)
@@ -144,3 +146,85 @@ Support 16,8,4,2 and 1 bitdepth
 - 40mA rpi on + avr (6mA)
 - 56mA rpi overclocked?
 - 5ohm for the backlight (4R7?)
+
+
+
+- not quite because palette indices need *2 and uses one too many registers 
+
+; 36 cycles worst case -- 39 41 
+; 20 cycles best case
+
+    2 LDW L3 ; background
+    2 LDW L2 ; mid
+    2 LDW L1 ; foreground  -- 6
+
+    1 MOVS mask, 0xff  -- 7 
+    1 AND x, L1, mask
+    1 BNZ bit2 ; if fg is not zero, we are done
+    1 AND x, L2, mask
+    1 BNZ bit1set ; if middle is not zero we will use that
+    1 AND x, L3, mask
+bit1set:
+    1 OR L1, L1, x
+
+bit2:
+    1 LSL mask, mask, 8
+    1 AND x, L1, mask
+    1 BNZ bit3
+    1 AND x, L2, mask
+    1 BNZ bit2set
+    1 AND x, L3, mask
+bit2set:
+    1 OR L1, L1, x
+
+bit3:
+    1 LSL mask, mask, 8
+    1 AND x, L1, mask
+    1 BNZ bit4
+    1 AND x, L2, mask
+    1 BNZ bit3set
+    1 AND x, L3, mask
+bit3set:
+    1 OR L1, L1, x
+  
+bit4:
+    1 LSL mask, mask, 8
+    1 AND x, L1, mask
+    1 BNZ store
+    1 AND x, L2, mask
+    1 BNZ bit4set
+    1 AND x, L3, mask
+bit4set:
+    1 OR L1, L1, x
+
+store:
+    2 STM out!, L1
+
+
+Worst case: 58 cycles for 4 pixels
+Best case: 34 cycles for 4 pixels
+
+2 LDRB x [l3 + N]
+1 TST x
+1 BNZ ready
+2 LDRB x [l2 + N]
+1 TST x
+1 BNZ ready
+2 LDRB x, [l1 + N]
+  ready:
+1 lsls x, 1
+2 LDRW x [palette + x]
+1 LSL x, x, 16
+
+2 LDRB y [l3 + N]
+1 TST y
+1 BNZ ready
+2 LDRB y [l2 + N]
+1 TST y
+2 BNZ ready
+2 LDRB y, [l1 + N]
+  ready:
+1 lsls y, 1
+2 LDRW y [palette + y]
+1 AND x, x, y
+2 STM out! {x}

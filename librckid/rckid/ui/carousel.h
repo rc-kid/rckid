@@ -1,7 +1,5 @@
 #pragma once
 
-#include <iostream>
-
 #include "rckid/rckid.h"
 #include "menu.h"
 #include "rckid/graphics/canvas.h"
