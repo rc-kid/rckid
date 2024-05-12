@@ -66,6 +66,26 @@ loop256:
     bx lr
 
 
+
+
+@ Blits given picture
+@
+@ Blits 8 bytes at a time
+.global rckid_blit_x8
+.thumb_func
+rckid_blit_bitmap:
+    @r0 - source data, expected in column right to left formt
+    @r1 - dest start
+    @r2 - source height
+    @r3 - source width
+    @r4 - dest advance
+    
+    @ actually writing the glyph, can read 4 at once, test by 0, all and skip, otherwise 
+
+@ Combines three tile layers where.
+@
+@ start with foreground, if empty go directly to lower layer, etc. 
+@ but what to do when the tiles start at different offsets? 
 .global rckid_tile_3_layers
 .thumb_func
 rckid_tile_3_layers:

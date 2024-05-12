@@ -19,6 +19,8 @@
 
 namespace rckid {
 
+    class AudioStream;
+
     /** Initializes the SDK.
      
         This *must* be the first function a cartridge calls if it wants 
@@ -158,6 +160,36 @@ namespace rckid {
             return 100;
         return (v - VCC_CRITICAL_THRESHOLD) * (420 - VCC_CRITICAL_THRESHOLD) / 100;
     }
+    //@}
+
+
+    /** \name Audio 
+     
+        Audio output is done via two PWM channels. At the maximum clock frequency of 200MHz, this gives us 12bit sound up to 44.1kHz with a bit of a headroom. 
+        
+     */
+    //@{
+
+    unsigned audioVolume();
+
+    void setAudioVolume(unsigned value);
+
+    /** Starts playback of given audio stream. 
+     */
+    void play(AudioStream * stream = nullptr); 
+
+    /** Pauses the audio playback. 
+     */
+    void pause();
+
+    /** Stops the audio playback, forgetting the current audio stream, if any.
+     */
+    void stop();
+
+    /** Returns true if playing through headphones, i.e. audio is enabled and headphones are connected. 
+     */
+    bool headphonesActive(); 
+
     //@}
 
     /** \name Memory Management

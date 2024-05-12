@@ -16,6 +16,8 @@
 #include "assets/all.h"
 #include "graphics/ST7789.h"
 #include "graphics/png.h"
+#include "audio/audio_stream.h"
+
 
 #include "ST7789_rgb.pio.h"
 #include "ST7789_rgb_double.pio.h"
@@ -76,6 +78,15 @@ namespace rckid {
         //gpio::outputHigh(GPIO21);
         unsigned irqs = dma_hw->ints0;
         dma_hw->ints0 = irqs;
+        // for audio, reset the DMA start address to the beginning of the buffer and tell the stream to refill
+        if (irqs & (1u << DeviceWrapper::audioDMA0_)) {
+            dma_channel_set_read_addr(DeviceWrapper::audioDMA0_, DeviceWrapper::audioBuffer0_, false);
+            DeviceWrapper::audioStream_->fillBuffer(DeviceWrapper::audioBuffer0_, RP_AUDIO_BUFFER_SIZE);
+        }
+        if (irqs & (1u << DeviceWrapper::audioDMA1_)) {
+            dma_channel_set_read_addr(DeviceWrapper::audioDMA1_, DeviceWrapper::audioBuffer1_, false);
+            DeviceWrapper::audioStream_->fillBuffer(DeviceWrapper::audioBuffer1_, RP_AUDIO_BUFFER_SIZE);
+        }
         // display
         if (irqs & ( 1u << ST7789::dma_))
             ST7789::irqHandler();
@@ -129,6 +140,17 @@ namespace rckid {
         stats::tickUpdateUs_ = uptimeUs() - stats::tickUpdateStart_;
     }
 
+    void configureAudioDMA(int dma, int other, uint16_t const * buffer, size_t bufferSize) {
+        auto dmaConf = dma_channel_get_default_config(dma);
+        channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bytes (16 per channel, 2 channels)
+        channel_config_set_read_increment(& dmaConf, true);  // increment on read
+        channel_config_set_dreq(&dmaConf, pwm_get_dreq(RP_PWM_SLICE));// DMA is driven by the PWM slice overflowing
+        channel_config_set_chain_to(& dmaConf, other); // chain to the other channel
+        dma_channel_configure(dma, & dmaConf, &pwm_hw->slice[RP_PWM_SLICE].cc, buffer, bufferSize / 2, false); // the buffer consists of stereo samples, (32bits), i.e. buffer size / 2
+        // enable IRQ0 on the DMA channel (shared with other framework DMA uses such as the display or the SD card)
+        dma_channel_set_irq0_enabled(dma, true);
+    }
+
     void initialize() {
         board_init();
         // initialize the I2C bus
@@ -154,6 +176,15 @@ namespace rckid {
         accelerometer_.initialize();
         alsSensor_.initialize();
         alsSensor_.startALS();
+        // initialize audio PWM pins
+        gpio_set_function(RP_PIN_PWM_RIGHT, GPIO_FUNC_PWM); // confoigure pwm pins for left and right channel
+        gpio_set_function(RP_PIN_PWM_LEFT, GPIO_FUNC_PWM);
+        pwm_set_wrap(RP_PWM_SLICE, 4096); // set wrap to 12bit sound levels
+        DeviceWrapper::audioDMA0_ = dma_claim_unused_channel(true);
+        DeviceWrapper::audioDMA1_ = dma_claim_unused_channel(true);
+        // configure & chain the audio buffer DMAs
+        configureAudioDMA(DeviceWrapper::audioDMA0_, DeviceWrapper::audioDMA1_, DeviceWrapper::audioBuffer0_, RP_AUDIO_BUFFER_SIZE);
+        configureAudioDMA(DeviceWrapper::audioDMA1_, DeviceWrapper::audioDMA0_, DeviceWrapper::audioBuffer1_, RP_AUDIO_BUFFER_SIZE);
     }
 
     void yield() {
@@ -195,6 +226,41 @@ namespace rckid {
         /// TODO: make sure sd and other things are done first, only then poweroff
         DeviceWrapper::sendCommand(cmd::PowerOff{}); 
     }
+
+    // ============================================================================================
+    // Audio
+    // ============================================================================================
+
+    void play(AudioStream * stream) {
+        if (stream == nullptr) {
+            // it's only playback resume
+            // TODO check there is active stream
+            DeviceWrapper::sendCommand(cmd::AudioEnabled{});
+            pwm_set_enabled(RP_PWM_SLICE, true);
+        } else {
+            stream->fillBuffer(DeviceWrapper::audioBuffer0_, RP_AUDIO_BUFFER_SIZE);
+            stream->fillBuffer(DeviceWrapper::audioBuffer1_, RP_AUDIO_BUFFER_SIZE);
+            DeviceWrapper::audioStream_ = stream;
+            pwm_set_clkdiv(RP_PWM_SLICE, cpu::clockSpeed() / (4096.0 * stream->sampleRate()));
+            DeviceWrapper::sendCommand(cmd::AudioEnabled{});
+            dma_channel_start(DeviceWrapper::audioDMA0_);
+            pwm_set_enabled(RP_PWM_SLICE, true);
+        }
+    }
+
+    void pause() {
+        pwm_set_enabled(RP_PWM_SLICE, false);
+        DeviceWrapper::sendCommand(cmd::AudioDisabled{});
+    }
+
+    void stop(){
+        DeviceWrapper::sendCommand(cmd::AudioDisabled{});
+        pwm_set_enabled(RP_PWM_SLICE, false);
+        dma_channel_abort(DeviceWrapper::audioDMA0_);        
+        dma_channel_abort(DeviceWrapper::audioDMA1_);
+        DeviceWrapper::audioStream_ = nullptr;
+    }
+
 
     // ============================================================================================
     // DeviceWrapper

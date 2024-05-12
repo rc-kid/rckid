@@ -5,6 +5,7 @@
 #include <iostream>
 #include <raylib.h>
 
+#include "rckid/audio/audio_stream.h"
 #include "graphics/ST7789.h"
 
 namespace rckid {
@@ -41,6 +42,23 @@ namespace rckid {
     void powerOff() {
 
     }
+
+    // ============================================================================================
+    // Audio
+    // ============================================================================================
+
+    void play(AudioStream * stream) {
+        stream->fillBuffer(DeviceWrapper::audioBuffer0_, RP_AUDIO_BUFFER_SIZE);
+        for (int i = 0; i < RP_AUDIO_BUFFER_SIZE; i += 2)
+            std::cout << DeviceWrapper::audioBuffer0_[i] << std::endl;
+    }
+
+    void pause() {
+    }
+
+    void stop(){
+    }
+
 
     // ============================================================================================
     // DeviceWrapper

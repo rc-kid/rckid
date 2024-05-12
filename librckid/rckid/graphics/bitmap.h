@@ -132,7 +132,11 @@ namespace rckid {
         //@{
 
         int putChar(Point where, Font const & font, char c, Color * colors) {
+            if (where.x() > width())
+                return 0;
             GlyphInfo const & g = font.glyphs[static_cast<uint8_t>((c - 32 >= 0) ? (c - 32) : 0)];
+            if (where.x() + g.advanceX < 0)
+                return g.advanceX;
             uint32_t const * pixels = font.pixels + g.index;
             unsigned a;
             unsigned col;

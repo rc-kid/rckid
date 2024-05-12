@@ -52,11 +52,11 @@ add_subdirectory("libs/libhelix-mp3")
 
 add_subdirectory("cartridges/test/simple")
 add_subdirectory("cartridges/test/sandbox")
+#add_subdirectory("cartridges/test/benchmarks")
 add_subdirectory("cartridges/games")
 #add_subdirectory("cartridges/test/sandbox")
 #add_subdirectory("cartridges/test/hw-test")
 #add_subdirectory("cartridges/test/audio-test")
-#add_subdirectory("cartridges/test/benchmarks")
 #add_subdirectory("cartridges/test/sd-blocking")
 
 if (ARCH STREQUAL "RP2040")

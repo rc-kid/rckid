@@ -4,9 +4,11 @@
 #include "rckid/graphics/font.h"
 
 #include "assets/fonts/Iosevka_16.h"
-#include "assets/fonts/Iosevka_20.h"
+#include "assets/fonts/SymbolsNF_16.h"
 #include "assets/fonts/SymbolsNF_20.h"
 
+
+#include "rckid/audio/tone.h"
 namespace rckid {
 
     /** A very basic RCKid header that can render itself into given bitmap. 
@@ -27,7 +29,7 @@ namespace rckid {
             // AC if plugged in
             if (dcPower()) {
                 x -= SymbolsNF_20.glyphInfoFor(glyph::DC).advanceX + 4;
-                bitmap.putChar(Point{x, y}, SymbolsNF_20, glyph::DC, COLOR::White());
+                bitmap.putChar(Point{x, y + 2}, SymbolsNF_16, glyph::DC, COLOR::White());
             }
             // draw the battery gauge and optional level
             x -= SymbolsNF_20.glyphInfoFor(glyph::Battery100).advanceX + 4;

@@ -8,10 +8,12 @@
 
 #include "assets/all.h"
 
+#include "rckid/audio/tone.h"
+
 using namespace rckid;
 
 
-class SimpleApp : public App<FrameBuffer<ColorRGB_332>> {
+class SimpleApp : public App<FrameBuffer<ColorRGB>> {
 public:
 
     SimpleApp() {
@@ -72,6 +74,12 @@ int main() {
 
 
     cpu::overclock();
+
+    setAudioVolume(1);
+    Tone<SineWave> tone;
+    tone.setFrequency(44000);
+    play(&tone);
+
     Menu m{{
         MenuItem::create("AVR Status", assets::icons::gameboy), 
         MenuItem::create("Sensors", assets::icons::unicorn), 

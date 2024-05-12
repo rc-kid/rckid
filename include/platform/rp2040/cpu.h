@@ -34,7 +34,7 @@ public:
 
 private:
 
-    static inline unsigned clockSpeedkHz_ = 125000000;
+    static inline unsigned clockSpeedkHz_ = 125000;
 
 }; // cpu
 

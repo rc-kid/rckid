@@ -9,7 +9,7 @@ include_directories(${CMAKE_SOURCE_DIR}/../libs/raylib/src)
 
 add_executable(bytes-to-cpp "bytes-to-cpp.cpp")
 add_executable(int16-to-cpp "int16-to-cpp.cpp")
-add_executable(interp-tables "interp-tables.cpp")
+add_executable(generate-interp-tables "generate-interp-tables.cpp")
 
 add_executable(generate-rgb-332-to-565 "generate-rgb-332-to-565.cpp")
 add_executable(generate-assets "generate-assets.cpp")

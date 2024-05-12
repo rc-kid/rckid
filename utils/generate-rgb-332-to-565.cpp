@@ -20,7 +20,7 @@ int main(int argc, char * argv[]) {
     f << " */" << std::endl << std::endl;
     f << "#include \"rckid/rckid.h\"" << std::endl << std::endl;
     f << "namespace rckid {" << std::endl;
-    f << "    static constexpr uint32_t Palette_332_to_565[] = {" << std::endl;
+    f << "    static constexpr uint16_t Palette_332_to_565[] = {" << std::endl;
     for (unsigned i = 0; i < 256; ++i) {
         unsigned r = (i >> 5) & 7;
         unsigned g = (i >> 3) & 7;

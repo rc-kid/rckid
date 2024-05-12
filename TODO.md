@@ -10,6 +10,8 @@
 
 ## TODO
 
+- convert interpolator to wave tables
+
 - make malloc work in mock
 
 - ColorRGB framebuffer update is much slower than Color256, why? can be due to more memory written for the fonts ?)
@@ -148,6 +150,18 @@ Support 16,8,4,2 and 1 bitdepth
 
 
 - not quite because palette indices need *2 and uses one too many registers 
+
+~ 12500 cycles is max budget for 40 fps
+- 6250 is max budget for 60 fps
+
+- do first layer = read tile, write tile ~ 240 cycles
+- do second layer = worst case : read 1, test, branch, load, write
+
+    - tilerow index
+    - no of tiles
+    - 
+
+
 
 ; 36 cycles worst case -- 39 41 
 ; 20 cycles best case

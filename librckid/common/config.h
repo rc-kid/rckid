@@ -94,6 +94,14 @@
  */
 #define RP_I2C_ADDRESS 0x55
 
+/** PWM slice used for the audio out, which on pins 22 and 23 correspon to PWM slice 3. 
+ */
+#define RP_PWM_SLICE 3
+
+/** Depth of the audio buffer (there are two audio buffers of the given size)
+*/
+#define RP_AUDIO_BUFFER_SIZE 2048
+
 
 /** AVR Pinout
  
