@@ -1,3 +1,4 @@
+#include <new>
 #include <cstdlib>
 #include "rckid.h"
 #include "stats.h"
@@ -21,12 +22,24 @@ namespace {
         Chunk(size_t size): size{size} {}
     };
 
+    /** Arena information, which contains a pointer to the previous arena and its own freelist. so that when the arena is removed, previous freelist can be restored. 
+     */
+    struct Arena {
+        Chunk * freelist = nullptr;
+        Arena * previous;
+
+        Arena(Arena * prev): previous{prev} {}
+    }; 
+
     Chunk * freelist = nullptr;
     char * heapEnd = & __bss_end__;
+    //char * heapEnd = & __bss_end__ + sizeof(Arena);
 
     unsigned allocated = 0;
     unsigned mallocCalls = 0;
     unsigned freeCalls = 0;
+
+    //Arena * arena_ = new (&__bss_end__) Arena{nullptr};
 }
 
 extern "C" {
@@ -81,6 +94,8 @@ namespace rckid {
     size_t getFreeCalls() { return freeCalls; }
 
     void enterHeapArena() {
+        // first allocate the arena header at the top of current heap
+        
 
     }
 

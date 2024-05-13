@@ -149,8 +149,6 @@ namespace rckid {
     unsigned vBatt(); 
 
     /** Returns the battery level in pct. 
-     
-        
      */
     inline unsigned batteryLevel() {
         unsigned v = vBatt();
@@ -161,7 +159,6 @@ namespace rckid {
         return (v - VCC_CRITICAL_THRESHOLD) * (420 - VCC_CRITICAL_THRESHOLD) / 100;
     }
     //@}
-
 
     /** \name Audio 
      
@@ -193,6 +190,10 @@ namespace rckid {
     //@}
 
     /** \name Memory Management
+     
+        Since RAM is quite constrained on the RP2040, RCKid implements its own malloc and free that are geared toards efficiency in memory allocation, not speed. Furthermore, the heap allows partitioning to arenas, where each arena can be used for both arena-like and heap-like allocations at the same time. When an arena is deallocated, all (including the heap-like allocated) its memory is freed. 
+        
+        This mechanism prevets framentation across applications as each application creates its own heap arena that will be completely deallocated when the application terminates. 
      */
     //@{
     size_t getFreeHeap();
@@ -213,7 +214,6 @@ namespace rckid {
     inline uint32_t uptimeUs() { return time_us_32(); }
 
     //@}
-
 
 }
 

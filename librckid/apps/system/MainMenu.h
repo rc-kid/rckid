@@ -18,9 +18,9 @@ namespace rckid {
     protected:
 
         void update() override {
-            if (pressed(Btn::Left))
+            if (down(Btn::Left))
                 carousel_.prev();
-            if (pressed(Btn::Right))
+            if (down(Btn::Right))
                 carousel_.next();
         }
 

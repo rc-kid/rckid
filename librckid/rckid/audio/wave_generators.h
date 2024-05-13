@@ -4,6 +4,9 @@
 
 namespace rckid {
 
+    /** We only use 24 bits for the wave resolution, so that uint32_t allows us to keep multiple second duration. 
+     */
+    constexpr uint32_t WaveBitDepth = 32;
     constexpr uint32_t WavePeriod = std::numeric_limits<uint32_t>::max();
     constexpr uint16_t WaveMidLine = 2048;
 
@@ -11,17 +14,17 @@ namespace rckid {
      */
     class SquareWave {
     public:
-        uint16_t valueAt(uint32_t t, uint16_t amp) const { 
+        static uint16_t valueAt(uint32_t t, uint16_t amp) { 
             return WaveMidLine + ((t >= WavePeriod / 2) ? amp : -amp); 
         }
     };
 
     class SineWave {
     public:
-        uint16_t valueAt(uint32_t t, uint16_t amp) const {
+        static uint16_t valueAt(uint32_t t, uint16_t amp) {
             static_assert(sizeof(SineTable) / sizeof(uint16_t) == 256);
             int value = 0;
-            t = (t >> 22);
+            t = (t >> (WaveBitDepth - 10));
             switch (t >> 8) {
                 case 0: // increasing from 0 to max, default sine table
                     value = SineTable[t & 0xff];
@@ -42,8 +45,8 @@ namespace rckid {
 
     class SawToothWave {
     public:
-        uint16_t valueAt(uint32_t t, uint16_t amp) const {
-            return WaveMidLine - amp + (2 * amp) * (t >> 16) / 65536;
+        static uint16_t valueAt(uint32_t t, uint16_t amp) {
+            return WaveMidLine - amp + (2 * amp) * (t >> (WaveBitDepth - 16)) / 65536;
         }
     };
 

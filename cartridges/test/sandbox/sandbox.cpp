@@ -9,9 +9,30 @@
 #include "assets/all.h"
 
 #include "rckid/audio/tone.h"
+#include "rckid/audio/music.h"
 
 using namespace rckid;
 
+constexpr NoteInfo Octave[] = {
+    NOTE_4(C4), 
+    NOTE_4(D4),
+    NOTE_4(E4),
+    NOTE_4(F4), 
+    NOTE_4(G4),
+    NOTE_4(A4),
+    NOTE_4(B4),
+    NOTE_4(C5),
+    REST_4,
+    NOTE_4(C5),
+    NOTE_4(B4),
+    NOTE_4(A4),
+    NOTE_4(G4),
+    NOTE_4(F4),
+    NOTE_4(E4),
+    NOTE_4(D4),
+    NOTE_4(C4),
+    REST_4,
+};
 
 class SimpleApp : public App<FrameBuffer<ColorRGB>> {
 public:
@@ -76,9 +97,11 @@ int main() {
     cpu::overclock();
 
     setAudioVolume(1);
-    Tone<SineWave> tone;
-    tone.setFrequency(44000);
-    play(&tone);
+    //Tone<SineWave> tone;
+    //tone.setFrequency(440);
+    //play(&tone);
+    Music<Tone<SineWave>> music{Octave};
+    play(&music);
 
     Menu m{{
         MenuItem::create("AVR Status", assets::icons::gameboy), 

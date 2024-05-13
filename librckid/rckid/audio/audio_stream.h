@@ -15,7 +15,6 @@ namespace rckid {
     public:
 
         uint16_t sampleRate() const { return sampleRate_; }
-        virtual void setSampleRate(SampleRate value) { sampleRate_ = static_cast<uint16_t>(value); } 
 
         virtual void fillBuffer(uint16_t * buffer, size_t bufferSize) = 0;
 
