@@ -7,6 +7,7 @@
 
 #include "rckid/audio/audio_stream.h"
 #include "graphics/ST7789.h"
+#include "graphics/framebuffer.h"
 
 namespace rckid {
 
@@ -39,8 +40,37 @@ namespace rckid {
         );
     }
 
+    void fatalError(uint32_t code, uint32_t line, char const * file) {
+        // directly do the IRQ code in the mock mode
+        FrameBuffer<ColorRGB> fb{};
+        fb.fill(ColorRGB::Blue());
+        Writer w = fb.textMultiline(10,20);
+        w << ":( Fatal error:\n\n" 
+          << "   code: " << code << "\n\n";
+        if (file != nullptr) {
+            w << "   line: " << line << "\n"
+            << "   file: " << file << "\n\n";
+        }
+        w << "   Long press home button to turn off,\n   then restart.";
+        // reset the display and draw the framebuffer
+        ST7789::reset();
+        fb.enable();
+        fb.render();
+        // enter busy wait loop - we need to be restarted now
+        while (true) {}
+    }
+
+
     void powerOff() {
 
+    }
+
+    Writer writeToSerial() {
+        return Writer{[](char x) {
+            std::cout << x; 
+            if (x == '\n')
+                std::cout << std::flush;
+        }};
     }
 
     // ============================================================================================

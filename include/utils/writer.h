@@ -3,7 +3,7 @@
 #include <string>
 #include <functional>
 
-#define STR(...) 
+//#define STR(...) 
 
 /** A simple formatter for writing human readable (ASCII) text to various places, such as the display, or serial debugging port, etc.
  */

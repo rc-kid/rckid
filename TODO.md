@@ -11,6 +11,8 @@
 ## TODO
 
 - convert interpolator to wave tables
+- audio mixer
+- ADSR envelope
 
 - make malloc work in mock
 
@@ -26,8 +28,6 @@
 - headphones work, speaker seems not to (always off) - seems bad GND connectiom for PAM8302
 
 - write optimized draw bitmap functions
-
-- make app system apps use 160x120x8bpp for minimal VRAM footprint for system
 
 - steps counter - might need battery to verify
 - accelerometer reported temperature

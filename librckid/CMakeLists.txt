@@ -29,6 +29,7 @@ function(link_with_librckid target_name)
         target_link_libraries(${target_name}
             pico_stdlib
             pico_rand
+            pico_multicore
             pico_unique_id
             hardware_i2c
             hardware_pio

@@ -22,6 +22,8 @@ namespace rckid {
                 carousel_.prev();
             if (down(Btn::Right))
                 carousel_.next();
+            if (down(Btn::Select))
+                FATAL_ERROR(0);
         }
 
         void draw() override {

@@ -11,11 +11,13 @@
 #include <hardware/pio.h>
 #include <hardware/pwm.h>
 #include <hardware/dma.h>
+#include <pico/multicore.h>
 
 #include "rckid.h"
 #include "assets/all.h"
 #include "graphics/ST7789.h"
 #include "graphics/png.h"
+#include "graphics/framebuffer.h"
 #include "audio/audio_stream.h"
 
 
@@ -36,8 +38,41 @@ static constexpr unsigned TICK_ACCEL = 3;
 static constexpr unsigned TICK_AVR = 4;
 
 volatile unsigned tickInProgress_ = TICK_DONE;
+static uint32_t errorCode_ = 0;
+static uint32_t errorLine_ = 0;
+static const char * errorFile_ = nullptr;
+
+extern "C" {
+    void resetHeap();
+}
 
 namespace rckid {
+
+    /** The blue screen of death fatal error handler. 
+     */
+    void irqBSOD_() {
+        // TODO reset SP to some good value to ensure we can call functions
+        hw_clear_bits(&timer_hw->intr, 1);
+
+        multicore_reset_core1();
+        resetHeap();
+        FrameBuffer<ColorRGB> fb{};
+        fb.fill(ColorRGB::Blue());
+        Writer w = fb.textMultiline(10,20);
+        w << ":( Fatal error:\n\n" 
+          << "   code: " << errorCode_ << "\n\n";
+        if (errorFile_ != nullptr) {
+            w << "   line: " << errorLine_ << "\n"
+            << "   file: " << errorFile_ << "\n\n";
+        }
+        w << "   Long press home button to turn off,\n   then restart.";
+        // reset the display and draw the framebuffer
+        ST7789::reset();
+        fb.enable();
+        fb.render();
+        // enter busy wait loop - we need to be restarted now
+        while (true) {}
+    }
 
     void __not_in_flash_func(i2cFillAVRTxBlocks)() {
         i2c0->hw->enable = 0;
@@ -153,6 +188,13 @@ namespace rckid {
 
     void initialize() {
         board_init();
+        /* TODO enable the cartridge uart port based on some preprocessor flag. WHen enabled, make all logs, traces and debugs go to the cartridge port as well. 
+        stdio_uart_init_full(
+            RP_DEBUG_UART, 
+            RP_DEBUG_UART_BAUDRATE, 
+            RP_DEBUG_UART_TX_PIN, 
+            RP_DEBUG_UART_RX_PIN
+        ); */
         // initialize the I2C bus
         i2c_init(i2c0, RP_I2C_BAUDRATE); 
         i2c0->hw->intr_mask = 0;
@@ -165,9 +207,12 @@ namespace rckid {
         // set the single DMA IRQ 0 handler reserved for the SDK
         irq_set_exclusive_handler(DMA_IRQ_0, irqDMADone_);
         irq_set_exclusive_handler(I2C0_IRQ, irqI2CDone_);
+        irq_set_exclusive_handler(TIMER_IRQ_0, irqBSOD_);
         irq_set_enabled(I2C0_IRQ, true);
         // make the I2C IRQ priority larger than that of the DMA (0x80) to ensure that I2C comms do not have to wait for render done if preparing data takes longer than sending them
         irq_set_priority(I2C0_IRQ, 0x40); 
+        // set TIMER_IRQ_0 used for fatal error BSOD to be the highest
+        irq_set_priority(TIMER_IRQ_0, 0x0);
         // initialize the display
         ST7789::initialize();
         setBrightness(128);
@@ -222,9 +267,30 @@ namespace rckid {
         );
     }
 
+    void fatalError(uint32_t code, uint32_t line, char const * file) {
+        // fill in error metadata
+        errorCode_ = code;
+        errorLine_ = line;
+        errorFile_ = file;
+        // set the timer IRQ to fire
+        hw_set_bits(&timer_hw->inte, 1);
+        irq_set_enabled(TIMER_IRQ_0, true);
+        timer_hw->alarm[0] = (timer_hw->timelr + 1000);
+        // forever loop so that we don't return
+        while(true) {};
+    }
+
     void powerOff() {
         /// TODO: make sure sd and other things are done first, only then poweroff
         DeviceWrapper::sendCommand(cmd::PowerOff{}); 
+    }
+
+    Writer writeToSerial() {
+        return Writer{[](char x) {
+            tud_cdc_write(& x, 1);
+            if (x == '\n')
+                tud_cdc_write_flush();            
+        }};
     }
 
     // ============================================================================================
@@ -352,15 +418,16 @@ namespace rckid {
         initializePinsBitBang();
 
         // TODO check the init sequence
+        // we need to use busy waits since the reset is also called from the fatal error handler, which happens inside an IRQ 
         sendCommand(SWRESET);
-        sleep_ms(150);
+        busy_wait_ms(150);
         sendCommand(VSCSAD, (uint8_t)0);
         configure(DisplayMode::Native_RGB565);
         sendCommand(TEON, TE_VSYNC);
         sendCommand(SLPOUT);
-        sleep_ms(150);
+        busy_wait_ms(150);
         sendCommand(DISPON);
-        sleep_ms(150);
+        busy_wait_ms(150);
         //sendCommand(MADCTL, (uint8_t)(MADCTL_MV));
         //sendCommand(MADCTL, (uint8_t)(MADCTL_MY | MADCTL_MV ));
         //sendCommand(MADCTL, 0_u8);

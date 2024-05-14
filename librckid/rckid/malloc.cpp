@@ -31,28 +31,33 @@ namespace {
         Arena(Arena * prev): previous{prev} {}
     }; 
 
-    Chunk * freelist = nullptr;
-    char * heapEnd = & __bss_end__;
-    //char * heapEnd = & __bss_end__ + sizeof(Arena);
+    //Chunk * freelist = nullptr;
+    //char * heapEnd = & __bss_end__;
+    char * heapEnd = & __bss_end__ + sizeof(Arena);
 
     unsigned allocated = 0;
     unsigned mallocCalls = 0;
     unsigned freeCalls = 0;
 
-    //Arena * arena_ = new (&__bss_end__) Arena{nullptr};
+    Arena * arena = new (__builtin_assume_aligned(&__bss_end__, 8)) Arena{nullptr};
 }
 
 extern "C" {
 
+    void resetHeap() {
+        heapEnd = & __bss_end__ + sizeof(Arena);
+        arena = new (__builtin_assume_aligned(&__bss_end__, 8)) Arena{nullptr};
+    }
+
     void * __wrap_malloc(size_t numBytes) {
         ++mallocCalls;
-        Chunk * freeChunk = freelist;
+        Chunk * freeChunk = arena->freelist;
         Chunk * last = nullptr;
         // see if we can use a chunk from freelist
         while (freeChunk != nullptr) {
             if (freeChunk->size >= numBytes) {
                 if (last == nullptr)
-                    freelist = freeChunk->next;
+                    arena->freelist = freeChunk->next;
                 else 
                     last->next = freeChunk->next;
                 allocated += freeChunk->size;
@@ -72,13 +77,14 @@ extern "C" {
     }
 
     void __wrap_free(void * ptr) {
+        // TODO check that we are freeing memory that is higher than the current arena, otherwise we are freeing from a previous arena which is wrong
         ++freeCalls;
         // get the chunk and prepend it to the freelist
         // TODO this is extremely ugly and inefficient, must be fixed in the future
         Chunk * chunk = (Chunk *)((char*) ptr - 4);
         allocated -= chunk->size; // the 4 bytes in the chunk header are still allocated
-        chunk->next = freelist;
-        freelist = chunk;
+        chunk->next = arena->freelist;
+        arena->freelist = chunk;
     }
 
 } 
@@ -93,14 +99,21 @@ namespace rckid {
 
     size_t getFreeCalls() { return freeCalls; }
 
+    /** Simply allocate new arena, which also creates new empty freelist to be used in it. 
+     */
     void enterHeapArena() {
-        // first allocate the arena header at the top of current heap
-        
-
+        arena = new (heapEnd) Arena{arena};
+        heapEnd += sizeof (Arena);
     }
 
+    /** Leaving the arena means resetting the heap end to the current arena pointer and then moving current arena to the previous one, which effectively reclaims all memory allocated in the arena we are leaving now. 
+     */
     void leaveHeapArena() {
-
+        // TODO BSOD in debug mode, do nothing in production
+        if (arena->previous == nullptr)
+            return;
+        heapEnd = reinterpret_cast<char*>(arena);
+        arena = arena->previous;
     }
 }
 
