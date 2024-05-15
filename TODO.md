@@ -10,7 +10,6 @@
 
 ## TODO
 
-- convert interpolator to wave tables
 - audio mixer
 - ADSR envelope
 
@@ -146,8 +145,6 @@ Support 16,8,4,2 and 1 bitdepth
 - 40mA rpi on + avr (6mA)
 - 56mA rpi overclocked?
 - 5ohm for the backlight (4R7?)
-
-
 
 - not quite because palette indices need *2 and uses one too many registers 
 

@@ -6,9 +6,10 @@
 
 namespace rckid {
 
+    /** Single Tile
 
-    /** Basic tile. 
-    */
+        Tiles are 16x16 pixels and use 256 colors from a custom palette with the color 0 being transparent 
+     */
     class Tile {
     public:
 
@@ -65,7 +66,7 @@ namespace rckid {
 
     }; 
 
-    /** A simple tile engine. 
+    /** Tile Engine with three layers and some sprites. 
      
         needs to:
         1) draw the tiles

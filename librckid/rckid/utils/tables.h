@@ -8,7 +8,7 @@
 namespace rckid {
 
     /** One quarter of sine wave, from 0 to max within uint16_t.
-      */
+     */
     constexpr uint16_t SineTable[] = {
         0, 402, 804, 1206, 1608, 2010, 2412, 2813, 
         3215, 3617, 4018, 4419, 4821, 5221, 5622, 6023, 

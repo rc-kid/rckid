@@ -1,6 +1,6 @@
 #pragma once
 
-#include "wave_tables.h"
+#include "rckid/utils/tables.h"
 
 namespace rckid {
 
@@ -17,7 +17,7 @@ namespace rckid {
         static uint16_t valueAt(uint32_t t, uint16_t amp) { 
             return WaveMidLine + ((t >= WavePeriod / 2) ? amp : -amp); 
         }
-    };
+    }; // rckid::squareWave
 
     class SineWave {
     public:
@@ -41,18 +41,17 @@ namespace rckid {
             }
             return WaveMidLine + value * amp / 65536;
         }
-    };
+    }; // rckid::SineWave
 
     class SawToothWave {
     public:
         static uint16_t valueAt(uint32_t t, uint16_t amp) {
             return WaveMidLine - amp + (2 * amp) * (t >> (WaveBitDepth - 16)) / 65536;
         }
-    };
+    }; // rckid::SawToothWave
 
     class WhiteNoise {
 
     };
-
 
 }; // namespace rckid

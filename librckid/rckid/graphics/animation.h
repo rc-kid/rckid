@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rckid/rckid.h"
-#include "utils/interpolation.h"
+#include "rckid/utils/easing.h"
 
 namespace rckid {
 
@@ -76,8 +76,8 @@ namespace rckid {
         }
 
         template<typename T> 
-        T interpolate(T start, T end, Interpolation i = Interpolation::Cos) {
-            return ::interpolate(start, end, t_ * 1000 / duration_, i);
+        T interpolate(T start, T end, Easing i = Easing::Cos) {
+            return easeInRange(start, end, t_ * 1000 / duration_, i);
         }
         
     private:

@@ -16,5 +16,5 @@ build-utils/generate-font assets/fonts/SymbolsNF.ttf 16 librckid/assets/fonts --
 build-utils/generate-font assets/fonts/SymbolsNF.ttf 20 librckid/assets/fonts --symbols
 build-utils/generate-font assets/fonts/SymbolsNF.ttf 32 librckid/assets/fonts --symbols
 echo "Generating interpolation tables..."
-build-utils/generate-interp-tables 256 librckid/rckid/audio/wave_tables.h
+build-utils/generate-interp-tables 256 librckid/rckid/utils/tables.h
 
