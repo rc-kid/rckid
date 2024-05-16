@@ -4,7 +4,7 @@
 
 namespace rckid {
 
-    enum class Easing {
+    enum class Easing : uint8_t {
         Linear, 
         Sin, 
         Cos, 
@@ -12,8 +12,8 @@ namespace rckid {
 
     template<typename T>
     inline T easeInRange(T start, T end, int promille, Easing e = Easing::Linear) {
-        if (end < start)
-            promille *= -1;
+        //if (end < start)
+        //    promille *= -1;
         switch (e) {
             default: // a bit of defensive programming
             case Easing::Linear:

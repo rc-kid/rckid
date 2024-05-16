@@ -78,9 +78,12 @@ namespace rckid {
     // ============================================================================================
 
     void play(AudioStream * stream) {
-        stream->fillBuffer(DeviceWrapper::audioBuffer0_, RP_AUDIO_BUFFER_SIZE);
-        for (int i = 0; i < RP_AUDIO_BUFFER_SIZE; i += 2)
-            std::cout << DeviceWrapper::audioBuffer0_[i] << std::endl;
+//        for (int i = 0; i < 44; ++i) {
+            stream->fillBuffer(DeviceWrapper::audioBuffer0_, RP_AUDIO_BUFFER_SIZE);
+//            for (int i = 0; i < RP_AUDIO_BUFFER_SIZE; i += 2)
+//                std::cout << DeviceWrapper::audioBuffer0_[i] << std::endl;
+//        }
+//        while(true) {};
     }
 
     void pause() {

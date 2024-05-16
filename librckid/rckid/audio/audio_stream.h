@@ -11,6 +11,8 @@ namespace rckid {
         kHz48 = 48000,
     };
 
+    constexpr uint16_t AudioBaseLevel = 2048;
+
     class AudioStream {
     public:
 

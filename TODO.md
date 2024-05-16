@@ -10,9 +10,6 @@
 
 ## TODO
 
-- audio mixer
-- ADSR envelope
-
 - make malloc work in mock
 
 - ColorRGB framebuffer update is much slower than Color256, why? can be due to more memory written for the fonts ?)
@@ -48,7 +45,13 @@
 
 ## Audio Woes
 
-- maybe 16bit at 22500 khz? 
+- have basic tone & envelope check, the sound quality is not stellar, but actually quite ok
+- need programmable amplitude & ADSR in milliseconds updated by sample rate
+- sample rate other than 44100 is not that great (because of PWM?)
+- sigma-delta DAC might be better? - at the cost of extra CPU though
+- the tone generator can be much optimized - interpolator?
+- add audio mixer
+
 - 8bit PCM audio is very very noisy - this is probably ok for some synthesized tunes & stuff, but sounds horrible for music. This is not HW problem, but rather quantization error and some such
 - 12bit audio seems to be better, works reliably well with 250MHz overclock, but won't work for 8kHz, a resampling and PDM output via PIO would be much better
 - use new circuit? - https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf

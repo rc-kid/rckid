@@ -8,20 +8,25 @@ namespace rckid {
      */
     constexpr uint32_t WaveBitDepth = 32;
     constexpr uint32_t WavePeriod = std::numeric_limits<uint32_t>::max();
-    constexpr uint16_t WaveMidLine = 2048;
+
+    class MaxWave {
+    public:
+        static int16_t valueAt(uint32_t t, int16_t amp) { return amp; }
+        
+    }; // rckid::MaxWave
 
     /** The simplest, square wave generator. 
      */
     class SquareWave {
     public:
-        static uint16_t valueAt(uint32_t t, uint16_t amp) { 
-            return WaveMidLine + ((t >= WavePeriod / 2) ? amp : -amp); 
+        static int16_t valueAt(uint32_t t, int16_t amp) { 
+            return ((t >= WavePeriod / 2) ? amp : -amp); 
         }
     }; // rckid::squareWave
 
     class SineWave {
     public:
-        static uint16_t valueAt(uint32_t t, uint16_t amp) {
+        static int16_t valueAt(uint32_t t, int16_t amp) {
             static_assert(sizeof(SineTable) / sizeof(uint16_t) == 256);
             int value = 0;
             t = (t >> (WaveBitDepth - 10));
@@ -39,14 +44,14 @@ namespace rckid {
                     value = - SineTable[255 - (t & 0xff)];
                     break;
             }
-            return WaveMidLine + value * amp / 65536;
+            return value * amp / 65536;
         }
     }; // rckid::SineWave
 
     class SawToothWave {
     public:
-        static uint16_t valueAt(uint32_t t, uint16_t amp) {
-            return WaveMidLine - amp + (2 * amp) * (t >> (WaveBitDepth - 16)) / 65536;
+        static int16_t valueAt(uint32_t t, int16_t amp) {
+            return  - amp + (2 * amp) * (t >> (WaveBitDepth - 16)) / 65536;
         }
     }; // rckid::SawToothWave
 

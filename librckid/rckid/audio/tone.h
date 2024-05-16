@@ -3,6 +3,7 @@
 #include "rckid/rckid.h"
 #include "audio_stream.h"
 #include "wave_generators.h"
+#include "envelope.h"
 
 namespace rckid {
 
@@ -14,7 +15,9 @@ namespace rckid {
     class Tone : public AudioStream, public GENERATOR {
     public:
 
-// 37391
+        // 2ms 1ms 50ms
+        static inline ADSREnvelope adsr_{88,44,2205,80, Easing::Linear};
+
         static constexpr uint16_t Forever = 0;
 
         using GENERATOR::valueAt;
@@ -24,7 +27,7 @@ namespace rckid {
         }
 
         uint16_t nextValue(uint16_t amp) {
-            uint16_t result = valueAt(frequency_ * acc_, amp);
+            uint16_t result = AudioBaseLevel + adsr_.modulate(valueAt(frequency_ * acc_, amp), i_, duration_);
             acc_ = (acc_ + delta_) % period_;
             return result;
         }
@@ -36,7 +39,7 @@ namespace rckid {
                     uint16_t v = nextValue(255);
                     *(buffer++) = v;
                     *(buffer++) = v;
-                    if (--duration_ == 0)
+                    if (++i_ >= duration_)
                         onDone();
                 }
             } else if (frequency_ != 0) {
@@ -63,6 +66,7 @@ namespace rckid {
                 duration_ = 0;
             else 
                 duration_ = duration * 10 / (10000000 / sampleRate_);
+            i_ = 0;
         }
 
     protected:
@@ -85,15 +89,11 @@ namespace rckid {
         uint32_t delta_ = 0; 
         // duration of the tone in ticks
         uint32_t duration_ = 0;
+        // where we are in in duration (useful for the envelope)
+        uint32_t i_ = 0;
 
     }; // rckid::Tone
 
 
-    /** Tone with an ADSR envelope
-     */
-    template<typename GENERATOR>
-    class ADSRTone {
-
-    }; // rckid::ADSR
 
 } // namespace rckid
