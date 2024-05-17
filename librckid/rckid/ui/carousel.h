@@ -89,7 +89,7 @@ namespace rckid {
             int totalWidth = 64 + 8 + textWidth;
             Point iconStart{where.left() + (where.width() - totalWidth) / 2 + offset * iconSpeed, where.top() + (h - icon_.height()) / 2};
             Point textStart{where.left() + (where.width() - totalWidth) / 2 + 72 + (offset * textSpeed) , where.top() + (h - canvas.font().size) / 2};
-            canvas.draw(iconStart, icon);
+            canvas.blit(iconStart, icon);
             canvas.text(textStart) << text;
         }
 

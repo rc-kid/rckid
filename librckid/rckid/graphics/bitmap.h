@@ -75,13 +75,13 @@ namespace rckid {
         }
         //@}
 
-        /** \name Drawing
+        /** \name Blitting 
          */
         //@{
 
-        void draw(Point where, Bitmap const & src) { draw(where, src, Rect::WH(src.width(), src.height())); }
+        void blit(Point where, Bitmap const & src) { blit(where, src, Rect::WH(src.width(), src.height())); }
 
-        void draw(Point where, Bitmap const & src, Rect srcRect) {
+        void blit(Point where, Bitmap const & src, Rect srcRect) {
             // default, very slow implementation 
             int dy = where.y();
             for (int y = srcRect.top(), ye = srcRect.bottom(); y != ye; ++y, ++dy) {
@@ -113,6 +113,10 @@ namespace rckid {
         }
         //@}
 
+        /** \name Drawing
+         *
+         */
+        //@{
         /** Fills the portion of the bitmap with given color. 
          
          */
@@ -125,8 +129,9 @@ namespace rckid {
 
         void fill(Color color) { fill(Rect::WH(width(), height()), color); }
 
+        //@}
 
-        /** Text routines. 
+        /** \name Text routines. 
          */
 
         //@{

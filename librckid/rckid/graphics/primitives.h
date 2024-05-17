@@ -12,6 +12,9 @@ namespace rckid {
         constexpr int x() const { return x_; }
         constexpr int y() const { return y_; }
 
+        void setX(int value) { x_ = value; }
+        void setY(int value) { y_ = value; }
+
         Point operator + (Point other) const { return Point{x_ + other.x_, y_ + other.y_}; }
         Point operator - (Point other) const { return Point{x_ - other.x_, y_ - other.y_}; }
         
@@ -64,6 +67,5 @@ namespace rckid {
         Point topLeft_;
         Point bottomRight_;
     }; 
-
 
 } // namespace rckid

@@ -66,7 +66,7 @@ namespace rckid {
                 } else {
                     return;
                 }
-                tmp_.draw(Point::origin(), driver_, tileRect(holeX_, holeY_));
+                tmp_.blit(Point::origin(), driver_, tileRect(holeX_, holeY_));
                 a_.start();
                 if (dir_ != Btn::Home)
                     setRumbler(RumblerEffect::Nudge());
@@ -84,19 +84,19 @@ namespace rckid {
             switch (dir_) {
                 case Btn::Left:
                     driver_.fill(tileRect(holeX_, holeY_));
-                    driver_.draw(tilePoint(holeX_, holeY_) - Point{a_.interpolate(0, TILE_WIDTH), 0}, tmp_);
+                    driver_.blit(tilePoint(holeX_, holeY_) - Point{a_.interpolate(0, TILE_WIDTH), 0}, tmp_);
                     break;
                 case Btn::Right:
                     driver_.fill(tileRect(holeX_, holeY_));
-                    driver_.draw(tilePoint(holeX_, holeY_) + Point{a_.interpolate(0, TILE_WIDTH), 0}, tmp_);
+                    driver_.blit(tilePoint(holeX_, holeY_) + Point{a_.interpolate(0, TILE_WIDTH), 0}, tmp_);
                     break;
                 case Btn::Up:
                     driver_.fill(tileRect(holeX_, holeY_));
-                    driver_.draw(tilePoint(holeX_, holeY_) - Point{0, a_.interpolate(0, TILE_HEIGHT)}, tmp_);
+                    driver_.blit(tilePoint(holeX_, holeY_) - Point{0, a_.interpolate(0, TILE_HEIGHT)}, tmp_);
                     break;
                 case Btn::Down: 
                     driver_.fill(tileRect(holeX_, holeY_));
-                    driver_.draw(tilePoint(holeX_, holeY_) + Point{0, a_.interpolate(0, TILE_HEIGHT)}, tmp_);
+                    driver_.blit(tilePoint(holeX_, holeY_) + Point{0, a_.interpolate(0, TILE_HEIGHT)}, tmp_);
                     break;
                 default:
                     break; // nothing to do for other controls
@@ -105,7 +105,7 @@ namespace rckid {
                 dir_ = Btn::Home;
                 if (swapTileMap(oldX_, oldY_, holeX_, holeY_)) {
                     // tada, game is finished
-                    driver_.draw(tilePoint(holeX_, holeY_), hole_);
+                    driver_.blit(tilePoint(holeX_, holeY_), hole_);
                     holeX_ = -1;
                     holeY_ = -1;
                 }
@@ -117,7 +117,7 @@ namespace rckid {
             // set the hole and fill in the hole canvas
             holeX_ = MAX_X;
             holeY_ = MAX_Y;
-            hole_.draw(Point::origin(), driver_, tileRect(holeX_, holeY_));
+            hole_.blit(Point::origin(), driver_, tileRect(holeX_, holeY_));
             driver_.setBg(Color::RGB(128, 128, 128));
             driver_.fill(tileRect(holeX_, holeY_));
             // reset the tilemap
@@ -150,9 +150,9 @@ namespace rckid {
             // swap the tiles
             Rect t1 = tileRect(x, y);
             Rect t2 = tileRect(holeX_, holeY_);
-            tmp_.draw( Point::origin(), driver_, t1);
-            driver_.draw(tilePoint(x, y), driver_, t2);
-            driver_.draw(tilePoint(holeX_, holeY_), tmp_);
+            tmp_.blit( Point::origin(), driver_, t1);
+            driver_.blit(tilePoint(x, y), driver_, t2);
+            driver_.blit(tilePoint(holeX_, holeY_), tmp_);
             // update th7e tilemap
             swapTileMap(x, y, holeX_, holeY_);
         }

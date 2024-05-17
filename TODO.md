@@ -8,9 +8,19 @@
 - precision headers cartridges ()
 - screw inserts (https://www.prusa3d.com/product/threaded-inserts-m2-short-100-pcs/)
 
+## Hardware Checks
+
+- microphone
+- battery & charging
+- SD card
+- radio - is the schematic right? Can we talk to it, can we sustain the power requirements? 
+
 ## TODO
 
+- 256 color mode does not work in mock because only the first two columns are ever drawn
+
 - make malloc work in mock
+- make audio work in mock
 
 - ColorRGB framebuffer update is much slower than Color256, why? can be due to more memory written for the fonts ?)
 

@@ -6,7 +6,7 @@ namespace rckid {
 
     namespace glyph {
 #define GLYPH(ID, NAME, ...) static constexpr char NAME = ID + 32;
-#include "symbols.inc"
+#include "symbols.inc.h"
     } // namespace rckid::glyph
 
     /** Information about single glyph. 

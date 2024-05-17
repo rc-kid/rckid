@@ -6,6 +6,8 @@
 
 #include "apps/system/MainMenu.h"
 
+#include "apps/games/Pong.h"
+
 #include "assets/all.h"
 
 #include "rckid/audio/tone.h"
@@ -91,17 +93,16 @@ protected:
 int main() {
     rckid::initialize();
     ST7789::setFPS(FPS::FPS_40);
+
+    Pong{}.run();
 //    SimpleApp{}.run();
 
 
     cpu::overclock();
 
     setAudioVolume(1);
-    //Tone<SineWave> tone;
-    //tone.setFrequency(440);
-    //play(&tone);
-    Music<Tone<SineWave>> music{Octave};
-    play(&music);
+    //Music<Tone<SineWave>> music{Octave};
+    //play(&music);
 
     Menu m{{
         MenuItem::create("AVR Status", assets::icons::gameboy), 

@@ -52,11 +52,8 @@ namespace rckid {
             };
         }
 
-        static constexpr ColorRGB White() { return RGB(255, 255, 255); }
-        static constexpr ColorRGB Black() { return RGB(0,0,0); }
-        static constexpr ColorRGB Blue() { return RGB(0, 0, 255); }
-        static constexpr ColorRGB Red() { return RGB(255, 0, 0); }
-        static constexpr ColorRGB Green() { return RGB(0, 255, 0); }
+#define COLOR(NAME, RED, GREEN, BLUE) static constexpr ColorRGB NAME() { return RGB(RED, GREEN, BLUE); }
+#include "colors.inc.h"
 
     private:
 
@@ -124,12 +121,9 @@ namespace rckid {
             };
         }
 
-        static constexpr ColorRGB_332 White() { return RGB(255, 255, 255); }
-        static constexpr ColorRGB_332 Black() { return RGB(0,0,0); }
-        static constexpr ColorRGB_332 Blue() { return RGB(0, 0, 255); }
-        static constexpr ColorRGB_332 Red() { return RGB(255, 0, 0); }
-        static constexpr ColorRGB Green() { return RGB(0, 255, 0); }
-        
+#define COLOR(NAME, RED, GREEN, BLUE) static constexpr ColorRGB_332 NAME() { return RGB(RED, GREEN, BLUE); }
+#include "colors.inc.h"
+
     private:
 
         ColorRGB_332(uint8_t raw): raw_{raw} {}
