@@ -10,6 +10,8 @@
 #include "apps/games/Pong.h"
 #include "apps/games/SlidingPuzzle.h"
 
+#include "rckid/system/USBMassStorage.h"
+
 #include "assets/all.h"
 
 #include "rckid/audio/tone.h"
@@ -26,15 +28,23 @@ Menu * menuGames() {
     }};
 }
 
+Menu * menuUtils() {
+    return new Menu{{
+        MenuItem::create("Data Sync", assets::icons::freesia, USBMassStorage::create),
+    }};
+
+}
+
 
 int main() {
     rckid::initialize();
     StaticMenuStack<> menu{
         new Menu{{
-            MenuItem::createSubmenu("Games", assets::icons::fruits, menuGames), 
-            MenuItem::create("Music", assets::icons::fruits), 
-            MenuItem::create("Walkie-Talkie", assets::icons::fruits), 
-            MenuItem::create("Settings", assets::icons::lynx),
+            MenuItem::createSubmenu("Games", assets::icons::game_controller, menuGames), 
+            MenuItem::create("Music", assets::icons::music), 
+            MenuItem::create("Walkie-Talkie", assets::icons::baby_monitor), 
+            MenuItem::create("Settings", assets::icons::settings),
+            MenuItem::createSubmenu("Utils", assets::icons::applications, menuUtils),
             MenuItem::create("Development", assets::icons::lynx),
         }}
     };

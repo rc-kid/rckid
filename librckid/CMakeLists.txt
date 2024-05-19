@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 3.12)
 
-file(GLOB_RECURSE SRC "rckid/*.cpp" "rckid/*.h" "rckid/*.s" "../usb.cpp")
+file(GLOB_RECURSE SRC "rckid/*.cpp" "rckid/*.h" "rckid/*.s" "usb.cpp" "apps/*.h" "apps/*.cpp")
 add_library(librckid ${SRC})
 
 target_compile_options(librckid PRIVATE -Wall -O2)
