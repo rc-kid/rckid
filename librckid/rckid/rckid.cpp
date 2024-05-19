@@ -59,13 +59,13 @@ namespace rckid {
         FrameBuffer<ColorRGB> fb{};
         fb.fill(ColorRGB::Blue());
         Writer w = fb.textMultiline(10,20);
-        w << ":( Fatal error:\n\n" 
-          << "   code: " << errorCode_ << "\n\n";
+        w << ":( Fatal error: " << errorCode_ << "\n\n" ;
         if (errorFile_ != nullptr) {
             w << "   line: " << errorLine_ << "\n"
             << "   file: " << errorFile_ << "\n\n";
         }
-        w << "   Long press home button to turn off,\n   then restart.";
+        w << "   Long press home button to turn off,\n   then restart.\n\n";
+        w << "free heap: " << getFreeHeap() << ", malloc " << getMallocCalls() << ", free " << getFreeCalls();
         // reset the display and draw the framebuffer
         ST7789::reset();
         fb.enable();

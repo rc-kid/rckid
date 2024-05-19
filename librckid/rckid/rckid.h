@@ -6,6 +6,7 @@
 #include "common/commands.h"
 #include "definitions.h"
 #include "utils/writer.h"
+#include "graphics/color.h"
 
 #define LOG(...) ::rckid::writeToSerial() << __VA_ARGS__ << "\r\n"
 #define TRACE(...) ::rckid::writeToSerial() << __VA_ARGS__ << "\r\n"
@@ -211,6 +212,18 @@ namespace rckid {
     /** Returns true if playing through headphones, i.e. audio is enabled and headphones are connected. 
      */
     bool headphonesActive(); 
+
+    //@}
+
+    /** \name User Management 
+     
+        Each RCKid device belongs to a user, who can specify their name, accent color, image, birthday and so on. 
+     */
+    //@{
+
+    //ColorRGB accentColor(); 
+
+    //std::string const & username();
 
     //@}
 

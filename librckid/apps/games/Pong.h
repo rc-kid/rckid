@@ -19,12 +19,19 @@ namespace rckid {
      */
     class Pong : public App<FrameBuffer<ColorRGB>> {
     public:
+        static Pong * create() {
+            return new Pong();
+        }
+
         Pong() {
             resetGame();
         }
+        
     protected:
 
         void update() override {
+            if (pressed(Btn::B))
+                exit();
             // move the ball
             ball_ = ball_ + (deltaBall_ * speed_);
             // update the pad's position & movement speed

@@ -22,6 +22,10 @@ namespace rckid {
     class SlidingPuzzle : public App<FrameBuffer<ColorRGB>> {
     public:
 
+        static SlidingPuzzle * create() {
+            return new SlidingPuzzle{};
+        }
+
     protected:
 
         void onFocus() override {

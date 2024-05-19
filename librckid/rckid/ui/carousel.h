@@ -12,7 +12,15 @@ namespace rckid {
     class Carousel {
     public:
 
-        Carousel(Menu * menu): menu_{menu} {
+        Carousel(Menu * menu = nullptr): menu_{menu} {
+            if (!empty())
+                loadItem(i_, text_, textWidth_, icon_);
+        }
+
+        void setMenu(Menu * menu, size_t index) {
+            a_.stop();
+            menu_ = menu;
+            i_ = index;
             if (!empty())
                 loadItem(i_, text_, textWidth_, icon_);
         }
@@ -23,6 +31,7 @@ namespace rckid {
 
         bool empty() const { return menu_ == nullptr ||  menu_->size() == 0; }
 
+        size_t current() const { return i_; }
 
         void prev() {
             if (!idle() || empty())

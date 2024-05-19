@@ -15,11 +15,30 @@ char __bss_end__;
 
 #endif
 namespace {
+
+
+    using ChunkHeader = uint32_t;
+
     struct Chunk {
         uint32_t size;
         Chunk * next;
 
         Chunk(size_t size): size{size} {}
+
+        char * start() {
+            return reinterpret_cast<char*>(this);
+        }
+
+        /** Returns the pointer past the end of the chunk. which is the address of the chunk + the chunk header + chunk size. 
+         */
+        char * end() {
+            return start() + sizeof(ChunkHeader) + allocatedSize();
+        }
+
+        size_t allocatedSize() {
+            return size;
+        }
+
     };
 
     /** Arena information, which contains a pointer to the previous arena and its own freelist. so that when the arena is removed, previous freelist can be restored. 
@@ -68,8 +87,9 @@ extern "C" {
         }
         // we haven't found anything in the freelist, use the end of the heap to create one and advance the heap end
         Chunk * result = (Chunk*) heapEnd;
-        heapEnd += numBytes + 4; 
-        // TODO if we are over the limit, panic
+        heapEnd += numBytes + sizeof(ChunkHeader); 
+        // if we are over the limit, panic
+        ASSERT(heapEnd <= & __StackLimit);
         allocated += numBytes + 4;
         // set the chunk's size and return it 
         result->size = numBytes;
@@ -77,11 +97,19 @@ extern "C" {
     }
 
     void __wrap_free(void * ptr) {
-        // TODO check that we are freeing memory that is higher than the current arena, otherwise we are freeing from a previous arena which is wrong
+        // check that we are freeing memory that is higher than the current arena, otherwise we are freeing from a previous arena which is wrong
+        ASSERT(ptr > & arena); 
         ++freeCalls;
+        // deal with the chunk
+        Chunk * chunk = (Chunk *)((char*) ptr - 4);
+        // if this is the last allocated memory chunk, simply update the heap end
+        if (chunk->end() == heapEnd) {
+            heapEnd = chunk->start();
+            return;
+        }
+
         // get the chunk and prepend it to the freelist
         // TODO this is extremely ugly and inefficient, must be fixed in the future
-        Chunk * chunk = (Chunk *)((char*) ptr - 4);
         allocated -= chunk->size; // the 4 bytes in the chunk header are still allocated
         chunk->next = arena->freelist;
         arena->freelist = chunk;

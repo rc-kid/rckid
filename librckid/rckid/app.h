@@ -11,6 +11,10 @@
 
 namespace rckid {
 
+    class BaseApp;
+
+    typedef BaseApp * (*AppLauncher)();
+
     /** Base app class. 
 
         Apps are always run modally, i.e. the loop is new frame 
@@ -22,6 +26,8 @@ namespace rckid {
     public:
 
         virtual ~BaseApp() = default;
+
+        void run() { loop(); }
 
         void exit();
 
@@ -99,7 +105,7 @@ namespace rckid {
             driver_{w, h} {
         }
 
-        void run() { loop(); }
+        using BaseApp::run;
 
     protected:
 

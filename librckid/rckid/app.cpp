@@ -18,8 +18,8 @@ namespace rckid {
         onFocus();
         nextFpsTick_ = uptimeUs() + 1000000;
         fpsCounter_ = 0;
-        // the actual loop
-        while (true) {
+        // the actual loop - loop as long as the currentApp is set (exit clears it)
+        while (currentApp_ != nullptr) {
             if (nextFpsTick_ <= uptimeUs()) {
                 nextFpsTick_ += 1000000;
                 stats::fps_ = fpsCounter_;
@@ -29,9 +29,6 @@ namespace rckid {
             MEASURE_TIME(stats::waitTickUs_, DeviceWrapper::waitTickDone());
             // call update
             MEASURE_TIME(stats::updateUs_, update());
-            // check if we are no longer the app (exit was called during update)
-            if (currentApp_ == nullptr)
-                break;
             // start new tick (no I2C allowed after update)
             tick();
             // wait for the display update to be done so that draw has complete access

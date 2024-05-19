@@ -4,11 +4,9 @@ This repository is the RCKid mark II. Unlike the first version, the mark II atte
 
 This also means that the chip is seriously "underpowered" for most tasks mark I handled with ease, such as playing videos and emulating old games. Mark II puts much more emphasis on own content creation and fun (at least for me) by recreating the feel of old consoles for the programmers as well. 
 
-> Please note that this is my toy project and as such will likely move *veeeery* slowly as its requirements in almost every department exceed my current capabilities (and when mistakes appear, probably my buget as well since the main PCB must be machine-assembled). 
-
-## Where to go from now
-
 This readme is intended for those who wish to develop their own cartridges for RCKid. When applicable, links will be put here for user guides, etc. 
+
+> Please note that this is my toy project and as such will likely move *veeeery* slowly as its requirements in almost every department exceed my current capabilities (and when mistakes appear, probably my buget as well since the main PCB must be machine-assembled). 
 
 ## Building
 

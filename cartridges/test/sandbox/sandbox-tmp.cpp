@@ -1,14 +1,14 @@
+#ifdef HAHA
+
 #include "rckid/app.h"
 #include "rckid/stats.h"
 #include "rckid/graphics/framebuffer.h"
 #include "rckid/graphics/font.h"
 #include "assets/fonts/Iosevka_16.h"
 
-//#include "apps/system/MainMenu.h"
-#include "rckid/ui/menu_app.h"
+#include "apps/system/MainMenu.h"
 
 #include "apps/games/Pong.h"
-#include "apps/games/SlidingPuzzle.h"
 
 #include "assets/all.h"
 
@@ -17,42 +17,83 @@
 
 using namespace rckid;
 
-/** The app games menu
- */
-Menu * menuGames() {
-    return new Menu{{
-        MenuItem::create("Pong", assets::icons::fruits, Pong::create),
-        MenuItem::create("SlidingPuzzle", assets::icons::lynx, SlidingPuzzle::create),
-    }};
-}
+constexpr NoteInfo Octave[] = {
+    NOTE_4(C4), 
+    NOTE_4(D4),
+    NOTE_4(E4),
+    NOTE_4(F4), 
+    NOTE_4(G4),
+    NOTE_4(A4),
+    NOTE_4(B4),
+    NOTE_4(C5),
+    REST_4,
+    NOTE_4(C5),
+    NOTE_4(B4),
+    NOTE_4(A4),
+    NOTE_4(G4),
+    NOTE_4(F4),
+    NOTE_4(E4),
+    NOTE_4(D4),
+    NOTE_4(C4),
+    REST_4,
+};
+
+class SimpleApp : public App<FrameBuffer<ColorRGB>> {
+public:
+
+    SimpleApp() {
+        for (int i = 0; i < 256; ++i) {
+            b8[i] = i;
+            palette[i] = i;
+        }
+    }
+
+protected:
+
+    void update() override {
+        /*
+        errors = 0;
+        MEASURE_TIME(naive_, {
+            for (int i = 0; i < 240; ++i)
+                b16[i] = palette[b8[i]];
+        });
+        MEASURE_TIME(cpp_, {
+            ColorRGB_332::translatePixelBuffer((uint32_t*)b8, (uint32_t*)b16, 240);
+        });
+        MEASURE_TIME(asm_, {
+            uint8_t const * res = rckid_color256_to_rgb(b8, b16, 240, palette);
+            errors = b16[0];
+        });
+        */
+    }
+
+    void draw() override {
+        driver_.fill();
+        driver_.textMultiline(0, 0, Iosevka_16, Color::White()) << 
+            "naive:   " << naive_ << "\n" <<
+            "cpp:     " << cpp_ << "\n" <<
+            "cpp ram: " << cppRam_ << "\n" << 
+            "asm:     " << asm_ << "\n" << 
+            "errors:  " << errors; 
+    }
+
+    uint32_t naive_;
+    uint32_t cpp_;
+    uint32_t cppRam_;
+    uint32_t asm_;
+    uint32_t errors = 0;
+
+
+    uint8_t * b8 = new uint8_t[1024];
+    uint16_t * b16 = new uint16_t[1024];
+    uint16_t * palette = new uint16_t[256];
+
+
+}; // SimpleApp
 
 
 int main() {
     rckid::initialize();
-    StaticMenuStack<> menu{
-        new Menu{{
-            MenuItem::createSubmenu("Games", assets::icons::fruits, menuGames), 
-            MenuItem::create("Music", assets::icons::fruits), 
-            MenuItem::create("Walkie-Talkie", assets::icons::fruits), 
-            MenuItem::create("Settings", assets::icons::lynx),
-            MenuItem::create("Development", assets::icons::lynx),
-        }}
-    };
-
-    while (true) {
-        enterHeapArena();
-        std::optional<void*> launcher = MenuApp<ColorRGB>(menu).run();
-        leaveHeapArena();
-        ASSERT(launcher.has_value());
-
-        enterHeapArena();
-        BaseApp * app = reinterpret_cast<AppLauncher>(launcher.value())();
-        app->run();
-        delete app;
-        leaveHeapArena();
-    }
-
-    /*
     ST7789::setFPS(FPS::FPS_40);
 
     Pong{}.run();
@@ -71,7 +112,6 @@ int main() {
         MenuItem::create("Development", assets::icons::lynx),
     }};
     MainMenu{&m}.run();    
-    */
    /*
     cpu::overclock();
     Menu m{{
@@ -320,5 +360,7 @@ int mainDisplay() {
     } */
     return 0;
 }
+
+#endif
 
 #endif

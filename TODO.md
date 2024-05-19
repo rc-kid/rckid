@@ -17,7 +17,11 @@
 
 ## TODO
 
+- a very simple minimal 16x16 & sprite tile engine with tiny footprint for the UI apps and an UI tileset, this can use 16 colors?  
+
 - 256 color mode does not work in mock because only the first two columns are ever drawn
+
+- dynamic menu (for say file listing, etc.)
 
 - make malloc work in mock
 - make audio work in mock

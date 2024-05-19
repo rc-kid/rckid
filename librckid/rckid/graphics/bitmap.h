@@ -46,6 +46,8 @@ namespace rckid {
         }
 
         void resize(int w, int h) {
+            if (w_ == w && h_ == h)
+                return; // noop
             delete buffer_;
             w_ = w;
             h_ = h;
@@ -212,7 +214,7 @@ namespace rckid {
     protected:
 
         constexpr Color * allocateBuffer(int w, int h) {
-            if (w ==0 || h == 0)
+            if (w == 0 || h == 0)
                 return nullptr;
             return new Color[w * h];
         } 
