@@ -4,7 +4,6 @@
 #include "common/config.h"
 #include "common/state.h"
 #include "common/commands.h"
-#include "definitions.h"
 #include "utils/writer.h"
 #include "graphics/color.h"
 
@@ -13,9 +12,9 @@
 #define DEBUG(...) ::rckid::writeToSerial() << __VA_ARGS__ << "\r\n"
 
 #define FATAL_ERROR(ERR) ::rckid::fatalError(ERR, __LINE__, __FILE__)
-#define ASSERT(...) do { if (!(__VA_ARGS__)) FATAL_ERROR(::rckid::ASSERTION_ERROR); } while (false)
-#define UNIMPLEMENTED FATAL_ERROR(::rckid::NOT_IMPLEMENTED_ERROR)
-#define UNREACHABLE FATAL_ERROR(::rckid::UNREACHABLE_ERROR)
+#define ASSERT(...) do { if (!(__VA_ARGS__)) FATAL_ERROR(::rckid::Error::AssertFailure); } while (false)
+#define UNIMPLEMENTED FATAL_ERROR(::rckid::Error::Unimplemented)
+#define UNREACHABLE FATAL_ERROR(::rckid::Error::Unreachable)
 
 
 /** On top of the RPi Pico SDK macros (see https://www.raspberrypi.com/documentation/pico-sdk/runtime.html#macros48), RCKid defines a few extra macros of its own to decorate functions:
@@ -34,6 +33,54 @@
 namespace rckid {
 
     class AudioStream;
+
+    /** \name Cartridge pins. 
+     */
+    //@{
+    constexpr gpio::Pin GPIO14 = gpio::Pin{14};
+    constexpr gpio::Pin GPIO15 = gpio::Pin{15};
+    constexpr gpio::Pin GPIO16 = gpio::Pin{16};
+    constexpr gpio::Pin GPIO17 = gpio::Pin{17};
+    constexpr gpio::Pin GPIO18 = gpio::Pin{18};
+    constexpr gpio::Pin GPIO19 = gpio::Pin{19};
+    constexpr gpio::Pin GPIO20 = gpio::Pin{20};
+    constexpr gpio::Pin GPIO21 = gpio::Pin{21};
+    //@}
+
+    /** Error codes
+     
+        Error codes that will be displayed on the blue screen of death as arguments to panic for some basic debugging. These are not an enum so that users can add their own when necessary. 
+     */
+    enum class Error {
+#define ERROR_CODE(NAME, ...) NAME, 
+#include "error_codes.inc.h"
+        UserError, 
+    }; // rckid::Error
+
+
+    /** Buttons. 
+    */
+    enum class Btn {
+        Left, 
+        Right,
+        Up, 
+        Down, 
+        A, 
+        B, 
+        Select, 
+        Start,
+        Home, 
+        VolumeUp, 
+        VolumeDown,
+    }; // rckid::Btn
+
+
+
+
+
+
+
+
 
     /** Initializes the SDK.
      
@@ -63,7 +110,13 @@ namespace rckid {
 
         
      */
+    //@{
     void __noreturn(fatalError)(uint32_t code, uint32_t line = 0, char const * file = nullptr);
+
+    inline void __noreturn(fatalError)(Error code, uint32_t line = 0, char const * file = nullptr) {
+        fatalError(static_cast<uint32_t>(code), line, file);
+    }
+    //@}
 
     /** \name Controls & Sensors
         

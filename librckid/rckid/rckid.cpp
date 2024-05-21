@@ -14,6 +14,7 @@
 #include <pico/multicore.h>
 
 #include "rckid.h"
+#include "sd.h"
 #include "assets/all.h"
 #include "graphics/ST7789.h"
 #include "graphics/png.h"
@@ -535,6 +536,125 @@ namespace rckid {
             stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::displayUpdateStart_);
         }
     }
+
+    // ============================================================================================
+    // SD Card
+    // ============================================================================================
+
+    /** Initializes the SD card into SPI mode. 
+     
+        The information in the method mostly comes from [1] and associated links, namely [2]. 
+
+        [1] https://electronics.stackexchange.com/questions/602105/how-can-i-initialize-use-sd-cards-with-spi
+        [2] http://elm-chan.org/docs/mmc/mmc_e.html#dataxfer
+     */
+    bool SD::initialize() {
+        // to initialize, the SPI baudrate must be between 100-400kHz for the initialization
+        spi_init(RP_SD_SPI, 200000);
+        gpio_set_function(RP_PIN_SD_SCK, GPIO_FUNC_SPI);
+        gpio_set_function(RP_PIN_SD_TX, GPIO_FUNC_SPI);
+        gpio_set_function(RP_PIN_SD_RX, GPIO_FUNC_SPI);
+        bi_decl(bi_3pins_with_func(RP_PIN_SD_SCK, RP_PIN_SD_TX, RP_PIN_SD_RX, GPIO_FUNC_SPI));
+        // initialize the CS for manual control
+        gpio::outputHigh(RP_PIN_SD_CSN);
+        // create the buffer and fill it with 0xff
+        uint8_t buffer[16];
+        memset(buffer, 0xff, sizeof(buffer));
+        // while CS is high, send at least 74 times 0xff
+        spi_write_blocking(RP_SD_SPI, buffer, sizeof(buffer));
+        // tell the card to go idle
+        uint8_t status = sendCommand(CMD0);
+        if (status != IDLE) {
+            // TODO raise error
+            return false;
+        }
+        // send interface condition to verify the communication. this is not supported by v1 cards so if we get illegal command continue with the initialization process
+        status = sendCommand(CMD8, buffer, 4);
+        if (status != ILLEGAL_COMMAND) {
+            if (status != IDLE) {
+                // TODO raise error
+                return false;
+            }
+            if (buffer[3] != 0xaa) {
+                // TODO raise error
+                return false;
+            }
+        }
+        // read the OCR register and check the card supports the 3v3 voltage range. This is likely not necessary as every card should be 3v3 compatible, but just to be sure
+        status = sendCommand(CMD58, buffer, 4);
+        if (status != IDLE) {
+            // TODO raise error
+            return false;
+        }
+        if (buffer[1] & 0x38 != 0x38) {
+            // TODO raise error
+            return false;
+        }
+        // and now get to the power on state, this needs to be done in a loop
+        unsigned attempts = 0;
+        while (true) {
+            if (attempts++ > 100) {
+                // TODO raise error
+                return false;
+            }
+            if (sendCommand(CMD55) != IDLE) {
+                // TOOD Raise error
+                return false;
+            }
+            if (sendCommand(ACMD41) == NO_ERROR)
+                break;
+            cpu::delayMs(10);
+        }
+        // the card is now ready to be operated, send CMD58 again to verify the card power status bit
+        status = sendCommand(CMD58, buffer, 4);
+        if (status != NO_ERROR) {
+            // TODO raise error
+            return false;
+        }
+        if (! (buffer[0] & 0x80)) {
+            // TODO raise error - card did not power up properly
+            return false;
+        }
+        // increase speed to 20MHz
+        spi_init(RP_SD_SPI, 20000000);
+        // if the card is not SDHC, set block length to 512 bytes
+        if (((buffer[0] & 64) == 0) && sendCommand(CMD16) != NO_ERROR) {
+            // TODO raise error
+            return false;
+        }
+        // determine the card capacity by reading the CSD
+        if (sendCommand(CMD9, buffer, 16) != NO_ERROR) {
+            // TODO raise error
+            return false;
+        }
+        // the capacity (CSIZE + 1) * 512k, to show capacity in kilobytes, we need to multiply by 512
+        capacity_ = ((buffer[8] << 16) + (buffer[9] << 8) + buffer[10] + 1) * 512;
+        // and we are done
+        return true;
+    }
+
+    bool SD::readBlock(size_t num, uint8_t * buffer) {
+        uint8_t cmd[] = { 0x51, (num >> 24) & 0xff, (num >> 16) & 0xff, (num >> 8) & 0xff, num & 0xff, 0x01 };
+        uint8_t status = sendCommand(cmd);
+        if (status != )
+    }
+
+    bool SD::writeBlock(size_t num, uint8_t const * buffer) {
+        return false;
+    }
+
+    uint8_t SD::sendCommand(uint8_t const (&cmd)[6], uint8_t * response, size_t responseSize, unsigned maxDelay) {
+        gpio::low(RP_PIN_SD_CSN);
+        spi_write_blocking(RP_SD_SPI, cmd,  6);
+        uint8_t result = BUSY;
+        while (result == BUSY && maxDelay-- != 0)
+            spi_read_blocking(RP_SD_SPI, 0xff, reinterpret_cast<uint8_t*>(& result), 1);
+        if (responseSize != 0 && response != nullptr)
+            spi_read_blocking(RP_SD_SPI, 0xff, response, responseSize);
+        gpio::high(RP_PIN_SD_CSN);
+        return result;
+    }
+
 }
 
 #endif // ARCH_RP2040
