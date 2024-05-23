@@ -40,6 +40,48 @@
                 "$platformio"
             ]
         },
+        // ESP8266 base station that provides internet connection over NRF or LoRa radio. 
+        {
+            "label": "esp8266/base-station",
+            "type": "shell",
+            "command": "~/.platformio/penv/bin/pio",
+            "args": [
+                "run"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/esp8266/base-station",
+                "shell": {
+                    "executable": "/bin/zsh",
+                    "args": [
+                        "-c"
+                    ]
+                }
+            },
+            "problemMatcher": [
+                "$platformio"
+            ]
+        },
+        // ESP8266 cartridge for WiFi access. 
+        {
+            "label": "esp8266/cartridge",
+            "type": "shell",
+            "command": "~/.platformio/penv/bin/pio",
+            "args": [
+                "run"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/esp8266/cartridge",
+                "shell": {
+                    "executable": "/bin/zsh",
+                    "args": [
+                        "-c"
+                    ]
+                }
+            },
+            "problemMatcher": [
+                "$platformio"
+            ]
+        },
         {
             "label": "avr/rckid [UPLOAD]",
             "command": "bash",

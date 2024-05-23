@@ -1,4 +1,6 @@
 avr/.pio
+esp8266/base-station/.pio
+esp8266/cartridge/.pio
 libs/pico-sdk
 libs/pico-examples
 libs/sd-card

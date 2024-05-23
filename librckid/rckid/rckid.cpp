@@ -231,6 +231,8 @@ namespace rckid {
         // configure & chain the audio buffer DMAs
         configureAudioDMA(DeviceWrapper::audioDMA0_, DeviceWrapper::audioDMA1_, DeviceWrapper::audioBuffer0_, RP_AUDIO_BUFFER_SIZE);
         configureAudioDMA(DeviceWrapper::audioDMA1_, DeviceWrapper::audioDMA0_, DeviceWrapper::audioBuffer1_, RP_AUDIO_BUFFER_SIZE);
+        // configure the SD card
+        SD::initialize();
     }
 
     void yield() {
@@ -563,6 +565,7 @@ namespace rckid {
         // while CS is high, send at least 74 times 0xff
         spi_write_blocking(RP_SD_SPI, buffer, sizeof(buffer));
         // tell the card to go idle
+        gpio::low(RP_PIN_SD_CSN);
         uint8_t status = sendCommand(CMD0);
         if (status != IDLE) {
             // TODO raise error
@@ -586,7 +589,7 @@ namespace rckid {
             // TODO raise error
             return false;
         }
-        if (buffer[1] & 0x38 != 0x38) {
+        if ((buffer[1] & 0x38) != 0x38) {
             // TODO raise error
             return false;
         }
@@ -634,24 +637,59 @@ namespace rckid {
     }
 
     bool SD::readBlock(size_t num, uint8_t * buffer) {
+        //gpio::low(RP_PIN_SD_CSN);
         uint8_t cmd[] = { 0x51, (num >> 24) & 0xff, (num >> 16) & 0xff, (num >> 8) & 0xff, num & 0xff, 0x01 };
-        uint8_t status = sendCommand(cmd);
-        if (status != )
+        //uint8_t cmd[] = { 0x51, 0, 0, 0, 0, 0x01 };
+        //spi_write_blocking(RP_SD_SPI, cmd, 6);
+        //spi_read_blocking(RP_SD_SPI, 0xff, buffer, 2048);
+        //gpio::high(RP_PIN_SD_CSN);
+        if (sendCommand(cmd) != 0)
+            return false;
+        // wait for the block start
+        uint8_t res = 0xff;
+        while (res != 0xfe)
+            spi_read_blocking(RP_SD_SPI, 0xff, &res, 1);
+        // read the block
+        spi_read_blocking(RP_SD_SPI, 0xff, buffer, 512);
+        // and read the CRC
+        uint16_t crc;
+        spi_read_blocking(RP_SD_SPI, 0xff, reinterpret_cast<uint8_t*>(&crc), 2);
+        res = 0xff;
+        spi_write_blocking(RP_SD_SPI, & res, 1);
+        // verify the CRC
+        ++numMscReads_;
+        return true;
     }
 
     bool SD::writeBlock(size_t num, uint8_t const * buffer) {
-        return false;
+        uint8_t cmd[] = { 0x58, (num >> 24) & 0xff, (num >> 16) & 0xff, (num >> 8) & 0xff, num & 0xff, 0x01 };
+        if (sendCommand(cmd) != 0)
+            return false;
+        cmd[0] = 0xff;
+        cmd[1] = 0xfe; // start of data block
+        spi_write_blocking(RP_SD_SPI, cmd, 2); // 1 byte wait + start data block
+        spi_write_blocking(RP_SD_SPI, buffer, 512);
+        spi_write_blocking(RP_SD_SPI, cmd, 2); // CRC
+        spi_read_blocking(RP_SD_SPI, 0xff, cmd, 1); // get the data response
+        // wait for busy
+        while (cmd[0] != 0xff)
+            spi_read_blocking(RP_SD_SPI, 0xff, cmd, 1);
+        ++numMscWrites_;
+        return true;
     }
 
     uint8_t SD::sendCommand(uint8_t const (&cmd)[6], uint8_t * response, size_t responseSize, unsigned maxDelay) {
-        gpio::low(RP_PIN_SD_CSN);
+        //gpio::low(RP_PIN_SD_CSN);
         spi_write_blocking(RP_SD_SPI, cmd,  6);
         uint8_t result = BUSY;
         while (result == BUSY && maxDelay-- != 0)
             spi_read_blocking(RP_SD_SPI, 0xff, reinterpret_cast<uint8_t*>(& result), 1);
         if (responseSize != 0 && response != nullptr)
             spi_read_blocking(RP_SD_SPI, 0xff, response, responseSize);
-        gpio::high(RP_PIN_SD_CSN);
+        // after reading each response, it is important to send extra one byte to allow the SD crd to "recover"
+        uint8_t tmp = 0xff;
+        spi_write_blocking(RP_SD_SPI, & tmp, 1);
+        //gpio::high(RP_PIN_SD_CSN);
         return result;
     }
 

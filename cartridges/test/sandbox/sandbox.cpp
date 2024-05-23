@@ -1,4 +1,4 @@
-#define HAHA_
+#define HAHA
 
 #ifdef HAHA
 

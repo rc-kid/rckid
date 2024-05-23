@@ -3,8 +3,6 @@
 #include <string>
 #include <functional>
 
-//#define STR(...) 
-
 /** A simple formatter for writing human readable (ASCII) text to various places, such as the display, or serial debugging port, etc.
  */
 class Writer {
@@ -41,7 +39,9 @@ public:
     }
 
     // TODO only works for real HW
-    Writer & operator << (size_t x) { return *this << (uint32_t) x; } 
+#if (defined ARCH_RP2040)
+    Writer & operator << (unsigned int x) { return *this << (uint32_t) x; } 
+#endif
 
     Writer & operator << (uint8_t x) { return *this << (uint32_t) x; }
     Writer & operator << (uint16_t x) { return *this << (uint32_t) x; }
@@ -73,6 +73,11 @@ public:
             x = -x;
         }
         return (*this) << static_cast<uint32_t>(x);
+    }
+
+    Writer & operator << (uint64_t x) {
+        // TODO fix this
+        return (*this) << (uint32_t)x;
     }
 
 private:

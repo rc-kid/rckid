@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rckid/app.h"
+#include "rckid/sd.h"
 #include "rckid/graphics/framebuffer.h"
 
 namespace rckid {
@@ -13,26 +14,18 @@ namespace rckid {
 
         static USBMassStorage * create() { return new USBMassStorage(); }
 
-        static bool available() { return available_; }
-
-        static uint32_t numBlocks() { return numBlocks_; }
-        static uint16_t blockSize() { return blockSize_; }
-        static void addEvent() { ++numEvents_; }
-
     protected:
 
         void onFocus() override {
             App::onFocus();
-            // TODO: fill in the numBlocks and blockSize, unmount SD card
-            numEvents_ = 0;
-            available_ = true;
+            SD::enableUsbMsc(true);
 
         }
 
         void onBlur() override {
             // TODO: remount the SD card
-            available_ = false;
             App::onBlur();
+            SD::enableUsbMsc(false);
         }
 
         void update() override {
@@ -40,16 +33,13 @@ namespace rckid {
                 exit();
         }
 
-        void draw() override;
+        void draw() override {
+            driver_.fill();
+            driver_.text(0,0) << "R: " << SD::numMscReads() << ", W: " << SD::numMscWrites();
+        }
 
     private:
 
-        static inline bool available_ = false;
-
-        static inline uint32_t numBlocks_ = 16;
-        static inline uint16_t blockSize_ = 512;
-
-        static inline size_t numEvents_ = 0;
         
     }; // USBMassStorage
 

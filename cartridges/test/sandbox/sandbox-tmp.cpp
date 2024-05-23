@@ -1,4 +1,4 @@
-#define HAHA
+#define HAHA_
 #ifdef HAHA
 
 #include "rckid/app.h"
@@ -39,9 +39,14 @@ constexpr NoteInfo Octave[] = {
 
 class SimpleApp : public App<FrameBuffer<ColorRGB>> {
 public:
+    uint8_t buffer[2048];
 
     SimpleApp() {
         SD::initialize();
+        for (int i = 0; i < 512; ++i)
+            buffer[i] = i & 0xff;
+        SD::writeBlock(1234, buffer);
+        SD::readBlock(1234, buffer);
         /*
         // to initialize, the SPI baudrate must be between 100-400kHz for the initialization
         spi_init(RP_SD_SPI, 200000);
@@ -85,9 +90,13 @@ protected:
 
     void draw() override {
         driver_.fill();
-        driver_.textMultiline(0, 0) << 
-            "cap:   " << SD::capacity() << "\n"
-            ;
+        auto w = driver_.textMultiline(0, 0) << "size: " << SD::capacity() << "\n";
+        for (int i = 0; i < 512; ++i) {
+            //if (buffer[i] != 255) {
+                w << buffer[i];
+                w << ",";
+            //}
+        }
     }
 
     //SD::Status cmd0Status_;

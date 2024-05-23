@@ -11,4 +11,7 @@ ERROR_CODE(OutOfMemory, "Heap out of memor error")
 ERROR_CODE(Unimplemented, "Unimplemented error")
 ERROR_CODE(Unreachable, "Unreachable error")
 
+ERROR_CODE(MSCRead, "Error reading USB MSC device")
+ERROR_CODE(MSCWrite, "Error writing USB MSC device")
+
 #undef ERROR_CODE

@@ -9,15 +9,21 @@ namespace rckid {
     class SD {
     public:
 
-        static bool usbMscAvailable() { return usbMscAvailable_; }
+        static bool usbMscReady() { return usbMscReady_; }
 
-        static uint32_t numBlocks() { return numBlocks_; }
-
-        static uint16_t blockSize() { return blockSize_; }
+        static uint32_t numBlocks() { return capacity_ * 2; }
 
         /** Returns the capacity of the inserted SD card in kilobytes, i.e. a maximum of 4TB is theoretically possible, but such large cards likely do not support the SPI interface anyways. 
          */
         static size_t capacity() { return capacity_; }
+
+        static bool enableUsbMsc(bool value) {
+            usbMscReady_ = value;
+            return true;
+        }
+
+        static uint32_t numMscReads() { return numMscReads_; }
+        static uint32_t numMscWrites() { return numMscWrites_; }
 
     //private:
 
@@ -46,10 +52,11 @@ namespace rckid {
         static inline size_t capacity_ = 0;
 
         // usb storage configuration
-        static inline bool usbMscAvailable_ = false;
-        static inline uint32_t numBlocks_ = 16;
-        static inline uint16_t blockSize_ = 512;
-        static inline size_t usbMscNumEvents_ = 0;  
+        static inline bool usbMscReady_ = false;
+
+        static inline uint32_t numMscReads_ = 0;
+        static inline uint32_t numMscWrites_ = 0;
+
 
 
         // response codes

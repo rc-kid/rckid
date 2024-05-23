@@ -1,6 +1,8 @@
 #pragma once
 
 #include <Arduino.h>
+#include <SPI.h>
+#include <Wire.h>
 
 #define ARCH_ARDUINO
 #define ARCH_LITTLE_ENDIAN
