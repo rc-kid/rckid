@@ -24,6 +24,9 @@
 - order hardware revision (5x or 10x ?)
 - order batteries (5x-10x ?)
 
+
+- app that sets keyboard lights, etc. 
+
 ## TODO
 
 - a very simple minimal 16x16 & sprite tile engine with tiny footprint for the UI apps and an UI tileset, this can use 16 colors?  

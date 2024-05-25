@@ -101,15 +101,15 @@ namespace platform {
         NRF24L01(spi::Device cs, gpio::Pin rxtx):
             CS{cs},
             RXTX{rxtx} {
+            gpio::setAsOutput(RXTX);
+            gpio::low(RXTX);
+            gpio::setAsOutput(CS);
+            gpio::high(CS);
         }
 
         /** Initializes the driver in the Enhanced shock-burst and returns true if successful, false is not. 
          */
         bool initialize(char const * rxAddr, char const * txAddr, uint8_t ch = 86) {
-            gpio::setAsOutput(RXTX);
-            gpio::low(RXTX);
-            gpio::setAsOutput(CS);
-            gpio::high(CS);
             // set channel and rx & tx addresses
             setChannel(ch);
             setTxAddress(txAddr);
@@ -416,8 +416,8 @@ namespace platform {
         }
 
         void end() {
-            spi::end(CS);
             cpu::delayUs(2);
+            spi::end(CS);
         }
 
 
