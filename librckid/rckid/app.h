@@ -33,7 +33,11 @@ namespace rckid {
 
     protected:
 
-        virtual void update() = 0;
+        virtual void update() {
+            if (pressed(Btn::B))
+                exit();
+        };
+        
         virtual void draw() = 0;
         virtual void render() = 0;
         /** Called by the app stack when the app gains focus. 

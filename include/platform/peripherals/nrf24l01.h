@@ -1,5 +1,5 @@
 #pragma once
-#include "platform/platform.h"
+#include "platform.h"
 
 namespace platform { 
 
@@ -106,9 +106,9 @@ namespace platform {
         /** Initializes the driver in the Enhanced shock-burst and returns true if successful, false is not. 
          */
         bool initialize(char const * rxAddr, char const * txAddr, uint8_t ch = 86) {
-            gpio::output(RXTX);
+            gpio::setAsOutput(RXTX);
             gpio::low(RXTX);
-            gpio::output(CS);
+            gpio::setAsOutput(CS);
             gpio::high(CS);
             // set channel and rx & tx addresses
             setChannel(ch);
@@ -131,9 +131,9 @@ namespace platform {
         /** Initializes the driver in the Enhanced shock-burst and returns true if successful, false is not. 
          */
         bool initializeESB(char const * rxAddr, char const * txAddr, uint8_t ch = 86) {
-            gpio::output(RXTX);
+            gpio::setAsOutput(RXTX);
             gpio::low(RXTX);
-            gpio::output(CS);
+            gpio::setAsOutput(CS);
             gpio::high(CS);
             // set channel and rx & tx addresses
             setChannel(ch);

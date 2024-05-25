@@ -29,12 +29,34 @@ namespace rckid {
             // AC if plugged in
             if (dcPower()) {
                 x -= SymbolsNF_20.glyphInfoFor(glyph::DC).advanceX + 4;
-                bitmap.putChar(Point{x, y + 2}, SymbolsNF_16, glyph::DC, COLOR::White());
+                bitmap.putChar(Point{x, y + 2}, SymbolsNF_16, glyph::DC, charging() ? COLOR::Red() : COLOR::Gray());
             }
             // draw the battery gauge and optional level
+            if (verbose_) {
+                std::string pct = STR(batteryLevel() << "%");
+                x -= Iosevka_16.textWidth(pct) + 8;
+                bitmap.text(x, y + 2, Iosevka_16, COLOR::LightGray()) << pct;
+            } else {
+                x -= 4; // extra space from the flash
+            }
             x -= SymbolsNF_20.glyphInfoFor(glyph::Battery100).advanceX + 4;
             auto b = getBatteryInfo();
-            bitmap.putChar(Point{x, y}, SymbolsNF_20, b.second, b.first);
+            bitmap.putChar(Point{x, y + 1}, SymbolsNF_20, b.second, b.first);
+            // see if we have headphones connected
+            if (headphonesActive()) {
+                x-= SymbolsNF_20.glyphInfoFor(glyph::Headphones).advanceX + 4;
+                bitmap.putChar(Point{x, y}, SymbolsNF_20, glyph::Headphones, COLOR::Blue());
+            }
+            // draw the audio state and volume
+            if (verbose_) {
+                std::string pct = STR(audioVolume() << "%");
+                x -= Iosevka_16.textWidth(pct) + 8;
+                bitmap.text(x, y + 2, Iosevka_16, COLOR::LightGray()) << pct;
+            }
+            auto v = getVolumeInfo();
+            x -= SymbolsNF_20.glyphInfoFor(v.second).advanceX + 4;
+            bitmap.putChar(Point{x, y + 1}, SymbolsNF_20, v.second, v.first);
+
                 
 
             bitmap.text(where.left(), where.top() + 2, Iosevka_16, COLOR::White()) <<
@@ -58,10 +80,19 @@ namespace rckid {
                 return std::make_pair(COLOR::Red(), glyph::Battery0);
         }
 
+        std::pair<COLOR, char> getVolumeInfo() {
+            unsigned vol = audioVolume();
+            if (vol >= 66)
+                return std::make_pair(COLOR::Green(), glyph::VolumeHigh);
+            else if (vol >= 33)
+                return std::make_pair(COLOR::Green(), glyph::VolumeMid);
+            else if (vol > 0)
+                return std::make_pair(COLOR::DarkGreen(), glyph::VolumeLow);
+            else 
+                return std::make_pair(COLOR::Red(), glyph::SpeakerOff);
+        }
+
         bool verbose_ = true;
-
-
-
 
     }; // rckid::Header
 

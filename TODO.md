@@ -8,12 +8,21 @@
 - precision headers cartridges ()
 - screw inserts (https://www.prusa3d.com/product/threaded-inserts-m2-short-100-pcs/)
 
-## Hardware Checks
+## Release 0.9
 
-- microphone
-- battery & charging
-- SD card
-- radio - is the schematic right? Can we talk to it, can we sustain the power requirements? 
+> First release, should meet the minimal usability, i.e. messaging app via telegram (ideally radio) and a few games. HW should be finished.
+
+- finish all hardware checks:
+    - microphone
+    - battery & charging, overcurrent protection
+    - radio & wifi cartridge wiring & power requirements
+
+- basic settings UI (brightness, volume, etc.)
+- virtual keyboard via glyphs
+- basic file access on the SD card
+- order displays
+- order hardware revision (5x or 10x ?)
+- order batteries (5x-10x ?)
 
 ## TODO
 
@@ -35,7 +44,7 @@
 - make showing image on the screen a separate function and make it work in mock mode as well
 - 2x 256 framebuffer does not render correctly and likely the code is wrong
 
-- headphones work, speaker seems not to (always off) - seems bad GND connectiom for PAM8302
+- speaker seems not to (always off) - seems bad GND connectiom for PAM8302
 
 - write optimized draw bitmap functions
 
@@ -73,6 +82,13 @@
 - headphone volume is too high, speaker volume is too low - is that still? 
 - check https://github.com/TuriSc/RP2040-PWM-DMA-Audio/tree/main and https://github.com/TuriSc/Dodepan for hints perhaps? 
 
+## SD Card 
+
+- usb msc works, but is terribly slow, could it be that we don't do event checking when redrawing much? 
+- no DMA & IRQ mode and how to deal with busy ? 
+- no FAT32 understanding
+- the code needs to be much polished
+
 ## PCB
 
 - make sure PAM8302 GND connection is strong 
@@ -97,9 +113,7 @@
 
 - LED speed is too great
 - looks like we get WDT reset every now & then with reset & bootloader delays, check watchdog timing
-- I2C on RP2040 hangs sometimes, could be bus errors? 
 - add some better non-linear interpolation for the breathe effect
-- check basic rumbler
 - measure the shunt resistor if the calculations are right (?)
 - can talk to INA, voltage reads ok, current is wrong
 - I2C master can hang up, which is bad (wdt saves us)
@@ -118,14 +132,6 @@
 - more stuff to the framebuffer
 - tiling engine 
 - jpeg, Bitmap::loadImage to support jpeg too
-> Apps
-
-- some selector app that cycles through options, could this be carousel? 
-- cleanup the app stack and make it more natural not relying on calling super for basic events
-
-> FAT32
-
-- do own async FAT32 driver with DMA
 
 ## Shopping List
 

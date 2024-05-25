@@ -63,6 +63,10 @@ namespace rckid {
          */
         void fill(Rect rect) { fill(rect, bg_); }
 
+        /** Draws specified rectangle with the foreground color. 
+         */
+        void drawRect(Rect rect) { fill(rect, fg_); }
+
 
     private:
 

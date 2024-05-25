@@ -14,14 +14,18 @@ public:
         bi_decl(bi_3pins_with_func(miso, mosi, sck, GPIO_FUNC_SPI));        
     }
 
+    static void setSpeed(unsigned speed) {
+        spi_init(spi0, speed);
+    }
+
     static void begin(Device device) {
 //        asm volatile("nop \n nop \n nop");
-        gpio::low(device);
+        gpio::write(device, false);
 //        asm volatile("nop \n nop \n nop");
     }
 
     static void end(Device device) {
-        gpio::high(device);
+        gpio::write(device, true);
     }
 
     static uint8_t transfer(uint8_t value) {

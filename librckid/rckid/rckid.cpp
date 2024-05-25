@@ -151,6 +151,14 @@ namespace rckid {
                     uint8_t * raw = reinterpret_cast<uint8_t*>(&DeviceWrapper::aState_);
                     for (int i = 0; i < 12; ++i)
                         *(raw++) = i2c0->hw->data_cmd;
+                    // update the accelerometer X and Y axes
+                    int16_t ax = - DeviceWrapper::aState_.accelY;
+                    int16_t ay = - DeviceWrapper::aState_.accelX;
+                    DeviceWrapper::aState_.accelX = ax;
+                    DeviceWrapper::aState_.accelY = ay;
+                    // and the gyroscope
+                    DeviceWrapper::aState_.gyroX *= -1;
+                    DeviceWrapper::aState_.gyroY *= -1;
                     // fill in the AVR data
                     i2cFillAVRTxBlocks();
                     tickInProgress_ = TICK_AVR;

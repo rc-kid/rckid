@@ -21,6 +21,7 @@
 #include "gpio.h"
 #include "cpu.h"
 #include "i2c.h"
+#include "spi.h"
 #include "pio.h"
 #include "../common.h"
 //#include "../I2CDevice.h"

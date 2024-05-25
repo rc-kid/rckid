@@ -3,6 +3,9 @@
 #include <string>
 #include <functional>
 
+
+#define STR(...) (StringWriter{} << __VA_ARGS__).str()
+
 /** A simple formatter for writing human readable (ASCII) text to various places, such as the display, or serial debugging port, etc.
  */
 class Writer {
@@ -85,3 +88,28 @@ private:
     std::function<void(char)> putChar_;
 
 }; // Writer
+
+
+class StringWriter {
+public:
+    StringWriter():
+        writer_{[this](char c) { str_ += c; }} {
+    }
+
+    template<typename T>
+    StringWriter & operator << (T x) {
+        writer_ << x;
+        return *this; 
+    }
+
+    std::string str() {
+        return std::move(str_);
+    }
+
+private:
+    std::string str_;
+    Writer writer_;
+
+}; // StringWriter
+
+
