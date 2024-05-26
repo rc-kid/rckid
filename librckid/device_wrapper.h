@@ -45,6 +45,7 @@ namespace rckid {
         friend bool dcPower() { return state_.state.dcPower(); }
         friend unsigned vcc() { return state_.state.vcc(); }
         friend unsigned vBatt() { return state_.state.vBatt(); }
+        friend unsigned batteryLevel() { return batteryLevel_; }
 
 
     private:
@@ -93,6 +94,10 @@ namespace rckid {
         // device & sensors state
         static inline DeviceState state_;
         static inline State lastState_;
+
+        // battery level in pct
+        static inline uint8_t batteryLevel_ = 0;
+
         static inline platform::BMI160::State aState_;
         static inline uint16_t lightALS_ = 0;
         static inline uint16_t lightUV_ = 0;
@@ -103,6 +108,7 @@ namespace rckid {
         static inline int audioDMA1_;
         static inline uint16_t audioBuffer0_[RP_AUDIO_BUFFER_SIZE];
         static inline uint16_t audioBuffer1_[RP_AUDIO_BUFFER_SIZE];
+
 
 
     }; // rckid::Device

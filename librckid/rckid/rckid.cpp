@@ -169,6 +169,19 @@ namespace rckid {
                     uint8_t * raw = reinterpret_cast<uint8_t*>(&DeviceWrapper::state_);
                     for (int i = 0; i < 8; ++i)
                         *(raw++) = i2c0->hw->data_cmd;
+                    // update battery level gauge, which can only go up when charging, or only go down when discharging to that the number does not fluctuate crazily
+                    unsigned battPct = vBatt();
+                    if (battPct <= VCC_CRITICAL_THRESHOLD)
+                        battPct = 0;
+                    else if (battPct >= VBATT_FULL_THRESHOLD)
+                        battPct = 100;
+                    else 
+                        battPct = (battPct - VCC_CRITICAL_THRESHOLD) * 100 / (VBATT_FULL_THRESHOLD - VCC_CRITICAL_THRESHOLD);
+                    if (charging()) {
+                        if (battPct > batteryLevel())
+                            DeviceWrapper::batteryLevel_ = battPct;
+                    } else if (battPct < batteryLevel()) 
+                            DeviceWrapper::batteryLevel_ = battPct;
                 } // fallthrough to default handler and to disabling the I2C comms
                 default:
                     // we are done with the I2C transfer

@@ -24,7 +24,6 @@
 - order hardware revision (5x or 10x ?)
 - order batteries (5x-10x ?)
 
-
 - app that sets keyboard lights, etc. 
 
 ## TODO

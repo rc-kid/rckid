@@ -26,6 +26,8 @@ namespace rckid {
                 else
                     return static_cast<T>((end - start) * (131072 - SineTable[511 - promille]) / 131072 + start);
             case Easing::Cos:
+                if (promille == 1000)
+                    return end;
                 // convert promille to 0..511
                 promille = promille * 511 / 1000;
                 if (promille < 255) 

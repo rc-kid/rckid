@@ -171,6 +171,10 @@
 
 #define VCC_DC_POWER_THRESHOLD 430
 
+/** Full battery threshold. 
+ */
+#define VBATT_FULL_THRESHOLD 420
+
 /** Critical voltage at which the device will not allow itself to be started (3v3 power rail). To prevent spurious measurements when the device is powering on or off, a configurable amount of consecutive vcc measurements must be below the threshold top trigger the reaction. 
  */
 #define VCC_CRITICAL_THRESHOLD 310

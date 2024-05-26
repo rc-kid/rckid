@@ -229,14 +229,7 @@ namespace rckid {
 
     /** Returns the battery level in pct. 
      */
-    inline unsigned batteryLevel() {
-        unsigned v = vBatt();
-        if (v <= VCC_CRITICAL_THRESHOLD)
-            return 0;
-        if (v >= 420)
-            return 100;
-        return (v - VCC_CRITICAL_THRESHOLD) * (420 - VCC_CRITICAL_THRESHOLD) / 100;
-    }
+    unsigned batteryLevel();
     //@}
 
     /** \name Audio 

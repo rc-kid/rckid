@@ -26,7 +26,11 @@ int main(int argc, char * argv[]) {
             f << std::endl;
             f << "        ";
         }
-        f << static_cast<unsigned>(sin(i / (size * 2.0) * M_PI) * 65535) << ", ";  
+        // ensure the last value is max
+        if (i == size - 1)
+            f << "65535, ";
+        else 
+            f << static_cast<unsigned>(sin(i / (size * 2.0) * M_PI) * 65535) << ", ";  
     }
     f << std::endl << "    };" << std::endl << std::endl;
     f << "} // namespace rckid" << std::endl;

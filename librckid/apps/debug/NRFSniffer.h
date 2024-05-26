@@ -16,7 +16,8 @@ namespace rckid {
         void onFocus() override {
             App::onFocus();
             spi::initialize(GPIO16, GPIO19, GPIO18);
-            spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+            // TODO check if we need this
+            //spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
         }
 
         void onBlur() override {
