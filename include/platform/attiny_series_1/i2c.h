@@ -8,6 +8,11 @@ namespace i2c {
         TWI0.MCTRLA = 0;
     }
 
+    inline void disable() {
+        TWI0.SCTRLA = 0;
+        TWI0.MCTRLA = 0;
+    }
+
     inline void initializeSlave(uint8_t address) {
         // turn I2C off in case it was running before
         disableSlave();

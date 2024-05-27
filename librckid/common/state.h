@@ -141,15 +141,25 @@ namespace rckid {
             The voltage to the AVR measured in 0.01[V]. Value of 0 means any voltage below 2.46V, value of 500 5V or more, otherwise the number returnes is volatge * 100. 
          */
         //@{
-        uint16_t vcc() const { return (data_[3] == 0) ? 0 : (data_[3] + 245); }
+        uint16_t vcc() const { return voltageFromRawStorage(data_[3]); }
+
 #ifdef RCKID_AVR
-        void setVcc(uint16_t vx100) {
+
+        void setVccRaw(uint8_t raw) {
+            data_[3] = raw;
+        }
+
+        static uint8_t voltageToRawStorage(uint16_t vx100) {
             if (vx100 < 250)
-                data_[3] = 0;
+                return 0;
             else if (vx100 >= 500)
-                data_[3] = 255;
+                return 255;
             else 
-                data_[3] = (vx100 - 245) & 0xff;
+                return (vx100 - 245) & 0xff;
+        }
+
+        static uint16_t voltageFromRawStorage(uint8_t value) {
+            return value == 0 ? 0 : value + 245;
         }
 #endif
 
@@ -158,16 +168,11 @@ namespace rckid {
         /** \name Battery Voltage
          */
         //@{
-        uint16_t vBatt() const { return (data_[4] == 0) ? 0 : (data_[4] + 245); }
+        uint16_t vBatt() const { return voltageFromRawStorage(data_[4]); }
 
 #ifdef RCKID_AVR
-        void setVBatt(uint16_t vx100) {
-            if (vx100 < 250)
-                data_[4] = 0;
-            else if (vx100 >= 500)
-                data_[4] = 255;
-            else 
-                data_[4] = (vx100 - 245) & 0xff;
+        void setVBattRaw(uint8_t raw) {
+            data_[4] = raw;
         }
 #endif
 
@@ -199,6 +204,21 @@ namespace rckid {
 #ifdef RCKID_AVR
         void setBrightness(uint8_t value) { data_[6] = value; }
 #endif
+        //@}
+
+        /** \name Current consumption 
+         */
+        //@{
+        uint16_t current() const { return data_[7] * 6; }
+#ifdef RCKID_AVR
+        void setCurrent(uint16_t value) { 
+            value = value / 6; 
+            if (value > 255)
+                value = 255;
+            data_[7] = static_cast<uint8_t>(value); 
+        }
+#endif
+
         //@}
 
     private:

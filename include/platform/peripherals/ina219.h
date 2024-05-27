@@ -53,10 +53,10 @@ namespace platform {
         void initialize_32V_4A(Resolution resolution, uint16_t rShunt_mOhm = 10) {
             uint16_t cfg = 0b0010000000000111; // continuous vbus & vshunt, 32 volts input
             cfg |= static_cast<uint16_t>(Gain::mv_40);
-            cfg |= static_cast<uint8_t>(resolution) << 3;
-            cfg |= static_cast<uint8_t>(resolution) << 7;
+            cfg |= static_cast<uint16_t>(resolution) << 3;
+            cfg |= static_cast<uint16_t>(resolution) << 7;
             i2c::writeRegister<uint16_t, Endian::Big>(address, CONFIG, cfg);
-            i2c::writeRegister<uint16_t, Endian::Big>(address, CALIBRATION, 40960 / 10 * 5);
+            i2c::writeRegister<uint16_t, Endian::Big>(address, CALIBRATION, 40960 / rShunt_mOhm * 5);
             currentMultiplier_ = 5;
         }
 
@@ -82,7 +82,7 @@ namespace platform {
         /** Returns the current in mA. 
          */
         uint16_t current() {
-            return i2c::readRegister<uint16_t, Endian::Big>(address, CURRENT) * currentMultiplier_;
+            return i2c::readRegister<uint16_t, Endian::Big>(address, CURRENT) / currentMultiplier_;
         }
 
         uint16_t shuntVoltage() {

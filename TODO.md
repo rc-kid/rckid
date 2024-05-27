@@ -28,6 +28,13 @@
 
 ## TODO
 
+- better stabilization for the voltage gauge (avg from N measurements + hysteresis maybe?)
+- charging is prematurely terminated due to too tight VBATT values? -- MAYBE OK
+- the issues with rebooting seem to be due to the I2C communication being at some weird state, and then probably hanging? When there is no comms, all works great it seems -- MAYBE OK
+
+- add message & alarm to symbol glyphs
+
+
 - a very simple minimal 16x16 & sprite tile engine with tiny footprint for the UI apps and an UI tileset, this can use 16 colors?  
 
 - 256 color mode does not work in mock because only the first two columns are ever drawn
@@ -39,7 +46,6 @@
 
 - ColorRGB framebuffer update is much slower than Color256, why? can be due to more memory written for the fonts ?)
 
-- the issues with rebooting seem to be due to the I2C communication being at some weird state, and then probably hanging? When there is no comms, all works great it seems 
 
 - what is the allocation during startup - see how I can debug and if it poses a problem - https://raspberry-projects.com/pi/microcontrollers/programming-debugging-devices/debugging-using-another-pico
 
@@ -113,11 +119,8 @@
 
 ## AVR
 
-- LED speed is too great
-- looks like we get WDT reset every now & then with reset & bootloader delays, check watchdog timing
+- LED speed is too great -- reduced to 30fps, maybe still too great? Add delay to effect? 
 - add some better non-linear interpolation for the breathe effect
-- measure the shunt resistor if the calculations are right (?)
-- can talk to INA, voltage reads ok, current is wrong
 - I2C master can hang up, which is bad (wdt saves us)
 - check that setting out high when already high does not glitch
 

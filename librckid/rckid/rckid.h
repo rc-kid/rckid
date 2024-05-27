@@ -227,6 +227,10 @@ namespace rckid {
      */
     unsigned vBatt(); 
 
+    /** Returns the current consumption as measured by the device in mA. 
+     */
+    unsigned current(); 
+
     /** Returns the battery level in pct. 
      */
     unsigned batteryLevel();

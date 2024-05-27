@@ -1,5 +1,5 @@
 #!/bin/bash
-export DISPLAY=0:0
+#export DISPLAY=0:0
 echo "Generating RGB 332 to 565 conversion table..."
 build-utils/generate-rgb-332-to-565 librckid/rckid/graphics/palette_332.h
 echo "Generating assets from static files..."
@@ -37,3 +37,8 @@ build-utils/generate-font assets/fonts/DPComic.ttf 24 librckid/assets/fonts
 echo "Generating interpolation tables..."
 build-utils/generate-interp-tables 256 librckid/rckid/utils/tables.h
 
+
+
+echo "Generating debug assets..."
+mkdir -p librckid/assets-debug
+build-utils/generate-assets assets/debug librckid/assets-debug

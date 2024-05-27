@@ -29,7 +29,7 @@ namespace rckid {
             driver_.textMultiline(10, 20) <<
                 "VCC:   " << vcc() << "\n" <<
                 "VBatt: " << vBatt() << "\n" <<
-                "I:     " << "???" << "\n" <<
+                "I:     " << current() << "\n" <<
                 "Temp:  " << tempAvr() << "\n" <<
                 "als: " << lightAmbient() << "\n" <<
                 "uv:  " << lightUV();

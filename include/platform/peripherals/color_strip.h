@@ -1,5 +1,5 @@
 #pragma once
-#include <cmath>
+#include <math.h>
 namespace platform {
 
     class Color {

@@ -45,6 +45,7 @@ namespace rckid {
         friend bool dcPower() { return state_.state.dcPower(); }
         friend unsigned vcc() { return state_.state.vcc(); }
         friend unsigned vBatt() { return state_.state.vBatt(); }
+        friend unsigned current() { return state_.state.current(); }
         friend unsigned batteryLevel() { return batteryLevel_; }
 
 

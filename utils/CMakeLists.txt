@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 include_directories(${CMAKE_SOURCE_DIR}/../libs/raylib/src)
 
+
+
 add_executable(bytes-to-cpp "bytes-to-cpp.cpp")
 add_executable(int16-to-cpp "int16-to-cpp.cpp")
 add_executable(generate-interp-tables "generate-interp-tables.cpp")
@@ -15,6 +17,13 @@ add_executable(generate-rgb-332-to-565 "generate-rgb-332-to-565.cpp")
 add_executable(generate-assets "generate-assets.cpp")
 add_executable(generate-font "generate-font.cpp")
 target_link_libraries(generate-font "${CMAKE_SOURCE_DIR}/../libs/raylib/src/libraylib.a")
+
+
+
+add_subdirectory("../libs/libhelix-mp3" "libhelix-mp3")
+
+add_executable(mp3-decoder "mp3-decoder.cpp")
+target_link_libraries(mp3-decoder libhelix-mp3)
 
 #target_link_libraries(generate-assets PRIVATE stdc++fs)
 

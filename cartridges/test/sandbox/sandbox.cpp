@@ -35,6 +35,7 @@
 
 
 #include "apps/debug/NRFSniffer.h"
+#include "apps/debug/MP3Test.h"
 
 using namespace rckid;
 
@@ -88,6 +89,8 @@ Menu * menuDebug() {
         MenuItem::create("HW Test", assets::icons::freesia, HWTest::create),
         MenuItem::create("Fonts", assets::icons::freesia, FontSelector::create),
         MenuItem::create("NRFSniffer", assets::icons::rabbit_1, NRFSniffer::create),
+        MenuItem::create("MP3 Test", assets::icons::rabbit_1, MP3Test::create),
+        
     }};
 }
 
