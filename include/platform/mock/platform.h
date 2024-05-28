@@ -92,7 +92,6 @@ namespace platform {
 
 } // platform
 
-#include "../utils.h"
 #include "../common.h"
 #include "../fonts.h"
 #include "../peripherals/color_strip.h"

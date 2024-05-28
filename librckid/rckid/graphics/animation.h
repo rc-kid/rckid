@@ -18,7 +18,7 @@ namespace rckid {
 
         void start(unsigned duration) {
             t_ = 0;
-            duration_ = duration_;
+            duration_ = duration;
             lastCheck_ = uptimeUs();
             state_ = State::Single;
         }

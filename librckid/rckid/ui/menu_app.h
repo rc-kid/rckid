@@ -58,6 +58,8 @@ namespace rckid {
         }
 
         void update() override {
+            if (carousel_.idle() && carousel_.menu() == nullptr)
+                exit();
             // left & right carousel movements
             if (down(Btn::Left))
                 carousel_.prev();
@@ -78,11 +80,11 @@ namespace rckid {
             if (pressed(Btn::B) || pressed(Btn::Down)) {
                 if (stack_.depth() > 0) {
                     MenuStack::Level & l = stack_.pop();
-                    carousel_.setMenu(l.menu, l.index);
+                    carousel_.setMenu(l.menu, l.index, /* reverse */ true);
                 // exit the menu entirely, or do nothing if exitting is not allowed
                 } else if (canGoBack_) {
                     // exit from the menu entirely
-                    exit();
+                    carousel_.setMenu(nullptr, 0, /* reverse */ true);
                 }
             }
         }

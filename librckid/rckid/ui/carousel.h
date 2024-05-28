@@ -17,12 +17,18 @@ namespace rckid {
                 loadItem(i_, text_, textWidth_, icon_);
         }
 
-        void setMenu(Menu * menu, size_t index) {
+        Menu * menu() const { return menu_; }
+
+        void setMenu(Menu * menu, size_t index, bool reverse = false) {
             a_.stop();
             menu_ = menu;
             i_ = index;
             if (!empty())
-                loadItem(i_, text_, textWidth_, icon_);
+                loadItem(i_, otherText_, otherTextWidth_, otherIcon_);
+            else 
+                otherText_ = nullptr; // clear other text, we are selecting down
+            dir_ = reverse ? Btn::Down : Btn::Up;
+            a_.start(500);
         }
 
         /** Returns true of the carousel is not currently rendering any animation.
@@ -59,19 +65,37 @@ namespace rckid {
                 drawItem(canvas, where, icon_, text_, textWidth_);
             } else {
                 int w = where.width();
+                int h = where.height();
                 int offset = a_.interpolate(0, w);
-                if (dir_ == Btn::Left) {
-                    drawItem(canvas, where, icon_, text_, textWidth_, offset, 1, 2);
-                    drawItem(canvas, where, otherIcon_, otherText_, otherTextWidth_, - (w - offset), 2, 1);
-                } else {
-                    drawItem(canvas, where, icon_, text_, textWidth_, -offset, 2, 1);
-                    drawItem(canvas, where, otherIcon_, otherText_, otherTextWidth_, + (w - offset), 1, 2);
-                }
+                int offsetH = a_.interpolate(0, h);
+                switch (dir_) {
+                    case Btn::Left:
+                        drawItem(canvas, where, icon_, text_, textWidth_, offset, 1, 2);
+                        drawItem(canvas, where, otherIcon_, otherText_, otherTextWidth_, - (w - offset), 2, 1);
+                        break;
+                    case Btn::Right:
+                        drawItem(canvas, where, icon_, text_, textWidth_, -offset, 2, 1);
+                        drawItem(canvas, where, otherIcon_, otherText_, otherTextWidth_, + (w - offset), 1, 2);
+                        break;
+                    // selecting menu, existing menu goes down, new arrives from sides
+                    case Btn::Up:
+                        if (text_ != nullptr)
+                            drawItemDown(canvas, where, icon_, text_, textWidth_, offsetH);
+                        drawItem(canvas, where, otherIcon_, otherText_, otherTextWidth_, (where.width() - offset) / 2, -1, 1);
+                        break;
+                    case Btn::Down:
+                        drawItemDown(canvas, where, otherIcon_, otherText_, otherTextWidth_, h - offsetH);
+                        if (text_ != nullptr)
+                            drawItem(canvas, where, icon_, text_, textWidth_, offset / 2, -1, 1);
+                        break;
+                    default:
+                        UNREACHABLE;
+                }   
                 if (!a_.running()) {
-                    dir_ = Btn::Home;
                     std::swap(text_, otherText_);
                     std::swap(textWidth_, otherTextWidth_);
                     std::swap(icon_, otherIcon_);
+                    dir_ = Btn::Home;
                 }
             }
         }   
@@ -98,6 +122,19 @@ namespace rckid {
             int totalWidth = 64 + 8 + textWidth;
             Point iconStart{where.left() + (where.width() - totalWidth) / 2 + offset * iconSpeed, where.top() + (h - icon_.height()) / 2};
             Point textStart{where.left() + (where.width() - totalWidth) / 2 + 72 + (offset * textSpeed) , where.top() + (h - canvas.font().size) / 2};
+            canvas.blit(iconStart, icon);
+            canvas.text(textStart) << text;
+        }
+
+        void drawItemDown(Canvas<COLOR> & canvas, Rect where, Bitmap<COLOR> const & icon, char const * text, int & textWidth, int offset = 0) {
+            // if we haven't measured the text yet, do so
+            if (textWidth == -1)
+                textWidth = canvas.font().textWidth(text);
+            // now determine the beginning of the icon and the beginning of the text in the 
+            int h = where.height();
+            int totalWidth = 64 + 8 + textWidth;
+            Point iconStart{where.left() + (where.width() - totalWidth) / 2, where.top() + (h - icon_.height()) / 2 + offset};
+            Point textStart{where.left() + (where.width() - totalWidth) / 2 + 72, where.top() + (h - canvas.font().size) / 2 + offset};
             canvas.blit(iconStart, icon);
             canvas.text(textStart) << text;
         }

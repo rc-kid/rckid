@@ -29,11 +29,8 @@
 ## TODO
 
 - better stabilization for the voltage gauge (avg from N measurements + hysteresis maybe?)
-- charging is prematurely terminated due to too tight VBATT values? -- MAYBE OK
-- the issues with rebooting seem to be due to the I2C communication being at some weird state, and then probably hanging? When there is no comms, all works great it seems -- MAYBE OK
 
 - add message & alarm to symbol glyphs
-
 
 - a very simple minimal 16x16 & sprite tile engine with tiny footprint for the UI apps and an UI tileset, this can use 16 colors?  
 
@@ -119,6 +116,7 @@
 
 ## AVR
 
+- turn off if INA senses too much of a current draw
 - LED speed is too great -- reduced to 30fps, maybe still too great? Add delay to effect? 
 - add some better non-linear interpolation for the breathe effect
 - I2C master can hang up, which is bad (wdt saves us)

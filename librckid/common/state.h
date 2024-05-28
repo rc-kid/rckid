@@ -143,6 +143,10 @@ namespace rckid {
         //@{
         uint16_t vcc() const { return voltageFromRawStorage(data_[3]); }
 
+        static uint16_t voltageFromRawStorage(uint8_t value) {
+            return value == 0 ? 0 : value + 245;
+        }
+
 #ifdef RCKID_AVR
 
         void setVccRaw(uint8_t raw) {
@@ -158,9 +162,6 @@ namespace rckid {
                 return (vx100 - 245) & 0xff;
         }
 
-        static uint16_t voltageFromRawStorage(uint8_t value) {
-            return value == 0 ? 0 : value + 245;
-        }
 #endif
 
         //@}
