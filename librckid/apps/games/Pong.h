@@ -35,6 +35,8 @@ namespace rckid {
             // move the ball
             ball_ = ball_ + (deltaBall_ * speed_);
             // update the pad's position & movement speed
+            // delta controlled by the keys & press length
+            /*
             if (down(Btn::Up)) {
                 deltaLeft_ *= FixedInt{1, 32};
                 deltaLeft_.clipInRange(-15, -1);
@@ -49,6 +51,19 @@ namespace rckid {
             } else if (deltaLeft_ > 0) {
                 deltaLeft_ = 0;
             }
+            */
+            // -- delta controlled by the acceperometer
+            /*  
+            deltaLeft_ = accelY() * 32 / 16384;
+            if (deltaLeft_ > 32)
+                deltaLeft_ = 32;
+            if (deltaLeft_ < -32)
+                deltaLeft_ = -32;
+            left_ += deltaLeft_;
+            */
+           // position controlled by the accelerometer
+            left_ = 120 + accelY() * 200 / 16384;
+
             left_.clipInRange(20, 220);
             // update the rigfht paddle to always center the ball
             // TODO do this only when single player mode (!)
