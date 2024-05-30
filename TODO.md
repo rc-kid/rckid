@@ -28,6 +28,8 @@
 
 ## TODO
 
+- when dc power plugged in (and maybe charging enabled) weird button presses are registered
+
 - better stabilization for the voltage gauge (avg from N measurements + hysteresis maybe?)
 
 - add message & alarm to symbol glyphs
@@ -104,15 +106,14 @@
 - add inrush current limiting resistors to all mosfets!!! (around 1k)
 - add ground pads to side buttons (not in EasyEDA library yet, can be added manually after the buttons arrive)
 
-- maybe change charge_en to go to AVR directly thtough the RProg. That way to disable charging we can just let the pin float
+- change charge_en to go to AVR directly thtough the RProg. That way to disable charging we can just let the pin float - this is necessary so that we can turn of charging w/o leaking VBATT to VCC line
 - can even be replaced with headphones so that we can use single ADC as the pin is no longer analog required
 
 - charging fluctuates when there is no battery present (not an issue IMO)
 
 ## RP
 
-- ensure VRAM is own bank
-- disable file & line information for fatal errors
+- USB host cannot be run twice because tud init can only be executed once. See comment in USBMassStorage.cpp, might need to patch the library, or maybe use in host & device mode so that we actually have weak pulldowns and not pullups on data lines? (is this true?)
 
 ## AVR
 

@@ -82,6 +82,10 @@ public:
     static inline platform::ColorStrip<6> rgbsTarget_;
     static inline RGBEffect rgbEffects_[6];
     static inline volatile bool rgbTick_ = false;
+    // backup for user specified notification LED effect in case system effect is active
+    static inline RGBEffect systemEffectBackup_;
+    // if active, user specified effect for notification LED is in the systemEffectBackup and the effect proper is controlled by the system (low voltage or charging)
+    static inline bool systemEffectActive_ = false;
 
     static inline RumblerEffect rumblerEffect_;
     static inline RumblerEffect rumblerCurrent_;
@@ -196,6 +200,7 @@ public:
         rgbEffects_[4] = RGBEffect::Solid(x, 1);
         rgbEffects_[5] = RGBEffect::Solid(x, 1);
         rgbs_.update();
+
     }
 
     /** The main loop. 
@@ -331,6 +336,13 @@ public:
                 stopSystemTicks();
                 power3v3(false);
                 power5v(false);
+                // clear RGB effects, no need to clear #2 as it gets handled by the charging if enabled
+                rgbEffects_[0] = RGBEffect::Off();
+                rgbEffects_[1] = RGBEffect::Off();
+                rgbEffects_[3] = RGBEffect::Off();
+                rgbEffects_[4] = RGBEffect::Off();
+                rgbEffects_[5] = RGBEffect::Off();
+                rgbs_.fill(platform::Color::RGB(0,0,0));
                 ts_.state.setDCPower(false);
                 // disable potential ongoing btnHome counter 
                 btnHomeCounter_ = 0;
@@ -380,7 +392,7 @@ public:
     static void systemTick() __attribute__((always_inline)) {
         if (systemTicksActive()) {
             // if the 5V rail is on, do RGB tick roughly 30 times per second
-            if (power5vActive() && (tick_ % 16) == 0)
+            if (power5vActive() && (tick_ % 32) == 0)
                 rgbTick_ = true;
             // do rumbler tick, if rumbler is on
             if (rumblerCurrent_.active())
@@ -554,15 +566,26 @@ public:
                 value = value * 2;
                 vcc_.addObservation(State::voltageToRawStorage(value));
                 ts_.state.setVccRaw(vcc_.value());
-                if (vcc_.ready()) {
-                    value = ts_.state.vcc();
-                    // check power events
-                    if ((ts_.state.deviceMode() != DeviceMode::PowerOff) && (value < VCC_CRITICAL_THRESHOLD))
-                        criticalBattery();
-                    else if (value > VCC_DC_POWER_THRESHOLD)
+                if (systemTicksActive()) {
+                    if (vcc_.ready()) {
+                        value = ts_.state.vcc();
+                        // check power events
+                        if (ts_.state.deviceMode() != DeviceMode::PowerOff) {
+                            if (value < VCC_CRITICAL_THRESHOLD)
+                                criticalBattery();
+                            else if (value < VCC_WARNING_THRESHOLD && (systemEffectActive_ == false))
+                                setSystemEffect(RGBEffect::Breathe(platform::Color::RGB(16, 0, 0), 1));
+                        }
+                        if (value > VCC_DC_POWER_THRESHOLD)
+                            dcPowerPlugged();
+                        else if (value < VCC_DC_POWER_THRESHOLD)
+                            dcPowerUnplugged();
+                    }
+                } else {
+                    if (value >= VCC_DC_POWER_THRESHOLD) {
                         dcPowerPlugged();
-                    else
-                        dcPowerUnplugged();
+                        vcc_.reset();
+                    }
                 }
                 break;
             case gpio::getADC0muxpos(AVR_PIN_VBATT):
@@ -771,10 +794,10 @@ public:
             return;
         // otherwise change state and get ready for charge monitoring
         ts_.state.setDCPower(true);
-    #ifdef RCKID_HAS_LIPO_CHARGER
-        ts_.state.setCharging(true); // we assume this
-        if (!systemTicksActive())
-            startSystemTicks();
+#ifdef RCKID_HAS_LIPO_CHARGER
+        // enable charging notification light
+        setSystemEffect(RGBEffect::Breathe(platform::Color::RGB(0,0,16), 1));
+        // enable the charger
 #if (defined DEPRECATED_VERSION_2_2)
         // ensure the charge enable pin is configured as input so that we can read it to determine charging current
         gpio::outputFloat(AVR_PIN_CHARGE_EN);
@@ -782,7 +805,11 @@ public:
         // set output low to enable charging
         gpio::outputLow(AVR_PIN_CHARGE_EN);
 #endif
-    #endif
+        // set charging on
+        ts_.state.setCharging(true); // we assume this
+        if (!systemTicksActive())
+            startSystemTicks();
+#endif
     }
 
     static void dcPowerUnplugged() {
@@ -791,13 +818,20 @@ public:
             return;
         // otherwise change state and disable the charger monitoring circuitry
         ts_.state.setDCPower(false);
-        ts_.state.setCharging(false);
 #ifdef RCKID_HAS_LIPO_CHARGER
-        if (ts_.state.deviceMode() == DeviceMode::PowerOff)
+        if (ts_.state.deviceMode() == DeviceMode::PowerOff) {
             stopSystemTicks();
+            power5v(false);
+        }
         ts_.state.setCharging(false);
-        // disable charging
+       // disable charging
+#if (defined DEPRECATED_VERSION_2_2)
+        //gpio::outputHigh(AVR_PIN_CHARGE_EN);
+#else
         gpio::outputFloat(AVR_PIN_CHARGE_EN);
+#endif
+        // disable the effect
+        setSystemEffect(RGBEffect::Off());
 #endif
     }
 
@@ -829,7 +863,7 @@ public:
     static void disableCharging() {
         // TODO enable this in the final version when the charging pin is directly connected to RPROG on the charger via resistor, not to ground as it is now
 #if (defined DEPRECATED_VERSION_2_2)
-        gpio::outputHigh(AVR_PIN_CHARGE_EN);
+        //gpio::outputHigh(AVR_PIN_CHARGE_EN);
 #else
         gpio::outputFloat(AVR_PIN_CHARGE_EN);
 #endif
@@ -964,7 +998,22 @@ public:
                 }
             }
         }
-   }
+    }
+
+    static void setSystemEffect(RGBEffect const & effect) {
+        if (effect.kind == RGBEffect::Kind::Off) {
+            if (systemEffectActive_)
+                rgbEffects_[2] = systemEffectBackup_;
+            systemEffectActive_ = false;
+        } else {
+            if (!systemEffectActive_)
+                systemEffectBackup_ = rgbEffects_[2];
+            rgbEffects_[2] = effect;
+            power5v(true);
+            systemEffectActive_ = true;
+        }
+    }
+
 
     //@}
 
@@ -1106,6 +1155,9 @@ public:
             }
             case cmd::SetRGBEffect::ID: {
                 auto & c = cmd::SetRGBEffect::fromBuffer(ts_.buffer);
+                if (c.index == 2 && systemEffectActive_)
+                    systemEffectBackup_ = c.effect;
+                else 
                 rgbEffects_[c.index] = c.effect;
                 power5v(true);
                 break;

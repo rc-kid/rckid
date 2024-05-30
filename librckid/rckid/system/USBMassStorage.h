@@ -7,7 +7,12 @@
 namespace rckid {
     /** USB Mass Storage device.  
      
-        The app has to be active in order for the mass storage attachment to work. 
+        The app has to be active in order for the mass storage attachment to work. It detaches the SD card from the RCKid async DMA routines and makes it exclusively available to the USB connected PC as a mass storage device. 
+
+        Furthermore, it detects if DC power is applied while the app is on, and if it is, initializes the usb stack. We can'd do this immediately because the ESD protection circuit on the USB leaks the pullups on the dataline to the VCC which then prevents the USB aware devices to connect and charge the RCKid properly. 
+
+        When the app is exitted, the USB device is turned off, which re-enables the DC voltage detection & charging. 
+
      */
     class USBMassStorage : public App<FrameBuffer<ColorRGB>> {
     public:
@@ -16,22 +21,11 @@ namespace rckid {
 
     protected:
 
-        void onFocus() override {
-            App::onFocus();
-            SD::enableUsbMsc(true);
+        void onFocus() override;
 
-        }
+        void onBlur() override;
 
-        void onBlur() override {
-            // TODO: remount the SD card
-            App::onBlur();
-            SD::enableUsbMsc(false);
-        }
-
-        void update() override {
-            if (pressed(Btn::B))
-                exit();
-        }
+        void update() override;
 
         void draw() override {
             driver_.fill();
@@ -39,6 +33,8 @@ namespace rckid {
         }
 
     private:
+
+        bool connected_ = false;
 
         
     }; // USBMassStorage

@@ -181,6 +181,10 @@
  */
 #define VCC_CRITICAL_THRESHOLD 310
 
+/** When the VCC is below this threshold, the notification LED will flash red. 
+ */
+#define VCC_WARNING_THRESHOLD 320
+
 /** If defined, the RCKid is powered by a LiPo battery and when DC power is inserted, the battery will charge and must be monitored. 
  
     THIS MUST BE SET TO FALSE FOR THE AAA POWERED VERSION. 

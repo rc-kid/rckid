@@ -29,7 +29,7 @@ namespace rckid {
             // AC if plugged in
             if (dcPower()) {
                 x -= SymbolsNF_20.glyphInfoFor(glyph::DC).advanceX + 4;
-                bitmap.putChar(Point{x, y + 2}, SymbolsNF_16, glyph::DC, charging() ? COLOR::Red() : COLOR::Gray());
+                bitmap.putChar(Point{x, y + 2}, SymbolsNF_16, glyph::DC, charging() ? COLOR::Blue() : COLOR::Gray());
             }
             // draw the battery gauge and optional level
             if (verbose_) {
