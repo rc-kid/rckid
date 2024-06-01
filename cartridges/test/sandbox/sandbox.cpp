@@ -13,7 +13,7 @@
 #include "apps/games/Pong.h"
 #include "apps/games/SlidingPuzzle.h"
 
-#include "rckid/system/USBMassStorage.h"
+#include "rckid/fs/USBMassStorage.h"
 #include "rckid/system/HWTest.h"
 
 #include "assets/all.h"

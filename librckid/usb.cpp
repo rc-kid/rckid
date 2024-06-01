@@ -191,7 +191,8 @@ extern "C" {
         Return true allowing host to read/write this LUN e.g SD card inserted
     */
     bool tud_msc_test_unit_ready_cb([[maybe_unused]] uint8_t lun) {
-        return SD::usbMscReady(); 
+        // TODO we can return true always because the device is only turned on when the SD card is really available
+        return SD::status() == SD::Status::USB; 
     }
 
     /** Invoked when received SCSI_CMD_READ_CAPACITY_10 and SCSI_CMD_READ_FORMAT_CAPACITY to determine the disk size

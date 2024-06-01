@@ -21,4 +21,6 @@ COLOR(White,     255, 255, 255)
 
 COLOR(DarkGray,   64,  64,  64)
 
+COLOR(Orange,    255, 165,   0)
+
 #undef COLOR

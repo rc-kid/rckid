@@ -79,8 +79,16 @@ public:
     }
 
     Writer & operator << (uint64_t x) {
-        // TODO fix this
-        return (*this) << (uint32_t)x;
+        uint64_t order = 10000000000000000000_u64;
+        while (x < order && order > 1)
+            order = order / 10;
+        while (order >= 10) {
+            putChar_((x / order) + '0');
+            x = x % order;
+            order = order / 10;
+        }
+        putChar_(x + '0');
+        return *this;
     }
 
 private:

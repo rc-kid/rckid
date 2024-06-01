@@ -4,37 +4,45 @@
 
 namespace rckid {
 
+    void initialize();
+
     /** Provides direct access to the SD card and manages between the device and USB access to it. 
      */
     class SD {
     public:
 
-        static bool ready() { return capacity_ > 0; }
+        /** Status of the attached SD card. When not present, no card was detected. When ready, the card can be accessed using the filesystem module and when in USB mode the filesystem module is detached while the card can be directly accessed via the USB as USB-MSC, i.e. data can be transferred between RCKid and a computer.
+        */
+        enum class Status {
+            NotPresent,
+            Unrecognized,
+            Ready,
+            USB,
+        };
 
-        static bool usbMscReady() { return usbMscReady_; }
+        /** Returns the current statusof the SD card. 
+         */
+        static Status status() { return status_; }
 
-        static uint32_t numBlocks() { return capacity_ * 2; }
+        /** Shorthand for checking that the SD card is ready. 
+         */
+        static bool ready() { return status_ == Status::Ready; }
 
         /** Returns the capacity of the inserted SD card in kilobytes, i.e. a maximum of 4TB is theoretically possible, but such large cards likely do not support the SPI interface anyways. 
          */
         static size_t capacity() { return capacity_; }
 
-        static bool enableUsbMsc(bool value) {
-            usbMscReady_ = value;
-            return true;
-        }
+        /** Returns the number of blocks available at the SD card. Block is always 512 bytes long. 
+         */
+        static uint32_t numBlocks() { return capacity_ * 2; }
+
+        /** Enables, or disables the USB MSC features. When enabled, unmounts the filesystem, which will be remounted then the USB MSC mode is left. 
+         */
+        static void enableUSBMsc(bool value); 
 
         static uint32_t numMscReads() { return numMscReads_; }
         static uint32_t numMscWrites() { return numMscWrites_; }
 
-    //private:
-
-        /** Initializes the SD card and determines its capacity.
-         
-            NOTE the function is blocking and will actually take milliseconds (tens of) to complete due to the SD card initialization process. 
-         */
-        static bool initialize();
-        
         /** Reads given 512 bytes block of data. 
          
             NOTE the function is blocking. 
@@ -47,18 +55,27 @@ namespace rckid {
          */
         static bool writeBlock(size_t num, uint8_t const * buffer);
 
+    private:
+
+        friend void initialize();
+
+        /** Initializes the SD card, determines its capacity and if found, mounts it to the FatFS module. 
+         
+            NOTE the function is blocking and will actually take milliseconds (tens of) to complete due to the SD card initialization process. 
+         */
+        static bool initialize();
+
         static uint8_t sendCommand(uint8_t const (&cmd)[6], uint8_t * response = nullptr, size_t responseSize = 0, unsigned maxDelay = 128);
 
+        // status of the SD card
+        static inline Status status_ = Status::NotPresent;
 
         // capacity of the SD card in kilobytes, i.e. up to 4TB is technically supported
         static inline size_t capacity_ = 0;
 
-        // usb storage configuration
-        static inline bool usbMscReady_ = false;
-
+        // SD card access stats
         static inline uint32_t numMscReads_ = 0;
         static inline uint32_t numMscWrites_ = 0;
-
 
 
         // response codes

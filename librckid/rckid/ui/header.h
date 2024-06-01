@@ -59,12 +59,22 @@ namespace rckid {
             x -= SymbolsNF_20.glyphInfoFor(v.second).advanceX + 4;
             bitmap.putChar(Point{x, y + 1}, SymbolsNF_20, v.second, v.first);
             // if SD card has not been found, show its error sign
-            if (!SD::ready()) {
-                x -= SymbolsNF_20.glyphInfoFor(glyph::SDCard).advanceX + 4;
-                bitmap.putChar(Point{x, y + 1}, SymbolsNF_20, glyph::SDCard, COLOR::Red());
+            switch (SD::status()) {
+                case SD::Status::NotPresent:
+                    x -= SymbolsNF_20.glyphInfoFor(glyph::SDCard).advanceX + 4;
+                    bitmap.putChar(Point{x, y + 1}, SymbolsNF_20, glyph::SDCard, COLOR::Red());
+                    break;
+                case SD::Status::Unrecognized:
+                    x -= SymbolsNF_20.glyphInfoFor(glyph::SDCard).advanceX + 4;
+                    bitmap.putChar(Point{x, y + 1}, SymbolsNF_20, glyph::SDCard, COLOR::Orange());
+                    break;
+                case SD::Status::USB:
+                    x -= SymbolsNF_20.glyphInfoFor(glyph::USB).advanceX + 4;
+                    bitmap.putChar(Point{x, y + 1}, SymbolsNF_20, glyph::USB, COLOR::White());
+                    break;
+                default:
+                    break;
             }
-
-                
 
             bitmap.text(where.left(), where.top() + 2, Iosevka_16, COLOR::White()) <<
                 "fps: " << stats::fps() << "d: " << stats::drawUs();

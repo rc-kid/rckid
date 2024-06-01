@@ -5,6 +5,7 @@
 #include "bsp/board.h"
 #include "tusb_config.h"
 #include "tusb.h"
+#include "hardware/structs/usb.h"
 
 #include "FatFS/ff.h"
 #include "FatFS/diskio.h"
@@ -19,6 +20,7 @@
 
 #include "rckid.h"
 #include "fs/sd.h"
+#include "fs/filesystem.h"
 #include "assets/all.h"
 #include "graphics/ST7789.h"
 #include "graphics/png.h"
@@ -565,6 +567,8 @@ namespace rckid {
     // SD Card
     // ============================================================================================
 
+    FATFS * fs_;
+
     /** Initializes the SD card into SPI mode. 
      
         The information in the method mostly comes from [1] and associated links, namely [2]. 
@@ -654,8 +658,36 @@ namespace rckid {
         }
         // the capacity (CSIZE + 1) * 512k, to show capacity in kilobytes, we need to multiply by 512
         capacity_ = ((buffer[8] << 16) + (buffer[9] << 8) + buffer[10] + 1) * 512;
-        // and we are done
+        // and we are done, now try mounting the FatFS
+        status_ = Status::Ready;
+        fs_ = (FATFS*) malloc(sizeof(FATFS));
+        if (f_mount(fs_, "", /* mount immediately */ 1) != FR_OK)
+            status_ = Status::Unrecognized;
         return true;
+    }
+
+    void SD::enableUSBMsc(bool value) {
+        if (value) {
+            // if status is ready, unmount the default drive
+            if (status_ ==  Status::Ready)
+                f_unmount("");
+            // if there is SD card (even unrecognized), enable the USB 
+            if (status_ != Status::NotPresent) {
+                status_ = Status::USB;
+                // initialize the USB
+                tud_init(BOARD_TUD_RHPORT);
+            }
+            
+        } else {
+            if (status_ == Status::USB) {
+                // disable USB -- reset so that we can again detect DC charge
+                memset(usb_hw, 0, sizeof(*usb_hw));
+                // reinitialize the SD card - the PC might have done things to the SD card that might caus it to be unrecognized
+                status_ = Status::Ready;
+                if (f_mount(fs_, "", 0) != FR_OK)
+                    status_ = Status::Unrecognized;
+            }
+        }
     }
 
     bool SD::readBlock(size_t num, uint8_t * buffer) {
@@ -728,7 +760,71 @@ namespace rckid {
         //gpio::high(RP_PIN_SD_CSN);
         return result;
     }
+
 } // namespace rckid
+
+// ================================================================================================
+// Filesystem
+// ================================================================================================
+
+namespace rckid::fs {
+
+    std::string getLabel(Drive drive) {
+        switch (drive) {
+            case Drive::Device: {
+                std::string result{' ', 12};
+                f_getlabel("",result.data(), 0);
+                return result;
+            }
+            default:
+                UNIMPLEMENTED;
+        }
+    }
+
+    Format getFormat(Drive drive) {
+        switch (drive) {
+            case Drive::Device: {
+                switch (fs_->fs_type) {
+                    case FS_FAT12:
+                        return Format::FAT12;
+                    case FS_FAT16:
+                        return Format::FAT16;
+                    case FS_FAT32:
+                        return Format::FAT32;
+                    case FS_EXFAT:
+                        return Format::EXFAT;
+                    default:
+                        return Format::Unrecognized;
+                }
+            }
+            default:
+                UNIMPLEMENTED;
+        }
+    }
+
+    uint64_t getTotalCapacity(Drive drive) {
+        switch (drive) {
+            case Drive::Device:
+                return static_cast<uint64_t>(fs_->n_fatent - 2) * fs_->csize * 512;
+            default:
+                UNIMPLEMENTED;
+        }
+    }
+
+    uint64_t getFreeCapacity(Drive drive) {
+        switch (drive) {
+            case Drive::Device: {
+                DWORD n;
+                FATFS * fs;
+                f_getfree("", & n, &fs);
+                return static_cast<uint64_t>(n) * fs_->csize * 512;
+            }
+            default:
+                UNIMPLEMENTED;
+        }
+    }
+
+} // namespace rckid::fs
 
 // ================================================================================================
 // FatFS device driver (using SD card)

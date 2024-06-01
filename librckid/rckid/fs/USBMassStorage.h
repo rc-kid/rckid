@@ -1,10 +1,13 @@
 #pragma once
 
 #include "rckid/app.h"
-#include "rckid/fs/sd.h"
 #include "rckid/graphics/framebuffer.h"
+#include "rckid/ui/header.h"
+
+#include "sd.h"
 
 namespace rckid {
+
     /** USB Mass Storage device.  
      
         The app has to be active in order for the mass storage attachment to work. It detaches the SD card from the RCKid async DMA routines and makes it exclusively available to the USB connected PC as a mass storage device. 
@@ -29,12 +32,26 @@ namespace rckid {
 
         void draw() override {
             driver_.fill();
-            driver_.text(0,0) << "R: " << SD::numMscReads() << ", W: " << SD::numMscWrites();
+            header_.drawOn(driver_, Rect::WH(320, 20));
+
+            driver_.textMultiline(0,20) <<
+                "Label:    " << label_ << "\n" <<
+                "Format:   " << format_ << "\n" <<
+                "Capacity: " << capacity_ << "\n" <<
+                "Free:     " << free_ << "\n\n" <<
+                "R: " << SD::numMscReads() << ", W: " << SD::numMscWrites();
+
         }
 
     private:
 
-        bool connected_ = false;
+        Header<Color> header_;
+
+        std::string label_;
+        std::string format_;
+        uint64_t capacity_;
+        uint64_t free_;
+
 
         
     }; // USBMassStorage

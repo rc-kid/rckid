@@ -3,6 +3,7 @@
 #include "rckid/app.h"
 #include "rckid/stats.h"
 #include "rckid/graphics/framebuffer.h"
+#include "rckid/ui/header.h"
 
 namespace rckid {
 
