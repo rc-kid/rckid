@@ -29,10 +29,3 @@ git clone https://github.com/raysan5/raylib.git
 cd raylib/src
 make PLATFORM=PLATFORM_DESKTOP
 cd ../../..
-
-
-echo "Installing FatFS..."
-git clone https://github.com/zduka/no-OS-FatFS-SD-SDIO-SPI-RPi-Pico.git sd-card
-
-#git clone https://github.com/rc-kid/PNGdec -o PNGdec
-
