@@ -5,7 +5,7 @@
 #include "pico/unique_id.h"
 #include "tusb_config.h"
 #include "tusb.h"
-#include "rckid/sd.h"
+#include "rckid/fs/sd.h"
 
 using namespace rckid;
 

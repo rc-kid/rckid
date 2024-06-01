@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rckid/app.h"
-#include "rckid/sd.h"
+#include "rckid/fs/sd.h"
 #include "rckid/graphics/framebuffer.h"
 
 namespace rckid {

@@ -36,7 +36,7 @@ function(link_with_librckid target_name)
             hardware_spi
             hardware_dma
             hardware_pwm
-            #FatFs_SPI
+            FatFS
             tinyusb_board
             tinyusb_device
             PNGdec

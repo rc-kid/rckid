@@ -27,6 +27,7 @@ GLYPH(20,  Refresh,              0xf01e)
 GLYPH(21,  ArrowUpDown,          0xf0e7a)
 GLYPH(22,  ArrowLeftRight,       0xf0e74)
 GLYPH(23,  ArrowCross,           0xf047)
+GLYPH(24,  SDCard,               0xf07dc)
 //GLYPH(xx,,)
 
 #undef GLYPH

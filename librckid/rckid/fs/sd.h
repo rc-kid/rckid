@@ -1,13 +1,15 @@
 #pragma once
 
-#include "rckid.h"
+#include "rckid/rckid.h"
 
 namespace rckid {
 
-    /** SD Card Access
+    /** Provides direct access to the SD card and manages between the device and USB access to it. 
      */
     class SD {
     public:
+
+        static bool ready() { return capacity_ > 0; }
 
         static bool usbMscReady() { return usbMscReady_; }
 

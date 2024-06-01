@@ -40,13 +40,14 @@ include_directories(${CMAKE_SOURCE_DIR}/include/platform/peripherals)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/assets)
 include_directories(${CMAKE_SOURCE_DIR}/librckid)
-include_directories(${CMAKE_SOURCE_DIR}/libs/sd-card)
+include_directories(${CMAKE_SOURCE_DIR}/libs/FatFS)
 include_directories(${CMAKE_SOURCE_DIR}/libs/PNGdec/src)
 include_directories(${CMAKE_SOURCE_DIR}/libs/libhelix-mp3)
 
 add_subdirectory("librckid")
 add_subdirectory("libs/PNGdec")
 add_subdirectory("libs/libhelix-mp3")
+add_subdirectory("libs/FatFS")
 #add_subdirectory("cartridges/gbcemu")
 
 

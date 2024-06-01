@@ -6,6 +6,9 @@
 #include "tusb_config.h"
 #include "tusb.h"
 
+#include "FatFS/ff.h"
+#include "FatFS/diskio.h"
+
 #include <pico/time.h>
 #include <hardware/gpio.h>
 #include <hardware/pio.h>
@@ -15,7 +18,7 @@
 
 
 #include "rckid.h"
-#include "sd.h"
+#include "fs/sd.h"
 #include "assets/all.h"
 #include "graphics/ST7789.h"
 #include "graphics/png.h"
@@ -657,7 +660,14 @@ namespace rckid {
 
     bool SD::readBlock(size_t num, uint8_t * buffer) {
         //gpio::low(RP_PIN_SD_CSN);
-        uint8_t cmd[] = { 0x51, (num >> 24) & 0xff, (num >> 16) & 0xff, (num >> 8) & 0xff, num & 0xff, 0x01 };
+        uint8_t cmd[] = { 
+            0x51, 
+            static_cast<uint8_t>((num >> 24) & 0xff), 
+            static_cast<uint8_t>((num >> 16) & 0xff), 
+            static_cast<uint8_t>((num >> 8) & 0xff), 
+            static_cast<uint8_t>(num & 0xff),
+            0x01
+        };
         //uint8_t cmd[] = { 0x51, 0, 0, 0, 0, 0x01 };
         //spi_write_blocking(RP_SD_SPI, cmd, 6);
         //spi_read_blocking(RP_SD_SPI, 0xff, buffer, 2048);
@@ -681,7 +691,14 @@ namespace rckid {
     }
 
     bool SD::writeBlock(size_t num, uint8_t const * buffer) {
-        uint8_t cmd[] = { 0x58, (num >> 24) & 0xff, (num >> 16) & 0xff, (num >> 8) & 0xff, num & 0xff, 0x01 };
+        uint8_t cmd[] = { 
+            0x58,
+            static_cast<uint8_t>((num >> 24) & 0xff), 
+            static_cast<uint8_t>((num >> 16) & 0xff), 
+            static_cast<uint8_t>((num >> 8) & 0xff),
+            static_cast<uint8_t>(num & 0xff),
+            0x01
+        };
         if (sendCommand(cmd) != 0)
             return false;
         cmd[0] = 0xff;
@@ -711,7 +728,76 @@ namespace rckid {
         //gpio::high(RP_PIN_SD_CSN);
         return result;
     }
+} // namespace rckid
 
+// ================================================================================================
+// FatFS device driver (using SD card)
+// ================================================================================================
+
+extern "C" {
+
+    DSTATUS disk_status(BYTE pdrv) {
+        ASSERT(pdrv == 0);
+        return rckid::SD::ready() ? RES_OK : STA_NODISK;
+    }
+
+    DSTATUS disk_initialize(BYTE pdrv) {
+        ASSERT(pdrv == 0);
+        return rckid::SD::ready() ? RES_OK : STA_NODISK;
+    }
+
+    DRESULT disk_read(BYTE pdrv, BYTE * buff, LBA_t sector, UINT count) {
+        ASSERT(pdrv == 0);
+        if (! rckid::SD::ready())
+            return RES_NOTRDY;
+        while (count-- > 0) {
+            if (!rckid::SD::readBlock(sector++, buff))
+                return RES_ERROR;
+            buff += 512;
+        }
+        return RES_OK;
+    }
+
+    DRESULT disk_write(BYTE pdrv, BYTE const * buff, LBA_t sector, UINT count) {
+        ASSERT(pdrv == 0);
+        if (! rckid::SD::ready())
+            return RES_NOTRDY;
+        while (count-- > 0) {
+            if (!rckid::SD::writeBlock(sector++, buff))
+                return RES_ERROR;
+            buff += 512;
+        }
+        return RES_OK;
+    }
+
+    DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void * buff) {
+        ASSERT(pdrv == 0);
+        if (!rckid::SD::ready())
+            return RES_NOTRDY;
+        switch (cmd) {
+            // no need to do anything for CTRL_SYNC as the FatFS exposed API is blocking
+            case CTRL_SYNC:
+                break;
+            // returns the number of SD card blocks
+            case GET_SECTOR_COUNT:
+                *(LBA_t *)buff = rckid::SD::numBlocks();
+                break;
+            case GET_BLOCK_SIZE:
+                *(DWORD *)buff = 1;
+                break;
+            // Sector size is fixed to 512 bytes so no need to set anything here
+            case GET_SECTOR_SIZE:
+            // CTRL_TRIM is not supported, all other ioctls are not supported as well
+            case CTRL_TRIM:
+            default:
+                return RES_PARERR;
+        }
+        return RES_OK;
+    }
+
+    DWORD get_fattime() {
+        UNIMPLEMENTED;
+    }
 }
 
 #endif // ARCH_RP2040

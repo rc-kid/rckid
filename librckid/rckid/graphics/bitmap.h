@@ -145,8 +145,6 @@ namespace rckid {
             if (where.x() + g.advanceX < 0)
                 return g.advanceX;
             uint32_t const * pixels = font.pixels + g.index;
-            unsigned a;
-            unsigned col;
             int ys = where.y() + g.y;
             int ye = ys + g.height;
             for (int x = where.x() + g.x,xe = where.x() + g.x + g.width; x < xe; ++x) {

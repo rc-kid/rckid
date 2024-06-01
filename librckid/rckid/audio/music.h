@@ -22,6 +22,10 @@ namespace rckid {
             setFrequency(frequencyOf(notes_[i_].note), durationOf(notes_[i_].length, tempo_));
         }
 
+        Tempo tempo() const { return tempo_; }
+
+        void setTempo(Tempo t) { tempo_ = t; }
+
     protected:
 
         void onDone() override {

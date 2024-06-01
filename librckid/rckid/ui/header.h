@@ -1,11 +1,13 @@
 #pragma once
 
 #include "rckid/rckid.h"
+#include "rckid/fs/sd.h"
 #include "rckid/graphics/font.h"
 
 #include "assets/fonts/Iosevka_16.h"
 #include "assets/fonts/SymbolsNF_16.h"
 #include "assets/fonts/SymbolsNF_20.h"
+
 
 
 #include "rckid/audio/tone.h"
@@ -56,6 +58,11 @@ namespace rckid {
             auto v = getVolumeInfo();
             x -= SymbolsNF_20.glyphInfoFor(v.second).advanceX + 4;
             bitmap.putChar(Point{x, y + 1}, SymbolsNF_20, v.second, v.first);
+            // if SD card has not been found, show its error sign
+            if (!SD::ready()) {
+                x -= SymbolsNF_20.glyphInfoFor(glyph::SDCard).advanceX + 4;
+                bitmap.putChar(Point{x, y + 1}, SymbolsNF_20, glyph::SDCard, COLOR::Red());
+            }
 
                 
 

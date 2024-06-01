@@ -26,6 +26,8 @@
 
 - app that sets keyboard lights, etc. 
 
+- extra games can be hangman, battleships, calculator (?)
+
 ## TODO
 
 - when dc power plugged in (and maybe charging enabled) weird button presses are registered
@@ -121,7 +123,6 @@
 - LED speed is too great -- reduced to 30fps, maybe still too great? Add delay to effect? 
 - add some better non-linear interpolation for the breathe effect
 - I2C master can hang up, which is bad (wdt saves us)
-- check that setting out high when already high does not glitch
 
 ## SDK
 
