@@ -119,6 +119,7 @@
 
 ## AVR
 
+- AVR EEPROM can store basic info such as username, etc and a password to lock the device
 - turn off if INA senses too much of a current draw
 - LED speed is too great -- reduced to 30fps, maybe still too great? Add delay to effect? 
 - add some better non-linear interpolation for the breathe effect

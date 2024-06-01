@@ -36,6 +36,7 @@
 
 #include "apps/debug/NRFSniffer.h"
 #include "apps/debug/MP3Test.h"
+#include "apps/debug/WAVTest.h"
 #include "apps/debug/melody.h"
 
 using namespace rckid;
@@ -92,7 +93,7 @@ Menu * menuDebug() {
         MenuItem::create("NRFSniffer", assets::icons::rabbit_1, NRFSniffer::create),
         MenuItem::create("MP3 Test", assets::icons::rabbit_1, MP3Test::create),
         MenuItem::create("Melody", assets::icons::music, Melody::create),
-        
+        MenuItem::create("WAV Test", assets::icons::rabbit_1, WAVTest::create),
     }};
 }
 

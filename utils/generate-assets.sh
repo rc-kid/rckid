@@ -42,3 +42,4 @@ build-utils/generate-interp-tables 256 librckid/rckid/utils/tables.h
 echo "Generating debug assets..."
 mkdir -p librckid/assets-debug
 build-utils/generate-assets assets/debug librckid/assets-debug
+build-utils/int16-to-cpp assets/raw/faryra.raw > librckid/assets-debug/faryra.raw.inc
