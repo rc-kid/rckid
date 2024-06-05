@@ -3,7 +3,6 @@
 #include <string>
 #include <functional>
 
-
 #define STR(...) (StringWriter{} << __VA_ARGS__).str()
 
 /** A simple formatter for writing human readable (ASCII) text to various places, such as the display, or serial debugging port, etc.

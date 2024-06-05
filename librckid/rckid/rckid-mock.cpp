@@ -9,6 +9,10 @@
 #include "graphics/ST7789.h"
 #include "graphics/framebuffer.h"
 
+#include "fs/sd.h"
+#include "fs/filesystem.h"
+
+
 namespace rckid {
 
     void initialize() {
@@ -171,7 +175,66 @@ namespace rckid {
         }
     }
 
+    // ============================================================================================
+    // SD
+    // ============================================================================================
+
+    bool SD::initialize() {
+        status_ = Status::Ready;
+        return true;
+    }
+
+    void SD::enableUSBMsc(bool value) {
+        status_ = value ? Status::USB : Status::Ready;
+    }
+
 } // namespace rckid
+
+// ================================================================================================
+// Filesystem
+// ================================================================================================
+
+namespace rckid::fs {
+
+    std::string getLabel(Drive drive) {
+        switch (drive) {
+            case Drive::Device:
+                return "Device";
+            case Drive::Cartridge:
+                return "Cartridge";
+            default:
+                UNREACHABLE;
+        }
+    }
+
+    Format getFormat(Drive drive) {
+        switch (drive) {
+            case Drive::Device:
+                return Format::EXFAT;
+            default:
+                UNIMPLEMENTED;
+        }
+    }
+
+    uint64_t getTotalCapacity(Drive drive) {
+        switch (drive) {
+            case Drive::Device:
+                return 64_u64 * 1024 * 1024 * 1024;
+            default:
+                UNIMPLEMENTED;
+        }
+    }
+
+    uint64_t getFreeCapacity(Drive drive) {
+        switch (drive) {
+            case Drive::Device:
+                return 62_u64 * 1024 * 1024 * 1024;
+            default:
+                UNIMPLEMENTED;
+        }
+    }
+
+} // namespace rckid::fs
 
 // ============================================================================================
 // Assembly mocks

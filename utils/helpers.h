@@ -1,5 +1,9 @@
 #include <filesystem>
 #include <string>
+#include <sstream>
+
+#define STR(...) static_cast<std::stringstream &&>(std::stringstream() << __VA_ARGS__).str()
+
 
 namespace fs = std::filesystem;
 

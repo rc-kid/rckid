@@ -3,7 +3,6 @@
 
 #include "USBMassStorage.h"
 
-
 namespace rckid {
 
     void USBMassStorage::onFocus() {

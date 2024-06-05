@@ -136,13 +136,13 @@ int main(int argc, char * argv[]) {
                 for (int x = 0; x < gi.width; ++x) {
                     uint8_t c = GetImageColor(glyphInfos[i].image, x, y).r;
                     if (c < 64)
-                        hdr << " ";
+                        hdr << "  ";
                     else if (c < 128)
-                        hdr << "\u2591";
+                        hdr << "\u2591\u2591";
                     else if (c < 196)
-                        hdr << "\u2592";
+                        hdr << "\u2592\u2592";
                     else 
-                        hdr << "\u2588";
+                        hdr << "\u2588\u2588";
                 }
                 hdr << std::endl;
             }

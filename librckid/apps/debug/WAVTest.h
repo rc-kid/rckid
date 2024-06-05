@@ -90,7 +90,7 @@ namespace rckid {
         bool playing_ = false;
 
         static constexpr uint16_t wave_[] = {
-#include "assets-debug/faryra.raw.inc"
+//#include "assets-debug/faryra.raw.inc"
         };
         
     }; // RCKid::WAVTest
