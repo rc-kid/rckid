@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rckid/rckid.h"
-#include "audio_stream.h"
+#include "audio.h"
 
 #include "mp3dec.h"
 
@@ -16,7 +16,7 @@ namespace rckid {
 
 
      */
-    class MP3 : public AudioStream  {
+    class MP3 : public audio::OutStream  {
     public:
 
         MP3():

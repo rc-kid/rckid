@@ -26,11 +26,11 @@
 #include "graphics/png.h"
 #include "graphics/framebuffer.h"
 #include "audio/audio.h"
-#include "audio/audio_stream.h"
 
 
 #include "ST7789_rgb.pio.h"
 #include "ST7789_rgb_double.pio.h"
+#include "mic_clk.pio.h"
 
 #include "ltr390uv.h"
 #include "bmi160.h"
@@ -317,16 +317,21 @@ namespace rckid {
 
         // initialize the microphone - DAT pin to the PWM & PWM to counting
         gpio::setAsInputPullDown(RP_PIN_PDM_DATA);
+        pwm_config cfg = pwm_get_default_config();
+        pwm_config_set_clkdiv_mode(&cfg, PWM_DIV_B_HIGH);
+        pwm_config_set_clkdiv(&cfg, 1);
+        pwm_init(RP_MIC_SLICE, &cfg, false);
         gpio_set_function(RP_PIN_PDM_DATA, GPIO_FUNC_PWM);
         // initailize the CLK pio
-
+        micSm_ = pio_claim_unused_sm(pio0, true);
+        micOffset_ = pio_add_program(pio0, & mic_clk_program);
     }
 
     bool audio::headphonesActive() {
         return DeviceWrapper:: state_.state.audioEnabled() && DeviceWrapper::state_.state.headphones();         
     }
 
-    void audio::play(AudioStream * stream) {
+    void audio::play(audio::OutStream * stream) {
         if (stream == nullptr) {
             // it's only playback resume
             // TODO check there is active stream
@@ -334,8 +339,8 @@ namespace rckid {
             pwm_set_enabled(RP_PWM_SLICE, true);
         } else {
             // configure & chain the audio buffer DMAs
-            configurePlaybackDMA(audio::dma0_, audio::dma1_, audio::buffer0_, RP_AUDIO_BUFFER_SIZE);
-            configurePlaybackDMA(audio::dma1_, audio::dma0_, audio::buffer1_, RP_AUDIO_BUFFER_SIZE);
+            configurePlaybackDMA(dma0_, dma1_, buffer0_, RP_AUDIO_BUFFER_SIZE);
+            configurePlaybackDMA(dma1_, dma0_, buffer1_, RP_AUDIO_BUFFER_SIZE);
             // fill the streams
             stream->fillBuffer(buffer0_, RP_AUDIO_BUFFER_SIZE);
             stream->fillBuffer(buffer1_, RP_AUDIO_BUFFER_SIZE);
@@ -354,11 +359,34 @@ namespace rckid {
     }
 
     void audio::stop(){
-        DeviceWrapper::sendCommand(cmd::AudioDisabled{});
-        pwm_set_enabled(RP_PWM_SLICE, false);
-        dma_channel_abort(audio::dma0_);        
-        dma_channel_abort(audio::dma1_);
-        playback_ = nullptr;
+        if (playback_ != nullptr) {
+            DeviceWrapper::sendCommand(cmd::AudioDisabled{});
+            pwm_set_enabled(RP_PWM_SLICE, false);
+            dma_channel_abort(audio::dma0_);        
+            dma_channel_abort(audio::dma1_);
+            playback_ = nullptr;
+        } else {
+            pwm_set_enabled(RP_MIC_SLICE, false);
+            pio_sm_set_enabled(pio0, micSm_, false);
+        }
+    }
+
+    void audio::record(std::function<void(uint16_t const *, size_t)> cb) {
+        // reset the counter and start counting
+        pwm_set_counter(RP_MIC_SLICE, 0);
+        pwm_set_enabled(RP_MIC_SLICE, true);
+        // start the clk
+        mic_clk_program_init(pio0, micSm_, micOffset_, RP_PIN_PDM_CLK);
+        pio_set_clock_speed(pio0, micSm_, 8000000);
+        pio_sm_set_enabled(pio0, micSm_, true);
+
+        // TODO stop playback if any 
+        // set the mic PWM to the sample rate
+        
+        //configureRecordDMA(dma0_, dma1_, buffer0_, RP_AUDIO_BUFFER_SIZE);
+        //configureRecordDMA(dma1_, dma0_, buffer1_, RP_AUDIO_BUFFER_SIZE);
+
+        // start the CLK PIO
     }
 
     void audio::configurePlaybackDMA(int dma, int other, uint16_t const * buffer, size_t bufferSize) {
@@ -370,6 +398,10 @@ namespace rckid {
         dma_channel_configure(dma, & dmaConf, &pwm_hw->slice[RP_PWM_SLICE].cc, buffer, bufferSize / 2, false); // the buffer consists of stereo samples, (32bits), i.e. buffer size / 2
         // enable IRQ0 on the DMA channel (shared with other framework DMA uses such as the display or the SD card)
         dma_channel_set_irq0_enabled(dma, true);
+    }
+
+    void audio::configureRecordDMA(int dma, int other, uint16_t const * buffer, size_t bufferSize) {
+
     }
 
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rckid/rckid.h"
-#include "audio_stream.h"
+#include "audio.h"
 #include "wave_generators.h"
 #include "envelope.h"
 
@@ -12,7 +12,7 @@ namespace rckid {
         Generates a tone with given frequency based on the provided generator.  
      */
     template<typename GENERATOR>
-    class Tone : public AudioStream, public GENERATOR {
+    class Tone : public audio::OutStream, public GENERATOR {
     public:
 
         // 2ms 1ms 50ms
@@ -23,11 +23,11 @@ namespace rckid {
         using GENERATOR::valueAt;
 
         Tone():
-            delta_{WavePeriod / (sampleRate_ * 10)} { // because frequency is x10, we have adjust sample rate as well 
+            delta_{WavePeriod / (44100 * 10)} { // because frequency is x10, we have adjust sample rate as well 
         }
 
         uint16_t nextValue(uint16_t amp) {
-            uint16_t result = AudioBaseLevel + adsr_.modulate(valueAt(frequency_ * acc_, amp), i_, duration_);
+            uint16_t result = audio::BaseLevel + adsr_.modulate(valueAt(frequency_ * acc_, amp), i_, duration_);
             acc_ = (acc_ + delta_) % period_;
             return result;
         }
@@ -65,7 +65,7 @@ namespace rckid {
             if (duration == Forever)
                 duration_ = 0;
             else 
-                duration_ = duration * 10 / (10000000 / sampleRate_);
+                duration_ = duration * 10 / (10000000 / 44100);
             i_ = 0;
         }
 

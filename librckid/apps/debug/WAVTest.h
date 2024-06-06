@@ -2,7 +2,7 @@
 
 #include "rckid/app.h"
 #include "rckid/graphics/framebuffer.h"
-#include "rckid/audio/audio_stream.h"
+#include "rckid/audio/audio.h"
 
 namespace rckid {
 
@@ -10,7 +10,7 @@ namespace rckid {
      
         A very simple test of audio output quality. Copies data from ROM to RAM buffer from which it fills the audio stream buffer. 
      */
-    class WAVTest: public App<FrameBuffer<ColorRGB>>, public AudioStream {
+    class WAVTest: public App<FrameBuffer<ColorRGB>>, public audio::OutStream {
     public:
 
         static WAVTest * create() { return new WAVTest{}; }

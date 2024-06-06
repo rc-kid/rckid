@@ -51,8 +51,8 @@
 #define RP_PIN_PWM_LEFT 22
 #define RP_PIN_PWM_RIGHT 23
 // PDM mic (via pio) -- managed by SDK
-#define RP_PIN_PDM_DATA 25
 #define RP_PIN_PDM_CLK 24
+#define RP_PIN_PDM_DATA 25
 // spi1 connected to the SD card -- managed by SDK
 #define RP_PIN_SD_SCK 26
 #define RP_PIN_SD_TX 27
@@ -79,10 +79,6 @@
  */
 #define RP_ST7789_BAUDRATE 15000000
 
-/** Goes down to 4.096MHz for the actual clock rate. 
- */
-#define RP_MIC_BAUDRATE 8192000
-
 
 #define RP_DEBUG_UART uart1
 #define RP_DEBUG_UART_BAUDRATE 115200
@@ -97,6 +93,9 @@
 /** PWM slice used for the audio out, which on pins 22 and 23 correspon to PWM slice 3. 
  */
 #define RP_PWM_SLICE 3
+
+/** PWM slice for the microphone in, which on pins 24 and 25 corresponds to PWM slice 4 */
+#define RP_MIC_SLICE 4
 
 /** Depth of the audio buffer (there are two audio buffers of the given size)
 */
