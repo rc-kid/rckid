@@ -238,30 +238,23 @@ namespace rckid {
 
     /** \name Audio 
      
-        Audio output is done via two PWM channels. At the maximum clock frequency of 200MHz, this gives us 12bit sound up to 44.1kHz with a bit of a headroom. 
         
      */
     //@{
 
-    unsigned audioVolume();
+    //unsigned audioVolume();
 
-    void setAudioVolume(unsigned value);
+    //void setAudioVolume(unsigned value);
 
-    /** Starts playback of given audio stream. 
-     */
-    void play(AudioStream * stream = nullptr); 
+    //void play(AudioStream * stream = nullptr); 
 
-    /** Pauses the audio playback. 
-     */
-    void pause();
+    //void pause();
 
-    /** Stops the audio playback, forgetting the current audio stream, if any.
-     */
-    void stop();
+    //void stop();
 
-    /** Returns true if playing through headphones, i.e. audio is enabled and headphones are connected. 
-     */
-    bool headphonesActive(); 
+    //bool headphonesActive(); 
+
+
 
     //@}
 

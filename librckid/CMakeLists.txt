@@ -10,8 +10,9 @@ add_library(librckid ${SRC})
 target_compile_options(librckid PRIVATE -Wall -O2)
 
 if (ARCH STREQUAL "RP2040")
-    pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/rckid/ST7789_rgb.pio)
-    pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/rckid/ST7789_rgb_double.pio)
+pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/rckid/mic_clk.pio)
+pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/rckid/ST7789_rgb.pio)
+pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/rckid/ST7789_rgb_double.pio)
 endif()
 
 function(link_with_librckid target_name)

@@ -25,6 +25,11 @@ namespace gpio {
         gpio_pull_up(pin);
     }
 
+    inline void setAsInputPullDown(Pin pin) {
+        gpio_set_dir(pin, GPIO_IN);
+        gpio_pull_down(pin);
+    }
+
     inline void write(Pin pin, bool value) { gpio_put(pin, value); }
 
     inline bool read(Pin pin) { return gpio_get(pin); }

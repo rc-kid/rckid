@@ -9,7 +9,7 @@
 #include "assets/fonts/SymbolsNF_20.h"
 
 
-
+#include "rckid/audio/audio.h"
 #include "rckid/audio/tone.h"
 namespace rckid {
 
@@ -45,13 +45,13 @@ namespace rckid {
             auto b = getBatteryInfo();
             bitmap.putChar(Point{x, y + 1}, SymbolsNF_20, b.second, b.first);
             // see if we have headphones connected
-            if (headphonesActive()) {
+            if (audio::headphonesActive()) {
                 x-= SymbolsNF_20.glyphInfoFor(glyph::Headphones).advanceX + 4;
                 bitmap.putChar(Point{x, y}, SymbolsNF_20, glyph::Headphones, COLOR::Blue());
             }
             // draw the audio state and volume
             if (verbose_) {
-                std::string pct = STR(audioVolume() << "%");
+                std::string pct = STR(audio::volume() << "%");
                 x -= Iosevka_16.textWidth(pct) + 8;
                 bitmap.text(x, y + 2, Iosevka_16, COLOR::LightGray()) << pct;
             }
@@ -98,7 +98,7 @@ namespace rckid {
         }
 
         std::pair<COLOR, char> getVolumeInfo() {
-            unsigned vol = audioVolume();
+            unsigned vol = audio::volume();
             if (vol >= 66)
                 return std::make_pair(COLOR::Green(), glyph::VolumeHigh);
             else if (vol >= 33)

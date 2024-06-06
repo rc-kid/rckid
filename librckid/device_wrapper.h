@@ -8,6 +8,7 @@ namespace rckid {
     class DeviceWrapper {
 
         friend class BaseApp;
+        friend class audio;
 
         friend void initialize();
         friend void yield();
@@ -32,14 +33,6 @@ namespace rckid {
         friend void setButtonsEffects(RGBEffect a, RGBEffect b, RGBEffect dpad, RGBEffect sel, RGBEffect start);
         friend void setRumbler(RumblerEffect effect) { DeviceWrapper::sendCommand(cmd::Rumbler{effect}); }
 
-        // audio
-        friend unsigned audioVolume() { return audioVolume_; }
-        friend void setAudioVolume(unsigned value) { audioVolume_ = value; }
-        friend void play(AudioStream * stream);
-        friend void pause(); 
-        friend void stop();
-        friend bool headphonesActive() { return state_.state.audioEnabled() && state_.state.headphones(); }
-
         friend void powerOff();
         friend bool charging() { return state_.state.charging(); }
         friend bool dcPower() { return state_.state.dcPower(); }
@@ -47,7 +40,6 @@ namespace rckid {
         friend unsigned vBatt() { return state_.state.vBatt(); }
         friend unsigned current() { return state_.state.current(); }
         friend unsigned batteryLevel() { return batteryLevel_; }
-
 
     private:
 
@@ -102,15 +94,6 @@ namespace rckid {
         static inline platform::BMI160::State aState_;
         static inline uint16_t lightALS_ = 0;
         static inline uint16_t lightUV_ = 0;
-
-        static inline AudioStream * audioStream_ = nullptr;
-        static inline uint8_t audioVolume_ = 15;
-        static inline int audioDMA0_;
-        static inline int audioDMA1_;
-        static inline uint16_t audioBuffer0_[RP_AUDIO_BUFFER_SIZE];
-        static inline uint16_t audioBuffer1_[RP_AUDIO_BUFFER_SIZE];
-
-
 
     }; // rckid::Device
 

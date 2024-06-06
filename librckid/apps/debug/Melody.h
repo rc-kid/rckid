@@ -18,12 +18,12 @@ namespace rckid {
         void onFocus() override {
             App::onFocus();
             music_.setTempo(Tempo::Vivace); 
-            play(&music_);
+            audio::play(&music_);
         }
 
         void onBlur() override {
             App::onBlur();
-            stop();
+            audio::stop();
             
         }
 

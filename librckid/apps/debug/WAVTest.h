@@ -44,13 +44,13 @@ namespace rckid {
 
         void onBlur() override {
             App::onBlur();
-            stop();
+            audio::stop();
         }
 
         void update() override {
             App::update();
             if (pressed(Btn::A)) {
-                playing_ ? pause() : play(this);
+                playing_ ? audio::pause() : audio::play(this);
                 playing_ = !playing_;
             }
             fillBufferFromROM();

@@ -1,0 +1,28 @@
+; Mic CLK generator. Simple square wave of a configurable frequency at the given pin.
+;
+; The pio program only toggles the side pin, while the pio speed controls the actual clocl
+
+.program mic_clk
+.side_set 1
+
+.wrap_target
+    nop side 1
+    nop side 0
+
+% c-sdk {
+
+#include "rckid/rckid.h"
+
+inline void mic_clk_program_init(PIO pio, uint sm, uint offset, uint clkPin) {
+    // claim the resources required for the continuous mode
+    pio_gpio_init(pio, clkPin);
+    pio_sm_set_consecutive_pindirs(pio, sm, clkPin, 1, true);
+    pio_sm_config c = mic_clk_program_get_default_config(offset);
+    sm_config_set_sideset_pins(&c, clkPin);
+    // enable autopull
+    sm_config_set_out_shift(&c, false, true, 16);
+    pio_sm_init(pio, sm, offset, &c);
+    //pio_set_clock_speed(pio, sm, RP_ST7789_BAUDRATE * 2);
+}
+
+%}
