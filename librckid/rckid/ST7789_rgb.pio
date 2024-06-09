@@ -25,7 +25,7 @@ inline void ST7789_rgb_program_init(PIO pio, uint sm, uint offset, uint wrPin, u
     pio_gpio_init(pio, dataPin + 2);
     pio_gpio_init(pio, dataPin + 3);
     pio_gpio_init(pio, dataPin + 4);
-pio_gpio_init(pio, dataPin + 5);
+    pio_gpio_init(pio, dataPin + 5);
     pio_gpio_init(pio, dataPin + 6);
     pio_gpio_init(pio, dataPin + 7);
     pio_sm_set_consecutive_pindirs(pio, sm, dataPin, 8, true);

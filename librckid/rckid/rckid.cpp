@@ -30,7 +30,9 @@
 
 #include "ST7789_rgb.pio.h"
 #include "ST7789_rgb_double.pio.h"
-#include "mic_clk.pio.h"
+//#include "mic_clk.pio.h"
+#include "mic_pdm.pio.h"
+
 
 #include "ltr390uv.h"
 #include "bmi160.h"
@@ -122,14 +124,10 @@ namespace rckid {
         unsigned irqs = dma_hw->ints0;
         dma_hw->ints0 = irqs;
         // for audio, reset the DMA start address to the beginning of the buffer and tell the stream to refill
-        if (irqs & (1u << audio::dma0_)) {
-            dma_channel_set_read_addr(audio::dma0_, audio::buffer0_, false);
-            audio::playback_->fillBuffer(audio::buffer0_, RP_AUDIO_BUFFER_SIZE);
-        }
-        if (irqs & (1u << audio::dma1_)) {
-            dma_channel_set_read_addr(audio::dma1_, audio::buffer1_, false);
-            audio::playback_->fillBuffer(audio::buffer1_, RP_AUDIO_BUFFER_SIZE);
-        }
+        if (irqs & (1u << audio::dma0_))
+            audio::irqHandler1();
+        if (irqs & (1u << audio::dma1_))
+            audio::irqHandler2();
         // display
         if (irqs & ( 1u << ST7789::dma_))
             ST7789::irqHandler();
@@ -309,22 +307,23 @@ namespace rckid {
 
     void audio::initialize() {
         // initialize audio PWM pins
-        gpio_set_function(RP_PIN_PWM_RIGHT, GPIO_FUNC_PWM); // confoigure pwm pins for left and right channel
-        gpio_set_function(RP_PIN_PWM_LEFT, GPIO_FUNC_PWM);
-        pwm_set_wrap(RP_PWM_SLICE, 4096); // set wrap to 12bit sound levels
         audio::dma0_ = dma_claim_unused_channel(true);
         audio::dma1_ = dma_claim_unused_channel(true);
 
         // initialize the microphone - DAT pin to the PWM & PWM to counting
-        gpio::setAsInputPullDown(RP_PIN_PDM_DATA);
-        pwm_config cfg = pwm_get_default_config();
-        pwm_config_set_clkdiv_mode(&cfg, PWM_DIV_B_HIGH);
-        pwm_config_set_clkdiv(&cfg, 1);
-        pwm_init(RP_MIC_SLICE, &cfg, false);
-        gpio_set_function(RP_PIN_PDM_DATA, GPIO_FUNC_PWM);
+        //gpio::setAsInputPullDown(RP_PIN_PDM_DATA);
+        //pwm_config cfg = pwm_get_default_config();
+        //pwm_config_set_clkdiv_mode(&cfg, PWM_DIV_B_HIGH);
+        //pwm_config_set_clkdiv(&cfg, 1);
+        //pwm_init(RP_MIC_SLICE, &cfg, false);
+        //gpio_set_function(RP_PIN_PDM_DATA, GPIO_FUNC_PWM);
         // initailize the CLK pio
         micSm_ = pio_claim_unused_sm(pio0, true);
-        micOffset_ = pio_add_program(pio0, & mic_clk_program);
+        //micOffset_ = pio_add_program(pio0, & mic_clk_program);
+        micOffset_ = pio_add_program(pio0, & mic_pdm_program);
+
+        mic_pdm_program_init(pio0, micSm_, micOffset_, RP_PIN_PDM_CLK, RP_PIN_PDM_DATA);
+
     }
 
     bool audio::headphonesActive() {
@@ -338,6 +337,10 @@ namespace rckid {
             DeviceWrapper::sendCommand(cmd::AudioEnabled{});
             pwm_set_enabled(RP_PWM_SLICE, true);
         } else {
+            // set the left and right pins to be used by the PWM
+            gpio_set_function(RP_PIN_PWM_RIGHT, GPIO_FUNC_PWM); 
+            gpio_set_function(RP_PIN_PWM_LEFT, GPIO_FUNC_PWM);
+            pwm_set_wrap(RP_PWM_SLICE, 4096); // set wrap to 12bit sound levels
             // configure & chain the audio buffer DMAs
             configurePlaybackDMA(dma0_, dma1_, buffer0_, RP_AUDIO_BUFFER_SIZE);
             configurePlaybackDMA(dma1_, dma0_, buffer1_, RP_AUDIO_BUFFER_SIZE);
@@ -359,26 +362,50 @@ namespace rckid {
     }
 
     void audio::stop(){
+        dma_channel_abort(audio::dma0_);        
+        dma_channel_abort(audio::dma1_);
         if (playback_ != nullptr) {
             DeviceWrapper::sendCommand(cmd::AudioDisabled{});
             pwm_set_enabled(RP_PWM_SLICE, false);
-            dma_channel_abort(audio::dma0_);        
-            dma_channel_abort(audio::dma1_);
+//            dma_channel_abort(audio::dma0_);        
+//            dma_channel_abort(audio::dma1_);
             playback_ = nullptr;
         } else {
-            pwm_set_enabled(RP_MIC_SLICE, false);
+            //pwm_set_enabled(RP_PWM_SLICE, false);
+            //pwm_set_enabled(RP_MIC_SLICE, false);
             pio_sm_set_enabled(pio0, micSm_, false);
         }
     }
 
     void audio::record(std::function<void(uint16_t const *, size_t)> cb) {
+        micCallback_ = cb;
+
+        configureRecordDMA(dma0_, dma1_, buffer0_, RP_AUDIO_BUFFER_SIZE);
+        configureRecordDMA(dma1_, dma0_, buffer1_, RP_AUDIO_BUFFER_SIZE);
+
+
+        /*
+        // detach the audio left and right pins from the PWM 
+        gpio_set_function(RP_PIN_PWM_RIGHT, GPIO_FUNC_NULL);
+        gpio_set_function(RP_PIN_PWM_LEFT, GPIO_FUNC_NULL);
+        // set the RP_PWM_SLICE to 16kHz
+        pwm_set_clkdiv(RP_PWM_SLICE, 1);
+        pwm_set_wrap(RP_PWM_SLICE, cpu::clockSpeed() / 16000);
+
         // reset the counter and start counting
         pwm_set_counter(RP_MIC_SLICE, 0);
         pwm_set_enabled(RP_MIC_SLICE, true);
         // start the clk
         mic_clk_program_init(pio0, micSm_, micOffset_, RP_PIN_PDM_CLK);
-        pio_set_clock_speed(pio0, micSm_, 8000000);
+        pio_set_clock_speed(pio0, micSm_, 8160000);
         pio_sm_set_enabled(pio0, micSm_, true);
+        // reset last mic so that we can calculate the deltas
+        micLast_ = 0;
+        // start the reader 
+        */
+        pio_sm_set_enabled(pio0, micSm_, true);
+        dma_channel_start(dma0_);
+//        pwm_set_enabled(RP_PWM_SLICE, true);
 
         // TODO stop playback if any 
         // set the mic PWM to the sample rate
@@ -389,9 +416,47 @@ namespace rckid {
         // start the CLK PIO
     }
 
-    void audio::configurePlaybackDMA(int dma, int other, uint16_t const * buffer, size_t bufferSize) {
+    void audio::irqHandler1() {
+        if (playback_ != nullptr) {
+            dma_channel_set_read_addr(dma0_, buffer0_, false);
+            playback_->fillBuffer(buffer0_, RP_AUDIO_BUFFER_SIZE);
+        } else {
+            dma_channel_set_write_addr(dma0_, buffer0_, false);
+            onBufferRecorded(buffer0_, RP_AUDIO_BUFFER_SIZE);
+        }
+    }
+
+    void audio::irqHandler2() {
+        if (playback_ != nullptr) {
+            dma_channel_set_read_addr(dma1_, buffer1_, false);
+            playback_->fillBuffer(buffer1_, RP_AUDIO_BUFFER_SIZE);
+        } else {
+            dma_channel_set_write_addr(dma1_, buffer1_, false);
+            onBufferRecorded(buffer1_, RP_AUDIO_BUFFER_SIZE);
+        }
+    }
+
+    void audio::onBufferRecorded(uint16_t * buffer, size_t size) {
+        uint32_t * b32 = reinterpret_cast<uint32_t*>(buffer);
+        for (size_t i = 0; i < size / 16; ++i) {
+            uint16_t x = 0;
+            for (size_t j = 0; j < 8; ++j)            
+                x += platform::popCount(b32[i * 8 + j]);
+            buffer[i] = x;
+        }
+        /*
+        for (size_t i = 0; i < size; ++i) {
+            uint16_t x = buffer[i];
+            buffer[i] = x - micLast_;
+            micLast_ = x;
+        }
+        */
+        micCallback_(buffer, size / 16);
+    }
+
+    void audio::configurePlaybackDMA(int dma, int other, uint16_t * buffer, size_t bufferSize) {
         auto dmaConf = dma_channel_get_default_config(dma);
-        channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bytes (16 per channel, 2 channels)
+        channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bits (16 per channel, 2 channels)
         channel_config_set_read_increment(& dmaConf, true);  // increment on read
         channel_config_set_dreq(&dmaConf, pwm_get_dreq(RP_PWM_SLICE));// DMA is driven by the PWM slice overflowing
         channel_config_set_chain_to(& dmaConf, other); // chain to the other channel
@@ -400,10 +465,30 @@ namespace rckid {
         dma_channel_set_irq0_enabled(dma, true);
     }
 
-    void audio::configureRecordDMA(int dma, int other, uint16_t const * buffer, size_t bufferSize) {
+    void audio::configureRecordDMA(int dma, int other, uint16_t * buffer, size_t bufferSize) {
+        auto dmaConf = dma_channel_get_default_config(dma);
+        channel_config_set_transfer_data_size(&dmaConf, DMA_SIZE_32); // transfer 16 bits (single channel, cummulative)
+        channel_config_set_dreq(& dmaConf, pio_get_dreq(pio0, micSm_, false)); // drew is pio rx is ready 
+        channel_config_set_read_increment(&dmaConf, false);  // do not increment on read - pio queue
+        channel_config_set_write_increment(&dmaConf, true); // increment on write - the buffer
+        channel_config_set_chain_to(& dmaConf, other); // chain to the other channel
+        dma_channel_configure(dma, & dmaConf, buffer, &pio0->rxf[micSm_], bufferSize / 2, false); // the buffer consists of mono samples, (16bits)
+        // enable IRQ0 on the DMA channel (shared with other framework DMA uses such as the display or the SD card)
+        dma_channel_set_irq0_enabled(dma, true);
 
+
+        /*
+        auto dmaConf = dma_channel_get_default_config(dma);
+        channel_config_set_transfer_data_size(&dmaConf, DMA_SIZE_16); // transfer 16 bits (single channel, cummulative)
+        channel_config_set_read_increment(&dmaConf, false);  // do not increment on read - the PWM counter
+        channel_config_set_write_increment(&dmaConf, true); // increment on write - the buffer
+        channel_config_set_dreq(&dmaConf, pwm_get_dreq(RP_PWM_SLICE));// DMA is driven by the PWM slice overflowing
+        channel_config_set_chain_to(& dmaConf, other); // chain to the other channel
+        dma_channel_configure(dma, & dmaConf, buffer, &pwm_hw->slice[RP_MIC_SLICE].ctr, bufferSize, false); // the buffer consists of mono samples, (16bits)
+        // enable IRQ0 on the DMA channel (shared with other framework DMA uses such as the display or the SD card)
+        dma_channel_set_irq0_enabled(dma, true);
+        */
     }
-
 
     // ============================================================================================
     // DeviceWrapper

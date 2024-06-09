@@ -59,14 +59,18 @@ namespace rckid {
         friend void initialize();
 
         static void initialize();
+        static void irqHandler1();
+        static void irqHandler2();
+
+        static void onBufferRecorded(uint16_t * buffer, size_t size);
 
         /** Configures the playback DMA that reads from the buffer and writes to the output PWM, switching to th second DMA immediately to swap the buffers. 
          */
-        static void configurePlaybackDMA(int dma, int other, uint16_t const * buffer, size_t bufferSize);
+        static void configurePlaybackDMA(int dma, int other, uint16_t * buffer, size_t bufferSize);
 
         /** Configures the recording DMA to read from the mic PWM counter and save to the buffer memory, triggering the other DMA when done. 
          */
-        static void configureRecordDMA(int dma, int other, uint16_t const * buffer, size_t bufferSize);
+        static void configureRecordDMA(int dma, int other, uint16_t * buffer, size_t bufferSize);
 
 
         static inline State state_ = State::Off; 
@@ -79,6 +83,7 @@ namespace rckid {
         static inline uint16_t buffer1_[RP_AUDIO_BUFFER_SIZE]; 
         static inline int micSm_;
         static inline unsigned micOffset_;
+        static inline uint16_t micLast_;
         static inline std::function<void(uint16_t const *, size_t)> micCallback_;
 
     }; // class rckid::audio

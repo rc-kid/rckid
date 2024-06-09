@@ -2,6 +2,8 @@
 
 #include "ST7789.h"
 
+#include "tile.h"
+
 #include "assets/tiles/Iosevka_Tiles_12x24.h"
 namespace rckid {
 
@@ -49,6 +51,12 @@ namespace rckid {
             ASSERT(x >= 0 && x < w_);
             ASSERT(y >= 0 && y < h_);
             tileMap_[y + (w_ - x - 1) * h_] = TileInfo{c, paletteOffset};
+        }
+
+        Writer text(int x, int y, uint8_t paletteOffset = 0) {
+            return Writer{[this, x, y, paletteOffset](char c) mutable {
+                setTile(x++, y, c, paletteOffset);
+            }};
         }
 
         char get(int x, int y) const {

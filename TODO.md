@@ -13,9 +13,8 @@
 > First release, should meet the minimal usability, i.e. messaging app via telegram (ideally radio) and a few games. HW should be finished.
 
 - finish all hardware checks:
-    - microphone
-    - battery & charging, overcurrent protection
-    - radio & wifi cartridge wiring & power requirements
+    - battery & charging, overcurrent protection -- seems ok
+    - radio & wifi cartridge wiring & power requirements -- seems ok
 
 - basic settings UI (brightness, volume, etc.)
 - virtual keyboard via glyphs
@@ -83,6 +82,7 @@
 - sigma-delta DAC might be better? - at the cost of extra CPU though
 - the tone generator can be much optimized - interpolator?
 - add audio mixer
+- microphone works-ish but is super noisy - maybe better PDM to PCM filter than the simple sum? - https://tomverbeure.github.io/2020/10/04/PDM-Microphones-and-Sigma-Delta-Conversion.html, https://github.com/ArmDeveloperEcosystem/microphone-library-for-pico
 
 - 8bit PCM audio is very very noisy - this is probably ok for some synthesized tunes & stuff, but sounds horrible for music. This is not HW problem, but rather quantization error and some such
 - 12bit audio seems to be better, works reliably well with 250MHz overclock, but won't work for 8kHz, a resampling and PDM output via PIO would be much better
@@ -104,6 +104,7 @@
 - add extra cartridge risers to the PCB because the cheap castellation process does not always work
 - enlarge holes so that they are more solderable
 - the cartridge riser mountholes should not connect to gnd for easier solderability
+- ensure thermal reliefs on GND through hole pads for easier solderability
 - how to make the oscillator better? The capacitors are already ok-ish for 16.5 pF, but maybe the capcacitance of the traces is wrong? 
 - add inrush current limiting resistors to all mosfets!!! (around 1k)
 - add ground pads to side buttons (not in EasyEDA library yet, can be added manually after the buttons arrive)
@@ -153,6 +154,9 @@
 - add SRAM (maybe https://cz.mouser.com/ProductDetail/ISSI/IS66WVS2M8BLL-104NLI?qs=doiCPypUmgFx786bHGqGiQ%3D%3D)
 
 # Graphics
+
+- have 16bpp, 8bpp, 4bpp and 2bpp for font, sprites, tiles and framebuffers
+
 
 - 320x240x8 framebuffer with full resolution (~80Kb with palette & transfer buffers)
 - 320x240x16 framebuffer can be selected too (~153.6Kb)

@@ -54,6 +54,20 @@ namespace platform {
         where = value ? (where | mask) : (where & ~mask);
     }
 
+
+    /** Calculates number of 1s in given 32bit number. 
+     */
+    inline unsigned popCount(uint32_t x) {
+        constexpr uint32_t m1 = 0x55555555;
+        constexpr uint32_t m2 = 0x33333333;
+        constexpr uint32_t m4 = 0x0f0f0f0f;
+        constexpr uint32_t h01 = 0x01010101;
+        x -= (x >> 1) & m1;             
+        x = (x & m2) + ((x >> 2) & m2);  
+        x = (x + (x >> 4)) & m4;         
+        return (x * h01) >> 24;   
+    }
+
 } // namespace platform 
 
 /** GPIO helper functions. 
