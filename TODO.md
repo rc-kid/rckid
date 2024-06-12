@@ -37,8 +37,6 @@
 
 - a very simple minimal 16x16 & sprite tile engine with tiny footprint for the UI apps and an UI tileset, this can use 16 colors?  
 
-- 256 color mode does not work in mock because only the first two columns are ever drawn
-
 - dynamic menu (for say file listing, etc.)
 
 - make malloc work in mock
@@ -76,6 +74,7 @@
 
 ## Audio Woes
 
+
 - have basic tone & envelope check, the sound quality is not stellar, but actually quite ok
 - need programmable amplitude & ADSR in milliseconds updated by sample rate
 - sample rate other than 44100 is not that great (because of PWM?)
@@ -88,7 +87,8 @@
 - 12bit audio seems to be better, works reliably well with 250MHz overclock, but won't work for 8kHz, a resampling and PDM output via PIO would be much better
 - use new circuit? - https://datasheets.raspberrypi.com/rp2040/hardware-design-with-rp2040.pdf
 - for 12bit sound, no need for extra timer on PWM
-- headphone volume is too high, speaker volume is too low - is that still? 
+- headphone volume is just right
+- speaker volume too low - AIN- should be connected to GND, figure out resistor divider between AIN+ and AIN-
 - check https://github.com/TuriSc/RP2040-PWM-DMA-Audio/tree/main and https://github.com/TuriSc/Dodepan for hints perhaps? 
 
 ## SD Card 
@@ -270,3 +270,4 @@ Best case: 34 cycles for 4 pixels
 2 LDRW y [palette + y]
 1 AND x, x, y
 2 STM out! {x}
+

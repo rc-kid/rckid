@@ -37,6 +37,8 @@ build-utils/generate-font assets/fonts/DPComic.ttf 24 librckid/assets/fonts
 echo "Generating interpolation tables..."
 build-utils/generate-interp-tables 256 librckid/rckid/utils/tables.h
 
+#echo "Generating UI tileset..."
+#build-utils/generate-font-tiles assets/fonts/Iosevka.ttf librckid/assets/tiles
 
 
 echo "Generating debug assets..."

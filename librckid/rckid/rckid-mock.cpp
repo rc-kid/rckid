@@ -3,9 +3,10 @@
 #if (defined ARCH_MOCK)
 
 #include <iostream>
+
 #include <raylib.h>
 
-#include "rckid/audio/audio_stream.h"
+#include "rckid/audio/audio.h"
 #include "graphics/ST7789.h"
 #include "graphics/framebuffer.h"
 
@@ -81,19 +82,27 @@ namespace rckid {
     // Audio
     // ============================================================================================
 
-    void play(AudioStream * stream) {
+    bool audio::headphonesActive() {
+        return DeviceWrapper:: state_.state.audioEnabled() && DeviceWrapper::state_.state.headphones();         
+    }
+
+    void audio::play(audio::OutStream * stream) {
 //        for (int i = 0; i < 44; ++i) {
-            stream->fillBuffer(DeviceWrapper::audioBuffer0_, RP_AUDIO_BUFFER_SIZE);
+            //stream->fillBuffer(DeviceWrapper::audioBuffer0_, RP_AUDIO_BUFFER_SIZE);
 //            for (int i = 0; i < RP_AUDIO_BUFFER_SIZE; i += 2)
 //                std::cout << DeviceWrapper::audioBuffer0_[i] << std::endl;
 //        }
 //        while(true) {};
     }
 
-    void pause() {
+    void audio::pause() {
     }
 
-    void stop(){
+    void audio::stop(){
+    }
+
+    void audio::record(std::function<void (uint16_t const *, size_t)> f) {
+
     }
 
 
@@ -118,10 +127,10 @@ namespace rckid {
         int xEnd_ = 320;
         int yEnd_ = 240;
         ColorRGB framebuffer_[320 * 240];
+        unsigned renderCallbackDepth_ = 0;
     }
 
     void ST7789::initialize() {
-
     }
 
     void ST7789::reset() {
@@ -142,8 +151,9 @@ namespace rckid {
         yStart_ = rect.top();
         xEnd_ = rect.right();
         yEnd_ = rect.bottom();
+        std::cout << xStart_ << ", " << xEnd_ << " -- " << yStart_ << ", " << yEnd_ << std::endl;
         x_ = xEnd_ - 1;
-        y_ = 0;
+        y_ = yStart_;
     }
 
     void ST7789::leaveContinuousUpdate() {
@@ -152,26 +162,36 @@ namespace rckid {
 
     void ST7789::initializePinsBitBang() {}
 
+    
     void ST7789::sendMockPixels(uint16_t const * pixels, size_t numPixels) {
+        // send the pixels
         while (numPixels-- != 0) {
             ColorRGB rgb = ColorRGB::Raw565(*pixels++);
-            framebuffer_[x_ + y_ * (xEnd_ - xStart_)] = rgb;
+            framebuffer_[x_ + y_ * 320] = rgb;
             if (++y_ == yEnd_) {
                 if (x_-- == xStart_)
                     x_ = xEnd_ - 1;
                 y_ = yStart_;
             }
         }
-        if (cb_()) {
-            updating_ = false;
-            BeginDrawing();
-            for (int x = 0; x < 320; ++x) {
-                for (int y = 0; y < 240; ++y) {
-                    ColorRGB c = framebuffer_[x + y * 320];
-                    DrawRectangle(x * 2, y * 2, 2, 2, (Color) { c.r(), c.g(), c.b(), 255});
+        // only the first pixel send deals with calling further callbacks
+        if (++renderCallbackDepth_ == 1) {
+            while (renderCallbackDepth_ > 0) {
+                if (cb_()) {
+                    updating_ = false;
+                    BeginDrawing();
+                    for (int x = 0; x < 320; ++x) {
+                        for (int y = 0; y < 240; ++y) {
+                            ColorRGB c = framebuffer_[x + y * 320];
+                            DrawRectangle(x * 2, y * 2, 2, 2, (Color) { c.r(), c.g(), c.b(), 255});
+                        }
+                    }
+                    EndDrawing();
+                    x_ = xEnd_ - 1;
+                    y_ = yStart_;
                 }
+                --renderCallbackDepth_;
             }
-            EndDrawing();
         }
     }
 

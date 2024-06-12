@@ -1,5 +1,7 @@
 # RCKid SDK
 
+The RCKid SDK provides basic access to the peripherals available on RCKid. Notably those include the graphics system (capable of 320x240x16bpp graphics in either bitmap, or tiles & sprites mode), audio (mono/stereo output and mono microphone, mixing & tone generation), storage (SD card and cartridge flash storage), other hardware (accelerometer, step counter) and cartridge-specific features (most notably radio). This document presents an overview of the system and their features with links to code that contains more detailed information. 
+
 ## Resources Used
 
 - DMA channel for the display
@@ -22,3 +24,7 @@ Disables the initial logo splashscreen (blank screen will be showed instead), co
 `RCKID_AUDIO_DEBUG` 
 
 Enables the audio output on cartridge available pins 14 & 15 for further processing by the cartridge or easier debugging via the cartridge port. 
+
+## Graphics
+
+Two basic graphic modes are supported - _bitmap_ and _tile_ oriented. The _bitmap_ mode utilizes bitmaps, canvases and framebuffers that support either 8 or 16 bpp and 

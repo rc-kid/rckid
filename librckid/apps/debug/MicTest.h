@@ -3,7 +3,7 @@
 
 #include <limits>
 
-#include <hardware/pwm.h>
+//#include <hardware/pwm.h>
 
 #include "rckid/app.h"
 #include "rckid/graphics/framebuffer.h"

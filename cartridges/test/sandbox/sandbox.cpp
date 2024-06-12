@@ -51,16 +51,16 @@ protected:
     void draw() override {
         driver_.fill();
         std::string text = "Q W E R T Y U I O P [ ]";
-        driver_.text(0,0, Iosevka_16, ColorRGB::White()) << text;
-        driver_.text(0,20, OpenDyslexic_16, ColorRGB::White()) << text;
-        driver_.text(0,40, Hasklug_16, ColorRGB::White()) << text;
-        driver_.text(0,60, Hurmit_16, ColorRGB::White()) << text;
-        driver_.text(0,80, VictorMono_16, ColorRGB::White()) << text;
-        driver_.text(0,100, VictorMonoBold_16, ColorRGB::White()) << text;
-        driver_.text(0,120, Lilly_24, ColorRGB::White()) << text;
-        driver_.text(0,150, Inconsolata_24, ColorRGB::White()) << text;
-        driver_.text(0,180, PixelFJVerdana_24, ColorRGB::White()) << text;
-        driver_.text(0,210, DPComic_24, ColorRGB::White()) << text;
+        driver_.text(0,0, Iosevka_16, Color::White()) << text;
+        driver_.text(0,20, OpenDyslexic_16, Color::White()) << text;
+        driver_.text(0,40, Hasklug_16, Color::White()) << text;
+        driver_.text(0,60, Hurmit_16, Color::White()) << text;
+        driver_.text(0,80, VictorMono_16, Color::White()) << text;
+        driver_.text(0,100, VictorMonoBold_16, Color::White()) << text;
+        driver_.text(0,120, Lilly_24, Color::White()) << text;
+        driver_.text(0,150, Inconsolata_24, Color::White()) << text;
+        driver_.text(0,180, PixelFJVerdana_24, Color::White()) << text;
+        driver_.text(0,210, DPComic_24, Color::White()) << text;
     }
 }; 
 

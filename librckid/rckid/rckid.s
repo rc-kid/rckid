@@ -20,6 +20,8 @@ loop:
     bne loop
     pop     {r4-r5, PC}
 
+
+@ 5 + 5 + 2 + 5 + 5 + 2 + 3 + 2 = 27
 .global rckid_color256_to_rgb
 .section .time_critical.rckid_color256_to_rgb, "ax"
 .thumb_func
@@ -35,7 +37,7 @@ rckid_color256_to_rgb:
     push    {r4-r6}
 loop256:
     @ load first pixel index, multiply by two and load color from palette to r4
-    ldrb r4, [r0] 
+    ldrb r4, [r0]       
     lsls r4, r4, 1
     ldrh r4, [r3, r4]
     @ load second pixel index, multiply by wo and load color from palette to r5
@@ -64,9 +66,6 @@ loop256:
     bne loop256
     pop {r4-r6}
     bx lr
-
-
-
 
 @ Blits given picture
 @

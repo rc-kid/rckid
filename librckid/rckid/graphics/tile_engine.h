@@ -8,117 +8,137 @@
 
 namespace rckid {
 
-    class TileMap {
+    /** Simple tile engine with very low memory overhead.  
+     
+        Supports only one layer with no non-display area and a few sprites. Due to its low memory footprint, the engine is particularly useful for simple UI applications. 
+     */
+    template<typename TILE>
+    class SimpleEngine {
     public:
+        using Tile = TILE;
 
-        TileMap(int width, int height, Tile * tileSet = nullptr, ColorRGB * palette = nullptr):
-            width_{width}, 
-            height_{height},
-            tileMap_{ new uint8_t[width * height]} {
+        struct TileInfo {
+            char c = ' ';
+            uint8_t paletteOffset = 0;
 
+            TileInfo & operator = (char c) { this->c = c; return *this; }
+        }; // SimpleEngine::TileInfo
+
+        SimpleEngine(int width, int height):
+            w_{width}, 
+            h_{height},
+            tileMap_{ new TileInfo[width * height] },
+            buffer_{ new uint16_t[height * Tile::Height * 2]} {
+            ASSERT(width > 0 && pixelWidth() <= 320);
+            ASSERT(height > 0 && pixelHeight() <= 240);
+            top_ = (240 - pixelHeight()) / 2;
         }
 
-        int width() const { return width_; }
-        int height() const { return height_; }
-        int top() const { return top_; }
-        int left() const { return left_; }
-        Point topLeft() const { return Point{left_, top_}; }
+        ~SimpleEngine() {
+            delete tileMap_;
+            delete buffer_;
+        }
 
-        uint8_t at(int x, int y) const { return tileMap_[y + x * height_]; }
-        uint8_t & at(int x, int y) { return tileMap_[y + x * height_]; }
-
-        Tile const * tileSet() const { return tileSet_; }
-        Tile * tileSet() { return tileSet_; }
-
-        void setTileSet(Tile * value) { tileSet_ = value;}
+        Tile const * tiles() const { return tiles_; }
+        void setTiles(Tile const * tiles) { tiles_ = tiles; }
 
         ColorRGB const * palette() const { return palette_; }
-        ColorRGB * palette() { return palette_; }
+        void setPalette(ColorRGB const * palette) { palette_ = palette; }
 
-        void setPalette(ColorRGB * value) { palette_ = value; }
+        int width() const { return w_; }
+        int height() const { return h_; }
 
+        int pixelWidth() const { return w_ * Tile::Width; }
+        int pixelHeight() const { return h_ * Tile::Height; }
 
-    private:
-        friend class TileEngine;
+        TileInfo const & at(int x, int y) const { return tileMap_[y + x * h_]; }
+        TileInfo & at(int x, int y) { return tileMap_[y + x * h_]; }
 
-        int width_;
-        int height_;
-        int top_ = 0;
-        int left_ = 0;
-        uint8_t * tileMap_;
-
-        Tile * tileSet_;
-        ColorRGB * palette_;
-
-    }; 
-
-    /** Tile Engine with three layers and some sprites. 
-     
-        needs to:
-        1) draw the tiles
-        2) convert to RGB
-        2) draw the sprites
-     */
-    class TileEngine {
-    public:
-
-        // TODO default to some basic palette and to a tileset that makes some basic sense
-        TileEngine():
-            buffer_{new ColorRGB[240 + 32]},
-            layers_{TileMap{30, 25}, TileMap{30,25}, TileMap{30,25}} {
+        /** Fills the entire tileset with given value. 
+         */
+        void fill(char c, uint8_t paletteOffset = 0) {
+            for (int i = 0, e = w_ * h_; i != e; ++i)
+                tileMap_[i] = TileInfo{c, paletteOffset};
         }
+
+        /** Single-line writer interface. 
+         */
+        Writer text(int x, int y, uint8_t paletteOffset = 0) {
+            return Writer{[this, x, y, paletteOffset](char c) mutable {
+                at(x++, y) = TileInfo{c, paletteOffset};
+            }};
+        }
+
+        /** \name Rendering 
+         
+            The rendering is done per column in alternating parts of the render buffer so that while the DMA is sending one column to the display, the next column is being calculated. 
+         */
+        //@{
 
         void enable() {
-
+            ST7789::configure(DisplayMode::Native_RGB565);
+            ST7789::enterContinuousUpdate(Rect::XYWH((320 - pixelWidth()) / 2, top_, pixelWidth(), pixelHeight()));
         }
 
-        void disable() {
-
+        void disable() { 
+            ST7789::leaveContinuousUpdate();
         }
 
         void render() {
+            renderColumn_ = pixelWidth() - 1;
+            renderColumn(renderColumn_, bufferForColumn(renderColumn_));
+            --renderColumn_;
+            renderColumn(renderColumn_, bufferForColumn(renderColumn_));
+            ST7789::waitVSync();
+            ST7789::writePixels(bufferForColumn(renderColumn_ + 1), pixelHeight(), [this]() {
+                if (renderColumn_ < 0)
+                    return true;
+                // write already processed pixels
+                ST7789::writePixels(bufferForColumn(renderColumn_), pixelHeight());
+                if (--renderColumn_ >= 0)
+                    renderColumn(renderColumn_, bufferForColumn(renderColumn_));
+                return false;
+            });
+        }
+        //@}
 
+    protected:
+
+        /** Returns the buffer part to be used for given column as the buffer is twice the column height. 
+         */
+        uint16_t * bufferForColumn(int col) {
+            return buffer_ + (col & 1) * pixelHeight();
         }
 
-        TileMap const & operator [] (unsigned index) const { return layers_[index]; }
-        TileMap & operator [] (unsigned index) { return layers_[index]; }
-
-    private:
-
-        /** Renders the given column into provided buffer. 
-         
-            First render the background, uint32 by uint32 reads for fastest speed. This means we start this layer so that we start always at properly aligned boundary. 
-
-            Then render the second layer by reading the tiles 4 by four, 
-
-            TODO
-         
-        */
-        void renderColumn(int col) {
-            // first get the buffer that we use for the calculations. We use the same bufer as for the final calculation, but at only 1 byte per pixel, we start later in it.
-            // the end of the buffer is where we store temporary palette results
-            uint8_t * buffer8_ = reinterpret_cast<uint8_t*>(buffer_ + 136);
-            // draw the first layer
-            // be dumb and just copy the appropriate tile & pixels
-            int x = layers_[0].left_ + col;
-            int tileX = x / 16; // index of the tile
-            x = x % 16; // index inside the tile
-            int y = layers_[0].top_;
-            int tileY = y / 16;
+        /** Renders the given column. 
+         */
+        void renderColumn(int x, uint16_t * buffer) {
+            // get the tile x coordinate and the x coordinate within the tile
+            int tx = x / Tile::Width;
+            x = x % Tile::Width;
+            // get first tile info for the given column (the column is consecutive tiles), and iterate over the tiles
+            TileInfo const * tile = tileMap_ + (tx * h_);
+            uint16_t * bx = buffer;
+            for (int ty = 0; ty < h_; ++ty, ++tile)
+                bx = tiles_[static_cast<uint8_t>(tile->c)].renderColumn(x, bx, palette_, tile->paletteOffset);
+            // TODO render sprites & bitmaps, if any 
         }
 
-        /** Renders the background layer, which is the simplest. Returns the offset in the buffer */
-        int renderBackgroundLayer(TileMap & layer, uint32_t * buffer, int col) {
-            int tile = layer.top_ / 16;
-            int startRow = layer.top_ % 16;
-            int column = (layer.left_ + col) % layer.width_;
-            
+        int w_;
+        int h_;
+        int top_;
 
-            
-        }
+        Tile const * tiles_ = nullptr;
 
-        ColorRGB * buffer_ = nullptr;
-        TileMap layers_[3];
- 
-    };
-}
+        ColorRGB const * palette_ = nullptr; 
+
+        TileInfo * tileMap_;
+        // single column rendering buffer
+        uint16_t * buffer_;
+        // column to be rendered
+        int renderColumn_;
+
+    }; // rckid::SimpleEngine
+
+} // namespace rckid
+
