@@ -256,22 +256,4 @@ namespace rckid::fs {
 
 } // namespace rckid::fs
 
-// ============================================================================================
-// Assembly mocks
-// ============================================================================================
-
-extern "C" {
-    void rckid_mem_fill_32x8(uint32_t * buffer, size_t num, uint32_t value) {
-        while (num-- > 0)
-            *(buffer++) = value;
-    }
-
-    uint8_t const * rckid_color256_to_rgb(uint8_t const * in, uint16_t * out, unsigned numPixels, uint16_t const * palette) {
-        while (numPixels-- > 0)
-            *(out++) = palette[*in++];
-        return in;
-    }
-    
-}
-
 #endif // ARCH_MOCK

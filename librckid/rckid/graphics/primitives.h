@@ -5,23 +5,21 @@ namespace rckid {
     class Point {
     public:
         Point() = default;
-        constexpr Point(int x, int y): x_{x}, y_{y} {}
+        constexpr Point(int x, int y): x{x}, y{y} {}
 
         constexpr static Point origin() { return Point{0,0}; }
 
-        constexpr int x() const { return x_; }
-        constexpr int y() const { return y_; }
 
-        void setX(int value) { x_ = value; }
-        void setY(int value) { y_ = value; }
-
-        Point operator + (Point other) const { return Point{x_ + other.x_, y_ + other.y_}; }
-        Point operator - (Point other) const { return Point{x_ - other.x_, y_ - other.y_}; }
+        Point operator + (Point other) const { return Point{x + other.x, y + other.y}; }
+        Point operator - (Point other) const { return Point{x - other.x, y - other.y}; }
         
+        bool operator == (Point other) const { return x == other.x && y == other.y; }
+
+        int x;
+        int y;
+
     private:
-        int x_ = 0;
-        int y_ = 0;
-    }; 
+   }; 
 
     class Rect {
     public:
@@ -29,7 +27,7 @@ namespace rckid {
             return Rect{Point{0,0}, Point{width, height}};
         }
 
-        static constexpr Rect XYWH(Point topLeft, int width, int height) { return XYWH(topLeft.x(), topLeft.y(), width, height); }
+        static constexpr Rect XYWH(Point topLeft, int width, int height) { return XYWH(topLeft.x, topLeft.y, width, height); }
         
         static constexpr Rect XYWH(int x, int y, int width, int height) {
             return Rect{
@@ -38,10 +36,10 @@ namespace rckid {
             };
         }
 
-        constexpr int top() const { return topLeft_.y(); }
-        constexpr int left() const { return topLeft_.x(); }
-        constexpr int bottom() const { return bottomRight_.y(); }
-        constexpr int right() const { return bottomRight_.x(); }
+        constexpr int top() const { return topLeft_.y; }
+        constexpr int left() const { return topLeft_.x; }
+        constexpr int bottom() const { return bottomRight_.y; }
+        constexpr int right() const { return bottomRight_.x; }
         constexpr int width() const { return right() - left(); }
         constexpr int height() const { return bottom() - top(); }
         constexpr Point const & topLeft() const { return topLeft_; }

@@ -27,6 +27,10 @@ namespace rckid {
         unsigned pixelAt(int x, int y) const { return rckid::pixelAt<FMT>(pixelBuffer_, WIDTH, HEIGHT, x, y); }
         void setPixelAt(int x, int y, unsigned c) { rckid::setPixelAt<FMT>(pixelBuffer_, WIDTH, HEIGHT, x, y, c); }
 
+        void fill(uint16_t color) {
+            rckid::fillBuffer<FMT>(pixelBuffer_, pixelBufferLength<FMT>(WIDTH, HEIGHT), color);
+        }
+
         uint16_t * renderColumn(int x, uint16_t * buffer, ColorRGB const * palette = nullptr, uint8_t paletteOffset = 0) const {
             return convertToRGB<FMT>(
                 getColumn<FMT>(pixelBuffer_, WIDTH, HEIGHT, x),
@@ -39,7 +43,7 @@ namespace rckid {
 
     private:
 
-        uint32_t pixelBuffer_[pixelBufferLength(WIDTH, HEIGHT, FMT)];
+        uint32_t pixelBuffer_[pixelBufferLength<FMT>(WIDTH, HEIGHT)];
 
     }; 
 

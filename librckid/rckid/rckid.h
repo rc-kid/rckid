@@ -308,6 +308,7 @@ namespace rckid {
 } // namespace rckid
 
 extern "C" {
+    void memFill32(uint32_t * buffer, uint32_t size, uint32_t value);
     void rckid_mem_fill_32x8(uint32_t * target, size_t num, uint32_t source); 
     uint8_t const * rckid_color256_to_rgb(uint8_t const * in, uint16_t * out, unsigned numPixels, uint16_t const * palette);
 }

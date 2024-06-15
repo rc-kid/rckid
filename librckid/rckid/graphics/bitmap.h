@@ -85,9 +85,9 @@ namespace rckid {
 
         void blit(Point where, Bitmap const & src, Rect srcRect) {
             // default, very slow implementation 
-            int dy = where.y();
+            int dy = where.y;
             for (int y = srcRect.top(), ye = srcRect.bottom(); y != ye; ++y, ++dy) {
-                int dx = where.x();
+                int dx = where.x;
                 for (int x = srcRect.left(), xe = srcRect.right(); x != xe; ++x, ++dx)
                     setPixelAt(dx, dy, src.pixelAt(x, y));
             }
@@ -110,7 +110,7 @@ namespace rckid {
             ASSERT(buffer_ != nullptr);
             png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
                 for (int i = 0; i < lineWidth; ++i)
-                    setPixelAt(i + where.x(), lineNum + where.y(), line[i]);
+                    setPixelAt(i + where.x, lineNum + where.y, line[i]);
             });
         }
         //@}
@@ -139,15 +139,15 @@ namespace rckid {
         //@{
 
         int putChar(Point where, Font const & font, char c, Color * colors) {
-            if (where.x() > width())
+            if (where.x > width())
                 return 0;
             GlyphInfo const & g = font.glyphs[static_cast<uint8_t>((c - 32 >= 0) ? (c - 32) : 0)];
-            if (where.x() + g.advanceX < 0)
+            if (where.x + g.advanceX < 0)
                 return g.advanceX;
             uint32_t const * pixels = font.pixels + g.index;
-            int ys = where.y() + g.y;
+            int ys = where.y + g.y;
             int ye = ys + g.height;
-            for (int x = where.x() + g.x,xe = where.x() + g.x + g.width; x < xe; ++x) {
+            for (int x = where.x + g.x,xe = where.x + g.x + g.width; x < xe; ++x) {
                 uint32_t col;
                 uint32_t bits = 0;
                 for (int y = ys; y != ye; ++y) {

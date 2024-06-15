@@ -29,14 +29,15 @@
 
 ## TODO
 
+- update how the transparency is handled in sprite drawing 
+- static sprites
+
 - when dc power plugged in (and maybe charging enabled) weird button presses are registered
 
 - better stabilization for the voltage gauge (avg from N measurements + hysteresis maybe?)
 
 - add message & alarm to symbol glyphs
-
-- a very simple minimal 16x16 & sprite tile engine with tiny footprint for the UI apps and an UI tileset, this can use 16 colors?  
-
+z
 - dynamic menu (for say file listing, etc.)
 
 - make malloc work in mock
@@ -44,20 +45,19 @@
 
 - ColorRGB framebuffer update is much slower than Color256, why? can be due to more memory written for the fonts ?)
 
-
 - what is the allocation during startup - see how I can debug and if it poses a problem - https://raspberry-projects.com/pi/microcontrollers/programming-debugging-devices/debugging-using-another-pico
 
 - make showing image on the screen a separate function and make it work in mock mode as well
 - 2x 256 framebuffer does not render correctly and likely the code is wrong
 
-- speaker seems not to (always off) - seems bad GND connectiom for PAM8302
-
-- write optimized draw bitmap functions
+- write optimized draw bitmap functions - rewrite the bitmap to use drawing.h as much as possible. Also rewrite the asm functions to be in line with routines.cpp & rckid.h
 
 - steps counter - might need battery to verify
 - accelerometer reported temperature
 
 - implement png's transparent color in png load & drawing
+
+- text UI should use only 8 color in tiles shading wise and use the rest for effects. Add effects and colors to it 
 
 - microphone tested to work - sample code https://github.com/ArmDeveloperEcosystem/microphone-library-for-pico/tree/main 
 - needs integration and lots of amplification it seems 

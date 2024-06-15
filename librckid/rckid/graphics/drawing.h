@@ -45,7 +45,10 @@ namespace rckid {
      
         NOTE The length is the number of uint32_t elements.  
      */
-    constexpr inline size_t pixelBufferLength(unsigned width, unsigned height, PixelFormat fmt) { return width * height * bpp(fmt) / 32; }
+    template<PixelFormat FMT>
+    constexpr inline size_t pixelBufferLength(unsigned width, unsigned height) { 
+        return width * height * bpp(FMT) / 32;
+    }
 
 
     /** Packs 4 8bpp colors into a single uint32_t value 
@@ -94,26 +97,43 @@ namespace rckid {
     constexpr inline void setPixelAt(uint32_t * buffer, unsigned width, unsigned height, unsigned x, unsigned y, unsigned value) {
         switch (bpp(FMT)) {
             case 16:
-                reinterpret_cast<uint16_t const*>(buffer)[y + (width - 1 - x) * height] = static_cast<uint16_t>(value);
+                reinterpret_cast<uint16_t*>(buffer)[y + (width - 1 - x) * height] = static_cast<uint16_t>(value);
                 break;
             case 8:
-                reinterpret_cast<uint8_t const*>(buffer)[y + (width -1 -x) * height] = static_cast<uint8_t>(value);
+                reinterpret_cast<uint8_t*>(buffer)[y + (width -1 -x) * height] = static_cast<uint8_t>(value);
                 break;
             case 4: {
-                uint8_t & x = reinterpret_cast<uint8_t const*>(buffer)[y / 2 + (width -1 -x) * height / 2];
-                x = x & ~(0x0f << ((y & 1) * 4));
-                x |= static_cast<uint8_t>(value) << ((y & 1) * 4);
+                uint8_t & xx = reinterpret_cast<uint8_t*>(buffer)[y / 2 + (width -1 -x) * height / 2];
+                xx = xx & ~(0x0f << ((y & 1) * 4));
+                xx |= static_cast<uint8_t>(value) << ((y & 1) * 4);
                 break;
             }
             //case 2: {
-            //    uint8_t & x = reinterpret_cast<uint8_t const*>(buffer)[y / 4 + (width -1 -x) * height / 4];
-            //    x = x & ~(0x03 << ((y & 3) * 2));
-            //    x |= static_cast<uint8_t>(value) << ((y & 3) * 2);
+            //    uint8_t & xx = reinterpret_cast<uint8_t const*>(buffer)[y / 4 + (width -1 -x) * height / 4];
+            //    xx = xx & ~(0x03 << ((y & 3) * 2));
+            //    xx |= static_cast<uint8_t>(value) << ((y & 3) * 2);
             //    break;
             //}
             default:
                 UNREACHABLE;
         }
+    }
+
+    template<PixelFormat FMT>
+    constexpr void fillBuffer(uint32_t * buffer, unsigned size, uint16_t color) {
+        uint32_t value = color;
+        switch (bpp(FMT)) {
+            case 4:
+                value = value | value << 4;
+            case 8:
+                value = value | value << 8;
+            case 16:
+                value = value | value << 16;
+                break;
+            default:
+                UNREACHABLE;
+        }
+        memFill32(buffer, size, value);
     }
 
     /** Returns the address of the n-th column from given pixel buffer. 
@@ -165,5 +185,59 @@ namespace rckid {
         }
     }
 
+    /** Converts the consecutive pixels from their internal format to the RGB 565 representation, making the last color in each format transparent. 
+     
+        TODO figure out how to do this properly - maybe set color value, etc
+     */
+    template<PixelFormat FMT>
+    constexpr inline uint16_t * convertToRGBtransparent(uint32_t const * buffer, uint16_t * out, unsigned numPixels, ColorRGB const *  palette, uint8_t paletteOffset) {
+        switch (bpp(FMT)) {
+            case 16: {
+                ASSERT(palette == nullptr);
+                // ignore the paletteOffset and simply copy the appropriate number of bytes
+                uint16_t const * pixels = reinterpret_cast<uint16_t const *>(buffer);
+                while (numPixels-- != 0) {
+                    uint16_t c = *pixels++;
+                    if (c != 65535)
+                        *(out++) = c;
+                    else
+                        ++out;
+                }
+                return out + numPixels;
+            }
+            case 8: {
+                ASSERT(palette != nullptr);
+                uint8_t const * pixels = reinterpret_cast<uint8_t const *>(buffer);
+                while (numPixels-- != 0) {
+                    uint8_t c = *pixels++;
+                    if (c == 255)
+                        ++out;
+                    else 
+                        *(out++) = palette[(c + paletteOffset) & 0xff].rawValue16();
+                }
+                return out;
+            }
+            case 4: {
+                ASSERT(palette != nullptr);
+                uint8_t const * pixels = reinterpret_cast<uint8_t const *>(buffer);
+                while (numPixels != 0) {
+                    uint8_t p = *pixels++;
+                    if (p & 0xf == 0xf)
+                        ++out;
+                    else 
+                        *(out++) = palette[((p & 0xf) + paletteOffset) & 0xff].rawValue16();
+                    if ((p >> 4) == 0xf)
+                        ++out;
+                    else
+                        *(out++) = palette[((p >> 4) + paletteOffset) & 0xff].rawValue16();
+                    numPixels -= 2;
+                }
+                return out;
+            }
+            default:
+                UNREACHABLE;
+        }
+
+    }
 
 } // namespace rckid

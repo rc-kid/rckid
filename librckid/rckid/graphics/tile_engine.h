@@ -5,6 +5,7 @@
 #include "rckid/graphics/primitives.h"
 
 #include "tile.h"
+#include "sprite.h"
 
 namespace rckid {
 
@@ -16,6 +17,7 @@ namespace rckid {
     class SimpleEngine {
     public:
         using Tile = TILE;
+        using Sprite = rckid::Sprite<TILE::Format>;
 
         struct TileInfo {
             char c = ' ';
@@ -45,6 +47,15 @@ namespace rckid {
         ColorRGB const * palette() const { return palette_; }
         void setPalette(ColorRGB const * palette) { palette_ = palette; }
 
+        Sprite & addSprite(int width, int height) {
+            sprites_.emplace_back(width, height);
+            return sprites_.back();
+        }
+
+        Sprite & getSprite(size_t index) { return sprites_[index]; }
+
+        size_t numSprites() const { return sprites_.size(); }
+
         int width() const { return w_; }
         int height() const { return h_; }
 
@@ -52,7 +63,9 @@ namespace rckid {
         int pixelHeight() const { return h_ * Tile::Height; }
 
         TileInfo const & at(int x, int y) const { return tileMap_[y + x * h_]; }
+        TileInfo const & at(Point p) const { return at(p.x, p.y); }
         TileInfo & at(int x, int y) { return tileMap_[y + x * h_]; }
+        TileInfo & at(Point p) { return at(p.x, p.y); }
 
         /** Fills the entire tileset with given value. 
          */
@@ -115,13 +128,14 @@ namespace rckid {
         void renderColumn(int x, uint16_t * buffer) {
             // get the tile x coordinate and the x coordinate within the tile
             int tx = x / Tile::Width;
-            x = x % Tile::Width;
             // get first tile info for the given column (the column is consecutive tiles), and iterate over the tiles
             TileInfo const * tile = tileMap_ + (tx * h_);
             uint16_t * bx = buffer;
             for (int ty = 0; ty < h_; ++ty, ++tile)
-                bx = tiles_[static_cast<uint8_t>(tile->c)].renderColumn(x, bx, palette_, tile->paletteOffset);
-            // TODO render sprites & bitmaps, if any 
+                bx = tiles_[static_cast<uint8_t>(tile->c)].renderColumn(x % Tile::Width, bx, palette_, tile->paletteOffset);
+            // render sprites & bitmaps, if any 
+            for (Sprite const & sprite : sprites_)
+                sprite.renderColumn(x, buffer, pixelHeight(), palette_);
         }
 
         int w_;
@@ -137,6 +151,8 @@ namespace rckid {
         uint16_t * buffer_;
         // column to be rendered
         int renderColumn_;
+
+        std::vector<Sprite> sprites_;
 
     }; // rckid::SimpleEngine
 

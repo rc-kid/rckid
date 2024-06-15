@@ -5,8 +5,10 @@
 #include "rckid/stats.h"
 #include "rckid/graphics/framebuffer.h"
 #include "rckid/graphics/font.h"
+#include "rckid/graphics/animation.h"
 #include "assets/fonts/Iosevka_16.h"
 #include "rckid/ui/ui.h"
+#include "rckid/ui/text_input.h"
 
 #include "assets/all.h"
 
@@ -17,40 +19,6 @@
 #include "rckid/graphics/tile_engine.h"
 
 using namespace rckid;
-
-
-/** 
- 
-     | Q W E R T Y U I O P |
-     |  A S D F G H J K L  |
-     |   Z X C V B N M     |
-     | < > ____ <- EN      |
- */
-class TextInput : public App<UITileEngine> {
-public:
-    TextInput():
-        App{21, 6} {
-        driver_.setPalette(reinterpret_cast<ColorRGB const *>(Palette_332_to_565));
-        driver_.fill('#');
-        driver_.text(0, 2) << " Q W E R T Y U I O P ";
-        driver_.text(0, 3) << "  A S D F G H J K L  ";
-        driver_.text(0, 4) << "   Z X C V B N M     ";
-        driver_.text(0, 5) << " < > _____ <-  EN    ";
-    }
-    
-protected:
-
-    void update() override {
-        App::update();
-    }
-
-    void draw() override {
-
-    }
-
-
-}; // TextInput
-
 
 int main() {
     rckid::initialize();

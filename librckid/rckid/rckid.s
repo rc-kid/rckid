@@ -3,6 +3,20 @@
 .thumb
 .text
 
+@ Fills memory with 32bit value. 
+.global memFill32 
+.thumb_func
+memFill32:
+    @ r0 = buffer
+    @ r1 = size
+    @ r2 = value to write
+.loop:
+    stm r0!, {r2}
+    subs r1, r1, #1
+    bne .loop
+    bx lr    
+
+
 .global rckid_mem_fill_32x8
 .thumb_func
 rckid_mem_fill_32x8:
