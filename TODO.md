@@ -96,17 +96,12 @@ z
 ## PCB
 
 - add extra cartridge risers to the PCB because the cheap castellation process does not always work
-- enlarge holes so that they are more solderable
-- the cartridge riser mountholes should not connect to gnd for easier solderability
 - ensure thermal reliefs on GND through hole pads for easier solderability
 - how to make the oscillator better? The capacitors are already ok-ish for 16.5 pF, but maybe the capcacitance of the traces is wrong? 
 - add inrush current limiting resistors to all mosfets!!! (around 1k)
 - add ground pads to side buttons (not in EasyEDA library yet, can be added manually after the buttons arrive)
-
-- change charge_en to go to AVR directly thtough the RProg. That way to disable charging we can just let the pin float - this is necessary so that we can turn of charging w/o leaking VBATT to VCC line
-- can even be replaced with headphones so that we can use single ADC as the pin is no longer analog required
-
 - charging fluctuates when there is no battery present (not an issue IMO)
+
 
 ## RP
 
@@ -114,6 +109,7 @@ z
 
 ## AVR
 
+- verify the Headphones/Charge EN pin swap and charge en circuit
 - AVR EEPROM can store basic info such as username, etc and a password to lock the device
 - turn off if INA senses too much of a current draw
 - LED speed is too great -- reduced to 30fps, maybe still too great? Add delay to effect? 
