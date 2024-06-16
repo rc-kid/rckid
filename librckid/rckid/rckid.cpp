@@ -959,6 +959,67 @@ namespace rckid::fs {
         }
     }
 
+    File File::openRead(std::string const & path, Drive drive) {
+        switch (drive) {
+            case Drive::Device: {
+                FIL * f = new FIL{};
+                FRESULT res = f_open(f, path.c_str(), FA_READ);
+                // TODO result check
+                return File{drive, f};
+            }
+            default:
+                UNIMPLEMENTED;
+        }
+    }
+
+    File File::openWrite(std::string const & path, Drive drive) {
+        switch (drive) {
+            case Drive::Device: {
+            }
+            default:
+                UNIMPLEMENTED;
+        }
+    }
+
+    File::~File() {
+        switch (drive_) {
+            case Drive::Device: {
+                FIL * f = reinterpret_cast<FIL*>(pimpl_);
+                f_close(f);
+                delete f;
+                return;
+            }
+            default:
+                UNIMPLEMENTED;
+        }
+    }
+
+    Folder Folder::open(std::string const & path, Drive drive) {
+        switch (drive) {
+            case Drive::Device: {
+                DIR * d = new DIR{};
+                FRESULT res = f_opendir(d, path.c_str());
+                // TODO deal with result
+                return Folder{drive, d};
+            }
+            default:
+                UNIMPLEMENTED;
+        }
+    }
+
+    Folder::~Folder() {
+        switch (drive_) {
+            case Drive::Device: {
+                DIR * d = reinterpret_cast<DIR*>(pimpl_);
+                f_closedir(d);
+                delete d;
+                return;
+            }
+            default:
+                UNIMPLEMENTED;
+        }
+    }
+
 } // namespace rckid::fs
 
 // ================================================================================================

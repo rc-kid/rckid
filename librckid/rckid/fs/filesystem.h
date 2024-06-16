@@ -23,22 +23,25 @@ namespace rckid::fs {
         FAT16, 
         FAT32, 
         EXFAT,
+        LittleFS,
     };
 
+    /** Returns the label associated with the device. 
+     */
     std::string getLabel(Drive drive = Drive::Device);
+
+    /** Returns the format of the given device. 
+        
+        Not really important from the user's perspective as all formats are abstracted by the filesystem API.  
+     */
     Format getFormat(Drive drive = Drive::Device);
     uint64_t getTotalCapacity(Drive drive = Drive::Device);
-    uint64_t getFreeCapacity(Drive drive = Drive::Device);
 
-    /** Simple folder elements iterator. 
+    /** Returns the available free capacity on the device.
+     
+        Depending on the underlying filesystem and its size, this can take time. 
      */
-    class Folder {
-    public:
-
-        static Folder open(std::string const & path);
-
-
-    }; // rckid::fs::Folder
+    uint64_t getFreeCapacity(Drive drive = Drive::Device);
 
 
     /** File that supports basic reading & writing. 
@@ -46,7 +49,52 @@ namespace rckid::fs {
         TODO also add async read support with callbacks. 
      */
     class File {
+    public:
+        static File openRead(std::string const & path, Drive drive = Drive::Device);
+        static File openWrite(std::string const & path, Drive drive = Drive::Device);
+
+        File(File const &) = delete;
+        File(File && from):
+            drive_{from.drive_}, 
+            pimpl_{from.pimpl_} {
+            from.pimpl_ = nullptr;
+        }
+
+        // delete copy ctor, enable move ctor
+
+        ~File();
+
+    private: 
+        File(Drive drive, void * impl): drive_{drive}, pimpl_{impl} {}
+        Drive drive_;
+        void * pimpl_;
 
     }; // rckid::fs::File
+
+
+    /** Simple folder elements iterator. 
+     */
+    class Folder {
+    public:
+
+        static Folder open(std::string const & path, Drive drive = Drive::Device);
+
+        Folder(Folder const &) = delete;
+        Folder(Folder && from):
+            drive_{from.drive_}, 
+            pimpl_{from.pimpl_} {
+            from.pimpl_ = nullptr;
+        }
+
+        ~Folder();
+
+    private:
+
+        Folder(Drive drive, void * impl): drive_{drive}, pimpl_{impl} {} 
+        Drive drive_;
+        void * pimpl_;
+
+    }; // rckid::fs::Folder
+
 
 } // namespace rckid

@@ -12,12 +12,7 @@
 
 > First release, should meet the minimal usability, i.e. messaging app via telegram (ideally radio) and a few games. HW should be finished.
 
-- finish all hardware checks:
-    - battery & charging, overcurrent protection -- seems ok
-    - radio & wifi cartridge wiring & power requirements -- seems ok
-
 - basic settings UI (brightness, volume, etc.)
-- virtual keyboard via glyphs
 - basic file access on the SD card
 - order displays
 - order hardware revision (5x or 10x ?)
@@ -100,7 +95,6 @@ z
 
 ## PCB
 
-- make sure PAM8302 GND connection is strong 
 - add extra cartridge risers to the PCB because the cheap castellation process does not always work
 - enlarge holes so that they are more solderable
 - the cartridge riser mountholes should not connect to gnd for easier solderability
