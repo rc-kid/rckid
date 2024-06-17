@@ -97,7 +97,6 @@
 - add extra cartridge risers to the PCB because the cheap castellation process does not always work
 - ensure thermal reliefs on GND through hole pads for easier solderability
 - how to make the oscillator better? The capacitors are already ok-ish for 16.5 pF, but maybe the capcacitance of the traces is wrong? 
-- add inrush current limiting resistors to all mosfets!!! (around 1k) -- actually, only required for display PWM - can't do it for the USB / VBATT switch (it would form voltage divider, not good), and the rumbler is incorrectly pushing VCC to the 3V3 rail -- must rewrite the AVR
 - add ground pads to side buttons (not in EasyEDA library yet, can be added manually after the buttons arrive)
 - charging fluctuates when there is no battery present (not an issue IMO)
 
@@ -107,7 +106,7 @@
 
 ## AVR
 
-- rewrite rumbler to use GND / floating instead of on/off
+- rewrite rumbler to use low side switching
 - verify the Headphones/Charge EN pin swap and charge en circuit
 - AVR EEPROM can store basic info such as username, etc and a password to lock the device
 - turn off if INA senses too much of a current draw
