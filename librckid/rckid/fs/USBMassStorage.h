@@ -39,7 +39,7 @@ namespace rckid {
                 "Format:   " << format_ << "\n" <<
                 "Capacity: " << capacity_ << "\n" <<
                 "Free:     " << free_ << "\n\n" <<
-                "R: " << SD::numMscReads() << ", W: " << SD::numMscWrites();
+                "R: " << stats::sdReadBlocks() << ", W: " << stats::sdWriteBlocks();
 
         }
 

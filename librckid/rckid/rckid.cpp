@@ -20,7 +20,6 @@
 
 #include "rckid.h"
 #include "fs/sd.h"
-#include "fs/filesystem.h"
 #include "assets/all.h"
 #include "graphics/ST7789.h"
 #include "graphics/png.h"
@@ -699,10 +698,139 @@ namespace rckid {
     }
 
     // ============================================================================================
-    // SD Card
+    // SD Card Raw Access
+    // ============================================================================================
+
+    // status of the SD card
+    SD::Status sdStatus_ = SD::Status::NotPresent;
+    // number of SD card blocks (each block is always 512bytes)
+    uint32_t sdNumBlocks_ = 0;
+
+    /** Tells the card to go to idle state (reset) 
+     */
+    constexpr uint8_t CMD0[] =   { 0x40, 0x00, 0x00, 0x00, 0x00, 0x95 };
+    /** Interface condition (voltage & data byte ping-pong to verify connection - 0xaa)
+     */
+    constexpr uint8_t CMD8[] =   { 0x48, 0x00, 0x00, 0x01, 0xaa, 0x87 };
+    /** Send CSD register, returns 16 bytes
+     */
+    constexpr uint8_t CMD9[] =   { 0x49, 0x00, 0x00, 0x00, 0x00, 0x01 };
+    /** Set block length to 512b (only for non SDHC cards)
+     */
+    constexpr uint8_t CMD16[] =  { 0x50, 0x00, 0x00, 0x02, 0x00, 0x01 };
+    /** Application specific command flag. 
+     */
+    constexpr uint8_t CMD55[] =  { 0x77, 0x00, 0x00, 0x00, 0x00, 0x65 };
+    /** Reads the OCR register. 
+     */
+    constexpr uint8_t CMD58[] =  { 0x7a, 0x00, 0x00, 0x00, 0x00, 0xfd };
+    /** App command - send operation condition 
+    */
+    constexpr uint8_t ACMD41[] = { 0x69, 0x40, 0x00, 0x00, 0x00, 0x77 };
+
+
+    // response codes
+    constexpr uint8_t SD_NO_ERROR = 0;
+    constexpr uint8_t SD_IDLE = 1;
+    constexpr uint8_t SD_ERASE_RESET = 2;
+    constexpr uint8_t SD_ILLEGAL_COMMAND = 4;
+    constexpr uint8_t SD_CRC_ERROR = 8;
+    constexpr uint8_t SD_ERASE_SEQUENCE_ERROR = 16;
+    constexpr uint8_t SD_ADDRESS_ERROR = 32;
+    constexpr uint8_t SD_PARAMETER_ERROR = 64;
+    constexpr uint8_t SD_VALID = 128;
+    constexpr uint8_t SD_BUSY = 255;
+
+    uint8_t sdSendCommand_(uint8_t const (&cmd)[6], uint8_t * response = nullptr, size_t responseSize = 0, unsigned maxDelay = 128) {
+        //gpio::low(RP_PIN_SD_CSN);
+        spi_write_blocking(RP_SD_SPI, cmd,  6);
+        uint8_t result = SD_BUSY;
+        while (result == SD_BUSY && maxDelay-- != 0)
+            spi_read_blocking(RP_SD_SPI, 0xff, reinterpret_cast<uint8_t*>(& result), 1);
+        if (responseSize != 0 && response != nullptr)
+            spi_read_blocking(RP_SD_SPI, 0xff, response, responseSize);
+        // after reading each response, it is important to send extra one byte to allow the SD crd to "recover"
+        uint8_t tmp = 0xff;
+        spi_write_blocking(RP_SD_SPI, & tmp, 1);
+        //gpio::high(RP_PIN_SD_CSN);
+        return result;
+    }
+
+    bool sdReadBlocks_(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {
+        while (numBlocks-- >= 0) {
+            //gpio::low(RP_PIN_SD_CSN);
+            uint8_t cmd[] = { 
+                0x51, 
+                static_cast<uint8_t>((start >> 24) & 0xff), 
+                static_cast<uint8_t>((start >> 16) & 0xff), 
+                static_cast<uint8_t>((start >> 8) & 0xff), 
+                static_cast<uint8_t>(start & 0xff),
+                0x01
+            };
+            //uint8_t cmd[] = { 0x51, 0, 0, 0, 0, 0x01 };
+            //spi_write_blocking(RP_SD_SPI, cmd, 6);
+            //spi_read_blocking(RP_SD_SPI, 0xff, buffer, 2048);
+            //gpio::high(RP_PIN_SD_CSN);
+            if (sdSendCommand_(cmd) != 0)
+                return false;
+            // wait for the block start
+            uint8_t res = 0xff;
+            while (res != 0xfe)
+                spi_read_blocking(RP_SD_SPI, 0xff, &res, 1);
+            // read the block
+            spi_read_blocking(RP_SD_SPI, 0xff, buffer, 512);
+            // and read the CRC
+            uint16_t crc;
+            spi_read_blocking(RP_SD_SPI, 0xff, reinterpret_cast<uint8_t*>(&crc), 2);
+            res = 0xff;
+            spi_write_blocking(RP_SD_SPI, & res, 1);
+            // verify the CRC
+            ++stats::sdReadBlocks_;
+            ++start;
+            buffer += 512;
+        }
+        return true;
+    }
+
+    bool sdWriteBlocks_(uint32_t start, uint8_t const * buffer, uint32_t numBlocks) {
+        while (numBlocks-- >= 0) {
+            uint8_t cmd[] = { 
+                0x58,
+                static_cast<uint8_t>((start >> 24) & 0xff), 
+                static_cast<uint8_t>((start >> 16) & 0xff), 
+                static_cast<uint8_t>((start >> 8) & 0xff),
+                static_cast<uint8_t>(start & 0xff),
+                0x01
+            };
+            if (sdSendCommand_(cmd) != 0)
+                return false;
+            cmd[0] = 0xff;
+            cmd[1] = 0xfe; // start of data block
+            spi_write_blocking(RP_SD_SPI, cmd, 2); // 1 byte wait + start data block
+            spi_write_blocking(RP_SD_SPI, buffer, 512);
+            spi_write_blocking(RP_SD_SPI, cmd, 2); // CRC
+            spi_read_blocking(RP_SD_SPI, 0xff, cmd, 1); // get the data response
+            // wait for busy
+            while (cmd[0] != 0xff)
+                spi_read_blocking(RP_SD_SPI, 0xff, cmd, 1);
+            ++stats::sdWriteBlocks_;
+            ++start;
+            buffer += 512;
+        }
+        return true;
+    } 
+
+    // ============================================================================================
+    // SD Card Wrapper
     // ============================================================================================
 
     FATFS * fs_;
+
+    /** Getters for the state shared between the SD card class wrapper and the implementation here
+     */
+    SD::Status SD::status() { return sdStatus_; }
+    bool SD::ready() { return sdStatus_ == Status::Ready; }
+    uint32_t SD::numBlocks() { return sdNumBlocks_; }
 
     /** Initializes the SD card into SPI mode. 
      
@@ -727,15 +855,15 @@ namespace rckid {
         spi_write_blocking(RP_SD_SPI, buffer, sizeof(buffer));
         // tell the card to go idle
         gpio::low(RP_PIN_SD_CSN);
-        uint8_t status = sendCommand(CMD0);
-        if (status != IDLE) {
+        uint8_t status = sdSendCommand_(CMD0);
+        if (status != SD_IDLE) {
             // TODO raise error
             return false;
         }
         // send interface condition to verify the communication. this is not supported by v1 cards so if we get illegal command continue with the initialization process
-        status = sendCommand(CMD8, buffer, 4);
-        if (status != ILLEGAL_COMMAND) {
-            if (status != IDLE) {
+        status = sdSendCommand_(CMD8, buffer, 4);
+        if (status != SD_ILLEGAL_COMMAND) {
+            if (status != SD_IDLE) {
                 // TODO raise error
                 return false;
             }
@@ -745,8 +873,8 @@ namespace rckid {
             }
         }
         // read the OCR register and check the card supports the 3v3 voltage range. This is likely not necessary as every card should be 3v3 compatible, but just to be sure
-        status = sendCommand(CMD58, buffer, 4);
-        if (status != IDLE) {
+        status = sdSendCommand_(CMD58, buffer, 4);
+        if (status != SD_IDLE) {
             // TODO raise error
             return false;
         }
@@ -761,17 +889,17 @@ namespace rckid {
                 // TODO raise error
                 return false;
             }
-            if (sendCommand(CMD55) != IDLE) {
+            if (sdSendCommand_(CMD55) != SD_IDLE) {
                 // TOOD Raise error
                 return false;
             }
-            if (sendCommand(ACMD41) == NO_ERROR)
+            if (sdSendCommand_(ACMD41) == SD_NO_ERROR)
                 break;
             cpu::delayMs(10);
         }
         // the card is now ready to be operated, send CMD58 again to verify the card power status bit
-        status = sendCommand(CMD58, buffer, 4);
-        if (status != NO_ERROR) {
+        status = sdSendCommand_(CMD58, buffer, 4);
+        if (status != SD_NO_ERROR) {
             // TODO raise error
             return false;
         }
@@ -782,245 +910,115 @@ namespace rckid {
         // increase speed to 20MHz
         spi_init(RP_SD_SPI, 20000000);
         // if the card is not SDHC, set block length to 512 bytes
-        if (((buffer[0] & 64) == 0) && sendCommand(CMD16) != NO_ERROR) {
+        if (((buffer[0] & 64) == 0) && sdSendCommand_(CMD16) != SD_NO_ERROR) {
             // TODO raise error
             return false;
         }
         // determine the card capacity by reading the CSD
-        if (sendCommand(CMD9, buffer, 16) != NO_ERROR) {
+        if (sdSendCommand_(CMD9, buffer, 16) != SD_NO_ERROR) {
             // TODO raise error
             return false;
         }
-        // the capacity (CSIZE + 1) * 512k, to show capacity in kilobytes, we need to multiply by 512
-        capacity_ = ((buffer[8] << 16) + (buffer[9] << 8) + buffer[10] + 1) * 512;
+        // get number of blocks
+        sdNumBlocks_ = ((buffer[8] << 16) + (buffer[9] << 8) + buffer[10] + 1);
         // and we are done, now try mounting the FatFS
-        status_ = Status::Ready;
+        sdStatus_ = Status::Ready;
         fs_ = (FATFS*) malloc(sizeof(FATFS));
         if (f_mount(fs_, "", /* mount immediately */ 1) != FR_OK)
-            status_ = Status::Unrecognized;
+            sdStatus_ = Status::Unrecognized;
         return true;
     }
 
     void SD::enableUSBMsc(bool value) {
         if (value) {
             // if status is ready, unmount the default drive
-            if (status_ ==  Status::Ready)
+            if (sdStatus_ ==  Status::Ready)
                 f_unmount("");
             // if there is SD card (even unrecognized), enable the USB 
-            if (status_ != Status::NotPresent) {
-                status_ = Status::USB;
+            if (sdStatus_ != Status::NotPresent) {
+                sdStatus_ = Status::USB;
                 // initialize the USB
                 tud_init(BOARD_TUD_RHPORT);
             }
             
         } else {
-            if (status_ == Status::USB) {
+            if (sdStatus_ == Status::USB) {
                 // disable USB -- reset so that we can again detect DC charge
-                memset(usb_hw, 0, sizeof(*usb_hw));
+                memset(reinterpret_cast<uint8_t *>(usb_hw), 0, sizeof(*usb_hw));
                 // reinitialize the SD card - the PC might have done things to the SD card that might caus it to be unrecognized
-                status_ = Status::Ready;
+                sdStatus_ = Status::Ready;
                 if (f_mount(fs_, "", 0) != FR_OK)
-                    status_ = Status::Unrecognized;
+                    sdStatus_ = Status::Unrecognized;
             }
         }
     }
+    // ============================================================================================
+    // SD filesystem 
+    // ============================================================================================
 
-    bool SD::readBlock(size_t num, uint8_t * buffer) {
-        //gpio::low(RP_PIN_SD_CSN);
-        uint8_t cmd[] = { 
-            0x51, 
-            static_cast<uint8_t>((num >> 24) & 0xff), 
-            static_cast<uint8_t>((num >> 16) & 0xff), 
-            static_cast<uint8_t>((num >> 8) & 0xff), 
-            static_cast<uint8_t>(num & 0xff),
-            0x01
-        };
-        //uint8_t cmd[] = { 0x51, 0, 0, 0, 0, 0x01 };
-        //spi_write_blocking(RP_SD_SPI, cmd, 6);
-        //spi_read_blocking(RP_SD_SPI, 0xff, buffer, 2048);
-        //gpio::high(RP_PIN_SD_CSN);
-        if (sendCommand(cmd) != 0)
-            return false;
-        // wait for the block start
-        uint8_t res = 0xff;
-        while (res != 0xfe)
-            spi_read_blocking(RP_SD_SPI, 0xff, &res, 1);
-        // read the block
-        spi_read_blocking(RP_SD_SPI, 0xff, buffer, 512);
-        // and read the CRC
-        uint16_t crc;
-        spi_read_blocking(RP_SD_SPI, 0xff, reinterpret_cast<uint8_t*>(&crc), 2);
-        res = 0xff;
-        spi_write_blocking(RP_SD_SPI, & res, 1);
-        // verify the CRC
-        ++numMscReads_;
-        return true;
+    uint64_t SD::getCapacity() { 
+        return static_cast<uint64_t>(fs_->n_fatent - 2) * fs_->csize * 512;
     }
 
-    bool SD::writeBlock(size_t num, uint8_t const * buffer) {
-        uint8_t cmd[] = { 
-            0x58,
-            static_cast<uint8_t>((num >> 24) & 0xff), 
-            static_cast<uint8_t>((num >> 16) & 0xff), 
-            static_cast<uint8_t>((num >> 8) & 0xff),
-            static_cast<uint8_t>(num & 0xff),
-            0x01
-        };
-        if (sendCommand(cmd) != 0)
-            return false;
-        cmd[0] = 0xff;
-        cmd[1] = 0xfe; // start of data block
-        spi_write_blocking(RP_SD_SPI, cmd, 2); // 1 byte wait + start data block
-        spi_write_blocking(RP_SD_SPI, buffer, 512);
-        spi_write_blocking(RP_SD_SPI, cmd, 2); // CRC
-        spi_read_blocking(RP_SD_SPI, 0xff, cmd, 1); // get the data response
-        // wait for busy
-        while (cmd[0] != 0xff)
-            spi_read_blocking(RP_SD_SPI, 0xff, cmd, 1);
-        ++numMscWrites_;
-        return true;
+    uint64_t SD::getFreeCapacity() {
+        DWORD n;
+        FATFS * fs;
+        f_getfree("", & n, &fs);
+        return static_cast<uint64_t>(n) * fs_->csize * 512;
     }
 
-    uint8_t SD::sendCommand(uint8_t const (&cmd)[6], uint8_t * response, size_t responseSize, unsigned maxDelay) {
-        //gpio::low(RP_PIN_SD_CSN);
-        spi_write_blocking(RP_SD_SPI, cmd,  6);
-        uint8_t result = BUSY;
-        while (result == BUSY && maxDelay-- != 0)
-            spi_read_blocking(RP_SD_SPI, 0xff, reinterpret_cast<uint8_t*>(& result), 1);
-        if (responseSize != 0 && response != nullptr)
-            spi_read_blocking(RP_SD_SPI, 0xff, response, responseSize);
-        // after reading each response, it is important to send extra one byte to allow the SD crd to "recover"
-        uint8_t tmp = 0xff;
-        spi_write_blocking(RP_SD_SPI, & tmp, 1);
-        //gpio::high(RP_PIN_SD_CSN);
+    SD::Format SD::getFormatKind() {
+        switch (fs_->fs_type) {
+            case FS_FAT12:
+                return Format::FAT12;
+            case FS_FAT16:
+                return Format::FAT16;
+            case FS_FAT32:
+                return Format::FAT32;
+            case FS_EXFAT:
+                return Format::EXFAT;
+            default:
+                return Format::Unrecognized;
+        }
+    }
+
+    std::string SD::getLabel() {
+        std::string result{' ', 12};
+        f_getlabel("",result.data(), 0);
+        return result;
+    }
+
+    // ============================================================================================
+    // SD File
+    // ============================================================================================
+
+    SD::File SD::File::openRead(std::string const & path) {
+        File result{};
+        errorCode_ = f_open(& result.f_, path.c_str(), FA_READ);
+        return result;
+    }
+
+    SD::File SD::File::openWrite(std::string const & path) {
+        UNIMPLEMENTED;
+    }
+
+    uint32_t SD::File::read(uint8_t * buffer, uint32_t numBytes) {
+        UINT bytesRead;
+        errorCode_ = f_read(& f_, buffer, numBytes, & bytesRead);
+        return bytesRead;
+    }
+
+    // ============================================================================================
+    // SD Folder
+    // ============================================================================================
+
+    SD::Folder SD::Folder::open(std::string const & path) {
+        Folder result{};
+        errorCode_ = f_opendir(& result.d_, path.c_str());
         return result;
     }
 
 } // namespace rckid
-
-// ================================================================================================
-// Filesystem
-// ================================================================================================
-
-namespace rckid::fs {
-
-    std::string getLabel(Drive drive) {
-        switch (drive) {
-            case Drive::Device: {
-                std::string result{' ', 12};
-                f_getlabel("",result.data(), 0);
-                return result;
-            }
-            default:
-                UNIMPLEMENTED;
-        }
-    }
-
-    Format getFormat(Drive drive) {
-        switch (drive) {
-            case Drive::Device: {
-                switch (fs_->fs_type) {
-                    case FS_FAT12:
-                        return Format::FAT12;
-                    case FS_FAT16:
-                        return Format::FAT16;
-                    case FS_FAT32:
-                        return Format::FAT32;
-                    case FS_EXFAT:
-                        return Format::EXFAT;
-                    default:
-                        return Format::Unrecognized;
-                }
-            }
-            default:
-                UNIMPLEMENTED;
-        }
-    }
-
-    uint64_t getTotalCapacity(Drive drive) {
-        switch (drive) {
-            case Drive::Device:
-                return static_cast<uint64_t>(fs_->n_fatent - 2) * fs_->csize * 512;
-            default:
-                UNIMPLEMENTED;
-        }
-    }
-
-    uint64_t getFreeCapacity(Drive drive) {
-        switch (drive) {
-            case Drive::Device: {
-                DWORD n;
-                FATFS * fs;
-                f_getfree("", & n, &fs);
-                return static_cast<uint64_t>(n) * fs_->csize * 512;
-            }
-            default:
-                UNIMPLEMENTED;
-        }
-    }
-
-    File File::openRead(std::string const & path, Drive drive) {
-        switch (drive) {
-            case Drive::Device: {
-                FIL * f = new FIL{};
-                FRESULT res = f_open(f, path.c_str(), FA_READ);
-                // TODO result check
-                return File{drive, f};
-            }
-            default:
-                UNIMPLEMENTED;
-        }
-    }
-
-    File File::openWrite(std::string const & path, Drive drive) {
-        switch (drive) {
-            case Drive::Device: {
-            }
-            default:
-                UNIMPLEMENTED;
-        }
-    }
-
-    File::~File() {
-        switch (drive_) {
-            case Drive::Device: {
-                FIL * f = reinterpret_cast<FIL*>(pimpl_);
-                f_close(f);
-                delete f;
-                return;
-            }
-            default:
-                UNIMPLEMENTED;
-        }
-    }
-
-    Folder Folder::open(std::string const & path, Drive drive) {
-        switch (drive) {
-            case Drive::Device: {
-                DIR * d = new DIR{};
-                FRESULT res = f_opendir(d, path.c_str());
-                // TODO deal with result
-                return Folder{drive, d};
-            }
-            default:
-                UNIMPLEMENTED;
-        }
-    }
-
-    Folder::~Folder() {
-        switch (drive_) {
-            case Drive::Device: {
-                DIR * d = reinterpret_cast<DIR*>(pimpl_);
-                f_closedir(d);
-                delete d;
-                return;
-            }
-            default:
-                UNIMPLEMENTED;
-        }
-    }
-
-} // namespace rckid::fs
 
 // ================================================================================================
 // FatFS device driver (using SD card)
@@ -1042,24 +1040,14 @@ extern "C" {
         ASSERT(pdrv == 0);
         if (! rckid::SD::ready())
             return RES_NOTRDY;
-        while (count-- > 0) {
-            if (!rckid::SD::readBlock(sector++, buff))
-                return RES_ERROR;
-            buff += 512;
-        }
-        return RES_OK;
+        return rckid::sdReadBlocks_(sector, buff, count) ? RES_OK : RES_ERROR;
     }
 
     DRESULT disk_write(BYTE pdrv, BYTE const * buff, LBA_t sector, UINT count) {
         ASSERT(pdrv == 0);
         if (! rckid::SD::ready())
             return RES_NOTRDY;
-        while (count-- > 0) {
-            if (!rckid::SD::writeBlock(sector++, buff))
-                return RES_ERROR;
-            buff += 512;
-        }
-        return RES_OK;
+        return rckid::sdWriteBlocks_(sector, buff, count) ? RES_OK : RES_ERROR;
     }
 
     DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void * buff) {

@@ -32,14 +32,22 @@ namespace rckid {
         static uint32_t displayUpdateUs() { return displayUpdateUs_; }
         static uint32_t tickUpdateUs() { return tickUpdateUs_; }
 
+
+        // SD card statistics
+        static uint32_t sdReadBlocks() { return sdReadBlocks_; }
+        static uint32_t sdWriteBlocks() { return sdWriteBlocks_; }
+
     private:
 
         friend class ST7789;
         friend class BaseApp;
         friend class DeviceWrapper;
+        friend class SD;
 
         friend void irqDMADone_();
         friend void irqI2CDone_();
+        friend bool sdReadBlocks_(uint32_t, uint8_t *, uint32_t);
+        friend bool sdWriteBlocks_(uint32_t, uint8_t const *, uint32_t);
         friend void yield();
         friend void tick();
         friend void * __wrap_malloc(size_t);
@@ -68,6 +76,11 @@ namespace rckid {
 
         static inline uint32_t displayUpdateStart_ = 0;
         static inline uint32_t tickUpdateStart_ = 0;
+
+
+        // SD card related statistics
+        static inline uint32_t sdReadBlocks_ = 0;
+        static inline uint32_t sdWriteBlocks_ = 0;
 
     }; // rckid::Stats
 } // namespace rckid

@@ -7,7 +7,13 @@
 #include "tusb.h"
 #include "rckid/fs/sd.h"
 
+namespace rckid {
+    bool sdReadBlocks_(uint32_t start, uint8_t * buffer, uint32_t numBlocks);    
+    bool sdWriteBlocks_(uint32_t start, uint8_t const * buffer, uint32_t numBlocks);    
+}
+
 using namespace rckid;
+
 
 /** \name USB Interface
     
@@ -236,8 +242,7 @@ extern "C" {
             return -1;
         if (bufsize != 512)
             FATAL_ERROR(::rckid::Error::MSCRead);
-
-        SD::readBlock(lba, reinterpret_cast<uint8_t*>(buffer));
+        sdReadBlocks_(lba, reinterpret_cast<uint8_t*>(buffer), 1);
 
         //uint8_t const* addr = msc_disk0[lba] + offset;
         //memcpy(buffer, addr, bufsize);
@@ -256,7 +261,7 @@ extern "C" {
         if (bufsize != 512)
             FATAL_ERROR(::rckid::Error::MSCWrite);
 
-        SD::writeBlock(lba, buffer);
+        sdWriteBlocks_(lba, buffer, 1);
         //uint8_t* addr = msc_disk0[lba]  + offset;
         //memcpy(addr, buffer, bufsize);
 

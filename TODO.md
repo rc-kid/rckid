@@ -32,7 +32,6 @@
 - better stabilization for the voltage gauge (avg from N measurements + hysteresis maybe?)
 
 - add message & alarm to symbol glyphs
-z
 - dynamic menu (for say file listing, etc.)
 
 - make malloc work in mock
@@ -98,10 +97,9 @@ z
 - add extra cartridge risers to the PCB because the cheap castellation process does not always work
 - ensure thermal reliefs on GND through hole pads for easier solderability
 - how to make the oscillator better? The capacitors are already ok-ish for 16.5 pF, but maybe the capcacitance of the traces is wrong? 
-- add inrush current limiting resistors to all mosfets!!! (around 1k)
+- add inrush current limiting resistors to all mosfets!!! (around 1k) -- actually, only required for display PWM - can't do it for the USB / VBATT switch (it would form voltage divider, not good), and the rumbler is incorrectly pushing VCC to the 3V3 rail -- must rewrite the AVR
 - add ground pads to side buttons (not in EasyEDA library yet, can be added manually after the buttons arrive)
 - charging fluctuates when there is no battery present (not an issue IMO)
-
 
 ## RP
 
@@ -109,12 +107,13 @@ z
 
 ## AVR
 
+- rewrite rumbler to use GND / floating instead of on/off
 - verify the Headphones/Charge EN pin swap and charge en circuit
 - AVR EEPROM can store basic info such as username, etc and a password to lock the device
 - turn off if INA senses too much of a current draw
-- LED speed is too great -- reduced to 30fps, maybe still too great? Add delay to effect? 
+- LED speed is too great -- reduced to 30fps, maybe still too great? Add delay to effect? -- is it still? 
 - add some better non-linear interpolation for the breathe effect
-- I2C master can hang up, which is bad (wdt saves us)
+- I2C master can hang up, which is bad (wdt saves us) -- does it still? 
 
 ## SDK
 

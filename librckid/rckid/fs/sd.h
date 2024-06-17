@@ -1,9 +1,11 @@
 #pragma once
 
+#include "FatFS/ff.h"
 #include "rckid/rckid.h"
 
 namespace rckid {
 
+    // forward declaration for friendship purposes
     void initialize();
 
     /** Provides direct access to the SD card and manages between the device and USB access to it. 
@@ -22,38 +24,107 @@ namespace rckid {
 
         /** Returns the current statusof the SD card. 
          */
-        static Status status() { return status_; }
+        static Status status();
 
         /** Shorthand for checking that the SD card is ready. 
          */
-        static bool ready() { return status_ == Status::Ready; }
-
-        /** Returns the capacity of the inserted SD card in kilobytes, i.e. a maximum of 4TB is theoretically possible, but such large cards likely do not support the SPI interface anyways. 
-         */
-        static size_t capacity() { return capacity_; }
+        static bool ready();
 
         /** Returns the number of blocks available at the SD card. Block is always 512 bytes long. 
          */
-        static uint32_t numBlocks() { return capacity_ * 2; }
+        static uint32_t numBlocks();
 
-        /** Enables, or disables the USB MSC features. When enabled, unmounts the filesystem, which will be remounted then the USB MSC mode is left. 
+        /** Enables, or disables the USB MSC features. 
+          
+            When enabled, unmounts the filesystem, which will be remounted then the USB MSC mode is left. 
          */
         static void enableUSBMsc(bool value); 
 
-        static uint32_t numMscReads() { return numMscReads_; }
-        static uint32_t numMscWrites() { return numMscWrites_; }
+        enum class Format {
+            Unrecognized,
+            FAT12, 
+            FAT16, 
+            FAT32, 
+            EXFAT,
+        };
 
-        /** Reads given 512 bytes block of data. 
+        /** Returns the capacity of the inserted SD card in bytes. 
+         */
+        static uint64_t getCapacity();
+
+        /** Returns the available free capacity on the device.
          
-            NOTE the function is blocking. 
+            Depending on the underlying filesystem and its size, this can take time. 
          */
-        static bool readBlock(size_t num, uint8_t * buffer);
+        static uint64_t getFreeCapacity();  
 
-        /** Writes given 523 bytes block of data. 
+        /** Returns the filesystem used on the SD card. 
 
-            NOTE the function is blocking.  
+            Not very important from the user's perspective as all the formats are abstracted away.  
          */
-        static bool writeBlock(size_t num, uint8_t const * buffer);
+        static Format getFormatKind();
+
+        /** Returns the SD Card label. 
+         */
+        static std::string getLabel(); 
+
+        /** File that supports basic reading & writing. 
+         
+            TODO also add async read support with callbacks. 
+         */
+        class File {
+        public:
+            static File openRead(std::string const & path);
+            static File openWrite(std::string const & path);
+
+            File(File const &) = delete;
+
+            File(File && from):
+                f_{from.f_} {
+                f_.obj.fs = nullptr; // invalidate the from file object
+            }
+
+            ~File() { f_close(& f_); }
+
+            bool good() const { return f_.obj.fs != nullptr; }
+
+            /** Reads data from the file to the provided buffer. 
+             
+                At most numBytes will be read at once. Returns the actual number of bytes read. If this number is 0, the end of file has been reached, or the request failed.
+            */
+            uint32_t read(uint8_t * buffer, uint32_t numBytes);
+
+        private:
+
+            File() = default;
+
+            FIL f_;
+        }; // SD::File
+
+
+        /** Simple folder elements iterator. 
+         */
+        class Folder {
+        public:
+
+            static Folder open(std::string const & path);
+
+            Folder(Folder const &) = delete;
+            
+            Folder(Folder && from):
+                d_{from.d_} {
+                d_.obj.fs = nullptr; // invalidate;
+            }
+
+            ~Folder() { f_closedir(& d_); }
+
+            bool good() const { return d_.obj.fs != nullptr; }
+
+        private:
+            Folder() = default;
+            DIR d_;
+
+        }; // SD::Folder
 
     private:
 
@@ -64,53 +135,6 @@ namespace rckid {
             NOTE the function is blocking and will actually take milliseconds (tens of) to complete due to the SD card initialization process. 
          */
         static bool initialize();
-
-        static uint8_t sendCommand(uint8_t const (&cmd)[6], uint8_t * response = nullptr, size_t responseSize = 0, unsigned maxDelay = 128);
-
-        // status of the SD card
-        static inline Status status_ = Status::NotPresent;
-
-        // capacity of the SD card in kilobytes, i.e. up to 4TB is technically supported
-        static inline size_t capacity_ = 0;
-
-        // SD card access stats
-        static inline uint32_t numMscReads_ = 0;
-        static inline uint32_t numMscWrites_ = 0;
-
-
-        // response codes
-        static constexpr uint8_t NO_ERROR = 0;
-        static constexpr uint8_t IDLE = 1;
-        static constexpr uint8_t ERASE_RESET = 2;
-        static constexpr uint8_t ILLEGAL_COMMAND = 4;
-        static constexpr uint8_t CRC_ERROR = 8;
-        static constexpr uint8_t ERASE_SEQUENCE_ERROR = 16;
-        static constexpr uint8_t ADDRESS_ERROR = 32;
-        static constexpr uint8_t PARAMETER_ERROR = 64;
-        static constexpr uint8_t VALID = 128;
-        static constexpr uint8_t BUSY = 255;
-
-        /** Tells the card to go to idle state (reset) 
-         */
-        static constexpr uint8_t CMD0[] =   { 0x40, 0x00, 0x00, 0x00, 0x00, 0x95 };
-        /** Interface condition (voltage & data byte ping-pong to verify connection - 0xaa)
-         */
-        static constexpr uint8_t CMD8[] =   { 0x48, 0x00, 0x00, 0x01, 0xaa, 0x87 };
-        /** Send CSD register, returns 16 bytes
-         */
-        static constexpr uint8_t CMD9[] =   { 0x49, 0x00, 0x00, 0x00, 0x00, 0x01 };
-        /** Set block length to 512b (only for non SDHC cards)
-         */
-        static constexpr uint8_t CMD16[] =  { 0x50, 0x00, 0x00, 0x02, 0x00, 0x01 };
-        /** Application specific command flag. 
-         */
-        static constexpr uint8_t CMD55[] =  { 0x77, 0x00, 0x00, 0x00, 0x00, 0x65 };
-        /** Reads the OCR register. 
-         */
-        static constexpr uint8_t CMD58[] =  { 0x7a, 0x00, 0x00, 0x00, 0x00, 0xfd };
-        /** App command - send operation condition 
-        */
-        static constexpr uint8_t ACMD41[] = { 0x69, 0x40, 0x00, 0x00, 0x00, 0x77 };
 
     }; // rckid::SD
 

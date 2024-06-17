@@ -11,7 +11,6 @@
 #include "graphics/framebuffer.h"
 
 #include "fs/sd.h"
-#include "fs/filesystem.h"
 
 
 namespace rckid {
@@ -199,61 +198,51 @@ namespace rckid {
     // SD
     // ============================================================================================
 
+    // status of the SD card
+    SD::Status sdStatus_ = SD::Status::NotPresent;
+    // number of blocks, not very useful in mock mode
+    uint32_t sdNumBlocks_ = 0;
+
+    /** Getters for the state shared between the SD card class wrapper and the implementation here
+     */
+    SD::Status SD::status() { return sdStatus_; }
+    bool SD::ready() { return sdStatus_ == Status::Ready; }
+    uint32_t SD::numBlocks() { return sdNumBlocks_; }
+
     bool SD::initialize() {
-        status_ = Status::Ready;
+        sdStatus_ = Status::Ready;
         return true;
     }
 
     void SD::enableUSBMsc(bool value) {
-        status_ = value ? Status::USB : Status::Ready;
+        sdStatus_ = value ? Status::USB : Status::Ready;
     }
+
+
+    uint64_t SD::getCapacity() { 
+        UNIMPLEMENTED; 
+    }
+
+    uint64_t SD::getFreeCapacity() { 
+        UNIMPLEMENTED;
+    }
+
+    SD::Format SD::getFormatKind() {
+        UNIMPLEMENTED;
+    }
+
+    std::string SD::getLabel() {
+        UNIMPLEMENTED;
+    }
+
+    // ============================================================================================
+    // SD File
+    // ============================================================================================
+
+    // ============================================================================================
+    // SD Folder
+    // ============================================================================================
 
 } // namespace rckid
-
-// ================================================================================================
-// Filesystem
-// ================================================================================================
-
-namespace rckid::fs {
-
-    std::string getLabel(Drive drive) {
-        switch (drive) {
-            case Drive::Device:
-                return "Device";
-            case Drive::Cartridge:
-                return "Cartridge";
-            default:
-                UNREACHABLE;
-        }
-    }
-
-    Format getFormat(Drive drive) {
-        switch (drive) {
-            case Drive::Device:
-                return Format::EXFAT;
-            default:
-                UNIMPLEMENTED;
-        }
-    }
-
-    uint64_t getTotalCapacity(Drive drive) {
-        switch (drive) {
-            case Drive::Device:
-                return 64_u64 * 1024 * 1024 * 1024;
-            default:
-                UNIMPLEMENTED;
-        }
-    }
-
-    uint64_t getFreeCapacity(Drive drive) {
-        switch (drive) {
-            case Drive::Device:
-                return 62_u64 * 1024 * 1024 * 1024;
-            default:
-                UNIMPLEMENTED;
-        }
-    }
-
-} // namespace rckid::fs
 
 #endif // ARCH_MOCK

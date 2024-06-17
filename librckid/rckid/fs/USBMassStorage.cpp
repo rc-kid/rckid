@@ -1,6 +1,4 @@
 
-#include "filesystem.h"
-
 #include "USBMassStorage.h"
 
 namespace rckid {
@@ -8,23 +6,23 @@ namespace rckid {
     void USBMassStorage::onFocus() {
         App::onFocus();
         if (SD::ready()) {
-            label_ = fs::getLabel();
-            capacity_ = fs::getTotalCapacity();
-            free_ = fs::getFreeCapacity();
-            switch (fs::getFormat()) {
-                case fs::Format::Unrecognized:
+            label_ = SD::getLabel();
+            capacity_ = SD::getCapacity();
+            free_ = SD::getFreeCapacity();
+            switch (SD::getFormatKind()) {
+                case SD::Format::Unrecognized:
                     format_ = "unrecognized";
                     break;
-                case fs::Format::FAT12:
+                case SD::Format::FAT12:
                     format_ = "FAT12";
                     break;
-                case fs::Format::FAT16:
+                case SD::Format::FAT16:
                     format_ = "FAT16";
                     break;
-                case fs::Format::FAT32:
+                case SD::Format::FAT32:
                     format_ = "FAT32";
                     break;
-                case fs::Format::EXFAT:
+                case SD::Format::EXFAT:
                     format_ = "EXFAT";
                     break;
             }
