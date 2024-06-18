@@ -94,11 +94,7 @@
 
 ## PCB
 
-- add extra cartridge risers to the PCB because the cheap castellation process does not always work
-- ensure thermal reliefs on GND through hole pads for easier solderability
 - how to make the oscillator better? The capacitors are already ok-ish for 16.5 pF, but maybe the capcacitance of the traces is wrong? 
-- add ground pads to side buttons (not in EasyEDA library yet, can be added manually after the buttons arrive)
-- charging fluctuates when there is no battery present (not an issue IMO)
 
 ## RP
 
