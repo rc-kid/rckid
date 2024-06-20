@@ -4,6 +4,7 @@
 #include <SPI.h>
 #include <Wire.h>
 
+
 #define ARCH_ARDUINO
 #define ARCH_LITTLE_ENDIAN
 
@@ -28,47 +29,37 @@ public:
 
 }; // cpu
 
-class gpio {
-public:
+namespace gpio {
+
     using Pin = int;
-    static constexpr Pin UNUSED = -1;
+    
+    constexpr Pin UNUSED = -1;
 
-    static void initialize() {}
+    inline void initialize() {}
 
-    static void setAsOutput(Pin pin) {
-        pinMode(pin, OUTPUT);
-    }
+    inline void setAsOutput(Pin pin) { pinMode(pin, OUTPUT); }
 
-    static void setAsInput(Pin pin) {
-        pinMode(pin, INPUT);
-    }
+    inline void setAsInput(Pin pin) { pinMode(pin, INPUT); }
 
-    static void setAsInputPullup(Pin pin) {
-        pinMode(pin, INPUT_PULLUP);
-    }
+    inline void setAsInputPullup(Pin pin) { pinMode(pin, INPUT_PULLUP); }
 
-    static void write(Pin pin, bool value) {
-        digitalWrite(pin, value ? HIGH : LOW);
-    }
+    inline void write(Pin pin, bool value) { digitalWrite(pin, value ? HIGH : LOW); }
 
-    static bool read(Pin pin) {
-        return digitalRead(pin);
-    }
+    inline bool read(Pin pin) { return digitalRead(pin); }
 }; // gpio
 
-class i2c {
-public:
+namespace i2c {
 
-    static void initializeMaster() {
+    inline void initializeMaster() {
         Wire.begin();
         Wire.setClock(400000);
     }
 
-    static void initializeSlave(uint8_t address) {
+    inline void initializeSlave(uint8_t address) {
         // TODO
     }
 
-    static bool masterTransmit(uint8_t address, uint8_t const * wb, uint8_t wsize, uint8_t * rb, uint8_t rsize) {
+    inline bool masterTransmit(uint8_t address, uint8_t const * wb, uint8_t wsize, uint8_t * rb, uint8_t rsize) {
         if (wsize > 0) {
             Wire.beginTransmission(address);
             Wire.write(wb, wsize);
@@ -86,43 +77,44 @@ public:
     }
 }; // i2c
 
-class spi {
-public:
+namespace spi {
 
     using Device = gpio::Pin;
 
-    static void initialize() {
+    inline void initialize() {
         SPI.begin();
     }
 
-    static void begin(Device device) {
+    inline void begin(Device device) {
         gpio::write(device, false);
         SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
     }
 
-    static void end(Device device) {
+    inline void end(Device device) {
         gpio::write(device, true);
         SPI.endTransaction();
     }
 
-    static uint8_t transfer(uint8_t value) {
+    inline uint8_t transfer(uint8_t value) {
         return SPI.transfer(value);
     }
 
-    static size_t transfer(uint8_t const * tx, uint8_t * rx, size_t numBytes) { 
+    inline size_t transfer(uint8_t const * tx, uint8_t * rx, size_t numBytes) { 
         for (size_t i = 0; i < numBytes; ++i)
             *(rx++) = transfer(*(tx++));
         return numBytes;
     }
 
-    static void send(uint8_t const * data, size_t numBytes) {
+    inline void send(uint8_t const * data, size_t numBytes) {
         for (size_t i = 0; i < numBytes; ++i)
             transfer(*(data++));
     }
 
-    static void receive(uint8_t * data, size_t numBytes) {
+    inline void receive(uint8_t * data, size_t numBytes) {
         for (size_t i = 0; i < numBytes; ++i)
             *(data++) = transfer(0);
     }
 
 }; // spi
+
+#include "../common.h"

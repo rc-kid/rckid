@@ -61,6 +61,20 @@
                 "$platformio"
             ]
         },
+        {
+            "label" : "esp8266/base-station [UPLOAD]",
+            "command" : "bash",
+            "args": [
+                "utils/esp8266-upload.sh",
+                "base-station",
+            ],
+            "options": {
+                "cwd": ""
+            },
+            "problemMatcher": [
+                "$platformio"
+            ]
+        },
         // ESP8266 cartridge for WiFi access. 
         {
             "label": "esp8266/cartridge",
