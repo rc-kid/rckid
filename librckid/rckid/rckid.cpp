@@ -919,8 +919,8 @@ namespace rckid {
             // TODO raise error
             return false;
         }
-        // get number of blocks
-        sdNumBlocks_ = ((buffer[8] << 16) + (buffer[9] << 8) + buffer[10] + 1);
+        // get number of blocks from the CS card's capacity. For SDXC and SDHC cards, this is (CSIZE + 1) * 512KB, so we divide the CSIZE + 1 by 1024 to get size in 512 byte blocks
+        sdNumBlocks_ = ((buffer[8] << 16) + (buffer[9] << 8) + buffer[10] + 1) * 1024;
         // and we are done, now try mounting the FatFS
         sdStatus_ = Status::Ready;
         fs_ = (FATFS*) malloc(sizeof(FATFS));

@@ -43,8 +43,8 @@ namespace rckid {
 
     void USBMassStorage::update() {
         // TODO the tud_init only works the first time as there is no tud_deinit. This should be added, for which we might need to fork the library
-        //if (SD::status() != SD::Status::USB && dcPower())
-        //    SD::enableUSBMsc(true);
+        if (SD::status() != SD::Status::USB && dcPower())
+            SD::enableUSBMsc(true);
         if (pressed(Btn::B))
             exit();
     }

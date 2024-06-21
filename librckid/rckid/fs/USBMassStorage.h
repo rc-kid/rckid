@@ -38,7 +38,8 @@ namespace rckid {
                 "Label:    " << label_ << "\n" <<
                 "Format:   " << format_ << "\n" <<
                 "Capacity: " << capacity_ << "\n" <<
-                "Free:     " << free_ << "\n\n" <<
+                "Free:     " << free_ << "\n" <<
+                "Blocks:   " << SD::numBlocks() << "\n\n" << 
                 "R: " << stats::sdReadBlocks() << ", W: " << stats::sdWriteBlocks();
 
         }
