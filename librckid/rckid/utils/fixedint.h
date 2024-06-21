@@ -108,8 +108,8 @@ namespace rckid {
         FixedPoint operator + (FixedPoint other) const { return FixedPoint{x_ + other.x_, y_ + other.y_}; }
         FixedPoint operator - (FixedPoint other) const { return FixedPoint{x_ - other.x_, y_ - other.y_}; }
 
-        FixedPoint operator + (Point other) const { return FixedPoint{x_ + other.x(), y_ + other.y()}; }
-        FixedPoint operator - (Point other) const { return FixedPoint{x_ - other.x(), y_ - other.y()}; }
+        FixedPoint operator + (Point other) const { return FixedPoint{x_ + other.x, y_ + other.y}; }
+        FixedPoint operator - (Point other) const { return FixedPoint{x_ - other.x, y_ - other.y}; }
 
         FixedPoint operator * (FixedInt other) const { return FixedPoint{x_ * other, y_ * other}; }
         FixedPoint operator * (int other) const { return FixedPoint{x_ * other, y_ * other}; }

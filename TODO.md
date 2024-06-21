@@ -62,12 +62,9 @@
 
 - holes in the top panel for rgb and sensor are on the wrong side
 - print the top holder for painting in a bright color so that the paint opacity can be checked
-- see if the cartridge insertion mechanism can be made reliable (looks ok)
-- check if the slim buttons are actually working reasonably well
 - there is still warping when screwed together (Anton suggested heating up a bit and let the tensions equalize, also try larger PCB for v2 to improve rigidity of the frame around it)
 
 ## Audio Woes
-
 
 - have basic tone & envelope check, the sound quality is not stellar, but actually quite ok
 - need programmable amplitude & ADSR in milliseconds updated by sample rate
@@ -89,7 +86,6 @@
 
 - usb msc works, but is terribly slow, could it be that we don't do event checking when redrawing much? 
 - no DMA & IRQ mode and how to deal with busy ? 
-- no FAT32 understanding
 - the code needs to be much polished
 
 ## PCB

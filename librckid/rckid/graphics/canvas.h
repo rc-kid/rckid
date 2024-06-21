@@ -47,7 +47,7 @@ namespace rckid {
             return Bitmap<Color>::text(x, y, *font_, fg_);
         }
 
-        Writer text(Point p) { return text(p.x(), p.y()); }
+        Writer text(Point p) { return text(p.x, p.y); }
 
         Writer textMultiline(int x, int y) {
             return Bitmap<Color>::textMultiline(x, y, *font_, fg_);

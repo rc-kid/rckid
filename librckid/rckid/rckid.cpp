@@ -757,7 +757,7 @@ namespace rckid {
     }
 
     bool sdReadBlocks_(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {
-        while (numBlocks-- >= 0) {
+        while (numBlocks-- != 0) {
             //gpio::low(RP_PIN_SD_CSN);
             uint8_t cmd[] = { 
                 0x51, 
@@ -793,7 +793,7 @@ namespace rckid {
     }
 
     bool sdWriteBlocks_(uint32_t start, uint8_t const * buffer, uint32_t numBlocks) {
-        while (numBlocks-- >= 0) {
+        while (numBlocks-- != 0) {
             uint8_t cmd[] = { 
                 0x58,
                 static_cast<uint8_t>((start >> 24) & 0xff), 

@@ -79,7 +79,9 @@ namespace rckid {
                 }
                 if (pressed(Btn::A))
                     keyPress();
-            }
+                if (pressed(Btn::Start))
+                    insertChar(' ');    
+            }   
         }
 
         void wrapSelectPosition() {
@@ -96,7 +98,6 @@ namespace rckid {
             last_.y = sprite.y();
             a_.start();
         }
-
 
         static constexpr Point KEY_UNKNOWN{2,0};
         static constexpr Point KEY_BACKSPACE{24, 0};
@@ -117,10 +118,7 @@ namespace rckid {
                 // TODO return the text
                 exit(text_);
             } else if (select_ == KEY_SPACE) {
-                text_.insert(cursor_, 1, ' ');
-                if (keyboardType_ == KeyboardType::FirstUpper)
-                    keyboardType_ = KeyboardType::LowerCase;
-                cursorRight();
+                insertChar(' ');
             } else if (select_ == KEY_SHIFT) {
                 switch (keyboardType_) {
                     case KeyboardType::UpperCase:
@@ -148,11 +146,15 @@ namespace rckid {
             } else if (select_ == KEY_RIGHT) {
                 cursorRight();
             } else {
-                text_.insert(cursor_, 1, driver_.at(select_.x, select_.y + 1).c);
-                if (keyboardType_ == KeyboardType::FirstUpper)
-                    keyboardType_ = KeyboardType::LowerCase;
-                cursorRight();
+                insertChar(driver_.at(select_.x, select_.y + 1).c);
             }
+        }
+
+        void insertChar(char c) {
+            text_.insert(cursor_, 1, c);
+            if (keyboardType_ == KeyboardType::FirstUpper)
+                keyboardType_ = KeyboardType::LowerCase;
+            cursorRight();
         }
 
         void cursorLeft() {
