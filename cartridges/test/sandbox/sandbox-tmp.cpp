@@ -16,13 +16,37 @@
 
 
 #include "rckid/graphics/tile.h"
+#include "rckid/graphics/png.h"
 #include "rckid/graphics/tile_engine.h"
+
+#include "rckid/fs/sd.h"
 
 using namespace rckid;
 
 int main() {
     rckid::initialize();
+
+
+    ST7789::configure(DisplayMode::Natural_RGB565);
+    ST7789::resetUpdateRegion();
+    SD::File f = SD::File::openRead("/.rckid/adacorn.png");
+
+    ST7789::beginDMAUpdate();
+    PNG png = PNG::fromStream(f);
+    png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
+        ST7789::dmaUpdateBlocking(line, lineWidth);
+    });
+    ST7789::endDMAUpdate();
+    //setBrightness(64);
+
+
     TextInput{}.run();
+
+   while (true) {};
+    
+
+
+
     /*
     ST7789::configure(DisplayMode::Native_RGB565);
     ST7789::enterContinuousUpdate(Rect::WH(320, 240));

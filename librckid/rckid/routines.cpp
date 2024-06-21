@@ -1,5 +1,7 @@
 #include "rckid.h"
 
+
+
 extern "C" {
 
     void memFill32(uint32_t * buffer, uint32_t size, uint32_t value) __attribute__((weak));

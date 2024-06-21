@@ -19,16 +19,17 @@ namespace rckid {
 
         void enable() {
             ST7789::configure(DisplayMode::Native_RGB565);
-            ST7789::enterContinuousUpdate(Rect::XYWH(left_, top_, width(), height()));
+            ST7789::setUpdateRegion(Rect::XYWH(left_, top_, width(), height()));
+            ST7789::beginDMAUpdate();
         }
 
         void disable() {
-            ST7789::leaveContinuousUpdate();
+            ST7789::endDMAUpdate();
         }
 
         void render() {
             ST7789::waitVSync();
-            ST7789::writePixels(reinterpret_cast<uint16_t const *>(buffer_), numPixels());
+            ST7789::dmaUpdateAsync(buffer_, numPixels());
         }
     private:
         int top_ = 0;
@@ -45,24 +46,25 @@ namespace rckid {
 
         void enable() {
             ST7789::configure(DisplayMode::Native_2X_RGB565);
-            ST7789::enterContinuousUpdate(width() * 2, height() * 2);
+            ST7789::setUpdateRegion(width() * 2, height() * 2);
+            ST7789::beginDMAUpdate();
         }
 
         void disable() {
-            ST7789::leaveContinuousUpdate();
+            ST7789::endDMAUpdate();
         }
 
         void render() {
             updateLine_ = 0;
             ST7789::waitVSync();
-            ST7789::writePixels(reinterpret_cast<uint16_t const *>(buffer_), height(), [this]() {
+            ST7789::dmaUpdateAsync(buffer_, height(), [this]() {
                 if (updateLine_ == width())
                     return true;
                 if (updateLine_ == width() -1) {
                     ++updateLine_;
-                    ST7789::writePixels(reinterpret_cast<uint16_t const *>(buffer_) + height() * (width() - 1), height()); 
+                    ST7789::dmaUpdateAsync(buffer_ + height() * (width() - 1), height()); 
                 } else {
-                    ST7789::writePixels(reinterpret_cast<uint16_t const *>(buffer_) + height() * updateLine_++, height() * 2);
+                    ST7789::dmaUpdateAsync(buffer_ + height() * updateLine_++, height() * 2);
                 }
                 return false;
             });
@@ -82,16 +84,17 @@ namespace rckid {
 
         FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): 
             Canvas{width, height},
-            renderBuffer_{new uint16_t[height * 2]} {
+            renderBuffer_{new ColorRGB[height * 2]} {
         }
 
         void enable() {
             ST7789::configure(DisplayMode::Native_RGB565);
-            ST7789::enterContinuousUpdate(Rect::XYWH(left_, top_, width(), height()));
+            ST7789::setUpdateRegion(Rect::XYWH(left_, top_, width(), height()));
+            ST7789::beginDMAUpdate();
         }
 
         void disable() { 
-            ST7789::leaveContinuousUpdate();
+            ST7789::endDMAUpdate();
         }
 
         /** Renders the display using a 2 column buffer column by column so that while one columh is being rendered, the other column is being processed. 
@@ -101,24 +104,24 @@ namespace rckid {
             // translate first two columns column
             toRender_ =  rckid_color256_to_rgb(
                 (uint8_t const *)buffer_, 
-                renderBuffer_, 
+                reinterpret_cast<uint16_t *>(renderBuffer_), 
                 height() * 2, 
                 Palette_332_to_565
             );
             column_ = 0;
             ST7789::waitVSync();
-            ST7789::writePixels(renderBuffer_, height(), [this]() {
+            ST7789::dmaUpdateAsync(renderBuffer_, height(), [this]() {
                 if (++column_ == width())
                     return true;
                 // write the already processed pixels
-                ST7789::writePixels(
+                ST7789::dmaUpdateAsync(
                     renderBuffer_ + ((column_ % 2 == 0) ? 0 : height()), 
                     height()
                 );
                 if (column_ + 1 < width())
                     toRender_ = rckid_color256_to_rgb(
                         toRender_,           
-                        renderBuffer_ + ((column_ % 2 == 1) ? 0 : height()), 
+                        reinterpret_cast<uint16_t*>(renderBuffer_ + ((column_ % 2 == 1) ? 0 : height())), 
                         height(), 
                         Palette_332_to_565
                     );
@@ -130,7 +133,7 @@ namespace rckid {
 
         int top_ = 0;
         int left_ = 0;
-        uint16_t * renderBuffer_ = nullptr;
+        ColorRGB * renderBuffer_ = nullptr;
         uint8_t const * toRender_ = nullptr;
         int column_ = 0;
 
@@ -145,16 +148,17 @@ namespace rckid {
 
         FrameBuffer(int width = DEFAULT_WIDTH, int height = DEFAULT_HEIGHT): 
             Canvas{width, height},
-            renderBuffer_{new uint16_t[height * 2] } {
+            renderBuffer_{new ColorRGB[height * 2] } {
         }
 
         void enable() {
             ST7789::configure(DisplayMode::Native_2X_RGB565);
-            ST7789::enterContinuousUpdate(width() * 2, height() * 2);
+            ST7789::setUpdateRegion(width() * 2, height() * 2);
+            ST7789::beginDMAUpdate();
         }
 
         void disable() { 
-            ST7789::leaveContinuousUpdate();
+            ST7789::endDMAUpdate();
         }
 
         /** Renders the display using a 2 column buffer column by column so that while one columh is being rendered, the other column is being processed. 
@@ -164,24 +168,24 @@ namespace rckid {
             // translate one column
             toRender_ =  rckid_color256_to_rgb(
                 (uint8_t const *)buffer_, 
-                renderBuffer_, 
+                reinterpret_cast<uint16_t *>(renderBuffer_), 
                 height() * 2, 
                 Palette_332_to_565
             );
             column_ = 0;
             ST7789::waitVSync();
-            ST7789::writePixels(reinterpret_cast<uint16_t const*>(renderBuffer_), height(), [this]() {
+            ST7789::dmaUpdateAsync(renderBuffer_, height(), [this]() {
                 if (++column_ == width())
                     return true;
                 // write the already processed pixels
-                ST7789::writePixels(
+                ST7789::dmaUpdateAsync(
                     renderBuffer_ + ((column_ % 2 == 0) ? 0 : height()), 
                     height()
                 );
                 if (column_ + 1 < width())
                     toRender_ = rckid_color256_to_rgb(
                         toRender_,           
-                        renderBuffer_ + ((column_ % 2 == 1) ? 0 : height()), 
+                        reinterpret_cast<uint16_t*>(renderBuffer_ + ((column_ % 2 == 1) ? 0 : height())), 
                         height(), 
                         Palette_332_to_565
                     );
@@ -191,7 +195,7 @@ namespace rckid {
 
     private:
 
-        uint16_t * renderBuffer_ = nullptr;
+        ColorRGB * renderBuffer_ = nullptr;
         uint8_t const * toRender_ = nullptr;
         int column_ = 0;
 

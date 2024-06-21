@@ -5,6 +5,7 @@
 #include <PNGdec.h>
 
 #include "color.h"
+#include "rckid/fs/stream.h"
 
 namespace rckid {
 
@@ -20,11 +21,7 @@ namespace rckid {
         template<size_t SIZE>
         static PNG fromBuffer(uint8_t const (&buffer)[SIZE]) { return fromBuffer(buffer, SIZE); }
 
-        /*
-        static PNG fromFile(char const * file) {
-
-        }
-        */
+        static PNG fromStream(InStream & stream);
 
         int width() const { return iWidth; }
 

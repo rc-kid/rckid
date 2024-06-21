@@ -22,7 +22,13 @@
 
 - extra games can be hangman, battleships, calculator (?)
 
+.rckid/adacorn.png
+
 ## TODO
+
+- do we need the callback return true of false to determine if next transfer is imminent? Can have an int that gets incremented/decremented accordingly and the callback will return void
+
+- do stream from memory that can be used by PNG and other things as well so that all works on streams
 
 - update how the transparency is handled in sprite drawing 
 - static sprites
@@ -37,11 +43,8 @@
 - make malloc work in mock
 - make audio work in mock
 
-- ColorRGB framebuffer update is much slower than Color256, why? can be due to more memory written for the fonts ?)
-
 - what is the allocation during startup - see how I can debug and if it poses a problem - https://raspberry-projects.com/pi/microcontrollers/programming-debugging-devices/debugging-using-another-pico
 
-- make showing image on the screen a separate function and make it work in mock mode as well
 - 2x 256 framebuffer does not render correctly and likely the code is wrong
 
 - write optimized draw bitmap functions - rewrite the bitmap to use drawing.h as much as possible. Also rewrite the asm functions to be in line with routines.cpp & rckid.h

@@ -52,7 +52,7 @@ namespace rckid {
         }
 
         /** */
-        bool renderColumn(int x, uint16_t * columnBuffer, int bufferHeight, ColorRGB const * palette) const {
+        bool renderColumn(int x, ColorRGB * columnBuffer, int bufferHeight, ColorRGB const * palette) const {
             // determine the sprite column to render
             int rx = x - x_;
             // don't render at all if the sprite column is out of range
@@ -71,10 +71,10 @@ namespace rckid {
 
     private:
  
-         uint16_t * renderFullColumn(int x, uint16_t * buffer, ColorRGB const * palette = nullptr) const {
+         uint16_t * renderFullColumn(int x, ColorRGB * buffer, ColorRGB const * palette = nullptr) const {
             return convertToRGBtransparent<FMT>(
                 getColumn<FMT>(pixelBuffer_, width_, height_, x),
-                buffer, 
+                reinterpret_cast<uint16_t*>(buffer), 
                 height_, 
                 palette,
                 paletteOffset_

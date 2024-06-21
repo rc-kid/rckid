@@ -28,6 +28,8 @@ PNG_STATIC uint8_t PNGMakeMask(PNGDRAW *pDraw, uint8_t *pMask, uint8_t ucThresho
 // Include the C code which does the actual work
 #include "png.inl"
 
+#ifdef FOOBAR
+
 //
 // Memory initialization
 //
@@ -207,3 +209,6 @@ uint8_t PNG::getAlphaMask(PNGDRAW *pDraw, uint8_t *pMask, uint8_t ucThreshold)
 {
     return PNGMakeMask(pDraw, pMask, ucThreshold);
 } /* getAlphaMask() */
+
+
+#endif // FOOBAR

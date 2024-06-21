@@ -158,6 +158,7 @@ typedef struct png_image_tag
 //
 // The PNG class wraps portable C code which does the actual work
 //
+/*
 class PNG
 {
   public:
@@ -183,7 +184,7 @@ class PNG
 
   private:
     PNGIMAGE _png;
-};
+}; */
 #else
 #define PNG_STATIC
 int PNG_openRAM(PNGIMAGE *pPNG, uint8_t *pData, int iDataSize);

@@ -79,6 +79,7 @@ namespace rckid {
             The function takes no arguments and returns true if the application is done upating the pixels for the current frame, or false if more pixel updates will be scheduled for current frame. 
          */
         using UpdatePixelsCallback = std::function<bool()>;
+        using DMAUpdateCallback = std::function<bool()>;
 
         /** Initializes the display. 
          
@@ -110,41 +111,64 @@ namespace rckid {
          */
         static void fill(ColorRGB color);
 
-        /** \name Continuous mode
+        /** Sets the update region of the screen. 
          
-            The continous mode does not send any commands to the display and only updates the entire display area. When data for entire display are sent, new frame will begin. The continuous mode uses 32bit PIO tuned to high speed for fast updates with minimal CPU intervention. 
-
-            When entering the continuous mode, a rectangle of the screen that will be updated can be specified (defaulting to full screen). This can speed rendering even more in cases where only partial screen updates are necessary. 
-            
+            The rectangle is always assumed to be in the natural coordinates, i.e. 320 columns, 240 rows. 
          */
+        static void setUpdateRegion(Rect rect);
 
-        /** Returns true if the display is in the continuous update mode. 
-         */
-        static bool continuousUpdateActive(); 
-
-        /** Starts the continuous update of the entire screen. 
-         */
-        static void enterContinuousUpdate() { enterContinuousUpdate(Rect::WH(320, 240)); }
-
-        /** Starts the continous update for part of the screen of given width and height that will be centered both vertically and horizotally on the screen. 
-         */
-        static void enterContinuousUpdate(int width, int height) { 
-            enterContinuousUpdate(Rect::XYWH((320 - width) / 2, (240 - height) / 2, width, height));
-        };
-
-        /** Enters continous update of the specified rectangle of the screen. The rectangle must be specified in the full resolution of the display (i.e. 320x240 max). 
-         */
-        static void enterContinuousUpdate(Rect rect); 
-
-        static void leaveContinuousUpdate();
-
-        static void writePixels(uint16_t const * pixels, size_t numPixels) {
-            if (!updating_)
-                cb_ = [](){ return true; }; // be done with the update
-            writePixels(pixels, numPixels, cb_);
+        static void setUpdateRegion(int width, int height) { 
+            setUpdateRegion(Rect::XYWH((320 - width) / 2, (240 - height) / 2, width, height));
         }
 
-        static void writePixels(uint16_t const * pixels, size_t numPixels, UpdatePixelsCallback cb) {
+        /** Resets the update region to entire screen. 
+         */
+        static void resetUpdateRegion() { setUpdateRegion(Rect::WH(320, 240)); }
+
+        /** \name Update mode
+         * 
+         */
+        //@{
+
+        static void beginUpdate();
+        static void endUpdate();
+
+        static void update(ColorRGB const * pixels, uint32_t numPixels);
+        //@}
+
+        /** \name DMA update mode 
+
+            The DMA mode does not send any commands to the display and only updates the selected display area. When data for the display area are sent, new frame will begin. The DMA mode uses 32bit PIO tuned to high speed for fast updates with minimal CPU intervention. 
+
+            To specify the portion of the screen to be updated, use the setUpdateRegion() or resetUpdateRegion() methods. 
+         */
+        //@{
+
+        /** Enters the DMA update mode, takes the display pins for the pio. 
+         */
+        static void beginDMAUpdate();
+
+        /** Leaves the DMA update mode and returns the display pins back to GPIO. 
+         */
+        static void endDMAUpdate();
+
+        /** Returns true if there is a screen update in progress. This is whenever the DMA is active, but can also be between DMA transfers if the callback function indicated more data to come. 
+         */
+        static bool dmaUpdateInProgress() { return updating_; }
+
+        /** Writes given pixels to the srceeen using the DMA. 
+         
+            If the DMA update is active, it reuses the callback function set with the first call, otherwise the update is treated as a single update. 
+         */
+        static void dmaUpdateAsync(ColorRGB const * pixels, size_t numPixels) {
+            if (!updating_)
+                cb_ = [](){ return true; }; // be done with the update
+            dmaUpdateAsync(pixels, numPixels, cb_);
+        }
+
+        /** Writes given pixels and provides a callback function to be called when the DMA transfer finishes. 
+         */
+        static void dmaUpdateAsync(ColorRGB const * pixels, uint32_t numPixels, DMAUpdateCallback cb) {
             cb_ = cb;
             if (!updating_) {
                 stats::displayUpdateStart_ = uptimeUs();
@@ -157,13 +181,15 @@ namespace rckid {
 #endif
         }
 
+        static void dmaUpdateBlocking(ColorRGB const * pixels, uint32_t numPixels) {
+            ASSERT(!dmaUpdateInProgress() && "Blocking DMA update must be the first in frame");
+            dmaUpdateAsync(pixels, numPixels);
+            while (dmaUpdateInProgress()) 
+                yield();
+        }
         //@}
 
-        /** Returns true if the display is currently being updated. 
-         */
-        static bool updating() { return updating_; }
-
-        /** Busy waits until the display finishes updating. 
+        /** Busy waits until the display finishes updating. Only useful in DMA update async mode, otherwise returns immediately.
          */
         static void waitUpdateDone() { 
             while (updating_)
@@ -200,12 +226,7 @@ namespace rckid {
 
         static void initializePinsBitBang();
 
-        static void beginCommand(uint8_t cmd) {
-            gpio_put(RP_PIN_DISP_CSX, false);
-            gpio_put(RP_PIN_DISP_DCX, false);
-            // RP_PIN_DISP_WRX is expected to be low 
-            sendByte(cmd);
-        }
+        static void beginCommand(uint8_t cmd);
 
         static void end() {
             gpio_put(RP_PIN_DISP_CSX, true);
@@ -278,7 +299,7 @@ namespace rckid {
         }
 
 #if (defined ARCH_MOCK)
-        static void sendMockPixels(uint16_t const * pixels, size_t numPixels);
+        static void sendMockPixels(ColorRGB const * pixels, size_t numPixels);
 #endif
 
         //static void irqDMADone();

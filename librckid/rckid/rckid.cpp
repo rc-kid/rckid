@@ -545,20 +545,13 @@ namespace rckid {
         end();
 #else
         configure(DisplayMode::Natural_RGB565);
-        setColumnRange(0, 319);
-        setRowRange(0, 239);
-        beginCommand(RAMWR);
-        gpio_put(RP_PIN_DISP_DCX, true);
+        resetUpdateRegion();
+        beginUpdate();
         PNG png = PNG::fromBuffer(assets::images::logo_black_16);
         png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
-            uint8_t const * raw = reinterpret_cast<uint8_t *>(line);
-            for (int i = 0; i < lineWidth; ++i) {
-                sendByte(raw[1]);
-                sendByte(raw[0]);
-                raw += 2;
-            }
+            update(line, lineWidth);
         });
-        end();
+        endUpdate();
         configure(DisplayMode::Native_RGB565);
 #endif
     }
@@ -597,8 +590,7 @@ namespace rckid {
     }
 
     void ST7789::configure(DisplayMode mode) {
-        if (continuousUpdateActive())
-            leaveContinuousUpdate();
+        endDMAUpdate(); // make sure we are in bitbang mode when configuring
         switch (mode) {
             case DisplayMode::Native_RGB565:
                 sendCommand(COLMOD, COLMOD_565);
@@ -636,30 +628,59 @@ namespace rckid {
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
         uint16_t x = color.rawValue16();
-        for (size_t i = 0, e =320 * 240; i < e; ++i) {
+        for (size_t i = 0, e = 320 * 240; i < e; ++i) {
             sendByte((x >> 8) & 0xff);
             sendByte(x & 0xff);
         }
         end();
     }
 
-    bool ST7789::continuousUpdateActive() {
-        return pio_sm_is_enabled(pio_, sm_);
+    void ST7789::setUpdateRegion(Rect rect) {
+        switch (displayMode_) {
+            case DisplayMode::Native_RGB565:
+            case DisplayMode::Native_2X_RGB565:
+                setColumnRange(rect.top(), rect.bottom() - 1);
+                setRowRange(rect.left(), rect.right() - 1);
+                break;
+            case DisplayMode::Natural_RGB565:
+            case DisplayMode::Natural_2X_RGB565:
+                setRowRange(rect.top(), rect.bottom() - 1);
+                setColumnRange(rect.left(), rect.right() - 1);
+                break;
+            default:
+                UNREACHABLE;
+        }
     }
 
-    void ST7789::enterContinuousUpdate(Rect rect) {
-        leaveContinuousUpdate();
-        setColumnRange(rect.top(), rect.bottom() - 1);
-        setRowRange(rect.left(), rect.right() - 1);
-        // start the continuous RAM write command
+    void ST7789::beginUpdate() {
+        beginCommand(RAMWR);
+        gpio_put(RP_PIN_DISP_DCX, true);
+    }
+
+    void ST7789::endUpdate() {
+        end();
+    }
+
+    void ST7789::update(ColorRGB const * pixels, uint32_t numPixels) {
+        uint8_t const * raw = reinterpret_cast<uint8_t const *>(pixels);
+        for (unsigned i = 0; i < numPixels; ++i) {
+            sendByte(raw[1]);
+            sendByte(raw[0]);
+            raw += 2;
+        }
+    }
+
+    void ST7789::beginDMAUpdate() {
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
         // initialize the corresponding PIO program
         switch (displayMode_) {
             case DisplayMode::Native_RGB565:
+            case DisplayMode::Natural_RGB565:
                 ST7789_rgb_program_init(pio_, sm_, offsetSingle_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
                 break;
             case DisplayMode::Native_2X_RGB565:
+            case DisplayMode::Natural_2X_RGB565:
                 ST7789_rgb_double_program_init(pio_, sm_, offsetDouble_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
                 break;
             default:
@@ -669,8 +690,8 @@ namespace rckid {
         pio_sm_set_enabled(pio_, sm_, true);
     }
 
-    void ST7789::leaveContinuousUpdate() {
-        if (continuousUpdateActive()) {
+    void ST7789::endDMAUpdate() {
+        if (pio_sm_is_enabled(pio_, sm_)) {
             // temporarily disable the IRQ on the DMA to ignore spurious complete events when aborting
             dma_channel_set_irq0_enabled(dma_, false);
             dma_channel_abort(dma_);
@@ -688,6 +709,14 @@ namespace rckid {
         gpio_set_dir_masked(outputPinsMask, outputPinsMask);
         //gpio_put_masked(outputPinsMask, false);
         gpio_put(RP_PIN_DISP_WRX, false);
+    }
+
+    void ST7789::beginCommand(uint8_t cmd) {
+        ASSERT(!pio_sm_is_enabled(pio_, sm_) && "Commands are bitbanged so the pins can't belong to the pio");
+        gpio_put(RP_PIN_DISP_CSX, false);
+        gpio_put(RP_PIN_DISP_DCX, false);
+        // RP_PIN_DISP_WRX is expected to be low 
+        sendByte(cmd);
     }
 
     void ST7789::irqHandler() {
@@ -1002,10 +1031,19 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
+    uint32_t SD::File::size() const {
+        return f_size(& f_);
+    }
+
     uint32_t SD::File::read(uint8_t * buffer, uint32_t numBytes) {
         UINT bytesRead;
         errorCode_ = f_read(& f_, buffer, numBytes, & bytesRead);
         return bytesRead;
+    }
+
+    uint32_t SD::File::seek(uint32_t position) {
+        errorCode_ = f_lseek(& f_, position);
+        return (errorCode_ == FR_OK) ? position : 0;
     }
 
     // ============================================================================================

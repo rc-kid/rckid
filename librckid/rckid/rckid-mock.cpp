@@ -144,50 +144,95 @@ namespace rckid {
 
     }
 
-    void ST7789::enterContinuousUpdate(Rect rect) {
-        // TODO set W H and stuff
+    void ST7789::setUpdateRegion(Rect rect) {
         xStart_ = rect.left();
         yStart_ = rect.top();
         xEnd_ = rect.right();
         yEnd_ = rect.bottom();
-        std::cout << xStart_ << ", " << xEnd_ << " -- " << yStart_ << ", " << yEnd_ << std::endl;
-        x_ = xEnd_ - 1;
-        y_ = yStart_;
     }
 
-    void ST7789::leaveContinuousUpdate() {
-        updating_ = false;
-    }
-
-    void ST7789::initializePinsBitBang() {}
-
-    
-    void ST7789::sendMockPixels(uint16_t const * pixels, size_t numPixels) {
-        // send the pixels
-        while (numPixels-- != 0) {
-            ColorRGB rgb = ColorRGB::Raw565(*pixels++);
-            framebuffer_[x_ + y_ * 320] = rgb;
-            if (++y_ == yEnd_) {
-                if (x_-- == xStart_)
-                    x_ = xEnd_ - 1;
+    void ST7789::beginUpdate() {
+        // reset the update cursor to the beginning according to the mode
+        switch (displayMode_) {
+            case DisplayMode::Native_RGB565:
+            case DisplayMode::Native_2X_RGB565:
+                x_ = xEnd_ - 1;
                 y_ = yStart_;
+                break;
+            case DisplayMode::Natural_RGB565:
+            case DisplayMode::Natural_2X_RGB565:
+                x_ = xStart_;
+                y_ = yStart_;
+                break;
+            default:
+                UNREACHABLE;
+        }
+    }
+
+    void ST7789::endUpdate() {
+        BeginDrawing();
+        for (int x = 0; x < 320; ++x) {
+            for (int y = 0; y < 240; ++y) {
+                ColorRGB c = framebuffer_[x + y * 320];
+                DrawRectangle(x * 2, y * 2, 2, 2, (Color) { c.r(), c.g(), c.b(), 255});
             }
         }
+        EndDrawing();
+    }
+
+    void ST7789::update(ColorRGB const * pixels, uint32_t numPixels) {
+        while (numPixels-- != 0) {
+            framebuffer_[x_ + y_ * 320] = *pixels++;
+            // move to next pixel
+            switch (displayMode_) {
+                case DisplayMode::Native_RGB565:
+                    if (++y_ == yEnd_) {
+                        if (x_-- == xStart_)
+                            x_ = xEnd_ - 1;
+                        y_ = yStart_;
+                    }
+                    break;
+                case DisplayMode::Native_2X_RGB565:
+                    UNIMPLEMENTED;
+                    break;
+                case DisplayMode::Natural_RGB565:
+                    if (++x_ == xEnd_) {
+                        if (++y_ == yEnd_) 
+                            y_ = yStart_;
+                        x_ = xStart_;
+                    }
+                    break;
+                case DisplayMode::Natural_2X_RGB565:
+                    UNIMPLEMENTED;
+                    break;
+                default:
+                    UNREACHABLE;
+            }
+        }
+    }
+
+    void ST7789::beginDMAUpdate() {
+        beginUpdate();
+    }
+
+    void ST7789::endDMAUpdate() {
+        endUpdate();
+    }
+
+    void ST7789::initializePinsBitBang() {
+        // NOP
+    }
+
+    
+    void ST7789::sendMockPixels(ColorRGB const * pixels, size_t numPixels) {
+        // send the pixels
+        update(pixels, numPixels);
         // only the first pixel send deals with calling further callbacks
         if (++renderCallbackDepth_ == 1) {
             while (renderCallbackDepth_ > 0) {
                 if (cb_()) {
                     updating_ = false;
-                    BeginDrawing();
-                    for (int x = 0; x < 320; ++x) {
-                        for (int y = 0; y < 240; ++y) {
-                            ColorRGB c = framebuffer_[x + y * 320];
-                            DrawRectangle(x * 2, y * 2, 2, 2, (Color) { c.r(), c.g(), c.b(), 255});
-                        }
-                    }
-                    EndDrawing();
-                    x_ = xEnd_ - 1;
-                    y_ = yStart_;
+                    endUpdate();
                 }
                 --renderCallbackDepth_;
             }

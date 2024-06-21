@@ -2,6 +2,7 @@
 
 #include "FatFS/ff.h"
 #include "rckid/rckid.h"
+#include "stream.h"
 
 namespace rckid {
 
@@ -72,7 +73,7 @@ namespace rckid {
          
             TODO also add async read support with callbacks. 
          */
-        class File {
+        class File : public InStream {
         public:
             static File openRead(std::string const & path);
             static File openWrite(std::string const & path);
@@ -88,11 +89,15 @@ namespace rckid {
 
             bool good() const { return f_.obj.fs != nullptr; }
 
+            uint32_t size() const override;
+
             /** Reads data from the file to the provided buffer. 
              
                 At most numBytes will be read at once. Returns the actual number of bytes read. If this number is 0, the end of file has been reached, or the request failed.
             */
-            uint32_t read(uint8_t * buffer, uint32_t numBytes);
+            uint32_t read(uint8_t * buffer, uint32_t numBytes) override;
+
+            uint32_t seek(uint32_t position) override;
 
         private:
 

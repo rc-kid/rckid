@@ -7,6 +7,19 @@ PNG_STATIC uint8_t PNGMakeMask(PNGDRAW *pDraw, uint8_t *pMask, uint8_t ucThresho
 // Include the C code which does the actual work
 #include "png.inl"
 
+int32_t readStream(PNGFILE * pFile, uint8_t * pBuf, int32_t iLen) {
+    rckid::InStream * s = static_cast<rckid::InStream*>(pFile->fHandle);
+    return s->read(pBuf, iLen);
+}
+
+int32_t seekStream(PNGFILE * pFile, int32_t iPosition) {
+    rckid::InStream * s = static_cast<rckid::InStream*>(pFile->fHandle);
+    return s->seek(iPosition);
+}
+
+typedef int32_t (PNG_SEEK_CALLBACK)(PNGFILE *pFile, int32_t iPosition);
+
+
 namespace rckid {
 
     PNG PNG::fromBuffer(uint8_t const * buffer, size_t numBytes) {
@@ -23,6 +36,23 @@ namespace rckid {
         PNGInit(& result);
         return result;
     }
+
+    PNG PNG::fromStream(InStream & stream) {
+        PNG result;
+        
+        result.ucMemType = PNG_MEM_RAM;
+        result.pfnRead = readStream;
+        result.pfnSeek = seekStream;
+        result.pfnDraw = decodeLine_;
+        result.pfnOpen = nullptr;
+        result.pfnClose = nullptr;
+        result.PNGFile.iSize = stream.size();
+        //result.PNGFile.pData = const_cast<uint8_t *>(buffer);
+        result.PNGFile.fHandle = & stream;
+        PNGInit(& result);
+        return result;
+    }
+
 
     int PNG::decode(DecodeCallback cb) {
         cb_ = cb;

@@ -12,7 +12,7 @@ namespace rckid {
      
         This is the native 5-6-5 bits per color channel (R, G, B) resolution of the display and the highest one that RCKid supports (the display also supports 6-6-6 3byte encoding which RCKid does not support). As a native color resolution, this is an equivalent of a true color resolution in the sense that each pixel contains its own color independent of any others. 
      */
-    class ColorRGB {
+    class alignas(uint16_t) ColorRGB {
     public:
         using RawType = uint16_t;
         static constexpr size_t BPP = 16;

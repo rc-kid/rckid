@@ -30,7 +30,7 @@ namespace rckid {
             w_{width}, 
             h_{height},
             tileMap_{ new TileInfo[width * height] },
-            buffer_{ new uint16_t[height * Tile::Height * 2]} {
+            buffer_{ new ColorRGB[height * Tile::Height * 2]} {
             ASSERT(width > 0 && pixelWidth() <= 320);
             ASSERT(height > 0 && pixelHeight() <= 240);
             top_ = (240 - pixelHeight()) / 2;
@@ -90,11 +90,12 @@ namespace rckid {
 
         void enable() {
             ST7789::configure(DisplayMode::Native_RGB565);
-            ST7789::enterContinuousUpdate(Rect::XYWH((320 - pixelWidth()) / 2, top_, pixelWidth(), pixelHeight()));
+            ST7789::setUpdateRegion(Rect::XYWH((320 - pixelWidth()) / 2, top_, pixelWidth(), pixelHeight()));
+            ST7789::beginDMAUpdate();
         }
 
         void disable() { 
-            ST7789::leaveContinuousUpdate();
+            ST7789::endDMAUpdate();
         }
 
         void render() {
@@ -103,11 +104,11 @@ namespace rckid {
             --renderColumn_;
             renderColumn(renderColumn_, bufferForColumn(renderColumn_));
             ST7789::waitVSync();
-            ST7789::writePixels(bufferForColumn(renderColumn_ + 1), pixelHeight(), [this]() {
+            ST7789::dmaUpdateAsync(bufferForColumn(renderColumn_ + 1), pixelHeight(), [this]() {
                 if (renderColumn_ < 0)
                     return true;
                 // write already processed pixels
-                ST7789::writePixels(bufferForColumn(renderColumn_), pixelHeight());
+                ST7789::dmaUpdateAsync(bufferForColumn(renderColumn_), pixelHeight());
                 if (--renderColumn_ >= 0)
                     renderColumn(renderColumn_, bufferForColumn(renderColumn_));
                 return false;
@@ -119,18 +120,18 @@ namespace rckid {
 
         /** Returns the buffer part to be used for given column as the buffer is twice the column height. 
          */
-        uint16_t * bufferForColumn(int col) {
-            return buffer_ + (col & 1) * pixelHeight();
+        ColorRGB * bufferForColumn(int col) {
+            return reinterpret_cast<ColorRGB*>(buffer_ + (col & 1) * pixelHeight());
         }
 
         /** Renders the given column. 
          */
-        void renderColumn(int x, uint16_t * buffer) {
+        void renderColumn(int x, ColorRGB * buffer) {
             // get the tile x coordinate and the x coordinate within the tile
             int tx = x / Tile::Width;
             // get first tile info for the given column (the column is consecutive tiles), and iterate over the tiles
             TileInfo const * tile = tileMap_ + (tx * h_);
-            uint16_t * bx = buffer;
+            ColorRGB * bx = buffer;
             for (int ty = 0; ty < h_; ++ty, ++tile)
                 bx = tiles_[static_cast<uint8_t>(tile->c)].renderColumn(x % Tile::Width, bx, palette_, tile->paletteOffset);
             // render sprites & bitmaps, if any 
@@ -148,7 +149,7 @@ namespace rckid {
 
         TileInfo * tileMap_;
         // single column rendering buffer
-        uint16_t * buffer_;
+        ColorRGB * buffer_;
         // column to be rendered
         int renderColumn_;
 

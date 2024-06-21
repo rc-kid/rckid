@@ -31,14 +31,14 @@ namespace rckid {
             rckid::fillBuffer<FMT>(pixelBuffer_, pixelBufferLength<FMT>(WIDTH, HEIGHT), color);
         }
 
-        uint16_t * renderColumn(int x, uint16_t * buffer, ColorRGB const * palette = nullptr, uint8_t paletteOffset = 0) const {
-            return convertToRGB<FMT>(
+        ColorRGB * renderColumn(int x, ColorRGB * buffer, ColorRGB const * palette = nullptr, uint8_t paletteOffset = 0) const {
+            return reinterpret_cast<ColorRGB*>(convertToRGB<FMT>(
                 getColumn<FMT>(pixelBuffer_, WIDTH, HEIGHT, x),
-                buffer, 
+                reinterpret_cast<uint16_t*>(buffer), 
                 HEIGHT, 
                 palette,
                 paletteOffset
-            );
+            ));
         }
 
     private:
