@@ -1,8 +1,17 @@
 #include "platform.h"
 
+#include "bridge.h"
+
+
+
+
+
 void setup() {
-    Serial.begin(9600);
-}
+    // start serial protocol for debugging
+    Serial.begin(115200);
+
+    Bridge::initialize();
+}   
 
 void loop() {
     Serial.println("Tick");

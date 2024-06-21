@@ -30,6 +30,10 @@ public:
         return *this;
     }
 
+#if (defined ARCH_ARDUINO)
+    Writer & operator << (String s) { return *this << s.c_str(); }
+#endif
+
     Writer & operator << (char c) { 
         putChar_(c); 
         return *this; 

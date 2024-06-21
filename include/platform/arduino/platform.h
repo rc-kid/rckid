@@ -16,7 +16,7 @@ public:
     }
 
     static void delayMs(uint16_t value) {
-        // TODO
+        delay(value);
     }
 
     static void sleep() {

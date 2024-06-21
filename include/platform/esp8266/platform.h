@@ -2,6 +2,7 @@
 
 #define ARCH_ESP8266
 
+
 /** On ESP8266 we use the default Arduino core provided for basic hardware. 
  */
 #include "../arduino/platform.h"
@@ -16,7 +17,8 @@ inline Writer writeToSerial() {
     }};
 }
 
-#define LOG(...) ::writeToSerial() << __VA_ARGS__ << "\n"
+#define LOG(...) ::writeToSerial() << __VA_ARGS__ << "\r\n"
+
 
 /** Minimal circuit
 
