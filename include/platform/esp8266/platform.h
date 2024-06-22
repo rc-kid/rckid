@@ -70,4 +70,11 @@ inline Writer writeToSerial() {
     - TX = white
     - RX = green
     - 3V3 = red
+
+    To connect to the serial port for debugging, the following can be used:
+
+        picocom -b 115200 /dev/ttyUSB0
+
+    (make sure to replace the baudrate and serial device according to the project at hand, this line is for by dev server and USB to serial dongle)
+
  */

@@ -1,5 +1,7 @@
 #include "platform.h"
 
+#include "../secrets.h"
+
 #include "bridge.h"
 
 
@@ -11,9 +13,9 @@ void setup() {
     Serial.begin(115200);
 
     Bridge::initialize();
+    Bridge::connect();
 }   
 
 void loop() {
-    Serial.println("Tick");
-    delay(1000);
+    Bridge::loop();
 }
