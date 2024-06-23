@@ -47,7 +47,7 @@ public:
         spi::initialize();
         LOG("Initializing radio...");
         gpio::setAsInput(PIN_NRF_IRQ);
-        bool result = radio_.initialize("RCKID", "RCKID", 56);
+        bool result = radio_.initializeESB("BSKID", "RCKID", 56);
         if (!result)
             LOG("  FAILED");
         char addr[] = {0,0,0,0,0,0};

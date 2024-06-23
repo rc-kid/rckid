@@ -23,12 +23,12 @@ public:
         void convert(Writer & w) const {
             for (size_t i = 0; i < bufferSize_; ++i) {
                 uint8_t c = buffer_[i] >> 4;
-                if (c >> 4 > 9)
+                if (c > 9)
                     w.putChar_('a' + (c - 10));
                 else
                     w.putChar_('0' + c);
                 c = buffer_[i] & 0xf;
-                if (c >> 4 > 9)
+                if (c > 9)
                     w.putChar_('a' + (c - 10));
                 else
                     w.putChar_('0' + c);
