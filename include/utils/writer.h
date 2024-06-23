@@ -10,6 +10,37 @@
 class Writer {
 public:
 
+    class hex {
+    public:
+        hex(uint8_t const * buffer, size_t size):
+            buffer_{buffer}, bufferSize_{size} {
+        }
+
+        hex(uint8_t const & c):
+            buffer_{&c}, bufferSize_{1} {
+        }
+
+        void convert(Writer & w) const {
+            for (size_t i = 0; i < bufferSize_; ++i) {
+                uint8_t c = buffer_[i] >> 4;
+                if (c >> 4 > 9)
+                    w.putChar_('a' + (c - 10));
+                else
+                    w.putChar_('0' + c);
+                c = buffer_[i] & 0xf;
+                if (c >> 4 > 9)
+                    w.putChar_('a' + (c - 10));
+                else
+                    w.putChar_('0' + c);
+            }
+        }
+
+    public:
+        uint8_t const * buffer_;
+        size_t bufferSize_;
+    }; // Writer::hex
+
+
     Writer(std::function<void(char)> putChar):putChar_{putChar} {}
 
     static Writer toString(std::string & str) {
@@ -91,6 +122,11 @@ public:
             order = order / 10;
         }
         putChar_(x + '0');
+        return *this;
+    }
+
+    Writer & operator << (hex const & converter) {
+        converter.convert(*this);
         return *this;
     }
 

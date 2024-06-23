@@ -1,9 +1,14 @@
 #pragma once
 
+#include "rckid/rckid.h"
+
 namespace rckid {
 
-    class NRF {
+    class radio {
     public:
+
+
+    private:
 
     }; // rckid::Radio
 

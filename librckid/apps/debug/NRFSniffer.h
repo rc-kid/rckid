@@ -18,6 +18,12 @@ namespace rckid {
             spi::initialize(GPIO16, GPIO19, GPIO18);
             // TODO check if we need this
             //spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+            if (!radio_.initialize("RCKID", "RCKID", 56)) {
+                x_ = radio_.getStatus().raw;
+                radio_.standby();
+            } else {
+                x_ = 512;
+            }
         }
 
         void onBlur() override {
@@ -27,23 +33,25 @@ namespace rckid {
 
         void update() override {
             if (pressed(Btn::A)) {
-                //char buffer[10];
-                //radio_.txAddress(buffer);
-                if (!radio_.initialize("rckid", "rckid"))
-                    x_ = radio_.getStatus().raw;
-                else
-                    x_ = 512;
+                uint8_t buf[32];
+                for (int i = 0; i < 32; ++i)
+                    buf[i] = msgId_;
+                ++msgId_;
+                radio_.transmit(buf, 32);
+                radio_.enableTransmitter();
             }
         }
 
         void draw() override {
             driver_.fill();
-            driver_.textMultiline(0,0) << "Status: " << x_;
+            driver_.textMultiline(0,0) << "Status: " << x_ << "\n" << 
+                                          "MSG ID: " << msgId_;
         }
 
         platform::NRF24L01 radio_{GPIO21, GPIO20};
 
         unsigned x_;
+        uint8_t msgId_ = 0;
     }; 
 
 

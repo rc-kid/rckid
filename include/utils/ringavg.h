@@ -9,7 +9,6 @@ public:
         i_ = 0;
     }
 
-
     void addObservation(T value) {
         sum_ = sum_ - buffer_[i_] + value;
         buffer_[i_++] = value;

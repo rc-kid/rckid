@@ -4,8 +4,8 @@
 - buttons (https://cz.mouser.com/ProductDetail/Omron-Electronics/B3U-3000P-B?qs=AO7BQMcsEu4JAdtnbsGArA%3D%3D)
 - rumbler (https://cz.mouser.com/ProductDetail/DFRobot/FIT0774?qs=ljCeji4nMDmZzIiC0gR9iA%3D%3D)
 - battery (https://www.tme.eu/cz/details/accu-lp503759_cl/akumulatory/cellevia-batteries/l503759/)
-- precision headers rckid ()
-- precision headers cartridges ()
+- precision headers rckid (gme824-021)
+- precision headers cartridges (gme 832-443)
 - screw inserts (https://www.prusa3d.com/product/threaded-inserts-m2-short-100-pcs/)
 
 ## Release 0.9
@@ -25,6 +25,8 @@
 .rckid/adacorn.png
 
 ## TODO
+
+- the datasheet says it is NRF24l01p the real thing - the high-gain modules, can they talk together actually? if yes, I can use ESB
 
 - do we need the callback return true of false to determine if next transfer is imminent? Can have an int that gets incremented/decremented accordingly and the callback will return void
 

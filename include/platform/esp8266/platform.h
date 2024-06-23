@@ -28,6 +28,10 @@ inline Writer writeToSerial() {
     - CH_PD must be pulled high
     - RST must be pulled high, low to reset 
 
+    Optional 
+
+    - D16 can be used to wake the chip up
+
  
 
 

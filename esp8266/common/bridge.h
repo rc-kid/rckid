@@ -18,6 +18,7 @@
  */
 class Bridge {
 public:
+
     static void initialize() {
         LOG("Initializing the bridge...");
         initializeWiFi();
