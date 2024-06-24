@@ -6,7 +6,9 @@ namespace rckid {
 
     class radio {
     public:
+        static void initialize() {
 
+        }
 
     private:
 
