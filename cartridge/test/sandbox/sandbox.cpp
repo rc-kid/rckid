@@ -40,6 +40,8 @@
 #include "apps/debug/MicTest.h"
 #include "apps/debug/melody.h"
 
+#include "rckid/radio/radio.h"
+
 using namespace rckid;
 
 class FontSelector : public App<FrameBuffer<ColorRGB>> {
