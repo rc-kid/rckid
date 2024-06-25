@@ -1,9 +1,9 @@
 {
     "tasks": [
         {
-            "label": "rckid-utils",
+            "label": "rckid-tools",
             "type": "shell",
-            "command": "utils/rckid-utils-build.sh",
+            "command": "tools/rckid-tools-build.sh",
             "options": {
                 "cwd": ""
             },
@@ -14,21 +14,21 @@
         {
             "label": "Generate assets",
             "type": "shell",
-            "command": "utils/generate-assets.sh",
+            "command": "tools/generate-assets.sh",
             "options": {
                 "cwd": ""
             },
             "problemMatcher": []
         },
         {
-            "label": "avr/rckid",
+            "label": "rckid/avr",
             "type": "shell",
             "command": "~/.platformio/penv/bin/pio",
             "args": [
                 "run"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/avr/rckid",
+                "cwd": "${workspaceFolder}/rckid/avr",
                 "shell": {
                     "executable": "/bin/zsh",
                     "args": [
@@ -40,16 +40,31 @@
                 "$platformio"
             ]
         },
+        {
+            "label": "rckid/avr [UPLOAD]",
+            "command": "bash",
+            "args": [
+                "tools/pio-upload.sh",
+                "rckid/avr"
+            ],
+            "options": {
+                "cwd": ""
+            },
+            "problemMatcher": [
+                "$platformio"
+            ]
+        },
+
         // ESP8266 base station that provides internet connection over NRF or LoRa radio. 
         {
-            "label": "esp8266/base-station",
+            "label": "base-station",
             "type": "shell",
             "command": "~/.platformio/penv/bin/pio",
             "args": [
                 "run"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/esp8266/base-station",
+                "cwd": "${workspaceFolder}/base-station",
                 "shell": {
                     "executable": "/bin/zsh",
                     "args": [
@@ -65,7 +80,7 @@
             "label" : "esp8266/base-station [UPLOAD]",
             "command" : "bash",
             "args": [
-                "utils/esp8266-upload.sh",
+                "tools/pio-upload.sh",
                 "base-station",
             ],
             "options": {
@@ -75,78 +90,12 @@
                 "$platformio"
             ]
         },
-        // ESP8266 cartridge for WiFi access. 
-        {
-            "label": "esp8266/cartridge",
-            "type": "shell",
-            "command": "~/.platformio/penv/bin/pio",
-            "args": [
-                "run"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/esp8266/cartridge",
-                "shell": {
-                    "executable": "/bin/zsh",
-                    "args": [
-                        "-c"
-                    ]
-                }
-            },
-            "problemMatcher": [
-                "$platformio"
-            ]
-        },
-        {
-            "label": "avr/rckid [UPLOAD]",
-            "command": "bash",
-            "args": [
-                "utils/avr-rckid-upload.sh"
-            ],
-            "options": {
-                "cwd": ""
-            },
-            "problemMatcher": [
-                "$platformio"
-            ]
-        },
-        {
-            "label": "avr/rckid-test",
-            "type": "shell",
-            "command": "~/.platformio/penv/bin/pio",
-            "args": [
-                "run"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/avr/rckid-test",
-                "shell": {
-                    "executable": "/bin/zsh",
-                    "args": [
-                        "-c"
-                    ]
-                }
-            },
-            "problemMatcher": [
-                "$platformio"
-            ]
-        },
-        {
-            "label": "avr/rckid-test [UPLOAD]",
-            "command": "bash",
-            "args": [
-                "utils/avr-rckid-test-upload.sh"
-            ],
-            "options": {
-                "cwd": ""
-            },
-            "problemMatcher": [
-                "$platformio"
-            ]
-        },
+        
         {
             "label": "rckid - local [MOCK]",
             "command": "bash",
             "args": [
-                "utils/build-mock.sh"
+                "tools/build-mock.sh"
             ],
             "options": {
                 "cwd": ""
@@ -159,7 +108,7 @@
             "label": "rckid-games [MOCK]",
             "command": "bash",
             "args": [
-                "utils/build-mock.sh",
+                "tools/build-mock.sh",
                 "games/games"
             ],
             "options": {
@@ -169,25 +118,12 @@
                 "$gcc"
             ]
         },
-        {
-            "label": "rckid-sandbox [MOCK]",
-            "command": "bash",
-            "args": [
-                "utils/build-mock.sh",
-                "test/sandbox/sandbox"
-            ],
-            "options": {
-                "cwd": ""
-            },
-            "problemMatcher": [
-                "$gcc"
-            ]
-        },
+        // TODO is this still working??
         {
             "label": "gbc-tests [MOCK]",
             "command": "bash",
             "args": [
-                "utils/build-mock.sh",
+                "tools/build-mock.sh",
                 "gbcemu/gbcemu-test"
             ],
             "options": {

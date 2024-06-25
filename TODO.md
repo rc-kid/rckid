@@ -26,6 +26,8 @@
 
 ## TODO
 
+- finish the redesign of the folders (avr and base-station build already, rckid, mock & tools remain)
+
 - seems I can use ESB for the NRF24L01p, at least between base station & rckid devices and rckid device themselves (for walkie talkie, we are still just flooding)
 
 - do we need the callback return true of false to determine if next transfer is imminent? Can have an int that gets incremented/decremented accordingly and the callback will return void
