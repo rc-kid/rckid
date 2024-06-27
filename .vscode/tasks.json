@@ -77,11 +77,12 @@
             ]
         },
         {
-            "label" : "esp8266/base-station [UPLOAD]",
+            "label" : "base-station [UPLOAD]",
             "command" : "bash",
             "args": [
                 "tools/pio-upload.sh",
                 "base-station",
+                "esp12e",
             ],
             "options": {
                 "cwd": ""

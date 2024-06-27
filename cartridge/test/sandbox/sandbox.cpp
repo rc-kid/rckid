@@ -40,7 +40,7 @@
 #include "apps/debug/MicTest.h"
 #include "apps/debug/melody.h"
 
-#include "rckid/radio/radio.h"
+#include "common/radio/radio.h"
 
 using namespace rckid;
 
@@ -105,6 +105,7 @@ Menu * menuDebug() {
 int main() {
     rckid::initialize();
     cpu::overclock();
+    //rckid::radio::Controller::initialize(0);
     
     StaticMenuStack<> menu{
         new Menu{{

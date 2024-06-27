@@ -1,6 +1,6 @@
 ## Shopping List
 
-- displays from aliexpress (~27x, IPS 2.8")
+- displays from aliexpress (~27x, IPS 2.8", https://www.aliexpress.com/item/1005004635814413.html?spm=a2g0o.order_list.order_list_main.5.10891802IbL7I1)
 - buttons (https://cz.mouser.com/ProductDetail/Omron-Electronics/B3U-3000P-B?qs=AO7BQMcsEu4JAdtnbsGArA%3D%3D)
 - rumbler (https://cz.mouser.com/ProductDetail/DFRobot/FIT0774?qs=ljCeji4nMDmZzIiC0gR9iA%3D%3D)
 - battery (https://www.tme.eu/cz/details/accu-lp503759_cl/akumulatory/cellevia-batteries/l503759/)
@@ -22,7 +22,7 @@
 
 - extra games can be hangman, battleships, calculator (?)
 
-.rckid/adacorn.png
+platformio run -t nobuild -t upload --disable-auto-clean
 
 ## TODO
 

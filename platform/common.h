@@ -7,6 +7,17 @@ inline uint16_t operator "" _u16(unsigned long long value) { return static_cast<
 inline uint32_t operator "" _u32(unsigned long long value) { return static_cast<uint32_t>(value); }
 inline uint64_t operator "" _u64(unsigned long long value) { return static_cast<uint64_t>(value); }
 
+#ifndef ASSERT
+#define ASSERT(...)
+#endif
+
+#ifndef UNREACHABLE
+#define UNREACHABLE
+#endif
+
+#ifndef UNIMPLEMENTED
+#define UNIMPLEMENTED
+#endif
 namespace platform {
 
     /** Endiannes of the platform. 

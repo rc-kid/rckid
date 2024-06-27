@@ -48,15 +48,17 @@ TODO
 
 The repository consists of various frameworks, libraries and executables for different architectures. The most important ones are:
 
-- `include/platform` contains header only very low level hardware abstraction layer unifying all the platforms used (RP2040, ATTiny, etc.). The platform framework supports basic gpio operations, cpu features and i2c/spi communication
-- `include/utils` various utilities
-- `cartridges` contains the cartridges built for the RCKid. Each cartridge has its own image that can be flashed (see below)
-- `avr/rckid` is the firmware for the AVR chip that takes care of reading user input, monitoring charging & power consumption and power modes
-- `librckid` contains the RCKid SDK, see its own readme for more details. 
-- `lbs` are 3rd party libraries used by the SDK
-- `utils` are various utilities for RCKid development
+- `platform` contains header only very low level hardware abstraction layer unifying all the platforms used (RP2040, ATTiny, ESP8266, etc.). The platform framework supports basic gpio operations, cpu features and i2c/spi communication. The platform framework is independent of RCKid and can be used in other projects as well, see `platform/README.md` for more details.
+- `tools` various utilities for RCKid's development and setup, such as asset generation, firmware flashing, etc. 
+- `libs` contains copies of 3rd party libraries used as part of the SDK
+- `assets` contains visual assets for the SDK
+- `common` contains source files that are common to multiple RCKid projects, such as configuration, bootloaders, radio libraries, etc. 
+- `rckid/avr` contains code for the AVR chip inside RCKid that takes care of power management and input/otput
+- `rckid/librckid` contains the bulk of the SDK
+- `rckid/platform` contains an RCkid's specific additions to the RP2040 platform
+- `cartridge` contains the cartridges built for the RCKid. Each cartridge has its own image that can be flashed
+- `base-station` is the code for ESP8266 based NRF to WiFi base station through which NRF enabled rckids can connect to the internet
 - `hardware` contains schematics, PCB layout files and 3D models for the device and cartridges
-
 
 ## Quick Notes
 

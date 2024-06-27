@@ -16,17 +16,13 @@ if (ARCH STREQUAL "RP2040")
     if (PICO_SDK_VERSION_STRING VERSION_LESS "1.3.0")
         message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
     endif()
-
-    set(PLATFORM_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/platform/rp2040")
-
 elseif (ARCH STREQUAL "MOCK")
     message("RCKID: Building for the Desktop (Raylib & X11)")
+    add_compile_definitions("RCKID_MOCK")
     include_directories(${CMAKE_SOURCE_DIR}/libs/raylib/src)
 
     project(rckid2)
     find_package(Threads REQUIRED) 
-
-    set(PLATFORM_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/platform/mock")
 else()
     message(FATAL_ERROR "Invalid architecture specified")
 endif()
@@ -35,7 +31,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
 
-include_directories(${PLATFORM_INCLUDE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/rckid/platform)
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/assets)
 include_directories(${CMAKE_SOURCE_DIR}/rckid/librckid)
@@ -44,6 +40,7 @@ include_directories(${CMAKE_SOURCE_DIR}/libs/PNGdec/src)
 include_directories(${CMAKE_SOURCE_DIR}/libs/libhelix-mp3)
 
 add_subdirectory("rckid/librckid")
+add_subdirectory("common/radio")
 add_subdirectory("libs/PNGdec")
 add_subdirectory("libs/libhelix-mp3")
 add_subdirectory("libs/FatFS")

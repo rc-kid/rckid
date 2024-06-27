@@ -19,11 +19,12 @@ namespace rckid {
             spi::initialize(GPIO16, GPIO19, GPIO18);
             // TODO check if we need this
             //spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
-            if (!radio_.initializeESB("RCKID", "BSKID", 56)) {
+            if (!radio_.initializeESB("  RK1", "  RK1", 87)) {
                 x_ = radio_.getStatus().raw;
             } else {
                 x_ = 255;
             }
+            radio_.setAddressLength(3);
             radio_.standby();
             gpio::setAsInputPullup(GPIO17);
         }
@@ -39,12 +40,13 @@ namespace rckid {
                 for (int i = 0; i < 32; ++i)
                     buf[i] = msgId_;
                 ++msgId_;
-                radio_.transmit(buf, 32);
+                radio_.transmitNoAck(buf, 32);
                 radio_.enableTransmitter();
             }
             if (gpio::read(GPIO17) == 0) {
                 ++irqs_; 
                 x_ = radio_.clearIrq();
+                radio_.flushTx();
             }
         }
 

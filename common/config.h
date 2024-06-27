@@ -59,6 +59,13 @@
 #define RP_PIN_SD_RX 28
 #define RP_PIN_SD_CSN 29
 
+
+/** Pins assignment for the cartridge with NRF radio chip. 
+ */
+#define RADIO_NRF_PIN_CS 21
+#define RADIO_NRF_PIN_RXTX 20
+#define RADIO_NRF_PIN_IRQ 17
+
 /* - pio for the display
    - for PDM microphone
    - ? timer ?  for sound out? 

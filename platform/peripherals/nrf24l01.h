@@ -176,6 +176,14 @@ namespace platform {
             clearIRQ();
         }
 
+        /** Sets the address length to 3, 4 or 5 bytes. 
+         
+         */
+        void setAddressLength(uint8_t length) {
+            ASSERT(length >= 3 && length <= 5);
+            writeRegister(SETUP_AW, length - 2);
+        }
+
         /** Enables the receiver of the chip. 
          
             The receiver can be on for as long as necessary and the radio will start receiving immediately after the call to the method. 
@@ -405,8 +413,15 @@ namespace platform {
             end();
         }
 
-
-
+        void enablePipe2(char addr, bool esb = false) {
+            writeRegister(RX_ADDR_P2, addr);
+            uint8_t x = readRegister(EN_RXADDR);
+            writeRegister(EN_RXADDR, x | ERX_P2);
+            // enable or disable auto act
+            x = readRegister(EN_AA);
+            x = esb ? (x | 4) : (x & ~4);
+            writeRegister(EN_AA, x);
+        }
 
     //private:
 
@@ -545,6 +560,20 @@ namespace platform {
         static constexpr uint8_t FIFO_TX_EMPTY = 1 << 4;
         static constexpr uint8_t FIFO_RX_FULL = 1 << 1;
         static constexpr uint8_t FIFO_RX_EMPTY = 1 << 0;
+
+        // SETUP_AW values
+        static constexpr uint8_t AW_ADDR_3 = 0x01;
+        static constexpr uint8_t AW_ADDR_4 = 0x02;
+        static constexpr uint8_t AW_ADDR_5 = 0x03;
+
+        // EN_RXADDR values
+        static constexpr uint8_t ERX_P0 = 1 << 0;
+        static constexpr uint8_t ERX_P1 = 1 << 1;
+        static constexpr uint8_t ERX_P2 = 1 << 2;
+        static constexpr uint8_t ERX_P3 = 1 << 3;
+        static constexpr uint8_t ERX_P4 = 1 << 4;
+        static constexpr uint8_t ERX_P5 = 1 << 5;
+        
 
     };
 

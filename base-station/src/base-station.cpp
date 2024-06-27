@@ -4,6 +4,8 @@
 #include <secrets.h>
 #include <common/esp8266/bridge.h>
 
+
+
 /** RCKid Base Station 
  
     The base station is a shared WiFi to NRF24L01p bridge. 
@@ -33,21 +35,23 @@
  */
 
 
+#define RADIO_NRF_PIN_CS 2
+#define RADIO_NRF_PIN_RXTX 16
+#define RADIO_NRF_PIN_IRQ 0
 
-#define PIN_NRF_CS 2
-#define PIN_NRF_RXTX 16
-#define PIN_NRF_IRQ 0
 class Radio {
 public:
 
     static void initialize() {
         spi::initialize();
         LOG("Initializing radio...");
-        gpio::setAsInput(PIN_NRF_IRQ);
-        bool result = radio_.initializeESB("BSKID", "RCKID", 56);
+        gpio::setAsInput(RADIO_NRF_PIN_IRQ);
+        bool result = radio_.initializeESB("  RK1", "  RK1", 87);
         if (!result)
             LOG("  FAILED");
         char addr[] = {0,0,0,0,0,0};
+        radio_.setAddressLength(3);
+        radio_.enablePipe2(0, /* esb */ true);
         radio_.txAddress(addr);
         LOG("  tx addr:" << addr);    
         radio_.rxAddress(addr);
@@ -61,7 +65,7 @@ public:
     }
 
     static void loop() {
-        if (gpio::read(PIN_NRF_IRQ) == 0) {
+        if (gpio::read(RADIO_NRF_PIN_IRQ) == 0) {
             LOG("NRF IRQ detected...");
             radio_.clearDataReadyIrq();
             uint8_t msg[32];
@@ -73,7 +77,7 @@ public:
 
 private:
 
-    static inline platform::NRF24L01 radio_{PIN_NRF_CS, PIN_NRF_RXTX};
+    static inline platform::NRF24L01 radio_{RADIO_NRF_PIN_CS, RADIO_NRF_PIN_RXTX};
 
 }; // Radio
 
