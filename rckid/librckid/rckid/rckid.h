@@ -7,7 +7,7 @@
 #include "common/errors.h"
 #include "graphics/color.h"
 
-
+#undef LOG // from platform
 #define LOG(...) ::rckid::writeToSerial() << __VA_ARGS__ << "\r\n"
 #define TRACE(...) ::rckid::writeToSerial() << __VA_ARGS__ << "\r\n"
 #define DEBUG(...) ::rckid::writeToSerial() << __VA_ARGS__ << "\r\n"

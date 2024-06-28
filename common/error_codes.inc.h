@@ -16,5 +16,6 @@ ERROR_CODE(MSCWrite, "Error writing USB MSC device")
 
 // radio errors
 ERROR_CODE(ConnectionUnsupported, "Requested connection not supported by the target device")
+ERROR_CODE(TooManyConnections, "Cannot create new connection, too many active connections")
 
 #undef ERROR_CODE

@@ -2,9 +2,17 @@
 #include <platform/peripherals/nrf24l01.h>
 
 #include <secrets.h>
+
 #include <common/esp8266/bridge.h>
 
+#include <common/radio/radio.h>
+#include <common/radio/controller.h>
 
+#define RADIO_NRF_PIN_CS 2
+#define RADIO_NRF_PIN_RXTX 16
+#define RADIO_NRF_PIN_IRQ 0
+
+#include <common/radio/nrf.cpp>
 
 /** RCKid Base Station 
  
@@ -35,10 +43,7 @@
  */
 
 
-#define RADIO_NRF_PIN_CS 2
-#define RADIO_NRF_PIN_RXTX 16
-#define RADIO_NRF_PIN_IRQ 0
-
+/*
 class Radio {
 public:
 
@@ -51,7 +56,7 @@ public:
             LOG("  FAILED");
         char addr[] = {0,0,0,0,0,0};
         radio_.setAddressLength(3);
-        radio_.enablePipe2(0, /* esb */ true);
+        radio_.enablePipe2(0, true);
         radio_.txAddress(addr);
         LOG("  tx addr:" << addr);    
         radio_.rxAddress(addr);
@@ -81,6 +86,22 @@ private:
 
 }; // Radio
 
+*/
+
+using namespace rckid;
+
+
+class RadioController : public radio::Controller {
+public:
+
+protected:
+    void onConnectionOpen(radio::msg::ConnectionOpen const & request) override {
+        // TODO
+
+    }
+
+}; // RadioController
+
 
 
 
@@ -90,10 +111,12 @@ void setup() {
     Bridge::initialize();
     Bridge::connect();
 
-    Radio::initialize();
+    radio::initialize('1');
 }   
 
 void loop() {
     Bridge::loop();
-    Radio::loop();
+
+    radio::loop();
+    //Radio::loop();
 }

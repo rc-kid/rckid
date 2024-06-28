@@ -10,26 +10,32 @@
     MESSAGE(Ping, false,
         DeviceId sender;
         uint8_t index;
-        // TODO add extra ping attributes, 
+        uint64_t userId;
+        char userName[];
     )
 
     /** Request to open connection. 
      
-        Contains the target device address and the connection type we wish to open as well as a temporary connection ID issued by the sender. 
+        Contains the target device address and the connection type we wish to open as well as the id for the connection under which it will be recognized on the sender. 
      */
     MESSAGE(ConnectionOpen, true,
         DeviceId sender;
-        ConnectionKind kind;
         uint8_t requestId;
+        ConnectionKind kind;
+
+        ConnectionOpen(DeviceId sender, uint8_t requestId, ConnectionKind kind):
+            sender{sender}, requestId{requestId}, kind{kind} {}
     )
 
     /** Connection accepted by the target device. 
      
-        Contains the temporary connection id created by the connection innitiating device (recipient of this mesage) and the non-temporary connection ID that must be used for the connection in the future, the ID is issued by the connection target (i.e. the sender of this message). 
+        Contains the sender issued connection id (requestId) and the target connection id (responseId). 
      */
     MESSAGE(ConnectionAccept, true,
         uint8_t requestId;
-        uint8_t connectionId;
+        uint8_t responseId;
+
+        ConnectionAccept(uint8_t requestId, uint8_t responseId): requestId{requestId}, responseId{responseId} {}
     )
 
     /** Connection rejected by the target device. 
@@ -62,6 +68,8 @@
         uint8_t connectionId;
         uint8_t size;
         uint8_t data[29];
+
+        ConnectionSend(uint8_t id, uint8_t size): connectionId{id}, size{size} {}
     )
 
     /** Sends full 30 bytes of data as part of the opened connection. 
@@ -71,6 +79,20 @@
     MESSAGE(ConnectionSend30, true, 
         uint8_t connectionId; 
         uint8_t data[30];
+
+        ConnectionSend30(uint8_t id): connectionId{id} {}
+    )
+
+    /** Connection data send receipt.
+        
+        Since the connection buffers are not infinite, the ConnectionReceived message must be issued after each connection send message has been accepted and the data has been written to the buffer at the target side. The returned length must be the same as the length of data sent by the last send message, or 0, indicating the data has not been written and the send message must be repeated. 
+     */
+    MESSAGE(ConnectionReceived, true,
+        uint8_t connectionId;
+        uint8_t length;
+        uint16_t available;
+
+        ConnectionReceived(uint8_t id, uint8_t length, uint16_t available) : connectionId{id}, length{length}, available{available} {}
     )
 
     /** Closes the connection. 

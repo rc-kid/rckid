@@ -2,10 +2,16 @@
 
 #define ARCH_ESP8266
 
+#define FATAL_ERROR(ERR) do { LOG(__FILE__ << "(" << __LINE__ << "):" << ERR); while (true) {}; } while (false)
+
+#define ASSERT(...) do { if (!(__VA_ARGS__)) FATAL_ERROR("assert"); } while (false)
+#define UNIMPLEMENTED FATAL_ERROR("unimplemented")
+#define UNREACHABLE FATAL_ERROR("unreachable")
 
 /** On ESP8266 we use the default Arduino core provided for basic hardware. 
  */
 #include "../arduino/platform.h"
+
 
 #include "../utils/writer.h"
 
@@ -17,7 +23,10 @@ inline Writer writeToSerial() {
     }};
 }
 
+#undef LOG // the defauult implementation that does nothing from platform 
+
 #define LOG(...) ::writeToSerial() << __VA_ARGS__ << "\r\n"
+
 
 
 /** Minimal circuit

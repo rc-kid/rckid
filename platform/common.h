@@ -12,12 +12,17 @@ inline uint64_t operator "" _u64(unsigned long long value) { return static_cast<
 #endif
 
 #ifndef UNREACHABLE
-#define UNREACHABLE
+#define UNREACHABLE while (true) {}
 #endif
 
 #ifndef UNIMPLEMENTED
-#define UNIMPLEMENTED
+#define UNIMPLEMENTED while (true) {}
 #endif
+
+#ifndef LOG
+#define LOG(...)
+#endif
+
 namespace platform {
 
     /** Endiannes of the platform. 

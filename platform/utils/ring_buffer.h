@@ -45,12 +45,40 @@ public:
         return num;
     }
 
+    /** Reads the given data from the buffer advancing the read pointer. 
+     
+        Returns the actual number of bytes transferred to the bufer, which must be smaller or equal to numBytes. 
+     */
     unsigned read(uint8_t * buffer, unsigned numBytes) {
         unsigned num = std::min(canRead(), numBytes);
         for (unsigned i = 0; i < num; ++i) {
             buffer[i] = buffer_[r_++];
             r_ = r_ % SIZE;
         }
+        return num;
+    }
+
+    /** Reads up to numBytes from the buffer without advancing the read pointer (i.e. the same data can be read multiple times). 
+     
+        Returns the actual number of bytes read.
+     */
+    unsigned peek(uint8_t * buffer, unsigned numBytes) {
+        unsigned num = std::min(canRead(), numBytes);
+        unsigned r = r_;
+        for (unsigned i = 0; i < num; ++i) {
+            buffer[i] = buffer_[r++];
+            r = r % SIZE;
+        }
+        return num;
+    }
+
+    /** Moves the read pointer by numBytes. 
+     
+        Useful for advancing the read pointer after previous peeks. Returns the number of bytes actually advanced (if lower than numBytes). 
+     */
+    unsigned flush(unsigned numBytes) {
+        unsigned num = std::min(canRead(), numBytes);
+        r_ = (r_ + num) % SIZE;
         return num;
     }
 
