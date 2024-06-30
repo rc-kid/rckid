@@ -559,7 +559,7 @@ namespace rckid {
     void ST7789::reset() {
         dma_channel_abort(dma_);
         pio_sm_set_enabled(pio_, sm_, false);
-        updating_ = false;
+        updating_ = 0;
 
         gpio_init(RP_PIN_DISP_TE);
         gpio_set_dir(RP_PIN_DISP_TE, GPIO_IN);
@@ -696,7 +696,7 @@ namespace rckid {
             dma_channel_set_irq0_enabled(dma_, false);
             dma_channel_abort(dma_);
             dma_channel_set_irq0_enabled(dma_, true);
-            updating_ = false;
+            updating_ = 0;
             pio_sm_set_enabled(pio_, sm_, false);
             end(); // end the RAMWR command
             initializePinsBitBang();
@@ -720,10 +720,10 @@ namespace rckid {
     }
 
     void ST7789::irqHandler() {
-        if (cb_()) {
-            updating_ = false;
+        if (cb_) 
+            cb_();
+        if (updating_ == 0 || (--updating_ == 0))
             stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::displayUpdateStart_);
-        }
     }
 
     // ============================================================================================

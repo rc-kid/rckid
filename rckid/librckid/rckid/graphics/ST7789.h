@@ -76,10 +76,9 @@ namespace rckid {
 
         /** Callback function for continuous pixel update. 
          
-            The function takes no arguments and returns true if the application is done upating the pixels for the current frame, or false if more pixel updates will be scheduled for current frame. 
+            The function takes no arguments. It may schedule another DMA transfer keep the update, or return immediately of the update is finished for the current frame. 
          */
-        using UpdatePixelsCallback = std::function<bool()>;
-        using DMAUpdateCallback = std::function<bool()>;
+        using DMAUpdateCallback = std::function<void()>;
 
         /** Initializes the display. 
          
@@ -154,15 +153,15 @@ namespace rckid {
 
         /** Returns true if there is a screen update in progress. This is whenever the DMA is active, but can also be between DMA transfers if the callback function indicated more data to come. 
          */
-        static bool dmaUpdateInProgress() { return updating_; }
+        static bool dmaUpdateInProgress() { return updating_ != 0; }
 
         /** Writes given pixels to the srceeen using the DMA. 
          
             If the DMA update is active, it reuses the callback function set with the first call, otherwise the update is treated as a single update. 
          */
         static void dmaUpdateAsync(ColorRGB const * pixels, size_t numPixels) {
-            if (!updating_)
-                cb_ = [](){ return true; }; // be done with the update
+            if (updating_ == 0)
+                cb_ = nullptr; // be done with the update
             dmaUpdateAsync(pixels, numPixels, cb_);
         }
 
@@ -170,10 +169,9 @@ namespace rckid {
          */
         static void dmaUpdateAsync(ColorRGB const * pixels, uint32_t numPixels, DMAUpdateCallback cb) {
             cb_ = cb;
-            if (!updating_) {
+            if (updating_ == 0)
                 stats::displayUpdateStart_ = uptimeUs();
-                updating_ = true;
-            }
+            ++updating_;
 #if (! defined ARCH_MOCK)
             dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
 #else       
@@ -192,7 +190,7 @@ namespace rckid {
         /** Busy waits until the display finishes updating. Only useful in DMA update async mode, otherwise returns immediately.
          */
         static void waitUpdateDone() { 
-            while (updating_)
+            while (updating_ != 0)
                 yield();
         }
 
@@ -311,8 +309,8 @@ namespace rckid {
         static inline uint dma_ = -1;
         static inline dma_channel_config dmaConf_;
 
-        static inline UpdatePixelsCallback cb_;
-        static inline volatile bool updating_ = false;
+        static inline DMAUpdateCallback cb_;
+        static inline volatile uint32_t updating_ = 0;
 
         static inline DisplayMode displayMode_ = DisplayMode::Native_RGB565;
 

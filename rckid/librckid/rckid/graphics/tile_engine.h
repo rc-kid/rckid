@@ -106,12 +106,11 @@ namespace rckid {
             ST7789::waitVSync();
             ST7789::dmaUpdateAsync(bufferForColumn(renderColumn_ + 1), pixelHeight(), [this]() {
                 if (renderColumn_ < 0)
-                    return true;
+                    return;
                 // write already processed pixels
                 ST7789::dmaUpdateAsync(bufferForColumn(renderColumn_), pixelHeight());
                 if (--renderColumn_ >= 0)
                     renderColumn(renderColumn_, bufferForColumn(renderColumn_));
-                return false;
             });
         }
         //@}

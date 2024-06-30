@@ -30,8 +30,6 @@
 
 - do header icons & information 
 
-- do we need the callback return true of false to determine if next transfer is imminent? Can have an int that gets incremented/decremented accordingly and the callback will return void
-
 - do stream from memory that can be used by PNG and other things as well so that all works on streams
 
 - update how the transparency is handled in sprite drawing 

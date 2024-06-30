@@ -59,14 +59,13 @@ namespace rckid {
             ST7789::waitVSync();
             ST7789::dmaUpdateAsync(buffer_, height(), [this]() {
                 if (updateLine_ == width())
-                    return true;
+                    return;
                 if (updateLine_ == width() -1) {
                     ++updateLine_;
                     ST7789::dmaUpdateAsync(buffer_ + height() * (width() - 1), height()); 
                 } else {
                     ST7789::dmaUpdateAsync(buffer_ + height() * updateLine_++, height() * 2);
                 }
-                return false;
             });
         }
 
@@ -112,7 +111,7 @@ namespace rckid {
             ST7789::waitVSync();
             ST7789::dmaUpdateAsync(renderBuffer_, height(), [this]() {
                 if (++column_ == width())
-                    return true;
+                    return;
                 // write the already processed pixels
                 ST7789::dmaUpdateAsync(
                     renderBuffer_ + ((column_ % 2 == 0) ? 0 : height()), 
@@ -125,7 +124,6 @@ namespace rckid {
                         height(), 
                         Palette_332_to_565
                     );
-                return false;
             });
         } 
 
@@ -176,7 +174,7 @@ namespace rckid {
             ST7789::waitVSync();
             ST7789::dmaUpdateAsync(renderBuffer_, height(), [this]() {
                 if (++column_ == width())
-                    return true;
+                    return;
                 // write the already processed pixels
                 ST7789::dmaUpdateAsync(
                     renderBuffer_ + ((column_ % 2 == 0) ? 0 : height()), 
@@ -189,7 +187,6 @@ namespace rckid {
                         height(), 
                         Palette_332_to_565
                     );
-                return false;
             });
         }
 

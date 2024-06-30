@@ -126,7 +126,6 @@ namespace rckid {
         int xEnd_ = 320;
         int yEnd_ = 240;
         ColorRGB framebuffer_[320 * 240];
-        unsigned renderCallbackDepth_ = 0;
     }
 
     void ST7789::initialize() {
@@ -227,16 +226,12 @@ namespace rckid {
     void ST7789::sendMockPixels(ColorRGB const * pixels, size_t numPixels) {
         // send the pixels
         update(pixels, numPixels);
-        // only the first pixel send deals with calling further callbacks
-        if (++renderCallbackDepth_ == 1) {
-            while (renderCallbackDepth_ > 0) {
-                if (cb_()) {
-                    updating_ = false;
-                    endUpdate();
-                }
-                --renderCallbackDepth_;
-            }
-        }
+        //  do callback
+        if (cb_ != nullptr)
+            cb_();
+        // check if we are done updating
+        if (--updating_ == 0)
+            endUpdate();
     }
 
     // ============================================================================================
