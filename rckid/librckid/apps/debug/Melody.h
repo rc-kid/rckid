@@ -39,7 +39,7 @@ namespace rckid {
     private:
 
         Music<Tone<SineWave>> music_{melody_};
-        Header<Color> header_;
+        header::Renderer<Color> header_;
 
 
         static constexpr NoteInfo melody_[] = {

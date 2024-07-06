@@ -15,8 +15,8 @@ set(RADIO NRF)
 
 file(GLOB_RECURSE SRC "./*.cpp" "./*.h")
 add_executable(${TARGET} ${SRC})
+target_link_libraries(${TARGET} librckid-radio-nrf)
 link_with_librckid(${TARGET})
-#target_link_libraries(${TARGET} librckid-radio-nrf)
 
 #pico_generate_pio_header(rckid-test ${CMAKE_SOURCE_DIR}/librckid/rckid/st7789.pio)
 

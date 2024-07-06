@@ -1,8 +1,21 @@
 #pragma once
 
+#include "rckid/ui/text_input.h"
+#include "rckid/ui/header.h"
+#include "rckid/app.h"
+
 namespace rckid {
 
     /** Telegram Messenger
+     
+        - have carousel for selecting which chat
+        - then in the chat, display text and icons + media 
+        - A = start writing text
+        - B = go back to list of conversations
+        - Up / Down = scroll
+        - Select = start look at the media sent
+        - Start = record audio message
+
 
         
 
@@ -34,7 +47,30 @@ namespace rckid {
         - it looks that when videos are sent, there is jpg o png thumb provided as well, which can be used to show things 
 
      */
-    class Messenger {
+    class Messenger : public App<FrameBuffer<ColorRGB_332>> {
+    public:
+        static Messenger * create() { return new Messenger(); }
+
+    protected:
+        void update() override {
+            App::update();
+            if (pressed(Btn::A)) {
+                auto msg = TextInput{}.run();
+                if (msg.has_value())
+                    msg_ = msg.value();
+            } 
+        }
+    
+        void draw() override {
+            driver_.fill();
+            header_.drawOn(driver_, Rect::WH(320, 20));
+            driver_.textMultiline(0,20) << msg_;
+        }
+
+        header::Renderer<Color> header_;
+
+        std::string msg_{"Hello world!"};
+
 
     }; // rckid::Messenger
 

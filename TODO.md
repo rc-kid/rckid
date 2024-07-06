@@ -24,6 +24,8 @@
 
 ## TODO
 
+- add kind switch to trace
+
 - connections API is in progress, how to send messages? via buffer and clear them on IRQ? retransmits? Maybe a buffer, if won't fit in the buffer, not that much harm done - can always retry at later time
 - add timeouts to to connections
 - seems I can use ESB for the NRF24L01p, at least between base station & rckid devices and rckid device themselves (for walkie talkie, we are still just flooding)
@@ -66,7 +68,6 @@
 ## Case
 
 - holes in the top panel for rgb and sensor are on the wrong side
-- print the top holder for painting in a bright color so that the paint opacity can be checked
 - there is still warping when screwed together (Anton suggested heating up a bit and let the tensions equalize, also try larger PCB for v2 to improve rigidity of the frame around it)
 
 ## Audio Woes

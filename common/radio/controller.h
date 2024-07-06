@@ -19,7 +19,6 @@ namespace rckid::radio {
     class Controller {
     public:
 
-
         /** Creates new connection to given device. 
          
             Returns the newly created connection and may set the onAccept and reject events. 
@@ -36,19 +35,42 @@ namespace rckid::radio {
             return result;
         }
 
+        Controller() {
+            ASSERT(instance_ == nullptr);
+            instance_ = this;
+        }
+
+        virtual ~Controller() {
+            ASSERT(instance_ == this);
+            instance_ = nullptr;
+        }
+
+
     protected:
+        
+
 
         /** Incoming connection request handler. 
          
             Override this method to determine whether the connection request should be accepted, or rejected. Default implementation is to reject all connections. To accept the connection, call the acceptConnection() method from within. 
          */
-        virtual void onConnectionOpen(msg::ConnectionOpen const & request) {
+        virtual void onConnectionRequest(msg::ConnectionOpen const & request) {
             rejectConnection(request);
         };
 
         /** Broadcast begin handler. 
          */
         virtual void onBroadcastStart(msg::BroadcastStart const & request) {}
+
+        void onTransmitFail() {
+            LOG("MSG transmit fail");
+            // TODO
+        }
+
+        void onTransmitSuccess() {
+            LOG("MSG transmit success");
+            // TODO
+        }
 
         /** Rejects the given connection. 
          
@@ -111,7 +133,7 @@ namespace rckid::radio {
         void connectionDataReceived(uint8_t connId, uint8_t const * buffer, uint8_t length) {
             Connection * conn = getConnectionByOwnId(connId);
             if (conn == nullptr) {
-                LOG("Received data for unknown connection " << (int)connId << " received, ignoring.");
+                LOG("Received data for unknown connection " << (uint32_t)connId << " received, ignoring.");
                 return;
             }
             conn->tryReceive(buffer, length);
@@ -119,19 +141,19 @@ namespace rckid::radio {
 
         /** Message received event. 
          */
-        void messageReceived(uint8_t const * msg) {
+        void onMessageReceived(uint8_t const * msg) {
             switch (static_cast<msg::Id>(msg[0])) {
                 case msg::ConnectionOpen::ID: {
                     auto & m = msg::ConnectionOpen::fromBuffer(msg);
                     LOG("connection request");
-                    onConnectionOpen(m);
+                    onConnectionRequest(m);
                     break;
                 }
                 case msg::ConnectionAccept::ID: {
                     auto & m = msg::ConnectionAccept::fromBuffer(msg);
                     Connection * conn = getConnectionByOwnId(m.requestId);
                     if (conn == nullptr)
-                        LOG("Accept for unknown connection " << (int)m.requestId << " received, ignoring.");
+                        LOG("Accept for unknown connection " << (uint32_t)m.requestId << " received, ignoring.");
                     else
                         conn->accepted(m.responseId);
                     break;
@@ -140,7 +162,7 @@ namespace rckid::radio {
                     auto & m = msg::ConnectionReject::fromBuffer(msg);
                     Connection * conn = getConnectionByOwnId(m.requestId);
                     if (conn == nullptr)
-                        LOG("Reject for unknown connection " << (int)m.requestId << " received, ignoring.");
+                        LOG("Reject for unknown connection " << (uint32_t)m.requestId << " received, ignoring.");
                     else
                         conn->rejected(); // TODO reason & stuff
                     break;
@@ -162,7 +184,7 @@ namespace rckid::radio {
                         conn->transmitAck(m.length);
                         conn->transmit(m.available);
                     } else {
-                        LOG("Transmit ACK for unknown connection " << (int)m.connectionId << " received, ignoring.");
+                        LOG("Transmit ACK for unknown connection " << (uint32_t)m.connectionId << " received, ignoring.");
                     }
                     break;
                 }
@@ -174,10 +196,8 @@ namespace rckid::radio {
                     break;
                 }
                 // TODO broadcasts - do we want sth? maybe deduplicate & things
-
             }
         }
-
 
     private:
 
@@ -187,7 +207,7 @@ namespace rckid::radio {
         Connection * lastConnection_ = nullptr;
         uint8_t nextConnectionId_ = 0;
 
-        static inline Controller * singleton_ = nullptr;
+        static inline Controller * instance_ = nullptr;
 
 
     }; // radio::Controller

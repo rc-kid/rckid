@@ -17,7 +17,7 @@ namespace rckid {
 
 
      */
-    class Pong : public App<FrameBuffer<ColorRGB>> {
+    class Pong : public App<FrameBuffer<ColorRGB_332>> {
     public:
         static Pong * create() {
             return new Pong();

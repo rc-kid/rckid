@@ -46,7 +46,7 @@ namespace rckid {
 
     private:
 
-        Header<Color> header_;
+        header::Renderer<Color> header_;
 
         std::string label_;
         std::string format_;

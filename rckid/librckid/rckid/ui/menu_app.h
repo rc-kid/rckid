@@ -98,7 +98,7 @@ namespace rckid {
 
     private:
 
-        Header<Color> header_;
+        header::Renderer<Color> header_;
         Carousel<Color> carousel_;
 
         MenuStack & stack_;

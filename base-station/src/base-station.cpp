@@ -94,16 +94,31 @@ using namespace rckid;
 class RadioController : public radio::Controller {
 public:
 
-protected:
-    void onConnectionOpen(radio::msg::ConnectionOpen const & request) override {
-        // TODO
+    static void initialize(radio::DeviceId address) {
+        spi::initialize();
+        LOG("Initializing radio...");
+        //gpio::setAsInput(RADIO_NRF_PIN_IRQ);
+
+        // initialize the radio
+        radio::initialize(address);
+        radio::enable();
+        // and create the singleton 
+        new RadioController{};
+        LOG(" rx address: " << (uint32_t)address);
+        LOG(" should be receiving");
+        LOG(" status: " << (uint32_t)(radio::nrf().getStatus().raw));
+        char addr[] = {0,0,0,0,0,0};
+        radio::nrf().txAddress(addr);
+        LOG("  tx addr:" << addr);    
+        radio::nrf().rxAddress(addr);
+        LOG("  rx addr:" << addr);    
+        LOG("  channel: " << (uint32_t)radio::nrf().channel());
 
     }
 
+protected:
+
 }; // RadioController
-
-
-
 
 void setup() {
     // start serial protocol for debugging
@@ -111,12 +126,13 @@ void setup() {
     Bridge::initialize();
     Bridge::connect();
 
-    radio::initialize('1');
+    RadioController::initialize('1');
+    LOG("Setup done");
 }   
 
 void loop() {
     Bridge::loop();
 
+    // for now do polling for the radio
     radio::loop();
-    //Radio::loop();
 }

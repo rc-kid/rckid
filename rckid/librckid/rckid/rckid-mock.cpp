@@ -222,16 +222,26 @@ namespace rckid {
         // NOP
     }
 
-    
+    /** 
+     
+       dma -> sendPixels -> cb -> dma -> sendPixels
+                               <-     <-
+                            cb (prepares data)
+    */       
     void ST7789::sendMockPixels(ColorRGB const * pixels, size_t numPixels) {
         // send the pixels
         update(pixels, numPixels);
-        //  do callback
-        if (cb_ != nullptr)
-            cb_();
-        // check if we are done updating
-        if (--updating_ == 0)
+        if (updating_ == 1) {
+            while (true) {
+                uint32_t oldUpdating_ = updating_;
+                if (cb_ != nullptr)
+                    cb_();
+                if (oldUpdating_ == updating_)
+                    break;
+            }
+            updating_ = 0;
             endUpdate();
+        } 
     }
 
     // ============================================================================================

@@ -68,6 +68,9 @@
 #define RADIO_NRF_PIN_CS 21
 #define RADIO_NRF_PIN_RXTX 20
 #define RADIO_NRF_PIN_IRQ 17
+#define RADIO_NRF_PIN_MISO 16
+#define RADIO_NRF_PIN_MOSI 19
+#define RADIO_NRF_PIN_SCK 18
 
 /* - pio for the display
    - for PDM microphone

@@ -40,6 +40,7 @@ namespace rckid {
 #if (defined RCKID_MOCK)
     #include "platform/mock/platform.h"
 #else
+    #define ARCH_RCKID
     #include "platform/rp2040/platform.h"
 #endif
 
@@ -53,3 +54,6 @@ namespace rckid {
      */
     Writer writeToSerial();
 }
+
+#undef LOG // from platform
+#define LOG(...) ::rckid::writeToSerial() << __VA_ARGS__ << "\r\n"

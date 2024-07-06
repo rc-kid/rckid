@@ -454,7 +454,7 @@ namespace platform {
 
         void initializeEnhancedShockBurst() {
             // auto retransmit count to 15, auto retransmit delay to 1500us, which is the minimum for the worst case of 32bytes long payload and 250kbps speed
-            writeRegister(SETUP_RETR, 0x80);
+            writeRegister(SETUP_RETR, 0x8f);
             // enable automatic acknowledge on input pipe 1 & 0
             writeRegister(EN_AA, 3);
             // disable dynamic payloads on all input pipes

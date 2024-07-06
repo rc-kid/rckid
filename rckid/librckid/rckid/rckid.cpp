@@ -206,6 +206,9 @@ namespace rckid {
             RP_DEBUG_UART_TX_PIN, 
             RP_DEBUG_UART_RX_PIN
         ); */
+        // initialize the USB
+        tud_init(BOARD_TUD_RHPORT);
+
         // initialize the I2C bus
         i2c_init(i2c0, RP_I2C_BAUDRATE); 
         i2c0->hw->intr_mask = 0;
@@ -295,8 +298,9 @@ namespace rckid {
     Writer writeToSerial() {
         return Writer{[](char x) {
             tud_cdc_write(& x, 1);
-            if (x == '\n')
+            if (x == '\n') {
                 tud_cdc_write_flush();            
+            }
         }};
     }
 
@@ -692,11 +696,9 @@ namespace rckid {
 
     void ST7789::endDMAUpdate() {
         if (pio_sm_is_enabled(pio_, sm_)) {
-            // temporarily disable the IRQ on the DMA to ignore spurious complete events when aborting
-            dma_channel_set_irq0_enabled(dma_, false);
-            dma_channel_abort(dma_);
-            dma_channel_set_irq0_enabled(dma_, true);
-            updating_ = 0;
+            // let the last display update finish (blocking)
+            waitUpdateDone();  
+            cb_ = nullptr; // to be sure
             pio_sm_set_enabled(pio_, sm_, false);
             end(); // end the RAMWR command
             initializePinsBitBang();

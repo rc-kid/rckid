@@ -40,6 +40,8 @@
 #include "apps/debug/MicTest.h"
 #include "apps/debug/melody.h"
 
+#include "apps/messenger.h"
+
 #include "common/radio/radio.h"
 
 using namespace rckid;
@@ -106,10 +108,12 @@ int main() {
     rckid::initialize();
     cpu::overclock();
     //rckid::radio::Controller::initialize(0);
-    
+    radio::initialize(0);
+   
     StaticMenuStack<> menu{
         new Menu{{
             MenuItem::createSubmenu("Games", assets::icons::game_controller, menuGames), 
+            MenuItem::create("Messenger", assets::icons::orca, Messenger::create),
             MenuItem::create("Music", assets::icons::music), 
             MenuItem::create("Walkie-Talkie", assets::icons::baby_monitor), 
             MenuItem::createSubmenu("Settings", assets::icons::settings, menuSettings),

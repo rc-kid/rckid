@@ -8,7 +8,7 @@
 
 namespace rckid::radio {
 
-    /** DeviceIDz
+    /** DeviceID
      
         The device ID identifies an RCKid's device for the transmissions. The device ID is not tied to the device forever.
      */
@@ -85,7 +85,10 @@ namespace rckid::radio {
     /** Sends given message. 
      */
     template<typename T>
-    void sendMessage(DeviceId target, T const & msg) { transmit(target, reinterpret_cast<uint8_t const *>(&msg), sizeof(T)); }
+    void sendMessage(DeviceId target, T const & msg) { 
+        LOG("transmitting message");
+        transmit(target, reinterpret_cast<uint8_t const *>(&msg), sizeof(T)); 
+    }
 
     /** Polling interface for the radio.
      */
