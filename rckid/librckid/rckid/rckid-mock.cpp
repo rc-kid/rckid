@@ -10,8 +10,15 @@
 #include "graphics/ST7789.h"
 #include "graphics/framebuffer.h"
 
+
 #include "fs/sd.h"
 
+
+// cartridge interface
+namespace rckid::cartridge {
+    void initialize();
+    void yield();
+}
 
 namespace rckid {
 
@@ -19,11 +26,13 @@ namespace rckid {
         // TODO initialize the mock display & friends
         InitWindow(640, 480, "RCKid");
         SetTargetFPS(60);
+        cartridge::initialize();
     }
 
     void yield() {
         // TODO do we do anything here actually? 
         //ST7789::processEvents();
+        cartridge::yield();
     }
 
     void tick() {

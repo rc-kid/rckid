@@ -59,8 +59,6 @@
 #define RP_PIN_SD_RX 28
 #define RP_PIN_SD_CSN 29
 
-
-
 #define RADIO_MAX_CONNECTIONS 10
 
 /** Pins assignment for the cartridge with NRF radio chip. 

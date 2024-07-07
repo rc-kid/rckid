@@ -55,6 +55,12 @@ extern "C" {
     void resetHeap();
 }
 
+// cartridge interface
+namespace rckid::cartridge {
+    void initialize();
+    void yield();
+}
+
 namespace rckid {
 
     /** The blue screen of death fatal error handler. 
@@ -226,6 +232,8 @@ namespace rckid {
         irq_set_enabled(I2C0_IRQ, true);
         // make the I2C IRQ priority larger than that of the DMA (0x80) to ensure that I2C comms do not have to wait for render done if preparing data takes longer than sending them
         irq_set_priority(I2C0_IRQ, 0x40); 
+        irq_set_priority(SPI0_IRQ, 0x40);
+        irq_set_priority(SPI1_IRQ, 0x40);
         // set TIMER_IRQ_0 used for fatal error BSOD to be the highest
         irq_set_priority(TIMER_IRQ_0, 0x0);
         // initialize the display
@@ -240,11 +248,15 @@ namespace rckid {
         audio::initialize();
         // configure the SD card
         SD::initialize();
+
+        // and run any cartridge-specific initialization
+        cartridge::initialize();
     }
 
     void yield() {
         tight_loop_contents();
         tud_task();
+        cartridge::yield();
     }
 
    void tick() {

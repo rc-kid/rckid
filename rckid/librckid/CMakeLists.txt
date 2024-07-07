@@ -16,16 +16,24 @@ pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/rckid/ST7789_rgb.p
 pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/rckid/ST7789_rgb_double.pio)
 endif()
 
+# Sets given project to be used with RCKid SDK. 
+#
+# This must be called for libraries as well as executables (cartridges). For cartridges, an extra argument specifying th cartridge type must be supplied. 
 function(link_with_librckid target_name)
     get_target_property(target_type ${target_name} TYPE)
     if (ARCH STREQUAL "RP2040")
         
         if (target_type STREQUAL "EXECUTABLE")
-            message("RCKID: Target executable ${target_name} will be linked with librckid")
+            if (NOT DEFINED ARGV1)
+                message(FATAL_ERROR "When linliking executable with rckid (${target_name}), cartridge name must be specified as well")
+            endif()
+            message("RCKID: Target executable ${target_name} will be linked with librckid, cartridge ${ARGV1}")
             target_compile_options(${target_name} PRIVATE "-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64")
             pico_add_extra_outputs(${target_name})
             pico_set_linker_script(${target_name} ${CMAKE_SOURCE_DIR}/rckid/librckid/memmap.ld)
             target_link_libraries(${target_name} librckid)
+            target_link_libraries(${target_name} librckid-cartridge-${ARGV1})
+
             #set_property(TARGET ${target_name} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
         endif()
 
@@ -49,8 +57,12 @@ function(link_with_librckid target_name)
     elseif (ARCH STREQUAL "MOCK")
 
         if (target_type STREQUAL "EXECUTABLE")
-            message("RCKID: Target executable ${target_name} will be linked with librckid")
+            if (NOT DEFINED ARGV1)
+                message(FATAL_ERROR "When linliking executable with rckid (${target_name}), cartridge name must be specified as well")
+            endif()
+            message("RCKID: Target executable ${target_name} will be linked with librckid, cartridge ${ARGV1}")
             target_link_libraries(${target_name} librckid)
+            target_link_libraries(${target_name} librckid-cartridge-${ARGV1})
         endif()
 
         target_link_libraries(${target_name}
@@ -64,7 +76,7 @@ function(link_with_librckid target_name)
     endif()
 endfunction()
 
-link_with_librckid(librckid)
+link_with_librckid(librckid) 
 
 
 if (ARCH STREQUAL "RP2040")

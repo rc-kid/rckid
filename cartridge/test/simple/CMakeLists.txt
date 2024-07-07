@@ -12,22 +12,22 @@ endif()
 
 # the simplest RCKid library based test that connect to the display and fills it with different colors in a loop using primitive bitbanging
 add_executable(display-test "display.cpp")
-link_with_librckid(display-test)
+link_with_librckid(display-test basic)
 
 # framebuffer tests - no app, primitive main loop that simply shows memory info and display update timings for various framebuffers
 add_executable(fb-hello-rgb "fb-rgb.cpp" "fb-test.h")
-link_with_librckid(fb-hello-rgb)
+link_with_librckid(fb-hello-rgb basic)
 
 add_executable(fb-hello-256 "fb-256.cpp" "fb-test.h")
-link_with_librckid(fb-hello-256)
+link_with_librckid(fb-hello-256 basic)
 
 add_executable(fb-hello-2x-rgb "fb-2x-rgb.cpp" "fb-test.h")
-link_with_librckid(fb-hello-2x-rgb)
+link_with_librckid(fb-hello-2x-rgb basic)
 
 add_executable(fb-hello-2x-256 "fb-2x-256.cpp" "fb-test.h")
-link_with_librckid(fb-hello-2x-256)
+link_with_librckid(fb-hello-2x-256 basic)
 
 # simple application that displays the timings of its main loop, uses a framebuffer app
 add_executable(simple-app "simple-app.cpp")
-link_with_librckid(simple-app)
+link_with_librckid(simple-app basic)
 

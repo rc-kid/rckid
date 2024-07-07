@@ -40,7 +40,7 @@ include_directories(${CMAKE_SOURCE_DIR}/libs/PNGdec/src)
 include_directories(${CMAKE_SOURCE_DIR}/libs/libhelix-mp3)
 
 add_subdirectory("rckid/librckid")
-add_subdirectory("common/radio")
+add_subdirectory("rckid/cartridges")
 add_subdirectory("libs/PNGdec")
 add_subdirectory("libs/libhelix-mp3")
 add_subdirectory("libs/FatFS")

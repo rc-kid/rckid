@@ -15,12 +15,6 @@ namespace rckid::radio {
     DeviceId id() { return id_; }
 
     void initialize(DeviceId deviceId) {
-        // on RCKid initialize the cartridge's SPI
-#if (defined ARCH_RCKID)
-        spi::initialize(RADIO_NRF_PIN_MISO, RADIO_NRF_PIN_MOSI, RADIO_NRF_PIN_SCK);
-        // the line below does not seme to be needed anymore
-        //spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
-#endif
         gpio::setAsInputPullup(RADIO_NRF_PIN_IRQ);
         // initialize radio with own rx and broadcast tx address
         txAddr_ = BroadcastId;
@@ -75,9 +69,9 @@ namespace rckid::radio {
         The method itself can either be registered as an interrupt, or be called from the loop when the IRQ pin is detected low. Upon each IRQ     
      */
     void irqHandler() {
-        LOG("NRF IRQ");
         // see what the fuss is about
         platform::NRF24L01::Status status = radio_.clearIrq();
+        return;
         radio_.flushTx();
         if (Controller::instance_ != nullptr) {
             if (status.txDataFailIrq())
@@ -87,7 +81,6 @@ namespace rckid::radio {
         }
         uint8_t msg[32];
         while (radio_.receive(msg, 32)) {
-            LOG("    message: " << Writer::hex{msg, 32});
             if (Controller::instance_ != nullptr)
                 Controller::instance_->onMessageReceived(msg);
         }

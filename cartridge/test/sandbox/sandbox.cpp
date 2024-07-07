@@ -21,7 +21,6 @@
 #include "rckid/audio/tone.h"
 #include "rckid/audio/music.h"
 
-
 #include "assets/fonts/OpenDyslexic_16.h"
 #include "assets/fonts/Hasklug_16.h"
 #include "assets/fonts/Hurmit_16.h"
@@ -108,7 +107,7 @@ int main() {
     rckid::initialize();
     cpu::overclock();
     //rckid::radio::Controller::initialize(0);
-    radio::initialize(0);
+    //radio::initialize(0);
    
     StaticMenuStack<> menu{
         new Menu{{

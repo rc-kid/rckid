@@ -6,11 +6,12 @@
 #include <common/radio/radio.h>
 #include <common/radio/controller.h>
 #include <common/radio/nrf.h>
+
 namespace rckid {
 
     /** A simple app that verifies communication with the NRF radio and allows some basic wireless monitoring and testing. 
      */
-    class NRFSniffer : public App<FrameBuffer<ColorRGB>> {
+    class NRFSniffer : public App<FrameBuffer<ColorRGB>>, public radio::Controller {
     public:
         static NRFSniffer * create() { return new NRFSniffer{}; }
     protected:
@@ -40,7 +41,7 @@ namespace rckid {
         } 
 
         void update() override {
-            radio::loop();
+            //radio::loop();
             if (pressed(Btn::A)) {
                 char addr[] = {0,0,0,0,0,0};
                 radio::nrf().txAddress(addr);
@@ -84,19 +85,27 @@ namespace rckid {
 
         void draw() override {
             driver_.fill();
-            driver_.textMultiline(0,0) << "Status: " << Writer::hex{x_} << "\n" << 
-                                          "MSG ID: " << msgId_ << "\n" << 
-                                          "IRQs:   " << irqs_ << "\n";
+            driver_.textMultiline(0,0) << "Status:    " << Writer::hex{x_} << "\n" << 
+                                          "MSG ID:    " << msgId_ << "\n" << 
+                                          "Errors:    " << errors_ << "\n" <<
+                                          "Transmits: " << transmits_ << "\n";
         }
 
-        //platform::NRF24L01 radio_{GPIO21, GPIO20};
+
+        void onTransmitFail() override {
+            ++errors_;
+        }
+
+        void onTransmitSuccess() override {
+            ++transmits_;
+        }
+
 
         uint8_t x_;
         uint8_t msgId_ = 0;
-        unsigned irqs_ = 0;
+        uint32_t errors_ = 0;
+        uint32_t transmits_ = 0;
 
-        radio::Controller controller_;
     }; 
-
 
 }

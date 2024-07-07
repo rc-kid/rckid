@@ -62,13 +62,13 @@ namespace rckid::radio {
          */
         virtual void onBroadcastStart(msg::BroadcastStart const & request) {}
 
-        void onTransmitFail() {
-            LOG("MSG transmit fail");
+        virtual void onTransmitFail() {
+            //LOG("MSG transmit fail");
             // TODO
         }
 
-        void onTransmitSuccess() {
-            LOG("MSG transmit success");
+        virtual void onTransmitSuccess() {
+            //LOG("MSG transmit success");
             // TODO
         }
 
@@ -98,7 +98,7 @@ namespace rckid::radio {
             return result;
         }
 
-        /** Returns next valid connection id. 
+        /** Returns next valid connection id.
          
             Keeps instrumenting the connection id for as long as there are conflicts with any currently active connections. 
          */

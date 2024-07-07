@@ -10,4 +10,4 @@ add_compile_options(
 file(GLOB_RECURSE SRC "./*.cpp" "./*.h")
 
 add_executable(${TARGET} ${SRC})
-link_with_librckid(${TARGET})
+link_with_librckid(${TARGET} basic)
