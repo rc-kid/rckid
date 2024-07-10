@@ -26,6 +26,11 @@
 
 - add kind switch to trace
 
+- there seems to be some NRF issue with timing (0.5Mhz for SPI communication mostly does not work, while 10Mhz seems to work reliably)
+- could it be that I am using the single byte transfer?
+- make sure that multiple connection requests for the same connection will be ignored if the connection is already listed as open (and fake accept message will be returned) - because messages can cross
+- have even and odd message sends so that the same data sent multiple times can be deduplicated when ACK is lost
+
 - connections API is in progress, how to send messages? via buffer and clear them on IRQ? retransmits? Maybe a buffer, if won't fit in the buffer, not that much harm done - can always retry at later time
 - add timeouts to to connections
 - seems I can use ESB for the NRF24L01p, at least between base station & rckid devices and rckid device themselves (for walkie talkie, we are still just flooding)
@@ -101,6 +106,17 @@
 ## RP
 
 - USB host cannot be run twice because tud init can only be executed once. See comment in USBMassStorage.cpp, might need to patch the library, or maybe use in host & device mode so that we actually have weak pulldowns and not pullups on data lines? (is this true?)
+
+
+## NRF Cartridge
+
+- 0.5MHz does not seem to work, 10MHz SPI communication seems to be better
+- no clue why, generally first message works, then it breaks
+- all NRF modules I have but the green ones seem to be ESB compatible
+
+## ESP8266 Cartridge
+
+
 
 ## AVR
 

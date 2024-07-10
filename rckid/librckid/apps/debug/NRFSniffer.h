@@ -41,14 +41,19 @@ namespace rckid {
         } 
 
         void update() override {
+            App::update();
             //radio::loop();
             if (pressed(Btn::A)) {
+                //uint32_t x = save_and_disable_interrupts();
+                /*
+                x_ = radio::nrf().getStatus().raw;
                 char addr[] = {0,0,0,0,0,0};
                 radio::nrf().txAddress(addr);
                 LOG("  tx addr:" << addr);    
                 radio::nrf().rxAddress(addr);
                 LOG("  rx addr:" << addr);    
                 LOG("  channel: " << (uint32_t)radio::nrf().channel());
+                */
                 radio::msg::Ping msg{0, msgId_++, 0x11223344};
 //                radio::msg::ConnectionSend msg{56, 12};
                 radio::sendMessage('1', msg);
@@ -60,8 +65,16 @@ namespace rckid {
                 radio_.transmitNoAck(buf, 32);
                 radio_.enableTransmitter();
                 */
-                x_ = radio::nrf().getStatus().raw;
 
+               //restore_interrupts(x);
+
+            } 
+            if (pressed(Btn::Up)) {
+                radio::status_ = radio::nrf().getStatus().raw;
+            }
+            if (pressed(Btn::Down)) {
+                radio::nrf().flushTx();
+                radio::status_ = radio::nrf().getStatus().raw;
             }
             /*
             if (gpio::read(GPIO17) == 0) {
@@ -85,7 +98,7 @@ namespace rckid {
 
         void draw() override {
             driver_.fill();
-            driver_.textMultiline(0,0) << "Status:    " << Writer::hex{x_} << "\n" << 
+            driver_.textMultiline(0,0) << "Status:    " << Writer::hex{radio::status_} << "\n" << 
                                           "MSG ID:    " << msgId_ << "\n" << 
                                           "Errors:    " << errors_ << "\n" <<
                                           "Transmits: " << transmits_ << "\n";

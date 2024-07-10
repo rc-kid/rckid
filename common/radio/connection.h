@@ -16,12 +16,22 @@ namespace rckid::radio {
         using Event = std::function<void(Connection*)>;
     
         /** State of the connection. 
+         
+            The connection can be in four general states:
+            
+            - requested, in which case there is nothing that can be done with the connection, but to wait for the target to accept or reject
+            - open, when the connection can be read from (if data available), written to (if not full), or closed. 
+            - closed (for various reasons), in which case the connection will not receive further data, but any data already in there can be read, and no data can be written to the connection. 
+            - terminated, a terminated connection is like closed, but no data can be read from it and it may be deleted by the controller at any time. 
          */
         enum class State {
-            Request, 
-            Open, 
-            Closing, 
-            Closed,
+            Requested, // locally requested, not heard back
+            Open, // valid connection that can be written to & read from
+            Rejected, // connection has been explicitly rejected by the traget, closed
+            Timeout, // communication failure, closed
+            ClosedLocally, // explicitly closed by this end, closed
+            ClosedRemotely, // explicitly closed by the other end, closed
+            Terminated, // no longer valid to use
         };
 
         /** Returns the state of the connection. 
@@ -59,11 +69,9 @@ namespace rckid::radio {
 
         /** Creates new connection request. 
          */
-        Connection(uint8_t id, Event onAccept, Event onReject):
-            state_{State::Request}, 
-            ownId_{id},
-            onAccept_{onAccept}, 
-            onReject_{onReject} {
+        Connection(uint8_t id):
+            state_{State::Requested}, 
+            ownId_{id} {
         }
 
         /** Creates new accepted connection. 
@@ -78,37 +86,39 @@ namespace rckid::radio {
         /** Marks the connection as open. 
          */
         void accepted(uint8_t otherId) {
-            ASSERT(state_ == State::Request);
+            ASSERT(state_ == State::Requested);
             otherId_  = otherId_;
             state_ = State::Open;
-            if (onAccept_)
-                onAccept_(this);
         }
 
         /** Called when connection is rejected, marks the connection as closed. 
          */
         void rejected() {
-            ASSERT(state_ == State::Request);
-            state_ = State::Closed;
-            if (onReject_)
-                onReject_(this);
+            ASSERT(state_ == State::Requested);
+            state_ = State::Rejected;
         }
 
-        void closed(uint16_t reason, uint8_t const * extra) {
-            // TODO 
+        void closedLocally() {
+            ASSERT(state_ == State::Open);
+            state_ = State::ClosedLocally;
+        }
+
+        void terminated() {
+            state_ = State::Terminated;
         }
 
         bool tryReceive(uint8_t const * buffer, uint8_t length) {
             if (bufferRx_.canWrite() < length) {
-                sendMessage(other_, msg::ConnectionReceived{otherId_, 0, static_cast<uint16_t>(bufferRx_.canWrite())});
+                //sendMessage(other_, msg::ConnectionReceived{otherId_, 0, static_cast<uint16_t>(bufferRx_.canWrite())});
                 return false;
             } else {
                 bufferRx_.write(buffer, length);
-                sendMessage(other_, msg::ConnectionReceived{otherId_, length, static_cast<uint16_t>(bufferRx_.canWrite())});
+                //sendMessage(other_, msg::ConnectionReceived{otherId_, length, static_cast<uint16_t>(bufferRx_.canWrite())});
                 return true;
             }
         }
 
+        /*
         bool transmit(unsigned available) {
             unsigned n = std::min(available, bufferTx_.canRead());
             if (n == 0)
@@ -123,7 +133,7 @@ namespace rckid::radio {
                 sendMessage(other_, m);
             }
             return true;
-        }
+        } */
 
         void transmitAck(uint8_t length) {
             if (length != 0) 
@@ -136,10 +146,6 @@ namespace rckid::radio {
         DeviceId other_ = 0;
         RingBuffer<512> bufferRx_;
         RingBuffer<512> bufferTx_;
-        Event onAccept_;
-        Event onReject_;
-        Event onClose_;
-        Event onDataReady_;
     };
 
 } // namespace rckid::radio

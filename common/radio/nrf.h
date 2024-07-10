@@ -4,6 +4,8 @@
 
 namespace rckid::radio {
 
+    extern uint8_t status_;
+
     platform::NRF24L01 & nrf();
 
 }

@@ -70,6 +70,15 @@
 #define RADIO_NRF_PIN_MOSI 19
 #define RADIO_NRF_PIN_SCK 18
 
+/** Pin assignment for the WiFi cartridge with ESP8266 and other cartridge settings
+ */
+#define RADIO_WIFI_PIN_TX 16
+#define RADIO_WIFI_PIN_RX 17
+#define RADIO_WIFI_PIN_RESET 14
+#define RADIO_WIFI_PIN_FLASH 15
+#define RADIO_WIFI_UART uart0
+#define RADIO_WIFI_BAUDRATE 115200
+
 /* - pio for the display
    - for PDM microphone
    - ? timer ?  for sound out? 

@@ -9,6 +9,7 @@
 #include <hardware/vreg.h>
 #include <hardware/dma.h>
 #include <hardware/uart.h>
+#include <hardware/sync.h>
 #include <pico.h>
 #include <pico/binary_info.h>
 #include <pico/time.h>

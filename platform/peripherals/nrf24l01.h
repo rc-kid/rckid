@@ -207,6 +207,7 @@ namespace platform {
             gpio::low(RXTX);
             config_ |= CONFIG_PWR_UP;
             config_ &= ~ CONFIG_PRIM_RX;
+            config_ &= ~(CONFIG_MASK_MAX_RT | CONFIG_MASK_RX_DR | CONFIG_MASK_TX_DS);
             writeRegister(CONFIG, config_);
             gpio::high(RXTX);
         }

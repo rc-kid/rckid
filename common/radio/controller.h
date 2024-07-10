@@ -6,6 +6,8 @@
 namespace rckid::radio {
 
     /** Radio controller. 
+     
+        The controller uses the low level radio message API to manage long-term connections and manage broadcasts. It should be used by inheriting from the class and overriding the event methods. 
 
 
 
@@ -17,27 +19,11 @@ namespace rckid::radio {
 
      */
     class Controller {
-    public:
-
-        /** Creates new connection to given device. 
-         
-            Returns the newly created connection and may set the onAccept and reject events. 
-         */
-        Connection * openConnection(DeviceId other, ConnectionKind kind, Connection::Event onAccept = nullptr, Connection::Event onReject = nullptr) {
-#if (defined RADIO_MAX_CONNECTIONS)
-            if (connections_.size() == RADIO_MAX_CONNECTIONS)
-                return nullptr;
-#endif
-            Connection * result = new Connection{getNextConnectionId(), onAccept, onReject};
-            sendMessage(other, msg::ConnectionOpen{id(), result->ownId(), kind});
-            lastConnection_ = result;
-            connections_.push_back(result);
-            return result;
-        }
+    protected:
 
         Controller() {
             ASSERT(instance_ == nullptr);
-            instance_ = this;
+            instance_ = this;   
         }
 
         virtual ~Controller() {
@@ -45,44 +31,25 @@ namespace rckid::radio {
             instance_ = nullptr;
         }
 
-
-    protected:
-        
-
-
-        /** Incoming connection request handler. 
+        /** Creates new connection to given device. 
          
-            Override this method to determine whether the connection request should be accepted, or rejected. Default implementation is to reject all connections. To accept the connection, call the acceptConnection() method from within. 
+            Returns the newly created connection and may set the onAccept and reject events. 
          */
-        virtual void onConnectionRequest(msg::ConnectionOpen const & request) {
-            rejectConnection(request);
-        };
-
-        /** Broadcast begin handler. 
-         */
-        virtual void onBroadcastStart(msg::BroadcastStart const & request) {}
-
-        virtual void onTransmitFail() {
-            //LOG("MSG transmit fail");
-            // TODO
-        }
-
-        virtual void onTransmitSuccess() {
-            //LOG("MSG transmit success");
-            // TODO
-        }
-
-        /** Rejects the given connection. 
-         
-            Sends the connection reject message to the sender. 
-         */
-        void rejectConnection(msg::ConnectionOpen const & request) {
-            sendMessage(request.sender, msg::ConnectionReject{request, Error::ConnectionUnsupported});
+        Connection * openConnection(DeviceId other, ConnectionKind kind) {
+#if (defined RADIO_MAX_CONNECTIONS)
+            if (connections_.size() == RADIO_MAX_CONNECTIONS)
+                return nullptr;
+#endif
+            Connection * result = new Connection{getNextConnectionId()};
+            sendMessage(other, msg::ConnectionOpen{id(), result->ownId(), kind});
+            lastConnection_ = result;
+            connections_.push_back(result);
+            return result;
         }
 
         /** Accepts the given connection reuquest and returns the connection itself. 
          
-            May return null if creating the new connection failed. 
+            May return null if creating the new connection failed.
          */
         Connection * acceptConnection(msg::ConnectionOpen const & request) {
 #if (defined RADIO_MAX_CONNECTIONS)
@@ -97,6 +64,82 @@ namespace rckid::radio {
             connections_.push_back(result);
             return result;
         }
+
+        /** Rejects the given connection request. 
+         
+            Sends the connection reject message to the sender. 
+         */
+        void rejectConnection(msg::ConnectionOpen const & request) {
+            sendMessage(request.sender, msg::ConnectionReject{request, Error::ConnectionUnsupported});
+        }
+
+        void closeConnection(Connection & conn, char const * reason = nullptr) {
+            if (conn.open())
+                sendMessage(conn.other_, msg::ConnectionClose{conn.otherId_, reason});
+            conn.closedLocally();
+        }
+
+        void terminateConnection(Connection & conn) {
+            if (conn.open())
+                sendMessage(conn.other_, msg::ConnectionClose{conn.otherId_, nullptr});
+            conn.terminated();
+            // TODO delete the connection from our list
+        }
+
+
+        /** Incoming connection request handler. 
+         
+            Override this method to determine whether the connection request should be accepted, or rejected. Default implementation is to reject all connections.
+         */
+        virtual void onConnectionRequest(msg::ConnectionOpen const & request) {
+            rejectConnection(request);
+        };
+
+        /** Called when the locally opened connection has been accepted by the target. 
+            
+            Argument is the accepted connection that is now ready to be written to. Does nothing by default. 
+         */
+        virtual void onConnectionAccepted(Connection & conn) { }
+
+        /** Called when the locally opened connection has been explicitly rejected by the target. 
+
+            This only happens if the target has explicitly rejected the connection. For timeouts and other connection errors, see the onConnectionClosed method below.
+
+            After the connection has been rejected, it will be closed locally and the onConnectionCLosed event will be called.           
+         */
+        virtual void onConnectionRejected(Connection & conn, char const * extra) {}
+
+        /** Called when a connection has been closed. 
+         
+            The connection can either be closed locally, remotely, or can timeout. The connection can still be used even after this call returns - to dispose of a connection, call he terminateConnection() method. 
+        */
+        virtual void onConnectionClosed(Connection & conn, char const * extra) {} 
+
+        /** Called when new data is ready to be read from the connection. 
+         */
+        virtual void onConnectionDataReady(Connection & conn) {}
+
+        // TODO broadcasts
+
+
+
+
+
+
+        virtual void onTransmitFail() {
+            //LOG("MSG transmit fail");
+            // TODO
+        }
+
+        virtual void onTransmitSuccess() {
+            //LOG("MSG transmit success");
+            // TODO
+        }
+
+
+
+
+    private:
 
         /** Returns next valid connection id.
          
@@ -130,54 +173,69 @@ namespace rckid::radio {
             return nullptr;
         }
 
+        /** Called when new data has been received for the given connection. 
+         */
         void connectionDataReceived(uint8_t connId, uint8_t const * buffer, uint8_t length) {
             Connection * conn = getConnectionByOwnId(connId);
             if (conn == nullptr) {
                 LOG("Received data for unknown connection " << (uint32_t)connId << " received, ignoring.");
                 return;
             }
+
             conn->tryReceive(buffer, length);
         }
 
         /** Message received event. 
+         
+            This method is called automatically by the radio layer and there should be no need to override it as all the required functionality is either handled automatically, or delegated to the virtual event methods. 
          */
         void onMessageReceived(uint8_t const * msg) {
-            switch (static_cast<msg::Id>(msg[0])) {
+            switch (msg::getIdFrom(msg)) {
+                case msg::Ping::ID: {
+                    // TODO deal with the ping in buddy list, etc. 
+                    break;
+                }
+                // on connection open request call the event which will either handle rejection, or will create the connection endpoint locally and send the accept
                 case msg::ConnectionOpen::ID: {
-                    auto & m = msg::ConnectionOpen::fromBuffer(msg);
                     LOG("connection request");
+                    auto & m = msg::ConnectionOpen::fromBuffer(msg);
                     onConnectionRequest(m);
                     break;
                 }
+                // our connection has been accepted - if known, update the connection information, mark it as open and call the onConnectionAccepted event
                 case msg::ConnectionAccept::ID: {
                     auto & m = msg::ConnectionAccept::fromBuffer(msg);
                     Connection * conn = getConnectionByOwnId(m.requestId);
-                    if (conn == nullptr)
+                    if (conn == nullptr) {
                         LOG("Accept for unknown connection " << (uint32_t)m.requestId << " received, ignoring.");
-                    else
+                    } else {
                         conn->accepted(m.responseId);
+                        onConnectionAccepted(*conn);
+                    }
                     break;
                 }
+                // connection has been rejected, update connection information and call the appropriate event, but do *not* dispose of the connection just yet.
                 case msg::ConnectionReject::ID: {
                     auto & m = msg::ConnectionReject::fromBuffer(msg);
                     Connection * conn = getConnectionByOwnId(m.requestId);
-                    if (conn == nullptr)
+                    if (conn == nullptr) {
                         LOG("Reject for unknown connection " << (uint32_t)m.requestId << " received, ignoring.");
-                    else
-                        conn->rejected(); // TODO reason & stuff
+                    } else {
+                        conn->rejected();
+                        onConnectionRejected(*conn, m.extra);
+                        onConnectionClosed(*conn, nullptr);
+                    }
                     break;
                 }
-                case msg::ConnectionSend::ID: {
+                case msg::ConnectionData::ID: {
+                    /*
                     auto & m = msg::ConnectionSend::fromBuffer(msg);
                     connectionDataReceived(m.connectionId, m.data, m.size);
-                    break;
-                }
-                case msg::ConnectionSend30::ID: {
-                    auto & m = msg::ConnectionSend30::fromBuffer(msg);
-                    connectionDataReceived(m.connectionId, m.data, 30);
+                    */
                     break;
                 }
                 case msg::ConnectionReceived::ID: {
+                    /*
                     auto & m = msg::ConnectionReceived::fromBuffer(msg);
                     Connection * conn = getConnectionByOwnId(m.connectionId);
                     if (conn != nullptr) {
@@ -187,19 +245,20 @@ namespace rckid::radio {
                         LOG("Transmit ACK for unknown connection " << (uint32_t)m.connectionId << " received, ignoring.");
                     }
                     break;
+                    */
                 }
                 case msg::ConnectionClose::ID: {
+                    /*
                     auto m = msg::ConnectionClose::fromBuffer(msg);
                     Connection * conn = getConnectionByOwnId(m.connectionId);
                     if (conn)
                         conn->closed(m.reason, m.extra);
                     break;
+                    */
                 }
                 // TODO broadcasts - do we want sth? maybe deduplicate & things
             }
         }
-
-    private:
 
         friend void irqHandler();
 
