@@ -31,9 +31,8 @@
 #include "assets/fonts/PixelFJVerdana_24.h"
 #include "assets/fonts/DPComic_24.h"
 
-
-
 //#include "apps/debug/NRFSniffer.h"
+#include "apps/debug/WiFiTest.h"
 #include "apps/debug/MP3Test.h"
 #include "apps/debug/WAVTest.h"
 #include "apps/debug/MicTest.h"
@@ -94,7 +93,8 @@ Menu * menuDebug() {
     return new Menu{{
         MenuItem::create("HW Test", assets::icons::freesia, HWTest::create),
         MenuItem::create("Fonts", assets::icons::freesia, FontSelector::create),
-        //MenuItem::create("NRFSniffer", assets::icons::rabbit_1, NRFSniffer::create),
+       // MenuItem::create("NRFSniffer", assets::icons::rabbit_1, NRFSniffer::create),
+        MenuItem::create("WiFiTest", assets::icons::rabbit_1, WiFiTest::create),
         MenuItem::create("MP3 Test", assets::icons::rabbit_1, MP3Test::create),
         MenuItem::create("Melody", assets::icons::music, Melody::create),
         MenuItem::create("WAV Test", assets::icons::rabbit_1, WAVTest::create),

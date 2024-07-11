@@ -4,11 +4,13 @@
 #include <cstring>
 #include <thread>
 #include <chrono>
+#include <iostream>
 
 
 
 #define ARCH_MOCK
 #define ARCH_LITTLE_ENDIAN
+
 
 namespace cpu {
 
@@ -97,6 +99,11 @@ namespace platform {
 #include "../common.h"
 #include "../fonts.h"
 #include "../peripherals/color_strip.h"
+
+#include "platform/utils/writer.h"
+#undef LOG
+#define LOG(...) Writer{[](char c) { std::cout << c; }} << __VA_ARGS << '\n'
+
 
 /** RP2040 compatibility layer. 
  

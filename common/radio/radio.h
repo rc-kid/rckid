@@ -4,6 +4,7 @@
 
 
 #include "platform.h"
+#include "platform/utils/ring_buffer.h"
 #include "common/errors.h"
 
 namespace rckid::radio {
@@ -17,10 +18,6 @@ namespace rckid::radio {
     /** Device ID 0 is reserved as broadcast device.
      */
     static constexpr DeviceId BroadcastId = 0;
-
-    enum class ConnectionKind : uint8_t {
-
-    }; // radio::ConnectionKind
 
     enum class BroadcastKind : uint8_t {
 
@@ -103,5 +100,8 @@ namespace rckid::radio {
         This needs to be called regularly to process the radio events. Since the implementation may use blocking API, it is generally not safe to call this from an ISR. 
      */
     void loop();
+
+    #include "connection.inc.h"
+    #include "controller.inc.h"
 
 } // namespace rckid::radio

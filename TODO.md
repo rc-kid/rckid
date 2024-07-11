@@ -24,7 +24,9 @@
 
 ## TODO
 
-- add kind switch to trace
+- add cartridge settings app
+
+- add commands, such as the GET, etc. then make the curl stuff work-ish? 
 
 - there seems to be some NRF issue with timing (0.5Mhz for SPI communication mostly does not work, while 10Mhz seems to work reliably)
 - could it be that I am using the single byte transfer?

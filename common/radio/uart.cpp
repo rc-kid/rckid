@@ -1,10 +1,14 @@
 #include "radio.h"
-#include "controller.h"
 
 namespace rckid::radio {
 
+    DeviceId id_;
+
+    DeviceId id() { return id_; }
+
     void initialize(DeviceId deviceId) {
         // nothing to do IMO
+        id_ = deviceId;
     }
 
     void enable(bool silent) {

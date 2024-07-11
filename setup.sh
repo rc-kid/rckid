@@ -4,6 +4,7 @@ echo "Installing packages..."
 sudo apt update
 sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib curl python3 python3.10-venv 
 sudo apt install libx11-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev libgl1-mesa-dev
+sudo apt install libcurl4-openssl-dev
 
 cd libs
 

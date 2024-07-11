@@ -37,6 +37,7 @@ namespace rckid {
 
     void tick() {
         MEASURE_TIME(stats::tickUs_, 
+            yield();
             ++stats::ticks_;
             DeviceWrapper::lastState_ = DeviceWrapper::state_.state;
             DeviceWrapper::state_.state.setBtnSel(IsKeyDown(KEY_SPACE));    
@@ -49,7 +50,6 @@ namespace rckid {
             DeviceWrapper::state_.state.setBtnDown(IsKeyDown(KEY_DOWN));    
             if (WindowShouldClose())
                 std::exit(-1);
-
         );
     }
 
@@ -119,6 +119,7 @@ namespace rckid {
     // ============================================================================================
 
     void DeviceWrapper::waitTickDone() {
+        yield();
         // do nothing, tick is always done in mock 
     }
 

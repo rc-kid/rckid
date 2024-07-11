@@ -3,7 +3,6 @@
 #include <platform/peripherals/nrf24l01.h>
 
 #include "radio.h"
-#include "controller.h"
 
 
 namespace rckid::radio {

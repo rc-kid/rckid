@@ -71,10 +71,9 @@
     MESSAGE(, ConnectionOpen, true,
         DeviceId sender;
         uint8_t requestId;
-        ConnectionKind kind;
 
-        ConnectionOpen(DeviceId sender, uint8_t requestId, ConnectionKind kind):
-            sender{sender}, requestId{requestId}, kind{kind} {}
+        ConnectionOpen(DeviceId sender, uint8_t requestId):
+            sender{sender}, requestId{requestId} {}
     )
 
     /** Connection accepted by the target device. 

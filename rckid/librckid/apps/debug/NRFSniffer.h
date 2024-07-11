@@ -4,7 +4,6 @@
 
 
 #include <common/radio/radio.h>
-#include <common/radio/controller.h>
 #include <common/radio/nrf.h>
 
 namespace rckid {
