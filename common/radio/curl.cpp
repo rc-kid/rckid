@@ -25,7 +25,13 @@ namespace curl {
         void onConnectionRequest(msg::ConnectionOpen const & request) override {
             acceptConnection(request);
         }
-        
+
+        void onConnectionDataReady(Connection & conn) {
+            uint8_t buffer[128];
+            unsigned available = conn.read(buffer, 128);
+            if (available != 0)
+                conn.write(buffer, available);
+        }
 
     }; // CurlClient
 } // namespace curl
@@ -58,8 +64,10 @@ namespace rckid::radio {
             while (true) {
                 auto msg = tx_.read(); 
                 LOG("curl rx: " << Writer::hex{msg.bytes, 32});
-                if (curl::Controller::instance_ != nullptr)
+                if (curl::Controller::instance_ != nullptr) {
                     curl::Controller::instance_->onMessageReceived(msg.bytes);
+                    curl::Controller::instance_->loop();
+                }
             }
         }};
         t.detach();
@@ -99,6 +107,8 @@ namespace rckid::radio {
             if (Controller::instance_ != nullptr)
                 Controller::instance_->onMessageReceived(msg.bytes);
         }
+        if (Controller::instance_ != nullptr)
+            Controller::instance_->loop();
     }
 
 } // rckid::radio

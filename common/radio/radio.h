@@ -49,7 +49,7 @@ namespace rckid::radio {
 
 #define MESSAGE(ID_HINT, NAME, ACK_REQUIRED, ...)                         \
     class NAME {                                                 \
-    private:  \
+    protected:  \
         uint8_t id_ = static_cast<uint8_t>(Id::NAME); \
     public:                                                      \
         static Id constexpr ID = Id::NAME;                       \

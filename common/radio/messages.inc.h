@@ -38,6 +38,13 @@
 
         uint8_t connectionId;
         uint8_t payload[30];
+
+        ConnectionData(uint8_t otherId, bool odd, uint8_t length):
+            connectionId{otherId} {
+            id_ |= (length & 0x1f);
+            if (odd)
+                id_ |= 0b00100000;
+        }
    )
 
    MESSAGE(= 0x40, BroadcastData, false, 

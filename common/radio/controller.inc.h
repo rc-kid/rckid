@@ -84,8 +84,12 @@ protected:
             sendMessage(conn.other_, msg::ConnectionClose{conn.otherId_, nullptr});
         conn.terminated();
         // TODO delete the connection from our list
+        Connection * c = & conn;
+        connections_.erase(std::remove_if(connections_.begin(), connections_.end(), [c](Connection * x) { 
+            return x == c;
+        }));
+        delete &conn;
     }
-
 
     /** Incoming connection request handler. 
      
@@ -117,7 +121,10 @@ protected:
      
         The connection can either be closed locally, remotely, or can timeout. The connection can still be used even after this call returns - to dispose of a connection, call he terminateConnection() method. 
     */
-    virtual void onConnectionClosed(Connection & conn, char const * extra) {} 
+    virtual void onConnectionClosed(Connection & conn, char const * extra) {
+        LOG("Connection " << static_cast<uint32_t>(conn.ownId()) << " closed");
+        terminateConnection(conn);
+    } 
 
     /** Called when new data is ready to be read from the connection. 
      */
@@ -177,16 +184,22 @@ private:
         return nullptr;
     }
 
-    /** Called when new data has been received for the given connection. 
+    /** Iterate over existing connections and see if there is anything we need to send. 
      */
-    void connectionDataReceived(uint8_t connId, uint8_t const * buffer, uint8_t length) {
-        Connection * conn = getConnectionByOwnId(connId);
-        if (conn == nullptr) {
-            LOG("Received data for unknown connection " << (uint32_t)connId << " received, ignoring.");
-            return;
-        }
+    void loop() {
+        for (Connection * conn : connections_)
+            transmitConnectionData(conn, 30);
+    }
 
-        conn->tryReceive(buffer, length);
+    void transmitConnectionData(Connection * conn, unsigned available) {
+        unsigned n = std::min(available, conn->bufferTx_.canRead());
+        if (n == 0)
+            return; // nothing to transmit
+        if (n > 30)
+            n = 30;
+        msg::ConnectionData m{conn->otherId(), conn->txOdd_, static_cast<uint8_t>(n)};
+        conn->bufferTx_.peek(m.payload, n);
+        sendMessage(conn->other(), m);
     }
 
     /** Message received event. 
@@ -232,34 +245,48 @@ private:
                 }
                 break;
             }
+            // when receiving data, check that the connection exists and if yes, try storing the data. Send back the ConnectionReceived message that informs the sender about number of bytes written and available space in the connection's rx buffer. 
             case msg::ConnectionData::ID: {
-                /*
-                auto & m = msg::ConnectionSend::fromBuffer(msg);
-                connectionDataReceived(m.connectionId, m.data, m.size);
-                */
+                auto & m = msg::ConnectionData::fromBuffer(msg);
+                Connection * conn = getConnectionByOwnId(m.connectionId);
+                if (conn == nullptr) {
+                    LOG("Received data for unknown connection " << (uint32_t)m.connectionId << " received, ignoring.");
+                    break;
+                }
+                unsigned available = conn->bufferRx_.canWrite();
+                if (available >= m.length()) {
+                    conn->bufferRx_.write(m.payload, m.length());
+                    available -= m.length();
+                    sendMessage(conn->other(), msg::ConnectionReceived{conn->otherId(), m.length(), static_cast<uint16_t>(available)});
+                    // the the app know the connection data can be read
+                    onConnectionDataReady(*conn);
+                } else {
+                    sendMessage(conn->other(), msg::ConnectionReceived{conn->otherId(), 0, static_cast<uint16_t>(available)});
+                }
                 break;
             }
+            // when we receive connection data receipt, flush the connection's tx buffer accordingly and try sending more, if there is data to send
             case msg::ConnectionReceived::ID: {
-                /*
                 auto & m = msg::ConnectionReceived::fromBuffer(msg);
                 Connection * conn = getConnectionByOwnId(m.connectionId);
                 if (conn != nullptr) {
-                    conn->transmitAck(m.length);
-                    conn->transmit(m.available);
+                    if (m.length > 0) {
+                        conn->bufferTx_.flush(m.length);
+                        conn->txOdd_ = ! conn->txOdd_;
+                    }
+                    transmitConnectionData(conn, m.available);
                 } else {
                     LOG("Transmit ACK for unknown connection " << (uint32_t)m.connectionId << " received, ignoring.");
                 }
                 break;
-                */
             }
+            // marks the connection as closed
             case msg::ConnectionClose::ID: {
-                /*
                 auto m = msg::ConnectionClose::fromBuffer(msg);
                 Connection * conn = getConnectionByOwnId(m.connectionId);
                 if (conn)
-                    conn->closed(m.reason, m.extra);
+                    onConnectionClosed(*conn, m.extra);
                 break;
-                */
             }
             // TODO broadcasts - do we want sth? maybe deduplicate & things
         }

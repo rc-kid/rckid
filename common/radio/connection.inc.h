@@ -55,6 +55,17 @@ public:
         return bufferTx_.write(buffer, numBytes); 
     }
 
+    /** A connection can be assigned metadata.
+     */
+    template<typename T> 
+    T const * getMetadata() const { return static_cast<T const *>(metadata_); }
+
+    template<typename T>
+    T * getMetadata() { return static_cast<T const *>(metadata_); }
+
+    template<typename T>
+    void setMetadata(T * value) { metadata_ = static_cast<void*>(value); }
+
 private:
 
     friend class Controller;
@@ -99,38 +110,7 @@ private:
         state_ = State::Terminated;
     }
 
-    bool tryReceive(uint8_t const * buffer, uint8_t length) {
-        if (bufferRx_.canWrite() < length) {
-            //sendMessage(other_, msg::ConnectionReceived{otherId_, 0, static_cast<uint16_t>(bufferRx_.canWrite())});
-            return false;
-        } else {
-            bufferRx_.write(buffer, length);
-            //sendMessage(other_, msg::ConnectionReceived{otherId_, length, static_cast<uint16_t>(bufferRx_.canWrite())});
-            return true;
-        }
-    }
-
-    /*
-    bool transmit(unsigned available) {
-        unsigned n = std::min(available, bufferTx_.canRead());
-        if (n == 0)
-            return false;
-        if (n >= 30) {
-            msg::ConnectionSend30 m{otherId_};
-            bufferTx_.peek(m.data, 30);
-            sendMessage(other_, m);
-        } else {
-            msg::ConnectionSend m{otherId_, static_cast<uint8_t>(n)};
-            bufferTx_.peek(m.data, n);
-            sendMessage(other_, m);
-        }
-        return true;
-    } */
-
-    void transmitAck(uint8_t length) {
-        if (length != 0) 
-            bufferTx_.flush(length);
-    }
+    void * metadata_ = nullptr;
 
     State state_;
     uint8_t ownId_;
@@ -138,4 +118,6 @@ private:
     DeviceId other_ = 0;
     RingBuffer<512> bufferRx_;
     RingBuffer<512> bufferTx_;
+    // TODO we also need to remmeber the tx timeout and resend the messages when failed 
+    bool txOdd_ = false;
 }; // Connection

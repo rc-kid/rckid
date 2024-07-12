@@ -34,6 +34,8 @@ namespace rckid {
 
         void onConnectionAccepted(radio::Connection & conn) override {
             // now the that the connection has been accepted, we can write to it - request the data
+            uint8_t buffer[] = { 'H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd', '!'};
+            conn.write(buffer, sizeof(buffer));
         }
 
         void onTransmitFail() override {
@@ -42,6 +44,10 @@ namespace rckid {
 
         void onTransmitSuccess() override {
 //            ++transmits_;
+        }
+
+        void onConnectionDataReady(radio::Connection & conn) {
+            terminateConnection(conn);
         }
 
         uint8_t msgId_ = 0;
