@@ -24,6 +24,9 @@
 
 ## TODO
 
+- the double radio methods should not be a problem
+- move controller & radio & stuff to the sdk? likely yes
+
 - add cartridge settings app
 
 - add commands, such as the GET, etc. then make the curl stuff work-ish? 

@@ -123,9 +123,9 @@
     MESSAGE(, ConnectionReceived, true,
         uint8_t connectionId;
         uint8_t length;
-        uint16_t available;
+        uint32_t available;
 
-        ConnectionReceived(uint8_t id, uint8_t length, uint16_t available) : connectionId{id}, length{length}, available{available} {}
+        ConnectionReceived(uint8_t id, uint8_t length, uint32_t available) : connectionId{id}, length{length}, available{available} {}
     )
 
     /** Closes the connection. 

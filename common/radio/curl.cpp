@@ -26,12 +26,19 @@ namespace curl {
             acceptConnection(request);
         }
 
-        void onConnectionDataReady(Connection & conn) {
+        void onConnectionDataReady(Connection & conn) override {
+            LOG("curl connection data received");
             uint8_t buffer[128];
             unsigned available = conn.read(buffer, 128);
             if (available != 0)
                 conn.write(buffer, available);
         }
+
+        void onConnectionClosed(Connection & conn, char const *) override {
+            LOG("Connection closed remotely, terminating...");
+            terminateConnection(conn);
+        }
+
 
     }; // CurlClient
 } // namespace curl

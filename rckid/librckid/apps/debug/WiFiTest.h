@@ -47,8 +47,10 @@ namespace rckid {
         }
 
         void onConnectionDataReady(radio::Connection & conn) {
+            LOG("Connection data received, terminating...");
             terminateConnection(conn);
         }
+
 
         uint8_t msgId_ = 0;
 /*

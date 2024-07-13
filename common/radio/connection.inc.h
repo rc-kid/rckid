@@ -90,7 +90,7 @@ private:
      */
     void accepted(uint8_t otherId) {
         ASSERT(state_ == State::Requested);
-        otherId_  = otherId_;
+        otherId_  = otherId;
         state_ = State::Open;
     }
 
@@ -106,8 +106,52 @@ private:
         state_ = State::ClosedLocally;
     }
 
+    void closedRemotely() {
+        if (state_ != State::Terminated)
+            state_ = State::ClosedRemotely;
+    }
+
     void terminated() {
         state_ = State::Terminated;
+    }
+
+    void transmit(unsigned available) {
+        if (commState_ & TXSTATE_PENDING)
+            return;
+        unsigned n = std::min(available, bufferTx_.canRead());
+        if (n == 0)
+            return; // nothing to transmit
+        if (n > 30)
+            n = 30;
+        LOG("Transmitting connection " << (uint32_t)ownId_ << ", other id " << (uint32_t)otherId_);
+        msg::ConnectionData m{otherId_, static_cast<bool>(commState_ & TXSTATE_ODD), static_cast<uint8_t>(n)};
+        bufferTx_.peek(m.payload, n);
+        commState_ |= TXSTATE_PENDING;
+        sendMessage(other_, m);
+    }
+
+    void transmitAck(uint8_t numBytes, unsigned available) {
+        commState_ &= ~ TXSTATE_PENDING;
+        if (numBytes > 0) {
+            commState_ ^= TXSTATE_ODD;
+            bufferTx_.flush(numBytes);
+        }
+        transmit(available);
+    }
+
+    bool receive(uint8_t const * buffer, uint8_t numBytes, bool odd) {
+        uint16_t available = bufferRx_.canWrite();
+        if (available >= numBytes) {
+            if ((commState_ & RXSTATE_ODD) != odd) {
+                bufferRx_.write(buffer, numBytes);
+                commState_ ^= RXSTATE_ODD;
+            }
+            sendMessage(other_, msg::ConnectionReceived{otherId_, numBytes, static_cast<uint32_t>(available - numBytes)});
+            return true;
+        } else {
+            sendMessage(other_, msg::ConnectionReceived{otherId_, 0, available});
+            return false;
+        }
     }
 
     void * metadata_ = nullptr;
@@ -118,6 +162,12 @@ private:
     DeviceId other_ = 0;
     RingBuffer<512> bufferRx_;
     RingBuffer<512> bufferTx_;
-    // TODO we also need to remmeber the tx timeout and resend the messages when failed 
-    bool txOdd_ = false;
+
+
+    static constexpr uint8_t TXSTATE_ODD = 0x01;
+    static constexpr uint8_t TXSTATE_PENDING = 0x02; 
+    static constexpr uint8_t RXSTATE_ODD = 0x04;
+    uint8_t commState_ = RXSTATE_ODD;
+    // TODO timeout for acks
+
 }; // Connection
