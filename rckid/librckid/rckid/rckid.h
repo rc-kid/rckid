@@ -2,9 +2,9 @@
 
 #include <platform.h>
 
-#include "common/state.h"
-#include "common/commands.h"
-#include "common/errors.h"
+#include "rckid/common/state.h"
+#include "rckid/common/commands.h"
+#include "errors.h"
 #include "graphics/color.h"
 
 #define TRACE(...) ::rckid::writeToSerial() << __VA_ARGS__ << "\r\n"

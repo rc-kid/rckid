@@ -8,9 +8,9 @@
 
 #include <platform/utils/ringavg.h>
 
-#include "common/config.h"
-#include "common/state.h"
-#include "common/commands.h"
+#include "rckid/common/config.h"
+#include "rckid/common/state.h"
+#include "rckid/common/commands.h"
 
 /** Displays AVR status and events on an external SSD1306 OLED display. Note this flag is only for debug purposes when writing own AVR code and that the AVR will hang & be reset via wdt if this is enabled and the oled display is not attached. 
 */

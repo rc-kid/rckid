@@ -91,6 +91,46 @@
                 "$platformio"
             ]
         },
+        // WiFi bridge (internet connection directly in the cartridge), via ESP8266 
+        {
+            "label": "wifi-bridge",
+            "type": "shell",
+            "command": "~/.platformio/penv/bin/pio",
+            "args": [
+                "run"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/wifi-bridge",
+                "shell": {
+                    "executable": "/bin/zsh",
+                    "args": [
+                        "-c"
+                    ]
+                }
+            },
+            "problemMatcher": [
+                "$platformio"
+            ]
+        },
+        // WiFi bridge - upload
+        {
+            "label" : "wifi-bridge [UPLOAD]",
+            "command" : "bash",
+            "args": [
+                "tools/pio-upload.sh",
+                "wifi-bridge",
+                "esp12e",
+            ],
+            "options": {
+                "cwd": ""
+            },
+            "problemMatcher": [
+                "$platformio"
+            ]
+        },
+
+
+
         
         {
             "label": "rckid - local [MOCK]",

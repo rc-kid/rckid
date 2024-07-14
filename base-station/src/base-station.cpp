@@ -11,7 +11,7 @@
 #define RADIO_NRF_PIN_RXTX 16
 #define RADIO_NRF_PIN_IRQ 0
 
-#include <common/radio/nrf.cpp>
+#include <common/radio/radio-nrf.cpp>
 
 /** RCKid Base Station 
  

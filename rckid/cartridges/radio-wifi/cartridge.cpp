@@ -1,6 +1,6 @@
-#include "common/config.h"
-#include "common/radio/radio.h"
+#include "rckid/common/config.h"
 #include "rckid/rckid.h"
+#include "rckid/radio/radio.h"
 
 namespace rckid::cartridge {
 

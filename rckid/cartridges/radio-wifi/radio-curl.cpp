@@ -4,15 +4,14 @@
 #include "platform.h"
 #include "platform/utils/channel.h"
 
-#include "radio.h"
+#include <rckid/radio/radio.h>
 
 // Hacky way to have two connections in a single process, an extra copy of connection and controller in the curl namespace.  
 namespace curl {
     using namespace rckid;
     using namespace rckid::radio;
-    #include "connection.inc.h"
-    #include "controller.inc.h"
-
+    #include <rckid/radio/connection.inc.h>
+    #include <rckid/radio/controller.inc.h>
 
     /** A very simple CURL HTTP/HTTPS based client for debugging purposes. 
      

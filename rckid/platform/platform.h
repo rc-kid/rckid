@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-#include <common/errors.h>
+#include "rckid/errors.h"
 
 /** On top of the RPi Pico SDK macros (see https://www.raspberrypi.com/documentation/pico-sdk/runtime.html#macros48), RCKid defines a few extra macros of its own to decorate functions:
  */
@@ -47,7 +47,7 @@ namespace rckid {
 #include <platform/utils/writer.h>
 
 // include the configuration macros so that all rckid projects can share them
-#include <common/config.h>
+#include "rckid/common/config.h"
 
 namespace rckid {
     /** Returns a writes to the USB virtual COM port.

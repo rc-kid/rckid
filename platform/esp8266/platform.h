@@ -12,7 +12,6 @@
  */
 #include "../arduino/platform.h"
 
-
 #include "../utils/writer.h"
 
 inline Writer writeToSerial() {

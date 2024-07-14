@@ -41,7 +41,7 @@
 
 #include "apps/messenger.h"
 
-#include "common/radio/radio.h"
+#include "rckid/radio/radio.h"
 
 using namespace rckid;
 

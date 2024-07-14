@@ -2,7 +2,8 @@
 
 #include <platform/peripherals/nrf24l01.h>
 
-#include "radio.h"
+#include "rckid/radio/radio.h"
+#include "radio-nrf.h"
 
 
 namespace rckid::radio {

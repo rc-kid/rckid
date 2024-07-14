@@ -5,7 +5,7 @@
 
 #include "platform.h"
 #include "platform/utils/ring_buffer.h"
-#include "common/errors.h"
+#include "rckid/errors.h"
 
 namespace rckid::radio {
 

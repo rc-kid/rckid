@@ -1,4 +1,4 @@
-#include "common/config.h"
+#include "rckid/common/config.h"
 #include "rckid/rckid.h"
 #include "rckid/graphics/ST7789.h"
 
