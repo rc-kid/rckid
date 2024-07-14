@@ -6,7 +6,6 @@
 #include <common/esp8266/bridge.h>
 
 #include <common/radio/radio.h>
-#include <common/radio/controller.h>
 
 #define RADIO_NRF_PIN_CS 2
 #define RADIO_NRF_PIN_RXTX 16

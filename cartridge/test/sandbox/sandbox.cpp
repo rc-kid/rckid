@@ -32,7 +32,8 @@
 #include "assets/fonts/DPComic_24.h"
 
 //#include "apps/debug/NRFSniffer.h"
-#include "apps/debug/WiFiTest.h"
+//#include "apps/debug/WiFiTest.h"
+#include "apps/debug/SerialMonitor.h"
 #include "apps/debug/MP3Test.h"
 #include "apps/debug/WAVTest.h"
 #include "apps/debug/MicTest.h"
@@ -94,7 +95,8 @@ Menu * menuDebug() {
         MenuItem::create("HW Test", assets::icons::freesia, HWTest::create),
         MenuItem::create("Fonts", assets::icons::freesia, FontSelector::create),
        // MenuItem::create("NRFSniffer", assets::icons::rabbit_1, NRFSniffer::create),
-        MenuItem::create("WiFiTest", assets::icons::rabbit_1, WiFiTest::create),
+        MenuItem::create("SerialMonitor", assets::icons::rabbit_1, SerialMonitor::create),
+        //MenuItem::create("WiFiTest", assets::icons::rabbit_1, WiFiTest::create),
         MenuItem::create("MP3 Test", assets::icons::rabbit_1, MP3Test::create),
         MenuItem::create("Melody", assets::icons::music, Melody::create),
         MenuItem::create("WAV Test", assets::icons::rabbit_1, WAVTest::create),
@@ -105,7 +107,7 @@ Menu * menuDebug() {
 
 int main() {
     rckid::initialize();
-    cpu::overclock();
+    //cpu::overclock();
     //rckid::radio::Controller::initialize(0);
     //radio::initialize(0);
    

@@ -24,6 +24,8 @@
 
 ## TODO
 
+- ESP12e won't start(!)
+
 - the double radio methods should not be a problem
 - move controller & radio & stuff to the sdk? likely yes
 
@@ -105,6 +107,8 @@
 - the code needs to be much polished
 
 ## PCB
+
+- ESP cartridge has pin 0 & 2 swapped
 
 - how to make the oscillator better? The capacitors are already ok-ish for 16.5 pF, but maybe the capcacitance of the traces is wrong? 
 
