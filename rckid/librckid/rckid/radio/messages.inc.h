@@ -78,9 +78,10 @@
     MESSAGE(, ConnectionOpen, true,
         DeviceId sender;
         uint8_t requestId;
+        uint8_t param;
 
-        ConnectionOpen(DeviceId sender, uint8_t requestId):
-            sender{sender}, requestId{requestId} {}
+        ConnectionOpen(DeviceId sender, uint8_t requestId, uint8_t param = 0):
+            sender{sender}, requestId{requestId}, param{param} {}
     )
 
     /** Connection accepted by the target device. 

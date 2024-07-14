@@ -24,6 +24,19 @@ public:
             return w_ + SIZE - r_;        
     }
 
+    /** Returns the number of bytes that can be read from the ring buffer and that are placed in continous memory (i.e. breks at read index, or ring end)
+     */
+    unsigned canReadContinuous() const {
+        if (w_ >= r_)
+            return w_ - r_;
+        else
+            return SIZE - r_;
+    }
+
+    /** Returns the read buffer pointer from which up to canReadContinuous() bytes can be copied. 
+     */
+    uint8_t const * readBuffer() const { return buffer_ + r_; }
+
     /** Returns the number of bytes that can be written to the buffer without blocking. 
      */
     unsigned canWrite() const {

@@ -24,6 +24,7 @@
 
 ## TODO
 
+- terminateConnection becomes close connection 
 - test HTTP and HTTPS clients
 - add internet connections
 - make the cartridge silent wrt log
@@ -112,6 +113,9 @@
 ## PCB
 
 - ESP cartridge has pin 0 & 2 swapped
+- also move to ESP8285, which is much cheaper and a bit smaller
+- the freed SPI pins can be used for extra things such as torchlight and TV remote? 
+- still have 2 pins left
 
 - how to make the oscillator better? The capacitors are already ok-ish for 16.5 pF, but maybe the capcacitance of the traces is wrong? 
 

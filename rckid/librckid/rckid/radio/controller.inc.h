@@ -35,14 +35,14 @@ protected:
      
         Returns the newly created connection and may set the onAccept and reject events. 
         */
-    Connection * openConnection(DeviceId other) {
+    Connection * openConnection(DeviceId other, uint8_t param = 0) {
 #if (defined RADIO_MAX_CONNECTIONS)
         if (connections_.size() == RADIO_MAX_CONNECTIONS)
             return nullptr;
 #endif
-        Connection * result = new Connection{getNextConnectionId()};
+        Connection * result = new Connection{getNextConnectionId(), param};
         LOG("Opened new connection " << (uint32_t)result->ownId());
-        sendMessage(other, msg::ConnectionOpen{id(), result->ownId()});
+        sendMessage(other, msg::ConnectionOpen{id(), result->ownId(), param});
         lastConnection_ = result;
         connections_.push_back(result);
         return result;
@@ -59,7 +59,7 @@ protected:
             return nullptr;
         }
 #endif
-        Connection * result = new Connection{getNextConnectionId(), request.requestId, request.sender};
+        Connection * result = new Connection{getNextConnectionId(), request.requestId, request.sender, request.param};
         LOG("Created connection " << static_cast<uint32_t>(result->ownId()));
         sendMessage(request.sender, msg::ConnectionAccept{result->otherId(), result->ownId()});
         lastConnection_ = result;
@@ -78,21 +78,7 @@ protected:
     void closeConnection(Connection & conn, char const * reason = nullptr) {
         if (conn.open())
             sendMessage(conn.other_, msg::ConnectionClose{conn.otherId_, reason});
-        conn.closedLocally();
-    }
-
-    void terminateConnection(Connection & conn) {
-        if (conn.open())
-            sendMessage(conn.other_, msg::ConnectionClose{conn.otherId_, nullptr});
-        conn.terminated();
-        // TODO delete the connection from our list
-        connections_.erase(std::remove_if(connections_.begin(), connections_.end(), [&](Connection * x) { 
-            return x == & conn;
-        }));
-        if (lastConnection_ == & conn)
-            lastConnection_ = nullptr;
-        LOG("Terminated connection " << static_cast<uint32_t>(conn.ownId_));
-        delete &conn;
+        terminateConnection(conn);
     }
 
     /** Incoming connection request handler. 
@@ -123,11 +109,10 @@ protected:
 
     /** Called when a connection has been closed. 
      
-        The connection can either be closed locally, remotely, or can timeout. The connection can still be used even after this call returns - to dispose of a connection, call he terminateConnection() method. 
+        The connection can either be closed locally, remotely, or can timeout. The connection can *not* be used after this call returns. 
     */
     virtual void onConnectionClosed(Connection & conn, char const * extra) {
         LOG("Connection " << static_cast<uint32_t>(conn.ownId()) << " closed");
-        terminateConnection(conn);
     } 
 
     /** Called when new data is ready to be read from the connection. 
@@ -190,6 +175,17 @@ private:
         return nullptr;
     }
 
+    void terminateConnection(Connection & conn) {
+        // delete the connection from our list
+        connections_.erase(std::remove_if(connections_.begin(), connections_.end(), [&](Connection * x) { 
+            return x == & conn;
+        }));
+        if (lastConnection_ == & conn)
+            lastConnection_ = nullptr;
+        LOG("Terminated connection " << static_cast<uint32_t>(conn.ownId_));
+        delete &conn;
+    }
+
     /** Iterate over existing connections and see if there is anything we need to send. 
      */
     void loop() {
@@ -238,6 +234,7 @@ private:
                     conn->rejected();
                     onConnectionRejected(*conn, m.extra);
                     onConnectionClosed(*conn, nullptr);
+                    terminateConnection(*conn);
                 }
                 break;
             }
@@ -269,8 +266,10 @@ private:
                 auto m = msg::ConnectionClose::fromBuffer(msg);
                 Connection * conn = getConnectionByOwnId(m.connectionId);
                 if (conn) {
-                    conn->closedRemotely();
+                    conn->closed();
                     onConnectionClosed(*conn, m.extra);
+                    // and terminate the connection on our side as well
+                    terminateConnection(*conn);
                 }
                 break;
             }

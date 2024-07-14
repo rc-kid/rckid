@@ -35,7 +35,6 @@ namespace curl {
 
         void onConnectionClosed(Connection & conn, char const *) override {
             LOG("Connection closed remotely, terminating...");
-            terminateConnection(conn);
         }
 
 

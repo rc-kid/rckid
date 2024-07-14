@@ -21,10 +21,12 @@ public:
         Open, // valid connection that can be written to & read from
         Rejected, // connection has been explicitly rejected by the traget, closed
         Timeout, // communication failure, closed
-        ClosedLocally, // explicitly closed by this end, closed
-        ClosedRemotely, // explicitly closed by the other end, closed
-        Terminated, // no longer valid to use
+        Closed, // closed, will be terminated soon
     };
+
+    /** Returns the connection parameter that is created when the connection is opened. 
+     */
+    uint8_t param() const { return param_; }
 
     /** Returns the state of the connection. 
      */
@@ -47,7 +49,9 @@ public:
     DeviceId other() const { return other_; }
 
     unsigned canRead() const { return bufferRx_.canRead(); }
+    unsigned canReadContinuous() const { return bufferRx_.canReadContinuous(); }
     unsigned read(uint8_t * buffer, unsigned numBytes) { return bufferRx_.read(buffer, numBytes); }
+    uint8_t const * readBuffer() { return bufferRx_.readBuffer(); }
 
     unsigned canWrite() const { return open() ? bufferTx_.canWrite() : 0; }
     unsigned write(uint8_t const * buffer, unsigned numBytes) { 
@@ -58,13 +62,18 @@ public:
     /** A connection can be assigned metadata.
      */
     template<typename T> 
-    T const * getMetadata() const { return static_cast<T const *>(metadata_); }
+    T const * metadata() const { return static_cast<T const *>(metadata_); }
 
     template<typename T>
-    T * getMetadata() { return static_cast<T const *>(metadata_); }
+    T * metadata() { return static_cast<T const *>(metadata_); }
+
+    bool hasMetadata() { return metadata_ != nullptr; }
+
 
     template<typename T>
     void setMetadata(T * value) { metadata_ = static_cast<void*>(value); }
+
+
 
 private:
 
@@ -72,18 +81,20 @@ private:
 
     /** Creates new connection request. 
      */
-    Connection(uint8_t id):
+    Connection(uint8_t id, uint8_t param):
         state_{State::Requested}, 
-        ownId_{id} {
+        ownId_{id},
+        param_{param} {
     }
 
     /** Creates new accepted connection. 
      */
-    Connection(uint8_t ownId, uint8_t otherId, DeviceId other):
+    Connection(uint8_t ownId, uint8_t otherId, DeviceId other, uint8_t param):
         state_{State::Open}, 
         ownId_{ownId}, 
         otherId_{otherId},
-        other_{other} {
+        other_{other},
+        param_{param} {
     }
 
     /** Marks the connection as open. 
@@ -101,18 +112,9 @@ private:
         state_ = State::Rejected;
     }
 
-    void closedLocally() {
+    void closed() {
         ASSERT(state_ == State::Open);
-        state_ = State::ClosedLocally;
-    }
-
-    void closedRemotely() {
-        if (state_ != State::Terminated)
-            state_ = State::ClosedRemotely;
-    }
-
-    void terminated() {
-        state_ = State::Terminated;
+        state_ = State::Closed;
     }
 
     void transmit(unsigned available) {
@@ -160,6 +162,7 @@ private:
     uint8_t ownId_;
     uint8_t otherId_ = 0;
     DeviceId other_ = 0;
+    uint8_t param_; 
     RingBuffer<512> bufferRx_;
     RingBuffer<512> bufferTx_;
 

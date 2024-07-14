@@ -1,9 +1,13 @@
 #include <ESP8266WiFi.h>
 
 #include <platform.h>
+#include <wifi.h>
 
 #include "secrets.h"
 #include "bridge.h"
+
+// bridge instance
+Bridge instance_;
 
 /** Disable wifi at startup. 
  
@@ -25,6 +29,8 @@ void preinit() {
 }
 
 /** UART Radio connection
+ 
+    An extremely simple basic serial connection. All messages must be 32 bytes and ignores device ids as they make no sense over serial line between two endpoints. 
  */
 namespace rckid::radio {
 
@@ -32,7 +38,9 @@ namespace rckid::radio {
     uint8_t wIndex = 0;
 
     DeviceId id() { return 1; }
-    void initialize(DeviceId) { }
+    void initialize(DeviceId) { 
+        Serial.begin(74880); // start at the same speed as the starup messages
+    }
     void enable(bool silent) { }
     void disable() { }
 
@@ -44,7 +52,8 @@ namespace rckid::radio {
             Serial.write(' ');
     }
 
-    /** While in the loop, check the serial line for bytes up to a message length and once we have it  */
+    /** While in the loop, check the serial line for bytes up to a message length and once we have it let the controller (in this case the bridge to deal with it)
+     */
     void loop() {
         while (Serial.available() > 0) {
             buffer[wIndex++] = static_cast<uint8_t>(Serial.read());
@@ -62,14 +71,16 @@ namespace rckid::radio {
  */
 
 void setup() {
-    Serial.begin(74880); // start at the same speed as the starup messages for now
-    LOG("Application code ready");
-    Bridge::initialize();
-    Bridge::connect();
+    rckid::radio::initialize(1);
+    // initialize the WiFi connection
+    wifi::initialize();
+    wifi::connect(WIFI_SSID, WIFI_PASSWORD);
+    // initialize the bridge 
+//    Bridge::initialize();
+//    Bridge::connect();
 }   
 
 void loop() {
-    Bridge::loop();
     rckid::radio::loop();
 }
 

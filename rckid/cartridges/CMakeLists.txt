@@ -18,7 +18,7 @@ elseif (ARCH STREQUAL "MOCK")
 
     find_package(CURL REQUIRED)
 
-    file(GLOB_RECURSE NRF_SRC "radio-wifi/*.h" "radio-wifi/cartridge.cpp" "radio-wifi/curl.cpp")
+    file(GLOB_RECURSE NRF_SRC "radio-wifi/*.h" "radio-wifi/cartridge.cpp" "radio-wifi/radio-curl.cpp")
     add_library(librckid-cartridge-radio-wifi ${NRF_SRC})
     link_with_librckid(librckid-cartridge-radio-wifi)
     target_link_libraries(librckid-cartridge-radio-wifi ${CURL_LIBRARIES})
