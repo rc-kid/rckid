@@ -8,6 +8,8 @@
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
 
+#include "rckid/radio/radio.h"
+
 /** The RCKid HTTP Bridge
  
     The bridge is the core part of both the base station and the WiFi cartridge. It provides a simple API for sending HTTP Requests and getting HTTP responses. The bridge is agnostic about the HTTP requests location, the decoding of which is left to the RCKid communicating with it. 
@@ -16,7 +18,7 @@
 
     From a security perspective, the bridge is extremely primitive. Security of the web server and configuration via it is provided by the WiFi network's security the bridge connects to (i.e. anyone who has access to the network has access to the bridge), while the security of the communication between RCKid itself and the bridge is delegated to the layer used. 
  */
-class Bridge {
+class Bridge : public rckid::radio::Controller {
 public:
 
     static void initialize() {

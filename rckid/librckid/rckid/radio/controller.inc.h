@@ -275,6 +275,8 @@ private:
                 break;
             }
             // TODO broadcasts - do we want sth? maybe deduplicate & things
+            default:
+                LOG("Unknown message received");
         }
     }
 

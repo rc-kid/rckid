@@ -24,7 +24,10 @@
 
 ## TODO
 
-- ESP12e won't start(!)
+- test HTTP and HTTPS clients
+- add internet connections
+- make the cartridge silent wrt log
+
 
 - the double radio methods should not be a problem
 - move controller & radio & stuff to the sdk? likely yes
