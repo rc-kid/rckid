@@ -53,11 +53,25 @@ public:
     unsigned read(uint8_t * buffer, unsigned numBytes) { return bufferRx_.read(buffer, numBytes); }
     uint8_t const * readBuffer() { return bufferRx_.readBuffer(); }
 
+    /** Determines if there is enough stored in the buffer to read the next value of given type. If the method returns true, the reader() can be used to read the value. 
+     */
+    template<typename T>
+    bool canRead() const;
+
+    Reader reader() { return Reader{[this](){ return bufferRx_.read(); }}; }
+
+    Reader peek() const { unsigned offset = 0; return Reader{[& offset, this]() mutable { return bufferRx_.peek(offset++); }}; }
+
     unsigned canWrite() const { return open() ? bufferTx_.canWrite() : 0; }
     unsigned write(uint8_t const * buffer, unsigned numBytes) { 
         ASSERT(open());
         return bufferTx_.write(buffer, numBytes); 
     }
+
+    /** Returns writer that can be used to write or serialize data to the connection. 
+     */
+    Writer writer() { return Writer{[this](char c){ bufferTx_.write(c); }}; }
+
 
     /** A connection can be assigned metadata.
      */
@@ -174,3 +188,15 @@ private:
     // TODO timeout for acks
 
 }; // Connection
+
+
+/** A string can be read from connection if there is enough to be read to get the length of the string (2 bytes) and the data itself. 
+ */
+template<>
+inline bool Connection::canRead<std::string>() const {
+    unsigned x = canRead();
+    if (x < 2) 
+        return false;
+    unsigned len = peek().deserialize<uint16_t>();
+    return 2 + len <= x;
+}

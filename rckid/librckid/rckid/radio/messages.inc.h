@@ -166,4 +166,21 @@
         DeviceId sender;
     )
 
+    /** Debug print. When received by a controller, prints payload, which is a null terminated string. 
+     */
+    MESSAGE(= 0xff, DebugPrint, false, 
+        char payload[31];
+
+        DebugPrint() {
+            payload[30] = 0;
+        };
+
+        DebugPrint(char const * payload) {
+            strncpy(this->payload, payload, sizeof(this->payload));
+            this->payload[30] = 0;
+        }
+
+        // TODO add writer interface
+   )
+
 #undef MESSAGE

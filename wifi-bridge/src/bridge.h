@@ -74,6 +74,7 @@ protected:
         switch (conn.param()) {
             case CMD_CONNECT:
                 // TODO 
+                UNIMPLEMENTED;
                 break;
             case CMD_DISCONNECT:
                 wifi::disconnect();
@@ -89,8 +90,10 @@ protected:
                         http_.write(conn.readBuffer(), cb);
                     }
                 // otherwise see if there is enough for the server address and connect
-                } else {
-                    // TODO
+                } else if (conn.canRead<std::string>()) {
+                    std::string serverName{conn.reader().deserialize<std::string>()};
+                    http_.connect(serverName.c_str(), 80);
+                    conn.setMetadata(& http_);
                 }
                 break;
             case CMD_HTTPS_GET:
@@ -103,9 +106,11 @@ protected:
                         https_.write(conn.readBuffer(), cb);
                     }
                 // otherwise see if there is enough for the server address and connect
-                } else {
-                    // TODO
-                }
+                } else if (conn.canRead<std::string>()) {
+                    std::string serverName{conn.reader().deserialize<std::string>()};
+                    https_.connect(serverName.c_str(), 443);
+                    conn.setMetadata(& https_);
+                } 
                 break;
             default:
                 UNREACHABLE;

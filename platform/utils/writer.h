@@ -1,9 +1,19 @@
 #pragma once
 
+#include <cstring>
 #include <string>
 #include <functional>
 
 #define STR(...) (StringWriter{} << __VA_ARGS__).str()
+
+template<typename T>
+class Binary {
+public:
+    T const & value;
+}; 
+
+template<typename T>
+Binary<T> serialize(T value) { return Binary<T>{value}; }
 
 /** A simple formatter for writing human readable (ASCII) text to various places, such as the display, or serial debugging port, etc.
  */
@@ -130,11 +140,51 @@ public:
         return *this;
     }
 
+    template<typename T>
+    Writer & operator << (Binary<T> const & value) {
+        serialize(value.value);
+        return *this;
+    }
+
+    void writeByte(uint8_t byte) { putChar_(byte); }
+
+    void writeBuffer(uint8_t const * buffer, size_t size) {
+        while (size-- != 0)
+            putChar_(*buffer++);
+    }
+
+    template<typename T>
+    void serialize(T what);
+
 private:
+
 
     std::function<void(char)> putChar_;
 
 }; // Writer
+
+class Reader {
+public:
+    Reader(std::function<uint8_t()> getByte): getByte_{getByte} {}
+    
+    // TODO override >> for string to type conversion
+    
+    uint8_t readByte() {
+        return getByte_();
+    }
+
+    void readBuffer(uint8_t * buffer, size_t size) {
+        while (size-- != 0) 
+            *(buffer++) = getByte_();
+    }
+
+    template<typename T>
+    T deserialize(); 
+
+private:
+    std::function<uint8_t()> getByte_;
+
+}; // Reader
 
 
 class StringWriter {
@@ -160,4 +210,40 @@ private:
 }; // StringWriter
 
 
+template<>
+inline void Writer::serialize<uint8_t>(uint8_t value) {
+    writeByte(value);
+}
+
+template<>
+inline void Writer::serialize<uint16_t>(uint16_t value) {
+    writeByte(value & 0xff);
+    writeByte(value >> 8);
+}
+
+template<>
+inline void Writer::serialize<char const *>(char const * value) {
+    size_t len = strlen(value);
+    serialize<uint16_t>(len);
+    writeBuffer(reinterpret_cast<uint8_t const *>(value), len);
+}
+
+template<>
+inline uint8_t Reader::deserialize<uint8_t>() { 
+    return getByte_(); 
+}
+
+template<>
+inline uint16_t Reader::deserialize<uint16_t>() {
+    uint16_t result = getByte_();
+    return (getByte_() << 8) | result;
+}
+
+template<>
+inline std::string Reader::deserialize<std::string>() {
+    size_t len = deserialize<uint16_t>();
+    std::string result(len, '\0');
+    readBuffer(reinterpret_cast<uint8_t*>(result.data()), len);
+    return result;
+}
 

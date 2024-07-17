@@ -249,7 +249,7 @@ namespace rckid {
         static constexpr uint8_t BTN_HOME = 1 << 6;
         static constexpr uint8_t ALARM = 1 << 7;
 
-        uint8_t data_[8];
+        uint8_t data_[8] = {};
 
     } __attribute__((packed)); 
 
@@ -258,13 +258,13 @@ namespace rckid {
     struct DeviceState {
         State state; // 8
         TinyDate time; // 4
-        uint32_t uptime; // 4
+        uint32_t uptime = 0; // 4
         uint8_t error = AVR_NO_ERROR; // 1
     } __attribute__((packed));
 
 
     struct TransferrableState : public DeviceState {
-        uint8_t buffer[33];
+        uint8_t buffer[33] = {};
     } __attribute__((packed));
 
 

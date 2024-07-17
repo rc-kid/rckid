@@ -48,14 +48,19 @@ public:
     }
 
     /** Writes data to the buffer. 
+     
+        Returns the number of characters actually written. 
      */
     unsigned write(uint8_t const * buffer, unsigned numBytes) {
         unsigned num = std::min(canWrite(), numBytes);
-        for (unsigned i = 0; i < num; ++i) {
-            buffer_[w_++]  = buffer[i];
-            w_ = w_ % SIZE;
-        }
+        for (unsigned i = 0; i < num; ++i)
+            write(buffer[i]);
         return num;
+    }
+
+    void write(uint8_t value) {
+        buffer_[w_++] = value;
+        w_ = w_ % SIZE;
     }
 
     /** Reads the given data from the buffer advancing the read pointer. 
@@ -64,11 +69,15 @@ public:
      */
     unsigned read(uint8_t * buffer, unsigned numBytes) {
         unsigned num = std::min(canRead(), numBytes);
-        for (unsigned i = 0; i < num; ++i) {
-            buffer[i] = buffer_[r_++];
-            r_ = r_ % SIZE;
-        }
+        for (unsigned i = 0; i < num; ++i)
+            buffer[i] = read();
         return num;
+    }
+
+    uint8_t read() {
+        uint8_t result = buffer_[r_++];
+        r_ = r_ % SIZE;
+        return result;
     }
 
     /** Reads up to numBytes from the buffer without advancing the read pointer (i.e. the same data can be read multiple times). 
@@ -83,6 +92,10 @@ public:
             r = r % SIZE;
         }
         return num;
+    }
+
+    uint8_t peek(unsigned offset = 0) const {
+        return buffer_[(r_ + offset) % SIZE];
     }
 
     /** Moves the read pointer by numBytes. 

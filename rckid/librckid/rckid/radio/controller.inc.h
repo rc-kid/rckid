@@ -273,6 +273,14 @@ private:
                 }
                 break;
             }
+            case msg::DebugPrint::ID: {
+                auto m = msg::DebugPrint::fromBuffer(msg);
+                if (m.payload[30] != 0)
+                    LOG("Invalid debug info print received");
+                else 
+                    LOG(m.payload);
+                break;
+            }
             // TODO broadcasts - do we want sth? maybe deduplicate & things
             default:
                 LOG("Unknown message received");

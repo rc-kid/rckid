@@ -60,6 +60,8 @@ namespace rckid {
         void update() override {
             if (carousel_.idle() && carousel_.menu() == nullptr)
                 exit();
+            if (! carousel_.idle())
+                return;
             // left & right carousel movements
             if (down(Btn::Left))
                 carousel_.prev();

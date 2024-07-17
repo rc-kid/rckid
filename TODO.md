@@ -24,7 +24,6 @@
 
 ## TODO
 
-- terminateConnection becomes close connection 
 - test HTTP and HTTPS clients
 - add internet connections
 - make the cartridge silent wrt log
@@ -112,6 +111,7 @@
 
 ## PCB
 
+- can do color pictures on the new cartridge boards maybe
 - ESP cartridge has pin 0 & 2 swapped
 - also move to ESP8285, which is much cheaper and a bit smaller
 - the freed SPI pins can be used for extra things such as torchlight and TV remote? 

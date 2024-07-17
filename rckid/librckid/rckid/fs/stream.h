@@ -4,6 +4,8 @@
 
 namespace rckid {
 
+    /** Input stream. 
+     */
     class InStream {
     public:
         virtual ~InStream() = default;
