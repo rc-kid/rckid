@@ -343,6 +343,7 @@ public:
                 rgbEffects_[4] = RGBEffect::Off();
                 rgbEffects_[5] = RGBEffect::Off();
                 rgbs_.fill(platform::Color::RGB(0,0,0));
+                rgbsTarget_.fill(platform::Color::RGB(0,0,0));
                 ts_.state.setDCPower(false);
                 // disable potential ongoing btnHome counter 
                 btnHomeCounter_ = 0;
@@ -405,8 +406,16 @@ public:
             if (tick_ % 512 == 0)
                 secondTick();
             // check if we are charging when DC power is available
-            if (ts_.state.dcPower())
-                ts_.state.setCharging(!gpio::read(AVR_PIN_CHARGING));
+            if (ts_.state.dcPower()) {
+                bool charging = !gpio::read(AVR_PIN_CHARGING);
+                if (ts_.state.charging() != charging) {
+                    ts_.state.setCharging(charging);
+                    setSystemEffect(RGBEffect::Breathe(
+                        charging ? platform::Color::RGB(0, 0, 16) : platform::Color::RGB(0, 16, 0),
+                        1)
+                    );
+                }
+            }
             // based on what tick we are, do what needs to be done             
             switch (tick_ % 4) {
                 case 0: {

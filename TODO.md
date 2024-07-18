@@ -82,6 +82,8 @@
 
 ## Case
 
+- fix the rumbler hole position in bottom and midframe
+- check that cable guides for battery are big enough
 - holes in the top panel for rgb and sensor are on the wrong side
 - there is still warping when screwed together (Anton suggested heating up a bit and let the tensions equalize, also try larger PCB for v2 to improve rigidity of the frame around it)
 
