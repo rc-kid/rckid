@@ -1,7 +1,7 @@
 #pragma once
 
 #include "rckid/rckid.h"
-#include "Color.h"
+#include "color.h"
 #include "drawing.h"
 
 namespace rckid {

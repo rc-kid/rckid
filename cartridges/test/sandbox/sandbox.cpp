@@ -37,7 +37,7 @@
 #include "apps/debug/MP3Test.h"
 #include "apps/debug/WAVTest.h"
 #include "apps/debug/MicTest.h"
-#include "apps/debug/melody.h"
+#include "apps/debug/Melody.h"
 
 #include "apps/messenger.h"
 
@@ -106,8 +106,8 @@ Menu * menuDebug() {
 
 
 int main() {
+    cpu::overclock();
     rckid::initialize();
-    //cpu::overclock();
     //rckid::radio::Controller::initialize(0);
     //radio::initialize(0);
    

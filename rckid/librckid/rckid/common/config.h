@@ -91,7 +91,7 @@
 // Actual frequency: 10416666. - ????????????
 #define RP_SD_SPI_BAUDRATE 12000000
 
-#define RP_I2C_BAUDRATE 400000
+#define RP_I2C_BAUDRATE 100000
 
 /** The baudrate for parallel data transfer to the display. 
  
@@ -146,7 +146,7 @@
     PC4 -- BTN_DPAD
     PC5 -- BTN_4
 */
-#define AVR_PIN_CHARGE_EN A1
+#define AVR_PIN_HEADPHONES A1
 #define AVR_PIN_CHARGING A2
 #define AVR_PIN_PWM_RUMBLER A3
 #define AVR_PIN_VBATT A4
@@ -164,7 +164,7 @@
 #define AVR_PIN_RGB B7
 
 #define AVR_PIN_BTN_CTRL C0
-#define AVR_PIN_HEADPHONES C1
+#define AVR_PIN_CHARGE_EN C1
 #define AVR_PIN_DISP_RDX C2
 #define AVR_PIN_QSPI_SS C3
 #define AVR_PIN_BTN_DPAD C4
@@ -178,7 +178,8 @@
  
     Set to 0 if the sensor is not present (such as when running on AAA batteries).
  */
-#define RCKID_INA219_I2C_ADDRESS 0x40
+//#define RCKID_INA219_I2C_ADDRESS 0x40
+#define RCKID_INA219_I2C_ADDRESS 0x0
 
 /** Determines home button's long press duration in 4 tick multiples ticks (~10ms). Defaults to 1 second */
 #define BTN_HOME_LONG_PRESS_THRESHOLD 100

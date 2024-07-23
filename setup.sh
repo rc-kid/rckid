@@ -30,3 +30,36 @@ git clone https://github.com/raysan5/raylib.git
 cd raylib/src
 make PLATFORM=PLATFORM_DESKTOP
 cd ../../..
+
+# now build everything we have - start with the tools
+mkdir build-tools
+cd build-tools
+cmake ../tools
+cmake --build .
+cd ..
+
+# build cartridges 
+mkdir build
+cd build
+cmake ..
+cmake --build .
+cd ..
+
+# build mock 
+mkdir build-mock
+cd build-mock
+cmake .. -DARCH=MOCK
+cmake --build .
+cd ..
+
+cd wifi-bridge
+pio run
+cd ..
+
+cd base-station
+pio run
+cd ..
+
+cd rckid/avr
+pio run
+cd ../..

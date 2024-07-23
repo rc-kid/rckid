@@ -24,6 +24,11 @@
 
 ## TODO
 
+- actually monitor the I2C commns on the dbg cartridge
+- lowering the I2C speed seems to fix the hangouts, 
+- could be related to overclock as well ?
+
+
 - test HTTP and HTTPS clients
 - add internet connections
 - make the cartridge silent wrt log
@@ -138,7 +143,7 @@
 
 ## AVR
 
-- rewrite rumbler to use low side switching
+- the I2C master (or something) keeps WDT timeout on AVR, onl when RPI is on
 - verify the Headphones/Charge EN pin swap and charge en circuit
 - AVR EEPROM can store basic info such as username, etc and a password to lock the device
 - turn off if INA senses too much of a current draw
