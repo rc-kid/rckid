@@ -89,6 +89,10 @@ namespace rckid {
                     carousel_.setMenu(nullptr, 0, /* reverse */ true);
                 }
             }
+            if (pressed(Btn::Select))
+                setBrightness(0);
+            if (pressed(Btn::Start))
+                setBrightness(128);
         }
 
         void draw() override {

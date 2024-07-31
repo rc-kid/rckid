@@ -10,10 +10,12 @@ template<typename T>
 class Binary {
 public:
     T const & value;
+
+//    Binary(T const & value): value{value} {}
 }; 
 
 template<typename T>
-Binary<T> serialize(T value) { return Binary<T>{value}; }
+Binary<T> serialize(T const & value) { return Binary<T>{value}; }
 
 /** A simple formatter for writing human readable (ASCII) text to various places, such as the display, or serial debugging port, etc.
  */
@@ -142,7 +144,7 @@ public:
 
     template<typename T>
     Writer & operator << (Binary<T> const & value) {
-        serialize(value.value);
+        this->serialize(value.value);
         return *this;
     }
 

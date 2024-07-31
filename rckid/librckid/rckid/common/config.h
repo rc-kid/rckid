@@ -91,6 +91,10 @@
 // Actual frequency: 10416666. - ????????????
 #define RP_SD_SPI_BAUDRATE 12000000
 
+/** Baudrate for the I2C protocol. 
+ 
+    TODO setting the baudrate to 100kHz breaks the I2C commands - not sure why, on scope all looks good. One thing to consider is the rather inefficient way in which the default RPI i2c blocking write sends the data byte by byte. Should be switched to DMA or some such and waited upon instead, for faster sending
+ */
 #define RP_I2C_BAUDRATE 100000
 
 /** The baudrate for parallel data transfer to the display. 
@@ -173,6 +177,7 @@
 /** I2C address of the AVR chip for communications with RP2040
  */
 #define AVR_I2C_ADDRESS 0x43
+//#define AVR_I2C_ADDRESS 0x88
 
 /** I2C address of the INA219 sensor measuring the current power draw of RCKid. 
  

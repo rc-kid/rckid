@@ -180,7 +180,15 @@
             this->payload[30] = 0;
         }
 
-        // TODO add writer interface
+        /** Returns a simple writer interface to the message that just recycles the payload's 30 allowed bytes (the last byte must always be 0 for null terminated string)
+         */
+        Writer writer() {
+            size_t i = 0;
+            return Writer{[this, & i](char c) mutable {
+                payload[i++] = c;
+                i = i % 30;
+            }};
+        }
    )
 
 #undef MESSAGE

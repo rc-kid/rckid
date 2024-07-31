@@ -24,10 +24,78 @@
 
 ## TODO
 
-- actually monitor the I2C commns on the dbg cartridge
-- lowering the I2C speed seems to fix the hangouts, 
-- could be related to overclock as well ?
+- I2C woes are related to the fact that AVR slept (some errors with timers still even now that sleep is disabled in normal modes)
+- I2C often fails on timeouts *and* fails on timeouts (not sure what that is any more)
+- and then in the IRQ fails on 0x40 cause (TX abort), from that point SDA is low and the stuff hangs
+- often hangs on startup when the W43 is what keeps the line low
+- the data sent seems to be often mangled, i.e. status bytes are sent, but offset is wrong, i.e.:
 
+AVR: 000011ea74ff8000
+AVR: 0000ffffffffffff
+AVR: 000031ea756d8000
+AVR: 000031ea756d8000
+AVR: 000031e875ff8000
+AVR: 000031e875ff8000
+AVR: e875ff8000010000
+AVR: 000031e8776d8000
+AVR: 6d80000100000001
+AVR: 000011e7786d8000
+AVR: 000011e67c6e8000
+AVR: 0000ffffffffffff
+AVR: 000031e67eff8000
+AVR: 000031e67dff8000
+AVR: 000031e67dff8000
+AVR: 000031e67dff8000
+AVR: 000031e67dff8000
+AVR: 000031e67dff8000
+AVR: 000031e67dff8000
+AVR: 000031e67cff8000
+AVR: 000031e67cff8000
+AVR: 000031e57cff8000
+AVR: 000031e47dff8000
+AVR: 000031e37dff8000
+AVR: 000011ffffffffff
+AVR: 000031e17d6d8000
+AVR: 000031e17d6d8000
+AVR: 000031e17dff8000
+AVR: 000011e17dff8000
+AVR: 000011e17dff8000
+AVR: 000011e0ffffffff
+AVR: 000031e17e6d8000
+AVR: 000031e17d6d8000
+AVR: 7d6d800001000000
+AVR: 000031df7f6d8000
+AVR: 000011dd7f6d8000
+AVR: 000011dd7f6d8000
+AVR: 000031dd816d8000
+AVR: 000011dd806d8000
+AVR: 000011dd806d8000
+AVR: 000031dd806d8000
+AVR: 000031dd80ff8000
+AVR: 000031dd7fff8000
+AVR: 7fff800001000000
+AVR: 000031db80ff8000
+AVR: 000011db7fff8000
+AVR: 000011db7f6c8000
+AVR: 000031db806d8000
+AVR: 000031d980ff8000
+AVR: 000031d97fff8000
+AVR: 000031d97fff8000
+AVR: 000031d97fff8000
+AVR: 000031d77fff8000
+AVR: 000031d77eff8000
+AVR: d77dff8000010000
+AVR: 000011d77dff8000
+AVR: 000011d77cff8000
+AVR: 000031d77cff8000
+AVR: 000031d77bff8000
+AVR: 000031d77bff8000
+AVR: 7bff800001000000
+ERR:40
+
+- somehow the disableCharging is called too often (now disabled in code)
+
+- add buffer for writing system messages (1kb might be sufficient) - this will help with I2C and stuff
 
 - test HTTP and HTTPS clients
 - add internet connections
@@ -149,7 +217,7 @@
 - turn off if INA senses too much of a current draw
 - LED speed is too great -- reduced to 30fps, maybe still too great? Add delay to effect? -- is it still? 
 - add some better non-linear interpolation for the breathe effect
-- I2C master can hang up, which is bad (wdt saves us) -- does it still? 
+- write I2C bootloader (entered via writing EEPROM, because EEPROM will last loner than the flash)
 
 ## SDK
 

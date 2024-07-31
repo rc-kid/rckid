@@ -18,11 +18,6 @@ namespace rckid::radio::wifi {
     constexpr uint8_t CMD_HTTP_GET = 3;
     constexpr uint8_t CMD_HTTPS_GET = 4;
 
-    /** Initiates a HTTP get message inside given connection. 
-     */
-    inline void HTTP_GET(Connection & conn, std::string const & url) {
-    }
-
     class WiFiController : public Controller {
     protected:
 
@@ -32,7 +27,6 @@ namespace rckid::radio::wifi {
             Connection * conn = openConnection(internetDevice_, CMD_HTTP_GET);
             // write the server name first, followed by the GET request with given path (and parameters. As per the HTTP standard, this has to be followed by two newlines
             conn->writer() << serialize(serverName) << "GET " << path << " HTTP/1.1\r\n\r\n";
-           
             return conn;
         }
 

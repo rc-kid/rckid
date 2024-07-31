@@ -198,12 +198,10 @@ public:
         Making the AVR code really simple, the main loop simply runs and services any interrupts, while sleeping between the runs to conserve as much power as possible. 
      */
     static void loop() {
-        END_ACTIVE_MODE;
 #if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
         oled_.clear32();
 #endif
         while (true) {
-            //BEGIN_ACTIVE_MODE;
             cpu::wdtReset();
             // if there is I2C message, process
             if (i2cCommandReady_)
@@ -233,11 +231,18 @@ public:
                 resetMode_ = 0;
             }
 
-            // make sure interrupts are enabled or we won't wake up, the appropriate sleep mode has already been set by the various peripheral interactions so we can happily go to sleep here
+            // make sure interrupts are enabled or we won't wake up, the appropriate sleep mode has already been set by the various peripheral interactions so we can happily go to sleep here as long as the current mode allows (normal, debug and bootloader mode don't work with sleep at all as we need the I2C active)
+            // TODO perhaps we can extend the sleep mode to some of those modes as well by having a flag if we have an active I2C transaction
             sei();
             sleep_enable();
-            END_ACTIVE_MODE;
-            sleep_cpu();
+            switch (ts_.state.deviceMode()) {
+                case DeviceMode::Normal:
+                case DeviceMode::Debug:
+                case DeviceMode::Bootloader:
+                    break;
+                default:
+                    sleep_cpu();
+            }
         }
     }
 
@@ -280,6 +285,7 @@ public:
     static void btnHomeLongPress() {
         switch (ts_.state.deviceMode()) {
             case DeviceMode::Normal:
+            case DeviceMode::Debug:
                 setDeviceMode(DeviceMode::PowerOff);
                 break;
             case DeviceMode::Sleep:
@@ -305,7 +311,8 @@ public:
         switch (mode) {
             case DeviceMode::Normal:
                 initializePWM();
-                ts_.state.setDebugMode(ts_.state.btnSel());
+                if (ts_.state.btnSel())
+                    ts_.state.setDeviceMode(DeviceMode::Debug);
                 // if we are in the debug mode, set brightness to 1/2 so that the display contents are visible even if not set by the app
                 if (ts_.state.debugMode())
                     setBacklightPWM(128);
@@ -786,7 +793,7 @@ public:
             power5v(false);
         }
         ts_.state.setCharging(false);
-       // disable charging
+        // disable charging
         gpio::outputFloat(AVR_PIN_CHARGE_EN);
         // disable the effect
         setSystemEffect(RGBEffect::Off());
@@ -819,7 +826,7 @@ public:
         As per the charger's datasheet, section 5.2.2, charging can be terminated by applying logic 1 to the charger's prog pin. 
      */
     static void disableCharging() {
-        gpio::outputFloat(AVR_PIN_CHARGE_EN);
+        //gpio::outputFloat(AVR_PIN_CHARGE_EN);
         // TODO this is serious error and should be reported somewhere
     }
     //@}
@@ -1023,8 +1030,13 @@ public:
             TWI0.SCTRLB = TWI_SCMD_COMPTRANS_gc;
             if (i2cRxIdx_ > 0)
                 i2cCommandReady_ = true;
+        } else if (status & TWI_BUSERR_bm) {
+            rgbs_[3] = platform::Color::Red().withBrightness(32);
+            TWI0.SSTATUS |= TWI_BUSERR_bm;
         } else {
             // error - a state we do not know how to handle
+            rgbs_[3] = platform::Color::White().withBrightness(32);
+
         }
     }
 
@@ -1053,10 +1065,10 @@ public:
                 // TODO
                 break;
             case cmd::DebugModeOn::ID:
-                NO_ISR(ts_.state.setDebugMode(true));
+                NO_ISR(ts_.state.setDeviceMode(DeviceMode::Debug));
                 break;
             case cmd::DebugModeOff::ID:
-                NO_ISR(ts_.state.setDebugMode(false));
+                NO_ISR(ts_.state.setDeviceMode(DeviceMode::Normal));
                 break;
             case cmd::AudioEnabled::ID:
                 NO_ISR(enableAudio(true));

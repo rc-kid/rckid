@@ -87,8 +87,6 @@ public:
     template<typename T>
     void setMetadata(T * value) { metadata_ = static_cast<void*>(value); }
 
-
-
 private:
 
     friend class Controller;

@@ -13,8 +13,8 @@ set(TARGET sandbox)
 
 file(GLOB_RECURSE SRC "./*.cpp" "./*.h")
 add_executable(${TARGET} ${SRC})
-link_with_librckid(${TARGET} basic)
-#link_with_librckid(${TARGET} radio-wifi)
+#link_with_librckid(${TARGET} basic)
+link_with_librckid(${TARGET} radio-wifi)
 
 #pico_generate_pio_header(rckid-test ${CMAKE_SOURCE_DIR}/librckid/rckid/st7789.pio)
 

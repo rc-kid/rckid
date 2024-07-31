@@ -1,10 +1,18 @@
 #include <cstring>
 #include <thread>
 
+#include <curl/curl.h>
+
 #include "platform.h"
 #include "platform/utils/channel.h"
 
 #include <rckid/radio/radio.h>
+#include <rckid/radio/wifi.h>
+
+size_t CURLWriteCallback(char *contents, size_t size, size_t nmemb, void *userp) {
+    ((std::string*)userp)->append((char*)contents, size * nmemb);
+    return size * nmemb;
+}
 
 // Hacky way to have two connections in a single process, an extra copy of connection and controller in the curl namespace.  
 namespace curl {
@@ -15,27 +23,60 @@ namespace curl {
 
     /** A very simple CURL HTTP/HTTPS based client for debugging purposes. 
      
-        Should behave the same as the ESP8266 client and test connections & wifi handling in RCKid happs. 
+        Should behave the same as the ESP8266 client and test connections & wifi handling in RCKid happs.
      */
     class HTTPClient : public Controller {
+    public:
+        HTTPClient() {
+            // initialize the libcurl
+            curl_global_init(CURL_GLOBAL_DEFAULT);        
+        }
+
     protected:
 
         // accept everything
         void onConnectionRequest(msg::ConnectionOpen const & request) override {
             acceptConnection(request);
+            LOG("Accepted connection id: " << (uint32_t)request.requestId << ", param: " << (uint32_t)request.param);
         }
 
         void onConnectionDataReady(Connection & conn) override {
             LOG("curl connection data received");
-            uint8_t buffer[128];
-            unsigned available = conn.read(buffer, 128);
-            if (available != 0)
-                conn.write(buffer, available);
+            switch (conn.param()) {
+                case wifi::CMD_HTTP_GET:
+                case wifi::CMD_HTTPS_GET: {
+                    if (curl_ == nullptr) {
+                        if (conn.canRead<std::string>()) {
+                            std::string url = conn.reader().deserialize<std::string>();
+                            curl_ = curl_easy_init();
+                            curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
+                            LOG("Connecting to url " << url);
+                            curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, CURLWriteCallback);
+                            curl_easy_setopt(curl_, CURLOPT_WRITEDATA, &curlResponse_);
+                            // TODO ditch the attributes
+                            CURLcode res = curl_easy_perform(curl_);
+                            if (res != CURLE_OK)
+                                LOG("CURL fail: " << curl_easy_strerror(res));
+                            LOG("CURL response: " << curlResponse_);
+                        } else {
+
+                        }
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
         }
 
         void onConnectionClosed(Connection & conn, char const *) override {
             LOG("Connection closed remotely, terminating...");
+            if (curl_ != nullptr)
+                curl_easy_cleanup(curl_);            
         }
+
+        CURL * curl_ = nullptr;
+        std::string curlResponse_;
 
 
     }; // CurlClient
@@ -62,6 +103,7 @@ namespace rckid::radio {
 
     void initialize(DeviceId deviceId) {
         id_ = deviceId;
+
         // start the HTTPS client thread
         std::thread t{[](){
             curlThreadId_ = std::this_thread::get_id();

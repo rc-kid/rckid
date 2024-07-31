@@ -9,6 +9,8 @@ uint32_t fpsCounter_ = 0;
 namespace rckid {
 
     void BaseApp::loop() {
+        // clear the status 
+        DeviceWrapper::clearEvents();
         // handle the focus - blur previous app if any 
         BaseApp * last = currentApp_;
         if (last != nullptr) {
@@ -22,6 +24,8 @@ namespace rckid {
         nextFpsTick_ = uptimeUs() + 1000000;
         fpsCounter_ = 0;
         TRACE("Entering app loop");
+        gpio::setAsOutput(GPIO14);
+        gpio::low(GPIO14);
         // the actual loop - loop as long as the currentApp is set (exit clears it)
         while (currentApp_ != nullptr) {
             if (nextFpsTick_ <= uptimeUs()) {

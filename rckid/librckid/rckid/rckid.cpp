@@ -179,6 +179,8 @@ namespace rckid {
                     uint8_t * raw = reinterpret_cast<uint8_t*>(&DeviceWrapper::state_);
                     for (int i = 0; i < 8; ++i)
                         *(raw++) = i2c0->hw->data_cmd;
+                    LOG("AVR: " << Writer::hex(reinterpret_cast<uint8_t*>(&DeviceWrapper::state_), 8));
+                    DeviceWrapper::lastState_ = DeviceWrapper::state_.state;
                     // update battery level gauge
                     unsigned battPct = vBatt();
                     if (battPct <= VCC_CRITICAL_THRESHOLD)
@@ -195,6 +197,14 @@ namespace rckid {
             }
         } else {
             ++stats::i2cErrors_;
+            LOG("ERR:" << Writer::hex(cause));
+            /*
+            i2c_deinit(i2c0);
+            i2c_init(i2c0, RP_I2C_BAUDRATE); 
+            i2c0->hw->intr_mask = 0;
+            gpio_set_function(RP_PIN_SDA, GPIO_FUNC_I2C);
+            gpio_set_function(RP_PIN_SCL, GPIO_FUNC_I2C);
+            */
         }
         // everything else than tx empty bits terminates the i2c transfer for the current tick
         tickInProgress_ = TICK_DONE;
@@ -251,6 +261,8 @@ namespace rckid {
 
         // and run any cartridge-specific initialization
         cartridge::initialize();
+
+        setRumbler(RumblerEffect::OK());
     }
 
     void yield() {
@@ -264,6 +276,10 @@ namespace rckid {
             while (tickInProgress_ != TICK_DONE)
                 yield();
             stats::tickUpdateStart_ = uptimeUs();
+
+            i2cFillAVRTxBlocks();
+            tickInProgress_ = TICK_AVR;
+#ifdef FOO
             // make sure the I2C is off, then set it up so that it can talk to the accelerometer
             if (stats::ticks_ % 8 == 0) {
                 i2c0->hw->enable = 0;
@@ -280,6 +296,7 @@ namespace rckid {
                 i2cFillAccelTxBlocks();
                 tickInProgress_ = TICK_ACCEL;
             }
+#endif
             // make the TX_EMPTY irq fire only when the data is actually processed
             //i2c0->hw->con |= I2C_IC_CON_TX_EMPTY_CTRL_BITS;
             // enable the I2C

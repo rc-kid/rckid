@@ -16,19 +16,23 @@ namespace rckid {
      
         The device can be in one of the following modes:
 
-        Mode      | 3V3 | Ticks | RP2040
-        ----------|-----|-------|--------|
-        Normal    |  x  |   x   |    x   |
-        Sleep     |  x  |   x   |        |
-        PowerOff  |     |       |        |
-        Wakeup    |     |   x   |        |
+        Mode       | 3V3 | Ticks | RP2040
+        -----------|-----|-------|--------|
+        Normal     |  x  |   x   |    x   |
+        Debug      |  x  |   x   |    x   |
+        Sleep      |  x  |   x   |        |
+        PowerOff   |     |       |        |
+        Wakeup     |     |   x   |        |
+        Bootloader |  x  |   x   |    x   |
 
      */
     enum class DeviceMode : uint8_t {
         Normal, 
+        Debug,
         Sleep, 
         PowerOff, 
         Wakeup,
+        Bootloader,
     }; 
 
     /** Device state
@@ -45,7 +49,6 @@ namespace rckid {
 
 
         - 3 bits mode
-        - 1 bit debug mode
         - 1 DC pwr
         - 1 charging
 
@@ -61,6 +64,8 @@ namespace rckid {
          */
         //@{
         DeviceMode deviceMode() const { return static_cast<DeviceMode>(data_[2] & DEVICE_MODE); }
+
+        bool debugMode() const { return deviceMode() == DeviceMode::Debug; }
 #ifdef RCKID_AVR
         void setDeviceMode(DeviceMode mode) {
             data_[2] &= ~DEVICE_MODE;
@@ -121,7 +126,6 @@ namespace rckid {
         //@{
         bool headphones() const { return data_[1] & HEADPHONES; }
         bool audioEnabled() const { return data_[1] & AUDIO_EN; }
-        bool debugMode() const { return data_[2] & DEBUG_MODE; }
         bool dcPower() const { return data_[2] & DC_PWR; }
         bool charging() const { return data_[2] & CHARGING; }
         bool alarm() const { return data_[2] & ALARM; }
@@ -129,7 +133,6 @@ namespace rckid {
 #ifdef RCKID_AVR
         void setHeadphones(bool value) { value ? data_[1] |= HEADPHONES : data_[1] &= ~HEADPHONES; }
         void setAudioEnabled(bool value) { value ? data_[1] |= AUDIO_EN : data_[1] &= ~AUDIO_EN; }
-        void setDebugMode(bool value) { value ? data_[2] |= DEBUG_MODE : data_[2] &= ~DEBUG_MODE; }
         void setDCPower(bool value) { value ? data_[2] |= DC_PWR : data_[2] &= ~DC_PWR; }
         void setCharging(bool value) { value ? data_[2] |= CHARGING : data_[2] &= ~CHARGING; }
         void setAlarm(bool value) { value ? data_[2] |= ALARM : data_[2] &= ~ALARM; }
@@ -243,7 +246,7 @@ namespace rckid {
         // 7
 
         static constexpr uint8_t DEVICE_MODE = 7; // 3
-        static constexpr uint8_t DEBUG_MODE = 1 << 3;
+        // 3 (or more device modes if we need them)
         static constexpr uint8_t DC_PWR = 1 << 4;
         static constexpr uint8_t CHARGING = 1 << 5;
         static constexpr uint8_t BTN_HOME = 1 << 6;

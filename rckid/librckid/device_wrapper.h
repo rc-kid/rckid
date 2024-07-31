@@ -83,6 +83,14 @@ namespace rckid {
             }
         }
 
+        /** Clears the user events. 
+         
+            Particularly useful when switching apps within a single tick, so that the second app won't react to user events that already happened (and should have been processed) by the first app. 
+         */
+        static void clearEvents() {
+            lastState_ = state_.state;
+        }
+
         static void waitTickDone();
 
         // device & sensors state

@@ -138,6 +138,10 @@ protected:
 
 
 
+    virtual void onDebugPrint(msg::DebugPrint const & msg) {
+        LOG("DBG: " << msg.payload);
+    }
+
 
 private:
 
@@ -263,7 +267,7 @@ private:
             // marks the connection as closed
             case msg::ConnectionClose::ID: {
                 LOG("received connection close msg");
-                auto m = msg::ConnectionClose::fromBuffer(msg);
+                auto & m = msg::ConnectionClose::fromBuffer(msg);
                 Connection * conn = getConnectionByOwnId(m.connectionId);
                 if (conn) {
                     conn->closed();
@@ -273,12 +277,13 @@ private:
                 }
                 break;
             }
+            // simply prints the debug information sent from another device. The debug messages are unly useful for debugging as the dbg print message does not contain any sender information, or other metadata. Default action is to simply log the message
             case msg::DebugPrint::ID: {
-                auto m = msg::DebugPrint::fromBuffer(msg);
+                auto & m = msg::DebugPrint::fromBuffer(msg);
                 if (m.payload[30] != 0)
                     LOG("Invalid debug info print received");
                 else 
-                    LOG(m.payload);
+                    onDebugPrint(m);
                 break;
             }
             // TODO broadcasts - do we want sth? maybe deduplicate & things
