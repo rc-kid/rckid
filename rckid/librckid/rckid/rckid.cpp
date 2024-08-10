@@ -96,12 +96,9 @@ namespace rckid {
         i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
         i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
         i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-        i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-        i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-        i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-        i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
         i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_STOP_BITS; // 1 for read, stop
-        i2c0->hw->rx_tl = 7;
+        // we wait for 4 bytes (reg value + 1)
+        i2c0->hw->rx_tl = 3; 
     }
 
     void __not_in_flash_func(i2cFillAccelTxBlocks)() {
@@ -175,12 +172,15 @@ namespace rckid {
                     return;
                 }
                 case TICK_AVR: {
-                    DeviceWrapper::lastState_ = DeviceWrapper::state_.state;
+                    DeviceWrapper::lastState_ = DeviceWrapper::state_;
                     uint8_t * raw = reinterpret_cast<uint8_t*>(&DeviceWrapper::state_);
-                    for (int i = 0; i < 8; ++i)
+                    if (raw[0] == 0xff || raw[1] == 0xff || raw[2] == 0xff || raw[3] == 0xff)
+                        gpio::outputHigh(GPIO14);
+                        
+                    for (int i = 0; i < 4; ++i)
                         *(raw++) = i2c0->hw->data_cmd;
-                    LOG("AVR: " << Writer::hex(reinterpret_cast<uint8_t*>(&DeviceWrapper::state_), 8));
-                    DeviceWrapper::lastState_ = DeviceWrapper::state_.state;
+                    LOG("AVR: " << Writer::hex(reinterpret_cast<uint8_t*>(&DeviceWrapper::state_), 4));
+                    DeviceWrapper::lastState_ = DeviceWrapper::state_;
                     // update battery level gauge
                     unsigned battPct = vBatt();
                     if (battPct <= VCC_CRITICAL_THRESHOLD)
@@ -195,9 +195,23 @@ namespace rckid {
                     // we are done with the I2C transfer
                     break;
             }
-        } else {
-            ++stats::i2cErrors_;
-            LOG("ERR:" << Writer::hex(cause));
+        } else if (cause == I2C_IC_INTR_MASK_M_TX_ABRT_BITS) {
+            stats::i2cErrors_ = cause; // i2c0->hw->raw_intr_stat;
+            i2c0->hw->clr_tx_abrt; 
+            LOG("I2C ABORT, SOURCE: " << i2c0->hw->tx_abrt_source);
+        }else {
+            UNREACHABLE;
+            // TODO show the raw status register to see all that could go wrong 
+            gpio::outputLow(GPIO14);
+            stats::i2cErrors_ = cause; // i2c0->hw->raw_intr_stat;
+            //++stats::i2cErrors_;
+            //LOG("ERR:         " << Writer::hex(cause));
+            //LOG("I2C_TX_ABRT: " << i2c0->hw->tx_abrt_source);
+            //LOG("CLR:         " << i2c0->hw->clr_tx_abrt);
+            gpio::outputHigh(GPIO14);
+            // abort the I2C transmission
+    // 25165824
+            
             /*
             i2c_deinit(i2c0);
             i2c_init(i2c0, RP_I2C_BAUDRATE); 
@@ -226,6 +240,8 @@ namespace rckid {
         tud_init(BOARD_TUD_RHPORT);
 
         // initialize the I2C bus
+        gpio::outputLow(GPIO14);
+
         i2c_init(i2c0, RP_I2C_BAUDRATE); 
         i2c0->hw->intr_mask = 0;
         gpio_set_function(RP_PIN_SDA, GPIO_FUNC_I2C);
@@ -277,9 +293,23 @@ namespace rckid {
                 yield();
             stats::tickUpdateStart_ = uptimeUs();
 
-            i2cFillAVRTxBlocks();
-            tickInProgress_ = TICK_AVR;
-#ifdef FOO
+
+/*
+            gpio::outputLow(GPIO14);
+            uint8_t bytes[4];
+            i2c_read_blocking(i2c0, AVR_I2C_ADDRESS, bytes, 4, false);
+            //i2c::masterTransmit(AVR_I2C_ADDRESS, nullptr, 0, bytes, 4);
+            for (uint8_t i = 0; i < 4; ++i)
+                if (bytes[i] != i) {
+                    gpio::outputHigh(GPIO14);
+                }
+                */
+            //i2cFillAVRTxBlocks();
+            //tickInProgress_ = TICK_AVR;
+            //uint8_t stuff[4];
+            //gpio::outputHigh(GPIO14);
+            //i2c_read_blocking(i2c0, AVR_I2C_ADDRESS, stuff, 4, false);
+            //gpio::outputLow(GPIO14);
             // make sure the I2C is off, then set it up so that it can talk to the accelerometer
             if (stats::ticks_ % 8 == 0) {
                 i2c0->hw->enable = 0;
@@ -296,7 +326,6 @@ namespace rckid {
                 i2cFillAccelTxBlocks();
                 tickInProgress_ = TICK_ACCEL;
             }
-#endif
             // make the TX_EMPTY irq fire only when the data is actually processed
             //i2c0->hw->con |= I2C_IC_CON_TX_EMPTY_CTRL_BITS;
             // enable the I2C
@@ -359,14 +388,14 @@ namespace rckid {
     }
 
     bool audio::headphonesActive() {
-        return DeviceWrapper:: state_.state.audioEnabled() && DeviceWrapper::state_.state.headphones();         
+        return DeviceWrapper:: state_.audioEnabled() && DeviceWrapper::state_.headphones();         
     }
 
     void audio::play(audio::OutStream * stream) {
         if (stream == nullptr) {
             // it's only playback resume
             // TODO check there is active stream
-            DeviceWrapper::sendCommand(cmd::AudioEnabled{});
+            DeviceWrapper::sendCommand(cmd::AudioOn{});
             pwm_set_enabled(RP_PWM_SLICE, true);
         } else {
             // set the left and right pins to be used by the PWM
@@ -382,7 +411,7 @@ namespace rckid {
             // enable audio and start the playback
             playback_ = stream;
             pwm_set_clkdiv(RP_PWM_SLICE, cpu::clockSpeed() / (4096.0 * stream->sampleRate()));
-            DeviceWrapper::sendCommand(cmd::AudioEnabled{});
+            DeviceWrapper::sendCommand(cmd::AudioOff{});
             dma_channel_start(dma0_);
             pwm_set_enabled(RP_PWM_SLICE, true);
         }
@@ -390,14 +419,14 @@ namespace rckid {
 
     void audio::pause() {
         pwm_set_enabled(RP_PWM_SLICE, false);
-        DeviceWrapper::sendCommand(cmd::AudioDisabled{});
+        DeviceWrapper::sendCommand(cmd::AudioOff{});
     }
 
     void audio::stop(){
         dma_channel_abort(audio::dma0_);        
         dma_channel_abort(audio::dma1_);
         if (playback_ != nullptr) {
-            DeviceWrapper::sendCommand(cmd::AudioDisabled{});
+            DeviceWrapper::sendCommand(cmd::AudioOff{});
             pwm_set_enabled(RP_PWM_SLICE, false);
 //            dma_channel_abort(audio::dma0_);        
 //            dma_channel_abort(audio::dma1_);
@@ -527,14 +556,17 @@ namespace rckid {
     // ============================================================================================
 
     void DeviceWrapper::waitTickDone() {
-        uint32_t timeout = uptimeUs() + 5000;
+        uint32_t timeout = uptimeUs() + 50000;
         while (tickInProgress_ != TICK_DONE) {
             yield();
             if (timeout < uptimeUs()) {
-                ++stats::i2cErrors_;
-                i2c0->hw->intr_mask = 0;
-                i2c0->hw->enable = 0;
-                tickInProgress_ = false;
+                stats::i2cErrors_ += 1000;
+                // TODO we *MUST* abort here
+                //i2c0->hw->intr_mask = 0;
+                //i2c0->hw->enable = 0;
+                //tickInProgress_ = false;
+                gpio::outputHigh(GPIO14);
+                break;
             }
         }
     }

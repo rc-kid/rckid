@@ -22,7 +22,34 @@
 
 - extra games can be hangman, battleships, calculator (?)
 
+## RP 2350
+
+So RPi threw a wrench in my plans, with their new chip that does everything the old one does, add more and most importantly keeps the quirks of RP2040 that make RCKid possible. Also I have found the bad flaw with the I2C bus between AVR and RPi to be painful and this would need a thorough redesign. So I might just bite the bullet, ditch the AVR and focus on single chip only as RP2350 comes in with 48 GPIOs. 
+
+- uses same crystal
+- extra power regulator things
+- 18 more pins, which can be:
+    - home, vol+, vol-, A, B Sel Start, DPad (4)   (11)
+    - screen read (1)
+    - 5V on, RGB (2)
+    - headphones (1)
+    - vbatt (1)
+    - rumbler (1)
+    - backlight (1)
+    - charging / enabled (2)
+- do not put I2C on the cartridge, instead use two extra pins for 10 total, and they can be the second i2c
+- should there be an extra 
+
+- yeah, should fit it seems 
+
 ## TODO
+
+- allright the problem is likely that when voltage on the SDA or SCL is *not* 3v3 then attiny won't recognize it as I2C stuff and ignores it, whereas RPi does other things, namely hangs.. why & where? 
+
+- I2C disable on RP2040 is not enough, abort must be issued too, otherwise the master might hold SDA low unless last transfer was with stop bit (!!!!)
+- this could be the problem I am seeing
+- make wait tick done wait indefinitely, pretty sure the abort there can cause the problem as well because this is exactly the disable that does not clear the bus lines...
+
 
 - I2C woes are related to the fact that AVR slept (some errors with timers still even now that sleep is disabled in normal modes)
 - I2C often fails on timeouts *and* fails on timeouts (not sure what that is any more)

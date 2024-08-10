@@ -37,9 +37,9 @@ protected:
             << "GyroZ:          " << gyroZ() << "\n"
             << "ALS:            " << lightAmbient() << "\n"
             << "UV:             " << lightUV() << "\n"
-            << "VCC:            " << vcc() << "\n"
-            << "VBatt:          " << vBatt() << "\n"
-            << "Temp:           " << tempAvr() << "\n";
+//            << "VCC:            " << vcc() << "\n"
+            << "VBatt:          " << vBatt() << "\n";
+//            << "Temp:           " << tempAvr() << "\n";
         ++t;
     }
 

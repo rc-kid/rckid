@@ -26,7 +26,7 @@ namespace i2c {
         TWI0.SADDR = address << 1;
         TWI0.SADDRMASK = 0;
         // enable the TWI in slave mode, don't enable interrupts as the default implementation operates in polling mode
-        TWI0.SCTRLA |= TWI_ENABLE_bm;
+        TWI0.SCTRLA = TWI_ENABLE_bm;
         // TWI0.SCTRLA = TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm  | TWI_ENABLE_bm;
 
         // bus Error Detection circuitry needs Master enabled to work 

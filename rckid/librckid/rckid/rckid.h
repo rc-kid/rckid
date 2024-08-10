@@ -3,7 +3,6 @@
 #include <platform.h>
 
 #include "rckid/common/state.h"
-#include "rckid/common/commands.h"
 #include "errors.h"
 #include "graphics/color.h"
 
@@ -107,10 +106,6 @@ namespace rckid {
      */
     uint16_t lightUV(); 
 
-    /** Returns temperature in Celsius x 10 as measured by the AVR chip. 
-     */
-    unsigned tempAvr();
-
     //}
 
     /** \name Brightness, LEDs, notifications and rumbler. 
@@ -167,19 +162,9 @@ namespace rckid {
      */
     bool dcPower();
 
-    /** Returns the VCC voltage in Volts x 100. 
-
-        The VCC voltage should either be almost identical to the battery voltage if running on batterier, or be close to 5.0 V (value 500) when running on DC power. Note that this voltage is not available on the cartridge, which only supports the converted 3V3 user by the display and the RP2040 chip. 
-     */
-    unsigned vcc();
-
     /** Returns the battery voltage in Volts x 100, i.e. full battery should read 420. 
      */
     unsigned vBatt(); 
-
-    /** Returns the current consumption as measured by the device in mA. 
-     */
-    unsigned current(); 
 
     /** Returns the battery level in pct. 
      */

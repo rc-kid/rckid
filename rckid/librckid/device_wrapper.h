@@ -15,9 +15,9 @@ namespace rckid {
         friend void yield();
         friend void tick();
         
-        friend bool down(Btn b) { return btnDown(b, state_.state); }
-        friend bool pressed(Btn b) { return btnDown(b, state_.state) && ! btnDown(b, lastState_); }
-        friend bool released(Btn b) { return !btnDown(b, state_.state) && btnDown(b, lastState_); }
+        friend bool down(Btn b) { return btnDown(b, state_); }
+        friend bool pressed(Btn b) { return btnDown(b, state_) && ! btnDown(b, lastState_); }
+        friend bool released(Btn b) { return !btnDown(b, state_) && btnDown(b, lastState_); }
         friend int16_t accelX() { return aState_.accelX; }
         friend int16_t accelY() { return aState_.accelY; }
         friend int16_t accelZ() { return aState_.accelZ; }
@@ -26,7 +26,6 @@ namespace rckid {
         friend int16_t gyroZ() { return aState_.gyroZ; }
         friend uint16_t lightAmbient() { return lightALS_; }
         friend uint16_t lightUV() { return lightUV_; }
-        friend unsigned tempAvr() { return state_.state.temp(); }
 
         friend void setBrightness(uint8_t brightness) { DeviceWrapper::sendCommand(cmd::SetBrightness(brightness)); }
         friend void disableLEDs() { DeviceWrapper::sendCommand(cmd::RGBOff{}); }
@@ -35,11 +34,9 @@ namespace rckid {
         friend void setRumbler(RumblerEffect effect) { DeviceWrapper::sendCommand(cmd::Rumbler{effect}); }
 
         friend void powerOff();
-        friend bool charging() { return state_.state.charging(); }
-        friend bool dcPower() { return state_.state.dcPower(); }
-        friend unsigned vcc() { return state_.state.vcc(); }
-        friend unsigned vBatt() { return state_.state.vBatt(); }
-        friend unsigned current() { return state_.state.current(); }
+        friend bool charging() { return state_.charging(); }
+        friend bool dcPower() { return state_.dcPower(); }
+        friend unsigned vBatt() { return state_.vBatt(); }
         friend unsigned batteryLevel() { return batteryLevel_; }
 
     private:
@@ -53,7 +50,7 @@ namespace rckid {
             i2c_write_blocking(i2c0, AVR_I2C_ADDRESS, (uint8_t const *) & cmd, sizeof(T), false);
         }    
 
-        static bool btnDown(Btn btn, State const & state) {
+        static bool btnDown(Btn btn, DeviceState const & state) {
             switch (btn) {
                 case Btn::Left:
                     return state.btnLeft();
@@ -88,14 +85,14 @@ namespace rckid {
             Particularly useful when switching apps within a single tick, so that the second app won't react to user events that already happened (and should have been processed) by the first app. 
          */
         static void clearEvents() {
-            lastState_ = state_.state;
+            lastState_ = state_;
         }
 
         static void waitTickDone();
 
         // device & sensors state
         static inline DeviceState state_;
-        static inline State lastState_;
+        static inline DeviceState lastState_;
 
         // battery level in pct
         static inline uint8_t batteryLevel_ = 0;

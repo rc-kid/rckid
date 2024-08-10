@@ -29,10 +29,10 @@ namespace rckid {
             header_.drawOn(driver_, Rect::WH(320, 20));
             driver_.setFg(Color::White());
             driver_.textMultiline(10, 20) <<
-                "VCC:   " << vcc() << "\n" <<
+                //"VCC:   " << vcc() << "\n" <<
                 "VBatt: " << vBatt() << "\n" <<
-                "I:     " << current() << "\n" <<
-                "Temp:  " << tempAvr() << "\n" <<
+                //"I:     " << current() << "\n" <<
+                //"Temp:  " << tempAvr() << "\n" <<
                 "als: " << lightAmbient() << "\n" <<
                 "uv:  " << lightUV();
             driver_.textMultiline(100, 20) << 

@@ -59,7 +59,6 @@
         The devices can periodically send the ping signal to detect other devices in range. The base stations never ping. Contains the device ID and some other attributes as payload. ALl pings are numbered so that observing multiple pings can be used to determine signal strength of the connection by calculating the number of dropped messages. 
 
      */
-   
     MESSAGE(= 0x80, Ping, true,
         DeviceId sender;
         uint8_t index;

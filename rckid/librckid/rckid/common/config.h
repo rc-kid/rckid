@@ -95,7 +95,8 @@
  
     TODO setting the baudrate to 100kHz breaks the I2C commands - not sure why, on scope all looks good. One thing to consider is the rather inefficient way in which the default RPI i2c blocking write sends the data byte by byte. Should be switched to DMA or some such and waited upon instead, for faster sending
  */
-#define RP_I2C_BAUDRATE 100000
+//#define RP_I2C_BAUDRATE 100000
+#define RP_I2C_BAUDRATE 50000
 
 /** The baudrate for parallel data transfer to the display. 
  
@@ -176,7 +177,7 @@
 
 /** I2C address of the AVR chip for communications with RP2040
  */
-#define AVR_I2C_ADDRESS 0x43
+#define AVR_I2C_ADDRESS 0x62
 //#define AVR_I2C_ADDRESS 0x88
 
 /** I2C address of the INA219 sensor measuring the current power draw of RCKid. 
@@ -194,7 +195,7 @@
 //#define BTN_HOME_POWER_ON_DURATION 900
 //#define BTN_HOME_POWER_OFF_DURATION 1800
 
-#define VBATT_LEVEL_HYSTERESIS 5
+//#define VBATT_LEVEL_HYSTERESIS 5
 
 #define VCC_DC_POWER_THRESHOLD 430
 
@@ -227,3 +228,10 @@
 /** Headphones detection threshold (when no headphones are inserted, the line is pulled up to 3V, i.e. some 930. 
  */
 #define HEADPHONES_DETECTION_THRESHOLD 100
+
+#define RGB_COLOR_BRIGHTNESS 128
+
+#define RGB_ERROR_EFFECT RGBEffect::Solid(platform::Color::RGB(RGB_COLOR_BRIGHTNESS, 0, 0))
+#define RGB_CHARGING_EFFECT RGBEffect::Breathe(platform::Color::RGB(0, 0, RGB_COLOR_BRIGHTNESS))
+#define RGB_CHARGING_DONE_EFFECT RGBEffect::Breathe(platform::Color::RGB(0, RGB_COLOR_BRIGHTNESS, 0))
+#define RGB_LOW_BATTERY_EFFECT RGBEffect::Breathe(platform::Color::RGB(RGB_COLOR_BRIGHTNESS, 0, 0))
