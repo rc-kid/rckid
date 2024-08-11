@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+        {
+            "type": "cmake",
+            "label": "run-tests",
+            "command": "build",
+            "targets": [
+                "run-tests"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Builds RCKid and runs all tests. Only available in ARCH_FANTASY"
+        }
+    ]
+}
