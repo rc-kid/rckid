@@ -11,3 +11,8 @@
 #else
 #define PACKED(...) __VA_ARGS__ __attribute__((packed))  
 #endif
+
+/// TODO: This should actually do something
+#ifndef  __force_inline
+#define  __force_inline
+#endif

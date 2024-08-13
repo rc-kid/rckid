@@ -11,7 +11,7 @@ namespace rckid {
     PACKED(class alignas(uint16_t) ColorRGB {
     public:
 
-        static constexpr uint8_t BPP = 16;
+        constexpr static uint8_t BPP = 16;
 
         constexpr ColorRGB() = default;
 
@@ -23,6 +23,9 @@ namespace rckid {
 
         constexpr ColorRGB(ColorRGB const & other): raw_{other.raw_} {}
 
+        constexpr static ColorRGB fromRaw(uint16_t raw) { return ColorRGB{raw}; };
+        constexpr uint16_t roRaw() const { return raw_; }
+
         uint8_t r() const { return ((raw_ >> 11) & 0xff) << 3; }
         uint8_t g() const { return ((raw_ >> 5) & 0x3f) << 2; }
         uint8_t b() const { return (raw_ & 0xff) << 3; }
@@ -32,6 +35,8 @@ namespace rckid {
         constexpr void setB(uint8_t v) { raw_ = (raw_ & 0xffe0) | (v >> 3); }
 
     private:
+        constexpr explicit ColorRGB(uint16_t raw): raw_{raw} {}
+
         uint16_t raw_ = 0;
     }); // rckid::ColorRGB
 
@@ -41,10 +46,22 @@ namespace rckid {
      */
     PACKED(class Color256 {
     public:
-        static constexpr uint8_t BPP = 8;
+        constexpr static  uint8_t BPP = 8;
 
         constexpr Color256() = default;
-        explicit constexpr Color256(uint8_t color): raw_{color} {}
+        constexpr explicit Color256(uint8_t color): raw_{color} {}
+
+        constexpr Color256 & operator = (uint8_t color) {
+            raw_ = color;
+            return *this;
+        }
+
+        constexpr static Color256 fromRaw(uint8_t raw) { return Color256{raw}; }
+        constexpr uint8_t toRaw() const { return raw_; }
+
+
+        constexpr bool operator == (Color256 const & other) { return raw_ == other.raw_; }
+        constexpr bool operator != (Color256 const & other) { return raw_ != other.raw_; }
 
     private:
         uint8_t raw_ = 0;
@@ -62,6 +79,9 @@ namespace rckid {
             raw_{color} {
             ASSERT(color < 16);
         }
+
+        constexpr static Color16 fromRaw(uint8_t raw) { return Color16{raw}; }
+        constexpr uint8_t toRaw() const { return raw_; }
 
     private:
         uint8_t raw_ = 0;
