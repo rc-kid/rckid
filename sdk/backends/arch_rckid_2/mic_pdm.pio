@@ -1,0 +1,37 @@
+; Mic PDM 
+; 
+; Outputs the clock as side pin and reads the data when clock is low
+
+.program mic_pdm
+.side_set 1
+
+.wrap_target
+    nop                 side 0
+    in pins, 1          side 0
+    push iffull noblock side 1
+    nop                 side 1
+.wrap
+
+% c-sdk {
+
+#include "rckid/rckid.h"
+
+inline void mic_pdm_program_init(PIO pio, uint sm, uint offset, uint clkPin, uint datPin) {
+    pio_sm_config c = mic_pdm_program_get_default_config(offset);
+    // clk pin (output)
+    pio_gpio_init(pio, clkPin);
+    pio_sm_set_consecutive_pindirs(pio, sm, clkPin, 1, true);
+    sm_config_set_sideset_pins(&c, clkPin);
+    // dat pin (input)
+    pio_gpio_init(pio, datPin);
+    pio_sm_set_consecutive_pindirs(pio, sm, datPin, 1, false);
+    sm_config_set_in_pins(&c, datPin);
+    // we'll output at 32 bits, no autopush, join queues
+    // TODO can we autopush? 
+    sm_config_set_in_shift(&c, false, false, 32);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_RX);
+    pio_sm_init(pio, sm, offset, &c);
+    pio_set_clock_speed(pio, sm, 16000 * 256 * 4);
+}
+
+%}

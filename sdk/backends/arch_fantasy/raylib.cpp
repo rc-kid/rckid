@@ -15,18 +15,50 @@
 
 #include "rckid/rckid.h"
 
+
+extern "C" {
+
+    // start in system malloc so that any pre-main initialization does not pollute rckid's heap
+    static thread_local bool systemMalloc_ = true;
+
+    // Replace the malloc and free with own versions that check if we are in the SDK/user code and therefore use rckid's malloc implementation, or if this is a 3rd party library and we should default to the system's malloc implementation. This is done by wrapping all raylib calls with set & clear of the systemMalloc_ flag 
+    /// TODO: only works on linux for now
+#if (defined __linux__)
+    extern void *__libc_malloc(size_t);
+    extern void __libc_free(void *);
+
+    void * malloc(size_t numBytes) {
+        if (systemMalloc_)
+            return __libc_malloc(numBytes);
+        else 
+            return rckid::malloc(numBytes);
+    }
+
+    void free(void * ptr) {
+        if (rckid::memoryIsOnHeap(ptr))
+            rckid::free(ptr);
+        else 
+            __libc_free(ptr);
+    }
+#endif 
+} // extern C - memory
+
 namespace rckid {
 
     void displayDraw();
 
     void initialize() {
+        systemMalloc_ = true;
         InitWindow(640, 480, "RCKid");
         SetTargetFPS(60);
+        systemMalloc_ = false;
     }
 
     void tick() {
+        systemMalloc_ = true;
         if (WindowShouldClose())
             std::exit(-1);
+        systemMalloc_ = false;
         displayDraw();
     }
 
@@ -59,6 +91,7 @@ namespace rckid {
     }
 
     void displayDraw() {
+        systemMalloc_ = true;
         BeginDrawing();
         ColorRGB * c = framebuffer_;
         switch (displayMode_) {
@@ -76,6 +109,7 @@ namespace rckid {
                 UNREACHABLE;
         }
         EndDrawing();
+        systemMalloc_ = false;
     }
 
     DisplayMode displayMode() { return displayMode_; }

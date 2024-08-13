@@ -1,27 +1,26 @@
 #pragma once
 
-#include <stdint.h>
 
-#include <platform/definitions.h>
+#include <platform.h>
 #include <platform/writer.h>
 
 #include "graphics/color.h"
 #include "graphics/geometry.h"
 
-
-#define UNIMPLEMENTED do {} while (false)
-#define UNREACHABLE do {} while (false)
-
-#define ASSERT(...)
-
-#define LOG(...) rckid::debugWrite() << __VA_ARGS__ << '\n';
-
 namespace rckid {
 
+    /** Initializes the RCKid console. 
+     
+        This must be the first SDK function called by the application. 
+     */
     void initialize();
 
     void tick();
 
+    /** Returns debug writer for logging and tracing purposes. 
+     
+        Depending on the backend, this is either the serial over USB port for the physical devices, or standard output for the fantasy console. 
+     */
     Writer debugWrite();
 
     /** \name Controls & Sensors
@@ -118,6 +117,10 @@ namespace rckid {
         Off,
     }; 
 
+    /** Callback function for display update. 
+         
+        The function takes no arguments. It may schedule another update, or return immediately if the update is finished for the current frame. 
+     */
     using DisplayUpdateCallback = std::function<void()>;
 
     /** Returns the current display mode. 
@@ -156,13 +159,14 @@ namespace rckid {
     void displayUpdate(ColorRGB const * pixels, uint32_t numPixels, DisplayUpdateCallback callback);
 
     void displayUpdate(ColorRGB const * pixels, uint32_t numPixels);
-    /*
-    inline void displayUpdateBlocking(ColorRGB const * pixels) {
-        displayUpdate(pixels);
+
+    inline void displayUpdateBlocking(ColorRGB const * pixels, uint32_t numPixels) {
+        ASSERT(!displayUpdateActive() && "Blocking update must be first and the only one in a frame");
+        displayUpdate(pixels, numPixels);
         // busy wait for the async update to finish
-        while (displayUpdateActive());
+        // TODO should we yield here?
+        while (displayUpdateActive()) { };
     }
-    */
 
     //@}
 
@@ -172,12 +176,34 @@ namespace rckid {
      */
     //@{
 
+    /** Returns free heap available to the application. The actual free heap is likely larger if any allocations were freed, but not returned to the heap.      
+     */
     uint32_t memoryFreeHeap();
+
+    /** Returns the heap already used. Reverse to the memoryFreeHeap(), this value contains all deallocated, but not yet returned memory as well. 
+     */
     uint32_t memoryUsedHeap();
+
+    bool memoryIsOnHeap(void * ptr);
+
+    bool memoryIsInCurrentArena(void * ptr);
+ 
+    /** Enters new memory arena.
+     */
     void memoryEnterArena();
+
+    /** Leaves current memory arena. 
+     
+        Can only be called if arena has previously been entered by memoryEnterArena(). Frees *all* memory of the arena that is being left. 
+     */
     void memoryLeaveArena();
 
+    /** Allocates new memory on the heap in current arena. 
+     */
     void * malloc(size_t numBytes);
+ 
+    /** Frees previously allocated chunk of memory. Note that the chunk *must* belong to the curren arena. 
+     */
     void free(void * ptr);
     //@}
 

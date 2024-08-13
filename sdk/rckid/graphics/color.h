@@ -1,13 +1,17 @@
 #pragma once
 
-#include <cstdint>
+#include <platform.h>
 
 namespace rckid {
 
     /** RGB color in display's native 565 format.
+     
+        Although internally the color is 565, the r, g and b elements are reported and can be set in 0..255 range, which is internally converted to the appropriate 0..31 and 0..64 ranges for red & blue and green respectively. 
      */
     PACKED(class alignas(uint16_t) ColorRGB {
     public:
+
+        static constexpr uint8_t BPP = 16;
 
         constexpr ColorRGB() = default;
 
@@ -32,5 +36,36 @@ namespace rckid {
     }); // rckid::ColorRGB
 
     static_assert(sizeof(ColorRGB) == 2);
+
+    /** Color index from palette of 256 colors (or less) 
+     */
+    PACKED(class Color256 {
+    public:
+        static constexpr uint8_t BPP = 8;
+
+        constexpr Color256() = default;
+        explicit constexpr Color256(uint8_t color): raw_{color} {}
+
+    private:
+        uint8_t raw_ = 0;
+
+    }); // rckid::Color256
+
+    static_assert(sizeof(Color256) == 1);
+
+    PACKED(class Color16 {
+    public:
+        static constexpr uint8_t BPP = 4;
+
+        constexpr Color16() = default;
+        explicit constexpr Color16(uint8_t color): 
+            raw_{color} {
+            ASSERT(color < 16);
+        }
+
+    private:
+        uint8_t raw_ = 0;
+
+    }); // rckid::Color16
 
 } // namespace rckid

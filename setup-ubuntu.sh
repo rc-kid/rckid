@@ -8,6 +8,13 @@ echo "    installing packages for RCKid SDK..."
 sudo apt update -qq
 sudo apt-get install -y -qq cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib ninja-build
 
+echo "    installing pico-sdk..."
+cd ${RCKID_DIR}/sdk/backends/arch_rckid
+git clone https://github.com/raspberrypi/pico-sdk.git --branch master -o pico-sdk
+cd pico-sdk
+git submodule update --init
+cd ${RCKID_DIR}
+
 echo "    installing packages for RCKid fantasy console..."
 echo "        x11 & graphics..."
 sudo apt-get install -y -qq libx11-dev libxcursor-dev libxrandr-dev libxinerama-dev libxi-dev libgl1-mesa-dev libwayland-dev libxkbcommon-dev

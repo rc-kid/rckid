@@ -1,15 +1,29 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(rckid)
-
-set(CMAKE_CXX_STANDARD 17)  
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 if (NOT DEFINED ARCH)
     message("RCKID: No architecture specified, defaulting to ARCH_RCKID_3")
     #set(ARCH "ARCH_RCKID_3")
     set(ARCH "ARCH_FANTASY")
 endif()
+
+if (ARCH STREQUAL "ARCH_FANTASY")
+    message("RCKID: Building for the fantasy console (with Raylib)")
+    project(rckid)
+else()
+    message("RCKID: Building for the actual hardware - RP2350 or RP2040")
+    # skip the pico malloc library setup
+    set(SKIP_PICO_MALLOC 1)
+    # Pull in SDK (must be before project)
+    include(${CMAKE_SOURCE_DIR}/sdk/backends/arch_rckid/pico-sdk/pico_sdk_init.cmake)
+    project(rckid C CXX ASM)
+    pico_sdk_init()
+    if (PICO_SDK_VERSION_STRING VERSION_LESS "2.0.0")
+        message(FATAL_ERROR "Raspberry Pi Pico SDK version 2.0.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
+    endif()
+endif()
+
+set(CMAKE_CXX_STANDARD 17)  
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_compile_definitions(${ARCH})
 include_directories("sdk")

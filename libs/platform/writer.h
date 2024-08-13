@@ -48,6 +48,19 @@ public:
         putChar_(x + '0');
         return *this;
     }
+    Writer & operator << (uint64_t x) {
+        uint64_t order = 10000000000000000000ul;
+        while (x < order && order > 1)
+            order = order / 10;
+        while (order >= 10) {
+            putChar_((x / order) + '0');
+            x = x % order;
+            order = order / 10;
+        }
+        putChar_(x + '0');
+        return *this;
+        return *this;
+    }
 
 private:
     std::function<void(char)> putChar_;

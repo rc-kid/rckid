@@ -99,12 +99,12 @@ public:
             }
         }
         if (FailedTests_ == 0) {
-            std::cout << "\rPASS: total tests:   " << TotalTests_ << "\033[K" << std::endl;
+            std::cout << "\rPASS: total tests:   " << TotalTests_ << " \033[K" << std::endl;
             std::cout << "      skipped tests: " << SkippedTests_ << std::endl;
             std::cout << "      total checks:  " << TotalChecks_ << std::endl;
             return EXIT_SUCCESS;
         } else {
-            std::cout << "\rFAIL: total tests:   " << TotalTests_ << "\033[K" << std::endl;
+            std::cout << "\rFAIL: total tests:   " << TotalTests_ << " \033[K" << std::endl;
             std::cout << "      skipped tests: " << SkippedTests_ << std::endl;
             std::cout << "      failed tests:  " << FailedTests_ << std::endl;
             std::cout << "      total checks:  " << TotalChecks_ << std::endl;
