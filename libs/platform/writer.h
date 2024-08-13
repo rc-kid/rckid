@@ -16,7 +16,7 @@
 class Writer {
 public:
 
-    Writer(std::function<void(char)> putChar):putChar_{putChar} {}
+    explicit Writer(std::function<void(char)> putChar):putChar_{putChar} {}
 
     Writer & operator << (char const * str) {
         while (*str != 0)

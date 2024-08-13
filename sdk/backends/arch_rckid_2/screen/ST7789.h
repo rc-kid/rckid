@@ -161,7 +161,8 @@ namespace rckid {
             cb_ = cb;
             if (updating_ == 0)
                 stats::displayUpdateStart_ = uptimeUs();
-            ++updating_;
+            // updating_ is volatile, but this is ok - it is only main app code (here), or from an IRQ
+            updating_ = updating_ + 1;
 #if (! defined ARCH_MOCK)
             dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
 #else       

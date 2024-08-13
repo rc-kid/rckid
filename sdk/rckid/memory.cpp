@@ -51,7 +51,7 @@ namespace {
         Chunk * freelist = nullptr;
         Arena * previous;
 
-        Arena(Arena * prev): previous{prev} {}
+        explicit Arena(Arena * prev): previous{prev} {}
     }; 
 
     static_assert(sizeof(Arena) == sizeof(void*) * 2);
