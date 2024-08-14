@@ -6,7 +6,7 @@
     "configurations": [
 
         {
-            "name": "hello_world [fantasy]",
+            "name": "display-fill [fantasy]",
             "type": "cppdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}",
@@ -14,7 +14,37 @@
             //"program": "${workspaceFolder}/build-mock/cartridges/test/display/display-test",
             //"program": "${workspaceFolder}/build-mock/cartridges/test/benchmarks/benchmarks",
             //"program": "${workspaceFolder}/build-mock/cartridges/games/games",
-            "program": "${workspaceFolder}/build/cartridges/hello-world/hello-world",
+            "program": "${workspaceFolder}/build/cartridges/test/display-fill",
+            "args": [],
+            "stopAtEntry": false,
+            "environment": [{ "name" : "DISPLAY", "value" : "0:0"}],
+            "externalConsole": false,
+            //"targetArchitecture": "arm64",
+            "MIMode": "gdb",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description":  "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                },
+            ]
+        },
+        {
+            "name": "tests [fantasy]",
+            "type": "cppdbg",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            //"program": "${workspaceFolder}/build-mock/cartridges/gbcemu/gbcemu",
+            //"program": "${workspaceFolder}/build-mock/cartridges/test/display/display-test",
+            //"program": "${workspaceFolder}/build-mock/cartridges/test/benchmarks/benchmarks",
+            //"program": "${workspaceFolder}/build-mock/cartridges/games/games",
+            "program": "${workspaceFolder}/build/test/tests",
             "args": [],
             "stopAtEntry": false,
             "environment": [{ "name" : "DISPLAY", "value" : "0:0"}],

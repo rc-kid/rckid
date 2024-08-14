@@ -17,6 +17,8 @@ namespace rckid {
 
     void tick();
 
+    void yield();
+
     /** Returns debug writer for logging and tracing purposes. 
      
         Depending on the backend, this is either the serial over USB port for the physical devices, or standard output for the fantasy console. 
@@ -155,6 +157,16 @@ namespace rckid {
      */
     bool displayUpdateActive(); 
 
+    /** Busy loop convenience function that waits for the display update to be done. 
+     */
+    inline void displayWaitUpdateDone() {
+        while (displayUpdateActive())
+            yield();
+    }
+
+    /** Busy waits for the display's VSYNC 
+     */
+    void displayWaitVSync();
 
     void displayUpdate(ColorRGB const * pixels, uint32_t numPixels, DisplayUpdateCallback callback);
 

@@ -35,3 +35,4 @@ add_subdirectory("sdk/backends/${ARCH_LOWER}")
 add_subdirectory("test")
 
 add_subdirectory("cartridges/hello-world")
+add_subdirectory("cartridges/test")

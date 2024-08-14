@@ -62,6 +62,10 @@ namespace rckid {
         displayDraw();
     }
 
+    void yield() {
+        // TODO
+    }
+
     Writer debugWrite() {
         return Writer([](char c) {
             std::cout << c;
@@ -133,6 +137,9 @@ namespace rckid {
     }
 
     bool displayUpdateActive() { return displayUpdating_ > 0; }
+
+    // there is no VSYNC on raylib, it's being handled by Begin & EndDrawing instead
+    void displayWaitVSync() { return; }
 
     void displayUpdate(ColorRGB const * pixels, uint32_t numPixels) {
         ++displayUpdating_;

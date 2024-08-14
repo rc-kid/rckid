@@ -1,7 +1,8 @@
 #pragma once
+#include <type_traits>
 
 #include "../rckid.h"
-
+#include "drawing.h"
 namespace rckid {
 
 
@@ -33,35 +34,14 @@ namespace rckid {
          */
         //@{
 
-        Color pixelAt(Coord x, Coord y) const {
-            switch (BPP) {
-                case 16:
-                    return Color::fromRaw(reinterpret_cast<uint16_t const *>(buffer_)[map(x, y)]);
-                case 8:
-                    return Color::fromRaw(buffer_[map(x, y)]);
-                case 4:
-                default:
-                    UNREACHABLE;
-            }
-        }
+        Color pixelAt(Coord x, Coord y) const { return rckid::pixelAt<COLOR>(buffer_, x, y, w_, h_); }
 
-        void setPixelAt(Coord x, Coord y, Color c) {
-            switch (BPP) {
-                case 16:
-                    reinterpret_cast<uint16_t *>(buffer_)[map(x, y)] = c.toRaw();
-                    break;
-                case 8:
-                    buffer_[map(x, y)] = c.toRaw();
-                    break;
-                case 4:
-                default:
-                    UNREACHABLE;
-            }
-        }
+        void setPixelAt(Coord x, Coord y, Color c) { rckid::setPixelAt<COLOR>(buffer_, x, y, c, w_, h_); }
         //@}
 
-
-
+        const typename Color::RawBufferType rawBuffer() const {
+            return reinterpret_cast<const typename Color::RawBufferType>(buffer_);
+        }
 
     private:
 
@@ -71,15 +51,11 @@ namespace rckid {
             return new uint8_t[(w * h) * BPP / 8];
         } 
 
-        constexpr __force_inline size_t map(Coord x, Coord y) const { return map(x, y, w_, h_); }
-
-        constexpr static __force_inline size_t map(Coord x, Coord y, Coord w, Coord h) { 
-            return (w - x - 1) * h + y; 
-        }
-
+        constexpr __force_inline size_t map(Coord x, Coord y) const { return pixelOffset(x, y, w_, h_); }
 
         Coord w_ = 0;
         Coord h_ = 0;
+
         uint8_t * buffer_ = nullptr;
 
 

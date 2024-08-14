@@ -13,6 +13,8 @@ namespace rckid {
 
         constexpr static uint8_t BPP = 16;
 
+        using RawBufferType = uint16_t *;
+
         constexpr ColorRGB() = default;
 
         constexpr ColorRGB(uint8_t r, uint8_t g, uint8_t b): raw_{0} {
@@ -48,6 +50,8 @@ namespace rckid {
     public:
         constexpr static  uint8_t BPP = 8;
 
+        using RawBufferType = uint8_t *;
+
         constexpr Color256() = default;
         constexpr explicit Color256(uint8_t color): raw_{color} {}
 
@@ -74,6 +78,8 @@ namespace rckid {
     public:
         static constexpr uint8_t BPP = 4;
 
+        using RawBufferType = uint8_t *;
+
         constexpr Color16() = default;
         explicit constexpr Color16(uint8_t color): 
             raw_{color} {
@@ -82,6 +88,9 @@ namespace rckid {
 
         constexpr static Color16 fromRaw(uint8_t raw) { return Color16{raw}; }
         constexpr uint8_t toRaw() const { return raw_; }
+
+        constexpr bool operator == (Color16 const & other) { return raw_ == other.raw_; }
+        constexpr bool operator != (Color16 const & other) { return raw_ != other.raw_; }
 
     private:
         uint8_t raw_ = 0;
