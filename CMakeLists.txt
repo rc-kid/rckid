@@ -24,6 +24,7 @@ endif()
 
 set(CMAKE_CXX_STANDARD 17)  
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_compile_options(-Wall -Wextra)
 
 add_compile_definitions(${ARCH})
 include_directories("sdk")
@@ -36,3 +37,16 @@ add_subdirectory("test")
 
 add_subdirectory("cartridges/hello-world")
 add_subdirectory("cartridges/test")
+
+
+# add utils target if we are building for the fantasy architecture (needs raylib)
+if(${ARCH} STREQUAL "ARCH_FANTASY")
+    add_subdirectory("sdk/utils")
+endif()
+
+# doxygen documentation
+add_custom_target(docs
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMAND echo "Generating doxygen documentation..."
+    COMMAND doxygen Doxyfile
+)

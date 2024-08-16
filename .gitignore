@@ -1,3 +1,4 @@
 build*
+docs/sdk
 sdk/backends/arch_fantasy/raylib
 sdk/backends/arch_rckid/pico-sdk

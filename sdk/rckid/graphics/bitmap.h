@@ -21,12 +21,33 @@ namespace rckid {
         Bitmap() = default;
         Bitmap(Coord width, Coord height): w_{width}, h_{height}, buffer_{allocateBuffer(width, height) } {}
 
+        Bitmap(Bitmap const &) = delete;
+        Bitmap(Bitmap && from): w_{from.w_}, h_{from.h_}, buffer_{from.buffer_} {
+            from.w_ = 0;
+            from.h_ = 0;
+            from.buffer_ = nullptr;
+        }
+
         ~Bitmap() {
             delete [] buffer_;
         }
 
         Coord width() const { return w_; }
         Coord height() const { return h_; }
+
+        uint32_t numPixels() const { return w_ * h_; }
+
+        /** Returns the color buffer. 
+         
+            This method is only implemented for bitmaps with bit depths allowing zero cost cast between the raw buffer and color types (i.e. 16 and 8 bpp). 
+         */
+        Color const * buffer() const;
+
+        /** Returns the raw color buffer in the underlying type. 
+         */
+        const typename Color::RawBufferType rawBuffer() const {
+            return reinterpret_cast<const typename Color::RawBufferType>(buffer_);
+        }
 
         /** \name Per-pixel interface 
 
@@ -39,16 +60,19 @@ namespace rckid {
         void setPixelAt(Coord x, Coord y, Color c) { rckid::setPixelAt<COLOR>(buffer_, x, y, c, w_, h_); }
         //@}
 
-        const typename Color::RawBufferType rawBuffer() const {
-            return reinterpret_cast<const typename Color::RawBufferType>(buffer_);
-        }
+        /** \name Drawing interface
+         */
+        //@{
+
+        void fill(Color color) { pixelBufferFill<Color>(buffer_, numPixels(), color); }
+        //@}
 
     private:
 
         constexpr uint8_t * allocateBuffer(int w, int h) {
             if (w == 0 || h == 0)
                 return nullptr;
-            return new uint8_t[(w * h) * BPP / 8];
+            return new uint8_t[pixelBufferSize<COLOR>(w, h)];
         } 
 
         constexpr __force_inline size_t map(Coord x, Coord y) const { return pixelOffset(x, y, w_, h_); }
@@ -61,5 +85,16 @@ namespace rckid {
 
 
     }; // rckid::Bitmap
+
+
+    template<>
+    inline ColorRGB const * Bitmap<ColorRGB>::buffer() const {
+        return reinterpret_cast<ColorRGB const *>(buffer_);
+    }
+
+    template<>
+    inline Color256 const * Bitmap<Color256>::buffer() const {
+        return reinterpret_cast<Color256 const *>(buffer_);
+    }
 
 } // namespace rckid

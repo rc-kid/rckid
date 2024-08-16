@@ -31,7 +31,5 @@ int main() {
         fill(fb, FB_SIZE, ColorRGB{0, 0, 0});
         displayUpdate(fb, FB_SIZE);
         displayWaitUpdateDone();
-}
-
-
+    }
 }

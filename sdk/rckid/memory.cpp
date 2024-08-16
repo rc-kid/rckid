@@ -87,7 +87,7 @@ extern "C" {
         // if we are over the limit, panic
         ASSERT(heapEnd <= & __StackLimit);
         // set the chunk's size and return it 
-        result->size = numBytes;
+        result->size = static_cast<uint32_t>(numBytes);
         return &(result->next);
     }
 
@@ -118,10 +118,10 @@ extern "C" {
 namespace rckid {
 
     uint32_t memoryFreeHeap() {
-        return & __StackLimit - heapEnd;
+        return static_cast<uint32_t>(& __StackLimit - heapEnd);
     }
     uint32_t memoryUsedHeap() {
-        return heapEnd - & __bss_end__;
+        return static_cast<uint32_t>(heapEnd - & __bss_end__);
     }
 
     bool memoryIsOnHeap(void * ptr) {

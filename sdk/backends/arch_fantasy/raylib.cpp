@@ -10,11 +10,11 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <chrono>
 
 #include <raylib.h>
 
 #include "rckid/rckid.h"
-
 
 extern "C" {
 
@@ -66,6 +66,12 @@ namespace rckid {
         // TODO
     }
 
+    uint32_t uptimeUs() {
+        using namespace std::chrono;
+        static auto first = steady_clock::now();
+        return static_cast<uint32_t>(duration_cast<microseconds>(steady_clock::now() - first).count()); 
+    }
+
     Writer debugWrite() {
         return Writer([](char c) {
             std::cout << c;
@@ -73,6 +79,21 @@ namespace rckid {
                 std::cout.flush();
         });
     }
+
+    // io
+
+    bool btnDown([[maybe_unused]] Btn b) {
+        return false;
+    }
+
+    bool btnPressed([[maybe_unused]] Btn b) {
+        return false;
+    }
+
+    bool btnReleased([[maybe_unused]] Btn b) {
+        return false;
+    }
+
 
     namespace {
         DisplayMode displayMode_ = DisplayMode::Off;
@@ -168,4 +189,16 @@ namespace rckid {
         displayCallback_ = callback;
         displayUpdate(pixels, numPixels);
     }
+
+
+
+
+
+    // accelerated functions
+
+    #include "rckid/accelerated.inc.h"
+    MEM_FILL_8
+    MEM_FILL_16
+    MEM_FILL_32
+
 }

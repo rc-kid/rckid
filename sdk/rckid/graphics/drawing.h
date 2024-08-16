@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../rckid.h"
 #include "geometry.h"
 #include "color.h"
 
@@ -11,6 +12,16 @@ namespace rckid {
 
         Note that all color buffers are expected to be aligned as uint32_t. This is the case if they were obtained by new or malloc. 
      */
+
+    /** Returns number of bytes a pixel buffer of given dimension needs for the specified color. 
+     
+        Single column must fit exactly into an uint8_t array, which is not a problem for RGB and 256 colors, but forces 16 color buffers to have even heights.  
+    */
+    template<typename COLOR>
+    constexpr inline uint32_t pixelBufferSize(Coord width, Coord height) {
+        ASSERT(height * COLOR::BPP % 8 == 0);
+        return width * height * COLOR::BPP / 8;
+    }
 
     /** Returns the pixel offset for pixel at coordinates (x,y) in a pixel buffer of specified width and height. Assumes the native display orientation, i.e. right-top corner is index 0, column-first format. 
       */
@@ -51,6 +62,37 @@ namespace rckid {
                 xx |= value.toRaw() << ((offset & 1) * 4);
                 break;
             }
+            default:
+                UNREACHABLE;
+        }
+    }
+
+    /** Fills the entire buffer with given color. 
+     */
+    template<typename COLOR>
+    constexpr void pixelBufferFill(uint8_t * buffer, uint32_t numPixels, COLOR color) {
+        uint32_t value = color.toRaw();
+        switch (COLOR::BPP) {
+            case 4:
+                ASSERT(numPixels & 1 == 0); // we need even number of pixels for 4 bpp
+                value = (value << 4) | value;
+                numPixels /= 2;
+                [[fallthrough]];
+            case 8:
+                if (numPixels % 1)
+                    return memFill(buffer, numPixels, static_cast<uint8_t>(value));
+                value = (value << 8) | value;
+                numPixels /= 2;
+                [[fallthrough]];
+            case 16:
+                if (numPixels % 1)
+                    return memFill(reinterpret_cast<uint16_t*>(buffer), numPixels, static_cast<uint16_t>(value));
+                value = (value << 16) | value;
+                numPixels /= 2;
+                [[fallthrough]];
+            case 32:
+                ASSERT(COLOR::BPP != 32); // we actually don't support 32 bpp, this is here only for faster memop
+                return memFill(reinterpret_cast<uint32_t*>(buffer), numPixels, value);
             default:
                 UNREACHABLE;
         }

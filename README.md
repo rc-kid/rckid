@@ -36,3 +36,9 @@ The SDK library is at the core of RCKid as it provides an abstraction layer over
 
 > For now, fantasy console via raylib (Windows and Linux), RCKid mk3 (RP2350) and RCKid mk2 (RP2040) are supported. Once mk3 hardware is available the mk2 version will be retired. 
 
+
+
+
+## Attribution
+
+- doxygen theme: https://github.com/jothepro/doxygen-awesome-css

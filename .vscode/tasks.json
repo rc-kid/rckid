@@ -11,6 +11,28 @@
             "group": "build",
             "problemMatcher": [],
             "detail": "Builds RCKid and runs all tests. Only available in ARCH_FANTASY"
+        },
+        {
+            "type": "cmake",
+            "label": "Generate doxygen docs",
+            "command": "build",
+            "targets": [
+                "docs"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Builds the doxygen HTML documentation in docs/sdk/html"
+        }, 
+        {
+            "type": "cmake",
+            "label": "Generate SDK assets",
+            "command": "build",
+            "targets": [
+                "generate-sdk-assets"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Generates the SDK assets for RCKid"
         }
     ]
 }

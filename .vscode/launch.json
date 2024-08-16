@@ -6,7 +6,7 @@
     "configurations": [
 
         {
-            "name": "display-fill [fantasy]",
+            "name": "graphics-app [fantasy]",
             "type": "cppdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}",
@@ -14,7 +14,7 @@
             //"program": "${workspaceFolder}/build-mock/cartridges/test/display/display-test",
             //"program": "${workspaceFolder}/build-mock/cartridges/test/benchmarks/benchmarks",
             //"program": "${workspaceFolder}/build-mock/cartridges/games/games",
-            "program": "${workspaceFolder}/build/cartridges/test/display-fill",
+            "program": "${workspaceFolder}/build/cartridges/test/graphics-app",
             "args": [],
             "stopAtEntry": false,
             "environment": [{ "name" : "DISPLAY", "value" : "0:0"}],

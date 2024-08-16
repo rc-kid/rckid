@@ -23,10 +23,11 @@ namespace rckid {
             setB(b);
         }
 
-        constexpr ColorRGB(ColorRGB const & other): raw_{other.raw_} {}
+        constexpr ColorRGB(ColorRGB const &) = default;
+        constexpr ColorRGB & operator = (ColorRGB const &) = default;
 
         constexpr static ColorRGB fromRaw(uint16_t raw) { return ColorRGB{raw}; };
-        constexpr uint16_t roRaw() const { return raw_; }
+        constexpr uint16_t toRaw() const { return raw_; }
 
         uint8_t r() const { return ((raw_ >> 11) & 0xff) << 3; }
         uint8_t g() const { return ((raw_ >> 5) & 0x3f) << 2; }
@@ -54,6 +55,9 @@ namespace rckid {
 
         constexpr Color256() = default;
         constexpr explicit Color256(uint8_t color): raw_{color} {}
+
+        constexpr Color256(Color256 const &) = default;
+        constexpr Color256 & operator = (Color256 const &) = default;
 
         constexpr Color256 & operator = (uint8_t color) {
             raw_ = color;
@@ -85,6 +89,9 @@ namespace rckid {
             raw_{color} {
             ASSERT(color < 16);
         }
+
+        constexpr Color16(Color16 const &) = default;
+        constexpr Color16 & operator = (Color16 const &) = default;
 
         constexpr static Color16 fromRaw(uint8_t raw) { return Color16{raw}; }
         constexpr uint8_t toRaw() const { return raw_; }

@@ -1,11 +1,12 @@
 #pragma once
 
-
 #include <platform.h>
 #include <platform/writer.h>
 
 #include "graphics/color.h"
 #include "graphics/geometry.h"
+
+
 
 namespace rckid {
 
@@ -18,6 +19,12 @@ namespace rckid {
     void tick();
 
     void yield();
+
+    /** Returns the system's uptime in microseconds. 
+     
+        For performance reasons, this uses uint32_t as the result value and as such will overflow every hour & something. The intended purpose of this function is not precise timekeeping, but delta time measurements, so the overflows are fine. 
+     */
+    uint32_t uptimeUs();
 
     /** Returns debug writer for logging and tracing purposes. 
      
@@ -49,13 +56,13 @@ namespace rckid {
 
     /** Returns true if the given button is currently down. 
      */
-    bool down(Btn b);
+    bool btnDown(Btn b);
 
     /** Returns true if the given button has been pressed since last frame (i.e. its state went from up to down). The value is stable within one frame. */
-    bool pressed(Btn b);
+    bool btnPressed(Btn b);
 
     /** Returns true if the given button has been released since last frame (i.e. its state went from down to up). The value is stable within one frame. */
-    bool released(Btn b);
+    bool btnReleased(Btn b);
 
     /** Returns the accelerometer readings. 
      */
@@ -153,6 +160,26 @@ namespace rckid {
      */
     void displaySetUpdateRegion(Rect region);
 
+    /** Sets the display update region based on width and height. The region will be automatically centered. 
+     */
+    inline void displaySetUpdateRegion(Coord width, Coord height) {
+        switch (displayMode()) {
+            case DisplayMode::Native:
+            case DisplayMode::Natural:
+                ASSERT(width >= 0 && width <= 320);
+                ASSERT(height >= 0 && height <= 240);
+                return displaySetUpdateRegion(Rect::XYWH((320 - width) / 2, (240 - height) / 2, width, height));
+            case DisplayMode::NativeDouble:
+            case DisplayMode::NaturalDouble:
+                ASSERT(width >= 0 && width <= 160);
+                ASSERT(height >= 0 && height <= 120);
+                return displaySetUpdateRegion(Rect::XYWH((160 - width) / 2, (120 - height) / 2, width, height));
+            case DisplayMode::Off:
+                // although this is a bit weird...
+                return;
+        }
+    }
+
     /** Returns true if display is currently being updated. 
      */
     bool displayUpdateActive(); 
@@ -176,8 +203,8 @@ namespace rckid {
         ASSERT(!displayUpdateActive() && "Blocking update must be first and the only one in a frame");
         displayUpdate(pixels, numPixels);
         // busy wait for the async update to finish
-        // TODO should we yield here?
-        while (displayUpdateActive()) { };
+        while (displayUpdateActive())
+            yield();
     }
 
     //@}
@@ -217,6 +244,21 @@ namespace rckid {
     /** Frees previously allocated chunk of memory. Note that the chunk *must* belong to the curren arena. 
      */
     void free(void * ptr);
+    //@}
+
+
+
+
+
+
+    /** \name Accelerated functions
+     */
+    //@{
+
+    void memFill(uint8_t * buffer, uint32_t size, uint8_t value);
+    void memFill(uint16_t * buffer, uint32_t size, uint16_t value);
+    void memFill(uint32_t * buffer, uint32_t size, uint32_t value);
+
     //@}
 
 } // namespace rckid
