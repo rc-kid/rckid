@@ -7,10 +7,10 @@
 #error "You are building fantasy (RayLib) backend without the indicator macro"
 #endif
 
-
 #include <cstdlib>
 #include <iostream>
 #include <chrono>
+#include <thread>
 
 #include <raylib.h>
 
@@ -45,13 +45,31 @@ extern "C" {
 
 namespace rckid {
 
+    namespace {
+        DisplayMode displayMode_ = DisplayMode::Off;
+        DisplayUpdateCallback displayCallback_;
+        uint8_t displayBrightness_ = 255;
+        size_t displayUpdating_ = 0; 
+        Rect displayRect_ = Rect::WH(320, 240);
+        size_t displayMax_ = 320 * 240;
+        int displayUpdateX_ = 319;
+        int displayUpdateY_ = 0;
+        Image displayImg_;
+        Texture displayTexture_;
+        std::chrono::steady_clock::time_point displayLastVSyncTime_;
+    }
+
+
+
     void displayDraw();
 
     void initialize() {
         systemMalloc_ = true;
         InitWindow(640, 480, "RCKid");
-        SetTargetFPS(60);
         systemMalloc_ = false;
+        displayImg_ = GenImageColor(320, 240, BLACK);
+        displayTexture_ = LoadTextureFromImage(displayImg_);
+        displayLastVSyncTime_ = std::chrono::steady_clock::now();
     }
 
     void tick() {
@@ -59,7 +77,7 @@ namespace rckid {
         if (WindowShouldClose())
             std::exit(-1);
         systemMalloc_ = false;
-        displayDraw();
+        PollInputEvents();
     }
 
     void yield() {
@@ -95,17 +113,6 @@ namespace rckid {
     }
 
 
-    namespace {
-        DisplayMode displayMode_ = DisplayMode::Off;
-        DisplayUpdateCallback displayCallback_;
-        uint8_t displayBrightness_ = 255;
-        size_t displayUpdating_ = 0; 
-        Rect displayRect_ = Rect::WH(320, 240);
-        size_t displayIdx_ = 0;
-        size_t displayMax_ = 320 * 240;
-        ColorRGB framebuffer_[320 * 240];
-    }
-
     void drawPixel(int x, int y, ColorRGB c) {
         Color rc;
         rc.a = 255;
@@ -117,23 +124,11 @@ namespace rckid {
 
     void displayDraw() {
         systemMalloc_ = true;
+        UpdateTexture(displayTexture_, displayImg_.data);
         BeginDrawing();
-        ColorRGB * c = framebuffer_;
-        switch (displayMode_) {
-            case DisplayMode::Native: {
-                for (int x = displayRect_.w - 1; x >= 0; --x)
-                    for (int y = 0; y < displayRect_.h; ++y)
-                        drawPixel(displayRect_.x + x, displayRect_.y + y, *c++);
-                break;
-            }
-            case DisplayMode::NativeDouble:
-            case DisplayMode::Natural:
-            case DisplayMode::NaturalDouble:
-                UNIMPLEMENTED;
-            default:
-                UNREACHABLE;
-        }
+        DrawTextureEx(displayTexture_, {0, 0}, 0, 2.0, WHITE);
         EndDrawing();
+        SwapScreenBuffer();
         systemMalloc_ = false;
     }
 
@@ -155,21 +150,34 @@ namespace rckid {
         displayMax_ = region.w * region.h;
         ASSERT(region.w > 0 && region.h > 0 && region.x >= 0 && region.y >= 0);
         ASSERT(region.bottom() <= 240 && region.right() <= 320);
+        displayUpdateX_ = displayRect_.right() - 1;
+        displayUpdateY_ = displayRect_.top();
     }
 
     bool displayUpdateActive() { return displayUpdating_ > 0; }
 
     // there is no VSYNC on raylib, it's being handled by Begin & EndDrawing instead
-    void displayWaitVSync() { return; }
+    void displayWaitVSync() { 
+        yield();
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - displayLastVSyncTime_).count();
+        if (elapsed < 16666)
+            std::this_thread::sleep_for(std::chrono::microseconds(16666 - elapsed));
+        displayLastVSyncTime_ = std::chrono::steady_clock::now();
+    }
 
     void displayUpdate(ColorRGB const * pixels, uint32_t numPixels) {
         ++displayUpdating_;
         // update the pixels
         while (numPixels != 0) {
-            framebuffer_[displayIdx_++] = *(pixels++);
-            if (displayIdx_ >= displayMax_)
-                displayIdx_ = 0;
+            ImageDrawPixel(&displayImg_, displayUpdateX_, displayUpdateY_, { pixels->r(), pixels->g(), pixels->b(), 255});
+            ++pixels;
             --numPixels;
+            if (++displayUpdateY_ == displayRect_.bottom()) {
+                displayUpdateY_ = displayRect_.top();
+                if (--displayUpdateX_ < displayRect_.left())
+                    displayUpdateX_ = displayRect_.right() - 1; 
+            }
         }
         // check if this is the first update call, in which case call all the other updates (as long as the callback generates a new update) and when no more updates are scheduled, actually redraw the display. Note that if the update is not the first, no callbacks are called
         if (displayUpdating_ == 1) {

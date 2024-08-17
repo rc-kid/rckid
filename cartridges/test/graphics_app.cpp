@@ -27,7 +27,11 @@ protected:
         }
         i_ = (i_ + 1) % 4;
         Font font(Font::fromROM<assets::font::Iosevka16>());
-        g_.text(0,0,font, ColorRGB{255, 255, 255}) << "Hello world! FPS: " << App::fps();
+        g_.text(0,0,font, ColorRGB{255, 255, 255}) 
+            << "Hello world!\n" 
+            << "FPS: " << App::fps() << "\n"
+            << "Draw: " << App::drawUs() << "\n"
+            << "Render: " << App::renderUs() << "\n";
 
     }
     uint32_t i_ = 0;

@@ -96,9 +96,15 @@ namespace rckid {
         }
 
         Writer text(int x, int y, Font const & font, Color const * colors) {
-            return Writer{[this, x, y, font, colors](char c) mutable {
-                if (c != '\n')
+            int startX = x;
+            return Writer{[=, this](char c) mutable {
+                if (c != '\n') {
                     x += putChar(Point{x, y}, font, c, colors);
+                    if (x < width())
+                        return; 
+                }
+                x = startX;
+                y += font.size;
             }};
         }
 

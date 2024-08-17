@@ -1,6 +1,7 @@
 include_directories(${CMAKE_SOURCE_DIR}/libs/raylib/src)
 find_package(Threads REQUIRED)
 
+add_definitions(-DSUPPORT_CUSTOM_FRAME_CONTROL)
 add_subdirectory(raylib)
 
 file(GLOB_RECURSE SRC "raylib.cpp" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.h" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.cpp" "${CMAKE_SOURCE_DIR}/sdk/assets-bin/*.cpp")
