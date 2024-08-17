@@ -30,14 +30,38 @@ Externally, it is almost identical to the version 2 built upon RP2040, but inter
 - `libs` holds mostly 3rd party libraries that are part of the RCKid SDK
 - `sdk` contains the `librckid` SDK library files and all backends
 
+## Building
+
+Windows & WSL Ubuntu are supported for both development and fantasy console, anothough linux is much more tested. On linux, the `setup-ubuntu.sh` must first be executed which installs all the required packages and sets up subprojects, etc.
+
+> This step is necessary for windows development as well as it installs the rpi-pico sdk and raylib for fantasy console.
+
+RCKid uses `cmake` so the following builds the fantasy console & all cartridges on linux:
+
+    mkdir build-linux
+    cd build-linux
+    cmake ..
+    cmake --build .
+
+To build RCKid for the device (mk III in this example), do the following:
+
+    mkdir build-mk3
+    cd build-mk3
+    cmake .. -DARCH=ARCH_RCKID_3
+    cmake --build .
+
+And finally, under Windows, enter the Visual Studio Developers prompt and then type:
+
+    mkdir build-win
+    cd build-win
+    cmake ..
+    cmake --build . --config=Release
+
 ## SDK
 
 The SDK library is at the core of RCKid as it provides an abstraction layer over the console's hardware. Furthermore, it makes RCKid also a fantasy console by being able to run on a PC for most of the features. Therefore the SDK comes in two folder, `rckid` where the common interface resides, and `backends` where specific implementation for the various hardware versions and fantasy consoles is implemented. 
 
 > For now, fantasy console via raylib (Windows and Linux), RCKid mk3 (RP2350) and RCKid mk2 (RP2040) are supported. Once mk3 hardware is available the mk2 version will be retired. 
-
-
-
 
 ## Attribution
 

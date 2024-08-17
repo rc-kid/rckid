@@ -6,19 +6,16 @@
 #include "graphics/color.h"
 #include "graphics/geometry.h"
 
-/** \page sdk RCKid SDK
+/** \defgroup api API
  
-    Blablabla
  */
-
 
 /** \defgroup backends Backends
  
-    Blablabla
- * 
- */
+    While \ref api provides an abstraction layer over the actual hardware, the library also contains a backend, which deals with the hardware details. This architecture allows the backends to be swapped, so that same RCKid cartridges can be run on multiple devices, or even emulators. 
 
-
+    All backends are stored in `/sdk/backends` folder. 
+  */
 
 namespace rckid {
 
