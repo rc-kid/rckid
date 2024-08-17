@@ -1,4 +1,6 @@
-/** \page raylib_backend Raylib backend
+/** 
+    \section raylib_backend Raylib backend
+    \addtogroup backends
  
     A fantasy console backend that uses RayLib for the graphics, audio and other aspects of the device. Should work anywhere raylib does. 
  */
@@ -161,6 +163,7 @@ namespace rckid {
         yield();
         auto now = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - displayLastVSyncTime_).count();
+        // hardwired for ~60 fps...  
         if (elapsed < 16666)
             std::this_thread::sleep_for(std::chrono::microseconds(16666 - elapsed));
         displayLastVSyncTime_ = std::chrono::steady_clock::now();

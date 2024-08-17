@@ -1,4 +1,7 @@
-/** \page rckid_backend RCKid mk III Backend 
+
+/** 
+    \section rckid_backend RCKid mk III Backend 
+    \addtogroup backends
  
     This is the default backend for RCKid mk III where all code happens on the RP2350. 
  */

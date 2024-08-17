@@ -6,6 +6,18 @@
 #include "graphics/color.h"
 #include "graphics/geometry.h"
 
+/** \page sdk RCKid SDK
+ 
+    Blablabla
+ */
+
+
+/** \defgroup backends Backends
+ 
+    Blablabla
+ * 
+ */
+
 
 
 namespace rckid {
