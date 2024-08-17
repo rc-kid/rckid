@@ -3,6 +3,8 @@
 
 #include "../rckid.h"
 #include "drawing.h"
+#include "font.h"
+
 namespace rckid {
 
 
@@ -65,6 +67,43 @@ namespace rckid {
         //@{
 
         void fill(Color color) { pixelBufferFill<Color>(buffer_, numPixels(), color); }
+
+        int putChar(Point where, Font const & font, char c, Color const * colors) {
+            if (where.x > width())
+                return 0;
+            GlyphInfo const & g = font.glyphs[static_cast<uint8_t>((c - 32 >= 0) ? (c - 32) : 0)];
+            if (where.x + g.advanceX < 0)
+                return g.advanceX;
+            uint32_t const * pixels = font.pixels + g.index;
+            int ys = where.y + g.y;
+            int ye = ys + g.height;
+            for (int x = where.x + g.x,xe = where.x + g.x + g.width; x < xe; ++x) {
+                uint32_t col;
+                uint32_t bits = 0;
+                for (int y = ys; y != ye; ++y) {
+                    if (bits == 0) {
+                        bits = 32;
+                        col = *pixels++;
+                    }
+                    unsigned a = (col >> 30) & 0x3;
+                    if (a != 0)
+                        setPixelAt(x, y, colors[a]);
+                    col = col << 2;
+                    bits -= 2;
+                }
+            }
+            return g.advanceX;
+        }
+
+        Writer text(int x, int y, Font const & font, Color const * colors) {
+            return Writer{[this, x, y, font, colors](char c) mutable {
+                if (c != '\n')
+                    x += putChar(Point{x, y}, font, c, colors);
+            }};
+        }
+
+        Writer text(int x, int y, Font const & font, Color color);
+
         //@}
 
     private:
@@ -95,6 +134,26 @@ namespace rckid {
     template<>
     inline Color256 const * Bitmap<Color256>::buffer() const {
         return reinterpret_cast<Color256 const *>(buffer_);
+    }
+
+    template<>
+    inline Writer Bitmap<ColorRGB>::text(int x, int y, Font const & font, ColorRGB color) {
+        Color colors[] = {
+            color.withAlpha(0), 
+            color.withAlpha(85), 
+            color.withAlpha(170), 
+            color.withAlpha(255), 
+        };
+        int startX = x;
+        return Writer{[this, x, startX, y, font, colors](char c) mutable {
+            if (c != '\n') {
+                x += putChar(Point{x, y}, font, c, colors);
+                if (x < width())
+                    return; 
+            }
+            x = startX;
+            y += font.size;
+        }};
     }
 
 } // namespace rckid

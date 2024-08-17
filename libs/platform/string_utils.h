@@ -38,3 +38,27 @@ inline std::string trim(std::string const & s) {
     trimInPlace(result);
     return result;
 }
+
+inline std::string encodeUTF8(uint32_t codepoint) {
+    std::string result;
+    if (codepoint <= 0x7F) {
+        // 1-byte sequence
+        result.push_back(static_cast<char>(codepoint));
+    } else if (codepoint <= 0x7FF) {
+        // 2-byte sequence
+        result.push_back(static_cast<char>((codepoint >> 6) | 0xC0));
+        result.push_back(static_cast<char>((codepoint & 0x3F) | 0x80));
+    } else if (codepoint <= 0xFFFF) {
+        // 3-byte sequence
+        result.push_back(static_cast<char>((codepoint >> 12) | 0xE0));
+        result.push_back(static_cast<char>(((codepoint >> 6) & 0x3F) | 0x80));
+        result.push_back(static_cast<char>((codepoint & 0x3F) | 0x80));
+    } else if (codepoint <= 0x10FFFF) {
+        // 4-byte sequence
+        result.push_back(static_cast<char>((codepoint >> 18) | 0xF0));
+        result.push_back(static_cast<char>(((codepoint >> 12) & 0x3F) | 0x80));
+        result.push_back(static_cast<char>(((codepoint >> 6) & 0x3F) | 0x80));
+        result.push_back(static_cast<char>((codepoint & 0x3F) | 0x80));
+    } 
+    return result;   
+}

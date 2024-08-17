@@ -32,6 +32,7 @@ namespace rckid {
             if (currentFrame >= 1000000) {
                 fps_ = currentFps;
                 currentFrame -= 1000000;
+                currentFps = 0;
             }
         }
         onBlur();

@@ -37,12 +37,6 @@ public:
     std::vector<int> codepoints;
 }; 
 
-std::string codepointToUTF8(int codepoint) {
-    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
-    return converter.to_bytes(codepoint);
-}
-
-
 /** Loads glyph indices from given file. The file is expected to be in the `assets/font-glyphs-inc.h` formet, i.e. 
  
         GLYPH(NAME, CODEPOINT)
@@ -101,33 +95,19 @@ inline void drawImageComments(Image const & img, std::ostream & s) {
         for (int x = 0; x < img.width; ++x) {
             Color cc = GetImageColor(img, x, y);
             unsigned c = (cc.r + cc.g + cc.b) / 3;
-            c = std::min(255u, c + 8); // rounding 
-            c >>= 4; // convert tp 4bpp
+            c = std::min(255u, c + 32); // rounding 
+            c >>= 6; // convert tp 2bpp
             switch (c) {
                 case 0: 
-                case 1:
-                case 2:
                     s << "  ";
                     break;
-                case 3:
-                case 4:
-                case 5:
+                case 1:
                     s << "\u2591\u2591";
                     break;
-                case 6:
-                case 7:
-                case 8:
-                case 9:
-                    s << "\u2592\u2592";
-                    break;
-                case 10:
-                case 11:
-                case 12:
+                case 2:
                     s << "\u2593\u2593";
                     break;
-                case 13:
-                case 14:
-                case 15: 
+                case 3:
                     s << "\u2588\u2588";
                     break;
             }
@@ -147,8 +127,9 @@ inline std::string generateFontGlyphs(std::string const & className, std::string
     // take the glyphs and add
     size_t gIndex = 0;
     for (size_t i = 0; i < glyphs.codepoints.size(); ++i) {
+        size_t currentIndex = gIndex;
         GlyphInfo const & g = gInfos[i];
-        defPixels << "            // " << i << " (" << glyphs.names[i] << ", codepoint: " << glyphs.codepoints[i] << " utf: " << codepointToUTF8(glyphs.codepoints[i]) << ", offset " + gIndex << ")" << std::endl;
+        defPixels << "            // " << i << " (" << glyphs.names[i] << ", codepoint: " << glyphs.codepoints[i] << " utf: " << encodeUTF8(glyphs.codepoints[i]) << ", offset " << currentIndex << ")" << std::endl;
         defPixels << "            ";
         // generate the glyph pixels, which we do column wise, starting from left (because this is how we will render the fonts, from left to right)
         for (int x = 0; x < g.image.width; ++x) {
@@ -156,11 +137,11 @@ inline std::string generateFontGlyphs(std::string const & className, std::string
             int bits = 0;
             for (int y = 0; y < g.image.height; ++y) {
                 unsigned c = GetImageColor(g.image, x, y).r;
-                c = std::min(255u, c + 8); // rounding 
-                c >>= 4; // convert tp 4bpp
-                data <<= 4;
+                c = std::min(255u, c + 32); // rounding 
+                c >>= 6; // convert tp 4bpp
+                data <<= 2;
                 data = data | c;
-                bits += 4;
+                bits += 2;
                 if (bits == 32) {
                     defPixels << data << ",";
                     data = 0;
@@ -177,8 +158,9 @@ inline std::string generateFontGlyphs(std::string const & className, std::string
         }
         defPixels << std::endl;
         size_t glyphHeight = g.image.height;
-        glyphHeight += 8 - (glyphHeight % 8);
-        defGlyphs << "            GlyphInfo{" << gIndex << ", " << g.advanceX << ", " << g.offsetX << ", " << g.offsetY << ", " << g.image.width << ", " << glyphHeight << "}, // " << i << " (" << glyphs.names[i] << ", codepoint: " << glyphs.codepoints[i] << " utf: " << codepointToUTF8(glyphs.codepoints[i]) << ")" << std::endl; 
+        if (glyphHeight % 16 != 0)
+            glyphHeight += 16 - (glyphHeight % 16);
+        defGlyphs << "            GlyphInfo{" << currentIndex << ", " << g.advanceX << ", " << g.offsetX << ", " << g.offsetY << ", " << g.image.width << ", " << glyphHeight << "}, // " << i << " (" << glyphs.names[i] << ", codepoint: " << glyphs.codepoints[i] << " utf: " << encodeUTF8(glyphs.codepoints[i]) << ")" << std::endl; 
         drawImageComments(g.image, defGlyphs);
     }
     
