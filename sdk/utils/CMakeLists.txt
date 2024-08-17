@@ -11,6 +11,6 @@ add_utility("generate-assets")
 add_custom_target(generate-sdk-assets 
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/sdk/assets
     COMMAND echo "Generating SDK assets..."
-    COMMAND generate-assets assets.def ${CMAKE_SOURCE_DIR}/sdk/assets-bin rckid::assets
+    COMMAND generate-assets assets.def ${CMAKE_SOURCE_DIR}/sdk/rckid/assets rckid::assets
     DEPENDS generate-assets
 )

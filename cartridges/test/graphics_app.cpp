@@ -1,5 +1,6 @@
 #include <rckid/rckid.h>
 #include <rckid/app.h>
+#include <rckid/assets/fonts/Iosevka16.h>
 
 using namespace rckid;
 
