@@ -1,6 +1,11 @@
-fontGlyphs, fonts/Iosevka.ttf, 16
-fontGlyphs, fonts/Iosevka.ttf, 24
-fontGlyphs, fonts/Iosevka.ttf, 32
-fontGlyphs, fonts/OpenDyslexic.otf, 32
-fontGlyphs, fonts/OpenDyslexic.otf, 48
-fontGlyphs, fonts/OpenDyslexic.otf, 64
+#generator,  path to font, font size, class name, glyphs to be generated
+#fontGlyphs, fonts/Iosevka.ttf, 16
+#fontGlyphs, fonts/Iosevka.ttf, 24
+#fontGlyphs, fonts/Iosevka.ttf, 32
+#fontGlyphs, fonts/OpenDyslexic.otf, 32
+#fontGlyphs, fonts/OpenDyslexic.otf, 48
+#fontGlyphs, fonts/OpenDyslexic.otf, 64
+#fontGlyphs, fonts/Iosevka.ttf, 24, Symbols16, ../rckid/assets/symbol-glyphs.inc.h
+
+#generator, path to folder, namespace (and output file)
+folder, icons, icons

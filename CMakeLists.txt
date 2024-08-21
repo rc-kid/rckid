@@ -34,6 +34,8 @@ add_compile_definitions(${ARCH})
 include_directories("sdk")
 include_directories("libs")
 
+add_subdirectory("libs/PNGdec")
+
 string(TOLOWER "${ARCH}" ARCH_LOWER)
 add_subdirectory("sdk/backends/${ARCH_LOWER}")
 
