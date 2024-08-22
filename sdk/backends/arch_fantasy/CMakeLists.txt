@@ -16,9 +16,12 @@ function(link_with_librckid target_name)
     get_target_property(target_type ${target_name} TYPE)
     target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/libs/platform/rckid-fantasy")
     if (target_type STREQUAL "EXECUTABLE")
-        target_link_libraries(${target_name} PRIVATE librckid)
-        target_link_libraries(${target_name} PRIVATE raylib)
-        target_link_libraries(${target_name} PRIVATE ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+        target_link_libraries(${target_name} PRIVATE 
+            librckid
+            raylib
+            PNGdec
+            ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
+        )
     endif()
 endfunction()
 

@@ -33,7 +33,8 @@ protected:
             << "FPS: " << App::fps() << "\n"
             << "Draw: " << App::drawUs() << "\n"
             << "Render: " << App::renderUs() << "\n";
-
+        MemoryReadStream str{rckid::assets::icons::bat};
+        g_.loadImage(PNG::fromStream(str));
     }
     uint32_t i_ = 0;
 }; 

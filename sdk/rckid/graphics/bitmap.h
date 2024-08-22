@@ -4,6 +4,7 @@
 #include "../rckid.h"
 #include "drawing.h"
 #include "font.h"
+#include "png.h"
 
 namespace rckid {
 
@@ -111,6 +112,30 @@ namespace rckid {
         Writer text(int x, int y, Font const & font, Color color);
 
         //@}
+
+        /** \name Image support
+         
+            Bitmaps can load their contents from PNG and JPG images as part of the SDK. 
+         */
+        //@{
+
+        void loadImage(PNG && png, Point where = Point::origin()) {
+            ASSERT(png.width() <= width());
+            ASSERT(png.height() <= height());
+            ASSERT(buffer_ != nullptr);
+            png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
+                for (int i = 0; i < lineWidth; ++i)
+                    setPixelAt(i + where.x, lineNum + where.y, line[i]);
+            });
+        }
+
+        static Bitmap fromImage(PNG && png) {
+            Bitmap result{png.width(), png.height()};
+            result.loadImage(std::move(png));
+            return result;
+        }
+        //@}
+
 
     private:
 

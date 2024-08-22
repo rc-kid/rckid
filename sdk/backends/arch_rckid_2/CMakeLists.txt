@@ -34,7 +34,7 @@ function(link_with_librckid target_name)
         #FatFS
         tinyusb_board
         tinyusb_device
-        #PNGdec
+        PNGdec
         #libhelix-mp3
     )
 endfunction()
