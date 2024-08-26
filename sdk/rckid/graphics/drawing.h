@@ -74,7 +74,7 @@ namespace rckid {
         uint32_t value = color.toRaw();
         switch (COLOR::BPP) {
             case 4:
-                ASSERT(numPixels & 1 == 0); // we need even number of pixels for 4 bpp
+                ASSERT((numPixels & 1) == 0); // we need even number of pixels for 4 bpp
                 value = (value << 4) | value;
                 numPixels /= 2;
                 [[fallthrough]];

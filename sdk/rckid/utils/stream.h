@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rckid.h"
+#include "../rckid.h"
 
 namespace rckid {
 
@@ -24,6 +24,7 @@ namespace rckid {
         /** Writes the given buffer to the stream. Returns the numbed of bytes written, which should be identical to bufferSize on success. 
          */
         virtual uint32_t write(uint8_t const * buffer, uint32_t bufferSize) = 0;
+
     }; // rckid::OutStream
 
     /** Random read stream. 

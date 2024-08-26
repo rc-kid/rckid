@@ -16,3 +16,10 @@
 #ifndef  __force_inline
 #define  __force_inline
 #endif
+
+
+#if defined(_MSC_VER)
+#define NORETURN(...) __declspec(noreturn) __VA_ARGS__
+#else
+#define NORETURN(...) __VA_ARGS__ __attribute__((noreturn))
+#endif

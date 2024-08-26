@@ -1,6 +1,6 @@
 #pragma once
 
-#include <platform.h>
+#include "../rckid.h"
 
 namespace rckid {
 
@@ -111,5 +111,15 @@ namespace rckid {
         uint8_t raw_ = 0;
 
     }); // rckid::Color16
+
+
+
+
+    namespace color {
+
+#define COLOR(NAME, R, G, B) constexpr ColorRGB NAME{R, G, B};
+#include "colors.inc.h"
+
+    } // rckid::color
 
 } // namespace rckid

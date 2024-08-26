@@ -6,49 +6,64 @@ namespace rckid {
 
     using Coord = int;
 
-    class Point {
+
+    template<typename COORD>
+    class TPoint {
     public:
-        Coord x = 0;
-        Coord y = 0;
+        COORD x = 0;
+        COORD y = 0;
 
-        Point() = default;
-        constexpr Point(int x, int y): x{x}, y{y} {}
+        TPoint() = default;
+        constexpr TPoint(int x, int y): x{x}, y{y} {}
 
-        constexpr static Point origin() { return Point{0,0}; }
+        constexpr static TPoint origin() { return TPoint{0,0}; }
 
-        constexpr Point operator + (Point other) const { return Point{x + other.x, y + other.y}; }
-        constexpr Point operator - (Point other) const { return Point{x - other.x, y - other.y}; }
+        constexpr TPoint operator + (TPoint other) const { return TPoint{x + other.x, y + other.y}; }
+        constexpr TPoint operator - (TPoint other) const { return TPoint{x - other.x, y - other.y}; }
+
+        constexpr TPoint operator * (COORD other) const { return TPoint{x * other, y * other}; }
+
+        constexpr TPoint & operator += (TPoint other) {
+            x += other.x;
+            y += other.y;
+            return *this;
+        }
         
-        constexpr bool operator == (Point other) const { return x == other.x && y == other.y; }
+        constexpr bool operator == (TPoint other) const { return x == other.x && y == other.y; }
 
     }; // rckid::Point
 
-    class Rect {
+    using Point = TPoint<Coord>;
+
+    template<typename COORD>
+    class TRect {
     public:
-        Coord x = 0;
-        Coord y = 0;
-        Coord w = 0;
-        Coord h = 0;
+        COORD x = 0;
+        COORD y = 0;
+        COORD w = 0;
+        COORD h = 0;
 
-        constexpr Coord top() const { return y; }
-        constexpr Coord left() const { return x; }
-        constexpr Coord bottom() const { return y + h; }
-        constexpr Coord right() const { return x + w; }
+        constexpr COORD top() const { return y; }
+        constexpr COORD left() const { return x; }
+        constexpr COORD bottom() const { return y + h; }
+        constexpr COORD right() const { return x + w; }
 
-        constexpr Point topLeft() const { return Point{x, y}; }
-        constexpr Point bottomRight() const { return Point{right(), bottom()}; }
+        constexpr TPoint<COORD> topLeft() const { return TPoint<COORD>{x, y}; }
+        constexpr TPoint<COORD> bottomRight() const { return TPoint<COORD>{right(), bottom()}; }
 
-        static constexpr Rect WH(int width, int height) {
-            return Rect{0, 0, width, height};
+        static constexpr TRect WH(int width, int height) {
+            return TRect{0, 0, width, height};
         }
 
-        static constexpr Rect XYWH(Point topLeft, int width, int height) { return XYWH(topLeft.x, topLeft.y, width, height); }
+        static constexpr TRect XYWH(TPoint<COORD> topLeft, int width, int height) { return XYWH(topLeft.x, topLeft.y, width, height); }
         
-        static constexpr Rect XYWH(int x, int y, int width, int height) {
-            return Rect{x, y, width, height};
+        static constexpr TRect XYWH(int x, int y, int width, int height) {
+            return TRect{x, y, width, height};
         }
 
-    }; // rckid::Rect
+    }; // rckid::TRect<>
+
+    using Rect = TRect<Coord>;
 
 
 } // namespace rckid

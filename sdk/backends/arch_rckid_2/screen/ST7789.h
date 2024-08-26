@@ -3,9 +3,8 @@
 #include <functional>
 
 #include "rckid/rckid.h"
-#include "rckid/stats.h"
 #include "rckid/graphics/color.h"
-#include "rckid/graphics/primitives.h"
+#include "rckid/graphics/geometry.h"
 
 namespace rckid {
 
@@ -91,6 +90,10 @@ namespace rckid {
          */
         static void setUpdateRegion(Rect rect);
 
+        static void setUpdateRegion(int width, int height) { 
+            setUpdateRegion(Rect::XYWH((320 - width) / 2, (240 - height) / 2, width, height));
+        }
+
         /** Sets the framerate of the display.
          
             At startup, 60 fps is selected, but this can be lowered by the apps based on the preset value. 
@@ -104,11 +107,6 @@ namespace rckid {
             Mostly useful for barebones clearing the screen in debug mode as the fill rate is rather slow. A much better approach is to enter the continous mode and fill the screen using the pio & dma.  
          */
         static void fill(ColorRGB color);
-
-
-        static void setUpdateRegion(int width, int height) { 
-            setUpdateRegion(Rect::XYWH((320 - width) / 2, (240 - height) / 2, width, height));
-        }
 
         /** Resets the update region to entire screen. 
          */
@@ -163,11 +161,7 @@ namespace rckid {
                 stats::displayUpdateStart_ = uptimeUs();
             // updating_ is volatile, but this is ok - it is only main app code (here), or from an IRQ
             updating_ = updating_ + 1;
-#if (! defined ARCH_MOCK)
             dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
-#else       
-            sendMockPixels(pixels, numPixels);
-#endif
         }
 
         //static void dmaUpdateBlocking(ColorRGB const * pixels, uint32_t numPixels) {
@@ -188,13 +182,9 @@ namespace rckid {
         /** Busy waits for the rising edge on the TE display pin, signalling the beginning of the V-blank period. 
          */
         static void waitVSync() { 
-#if (! defined ARCH_MOCK)
-            MEASURE_TIME(stats::waitVSyncUs_, 
-                while (gpio_get(RP_PIN_DISP_TE)); 
-                while (! gpio_get(RP_PIN_DISP_TE))
-                    yield();
-            );
-#endif
+            while (gpio_get(RP_PIN_DISP_TE)); 
+            while (! gpio_get(RP_PIN_DISP_TE))
+                yield();
         }
 
     private:
@@ -256,7 +246,6 @@ namespace rckid {
             According to the datasheet (page 41), the read byte cycle is at least 66ns with both high and low pulses being at least 15ns. To work in the worst supported case at 250MHz, we insert 24 NOP instructions in total for 96ns, which adds about 30% safety margin. This will double in the 125MHz default speed, since the driver should mostly utilize the PIO driven DMA access, it should not be a problem. 
          */
         static void sendByte(uint32_t b) {
-#if (! defined ARCH_MOCK)
             gpio_put_masked(0xff << RP_PIN_DISP_DB8, b << RP_PIN_DISP_DB8);
             cpu::nop();
             cpu::nop();
@@ -284,7 +273,6 @@ namespace rckid {
             cpu::nop();
             cpu::nop();
             gpio_put(RP_PIN_DISP_WRX, false);
-#endif
         }
 
         // PIO settings including the DMA used for the display and the addresses for the pio drivers for normal and double modes.

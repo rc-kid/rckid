@@ -3,7 +3,6 @@
 #include <platform.h>
 #include <platform/writer.h>
 
-#include "graphics/color.h"
 #include "graphics/geometry.h"
 
 /** \defgroup api API
@@ -19,6 +18,16 @@
 
 namespace rckid {
 
+    class ColorRGB;
+
+    enum class Error : uint32_t {
+        NoError = 0, 
+        Unimplemented = 1,
+        Unreachable, 
+        Assert, 
+        User, 
+    }; // rckid::Error
+
     /** Initializes the RCKid console. 
      
         This must be the first SDK function called by the application. 
@@ -29,11 +38,17 @@ namespace rckid {
 
     void yield();
 
+    NORETURN(void fatalError(uint32_t error, uint32_t line = 0, char const * file = nullptr));
+
+    NORETURN(void fatalError(Error error, uint32_t line = 0, char const * file = nullptr));
+
     /** Returns the system's uptime in microseconds. 
      
         For performance reasons, this uses uint32_t as the result value and as such will overflow every hour & something. The intended purpose of this function is not precise timekeeping, but delta time measurements, so the overflows are fine. 
      */
     uint32_t uptimeUs();
+
+    uint32_t random();
 
     /** Returns debug writer for logging and tracing purposes. 
      

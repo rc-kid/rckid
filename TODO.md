@@ -33,3 +33,9 @@ This just might work.
 
 - how to enter bootloader mode (seems to be possible over software alone by forcing the USB open close at 1200 bps, there also seems to be a way to start BOOTSEL programatically if I read the datasheet right)
 - how to reset (can be SW on watchdog and detection)
+
+
+## SDK
+
+- account for PNG's transparency by allowing it to be overlayed on existing bitmap
+- maybe even RGBA colors? 

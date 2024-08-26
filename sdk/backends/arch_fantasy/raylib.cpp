@@ -17,6 +17,7 @@
 #include <raylib.h>
 
 #include "rckid/rckid.h"
+#include "rckid/graphics/color.h"
 
 extern "C" {
 
@@ -45,9 +46,50 @@ extern "C" {
 #endif 
 } // extern C - memory
 
+namespace {
+
+    class State {
+    public:
+        bool btnUp = false;
+        bool btnDown = false;
+        bool btnLeft = false;
+        bool btnRight = false;
+        bool btnA = false;
+        bool btnB = false;
+        bool btnSelect = false;
+        bool btnStart = false;
+        bool btnVolumeUp = false;
+        bool btnVolumeDown = false;
+        bool btnHome = false;
+
+        bool buttonState(rckid::Btn b) {
+            using namespace rckid;
+            switch (b) {
+                case Btn::Up: return btnUp;
+                case Btn::Down: return btnDown;
+                case Btn::Left: return btnLeft;
+                case Btn::Right: return btnRight;
+                case Btn::A: return btnA;
+                case Btn::B: return btnB;
+                case Btn::Select: return btnSelect;
+                case Btn::Start: return btnStart;
+                case Btn::VolumeUp: return btnVolumeUp;
+                case Btn::VolumeDown: return btnVolumeDown;
+                case Btn::Home: return btnHome;
+                default:
+                    UNREACHABLE;
+            }
+        }
+    }; // State
+
+} // anonymous namespace
+
 namespace rckid {
 
+
     namespace {
+        State state_;
+        State lastState_;
         DisplayMode displayMode_ = DisplayMode::Off;
         DisplayUpdateCallback displayCallback_;
         uint8_t displayBrightness_ = 255;
@@ -79,17 +121,52 @@ namespace rckid {
         if (WindowShouldClose())
             std::exit(-1);
         systemMalloc_ = false;
+        systemMalloc_ = true;
         PollInputEvents();
+        systemMalloc_ = false;
+        lastState_ = state_;
+        state_.btnUp = IsKeyDown(KEY_UP);
+        state_.btnDown = IsKeyDown(KEY_DOWN);
+        state_.btnLeft = IsKeyDown(KEY_LEFT);
+        state_.btnRight = IsKeyDown(KEY_RIGHT);
+        state_.btnA = IsKeyDown(KEY_A);
+        state_.btnB = IsKeyDown(KEY_B);
+        state_.btnSelect = IsKeyDown(KEY_SPACE);
+        state_.btnStart = IsKeyDown(KEY_ENTER);
+        state_.btnVolumeUp = IsKeyDown(KEY_PAGE_UP);
+        state_.btnVolumeDown = IsKeyDown(KEY_PAGE_DOWN);
+        state_.btnHome = IsKeyDown(KEY_H);
     }
 
     void yield() {
         // TODO
     }
 
+    void fatalError(uint32_t error, uint32_t line, char const * file) {
+        LOG("Fatal error: " << error);
+        if (file != nullptr) {
+            LOG("Line:        " << line);
+            LOG("File:        " << file);
+        }
+        systemMalloc_ = true;
+        while (! WindowShouldClose())
+            PollInputEvents();
+        systemMalloc_ = false;
+        std::exit(EXIT_FAILURE);
+    }
+
+    void fatalError(Error error, uint32_t line, char const * file) {
+        fatalError(static_cast<uint32_t>(error), line, file);
+    }
+
     uint32_t uptimeUs() {
         using namespace std::chrono;
         static auto first = steady_clock::now();
         return static_cast<uint32_t>(duration_cast<microseconds>(steady_clock::now() - first).count()); 
+    }
+
+    uint32_t random() {
+        return std::rand();
     }
 
     Writer debugWrite() {
@@ -102,18 +179,29 @@ namespace rckid {
 
     // io
 
-    bool btnDown([[maybe_unused]] Btn b) {
-        return false;
+    bool btnDown(Btn b) {
+        return state_.buttonState(b);
     }
 
-    bool btnPressed([[maybe_unused]] Btn b) {
-        return false;
+    bool btnPressed(Btn b) {
+        return state_.buttonState(b) && ! lastState_.buttonState(b);
     }
 
-    bool btnReleased([[maybe_unused]] Btn b) {
-        return false;
+    bool btnReleased(Btn b) {
+        return !state_.buttonState(b) && lastState_.buttonState(b);
     }
 
+    int16_t accelX() { return 0; }
+    int16_t accelY() { return 0; }
+    int16_t accelZ() { return 0; }
+
+    /** Returns the gyroscope readings. 
+     */
+    int16_t gyroX() { return 0; }
+    int16_t gyroY() { return 0; }
+    int16_t gyroZ() { return 0; }
+
+    // display 
 
     void drawPixel(int x, int y, ColorRGB c) {
         Color rc;

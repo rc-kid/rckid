@@ -109,11 +109,7 @@ extern "C" {
         arena->freelist = chunk;
     }
 
-
 }
-
-
-
 
 namespace rckid {
 

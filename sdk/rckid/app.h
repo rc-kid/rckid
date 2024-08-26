@@ -66,6 +66,7 @@ namespace rckid {
     template<typename GRAPHICS>
     class GraphicsApp : public App {
     public:
+        using Color = typename GRAPHICS::Color;
 
     protected:
         GraphicsApp(GRAPHICS && g): g_{std::move(g) } {}

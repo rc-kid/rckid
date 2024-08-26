@@ -2,7 +2,7 @@
 
 #include <PNGdec/src/PNGdec.h>
 
-#include "../stream.h"
+#include "../utils/stream.h"
 #include "color.h"
 
 namespace rckid {

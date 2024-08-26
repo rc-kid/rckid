@@ -8,7 +8,6 @@
 
 namespace rckid {
 
-
     /** Pixel bitmap, templated by the underlying color type. 
 
         The bitmap manages the pixel data and provides access to it in two different modes - slow per pixel manipulation and faster blitting of regions.      
@@ -63,11 +62,36 @@ namespace rckid {
         void setPixelAt(Coord x, Coord y, Color c) { rckid::setPixelAt<COLOR>(buffer_, x, y, c, w_, h_); }
         //@}
 
+        /** \name Blitting 
+         */
+        //@{
+
+        void blit(Point where, Bitmap const & src) { blit(where, src, Rect::WH(src.width(), src.height())); }
+
+        void blit(Point where, Bitmap const & src, Rect srcRect) {
+            // default, very slow implementation 
+            int dy = where.y;
+            for (int y = srcRect.top(), ye = srcRect.bottom(); y != ye; ++y, ++dy) {
+                int dx = where.x;
+                for (int x = srcRect.left(), xe = srcRect.right(); x != xe; ++x, ++dx)
+                    setPixelAt(dx, dy, src.pixelAt(x, y));
+            }
+        }
+        //@}
+
+
         /** \name Drawing interface
          */
         //@{
 
         void fill(Color color) { pixelBufferFill<Color>(buffer_, numPixels(), color); }
+
+        void fill(Color color, Rect rect) {
+            // default, very slow implementation
+            for (int x = rect.left(), xe = rect.right(); x < xe; ++x)
+                for (int y = rect.top(), ye = rect.bottom(); y < ye; ++y)
+                    setPixelAt(x, y, color);
+        }
 
         int putChar(Point where, Font const & font, char c, Color const * colors) {
             if (where.x > width())
@@ -135,7 +159,6 @@ namespace rckid {
             return result;
         }
         //@}
-
 
     private:
 
