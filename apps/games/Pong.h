@@ -27,6 +27,7 @@ namespace rckid {
             GraphicsApp(Bitmap<Color>{320, 240}) 
         {
             resetGame();
+            ASSERT(false);
         }
 
         void update() override {

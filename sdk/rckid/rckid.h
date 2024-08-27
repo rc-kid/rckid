@@ -14,12 +14,25 @@
     While \ref api provides an abstraction layer over the actual hardware, the library also contains a backend, which deals with the hardware details. This architecture allows the backends to be swapped, so that same RCKid cartridges can be run on multiple devices, or even emulators. 
 
     All backends are stored in `/sdk/backends` folder. 
+
+    To create a new backend, implementation for all functions mentioned in the rckid.h file must be provided. These functions generally fall into the following categories:
+
+    - user input detection (buttons, accelerometer, UV sensor)
+    - feedback effects (LEDs, rumbler)
+    - display
+    - audio
+    - memory (malloc & free)
+    - filesystem (SD card)
   */
 
 namespace rckid {
 
     class ColorRGB;
 
+    /** Error enum. 
+     
+        To be used with the fatalError() function. The following error codes are reserved for the SDK, while any value equal or larger to Error::User can be used by the application itself. 
+     */
     enum class Error : uint32_t {
         NoError = 0, 
         Unimplemented = 1,
@@ -48,6 +61,8 @@ namespace rckid {
      */
     uint32_t uptimeUs();
 
+    /** Generates random number in the 32bit unsigned range. 
+     */
     uint32_t random();
 
     /** Returns debug writer for logging and tracing purposes. 
@@ -233,6 +248,53 @@ namespace rckid {
 
     //@}
 
+    /** \name RGB LEDs
+     
+        The top plate buttons (DPAD, A, B and Select and Start) each contain one RGB LED underneath that can be used for various light effects. There is also sixth LED in the upper display border that is used for notifications and is not expected to be changed by the application directly. 
+
+        The RGBs support simple effects, such as breathe, rainbow hue, etc.  
+
+        Since the LEDs are neopixels at 5 volts and together consume at least 6mA even if completelt black, it is important to turn them off via ledsOff() function whenever they are not needed. 
+     */
+    //@{
+
+    /** LED effect specification. 
+     */
+    class LEDEffect {
+
+    };
+
+    /** Turns all the LEDs off to save power. 
+     */
+    void ledsOff(); 
+
+    void ledSetEffect(Btn b, LEDEffect const & effect);
+
+    void ledSetEffects(LEDEffect const & dpad, LEDEffect const & a, LEDEffect const & b, LEDEffect const & select, LEDEffect const & start); 
+
+    //@}
+
+    /** \name Rumbler 
+     
+        A simple rumbler interface that allows playing a rumbler effect that consists of N iterations of rumble with particular strength for a time followed by a pause.
+     */
+    //@{
+
+    void rumble(uint8_t intensity, uint16_t duration, unsigned repetitions, uint16_t offDuration); 
+
+    inline void rumble(uint8_t intensity, uint16_t duration, unsigned repetitions = 1) {
+        rumble(intensity, duration, repetitions, duration);
+    }
+    //@}
+
+    /** \name SD Card Filesystem access. 
+     
+        RCKid device contains an SD card that can be used to store various data that can persist between different cartridges, such as music, messages, images, etc. The actual filesystem is handled by the FatFS library where the RCKid SDK only provides the necessary functions that enable the filesystem access. 
+     */
+    //@{
+
+    //@}
+
     /** \name Memory Management
 
         RCKid uses a mixed arena-heap model where the heap can be split into different arenas and when arena is exitted, all its memory is freed. This is particularly useful for running apps as everytime an app is executed, new arena is created and when the app is done, the arena is destroyed cleaning up any app-related memory leaks and defragmentation issues.  
@@ -250,6 +312,10 @@ namespace rckid {
     bool memoryIsOnHeap(void * ptr);
 
     bool memoryIsInCurrentArena(void * ptr);
+
+    /** Returns true if there is active memory arena (i.e. when it is safe to call memoryLeaveArena(). 
+     */
+    bool memoryInsideArena();
  
     /** Enters new memory arena.
      */
@@ -268,6 +334,10 @@ namespace rckid {
     /** Frees previously allocated chunk of memory. Note that the chunk *must* belong to the curren arena. 
      */
     void free(void * ptr);
+
+    /** Returns the beginning of the heap. 
+     */
+    char * heapStart();
     //@}
 
 

@@ -39,3 +39,4 @@ This just might work.
 
 - account for PNG's transparency by allowing it to be overlayed on existing bitmap
 - maybe even RGBA colors? 
+- rumbler & LED effect done event

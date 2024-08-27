@@ -1,6 +1,14 @@
 #include <platform/tests.h>
 #include <rckid/rckid.h>
 
+TEST(memory,  insideArena) {
+    EXPECT(rckid::memoryInsideArena() == false);
+    rckid::memoryEnterArena();
+    EXPECT(rckid::memoryInsideArena() == true);
+    rckid::memoryLeaveArena();
+    EXPECT(rckid::memoryInsideArena() == false);
+}
+
 TEST(memory, arenaFree) {
     uint32_t freeHeap = rckid::memoryFreeHeap();
     rckid::memoryEnterArena();

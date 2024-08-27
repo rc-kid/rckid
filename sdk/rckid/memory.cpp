@@ -93,7 +93,7 @@ extern "C" {
 
     void __wrap_free(void * ptr) {
         // check that we are freeing memory that is higher than the current arena, otherwise we are freeing from a previous arena which is wrong
-        ASSERT(ptr > & arena); 
+        ASSERT(ptr > arena); 
         ++freeCalls;
         // deal with the chunk
         Chunk * chunk = (Chunk *)((char*) ptr - 4);
@@ -128,6 +128,10 @@ namespace rckid {
         return (ptr >= arena) && (ptr < & __StackLimit);
     }
 
+    bool memoryInsideArena() {
+        return ! memoryIsInCurrentArena(& __bss_end__);
+    }
+
     void memoryEnterArena() {
         arena = new (heapEnd) Arena{arena};
         heapEnd += sizeof (Arena);
@@ -144,5 +148,7 @@ namespace rckid {
     void * malloc(size_t numBytes) { return __wrap_malloc(numBytes); }
 
     void free(void * ptr) { __wrap_free(ptr); }
+
+    char * heapStart() { return & __bss_end__; }
 
 } // namespace rckid

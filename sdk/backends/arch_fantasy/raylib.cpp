@@ -18,6 +18,7 @@
 
 #include "rckid/rckid.h"
 #include "rckid/graphics/color.h"
+#include "rckid/bsod.h"
 
 extern "C" {
 
@@ -86,6 +87,7 @@ namespace {
 
 namespace rckid {
 
+    void displayDraw();
 
     namespace {
         State state_;
@@ -102,10 +104,6 @@ namespace rckid {
         Texture displayTexture_;
         std::chrono::steady_clock::time_point displayLastVSyncTime_;
     }
-
-
-
-    void displayDraw();
 
     void initialize() {
         systemMalloc_ = true;
@@ -143,11 +141,10 @@ namespace rckid {
     }
 
     void fatalError(uint32_t error, uint32_t line, char const * file) {
-        LOG("Fatal error: " << error);
-        if (file != nullptr) {
-            LOG("Line:        " << line);
-            LOG("File:        " << file);
-        }
+        // clear all memory arenas to clean up space, this is guarenteed to succeed as the SDK creates memory arena when it finishes initialization    
+        while (memoryInsideArena())
+            memoryLeaveArena();
+        bsod(error, line, file, nullptr);
         systemMalloc_ = true;
         while (! WindowShouldClose())
             PollInputEvents();
@@ -289,9 +286,25 @@ namespace rckid {
         displayUpdate(pixels, numPixels);
     }
 
+    // LEDs
 
+    void ledsOff() {
+        UNIMPLEMENTED;
+    }
 
+    void ledSetEffect(Btn b, LEDEffect const & effect) {
+        UNIMPLEMENTED;
+    }
 
+    void ledSetEffects(LEDEffect const & dpad, LEDEffect const & a, LEDEffect const & b, LEDEffect const & select, LEDEffect const & start){
+        UNIMPLEMENTED;
+    }
+
+    // Rumbler
+
+    void rumble(uint8_t intensity, uint16_t duration, unsigned repetitions, uint16_t offDuration) {
+        UNIMPLEMENTED;
+    }
 
     // accelerated functions
 

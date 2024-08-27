@@ -177,6 +177,7 @@ namespace rckid {
 
 
 
+
     }; // rckid::Bitmap
 
 
