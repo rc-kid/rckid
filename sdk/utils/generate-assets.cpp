@@ -32,6 +32,12 @@
 
     Takes all files in the folder and onverts their raw contents into byte arrays. Creates fle NAMESPACE.h in the output folder and in it one definition per file in the folder. The actual byte array contents will be stored in separate files (`raw/NAMESPACE/filename.h`) and included where appropriate. 
 
+    ### Interpolation
+
+        sine, FILENAME, N
+
+    Generates sine table (1/4) from 0 to 65535 with N rows into the given filename. Generates only the contents of the table, which should then be manually inserted into code when needed as this varies greatly with different uses. 
+
     ### Tiles
 
     ### Font Tiles
@@ -75,6 +81,8 @@ int main(int argc, char * argv []) {
                     generateFontGlyphs(g, outputDir, nspace);
                 else if (g.name == "folder")
                     generateFolder(g, outputDir, nspace);
+                else if (g.name == "sine")
+                    generateSineTable(g, outputDir, nspace);
                 else 
                     throw std::runtime_error("Unknown generator");
             } catch (std::exception const & e) {

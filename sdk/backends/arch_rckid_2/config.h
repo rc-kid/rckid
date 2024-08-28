@@ -1,10 +1,5 @@
 #pragma once
 
-/** \defgroup RCKid 2 - Hardware Configuration
- 
-    
- */
-
 /** RP2040 Pinout
 
  */
