@@ -1,5 +1,21 @@
 #pragma once
 
+#ifndef ASSERT
+#define ASSERT(...)
+#endif
+
+#ifndef UNREACHABLE
+#define UNREACHABLE while (true) {}
+#endif
+
+#ifndef UNIMPLEMENTED
+#define UNIMPLEMENTED while (true) {}
+#endif
+
+#ifndef LOG
+#define LOG(...)
+#endif
+
 /** Because Microsoft and GCC/CLang have different standards of how to declare packed structs or classes. Just wrap the definition with the PACKED() macro. 
  */
 #if defined(_MSC_VER)

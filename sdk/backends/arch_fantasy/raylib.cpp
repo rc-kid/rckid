@@ -18,7 +18,7 @@
 
 #include "rckid/rckid.h"
 #include "rckid/graphics/color.h"
-#include "rckid/bsod.h"
+#include "rckid/internals.h"
 
 extern "C" {
 

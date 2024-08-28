@@ -20,9 +20,6 @@
 
 #include "rckid/rckid.h"
 
-
-
-
 namespace rckid {
 
     namespace {
@@ -31,7 +28,25 @@ namespace rckid {
 
     }
 
+    void __not_in_flash_func(irqDMADone_)() {
+        //gpio::outputHigh(GPIO21);
+        unsigned irqs = dma_hw->ints0;
+        dma_hw->ints0 = irqs;
+        // for audio, reset the DMA start address to the beginning of the buffer and tell the stream to refill
+//        if (irqs & (1u << audio::dma0_))
+//            audio::irqHandler1();
+//        if (irqs & (1u << audio::dma1_))
+//            audio::irqHandler2();
+        // display
+        if (irqs & ( 1u << ST7789::dma_))
+            ST7789::irqHandler();
+        //gpio::outputLow(GPIO21);
+    }
+
+
+
     void initialize() {
+        ST7789::initialize();
 
     }
 
@@ -40,7 +55,8 @@ namespace rckid {
     }
 
     void yield() {
-
+        tight_loop_contents();
+        tud_task();
     }
 
     void fatalError(uint32_t error, uint32_t line, char const * file) {
@@ -80,37 +96,32 @@ namespace rckid {
 
     // display
 
-    DisplayMode displayMode() { return displayMode_; }
+    DisplayMode displayMode() { 
+        return ST7789::displayMode();
+     }
 
     void displaySetMode(DisplayMode mode) {
-        if (displayMode_ == mode)
-            return;
-        displayMode_ = mode;
-        switch (displayMode_) {
-            case DisplayMode::Native:
-            case DisplayMode::NativeDouble:
-            case DisplayMode::Natural:
-            case DisplayMode::NaturalDouble:
-            case DisplayMode::Off:
-                break;            
-        }
+        ST7789::setDisplayMode(mode);
     }
 
     uint8_t displayBrightness() { 
-
+        // TODO Read from state
     }
 
-    void displaySetBrightness(uint8_t value) {  }
+    void displaySetBrightness(uint8_t value) {  
+        // TODO send I2C command to AVR
+    }
 
-    Rect displayUpdateRegion() { 
-
+    Rect displayUpdateRegion() {    
+        return ST7789::updateRegion();
     }
 
     void displaySetUpdateRegion(Rect region) { 
+        ST7789::setUpdateRegion(region);
     }
 
-    bool displayUpdateActive() { 
-
+    bool displayUpdateActive() {
+        return ST7789::dmaUpdateInProgress();
     }
 
     void displayWaitVSync() { 
@@ -118,11 +129,12 @@ namespace rckid {
     }
 
     void displayUpdate(ColorRGB const * pixels, uint32_t numPixels) {
+        ST7789::dmaUpdateAsync(pixels, numPixels);
     }
 
     void displayUpdate(ColorRGB const * pixels, uint32_t numPixels, DisplayUpdateCallback callback) {
+        ST7789::dmaUpdateAsync(pixels, numPixels, callback);
     }
-
 
     // accelerated functions
     #include "rckid/accelerated.inc.h"

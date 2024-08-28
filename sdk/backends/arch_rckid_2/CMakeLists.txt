@@ -1,5 +1,5 @@
 
-file(GLOB_RECURSE SRC "rckid_mk2.cpp" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.h" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.cpp")
+file(GLOB_RECURSE SRC "rckid_mk2.cpp" "screen/*.cpp" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.h" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.cpp")
 add_library(librckid STATIC ${SRC})
 
 pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/mic_pdm.pio)
@@ -11,7 +11,7 @@ pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/screen/ST7789_rgb_
 # This must be called for libraries as well as executables (cartridges). 
 function(link_with_librckid target_name)
     get_target_property(target_type ${target_name} TYPE)
-    target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/libs/platform/rckid")
+    target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/libs/platform/rckid_2")
     target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/sdk/backends/arch_rckid_2/usb")
     if (target_type STREQUAL "EXECUTABLE")
         target_compile_options(${target_name} PRIVATE "-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64")

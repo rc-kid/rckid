@@ -2,19 +2,14 @@
 
 #include <functional>
 
+#include "../config.h"
 #include "rckid/rckid.h"
 #include "rckid/graphics/color.h"
 #include "rckid/graphics/geometry.h"
 
 namespace rckid {
 
-    /** Supported FPS values for the display. 
-     */
-    enum class FPS : uint8_t {
-        FPS_60 = 0x0f,
-        FPS_50 = 0x15, 
-        FPS_40 = 0x1e,  
-    };
+    void irqDMADone_();
 
     /** Low level driver for the ST7789 display driver. 
      
@@ -61,6 +56,13 @@ namespace rckid {
      */
     class ST7789 {
     public:
+        /** Supported FPS values for the display. 
+         */
+        enum class FPS : uint8_t {
+            FPS_60 = 0x0f,
+            FPS_50 = 0x15, 
+            FPS_40 = 0x1e,  
+        };
 
         /** Initializes the display. 
          
@@ -74,25 +76,13 @@ namespace rckid {
          */
         static void reset();
 
-        /** Returns the current display mode.
-         */
-        static DisplayMode mode() { return mode_; }
+        static DisplayMode displayMode() { return mode_; }
 
-        /** Configures the display for the given mode. 
-         */
-        static void setMode(DisplayMode mode);
+        static void setDisplayMode(DisplayMode mode); 
 
         static Rect updateRegion() { return updateRegion_; }
 
-        /** Sets the update region of the screen. 
-         
-            The rectangle is always assumed to be in the natural coordinates, i.e. 320 columns, 240 rows. 
-         */
-        static void setUpdateRegion(Rect rect);
-
-        static void setUpdateRegion(int width, int height) { 
-            setUpdateRegion(Rect::XYWH((320 - width) / 2, (240 - height) / 2, width, height));
-        }
+        static void setUpdateRegion(Rect rect); 
 
         /** Sets the framerate of the display.
          
@@ -106,7 +96,7 @@ namespace rckid {
     
             Mostly useful for barebones clearing the screen in debug mode as the fill rate is rather slow. A much better approach is to enter the continous mode and fill the screen using the pio & dma.  
          */
-        static void fill(ColorRGB color);
+        //static void fill(ColorRGB color);
 
         /** Resets the update region to entire screen. 
          */
@@ -131,13 +121,17 @@ namespace rckid {
          */
         //@{
 
+        static void enterCommandMode(); 
+
+        static void enterUpdateMode();
+
         /** Enters the DMA update mode, takes the display pins for the pio. 
          */
-        static void beginDMAUpdate();
+        //static void beginDMAUpdate();
 
         /** Leaves the DMA update mode and returns the display pins back to GPIO. 
          */
-        static void endDMAUpdate();
+        //static void endDMAUpdate();
 
         /** Returns true if there is a screen update in progress. This is whenever the DMA is active, but can also be between DMA transfers if the callback function indicated more data to come. 
          */
@@ -155,10 +149,9 @@ namespace rckid {
 
         /** Writes given pixels and provides a callback function to be called when the DMA transfer finishes. 
          */
-        static void dmaUpdateAsync(ColorRGB const * pixels, uint32_t numPixels, DMAUpdateCallback cb) {
+        static void dmaUpdateAsync(ColorRGB const * pixels, uint32_t numPixels, DisplayUpdateCallback cb) {
+            enterUpdateMode();
             cb_ = cb;
-            if (updating_ == 0)
-                stats::displayUpdateStart_ = uptimeUs();
             // updating_ is volatile, but this is ok - it is only main app code (here), or from an IRQ
             updating_ = updating_ + 1;
             dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
@@ -189,6 +182,8 @@ namespace rckid {
 
     private:
 
+        friend void irqDMADone_();
+
         static void irqHandler();
 
         /** Sets the columns range for RAM updates. Columns are referenced in the native mode and can be from 0 to 239 inclusive. 
@@ -205,7 +200,13 @@ namespace rckid {
 
         static void initializePinsBitBang();
 
-        static void beginCommand(uint8_t cmd);
+        static void beginCommand(uint8_t cmd) {
+            ASSERT(!pio_sm_is_enabled(pio_, sm_) && "Commands are bitbanged so the pins can't belong to the pio");
+            gpio_put(RP_PIN_DISP_CSX, false);
+            gpio_put(RP_PIN_DISP_DCX, false);
+            // RP_PIN_DISP_WRX is expected to be low 
+            sendByte(cmd);
+        }
 
         static void end() {
             gpio_put(RP_PIN_DISP_CSX, true);
@@ -283,11 +284,11 @@ namespace rckid {
         static inline uint dma_ = -1;
         static inline dma_channel_config dmaConf_;
 
-        // Update bookkeeping - the callback, whether update is active or not, the current display mode and the update region
-        static inline DMAUpdateCallback cb_;
-        static inline volatile uint32_t updating_ = 0;
-        static inline DisplayMode mode_ = DisplayMode::Native;
+        static inline DisplayMode mode_ = DisplayMode::Off;
         static inline Rect updateRegion_ = Rect::WH(320, 240);
+        // Update bookkeeping - the callback, whether update is active or not, the current display mode and the update region
+        static inline DisplayUpdateCallback cb_;
+        static inline volatile uint32_t updating_ = 0;
 
 
         // Low level driver constants
