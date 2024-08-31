@@ -286,6 +286,44 @@ namespace rckid {
         displayUpdate(pixels, numPixels);
     }
 
+    // audio
+
+    void audioEnable() {
+        UNIMPLEMENTED;
+    }
+
+    void audioDisable() {
+        UNIMPLEMENTED;
+    }
+
+    bool audioHeadphones() {
+        UNIMPLEMENTED;
+    }
+
+    uint8_t audioVolume() {
+        UNIMPLEMENTED;
+    }
+
+    void audioSetVolume(uint8_t value) {
+        UNIMPLEMENTED;
+    }
+
+    void audioPlay(DoubleBuffer & data, uint32_t bitrate) {
+        UNIMPLEMENTED;
+    }
+
+    void audioRecord(DoubleBuffer & data, uint32_t bitrate) {
+        UNIMPLEMENTED;
+    }
+
+    void audioPause() {
+        UNIMPLEMENTED;
+    }
+
+    void audioStop() {
+        UNIMPLEMENTED;
+    }
+
     // LEDs
 
     void ledsOff() {

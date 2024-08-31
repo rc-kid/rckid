@@ -18,18 +18,23 @@ int main() {
     ColorRGB * fb = new ColorRGB[FB_SIZE];
     while (true) {
         fill(fb, FB_SIZE, ColorRGB{255, 0, 0});
+        displayWaitVSync();
         displayUpdate(fb, FB_SIZE);
         displayWaitUpdateDone();
 
+
         fill(fb, FB_SIZE, ColorRGB{0, 255, 0});
+        displayWaitVSync();
         displayUpdate(fb, FB_SIZE);
         displayWaitUpdateDone();
 
         fill(fb, FB_SIZE, ColorRGB{0, 0, 255});
+        displayWaitVSync();
         displayUpdate(fb, FB_SIZE);
         displayWaitUpdateDone();
 
         fill(fb, FB_SIZE, ColorRGB{0, 0, 0});
+        displayWaitVSync();
         displayUpdate(fb, FB_SIZE);
         displayWaitUpdateDone();
     }

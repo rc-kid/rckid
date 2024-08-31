@@ -25,6 +25,21 @@ namespace rckid {
          */
         virtual uint32_t write(uint8_t const * buffer, uint32_t bufferSize) = 0;
 
+        /** Writes single byte to the stream. 
+         */
+        bool write(uint8_t data) {
+            return write(&data, 1) == 1;
+        }
+
+        /** Returns a writer for formatter and serialized writes to the stream.
+         */
+        Writer write() {
+            return Writer([this](char c) {
+                bool result = write(static_cast<uint8_t>(c));
+                ASSERT(result);
+            });
+        }
+
     }; // rckid::OutStream
 
     /** Random read stream. 

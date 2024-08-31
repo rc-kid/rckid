@@ -168,7 +168,9 @@ namespace rckid {
     void ST7789::irqHandler() {
         if (cb_) 
             cb_();
-        //if (updating_ == 0 || (--updating_ == 0))
+        if (updating_ > 0)
+            --updating_;
+       //if (updating_ == 0 || (--updating_ == 0))
         //    stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::displayUpdateStart_);
     }
 

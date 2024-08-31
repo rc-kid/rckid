@@ -1,6 +1,7 @@
 #pragma once
 
-/** RP2040 Pinout
+/** \section RP2040Pinout RP2040 Pinout
+ 
 
  */
 

@@ -5,7 +5,7 @@
 #include "pico/unique_id.h"
 #include "tusb_config.h"
 #include "tusb.h"
-#include "rckid/fs/sd.h"
+//#include "rckid/fs/sd.h"
 
 namespace rckid {
     bool sdReadBlocks_(uint32_t start, uint8_t * buffer, uint32_t numBlocks);    
@@ -198,7 +198,8 @@ extern "C" {
     */
     bool tud_msc_test_unit_ready_cb([[maybe_unused]] uint8_t lun) {
         // TODO we can return true always because the device is only turned on when the SD card is really available
-        return SD::status() == SD::Status::USB; 
+        //return SD::status() == SD::Status::USB; 
+        return false;
     }
 
     /** Invoked when received SCSI_CMD_READ_CAPACITY_10 and SCSI_CMD_READ_FORMAT_CAPACITY to determine the disk size
@@ -206,8 +207,8 @@ extern "C" {
         Application update block count and block size. 
     */
     void tud_msc_capacity_cb([[maybe_unused]] uint8_t lun, uint32_t* block_count, uint16_t* block_size) {
-        *block_count = SD::numBlocks(); //SD::numBlocks();
-        *block_size  = 512;
+        //*block_count = SD::numBlocks(); //SD::numBlocks();
+        //*block_size  = 512;
     }
 
     /** Invoked when received Start Stop Unit command
@@ -237,6 +238,7 @@ extern "C" {
         Copy disk's data to buffer (up to bufsize) and return number of copied bytes.
     */
     int32_t tud_msc_read10_cb([[maybe_unused]] uint8_t lun, uint32_t lba, uint32_t offset, void* buffer, uint32_t bufsize) {
+        /*
         // out of ramdisk
         if (lba >= SD::numBlocks()) 
             return -1;
@@ -248,6 +250,7 @@ extern "C" {
         //memcpy(buffer, addr, bufsize);
 
         return (int32_t) bufsize;
+        */
     }
 
     /** Callback invoked when received WRITE10 command.
@@ -255,6 +258,7 @@ extern "C" {
         Process data in buffer to disk's storage and return number of written bytes
     */
     int32_t tud_msc_write10_cb([[maybe_unused]] uint8_t lun, uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_t bufsize) {
+        /*
         // out of ramdisk
         if (lba >= SD::numBlocks()) 
             return -1;
@@ -266,6 +270,7 @@ extern "C" {
         //memcpy(addr, buffer, bufsize);
 
         return (int32_t) bufsize;
+        */
     }
 
     /** Callback invoked when received an SCSI command not in built-in list below

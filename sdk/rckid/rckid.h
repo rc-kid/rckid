@@ -28,6 +28,7 @@
 namespace rckid {
 
     class ColorRGB;
+    class DoubleBuffer;
 
     /** Error enum. 
      
@@ -245,6 +246,32 @@ namespace rckid {
         while (displayUpdateActive())
             yield();
     }
+
+    //@}
+
+    /** \name Audio
+     */
+    //@{
+
+    /** Enables the audio.
+     */
+    void audioEnable();
+
+    void audioDisable();
+
+    bool audioHeadphones();
+
+    uint8_t audioVolume();
+
+    void audioSetVolume(uint8_t value);
+
+    void audioPlay(DoubleBuffer & data, uint32_t bitrate = 44100);
+
+    void audioRecord(DoubleBuffer & data, uint32_t bitrate = 8000);
+
+    void audioPause();
+
+    void audioStop();
 
     //@}
 

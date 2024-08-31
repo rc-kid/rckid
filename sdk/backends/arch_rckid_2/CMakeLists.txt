@@ -1,5 +1,5 @@
 
-file(GLOB_RECURSE SRC "rckid_mk2.cpp" "screen/*.cpp" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.h" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.cpp")
+file(GLOB_RECURSE SRC "rckid_mk2.cpp" "usb/*.cpp" "screen/*.cpp" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.h" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.cpp")
 add_library(librckid STATIC ${SRC})
 
 pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/mic_pdm.pio)
