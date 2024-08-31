@@ -19,8 +19,8 @@ namespace rckid {
         uint32_t currentFrame = 0;
         uint32_t currentFps = 0;
         while (current_ == this) {
-            MEASURE_TIME(updateUs_,     update());
             MEASURE_TIME(tickUs_,       tick());
+            MEASURE_TIME(updateUs_,     update());
             MEASURE_TIME(waitRenderUs_, displayWaitUpdateDone());
             MEASURE_TIME(drawUs_,       draw());
             MEASURE_TIME(waitVSyncUs_,  displayWaitVSync());

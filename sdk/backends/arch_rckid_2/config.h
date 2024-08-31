@@ -43,7 +43,7 @@
 #define RP_PIN_SD_RX 28
 #define RP_PIN_SD_CSN 29
 
-
+#define I2C_AVR_ADDRESS 0x43 
 
 
 

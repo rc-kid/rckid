@@ -28,10 +28,9 @@ namespace rckid {
 
         /** Creates the buffer of particular size.
          */
-        DoubleBuffer(uint32_t size, SwapCallback cb):
+        DoubleBuffer(uint32_t size):
             size_{size}, 
-            buffer_{new uint8_t[size * 2]},
-            cb_{cb} {
+            buffer_{new uint8_t[size * 2]} {
         }
 
         ~DoubleBuffer() {
@@ -52,7 +51,7 @@ namespace rckid {
          
             This typically involves a DMA transfer to peripherals in case of graphics or audio playback, or actual on-chip processing in case of audio recording. 
          */
-        uint8_t * getFontBuffer() {
+        uint8_t * getFrontBuffer() {
             return state_ ? (buffer_ + size_) : buffer_;
         }
 
@@ -67,9 +66,9 @@ namespace rckid {
         }
 
     private:
-        uint8_t * buffer_;
         uint32_t size_;
-        bool state_;
+        uint8_t * buffer_;
+        bool state_ = false;
         SwapCallback cb_;
     }; // rckid::DoubleBuffer
 

@@ -6,7 +6,7 @@
 int main() {
     rckid::initialize();
     LOG("Initialized, running the app!");
-    auto game = rckid::Pong::create();
+    auto game = rckid::SlidingPuzzle::create();
     game->run();
     while (true) {
         rckid::tick();

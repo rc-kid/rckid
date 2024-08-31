@@ -33,6 +33,22 @@
             "group": "build",
             "problemMatcher": [],
             "detail": "Generates the SDK assets for RCKid"
+        },
+        {
+            "type": "shell",
+            "label": "build mkII",
+            "detail": "Generates the SDK assets for RCKid",
+
+            "options": {
+                "cwd": "${workspaceFolder}/build-rckid-2"
+            },
+
+            "command": "cmake",
+            "args" : [
+                "--build", 
+                "."
+            ],
+            "problemMatcher": ["$gcc"]
         }
     ]
 }
