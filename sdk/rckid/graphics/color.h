@@ -45,6 +45,9 @@ namespace rckid {
             };
         }
 
+        constexpr bool operator == (ColorRGB const & other) const { return raw_ == other.raw_; }
+        constexpr bool operator != (ColorRGB const & other) const { return raw_ != other.raw_; }
+
     private:
         constexpr explicit ColorRGB(uint16_t raw): raw_{raw} {}
 
@@ -75,9 +78,11 @@ namespace rckid {
         constexpr static Color256 fromRaw(uint8_t raw) { return Color256{raw}; }
         constexpr uint8_t toRaw() const { return raw_; }
 
-
         constexpr bool operator == (Color256 const & other) { return raw_ == other.raw_; }
         constexpr bool operator != (Color256 const & other) { return raw_ != other.raw_; }
+
+        constexpr bool operator == (int index) const { return raw_ == index; }
+        constexpr bool operator != (int index) const { return raw_ != index; }
 
     private:
         uint8_t raw_ = 0;
@@ -106,6 +111,9 @@ namespace rckid {
 
         constexpr bool operator == (Color16 const & other) { return raw_ == other.raw_; }
         constexpr bool operator != (Color16 const & other) { return raw_ != other.raw_; }
+
+        constexpr bool operator == (int index) const { return raw_ == index; }
+        constexpr bool operator != (int index) const { return raw_ != index; }
 
     private:
         uint8_t raw_ = 0;

@@ -8,6 +8,8 @@ endfunction()
 
 add_utility("generate-assets")
 
+add_utility("create-font-tiles")
+
 add_custom_target(generate-sdk-assets 
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/sdk/assets
     COMMAND echo "Generating SDK assets..."

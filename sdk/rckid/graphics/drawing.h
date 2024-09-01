@@ -25,15 +25,15 @@ namespace rckid {
 
     /** Returns the pixel offset for pixel at coordinates (x,y) in a pixel buffer of specified width and height. Assumes the native display orientation, i.e. right-top corner is index 0, column-first format. 
       */
-    constexpr __force_inline uint32_t pixelOffset(Coord x, Coord y, Coord width, Coord height) {
+    constexpr __force_inline uint32_t pixelBufferOffset(Coord x, Coord y, Coord width, Coord height) {
         return (width - x - 1) * height + y; 
     }
 
     /** Returns the value of given pixel.
      */
     template<typename COLOR>
-    constexpr inline COLOR pixelAt(uint8_t const * buffer, Coord x, Coord y, Coord width, Coord height) {
-        uint32_t offset = pixelOffset(x, y, width, height);
+    constexpr inline COLOR pixelBufferAt(uint8_t const * buffer, Coord x, Coord y, Coord width, Coord height) {
+        uint32_t offset = pixelBufferOffset(x, y, width, height);
         switch (COLOR::BPP) {
             case 16:
             case 8:
@@ -49,8 +49,8 @@ namespace rckid {
     /** Sets the value of given pixel. 
      */
     template<typename COLOR>
-    constexpr inline void setPixelAt(uint8_t * buffer, Coord x, Coord y, COLOR value, Coord width, Coord height) {
-        uint32_t offset = pixelOffset(x, y, width, height);
+    constexpr inline void setPixelBufferAt(uint8_t * buffer, Coord x, Coord y, COLOR value, Coord width, Coord height) {
+        uint32_t offset = pixelBufferOffset(x, y, width, height);
         switch (COLOR::BPP) {
             case 16:
             case 8:
@@ -93,6 +93,51 @@ namespace rckid {
             case 32:
                 ASSERT(COLOR::BPP != 32); // we actually don't support 32 bpp, this is here only for faster memop
                 return memFill(reinterpret_cast<uint32_t*>(buffer), numPixels, value);
+            default:
+                UNREACHABLE;
+        }
+    }
+
+    /** Returns the address of the n-th column from given pixel buffer. 
+     */
+    template<typename COLOR>
+    constexpr inline uint32_t pixelBufferColumnOffset(unsigned width, unsigned height, unsigned x) {
+        return (width - 1 - x) * height * COLOR::BPP / 8;
+    }
+ 
+
+    /** Converts consecutive pixels from their internal format to the RGB 565 representation. 
+     
+        If the pixel buffer is already in the RGB format, this is a simple memcopy, otherwise each source pixel's palette color is adjusted by given offset and the color from palette is used.  
+
+        TODO these functions are likely candidates for assembly fast methods
+     */
+    template<typename COLOR>
+    constexpr inline ColorRGB * pixelBufferToRGB(uint8_t const * buffer, ColorRGB * out, uint32_t numPixels, ColorRGB const * palette = nullptr, uint8_t paletteOffset = 0) {
+        switch (COLOR::BPP) {
+            case 16:
+                ASSERT(palette == nullptr);
+                // ignore the paletteOffset and simply copy the appropriate number of bytes
+                memcpy(out, buffer, numPixels * 2);
+                return out + numPixels;
+            case 8: {
+                ASSERT(palette != nullptr);
+                uint8_t const * pixels = reinterpret_cast<uint8_t const *>(buffer);
+                while (numPixels-- != 0)
+                    *(out++) = palette[(*pixels++ + paletteOffset) & 0xff];
+                return out;
+            }
+            case 4: {
+                ASSERT(palette != nullptr);
+                uint8_t const * pixels = reinterpret_cast<uint8_t const *>(buffer);
+                while (numPixels != 0) {
+                    uint8_t p = *pixels++;
+                    *(out++) = palette[((p & 0xf) + paletteOffset) & 0xff];
+                    *(out++) = palette[((p >> 4) + paletteOffset) & 0xff];
+                    numPixels -= 2;
+                }
+                return out;
+            }
             default:
                 UNREACHABLE;
         }

@@ -40,3 +40,10 @@ This just might work.
 - account for PNG's transparency by allowing it to be overlayed on existing bitmap
 - maybe even RGBA colors? 
 - rumbler & LED effect done event
+
+
+- is the order in 16color tiles right? 
+
+- add filesystem support with an ISO file specified for the SD card, using the same fatfs mechanics
+
+- rckid v2: audio playback

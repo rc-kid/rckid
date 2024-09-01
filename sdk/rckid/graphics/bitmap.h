@@ -57,9 +57,9 @@ namespace rckid {
          */
         //@{
 
-        Color pixelAt(Coord x, Coord y) const { return rckid::pixelAt<COLOR>(buffer_, x, y, w_, h_); }
+        Color pixelAt(Coord x, Coord y) const { return pixelBufferAt<COLOR>(buffer_, x, y, w_, h_); }
 
-        void setPixelAt(Coord x, Coord y, Color c) { rckid::setPixelAt<COLOR>(buffer_, x, y, c, w_, h_); }
+        void setPixelAt(Coord x, Coord y, Color c) { setPixelBufferAt<COLOR>(buffer_, x, y, c, w_, h_); }
         //@}
 
         /** \name Blitting 
@@ -168,7 +168,7 @@ namespace rckid {
             return new uint8_t[pixelBufferSize<COLOR>(w, h)];
         } 
 
-        constexpr __force_inline size_t map(Coord x, Coord y) const { return pixelOffset(x, y, w_, h_); }
+        constexpr __force_inline size_t map(Coord x, Coord y) const { return pixelBufferOffset(x, y, w_, h_); }
 
         Coord w_ = 0;
         Coord h_ = 0;
