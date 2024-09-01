@@ -8,18 +8,6 @@ namespace rckid {
 
     /** A simple double buffer.  
 
-        For playback:
-            - get the current chunk to be sent
-            - swap
-            - callback on refilling the buffer
-            - initialize
-
-        For recording:
-            - callback on buffer filled, 
-            - get the current chunk to be written to
-            - swap
-
-
      */
     class DoubleBuffer {
     public:

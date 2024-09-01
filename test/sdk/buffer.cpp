@@ -18,3 +18,11 @@ TEST(buffer, doubleBuffer_swap) {
     EXPECT(back == b.getBackBuffer());
     EXPECT(front == b.getFrontBuffer());
 }
+
+TEST(buffer, doubleBuffer_cb) {
+    bool swapped = false;
+    DoubleBuffer b(1024, [&](DoubleBuffer &) mutable { swapped = true; });
+    EXPECT(swapped == false);
+    b.swap();
+    EXPECT(swapped == true);
+}
