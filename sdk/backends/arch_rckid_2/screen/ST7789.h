@@ -341,10 +341,6 @@ namespace rckid {
         static constexpr uint8_t PORCTRL = 0xb2; // porch control
         static constexpr uint8_t FRCTRL2 = 0xc6; // framerate control
 
-        // the global IRQ handler
-        friend void irqDMADone_();
-        friend void yield();
-
     }; // rckid::ST7789
 
 } // namespace rckid

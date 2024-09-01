@@ -17,6 +17,7 @@
 
 #include "rckid/rckid.h"
 #include "rckid/internals.h"
+#include "rckid/utils/buffer.h"
 
 #include "avr/src/state.h"
 
@@ -51,8 +52,15 @@ namespace rckid {
         State state_; 
         State lastState_;
         uint8_t ticks_ = 0;
-        
-    }
+
+
+        uint8_t audioVolume_ = 128;
+        bool audioPlayback_ = false;
+        uint audioDma0_ = 0;
+        uint audioDma1_ = 0;
+        DoubleBuffer * audioPlaybackBuffer_;
+
+   }
 
     void __not_in_flash_func(i2cFillAVRTxBlocks)() {
         i2c0->hw->enable = 0;
@@ -155,11 +163,37 @@ namespace rckid {
     }
 
 
+    /** Audio DMA playback handler.
+        
+     */
+    void audioPlaybackDMA(uint finished, uint other) {
+        // reconfigure the currently finished buffer to start from the current front buffer (will be back after the swap) - note the other dma has already been started by the finished one
+        dma_channel_set_read_addr(finished, audioPlaybackBuffer_->getFrontBuffer(), false);
+        // swap the buffers (this also calls the callback that fills the front part of the buffer with data)
+        audioPlaybackBuffer_->swap();
+        // finally, while in the IRQ we must ensure that the data filled by the app in the callback conforms to what we expect. This means adjusting the volume and converting from int16_t to uint16_t centered at 32768
+        // also for the basic PWM out w/o sigma delta, this also means loweing the resolution to 12 bits only
+        
+        // TODO
+        //int16_t * buf = audioPlaybackBuffer_->getFrontBuffer();
+        //for (uint32_t i = 0; i < audioPlaybackBuffer_.size(); ++i) {
+
+        //}
+
+    }
+
+
 
     void __not_in_flash_func(irqDMADone_)() {
         //gpio::outputHigh(GPIO21);
         unsigned irqs = dma_hw->ints0;
         dma_hw->ints0 = irqs;
+        if (audioPlayback_) {
+            if (irqs & (1u << audioDma0_))
+                audioPlaybackDMA(audioDma0_, audioDma1_);
+            if (irqs & (1u << audioDma1_))
+                audioPlaybackDMA(audioDma1_, audioDma0_);
+        }
         // for audio, reset the DMA start address to the beginning of the buffer and tell the stream to refill
 //        if (irqs & (1u << audio::dma0_))
 //            audio::irqHandler1();
@@ -211,6 +245,10 @@ namespace rckid {
         accelerometer_.initialize();
         alsSensor_.initialize();
         alsSensor_.startALS();
+
+        // initialize audio
+        audioDma0_ = dma_claim_unused_channel(true);
+        audioDma1_ = dma_claim_unused_channel(true);
 
         // enter base arena for the application
         memoryEnterArena();
@@ -377,10 +415,11 @@ namespace rckid {
     }
 
     uint8_t audioVolume() {
-
+        return audioVolume_;
     }
 
     void audioSetVolume(uint8_t value) {
+        audioVolume_ = value;
 
     }
 

@@ -150,7 +150,7 @@ inline std::string generateFontGlyphs(std::string const & className, std::string
             for (int y = 0; y < g.image.height; ++y) {
                 unsigned c = GetImageColor(g.image, x, y).r;
                 c = std::min(255u, c + 32); // rounding 
-                c >>= 6; // convert tp 4bpp
+                c >>= 6; // convert tp 2bpp
                 data <<= 2;
                 data = data | c;
                 bits += 2;

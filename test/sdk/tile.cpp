@@ -1,5 +1,6 @@
 #include <platform/tests.h>
 #include <rckid/graphics/tile.h>
+#include <rckid/assets/tiles/ui-tiles.h>
 
 using namespace rckid;
 
