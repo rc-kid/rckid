@@ -9,6 +9,7 @@
 
 #generator, path to folder, namespace (and output file)
 #folder, icons, icons
+folder, tests, tests
 
 #generator, filename, n
-sine, easing_sine.inc.h, 256
+#sine, easing_sine.inc.h, 256

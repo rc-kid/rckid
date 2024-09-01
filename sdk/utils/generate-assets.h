@@ -1,5 +1,6 @@
 #pragma once 
 
+#define _USE_MATH_DEFINES
 #include <cmath>
 #include <string>
 #include <ostream>
@@ -91,7 +92,7 @@ GlyphInfo * loadFontGlyphs(std::string const & fontFile, int fontSize, std::vect
          (std::istreambuf_iterator<char>(input)),
          (std::istreambuf_iterator<char>()));
     input.close();   
-    GlyphInfo * glyphInfos = LoadFontData(bytes.data(), bytes.size(), fontSize, const_cast<int*>(glyphs.data()), glyphs.size(), FONT_DEFAULT);
+    GlyphInfo * glyphInfos = LoadFontData(bytes.data(), (int) bytes.size(), fontSize, const_cast<int*>(glyphs.data()), (int) glyphs.size(), FONT_DEFAULT);
     std::cout << "            loaded " << glyphs.size() << " glyphs" << std::endl;
     return glyphInfos;
 }
@@ -197,7 +198,7 @@ inline std::string generateFontGlyphs(std::string const & className, std::string
 
 /** Reads given file and outputs it as a contents of C++ array of uint8_t (without the declaration) to the given output stream. A helper function intended to be used by other generators. Returns the size in bytes of the input file (which is how much ROM the asset will take)
  */
-inline size_t generateBinaryContent(std::string const & inputFile, std::ostream & out) {
+inline size_t generateBinaryContent(std::filesystem::path const & inputFile, std::ostream & out) {
     std::ifstream input(inputFile, std::ios::binary);
     std::vector<char> bytes(
          (std::istreambuf_iterator<char>(input)),
@@ -218,10 +219,10 @@ inline size_t generateBinaryContent(std::string const & inputFile, std::ostream 
 
 /** Converts given string to a valid C++ class name (or identifier). Ignores leading numbers and hyphens and converts hyphens to underscored. Note that his is very light mangling and as such does not guarantee that what wee unique inputs to the function will be unique results as well, it mostly exists as a convenience fuction to quickly converts folder contents. 
  */
-inline std::string convertToClassName(std::string const & from) {
+inline std::string convertToClassName(std::filesystem::path const & from) {
     std::string result;
     bool start = true;
-    for (char c : from) {
+    for (char c : from.string()) {
         if (start && c >= '0' && c <= '9')
             continue;
         if (start && c == '-')

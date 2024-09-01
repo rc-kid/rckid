@@ -265,9 +265,9 @@ namespace rckid {
 
     void audioSetVolume(uint8_t value);
 
-    void audioPlay(DoubleBuffer & data, uint32_t bitrate = 44100);
+    void audioPlay(DoubleBuffer & data, uint32_t sampleRate= 44100);
 
-    void audioRecord(DoubleBuffer & data, uint32_t bitrate = 8000);
+    void audioRecord(DoubleBuffer & data, uint32_t sampleRate = 8000);
 
     void audioPause();
 

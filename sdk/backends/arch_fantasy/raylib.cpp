@@ -19,6 +19,7 @@
 #include "rckid/rckid.h"
 #include "rckid/graphics/color.h"
 #include "rckid/internals.h"
+#include "rckid/utils/buffer.h"
 
 extern "C" {
 
@@ -103,6 +104,13 @@ namespace rckid {
         Image displayImg_;
         Texture displayTexture_;
         std::chrono::steady_clock::time_point displayLastVSyncTime_;
+
+
+        bool audioPlayback_;
+        AudioStream audioStream_;
+        DoubleBuffer * audioPlaybackBuffer_;
+        uint32_t audioPlaybackBufferRemaining_;
+        int16_t * audioPlaybackBufferRead_;
     }
 
     void initialize() {
@@ -288,12 +296,28 @@ namespace rckid {
 
     // audio
 
+    void audioStreamRefill(void * buffer, unsigned int frames) {
+        int16_t * stereo = reinterpret_cast<int16_t*>(buffer);
+        while (frames-- != 0) {
+            if (audioPlaybackBufferRemaining_ == 0) {
+                audioPlaybackBuffer_->swap();
+                audioPlaybackBufferRemaining_ = audioPlaybackBuffer_->size() / 4; // stereo uint16_t 
+                audioPlaybackBufferRead_ = reinterpret_cast<int16_t*>(audioPlaybackBuffer_->getFrontBuffer());
+            }
+            *(stereo++) = *(audioPlaybackBufferRead_++);
+            *(stereo++) = *(audioPlaybackBufferRead_++);
+            --audioPlaybackBufferRemaining_;
+        }
+    }
+
     void audioEnable() {
-        UNIMPLEMENTED;
+        InitAudioDevice();
     }
 
     void audioDisable() {
-        UNIMPLEMENTED;
+        if (audioPlayback_)
+            audioStop();
+        CloseAudioDevice();
     }
 
     bool audioHeadphones() {
@@ -301,27 +325,39 @@ namespace rckid {
     }
 
     uint8_t audioVolume() {
-        UNIMPLEMENTED;
+        return static_cast<uint8_t>(GetMasterVolume() * 255);
     }
 
     void audioSetVolume(uint8_t value) {
-        UNIMPLEMENTED;
+        SetMasterVolume(value / 255.0);
     }
 
-    void audioPlay(DoubleBuffer & data, uint32_t bitrate) {
-        UNIMPLEMENTED;
+    void audioPlay(DoubleBuffer & data, uint32_t sampleRate) {
+        if (audioPlayback_)
+            audioStop();
+        audioStream_ = LoadAudioStream(sampleRate, 16, 2);
+        SetAudioStreamCallback(audioStream_, audioStreamRefill);   
+        audioPlaybackBuffer_ = & data;   
+        audioPlaybackBufferRemaining_ = 0;  
+        PlayAudioStream(audioStream_);
+        audioPlayback_ = true;
     }
 
-    void audioRecord(DoubleBuffer & data, uint32_t bitrate) {
+    void audioRecord(DoubleBuffer & data, uint32_t sampleRate) {
         UNIMPLEMENTED;
     }
 
     void audioPause() {
-        UNIMPLEMENTED;
+        if (audioPlayback_)
+            PauseAudioStream(audioStream_);
     }
 
     void audioStop() {
-        UNIMPLEMENTED;
+        if (audioPlayback_) {
+            StopAudioStream(audioStream_);
+            UnloadAudioStream(audioStream_);
+            audioPlayback_ = false;
+        }
     }
 
     // LEDs

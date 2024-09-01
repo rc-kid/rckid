@@ -33,6 +33,12 @@ namespace rckid {
             buffer_{new uint8_t[size * 2]} {
         }
 
+        DoubleBuffer(uint32_t size, SwapCallback cb):
+            size_{size}, 
+            buffer_{new uint8_t[size * 2]},
+            cb_{cb} {
+        }
+
         ~DoubleBuffer() {
             delete [] buffer_;
         }
