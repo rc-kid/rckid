@@ -320,6 +320,14 @@ namespace rckid {
      */
     //@{
 
+    /** Returns the capacity of the installed SD card in 512 byte blocks, or 0 if there is no SD card, or if its initialization has failed. 
+     */
+    uint32_t sdCapacity();
+
+    bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks);
+
+    bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks);
+
     //@}
 
     /** \name Memory Management

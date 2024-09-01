@@ -19,6 +19,7 @@ function(link_with_librckid target_name)
         target_link_libraries(${target_name} PRIVATE 
             librckid
             raylib
+            FatFS
             PNGdec
             ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
         )

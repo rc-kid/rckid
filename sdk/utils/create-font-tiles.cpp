@@ -1,8 +1,3 @@
-#include <cstdlib>
-#include <cstdio>
-
-
-
 #include "generate-assets.h"
 
 // TODO maybe move this to assets hdr file when generating tiles from bitmaps? 

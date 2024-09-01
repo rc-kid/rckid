@@ -3,6 +3,17 @@
     \addtogroup backends
  
     A fantasy console backend that uses RayLib for the graphics, audio and other aspects of the device. Should work anywhere raylib does. 
+
+
+
+    SD Card Emulation
+
+    If there is `sd.iso` file present in the current working directory and the file has a size divisible by 512, it will be used as an SD card. Creating such file is straightforward in linux, such as:
+
+        fallocate -l 2G sd.iso
+        
+
+
  */
 
 #ifndef ARCH_FANTASY
@@ -13,6 +24,7 @@
 #include <iostream>
 #include <chrono>
 #include <thread>
+#include <fstream>
 
 #include <raylib.h>
 
@@ -20,6 +32,7 @@
 #include "rckid/graphics/color.h"
 #include "rckid/internals.h"
 #include "rckid/utils/buffer.h"
+#include "rckid/filesystem.h"
 
 extern "C" {
 
@@ -111,6 +124,9 @@ namespace rckid {
         DoubleBuffer * audioPlaybackBuffer_;
         uint32_t audioPlaybackBufferRemaining_;
         int16_t * audioPlaybackBufferRead_;
+
+        uint32_t sdNumBlocks_;
+        std::fstream sdIso_;
     }
 
     void initialize() {
@@ -120,6 +136,21 @@ namespace rckid {
         displayImg_ = GenImageColor(320, 240, BLACK);
         displayTexture_ = LoadTextureFromImage(displayImg_);
         displayLastVSyncTime_ = std::chrono::steady_clock::now();
+        // see if there is sd.iso file so that we can simulate SD card
+        sdIso_.open("sd.iso", std::ios::in | std::ios::out | std::ios::binary);
+        if (sdIso_.is_open()) {
+            sdIso_.seekg(0, std::ios::end);
+            size_t sizeBytes = sdIso_.tellg();
+            LOG("sd.iso file found, mounting SD card - " << sizeBytes << " bytes");
+            if (sizeBytes % 512 == 0 && sizeBytes != 0) {
+                sdNumBlocks_ = sizeBytes / 512;
+                LOG("    blocks: " << sdNumBlocks_);
+            } else {
+                LOG("    invalid file size (multiples of 512 bytes allowed)");
+            }
+        } else {
+            LOG("sd.iso file not found, CD card not present");
+        }
     }
 
     void tick() {
@@ -378,6 +409,36 @@ namespace rckid {
 
     void rumble(uint8_t intensity, uint16_t duration, unsigned repetitions, uint16_t offDuration) {
         UNIMPLEMENTED;
+    }
+
+    // SD card interface
+
+    uint32_t sdCapacity() {
+        return sdNumBlocks_;
+    }
+
+    bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {
+        ASSERT(sdNumBlocks_ != 0);
+        try {
+            sdIso_.seekg(start * 512);
+            sdIso_.read(reinterpret_cast<char*>(buffer), numBlocks * 512);
+            return true;
+        } catch (std::exception const & e) {
+            LOG("SD card read error: " << e.what());
+            return false;
+        }
+    }
+
+    bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks) {
+        ASSERT(sdNumBlocks_ != 0);
+        try {
+            sdIso_.seekp(start * 512);
+            sdIso_.write(reinterpret_cast<char const *>(buffer), numBlocks * 512);
+            return true;
+        } catch (std::exception const & e) {
+            LOG("SD card write error: " << e.what());
+            return false;
+        }
     }
 
     // accelerated functions

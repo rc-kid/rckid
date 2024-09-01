@@ -1,5 +1,5 @@
 
-file(GLOB_RECURSE SRC "rckid_mk2.cpp" "usb/*.cpp" "screen/*.cpp" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.h" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.cpp")
+file(GLOB_RECURSE SRC "rckid_mk2.cpp" "sd/*.cpp" "usb/*.cpp" "screen/*.cpp" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.h" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.cpp")
 add_library(librckid STATIC ${SRC})
 
 pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/mic_pdm.pio)
@@ -31,9 +31,9 @@ function(link_with_librckid target_name)
         hardware_spi
         hardware_dma
         hardware_pwm
-        #FatFS
         tinyusb_board
         tinyusb_device
+        FatFS
         PNGdec
         #libhelix-mp3
     )

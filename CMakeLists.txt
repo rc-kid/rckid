@@ -35,6 +35,7 @@ include_directories("sdk")
 include_directories("libs")
 
 add_subdirectory("libs/PNGdec")
+add_subdirectory("libs/FatFS")
 
 string(TOLOWER "${ARCH}" ARCH_LOWER)
 add_subdirectory("sdk/backends/${ARCH_LOWER}")

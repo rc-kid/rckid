@@ -1,4 +1,5 @@
 build*
 docs/sdk
+sd.iso
 sdk/backends/arch_fantasy/raylib
 sdk/backends/arch_rckid/pico-sdk

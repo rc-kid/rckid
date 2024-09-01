@@ -20,6 +20,7 @@
 #include "rckid/utils/buffer.h"
 
 #include "avr/src/state.h"
+#include "sd/sd.h"
 
 
 /** 
@@ -34,9 +35,6 @@
 namespace rckid {
 
     namespace {
-        DisplayMode displayMode_ = DisplayMode::Off;
-        DisplayUpdateCallback displayCallback_;
-
         static constexpr unsigned TICK_DONE = 0;
         static constexpr unsigned TICK_ALS = 1;
         static constexpr unsigned TICK_UV = 2;
@@ -60,7 +58,13 @@ namespace rckid {
         uint audioDma1_ = 0;
         DoubleBuffer * audioPlaybackBuffer_;
 
-   }
+    }
+
+    template<typename T>
+    static void sendCommand(T const & cmd) {
+        /// TODO: ensure T is a command
+        i2c_write_blocking(i2c0, I2C_AVR_ADDRESS, (uint8_t const *) & cmd, sizeof(T), false);
+    }    
 
     void __not_in_flash_func(i2cFillAVRTxBlocks)() {
         i2c0->hw->enable = 0;
@@ -250,6 +254,9 @@ namespace rckid {
         audioDma0_ = dma_claim_unused_channel(true);
         audioDma1_ = dma_claim_unused_channel(true);
 
+        // initialize the SD card
+        sdInitialize();
+
         // enter base arena for the application
         memoryEnterArena();
     }
@@ -368,8 +375,7 @@ namespace rckid {
     }
 
     uint8_t displayBrightness() { 
-        // TODO Read from state
-        return 128;
+        return state_.brightness();
     }
 
     void displaySetBrightness(uint8_t value) {  
