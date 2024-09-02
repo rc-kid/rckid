@@ -8,6 +8,10 @@
 
 namespace rckid {
 
+#if ARCH_RCKID_2
+    void rckid_mkII_waitTickDone();
+#endif
+
     void App::run() {
         if (current_)
             current_->onBlur();
@@ -19,8 +23,15 @@ namespace rckid {
         uint32_t currentFrame = 0;
         uint32_t currentFps = 0;
         while (current_ == this) {
+#if ARCH_RCKID_2
+            // this is a rather dirty hack to get around the fact that on mkII the app needs talking to the AVR chip for some of its functionality via I2C, which is also used during tick to get peripheral information from AVR and other sensors. To make sure the I2C commands and the tick requests are not overlapping, on mkII the tick happens *after* the update, i.e. during draw and render when no commands should be issued, and we wait before calling the update method for the tick to be done. 
+            rckid_mkII_waitTickDone();
+            MEASURE_TIME(updateUs_,     update());
+            MEASURE_TIME(tickUs_,       tick());
+#else
             MEASURE_TIME(tickUs_,       tick());
             MEASURE_TIME(updateUs_,     update());
+#endif
             MEASURE_TIME(waitRenderUs_, displayWaitUpdateDone());
             MEASURE_TIME(drawUs_,       draw());
             MEASURE_TIME(waitVSyncUs_,  displayWaitVSync());

@@ -72,6 +72,30 @@ namespace rckid::filesystem {
         FATFS * fs_ = nullptr;
     }
 
+    bool format(Filesystem fs) {
+        MKFS_PARM opts;
+        switch (fs) {
+            case Filesystem::FAT16:
+                opts.fmt = FM_FAT;
+                break;
+            case Filesystem::FAT32:
+                opts.fmt = FM_FAT32;
+                break;
+            case Filesystem::exFAT:
+                opts.fmt = FM_EXFAT;
+                break;
+            default:
+                ASSERT(fs != Filesystem::Unrecognized);
+                UNREACHABLE;
+        }
+        opts.n_fat = 0; 
+        opts.align = 0;
+        opts.n_root = 0;
+        opts.au_size = 0;
+        BYTE work[FF_MAX_SS];
+        return f_mkfs("", & opts, work, FF_MAX_SS) == FR_OK;
+    }
+
     bool mount() {
         if (fs_ != nullptr) {
             LOG("Filesystem already mounted");
@@ -86,26 +110,34 @@ namespace rckid::filesystem {
         rckid::free(fs_);
     }
 
-    bool format(Filesystem fs) {
-        MKFS_PARM opts;
-        switch (fs) {
-            case Filesystem::FAT16:
-                opts.fmt = FM_FAT;
-                break;
-            case Filesystem::FAT32:
-                opts.fmt = FM_FAT32;
-                break;
-            case Filesystem::exFAT:
-                opts.fmt = FM_EXFAT;
-                break;
-            default:
-                UNREACHABLE;
-        }
-        opts.n_fat = 0; 
-        opts.align = 0;
-        opts.n_root = 0;
-        opts.au_size = 0;
-        BYTE work[FF_MAX_SS];
-        return f_mkfs("", & opts, work, FF_MAX_SS) == FR_OK;
+    uint64_t getCapacity() {
+        return static_cast<uint64_t>(fs_->n_fatent - 2) * fs_->csize * 512;
     }
+
+    uint64_t getFreeCapacity() {
+        DWORD n;
+        FATFS * fs;
+        f_getfree("", & n, &fs);
+        return static_cast<uint64_t>(n) * fs_->csize * 512;
+    }
+
+    Filesystem getFormat() {
+        switch (fs_->fs_type) {
+            case FS_FAT16:
+                return Filesystem::FAT16;
+            case FS_FAT32:
+                return Filesystem::FAT32;
+            case FS_EXFAT:
+                return Filesystem::exFAT;
+            default:
+                return Filesystem::Unrecognized;
+        }
+    }
+
+    std::string getLabel() {
+        std::string result{' ', 12};
+        f_getlabel("",result.data(), 0);
+        return result;
+    }
+
 } // namespace rckid::filesystem

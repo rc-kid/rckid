@@ -317,6 +317,8 @@ namespace rckid {
     /** \name SD Card Filesystem access. 
      
         RCKid device contains an SD card that can be used to store various data that can persist between different cartridges, such as music, messages, images, etc. The actual filesystem is handled by the FatFS library where the RCKid SDK only provides the necessary functions that enable the filesystem access. 
+
+        NOTE: Those functions are *not* intended to be called from applications. Instead the filesystem namespace that provides the necessary filesystem abstractions onver the SD card basic read & write interface should be used. 
      */
     //@{
 
@@ -324,8 +326,12 @@ namespace rckid {
      */
     uint32_t sdCapacity();
 
+    /** Reads given number of blocks starting at provided offset from the SD card into the given buffer.
+     */
     bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks);
 
+    /** Writes given number of blocks from the provided beginning offset. 
+     */
     bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks);
 
     //@}

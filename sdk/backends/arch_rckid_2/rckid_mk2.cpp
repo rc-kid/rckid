@@ -11,17 +11,15 @@
 #include <platform/peripherals/bmi160.h>
 #include <platform/peripherals/ltr390uv.h>
 
-
-
-#include "screen/ST7789.h"
-
 #include "rckid/rckid.h"
 #include "rckid/internals.h"
 #include "rckid/utils/buffer.h"
 
-#include "avr/src/state.h"
+#include "screen/ST7789.h"
 #include "sd/sd.h"
 
+#include "avr/src/state.h"
+#include "avr/src/commands.h"
 
 /** 
     \section rckid_mk2_backend RCKid mk II Backend 
@@ -60,9 +58,10 @@ namespace rckid {
 
     }
 
+    /** Sends given I2C command to the AVR. 
+     */
     template<typename T>
     static void sendCommand(T const & cmd) {
-        /// TODO: ensure T is a command
         i2c_write_blocking(i2c0, I2C_AVR_ADDRESS, (uint8_t const *) & cmd, sizeof(T), false);
     }    
 
@@ -284,8 +283,13 @@ namespace rckid {
         //i2c0->hw->con |= I2C_IC_CON_TX_EMPTY_CTRL_BITS;
         // enable the I2C
         i2c0->hw->intr_mask = I2C_IC_INTR_MASK_M_RX_FULL_BITS | I2C_IC_INTR_MASK_M_TX_ABRT_BITS;
+    }
 
-
+    /** Waits for the tick to be done (and the I2C bus being freed). This is mkII specific hack to ensure that I2C bus is available for the application during the update() method. 
+     */
+    void rckid_mkII_waitTickDone() {
+        while (tickInProgress_ != TICK_DONE)
+            yield();
     }
 
     void yield() {
@@ -379,7 +383,7 @@ namespace rckid {
     }
 
     void displaySetBrightness(uint8_t value) {  
-        // TODO send I2C command to AVR
+        sendCommand(cmd::SetBrightness{value});
     }
 
     Rect displayUpdateRegion() {    
@@ -409,15 +413,17 @@ namespace rckid {
     // audio
 
     void audioEnable() {
+        sendCommand(cmd::AudioEnabled{});
 
     }
 
     void audioDisable() {
+        sendCommand(cmd::AudioDisabled{});
 
     }
 
     bool audioHeadphones() {
-
+        return state_.headphones();
     }
 
     uint8_t audioVolume() {
@@ -443,6 +449,26 @@ namespace rckid {
 
     void audioStop() {
 
+    }
+
+    // RGB LEDs
+
+    void ledsOff() {
+        sendCommand(cmd::RGBOff());
+    }
+
+    void ledSetEffect(Btn b, LEDEffect const & effect) {
+
+    }
+
+    void ledSetEffects(LEDEffect const & dpad, LEDEffect const & a, LEDEffect const & b, LEDEffect const & select, LEDEffect const & start) {
+
+    }
+
+    // Rumbler
+
+    void rumble(uint8_t intensity, uint16_t duration, unsigned repetitions, uint16_t offDuration) {
+        sendCommand(cmd::Rumbler(RumblerEffect(intensity, duration, offDuration, repetitions)));
     }
 
     // accelerated functions

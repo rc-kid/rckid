@@ -41,9 +41,12 @@ This just might work.
 - maybe even RGBA colors? 
 - rumbler & LED effect done event
 
+- recording in fantasy
+- audio in mkII
 
-- is the order in 16color tiles right? 
 
 - add filesystem support with an ISO file specified for the SD card, using the same fatfs mechanics
 
-- rckid v2: audio playback
+## mkIII
+
+- when switching to mkIII fix the order in app.cpp (tick before update)
