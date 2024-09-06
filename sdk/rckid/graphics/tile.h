@@ -41,7 +41,7 @@ namespace rckid {
         }
 
         // TODO ideally this should be private somehow
-        ColorRGB * renderColumn(int x, ColorRGB * buffer, ColorRGB const * palette = nullptr, uint8_t paletteOffset = 0) const {
+        ColorRGB * renderColumn(Coord x, ColorRGB * buffer, ColorRGB const * palette = nullptr, uint8_t paletteOffset = 0) const {
             return pixelBufferToRGB<COLOR>(
                 pixelBuffer_ + pixelBufferColumnOffset<COLOR>(WIDTH, HEIGHT, x),
                 buffer, 

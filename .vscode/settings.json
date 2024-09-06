@@ -59,6 +59,7 @@
         "regex": "cpp",
         "fstream": "cpp",
         "iomanip": "cpp",
-        "forward_list": "cpp"
+        "forward_list": "cpp",
+        "*.m": "cpp"
     }
 }

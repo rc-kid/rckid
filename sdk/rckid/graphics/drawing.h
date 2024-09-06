@@ -6,6 +6,11 @@
 
 namespace rckid {
 
+    template<typename T>
+    class Renderer;
+
+
+
     /** \defgroup drawing Drawing 
      
         Drawing is done on pixel buffers, with varying sizes and bit depth. Due to the physical construction of the device (the display is rotated), the pixel data is stored in column-wise format starting from top-right to bottom-left (DisplayMode::Native) This means that an 16bpp pixel buffer can be transferred to the display in a single DMA command without tearing effect. 

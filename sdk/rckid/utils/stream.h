@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 #include "../rckid.h"
 
 namespace rckid {

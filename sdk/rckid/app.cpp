@@ -34,7 +34,7 @@ namespace rckid {
 #endif
             MEASURE_TIME(waitRenderUs_, displayWaitUpdateDone());
             MEASURE_TIME(drawUs_,       draw());
-            MEASURE_TIME(waitVSyncUs_,  displayWaitVSync());
+            // don't wait for Vsync here as the rendering might want to preprocess the graphic data first
             MEASURE_TIME(renderUs_,     render());
             ++currentFps;
             uint32_t uus = uptimeUs();

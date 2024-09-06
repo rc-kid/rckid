@@ -37,6 +37,9 @@ This just might work.
 
 ## SDK
 
+- add position & things to renderers for bitmap
+- color arithmetics can be done on numbers so that I we can use COlor16 with 256 palettes and offsets (otherwise color would wrap at 16)
+
 - account for PNG's transparency by allowing it to be overlayed on existing bitmap
 - maybe even RGBA colors? 
 - rumbler & LED effect done event
@@ -44,9 +47,18 @@ This just might work.
 - recording in fantasy
 - audio in mkII
 
+- mp3 decoder library
+- libopus decoder & encoder library
+- jpeg decoding library
+> verify the work on windows too
 
+- filesystem file & folder abstractions
 - add filesystem support with an ISO file specified for the SD card, using the same fatfs mechanics
 
-## mkIII
+### mkIII
 
 - when switching to mkIII fix the order in app.cpp (tick before update)
+
+## PCB
+
+- see if the riser for the cartridge connector is necessary, or the cartridge leads can be bent, soldered and then the connector glued

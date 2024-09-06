@@ -14,7 +14,7 @@
             //"program": "${workspaceFolder}/build-mock/cartridges/test/display/display-test",
             //"program": "${workspaceFolder}/build-mock/cartridges/test/benchmarks/benchmarks",
             //"program": "${workspaceFolder}/build-mock/cartridges/games/games",
-            "program": "${workspaceFolder}/build/cartridges/test/graphics-app",
+            "program": "${workspaceFolder}/build/cartridges/test/graphics-app256",
             "args": [],
             "stopAtEntry": false,
             "environment": [{ "name" : "DISPLAY", "value" : "0:0"}],

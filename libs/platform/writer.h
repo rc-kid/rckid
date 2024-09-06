@@ -24,6 +24,10 @@ public:
         return *this;
     }
 
+    Writer & operator << (std::string const & str) {
+        return *this << str.c_str();
+    }
+
     Writer & operator << (char c) { 
         putChar_(c); 
         return *this; 

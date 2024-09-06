@@ -1,5 +1,7 @@
 #pragma once
 
+#include "bitmap.h"
+
 namespace rckid {
 
     template<typename COLOR>
@@ -30,5 +32,8 @@ namespace rckid {
         Color bg_;        
 
     }; // rckid::Canvas
+
+    template<typename T>
+    class Renderer<Canvas<T>> : public Renderer<Bitmap<T>> {};
 
 } // namespace rckid

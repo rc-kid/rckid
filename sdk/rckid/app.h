@@ -1,14 +1,14 @@
 #pragma once
 
 #include "rckid.h"
-#include "graphics/renderer.h"
+#include "graphics/drawing.h"
 
 namespace rckid {
 
     class App {
     public:
 
-        virtual ~App() = default;
+        virtual ~App() noexcept = default;
 
         /** Runs the app */
         void run(); 

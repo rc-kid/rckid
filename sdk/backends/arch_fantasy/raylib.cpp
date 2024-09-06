@@ -394,6 +394,7 @@ namespace rckid {
     // LEDs
 
     void ledsOff() {
+        LOG("LED: all off");
         UNIMPLEMENTED;
     }
 
@@ -408,7 +409,8 @@ namespace rckid {
     // Rumbler
 
     void rumble(uint8_t intensity, uint16_t duration, unsigned repetitions, uint16_t offDuration) {
-        UNIMPLEMENTED;
+        // there is no rumbler, just log the action
+        LOG("Rumbler: intensity " << (unsigned) intensity << ", duration: " << duration << ", repetitions: " << repetitions << ", off duration: " << offDuration);
     }
 
     // SD card interface

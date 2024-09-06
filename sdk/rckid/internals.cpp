@@ -1,6 +1,5 @@
 #include "internals.h"
 #include "graphics/bitmap.h"
-#include "graphics/renderer.h"
 #include "assets/fonts/Iosevka16.h"
 
 namespace rckid {

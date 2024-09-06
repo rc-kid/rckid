@@ -140,4 +140,14 @@ namespace rckid::filesystem {
         return result;
     }
 
+    bool fileExists(char const * filename) {
+        FIL f;
+        if (f_open(& f, filename, FA_READ) != FR_OK)
+            return false;
+        if (f.obj.fs == nullptr)
+            return false;
+        f_close(& f);
+        return true;
+    }
+
 } // namespace rckid::filesystem

@@ -1,6 +1,8 @@
 #pragma once
+#include "FatFS/ff.h"
 
 #include "rckid.h"
+#include "utils/stream.h"
 
 namespace rckid::filesystem {
 
@@ -14,6 +16,65 @@ namespace rckid::filesystem {
         exFAT, 
         Unrecognized
     };
+
+    class FileReadStream : public RandomReadStream {
+    public:
+
+        static FileReadStream open(char const * filename) {
+            FileReadStream result;
+            f_open(& result.f_, filename, FA_READ);
+            return result;
+        }
+
+        ~FileReadStream() {
+            f_close(& f_);
+        }
+
+        bool good() const  { return f_.obj.fs != nullptr; }
+
+        uint32_t size() const override { return f_size(& f_); }
+
+        uint32_t seek(uint32_t position) override {
+            f_lseek(& f_, position);
+            return f_.fptr;
+        }
+
+        uint32_t read(uint8_t * buffer, uint32_t bufferSize) override {
+            UINT bytesRead = 0;
+            f_read(& f_, buffer, bufferSize, & bytesRead);
+            return bytesRead;
+        }
+
+    private:
+        FIL f_;
+    };
+
+    class FileWriteStream : public WriteStream {
+    public:
+
+        static FileWriteStream open(char const * filename, bool append = false) {
+            FileWriteStream result;
+            f_open(& result.f_, filename, FA_WRITE | append ? 0 : FA_OPEN_APPEND);
+            return result;
+        }
+
+        ~FileWriteStream() {
+            f_close(& f_);
+        }
+
+
+        bool good() const  { return f_.obj.fs != nullptr; }
+
+        uint32_t write(uint8_t const * buffer, uint32_t bufferSize) override {
+            UINT bytesWritten = 0; 
+            f_write(& f_, buffer, bufferSize, & bytesWritten);
+            return bytesWritten;
+        }
+
+    private:
+        FIL f_;
+    };
+
 
     /** Formats the SD card to given filesystem. 
      
@@ -52,6 +113,13 @@ namespace rckid::filesystem {
     /** Returns the SD Card label. 
      */
     std::string getLabel(); 
+
+    /** Returns true if the given file exists.
+     
+        Shorthand for opening the file for reading, checking the stream is valid and then closing it. 
+     */
+    bool fileExists(char const * filename);
+
 
 
 } // namespace rckid::filesystem
