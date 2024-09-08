@@ -4,8 +4,11 @@
 PNG_STATIC int PNGInit(PNGIMAGE *pPNG);
 PNG_STATIC int DecodePNG(PNGIMAGE *pImage, void *pUser, int iOptions);
 PNG_STATIC uint8_t PNGMakeMask(PNGDRAW *pDraw, uint8_t *pMask, uint8_t ucThreshold);
+
+WARNINGS_OFF
 // Include the C code which does the actual work
 #include <PNGdec/src/png.inl>
+WARNINGS_ON
 
 int32_t readStream(PNGFILE * pFile, uint8_t * pBuf, int32_t iLen) {
     rckid::RandomReadStream * s = static_cast<rckid::RandomReadStream*>(pFile->fHandle);

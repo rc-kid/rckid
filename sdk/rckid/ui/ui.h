@@ -136,19 +136,19 @@ namespace rckid {
         }
 
         void render(UITileEngine<TILE> const & te) {
-            Coord column = te.pixelWidth() - 1;
-            renderColumn(column, te);
-            renderColumn(column - 1, te);
+            column_ = te.pixelWidth() - 1;
+            renderColumn(column_, te);
+            renderColumn(column_ - 1, te);
             displayWaitVSync();
-            displayUpdate(getRenderBufferChunk(column, te), te.pixelHeight(), [&]() mutable {
+            displayUpdate(getRenderBufferChunk(column_, te), te.pixelHeight(), [&]() {
                 // move to previous (right to left column), if there is none, we are done rendering
-                if (--column < 0)
+                if (--column_ < 0)
                     return;
                 // render the column we currently point to (already in the renderBuffer)
-                displayUpdate(getRenderBufferChunk(column, te), te.pixelHeight());
+                displayUpdate(getRenderBufferChunk(column_, te), te.pixelHeight());
                 // render the column ahead, if any
-                if (column > 0)
-                    renderColumn(column - 1, te);
+                if (column_ > 0)
+                    renderColumn(column_ - 1, te);
             });
         }
     
@@ -177,6 +177,7 @@ namespace rckid {
 
         }
 
+        int column_;
         // rendering buffer for 2 columns (double buffering single column)
         ColorRGB * renderBuffer_ = nullptr;
 

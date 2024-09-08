@@ -139,8 +139,12 @@
 
         ConnectionClose(uint8_t id, char const * extra):
             connectionId{id} {
-            // TODO copy the extra
-            this->extra[0] = 0;
+            if (extra == nullptr) {
+                this->extra[0] = 0;
+            } else {
+                strncpy(this->extra, extra, sizeof(this->extra));
+                this->extra[sizeof(extra)] = 0;
+            }
         }
     )
 
@@ -155,7 +159,7 @@
      */
     MESSAGE(, BroadcastStart, false, 
         DeviceId sender;
-        BroadcastKind kind;
+        uint8_t broadcastKind;
         uint8_t repeatCount;
     )
 
@@ -177,7 +181,7 @@
 
         DebugPrint(char const * payload) {
             strncpy(this->payload, payload, sizeof(this->payload));
-            this->payload[30] = 0;
+            this->payload[sizeof(this->payload)] = 0;
         }
 
         // TODO add writer interface

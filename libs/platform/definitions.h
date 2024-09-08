@@ -1,5 +1,23 @@
 #pragma once
 
+/** Wrappers for external libraries that turn compiler warnings in them off. 
+ */
+#if defined(_MSC_VER)
+    #define WARNINGS_OFF() __pragma(warning(push, 0))
+    #define WARNINGS_ON()  __pragma(warning(pop))
+#else
+     #define WARNINGS_OFF \
+        _Pragma("GCC diagnostic push") \
+        _Pragma("GCC diagnostic ignored \"-Wunused-parameter\"") \
+        _Pragma("GCC diagnostic ignored \"-Wunused-function\"") \
+        _Pragma("GCC diagnostic ignored \"-Wall\"") \
+        _Pragma("GCC diagnostic ignored \"-Wextra\"") \
+        _Pragma("GCC diagnostic ignored \"-Wpedantic\"")
+
+    #define WARNINGS_ON _Pragma("GCC diagnostic pop")
+#endif
+
+
 #ifndef ASSERT
 #define ASSERT(...)
 #endif

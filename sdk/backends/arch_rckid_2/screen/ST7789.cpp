@@ -166,12 +166,12 @@ namespace rckid {
     }
 
     void ST7789::irqHandler() {
+        //gpio::outputHigh(gpio::Pin{21});
         if (cb_) 
             cb_();
         if (updating_ > 0)
             --updating_;
-       //if (updating_ == 0 || (--updating_ == 0))
-        //    stats::displayUpdateUs_ = static_cast<unsigned>(uptimeUs() - stats::displayUpdateStart_);
+        //gpio::outputLow(gpio::Pin{21});
     }
 
 } // namespace rckid

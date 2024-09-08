@@ -37,9 +37,7 @@ This just might work.
 
 ## SDK
 
-- palette based rendering (or multi-update rendering) does not seem to work on device
 - add position & things to renderers for bitmap
-- color arithmetics can be done on numbers so that I we can use COlor16 with 256 palettes and offsets (otherwise color would wrap at 16)
 
 - account for PNG's transparency by allowing it to be overlayed on existing bitmap
 - maybe even RGBA colors? 

@@ -1,9 +1,12 @@
 #pragma once
 
-#include <PNGdec/src/PNGdec.h>
 
 #include "../utils/stream.h"
 #include "color.h"
+
+WARNINGS_OFF
+#include <PNGdec/src/PNGdec.h>
+WARNINGS_ON
 
 namespace rckid {
 

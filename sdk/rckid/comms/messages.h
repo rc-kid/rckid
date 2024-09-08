@@ -6,6 +6,21 @@
     \addtogroup Communication
  */
 
+
+namespace rckid {
+
+    /** DeviceID
+     
+        The device ID identifies an RCKid's device for the transmissions. The device ID is not tied to the device forever.
+     */
+    using DeviceId = uint8_t;
+
+    /** Device ID 255 is reserved as broadcast device.
+     */
+    static constexpr DeviceId BroadcastId = 0xff;
+
+} // namespace rckid
+
 namespace rckid::msg {
 
     enum class Id : uint8_t {
@@ -19,7 +34,6 @@ namespace rckid::msg {
         else 
             return static_cast<Id>(*buffer);
     }
-
 
     inline bool requiresAck(Id id) {
         switch (id) {

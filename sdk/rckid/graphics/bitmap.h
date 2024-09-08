@@ -244,19 +244,19 @@ namespace rckid {
         }
 
         void render(Bitmap<T> const & bitmap) {
-            Coord column = bitmap.width() - 1;
-            renderColumn(column, bitmap);
-            renderColumn(column - 1, bitmap);
+            column_ = bitmap.width() - 1;
+            renderColumn(column_, bitmap);
+            renderColumn(column_ - 1, bitmap);
             displayWaitVSync();
-            displayUpdate(getRenderBufferChunk(column, bitmap), bitmap.height(), [&]() mutable {
+            displayUpdate(getRenderBufferChunk(column_, bitmap), bitmap.height(), [&]() {
                 // move to previous (right to left column), if there is none, we are done rendering
-                if (--column < 0)
+                if (--column_ < 0)
                     return; 
                 // render the column we currently point to (already in the renderBuffer)
-                displayUpdate(getRenderBufferChunk(column, bitmap), bitmap.height());
+                displayUpdate(getRenderBufferChunk(column_, bitmap), bitmap.height());
                 // render the column ahead, if any
-                if (column > 0)
-                    renderColumn(column - 1, bitmap);
+                if (column_ > 0)
+                    renderColumn(column_ - 1, bitmap);
             });
         }
 
@@ -272,6 +272,7 @@ namespace rckid {
             pixelBufferToRGB<T>(sb, rb, bitmap.height(), bitmap.palette(), 0);
         }
 
+        int column_; 
         ColorRGB * renderBuffer_ = nullptr;
 
     }; // rckid::Renderer<Bitmap<T>>

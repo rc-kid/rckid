@@ -15,6 +15,8 @@
 #include <rckid/ui/ui.h>
 #include <rckid/ui/text_input.h>
 
+#include <rckid/comms/uart_transceiver.h>
+
 using namespace rckid;
 
 int main() {

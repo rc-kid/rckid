@@ -21,6 +21,12 @@ namespace rckid {
             setB(b);
         }
 
+        constexpr ColorRGB(int r, int g, int b): raw_{0} {
+            setR(static_cast<uint8_t>(r & 0xff));
+            setG(static_cast<uint8_t>(g & 0xff));
+            setB(static_cast<uint8_t>(b & 0xff));
+        }
+
         constexpr ColorRGB(ColorRGB const &) = default;
         constexpr ColorRGB & operator = (ColorRGB const &) = default;
 
