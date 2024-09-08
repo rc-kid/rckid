@@ -147,7 +147,58 @@ namespace rckid {
         }
     }
 
+    /** Converts the consecutive pixels from their internal format to the RGB 565 representation, making the last color in each format transparent. 
+     
+        TODO figure out how to do this properly - maybe set color value, etc
+     */
+    template<typename COLOR>
+    inline ColorRGB * pixelBufferToRGBTransparent(uint8_t const * buffer, ColorRGB * out, unsigned numPixels, ColorRGB const * palette, uint8_t paletteOffset) {
+        switch (COLOR::BPP) {
+            //case 16: -- not here, specialized below
+            case 8: {
+                ASSERT(palette != nullptr);
+                while (numPixels-- != 0) {
+                    uint8_t c = *buffer++;
+                    if (c == 0)
+                        ++out;
+                    else 
+                        *(out++) = palette[(c + paletteOffset) & 0xff];
+                }
+                return out;
+            }
+            case 4: {
+                ASSERT(palette != nullptr);
+                uint8_t const * pixels = reinterpret_cast<uint8_t const *>(buffer);
+                while (numPixels != 0) {
+                    uint8_t p = *pixels++;
+                    if ((p & 0xf) == 0)
+                        ++out;
+                    else 
+                        *(out++) = palette[((p & 0xf) + paletteOffset) & 0xff];
+                    if ((p >> 4) == 0)
+                        ++out;
+                    else
+                        *(out++) = palette[((p >> 4) + paletteOffset) & 0xff];
+                    numPixels -= 2;
+                }
+                return out;
+            }
+            default:
+                UNREACHABLE;
+        }
+    }
 
-
+    inline ColorRGB * pixelBufferToRGBTransparent(uint8_t const * buffer, ColorRGB * out, unsigned numPixels, ColorRGB transparent) {
+        // ignore the paletteOffset and simply copy the appropriate number of bytes
+        ColorRGB const * pixels = reinterpret_cast<ColorRGB const *>(buffer);
+        while (numPixels-- != 0) {
+            ColorRGB c = *pixels++;
+            if (c != transparent)
+                *(out++) = c;
+            else
+                ++out;
+        }
+        return out + numPixels;
+    }
 
 } // namespace rckid

@@ -92,8 +92,7 @@ namespace rckid {
 
         constexpr Color16() = default;
         constexpr Color16(uint8_t color): 
-            raw_{color} {
-            ASSERT(color < 16);
+            raw_{static_cast<uint8_t>(color & 0xf)} {
         }
 
         constexpr Color16(Color16 const &) = default;
@@ -105,7 +104,7 @@ namespace rckid {
         constexpr bool operator == (Color16 const & other) { return raw_ == other.raw_; }
         constexpr bool operator != (Color16 const & other) { return raw_ != other.raw_; }
 
-        constexpr Color16 operator + (int index) const { return Color16{static_cast<uint8_t>((index + raw_) & 0x0f)}; }
+        constexpr uint8_t operator + (uint8_t index) const { return index + raw_; }
 
     private:
         uint8_t raw_ = 0;

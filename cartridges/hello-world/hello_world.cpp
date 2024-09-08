@@ -20,9 +20,6 @@ using namespace rckid;
 int main() {
     rckid::initialize();
     LOG("Initialized, running the app!");
-    LOG(sizeof(Bitmap<Color16>));
-    LOG(sizeof(Bitmap<Color256>));
-    LOG(sizeof(Bitmap<ColorRGB>));
     //auto game = rckid::SlidingPuzzle::create();
     //auto game = new rckid::RawAudioTest{};
     auto game = new TextInput{};

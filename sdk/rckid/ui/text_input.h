@@ -33,22 +33,22 @@ namespace rckid {
             }
             // TODO the sprites should live in ROM and therefore the initialization is not necessary
             UITileEngine<>::Sprite & sprite = g_.addSprite(24, 24);
-            sprite.fill(15);
+            sprite.fill(0);
             sprite.setX(7);
             sprite.setY(48);
             for (int i = 0; i < 24; ++i) {
-                sprite.setPixelAt(i, 0, 0);
-                sprite.setPixelAt(i, 1, 0);
-                sprite.setPixelAt(i, 22, 0);
-                sprite.setPixelAt(i, 23, 0);
-                sprite.setPixelAt(0, i, 0);
-                sprite.setPixelAt(1, i, 0);
-                sprite.setPixelAt(22, i, 0);
-                sprite.setPixelAt(23, i, 0);
+                sprite.setPixelAt(i, 0, 1);
+                sprite.setPixelAt(i, 1, 1);
+                sprite.setPixelAt(i, 22, 1);
+                sprite.setPixelAt(i, 23, 1);
+                sprite.setPixelAt(0, i, 1);
+                sprite.setPixelAt(1, i, 1);
+                sprite.setPixelAt(22, i, 1);
+                sprite.setPixelAt(23, i, 1);
             }
             // and the cursor itself
             UITileEngine<>::Sprite & cursorSprite = g_.addSprite(2, 24);
-            cursorSprite.fill(0);
+            cursorSprite.fill(1);
             cursorSprite.setPos(12,0);
             //placeholder_ = "Enter name:";
         }
@@ -92,11 +92,9 @@ namespace rckid {
                 select_.y = 2;
             if (select_.y > 2)
                 select_.y = 0;
-            /*
             auto & sprite = g_.getSprite(0);
             last_.x = sprite.x();
             last_.y = sprite.y();
-            */
             a_.start();
         }
 
@@ -167,7 +165,7 @@ namespace rckid {
         }
 
         void cursorRight() {
-            if (cursor_ >= text_.size())
+            if (cursor_ >= static_cast<int>(text_.size()))
                 return;
             ++cursor_;
             if (cursor_ - left_ > 24)
@@ -176,7 +174,6 @@ namespace rckid {
 
         void draw() override {
             a_.update();
-            /*
             auto & sprite = g_.getSprite(0);
             auto & cursorSprite = g_.getSprite(1);
             pOffset = (pOffset + 1) & 0x1f;
@@ -195,7 +192,6 @@ namespace rckid {
             }
             sprite.setPos(x, y);
             cursorSprite.setX(12 + (cursor_ - left_) * 12);
-            */
             drawKeyboard(keyboardType_);
             drawText();
         }
