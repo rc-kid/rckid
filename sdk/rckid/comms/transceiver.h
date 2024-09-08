@@ -37,6 +37,8 @@ namespace rckid {
          */
         Transceiver(DeviceId ownId): ownId_{ownId} {}
 
+        DeviceId ownId() const { return ownId_; }
+
         /** Returns whether the communication hardware is enabled or disabled.
          */
         bool enabled() const { return enabled_; }
@@ -48,7 +50,7 @@ namespace rckid {
         void enable() {
             if (enabled_)
                 return;
-            enableHardware();
+            enabled_ = enableHardware();
         }
 
         /** Disables the transceiver hardware. 
@@ -59,6 +61,7 @@ namespace rckid {
             if (!enabled_)
                 return;
             disableHardware();
+            enabled_ = false;
         }
 
         /** Initializes the transceiver's hardware. 
@@ -118,7 +121,11 @@ namespace rckid {
          */
         bool transmit(DeviceId target, Packet const & packet);
 
-        void enableHardware();
+        /** Enables the HW. 
+         
+            Returns true if successful, false otherwise.
+         */
+        bool enableHardware();
 
         void disableHardware(); 
 

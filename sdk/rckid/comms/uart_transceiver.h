@@ -2,6 +2,7 @@
 
 #if defined (ARCH_FANTASY)
 #include <deque>
+#include <mutex>
 #endif
 
 #include "transceiver.h"
@@ -25,7 +26,7 @@ namespace rckid {
         }
 
         static void deviceTx(Packet const & packet) {
-            deviceTx_.push_back(Pkt(packet));
+            deviceTx_.push_back(Pkt{packet});
         }
 
         static bool deviceRx(Packet & buffer) {
@@ -36,6 +37,20 @@ namespace rckid {
             return true;
         }
 
+        static void targetTx(Packet const & packet) {
+            deviceRx_.push_back(Pkt{packet});
+        }
+
+        static bool targetRx(Packet & buffer) {
+            if (deviceTx_.empty())
+                return false;
+            memcpy(& buffer, deviceTx_.front().bytes, sizeof(Packet));
+            deviceTx_.pop_front();
+            return true;
+        }
+
+        // TODO add mutex
+
     private:
 
         struct Pkt {
@@ -45,10 +60,8 @@ namespace rckid {
             }
         };
 
-        static std::deque<Pkt> deviceTx_; 
-        static std::deque<Pkt> deviceRx_;
-
-        // TODO mutex around the queues
+        static inline std::deque<Pkt> deviceTx_; 
+        static inline std::deque<Pkt> deviceRx_;
     };
 
 #endif
@@ -64,9 +77,9 @@ namespace rckid {
     }
 
     template<>
-    inline void Transceiver<UART>::enableHardware() {
+    inline bool Transceiver<UART>::enableHardware() {
 #if defined (ARCH_FANTASY)
-        // nothing to do for FantasyUART
+        return true; // in fantasy world, this always succeeds
 #else
         // TODO
         UNIMPLEMENTED;
