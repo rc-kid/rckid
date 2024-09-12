@@ -3,7 +3,10 @@
 #include <platform.h>
 #include <platform/writer.h>
 
+
+#include "config.h"
 #include "graphics/geometry.h"
+
 
 /** \defgroup api API
  

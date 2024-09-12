@@ -191,11 +191,11 @@ namespace rckid {
         //gpio::outputHigh(GPIO21);
         unsigned irqs = dma_hw->ints0;
         dma_hw->ints0 = irqs;
-        if (audioPlayback_) {
-            if (irqs & (1u << audioDma0_))
-                audioPlaybackDMA(audioDma0_, audioDma1_);
-            if (irqs & (1u << audioDma1_))
-                audioPlaybackDMA(audioDma1_, audioDma0_);
+        if (Audio::playback()) {
+            if (irqs & (1u << Audio::dma0_))
+                audioPlaybackDMA(Audio::dma0_, Audio::dma1_);
+            if (irqs & (1u << Audio::dma1_))
+                audioPlaybackDMA(Audio::dma1_, Audio::dma0_);
         }
         // for audio, reset the DMA start address to the beginning of the buffer and tell the stream to refill
 //        if (irqs & (1u << audio::dma0_))
@@ -243,6 +243,8 @@ namespace rckid {
 
         // initialize the display
         ST7789::initialize();
+        // and audio drivers
+        Audio::initialize();
 
         // initialize the accelerometer & uv light sensor
         accelerometer_.initialize();

@@ -2,7 +2,6 @@
 
 #include <functional>
 
-#include "../config.h"
 #include "rckid/rckid.h"
 #include "rckid/graphics/color.h"
 #include "rckid/graphics/geometry.h"

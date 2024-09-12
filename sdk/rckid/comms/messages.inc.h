@@ -31,6 +31,18 @@
     
     */
 
+   /** Messages
+    
+       Message can have at most 32 bytes with first byte being reserved for the message id and metadata and the remaining 31 bytes for the message payload (depending on the id). Message ID byte is encoded as follows:
+
+           128 64 32 16 8 4 2 1
+             0  0  0  x x x x x | send odd
+             0  0  1  x x x x x | send even 
+             0  1  0  x x x x x | broadcast data
+             0  1  1  - - - - - | reserved
+             1  x  x  x x x x x | other messages 
+    */
+
    MESSAGE(= 0x00, ConnectionData, true, 
 
         bool odd() const { return id_ & 0b00100000; }
@@ -60,7 +72,7 @@
 
      */
    
-    MESSAGE(= 0x80, Ping, true,
+    MESSAGE(= 0x80, Ping, false,
         DeviceId sender;
         uint8_t index;
         uint64_t userId;
@@ -169,6 +181,12 @@
     MESSAGE(, BroadcastEnd, false,
         DeviceId sender;
     )
+
+    /** Message receive acknowledge.
+     
+        Used for hardware that does not support automatic receive acknowledge, such as UART, etc. The receiving transceiver must send the message after a ack requiring message has been received by it.
+     */
+    MESSAGE(= 0xfe, Ack, false)
 
     /** Debug print. When received by a controller, prints payload, which is a null terminated string. 
      */

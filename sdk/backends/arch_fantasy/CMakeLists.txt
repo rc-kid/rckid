@@ -15,6 +15,7 @@ target_include_directories(librckid PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/raylib/
 function(link_with_librckid target_name)
     get_target_property(target_type ${target_name} TYPE)
     target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/libs/platform/rckid-fantasy")
+    target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/sdk/backends/arch_fantasy")
     if (target_type STREQUAL "EXECUTABLE")
         target_link_libraries(${target_name} PRIVATE 
             librckid

@@ -49,6 +49,9 @@ namespace rckid {
             return true;
         }
 
+        static size_t deviceRxSize() { return deviceRx_.size(); }
+        static size_t targetRxSize() { return deviceTx_.size(); }
+
         // TODO add mutex
 
     private:
@@ -101,13 +104,20 @@ namespace rckid {
 #if defined (ARCH_FANTASY)
         Packet p;
         while (FantasyUART::deviceRx(p)) {
-            // TODO if the message received requires ACK, send one immediately
-            onMessageReceived(p);
+            if (p[0] == static_cast<uint8_t>(msg::Ack::ID)) {
+                onAckReceived(true);    
+            } else {
+                if (msg::requiresAck(static_cast<msg::Id>(p[0])))
+                    send(BroadcastId, msg::Ack{});
+                onMessageReceived(p);
+            }
         }
 #else
         // TODO
         UNIMPLEMENTED;
 #endif
+        if (ackCb_ && uptimeUs() >= txTimeout_)
+            onAckReceived(false);
     }
 
     template<>

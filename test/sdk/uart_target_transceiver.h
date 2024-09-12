@@ -26,8 +26,13 @@ namespace rckid {
     inline void Transceiver<UARTTarget>::loop() {
         Packet p;
         while (FantasyUART::targetRx(p)) {
-            // TODO if the message received requires ACK, send one immediately
-            onMessageReceived(p);
+            if (p[0] == static_cast<uint8_t>(msg::Ack::ID)) {
+                onAckReceived(true);    
+            } else {
+                if (msg::requiresAck(static_cast<msg::Id>(p[0])))
+                    send(BroadcastId, msg::Ack{});
+                onMessageReceived(p);
+            }
         }
     }
 
@@ -37,4 +42,10 @@ namespace rckid {
         return true;
     }
 
+    class UARTTargetTransceiver : public Transceiver<UARTTarget> {
+    public:
+        UARTTargetTransceiver(DeviceId ownId): Transceiver<UARTTarget>{ownId} {}
+    protected:
+        void onMessageReceived([[maybe_unused]] Packet const & msg) override {}
+    };
 }

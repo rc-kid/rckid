@@ -76,30 +76,37 @@ namespace rckid {
          */
         void loop();
 
-        /** Transmits given message to the provided device. 
-         
-            Returns true if sending the message was successful, false if there was hardware error with the local transceiver. 
-         */
-        template<typename MSG>
-        bool transmit(DeviceId target, MSG const & message) { return transmit(target, message, nullptr); }
-
         /**
          
            - copy message to buffer
            - if ackable, 
          */
         template<typename MSG>
-        bool transmit(DeviceId target, MSG const & message, AckCallback cb) {
+        bool send(DeviceId target, MSG const & message, AckCallback cb) {
             ASSERT(!ackCb_); // only one message in flight
-            if (msg::requiresAck(MSG::ID))
-                ackCb_ = cb;
-            // TODO copy the message to the buffer_
+            // set callback & copy the message to the buffer
+            ackCb_ = cb;
+            memcpy(buffer_, & message, sizeof(MSG));
+            // transmit via HW
+            txTimeout_ = uptimeUs() + UART_TX_TIMEOUT_US;
             bool result = transmit(target, buffer_);
             // if local send not successful, no need to wait for the ack
-            if (!result)
+            if (!result) {
                 ackCb_ = nullptr;
+            }
+            else if (ackCb_ && !msg::requiresAck(MSG::ID)) {
+                ackCb_(true, buffer_); 
+                ackCb_ = nullptr;
+            }
             return result;
         }
+
+        /** Transmits given message to the provided device. 
+         
+            Returns true if sending the message was successful, false if there was hardware error with the local transceiver. 
+         */
+        template<typename MSG>
+        bool send(DeviceId target, MSG const & message) { return send(target, message, nullptr); }
 
         template<typename MSG>
         bool sendBlocking(DeviceId target, MSG const & message) {
@@ -133,6 +140,7 @@ namespace rckid {
         bool enabled_ = false;
         Packet buffer_; 
         AckCallback ackCb_ = nullptr;
+        uint32_t txTimeout_ = 0;
 
     private:
 
