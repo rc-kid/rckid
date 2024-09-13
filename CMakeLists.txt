@@ -44,6 +44,7 @@ add_subdirectory("test")
 
 add_subdirectory("cartridges/hello-world")
 add_subdirectory("cartridges/test")
+add_subdirectory("cartridges/gbcemu")
 
 
 # add utils target if we are building for the fantasy architecture (needs raylib)
