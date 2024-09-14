@@ -2,6 +2,7 @@
 
 #include <platform.h>
 #include <platform/writer.h>
+#include <platform/buffer.h>
 
 
 #include "config.h"
@@ -31,7 +32,6 @@
 namespace rckid {
 
     class ColorRGB;
-    class DoubleBuffer;
 
     /** Error enum. 
      

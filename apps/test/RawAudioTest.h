@@ -1,6 +1,6 @@
+#include <platform/buffer.h>
 #include <rckid/app.h>
 #include <rckid/graphics/canvas.h>
-#include <rckid/utils/buffer.h>
 #include <rckid/assets/tests.h>
 
 namespace rckid {

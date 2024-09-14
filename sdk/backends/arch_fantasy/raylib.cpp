@@ -28,10 +28,11 @@
 
 #include <raylib.h>
 
+#include <platform/buffer.h>
+
 #include "rckid/rckid.h"
 #include "rckid/graphics/color.h"
 #include "rckid/internals.h"
-#include "rckid/utils/buffer.h"
 #include "rckid/filesystem.h"
 
 extern "C" {
