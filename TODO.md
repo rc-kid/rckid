@@ -36,6 +36,11 @@ This just might work.
 
 ## SDK
 
+
+
+- update the order of args in drawing methods (pos, color) etc
+- add space invaders :)
+
 - add blocking send & test it
 
 - add position & things to renderers for bitmap
