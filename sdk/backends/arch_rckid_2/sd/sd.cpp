@@ -1,7 +1,7 @@
 
 #include "platform.h"
 #include "sd.h"
-#include "../config.h"
+#include "rckid/config.h"
 
 namespace rckid {
 

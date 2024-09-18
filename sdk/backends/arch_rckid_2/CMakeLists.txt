@@ -19,11 +19,11 @@ function(link_with_librckid target_name)
         target_compile_options(${target_name} PRIVATE "-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64")
         pico_add_extra_outputs(${target_name})
         pico_set_linker_script(${target_name} ${CMAKE_SOURCE_DIR}/sdk/backends/arch_rckid_2/memmap.ld)
-        target_link_libraries(${target_name} librckid)
+        target_link_libraries(${target_name} PRIVATE librckid)
         #set_property(TARGET ${target_name} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
     endif()
 
-    target_link_libraries(${target_name}
+    target_link_libraries(${target_name} PRIVATE
         pico_stdlib
         pico_rand
         pico_multicore

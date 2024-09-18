@@ -22,7 +22,7 @@ public:
     }
 
     void draw() override {
-        g_.fill(Rect::XYWH(40, 12, 240, 216));
+        g_.fill();
     }
 
     void onFocus() override {

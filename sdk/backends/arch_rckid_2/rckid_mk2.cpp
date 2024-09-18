@@ -10,10 +10,10 @@
 
 #include <platform/peripherals/bmi160.h>
 #include <platform/peripherals/ltr390uv.h>
+#include <platform/buffer.h>
 
 #include "rckid/rckid.h"
 #include "rckid/internals.h"
-#include "rckid/utils/buffer.h"
 
 #include "screen/ST7789.h"
 #include "sd/sd.h"
@@ -191,12 +191,13 @@ namespace rckid {
         //gpio::outputHigh(GPIO21);
         unsigned irqs = dma_hw->ints0;
         dma_hw->ints0 = irqs;
+        /*
         if (Audio::playback()) {
             if (irqs & (1u << Audio::dma0_))
                 audioPlaybackDMA(Audio::dma0_, Audio::dma1_);
             if (irqs & (1u << Audio::dma1_))
                 audioPlaybackDMA(Audio::dma1_, Audio::dma0_);
-        }
+        } */
         // for audio, reset the DMA start address to the beginning of the buffer and tell the stream to refill
 //        if (irqs & (1u << audio::dma0_))
 //            audio::irqHandler1();
@@ -244,7 +245,7 @@ namespace rckid {
         // initialize the display
         ST7789::initialize();
         // and audio drivers
-        Audio::initialize();
+        // TODO
 
         // initialize the accelerometer & uv light sensor
         accelerometer_.initialize();
