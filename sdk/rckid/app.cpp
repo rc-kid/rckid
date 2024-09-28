@@ -12,7 +12,7 @@ namespace rckid {
     void rckid_mkII_waitTickDone();
 #endif
 
-    void App::run() {
+    void App::loop() {
         if (current_)
             current_->onBlur();
         App * lastApp = current_;

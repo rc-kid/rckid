@@ -14,10 +14,12 @@ namespace rckid {
 
         Color fg() const { return fg_; }
         void setFg(Color value) { fg_ = value; }
+
         Color bg() const { return bg_; }
         void setBg(Color value) { bg_ = value; }
 
-
+        Font const & font() const { return *font_; }
+        void setFont(Font const & font) { font_ = & font; }
 
         using Bitmap<COLOR>::fill;
 
@@ -27,9 +29,16 @@ namespace rckid {
 
         void drawRect(Rect rect) { fill(fg_, rect); }
 
+        Writer text(int x, int y) {
+            return Bitmap<Color>::text(x, y, *font_, fg_);
+        }
+
+        Writer text(Point p) { return text(p.x, p.y); }
+
     private:
         Color fg_;
-        Color bg_;        
+        Color bg_;   
+        Font const * font_;     
 
     }; // rckid::Canvas
 

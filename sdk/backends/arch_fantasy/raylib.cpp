@@ -54,10 +54,12 @@ extern "C" {
     }
 
     void free(void * ptr) {
-        if (rckid::memoryIsOnHeap(ptr))
-            rckid::free(ptr);
-        else 
+        if (rckid::memoryIsOnHeap(ptr)) {
+            if (!systemMalloc_)
+                rckid::free(ptr);
+        } else {
             __libc_free(ptr);
+        }
     }
 #endif 
 } // extern C - memory
@@ -152,6 +154,8 @@ namespace rckid {
         } else {
             LOG("sd.iso file not found, CD card not present");
         }
+        // enter base arena for the application
+        memoryEnterArena();
     }
 
     void tick() {

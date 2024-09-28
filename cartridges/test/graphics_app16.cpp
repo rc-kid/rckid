@@ -16,6 +16,8 @@ public:
         delete [] g_.palette();
     }
 
+    static void run() { TestApp16 t{200, 200}; t.loop(); }
+
 protected:
 
     void draw() override {
@@ -49,6 +51,6 @@ protected:
 int main() {
     initialize();
     while (true) {
-        TestApp16{200, 200}.run();
+        TestApp16::run();
     }
 }

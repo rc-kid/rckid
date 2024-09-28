@@ -1,4 +1,5 @@
 #include <rckid/app.h>
+#include <rckid/graphics/bitmap.h>
 #include <rckid/graphics/color.h>
 #include <rckid/utils/fixedint.h>
 
@@ -17,17 +18,16 @@ namespace rckid {
      */
     class Pong : public GraphicsApp<Bitmap<ColorRGB>> {
     public:
-        static Pong * create() {
-            return new Pong();
+        static void run() {
+            Pong p{};
+            p.loop();
         }
-
         
     protected:
         Pong(): 
             GraphicsApp(Bitmap<Color>{320, 240}) 
         {
             resetGame();
-            ASSERT(false);
         }
 
         void update() override {

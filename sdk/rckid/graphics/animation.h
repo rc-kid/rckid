@@ -34,7 +34,7 @@ namespace rckid {
 
         void stop() { state_ = State::Off; }
 
-        bool running() { return state_ != State::Off; }
+        bool running() const { return state_ != State::Off; }
 
         /** Updates the animation, returns true if the animation's duration has passed, i.e. when a single animation is done or, or when a continuous animation changes direction. 
          */

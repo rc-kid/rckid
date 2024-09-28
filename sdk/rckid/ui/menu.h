@@ -9,23 +9,13 @@
 namespace rckid {
 
     /** Menu item
+        
+        A very simple menu item interface. Each menu item can return its text, given as C string (managed by the menu item itself) and optionally an icon, which is returned as RGB surface (managed by the caller). 
 
-        The class is most an API specification for a menu item with interface for displaying      
-        - enabled
-        - text 
-        - drawIcon
-        - action (payload)
-        - release to release any unnecessary resources (when no longer displayed, etc)
-
+        Based on how the text & icon are stored/generated different menu item subclasses, such as StaticMenuItem are used. 
      */
     class MenuItem {
     public:
-        /** Returns true if the menu item is enabled. 
-         
-            Default implementation always returns true. 
-         */
-        virtual bool enabled() const { return true; }
-
         /** Returns the menu item text as a C-string. 
          
             C strings are used so that static menu items that read values directly do not have to create copies into std::string. 
@@ -35,27 +25,69 @@ namespace rckid {
         /** Returns an icon to be used with the menu */
         virtual std::optional<Surface<ColorRGB>> icon() const { return std::nullopt; }
 
+        virtual ~MenuItem() = default;
 
-
-        /** Returns the payload associated with the menu item. 
-         
-            DO WE NEED THIS? 
-         */
         void * payload() const { return payload_; }
 
-        virtual ~MenuItem() noexcept = default;
+        void setPayload(void * value) { payload_ = value; }
 
     protected:
 
-        MenuItem(void * payload): payload_{payload} {}
+        MenuItem(void * payload = nullptr): payload_{payload} {}
 
-        void * payload_ = nullptr;
+    private:
+
+        void * payload_;
 
     }; // rckid::MenuItem
 
-    /** Menu container API 
+    /** Static menu item with no memory allocation for its contents. 
      
-    */
+        The static menu item is useful for menu items where 
+     */
+    class StaticMenuItem : public MenuItem {
+    public:
+
+        StaticMenuItem(char const * text, void * payload = nullptr):
+            MenuItem{payload},
+            text_{text} {
+        }
+
+        StaticMenuItem(char const * text, uint8_t const * iconData, uint32_t iconSize, void * payload = nullptr):
+            MenuItem{payload},
+            text_{text}, 
+            iconData_{iconData},
+            iconSize_{iconSize} {
+        }
+
+        template<uint32_t SIZE>
+        StaticMenuItem(char const * text, uint8_t const (&buffer)[SIZE], void * payload = nullptr):
+            MenuItem{payload},
+            text_{text}, 
+            iconData_{buffer},
+            iconSize_{SIZE} {
+        }
+
+        char const * text() const override { return text_; }
+
+        std::optional<Surface<ColorRGB>> icon() const override {
+            if (iconData_ == nullptr)
+                return std::nullopt;
+            return Surface<ColorRGB>::fromImage(PNG::fromBuffer(iconData_, iconSize_));
+        }
+
+    private:
+        char const * text_ = nullptr;
+        uint8_t const * iconData_ = nullptr;
+        uint32_t iconSize_ = 0;
+
+    }; // rckid::StaticMenuItem
+
+
+    /** Menu container API 
+
+        The menu container is simply a wrapper around menu items vector.  
+     */
     class Menu {
     public:
 
@@ -80,58 +112,7 @@ namespace rckid {
         }
 
     private:
-
         std::vector<MenuItem *> items_;
     }; // rckid::Menu
-
-
-
-
-
-
-
-    class StaticMenuItem : public MenuItem {
-    public:
-
-        StaticMenuItem(char const * text, void * payload = nullptr):
-            MenuItem{payload},
-            text_{text} {
-        }
-
-        StaticMenuItem(char const * text, uint8_t const * iconData, uint32_t iconSize, void * payload = nullptr):
-            MenuItem{payload},
-            text_{text}, 
-            iconData_{iconData},
-            iconSize_{iconSize} {
-        }
-
-        template<uint32_t SIZE>
-        StaticMenuItem(char const * text, uint8_t const (&buffer)[SIZE], void * payload = nullptr):
-            MenuItem{payload_},
-            text_{text}, 
-            iconData_{buffer},
-            iconSize_{SIZE} {
-        }
-
-        bool enabled() const override { return enabled_; }
-
-        char const * text() const override { return text_; }
-
-        std::optional<Surface<ColorRGB>> icon() const override {
-            if (iconData_ == nullptr)
-                return std::nullopt;
-            return Surface<ColorRGB>::fromImage(PNG::fromBuffer(iconData_, iconSize_));
-        }
-
-        void enable(bool value) { enabled_ = value; }
-
-    private:
-        bool enabled_ = true;
-        char const * text_ = nullptr;
-        uint8_t const * iconData_ = nullptr;
-        uint32_t iconSize_ = 0;
-
-    }; // rckid::StaticMenuItem
-
 
 } // namespace rckid

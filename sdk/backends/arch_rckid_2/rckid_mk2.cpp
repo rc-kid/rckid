@@ -50,11 +50,15 @@ namespace rckid {
         uint8_t ticks_ = 0;
 
 
-        uint8_t audioVolume_ = 128;
-        bool audioPlayback_ = false;
-        uint audioDma0_ = 0;
-        uint audioDma1_ = 0;
-        DoubleBuffer * audioPlaybackBuffer_;
+        namespace audio {
+
+            uint8_t volume_ = 128;
+            bool playback_ = false;
+            uint dma0_ = 0;
+            uint dma1_ = 0;
+            DoubleBuffer * playbackBuffer_;
+
+        }
 
     }
 
@@ -171,9 +175,9 @@ namespace rckid {
      */
     void audioPlaybackDMA(uint finished, uint other) {
         // reconfigure the currently finished buffer to start from the current front buffer (will be back after the swap) - note the other dma has already been started by the finished one
-        dma_channel_set_read_addr(finished, audioPlaybackBuffer_->getFrontBuffer(), false);
+        dma_channel_set_read_addr(finished, audio::playbackBuffer_->getFrontBuffer(), false);
         // swap the buffers (this also calls the callback that fills the front part of the buffer with data)
-        audioPlaybackBuffer_->swap();
+        audio::playbackBuffer_->swap();
         // finally, while in the IRQ we must ensure that the data filled by the app in the callback conforms to what we expect. This means adjusting the volume and converting from int16_t to uint16_t centered at 32768
         // also for the basic PWM out w/o sigma delta, this also means loweing the resolution to 12 bits only
         
@@ -191,13 +195,12 @@ namespace rckid {
         //gpio::outputHigh(GPIO21);
         unsigned irqs = dma_hw->ints0;
         dma_hw->ints0 = irqs;
-        /*
-        if (Audio::playback()) {
-            if (irqs & (1u << Audio::dma0_))
-                audioPlaybackDMA(Audio::dma0_, Audio::dma1_);
-            if (irqs & (1u << Audio::dma1_))
-                audioPlaybackDMA(Audio::dma1_, Audio::dma0_);
-        } */
+        if (audio::playback_) {
+            if (irqs & (1u << audio::dma0_))
+                audioPlaybackDMA(audio::dma0_, audio::dma1_);
+            if (irqs & (1u << audio::dma1_))
+                audioPlaybackDMA(audio::dma1_, audio::dma0_);
+        }
         // for audio, reset the DMA start address to the beginning of the buffer and tell the stream to refill
 //        if (irqs & (1u << audio::dma0_))
 //            audio::irqHandler1();
@@ -244,8 +247,6 @@ namespace rckid {
 
         // initialize the display
         ST7789::initialize();
-        // and audio drivers
-        // TODO
 
         // initialize the accelerometer & uv light sensor
         accelerometer_.initialize();
@@ -253,8 +254,8 @@ namespace rckid {
         alsSensor_.startALS();
 
         // initialize audio
-        audioDma0_ = dma_claim_unused_channel(true);
-        audioDma1_ = dma_claim_unused_channel(true);
+        audio::dma0_ = dma_claim_unused_channel(true);
+        audio::dma1_ = dma_claim_unused_channel(true);
 
         // initialize the SD card
         sdInitialize();
@@ -415,6 +416,18 @@ namespace rckid {
 
     // audio
 
+    void audioConfigurePlaybackDMA(int dma, int other, uint8_t * buffer, size_t bufferSize) {
+        auto dmaConf = dma_channel_get_default_config(dma);
+        channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bits (16 per channel, 2 channels)
+        channel_config_set_read_increment(& dmaConf, true);  // increment on read
+        channel_config_set_dreq(&dmaConf, pwm_get_dreq(RP_AUDIO_PWM_SLICE));// DMA is driven by the PWM slice overflowing
+        channel_config_set_chain_to(& dmaConf, other); // chain to the other channel
+        dma_channel_configure(dma, & dmaConf, &pwm_hw->slice[RP_AUDIO_PWM_SLICE].cc, buffer, bufferSize / 2, false); // the buffer consists of stereo samples, (32bits), i.e. buffer size / 2
+        // enable IRQ0 on the DMA channel (shared with other framework DMA uses such as the display or the SD card)
+        dma_channel_set_irq0_enabled(dma, true);
+    }
+
+
     void audioEnable() {
         sendCommand(cmd::AudioEnabled{});
 
@@ -422,7 +435,6 @@ namespace rckid {
 
     void audioDisable() {
         sendCommand(cmd::AudioDisabled{});
-
     }
 
     bool audioHeadphones() {
@@ -430,24 +442,45 @@ namespace rckid {
     }
 
     uint8_t audioVolume() {
-        return audioVolume_;
+        return audio::volume_;
     }
 
     void audioSetVolume(uint8_t value) {
-        audioVolume_ = value;
+        audio::volume_ = value;
 
     }
 
     void audioPlay(DoubleBuffer & data, uint32_t bitrate) {
-
+        // stop the previous playback if any
+        if (audio::playback_)
+            audioStop();
+        // set the audio playback buffer
+        audio::playbackBuffer_ = & data;
+        // set the left and right pins to be used by the PWM
+        gpio_set_function(RP_PIN_PWM_RIGHT, GPIO_FUNC_PWM); 
+        gpio_set_function(RP_PIN_PWM_LEFT, GPIO_FUNC_PWM);
+        // initialize the DMA channels 
+        audioConfigurePlaybackDMA(audio::dma0_, audio::dma1_, data.getBackBuffer(), RP_AUDIO_BUFFER_SIZE);
+        audioConfigurePlaybackDMA(audio::dma1_, audio::dma0_, data.getFrontBuffer(), RP_AUDIO_BUFFER_SIZE);
+        dma_channel_start(audio::dma0_);
+        // and finally the timers
+        pwm_set_clkdiv(RP_AUDIO_PWM_SLICE, cpu::clockSpeed() / (4096.0 * bitrate));
+        pwm_set_wrap(RP_AUDIO_PWM_SLICE, 4096); // set wrap to 12bit sound levels
+        pwm_set_enabled(RP_AUDIO_PWM_SLICE, true);
     }
 
     void audioRecord(DoubleBuffer & data, uint32_t bitrate) {
-
+        UNIMPLEMENTED;
     }
 
     void audioPause() {
-
+        if (audio::playback_) {
+            if (pwm_is_enabled(RP_AUDIO_PWM_SLICE)) {
+                pwm_set_enabled(RP_AUDIO_PWM_SLICE, false);
+            } else {
+                pwm_set_enabled(RP_AUDIO_PWM_SLICE, true);
+            }
+        }        
     }
 
     void audioStop() {

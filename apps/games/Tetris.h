@@ -18,19 +18,23 @@ namespace rckid {
      */
     class Tetris : public GraphicsApp<Canvas<ColorRGB>> {
     public:
-        static Tetris * create() { return new Tetris{}; }
+
+        static void run() {
+            Tetris t;
+            t.loop();
+        }
 
     protected:
 
         Tetris(): GraphicsApp{Canvas<Color>{320, 240}} {}
 
         void onFocus() override {
-            next_.randomize();
-            spawn();
-            countdown_ = speed_;
+            resetGame();
         }
 
         void update() override {
+            // handle back button
+            GraphicsApp::update();
             bool goDown = false;
             if (--countdown_ == 0) {
                 goDown = true;
@@ -46,12 +50,12 @@ namespace rckid {
                 allowDown_ = true;
             }
             // check left & right
-            if (btnDown(Btn::Left)) {
+            if (btnPressed(Btn::Left)) {
                 if (validate(cur_, x_ - 1, y_))
                     --x_;
                 // else rumble
             }
-            if (btnDown(Btn::Right)) {
+            if (btnPressed(Btn::Right)) {
                 if (validate(cur_, x_ + 1, y_))
                     ++x_;
                 // else rumble
@@ -61,6 +65,7 @@ namespace rckid {
                     ++y_;
                 } else {
                     addToGrid(cur_, x_, y_);
+                    compactRows(y_);
                     spawn();
                     //if (!validate(cur_, x_, y_))
                     //  gameOver();
@@ -203,6 +208,28 @@ namespace rckid {
                 }
         }
 
+        /** Checks row compacting when the tile lands. 
+         */
+        void compactRows(int startRow) {
+            for (int y = startRow; y < startRow + 4; ++y) {
+                bool compact = true;
+                for (int x = 0; x < PLAY_WIDTH; ++x) {
+                    uint8_t gc = grid(x, y);
+                    if (gc == 0 || gc == 0xff) {
+                        compact = false;
+                        break;
+                    }
+                }
+                if (compact) {
+                    for (int yy = y; yy > 1; --yy)
+                        for (int x = 0; x < PLAY_WIDTH; ++x)
+                            setGrid(x, yy, grid(x, yy - 1));
+                    for (int x = 0; x < PLAY_WIDTH; ++x)
+                        setGrid(x, 0, 0);
+                }
+            }
+        }
+
         /** Draws single tile at given location (absolute coordinates) 
          */
         void drawTile(int x, int y, uint8_t color) {
@@ -221,6 +248,15 @@ namespace rckid {
                     if (c != 0)
                         drawTile(x + tx * 10, y + ty * 10, c);
                 }
+        }
+
+        void resetGame() {
+            speed_ = 60;
+            for (unsigned i = 0; i < PLAY_WIDTH * PLAY_HEIGHT; ++i)
+                grid_[i] = 0;
+            next_.randomize();
+            spawn();
+            countdown_ = speed_;
         }
 
         /** The play area.  

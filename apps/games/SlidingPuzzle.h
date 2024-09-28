@@ -23,8 +23,9 @@ namespace rckid {
     class SlidingPuzzle : public GraphicsApp<Canvas<ColorRGB>> {
     public:
 
-        static SlidingPuzzle * create() {
-            return new SlidingPuzzle{};
+        static void run() {
+            SlidingPuzzle p;
+            p.loop();
         }
 
     protected:

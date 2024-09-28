@@ -36,8 +36,6 @@ This just might work.
 
 ## SDK
 
-
-
 - update the order of args in drawing methods (pos, color) etc
 - add space invaders :)
 
@@ -67,3 +65,10 @@ This just might work.
 ## PCB
 
 - see if the riser for the cartridge connector is necessary, or the cartridge leads can be bent, soldered and then the connector glued
+
+
+
+## Tetris
+
+- pause & game over and stuff
+- drawing speed might be too slow for 60fps (check)

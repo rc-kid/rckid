@@ -43,6 +43,12 @@
 #define RP_PIN_SD_RX 28
 #define RP_PIN_SD_CSN 29
 
+
+/** PWM slice used for the audio out, which on pins 22 and 23 correspon to PWM slice 3. 
+ */
+#define RP_AUDIO_PWM_SLICE 3
+
+
 #define I2C_AVR_ADDRESS 0x43 
 
 
@@ -57,6 +63,10 @@
 
 
 #define COMMS_UART_TX_TIMEOUT_US 1000
+
+
+
+
 
 
 // OLD and unchecked yet ==================================================================================================
@@ -125,10 +135,6 @@
 /** I2C address of the RP2040 chip (to wake up from sleep)
  */
 #define RP_I2C_ADDRESS 0x55
-
-/** PWM slice used for the audio out, which on pins 22 and 23 correspon to PWM slice 3. 
- */
-#define RP_PWM_SLICE 3
 
 /** PWM slice for the microphone in, which on pins 24 and 25 corresponds to PWM slice 4 */
 #define RP_MIC_SLICE 4

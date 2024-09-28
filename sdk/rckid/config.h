@@ -1,5 +1,10 @@
 #pragma once
 
+#define RCKID_UI_EFFECT_DURATION_MS 500
+
+
+
+
 /** UART transceiver does not support HW ack for messages, instead receiver is expected to send ACK message to the sender. If not received within this interval, the message is considered undelivered.
  
     NOTE the unit is microseconds!

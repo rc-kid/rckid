@@ -55,6 +55,9 @@ namespace rckid {
      */
     template<typename COLOR>
     constexpr inline void setPixelBufferAt(uint8_t * buffer, Coord x, Coord y, COLOR value, Coord width, Coord height) {
+        // don't do anything when out of bounds
+        if (x < 0 || y < 0 || x >= width || y >= height)
+            return;
         uint32_t offset = pixelBufferOffset(x, y, width, height);
         switch (COLOR::BPP) {
             case 16:

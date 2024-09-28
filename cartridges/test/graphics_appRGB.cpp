@@ -10,6 +10,8 @@ class TestAppRGB : public GraphicsApp<Bitmap<ColorRGB>> {
 public:
     TestAppRGB(Coord w, Coord h): GraphicsApp{Bitmap<ColorRGB>{w, h}} {}
 
+    static void run() { TestAppRGB t{200, 200}; t.loop(); }
+
 protected:
 
     void draw() override {
@@ -43,6 +45,6 @@ protected:
 int main() {
     initialize();
     while (true) {
-        TestAppRGB{200, 200}.run();
+        TestAppRGB::run();
     }
 }

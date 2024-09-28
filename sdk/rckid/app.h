@@ -10,9 +10,6 @@ namespace rckid {
 
         virtual ~App() noexcept = default;
 
-        /** Runs the app */
-        void run(); 
-
         static uint32_t tickUs() { return tickUs_; }
         static uint32_t updateUs() { return updateUs_; }
         static uint32_t drawUs() { return drawUs_; }
@@ -22,6 +19,10 @@ namespace rckid {
         static uint32_t fps() { return fps_; }
 
     protected:
+
+        /** Runs the app's main loop until exit() is called.
+         */
+        void loop(); 
 
         /** App state update method. 
          

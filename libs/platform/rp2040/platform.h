@@ -10,6 +10,7 @@
 #include <hardware/dma.h>
 #include <hardware/uart.h>
 #include <hardware/sync.h>
+#include <hardware/pwm.h>
 #include <pico.h>
 #include <pico/binary_info.h>
 #include <pico/time.h>
@@ -182,6 +183,12 @@ inline void pio_set_clock_speed(PIO pio, unsigned sm, unsigned hz) {
  */
 inline bool pio_sm_is_enabled(PIO pio, uint sm) {
     return pio->ctrl & (1u << sm);
+}
+
+/** Returns trye if the  given PWM is active. 
+ */
+inline bool pwm_is_enabled(uint slice_num) {
+    return (pwm_hw->slice[slice_num].csr) & (1 << PWM_CH0_CSR_EN_LSB);
 }
 
 #include "../common.h"

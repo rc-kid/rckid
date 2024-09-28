@@ -38,6 +38,15 @@ namespace rckid {
             delete [] buffer_;
         }
 
+        Surface & operator = (Surface && from) {
+            w_ = from.w_;
+            h_ = from.h_;
+            delete buffer_;
+            buffer_ = from.buffer_;
+            from.buffer_ = nullptr;
+            return *this;
+        }
+
         Coord width() const { return w_; }
         Coord height() const { return h_; }
 
