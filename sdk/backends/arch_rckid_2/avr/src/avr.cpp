@@ -14,7 +14,6 @@
 #include <avr/interrupt.h>
 
 #include <platform.h>
-#include <platform/peripherals/ina219.h>
 #include <platform/peripherals/neopixel.h>
 
 #include <platform/ringavg.h>
@@ -26,19 +25,6 @@
 /** Displays AVR status and events on an external SSD1306 OLED display. Note this flag is only for debug purposes when writing own AVR code and that the AVR will hang & be reset via wdt if this is enabled and the oled display is not attached. 
 */
 #define RCKID_AVR_DEBUG_OLED_DISPLAY_
-
-
-// //*
-#define BEGIN_ACTIVE_MODE do {} while (false) 
-#define END_ACTIVE_MODE do {} while (false)
-//   */
-
-//#define BEGIN_ACTIVE_MODE gpio::outputHigh(AVR_PIN_DISP_RDX)
-//#define END_ACTIVE_MODE gpio::outputLow(AVR_PIN_DISP_RDX);
-
-
-
-
 
 #if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
 #include <ssd1306.h>
@@ -77,14 +63,6 @@ public:
      */
     static inline RingAvg<uint8_t, 128> vcc_;
     static inline RingAvg<uint8_t, 128> vBatt_;
-
-    /** Counter to measure the current consumed by the device by the INA219 to guarantee we will keep measuring even if RP2040 has issues talking to the AVR, which generally triggers the measurement otherwise to limit I2C bus congestion.
-     */
-    static inline uint8_t iMeasureCounter_ = 0;
-
-#if (RCKID_INA219_I2C_ADDRESS != 0)
-    static inline platform::INA219 ina_{RCKID_INA219_I2C_ADDRESS};
-#endif
 
     static inline platform::NeopixelStrip<6> rgbs_{AVR_PIN_RGB}; 
     static inline platform::ColorStrip<6> rgbsTarget_;
@@ -209,22 +187,14 @@ public:
         Making the AVR code really simple, the main loop simply runs and services any interrupts, while sleeping between the runs to conserve as much power as possible. 
      */
     static void loop() {
-        END_ACTIVE_MODE;
 #if (defined RCKID_AVR_DEBUG_OLED_DISPLAY)
         oled_.clear32();
 #endif
         while (true) {
-            //BEGIN_ACTIVE_MODE;
             cpu::wdtReset();
             // if there is I2C message, process
             if (i2cCommandReady_)
                 processI2CCommand();
-#if (RCKID_INA219_I2C_ADDRESS != 0)
-            if (power3v3Active() && iMeasureCounter_ == 0) {
-                ts_.state.setCurrent(ina_.current()); // ina_.initialize(platform::INA219::Gain::mv_40, 10);
-                iMeasureCounter_ = RCKID_CURRENT_SENSE_TIMEOUT_TICKS;
-            }
-#endif
             if (rgbTick_)
                 rgbTick();
             if (rumblerTick_)
@@ -247,7 +217,6 @@ public:
             // make sure interrupts are enabled or we won't wake up, the appropriate sleep mode has already been set by the various peripheral interactions so we can happily go to sleep here
             sei();
             sleep_enable();
-            END_ACTIVE_MODE;
             sleep_cpu();
         }
     }
@@ -401,8 +370,6 @@ public:
                 rumblerTick_ = true;
             // increase the system tick counter
             ++tick_;
-            if (iMeasureCounter_ > 0)
-                --iMeasureCounter_;
             // in case of the fast system tick, only do second every 512 ticks
             if (tick_ % 512 == 0)
                 secondTick();
@@ -640,11 +607,6 @@ public:
             gpio::outputHigh(AVR_PIN_3V3_ON);
             // allow some time for the voltages to stabilize
             cpu::delayMs(50);
-#if (RCKID_INA219_I2C_ADDRESS != 0)            
-            i2c::initializeMaster();
-            ina_.initialize_32V_4A(INA219::Resolution::bit12_samples4, 10);
-#endif
-            iMeasureCounter_ = 0; 
         } else {
             gpio::outputFloat(AVR_PIN_3V3_ON);
 #if (!defined RCKID_AVR_DEBUG_OLED_DISPLAY)
@@ -1027,8 +989,6 @@ public:
         } else if ((status & I2C_STOP_MASK) == I2C_STOP_TX) {
             TWI0.SCTRLB = TWI_SCMD_COMPTRANS_gc;
             i2cTxIdx_ = 0;
-            // since we are done sending, time to check the INA219 for current measurements to avoid clashes on the bus
-            iMeasureCounter_ = 0;
         // receiving finished, inform main loop we have message waiting if we have received at laast one byte (0 bytes received is just I2C ping)
         } else if ((status & I2C_STOP_MASK) == I2C_STOP_RX) {
             TWI0.SCTRLB = TWI_SCMD_COMPTRANS_gc;
@@ -1150,24 +1110,20 @@ public:
 }; // class RCKid
 
 ISR(RTC_PIT_vect) {
-    BEGIN_ACTIVE_MODE;
     RTC.PITINTFLAGS = RTC_PI_bm; // clear the interrupt
     RCKid::systemTick();
 }
 
 ISR(TWI0_TWIS_vect) {
-    BEGIN_ACTIVE_MODE;
     RCKid::i2cSlaveIRQHandler();
 }
 
 ISR(ADC0_RESRDY_vect) {
-   BEGIN_ACTIVE_MODE;
    ADC0.INTFLAGS = ADC_RESRDY_bm;
    RCKid::adcDone(); 
 }
 
 ISR(PORTB_PORT_vect) {
-    BEGIN_ACTIVE_MODE;
     static_assert(AVR_PIN_BTN_HOME == B2);
     VPORTB.INTFLAGS = (1 << 2);
     RCKid::btnHomeDown();
