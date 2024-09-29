@@ -372,6 +372,29 @@ namespace rckid {
     int16_t gyroY() { return 0; }
     int16_t gyroZ() { return 0; }
 
+    // power management
+
+    void sleep() {
+        UNIMPLEMENTED;
+    }
+
+    bool charging() { 
+        return state_.charging();
+    }
+
+    bool dcPower() {
+        return state_.dcPower();
+    }
+
+    unsigned vBatt() {
+        return state_.vBatt();
+    }
+
+    unsigned batteryLevel() {
+        // TODO change this to sth meaningful
+        return 67;
+    }
+
     // display
 
     DisplayMode displayMode() { 

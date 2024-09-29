@@ -4,7 +4,7 @@
 
 #include <platform.h>
 #include <platform/tinydate.h>
-#include <platform/peripherals/neopixel.h>
+#include <platform/color_strip.h>
 
 namespace rckid {
 

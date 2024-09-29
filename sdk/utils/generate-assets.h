@@ -56,6 +56,9 @@ GlyphIds loadGlyphIndices(std::string const & fromFile) {
     GlyphIds result;
     std::string l;
     while (std::getline(gf, l)) {
+        // undefs and comments are ignored - note this is very much not sturdy
+        if (l[0] != 'G')
+            continue;
         std::stringstream sl{l};
         std::string tmp;
         std::getline(sl, tmp, ',');
@@ -235,7 +238,6 @@ inline std::string convertToClassName(std::filesystem::path const & from) {
     }
     return result;
 }
-
 
 /** Generates font glyphs for given font. Unlike font tiles, glyphs can have different sizes for different glyphs, supporting both monospaced and proportional fonts. 
 */

@@ -49,6 +49,30 @@
                 "."
             ],
             "problemMatcher": ["$gcc"]
-        }
+        },
+
+        {
+            "label": "mk II - build avr",
+            "detail": "Builds the AVR firmware for the mk II device.",
+
+            "type": "shell",
+            "command": "~/.platformio/penv/bin/pio",
+            "args": [
+                "run"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/sdk/backends/arch_rckid_2/avr",
+                "shell": {
+                    "executable": "/bin/zsh",
+                    "args": [
+                        "-c"
+                    ]
+                }
+            },
+            "problemMatcher": [
+                "$platformio"
+            ]
+        },
+
     ]
 }

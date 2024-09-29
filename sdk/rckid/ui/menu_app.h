@@ -5,6 +5,7 @@
 
 #include "../assets/fonts/OpenDyslexic48.h"
 
+#include "header.h"
 #include "menu.h"
 #include "carousel.h"
 
@@ -111,6 +112,7 @@ namespace rckid {
         void draw() {
             g_.fill();
             carousel_->drawOn(g_, Rect::XYWH(0, 160, 320, 80));
+            Header::drawOn(g_);
         }
 
     private:

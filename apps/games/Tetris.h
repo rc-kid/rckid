@@ -2,6 +2,7 @@
 
 #include <rckid/app.h>
 #include <rckid/graphics/canvas.h>
+#include <rckid/ui/header.h>
 
 namespace rckid {
 
@@ -83,6 +84,9 @@ namespace rckid {
             // draw the current tetromino
             drawTetromino(110 + x_ * 10, 10 + y_ * 10, cur_);
             drawTetromino(250, 100, next_);
+
+            // and draw the header
+            Header::drawOn(g_);
         }
 
     private:

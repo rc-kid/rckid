@@ -55,6 +55,7 @@ extern "C" {
 
     void free(void * ptr) {
         if (rckid::memoryIsOnHeap(ptr)) {
+            // if we are in system malloc phase, we should not be deallocating rckid memory, as this only happens during shutdown
             if (!systemMalloc_)
                 rckid::free(ptr);
         } else {
@@ -241,6 +242,30 @@ namespace rckid {
     int16_t gyroX() { return 0; }
     int16_t gyroY() { return 0; }
     int16_t gyroZ() { return 0; }
+
+
+
+    // power management
+
+    void sleep() {
+
+    }
+
+    bool charging() { 
+        return true; 
+    }
+
+    bool dcPower() {
+        return true;
+    }
+
+    unsigned vBatt() {
+        return 370;
+    }
+
+    unsigned batteryLevel() {
+        return 67;
+    }
 
     // display 
 

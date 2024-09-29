@@ -25,3 +25,4 @@ GLYPH(ArrowCross,           0xf047)
 GLYPH(SDCard,               0xf07dc)
 GLYPH(USB,                  0xf287)
 
+#undef GLYPH

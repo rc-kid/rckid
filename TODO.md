@@ -53,10 +53,11 @@ This just might work.
 - mp3 decoder library
 - libopus decoder & encoder library
 - jpeg decoding library
-> verify the work on windows too
 
 - filesystem file & folder abstractions
 - add filesystem support with an ISO file specified for the SD card, using the same fatfs mechanics
+
+- can swap RAM arenas to disk if necessary
 
 ### mkIII
 
@@ -72,3 +73,24 @@ This just might work.
 
 - pause & game over and stuff
 - drawing speed might be too slow for 60fps (check)
+
+
+## Mk II Hardware
+
+- the tick takes too long it seems (when to I2C comms with AVR there are no resets & FPS is correct at 60fps)
+- this only affect the black prototype - can be wrong AVR programming
+
+
+## Mk III Hardware
+
+- the 3v3 rail to onboard sensors & RTC is always on, this enables time & steps tracking to be valid even across cartridges. The RTC memory (if present) can be used for some basic storage as well  
+- bootloader switch can be optionally on the cartridge. Otherwise SW boot is possible as well
+- the RP and cartridge can be powered down (and will), and the home button press turns it on 
+- software can enable bootloader mode as well
+
+
+- maybe keep avr because it can: 
+- act as RTC
+- act as Home button press detection 
+- help with resetting 
+- aleviate the pin count pressure
