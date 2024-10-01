@@ -4,6 +4,8 @@
 #include <platform/writer.h>
 #include <platform/buffer.h>
 
+#include "tracing.h"
+
 
 #include "config.h"
 #include "graphics/geometry.h"

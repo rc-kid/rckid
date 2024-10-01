@@ -60,7 +60,6 @@ namespace rckid {
         static inline uint32_t waitRenderUs_ = 0;
         static inline uint32_t fps_ = 0; 
 
-
     }; // rckid::App
 
 

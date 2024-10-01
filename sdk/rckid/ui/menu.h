@@ -27,17 +27,21 @@ namespace rckid {
 
         virtual ~MenuItem() = default;
 
-        void * payload() const { return payload_; }
+        void * payloadPtr() const { return payloadPtr_; }
 
-        void setPayload(void * value) { payload_ = value; }
+        void setPayloadPtr(void * value) { payloadPtr_ = value; }
+
+        uint32_t payload() const { return payload_; }
+        void setPayload(uint32_t value) { payload_ = value; }
 
     protected:
 
-        MenuItem(void * payload = nullptr): payload_{payload} {}
+        MenuItem(uint32_t payload = 0, void * payloadPtr = nullptr): payload_{payload}, payloadPtr_{payloadPtr} {}
 
     private:
 
-        void * payload_;
+        uint32_t payload_ = 0;
+        void * payloadPtr_ = nullptr;
 
     }; // rckid::MenuItem
 
@@ -48,21 +52,21 @@ namespace rckid {
     class StaticMenuItem : public MenuItem {
     public:
 
-        StaticMenuItem(char const * text, void * payload = nullptr):
-            MenuItem{payload},
+        StaticMenuItem(char const * text, uint32_t payload = 0, void * payloadPtr = nullptr):
+            MenuItem{payload, payloadPtr},
             text_{text} {
         }
 
-        StaticMenuItem(char const * text, uint8_t const * iconData, uint32_t iconSize, void * payload = nullptr):
-            MenuItem{payload},
+        StaticMenuItem(char const * text, uint8_t const * iconData, uint32_t iconSize, uint32_t payload = 0, void * payloadPtr = nullptr):
+            MenuItem{payload, payloadPtr},
             text_{text}, 
             iconData_{iconData},
             iconSize_{iconSize} {
         }
 
         template<uint32_t SIZE>
-        StaticMenuItem(char const * text, uint8_t const (&buffer)[SIZE], void * payload = nullptr):
-            MenuItem{payload},
+        StaticMenuItem(char const * text, uint8_t const (&buffer)[SIZE], uint32_t payload = 0, void * payloadPtr = nullptr):
+            MenuItem{payload, payloadPtr},
             text_{text}, 
             iconData_{buffer},
             iconSize_{SIZE} {

@@ -49,7 +49,17 @@
 #define RP_AUDIO_PWM_SLICE 3
 
 
+//#define RP_I2C_BAUDRATE 100000
+#define RP_I2C_BAUDRATE 50000
+
 #define I2C_AVR_ADDRESS 0x43 
+
+
+/** When enabled, instead of logging to the USB serial port, logs all data directly to the hardware serial port at pins 16 & 17 (uart0) at 74880 baudrate.
+ */
+//#define RP_LOG_TO_SERIAL
+
+
 
 
 

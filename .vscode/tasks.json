@@ -73,6 +73,21 @@
                 "$platformio"
             ]
         },
+        {
+            "label": "mk II  - upload avr",
+            "detail": "Builds the AVR firmware for mk II on the dev server and uploads it to the device immediately.",
+            "command": "bash",
+            "args": [
+                "sdk/utils/pio-upload.sh",
+                "sdk/backends/arch_rckid_2/avr"
+            ],
+            "options": {
+                "cwd": ""
+            },
+            "problemMatcher": [
+                "$platformio"
+            ]
+        },
 
     ]
 }

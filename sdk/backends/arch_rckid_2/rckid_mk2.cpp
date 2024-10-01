@@ -7,6 +7,7 @@
 #include "tusb_config.h"
 #include "tusb.h"
 #include <hardware/structs/usb.h>
+#include <hardware/uart.h>
 
 #include <platform/peripherals/bmi160.h>
 #include <platform/peripherals/ltr390uv.h>
@@ -232,6 +233,13 @@ namespace rckid {
         // Make the I2C pins available to picotool
         bi_decl(bi_2pins_with_func(RP_PIN_SDA, RP_PIN_SCL, GPIO_FUNC_I2C));  
 
+#if (defined RP_LOG_TO_SERIAL)
+        // initialize uart0 on pins 16 & 17 as serial out
+        uart_init(uart0, 74880);
+        gpio_set_function(16, GPIO_FUNC_UART);
+        gpio_set_function(17, GPIO_FUNC_UART);
+#endif
+
         //usb_hw->main_ctrl = 0;
         // set the single DMA IRQ 0 handler reserved for the SDK
         irq_set_exclusive_handler(DMA_IRQ_0, irqDMADone_);
@@ -262,6 +270,9 @@ namespace rckid {
 
         // enter base arena for the application
         memoryEnterArena();
+        
+        // set brightness to 50% by default after startup
+        displaySetBrightness(128);
     }
 
     void tick() {
@@ -323,9 +334,16 @@ namespace rckid {
 
     Writer debugWrite() {
         return Writer{[](char x) {
-            tud_cdc_write(& x, 1);
-            if (x == '\n')
+#if (defined RP_LOG_TO_SERIAL)
+            uart_putc(uart0, x);
+#else
+            if (x == '\n') {
+                tud_cdc_write("\r\n", 2);
                 tud_cdc_write_flush();            
+            } else {
+                tud_cdc_write(& x, 1);
+            }
+#endif
         }};
     }    
 

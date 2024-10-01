@@ -80,6 +80,19 @@ This just might work.
 - the tick takes too long it seems (when to I2C comms with AVR there are no resets & FPS is correct at 60fps)
 - this only affect the black prototype - can be wrong AVR programming
 
+- menu app is weird, the generator vs action does not seem to work well
+- not sure why, try some log prints
+- does not work with 5V from laptop
+- for mk II can disable running RP2040 when on DC power perhaps
+- avr tick speed seems to be an issue as well
+- won't power on with long home button key - can be related to the above
+
+- remove charging current from state
+
+
+
+
+
 
 ## Mk III Hardware
 
@@ -94,3 +107,35 @@ This just might work.
 - act as Home button press detection 
 - help with resetting 
 - aleviate the pin count pressure
+- actually keep for sure
+
+Pins:
+
+- 2 -- I2C - connecterd to AVR, accel, light detector & INA219 if present (?)
+- 8 -- display data
+- 4 -- display control
+- 2 -- audio PWM out
+- 1 -- mic PDM in
+- 4 -- SD-CARD SPI
+- 10 -- cartridge (including QSPI secons SS, SPI, I2C, UART, programmable if necessary)
+- 8 -- top plate buttons 
+- 39 
+
+AVR
+
+- 3 -- buttons (home, vol up, vol down)
+- 2 -- I2C
+- 1 -- backlight PWM
+- 1 -- rumbler PWM
+- 1 -- 3V3 power on
+- 1 -- 5V power on
+- 1 -- neopixel
+- 1 -- charging (detect)
+- 1 -- vbatt
+- 1 -- audio detection
+- 13
+
+- how to deal with power & I2C? 
+- power goes to 3v3 switching, which *always* powers the AVR & sensors
+- the sensors should not leak voltage to I2C
+ 

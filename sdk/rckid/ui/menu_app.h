@@ -11,13 +11,6 @@
 
 namespace rckid {
 
-
-    template<Menu (*GENERATOR)()>
-    void menu() {
-
-    }
-
-
     /* Menu application. 
 
        TODO should really be carousel app
@@ -34,13 +27,16 @@ namespace rckid {
 
         template<uint32_t SIZE>
         static MenuItem * Submenu(char const * text, uint8_t const (&buffer)[SIZE], MenuGenerator generator) {
-            uintptr_t x = reinterpret_cast<uintptr_t>(generator) + 1;
-            return new StaticMenuItem(text, buffer, SIZE, reinterpret_cast<void*>(x));
+            void * x = reinterpret_cast<void*>(generator);
+            TRACE_MENU_APP("Created submenu " << text << ", payload " << x);
+            return new StaticMenuItem(text, buffer, SIZE, ITEM_KIND_SUBMENU, x);
         }
 
         template<uint32_t SIZE>
         static MenuItem * Item(char const * text, uint8_t const (&buffer)[SIZE], Action action) {
-            return new StaticMenuItem(text, buffer, SIZE, reinterpret_cast<void*>(action));
+            void * x = reinterpret_cast<void*>(action);
+            TRACE_MENU_APP("Created menu item " << text << ", payload " << x);
+            return new StaticMenuItem(text, buffer, SIZE, ITEM_KIND_ACTION, x);
         }
 
         MenuApp(): 
@@ -53,31 +49,39 @@ namespace rckid {
                 singleton_ = new MenuApp{};
             i_ = 0;
             menu_ = menuGenerator();
+            TRACE_MENU_APP("Generated menu - items: " << menu_->size());
             carousel_->moveUp((*menu_)[i_]);
             while (true) {
+                TRACE_MENU_APP("Entering app loop");
                 singleton_->loop();
                 // based on current index, we either return from the function, call submenu, or perform the action
                 if (i_ == -1) {
+                    TRACE_MENU_APP("Leaving menu level");
                     delete menu_;
                     return;
                 }
-                uintptr_t x = reinterpret_cast<uintptr_t>((*menu_)[i_].payload());
+                TRACE_MENU_APP("Selected submenu " << i_ << ", payload " << (*menu_)[i_].payload());
+                uint32_t itemKind = (*menu_)[i_].payload();
+                void * payloadPtr = ((*menu_)[i_].payloadPtr());
                 // if the LSB is set, we are dealing with a submenu, remember current index, delete the menu and call itself with the generator 
-                if (x & 1) {
-                    x = x - 1;
+                if (itemKind == ITEM_KIND_SUBMENU) {
+                    TRACE_MENU_APP("Entering submenu");
                     delete menu_;
                     int oldIndex = i_;
-                    run(reinterpret_cast<MenuGenerator>(x));
+                    run(reinterpret_cast<MenuGenerator>(payloadPtr));
+                    TRACE_MENU_APP("Submenu done");
                     // when we come back, regenerate the menu and set index accordingly
                     i_ = oldIndex;
                     menu_ = menuGenerator();
                     carousel_->moveDown((*menu_)[i_]);
                 // it's an action - run the action, but leave the memory area first
                 } else {
+                    TRACE_MENU_APP("Executing app");
                     int oldIndex = i_;
                     memoryLeaveArena();
                     memoryEnterArena();
-                    reinterpret_cast<Action>(x)();
+                    reinterpret_cast<Action>(payloadPtr)();
+                    TRACE_MENU_APP("App done");
                     memoryLeaveArena();
                     memoryEnterArena();
                     singleton_ = new MenuApp{};
@@ -116,6 +120,9 @@ namespace rckid {
         }
 
     private:
+
+        static constexpr uint32_t ITEM_KIND_ACTION = 0;
+        static constexpr uint32_t ITEM_KIND_SUBMENU = 1;
 
         void moveLeft() {
             if (--i_ < 0)

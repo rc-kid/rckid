@@ -66,6 +66,40 @@ public:
         return *this;
     }
 
+    Writer & operator << (void * address) {
+        static_assert(sizeof(void*) <= 8);
+        if (sizeof(void*) > 4)
+            return (*this) << reinterpret_cast<uint64_t>(address);
+        else
+            return (*this) << static_cast<uint32_t>(reinterpret_cast<uint64_t>(address));
+    }
+
+    //std::enable_if<sizeof(int) == 4, Writer &>::type
+    Writer & operator << (int value) {
+        if (value < 0) {
+            putChar_('-');
+            value *= -1;
+        }
+        if (sizeof(int) == 4)
+            return (*this) << static_cast<uint32_t>(value);
+        else
+            return (*this) << static_cast<uint64_t>(value);
+    }
+
+/*
+    typename std::enable_if<sizeof(int) != 4, Writer &>::type
+    operator << (int32_t value) {
+        if (value < 0) {
+            putChar_('-');
+            value *= -1;
+        }
+        return (*this) << static_cast<uint32_t>(value);
+    }
+*/
+
+    //std::enable_if<sizeof(int) == 4, Writer &>::type
+    //operator << (int value) { return (*this) << (uint32_t)}
+
 private:
     std::function<void(char)> putChar_;
 }; // Writer

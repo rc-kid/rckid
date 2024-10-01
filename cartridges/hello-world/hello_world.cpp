@@ -54,7 +54,8 @@ int main() {
     //auto game = new TextInput{};
     //auto game = Tetris::create();
     //game->run();
-    MenuApp::run(mainMenu);
+    while (true)
+        MenuApp::run(mainMenu);
     while (true) {
         rckid::tick();
     };
