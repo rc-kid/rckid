@@ -8,8 +8,8 @@
 
 
 #include "config.h"
+#include "common.h"
 #include "graphics/geometry.h"
-
 
 /** \defgroup api API
  
@@ -290,19 +290,13 @@ namespace rckid {
      */
     //@{
 
-    /** LED effect specification. 
-     */
-    class LEDEffect {
-
-    };
-
     /** Turns all the LEDs off to save power. 
      */
     void ledsOff(); 
 
-    void ledSetEffect(Btn b, LEDEffect const & effect);
+    void ledSetEffect(Btn b, RGBEffect const & effect);
 
-    void ledSetEffects(LEDEffect const & dpad, LEDEffect const & a, LEDEffect const & b, LEDEffect const & select, LEDEffect const & start); 
+    void ledSetEffects(RGBEffect const & dpad, RGBEffect const & a, RGBEffect const & b, RGBEffect const & select, RGBEffect const & start); 
 
     //@}
 
@@ -317,6 +311,19 @@ namespace rckid {
     inline void rumble(uint8_t intensity, uint16_t duration, unsigned repetitions = 1) {
         rumble(intensity, duration, repetitions, duration);
     }
+
+    inline void rumbleOk() {
+        rumble(128, 100);
+    }
+
+    inline void rumbleFail() {
+        rumble(128, 20, 3, 30);
+    }
+
+    inline void rumbleAttention() {
+        rumble(128, 500);
+    }
+
     //@}
 
     /** \name SD Card Filesystem access. 

@@ -109,7 +109,12 @@ namespace rckid {
                 if (btnDown(Btn::Down) || btnDown(Btn::B)) {
                     i_ = -1; // to signify we are leaving the menu
                     exit();
+                    rumbleAttention();                    
                 }
+                if (btnPressed(Btn::Select))
+                    ledSetEffect(Btn::Left, RGBEffect::Solid(16, 0, 0, 1));
+                if (btnPressed(Btn::Start))
+                    ledSetEffect(Btn::Left, RGBEffect::Solid(0, 16, 0, 1));
             }
         }
 
@@ -128,12 +133,14 @@ namespace rckid {
             if (--i_ < 0)
                 i_ = menu_->size() - 1;
             carousel_->moveLeft((*menu_)[i_]);
+            rumbleOk();
         }
 
         void moveRight() {
             if (++i_ >= static_cast<int>(menu_->size()))
                 i_ = 0;
             carousel_->moveRight((*menu_)[i_]);
+            rumbleFail();
         }
 
         static inline MenuApp * singleton_ = nullptr;

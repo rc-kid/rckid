@@ -34,6 +34,10 @@ This just might work.
 - how to enter bootloader mode (seems to be possible over software alone by forcing the USB open close at 1200 bps, there also seems to be a way to start BOOTSEL programatically if I read the datasheet right)
 - how to reset (can be SW on watchdog and detection)
 
+- USB serial does not display all text, sometimes garbled, as if not blocking to send
+- when sliding puzzle is entered and then left, pong no longer works, not sure why...
+- has to do with spurious button presses - or maybe not clened well when app transitions? 
+
 ## SDK
 
 - update the order of args in drawing methods (pos, color) etc
@@ -138,4 +142,4 @@ AVR
 - how to deal with power & I2C? 
 - power goes to 3v3 switching, which *always* powers the AVR & sensors
 - the sensors should not leak voltage to I2C
- 
+

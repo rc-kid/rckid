@@ -1,5 +1,7 @@
 #pragma once
 
+#include <platform.h>
+
 namespace platform {
 
     class Color {

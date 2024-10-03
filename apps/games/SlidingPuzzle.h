@@ -56,7 +56,7 @@ namespace rckid {
             if (btnPressed(Btn::Start))
                 resetGame(20);
                 // shuffle_ = 20;
-            if (dir_ == Btn::Home) {
+            if (shuffle_ == 0 && dir_ == Btn::Home) {
                 oldX_ = holeX_;
                 oldY_ = holeY_;
                 if (btnPressed(Btn::Left) && canMoveLeft()) {
@@ -88,7 +88,7 @@ namespace rckid {
                 shuffleMove();
                 shuffleMove();
                 --shuffle_;
-            }
+            } 
             switch (dir_) {
                 case Btn::Left:
                     g_.fill(tileRect(holeX_, holeY_));
@@ -133,6 +133,9 @@ namespace rckid {
                 tileMap_[i] = i;
             // set the number of shuffle moves
             shuffle_ = moves;
+            // reset any direction move & stop any outstanding animations
+            dir_ = Btn::Home;
+            a_.stop();
         }
 
         void shuffleMove() {

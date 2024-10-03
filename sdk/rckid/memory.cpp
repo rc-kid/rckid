@@ -76,6 +76,7 @@ extern "C" {
                     arena->freelist = freeChunk->next;
                 else 
                     last->next = freeChunk->next;
+                TRACE_MEMORY("allocating " << numBytes<< " from existing chunk");
                 return & freeChunk->next;
             }
             last = freeChunk;
@@ -88,6 +89,7 @@ extern "C" {
         ASSERT(heapEnd <= & __StackLimit);
         // set the chunk's size and return it 
         result->size = static_cast<uint32_t>(numBytes);
+        TRACE_MEMORY("allocating " << numBytes<< " from heap, free " << rckid::memoryFreeHeap());
         return &(result->next);
     }
 
@@ -100,13 +102,14 @@ extern "C" {
         // if this is the last allocated memory chunk, simply update the heap end
         if (chunk->end() == heapEnd) {
             heapEnd = chunk->start();
+            TRACE_MEMORY("deallocating last chunk, free " << rckid::memoryFreeHeap());
             return;
         }
-
         // get the chunk and prepend it to the freelist
         // TODO this is extremely ugly and inefficient, must be fixed in the future
         chunk->next = arena->freelist;
         arena->freelist = chunk;
+        TRACE_MEMORY("deallocating and adding to freelist, free " << rckid::memoryFreeHeap());
     }
 
 }
@@ -135,14 +138,17 @@ namespace rckid {
     void memoryEnterArena() {
         arena = new (heapEnd) Arena{arena};
         heapEnd += sizeof (Arena);
+        TRACE_MEMORY("Entering arena @" << (void*)(arena) << ", free " << memoryFreeHeap());
     }
 
     void memoryLeaveArena() {
+        TRACE_MEMORY("Leaving arena @" << (void*)(arena) << ", free " << memoryFreeHeap());
         // TODO BSOD in debug mode, do nothing in production
         if (arena->previous == nullptr)
             return;
         heapEnd = reinterpret_cast<char*>(arena);
         arena = arena->previous;
+        TRACE_MEMORY("Current arena @" << (void*)(arena) << ", free " << memoryFreeHeap());
     }
 
     void * malloc(size_t numBytes) { return __wrap_malloc(numBytes); }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include <sstream>
 #include <string>
 
@@ -16,3 +17,6 @@ inline uint16_t __builtin_bswap16(uint16_t x) {
 }
 
 #endif
+
+#include "../utils.h"
+

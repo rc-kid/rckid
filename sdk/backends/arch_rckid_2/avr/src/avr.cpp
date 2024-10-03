@@ -19,6 +19,7 @@
 #include <platform/ringavg.h>
 
 #include "../../backend_config.h"
+#include "../../../../rckid/common.h"
 #include "state.h"
 #include "commands.h"
 
@@ -1082,7 +1083,7 @@ public:
                 if (c.index == 2 && systemEffectActive_)
                     systemEffectBackup_ = c.effect;
                 else 
-                rgbEffects_[c.index] = c.effect;
+                    rgbEffects_[c.index] = c.effect;
                 power5v(true);
                 break;
             }

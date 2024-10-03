@@ -16,6 +16,7 @@
 #define TRACE(...) do { LOG(__VA_ARGS__); } while (false)
 
 #define TRACE_MENU_APP
+#define TRACE_MEMORY
 
 #if !defined TRACE_MENU_APP
     #define TRACE_MENU_APP(...)

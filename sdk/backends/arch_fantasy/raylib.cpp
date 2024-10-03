@@ -425,15 +425,15 @@ namespace rckid {
 
     void ledsOff() {
         LOG("LED: all off");
-        UNIMPLEMENTED;
+//        UNIMPLEMENTED;
     }
 
-    void ledSetEffect(Btn b, LEDEffect const & effect) {
-        UNIMPLEMENTED;
+    void ledSetEffect(Btn b, RGBEffect const & effect) {
+//        UNIMPLEMENTED;
     }
 
-    void ledSetEffects(LEDEffect const & dpad, LEDEffect const & a, LEDEffect const & b, LEDEffect const & select, LEDEffect const & start){
-        UNIMPLEMENTED;
+    void ledSetEffects(RGBEffect const & dpad, RGBEffect const & a, RGBEffect const & b, RGBEffect const & select, RGBEffect const & start){
+//        UNIMPLEMENTED;
     }
 
     // Rumbler

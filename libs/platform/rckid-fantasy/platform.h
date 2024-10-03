@@ -9,5 +9,4 @@
 
 #define LOG(...) rckid::debugWrite() << __VA_ARGS__ << '\n';
 
-#include "../definitions.h"
-
+#include "../pc/platform.h"

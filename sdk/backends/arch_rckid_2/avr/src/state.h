@@ -294,6 +294,8 @@ namespace rckid {
 
     } __attribute__((packed));
 
+#ifdef FOOBAR
+
     /** RGB LED effects 
      
         - Solid - display color (color, timer?)
@@ -403,5 +405,7 @@ namespace rckid {
         RGBEffect(Kind kind, uint8_t speed, uint8_t duration):
             kind{kind}, speed{speed}, duration{duration}, color{platform::Color::Black()} {}
     } __attribute__((packed)); 
+
+#endif
 
 } // namespace rckid

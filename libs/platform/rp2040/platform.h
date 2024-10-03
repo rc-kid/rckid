@@ -191,5 +191,7 @@ inline bool pwm_is_enabled(uint slice_num) {
     return (pwm_hw->slice[slice_num].csr) & (1 << PWM_CH0_CSR_EN_LSB);
 }
 
+#include "../definitions.h"
+#include "../utils.h"
 #include "../common.h"
 

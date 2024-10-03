@@ -382,13 +382,13 @@ namespace rckid {
         return ! buttonState(b, state_) && buttonState(b, lastState_);
     }
 
-    int16_t accelX() { return 0; }
-    int16_t accelY() { return 0; }
-    int16_t accelZ() { return 0; }
+    int16_t accelX() { return aState_.accelX; }
+    int16_t accelY() { return aState_.accelY; }
+    int16_t accelZ() { return aState_.accelZ; }
 
-    int16_t gyroX() { return 0; }
-    int16_t gyroY() { return 0; }
-    int16_t gyroZ() { return 0; }
+    int16_t gyroX() { return aState_.gyroX; }
+    int16_t gyroY() { return aState_.gyroY; }
+    int16_t gyroZ() { return aState_.gyroZ; }
 
     // power management
 
@@ -534,12 +534,33 @@ namespace rckid {
         sendCommand(cmd::RGBOff());
     }
 
-    void ledSetEffect(Btn b, LEDEffect const & effect) {
 
+    uint8_t buttonLedIndex(Btn b) {
+        switch (b) {
+            case Btn::A:
+                return 0;
+            case Btn::B:
+                return 1;
+            case Btn::Left:
+            case Btn::Right:
+            case Btn::Up:
+            case Btn::Down:
+                return 3;
+            case Btn::Select:
+                return 4;
+            case Btn::Start:
+                return 5;
+            default:
+                return 2; 
+        }
+    }    
+
+    void ledSetEffect(Btn b, RGBEffect const & effect) {
+        sendCommand(cmd::SetRGBEffect{buttonLedIndex(b), effect});
     }
 
-    void ledSetEffects(LEDEffect const & dpad, LEDEffect const & a, LEDEffect const & b, LEDEffect const & select, LEDEffect const & start) {
-
+    void ledSetEffects(RGBEffect const & dpad, RGBEffect const & a, RGBEffect const & b, RGBEffect const & select, RGBEffect const & start) {
+        sendCommand(cmd::SetRGBEffects(a, b, dpad, select, start));
     }
 
     // Rumbler

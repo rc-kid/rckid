@@ -29,8 +29,8 @@ namespace rckid {
             MEASURE_TIME(updateUs_,     update());
             MEASURE_TIME(tickUs_,       tick());
 #else
-            MEASURE_TIME(tickUs_,       tick());
             MEASURE_TIME(updateUs_,     update());
+            MEASURE_TIME(tickUs_,       tick());
 #endif
             MEASURE_TIME(waitRenderUs_, displayWaitUpdateDone());
             MEASURE_TIME(drawUs_,       draw());
