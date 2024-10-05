@@ -89,5 +89,28 @@
             ]
         },
 
+
+        {
+            "label": "mk III - build avr",
+            "detail": "Builds the AVR firmware for the mk III device.",
+            "type": "shell",
+            "command": "~/.platformio/penv/bin/pio",
+            "args": [
+                "run"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/sdk/backends/arch_rckid/avr",
+                "shell": {
+                    "executable": "/bin/zsh",
+                    "args": [
+                        "-c"
+                    ]
+                }
+            },
+            "problemMatcher": [
+                "$platformio"
+            ]
+        },
+
     ]
 }

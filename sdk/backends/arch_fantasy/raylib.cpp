@@ -382,7 +382,8 @@ namespace rckid {
     }
 
     bool audioHeadphones() {
-        UNIMPLEMENTED;
+        // TODO detection ? 
+        return true;
     }
 
     uint8_t audioVolume() {

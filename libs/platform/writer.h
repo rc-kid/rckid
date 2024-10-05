@@ -66,6 +66,15 @@ public:
         return *this;
     }
 
+#if (! defined ARCH_PC)
+    Writer & operator << (size_t x) {
+        if (sizeof(size_t) == 4)
+            return (*this) << static_cast<uint32_t>(x);
+        else 
+            return (*this) << static_cast<uint64_t>(x);
+    }
+#endif
+
     Writer & operator << (void * address) {
         static_assert(sizeof(void*) <= 8);
         if (sizeof(void*) > 4)
@@ -101,8 +110,73 @@ public:
     //operator << (int value) { return (*this) << (uint32_t)}
 
 private:
+
+#ifdef foobar
+
+    Writer & format(uint8_t value) {
+
+    }
+
+    Writer & format(uint16_t value) {
+
+    }
+
+    Writer & format(uint32_t value) {
+        unsigned order = 1000000000;
+        while (x < order && order > 1)
+            order = order / 10;
+        while (order >= 10) {
+            putChar_(static_cast<char>((x / order)) + '0');
+            x = x % order;
+            order = order / 10;
+        }
+        putChar_(static_cast<char>(x) + '0');
+        return *this;
+    }
+
+    Writer & format(uint64_t value) {
+        uint64_t order = 10000000000000000000ul;
+        while (x < order && order > 1)
+            order = order / 10;
+        while (order >= 10) {
+            putChar_(static_cast<char>((x / order)) + '0');
+            x = x % order;
+            order = order / 10;
+        }
+        putChar_(static_cast<char>(x) + '0');
+        return *this;
+        return *this;
+    }
+
+    #endif
+
     std::function<void(char)> putChar_;
 }; // Writer
+
+
+/** Very simple string buffer that uses the Writer API to serialize values into a string. 
+ */
+class StringWriter {
+public:
+    StringWriter():
+        writer_{[this](char c) { str_ += c; }} {
+    }
+
+    template<typename T>
+    StringWriter & operator << (T x) {
+        writer_ << x;
+        return *this; 
+    }
+
+    std::string str() {
+        return std::move(str_);
+    }
+
+private:
+    std::string str_;
+    Writer writer_;
+
+}; // StringWriter
 
 
 
@@ -265,31 +339,6 @@ private:
     std::function<void(char)> putChar_;
 
 }; // Writer
-
-
-
-class StringWriter {
-public:
-    StringWriter():
-        writer_{[this](char c) { str_ += c; }} {
-    }
-
-    template<typename T>
-    StringWriter & operator << (T x) {
-        writer_ << x;
-        return *this; 
-    }
-
-    std::string str() {
-        return std::move(str_);
-    }
-
-private:
-    std::string str_;
-    Writer writer_;
-
-}; // StringWriter
-
 
 template<>
 inline void Writer::serialize<uint8_t>(uint8_t value) {

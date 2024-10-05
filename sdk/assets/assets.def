@@ -5,11 +5,11 @@
 #fontGlyphs, fonts/OpenDyslexic.otf, 32
 #fontGlyphs, fonts/OpenDyslexic.otf, 48
 #fontGlyphs, fonts/OpenDyslexic.otf, 64
-#fontGlyphs, fonts/Iosevka.ttf, 24, Symbols16, ../rckid/assets/symbol-glyphs.inc.h
+fontGlyphs, fonts/OpenDyslexic.otf, 32, Symbols16, ../rckid/assets/symbol-glyphs.inc.h
 
 #generator, path to folder, namespace (and output file)
 #folder, icons, icons
-folder, tests, tests
+#folder, tests, tests
 
 #generator, filename, n
 #sine, easing_sine.inc.h, 256

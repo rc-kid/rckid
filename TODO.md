@@ -7,6 +7,9 @@
 
 - actually don't do anything crazy, have the RP always powered on (10uA), but allow disengaging the cartridge's power supply - might be able to do this even for sleep? 
 
+- make mp3 player and video as a TV so that the mp3's have daily schedule that you can do
+
+
 ## RP2350
 
 - 2 -- I2C - connected to accelerometer, light detector, INA219 if present
@@ -81,11 +84,10 @@ This just might work.
 
 ## Mk II Hardware
 
+- I2C problems might be somewhat mitigated by extra pullups in the cartridge
 - the tick takes too long it seems (when to I2C comms with AVR there are no resets & FPS is correct at 60fps)
 - this only affect the black prototype - can be wrong AVR programming
 
-- menu app is weird, the generator vs action does not seem to work well
-- not sure why, try some log prints
 - does not work with 5V from laptop
 - for mk II can disable running RP2040 when on DC power perhaps
 - avr tick speed seems to be an issue as well

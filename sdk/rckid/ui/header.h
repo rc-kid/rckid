@@ -15,6 +15,11 @@ namespace rckid {
          */
         static void drawOn(Surface<ColorRGB> & surface, bool verbose = true);
 
+    private:
+
+        static std::pair<ColorRGB, char> getBatteryInfo(unsigned lebel);
+        static std::pair<ColorRGB, char> getVolumeInfo(unsigned lebel);
+
     }; // rckid::Header
 
 

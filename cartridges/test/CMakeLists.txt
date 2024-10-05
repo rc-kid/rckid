@@ -14,4 +14,8 @@ link_with_librckid(graphics-app256)
 add_executable(graphics-app16 "graphics_app16.cpp")
 link_with_librckid(graphics-app16)
 
+# test of the graphics app framework (256 colors) 
+add_executable(rgb_leds "rgb_leds.cpp")
+link_with_librckid(rgb_leds)
+
 
