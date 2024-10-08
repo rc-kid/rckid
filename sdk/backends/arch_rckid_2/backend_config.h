@@ -49,8 +49,8 @@
 #define RP_AUDIO_PWM_SLICE 3
 
 
-//#define RP_I2C_BAUDRATE 100000
-#define RP_I2C_BAUDRATE 50000
+#define RP_I2C_BAUDRATE 100000
+//#define RP_I2C_BAUDRATE 50000
 
 #define I2C_AVR_ADDRESS 0x43 
 
@@ -133,8 +133,6 @@
 // Actual frequency: 10416666. - ????????????
 #define RP_SD_SPI_BAUDRATE 12000000
 
-//#define RP_I2C_BAUDRATE 100000
-#define RP_I2C_BAUDRATE 50000
 
 #define RP_DEBUG_UART uart1
 #define RP_DEBUG_UART_BAUDRATE 115200

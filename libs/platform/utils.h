@@ -11,13 +11,6 @@ inline uint64_t operator "" _u64(unsigned long long value) { return static_cast<
 
 namespace platform {
 
-    /** Endiannes of the platform. 
-     */
-    enum class Endian {
-        Little, 
-        Big, 
-    }; 
-
     /** Assumes that the given pointer is aligned to 4 bytes, which is required for speedy memory accesses. We have to roll our own because the std::assume_align is only available from C++20. 
      */
     template<typename T, typename W>

@@ -2,6 +2,16 @@
 
 #include <cstdint>
 
+namespace platform {
+    /** Endiannes of the platform. 
+     */
+    enum class Endian {
+        Little, 
+        Big, 
+    }; 
+
+} // namespace platform
+
 /** GPIO helper functions. 
  */
 namespace gpio {

@@ -9,6 +9,8 @@
 #include "menu.h"
 #include "carousel.h"
 
+#include "text_input.h"
+
 namespace rckid {
 
     /* Menu application. 
@@ -78,6 +80,7 @@ namespace rckid {
                 } else {
                     TRACE_MENU_APP("Executing app");
                     int oldIndex = i_;
+                    singleton_->onBlur();
                     memoryLeaveArena();
                     memoryEnterArena();
                     reinterpret_cast<Action>(payloadPtr)();
@@ -85,6 +88,7 @@ namespace rckid {
                     memoryLeaveArena();
                     memoryEnterArena();
                     singleton_ = new MenuApp{};
+                    singleton_->onFocus();
                     i_ = oldIndex;
                     menu_ = menuGenerator();
                     carousel_->moveUp((*menu_)[i_]);
@@ -94,9 +98,6 @@ namespace rckid {
 
     protected:
 
-
-        void onFocus() override {
-        }
 
         void update() override {
             if (carousel_->idle()) {

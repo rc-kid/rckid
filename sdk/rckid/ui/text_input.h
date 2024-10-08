@@ -14,12 +14,21 @@ namespace rckid {
       */
     class TextInput : public GraphicsApp<UITileEngine<>> {
     public:
+
+        using ModalResult = std::string;
+
         enum class KeyboardType {
             UpperCase, 
             LowerCase,
             FirstUpper,
             NumbersAndSymbols,
         }; // TextInput::KeyboardType
+
+        static std::optional<std::string> run() {
+            return "";
+        }
+
+    protected:
 
         TextInput():
             GraphicsApp{UITileEngine<>{26, 4, UITiles::Tileset, nullptr}}, 

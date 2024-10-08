@@ -326,7 +326,9 @@ public:
         }
     }
 
-    static bool systemTicksActive() { return (RTC.PITCTRLA & RTC_PERIOD_gm) == RTC_PERIOD_CYC64_gc; }
+    static bool systemTicksActive() { 
+        return (RTC.PITCTRLA & RTC_PERIOD_gm) == RTC_PERIOD_CYC64_gc; 
+    }
 
     static void startSystemTicks() {
         if (!systemTicksActive()) {
@@ -621,9 +623,14 @@ public:
         return gpio::read(AVR_PIN_3V3_ON);
     }
 
+    static inline bool pwr5v = false;
+
     /** Turns the 5V power rail for the neopixels on or off. 
      */
     static void power5v(bool state) {
+        if (state == pwr5v)
+            return;
+        pwr5v = state;
         if (state) {
             gpio::outputHigh(AVR_PIN_5V_ON);
             gpio::setAsOutput(AVR_PIN_RGB);
@@ -978,7 +985,7 @@ public:
         // a byte has been received from master. Store it and send either ACK if we can store more, or NACK if we can't store more
         } else if ((status & I2C_DATA_MASK) == I2C_DATA_RX) {
             ts_.buffer[i2cRxIdx_++] = TWI0.SDATA;
-            rgbs_[2] = platform::Color::Green().withBrightness(32);
+            //rgbs_[2] = platform::Color::Green().withBrightness(32);
             TWI0.SCTRLB = (i2cRxIdx_ == sizeof(ts_.buffer)) ? TWI_SCMD_COMPTRANS_gc : TWI_SCMD_RESPONSE_gc;
         // master requests slave to write data, reset the sent bytes counter, initialize the actual read address from the read start and reset the IRQ
         } else if ((status & I2C_START_MASK) == I2C_START_TX) {
@@ -1001,8 +1008,11 @@ public:
     }
 
     static void processI2CCommand() {
-        rgbs_[2] = platform::Color::Red().withBrightness(32);
-        rgbs_.update();
+        //i2cRxIdx_ = 0;
+        //i2cCommandReady_ = false;
+        //return;
+        //rgbs_[2] = platform::Color::Red().withBrightness(32);
+        //rgbs_.update();
         switch (ts_.buffer[0]) {
             case cmd::Nop::ID:
                 break;

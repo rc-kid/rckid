@@ -1,5 +1,83 @@
 #pragma once
 
+
+
+/** Determines home button's long press duration in system ticks (1ms)
+ */
+#define BTN_HOME_LONG_PRESS_THRESHOLD 1000
+
+/** Default brigthness of the RGB LEDs for all effects. Can be anything between 1 and 255 - the value depends on the opacity of the keys. 
+ */
+#define RGB_LED_DEFAULT_BRIGHTNESS 32
+
+
+
+
+
+
+
+/** I2C address of the AVR chip. No need to change this as the I2C bus is no longer user accessible in the cartridge in version 3. 
+ */
+#define I2C_AVR_ADDRESS 0x43 
+
+/** AVR Pinout
+ 
+    PA1 -- CHARGE_EN (floating, pull low to disable charging)
+    PA2 -- CHARGING (ADC0 channel 2, can also be just digital ?)
+    PA3 -- PWM_RUMBLER (TCB1 WO)
+    PA4 -- VBATT (ADC0 channel 4)
+    PA5 -- PWM_BACKLIGHT (TCB0 WO)
+    PA6 -- 3V3_ON
+    PA7 -- 5V_ON
+    PB7 -- RGB
+    PB6 -- BTN_3
+    PB5 -- BTN_ABXY
+    PB4 -- BTN_2
+    PB3 -- BTN_1
+    PB2 -- BTN_HOME (-> GND, internal pullup)
+    PB1 -- SDA
+    PB0 -- SCL
+    PC0 -- BTN_CTRL
+    PC1 -- HEADPHONES (ADC 1 channel 7)
+    PC2 -- DISP_RDX
+    PC3 -- QSPI_SS
+    PC4 -- BTN_DPAD
+    PC5 -- BTN_4
+*/
+#define AVR_PIN_HEADPHONES A1
+#define AVR_PIN_CHARGING A2
+#define AVR_PIN_PWM_RUMBLER A3
+#define AVR_PIN_VBATT A4
+#define AVR_PIN_PWM_BACKLIGHT A5
+#define AVR_PIN_3V3_ON A6
+#define AVR_PIN_5V_ON A7
+
+#define AVR_PIN_SCL B0
+#define AVR_PIN_SDA B1
+#define AVR_PIN_BTN_HOME B2
+#define AVR_PIN_BTN_1 B3
+#define AVR_PIN_BTN_2 B4
+#define AVR_PIN_BTN_ABSELSTART B5
+#define AVR_PIN_BTN_3 B6
+#define AVR_PIN_RGB B7
+
+#define AVR_PIN_BTN_CTRL C0
+#define AVR_PIN_CHARGE_EN C1
+#define AVR_PIN_DISP_RDX C2
+#define AVR_PIN_QSPI_SS C3
+#define AVR_PIN_BTN_DPAD C4
+#define AVR_PIN_BTN_4 C5
+
+
+
+
+
+
+
+
+
+
+
 /** \section RP2040Pinout RP2040 Pinout
  
 
@@ -52,7 +130,6 @@
 //#define RP_I2C_BAUDRATE 100000
 #define RP_I2C_BAUDRATE 50000
 
-#define I2C_AVR_ADDRESS 0x43 
 
 
 /** When enabled, instead of logging to the USB serial port, logs all data directly to the hardware serial port at pins 16 & 17 (uart0) at 74880 baudrate.
@@ -73,7 +150,6 @@
 
 
 #define COMMS_UART_TX_TIMEOUT_US 1000
-
 
 
 
@@ -154,57 +230,6 @@
 #define RP_AUDIO_BUFFER_SIZE 2048
 
 
-/** AVR Pinout
- 
-    PA1 -- CHARGE_EN (floating, pull low to disable charging)
-    PA2 -- CHARGING (ADC0 channel 2, can also be just digital ?)
-    PA3 -- PWM_RUMBLER (TCB1 WO)
-    PA4 -- VBATT (ADC0 channel 4)
-    PA5 -- PWM_BACKLIGHT (TCB0 WO)
-    PA6 -- 3V3_ON
-    PA7 -- 5V_ON
-    PB7 -- RGB
-    PB6 -- BTN_3
-    PB5 -- BTN_ABXY
-    PB4 -- BTN_2
-    PB3 -- BTN_1
-    PB2 -- BTN_HOME (-> GND, internal pullup)
-    PB1 -- SDA
-    PB0 -- SCL
-    PC0 -- BTN_CTRL
-    PC1 -- HEADPHONES (ADC 1 channel 7)
-    PC2 -- DISP_RDX
-    PC3 -- QSPI_SS
-    PC4 -- BTN_DPAD
-    PC5 -- BTN_4
-*/
-#define AVR_PIN_HEADPHONES A1
-#define AVR_PIN_CHARGING A2
-#define AVR_PIN_PWM_RUMBLER A3
-#define AVR_PIN_VBATT A4
-#define AVR_PIN_PWM_BACKLIGHT A5
-#define AVR_PIN_3V3_ON A6
-#define AVR_PIN_5V_ON A7
-
-#define AVR_PIN_SCL B0
-#define AVR_PIN_SDA B1
-#define AVR_PIN_BTN_HOME B2
-#define AVR_PIN_BTN_1 B3
-#define AVR_PIN_BTN_2 B4
-#define AVR_PIN_BTN_ABXY B5
-#define AVR_PIN_BTN_3 B6
-#define AVR_PIN_RGB B7
-
-#define AVR_PIN_BTN_CTRL C0
-#define AVR_PIN_CHARGE_EN C1
-#define AVR_PIN_DISP_RDX C2
-#define AVR_PIN_QSPI_SS C3
-#define AVR_PIN_BTN_DPAD C4
-#define AVR_PIN_BTN_4 C5
-
-/** I2C address of the AVR chip for communications with RP2040
- */
-#define AVR_I2C_ADDRESS 0x43
 
 /** I2C address of the INA219 sensor measuring the current power draw of RCKid. 
  
@@ -213,8 +238,6 @@
 //#define RCKID_INA219_I2C_ADDRESS 0x40
 #define RCKID_INA219_I2C_ADDRESS 0x0
 
-/** Determines home button's long press duration in 4 tick multiples ticks (~10ms). Defaults to 1 second */
-#define BTN_HOME_LONG_PRESS_THRESHOLD 100
 
 /* Duration of the home button press necessasy to power the device on. Measured in ADC cycles for the initial voltage detection, i.e. 887 cycles per second. 
  */

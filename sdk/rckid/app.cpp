@@ -1,3 +1,5 @@
+#include "ui/pause.h"
+
 #include "app.h"
 
 #define MEASURE_TIME(whereTo, ...) { \
@@ -13,8 +15,8 @@ namespace rckid {
 #endif
 
     void App::loop() {
-        if (current_)
-            current_->onBlur();
+        //if (current_)
+        //    current_->onBlur();
         App * lastApp = current_;
         current_ = this;
         onFocus();
@@ -46,10 +48,16 @@ namespace rckid {
                 currentFps = 0;
             }
         }
+        // current can only be nullptr at this point, if it is anything else than nullptr, we have a problem as the exit mechanic when running modal apps has been broken somehow. 
+        ASSERT(current_ == nullptr);
         onBlur();
         current_ = lastApp;
-        if (current_)
-            current_->onFocus();
+        //if (current_)
+        //    current_->onFocus();
+    }
+
+    void App::pause() {
+        runModal<Pause>();
     }
 
 } // namespace rckid

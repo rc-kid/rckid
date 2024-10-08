@@ -81,7 +81,6 @@ This just might work.
 - pause & game over and stuff
 - drawing speed might be too slow for 60fps (check)
 
-
 ## Mk II Hardware
 
 - I2C problems might be somewhat mitigated by extra pullups in the cartridge
@@ -95,7 +94,9 @@ This just might work.
 
 - remove charging current from state
 
+- update the modal stuff how it works and the focus & blur methods to make it more resilient. Add docs warning for making sure to call the parent focus blur !!!!!
 
+- rewrite AVR code, start simple and check the basic speed stuff, etc. Then work incrementally towards a more complex stuff. 
 
 
 

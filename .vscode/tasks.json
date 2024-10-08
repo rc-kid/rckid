@@ -111,6 +111,22 @@
                 "$platformio"
             ]
         },
+        {
+            "label": "mk III  - upload avr",
+            "detail": "Builds the AVR firmware for mk III on the dev server and uploads it to the device immediately.",
+            "command": "bash",
+            "args": [
+                "sdk/utils/pio-upload.sh",
+                "sdk/backends/arch_rckid/avr"
+            ],
+            "options": {
+                "cwd": ""
+            },
+            "problemMatcher": [
+                "$platformio"
+            ]
+        },
+
 
     ]
 }

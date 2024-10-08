@@ -1,9 +1,21 @@
 #pragma once
 
+#include <optional>
+
 #include "rckid.h"
 #include "graphics/drawing.h"
 
 namespace rckid {
+
+
+    /** Template metaprogramming trick to determine whether ModalResult is defined on a given app type.
+     */
+    template<typename, typename = void>
+    constexpr bool HasModalResult = false;
+
+    template<typename T>
+    constexpr bool HasModalResult
+        <T, std::void_t<decltype(sizeof(typename T::ModalResult))>> = true;
 
     class App {
     public:
@@ -41,11 +53,34 @@ namespace rckid {
         virtual void onFocus() {}
         virtual void onBlur() {}
 
+        virtual void pause();
+
         /** Exits from the app. 
          */
         void exit() {
             ASSERT(current_ == this);
             current_ = nullptr;
+        }
+
+        template<typename T> 
+        typename std::enable_if<HasModalResult<T>, std::optional<typename T::ModalResult>>::type
+        runModal() {
+            onBlur();
+            //memoryEnterArena();
+            auto result = T::run();
+            //memoryLeaveArena();
+            onFocus();
+            return result;
+        }
+
+        template<typename T>
+        typename std::enable_if<!HasModalResult<T>, void>::type 
+        runModal() {
+            onBlur();
+            memoryEnterArena();
+            T::run();
+            memoryLeaveArena();
+            onFocus();
         }
 
     private:

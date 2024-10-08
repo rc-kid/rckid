@@ -3,6 +3,7 @@
 #include <rckid/app.h>
 #include <rckid/graphics/canvas.h>
 #include <rckid/ui/header.h>
+#include <rckid/ui/pause.h>
 
 namespace rckid {
 
@@ -22,16 +23,13 @@ namespace rckid {
 
         static void run() {
             Tetris t;
+            t.resetGame();
             t.loop();
         }
 
     protected:
 
         Tetris(): GraphicsApp{Canvas<Color>{320, 240}} {}
-
-        void onFocus() override {
-            resetGame();
-        }
 
         void update() override {
             // handle back button
@@ -41,8 +39,10 @@ namespace rckid {
                 goDown = true;
                 countdown_ = speed_;
             }
+            if (btnPressed(Btn::A))
+                pause();
             // TODO if we should, go down automatically
-            if (btnPressed(Btn::A) || btnPressed(Btn::Up))
+            if (btnPressed(Btn::Up))
                 rotate();
             if (btnDown(Btn::Down)) {
                 if (allowDown_)

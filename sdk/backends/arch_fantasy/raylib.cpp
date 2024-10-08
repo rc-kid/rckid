@@ -346,6 +346,7 @@ namespace rckid {
                     break;
             }
             displayUpdating_ = 0;
+            displayCallback_ = nullptr;
             displayDraw();
         }
     }
