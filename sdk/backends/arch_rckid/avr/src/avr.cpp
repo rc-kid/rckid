@@ -157,6 +157,7 @@ public:
     /** AVR uptime in seconds. 
      */
     uint32_t uptime;
+
     /** Communications buffer. This is where commands are stored and where extra commands store the data they wish to transfer to the RP.
      */
     uint8_t buffer[32];
@@ -208,6 +209,27 @@ public:
 
         // delay so that voltages stabilize and so on
         cpu::delayMs(100); 
+
+        // determine why the reset
+
+
+        platform::Color c = platform::Color::RGB(32, 32, 32);
+        if (RSTCTRL.RSTFR & RSTCTRL_WDRF_bm)
+            c = platform::Color::RGB(32, 0, 0);
+        if (RSTCTRL.RSTFR & RSTCTRL_BORF_bm)
+            c = platform::Color::RGB(0, 0, 32);
+
+        rgbOn();
+        rgbs_[0] = c;
+        rgbs_[1] = c;
+        rgbs_[3] = c;
+        rgbs_[4] = c;
+        rgbs_[5] = c;
+        rgbs_.update();
+        cpu::delayMs(100);
+        rgbOff();
+
+        cpu::delayMs(100);
 
         // set the AVR state to sleep (to enforce full wakeup) and then go to power on mode immediately
         avrState_ = AVRState::Sleep;
@@ -353,6 +375,7 @@ public:
         ADC0.CTRLA = 0;
         // disable RGBs
         rgbOff();
+        avrState_ = AVRState::Sleep;
     }
 
     /** Wakes up - enables  */
@@ -504,7 +527,7 @@ public:
         vcc_.addObservation(Status::voltageToRawStorage(vx100));
         uint16_t value = Status::voltageFromRawStorage(vcc_.value());
         ts_.vcc = value;
-        debugShowNumber((uint8_t)avrState_);
+        //debugShowNumber((uint8_t)avrState_);
         // update the dc power detection
         if (vx100 >= VOLTAGE_DC_POWER_THRESHOLD) {
             dcPowerPlugged();
@@ -685,7 +708,8 @@ public:
             return;
         gpio::outputHigh(AVR_PIN_5V_ON);
         gpio::setAsOutput(AVR_PIN_RGB);
-        cpu::delayMs(50);
+        cpu::wdtReset();
+        cpu::delayMs(100);
         rgbOn_ = true;
     }
 
@@ -693,14 +717,16 @@ public:
         if (!rgbOn_)
             return;
         rgbOn_ = false;
-        gpio::outputFloat(AVR_PIN_5V_ON);
         gpio::outputFloat(AVR_PIN_RGB);
+        gpio::outputFloat(AVR_PIN_5V_ON);
     }
 
     static void rgbTick() {
         if (!rgbTick_)
             return;
         rgbTick_ = false;
+        if (!rgbOn_)
+            return;
         // is there a second tick to process? 
         rgbSecondTick();
         // for all LEDs, move them towards their target at speed given by their effect
@@ -739,7 +765,7 @@ public:
 
     static void rgbUpdateSystemNotification() {
         // highest priority - if we are running on battery and the battery level is low, show the low battery level warning
-        if ((!ts_.status.powerDC()) && (ts_.vcc < VOLTAGE_WARNING_THRESHOLD))
+        if ((!ts_.status.powerDC()) && (ts_.vcc < VOLTAGE_WARNING_THRESHOLD) && vcc_.ready())
             return rgbSetSystemNotification(SystemNotification::BatteryWarning);
         // if we are running on DC power, display either charging done if not charging, or charging
         if (ts_.status.powerDC()) {     
@@ -1036,7 +1062,7 @@ public:
                     enterSleep();
                     avrState_ = AVRState::Sleep;
                 }
-            }
+            } 
             // reset the long press counter
             btnHomeCounter_ = 0;
         }
