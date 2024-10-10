@@ -147,7 +147,7 @@ public:
     Status status;
     /** Current date & time as kept by the RTC. 
      */
-    TinyDate date;
+    TinyDate time;
     /** Current brightness settings. 
      */
     uint8_t brightness;
@@ -307,7 +307,7 @@ public:
      */
     static void secondTick() __attribute__((always_inline)) {
         ++ts_.uptime;
-        ts_.date.secondTick();
+        ts_.time.secondTick();
         // if we are sleeping, initiatethe ADC measurement for the VCC to determine if DC power has been connected
         if (avrState_ == AVRState::Sleep)
             vccMeasureTick_ = true;
@@ -627,9 +627,34 @@ public:
         switch (ts_.buffer[0]) {
             case cmd::Nop::ID:
                 break;
-            // TODO all the others
-
-
+            case cmd::PowerOff::ID:
+                devicePowerOff();
+                break;
+            case cmd::ResetRP::ID:
+                reset();
+                break;
+            case cmd::ResetAVR::ID:
+                cpu::reset();
+                // unreachable here
+            case cmd::BootloaderRP::ID:
+                resetBootloader(); 
+                break;
+            case cmd::BootloaderAVR::ID:
+                // TODO
+                break;
+            // TODO debug mode
+            // TODO audio enable 
+            case cmd::SetBrightness::ID: {
+                uint8_t value = cmd::SetBrightness::fromBuffer(ts_.buffer).value;
+                setBacklightPWM(value);
+                ts_.brightness = value;
+                break;
+            }
+            case cmd::SetTime::ID: {
+                TinyDate t = cmd::SetTime::fromBuffer(ts_.buffer).value;
+                ts_.time = t;
+                break;
+            }
             case cmd::Rumbler::ID: {
                 break; // TODO remove
                 auto & c = cmd::Rumbler::fromBuffer(ts_.buffer);
