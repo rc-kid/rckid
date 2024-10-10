@@ -39,13 +39,13 @@ public:
     bool audioEnabled() const { return status_ & AUDIO_EN; }
     bool audioHeadphones() const { return status_ & AUDIO_HEADPHONES; }
 
-    void setBtnHome(bool value) { value ? status_ |= BTN_HOME : status_ != ~BTN_HOME; }
-    void setBtnVolumeUp(bool value) { value ? status_ |= BTN_VOL_UP : status_ != ~BTN_VOL_UP; }
-    void setBtnVolumeDown(bool value) { value ? status_ |= BTN_VOL_DOWN : status_ != ~BTN_VOL_DOWN; }
-    void setCharging(bool value) { value ? status_ |= CHARGING : status_ != ~CHARGING; }
-    void setPowerDC(bool value) { value ? status_ |= DC_POWER : status_ != ~DC_POWER; }
-    void setAudioEnabled(bool value) { value ? status_ |= AUDIO_EN : status_ != ~AUDIO_EN; }
-    void setAudioHeadphones(bool value) { value ? status_ |= AUDIO_HEADPHONES : status_ != ~AUDIO_HEADPHONES; }
+    void setBtnHome(bool value) { value ? status_ |= BTN_HOME : status_ &= ~BTN_HOME; }
+    void setBtnVolumeUp(bool value) { value ? status_ |= BTN_VOL_UP : status_ &= ~BTN_VOL_UP; }
+    void setBtnVolumeDown(bool value) { value ? status_ |= BTN_VOL_DOWN : status_ &= ~BTN_VOL_DOWN; }
+    void setCharging(bool value) { value ? status_ |= CHARGING : status_ &= ~CHARGING; }
+    void setPowerDC(bool value) { value ? status_ |= DC_POWER : (status_ &= ~DC_POWER); }
+    void setAudioEnabled(bool value) { value ? status_ |= AUDIO_EN : status_ &= ~AUDIO_EN; }
+    void setAudioHeadphones(bool value) { value ? status_ |= AUDIO_HEADPHONES : status_ &= ~AUDIO_HEADPHONES; }
     void setVolumeKeys(bool volUp, bool volDown) {
         status_ &= ~(BTN_VOL_UP | BTN_VOL_DOWN);
         status_ |= ( volUp ? BTN_VOL_UP : 0) | (volDown ? BTN_VOL_DOWN : 0);
@@ -122,7 +122,7 @@ private:
     uint8_t controls_ = 0;
 
     static uint16_t voltageFromRawStorage(uint8_t value) {
-        return value == 0 ? 0 : value + 245;
+        return (value == 0) ? 0 : (value + 245);
     }
 
     static uint8_t voltageToRawStorage(uint16_t vx100) {
@@ -285,10 +285,6 @@ public:
     static void secondTick() __attribute__((always_inline)) {
         ++ts_.uptime;
         ts_.date.secondTick();
-        if (ts_.uptime % 4  == 0 )
-            rgbEffects_[2] = RGBEffect::Solid(platform::Color::RGB(32, 0, 0), 255);
-        else
-            rgbEffects_[2] = RGBEffect::Solid(platform::Color::RGB(0,0,0), 1);
     }
 
     /** \name Power Management
@@ -324,6 +320,14 @@ public:
         } else {
             enterSleep();
             avrState_ = AVRState::Sleep;
+        }
+        // clear user RGBs
+        for (int i = 0; i < 6; ++i) {
+            if (i == 2)
+                continue;
+            rgbEffects_[i] = RGBEffect::Off();
+            rgbsTarget_[i] = platform::Color::Black();
+            rgbs_[i] = platform::Color::Black();
         }
     }
 
@@ -397,12 +401,11 @@ public:
         // set DC power on
         ts_.status.setPowerDC(true);
 #ifdef RCKID_HAS_LIPO_CHARGER
-        // enter the charging mode, if the device was sleeping, wake up
-        if (avrState_ == AVRState::Sleep)
+        // if the device was asleep, wake up and enter charging mode, otherwise stay in the On state. 
+        if (avrState_ == AVRState::Sleep) {
             leaveSleep();
-        avrState_ = AVRState::Charging;
-        // start the charging RGB Notification effect
-        rgbEffects_[2] = RGBEffect::Breathe(platform::Color::Blue().withBrightness(RGB_LED_DEFAULT_BRIGHTNESS), 1);
+            avrState_ = AVRState::Charging;
+        }
         // TODO enable charging 
 #endif
     }
@@ -495,22 +498,36 @@ public:
         // and return - the RP is now in bootloader mode, so will not talk to the AVR via I2C, but we don't care and will keep the powered on mode anyways
     }
 
-    static void measureVcc(uint16_t rawValue) {
-        // TODO this is V2 code, in V3 we have to measure VCC on real pin through ADC as the AVR chip is always running at 3V3
-        rawValue = 110 * 512 / rawValue;
-        rawValue *= 2;
+
+    static void measureVcc(uint16_t vx100) {
         // add the value to the ring buffer and set the ring buffer's current value to the transferrable state
-        vcc_.addObservation(Status::voltageToRawStorage(rawValue));
-        ts_.vcc = vcc_.value();
+        vcc_.addObservation(Status::voltageToRawStorage(vx100));
+        uint16_t value = Status::voltageFromRawStorage(vcc_.value());
+        ts_.vcc = value;
+        debugShowNumber((uint8_t)avrState_);
+        // update the dc power detection
+        if (vx100 >= VOLTAGE_DC_POWER_THRESHOLD) {
+            dcPowerPlugged();
+        } else {
+            dcPowerUnplugged();
+            // if we are running on batteries, check if we should emit low voltage warning, or even turn the device off. Those are based off the VCC so that they work even if powered through USB-C cable as they are really a property of the chip voltage irrespective where it comes from
+            if (avrState_ != AVRState::Sleep) {
+                // only emit critical battery warning if we have accumulated enough vcc measurements
+                if (vcc_.ready() && (value < VOLTAGE_CRITICAL_THRESHOLD))
+                    criticalBattery();
+            }
+        }
+        rgbUpdateSystemNotification();
     }
 
-    static void measureVBatt(uint16_t rawValue) {
-
-        vBatt_.addObservation(Status::voltageToRawStorage(rawValue));
+    static void measureVBatt(uint16_t vx100) {
+        vBatt_.addObservation(Status::voltageToRawStorage(vx100));
+        ts_.status.setVBatt(vBatt_.value());
     }
 
-    static void measureTemp(uint16_t rawValue) {
-
+    static void measureTemp(int32_t rawValue) {
+        ts_.status.setTemp(rawValue);
+        // TODO if temperature is too large, cut of charging
     }
     //@}
 
@@ -605,6 +622,7 @@ public:
                 break;
             }
             case cmd::SetRGBEffect::ID: {
+                break; // TODO remove
                 auto & c = cmd::SetRGBEffect::fromBuffer(ts_.buffer);
                 if (c.index == 2)
                     break;
@@ -613,6 +631,7 @@ public:
                 break;
             }
             case cmd::SetRGBEffects::ID: {
+                break;
                 auto & c = cmd::SetRGBEffects::fromBuffer(ts_.buffer);
                 rgbEffects_[0] = c.b;
                 rgbEffects_[1] = c.a;
@@ -642,12 +661,24 @@ public:
      */
     //@{
 
+    enum class SystemNotification : uint8_t {
+        None, 
+        User,
+        BatteryWarning, 
+        Charging,
+        ChargingDone,
+    };
+
     static inline volatile bool rgbOn_ = false;
     static inline volatile bool rgbTick_ = false;
     static inline volatile uint8_t rgbSecondTick_ = 60;
     static inline platform::NeopixelStrip<6> rgbs_{AVR_PIN_RGB}; 
     static inline platform::ColorStrip<6> rgbsTarget_;
     static inline RGBEffect rgbEffects_[6];
+
+    static inline bool userNotification_ = false;
+    static inline SystemNotification systemNotification_ = SystemNotification::None;
+
 
     static void rgbOn() {
         if (rgbOn_)
@@ -704,6 +735,48 @@ public:
                 }
             }
         }
+    }
+
+    static void rgbUpdateSystemNotification() {
+        // highest priority - if we are running on battery and the battery level is low, show the low battery level warning
+        if ((!ts_.status.powerDC()) && (ts_.vcc < VOLTAGE_WARNING_THRESHOLD))
+            return rgbSetSystemNotification(SystemNotification::BatteryWarning);
+        // if we are running on DC power, display either charging done if not charging, or charging
+        if (ts_.status.powerDC()) {     
+            if (ts_.status.charging())
+                return rgbSetSystemNotification(SystemNotification::Charging);
+            else 
+                return rgbSetSystemNotification(SystemNotification::ChargingDone);
+        }
+        // if there is user notification, now is the time
+        if (userNotification_)
+            return rgbSetSystemNotification(SystemNotification::User);
+        // otherwise, there is no notification to show
+        rgbSetSystemNotification(SystemNotification::None);
+    }
+
+    static void rgbSetSystemNotification(SystemNotification n) {
+        if (systemNotification_ == n)
+            return;
+        systemNotification_ = n;
+        switch (n)  {
+            case SystemNotification::None:
+                rgbEffects_[2] = RGBEffect::Off();
+                return; // don't go to rgbOn (we might be the only reason for the RGBs to be on)
+            case SystemNotification::User:
+                rgbEffects_[2] = RGBEffect::Breathe(platform::Color::Yellow().withBrightness(RGB_LED_DEFAULT_BRIGHTNESS));
+                break;
+            case SystemNotification::BatteryWarning:
+                rgbEffects_[2] = RGBEffect::Breathe(platform::Color::Red().withBrightness(RGB_LED_DEFAULT_BRIGHTNESS));
+                break;
+            case SystemNotification::Charging:
+                rgbEffects_[2] = RGBEffect::Breathe(platform::Color::Blue().withBrightness(RGB_LED_DEFAULT_BRIGHTNESS));
+                break;
+            case SystemNotification::ChargingDone:
+                rgbEffects_[2] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RGB_LED_DEFAULT_BRIGHTNESS));
+                break;
+        }
+        rgbOn();
     }
 
     //@}
@@ -836,25 +909,39 @@ public:
         // convert the raw measurement according to what we measured and prepare to measure the next one
         switch (muxpos) {
             case ADC_MUXPOS_INTREF_gc:
+                // TODO this is V2 code, in V3 we have to measure VCC on real pin through ADC as the AVR chip is always running at 3V3
+                value = 110 * 512 / value;
+                value *= 2;
                 measureVcc(value);
                 // get ready for measuriong the battery voltage
                 ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
                 ADC0.MUXPOS = gpio::getADC0muxpos(AVR_PIN_VBATT);
                 break;
             case gpio::getADC0muxpos(AVR_PIN_VBATT):
+                value >>= 2; // go for 8bit precision, which should be enough
+                value = (ts_.vcc / 2 * value)  / 128; 
                 measureVBatt(value);
                 // measure temp sense next
                 ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_INTREF_gc | ADC_SAMPCAP_bm;
                 ADC0.MUXPOS = ADC_MUXPOS_TEMPSENSE_gc;
                 break;
-            case ADC_MUXPOS_TEMPSENSE_gc:
-                measureTemp(value);
+            case ADC_MUXPOS_TEMPSENSE_gc: {
+                int8_t sigrow_offset = SIGROW.TEMPSENSE1; 
+                uint8_t sigrow_gain = SIGROW.TEMPSENSE0;
+                int32_t t = value - sigrow_offset; // Result might overflow 16 bit variable (10bit+8bit)
+                t *= sigrow_gain;
+                // temp is now in kelvin range, to convert to celsius, remove -273.15 (x256)
+                t -= 69926;
+                // and now loose precision to 0.5C (x10, i.e. -15 = -1.5C)
+                value = (t >>= 7) * 5;
+                measureTemp(t);
                 // sample internal voltage reference using VDD for reference to determine VCC next 
                 ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
                 ADC0.MUXPOS = ADC_MUXPOS_INTREF_gc;
                 // TODO for V2 prepare for headphones instead, if audio is on
                 break;
-            // V2
+            }
+            // TODO headphones in V2 share same pin, and are analog. This could change to digital in V3
             case gpio::getADC0muxpos(AVR_PIN_HEADPHONES):
                 //ts_.state.setHeadphones(value < HEADPHONES_DETECTION_THRESHOLD);
                 // sample internal voltage reference using VDD for reference to determine VCC next 
@@ -1006,6 +1093,28 @@ public:
     }
 
     //@}
+
+
+    /** Displays an 8bit nunmber on the top plate buttons LEDs. 
+     
+        Since we only have 5 leds, two colors are used:
+     */
+
+    static void debugShowNumber(uint8_t value) {
+        rgbOn();
+        uint8_t i = RGB_LED_DEFAULT_BRIGHTNESS;
+        rgbs_[1] = platform::Color::RGB((value & 1) ? i : 0, (value & 32) ? i : 0, 0);
+        rgbs_[0] = platform::Color::RGB((value & 2) ? i : 0, (value & 64) ? i : 0, 0);
+        rgbs_[3] = platform::Color::RGB((value & 4) ? i : 0, (value & 128) ? i : 0, 0);
+        rgbs_[5] = platform::Color::RGB((value & 8) ? i : 0, 0, 0);
+        rgbs_[4] = platform::Color::RGB((value & 16) ? i : 0, 0, 0);
+        for (unsigned i = 0; i < 6; ++i) {
+            if (i == 2)
+                continue;
+            rgbsTarget_[i] = rgbs_[i];
+        }
+        rgbs_.update();
+    }
 
 
 }; // class RCKid

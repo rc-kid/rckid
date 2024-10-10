@@ -2,6 +2,8 @@
 
 
 
+
+
 /** Determines home button's long press duration in system ticks (1ms)
  */
 #define BTN_HOME_LONG_PRESS_THRESHOLD 1000
@@ -11,6 +13,25 @@
 #define RGB_LED_DEFAULT_BRIGHTNESS 32
 
 
+
+
+/** If defined, the RCKid is powered by a LiPo battery and when DC power is inserted, the battery will charge and must be monitored. 
+ 
+    THIS MUST BE SET TO FALSE FOR THE AAA POWERED VERSION. 
+  */
+#define RCKID_HAS_LIPO_CHARGER
+
+
+/** Critical voltage at which the device will not allow itself to be started (3v3 power rail). To prevent spurious measurements when the device is powering on or off, a configurable amount of consecutive vcc measurements must be below the threshold top trigger the reaction. 
+ */
+#define VOLTAGE_CRITICAL_THRESHOLD 330
+
+/** When the VCC is below this threshold, the notification LED will flash red. 
+ */
+#define VOLTAGE_WARNING_THRESHOLD 340
+
+
+#define VOLTAGE_DC_POWER_THRESHOLD 430
 
 
 
@@ -246,25 +267,6 @@
 
 #define VBATT_LEVEL_HYSTERESIS 5
 
-#define VCC_DC_POWER_THRESHOLD 430
-
-/** Full battery threshold. 
- */
-#define VBATT_FULL_THRESHOLD 420
-
-/** Critical voltage at which the device will not allow itself to be started (3v3 power rail). To prevent spurious measurements when the device is powering on or off, a configurable amount of consecutive vcc measurements must be below the threshold top trigger the reaction. 
- */
-#define VCC_CRITICAL_THRESHOLD 310
-
-/** When the VCC is below this threshold, the notification LED will flash red. 
- */
-#define VCC_WARNING_THRESHOLD 320
-
-/** If defined, the RCKid is powered by a LiPo battery and when DC power is inserted, the battery will charge and must be monitored. 
- 
-    THIS MUST BE SET TO FALSE FOR THE AAA POWERED VERSION. 
-  */
-#define RCKID_HAS_LIPO_CHARGER
 
 /** When the 3V3 rail is on, the onboard current sensor is being checked each frame right after AVR is done sending status to master. Should this fail, this number of ticks provides a failsafe for current measurements even with frameskips, or RP2040 hangup. 
 */

@@ -10,6 +10,9 @@
 - make mp3 player and video as a TV so that the mp3's have daily schedule that you can do
 
 
+- avr mk III - the voltage measurements are still not working - check why
+
+
 ## RP2350
 
 - 2 -- I2C - connected to accelerometer, light detector, INA219 if present

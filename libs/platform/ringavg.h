@@ -11,8 +11,8 @@ public:
 
     void addObservation(T value) {
         sum_ = sum_ - buffer_[i_] + value;
-        buffer_[i_++] = value;
-        if (i_ >= BUFFER_SIZE) {
+        buffer_[i_] = value;
+        if (++i_ >= BUFFER_SIZE) {
             i_ = 0;
             ready_ = true;
         }

@@ -42,7 +42,7 @@ namespace rckid {
             Rainbow rainbow;
         } __attribute__((packed));
 
-        RGBEffect(): kind{Kind::Off}, speed{255}, duration{0}, color{platform::Color::Black()} {} 
+        RGBEffect(): kind{Kind::Off}, speed{1}, duration{0}, color{platform::Color::Black()} {} 
 
 
         RGBEffect(RGBEffect const & from):
@@ -53,13 +53,13 @@ namespace rckid {
 
         static RGBEffect Off() { return RGBEffect{}; }
 
-        static RGBEffect Solid(platform::Color color, uint8_t speed, uint16_t duration = 0) {
+        static RGBEffect Solid(platform::Color color, uint8_t speed = 1, uint16_t duration = 0) {
             RGBEffect result(Kind::Solid, speed, duration);
             result.color = color;
             return result;
         }
 
-        static RGBEffect Solid(uint8_t r, uint8_t g, uint8_t b, uint8_t speed, uint16_t duration = 0) {
+        static RGBEffect Solid(uint8_t r, uint8_t g, uint8_t b, uint8_t speed = 1, uint16_t duration = 0) {
             RGBEffect result(Kind::Solid, speed, duration);
             result.color.r = r;
             result.color.g = g;
@@ -67,13 +67,13 @@ namespace rckid {
             return result;
         }
 
-        static RGBEffect Breathe(platform::Color color, uint8_t speed, uint16_t duration = 0) {
+        static RGBEffect Breathe(platform::Color color, uint8_t speed = 1, uint16_t duration = 0) {
             RGBEffect result(Kind::Breathe, speed, duration);
             result.color = color;
             return result;
         }
 
-        static RGBEffect Rainbow(uint8_t hue, uint8_t step, uint8_t speed, uint8_t brightness = 255, uint16_t duration = 0) {
+        static RGBEffect Rainbow(uint8_t hue, uint8_t step, uint8_t speed = 1, uint8_t brightness = 255, uint16_t duration = 0) {
             RGBEffect result(Kind::Rainbow, speed, duration);
             result.rainbow.hue = hue;
             result.rainbow.step = step;
