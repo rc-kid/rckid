@@ -253,6 +253,7 @@ public:
             processI2CCommand();
             // sleep if we should, if not sleeping check if we have ADC measurement ready
             if (avrState_ == AVRState::Sleep) {
+                measureVccInSleep();
                 sleep_enable();
                 sleep_cpu();
             } else {
@@ -307,6 +308,9 @@ public:
     static void secondTick() __attribute__((always_inline)) {
         ++ts_.uptime;
         ts_.date.secondTick();
+        // if we are sleeping, initiatethe ADC measurement for the VCC to determine if DC power has been connected
+        if (avrState_ == AVRState::Sleep)
+            vccMeasureTick_ = true;
     }
 
     /** \name Power Management
@@ -522,14 +526,16 @@ public:
     }
 
 
-    static void measureVcc(uint16_t vx100) {
+    static void measureVcc(uint16_t rawValue) {
+        rawValue = 110 * 512 / rawValue;
+        rawValue *= 2;
         // add the value to the ring buffer and set the ring buffer's current value to the transferrable state
-        vcc_.addObservation(Status::voltageToRawStorage(vx100));
+        vcc_.addObservation(Status::voltageToRawStorage(rawValue));
         uint16_t value = Status::voltageFromRawStorage(vcc_.value());
         ts_.vcc = value;
         //debugShowNumber((uint8_t)avrState_);
         // update the dc power detection
-        if (vx100 >= VOLTAGE_DC_POWER_THRESHOLD) {
+        if (rawValue >= VOLTAGE_DC_POWER_THRESHOLD) {
             dcPowerPlugged();
         } else {
             dcPowerUnplugged();
@@ -625,7 +631,7 @@ public:
 
 
             case cmd::Rumbler::ID: {
-                break;
+                break; // TODO remove
                 auto & c = cmd::Rumbler::fromBuffer(ts_.buffer);
                 if (c.effect.cycles > 0 && c.effect.strength > 0) {
                     rumblerEffect_ = c.effect;
@@ -645,7 +651,6 @@ public:
                 break;
             }
             case cmd::SetRGBEffect::ID: {
-                break; // TODO remove
                 auto & c = cmd::SetRGBEffect::fromBuffer(ts_.buffer);
                 if (c.index == 2)
                     break;
@@ -654,7 +659,6 @@ public:
                 break;
             }
             case cmd::SetRGBEffects::ID: {
-                break;
                 auto & c = cmd::SetRGBEffects::fromBuffer(ts_.buffer);
                 rgbEffects_[0] = c.b;
                 rgbEffects_[1] = c.a;
@@ -909,7 +913,35 @@ public:
         ADC0 is used to measure the analogue measurements - vcc, battery voltage and temperature.
      */
     //@{
+
+    static inline volatile bool vccMeasureTick_ = false;
+    static inline volatile bool vccMeasureReady_ = false;
+
+    static void measureVccInSleep() {
+        if (vccMeasureTick_) {
+            vccMeasureTick_ = false;
+            vccMeasureReady_ = false;
+            // we'll be sleeping in standby mode until the ADC is finished
+            set_sleep_mode(SLEEP_MODE_STANDBY); // to make sure the ADC runs
+            // initialize the ADC to measure VCC
+            initializeADC();
+            // and enable the interrupt 
+            ADC0.INTCTRL = ADC_RESRDY_bm;
+        } else if (vccMeasureReady_) {
+            vccMeasureReady_ = false;
+            // go back to deep sleep - we are done wih the ADC for this second
+            set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+            // get the value and turn ADC off
+            uint16_t value = ADC0.RES / 32;
+            ADC0.CTRLA = 0;
+            // and run the mesurement logic
+            measureVcc(value);
+        }
+    }
+
     static void initializeADC() {
+        ADC0.CTRLA = 0;
+        ADC0.INTCTRL = 0;
         // initialize ADC0 common properties without turning it on
         ADC0.CTRLB = ADC_SAMPNUM_ACC32_gc;
         ADC0.CTRLD = ADC_INITDLY_DLY32_gc;
@@ -936,8 +968,6 @@ public:
         switch (muxpos) {
             case ADC_MUXPOS_INTREF_gc:
                 // TODO this is V2 code, in V3 we have to measure VCC on real pin through ADC as the AVR chip is always running at 3V3
-                value = 110 * 512 / value;
-                value *= 2;
                 measureVcc(value);
                 // get ready for measuriong the battery voltage
                 ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
@@ -1166,6 +1196,14 @@ ISR(PORTB_PORT_vect) {
     VPORTB.INTFLAGS = (1 << 2);
     RCKid::btnHomeDown();
 }
+
+/** VCC measurement in sleep node is ready. 
+ */
+ISR(ADC0_RESRDY_vect) {
+   ADC0.INTFLAGS = ADC_RESRDY_bm;
+   RCKid::vccMeasureReady_ = true;
+}
+
 
 int main() {
     RCKid::initialize();
