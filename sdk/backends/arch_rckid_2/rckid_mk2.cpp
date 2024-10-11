@@ -19,8 +19,8 @@
 #include "screen/ST7789.h"
 #include "sd/sd.h"
 
-#include "avr/src/state.h"
 #include "avr/src/commands.h"
+#include "avr/src/status.h"
 
 /** 
     \section rckid_mk2_backend RCKid mk II Backend 
@@ -46,8 +46,8 @@ namespace rckid {
         platform::BMI160::State aState_;
         uint16_t lightAls_ = 0;
         uint16_t lightUV_ = 0;
-        State state_; 
-        State lastState_;
+        Status status_; 
+        Status lastStatus_;
         uint8_t ticks_ = 0;
 
 
@@ -71,18 +71,15 @@ namespace rckid {
     }    
 
     void __not_in_flash_func(i2cFillAVRTxBlocks)() {
+        static_assert(sizeof(Status) == 4);
         i2c0->hw->enable = 0;
         i2c0->hw->tar = I2C_AVR_ADDRESS;
         i2c0->hw->enable = 1;
         i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
         i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
         i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-        i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-        i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-        i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
-        i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS; // 1 for read
         i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | I2C_IC_DATA_CMD_STOP_BITS; // 1 for read, stop
-        i2c0->hw->rx_tl = 7;
+        i2c0->hw->rx_tl = 3;
     }
 
     void __not_in_flash_func(i2cFillAccelTxBlocks)() {
@@ -141,8 +138,8 @@ namespace rckid {
                     return;
                 }
                 case TICK_AVR: {
-                    lastState_ = state_;
-                    uint8_t * raw = reinterpret_cast<uint8_t*>(&state_);
+                    lastStatus_ = status_;
+                    uint8_t * raw = reinterpret_cast<uint8_t*>(&status_);
                     for (int i = 0; i < 8; ++i)
                         *(raw++) = i2c0->hw->data_cmd;
                     // update battery level gauge
@@ -167,6 +164,7 @@ namespace rckid {
         // everything else than tx empty bits terminates the i2c transfer for the current tick
         tickInProgress_ = TICK_DONE;
         i2c0->hw->intr_mask = 0;
+        // and reset the I2C 
         i2c0->hw->enable = 0;
     }
 
@@ -349,19 +347,19 @@ namespace rckid {
 
     // io
 
-    bool buttonState(Btn b, State & state) {
+    bool buttonState(Btn b, Status & status) {
         switch (b) {
-            case Btn::Up: return state.btnUp();
-            case Btn::Down: return state.btnDown();
-            case Btn::Left: return state.btnLeft();
-            case Btn::Right: return state.btnRight();
-            case Btn::A: return state.btnA();
-            case Btn::B: return state.btnB();
-            case Btn::Select: return state.btnSel();
-            case Btn::Start: return state.btnStart();
-            case Btn::VolumeUp: return state.btnVolUp();
-            case Btn::VolumeDown: return state.btnVolDown();
-            case Btn::Home: return state.btnHome();
+            case Btn::Up: return status.btnUp();
+            case Btn::Down: return status.btnDown();
+            case Btn::Left: return status.btnLeft();
+            case Btn::Right: return status.btnRight();
+            case Btn::A: return status.btnA();
+            case Btn::B: return status.btnB();
+            case Btn::Select: return status.btnSel();
+            case Btn::Start: return status.btnStart();
+            case Btn::VolumeUp: return status.btnVolumeUp();
+            case Btn::VolumeDown: return status.btnVolumeDown();
+            case Btn::Home: return status.btnHome();
             default:
                 UNREACHABLE;
         }
@@ -369,17 +367,17 @@ namespace rckid {
 
 
     bool btnDown(Btn b) {
-        return buttonState(b, state_);
+        return buttonState(b, status_);
 
     }
 
     bool btnPressed(Btn b) {
-        return buttonState(b, state_) && ! buttonState(b, lastState_);
+        return buttonState(b, status_) && ! buttonState(b, lastStatus_);
 
     }
 
     bool btnReleased(Btn b) {
-        return ! buttonState(b, state_) && buttonState(b, lastState_);
+        return ! buttonState(b, status_) && buttonState(b, lastStatus_);
     }
 
     int16_t accelX() { return aState_.accelX; }
@@ -397,15 +395,15 @@ namespace rckid {
     }
 
     bool charging() { 
-        return state_.charging();
+        return status_.charging();
     }
 
     bool dcPower() {
-        return state_.dcPower();
+        return status_.powerDC();
     }
 
     unsigned vBatt() {
-        return state_.vBatt();
+        return status_.vBatt();
     }
 
     unsigned batteryLevel() {
@@ -424,7 +422,9 @@ namespace rckid {
     }
 
     uint8_t displayBrightness() { 
-        return state_.brightness();
+        // TODO TODO TODO 
+        return 255;
+        //return status_.brightness();
     }
 
     void displaySetBrightness(uint8_t value) {  
@@ -479,7 +479,7 @@ namespace rckid {
     }
 
     bool audioHeadphones() {
-        return state_.headphones();
+        return status_.audioHeadphones();
     }
 
     uint8_t audioVolume() {

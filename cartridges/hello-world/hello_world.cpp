@@ -49,6 +49,8 @@ Menu * mainMenu() {
 int main() {
     rckid::initialize();
     LOG("Initialized, running the app!");
+    rckid::displaySetBrightness(128);
+    rckid::rumbleOk();
     //auto game = rckid::SlidingPuzzle::create();
     //auto game = new rckid::RawAudioTest{};
     //auto game = new TextInput{};

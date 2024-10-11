@@ -313,16 +313,18 @@ namespace rckid {
     }
 
     inline void rumbleOk() {
-        rumble(128, 100);
+        rumble(128, 100);   
     }
 
     inline void rumbleFail() {
-        rumble(128, 20, 3, 30);
+        //rumble(128, 20, 3, 30);
+        rumble(128, 100, 3, 100);
     }
 
     inline void rumbleAttention() {
         rumble(128, 500);
     }
+
 
     //@}
 

@@ -3,6 +3,8 @@
 #include <platform.h>
 #include <platform/color_strip.h>
 
+// Forward declaration for the RCKid firmware class so that we can access status internals
+class RCKid;
 namespace rckid {
 
     /** RGB LED effects 
@@ -12,7 +14,7 @@ namespace rckid {
         - display color, vary hue (hue, speed)
      
      */
-    class RGBEffect {
+    PACKED(class RGBEffect {
     public:
         enum class Kind : uint8_t {
             Off,
@@ -121,9 +123,9 @@ namespace rckid {
 
         RGBEffect(Kind kind, uint8_t speed, uint8_t duration):
             kind{kind}, speed{speed}, duration{duration}, color{platform::Color::Black()} {}
-    } __attribute__((packed)); 
+    }); 
 
-    class RumblerEffect {
+    PACKED(class RumblerEffect {
     public:
         uint8_t strength = 0;
         uint8_t timeOn = 0;
@@ -146,8 +148,6 @@ namespace rckid {
 
         static RumblerEffect Off() { return RumblerEffect{}; }
 
-    } __attribute__((packed));
-
-
+    });
 
 } // namespace rckid

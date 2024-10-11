@@ -84,6 +84,7 @@ namespace rckid {
                 if (ball_.x >= 300) {
                     ball_.x = 600 - ball_.x;
                     deltaBall_.x = deltaBall_.x * -1;
+                    
                     //setRumbler(RumblerEffect::Nudge());
                     // TODO pong
                 }

@@ -76,6 +76,9 @@
 
 
 
+#define RGB_LED_DEFAULT_BRIGHTNESS 32
+
+
 
 
 
@@ -189,7 +192,7 @@
 #define AVR_PIN_BTN_HOME B2
 #define AVR_PIN_BTN_1 B3
 #define AVR_PIN_BTN_2 B4
-#define AVR_PIN_BTN_ABXY B5
+#define AVR_PIN_BTN_ABSELSTART B5
 #define AVR_PIN_BTN_3 B6
 #define AVR_PIN_RGB B7
 
@@ -204,6 +207,7 @@
  */
 #define AVR_I2C_ADDRESS 0x43
 
+
 /** I2C address of the INA219 sensor measuring the current power draw of RCKid. 
  
     Set to 0 if the sensor is not present (such as when running on AAA batteries).
@@ -211,8 +215,8 @@
 //#define RCKID_INA219_I2C_ADDRESS 0x40
 #define RCKID_INA219_I2C_ADDRESS 0x0
 
-/** Determines home button's long press duration in 4 tick multiples ticks (~10ms). Defaults to 1 second */
-#define BTN_HOME_LONG_PRESS_THRESHOLD 100
+/** Determines home button's long press duration in ticks multiples ticks (~1ms). Defaults to 1 second */
+#define BTN_HOME_LONG_PRESS_THRESHOLD 1000
 
 /* Duration of the home button press necessasy to power the device on. Measured in ADC cycles for the initial voltage detection, i.e. 887 cycles per second. 
  */
@@ -221,7 +225,7 @@
 
 #define VBATT_LEVEL_HYSTERESIS 5
 
-#define VCC_DC_POWER_THRESHOLD 430
+#define VOLTAGE_DC_POWER_THRESHOLD 430
 
 /** Full battery threshold. 
  */
@@ -229,11 +233,11 @@
 
 /** Critical voltage at which the device will not allow itself to be started (3v3 power rail). To prevent spurious measurements when the device is powering on or off, a configurable amount of consecutive vcc measurements must be below the threshold top trigger the reaction. 
  */
-#define VCC_CRITICAL_THRESHOLD 310
+#define VOLTAGE_CRITICAL_THRESHOLD 310
 
 /** When the VCC is below this threshold, the notification LED will flash red. 
  */
-#define VCC_WARNING_THRESHOLD 320
+#define VOLTAGE_WARNING_THRESHOLD 320
 
 /** If defined, the RCKid is powered by a LiPo battery and when DC power is inserted, the battery will charge and must be monitored. 
  
