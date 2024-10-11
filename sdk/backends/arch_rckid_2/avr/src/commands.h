@@ -34,7 +34,7 @@ namespace rckid::cmd {
 
     COMMAND(0, Nop);
     COMMAND(1, PowerOff);
-    COMMAND(2, Sleep);
+    //COMMAND(2, Sleep);
     COMMAND(4, ResetRP);
     COMMAND(5, ResetAVR);
     COMMAND(6, BootloaderRP);
@@ -55,17 +55,13 @@ namespace rckid::cmd {
         SetTime(TinyDate value): value{value} {}
     );
 
-    /** Instructs the RPI to enable reading from the display by the RP data lines by pulling the DISP_RDX line low. 
+    /** Enables user notification (yellow light flashes of the system led). 
      */
-    COMMAND(20, DisplayRead);
+    COMMAND(20, UserNotificationOn);
 
-    /** Instructs the RPI to enable writing from the display by the RP data lines by letting the DISP_RDC lien float (pulled up externally). 
+    /** Disables user notification on the system led. 
      */
-    COMMAND(21, DisplayWrite);
-
-    /** Clears the AVR last error information. 
-     */
-    COMMAND(30, ResetAVRError);
+    COMMAND(21, UserNotificationOff);
 
     COMMAND(40, Rumbler,
         RumblerEffect effect;

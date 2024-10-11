@@ -113,6 +113,22 @@ namespace rckid {
         }
     }); 
 
+    /** Extra flags and information that can be transmitted from AVR to RP as part of the transferrable state, but not the status. Mostly useful for debugging purposes. 
+     */
+    PACKED(class Extras {
+    public:
+        bool debugMode() const { return raw_ & DEBUG_MODE; }
+        bool userNotification() const { return raw_ & USER_NOTIFICATION; }
+
+        void setDebugMode(bool value) { value ? raw_ |= DEBUG_MODE : raw_ &= ~DEBUG_MODE; }
+        void setUserNotification(bool value) { value ? raw_ |= USER_NOTIFICATION : raw_ &= ~USER_NOTIFICATION; }
+
+    private:
+        static constexpr uint8_t DEBUG_MODE = 1 << 0;
+        static constexpr uint8_t USER_NOTIFICATION = 1 << 1;
+        uint8_t raw_ = 0;
+    });
+
     /** The entire transferrable state. 
      
         This is the maximum extent of data that can be read from the AVR. The I2C handler is very simple and only sends the transferrable state during a master read transaction. Therefore the order of the fields of the transferrable state corresponds to the expected frequency at which they will be read. 
@@ -134,7 +150,9 @@ namespace rckid {
         /** AVR uptime in seconds. 
          */
         uint32_t uptime;
-
+        /** Extra information, mostly for debugging. 
+         */
+        Extras extras;
         /** Communications buffer. This is where commands are stored and where extra commands store the data they wish to transfer to the RP. The size is enough for a single byte command and 32 byte payload. 
          */
         uint8_t buffer[33];

@@ -94,6 +94,10 @@ public:
 
         cpu::delayMs(100);
 
+        // start in debug mode
+        // TODO maybe do not have this in production
+        ts_.extras.setDebugMode(true);
+
         // set the AVR state to sleep (to enforce full wakeup) and then go to power on mode immediately
         avrState_ = AVRState::Sleep;
         devicePowerOn();
@@ -234,6 +238,9 @@ public:
             // and mark the state as On
             avrState_ = AVRState::On;
         }
+        // if we are in debug mode, ensure the display is *on*
+        if (ts_.extras.debugMode())
+            setBacklightPWM(128);
     }
 
     static void enterSleep() {
@@ -505,7 +512,14 @@ public:
             case cmd::BootloaderAVR::ID:
                 // TODO
                 break;
-            // TODO debug mode
+            case cmd::DebugModeOn::ID:
+                ts_.extras.setDebugMode(true);
+                rgbUpdateSystemNotification();
+                break;
+            case cmd::DebugModeOff::ID:
+                ts_.extras.setDebugMode(false);
+                rgbUpdateSystemNotification();
+                break;
             // TODO audio enable 
             case cmd::SetBrightness::ID: {
                 uint8_t value = cmd::SetBrightness::fromBuffer(ts_.buffer).value;
@@ -518,11 +532,18 @@ public:
                 ts_.time = t;
                 break;
             }
+            case cmd::UserNotificationOn::ID:
+                ts_.extras.setUserNotification(true);
+                rgbUpdateSystemNotification();
+                break;
+            case cmd::UserNotificationOff::ID:
+                ts_.extras.setUserNotification(false);
+                rgbUpdateSystemNotification();
+                break;
             case cmd::Rumbler::ID: {
                 auto & c = cmd::Rumbler::fromBuffer(ts_.buffer);
                 if (c.effect.cycles > 0 && c.effect.strength > 0) {
                     rumblerEffect_ = c.effect;
-                    //--rumblerEffect_.cycles;
                     rumblerCurrent_ = rumblerEffect_;
                     rumblerCurrent_.timeOn = 0;
                     rumblerCurrent_.timeOff = 0;
@@ -590,7 +611,6 @@ public:
     static inline platform::ColorStrip<6> rgbsTarget_;
     static inline RGBEffect rgbEffects_[6];
 
-    static inline bool userNotification_ = false;
     static inline SystemNotification systemNotification_ = SystemNotification::None;
 
 
@@ -666,7 +686,7 @@ public:
                 return rgbSetSystemNotification(SystemNotification::ChargingDone);
         }
         // if there is user notification, now is the time
-        if (userNotification_)
+        if (ts_.extras.userNotification())
             return rgbSetSystemNotification(SystemNotification::User);
         // otherwise, there is no notification to show
         rgbSetSystemNotification(SystemNotification::None);
@@ -1001,9 +1021,9 @@ public:
                 // we are ready to read vol up & down, read, react and get ready to measure DPAD in next tick
                 ts_.status.setVolumeKeys(!gpio::read(AVR_PIN_BTN_2), !gpio::read(AVR_PIN_BTN_3));
                 // TODO do this only when in debug mode
-                if (ts_.status.btnVolumeUp()) {
+                if (ts_.extras.debugMode() && ts_.status.btnVolumeUp()) {
                     reset();
-                } else if (ts_.status.btnVolumeDown()) {
+                } else if (ts_.extras.debugMode() && ts_.status.btnVolumeDown()) {
                     resetBootloader();
                 } else {
                     gpio::high(AVR_PIN_BTN_CTRL);

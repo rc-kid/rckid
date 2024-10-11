@@ -99,12 +99,12 @@ This just might work.
 
 - update the modal stuff how it works and the focus & blur methods to make it more resilient. Add docs warning for making sure to call the parent focus blur !!!!!
 
-- rewrite AVR code, start simple and check the basic speed stuff, etc. Then work incrementally towards a more complex stuff. 
+- add battery level hysteresis
+- fix DC power reporting 
+- add audio on/off and headphone detection on mk2
+- add charging detection & disable and then copy to mk III code as well for a start
 
-
-
-
-## Mk III Hardware
+## Mk III
 
 - the 3v3 rail to onboard sensors & RTC is always on, this enables time & steps tracking to be valid even across cartridges. The RTC memory (if present) can be used for some basic storage as well  
 - bootloader switch can be optionally on the cartridge. Otherwise SW boot is possible as well
