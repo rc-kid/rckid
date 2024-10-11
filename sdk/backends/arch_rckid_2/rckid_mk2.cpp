@@ -407,8 +407,12 @@ namespace rckid {
     }
 
     unsigned batteryLevel() {
-        // TODO change this to sth meaningful
-        return 67;
+        unsigned vb = vBatt();
+        if (vb < 320)
+            return 0;
+        if (vb > 420)
+            return 100;
+        return vb - 320;
     }
 
     // display

@@ -414,7 +414,7 @@ public:
 
     static void measureVBatt(uint16_t vx100) {
         vBatt_.addObservation(Status::voltageToRawStorage(vx100));
-        ts_.status.setVBatt(vBatt_.value());
+        ts_.status.setVBatt(Status::voltageFromRawStorage(vBatt_.value()));
     }
 
     static void measureTemp(int32_t rawValue) {
