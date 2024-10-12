@@ -77,6 +77,44 @@
 #define HEADPHONES_DETECTION_THRESHOLD 100
 
 
+
+
+// ================================================================================================
+/** AVR Pinout
+ */
+#define AVR_PIN_HEADPHONES A1
+#define AVR_PIN_CHARGING A2
+#define AVR_PIN_PWM_RUMBLER A3
+#define AVR_PIN_VBATT A4
+#define AVR_PIN_PWM_BACKLIGHT A5
+#define AVR_PIN_3V3_ON A6
+#define AVR_PIN_5V_ON A7
+
+#define AVR_PIN_SCL B0
+#define AVR_PIN_SDA B1
+#define AVR_PIN_BTN_HOME B2
+#define AVR_PIN_BTN_1 B3
+#define AVR_PIN_BTN_2 B4
+#define AVR_PIN_BTN_ABSELSTART B5
+#define AVR_PIN_BTN_3 B6
+#define AVR_PIN_RGB B7
+
+#define AVR_PIN_BTN_CTRL C0
+#define AVR_PIN_CHARGE_EN C1
+#define AVR_PIN_DISP_RDX C2
+#define AVR_PIN_QSPI_SS C3
+#define AVR_PIN_BTN_DPAD C4
+#define AVR_PIN_BTN_4 C5
+
+/** In version 2.2 the headphones and charge enable pins were swapped.
+ */
+#ifdef RCKID_VERSION_2_2
+#undef AVR_PIN_HEADPHONES
+#undef AVR_PIN_CHARGE_EN
+#define AVR_PIN_HEADPHONES C1 
+#define AVR_PIN_CHARGE_EN A1
+#endif
+
 /** \section RP2040Pinout RP2040 Pinout
  
 
@@ -255,29 +293,6 @@
     PC4 -- BTN_DPAD
     PC5 -- BTN_4
 */
-#define AVR_PIN_HEADPHONES A1
-#define AVR_PIN_CHARGING A2
-#define AVR_PIN_PWM_RUMBLER A3
-#define AVR_PIN_VBATT A4
-#define AVR_PIN_PWM_BACKLIGHT A5
-#define AVR_PIN_3V3_ON A6
-#define AVR_PIN_5V_ON A7
-
-#define AVR_PIN_SCL B0
-#define AVR_PIN_SDA B1
-#define AVR_PIN_BTN_HOME B2
-#define AVR_PIN_BTN_1 B3
-#define AVR_PIN_BTN_2 B4
-#define AVR_PIN_BTN_ABSELSTART B5
-#define AVR_PIN_BTN_3 B6
-#define AVR_PIN_RGB B7
-
-#define AVR_PIN_BTN_CTRL C0
-#define AVR_PIN_CHARGE_EN C1
-#define AVR_PIN_DISP_RDX C2
-#define AVR_PIN_QSPI_SS C3
-#define AVR_PIN_BTN_DPAD C4
-#define AVR_PIN_BTN_4 C5
 
 
 

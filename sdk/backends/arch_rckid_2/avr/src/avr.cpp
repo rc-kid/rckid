@@ -980,6 +980,15 @@ public:
                 // and now loose precision to 0.5C (x10, i.e. -15 = -1.5C)
                 value = (t >>= 7) * 5;
                 measureTemp(t);
+#ifdef RCKID_VERSION_2_2
+                // in version 2.2 headphones pin is not attached to something that can be measured with ADC, try reading the gpio, which should be enough most of the time
+                audioUpdateHeadphonesState(!gpio::read(AVR_PIN_HEADPHONES));
+                // sample internal voltage reference using VDD for reference to determine VCC next 
+                ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
+                ADC0.MUXPOS = ADC_MUXPOS_INTREF_gc;
+                break;
+            }
+#else
                 // prepare to sample the headphones next (we do this regardless of the audio state for simplicity)
                 ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
                 ADC0.MUXPOS = gpio::getADC0muxpos(AVR_PIN_HEADPHONES);
@@ -991,6 +1000,7 @@ public:
                 ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
                 ADC0.MUXPOS = ADC_MUXPOS_INTREF_gc;
                 break;
+#endif
         }
         // start the ADC conversion
         ADC0.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc | ADC_RUNSTBY_bm;

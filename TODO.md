@@ -1,6 +1,7 @@
 # TODO
 
 - check the critical battery warning & new AVR
+- some extra pixels get drawn below in the menu
 
 
 
