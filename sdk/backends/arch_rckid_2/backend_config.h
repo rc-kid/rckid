@@ -56,6 +56,10 @@
  */
 #define VOLTAGE_WARNING_THRESHOLD 340
 
+/** Nominal voltage of fully charged battery.
+ */
+#define VOLTAGE_BATTERY_FULL_THRESHOLD 420
+
 /** If the VCC measured by the chip is over this value (max of battery voltage + margin), we expect we are running from DC power. 
  */
 #define VOLTAGE_DC_POWER_THRESHOLD 430

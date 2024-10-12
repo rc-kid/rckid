@@ -49,6 +49,8 @@ namespace rckid {
         Status status_; 
         Status lastStatus_;
         uint8_t ticks_ = 0;
+        // reported battery level to prevent battery reporting glitches
+        uint8_t batteryLevel_ = 100;
 
 
         namespace audio {
@@ -140,19 +142,21 @@ namespace rckid {
                 case TICK_AVR: {
                     lastStatus_ = status_;
                     uint8_t * raw = reinterpret_cast<uint8_t*>(&status_);
-                    for (int i = 0; i < 8; ++i)
+                    for (int i = 0; i < sizeof(Status); ++i)
                         *(raw++) = i2c0->hw->data_cmd;
-                    // update battery level gauge
-                    /*
-                    unsigned battPct = vBatt();
-                    if (battPct <= VCC_CRITICAL_THRESHOLD)
-                        battPct = 0;
-                    else if (battPct >= VBATT_FULL_THRESHOLD)
-                        battPct = 100;
-                    else 
-                        battPct = (battPct - VCC_CRITICAL_THRESHOLD) * 100 / (VBATT_FULL_THRESHOLD - VCC_CRITICAL_THRESHOLD);
-                    DeviceWrapper::batteryLevel_ = battPct;
-                    */
+                    // update battery level gauge - calculate battery percentage from the battery voltage ranges and determine if we should display it (i.e. when discharging the percentage can only go down and when charging, the percentage can only go up). 
+                    unsigned vb = status_.vBatt();
+                    uint8_t bl = 0;
+                    if (vb > VOLTAGE_BATTERY_FULL_THRESHOLD)
+                        bl = 100;
+                    else if (vb > VOLTAGE_CRITICAL_THRESHOLD)
+                        bl = static_cast<uint8_t>((vb - VOLTAGE_CRITICAL_THRESHOLD) * 100 / (VOLTAGE_BATTERY_FULL_THRESHOLD - VOLTAGE_CRITICAL_THRESHOLD));
+                    if (status_.charging()) {
+                        if (bl > batteryLevel_)
+                            batteryLevel_ = bl;
+                    } else if (bl < batteryLevel_) {
+                        batteryLevel_ = bl;
+                    }
                 } // fallthrough to default handler and to disabling the I2C comms
                 default:
                     // we are done with the I2C transfer
@@ -407,12 +411,7 @@ namespace rckid {
     }
 
     unsigned batteryLevel() {
-        unsigned vb = vBatt();
-        if (vb < 320)
-            return 0;
-        if (vb > 420)
-            return 100;
-        return vb - 320;
+        return batteryLevel_;
     }
 
     // display
@@ -475,7 +474,6 @@ namespace rckid {
 
     void audioOn() {
         sendCommand(cmd::AudioOn{});
-
     }
 
     void audioOff() {
