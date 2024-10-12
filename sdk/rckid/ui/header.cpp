@@ -16,7 +16,7 @@ namespace rckid {
         int y = 0;
         int x = surface.width();
         // AC if plugged in
-        if (dcPower() || true) {
+        if (dcPower()) {
             x -= fSym.glyphInfoFor(assets::glyph::PowerCord).advanceX + 4;
             surface.text(x, y - 7, fSym, charging() ? color::Blue : color::Gray) << assets::glyph::PowerCord;
         }
@@ -32,7 +32,7 @@ namespace rckid {
         surface.text(x, y - 7, fSym, b.first) << b.second;
 
         // see if we have headphones connected
-        if (audioHeadphones() || true) {
+        if (audioHeadphones()) {
             x-= fSym.glyphInfoFor(assets::glyph::Headphones).advanceX + 6;
             surface.text(x, y - 6, fSym, color::Blue) << assets::glyph::Headphones;
         }
