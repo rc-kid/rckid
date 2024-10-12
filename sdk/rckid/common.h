@@ -138,6 +138,9 @@ namespace rckid {
             strength{strength}, timeOn{timeOn}, timeOff{timeOff}, cycles{cycles} {}
 
         bool active() const { return strength != 0; }
+
+        static RumblerEffect Off() { return RumblerEffect{}; }
+
     });
 
 } // namespace rckid

@@ -101,6 +101,8 @@ public:
         // set the AVR state to sleep (to enforce full wakeup) and then go to power on mode immediately
         avrState_ = AVRState::Sleep;
         devicePowerOn();
+        audioOff();
+        disableCharging();
     }
 
     /** The main loop implementation (including the loop). 
