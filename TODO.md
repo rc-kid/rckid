@@ -86,7 +86,7 @@ This just might work.
 
 ## Mk II Hardware
 
-- I2C problems might be somewhat mitigated by extra pullups in the cartridge
+- I2C problems might be somewhat mitigated by extra pullups in the cartridge, or add a special mode where if DC power is enabled we stop querying and just display that we have entered charging and only stop when charging is stopped? - as a really ugly hack, but will work 
 - the tick takes too long it seems (when to I2C comms with AVR there are no resets & FPS is correct at 60fps)
 - this only affect the black prototype - can be wrong AVR programming
 

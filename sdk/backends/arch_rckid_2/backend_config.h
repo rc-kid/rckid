@@ -1,5 +1,62 @@
 #pragma once
 
+// ================================================================================================
+
+/** Backend configuration - hardware settings. 
+ 
+    The following macros determine the hardware characteristics of the RCKid the firmware is intended for. 
+
+    BE EXTREMELY CAREFUL WHEN CHANGING THOSE VALUES AS INVALID SETTINGS MAY DESTROY THE DEVICE. 
+ */
+
+/** If defined, the RCKid is powered by a LiPo battery and when DC power is inserted, the battery will charge and must be monitored. 
+ 
+    THIS MUST BE SET TO FALSE FOR THE AAA POWERED VERSION. 
+  */
+#define RCKID_HAS_LIPO_CHARGER
+
+// ================================================================================================
+
+/** User Interface Specifics
+ 
+    Those values determine the user experience, and can be set freely. Especially if your build does not follow the exact materials used by RCKid proper, you way want to tweak those. 
+ */
+
+/** Determines home button's long press duration in system ticks (1ms)
+ */
+#define BTN_HOME_LONG_PRESS_THRESHOLD 1000
+
+/** Default brigthness of the RGB LEDs for all effects. Can be anything between 1 and 255 - the value depends on the opacity of the keys. 
+ */
+#define RGB_LED_DEFAULT_BRIGHTNESS 32
+
+
+
+// ================================================================================================
+
+/** Hardware thresholds. 
+ 
+    Those are hardware thresholds used by the firmware. There should be no need to change those past the initial development and calibration, unless you are doing a heavily modified build. 
+ */
+
+/** Critical voltage at which the device will not allow itself to be started (3v3 power rail). To prevent spurious measurements when the device is powering on or off, a configurable amount of consecutive vcc measurements must be below the threshold top trigger the reaction. 
+ 
+    TODO The limit here is the fact that AVR runs off the VCC rail while communicating with RP over I2C (i.e. SDA and SCL will be 3v3. If we went lower, we could get past AVR's tolerance). In version 3 this (and the warning numbers can be lowered to extend battery life a bit). 
+ */
+#define VOLTAGE_CRITICAL_THRESHOLD 330
+
+/** When the VCC is below this threshold, the notification LED will flash red. 
+ */
+#define VOLTAGE_WARNING_THRESHOLD 340
+
+/** If the VCC measured by the chip is over this value (max of battery voltage + margin), we expect we are running from DC power. 
+ */
+#define VOLTAGE_DC_POWER_THRESHOLD 430
+
+/** Headphones detection threshold (when no headphones are inserted, the line is pulled up to 3V, i.e. some 930. 
+ */
+#define HEADPHONES_DETECTION_THRESHOLD 100
+
 /** \section RP2040Pinout RP2040 Pinout
  
 
@@ -76,7 +133,6 @@
 
 
 
-#define RGB_LED_DEFAULT_BRIGHTNESS 32
 
 
 
@@ -203,56 +259,8 @@
 #define AVR_PIN_BTN_DPAD C4
 #define AVR_PIN_BTN_4 C5
 
-/** I2C address of the AVR chip for communications with RP2040
- */
-#define AVR_I2C_ADDRESS 0x43
 
 
-/** I2C address of the INA219 sensor measuring the current power draw of RCKid. 
- 
-    Set to 0 if the sensor is not present (such as when running on AAA batteries).
- */
-//#define RCKID_INA219_I2C_ADDRESS 0x40
-#define RCKID_INA219_I2C_ADDRESS 0x0
 
-/** Determines home button's long press duration in ticks multiples ticks (~1ms). Defaults to 1 second */
-#define BTN_HOME_LONG_PRESS_THRESHOLD 1000
 
-/* Duration of the home button press necessasy to power the device on. Measured in ADC cycles for the initial voltage detection, i.e. 887 cycles per second. 
- */
-//#define BTN_HOME_POWER_ON_DURATION 900
-//#define BTN_HOME_POWER_OFF_DURATION 1800
 
-#define VBATT_LEVEL_HYSTERESIS 5
-
-#define VOLTAGE_DC_POWER_THRESHOLD 430
-
-/** Full battery threshold. 
- */
-#define VBATT_FULL_THRESHOLD 420
-
-/** Critical voltage at which the device will not allow itself to be started (3v3 power rail). To prevent spurious measurements when the device is powering on or off, a configurable amount of consecutive vcc measurements must be below the threshold top trigger the reaction. 
- */
-#define VOLTAGE_CRITICAL_THRESHOLD 310
-
-/** When the VCC is below this threshold, the notification LED will flash red. 
- */
-#define VOLTAGE_WARNING_THRESHOLD 320
-
-/** If defined, the RCKid is powered by a LiPo battery and when DC power is inserted, the battery will charge and must be monitored. 
- 
-    THIS MUST BE SET TO FALSE FOR THE AAA POWERED VERSION. 
-  */
-#define RCKID_HAS_LIPO_CHARGER
-
-/** When the 3V3 rail is on, the onboard current sensor is being checked each frame right after AVR is done sending status to master. Should this fail, this number of ticks provides a failsafe for current measurements even with frameskips, or RP2040 hangup. 
-*/
-#define RCKID_CURRENT_SENSE_TIMEOUT_TICKS 10
-
-#define RCKID_VBATT_CHARGE_CUTOFF_VOLTAGE 435
-
-#define RCKID_VBATT_CUTOFF_TEMPERATURE 450
-
-/** Headphones detection threshold (when no headphones are inserted, the line is pulled up to 3V, i.e. some 930. 
- */
-#define HEADPHONES_DETECTION_THRESHOLD 100

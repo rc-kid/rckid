@@ -42,8 +42,8 @@ namespace rckid::cmd {
     
     COMMAND(8, DebugModeOn);
     COMMAND(9, DebugModeOff);
-    COMMAND(10, AudioEnabled);
-    COMMAND(11, AudioDisabled);
+    COMMAND(10, AudioOn);
+    COMMAND(11, AudioOff);
 
     COMMAND(12, SetBrightness,
         uint8_t value;

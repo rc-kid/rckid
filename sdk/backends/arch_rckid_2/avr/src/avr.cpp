@@ -191,7 +191,7 @@ public:
     static inline RingAvg<uint8_t, 128> vcc_;
     static inline RingAvg<uint8_t, 128> vBatt_;
 
-    /** State of the AVR MCU. 
+    /** State of the AVR MCU.
     */
     enum class AVRState {
         Sleep, 
@@ -520,7 +520,12 @@ public:
                 ts_.extras.setDebugMode(false);
                 rgbUpdateSystemNotification();
                 break;
-            // TODO audio enable 
+            case cmd::AudioOn::ID:
+                audioOn();
+                break;
+            case cmd::AudioOff::ID:
+                audioOff();
+                break;
             case cmd::SetBrightness::ID: {
                 uint8_t value = cmd::SetBrightness::fromBuffer(ts_.buffer).value;
                 setBacklightPWM(value);
@@ -584,6 +589,32 @@ public:
         i2cRxIdx_ = 0;
         i2cCommandReady_ = false;
         sei();
+    }
+
+    //@}
+
+    /** \name Audio
+     
+        The AVR is responsible for turning the speaker off when audio is not in use as there is a bit of a hum. The same pin is also used to detect whether headphones are inserted or not (inserting headphones also disables the speaker). This means that when audio is off, the headphone detection does not work and the AVR reports headphones as not present. 
+
+        TODO for V3 we can use two separate pins for this and read headphones independently of speaker enabled or disabled. 
+     */
+    //@{
+
+    static void audioOn() {
+        ts_.status.setAudioEnabled(true);
+        gpio::outputFloat(AVR_PIN_HEADPHONES);
+    }
+
+    static void audioOff() {
+        ts_.status.setAudioEnabled(false);
+        ts_.status.setAudioHeadphones(false);
+        gpio::outputLow(AVR_PIN_HEADPHONES);
+    }
+
+    static void audioUpdateHeadphonesState(bool value) {
+        if (ts_.status.audioEnabled())
+            ts_.status.setAudioHeadphones(value);
     }
 
     //@}
@@ -817,7 +848,9 @@ public:
 
     /** \name Analogue Measurements
      
-        ADC0 is used to measure the analogue measurements - vcc, battery voltage and temperature.
+        ADC0 is used to measure the analogue measurements - vcc, battery voltage, temperature and whether headphones are present or not.
+
+        Since in mk II the AVR runs off the VCC rail directly, we can measure VCC by measuring internal voltage reference against VCC. Battery is measured as connected to a pin (VCC is always >= vBatt). 
      */
     //@{
 
@@ -898,15 +931,13 @@ public:
                 // and now loose precision to 0.5C (x10, i.e. -15 = -1.5C)
                 value = (t >>= 7) * 5;
                 measureTemp(t);
-                // sample internal voltage reference using VDD for reference to determine VCC next 
+                // prepare to sample the headphones next (we do this regardless of the audio state for simplicity)
                 ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
-                ADC0.MUXPOS = ADC_MUXPOS_INTREF_gc;
-                // TODO for V2 prepare for headphones instead, if audio is on
+                ADC0.MUXPOS = gpio::getADC0muxpos(AVR_PIN_HEADPHONES);
                 break;
             }
-            // TODO headphones in V2 share same pin, and are analog. This could change to digital in V3
             case gpio::getADC0muxpos(AVR_PIN_HEADPHONES):
-                //ts_.state.setHeadphones(value < HEADPHONES_DETECTION_THRESHOLD);
+                audioUpdateHeadphonesState(value < HEADPHONES_DETECTION_THRESHOLD);
                 // sample internal voltage reference using VDD for reference to determine VCC next 
                 ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
                 ADC0.MUXPOS = ADC_MUXPOS_INTREF_gc;
@@ -1110,7 +1141,6 @@ ISR(ADC0_RESRDY_vect) {
    ADC0.INTFLAGS = ADC_RESRDY_bm;
    RCKid::vccMeasureReady_ = true;
 }
-
 
 int main() {
     RCKid::initialize();
