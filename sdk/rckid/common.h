@@ -2,6 +2,7 @@
 
 #include <platform.h>
 #include <platform/color_strip.h>
+#include "backend_config.h"
 
 // Forward declaration for the RCKid firmware class so that we can access status internals
 class RCKid;
@@ -125,6 +126,12 @@ namespace rckid {
             kind{kind}, speed{speed}, duration{duration}, color{platform::Color::Black()} {}
     }); 
 
+    /** Rumbler effect description. 
+
+        All times are specified in frames (60 frames per second). This gives resolution of down to 16ms and up to 4 seconds. Also contains predefined rumble effects, such as Ok (single), Fail (tree rumbles), Attention (log rumble) and nudge (single short pulse). 
+
+        
+     */
     PACKED(class RumblerEffect {
     public:
         uint8_t strength = 0;
@@ -138,6 +145,30 @@ namespace rckid {
             strength{strength}, timeOn{timeOn}, timeOff{timeOff}, cycles{cycles} {}
 
         bool active() const { return strength != 0; }
+
+        static RumblerEffect Ok() { return RumblerEffect{
+            RUMBLER_DEFAULT_STRENGTH, 
+            RUMBLER_OK_DURATION,
+            0, 
+            1}; } 
+
+        static RumblerEffect Fail() { return RumblerEffect{
+            RUMBLER_DEFAULT_STRENGTH, 
+            RUMBLER_OK_DURATION,
+            RUMBLER_OK_DURATION,
+            3}; }
+
+        static RumblerEffect Attention() { return RumblerEffect{
+            RUMBLER_DEFAULT_STRENGTH, 
+            RUMBLER_ATTENTION_DURATION,
+            0, 
+            1}; }
+
+        static RumblerEffect Nudge() { return RumblerEffect{
+            RUMBLER_DEFAULT_STRENGTH, 
+            RUMBLER_NUDGE_DURATION,
+            0, 
+            1}; }
 
         static RumblerEffect Off() { return RumblerEffect{}; }
 

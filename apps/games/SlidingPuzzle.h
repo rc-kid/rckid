@@ -76,8 +76,8 @@ namespace rckid {
                 }
                 tmp_.blit(Point::origin(), g_, tileRect(holeX_, holeY_));
                 a_.start();
-                //if (dir_ != Btn::Home)
-                //    setRumbler(RumblerEffect::Nudge());
+                if (dir_ != Btn::Home)
+                    rumbleNudge();
             }
         }
 

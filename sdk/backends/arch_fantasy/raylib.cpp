@@ -440,9 +440,9 @@ namespace rckid {
 
     // Rumbler
 
-    void rumble(uint8_t intensity, uint16_t duration, unsigned repetitions, uint16_t offDuration) {
+    void rumble(RumblerEffect const & effect) {
         // there is no rumbler, just log the action
-        LOG("Rumbler: intensity " << (unsigned) intensity << ", duration: " << duration << ", repetitions: " << repetitions << ", off duration: " << offDuration);
+        LOG("Rumbler: intensity " << (unsigned) effect.strength << ", duration: " << effect.timeOn << ", repetitions: " << effect.cycles << ", off duration: " << effect.timeOff);
     }
 
     // SD card interface

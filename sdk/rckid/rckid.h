@@ -306,24 +306,12 @@ namespace rckid {
      */
     //@{
 
-    void rumble(uint8_t intensity, uint16_t duration, unsigned repetitions, uint16_t offDuration); 
+    void rumble(RumblerEffect const & effect);
 
-    inline void rumble(uint8_t intensity, uint16_t duration, unsigned repetitions = 1) {
-        rumble(intensity, duration, repetitions, duration);
-    }
-
-    inline void rumbleOk() {
-        rumble(128, 100);   
-    }
-
-    inline void rumbleFail() {
-        rumble(128, 100, 3, 100);
-    }
-
-    inline void rumbleAttention() {
-        rumble(128, 500);
-    }
-
+    inline void rumbleNudge() { rumble(RumblerEffect::Nudge()); }
+    inline void rumbleOk() { rumble(RumblerEffect::Ok()); }
+    inline void rumbleFail() { rumble(RumblerEffect::Fail()); }
+    inline void rumbleAttention() {rumble(RumblerEffect::Attention()); }
 
     //@}
 

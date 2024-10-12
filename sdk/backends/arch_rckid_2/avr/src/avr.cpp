@@ -19,7 +19,7 @@
 
 #include <platform/ringavg.h>
 
-#include "../../backend_config.h"
+#include "backend_config.h"
 #include "../../../../rckid/common.h"
 #include "status.h"
 #include "commands.h"
@@ -163,11 +163,11 @@ public:
         TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm;
         // input ticks happen at the same as system ticks
         inputsTick_ = true;
-        rumblerTick_ = true;
         // see if we should trigger the 60fps rgb & rumbler ticks
         if (--systemTicksCountdown_ == 0) {
             systemTicksCountdown_ = 60;
             rgbTick_ = true;
+            rumblerTick_ = true;
         }
         // if dc power is present, check the charging pin to determine if we are charging or not 
         if (ts_.status.powerDC()) {

@@ -567,8 +567,8 @@ namespace rckid {
 
     // Rumbler
 
-    void rumble(uint8_t intensity, uint16_t duration, unsigned repetitions, uint16_t offDuration) {
-        sendCommand(cmd::Rumbler(RumblerEffect(intensity, duration, offDuration, repetitions)));
+    void rumble(RumblerEffect const & effect) {
+        sendCommand(cmd::Rumbler(effect));
     }
 
     // accelerated functions
