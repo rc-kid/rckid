@@ -1,10 +1,6 @@
 # TODO
 
 - check the critical battery warning & new AVR
-- some extra pixels get drawn below in the menu
-
-
-
 
 - make mp3 player and video as a TV so that the mp3's have daily schedule that you can do
 

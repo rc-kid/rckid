@@ -127,29 +127,29 @@ namespace rckid {
         }
 
         Writer text(int x, int y, Font const & font, Color const * colors) {
-            //int startX = x;
+            int startX = x;
             return Writer{[=](char c) mutable {
                 if (c != '\n') {
-                    x += putChar(Point{x, y}, font, c, colors);
-                    //if (x < width())
-                    //    return; 
+                    if (x < width())
+                        x += putChar(Point{x, y}, font, c, colors);
+                } else {
+                    x = startX;
+                    y += font.size;
                 }
-                //x = startX;
-                //y += font.size;
             }};
         }
 
         Writer text(int x, int y, Font const & font, Color color) {
             Color colors[] = { color, (color + 1), (color + 2) , (color + 3) };
-            //int startX = x;
-            return Writer{[this, x, y, font, colors](char c) mutable {
+            int startX = x;
+            return Writer{[this, x, y, startX, font, colors](char c) mutable {
                 if (c != '\n') {
-                    x += putChar(Point{x, y}, font, c, colors);
-                    //if (x < width())
-                    //    return; 
+                    if (x < width())
+                        x += putChar(Point{x, y}, font, c, colors);
+                } else {
+                    x = startX;
+                    y += font.size;
                 }
-                //x = startX;
-                //y += font.size;
             }};
         }
 
@@ -206,12 +206,12 @@ namespace rckid {
         int startX = x;
         return Writer{[this, x, startX, y, font, colors](char c) mutable {
             if (c != '\n') {
-                x += putChar(Point{x, y}, font, c, colors);
-                //if (x < width())
-                //    return; 
+                if (x < width())
+                    x += putChar(Point{x, y}, font, c, colors);
+            } else {
+                x = startX;
+                y += font.size;
             }
-            //x = startX;
-            //y += font.size;
         }};
     }
 

@@ -33,7 +33,7 @@ namespace rckid {
 
         // see if we have headphones connected
         if (audioHeadphones()) {
-            x -= fSym.glyphInfoFor(assets::glyph::Headphones).advanceX + 6;
+            x -= fSym.glyphInfoFor(assets::glyph::Headphones).advanceX + 4;
             surface.text(x, y - 6, fSym, color::Blue) << assets::glyph::Headphones;
         } else {
             x -= 4;
