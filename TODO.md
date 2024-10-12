@@ -1,17 +1,11 @@
 # TODO
 
-- is it ok to remove the cartridge while powered on?
+- check the critical battery warning & new AVR
 
-- use NOR gate for pin from RP and button so that pressing the button powers rpi on
-- https://jlcpcb.com/partdetail/Msksemi-SN74LVC1G04DBVRMS/C7434171
 
-- actually don't do anything crazy, have the RP always powered on (10uA), but allow disengaging the cartridge's power supply - might be able to do this even for sleep? 
+
 
 - make mp3 player and video as a TV so that the mp3's have daily schedule that you can do
-
-
-- avr mk III - the voltage measurements are still not working - check why
-
 
 ## RP2350
 

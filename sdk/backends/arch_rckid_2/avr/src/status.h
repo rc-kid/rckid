@@ -119,13 +119,16 @@ namespace rckid {
     public:
         bool debugMode() const { return raw_ & DEBUG_MODE; }
         bool userNotification() const { return raw_ & USER_NOTIFICATION; }
+        bool chargingError() const { return raw_ & CHARGING_ERROR; }
 
         void setDebugMode(bool value) { value ? raw_ |= DEBUG_MODE : raw_ &= ~DEBUG_MODE; }
         void setUserNotification(bool value) { value ? raw_ |= USER_NOTIFICATION : raw_ &= ~USER_NOTIFICATION; }
+        void setChargingError(bool value) { value ? raw_ |= CHARGING_ERROR : raw_ &= ~CHARGING_ERROR; }
 
     private:
         static constexpr uint8_t DEBUG_MODE = 1 << 0;
         static constexpr uint8_t USER_NOTIFICATION = 1 << 1;
+        static constexpr uint8_t CHARGING_ERROR = 1 << 2;
         uint8_t raw_ = 0;
     });
 

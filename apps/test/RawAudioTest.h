@@ -12,7 +12,7 @@ namespace rckid {
             buf_{BUFFER_FRAMES * 4, [this](DoubleBuffer &) {
                 refill();
             }} {
-                audioEnable();
+                audioOn();
                 refill();
             }
 

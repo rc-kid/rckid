@@ -138,16 +138,6 @@ namespace rckid {
             strength{strength}, timeOn{timeOn}, timeOff{timeOff}, cycles{cycles} {}
 
         bool active() const { return strength != 0; }
-
-
-        static RumblerEffect OK() { return RumblerEffect{RCKID_RUMBLER_DEFAULT_STRENGTH, RCKID_RUMBLER_OK_TIME_ON, RCKID_RUMBLER_OK_TIME_OFF, RCKID_RUMBLER_OK_CYCLES}; }
-
-        static RumblerEffect FAIL() { return RumblerEffect{RCKID_RUMBLER_DEFAULT_STRENGTH, RCKID_RUMBLER_FAIL_TIME_ON, RCKID_RUMBLER_FAIL_TIME_OFF, RCKID_RUMBLER_FAIL_CYCLES}; }
-
-        static RumblerEffect Nudge() { return RumblerEffect{RCKID_RUMBLER_NUDGE_STRENGTH, RCKID_RUMBLER_NUDGE_TIME_ON, 0, 1}; }
-
-        static RumblerEffect Off() { return RumblerEffect{}; }
-
     });
 
 } // namespace rckid

@@ -36,7 +36,7 @@ public:
 
 int main() {
     rckid::initialize();
-    audioEnable();
+    audioOn();
     //GBCEmu{}.run();
     //start(Menu{});
     //start(SlidingPuzzle{});

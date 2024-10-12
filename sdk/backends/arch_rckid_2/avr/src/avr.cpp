@@ -167,6 +167,14 @@ public:
             systemTicksCountdown_ = 60;
             rgbTick_ = true;
         }
+        // if dc power is present, check the charging pin to determine if we are charging or not 
+        if (ts_.status.powerDC()) {
+            bool charging = !gpio::read(AVR_PIN_CHARGING);
+            if (charging != ts_.status.charging()) {
+                ts_.status.setCharging(charging);
+                rgbUpdateSystemNotification();
+            }
+        }
         // TODO do the system tick
     }
 
@@ -303,7 +311,7 @@ public:
             leaveSleep();
             avrState_ = AVRState::Charging;
         }
-        // TODO enable charging 
+        enableCharging();
 #endif
     }
 
@@ -311,9 +319,34 @@ public:
         if (!ts_.status.powerDC())
             return;
         ts_.status.setPowerDC(false);
+        // we are clearly not charging if we don't have DC power, disable it as well to be sure
+        ts_.status.setCharging(false);
+        // clear charging error in status extras
+        ts_.extras.setChargingError(false);
 #ifdef RCKID_HAS_LIPO_CHARGER
+        disableCharging();
         if (avrState_ == AVRState::Charging) 
             enterSleep();
+#endif
+    }
+
+    /** Enables charging. 
+     */
+    static void enableCharging() {
+#ifdef RCKID_VERSION_2_2
+        gpio::outputFloat(AVR_PIN_CHARGE_EN);
+#else
+        gpio::outputLow(AVR_PIN_CHARGE_EN);
+#endif
+    }
+
+    /** Disables charging
+     */
+    static void disableCharging() {
+#ifdef RCKID_VERSION_2_2
+        gpio::outputHigh(AVR_PIN_CHARGE_EN);
+#else
+        gpio::outputFloat(AVR_PIN_CHARGE_EN);
 #endif
     }
 
@@ -422,11 +455,20 @@ public:
     static void measureVBatt(uint16_t vx100) {
         vBatt_.addObservation(Status::voltageToRawStorage(vx100));
         ts_.status.setVBatt(Status::voltageFromRawStorage(vBatt_.value()));
+        // if the battery measured voltage is above the specified threshold, we expect charger malfunction and cut the charging off
+        if (vx100 >= VOLTAGE_BATTERY_OVERCHARGE_THRESHOLD) {
+            disableCharging();
+            ts_.extras.setChargingError(true);
+        }
     }
 
-    static void measureTemp(int32_t rawValue) {
-        ts_.status.setTemp(rawValue);
-        // TODO if temperature is too large, cut of charging
+    static void measureTemp(int32_t tx10) {
+        ts_.status.setTemp(tx10);
+        // if temperature is too large, cut of charging
+        if (tx10 >= TEMPERATURE_BATTERY_OVERHEAT_THRESHOLD) {
+            disableCharging();
+            ts_.extras.setChargingError(true);
+        }
     }
     //@}
 
@@ -435,8 +477,7 @@ public:
         The communication is rather simple - an I2C slave that when read from returns the state buffer and when written to, stores data in the state's comms buffer. The data will be interpreted as a command and performed after the stop condition is received.
 
         This mode simplifies the AVR part and prioritizes short communication burts for often needed data, while infrequent operations, such as full state and even EEPROM data reads take more time. 
-
-        
+       
      */
     //@{
 
@@ -633,6 +674,7 @@ public:
         BatteryWarning, 
         Charging,
         ChargingDone,
+        ChargingError,
     };
 
     static inline volatile bool rgbOn_ = false;
@@ -706,6 +748,8 @@ public:
     }
 
     static void rgbUpdateSystemNotification() {
+        if (ts_.extras.chargingError())
+            return rgbSetSystemNotification(SystemNotification::ChargingError);
         // highest priority - if we are running on battery and the battery level is low, show the low battery level warning
         if ((!ts_.status.powerDC()) && (ts_.vcc < VOLTAGE_WARNING_THRESHOLD) && vcc_.ready())
             return rgbSetSystemNotification(SystemNotification::BatteryWarning);
@@ -742,6 +786,9 @@ public:
                 break;
             case SystemNotification::ChargingDone:
                 rgbEffects_[2] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RGB_LED_DEFAULT_BRIGHTNESS));
+                break;
+            case SystemNotification::ChargingError:
+                rgbEffects_[2] = RGBEffect::Breathe(platform::Color::Red().withBrightness(RGB_LED_DEFAULT_BRIGHTNESS), 4);
                 break;
         }
         rgbOn();

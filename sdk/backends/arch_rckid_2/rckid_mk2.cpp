@@ -473,13 +473,13 @@ namespace rckid {
     }
 
 
-    void audioEnable() {
-        sendCommand(cmd::AudioEnabled{});
+    void audioOn() {
+        sendCommand(cmd::AudioOn{});
 
     }
 
-    void audioDisable() {
-        sendCommand(cmd::AudioDisabled{});
+    void audioOff() {
+        sendCommand(cmd::AudioOff{});
     }
 
     bool audioHeadphones() {

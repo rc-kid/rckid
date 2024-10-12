@@ -15,6 +15,13 @@
   */
 #define RCKID_HAS_LIPO_CHARGER
 
+
+
+/** Select this for PCB version 2.2 where charging was not connected directly to an AVR pin, but went to ground with a swicth (i.e. to enable charging the pin was to be set to float and not disturb the mosfet and to disable, the pin was drivern ) 
+*/
+
+#define RCKID_VERSION_2_2
+
 // ================================================================================================
 
 /** User Interface Specifics
@@ -53,9 +60,18 @@
  */
 #define VOLTAGE_DC_POWER_THRESHOLD 430
 
+/** If the VBatt will be reported at over 4.35V during charging, we'll detect overcharge failure and cut the charger off. 
+ */
+#define VOLTAGE_BATTERY_OVERCHARGE_THRESHOLD 435
+
+/** If the device's temperature measured by teh AVR will be over 40 degrees, we'll detect battery overheat and turn charging off.
+ */
+#define TEMPERATURE_BATTERY_OVERHEAT_THRESHOLD 400
+
 /** Headphones detection threshold (when no headphones are inserted, the line is pulled up to 3V, i.e. some 930. 
  */
 #define HEADPHONES_DETECTION_THRESHOLD 100
+
 
 /** \section RP2040Pinout RP2040 Pinout
  

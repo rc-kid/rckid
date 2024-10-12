@@ -260,9 +260,9 @@ namespace rckid {
 
     /** Enables the audio.
      */
-    void audioEnable();
+    void audioOn();
 
-    void audioDisable();
+    void audioOff();
 
     bool audioHeadphones();
 

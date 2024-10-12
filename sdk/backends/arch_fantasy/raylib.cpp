@@ -372,11 +372,11 @@ namespace rckid {
         }
     }
 
-    void audioEnable() {
+    void audioOn() {
         InitAudioDevice();
     }
 
-    void audioDisable() {
+    void audioOff() {
         if (audioPlayback_)
             audioStop();
         CloseAudioDevice();
