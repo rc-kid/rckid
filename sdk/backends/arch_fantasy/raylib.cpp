@@ -243,6 +243,11 @@ namespace rckid {
     int16_t gyroY() { return 0; }
     int16_t gyroZ() { return 0; }
 
+    uint16_t lightAmbient() { return 1; }
+    uint16_t lightUV() { return 2; }
+
+    int16_t tempAvr() { return 250; }
+
 
 
     // power management
@@ -380,6 +385,11 @@ namespace rckid {
         if (audioPlayback_)
             audioStop();
         CloseAudioDevice();
+    }
+
+    bool audioEnabled() {
+        // TODO and recording
+        return audioPlayback_; 
     }
 
     bool audioHeadphones() {

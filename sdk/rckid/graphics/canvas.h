@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../assets/fonts/Iosevka16.h"
 #include "bitmap.h"
 
 namespace rckid {
@@ -38,11 +39,21 @@ namespace rckid {
     private:
         Color fg_;
         Color bg_;   
-        Font const * font_;     
+        Font const * font_ = & defaultFont_;   
+
+        static constexpr Font defaultFont_{Font::fromROM<assets::font::Iosevka16>()};  
 
     }; // rckid::Canvas
 
     template<typename T>
     class Renderer<Canvas<T>> : public Renderer<Bitmap<T>> {};
+
+    template<>
+    inline Canvas<ColorRGB>::Canvas(Coord width, Coord height): 
+        Bitmap<Color>{width, height},
+        fg_{color::White}, 
+        bg_{color::Black} {
+    }
+
 
 } // namespace rckid

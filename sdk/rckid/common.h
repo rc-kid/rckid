@@ -130,7 +130,7 @@ namespace rckid {
 
         All times are specified in frames (60 frames per second). This gives resolution of down to 16ms and up to 4 seconds. Also contains predefined rumble effects, such as Ok (single), Fail (tree rumbles), Attention (log rumble) and nudge (single short pulse). 
 
-        
+
      */
     PACKED(class RumblerEffect {
     public:
@@ -154,8 +154,8 @@ namespace rckid {
 
         static RumblerEffect Fail() { return RumblerEffect{
             RUMBLER_DEFAULT_STRENGTH, 
-            RUMBLER_OK_DURATION,
-            RUMBLER_OK_DURATION,
+            RUMBLER_FAIL_DURATION,
+            RUMBLER_FAIL_DURATION,
             3}; }
 
         static RumblerEffect Attention() { return RumblerEffect{

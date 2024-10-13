@@ -39,12 +39,10 @@
 
 
 #define RUMBLER_DEFAULT_STRENGTH 128
-#define RUMBLER_OK_DURATION 6
-#define RUMBLER_FAIL_DURATION 6
-#define RUMBLER_ATTENTION_DURATION 31
-#define RUMBLER_NUDGE_DURATION 3
-
-
+#define RUMBLER_OK_DURATION 5
+#define RUMBLER_FAIL_DURATION 3
+#define RUMBLER_ATTENTION_DURATION 10
+#define RUMBLER_NUDGE_DURATION 2
 
 // ================================================================================================
 

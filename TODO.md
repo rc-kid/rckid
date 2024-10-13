@@ -1,6 +1,10 @@
 # TODO
 
 - check the critical battery warning & new AVR
+- temperature does not seem to be right
+- effects and direct RGB settings not playing nicely together either (setting normal value should clear effect & green for )
+- add logo when clearing the screen
+
 
 - make mp3 player and video as a TV so that the mp3's have daily schedule that you can do
 
@@ -78,22 +82,10 @@ This just might work.
 ## Mk II Hardware
 
 - I2C problems might be somewhat mitigated by extra pullups in the cartridge, or add a special mode where if DC power is enabled we stop querying and just display that we have entered charging and only stop when charging is stopped? - as a really ugly hack, but will work 
-- the tick takes too long it seems (when to I2C comms with AVR there are no resets & FPS is correct at 60fps)
-- this only affect the black prototype - can be wrong AVR programming
 
 - does not work with 5V from laptop
-- for mk II can disable running RP2040 when on DC power perhaps
-- avr tick speed seems to be an issue as well
-- won't power on with long home button key - can be related to the above
-
-- remove charging current from state
 
 - update the modal stuff how it works and the focus & blur methods to make it more resilient. Add docs warning for making sure to call the parent focus blur !!!!!
-
-- add battery level hysteresis
-- fix DC power reporting 
-- add audio on/off and headphone detection on mk2
-- add charging detection & disable and then copy to mk III code as well for a start
 
 ## Mk III
 

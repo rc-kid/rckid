@@ -92,6 +92,7 @@ namespace rckid {
                     memoryEnterArena();
                     reinterpret_cast<Action>(payloadPtr)();
                     TRACE_MENU_APP("App done");
+                    rumbleNudge();
                     memoryLeaveArena();
                     memoryEnterArena();
                     singleton_ = new MenuApp{};
@@ -112,12 +113,14 @@ namespace rckid {
                     moveLeft();
                 if (btnDown(Btn::Right))
                     moveRight();
-                if (btnDown(Btn::Up) || btnDown(Btn::A))
+                if (btnDown(Btn::Up) || btnDown(Btn::A)) {
+                    rumbleNudge();
                     exit();
+                }
                 if (btnDown(Btn::Down) || btnDown(Btn::B)) {
                     i_ = -1; // to signify we are leaving the menu
                     exit();
-                    rumbleAttention();                    
+                    rumbleNudge();                    
                 }
                 if (btnPressed(Btn::Select))
                     ledSetEffect(Btn::Left, RGBEffect::Solid(16, 0, 0, 1));
@@ -141,14 +144,14 @@ namespace rckid {
             if (--i_ < 0)
                 i_ = menu_->size() - 1;
             carousel_->moveLeft((*menu_)[i_]);
-            rumbleOk();
+            rumbleNudge();
         }
 
         void moveRight() {
             if (++i_ >= static_cast<int>(menu_->size()))
                 i_ = 0;
             carousel_->moveRight((*menu_)[i_]);
-            rumbleFail();
+            rumbleNudge();
         }
 
         static inline MenuApp * singleton_ = nullptr;

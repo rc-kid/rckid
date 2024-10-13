@@ -129,6 +129,10 @@ namespace rckid {
      */
     uint16_t lightUV(); 
 
+    /** Temperature in tenths of degree Celsius as measured by the AVR firmware
+     */
+    int16_t tempAvr(); 
+
     //}
 
     /** \name Power Management
@@ -263,6 +267,8 @@ namespace rckid {
     void audioOn();
 
     void audioOff();
+
+    bool audioEnabled();
 
     bool audioHeadphones();
 

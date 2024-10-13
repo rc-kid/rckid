@@ -25,7 +25,7 @@ namespace rckid {
         
     protected:
         Pong(): 
-            GraphicsApp(Bitmap<Color>{320, 240}) 
+            GraphicsApp{Bitmap<Color>{320, 240}}
         {
             resetGame();
         }

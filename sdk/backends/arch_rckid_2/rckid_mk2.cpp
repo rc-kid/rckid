@@ -280,6 +280,7 @@ namespace rckid {
     void tick() {
         while (tickInProgress_ != TICK_DONE)
             yield();
+        ++ticks_;
         // make sure the I2C is off, then set it up so that it can talk to the accelerometer
         if (ticks_ % 8 == 0) {
             i2c0->hw->enable = 0;
@@ -392,6 +393,11 @@ namespace rckid {
     int16_t gyroY() { return aState_.gyroY; }
     int16_t gyroZ() { return aState_.gyroZ; }
 
+    uint16_t lightAmbient() { return lightAls_; }
+    uint16_t lightUV() { return lightUV_; }
+
+    int16_t tempAvr() { return status_.temp(); }
+
     // power management
 
     void sleep() {
@@ -478,6 +484,10 @@ namespace rckid {
 
     void audioOff() {
         sendCommand(cmd::AudioOff{});
+    }
+
+    bool audioEnabled() {
+        return status_.audioEnabled();
     }
 
     bool audioHeadphones() {

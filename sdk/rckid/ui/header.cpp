@@ -48,7 +48,7 @@ namespace rckid {
         x -= fSym.glyphInfoFor(v.second).advanceX;
         surface.text(x, y - 7, fSym, v.first) << v.second;
         // if SD card has not been found, show its error sign
-        if (sdCapacity() == 0 || true) {
+        if (sdCapacity() == 0) {
             x -= fSym.glyphInfoFor(assets::glyph::SDCard).advanceX;
             surface.text(x, y - 7, fSym, color::Red) << assets::glyph::SDCard;
         }
