@@ -24,11 +24,11 @@ namespace rckid {
             Rainbow,
         }; 
 
-        struct Rainbow {
+        PACKED(struct Rainbow {
             uint8_t hue;
             uint8_t step; 
             uint8_t brightness;
-        } __attribute__((packed)); 
+        }); 
 
         /** Kind of the effect. 
          */
@@ -40,10 +40,10 @@ namespace rckid {
          */
         uint8_t duration;
 
-        union {
+        PACKED(union {
             platform::Color color;
             Rainbow rainbow;
-        } __attribute__((packed));
+        });
 
         RGBEffect(): kind{Kind::Off}, speed{1}, duration{0}, color{platform::Color::Black()} {} 
 
