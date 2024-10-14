@@ -269,11 +269,6 @@
 /** PWM slice for the microphone in, which on pins 24 and 25 corresponds to PWM slice 4 */
 #define RP_MIC_SLICE 4
 
-/** Depth of the audio buffer (there are two audio buffers of the given size)
-*/
-#define RP_AUDIO_BUFFER_SIZE 2048
-
-
 /** AVR Pinout
  
     PA1 -- CHARGE_EN (floating, pull low to disable charging)

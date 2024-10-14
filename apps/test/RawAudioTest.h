@@ -7,6 +7,13 @@ namespace rckid {
 
     class RawAudioTest : public GraphicsApp<Canvas<ColorRGB>> {
     public:
+
+        static void run() {
+            RawAudioTest app{};
+            app.loop();
+        }
+
+    protected:
         RawAudioTest():
             GraphicsApp{Canvas<Color>{320, 240}},
             buf_{BUFFER_FRAMES * 4, [this](DoubleBuffer &) {
@@ -16,7 +23,6 @@ namespace rckid {
                 refill();
             }
 
-    protected:
 
         void update() override {
             if (btnPressed(Btn::A)) {
@@ -29,7 +35,10 @@ namespace rckid {
 
         void draw() override {
             g_.fill();
-            //g_.text(10,10) << "Music to my ears:";
+            g_.text(10,20) << 
+                "\nUpdate calls: " << updates_ <<
+                "\nErrors:       " << errors_ << 
+                "\nIndex:        " << ii_;
         }
 
 
@@ -80,10 +89,27 @@ namespace rckid {
         static constexpr uint32_t BUFFER_FRAMES = 512;
         static constexpr uint32_t INPUT_SIZE = sizeof(assets::tests::raw_audio_44100_16_signed) / 2;
 
+        uint16_t x = 0;
+
+        uint32_t updates_ = 0;
+        int16_t * lastBuf_ = nullptr;
+        uint32_t errors_ = 0;
+
         void refill() {
+            ++updates_;
             int16_t * buf = reinterpret_cast<int16_t*>(buf_.getBackBuffer());
+            if (buf == lastBuf_)
+                ++errors_;
+            lastBuf_ = buf;
             int16_t const * input = reinterpret_cast<int16_t const *>(assets::tests::raw_audio_44100_16_signed);
             for (uint32_t i = 0; i < BUFFER_FRAMES; ++i) {
+                /*
+                buf[i * 2] = x;
+                buf[i * 2 + 1] = x;
+                if (++x == 4096)
+                    x = 0;
+               ++ii_;
+               */
                 int16_t v = input[ii_];
                 if (++ii_ == INPUT_SIZE)
                     ii_ = 0;

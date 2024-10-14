@@ -54,13 +54,12 @@ namespace rckid {
 
 
         namespace audio {
-
             uint8_t volume_ = 128;
             bool playback_ = false;
             uint dma0_ = 0;
             uint dma1_ = 0;
             DoubleBuffer * playbackBuffer_;
-
+            uint8_t bitResolution_ = 12;
         }
 
     }
@@ -142,7 +141,7 @@ namespace rckid {
                 case TICK_AVR: {
                     lastStatus_ = status_;
                     uint8_t * raw = reinterpret_cast<uint8_t*>(&status_);
-                    for (int i = 0; i < sizeof(Status); ++i)
+                    for (size_t i = 0; i < sizeof(Status); ++i)
                         *(raw++) = i2c0->hw->data_cmd;
                     // update battery level gauge - calculate battery percentage from the battery voltage ranges and determine if we should display it (i.e. when discharging the percentage can only go down and when charging, the percentage can only go up). 
                     unsigned vb = status_.vBatt();
@@ -174,41 +173,37 @@ namespace rckid {
 
 
     /** Audio DMA playback handler.
-        
+     
+        When this fucntion is called, the other DMA is already running (it was started by the finished DMA immediately). Our task is to tell the finished DMA to again start the other one immediately after it finishes, then call the refill function for the buffer DMA's buffer area and convert the filled data from int16_t to 12bit uint16_t.  
      */
-    void audioPlaybackDMA(uint finished, uint other) {
+    void __not_in_flash_func(audioPlaybackDMA)(uint finished, [[maybe_unused]] uint other) {
         // reconfigure the currently finished buffer to start from the current front buffer (will be back after the swap) - note the other dma has already been started by the finished one
         dma_channel_set_read_addr(finished, audio::playbackBuffer_->getFrontBuffer(), false);
         // swap the buffers (this also calls the callback that fills the front part of the buffer with data)
         audio::playbackBuffer_->swap();
-        // finally, while in the IRQ we must ensure that the data filled by the app in the callback conforms to what we expect. This means adjusting the volume and converting from int16_t to uint16_t centered at 32768
-        // also for the basic PWM out w/o sigma delta, this also means loweing the resolution to 12 bits only
-        
-        // TODO
-        //int16_t * buf = audioPlaybackBuffer_->getFrontBuffer();
-        //for (uint32_t i = 0; i < audioPlaybackBuffer_.size(); ++i) {
-
-        //}
-
+        // finally, while in the IRQ we must ensure that the data filled by the app in the callback conforms to what we expect. This means adjusting the volume and converting from int16_t to uint16_t centered at half the bit resolution
+        int16_t * buf = reinterpret_cast<int16_t*>(audio::playbackBuffer_->getBackBuffer());
+        if (audio::bitResolution_ == 12) {
+            for (uint32_t i = 0, e = audio::playbackBuffer_->size() / 2; i < e; ++i)
+                buf[i] = (buf[i] >> 4) + 2048;
+        } else {
+            ASSERT(audio::bitResolution_ == 11);
+            for (uint32_t i = 0, e = audio::playbackBuffer_->size() / 2; i < e; ++i)
+                buf[i] = (buf[i] >> 5) + 1024;
+        }
     }
-
-
 
     void __not_in_flash_func(irqDMADone_)() {
         //gpio::outputHigh(GPIO21);
         unsigned irqs = dma_hw->ints0;
         dma_hw->ints0 = irqs;
+        // for audio, reset the DMA start address to the beginning of the buffer and tell the double buffer to refill
         if (audio::playback_) {
             if (irqs & (1u << audio::dma0_))
                 audioPlaybackDMA(audio::dma0_, audio::dma1_);
             if (irqs & (1u << audio::dma1_))
                 audioPlaybackDMA(audio::dma1_, audio::dma0_);
         }
-        // for audio, reset the DMA start address to the beginning of the buffer and tell the stream to refill
-//        if (irqs & (1u << audio::dma0_))
-//            audio::irqHandler1();
-//        if (irqs & (1u << audio::dma1_))
-//            audio::irqHandler2();
         // display
         if (irqs & ( 1u << ST7789::dma_))
             ST7789::irqHandler();
@@ -464,7 +459,12 @@ namespace rckid {
         ST7789::dmaUpdateAsync(pixels, numPixels, callback);
     }
 
-    // audio
+    /** Audio
+     
+        Audio playback is done via two PWM pins. This means that maximum sample rate & bit resolution the RP2040 can provide is 12bits @ 44.1 kHz when overclocked. When running at normal speed (125MHz) this is downgraded to 11bit resolution at the same sample rate. 
+
+        Note that higher quality audio output can be achieved with either I2S, or pio and delta sigma modulation. The delta-sigma can be useful also for microphone reading.  
+     */
 
     void audioConfigurePlaybackDMA(int dma, int other, uint8_t * buffer, size_t bufferSize) {
         auto dmaConf = dma_channel_get_default_config(dma);
@@ -472,11 +472,10 @@ namespace rckid {
         channel_config_set_read_increment(& dmaConf, true);  // increment on read
         channel_config_set_dreq(&dmaConf, pwm_get_dreq(RP_AUDIO_PWM_SLICE));// DMA is driven by the PWM slice overflowing
         channel_config_set_chain_to(& dmaConf, other); // chain to the other channel
-        dma_channel_configure(dma, & dmaConf, &pwm_hw->slice[RP_AUDIO_PWM_SLICE].cc, buffer, bufferSize / 2, false); // the buffer consists of stereo samples, (32bits), i.e. buffer size / 2
+        dma_channel_configure(dma, & dmaConf, &pwm_hw->slice[RP_AUDIO_PWM_SLICE].cc, buffer, bufferSize / 4, false); // the buffer consists of stereo samples, (32bits), i.e. buffer size / 2
         // enable IRQ0 on the DMA channel (shared with other framework DMA uses such as the display or the SD card)
         dma_channel_set_irq0_enabled(dma, true);
     }
-
 
     void audioOn() {
         sendCommand(cmd::AudioOn{});
@@ -509,16 +508,28 @@ namespace rckid {
             audioStop();
         // set the audio playback buffer
         audio::playbackBuffer_ = & data;
+        audio::playback_ = true;
+        // reload the next buffer so that the whole buffer is ready and can be swapped immediately by the DMA
+        data.swap();
         // set the left and right pins to be used by the PWM
         gpio_set_function(RP_PIN_PWM_RIGHT, GPIO_FUNC_PWM); 
         gpio_set_function(RP_PIN_PWM_LEFT, GPIO_FUNC_PWM);
         // initialize the DMA channels 
-        audioConfigurePlaybackDMA(audio::dma0_, audio::dma1_, data.getBackBuffer(), RP_AUDIO_BUFFER_SIZE);
-        audioConfigurePlaybackDMA(audio::dma1_, audio::dma0_, data.getFrontBuffer(), RP_AUDIO_BUFFER_SIZE);
+        audioConfigurePlaybackDMA(audio::dma0_, audio::dma1_, data.getFrontBuffer(), data.size());
+        audioConfigurePlaybackDMA(audio::dma1_, audio::dma0_, data.getBackBuffer(), data.size());
         dma_channel_start(audio::dma0_);
         // and finally the timers
-        pwm_set_clkdiv(RP_AUDIO_PWM_SLICE, cpu::clockSpeed() / (4096.0 * bitrate));
-        pwm_set_wrap(RP_AUDIO_PWM_SLICE, 4096); // set wrap to 12bit sound levels
+        float clkdiv = cpu::clockSpeed() / (4096.0 * bitrate);
+        if (clkdiv > 1) { // 12 bit sound
+            audio::bitResolution_ = 12;
+            pwm_set_wrap(RP_AUDIO_PWM_SLICE, 4096); // set wrap to 12bit sound levels
+        } else { // 11bit sound
+            clkdiv = cpu::clockSpeed() / (2048.0 * bitrate);
+            audio::bitResolution_ = 11;
+            pwm_set_wrap(RP_AUDIO_PWM_SLICE, 2048); // set wrap to 12bit sound levels
+        }
+        ASSERT(clkdiv > 1); // otherwise we won't be able to
+        pwm_set_clkdiv(RP_AUDIO_PWM_SLICE, clkdiv);
         pwm_set_enabled(RP_AUDIO_PWM_SLICE, true);
     }
 
@@ -537,6 +548,12 @@ namespace rckid {
     }
 
     void audioStop() {
+        if (audio::playback_) {
+            dma_channel_abort(audio::dma0_);        
+            dma_channel_abort(audio::dma1_);
+            pwm_set_enabled(RP_AUDIO_PWM_SLICE, false);
+            audio::playback_ = false;
+        }
 
     }
 

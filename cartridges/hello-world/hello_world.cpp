@@ -41,7 +41,8 @@ Menu * menuGames() {
 
 Menu * menuUtils() {
     return new Menu{
-        MenuApp::Item("Status", assets::icons::info, StatusDisplay::run)
+        MenuApp::Item("Status", assets::icons::info, StatusDisplay::run),
+        MenuApp::Item("Raw Audio", assets::icons::music, RawAudioTest::run)
     };
 }
 
@@ -55,6 +56,7 @@ Menu * mainMenu() {
 }
 
 int main() {
+    //cpu::overclock();
     rckid::initialize();
     LOG("Initialized, running the app!");
     rckid::displaySetBrightness(128);
