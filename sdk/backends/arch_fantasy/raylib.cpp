@@ -401,6 +401,13 @@ namespace rckid {
         return static_cast<uint8_t>(GetMasterVolume() * 255);
     }
 
+    uint32_t audioSampleRate() {
+        if (audioPlayback_)
+            return audioStream_.sampleRate;
+        else
+            return 44100;
+    }
+
     void audioSetVolume(uint8_t value) {
         SetMasterVolume(value / 255.0);
     }

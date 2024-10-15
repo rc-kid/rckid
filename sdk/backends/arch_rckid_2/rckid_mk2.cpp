@@ -60,6 +60,7 @@ namespace rckid {
             uint dma1_ = 0;
             DoubleBuffer * playbackBuffer_;
             uint8_t bitResolution_ = 12;
+            uint32_t sampleRate_ = 44100;
         }
 
     }
@@ -497,18 +498,23 @@ namespace rckid {
         return audio::volume_;
     }
 
+    uint32_t audioSampleRate() {
+        return audio::sampleRate_;
+    }
+
     void audioSetVolume(uint8_t value) {
         audio::volume_ = value;
 
     }
 
-    void audioPlay(DoubleBuffer & data, uint32_t bitrate) {
+    void audioPlay(DoubleBuffer & data, uint32_t sampleRate) {
         // stop the previous playback if any
         if (audio::playback_)
             audioStop();
         // set the audio playback buffer
         audio::playbackBuffer_ = & data;
         audio::playback_ = true;
+        audio::sampleRate_ = sampleRate;
         // reload the next buffer so that the whole buffer is ready and can be swapped immediately by the DMA
         data.swap();
         // set the left and right pins to be used by the PWM
@@ -519,12 +525,12 @@ namespace rckid {
         audioConfigurePlaybackDMA(audio::dma1_, audio::dma0_, data.getBackBuffer(), data.size());
         dma_channel_start(audio::dma0_);
         // and finally the timers
-        float clkdiv = cpu::clockSpeed() / (4096.0 * bitrate);
+        float clkdiv = cpu::clockSpeed() / (4096.0 * sampleRate);
         if (clkdiv > 1) { // 12 bit sound
             audio::bitResolution_ = 12;
             pwm_set_wrap(RP_AUDIO_PWM_SLICE, 4096); // set wrap to 12bit sound levels
         } else { // 11bit sound
-            clkdiv = cpu::clockSpeed() / (2048.0 * bitrate);
+            clkdiv = cpu::clockSpeed() / (2048.0 * sampleRate);
             audio::bitResolution_ = 11;
             pwm_set_wrap(RP_AUDIO_PWM_SLICE, 2048); // set wrap to 12bit sound levels
         }
@@ -533,7 +539,8 @@ namespace rckid {
         pwm_set_enabled(RP_AUDIO_PWM_SLICE, true);
     }
 
-    void audioRecord(DoubleBuffer & data, uint32_t bitrate) {
+    void audioRecord(DoubleBuffer & data, uint32_t sampleRate) {
+        audio::sampleRate_ = sampleRate;
         UNIMPLEMENTED;
     }
 

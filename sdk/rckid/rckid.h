@@ -274,6 +274,8 @@ namespace rckid {
 
     uint8_t audioVolume();
 
+    uint32_t audioSampleRate();
+
     void audioSetVolume(uint8_t value);
 
     void audioPlay(DoubleBuffer & data, uint32_t sampleRate= 44100);

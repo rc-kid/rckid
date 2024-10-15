@@ -9,6 +9,7 @@
 #include <games/Tetris.h>
 #include <games/SlidingPuzzle.h>
 #include <test/RawAudioTest.h>
+#include <test/ToneAudioTest.h>
 #include <utils/StatusDisplay.h>
 
 #include <rckid/ui/menu.h>
@@ -42,7 +43,8 @@ Menu * menuGames() {
 Menu * menuUtils() {
     return new Menu{
         MenuApp::Item("Status", assets::icons::info, StatusDisplay::run),
-        MenuApp::Item("Raw Audio", assets::icons::music, RawAudioTest::run)
+        MenuApp::Item("Raw Audio", assets::icons::music, RawAudioTest::run),
+        MenuApp::Item("Tone Audio", assets::icons::music, ToneAudioTest::run)
     };
 }
 

@@ -32,3 +32,11 @@
     #define TRACE_MEMORY(...) TRACE("memory:" << __VA_ARGS__)
 #endif
 
+
+#if !defined TRACE_TONE
+    #define TRACE_TONE(...)
+#else
+    #undef TRACE_TONE
+    #define TRACE_TONE(...) TRACE("memory:" << __VA_ARGS__)
+#endif
+
