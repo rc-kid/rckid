@@ -22,11 +22,13 @@
 #include "zlib.h"
 
 #if defined(_MSC_VER)
-/** Swaps bytes in an uint16_t. GCC builtin that is not available on MSVC. 
+/* Swaps bytes in an uint16_t. GCC builtin that is not available on MSVC. Normally this is available through platform, but for standalone builds without platform we check if it has already been defined and define if missing. 
  */
-inline uint16_t __builtin_bswap16(uint16_t x) {
+#ifndef __builtin_bswap16
+inline constexpr uint16_t __builtin_bswap16(uint16_t x) {
     return (x >> 8) | ((x & 0xff) << 8);
 }
+#endif
 #endif
 
 //

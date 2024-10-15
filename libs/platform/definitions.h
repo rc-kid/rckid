@@ -3,8 +3,8 @@
 /** Wrappers for external libraries that turn compiler warnings in them off. 
  */
 #if defined(_MSC_VER)
-    #define WARNINGS_OFF() __pragma(warning(push, 0))
-    #define WARNINGS_ON()  __pragma(warning(pop))
+    #define WARNINGS_OFF __pragma(warning(push, 0))
+    #define WARNINGS_ON  __pragma(warning(pop))
 #else
      #define WARNINGS_OFF \
         _Pragma("GCC diagnostic push") \

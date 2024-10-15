@@ -40,7 +40,7 @@ namespace rckid {
         }
         // draw the audio state and volume
         if (verbose) {
-            std::string pct = STR(audioVolume << "%");
+            std::string pct = STR(static_cast<unsigned>(audioVolume()) << "%");
             x -= f.textWidth(pct);
             surface.text(x, y + 1, f, color::LightGray) << pct; 
         }

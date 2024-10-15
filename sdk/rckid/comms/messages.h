@@ -45,7 +45,7 @@ namespace rckid::msg {
     }
 
 #define MESSAGE(ID_HINT, NAME, ACK_REQUIRED, ...)                         \
-    class NAME {                                                 \
+    PACKED(class NAME {                                                 \
     protected:  \
         uint8_t id_ = static_cast<uint8_t>(Id::NAME); \
     public:                                                      \
@@ -55,7 +55,7 @@ namespace rckid::msg {
         }     \
         Id id() const { return getIdFrom(reinterpret_cast<uint8_t const*>(this)); }           \
         __VA_ARGS__                                              \
-    } __attribute__((packed));                                   \
+    });                                   \
     static_assert(sizeof(NAME) <= 32);              
 
 #include "messages.inc.h"
