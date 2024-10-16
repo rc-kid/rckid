@@ -77,12 +77,15 @@ namespace rckid {
         void draw() override {
             // clear
             g_.fill();
+            int startX = (320 - PLAY_WIDTH * 10) / 2;
+            int startY = 238 - PLAY_HEIGHT * 10;
+            g_.fill(color::DarkGray, Rect::XYWH(startX - 2, startY-2, 10 * PLAY_WIDTH + 3, 10 * PLAY_HEIGHT + 3));
             // draw the playgrid
             for (int y = 0; y < PLAY_HEIGHT; ++y)
                 for (int x = 0; x < PLAY_WIDTH; ++x)
-                    drawTile(110 + x * 10, 10 + y * 10, grid(x, y));
+                    drawTile(startX + x * 10, startY + y * 10, grid(x, y));
             // draw the current tetromino
-            drawTetromino(110 + x_ * 10, 10 + y_ * 10, cur_);
+            drawTetromino(startX + x_ * 10, startY + y_ * 10, cur_);
             drawTetromino(250, 100, next_);
 
             // and draw the header
