@@ -11,6 +11,13 @@
 #include "common.h"
 #include "graphics/geometry.h"
 
+#define MEASURE_TIME(whereTo, ...) { \
+    uint32_t start__ = uptimeUs(); \
+    __VA_ARGS__; \
+    whereTo = uptimeUs() - start__; \
+}
+
+
 /** \defgroup api API
  
  */

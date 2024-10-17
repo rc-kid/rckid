@@ -1,5 +1,7 @@
 # TODO
 
+- remove easing and use interpolation for its purposes as well
+
 - turn audio off when powering off for sure
 - check the critical battery warning & new AVR
 - temperature does not seem to be right
