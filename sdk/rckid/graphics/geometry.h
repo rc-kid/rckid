@@ -10,8 +10,8 @@ namespace rckid {
     template<typename COORD>
     class TPoint {
     public:
-        COORD x = 0;
-        COORD y = 0;
+        COORD x = COORD{0};
+        COORD y = COORD{0};
 
         TPoint() = default;
         constexpr TPoint(int x, int y): x{x}, y{y} {}
@@ -38,10 +38,10 @@ namespace rckid {
     template<typename COORD>
     class TRect {
     public:
-        COORD x = 0;
-        COORD y = 0;
-        COORD w = 0;
-        COORD h = 0;
+        COORD x = COORD{0};
+        COORD y = COORD{0};
+        COORD w = COORD{0};
+        COORD h = COORD{0};
 
         constexpr COORD top() const { return y; }
         constexpr COORD left() const { return x; }

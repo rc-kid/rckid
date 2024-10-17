@@ -2,6 +2,7 @@
 
 #include "../rckid.h"
 #include "../utils/fixedint.h"
+#include "../utils/interpolation.h"
 
 namespace rckid {
 
@@ -20,15 +21,23 @@ namespace rckid {
     class Tone {
     public:
 
-        static Tone square() {
-            Tone result;
-            result.setWaveForm(square_, sizeof(square_) / 2);
-            return result;
+        enum class Waveform {
+            Square, 
+            Sawtooth, 
+            Triangle,
+            Sine,
+            Custom,
+        }; 
+
+        void setWaveform(Waveform wf) {
+            ASSERT(wf != Waveform::Custom); // use setCustomWaveform instead
+            waveform_ = wf;
         }
 
-        void setWaveForm(int16_t const * waveForm, int32_t length) {
-            waveForm_ = waveForm;
-            waveFormLength_ = length;
+        void setCustomWaveform(int16_t const * waveForm, int32_t length) {
+            waveform_ = Waveform::Custom;
+            waveformData_ = waveForm;
+            waveformLength_ = length;
         }
 
         /** Sets note frequency and sample rate. 
@@ -55,25 +64,52 @@ namespace rckid {
         int16_t next() {
             if (period_ == 0)
                 return 0;
-            int16_t result = waveForm_[((i_ * waveFormLength_) / period_).clip()];
+            // get current index
+            FixedInt i = i_;
+            // move to next index
             i_ += 1;
             if (i_ > period_)
                 i_ -= period_;
-            if (--duration_ == 0)
+            if (--duration_ == 0) {
                 off();
-            return result;
+                return 0;
+            }
+            switch (waveform_) {
+                // simple square wave with 50% duty cycle 
+                case Waveform::Square:
+                    return interpolation::square(i, period_, MIN, MAX);
+                // sawtooth - MIN to MAX then MAX to MIN
+                case Waveform::Sawtooth:
+                    return interpolation::sawtooth(i, period_, MIN, MAX);
+                // triangle from MIN to MAX
+                case Waveform::Triangle:
+                    return interpolation::linear(i, period_, MIN, MAX);
+                // sine wave from the sine interpolator 
+                case Waveform::Sine:
+                    return interpolation::sine(i, period_, MIN, MAX);
+                // custom waveform from the waveform buffer
+                case Waveform::Custom:
+                    return interpolation::custom(i, period_, waveformData_, waveformLength_);
+                default:
+                    UNREACHABLE;
+            }
         }
 
     private:
+
+        static constexpr int16_t MIN = -8191;
+        static constexpr int16_t MAX = 8191;
 
         FixedInt period_;
         FixedInt i_;
         uint32_t duration_;
 
-        int16_t const * waveForm_;
-        int32_t waveFormLength_; 
+        // what waveform the tone generator uses
+        Waveform waveform_ = Waveform::Square;
+        // for custom waveform, the waveform data for single period
+        int16_t const * waveformData_;
+        int32_t waveformLength_; 
 
-        static constexpr int16_t square_[] = {-8191, 8191};
     }; 
 
 

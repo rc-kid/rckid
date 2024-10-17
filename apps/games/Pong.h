@@ -164,16 +164,16 @@ namespace rckid {
 
     private:
 
-        FixedInt left_ = 120;
-        FixedInt deltaLeft_ = 0;
+        FixedInt left_ = 120_fi;
+        FixedInt deltaLeft_ = 0_fi;
 
-        FixedInt right_ = 120;
-        FixedInt deltaRight_ = 0;
+        FixedInt right_ = 120_fi;
+        FixedInt deltaRight_ = 0_fi;
 
         FixedPoint ball_;
         FixedPoint deltaBall_;   
 
-        FixedInt speed_ = 1;     
+        FixedInt speed_ = 1_fi;     
 
         unsigned scoreLeft_ = 0;
         unsigned scoreRight_ = 0;

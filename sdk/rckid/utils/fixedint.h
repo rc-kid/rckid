@@ -14,11 +14,11 @@ namespace rckid {
     public:
 
         FixedInt() = default;
-        constexpr FixedInt(int32_t value): value_{value << 8} {}
+        explicit constexpr FixedInt(int32_t value): value_{value << 8} {}
         constexpr FixedInt(int32_t value, uint8_t fraction): value_{(value << 8) + fraction} {}
         constexpr FixedInt(FixedInt const &) = default;
 
-        FixedInt & operator = (int32_t other) { value_ = (other << 8); return *this; }
+        FixedInt & operator = (int other) { value_ = (other << 8); return *this; }
 
         FixedInt operator + (FixedInt other) { 
             FixedInt result;
@@ -73,6 +73,7 @@ namespace rckid {
             return *this;
         }
 
+
         FixedInt & operator -= (FixedInt other) {
             value_ = value_ - other.value_;
             return *this;
@@ -83,12 +84,25 @@ namespace rckid {
             return *this;
         }
 
+        FixedInt & operator +=(int other) { return *this += FixedInt{other}; }
+        FixedInt & operator -=(int other) { return *this -= FixedInt{other}; }
+        FixedInt & operator *=(int other) { return *this *= FixedInt{other}; }
+
         void clipInRange(FixedInt min, FixedInt max) {
             if (value_ < min.value_)
                 value_ = min.value_;
             if (value_ > max.value_)
                 value_ = max.value_;
         }
+
+        void clipInRange(int min, int max) { return clipInRange(FixedInt{min}, FixedInt{max}); }
+
+        bool operator == (FixedInt other) const { return value_ == other.value_; }
+        bool operator != (FixedInt other) const { return value_ != other.value_; }
+        bool operator < (FixedInt other) const { return value_ < other.value_; }
+        bool operator <= (FixedInt other) const { return value_ <= other.value_; }
+        bool operator > (FixedInt other) const { return value_ > other.value_; }
+        bool operator >= (FixedInt other) const { return value_ >= other.value_; }
 
         bool inRange(FixedInt min, FixedInt max) {
             return value_ >= min.value_ && value_ <= max.value_;
@@ -104,6 +118,8 @@ namespace rckid {
         int32_t round() const {
             return ((value_ >= 0) ? (value_ + 0x80) : (value_ - 0x80)) >> 8;
         }
+
+        int32_t raw() const { return value_; }
 
     private:
 
@@ -125,4 +141,8 @@ namespace rckid {
     inline FixedPoint operator * (FixedPoint p, int other) { 
         return FixedPoint{p.x * other, p.y * other}; 
     }
+}
+
+inline rckid::FixedInt operator "" _fi(unsigned long long value) { 
+    return rckid::FixedInt{static_cast<int32_t>(value)}; 
 }

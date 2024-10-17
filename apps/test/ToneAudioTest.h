@@ -31,7 +31,7 @@ namespace rckid {
                 tone_.setFrequency(440, 1000);
             }
             if (btnPressed(Btn::B)) {
-                tone_.off();
+                tone_.setWaveform(Tone::Waveform::Sine);
             }
         }
 
@@ -89,7 +89,7 @@ namespace rckid {
         static constexpr uint32_t BUFFER_FRAMES = 512;
         uint32_t updates_ = 0;
 
-        Tone tone_{Tone::square()};
+        Tone tone_;
 
         void refill() {
             ++updates_;
