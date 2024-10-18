@@ -7,8 +7,8 @@ namespace rckid {
     class ToneGenerator {
     public:
         void run(Canvas<ColorRGB> & g_) {
-            g_.text(0, 20) << 
-                "Tone generation measurements [us]\n" <<
+            g_.text(0, 30) << 
+                "Tone generation measurements [us]\n\n" <<
                 "Sine 8khz:      " << measure(Tone::Waveform::Sine, 8000) << "\n" <<
                 "Sine 16khz:     " << measure(Tone::Waveform::Sine, 16000) << "\n" <<
                 "Sine 44.1khz:   " << measure(Tone::Waveform::Sine, 44100) << "\n" <<
