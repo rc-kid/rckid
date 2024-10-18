@@ -279,11 +279,11 @@ namespace rckid {
 
     bool audioHeadphones();
 
-    uint8_t audioVolume();
+    int32_t audioVolume();
+
+    void audioSetVolume(int32_t value);
 
     uint32_t audioSampleRate();
-
-    void audioSetVolume(uint8_t value);
 
     void audioPlay(DoubleBuffer & data, uint32_t sampleRate= 44100);
 

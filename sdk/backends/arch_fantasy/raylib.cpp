@@ -128,6 +128,7 @@ namespace rckid {
         DoubleBuffer * audioPlaybackBuffer_;
         uint32_t audioPlaybackBufferRemaining_;
         int16_t * audioPlaybackBufferRead_;
+        uint8_t audioVolume_ = 10;
 
         uint32_t sdNumBlocks_;
         std::fstream sdIso_;
@@ -371,8 +372,22 @@ namespace rckid {
                 audioPlaybackBufferRemaining_ = audioPlaybackBuffer_->size() / 4; // stereo uint16_t 
                 audioPlaybackBufferRead_ = reinterpret_cast<int16_t*>(audioPlaybackBuffer_->getFrontBuffer());
             }
-            *(stereo++) = *(audioPlaybackBufferRead_++);
-            *(stereo++) = *(audioPlaybackBufferRead_++);
+            if (audioVolume_ == 0) {
+                *(stereo++) = 0;
+                *(stereo++) = 0;
+            } else {
+                int16_t x = *(audioPlaybackBufferRead_++);
+                x >>= (10 - audioVolume_);
+                x = x & 0xfff0;
+                *(stereo++) = x; //*(audioPlaybackBufferRead_++);
+
+                x = *(audioPlaybackBufferRead_++);
+                x >>= (10 - audioVolume_);
+                x = x & 0xfff0;
+                *(stereo++) = x; //*(audioPlaybackBufferRead_++);
+            }
+
+//            *(stereo++) = *(audioPlaybackBufferRead_++);
             --audioPlaybackBufferRemaining_;
         }
     }
@@ -397,8 +412,16 @@ namespace rckid {
         return true;
     }
 
-    uint8_t audioVolume() {
-        return static_cast<uint8_t>(GetMasterVolume() * 255);
+    int32_t audioVolume() {
+        return audioVolume_;
+    }
+
+    void audioSetVolume(int32_t value) {
+        if (value > 10)
+            value = 10;
+        if (value < 0)
+            value = 0;
+        audioVolume_ = value; 
     }
 
     uint32_t audioSampleRate() {
@@ -406,10 +429,6 @@ namespace rckid {
             return audioStream_.sampleRate;
         else
             return 44100;
-    }
-
-    void audioSetVolume(uint8_t value) {
-        SetMasterVolume(value / 255.0);
     }
 
     void audioPlay(DoubleBuffer & data, uint32_t sampleRate) {

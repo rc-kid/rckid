@@ -40,7 +40,7 @@ namespace rckid {
         }
         // draw the audio state and volume
         if (verbose) {
-            std::string pct = STR(static_cast<unsigned>(audioVolume()) << "%");
+            std::string pct = STR(static_cast<unsigned>(audioVolume()));
             x -= f.textWidth(pct);
             surface.text(x, y + 1, f, color::LightGray) << pct; 
         }
@@ -69,9 +69,9 @@ namespace rckid {
     }
 
     std::pair<ColorRGB, char> Header::getVolumeInfo(unsigned vol) {
-        if (vol >= 66)
+        if (vol >= 9)
             return std::make_pair(color::Red, assets::glyph::VolumeHigh);
-        else if (vol >= 33)
+        else if (vol >= 4)
             return std::make_pair(color::Green, assets::glyph::VolumeMid);
         else if (vol > 0)
             return std::make_pair(color::DarkGreen, assets::glyph::VolumeLow);

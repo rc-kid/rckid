@@ -54,7 +54,7 @@ namespace rckid {
 
 
         namespace audio {
-            uint8_t volume_ = 128;
+            uint8_t volume_ = 10;
             bool playback_ = false;
             uint dma0_ = 0;
             uint dma1_ = 0;
@@ -172,7 +172,21 @@ namespace rckid {
         i2c0->hw->enable = 0;
     }
 
+    void adjustAudioBuffer(int16_t * buffer, uint32_t bufferLength) {
+        if (audio::volume_ == 0) {
+            // TODO this can be fast memfill
+            for (uint32_t i = 0; i < bufferLength; ++i)
+                 buffer[i] = 0;
+        } else if (audio::bitResolution_ == 12) {
+            for (uint32_t i = 0; i < bufferLength; ++i)
+                buffer[i] = (buffer[i] >> (14 - audio::volume_)) + 2048;
+        } else {
+            ASSERT(audio::bitResolution_ == 11);
+            for (uint32_t i = 0; i < bufferLength; ++i)
+                buffer[i] = (buffer[i] >> (15 - audio::volume_)) + 1024;
 
+        }
+    }
     /** Audio DMA playback handler.
      
         When this fucntion is called, the other DMA is already running (it was started by the finished DMA immediately). Our task is to tell the finished DMA to again start the other one immediately after it finishes, then call the refill function for the buffer DMA's buffer area and convert the filled data from int16_t to 12bit uint16_t.  
@@ -184,14 +198,8 @@ namespace rckid {
         audio::playbackBuffer_->swap();
         // finally, while in the IRQ we must ensure that the data filled by the app in the callback conforms to what we expect. This means adjusting the volume and converting from int16_t to uint16_t centered at half the bit resolution
         int16_t * buf = reinterpret_cast<int16_t*>(audio::playbackBuffer_->getBackBuffer());
-        if (audio::bitResolution_ == 12) {
-            for (uint32_t i = 0, e = audio::playbackBuffer_->size() / 2; i < e; ++i)
-                buf[i] = (buf[i] >> 4) + 2048;
-        } else {
-            ASSERT(audio::bitResolution_ == 11);
-            for (uint32_t i = 0, e = audio::playbackBuffer_->size() / 2; i < e; ++i)
-                buf[i] = (buf[i] >> 5) + 1024;
-        }
+        // and adjust the buffer
+        adjustAudioBuffer(buf, audio::playbackBuffer_->size() / 2);
     }
 
     void __not_in_flash_func(irqDMADone_)() {
@@ -494,17 +502,20 @@ namespace rckid {
         return status_.audioHeadphones();
     }
 
-    uint8_t audioVolume() {
+    int32_t audioVolume() {
         return audio::volume_;
+    }
+
+    void audioSetVolume(int32_t value) {
+        if (value > 10)
+            value = 10;
+        if (value < 0)
+            value = 0;
+        audio::volume_ = value;
     }
 
     uint32_t audioSampleRate() {
         return audio::sampleRate_;
-    }
-
-    void audioSetVolume(uint8_t value) {
-        audio::volume_ = value;
-
     }
 
     void audioPlay(DoubleBuffer & data, uint32_t sampleRate) {
@@ -515,8 +526,11 @@ namespace rckid {
         audio::playbackBuffer_ = & data;
         audio::playback_ = true;
         audio::sampleRate_ = sampleRate;
+        //int16_t * buf = reinterpret_cast<int16_t*>(audio::playbackBuffer_->getBackBuffer());
         // reload the next buffer so that the whole buffer is ready and can be swapped immediately by the DMA
         data.swap();
+        // and adjust the first part of the buffer that we already got filled
+        adjustAudioBuffer(reinterpret_cast<int16_t*>(data.getFrontBuffer()), data.size() / 2);
         // set the left and right pins to be used by the PWM
         gpio_set_function(RP_PIN_PWM_RIGHT, GPIO_FUNC_PWM); 
         gpio_set_function(RP_PIN_PWM_LEFT, GPIO_FUNC_PWM);

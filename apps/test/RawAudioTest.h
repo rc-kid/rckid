@@ -31,6 +31,10 @@ namespace rckid {
             if (btnPressed(Btn::B)) {
                 audioStop();
             }
+            if (btnPressed(Btn::Up))
+                audioSetVolume(audioVolume() + 1);
+            if (btnPressed(Btn::Down))
+                audioSetVolume(audioVolume() - 1);
         }
 
         void draw() override {
@@ -39,6 +43,7 @@ namespace rckid {
                 "\nUpdate calls: " << updates_ <<
                 "\nErrors:       " << errors_ << 
                 "\nIndex:        " << ii_;
+            Header::drawOn(g_);
         }
 
 
