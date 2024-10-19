@@ -1,9 +1,9 @@
 #pragma once
 
-#include "rckid/rckid.h"
-#include "rckid/app.h"
-#include "rckid/graphics/animation.h"
-#include "rckid/ui/ui.h"
+#include "../rckid.h"
+#include "../app.h"
+#include "../ui/timer.h"
+#include "ui.h"
 
 
 namespace rckid {
@@ -196,8 +196,8 @@ namespace rckid {
             int x = select_.x * 12 - 6;
             int y = select_.y * 24 + 24;
             if (a_.running()) {
-                x = a_.interpolate(last_.x, x);
-                y = a_.interpolate(last_.y, y);
+                x = interpolation::easingCos(a_, last_.x, x);
+                y = interpolation::easingCos(a_, last_.y, y);
             }
             sprite.setPos(x, y);
             cursorSprite.setX(12 + (cursor_ - left_) * 12);
@@ -248,7 +248,7 @@ namespace rckid {
         std::string text_;
         std::string placeholder_;
 
-        Animation a_{250};
+        Timer a_{250};
         // Center of the tile in the selection frame
         Point select_{4,0};
         // old sprite position to determine the animation

@@ -4,7 +4,8 @@
 #include <rckid/graphics/color.h>
 #include <rckid/graphics/png.h>
 #include <rckid/graphics/canvas.h>
-#include <rckid/graphics/animation.h>
+#include <rckid/ui/timer.h>
+#include <rckid/utils/interpolation.h>
 
 namespace rckid {
 
@@ -92,19 +93,19 @@ namespace rckid {
             switch (dir_) {
                 case Btn::Left:
                     g_.fill(tileRect(holeX_, holeY_));
-                    g_.blit(tilePoint(holeX_, holeY_) - Point{a_.interpolate(0, TILE_WIDTH), 0}, tmp_);
+                    g_.blit(tilePoint(holeX_, holeY_) - Point{interpolation::easingCos(a_, 0, TILE_WIDTH), 0}, tmp_);
                     break;
                 case Btn::Right:
                     g_.fill(tileRect(holeX_, holeY_));
-                    g_.blit(tilePoint(holeX_, holeY_) + Point{a_.interpolate(0, TILE_WIDTH), 0}, tmp_);
+                    g_.blit(tilePoint(holeX_, holeY_) + Point{interpolation::easingCos(a_, 0, TILE_WIDTH), 0}, tmp_);
                     break;
                 case Btn::Up:
                     g_.fill(tileRect(holeX_, holeY_));
-                    g_.blit(tilePoint(holeX_, holeY_) - Point{0, a_.interpolate(0, TILE_HEIGHT)}, tmp_);
+                    g_.blit(tilePoint(holeX_, holeY_) - Point{0, interpolation::easingCos(a_, 0, TILE_HEIGHT)}, tmp_);
                     break;
                 case Btn::Down: 
                     g_.fill(tileRect(holeX_, holeY_));
-                    g_.blit(tilePoint(holeX_, holeY_) + Point{0, a_.interpolate(0, TILE_HEIGHT)}, tmp_);
+                    g_.blit(tilePoint(holeX_, holeY_) + Point{0, interpolation::easingCos(a_, 0, TILE_HEIGHT)}, tmp_);
                     break;
                 default:
                     break; // nothing to do for other controls
@@ -213,7 +214,7 @@ namespace rckid {
 
         Btn dir_ = Btn::Home;
 
-        Animation a_{500};
+        Timer a_{500};
 
         /** PNG image for the game. 
          

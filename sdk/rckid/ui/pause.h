@@ -2,7 +2,7 @@
 
 #include "rckid/rckid.h"
 #include "rckid/app.h"
-#include "rckid/graphics/animation.h"
+#include "rckid/ui/timer.h"
 #include "rckid/ui/ui.h"
 
 

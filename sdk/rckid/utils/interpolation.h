@@ -47,4 +47,29 @@ namespace rckid::interpolation {
         return min + (max - min) / 2 - custom(p4 -i, p4, assets::SineTable) * (max - min) / hwDiv;
     }
 
-}
+    inline int halfSine(FixedInt i, FixedInt period, int min, int max) {
+        int hwDiv =  assets::SineMax; 
+        FixedInt p2 = period / 2;
+        if (i <= p2)
+            return min + custom(i, p2, assets::SineTable) * (max - min) / hwDiv;
+        i -= p2;
+        return min + custom(p2 - i, p2, assets::SineTable) * (max - min) / hwDiv;
+    }
+
+    /** Cosine easing function. Starts slow, ramps up to top speed in the middle and then slows down again using the cos function. Useful for menu shifting, etc. 
+     */
+    inline int easingCos(FixedInt i, FixedInt period, int min, int max) {
+        int hwDiv =  assets::SineMax * 2; 
+        FixedInt p2 = period / 2;
+        if (i <= p2)
+            return min + (max - min) / 2 - custom(p2 - i, p2, assets::SineTable) * (max - min) / hwDiv;
+        i -= p2;
+        return min + (max - min) / 2 + custom(i, p2, assets::SineTable) * (max - min) / hwDiv;
+    }
+
+    inline int easingCos(Timer const & a, int min, int max) {
+        return easingCos(FixedInt{a.t()}, FixedInt{a.duration()}, min, max);
+    }
+
+} // namespace rckid
+ 

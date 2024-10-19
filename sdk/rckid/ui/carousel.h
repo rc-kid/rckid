@@ -2,7 +2,7 @@
 
 #include "../app.h"
 #include "../graphics/canvas.h"
-#include "../graphics/animation.h"
+#include "../ui/timer.h"
 
 #include "menu.h"
 
@@ -61,8 +61,8 @@ namespace rckid {
                 }
                 // other comes from left
                 case Btn::Left: {
-                    Point opos = getItemPosition(otherIcon_, otherTextWidth_, where);    
-                    int offset = a_.interpolate(0, where.w);
+                    Point opos = getItemPosition(otherIcon_, otherTextWidth_, where);  
+                    int offset = interpolation::easingCos(a_, 0, where.w);
                     drawIcon(surface, pos.x + offset, pos.y, icon_);
                     drawText(surface, pos.x + offset * 2, pos.y, icon_, text_);
                     drawIcon(surface, opos.x - (where.w - offset) * 2, opos.y, otherIcon_);
@@ -72,7 +72,7 @@ namespace rckid {
                 // other comes from right
                 case Btn::Right: {
                     Point opos = getItemPosition(otherIcon_, otherTextWidth_, where);    
-                    int offset = a_.interpolate(0, where.w);
+                    int offset = interpolation::easingCos(a_, 0, where.w);
                     drawIcon(surface, pos.x - offset * 2, pos.y, icon_);
                     drawText(surface, pos.x - offset, pos.y, icon_, text_);
                     drawIcon(surface, opos.x + (where.w - offset), opos.y, otherIcon_);
@@ -82,20 +82,20 @@ namespace rckid {
                 // other comes from sides, current goes down (we are moving up in the menu hierarchy)
                 case Btn::Up: {
                     Point opos = getItemPosition(otherIcon_, otherTextWidth_, where);    
-                    int offset = a_.interpolate(where.w, 0);
+                    int offset = interpolation::easingCos(a_, where.w, 0);
                     drawIcon(surface, opos.x - offset, opos.y, otherIcon_);
                     drawText(surface, opos.x + offset, opos.y, otherIcon_, otherText_);
-                    offset = a_.interpolate(0, where.h);
+                    offset = interpolation::easingCos(a_, 0, where.h);
                     drawIcon(surface, pos.x, pos.y + offset, icon_);
                     drawText(surface, pos.x, pos.y + offset, icon_, text_);
                     break;
                 }
                 case Btn::Down: {
                     Point opos = getItemPosition(otherIcon_, otherTextWidth_, where);    
-                    int offset = a_.interpolate(0, where.w);
+                    int offset = interpolation::easingCos(a_, 0, where.w);
                     drawIcon(surface, pos.x - offset, pos.y, icon_);
                     drawText(surface, pos.x + offset, pos.y, icon_, text_);
-                    offset = a_.interpolate(where.h, 0);
+                    offset = interpolation::easingCos(a_, where.h, 0);
                     drawIcon(surface, opos.x, opos.y + offset, otherIcon_);
                     drawText(surface, opos.x, opos.y + offset, otherIcon_, otherText_);
                     break;
@@ -152,7 +152,7 @@ namespace rckid {
         Surface<ColorRGB> otherIcon_{64, 64}; 
 
         Btn dir_ = Btn::Home;
-        Animation a_{RCKID_UI_EFFECT_DURATION_MS};
+        Timer a_{RCKID_UI_EFFECT_DURATION_MS};
     }; 
 
 

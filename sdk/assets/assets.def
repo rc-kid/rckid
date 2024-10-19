@@ -12,6 +12,4 @@
 #folder, tests, tests
 
 #generator, filename, n
-#sine, easing_sine.inc.h, 256
-
 sine, interpolation_sine.inc.h, 256, 32767
