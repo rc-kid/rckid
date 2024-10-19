@@ -36,6 +36,8 @@ namespace rckid {
 
         Writer text(Point p) { return text(p.x, p.y); }
 
+        using Bitmap<COLOR>::text;
+
     private:
         Color fg_;
         Color bg_;   

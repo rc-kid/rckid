@@ -286,6 +286,9 @@ public:
 
     static void power3v3Off() {
         cli();
+        // turn audio off
+        audioOff();
+        rumblerOff();
         // turn display off
         setBacklightPWM(0);
         // disable I2C
@@ -297,7 +300,7 @@ public:
         // now disable the 3V3 power
         gpio::outputFloat(AVR_PIN_3V3_ON);
         // TODO turn RGBs off? 
-        // TODO rumble off? 
+        
         sei();
     }
 
@@ -843,6 +846,13 @@ public:
             TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm | TCB_RUNSTDBY_bm;
             //requireSleepStandby(STANDBY_REQUIRED_BRIGHTNESS);
         }
+    }
+
+    /** Turns the rumbler off, disabling the motor and setting the rumbler effect to off. 
+     */
+    static void rumblerOff() {
+        setRumblerPWM(0);
+        rumblerEffect_ = RumblerEffect::Off();
     }
 
     static void setRumblerPWM(uint8_t value) {

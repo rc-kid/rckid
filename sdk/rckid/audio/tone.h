@@ -3,14 +3,23 @@
 #include "../rckid.h"
 #include "../utils/fixedint.h"
 #include "../utils/interpolation.h"
+#include "note.h"
 
 namespace rckid {
 
+    /** A simple ADSR envelope.
+        
+     */
     class Envelope {
     public:
+        Envelope(uint32_t attack, uint32_t decay, uint32_t sustain, uint32_t release):
+            attack_{attack}, decay_{decay}, sustain_{sustain}, release_{release} {}
 
-
-
+    private:
+        uint32_t attack_;
+        uint32_t decay_;
+        uint32_t sustain_;
+        uint32_t release_;
     }; // rckid::Envelope
 
 

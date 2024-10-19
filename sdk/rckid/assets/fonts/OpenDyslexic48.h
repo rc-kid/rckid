@@ -2249,5 +2249,8 @@ namespace rckid::assets::font {
             // 94 (~, codepoint: 126 utf: ~, offset 2300)
             264241152,788529152,1023410176,3154116608,3087007744,3087007744,3154116608,2097152000,1040187392,788529152,528482304,264241152,264241152,260046848,520093696,1023410176,3154116608,1342177280,
         }; // OpenDyslexic48::pixels
+
+        static constexpr Font font{size, sizeof(glyphs) / sizeof(GlyphInfo), glyphs, pixels};
+
     }; // OpenDyslexic48
 } // namesapce rckid::assets::font

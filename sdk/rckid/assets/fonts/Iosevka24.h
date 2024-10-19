@@ -1741,5 +1741,8 @@ namespace rckid::assets::font {
             // 94 (~, codepoint: 126 utf: ~, offset 826)
             16777216,524288000,3170893824,4026531840,2097152000,524288000,192937984,2130706432,3019898880,0,
         }; // Iosevka24::pixels
+
+        static constexpr Font font{size, sizeof(glyphs) / sizeof(GlyphInfo), glyphs, pixels};
+
     }; // Iosevka24
 } // namesapce rckid::assets::font

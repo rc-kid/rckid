@@ -194,7 +194,8 @@ inline std::string generateFontGlyphs(std::string const & className, std::string
         "        }; // " << className << "::glyphs" << std::endl << std::endl <<
         "        static constexpr uint32_t pixels[] = {" << std::endl <<
         defPixels.str() <<
-        "        }; // " << className << "::pixels" << std::endl <<
+        "        }; // " << className << "::pixels" << std::endl << std::endl <<
+        "        static constexpr Font font{size, sizeof(glyphs) / sizeof(GlyphInfo), glyphs, pixels};" << std::endl << std::endl <<
         "    }; // " << className << std::endl
     );
 }

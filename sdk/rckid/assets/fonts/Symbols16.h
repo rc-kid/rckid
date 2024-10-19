@@ -476,5 +476,8 @@ namespace rckid::assets::font {
             // 23 (USB, codepoint: 62087 utf: , offset 431)
             516096,2095104,3144704,2095104,782336,180224,245760,2080768,33538048,131256320,251854080,235069376,792904176,1069727856,1069728253,167953149,180989,180989,180308,779264,1045504,516096,245760,16384,
         }; // Symbols16::pixels
+
+        static constexpr Font font{size, sizeof(glyphs) / sizeof(GlyphInfo), glyphs, pixels};
+
     }; // Symbols16
 } // namesapce rckid::assets::font
