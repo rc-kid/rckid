@@ -53,7 +53,7 @@ namespace rckid {
          */
         void setFrequency(uint32_t frequency, uint32_t durationMs, uint32_t sampleRate) {
             i_ = 0;
-            period_ = FixedInt{static_cast<int32_t>(sampleRate)} / static_cast<int32_t>(frequency);
+            period_ = FixedInt{static_cast<int>(sampleRate)} / static_cast<int>(frequency);
             duration_ = sampleRate * durationMs / 1000;
             TRACE_TONE("Tone frequency " << frequency << ", period: " << period_.clip(), " duration ticks " << duration_);
         }

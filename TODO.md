@@ -1,6 +1,6 @@
 # TODO
 
-- make sure that it's the I2C command & tick that waits for the tick done, not the update method
+- verify that ticks work on mkII (this has now become mk III as well)
 
 - check the critical battery warning & new AVR
 - temperature does not seem to be right

@@ -14,8 +14,8 @@ namespace rckid {
     public:
 
         FixedInt() = default;
-        explicit constexpr FixedInt(int32_t value): value_{value << 8} {}
-        constexpr FixedInt(int32_t value, uint8_t fraction): value_{(value << 8) + fraction} {}
+        explicit constexpr FixedInt(int value): value_{value << 8} {}
+        constexpr FixedInt(int value, uint8_t fraction): value_{(value << 8) + fraction} {}
         constexpr FixedInt(FixedInt const &) = default;
 
         FixedInt & operator = (int other) { value_ = (other << 8); return *this; }
@@ -38,25 +38,25 @@ namespace rckid {
             return result;
         }
 
-        FixedInt operator + (int32_t other) { 
+        FixedInt operator + (int other) { 
             FixedInt result;
             result.value_ = value_ + (other << 8);
             return result;
         }
 
-        FixedInt operator - (int32_t other) { 
+        FixedInt operator - (int other) { 
             FixedInt result;
             result.value_ = value_ - (other << 8);
             return result;
         }
 
-        FixedInt operator * (int32_t other) {
+        FixedInt operator * (int other) {
             FixedInt result;
             result.value_ = value_ * other;
             return result;
         }
 
-        FixedInt operator / (int32_t other) {
+        FixedInt operator / (int other) {
             FixedInt result;
             result.value_ = value_ / other;
             return result;
@@ -64,7 +64,7 @@ namespace rckid {
 
         FixedInt operator / (FixedInt other) {
             FixedInt result;
-            result.value_ = static_cast<int32_t>((static_cast<int64_t>(value_) << 8) / other.value_);
+            result.value_ = static_cast<int>((static_cast<int64_t>(value_) << 8) / other.value_);
             return result;
         }
 
@@ -110,21 +110,21 @@ namespace rckid {
 
         /** Implicit conversion from the fixed int to int with rounding. 
          */
-        operator int32_t () const { return round(); }
+        operator int () const { return round(); }
 
-        int32_t clip() const { 
+        int clip() const { 
             return (value_ >> 8);
         }
-        int32_t round() const {
+        int round() const {
             return ((value_ >= 0) ? (value_ + 0x80) : (value_ - 0x80)) >> 8;
         }
 
-        int32_t raw() const { return value_; }
+        int raw() const { return value_; }
 
     private:
 
 
-        int32_t value_;
+        int value_;
 
     }; // rckid::FixedInt
 
@@ -144,5 +144,5 @@ namespace rckid {
 }
 
 inline rckid::FixedInt operator "" _fi(unsigned long long value) { 
-    return rckid::FixedInt{static_cast<int32_t>(value)}; 
+    return rckid::FixedInt{static_cast<int>(value)}; 
 }

@@ -39,6 +39,7 @@ namespace rckid {
         static constexpr unsigned TICK_UV = 2;
         static constexpr unsigned TICK_ACCEL = 3;
         static constexpr unsigned TICK_AVR = 4;
+        static constexpr unsigned TICK_RESET = 5;
         volatile unsigned tickInProgress_ = TICK_DONE;
 
         platform::BMI160 accelerometer_;
@@ -65,10 +66,25 @@ namespace rckid {
 
     }
 
+    /**  Waits for the end of tick's async operations. 
+
+         This is particularly useful in cases where drawing would be faster, or when the update method would like to issue I2C commands for the AVR, but the I2C bus is still used by the tick async requests. 
+     */
+    void waitTickEnd() {
+        if (tickInProgress_ != TICK_RESET) {
+            // tick reset is here for the unlucky chance of two threads doing the same
+            while (tickInProgress_ != TICK_DONE && tickInProgress_ != TICK_RESET) 
+                yield();
+            tickInProgress_ = TICK_RESET;
+            i2c_init(i2c0, RP_I2C_BAUDRATE); 
+        }
+    }
+
     /** Sends given I2C command to the AVR. 
      */
     template<typename T>
     static void sendCommand(T const & cmd) {
+        waitTickEnd();
         i2c_write_blocking(i2c0, I2C_AVR_ADDRESS, (uint8_t const *) & cmd, sizeof(T), false);
     }    
 
@@ -282,8 +298,7 @@ namespace rckid {
     }
 
     void tick() {
-        while (tickInProgress_ != TICK_DONE)
-            yield();
+        waitTickEnd();
         ++ticks_;
         // make sure the I2C is off, then set it up so that it can talk to the accelerometer
         if (ticks_ % 8 == 0) {
@@ -305,13 +320,6 @@ namespace rckid {
         //i2c0->hw->con |= I2C_IC_CON_TX_EMPTY_CTRL_BITS;
         // enable the I2C
         i2c0->hw->intr_mask = I2C_IC_INTR_MASK_M_RX_FULL_BITS | I2C_IC_INTR_MASK_M_TX_ABRT_BITS;
-    }
-
-    /** Waits for the tick to be done (and the I2C bus being freed). This is mkII specific hack to ensure that I2C bus is available for the application during the update() method. 
-     */
-    void rckid_mkII_waitTickDone() {
-        while (tickInProgress_ != TICK_DONE)
-            yield();
     }
 
     void yield() {
