@@ -1,5 +1,3 @@
-#include "ui/pause.h"
-
 #include "app.h"
 
 namespace rckid {
@@ -14,6 +12,8 @@ namespace rckid {
         App * lastApp = current_;
         current_ = this;
         onFocus();
+        // add extra tick to ensure that button presses are cleared
+        tick();
         // reste the FPS counter & period
         uint32_t lastFrame = uptimeUs();
         uint32_t currentFrame = 0;
@@ -51,9 +51,4 @@ namespace rckid {
         //if (current_)
         //    current_->onFocus();
     }
-
-    void App::pause() {
-        runModal<Pause>();
-    }
-
 } // namespace rckid

@@ -1,5 +1,7 @@
 # TODO
 
+- make sure that it's the I2C command & tick that waits for the tick done, not the update method
+
 - check the critical battery warning & new AVR
 - temperature does not seem to be right
 - effects and direct RGB settings not playing nicely together either (setting normal value should clear effect & green for )

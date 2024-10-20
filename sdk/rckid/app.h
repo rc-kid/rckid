@@ -53,32 +53,32 @@ namespace rckid {
         virtual void onFocus() {}
         virtual void onBlur() {}
 
-        virtual void pause();
-
         /** Exits from the app. 
          */
         void exit() {
-            ASSERT(current_ == this);
+            // multiple exits in single app tick are technically possible
+            if (current_ != nullptr)
+                ASSERT(current_ == this);
             current_ = nullptr;
         }
 
-        template<typename T> 
+        template<typename T, typename ... ARGS> 
         typename std::enable_if<HasModalResult<T>, std::optional<typename T::ModalResult>>::type
-        runModal() {
+        runModal(ARGS && ... args) {
             onBlur();
             //memoryEnterArena();
-            auto result = T::run();
+            auto result = T::run(std::forward<ARGS>(args) ...);
             //memoryLeaveArena();
             onFocus();
             return result;
         }
 
-        template<typename T>
+        template<typename T, typename ... ARGS>
         typename std::enable_if<!HasModalResult<T>, void>::type 
-        runModal() {
+        runModal(ARGS && ... args) {
             onBlur();
             memoryEnterArena();
-            T::run();
+            T::run(std::forward<ARGS>(args) ...);
             memoryLeaveArena();
             onFocus();
         }

@@ -3,7 +3,7 @@
 #include <rckid/app.h>
 #include <rckid/graphics/canvas.h>
 #include <rckid/ui/header.h>
-#include <rckid/ui/pause.h>
+#include <rckid/ui/alert.h>
 
 #include <rckid/assets/fonts/OpenDyslexic24.h>
 namespace rckid {
@@ -41,7 +41,7 @@ namespace rckid {
                 countdown_ = speed_;
             }
             if (btnPressed(Btn::A))
-                pause();
+                runModal<Alert>("PAUSE", "Press A to continue...");
             // TODO if we should, go down automatically
             if (btnPressed(Btn::Up))
                 rotate();
@@ -71,8 +71,8 @@ namespace rckid {
                     addToGrid(cur_, x_, y_);
                     compactRows(y_);
                     spawn();
-                    //if (!validate(cur_, x_, y_))
-                    //  gameOver();
+                    if (!validate(cur_, x_, y_))
+                        gameOver();
                 }
             }
         }
@@ -190,6 +190,17 @@ namespace rckid {
             return true;
         }
 
+        /** Game over.
+
+            Display game over dialg and then reset the game. 
+
+            TODO store high score, etc.          
+         */
+        void gameOver() {
+            runModal<Alert>("GAME OVER", "Press A to continue...");
+            resetGame();
+        }
+
         /** Spawns next tetromino. 
          */
         void spawn() {
@@ -293,6 +304,7 @@ namespace rckid {
 
         void resetGame() {
             level_ = 1;
+            score_ = 0;
             speed_ = getLevelSpeed(1);
             for (unsigned i = 0; i < PLAY_WIDTH * PLAY_HEIGHT; ++i)
                 grid_[i] = 0;

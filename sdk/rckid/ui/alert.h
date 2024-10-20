@@ -1,29 +1,30 @@
 #pragma once
 
-#include "rckid/rckid.h"
-#include "rckid/app.h"
-#include "rckid/ui/timer.h"
-#include "rckid/ui/ui.h"
+#include "../rckid.h"
+#include "../app.h"
+#include "ui.h"
 
 
 namespace rckid {
 
-    /** Simple pause dialog.
+    /** Simple alert dialog
      * 
       */
-    class Pause : public GraphicsApp<UITileEngine<>> {
+    class Alert : public GraphicsApp<UITileEngine<>> {
     public:
 
-        static void run() {
-            Pause * p = new Pause{};
-            p->loop();
+        static void run(char const * title, char const * message) {
+            Alert a{title, message};
+            a.loop();
         }
 
     protected:
 
-        Pause():
+        Alert(char const * title, char const * message):
             GraphicsApp{UITileEngine<>{26, 4, UITiles::Tileset, nullptr}}, 
-            palette_{new ColorRGB[32] } {
+            palette_{new ColorRGB[32] }, 
+            title_{title}, 
+            message_{message} {
             g_.setPalette(palette_);
             // initialize the palette
             for (uint8_t i = 0; i < 16; ++i) {
@@ -34,16 +35,20 @@ namespace rckid {
 
         void update() override {
             App::update();
+            if (btnPressed(Btn::A))
+                exit();
         }
 
         void draw() override {
-            g_.text(0, 1) << "PAUSE";
-            g_.text(0, 2) << "Press A to resume";
+            g_.text(0, 1) << title_;
+            g_.text(0, 2) << message_;
         }
 
         // palette
         ColorRGB * palette_; 
+        char const * title_;
+        char const * message_;
 
-    }; // Pause
+    }; // Alert
 
 } // namespace rckid
