@@ -197,7 +197,7 @@ namespace rckid {
             TODO store high score, etc.          
          */
         void gameOver() {
-            runModal<Alert>("GAME OVER", "Press A to continue...");
+            runModal<Alert>("GAME OVER", "Press A to continue...", ColorRGB{32, 0, 0});
             resetGame();
         }
 

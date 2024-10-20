@@ -13,14 +13,14 @@ namespace rckid {
     class Alert : public GraphicsApp<UITileEngine<>> {
     public:
 
-        static void run(char const * title, char const * message) {
-            Alert a{title, message};
+        static void run(char const * title, char const * message, ColorRGB background = ColorRGB{16,16,16}) {
+            Alert a{title, message, background};
             a.loop();
         }
 
     protected:
 
-        Alert(char const * title, char const * message):
+        Alert(char const * title, char const * message, ColorRGB background):
             GraphicsApp{UITileEngine<>{26, 4, UITiles::Tileset, nullptr}}, 
             palette_{new ColorRGB[32] }, 
             title_{title}, 
@@ -31,6 +31,7 @@ namespace rckid {
                 palette_[i] = ColorRGB{(i << 4) + i, (i << 4) + i, (i << 4) + i};
                 palette_[i + 16] = ColorRGB{(i << 4) + i, 0, 0};
             }
+            palette_[0] = background;
         }
 
         void update() override {
