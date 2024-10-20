@@ -66,17 +66,21 @@ namespace rckid {
 
     }
 
-    /**  Waits for the end of tick's async operations. 
+    /** Waits for the end of tick's async operations. 
 
-         This is particularly useful in cases where drawing would be faster, or when the update method would like to issue I2C commands for the AVR, but the I2C bus is still used by the tick async requests. 
+        This is particularly useful in cases where drawing would be faster, or when the update method would like to issue I2C commands for the AVR, but the I2C bus is still used by the tick async requests. 
+
+        Returns true if there was any wait, false otherwise. 
      */
-    void waitTickEnd() {
+    bool waitTickEnd() {
         if (tickInProgress_ != TICK_RESET) {
             // tick reset is here for the unlucky chance of two threads doing the same
             while (tickInProgress_ != TICK_DONE && tickInProgress_ != TICK_RESET) 
                 yield();
             tickInProgress_ = TICK_RESET;
-            i2c_init(i2c0, RP_I2C_BAUDRATE); 
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -84,7 +88,9 @@ namespace rckid {
      */
     template<typename T>
     static void sendCommand(T const & cmd) {
-        waitTickEnd();
+        // if we are the first ones waiting, enable the I2C so that the command below will work, otherwise we've already done so in the past
+        if (waitTickEnd())
+            i2c_init(i2c0, RP_I2C_BAUDRATE); 
         i2c_write_blocking(i2c0, I2C_AVR_ADDRESS, (uint8_t const *) & cmd, sizeof(T), false);
     }    
 

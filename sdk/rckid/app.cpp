@@ -12,7 +12,8 @@ namespace rckid {
         App * lastApp = current_;
         current_ = this;
         onFocus();
-        // add extra tick to ensure that button presses are cleared
+        // add extra tick to ensure that button presses are cleared. We really need only the first tick, the second tick is there to ensure that any async processes of the first tick will actually finish before the update method call in the loop (tick waits for completion of previous one)
+        tick();
         tick();
         // reste the FPS counter & period
         uint32_t lastFrame = uptimeUs();
@@ -35,6 +36,8 @@ namespace rckid {
                 currentFps = 0;
             }
         }
+        // make sure the last frame of the app has been rendered properly (otherwise the rendering might stop mid frame when the app swaps and may create weird artefacts on the display)
+        displayWaitUpdateDone();
         // current can only be nullptr at this point, if it is anything else than nullptr, we have a problem as the exit mechanic when running modal apps has been broken somehow. 
         ASSERT(current_ == nullptr);
         onBlur();

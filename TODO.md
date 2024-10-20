@@ -1,7 +1,5 @@
 # TODO
 
-- verify that ticks work on mkII (this has now become mk III as well)
-
 - check the critical battery warning & new AVR
 - temperature does not seem to be right
 - effects and direct RGB settings not playing nicely together either (setting normal value should clear effect & green for )
