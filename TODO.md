@@ -1,9 +1,11 @@
 # TODO
 
+- verify the thickness of the case printed from glowing PLA
+- enlarge display hole a bit 
+
 - check the critical battery warning & new AVR
-- temperature does not seem to be right
-- effects and direct RGB settings not playing nicely together either (setting normal value should clear effect & green for )
 - add logo when clearing the screen
+- can easily port littlefs for cartridge storage filesystem
 
 - make mp3 player and video as a TV so that the mp3's have daily schedule that you can do
 

@@ -8,6 +8,7 @@
 #include <games/Pong.h>
 #include <games/Tetris.h>
 #include <games/SlidingPuzzle.h>
+#include <games/GalaxyInvaders.h>
 #include <test/RawAudioTest.h>
 #include <test/ToneAudioTest.h>
 #include <utils/StatusDisplay.h>
@@ -38,7 +39,7 @@ Menu * menuGames() {
         MenuApp::Item("Pong", assets::icons::bat, Pong::run),
         MenuApp::Item("Tetris", assets::icons::beaver, Tetris::run),
         MenuApp::Item("Sliding Puzzle", assets::icons::bee, SlidingPuzzle::run),
-        //MenuApp::Item("Space Invaders", assets::icons::bird_of_paradise, nullptr),
+        MenuApp::Item("Invaders", assets::icons::bird_of_paradise, GalaxyInvaders::run),
     };
 }
 
@@ -71,7 +72,7 @@ int main() {
     rckid::initialize();
     LOG("Initialized, running the app!");
     rckid::displaySetBrightness(128);
-    rckid::rumbleOk();
+    //rckid::rumbleOk();
     //auto game = rckid::SlidingPuzzle::create();
     //auto game = new rckid::RawAudioTest{};
     //auto game = new TextInput{};

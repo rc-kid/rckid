@@ -30,6 +30,34 @@ public:
             + ((raw_[3] & YEAR_MASK) >> 5);
     }
 
+    void clear() {
+        raw_[0] = 0xff;
+        raw_[1] = 0xff;
+        raw_[2] = 0xff;
+        raw_[3] = 0xff;
+    }
+
+    void set(uint8_t day, uint8_t month, uint16_t year) {
+        raw_[0] = 0x0;
+        raw_[1] = 0x0;
+        raw_[2] = 0x0;
+        raw_[3] = 0x0;
+        setDay(day);
+        setMonth(month);
+        setYear(year);
+    }
+
+    void set(uint8_t day, uint8_t month, uint16_t year, uint8_t h, uint8_t m, uint8_t s) {
+        setDay(day);
+        setMonth(month);
+        setYear(year);
+        setHour(h);
+        setMinute(m);
+        setSecond(s);
+    }
+
+    bool isValid() const { return month() < 13; }
+
     /** Returns the day of week for given date. 
      
         Only works for dates in range. Returns 0 for Monday and 6 for Sunday. 
@@ -44,17 +72,17 @@ public:
     }
 
 
-    void setSeconds(uint8_t value) { 
+    void setSecond(uint8_t value) { 
         raw_[0] &= ~SECOND_MASK;
         raw_[0] |= value & SECOND_MASK;
     }
 
-    void setMinutes(uint8_t value) {
+    void setMinute(uint8_t value) {
         raw_[1] &= ~MINUTE_MASK;
         raw_[1] |= value & MINUTE_MASK;
     }
 
-    void setHours(uint8_t value) {
+    void setHour(uint8_t value) {
         raw_[2] &= ~HOUR_MASK;
         raw_[2] |= value & HOUR_MASK;
     }
@@ -83,21 +111,21 @@ public:
         raw_[3] |= y2;
     }
 
-    bool incSeconds() {
+    bool incSecond() {
         uint8_t x = (seconds() + 1) % 60;
-        setSeconds(x);
+        setSecond(x);
         return x == 0;
     }
 
-    bool incMinutes() {
+    bool incMinute() {
         uint8_t x = (minutes() + 1) % 60;
-        setMinutes(x);
+        setMinute(x);
         return x == 0;
     }
 
-    bool incHours() {
+    bool incHour() {
         uint8_t x = (hours() + 1) % 12;
-        setHours(x);
+        setHour(x);
         return x == 0;
     }
 
@@ -126,11 +154,11 @@ public:
     }
 
     bool secondTick() {
-        if (! incSeconds())
+        if (! incSecond())
             return false;
-        if (! incMinutes())
+        if (! incMinute())
             return false;
-        if (! incHours())
+        if (! incHour())
             return false;
         if (! incDay())
             return false;
@@ -161,6 +189,10 @@ public:
         }
     }
 
+    bool operator == (TinyDate const & other) const {
+        return (raw_[0] == other.raw_[0]) && (raw_[1] == other.raw_[1]) && (raw_[2] == other.raw_[2]) && (raw_[3] == other.raw_[3]);
+    }
+
 
 private:
     static constexpr uint8_t SECOND_MASK = 63;
@@ -170,7 +202,7 @@ private:
     static constexpr uint8_t MONTH_MASK = 192; 
     static constexpr uint8_t YEAR_MASK = 224;
 
-    uint8_t raw_[4];
+    uint8_t raw_[4] = { 0xff, 0xff, 0xff, 0xff};
 
 } __attribute__((packed)); // TinyDate
 

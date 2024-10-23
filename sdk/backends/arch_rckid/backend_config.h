@@ -37,6 +37,8 @@
 
 
 
+
+
 /** I2C address of the AVR chip. No need to change this as the I2C bus is no longer user accessible in the cartridge in version 3. 
  */
 #define I2C_AVR_ADDRESS 0x43 

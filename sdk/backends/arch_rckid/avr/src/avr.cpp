@@ -113,6 +113,9 @@ public:
             rumblerTick();
             // see if there were any I2C commands received and if so, execute
             processI2CCommand();
+            // if we are not on, and there is an alarm, we should power on 
+            if (avrState_ != AVRState::On && ts_.status.alarm())
+                devicePowerOn();
             // sleep if we should, if not sleeping check if we have ADC measurement ready
             if (avrState_ == AVRState::Sleep) {
                 measureVccInSleep();
@@ -173,6 +176,9 @@ public:
         // if we are sleeping, initiatethe ADC measurement for the VCC to determine if DC power has been connected
         if (avrState_ == AVRState::Sleep)
             vccMeasureTick_ = true;
+        // check the alarm - if the alarm is set the main loop will wakeup
+        if (ts_.time == ts.alarm)
+            ts_.status.setAlarm(true);
     }
 
     /** \name Power Management
@@ -504,8 +510,12 @@ public:
             case cmd::BootloaderAVR::ID:
                 // TODO
                 break;
-            // TODO debug mode
-            // TODO audio enable 
+            case cmd::DebugModeOn::ID:
+                ts_.extras.setDebugMode(false);
+                break;
+            case cmd::DebugModeOff::ID:
+                ts_.extras.setDebugMode(true);
+                break;
             case cmd::SetBrightness::ID: {
                 uint8_t value = cmd::SetBrightness::fromBuffer(ts_.buffer).value;
                 setBacklightPWM(value);
@@ -515,6 +525,16 @@ public:
             case cmd::SetTime::ID: {
                 TinyDate t = cmd::SetTime::fromBuffer(ts_.buffer).value;
                 ts_.time = t;
+                break;
+            }
+            case cmd::SetAlarm::ID: {
+                TinyDate t = cmd::SetAlarm::fromBuffer(ts_.buffer).value;
+                ts_.alarm = t;
+                break;
+            }
+            case cmd::ClearAlarm::ID: {
+                ts_.alarm.clear();
+                ts_.status.setAlarm(false);
                 break;
             }
             case cmd::Rumbler::ID: {
@@ -960,6 +980,9 @@ public:
             if (--btnHomeCounter_ == 0) {
                 switch (avrState_) {
                     case AVRState::PoweringOn:
+                        // see if we have also pressed the volume down key, which activates the debug mode
+                        ts_.extras.setDebugMode(ts_.status.btnVolumeDown());
+                        // and turn the device on 
                         devicePowerOn();
                         break;
                     case AVRState::On:
@@ -1001,9 +1024,9 @@ public:
                 // we are ready to read vol up & down, read, react and get ready to measure DPAD in next tick
                 ts_.status.setVolumeKeys(!gpio::read(AVR_PIN_BTN_2), !gpio::read(AVR_PIN_BTN_3));
                 // TODO do this only when in debug mode
-                if (ts_.status.btnVolumeUp()) {
+                if (ts_.status.btnVolumeUp() && ts_.extras.debugMode()) {
                     reset();
-                } else if (ts_.status.btnVolumeDown()) {
+                } else if (ts_.status.btnVolumeDown() && ts_.extras.debugMode()) {
                     resetBootloader();
                 } else {
                     gpio::high(AVR_PIN_BTN_CTRL);

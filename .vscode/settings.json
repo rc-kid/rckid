@@ -60,6 +60,7 @@
         "fstream": "cpp",
         "iomanip": "cpp",
         "forward_list": "cpp",
-        "*.m": "cpp"
+        "*.m": "cpp",
+        "ratio": "cpp"
     }
 }

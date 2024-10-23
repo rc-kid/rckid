@@ -16,6 +16,7 @@ namespace rckid {
         bool powerDC() const { return status_ & DC_POWER; }
         bool audioEnabled() const { return status_ & AUDIO_EN; }
         bool audioHeadphones() const { return status_ & AUDIO_HEADPHONES; }
+        bool alarm() const { return status_ & ALARM; }
 
         void setBtnHome(bool value) { value ? status_ |= BTN_HOME : status_ &= ~BTN_HOME; }
         void setBtnVolumeUp(bool value) { value ? status_ |= BTN_VOL_UP : status_ &= ~BTN_VOL_UP; }
@@ -28,11 +29,14 @@ namespace rckid {
             status_ &= ~(BTN_VOL_UP | BTN_VOL_DOWN);
             status_ |= ( volUp ? BTN_VOL_UP : 0) | (volDown ? BTN_VOL_DOWN : 0);
         }
+        void setAlarm(bool value) { value ? status_ |= ALARM : status_ &= ~ALARM; }
 
         uint16_t vBatt() const { return voltageFromRawStorage(vBatt_); }
-        int16_t temp() const { return -200 + (temp_ * 5); }
 
         void setVBatt(uint16_t vx100) { vBatt_ = voltageToRawStorage(vx100); }
+
+        int16_t temp() const { return -200 + (temp_ * 5); }
+
         void setTemp(int32_t tempx10) {
             if (tempx10 <= -200)
                 temp_ = 0;
@@ -72,6 +76,7 @@ namespace rckid {
         static constexpr uint8_t DC_POWER = 1 << 4;
         static constexpr uint8_t AUDIO_EN = 1 << 5;
         static constexpr uint8_t AUDIO_HEADPHONES = 1 << 6;
+        static constexpr uint8_t ALARM = 1 << 7;
         // 7 free
 
         /** Device status (8 single bit values)
@@ -144,6 +149,9 @@ namespace rckid {
         /** Current date & time as kept by the RTC. 
          */
         TinyDate time;
+        /** Alarm.
+         */
+        TinyDate alarm;
         /** Current brightness settings. 
          */
         uint8_t brightness;

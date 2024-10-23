@@ -40,12 +40,12 @@ namespace rckid {
 
     /** Single note information. 
      */
-    struct NoteInfo {
+    PACKED(struct NoteInfo {
         Note note;
         NoteLength length;
 
         constexpr NoteInfo(Note n, NoteLength l): note{n}, length{l} {}
-    } __attribute__((packed));
+    });
 
     constexpr inline uint16_t frequencyOf(Note n) {
         switch (n) {

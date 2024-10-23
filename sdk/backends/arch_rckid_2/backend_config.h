@@ -120,6 +120,11 @@
 #define AVR_PIN_CHARGE_EN A1
 #endif
 
+
+/** Index of the notification LED in the RGB strip. 
+ */
+#define RGB_LED_INDEX_NOTIFICATION 2
+
 /** \section RP2040Pinout RP2040 Pinout
  
 

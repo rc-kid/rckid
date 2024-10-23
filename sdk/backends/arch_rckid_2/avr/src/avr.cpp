@@ -225,13 +225,9 @@ public:
             avrState_ = AVRState::Sleep;
         }
         // clear user RGBs
-        for (int i = 0; i < 6; ++i) {
-            if (i == 2)
-                continue;
-            rgbEffects_[i] = RGBEffect::Off();
-            rgbsTarget_[i] = platform::Color::Black();
-            rgbs_[i] = platform::Color::Black();
-        }
+        rgbClear();
+        // leave debug mode
+        ts_.extras.setDebugMode(false);
     }
 
     static void devicePoweringOn() {
@@ -251,6 +247,9 @@ public:
         // if we are in debug mode, ensure the display is *on*
         if (ts_.extras.debugMode())
             setBacklightPWM(128);
+        // rumble to indicate power on
+        rumblerEffect_ = RumblerEffect::Ok();
+        rumblerCurrent_ = rumblerEffect_;
     }
 
     static void enterSleep() {
@@ -404,7 +403,7 @@ public:
     static void resetBootloader() {
         power3v3Off();
         rgbOn();
-        rgbs_.fill(platform::Color::Black());
+        rgbClear();
         // pull QSPI_SS low to indicate bootloader
         gpio::outputLow(AVR_PIN_QSPI_SS);
         // wait 1 second by and indicate this on the RGB leds, se
@@ -708,6 +707,21 @@ public:
         rgbOn_ = false;
         gpio::outputFloat(AVR_PIN_RGB);
         gpio::outputFloat(AVR_PIN_5V_ON);
+        // make sure that we start with a clean state
+        rgbClear();
+    }
+
+    /** Clears the RGBs - disables effects and sets the current and target color to black for immediate switch to black color.
+     */
+    static void rgbClear() {
+        for (uint8_t i = 0; i < 6; ++i) {
+            // ignore the notification led
+            if (i == RGB_LED_INDEX_NOTIFICATION)
+                continue;
+            rgbEffects_[i] = RGBEffect::Off();
+            rgbs_[i] = platform::Color::Black();
+            rgbsTarget_[i] = platform::Color::Black();
+        }
     }
 
     static void rgbTick() {
@@ -987,8 +1001,9 @@ public:
                 t *= sigrow_gain;
                 // temp is now in kelvin range, to convert to celsius, remove -273.15 (x256)
                 t -= 69926;
+                t += 0x40; // rounding on 0.5 degrees
                 // and now loose precision to 0.5C (x10, i.e. -15 = -1.5C)
-                value = (t >>= 7) * 5;
+                t = (t >>= 7) * 5;
                 measureTemp(t);
 #ifdef RCKID_VERSION_2_2
                 // in version 2.2 headphones pin is not attached to something that can be measured with ADC, try reading the gpio, which should be enough most of the time
@@ -1069,17 +1084,18 @@ public:
     }
 
     static void btnHomeTick() {
-        // do nothing if we are not counting the long press
-        if (btnHomeCounter_ == 0)
-            return;
         // get the home button state and update the status accordingly
         bool state = ! gpio::read(AVR_PIN_BTN_HOME);
         ts_.status.setBtnHome(state);
+        // do nothing else if we are not counting the long press
+        if (btnHomeCounter_ == 0)
+            return;
         // if home button is pressed and long press countdown has been reached, either turn the device on if in PoweringOn state, or turn the device off if in On state
         if (state) {
             if (--btnHomeCounter_ == 0) {
                 switch (avrState_) {
                     case AVRState::PoweringOn:
+                        ts_.extras.setDebugMode(ts_.status.btnVolumeDown());
                         devicePowerOn();
                         break;
                     case AVRState::On:
@@ -1117,19 +1133,22 @@ public:
 
 
         switch (inputsTicks_) {
-            case 0:
+            case 0: {
+                bool volUp = ts_.status.btnVolumeUp();
+                bool volDown = ts_.status.btnVolumeDown();
                 // we are ready to read vol up & down, read, react and get ready to measure DPAD in next tick
                 ts_.status.setVolumeKeys(!gpio::read(AVR_PIN_BTN_2), !gpio::read(AVR_PIN_BTN_3));
                 // TODO do this only when in debug mode
-                if (ts_.extras.debugMode() && ts_.status.btnVolumeUp()) {
+                if (ts_.extras.debugMode() && ts_.status.btnVolumeUp() && ! volUp) {
                     reset();
-                } else if (ts_.extras.debugMode() && ts_.status.btnVolumeDown()) {
+                } else if (ts_.extras.debugMode() && ts_.status.btnVolumeDown() && ! volDown) {
                     resetBootloader();
                 } else {
                     gpio::high(AVR_PIN_BTN_CTRL);
                     gpio::low(AVR_PIN_BTN_DPAD);
                 }
                 break;
+            }
             case 1:
                 // we are ready to read dpad, update status and move to read A, B, Sel & Start in next tick
                 ts_.status.setDPadKeys(
