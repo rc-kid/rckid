@@ -12,6 +12,9 @@
 #include <test/RawAudioTest.h>
 #include <test/ToneAudioTest.h>
 #include <utils/StatusDisplay.h>
+#include <utils/StatusDisplay.h>
+#include <utils/Clock.h>
+#include <utils/Stopwatch.h>
 
 #include <benchmarks/ToneGenerator.h>
 
@@ -46,6 +49,8 @@ Menu * menuGames() {
 Menu * menuUtils() {
     return new Menu{
         MenuApp::Item("Status", assets::icons::info, StatusDisplay::run),
+        MenuApp::Item("Stopwatch", assets::icons::alarm_clock, Stopwatch::run),
+        MenuApp::Item("Clock", assets::icons::alarm_clock, Clock::run),
         //MenuApp::Item("Raw Audio", assets::icons::music, RawAudioTest::run),
         MenuApp::Item("Tone Audio", assets::icons::music, ToneAudioTest::run)
     };
