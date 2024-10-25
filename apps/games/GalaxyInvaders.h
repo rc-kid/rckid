@@ -28,21 +28,35 @@ namespace rckid {
         void update() override {
             // handle back button
             GraphicsApp::update();
+            bool moving = false;
             if (btnDown(Btn::Left)) {
-                if (shipX_ > 0)
-                    --shipX_;
+                if (shipSpeed_ >= 0)
+                    shipSpeed_ = -1;
+                else if (shipSpeed_ > -10)
+                    shipSpeed_ = shipSpeed_ * FixedInt{1, 0x20};
+                shipX_ = shipX_ + shipSpeed_;
+                if (shipX_ < 0)
+                    shipX_ = 0;
+                moving = true;
             }
             if (btnDown(Btn::Right)) {
-                if (shipX_ < 290)
-                    ++shipX_;
+                if (shipSpeed_ <= 0)
+                    shipSpeed_ = 1;
+                else if (shipSpeed_ < 10)
+                    shipSpeed_ = shipSpeed_ * FixedInt{1, 0x20};
+                shipX_ = shipX_ + shipSpeed_;
+                if (shipX_ > 296)
+                    shipX_ = 296;
+                moving = true;
             }
+            if (!moving)
+                shipSpeed_ = 0;
         }
 
         void draw() override {
             g_.fill();
             drawSpaceship();
             drawAliens();
-
         }
 
         void resetGame() {
@@ -74,7 +88,8 @@ namespace rckid {
 
         uint32_t score_;
 
-        int32_t shipX_;
+        FixedInt shipX_;
+        FixedInt shipSpeed_;
         int32_t aliensX_;
         int32_t aliensY_;
         bool aliens_[8 * 5];

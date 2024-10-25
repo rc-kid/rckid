@@ -200,8 +200,8 @@ namespace rckid {
             return Point{ x * TILE_WIDTH, y * TILE_HEIGHT};
         }
 
-        Bitmap<Color> hole_{TILE_WIDTH,TILE_HEIGHT};
-        Bitmap<Color> tmp_{TILE_WIDTH,TILE_HEIGHT};
+        RenderableBitmap<Color> hole_{TILE_WIDTH,TILE_HEIGHT};
+        RenderableBitmap<Color> tmp_{TILE_WIDTH,TILE_HEIGHT};
 
         uint8_t tileMap_[NUM_TILES];
 

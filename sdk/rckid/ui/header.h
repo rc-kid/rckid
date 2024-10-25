@@ -11,9 +11,9 @@ namespace rckid {
     class Header {
     public:
 
-        /** Draws the header on given surface. 
+        /** Draws the header on given bitmap. 
          */
-        static void drawOn(Surface<ColorRGB> & surface, bool verbose = true);
+        static void drawOn(Bitmap<ColorRGB> & surface, bool verbose = true);
 
     private:
 

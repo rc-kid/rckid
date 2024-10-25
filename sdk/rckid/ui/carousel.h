@@ -23,7 +23,7 @@ namespace rckid {
 
         bool idle() const { return ! a_.running(); }
 
-        void setCurrent(char const * text, Surface<ColorRGB> && icon) {
+        void setCurrent(char const * text, Bitmap<ColorRGB> && icon) {
             text_ = text;
             textWidth_ = font_.textWidth(text);
             icon_ = std::move(icon);
@@ -48,7 +48,7 @@ namespace rckid {
 
         /** Draws the carousel's current state onto the given surface. 
          */
-        void drawOn(Surface<ColorRGB> & surface, Rect where) {
+        void drawOn(Bitmap<ColorRGB> & surface, Rect where) {
             a_.update();
             Point pos = getItemPosition(icon_, textWidth_, where);
             switch (dir_) {
@@ -123,13 +123,13 @@ namespace rckid {
             a_.start();
         }
 
-        Point getItemPosition(Surface<ColorRGB> const & icon, int textWidth, Rect where) {
+        Point getItemPosition(Bitmap<ColorRGB> const & icon, int textWidth, Rect where) {
             int left = where.left() + (where.w - icon.width() - 5 - textWidth) / 2;
             int top = where.top() + (where.h - icon.height()) / 2;
             return Point{left, top};
         }
 
-        void drawText(Surface<ColorRGB> & surface, int x, int y, Surface<ColorRGB> const & icon, char const * text) {
+        void drawText(Bitmap<ColorRGB> & surface, int x, int y, Bitmap<ColorRGB> const & icon, char const * text) {
             if (text == nullptr)
                 return;
             y += (icon.height() - font_.size) / 2;
@@ -138,7 +138,7 @@ namespace rckid {
             surface.text(x, y, font_, color::White) << text;
         }
 
-        void drawIcon(Surface<ColorRGB> & surface, int x, int y, Surface<ColorRGB> const & icon) {
+        void drawIcon(Bitmap<ColorRGB> & surface, int x, int y, Bitmap<ColorRGB> const & icon) {
             surface.blit(Point{x, y}, icon);
         }
 
@@ -148,8 +148,8 @@ namespace rckid {
         char const * otherText_ = nullptr;
         int textWidth_ = 0;
         int otherTextWidth_ = 0;
-        Surface<ColorRGB> icon_{64, 64};
-        Surface<ColorRGB> otherIcon_{64, 64}; 
+        Bitmap<ColorRGB> icon_{64, 64};
+        Bitmap<ColorRGB> otherIcon_{64, 64}; 
 
         Btn dir_ = Btn::Home;
         Timer a_{RCKID_UI_EFFECT_DURATION_MS};

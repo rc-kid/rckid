@@ -6,9 +6,9 @@
 
 using namespace rckid;
 
-class TestApp256 : public GraphicsApp<Bitmap<Color256>> {
+class TestApp256 : public GraphicsApp<RenderableBitmap<Color256>> {
 public:
-    TestApp256(Coord w, Coord h): GraphicsApp{Bitmap<Color256>{w, h}} {
+    TestApp256(Coord w, Coord h): GraphicsApp{RenderableBitmap<Color256>{w, h}} {
         g_.setPalette(palette::generatePalette256());
     }
 

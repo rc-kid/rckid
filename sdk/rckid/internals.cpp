@@ -13,7 +13,7 @@ namespace rckid {
         }
         LOG("Free heap:   " << memoryFreeHeap());
         // create the blue screen of death
-        Bitmap<ColorRGB> fb{320, 240};
+        RenderableBitmap<ColorRGB> fb{320, 240};
         fb.fill(color::Blue);
         Font f = Font::fromROM<assets::font::Iosevka16>();
         fb.text(10,10, f, color::White)
@@ -23,7 +23,7 @@ namespace rckid {
             << "    Extra: " << ((extras != nullptr) ? extras : "-") << "\n\n"
             << "    Long press home button to reset.";
         // render the framebuffer we have
-        Renderer<Bitmap<ColorRGB>> r;
+        Renderer<RenderableBitmap<ColorRGB>> r;
         r.initialize(fb);
         r.render(fb);
     }

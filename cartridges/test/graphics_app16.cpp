@@ -6,9 +6,9 @@
 
 using namespace rckid;
 
-class TestApp16 : public GraphicsApp<Bitmap<Color16>> {
+class TestApp16 : public GraphicsApp<RenderableBitmap<Color16>> {
 public:
-    TestApp16(Coord w, Coord h): GraphicsApp{Bitmap<Color16>{w, h}} {
+    TestApp16(Coord w, Coord h): GraphicsApp{RenderableBitmap<Color16>{w, h}} {
         g_.setPalette(palette::generatePalette16());
     }
 

@@ -17,7 +17,7 @@ namespace rckid {
     public:
         static void run() {
             Stopwatch app{};
-            
+
             app.loop();
         }
 
@@ -72,10 +72,10 @@ namespace rckid {
             Header::drawOn(g_);
         }
 
-        int32_t ms_ = 0;
-        int32_t s_ = 0;
-        int32_t m_ = 0;
-        int32_t h_ = 0;
+        uint32_t ms_ = 0;
+        uint32_t s_ = 0;
+        uint32_t m_ = 0;
+        uint32_t h_ = 0;
 
         bool running_ = false;
         uint32_t lastTime_;

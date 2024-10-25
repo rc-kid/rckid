@@ -124,7 +124,7 @@ namespace rckid {
     private:
 
 
-        int value_;
+        int value_ = 0;
 
     }; // rckid::FixedInt
 

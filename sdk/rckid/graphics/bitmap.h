@@ -8,23 +8,23 @@
 
 namespace rckid {
 
-    /** Pixel surface, templated by the underlying color type. 
+    /** Bitmap, templated by the underlying color type. 
 
-        Surface constists of width and height information and a pixel buffer stored in the native orientation of the RCKid device, i.e. column first right to left, top to bottom. It provides access to the pixel data and drawing primitives via the drawing.h functions in two basic modes: slow per pixel manipulation and faster blitting of regions.
+        Bitmap constists of width and height information and a pixel buffer stored in the native orientation of the RCKid device, i.e. column first right to left, top to bottom. It provides access to the pixel data and drawing primitives via the drawing.h functions in two basic modes: slow per pixel manipulation and faster blitting of regions.
      */
     template<typename COLOR>
-    class Surface {
+    class Bitmap {
     public:
         using Color = COLOR;
         static constexpr uint8_t BPP = Color::BPP;
 
         static_assert(BPP == 16 || BPP ==8 || BPP == 4);
 
-        Surface() = default;
-        Surface(Coord width, Coord height): w_{width}, h_{height}, buffer_{allocateBuffer(width, height) } {}
+        Bitmap() = default;
+        Bitmap(Coord width, Coord height): w_{width}, h_{height}, buffer_{allocateBuffer(width, height) } {}
 
-        Surface(Surface const &) = delete;
-        Surface(Surface && from): 
+        Bitmap(Bitmap const &) = delete;
+        Bitmap(Bitmap && from): 
             w_{from.w_}, 
             h_{from.h_}, 
             buffer_{from.buffer_} 
@@ -34,11 +34,11 @@ namespace rckid {
             from.buffer_ = nullptr;
         }
 
-        ~Surface() {
+        ~Bitmap() {
             delete [] buffer_;
         }
 
-        Surface & operator = (Surface && from) {
+        Bitmap & operator = (Bitmap && from) {
             w_ = from.w_;
             h_ = from.h_;
             delete buffer_;
@@ -73,9 +73,9 @@ namespace rckid {
          */
         //@{
 
-        void blit(Point where, Surface const & src) { blit(where, src, Rect::WH(src.width(), src.height())); }
+        void blit(Point where, Bitmap const & src) { blit(where, src, Rect::WH(src.width(), src.height())); }
 
-        void blit(Point where, Surface const & src, Rect srcRect) {
+        void blit(Point where, Bitmap const & src, Rect srcRect) {
             // default, very slow implementation 
             int dy = where.y;
             for (int y = srcRect.top(), ye = srcRect.bottom(); y != ye; ++y, ++dy) {
@@ -172,8 +172,8 @@ namespace rckid {
             });
         }
 
-        static Surface fromImage(PNG && png) {
-            Surface result{png.width(), png.height()};
+        static Bitmap fromImage(PNG && png) {
+            Bitmap result{png.width(), png.height()};
             result.loadImage(std::move(png));
             return result;
         }
@@ -194,10 +194,10 @@ namespace rckid {
 
         uint8_t * buffer_ = nullptr;
 
-    }; // rckid::Surface
+    }; // rckid::Bitmap
 
     template<>
-    inline Writer Surface<ColorRGB>::text(int x, int y, Font const & font, ColorRGB color) {
+    inline Writer Bitmap<ColorRGB>::text(int x, int y, Font const & font, ColorRGB color) {
         Color colors[] = {
             color.withAlpha(0), 
             color.withAlpha(85), 
@@ -216,19 +216,19 @@ namespace rckid {
         }};
     }
 
-    /** Bitmap
+    /** Renderable Bitmap
      
-        Bitmap is pixel surface with its drawing primitives and pixel buffer management paired with a palette holder for the given bitmap (if palettes are used). As such, Bitmap contains all the information needed to be rendered and provides a renderer specialization (below). 
+        RenderableBitmap is a bitmap with its drawing primitives and pixel buffer management paired with a palette holder for the given bitmap (if palettes are used). As such, RenderableBitmap contains all the information needed to be rendered and provides a renderer specialization (below). 
      */
     template<typename COLOR>
-    class Bitmap : public Surface<COLOR>, public PaletteHolder<COLOR> {
+    class RenderableBitmap : public Bitmap<COLOR>, public PaletteHolder<COLOR> {
     public:
 
-        Bitmap() = default;
-        Bitmap(Coord width, Coord height): Surface<COLOR>{width, height} {}
+        RenderableBitmap() = default;
+        RenderableBitmap(Coord width, Coord height): Bitmap<COLOR>{width, height} {}
 
-        Bitmap(Bitmap const &) = delete;
-        Bitmap(Bitmap && from) = default;
+        RenderableBitmap(RenderableBitmap const &) = delete;
+        RenderableBitmap(RenderableBitmap && from) = default;
 
     }; // rckid::Bitmap
 
@@ -238,9 +238,9 @@ namespace rckid {
         Renders the bitmap in a column-wise manner starting from right to left. Uses double buffering so that while one column is being sent to the display, another column is being prepared, which means converting the bitmap colors to ColorRGB using the palette (or just memcopy if using ColorRGB). 
      */
     template<typename T>
-    class Renderer<Bitmap<T>> {
+    class Renderer<RenderableBitmap<T>> {
     public:
-        void initialize(Bitmap<T> const & bitmap) {
+        void initialize(RenderableBitmap<T> const & bitmap) {
             displaySetMode(DisplayMode::Native);
             displaySetUpdateRegion(bitmap.width(), bitmap.height());
             // allocate enough room for 2 columns
@@ -253,7 +253,7 @@ namespace rckid {
             renderBuffer_ = nullptr;
         }
 
-        void render(Bitmap<T> const & bitmap) {
+        void render(RenderableBitmap<T> const & bitmap) {
             column_ = bitmap.width() - 1;
             renderColumn(column_, bitmap);
             renderColumn(column_ - 1, bitmap);
@@ -272,11 +272,11 @@ namespace rckid {
 
     private:
 
-        ColorRGB * getRenderBufferChunk(Coord column, Bitmap<T> const & bitmap) { 
+        ColorRGB * getRenderBufferChunk(Coord column, RenderableBitmap<T> const & bitmap) { 
             return renderBuffer_ + (column % 1) * bitmap.height(); 
         }
 
-        void renderColumn(Coord column, Bitmap<T> const & bitmap) {
+        void renderColumn(Coord column, RenderableBitmap<T> const & bitmap) {
             ColorRGB * rb = getRenderBufferChunk(column, bitmap);
             uint8_t const * sb = bitmap.buffer() + pixelBufferColumnOffset<T>(bitmap.width(), bitmap.height(), column);
             pixelBufferToRGB<T>(sb, rb, bitmap.height(), bitmap.palette(), 0);
@@ -285,16 +285,16 @@ namespace rckid {
         int column_; 
         ColorRGB * renderBuffer_ = nullptr;
 
-    }; // rckid::Renderer<Bitmap<T>>
+    }; // rckid::Renderer<RenderableBitmap<T>>
 
     /** The simplest display renderer from a RGB color bitmap. 
      
         This specialization renders the entire buffer in one display update as the buffer contains directly the data to be sent over the display data lanes. 
      */
     template<>
-    class Renderer<Bitmap<ColorRGB>> {
+    class Renderer<RenderableBitmap<ColorRGB>> {
     public:
-        void initialize(Bitmap<ColorRGB> const & bitmap) {
+        void initialize(RenderableBitmap<ColorRGB> const & bitmap) {
             displaySetMode(DisplayMode::Native);
             displaySetUpdateRegion(bitmap.width(), bitmap.height());
         }
@@ -303,11 +303,11 @@ namespace rckid {
             // nothing to finalize
         }
 
-        void render(Bitmap<ColorRGB> const & bitmap) {
+        void render(RenderableBitmap<ColorRGB> const & bitmap) {
             displayWaitVSync();
             displayUpdate(reinterpret_cast<ColorRGB const*>(bitmap.buffer()), bitmap.numPixels());
         }
 
-    }; // rckid::Renderer<Bitmap<ColorRGB>>
+    }; // rckid::Renderer<RenderableBitmap<ColorRGB>>
 
 } // namespace rckid

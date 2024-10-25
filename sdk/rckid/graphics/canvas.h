@@ -6,12 +6,12 @@
 namespace rckid {
 
     template<typename COLOR>
-    class Canvas : public Bitmap<COLOR> {
+    class Canvas : public RenderableBitmap<COLOR> {
     public:
 
         using Color = COLOR;
 
-        Canvas(Coord width, Coord height): Bitmap<Color>{width, height} {}
+        Canvas(Coord width, Coord height): RenderableBitmap<Color>{width, height} {}
 
         Color fg() const { return fg_; }
         void setFg(Color value) { fg_ = value; }
@@ -22,7 +22,7 @@ namespace rckid {
         Font const & font() const { return *font_; }
         void setFont(Font const & font) { font_ = & font; }
 
-        using Bitmap<COLOR>::fill;
+        using RenderableBitmap<COLOR>::fill;
 
         void fill() { fill(bg_); }
 
@@ -31,12 +31,12 @@ namespace rckid {
         void drawRect(Rect rect) { fill(fg_, rect); }
 
         Writer text(int x, int y) {
-            return Bitmap<Color>::text(x, y, *font_, fg_);
+            return RenderableBitmap<Color>::text(x, y, *font_, fg_);
         }
 
         Writer text(Point p) { return text(p.x, p.y); }
 
-        using Bitmap<COLOR>::text;
+        using RenderableBitmap<COLOR>::text;
 
     private:
         Color fg_;
@@ -48,11 +48,11 @@ namespace rckid {
     }; // rckid::Canvas
 
     template<typename T>
-    class Renderer<Canvas<T>> : public Renderer<Bitmap<T>> {};
+    class Renderer<Canvas<T>> : public Renderer<RenderableBitmap<T>> {};
 
     template<>
     inline Canvas<ColorRGB>::Canvas(Coord width, Coord height): 
-        Bitmap<Color>{width, height},
+        RenderableBitmap<Color>{width, height},
         fg_{color::White}, 
         bg_{color::Black} {
     }

@@ -6,9 +6,9 @@
 
 using namespace rckid;
 
-class TestAppRGB : public GraphicsApp<Bitmap<ColorRGB>> {
+class TestAppRGB : public GraphicsApp<RenderableBitmap<ColorRGB>> {
 public:
-    TestAppRGB(Coord w, Coord h): GraphicsApp{Bitmap<ColorRGB>{w, h}} {}
+    TestAppRGB(Coord w, Coord h): GraphicsApp{RenderableBitmap<ColorRGB>{w, h}} {}
 
     static void run() { TestAppRGB t{200, 200}; t.loop(); }
 

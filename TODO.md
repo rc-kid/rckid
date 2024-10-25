@@ -3,8 +3,6 @@
 - verify the thickness of the case printed from glowing PLA
 - enlarge display hole a bit 
 
-- rename Surface to bitmap and bitmap to drawableBitmap
-
 - check the critical battery warning & new AVR
 - add logo when clearing the screen
 - can easily port littlefs for cartridge storage filesystem

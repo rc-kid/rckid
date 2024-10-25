@@ -16,7 +16,7 @@ namespace rckid {
 
 
      */
-    class Pong : public GraphicsApp<Bitmap<ColorRGB>> {
+    class Pong : public GraphicsApp<RenderableBitmap<ColorRGB>> {
     public:
         static void run() {
             Pong p{};
@@ -25,7 +25,7 @@ namespace rckid {
         
     protected:
         Pong(): 
-            GraphicsApp{Bitmap<Color>{320, 240}}
+            GraphicsApp{RenderableBitmap<Color>{320, 240}}
         {
             resetGame();
         }

@@ -8,17 +8,17 @@ namespace rckid {
 
     /** Sprite
      
-        Sprite is pixel surface (width, height, buffer) coupled with position information (x, y). Palette is intended to be provided by the tile engine that the display belongs to. 
+        Sprite is a bitmap (width, height, buffer) coupled with position information (x, y). Palette is intended to be provided by the tile engine that the display belongs to. 
      */
     template<typename COLOR>
-    class Sprite : public Surface<COLOR> {
+    class Sprite : public Bitmap<COLOR> {
     public:
-        Sprite(Coord width, Coord height): Surface<COLOR>{width, height} {}
+        Sprite(Coord width, Coord height): Bitmap<COLOR>{width, height} {}
 
         Sprite(Sprite const &) = delete;
 
         Sprite(Sprite && from):
-            Surface<COLOR>{std::move(from)}, 
+            Bitmap<COLOR>{std::move(from)}, 
             x_{from.x_},
             y_{from.y_},
             paletteOffset_{from.paletteOffset_} {
@@ -54,8 +54,8 @@ namespace rckid {
         }
 
         // necessary to bring template parent methods to scope
-        using Surface<COLOR>::width;
-        using Surface<COLOR>::height;
+        using Bitmap<COLOR>::width;
+        using Bitmap<COLOR>::height;
 
     private:
  
@@ -77,13 +77,13 @@ namespace rckid {
 
 
     template<>
-    class Sprite<ColorRGB> : public Surface<ColorRGB> {
-        Sprite(Coord width, Coord height): Surface<ColorRGB>{width, height} {}
+    class Sprite<ColorRGB> : public Bitmap<ColorRGB> {
+        Sprite(Coord width, Coord height): Bitmap<ColorRGB>{width, height} {}
 
         Sprite(Sprite const &) = delete;
 
         Sprite(Sprite && from):
-            Surface<ColorRGB>{std::move(from)}, 
+            Bitmap<ColorRGB>{std::move(from)}, 
             x_{from.x_},
             y_{from.y_},
             transparentColor_{from.transparentColor_} {

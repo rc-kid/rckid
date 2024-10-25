@@ -23,7 +23,7 @@ namespace rckid {
         virtual char const * text() const = 0;
 
         /** Returns an icon to be used with the menu */
-        virtual std::optional<Surface<ColorRGB>> icon() const { return std::nullopt; }
+        virtual std::optional<Bitmap<ColorRGB>> icon() const { return std::nullopt; }
 
         virtual ~MenuItem() = default;
 
@@ -74,10 +74,10 @@ namespace rckid {
 
         char const * text() const override { return text_; }
 
-        std::optional<Surface<ColorRGB>> icon() const override {
+        std::optional<Bitmap<ColorRGB>> icon() const override {
             if (iconData_ == nullptr)
                 return std::nullopt;
-            return Surface<ColorRGB>::fromImage(PNG::fromBuffer(iconData_, iconSize_));
+            return Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(iconData_, iconSize_));
         }
 
     private:

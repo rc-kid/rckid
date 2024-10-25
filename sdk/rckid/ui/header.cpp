@@ -7,7 +7,7 @@
 
 namespace rckid {
 
-    void Header::drawOn(Surface<ColorRGB> & surface, bool verbose) {
+    void Header::drawOn(Bitmap<ColorRGB> & surface, bool verbose) {
         Font fSym = Font::fromROM<assets::font::Symbols16>();
         Font f = Font::fromROM<assets::font::Iosevka16>();
 
