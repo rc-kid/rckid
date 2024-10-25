@@ -208,6 +208,14 @@ namespace rckid {
         return static_cast<uint32_t>(duration_cast<microseconds>(steady_clock::now() - first).count()); 
     }
 
+    TinyDate dateTime() {
+        return TinyDate{};
+    }
+
+    TinyDate alarm() {
+        return TinyDate{};
+    }
+
     uint32_t random() {
         return std::rand();
     }

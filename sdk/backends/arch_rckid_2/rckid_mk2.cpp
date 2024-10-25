@@ -47,8 +47,9 @@ namespace rckid {
         platform::BMI160::State aState_;
         uint16_t lightAls_ = 0;
         uint16_t lightUV_ = 0;
-        Status status_; 
+        TransferrableState state_;
         Status lastStatus_;
+        uint64_t nextSecond_;
         uint8_t ticks_ = 0;
         // reported battery level to prevent battery reporting glitches
         uint8_t batteryLevel_ = 100;
@@ -162,18 +163,18 @@ namespace rckid {
                     return;
                 }
                 case TICK_AVR: {
-                    lastStatus_ = status_;
-                    uint8_t * raw = reinterpret_cast<uint8_t*>(&status_);
+                    lastStatus_ = state_.status;
+                    uint8_t * raw = reinterpret_cast<uint8_t*>(&state_.status);
                     for (size_t i = 0; i < sizeof(Status); ++i)
                         *(raw++) = i2c0->hw->data_cmd;
                     // update battery level gauge - calculate battery percentage from the battery voltage ranges and determine if we should display it (i.e. when discharging the percentage can only go down and when charging, the percentage can only go up). 
-                    unsigned vb = status_.vBatt();
+                    unsigned vb = state_.status.vBatt();
                     uint8_t bl = 0;
                     if (vb > VOLTAGE_BATTERY_FULL_THRESHOLD)
                         bl = 100;
                     else if (vb > VOLTAGE_CRITICAL_THRESHOLD)
                         bl = static_cast<uint8_t>((vb - VOLTAGE_CRITICAL_THRESHOLD) * 100 / (VOLTAGE_BATTERY_FULL_THRESHOLD - VOLTAGE_CRITICAL_THRESHOLD));
-                    if (status_.charging()) {
+                    if (state_.status.charging()) {
                         if (bl > batteryLevel_)
                             batteryLevel_ = bl;
                     } else if (bl < batteryLevel_) {
@@ -298,6 +299,10 @@ namespace rckid {
 
         // enter base arena for the application
         memoryEnterArena();
+
+        // read the full AVR state and set last tick for time keeping
+        i2c_read_blocking(i2c0, I2C_AVR_ADDRESS, (uint8_t *) & state_, sizeof(TransferrableState), false);
+        nextSecond_ = time_us_64() + 1000000;
         
         // set brightness to 50% by default after startup
         displaySetBrightness(128);
@@ -305,6 +310,11 @@ namespace rckid {
 
     void tick() {
         waitTickEnd();
+        uint64_t now = time_us_64();
+        while (now > nextSecond_) {
+            nextSecond_ += 1000000;
+            state_.time.secondTick();
+        }
         ++ticks_;
         // make sure the I2C is off, then set it up so that it can talk to the accelerometer
         if (ticks_ % 8 == 0) {
@@ -350,6 +360,10 @@ namespace rckid {
     }
 
     uint32_t uptimeUs() { return time_us_32(); }
+
+    TinyDate dateTime() { return state_.time; }
+
+    TinyDate alarm() { return state_.alarm; }
     
     uint32_t random() { return get_rand_32(); }
 
@@ -390,17 +404,17 @@ namespace rckid {
 
 
     bool btnDown(Btn b) {
-        return buttonState(b, status_);
+        return buttonState(b, state_.status);
 
     }
 
     bool btnPressed(Btn b) {
-        return buttonState(b, status_) && ! buttonState(b, lastStatus_);
+        return buttonState(b, state_.status) && ! buttonState(b, lastStatus_);
 
     }
 
     bool btnReleased(Btn b) {
-        return ! buttonState(b, status_) && buttonState(b, lastStatus_);
+        return ! buttonState(b, state_.status) && buttonState(b, lastStatus_);
     }
 
     int16_t accelX() { return aState_.accelX; }
@@ -414,7 +428,7 @@ namespace rckid {
     uint16_t lightAmbient() { return lightAls_; }
     uint16_t lightUV() { return lightUV_; }
 
-    int16_t tempAvr() { return status_.temp(); }
+    int16_t tempAvr() { return state_.status.temp(); }
 
     // power management
 
@@ -423,15 +437,15 @@ namespace rckid {
     }
 
     bool charging() { 
-        return status_.charging();
+        return state_.status.charging();
     }
 
     bool dcPower() {
-        return status_.powerDC();
+        return state_.status.powerDC();
     }
 
     unsigned vBatt() {
-        return status_.vBatt();
+        return state_.status.vBatt();
     }
 
     unsigned batteryLevel() {
@@ -451,7 +465,7 @@ namespace rckid {
     uint8_t displayBrightness() { 
         // TODO TODO TODO 
         return 255;
-        //return status_.brightness();
+        //return state_.status.brightness();
     }
 
     void displaySetBrightness(uint8_t value) {  
@@ -509,11 +523,11 @@ namespace rckid {
     }
 
     bool audioEnabled() {
-        return status_.audioEnabled();
+        return state_.status.audioEnabled();
     }
 
     bool audioHeadphones() {
-        return status_.audioHeadphones();
+        return state_.status.audioHeadphones();
     }
 
     int32_t audioVolume() {

@@ -3,6 +3,7 @@
 #include <platform.h>
 #include <platform/writer.h>
 #include <platform/buffer.h>
+#include <platform/tinydate.h>
 
 #include "tracing.h"
 
@@ -73,6 +74,12 @@ namespace rckid {
         For performance reasons, this uses uint32_t as the result value and as such will overflow every hour & something. The intended purpose of this function is not precise timekeeping, but delta time measurements, so the overflows are fine. 
      */
     uint32_t uptimeUs();
+
+    /** Returns current date and time as kept by the AVR & RPi. 
+     */
+    TinyDate dateTime();
+
+    TinyDate alarm();
 
     /** Generates random number in the 32bit unsigned range. 
      */

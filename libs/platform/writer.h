@@ -15,6 +15,7 @@
  */
 class Writer {
 public:
+    static constexpr char endl = '\n';
 
     explicit Writer(std::function<void(char)> putChar):putChar_{putChar} {}
 

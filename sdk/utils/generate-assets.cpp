@@ -65,8 +65,8 @@ int main(int argc, char * argv []) {
         std::ifstream configFile{argv[1]};
         std::string outputDir{argv[2]};
         std::string nspace{argv[3]};
-        std::cout << "Generating assets from " << argv[1] << " to " << outputDir << std::endl;
-        std::cout << "    namespace = " << nspace << std::endl;
+        std::cout << "Generating assets from " << argv[1] << " to " << outputDir << Writer::endl;
+        std::cout << "    namespace = " << nspace << Writer::endl;
 
         std::string generatorLine;
         size_t lineNum = 0;
@@ -86,18 +86,18 @@ int main(int argc, char * argv []) {
                 else 
                     throw std::runtime_error("Unknown generator");
             } catch (std::exception const & e) {
-                throw std::runtime_error(STR(e.what() << " at line " << lineNum << ":" << std::endl << generatorLine << std::endl));
+                throw std::runtime_error(STR(e.what() << " at line " << lineNum << ":" << Writer::endl << generatorLine << Writer::endl));
             }
         }
         return EXIT_SUCCESS;
     } catch (std::exception const & e) {
-        std::cout << "ERROR: " << e.what() << std::endl << std::endl;
-        std::cout << "Usage: " << std::endl << std::endl;
-        std::cout << "    generate-assets CONFIG_FILE OUTPUT_FOLDER NAMESPACE" << std::endl << std::endl;
-        std::cout << "Where:" << std::endl;
-        std::cout << "    CONFIG_FILE = file with description of what to generate" << std::endl;
-        std::cout << "    OUTPUT_FOLDER = output folder where all cpp files with definitions will be stored" << std::endl;
-        std::cout << "    NAMESPACE = namespace in which the assets will reside" << std::endl;
+        std::cout << "ERROR: " << e.what() << Writer::endl << Writer::endl;
+        std::cout << "Usage: " << Writer::endl << Writer::endl;
+        std::cout << "    generate-assets CONFIG_FILE OUTPUT_FOLDER NAMESPACE" << Writer::endl << Writer::endl;
+        std::cout << "Where:" << Writer::endl;
+        std::cout << "    CONFIG_FILE = file with description of what to generate" << Writer::endl;
+        std::cout << "    OUTPUT_FOLDER = output folder where all cpp files with definitions will be stored" << Writer::endl;
+        std::cout << "    NAMESPACE = namespace in which the assets will reside" << Writer::endl;
         return EXIT_FAILURE;
     }
         

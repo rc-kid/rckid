@@ -21,10 +21,10 @@ namespace rckid {
 
         void draw() override {
             g_.fill();
-            std::string time = "10:45";
-            g_.text(100, 30, assets::font::OpenDyslexic128::font, color::White) << time;
-
-
+            TinyDate now = dateTime();
+            std::string time{STR(now.hours() << (now.seconds() & 1 ? ":" : " ") << now.minutes())};
+            int tWidth = assets::font::OpenDyslexic128::font.textWidth(time.c_str());
+            g_.text(160 - tWidth / 2, 30, assets::font::OpenDyslexic128::font, color::White) << time;
 
             Header::drawOn(g_);
         }
