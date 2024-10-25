@@ -103,6 +103,9 @@ public:
         devicePowerOn();
         audioOff();
         disableCharging();
+        // reset time and uptime when we reset the AVR
+        state_.time.set(1, 1, 2018, 1, 36, 0);
+        state_.uptime = 0;
     }
 
     /** The main loop implementation (including the loop). 
