@@ -224,6 +224,7 @@ namespace rckid {
             // TODO else rumble bad
             //else
             //   rumble()
+            rumbleNudge();
         }
 
         void addToGrid(Tetromino const & t, int x, int y) {
@@ -279,6 +280,9 @@ namespace rckid {
                 ++level_;
                 speed_ = getLevelSpeed(level_);
                 levelCompacted_ -= 10;
+                rumbleOk();
+            } else if (compacted) {
+                rumbleNudge();
             }
         }
 

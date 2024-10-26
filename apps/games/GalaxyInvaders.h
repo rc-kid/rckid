@@ -11,8 +11,9 @@
 namespace rckid {
 
     /** SpaceInvaders-like simple game. 
-     
-        Controllable ship.
+
+        -- alien bullets
+
      */
     class GalaxyInvaders : public GraphicsApp<Canvas<ColorRGB>> {
     public:
@@ -35,7 +36,7 @@ namespace rckid {
                 if (shipSpeed_ >= 0)
                     shipSpeed_ = -1;
                 else if (shipSpeed_ > -10)
-                    shipSpeed_ = shipSpeed_ * FixedInt{1, 0x20};
+                    shipSpeed_ = shipSpeed_ * FixedInt{1, 0x10};
                 shipX_ = shipX_ + shipSpeed_;
                 if (shipX_ < 0)
                     shipX_ = 0;
@@ -45,7 +46,7 @@ namespace rckid {
                 if (shipSpeed_ <= 0)
                     shipSpeed_ = 1;
                 else if (shipSpeed_ < 10)
-                    shipSpeed_ = shipSpeed_ * FixedInt{1, 0x20};
+                    shipSpeed_ = shipSpeed_ * FixedInt{1, 0x10};
                 shipX_ = shipX_ + shipSpeed_;
                 if (shipX_ > 296)
                     shipX_ = 296;
@@ -57,12 +58,15 @@ namespace rckid {
             }
             if (!moving)
                 shipSpeed_ = 0;
+            // update the position if aliens and calculate any bullets
+            aliens_.advance();
             advanceBullets();
         }
 
         void draw() override {
             g_.fill();
-            drawBullets();
+            drawBullets(bullets_, color::White);
+            drawBullets(alienBullets_, color::Red);
             drawSpaceship();
             aliens_.drawOn(g_);
         }
@@ -77,9 +81,9 @@ namespace rckid {
             g_.fill(color::Green, Rect::XYWH(shipX_, 200, 24, 24));
         }
 
-        void drawBullets() {
-            for (auto & pos : bullets_)
-                g_.fill(color::White, Rect::XYWH(pos.x - 2, pos.y - 5, 4, 10));
+        void drawBullets(std::vector<point> const & bullets, Color color) {
+            for (auto & pos : bullets)
+                g_.fill(color, Rect::XYWH(pos.x - 2, pos.y - 5, 4, 10));
         }
 
 
@@ -87,7 +91,7 @@ namespace rckid {
             // advance bullets and check those that hit aliens
             for (auto & b: bullets_) {
                 b.y -= 2;
-                // TODO check if the bullet hits an alien
+                // check if the bullet hits an alien
                 if (aliens_.checkBullet(b)) {
                     b.y = -100;
                     rumbleNudge();
@@ -97,6 +101,18 @@ namespace rckid {
             bullets_.erase(std::remove_if(bullets_.begin(), bullets_.end(), [](Point const & p) {
                  return p.y < 0; 
             }), bullets_.end());
+        }
+
+        void advanceAlienBullets() {
+            // advance bullets and check those that hit aliens
+            for (auto & b: alienBullets_) {
+                b.y += 2;
+                // TODO check if the bullet hits player
+            }
+            // remove any off screen bullets
+            alienBullets_.erase(std::remove_if(alienBullets_.begin(), alienBullets_.end(), [](Point const & p) {
+                 return p.y > 220; 
+            }), alienBullets_.end());
         }
 
         uint32_t score_;
@@ -112,7 +128,7 @@ namespace rckid {
         class Aliens {
         public:
             FixedInt x;
-            FixedInt speed;
+            FixedInt speed{0, 0x80};
             int y;
             bool valid[ALIEN_COLS * ALIEN_ROWS];
             int freeLeft = 0;
@@ -121,7 +137,7 @@ namespace rckid {
             void reset() {
                 for (uint32_t i = 0; i < ALIEN_COLS * ALIEN_ROWS; ++i)
                     valid[i] = true;
-                x = 30;
+                x = 160 - ALIEN_COLS * 10;
                 y = 100;
             }
 
@@ -131,6 +147,23 @@ namespace rckid {
 
             void remove(int col, int row) {
                 valid[row + col * ALIEN_ROWS] = false;
+                // when removing an alien, we need to check if the freeLeft and freeRight change
+                if (col == freeLeft) {
+                    while (freeLeft < ALIEN_COLS && isColumnEmpty(freeLeft))
+                    ++freeLeft;
+                }
+                if (col == ALIEN_COLS - freeRight - 1) {
+                    while (freeRight < ALIEN_COLS && isColumnEmpty(ALIEN_COLS - freeRight - 1))
+                        ++freeRight;
+                }
+            }
+
+            bool isColumnEmpty(int col) {
+                bool * column = valid + col * ALIEN_ROWS;
+                for (int i = 0; i < ALIEN_ROWS; ++i)
+                    if (*(column++))
+                        return false;
+                return true;
             }
 
             void drawOn(Bitmap<ColorRGB> & b) {
@@ -157,12 +190,24 @@ namespace rckid {
                 return true;
             }
 
+            void advance() {
+                x = x + speed;
+                if (x + (freeLeft * 20) < 0) {
+                    x = 0 - (freeLeft * 20);
+                    speed = speed * -1;
+                } else if (x + (ALIEN_COLS - freeRight) * 20 > 320) {
+                    x = 320 - (ALIEN_COLS - freeRight) * 20;
+                    speed = speed * -1;
+                }
+            }
+
         }; 
 
         Aliens aliens_;
 
 
         std::vector<Point> bullets_;
+        std::vector<Point> alienBullets_;
 
     }; // rckid::GalaxyInvaders
 
