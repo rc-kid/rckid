@@ -79,6 +79,8 @@ namespace rckid {
      */
     TinyDate dateTime();
 
+    /** Returns the currently set alarm.
+     */
     TinyDate alarm();
 
     /** Generates random number in the 32bit unsigned range. 

@@ -22,6 +22,7 @@ GLYPH(Refresh,              0xf01e) // 
 GLYPH(ArrowCross,           0xf047) // 
 GLYPH(SDCard,               0xf0479) // 󰑹
 GLYPH(USB,                  0xf287) // 
+GLYPH(Alarm,                0xf0020) // 󰀠
 
 
 #undef GLYPH

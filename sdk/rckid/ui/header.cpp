@@ -10,11 +10,23 @@ namespace rckid {
     void Header::drawOn(Bitmap<ColorRGB> & surface, bool verbose) {
         Font fSym = Font::fromROM<assets::font::Symbols16>();
         Font f = Font::fromROM<assets::font::Iosevka16>();
-
-        surface.text(0,0, f, color::White) << App::fps() << " " << App::drawUs();
-
+        int x = 0;
         int y = 0;
-        int x = surface.width();
+        if (verbose) { 
+            TinyDate now = dateTime();
+            std::string time{STR(now.hours() << ":" << now.minutes())};
+            surface.text(x, y + 1, f, color::LightGray) << time;
+            x += f.textWidth(time);
+        }
+        if (alarm().isValid()) {
+            surface.text(x, y - 7, fSym, color::White) << assets::glyph::Alarm;
+            x += fSym.glyphInfoFor(assets::glyph::Alarm).advanceX + 4;
+        }
+
+        // TODO FPS and draw time, which might not always be needed
+        surface.text(x, y + 1, f, color::White) << App::fps() << " " << App::drawUs();
+
+        x = surface.width();
         // AC if plugged in
         if (dcPower()) {
             x -= fSym.glyphInfoFor(assets::glyph::PowerCord).advanceX + 4;
