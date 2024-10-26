@@ -107,6 +107,12 @@ namespace rckid {
 
     void displayDraw();
 
+    uint64_t uptimeUs64() {
+        using namespace std::chrono;
+        static auto first = steady_clock::now();
+        return static_cast<uint64_t>(duration_cast<microseconds>(steady_clock::now() - first).count()); 
+    }
+
     namespace {
         State state_;
         State lastState_;
@@ -132,6 +138,11 @@ namespace rckid {
 
         uint32_t sdNumBlocks_;
         std::fstream sdIso_;
+
+
+        uint64_t nextSecond_;
+        TinyDate dateTime_;
+        TinyDate alarm_;
     }
 
     void initialize() {
@@ -158,10 +169,30 @@ namespace rckid {
         }
         // enter base arena for the application
         memoryEnterArena();
+        // initialize the next second and time & date from systems time and data
+        nextSecond_ = uptimeUs64() + 1000000;
+#if (defined _MSC_VER)        
+        auto now = std::chrono::system_clock::now();
+        std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+        std::tm* now_tm = std::localtime(&now_time);
+        dateTime_.set(
+            now_tm->tm_mday, 
+            now_tm->tm_mon, 
+            now_tm->tm_year,
+            now_tm->tm_hour, 
+            now_tm->tm_min, 
+            now_tm->tm_sec
+        );
+#endif
     }
 
     void tick() {
         systemMalloc_ = true;
+        uint64_t now = uptimeUs64();
+        while (now > nextSecond_) {
+            nextSecond_ += 1000000;
+            dateTime_.secondTick();
+        }
         if (WindowShouldClose())
             std::exit(-1);
         systemMalloc_ = false;
@@ -209,11 +240,11 @@ namespace rckid {
     }
 
     TinyDate dateTime() {
-        return TinyDate{};
+        return dateTime_;
     }
 
     TinyDate alarm() {
-        return TinyDate{};
+        return alarm_;
     }
 
     uint32_t random() {
@@ -474,11 +505,11 @@ namespace rckid {
 //        UNIMPLEMENTED;
     }
 
-    void ledSetEffect(Btn b, RGBEffect const & effect) {
+    void ledSetEffect([[maybe_unused]]Btn b, [[maybe_unused]] RGBEffect const & effect) {
 //        UNIMPLEMENTED;
     }
 
-    void ledSetEffects(RGBEffect const & dpad, RGBEffect const & a, RGBEffect const & b, RGBEffect const & select, RGBEffect const & start){
+    void ledSetEffects([[maybe_unused]] RGBEffect const & dpad, [[maybe_unused]] RGBEffect const & a, [[maybe_unused]] RGBEffect const & b, [[maybe_unused]] RGBEffect const & select, [[maybe_unused]] RGBEffect const & start){
 //        UNIMPLEMENTED;
     }
 

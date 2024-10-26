@@ -204,6 +204,6 @@ private:
 
     uint8_t raw_[4] = { 0xff, 0xff, 0xff, 0xff};
 
-} __attribute__((packed)); // TinyDate
+} ; // __attribute__((packed)); // TinyDate
 
 static_assert(sizeof(TinyDate) == 4);

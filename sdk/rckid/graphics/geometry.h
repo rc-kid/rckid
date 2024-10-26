@@ -6,7 +6,6 @@ namespace rckid {
 
     using Coord = int;
 
-
     template<typename COORD>
     class TPoint {
     public:

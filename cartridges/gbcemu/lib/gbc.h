@@ -220,7 +220,7 @@ public:
         }
 
         // depends on memory controller in cartridge
-        void setExternalRAMBank(size_t index) {
+        void setExternalRAMBank([[maybe_unused]] size_t index) {
         }
 
 

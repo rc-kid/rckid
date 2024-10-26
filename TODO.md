@@ -1,13 +1,38 @@
 # TODO
 
-- verify the thickness of the case printed from glowing PLA
-- enlarge display hole a bit 
-
 - check the critical battery warning & new AVR
 - add logo when clearing the screen
 - can easily port littlefs for cartridge storage filesystem
+- USB serial does not display all text, sometimes garbled, as if not blocking to send
+
+- make an analogue joystick "fake" input that can be controlled by the games via the accelerometer, buttons, etc
+
+- move games & apps to SDK, unless they belong in cartridges 
 
 - make mp3 player and video as a TV so that the mp3's have daily schedule that you can do
+
+- update the order of args in drawing methods (pos, color) etc
+
+- add blocking send & test it
+
+- account for PNG's transparency by allowing it to be overlayed on existing bitmap
+- maybe even RGBA colors? 
+- rumbler & LED effect done event
+
+- recording in fantasy
+
+- mp3 decoder library
+- libopus decoder & encoder library
+- jpeg decoding library
+
+- filesystem file & folder abstractions
+- add filesystem support with an ISO file specified for the SD card, using the same fatfs mechanics
+
+- can swap RAM arenas to disk if necessary
+
+## Fantasy
+
+- implement clock counting & alarm
 
 ## RP2350
 
@@ -31,38 +56,6 @@
 
 This just might work. 
 
-### Problems
-
-- how to enter bootloader mode (seems to be possible over software alone by forcing the USB open close at 1200 bps, there also seems to be a way to start BOOTSEL programatically if I read the datasheet right)
-- how to reset (can be SW on watchdog and detection)
-
-- USB serial does not display all text, sometimes garbled, as if not blocking to send
-- when sliding puzzle is entered and then left, pong no longer works, not sure why...
-- has to do with spurious button presses - or maybe not clened well when app transitions? 
-
-## SDK
-
-- update the order of args in drawing methods (pos, color) etc
-- add space invaders :)
-
-- add blocking send & test it
-
-- add position & things to renderers for bitmap
-
-- account for PNG's transparency by allowing it to be overlayed on existing bitmap
-- maybe even RGBA colors? 
-- rumbler & LED effect done event
-
-- recording in fantasy
-
-- mp3 decoder library
-- libopus decoder & encoder library
-- jpeg decoding library
-
-- filesystem file & folder abstractions
-- add filesystem support with an ISO file specified for the SD card, using the same fatfs mechanics
-
-- can swap RAM arenas to disk if necessary
 
 ### mkIII
 
@@ -71,13 +64,6 @@ This just might work.
 ## PCB
 
 - see if the riser for the cartridge connector is necessary, or the cartridge leads can be bent, soldered and then the connector glued
-
-
-
-## Tetris
-
-- pause & game over and stuff
-- drawing speed might be too slow for 60fps (check)
 
 ## Mk II Hardware
 
