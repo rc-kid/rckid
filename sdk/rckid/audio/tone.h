@@ -1,5 +1,7 @@
 #pragma once
 
+#include <platform/buffer.h>
+
 #include "../rckid.h"
 #include "../utils/fixedint.h"
 #include "../utils/interpolation.h"
@@ -21,7 +23,6 @@ namespace rckid {
         uint32_t sustain_;
         uint32_t release_;
     }; // rckid::Envelope
-
 
     /** Simple tone generator. 
      
@@ -121,5 +122,50 @@ namespace rckid {
 
     }; 
 
+    /** A simple four channel tone generator (monophonic)
+     */
+    class ToneGenerator {
+    public:
+
+        ToneGenerator():
+            buf_{BUFFER_FRAMES * 4, [this](DoubleBuffer &) { refill(); }} {
+        }
+
+
+        void enable() {
+            refill();
+            audioPlay(buf_, f_);
+        }
+
+        void disable() {
+            audioStop();
+        }
+
+        Tone & operator[] (uint32_t channel) { 
+            ASSERT(channel < 4);
+            return channels_[channel];
+        }
+
+    private:
+
+        static constexpr uint32_t BUFFER_FRAMES = 512;
+
+        // go over all the channels and refill them
+        void refill() {
+            int16_t * buf = reinterpret_cast<int16_t*>(buf_.getBackBuffer());
+            for (uint32_t i = 0; i < BUFFER_FRAMES; ++i) {
+                int16_t v = channels_[0].next();
+                v += channels_[1].next();
+                v += channels_[2].next();
+                v += channels_[3].next();
+                buf[i * 2] = v;
+                buf[i * 2 + 1] = v;
+            }
+        }
+
+        Tone channels_[4];
+        DoubleBuffer buf_;
+        uint32_t f_ = 44100;
+    }; 
 
 } // namespace rckid

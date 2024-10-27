@@ -4,7 +4,7 @@
 
 namespace rckid {
 
-    class ToneGenerator {
+    class ToneGeneratorBenchmark {
     public:
         void run(Canvas<ColorRGB> & g_) {
             g_.text(0, 30) << 

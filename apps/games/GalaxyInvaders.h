@@ -7,12 +7,11 @@
 #include <rckid/graphics/sprite.h>
 #include <rckid/ui/header.h>
 #include <rckid/ui/alert.h>
+#include <rckid/audio/tone.h>
 
 namespace rckid {
 
     /** SpaceInvaders-like simple game. 
-
-        -- alien bullets
 
      */
     class GalaxyInvaders : public GraphicsApp<Canvas<ColorRGB>> {
@@ -27,6 +26,18 @@ namespace rckid {
     protected:
 
         GalaxyInvaders(): GraphicsApp{Canvas<Color>{320, 240}} {}
+
+        void onFocus() override {
+            GraphicsApp::onFocus();
+            audioOn();
+            audio_.enable();
+        }
+
+        void onBlur() override {
+            GraphicsApp::onBlur();
+            audio_.disable();
+            audioOff();
+        }
 
         void update() override {
             // handle back button
@@ -55,6 +66,7 @@ namespace rckid {
             // fire
             if (btnPressed(Btn::A)) {
                 bullets_.push_back(Point{shipX_ + 12, 200});
+                audio_[0].setFrequency(440, 100);
             }
             if (!moving)
                 shipSpeed_ = 0;
@@ -81,11 +93,10 @@ namespace rckid {
             g_.fill(color::Green, Rect::XYWH(shipX_, 200, 24, 24));
         }
 
-        void drawBullets(std::vector<point> const & bullets, Color color) {
+        void drawBullets(std::vector<Point> const & bullets, Color color) {
             for (auto & pos : bullets)
                 g_.fill(color, Rect::XYWH(pos.x - 2, pos.y - 5, 4, 10));
         }
-
 
         void advanceBullets() {
             // advance bullets and check those that hit aliens
@@ -94,6 +105,7 @@ namespace rckid {
                 // check if the bullet hits an alien
                 if (aliens_.checkBullet(b)) {
                     b.y = -100;
+                    audio_[1].setFrequency(50, 100);
                     rumbleNudge();
                 }
             }
@@ -205,11 +217,11 @@ namespace rckid {
 
         Aliens aliens_;
 
-
         std::vector<Point> bullets_;
         std::vector<Point> alienBullets_;
 
-    }; // rckid::GalaxyInvaders
+        ToneGenerator audio_;
 
+    }; // rckid::GalaxyInvaders
 
 } // namespace rckid

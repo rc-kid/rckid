@@ -58,7 +58,7 @@ Menu * menuUtils() {
 
 Menu * menuBenchmarks() {
     return new Menu{
-        MenuApp::Item("Tone Generator", assets::icons::music, Benchmark<ToneGenerator>::run),
+        MenuApp::Item("Tone Generator", assets::icons::music, Benchmark<ToneGeneratorBenchmark>::run),
     };
 }
 

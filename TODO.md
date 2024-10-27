@@ -30,6 +30,10 @@
 
 - can swap RAM arenas to disk if necessary
 
+## GalaxyInvaders
+
+- alien bullets
+
 ## Fantasy
 
 - implement clock counting & alarm
