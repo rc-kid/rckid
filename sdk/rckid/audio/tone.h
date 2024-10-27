@@ -8,23 +8,7 @@
 
 namespace rckid {
 
-    /** A simple ADSR envelope.
-     
-        Provides the timings of the attack, decay, sustain and release 
-        
-     */
-    class Envelope {
-    public:
-        Envelope(uint32_t attack, uint32_t decay, uint32_t sustain, uint32_t release):
-            attack_{attack}, decay_{decay}, sustain_{sustain}, release_{release} {}
-
-    private:
-        uint32_t attack_;
-        uint32_t decay_;
-        uint32_t sustain_;
-        uint32_t release_;
-
-    }; // rckid::Envelope
+    class Tone;
 
     /** Simple tone generator. 
      
@@ -42,6 +26,35 @@ namespace rckid {
             Sine,
             Custom,
         }; 
+
+        uint32_t attackMs() const { return attackMs_; }
+        uint32_t decayMs() const { return decayMs_; }
+        uint32_t sustainPct() const { return sustainPct_; }
+        uint32_t releaseMs() const { return releaseMs_; }
+
+        void setAttackMs(uint32_t value) { 
+            attackMs_ = value; 
+        }
+
+        void setDecayMs(uint32_t value) {
+            decayMs_ = value;
+        }
+
+        void setSustainPct(uint32_t value) {
+            ASSERT(value <= 100);
+        }
+
+        void setReleaseMs(uint32_t value) {
+            releaseMs_ = value;
+        }
+
+        void setEnvelope(uint32_t attackMs, uint32_t decayMs, uint32_t sustainPct, uint32_t releaseMs) {
+            attackMs_ = attackMs;
+            decayMs_ = decayMs;
+            sustainPct_ = sustainPct;
+            releaseMs_ = releaseMs;
+            updateEnvelope();
+        }
 
         void setWaveform(Waveform wf) {
             ASSERT(wf != Waveform::Custom); // use setCustomWaveform instead
@@ -62,11 +75,13 @@ namespace rckid {
          */
         void setFrequency(uint32_t frequency, uint32_t durationMs, uint32_t sampleRate) {
             i_ = 0;
+            di_ = 0;
             if (frequency != 0)
                 period_ = FixedInt{static_cast<int>(sampleRate)} / static_cast<int>(frequency);
             else
                 period_ = 0;
             duration_ = sampleRate * durationMs / 1000;
+            releaseStart_ = (releaseMs_ < durationMs) ? (duration_ - releaseMs_ * sampleRate / 1000) : duration_;     
             TRACE_TONE("Tone frequency " << frequency << ", period: " << period_.clip(), " duration ticks " << duration_);
         }
 
@@ -79,6 +94,7 @@ namespace rckid {
             period_ = 0;
             duration_ = 0;
             i_ = 0;
+            di_ = 0;
             if (onDone_)
                 onDone_(*this);
         }
@@ -88,32 +104,41 @@ namespace rckid {
         int16_t next() {
             if (duration_ == 0)
                 return 0;
-            // get current index
-            FixedInt i = i_;
-            if (--duration_ == 0) {
+            if (++di_ == duration_) {
                 off();
                 return 0;
             }
             // just a silence note
             if (period_ == 0)
                 return 0;
+            // get current index
+            FixedInt i = i_;
             // move to next index
             i_ += 1;
             if (i_ > period_)
                 i_ -= period_;
+            // update the amplitude based on the envelope
+            int amp = sustainAmp_;
+            if (di_ >= releaseStart_)
+                amp = interpolation::linear(di_ - releaseStart_, duration_ - releaseStart_, amp, 0);
+            else if (di_ < attackEnd_)
+                amp = interpolation::linear(di_, attackEnd_, 0, MAX);
+            else if (di_ < decayEnd_)
+                amp = interpolation::linear(di_ - attackEnd_, decayEnd_ - attackEnd_, MAX, sustainAmp_);
+            // and calculate the waveform
             switch (waveform_) {
                 // simple square wave with 50% duty cycle 
                 case Waveform::Square:
-                    return interpolation::square(i, period_, MIN, MAX);
+                    return interpolation::square(i, period_, -amp, amp);
                 // sawtooth - MIN to MAX then MAX to MIN
                 case Waveform::Sawtooth:
-                    return interpolation::sawtooth(i, period_, MIN, MAX);
+                    return interpolation::sawtooth(i, period_, -amp, amp);
                 // triangle from MIN to MAX
                 case Waveform::Triangle:
-                    return interpolation::linear(i, period_, MIN, MAX);
+                    return interpolation::linear(i, period_, -amp, amp);
                 // sine wave from the sine interpolator 
                 case Waveform::Sine:
-                    return interpolation::sine(i, period_, MIN, MAX);
+                    return interpolation::sine(i, period_, -amp, amp);
                 // custom waveform from the waveform buffer
                 case Waveform::Custom:
                     return interpolation::custom(i, period_, waveformData_, waveformLength_);
@@ -124,12 +149,31 @@ namespace rckid {
 
     private:
 
+        void updateEnvelope() {
+            attackEnd_ = attackMs_ * audioSampleRate() / 1000;
+            decayEnd_ = attackEnd_ + decayMs_ * audioSampleRate() / 1000;
+            sustainAmp_ = MAX * sustainPct_ / 100;
+        }
+
         static constexpr int16_t MIN = -8191;
         static constexpr int16_t MAX = 8191;
 
         FixedInt period_;
         FixedInt i_;
+        uint32_t di_;
         uint32_t duration_;
+
+        // envelope
+        uint32_t attackMs_;
+        uint32_t decayMs_;
+        uint32_t releaseMs_;
+        uint32_t sustainPct_;
+
+        // envelope updated to the given frequency
+        int32_t attackEnd_ = 0;
+        int32_t decayEnd_ = 0;
+        int32_t releaseStart_ = 0;
+        int sustainAmp_ = MAX;
 
         // what waveform the tone generator uses
         Waveform waveform_ = Waveform::Square;

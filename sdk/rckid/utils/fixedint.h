@@ -13,12 +13,15 @@ namespace rckid {
     class FixedInt {
     public:
 
+        static constexpr uint8_t FRACTION_BITS = 4;
+        static constexpr uint8_t FRACTION_HALF = 1 << (FRACTION_BITS - 1);
+
         FixedInt() = default;
-        explicit constexpr FixedInt(int value): value_{value << 8} {}
-        constexpr FixedInt(int value, uint8_t fraction): value_{(value << 8) + fraction} {}
+        explicit constexpr FixedInt(int value): value_{value << FRACTION_BITS} {}
+        constexpr FixedInt(int value, uint8_t fraction): value_{(value << FRACTION_BITS) + fraction} {}
         constexpr FixedInt(FixedInt const &) = default;
 
-        FixedInt & operator = (int other) { value_ = (other << 8); return *this; }
+        FixedInt & operator = (int other) { value_ = (other << FRACTION_BITS); return *this; }
 
         FixedInt operator + (FixedInt other) { 
             FixedInt result;
@@ -34,19 +37,19 @@ namespace rckid {
 
         FixedInt operator * (FixedInt other) {
             FixedInt result;
-            result.value_ = (value_ * other.value_) >> 8;
+            result.value_ = (value_ * other.value_) >> FRACTION_BITS;
             return result;
         }
 
         FixedInt operator + (int other) { 
             FixedInt result;
-            result.value_ = value_ + (other << 8);
+            result.value_ = value_ + (other << FRACTION_BITS);
             return result;
         }
 
         FixedInt operator - (int other) { 
             FixedInt result;
-            result.value_ = value_ - (other << 8);
+            result.value_ = value_ - (other << FRACTION_BITS);
             return result;
         }
 
@@ -64,7 +67,7 @@ namespace rckid {
 
         FixedInt operator / (FixedInt other) {
             FixedInt result;
-            result.value_ = static_cast<int>((static_cast<int64_t>(value_) << 8) / other.value_);
+            result.value_ = static_cast<int>((static_cast<int64_t>(value_) << FRACTION_BITS) / other.value_);
             return result;
         }
 
@@ -80,7 +83,7 @@ namespace rckid {
         }
 
         FixedInt & operator *= (FixedInt other) {
-            value_ = (value_ * other.value_) >> 8;
+            value_ = (value_ * other.value_) >> FRACTION_BITS;
             return *this;
         }
 
@@ -113,10 +116,10 @@ namespace rckid {
         operator int () const { return round(); }
 
         int clip() const { 
-            return (value_ >> 8);
+            return (value_ >> FRACTION_BITS);
         }
         int round() const {
-            return ((value_ >= 0) ? (value_ + 0x80) : (value_ - 0x80)) >> 8;
+            return ((value_ >= 0) ? (value_ + FRACTION_HALF) : (value_ - FRACTION_HALF)) >> FRACTION_BITS;
         }
 
         int raw() const { return value_; }

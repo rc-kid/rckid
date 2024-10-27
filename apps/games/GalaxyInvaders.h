@@ -28,7 +28,10 @@ namespace rckid {
 
         GalaxyInvaders(): GraphicsApp{Canvas<Color>{320, 240}} {
             music_.setSheet(melody_);
+            audio_[3].setWaveform(Tone::Waveform::Sine);
+            audio_[3].setEnvelope(20, 10, 80, 100);
             music_.attachTo(audio_[3]);
+            audio_[1].setEnvelope(100, 50, 80, 250);
         }
 
         void onFocus() override {
@@ -51,7 +54,7 @@ namespace rckid {
                 if (shipSpeed_ >= 0)
                     shipSpeed_ = -1;
                 else if (shipSpeed_ > -10)
-                    shipSpeed_ = shipSpeed_ * FixedInt{1, 0x10};
+                    shipSpeed_ = shipSpeed_ * FixedInt{1, 0x1};
                 shipX_ = shipX_ + shipSpeed_;
                 if (shipX_ < 0)
                     shipX_ = 0;
@@ -61,7 +64,7 @@ namespace rckid {
                 if (shipSpeed_ <= 0)
                     shipSpeed_ = 1;
                 else if (shipSpeed_ < 10)
-                    shipSpeed_ = shipSpeed_ * FixedInt{1, 0x10};
+                    shipSpeed_ = shipSpeed_ * FixedInt{1, 0x1};
                 shipX_ = shipX_ + shipSpeed_;
                 if (shipX_ > 296)
                     shipX_ = 296;
@@ -109,7 +112,7 @@ namespace rckid {
                 // check if the bullet hits an alien
                 if (aliens_.checkBullet(b)) {
                     b.y = -100;
-                    audio_[1].setFrequency(50, 100);
+                    audio_[1].setFrequency(50, 500);
                     rumbleNudge();
                 }
             }
@@ -144,7 +147,7 @@ namespace rckid {
         class Aliens {
         public:
             FixedInt x;
-            FixedInt speed{0, 0x80};
+            FixedInt speed{0, 0x8};
             int y;
             bool valid[ALIEN_COLS * ALIEN_ROWS];
             int freeLeft = 0;

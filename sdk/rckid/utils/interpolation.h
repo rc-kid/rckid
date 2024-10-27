@@ -22,6 +22,10 @@ namespace rckid::interpolation {
         return min + static_cast<int>(i * (max - min) / period);
     }
 
+    inline int linear(int i, int period, int min, int max) {
+        return min + static_cast<int>(i * (max - min) / period);
+    }
+
     inline int sawtooth(FixedInt i, FixedInt period, int min, int max) {
         FixedInt pHalf = period / 2;
         if (i <= pHalf) {

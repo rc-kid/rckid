@@ -1,5 +1,7 @@
 # TODO
 
+- clean music & tone generators, ensure other frequencies work as well, document, benchmark
+
 - check the critical battery warning & new AVR
 - add logo when clearing the screen
 - can easily port littlefs for cartridge storage filesystem

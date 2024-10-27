@@ -136,7 +136,7 @@ namespace rckid {
             // TODO effects
             ball_ = FixedPoint{160, 120};
             speed_ = 1;
-            deltaBall_ = FixedPoint{FixedInt{1, 128},1};
+            deltaBall_ = FixedPoint{FixedInt{1, 8},1};
             deltaLeft_ = 0;
             fail_ = false;
             //setRumbler(RumblerEffect::OK());
