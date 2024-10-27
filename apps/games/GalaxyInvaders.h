@@ -8,6 +8,7 @@
 #include <rckid/ui/header.h>
 #include <rckid/ui/alert.h>
 #include <rckid/audio/tone.h>
+#include <rckid/audio/music.h>
 
 namespace rckid {
 
@@ -25,7 +26,10 @@ namespace rckid {
 
     protected:
 
-        GalaxyInvaders(): GraphicsApp{Canvas<Color>{320, 240}} {}
+        GalaxyInvaders(): GraphicsApp{Canvas<Color>{320, 240}} {
+            music_.setSheet(melody_);
+            music_.attachTo(audio_[3]);
+        }
 
         void onFocus() override {
             GraphicsApp::onFocus();
@@ -220,7 +224,101 @@ namespace rckid {
         std::vector<Point> bullets_;
         std::vector<Point> alienBullets_;
 
+        Music music_;
         ToneGenerator audio_;
+
+        static constexpr uint8_t melody_[] = {
+            NOTE_2(E4), 
+            NOTE_4(E4),
+            NOTE_4(D4),
+            NOTE_2(C4), 
+            NOTE_4(C4),
+            REST_4,
+            NOTE_4(D4),
+            NOTE_4(D4),
+            NOTE_4(E4),
+            NOTE_4(F4),
+            NOTE_4(E4), 
+            NOTE_4(D4),
+            NOTE_4(C4),
+            REST_4,
+            NOTE_4(E4), 
+            NOTE_4(G4), 
+            NOTE_4(E4),
+            NOTE_4(D4),
+            NOTE_4(C4),
+            NOTE_4(B3),
+            NOTE_4(A3),
+            REST_8,
+            NOTE_8(C4),
+            NOTE_4(D4),
+            NOTE_4(C4),
+            NOTE_4(E4),
+            NOTE_4(D4),
+            NOTE_2L(C4),
+            REST_4,
+            NOTE_4(E4),
+            NOTE_4(E4),
+            NOTE_4(E4),
+            NOTE_4(D4),
+            NOTE_2(C4),
+            NOTE_4(C4),
+            NOTE_4(C4),
+            NOTE_4(D4),
+            NOTE_4(D4),
+            NOTE_4(D4),
+            NOTE_4(F4),
+            NOTE_4(E4),
+            NOTE_4(D4),
+            NOTE_4(C4),
+            REST_4,
+            NOTE_4(E4),
+            NOTE_4(G4),
+            NOTE_4(E4),
+            NOTE_4(D4),
+            NOTE_4(C4),
+            NOTE_4(B3),
+            NOTE_4(A3),
+            REST_8,
+            NOTE_8(C4),
+            NOTE_4(D4),
+            NOTE_4(D4),
+            NOTE_4(E4),
+            NOTE_4(D4),
+            NOTE_2L(C4),
+            REST_4,
+
+            NOTE_2(E4), 
+            NOTE_4(E4),
+            NOTE_4(D4),
+            NOTE_2(C4), 
+            NOTE_4(C4),
+            REST_4,
+            NOTE_4(D4),
+            NOTE_4(D4),
+            NOTE_4(E4),
+            NOTE_4(F4),
+            NOTE_4(E4), 
+            NOTE_4(D4),
+            NOTE_4(C4),
+            REST_4,
+            NOTE_4(E4), 
+            NOTE_4(G4), 
+            NOTE_4(E4),
+            NOTE_4(D4),
+            NOTE_4(C4),
+            NOTE_4(B3),
+            NOTE_4(A3),
+            REST_8,
+            NOTE_8(C4),
+            NOTE_4(D4),
+            NOTE_4(C4),
+            NOTE_4(E4),
+            NOTE_4(D4),
+            NOTE(C4),
+            
+            REST,
+        };
 
     }; // rckid::GalaxyInvaders
 

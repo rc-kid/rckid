@@ -5,11 +5,12 @@
 #include "../rckid.h"
 #include "../utils/fixedint.h"
 #include "../utils/interpolation.h"
-#include "note.h"
 
 namespace rckid {
 
     /** A simple ADSR envelope.
+     
+        Provides the timings of the attack, decay, sustain and release 
         
      */
     class Envelope {
@@ -22,6 +23,7 @@ namespace rckid {
         uint32_t decay_;
         uint32_t sustain_;
         uint32_t release_;
+
     }; // rckid::Envelope
 
     /** Simple tone generator. 
@@ -30,6 +32,8 @@ namespace rckid {
      */
     class Tone {
     public:
+
+        using OnDone = std::function<void(Tone &)>;
 
         enum class Waveform {
             Square, 
@@ -50,11 +54,18 @@ namespace rckid {
             waveformLength_ = length;
         }
 
+        void clearOnDone() { onDone_ = nullptr; }
+
+        void setOnDone(OnDone cb) { onDone_ = cb; }
+
         /** Sets note frequency and sample rate. 
          */
         void setFrequency(uint32_t frequency, uint32_t durationMs, uint32_t sampleRate) {
             i_ = 0;
-            period_ = FixedInt{static_cast<int>(sampleRate)} / static_cast<int>(frequency);
+            if (frequency != 0)
+                period_ = FixedInt{static_cast<int>(sampleRate)} / static_cast<int>(frequency);
+            else
+                period_ = 0;
             duration_ = sampleRate * durationMs / 1000;
             TRACE_TONE("Tone frequency " << frequency << ", period: " << period_.clip(), " duration ticks " << duration_);
         }
@@ -66,24 +77,30 @@ namespace rckid {
         void off() {
             TRACE_TONE("Tone off");
             period_ = 0;
+            duration_ = 0;
             i_ = 0;
+            if (onDone_)
+                onDone_(*this);
         }
 
         /** Returns the next value of the waveform based on the tone waveform itself and the selected freqency.
          */
         int16_t next() {
-            if (period_ == 0)
+            if (duration_ == 0)
                 return 0;
             // get current index
             FixedInt i = i_;
-            // move to next index
-            i_ += 1;
-            if (i_ > period_)
-                i_ -= period_;
             if (--duration_ == 0) {
                 off();
                 return 0;
             }
+            // just a silence note
+            if (period_ == 0)
+                return 0;
+            // move to next index
+            i_ += 1;
+            if (i_ > period_)
+                i_ -= period_;
             switch (waveform_) {
                 // simple square wave with 50% duty cycle 
                 case Waveform::Square:
@@ -119,6 +136,8 @@ namespace rckid {
         // for custom waveform, the waveform data for single period
         int16_t const * waveformData_;
         int32_t waveformLength_; 
+
+        OnDone onDone_;
 
     }; 
 
@@ -169,3 +188,12 @@ namespace rckid {
     }; 
 
 } // namespace rckid
+
+
+/*
+
+    What I need - multiple channels, each one is tone. Way to control actions 
+
+
+
+*/
