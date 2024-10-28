@@ -140,14 +140,25 @@ namespace rckid::filesystem {
         return result;
     }
 
-    bool fileExists(char const * filename) {
-        FIL f;
-        if (f_open(& f, filename, FA_READ) != FR_OK)
+    bool exists(char const * path) {
+        FILINFO f;
+        if (f_stat(path, & f) != FR_OK)
             return false;
-        if (f.obj.fs == nullptr)
+        return f.fname[0] != 0;        
+    }
+
+    bool isDir(char const * path) {
+        FILINFO f;
+        if (f_stat(path, & f) != FR_OK)
             return false;
-        f_close(& f);
-        return true;
+        return f.fname[0] != 0 && (f.fattrib & AM_DIR);        
+    }
+
+    bool isFile(char const * path) {
+        FILINFO f;
+        if (f_stat(path, & f) != FR_OK)
+            return false;
+        return f.fname[0] != 0 && ! (f.fattrib & AM_DIR);        
     }
 
 } // namespace rckid::filesystem

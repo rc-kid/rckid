@@ -67,6 +67,8 @@ namespace rckid {
 
     }
 
+    void joystickTick();
+
     /** Waits for the end of tick's async operations. 
 
         This is particularly useful in cases where drawing would be faster, or when the update method would like to issue I2C commands for the AVR, but the I2C bus is still used by the tick async requests. 
@@ -309,6 +311,7 @@ namespace rckid {
     }
 
     void tick() {
+        joystickTick();
         waitTickEnd();
         uint64_t now = time_us_64();
         while (now > nextSecond_) {

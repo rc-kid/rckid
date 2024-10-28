@@ -11,6 +11,7 @@
 #include "config.h"
 #include "common.h"
 #include "graphics/geometry.h"
+#include "utils/fixedint.h"
 
 #define MEASURE_TIME(whereTo, ...) { \
     uint32_t start__ = uptimeUs(); \
@@ -96,6 +97,8 @@ namespace rckid {
     /** \name Controls & Sensors
         
         RCKid controls comprise of a dpad, buttons A and B, buttons Select and Start, side home button and volume up & down keys. Furthermore, RCKid is equipped with a 3axis accelerometer and gyroscope as well as an ambient and UV light sensor. 
+
+        The device also supports analogue joystick peripheral that can be physically controlled by either dpad, or the accelerometer. 
      */
     //@{
 
@@ -136,6 +139,32 @@ namespace rckid {
     int16_t gyroX();
     int16_t gyroY();
     int16_t gyroZ();
+
+
+    /** Fake joystick. 
+     */
+    int8_t joystickX();
+    int8_t joystickY();
+    inline int8_t joystickX(int8_t min, int8_t max) { 
+        int8_t r = joystickX();
+        return (r < min) ? min : ((r > max) ? max : r);
+    }
+    inline int8_t joystickY(int8_t min, int8_t max) { 
+        int8_t r = joystickY();
+        return (r < min) ? min : ((r > max) ? max : r);
+    }
+
+    void joystickXUseDPad(FixedInt acceleration = FixedInt{1});
+    void joystickYUseDPad(FixedInt acceleration = FixedInt{1});
+    inline void joystickUseDPad() {
+        joystickXUseDPad();
+        joystickYUseDPad();
+    }
+    inline void joustickUseDPad(FixedInt accelX, FixedInt accelY) {
+        joystickXUseDPad(accelX);
+        joystickYUseDPad(accelY);
+    }
+
 
     /** Returns the readout of the ambient light sensor. 
      */
@@ -359,6 +388,13 @@ namespace rckid {
      */
     bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks);
 
+    //@}
+
+    /** \name Cartridge Filsystem access. 
+     
+        Provides access to a section of the cartridge flash memory.  
+     */
+    //@{
     //@}
 
     /** \name Memory Management

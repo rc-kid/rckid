@@ -91,14 +91,16 @@ namespace rckid {
         FixedInt & operator -=(int other) { return *this -= FixedInt{other}; }
         FixedInt & operator *=(int other) { return *this *= FixedInt{other}; }
 
-        void clipInRange(FixedInt min, FixedInt max) {
-            if (value_ < min.value_)
-                value_ = min.value_;
-            if (value_ > max.value_)
-                value_ = max.value_;
+        FixedInt clamp(FixedInt min, FixedInt max) {
+            FixedInt result{*this};
+            if (result.value_ < min.value_)
+                result.value_ = min.value_;
+            if (result.value_ > max.value_)
+                result.value_ = max.value_;
+            return result;
         }
 
-        void clipInRange(int min, int max) { return clipInRange(FixedInt{min}, FixedInt{max}); }
+        FixedInt clamp(int min, int max) { return clamp(FixedInt{min}, FixedInt{max}); }
 
         bool operator == (FixedInt other) const { return value_ == other.value_; }
         bool operator != (FixedInt other) const { return value_ != other.value_; }

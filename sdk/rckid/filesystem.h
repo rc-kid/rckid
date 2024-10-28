@@ -7,8 +7,6 @@
 namespace rckid::filesystem {
 
     /** Possible filesystem formats understood by the SDK. 
-     
-        exFAT is preferred.
      */
     enum class Filesystem {
         FAT16,
@@ -114,12 +112,16 @@ namespace rckid::filesystem {
      */
     std::string getLabel(); 
 
-    /** Returns true if the given file exists.
-     
-        Shorthand for opening the file for reading, checking the stream is valid and then closing it. 
+    /** Returns true if the given path exists (i.e. either directory, or file).
      */
-    bool fileExists(char const * filename);
+    bool exists(char const * path);
 
+    /** Returns true if  the given path is a valid file. 
+     */
+    bool isDir(char const * path);
 
+    /** Returns true if the given path is a valid directory. 
+     */
+    bool isFile(char const * path); 
 
 } // namespace rckid::filesystem

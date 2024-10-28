@@ -105,6 +105,7 @@ namespace {
 
 namespace rckid {
 
+    void joystickTick();
     void displayDraw();
 
     uint64_t uptimeUs64() {
@@ -187,6 +188,7 @@ namespace rckid {
     }
 
     void tick() {
+        joystickTick();
         systemMalloc_ = true;
         uint64_t now = uptimeUs64();
         while (now > nextSecond_) {

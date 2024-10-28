@@ -40,14 +40,14 @@ namespace rckid {
             /*
             if (down(Btn::Up)) {
                 deltaLeft_ *= FixedInt{1, 32};
-                deltaLeft_.clipInRange(-15, -1);
+                deltaLeft_.clamp(-15, -1);
                 left_ += deltaLeft_;
             } else if (deltaLeft_ < 0) {
                 deltaLeft_ = 0;
             }
             if (down(Btn::Down)) {
                 deltaLeft_ *= FixedInt{1, 32};
-                deltaLeft_.clipInRange(1, 15);
+                deltaLeft_.clamp(1, 15);
                 left_ += deltaLeft_;
             } else if (deltaLeft_ > 0) {
                 deltaLeft_ = 0;
@@ -65,11 +65,11 @@ namespace rckid {
            // position controlled by the accelerometer
             left_ = 120 + accelY() * 200 / 16384;
 
-            left_.clipInRange(20, 220);
+            left_ = left_.clamp(20, 220);
             // update the rigfht paddle to always center the ball
             // TODO do this only when single player mode (!)
             right_ = ball_.y;
-            right_.clipInRange(20, 220);
+            right_ = right_.clamp(20, 220);
             // check ball position
             if (ball_.y < 5) {
                 ball_.y = 5 + (5 - ball_.y);

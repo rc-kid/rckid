@@ -49,34 +49,15 @@ namespace rckid {
         void update() override {
             // handle back button
             GraphicsApp::update();
-            bool moving = false;
-            if (btnDown(Btn::Left)) {
-                if (shipSpeed_ >= 0)
-                    shipSpeed_ = -1;
-                else if (shipSpeed_ > -10)
-                    shipSpeed_ = shipSpeed_ * FixedInt{1, 0x1};
-                shipX_ = shipX_ + shipSpeed_;
-                if (shipX_ < 0)
-                    shipX_ = 0;
-                moving = true;
-            }
-            if (btnDown(Btn::Right)) {
-                if (shipSpeed_ <= 0)
-                    shipSpeed_ = 1;
-                else if (shipSpeed_ < 10)
-                    shipSpeed_ = shipSpeed_ * FixedInt{1, 0x1};
-                shipX_ = shipX_ + shipSpeed_;
-                if (shipX_ > 296)
-                    shipX_ = 296;
-                moving = true;
-            }
+            // TODO no need to keep shipSpeed
+            shipSpeed_ = joystickX(-10, 10);
+            if (shipSpeed_ != 0)
+                shipX_ = (shipX_ + shipSpeed_).clamp(0, 296);
             // fire
             if (btnPressed(Btn::A)) {
                 bullets_.push_back(Point{shipX_ + 12, 200});
                 audio_[0].setFrequency(440, 100);
             }
-            if (!moving)
-                shipSpeed_ = 0;
             // update the position if aliens and calculate any bullets
             aliens_.advance();
             advanceBullets();
