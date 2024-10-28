@@ -36,6 +36,7 @@ include_directories("libs")
 
 add_subdirectory("libs/PNGdec")
 add_subdirectory("libs/FatFS")
+add_subdirectory("libs/libhelix-mp3")
 
 string(TOLOWER "${ARCH}" ARCH_LOWER)
 add_subdirectory("sdk/backends/${ARCH_LOWER}")

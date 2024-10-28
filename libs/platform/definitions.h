@@ -46,11 +46,13 @@
 #define PACKED(...) __VA_ARGS__ __attribute__((packed))  
 #endif
 
-/// TODO: This should actually do something
-#ifndef  __force_inline
-#define  __force_inline
+#ifdef _MSC_VER
+    #define FORCE_INLINE __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+    #define FORCE_INLINE __attribute__((always_inline)) inline
+#else
+    #define FORCE_INLINE inline
 #endif
-
 
 #if defined(_MSC_VER)
 #define NORETURN(...) __declspec(noreturn) __VA_ARGS__

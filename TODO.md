@@ -1,5 +1,7 @@
 # TODO
 
+- print the cases without cartridges
+
 - clean music & tone generators, ensure other frequencies work as well, document, benchmark
 
 - check the critical battery warning & new AVR
@@ -31,6 +33,8 @@
 - add filesystem support with an ISO file specified for the SD card, using the same fatfs mechanics
 
 - can swap RAM arenas to disk if necessary
+
+- extra game sokoban
 
 ## GalaxyInvaders
 

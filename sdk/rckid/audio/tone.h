@@ -160,8 +160,8 @@ namespace rckid {
 
         FixedInt period_;
         FixedInt i_;
-        uint32_t di_;
-        uint32_t duration_;
+        int32_t di_;
+        int32_t duration_;
 
         // envelope
         uint32_t attackMs_;

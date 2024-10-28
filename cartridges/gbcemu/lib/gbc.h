@@ -416,8 +416,8 @@ private:
     uint16_t read16(uint16_t address);
     void write8(uint16_t address, uint8_t value);
     void write16(uint16_t address, uint16_t value);
-    uint8_t __force_inline rd8(uint16_t & address);
-    uint16_t __force_inline rd16(uint16_t & address);
+    FORCE_INLINE uint8_t rd8(uint16_t & address);
+    FORCE_INLINE uint16_t rd16(uint16_t & address);
 
     //@}
 
@@ -425,18 +425,18 @@ private:
      */
     //@{
 
-    uint8_t __force_inline inc8(uint8_t x);
-    uint8_t __force_inline dec8(uint8_t x);
-    uint8_t __force_inline add8(uint8_t a, uint8_t b, uint8_t c = 0);
-    uint8_t __force_inline sub8(uint8_t a, uint8_t b, uint8_t c = 0);
-    uint16_t __force_inline add16(uint16_t a, uint16_t b);
-    uint8_t __force_inline rlc8(uint8_t a);
-    uint8_t __force_inline rl8(uint8_t a);
-    uint8_t __force_inline rrc8(uint8_t a);
-    uint8_t __force_inline rr8(uint8_t a);
-    uint8_t __force_inline sla8(uint8_t a);
-    uint8_t __force_inline sra8(uint8_t a);
-    uint8_t __force_inline srl8(uint8_t a);
+    FORCE_INLINE uint8_t inc8(uint8_t x);
+    FORCE_INLINE uint8_t dec8(uint8_t x);
+    FORCE_INLINE uint8_t add8(uint8_t a, uint8_t b, uint8_t c = 0);
+    FORCE_INLINE uint8_t sub8(uint8_t a, uint8_t b, uint8_t c = 0);
+    FORCE_INLINE uint16_t add16(uint16_t a, uint16_t b);
+    FORCE_INLINE uint8_t rlc8(uint8_t a);
+    FORCE_INLINE uint8_t rl8(uint8_t a);
+    FORCE_INLINE uint8_t rrc8(uint8_t a);
+    FORCE_INLINE uint8_t rr8(uint8_t a);
+    FORCE_INLINE uint8_t sla8(uint8_t a);
+    FORCE_INLINE uint8_t sra8(uint8_t a);
+    FORCE_INLINE uint8_t srl8(uint8_t a);
 
     //@}
 

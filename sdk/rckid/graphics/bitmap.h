@@ -187,7 +187,7 @@ namespace rckid {
             return new uint8_t[pixelBufferSize<COLOR>(w, h)];
         } 
 
-        constexpr __force_inline size_t map(Coord x, Coord y) const { return pixelBufferOffset(x, y, w_, h_); }
+        FORCE_INLINE constexpr size_t map(Coord x, Coord y) const { return pixelBufferOffset(x, y, w_, h_); }
 
         Coord w_ = 0;
         Coord h_ = 0;
