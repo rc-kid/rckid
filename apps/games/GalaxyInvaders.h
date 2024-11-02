@@ -99,8 +99,10 @@ namespace rckid {
             // draw lives
             for (uint32_t i = 0; i < lives_; ++i)
                 g_.text(i * 22, 216, assets::font::Symbols16::font, color::Red) << assets::glyph::SolidHeart;
-            std::string score{STR(score_)};
-            g_.text(160 - assets::font::OpenDyslexic24::font.textWidth(score) / 2, 216, assets::font::OpenDyslexic24::font, color::LightGray) << score;
+            //std::string score{STR(score_)};
+            //g_.text(160 - assets::font::OpenDyslexic24::font.textWidth(score) / 2, 216, assets::font::OpenDyslexic24::font, color::LightGray) << score;
+            std::string score{STR(aliens_.active)};
+            g_.text(160 - assets::font::OpenDyslexic24::font.textWidth(score) / 2, 216, assets::font::OpenDyslexic24::font, color::LightGray) << aliens_.active;
             std::string lvl(STR("Lvl: " << level_));
             g_.text(320 - assets::font::OpenDyslexic24::font.textWidth(lvl), 216, assets::font::OpenDyslexic24::font, color::LightGray) << lvl;
             // draw aliens
@@ -236,10 +238,13 @@ namespace rckid {
             }
 
             bool isValid(int col, int row) {
+                ASSERT(col >= 0 && col < ALIEN_COLS);
+                ASSERT(row >= 0 && row < ALIEN_ROWS);
                 return valid[row + col * ALIEN_ROWS];
             }
 
             void remove(int col, int row) {
+                ASSERT(isValid(col, row));
                 valid[row + col * ALIEN_ROWS] = false;
                 // when removing an alien, we need to check if the freeLeft and freeRight change
                 if (col == freeLeft) {
@@ -273,8 +278,8 @@ namespace rckid {
             }
 
             bool checkBullet(FixedPoint bullet) {
-                int bx = bullet.x.round();
-                int by = bullet.y.round();
+                int bx = bullet.x.clip();
+                int by = bullet.y.clip();
                 if (bx < x || bx > x + 20 * ALIEN_COLS)
                     return false;
                 if (by > y || by < y - 20 * ALIEN_ROWS)

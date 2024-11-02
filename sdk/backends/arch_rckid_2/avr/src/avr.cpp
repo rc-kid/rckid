@@ -24,8 +24,6 @@
 #include "status.h"
 #include "commands.h"
 
-
-
 using namespace rckid;
 
 
