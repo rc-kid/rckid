@@ -13,7 +13,7 @@ namespace rckid {
         COORD y = COORD{0};
 
         TPoint() = default;
-        constexpr TPoint(int x, int y): x{x}, y{y} {}
+        constexpr TPoint(COORD x, COORD y): x{x}, y{y} {}
 
         constexpr static TPoint origin() { return TPoint{0,0}; }
 

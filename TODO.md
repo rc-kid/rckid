@@ -1,6 +1,13 @@
 # TODO
 
-- print the cases without cartridges
+> Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
+
+- print white buttons (2x at least)
+- verify charging & the new AVR code on a prototype board, then put it in the new case
+
+- fixed int is a wee bit broken and perhaps too complex, figure out what & where to overwrite in terms of operators and casts
+
+- maybe not use joystick, but keep it as an extra file so that each app can configure it properly, including things like position. But how to integrate with settings? 
 
 - clean music & tone generators, ensure other frequencies work as well, document, benchmark
 
@@ -38,7 +45,7 @@
 
 ## GalaxyInvaders
 
-- alien bullets
+- detect all aliens dead, detect player dead, respawn, print score, and update game mechanics for faster bullet speeds and more chances for alien bullets to be triggered
 
 ## Fantasy
 
@@ -97,6 +104,63 @@ This just might work.
 - help with resetting 
 - aleviate the pin count pressure
 - actually keep for sure
+
+
+
+### Display woes
+
+> The displays I ordered for the prototypes are 8bit interface, while the larger batch is 16. This in itself would not be the worst, but it seems that the 8bit display can no longer be purchased. I have 2 working prototypes for xmas, so if all goes well, it *might* work still, but the plan for the future is to use the extra pins on RP2350B for the 16bit interface so that I can use the displays I have ordered already. 
+
+The RPI has 48 GPIO, the necessary pins are:
+
+- 20 (16 + 4) for the display
+- 2 pins for I2C communication with the AVR
+- 10 pins for the cartridge
+- 4 pins for the SD card
+- 2 pins for stereo audio out
+- 2 pins for the PDM microphone
+
+This is 40 pins already, with 8 pins left. Those can either be used for the buttons, or provide extras such as:
+
+- 1 pin will make I2S sound output possibility
+- 2 pins will make the SDIO interface to the SD card possibility
+- 1 for display read as well
+
+This leaves us with 4 free pins on the RP2350 side. 
+
+Then there is the ATTiny3217, which has 21 GPIO pins:
+
+- 2 pins for I2C
+- 1 pin for power
+- 2 pins for RGB & 5V power
+- 1 vbatt (ADC)
+- 1 vcc (ADC)
+- 1 pin charging detection
+- 1 pin charging on/off
+- 7 pins for the buttons (3x4 matrix, including the home button)
+
+This is 16 pins, with 5 pins left on the AVR side. 
+
+Things we are missing is audio on/off and headphone detection (1 or 2 pins), backlight (1pin), rumbler (1pin)
+
+I can put RP in charge of the audio, while keeping the backlihght & rumbler on AVR, leaving RP with 2 free pins (UART for debugging or some aoutput pins) and 3 pins on AVR (uart for debugging and some leds, etc.)
+
+> Turns out it actually might work even with the 16bit display and the 16bit resolution can even give faster communication and thus more time available for draw in framebuffer mode. 
+
+- 48 gpio
+- 16 + 4 display
+- 2 I2C
+- 10 cartridge
+- 4 microSD SPI (+2 for SDIO)
+- 2 for PDM microphone
+- 2 for audio out (+1 for I2S)
+
+
+~ 43 pins
+
+5 left: 
+
+
 
 Pins:
 

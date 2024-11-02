@@ -6,7 +6,7 @@
 namespace rckid::interpolation {
 
     inline int custom(FixedInt i, FixedInt period, int16_t const * data, uint32_t length) {
-        return data[static_cast<int>((i * static_cast<int>(length - 1)) / period)];    
+        return data[((i * static_cast<int>(length - 1)) / period).round()];    
     }
 
     template<uint32_t SIZE>
@@ -19,7 +19,7 @@ namespace rckid::interpolation {
     }
 
     inline int linear(FixedInt i, FixedInt period, int min, int max) {
-        return min + static_cast<int>(i * (max - min) / period);
+        return min + (i * (max - min) / period).round();
     }
 
     inline int linear(int i, int period, int min, int max) {
@@ -29,10 +29,10 @@ namespace rckid::interpolation {
     inline int sawtooth(FixedInt i, FixedInt period, int min, int max) {
         FixedInt pHalf = period / 2;
         if (i <= pHalf) {
-            return min + static_cast<int>(i * (max - min) / pHalf);
+            return min + (i * (max - min) / pHalf).round();
         } else {
             i -= pHalf;
-            return max - static_cast<int>(i * (max - min) / pHalf);
+            return max - (i * (max - min) / pHalf).round();
         }
     }
 

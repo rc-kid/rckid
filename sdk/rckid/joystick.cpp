@@ -4,7 +4,7 @@ namespace rckid {
 
     namespace {
         struct JoystickAxis {
-            bool useDpad = false;
+            bool useDpad = true;
             int16_t min = -15000;
             int16_t max = 15000;
             int16_t centerMin = - 500;

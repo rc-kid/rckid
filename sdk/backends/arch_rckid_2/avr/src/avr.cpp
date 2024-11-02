@@ -95,7 +95,7 @@ public:
         cpu::delayMs(100);
 
         // start in debug mode
-        // TODO maybe do not have this in production
+        // TODO do not have this in production
         ts_.extras.setDebugMode(true);
 
         // set the AVR state to sleep (to enforce full wakeup) and then go to power on mode immediately
@@ -104,8 +104,8 @@ public:
         audioOff();
         disableCharging();
         // reset time and uptime when we reset the AVR
-        state_.time.set(1, 1, 2018, 1, 36, 0);
-        state_.uptime = 0;
+        ts_.time.set(1, 1, 2018, 1, 36, 0);
+        ts_.uptime = 0;
     }
 
     /** The main loop implementation (including the loop). 
@@ -180,7 +180,6 @@ public:
                 rgbUpdateSystemNotification();
             }
         }
-        // TODO do the system tick
     }
 
     /** Second tick happens inside IRQ. Simply increase uptime and the RTC. The second tick is called at all times and at all AVR states. It is also a periodic wakeup for the device when sleeping - but any other tasks (charge detection, alarms, etc.) are handled by the main loop instead. 
@@ -541,7 +540,7 @@ public:
     static void processI2CCommand() {
         if (!i2cCommandReady_)
             return;
-        // TODO process the commands
+        // process the commands
         switch (ts_.buffer[0]) {
             case cmd::Nop::ID:
                 break;
@@ -1141,7 +1140,7 @@ public:
                 bool volDown = ts_.status.btnVolumeDown();
                 // we are ready to read vol up & down, read, react and get ready to measure DPAD in next tick
                 ts_.status.setVolumeKeys(!gpio::read(AVR_PIN_BTN_2), !gpio::read(AVR_PIN_BTN_3));
-                // TODO do this only when in debug mode
+                // in debug mode, the volume up & down keys have special meaning (reset & RP bootloader)
                 if (ts_.extras.debugMode() && ts_.status.btnVolumeUp() && ! volUp) {
                     reset();
                 } else if (ts_.extras.debugMode() && ts_.status.btnVolumeDown() && ! volDown) {

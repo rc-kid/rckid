@@ -125,11 +125,11 @@ namespace rckid {
             drawScore(scoreLeft_, 120);
             drawScore(scoreRight_, 200 - 20);
             // draw player paddles
-            g_.fill(color::White, Rect::XYWH(5, left_ - 20, 10, 40));
-            g_.fill(color::White, Rect::XYWH(305, right_ - 20, 10, 40));
+            g_.fill(color::White, Rect::XYWH(5, (left_ - 20).round(), 10, 40));
+            g_.fill(color::White, Rect::XYWH(305, (right_ - 20).round(), 10, 40));
             // draw the ball
             FixedPoint ballPos = ball_ - Point{5,5};
-            g_.fill(color::White, Rect::XYWH(ballPos.x, ballPos.y, 10, 10));
+            g_.fill(color::White, Rect::XYWH(ballPos.x.round(), ballPos.y.round(), 10, 10));
         }
 
         void resetBall() {
@@ -164,16 +164,16 @@ namespace rckid {
 
     private:
 
-        FixedInt left_ = 120_fi;
-        FixedInt deltaLeft_ = 0_fi;
+        FixedInt left_ = 120;
+        FixedInt deltaLeft_ = 0;
 
-        FixedInt right_ = 120_fi;
-        FixedInt deltaRight_ = 0_fi;
+        FixedInt right_ = 120;
+        FixedInt deltaRight_ = 0;
 
         FixedPoint ball_;
         FixedPoint deltaBall_;   
 
-        FixedInt speed_ = 1_fi;     
+        FixedInt speed_ = 1;     
 
         unsigned scoreLeft_ = 0;
         unsigned scoreRight_ = 0;
