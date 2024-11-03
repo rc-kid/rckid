@@ -9,6 +9,7 @@
 #include <games/Tetris.h>
 #include <games/SlidingPuzzle.h>
 #include <games/GalaxyInvaders.h>
+#include <games/Sokoban.h>
 #include <test/RawAudioTest.h>
 #include <test/ToneAudioTest.h>
 #include <utils/StatusDisplay.h>
@@ -43,6 +44,7 @@ Menu * menuGames() {
         MenuApp::Item("Tetris", assets::icons::beaver, Tetris::run),
         MenuApp::Item("Sliding Puzzle", assets::icons::bee, SlidingPuzzle::run),
         MenuApp::Item("Invaders", assets::icons::bird_of_paradise, GalaxyInvaders::run),
+        MenuApp::Item("Sokoban", assets::icons::boar, Sokoban::run),
     };
 }
 
@@ -52,7 +54,7 @@ Menu * menuUtils() {
         MenuApp::Item("Stopwatch", assets::icons::alarm_clock, Stopwatch::run),
         MenuApp::Item("Clock", assets::icons::alarm_clock, Clock::run),
         //MenuApp::Item("Raw Audio", assets::icons::music, RawAudioTest::run),
-        MenuApp::Item("Tone Audio", assets::icons::music, ToneAudioTest::run)
+        MenuApp::Item("Tone Audio", assets::icons::music, ToneAudioTest::run),
     };
 }
 

@@ -238,8 +238,10 @@ namespace rckid {
             }
 
             bool isValid(int col, int row) {
-                ASSERT(col >= 0 && col < ALIEN_COLS);
-                ASSERT(row >= 0 && row < ALIEN_ROWS);
+                if (col < 0 || col >= ALIEN_COLS)
+                    return false;
+                if (row < 0 || row >= ALIEN_ROWS)
+                    return false;
                 return valid[row + col * ALIEN_ROWS];
             }
 
@@ -284,8 +286,8 @@ namespace rckid {
                     return false;
                 if (by > y || by < y - 20 * ALIEN_ROWS)
                     return false;
-                int bulletCol = (bx - x).round() / 20;
-                int bulletRow = (y - by).round() / 20;
+                int bulletCol = (bx - x).clip() / 20;
+                int bulletRow = (y - by).clip() / 20;
                 if (!isValid(bulletCol, bulletRow))
                     return false;
                 remove(bulletCol, bulletRow);
