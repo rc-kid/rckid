@@ -466,13 +466,12 @@ namespace rckid {
     }
 
     uint8_t displayBrightness() { 
-        // TODO TODO TODO 
-        return 255;
-        //return state_.status.brightness();
+        return state_.brightness;
     }
 
     void displaySetBrightness(uint8_t value) {  
         sendCommand(cmd::SetBrightness{value});
+        state_.brightness = value;
     }
 
     Rect displayUpdateRegion() {    

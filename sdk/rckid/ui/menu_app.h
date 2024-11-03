@@ -112,6 +112,13 @@ namespace rckid {
                 audioSetVolume(audioVolume() + 1);
             if (btnPressed(Btn::VolumeDown))
                 audioSetVolume(audioVolume() - 1);
+            if (btnPressed(Btn::Select)) {
+                if (displayBrightness() == 0)
+                    displaySetBrightness(128);
+                else if (displayBrightness() == 128)
+                    displaySetBrightness(255);
+                else displaySetBrightness(0);
+            }
             if (carousel_->idle()) {
                 if (btnDown(Btn::Left))
                     moveLeft();

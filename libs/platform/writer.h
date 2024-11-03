@@ -9,15 +9,24 @@
 #endif
 
 
+
 /** A very simple formatter for both human-readable texts and binary representations. 
  
     To make sure the writer is available even on very low level platforms such as ATTiny chips, it does not use C++'s lambda captures, but rely on passing a void * context poninter to the PutChar function. 
  */
 class Writer {
 public:
+
+    using Converter = std::function<void(Writer &)>;
+
     static constexpr char endl = '\n';
 
     explicit Writer(std::function<void(char)> putChar):putChar_{putChar} {}
+
+    Writer & operator << (Converter & conv) {
+        conv(*this);
+        return *this;
+    }
 
     Writer & operator << (char const * str) {
         while (*str != 0)
@@ -179,8 +188,19 @@ private:
 
 }; // StringWriter
 
-
-
+/** Writer formatter that ensures width of given value of at least N characters with an optional fill character (defaults to space). 
+ */
+template<typename T>
+inline Writer::Converter fillLeft(T const & what, uint32_t width, char fill = ' ') {
+    return [what, width, fill](Writer & writer) mutable {
+        std::string x{STR(what)};
+        while (x.size() < width) {
+            writer << fill;
+            --width;
+        }
+        writer << x;
+    };
+}
 
 #ifdef FOO
 

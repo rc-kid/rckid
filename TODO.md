@@ -2,7 +2,6 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
-- print white buttons (2x at least)
 - verify charging & the new AVR code on a prototype board, then put it in the new case
 
 - maybe not use joystick, but keep it as an extra file so that each app can configure it properly, including things like position. But how to integrate with settings? 
@@ -13,8 +12,6 @@
 - add logo when clearing the screen
 - can easily port littlefs for cartridge storage filesystem
 - USB serial does not display all text, sometimes garbled, as if not blocking to send
-
-- make an analogue joystick "fake" input that can be controlled by the games via the accelerometer, buttons, etc
 
 - move games & apps to SDK, unless they belong in cartridges 
 
@@ -40,8 +37,6 @@
 - add filesystem support with an ISO file specified for the SD card, using the same fatfs mechanics
 
 - can swap RAM arenas to disk if necessary
-
-- could the whine be from load changes with the display?
 
 ## GalaxyInvaders
 

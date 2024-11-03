@@ -21,11 +21,18 @@ namespace rckid {
 
         void draw() override {
             g_.fill();
+            Font const & f = assets::font::OpenDyslexic128::font;
             TinyDate now = dateTime();
-            std::string time{STR(now.hours() << (now.seconds() & 1 ? ":" : " ") << now.minutes())};
-            int tWidth = assets::font::OpenDyslexic128::font.textWidth(time.c_str());
-            g_.text(160 - tWidth / 2, 30, assets::font::OpenDyslexic128::font, color::White) << time;
+            std::string h{STR(fillLeft(now.hours(), 2, '0'))};
+            std::string m{STR(fillLeft(now.minutes(), 2, '0'))};
+            int hWidth = f.textWidth(h.c_str());
+            g_.text(150 - hWidth, 30, f, color::White) << h;
+            g_.text(170, 30, f, color::White) << m;
+            if (now.seconds() & 1)
+                g_.text(160 - f.glyphInfoFor(':').advanceX / 2, 30, f, color::White) << ':';
 
+
+            // TODO draw alarm clock as well and allow its setting
             Header::drawOn(g_);
         }
 
