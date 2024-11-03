@@ -108,6 +108,10 @@ namespace rckid {
 
 
         void update() override {
+            if (btnPressed(Btn::VolumeUp))
+                audioSetVolume(audioVolume() + 1);
+            if (btnPressed(Btn::VolumeDown))
+                audioSetVolume(audioVolume() - 1);
             if (carousel_->idle()) {
                 if (btnDown(Btn::Left))
                     moveLeft();
@@ -122,6 +126,7 @@ namespace rckid {
                     exit();
                     rumbleNudge();                    
                 }
+                // TODO this should be handled by the base app in future versions
                 if (btnPressed(Btn::Select))
                     ledSetEffect(Btn::Left, RGBEffect::Solid(16, 0, 0, 1));
                 if (btnPressed(Btn::Start))

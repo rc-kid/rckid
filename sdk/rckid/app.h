@@ -43,6 +43,10 @@ namespace rckid {
         virtual void update() {
             if (btnPressed(Btn::B))
                 exit();
+            if (btnPressed(Btn::VolumeUp))
+                audioSetVolume(audioVolume() + 1);
+            if (btnPressed(Btn::VolumeDown))
+                audioSetVolume(audioVolume() - 1);
         }
 
         virtual void draw() = 0;

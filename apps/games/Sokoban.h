@@ -18,7 +18,7 @@ namespace rckid {
         
         static void run() {
             Sokoban g;
-            g.setLevel(0);
+            g.resetGame();
             g.loop();
         }
 
@@ -41,6 +41,11 @@ namespace rckid {
             g_.fill();
             drawMap();
             drawPlayer();
+
+            std::string str{STR(moves_ << " moves")};
+            g_.text(320 - assets::font::OpenDyslexic24::font.textWidth(str), 218, assets::font::OpenDyslexic24::font, color::LightGray) << str;
+            str = STR("Level " << level_);
+            g_.text(0, 218, assets::font::OpenDyslexic24::font, color::LightGray) <<str;
         }
 
 
@@ -91,6 +96,7 @@ namespace rckid {
 
         void tryMove(Point d) {
             if (move(d)) {
+                ++moves_;
                 if (areWeDoneYet()) {
                     LOG("Level cleared!");
                 }
@@ -152,9 +158,23 @@ namespace rckid {
         uint8_t getTile(Point p) { return getTile(p.x, p.y); }
         void setTile(Point p, uint8_t tile) { setTile(p.x, p.y, tile); }
 
-        void setLevel(int value) {
+        void resetGame() {
+            totalMoves_ = 0;
+            moves_ = 0;
+            setLevel(1);
+        }
+
+        void resetLevel() {
+            moves_ = 0;
+            setLevel(level_);
+        }
+
+        void setLevel(uint32_t value) {
             // copy the level map
-            memcpy(map_, levels_[value], sizeof(map_));
+            memcpy(map_, levels_[value - 1], sizeof(map_));
+            totalMoves_ += moves_;
+            level_ = value;
+            moves_ = 0;
             // find player's initial position on the map and replace it with floor
             uint8_t * tiles = map_;
             for (int y = 0; y < ROWS; ++y) {
@@ -187,6 +207,9 @@ namespace rckid {
         static constexpr uint8_t TILE_PLACE = 5;
         static constexpr uint8_t TILE_PLAYER = 9;
 
+        uint32_t level_;
+        uint32_t moves_;
+        uint32_t totalMoves_;
         Point player_;
         uint8_t map_[COLS * ROWS];
 

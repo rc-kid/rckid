@@ -99,12 +99,12 @@ namespace rckid {
             // draw lives
             for (uint32_t i = 0; i < lives_; ++i)
                 g_.text(i * 22, 216, assets::font::Symbols16::font, color::Red) << assets::glyph::SolidHeart;
-            //std::string score{STR(score_)};
-            //g_.text(160 - assets::font::OpenDyslexic24::font.textWidth(score) / 2, 216, assets::font::OpenDyslexic24::font, color::LightGray) << score;
-            std::string score{STR(aliens_.active)};
-            g_.text(160 - assets::font::OpenDyslexic24::font.textWidth(score) / 2, 216, assets::font::OpenDyslexic24::font, color::LightGray) << aliens_.active;
+            std::string score{STR(score_)};
+            g_.text(160 - assets::font::OpenDyslexic24::font.textWidth(score) / 2, 218, assets::font::OpenDyslexic24::font, color::LightGray) << score;
+            //std::string score{STR(aliens_.active)};
+            //g_.text(160 - assets::font::OpenDyslexic24::font.textWidth(score) / 2, 216, assets::font::OpenDyslexic24::font, color::LightGray) << aliens_.active;
             std::string lvl(STR("Lvl: " << level_));
-            g_.text(320 - assets::font::OpenDyslexic24::font.textWidth(lvl), 216, assets::font::OpenDyslexic24::font, color::LightGray) << lvl;
+            g_.text(320 - assets::font::OpenDyslexic24::font.textWidth(lvl), 218, assets::font::OpenDyslexic24::font, color::LightGray) << lvl;
             // draw aliens
             aliens_.drawOn(g_);
             // draw the player depending on the spawn state

@@ -34,16 +34,20 @@
 - libopus decoder & encoder library
 - jpeg decoding library
 
+- add a way to silence button down presses (such as btnPressedClear() function that makes any subseuent )
+
 - filesystem file & folder abstractions
 - add filesystem support with an ISO file specified for the SD card, using the same fatfs mechanics
 
 - can swap RAM arenas to disk if necessary
 
-- extra game sokoban
+- could the whine be from load changes with the display?
 
 ## GalaxyInvaders
 
 - alien counting does not seem to work well
+
+## Sokoban
 
 
 ## Fantasy
