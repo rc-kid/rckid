@@ -25,6 +25,8 @@ namespace rckid {
         }; // TextInput::KeyboardType
 
         static std::optional<std::string> run() {
+            TextInput input;
+            input.loop();
             return "";
         }
 

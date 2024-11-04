@@ -2,7 +2,9 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
-- verify charging & the new AVR code on a prototype board, then put it in the new case
+- tiny date check limits properly when setting time & date
+
+- verify charging & the new AVR code on a prototype board,2 then put it in the new case
 
 - maybe not use joystick, but keep it as an extra file so that each app can configure it properly, including things like position. But how to integrate with settings? 
 
@@ -37,6 +39,9 @@
 - add filesystem support with an ISO file specified for the SD card, using the same fatfs mechanics
 
 - can swap RAM arenas to disk if necessary
+
+
+- make timer run a ... b ... a as well (then I can replace the blinking code in clock)
 
 ## GalaxyInvaders
 

@@ -48,10 +48,14 @@ namespace rckid {
             bool result = false;
             t_ += d;
             if (t_ > duration_) {
-                t_ = duration_;
                 result = true;
-                if (state_ == State::Single)
+                // if we are in single mode, ensure we are at duration when done, otherwise start again
+                if (state_ == State::Single) {
                     state_ = State::Off;
+                    t_ = duration_;
+                } else {
+                    t_ -= duration_;
+                }
             }
             return result;
         }
@@ -63,7 +67,7 @@ namespace rckid {
         void setDuration(int32_t value) {
             duration_ = value;
             if (t_ > duration_)
-                t_ = duration_;
+                t_ -= duration_;
         }
 
         int32_t t() const { return t_; }

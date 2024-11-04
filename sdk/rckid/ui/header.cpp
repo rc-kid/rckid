@@ -14,7 +14,7 @@ namespace rckid {
         int y = 0;
         if (verbose) { 
             TinyDate now = dateTime();
-            std::string time{STR(now.hours() << ":" << now.minutes())};
+            std::string time{STR(now.hour() << ":" << fillLeft(now.minute(), 2, '0'))};
             surface.text(x, y + 1, f, color::LightGray) << time;
             x += f.textWidth(time);
         }

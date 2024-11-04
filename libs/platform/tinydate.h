@@ -16,9 +16,9 @@ public:
     static constexpr uint16_t YEAR_START = 2023;
     static constexpr uint16_t YEAR_END = YEAR_START + 64;
 
-    uint8_t seconds() const { return raw_[0] & SECOND_MASK; }
-    uint8_t minutes() const { return raw_[1] & MINUTE_MASK; }
-    uint8_t hours() const { return raw_[2] & HOUR_MASK; }
+    uint8_t second() const { return raw_[0] & SECOND_MASK; }
+    uint8_t minute() const { return raw_[1] & MINUTE_MASK; }
+    uint8_t hour() const { return raw_[2] & HOUR_MASK; }
     uint8_t day() const { return raw_[3] & DAY_MASK; }
     uint8_t month() const { 
         return ((raw_[0] & MONTH_MASK) >> 4) 
@@ -112,19 +112,19 @@ public:
     }
 
     bool incSecond() {
-        uint8_t x = (seconds() + 1) % 60;
+        uint8_t x = (second() + 1) % 60;
         setSecond(x);
         return x == 0;
     }
 
     bool incMinute() {
-        uint8_t x = (minutes() + 1) % 60;
+        uint8_t x = (minute() + 1) % 60;
         setMinute(x);
         return x == 0;
     }
 
     bool incHour() {
-        uint8_t x = (hours() + 1) % 12;
+        uint8_t x = (hour() + 1) % 12;
         setHour(x);
         return x == 0;
     }

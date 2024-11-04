@@ -16,6 +16,7 @@
 #include <utils/StatusDisplay.h>
 #include <utils/Clock.h>
 #include <utils/Stopwatch.h>
+#include <utils/SetTime.h>
 
 #include <benchmarks/ToneGenerator.h>
 
@@ -58,6 +59,13 @@ Menu * menuUtils() {
     };
 }
 
+Menu * menuSettings() {
+    return new Menu{
+        MenuApp::Item("Date & Time", assets::icons::alarm_clock, SetTime::run),
+     
+    };
+}
+
 Menu * menuBenchmarks() {
     return new Menu{
         MenuApp::Item("Tone Generator", assets::icons::music, Benchmark<ToneGeneratorBenchmark>::run),
@@ -69,7 +77,7 @@ Menu * mainMenu() {
     return new Menu{
         MenuApp::Submenu("Games", assets::icons::game_controller, menuGames),
         MenuApp::Submenu("Utils", assets::icons::applications, menuUtils),
-        MenuApp::Submenu("Settings", assets::icons::settings, menuGames),
+        MenuApp::Submenu("Settings", assets::icons::settings, menuSettings),
         MenuApp::Submenu("Benchmarks", assets::icons::spider, menuBenchmarks),
     };
 }
@@ -80,11 +88,6 @@ int main() {
     LOG("Initialized, running the app!");
     rckid::displaySetBrightness(128);
     //rckid::rumbleOk();
-    //auto game = rckid::SlidingPuzzle::create();
-    //auto game = new rckid::RawAudioTest{};
-    //auto game = new TextInput{};
-    //auto game = Tetris::create();
-    //game->run();
     while (true)
         MenuApp::run(mainMenu);
     while (true) {
