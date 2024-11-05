@@ -245,6 +245,10 @@ namespace rckid {
         return dateTime_;
     }
 
+    void setDateTime(TinyDate value) {
+        dateTime_ = value;
+    }
+
     TinyDate alarm() {
         return alarm_;
     }

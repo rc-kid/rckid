@@ -366,6 +366,11 @@ namespace rckid {
 
     TinyDate dateTime() { return state_.time; }
 
+    void setDateTime(TinyDate value) {
+        sendCommand(cmd::SetTime{value});
+        state_.time = value;
+    }
+
     TinyDate alarm() { return state_.alarm; }
     
     uint32_t random() { return get_rand_32(); }

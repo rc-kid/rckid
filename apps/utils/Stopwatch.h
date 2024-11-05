@@ -63,7 +63,7 @@ namespace rckid {
             }
             g_.fill();
             std::string time{STR(h_ << ":" << m_ << ":" << s_)};
-            std::string ms{STR("." << ms_)};
+            std::string ms{STR("." << fillLeft(ms_, 3, '0'))};
             int tWidth = assets::font::OpenDyslexic128::font.textWidth(time.c_str());
             int msWidth = assets::font::OpenDyslexic64::font.textWidth(ms.c_str());
             g_.text(160 - tWidth / 2, 30, assets::font::OpenDyslexic128::font, color::White) << time;

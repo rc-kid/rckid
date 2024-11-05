@@ -50,6 +50,11 @@ namespace rckid {
                 adjustSelectedBy(1);
             if (btnPressed(Btn::Down))
                 adjustSelectedBy(-1);
+            // sets the date & time if button A is pressed
+            if (btnPressed(Btn::A)) {
+                setDateTime(d_);
+                exit();
+            }
         }
 
         /** Draws the date & time */
@@ -62,7 +67,7 @@ namespace rckid {
             Font const & f = assets::font::OpenDyslexic128::font;
             Font const & fSmall = assets::font::OpenDyslexic64::font;
 
-            std::string h{STR(d_.hour())};
+            std::string h{STR(fillLeft(d_.hour(), 2, '0'))};
             std::string m{STR(fillLeft(d_.minute(), 2, '0'))};
             int hWidth = f.textWidth(h.c_str());
             g_.text(150 - hWidth, 30, f, (ae_ == AE_HOUR) ? active : color::White) << h;

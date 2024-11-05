@@ -80,6 +80,10 @@ namespace rckid {
      */
     TinyDate dateTime();
 
+    /** Sets the date & time kept by the device to the given value. 
+     */
+    void setDateTime(TinyDate value);
+
     /** Returns the currently set alarm.
      */
     TinyDate alarm();

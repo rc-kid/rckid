@@ -73,26 +73,41 @@ public:
 
 
     void setSecond(uint8_t value) { 
+        if (value >= 60)
+            value = 59;
         raw_[0] &= ~SECOND_MASK;
         raw_[0] |= value & SECOND_MASK;
     }
 
     void setMinute(uint8_t value) {
+        if (value >= 60)
+            value = 59;
         raw_[1] &= ~MINUTE_MASK;
         raw_[1] |= value & MINUTE_MASK;
     }
 
     void setHour(uint8_t value) {
+        if (value >= 24)
+            value = 23;
         raw_[2] &= ~HOUR_MASK;
         raw_[2] |= value & HOUR_MASK;
     }
 
     void setDay(uint8_t value) {
+        unsigned dim = daysInMonth(year(), month());
+        if (value > dim)
+            value = dim;
+        if (value == 0)
+            value = 1;
         raw_[3] &= ~DAY_MASK;
         raw_[3] |= value & DAY_MASK;
     }
 
     void setMonth(uint8_t value) {
+        if (value == 0)
+            value = 1;
+        if (value > 12)
+            value = 12;
         uint8_t m1 = ((value >> 2) & 3) << 6;
         uint8_t m2 = (value & 3) << 6;
         raw_[0] &= ~MONTH_MASK;
@@ -102,6 +117,9 @@ public:
     }
 
     void setYear(uint16_t value) {
+        if (month() == 2 && day() == 29)
+            if (daysInMonth(value, 2) == 28)
+                setDay(28);
         value -= YEAR_START;
         uint8_t y1 = ((value >> 3) & 7) << 5;
         uint8_t y2 = (value & 7) << 5;

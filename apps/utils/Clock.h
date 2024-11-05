@@ -23,7 +23,7 @@ namespace rckid {
             g_.fill();
             Font const & f = assets::font::OpenDyslexic128::font;
             TinyDate now = dateTime();
-            std::string h{STR(now.hour())};
+            std::string h{STR(fillLeft(now.hour(), 2, '0'))};
             std::string m{STR(fillLeft(now.minute(), 2, '0'))};
             int hWidth = f.textWidth(h.c_str());
             g_.text(150 - hWidth, 30, f, color::White) << h;
