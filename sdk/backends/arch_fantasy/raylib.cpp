@@ -143,7 +143,7 @@ namespace rckid {
 
         uint64_t nextSecond_;
         TinyDate dateTime_;
-        TinyDate alarm_;
+        TinyAlarm alarm_;
     }
 
     void initialize() {
@@ -249,8 +249,12 @@ namespace rckid {
         dateTime_ = value;
     }
 
-    TinyDate alarm() {
+    TinyAlarm alarm() {
         return alarm_;
+    }
+
+    void setAlarm(TinyAlarm value) {
+        alarm_ = value;
     }
 
     uint32_t random() {

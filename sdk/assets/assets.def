@@ -8,6 +8,8 @@ fontGlyphs, fonts/OpenDyslexic.otf, 48
 fontGlyphs, fonts/OpenDyslexic.otf, 64
 fontGlyphs, fonts/OpenDyslexic.otf, 128
 fontGlyphs, fonts/OpenDyslexic.otf, 32, Symbols16, ../rckid/assets/symbol-glyphs.inc.h
+fontGlyphs, fonts/OpenDyslexic.otf, 64, Symbols32, ../rckid/assets/symbol-glyphs.inc.h
+fontGlyphs, fonts/OpenDyslexic.otf, 128, Symbols64, ../rckid/assets/symbol-glyphs.inc.h
 
 #generator, path to folder, namespace (and output file)
 #folder, icons, icons

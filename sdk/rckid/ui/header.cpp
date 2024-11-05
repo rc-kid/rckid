@@ -18,7 +18,7 @@ namespace rckid {
             surface.text(x, y + 1, f, color::LightGray) << time;
             x += f.textWidth(time);
         }
-        if (alarm().isValid()) {
+        if (alarm().enabled()) {
             surface.text(x, y - 7, fSym, color::White) << assets::glyph::Alarm;
             x += fSym.glyphInfoFor(assets::glyph::Alarm).advanceX + 4;
         }

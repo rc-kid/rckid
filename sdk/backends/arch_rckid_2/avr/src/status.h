@@ -151,7 +151,7 @@ namespace rckid {
         TinyDate time;
         /** Alarm.
          */
-        TinyDate alarm;
+        TinyAlarm alarm;
         /** Current brightness settings. 
          */
         uint8_t brightness;

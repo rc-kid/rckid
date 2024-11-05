@@ -58,8 +58,8 @@ namespace rckid::cmd {
     /** Sets the alarm to given value and enables it. 
      */
     COMMAND(14, SetAlarm, 
-        TinyDate value;
-        SetAlarm(TinyDate value): value{value} {}
+        TinyAlarm value;
+        SetAlarm(TinyAlarm value): value{value} {}
     );
 
     /** Clears the alarm flag in the status and clears the alarm itself. If the alarm should happen again, SetAlarm command must be issued after clearing the alarm.

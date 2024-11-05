@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "definitions.h"
 
 /** A simple date-time object that fits in just 4 bytes. 
  
@@ -11,8 +12,9 @@
     raw 2 : YYYhhhhh
     raw 3 : YYYddddd
 */
-class TinyDate {
+PACKED(class TinyDate {
 public:
+
     static constexpr uint16_t YEAR_START = 2023;
     static constexpr uint16_t YEAR_END = YEAR_START + 64;
 
@@ -222,6 +224,64 @@ private:
 
     uint8_t raw_[4] = { 0xff, 0xff, 0xff, 0xff};
 
-} ; // __attribute__((packed)); // TinyDate
+}); // __attribute__((packed)); // TinyDate
 
 static_assert(sizeof(TinyDate) == 4);
+
+
+/** Simple alarm. 
+ 
+    Hours, minutes and days of the week when the alarm is active. Since we need at least 18 bits to store this information, the alarm uses 3 bytes internally for hours, minutes and days of the week respectively. 
+ */
+PACKED(class TinyAlarm {
+public:
+
+    uint8_t hour() const { return raw_[0]; }
+    uint8_t minute() const { return raw_[1]; }
+    bool enabled() const { return raw_[2] != 0; }
+    bool enabledDay(uint8_t dayOfWeek) const { return raw_[2] & (1 << dayOfWeek); }
+
+    void setHour(uint8_t value) {
+        if (value >= 24)
+            value = 23;
+        raw_[0] = value;
+    }
+
+    void setMinute(uint8_t value) {
+        if (value >= 60)
+            value = 59;
+        raw_[1] = value;
+    }
+
+    void setEnabled(bool value = true) {
+        raw_[2] = value ? 0x7f : 0;
+    }
+
+    void setEnabledDay(uint8_t day, bool value = true) {
+        if (day >= 7)
+            day = 6;
+        if (value)
+            raw_[2] |= (1 << day);
+        else
+            raw_[2] &= ~(1 << day);
+    }
+
+    bool check(TinyDate const & date) {
+        if (date.second() != 0)
+            return false;
+        if (date.minute() != raw_[1])
+            return false;
+        if (date.hour() != raw_[0])
+            return false;
+        return enabledDay(date.dayOfWeek());
+    }
+
+private:
+    uint8_t raw_[3] = { 0, 0, 0};
+
+}); 
+
+static_assert(sizeof(TinyAlarm) == 3);
+
+
+// 8166

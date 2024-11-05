@@ -17,7 +17,6 @@ namespace rckid {
     public:
         static void run() {
             Stopwatch app{};
-
             app.loop();
         }
 

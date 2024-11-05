@@ -371,7 +371,12 @@ namespace rckid {
         state_.time = value;
     }
 
-    TinyDate alarm() { return state_.alarm; }
+    TinyAlarm alarm() { return state_.alarm; }
+
+    void setAlarm(TinyAlarm value) {
+        sendCommand(cmd::SetAlarm{value});
+        state_.alarm = value;
+    }
     
     uint32_t random() { return get_rand_32(); }
 

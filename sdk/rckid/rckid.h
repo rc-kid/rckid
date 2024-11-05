@@ -86,7 +86,9 @@ namespace rckid {
 
     /** Returns the currently set alarm.
      */
-    TinyDate alarm();
+    TinyAlarm alarm();
+
+    void setAlarm(TinyAlarm alarm);
 
     /** Generates random number in the 32bit unsigned range. 
      */

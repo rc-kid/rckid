@@ -438,7 +438,7 @@ public:
      */
     //@{
 
-    static inline volatile TransferrableState ts_;
+    static inline TransferrableState ts_;
 
     static inline volatile uint8_t i2cTxIdx_ = 0;
     static inline volatile uint8_t i2cRxIdx_ = 0;

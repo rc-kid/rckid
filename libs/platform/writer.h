@@ -28,6 +28,11 @@ public:
         return *this;
     }
 
+    Writer & operator << (Converter && conv) {
+        conv(*this);
+        return *this;
+    }
+
     Writer & operator << (char const * str) {
         while (*str != 0)
             putChar_(*(str++));

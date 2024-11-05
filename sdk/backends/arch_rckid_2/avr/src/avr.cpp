@@ -185,6 +185,12 @@ public:
     static void secondTick() __attribute__((always_inline)) {
         ++ts_.uptime;
         ts_.time.secondTick();
+        // check if we should should the alarm, and optionally wake up
+        if (ts_.alarm.check(ts_.time)) {
+            ts_.status.setAlarm(true);
+            if (avrState_ != AVRState::On) 
+                devicePowerOn();
+        }
         // if we are sleeping, initiatethe ADC measurement for the VCC to determine if DC power has been connected
         if (avrState_ == AVRState::Sleep)
             vccMeasureTick_ = true;
@@ -485,7 +491,7 @@ public:
      */
     //@{
 
-    static inline volatile TransferrableState ts_;
+    static inline TransferrableState ts_;
 
     static inline volatile uint8_t i2cTxIdx_ = 0;
     static inline volatile uint8_t i2cRxIdx_ = 0;
@@ -578,8 +584,15 @@ public:
                 break;
             }
             case cmd::SetTime::ID: {
-                TinyDate t = cmd::SetTime::fromBuffer(ts_.buffer).value;
-                ts_.time = t;
+                ts_.time = cmd::SetTime::fromBuffer(ts_.buffer).value;
+                break;
+            }
+            case cmd::SetAlarm::ID: {
+                ts_.alarm = cmd::SetAlarm::fromBuffer(ts_.buffer).value;
+                break;
+            }
+            case cmd::ClearAlarm::ID: {
+                ts_.status.setAlarm(false);
                 break;
             }
             case cmd::UserNotificationOn::ID:
