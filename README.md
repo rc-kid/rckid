@@ -66,3 +66,4 @@ The SDK library is at the core of RCKid as it provides an abstraction layer over
 ## Attribution
 
 - doxygen theme: https://github.com/jothepro/doxygen-awesome-css
+- icons are from flaticon, for detailed attribution, please see ATTRIBUTION.md file 

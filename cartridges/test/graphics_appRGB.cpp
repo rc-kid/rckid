@@ -1,7 +1,7 @@
 #include <rckid/rckid.h>
 #include <rckid/app.h>
 #include <rckid/graphics/bitmap.h>
-#include <rckid/assets/icons.h>
+#include <rckid/assets/icons64.h>
 #include <rckid/assets/fonts/Iosevka16.h>
 
 using namespace rckid;
@@ -36,7 +36,7 @@ protected:
             << "FPS: " << App::fps() << "\n"
             << "Draw: " << App::drawUs() << "\n"
             << "Render: " << App::renderUs() << "\n";
-        MemoryReadStream str{rckid::assets::icons::bat};
+        MemoryReadStream str{rckid::assets::icons64::bat};
         //g_.loadImage(PNG::fromStream(str));
     }
     uint32_t i_ = 0;

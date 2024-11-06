@@ -33,7 +33,7 @@
 #include <rckid/comms/uart_transceiver.h>
 //#include <rckid/comms/connection.h>
 
-#include <rckid/assets/icons.h>
+#include <rckid/assets/icons64.h>
 
 
 using namespace rckid;
@@ -41,44 +41,44 @@ using namespace rckid;
 
 Menu * menuGames() {
     return new Menu{
-        MenuApp::Item("Pong", assets::icons::bat, Pong::run),
-        MenuApp::Item("Tetris", assets::icons::beaver, Tetris::run),
-        MenuApp::Item("Sliding Puzzle", assets::icons::bee, SlidingPuzzle::run),
-        MenuApp::Item("Invaders", assets::icons::bird_of_paradise, GalaxyInvaders::run),
-        MenuApp::Item("Sokoban", assets::icons::boar, Sokoban::run),
+        MenuApp::Item("Pong", assets::icons64::ping_pong, Pong::run),
+        MenuApp::Item("Tetris", assets::icons64::tetris, Tetris::run),
+        MenuApp::Item("Sliding Puzzle", assets::icons64::mosaic, SlidingPuzzle::run),
+        MenuApp::Item("Invaders", assets::icons64::space, GalaxyInvaders::run),
+        MenuApp::Item("Sokoban", assets::icons64::forklift, Sokoban::run),
     };
 }
 
 Menu * menuUtils() {
     return new Menu{
-        MenuApp::Item("Status", assets::icons::info, StatusDisplay::run),
-        MenuApp::Item("Stopwatch", assets::icons::alarm_clock, Stopwatch::run),
-        MenuApp::Item("Clock", assets::icons::alarm_clock, Clock::run),
-        //MenuApp::Item("Raw Audio", assets::icons::music, RawAudioTest::run),
-        MenuApp::Item("Tone Audio", assets::icons::music, ToneAudioTest::run),
+        MenuApp::Item("Status", assets::icons64::info, StatusDisplay::run),
+        MenuApp::Item("Stopwatch", assets::icons64::clock, Stopwatch::run),
+        MenuApp::Item("Clock", assets::icons64::alarm_clock, Clock::run),
+        //MenuApp::Item("Raw Audio", assets::icons64::music, RawAudioTest::run),
+        MenuApp::Item("Tone Audio", assets::icons64::music, ToneAudioTest::run),
     };
 }
 
 Menu * menuSettings() {
     return new Menu{
-        MenuApp::Item("Date & Time", assets::icons::alarm_clock, SetTime::run),
+        MenuApp::Item("Date & Time", assets::icons64::clock, SetTime::run),
      
     };
 }
 
 Menu * menuBenchmarks() {
     return new Menu{
-        MenuApp::Item("Tone Generator", assets::icons::music, Benchmark<ToneGeneratorBenchmark>::run),
+        MenuApp::Item("Tone Generator", assets::icons64::music, Benchmark<ToneGeneratorBenchmark>::run),
     };
 }
 
 
 Menu * mainMenu() {
     return new Menu{
-        MenuApp::Submenu("Games", assets::icons::game_controller, menuGames),
-        MenuApp::Submenu("Utils", assets::icons::applications, menuUtils),
-        MenuApp::Submenu("Settings", assets::icons::settings, menuSettings),
-        MenuApp::Submenu("Benchmarks", assets::icons::spider, menuBenchmarks),
+        MenuApp::Submenu("Games", assets::icons64::game_controller, menuGames),
+        MenuApp::Submenu("Utils", assets::icons64::applications, menuUtils),
+        MenuApp::Submenu("Settings", assets::icons64::settings, menuSettings),
+        MenuApp::Submenu("Benchmarks", assets::icons64::spider, menuBenchmarks),
     };
 }
 

@@ -12,6 +12,8 @@
 #include <rckid/assets/fonts/Symbols16.h>
 #include <rckid/assets/fonts/OpenDyslexic24.h>
 #include <rckid/assets/glyphs.h>
+#include <rckid/assets/icons24.h>
+#include <rckid/assets/icons16.h>
 
 namespace rckid {
 
@@ -33,7 +35,19 @@ namespace rckid {
         static constexpr int32_t SHIP_HEIGHT = 24;
         static constexpr int32_t SHIP_Y = 195;
 
-        GalaxyInvaders(): GraphicsApp{Canvas<Color>{320, 240}} {
+        GalaxyInvaders(): 
+            GraphicsApp{Canvas<Color>{320, 240}} /*, 
+            // TODO for some resons, the commented code initialization does not work, while the one below does. Not sure why. a bug in my code? stack issues? - it only does not work on HW, fantasy works ok
+            ship_{Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(assets::icons24::space))},
+            alienShips_{
+                Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(assets::icons16::alien_2)),
+                Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(assets::icons16::alien_1)),
+                Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(assets::icons16::alien)),
+            } */ {
+            alienShips_[0].loadImage(PNG::fromBuffer(assets::icons16::alien_2));
+            alienShips_[1].loadImage(PNG::fromBuffer(assets::icons16::alien_1));
+            alienShips_[2].loadImage(PNG::fromBuffer(assets::icons16::alien));
+            ship_.loadImage(PNG::fromBuffer(assets::icons24::space));
             audio_[1].setEnvelope(100, 50, 80, 250);
         }
 
@@ -106,7 +120,7 @@ namespace rckid {
             std::string lvl(STR("Lvl: " << level_));
             g_.text(320 - assets::font::OpenDyslexic24::font.textWidth(lvl), 218, assets::font::OpenDyslexic24::font, color::LightGray) << lvl;
             // draw aliens
-            aliens_.drawOn(g_);
+            aliens_.drawOn(g_, alienShips_);
             // draw the player depending on the spawn state
             if (mode_ == Mode::Respawn || mode_ == Mode::Killed)
                 if ((spawn_ / 10) & 1)
@@ -161,7 +175,8 @@ namespace rckid {
         }
 
         void drawSpaceship() {
-            g_.fill(color::Green, Rect::XYWH(shipX_.round(), SHIP_Y, SHIP_WIDTH, SHIP_HEIGHT));
+            g_.blit(Point{shipX_.round(), SHIP_Y}, ship_);
+            //g_.fill(color::Green, Rect::XYWH(shipX_.round(), SHIP_Y, SHIP_WIDTH, SHIP_HEIGHT));
         }
 
         void drawBullets(std::vector<FixedPoint> const & bullets, Color color) {
@@ -215,6 +230,7 @@ namespace rckid {
 
         static constexpr int ALIEN_COLS = 8;
         static constexpr int ALIEN_ROWS = 5;
+        static constexpr uint8_t ALIEN_INVALID = 0xff;
 
         class Aliens {
         public:
@@ -222,14 +238,15 @@ namespace rckid {
             //FixedInt speed{0, 0x8};
             FixedInt y;
             FixedInt speed;
-            bool valid[ALIEN_COLS * ALIEN_ROWS];
+            uint8_t valid[ALIEN_COLS * ALIEN_ROWS];
             int freeLeft = 0;
             int freeRight = 0;
             uint32_t active = ALIEN_COLS * ALIEN_ROWS;
 
+
             void reset() {
                 for (uint32_t i = 0; i < ALIEN_COLS * ALIEN_ROWS; ++i)
-                    valid[i] = true;
+                    valid[i] = random() % 3;
                 x = 160 - ALIEN_COLS * 10;
                 y = 100;
                 freeLeft = 0;
@@ -242,12 +259,12 @@ namespace rckid {
                     return false;
                 if (row < 0 || row >= ALIEN_ROWS)
                     return false;
-                return valid[row + col * ALIEN_ROWS];
+                return valid[row + col * ALIEN_ROWS] != ALIEN_INVALID;
             }
 
             void remove(int col, int row) {
                 ASSERT(isValid(col, row));
-                valid[row + col * ALIEN_ROWS] = false;
+                valid[row + col * ALIEN_ROWS] = ALIEN_INVALID;
                 // when removing an alien, we need to check if the freeLeft and freeRight change
                 if (col == freeLeft) {
                     while (freeLeft < ALIEN_COLS && isColumnEmpty(freeLeft))
@@ -261,20 +278,22 @@ namespace rckid {
             }
 
             bool isColumnEmpty(int col) {
-                bool * column = valid + col * ALIEN_ROWS;
+                uint8_t * column = valid + col * ALIEN_ROWS;
                 for (int i = 0; i < ALIEN_ROWS; ++i)
-                    if (*(column++))
+                    if (*(column++) != ALIEN_INVALID)
                         return false;
                 return true;
             }
 
-            void drawOn(Bitmap<ColorRGB> & b) {
-                bool * v = valid;
+            void drawOn(Bitmap<ColorRGB> & b, Bitmap<ColorRGB> const * ships) {
+                uint8_t * v = valid;
                 for (int col = 0; col < ALIEN_COLS; ++col) {
                     for (int row = 0; row < ALIEN_ROWS; ++row) {
-                        if (*(v++)) {
-                            b.fill(color::Red, Rect::XYWH((x + col * 20 + 2).round(), (y - row * 20 + 2 - 20).round(), 16, 16));
+                        if (*v != ALIEN_INVALID) {
+                            b.blit(Point{(x + col * 20 + 2).round(), (y - row * 20 + 2 - 20).round()}, ships[*v]);
+                            //b.fill(color::Red, Rect::XYWH((x + col * 20 + 2).round(), (y - row * 20 + 2 - 20).round(), 16, 16));
                         }
+                        ++v;
                     }
                 }
             }
@@ -318,9 +337,9 @@ namespace rckid {
                     }
                     col = (col + 1) % ALIEN_COLS;
                 }
-                bool * column = valid + col * ALIEN_ROWS;
+                uint8_t * column = valid + col * ALIEN_ROWS;
                 int row = 0;
-                while (column[row] == false)
+                while (column[row] == ALIEN_INVALID)
                     ++row;
                 return FixedPoint{x.round() + col * 20 + 10, y - row * 20};
             }
@@ -340,6 +359,13 @@ namespace rckid {
 
         std::vector<FixedPoint> bullets_;
         std::vector<FixedPoint> alienBullets_;
+
+        Bitmap<ColorRGB> ship_{24, 24};
+        Bitmap<ColorRGB> alienShips_[3] = {
+            Bitmap<ColorRGB>{16, 16},
+            Bitmap<ColorRGB>{16, 16},
+            Bitmap<ColorRGB>{16, 16},
+        };
 
         Music music_;
         ToneGenerator audio_;
