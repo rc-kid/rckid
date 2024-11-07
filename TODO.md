@@ -21,7 +21,7 @@
 
 - add blocking send & test it
 
-- account for PNG's transparency by allowing it to be overlayed on existing bitmap
+- account for PNG's transparency by allowing it to be overlayed on existing bitmap (right now it is set to black which looks ok on black background)
 - maybe even RGBA colors? 
 - rumbler & LED effect done event
 

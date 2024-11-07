@@ -62,7 +62,9 @@ namespace rckid {
     void PNG::decodeLine_(PNGDRAW *pDraw) {
         uint16_t line[320];
         PNG * png = reinterpret_cast<PNG*>(pDraw->pUser);
-        PNGRGB565(pDraw, line, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff, png->iHasAlpha);
+        //PNGRGB565(pDraw, line, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff, png->iHasAlpha);
+        // TODO background is set to 0, which means the icons look good on black, but real transparency is not really working at this point
+        PNGRGB565(pDraw, line, PNG_RGB565_LITTLE_ENDIAN, 0x0, png->iHasAlpha);
         png->cb_(reinterpret_cast<ColorRGB *>(line), pDraw->y, pDraw->iWidth);
     }
 #pragma GCC diagnostic push
