@@ -45,7 +45,7 @@ Menu * menuGames() {
         MenuApp::Item("Tetris", assets::icons64::tetris, Tetris::run),
         MenuApp::Item("Sliding Puzzle", assets::icons64::mosaic, SlidingPuzzle::run),
         MenuApp::Item("Invaders", assets::icons64::space, GalaxyInvaders::run),
-        MenuApp::Item("Sokoban", assets::icons64::forklift, Sokoban::run),
+        MenuApp::Item("Sokoban", assets::icons64::wooden_box, Sokoban::run),
     };
 }
 

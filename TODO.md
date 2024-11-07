@@ -2,6 +2,8 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
+- add blit that ignores particular color
+
 - verify charging & the new AVR code on a prototype board,2 then put it in the new case
 
 - maybe not use joystick, but keep it as an extra file so that each app can configure it properly, including things like position. But how to integrate with settings? 
@@ -42,10 +44,9 @@
 
 ## GalaxyInvaders
 
-- alien counting does not seem to work well
-
 ## Sokoban
 
+- add new levels, use images 
 
 ## Fantasy
 

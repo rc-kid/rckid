@@ -1080,4 +1080,190 @@ namespace rckid::assets::icons64{
     static constexpr uint8_t bicycle[] = {
         #include "raw/icons64/179-bicycle.png.h"
     };
+
+    // File: 180-wooden-box.png
+    // Size: 3195
+    static constexpr uint8_t wooden_box[] = {
+        #include "raw/icons64/180-wooden-box.png.h"
+    };
+
+    // File: 181-boy.png
+    // Size: 3508
+    static constexpr uint8_t boy[] = {
+        #include "raw/icons64/181-boy.png.h"
+    };
+
+    // File: 182-wall.png
+    // Size: 485
+    static constexpr uint8_t wall[] = {
+        #include "raw/icons64/182-wall.png.h"
+    };
+
+    // File: 183-wall-1.png
+    // Size: 607
+    static constexpr uint8_t wall_1[] = {
+        #include "raw/icons64/183-wall-1.png.h"
+    };
+
+    // File: 184-woman.png
+    // Size: 3877
+    static constexpr uint8_t woman[] = {
+        #include "raw/icons64/184-woman.png.h"
+    };
+
+    // File: 185-girl.png
+    // Size: 4017
+    static constexpr uint8_t girl[] = {
+        #include "raw/icons64/185-girl.png.h"
+    };
+
+    // File: 186-hourglass.png
+    // Size: 2158
+    static constexpr uint8_t hourglass[] = {
+        #include "raw/icons64/186-hourglass.png.h"
+    };
+
+    // File: 187-gps.png
+    // Size: 1402
+    static constexpr uint8_t gps[] = {
+        #include "raw/icons64/187-gps.png.h"
+    };
+
+    // File: 188-gps-1.png
+    // Size: 1507
+    static constexpr uint8_t gps_1[] = {
+        #include "raw/icons64/188-gps-1.png.h"
+    };
+
+    // File: 189-music-note.png
+    // Size: 2091
+    static constexpr uint8_t music_note[] = {
+        #include "raw/icons64/189-music-note.png.h"
+    };
+
+    // File: 190-music-1.png
+    // Size: 3152
+    static constexpr uint8_t music_1[] = {
+        #include "raw/icons64/190-music-1.png.h"
+    };
+
+    // File: 191-red-panda.png
+    // Size: 3693
+    static constexpr uint8_t red_panda[] = {
+        #include "raw/icons64/191-red-panda.png.h"
+    };
+
+    // File: 192-red-panda-1.png
+    // Size: 5156
+    static constexpr uint8_t red_panda_1[] = {
+        #include "raw/icons64/192-red-panda-1.png.h"
+    };
+
+    // File: 193-animal.png
+    // Size: 5182
+    static constexpr uint8_t animal[] = {
+        #include "raw/icons64/193-animal.png.h"
+    };
+
+    // File: 194-animal-1.png
+    // Size: 5279
+    static constexpr uint8_t animal_1[] = {
+        #include "raw/icons64/194-animal-1.png.h"
+    };
+
+    // File: 195-animal-2.png
+    // Size: 5377
+    static constexpr uint8_t animal_2[] = {
+        #include "raw/icons64/195-animal-2.png.h"
+    };
+
+    // File: 196-animal-3.png
+    // Size: 5076
+    static constexpr uint8_t animal_3[] = {
+        #include "raw/icons64/196-animal-3.png.h"
+    };
+
+    // File: 197-animal-4.png
+    // Size: 4958
+    static constexpr uint8_t animal_4[] = {
+        #include "raw/icons64/197-animal-4.png.h"
+    };
+
+    // File: 198-owl-2.png
+    // Size: 1915
+    static constexpr uint8_t owl_2[] = {
+        #include "raw/icons64/198-owl-2.png.h"
+    };
+
+    // File: 199-animal-5.png
+    // Size: 4931
+    static constexpr uint8_t animal_5[] = {
+        #include "raw/icons64/199-animal-5.png.h"
+    };
+
+    // File: 200-calendar.png
+    // Size: 2142
+    static constexpr uint8_t calendar[] = {
+        #include "raw/icons64/200-calendar.png.h"
+    };
+
+    // File: 201-calendar-1.png
+    // Size: 2302
+    static constexpr uint8_t calendar_1[] = {
+        #include "raw/icons64/201-calendar-1.png.h"
+    };
+
+    // File: 202-chat.png
+    // Size: 2658
+    static constexpr uint8_t chat[] = {
+        #include "raw/icons64/202-chat.png.h"
+    };
+
+    // File: 203-chat-1.png
+    // Size: 1115
+    static constexpr uint8_t chat_1[] = {
+        #include "raw/icons64/203-chat-1.png.h"
+    };
+
+    // File: 204-medal.png
+    // Size: 2513
+    static constexpr uint8_t medal[] = {
+        #include "raw/icons64/204-medal.png.h"
+    };
+
+    // File: 205-star.png
+    // Size: 2379
+    static constexpr uint8_t star[] = {
+        #include "raw/icons64/205-star.png.h"
+    };
+
+    // File: 206-money-bag.png
+    // Size: 2500
+    static constexpr uint8_t money_bag[] = {
+        #include "raw/icons64/206-money-bag.png.h"
+    };
+
+    // File: 207-diamond.png
+    // Size: 1983
+    static constexpr uint8_t diamond[] = {
+        #include "raw/icons64/207-diamond.png.h"
+    };
+
+    // File: 208-diamond-1.png
+    // Size: 1747
+    static constexpr uint8_t diamond_1[] = {
+        #include "raw/icons64/208-diamond-1.png.h"
+    };
+
+    // File: 209-diamond-2.png
+    // Size: 1872
+    static constexpr uint8_t diamond_2[] = {
+        #include "raw/icons64/209-diamond-2.png.h"
+    };
+
+    // File: 210-costume.png
+    // Size: 4248
+    static constexpr uint8_t costume[] = {
+        #include "raw/icons64/210-costume.png.h"
+    };
 } // namespace rckid::assets::icons64

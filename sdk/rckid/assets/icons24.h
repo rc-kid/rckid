@@ -12,4 +12,34 @@ namespace rckid::assets::icons24{
     static constexpr uint8_t space[] = {
         #include "raw/icons24/152-space.png.h"
     };
+
+    // File: 180-wooden-box.png
+    // Size: 1448
+    static constexpr uint8_t wooden_box[] = {
+        #include "raw/icons24/180-wooden-box.png.h"
+    };
+
+    // File: 181-boy.png
+    // Size: 1408
+    static constexpr uint8_t boy[] = {
+        #include "raw/icons24/181-boy.png.h"
+    };
+
+    // File: 182-wall.png
+    // Size: 561
+    static constexpr uint8_t wall[] = {
+        #include "raw/icons24/182-wall.png.h"
+    };
+
+    // File: 184-woman.png
+    // Size: 1503
+    static constexpr uint8_t woman[] = {
+        #include "raw/icons24/184-woman.png.h"
+    };
+
+    // File: 187-gps.png
+    // Size: 608
+    static constexpr uint8_t gps[] = {
+        #include "raw/icons24/187-gps.png.h"
+    };
 } // namespace rckid::assets::icons24

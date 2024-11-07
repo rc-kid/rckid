@@ -6,6 +6,7 @@
 #include <rckid/ui/alert.h>
 
 #include <rckid/assets/fonts/OpenDyslexic24.h>
+#include <rckid/assets/icons24.h>
 
 namespace rckid {
 
@@ -23,7 +24,12 @@ namespace rckid {
         }
 
     protected:
-        Sokoban(): GraphicsApp{Canvas<Color>{320, 240}} {}
+        Sokoban(): GraphicsApp{Canvas<Color>{320, 240}} {
+            imgs_[0].loadImage(PNG::fromBuffer(assets::icons24::wall));
+            imgs_[1].loadImage(PNG::fromBuffer(assets::icons24::wooden_box));
+            imgs_[2].loadImage(PNG::fromBuffer(assets::icons24::gps));
+            imgs_[3].loadImage(PNG::fromBuffer(assets::icons24::boy));
+        }
 
         void update() override {
             GraphicsApp::update();
@@ -74,24 +80,26 @@ namespace rckid {
                 case TILE_EMPTY:
                     return;
                 case TILE_WALL:
-                    c = color::Red;
+                    g_.blit(Point{x, y}, imgs_[0]);
+                    return;
                     break;
                 case TILE_FLOOR:
                     c = color::DarkGray;
                     break;
                 case TILE_PLACE:
-                    c = color::LightGray;
-                    break;
+                    g_.blit(Point{x, y}, imgs_[2]);
+                    return;
                 case TILE_CRATE:
                 case TILE_PLACED_CRATE:
-                    c = color::Blue;
-                    break;
+                    g_.blit(Point{x, y}, imgs_[1]);
+                    return;
             }
-            g_.fill(c, Rect::XYWH(x, y, TILE_WIDTH, TILE_HEIGHT));
+            //g_.fill(c, Rect::XYWH(x, y, TILE_WIDTH, TILE_HEIGHT));
         }
 
         void drawPlayer() {
-            g_.fill(color::Green, Rect::XYWH(OFFSETX + player_.x * TILE_WIDTH, OFFSETY + player_.y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT));
+            g_.blit(Point{OFFSETX + player_.x * TILE_WIDTH, OFFSETY + player_.y * TILE_HEIGHT}, imgs_[3]);
+//            g_.fill(color::Green, Rect::XYWH(OFFSETX + player_.x * TILE_WIDTH, OFFSETY + player_.y * TILE_HEIGHT, TILE_WIDTH, TILE_HEIGHT));
         }
 
         void tryMove(Point d) {
@@ -212,6 +220,13 @@ namespace rckid {
         uint32_t totalMoves_;
         Point player_;
         uint8_t map_[COLS * ROWS];
+
+        Bitmap<ColorRGB> imgs_[4] = {
+            Bitmap<ColorRGB>{24, 24},
+            Bitmap<ColorRGB>{24, 24},
+            Bitmap<ColorRGB>{24, 24},
+            Bitmap<ColorRGB>{24, 24},
+        };
 
         static constexpr uint8_t levels_[][COLS * ROWS] = {
             {
