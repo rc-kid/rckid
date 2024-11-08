@@ -36,6 +36,7 @@ include_directories("libs")
 
 add_subdirectory("libs/PNGdec")
 add_subdirectory("libs/FatFS")
+add_subdirectory("libs/littlefs")
 add_subdirectory("libs/libhelix-mp3")
 add_subdirectory("libs/libopus")
 

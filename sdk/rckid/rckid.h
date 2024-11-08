@@ -398,9 +398,23 @@ namespace rckid {
 
     /** \name Cartridge Filsystem access. 
      
-        Provides access to a section of the cartridge flash memory.  
+        Provides access to a section of the cartridge flash memory. Due to the nature of the flash memory on the device, three functions are provided, one for reading a block. The API is tailored for the NOR flash supported by RPI, hence minimal read size of 1 as the flash is memory mapped via XIP on the device, while the write page size and write block size are each different, generally at 256 and 4096 bytes. 
+
+        On the fantasy backend, the flash is emulated by its own file. 
      */
     //@{
+    uint32_t flashSize();
+
+    uint32_t flashWriteSize();
+
+    uint32_t flashEraseSize();
+
+    void flashRead(uint32_t start, uint8_t * buffer, uint32_t numBytes);
+
+    void flashWrite(uint32_t * start, uint8_t const * buffer);
+
+    void flashErase(uint32_t * start);
+
     //@}
 
     /** \name Memory Management

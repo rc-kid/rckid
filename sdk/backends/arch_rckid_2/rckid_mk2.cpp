@@ -8,6 +8,7 @@
 #include "tusb.h"
 #include <hardware/structs/usb.h>
 #include <hardware/uart.h>
+#include <hardware/flash.h>
 
 #include <platform/peripherals/bmi160.h>
 #include <platform/peripherals/ltr390uv.h>
@@ -30,6 +31,11 @@
 
     The V2 backend is rather complicated because of the small number of RP2040 IO pins required an additional MCU - ATTiny3217 that controls power management and input/output (buttons, LEDs, rumbler). See \ref RP2040Pinout for more details on the hardware connections.
  */
+
+extern "C" {
+    extern uint8_t __cartridge_filesystem_start;
+    extern uint8_t __cartridge_filesystem_end;
+}
 
 namespace rckid {
 
@@ -658,6 +664,44 @@ namespace rckid {
     void rumble(RumblerEffect const & effect) {
         sendCommand(cmd::Rumbler(effect));
     }
+
+    // flash
+
+    uint32_t flashSize() {
+        return &__cartridge_filesystem_end - &__cartridge_filesystem_start;
+    }
+
+    uint32_t flashWriteSize() {
+        return FLASH_PAGE_SIZE; // 256
+    }
+
+    uint32_t flashEraseSize() {
+        return FLASH_SECTOR_SIZE; // 4096
+    }
+
+    void flashRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
+        // since flash is memory mapped via XIP, all we need to do is aggregate offset properly 
+        memcpy(buffer, &__cartridge_filesystem_start + start, numBytes);
+    }
+
+    void flashWrite(uint32_t start, uint8_t const * buffer) {
+        ASSERT(start < flashSize());
+        ASSERT(start + FLASH_PAGE_SIZE <= flashSize());
+        uint32_t ints = save_and_disable_interrupts();
+        flash_range_program(reinterpret_cast<uint32_t>((&__cartridge_filesystem_start - XIP_BASE) + start), buffer, FLASH_PAGE_SIZE);
+        restore_interrupts(ints);
+
+    }
+
+    void flashErase(uint32_t start) {
+        ASSERT(start < flashSize());
+        ASSERT(start + FLASH_SECTOR_SIZE <= flashSize());
+        uint32_t ints = save_and_disable_interrupts();
+        flash_range_erase(reinterpret_cast<uint32_t>((&__cartridge_filesystem_start - XIP_BASE) + start), FLASH_SECTOR_SIZE);
+        restore_interrupts(ints);
+    }
+
+
 
     // accelerated functions
     #include "rckid/accelerated.inc.h"

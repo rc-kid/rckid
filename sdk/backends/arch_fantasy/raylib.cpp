@@ -137,9 +137,11 @@ namespace rckid {
         int16_t * audioPlaybackBufferRead_;
         uint8_t audioVolume_ = 10;
 
-        uint32_t sdNumBlocks_;
         std::fstream sdIso_;
+        uint32_t sdNumBlocks_;
 
+        std::fstream flashIso_;
+        uint32_t flashSize_ = 0;
 
         uint64_t nextSecond_;
         TinyDate dateTime_;
@@ -168,6 +170,22 @@ namespace rckid {
         } else {
             LOG("sd.iso file not found, CD card not present");
         }
+        // see if there is flash.iso file so that we can simulate flash storage
+        flashIso_.open("flash.iso", std::ios::in | std::ios::out | std::ios::binary);
+        if (flashIso_.is_open()) {
+            flashIso_.seekg(0, std::ios::end);
+            size_t sizeBytes = flashIso_.tellg();
+            LOG("flash.iso file found, mounting cartridge store - " << sizeBytes << " bytes");
+            if (sizeBytes % 4096 == 0 && sizeBytes != 0) {
+                flashSize_ = sizeBytes;
+                LOG("    size: " << flashSize_);
+            } else {
+                LOG("    invalid file size (multiples of 4096 bytes allowed)");
+            }
+        } else {
+            LOG("flash.iso file not found, cartridge storage not present");
+        }
+
         // enter base arena for the application
         memoryEnterArena();
         // initialize the next second and time & date from systems time and data
@@ -557,6 +575,51 @@ namespace rckid {
         } catch (std::exception const & e) {
             LOG("SD card write error: " << e.what());
             return false;
+        }
+    }
+
+    // flash
+
+    uint32_t flashSize() { return flashSize_; }
+
+    uint32_t flashWriteSize() { return 256; }
+
+    uint32_t flashEraseSize() { return 4096; }
+
+    void flashRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
+        ASSERT(start + numBytes <= flashSize_);
+        try {
+            flashIso_.seekg(start);
+            flashIso_.read(reinterpret_cast<char*>(buffer), numBytes);
+        } catch (std::exception const & e) {
+            LOG("Cartridge flash read error: " << e.what());
+            UNREACHABLE;
+        }
+    }
+
+    void flashWrite(uint32_t start, uint8_t const * buffer) {
+        ASSERT(start % 256 == 0);
+        ASSERT(start + 256 <= flashSize_);
+        try {
+            flashIso_.seekp(start);
+            flashIso_.write(reinterpret_cast<char const *>(buffer), 256);
+        } catch (std::exception const & e) {
+            LOG("Cartridge flash write error: " << e.what());
+            UNREACHABLE;
+        }
+    }
+
+    void flashErase(uint32_t start) {
+        ASSERT(start % 4096 == 0);
+        ASSERT(start + 4096 <= flashSize_);
+        try {
+            flashIso_.seekp(start);
+            uint8_t buffer[4096];
+            std::memset(buffer, 4096, 0xff);
+            flashIso_.write(reinterpret_cast<char const *>(buffer), 4096);
+        } catch (std::exception const & e) {
+            LOG("Cartridge flash erase error: " << e.what());
+            UNREACHABLE;
         }
     }
 

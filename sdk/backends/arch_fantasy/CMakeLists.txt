@@ -21,6 +21,7 @@ function(link_with_librckid target_name)
             librckid
             raylib
             FatFS
+            littlefs
             PNGdec
             ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
         )

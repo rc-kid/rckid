@@ -48,11 +48,8 @@ namespace rckid {
                 "\nGyroZ:   " << gyroZ() << 
                 "\nLight:   " << lightAmbient() << 
                 "\nUV:      " << lightUV(); 
-
-
-
-
-
+            g_.text(160, 40) <<
+                "\nCart FS size " << flashSize();
 
             Header::drawOn(g_);
         }

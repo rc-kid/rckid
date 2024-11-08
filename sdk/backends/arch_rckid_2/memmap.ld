@@ -23,8 +23,8 @@
 
 MEMORY
 {
-    FLASH(rx) : ORIGIN = 0x10000000,  LENGTH = 12288k /* User Flash (12MiB) */
-    FAT(r)    : ORIGIN = 0x10003000,  LENGTH = 4096K  /* Reserved for FAT (4MiB) */
+    FLASH(rx) : ORIGIN = 0x10000000,  LENGTH = 15360k /* User Flash (15MiB) */
+    FILESYSTEM(r)    : ORIGIN = 0x10003c00,  LENGTH = 1024K  /* Reserved for FILESYSTEM (1MiB) */
     RAM(rwx)  : ORIGIN = 0x20000000,  LENGTH = 256k 
     SCRATCH_X(rwx) : ORIGIN = 0x20040000, LENGTH = 4k
     SCRATCH_Y(rwx) : ORIGIN = 0x20041000, LENGTH = 4k
@@ -174,6 +174,11 @@ SECTIONS
         /* All data end */
         __data_end__ = .;
     } > RAM AT> FLASH
+
+    . = ORIGIN(FILESYSTEM);
+    __cartridge_filesystem_start = .;
+    . += LENGTH(FILESYSTEM);
+    __cartridge_filesystem_end = .;
 
     .uninitialized_data (COPY): {
         . = ALIGN(4);
