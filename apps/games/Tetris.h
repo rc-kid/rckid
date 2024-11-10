@@ -15,11 +15,7 @@ namespace rckid {
 
         TODO
 
-        - calculate score, print level, etc. 
-        - move down, 
-        - figure out game over
         - add effects? 
-        - add game over 
         
      */
     class Tetris : public GraphicsApp<Canvas<ColorRGB>> {
@@ -35,14 +31,15 @@ namespace rckid {
 
         Tetris(): GraphicsApp{Canvas<Color>{320, 240}} {
             using namespace filesystem;
-            hof_.add("Ariel", 30000);
-            hof_.add("Rapunzel", 20000);
-            hof_.add("Jaffar", 10000);
-            hof_.add("Noone", 1);
-            //FileWrite f = fileWrite("tetris.hof", Drive::Cartridge);
-            //hof_.serializeTo(f);
-            //FileRead f = fileRead("tetris.hof", Drive::Cartridge);
-            //hof_.deserializeFrom(f);
+            FileRead f = fileRead("tetris.hof", Drive::Cartridge);
+            if (f.good()) {
+                hof_.deserializeFrom(f);
+            } else {
+                hof_.add("Ariel", 30000);
+                hof_.add("Rapunzel", 20000);
+                hof_.add("Jaffar", 10000);
+                hof_.add("Noone", 1);
+            }
         }
 
         void update() override {
@@ -219,10 +216,15 @@ namespace rckid {
             TODO store high score, etc.          
          */
         void gameOver() {
+            using namespace filesystem;
             if (hof_.isHighEnough(score_)) {
                 auto name = runModal<TextInput>();
-                if (name)
+                if (name) {
                     hof_.add(name.value(), score_);
+                    // update the hall of fame
+                    FileWrite f = fileWrite("tetris.hof", Drive::Cartridge);
+                    hof_.serializeTo(f);
+                }
             } else {
                 runModal<Alert>("GAME OVER", "Press A to continue...", ColorRGB{32, 0, 0});
             }

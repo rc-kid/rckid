@@ -548,8 +548,10 @@ namespace rckid {
     bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {
         ASSERT(sdNumBlocks_ != 0);
         try {
+            systemMalloc_ = true;
             sdIso_.seekg(start * 512);
             sdIso_.read(reinterpret_cast<char*>(buffer), numBlocks * 512);
+            systemMalloc_ = false;
             return true;
         } catch (std::exception const & e) {
             LOG("SD card read error: " << e.what());
@@ -560,8 +562,10 @@ namespace rckid {
     bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks) {
         ASSERT(sdNumBlocks_ != 0);
         try {
+            systemMalloc_ = true;
             sdIso_.seekp(start * 512);
             sdIso_.write(reinterpret_cast<char const *>(buffer), numBlocks * 512);
+            systemMalloc_ = false;
             return true;
         } catch (std::exception const & e) {
             LOG("SD card write error: " << e.what());
@@ -580,8 +584,10 @@ namespace rckid {
     void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
         ASSERT(start + numBytes <= flashSize_);
         try {
+            systemMalloc_ = true;
             flashIso_.seekg(start);
             flashIso_.read(reinterpret_cast<char*>(buffer), numBytes);
+            systemMalloc_ = false;
         } catch (std::exception const & e) {
             LOG("Cartridge flash read error: " << e.what());
             UNREACHABLE;
@@ -593,7 +599,9 @@ namespace rckid {
         ASSERT(start + 256 <= flashSize_);
         try {
             flashIso_.seekp(start);
+            systemMalloc_ = true;
             flashIso_.write(reinterpret_cast<char const *>(buffer), 256);
+            systemMalloc_ = false;
         } catch (std::exception const & e) {
             LOG("Cartridge flash write error: " << e.what());
             UNREACHABLE;
@@ -607,7 +615,9 @@ namespace rckid {
             flashIso_.seekp(start);
             uint8_t buffer[4096];
             std::memset(buffer, 4096, 0xff);
+            systemMalloc_ = true;
             flashIso_.write(reinterpret_cast<char const *>(buffer), 4096);
+            systemMalloc_ = false;
         } catch (std::exception const & e) {
             LOG("Cartridge flash erase error: " << e.what());
             UNREACHABLE;

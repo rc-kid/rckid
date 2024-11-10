@@ -94,6 +94,9 @@ extern "C" {
     }
 
     void __wrap_free(void * ptr) {
+        // deleting nullptr is noop        
+        if (ptr == nullptr)
+            return;
         // check that we are freeing memory that is higher than the current arena, otherwise we are freeing from a previous arena which is wrong
         ASSERT(ptr > arena); 
         ++freeCalls;

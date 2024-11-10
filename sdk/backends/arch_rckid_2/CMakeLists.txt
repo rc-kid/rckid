@@ -33,6 +33,8 @@ function(link_with_librckid target_name)
         hardware_spi
         hardware_dma
         hardware_pwm
+        hardware_sync
+        hardware_flash
         tinyusb_board
         tinyusb_device
         FatFS

@@ -103,11 +103,12 @@
 
 // CDC FIFO size of TX and RX
 #define CFG_TUD_CDC_RX_BUFSIZE   64
-#define CFG_TUD_CDC_TX_BUFSIZE   64
+//#define CFG_TUD_CDC_TX_BUFSIZE   64
+#define CFG_TUD_CDC_TX_BUFSIZE   1024
 
 // CDC Endpoint transfer buffer size, more is faster
-//#define CFG_TUD_CDC_EP_BUFSIZE   64
-#define CFG_TUD_CDC_EP_BUFSIZE   512
+#define CFG_TUD_CDC_EP_BUFSIZE   64
+//#define CFG_TUD_CDC_EP_BUFSIZE   4096
 
 // MSC Buffer size of Device Mass storage
 #define CFG_TUD_MSC_EP_BUFSIZE   512
