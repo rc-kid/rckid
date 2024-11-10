@@ -16,6 +16,20 @@ namespace rckid {
         /** Reads up to bufferSize bytes from the stream. Returns the actual number of bytes read. 
          */
         virtual uint32_t read(uint8_t * buffer, uint32_t bufferSize) = 0;
+
+        uint8_t read() {
+            uint8_t result;
+            bool res = read(& result, 1);
+            ASSERT(res == 1);
+            return result;
+        }
+
+        /** Deserializes value of the specified type from the stream. 
+         
+            Those methods form a counterpart to the WriteStream::serialize. 
+         */
+        template<typename T>
+        T deserialize(); 
     }; // rckid::InStream
 
     /** Simplest write stream interface. 
@@ -25,7 +39,7 @@ namespace rckid {
     class WriteStream {
     public:
         virtual ~WriteStream() = default;
-        
+
         /** Writes the given buffer to the stream. Returns the numbed of bytes written, which should be identical to bufferSize on success. 
          */
         virtual uint32_t write(uint8_t const * buffer, uint32_t bufferSize) = 0;
@@ -45,7 +59,14 @@ namespace rckid {
             });
         }
 
-    }; // rckid::OutStream
+        /** Serializes the given value into the writer using a binary format 
+         
+            Specializations are provided for different types and can be extended further by providing template specializations.
+        */
+        template<typename T>
+        void serialize(T const & what); 
+
+    }; // rckid::WriteStream
 
     /** Random read stream. 
      
@@ -115,5 +136,60 @@ namespace rckid {
         uint32_t bufferSize_;
         uint32_t pos_;
     }; // rckid::MemoryReadStream
+
+
+
+
+
+
+    // serialization of uint8_t 
+    template<>
+    inline void WriteStream::serialize<uint8_t>(uint8_t const & what) {
+        write(what);
+    }
+
+    template<>
+    inline uint8_t ReadStream::deserialize<uint8_t>() {
+        return read();
+    }
+
+    // serialization of uint16_t 
+    template<>
+    inline void WriteStream::serialize<uint16_t>(uint16_t const & what) {
+        serialize<uint8_t>(what & 0xff);
+        serialize<uint8_t>(what >> 8);
+    }
+
+    template<>
+    inline uint16_t ReadStream::deserialize<uint16_t>() {
+        return deserialize<uint8_t>() + (deserialize<uint8_t>() << 8);
+    }
+
+    // serialization of uint32_t 
+    template<>
+    inline void WriteStream::serialize<uint32_t>(uint32_t const & what) {
+        serialize<uint16_t>(what & 0xffff);
+        serialize<uint16_t>(what >> 16);
+    }
+
+    template<>
+    inline uint32_t ReadStream::deserialize<uint32_t>() {
+        return deserialize<uint16_t>() + (deserialize<uint16_t>() << 16);
+    }
+
+    // serialization of std::string - first serialize uint32_t length, followed by the array itself
+    template<>
+    inline void WriteStream::serialize(std::string const & what) {
+        serialize<uint32_t>(what.size());
+        write(reinterpret_cast<uint8_t const *>(what.data()), what.size());
+    }
+
+    template<>
+    inline std::string ReadStream::deserialize<std::string>() {
+        uint32_t size = deserialize<uint32_t>();
+        std::string result(size, ' ');
+        read(reinterpret_cast<uint8_t*>(result.data()), size);
+        return result;
+    }
 
 } // namespace rckid
