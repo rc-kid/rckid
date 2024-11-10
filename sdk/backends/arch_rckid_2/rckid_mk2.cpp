@@ -305,6 +305,9 @@ namespace rckid {
         // initialize the SD card
         sdInitialize();
 
+        // initialize the filesystem
+        filesystem::initialize();
+
         // enter base arena for the application
         memoryEnterArena();
 
