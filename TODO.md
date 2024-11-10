@@ -2,6 +2,12 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
+- load filesystems from SD and from cartridge during initialization - then we can unload them during the file transfer
+- change API in filesystem to always take drive into account as well
+- write directory reader classes for FatFS and littlefs
+
+- add fancy font & writing with changing hue - maybe generic way with a function to change the hue based on some value
+
 - add blit that ignores particular color
 
 - verify charging & the new AVR code on a prototype board,2 then put it in the new case

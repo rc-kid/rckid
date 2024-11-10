@@ -403,17 +403,17 @@ namespace rckid {
         On the fantasy backend, the flash is emulated by its own file. 
      */
     //@{
-    uint32_t flashSize();
+    uint32_t cartridgeCapacity();
 
-    uint32_t flashWriteSize();
+    uint32_t cartridgeWriteSize();
 
-    uint32_t flashEraseSize();
+    uint32_t cartridgeEraseSize();
 
-    void flashRead(uint32_t start, uint8_t * buffer, uint32_t numBytes);
+    void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes);
 
-    void flashWrite(uint32_t * start, uint8_t const * buffer);
+    void cartridgeWrite(uint32_t start, uint8_t const * buffer);
 
-    void flashErase(uint32_t * start);
+    void cartridgeErase(uint32_t start);
 
     //@}
 

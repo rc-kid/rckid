@@ -64,50 +64,214 @@ extern "C" {
     DWORD get_fattime() {
         return 0;
     }
+
+    // lfs wrappers for the RCKid cartridge interface
+
+    int lfs_device_read(lfs_config const * c, lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size) {
+        TRACE_LITTLEFS("Reading " << size << " from block " << block << ", offset " << off);
+        rckid::cartridgeRead(block * c->block_size + off, reinterpret_cast<uint8_t *>(buffer), size);
+        return 0;
+    }
+
+    int lfs_device_write(lfs_config const * c, lfs_block_t block, lfs_off_t off, void const * buffer, lfs_size_t size) {
+        ASSERT(size == rckid::cartridgeWriteSize());
+        TRACE_LITTLEFS("Writing " << size << " from block " << block << ", offset " << off);
+        rckid::cartridgeWrite(block * c->block_size + off, reinterpret_cast<uint8_t const *>(buffer));
+        return 0;
+    }
+
+    int lfs_device_erase(lfs_config const * c, lfs_block_t block) {
+        TRACE_LITTLEFS("Erasing block " << block);
+        rckid::cartridgeErase(static_cast<uint32_t>(block * c->block_size));
+        return 0;
+    }
+
+    int lfs_device_sync([[maybe_unused]] lfs_config const * c) {
+        TRACE_LITTLEFS("Sync");
+        return 0;
+    }
 }
 
 namespace rckid::filesystem {
 
     namespace {
         FATFS * fs_ = nullptr;
+
+        lfs_t lfs_;
+        lfs_config lfsCfg_;
     }
 
-    bool format(Filesystem fs) {
-        MKFS_PARM opts;
-        switch (fs) {
-            case Filesystem::FAT16:
-                opts.fmt = FM_FAT;
+    void initialize() {
+        memset(& lfs_, 0, sizeof(lfs_t));
+        memset(& lfsCfg_, 0, sizeof(lfs_config));
+        // initialize LittleFS settings for the cartridge
+        // block device operations
+        lfsCfg_.read  = lfs_device_read;
+        lfsCfg_.prog  = lfs_device_write;
+        lfsCfg_.erase = lfs_device_erase;
+        lfsCfg_.sync  = lfs_device_sync;
+        // block device configuration
+        lfsCfg_.read_size = 1;
+        lfsCfg_.prog_size = cartridgeWriteSize();
+        lfsCfg_.block_size = cartridgeEraseSize();
+        lfsCfg_.block_count = cartridgeCapacity() / lfsCfg_.block_size;
+        lfsCfg_.cache_size = cartridgeWriteSize();
+        lfsCfg_.lookahead_size = 32;
+        lfsCfg_.block_cycles = 500;
+        // if the capacity is non-zero, mount the cartridge filesystem
+        if (cartridgeCapacity() != 0) {
+            TRACE_LITTLEFS("Mounting cartridge flahs storage");
+            if (! mount(Drive::Cartridge)) {
+                TRACE_LITTLEFS("Mount failed, formatting...");
+                format(Drive::Cartridge);
+                TRACE_LITTLEFS("Re-mounting after format");
+                mount(Drive::Cartridge);
+            }
+        }
+    }
+
+    uint32_t FileRead::size() const {
+        switch (drive_) {
+            case Drive::SD:
+               return f_size(&sd_);
+            case Drive::Cartridge:
+                return lfs_file_size(& lfs_, const_cast<lfs_file_t*>(& cart_));
+            default:
+                return 0;
+        }
+    }
+
+    uint32_t FileRead::seek(uint32_t position) {
+        switch (drive_) {
+            case Drive::SD:
+                f_lseek(& sd_, position);
+                return sd_.fptr;
+            case Drive::Cartridge:
+                lfs_file_seek(& lfs_, & cart_, position, 0);
+                return lfs_file_tell(& lfs_, & cart_);
+            default:
+                ASSERT(false); // seeking invalid file is not allowed
+        }
+    }
+
+    uint32_t FileRead::read(uint8_t * buffer, uint32_t numBytes) {
+            switch (drive_) {
+                case Drive::SD: {
+                    UINT bytesRead = 0;
+                    f_read(& sd_, buffer, numBytes, & bytesRead);
+                    return bytesRead;
+                }
+                case Drive::Cartridge:
+                    return lfs_file_read(& lfs_, & cart_, buffer, numBytes);
+                default:
+                    ASSERT(false); // trying to read from invalid file
+            }
+    }
+
+    FileRead::~FileRead() {
+        switch (drive_) {
+            case Drive::SD:
+                f_close(& sd_);
                 break;
-            case Filesystem::FAT32:
-                opts.fmt = FM_FAT32;
-                break;
-            case Filesystem::exFAT:
-                opts.fmt = FM_EXFAT;
+            case Drive::Cartridge:
+                lfs_file_close(& lfs_, & cart_);
                 break;
             default:
-                ASSERT(fs != Filesystem::Unrecognized);
-                UNREACHABLE;
+                break;
         }
-        opts.n_fat = 0; 
-        opts.align = 0;
-        opts.n_root = 0;
-        opts.au_size = 0;
-        BYTE work[FF_MAX_SS];
-        return f_mkfs("", & opts, work, FF_MAX_SS) == FR_OK;
     }
 
-    bool mount() {
-        if (fs_ != nullptr) {
-            LOG("Filesystem already mounted");
-            return true;
+    // FileWrite 
+
+    uint32_t FileWrite::write(uint8_t const * buffer, uint32_t numBytes) {
+        switch (drive_) {
+            case Drive::SD: {
+                UINT bytesWritten = 0; 
+                f_write(& sd_, buffer, numBytes, & bytesWritten);
+                return bytesWritten;
+            }
+            case Drive::Cartridge:
+                return lfs_file_write(& lfs_, & cart_, buffer, numBytes);
+            default:
+                ASSERT(false); // writing invalid file
         }
-        fs_ = (FATFS*) rckid::malloc(sizeof(FATFS));
-        return f_mount(fs_, "", /* mount immediately */ 1) == FR_OK;
     }
 
-    void unmount() {
-        f_unmount("");
-        rckid::free(fs_);
+    FileWrite::~FileWrite() {
+        switch (drive_) {
+            case Drive::SD:
+                f_close(& sd_);
+                break;
+            case Drive::Cartridge:
+                lfs_file_close(& lfs_, & cart_);
+                break;
+            default:
+                break;
+        }
+    }
+
+
+    bool format(Drive dr) {
+        switch (dr) {
+            case Drive::SD: {
+                MKFS_PARM opts;
+                opts.fmt = FM_EXFAT;
+                opts.n_fat = 0; 
+                opts.align = 0;
+                opts.n_root = 0;
+                opts.au_size = 0;
+                BYTE work[FF_MAX_SS];
+                return f_mkfs("", & opts, work, FF_MAX_SS) == FR_OK;
+            }
+            case Drive::Cartridge: {
+                int ok = lfs_format(&lfs_, & lfsCfg_);
+                lfs_.cfg = nullptr;
+                return ok == 0;
+            }
+            default:
+                ASSERT(false); // won't format invalid drive
+        }
+    }
+
+    bool mount(Drive dr) {
+        switch (dr) {
+            case Drive::SD: {
+                if (fs_ != nullptr) {
+                    LOG("SD already mounted");
+                    return true;
+                }
+                fs_ = (FATFS*) rckid::malloc(sizeof(FATFS));
+                return f_mount(fs_, "", /* mount immediately */ 1) == FR_OK;
+            }
+            case Drive::Cartridge:
+                if (lfs_.cfg == & lfsCfg_) {
+                    LOG("Cartridge already mounted");
+                    return true;
+                }
+                if (lfs_mount(&lfs_, &lfsCfg_) != 0) {
+                    TRACE_LITTLEFS("Mounting cartridge failed");
+                    lfs_.cfg = nullptr;
+                    return false;
+                }
+                return true;
+            default:
+                ASSERT(false); // invalid drive
+        }
+    }
+
+    void unmount(Drive dr) {
+        switch (dr) {
+            case Drive::SD:
+                f_unmount("");
+                rckid::free(fs_);
+                break;
+            case Drive::Cartridge:
+                lfs_unmount(&lfs_);
+                lfs_->cfg = nullptr;
+                break;
+            default:
+                ASSERT(false); // invalid drive
+        }
     }
 
     uint64_t getCapacity() {
@@ -160,5 +324,65 @@ namespace rckid::filesystem {
             return false;
         return f.fname[0] != 0 && ! (f.fattrib & AM_DIR);        
     }
+
+    // file read, write and append operations
+
+    FileRead fileRead(char const * filename, Drive dr) {
+        FileRead result;
+        switch (dr) {
+            case Drive::SD: {
+                if (f_open(& result.sd_, filename, FA_READ) == FR_OK)
+                    result.drive_ = dr;
+                break;
+            }
+            case Drive::Cartridge: {
+                if (lfs_file_open(& lfs_, & result.cart_, filename, LFS_O_RDONLY) >= 0)
+                    result.drive_ = dr;
+                break;
+            }
+            default:
+                UNREACHABLE;
+        }
+        return result;
+    }
+
+    FileWrite fileWrite(char const * filename, Drive dr) {
+        FileWrite result;
+        switch (dr) {
+            case Drive::SD: {
+                if (f_open(& result.sd_, filename, FA_WRITE) == FR_OK)
+                    result.drive_ = dr;
+                break;
+            }
+            case Drive::Cartridge: {
+                if (lfs_file_open(& lfs_, & result.cart_, filename, LFS_O_WRONLY) >= 0)
+                    result.drive_ = dr;
+                break;
+            }
+            default:
+                UNREACHABLE;
+        }
+        return result;
+    }
+
+    FileWrite fileAppend(char const * filename, Drive dr) {
+        FileWrite result;
+        switch (dr) {
+            case Drive::SD: {
+                if (f_open(& result.sd_, filename, FA_WRITE | FA_OPEN_APPEND) == FR_OK)
+                    result.drive_ = dr;
+                break;
+            }
+            case Drive::Cartridge: {
+                if (lfs_file_open(& lfs_, & result.cart_, filename, LFS_O_WRONLY | LFS_O_APPEND) >= 0)
+                    result.drive_ = dr;
+                break;
+            }
+            default:
+                UNREACHABLE;
+        }
+        return result;
+    }
+
 
 } // namespace rckid::filesystem

@@ -17,6 +17,7 @@
 
 //#define TRACE_MENU_APP
 //#define TRACE_MEMORY
+#define TRACE_LITTLEFS
 
 #if !defined TRACE_MENU_APP
     #define TRACE_MENU_APP(...)
@@ -39,4 +40,12 @@
     #undef TRACE_TONE
     #define TRACE_TONE(...) TRACE("memory:" << __VA_ARGS__)
 #endif
+
+#if !defined TRACE_LITTLEFS
+    #define TRACE_LITTLEFS(...)
+#else
+    #undef TRACE_LITTLEFS
+    #define TRACE_LITTLEFS(...) TRACE("littlefs:" << __VA_ARGS__)
+#endif
+
 

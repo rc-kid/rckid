@@ -1,96 +1,132 @@
 #pragma once
 #include "FatFS/ff.h"
+#include "littlefs/lfs.h"
 
 #include "rckid.h"
 #include "utils/stream.h"
 
 namespace rckid::filesystem {
 
+    /** RCKid supports two filesystems, SD card and a pieces of the flash memory inside cartridge. 
+     */
+    enum class Drive {
+        SD,
+        Cartridge, 
+        Invalid,
+    }; 
+    
     /** Possible filesystem formats understood by the SDK. 
      */
     enum class Filesystem {
+        FAT12,
         FAT16,
         FAT32,
-        exFAT, 
+        exFAT,
+        LittleFS, 
         Unrecognized
     };
 
-    class FileReadStream : public RandomReadStream {
-    public:
-
-        static FileReadStream open(char const * filename) {
-            FileReadStream result;
-            f_open(& result.f_, filename, FA_READ);
-            return result;
-        }
-
-        ~FileReadStream() {
-            f_close(& f_);
-        }
-
-        bool good() const  { return f_.obj.fs != nullptr; }
-
-        uint32_t size() const override { return f_size(& f_); }
-
-        uint32_t seek(uint32_t position) override {
-            f_lseek(& f_, position);
-            return f_.fptr;
-        }
-
-        uint32_t read(uint8_t * buffer, uint32_t bufferSize) override {
-            UINT bytesRead = 0;
-            f_read(& f_, buffer, bufferSize, & bytesRead);
-            return bytesRead;
-        }
-
-    private:
-        FIL f_;
-    };
-
-    class FileWriteStream : public WriteStream {
-    public:
-
-        static FileWriteStream open(char const * filename, bool append = false) {
-            FileWriteStream result;
-            f_open(& result.f_, filename, FA_WRITE | append ? 0 : FA_OPEN_APPEND);
-            return result;
-        }
-
-        ~FileWriteStream() {
-            f_close(& f_);
-        }
-
-
-        bool good() const  { return f_.obj.fs != nullptr; }
-
-        uint32_t write(uint8_t const * buffer, uint32_t bufferSize) override {
-            UINT bytesWritten = 0; 
-            f_write(& f_, buffer, bufferSize, & bytesWritten);
-            return bytesWritten;
-        }
-
-    private:
-        FIL f_;
-    };
-
-
-    /** Formats the SD card to given filesystem. 
-     
-        Requires the card to be not mounted. 
+    /** File with read-only access. 
      */
-    bool format(Filesystem fs);
+    class FileRead : public RandomReadStream {
+    public:
+        uint32_t size() const override;
+
+        uint32_t seek(uint32_t position) override;
+
+        uint32_t read(uint8_t * buffer, uint32_t numBytes) override;
+
+        ~FileRead() override;
+
+        FileRead(FileRead && from):
+            drive_{from.drive_} {
+            switch (drive_) {
+                case Drive::SD:
+                    sd_ = from.sd_;
+                    break;
+                case Drive::Cartridge:
+                    cart_ = from.cart_;
+                    break;
+                default:
+                    break;
+            }
+            from.drive_ = Drive::Invalid;
+        }
+
+    private:
+
+        friend FileRead fileRead(char const * filename, Drive dr);
+
+        FileRead():
+            drive_{Drive::Invalid} {
+        }
+        Drive drive_;
+        union {
+            FIL sd_;
+            lfs_file_t cart_;
+        };
+    }; 
+
+    /** File with write access. 
+     */
+    class FileWrite : public WriteStream {
+    public:
+
+        uint32_t write(uint8_t const * buffer, uint32_t numBytes) override;
+
+        ~FileWrite() override;
+
+        FileWrite(FileWrite && from):
+            drive_{from.drive_} {
+            switch (drive_) {
+                case Drive::SD:
+                    sd_ = from.sd_;
+                    break;
+                case Drive::Cartridge:
+                    cart_ = from.cart_;
+                    break;
+                default:
+                    break;
+            }
+            from.drive_ = Drive::Invalid;
+        }
+
+    private:
+
+        friend FileWrite fileWrite(char const * filename, Drive dr);
+        friend FileWrite fileAppend(char const * filename, Drive dr);
+
+        FileWrite():
+            drive_{Drive::Invalid} {
+        }
+        Drive drive_;
+        union {
+            FIL sd_;
+            lfs_file_t cart_;
+        };
+    };
+
+
+
+    /** Formats the drive. 
+     
+        For the SD card, formats the card using the ExFAT filesystem, while LittleFS is used for cartridge's flash memory where wear levelling is important. 
+
+        NOTE that the drive can only be formatted when not mounted. 
+     */
+    bool format(Drive dr = Drive::SD); 
 
     /** Mounts the SD card. 
      
         Returns true if the card was mounted (i.e. the card is present and its format has been understood), false otherwise (no SD card or corrupted data). 
      */
-    bool mount();
+    bool mount(Drive dr = Drive::SD);
 
     /** Unmounts previously mounted SD card. 
      
         No-op if the card is currently not mounted. 
      */
-    void unmount();
+    void unmount(Drive dr = Drive::SD);
 
     /** Returns the capacity of the mounted SD card in bytes. 
      */
@@ -123,5 +159,15 @@ namespace rckid::filesystem {
     /** Returns true if the given path is a valid directory. 
      */
     bool isFile(char const * path); 
+
+
+    /** Opens given file for reading. 
+     */
+    FileRead fileRead(char const * filename, Drive dr = Drive::SD);
+
+    FileWrite fileWrite(char const * filename, Drive dr = Drive::SD);
+
+    FileWrite fileAppend(char const * filename, Drive dr = Drive::SD);
+
 
 } // namespace rckid::filesystem
