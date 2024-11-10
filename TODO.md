@@ -2,6 +2,10 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
+- text input should distinguish between returning and cancel, currently no provision for that in code
+
+- hall of fame and others can be apps of their own that just reuse the canvas from previous run, but delegate the controls? How though
+
 - load filesystems from SD and from cartridge during initialization - then we can unload them during the file transfer
 - change API in filesystem to always take drive into account as well
 - write directory reader classes for FatFS and littlefs
