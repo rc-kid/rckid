@@ -8,6 +8,7 @@
 #include "header.h"
 #include "menu.h"
 #include "carousel.h"
+#include "../filesystem.h"
 
 #include "text_input.h"
 
@@ -113,11 +114,15 @@ namespace rckid {
             if (btnPressed(Btn::VolumeDown))
                 audioSetVolume(audioVolume() - 1);
             if (btnPressed(Btn::Select)) {
+                using namespace filesystem;
+                format(Drive::Cartridge);
+                /*
                 if (displayBrightness() == 0)
                     displaySetBrightness(128);
                 else if (displayBrightness() == 128)
                     displaySetBrightness(255);
                 else displaySetBrightness(0);
+                */
             }
             if (carousel_->idle()) {
                 if (btnDown(Btn::Left))

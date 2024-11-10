@@ -120,7 +120,7 @@ namespace rckid::filesystem {
         lfsCfg_.block_cycles = 500;
         // if the capacity is non-zero, mount the cartridge filesystem
         if (cartridgeCapacity() != 0) {
-            TRACE_LITTLEFS("Mounting cartridge flahs storage");
+            TRACE_LITTLEFS("Mounting cartridge flash storage");
             if (! mount(Drive::Cartridge)) {
                 TRACE_LITTLEFS("Mount failed, formatting...");
                 format(Drive::Cartridge);

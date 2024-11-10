@@ -16,6 +16,8 @@ else()
     # Pull in SDK (must be before project)
     include(${CMAKE_SOURCE_DIR}/sdk/backends/arch_rckid/pico-sdk/pico_sdk_init.cmake)
     project(rckid C CXX ASM)
+    # Tell pico SDK we are using 16MB cartridges
+    add_compile_definitions(PICO_FLASH_SIZE_BYTES=16777216)
     pico_sdk_init()
     if (PICO_SDK_VERSION_STRING VERSION_LESS "2.0.0")
         message(FATAL_ERROR "Raspberry Pi Pico SDK version 2.0.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")

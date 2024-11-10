@@ -6,9 +6,12 @@
 #include <bsp/board.h>
 #include "tusb_config.h"
 #include "tusb.h"
-#include <hardware/structs/usb.h>
-#include <hardware/uart.h>
-#include <hardware/flash.h>
+
+extern "C" {
+    #include <hardware/structs/usb.h>
+    #include <hardware/uart.h>
+    #include <hardware/flash.h>
+}
 
 #include <platform/peripherals/bmi160.h>
 #include <platform/peripherals/ltr390uv.h>
@@ -684,23 +687,28 @@ namespace rckid {
 
     void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
         // since flash is memory mapped via XIP, all we need to do is aggregate offset properly 
-        memcpy(buffer, &__cartridge_filesystem_start + start, numBytes);
+        memcpy(buffer, XIP_NOCACHE_NOALLOC_BASE + (&__cartridge_filesystem_start - XIP_BASE) + start, numBytes);
     }
 
-    void cartridgeWrite(uint32_t start, uint8_t const * buffer) {
+    void __not_in_flash_func(cartridgeWrite)(uint32_t start, uint8_t const * buffer) {
         ASSERT(start < cartridgeCapacity());
         ASSERT(start + FLASH_PAGE_SIZE <= cartridgeCapacity());
+        uint32_t offset = reinterpret_cast<uint32_t>(& __cartridge_filesystem_start) - XIP_BASE + start;
+        TRACE_LITTLEFS("flash_range_program(" << offset << ", " << FLASH_PAGE_SIZE << ") - start " << start);
         uint32_t ints = save_and_disable_interrupts();
-        flash_range_program(reinterpret_cast<uint32_t>((&__cartridge_filesystem_start - XIP_BASE) + start), buffer, FLASH_PAGE_SIZE);
+        flash_range_program(offset, buffer, FLASH_PAGE_SIZE);
         restore_interrupts(ints);
-
     }
 
-    void cartridgeErase(uint32_t start) {
+    void __not_in_flash_func(cartridgeErase)(uint32_t start) {
         ASSERT(start < cartridgeCapacity());
         ASSERT(start + FLASH_SECTOR_SIZE <= cartridgeCapacity());
+        uint32_t offset = reinterpret_cast<uint32_t>(& __cartridge_filesystem_start) - XIP_BASE + start;
+        //TRACE_LITTLEFS("cart_fs_start: " << (uint32_t)(& __cartridge_filesystem_start));         
+        //TRACE_LITTLEFS("XIP_BASE:      " << (uint32_t)(XIP_BASE));
+        TRACE_LITTLEFS("flash_range_erase(" << offset << ", " << FLASH_SECTOR_SIZE << ") -- start " << start);
         uint32_t ints = save_and_disable_interrupts();
-        flash_range_erase(reinterpret_cast<uint32_t>((&__cartridge_filesystem_start - XIP_BASE) + start), FLASH_SECTOR_SIZE);
+        flash_range_erase(offset, FLASH_SECTOR_SIZE);
         restore_interrupts(ints);
     }
 
