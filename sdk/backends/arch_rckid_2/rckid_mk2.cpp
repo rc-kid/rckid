@@ -685,8 +685,8 @@ namespace rckid {
     }
 
     void cartridgeWrite(uint32_t start, uint8_t const * buffer) {
-        ASSERT(start < flashSize());
-        ASSERT(start + FLASH_PAGE_SIZE <= flashSize());
+        ASSERT(start < cartridgeCapacity());
+        ASSERT(start + FLASH_PAGE_SIZE <= cartridgeCapacity());
         uint32_t ints = save_and_disable_interrupts();
         flash_range_program(reinterpret_cast<uint32_t>((&__cartridge_filesystem_start - XIP_BASE) + start), buffer, FLASH_PAGE_SIZE);
         restore_interrupts(ints);
@@ -694,8 +694,8 @@ namespace rckid {
     }
 
     void cartridgeErase(uint32_t start) {
-        ASSERT(start < flashSize());
-        ASSERT(start + FLASH_SECTOR_SIZE <= flashSize());
+        ASSERT(start < cartridgeCapacity());
+        ASSERT(start + FLASH_SECTOR_SIZE <= cartridgeCapacity());
         uint32_t ints = save_and_disable_interrupts();
         flash_range_erase(reinterpret_cast<uint32_t>((&__cartridge_filesystem_start - XIP_BASE) + start), FLASH_SECTOR_SIZE);
         restore_interrupts(ints);

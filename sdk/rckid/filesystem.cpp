@@ -132,9 +132,9 @@ namespace rckid::filesystem {
 
     uint32_t FileRead::size() const {
         switch (drive_) {
-            case Drive::SD:
+            case static_cast<unsigned>(Drive::SD):
                return f_size(&sd_);
-            case Drive::Cartridge:
+            case static_cast<unsigned>(Drive::Cartridge):
                 return lfs_file_size(& lfs_, const_cast<lfs_file_t*>(& cart_));
             default:
                 return 0;
@@ -143,10 +143,10 @@ namespace rckid::filesystem {
 
     uint32_t FileRead::seek(uint32_t position) {
         switch (drive_) {
-            case Drive::SD:
+            case static_cast<unsigned>(Drive::SD):
                 f_lseek(& sd_, position);
                 return sd_.fptr;
-            case Drive::Cartridge:
+            case static_cast<unsigned>(Drive::Cartridge):
                 lfs_file_seek(& lfs_, & cart_, position, 0);
                 return lfs_file_tell(& lfs_, & cart_);
             default:
@@ -156,12 +156,12 @@ namespace rckid::filesystem {
 
     uint32_t FileRead::read(uint8_t * buffer, uint32_t numBytes) {
             switch (drive_) {
-                case Drive::SD: {
+                case static_cast<unsigned>(Drive::SD): {
                     UINT bytesRead = 0;
                     f_read(& sd_, buffer, numBytes, & bytesRead);
                     return bytesRead;
                 }
-                case Drive::Cartridge:
+                case static_cast<unsigned>(Drive::Cartridge):
                     return lfs_file_read(& lfs_, & cart_, buffer, numBytes);
                 default:
                     ASSERT(false); // trying to read from invalid file
@@ -170,10 +170,10 @@ namespace rckid::filesystem {
 
     FileRead::~FileRead() {
         switch (drive_) {
-            case Drive::SD:
+            case static_cast<unsigned>(Drive::SD):
                 f_close(& sd_);
                 break;
-            case Drive::Cartridge:
+            case static_cast<unsigned>(Drive::Cartridge):
                 lfs_file_close(& lfs_, & cart_);
                 break;
             default:
@@ -185,12 +185,12 @@ namespace rckid::filesystem {
 
     uint32_t FileWrite::write(uint8_t const * buffer, uint32_t numBytes) {
         switch (drive_) {
-            case Drive::SD: {
+            case static_cast<unsigned>(Drive::SD): {
                 UINT bytesWritten = 0; 
                 f_write(& sd_, buffer, numBytes, & bytesWritten);
                 return bytesWritten;
             }
-            case Drive::Cartridge:
+            case static_cast<unsigned>(Drive::Cartridge):
                 return lfs_file_write(& lfs_, & cart_, buffer, numBytes);
             default:
                 ASSERT(false); // writing invalid file
@@ -199,10 +199,10 @@ namespace rckid::filesystem {
 
     FileWrite::~FileWrite() {
         switch (drive_) {
-            case Drive::SD:
+            case static_cast<unsigned>(Drive::SD):
                 f_close(& sd_);
                 break;
-            case Drive::Cartridge:
+            case static_cast<unsigned>(Drive::Cartridge):
                 lfs_file_close(& lfs_, & cart_);
                 break;
             default:
@@ -229,7 +229,7 @@ namespace rckid::filesystem {
                 return ok == 0;
             }
             default:
-                ASSERT(false); // won't format invalid drive
+                UNREACHABLE;
         }
     }
 
@@ -255,7 +255,7 @@ namespace rckid::filesystem {
                 }
                 return true;
             default:
-                ASSERT(false); // invalid drive
+                UNREACHABLE;
         }
     }
 
@@ -267,62 +267,141 @@ namespace rckid::filesystem {
                 break;
             case Drive::Cartridge:
                 lfs_unmount(&lfs_);
-                lfs_->cfg = nullptr;
+                lfs_.cfg = nullptr;
                 break;
             default:
-                ASSERT(false); // invalid drive
+                UNREACHABLE;
         }
     }
 
-    uint64_t getCapacity() {
-        return static_cast<uint64_t>(fs_->n_fatent - 2) * fs_->csize * 512;
-    }
-
-    uint64_t getFreeCapacity() {
-        DWORD n;
-        FATFS * fs;
-        f_getfree("", & n, &fs);
-        return static_cast<uint64_t>(n) * fs_->csize * 512;
-    }
-
-    Filesystem getFormat() {
-        switch (fs_->fs_type) {
-            case FS_FAT16:
-                return Filesystem::FAT16;
-            case FS_FAT32:
-                return Filesystem::FAT32;
-            case FS_EXFAT:
-                return Filesystem::exFAT;
+    bool isMounted(Drive dr) {
+        switch (dr) {
+            case Drive::SD:
+                return fs_ != nullptr;
+            case Drive::Cartridge:
+                return lfs_.cfg != nullptr;
             default:
-                return Filesystem::Unrecognized;
+                UNREACHABLE;
         }
     }
 
-    std::string getLabel() {
-        std::string result{' ', 12};
-        f_getlabel("",result.data(), 0);
-        return result;
+    uint64_t getCapacity(Drive dr) {
+        switch (dr) {
+            case Drive::SD:
+                return static_cast<uint64_t>(fs_->n_fatent - 2) * fs_->csize * 512;
+            case Drive::Cartridge:
+                return lfsCfg_.block_count * lfsCfg_.block_size;
+            default:
+                UNREACHABLE;
+        }
     }
 
-    bool exists(char const * path) {
-        FILINFO f;
-        if (f_stat(path, & f) != FR_OK)
-            return false;
-        return f.fname[0] != 0;        
+    uint64_t getFreeCapacity(Drive dr) {
+        switch (dr) {
+            case Drive::SD: {
+                DWORD n;
+                FATFS * fs;
+                f_getfree("", & n, &fs);
+                return static_cast<uint64_t>(n) * fs_->csize * 512;
+            }
+            case Drive::Cartridge: {
+                int allocatedBlocks = lfs_fs_size(&lfs_);
+                if (allocatedBlocks < 0)
+                    return 0; // error
+                return (lfsCfg_.block_count - allocatedBlocks) * lfsCfg_.block_size;
+            }
+            default:
+                UNREACHABLE;
+        }
     }
 
-    bool isDir(char const * path) {
-        FILINFO f;
-        if (f_stat(path, & f) != FR_OK)
-            return false;
-        return f.fname[0] != 0 && (f.fattrib & AM_DIR);        
+    Filesystem getFormat(Drive dr) {
+        switch (dr) {
+            case Drive::SD: 
+                switch (fs_->fs_type) {
+                    case FS_FAT16:
+                        return Filesystem::FAT16;
+                    case FS_FAT32:
+                        return Filesystem::FAT32;
+                    case FS_EXFAT:
+                        return Filesystem::exFAT;
+                    default:
+                        return Filesystem::Unrecognized;
+                }
+            case Drive::Cartridge:
+                return Filesystem::LittleFS;
+            default:
+                UNREACHABLE;
+        }
     }
 
-    bool isFile(char const * path) {
-        FILINFO f;
-        if (f_stat(path, & f) != FR_OK)
-            return false;
-        return f.fname[0] != 0 && ! (f.fattrib & AM_DIR);        
+    std::string getLabel(Drive dr) {
+        switch (dr) {
+            case Drive::SD: {
+                std::string result{' ', 12};
+                f_getlabel("",result.data(), 0);
+                return result;
+            }
+            case Drive::Cartridge:
+                return "Cartridge";
+            default:
+                UNREACHABLE;
+        }
+    }
+
+    bool exists(char const * path, Drive dr) {
+        switch (dr) {
+            case Drive::SD: {
+                FILINFO f;
+                if (f_stat(path, & f) != FR_OK)
+                    return false;
+                return f.fname[0] != 0;        
+            }
+            case Drive::Cartridge: {
+                lfs_info info;
+                return lfs_stat(&lfs_, path, & info) == 0;
+            }
+            default:
+                UNREACHABLE;
+        }
+    }
+
+    bool isDir(char const * path, Drive dr) {
+        switch (dr) {
+            case Drive::SD: {
+                FILINFO f;
+                if (f_stat(path, & f) != FR_OK)
+                    return false;
+                return f.fname[0] != 0 && (f.fattrib & AM_DIR);        
+            }
+            case Drive::Cartridge: {
+                lfs_info info;
+                if (lfs_stat(&lfs_, path, & info) != 0)
+                    return false;
+                return info.type & LFS_TYPE_DIR;
+            }
+            default:
+                UNREACHABLE;
+        }
+    }
+
+    bool isFile(char const * path, Drive dr) {
+        switch (dr) {
+            case Drive::SD: {
+                FILINFO f;
+                if (f_stat(path, & f) != FR_OK)
+                    return false;
+                return f.fname[0] != 0 && ! (f.fattrib & AM_DIR);        
+            }
+            case Drive::Cartridge: {
+                lfs_info info;
+                if (lfs_stat(&lfs_, path, & info) != 0)
+                    return false;
+                return info.type == LFS_TYPE_REG;
+            }
+            default:
+                UNREACHABLE;
+        }
     }
 
     // file read, write and append operations
@@ -332,12 +411,12 @@ namespace rckid::filesystem {
         switch (dr) {
             case Drive::SD: {
                 if (f_open(& result.sd_, filename, FA_READ) == FR_OK)
-                    result.drive_ = dr;
+                    result.drive_ = static_cast<unsigned>(dr);
                 break;
             }
             case Drive::Cartridge: {
                 if (lfs_file_open(& lfs_, & result.cart_, filename, LFS_O_RDONLY) >= 0)
-                    result.drive_ = dr;
+                    result.drive_ = static_cast<unsigned>(dr);
                 break;
             }
             default:
@@ -351,12 +430,12 @@ namespace rckid::filesystem {
         switch (dr) {
             case Drive::SD: {
                 if (f_open(& result.sd_, filename, FA_WRITE) == FR_OK)
-                    result.drive_ = dr;
+                    result.drive_ = static_cast<unsigned>(dr);
                 break;
             }
             case Drive::Cartridge: {
                 if (lfs_file_open(& lfs_, & result.cart_, filename, LFS_O_WRONLY) >= 0)
-                    result.drive_ = dr;
+                    result.drive_ = static_cast<unsigned>(dr);
                 break;
             }
             default:
@@ -370,12 +449,12 @@ namespace rckid::filesystem {
         switch (dr) {
             case Drive::SD: {
                 if (f_open(& result.sd_, filename, FA_WRITE | FA_OPEN_APPEND) == FR_OK)
-                    result.drive_ = dr;
+                    result.drive_ = static_cast<unsigned>(dr);
                 break;
             }
             case Drive::Cartridge: {
                 if (lfs_file_open(& lfs_, & result.cart_, filename, LFS_O_WRONLY | LFS_O_APPEND) >= 0)
-                    result.drive_ = dr;
+                    result.drive_ = static_cast<unsigned>(dr);
                 break;
             }
             default:
