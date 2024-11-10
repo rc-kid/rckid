@@ -168,7 +168,6 @@ private:
     std::function<void(char)> putChar_;
 }; // Writer
 
-
 /** Very simple string buffer that uses the Writer API to serialize values into a string. 
  */
 class StringWriter {
