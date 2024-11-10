@@ -12,4 +12,9 @@ namespace rckid {
      */
     void bsod(uint32_t error, uint32_t line, char const * file, char const * extras = nullptr);
 
+
+    namespace filesystem {
+        void initialize();
+    }
+
 } // namespace rckid

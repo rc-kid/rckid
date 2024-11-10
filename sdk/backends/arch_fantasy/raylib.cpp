@@ -4,16 +4,6 @@
  
     A fantasy console backend that uses RayLib for the graphics, audio and other aspects of the device. Should work anywhere raylib does. 
 
-
-
-    SD Card Emulation
-
-    If there is `sd.iso` file present in the current working directory and the file has a size divisible by 512, it will be used as an SD card. Creating such file is straightforward in linux, such as:
-
-        fallocate -l 2G sd.iso
-        
-
-
  */
 
 #ifndef ARCH_FANTASY
@@ -171,7 +161,7 @@ namespace rckid {
             LOG("sd.iso file not found, CD card not present");
         }
         // see if there is flash.iso file so that we can simulate flash storage
-        flashIso_.open("flash.iso", std::ios::in | std::ios::out | std::ios::binary);
+        flashIso_.open("cartridge.iso", std::ios::in | std::ios::out | std::ios::binary);
         if (flashIso_.is_open()) {
             flashIso_.seekg(0, std::ios::end);
             size_t sizeBytes = flashIso_.tellg();
@@ -185,6 +175,7 @@ namespace rckid {
         } else {
             LOG("flash.iso file not found, cartridge storage not present");
         }
+        filesystem::initialize();
 
         // enter base arena for the application
         memoryEnterArena();
@@ -580,13 +571,13 @@ namespace rckid {
 
     // flash
 
-    uint32_t flashSize() { return flashSize_; }
+    uint32_t cartridgeCapacity() { return flashSize_; }
 
-    uint32_t flashWriteSize() { return 256; }
+    uint32_t cartridgeWriteSize() { return 256; }
 
-    uint32_t flashEraseSize() { return 4096; }
+    uint32_t cartridgeEraseSize() { return 4096; }
 
-    void flashRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
+    void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
         ASSERT(start + numBytes <= flashSize_);
         try {
             flashIso_.seekg(start);
@@ -597,7 +588,7 @@ namespace rckid {
         }
     }
 
-    void flashWrite(uint32_t start, uint8_t const * buffer) {
+    void cartridgeWrite(uint32_t start, uint8_t const * buffer) {
         ASSERT(start % 256 == 0);
         ASSERT(start + 256 <= flashSize_);
         try {
@@ -609,7 +600,7 @@ namespace rckid {
         }
     }
 
-    void flashErase(uint32_t start) {
+    void cartridgeErase(uint32_t start) {
         ASSERT(start % 4096 == 0);
         ASSERT(start + 4096 <= flashSize_);
         try {

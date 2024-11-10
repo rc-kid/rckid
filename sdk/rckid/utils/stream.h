@@ -12,6 +12,7 @@ namespace rckid {
      */
     class ReadStream {
     public:
+        virtual ~ReadStream() = default;
         /** Reads up to bufferSize bytes from the stream. Returns the actual number of bytes read. 
          */
         virtual uint32_t read(uint8_t * buffer, uint32_t bufferSize) = 0;
@@ -23,6 +24,8 @@ namespace rckid {
      */
     class WriteStream {
     public:
+        virtual ~WriteStream() = default;
+        
         /** Writes the given buffer to the stream. Returns the numbed of bytes written, which should be identical to bufferSize on success. 
          */
         virtual uint32_t write(uint8_t const * buffer, uint32_t bufferSize) = 0;

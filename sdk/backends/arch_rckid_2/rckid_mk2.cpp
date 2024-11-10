@@ -667,24 +667,24 @@ namespace rckid {
 
     // flash
 
-    uint32_t flashSize() {
+    uint32_t cartridgeCapacity() {
         return &__cartridge_filesystem_end - &__cartridge_filesystem_start;
     }
 
-    uint32_t flashWriteSize() {
+    uint32_t cartridgeWriteSize() {
         return FLASH_PAGE_SIZE; // 256
     }
 
-    uint32_t flashEraseSize() {
+    uint32_t cartridgeEraseSize() {
         return FLASH_SECTOR_SIZE; // 4096
     }
 
-    void flashRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
+    void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
         // since flash is memory mapped via XIP, all we need to do is aggregate offset properly 
         memcpy(buffer, &__cartridge_filesystem_start + start, numBytes);
     }
 
-    void flashWrite(uint32_t start, uint8_t const * buffer) {
+    void cartridgeWrite(uint32_t start, uint8_t const * buffer) {
         ASSERT(start < flashSize());
         ASSERT(start + FLASH_PAGE_SIZE <= flashSize());
         uint32_t ints = save_and_disable_interrupts();
@@ -693,15 +693,13 @@ namespace rckid {
 
     }
 
-    void flashErase(uint32_t start) {
+    void cartridgeErase(uint32_t start) {
         ASSERT(start < flashSize());
         ASSERT(start + FLASH_SECTOR_SIZE <= flashSize());
         uint32_t ints = save_and_disable_interrupts();
         flash_range_erase(reinterpret_cast<uint32_t>((&__cartridge_filesystem_start - XIP_BASE) + start), FLASH_SECTOR_SIZE);
         restore_interrupts(ints);
     }
-
-
 
     // accelerated functions
     #include "rckid/accelerated.inc.h"
