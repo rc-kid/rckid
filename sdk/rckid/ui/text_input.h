@@ -4,6 +4,7 @@
 #include "../app.h"
 #include "../ui/timer.h"
 #include "ui.h"
+#include "../utils/interpolation.h"
 
 
 namespace rckid {
@@ -27,7 +28,7 @@ namespace rckid {
         static std::optional<std::string> run() {
             TextInput input;
             input.loop();
-            return "";
+            return input.text_;
         }
 
     protected:
@@ -125,8 +126,8 @@ namespace rckid {
                 cursorLeft();
                 text_.erase(cursor_, 1);
             } else if (select_ == KEY_ENTER) {
-                // TODO return the text
-                // exit(text_);
+                // return the text
+                exit();
             } else if (select_ == KEY_SPACE) {
                 insertChar(' ');
             } else if (select_ == KEY_SHIFT) {

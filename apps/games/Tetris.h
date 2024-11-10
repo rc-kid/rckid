@@ -4,6 +4,9 @@
 #include <rckid/graphics/canvas.h>
 #include <rckid/ui/header.h>
 #include <rckid/ui/alert.h>
+#include <rckid/ui/text_input.h>
+#include <rckid/ui/halloffame.h>
+#include <rckid/filesystem.h>
 
 #include <rckid/assets/fonts/OpenDyslexic24.h>
 namespace rckid {
@@ -30,11 +33,26 @@ namespace rckid {
 
     protected:
 
-        Tetris(): GraphicsApp{Canvas<Color>{320, 240}} {}
+        Tetris(): GraphicsApp{Canvas<Color>{320, 240}} {
+            using namespace filesystem;
+            hof_.add("Ariel", 30000);
+            hof_.add("Rapunzel", 20000);
+            hof_.add("Jaffar", 10000);
+            hof_.add("Noone", 1);
+            //FileWrite f = fileWrite("tetris.hof", Drive::Cartridge);
+            //hof_.serializeTo(f);
+            //FileRead f = fileRead("tetris.hof", Drive::Cartridge);
+            //hof_.deserializeFrom(f);
+        }
 
         void update() override {
             // handle back button
             GraphicsApp::update();
+            if (hofActive_) {
+                if (btnPressed(Btn::Start))
+                    hofActive_ = false;
+                return;
+            }
             bool goDown = false;
             if (--countdown_ == 0) {
                 goDown = true;
@@ -80,6 +98,10 @@ namespace rckid {
         void draw() override {
             // clear
             g_.fill();
+            if (hofActive_) {
+                hof_.drawOn(g_);
+                return;
+            }
             int startX = (320 - PLAY_WIDTH * 10) / 2;
             int startY = 238 - PLAY_HEIGHT * 10;
             g_.fill(color::DarkGray, Rect::XYWH(startX - 2, startY-2, 10 * PLAY_WIDTH + 3, 10 * PLAY_HEIGHT + 3));
@@ -197,7 +219,13 @@ namespace rckid {
             TODO store high score, etc.          
          */
         void gameOver() {
-            runModal<Alert>("GAME OVER", "Press A to continue...", ColorRGB{32, 0, 0});
+            if (hof_.isHighEnough(score_)) {
+                auto name = runModal<TextInput>();
+                if (name)
+                    hof_.add(name.value(), score_);
+            } else {
+                runModal<Alert>("GAME OVER", "Press A to continue...", ColorRGB{32, 0, 0});
+            }
             resetGame();
         }
 
@@ -315,6 +343,7 @@ namespace rckid {
             next_.randomize();
             spawn();
             countdown_ = speed_;
+            hofActive_ = true;
         }
 
         /** The play area.  
@@ -333,6 +362,9 @@ namespace rckid {
         uint32_t countdown_;
         uint32_t score_ = 0;
         bool allowDown_ = true;
+
+        HallOfFame hof_;
+        bool hofActive_ = true;
 
         /** Default grids of all 7 types. 
          */

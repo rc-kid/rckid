@@ -434,7 +434,7 @@ namespace rckid::filesystem {
                 break;
             }
             case Drive::Cartridge: {
-                if (lfs_file_open(& lfs_, & result.cart_, filename, LFS_O_WRONLY) >= 0)
+                if (lfs_file_open(& lfs_, & result.cart_, filename, LFS_O_WRONLY | LFS_O_CREAT) >= 0)
                     result.drive_ = static_cast<unsigned>(dr);
                 break;
             }
