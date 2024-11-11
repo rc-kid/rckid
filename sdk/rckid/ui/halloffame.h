@@ -7,8 +7,8 @@
 #include "../utils/stream.h"
 #include "../graphics/canvas.h"
 
-#include "../assets/fonts/OpenDyslexic32.h"
-#include "../assets/fonts/Iosevka16.h"
+#include "../assets/fonts/OpenDyslexic48.h"
+#include "../assets/fonts/Iosevka24.h"
 
 namespace rckid {
 
@@ -31,9 +31,12 @@ namespace rckid {
                 --iAt;
             }
             // try harder next time
-            if (iAt >= 10)
+            if (iAt >= maxEntries_)
                 return false;
             table_.insert(table_.begin() + iAt, Record{name, score});
+            // ensure the table is not infinite
+            while (table_.size() > maxEntries_)
+                table_.pop_back();
             return true;
         }
 
@@ -44,7 +47,7 @@ namespace rckid {
                     break;
                 --iAt;
             }
-            return iAt < 10;
+            return iAt < maxEntries_;
         }
 
         /** Serializes the current hall of fame entries to the given stream. 
@@ -67,6 +70,9 @@ namespace rckid {
                 uint32_t score = s.deserialize<uint32_t>();
                 table_.push_back(Record{name, score});
             }
+            // ensure the table is not infinite
+            while (table_.size() > maxEntries_)
+                table_.pop_back();
         }
 
         /** Draws the hall of fame on the provided canvas. 
@@ -88,12 +94,13 @@ namespace rckid {
             uint32_t score;
         }; 
 
-        Font const * titleFont_ = & assets::font::OpenDyslexic32::font;
+        Font const * titleFont_ = & assets::font::OpenDyslexic48::font;
         ColorRGB titleColor_ = color::White;
 
-        Font const * tableFont_ = & assets::font::Iosevka16::font;
+        Font const * tableFont_ = & assets::font::Iosevka24::font;
         ColorRGB tableColor_ = color::White;
 
+        uint32_t maxEntries_ = 5;
         std::string title_{"Hall of Fame"};
         std::vector<Record> table_;
 

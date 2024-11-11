@@ -24,6 +24,9 @@
 #include <rckid/ui/menu_app.h>
 
 
+#include <rckid/audio/opus.h>
+
+
 
 //#include <rckid/graphics/tile_engine.h>
 

@@ -126,7 +126,6 @@ namespace rckid {
             return g.advanceX;
         }
 
-
         Writer text(int x, int y, Font const & font, Color const * colors) {
             int startX = x;
             return Writer{[=](char c) mutable {

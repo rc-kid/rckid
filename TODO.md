@@ -7,7 +7,6 @@
 - hall of fame and others can be apps of their own that just reuse the canvas from previous run, but delegate the controls? How though
 
 - load filesystems from SD and from cartridge during initialization - then we can unload them during the file transfer
-- change API in filesystem to always take drive into account as well
 - write directory reader classes for FatFS and littlefs
 
 - add fancy font & writing with changing hue - maybe generic way with a function to change the hue based on some value
@@ -22,8 +21,6 @@
 
 - check the critical battery warning & new AVR
 - add logo when clearing the screen
-- can easily port littlefs for cartridge storage filesystem
-- USB serial does not display all text, sometimes garbled, as if not blocking to send
 
 - move games & apps to SDK, unless they belong in cartridges 
 
@@ -45,9 +42,6 @@
 
 - add a way to silence button down presses (such as btnPressedClear() function that makes any subseuent )
 
-- filesystem file & folder abstractions
-- add filesystem support with an ISO file specified for the SD card, using the same fatfs mechanics
-
 - can swap RAM arenas to disk if necessary
 
 - make timer run a ... b ... a as well (then I can replace the blinking code in clock)
@@ -56,7 +50,7 @@
 
 ## Sokoban
 
-- add new levels, use images 
+- add new levels
 
 ## Fantasy
 
