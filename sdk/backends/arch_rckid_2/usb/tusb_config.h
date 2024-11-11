@@ -102,6 +102,10 @@
 #define CFG_TUD_MSC_EP_BUFSIZE    512
 
 // CDC FIFO size of TX and RX
+/** Making the TX buffer size larger we can ensure that enough information can be passed via the USB to serial connection to the other system without loosing debugging information. In production, this number can likely go back to the small value.
+ 
+    TODO make this conditional on some flag
+ */
 #define CFG_TUD_CDC_RX_BUFSIZE   64
 //#define CFG_TUD_CDC_TX_BUFSIZE   64
 #define CFG_TUD_CDC_TX_BUFSIZE   1024
