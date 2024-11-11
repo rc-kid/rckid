@@ -153,6 +153,35 @@ namespace rckid {
             }};
         }
 
+        /** Draws text so that color of each letter is independently determined by calling the provided function. 
+         */
+        Writer text(int x, int y, Font const & font, std::function<Color(uint32_t)> color) {
+            int startX = x;
+            uint32_t charIndex = 0;
+            return Writer{[this, x, y, startX, font, color, charIndex](char c) mutable {
+                Color baseColor = color(charIndex++);
+                Color colors[] = { baseColor, (baseColor + 1), (baseColor + 2) , (baseColor + 3) };
+                if (c != '\n') {
+                    if (x < width())
+                        x += putChar(Point{x, y}, font, c, colors);
+                } else {
+                    x = startX;
+                    y += font.size;
+                }
+            }};
+        }
+
+        /** Shorthand for a rainbow effect on the displayed text where each consecutive letter is displayed in a different hue.
+         
+            TODO this only makes sense for colors that support HSV initialization, but that's going to be all in the next version.
+         */
+        Writer textRainbow(int x, int y, Font const & font, uint16_t hueStart, uint16_t hueInc) {
+            auto getColor = [hueStart, hueInc](uint32_t) mutable {
+                return Color::HSV(hueStart += hueInc, 255, 255);
+            };
+            return text(x, y, font, getColor);
+        }
+
         //@}
 
         /** \name Image support
@@ -214,6 +243,31 @@ namespace rckid {
             }
         }};
     }
+    /** Draws text so that color of each letter is independently determined by calling the provided function. 
+     */
+    template<>
+    inline Writer Bitmap<ColorRGB>::text(int x, int y, Font const & font, std::function<Color(uint32_t)> color) {
+        int startX = x;
+        uint32_t charIndex = 0;
+        return Writer{[this, x, y, startX, font, color, charIndex](char c) mutable {
+            ColorRGB baseColor = color(charIndex++);
+            ColorRGB colors[] = {
+                baseColor.withAlpha(0), 
+                baseColor.withAlpha(85), 
+                baseColor.withAlpha(170), 
+                baseColor.withAlpha(255), 
+            };
+            if (c != '\n') {
+                if (x < width())
+                    x += putChar(Point{x, y}, font, c, colors);
+            } else {
+                x = startX;
+                y += font.size;
+            }
+        }};
+    }
+
+
 
     /** Renderable Bitmap
      

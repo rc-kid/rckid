@@ -9,8 +9,6 @@
 - load filesystems from SD and from cartridge during initialization - then we can unload them during the file transfer
 - write directory reader classes for FatFS and littlefs
 
-- add fancy font & writing with changing hue - maybe generic way with a function to change the hue based on some value
-
 - add blit that ignores particular color
 
 - verify charging & the new AVR code on a prototype board,2 then put it in the new case

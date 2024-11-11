@@ -78,13 +78,15 @@ namespace rckid {
         /** Draws the hall of fame on the provided canvas. 
          */
         void drawOn(Canvas<ColorRGB> & g) {
-            g.text(160 - titleFont_->textWidth(title_.c_str()) / 2, 20, *titleFont_, titleColor_) << title_;
+            //g.text(160 - titleFont_->textWidth(title_.c_str()) / 2, 20, *titleFont_, titleColor_) << title_;
+            g.textRainbow(160 - titleFont_->textWidth(title_.c_str()) / 2, 20, *titleFont_, startHue_, 1024) << title_;
             int y = 20 + titleFont_->size + 10;
             for (auto const & i : table_) {
                 g.text(20, y, *tableFont_, tableColor_) << i.name;
                 g.text(260, y, *tableFont_, tableColor_) << i.score;
                 y += tableFont_->size + 5;
             }
+            startHue_ += 128;
         }
 
     private:
@@ -103,6 +105,7 @@ namespace rckid {
         uint32_t maxEntries_ = 5;
         std::string title_{"Hall of Fame"};
         std::vector<Record> table_;
+        uint16_t startHue_ = 0;
 
     }; // rckid::HallOfFame
 

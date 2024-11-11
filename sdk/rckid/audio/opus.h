@@ -2,7 +2,7 @@
 
 #include <libopus/include/opus.h>
 
-namespace rckid {
+namespace rckid::opus {
 
     // TODO this is code from V1 and needs to be ported and updated to the latest SDK
     // kept here as a starting point
@@ -11,6 +11,7 @@ namespace rckid {
      
         The raw encoder is a specialzed direct opus codec encoder tuned for transmitting voice over the NRF packets. It wraps the opus packets of max 30 bytes with 2 bytes of extra information - the length of the opus packet and a packet index that can be used to detect multiple sends of the same packet as well as packet loss.
      */
+
     class RawEncoder {
     public:
         /** Creates new encoder. 

@@ -11,6 +11,7 @@
 #include <rckid/audio/music.h>
 #include <rckid/assets/fonts/Symbols16.h>
 #include <rckid/assets/fonts/OpenDyslexic24.h>
+#include <rckid/assets/fonts/HemiHead64.h>
 #include <rckid/assets/glyphs.h>
 #include <rckid/assets/icons24.h>
 #include <rckid/assets/icons16.h>
@@ -102,6 +103,7 @@ namespace rckid {
                 spawn_ = 120;
                 // ouch
                 audio_[1].setFrequency(50, 500);
+                msgText_ = "Kaboom!";
             } else {
                 if (aliens_.active == 0)
                     nextLevel();
@@ -122,9 +124,13 @@ namespace rckid {
             // draw aliens
             aliens_.drawOn(g_, alienShips_);
             // draw the player depending on the spawn state
-            if (mode_ == Mode::Respawn || mode_ == Mode::Killed)
+            if (mode_ == Mode::Respawn || mode_ == Mode::Killed) {
+                Font const & f = assets::font::HemiHead64::font;
+                g_.textRainbow(160 - f.textWidth(msgText_.c_str()) / 2, 80, f, msgHue_, 1024) << msgText_;
+                msgHue_ += 1024;
                 if ((spawn_ / 10) & 1)
                     return; 
+            }
             drawBullets(bullets_, color::White);
             drawBullets(alienBullets_, color::Red);
             drawSpaceship();
@@ -135,6 +141,7 @@ namespace rckid {
             level_ = 0;
             lives_ = 3;
             nextLevel();
+            msgText_ = "Get Ready!";
         }
 
         void respawnPlayer() {
@@ -143,6 +150,7 @@ namespace rckid {
             bullets_.clear();
             mode_ = Mode::Respawn;
             spawn_ = 120;
+            msgText_ = "Kaboom!";
         }
 
         void nextLevel() {
@@ -167,6 +175,7 @@ namespace rckid {
                     alienFireProm_ = 50;
                     aliens_.speed = FixedInt{1};
             }
+            msgText_ = "Level Up!";
         }
 
         void gameOver() {
@@ -225,6 +234,8 @@ namespace rckid {
         // promile per tick for an alien to shoot (anything above 50 is crazy)
         uint32_t alienFireProm_;
         FixedInt alienBulletSpeed_;
+        std::string msgText_ = "Get Ready!"; 
+        uint16_t msgHue_ = 0;
 
         FixedInt shipX_;
 
@@ -290,7 +301,9 @@ namespace rckid {
                 for (int col = 0; col < ALIEN_COLS; ++col) {
                     for (int row = 0; row < ALIEN_ROWS; ++row) {
                         if (*v != ALIEN_INVALID) {
-                            b.blit(Point{(x + col * 20 + 2).round(), (y - row * 20 + 2 - 20).round()}, ships[*v]);
+                            int dx = 0; //static_cast<int>(random() % 3) - 1;
+                            int dy = 0; //static_cast<int>(random() % 3) - 1;
+                            b.blit(Point{(x + col * 20 + 2).round() + dx, (y - row * 20 + 2 - 20).round() + dy}, ships[*v]);
                             //b.fill(color::Red, Rect::XYWH((x + col * 20 + 2).round(), (y - row * 20 + 2 - 20).round(), 16, 16));
                         }
                         ++v;
