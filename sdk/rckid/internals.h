@@ -13,8 +13,16 @@ namespace rckid {
     void bsod(uint32_t error, uint32_t line, char const * file, char const * extras = nullptr);
 
 
+    /** Leaves all opened arenas. 
+     
+        This has widespread implications and should be used with extreme care as all of the arena users will be left with invalid pointers after this call. 
+     */
+    void memoryResetArena();
+
     namespace filesystem {
         void initialize();
     }
+
+
 
 } // namespace rckid

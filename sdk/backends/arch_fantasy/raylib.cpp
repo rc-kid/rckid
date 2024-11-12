@@ -230,8 +230,7 @@ namespace rckid {
 
     void fatalError(uint32_t error, uint32_t line, char const * file) {
         // clear all memory arenas to clean up space, this is guarenteed to succeed as the SDK creates memory arena when it finishes initialization    
-        while (memoryInsideArena())
-            memoryLeaveArena();
+        memoryResetArena();
         bsod(error, line, file, nullptr);
         systemMalloc_ = true;
         while (! WindowShouldClose())

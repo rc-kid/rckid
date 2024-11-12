@@ -435,8 +435,6 @@ namespace rckid {
 
     bool memoryIsInArena(void * ptr);
 
-    bool memoryIsInCurrentArena(void * ptr);
-
     /** Returns true if there is active memory arena (i.e. when it is safe to call memoryLeaveArena(). 
      */
     bool memoryInsideArena();

@@ -139,14 +139,11 @@ namespace rckid {
         return (ptr >= & __bss_end__) && (ptr < arenaEnd);
     }
 
-    // TODO remove
     bool memoryIsInCurrentArena(void * ptr) {
-        return true;
-    }
-
-    // TODO remove
-    bool memoryInsideArena() {
-        return ! memoryIsInCurrentArena(& __bss_end__);
+        if (arenaStart == nullptr)
+            return (ptr >= & __bss_end__) && (ptr < arenaEnd);
+        else 
+            return (ptr >= arenaStart) && (ptr < arenaEnd);
     }
 
     void memoryEnterArena() {
@@ -165,6 +162,12 @@ namespace rckid {
         TRACE_MEMORY("Leaving arena @" << (void*)(old) << " (previous @ " << (void*)arenaStart <<", free heap " << memoryFreeHeap() << ")");
     }
 
+    // internal 
+    void memoryResetArena() {
+        arenaStart = nullptr;
+        arenaEnd = & __bss_end__;
+    }
+
     void * mallocArena(size_t numBytes) {
         void * result = arenaEnd;
         arenaEnd += numBytes;
@@ -172,6 +175,7 @@ namespace rckid {
         ASSERT(arenaEnd <= heapEnd);
         return result;
     }
+
 
     void * malloc(size_t numBytes) { return __wrap_malloc(numBytes); }
 
