@@ -433,13 +433,15 @@ namespace rckid {
 
     bool memoryIsOnHeap(void * ptr);
 
+    bool memoryIsInArena(void * ptr);
+
     bool memoryIsInCurrentArena(void * ptr);
 
     /** Returns true if there is active memory arena (i.e. when it is safe to call memoryLeaveArena(). 
      */
     bool memoryInsideArena();
  
-    /** Enters new memory arena.
+    /** Enters new memory arena for the arena allocator.
      */
     void memoryEnterArena();
 
@@ -449,13 +451,20 @@ namespace rckid {
      */
     void memoryLeaveArena();
 
-    /** Allocates new memory on the heap in current arena. 
+    /** Allocates new memory on the heap. 
      */
     void * malloc(size_t numBytes);
  
-    /** Frees previously allocated chunk of memory. Note that the chunk *must* belong to the curren arena. 
+    /** Frees previously allocated chunk of memory. 
      */
     void free(void * ptr);
+
+    /** Allocates required number of bytes in the arena. 
+     */
+    void * mallocArena(size_t numBytes); 
+
+    template<typename T>
+    inline T * mallocArena() { return (T*)mallocArena(sizeof(T)); }
 
     /** Returns the beginning of the heap. 
      */
