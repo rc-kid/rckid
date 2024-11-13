@@ -44,12 +44,22 @@ extern "C" {
     }
 
     void free(void * ptr) {
-        if (rckid::memoryIsOnHeap(ptr)) {
-            // if we are in system malloc phase, we should not be deallocating rckid memory, as this only happens during shutdown
-            if (!systemMalloc_)
-                rckid::free(ptr);
-        } else {
-            __libc_free(ptr);
+        using namespace rckid;
+        switch (memoryOf(ptr)) {
+            case Memory::Heap:
+                // if we are in system malloc phase, we should not be deallocating rckid memory, as this only happens during shutdown
+                if (!systemMalloc_)
+                    rckid::free(ptr);
+                break;
+            case Memory::Arena:
+                // do nothing for arenas
+                break;
+            case Memory::ROM:
+                // it's quite likely it is not ROM, but system's malloc somewhere
+                __libc_free(ptr);
+                break;
+            default:
+                UNREACHABLE;
         }
     }
 #endif 
@@ -141,10 +151,6 @@ namespace rckid {
     void initialize() {
         systemMalloc_ = true;
         InitWindow(640, 480, "RCKid");
-        systemMalloc_ = false;
-        displayImg_ = GenImageColor(320, 240, BLACK);
-        displayTexture_ = LoadTextureFromImage(displayImg_);
-        displayLastVSyncTime_ = std::chrono::steady_clock::now();
         // see if there is sd.iso file so that we can simulate SD card
         sdIso_.open("sd.iso", std::ios::in | std::ios::out | std::ios::binary);
         if (sdIso_.is_open()) {
@@ -175,6 +181,10 @@ namespace rckid {
         } else {
             LOG("flash.iso file not found, cartridge storage not present");
         }
+        systemMalloc_ = false;
+        displayImg_ = GenImageColor(320, 240, BLACK);
+        displayTexture_ = LoadTextureFromImage(displayImg_);
+        displayLastVSyncTime_ = std::chrono::steady_clock::now();
         filesystem::initialize();
 
         // enter base arena for the application
@@ -230,9 +240,12 @@ namespace rckid {
 
     void fatalError(uint32_t error, uint32_t line, char const * file) {
         // clear all memory arenas to clean up space, this is guarenteed to succeed as the SDK creates memory arena when it finishes initialization    
-        memoryResetArena();
         bsod(error, line, file, nullptr);
         systemMalloc_ = true;
+        if (sdIso_.good())
+            sdIso_.close();
+        if (flashIso_.good())
+            flashIso_.close();
         while (! WindowShouldClose())
             PollInputEvents();
         systemMalloc_ = false;
