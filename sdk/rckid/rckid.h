@@ -423,6 +423,14 @@ namespace rckid {
      */
     //@{
 
+    /** Enum of all allocation locations. 
+     */
+    enum class Memory {
+        Heap, 
+        Arena,
+        ROM,
+    };
+
     /** Returns free heap available to the application. The actual free heap is likely larger if any allocations were freed, but not returned to the heap.      
      */
     uint32_t memoryFreeHeap();
@@ -431,14 +439,10 @@ namespace rckid {
      */
     uint32_t memoryUsedHeap();
 
-    bool memoryIsOnHeap(void * ptr);
-
-    bool memoryIsInArena(void * ptr);
-
-    /** Returns true if there is active memory arena (i.e. when it is safe to call memoryLeaveArena(). 
+    /** Returns which memory type the given pointer belongs to. 
      */
-    bool memoryInsideArena();
- 
+    Memory memoryOf(void * ptr);
+
     /** Enters new memory arena for the arena allocator.
      */
     void memoryEnterArena();
@@ -467,12 +471,15 @@ namespace rckid {
     /** Returns the beginning of the heap. 
      */
     char * heapStart();
+
+    class ArenaScope {
+    public:
+        ArenaScope();
+        ~ArenaScope();
+        ArenaScope(ArenaScope const & ) = delete;
+    }; 
+
     //@}
-
-
-
-
-
 
     /** \name Accelerated functions
      */

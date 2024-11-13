@@ -5,13 +5,15 @@
 namespace rckid {
 
     void bsod(uint32_t error, uint32_t line, char const * file, char const * extras) {
+        uint32_t freeHeap = memoryFreeHeap();
+        memoryReset();
         // print the error to debug console
         LOG("Fatal error: " << error);
         if (file != nullptr) {
             LOG("Line:        " << line);
             LOG("File:        " << file);
         }
-        LOG("Free heap:   " << memoryFreeHeap());
+        LOG("Free heap:   " << freeHeap);
         // create the blue screen of death
         RenderableBitmap<ColorRGB> fb{320, 240};
         fb.fill(color::Blue);

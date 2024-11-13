@@ -63,6 +63,8 @@ namespace {
     Arena * arenaStart = nullptr;
 
 
+    uint32_t forceArenaAllocation = 0; 
+
     uint32_t mallocCalls = 0;
     uint32_t freeCalls = 0;
 
@@ -71,6 +73,8 @@ namespace {
 extern "C" {
     void *__wrap_malloc(size_t numBytes) {
         ++mallocCalls;
+        if (forceArenaAllocation > 0)
+            return rckid::mallocArena(numBytes);
         Chunk * freeChunk = freelist;
         Chunk * last = nullptr;
         // see if we can use a chunk from freelist
@@ -123,21 +127,32 @@ extern "C" {
 
 namespace rckid {
 
+    ArenaScope::ArenaScope() {
+        ++forceArenaAllocation;
+    }
+
+    ArenaScope::~ArenaScope() {
+        ASSERT(forceArenaAllocation > 0);
+        --forceArenaAllocation;
+    }
+
     uint32_t memoryFreeHeap() {
-        ASSERT(heapEnd >= arenaEnd);
+        if (heapEnd <= arenaEnd)
+            return 0;
         return static_cast<uint32_t>(heapEnd - arenaEnd);
     }
     uint32_t memoryUsedHeap() {
         return static_cast<uint32_t>(heapEnd - & __bss_end__);
     }
 
-    bool memoryIsOnHeap(void * ptr) {
-        return (ptr >= heapEnd) && (ptr < & __StackLimit);
+    Memory memoryOf(void * ptr) {
+        if (ptr >= heapEnd && ptr < & __StackLimit)
+            return Memory::Heap;
+        if (ptr >= & __bss_end__ && ptr < arenaEnd) 
+            return Memory::Arena;
+        return Memory::ROM;
     }
 
-    bool memoryIsInArena(void * ptr) {
-        return (ptr >= & __bss_end__) && (ptr < arenaEnd);
-    }
 
     bool memoryIsInCurrentArena(void * ptr) {
         if (arenaStart == nullptr)
@@ -163,9 +178,11 @@ namespace rckid {
     }
 
     // internal 
-    void memoryResetArena() {
+    void memoryReset() {
         arenaStart = nullptr;
         arenaEnd = & __bss_end__;
+        freelist = nullptr;
+        heapEnd = & __StackLimit;
     }
 
     void * mallocArena(size_t numBytes) {
