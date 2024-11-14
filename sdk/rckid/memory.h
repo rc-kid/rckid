@@ -2,6 +2,8 @@
 
 #include <platform.h>
 
+#include "errors.h"
+
 namespace rckid {
 
     class Heap {
@@ -113,7 +115,6 @@ namespace rckid {
             end_ = (char*)previous;
         }
 
-
         /** Returns true if given pointer belongs to any of the currently opened arenas. 
          
             This is true if it happens to be anywhere between very beginning of arena's allocatoion (after bss) the end of currently opened arena. 
@@ -168,6 +169,7 @@ namespace rckid {
     /** RAII object that enters new arena, redirects all default allocations to it and leaves the arena when going out of scope itself. 
      */
     class NewArenaScope {
+    public:
         NewArenaScope() {
             Arena::enter();
             ++Heap::preferredArena_;
@@ -178,9 +180,6 @@ namespace rckid {
             Arena::leave();
             --Heap::preferredArena_; 
         }
-
-        template<typename T>
-        T && operator()(T && value) { return std::move(value); }
     };
 
     /** Returns free memory available on the system. */

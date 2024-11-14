@@ -12,14 +12,14 @@
 #include "common.h"
 #include "graphics/geometry.h"
 #include "utils/fixedint.h"
-
+#include "errors.h"
+#include "memory.h"
 
 #define MEASURE_TIME(whereTo, ...) { \
     uint32_t start__ = uptimeUs(); \
     __VA_ARGS__; \
     whereTo = uptimeUs() - start__; \
 }
-
 
 /** \defgroup api API
  
@@ -45,17 +45,6 @@ namespace rckid {
 
     class ColorRGB;
 
-    /** Error enum. 
-     
-        To be used with the fatalError() function. The following error codes are reserved for the SDK, while any value equal or larger to Error::User can be used by the application itself. 
-     */
-    enum class Error : uint32_t {
-        NoError = 0, 
-        Unimplemented = 1,
-        Unreachable, 
-        Assert, 
-        User, 
-    }; // rckid::Error
 
     /** Initializes the RCKid console. 
      
@@ -66,10 +55,6 @@ namespace rckid {
     void tick();
 
     void yield();
-
-    NORETURN(void fatalError(uint32_t error, uint32_t line = 0, char const * file = nullptr));
-
-    NORETURN(void fatalError(Error error, uint32_t line = 0, char const * file = nullptr));
 
     /** Returns the system's uptime in microseconds. 
      
@@ -418,74 +403,6 @@ namespace rckid {
 
     //@}
 
-    #ifdef FOOBAR
-
-    /** \name Memory Management
-
-        RCKid uses a mixed arena-heap model where the heap can be split into different arenas and when arena is exitted, all its memory is freed. This is particularly useful for running apps as everytime an app is executed, new arena is created and when the app is done, the arena is destroyed cleaning up any app-related memory leaks and defragmentation issues.  
-     */
-    //@{
-
-    /** Enum of all allocation locations. 
-     */
-    enum class Memory {
-        Heap, 
-        Arena,
-        ROM,
-    };
-
-    /** Returns free heap available to the application. The actual free heap is likely larger if any allocations were freed, but not returned to the heap.      
-     */
-    uint32_t memoryFreeHeap();
-
-    /** Returns the heap already used. Reverse to the memoryFreeHeap(), this value contains all deallocated, but not yet returned memory as well. 
-     */
-    uint32_t memoryUsedHeap();
-
-    /** Returns which memory type the given pointer belongs to. 
-     */
-    Memory memoryOf(void * ptr);
-
-    /** Enters new memory arena for the arena allocator.
-     */
-    void memoryEnterArena();
-
-    /** Leaves current memory arena. 
-     
-        Can only be called if arena has previously been entered by memoryEnterArena(). Frees *all* memory of the arena that is being left. 
-     */
-    void memoryLeaveArena();
-
-    /** Allocates new memory on the heap. 
-     */
-    void * malloc(size_t numBytes);
- 
-    /** Frees previously allocated chunk of memory. 
-     */
-    void free(void * ptr);
-
-    /** Allocates required number of bytes in the arena. 
-     */
-    void * mallocArena(size_t numBytes); 
-
-    template<typename T>
-    inline T * mallocArena() { return (T*)mallocArena(sizeof(T)); }
-
-    /** Returns the beginning of the heap. 
-     */
-    char * heapStart();
-
-    class ArenaScopeX {
-    public:
-        ArenaScopeX();
-        ~ArenaScopeX();
-        ArenaScopeX(ArenaScopeX const & ) = delete;
-    }; 
-
-#endif
-
-    //@}
-
     /** \name Accelerated functions
      */
     //@{
@@ -497,5 +414,3 @@ namespace rckid {
     //@}
 
 } // namespace rckid
-
-#include "memory.h"
