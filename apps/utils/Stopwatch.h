@@ -22,7 +22,7 @@ namespace rckid {
 
     protected:
 
-        Stopwatch(): GraphicsApp{Canvas<ColorRGB>{320, 240}} {}
+        Stopwatch(): GraphicsApp{ARENA(Canvas<ColorRGB>{320, 240})} {}
 
         void update() override {
             GraphicsApp::update();

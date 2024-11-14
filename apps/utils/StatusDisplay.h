@@ -16,7 +16,7 @@ namespace rckid {
 
     protected:
 
-        StatusDisplay(): GraphicsApp{Canvas<ColorRGB>{320, 240}} {}
+        StatusDisplay(): GraphicsApp{ARENA(Canvas<ColorRGB>{320, 240})} {}
 
         void draw() override {
             g_.fill();

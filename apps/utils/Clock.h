@@ -21,7 +21,7 @@ namespace rckid {
 
     protected:
 
-        Clock(): GraphicsApp{Canvas<ColorRGB>{320, 240}} {
+        Clock(): GraphicsApp{ARENA(Canvas<ColorRGB>{320, 240})} {
             alarm_ = alarm();
             t_.startContinuous();
         }

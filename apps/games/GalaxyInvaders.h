@@ -37,7 +37,7 @@ namespace rckid {
         static constexpr int32_t SHIP_Y = 195;
 
         GalaxyInvaders(): 
-            GraphicsApp{Canvas<Color>{320, 240}} /*, 
+            GraphicsApp{ARENA(Canvas<Color>{320, 240})} /*, 
             // TODO for some resons, the commented code initialization does not work, while the one below does. Not sure why. a bug in my code? stack issues? - it only does not work on HW, fantasy works ok
             ship_{Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(assets::icons24::space))},
             alienShips_{

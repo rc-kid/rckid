@@ -27,7 +27,7 @@ namespace rckid {
 
     protected:
 
-        SetTime(): GraphicsApp{Canvas<ColorRGB>{320, 240}} {
+        SetTime(): GraphicsApp{ARENA(Canvas<ColorRGB>{320, 240})} {
             d_ = dateTime();
             t_.startContinuous();
         }

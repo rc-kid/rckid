@@ -31,7 +31,7 @@ namespace rckid {
 
     protected:
 
-        SlidingPuzzle(): GraphicsApp{Canvas<Color>{320, 240}} {}
+        SlidingPuzzle(): GraphicsApp{ARENA(Canvas<Color>{320, 240})} {}
 
         void onFocus() override {
             App::onFocus();

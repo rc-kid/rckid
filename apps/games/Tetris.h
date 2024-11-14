@@ -29,7 +29,7 @@ namespace rckid {
 
     protected:
 
-        Tetris(): GraphicsApp{Canvas<Color>{320, 240}} {
+        Tetris(): GraphicsApp{ARENA(Canvas<Color>{320, 240})} {
             using namespace filesystem;
             FileRead f = fileRead("tetris.hof", Drive::Cartridge);
             if (f.good()) {

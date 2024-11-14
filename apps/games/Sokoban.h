@@ -24,7 +24,7 @@ namespace rckid {
         }
 
     protected:
-        Sokoban(): GraphicsApp{Canvas<Color>{320, 240}} {
+        Sokoban(): GraphicsApp{ARENA(Canvas<Color>{320, 240})} {
             imgs_[0].loadImage(PNG::fromBuffer(assets::icons24::wall));
             imgs_[1].loadImage(PNG::fromBuffer(assets::icons24::wooden_box));
             imgs_[2].loadImage(PNG::fromBuffer(assets::icons24::gps));

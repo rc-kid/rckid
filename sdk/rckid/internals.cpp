@@ -7,6 +7,7 @@ namespace rckid {
     void bsod(uint32_t error, uint32_t line, char const * file, char const * extras) {
         uint32_t freeHeap = memoryFree();
         memoryReset();
+        ArenaScope _{};
         // print the error to debug console
         LOG("Fatal error: " << error);
         if (file != nullptr) {
