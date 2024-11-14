@@ -43,7 +43,7 @@ namespace rckid {
         }
 
         MenuApp(): 
-            GraphicsApp{Canvas<ColorRGB>{320, 240}} {
+            GraphicsApp{ARENA(Canvas<ColorRGB>{320, 240})} {
             carousel_ = new Carousel{Font::fromROM<assets::font::OpenDyslexic48>()}; 
             rckid::ledSetEffects(
                 RGBEffect::Rainbow(0, 1, 1, 32), 

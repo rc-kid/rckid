@@ -26,7 +26,7 @@ namespace rckid {
 
     protected:
         Benchmark():
-            GraphicsApp{Canvas<Color>{320, 240}} {
+            GraphicsApp{ARENA(Canvas<Color>{320, 240})} {
         }
 
         void update() override {

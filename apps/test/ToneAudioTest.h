@@ -16,7 +16,7 @@ namespace rckid {
 
     protected:
         ToneAudioTest():
-            GraphicsApp{Canvas<Color>{320, 240}},
+            GraphicsApp{ARENA(Canvas<Color>{320, 240})},
             buf_{BUFFER_FRAMES * 4, [this](DoubleBuffer &) {
                 refill();
             }} {
