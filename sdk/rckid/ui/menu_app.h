@@ -89,13 +89,13 @@ namespace rckid {
                     TRACE_MENU_APP("Executing app");
                     int oldIndex = i_;
                     singleton_->onBlur();
-                    memoryLeaveArena();
-                    memoryEnterArena();
+                    Arena::leave();
+                    Arena::enter();
                     reinterpret_cast<Action>(payloadPtr)();
                     TRACE_MENU_APP("App done");
                     rumbleNudge();
-                    memoryLeaveArena();
-                    memoryEnterArena();
+                    Arena::leave();
+                    Arena::enter();
                     singleton_ = new MenuApp{};
                     singleton_->onFocus();
                     i_ = oldIndex;

@@ -45,21 +45,15 @@ extern "C" {
 
     void free(void * ptr) {
         using namespace rckid;
-        switch (memoryOf(ptr)) {
-            case Memory::Heap:
-                // if we are in system malloc phase, we should not be deallocating rckid memory, as this only happens during shutdown
-                if (!systemMalloc_)
-                    rckid::free(ptr);
-                break;
-            case Memory::Arena:
-                // do nothing for arenas
-                break;
-            case Memory::ROM:
-                // it's quite likely it is not ROM, but system's malloc somewhere
-                __libc_free(ptr);
-                break;
-            default:
-                UNREACHABLE;
+        if (Heap::contains(ptr)) {
+            // if we are in system malloc phase, we should not be deallocating rckid memory, as this only happens during shutdown
+            if (!systemMalloc_)
+                Heap::free(ptr);
+        } else if (Arena::contains(ptr)) {
+            // don't delete if it comes from arena
+        } else {
+            // if the pointer is not on arena, it must come from the host system's heap and should be freed by libc's free mechanism
+            __libc_free(ptr);
         }
     }
 #endif 
@@ -188,7 +182,8 @@ namespace rckid {
         filesystem::initialize();
 
         // enter base arena for the application
-        memoryEnterArena();
+        // TODO is this needed? 
+        Arena::enter();
         // initialize the next second and time & date from systems time and data
         nextSecond_ = uptimeUs64() + 1000000;
 #if (defined _MSC_VER)        

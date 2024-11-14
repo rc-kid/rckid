@@ -81,9 +81,9 @@ namespace rckid {
         typename std::enable_if<!HasModalResult<T>, void>::type 
         runModal(ARGS && ... args) {
             onBlur();
-            memoryEnterArena();
+            Arena::enter();
             T::run(std::forward<ARGS>(args) ...);
-            memoryLeaveArena();
+            Arena::leave();
             onFocus();
         }
 

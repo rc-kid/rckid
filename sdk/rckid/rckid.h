@@ -13,6 +13,7 @@
 #include "graphics/geometry.h"
 #include "utils/fixedint.h"
 
+
 #define MEASURE_TIME(whereTo, ...) { \
     uint32_t start__ = uptimeUs(); \
     __VA_ARGS__; \
@@ -417,6 +418,8 @@ namespace rckid {
 
     //@}
 
+    #ifdef FOOBAR
+
     /** \name Memory Management
 
         RCKid uses a mixed arena-heap model where the heap can be split into different arenas and when arena is exitted, all its memory is freed. This is particularly useful for running apps as everytime an app is executed, new arena is created and when the app is done, the arena is destroyed cleaning up any app-related memory leaks and defragmentation issues.  
@@ -472,12 +475,14 @@ namespace rckid {
      */
     char * heapStart();
 
-    class ArenaScope {
+    class ArenaScopeX {
     public:
-        ArenaScope();
-        ~ArenaScope();
-        ArenaScope(ArenaScope const & ) = delete;
+        ArenaScopeX();
+        ~ArenaScopeX();
+        ArenaScopeX(ArenaScopeX const & ) = delete;
     }; 
+
+#endif
 
     //@}
 
@@ -492,3 +497,5 @@ namespace rckid {
     //@}
 
 } // namespace rckid
+
+#include "memory.h"
