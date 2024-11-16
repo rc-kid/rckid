@@ -122,6 +122,5 @@ I can put RP in charge of the audio, while keeping the backlihght & rumbler on A
 
 Both arenas are explicit to avoid confusion. 
 
-- stuff does not work because PNG image is *way too* large for RPI's stack
-
+- there are still some memory leaks in apps, check
 

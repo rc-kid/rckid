@@ -103,7 +103,6 @@ namespace rckid {
 
         Menu(std::initializer_list<MenuItem *> items):
             items_{items} {
-            LOG("Items are stored at " << (uintptr_t)(&items_));
         }
 
         ~Menu() {

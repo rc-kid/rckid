@@ -16,11 +16,13 @@
 #define TRACE(...) do { rckid::NewArenaScope _{}; LOG(__VA_ARGS__); } while (false)
 
 //#define TRACE_MENU_APP
-//#define TRACE_MEMORY
+#define TRACE_MEMORY
 //#define TRACE_HEAP
 //#define TRACE_ARENA
 //#define TRACE_LITTLEFS
 
+/** Traces the events in the menu app. 
+ */
 #if !defined TRACE_MENU_APP
     #define TRACE_MENU_APP(...)
 #else
@@ -28,6 +30,8 @@
     #define TRACE_MENU_APP(...) TRACE("menuApp:" << __VA_ARGS__)
 #endif
 
+/** Traces general memory events - namely extra information on app start/end and whenever free memory is checked, prints a detailed breakdown of the memory.
+ */
 #if !defined TRACE_MEMORY
     #define TRACE_MEMORY(...)
 #else
@@ -35,6 +39,8 @@
     #define TRACE_MEMORY(...) TRACE("memory:" << __VA_ARGS__)
 #endif
 
+/** Traces all arena allocations and entering & leaving. 
+ */
 #if !defined TRACE_ARENA
     #define TRACE_ARENA(...)
 #else
@@ -42,12 +48,15 @@
     #define TRACE_ARENA(...) TRACE("arena:" << __VA_ARGS__)
 #endif
 
+/** Traces all heap allocations (and freeing).
+ */
 #if !defined TRACE_HEAP
     #define TRACE_HEAP(...)
 #else
     #undef TRACE_HEAP
     #define TRACE_HEAP(...) TRACE("heap:" << __VA_ARGS__)
 #endif
+
 
 #if !defined TRACE_TONE
     #define TRACE_TONE(...)

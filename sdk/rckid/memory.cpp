@@ -15,7 +15,7 @@
 
 namespace rckid {
 
-    char * Heap::end_ = & __StackLimit - 10000;
+    char * Heap::end_ = & __StackLimit;
 
     char * Arena::start_ = & __bss_end__;
     char * Arena::end_ = & __bss_end__;
@@ -106,7 +106,7 @@ namespace rckid {
 
     void memoryReset() {
         Heap::freelist_ = nullptr;
-        Heap::end_ = & __StackLimit - 10000;
+        Heap::end_ = & __StackLimit;
         Arena::start_ = & __bss_end__;
         Arena::end_ = & __bss_end__;
         TRACE_MEMORY("Resetting memory");
