@@ -29,6 +29,11 @@
     Those values determine the user experience, and can be set freely. Especially if your build does not follow the exact materials used by RCKid proper, you way want to tweak those. 
  */
 
+
+/** Idle timer in seconds, after which the device powers off. 
+ */
+#define IDLE_TIMEOUT 300
+
 /** Determines home button's long press duration in system ticks (1ms)
  */
 #define BTN_HOME_LONG_PRESS_THRESHOLD 1000

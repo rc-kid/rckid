@@ -63,6 +63,8 @@ namespace rckid {
         // reported battery level to prevent battery reporting glitches
         uint8_t batteryLevel_ = 100;
 
+        bool idle_ = true;
+        uint32_t idleTimeout_ = IDLE_TIMEOUT; 
 
         namespace audio {
             uint8_t volume_ = 10;
@@ -178,6 +180,8 @@ namespace rckid {
                     uint8_t * raw = reinterpret_cast<uint8_t*>(&state_.status);
                     for (size_t i = 0; i < sizeof(Status); ++i)
                         *(raw++) = i2c0->hw->data_cmd;
+                    // update idle settings in this second
+                    idle_ = idle_ & ! state_.status.userControlChanged(lastStatus_);
                     // update battery level gauge - calculate battery percentage from the battery voltage ranges and determine if we should display it (i.e. when discharging the percentage can only go down and when charging, the percentage can only go up). 
                     unsigned vb = state_.status.vBatt();
                     uint8_t bl = 0;
@@ -328,6 +332,21 @@ namespace rckid {
     #endif
     }
 
+    void fatalError(uint32_t error, uint32_t line, char const * file) {
+        // TODO ensure that there is enough stack for our functions
+        // clear all memory arenas to clean up space, this is guarenteed to succeed as the SDK creates memory arena when it finishes initialization    
+        memoryReset();
+        bsod(error, line, file, nullptr);
+        // use yield so that we can keep the USB active as well
+        // TODO monitor reset, etc 
+        while (true)
+            yield();
+    }
+
+    void fatalError(Error error, uint32_t line, char const * file) {
+        fatalError(static_cast<uint32_t>(error), line, file);
+    }
+
     void tick() {
         joystickTick();
         waitTickEnd();
@@ -335,6 +354,13 @@ namespace rckid {
         while (now > nextSecond_) {
             nextSecond_ += 1000000;
             state_.time.secondTick();
+            if (idle_) {
+                if (--idleTimeout_ == 0)
+                    sendCommand(cmd::PowerOff{});
+            } else {
+                idle_ = true;
+                idleTimeout_ = IDLE_TIMEOUT;
+            }
         }
         ++ticks_;
         // make sure the I2C is off, then set it up so that it can talk to the accelerometer
@@ -364,19 +390,8 @@ namespace rckid {
         tud_task();
     }
 
-    void fatalError(uint32_t error, uint32_t line, char const * file) {
-        // TODO ensure that there is enough stack for our functions
-        // clear all memory arenas to clean up space, this is guarenteed to succeed as the SDK creates memory arena when it finishes initialization    
-        memoryReset();
-        bsod(error, line, file, nullptr);
-        // use yield so that we can keep the USB active as well
-        // TODO monitor reset, etc 
-        while (true)
-            yield();
-    }
-
-    void fatalError(Error error, uint32_t line, char const * file) {
-        fatalError(static_cast<uint32_t>(error), line, file);
+    void keepAlive() {
+        idleTimeout_ = IDLE_TIMEOUT;
     }
 
     uint32_t uptimeUs() { return time_us_32(); }
