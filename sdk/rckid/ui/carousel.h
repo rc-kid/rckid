@@ -23,20 +23,15 @@ namespace rckid {
 
         bool idle() const { return ! a_.running(); }
 
-        void setCurrent(char const * text, Bitmap<ColorRGB> && icon) {
-            text_ = text;
-            textWidth_ = font_.textWidth(text);
-            icon_ = std::move(icon);
-            dir_ = Btn::Home;
-        }
-
         void setCurrent(MenuItem const & item) {
             text_ = item.text();
             textWidth_ = font_.textWidth(text_);
-            auto x = item.icon();
-            if (x) {
-                icon_ = std::move(*x);
-            }
+            if (! item.icon(icon_))
+                icon_.fill(color::Black);
+            //auto x = item.icon();
+            //if (x) {
+            //    icon_ = std::move(*x);
+            //}
             // TODO else
             dir_ = Btn::Home;
         }
@@ -114,10 +109,13 @@ namespace rckid {
         void setOther(MenuItem const & item, Btn dir) {
             otherText_ = item.text();
             otherTextWidth_ = font_.textWidth(otherText_);
-            auto x = item.icon();
-            if (x) {
-                otherIcon_ = std::move(*x);
-            }
+            if (! item.icon(otherIcon_))
+                otherIcon_.fill(color::Black);
+
+            //auto x = item.icon();
+            //if (x) {
+            //    otherIcon_ = std::move(*x);
+            //}
             // TODO else
             dir_ = dir;
             a_.start();

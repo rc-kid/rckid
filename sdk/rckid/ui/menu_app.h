@@ -43,7 +43,7 @@ namespace rckid {
         }
 
         MenuApp(): 
-            GraphicsApp{ARENA(Canvas<ColorRGB>{320, 240})} {
+            GraphicsApp{Canvas<ColorRGB>{320, 240}} {
             carousel_ = new Carousel{Font::fromROM<assets::font::OpenDyslexic48>()}; 
             rckid::ledSetEffects(
                 RGBEffect::Rainbow(0, 1, 1, 32), 
@@ -56,7 +56,7 @@ namespace rckid {
 
         static void run(MenuGenerator menuGenerator) {
             if (singleton_ == nullptr)
-                singleton_ = new MenuApp{};
+                singleton_ = ARENA(new MenuApp{});
             i_ = 0;
             menu_ = menuGenerator();
             TRACE_MENU_APP("Generated menu - items: " << menu_->size());
@@ -89,14 +89,19 @@ namespace rckid {
                     TRACE_MENU_APP("Executing app");
                     int oldIndex = i_;
                     singleton_->onBlur();
+                    delete menu_; // menu is heap allocated
                     Arena::leave();
                     Arena::enter();
+                    TRACE_MEMORY("Heap allocated before app: " << Heap::allocated());
+                    TRACE_MEMORY("Heap used befor eapp:      " << Heap::used());
                     reinterpret_cast<Action>(payloadPtr)();
+                    TRACE_MEMORY("Heap allocated after app:  " << Heap::allocated());
+                    TRACE_MEMORY("Heap used after eapp:      " << Heap::used());
                     TRACE_MENU_APP("App done");
                     rumbleNudge();
                     Arena::leave();
                     Arena::enter();
-                    singleton_ = new MenuApp{};
+                    singleton_ = ARENA(new MenuApp{});
                     singleton_->onFocus();
                     i_ = oldIndex;
                     menu_ = menuGenerator();
@@ -114,8 +119,9 @@ namespace rckid {
             if (btnPressed(Btn::VolumeDown))
                 audioSetVolume(audioVolume() - 1);
             if (btnPressed(Btn::Select)) {
-                using namespace filesystem;
-                format(Drive::Cartridge);
+                //using namespace filesystem;
+                //format(Drive::Cartridge);
+                memoryFree();
                 /*
                 if (displayBrightness() == 0)
                     displaySetBrightness(128);
@@ -147,6 +153,7 @@ namespace rckid {
         }
 
         void draw() {
+            NewArenaScope _{};
             g_.fill();
             carousel_->drawOn(g_, Rect::XYWH(0, 160, 320, 80));
             Header::drawOn(g_);

@@ -70,9 +70,7 @@ namespace rckid {
         typename std::enable_if<HasModalResult<T>, std::optional<typename T::ModalResult>>::type
         runModal(ARGS && ... args) {
             onBlur();
-            //memoryEnterArena();
             auto result = T::run(std::forward<ARGS>(args) ...);
-            //memoryLeaveArena();
             onFocus();
             return result;
         }

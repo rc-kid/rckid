@@ -6,14 +6,13 @@
 #include <platform/tinydate.h>
 
 #include "tracing.h"
-
+#include "memory.h"
 
 #include "config.h"
 #include "common.h"
 #include "graphics/geometry.h"
 #include "utils/fixedint.h"
 #include "errors.h"
-#include "memory.h"
 
 #define MEASURE_TIME(whereTo, ...) { \
     uint32_t start__ = uptimeUs(); \

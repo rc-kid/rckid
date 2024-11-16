@@ -312,7 +312,7 @@ namespace rckid {
         filesystem::initialize();
 
         // enter base arena for the application
-        memoryEnterArena();
+        //Arena::enter();
 
         // read the full AVR state and set last tick for time keeping
         i2c_read_blocking(i2c0, I2C_AVR_ADDRESS, (uint8_t *) & state_, sizeof(TransferrableState), false);
@@ -320,6 +320,12 @@ namespace rckid {
         
         // set brightness to 50% by default after startup
         displaySetBrightness(128);
+
+
+        return;
+        char cmd_ = ' ';
+        while (tud_cdc_read(& cmd_, 1) != 1) { yield(); };
+        LOG("Received command " << cmd_);
     }
 
     void tick() {
@@ -361,8 +367,7 @@ namespace rckid {
     void fatalError(uint32_t error, uint32_t line, char const * file) {
         // TODO ensure that there is enough stack for our functions
         // clear all memory arenas to clean up space, this is guarenteed to succeed as the SDK creates memory arena when it finishes initialization    
-        while (memoryInsideArena())
-            memoryLeaveArena();
+        memoryReset();
         bsod(error, line, file, nullptr);
         // use yield so that we can keep the USB active as well
         // TODO monitor reset, etc 
