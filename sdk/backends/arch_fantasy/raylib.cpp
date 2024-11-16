@@ -458,7 +458,9 @@ namespace rckid {
     }
 
     void audioOn() {
+        systemMalloc_ = true;
         InitAudioDevice();
+        systemMalloc_ = false;
     }
 
     void audioOff() {

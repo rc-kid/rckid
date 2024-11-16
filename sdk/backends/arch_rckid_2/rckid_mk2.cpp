@@ -321,11 +321,11 @@ namespace rckid {
         // set brightness to 50% by default after startup
         displaySetBrightness(128);
 
-
-        return;
+    #if (defined RCKID_WAIT_FOR_SERIAL)
         char cmd_ = ' ';
         while (tud_cdc_read(& cmd_, 1) != 1) { yield(); };
         LOG("Received command " << cmd_);
+    #endif
     }
 
     void tick() {

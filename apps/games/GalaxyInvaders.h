@@ -111,6 +111,7 @@ namespace rckid {
         }
 
         void draw() override {
+            NewArenaScope _{};
             g_.fill();
             // draw lives
             for (uint32_t i = 0; i < lives_; ++i)
