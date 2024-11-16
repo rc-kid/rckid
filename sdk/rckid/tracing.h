@@ -13,11 +13,13 @@
 
  */
 
-#define TRACE(...) do { LOG(__VA_ARGS__); } while (false)
+#define TRACE(...) do { rckid::NewArenaScope _{}; LOG(__VA_ARGS__); } while (false)
 
 //#define TRACE_MENU_APP
 //#define TRACE_MEMORY
-#define TRACE_LITTLEFS
+//#define TRACE_HEAP
+//#define TRACE_ARENA
+//#define TRACE_LITTLEFS
 
 #if !defined TRACE_MENU_APP
     #define TRACE_MENU_APP(...)
@@ -33,6 +35,19 @@
     #define TRACE_MEMORY(...) TRACE("memory:" << __VA_ARGS__)
 #endif
 
+#if !defined TRACE_ARENA
+    #define TRACE_ARENA(...)
+#else
+    #undef TRACE_ARENA
+    #define TRACE_ARENA(...) TRACE("arena:" << __VA_ARGS__)
+#endif
+
+#if !defined TRACE_HEAP
+    #define TRACE_HEAP(...)
+#else
+    #undef TRACE_HEAP
+    #define TRACE_HEAP(...) TRACE("heap:" << __VA_ARGS__)
+#endif
 
 #if !defined TRACE_TONE
     #define TRACE_TONE(...)
@@ -47,5 +62,10 @@
     #undef TRACE_LITTLEFS
     #define TRACE_LITTLEFS(...) TRACE("littlefs:" << __VA_ARGS__)
 #endif
+
+namespace rckid {
+    // forward declaration for traces
+    Writer debugWrite();
+}
 
 

@@ -2,6 +2,8 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
+- new memory is cool but there is a memory leak somewhere. Try checking the code for a bit and if can't be fixed use the ugly ones for xmas and move on
+
 - text input should distinguish between returning and cancel, currently no provision for that in code
 
 - hall of fame and others can be apps of their own that just reuse the canvas from previous run, but delegate the controls? How though
@@ -111,3 +113,15 @@ Things we are missing is audio on/off and headphone detection (1 or 2 pins), bac
 I can put RP in charge of the audio, while keeping the backlihght & rumbler on AVR, leaving RP with 2 free pins (UART for debugging or some aoutput pins) and 3 pins on AVR (uart for debugging and some leds, etc.)
 
 > Turns out it actually might work even with the 16bit display and the 16bit resolution can even give faster communication and thus more time available for draw in framebuffer mode. 
+
+# Proper memory layoyt
+
+1) allocate everything that should last as long as the app on arena.
+2) allocate everything that should last as long as the draw method on the separate per frame arena
+3) everything else goes on heap
+
+Both arenas are explicit to avoid confusion. 
+
+- stuff does not work because PNG image is *way too* large for RPI's stack
+
+

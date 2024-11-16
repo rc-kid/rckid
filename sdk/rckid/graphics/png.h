@@ -16,7 +16,7 @@ namespace rckid {
 
         The decode callback is called every time new row of the image is decoded and thus gives the caller the ability to process the image.
      */
-    class PNG : private PNGIMAGE  {
+    class PNG {
     public:
 
         using DecodeCallback = std::function<void(ColorRGB * rgb, int lineNum, int lineWidth)>;
@@ -29,20 +29,26 @@ namespace rckid {
         static PNG fromBuffer(uint8_t const (&buffer)[SIZE]) { return fromBuffer(buffer, SIZE); }
 
 
-        int width() const { return iWidth; }
+        int width() const { return img_->iWidth; }
 
-        int height() const { return iHeight; }
+        int height() const { return img_->iHeight; }
 
         int decode(DecodeCallback cb);
 
         PNG & operator == (PNG const &) = delete;
         PNG & operator == (PNG &&) = delete;
 
+        ~PNG() {
+            delete img_;
+        }
+
     private:
 
         PNG();
 
         static void decodeLine_(PNGDRAW *pDraw);
+
+        PNGIMAGE * img_;
 
         DecodeCallback cb_;
 

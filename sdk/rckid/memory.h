@@ -6,6 +6,42 @@
 
 namespace rckid {
 
+    /** Returns free memory available on the system. */
+    uint32_t memoryFree(); 
+
+    /** RAII object that redirects all default allocations to arena. 
+     */
+    class ArenaScope {
+    public:
+        ArenaScope();
+        ~ArenaScope();
+
+        template<typename T>
+        T && operator()(T && value) { return std::move(value); }
+    };
+
+    /** RAII object that overrides all default allocations to heap, even when called from inside arena scope. 
+     */
+    class HeapScope {
+    public:
+        HeapScope();
+        ~HeapScope();
+
+        template<typename T>
+        T && operator()(T && value) { return std::move(value); }
+
+    private:
+        uint32_t const backup_;
+    };
+
+    /** RAII object that enters new arena, redirects all default allocations to it and leaves the arena when going out of scope itself. 
+     */
+    class NewArenaScope {
+    public:
+        NewArenaScope();
+        ~NewArenaScope();
+    };
+
     class Heap {
     public:
 
@@ -35,6 +71,16 @@ namespace rckid {
             This is true if it happens to be anywhere between current heap's end and stack limit. 
          */
         static bool contains(void * ptr);
+
+        /** Returns the size of the contiguous heap including any freed objects.
+         */
+        static uint32_t used(); 
+
+        /** Returns the total allocated heap memory.
+         
+            This is everything in memory used minus all chunks in the freelist. 
+         */
+        static uint32_t allocated();
 
     private:
         friend class Arena;
@@ -75,9 +121,10 @@ namespace rckid {
 
         /** Allocates given number of bytes on the current arena. 
          */
-        static void * malloc(uint32_t bytes) {
+        static void * malloc(uint32_t numBytes) {
+            TRACE_ARENA("Allocating " << numBytes << " on arena");        
             void * result = end_;
-            end_ += bytes;
+            end_ += numBytes;
             // check that we are not running out of memory by crossing the heap end
             ASSERT(end_ < Heap::end_);
             return result;
@@ -91,6 +138,7 @@ namespace rckid {
         /** Resets the current arena by deallocating all its objects. 
          */
         static void reset() {
+            TRACE_ARENA("Resetting arena (clearing " <<  (uint32_t)(end_ - start_) << " bytes)");
             end_ = start_;
         }
 
@@ -99,6 +147,7 @@ namespace rckid {
             Pushes current arena start onto the arena memmory and then sets arena start and end immediately after this pointer. This leaves old arena start right before current arena start for when we are leaving the current arena. 
          */
         static void enter() {
+            TRACE_ARENA("Entering arena");
             char ** lastStart = malloc<char*>();
             *lastStart = start_;
             start_ = end_;
@@ -109,10 +158,12 @@ namespace rckid {
             Leaves the current arena loading the previous arena start from just before current arena start and then moving the end to where the previous arena start was stored. 
          */
         static void leave() {
+            TRACE_ARENA("Leaving arena");
             // TODO assert we are still in RAM actually (i.e. there is something before us)
             char ** previous = ((char**)start_) - 1;
             start_ = *previous;
             end_ = (char*)previous;
+            TRACE_ARENA("Free memory: " << memoryFree());
         }
 
         /** Returns true if given pointer belongs to any of the currently opened arenas. 
@@ -124,6 +175,14 @@ namespace rckid {
         /** Returns true if arena is the preferred mode of allocation at the point of calling the method. 
          */
         static bool isPreferred() { return Heap::preferredArena_ > 0; }
+
+        /** Returns the total memory used by the arenas (i.e. the sum of all entered arenas). 
+         */
+        static uint32_t used(); 
+
+        /** Returns the memory used by the current arena. 
+         */
+        static uint32_t usedCurrent() { return end_ - start_; }
 
     private:
         friend class Heap;
@@ -137,53 +196,6 @@ namespace rckid {
 
     }; // rckid::Arena
 
-    /** RAII object that redirects all default allocations to arena. 
-     */
-    class ArenaScope {
-    public:
-        ArenaScope() { ++Heap::preferredArena_; }
-
-        ~ArenaScope() { 
-            ASSERT(Heap::preferredArena_ > 0);
-            --Heap::preferredArena_; 
-        }
-
-        template<typename T>
-        T && operator()(T && value) { return std::move(value); }
-    };
-
-    /** RAII object that overrides all default allocations to heap, even when called from inside arena scope. 
-     */
-    class HeapScope {
-    public:
-        HeapScope():backup_{Heap::preferredArena_} { Heap::preferredArena_ = 0; }
-        ~HeapScope() { Heap::preferredArena_ = backup_; }
-
-        template<typename T>
-        T && operator()(T && value) { return std::move(value); }
-
-    private:
-        uint32_t const backup_;
-    };
-
-    /** RAII object that enters new arena, redirects all default allocations to it and leaves the arena when going out of scope itself. 
-     */
-    class NewArenaScope {
-    public:
-        NewArenaScope() {
-            Arena::enter();
-            ++Heap::preferredArena_;
-        }
-
-        ~NewArenaScope() {
-            ASSERT(Heap::preferredArena_ > 0);
-            Arena::leave();
-            --Heap::preferredArena_; 
-        }
-    };
-
-    /** Returns free memory available on the system. */
-    inline uint32_t memoryFree() { return (Heap::end_ - Arena::end_); } 
 
     /** Generic malloc. 
      
@@ -207,7 +219,28 @@ namespace rckid {
     #define HEAP(...) rckid::HeapScope{}(__VA_ARGS__)
 
     #define ARENA(...) rckid::ArenaScope{}(__VA_ARGS__)
+    
 
-    #define NEW_ARENA(...) rckid::NewArenaScope{}(__VA_ARGS__)
+
+    inline ArenaScope::ArenaScope() { ++Heap::preferredArena_; }
+
+    inline ArenaScope::~ArenaScope() { 
+        ASSERT(Heap::preferredArena_ > 0);
+        --Heap::preferredArena_; 
+    }
+
+    inline HeapScope::HeapScope():backup_{Heap::preferredArena_} { Heap::preferredArena_ = 0; }
+    inline HeapScope::~HeapScope() { Heap::preferredArena_ = backup_; }
+
+    inline NewArenaScope::NewArenaScope() {
+        Arena::enter();
+        ++Heap::preferredArena_;
+    }
+
+    inline NewArenaScope::~NewArenaScope() {
+        ASSERT(Heap::preferredArena_ > 0);
+        Arena::leave();
+        --Heap::preferredArena_; 
+    }
 
 } // namespace rckid

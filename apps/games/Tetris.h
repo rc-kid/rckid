@@ -93,6 +93,7 @@ namespace rckid {
         }
 
         void draw() override {
+            NewArenaScope _{};
             // clear
             g_.fill();
             if (hofActive_) {

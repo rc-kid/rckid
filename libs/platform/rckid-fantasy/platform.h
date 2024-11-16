@@ -7,6 +7,6 @@
 
 #define ASSERT(...) do { if (!(__VA_ARGS__)) rckid::fatalError(rckid::Error::Assert, __LINE__, __FILE__); } while (false)
 
-#define LOG(...) rckid::debugWrite() << __VA_ARGS__ << '\n';
+#define LOG(...) do { rckid::NewArenaScope _{}; rckid::debugWrite() << __VA_ARGS__ << '\n'; } while (false)
 
 #include "../pc/platform.h"

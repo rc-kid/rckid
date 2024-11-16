@@ -22,8 +22,13 @@ namespace rckid {
          */
         virtual char const * text() const = 0;
 
-        /** Returns an icon to be used with the menu */
-        virtual std::optional<Bitmap<ColorRGB>> icon() const { return std::nullopt; }
+        /** Loads menu item icon into the given bitmap. 
+         
+            Returns true on success, false otherwise. 
+
+            TODO the bitmap has to be at least as large as the icon stored with the menu for now, but we should add a scaling variant. 
+         */
+        virtual bool icon([[maybe_unused]] Bitmap<ColorRGB> & bmp) const { return false; }
 
         virtual ~MenuItem() = default;
 
@@ -74,10 +79,11 @@ namespace rckid {
 
         char const * text() const override { return text_; }
 
-        std::optional<Bitmap<ColorRGB>> icon() const override {
+        bool icon(Bitmap<ColorRGB> &bmp) const override {
             if (iconData_ == nullptr)
-                return std::nullopt;
-            return Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(iconData_, iconSize_));
+                return false;
+            bmp.loadImage(PNG::fromBuffer(iconData_, iconSize_));
+            return true;
         }
 
     private:
@@ -97,6 +103,7 @@ namespace rckid {
 
         Menu(std::initializer_list<MenuItem *> items):
             items_{items} {
+            LOG("Items are stored at " << (uintptr_t)(&items_));
         }
 
         ~Menu() {
@@ -108,7 +115,7 @@ namespace rckid {
 
         MenuItem & operator [] (uint32_t index) {
             ASSERT(index < items_.size());
-            return *items_[index];
+            return *(items_[index]);
         }
 
         void add(MenuItem * item) {
