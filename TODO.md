@@ -2,8 +2,6 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
-- new memory is cool but there is a memory leak somewhere. Try checking the code for a bit and if can't be fixed use the ugly ones for xmas and move on
-
 - text input should distinguish between returning and cancel, currently no provision for that in code
 
 - hall of fame and others can be apps of their own that just reuse the canvas from previous run, but delegate the controls? How though
@@ -121,6 +119,3 @@ I can put RP in charge of the audio, while keeping the backlihght & rumbler on A
 3) everything else goes on heap
 
 Both arenas are explicit to avoid confusion. 
-
-- there are still some memory leaks in apps, check
-

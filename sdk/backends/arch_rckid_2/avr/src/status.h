@@ -65,6 +65,17 @@ namespace rckid {
             controls_ |= (a ? BTN_A : 0) | ( b ? BTN_B : 0) | (sel ? BTN_SELECT : 0) | (start ? BTN_START : 0);
         }
 
+        /** Returns true if the user input controls monitored by the AVR changed between the other status and the current one. Used to determine the idle timer. 
+         */
+        bool userControlChanged(Status const & from) {
+            if (controls_ != from.controls_)
+                return true;
+            uint8_t mask = (BTN_HOME | BTN_VOL_UP | BTN_VOL_DOWN); 
+            if ((status_ & mask)  != (from.status_ & mask))
+                return true;
+            return false;
+        }
+
     private:
 
         friend class ::RCKid;

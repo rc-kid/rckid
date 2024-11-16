@@ -55,6 +55,12 @@ namespace rckid {
 
     void yield();
 
+    /** Programatically resets the idle timer that automatically powers the device off. 
+     
+        Use with care only in cases where it makes sense (such as when playing media) otherwise this has obviously  very negative impact on the battery. 
+     */
+    void keepAlive();
+
     /** Returns the system's uptime in microseconds. 
      
         For performance reasons, this uses uint32_t as the result value and as such will overflow every hour & something. The intended purpose of this function is not precise timekeeping, but delta time measurements, so the overflows are fine. 
