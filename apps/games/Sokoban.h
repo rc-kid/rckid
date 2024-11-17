@@ -4,9 +4,12 @@
 #include <rckid/graphics/canvas.h>
 #include <rckid/ui/header.h>
 #include <rckid/ui/alert.h>
+#include <rckid/ui/carousel.h>
 
 #include <rckid/assets/fonts/OpenDyslexic24.h>
+#include <rckid/assets/fonts/OpenDyslexic48.h>
 #include <rckid/assets/icons24.h>
+
 
 namespace rckid {
 
@@ -18,48 +21,127 @@ namespace rckid {
         
         static void run() {
             Sokoban g;
-            g.resetGame();
             g.loop();
         }
 
     protected:
+
+        class SokobanLevel : public MenuItem {
+        public:
+            SokobanLevel(Sokoban * parent):
+                parent_{*parent}, level_{parent->level_} {
+            }
+
+            void text(std::string & text) const override { 
+                text = STR("Level " << level_);
+            }
+
+            bool icon(Bitmap<ColorRGB> &bmp) const override {
+                bmp.fill(color::Black);
+                int tSize = std::min(bmp.width() / COLS, bmp.height() / ROWS); 
+                int offsetX = (bmp.width() - COLS * tSize) / 2;
+                int yy = (bmp.height() - ROWS * tSize) / 2;
+                uint8_t * tiles = parent_.map_;
+                for (int y = 0; y < ROWS; ++y) {
+                    int xx = offsetX;
+                    for (int x = 0; x < COLS; ++x) {
+                        switch ((*tiles++)) {
+                            case TILE_WALL:
+                                bmp.fill(color::Red, Rect::XYWH(xx, yy, tSize, tSize));
+                                break;
+                            case TILE_PLACED_CRATE:
+                            case TILE_CRATE:
+                                bmp.fill(color::Yellow, Rect::XYWH(xx, yy, tSize, tSize));
+                                break;
+                            case TILE_PLACE:
+                                bmp.fill(color::Blue, Rect::XYWH(xx, yy, tSize, tSize));
+                                break;
+                            default:
+                                break;
+                        }
+                        xx += tSize;
+                    }
+                    yy += tSize;
+                }
+                return true;
+            }
+
+        private:
+            Sokoban & parent_;
+            uint32_t level_;
+        }; 
 
         Sokoban(): GraphicsApp{ARENA(Canvas<Color>{320, 240})} {
             imgs_[0].loadImage(PNG::fromBuffer(assets::icons24::wall));
             imgs_[1].loadImage(PNG::fromBuffer(assets::icons24::wooden_box));
             imgs_[2].loadImage(PNG::fromBuffer(assets::icons24::gps));
             imgs_[3].loadImage(PNG::fromBuffer(assets::icons24::boy));
+            setLevel(1);
+            levelSelect_.setCurrent(SokobanLevel{this});
         }
 
         void update() override {
             GraphicsApp::update();
-            if (btnPressed(Btn::Up))
-                tryMove(Point{0, -1});
-            if (btnPressed(Btn::Down))
-                tryMove(Point{0, 1});
-            if (btnPressed(Btn::Left))
-                tryMove(Point{-1, 0});
-            if (btnPressed(Btn::Right))
-                tryMove(Point{1, 0});
-            if (btnPressed(Btn::Start))
-                resetLevel();
-            // TODO debug only
-            if (btnPressed(Btn::Select))
-                setLevel(level_ + 1);
+            switch (mode_) {
+                case Mode::Intro: {
+                    if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                        mode_ = Mode::Game;
+                        setLevel(level_);
+                    }
+                    if (btnPressed(Btn::Left)) {
+                        setLevel(level_ - 1);
+                        levelSelect_.moveLeft(SokobanLevel{this});
+                    }
+                    if (btnPressed(Btn::Right)) {
+                        setLevel(level_ + 1);
+                        levelSelect_.moveRight(SokobanLevel{this});
+                    }
+                    break;
+                }
+                case Mode::Game: {
+                    if (btnPressed(Btn::Up))
+                        tryMove(Point{0, -1});
+                    if (btnPressed(Btn::Down))
+                        tryMove(Point{0, 1});
+                    if (btnPressed(Btn::Left))
+                        tryMove(Point{-1, 0});
+                    if (btnPressed(Btn::Right))
+                        tryMove(Point{1, 0});
+                    if (btnPressed(Btn::Start))
+                        setLevel(level_);
+                    // TODO debug only
+                    if (btnPressed(Btn::Select))
+                        setLevel(level_ + 1);
+                    break;
+                }
+                default:
+                    // no use control in other modes
+                    break;
+            }
         }
 
         void draw() override {
+            NewArenaScope _{};
             g_.fill();
-            drawMap();
-            drawPlayer();
+            switch (mode_) {
+                case Mode::Intro: {
+                    levelSelect_.drawOn(g_, Rect::XYWH(0, 160, 320, 80));
+                    break;
+                }
+                case Mode::Game: {
+                    drawMap();
+                    drawPlayer();
 
-            std::string str{STR(moves_ << " moves")};
-            g_.text(320 - assets::font::OpenDyslexic24::font.textWidth(str), 218, assets::font::OpenDyslexic24::font, color::LightGray) << str;
-            str = STR("Level " << level_);
-            g_.text(0, 218, assets::font::OpenDyslexic24::font, color::LightGray) <<str;
+                    std::string str{STR(moves_ << " moves")};
+                    g_.text(320 - assets::font::OpenDyslexic24::font.textWidth(str), 218, assets::font::OpenDyslexic24::font, color::LightGray) << str;
+                    str = STR("Level " << level_);
+                    g_.text(0, 218, assets::font::OpenDyslexic24::font, color::LightGray) << str;
+                    break;
+                } 
+                default:
+                    UNIMPLEMENTED;
+            }
         }
-
-
 
         /** Draws the sokoban map. 
          
@@ -174,21 +256,11 @@ namespace rckid {
         uint8_t getTile(Point p) { return getTile(p.x, p.y); }
         void setTile(Point p, uint8_t tile) { setTile(p.x, p.y, tile); }
 
-        void resetGame() {
-            totalMoves_ = 0;
-            moves_ = 0;
-            setLevel(1);
-        }
-
-        void resetLevel() {
-            moves_ = 0;
-            setLevel(level_);
-        }
-
         void setLevel(uint32_t value) {
-            // TODO although we actually want to be done when all levels are exhausted
             if (value > NUM_LEVELS)
                 value = 1;
+            else if (value == 0)
+                value = NUM_LEVELS;
             // copy the level map
             memcpy(map_, levels_[value - 1], sizeof(map_));
             totalMoves_ += moves_;
@@ -216,8 +288,6 @@ namespace rckid {
         static constexpr int OFFSETX = (320 - COLS * TILE_WIDTH) / 2;
         static constexpr int OFFSETY = (240 - ROWS * TILE_HEIGHT) / 2;
 
-
-
         static constexpr uint8_t TILE_EMPTY = 0;
         static constexpr uint8_t TILE_WALL = 1;
         static constexpr uint8_t TILE_CRATE = 2;
@@ -226,7 +296,18 @@ namespace rckid {
         static constexpr uint8_t TILE_PLACE = 5;
         static constexpr uint8_t TILE_PLAYER = 9;
 
-        uint32_t level_;
+        enum class Mode {
+            Intro, 
+            Game, 
+            Reset,
+            Done,
+        }; 
+
+        Mode mode_ = Mode::Intro;
+
+        Carousel levelSelect_{assets::font::OpenDyslexic48::font};
+
+        uint32_t level_ = 1;
         uint32_t moves_;
         uint32_t totalMoves_;
         Point player_;

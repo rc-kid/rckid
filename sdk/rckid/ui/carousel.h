@@ -24,7 +24,7 @@ namespace rckid {
         bool idle() const { return ! a_.running(); }
 
         void setCurrent(MenuItem const & item) {
-            text_ = item.text();
+            item.text(text_);
             textWidth_ = font_.textWidth(text_);
             if (! item.icon(icon_))
                 icon_.fill(color::Black);
@@ -107,7 +107,7 @@ namespace rckid {
     private:
 
         void setOther(MenuItem const & item, Btn dir) {
-            otherText_ = item.text();
+            item.text(otherText_);
             otherTextWidth_ = font_.textWidth(otherText_);
             if (! item.icon(otherIcon_))
                 otherIcon_.fill(color::Black);
@@ -127,8 +127,8 @@ namespace rckid {
             return Point{left, top};
         }
 
-        void drawText(Bitmap<ColorRGB> & surface, int x, int y, Bitmap<ColorRGB> const & icon, char const * text) {
-            if (text == nullptr)
+        void drawText(Bitmap<ColorRGB> & surface, int x, int y, Bitmap<ColorRGB> const & icon, std::string & text) {
+            if (text.empty())
                 return;
             y += (icon.height() - font_.size) / 2;
             x += icon.width() + 5;
@@ -142,8 +142,8 @@ namespace rckid {
 
         Font font_;
 
-        char const * text_ = nullptr;
-        char const * otherText_ = nullptr;
+        std::string text_;
+        std::string otherText_;
         int textWidth_ = 0;
         int otherTextWidth_ = 0;
         Bitmap<ColorRGB> icon_{64, 64};

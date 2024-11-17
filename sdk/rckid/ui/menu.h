@@ -16,11 +16,11 @@ namespace rckid {
      */
     class MenuItem {
     public:
-        /** Returns the menu item text as a C-string. 
-         
-            C strings are used so that static menu items that read values directly do not have to create copies into std::string. 
+        /** Loads the text associated with the menu item to the provides string.
+
+            This is so that the menu items do not have to worry about allocation of the strings, which is provided by their users.  
          */
-        virtual char const * text() const = 0;
+        virtual void text(std::string & text) const = 0;
 
         /** Loads menu item icon into the given bitmap. 
          
@@ -77,7 +77,7 @@ namespace rckid {
             iconSize_{SIZE} {
         }
 
-        char const * text() const override { return text_; }
+        void text(std::string & text) const override { text = text_; }
 
         bool icon(Bitmap<ColorRGB> &bmp) const override {
             if (iconData_ == nullptr)
