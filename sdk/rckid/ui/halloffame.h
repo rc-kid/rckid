@@ -79,15 +79,21 @@ namespace rckid {
          */
         void drawOn(Canvas<ColorRGB> & g) {
             //g.text(160 - titleFont_->textWidth(title_.c_str()) / 2, 20, *titleFont_, titleColor_) << title_;
-            g.textRainbow(160 - titleFont_->textWidth(title_.c_str()) / 2, 20, *titleFont_, startHue_, 1024) << title_;
-            int y = 20 + titleFont_->size + 10;
+            g.textRainbow(160 - titleFont_.textWidth(title_.c_str()) / 2, 20, titleFont_, startHue_, 1024) << title_;
+            int y = 20 + titleFont_.size + 10;
             for (auto const & i : table_) {
-                g.text(20, y, *tableFont_, tableColor_) << i.name;
-                g.text(260, y, *tableFont_, tableColor_) << i.score;
-                y += tableFont_->size + 5;
+                g.text(20, y, tableFont_, tableColor_) << i.name;
+                g.text(260, y, tableFont_, tableColor_) << i.score;
+                y += tableFont_.size + 5;
             }
             startHue_ += 128;
         }
+
+        Font const & titleFont() const { return titleFont_; }
+        Font const & tableFont() const { return tableFont_; }
+
+        void setTitleFont(Font const & f) { titleFont_ = f; }
+        void setTableFont(Font const & f) { tableFont_ = f; }
 
     private:
 
@@ -96,14 +102,14 @@ namespace rckid {
             uint32_t score;
         }; 
 
-        Font const * titleFont_ = & assets::font::OpenDyslexic48::font;
+        Font titleFont_ = assets::font::OpenDyslexic48::font;
         ColorRGB titleColor_ = color::White;
 
-        Font const * tableFont_ = & assets::font::Iosevka24::font;
+        Font tableFont_ = assets::font::Iosevka24::font;
         ColorRGB tableColor_ = color::White;
 
         uint32_t maxEntries_ = 5;
-        std::string title_{"Hall of Fame"};
+        std::string title_{"HALL OF FAME"};
         std::vector<Record> table_;
         uint16_t startHue_ = 0;
 

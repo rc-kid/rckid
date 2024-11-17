@@ -9,6 +9,8 @@
 #include <rckid/filesystem.h>
 
 #include <rckid/assets/fonts/OpenDyslexic24.h>
+#include <rckid/assets/fonts/MetalLord32.h>
+#include <rckid/assets/fonts/MetalLord64.h>
 namespace rckid {
 
     /** A simple tetris game. 
@@ -40,83 +42,117 @@ namespace rckid {
                 hof_.add("Jaffar", 10000);
                 hof_.add("Noone", 1);
             }
+            hof_.setTitleFont(assets::font::MetalLord32::font);
         }
 
         void update() override {
+            switch (mode_) {
+                case Mode::Intro:
+                case Mode::HallOfFame: {
+                    if (btnPressed(Btn::A) || btnPressed(Btn::Start))  {
+                        resetGame();
+                        mode_ = Mode::Game;
+                    }
+                    if (--modeTimeout_ == 0) {
+                        mode_ = mode_ == Mode::Intro ? Mode::HallOfFame : Mode::Intro;
+                        modeTimeout_ = INTRO_FRAMES_LENGTH;
+                    }
+                    break;
+                }
+                case Mode::Game: {
+                    bool goDown = false;
+                    if (--countdown_ == 0) {
+                        goDown = true;
+                        countdown_ = speed_;
+                    }
+                    if (btnPressed(Btn::A))
+                        runModal<Alert>("PAUSE", "Press A to continue...");
+                    // TODO if we should, go down automatically
+                    if (btnPressed(Btn::Up))
+                        rotate();
+                    if (btnDown(Btn::Down)) {
+                        if (allowDown_) {
+                            goDown = true;
+                            ++score_;
+                        }
+                    } else {
+                        allowDown_ = true;
+                    }
+                    // check left & right
+                    if (btnPressed(Btn::Left)) {
+                        if (validate(cur_, x_ - 1, y_))
+                            --x_;
+                        // else rumble
+                    }
+                    if (btnPressed(Btn::Right)) {
+                        if (validate(cur_, x_ + 1, y_))
+                            ++x_;
+                        // else rumble
+                    }
+                    if (goDown) {
+                        if (validate(cur_, x_, y_ + 1)) {
+                            ++y_;
+                        } else {
+                            addToGrid(cur_, x_, y_);
+                            compactRows(y_);
+                            spawn();
+                            if (!validate(cur_, x_, y_))
+                                gameOver();
+                        }
+                    }
+                    if (btnPressed(Btn::B)) {
+                        btnPressedClear(Btn::B);
+                        // TODO save high score if was good? 
+                        mode_ = Mode::Intro;
+                        modeTimeout_ = INTRO_FRAMES_LENGTH;
+                    }
+
+                    break;
+                }
+                default:
+                    UNREACHABLE;
+            }
             // handle back button
             GraphicsApp::update();
-            if (hofActive_) {
-                if (btnPressed(Btn::Start))
-                    hofActive_ = false;
-                return;
-            }
-            bool goDown = false;
-            if (--countdown_ == 0) {
-                goDown = true;
-                countdown_ = speed_;
-            }
-            if (btnPressed(Btn::A))
-                runModal<Alert>("PAUSE", "Press A to continue...");
-            // TODO if we should, go down automatically
-            if (btnPressed(Btn::Up))
-                rotate();
-            if (btnDown(Btn::Down)) {
-                if (allowDown_) {
-                    goDown = true;
-                    ++score_;
-                }
-            } else {
-                allowDown_ = true;
-            }
-            // check left & right
-            if (btnPressed(Btn::Left)) {
-                if (validate(cur_, x_ - 1, y_))
-                    --x_;
-                // else rumble
-            }
-            if (btnPressed(Btn::Right)) {
-                if (validate(cur_, x_ + 1, y_))
-                    ++x_;
-                // else rumble
-            }
-            if (goDown) {
-                if (validate(cur_, x_, y_ + 1)) {
-                    ++y_;
-                } else {
-                    addToGrid(cur_, x_, y_);
-                    compactRows(y_);
-                    spawn();
-                    if (!validate(cur_, x_, y_))
-                        gameOver();
-                }
-            }
         }
 
         void draw() override {
             NewArenaScope _{};
             // clear
             g_.fill();
-            if (hofActive_) {
-                hof_.drawOn(g_);
-                return;
-            }
-            int startX = (320 - PLAY_WIDTH * 10) / 2;
-            int startY = 238 - PLAY_HEIGHT * 10;
-            g_.fill(color::DarkGray, Rect::XYWH(startX - 2, startY-2, 10 * PLAY_WIDTH + 3, 10 * PLAY_HEIGHT + 3));
-            // draw the playgrid
-            for (int y = 0; y < PLAY_HEIGHT; ++y)
-                for (int x = 0; x < PLAY_WIDTH; ++x)
-                    drawTile(startX + x * 10, startY + y * 10, grid(x, y));
-            // draw the current tetromino
-            drawTetromino(startX + x_ * 10, startY + y_ * 10, cur_);
-            drawTetromino(250, 100, next_);
+            switch (mode_) {
+                case Mode::Intro: {
+                    Font const & f = assets::font::MetalLord64::font;
+                    int tw = f.textWidth("TETRIS");
+                    g_.textRainbow(160 - tw / 2, 30, f, startHue_, 1024) << "TETRIS";
+                    startHue_ += 128;
+                    break;
+                }
+                case Mode::HallOfFame: {
+                    hof_.drawOn(g_);
+                    break;
+                }
+                case Mode::Game: {
+                    int startX = (320 - PLAY_WIDTH * 10) / 2;
+                    int startY = 238 - PLAY_HEIGHT * 10;
+                    g_.fill(color::DarkGray, Rect::XYWH(startX - 2, startY-2, 10 * PLAY_WIDTH + 3, 10 * PLAY_HEIGHT + 3));
+                    // draw the playgrid
+                    for (int y = 0; y < PLAY_HEIGHT; ++y)
+                        for (int x = 0; x < PLAY_WIDTH; ++x)
+                            drawTile(startX + x * 10, startY + y * 10, grid(x, y));
+                    // draw the current tetromino
+                    drawTetromino(startX + x_ * 10, startY + y_ * 10, cur_);
+                    drawTetromino(250, 100, next_);
 
-            g_.text(0, 20, assets::font::OpenDyslexic24::font, color::Gray) << "Score:";
-            g_.text(0, 60, assets::font::OpenDyslexic24::font, color::Gray) << "Level:";
-            std::string score{STR(score_)};
-            g_.text(startX - 20 - assets::font::OpenDyslexic24::font.textWidth(score), 40, assets::font::OpenDyslexic24::font, color::White) << score;
-            std::string level{STR(level_)};
-            g_.text(startX - 20 - assets::font::OpenDyslexic24::font.textWidth(level), 80, assets::font::OpenDyslexic24::font, color::White) << level;
+                    g_.text(0, 20, assets::font::OpenDyslexic24::font, color::Gray) << "Score:";
+                    g_.text(0, 60, assets::font::OpenDyslexic24::font, color::Gray) << "Level:";
+                    std::string score{STR(score_)};
+                    g_.text(startX - 20 - assets::font::OpenDyslexic24::font.textWidth(score), 40, assets::font::OpenDyslexic24::font, color::White) << score;
+                    std::string level{STR(level_)};
+                    g_.text(startX - 20 - assets::font::OpenDyslexic24::font.textWidth(level), 80, assets::font::OpenDyslexic24::font, color::White) << level;
+                    break;
+                }
+            }
             // and draw the header
             //Header::drawOn(g_);
         }
@@ -127,6 +163,12 @@ namespace rckid {
 
         static constexpr Coord PLAY_WIDTH = 10;
         static constexpr Coord PLAY_HEIGHT = 22;
+
+        enum class Mode {
+            Intro,
+            HallOfFame,
+            Game
+        }; 
 
         /** Tetromino. 
          
@@ -346,7 +388,8 @@ namespace rckid {
             next_.randomize();
             spawn();
             countdown_ = speed_;
-            hofActive_ = true;
+            mode_ = Mode::Intro;
+            modeTimeout_ = INTRO_FRAMES_LENGTH;
         }
 
         /** The play area.  
@@ -366,8 +409,15 @@ namespace rckid {
         uint32_t score_ = 0;
         bool allowDown_ = true;
 
+        static constexpr uint32_t INTRO_FRAMES_LENGTH = 60 * 30;
+
+        Mode mode_ = Mode::Intro;
+        uint32_t modeTimeout_ = INTRO_FRAMES_LENGTH; 
+
+        // hue for the tetris logo
+        uint16_t startHue_ = 0;
+
         HallOfFame hof_;
-        bool hofActive_ = true;
 
         /** Default grids of all 7 types. 
          */
