@@ -50,6 +50,7 @@ namespace rckid {
             alienShips_[2].loadImage(PNG::fromBuffer(assets::icons16::alien));
             ship_.loadImage(PNG::fromBuffer(assets::icons24::space));
             audio_[1].setEnvelope(100, 50, 80, 250);
+            initializeStars();
         }
 
         void onFocus() override {
@@ -65,6 +66,7 @@ namespace rckid {
         }
 
         void update() override {
+            updateStars();
             // handle back button
             GraphicsApp::update();
             // don't do anything if we are spawning, just decrease the spawn counter
@@ -113,6 +115,7 @@ namespace rckid {
         void draw() override {
             NewArenaScope _{};
             g_.fill();
+            drawStars();
             // draw lives
             for (uint32_t i = 0; i < lives_; ++i)
                 g_.text(i * 22, 216, assets::font::Symbols16::font, color::Red) << assets::glyph::SolidHeart;
@@ -360,6 +363,34 @@ namespace rckid {
 
         }; 
 
+        void drawStars() {
+            for (unsigned i = 0; i < NUM_STARS; ++i) {
+                uint8_t b = starBrightness_[i];
+                g_.setPixelAt(stars_[i].x.round(), stars_[i].y.round(),  ColorRGB{b, b, b});
+            }
+        }
+
+        void initializeStars() {
+            for (unsigned i = 0; i < NUM_STARS; ++i) {
+                stars_[i].y = random() % 240;
+                stars_[i].x = random() % 320;
+                starSpeed_[i] = FixedInt{static_cast<int>(1 + random() % 3), static_cast<uint8_t>(random() % 16)};
+                starBrightness_[i] = 128 + random() % 128;
+            }
+        }
+
+        void updateStars() {
+            for (unsigned i = 0; i < NUM_STARS; ++i) {
+                stars_[i].y += starSpeed_[i];
+                if (stars_[i].y > 240) {
+                    stars_[i].y = 0;
+                    stars_[i].x = random() % 320;
+                    starSpeed_[i] = FixedInt{static_cast<int>(1 + random() % 3), static_cast<uint8_t>(random() % 16)};
+                    starBrightness_[i] = 128 + random() % 128;
+                }
+            }
+        }
+
         enum class Mode {
             Game, // active game
             Killed, // player ship is killed, will respawn or game over when countdown is done 
@@ -383,6 +414,11 @@ namespace rckid {
 
         Music music_;
         ToneGenerator audio_;
+
+        static constexpr unsigned NUM_STARS = 80;
+        FixedPoint stars_[NUM_STARS];
+        FixedInt starSpeed_[NUM_STARS];
+        uint8_t starBrightness_[NUM_STARS];
 
 
     }; // rckid::GalaxyInvaders
