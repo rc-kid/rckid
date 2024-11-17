@@ -5,10 +5,13 @@
 #include <rckid/ui/header.h>
 #include <rckid/ui/alert.h>
 #include <rckid/ui/carousel.h>
+#include <rckid/filesystem.h>
 
 #include <rckid/assets/fonts/OpenDyslexic24.h>
 #include <rckid/assets/fonts/OpenDyslexic48.h>
+#include <rckid/assets/fonts/HemiHead64.h>
 #include <rckid/assets/icons24.h>
+#include <rckid/assets/icons64.h>
 
 
 namespace rckid {
@@ -40,6 +43,11 @@ namespace rckid {
 
             bool icon(Bitmap<ColorRGB> &bmp) const override {
                 Sokoban & parent = * reinterpret_cast<Sokoban*>(payloadPtr());
+                uint32_t level = payload();
+                ColorRGB w = parent.levelUnlocked(level) ? color::Red : color::DarkRed;
+                ColorRGB c = parent.levelUnlocked(level) ? color::Yellow : color::Black;
+                ColorRGB p = parent.levelUnlocked(level) ? color::Blue : color::Black;
+
                 bmp.fill(color::Black);
                 int tSize = std::min(bmp.width() / COLS, bmp.height() / ROWS); 
                 int offsetX = (bmp.width() - COLS * tSize) / 2;
@@ -50,14 +58,14 @@ namespace rckid {
                     for (int x = 0; x < COLS; ++x) {
                         switch ((*tiles++)) {
                             case TILE_WALL:
-                                bmp.fill(color::Red, Rect::XYWH(xx, yy, tSize, tSize));
+                                bmp.fill(w, Rect::XYWH(xx, yy, tSize, tSize));
                                 break;
                             case TILE_PLACED_CRATE:
                             case TILE_CRATE:
-                                bmp.fill(color::Yellow, Rect::XYWH(xx, yy, tSize, tSize));
+                                bmp.fill(c, Rect::XYWH(xx, yy, tSize, tSize));
                                 break;
                             case TILE_PLACE:
-                                bmp.fill(color::Blue, Rect::XYWH(xx, yy, tSize, tSize));
+                                bmp.fill(p, Rect::XYWH(xx, yy, tSize, tSize));
                                 break;
                             default:
                                 break;
@@ -75,9 +83,23 @@ namespace rckid {
             using Carousel::Carousel;
         protected:
             void drawText(Bitmap<ColorRGB> & surface, int x, int y, Item & item) override {
+                Sokoban & parent = * reinterpret_cast<Sokoban*>(item.payloadPtr);
+                uint32_t level = item.payload;
+                ColorRGB c = parent.levelUnlocked(level) ? color::White : color::Gray;
                 // TODO does nothing interesting - eventually might scroll the text if too large to fit, etc
-                surface.text(x, y - 8, font(), color::White) << item.text;
-                surface.text(x, y + 32, assets::font::Iosevka16::font, color::White) << "Locked";
+                surface.text(x, y - 8, font(), c) << item.text;
+                uint32_t moves = parent.levelStatus_[level - 1];
+                switch (moves) {
+                    case LEVEL_LOCKED:
+                        surface.text(x, y + 32, assets::font::Iosevka16::font, c) << "Locked";
+                        break;
+                    case LEVEL_UNLOCKED:
+                        surface.text(x, y + 32, assets::font::Iosevka16::font, c) << "Unlocked";
+                        break;
+                    default:
+                        surface.text(x, y + 32, assets::font::Iosevka16::font, c) << "Solved in " << moves << " moves";
+                        break;
+                }
             }
         };
 
@@ -86,17 +108,22 @@ namespace rckid {
             imgs_[1].loadImage(PNG::fromBuffer(assets::icons24::wooden_box));
             imgs_[2].loadImage(PNG::fromBuffer(assets::icons24::gps));
             imgs_[3].loadImage(PNG::fromBuffer(assets::icons24::boy));
+            icon_.loadImage(PNG::fromBuffer(assets::icons64::wooden_box));
+            loadLevelStatus();
             setLevel(1);
             levelSelect_.setCurrent(SokobanLevel{this});
         }
 
         void update() override {
-            GraphicsApp::update();
             switch (mode_) {
                 case Mode::Intro: {
                     if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
-                        mode_ = Mode::Game;
-                        setLevel(level_);
+                        if (levelUnlocked(level_)) {
+                            mode_ = Mode::Game;
+                            setLevel(level_);
+                        } else {
+                            rumbleFail();
+                        }
                     }
                     if (btnPressed(Btn::Left)) {
                         setLevel(level_ - 1);
@@ -119,6 +146,11 @@ namespace rckid {
                         tryMove(Point{1, 0});
                     if (btnPressed(Btn::Start))
                         setLevel(level_);
+                    if (btnPressed(Btn::B)) {
+                        mode_ = Mode::Intro;
+                        btnPressedClear(Btn::B);
+                        levelSelect_.setCurrent(SokobanLevel{this});
+                    }
                     // TODO debug only
                     if (btnPressed(Btn::Select))
                         setLevel(level_ + 1);
@@ -128,6 +160,7 @@ namespace rckid {
                     // no use control in other modes
                     break;
             }
+            GraphicsApp::update();
         }
 
         void draw() override {
@@ -135,6 +168,8 @@ namespace rckid {
             g_.fill();
             switch (mode_) {
                 case Mode::Intro: {
+                    g_.text(40, 20, assets::font::HemiHead64::font, color::Red) << "Sokoban";
+                    g_.blit(Point{128, 95}, icon_);
                     levelSelect_.drawOn(g_, Rect::XYWH(0, 160, 320, 80));
                     break;
                 }
@@ -203,8 +238,29 @@ namespace rckid {
             if (move(d)) {
                 ++moves_;
                 if (areWeDoneYet()) {
-                    // TODO do something nice here and inform the user
+                    bool changed = false;
+                    // do we have high score? 
+                    if (levelStatus_[level_ - 1] > moves_) {
+                        levelStatus_[level_ - 1] = moves_;
+                        changed = true;
+                    }
+                    // unlock next level 
                     setLevel(level_ + 1);
+                    if (levelStatus_[level_ - 1] == LEVEL_LOCKED) {
+                        levelStatus_[level_ - 1] = LEVEL_UNLOCKED;
+                        changed = true;
+                    }
+                    // if changed, update the table 
+                    if (changed) {
+                        using namespace filesystem;
+                        FileWrite f = fileWrite("sokoban.levels", Drive::Cartridge);
+                        if (f.good()) {
+                            // very dirty serialization that does not check stuff at all
+                            // TODO my future self will fix it
+                            for (unsigned i = 0; i < NUM_LEVELS; ++i)
+                                f.serialize<uint32_t>(levelStatus_[i]);
+                        }
+                    }
                 }
             } else {
                 rumbleFail();
@@ -291,6 +347,25 @@ namespace rckid {
             UNREACHABLE;
         }
 
+        void loadLevelStatus() {
+            using namespace filesystem;
+            FileRead f = fileRead("sokoban.levels", Drive::Cartridge);
+            if (f.good()) {
+                // very dirty deserialization that does not check stuff at all
+                // TODO my future self will fix it
+                for (unsigned i = 0; i < NUM_LEVELS; ++i)
+                    levelStatus_[i] = f.deserialize<uint32_t>();
+            } else {
+                for (unsigned i = 0; i < NUM_LEVELS; ++i)
+                    levelStatus_[i] = LEVEL_LOCKED;
+                levelStatus_[0] = LEVEL_UNLOCKED;    
+            }
+        }
+
+        bool levelUnlocked(uint32_t level) {
+            return levelStatus_[level - 1] != LEVEL_LOCKED;
+        }
+
         static constexpr int TILE_WIDTH = 24;
         static constexpr int TILE_HEIGHT = 24;
         static constexpr int ROWS = 240 / TILE_HEIGHT;
@@ -322,6 +397,8 @@ namespace rckid {
         uint32_t totalMoves_;
         Point player_;
         uint8_t map_[COLS * ROWS];
+
+        Bitmap<ColorRGB> icon_{64, 64};
 
         Bitmap<ColorRGB> imgs_[4] = {
             Bitmap<ColorRGB>{24, 24},
@@ -1633,6 +1710,14 @@ namespace rckid {
         };
 
         static constexpr uint32_t NUM_LEVELS = sizeof(levels_) / (COLS * ROWS);
+
+        static constexpr uint32_t LEVEL_LOCKED = 0;
+        static constexpr uint32_t LEVEL_UNLOCKED = std::numeric_limits<uint32_t>::max();
+
+        /** level status 
+         */
+        uint32_t levelStatus_[NUM_LEVELS];
+
 
     }; // rckid::Sokoban
 

@@ -446,6 +446,23 @@ namespace rckid {
                 UNREACHABLE;
         }
     }
+    void setButtonState(Btn b, Status & status, bool value) {
+        switch (b) {
+            case Btn::Up: status.setDPadKeys(status.btnLeft(), status.btnRight(), value, status.btnDown()); return;
+            case Btn::Down: status.setDPadKeys(status.btnLeft(), status.btnRight(), status.btnUp(), value); return;
+            case Btn::Left: status.setDPadKeys(value, status.btnRight(), status.btnUp(), status.btnDown()); return;
+            case Btn::Right: status.setDPadKeys(status.btnLeft(), value, status.btnUp(), status.btnDown()); return;
+            case Btn::A: status.setABSelStartKeys(value, status.btnB(), status.btnSel(), status.btnStart()); return;
+            case Btn::B: status.setABSelStartKeys(status.btnA(), value, status.btnSel(), status.btnStart()); return;
+            case Btn::Select: status.setABSelStartKeys(status.btnA(), status.btnB(), value, status.btnStart()); return;
+            case Btn::Start: status.setABSelStartKeys(status.btnA(), status.btnB(), status.btnSel(), value); return;
+            case Btn::VolumeUp: status.setBtnVolumeUp(value); return;
+            case Btn::VolumeDown: status.setBtnVolumeDown(value); return;
+            case Btn::Home: status.setBtnHome(value); return;
+            default:
+                UNREACHABLE;
+        }
+    }
 
 
     bool btnDown(Btn b) {
@@ -455,11 +472,14 @@ namespace rckid {
 
     bool btnPressed(Btn b) {
         return buttonState(b, state_.status) && ! buttonState(b, lastStatus_);
-
     }
 
     bool btnReleased(Btn b) {
         return ! buttonState(b, state_.status) && buttonState(b, lastStatus_);
+    }
+
+    void btnPressedClear(Btn b) {
+        setButtonState(b, lastStatus_,  buttonState(b, state_.status));
     }
 
     int16_t accelX() { return aState_.accelX; }

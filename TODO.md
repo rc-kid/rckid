@@ -38,8 +38,6 @@
 - libopus decoder & encoder library
 - jpeg decoding library
 
-- add a way to silence button down presses (such as btnPressedClear() function that makes any subseuent )
-
 - can swap RAM arenas to disk if necessary
 
 - make timer run a ... b ... a as well (then I can replace the blinking code in clock)
@@ -49,11 +47,11 @@
 - make levels better
 - add hall of fame
 - add intro
+- can be AI playing the game (?)
 
 ## Sokoban
 
-- add intro
-- allow unlocking levels and getting them
+- show some text after highscore and level unlocked, maybe even reset
 
 ## Pong
 
@@ -64,10 +62,13 @@
 ## Tetris
 
 - add intro
+- can be flting tetrominos (?)
 
-## Fantasy
+## Alarm
 
-- implement alarm
+- implement alarm in fantasy
+- implement alarm snoozing and turning off
+- alarm sound (!)
 
 ## PCB
 

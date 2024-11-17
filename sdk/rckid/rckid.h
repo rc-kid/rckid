@@ -125,6 +125,12 @@ namespace rckid {
     /** Returns true if the given button has been released since last frame (i.e. its state went from down to up). The value is stable within one frame. */
     bool btnReleased(Btn b);
 
+    /** Clears button press information
+     
+        Useful for supressing default button actions when the app uses own mechanics.
+     */
+    void btnPressedClear(Btn b);
+
     /** Returns the accelerometer readings. 
      */
     int16_t accelX(); 
