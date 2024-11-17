@@ -93,6 +93,26 @@ namespace {
                     UNREACHABLE;
             }
         }
+
+        void setButtonState(rckid::Btn b, bool value) {
+            using namespace rckid;
+            switch (b) {
+                case Btn::Up: btnUp = value; return;
+                case Btn::Down: btnDown = value; return;
+                case Btn::Left: btnLeft = value; return;
+                case Btn::Right: btnRight = value; return;
+                case Btn::A: btnA = value; return;
+                case Btn::B: btnB = value; return;
+                case Btn::Select: btnSelect = value; return;
+                case Btn::Start: btnStart = value; return;
+                case Btn::VolumeUp: btnVolumeUp = value; return;
+                case Btn::VolumeDown: btnVolumeDown = value; return;
+                case Btn::Home: btnHome = value; return;
+                default:
+                    UNREACHABLE;
+            }
+
+        }
     }; // State
 
 } // anonymous namespace
@@ -298,6 +318,10 @@ namespace rckid {
 
     bool btnReleased(Btn b) {
         return !state_.buttonState(b) && lastState_.buttonState(b);
+    }
+
+    void btnPressedClear(Btn b) {
+        lastState_.setButtonState(b, state_.buttonState(b));
     }
 
     int16_t accelX() { return 0; }
