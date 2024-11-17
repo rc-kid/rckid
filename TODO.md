@@ -61,9 +61,6 @@
 
 ## Tetris
 
-- add intro
-- can be flting tetrominos (?)
-
 ## Alarm
 
 - implement alarm in fantasy

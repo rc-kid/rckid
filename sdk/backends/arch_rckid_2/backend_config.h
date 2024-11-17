@@ -32,7 +32,8 @@
 
 /** Idle timer in seconds, after which the device powers off. 
  */
-#define IDLE_TIMEOUT 300
+//#define IDLE_TIMEOUT 300
+#define IDLE_TIMEOUT 3000000
 
 /** Determines home button's long press duration in system ticks (1ms)
  */

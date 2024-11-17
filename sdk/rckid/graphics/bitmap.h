@@ -175,7 +175,7 @@ namespace rckid {
          
             TODO this only makes sense for colors that support HSV initialization, but that's going to be all in the next version.
          */
-        Writer textRainbow(int x, int y, Font const & font, uint16_t hueStart, uint16_t hueInc) {
+        Writer textRainbow(int x, int y, Font const & font, uint16_t hueStart, int16_t hueInc) {
             auto getColor = [hueStart, hueInc](uint32_t) mutable {
                 return Color::HSV(hueStart += hueInc, 255, 255);
             };

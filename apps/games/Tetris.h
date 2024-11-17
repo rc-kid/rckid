@@ -43,6 +43,11 @@ namespace rckid {
                 hof_.add("Noone", 1);
             }
             hof_.setTitleFont(assets::font::MetalLord32::font);
+            for (unsigned i = 0; i < NUM_FALLING_PIECES; ++i) {
+                fallingPieces_[i].randomize();
+                fallingX_[i] = random() % 320;
+                fallingY_[i] = - random() % 240;
+            }
         }
 
         void update() override {
@@ -56,6 +61,16 @@ namespace rckid {
                     if (--modeTimeout_ == 0) {
                         mode_ = mode_ == Mode::Intro ? Mode::HallOfFame : Mode::Intro;
                         modeTimeout_ = INTRO_FRAMES_LENGTH;
+                    }
+                    for (unsigned i = 0; i < NUM_FALLING_PIECES; ++i) {
+                        fallingY_[i] += 1;
+                        if (fallingY_[i] == 240) {
+                            fallingY_[i] = - 40;
+                            fallingX_[i] = random() % 320;
+                            fallingPieces_[i].randomize();
+                        }
+                        if (random() % 1000 < 10)
+                            fallingPieces_[i] = fallingPieces_[i].rotate();
                     }
                     break;
                 }
@@ -122,13 +137,19 @@ namespace rckid {
             g_.fill();
             switch (mode_) {
                 case Mode::Intro: {
+                    drawIntroFallingPieces();
                     Font const & f = assets::font::MetalLord64::font;
+                    Font const & f2 = assets::font::Iosevka24::font;
                     int tw = f.textWidth("TETRIS");
                     g_.textRainbow(160 - tw / 2, 30, f, startHue_, 1024) << "TETRIS";
+
+                    tw = f2.textWidth("Press A to start");
+                    g_.textRainbow(160 - tw / 2, 160, f2, startHue_, -1024) << "Press A to start";
                     startHue_ += 128;
                     break;
                 }
                 case Mode::HallOfFame: {
+                    drawIntroFallingPieces();
                     hof_.drawOn(g_);
                     break;
                 }
@@ -392,6 +413,11 @@ namespace rckid {
             modeTimeout_ = INTRO_FRAMES_LENGTH;
         }
 
+        void drawIntroFallingPieces() {
+            for (unsigned i = 0; i < NUM_FALLING_PIECES; ++i)
+                drawTetromino(fallingX_[i], fallingY_[i], fallingPieces_[i]);
+        }
+
         /** The play area.  
          
             Stored value indicates color, 0 for black, which means empty. 
@@ -409,15 +435,21 @@ namespace rckid {
         uint32_t score_ = 0;
         bool allowDown_ = true;
 
-        static constexpr uint32_t INTRO_FRAMES_LENGTH = 60 * 30;
+        static constexpr uint32_t INTRO_FRAMES_LENGTH = 60 * 10;
 
         Mode mode_ = Mode::Intro;
         uint32_t modeTimeout_ = INTRO_FRAMES_LENGTH; 
 
         // hue for the tetris logo
         uint16_t startHue_ = 0;
-
+        // hall of fame screen
         HallOfFame hof_;
+
+        // falling tetrominos in the intro
+        static constexpr unsigned NUM_FALLING_PIECES = 10;
+        Tetromino fallingPieces_[NUM_FALLING_PIECES];
+        int fallingX_[NUM_FALLING_PIECES];
+        int fallingY_[NUM_FALLING_PIECES];
 
         /** Default grids of all 7 types. 
          */
