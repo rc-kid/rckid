@@ -16,138 +16,134 @@ namespace rckid {
     class Carousel {
     public:
 
-        Carousel(Font font): font_{font} {
-            icon_.fill(color::Black);
-            otherIcon_.fill(color::Black);
-        }
+        Carousel(Font font): font_{font} { }
 
         bool idle() const { return ! a_.running(); }
 
-        void setCurrent(MenuItem const & item) {
-            item.text(text_);
-            textWidth_ = font_.textWidth(text_);
-            if (! item.icon(icon_))
-                icon_.fill(color::Black);
-            //auto x = item.icon();
-            //if (x) {
-            //    icon_ = std::move(*x);
-            //}
-            // TODO else
-            dir_ = Btn::Home;
-        }
+        void setCurrent(MenuItem const & item) { setItem(item, current_, Btn::Home); }
 
-        void moveLeft(MenuItem const & item) { setOther(item, Btn::Left); }
-        void moveRight(MenuItem const & item) { setOther(item, Btn::Right); }
-        void moveUp(MenuItem const & item) { setOther(item, Btn::Up); }
-        void moveDown(MenuItem const & item) { setOther(item, Btn::Down); }
+        void moveLeft(MenuItem const & item) { setItem(item, other_, Btn::Left); }
+        void moveRight(MenuItem const & item) { setItem(item, other_, Btn::Right); }
+        void moveUp(MenuItem const & item) { setItem(item, other_, Btn::Up); }
+        void moveDown(MenuItem const & item) { setItem(item, other_, Btn::Down); }
 
         /** Draws the carousel's current state onto the given surface. 
          */
         void drawOn(Bitmap<ColorRGB> & surface, Rect where) {
             a_.update();
-            Point pos = getItemPosition(icon_, textWidth_, where);
+            Point pos = getItemPosition(current_, where);
             switch (dir_) {
                 // no animation - only display the current icon & text
                 default:
                 case Btn::Home: {
-                    drawIcon(surface, pos.x, pos.y, icon_);
-                    drawText(surface, pos.x, pos.y, icon_, text_);
+                    drawIcon(surface, pos.x, pos.y, current_);
+                    doDrawText(surface, pos.x, pos.y, current_);
                     break;
                 }
                 // other comes from left
                 case Btn::Left: {
-                    Point opos = getItemPosition(otherIcon_, otherTextWidth_, where);  
+                    Point opos = getItemPosition(other_, where);  
                     int offset = interpolation::easingCos(a_, 0, where.w);
-                    drawIcon(surface, pos.x + offset, pos.y, icon_);
-                    drawText(surface, pos.x + offset * 2, pos.y, icon_, text_);
-                    drawIcon(surface, opos.x - (where.w - offset) * 2, opos.y, otherIcon_);
-                    drawText(surface, opos.x - (where.w - offset), opos.y, otherIcon_, otherText_);
+                    drawIcon(surface, pos.x + offset, pos.y, current_);
+                    doDrawText(surface, pos.x + offset * 2, pos.y, current_);
+                    drawIcon(surface, opos.x - (where.w - offset) * 2, opos.y, other_);
+                    doDrawText(surface, opos.x - (where.w - offset), opos.y, other_);
                     break;
                 }
                 // other comes from right
                 case Btn::Right: {
-                    Point opos = getItemPosition(otherIcon_, otherTextWidth_, where);    
+                    Point opos = getItemPosition(other_, where);    
                     int offset = interpolation::easingCos(a_, 0, where.w);
-                    drawIcon(surface, pos.x - offset * 2, pos.y, icon_);
-                    drawText(surface, pos.x - offset, pos.y, icon_, text_);
-                    drawIcon(surface, opos.x + (where.w - offset), opos.y, otherIcon_);
-                    drawText(surface, opos.x + (where.w - offset) * 2, opos.y, otherIcon_, otherText_);
+                    drawIcon(surface, pos.x - offset * 2, pos.y, current_);
+                    doDrawText(surface, pos.x - offset, pos.y, current_);
+                    drawIcon(surface, opos.x + (where.w - offset), opos.y, other_);
+                    doDrawText(surface, opos.x + (where.w - offset) * 2, opos.y, other_);
                     break;
                 }
                 // other comes from sides, current goes down (we are moving up in the menu hierarchy)
                 case Btn::Up: {
-                    Point opos = getItemPosition(otherIcon_, otherTextWidth_, where);    
+                    Point opos = getItemPosition(other_, where);    
                     int offset = interpolation::easingCos(a_, where.w, 0);
-                    drawIcon(surface, opos.x - offset, opos.y, otherIcon_);
-                    drawText(surface, opos.x + offset, opos.y, otherIcon_, otherText_);
+                    drawIcon(surface, opos.x - offset, opos.y, other_);
+                    doDrawText(surface, opos.x + offset, opos.y, other_);
                     offset = interpolation::easingCos(a_, 0, where.h);
-                    drawIcon(surface, pos.x, pos.y + offset, icon_);
-                    drawText(surface, pos.x, pos.y + offset, icon_, text_);
+                    drawIcon(surface, pos.x, pos.y + offset, current_);
+                    doDrawText(surface, pos.x, pos.y + offset, current_);
                     break;
                 }
                 case Btn::Down: {
-                    Point opos = getItemPosition(otherIcon_, otherTextWidth_, where);    
+                    Point opos = getItemPosition(other_, where);    
                     int offset = interpolation::easingCos(a_, 0, where.w);
-                    drawIcon(surface, pos.x - offset, pos.y, icon_);
-                    drawText(surface, pos.x + offset, pos.y, icon_, text_);
+                    drawIcon(surface, pos.x - offset, pos.y, current_);
+                    doDrawText(surface, pos.x + offset, pos.y, current_);
                     offset = interpolation::easingCos(a_, where.h, 0);
-                    drawIcon(surface, opos.x, opos.y + offset, otherIcon_);
-                    drawText(surface, opos.x, opos.y + offset, otherIcon_, otherText_);
+                    drawIcon(surface, opos.x, opos.y + offset, other_);
+                    doDrawText(surface, opos.x, opos.y + offset, other_);
                     break;
                 }
             }
             if (dir_ != Btn::Home && !a_.running()) {
-                std::swap(text_, otherText_);
-                std::swap(textWidth_, otherTextWidth_);
-                std::swap(icon_, otherIcon_);
+                std::swap(current_, other_);
                 dir_ = Btn::Home;
             }            
         }
 
+        Font const & font() const { return font_; }
+
+    protected:
+
+        class Item {
+        public:
+            std::string text;
+            int textWidth;
+            Bitmap<ColorRGB> icon{64, 64};
+            void * payloadPtr;
+            uint32_t payload;
+
+            Item() { icon.fill(color::Black); }
+        }; 
+
     private:
 
-        void setOther(MenuItem const & item, Btn dir) {
-            item.text(otherText_);
-            otherTextWidth_ = font_.textWidth(otherText_);
-            if (! item.icon(otherIcon_))
-                otherIcon_.fill(color::Black);
-
-            //auto x = item.icon();
-            //if (x) {
-            //    otherIcon_ = std::move(*x);
-            //}
-            // TODO else
+        void setItem(MenuItem const & from, Item & item, Btn dir) {
+            from.text(item.text);
+            item.textWidth = font_.textWidth(item.text);
+            if (! from.icon(item.icon))
+                item.icon.fill(color::Black);
+            item.payloadPtr = from.payloadPtr();
+            item.payload = from.payload();
             dir_ = dir;
-            a_.start();
+            if (dir_ != Btn::Home)
+                a_.start();
         }
 
-        Point getItemPosition(Bitmap<ColorRGB> const & icon, int textWidth, Rect where) {
-            int left = where.left() + (where.w - icon.width() - 5 - textWidth) / 2;
-            int top = where.top() + (where.h - icon.height()) / 2;
+        Point getItemPosition(Item & item, Rect where) {
+            int left = where.left() + (where.w - item.icon.width() - 5 - item.textWidth) / 2;
+            int top = where.top() + (where.h - item.icon.height()) / 2;
             return Point{left, top};
         }
 
-        void drawText(Bitmap<ColorRGB> & surface, int x, int y, Bitmap<ColorRGB> const & icon, std::string & text) {
-            if (text.empty())
-                return;
-            y += (icon.height() - font_.size) / 2;
-            x += icon.width() + 5;
-            // TODO does nothing interesting - eventually might scroll the text if too large to fit, etc
-            surface.text(x, y, font_, color::White) << text;
+        void doDrawText(Bitmap<ColorRGB> & surface, int x, int y, Item & item) {
+            y += (item.icon.height() - font_.size) / 2;
+            x += item.icon.width() + 5;
+            drawText(surface, x, y, item);
         }
 
-        void drawIcon(Bitmap<ColorRGB> & surface, int x, int y, Bitmap<ColorRGB> const & icon) {
-            surface.blit(Point{x, y}, icon);
+        virtual void drawText(Bitmap<ColorRGB> & surface, int x, int y, Item & item) {
+            if (item.text.empty())
+                return;
+            // TODO does nothing interesting - eventually might scroll the text if too large to fit, etc
+            surface.text(x, y, font_, color::White) << item.text;
+        }
+
+        virtual void drawIcon(Bitmap<ColorRGB> & surface, int x, int y, Item & item) {
+            surface.blit(Point{x, y}, item.icon);
         }
 
         Font font_;
 
-        std::string text_;
-        std::string otherText_;
-        int textWidth_ = 0;
-        int otherTextWidth_ = 0;
-        Bitmap<ColorRGB> icon_{64, 64};
-        Bitmap<ColorRGB> otherIcon_{64, 64}; 
+        Item current_;
+        Item other_;
 
         Btn dir_ = Btn::Home;
         Timer a_{RCKID_UI_EFFECT_DURATION_MS};
