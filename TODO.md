@@ -2,6 +2,9 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
+- battery charging error detection seems to be the likely problem of the flashing red LED
+- DC is not always correctly detected
+
 - text input should distinguish between returning and cancel, currently no provision for that in code
 
 - hall of fame and others can be apps of their own that just reuse the canvas from previous run, but delegate the controls? How though
@@ -48,6 +51,7 @@
 - add hall of fame
 - add intro
 - can be AI playing the game (?)
+- check that stars work on device (they seem to have colors?)
 
 ## Sokoban
 
