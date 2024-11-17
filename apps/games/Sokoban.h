@@ -28,20 +28,23 @@ namespace rckid {
 
         class SokobanLevel : public MenuItem {
         public:
-            SokobanLevel(Sokoban * parent):
-                parent_{*parent}, level_{parent->level_} {
+            SokobanLevel(Sokoban * parent) {
+                setPayloadPtr(parent);
+                setPayload(parent->level_);
             }
 
             void text(std::string & text) const override { 
-                text = STR("Level " << level_);
+                text = STR("Level " << payload());
             }
 
+
             bool icon(Bitmap<ColorRGB> &bmp) const override {
+                Sokoban & parent = * reinterpret_cast<Sokoban*>(payloadPtr());
                 bmp.fill(color::Black);
                 int tSize = std::min(bmp.width() / COLS, bmp.height() / ROWS); 
                 int offsetX = (bmp.width() - COLS * tSize) / 2;
                 int yy = (bmp.height() - ROWS * tSize) / 2;
-                uint8_t * tiles = parent_.map_;
+                uint8_t * tiles = parent.map_;
                 for (int y = 0; y < ROWS; ++y) {
                     int xx = offsetX;
                     for (int x = 0; x < COLS; ++x) {
@@ -65,11 +68,18 @@ namespace rckid {
                 }
                 return true;
             }
-
-        private:
-            Sokoban & parent_;
-            uint32_t level_;
         }; 
+
+        class SokobanCarousel : public Carousel {
+        public:
+            using Carousel::Carousel;
+        protected:
+            void drawText(Bitmap<ColorRGB> & surface, int x, int y, Item & item) override {
+                // TODO does nothing interesting - eventually might scroll the text if too large to fit, etc
+                surface.text(x, y - 8, font(), color::White) << item.text;
+                surface.text(x, y + 32, assets::font::Iosevka16::font, color::White) << "Locked";
+            }
+        };
 
         Sokoban(): GraphicsApp{ARENA(Canvas<Color>{320, 240})} {
             imgs_[0].loadImage(PNG::fromBuffer(assets::icons24::wall));
@@ -305,7 +315,7 @@ namespace rckid {
 
         Mode mode_ = Mode::Intro;
 
-        Carousel levelSelect_{assets::font::OpenDyslexic48::font};
+        SokobanCarousel levelSelect_{assets::font::OpenDyslexic48::font};
 
         uint32_t level_ = 1;
         uint32_t moves_;
