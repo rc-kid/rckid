@@ -46,9 +46,24 @@
 
 ## GalaxyInvaders
 
+- make levels better
+- add hall of fame
+- add intro
+
 ## Sokoban
 
-- add new levels
+- add intro
+- allow unlocking levels and getting them
+
+## Pong
+
+- make AI less good
+- add hall of fame
+- add intro
+
+## Tetris
+
+- add intro
 
 ## Fantasy
 
