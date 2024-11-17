@@ -1,5 +1,6 @@
 # Fonts
 
+- MetalLord font by https://www.1001freefonts.com/metal-lord.font
 - HemiHead font by https://www.1001freefonts.com/hemi-head-426.font
 - Iosevka and OpenDyslexic fonts from nerdfonts
 
