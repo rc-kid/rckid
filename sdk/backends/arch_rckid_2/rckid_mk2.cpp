@@ -189,12 +189,9 @@ namespace rckid {
                         bl = 100;
                     else if (vb > VOLTAGE_CRITICAL_THRESHOLD)
                         bl = static_cast<uint8_t>((vb - VOLTAGE_CRITICAL_THRESHOLD) * 100 / (VOLTAGE_BATTERY_FULL_THRESHOLD - VOLTAGE_CRITICAL_THRESHOLD));
-                    if (state_.status.charging()) {
-                        if (bl > batteryLevel_)
-                            batteryLevel_ = bl;
-                    } else if (bl < batteryLevel_) {
+                    
+                    if (state_.status.powerDC() || bl < batteryLevel_)
                         batteryLevel_ = bl;
-                    }
                 } // fallthrough to default handler and to disabling the I2C comms
                 default:
                     // we are done with the I2C transfer

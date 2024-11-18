@@ -2,8 +2,9 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
-- battery charging error detection seems to be the likely problem of the flashing red LED
-- DC is not always correctly detected
+- when charging is terminated, both the battery level *and* the vBatt should super low values, despite AVR not turning the device off
+- add some hysteresis to the battery level (i.e. always down, up only if its above say 2 pct, etc)
+- DC is not always correctly detected (maybe too low high a threshold)
 
 - text input should distinguish between returning and cancel, currently no provision for that in code
 

@@ -74,6 +74,12 @@ namespace rckid::cmd {
      */
     COMMAND(21, UserNotificationOff);
 
+    /** Clears the charging error status. 
+
+        Note that charging error is also cleared whenever DC power is unplugged - the idea is that if we were charging and error happened, then when user comes to the device and uplugs the charger they have already seen the error.  
+     */
+    COMMAND(22, ClearChargingError);
+
     COMMAND(40, Rumbler,
         RumblerEffect effect;
         Rumbler(RumblerEffect effect): effect{effect} {}
