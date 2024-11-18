@@ -104,6 +104,10 @@ public:
         // reset time and uptime when we reset the AVR
         ts_.time.set(1, 1, 2018, 1, 36, 0);
         ts_.uptime = 0;
+        // read up the VCC and VBatt enough times so that we have the vBatt and vcc ring buffers saturated for reasonably stable vBatt and VCC reads
+        while (!vBatt_.ready() || !vcc_.ready())
+            measureADC();
+        
     }
 
     /** The main loop implementation (including the loop). 
@@ -464,9 +468,10 @@ public:
 
     static void measureVBatt(uint16_t vx100) {
         vBatt_.addObservation(Status::voltageToRawStorage(vx100));
-        ts_.status.setVBatt(Status::voltageFromRawStorage(vBatt_.value()));
+        vx100 = Status::voltageFromRawStorage(vBatt_.value());
+        ts_.status.setVBatt(vx100);
         // if the battery measured voltage is above the specified threshold, we expect charger malfunction and cut the charging off
-        if (vx100 >= VOLTAGE_BATTERY_OVERCHARGE_THRESHOLD) {
+        if (vBatt_.ready() && vx100 >= VOLTAGE_BATTERY_OVERCHARGE_THRESHOLD) {
             disableCharging();
             ts_.extras.setChargingError(true);
         }
@@ -603,6 +608,9 @@ public:
                 ts_.extras.setUserNotification(false);
                 rgbUpdateSystemNotification();
                 break;
+            case cmd::ClearChargingError::ID:
+                ts_.extras.setChargingError(false);
+                break;
             case cmd::Rumbler::ID: {
                 auto & c = cmd::Rumbler::fromBuffer(ts_.buffer);
                 if (c.effect.cycles > 0 && c.effect.strength > 0) {
@@ -721,15 +729,15 @@ public:
         gpio::outputFloat(AVR_PIN_RGB);
         gpio::outputFloat(AVR_PIN_5V_ON);
         // make sure that we start with a clean state
-        rgbClear();
+        rgbClear(/* ignore notification */ false);
     }
 
     /** Clears the RGBs - disables effects and sets the current and target color to black for immediate switch to black color.
      */
-    static void rgbClear() {
+    static void rgbClear(bool ignoreNotification = true) {
         for (uint8_t i = 0; i < 6; ++i) {
             // ignore the notification led
-            if (i == RGB_LED_INDEX_NOTIFICATION)
+            if (i == RGB_LED_INDEX_NOTIFICATION && ignoreNotification)
                 continue;
             rgbEffects_[i] = RGBEffect::Off();
             rgbs_[i] = platform::Color::Black();
