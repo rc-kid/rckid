@@ -319,6 +319,8 @@ public:
             return;
         // set DC power on
         ts_.status.setPowerDC(true);
+        // clear charging error in status extras
+        ts_.extras.setChargingError(false);
 #ifdef RCKID_HAS_LIPO_CHARGER
         // if the device was asleep, wake up and enter charging mode, otherwise stay in the On state. 
         if (avrState_ == AVRState::Sleep) {
@@ -471,7 +473,7 @@ public:
         vx100 = Status::voltageFromRawStorage(vBatt_.value());
         ts_.status.setVBatt(vx100);
         // if the battery measured voltage is above the specified threshold, we expect charger malfunction and cut the charging off
-        if (vBatt_.ready() && vx100 >= VOLTAGE_BATTERY_OVERCHARGE_THRESHOLD) {
+        if (vBatt_.ready() && (vx100 >= VOLTAGE_BATTERY_OVERCHARGE_THRESHOLD) && ts_.status.charging()) {
             disableCharging();
             ts_.extras.setChargingError(true);
         }
@@ -711,7 +713,6 @@ public:
 
     static inline SystemNotification systemNotification_ = SystemNotification::None;
 
-
     static void rgbOn() {
         if (rgbOn_)
             return;
@@ -743,6 +744,9 @@ public:
             rgbs_[i] = platform::Color::Black();
             rgbsTarget_[i] = platform::Color::Black();
         }
+        // if we are not ignoring the system notification we should also clear the system notification type, otherwise changing it might not have the effect of turning the RGBs on in sleep mode (this only affects the charging error notification)
+        if (! ignoreNotification)
+            systemNotification_ = SystemNotification::None;
     }
 
     static void rgbTick() {

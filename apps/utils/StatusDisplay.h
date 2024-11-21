@@ -18,6 +18,10 @@ namespace rckid {
 
         StatusDisplay(): GraphicsApp{ARENA(Canvas<ColorRGB>{320, 240})} {}
 
+        void update() {
+            GraphicsApp::update();
+        }
+
         void draw() override {
             g_.fill();
 

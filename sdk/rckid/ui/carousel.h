@@ -95,10 +95,10 @@ namespace rckid {
         class Item {
         public:
             std::string text;
-            int textWidth;
+            int textWidth = 0;
             Bitmap<ColorRGB> icon{64, 64};
-            void * payloadPtr;
-            uint32_t payload;
+            void * payloadPtr = nullptr;
+            uint32_t payload = 0;
 
             Item() { icon.fill(color::Black); }
         }; 

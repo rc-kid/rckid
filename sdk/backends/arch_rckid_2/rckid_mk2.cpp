@@ -185,12 +185,12 @@ namespace rckid {
                     // update battery level gauge - calculate battery percentage from the battery voltage ranges and determine if we should display it (i.e. when discharging the percentage can only go down and when charging, the percentage can only go up). 
                     unsigned vb = state_.status.vBatt();
                     uint8_t bl = 0;
-                    if (vb > VOLTAGE_BATTERY_FULL_THRESHOLD)
+                    if (vb > VOLTAGE_BATTERY_FULL_THRESHOLD) {
                         bl = 100;
-                    else if (vb > VOLTAGE_CRITICAL_THRESHOLD)
+                    } else if (vb > VOLTAGE_CRITICAL_THRESHOLD) {
                         bl = static_cast<uint8_t>((vb - VOLTAGE_CRITICAL_THRESHOLD) * 100 / (VOLTAGE_BATTERY_FULL_THRESHOLD - VOLTAGE_CRITICAL_THRESHOLD));
-                    
-                    if (state_.status.powerDC() || bl < batteryLevel_)
+                    }
+                    if (state_.status.powerDC() || bl < batteryLevel_ || bl > batteryLevel_ + 1)
                         batteryLevel_ = bl;
                 } // fallthrough to default handler and to disabling the I2C comms
                 default:
@@ -264,7 +264,10 @@ namespace rckid {
             RP_DEBUG_UART_RX_PIN
         ); */
         // initialize the USB
-        tud_init(BOARD_TUD_RHPORT);
+        //tud_init(BOARD_TUD_RHPORT);
+
+        // disable USB -- reset so that we can again detect DC charge
+        memset(reinterpret_cast<uint8_t *>(usb_hw), 0, sizeof(*usb_hw));
 
         // initialize the I2C bus
         i2c_init(i2c0, RP_I2C_BAUDRATE); 
@@ -386,6 +389,7 @@ namespace rckid {
         tight_loop_contents();
         tud_task();
     }
+
 
     void keepAlive() {
         idleTimeout_ = IDLE_TIMEOUT;

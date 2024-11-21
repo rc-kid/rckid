@@ -161,7 +161,9 @@ namespace rckid {
 
     private:
 
+        // an app to be executed (with trasition effects)
         static constexpr uint32_t ITEM_KIND_ACTION = 0;
+        // submenu with generator
         static constexpr uint32_t ITEM_KIND_SUBMENU = 1;
 
         void moveLeft() {

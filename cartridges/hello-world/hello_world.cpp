@@ -63,6 +63,8 @@ Menu * menuUtils() {
 Menu * menuSettings() {
     return new Menu{
         MenuApp::Item("Date & Time", assets::icons64::clock, SetTime::run),
+        //MenuApp::Item("Brightness", assets::icons64::brightness, SetTime::run),
+        //MenuApp::Item("Volume", assets::icons64::high_volume, SetTime::run),
      
     };
 }
