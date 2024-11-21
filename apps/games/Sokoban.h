@@ -83,12 +83,15 @@ namespace rckid {
             using Carousel::Carousel;
         protected:
             void drawText(Bitmap<ColorRGB> & surface, int x, int y, Item & item) override {
-                Sokoban & parent = * reinterpret_cast<Sokoban*>(item.payloadPtr);
+                Sokoban * parent = reinterpret_cast<Sokoban*>(item.payloadPtr);
+                // if parent is null, its uninitialie item, don't draw anything
+                if (parent == nullptr)
+                    return;
                 uint32_t level = item.payload;
-                ColorRGB c = parent.levelUnlocked(level) ? color::White : color::Gray;
+                ColorRGB c = parent->levelUnlocked(level) ? color::White : color::Gray;
                 // TODO does nothing interesting - eventually might scroll the text if too large to fit, etc
                 surface.text(x, y - 8, font(), c) << item.text;
-                uint32_t moves = parent.levelStatus_[level - 1];
+                uint32_t moves = parent->levelStatus_[level - 1];
                 switch (moves) {
                     case LEVEL_LOCKED:
                         surface.text(x, y + 32, assets::font::Iosevka16::font, c) << "Locked";
@@ -110,8 +113,12 @@ namespace rckid {
             imgs_[3].loadImage(PNG::fromBuffer(assets::icons24::boy));
             icon_.loadImage(PNG::fromBuffer(assets::icons64::wooden_box));
             loadLevelStatus();
-            setLevel(1);
-            levelSelect_.setCurrent(SokobanLevel{this});
+            // find the last unlocked level and move towards it
+            for (level_ = 0; level_ < NUM_LEVELS; ++level_)
+                if (levelStatus_[level_] == LEVEL_UNLOCKED)
+                    break;
+            setLevel(level_ + 1);
+            levelSelect_.moveUp(SokobanLevel{this});
         }
 
         void update() override {
