@@ -2,22 +2,6 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
-> leaking VCC on charging line
-- something is leaking 3V3 on the 
-- could be software? Powering up RPI seems to fix the issue
-- who is leaking? 
-- it's 3v3, but not from RP2040 as turning 3v3 off does not seem to have much difference
-- for mkIII this can be rewritten and AVR can control the battery switch on "demand"
-- seems to be nonissue in 2.3, where we can't detect charging during sleep
-- seems connected to the invalid charging detection (but power supply reading suggests we start)
-- could it be that we disable charging because the voltage will get too high with the battery not depleted
-
-
-- charging seem not to work with version 2.2 - try this with one of the display-less V2.3 boards
-- when charging is terminated, both the battery level *and* the vBatt should super low values, despite AVR not turning the device off
-- add some hysteresis to the battery level (i.e. always down, up only if its above say 2 pct, etc)
-- DC is not always correctly detected (maybe too low high a threshold)
-
 - text input should distinguish between returning and cancel, currently no provision for that in code
 
 - hall of fame and others can be apps of their own that just reuse the canvas from previous run, but delegate the controls? How though
