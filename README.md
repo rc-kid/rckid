@@ -22,6 +22,8 @@ Cartridge specifications:
 
 Externally, it is almost identical to the version 2 built upon RP2040, but internally uses the new RP2350 chip instead. This allows both simplifications in the design (no need for AVR coprocessor because of higher pin count on RP chip) as well as improvements (less RAM pressure, possibility of external RAM in cartridges and more CPU raw power that makes more things possible).
 
+![RCKid mkII](docs/photos/rckid.jpg "RCKid prototype. The specks of dust on screen are not speck of dust but moving stars in the game:)")
+
 ## Directory Structure
 
 - `cartridges` folder contains specific cartridge ROMs that can be build as part of RCKid
