@@ -11,13 +11,10 @@
 
 - add blit that ignores particular color
 
-- verify charging & the new AVR code on a prototype board,2 then put it in the new case
-
 - maybe not use joystick, but keep it as an extra file so that each app can configure it properly, including things like position. But how to integrate with settings? 
 
 - clean music & tone generators, ensure other frequencies work as well, document, benchmark
 
-- check the critical battery warning & new AVR
 - add logo when clearing the screen
 
 - move games & apps to SDK, unless they belong in cartridges 
