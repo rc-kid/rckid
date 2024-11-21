@@ -20,7 +20,7 @@
 /** Select this for PCB version 2.2 where charging was not connected directly to an AVR pin, but went to ground with a swicth (i.e. to enable charging the pin was to be set to float and not disturb the mosfet and to disable, the pin was drivern ) 
 */
 
-#define RCKID_VERSION_2_2__
+#define RCKID_VERSION_2_2
 
 // ================================================================================================
 

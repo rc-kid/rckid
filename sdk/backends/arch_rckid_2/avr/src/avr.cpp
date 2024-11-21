@@ -360,7 +360,9 @@ public:
      */
     static void disableCharging() {
 #ifdef RCKID_VERSION_2_2
-        gpio::outputHigh(AVR_PIN_CHARGE_EN);
+        // this is a hack - we do not disable charging on version 2.2. because the way the charge enabled is wired will leak voltage when disabled. Instead we disable charging if there is charging error and only when the device is connected to DC
+        gpio::outputFloat(AVR_PIN_CHARGE_EN);
+        //gpio::outputHigh(AVR_PIN_CHARGE_EN);
 #else
         gpio::outputFloat(AVR_PIN_CHARGE_EN);
 #endif
@@ -472,10 +474,15 @@ public:
         vBatt_.addObservation(Status::voltageToRawStorage(vx100));
         vx100 = Status::voltageFromRawStorage(vBatt_.value());
         ts_.status.setVBatt(vx100);
-        // if the battery measured voltage is above the specified threshold, we expect charger malfunction and cut the charging off
+        // if the battery measured voltage is above the specified threshold, we expect charger malfunction and cut the charging off. Only do this when actually charging as when charger is disconnected, the battery readings can temporarily spike outside of the valid range.
         if (vBatt_.ready() && (vx100 >= VOLTAGE_BATTERY_OVERCHARGE_THRESHOLD) && ts_.status.charging()) {
             disableCharging();
             ts_.extras.setChargingError(true);
+#ifdef RCKID_VERSION_2_2
+            // version 2.2 has bad connection to charger enable where if disabled while on battery power, we will leak voltage to the batt / vcc mosfet. This disabled charging when powered on & charging error. 
+            // TODO delete when moving to version 2.3 & onward
+            gpio::outputHigh(AVR_PIN_CHARGE_EN);
+#endif
         }
     }
 
@@ -485,6 +492,11 @@ public:
         if (tx10 >= TEMPERATURE_BATTERY_OVERHEAT_THRESHOLD) {
             disableCharging();
             ts_.extras.setChargingError(true);
+#ifdef RCKID_VERSION_2_2
+            // version 2.2 has bad connection to charger enable where if disabled while on battery power, we will leak voltage to the batt / vcc mosfet. This disabled charging when powered on & charging error. 
+            // TODO delete when moving to version 2.3 & onward
+            gpio::outputHigh(AVR_PIN_CHARGE_EN);
+#endif
         }
     }
     //@}
