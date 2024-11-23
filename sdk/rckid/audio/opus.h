@@ -2,7 +2,107 @@
 
 #include <libopus/include/opus.h>
 
+#include "audio.h"
+
+
 namespace rckid::opus {
+
+    /** Decoder of raw opus packets. 
+     
+        The decoder is initialized with sample rate and number of channels expected. Then its decodePacket method can be called repeatedly only opus packets, which will be decoded into the provides output stream. 
+    
+     */
+    class Decoder {
+    public:
+        Decoder(audio::SampleRate sr, audio::Channels channels) {
+            int err;
+            decoder_ = opus_decoder_create(static_cast<int32_t>(sr), static_cast<int32_t>(channels), &err);
+            if (err != OPUS_OK) {
+                LOG("Unable to create opus decoder, code: " << err);
+                decoder_ = nullptr;
+            }
+        }
+
+        ~Decoder() {
+            opus_decoder_destroy(decoder_);
+        }
+
+        /** Takes given raw packet and decodes it into given  */
+        size_t decodePacket(uint8_t const * rawPacket, uint32_t inBytes, int16_t * out, uint32_t outBytes) {
+
+        }
+        /*
+        void reset() {
+            opus_decoder_destroy(decoder_);
+            int err;
+            decoder_ = opus_decoder_create(8000, 1, &err);
+            if (err != OPUS_OK) {
+                LOG("Unable to create opus decoder, code: " << err);
+                decoder_ = nullptr;
+            }
+            lastIndex_ = 0xff;
+            missingPackets_ = 0;
+            packets_ = 0;
+        }
+        */
+
+        size_t decodePacket(unsigned char const * rawPacket) {
+            // if the packet index is the same as last one, it's a packet retransmit and there is nothing we need to do
+            if (rawPacket[1] == lastIndex_)
+                return 0;
+            // if we have missed any packet, report it as lost
+            while (++lastIndex_ != rawPacket[1])
+                reportPacketLoss();
+            // decode the packet and return the decoded size
+            int result = opus_decode(decoder_, rawPacket + 2, rawPacket[0], buffer_, 320, false);
+            if (result < 0) {
+                LOG("Unable to decode packet, code: " << result);
+                // TODO
+            }
+            ++packets_;
+            return result;
+        }
+
+        opus_int16 const * buffer() const { return buffer_; }
+
+        size_t missingPackets() const { return missingPackets_; }
+        size_t packets() const { return packets_; }
+
+    private:
+
+        void reportPacketLoss() {
+            ++missingPackets_;
+            int result = opus_decode(decoder_, nullptr, 0, buffer_, 320, false);
+            if (result < 0)
+                LOG("Unable to decode missing packet, code: " << result);
+        }
+
+        OpusDecoder * decoder_;
+        size_t missingPackets_{0};
+        size_t packets_{0};
+        opus_int16 buffer_[320];
+        uint8_t lastIndex_{0xff};
+    }; 
+
+    class Encoder {
+    public:
+        /** Creates new encoder with given sample rate, number of channels and desired bitrate. 
+         */
+        Encoder(audio::SampleRate sr, audio::Channels channels, uint32_t bitrate) {
+
+        }
+
+        ~Encoder() {
+
+        }
+
+        
+
+    private:
+
+    }; // rckid::opus::Encoder
+
+
 
     // TODO this is code from V1 and needs to be ported and updated to the latest SDK
     // kept here as a starting point
@@ -106,74 +206,5 @@ namespace rckid::opus {
         unsigned char frame_[32];
     }; // opus::RawEncoder
 
-    /** Decoder ofthe raw packets encoded via the RawEncoder. 
-     
-        Together with the decoding also keeps track of packet loss and uses them to calculate approximate signal loss. 
-     */
-    class RawDecoder {
-    public:
-        RawDecoder() {
-            int err;
-            decoder_ = opus_decoder_create(8000, 1, &err);
-            if (err != OPUS_OK) {
-                LOG("Unable to create opus decoder, code: " << err);
-                decoder_ = nullptr;
-            }
-        }
-
-        ~RawDecoder() {
-            opus_decoder_destroy(decoder_);
-        }
-
-        void reset() {
-            opus_decoder_destroy(decoder_);
-            int err;
-            decoder_ = opus_decoder_create(8000, 1, &err);
-            if (err != OPUS_OK) {
-                LOG("Unable to create opus decoder, code: " << err);
-                decoder_ = nullptr;
-            }
-            lastIndex_ = 0xff;
-            missingPackets_ = 0;
-            packets_ = 0;
-        }
-
-        size_t decodePacket(unsigned char const * rawPacket) {
-            // if the packet index is the same as last one, it's a packet retransmit and there is nothing we need to do
-            if (rawPacket[1] == lastIndex_)
-                return 0;
-            // if we have missed any packet, report it as lost
-            while (++lastIndex_ != rawPacket[1])
-                reportPacketLoss();
-            // decode the packet and return the decoded size
-            int result = opus_decode(decoder_, rawPacket + 2, rawPacket[0], buffer_, 320, false);
-            if (result < 0) {
-                LOG("Unable to decode packet, code: " << result);
-                // TODO
-            }
-            ++packets_;
-            return result;
-        }
-
-        opus_int16 const * buffer() const { return buffer_; }
-
-        size_t missingPackets() const { return missingPackets_; }
-        size_t packets() const { return packets_; }
-
-    private:
-
-        void reportPacketLoss() {
-            ++missingPackets_;
-            int result = opus_decode(decoder_, nullptr, 0, buffer_, 320, false);
-            if (result < 0)
-                LOG("Unable to decode missing packet, code: " << result);
-        }
-
-        OpusDecoder * decoder_;
-        size_t missingPackets_{0};
-        size_t packets_{0};
-        opus_int16 buffer_[320];
-        uint8_t lastIndex_{0xff};
-    }; 
 
 }
