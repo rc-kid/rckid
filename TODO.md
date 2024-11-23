@@ -39,6 +39,8 @@
 
 - make timer run a ... b ... a as well (then I can replace the blinking code in clock)
 
+## UI
+
 ## GalaxyInvaders
 
 - make levels better
@@ -130,3 +132,12 @@ I can put RP in charge of the audio, while keeping the backlihght & rumbler on A
 3) everything else goes on heap
 
 Both arenas are explicit to avoid confusion. 
+
+## MkIII SDK Revision
+
+> This is the next major rewrite of the SDK, probably will happen after Xmas and is tailored towards the RP2350, although RP2040 should benfit from it as well. 
+
+- make graphic apps simpler, only implement what we have use for, i.e. maybe only use full color buffers in the graphic modes
+- modal apps will be passed the reusable framebuffer that they can deal with any way they like
+- gauge settings should be animated with the menu, i.e. the title will start below and go up, gauge will appear, then go down to the menu 
+
