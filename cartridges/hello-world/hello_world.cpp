@@ -38,6 +38,8 @@
 #include <rckid/assets/icons64.h>
 
 
+#include <rckid/filesystem.h>
+
 using namespace rckid;
 
 
@@ -87,6 +89,7 @@ Menu * mainMenu() {
 }
 
 int main() {
+    namespace fs = rckid::filesystem;
     //cpu::overclock();
     rckid::initialize();
     LOG("Initialized, running the app!");

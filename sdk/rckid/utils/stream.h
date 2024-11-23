@@ -47,15 +47,15 @@ namespace rckid {
 
         /** Writes single byte to the stream. 
          */
-        bool write(uint8_t data) {
+        bool writeByte(uint8_t data) {
             return write(&data, 1) == 1;
         }
 
         /** Returns a writer for formatter and serialized writes to the stream.
          */
-        Writer write() {
+        Writer writer() {
             return Writer([this](char c) {
-                bool result = write(static_cast<uint8_t>(c));
+                bool result = writeByte(static_cast<uint8_t>(c));
                 ASSERT(result);
             });
         }
@@ -146,7 +146,7 @@ namespace rckid {
     // serialization of uint8_t 
     template<>
     inline void WriteStream::serialize<uint8_t>(uint8_t const & what) {
-        write(what);
+        writeByte(what);
     }
 
     template<>

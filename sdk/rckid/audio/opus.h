@@ -7,6 +7,8 @@
 
 namespace rckid::opus {
 
+#ifdef IN_PROGRESS
+
     /** Decoder of raw opus packets. 
      
         The decoder is initialized with sample rate and number of channels expected. Then its decodePacket method can be called repeatedly only opus packets, which will be decoded into the provides output stream. 
@@ -96,13 +98,15 @@ namespace rckid::opus {
 
         }
 
-        
+
 
     private:
 
     }; // rckid::opus::Encoder
 
 
+
+#endif
 
     // TODO this is code from V1 and needs to be ported and updated to the latest SDK
     // kept here as a starting point

@@ -210,6 +210,55 @@ namespace rckid::filesystem {
         }
     }
 
+    // Folder
+
+    Folder::~Folder() {
+        switch(drive_) {
+            case static_cast<unsigned>(Drive::SD):
+                f_closedir(& sd_);
+                break;
+            case static_cast<unsigned>(Drive::Cartridge):
+                lfs_dir_close(& lfs_, & cart_);
+                break;
+            default:
+                break;
+        }
+    }
+
+    void Folder::rewind() {
+        switch(drive_) {
+            case static_cast<unsigned>(Drive::SD):
+                f_rewinddir(& sd_);
+                break;
+            case static_cast<unsigned>(Drive::Cartridge):
+                lfs_dir_rewind(& lfs_, & cart_);
+                break;
+            default:
+                UNREACHABLE;
+        }
+    }
+
+    void Folder::readNext(Entry & into) {
+        into.drive_ = 0; // invalidate the entry
+        switch (drive_) {
+            case static_cast<unsigned>(Drive::SD):
+                if (f_readdir(& sd_, & into.sd_) == FR_OK && into.sd_.fname[0] != 0)
+                    into.drive_ = drive_;
+                break;
+            case static_cast<unsigned>(Drive::Cartridge): {
+                while (lfs_dir_read(& lfs_, & cart_, & into.cart_) > 0) {
+                    // skip . and .. folders to be compatible fith fatfs
+                    if (strcmp(".", into.cart_.name) == 0 || strcmp("..", into.cart_.name) == 0)
+                        continue;
+                    into.drive_ = drive_;
+                    break;                    
+                }
+                break;
+            }
+            default:
+                UNREACHABLE;
+        }
+    }
 
     bool format(Drive dr) {
         switch (dr) {
@@ -235,14 +284,17 @@ namespace rckid::filesystem {
 
     bool mount(Drive dr) {
         switch (dr) {
-            case Drive::SD: {
+            case Drive::SD:
                 if (fs_ != nullptr) {
                     LOG("SD already mounted");
                     return true;
                 }
-                fs_ = (FATFS*) rckid::malloc(sizeof(FATFS));
-                return f_mount(fs_, "", /* mount immediately */ 1) == FR_OK;
-            }
+                fs_ = (FATFS*) rckid::Heap::malloc(sizeof(FATFS));
+                if (f_mount(fs_, "", /* mount immediately */ 1) != FR_OK) {
+                    delete fs_;
+                    return false;
+                }
+                return true;
             case Drive::Cartridge:
                 if (lfs_.cfg == & lfsCfg_) {
                     LOG("Cartridge already mounted");
@@ -366,7 +418,7 @@ namespace rckid::filesystem {
         }
     }
 
-    bool isDir(char const * path, Drive dr) {
+    bool isFolder(char const * path, Drive dr) {
         switch (dr) {
             case Drive::SD: {
                 FILINFO f;
@@ -406,62 +458,74 @@ namespace rckid::filesystem {
 
     // file read, write and append operations
 
-    FileRead fileRead(char const * filename, Drive dr) {
+    FileRead fileRead(char const * path, Drive dr) {
         FileRead result;
         switch (dr) {
-            case Drive::SD: {
-                if (f_open(& result.sd_, filename, FA_READ) == FR_OK)
+            case Drive::SD:
+                if (f_open(& result.sd_, path, FA_READ) == FR_OK)
                     result.drive_ = static_cast<unsigned>(dr);
                 break;
-            }
-            case Drive::Cartridge: {
-                if (lfs_file_open(& lfs_, & result.cart_, filename, LFS_O_RDONLY) >= 0)
+            case Drive::Cartridge:
+                if (lfs_file_open(& lfs_, & result.cart_, path, LFS_O_RDONLY) >= 0)
                     result.drive_ = static_cast<unsigned>(dr);
                 break;
-            }
             default:
                 UNREACHABLE;
         }
         return result;
     }
 
-    FileWrite fileWrite(char const * filename, Drive dr) {
+    FileWrite fileWrite(char const * path, Drive dr) {
         FileWrite result;
         switch (dr) {
-            case Drive::SD: {
-                if (f_open(& result.sd_, filename, FA_WRITE) == FR_OK)
+            case Drive::SD:
+                if (f_open(& result.sd_, path, FA_WRITE) == FR_OK)
                     result.drive_ = static_cast<unsigned>(dr);
                 break;
-            }
-            case Drive::Cartridge: {
-                if (lfs_file_open(& lfs_, & result.cart_, filename, LFS_O_WRONLY | LFS_O_CREAT) >= 0)
+            case Drive::Cartridge:
+                if (lfs_file_open(& lfs_, & result.cart_, path, LFS_O_WRONLY | LFS_O_CREAT) >= 0)
                     result.drive_ = static_cast<unsigned>(dr);
                 break;
-            }
             default:
                 UNREACHABLE;
         }
         return result;
     }
 
-    FileWrite fileAppend(char const * filename, Drive dr) {
+    FileWrite fileAppend(char const * path, Drive dr) {
         FileWrite result;
         switch (dr) {
-            case Drive::SD: {
-                if (f_open(& result.sd_, filename, FA_WRITE | FA_OPEN_APPEND) == FR_OK)
+            case Drive::SD:
+                if (f_open(& result.sd_, path, FA_WRITE | FA_OPEN_APPEND) == FR_OK)
                     result.drive_ = static_cast<unsigned>(dr);
                 break;
-            }
-            case Drive::Cartridge: {
-                if (lfs_file_open(& lfs_, & result.cart_, filename, LFS_O_WRONLY | LFS_O_APPEND) >= 0)
+            case Drive::Cartridge:
+                if (lfs_file_open(& lfs_, & result.cart_, path, LFS_O_WRONLY | LFS_O_APPEND) >= 0)
                     result.drive_ = static_cast<unsigned>(dr);
                 break;
-            }
             default:
                 UNREACHABLE;
         }
         return result;
     }
+
+    Folder folderRead(char const * path, Drive dr) {
+        Folder result;
+        switch (dr) {
+            case Drive::SD:
+                if (f_opendir(& result.sd_, path) == FR_OK)
+                    result.drive_ = static_cast<unsigned>(dr);
+                break;
+            case Drive::Cartridge:
+                if (lfs_dir_open(& lfs_, & result.cart_, path) >=0)
+                    result.drive_ = static_cast<unsigned>(dr);
+                break;
+            default:
+                UNREACHABLE;
+        }
+        return result;
+    }
+
 
 
 } // namespace rckid::filesystem
