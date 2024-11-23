@@ -2,12 +2,16 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
+- can usb be enabled for comms & still work ok with battery levels? 
+
+- move all 3rd part code out of sdk for easier maintenance
+- maybe move platform to sdk?
+
 - text input should distinguish between returning and cancel, currently no provision for that in code
 
 - hall of fame and others can be apps of their own that just reuse the canvas from previous run, but delegate the controls? How though
 
 - load filesystems from SD and from cartridge during initialization - then we can unload them during the file transfer
-- write directory reader classes for FatFS and littlefs
 
 - add blit that ignores particular color
 
@@ -83,7 +87,9 @@
 
 > With ability to read from the display uninterrupted, we can also reinitialize this any time with the existing framebuffer for all kinds of cool effects.
 
-- the 3v3 rail to onboard sensors & RTC is always on, this enables time & steps tracking to be valid even across cartridges. The RTC memory (if present) can be used for some basic storage as well  
+- the 3v3 rail to onboard sensors & RTC is always on, this enables time & steps tracking to be valid even across cartridges. The RTC memory (if present) can be used for some basic storage as well 
+- maybe put SD card under the display, together with RPI, this will save enormous amount of space on the PCB around the buttons for rather small increase in total height, which is probably ok
+- have version with both solderable contants and FPC for the display?  
 
 ### Display woes
 

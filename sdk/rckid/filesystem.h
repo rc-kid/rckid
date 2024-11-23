@@ -118,6 +118,173 @@ namespace rckid::filesystem {
         };
     };
 
+    class Entry {
+    public:
+
+        bool good() const { return drive_ != 0; }
+
+        char const * name() const {
+            switch (drive_) {
+                case static_cast<unsigned>(Drive::SD):
+                    return sd_.fname;
+                case static_cast<unsigned>(Drive::Cartridge):
+                    return cart_.name;
+                default:
+                    return ""; // avoid nullptr
+            }
+        }
+
+        uint32_t size() const {
+            switch (drive_) {
+                case static_cast<unsigned>(Drive::SD):
+                    return sd_.fsize;
+                case static_cast<unsigned>(Drive::Cartridge):
+                    return cart_.size;
+                default:
+                    return 0;
+            }
+        }
+
+        bool isFile() const {
+            switch (drive_) {
+                case static_cast<unsigned>(Drive::SD):
+                    return (sd_.fattrib & AM_DIR) == 0;
+                case static_cast<unsigned>(Drive::Cartridge):
+                    return cart_.type == LFS_TYPE_REG;
+                default:
+                    return false;
+            }
+        }
+
+        bool isFolder() const {
+            switch (drive_) {
+                case static_cast<unsigned>(Drive::SD):
+                    return (sd_.fattrib & AM_DIR) != 0;
+                case static_cast<unsigned>(Drive::Cartridge):
+                    return cart_.type == LFS_TYPE_DIR;
+                default:
+                    return false;
+            }
+        }
+
+        bool operator == (Entry const & other) const {
+            if (drive_ != other.drive_)
+                return false;
+            switch (drive_) {
+                case static_cast<unsigned>(Drive::SD):
+                    return (sd_.fsize == other.sd_.fsize) &&
+                           (sd_.fdate == other.sd_.fdate) &&
+                           (sd_.ftime == other.sd_.ftime) &&
+                           (sd_.fattrib == other.sd_.fattrib) &&
+                           strncmp(sd_.fname, other.sd_.fname, FF_LFN_BUF) == 0;
+                case static_cast<unsigned>(Drive::Cartridge):
+                    return (cart_.type == other.cart_.type) && 
+                           (cart_.size == other.cart_.size) &&
+                           strncmp(cart_.name, other.cart_.name, LFS_NAME_MAX) == 0;
+                case 0:
+                    // all invalid drives are equal and we already know both drives are the same
+                    return true;
+                default:
+                    UNREACHABLE;
+            }
+        }
+
+        bool operator != (Entry const & other) const {
+            if (drive_ != other.drive_)
+                return true;
+            switch (drive_) {
+                case static_cast<unsigned>(Drive::SD):
+                    return (sd_.fsize != other.sd_.fsize) ||
+                           (sd_.fdate != other.sd_.fdate) ||
+                           (sd_.ftime != other.sd_.ftime) ||
+                           (sd_.fattrib != other.sd_.fattrib) ||
+                           strncmp(sd_.fname, other.sd_.fname, FF_LFN_BUF) != 0;
+                case static_cast<unsigned>(Drive::Cartridge):
+                    return (cart_.type != other.cart_.type) ||
+                           (cart_.size != other.cart_.size) ||
+                           strncmp(cart_.name, other.cart_.name, LFS_NAME_MAX) != 0;
+                // if we get here and drive is 0 (invalid), then the other drive had to be 0 as well and all invalid entries are equal
+                case 0:
+                    return false;
+                default:
+                    UNREACHABLE;
+            }
+        }
+        
+    private:
+
+        friend class Folder;
+
+        unsigned drive_ = 0;
+
+        union {
+            FILINFO sd_;
+            lfs_info cart_;
+        };
+    }; // Entry
+
+    /** Simple folder listing  */
+    class Folder {
+    public:
+
+        class Iterator {
+        public:
+
+            Entry & operator * () { return entry_; }
+            Entry * operator -> () { return & entry_; }
+            Iterator & operator ++ () {
+                folder_->readNext(entry_);
+                return *this;
+            }
+
+            bool operator == (Iterator const & other) const {
+                return (entry_ == other.entry_) && (folder_ == other.folder_);
+            }
+
+            bool operator != (Iterator const & other) const {
+                return (entry_ != other.entry_) || (folder_ != other.folder_);
+            }
+
+        private:
+
+            friend class Folder;
+            
+            Iterator(Folder * folder): folder_(folder) {}
+            Folder * folder_;
+            Entry entry_;
+        }; 
+
+        ~Folder();
+
+        bool good() const { return drive_ != 0; }
+
+        Iterator begin() { 
+            Iterator result{this};
+            if (good()) {
+                rewind();
+                ++result;
+            }
+            return result;
+        }
+
+        Iterator end() { return Iterator{this}; }
+
+    private:
+
+        friend Folder folderRead(char const * path, Drive dr);
+
+        void rewind();
+
+        void readNext(Entry & into);
+
+        unsigned drive_ = 0;
+        union {
+            DIR sd_;
+            lfs_dir_t cart_;
+        }; 
+
+    }; // rckid::filesystem::Folder
+
     /** Formats the drive. 
      
         For the SD card, formats the card using the ExFAT filesystem, while LittleFS is used for cartridge's flash memory where wear levelling is important. 
@@ -170,20 +337,21 @@ namespace rckid::filesystem {
 
     /** Returns true if  the given path is a valid file. 
      */
-    bool isDir(char const * path, Drive dr = Drive::SD);
+    bool isFolder(char const * path, Drive dr = Drive::SD);
 
     /** Returns true if the given path is a valid directory. 
      */
     bool isFile(char const * path, Drive dr = Drive::SD); 
 
-
     /** Opens given file for reading. 
      */
-    FileRead fileRead(char const * filename, Drive dr = Drive::SD);
+    FileRead fileRead(char const * path, Drive dr = Drive::SD);
 
-    FileWrite fileWrite(char const * filename, Drive dr = Drive::SD);
+    FileWrite fileWrite(char const * path, Drive dr = Drive::SD);
 
-    FileWrite fileAppend(char const * filename, Drive dr = Drive::SD);
+    FileWrite fileAppend(char const * path, Drive dr = Drive::SD);
+
+    Folder folderRead(char const * path, Drive dr = Drive::SD);
 
 
 } // namespace rckid::filesystem
