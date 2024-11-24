@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <functional>
+#include <algorithm>
 
 /** A very simple ring buffer implementation with static size. 
  
@@ -117,63 +117,37 @@ private:
     unsigned w_ = 0;
 }; // RingBuffer
 
-/** A simple double buffer.  
 
+/** Very simple double buffer. 
  */
+template<typename T>
 class DoubleBuffer {
 public:
-
-    using SwapCallback = std::function<void(DoubleBuffer &)>;
-
-    /** Creates the buffer of particular size.
-     */
-    DoubleBuffer(uint32_t size):
-        size_{size}, 
-        buffer_{new uint8_t[size * 2]} {
-    }
-
-    DoubleBuffer(uint32_t size, SwapCallback cb):
-        size_{size}, 
-        buffer_{new uint8_t[size * 2]},
-        cb_{cb} {
+    DoubleBuffer(size_t size): 
+        size_{size},
+        front_{new T[size]}, 
+        back_{new T[size]} {
     }
 
     ~DoubleBuffer() {
-        delete [] buffer_;
+        delete [] front_;
+        delete [] back_;
     }
 
-    uint32_t size() { return size_; }
-
-    /** Returns the current back buffer, i.e. the empty buffer that needs to be filled. 
-     
-        This is typically the buffer to which the app renders, or the buffer to which audio playback should store the waveform, or where audio recording should store the recorded data. 
-        */
-    uint8_t * getBackBuffer() {
-        return state_ ? buffer_ : (buffer_ + size_);
-    }
-
-    /** Returns the current front buffer, i.e. the buffer containing valid data that is to be processed. 
-     
-        This typically involves a DMA transfer to peripherals in case of graphics or audio playback, or actual on-chip processing in case of audio recording. 
-        */
-    uint8_t * getFrontBuffer() {
-        return state_ ? (buffer_ + size_) : buffer_;
-    }
-
-    /** Swaps the front and back buffers. 
-
-        Executes the appropriate callbacks if provided.  
-        */
     void swap() {
-        state_ = ! state_;
-        if (cb_)
-            cb_(*this);
+        std::swap(front_, back_);
     }
+
+    uint32_t size() const { return size_; }
+
+    T const * front() const { return front_; }
+    T const * back() const { return back_; }
+    T * front() { return front_; }
+    T * back() { return back_; }
 
 private:
-    uint32_t size_;
-    uint8_t * buffer_;
-    bool state_ = false;
-    SwapCallback cb_;
-}; // DoubleBuffer
+    size_t size_;
+    T * front_;
+    T * back_;
 
+}; // DoubleBuffer<T>

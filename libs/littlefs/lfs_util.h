@@ -20,6 +20,14 @@
 #include LFS_STRINGIZE(LFS_CONFIG)
 #else
 
+// RCKID: The macros don't play nicely with MSVC
+#ifdef _MSC_VER
+#define LFS_NO_DEBUG
+#define LFS_NO_ERROR
+#define LFS_NO_WARN
+#define LFS_NO_ASSERT
+#endif
+
 // System includes
 #include <stdint.h>
 #include <stdbool.h>

@@ -191,13 +191,11 @@ namespace rckid {
     public:
 
         ToneGenerator():
-            buf_{BUFFER_FRAMES * 4, [this](DoubleBuffer &) { refill(); }} {
+            buffer_{BUFFER_SAMPLES * 2} {
         }
 
-
         void enable() {
-            refill();
-            audioPlay(buf_, f_);
+            audioPlay(buffer_, 44100, [this](int16_t * buffer, uint32_t samples) { return refill(buffer, samples); });
         }
 
         void disable() {
@@ -211,23 +209,23 @@ namespace rckid {
 
     private:
 
-        static constexpr uint32_t BUFFER_FRAMES = 512;
+        static constexpr uint32_t BUFFER_SAMPLES = 512;
 
         // go over all the channels and refill them
-        void refill() {
-            int16_t * buf = reinterpret_cast<int16_t*>(buf_.getBackBuffer());
-            for (uint32_t i = 0; i < BUFFER_FRAMES; ++i) {
+        uint32_t refill(int16_t * buffer, uint32_t samples) {
+            for (uint32_t i = 0; i < samples; ++i) {
                 int16_t v = channels_[0].next();
                 v += channels_[1].next();
                 v += channels_[2].next();
                 v += channels_[3].next();
-                buf[i * 2] = v;
-                buf[i * 2 + 1] = v;
+                buffer[i * 2] = v;
+                buffer[i * 2 + 1] = v;
             }
+            return samples;
         }
 
         Tone channels_[4];
-        DoubleBuffer buf_;
+        DoubleBuffer<int16_t> buffer_;
         uint32_t f_ = 44100;
     }; 
 

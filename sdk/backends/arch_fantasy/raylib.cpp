@@ -143,14 +143,6 @@ namespace rckid {
         Texture displayTexture_;
         std::chrono::steady_clock::time_point displayLastVSyncTime_;
 
-
-        bool audioPlayback_;
-        AudioStream audioStream_;
-        DoubleBuffer * audioPlaybackBuffer_;
-        uint32_t audioPlaybackBufferRemaining_;
-        int16_t * audioPlaybackBufferRead_;
-        uint8_t audioVolume_ = 10;
-
         std::fstream sdIso_;
         uint32_t sdNumBlocks_;
 
@@ -160,7 +152,19 @@ namespace rckid {
         uint64_t nextSecond_;
         TinyDate dateTime_;
         TinyAlarm alarm_;
+
+        namespace audio {
+            std::function<uint32_t(int16_t *, uint32_t)> cb_;
+            DoubleBuffer<int16_t> * buffer_ = nullptr;
+            size_t bufferSize_ = 0;
+            size_t bufferI_ = 0;
+            bool playback_ = false;
+            uint8_t volume_ = 10;
+            AudioStream stream_;
+        }
     }
+
+
 
     void initialize() {
         systemMalloc_ = true;
@@ -454,31 +458,30 @@ namespace rckid {
 
     // audio
 
-    void audioStreamRefill(void * buffer, unsigned int frames) {
+    /** Refills the raylib's audio stream. 
+     */
+    void audioStreamRefill(void * buffer, unsigned int samples) {
+        // get the stereo view of the input buffer
         int16_t * stereo = reinterpret_cast<int16_t*>(buffer);
-        while (frames-- != 0) {
-            if (audioPlaybackBufferRemaining_ == 0) {
-                audioPlaybackBuffer_->swap();
-                audioPlaybackBufferRemaining_ = audioPlaybackBuffer_->size() / 4; // stereo uint16_t 
-                audioPlaybackBufferRead_ = reinterpret_cast<int16_t*>(audioPlaybackBuffer_->getFrontBuffer());
+        while (samples-- != 0) {
+            if (audio::bufferI_ >= audio::bufferSize_) {
+                audio::bufferSize_ = audio::cb_(audio::buffer_->front(), audio::buffer_->size() / 2);
+                audio::bufferI_ = 0;
+                audio::buffer_->swap();
             }
-            if (audioVolume_ == 0) {
-                *(stereo++) = 0;
-                *(stereo++) = 0;
+            int16_t l = audio::buffer_->back()[audio::bufferI_++];
+            int16_t r = audio::buffer_->back()[audio::bufferI_++];
+            if (audio::volume_ == 0) {
+                l = 0;
+                r = 0;
             } else {
-                int16_t x = *(audioPlaybackBufferRead_++);
-                x >>= (10 - audioVolume_);
-                x = x & 0xfff0;
-                *(stereo++) = x; //*(audioPlaybackBufferRead_++);
-
-                x = *(audioPlaybackBufferRead_++);
-                x >>= (10 - audioVolume_);
-                x = x & 0xfff0;
-                *(stereo++) = x; //*(audioPlaybackBufferRead_++);
+                l >>= (10 - audio::volume_);
+                l = l & 0xfff0;
+                r >>= (10 - audio::volume_);
+                r = r & 0xfff0;
             }
-
-//            *(stereo++) = *(audioPlaybackBufferRead_++);
-            --audioPlaybackBufferRemaining_;
+            *(stereo++) = l;
+            *(stereo++) = r;
         }
     }
 
@@ -489,14 +492,14 @@ namespace rckid {
     }
 
     void audioOff() {
-        if (audioPlayback_)
+        if (audio::playback_)
             audioStop();
         CloseAudioDevice();
     }
 
     bool audioEnabled() {
         // TODO and recording
-        return audioPlayback_; 
+        return audio::playback_; 
     }
 
     bool audioHeadphones() {
@@ -505,7 +508,7 @@ namespace rckid {
     }
 
     int32_t audioVolume() {
-        return audioVolume_;
+        return audio::volume_;
     }
 
     void audioSetVolume(int32_t value) {
@@ -513,41 +516,44 @@ namespace rckid {
             value = 10;
         if (value < 0)
             value = 0;
-        audioVolume_ = value; 
+        audio::volume_ = value; 
     }
 
     uint32_t audioSampleRate() {
-        if (audioPlayback_)
-            return audioStream_.sampleRate;
+        if (audio::playback_)
+            return audio::stream_.sampleRate;
         else
             return 44100;
     }
 
-    void audioPlay(DoubleBuffer & data, uint32_t sampleRate) {
-        if (audioPlayback_)
+    void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, std::function<uint32_t(int16_t *, uint32_t)> cb) {
+        if (audio::playback_)
             audioStop();
-        audioStream_ = LoadAudioStream(sampleRate, 16, 2);
-        SetAudioStreamCallback(audioStream_, audioStreamRefill);   
-        audioPlaybackBuffer_ = & data;   
-        audioPlaybackBufferRemaining_ = 0;  
-        PlayAudioStream(audioStream_);
-        audioPlayback_ = true;
+        audio::cb_ = cb;
+        audio::buffer_ = & buffer;
+        audio::stream_ = LoadAudioStream(sampleRate, 16, 2);
+        SetAudioStreamCallback(audio::stream_, audioStreamRefill);   
+        audio::playback_ = true;
+        PlayAudioStream(audio::stream_);
     }
 
-    void audioRecord(DoubleBuffer & data, uint32_t sampleRate) {
-        UNIMPLEMENTED;
-    }
+    //void audioRecord(DoubleBuffer & data, uint32_t sampleRate) {
+    //    UNIMPLEMENTED;
+    //}
 
     void audioPause() {
-        if (audioPlayback_)
-            PauseAudioStream(audioStream_);
+        if (audio::playback_)
+            PauseAudioStream(audio::stream_);
     }
 
     void audioStop() {
-        if (audioPlayback_) {
-            StopAudioStream(audioStream_);
-            UnloadAudioStream(audioStream_);
-            audioPlayback_ = false;
+        if (audio::playback_) {
+            StopAudioStream(audio::stream_);
+            UnloadAudioStream(audio::stream_);
+            audio::playback_ = false;
+            audio::buffer_ = nullptr;
+            audio::bufferSize_ = 0;
+            audio::bufferI_ = 0;
         }
     }
 

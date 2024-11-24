@@ -307,7 +307,10 @@ namespace rckid {
     //@}
 
     /** \name Audio
-     
+
+        The audio uses 16bit signed format and supports either mono, or stereo playback and mono recording via the buil-in microphone with sample rates of up to 48kHz. To conserve memory, both playback and recording require the app to supply the audio system with a double buffer that the audio system will use to cache and stream out the audio data, and a callback function. 
+
+        The callback function for the playback takes a buffer and its size in *stereo samples* and should fill the buffer with up to the specified number of stereo samples, returning the number of stereo samples actually written (which can be smaller then the number of samples the buffer can hold). Internally, the device uses the double buffer so that when one part is being streamed out via DMA, the other part can be refilled by the application.
      */
     //@{
 
@@ -327,9 +330,11 @@ namespace rckid {
 
     uint32_t audioSampleRate();
 
-    void audioPlay(DoubleBuffer & data, uint32_t sampleRate= 44100);
+    /** Starts playback with given sample rate and callback function.
+     */
+    void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, std::function<uint32_t(int16_t *, uint32_t)> cb);
 
-    void audioRecord(DoubleBuffer & data, uint32_t sampleRate = 8000);
+    //void audioRecord(DoubleBuffer & data, uint32_t sampleRate = 8000);
 
     void audioPause();
 
