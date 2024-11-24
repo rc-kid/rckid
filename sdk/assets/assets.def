@@ -1,18 +1,18 @@
 #generator,  path to font, font size, class name, glyphs to be generated
-fontGlyphs, fonts/Iosevka.ttf, 16
-fontGlyphs, fonts/Iosevka.ttf, 24
-fontGlyphs, fonts/Iosevka.ttf, 32
-fontGlyphs, fonts/OpenDyslexic.otf, 24
-fontGlyphs, fonts/OpenDyslexic.otf, 32
-fontGlyphs, fonts/OpenDyslexic.otf, 48
-fontGlyphs, fonts/OpenDyslexic.otf, 64
-fontGlyphs, fonts/OpenDyslexic.otf, 128
-fontGlyphs, fonts/OpenDyslexic.otf, 32, Symbols16, ../rckid/assets/symbol-glyphs.inc.h
-fontGlyphs, fonts/OpenDyslexic.otf, 64, Symbols32, ../rckid/assets/symbol-glyphs.inc.h
-fontGlyphs, fonts/OpenDyslexic.otf, 128, Symbols64, ../rckid/assets/symbol-glyphs.inc.h
-fontGlyphs, fonts/HemiHead.ttf, 64
-fontGlyphs, fonts/MetalLord.ttf, 64
-fontGlyphs, fonts/MetalLord.ttf, 32
+#fontGlyphs, fonts/Iosevka.ttf, 16
+#fontGlyphs, fonts/Iosevka.ttf, 24
+#fontGlyphs, fonts/Iosevka.ttf, 32
+#fontGlyphs, fonts/OpenDyslexic.otf, 24
+#fontGlyphs, fonts/OpenDyslexic.otf, 32
+#fontGlyphs, fonts/OpenDyslexic.otf, 48
+#fontGlyphs, fonts/OpenDyslexic.otf, 64
+#fontGlyphs, fonts/OpenDyslexic.otf, 128
+#fontGlyphs, fonts/OpenDyslexic.otf, 32, Symbols16, ../rckid/assets/symbol-glyphs.inc.h
+#fontGlyphs, fonts/OpenDyslexic.otf, 64, Symbols32, ../rckid/assets/symbol-glyphs.inc.h
+#fontGlyphs, fonts/OpenDyslexic.otf, 128, Symbols64, ../rckid/assets/symbol-glyphs.inc.h
+#fontGlyphs, fonts/HemiHead.ttf, 64
+#fontGlyphs, fonts/MetalLord.ttf, 64
+#fontGlyphs, fonts/MetalLord.ttf, 32
 
 #generator, path to folder, namespace (and output file)
 #folder, icons64, icons64
@@ -21,4 +21,7 @@ fontGlyphs, fonts/MetalLord.ttf, 32
 #folder, tests, tests
 
 #generator, filename, n
-sine, interpolation_sine.inc.h, 256, 32767
+#sine, interpolation_sine.inc.h, 256, 32767
+
+#generator, filename, channels
+rawopus, tests/faryra.raw, 48000, 1, 32000

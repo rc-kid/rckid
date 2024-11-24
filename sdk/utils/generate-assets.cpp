@@ -83,6 +83,8 @@ int main(int argc, char * argv []) {
                     generateFolder(g, outputDir, nspace);
                 else if (g.name == "sine")
                     generateSineTable(g, outputDir, nspace);
+                else if (g.name == "rawopus")
+                    generateRawOpus(g, outputDir, nspace);
                 else 
                     throw std::runtime_error("Unknown generator");
             } catch (std::exception const & e) {

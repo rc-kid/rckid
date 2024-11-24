@@ -7,6 +7,10 @@
 
 namespace rckid::opus {
 
+    /** Opus frame sizes in milliseconds. 
+     
+        Depending on the number of channels and sample rate, opus frames have different actual sizes - use the frameSize() function for this. 
+     */
     enum class FrameSize {
         ms2_5 = 1, 
         ms5 = 2, 
@@ -91,9 +95,6 @@ namespace rckid::opus {
         OpusEncoder * encoder_;
 
     }; // rckid::opus::Encoder
-
-
-
 
     // TODO this is code from V1 and needs to be ported and updated to the latest SDK
     // kept here as a starting point
