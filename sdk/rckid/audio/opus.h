@@ -7,7 +7,20 @@
 
 namespace rckid::opus {
 
-#ifdef IN_PROGRESS
+    enum class FrameSize {
+        ms2_5 = 1, 
+        ms5 = 2, 
+        ms10 = 4, 
+        ms20 = 8, 
+        ms40 = 16,
+        ms60 = 24,
+    };
+
+    /** Returns the size of opus frame based on given sample rate, number of audio channels and desired frame size in milliseconds. This number is the number of int16_t samples in the frame. 
+     */
+    inline uint32_t frameSize(audio::SampleRate sr, audio::Channels ch, FrameSize fs) {
+        return static_cast<uint32_t>(ch) * static_cast<uint32_t>(sr) / 400 * static_cast<uint32_t>(fs);
+    }
 
     /** Decoder of raw opus packets. 
      
@@ -29,61 +42,20 @@ namespace rckid::opus {
             opus_decoder_destroy(decoder_);
         }
 
-        /** Takes given raw packet and decodes it into given  */
-        size_t decodePacket(uint8_t const * rawPacket, uint32_t inBytes, int16_t * out, uint32_t outBytes) {
-
-        }
-        /*
-        void reset() {
-            opus_decoder_destroy(decoder_);
-            int err;
-            decoder_ = opus_decoder_create(8000, 1, &err);
-            if (err != OPUS_OK) {
-                LOG("Unable to create opus decoder, code: " << err);
-                decoder_ = nullptr;
-            }
-            lastIndex_ = 0xff;
-            missingPackets_ = 0;
-            packets_ = 0;
-        }
-        */
-
-        size_t decodePacket(unsigned char const * rawPacket) {
-            // if the packet index is the same as last one, it's a packet retransmit and there is nothing we need to do
-            if (rawPacket[1] == lastIndex_)
+        /** Takes raw packet and decodes it into provided buffer.
+         
+            This is just a super thin wrapper around the opus decoder. It leaves up to the user to ensure that the output buffer is large enough to hold the opus frame being decoded.
+          */
+        uint32_t decodePacket(uint8_t const * rawPacket, uint32_t inBytes, int16_t * out, uint32_t outBytes) {
+            int result = opus_decode(decoder_, rawPacket, inBytes, out, outBytes, false); 
+            if (result < 0)
                 return 0;
-            // if we have missed any packet, report it as lost
-            while (++lastIndex_ != rawPacket[1])
-                reportPacketLoss();
-            // decode the packet and return the decoded size
-            int result = opus_decode(decoder_, rawPacket + 2, rawPacket[0], buffer_, 320, false);
-            if (result < 0) {
-                LOG("Unable to decode packet, code: " << result);
-                // TODO
-            }
-            ++packets_;
-            return result;
+            return static_cast<uint32_t>(result);
         }
-
-        opus_int16 const * buffer() const { return buffer_; }
-
-        size_t missingPackets() const { return missingPackets_; }
-        size_t packets() const { return packets_; }
 
     private:
 
-        void reportPacketLoss() {
-            ++missingPackets_;
-            int result = opus_decode(decoder_, nullptr, 0, buffer_, 320, false);
-            if (result < 0)
-                LOG("Unable to decode missing packet, code: " << result);
-        }
-
         OpusDecoder * decoder_;
-        size_t missingPackets_{0};
-        size_t packets_{0};
-        opus_int16 buffer_[320];
-        uint8_t lastIndex_{0xff};
     }; 
 
     class Encoder {
@@ -91,22 +63,37 @@ namespace rckid::opus {
         /** Creates new encoder with given sample rate, number of channels and desired bitrate. 
          */
         Encoder(audio::SampleRate sr, audio::Channels channels, uint32_t bitrate) {
-
+            int err;
+            encoder_ = opus_encoder_create(static_cast<int>(sr), static_cast<int>(channels), OPUS_APPLICATION_VOIP, &err);
+            if (err != OPUS_OK) {
+                LOG("Unable to create opus encoder, code: " << err);
+                encoder_ = nullptr;
+                return;
+            }
+            opus_encoder_ctl(encoder_, OPUS_SET_BITRATE(bitrate));                
         }
 
         ~Encoder() {
-
+            opus_encoder_destroy(encoder_);
         }
 
-
+        /** Encodes provided packet. 
+         */
+        uint32_t encodePacket(int16_t const * rawAudio, uint32_t samples, uint8_t * out, uint32_t outBytes) {
+            int result = opus_encode(encoder_, rawAudio, samples, out, outBytes);
+            if (result < 0)
+                return 0;
+            return static_cast<uint32_t>(result);
+        }
 
     private:
+
+        OpusEncoder * encoder_;
 
     }; // rckid::opus::Encoder
 
 
 
-#endif
 
     // TODO this is code from V1 and needs to be ported and updated to the latest SDK
     // kept here as a starting point
