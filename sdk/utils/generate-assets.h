@@ -352,7 +352,7 @@ void generateRawOpus(GeneratorSpecification const & g, std::string const & outpu
     size_t i = 0;
     size_t encoded = 0;
     std::string outputPath = STR(outputDir + "/audio/opus");
-    std::string className{std::filesystem::path{filename}.stem().c_str()};
+    std::string className = STR(std::filesystem::path(filename).stem().c_str());
     std::filesystem::create_directories(outputPath);
     std::ofstream out{STR(outputPath + "/" + className + ".h")};
     out << "#pragma once" << Writer::endl << Writer::endl;

@@ -15,18 +15,13 @@ namespace rckid {
 
     protected:
         RawAudioTest():
-            GraphicsApp{ARENA(Canvas<Color>{320, 240})},
-            buf_{BUFFER_FRAMES * 4, [this](DoubleBuffer &) {
-                refill();
-            }} {
-                audioOn();
-                refill();
-            }
-
+            GraphicsApp{ARENA(Canvas<Color>{320, 240})} {
+            audioOn();
+        }
 
         void update() override {
             if (btnPressed(Btn::A)) {
-                audioPlay(buf_, 44100);                
+                audioPlay(buffer_, 44100, [this](int16_t * buffer, uint32_t samples) { return refill(buffer, samples); });
             }
             if (btnPressed(Btn::B)) {
                 audioStop();
@@ -91,15 +86,30 @@ namespace rckid {
 
     private:
 
-        static constexpr uint32_t BUFFER_FRAMES = 512;
+        static constexpr uint32_t BUFFER_SAMPLES = 512;
         static constexpr uint32_t INPUT_SIZE = sizeof(assets::tests::raw_audio_44100_16_signed) / 2;
+
+        DoubleBuffer<int16_t> buffer_{BUFFER_SAMPLES * 2};
 
         uint16_t x = 0;
 
         uint32_t updates_ = 0;
-        int16_t * lastBuf_ = nullptr;
+        //int16_t * lastBuf_ = nullptr;
         uint32_t errors_ = 0;
 
+        uint32_t refill(int16_t * buffer, uint32_t samples) {
+            ++updates_;
+            int16_t const * input = reinterpret_cast<int16_t const *>(assets::tests::raw_audio_44100_16_signed);
+            for (unsigned i = 0; i < samples; ++i) {
+                *(buffer++) = input[ii_];
+                *(buffer++) = input[ii_];
+                if (++ii_ >= INPUT_SIZE)
+                    ii_ = 0;
+            }
+            return samples;
+        }
+
+        /*
         void refill() {
             ++updates_;
             int16_t * buf = reinterpret_cast<int16_t*>(buf_.getBackBuffer());
@@ -108,22 +118,22 @@ namespace rckid {
             lastBuf_ = buf;
             int16_t const * input = reinterpret_cast<int16_t const *>(assets::tests::raw_audio_44100_16_signed);
             for (uint32_t i = 0; i < BUFFER_FRAMES; ++i) {
-                /*
+                / *
                 buf[i * 2] = x;
                 buf[i * 2 + 1] = x;
                 if (++x == 4096)
                     x = 0;
                ++ii_;
-               */
+               * /
                 int16_t v = input[ii_];
                 if (++ii_ == INPUT_SIZE)
                     ii_ = 0;
                 buf[i * 2] = v;
                 buf[i * 2 + 1] = v;
             }
-        }
+        } */
 
-        DoubleBuffer buf_;
+        //DoubleBuffer buf_;
         uint32_t ii_ = 0;
 
         /*

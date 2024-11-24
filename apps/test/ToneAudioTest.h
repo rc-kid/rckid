@@ -17,12 +17,9 @@ namespace rckid {
     protected:
         ToneAudioTest():
             GraphicsApp{ARENA(Canvas<Color>{320, 240})},
-            buf_{BUFFER_FRAMES * 4, [this](DoubleBuffer &) {
-                refill();
-            }} {
+            buffer_{BUFFER_SAMPLES * 2} {
                 audioOn();
-                refill();
-                audioPlay(buf_, 44100);
+                audioPlay(buffer_, 44100, [this](int16_t * buffer, uint32_t samples) { return refill(buffer, samples); });
             }
 
 
@@ -86,22 +83,22 @@ namespace rckid {
 
     private:
 
-        static constexpr uint32_t BUFFER_FRAMES = 512;
+        static constexpr uint32_t BUFFER_SAMPLES = 512;
         uint32_t updates_ = 0;
 
         Tone tone_;
 
-        void refill() {
+        uint32_t refill(int16_t * buffer, uint32_t samples) {
             ++updates_;
-            int16_t * buf = reinterpret_cast<int16_t*>(buf_.getBackBuffer());
-            for (uint32_t i = 0; i < BUFFER_FRAMES; ++i) {
+            for (uint32_t i = 0; i < samples; ++i) {
                 int16_t v = tone_.next();
-                buf[i * 2] = v;
-                buf[i * 2 + 1] = v;
+                buffer[i * 2] = v;
+                buffer[i * 2 + 1] = v;
             }
+            return samples;
         }
 
-        DoubleBuffer buf_;
+        DoubleBuffer<int16_t> buffer_;
 
     }; // rckid::RawAudiotest
 
