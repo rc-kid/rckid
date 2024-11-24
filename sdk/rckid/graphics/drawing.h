@@ -99,7 +99,8 @@ namespace rckid {
                 numPixels /= 2;
                 [[fallthrough]];
             case 32:
-                ASSERT(COLOR::BPP != 32); // we actually don't support 32 bpp, this is here only for faster memop
+                // we actually don't support 32 bpp, this is here only for faster memop
+                static_assert(COLOR::BPP != 32);
                 return memFill(reinterpret_cast<uint32_t*>(buffer), numPixels, value);
             default:
                 UNREACHABLE;

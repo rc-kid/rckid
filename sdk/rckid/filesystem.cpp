@@ -1,9 +1,7 @@
-extern "C" {
+#include <cmath>
 
 #include <FatFS/ff.h>
 #include <FatFS/diskio.h>
-
-}
 
 #include "rckid.h"
 #include "filesystem.h"
