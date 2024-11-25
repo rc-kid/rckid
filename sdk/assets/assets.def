@@ -24,4 +24,6 @@
 #sine, interpolation_sine.inc.h, 256, 32767
 
 #generator, filename, channels
-rawopus, tests/faryra.raw, 48000, 1, 32000
+#rawopus, tests/faryra.raw, 48000, 1, 32000
+
+mp3dec, tests/faryra.mp3

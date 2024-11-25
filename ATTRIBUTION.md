@@ -6,7 +6,7 @@
 
 # Music
 
-- faryra (used for tests): https://freemusicarchive.org/music/audiorezout/skyward/faryra/
+- faryra by audiorezout CC-BY-NC (used for tests): https://freemusicarchive.org/music/audiorezout/skyward/faryra/
 
 # Icons
 

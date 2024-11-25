@@ -3,7 +3,7 @@ function(add_utility util_name)
     target_include_directories(${util_name} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/raylib/src")
     target_include_directories(${util_name} PRIVATE "${CMAKE_SOURCE_DIR}/libs/platform/pc")
 
-    target_link_libraries(${util_name} raylib opus)
+    target_link_libraries(${util_name} raylib opus libhelix-mp3)
 endfunction()
 
 add_utility("generate-assets")
