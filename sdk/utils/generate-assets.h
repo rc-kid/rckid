@@ -17,6 +17,7 @@
 
 #include "rckid/graphics/font.h"
 #include "rckid/audio/opus.h"
+#include "rckid/audio/mp3.h"
 
 class GeneratorSpecification {
 public:
@@ -381,6 +382,46 @@ void generateRawOpus(GeneratorSpecification const & g, std::string const & outpu
     std::cout << "File encoded in " << encoded << " bytes" << std::endl;
 }
 
+// TODO this does not seem to work, it only read first frame, not sure why
+void generateMP3Dec(GeneratorSpecification const & g, std::string const & outputDir, [[maybe_unused]] std::string const & nspace) {
+    std::string filename{g.args[0]};
+    std::ifstream input(filename, std::ios::binary);
+    std::vector<char> bytes(
+         (std::istreambuf_iterator<char>(input)),
+         (std::istreambuf_iterator<char>()));
+    input.close();   
+    std::cout << "Loaded " << bytes.size() << " bytes" << Writer::endl;
+    HMP3Decoder dec = MP3InitDecoder();
+    unsigned char * buf = reinterpret_cast<unsigned char*>(bytes.data());
+    int bytesLeft = bytes.size();
+    short outbuf[4096];
+    MP3FrameInfo finfo;
 
+    while (bytesLeft > 0) {
+        int syncWord = MP3FindSyncWord(buf, bytesLeft);
+        if (syncWord < 0) {
+            std::cerr << "Sync word not found." << std::endl;
+            break;
+        }
+        
+        buf += syncWord;
+        bytesLeft -= syncWord;
 
+        int err = MP3Decode(dec, &buf, &bytesLeft, outbuf, sizeof(outbuf) / 2);
+        if (err) {
+            std::cerr << "Decoding error: " << err << std::endl;
+            break;
+        }
+
+        MP3GetLastFrameInfo(dec, &finfo);
+        std::cout << "Decoded frame: "
+                  << "Bitrate: " << finfo.bitrate
+                  << ", Channels: " << finfo.nChans
+                  << ", Sample Rate: " << finfo.samprate
+                  << ", out samples: " << finfo.outputSamps
+                  << ", Layer: " << finfo.layer << std::endl;
+    }
+
+    MP3FreeDecoder(dec);
+}
 

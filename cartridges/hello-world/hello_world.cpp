@@ -25,7 +25,7 @@
 #include <rckid/ui/menu_app.h>
 
 
-#include <rckid/audio/opus.h>
+//#include <rckid/audio/opus.h>
 
 //#include <rckid/graphics/tile_engine.h>
 
@@ -42,7 +42,6 @@
 
 using namespace rckid;
 
-
 Menu * menuGames() {
     return new Menu{
         MenuApp::Item("Pong", assets::icons64::ping_pong, Pong::run),
@@ -58,7 +57,7 @@ Menu * menuUtils() {
         MenuApp::Item("Status", assets::icons64::info, StatusDisplay::run),
         MenuApp::Item("Stopwatch", assets::icons64::clock, Stopwatch::run),
         MenuApp::Item("Clock", assets::icons64::alarm_clock, Clock::run),
-        MenuApp::Item("Raw Audio", assets::icons64::music, RawAudioTest::run),
+        //MenuApp::Item("Raw Audio", assets::icons64::music, RawAudioTest::run),
         MenuApp::Item("Tone Audio", assets::icons64::music, ToneAudioTest::run),
     };
 }
