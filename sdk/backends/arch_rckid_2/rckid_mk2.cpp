@@ -261,9 +261,9 @@ namespace rckid {
             RP_DEBUG_UART_TX_PIN, 
             RP_DEBUG_UART_RX_PIN
         ); */
+        // TODO in mkII we can't enable the USB in general as it leaks voltage into the USB pwr, which in turn leaks voltage to the battery switch mosfet
         // initialize the USB
         //tud_init(BOARD_TUD_RHPORT);
-
         // disable USB -- reset so that we can again detect DC charge
         memset(reinterpret_cast<uint8_t *>(usb_hw), 0, sizeof(*usb_hw));
 

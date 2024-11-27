@@ -2,6 +2,7 @@
 #include "platform.h"
 #include "sd.h"
 #include "rckid/config.h"
+#include "rckid/apps/DataSync.h"
 
 namespace rckid {
 
@@ -154,6 +155,7 @@ namespace rckid {
             //++stats::sdReadBlocks_;
             ++start;
             buffer += 512;
+            ++DataSync::blocksRead_;
         }
         return true;
     }
@@ -182,6 +184,7 @@ namespace rckid {
             //++stats::sdWriteBlocks_;
             ++start;
             buffer += 512;
+            ++DataSync::blocksRead_;
         }
         return true;
     }

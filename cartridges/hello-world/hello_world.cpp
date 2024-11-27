@@ -18,6 +18,7 @@
 #include <utils/Stopwatch.h>
 #include <utils/SetTime.h>
 #include <utils/SettingsGauge.h>
+#include <rckid/apps/DataSync.h>
 
 #include <benchmarks/ToneGenerator.h>
 
@@ -57,6 +58,7 @@ Menu * menuUtils() {
         MenuApp::Item("Status", assets::icons64::info, StatusDisplay::run),
         MenuApp::Item("Stopwatch", assets::icons64::clock, Stopwatch::run),
         MenuApp::Item("Clock", assets::icons64::alarm_clock, Clock::run),
+        MenuApp::Item("Data Sync", assets::icons64::pen_drive, DataSync::run),
         //MenuApp::Item("Raw Audio", assets::icons64::music, RawAudioTest::run),
         MenuApp::Item("Tone Audio", assets::icons64::music, ToneAudioTest::run),
     };

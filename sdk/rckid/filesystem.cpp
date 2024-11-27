@@ -293,6 +293,7 @@ namespace rckid::filesystem {
                 fs_ = (FATFS*) rckid::Heap::malloc(sizeof(FATFS));
                 if (f_mount(fs_, "", /* mount immediately */ 1) != FR_OK) {
                     delete fs_;
+                    fs_ = nullptr;
                     return false;
                 }
                 return true;
@@ -316,7 +317,8 @@ namespace rckid::filesystem {
         switch (dr) {
             case Drive::SD:
                 f_unmount("");
-                rckid::free(fs_);
+                delete fs_;
+                fs_ = nullptr;
                 break;
             case Drive::Cartridge:
                 lfs_unmount(&lfs_);

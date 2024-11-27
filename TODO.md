@@ -2,8 +2,8 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
-- can usb be enabled for comms & still work ok with battery levels? 
-
+- tud_deinit freezes the device, not sure why? 
+- already disconnect does
 - move all 3rd part code out of sdk for easier maintenance
 - maybe move platform to sdk?
 
@@ -42,6 +42,8 @@
 - can swap RAM arenas to disk if necessary
 
 - make timer run a ... b ... a as well (then I can replace the blinking code in clock)
+
+- STR does not work with MemoryArena, only on heap (see Data Sync)
 
 ## UI
 

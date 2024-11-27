@@ -1,19 +1,22 @@
 #include "platform.h"
 
-#if (defined ARCH_RP2040)
-
 #include "pico/unique_id.h"
 #include "tusb_config.h"
 #include "tusb.h"
+
+
+#include "rckid/apps/DataSync.h"
+
 //#include "rckid/fs/sd.h"
 
+/*
 namespace rckid {
-    bool sdReadBlocks_(uint32_t start, uint8_t * buffer, uint32_t numBlocks);    
-    bool sdWriteBlocks_(uint32_t start, uint8_t const * buffer, uint32_t numBlocks);    
+    bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks);    
+    bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks);    
 }
+*/
 
 using namespace rckid;
-
 
 /** \name USB Interface
     
@@ -133,9 +136,8 @@ extern "C" {
         return (uint8_t const *)(& DESC_DEVICE);
     }
 
-    uint8_t const * tud_descriptor_configuration_cb(uint8_t index) {
-    (void) index; // for multiple configurations
-    return desc_fs_configuration;
+    uint8_t const * tud_descriptor_configuration_cb([[maybe_unused]] uint8_t index) {
+        return desc_fs_configuration;
     }
 
     uint16_t const * tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
@@ -169,12 +171,11 @@ extern "C" {
     }
 
     /** Number of LUNs available. For now we have just one (the SD card). 
-     
-        TODO: return 0 if there is no SD card. 
-        TODO: We can in theory have two LUNs, the second being the FATFS in the flash chip. 
+
+        In theory, we can have also the LittleFS that is mounted in the flash as a LUN here, but LittleFS is not easily understood by all operating systems, and the flash storage is not expected to be user accessible anyways. 
     */
     uint8_t tud_msc_get_maxlun_cb(void) {
-        return 1; 
+        return sdCapacity() > 0 ? 1 : 0; 
     }
 
     /** Invoked when received SCSI_CMD_INQUIRY
@@ -194,12 +195,10 @@ extern "C" {
 
     /** Invoked when received Test Unit Ready command.
         
-        Return true allowing host to read/write this LUN e.g SD card inserted
+        Return true allowing host to read/write this LUN e.g SD card inserted. Only returns true if the DataSync app is active, otherwise the disk is not ready as it may be used by RCKid device apps. 
     */
     bool tud_msc_test_unit_ready_cb([[maybe_unused]] uint8_t lun) {
-        // TODO we can return true always because the device is only turned on when the SD card is really available
-        //return SD::status() == SD::Status::USB; 
-        return false;
+        return rckid::DataSync::active();
     }
 
     /** Invoked when received SCSI_CMD_READ_CAPACITY_10 and SCSI_CMD_READ_FORMAT_CAPACITY to determine the disk size
@@ -207,8 +206,8 @@ extern "C" {
         Application update block count and block size. 
     */
     void tud_msc_capacity_cb([[maybe_unused]] uint8_t lun, uint32_t* block_count, uint16_t* block_size) {
-        //*block_count = SD::numBlocks(); //SD::numBlocks();
-        //*block_size  = 512;
+        *block_count = sdCapacity();
+        *block_size  = 512;
     }
 
     /** Invoked when received Start Stop Unit command
@@ -217,7 +216,7 @@ extern "C" {
         - Start = 1 : active mode, if load_eject = 1 : load disk storage
     */
     bool tud_msc_start_stop_cb([[maybe_unused]] uint8_t lun, [[maybe_unused]] uint8_t power_condition, bool start, bool load_eject) {
-
+        // TODO maybe let DataSync app know? 
         if (load_eject) {
             if (start) {
                 // load disk storage
@@ -225,7 +224,6 @@ extern "C" {
                 // unload disk storage
             }
         }
-
         return true;
     }
 
@@ -238,19 +236,14 @@ extern "C" {
         Copy disk's data to buffer (up to bufsize) and return number of copied bytes.
     */
     int32_t tud_msc_read10_cb([[maybe_unused]] uint8_t lun, uint32_t lba, uint32_t offset, void* buffer, uint32_t bufsize) {
-        /*
-        // out of ramdisk
-        if (lba >= SD::numBlocks()) 
+        // out of disk
+        if (lba >= sdCapacity()) 
             return -1;
         if (bufsize != 512)
-            FATAL_ERROR(::rckid::Error::MSCRead);
-        sdReadBlocks_(lba, reinterpret_cast<uint8_t*>(buffer), 1);
+            rckid::fatalError(rckid::Error::MSCRead);
 
-        //uint8_t const* addr = msc_disk0[lba] + offset;
-        //memcpy(buffer, addr, bufsize);
-
+        sdReadBlocks(lba, reinterpret_cast<uint8_t*>(buffer), 1);
         return (int32_t) bufsize;
-        */
     }
 
     /** Callback invoked when received WRITE10 command.
@@ -258,19 +251,17 @@ extern "C" {
         Process data in buffer to disk's storage and return number of written bytes
     */
     int32_t tud_msc_write10_cb([[maybe_unused]] uint8_t lun, uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_t bufsize) {
-        /*
         // out of ramdisk
-        if (lba >= SD::numBlocks()) 
+        if (lba >= sdCapacity()) 
             return -1;
         if (bufsize != 512)
-            FATAL_ERROR(::rckid::Error::MSCWrite);
+            rckid::fatalError(rckid::Error::MSCWrite);
 
-        sdWriteBlocks_(lba, buffer, 1);
+        sdWriteBlocks(lba, buffer, 1);
         //uint8_t* addr = msc_disk0[lba]  + offset;
         //memcpy(addr, buffer, bufsize);
 
         return (int32_t) bufsize;
-        */
     }
 
     /** Callback invoked when received an SCSI command not in built-in list below
@@ -312,5 +303,3 @@ extern "C" {
 
 }
 //@}
-
-#endif // ARCH_RP2040
