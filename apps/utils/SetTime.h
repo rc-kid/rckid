@@ -6,8 +6,6 @@
 #include <rckid/assets/fonts/OpenDyslexic64.h>
 #include <rckid/ui/timer.h>
 #include <rckid/utils/interpolation.h>
-
-
 #include <rckid/ui/header.h>
 
 

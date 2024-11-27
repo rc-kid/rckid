@@ -13,6 +13,8 @@ namespace rckid {
         Unimplemented = 1,
         Unreachable, 
         Assert, 
+        MSCRead, 
+        MSCWrite,
         User, 
     }; // rckid::Error
 

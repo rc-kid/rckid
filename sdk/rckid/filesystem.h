@@ -25,6 +25,24 @@ namespace rckid::filesystem {
         Unrecognized
     };
 
+    inline char const * formatToStr(Filesystem f) {
+        switch (f) {
+            case Filesystem::FAT12:
+                return "FAT12";
+            case Filesystem::FAT16:
+                return "FAT16";
+            case Filesystem::FAT32:
+                return "FAT32";
+            case Filesystem::exFAT:
+                return "exFAT";
+            case Filesystem::LittleFS:
+                return "LittleFS";
+            case Filesystem::Unrecognized:
+            default:
+                return "Unrecognized";
+        }
+    }
+
     /** File with read-only access. 
      */
     class FileRead : public RandomReadStream {

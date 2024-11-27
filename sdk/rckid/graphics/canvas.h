@@ -39,8 +39,8 @@ namespace rckid {
         using RenderableBitmap<COLOR>::text;
 
     private:
-        Color fg_;
-        Color bg_;   
+        Color fg_ = color::White;
+        Color bg_ = color::Black;   
         Font const * font_ = & defaultFont_;   
 
         static constexpr Font defaultFont_{Font::fromROM<assets::font::Iosevka16>()};  
