@@ -2,14 +2,13 @@
 
 RCKID_DIR=$(pwd)
 echo "Setting up RCKid development in ${RCKID_DIR}"
-mkdir -p libs
 
 echo "    installing packages for RCKid SDK..."
 sudo apt update -qq
 sudo apt-get install -y -qq cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib ninja-build doxygen graphviz
 
 echo "    installing pico-sdk..."
-cd ${RCKID_DIR}/sdk/backends/arch_rckid
+cd ${RCKID_DIR}/libs
 git clone https://github.com/raspberrypi/pico-sdk.git --branch master -o pico-sdk
 cd pico-sdk
 git submodule update --init
@@ -23,7 +22,7 @@ echo "        curl..."
 sudo apt-get install -y -qq libcurl4-openssl-dev curl
 
 echo "        raylib..."
-cd ${RCKID_DIR}/sdk/backends/arch_fantasy
+cd ${RCKID_DIR}/libs
 #sudo apt-get install vlc alsa-utils
 git clone https://github.com/raysan5/raylib.git
 #cd raylib/src

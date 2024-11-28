@@ -4,7 +4,6 @@
 
 - tud_deinit freezes the device, not sure why? 
 - already disconnect does
-- move all 3rd part code out of sdk for easier maintenance
 - maybe move platform to sdk?
 
 - text input should distinguish between returning and cancel, currently no provision for that in code
