@@ -2,5 +2,5 @@ build*
 docs/sdk
 sd.iso
 cartridge.iso
-sdk/backends/arch_fantasy/raylib
-sdk/backends/arch_rckid/pico-sdk
+libs/raylib
+libs/pico-sdk

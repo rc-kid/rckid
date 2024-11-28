@@ -9,12 +9,15 @@ endif()
 if (ARCH STREQUAL "ARCH_FANTASY")
     message("RCKID: Building for the fantasy console (with Raylib)")
     project(rckid)
+    add_definitions(-DSUPPORT_CUSTOM_FRAME_CONTROL)
+    add_subdirectory(libs/raylib)
+    
 else()
     message("RCKID: Building for the actual hardware - RP2350 or RP2040")
     # skip the pico malloc library setup
     set(SKIP_PICO_MALLOC 1)
     # Pull in SDK (must be before project)
-    include(${CMAKE_SOURCE_DIR}/sdk/backends/arch_rckid/pico-sdk/pico_sdk_init.cmake)
+    include(${CMAKE_SOURCE_DIR}/libs/pico-sdk/pico_sdk_init.cmake)
     project(rckid C CXX ASM)
     # Tell pico SDK we are using 16MB cartridges
     add_compile_definitions(PICO_FLASH_SIZE_BYTES=16777216)

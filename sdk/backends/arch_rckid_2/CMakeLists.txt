@@ -25,9 +25,11 @@ function(link_with_librckid target_name)
 
     target_link_libraries(${target_name} PRIVATE
         pico_stdlib
+        pico_unique_id
+        tinyusb_device
+        tinyusb_board
         pico_rand
         pico_multicore
-        pico_unique_id
         hardware_i2c
         hardware_pio
         hardware_spi
@@ -35,8 +37,6 @@ function(link_with_librckid target_name)
         hardware_pwm
         hardware_sync
         hardware_flash
-        tinyusb_board
-        tinyusb_device
         FatFS
         littlefs
         PNGdec
