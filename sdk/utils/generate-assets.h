@@ -403,13 +403,14 @@ void generateMP3Dec(GeneratorSpecification const & g, std::string const & output
             std::cerr << "Sync word not found." << std::endl;
             break;
         }
+        std::cout << "Sync word at " << syncWord << std::endl;
         
         buf += syncWord;
         bytesLeft -= syncWord;
 
-        int err = MP3Decode(dec, &buf, &bytesLeft, outbuf, sizeof(outbuf) / 2);
+        int err = MP3Decode(dec, &buf, &bytesLeft, outbuf, 0);
         if (err) {
-            std::cerr << "Decoding error: " << err << std::endl;
+            std::cout << "Decoding error: " << err << std::endl;
             break;
         }
 

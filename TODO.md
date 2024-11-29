@@ -2,8 +2,7 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
-- tud_deinit freezes the device, not sure why? 
-- already disconnect does
+- tud_deinit (already disconnect does) freezes the device, not sure why? - but interestingly if DC is disconnected first, then it all works, even repeatedly
 - maybe move platform to sdk?
 
 - text input should distinguish between returning and cancel, currently no provision for that in code
