@@ -43,6 +43,17 @@ namespace rckid::filesystem {
         }
     }
 
+    inline char const * driveToStr(Drive dr) {
+        switch (dr) {
+            case Drive::SD:
+                return "sd";
+            case Drive::Cartridge:
+                return "cart";
+            default:
+                UNREACHABLE;
+        }
+    }
+
     /** File with read-only access. 
      */
     class FileRead : public RandomReadStream {
@@ -370,6 +381,7 @@ namespace rckid::filesystem {
     FileWrite fileAppend(char const * path, Drive dr = Drive::SD);
 
     Folder folderRead(char const * path, Drive dr = Drive::SD);
+    inline Folder folderRead(std::string const & path, Drive dr = Drive::SD) { return folderRead(path.c_str(), dr); }
 
 
 } // namespace rckid::filesystem
