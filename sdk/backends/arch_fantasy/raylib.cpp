@@ -164,11 +164,10 @@ namespace rckid {
         }
     }
 
-
-
-    void initialize() {
+    void initialize(bool createWindow) {
         systemMalloc_ = true;
-        InitWindow(640, 480, "RCKid");
+        if (createWindow)
+            InitWindow(640, 480, "RCKid");
         // see if there is sd.iso file so that we can simulate SD card
         sdIso_.open("sd.iso", std::ios::in | std::ios::out | std::ios::binary);
         if (sdIso_.is_open()) {
@@ -200,9 +199,11 @@ namespace rckid {
             LOG("flash.iso file not found, cartridge storage not present");
         }
         systemMalloc_ = false;
-        displayImg_ = GenImageColor(320, 240, BLACK);
-        displayTexture_ = LoadTextureFromImage(displayImg_);
-        displayLastVSyncTime_ = std::chrono::steady_clock::now();
+        if (createWindow) {
+            displayImg_ = GenImageColor(320, 240, BLACK);
+            displayTexture_ = LoadTextureFromImage(displayImg_);
+            displayLastVSyncTime_ = std::chrono::steady_clock::now();
+        }
         filesystem::initialize();
 
         // enter base arena for the application
@@ -223,6 +224,10 @@ namespace rckid {
             now_tm->tm_sec
         );
 #endif
+    }
+
+    void initialize() {
+        initialize(true);
     }
 
     void tick() {
