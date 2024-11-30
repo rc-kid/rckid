@@ -21,6 +21,7 @@
 #include <rckid/apps/DataSync.h>
 
 #include <benchmarks/ToneGenerator.h>
+#include <benchmarks/MP3Decoder.h>
 
 #include <rckid/ui/menu.h>
 #include <rckid/ui/menu_app.h>
@@ -76,6 +77,7 @@ Menu * menuSettings() {
 Menu * menuBenchmarks() {
     return new Menu{
         MenuApp::Item("Tone Generator", assets::icons64::music, Benchmark<ToneGeneratorBenchmark>::run),
+        MenuApp::Item("MP3 Decoder", assets::icons64::music, Benchmark<MP3DecoderBenchmark>::run),
     };
 }
 

@@ -396,6 +396,7 @@ void generateMP3Dec(GeneratorSpecification const & g, std::string const & output
     int bytesLeft = bytes.size();
     short outbuf[4096];
     MP3FrameInfo finfo;
+    int maxFrame = 0;
 
     while (bytesLeft > 0) {
         int syncWord = MP3FindSyncWord(buf, bytesLeft);
@@ -403,16 +404,18 @@ void generateMP3Dec(GeneratorSpecification const & g, std::string const & output
             std::cerr << "Sync word not found." << std::endl;
             break;
         }
-        std::cout << "Sync word at " << syncWord << std::endl;
+        //std::cout << "Sync word at " << syncWord << std::endl;
         
         buf += syncWord;
         bytesLeft -= syncWord;
-
+        int bbefore = bytesLeft;
         int err = MP3Decode(dec, &buf, &bytesLeft, outbuf, 0);
         if (err) {
             std::cout << "Decoding error: " << err << std::endl;
             break;
         }
+        if ((bbefore - bytesLeft) > maxFrame)
+            maxFrame = bbefore - bytesLeft;
 
         MP3GetLastFrameInfo(dec, &finfo);
         std::cout << "Decoded frame: "
@@ -420,9 +423,10 @@ void generateMP3Dec(GeneratorSpecification const & g, std::string const & output
                   << ", Channels: " << finfo.nChans
                   << ", Sample Rate: " << finfo.samprate
                   << ", out samples: " << finfo.outputSamps
-                  << ", Layer: " << finfo.layer << std::endl;
+                  << ", Layer: " << finfo.layer
+                  << ", encoded:"  << (bbefore - bytesLeft) << std::endl;
     }
-
+    std::cout << "Max frame: " << maxFrame << std::endl;
     MP3FreeDecoder(dec);
 }
 
