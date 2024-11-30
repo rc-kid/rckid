@@ -118,4 +118,10 @@ namespace rckid {
 extern "C" {
     void *__wrap_malloc(size_t numBytes) { return rckid::malloc(numBytes); }
     void __wrap_free(void * ptr) { rckid::free(ptr); }
+
+    void *__wrap_calloc(size_t numBytes) {
+        void * result = rckid::malloc(numBytes);
+        memset(result, 0, numBytes);
+        return result;
+    }
 }

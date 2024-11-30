@@ -40,7 +40,7 @@ function(link_with_librckid target_name)
         FatFS
         littlefs
         PNGdec
-        #libhelix-mp3
+        libhelix-mp3
     )
 endfunction()
 
