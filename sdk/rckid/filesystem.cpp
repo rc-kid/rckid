@@ -481,7 +481,7 @@ namespace rckid::filesystem {
         FileWrite result;
         switch (dr) {
             case Drive::SD:
-                if (f_open(& result.sd_, path, FA_WRITE) == FR_OK)
+                if (f_open(& result.sd_, path, FA_WRITE | FA_CREATE_ALWAYS) == FR_OK)
                     result.drive_ = static_cast<unsigned>(dr);
                 break;
             case Drive::Cartridge:

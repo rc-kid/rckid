@@ -1,11 +1,15 @@
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
 
 #include <rckid/filesystem.h>
 
 namespace rckid {
     void initialize(bool createWindow);
+
+    void enableSystemMalloc(bool value);
 }
+
 
 namespace fs = rckid::filesystem;
 
@@ -64,9 +68,45 @@ void ls(fs::Drive dr, int argc, char * argv[]) {
     }
 }
 
+void store(fs::Drive dr, int argc, char * argv[]) {
+    ::mount(dr);
+    if (argc != 5)
+        throw std::runtime_error("Invalid number of arguments to store (store SRC DESC)");
+    std::string src{argv[3]};
+    std::string desc{argv[4]};
+    std::cout << "Storing file " << src << " into " << desc << std::endl;
+
+    rckid::enableSystemMalloc(true);
+    std::ifstream input(src, std::ios::binary);
+    if (!input.good())
+        throw std::runtime_error("Unable to open input file");
+    std::cout << "File opened" << std::endl;
+    std::vector<char> bytes(
+         (std::istreambuf_iterator<char>(input)),
+         (std::istreambuf_iterator<char>()));
+    input.close();
+    std::cout << bytes.size() << " bytes read" << std::endl;
+    rckid::enableSystemMalloc(false);
+
+    fs::FileWrite f = fs::fileWrite(desc, dr);
+    if (!f.good())
+        throw std::runtime_error("Unable to open the destination file");
+    
+    // store the file now, is somewhat manageable chunks
+    uint8_t * data = (uint8_t *)bytes.data();
+    uint32_t numBytes = bytes.size();
+    while (numBytes > 0) {
+        uint32_t tx = f.write(data, (numBytes > 512) ? 512 : numBytes);
+        numBytes -= tx;
+        data += tx; 
+    }
+    std::cout << "Stored " << bytes.size() << " bytes" << std::endl;
+}
+
 int main(int argc, char * argv[]) {
     try {
         rckid::initialize(false);
+
         if (argc < 3)
             throw std::runtime_error("Invalid number of arguments");
         std::string driveName{argv[1]};
@@ -84,6 +124,8 @@ int main(int argc, char * argv[]) {
             ::format(dr);
         else if (cmd == "ls")
             ls(dr, argc, argv);
+        else if (cmd == "store")
+            store(dr, argc, argv);
         else
             throw std::runtime_error("Invalid command");
         return EXIT_SUCCESS;
@@ -91,5 +133,10 @@ int main(int argc, char * argv[]) {
         std::cout << "Error: " << e.what() << std::endl << std::endl;
         showUsage();
         return EXIT_FAILURE;
+    } catch (...) {
+        std::cout << "Unknown error" << std::endl;
+        showUsage();
+        return EXIT_FAILURE;
+
     }
 }
