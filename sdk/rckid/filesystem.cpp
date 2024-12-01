@@ -168,7 +168,7 @@ namespace rckid::filesystem {
             }
     }
 
-    FileRead::~FileRead() {
+    void FileRead::close() {
         switch (drive_) {
             case static_cast<unsigned>(Drive::SD):
                 f_close(& sd_);

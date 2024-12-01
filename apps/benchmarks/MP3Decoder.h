@@ -58,15 +58,28 @@ namespace rckid {
             if (!f.good())
                 return "Cannot open file";
             NewArenaScope _{};
-            uint8_t * buffer = new uint8_t[2048];
+            MP3 mp3{& f};
+            DoubleBuffer<int16_t> out{1152 * 2};
+            MEASURE_TIME(total_, {
+                while (!mp3.eof()) {
+                    if (mp3.decodeNextFrame(out.front()) == 0)
+                        read_ += 1;
+                    ++frames_;
+                }
+            });
+            error_ = mp3.lastError();
+
+/*
+            uint8_t * buffer = new uint8_t[8192];
             uint32_t bufSize = 0;
             DoubleBuffer<int16_t> out{1152 * 2};
             bool eof = false;
             HMP3Decoder dec = MP3InitDecoder();
-            while (!eof/* || bufSize > 0*/) {
+
+            while (!eof/ * || bufSize > 0* /) {
                 uint32_t t;
                 MEASURE_TIME(t, {
-                    if (!eof && bufSize < 1536) {
+                    if (!eof && bufSize < 7000) {
                         uint32_t x = f.read(buffer + bufSize, 1024);
                         bufSize += x;
                         bytesRead_ += x;
@@ -93,7 +106,8 @@ namespace rckid {
                 memcpy(buffer, x, remaining);
                 bufSize = remaining;
                 frames_ += 1;
-            }
+            }*/
+
             return "All OK";
         }
 

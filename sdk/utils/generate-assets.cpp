@@ -85,8 +85,6 @@ int main(int argc, char * argv []) {
                     generateSineTable(g, outputDir, nspace);
                 else if (g.name == "rawopus")
                     generateRawOpus(g, outputDir, nspace);
-                else if (g.name == "mp3dec")
-                    generateMP3Dec(g, outputDir, nspace);
                 else 
                     throw std::runtime_error("Unknown generator");
             } catch (std::exception const & e) {
