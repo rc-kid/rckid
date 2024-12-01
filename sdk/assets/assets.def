@@ -26,4 +26,3 @@
 #generator, filename, channels
 #rawopus, tests/faryra.raw, 48000, 1, 32000
 
-mp3dec, tests/faryra.mp3

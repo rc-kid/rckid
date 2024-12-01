@@ -28,7 +28,7 @@
 
 
 //#include <rckid/audio/opus.h>
-
+#include <rckid/apps/AudioPlayer.h>
 //#include <rckid/graphics/tile_engine.h>
 
 #include <rckid/ui/ui.h>
@@ -86,6 +86,7 @@ Menu * mainMenu() {
     return new Menu{
         MenuApp::Submenu("Games", assets::icons64::game_controller, menuGames),
         MenuApp::Submenu("Utils", assets::icons64::applications, menuUtils),
+        MenuApp::Item("Audio Player", assets::icons64::music, AudioPlayer::run),
         MenuApp::Submenu("Settings", assets::icons64::settings, menuSettings),
         MenuApp::Submenu("Benchmarks", assets::icons64::spider, menuBenchmarks),
     };

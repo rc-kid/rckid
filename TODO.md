@@ -2,6 +2,10 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
+- will play mp3. Fails with memory & stuff and only plays one, but good start
+- the 128kbps mp3 does not play well - it does different things on device than it does on desktop. Not sure why
+- should SD card be always mounted when present? 
+
 - tud_deinit (already disconnect does) freezes the device, not sure why? - but interestingly if DC is disconnected first, then it all works, even repeatedly
 - maybe move platform to sdk?
 

@@ -17,7 +17,6 @@
 
 #include "rckid/graphics/font.h"
 #include "rckid/audio/opus.h"
-#include "rckid/audio/mp3.h"
 
 class GeneratorSpecification {
 public:
@@ -381,52 +380,3 @@ void generateRawOpus(GeneratorSpecification const & g, std::string const & outpu
     out << "} // namesapce " << nspace << "::audio::opus" << Writer::endl;
     std::cout << "File encoded in " << encoded << " bytes" << std::endl;
 }
-
-// TODO this does not seem to work, it only read first frame, not sure why
-void generateMP3Dec(GeneratorSpecification const & g, std::string const & outputDir, [[maybe_unused]] std::string const & nspace) {
-    std::string filename{g.args[0]};
-    std::ifstream input(filename, std::ios::binary);
-    std::vector<char> bytes(
-         (std::istreambuf_iterator<char>(input)),
-         (std::istreambuf_iterator<char>()));
-    input.close();   
-    std::cout << "Loaded " << bytes.size() << " bytes" << Writer::endl;
-    HMP3Decoder dec = MP3InitDecoder();
-    unsigned char * buf = reinterpret_cast<unsigned char*>(bytes.data());
-    int bytesLeft = bytes.size();
-    short outbuf[4096];
-    MP3FrameInfo finfo;
-    int maxFrame = 0;
-
-    while (bytesLeft > 0) {
-        int syncWord = MP3FindSyncWord(buf, bytesLeft);
-        if (syncWord < 0) {
-            std::cerr << "Sync word not found." << std::endl;
-            break;
-        }
-        //std::cout << "Sync word at " << syncWord << std::endl;
-        
-        buf += syncWord;
-        bytesLeft -= syncWord;
-        int bbefore = bytesLeft;
-        int err = MP3Decode(dec, &buf, &bytesLeft, outbuf, 0);
-        if (err) {
-            std::cout << "Decoding error: " << err << std::endl;
-            break;
-        }
-        if ((bbefore - bytesLeft) > maxFrame)
-            maxFrame = bbefore - bytesLeft;
-
-        MP3GetLastFrameInfo(dec, &finfo);
-        std::cout << "Decoded frame: "
-                  << "Bitrate: " << finfo.bitrate
-                  << ", Channels: " << finfo.nChans
-                  << ", Sample Rate: " << finfo.samprate
-                  << ", out samples: " << finfo.outputSamps
-                  << ", Layer: " << finfo.layer
-                  << ", encoded:"  << (bbefore - bytesLeft) << std::endl;
-    }
-    std::cout << "Max frame: " << maxFrame << std::endl;
-    MP3FreeDecoder(dec);
-}
-

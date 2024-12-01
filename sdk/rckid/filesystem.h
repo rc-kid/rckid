@@ -72,7 +72,9 @@ namespace rckid::filesystem {
 
         uint32_t read(uint8_t * buffer, uint32_t numBytes) override;
 
-        ~FileRead() override;
+        void close(); 
+
+        ~FileRead() override { close(); }
 
         FileRead(FileRead && from):
             drive_{from.drive_} {
@@ -89,11 +91,28 @@ namespace rckid::filesystem {
             from.drive_ = 0;
         }
 
+        FileRead() = default;
+
+        FileRead & operator = (FileRead && from) {
+            close();
+            drive_ = from.drive_;
+            switch (drive_) {
+                case static_cast<unsigned>(Drive::SD):
+                    sd_ = from.sd_;
+                    break;
+                case static_cast<unsigned>(Drive::Cartridge):
+                    cart_ = from.cart_;
+                    break;
+                default:
+                    break;
+            }
+            from.drive_ = 0;
+            return *this;
+        }
+
     private:
 
         friend FileRead fileRead(char const * filename, Drive dr);
-
-        FileRead() = default;
 
         unsigned drive_ = 0;
         union {
