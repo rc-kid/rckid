@@ -13,6 +13,7 @@ namespace rckid {
         Unimplemented = 1,
         Unreachable, 
         Assert, 
+        StackProtectionFailure,
         MSCRead, 
         MSCWrite,
         User, 

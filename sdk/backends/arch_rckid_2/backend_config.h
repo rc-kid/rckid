@@ -1,5 +1,7 @@
 #pragma once
 
+#define RCKID_ENABLE_STACK_PROTECTION
+
 // ================================================================================================
 
 /** Backend configuration - hardware settings. 

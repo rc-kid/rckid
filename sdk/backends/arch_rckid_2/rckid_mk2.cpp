@@ -79,6 +79,10 @@ namespace rckid {
 
     }
 
+    void instrumentStackProtection();
+
+    void checkStackProtection();
+
     void joystickTick();
 
     /** Waits for the end of tick's async operations. 
@@ -253,6 +257,10 @@ namespace rckid {
     }
 
     void initialize() {
+#if (defined RCKID_ENABLE_STACK_PROTECTION)
+        instrumentStackProtection();
+#endif
+
         board_init();
         /* TODO enable the cartridge uart port based on some preprocessor flag. WHen enabled, make all logs, traces and debugs go to the cartridge port as well. 
         stdio_uart_init_full(
@@ -263,9 +271,9 @@ namespace rckid {
         ); */
         // TODO in mkII we can't enable the USB in general as it leaks voltage into the USB pwr, which in turn leaks voltage to the battery switch mosfet
         // initialize the USB
-        //tud_init(BOARD_TUD_RHPORT);
+        tud_init(BOARD_TUD_RHPORT);
         // disable USB -- reset so that we can again detect DC charge
-        memset(reinterpret_cast<uint8_t *>(usb_hw), 0, sizeof(*usb_hw));
+        //memset(reinterpret_cast<uint8_t *>(usb_hw), 0, sizeof(*usb_hw));
 
         // initialize the I2C bus
         i2c_init(i2c0, RP_I2C_BAUDRATE); 
@@ -384,6 +392,9 @@ namespace rckid {
     }
 
     void yield() {
+#if (defined RCKID_ENABLE_STACK_PROTECTION)
+        checkStackProtection();
+#endif
         tight_loop_contents();
         tud_task();
     }

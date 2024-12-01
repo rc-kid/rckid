@@ -63,4 +63,12 @@ namespace platform {
         return (x * h01) >> 24;   
     }
 
+
+    inline uint32_t hash(uint8_t const * buffer, size_t n) {
+        uint32_t r = 0;
+        for (size_t i = 0; i < n; ++i)
+            r = r + (buffer[i] << (i % 24));
+        return static_cast<uint32_t>(r + n);
+    }
+
 } // namespace platform 

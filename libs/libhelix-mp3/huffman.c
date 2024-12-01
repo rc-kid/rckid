@@ -157,8 +157,8 @@ static int DecodeHuffmanPairs(int *xy, int nVals, int tabIdx, int bitsLeft, unsi
 				/* ran out of bits - should never have consumed padBits */
 				if (cachedBits < padBits)
                     // peta: https://github.com/ultraembedded/libhelix-mp3/issues/2
-                    cachedBits = padBits;
-					//return -1;
+                    //cachedBits = padBits;
+					return -1;
 
 				*xy++ = x;
 				*xy++ = y;

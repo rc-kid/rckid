@@ -15,6 +15,26 @@
 
 namespace rckid {
 
+    bool ptrInsideFantasyHeap(void * ptr) {
+        return ptr >= & __bss_end__ && ptr < & __StackLimit;
+    }
+
+
+    void instrumentStackProtection() {
+        char * x = & __StackLimit;
+        x[0] = 'R';
+        x[1] = 'C';
+        x[2] = 'k';
+        x[3] = 'i';
+        x[4] = 'd';
+    }
+
+    void checkStackProtection() {
+        char * x = & __StackLimit;
+        if (x[0] != 'R' || x[1] != 'C' || x[2] != 'k' || x[3] != 'i' || x[4] != 'd')
+            rckid::fatalError(Error::StackProtectionFailure, __LINE__, __FILE__);
+    }
+
     char * Heap::end_ = & __StackLimit;
 
     char * Arena::start_ = & __bss_end__;
