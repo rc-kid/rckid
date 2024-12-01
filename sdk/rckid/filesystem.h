@@ -381,7 +381,10 @@ namespace rckid::filesystem {
     FileWrite fileAppend(char const * path, Drive dr = Drive::SD);
 
     Folder folderRead(char const * path, Drive dr = Drive::SD);
-    inline Folder folderRead(std::string const & path, Drive dr = Drive::SD) { return folderRead(path.c_str(), dr); }
 
+
+    inline FileRead fileRead(std::string const & path, Drive dr = Drive::SD) { return fileRead(path.c_str(), dr); }
+    inline FileWrite fileWrite(std::string const & path, Drive dr = Drive::SD) { return fileWrite(path.c_str(), dr); }
+    inline Folder folderRead(std::string const & path, Drive dr = Drive::SD) { return folderRead(path.c_str(), dr); }
 
 } // namespace rckid::filesystem

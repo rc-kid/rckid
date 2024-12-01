@@ -230,6 +230,10 @@ namespace rckid {
         initialize(true);
     }
 
+    void enableSystemMalloc(bool value) {
+        systemMalloc_ = value;
+    }
+
     void tick() {
         joystickTick();
         systemMalloc_ = true;
