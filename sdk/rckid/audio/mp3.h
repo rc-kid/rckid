@@ -34,6 +34,7 @@ namespace rckid {
                         return res / 2;
                     }
                 }
+                yield();
                 return res / 2;
             });
         }
@@ -50,19 +51,24 @@ namespace rckid {
                     break;
                 // otherwise read next chunk - we can completely throw what we have in the buffer because if there is no sync word, no need to worry about it. This should definitely be enough to hold an mp3 frame
                 bufferSize_ = in_->read(buffer_, 512 * 3);
+                //TRACE_MP3("buffer reset: " << bufferSize_);
                 // if nothing was read, we are done decoding
                 if (bufferSize_ == 0) {
                     eof_ = true;
                     return 0;
                 }
             }
+            //TRACE_MP3("Sync word at " << sw << ", bufferSize " << bufferSize_);
             uint8_t * buf;
             int remaining;
             // we have found sync word, try decoding starting from the sync word
             while (true) {
                 buf = buffer_ + sw;
                 remaining = bufferSize_ - sw;
+                TRACE_MP3("Before: " << platform::hash(buffer_, bufferSize_));
                 err_ = MP3Decode(dec_, & buf,  & remaining, out, 0);
+                TRACE_MP3("      : " << platform::hash(buffer_, bufferSize_));
+                TRACE_MP3("Decoding: " << err_ << " buffer hash " << platform::hash(buffer_ + sw, bufferSize_ - sw - remaining) << ", output hash " << platform::hash((uint8_t *)out, 1152 * 4) << " remaining: " << remaining << ", sw: " << sw << ", bs: " << bufferSize_);
                 // no error, we are done
                 if (err_ == ERR_MP3_NONE)
                     break;
@@ -72,14 +78,19 @@ namespace rckid {
                         continue;
                 }
                 ++frameErrors_;
+                TRACE_MP3("frame error: " << err_ << ", remaining " << remaining);
+                //return 0;
+                if (remaining == static_cast<int>(bufferSize_ - sw))
+                    remaining -= 3; // MP3 sync word length 
+                if (remaining < 0)
+                    remaining = 0;
                 // we have decoding error on our hands, hopefully this will be reflected in the samples
                 break;
-                //return 0;
             }
             ++frames_;
             // if there are data remaining, we must copy them to the beginning of the buffer 
             if (remaining > 0)
-                memcpy(buffer_, buf, remaining);
+                memmove(buffer_, buf, remaining);
             bufferSize_ = remaining;
             // and return the number of samples created
             MP3GetLastFrameInfo(dec_, &fInfo_);
@@ -91,6 +102,7 @@ namespace rckid {
             if (max > 512)
                 max = max - (max % 512);
             uint32_t rd = in_->read(buffer_ + bufferSize_, max);
+            TRACE_MP3("buffer refill " << rd << " bytes (max " << max << "), from index " << bufferSize_ << ", hash " << platform::hash(buffer_ + bufferSize_, rd));
             if (rd == 0)
                 eof_ = true;
             bufferSize_ += rd;
@@ -104,6 +116,12 @@ namespace rckid {
         uint32_t frames() const { return frames_; }
 
         uint32_t frameErrors() const { return frameErrors_; }
+
+        uint32_t channels() const { return fInfo_.nChans; }
+
+        uint32_t sampleRate() const { return fInfo_.samprate; }
+
+        uint32_t bitrate() const { return fInfo_.bitrate; }
 
     private:
 

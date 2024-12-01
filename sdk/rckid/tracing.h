@@ -16,10 +16,11 @@
 #define TRACE(...) do { rckid::NewArenaScope _{}; LOG(__VA_ARGS__); } while (false)
 
 //#define TRACE_MENU_APP
-#define TRACE_MEMORY
+//#define TRACE_MEMORY
 //#define TRACE_HEAP
 //#define TRACE_ARENA
 //#define TRACE_LITTLEFS
+//#define TRACE_MP3
 
 /** Traces the events in the menu app. 
  */
@@ -71,6 +72,14 @@
     #undef TRACE_LITTLEFS
     #define TRACE_LITTLEFS(...) TRACE("littlefs:" << __VA_ARGS__)
 #endif
+
+#if !defined TRACE_MP3
+    #define TRACE_MP3(...)
+#else
+    #undef TRACE_MP3
+    #define TRACE_MP3(...) TRACE("mp3:" << __VA_ARGS__)
+#endif
+
 
 namespace rckid {
     // forward declaration for traces

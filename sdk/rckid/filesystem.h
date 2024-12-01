@@ -391,6 +391,10 @@ namespace rckid::filesystem {
      */
     bool isFile(char const * path, Drive dr = Drive::SD); 
 
+    /** Returns hash of given file. 
+     */
+    uint32_t hash(char const * path, Drive dr = Drive::SD);
+
     /** Opens given file for reading. 
      */
     FileRead fileRead(char const * path, Drive dr = Drive::SD);
@@ -400,7 +404,6 @@ namespace rckid::filesystem {
     FileWrite fileAppend(char const * path, Drive dr = Drive::SD);
 
     Folder folderRead(char const * path, Drive dr = Drive::SD);
-
 
     inline FileRead fileRead(std::string const & path, Drive dr = Drive::SD) { return fileRead(path.c_str(), dr); }
     inline FileWrite fileWrite(std::string const & path, Drive dr = Drive::SD) { return fileWrite(path.c_str(), dr); }

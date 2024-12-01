@@ -458,6 +458,26 @@ namespace rckid::filesystem {
         }
     }
 
+    uint32_t hash(char const * path, Drive dr) {
+        FileRead f = fileRead(path, dr); 
+        if (!f.good())
+            return 0;
+        uint32_t hash = 0;
+        uint32_t size = 0;
+        uint8_t buffer[32];
+        uint32_t o = 0;
+        while (true) {
+            uint32_t bl = f.read(buffer, sizeof(buffer));
+            for (uint32_t i = 0; i < sizeof(buffer); ++i)
+                hash = hash + (buffer[i] << (o++ % 24));
+            size += bl;
+            if (bl < sizeof(buffer))
+                break;
+        }
+        hash += size;
+        return hash;
+    }
+
     // file read, write and append operations
 
     FileRead fileRead(char const * path, Drive dr) {

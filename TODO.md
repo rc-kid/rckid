@@ -2,9 +2,15 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
-- will play mp3. Fails with memory & stuff and only plays one, but good start
-- the 128kbps mp3 does not play well - it does different things on device than it does on desktop. Not sure why
+- document stack protection check
+
+- will play mp3, once at least - verify code around stopping, etc. 
+- add file browser and we have basic mp3 player
+- even 128kbps seems to require overclocking (!) for decent FPS
 - should SD card be always mounted when present? 
+
+- trace arena is broken as it creates new arena for the tracking, which traces itself:)
+- memory leaks in fantasy where we have pointers that are in fantasy heap, but not on arena or heap (see raylib.cpp feee() method)
 
 - tud_deinit (already disconnect does) freezes the device, not sure why? - but interestingly if DC is disconnected first, then it all works, even repeatedly
 - maybe move platform to sdk?
@@ -96,7 +102,7 @@
 - have version with both solderable contants and FPC for the display?  
 
 - can have sinking USB-C https://jlcpcb.com/partdetail/Xunpu-TYPEC_302BRP16SC21/C5760470
-- I can technically solder header 
+- I can technically solder headphone jack 
 
 ### Display woes
 

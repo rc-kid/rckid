@@ -25,6 +25,11 @@
 #include "rckid/internals.h"
 #include "rckid/filesystem.h"
 
+namespace rckid {
+    bool ptrInsideFantasyHeap(void * ptr);
+}
+
+
 extern "C" {
 
     // start in system malloc so that any pre-main initialization does not pollute rckid's heap
@@ -49,7 +54,8 @@ extern "C" {
             // if we are in system malloc phase, we should not be deallocating rckid memory, as this only happens during shutdown
             if (!systemMalloc_)
                 Heap::free(ptr);
-        } else if (Arena::contains(ptr)) {
+        // TODO there is some issue wit fantasy heap and arenas where we have pointers from fantasy heap that are not in the arena or heap getting here and then not getting deallocated properly in fantasy
+        } else if (ptrInsideFantasyHeap(ptr)) /*Arena::contains(ptr)) */ {
             // don't delete if it comes from arena
         } else {
             // if the pointer is not on arena, it must come from the host system's heap and should be freed by libc's free mechanism

@@ -22,7 +22,21 @@ namespace rckid {
         AudioPlayer(): 
             GraphicsApp{ARENA(Canvas<ColorRGB>{320, 240})}, 
             out_{ARENA(DoubleBuffer<int16_t>{1152 * 2})} {
-                filesystem::mount();
+            filesystem::mount();
+            //LOG("128kbps.mp3: " << filesystem::hash("128kbps.mp3"));
+            //yield();
+            //LOG("160kbps.mp3: " << filesystem::hash("160kbps.mp3"));
+            //yield();
+            //LOG("192kbps.mp3: " << filesystem::hash("192kbps.mp3"));
+            //yield();
+            //LOG("320kbps.mp3: " << filesystem::hash("320kbps.mp3"));
+            //yield();
+        }
+
+        ~AudioPlayer() {
+            audioStop();
+            if (mp3_ != nullptr)
+               delete mp3_;
         }
 
         void update() override {
@@ -30,17 +44,22 @@ namespace rckid {
             if (btnPressed(Btn::A)) {
                 if (mp3_ != nullptr)
                     delete mp3_;
-                f_ = filesystem::fileRead("320kbps.mp3");
+                f_ = filesystem::fileRead("128kbps.mp3");
                 mp3_ = new MP3{ &f_};
+                memoryFree();
                 mp3_->play(out_);
             }
         }
 
         void draw() override {
+            NewArenaScope _{};
             g_.fill();
             Header::drawOn(g_);
             if (mp3_ != nullptr) {
                 g_.text(10, 30) << "Last errror:  " << mp3_->lastError() << "\n"
+                                << "Channels:     " << mp3_->channels() << "\n"
+                                << "Sample rate:  " << mp3_->sampleRate() << "\n"
+                                << "Bitrate:      " << mp3_->bitrate() << "\n"
                                 << "Frames:       " << mp3_->frames() << "\n"
                                 << "Frame errors: " << mp3_->frameErrors(); 
             }
