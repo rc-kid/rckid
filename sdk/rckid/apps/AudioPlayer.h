@@ -42,6 +42,7 @@ namespace rckid {
         void update() override {
             GraphicsApp::update();
             if (btnPressed(Btn::A)) {
+                audioStop();
                 if (mp3_ != nullptr)
                     delete mp3_;
                 f_ = filesystem::fileRead("128kbps.mp3");
