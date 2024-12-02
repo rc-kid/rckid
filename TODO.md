@@ -43,7 +43,6 @@
 
 - recording in fantasy
 
-- mp3 decoder library (added, write API)
 - libopus decoder & encoder library
 - jpeg decoding library
 

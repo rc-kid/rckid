@@ -79,10 +79,6 @@ namespace rckid {
 
     }
 
-    void instrumentStackProtection();
-
-    void checkStackProtection();
-
     void joystickTick();
 
     /** Waits for the end of tick's async operations. 
@@ -258,7 +254,7 @@ namespace rckid {
 
     void initialize() {
 #if (defined RCKID_ENABLE_STACK_PROTECTION)
-        instrumentStackProtection();
+        memoryInstrumentStackProtection();
 #endif
 
         board_init();
@@ -393,7 +389,7 @@ namespace rckid {
 
     void yield() {
 #if (defined RCKID_ENABLE_STACK_PROTECTION)
-        checkStackProtection();
+        memoryCheckStackProtection();
 #endif
         tight_loop_contents();
         tud_task();
@@ -595,6 +591,7 @@ namespace rckid {
     }
 
     void audioOff() {
+        audioStop();
         sendCommand(cmd::AudioOff{});
     }
 
@@ -676,10 +673,12 @@ namespace rckid {
 
     void audioStop() {
         if (audio::playback_) {
+            uint32_t ii = save_and_disable_interrupts();
             dma_channel_abort(audio::dma0_);        
             dma_channel_abort(audio::dma1_);
             pwm_set_enabled(RP_AUDIO_PWM_SLICE, false);
             audio::playback_ = false;
+            restore_interrupts(ii);
         }
 
     }

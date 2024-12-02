@@ -34,7 +34,7 @@ namespace rckid {
         }
 
         ~AudioPlayer() {
-            audioStop();
+            audioOff();
             if (mp3_ != nullptr)
                delete mp3_;
         }
@@ -48,6 +48,7 @@ namespace rckid {
                 f_ = filesystem::fileRead("128kbps.mp3");
                 mp3_ = new MP3{ &f_};
                 memoryFree();
+                audioOn();
                 mp3_->play(out_);
             }
         }
