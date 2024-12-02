@@ -47,7 +47,7 @@ namespace rckid {
 
         /** Allocates given amount of bytes on heap.
          
-            This is under all circumstances equivalent to a standard malloc call irrespective of the default allocation mode. 
+            This is under all circumstances equivalent to a standard malloc call irrespective of the default allocation mode.
          */
         static void * malloc(uint32_t bytes);
 
@@ -92,21 +92,44 @@ namespace rckid {
 
         using ChunkHeader = uint32_t;
 
+        /** Heap allocated chunk.
+         
+            Chunk consists of header and body. Chunk header is 4 bytes long and is the chunk size (including the header). Since chunk sizes must be in multiples of 4, ths LSB (2 of them in fact) is free and is used to determine whether the chunk is allocated (0), or part of the freelist (1). When the chunk is allocated, its body is the user data, but when the chunk becomes part of the freelist, the body consists of a pointer to the previous and next chunks in the freelist.  
+         */
         PACKED(struct Chunk {
-            ChunkHeader size;
+            ChunkHeader header;
             Chunk * next;
+            Chunk * prev;
 
-            Chunk(uint32_t size): size{size} {}
+            Chunk(uint32_t size): header{size} {}
 
             char * start() { return (char*)this; }
 
             /** Returns the pointer past the end of the chunk. which is the address of the chunk + the chunk header + chunk size. 
              */
-            char * end() { return start() + sizeof(ChunkHeader) + size; }
+            char * end() { return start() + size(); }
 
-            size_t allocatedSize() { return size; }
+            size_t size() { return header & ~3; }
+
+            /** Sets size of the chunk and marks it as allocated.
+             */
+            void setSize(uint32_t bytes) { header = bytes; }
+
+            bool isFree() { return header & CHUNK_IS_FREE; }
+
+            void markAsAllocated() { header &= ~CHUNK_IS_FREE; }
+
+            void markAsFree() { header |= CHUNK_IS_FREE; }
+
+        private:
+
+            static constexpr uint32_t CHUNK_IS_FREE = 1;
 
         }); // Heap::Chunk
+
+        /** Detaches given chunk from the freelist. This is useful when the last chunk on the heap is freed and the chunk above it is part of the freelist, in which case we can remove that chunk as well to fully reclaim the memory.
+         */
+        static void detachChunk(Chunk * chunk);
 
         static char * end_;
 

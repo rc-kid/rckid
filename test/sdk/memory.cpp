@@ -69,6 +69,15 @@ TEST(memory, heapAllocation) {
     EXPECT(! Arena::contains(b));
 }
 
+TEST(memory, atLeast12Bytes) {
+    using namespace rckid;
+    uint32_t freeHeap = rckid::memoryFree();
+    void * ptr = rckid::malloc(4);
+    EXPECT(rckid::memoryFree() + 12 == freeHeap);
+    rckid::free(ptr);
+    EXPECT(rckid::memoryFree() == freeHeap);
+}
+
 TEST(memory, immediateDeleteDeallocates) {
     uint32_t freeHeap = rckid::memoryFree();
     void * ptr = rckid::malloc(128);
@@ -77,14 +86,14 @@ TEST(memory, immediateDeleteDeallocates) {
     EXPECT(rckid::memoryFree() == freeHeap);
 }
 
-TEST(memory, nonImmediateDeleteDoesNotDeallocate) {
+TEST(memory, nonImmediateDeleteDeallocates) {
     uint32_t freeHeap = rckid::memoryFree();
     void * ptr1 = rckid::malloc(128);
     void * ptr2 = rckid::malloc(128);
     EXPECT(rckid::memoryFree() + (128 + 4) * 2 == freeHeap);
     rckid::free(ptr1);
     rckid::free(ptr2);
-    EXPECT(rckid::memoryFree() != freeHeap);
+    EXPECT(rckid::memoryFree() == freeHeap);
 }
 
 TEST(memory, defaultAllocationIsHeap) {

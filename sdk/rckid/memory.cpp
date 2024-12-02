@@ -19,7 +19,6 @@ namespace rckid {
         return ptr >= & __bss_end__ && ptr < & __StackLimit;
     }
 
-
     void instrumentStackProtection() {
         char * x = & __StackLimit;
         x[0] = 'R';
@@ -41,28 +40,31 @@ namespace rckid {
     char * Arena::end_ = & __bss_end__;
 
     void * Heap::malloc(uint32_t numBytes) {
+        // we only allow total number of bytes reserved (including the header) to be divisible by 4, bump the number of bytes here accordingly
+        numBytes = numBytes + sizeof(ChunkHeader);
+        if ((numBytes & 3) != 0)
+            numBytes = (numBytes & ~3) + 4;
+        if (numBytes < 12)
+            numBytes = 12;
         Chunk * freeChunk = freelist_;
-        Chunk * last = nullptr;
         // see if we can use a chunk from freelist
         while (freeChunk != nullptr) {
-            if (freeChunk->size >= numBytes) {
-                if (last == nullptr)
-                    freelist_ = freeChunk->next;
-                else 
-                    last->next = freeChunk->next;
+            if (freeChunk->size() >= numBytes) {
                 TRACE_HEAP("allocating " << numBytes<< " from existing chunk (size " << freeChunk->size << ", addr " << (uintptr_t)(& freeChunk->next) << ")");
+                ASSERT(freeChunk->isFree());
+                freeChunk->markAsAllocated();
+                detachChunk(freeChunk);
                 return & freeChunk->next;
             }
-            last = freeChunk;
             freeChunk = freeChunk->next;
         }
         // we haven't found anything in the freelist, use the end of the heap to create one and advance the heap end
-        end_ -= (numBytes + sizeof(ChunkHeader));
+        end_ -= numBytes;
         Chunk * result = (Chunk*) end_;
         // if we are over the limit, panic
         ASSERT(end_ >= Arena::end_);
         // set the chunk's size and return it 
-        result->size = static_cast<uint32_t>(numBytes);
+        result->setSize(numBytes);
         TRACE_HEAP("allocating " << numBytes<< " from heap, address " << (uintptr_t)(& result->next));
         return &(result->next);
     }
@@ -74,15 +76,27 @@ namespace rckid {
         ASSERT(Heap::contains(ptr)); 
         // deal with the chunk
         Chunk * chunk = (Chunk *)((char*) ptr - 4);
-        // if this is the last allocated memory chunk, simply update the heap end
+        ASSERT(!chunk->isFree());
+        // if this is the last allocated memory chunk, simply update the heap end instead of putting the chunk to a freelist. This is a transitive operation, i.e. if the chunk after the current one is free chunk, reclaim its memory too
         if (chunk->start() == end_) {
-            end_ = chunk->end();
             TRACE_HEAP("deallocating last chunk (addr " << (uintptr_t)(ptr) << ")");
+            while (true) {
+                end_ = chunk->end();
+                chunk = (Chunk*) chunk->end();
+                if (!chunk->isFree())
+                    break;
+                detachChunk(chunk);
+                TRACE_HEAP("deallocating transitive last chunk (addr " << (uintptr_t)(ptr) << ")");
+            }
             return;
         }
         // get the chunk and prepend it to the freelist
         // TODO this is extremely ugly and inefficient, must be fixed in the future
+        chunk->markAsFree();
+        chunk->prev = nullptr;
         chunk->next = freelist_;
+        if (freelist_ != nullptr)
+            freelist_->prev = chunk;
         freelist_ = chunk;
         TRACE_HEAP("deallocating (addr " << (uintptr_t)(ptr) << ") and adding to freelist");
     }
@@ -99,10 +113,24 @@ namespace rckid {
         uint32_t result = used();
         Chunk * c = freelist_;
         while (c != nullptr) {
-            result -= c->size + sizeof(ChunkHeader);
+            result -= c->size();
             c = c ->next;
         }
         return result;
+    }
+
+    void Heap::detachChunk(Chunk * chunk) {
+        if (chunk == freelist_) {
+            freelist_ = freelist_->next;
+            if (freelist_ != nullptr) {
+                ASSERT(freelist_->prev == chunk);
+                freelist_->prev = nullptr;
+            }
+        } else {
+            chunk->prev->next = chunk->next;
+            if (chunk->next)
+                chunk->next->prev = chunk->prev;
+        }
     }
 
     bool Arena::contains(void * ptr) {
