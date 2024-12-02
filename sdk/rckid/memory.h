@@ -6,6 +6,10 @@
 
 namespace rckid {
 
+    void memoryInstrumentStackProtection();
+
+    void memoryCheckStackProtection();
+
     /** Returns free memory available on the system. */
     uint32_t memoryFree(); 
 

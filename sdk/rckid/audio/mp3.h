@@ -24,7 +24,6 @@ namespace rckid {
         }
 
         void play(DoubleBuffer<int16_t> & sampleBuffer) {
-            audioOn();
             audioPlay(sampleBuffer, 44100, [this](int16_t * buffer, [[maybe_unused]] uint32_t samples) {
                 uint32_t res = 0;
                 while (res == 0) {

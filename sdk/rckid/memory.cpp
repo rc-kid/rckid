@@ -19,7 +19,7 @@ namespace rckid {
         return ptr >= & __bss_end__ && ptr < & __StackLimit;
     }
 
-    void instrumentStackProtection() {
+    void memoryInstrumentStackProtection() {
         char * x = & __StackLimit;
         x[0] = 'R';
         x[1] = 'C';
@@ -28,7 +28,7 @@ namespace rckid {
         x[4] = 'd';
     }
 
-    void checkStackProtection() {
+    void memoryCheckStackProtection() {
         char * x = & __StackLimit;
         if (x[0] != 'R' || x[1] != 'C' || x[2] != 'k' || x[3] != 'i' || x[4] != 'd')
             rckid::fatalError(Error::StackProtectionFailure, __LINE__, __FILE__);
