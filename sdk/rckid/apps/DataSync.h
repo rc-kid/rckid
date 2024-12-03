@@ -84,6 +84,13 @@ namespace rckid {
             }
 #endif
             GraphicsApp::update();
+            /* This is too dangerous to have here
+            if (btnPressed(Btn::Start)) {
+                filesystem::unmount();
+                filesystem::format();
+                exit();
+            }
+            */
         }
 
         void draw() override {
