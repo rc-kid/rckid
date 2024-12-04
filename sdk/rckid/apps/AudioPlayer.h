@@ -99,7 +99,9 @@ namespace rckid {
             }
             if (btnPressed(Btn::Right)) {
                 stop();
-                i_ = (i_ == 0) ? files_.size() - 1 : i_ - 1;
+                ++i_;
+                if (i_ >= files_.size())
+                    i_ = 0;
                 carousel_.moveRight(files_[i_]);    
             }
             // A button either toggles pause, if playing, or starts playback if current item is file, or enters directory if current item is dir
