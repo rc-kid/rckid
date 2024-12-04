@@ -458,6 +458,17 @@ namespace rckid::filesystem {
         }
     }
 
+    bool createFolder(char const * path, Drive dr) {
+        switch (dr) {
+            case Drive::SD:
+                return f_mkdir(path) == FR_OK;
+            case Drive::Cartridge:
+                return lfs_mkdir(&lfs_, path) == 0;
+            default:
+                UNREACHABLE;
+        }
+    }
+
     uint32_t hash(char const * path, Drive dr) {
         FileRead f = fileRead(path, dr); 
         if (!f.good())
@@ -549,5 +560,45 @@ namespace rckid::filesystem {
     }
 
 
+
+
+
+
+    std::string stem(std::string const & path) {
+        if (path.empty())
+            return path;
+        size_t end = path.size();
+        size_t i = end - 1;
+        for (; i > 0; --i) {
+            if (path[i] == '.')
+                end = i;
+            else if (path[i] == '/')
+                break;
+        }
+        if (path[i] == '/')
+            ++i;
+        return path.substr(i, end - i);
+    }
+
+    std::string ext(std::string const & path) {
+        for (size_t i = path.size() - 1; i > 0; --i) {
+            if (path[i] == '.')
+                return path.substr(i);
+        }
+        return "";
+    }
+
+    std::string join(std::string const & path, std::string const & item) {
+        return STR(path << "/" << item);
+    }
+
+    std::string parent(std::string const & path) {
+        for (size_t i = path.size() - 1; i > 0; --i) {
+            if (path[i] == '/')
+                return path.substr(0, i);
+        }
+        return "/";
+
+    }
 
 } // namespace rckid::filesystem

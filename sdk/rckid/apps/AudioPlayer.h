@@ -6,6 +6,8 @@
 #include <rckid/audio/mp3.h>
 #include <rckid/filesystem.h>
 #include <rckid/ui/header.h>
+#include <rckid/ui/carousel.h>
+#include <rckid/assets/icons64.h>
 
 namespace rckid {
 
@@ -19,6 +21,40 @@ namespace rckid {
 
     protected:
 
+        class Item : public MenuItem {
+        public:
+
+            Item(filesystem::Entry const & e):
+                MenuItem(e.isFolder() ? PAYLOAD_FOLDER : PAYLOAD_FILE) {
+                text_ = e.name();
+                LOG(text_ << ": size " << text_.size());
+            }
+
+            bool isFile() const { return payload() == PAYLOAD_FILE; }
+
+
+            std::string const & filename() const { return text_; }    
+
+            void text(std::string & text) const override {
+                text = filesystem::stem(text_); 
+            }
+
+            bool icon(Bitmap<ColorRGB> &bmp) const override {
+                if (isFile())
+                    bmp.loadImage(PNG::fromBuffer(assets::icons64::music_note));
+                else
+                    bmp.loadImage(PNG::fromBuffer(assets::icons64::music_1));
+                // TODO actually return icon for mp3 or folder
+                return true;
+            }
+
+        private:
+            static constexpr uint32_t PAYLOAD_FILE = 0;
+            static constexpr uint32_t PAYLOAD_FOLDER = 1;
+
+            std::string text_;
+        };
+
         AudioPlayer(): 
             GraphicsApp{ARENA(Canvas<ColorRGB>{320, 240})}, 
             out_{ARENA(DoubleBuffer<int16_t>{1152 * 2})} {
@@ -31,6 +67,7 @@ namespace rckid {
             //yield();
             //LOG("320kbps.mp3: " << filesystem::hash("320kbps.mp3"));
             //yield();
+            loadFolder("audio");
         }
 
         ~AudioPlayer() {
@@ -40,7 +77,7 @@ namespace rckid {
         }
 
         void update() override {
-            GraphicsApp::update();
+            /*
             if (btnPressed(Btn::A)) {
                 audioStop();
                 if (mp3_ != nullptr)
@@ -51,25 +88,118 @@ namespace rckid {
                 audioOn();
                 mp3_->play(out_);
             }
+            */
+            // stop playing if we are finished
+            if (mp3_ != nullptr && mp3_->eof())
+                stop();
+            if (btnPressed(Btn::Left)) {
+                stop();
+                i_ = (i_ == 0) ? files_.size() - 1 : i_ - 1;
+                carousel_.moveLeft(files_[i_]);    
+            }
+            if (btnPressed(Btn::Right)) {
+                stop();
+                i_ = (i_ == 0) ? files_.size() - 1 : i_ - 1;
+                carousel_.moveRight(files_[i_]);    
+            }
+            // A button either toggles pause, if playing, or starts playback if current item is file, or enters directory if current item is dir
+            if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                if (mp3_ != nullptr) {
+                    audioPause();
+                } else {
+                    Item * i = currentItem();
+                    if (i->isFile())
+                        play(filesystem::join(path_, i->filename()));
+                    else
+                        loadFolder(filesystem::join(path_, i->filename()));
+                }
+            }
+            // if we pressed the back button, then if playing, stop playing, or see if we can go back
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                if (mp3_ != nullptr) {
+                    stop();
+                } else {
+                    path_ = filesystem::parent(path_);
+                    if (path_ != "/")
+                        loadFolder(path_, /* down */true);
+                    else
+                        exit();
+                }
+                btnPressedClear(Btn::B);
+            }
+            GraphicsApp::update();
+        }
+
+        void stop() {
+            if (mp3_ != nullptr) {
+                audioStop();
+                if (mp3_ != nullptr)
+                    delete mp3_;
+                mp3_ = nullptr;
+                f_.close();
+            }
+        }
+
+        void play(std::string const & file) {
+            stop();
+            f_ = filesystem::fileRead(file);
+            mp3_ = new MP3{ &f_};
+            memoryFree();
+            audioOn();
+            mp3_->play(out_);
         }
 
         void draw() override {
             NewArenaScope _{};
-            g_.fill();
-            Header::drawOn(g_);
             if (mp3_ != nullptr) {
+                g_.fill(Rect::XYWH(0,0,320,20));
+                /*
                 g_.text(10, 30) << "Last errror:  " << mp3_->lastError() << "\n"
                                 << "Channels:     " << mp3_->channels() << "\n"
                                 << "Sample rate:  " << mp3_->sampleRate() << "\n"
                                 << "Bitrate:      " << mp3_->bitrate() << "\n"
                                 << "Frames:       " << mp3_->frames() << "\n"
                                 << "Frame errors: " << mp3_->frameErrors(); 
+                */
+            } else {
+                g_.fill();
+                carousel_.drawOn(g_, Rect::XYWH(0, 160, 320, 80));
             }
+            Header::drawOn(g_);
         }
+
+        Item * currentItem() { return (Item*) & files_[i_]; }
+
+        std::string path_;
+        Menu files_;
+        std::vector<uint32_t> indices_;
+        uint32_t i_;
+        Carousel carousel_{assets::font::OpenDyslexic48::font};
 
         DoubleBuffer<int16_t> out_; 
         MP3 * mp3_ = nullptr;
         filesystem::FileRead f_;
+
+        bool loadFolder(std::string const & dir, bool down = false) {
+            filesystem::Folder f = filesystem::folderRead(dir);
+            if (!f.good())
+                return false;
+            files_.clear();
+            for (auto const & i : f)
+                files_.add(new Item{i});
+            path_ = std::move(dir);
+            if (down) {
+                i_ = indices_.back();
+                indices_.pop_back();
+                carousel_.moveDown(files_[i_]);
+            } else {
+                indices_.push_back(i_);
+                i_ = 0;
+                carousel_.moveDown(files_[i_]);
+            }
+            return true;
+        }
+        
 
     }; // rckid::AudioPlayer
 

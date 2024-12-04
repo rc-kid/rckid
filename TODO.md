@@ -2,12 +2,18 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
+- when drawing a lot during mp3 playback, there are hiccups even when overclocked
+- audio player home button turns display off/on
+- repeat & move to next track...
+
 - document stack protection check
 
 - will play mp3, once at least - verify code around stopping, etc. 
 - add file browser and we have basic mp3 player
 - even 128kbps seems to require overclocking (!) for decent FPS
 - should SD card be always mounted when present? 
+
+- on fantasy malloc & free replacement is not complete - causes trouble especially with strings
 
 - trace arena is broken as it creates new arena for the tracking, which traces itself:)
 - memory leaks in fantasy where we have pointers that are in fantasy heap, but not on arena or heap (see raylib.cpp feee() method)

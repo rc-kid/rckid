@@ -68,6 +68,16 @@ void ls(fs::Drive dr, int argc, char * argv[]) {
     }
 }
 
+void mkdir(fs::Drive dr, int argc, char * argv[]) {
+    ::mount(dr);
+    if (argc != 4)
+        throw std::runtime_error("Invalid number of arguments to mkdir");
+    std::string dir = argv[3];
+    std::cout << "Creating folder " << dir << std::endl;
+    if (!fs::createFolder(dir.c_str(), dr))
+        throw std::runtime_error("Cannot create folder");
+}
+
 void store(fs::Drive dr, int argc, char * argv[]) {
     ::mount(dr);
     if (argc != 5)
@@ -124,6 +134,8 @@ int main(int argc, char * argv[]) {
             ::format(dr);
         else if (cmd == "ls")
             ls(dr, argc, argv);
+        else if (cmd == "mkdir")
+            mkdir(dr, argc, argv);
         else if (cmd == "store")
             store(dr, argc, argv);
         else

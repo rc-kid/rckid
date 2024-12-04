@@ -5,7 +5,7 @@
 #include "errors.h"
 
 namespace rckid {
-
+    
     void memoryInstrumentStackProtection();
 
     void memoryCheckStackProtection();
