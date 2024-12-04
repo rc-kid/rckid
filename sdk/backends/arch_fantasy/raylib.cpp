@@ -42,6 +42,8 @@ extern "C" {
     extern void __libc_free(void *);
 
     void * malloc(size_t numBytes) {
+        // TODO deal with malloc in fantasy properly
+        return __libc_malloc(numBytes);
         if (systemMalloc_)
             return __libc_malloc(numBytes);
         else 
@@ -49,6 +51,8 @@ extern "C" {
     }
 
     void free(void * ptr) {
+        // TODO deal with malloc in fantasy properly
+        return __libc_free(ptr);
         using namespace rckid;
         if (Heap::contains(ptr)) {
             // if we are in system malloc phase, we should not be deallocating rckid memory, as this only happens during shutdown

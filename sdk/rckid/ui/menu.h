@@ -101,6 +101,8 @@ namespace rckid {
     class Menu {
     public:
 
+        Menu() = default;
+
         Menu(std::initializer_list<MenuItem *> items):
             items_{items} {
         }
@@ -121,8 +123,21 @@ namespace rckid {
             items_.push_back(item);
         }
 
+        void clear() {
+            for (auto mi : items_)
+                delete mi;
+            items_.clear();
+        }
+
     private:
         std::vector<MenuItem *> items_;
     }; // rckid::Menu
 
 } // namespace rckid
+
+// 7a66c8
+// 7a6680
+// 7a6630
+// 7a65d0
+
+

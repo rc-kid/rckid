@@ -391,6 +391,10 @@ namespace rckid::filesystem {
      */
     bool isFile(char const * path, Drive dr = Drive::SD); 
 
+    /** Creates given folder. 
+     */
+    bool createFolder(char const * path, Drive dr = Drive::SD);
+
     /** Returns hash of given file. 
      */
     uint32_t hash(char const * path, Drive dr = Drive::SD);
@@ -408,5 +412,12 @@ namespace rckid::filesystem {
     inline FileRead fileRead(std::string const & path, Drive dr = Drive::SD) { return fileRead(path.c_str(), dr); }
     inline FileWrite fileWrite(std::string const & path, Drive dr = Drive::SD) { return fileWrite(path.c_str(), dr); }
     inline Folder folderRead(std::string const & path, Drive dr = Drive::SD) { return folderRead(path.c_str(), dr); }
+
+
+
+    std::string stem(std::string const & path);
+    std::string ext(std::string const & path);
+    std::string join(std::string const & path, std::string const & item);
+    std::string parent(std::string const & path);
 
 } // namespace rckid::filesystem

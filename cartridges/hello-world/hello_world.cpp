@@ -85,8 +85,8 @@ Menu * menuBenchmarks() {
 Menu * mainMenu() {
     return new Menu{
         MenuApp::Submenu("Games", assets::icons64::game_controller, menuGames),
-        MenuApp::Submenu("Utils", assets::icons64::applications, menuUtils),
         MenuApp::Item("Audio Player", assets::icons64::music, AudioPlayer::run),
+        MenuApp::Submenu("Utils", assets::icons64::applications, menuUtils),
         MenuApp::Submenu("Settings", assets::icons64::settings, menuSettings),
         MenuApp::Submenu("Benchmarks", assets::icons64::spider, menuBenchmarks),
     };
@@ -94,7 +94,7 @@ Menu * mainMenu() {
 
 int main() {
     namespace fs = rckid::filesystem;
-    //cpu::overclock();
+    cpu::overclock();
     rckid::initialize();
     LOG("Initialized, running the app!");
     rckid::displaySetBrightness(128);
