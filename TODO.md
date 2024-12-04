@@ -2,6 +2,7 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
+- add rumbler to audio player
 - when drawing a lot during mp3 playback, there are hiccups even when overclocked
 - audio player home button turns display off/on
 - repeat & move to next track...
