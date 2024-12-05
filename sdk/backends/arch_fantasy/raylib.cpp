@@ -174,6 +174,10 @@ namespace rckid {
         }
     }
 
+    void overclock() {
+        LOG("Overclocking is not suppprted in fantasy backend.");
+    }
+
     void initialize(bool createWindow) {
         systemMalloc_ = true;
         if (createWindow)

@@ -59,14 +59,6 @@ namespace rckid {
             GraphicsApp{ARENA(Canvas<ColorRGB>{320, 240})}, 
             out_{ARENA(DoubleBuffer<int16_t>{1152 * 2})} {
             filesystem::mount();
-            //LOG("128kbps.mp3: " << filesystem::hash("128kbps.mp3"));
-            //yield();
-            //LOG("160kbps.mp3: " << filesystem::hash("160kbps.mp3"));
-            //yield();
-            //LOG("192kbps.mp3: " << filesystem::hash("192kbps.mp3"));
-            //yield();
-            //LOG("320kbps.mp3: " << filesystem::hash("320kbps.mp3"));
-            //yield();
             loadFolder("audio");
         }
 
@@ -77,44 +69,40 @@ namespace rckid {
         }
 
         void update() override {
-            /*
-            if (btnPressed(Btn::A)) {
-                audioStop();
-                if (mp3_ != nullptr)
-                    delete mp3_;
-                f_ = filesystem::fileRead("128kbps.mp3");
-                mp3_ = new MP3{ &f_};
-                memoryFree();
-                audioOn();
-                mp3_->play(out_);
-            }
-            */
             // stop playing if we are finished
-            if (mp3_ != nullptr && mp3_->eof())
-                stop();
+            if (mp3_ != nullptr && mp3_->eof()) {
+                if (repeat_) {
+                    stop();
+                } else {
+                    do {
+                        moveRight();
+                    } while (! currentItem()->isFile());
+                }
+                playAfterAnimation_ = true;
+            }
             if (btnPressed(Btn::Left)) {
-                stop();
-                i_ = (i_ == 0) ? files_.size() - 1 : i_ - 1;
-                carousel_.moveLeft(files_[i_]);    
+                moveLeft();
+                rumbleNudge();
+                playAfterAnimation_ = false;
             }
             if (btnPressed(Btn::Right)) {
-                stop();
-                ++i_;
-                if (i_ >= files_.size())
-                    i_ = 0;
-                carousel_.moveRight(files_[i_]);    
+                moveRight();
+                rumbleNudge();
+                playAfterAnimation_ = false;
             }
             // A button either toggles pause, if playing, or starts playback if current item is file, or enters directory if current item is dir
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                 if (mp3_ != nullptr) {
                     audioPause();
                 } else {
+                    rumbleNudge();
                     Item * i = currentItem();
                     if (i->isFile())
                         play(filesystem::join(path_, i->filename()));
                     else
                         loadFolder(filesystem::join(path_, i->filename()));
                 }
+                playAfterAnimation_ = false;
             }
             // if we pressed the back button, then if playing, stop playing, or see if we can go back
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
@@ -126,8 +114,32 @@ namespace rckid {
                         loadFolder(path_, /* down */true);
                     else
                         exit();
+                    rumbleNudge();
                 }
                 btnPressedClear(Btn::B);
+                playAfterAnimation_ = false;
+            }
+            if (btnPressed(Btn::Home)) {
+                if (screenOff_) {
+                    screenOff_ = false;
+                    displaySetBrightness(128);
+                    rckid::ledSetEffects(
+                        RGBEffect::Rainbow(0, 1, 1, 32), 
+                        RGBEffect::Rainbow(51, 1, 1, 32), 
+                        RGBEffect::Rainbow(102, 1, 1, 32), 
+                        RGBEffect::Rainbow(153, 1, 1, 32), 
+                        RGBEffect::Rainbow(204, 1, 1, 32)
+                    );
+
+                } else if (mp3_ != nullptr) {
+                    screenOff_ = true;
+                    displaySetBrightness(0);
+                    rckid::ledsOff();
+                }
+            }
+            if (playAfterAnimation_ && carousel_.idle()) {
+                playAfterAnimation_ = false;
+                play(filesystem::join(path_, currentItem()->filename()));
             }
             GraphicsApp::update();
         }
@@ -151,7 +163,23 @@ namespace rckid {
             mp3_->play(out_);
         }
 
+        void moveLeft() {
+            stop();
+            i_ = (i_ == 0) ? files_.size() - 1 : i_ - 1;
+            carousel_.moveLeft(files_[i_]);    
+        }
+
+        void moveRight() {
+            stop();
+            ++i_;
+            if (i_ >= files_.size())
+                i_ = 0;
+            carousel_.moveRight(files_[i_]);    
+        }
+
         void draw() override {
+            if (screenOff_)
+                return;
             NewArenaScope _{};
             if (mp3_ != nullptr) {
                 g_.fill(Rect::XYWH(0,0,320,20));
@@ -181,6 +209,10 @@ namespace rckid {
         DoubleBuffer<int16_t> out_; 
         MP3 * mp3_ = nullptr;
         filesystem::FileRead f_;
+
+        bool repeat_ = false;
+        bool screenOff_ = false;
+        bool playAfterAnimation_ = false;
 
         bool loadFolder(std::string const & dir, bool down = false) {
             filesystem::Folder f = filesystem::folderRead(dir);
