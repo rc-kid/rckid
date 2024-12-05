@@ -44,6 +44,11 @@ namespace rckid {
 
     class ColorRGB;
 
+    /** Overclocks the device. 
+     
+        Must be called before initialize(). May not have an effect if overclocking is not supported by the current backend. 
+     */
+    void overclock(); 
 
     /** Initializes the RCKid console. 
      

@@ -94,7 +94,7 @@ Menu * mainMenu() {
 
 int main() {
     namespace fs = rckid::filesystem;
-    cpu::overclock();
+    rckid::overclock();
     rckid::initialize();
     LOG("Initialized, running the app!");
     rckid::displaySetBrightness(128);

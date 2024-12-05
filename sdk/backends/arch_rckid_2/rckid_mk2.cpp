@@ -252,6 +252,10 @@ namespace rckid {
         //gpio::outputLow(GPIO21);
     }
 
+    void overclock() {
+        cpu::overclock();
+    }
+
     void initialize() {
 #if (defined RCKID_ENABLE_STACK_PROTECTION)
         memoryInstrumentStackProtection();
