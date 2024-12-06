@@ -2,6 +2,7 @@
 
 #include <libhelix-mp3/mp3dec.h>
 
+#include "audio.h"
 #include "../utils/stream.h"
 
 namespace rckid {
@@ -93,7 +94,12 @@ namespace rckid {
             bufferSize_ = remaining;
             // and return the number of samples created
             MP3GetLastFrameInfo(dec_, &fInfo_);
-            return fInfo_.outputSamps;
+            if (fInfo_.nChans == 1) {
+                audio::convertToStereo(out, fInfo_.outputSamps);
+                return fInfo_.outputSamps * 2;
+            } else {
+                return fInfo_.outputSamps;
+            }
         }
 
         uint32_t refillBuffer() {

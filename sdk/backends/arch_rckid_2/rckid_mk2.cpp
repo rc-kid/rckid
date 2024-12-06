@@ -675,6 +675,14 @@ namespace rckid {
         }        
     }
 
+    bool audioPaused() {
+        if (audio::playback_) {
+            return ! pwm_is_enabled(RP_AUDIO_PWM_SLICE);
+        } else {
+            return false;
+        }
+    }
+
     void audioStop() {
         if (audio::playback_) {
             uint32_t ii = save_and_disable_interrupts();

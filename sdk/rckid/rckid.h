@@ -343,7 +343,10 @@ namespace rckid {
 
     void audioPause();
 
+    bool audioPaused();
+
     void audioStop();
+
 
     //@}
 
