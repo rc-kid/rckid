@@ -13,6 +13,12 @@ namespace rckid::assets::icons24{
         #include "raw/icons24/152-space.png.h"
     };
 
+    // File: 158-multimedia.png
+    // Size: 1586
+    static constexpr uint8_t multimedia[] = {
+        #include "raw/icons24/158-multimedia.png.h"
+    };
+
     // File: 180-wooden-box.png
     // Size: 1448
     static constexpr uint8_t wooden_box[] = {

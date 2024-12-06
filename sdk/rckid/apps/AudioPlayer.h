@@ -8,15 +8,21 @@
 #include <rckid/ui/header.h>
 #include <rckid/ui/carousel.h>
 #include <rckid/assets/icons64.h>
+#include <rckid/assets/icons24.h>
 
 namespace rckid {
 
+    /** MP3 Audio Player
+     
+        Because there is not enough memory for a full screen framebuffer, we cheat and split the screen in three thirds: the header, the current playback info and the carousel for music selection in the bottom part of the screen. We this switch and each frame only draw the part of the screen that is necessary. 
+     */
     class AudioPlayer : public GraphicsApp<Canvas<ColorRGB>> {
     public:
 
         static void run() {
             AudioPlayer app{};
             app.loop();
+            filesystem::unmount();
         }
 
     protected:
@@ -27,7 +33,6 @@ namespace rckid {
             Item(filesystem::Entry const & e):
                 MenuItem(e.isFolder() ? PAYLOAD_FOLDER : PAYLOAD_FILE) {
                 text_ = e.name();
-                LOG(text_ << ": size " << text_.size());
             }
 
             bool isFile() const { return payload() == PAYLOAD_FILE; }
@@ -43,7 +48,7 @@ namespace rckid {
                 if (isFile())
                     bmp.loadImage(PNG::fromBuffer(assets::icons64::music_note));
                 else
-                    bmp.loadImage(PNG::fromBuffer(assets::icons64::music_1));
+                    bmp.loadImage(PNG::fromBuffer(assets::icons64::folder));
                 // TODO actually return icon for mp3 or folder
                 return true;
             }
@@ -56,9 +61,13 @@ namespace rckid {
         };
 
         AudioPlayer(): 
-            GraphicsApp{ARENA(Canvas<ColorRGB>{320, 240})}, 
-            out_{ARENA(DoubleBuffer<int16_t>{1152 * 2})} {
+            GraphicsApp{ARENA(Canvas<ColorRGB>{320, 80})}, 
+            out_{ARENA(DoubleBuffer<int16_t>{1152 * 4})} {
             filesystem::mount();
+            play_.loadImage(PNG::fromBuffer(assets::icons64::play));
+            pause_.loadImage(PNG::fromBuffer(assets::icons64::pause));
+            repeatIcon_.loadImage(PNG::fromBuffer(assets::icons24::multimedia));
+
             loadFolder("audio");
         }
 
@@ -94,6 +103,7 @@ namespace rckid {
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                 if (mp3_ != nullptr) {
                     audioPause();
+                    frame_ = 0; // so that we change the icon quickly
                 } else {
                     rumbleNudge();
                     Item * i = currentItem();
@@ -118,6 +128,10 @@ namespace rckid {
                 }
                 btnPressedClear(Btn::B);
                 playAfterAnimation_ = false;
+            }
+            if (btnPressed(Btn::Start)) {
+                repeat_ = ! repeat_;
+                frame_ = 0;
             }
             if (btnPressed(Btn::Home)) {
                 if (screenOff_) {
@@ -151,6 +165,8 @@ namespace rckid {
                     delete mp3_;
                 mp3_ = nullptr;
                 f_.close();
+                memoryFree();
+                clearPlayback_ = true;
             }
         }
 
@@ -161,6 +177,8 @@ namespace rckid {
             memoryFree();
             audioOn();
             mp3_->play(out_);
+            memoryFree();
+            frame_ = 0;
         }
 
         void moveLeft() {
@@ -178,11 +196,35 @@ namespace rckid {
         }
 
         void draw() override {
-            if (screenOff_)
-                return;
             NewArenaScope _{};
+            if (clearPlayback_) {
+                g_.fill();
+                displaySetUpdateRegion(Rect::XYWH(0, 80, 320, 80));
+                frame_ = 0;
+                clearPlayback_ = false;
+                return;
+            }
             if (mp3_ != nullptr) {
-                g_.fill(Rect::XYWH(0,0,320,20));
+                if (screenOff_)
+                    return;
+                switch (frame_++ % 30) {
+                    case 0:
+                        g_.fill();
+                        displaySetUpdateRegion(Rect::XYWH(0, 0, 320, 80));
+                        Header::drawOn(g_);
+                        break;
+                    case 1:
+                        g_.fill();
+                        displaySetUpdateRegion(Rect::XYWH(0, 80, 320, 80));
+                        g_.blit(Point{128, 0}, audioPaused() ? pause_ : play_);
+                        if (repeat_)
+                            g_.blit(Point{195, 20}, repeatIcon_);
+                        // draw here that we are playing and how much and repeat
+                        break;
+                    default:
+                        // don't draw anything - nothing changes   
+                        break;                 
+                }
                 /*
                 g_.text(10, 30) << "Last errror:  " << mp3_->lastError() << "\n"
                                 << "Channels:     " << mp3_->channels() << "\n"
@@ -193,9 +235,19 @@ namespace rckid {
                 */
             } else {
                 g_.fill();
-                carousel_.drawOn(g_, Rect::XYWH(0, 160, 320, 80));
+                switch (frame_++ % 60) {
+                    case 0:
+                        displaySetUpdateRegion(Rect::XYWH(0, 0, 320, 80));
+                        Header::drawOn(g_);
+                        break;
+                    case 1:
+                        displaySetUpdateRegion(Rect::XYWH(0, 160, 320, 80));
+                        [[fallthrough]];
+                    default:
+                        carousel_.drawOn(g_, Rect::XYWH(0, 0, 320, 80));
+                        break;
+                }
             }
-            Header::drawOn(g_);
         }
 
         Item * currentItem() { return (Item*) & files_[i_]; }
@@ -213,6 +265,11 @@ namespace rckid {
         bool repeat_ = false;
         bool screenOff_ = false;
         bool playAfterAnimation_ = false;
+        uint32_t frame_ = 0;
+        Bitmap<ColorRGB> play_{64, 64};
+        Bitmap<ColorRGB> pause_{64, 64};
+        Bitmap<ColorRGB> repeatIcon_{24, 24};
+        bool clearPlayback_ = false;
 
         bool loadFolder(std::string const & dir, bool down = false) {
             filesystem::Folder f = filesystem::folderRead(dir);

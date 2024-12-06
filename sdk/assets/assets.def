@@ -15,8 +15,8 @@
 #fontGlyphs, fonts/MetalLord.ttf, 32
 
 #generator, path to folder, namespace (and output file)
-#folder, icons64, icons64
-#folder, icons24, icons24
+folder, icons64, icons64
+folder, icons24, icons24
 #folder, icons16, icons16
 #folder, tests, tests
 

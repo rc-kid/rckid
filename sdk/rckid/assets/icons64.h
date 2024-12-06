@@ -1266,4 +1266,34 @@ namespace rckid::assets::icons64{
     static constexpr uint8_t costume[] = {
         #include "raw/icons64/210-costume.png.h"
     };
+
+    // File: 211-play.png
+    // Size: 1752
+    static constexpr uint8_t play[] = {
+        #include "raw/icons64/211-play.png.h"
+    };
+
+    // File: 212-pause.png
+    // Size: 2488
+    static constexpr uint8_t pause[] = {
+        #include "raw/icons64/212-pause.png.h"
+    };
+
+    // File: 213-folder.png
+    // Size: 2621
+    static constexpr uint8_t folder[] = {
+        #include "raw/icons64/213-folder.png.h"
+    };
+
+    // File: 214-notes.png
+    // Size: 2624
+    static constexpr uint8_t notes[] = {
+        #include "raw/icons64/214-notes.png.h"
+    };
+
+    // File: 215-notebook.png
+    // Size: 2636
+    static constexpr uint8_t notebook[] = {
+        #include "raw/icons64/215-notebook.png.h"
+    };
 } // namespace rckid::assets::icons64

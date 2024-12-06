@@ -4,12 +4,9 @@
 
 - the SD card initialization routine does not work for SDHC cards, only for SDXC (not a blocker for xmas)
 
-- when drawing a lot during mp3 playback, there are hiccups even when overclocked
-- repeat single track (technically there, but control & icon)
-
 - document stack protection check
 
-- should SD card be always mounted when present? 
+- should SD card be always mounted when present? - no it consumes memory
 
 - on fantasy malloc & free replacement is not complete - causes trouble especially with strings
 
