@@ -2,9 +2,17 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
+- make sliding puzzle use default image, and add the default image to load screen
+
 - the SD card initialization routine does not work for SDHC cards, only for SDXC (not a blocker for xmas)
 
+- add fantasy mode where cartridge and SD card are folders on local drive for simplicity
+
 - document stack protection check
+
+- add the screen off mode as part of the API 
+
+- add file browser as own widget
 
 - should SD card be always mounted when present? - no it consumes memory
 
