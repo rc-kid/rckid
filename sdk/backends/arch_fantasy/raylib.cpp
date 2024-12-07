@@ -569,6 +569,13 @@ namespace rckid {
             PauseAudioStream(audio::stream_);
     }
 
+    bool audioPaused() { 
+        if (audio::playback_)
+            return ! IsAudioStreamPlaying(audio::stream_);
+        else
+            return false;
+    }
+
     void audioStop() {
         if (audio::playback_) {
             StopAudioStream(audio::stream_);

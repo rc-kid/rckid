@@ -89,50 +89,7 @@ namespace rckid {
                 }
                 playAfterAnimation_ = true;
             }
-            if (btnPressed(Btn::Left)) {
-                moveLeft();
-                rumbleNudge();
-                playAfterAnimation_ = false;
-            }
-            if (btnPressed(Btn::Right)) {
-                moveRight();
-                rumbleNudge();
-                playAfterAnimation_ = false;
-            }
-            // A button either toggles pause, if playing, or starts playback if current item is file, or enters directory if current item is dir
-            if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
-                if (mp3_ != nullptr) {
-                    audioPause();
-                    frame_ = 0; // so that we change the icon quickly
-                } else {
-                    rumbleNudge();
-                    Item * i = currentItem();
-                    if (i->isFile())
-                        play(filesystem::join(path_, i->filename()));
-                    else
-                        loadFolder(filesystem::join(path_, i->filename()));
-                }
-                playAfterAnimation_ = false;
-            }
-            // if we pressed the back button, then if playing, stop playing, or see if we can go back
-            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
-                if (mp3_ != nullptr) {
-                    stop();
-                } else {
-                    path_ = filesystem::parent(path_);
-                    if (path_ != "/")
-                        loadFolder(path_, /* down */true);
-                    else
-                        exit();
-                    rumbleNudge();
-                }
-                btnPressedClear(Btn::B);
-                playAfterAnimation_ = false;
-            }
-            if (btnPressed(Btn::Start)) {
-                repeat_ = ! repeat_;
-                frame_ = 0;
-            }
+
             if (btnPressed(Btn::Home)) {
                 if (screenOff_) {
                     screenOff_ = false;
@@ -151,11 +108,59 @@ namespace rckid {
                     rckid::ledsOff();
                 }
             }
+
+            // other keys don't work when screen is off
+            if (screenOff_ == false) {
+                if (btnPressed(Btn::Left)) {
+                    moveLeft();
+                    rumbleNudge();
+                    playAfterAnimation_ = false;
+                }
+                if (btnPressed(Btn::Right)) {
+                    moveRight();
+                    rumbleNudge();
+                    playAfterAnimation_ = false;
+                }
+                // A button either toggles pause, if playing, or starts playback if current item is file, or enters directory if current item is dir
+                if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                    if (mp3_ != nullptr) {
+                        audioPause();
+                        frame_ = 0; // so that we change the icon quickly
+                    } else {
+                        rumbleNudge();
+                        Item * i = currentItem();
+                        if (i->isFile())
+                            play(filesystem::join(path_, i->filename()));
+                        else
+                            loadFolder(filesystem::join(path_, i->filename()));
+                    }
+                    playAfterAnimation_ = false;
+                }
+                // if we pressed the back button, then if playing, stop playing, or see if we can go back
+                if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                    if (mp3_ != nullptr) {
+                        stop();
+                    } else {
+                        path_ = filesystem::parent(path_);
+                        if (path_ != "/")
+                            loadFolder(path_, /* down */true);
+                        else
+                            exit();
+                        rumbleNudge();
+                    }
+                    btnPressedClear(Btn::B);
+                    playAfterAnimation_ = false;
+                }
+                if (btnPressed(Btn::Start)) {
+                    repeat_ = ! repeat_;
+                    frame_ = 0;
+                }
+                GraphicsApp::update();
+            }
             if (playAfterAnimation_ && carousel_.idle()) {
                 playAfterAnimation_ = false;
                 play(filesystem::join(path_, currentItem()->filename()));
             }
-            GraphicsApp::update();
         }
 
         void stop() {
@@ -286,7 +291,7 @@ namespace rckid {
             } else {
                 indices_.push_back(i_);
                 i_ = 0;
-                carousel_.moveDown(files_[i_]);
+                carousel_.moveUp(files_[i_]);
             }
             return true;
         }

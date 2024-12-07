@@ -6,6 +6,11 @@
 #include <rckid/graphics/canvas.h>
 #include <rckid/ui/timer.h>
 #include <rckid/utils/interpolation.h>
+#include <rckid/ui/carousel.h>
+#include <rckid/assets/fonts/OpenDyslexic48.h>
+#include <rckid/assets/icons64.h>
+#include <rckid/filesystem.h>
+
 
 namespace rckid {
 
@@ -31,12 +36,52 @@ namespace rckid {
 
     protected:
 
-        SlidingPuzzle(): GraphicsApp{ARENA(Canvas<Color>{320, 240})} {}
+        class Item : public MenuItem {
+        public:
+
+            Item(filesystem::Entry const & e) {
+                text_ = e.name();
+            }
+
+            std::string const & filename() const { return text_; }    
+
+            void text(std::string & text) const override {
+                text = filesystem::stem(text_); 
+            }
+
+            bool icon(Bitmap<ColorRGB> &bmp) const override {
+                bmp.loadImage(PNG::fromBuffer(assets::icons64::screenshot));
+                return true;
+            }
+
+        private:
+
+            std::string text_;
+        };
+
+
+        SlidingPuzzle(): GraphicsApp{ARENA(Canvas<Color>{320, 240})} {
+            filesystem::mount();
+            imageSelectMode_ = loadFolder();
+            if (! imageSelectMode_) {
+                resetGame();
+            }
+        }
+
+        ~SlidingPuzzle() {
+            filesystem::unmount();
+        }
+
+        void reset() {
+            shuffle_ = 0;
+            holeX_ = -1;
+            holeY_ = -1;
+        }
 
         void onFocus() override {
             App::onFocus();
             //PNG png = PNG::fromBuffer(defaultImage_, sizeof(defaultImage_));
-            g_.loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
+            //g_.loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
             /*
             png.decode([&](ColorRGB * line, int lineNum, int lineWidth){
                 Renderer & r = renderer();
@@ -46,87 +91,150 @@ namespace rckid {
                 }
             });
             */
-            shuffle_ = 0;
-            holeX_ = -1;
-            holeY_ = -1;
+            //shuffle_ = 0;
+            //holeX_ = -1;
+            //holeY_ = -1;
         }
 
         void update() override {
-            if (btnPressed(Btn::B))
-                exit();
-            if (btnPressed(Btn::Start))
-                resetGame(20);
-                // shuffle_ = 20;
-            if (shuffle_ == 0 && dir_ == Btn::Home) {
-                oldX_ = holeX_;
-                oldY_ = holeY_;
-                if (btnPressed(Btn::Left) && canMoveLeft()) {
-                    holeX_ += 1;
-                    dir_ = Btn::Left;
-                } else if (btnPressed(Btn::Right) && canMoveRight()) {
-                    holeX_ -= 1;
-                    dir_ = Btn::Right;
-                } else if (btnPressed(Btn::Up) && canMoveUp()) {
-                    holeY_ += 1;
-                    dir_ = Btn::Up;
-                } else if (btnPressed(Btn::Down) && canMoveDown()) {
-                    holeY_ -= 1;
-                    dir_ = Btn::Down;
-                } else {
-                    return;
-                }
-                tmp_.blit(Point::origin(), g_, tileRect(holeX_, holeY_));
-                a_.start();
-                if (dir_ != Btn::Home)
+            if (imageSelectMode_) {
+                if (btnPressed(Btn::Left)) {
+                    i_ = (i_ == 0) ? files_.size() - 1 : i_ - 1;
+                    carousel_.moveLeft(files_[i_]);    
                     rumbleNudge();
+
+                }
+                if (btnPressed(Btn::Right)) {
+                    ++i_;
+                    if (i_ >= files_.size())
+                        i_ = 0;
+                    carousel_.moveRight(files_[i_]);    
+                    rumbleNudge();
+                }
+                if (btnPressed(Btn::Up) || btnPressed(Btn::A)) {
+                    resetGame();
+                }
+                if (btnPressed(Btn::Down) || btnPressed(Btn::B)) {
+                    exit();
+                    btnPressedClear(Btn::B);
+                }
+
+            } else {
+                if (btnPressed(Btn::B)) {
+                    if (tmp_ != nullptr) {
+                        delete tmp_;
+                        delete hole_;
+                        tmp_ = nullptr;
+                        hole_ = nullptr;
+                    }
+                    if (files_.size() == 0) {
+                        exit();
+                    } else {
+                        imageSelectMode_ = true;
+                        btnPressedClear(Btn::B);
+                    }
+                    return;
+                }                    
+                if (btnPressed(Btn::A)) {
+                    if (tmp_ == nullptr)
+                        shuffle(20);
+                    else
+                        resetGame();
+                }
+                if ((tmp_ != nullptr) && (shuffle_ == 0) && (dir_ == Btn::Home)) {
+                    oldX_ = holeX_;
+                    oldY_ = holeY_;
+                    if (btnPressed(Btn::Left) && canMoveLeft()) {
+                        holeX_ += 1;
+                        dir_ = Btn::Left;
+                    } else if (btnPressed(Btn::Right) && canMoveRight()) {
+                        holeX_ -= 1;
+                        dir_ = Btn::Right;
+                    } else if (btnPressed(Btn::Up) && canMoveUp()) {
+                        holeY_ += 1;
+                        dir_ = Btn::Up;
+                    } else if (btnPressed(Btn::Down) && canMoveDown()) {
+                        holeY_ -= 1;
+                        dir_ = Btn::Down;
+                    } else {
+                        return;
+                    }
+                    tmp_->blit(Point::origin(), g_, tileRect(holeX_, holeY_));
+                    a_.start();
+                    if (dir_ != Btn::Home)
+                        rumbleNudge();
+                }
             }
         }
 
         void draw() override {
-            a_.update();
-            if (shuffle_ > 0) {
-                shuffleMove();
-                shuffleMove();
-                shuffleMove();
-                --shuffle_;
-            } 
-            switch (dir_) {
-                case Btn::Left:
-                    g_.fill(tileRect(holeX_, holeY_));
-                    g_.blit(tilePoint(holeX_, holeY_) - Point{interpolation::easingCos(a_, 0, TILE_WIDTH), 0}, tmp_);
-                    break;
-                case Btn::Right:
-                    g_.fill(tileRect(holeX_, holeY_));
-                    g_.blit(tilePoint(holeX_, holeY_) + Point{interpolation::easingCos(a_, 0, TILE_WIDTH), 0}, tmp_);
-                    break;
-                case Btn::Up:
-                    g_.fill(tileRect(holeX_, holeY_));
-                    g_.blit(tilePoint(holeX_, holeY_) - Point{0, interpolation::easingCos(a_, 0, TILE_HEIGHT)}, tmp_);
-                    break;
-                case Btn::Down: 
-                    g_.fill(tileRect(holeX_, holeY_));
-                    g_.blit(tilePoint(holeX_, holeY_) + Point{0, interpolation::easingCos(a_, 0, TILE_HEIGHT)}, tmp_);
-                    break;
-                default:
-                    break; // nothing to do for other controls
-            }
-            if (dir_ != Btn::Home && !a_.running() && shuffle_ == 0) {
-                dir_ = Btn::Home;
-                if (swapTileMap(oldX_, oldY_, holeX_, holeY_)) {
-                    // tada, game is finished
-                    g_.blit(tilePoint(holeX_, holeY_), hole_);
-                    holeX_ = -1;
-                    holeY_ = -1;
+            if (imageSelectMode_) {
+                g_.setBg(Color{0, 0, 0});
+                g_.fill();
+                carousel_.drawOn(g_, Rect::XYWH(0, 160, 320, 80));
+            } else {
+                a_.update();
+                if (shuffle_ > 0) {
+                    shuffleMove();
+                    shuffleMove();
+                    shuffleMove();
+                    --shuffle_;
+                } 
+                switch (dir_) {
+                    case Btn::Left:
+                        g_.fill(tileRect(holeX_, holeY_));
+                        g_.blit(tilePoint(holeX_, holeY_) - Point{interpolation::easingCos(a_, 0, TILE_WIDTH), 0}, *tmp_);
+                        break;
+                    case Btn::Right:
+                        g_.fill(tileRect(holeX_, holeY_));
+                        g_.blit(tilePoint(holeX_, holeY_) + Point{interpolation::easingCos(a_, 0, TILE_WIDTH), 0}, *tmp_);
+                        break;
+                    case Btn::Up:
+                        g_.fill(tileRect(holeX_, holeY_));
+                        g_.blit(tilePoint(holeX_, holeY_) - Point{0, interpolation::easingCos(a_, 0, TILE_HEIGHT)}, *tmp_);
+                        break;
+                    case Btn::Down: 
+                        g_.fill(tileRect(holeX_, holeY_));
+                        g_.blit(tilePoint(holeX_, holeY_) + Point{0, interpolation::easingCos(a_, 0, TILE_HEIGHT)}, *tmp_);
+                        break;
+                    default:
+                        break; // nothing to do for other controls
+                }
+                if (dir_ != Btn::Home && !a_.running() && shuffle_ == 0) {
+                    dir_ = Btn::Home;
+                    if (swapTileMap(oldX_, oldY_, holeX_, holeY_)) {
+                        // tada, game is finished
+                        g_.blit(tilePoint(holeX_, holeY_), *hole_);
+                        holeX_ = -1;
+                        holeY_ = -1;
+                    }
                 }
             }
         }
 
-        void resetGame(unsigned moves) {
-            g_.loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
+        void resetGame() {
+            if (files_.size() > 0) {
+                filesystem::mount();
+                std::string filename{STR("apps/SlidingPuzzle/" << currentItem()->filename())};
+                filesystem::FileRead f = filesystem::fileRead(filename);
+                g_.loadImage(PNG::fromStream(f));
+                filesystem::unmount();
+            } else {
+                g_.loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
+            }
+            imageSelectMode_ = false;
+            // reset any direction move & stop any outstanding animations
+            dir_ = Btn::Home;
+            a_.stop();
+        }
+
+        void shuffle(unsigned moves) {
+            hole_ = new Bitmap<ColorRGB>{TILE_WIDTH, TILE_HEIGHT};
+            tmp_ = new Bitmap<ColorRGB>{TILE_WIDTH, TILE_HEIGHT};
             // set the hole and fill in the hole canvas
             holeX_ = MAX_X;
             holeY_ = MAX_Y;
-            hole_.blit(Point::origin(), g_, tileRect(holeX_, holeY_));
+            hole_->blit(Point::origin(), g_, tileRect(holeX_, holeY_));
             g_.setBg(Color{128, 128, 128});
             g_.fill(tileRect(holeX_, holeY_));
             // reset the tilemap
@@ -162,9 +270,9 @@ namespace rckid {
             // swap the tiles
             Rect t1 = tileRect(x, y);
             Rect t2 = tileRect(holeX_, holeY_);
-            tmp_.blit( Point::origin(), g_, t1);
+            tmp_->blit( Point::origin(), g_, t1);
             g_.blit(tilePoint(x, y), g_, t2);
-            g_.blit(tilePoint(holeX_, holeY_), tmp_);
+            g_.blit(tilePoint(holeX_, holeY_), *tmp_);
             // update th7e tilemap
             swapTileMap(x, y, holeX_, holeY_);
         }
@@ -181,6 +289,24 @@ namespace rckid {
         bool canMoveRight() { return holeX_ > 0; }
         bool canMoveUp() { return holeY_ < MAX_Y && holeY_ >= 0; }
         bool canMoveDown() { return holeY_ > 0; }
+
+        bool loadFolder() {
+            filesystem::Folder f = filesystem::folderRead("apps/SlidingPuzzle");
+            if (!f.good())
+                return false;
+            files_.clear();
+            for (auto const & i : f) {
+                LOG("Loadded item " << i.name());
+                files_.add(new Item{i});
+            }
+            i_ = 0;
+            carousel_.moveDown(files_[i_]);
+            return true;
+        }
+
+        Item * currentItem() { return (Item*) & files_[i_]; }
+
+
 
     private:
 
@@ -200,8 +326,8 @@ namespace rckid {
             return Point{ x * TILE_WIDTH, y * TILE_HEIGHT};
         }
 
-        RenderableBitmap<Color> hole_{TILE_WIDTH,TILE_HEIGHT};
-        RenderableBitmap<Color> tmp_{TILE_WIDTH,TILE_HEIGHT};
+        Bitmap<Color> * hole_ = nullptr;
+        Bitmap<Color> * tmp_ = nullptr;
 
         uint8_t tileMap_[NUM_TILES];
 
@@ -209,12 +335,19 @@ namespace rckid {
         int holeY_ = -1;
         int oldX_ = -1;
         int oldY_ = -1;
-
+        
         size_t shuffle_ = 0;
 
         Btn dir_ = Btn::Home;
 
         Timer a_{500};
+
+
+        Menu files_;
+        uint32_t i_ = 0;
+        bool imageSelectMode_ = false;
+
+        Carousel carousel_{assets::font::OpenDyslexic48::font};
 
         /** PNG image for the game. 
          
