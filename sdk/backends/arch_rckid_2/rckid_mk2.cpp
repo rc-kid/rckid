@@ -271,9 +271,10 @@ namespace rckid {
         ); */
         // TODO in mkII we can't enable the USB in general as it leaks voltage into the USB pwr, which in turn leaks voltage to the battery switch mosfet
         // initialize the USB
-        tud_init(BOARD_TUD_RHPORT);
+        //tud_init(BOARD_TUD_RHPORT);
+        
         // disable USB -- reset so that we can again detect DC charge
-        //memset(reinterpret_cast<uint8_t *>(usb_hw), 0, sizeof(*usb_hw));
+        memset(reinterpret_cast<uint8_t *>(usb_hw), 0, sizeof(*usb_hw));
 
         // initialize the I2C bus
         i2c_init(i2c0, RP_I2C_BAUDRATE); 
