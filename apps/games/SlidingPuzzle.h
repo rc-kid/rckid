@@ -10,6 +10,7 @@
 #include <rckid/assets/fonts/OpenDyslexic48.h>
 #include <rckid/assets/icons64.h>
 #include <rckid/filesystem.h>
+#include <rckid/assets/images.h>
 
 
 namespace rckid {
@@ -220,7 +221,7 @@ namespace rckid {
                 g_.loadImage(PNG::fromStream(f));
                 filesystem::unmount();
             } else {
-                g_.loadImage(PNG::fromBuffer(defaultImage_, sizeof(defaultImage_)));
+                g_.loadImage(PNG::fromBuffer(assets::images::logo16));
             }
             imageSelectMode_ = false;
             // reset any direction move & stop any outstanding animations
@@ -348,15 +349,6 @@ namespace rckid {
         bool imageSelectMode_ = false;
 
         Carousel carousel_{assets::font::OpenDyslexic48::font};
-
-        /** PNG image for the game. 
-         
-           from https://images6.fanpop.com/image/photos/43100000/Disney-Princesses-disney-princess-43157173-1500-1080.jpg 
-         */
-        static constexpr uint8_t defaultImage_[] = {
-#include "SlidingPuzzle16.png.inc"
-        }; 
-
     }; 
 
 } // namespace rckid

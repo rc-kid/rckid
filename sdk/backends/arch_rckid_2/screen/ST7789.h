@@ -278,6 +278,11 @@ namespace rckid {
             gpio_put(RP_PIN_DISP_WRX, false);
         }
 
+        static void sendWord(uint32_t w) {
+            sendByte((w >> 8) & 0xff);
+            sendByte(w & 0xff);
+        }
+
         // PIO settings including the DMA used for the display and the addresses for the pio drivers for normal and double modes.
         static inline PIO pio_;
         static inline uint sm_;

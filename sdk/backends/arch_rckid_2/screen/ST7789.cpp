@@ -2,6 +2,9 @@
 #include "ST7789_rgb.pio.h"
 #include "ST7789_rgb_double.pio.h"
 
+#include <rckid/graphics/png.h>
+#include <rckid/assets/images.h>
+
 namespace rckid {
 
     void ST7789::initialize() {
@@ -60,6 +63,32 @@ namespace rckid {
         //setDisplayMode(ST7789::DisplayMode::Native);
         sendCommand(INVON);
         updateRegion_ = Rect::WH(320, 240);
+        // and now do the png file
+        // now clear the entire display black
+#if (RCKID_SPLASHSCREEN_OFF)
+        beginCommand(RAMWR);
+        gpio_put(RP_PIN_DISP_DCX, true);
+        for (size_t i = 0, e =320 * 240; i < e; ++i) {
+            sendByte(0);
+            sendByte(0);
+        }
+        gpio_put(RP_PIN_DISP_DCX, false);
+        end();
+#else
+        setDisplayMode(DisplayMode::Natural);
+        setUpdateRegion(updateRegion_);
+        beginCommand(RAMWR);
+        gpio_put(RP_PIN_DISP_DCX, true);
+        PNG png = PNG::fromBuffer(assets::images::logo16);
+        png.decode([&](ColorRGB * line, [[maybe_unused]] int lineNum, int lineWidth){
+            for (int i = 0; i < lineWidth; ++i)
+                sendWord(line[i].toRaw());
+        });
+        gpio_put(RP_PIN_DISP_DCX, false);
+        end();
+        setDisplayMode(DisplayMode::Native);
+        setUpdateRegion(updateRegion_);
+#endif
     }
 
     void ST7789::setDisplayMode(DisplayMode mode) {

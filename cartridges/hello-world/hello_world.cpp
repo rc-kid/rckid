@@ -98,6 +98,7 @@ int main() {
     rckid::initialize();
     LOG("Initialized, running the app!");
     rckid::displaySetBrightness(128);
+
     //rckid::rumbleOk();
     while (true)
         MenuApp::run(mainMenu);

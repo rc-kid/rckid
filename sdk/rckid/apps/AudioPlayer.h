@@ -79,15 +79,19 @@ namespace rckid {
 
         void update() override {
             // stop playing if we are finished
-            if (mp3_ != nullptr && mp3_->eof()) {
-                if (repeat_) {
-                    stop();
-                } else {
-                    do {
-                        moveRight();
-                    } while (! currentItem()->isFile());
+            if (mp3_ != nullptr) {
+                // make sure we won't die when playing
+                keepAlive();
+                if (mp3_->eof()) {
+                    if (repeat_) {
+                        stop();
+                    } else {
+                        do {
+                            moveRight();
+                        } while (! currentItem()->isFile());
+                    }
+                    playAfterAnimation_ = true;
                 }
-                playAfterAnimation_ = true;
             }
 
             if (btnPressed(Btn::Home)) {

@@ -280,6 +280,10 @@ namespace rckid {
         // TODO
     }
 
+    void keepAlive() {
+        // do nothing, auto power off is not supported for fantasy backend
+    }
+
     void fatalError(uint32_t error, uint32_t line, char const * file) {
         // clear all memory arenas to clean up space, this is guarenteed to succeed as the SDK creates memory arena when it finishes initialization    
         memoryReset();

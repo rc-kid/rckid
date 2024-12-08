@@ -1,9 +1,13 @@
 # TODO
 
-> Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
+> Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. The following TODO items are for xmas:
 
 - maybe add difficulty in terms of how much we shuffle? 
-- make sliding puzzle use default image, and add the default image to load screen
+
+> After XMAS, but can be done with RP2040:
+
+- generate assets does not generate ui tiles yet - and the ones we have are a bit off
+- make text input better looking and the whole idea of modal apps nicer to work with
 
 - the SD card initialization routine does not work for SDHC cards, only for SDXC (not a blocker for xmas)
 
@@ -15,30 +19,22 @@
 
 - add file browser as own widget
 
-- should SD card be always mounted when present? - no it consumes memory
-
 - on fantasy malloc & free replacement is not complete - causes trouble especially with strings
 - STR does not work with MemoryArena, only on heap (see Data Sync)
 
 - trace arena is broken as it creates new arena for the tracking, which traces itself:)
 - memory leaks in fantasy where we have pointers that are in fantasy heap, but not on arena or heap (see raylib.cpp feee() method)
 
-- tud_deinit (already disconnect does) freezes the device, not sure why? - but interestingly if DC is disconnected first, then it all works, even repeatedly
+- tud_deinit (already disconnect does) freezes the device, not sure why? - but interestingly if DC is disconnected first, then it all works, even repeatedly - this no longer seems to be the case
 - maybe move platform to sdk?
 
-- text input should distinguish between returning and cancel, currently no provision for that in code
-
 - hall of fame and others can be apps of their own that just reuse the canvas from previous run, but delegate the controls? How though
-
-- load filesystems from SD and from cartridge during initialization - then we can unload them during the file transfer
 
 - add blit that ignores particular color
 
 - maybe not use joystick, but keep it as an extra file so that each app can configure it properly, including things like position. But how to integrate with settings? 
 
 - clean music & tone generators, ensure other frequencies work as well, document, benchmark
-
-- add logo when clearing the screen
 
 - move games & apps to SDK, unless they belong in cartridges 
 
@@ -62,8 +58,6 @@
 - make timer run a ... b ... a as well (then I can replace the blinking code in clock)
 
 - can have audio player run in the background on second core for most other games, that way people can play & listen to music
-
-
 
 ## UI
 

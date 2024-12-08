@@ -28,7 +28,7 @@ namespace rckid {
         static std::optional<std::string> run() {
             TextInput input;
             input.loop();
-            return input.text_;
+            return input.valid_ ? std::optional{input.text_} : std::nullopt;
         }
 
     protected:
@@ -68,6 +68,9 @@ namespace rckid {
     protected:
 
         void update() override {
+            // if back button is selected, do return nullopt
+            if (btnPressed(Btn::B))
+                valid_ = false;
             App::update();
             if (! a_.running()) {
                 if (btnDown(Btn::Right)) {
@@ -121,15 +124,15 @@ namespace rckid {
 
         void keyPress() {
             if (select_ == KEY_UNKNOWN) {
-
+                insertChar(' ');
             } else if (select_ == KEY_BACKSPACE) {
                 cursorLeft();
                 text_.erase(cursor_, 1);
             } else if (select_ == KEY_ENTER) {
                 // return the text
                 exit();
-            } else if (select_ == KEY_SPACE) {
-                insertChar(' ');
+            //} else if (select_ == KEY_SPACE) {
+            //    insertChar(' ');
             } else if (select_ == KEY_SHIFT) {
                 switch (keyboardType_) {
                     case KeyboardType::UpperCase:
@@ -212,18 +215,18 @@ namespace rckid {
             switch (type) {
                 case KeyboardType::UpperCase:
                 case KeyboardType::FirstUpper:
-                    g_.text(0, 1) << "  @ Q W E R T Y U I O P * ";
-                    g_.text(0, 2) << " @ ^ A S D F G H J K L <  ";
+                    g_.text(0, 1) << "  \x1d Q W E R T Y U I O P * ";
+                    g_.text(0, 2) << " \x1c \x1b A S D F G H J K L \x1a  ";
                     g_.text(0, 3) << "  < > Z X C V B N M _ . , ";
                     break;
                 case KeyboardType::LowerCase:
-                    g_.text(0, 1) << "  @ q w e r t y u i o p * ";
-                    g_.text(0, 2) << " @ ^ a s d f g h j k l <  ";
+                    g_.text(0, 1) << "  \x1d q w e r t y u i o p * ";
+                    g_.text(0, 2) << " \x1c \x1b a s d f g h j k l \x1a  ";
                     g_.text(0, 3) << "  < > z x c v b n m _ . , ";
                     break;
                 case KeyboardType::NumbersAndSymbols:
-                    g_.text(0, 1) << "  @ 1 2 3 4 5 6 7 8 9 @ * ";
-                    g_.text(0, 2) << " @ ^ ( ) [ ] ! ? @ # $ <  ";
+                    g_.text(0, 1) << "  \x1d 1 2 3 4 5 6 7 8 9 @ * ";
+                    g_.text(0, 2) << " \x1c \x1b ( ) [ ] ! ? @ # $ \x1a  ";
                     g_.text(0, 3) << "  < > % ^ & * ' \" ~ _ . , ";
                     break;
             }
@@ -250,6 +253,7 @@ namespace rckid {
 
         std::string text_;
         std::string placeholder_;
+        bool valid_ = true;
 
         Timer a_{250};
         // Center of the tile in the selection frame
@@ -259,7 +263,6 @@ namespace rckid {
         // cursor and the left offset of the displayed text
         int cursor_ = 0;
         int left_ = 0;
-
 
     }; // TextInput
 
