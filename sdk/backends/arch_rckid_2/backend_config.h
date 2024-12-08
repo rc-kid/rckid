@@ -19,6 +19,10 @@
 
 
 
+
+#define RCKID_SPLASHSCREEN_OFF false
+
+
 /** Select this for PCB version 2.2 where charging was not connected directly to an AVR pin, but went to ground with a swicth (i.e. to enable charging the pin was to be set to float and not disturb the mosfet and to disable, the pin was drivern ) 
 */
 
@@ -34,8 +38,8 @@
 
 /** Idle timer in seconds, after which the device powers off. 
  */
-//#define IDLE_TIMEOUT 300
-#define IDLE_TIMEOUT 3000000
+#define IDLE_TIMEOUT 300
+//#define IDLE_TIMEOUT 3000000
 
 /** Determines home button's long press duration in system ticks (1ms)
  */
