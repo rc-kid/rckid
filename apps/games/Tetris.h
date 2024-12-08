@@ -15,10 +15,6 @@ namespace rckid {
 
     /** A simple tetris game. 
 
-        TODO
-
-        - add effects? 
-        
      */
     class Tetris : public GraphicsApp<Canvas<ColorRGB>> {
     public:
@@ -117,7 +113,8 @@ namespace rckid {
                     }
                     if (btnPressed(Btn::B)) {
                         btnPressedClear(Btn::B);
-                        // TODO save high score if was good? 
+                        // check if we should save the high score
+                        shouldSaveHighScore();
                         mode_ = Mode::Intro;
                         modeTimeout_ = INTRO_FRAMES_LENGTH;
                     }
@@ -273,13 +270,7 @@ namespace rckid {
             return true;
         }
 
-        /** Game over.
-
-            Display game over dialg and then reset the game. 
-
-            TODO store high score, etc.          
-         */
-        void gameOver() {
+        bool shouldSaveHighScore() {
             using namespace filesystem;
             if (hof_.isHighEnough(score_)) {
                 auto name = runModal<TextInput>();
@@ -289,9 +280,21 @@ namespace rckid {
                     FileWrite f = fileWrite("tetris.hof", Drive::Cartridge);
                     hof_.serializeTo(f);
                 }
+                return true;
             } else {
-                runModal<Alert>("GAME OVER", "Press A to continue...", ColorRGB{32, 0, 0});
+                return false;
             }
+        }
+
+        /** Game over.
+
+            Display game over dialg and then reset the game. 
+
+            TODO store high score, etc.          
+         */
+        void gameOver() {
+            runModal<Alert>("GAME OVER", "Press A to continue...", ColorRGB{32, 0, 0});
+            shouldSaveHighScore();
             resetGame();
         }
 

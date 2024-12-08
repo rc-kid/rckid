@@ -2,6 +2,7 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. 
 
+- maybe add difficulty in terms of how much we shuffle? 
 - make sliding puzzle use default image, and add the default image to load screen
 
 - the SD card initialization routine does not work for SDHC cards, only for SDXC (not a blocker for xmas)
@@ -9,7 +10,7 @@
 - add fantasy mode where cartridge and SD card are folders on local drive for simplicity
 
 - document stack protection check
-
+ 
 - add the screen off mode as part of the API 
 
 - add file browser as own widget
@@ -17,6 +18,7 @@
 - should SD card be always mounted when present? - no it consumes memory
 
 - on fantasy malloc & free replacement is not complete - causes trouble especially with strings
+- STR does not work with MemoryArena, only on heap (see Data Sync)
 
 - trace arena is broken as it creates new arena for the tracking, which traces itself:)
 - memory leaks in fantasy where we have pointers that are in fantasy heap, but not on arena or heap (see raylib.cpp feee() method)
@@ -59,7 +61,9 @@
 
 - make timer run a ... b ... a as well (then I can replace the blinking code in clock)
 
-- STR does not work with MemoryArena, only on heap (see Data Sync)
+- can have audio player run in the background on second core for most other games, that way people can play & listen to music
+
+
 
 ## UI
 
