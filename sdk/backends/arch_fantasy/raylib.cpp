@@ -337,6 +337,9 @@ namespace rckid {
         });
     }
 
+    // fantasy console is always in debug mode
+    bool debugMode() { return true; }
+
     // io
 
     bool btnDown(Btn b) {

@@ -53,6 +53,7 @@ namespace rckid {
                 "\nLight:   " << lightAmbient() << 
                 "\nUV:      " << lightUV(); 
             g_.text(120, 40) <<
+                "\nDebug mode   " << (debugMode() ? "yes" : "no") << 
                 "\nCart FS size " << cartridgeCapacity() <<
                 "\nSD  size     " << sdCapacity();
 

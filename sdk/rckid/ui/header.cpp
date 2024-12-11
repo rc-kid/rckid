@@ -23,8 +23,9 @@ namespace rckid {
             x += fSym.glyphInfoFor(assets::glyph::Alarm).advanceX + 4;
         }
 
-        // TODO FPS and draw time, which might not always be needed
-        surface.text(x, y + 1, f, color::White) << App::fps() << " " << App::drawUs();
+        // show FPS and draw time if we are in debug mode
+        if (debugMode())
+            surface.text(x, y + 1, f, color::White) << App::fps() << " " << App::drawUs();
 
         x = surface.width();
         // AC if plugged in
