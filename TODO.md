@@ -2,7 +2,6 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. The following TODO items are for xmas:
 
-- add animal picture to main menu
 - maybe add difficulty in terms of how much we shuffle? 
 
 > After XMAS, but can be done with RP2040:

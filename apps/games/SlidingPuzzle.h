@@ -140,7 +140,7 @@ namespace rckid {
                     if (tmp_ == nullptr)
                         shuffle(20);
                     else
-                        resetGame();
+                        return resetGame();
                 }
                 if ((tmp_ != nullptr) && (shuffle_ == 0) && (dir_ == Btn::Home)) {
                     oldX_ = holeX_;
@@ -214,6 +214,12 @@ namespace rckid {
         }
 
         void resetGame() {
+            if (tmp_ != nullptr) {
+                delete tmp_;
+                delete hole_;
+                tmp_ = nullptr;
+                hole_ = nullptr;
+            }
             if (files_.size() > 0) {
                 filesystem::mount();
                 std::string filename{STR("apps/SlidingPuzzle/" << currentItem()->filename())};
