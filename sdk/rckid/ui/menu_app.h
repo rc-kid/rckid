@@ -4,6 +4,8 @@
 #include "../graphics/canvas.h"
 
 #include "../assets/fonts/OpenDyslexic48.h"
+#include "../assets/icons64.h"
+
 
 #include "header.h"
 #include "menu.h"
@@ -45,6 +47,9 @@ namespace rckid {
         MenuApp(): 
             GraphicsApp{Canvas<ColorRGB>{320, 240}} {
             carousel_ = new Carousel{Font::fromROM<assets::font::OpenDyslexic48>()}; 
+            icon_ = new Bitmap<ColorRGB>{64, 64};
+            //icon_->loadImage(HEAP(PNG::fromBuffer(assets::icons64::lynx)));
+            icon_->loadImage(HEAP(PNG::fromBuffer(assets::icons64::owl_1)));
             rckid::ledSetEffects(
                 RGBEffect::Rainbow(0, 1, 1, 32), 
                 RGBEffect::Rainbow(51, 1, 1, 32), 
@@ -155,11 +160,13 @@ namespace rckid {
         void draw() {
             NewArenaScope _{};
             g_.fill();
+            g_.blit(Point{128,80}, *icon_);
             carousel_->drawOn(g_, Rect::XYWH(0, 160, 320, 80));
             Header::drawOn(g_);
         }
 
     private:
+
 
         // an app to be executed (with trasition effects)
         static constexpr uint32_t ITEM_KIND_ACTION = 0;
@@ -180,6 +187,7 @@ namespace rckid {
             rumbleNudge();
         }
 
+        static inline Bitmap<ColorRGB> * icon_ = nullptr;
         static inline MenuApp * singleton_ = nullptr;
         static inline Carousel * carousel_;
         static inline Menu * menu_;
