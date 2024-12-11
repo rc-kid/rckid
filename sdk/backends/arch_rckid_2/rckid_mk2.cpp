@@ -438,6 +438,8 @@ namespace rckid {
         }};
     }    
 
+    bool debugMode() { return state_.extras.debugMode(); }
+
     // io
 
     bool buttonState(Btn b, Status & status) {

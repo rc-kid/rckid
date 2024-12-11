@@ -96,6 +96,10 @@ namespace rckid {
      */
     Writer debugWrite();
 
+    /** Returns true if the device is in debug mode. 
+     */
+    bool debugMode();
+
     /** \name Controls & Sensors
         
         RCKid controls comprise of a dpad, buttons A and B, buttons Select and Start, side home button and volume up & down keys. Furthermore, RCKid is equipped with a 3axis accelerometer and gyroscope as well as an ambient and UV light sensor. 

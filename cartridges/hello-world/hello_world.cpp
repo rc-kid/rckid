@@ -55,14 +55,18 @@ Menu * menuGames() {
 }
 
 Menu * menuUtils() {
-    return new Menu{
-        MenuApp::Item("Status", assets::icons64::info, StatusDisplay::run),
+    Menu * m = new Menu{
         MenuApp::Item("Stopwatch", assets::icons64::clock, Stopwatch::run),
         MenuApp::Item("Clock", assets::icons64::alarm_clock, Clock::run),
-        MenuApp::Item("Data Sync", assets::icons64::pen_drive, DataSync::run),
-        //MenuApp::Item("Raw Audio", assets::icons64::music, RawAudioTest::run),
-        MenuApp::Item("Tone Audio", assets::icons64::music, ToneAudioTest::run),
     };
+    m->add(MenuApp::Item("Status", assets::icons64::info, StatusDisplay::run));
+    if (debugMode()) {
+        m->add(MenuApp::Item("Data Sync", assets::icons64::pen_drive, DataSync::run));
+        m->add(MenuApp::Item("Status", assets::icons64::info, StatusDisplay::run));
+        //MenuApp::Item("Raw Audio", assets::icons64::music, RawAudioTest::run),
+        //MenuApp::Item("Tone Audio", assets::icons64::music, ToneAudioTest::run),
+    }
+    return m;
 }
 
 Menu * menuSettings() {
@@ -70,7 +74,6 @@ Menu * menuSettings() {
         MenuApp::Item("Date & Time", assets::icons64::clock, SetTime::run),
         MenuApp::Item("Brightness", assets::icons64::brightness, setBrightness),
         MenuApp::Item("Volume", assets::icons64::high_volume, setVolume),
-     
     };
 }
 
@@ -83,13 +86,16 @@ Menu * menuBenchmarks() {
 
 
 Menu * mainMenu() {
-    return new Menu{
+    Menu * m = new Menu{
         MenuApp::Submenu("Games", assets::icons64::game_controller, menuGames),
         MenuApp::Item("Audio Player", assets::icons64::music, AudioPlayer::run),
         MenuApp::Submenu("Utils", assets::icons64::applications, menuUtils),
         MenuApp::Submenu("Settings", assets::icons64::settings, menuSettings),
-        MenuApp::Submenu("Benchmarks", assets::icons64::spider, menuBenchmarks),
     };
+    if (debugMode()) {
+        m->add(MenuApp::Submenu("Benchmarks", assets::icons64::spider, menuBenchmarks));
+    }
+    return m;
 }
 
 int main() {
