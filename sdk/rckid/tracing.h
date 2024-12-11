@@ -21,6 +21,7 @@
 //#define TRACE_ARENA
 //#define TRACE_LITTLEFS
 //#define TRACE_MP3
+#define TRACE_SD
 
 /** Traces the events in the menu app. 
  */
@@ -78,6 +79,13 @@
 #else
     #undef TRACE_MP3
     #define TRACE_MP3(...) TRACE("mp3:" << __VA_ARGS__)
+#endif
+
+#if !defined TRACE_SD
+    #define TRACE_SD(...)
+#else
+    #undef TRACE_SD
+    #define TRACE_SD(...) TRACE("sd:" << __VA_ARGS__)
 #endif
 
 

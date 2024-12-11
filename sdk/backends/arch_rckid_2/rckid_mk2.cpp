@@ -316,12 +316,6 @@ namespace rckid {
         audio::dma0_ = dma_claim_unused_channel(true);
         audio::dma1_ = dma_claim_unused_channel(true);
 
-        // initialize the SD card
-        sdInitialize();
-
-        // initialize the filesystem
-        filesystem::initialize();
-
         // enter base arena for the application
         //Arena::enter();
 
@@ -332,11 +326,20 @@ namespace rckid {
         // set brightness to 50% by default after startup
         displaySetBrightness(128);
 
-    #if (defined RCKID_WAIT_FOR_SERIAL)
+    #if (RCKID_WAIT_FOR_SERIAL)
+        // initialize the USB
+        tud_init(BOARD_TUD_RHPORT);
         char cmd_ = ' ';
         while (tud_cdc_read(& cmd_, 1) != 1) { yield(); };
         LOG("Received command " << cmd_);
     #endif
+
+        // initialize the SD card
+        sdInitialize();
+
+        // initialize the filesystem
+        filesystem::initialize();
+
     }
 
     void fatalError(uint32_t error, uint32_t line, char const * file) {

@@ -18,7 +18,7 @@
 #define RCKID_HAS_LIPO_CHARGER
 
 
-
+#define RCKID_WAIT_FOR_SERIAL true
 
 #define RCKID_SPLASHSCREEN_OFF false
 
