@@ -89,8 +89,14 @@ namespace rckid {
         }
         // increase speed to 20MHz
         spi_init(RP_SD_SPI, 20000000);
+        TRACE_SD("CMD58:" << buffer[0]); // 192
+        TRACE_SD("CMD58:" << buffer[1]); // 255
+        TRACE_SD("CMD58:" << buffer[2]); // 128
+        TRACE_SD("CMD58:" << buffer[3]); // 0
+        cpu::delayMs(10);
         // if the card is not SDHC, set block length to 512 bytes
         if (((buffer[0] & 64) == 0) && sdSendCommand(CMD16) != SD_NO_ERROR) {
+            TRACE_SD("Setting card to 512bytes block (CMD16)");
             // TODO raise error
             return false;
         }
@@ -99,6 +105,22 @@ namespace rckid {
             // TODO raise error
             return false;
         }
+        TRACE_SD("CMD9:" << buffer[0]); // 192
+        TRACE_SD("CMD9:" << buffer[1]);  // 255
+        TRACE_SD("CMD9:" << buffer[2]); // 128
+        TRACE_SD("CMD9:" << buffer[3]);  // 0
+        TRACE_SD("CMD9:" << buffer[4]); // 255
+        TRACE_SD("CMD9:" << buffer[5]);  // 254
+        TRACE_SD("CMD9:" << buffer[6]);  // 
+        TRACE_SD("CMD9:" << buffer[7]);  // 89
+        TRACE_SD("CMD9:" << buffer[8]);  // 0
+        TRACE_SD("CMD9:" << buffer[9]);  // 0
+        TRACE_SD("CMD9:" << buffer[10]);  // 239   - 
+        TRACE_SD("CMD9:" << buffer[11]);  // 23    - 48 0001 0111  
+        TRACE_SD("CMD9:" << buffer[12]);  // 127   - 40 0111 1111
+        TRACE_SD("CMD9:" << buffer[13]);  // 128   - 32 1000 0000
+        TRACE_SD("CMD9:" << buffer[14]);  // 10    - 16 0000 1010
+        TRACE_SD("CMD9:" << buffer[15]);  // 64    - 8  0100 0000
         // get number of blocks from the CS card's capacity. For SDXC and SDHC cards, this is (CSIZE + 1) * 512KB, so we divide the CSIZE + 1 by 1024 to get size in 512 byte blocks
         sdNumBlocks_ = ((buffer[8] << 16) + (buffer[9] << 8) + buffer[10] + 1) * 1024;
         return true;
@@ -109,17 +131,22 @@ namespace rckid {
     }
 
     uint8_t sdSendCommand(uint8_t const (&cmd)[6], uint8_t * response, size_t responseSize, unsigned maxDelay) {
-        //gpio::low(RP_PIN_SD_CSN);
+        gpio::low(RP_PIN_SD_CSN);
+        // wait for the SD card to be ready
+        uint8_t result = 0;
+        do {
+            spi_read_blocking(RP_SD_SPI, 0xff, & result, 1);
+        } while ((result != SD_BUSY) && (maxDelay-- != 0));
         spi_write_blocking(RP_SD_SPI, cmd,  6);
-        uint8_t result = SD_BUSY;
-        while (result == SD_BUSY && maxDelay-- != 0)
-            spi_read_blocking(RP_SD_SPI, 0xff, reinterpret_cast<uint8_t*>(& result), 1);
+        result = SD_BUSY;
+        while ((result == SD_BUSY) && (maxDelay-- != 0))
+            spi_read_blocking(RP_SD_SPI, 0xff, & result, 1);
         if (responseSize != 0 && response != nullptr)
             spi_read_blocking(RP_SD_SPI, 0xff, response, responseSize);
         // after reading each response, it is important to send extra one byte to allow the SD crd to "recover"
-        uint8_t tmp = 0xff;
-        spi_write_blocking(RP_SD_SPI, & tmp, 1);
-        //gpio::high(RP_PIN_SD_CSN);
+        uint16_t tmp = 0xffFF;
+        gpio::high(RP_PIN_SD_CSN);
+        spi_write_blocking(RP_SD_SPI, (uint8_t*)& tmp, 2);
         return result;
     }
 
