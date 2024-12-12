@@ -8,6 +8,7 @@
 #include <rckid/utils/interpolation.h>
 #include <rckid/ui/carousel.h>
 #include <rckid/assets/fonts/OpenDyslexic48.h>
+#include <rckid/assets/fonts/OpenDyslexic32.h>
 #include <rckid/assets/icons64.h>
 #include <rckid/filesystem.h>
 #include <rckid/assets/images.h>
@@ -67,6 +68,7 @@ namespace rckid {
             if (! imageSelectMode_) {
                 resetGame();
             }
+            g_.setFont(assets::font::OpenDyslexic32::font);
         }
 
         ~SlidingPuzzle() {
@@ -119,7 +121,12 @@ namespace rckid {
                     exit();
                     btnPressedClear(Btn::B);
                 }
-
+                if (btnPressed(Btn::Select)) {
+                    if (difficulty_ < 64)
+                        difficulty_ *= 2;
+                    else 
+                        difficulty_ = 4;
+                }
             } else {
                 if (btnPressed(Btn::B)) {
                     if (tmp_ != nullptr) {
@@ -138,7 +145,7 @@ namespace rckid {
                 }                    
                 if (btnPressed(Btn::A)) {
                     if (tmp_ == nullptr)
-                        shuffle(20);
+                        shuffle(difficulty_);
                     else
                         return resetGame();
                 }
@@ -173,6 +180,26 @@ namespace rckid {
                 g_.setBg(Color{0, 0, 0});
                 g_.fill();
                 carousel_.drawOn(g_, Rect::XYWH(0, 160, 320, 80));
+                char const * d = "???"; 
+                switch (difficulty_) {
+                    case 4:
+                        d = "toddler";
+                        break;
+                    case 8:
+                        d = "baby";
+                        break;
+                    case 16:
+                        d = "child";
+                        break;
+                    case 32:
+                        d = "grownup";
+                        break;
+                    case 64:
+                        d = "wise old elf";
+                        break;
+                }
+                int w = g_.font().textWidth(d);
+                g_.text(160 - w / 2, 80) << d;
             } else {
                 a_.update();
                 if (shuffle_ > 0) {
@@ -343,7 +370,8 @@ namespace rckid {
         int oldX_ = -1;
         int oldY_ = -1;
         
-        size_t shuffle_ = 0;
+        uint32_t difficulty_ = 16;
+        uint32_t shuffle_ = 0;
 
         Btn dir_ = Btn::Home;
 
