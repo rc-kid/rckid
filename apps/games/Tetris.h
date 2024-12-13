@@ -7,6 +7,7 @@
 #include <rckid/ui/text_input.h>
 #include <rckid/ui/halloffame.h>
 #include <rckid/filesystem.h>
+#include <rckid/audio/tone.h>
 
 #include <rckid/assets/fonts/OpenDyslexic24.h>
 #include <rckid/assets/fonts/MetalLord32.h>
@@ -44,6 +45,19 @@ namespace rckid {
                 fallingX_[i] = random() % 320;
                 fallingY_[i] = - random() % 240;
             }
+            audio_[3].setEnvelope(100, 50, 80, 500);
+        }
+
+        void onFocus() override {
+            GraphicsApp::onFocus();
+            audioOn();
+            audio_.enable();
+        }
+
+        void onBlur() override {
+            GraphicsApp::onBlur();
+            audio_.disable();
+            audioOff();
         }
 
         void update() override {
@@ -103,6 +117,7 @@ namespace rckid {
                     if (goDown) {
                         if (validate(cur_, x_, y_ + 1)) {
                             ++y_;
+                            audio_[0].setFrequency(220, 5);
                         } else {
                             addToGrid(cur_, x_, y_);
                             compactRows(y_);
@@ -321,7 +336,8 @@ namespace rckid {
             // TODO else rumble bad
             //else
             //   rumble()
-            rumbleNudge();
+            audio_[1].setFrequency(440, 30);
+           rumbleNudge();
         }
 
         void addToGrid(Tetromino const & t, int x, int y) {
@@ -358,15 +374,19 @@ namespace rckid {
             switch (compacted) {
                 case 1:
                     score_ += 100 * level_;
+                    audio_[3].setFrequency(220, 250);
                     break;
                 case 2:
                     score_ += 300 * level_;
+                    audio_[3].setFrequency(330, 500);
                     break;
                 case 3:
                     score_ += 500 * level_;
+                    audio_[3].setFrequency(440, 750);
                     break;
                 case 4:
                     score_ += 800 * level_;
+                    audio_[3].setFrequency(660, 1000);
                     break;
                 default:
                     // no points awarded
@@ -453,6 +473,8 @@ namespace rckid {
         Tetromino fallingPieces_[NUM_FALLING_PIECES];
         int fallingX_[NUM_FALLING_PIECES];
         int fallingY_[NUM_FALLING_PIECES];
+
+        ToneGenerator audio_;
 
         /** Default grids of all 7 types. 
          */

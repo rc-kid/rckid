@@ -59,7 +59,6 @@ Menu * menuUtils() {
         MenuApp::Item("Stopwatch", assets::icons64::clock, Stopwatch::run),
         MenuApp::Item("Clock", assets::icons64::alarm_clock, Clock::run),
     };
-    m->add(MenuApp::Item("Status", assets::icons64::info, StatusDisplay::run));
     if (debugMode()) {
         m->add(MenuApp::Item("Data Sync", assets::icons64::pen_drive, DataSync::run));
         m->add(MenuApp::Item("Status", assets::icons64::info, StatusDisplay::run));
@@ -84,11 +83,10 @@ Menu * menuBenchmarks() {
     };
 }
 
-
 Menu * mainMenu() {
     Menu * m = new Menu{
         MenuApp::Submenu("Games", assets::icons64::game_controller, menuGames),
-        MenuApp::Item("Audio Player", assets::icons64::music, AudioPlayer::run),
+        MenuApp::Item("Music", assets::icons64::music, AudioPlayer::run),
         MenuApp::Submenu("Utils", assets::icons64::applications, menuUtils),
         MenuApp::Submenu("Settings", assets::icons64::settings, menuSettings),
     };

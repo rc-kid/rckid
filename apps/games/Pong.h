@@ -84,16 +84,13 @@ namespace rckid {
                 if (ball_.x >= 300) {
                     ball_.x = 600 - ball_.x;
                     deltaBall_.x = deltaBall_.x * -1;
-                    
-                    //setRumbler(RumblerEffect::Nudge());
-                    // TODO pong
+                    rumbleNudge();
                 }
                 if (ball_.x <= 20) {
                     if (ball_.y.inRange(left_ - 20, left_ + 20)) {
                         ball_.x = 40 - ball_.x;
                         deltaBall_.x = deltaBall_.x * -1;
-                        //setRumbler(RumblerEffect::Nudge());
-                        // TODO pong
+                        rumbleNudge();
                     } else {
                         fail_ = true;
                     }
@@ -139,7 +136,7 @@ namespace rckid {
             deltaBall_ = FixedPoint{FixedInt{1, 8},1};
             deltaLeft_ = 0;
             fail_ = false;
-            //setRumbler(RumblerEffect::OK());
+            rumbleOk();
 
         }
 
