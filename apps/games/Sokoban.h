@@ -6,6 +6,8 @@
 #include <rckid/ui/alert.h>
 #include <rckid/ui/carousel.h>
 #include <rckid/filesystem.h>
+#include <rckid/audio/tone.h>
+
 
 #include <rckid/assets/fonts/OpenDyslexic24.h>
 #include <rckid/assets/fonts/OpenDyslexic48.h>
@@ -119,6 +121,19 @@ namespace rckid {
                     break;
             setLevel(level_ + 1);
             levelSelect_.moveUp(SokobanLevel{this});
+            audio_[1].setEnvelope(100, 50, 80, 250);
+        }
+
+        void onFocus() override {
+            GraphicsApp::onFocus();
+            audioOn();
+            audio_.enable();
+        }
+
+        void onBlur() override {
+            GraphicsApp::onBlur();
+            audio_.disable();
+            audioOff();
         }
 
         void update() override {
@@ -128,6 +143,7 @@ namespace rckid {
                         if (levelUnlocked(level_)) {
                             mode_ = Mode::Game;
                             setLevel(level_);
+                            rumbleNudge();
                         } else {
                             rumbleFail();
                         }
@@ -135,10 +151,12 @@ namespace rckid {
                     if (btnPressed(Btn::Left)) {
                         setLevel(level_ - 1);
                         levelSelect_.moveLeft(SokobanLevel{this});
+                        rumbleNudge();
                     }
                     if (btnPressed(Btn::Right)) {
                         setLevel(level_ + 1);
                         levelSelect_.moveRight(SokobanLevel{this});
+                        rumbleNudge();
                     }
                     break;
                 }
@@ -269,8 +287,10 @@ namespace rckid {
                         }
                     }
                 }
+                audio_[0].setFrequency(50, 20);
             } else {
-                rumbleFail();
+                audio_[1].setFrequency(220, 50);
+                rumbleOk();
             }
         }
 
@@ -283,7 +303,6 @@ namespace rckid {
                 case TILE_PLACE:
                 case TILE_EMPTY:
                     player_ = target;
-                    rumbleNudge();
                     return true;
                 // if there is a crate, we need to check if the crate itself has a place to move
                 case TILE_CRATE: {}
@@ -292,10 +311,13 @@ namespace rckid {
                     uint8_t t2 = getTile(p2);
                     if (t2 == TILE_FLOOR || t2 == TILE_PLACE || t2 == TILE_EMPTY) {
                         setTile(p2, (t2 == TILE_FLOOR || t2 == TILE_EMPTY) ? TILE_CRATE : TILE_PLACED_CRATE);
+                        // play nice sound if we help place stuff
+                        if (getTile(p2) == TILE_PLACED_CRATE)
+                            audio_[1].setFrequency(440, 100);
                         // TODO This changes empty tiles to floors as sokoban walks over them - might want to change when we reintroduce floor tiles, if at all
                         setTile(target, t1 == TILE_PLACED_CRATE ? TILE_PLACE : TILE_FLOOR);
                         player_ = target;
-                        rumbleOk();
+                        rumbleNudge();
                         return true;        
                     }
                     return false;
@@ -404,6 +426,8 @@ namespace rckid {
         uint32_t totalMoves_;
         Point player_;
         uint8_t map_[COLS * ROWS];
+
+        ToneGenerator audio_;
 
         Bitmap<ColorRGB> icon_{64, 64};
 
