@@ -13,7 +13,8 @@ namespace rckid {
 
         /** Draws the header on given bitmap. 
          */
-        static void drawOn(Bitmap<ColorRGB> & surface, bool verbose = true);
+        static void drawOn(Bitmap<ColorRGB> & surface, bool verbose);
+        static void drawOn(Bitmap<ColorRGB> & surface) { drawOn(surface, debugMode()); }
 
     private:
 

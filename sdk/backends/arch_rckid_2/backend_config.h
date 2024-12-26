@@ -39,6 +39,10 @@
 /** Idle timer in seconds, after which the device powers off. 
  */
 #define IDLE_TIMEOUT 300
+
+/** Idle timeout fallback that is not affected by the keepalive function call. 
+ */
+#define IDLE_TIMEOUT_FALLBACK 1800
 //#define IDLE_TIMEOUT 3000000
 
 /** Determines home button's long press duration in system ticks (1ms)

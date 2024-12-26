@@ -49,7 +49,9 @@ namespace rckid {
             carousel_ = new Carousel{Font::fromROM<assets::font::OpenDyslexic48>()}; 
             icon_ = new Bitmap<ColorRGB>{64, 64};
             //icon_->loadImage(HEAP(PNG::fromBuffer(assets::icons64::lynx)));
-            icon_->loadImage(HEAP(PNG::fromBuffer(assets::icons64::owl_1)));
+            //icon_->loadImage(HEAP(PNG::fromBuffer(assets::icons64::owl_1)));
+            //icon_->loadImage(HEAP(PNG::fromBuffer(assets::icons64::animal_1)));
+            icon_->loadImage(HEAP(PNG::fromBuffer(assets::icons64::buggy)));
             rckid::ledSetEffects(
                 RGBEffect::Rainbow(0, 1, 1, 32), 
                 RGBEffect::Rainbow(51, 1, 1, 32), 
