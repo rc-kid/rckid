@@ -2,7 +2,17 @@
 
 > Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. The following TODO items are for xmas:
 
+- could be faulty cartridge connection with the qspi pins (disassemble & check, also make the board smaller to fit better)
+- fix red one (remove speaker adhesive)
+
+
 > After XMAS, but can be done with RP2040:
+
+- https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01-1-16r13/ (90 deg cartridge header)
+
+- see if we can have simpler cartridge connector w/o the riser board
+
+- I need a much better way to connect the battery in v3 - soldering and then stuffing it in the enclosure is beyond pain
 
 - generate assets does not generate ui tiles yet - and the ones we have are a bit off
 - make text input better looking and the whole idea of modal apps nicer to work with
@@ -163,3 +173,34 @@ Both arenas are explicit to avoid confusion.
 - make graphic apps simpler, only implement what we have use for, i.e. maybe only use full color buffers in the graphic modes
 - modal apps will be passed the reusable framebuffer that they can deal with any way they like
 - gauge settings should be animated with the menu, i.e. the title will start below and go up, gauge will appear, then go down to the menu 
+
+## MKIII Hardware Revision
+
+- make the PCB smaller (102x102 so that its creation is cheaper)
+
+> RP2350 has 48 GPIO. The cartridge pins must include a QSPI second SS, some SPI, some I2C and ideally the HSTX as well just because we have it
+- 20 (16 + 4) for the display
+- 10 pins for the cartridge
+- 2 pins for I2C
+- 4 + 2 pins for SPI SD card (or SDIO)
+- 2 pins for PDM microphone
+- 3 pins for audio out (I2S or only 2 pins for PWM)
+- free 5
+
+> ATTiny3217, which has 21 GPIO pins
+- 2 pins for I2C
+- 7 pins for the buttons (3x4 matrix, including the home button)
+- 1 pin 3V3 power
+- 2 pins for RGB leds & 5V power
+- 2 pins for charging (enable, charge status)
+- 1 pin for battery voltage
+- 1 pin for USB 5V power detect
+- 2 PWM pins (rumbler & backlight)
+- free 3 
+
+- headphones detect
+- audio on/off
+
+
+
+https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01-1-16r13/

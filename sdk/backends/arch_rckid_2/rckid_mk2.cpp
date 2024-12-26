@@ -65,6 +65,7 @@ namespace rckid {
 
         bool idle_ = true;
         uint32_t idleTimeout_ = IDLE_TIMEOUT; 
+        uint32_t idleTimeoutFallback_ = IDLE_TIMEOUT_FALLBACK;
 
         namespace audio {
             std::function<uint32_t(int16_t *, uint32_t)> cb_;
@@ -257,11 +258,11 @@ namespace rckid {
     }
 
     void initialize() {
+        board_init();
 #if (defined RCKID_ENABLE_STACK_PROTECTION)
         memoryInstrumentStackProtection();
 #endif
 
-        board_init();
         /* TODO enable the cartridge uart port based on some preprocessor flag. WHen enabled, make all logs, traces and debugs go to the cartridge port as well. 
         stdio_uart_init_full(
             RP_DEBUG_UART, 
@@ -282,7 +283,7 @@ namespace rckid {
         gpio_set_function(RP_PIN_SDA, GPIO_FUNC_I2C);
         gpio_set_function(RP_PIN_SCL, GPIO_FUNC_I2C);
         // Make the I2C pins available to picotool
-        bi_decl(bi_2pins_with_func(RP_PIN_SDA, RP_PIN_SCL, GPIO_FUNC_I2C));  
+        bi_decl(bi_2pins_with_func(RP_PIN_SDA, RP_PIN_SCL, GPIO_FUNC_I2C)); 
 
 #if (defined RP_LOG_TO_SERIAL)
         // initialize uart0 on pins 16 & 17 as serial out
@@ -362,11 +363,14 @@ namespace rckid {
             nextSecond_ += 1000000;
             state_.time.secondTick();
             if (idle_) {
-                if (--idleTimeout_ == 0)
+                --idleTimeoutFallback_;
+                --idleTimeout_;
+                if (idleTimeoutFallback_ == 0 || idleTimeout_ == 0)
                     sendCommand(cmd::PowerOff{});
             } else {
                 idle_ = true;
                 idleTimeout_ = IDLE_TIMEOUT;
+                idleTimeoutFallback_ = IDLE_TIMEOUT_FALLBACK;
             }
         }
         ++ticks_;

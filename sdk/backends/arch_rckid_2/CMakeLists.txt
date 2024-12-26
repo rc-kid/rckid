@@ -11,12 +11,12 @@ pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/screen/ST7789_rgb_
 # This must be called for libraries as well as executables (cartridges). 
 function(link_with_librckid target_name)
     get_target_property(target_type ${target_name} TYPE)
+    target_compile_options(${target_name} PRIVATE "-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=128")
     target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/libs/platform/rckid_2")
     target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/sdk/backends/arch_rckid_2")
     # required for tiny usb library to find the tusb_config.h file
     target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/sdk/backends/arch_rckid_2/usb")
     if (target_type STREQUAL "EXECUTABLE")
-        target_compile_options(${target_name} PRIVATE "-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=64")
         pico_add_extra_outputs(${target_name})
         pico_set_linker_script(${target_name} ${CMAKE_SOURCE_DIR}/sdk/backends/arch_rckid_2/memmap.ld)
         target_link_libraries(${target_name} PRIVATE librckid)
