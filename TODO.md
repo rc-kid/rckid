@@ -1,10 +1,12 @@
 # TODO
 
-> Due to lack of displays, I have only 2 prototypes that should be working with a display & battery, those will be used for xmas, I have an extra prototype that works with display, but not with battery (faulty charger), but can be tested for the AAA cells. The following TODO items are for xmas:
-
-- could be faulty cartridge connection with the qspi pins (disassemble & check, also make the board smaller to fit better)
-- fix red one (remove speaker adhesive)
-
+> MK III ideas
+- buy the RP recommended crystal at jlcpcb
+- check if I can solder the inductor myself (might be just able to)
+- test the 90 degree cartridge connector feasibility
+- better sound driver (PCM5102) for fully 16bit sound
+- simplify HW - no light sensor, no notification LED. This makes for smaller PCB, fewer parts. Arguably can keep the light detector and put it under the display, 
+- can use DMA & control blocks to do the 256 palette lookup with FB w/o involving the CPU
 
 > After XMAS, but can be done with RP2040:
 
@@ -204,3 +206,37 @@ Both arenas are explicit to avoid confusion.
 
 
 https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01-1-16r13/
+
+
+- 2 UART
+
+
+- 2 I2C
+- 3 I2S
+- 2 Mic
+- 1 audio en
+- 1 headphones detect
+
+
+
+# mk3 Updates
+
+- use TPS63021 (larger possible output current, might be more efficient)
+- use the correct recommended crystal
+- HX4002 is enough for the LEDs at full power just barely (they are 12mA per channel)
+- completely different audio (PCM5100a)
+- check the IOVDD switch is proper and will work
+- check that the large resistors on VBATT divider can still work with ADC
+- check home button part of the matrix
+
+# mk3 TODO
+
+- terminating resistors on I2S
+- should I use the PMIC chips? 
+- check radio can output to the audio codec
+- footprints for the devices on the RP2350 switching regulator are bad, check when the parts really exist in jlcpcb
+- use https://jlcpcb.com/partdetail/skyworks_siliconLabs-SI4705_D60GMR/C2654632 for radio
+- can use also SI4703, but that one does not have internal / external antenna - do I really need it? 
+- this allows for shorter audio paths
+- or just use module? 
+
