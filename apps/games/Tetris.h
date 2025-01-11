@@ -39,6 +39,16 @@ namespace rckid {
                 hof_.add("Jaffar", 10000);
                 hof_.add("Noone", 1);
             }
+            /*
+            FileRead f = fileRead("tetris-x.hof", Drive::Cartridge);
+            if (f.good()) {
+                hof_.deserializeFrom(f);
+            } else {
+                hof_.add("TATA", 30000);
+                hof_.add("Taticek", 20000);
+                hof_.add("Tatinek", 10000);
+                hof_.add("Dedisek", 1000);
+            } */
             hof_.setTitleFont(assets::font::MetalLord32::font);
             for (unsigned i = 0; i < NUM_FALLING_PIECES; ++i) {
                 fallingPieces_[i].randomize();
@@ -87,7 +97,7 @@ namespace rckid {
                 case Mode::Game: {
                     bool goDown = false;
                     if (--countdown_ == 0) {
-                        goDown = true;
+                        goDown = true && (level_ != 1);
                         countdown_ = speed_;
                     }
                     if (btnPressed(Btn::A))
