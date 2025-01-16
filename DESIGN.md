@@ -1,5 +1,37 @@
 # Hardware Design
 
+## Pinouts
+
+This is just a summary of devices connected to the 2 MCUs (AVR and RP) to ensure all fits and give a simple overview:
+
+### RP2350
+
+The RP2350 has 48 GPIO available in total. The mandatory (i.e. those required for even the basic functionality of the device) are the following (41):
+
+- 16 for display data
+- 4 for display control
+- 4 for SD card in SPI interface
+- 8 for HSTX pins on cartridge
+- 2 for extra pins on cartridge (one of them ADC)
+- 2 for I2C
+- 5 for audio codec (reset, bclk, lrclk, di, do)
+
+This leaves us with 1
+
+- 2 pins for the SD card to allow SDIO interface
+- 1 pin for AVR int
+- 1 pin for reading the display memory as well
+- 1 pin for audio codec int
+- 2 pins for radio (reset & int)
+
+
+### AVR
+
+- accel int
+- pmic int
+- int to RP
+- i2c switch -- this can actually be the same as 3v3 on it would seem, just the 3V3 on might need to be more controlled to ensure that we do not bleed voltage? 
+
 ## Power Path Stage
 
 We are using BQ25895(https://www.ti.com/product/BQ25895) for charger and power path manager as it supports I2C configuration, has integrated ADC which frees AVR pins and has integrated boost converter that ensures the VCC voltage will stay above 3.3V threshold which allows the 3V3 converters to be simple buck ones. 
@@ -35,3 +67,8 @@ To simplify the design, we use a charge pump
 ## Audio
 
 TLV320AIC3204
+- might need LDO for the codec's voltage (3V is ok, 150mA)
+
+- seems I can get rid of MCLK
+
+- verify AVR & Radio crystal & capacitors
