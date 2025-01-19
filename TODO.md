@@ -8,6 +8,9 @@
 - simplify HW - no light sensor, no notification LED. This makes for smaller PCB, fewer parts. Arguably can keep the light detector and put it under the display, 
 - can use DMA & control blocks to do the 256 palette lookup with FB w/o involving the CPU
 
+
+- when using NiMH batteries, due to very flat discharge curve, the battery voltage reading might not be really useful
+
 > After XMAS, but can be done with RP2040:
 
 - https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01-1-16r13/ (90 deg cartridge header)
