@@ -1,5 +1,7 @@
 # TODO
 
+> This is updated TODO list for mkIII. It's split into 
+
 > MK III ideas
 - buy the RP recommended crystal at jlcpcb
 - check if I can solder the inductor myself (might be just able to)
@@ -233,6 +235,8 @@ https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01
 - check home button part of the matrix
 
 # mk3 TODO
+
+- an interesting idea is to create extra board for mkIII development with big enough components so that I can solder/desolder them as necessary (can even use RP2040)
 
 - terminating resistors on I2S
 - should I use the PMIC chips? 
