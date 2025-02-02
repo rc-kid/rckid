@@ -185,7 +185,7 @@ namespace rckid::filesystem {
         uint32_t size() const {
             switch (drive_) {
                 case static_cast<unsigned>(Drive::SD):
-                    return sd_.fsize;
+                    return static_cast<uint32_t>(sd_.fsize);
                 case static_cast<unsigned>(Drive::Cartridge):
                     return cart_.size;
                 default:
@@ -412,8 +412,6 @@ namespace rckid::filesystem {
     inline FileRead fileRead(std::string const & path, Drive dr = Drive::SD) { return fileRead(path.c_str(), dr); }
     inline FileWrite fileWrite(std::string const & path, Drive dr = Drive::SD) { return fileWrite(path.c_str(), dr); }
     inline Folder folderRead(std::string const & path, Drive dr = Drive::SD) { return folderRead(path.c_str(), dr); }
-
-
 
     std::string stem(std::string const & path);
     std::string ext(std::string const & path);

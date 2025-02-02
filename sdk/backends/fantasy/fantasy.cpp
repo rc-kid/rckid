@@ -1,0 +1,527 @@
+#ifndef RCKID_BACKEND_FANTASY
+#error "You are building fantasy (RayLib) backend without the indicator macro"
+#endif
+
+#include <raylib.h>
+#include <string>
+#include <fstream>
+#include <chrono>
+
+#include <platform/string_utils.h>
+#include <platform/args.h>
+
+#include "rckid/rckid.h"
+
+extern char & __bss_end__;
+extern char & __StackLimit;
+
+/** Start in system malloc so that any pre-main initialization does not pollute rckid's heap. 
+ 
+    The code below replaces malloc and free functions with own versions that depending the flag either use system malloc, or rckid's heap allocator, which can be used for tracking memory footprint of applications even in the fantasy backend setting. 
+
+    TODO that this only works on linux now - replacing system malloc on windows does not seem to be as easy. 
+ */
+thread_local bool systemMalloc_ = true;
+
+#ifndef _WIN32
+extern "C" {
+    extern void *__libc_malloc(size_t);
+    extern void __libc_free(void *);
+
+    //depending on whether we are in system malloc, or not use libc malloc, or RCKid's heap
+    void * malloc(size_t numBytes) {
+        if (systemMalloc_)
+            return __libc_malloc(numBytes);
+        else 
+            return rckid::Heap::alloc(numBytes);
+    }
+
+    // if the pointer to be freed belongs to RCKId's heap, we should use own heap free, otherwise use normal free (and assert it does not belong to fantasy heap in general as that would be weird)
+    void free(void * ptr) {
+        if (rckid::Heap::contains(ptr))
+            // if we are in system malloc phase, we should not be deallocating rckid memory, as this only happens during shutdown
+            //if (!systemMalloc_)
+            rckid::Heap::free(ptr);
+        // TODO there is some issue wit fantasy heap and arenas where we have pointers from fantasy heap that are not in the arena or heap getting here and then not getting deallocated properly in fantasy
+        else if (ptr < & __bss_end__ || ptr > & __StackLimit)
+            __libc_free(ptr);
+   }
+} // extern C
+#endif
+
+namespace rckid {
+
+    namespace {
+        std::fstream sdIso_;
+        uint32_t sdNumBlocks_;
+
+        std::fstream flashIso_;
+        uint32_t flashSize_ = 0;
+    }
+
+    namespace display {
+        DisplayResolution resolution;
+        DisplayRefreshDirection direction;
+        Rect rect = Rect::WH(320, 240);
+        Image img;
+        Texture texture;
+        uint8_t brightness;
+        DisplayUpdateCallback callback;
+
+        int updateX = 0;
+        int updateY = 0;
+        size_t updating = 0;
+        std::chrono::steady_clock::time_point lastVSyncTime;        
+    }
+
+    namespace audio {
+        enum class Mode {
+            Off,
+            Play,
+            Record
+        };
+        Mode mode;
+        AudioCallback cb;
+        DoubleBuffer<int16_t> * buffer = nullptr;
+        size_t bufferSize = 0;
+        size_t bufferI = 0;
+        bool playback = false;
+        uint8_t volume = 10;
+        AudioStream stream;
+    }
+
+    // forward declarations of internal functions
+    namespace filesystem {
+        void initialize();
+    }
+
+    class SystemMallocGuard {
+    public:
+        SystemMallocGuard() { 
+            ASSERT(systemMalloc_ == false); // nested malloc guards are not supported
+            systemMalloc_ = true;
+        }
+        ~SystemMallocGuard() { systemMalloc_ = false; }
+    }; 
+
+
+
+    void fatalError(uint32_t error, uint32_t line, char const * file) {
+        std::cout << "Fatal error " << error;
+        if (file != nullptr)
+            std::cout << " in " << file << "(" << line << ")";
+        std::cout << std::endl;
+        // clear all memory arenas to clean up space, this is guarenteed to succeed as the SDK creates memory arena when it finishes initialization    
+        /**
+        memoryReset();
+        bsod(error, line, file, nullptr);
+        systemMalloc_ = true;
+        if (sdIso_.good())
+            sdIso_.close();
+        if (flashIso_.good())
+            flashIso_.close();
+        while (! WindowShouldClose())
+            PollInputEvents();
+        systemMalloc_ = false;
+        */
+        std::exit(EXIT_FAILURE);
+    }
+
+    Writer debugWrite() {
+        return Writer([](char c) {
+            std::cout << c;
+            if (c == '\n')
+                std::cout.flush();
+        });
+    }
+
+    void initialize(int argc, char const * argv[]) {
+        systemMalloc_ = true;
+        InitWindow(640, 480, "RCKid");
+        display::img = GenImageColor(320, 240, BLACK);
+        display::texture = LoadTextureFromImage(display::img);
+        display::lastVSyncTime = std::chrono::steady_clock::now();
+        Args::Arg<std::string> sdIso{"sd", "sd.iso"};
+        Args::Arg<std::string> flashIso{"flash", "flash.iso"};
+        Args::parse(argc, argv, { sdIso, flashIso });
+
+#ifndef RCKID_FANTASY_FS_DIRECT
+        // see if there is sd.iso file so that we can simulate SD card
+        sdIso_.open(sdIso.value(), std::ios::in | std::ios::out | std::ios::binary);
+        if (sdIso_.is_open()) {
+            sdIso_.seekg(0, std::ios::end);
+            size_t sizeBytes = sdIso_.tellg();
+            LOG(LL_INFO, sdIso.value() << " file found, mounting SD card - " << sizeBytes << " bytes");
+            if (sizeBytes % 512 == 0 && sizeBytes != 0) {
+                sdNumBlocks_ = static_cast<uint32_t>(sizeBytes / 512);
+                LOG(LL_INFO, "    blocks: " << sdNumBlocks_);
+            } else {
+                LOG(LL_INFO, "    invalid file size (multiples of 512 bytes allowed)");
+            }
+        } else {
+            LOG(LL_ERROR, sdIso.value() << " file not found, CD card not present");
+        }
+        // see if there is flash.iso file so that we can simulate flash storage
+        flashIso_.open(flashIso.value(), std::ios::in | std::ios::out | std::ios::binary);
+        if (flashIso_.is_open()) {
+            flashIso_.seekg(0, std::ios::end);
+            size_t sizeBytes = flashIso_.tellg();
+            LOG(LL_INFO, flashIso.value() << " file found, mounting cartridge store - " << sizeBytes << " bytes");
+            if (sizeBytes % 4096 == 0 && sizeBytes != 0) {
+                flashSize_ = static_cast<uint32_t>(sizeBytes);
+                LOG(LL_INFO, "    size: " << flashSize_);
+            } else {
+                LOG(LL_INFO, "    invalid file size (multiples of 4096 bytes allowed)");
+            }
+        } else {
+            LOG(LL_ERROR, flashIso.value() << " file not found, cartridge storage not present");
+        }
+#endif
+        systemMalloc_ = false;
+
+
+        filesystem::initialize();
+    }
+
+    void yield() {
+
+    }
+
+    // display 
+
+    void displayDraw() {
+        SystemMallocGuard g;
+        UpdateTexture(display::texture, display::img.data);
+        BeginDrawing();
+        DrawTextureEx(display::texture, {0, 0}, 0, (display::resolution == DisplayResolution::Normal ? 2.0f : 4.0f), WHITE);
+        EndDrawing();
+        SwapScreenBuffer();
+    }
+
+    void displayResetDrawRectangle() {
+        switch (display::direction) {
+            case DisplayRefreshDirection::Native:
+                display::updateX = display::rect.right() - 1;
+                display::updateY = display::rect.top();
+                break;
+            case DisplayRefreshDirection::Normal:
+                display::updateX = display::rect.left();
+                display::updateY = display::rect.top();
+                break;
+            default:
+                UNREACHABLE;
+        }
+    }
+
+    DisplayResolution displayResolution() { 
+        return display::resolution; 
+    }
+
+    void displaySetResolution(DisplayResolution value) {
+        display::resolution = value;
+        displayResetDrawRectangle();
+    }
+
+    DisplayRefreshDirection displayRefreshDirection() {
+        return display::direction;
+    }
+
+    void displaySetRefreshDirection(DisplayRefreshDirection value) {
+        display::direction = value;
+        displayResetDrawRectangle();
+    }
+
+    uint8_t displayBrightness() { 
+        return display::brightness;
+    }
+
+    void displaySetBrightness(uint8_t value) {
+        display::brightness = value;
+    }
+
+    Rect displayUpdateRegion() {
+        return display::rect;
+    }
+
+    void displaySetUpdateRegion(Rect value) {
+        display::rect = value;
+        displayResetDrawRectangle();
+    }
+
+    void displaySetUpdateRegion(Coord width, Coord height) {
+        switch (display::resolution) {
+            case DisplayResolution::Normal:
+                displaySetUpdateRegion(Rect::XYWH((320 - width) / 2, (320 - height) / 2, width, height));
+                break;               
+            case DisplayResolution::Half:
+                displaySetUpdateRegion(Rect::XYWH((160 - width) / 2, (160 - height) / 2, width, height));
+                break;               
+            default:
+                UNREACHABLE;
+        }
+    }
+
+    bool displayUpdateActive() {
+        return display::updating;
+    }
+
+    void displayWaitUpdateDone() {
+        while (displayUpdateActive())
+            yield();
+    }
+
+    void displayWaitVSync() {
+        yield();
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - display::lastVSyncTime).count();
+        // hardwired for ~60 fps...  
+        if (elapsed < 16666)
+            std::this_thread::sleep_for(std::chrono::microseconds(16666 - elapsed));
+        display::lastVSyncTime = std::chrono::steady_clock::now();
+
+    }
+
+    void displayUpdate(ColorRGB const * pixels, uint32_t numPixels, DisplayUpdateCallback callback) {
+        display::callback = callback;
+        displayUpdate(pixels, numPixels);
+    }
+
+    void displayUpdate(ColorRGB const * pixels, uint32_t numPixels) {
+        ++display::updating;
+        // update the pixels in the internal framebuffer
+        while (numPixels != 0) {
+            ImageDrawPixel(&display::img, display::updateX, display::updateY, { pixels->r(), pixels->g(), pixels->b(), 255});
+            ++pixels;
+            --numPixels;
+            switch (display::direction) {
+                case DisplayRefreshDirection::Native:
+                    if (++display::updateY >= display::rect.bottom()) {
+                        display::updateY = display::rect.top();
+                        if (--display::updateX < display::rect.left())
+                            display::updateX = display::rect.right() - 1; 
+                    }
+                    break;
+                case DisplayRefreshDirection::Normal:
+                    if (++display::updateX >= display::rect.right()) {
+                        display::updateX = display::rect.left();
+                        if (++display::updateY >= display::rect.bottom())
+                            display::updateY = display::rect.top(); 
+                    }
+                    break;
+                default:
+                    UNREACHABLE;
+            }
+        }
+        // check if this is the first update call, in which case call all the other updates (as long as the callback generates a new update) and when no more updates are scheduled, actually redraw the display. Note that if the update is not the first, no callbacks are called
+        if (display::updating == 1) {
+            while (true) {
+                size_t updatingOld = display::updating;
+                if (display::callback)
+                    display::callback();
+                if (updatingOld == display::updating)
+                    break;
+            }
+            display::updating = 0;
+            display::callback = nullptr;
+            displayDraw();
+        }
+    }
+
+    // audio
+
+    /** Refills the raylib's audio stream. 
+     */
+    void audioStreamRefill(void * buffer, unsigned int samples) {
+        // get the stereo view of the input buffer
+        int16_t * stereo = reinterpret_cast<int16_t*>(buffer);
+        while (samples-- != 0) {
+            if (audio::bufferI >= audio::bufferSize) {
+                audio::bufferSize = audio::cb(audio::buffer->front(), static_cast<uint32_t>(audio::buffer->size()) / 2);
+                audio::bufferI = 0;
+                audio::buffer->swap();
+            }
+            int16_t l = audio::buffer->back()[audio::bufferI++];
+            int16_t r = audio::buffer->back()[audio::bufferI++];
+            if (audio::volume == 0) {
+                l = 0;
+                r = 0;
+            } else {
+                l >>= (10 - audio::volume);
+                l = l & 0xfff0;
+                r >>= (10 - audio::volume);
+                r = r & 0xfff0;
+            }
+            *(stereo++) = l;
+            *(stereo++) = r;
+        }
+    }
+
+    bool audioHeadphones() {
+        // TODO make this conditional on something
+        return false;
+    }
+
+    bool audioPaused() {
+        switch (audio::mode) {
+            case audio::Mode::Play:
+                return !IsAudioStreamPlaying(audio::stream);
+                break;
+            case audio::Mode::Record:
+                UNIMPLEMENTED;
+            case audio::Mode::Off:
+                break;
+        }
+        return false;
+    }
+
+    bool audioPlayback() {
+        return audio::mode == audio::Mode::Play;
+    }
+
+    bool audioRecording() {
+        return audio::mode == audio::Mode::Record;
+    }
+
+    uint8_t audioVolume() {
+        return audio::volume;
+    }
+
+    void audioSetVolume(uint8_t value) {
+        audio::volume = value;
+    }
+
+    void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb) {
+        if (audio::mode != audio::Mode::Off)
+            audioStop();
+        {
+            SystemMallocGuard g;
+            InitAudioDevice();
+        }
+        audio::cb = cb;
+        audio::buffer = & buffer;
+        audio::stream = LoadAudioStream(sampleRate, 16, 2);
+        SetAudioStreamCallback(audio::stream, audioStreamRefill);   
+        audio::mode = audio::Mode::Play;
+        PlayAudioStream(audio::stream);
+    }
+
+    void audioPause() {
+        if (!audioPaused()) {
+            switch (audio::mode) {
+                case audio::Mode::Play:
+                    PauseAudioStream(audio::stream);
+                    break;
+                case audio::Mode::Record:
+                    UNIMPLEMENTED;
+                case audio::Mode::Off:
+                    break;
+            }
+        }
+    }
+
+    void audioResume() {
+        if (audioPaused())
+            // it's toggle in raylib
+            audioPause();
+    }
+
+    void audioStop() {
+        switch (audio::mode) {
+            case audio::Mode::Play: {
+                SystemMallocGuard g;
+                StopAudioStream(audio::stream);
+                UnloadAudioStream(audio::stream);
+                audio::buffer = nullptr;
+                //audio::bufferSize_ = 0;
+                //audio::bufferI_ = 0;
+                break;
+            }
+            case audio::Mode::Record:
+                UNIMPLEMENTED;
+            case audio::Mode::Off:
+                break;
+        }
+        audio::mode = audio::Mode::Off;
+    }
+
+    // SD Card access
+
+    uint32_t sdCapacity() {
+        return sdNumBlocks_;
+    }
+
+    bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {
+        ASSERT(sdNumBlocks_ != 0);
+        try {
+            SystemMallocGuard g;
+            sdIso_.seekg(start * 512);
+            sdIso_.read(reinterpret_cast<char*>(buffer), numBlocks * 512);
+            return true;
+        } catch (std::exception const & e) {
+            LOG(LL_ERROR, "SD card read error: " << e.what());
+            return false;
+        }
+    }
+
+    bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks) {
+        ASSERT(sdNumBlocks_ != 0);
+        try {
+            SystemMallocGuard g;
+            sdIso_.seekp(start * 512);
+            sdIso_.write(reinterpret_cast<char const *>(buffer), numBlocks * 512);
+            return true;
+        } catch (std::exception const & e) {
+            LOG(LL_ERROR, "SD card write error: " << e.what());
+            return false;
+        }
+    }
+
+    // Cartridge filesystem access
+
+    uint32_t cartridgeCapacity() { return flashSize_; }
+
+    uint32_t cartridgeWriteSize() { return 256; }
+
+    uint32_t cartridgeEraseSize() { return 4096; }
+
+    void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
+        ASSERT(start + numBytes <= flashSize_);
+        try {
+            SystemMallocGuard g;
+            flashIso_.seekg(start);
+            flashIso_.read(reinterpret_cast<char*>(buffer), numBytes);
+        } catch (std::exception const & e) {
+            LOG(LL_ERROR, "Cartridge flash read error: " << e.what());
+            UNREACHABLE;
+        }
+    }
+
+    void cartridgeWrite(uint32_t start, uint8_t const * buffer) {
+        ASSERT(start % 256 == 0);
+        ASSERT(start + 256 <= flashSize_);
+        try {
+            SystemMallocGuard g;
+            flashIso_.seekp(start);
+            flashIso_.write(reinterpret_cast<char const *>(buffer), 256);
+        } catch (std::exception const & e) {
+            LOG(LL_ERROR, "Cartridge flash write error: " << e.what());
+            UNREACHABLE;
+        }
+    }
+
+    void cartridgeErase(uint32_t start) {
+        ASSERT(start % 4096 == 0);
+        ASSERT(start + 4096 <= flashSize_);
+        try {
+            SystemMallocGuard g;
+            flashIso_.seekp(start);
+            uint8_t buffer[4096];
+            std::memset(buffer, 4096, 0xff);
+            flashIso_.write(reinterpret_cast<char const *>(buffer), 4096);
+        } catch (std::exception const & e) {
+            LOG(LL_ERROR, "Cartridge flash erase error: " << e.what());
+            UNREACHABLE;
+        }
+    }
+
+}

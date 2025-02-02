@@ -1,236 +1,107 @@
 #pragma once
 
 #include <platform.h>
-#include <platform/writer.h>
-#include <platform/buffer.h>
-#include <platform/tinydate.h>
+#include <platform/buffers.h>
 
-#include "tracing.h"
-#include "memory.h"
-
-#include "config.h"
-#include "common.h"
+#include "graphics/color.h"
 #include "graphics/geometry.h"
-#include "utils/fixedint.h"
-#include "errors.h"
 
-#define MEASURE_TIME(whereTo, ...) { \
-    uint32_t start__ = uptimeUs(); \
-    __VA_ARGS__; \
-    whereTo = uptimeUs() - start__; \
-}
 
-/** \defgroup api API
+/** \page sdk RCKid SDK
  
+    RCKid provides custom API to abstract from the hardware details of the console and to provide common functionality useful for 
+
+    \section Backends
+
+    Most of the API provided abstract from the hardware details of the device (this is not true for specific cartridge interfaces) so that as long as the SDK is used for HW access, different physical hardware can be used, including fantasy consoles. To this end the hardware specific functionality of the SDK is implemented in different _backends_.
+
+    \subpage backend_mk3
+    \subpage backend_mk2
+    \subpage backend_fantasy
  */
 
-/** \defgroup backends Backends
- 
-    While \ref api provides an abstraction layer over the actual hardware, the library also contains a backend, which deals with the hardware details. This architecture allows the backends to be swapped, so that same RCKid cartridges can be run on multiple devices, or even emulators. 
+#define UNIMPLEMENTED do { rckid::fatalError(rckid::error::Unimplemented, __LINE__, __FILE__); } while (false)
+#define UNREACHABLE do { rckid::fatalError(rckid::error::Unreachable, __LINE__, __FILE__); } while (false)
 
-    All backends are stored in `/sdk/backends` folder. 
+#define ASSERT(...) do { if (!(__VA_ARGS__)) rckid::fatalError(rckid::error::Assert, __LINE__, __FILE__); } while (false)
 
-    To create a new backend, implementation for all functions mentioned in the rckid.h file must be provided. These functions generally fall into the following categories:
+#define ERROR(ERRNO) do { rckid::fatalError(ERRNO, __LINE__, __FILE__); } while (false)
+#define ERROR_IF(ERRNO, ...) do { if ((__VA_ARGS__)) ERROR(ERRNO); } while (false)
 
-    - user input detection (buttons, accelerometer, UV sensor)
-    - feedback effects (LEDs, rumbler)
-    - display
-    - audio
-    - memory (malloc & free)
-    - filesystem (SD card)
-  */
+/** \page sdk 
+    \section err_log Errors and Logging
+
+    TODO error handling
+
+    Logging in RCKid is quite simple, but versatile. At its heart is the debugWrite() function which returns a writer used for the logging. This writer prints to the USB to UART converter, or standard output for the fantasy console. All logging should be done via the LOG macro, which takes two arguments - log level to be used, which can be any identifier and an expression to be logged. 
+
+    Loglevels can be enabled or disabled at compile time so that there is no runtime cost associated with disabled loglevels both in performance and flash usage. To enable a log level, RCKid must be compiled with macro of the same name as the log level being set to `1`. 
+
+    The following log levels are used by the SDK itself:
+
+    - `LL_ERROR` is used for error that are not fatal. Is enabled unless ecplicitly silenced with `-DLL_ERROR=0`
+    - `LL_WARN` is used for warnings, i.e. something that likely should not happen, but which does not interfere with device's functionality on its own. Is on by default
+    - `LL_INFO` is for general information. Is enabled by default in non-release builds
+ */
+#define IS_LOGLEVEL_ENABLED_HELPER(X) #X
+#define IS_LOGLEVEL_ENABLED(X) (IS_LOGLEVEL_ENABLED_HELPER(X)[0] == '1')
+#define LOG(LOGLEVEL,...) do { if (IS_LOGLEVEL_ENABLED(LOGLEVEL)) rckid::debugWrite() << #LOGLEVEL << ": " << __VA_ARGS__ << '\n'; } while (false)
+
+#ifndef LL_ERROR
+#define LL_ERROR 1
+#endif
+
+#ifndef LL_WARN
+#define LL_WARN 1
+#endif
+
+#ifndef NDEBUG
+#ifndef LL_INFO
+#define LL_INFO 1
+#endif
+#endif
 
 namespace rckid {
+    namespace error {
+        static constexpr uint32_t Success = 0;
+        static constexpr uint32_t Unimplemented = 1;
+        static constexpr uint32_t Unreachable = 2;
+        static constexpr uint32_t Assert = 3;
+        static constexpr uint32_t OutOfMemory = 4;
+        static constexpr uint32_t StackProtectionFailure = 5;
+    }; // rckid::error
 
-    class ColorRGB;
-
-    /** Overclocks the device. 
+    /** Raises fatal error. 
      
-        Must be called before initialize(). May not have an effect if overclocking is not supported by the current backend. 
-     */
-    void overclock(); 
+        Since exceptions are not supported, rasing errors is akin to blue screen of death, which is indeed what this function shows. The line and file can be specified for debugging purposes and will be displayed on screen. There is no recovery from fatal errors and the device should be reset afterwards. 
 
-    /** Initializes the RCKid console. 
+     */
+    NORETURN(void fatalError(uint32_t error, uint32_t line = 0, char const * file = nullptr));
+
+    /** Returns writer intended for debugging purposes.
      
-        This must be the first SDK function called by the application. 
-     */
-    void initialize();
-
-    void tick();
-
-    void yield();
-
-    /** Programatically resets the idle timer that automatically powers the device off. 
-     
-        Use with care only in cases where it makes sense (such as when playing media) otherwise this has obviously  very negative impact on the battery. 
-     */
-    void keepAlive();
-
-    /** Returns the system's uptime in microseconds. 
-     
-        For performance reasons, this uses uint32_t as the result value and as such will overflow every hour & something. The intended purpose of this function is not precise timekeeping, but delta time measurements, so the overflows are fine. 
-     */
-    uint32_t uptimeUs();
-
-    /** Returns current date and time as kept by the AVR & RPi. 
-     */
-    TinyDate dateTime();
-
-    /** Sets the date & time kept by the device to the given value. 
-     */
-    void setDateTime(TinyDate value);
-
-    /** Returns the currently set alarm.
-     */
-    TinyAlarm alarm();
-
-    void setAlarm(TinyAlarm alarm);
-
-    /** Generates random number in the 32bit unsigned range. 
-     */
-    uint32_t random();
-
-    /** Returns debug writer for logging and tracing purposes. 
-     
-        Depending on the backend, this is either the serial over USB port for the physical devices, or standard output for the fantasy console. 
+        This is usually the USB to UART bridge on the device, or dedicated UART port via cartridge GPIO or in the fantasy console a standard stdout.
      */
     Writer debugWrite();
 
-    /** Returns true if the device is in debug mode. 
-     */
-    bool debugMode();
 
-    /** \name Controls & Sensors
-        
-        RCKid controls comprise of a dpad, buttons A and B, buttons Select and Start, side home button and volume up & down keys. Furthermore, RCKid is equipped with a 3axis accelerometer and gyroscope as well as an ambient and UV light sensor. 
-
-        The device also supports analogue joystick peripheral that can be physically controlled by either dpad, or the accelerometer. 
-     */
-    //@{
-
-    /** Enum for the buttons available. 
-     */
-    enum class Btn : uint32_t {
-        Left       = 1 << 0, 
-        Right      = 1 << 1,
-        Up         = 1 << 2, 
-        Down       = 1 << 3, 
-        A          = 1 << 4, 
-        B          = 1 << 5, 
-        Select     = 1 << 6, 
-        Start      = 1 << 7,
-        Home       = 1 << 8, 
-        VolumeUp   = 1 << 9, 
-        VolumeDown = 1 << 10,
-    }; // rckid::Btn
-
-    /** Returns true if the given button is currently down. 
-     */
-    bool btnDown(Btn b);
-
-    /** Returns true if the given button has been pressed since last frame (i.e. its state went from up to down). The value is stable within one frame. */
-    bool btnPressed(Btn b);
-
-    /** Returns true if the given button has been released since last frame (i.e. its state went from down to up). The value is stable within one frame. */
-    bool btnReleased(Btn b);
-
-    /** Clears button press information
+    /** Initializes the RCKid console. 
      
-        Useful for supressing default button actions when the app uses own mechanics.
+        This must be the first SDK function called by the application. Its task is to set up the console and completely depends on the backend used - while the device backends initialize the actual hardware after power on, the fantasy backend sets up the console window, etc. 
      */
-    void btnPressedClear(Btn b);
+    void initialize(int argc, char const * argv[]);
+    inline void initialize() { initialize(0, nullptr); }
 
-    /** Returns the accelerometer readings. 
+
+    void yield();
+
+
+    /** \page sdk
+        \section display Display Driver
+
+
+
      */
-    int16_t accelX(); 
-    int16_t accelY();
-    int16_t accelZ();
-
-    /** Returns the gyroscope readings. 
-     */
-    int16_t gyroX();
-    int16_t gyroY();
-    int16_t gyroZ();
-
-
-    /** Fake joystick. 
-     */
-    int8_t joystickX();
-    int8_t joystickY();
-    inline int8_t joystickX(int8_t min, int8_t max) { 
-        int8_t r = joystickX();
-        return (r < min) ? min : ((r > max) ? max : r);
-    }
-    inline int8_t joystickY(int8_t min, int8_t max) { 
-        int8_t r = joystickY();
-        return (r < min) ? min : ((r > max) ? max : r);
-    }
-
-    void joystickXUseDPad(FixedInt acceleration = FixedInt{1});
-    void joystickYUseDPad(FixedInt acceleration = FixedInt{1});
-    inline void joystickUseDPad() {
-        joystickXUseDPad();
-        joystickYUseDPad();
-    }
-    inline void joustickUseDPad(FixedInt accelX, FixedInt accelY) {
-        joystickXUseDPad(accelX);
-        joystickYUseDPad(accelY);
-    }
-
-
-    /** Returns the readout of the ambient light sensor. 
-     */
-    uint16_t lightAmbient();
- 
-    /** Returns the readout of the UV light sensor. 
-     */
-    uint16_t lightUV(); 
-
-    /** Temperature in tenths of degree Celsius as measured by the AVR firmware
-     */
-    int16_t tempAvr(); 
-
-    //}
-
-    /** \name Power Management
-     */
-    //@{
-
-    /** Puts the device to sleep */
-    void sleep();
-
-    /** Returns true if the device is currently charging the li-ion battery (must be in DC power mode). False when the charge has completed while still DC power attached, or running from batteries. 
-     */
-    bool charging();
-
-    /** Returns true if the device is running from DC power, false when power from battery. 
-     */
-    bool dcPower();
-
-    /** Returns the battery voltage in Volts x 100, i.e. full battery should read 420. 
-     */
-    unsigned vBatt(); 
-
-    /** Returns the battery level in pct. 
-     */
-    unsigned batteryLevel();
-    //@}
-
-    /** \name Display
-     
-       RCKid supports display with resolution of 320x240 pixels at 65536 colors. 
-       
-       The display on the device is 320x240 2.8" IPS display with 8080 8bit interface using ST7789 driver, but since the the display is originally vertical, 
-     */
-    //@{
-
-    enum class DisplayMode {
-        Native, 
-        Natural,
-        NativeDouble, 
-        NaturalDouble,
-        Off,
-    }; 
 
     /** Callback function for display update. 
          
@@ -238,164 +109,120 @@ namespace rckid {
      */
     using DisplayUpdateCallback = std::function<void()>;
 
-    /** Returns the current display mode. 
-     */
-    DisplayMode displayMode(); 
+    enum class DisplayResolution {
+        Normal,
+        Half
+    }; 
 
-    /** Sets the display mode. 
-      
-        Does nothing if the new mode is same as current mode. Setting display mode to DisplayMode::Off turns the display off, *including* the backlight, but brigtness setting itself will not be affected. 
+    enum class DisplayRefreshDirection {
+        Native, 
+        Normal,
+    };
+
+    /** Returns the display resolution. 
      */
-    void displaySetMode(DisplayMode mode);
+    DisplayResolution displayResolution(); 
+
+    /** Sets the display resolution (either normal, of half). 
+     */
+    void displaySetResolution(DisplayResolution value);
+
+    DisplayRefreshDirection displayRefreshDirection();
+
+    void displaySetRefreshDirection(DisplayRefreshDirection value); 
 
     /** Returns the display brightness. 
      */
-    uint8_t displayBrightness(); 
+    uint8_t displayBrightness();
 
-    /** Sets the display brightness.
-     
-        If the display is on, the effect should be immediate. 
+    /** Sets the display brightness 
      */
-    void displaySetBrightness(uint8_t value);
+    void displaySetBrightness(uint8_t value); 
 
-    /** Returns the current update region of the display. 
-     */
-    Rect displayUpdateRegion();
+    /** Returns the display update region. The rectangle values must be interpreted in the current display resolution.
+    */
+    Rect displayUpdateRegion(); 
 
-    /** Sets the display update region. 
+    /** Sets the display update region. The coordinates must be interpreter in the current display resolution.
      */
-    void displaySetUpdateRegion(Rect region);
+    void displaySetUpdateRegion(Rect value);
 
-    /** Sets the display update region based on width and height. The region will be automatically centered. 
+    /** Sets the display update region to a rectangle fo given width and height that will be centered on the screen. The width and height are interpreted in the current display resolution.
      */
-    inline void displaySetUpdateRegion(Coord width, Coord height) {
-        switch (displayMode()) {
-            case DisplayMode::Native:
-            case DisplayMode::Natural:
-                ASSERT(width >= 0 && width <= 320);
-                ASSERT(height >= 0 && height <= 240);
-                return displaySetUpdateRegion(Rect::XYWH((320 - width) / 2, (240 - height) / 2, width, height));
-            case DisplayMode::NativeDouble:
-            case DisplayMode::NaturalDouble:
-                ASSERT(width >= 0 && width <= 160);
-                ASSERT(height >= 0 && height <= 120);
-                return displaySetUpdateRegion(Rect::XYWH((160 - width) / 2, (120 - height) / 2, width, height));
-            case DisplayMode::Off:
-                // although this is a bit weird...
-                return;
-        }
-    }
+    void displaySetUpdateRegion(Coord width, Coord height); 
 
-    /** Returns true if display is currently being updated. 
+    /** Returns true if the display is currently being updated. False otherwise.
      */
-    bool displayUpdateActive(); 
+    bool displayUpdateActive();
 
-    /** Busy loop convenience function that waits for the display update to be done. 
+    /** Waits until the display update is done.
      */
-    inline void displayWaitUpdateDone() {
-        while (displayUpdateActive())
-            yield();
-    }
+    void displayWaitUpdateDone();
 
-    /** Busy waits for the display's VSYNC 
-     */
     void displayWaitVSync();
 
     void displayUpdate(ColorRGB const * pixels, uint32_t numPixels, DisplayUpdateCallback callback);
 
     void displayUpdate(ColorRGB const * pixels, uint32_t numPixels);
 
-    inline void displayUpdateBlocking(ColorRGB const * pixels, uint32_t numPixels) {
-        ASSERT(!displayUpdateActive() && "Blocking update must be first and the only one in a frame");
-        displayUpdate(pixels, numPixels);
-        // busy wait for the async update to finish
-        while (displayUpdateActive())
-            yield();
-    }
-
-    //@}
-
-    /** \name Audio
+    /** \page sdk
+        \section audio Audio Playback & Recording
 
         The audio uses 16bit signed format and supports either mono, or stereo playback and mono recording via the buil-in microphone with sample rates of up to 48kHz. To conserve memory, both playback and recording require the app to supply the audio system with a double buffer that the audio system will use to cache and stream out the audio data, and a callback function. 
 
         The callback function for the playback takes a buffer and its size in *stereo samples* and should fill the buffer with up to the specified number of stereo samples, returning the number of stereo samples actually written (which can be smaller then the number of samples the buffer can hold). Internally, the device uses the double buffer so that when one part is being streamed out via DMA, the other part can be refilled by the application.
+
      */
-    //@{
 
-    /** Enables the audio.
+    using AudioCallback = std::function<uint32_t(int16_t *, uint32_t)>;
+
+    /** Returns true if headphones are connected. 
      */
-    void audioOn();
+    bool audioHeadphones(); 
 
-    void audioOff();
-
-    bool audioEnabled();
-
-    bool audioHeadphones();
-
-    int32_t audioVolume();
-
-    void audioSetVolume(int32_t value);
-
-    uint32_t audioSampleRate();
-
-    /** Starts playback with given sample rate and callback function.
+    /** Reuturns true if audio processing is paused (playback or recording). 
      */
-    void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, std::function<uint32_t(int16_t *, uint32_t)> cb);
-
-    //void audioRecord(DoubleBuffer & data, uint32_t sampleRate = 8000);
-
-    void audioPause();
-
     bool audioPaused();
 
+    /** Returns true if playback is active or paused.
+     */
+    bool audioPlayback();
+
+    /** Returns true if recording is active or paused.
+     */
+    bool audioRecording();
+
+    /** Returns the current audio volume. 
+     */
+    uint8_t audioVolume();
+
+    /** Sets the current audio volume. 
+     */
+    void audioSetVolume(uint8_t value);
+
+    /** Starts playback of given buffer at spefified sample rate. 
+     */
+    void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb);
+
+    /** Pauses audio playback or recording. 
+     */
+    void audioPause();
+
+    /** Resumes audio playbnack or recoding. 
+     */
+    void audioResume();
+
+    /** Stops playback or recording. 
+     */
     void audioStop();
 
-
-    //@}
-
-    /** \name RGB LEDs
-     
-        The top plate buttons (DPAD, A, B and Select and Start) each contain one RGB LED underneath that can be used for various light effects. There is also sixth LED in the upper display border that is used for notifications and is not expected to be changed by the application directly. 
-
-        The RGBs support simple effects, such as breathe, rainbow hue, etc.  
-
-        Since the LEDs are neopixels at 5 volts and together consume at least 6mA even if completelt black, it is important to turn them off via ledsOff() function whenever they are not needed. 
-     */
-    //@{
-
-    /** Turns all the LEDs off to save power. 
-     */
-    void ledsOff(); 
-
-    void ledSetEffect(Btn b, RGBEffect const & effect);
-
-    void ledSetEffects(RGBEffect const & dpad, RGBEffect const & a, RGBEffect const & b, RGBEffect const & select, RGBEffect const & start); 
-
-    //@}
-
-    /** \name Rumbler 
-     
-        A simple rumbler interface that allows playing a rumbler effect that consists of N iterations of rumble with particular strength for a time followed by a pause.
-     */
-    //@{
-
-    void rumble(RumblerEffect const & effect);
-
-    inline void rumbleNudge() { rumble(RumblerEffect::Nudge()); }
-    inline void rumbleOk() { rumble(RumblerEffect::Ok()); }
-    inline void rumbleFail() { rumble(RumblerEffect::Fail()); }
-    inline void rumbleAttention() {rumble(RumblerEffect::Attention()); }
-
-    //@}
-
-    /** \name SD Card Filesystem access. 
+    /** \page sdk
+        \section sdfs SD Card Filesystem access. 
      
         RCKid device contains an SD card that can be used to store various data that can persist between different cartridges, such as music, messages, images, etc. The actual filesystem is handled by the FatFS library where the RCKid SDK only provides the necessary functions that enable the filesystem access. 
 
         NOTE: Those functions are *not* intended to be called from applications. Instead the filesystem namespace that provides the necessary filesystem abstractions onver the SD card basic read & write interface should be used. 
      */
-    //@{
 
     /** Returns the capacity of the installed SD card in 512 byte blocks, or 0 if there is no SD card, or if its initialization has failed. 
      */
@@ -409,15 +236,13 @@ namespace rckid {
      */
     bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks);
 
-    //@}
-
-    /** \name Cartridge Filsystem access. 
+    /** \page sdk
+        \section cartfs Cartridge Filsystem access. 
      
         Provides access to a section of the cartridge flash memory. Due to the nature of the flash memory on the device, three functions are provided, one for reading a block. The API is tailored for the NOR flash supported by RPI, hence minimal read size of 1 as the flash is memory mapped via XIP on the device, while the write page size and write block size are each different, generally at 256 and 4096 bytes. 
 
         On the fantasy backend, the flash is emulated by its own file. 
      */
-    //@{
     uint32_t cartridgeCapacity();
 
     uint32_t cartridgeWriteSize();
@@ -430,16 +255,22 @@ namespace rckid {
 
     void cartridgeErase(uint32_t start);
 
-    //@}
-
-    /** \name Accelerated functions
-     */
-    //@{
-
-    void memFill(uint8_t * buffer, uint32_t size, uint8_t value);
-    void memFill(uint16_t * buffer, uint32_t size, uint16_t value);
-    void memFill(uint32_t * buffer, uint32_t size, uint32_t value);
-
-    //@}
-
 } // namespace rckid
+
+/** \page sdk
+    \section memory Memory Management
+
+    As the device has only a limited amount of RAM (~512 KB excluding stacks for mk III), some careful management is necessary. RCKid supports two dynamic allocation schemes, a normal heap and arena allocators.
+
+    Stack Protection
+
+    Another variable in the memory layout is relative small stack sizes (only 4kb per core). Those stacks can easily overflow and corrupt the heap, or one another. Stack protection scheme can be employed to detect stack overflow into a the heap and prevent further execution (recovery at this point is impossible). 
+
+    To enable the protection, memoryInstrumentStackProtection() must be called first, which writes magic bytes to the end of the stack regions (just above RAM). Subsequent periodic calls to memoryCheckStaticProtection() then compare the memory to the expected magic value and will raise an error (error::StackProtectionFailure) upon failure. 
+
+    NOTE that the stack protection scheme is only meaningful on the actual devices, the fantasy console uses the OS callstack instead and this will likely never overflow into the fantasy heap region. 
+
+    \ref memoryFree, \ref Heap, \ref Arena, 
+*/
+
+#include "memory.h"

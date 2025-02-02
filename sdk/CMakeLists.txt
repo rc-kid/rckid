@@ -1,0 +1,30 @@
+cmake_minimum_required(VERSION 3.12)
+
+# add the backend as selected
+string(TOLOWER "${RCKID_BACKEND}" BACKEND_LOWER)
+add_subdirectory("backends/${BACKEND_LOWER}")
+
+# now add the utils if we are in fantasy build
+if (RCKID_BACKEND STREQUAL "FANTASY")
+
+    function(add_utility util_name sources)
+        add_executable(${util_name} "${sources}")
+        target_include_directories(${util_name} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/raylib/src")
+        target_include_directories(${util_name} PRIVATE "${CMAKE_SOURCE_DIR}/libs/platform/pc")
+
+        target_link_libraries(${util_name} raylib opus libhelix-mp3 FatFS littlefs)
+    endfunction()
+
+    add_utility("font-converter" "utils/font_converter.cpp")
+
+    add_custom_target(generate-sdk-assets
+        COMMAND $<TARGET_FILE:font-converter> assets/fonts/Iosevka.ttf rckid/assets/fonts/Iosevka16.h 16
+        DEPENDS font-converter
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+
+else()
+    message("SDK utils are only available in RCKID_BACKEND=FANTASY, skipping")
+endif()
+
+

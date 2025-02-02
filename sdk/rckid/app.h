@@ -1,129 +1,99 @@
 #pragma once
 
-#include <optional>
-
 #include "rckid.h"
-#include "graphics/drawing.h"
+#include "utils/stream.h"
 
 namespace rckid {
 
-
-    /** Template metaprogramming trick to determine whether ModalResult is defined on a given app type.
+    /** Base class for RCKid applications.
+     
+        Defines the application lifecycle and their stacking. 
+     
      */
-    template<typename, typename = void>
-    constexpr bool HasModalResult = false;
-
-    template<typename T>
-    constexpr bool HasModalResult
-        <T, std::void_t<decltype(sizeof(typename T::ModalResult))>> = true;
-
-    class App {
+    class BaseApp {
     public:
 
-        virtual ~App() noexcept = default;
-
-        static uint32_t tickUs() { return tickUs_; }
-        static uint32_t updateUs() { return updateUs_; }
-        static uint32_t drawUs() { return drawUs_; }
-        static uint32_t renderUs() { return renderUs_; }
-        static uint32_t waitVSyncUs() { return waitVSyncUs_; }
-        static uint32_t waitRenderUs() { return waitRenderUs_; }
-        static uint32_t fps() { return fps_; }
-
-    protected:
-
-        /** Runs the app's main loop until exit() is called.
+        /** Runs the application. 
          */
         void loop(); 
 
-        /** App state update method. 
+        /** Suspends the app. 
          
-            
+            For apps that support suspending, the method should be overriden and the app should free as much memory as possible. 
          */
-        virtual void update() {
-            if (btnPressed(Btn::B))
-                exit();
-            if (btnPressed(Btn::VolumeUp))
-                audioSetVolume(audioVolume() + 1);
-            if (btnPressed(Btn::VolumeDown))
-                audioSetVolume(audioVolume() - 1);
+        virtual void suspend() {
+            ASSERT(suspended_ == false);
+            suspended_ = true;
         }
 
-        virtual void draw() = 0;
+        virtual void resume() {
+            ASSERT(suspended_ == true);
+            suspended_ = false;
+        }
 
-        virtual void render() = 0;
+        virtual void save([[maybe_unused]] WriteStream & into) {
+            LOG(LL_ERROR, "Saving application state not supported");
+        }   
 
+        virtual void load([[maybe_unused]] ReadStream & from) {
+            LOG(LL_ERROR, "Loading application state not supported");
+        }
 
+    protected:
+
+        /** Called when the application gains focus, 
+         
+            i.e. its update & draw methods start being called. This is either after the app is created and before it starts running, or if it was superseded by another app, when that app exitted.  
+         */
         virtual void onFocus() {}
+
+        /** Called when the application is about to loose focus.
+         
+            i.e. no upate or draw methods will be called after the application blurs. This can happen when either the app exits, or if it is superseded by another app. 
+         */
         virtual void onBlur() {}
 
-        /** Exits from the app. 
+        /** */
+        virtual void update() {
+
+        }
+
+        /** Method responsible for drawing the app contents on the screen. 
+         
+            While the method runs, 
          */
-        void exit() {
-            // multiple exits in single app tick are technically possible
-            if (current_ != nullptr)
-                ASSERT(current_ == this);
-            current_ = nullptr;
-        }
-
-        template<typename T, typename ... ARGS> 
-        typename std::enable_if<HasModalResult<T>, std::optional<typename T::ModalResult>>::type
-        runModal(ARGS && ... args) {
-            onBlur();
-            auto result = T::run(std::forward<ARGS>(args) ...);
-            onFocus();
-            return result;
-        }
-
-        template<typename T, typename ... ARGS>
-        typename std::enable_if<!HasModalResult<T>, void>::type 
-        runModal(ARGS && ... args) {
-            onBlur();
-            Arena::enter();
-            T::run(std::forward<ARGS>(args) ...);
-            Arena::leave();
-            onFocus();
-        }
+        virtual void draw() = 0;
 
     private:
 
-        static inline App * current_ = nullptr;
+        bool suspended_ = false;
+        BaseApp * parent_ = nullptr;
 
-        static inline uint32_t tickUs_ = 0;
-        static inline uint32_t updateUs_ = 0;
-        static inline uint32_t drawUs_ = 0;
-        static inline uint32_t renderUs_ = 0;
-        static inline uint32_t waitVSyncUs_ = 0;
-        static inline uint32_t waitRenderUs_ = 0;
-        static inline uint32_t fps_ = 0; 
+        static inline BaseApp * app_ = nullptr;
 
-    }; // rckid::App
+    }; // rckid::BaseApp
 
-
-    template<typename GRAPHICS>
-    class GraphicsApp : public App {
+    /** Application with Renderer that takes care of its rendering on the display.
+     */
+    template<typename RENDERER>
+    class App : public BaseApp {
     public:
-        using Color = typename GRAPHICS::Color;
-
+        using Color = typename RENDERER::Color;
     protected:
-        GraphicsApp(GRAPHICS && g): g_{std::move(g) } {}
-
-        void render() override {
-            renderer_.render(g_);
+        template <typename... Args>
+        App(Args&&... args) : g_{std::forward<Args>(args)...} {
         }
 
         void onFocus() override {
-            App::onFocus();
-            renderer_.initialize(g_);
+            g_.initialize();
         }
 
-        void onBlur() override {
-            App::onBlur();
-            renderer_.finalize();
+        void draw() override {
+            g_.render();
         }
 
-        GRAPHICS g_;
-        Renderer<GRAPHICS> renderer_;
-    };
+        RENDERER g_;
+
+    }; // rckid::App
 
 } // namespace rckid

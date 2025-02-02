@@ -31,7 +31,7 @@ namespace rckid {
         int size; 
         int numGlyphs;
         GlyphInfo const * glyphs;
-        uint32_t const * pixels;
+        uint8_t const * pixels;
 
         template<typename T>
         static constexpr Font const fromROM() {

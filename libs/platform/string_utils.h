@@ -39,6 +39,16 @@ inline std::string trim(std::string const & s) {
     return result;
 }
 
+inline bool startsWith(char const * x, char const * prefix) {
+    while (*prefix != 0) {
+        if (*x != *prefix)
+            return false;
+        ++x;
+        ++prefix;
+    }
+    return true;
+}
+
 inline std::string encodeUTF8(uint32_t codepoint) {
     std::string result;
     if (codepoint <= 0x7F) {
