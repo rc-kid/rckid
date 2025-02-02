@@ -17,8 +17,10 @@
 #include <pico/stdlib.h>
 #include <pico/rand.h>
 
-#define ARCH_RP2040
-#define ARCH_LITTLE_ENDIAN
+#define PLATFORM_RP2040
+#define PLATFORM_LITTLE_ENDIAN
+
+#include "../definitions.h"
 
 class cpu {
 public:
@@ -31,9 +33,11 @@ public:
         sleep_ms(value);  
     }
 
-    static void sleep() {
-        // TODO TODO TODO 
-    }
+    FORCE_INLINE(static void nop() __attribute__((always_inline)) {
+        __asm__ volatile ("nop");
+    })
+
+    // platform extras
 
     static size_t clockSpeed() { return clockSpeedkHz_ * 1000; } 
 
@@ -48,71 +52,77 @@ public:
         set_sys_clock_khz(clockSpeedkHz_, true);
     }
 
-    static void nop() __attribute__((always_inline)) {
-        __asm__ volatile ("nop");
-    }
-
 private:
 
     static inline unsigned clockSpeedkHz_ = 125000;
 
 }; // cpu
 
-namespace gpio {
+class gpio {
+public:
 
     using Pin = uint16_t;
 
-    constexpr Pin UNUSED = 0xffff;
+    static constexpr Pin UNUSED = 0xffff;
 
-    inline void initialize() {
-        //stdio_init_all();
-    }
-
-    inline void setAsOutput(Pin pin) {
+    static void setAsOutput(Pin pin) {
         gpio_init(pin);
         gpio_set_dir(pin, GPIO_OUT);
     }
 
-    inline void setAsInput(Pin pin) {
+    static void setAsInput(Pin pin) {
         gpio_init(pin);
         gpio_set_dir(pin, GPIO_IN);
     }
 
-    inline void setAsInputPullup(Pin pin) {
+    static void setAsInputPullup(Pin pin) {
         gpio_set_dir(pin, GPIO_IN);
         gpio_pull_up(pin);
     }
 
-    inline void setAsInputPullDown(Pin pin) {
+    static void setAsInputPullDown(Pin pin) {
         gpio_set_dir(pin, GPIO_IN);
         gpio_pull_down(pin);
     }
 
-    inline void write(Pin pin, bool value) { gpio_put(pin, value); }
+    static void write(Pin pin, bool value) { gpio_put(pin, value); }
 
-    inline bool read(Pin pin) { return gpio_get(pin); }
+    static bool read(Pin pin) { return gpio_get(pin); }
+
+    static  void outputHigh(Pin p) { write(p, true); setAsOutput(p); write(p, true);  }
+    static  void outputLow(Pin p) { write(p, false); setAsOutput(p); write(p, false); }
+    static  void outputFloat(Pin p) { setAsInput(p); }
+
+    static void high(Pin p) { write(p, true); }
+    static void low(Pin p) { write(p, false); }
+
+    /* TODO do we need this?
+    static void initialize() {
+        //stdio_init_all();
+    }
+    */
+
 }; // gpio
 
-#pragma once
+class i2c {
+public:
 
-namespace i2c {
-
-    inline void initializeMaster(unsigned sda, unsigned scl, unsigned baudrate = 400000) {
-        i2c_init(i2c0, baudrate);
-        gpio_set_function(sda, GPIO_FUNC_I2C);
-        gpio_set_function(scl, GPIO_FUNC_I2C);
-        // Make the I2C pins available to picotool
-        bi_decl(bi_2pins_with_func(sda, scl, GPIO_FUNC_I2C));    
-    }
-
-    //static void initializeSlave(uint8_t address_) {}
-
-    inline bool masterTransmit(uint8_t address, uint8_t const * wb, uint8_t wsize, uint8_t * rb, uint8_t rsize) {
+    static bool masterTransmit(uint8_t address, uint8_t const * wb, uint8_t wsize, uint8_t * rb, uint8_t rsize) {
         if (wsize != 0)
             i2c_write_blocking(i2c0, address, wb, wsize, rsize != 0);
         if (rsize != 0)
             i2c_read_blocking(i2c0, address, rb, rsize, false);
         return true;
+    }
+
+    // platform extras
+
+    static void initializeMaster(unsigned sda, unsigned scl, unsigned baudrate = 400000) {
+        i2c_init(i2c0, baudrate);
+        gpio_set_function(sda, GPIO_FUNC_I2C);
+        gpio_set_function(scl, GPIO_FUNC_I2C);
+        // Make the I2C pins available to picotool
+        bi_decl(bi_2pins_with_func(sda, scl, GPIO_FUNC_I2C));    
     }
 
 }; // i2c
@@ -121,19 +131,6 @@ class spi {
 public:
 
     using Device = gpio::Pin;
-
-    static void initialize(unsigned miso, unsigned mosi, unsigned sck) {
-        spi_init(spi0, 500000); // init spi0 at 0.5Mhz
-        gpio_set_function(miso, GPIO_FUNC_SPI);
-        gpio_set_function(mosi, GPIO_FUNC_SPI);
-        gpio_set_function(sck, GPIO_FUNC_SPI);
-        // Make the SPI pins available to picotool
-        bi_decl(bi_3pins_with_func(miso, mosi, sck, GPIO_FUNC_SPI));        
-    }
-
-    static void setSpeed(unsigned speed) {
-        spi_init(spi0, speed);
-    }
 
     static void begin(Device device) {
 //        asm volatile("nop \n nop \n nop");
@@ -167,6 +164,18 @@ public:
             *(data++) = transfer(0);
     }
 
+    static void initialize(unsigned miso, unsigned mosi, unsigned sck) {
+        spi_init(spi0, 500000); // init spi0 at 0.5Mhz
+        gpio_set_function(miso, GPIO_FUNC_SPI);
+        gpio_set_function(mosi, GPIO_FUNC_SPI);
+        gpio_set_function(sck, GPIO_FUNC_SPI);
+        // Make the SPI pins available to picotool
+        bi_decl(bi_3pins_with_func(miso, mosi, sck, GPIO_FUNC_SPI));        
+    }
+
+    static void setSpeed(unsigned speed) {
+        spi_init(spi0, speed);
+    }
 }; // spi
 
 /** Convenience function for setting PIO speed. 
@@ -191,7 +200,5 @@ inline bool pwm_is_enabled(uint slice_num) {
     return (pwm_hw->slice[slice_num].csr) & (1 << PWM_CH0_CSR_EN_LSB);
 }
 
-#include "../definitions.h"
-#include "../utils.h"
-#include "../common.h"
+#include "../I2CDevice.h"
 

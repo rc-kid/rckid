@@ -5,7 +5,6 @@
 
 #include "filesystem.h"
 
-
 // ================================================================================================
 // FatFS device driver (using SD card)
 // ================================================================================================
@@ -26,14 +25,14 @@ extern "C" {
         ASSERT(pdrv == 0);
         if (! rckid::sdCapacity() != 0)
             return RES_NOTRDY;
-        return rckid::sdReadBlocks(sector, buff, count) ? RES_OK : RES_ERROR;
+        return rckid::sdReadBlocks(static_cast<uint32_t>(sector), buff, count) ? RES_OK : RES_ERROR;
     }
 
     DRESULT disk_write(BYTE pdrv, BYTE const * buff, LBA_t sector, UINT count) {
         ASSERT(pdrv == 0);
         if (! rckid::sdCapacity())
             return RES_NOTRDY;
-        return rckid::sdWriteBlocks(sector, buff, count) ? RES_OK : RES_ERROR;
+        return rckid::sdWriteBlocks(static_cast<uint32_t>(sector), buff, count) ? RES_OK : RES_ERROR;
     }
 
     DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void * buff) {
@@ -68,26 +67,22 @@ extern "C" {
     // lfs wrappers for the RCKid cartridge interface
 
     int lfs_device_read(lfs_config const * c, lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size) {
-        TRACE_LITTLEFS("Reading " << size << " from block " << block << ", offset " << off);
         rckid::cartridgeRead(block * c->block_size + off, reinterpret_cast<uint8_t *>(buffer), size);
         return 0;
     }
 
     int lfs_device_write(lfs_config const * c, lfs_block_t block, lfs_off_t off, void const * buffer, lfs_size_t size) {
         ASSERT(size == rckid::cartridgeWriteSize());
-        TRACE_LITTLEFS("Writing " << size << " from block " << block << ", offset " << off);
         rckid::cartridgeWrite(block * c->block_size + off, reinterpret_cast<uint8_t const *>(buffer));
         return 0;
     }
 
     int lfs_device_erase(lfs_config const * c, lfs_block_t block) {
-        TRACE_LITTLEFS("Erasing block " << block);
         rckid::cartridgeErase(static_cast<uint32_t>(block * c->block_size));
         return 0;
     }
 
     int lfs_device_sync([[maybe_unused]] lfs_config const * c) {
-        TRACE_LITTLEFS("Sync");
         return 0;
     }
 }
@@ -120,11 +115,8 @@ namespace rckid::filesystem {
         lfsCfg_.block_cycles = 500;
         // if the capacity is non-zero, mount the cartridge filesystem
         if (cartridgeCapacity() != 0) {
-            TRACE_LITTLEFS("Mounting cartridge flash storage");
             if (! mount(Drive::Cartridge)) {
-                TRACE_LITTLEFS("Mount failed, formatting...");
                 format(Drive::Cartridge);
-                TRACE_LITTLEFS("Re-mounting after format");
                 mount(Drive::Cartridge);
             }
         }
@@ -133,7 +125,7 @@ namespace rckid::filesystem {
     uint32_t FileRead::size() const {
         switch (drive_) {
             case static_cast<unsigned>(Drive::SD):
-               return f_size(&sd_);
+               return static_cast<uint32_t>(f_size(&sd_));
             case static_cast<unsigned>(Drive::Cartridge):
                 return lfs_file_size(& lfs_, const_cast<lfs_file_t*>(& cart_));
             default:
@@ -145,7 +137,7 @@ namespace rckid::filesystem {
         switch (drive_) {
             case static_cast<unsigned>(Drive::SD):
                 f_lseek(& sd_, position);
-                return sd_.fptr;
+                return static_cast<uint32_t>(sd_.fptr);
             case static_cast<unsigned>(Drive::Cartridge):
                 lfs_file_seek(& lfs_, & cart_, position, 0);
                 return lfs_file_tell(& lfs_, & cart_);
@@ -286,10 +278,10 @@ namespace rckid::filesystem {
         switch (dr) {
             case Drive::SD:
                 if (fs_ != nullptr) {
-                    LOG("SD already mounted");
+                    LOG(LL_WARN, "SD already mounted");
                     return true;
                 }
-                fs_ = (FATFS*) rckid::Heap::malloc(sizeof(FATFS));
+                fs_ = (FATFS*) rckid::Heap::alloc(sizeof(FATFS));
                 if (f_mount(fs_, "", /* mount immediately */ 1) != FR_OK) {
                     delete fs_;
                     fs_ = nullptr;
@@ -298,11 +290,10 @@ namespace rckid::filesystem {
                 return true;
             case Drive::Cartridge:
                 if (lfs_.cfg == & lfsCfg_) {
-                    LOG("Cartridge already mounted");
+                    LOG(LL_WARN, "Cartridge already mounted");
                     return true;
                 }
                 if (lfs_mount(&lfs_, &lfsCfg_) != 0) {
-                    TRACE_LITTLEFS("Mounting cartridge failed");
                     lfs_.cfg = nullptr;
                     return false;
                 }

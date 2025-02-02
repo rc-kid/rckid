@@ -83,7 +83,7 @@ public:
 
 #if (! defined ARCH_PC)
     Writer & operator << (size_t x) {
-        if (sizeof(size_t) == 4)
+        if constexpr(sizeof(size_t) == 4)
             return (*this) << static_cast<uint32_t>(x);
         else 
             return (*this) << static_cast<uint64_t>(x);
@@ -92,7 +92,7 @@ public:
 
     Writer & operator << (void * address) {
         static_assert(sizeof(void*) <= 8);
-        if (sizeof(void*) > 4)
+        if constexpr (sizeof(void*) > 4)
             return (*this) << reinterpret_cast<uint64_t>(address);
         else
             return (*this) << static_cast<uint32_t>(reinterpret_cast<uint64_t>(address));
@@ -104,7 +104,7 @@ public:
             putChar_('-');
             value *= -1;
         }
-        if (sizeof(int) == 4)
+        if constexpr (sizeof(int) == 4)
             return (*this) << static_cast<uint32_t>(value);
         else
             return (*this) << static_cast<uint64_t>(value);

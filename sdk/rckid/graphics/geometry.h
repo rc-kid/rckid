@@ -4,7 +4,8 @@
 
 namespace rckid {
 
-    using Coord = int;
+    using Coord = int32_t;
+
 
     template<typename COORD>
     class TPoint {
@@ -32,8 +33,6 @@ namespace rckid {
 
     }; // rckid::Point
 
-    using Point = TPoint<Coord>;
-
     template<typename COORD>
     class TRect {
     public:
@@ -60,9 +59,13 @@ namespace rckid {
             return TRect{x, y, width, height};
         }
 
+        static constexpr TRect Centered(COORD w, COORD h, COORD maxWidth, COORD maxHeight) {
+            return TRect{(maxWidth - w) / 2, (maxHeight - h) / 2, w, h};
+        }
+
     }; // rckid::TRect<>
 
     using Rect = TRect<Coord>;
-
+    using Point = TPoint<Coord>;
 
 } // namespace rckid

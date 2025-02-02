@@ -1,6 +1,20 @@
 # TODO
 
+
+- ensure that buffers use allocators properly when they are created to construct stuff
+- check audio playback, check the documentation for audio playback
+- add input & output 
+
+- fix platform for PC and attiny acording to the RP2040 platform
+- update I2C device so that it works well
+- waiting for display update done could make the cpu sleep
+
+
 > This is updated TODO list for mkIII. It's split into 
+
+- 2.8" 320x240 with fpc: https://www.aliexpress.com/item/1005004629215040.html?pdp_npi=4%40dis%21CZK%21CZK%208.90%21CZK%208.90%21%21%210.36%210.36%21%402103891017375828457015857e954c%2112000035688288567%21sh%21CZ%213305825785%21X&spm=a2g0o.store_pc_allItems_or_groupList.new_all_items_2007508297226.1005004629215040
+
+- 3.9" 320x320 https://www.aliexpress.com/item/1005006170307995.html?pdp_npi=4%40dis%21CZK%21CZK%20299.00%21CZK%20299.00%21%21%2112.09%2112.09%21%40211b819117375814797795352e5cdc%2112000036095035873%21sh%21CZ%213305825785%21X&spm=a2g0o.store_pc_allItems_or_groupList.new_all_items_2007508297226.1005006170307995
 
 > MK III ideas
 - buy the RP recommended crystal at jlcpcb

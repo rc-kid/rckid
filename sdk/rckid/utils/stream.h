@@ -1,11 +1,9 @@
 #pragma once
 
-#include <algorithm>
-#include <vector>
 
 #include "../rckid.h"
 
-namespace rckid {
+namespace rckid { 
 
     /** Simplest read stream interface.  
      
@@ -108,7 +106,7 @@ namespace rckid {
         /** Reads up to bufferSize bytes into the buffer and returns the number of bytes read. This is 0 if at the end of the time. Also advances the read cursor by the actal bytes read. 
          */
         uint32_t read(uint8_t * buffer, uint32_t bufferSize) override {
-            uint32_t available = std::min(bufferSize, bufferSize_ - pos_);
+            uint32_t available = bufferSize < (bufferSize_ - pos_) ? bufferSize : (bufferSize_ - pos_);
             if (available != 0) {
                 memcpy(buffer, buffer_ + pos_, available);
                 pos_ += available;
@@ -181,8 +179,8 @@ namespace rckid {
     // serialization of std::string - first serialize uint32_t length, followed by the array itself
     template<>
     inline void WriteStream::serialize(std::string const & what) {
-        serialize<uint32_t>(what.size());
-        write(reinterpret_cast<uint8_t const *>(what.data()), what.size());
+        serialize<uint32_t>(static_cast<uint32_t>(what.size()));
+        write(reinterpret_cast<uint8_t const *>(what.data()), static_cast<uint32_t>(what.size()));
     }
 
     template<>

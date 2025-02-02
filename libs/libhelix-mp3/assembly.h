@@ -423,7 +423,7 @@ static __inline Word64 SAR64(Word64 x, int n)
 #else 
 // in all other cases use the platform independent C implementation
 
-FORCE_INLINE static int FASTABS(int x)
+FORCE_INLINE(static int FASTABS(int x)
 {
   int sign;
 
@@ -432,9 +432,9 @@ FORCE_INLINE static int FASTABS(int x)
   x -= sign;
 
   return x;
-}
+})
 
-FORCE_INLINE static int CLZ(int x)
+FORCE_INLINE(static int CLZ(int x)
 {
   int numZeros;
 
@@ -448,28 +448,28 @@ FORCE_INLINE static int CLZ(int x)
   }
 
   return numZeros;
-}
+})
 
 /* returns 64-bit value in [edx:eax] */
-FORCE_INLINE static Word64 MADD64(Word64 sum64, int x, int y)
+FORCE_INLINE(static Word64 MADD64(Word64 sum64, int x, int y)
 {
     sum64 += (Word64)x * (Word64)y;
     return sum64;
-}
+})
 
-FORCE_INLINE static int MULSHIFT32(int x, int y)
+FORCE_INLINE(static int MULSHIFT32(int x, int y)
 {
     int z;
 
     z = (Word64)x * (Word64)y >> 32;
 
         return z;
-}
+})
 
-FORCE_INLINE static Word64 SAR64(Word64 x, int n)
+FORCE_INLINE(static Word64 SAR64(Word64 x, int n)
 {
   return x >> n;
-}
+})
 
 #endif
 

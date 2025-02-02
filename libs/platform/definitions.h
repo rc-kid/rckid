@@ -1,5 +1,49 @@
 #pragma once
 
+#ifdef __cplusplus
+namespace platform {
+    /** Endiannes of the platform. 
+     */
+    enum class Endian {
+        Little, 
+        Big, 
+    }; 
+
+} // namespace platform
+#endif
+
+
+/** Because Microsoft and GCC/CLang have different standards of how to declare packed structs or classes. Just wrap the definition with the PACKED() macro. 
+ */
+#if defined(_MSC_VER)
+#define PACKED(...) \
+    __pragma(pack(push, 1)) \
+    __VA_ARGS__ ; \
+    __pragma(pack(pop)) \
+    static_assert(true)
+#else
+#define PACKED(...) __VA_ARGS__ __attribute__((packed))  
+#endif
+
+#ifdef _MSC_VER
+    #define FORCE_INLINE(...) __forceinline __VA_ARGS__
+#elif defined(__GNUC__) || defined(__clang__)
+    #define FORCE_INLINE(...) __attribute__((always_inline)) inline __VA_ARGS__
+#else
+    #define FORCE_INLINE(...) inline __VA_ARGS__
+#endif
+
+#if defined(_MSC_VER)
+#define NORETURN(...) __declspec(noreturn) __VA_ARGS__
+#else
+#define NORETURN(...) __VA_ARGS__ __attribute__((noreturn))
+#endif
+
+
+
+
+#ifdef FOOBAR
+
 /** Wrappers for external libraries that turn compiler warnings in them off. 
  */
 #if defined(_MSC_VER)
@@ -34,28 +78,4 @@
 #define LOG(...)
 #endif
 
-/** Because Microsoft and GCC/CLang have different standards of how to declare packed structs or classes. Just wrap the definition with the PACKED() macro. 
- */
-#if defined(_MSC_VER)
-#define PACKED(...) \
-    __pragma(pack(push, 1)) \
-    __VA_ARGS__ ; \
-    __pragma(pack(pop)) \
-    static_assert(true)
-#else
-#define PACKED(...) __VA_ARGS__ __attribute__((packed))  
-#endif
-
-#ifdef _MSC_VER
-    #define FORCE_INLINE __forceinline
-#elif defined(__GNUC__) || defined(__clang__)
-    #define FORCE_INLINE __attribute__((always_inline)) inline
-#else
-    #define FORCE_INLINE inline
-#endif
-
-#if defined(_MSC_VER)
-#define NORETURN(...) __declspec(noreturn) __VA_ARGS__
-#else
-#define NORETURN(...) __VA_ARGS__ __attribute__((noreturn))
 #endif
