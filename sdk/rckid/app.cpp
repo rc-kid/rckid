@@ -14,6 +14,7 @@ namespace rckid {
         app_->onFocus();
         // now run the app
         while (app_ == this) {
+            tick();
             update();
             displayWaitUpdateDone();
             draw();

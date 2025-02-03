@@ -59,6 +59,17 @@ namespace rckid {
         uint32_t flashSize_ = 0;
     }
 
+    namespace io {
+        uint32_t buttons_;
+        uint32_t lastButtons_;
+        int16_t accelX_;
+        int16_t accelY_;
+        int16_t accelZ_;
+        int16_t gyroX_;
+        int16_t gyroY_;
+        int16_t gyroZ_;
+    }
+
     namespace display {
         DisplayResolution resolution;
         DisplayRefreshDirection direction;
@@ -183,8 +194,78 @@ namespace rckid {
         filesystem::initialize();
     }
 
-    void yield() {
+    void tick() {
+        SystemMallocGuard g_;
+        if (WindowShouldClose())
+            std::exit(-1);
 
+        io::lastButtons_ = io::buttons_;
+        io::buttons_ = 0;
+        PollInputEvents();
+        if (IsKeyDown(KEY_UP))
+            io::buttons_ |= static_cast<uint32_t>(Btn::Up);
+        if (IsKeyDown(KEY_DOWN))
+            io::buttons_ |= static_cast<uint32_t>(Btn::Down);
+        if (IsKeyDown(KEY_LEFT))
+            io::buttons_ |= static_cast<uint32_t>(Btn::Left);
+        if (IsKeyDown(KEY_RIGHT))
+            io::buttons_ |= static_cast<uint32_t>(Btn::Right);
+        if (IsKeyDown(KEY_A))
+            io::buttons_ |= static_cast<uint32_t>(Btn::A);
+        if (IsKeyDown(KEY_B))
+            io::buttons_ |= static_cast<uint32_t>(Btn::B);
+        if (IsKeyDown(KEY_SPACE))
+            io::buttons_ |= static_cast<uint32_t>(Btn::Select);
+        if (IsKeyDown(KEY_ENTER))
+            io::buttons_ |= static_cast<uint32_t>(Btn::Start);
+        if (IsKeyDown(KEY_PAGE_UP))
+            io::buttons_ |= static_cast<uint32_t>(Btn::VolumeUp);
+        if (IsKeyDown(KEY_PAGE_DOWN))
+            io::buttons_ |= static_cast<uint32_t>(Btn::VolumeDown);
+        if (IsKeyDown(KEY_H))
+            io::buttons_ |= static_cast<uint32_t>(Btn::Home);
+    }
+
+    void yield() {
+        // nothing yet to be be done here in fantasy mode
+    }
+
+    // io
+
+    bool btnDown(Btn b) {
+        return io::buttons_ & static_cast<uint32_t>(b);
+    }    
+
+    bool btnPressed(Btn b) {
+        return btnDown(b) && ! (io::lastButtons_ & static_cast<uint32_t>(b));
+    }    
+
+    bool btnReleased(Btn b) {
+        return btnDown(b) && ! (io::lastButtons_ & static_cast<uint32_t>(b));
+    }    
+
+    int16_t accelX() { 
+        return io::accelX_; 
+    }
+
+    int16_t accelY() { 
+        return io::accelY_; 
+    }
+
+    int16_t accelZ() { 
+        return io::accelZ_; 
+    }
+
+    int16_t gyroX() { 
+        return io::gyroX_; 
+    }
+
+    int16_t gyroY() { 
+        return io::gyroY_; 
+    }
+
+    int16_t gyroZ() { 
+        return io::gyroZ_; 
     }
 
     // display 

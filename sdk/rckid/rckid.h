@@ -92,13 +92,53 @@ namespace rckid {
     void initialize(int argc, char const * argv[]);
     inline void initialize() { initialize(0, nullptr); }
 
+    void tick();
 
     void yield();
 
 
     /** \page sdk
-        \section display Display Driver
+        \section io IO
 
+     */
+    enum class Btn : uint32_t {
+        Left       = 1 << 0, 
+        Right      = 1 << 1,
+        Up         = 1 << 2, 
+        Down       = 1 << 3, 
+        A          = 1 << 4, 
+        B          = 1 << 5, 
+        Select     = 1 << 6, 
+        Start      = 1 << 7,
+        Home       = 1 << 8, 
+        VolumeUp   = 1 << 9, 
+        VolumeDown = 1 << 10,
+    }; // rckid::Btn
+
+    /** Returns true if the given button is currently down. 
+     */
+    bool btnDown(Btn b);
+
+    /** Returns true if the given button has been pressed since last frame (i.e. its state went from up to down). The value is stable within one frame. */
+    bool btnPressed(Btn b);
+
+    /** Returns true if the given button has been released since last frame (i.e. its state went from down to up). The value is stable within one frame. */
+    bool btnReleased(Btn b);
+
+    /** Returns the accelerometer readings. 
+     */
+    int16_t accelX(); 
+    int16_t accelY();
+    int16_t accelZ();
+
+    /** Returns the gyroscope readings. 
+     */
+    int16_t gyroX();
+    int16_t gyroY();
+    int16_t gyroZ();
+
+    /** \page sdk
+        \section display Display Driver
 
 
      */
