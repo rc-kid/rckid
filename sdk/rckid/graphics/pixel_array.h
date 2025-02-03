@@ -26,7 +26,7 @@ namespace rckid {
 
         /** Returns the pixel offset for pixel at coordinates (x,y) in a pixel buffer of specified width and height. Assumes the native display orientation, i.e. right-top corner is index 0, column-first format. 
          */
-        static constexpr uint16_t offset(Coord x, Coord y, Coord width, Coord height) {
+        static constexpr uint32_t offset(Coord x, Coord y, Coord width, Coord height) {
             return (width - x - 1) * height + y; 
         }
 

@@ -78,13 +78,7 @@ namespace rckid {
         }
 
         Writer text(Coord x, Coord y, Font const & font, Color color) {
-            uint16_t colors[] = {
-                0x0000, 
-                0x6060,
-                0xb0b0,
-                0xffff,
-            };
-            return text(x, y, font, colors);
+            return text(x, y, font, Font::colorToArray(color));
         }
 
 
@@ -96,12 +90,12 @@ namespace rckid {
             return PixelArray::putChar(x, y, w_, h_, font, c, colors, pixels_);
         }
 
-        Writer text(Coord x, Coord y, Font const & font, uint16_t colors[4]) {
+        Writer text(Coord x, Coord y, Font const & font, std::array<uint16_t, 4> colors) {
             int startX = x;
             return Writer{[=](char c) mutable {
                 if (c != '\n') {
                     if (x < w_)
-                        x += putChar(x, y, font, c, colors);
+                        x += putChar(x, y, font, c, colors.data());
                 } else {
                     x = startX;
                     y += font.size;

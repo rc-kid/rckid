@@ -2,7 +2,7 @@
 
 #ifdef __cplusplus
 namespace platform {
-    /** Endiannes of the platform. 
+    /** Endiannes of the platform. s
      */
     enum class Endian {
         Little, 
