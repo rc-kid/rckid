@@ -2,6 +2,11 @@
 
 #include <platform.h>
 
+// on windows, there is RGB macro, which clases with the 565 and 332 colors
+#ifdef RGB
+#undef RGB
+#endif
+
 namespace rckid {
 
     PACKED(class ColorRGB565 {
@@ -10,10 +15,6 @@ namespace rckid {
         static constexpr uint8_t BPP = 16;
 
         constexpr ColorRGB565() = default;
-
-        static constexpr ColorRGB565 RGB(uint8_t r, uint8_t g, uint8_t b) {
-            return ColorRGB565{r, g, b};
-        }
 
         static constexpr ColorRGB565 fromRaw(uint16_t raw) { return ColorRGB565{raw}; }
         constexpr uint16_t raw() const { return raw_; }
@@ -24,6 +25,10 @@ namespace rckid {
             setB(static_cast<uint8_t>(b & 0xff));
         }
 
+        static constexpr ColorRGB565 RGB(int r, int g, int b) {
+            return ColorRGB565(r, g, b);
+        }
+
         constexpr uint8_t r() const { return ((raw_ >> 11) & 0xff) << 3; }
         constexpr uint8_t g() const { return ((raw_ >> 5) & 0x3f) << 2; }
         constexpr uint8_t b() const { return (raw_ & 0xff) << 3; }
@@ -31,6 +36,10 @@ namespace rckid {
         constexpr void setR(uint8_t v) { uint16_t x = v >>= 3; raw_ = (raw_ & 0x07ff) | (x << 11); }
         constexpr void setG(uint8_t v) { uint16_t x = v >>= 2; raw_ = (raw_ & 0xf81f) | (x << 5); }
         constexpr void setB(uint8_t v) { raw_ = (raw_ & 0xffe0) | (v >> 3); }
+
+        constexpr ColorRGB565 withAlpha(uint8_t a) {
+            return ColorRGB565{r() * a / 255, g() * a / 255, b() * a / 255};
+        }
 
     private:
         constexpr ColorRGB565(uint16_t raw): raw_{raw} {}

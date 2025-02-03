@@ -1,8 +1,10 @@
 #pragma once
 
 #include <string>
+#include <array>
 
 #include <platform.h>
+#include "color.h"
 
 namespace rckid {
 
@@ -54,8 +56,34 @@ namespace rckid {
 
         GlyphInfo const & glyphInfoFor(char glyph) const { return glyphs[glyph - 32]; }
 
+        /** Takes a color and converts it to an array of 4 colors corresponding to the 2BPP of font glyphs. 
+         
+            This is the default implementation that works well for palette based colors, where the palette is created from preceding color indices. Non-palette colors are implemented in specializations below. 
+         */
+        template<typename COLOR>
+        static std::array<uint16_t, 4> colorToArray(COLOR color) {
+            uint16_t i = color.raw();
+            return std::array<uint16_t, 4>{
+                static_cast<uint16_t>((i - 3) % (1 << COLOR::BPP)),
+                static_cast<uint16_t>((i - 2) % (1 << COLOR::BPP)),
+                static_cast<uint16_t>((i - 1) % (1 << COLOR::BPP)),
+                i, 
+            };
+        }
+
     }; // rckid::Font
 
 
+    /** Font color array specialization for RGB565, full color is the specified, others are with decreasing alpha to black.
+     */
+    template<>
+    inline std::array<uint16_t, 4> Font::colorToArray(ColorRGB565 color) {
+        return std::array<uint16_t, 4>{
+            0,
+            color.withAlpha(85).raw(),
+            color.withAlpha(170).raw(),
+            color.raw()
+        };
+    }
 
 } // namespace rckid
