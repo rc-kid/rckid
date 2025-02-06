@@ -1,6 +1,5 @@
 # TODO
 
-
 - ensure that buffers use allocators properly when they are created to construct stuff
 - check audio playback, check the documentation for audio playback
 - add input & output 

@@ -61,6 +61,8 @@
 #endif
 #endif
 
+#define LL_HEAP 1
+
 namespace rckid {
     namespace error {
         static constexpr uint32_t Success = 0;

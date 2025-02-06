@@ -16,10 +16,16 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
     endfunction()
 
     add_utility("font-converter" "utils/font_converter.cpp")
+    add_utility("binary-folder" "utils/binary_folder.cpp")
 
+    # Generates the SDK assets
+    #
+    # The assets are expressed and constexpr uint8_t arrays. See the description of appropriate utilities for the actual tranformation, which depends on the utility/contents used.
     add_custom_target(generate-sdk-assets
         COMMAND $<TARGET_FILE:font-converter> assets/fonts/Iosevka.ttf rckid/assets/fonts/Iosevka16.h 16
+        COMMAND $<TARGET_FILE:binary-folder> assets/images rckid/assets/images.h --raw-path raw/images
         DEPENDS font-converter
+        DEPENDS binary-folder
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
 

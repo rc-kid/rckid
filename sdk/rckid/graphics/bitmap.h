@@ -3,31 +3,47 @@
 #include <memory>
 
 #include "../rckid.h"
+#include "../memory.h"
 #include "color.h"
 #include "palette.h"
 #include "pixel_array.h"
 #include "font.h"
+#include "png.h"
 
 namespace rckid {
 
-    template<typename COLOR, typename ALLOCATOR = Heap>
+    template<typename COLOR>
     class Bitmap {
     public:
         static constexpr uint8_t BPP = COLOR::BPP;
         using Color = COLOR;
-        using Allocator = ALLOCATOR;
         using PixelArray = rckid::PixelArray<BPP>;
 
         /** Creates the bitmap using given allocator.
          */
-        Bitmap(Coord w, Coord h): pixels_{ALLOCATOR::template alloc<uint8_t>(PixelArray::numBytes(w, h))}, w_{w}, h_{h} {
+        Bitmap(Coord w, Coord h, Allocator & a = Heap::allocator()): pixels_{a.alloc<uint8_t>(PixelArray::numBytes(w, h))}, w_{w}, h_{h} {
+        }
+
+        Bitmap(Bitmap const &) = delete;
+
+        Bitmap(Bitmap && other): pixels_{other.pixels_}, w_{other.w_}, h_{other.h_} {
+            other.pixels_ = nullptr;
+            other.w_ = 0;
+            other.h_ = 0;
+        }
+
+        // TODO add bitmap constructor with decoder and palette that will be specialized for nonrgb bitmaps
+        Bitmap(PNG && decoder, Allocator & a = Heap::allocator()):
+            Bitmap{decoder.width(), decoder.height(), a} {
+            loadImage(std::move(decoder), 0, 0);
         }
 
         /** Frees the bitmap.
          */
-        ~Bitmap() {
-            ALLOCATOR::free(pixels_);
-        }
+        ~Bitmap() { Heap::tryFree(pixels_); };
+
+        void loadImage(PNG && decoder, int x, int y);
+        void loadImage(PNG && decoder) { loadImage(std::move(decoder), 0, 0); }
 
         Coord width() const { return w_; }
         Coord height() const { return h_; }
@@ -81,7 +97,6 @@ namespace rckid {
             return text(x, y, font, Font::colorToArray(color));
         }
 
-
         //@}
 
     private:
@@ -103,31 +118,38 @@ namespace rckid {
             }};
         }
 
-
         uint8_t * pixels_;
         Coord w_;
         Coord h_;
     }; // rckid::Bitmap
 
+    template<>
+    inline void Bitmap<ColorRGB565>::loadImage(PNG && decoder, int x, int y) {
+        decoder.decode([this, x, y](ColorRGB * line, int lineNum, int lineWidth) {
+            for (int i = 0; i < lineWidth; ++i)
+                setAt(i + x, lineNum + y, line[i]);
+        });
+    }
+
     /** Bitmap that can render itself. 
      
         Defined as template and specialized based on used color and allocators. See the specializations below for more information.  
      */
-    template<typename COLOR, typename ALLOCATOR = Heap>
+    template<typename COLOR>
     class RenderableBitmap;
 
     /** Renderable bitmap specialization for Full 16bit RGB colors. 
      
         This is rather simple as the entire pixel array of the bitmap can be sent directly to the displayUpdate() method. Initialization simply sets the display to native mode and sets update region to a centered rectangle of the bitmap's size. There is no need to finalize anything. 
       */
-    template<typename ALLOCATOR>
-    class RenderableBitmap<ColorRGB565, ALLOCATOR> : public Bitmap<ColorRGB565, ALLOCATOR> {
+    template<>
+    class RenderableBitmap<ColorRGB565> : public Bitmap<ColorRGB565> {
     public:
-        using Bitmap<ColorRGB565, ALLOCATOR>::width;
-        using Bitmap<ColorRGB565, ALLOCATOR>::height;
-        using Bitmap<ColorRGB565, ALLOCATOR>::pixels;
-        using Bitmap<ColorRGB565, ALLOCATOR>::numPixels;
-        using Bitmap<ColorRGB565, ALLOCATOR>::Bitmap;
+        using Bitmap<ColorRGB565>::width;
+        using Bitmap<ColorRGB565>::height;
+        using Bitmap<ColorRGB565>::pixels;
+        using Bitmap<ColorRGB565>::numPixels;
+        using Bitmap<ColorRGB565>::Bitmap;
 
         void initialize() {
             initialize(Rect::Centered(width(), height(), 320, 240), DisplayResolution::Normal);

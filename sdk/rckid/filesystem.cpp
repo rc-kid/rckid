@@ -281,7 +281,7 @@ namespace rckid::filesystem {
                     LOG(LL_WARN, "SD already mounted");
                     return true;
                 }
-                fs_ = (FATFS*) rckid::Heap::alloc(sizeof(FATFS));
+                fs_ = rckid::Heap::alloc<FATFS>();
                 if (f_mount(fs_, "", /* mount immediately */ 1) != FR_OK) {
                     delete fs_;
                     fs_ = nullptr;

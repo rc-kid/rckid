@@ -4,8 +4,8 @@
 TEST(memory, arenaAllocation) {
     using namespace rckid;
     Arena::enter();
-    uint8_t * a = (uint8_t*)Arena::alloc(128);
-    uint8_t * b = (uint8_t*)Arena::alloc(128);
+    uint8_t * a = (uint8_t*)Arena::allocBytes(128);
+    uint8_t * b = (uint8_t*)Arena::allocBytes(128);
     EXPECT(a < b);
     EXPECT(b == a + 128);
     EXPECT(Arena::contains(a));
@@ -18,11 +18,11 @@ TEST(memory, arenaAllocation) {
 TEST(memory, arenaReset) {
     using namespace rckid;
     Arena::enter();
-    uint8_t * a = (uint8_t*)Arena::alloc(128);
-    uint8_t * b = (uint8_t*)Arena::alloc(128);
+    uint8_t * a = (uint8_t*)Arena::allocBytes(128);
+    uint8_t * b = (uint8_t*)Arena::allocBytes(128);
     Arena::reset();
-    uint8_t * c = (uint8_t*)Arena::alloc(128);
-    uint8_t * d = (uint8_t*)Arena::alloc(128);
+    uint8_t * c = (uint8_t*)Arena::allocBytes(128);
+    uint8_t * d = (uint8_t*)Arena::allocBytes(128);
     EXPECT(a == c);
     EXPECT(b == d);
     Arena::leave();
@@ -31,12 +31,12 @@ TEST(memory, arenaReset) {
 TEST(memory, arenaLeave) {
     using namespace rckid;
     Arena::enter();
-    uint8_t * a = (uint8_t*)Arena::alloc(128);
-    uint8_t * b = (uint8_t*)Arena::alloc(128);
+    uint8_t * a = (uint8_t*)Arena::allocBytes(128);
+    uint8_t * b = (uint8_t*)Arena::allocBytes(128);
     Arena::leave();
     Arena::enter();
-    uint8_t * c = (uint8_t*)Arena::alloc(128);
-    uint8_t * d = (uint8_t*)Arena::alloc(128);
+    uint8_t * c = (uint8_t*)Arena::allocBytes(128);
+    uint8_t * d = (uint8_t*)Arena::allocBytes(128);
     EXPECT(a == c);
     EXPECT(b == d);
     Arena::leave();
@@ -49,7 +49,7 @@ TEST(memory, arenaLeaveMemoryFootprint) {
     uint32_t afterArena = memoryFree();
     // entering arena allocated new arena header, total free memory should be lower by that
     EXPECT(freeHeap - sizeof(void*) == afterArena);
-    Arena::alloc(128);
+    Arena::allocBytes(128);
     uint32_t afterAlloc = memoryFree();
     // the 128bytes, no header
     EXPECT(afterArena - 128 == afterAlloc);
@@ -60,8 +60,8 @@ TEST(memory, arenaLeaveMemoryFootprint) {
 
 TEST(memory, heapAllocation) {
     using namespace rckid;
-    uint8_t * a = (uint8_t *)Heap::alloc(128);
-    uint8_t * b = (uint8_t *)Heap::alloc(128);
+    uint8_t * a = (uint8_t *)Heap::allocBytes(128);
+    uint8_t * b = (uint8_t *)Heap::allocBytes(128);
     EXPECT(a + 128 != b);
     EXPECT(Heap::contains(a));
     EXPECT(Heap::contains(b));
@@ -74,7 +74,7 @@ TEST(memory, heapAllocation) {
 TEST(memory, atLeast12Bytes) {
     using namespace rckid;
     uint32_t freeHeap = rckid::memoryFree();
-    void * ptr = Heap::alloc(4);
+    void * ptr = Heap::allocBytes(4);
     EXPECT(rckid::memoryFree() + 12 == freeHeap);
     Heap::free(ptr);
     EXPECT(rckid::memoryFree() == freeHeap);
@@ -83,7 +83,7 @@ TEST(memory, atLeast12Bytes) {
 TEST(memory, immediateDeleteDeallocates) {
     using namespace rckid;
     uint32_t freeHeap = rckid::memoryFree();
-    void * ptr = Heap::alloc(128);
+    void * ptr = Heap::allocBytes(128);
     EXPECT(rckid::memoryFree() + 128 + 4 == freeHeap);
     Heap::free(ptr);
     EXPECT(rckid::memoryFree() == freeHeap);
@@ -92,8 +92,8 @@ TEST(memory, immediateDeleteDeallocates) {
 TEST(memory, nonImmediateDeleteDeallocates) {
     using namespace rckid;
     uint32_t freeHeap = rckid::memoryFree();
-    void * ptr1 = Heap::alloc(128);
-    void * ptr2 = Heap::alloc(128);
+    void * ptr1 = Heap::allocBytes(128);
+    void * ptr2 = Heap::allocBytes(128);
     EXPECT(rckid::memoryFree() + (128 + 4) * 2 == freeHeap);
     Heap::free(ptr1);
     Heap::free(ptr2);

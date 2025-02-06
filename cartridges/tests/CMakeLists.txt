@@ -11,7 +11,11 @@ endif()
 add_executable(display-fill "display_fill.cpp")
 link_with_librckid(display-fill)
 
-# test of the graphics app framework (RGB colors) 
+# very basic test of the graphics app rendering (cycles through background colors and displays text).  
 add_executable(graphics-appRGB "graphics_appRGB.cpp")
 link_with_librckid(graphics-appRGB)
+
+# displays PNG image 
+add_executable(display-png "display_png.cpp")
+link_with_librckid(display-png)
 
