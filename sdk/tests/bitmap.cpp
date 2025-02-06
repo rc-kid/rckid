@@ -32,12 +32,20 @@ TEST(bitmap, pixels_bpp4) {
 TEST(bitmap, arena_allocator) {
     using namespace rckid;
     ArenaGuard g_;
-    Bitmap<Color256, Arena> bmp{320, 240};
+    EXPECT(Arena::currentSize() == 0);
+    Bitmap<Color256> bmp{320, 240, Arena::allocator()};
+    EXPECT(Arena::currentSize() == 320 * 240); 
     Color256 x{78};
     Color256 y{56};
     bmp.setAt(10, 67, x);
     bmp.setAt(5, 57, y);
     EXPECT(bmp.at(10, 67) == x);
     EXPECT(bmp.at(5, 57) == y);
+}
+
+TEST(bitmap, fromPng) {
+    using namespace rckid;
+    ArenaGuard g_;
+    Bitmap<ColorRGB565> bmp{PNG::fromBuffer(nullptr, 0), Arena::allocator()};
 }
 

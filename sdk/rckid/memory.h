@@ -5,30 +5,61 @@
 
 namespace rckid {
 
+    /** Allocator base class that provides the basic allocation primitives for allocation and deallocation.
+     */
+    class Allocator {
+    public:
+        virtual void * allocBytes(uint32_t bytes) = 0;
+        virtual void free(void * ptr) = 0;
+
+        template<typename T>
+        T * alloc() { return (T*)allocBytes(sizeof(T)); } 
+
+        template<typename T>
+        T * alloc(uint32_t numItems) { return (T*)allocBytes(sizeof(T) * numItems); }
+    }; 
+
     /** Heap allocation and management. 
      
      */
     class Heap {
     public:
+        class AllocatorSingleton : public Allocator {
+        public:
+            void * allocBytes(uint32_t bytes) { return Heap::allocBytes(bytes); }
+            void free(void * ptr) { Heap::free(ptr); }
+        }; // Heap::AllocatorSingleton
+
+        static AllocatorSingleton & allocator() {
+            static AllocatorSingleton singleton;
+            return singleton;
+        }
+
         /** Allocates given amount of bytes on heap.
          
             This is under all circumstances equivalent to a standard malloc call irrespective of the default allocation mode.
          */
-        static void * alloc(uint32_t bytes); 
+        static void * allocBytes(uint32_t bytes); 
     
         /** Allocates memory for given type. Will allways allocate on heap. 
          */
         template<typename T>
-        static T * alloc() { return (T*)alloc(sizeof(T)); }
+        static T * alloc() { return (T*)allocBytes(sizeof(T)); }
 
         template<typename T>
-        static T* alloc(uint32_t items) { return (T*)alloc(sizeof(T) * items); }
+        static T* alloc(uint32_t items) { return (T*)allocBytes(sizeof(T) * items); }
 
         /** Frees the given pointer. 
          
             Expects the pointer actually belongs to heap, i.e. should only be explicitly called on pointers created with Heap::malloc explicitly. If a pointer was allocated by the default function (malloc, rckid::malloc, new) the generic deletion (free, rckid::free, delete) should be called. 
          */
         static void free(void * ptr);
+
+        /** Checks that the pointer belongs to the heap and if so, frees it. Does nothing otherwise. 
+         
+            This method is useful when freeing pointers that could have been allocated inside an arena, such as when using the Allocator class above to allocate them.
+         */
+        static void tryFree(void * ptr);
 
         /** Returns true if given pointer belongs to the heap. 
          
@@ -52,9 +83,21 @@ namespace rckid {
      */
     class Arena {
     public:
+
+        class AllocatorSingleton : public Allocator {
+        public:
+            void * allocBytes(uint32_t bytes) { return Arena::allocBytes(bytes); }
+            void free([[maybe_unused]] void * ptr) { }
+        }; // Heap::AllocatorSingleton
+
+        static AllocatorSingleton & allocator() {
+            static AllocatorSingleton singleton;
+            return singleton;
+        }
+
         /** Allocates given number of bytes on the current arena. 
          */
-        static void * alloc(uint32_t numBytes) {
+        static void * allocBytes(uint32_t numBytes) {
             void * result = end_;
             end_ += numBytes;
             // check that we are not running out of memory by crossing the heap end
@@ -65,10 +108,10 @@ namespace rckid {
         /** Allocates arena for given type. 
          */
         template<typename T>
-        static T * alloc() { return (T*)alloc(sizeof(T)); }
+        static T * alloc() { return (T*)allocBytes(sizeof(T)); }
 
         template<typename T>
-        static T* alloc(uint32_t items) { return (T*)malloc(sizeof(T) * items); }
+        static T* alloc(uint32_t items) { return (T*)allocBytes(sizeof(T) * items); }
 
 
         /** Free API for allocator. Does nothing as arena does not support per item deallocation.
@@ -134,7 +177,7 @@ namespace rckid {
         using difference_type = std::ptrdiff_t;
         using propagate_on_container_move_assignment = std::true_type;
 
-        T * allocate(std::size_t n) { return (T *)Arena::alloc(static_cast<uint32_t>(n * sizeof(T))); }
+        T * allocate(std::size_t n) { return (T *)Arena::allocBytes(static_cast<uint32_t>(n * sizeof(T))); }
         void deallocate([[maybe_unused]] T * ptr, [[maybe_unused]] size_t n) { }
     };    
 

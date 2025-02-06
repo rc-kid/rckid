@@ -33,7 +33,7 @@ extern "C" {
         if (systemMalloc_)
             return __libc_malloc(numBytes);
         else 
-            return rckid::Heap::alloc(numBytes);
+            return rckid::Heap::allocBytes(numBytes);
     }
 
     // if the pointer to be freed belongs to RCKId's heap, we should use own heap free, otherwise use normal free (and assert it does not belong to fantasy heap in general as that would be weird)

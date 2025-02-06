@@ -165,3 +165,34 @@ inline void drawImageInComments(Image const & img, std::ostream & s, std::string
     }
     s << std::endl;
 }
+
+struct FolderItem {
+    std::string filename;
+    std::string className;
+    std::vector<uint8_t> bytes;
+
+    FolderItem(std::filesystem::path const & path):
+        className{convertToClassName(path.stem().string())},
+        filename{path.string()} {
+        std::ifstream input(filename, std::ios::binary | std::ios::ate);
+        std::streamsize fileSize = input.tellg();
+        input.seekg(0, std::ios::beg);
+        bytes.resize(fileSize);
+        if (!input.read(reinterpret_cast<char*>(bytes.data()), fileSize))
+            throw std::runtime_error(STR("Error reading file " << filename));
+        input.close();
+    }
+
+    void outputBytes(std::ostream & s, std::string const & indent) const {
+        size_t i = 0;
+        for (uint8_t c : bytes) {
+            if (i % 16 == 0) {
+                if (i != 0)
+                    s << std::endl;
+                s << indent;
+            }
+            s << (unsigned) c << ",";
+            ++i;
+        }
+    } 
+}; // FolderItem

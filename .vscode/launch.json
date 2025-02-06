@@ -14,7 +14,7 @@
             //"program": "${workspaceFolder}/build-mock/cartridges/test/display/display-test",
             //"program": "${workspaceFolder}/build-mock/cartridges/test/benchmarks/benchmarks",
             //"program": "${workspaceFolder}/build-mock/cartridges/games/games",
-            "program": "${workspaceFolder}/build/cartridges/tests/graphics-appRGB",
+            "program": "${workspaceFolder}/build/cartridges/tests/display-png",
             "args": [],
             "stopAtEntry": false,
             "environment": [{ "name" : "DISPLAY", "value" : "0:0"}],
@@ -33,7 +33,7 @@
                     "text": "-gdb-set disassembly-flavor intel",
                     "ignoreFailures": true
                 },
-            ]
+            ],
         },
         {
             "name": "cartridge [fantasy]",

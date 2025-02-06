@@ -71,4 +71,5 @@ int main(int argc, char const * argv[]) {
     ofile << indent << "}; // class " << ns.value() << "::" << className << std::endl;
     if (! ns.value().empty())
         ofile << "} // namespace " << ns.value() << std::endl;
+    return EXIT_SUCCESS;
 }

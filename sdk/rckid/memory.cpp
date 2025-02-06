@@ -76,7 +76,7 @@ namespace rckid {
         Arena::end_ = & __bss_end__;
     }
 
-    void * Heap::alloc(uint32_t numBytes) {
+    void * Heap::allocBytes(uint32_t numBytes) {
         // we only allow total number of bytes reserved (including the header) to be divisible by 4, bump the number of bytes here accordingly
         numBytes = numBytes + sizeof(ChunkHeader);
         if ((numBytes & 3) != 0)
@@ -101,10 +101,12 @@ namespace rckid {
         ASSERT(end_ >= Arena::end_);
         // set the chunk's size and return it 
         result->setSize(numBytes);
+        LOG(LL_HEAP, "Allocating " << numBytes << " bytes from " << &(result->next));
         return &(result->next);
     }
 
     void Heap::free(void * ptr) {
+        LOG(LL_HEAP, "Freeing " << ptr);
         // deleting nullptr is noop        
         if (ptr == nullptr)
             return;
@@ -131,6 +133,11 @@ namespace rckid {
         if (freelist_ != nullptr)
             freelist_->prev = chunk;
         freelist_ = chunk;
+    }
+
+    void Heap::tryFree(void * ptr) {
+        if (contains(ptr))
+            Heap::free(ptr);
     }
 
     bool Heap::contains(void const * ptr) {
