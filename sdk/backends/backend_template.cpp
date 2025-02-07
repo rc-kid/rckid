@@ -1,10 +1,9 @@
-/** \page backend_mk2 Mk II 
+/** \page backend_XXXYYY XXXYYY 
 
-    Mark II backend which uses RP2040, PWM audio, PDM microphone and 2.8 320x240 display in 8bit MCU interface. 
-*/
-
-#ifndef RCKID_BACKEND_MK2
-#error "You are building fantasy (RayLib) backend without the indicator macro"
+    This is RCKid backend template. The functions below have to be implemented in order to port the RCKid SDK to a new platform.
+ */
+#ifndef RCKID_BACKEND_XXXYYY
+#error "You are building XXXYYY backend without the indicator macro"
 #endif
 
 #include "rckid/rckid.h"

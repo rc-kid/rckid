@@ -85,16 +85,7 @@ public:
         gpio_pull_down(pin);
     }
 
-    static void write(Pin pin, bool value) { gpio_put(pin, value); }
-
-    static bool read(Pin pin) { return gpio_get(pin); }
-
-    static  void outputHigh(Pin p) { write(p, true); setAsOutput(p); write(p, true);  }
-    static  void outputLow(Pin p) { write(p, false); setAsOutput(p); write(p, false); }
-    static  void outputFloat(Pin p) { setAsInput(p); }
-
-    static void high(Pin p) { write(p, true); }
-    static void low(Pin p) { write(p, false); }
+    #include "../common/gpio_common.h"
 
     /* TODO do we need this?
     static void initialize() {
@@ -125,6 +116,8 @@ public:
         bi_decl(bi_2pins_with_func(sda, scl, GPIO_FUNC_I2C));    
     }
 
+    #include "../common/i2c_common.h"
+
 }; // i2c
 
 class spi {
@@ -148,22 +141,6 @@ public:
         return result;
     }
 
-    static size_t transfer(uint8_t const * tx, uint8_t * rx, size_t numBytes) { 
-        for (size_t i = 0; i < numBytes; ++i)
-            *(rx++) = transfer(*(tx++));
-        return numBytes;
-    }
-
-    static void send(uint8_t const * data, size_t numBytes) {
-        for (size_t i = 0; i < numBytes; ++i)
-            transfer(*(data++));
-    }
-
-    static void receive(uint8_t * data, size_t numBytes) {
-        for (size_t i = 0; i < numBytes; ++i)
-            *(data++) = transfer(0);
-    }
-
     static void initialize(unsigned miso, unsigned mosi, unsigned sck) {
         spi_init(spi0, 500000); // init spi0 at 0.5Mhz
         gpio_set_function(miso, GPIO_FUNC_SPI);
@@ -176,6 +153,8 @@ public:
     static void setSpeed(unsigned speed) {
         spi_init(spi0, speed);
     }
+
+    #include "../common/spi_common.h"
 }; // spi
 
 /** Convenience function for setting PIO speed. 
@@ -199,6 +178,3 @@ inline bool pio_sm_is_enabled(PIO pio, uint sm) {
 inline bool pwm_is_enabled(uint slice_num) {
     return (pwm_hw->slice[slice_num].csr) & (1 << PWM_CH0_CSR_EN_LSB);
 }
-
-#include "../I2CDevice.h"
-

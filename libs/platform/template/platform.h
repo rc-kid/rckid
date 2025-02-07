@@ -30,17 +30,14 @@ public:
 
     static bool read(Pin pin);
 
-    static  void outputHigh(Pin p) { write(p, true); setAsOutput(p); write(p, true);  }
-    static  void outputLow(Pin p) { write(p, false); setAsOutput(p); write(p, false); }
-    static  void outputFloat(Pin p) { setAsInput(p); }
-
-    static void high(Pin p) { write(p, true); }
-    static void low(Pin p) { write(p, false); }
+    #include "../common/gpio_common.h"
 
 }; 
 
 class i2c {
     static bool masterTransmit(uint8_t address, uint8_t const * wb, uint8_t wsize, uint8_t * rb, uint8_t rsize);
+
+    #include "../common/i2c_common.h"
 }; 
 
 class spi {
@@ -56,20 +53,6 @@ class spi {
 
     static uint8_t transfer(uint8_t value);
 
-    static size_t transfer(uint8_t const * tx, uint8_t * rx, size_t numBytes) {
-        for (size_t i = 0; i < numBytes; ++i)
-            *(rx++) = transfer(*(tx++));
-        return numBytes;
-    }
-
-    static void send(uint8_t const * data, size_t numBytes) {
-        for (size_t i = 0; i < numBytes; ++i)
-            transfer(*(data++));
-    }
-
-    static void receive(uint8_t * data, size_t numBytes) {
-        for (size_t i = 0; i < numBytes; ++i)
-            *(data++) = transfer(0);
-    }
-}
+    #include "../common/spi_common.h"
+}; // spi
 

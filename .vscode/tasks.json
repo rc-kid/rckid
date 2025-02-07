@@ -36,10 +36,10 @@
         },
         {
             "type": "shell",
-            "label": "mk II - build",
+            "label": "mk 2 - build",
             "detail": "Generates the SDK assets for RCKid",
             "options": {
-                "cwd": "${workspaceFolder}/build-rckid-2"
+                "cwd": "${workspaceFolder}/build-mk2"
             },
 
             "command": "cmake",
@@ -52,7 +52,7 @@
         },
 
         {
-            "label": "mk II - build avr",
+            "label": "mk 2 - build avr",
             "detail": "Builds the AVR firmware for the mk II device.",
 
             "type": "shell",
@@ -61,7 +61,7 @@
                 "run"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/sdk/backends/arch_rckid_2/avr",
+                "cwd": "${workspaceFolder}/sdk/backends/mk2/avr",
                 "shell": {
                     "executable": "/bin/zsh",
                     "args": [
@@ -74,12 +74,12 @@
             ]
         },
         {
-            "label": "mk II  - upload avr",
+            "label": "mk 2  - upload avr",
             "detail": "Builds the AVR firmware for mk II on the dev server and uploads it to the device immediately.",
             "command": "bash",
             "args": [
                 "sdk/utils/pio-upload.sh",
-                "sdk/backends/arch_rckid_2/avr"
+                "sdk/backends/mk2/avr"
             ],
             "options": {
                 "cwd": ""
@@ -91,7 +91,7 @@
 
 
         {
-            "label": "mk III - build avr",
+            "label": "mk 3 - build avr",
             "detail": "Builds the AVR firmware for the mk III device.",
             "type": "shell",
             "command": "~/.platformio/penv/bin/pio",
@@ -99,7 +99,7 @@
                 "run"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/sdk/backends/arch_rckid/avr",
+                "cwd": "${workspaceFolder}/sdk/backends/mk3/avr",
                 "shell": {
                     "executable": "/bin/zsh",
                     "args": [
@@ -112,12 +112,12 @@
             ]
         },
         {
-            "label": "mk III  - upload avr",
+            "label": "mk 3  - upload avr",
             "detail": "Builds the AVR firmware for mk III on the dev server and uploads it to the device immediately.",
             "command": "bash",
             "args": [
                 "sdk/utils/pio-upload.sh",
-                "sdk/backends/arch_rckid/avr"
+                "sdk/backends/mk3/avr"
             ],
             "options": {
                 "cwd": ""
