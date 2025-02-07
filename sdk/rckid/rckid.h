@@ -47,6 +47,9 @@
 #define IS_LOGLEVEL_ENABLED(X) (IS_LOGLEVEL_ENABLED_HELPER(X)[0] == '1')
 #define LOG(LOGLEVEL,...) do { if (IS_LOGLEVEL_ENABLED(LOGLEVEL)) rckid::debugWrite() << #LOGLEVEL << ": " << __VA_ARGS__ << '\n'; } while (false)
 
+#define LL_HEAP 1
+#define LL_INFO 1
+
 #ifndef LL_ERROR
 #define LL_ERROR 1
 #endif
@@ -61,7 +64,15 @@
 #endif
 #endif
 
-#define LL_HEAP 1
+
+
+/** Measures the time it takes to compute the statements in the arguments in microseconds (returned as uint32_t). 
+ */
+#define MEASURE_TIME(...) [&]() { \
+    uint32_t start__ = uptimeUs(); \
+    __VA_ARGS__; \
+    return uptimeUs() - start__; \
+}()
 
 namespace rckid {
     namespace error {
@@ -86,8 +97,7 @@ namespace rckid {
      */
     Writer debugWrite();
 
-
-    /** Initializes the RCKid console. 
+        /** Initializes the RCKid console. 
      
         This must be the first SDK function called by the application. Its task is to set up the console and completely depends on the backend used - while the device backends initialize the actual hardware after power on, the fantasy backend sets up the console window, etc. 
      */
@@ -98,6 +108,11 @@ namespace rckid {
 
     void yield();
 
+    /** Returns the system's uptime in microseconds. 
+     
+        For performance reasons, this uses uint32_t as the result value and as such will overflow every hour & something. The intended purpose of this function is not precise timekeeping, but delta time measurements, so the overflows are fine. 
+     */
+    uint32_t uptimeUs();
 
     /** \page sdk
         \section io IO
