@@ -230,6 +230,12 @@ namespace rckid {
         // nothing yet to be be done here in fantasy mode
     }
 
+    uint32_t uptimeUs() {
+        using namespace std::chrono;
+        static auto first = steady_clock::now();
+        return static_cast<uint32_t>(duration_cast<microseconds>(steady_clock::now() - first).count()); 
+    }
+
     // io
 
     bool btnDown(Btn b) {
