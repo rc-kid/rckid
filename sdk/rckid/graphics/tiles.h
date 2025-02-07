@@ -30,7 +30,7 @@ namespace rckid {
 
     private:
 
-        uint8_t pixelBuffer_[PixelArray<BPP>::numBytes(WIDTH, HEIGHT)];
+        uint8_t pixels_[PixelArray<BPP>::numBytes(WIDTH, HEIGHT)];
 
     }; // rckid::Tile
 

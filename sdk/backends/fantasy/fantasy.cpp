@@ -51,12 +51,14 @@ extern "C" {
 
 namespace rckid {
 
-    namespace {
-        std::fstream sdIso_;
-        uint32_t sdNumBlocks_;
+    namespace sd {
+        std::fstream iso_;
+        uint32_t numBlocks_ = 0;
+    }
 
-        std::fstream flashIso_;
-        uint32_t flashSize_ = 0;
+    namespace flash {
+        std::fstream iso_;
+        uint32_t size_ = 0;
     }
 
     namespace io {
@@ -127,10 +129,10 @@ namespace rckid {
         memoryReset();
         bsod(error, line, file, nullptr);
         systemMalloc_ = true;
-        if (sdIso_.good())
-            sdIso_.close();
-        if (flashIso_.good())
-            flashIso_.close();
+        if (sd::iso_.good())
+            sd::iso_.close();
+        if (flash::iso_.good())
+            flash::iso_.close();
         while (! WindowShouldClose())
             PollInputEvents();
         systemMalloc_ = false;
@@ -158,14 +160,14 @@ namespace rckid {
 
 #ifndef RCKID_FANTASY_FS_DIRECT
         // see if there is sd.iso file so that we can simulate SD card
-        sdIso_.open(sdIso.value(), std::ios::in | std::ios::out | std::ios::binary);
-        if (sdIso_.is_open()) {
-            sdIso_.seekg(0, std::ios::end);
-            size_t sizeBytes = sdIso_.tellg();
+        sd::iso_.open(sdIso.value(), std::ios::in | std::ios::out | std::ios::binary);
+        if (sd::iso_.is_open()) {
+            sd::iso_.seekg(0, std::ios::end);
+            size_t sizeBytes = sd::iso_.tellg();
             LOG(LL_INFO, sdIso.value() << " file found, mounting SD card - " << sizeBytes << " bytes");
             if (sizeBytes % 512 == 0 && sizeBytes != 0) {
-                sdNumBlocks_ = static_cast<uint32_t>(sizeBytes / 512);
-                LOG(LL_INFO, "    blocks: " << sdNumBlocks_);
+                sd::numBlocks_ = static_cast<uint32_t>(sizeBytes / 512);
+                LOG(LL_INFO, "    blocks: " << sd::numBlocks_);
             } else {
                 LOG(LL_INFO, "    invalid file size (multiples of 512 bytes allowed)");
             }
@@ -173,14 +175,14 @@ namespace rckid {
             LOG(LL_ERROR, sdIso.value() << " file not found, CD card not present");
         }
         // see if there is flash.iso file so that we can simulate flash storage
-        flashIso_.open(flashIso.value(), std::ios::in | std::ios::out | std::ios::binary);
-        if (flashIso_.is_open()) {
-            flashIso_.seekg(0, std::ios::end);
-            size_t sizeBytes = flashIso_.tellg();
+        flash::iso_.open(flashIso.value(), std::ios::in | std::ios::out | std::ios::binary);
+        if (flash::iso_.is_open()) {
+            flash::iso_.seekg(0, std::ios::end);
+            size_t sizeBytes = flash::iso_.tellg();
             LOG(LL_INFO, flashIso.value() << " file found, mounting cartridge store - " << sizeBytes << " bytes");
             if (sizeBytes % 4096 == 0 && sizeBytes != 0) {
-                flashSize_ = static_cast<uint32_t>(sizeBytes);
-                LOG(LL_INFO, "    size: " << flashSize_);
+                flash::size_ = static_cast<uint32_t>(sizeBytes);
+                LOG(LL_INFO, "    size: " << flash::size_);
             } else {
                 LOG(LL_INFO, "    invalid file size (multiples of 4096 bytes allowed)");
             }
@@ -534,15 +536,15 @@ namespace rckid {
     // SD Card access
 
     uint32_t sdCapacity() {
-        return sdNumBlocks_;
+        return sd::numBlocks_;
     }
 
     bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {
-        ASSERT(sdNumBlocks_ != 0);
+        ASSERT(sd::numBlocks_ != 0);
         try {
             SystemMallocGuard g;
-            sdIso_.seekg(start * 512);
-            sdIso_.read(reinterpret_cast<char*>(buffer), numBlocks * 512);
+            sd::iso_.seekg(start * 512);
+            sd::iso_.read(reinterpret_cast<char*>(buffer), numBlocks * 512);
             return true;
         } catch (std::exception const & e) {
             LOG(LL_ERROR, "SD card read error: " << e.what());
@@ -551,11 +553,11 @@ namespace rckid {
     }
 
     bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks) {
-        ASSERT(sdNumBlocks_ != 0);
+        ASSERT(sd::numBlocks_ != 0);
         try {
             SystemMallocGuard g;
-            sdIso_.seekp(start * 512);
-            sdIso_.write(reinterpret_cast<char const *>(buffer), numBlocks * 512);
+            sd::iso_.seekp(start * 512);
+            sd::iso_.write(reinterpret_cast<char const *>(buffer), numBlocks * 512);
             return true;
         } catch (std::exception const & e) {
             LOG(LL_ERROR, "SD card write error: " << e.what());
@@ -565,18 +567,18 @@ namespace rckid {
 
     // Cartridge filesystem access
 
-    uint32_t cartridgeCapacity() { return flashSize_; }
+    uint32_t cartridgeCapacity() { return flash::size_; }
 
     uint32_t cartridgeWriteSize() { return 256; }
 
     uint32_t cartridgeEraseSize() { return 4096; }
 
     void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
-        ASSERT(start + numBytes <= flashSize_);
+        ASSERT(start + numBytes <= flash::size_);
         try {
             SystemMallocGuard g;
-            flashIso_.seekg(start);
-            flashIso_.read(reinterpret_cast<char*>(buffer), numBytes);
+            flash::iso_.seekg(start);
+            flash::iso_.read(reinterpret_cast<char*>(buffer), numBytes);
         } catch (std::exception const & e) {
             LOG(LL_ERROR, "Cartridge flash read error: " << e.what());
             UNREACHABLE;
@@ -585,11 +587,11 @@ namespace rckid {
 
     void cartridgeWrite(uint32_t start, uint8_t const * buffer) {
         ASSERT(start % 256 == 0);
-        ASSERT(start + 256 <= flashSize_);
+        ASSERT(start + 256 <= flash::size_);
         try {
             SystemMallocGuard g;
-            flashIso_.seekp(start);
-            flashIso_.write(reinterpret_cast<char const *>(buffer), 256);
+            flash::iso_.seekp(start);
+            flash::iso_.write(reinterpret_cast<char const *>(buffer), 256);
         } catch (std::exception const & e) {
             LOG(LL_ERROR, "Cartridge flash write error: " << e.what());
             UNREACHABLE;
@@ -598,13 +600,13 @@ namespace rckid {
 
     void cartridgeErase(uint32_t start) {
         ASSERT(start % 4096 == 0);
-        ASSERT(start + 4096 <= flashSize_);
+        ASSERT(start + 4096 <= flash::size_);
         try {
             SystemMallocGuard g;
-            flashIso_.seekp(start);
+            flash::iso_.seekp(start);
             uint8_t buffer[4096];
             std::memset(buffer, 4096, 0xff);
-            flashIso_.write(reinterpret_cast<char const *>(buffer), 4096);
+            flash::iso_.write(reinterpret_cast<char const *>(buffer), 4096);
         } catch (std::exception const & e) {
             LOG(LL_ERROR, "Cartridge flash erase error: " << e.what());
             UNREACHABLE;

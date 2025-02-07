@@ -1,6 +1,7 @@
 #pragma once
 
 #include <platform.h>
+#include <platform/writer.h>
 #include <platform/buffers.h>
 
 #include "graphics/color.h"
@@ -167,13 +168,13 @@ namespace rckid {
     using DisplayUpdateCallback = std::function<void()>;
 
     enum class DisplayResolution {
-        Normal,
+        Full,
         Half
     }; 
 
     enum class DisplayRefreshDirection {
         Native, 
-        Normal,
+        Natural,
     };
 
     /** Returns the display resolution. 
