@@ -17,6 +17,11 @@
  */
 #define RP_ST7789_BAUDRATE 15000000
 
+/** SPI on which the SD card is connected. 
+ */
+#define RP_SD_SPI spi1
+
+
 /** RP2040 Pinout 
  */
 

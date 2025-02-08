@@ -83,6 +83,8 @@ namespace rckid {
         static constexpr uint32_t Assert = 3;
         static constexpr uint32_t OutOfMemory = 4;
         static constexpr uint32_t StackProtectionFailure = 5;
+        static constexpr uint32_t USBMSCRead = 6;
+        static constexpr uint32_t USBMSCWrite = 7;
     }; // rckid::error
 
     /** Raises fatal error. 

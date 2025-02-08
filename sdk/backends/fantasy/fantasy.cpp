@@ -282,7 +282,7 @@ namespace rckid {
         SystemMallocGuard g;
         UpdateTexture(display::texture, display::img.data);
         BeginDrawing();
-        DrawTextureEx(display::texture, {0, 0}, 0, (display::resolution == DisplayResolution::Normal ? 2.0f : 4.0f), WHITE);
+        DrawTextureEx(display::texture, {0, 0}, 0, (display::resolution == DisplayResolution::Full ? 2.0f : 4.0f), WHITE);
         EndDrawing();
         SwapScreenBuffer();
     }
@@ -293,7 +293,7 @@ namespace rckid {
                 display::updateX = display::rect.right() - 1;
                 display::updateY = display::rect.top();
                 break;
-            case DisplayRefreshDirection::Normal:
+            case DisplayRefreshDirection::Natural:
                 display::updateX = display::rect.left();
                 display::updateY = display::rect.top();
                 break;
@@ -339,7 +339,7 @@ namespace rckid {
 
     void displaySetUpdateRegion(Coord width, Coord height) {
         switch (display::resolution) {
-            case DisplayResolution::Normal:
+            case DisplayResolution::Full:
                 displaySetUpdateRegion(Rect::XYWH((320 - width) / 2, (320 - height) / 2, width, height));
                 break;               
             case DisplayResolution::Half:
@@ -390,7 +390,7 @@ namespace rckid {
                             display::updateX = display::rect.right() - 1; 
                     }
                     break;
-                case DisplayRefreshDirection::Normal:
+                case DisplayRefreshDirection::Natural:
                     if (++display::updateX >= display::rect.right()) {
                         display::updateX = display::rect.left();
                         if (++display::updateY >= display::rect.bottom())

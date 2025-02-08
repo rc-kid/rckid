@@ -152,7 +152,7 @@ namespace rckid {
         using Bitmap<ColorRGB565>::Bitmap;
 
         void initialize() {
-            initialize(Rect::Centered(width(), height(), 320, 240), DisplayResolution::Normal);
+            initialize(Rect::Centered(width(), height(), 320, 240), DisplayResolution::Full);
         }
 
         void initialize(Rect updateRect, DisplayResolution resolution) {

@@ -20,7 +20,7 @@
 
     /** Reads dynamically sized buffer starting at given register. 
      */
-    static inline void readRegister(uint8_t address, uint8_t reg, uint8_t * buffer, size_t size) {
+    static void readRegister(uint8_t address, uint8_t reg, uint8_t * buffer, size_t size) {
         i2c::masterTransmit(address, & reg, 1, buffer, size);
     }
 
@@ -115,21 +115,21 @@ inline void i2c::writeRegister<uint16_t, platform::Endian::Big>(uint8_t address,
 }
 
 template<>
-uint8_t i2c::readRegister<uint8_t, platform::Endian::Little>(uint8_t address, uint8_t reg) {
+inline uint8_t i2c::readRegister<uint8_t, platform::Endian::Little>(uint8_t address, uint8_t reg) {
     uint8_t result = 0;
     i2c::masterTransmit(address, & reg, 1, & result, 1);
     return result;
 }
 
 template<>
-uint8_t i2c::readRegister<uint8_t, platform::Endian::Big>(uint8_t address, uint8_t reg) {
+inline uint8_t i2c::readRegister<uint8_t, platform::Endian::Big>(uint8_t address, uint8_t reg) {
     uint8_t result = 0;
     i2c::masterTransmit(address, & reg, 1, & result, 1);
     return result;
 }
 
 template<>
-uint16_t i2c::readRegister<uint16_t, platform::Endian::Little>(uint8_t address, uint8_t reg) {
+inline uint16_t i2c::readRegister<uint16_t, platform::Endian::Little>(uint8_t address, uint8_t reg) {
 #if (defined PLATFORM_LITTLE_ENDIAN)
     uint16_t result = 0;
     i2c::masterTransmit(address, & reg, 1, reinterpret_cast<uint8_t*>(& result), 2);
@@ -140,7 +140,7 @@ uint16_t i2c::readRegister<uint16_t, platform::Endian::Little>(uint8_t address, 
 }
 
 template<>
-uint16_t i2c::readRegister<uint16_t, platform::Endian::Big>(uint8_t address, uint8_t reg) {
+inline uint16_t i2c::readRegister<uint16_t, platform::Endian::Big>(uint8_t address, uint8_t reg) {
     uint8_t result[2];
     i2c::masterTransmit(address, & reg, 1, result, 2);
     return (result[0] << 8) | result[1];

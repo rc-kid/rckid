@@ -1,5 +1,7 @@
 # TODO
 
+- add error handling & BSOD
+
 - ensure that buffers use allocators properly when they are created to construct stuff
 - check audio playback, check the documentation for audio playback
 - add input & output 
@@ -7,6 +9,9 @@
 - fix platform for PC and attiny acording to the RP2040 platform
 - update I2C device so that it works well
 - waiting for display update done could make the cpu sleep
+
+- update the DataSync app so that it actually works as intended
+- add UI header
 
 
 > This is updated TODO list for mkIII. It's split into 
