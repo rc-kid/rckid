@@ -26,7 +26,7 @@ namespace rckid {
     void yield() {
     }
 
-    uint32_t updateUs() {
+    uint32_t uptimeUs() {
     }
 
     // io

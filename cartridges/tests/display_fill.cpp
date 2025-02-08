@@ -13,7 +13,7 @@ void fill(ColorRGB * fb, size_t size, ColorRGB value)  {
 
 int main() {
     initialize();
-    displaySetResolution(DisplayResolution::Normal);
+    displaySetResolution(DisplayResolution::Full);
     displaySetUpdateRegion(Rect::WH(320, 240));
     ColorRGB * fb = new ColorRGB[FB_SIZE];
     while (true) {

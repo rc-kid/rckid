@@ -240,7 +240,7 @@ extern "C" {
         if (lba >= sdCapacity()) 
             return -1;
         if (bufsize != 512)
-            rckid::fatalError(rckid::Error::MSCRead);
+            ERROR(rckid::error::USBMSCRead);
 
         sdReadBlocks(lba, reinterpret_cast<uint8_t*>(buffer), 1);
         return (int32_t) bufsize;
@@ -255,7 +255,7 @@ extern "C" {
         if (lba >= sdCapacity()) 
             return -1;
         if (bufsize != 512)
-            rckid::fatalError(rckid::Error::MSCWrite);
+            ERROR(rckid::error::USBMSCWrite);
 
         sdWriteBlocks(lba, buffer, 1);
         //uint8_t* addr = msc_disk0[lba]  + offset;
