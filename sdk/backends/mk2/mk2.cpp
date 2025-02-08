@@ -19,8 +19,6 @@ extern "C" {
 }
 
 #include "screen/ST7789.h"
-
-
 #include "rckid/rckid.h"
 
 

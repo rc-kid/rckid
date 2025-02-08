@@ -265,3 +265,14 @@ https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01
 - this allows for shorter audio paths
 - or just use module? 
 
+
+
+# Simpler Graphics
+
+- only have 2 options - 8 and 16 BPP for rendering. 8 goes through palette, 16 does not
+- tiles, fonts & sprites can have different BPPs (2, 4, 8) and they render either through palette, or through palette offset
+- this should greatly simplify things, as for colors, we have three:
+
+- ColorRGB16, ColorRGB8 and Color256
+
+
