@@ -5,6 +5,9 @@
 #include <rckid/assets/fonts/Iosevka16.h>
 #include <rckid/assets/images.h>
 
+
+#include <rckid/graphics/sprite.h>
+
 using namespace rckid;
 
 class DisplayPNGApp : public App<RenderableBitmap<ColorRGB>> {

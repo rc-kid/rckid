@@ -6,6 +6,21 @@ namespace rckid {
 
     using Coord = int32_t;
 
+    /** Horizontal alignment for labels and other UI elements. 
+     */
+    enum class HAlign {
+        Left,
+        Center,
+        Right,
+    };
+
+    /** Vertical alignment for labels and other UI elements. 
+     */
+    enum class VAlign {
+        Top,
+        Center,
+        Bottom,
+    };
 
     template<typename COORD>
     class TPoint {

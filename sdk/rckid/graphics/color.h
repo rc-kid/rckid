@@ -13,6 +13,7 @@ namespace rckid {
     public:
 
         static constexpr uint8_t BPP = 16;
+        static constexpr bool PALETTE = false;
 
         constexpr ColorRGB565() = default;
 
@@ -53,6 +54,8 @@ namespace rckid {
     PACKED(class ColorRGB332 {
     public:
         static constexpr uint8_t BPP = 8;
+        static constexpr bool PALETTE = false;
+
 
     }); // rckid::ColorRGB332
 
@@ -61,6 +64,8 @@ namespace rckid {
     PACKED(class Color256 {
     public:
         static constexpr uint8_t BPP = 8;
+        static constexpr bool PALETTE = true;
+
         constexpr Color256() = default;
         static constexpr Color256 fromRaw(uint8_t raw) { return Color256{raw}; }
         constexpr uint16_t raw() const { return index_; }
@@ -80,6 +85,8 @@ namespace rckid {
     PACKED(class Color16 {
     public:
         static constexpr uint8_t BPP = 4;
+        static constexpr bool PALETTE = true;
+
         constexpr Color16() = default;
         static constexpr Color16 fromRaw(uint8_t raw) { return Color16{static_cast<uint8_t>(raw & 0xf)}; }
         constexpr uint16_t raw() const { return index_; }
