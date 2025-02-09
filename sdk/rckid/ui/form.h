@@ -1,8 +1,8 @@
 #pragma once
 
 #include <vector>
-#include <platform/buffers.h>
 
+#include "../utils/buffers.h"
 #include "panel.h"
 
 namespace rckid::ui {
@@ -11,7 +11,7 @@ namespace rckid::ui {
     public:
         Form(Allocator & a = Heap::allocator()) {
             setRect(Rect::WH(320, 240));
-            buffer_ = new (a.alloc<DoubleBuffer<uint16_t>>()) DoubleBuffer<uint16_t>(240);
+            buffer_ = new (a.alloc<DoubleBuffer<uint16_t>>()) DoubleBuffer<uint16_t>(240, a);
         }
 
         ~Form() override {

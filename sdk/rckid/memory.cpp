@@ -1,4 +1,4 @@
-#include "memory.h"
+#include "rckid.h"
 
 #include <backend_config.h>
 
@@ -22,7 +22,7 @@ namespace rckid {
 
         NOTE for the fantasy backend: the chunk pointers are stored as offsets from the __bss_end__ symbol, which is the start of the fantasy heap. This is to ensure that the pointer sizes in the heap chunks fit in 4 bytes each even on 64bit systems. On physical devices, which are expected to be 32bit this is streamlined to actual pointers. 
      */
-    PACKED(struct HeapChunk {
+    struct HeapChunk {
         HeapChunk(uint32_t size): header_{size} {}
 
         char * start() { return (char*)this; }
@@ -94,7 +94,8 @@ namespace rckid {
 
         static constexpr uint32_t CHUNK_IS_FREE = 1;
 
-    }); // HeapChunk
+    }; // HeapChunk
+
 
     static_assert(sizeof(HeapChunk) == 12);
 
