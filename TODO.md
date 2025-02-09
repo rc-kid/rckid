@@ -1,8 +1,5 @@
 # TODO
 
-
-- for the error argument and extras, it should not be passed to the function but instead there should be global functions to set it appropriately
-
 - ensure that buffers use allocators properly when they are created to construct stuff
 - check audio playback, check the documentation for audio playback
 - add input & output 
@@ -13,7 +10,6 @@
 
 - update the DataSync app so that it actually works as intended
 - add UI header
-
 
 > This is updated TODO list for mkIII. It's split into 
 

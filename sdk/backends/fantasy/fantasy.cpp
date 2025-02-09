@@ -51,6 +51,9 @@ extern "C" {
 
 namespace rckid {
 
+    // forward declaration of the bsod function
+    NORETURN(void bsod(uint32_t error, uint32_t line = 0, char const * file = nullptr));
+
     namespace sd {
         std::fstream iso_;
         uint32_t numBlocks_ = 0;
@@ -119,7 +122,7 @@ namespace rckid {
 
 
 
-    void fatalError(uint32_t error, uint32_t attr, uint32_t line, char const * file) {
+    void fatalError(uint32_t error, uint32_t line, char const * file) {
         // close the SD and flash files
         systemMalloc_ = true;
         if (sd::iso_.good())
@@ -128,7 +131,7 @@ namespace rckid {
             flash::iso_.close();
         systemMalloc_ = false;
         // finally, go for BSOD
-        bsod(error, attr, line, file);
+        bsod(error, line, file);
     }
 
     Writer debugWrite() {
