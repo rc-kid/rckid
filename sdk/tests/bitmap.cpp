@@ -13,7 +13,7 @@ TEST(bitmap, pixels_bpp8) {
     EXPECT(bmp.at(5, 57) == y);
 }
 
-TEST(bitmap, pixels_bpp4) {
+TEST(bitmap, pixels_bpp16) {
     Bitmap<16> bmp{320, 240};
     Bitmap<16>::Pixel x{13};
     Bitmap<16>::Pixel y{8};
@@ -26,7 +26,8 @@ TEST(bitmap, pixels_bpp4) {
     bmp.setAt(319, 1, y);
     EXPECT(bmp.at(319, 0) == x);
     EXPECT(bmp.at(319, 1) == y);
-    EXPECT(bmp.pixels()[0] == 0x8d);
+    EXPECT(bmp.pixels()[0] == x);
+    EXPECT(bmp.pixels()[1] == y);
 }
 
 TEST(bitmap, arena_allocator) {
