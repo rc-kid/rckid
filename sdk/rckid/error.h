@@ -28,6 +28,17 @@ namespace rckid {
         Since exceptions are not supported, rasing errors is akin to blue screen of death, which is indeed what this function shows. The line and file can be specified for debugging purposes and will be displayed on screen. There is no recovery from fatal errors and the device should be reset afterwards. 
 
      */
+
+    NORETURN(void fatalError(uint32_t error, uint32_t arg, uint32_t line = 0, char const * file = nullptr));
+
     NORETURN(void fatalError(uint32_t error, uint32_t line = 0, char const * file = nullptr));
+
+    inline void fatalError(uint32_t error, uint32_t line, char const * file) {
+        fatalError(error, 0, line, file);
+    }
+
+    /** Displays the blue screen of death and hangs indefinitely. This is the ultimate end of all fatal errors, but has to be called safely from the fatal error handler after all hardware is correctly torn down.
+     */
+    NORETURN(void bsod(uint32_t error, uint32_t arg, uint32_t line = 0, char const * file = nullptr, char const * extras = nullptr));
 
 } // namespace rckid

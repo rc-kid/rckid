@@ -119,25 +119,16 @@ namespace rckid {
 
 
 
-    void fatalError(uint32_t error, uint32_t line, char const * file) {
-        std::cout << "Fatal error " << error;
-        if (file != nullptr)
-            std::cout << " in " << file << "(" << line << ")";
-        std::cout << std::endl;
-        // clear all memory arenas to clean up space, this is guarenteed to succeed as the SDK creates memory arena when it finishes initialization    
-        /**
-        memoryReset();
-        bsod(error, line, file, nullptr);
+    void fatalError(uint32_t error, uint32_t attr, uint32_t line, char const * file) {
+        // close the SD and flash files
         systemMalloc_ = true;
         if (sd::iso_.good())
             sd::iso_.close();
         if (flash::iso_.good())
             flash::iso_.close();
-        while (! WindowShouldClose())
-            PollInputEvents();
         systemMalloc_ = false;
-        */
-        std::exit(EXIT_FAILURE);
+        // finally, go for BSOD
+        bsod(error, attr, line, file);
     }
 
     Writer debugWrite() {
