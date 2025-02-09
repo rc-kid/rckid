@@ -18,7 +18,7 @@ namespace rckid {
      */
     class PNG {
     public:
-        using DecodeCallback = std::function<void(ColorRGB * rgb, int lineNum, int lineWidth)>;
+        using DecodeCallback16 = std::function<void(uint16_t * rgb, int lineNum, int lineWidth)>;
 
         static PNG fromStream(RandomReadStream & stream, Allocator & a = Heap::allocator());
 
@@ -31,24 +31,32 @@ namespace rckid {
 
         int height() const;
 
-        int decode(DecodeCallback cb);
+        int decode16(DecodeCallback16 cb, Allocator & a = Heap::allocator());
 
         PNG & operator == (PNG const &) = delete;
         PNG & operator == (PNG &&) = delete;
 
         ~PNG() {
             Heap::tryFree(img_);
-            Heap::tryFree(line_);
         }
 
     private:
 
+        struct Decode16 {
+            DecodeCallback16 cb;
+            PNG * png;
+            uint16_t * line;
+
+            Decode16(DecodeCallback16 cb, PNG * png, Allocator & a);
+            ~Decode16();
+        };
+
         PNG(Allocator & a);
 
-        static void decodeLine_(png_draw_tag *pDraw);
+        static void decodeLine16_(png_draw_tag *pDraw);
 
         png_image_tag * img_;
-        DecodeCallback cb_;
-        uint16_t * line_;
+
+
     }; 
 }

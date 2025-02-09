@@ -221,9 +221,9 @@ namespace rckid {
 
     void displayWaitVSync();
 
-    void displayUpdate(ColorRGB const * pixels, uint32_t numPixels, DisplayUpdateCallback callback);
+    void displayUpdate(uint16_t const * pixels, uint32_t numPixels, DisplayUpdateCallback callback);
 
-    void displayUpdate(ColorRGB const * pixels, uint32_t numPixels);
+    void displayUpdate(uint16_t const * pixels, uint32_t numPixels);
 
     /** \page sdk
         \section audio Audio Playback & Recording

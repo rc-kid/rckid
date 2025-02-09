@@ -1,5 +1,7 @@
 # TODO
 
+- memory management does not work in fantasy on 64bit systems due to too large headers (8byte ptrs vs 4 byte on the device)
+
 - add error handling & BSOD
 
 - ensure that buffers use allocators properly when they are created to construct stuff
@@ -274,5 +276,7 @@ https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01
 - this should greatly simplify things, as for colors, we have three:
 
 - ColorRGB16, ColorRGB8 and Color256
+- maybe have bitmap & friends only templated by BPP, without actually caring about the color meaning
+- then have ColorRGB which can be full RGBA and this one works with different color representations
 
-
+- how to fit 16bit RGBA in there? maybe ignore the alpha channel at pio level? that might just work

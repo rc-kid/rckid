@@ -25,18 +25,26 @@ typedef int32_t (PNG_SEEK_CALLBACK)(PNGFILE *pFile, int32_t iPosition);
 
 namespace rckid {
 
+    PNG::Decode16::Decode16(DecodeCallback16 cb, PNG * png, Allocator & a): 
+        cb{cb}, 
+        png{png}, 
+        line{a.alloc<uint16_t>(png->img_->iWidth)} {
+    }
+
+    PNG::Decode16::~Decode16() {
+        Heap::tryFree(line);
+    }
+
     PNG PNG::fromStream(RandomReadStream & stream, Allocator & a) {
         PNG result(a);
         result.img_->ucMemType = PNG_MEM_RAM;
         result.img_->pfnRead = readStream;
         result.img_->pfnSeek = seekStream;
-        result.img_->pfnDraw = decodeLine_;
         result.img_->pfnOpen = nullptr;
         result.img_->pfnClose = nullptr;
         result.img_->PNGFile.iSize = stream.size();
         result.img_->PNGFile.fHandle = & stream;
         PNGInit(result.img_);
-        result.line_ = a.alloc<uint16_t>(result.img_->iWidth);
         return result;
     }
 
@@ -45,13 +53,11 @@ namespace rckid {
         result.img_->ucMemType = PNG_MEM_RAM;
         result.img_->pfnRead = readRAM;
         result.img_->pfnSeek = seekMem;
-        result.img_->pfnDraw = decodeLine_;
         result.img_->pfnOpen = nullptr;
         result.img_->pfnClose = nullptr;
         result.img_->PNGFile.iSize = numBytes;
         result.img_->PNGFile.pData = const_cast<uint8_t *>(buffer);
         PNGInit(result.img_);
-        result.line_ = a.alloc<uint16_t>(result.img_->iWidth);
         return result;
     } 
 
@@ -59,9 +65,10 @@ namespace rckid {
 
     int PNG::height() const { return img_->iHeight; }
 
-    int PNG::decode(DecodeCallback cb) {
-        cb_ = cb;
-        return DecodePNG(this->img_, this, 0);
+    int PNG::decode16(DecodeCallback16 cb, Allocator & a) {
+        Decode16 d{cb, this, a};
+        img_->pfnDraw = decodeLine16_;
+        return DecodePNG(this->img_, & d, 0);
     }
 
     PNG::PNG(Allocator & a) {
@@ -69,12 +76,12 @@ namespace rckid {
         memset(img_, 0, sizeof(png_image_tag));
     }
 
-    void PNG::decodeLine_(png_draw_tag *pDraw) {
-        PNG * png = reinterpret_cast<PNG*>(pDraw->pUser);
+    void PNG::decodeLine16_(png_draw_tag *pDraw) {
+        Decode16 * dec = reinterpret_cast<Decode16*>(pDraw->pUser);
         //PNGRGB565(pDraw, line, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff, png->iHasAlpha);
         // TODO background is set to 0, which means the icons look good on black, but real transparency is not really working at this point
-        PNGRGB565(pDraw, png->line_, PNG_RGB565_LITTLE_ENDIAN, 0x0, png->img_->iHasAlpha);
-        png->cb_(reinterpret_cast<ColorRGB *>(png->line_), pDraw->y, pDraw->iWidth);
+        PNGRGB565(pDraw, dec->line, PNG_RGB565_LITTLE_ENDIAN, 0x0, dec->png->img_->iHasAlpha);
+        dec->cb(dec->line, pDraw->y, pDraw->iWidth);
     }
 
 }

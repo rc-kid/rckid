@@ -106,7 +106,6 @@ namespace rckid {
     }
 
     void Heap::free(void * ptr) {
-        LOG(LL_HEAP, "Freeing " << ptr);
         // deleting nullptr is noop        
         if (ptr == nullptr)
             return;
@@ -123,10 +122,12 @@ namespace rckid {
                     break;
                 detachChunk(chunk);
             }
+            LOG(LL_HEAP, "Freeing joined chunk " << ptr << " (size " << chunk->size() << ")");
             return;
         }
         // get the chunk and prepend it to the freelist
         // TODO this is extremely ugly and inefficient, must be fixed in the future
+        LOG(LL_HEAP, "Freeing standalone chunk " << ptr << " (size " << chunk->size() << ")");
         chunk->markAsFree();
         chunk->prev = nullptr;
         chunk->next = freelist_;

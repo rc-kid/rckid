@@ -370,17 +370,17 @@ namespace rckid {
 
     }
 
-    void displayUpdate(ColorRGB const * pixels, uint32_t numPixels, DisplayUpdateCallback callback) {
+    void displayUpdate(uint16_t const * pixels, uint32_t numPixels, DisplayUpdateCallback callback) {
         display::callback = callback;
         displayUpdate(pixels, numPixels);
     }
 
-    void displayUpdate(ColorRGB const * pixels, uint32_t numPixels) {
+    void displayUpdate(uint16_t const * pixels, uint32_t numPixels) {
         ++display::updating;
         // update the pixels in the internal framebuffer
         while (numPixels != 0) {
-            ImageDrawPixel(&display::img, display::updateX, display::updateY, { pixels->r(), pixels->g(), pixels->b(), 255});
-            ++pixels;
+            ColorRGB c = ColorRGB::fromRaw16(*pixels++);
+            ImageDrawPixel(&display::img, display::updateX, display::updateY, { c.r(), c.g(), c.b(), 255});
             --numPixels;
             switch (display::direction) {
                 case DisplayRefreshDirection::Native:

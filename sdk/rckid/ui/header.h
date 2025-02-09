@@ -1,6 +1,6 @@
 #pragma once
 
-namespace rckid {
+namespace rckid::ui {
 
     /** Application hedear. 
      
@@ -18,6 +18,6 @@ namespace rckid {
 
 
 
-    }; // rckid::Header
+    }; // rckid::ui::Header
 
-} // namespace rckid
+} // namespace rckid::ui

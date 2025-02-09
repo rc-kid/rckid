@@ -2,7 +2,7 @@
 
 #include "../graphics/bitmap.h"
 
-namespace rckid {
+namespace rckid::ui {
 
     /** The carousel is used to display a rolling menu.
      
@@ -23,6 +23,6 @@ namespace rckid {
         Bitmap<ColorRGB> icon_;
         Bitmap<ColorRGB> iconNext_;
 
-    }; // rckid::Carousel
+    }; // rckid::ui::Carousel
 
-} // namespace rckid
+} // namespace rckid::ui

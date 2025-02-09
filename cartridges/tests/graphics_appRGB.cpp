@@ -4,10 +4,9 @@
 #include <rckid/assets/fonts/Iosevka16.h>
 
 using namespace rckid;
-
-class TestAppRGB : public App<RenderableBitmap<ColorRGB>> {
+class TestAppRGB : public App<RenderableBitmap<16>> {
 public:
-    TestAppRGB(Coord w, Coord h): App{RenderableBitmap<ColorRGB>{w, h}} {}
+    TestAppRGB(Coord w, Coord h): App{RenderableBitmap<16>{w, h}} {}
 
     static void run() { TestAppRGB t{200, 200}; t.loop(); }
 
@@ -28,7 +27,13 @@ protected:
                 g_.fill(ColorRGB{0, 0, 0});
                 break;
         }
-        g_.text(10,10, Font::fromROM<assets::Iosevka16>(), Color::RGB(0xff, 0xff, 0xff)) << "Hello world!";
+        std::array<Bitmap<16>::Pixel, 4> colors = {
+            ColorRGB{0, 0, 0},
+            ColorRGB{85, 85, 80},
+            ColorRGB{170, 170, 170},
+            ColorRGB{255, 255, 255}
+        };
+        g_.text(10,10, Font::fromROM<assets::Iosevka16>(), colors) << "Hello world!";
         App::draw();
     }
 
@@ -41,3 +46,4 @@ int main() {
         TestAppRGB::run();
     }
 }
+

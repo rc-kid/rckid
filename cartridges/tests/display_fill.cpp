@@ -6,7 +6,7 @@ using namespace rckid;
 
 static constexpr size_t FB_SIZE = 320 * 240;
 
-void fill(ColorRGB * fb, size_t size, ColorRGB value)  {
+void fill(uint16_t * fb, size_t size, uint16_t value)  {
     while (size-- != 0)
         *(fb++) = value;
 }
@@ -15,7 +15,7 @@ int main() {
     initialize();
     displaySetResolution(DisplayResolution::Full);
     displaySetUpdateRegion(Rect::WH(320, 240));
-    ColorRGB * fb = new ColorRGB[FB_SIZE];
+    uint16_t * fb = new uint16_t[FB_SIZE];
     while (true) {
         fill(fb, FB_SIZE, ColorRGB{255, 0, 0});
         //displayWaitVSync();
