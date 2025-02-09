@@ -9,11 +9,14 @@ namespace rckid {
 
     /** Pixel Array 
      
-        Drawing operations on pixel  buffers. 
+        Drawing operations on pixel buffers. The pixel array provides basic operations on pixel buffers in the native display orientation so that the routines can be reused by different graphic classes. 
      */
     template<uint32_t BPP>
     class PixelArray {
+        static_assert(BPP == 16 || BPP == 8, "Only 16 and 8 BPP supported");
     public:
+
+        using Pixel = std::conditional_t<BPP == 16, uint16_t, uint8_t>;
 
         /** Returns number of bytes a pixel array of given dimension needs for the specified color. 
          
@@ -32,23 +35,13 @@ namespace rckid {
 
         /** Returns the value of given pixel.
          */
-        static constexpr uint16_t get(Coord x, Coord y, Coord width, Coord height, uint8_t const * array) {
-            uint32_t i = offset(x, y, width, height); 
-            switch (BPP) {
-                case 16:
-                    return reinterpret_cast<uint16_t const *>(array)[i];
-                case 8:
-                    return array[i];
-                case 4:
-                    return (array[i >> 1] >> ((i & 1) * 4)) & 0x0f;
-                default:
-                    UNREACHABLE;
-            }
+        static constexpr Pixel get(Coord x, Coord y, Coord width, Coord height, Pixel const * array) {
+            return array[offset(x, y, width, height)];
         }
 
         /** Sets the value of given pixel. If the coordinates are outside of the pixel array bounds, does nothing. 
          */
-        static constexpr void set(Coord x, Coord y, Coord width, Coord height, uint16_t value, uint8_t * array) {
+        static constexpr void set(Coord x, Coord y, Coord width, Coord height, Pixel value, Pixel * array) {
             // don't do anything if outside of bounds
             if (x < 0 || y < 0 || x >= width || y >= height)
                 return;
@@ -57,32 +50,16 @@ namespace rckid {
 
         /** Sets the value of given pixel assuming the coordinates are within the pixel array bounds.
          */
-        static constexpr void setNoCheck(Coord x, Coord y, Coord width, Coord height, uint16_t value, uint8_t * array) {
-            uint32_t i = offset(x, y, width, height); 
-            switch (BPP) {
-                case 16:
-                    reinterpret_cast<uint16_t *>(array)[i] = value & 0xffff;
-                    break;
-                case 8:
-                    array[i] = value & 0xff;
-                    break;
-                case 4: {
-                    uint8_t & xx = array[i >> 1];
-                    xx &= ~(0x0f << ((i & 1) * 4));
-                    xx |= (value & 0xf) << ((i & 1) * 4);
-                    break;
-                }
-                default:
-                    UNREACHABLE;
-            }
+        static constexpr void setNoCheck(Coord x, Coord y, Coord width, Coord height, Pixel value, Pixel * array) {
+            array[offset(x, y, width, height)] = value;
         }
 
-        static constexpr Coord putChar(Coord x, Coord y, Coord width, Coord height, Font const & font, char c, uint16_t const * colors, uint8_t * array) {
+        static constexpr Coord putChar(Coord x, Coord y, Coord width, Coord height, Font const & font, char c, Pixel const * colors, Pixel * pixels) {
             GlyphInfo const & g = font.glyphs[static_cast<uint8_t>((c - 32 >= 0) ? (c - 32) : 0)];
             // if the start is after, or the end is before the current bitamp, rsimply advance
             if (x > width || x + g.advanceX < 0)
                 return g.advanceX;
-            uint8_t const * pixels = font.pixels + g.index;
+            uint8_t const * gPixels = font.pixels + g.index;
             int ys = y + g.y;
             int ye = ys + g.height;
             for (int xx = x + g.x,xe = x + g.x + g.width; xx < xe; ++xx) {
@@ -91,11 +68,11 @@ namespace rckid {
                 for (int yy = ys; yy != ye; ++yy) {
                     if (bits == 0) {
                         bits = 8;
-                        col = *pixels++;
+                        col = *gPixels++;
                     }
                     unsigned a = (col >> 6) & 0x3;
                     if (a != 0)
-                        set(xx, yy, width, height, colors[a], array);
+                        set(xx, yy, width, height, colors[a], pixels);
                     col = col << 2;
                     bits -= 2;
                 }

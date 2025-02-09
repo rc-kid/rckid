@@ -77,8 +77,6 @@ namespace rckid {
      */
     template<typename RENDERER>
     class App : public BaseApp {
-    public:
-        using Color = typename RENDERER::Color;
     protected:
         template <typename... Args>
         App(Args&&... args) : g_{std::forward<Args>(args)...} {

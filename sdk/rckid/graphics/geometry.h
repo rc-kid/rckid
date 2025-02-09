@@ -61,6 +61,9 @@ namespace rckid {
         constexpr COORD bottom() const { return y + h; }
         constexpr COORD right() const { return x + w; }
 
+        constexpr COORD width() const { return w; }
+        constexpr COORD height() const { return h; }
+
         constexpr TPoint<COORD> topLeft() const { return TPoint<COORD>{x, y}; }
         constexpr TPoint<COORD> bottomRight() const { return TPoint<COORD>{right(), bottom()}; }
 

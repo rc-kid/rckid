@@ -4,7 +4,6 @@
 
 #include "../rckid.h"
 #include "../memory.h"
-#include "color.h"
 #include "palette.h"
 #include "pixel_array.h"
 #include "font.h"
@@ -12,16 +11,15 @@
 
 namespace rckid {
 
-    template<typename COLOR>
+    template<uint32_t BPP>
     class Bitmap {
     public:
-        static constexpr uint8_t BPP = COLOR::BPP;
-        using Color = COLOR;
         using PixelArray = rckid::PixelArray<BPP>;
+        using Pixel = typename PixelArray::Pixel;
 
         /** Creates the bitmap using given allocator.
          */
-        Bitmap(Coord w, Coord h, Allocator & a = Heap::allocator()): pixels_{a.alloc<uint8_t>(PixelArray::numBytes(w, h))}, w_{w}, h_{h} {
+        Bitmap(Coord w, Coord h, Allocator & a = Heap::allocator()): pixels_{a.alloc<Pixel>(w * h)}, w_{w}, h_{h} {
         }
 
         Bitmap(Bitmap const &) = delete;
@@ -57,20 +55,20 @@ namespace rckid {
          */
         //@{
 
-        Color at(Coord x, Coord y) const { return Color::fromRaw(PixelArray::get(x, y, w_, h_, pixels_)); }
+        Pixel at(Coord x, Coord y) const { return PixelArray::get(x, y, w_, h_, pixels_); }
 
-        void setAt(Coord x, Coord y, Color c) { PixelArray::set(x, y, w_, h_, c.raw(), pixels_); }
+        void setAt(Coord x, Coord y, Pixel c) { PixelArray::set(x, y, w_, h_, c, pixels_); }
 
-        uint8_t const * pixels() const { return pixels_; }
+        Pixel const * pixels() const { return pixels_; }
 
         //@}
 
         /** \name Blitting. 
          */
         //@{
-        void blit(Point where, Bitmap<COLOR> const & src) { blit(where, src, Rect::WH(src.width(), src.height())); }
+        void blit(Point where, Bitmap<BPP> const & src) { blit(where, src, Rect::WH(src.width(), src.height())); }
 
-        void blit(Point where, Bitmap<COLOR> const & src, Rect srcRect) {
+        void blit(Point where, Bitmap<BPP> const & src, Rect srcRect) {
             // default, very slow implementation 
             int dy = where.y;
             for (int y = srcRect.top(), ye = srcRect.bottom(); y != ye; ++y, ++dy) {
@@ -84,28 +82,16 @@ namespace rckid {
         /** \name Drawing
          */
         //@{
-        void fill(Color color) { fill(color, Rect::WH(w_, h_)); }
+        void fill(Pixel color) { fill(color, Rect::WH(w_, h_)); }
 
-        void fill(Color color, Rect rect) {
+        void fill(Pixel color, Rect rect) {
             // default, very slow implementation
             for (int x = rect.left(), xe = rect.right(); x < xe; ++x)
                 for (int y = rect.top(), ye = rect.bottom(); y < ye; ++y)
                     setAt(x, y, color);
         }
 
-        Writer text(Coord x, Coord y, Font const & font, Color color) {
-            return text(x, y, font, Font::colorToArray(color));
-        }
-
-        //@}
-
-    private:
-
-        Coord putChar(Coord x, Coord y, Font const & font, char c, uint16_t const * colors) {
-            return PixelArray::putChar(x, y, w_, h_, font, c, colors, pixels_);
-        }
-
-        Writer text(Coord x, Coord y, Font const & font, std::array<uint16_t, 4> colors) {
+        Writer text(Coord x, Coord y, Font const & font, std::array<Pixel, 4> colors) {
             int startX = x;
             return Writer{[=](char c) mutable {
                 if (c != '\n') {
@@ -118,14 +104,22 @@ namespace rckid {
             }};
         }
 
-        uint8_t * pixels_;
+        //@}
+
+    private:
+
+        Coord putChar(Coord x, Coord y, Font const & font, char c, Pixel const * colors) {
+            return PixelArray::putChar(x, y, w_, h_, font, c, colors, pixels_);
+        }
+
+        Pixel * pixels_;
         Coord w_;
         Coord h_;
     }; // rckid::Bitmap
 
     template<>
-    inline void Bitmap<ColorRGB565>::loadImage(PNG && decoder, int x, int y) {
-        decoder.decode([this, x, y](ColorRGB * line, int lineNum, int lineWidth) {
+    inline void Bitmap<16>::loadImage(PNG && decoder, int x, int y) {
+        decoder.decode16([this, x, y](Pixel * line, int lineNum, int lineWidth) {
             for (int i = 0; i < lineWidth; ++i)
                 setAt(i + x, lineNum + y, line[i]);
         });
@@ -135,21 +129,23 @@ namespace rckid {
      
         Defined as template and specialized based on used color and allocators. See the specializations below for more information.  
      */
-    template<typename COLOR>
-    class RenderableBitmap;
+    template<uint32_t BPP>
+    class RenderableBitmap {
+
+    };
 
     /** Renderable bitmap specialization for Full 16bit RGB colors. 
      
         This is rather simple as the entire pixel array of the bitmap can be sent directly to the displayUpdate() method. Initialization simply sets the display to native mode and sets update region to a centered rectangle of the bitmap's size. There is no need to finalize anything. 
       */
     template<>
-    class RenderableBitmap<ColorRGB565> : public Bitmap<ColorRGB565> {
+    class RenderableBitmap<16> : public Bitmap<16> {
     public:
-        using Bitmap<ColorRGB565>::width;
-        using Bitmap<ColorRGB565>::height;
-        using Bitmap<ColorRGB565>::pixels;
-        using Bitmap<ColorRGB565>::numPixels;
-        using Bitmap<ColorRGB565>::Bitmap;
+        using Bitmap<16>::width;
+        using Bitmap<16>::height;
+        using Bitmap<16>::pixels;
+        using Bitmap<16>::numPixels;
+        using Bitmap<16>::Bitmap;
 
         void initialize() {
             initialize(Rect::Centered(width(), height(), 320, 240), DisplayResolution::Full);
@@ -167,11 +163,9 @@ namespace rckid {
 
         void render() {
             displayWaitVSync();
-            displayUpdate(reinterpret_cast<ColorRGB565 const *>(pixels()), numPixels());
+            displayUpdate(pixels(), numPixels());
         }
 
     };
-
-
     
 }

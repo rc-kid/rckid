@@ -19,3 +19,7 @@ link_with_librckid(graphics-appRGB)
 add_executable(display-png "display_png.cpp")
 link_with_librckid(display-png)
 
+# displays simple ui elements to verify the framework works
+add_executable(display-ui "display_ui.cpp")
+link_with_librckid(display-ui)
+

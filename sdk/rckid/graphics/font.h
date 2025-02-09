@@ -76,6 +76,7 @@ namespace rckid {
 
     /** Font color array specialization for RGB565, full color is the specified, others are with decreasing alpha to black.
      */
+    /*
     template<>
     inline std::array<uint16_t, 4> Font::colorToArray(ColorRGB565 color) {
         return std::array<uint16_t, 4>{
@@ -85,5 +86,6 @@ namespace rckid {
             color.raw()
         };
     }
+        */
 
 } // namespace rckid

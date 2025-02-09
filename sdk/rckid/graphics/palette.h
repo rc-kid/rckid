@@ -24,13 +24,6 @@ namespace rckid {
         ColorRGB const * palette_ = nullptr;
     };
 
-    template<>
-    class PaletteHolder<ColorRGB565> {};
-
-    template<>
-    class PaletteHolder<ColorRGB332> {};
-
-
     template<typename COLOR>
     class PaletteOffsetHolder {
     public:
@@ -43,12 +36,6 @@ namespace rckid {
 
         uint8_t paletteOffset_ = 0;
     }; 
-
-    template<>
-    class PaletteOffsetHolder<ColorRGB565> {};
-
-    template<>
-    class PaletteOffsetHolder<ColorRGB332> {};
 
 
 } // namespace rckid

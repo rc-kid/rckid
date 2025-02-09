@@ -6,18 +6,16 @@
 #include <rckid/assets/images.h>
 
 
-#include <rckid/graphics/sprite.h>
-
 using namespace rckid;
 
-class DisplayPNGApp : public App<RenderableBitmap<ColorRGB>> {
+class DisplayPNGApp : public App<RenderableBitmap<16>> {
 public:
-    DisplayPNGApp(Coord w, Coord h): App{RenderableBitmap<ColorRGB>{w, h}} {
+    DisplayPNGApp(Coord w, Coord h): App{RenderableBitmap<16>{w, h}} {
         decTime_ = MEASURE_TIME(
             g_.loadImage(PNG::fromBuffer(assets::logo256));
         );
         LOG(LL_INFO, "Decoding time: " << decTime_);
-        g_.text(10,10, Font::fromROM<assets::Iosevka16>(), Color::RGB(0xff, 0xff, 0xff)) << "Decoding time: " << decTime_;
+        g_.text(10,10, Font::fromROM<assets::Iosevka16>(), ColorRGB{255, 255, 255}.toFontColors()) << "Decoding time: " << decTime_;
     }
 
     static void run() { DisplayPNGApp t{320, 240}; t.loop(); }
