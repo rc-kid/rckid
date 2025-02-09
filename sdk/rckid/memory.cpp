@@ -19,13 +19,11 @@ namespace rckid {
     /** Heap allocated chunk.
      
         Chunk consists of header and body. Chunk header is 4 bytes long and is the chunk size (including the header). Since chunk sizes must be in multiples of 4, ths LSB (2 of them in fact) is free and is used to determine whether the chunk is allocated (0), or part of the freelist (1). When the chunk is allocated, its body is the user data, but when the chunk becomes part of the freelist, the body consists of a pointer to the previous and next chunks in the freelist.  
-        */
-    PACKED(struct HeapChunk {
-        ChunkHeader header;
-        HeapChunk * next;
-        HeapChunk * prev;
 
-        HeapChunk(uint32_t size): header{size} {}
+        NOTE for the fantasy backend: the chunk pointers are stored as offsets from the __bss_end__ symbol, which is the start of the fantasy heap. This is to ensure that the pointer sizes in the heap chunks fit in 4 bytes each even on 64bit systems. On physical devices, which are expected to be 32bit this is streamlined to actual pointers. 
+     */
+    PACKED(struct HeapChunk {
+        HeapChunk(uint32_t size): header_{size} {}
 
         char * start() { return (char*)this; }
 
@@ -33,37 +31,86 @@ namespace rckid {
          */
         char * end() { return start() + size(); }
 
-        size_t size() { return header & ~3; }
+        size_t size() { return header_ & ~3; }
 
         /** Sets size of the chunk and marks it as allocated.
          */
-        void setSize(uint32_t bytes) { header = bytes; }
+        void setSize(uint32_t bytes) { header_ = bytes; }
 
-        bool isFree() { return header & CHUNK_IS_FREE; }
+        bool isFree() { return header_ & CHUNK_IS_FREE; }
 
-        void markAsAllocated() { header &= ~CHUNK_IS_FREE; }
+        void markAsAllocated() { header_ &= ~CHUNK_IS_FREE; }
 
-        void markAsFree() { header |= CHUNK_IS_FREE; }
+        void markAsFree() { header_ |= CHUNK_IS_FREE; }
+
+        void * ptr() {
+            return & next_;
+        }
+
+        HeapChunk * next() {
+#ifdef RCKID_BACKEND_FANTASY
+            return (next_ == CHUNK_NULLPTR) ? nullptr : reinterpret_cast<HeapChunk*>((& __bss_end__) + next_);
+#else
+            return next_;
+#endif
+        }
+
+        HeapChunk * prev() {
+#ifdef RCKID_BACKEND_FANTASY
+            return (prev_ == CHUNK_NULLPTR) ? nullptr : reinterpret_cast<HeapChunk*>((& __bss_end__) + prev_);
+#else
+            return prev_;
+#endif
+        }
+
+        void setNext(HeapChunk * next) {
+#ifdef RCKID_BACKEND_FANTASY
+            next_ = (next == nullptr) ? CHUNK_NULLPTR : reinterpret_cast<char*>(next) - & __bss_end__;
+#else
+            next_ = next;
+#endif
+        }
+
+        void setPrev(HeapChunk * prev) {
+#ifdef RCKID_BACKEND_FANTASY
+            prev_ = (prev == nullptr) ? CHUNK_NULLPTR : reinterpret_cast<char*>(prev) - & __bss_end__;
+#else
+            prev_ = prev;
+#endif
+        }
 
     private:
+        // to ensure the chunk header is always 12 bytes even on 64bit systems (fantasy backend), we use relative offsets from the heap start instead of pointers for the next and prev chunk pointers. 
+#ifdef RCKID_BACKEND_FANTASY
+        ChunkHeader header_;
+        uint32_t next_ = CHUNK_NULLPTR;
+        uint32_t prev_ = CHUNK_NULLPTR;
+
+        static constexpr uint32_t CHUNK_NULLPTR = 0xffffffff;
+#else
+        HeapChunk * next_ = nullptr;
+        HeapChunk * prev_ = nullptr;
+#endif
 
         static constexpr uint32_t CHUNK_IS_FREE = 1;
 
     }); // HeapChunk
 
+    static_assert(sizeof(HeapChunk) == 12);
+
     /** Detaches given chunk from the freelist. This is useful when the last chunk on the heap is freed and the chunk above it is part of the freelist, in which case we can remove that chunk as well to fully reclaim the memory.
      */
     void detachChunk(HeapChunk * chunk) {
         if (chunk == freelist_) {
-            freelist_ = freelist_->next;
+            freelist_ = freelist_->next();
             if (freelist_ != nullptr) {
-                ASSERT(freelist_->prev == chunk);
-                freelist_->prev = nullptr;
+                ASSERT(freelist_->prev() == chunk);
+                freelist_->setPrev(nullptr);
             }
         } else {
-            chunk->prev->next = chunk->next;
-            if (chunk->next)
-                chunk->next->prev = chunk->prev;
+            chunk->prev()->setNext(chunk->next());
+            if (chunk->next())
+                chunk->next()->setPrev(chunk->prev());
         }
     }
 
@@ -90,9 +137,9 @@ namespace rckid {
                 ASSERT(freeChunk->isFree());
                 freeChunk->markAsAllocated();
                 detachChunk(freeChunk);
-                return & freeChunk->next;
+                return freeChunk->next();
             }
-            freeChunk = freeChunk->next;
+            freeChunk = freeChunk->next();
         }
         // we haven't found anything in the freelist, use the end of the heap to create one and advance the heap end
         end_ -= numBytes;
@@ -101,8 +148,8 @@ namespace rckid {
         ASSERT(end_ >= Arena::end_);
         // set the chunk's size and return it 
         result->setSize(numBytes);
-        LOG(LL_HEAP, "Allocating " << numBytes << " bytes from " << &(result->next));
-        return &(result->next);
+        LOG(LL_HEAP, "Allocating " << numBytes << " bytes from " << (result->ptr()));
+        return result->ptr();
     }
 
     void Heap::free(void * ptr) {
@@ -129,10 +176,10 @@ namespace rckid {
         // TODO this is extremely ugly and inefficient, must be fixed in the future
         LOG(LL_HEAP, "Freeing standalone chunk " << ptr << " (size " << chunk->size() << ")");
         chunk->markAsFree();
-        chunk->prev = nullptr;
-        chunk->next = freelist_;
+        chunk->setPrev(nullptr);
+        chunk->setNext(freelist_);
         if (freelist_ != nullptr)
-            freelist_->prev = chunk;
+            freelist_->setPrev(chunk);
         freelist_ = chunk;
     }
 

@@ -1,6 +1,6 @@
 # TODO
 
-- memory management does not work in fantasy on 64bit systems due to too large headers (8byte ptrs vs 4 byte on the device)
+- add allocator support to double buffer (move to rckid sdk)
 
 - add error handling & BSOD
 
