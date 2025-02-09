@@ -8,7 +8,7 @@ using namespace rckid;
 class DisplayUIApp : public App<ui::Form> {
 public:
 
-    DisplayUIApp() {
+    DisplayUIApp(): App{320, 240} {
         ui::Panel * p1 = new ui::Panel();
         p1->setRect(Rect::XYWH(20, 20, 20, 20));
         p1->setBg(ColorRGB{255, 0, 0});

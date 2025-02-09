@@ -35,8 +35,12 @@ namespace rckid::ui {
         virtual ~Widget() = default;
 
         virtual void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) = 0;
-    
+
     protected:
+
+        Widget() = default;
+
+        Widget(Rect rect): x_{rect.x}, y_{rect.y}, w_{rect.w}, h_{rect.h} {}
 
         /** Renders given child. */
         void renderChild(Widget * w, Coord column, Pixel * buffer, Coord starty, Coord numPixels) {

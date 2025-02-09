@@ -9,9 +9,12 @@ namespace rckid::ui {
 
     class Form : public Panel {
     public:
-        Form(Allocator & a = Heap::allocator()) {
-            setRect(Rect::WH(320, 240));
-            buffer_ = new (a.alloc<DoubleBuffer<uint16_t>>()) DoubleBuffer<uint16_t>(240, a);
+        Form(Coord width, Coord height, Allocator & a = Heap::allocator()):
+            Form(Rect::Centered(width, height, 320, 240), a) {
+        }
+
+        Form(Rect rect, Allocator & a = Heap::allocator()): Panel{rect} {
+            buffer_ = new (a.alloc<DoubleBuffer<uint16_t>>()) DoubleBuffer<uint16_t>(240);
         }
 
         ~Form() override {
@@ -32,6 +35,8 @@ namespace rckid::ui {
             // nothing to do in the finalizer
         }
 
+        /** Renders the form on the display in a column-wise manner.
+         */
         void render() {
             column_ = width() - 1;
             renderColumn(column_, buffer_->front(), 0, 240);
@@ -51,7 +56,6 @@ namespace rckid::ui {
 
         DoubleBuffer<uint16_t> * buffer_;
         Coord column_;
-
     }; 
 
 } // namespace rckid::ui

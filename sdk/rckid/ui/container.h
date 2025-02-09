@@ -11,6 +11,8 @@ namespace rckid::ui {
         
         Container() = default;
 
+        Container(Rect rect): Widget(rect) {}
+
         ~Container() override {
             for (auto w : widgets_)
                 Heap::tryFree(w);
