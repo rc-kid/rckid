@@ -1,7 +1,5 @@
 # TODO
 
-- add allocator support to double buffer (move to rckid sdk)
-
 - add error handling & BSOD
 
 - ensure that buffers use allocators properly when they are created to construct stuff

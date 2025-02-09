@@ -2,11 +2,9 @@
 
 #include <platform.h>
 #include <platform/writer.h>
-#include <platform/buffers.h>
 
 #include "graphics/color.h"
 #include "graphics/geometry.h"
-
 
 /** \page sdk RCKid SDK
  
@@ -20,14 +18,6 @@
     \subpage backend_mk2
     \subpage backend_fantasy
  */
-
-#define UNIMPLEMENTED do { rckid::fatalError(rckid::error::Unimplemented, __LINE__, __FILE__); } while (false)
-#define UNREACHABLE do { rckid::fatalError(rckid::error::Unreachable, __LINE__, __FILE__); } while (false)
-
-#define ASSERT(...) do { if (!(__VA_ARGS__)) rckid::fatalError(rckid::error::Assert, __LINE__, __FILE__); } while (false)
-
-#define ERROR(ERRNO) do { rckid::fatalError(ERRNO, __LINE__, __FILE__); } while (false)
-#define ERROR_IF(ERRNO, ...) do { if ((__VA_ARGS__)) ERROR(ERRNO); } while (false)
 
 /** \page sdk 
     \section err_log Errors and Logging
@@ -44,27 +34,27 @@
     - `LL_WARN` is used for warnings, i.e. something that likely should not happen, but which does not interfere with device's functionality on its own. Is on by default
     - `LL_INFO` is for general information. Is enabled by default in non-release builds
  */
-#define IS_LOGLEVEL_ENABLED_HELPER(X) #X
-#define IS_LOGLEVEL_ENABLED(X) (IS_LOGLEVEL_ENABLED_HELPER(X)[0] == '1')
-#define LOG(LOGLEVEL,...) do { if (IS_LOGLEVEL_ENABLED(LOGLEVEL)) rckid::debugWrite() << #LOGLEVEL << ": " << __VA_ARGS__ << '\n'; } while (false)
+#include "error.h"
+#include "log.h"
 
-#define LL_HEAP 1
-#define LL_INFO 1
+/** \page sdk
+    \section memory Memory Management
 
-#ifndef LL_ERROR
-#define LL_ERROR 1
-#endif
+    As the device has only a limited amount of RAM (~512 KB excluding stacks for mk III), some careful management is necessary. RCKid supports two dynamic allocation schemes, a normal heap and arena allocators.
 
-#ifndef LL_WARN
-#define LL_WARN 1
-#endif
+    Stack Protection
 
-#ifndef NDEBUG
-#ifndef LL_INFO
-#define LL_INFO 1
-#endif
-#endif
+    Another variable in the memory layout is relative small stack sizes (only 4kb per core). Those stacks can easily overflow and corrupt the heap, or one another. Stack protection scheme can be employed to detect stack overflow into a the heap and prevent further execution (recovery at this point is impossible). 
 
+    To enable the protection, memoryInstrumentStackProtection() must be called first, which writes magic bytes to the end of the stack regions (just above RAM). Subsequent periodic calls to memoryCheckStaticProtection() then compare the memory to the expected magic value and will raise an error (error::StackProtectionFailure) upon failure. 
+
+    NOTE that the stack protection scheme is only meaningful on the actual devices, the fantasy console uses the OS callstack instead and this will likely never overflow into the fantasy heap region. 
+
+    \ref memoryFree, \ref Heap, \ref Arena, 
+*/
+
+#include "memory.h"
+#include "utils/buffers.h"
 
 
 /** Measures the time it takes to compute the statements in the arguments in microseconds (returned as uint32_t). 
@@ -76,29 +66,6 @@
 }()
 
 namespace rckid {
-    namespace error {
-        static constexpr uint32_t Success = 0;
-        static constexpr uint32_t Unimplemented = 1;
-        static constexpr uint32_t Unreachable = 2;
-        static constexpr uint32_t Assert = 3;
-        static constexpr uint32_t OutOfMemory = 4;
-        static constexpr uint32_t StackProtectionFailure = 5;
-        static constexpr uint32_t USBMSCRead = 6;
-        static constexpr uint32_t USBMSCWrite = 7;
-    }; // rckid::error
-
-    /** Raises fatal error. 
-     
-        Since exceptions are not supported, rasing errors is akin to blue screen of death, which is indeed what this function shows. The line and file can be specified for debugging purposes and will be displayed on screen. There is no recovery from fatal errors and the device should be reset afterwards. 
-
-     */
-    NORETURN(void fatalError(uint32_t error, uint32_t line = 0, char const * file = nullptr));
-
-    /** Returns writer intended for debugging purposes.
-     
-        This is usually the USB to UART bridge on the device, or dedicated UART port via cartridge GPIO or in the fantasy console a standard stdout.
-     */
-    Writer debugWrite();
 
         /** Initializes the RCKid console. 
      
@@ -316,21 +283,3 @@ namespace rckid {
     void cartridgeErase(uint32_t start);
 
 } // namespace rckid
-
-/** \page sdk
-    \section memory Memory Management
-
-    As the device has only a limited amount of RAM (~512 KB excluding stacks for mk III), some careful management is necessary. RCKid supports two dynamic allocation schemes, a normal heap and arena allocators.
-
-    Stack Protection
-
-    Another variable in the memory layout is relative small stack sizes (only 4kb per core). Those stacks can easily overflow and corrupt the heap, or one another. Stack protection scheme can be employed to detect stack overflow into a the heap and prevent further execution (recovery at this point is impossible). 
-
-    To enable the protection, memoryInstrumentStackProtection() must be called first, which writes magic bytes to the end of the stack regions (just above RAM). Subsequent periodic calls to memoryCheckStaticProtection() then compare the memory to the expected magic value and will raise an error (error::StackProtectionFailure) upon failure. 
-
-    NOTE that the stack protection scheme is only meaningful on the actual devices, the fantasy console uses the OS callstack instead and this will likely never overflow into the fantasy heap region. 
-
-    \ref memoryFree, \ref Heap, \ref Arena, 
-*/
-
-#include "memory.h"

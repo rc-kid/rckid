@@ -1,5 +1,4 @@
 #pragma once
-
 #include <cstdint>
 #include <algorithm>
 
@@ -116,38 +115,3 @@ private:
     unsigned r_ = 0;
     unsigned w_ = 0;
 }; // RingBuffer
-
-
-/** Very simple double buffer. 
- */
-template<typename T>
-class DoubleBuffer {
-public:
-    DoubleBuffer(size_t size): 
-        size_{size},
-        front_{new T[size]}, 
-        back_{new T[size]} {
-    }
-
-    ~DoubleBuffer() {
-        delete [] front_;
-        delete [] back_;
-    }
-
-    void swap() {
-        std::swap(front_, back_);
-    }
-
-    size_t size() const { return size_; }
-
-    T const * front() const { return front_; }
-    T const * back() const { return back_; }
-    T * front() { return front_; }
-    T * back() { return back_; }
-
-private:
-    size_t size_;
-    T * front_;
-    T * back_;
-
-}; // DoubleBuffer<T>

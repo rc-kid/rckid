@@ -1,7 +1,8 @@
-#include "../tests.h"
-#include "../buffers.h"
+#include <platform/tests.h>
+#include <rckid/utils/buffers.h>
 
 TEST(platform, doubleBuffer_swap) {
+    using namespace rckid;
     DoubleBuffer<uint8_t> b(1024);
     EXPECT(b.size() == 1024);
     uint8_t * front = b.front();
