@@ -8,7 +8,6 @@ namespace rckid {
 
     namespace {
         uint32_t sdNumBlocks_ = 0;    
-
     }; // anonymous namespace
 
 
@@ -104,10 +103,6 @@ namespace rckid {
         return true;
     }
 
-    uint32_t sdCapacity() {
-        return sdNumBlocks_;
-    }
-
     uint8_t sdSendCommand(uint8_t const (&cmd)[6], uint8_t * response, size_t responseSize, unsigned maxDelay) {
         //gpio::low(RP_PIN_SD_CSN);
         spi_write_blocking(RP_SD_SPI, cmd,  6);
@@ -121,6 +116,12 @@ namespace rckid {
         spi_write_blocking(RP_SD_SPI, & tmp, 1);
         //gpio::high(RP_PIN_SD_CSN);
         return result;
+    }
+
+    // rckid API functions
+
+    uint32_t sdCapacity() {
+        return sdNumBlocks_;
     }
 
     bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {
