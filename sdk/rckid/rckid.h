@@ -124,6 +124,9 @@ namespace rckid {
     int16_t gyroY();
     int16_t gyroZ();
 
+    uint16_t lightAmbient();
+    uint16_t lightUV();
+
     /** \page sdk
         \section display Display Driver
 

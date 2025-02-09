@@ -23,7 +23,7 @@ namespace rckid {
         When the app is exitted, the USB device is turned off, which re-enables the DC voltage detection & charging. 
 
      */
-    class DataSync : public App<RenderableBitmap<ColorRGB>> {
+    class DataSync : public App<RenderableBitmap<16>> {
     public:
 
         static void run() {

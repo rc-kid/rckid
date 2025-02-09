@@ -1,3 +1,8 @@
+    static inline bool isPresent(uint8_t address) {
+        uint8_t x_;
+        return i2c::masterTransmit(address, nullptr, 0, & x_, 1);
+    }
+    
     template<typename T, platform::Endian DEVICE_ENDIAN = platform::Endian::Little>
     static void write(uint8_t address, T data);
 

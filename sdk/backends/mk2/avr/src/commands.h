@@ -80,23 +80,31 @@ namespace rckid::cmd {
      */
     COMMAND(22, ClearChargingError);
 
+    /*
+
     COMMAND(40, Rumbler,
         RumblerEffect effect;
         Rumbler(RumblerEffect effect): effect{effect} {}
     );
+    */
 
     /** Turns all LEDs off immediately. 
      */
+    /*
     COMMAND(100, RGBOff);
+    */
 
     /** Specifies the RGB effect for a particular LED. 
     */
+     /*
     COMMAND(101, SetRGBEffect, 
         uint8_t index;
         RGBEffect effect;
         SetRGBEffect(uint8_t index, RGBEffect const & effect): index{index}, effect{effect} {}
     );
+    */
 
+    /*
     COMMAND(102, SetRGBEffects, 
         RGBEffect a;
         RGBEffect b;
@@ -106,5 +114,6 @@ namespace rckid::cmd {
         SetRGBEffects(RGBEffect const & a, RGBEffect const & b, RGBEffect const & dpad, RGBEffect const & sel, RGBEffect const & start):
             a{a}, b{b}, dpad{dpad}, sel{sel}, start{start} {}
     );
+    */
 
 } // namespace rckid::cmd

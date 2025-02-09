@@ -80,9 +80,9 @@ namespace rckid {
         }
 
     private:
+        ChunkHeader header_;
         // to ensure the chunk header is always 12 bytes even on 64bit systems (fantasy backend), we use relative offsets from the heap start instead of pointers for the next and prev chunk pointers. 
 #ifdef RCKID_BACKEND_FANTASY
-        ChunkHeader header_;
         uint32_t next_ = CHUNK_NULLPTR;
         uint32_t prev_ = CHUNK_NULLPTR;
 
@@ -200,16 +200,31 @@ namespace rckid {
 
     void memoryInstrumentStackProtection() {
         char * x = & __StackLimit;
+#ifdef __GNUC__        
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"        
+#pragma GCC diagnostic ignored "-Wstringop-overflow"        
+#endif
         x[0] = 'R';
         x[1] = 'C';
         x[2] = 'k';
         x[3] = 'i';
         x[4] = 'd';
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
     }
 
     void memoryCheckStackProtection() {
         char * x = & __StackLimit;
+#ifdef __GNUC__        
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
         ERROR_IF(error::StackProtectionFailure, (x[0] != 'R' || x[1] != 'C' || x[2] != 'k' || x[3] != 'i' || x[4] != 'd'));
+#ifdef __GNUC__        
+#pragma GCC diagnostic pop
+#endif
     }
 
 } // namespace rckid

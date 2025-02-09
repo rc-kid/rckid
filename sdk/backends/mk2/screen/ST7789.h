@@ -156,7 +156,7 @@ namespace rckid {
          
             If the DMA update is active, it reuses the callback function set with the first call, otherwise the update is treated as a single update. 
          */
-        static void dmaUpdateAsync(ColorRGB const * pixels, size_t numPixels) {
+        static void dmaUpdateAsync(uint16_t const * pixels, size_t numPixels) {
             enterUpdateMode();    
             if (updating_ == 0)
                 cb_ = nullptr; // be done with the update
@@ -167,7 +167,7 @@ namespace rckid {
 
         /** Writes given pixels and provides a callback function to be called when the DMA transfer finishes. 
          */
-        static void dmaUpdateAsync(ColorRGB const * pixels, uint32_t numPixels, DisplayUpdateCallback cb) {
+        static void dmaUpdateAsync(uint16_t const * pixels, uint32_t numPixels, DisplayUpdateCallback cb) {
             enterUpdateMode();
             cb_ = cb;
             // updating_ is volatile, but this is ok - it is only main app code (here), or from an IRQ

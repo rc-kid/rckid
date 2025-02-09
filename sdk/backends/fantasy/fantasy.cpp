@@ -120,8 +120,6 @@ namespace rckid {
         ~SystemMallocGuard() { systemMalloc_ = false; }
     }; 
 
-
-
     void fatalError(uint32_t error, uint32_t line, char const * file) {
         // close the SD and flash files
         systemMalloc_ = true;

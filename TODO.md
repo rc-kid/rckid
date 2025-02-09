@@ -1,5 +1,11 @@
 # TODO
 
+- verify mkII backend on the device
+- add audio layer (eventually, after there is audio test)
+
+- figure out how to make the run() simpler so that we don't have to write it (maybe loop is run?)
+- add rgb and rumbler effects to the SDK (commented out in mkII)
+
 - ensure that buffers use allocators properly when they are created to construct stuff
 - check audio playback, check the documentation for audio playback
 - add input & output 
@@ -10,6 +16,8 @@
 
 - update the DataSync app so that it actually works as intended
 - add UI header
+
+- for mkII add backend config option that enables or disables the cartridge UART (se initialize()) -- but is this actually still needed?
 
 > This is updated TODO list for mkIII. It's split into 
 
