@@ -40,8 +40,11 @@ extern "C" {
 
 namespace rckid {
 
+    // forward declaration of the bsod function
+    NORETURN(void bsod(uint32_t error, uint32_t line = 0, char const * file = nullptr));
 
-    void fatalError(uint32_t error, uint32_t arg, uint32_t line, char const * file) {
+
+    void fatalError(uint32_t error, uint32_t line, char const * file) {
     }
 
     Writer debugWrite() {
