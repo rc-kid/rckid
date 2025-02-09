@@ -1,6 +1,7 @@
 # TODO
 
-- add error handling & BSOD
+
+- for the error argument and extras, it should not be passed to the function but instead there should be global functions to set it appropriately
 
 - ensure that buffers use allocators properly when they are created to construct stuff
 - check audio playback, check the documentation for audio playback

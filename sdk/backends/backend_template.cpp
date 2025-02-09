@@ -11,7 +11,7 @@
 namespace rckid {
 
 
-    void fatalError(uint32_t error, uint32_t line, char const * file) {
+    void fatalError(uint32_t error, uint32_t arg, uint32_t line, char const * file) {
     }
 
     Writer debugWrite() {
