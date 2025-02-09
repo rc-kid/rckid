@@ -9,7 +9,7 @@ namespace rckid {
     template<typename T>
     class DoubleBuffer {
     public:
-        DoubleBuffer(size_t size, Allocator & a = Heap::allocator()): 
+        DoubleBuffer(uint32_t size, Allocator & a = Heap::allocator()): 
             size_{size},
             front_{a.alloc<T>(size)}, 
             back_{a.alloc<T>(size)} {
@@ -22,6 +22,14 @@ namespace rckid {
 
         void swap() {
             std::swap(front_, back_);
+        }
+
+        void resize(uint32_t size, Allocator & a = Heap::allocator()) {
+            Heap::tryFree(front_);
+            Heap::tryFree(back_);
+            size_ = size;
+            front_ = a.alloc<T>(size);
+            back_ = a.alloc<T>(size);
         }
 
         size_t size() const { return size_; }

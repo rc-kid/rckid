@@ -9,6 +9,8 @@ namespace rckid::ui {
 
         Panel() = default;
 
+        Panel(Rect rect): Container{rect} {}
+
         void setBg(ColorRGB bg) { bg_ = bg; }
 
         void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) override {
