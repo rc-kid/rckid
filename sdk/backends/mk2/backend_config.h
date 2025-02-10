@@ -49,6 +49,10 @@
  */
 #define TEMPERATURE_BATTERY_OVERHEAT_THRESHOLD 400
 
+/** PWM slice used for the audio out, which on pins 22 and 23 correspon to PWM slice 3. 
+ */
+#define RP_AUDIO_PWM_SLICE 3
+
 /** Headphones detection threshold (when no headphones are inserted, the line is pulled up to 3V, i.e. some 930. 
  */
 #define HEADPHONES_DETECTION_THRESHOLD 100
