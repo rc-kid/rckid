@@ -288,7 +288,7 @@ namespace rckid {
 
     Writer debugWrite() {
         return Writer{[](char x) {
-#if (defined RP_LOG_TO_SERIAL)
+#if (defined RCKID_LOG_TO_SERIAL)
             uart_putc(uart0, x);
 #else
             if (x == '\n') {
@@ -321,7 +321,7 @@ namespace rckid {
         // Make the I2C pins available to picotool
         bi_decl(bi_2pins_with_func(RP_PIN_SDA, RP_PIN_SCL, GPIO_FUNC_I2C)); 
 
-#if (defined RP_LOG_TO_SERIAL)
+#if (defined RCKID_LOG_TO_SERIAL)
         // initialize uart0 on pins 16 & 17 as serial out
         uart_init(uart0, 74880);
         gpio_set_function(16, GPIO_FUNC_UART);

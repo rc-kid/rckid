@@ -13,8 +13,6 @@
 
 - update the DataSync app so that it actually works as intended
 
-- for mkII add backend config option that enables or disables the cartridge UART (se initialize()) -- but is this actually still needed?
-
 - should audio volume be uint8, or something else? 
 
 > This is updated TODO list for mkIII. It's split into 
