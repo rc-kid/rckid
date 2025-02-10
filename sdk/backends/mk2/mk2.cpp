@@ -50,10 +50,10 @@ namespace rckid {
     // forward declaration of the bsod function
     NORETURN(void bsod(uint32_t error, uint32_t line = 0, char const * file = nullptr));
 
+    void audioPlaybackDMA(uint finished, uint other);
     namespace filesystem {
         void initialize();
     }
-
     namespace io {
         BMI160 accelerometer_;
         LTR390UV alsSensor_;
@@ -223,33 +223,6 @@ namespace rckid {
         i2c0->hw->intr_mask = 0;
         // and reset the I2C 
         i2c0->hw->enable = 0;
-    }
-
-    void adjustAudioBuffer(int16_t * buffer, uint32_t bufferLength) {
-        if (audio::volume_ == 0) {
-            // TODO this can be fast memfill
-            for (uint32_t i = 0; i < bufferLength; ++i)
-                 buffer[i] = 0;
-        } else if (audio::bitResolution_ == 12) {
-            for (uint32_t i = 0; i < bufferLength; ++i)
-                buffer[i] = (buffer[i] >> (14 - audio::volume_)) + 2048;
-        } else {
-            ASSERT(audio::bitResolution_ == 11);
-            for (uint32_t i = 0; i < bufferLength; ++i)
-                buffer[i] = (buffer[i] >> (15 - audio::volume_)) + 1024;
-
-        }
-    }
-
-    void __not_in_flash_func(audioPlaybackDMA)(uint finished, [[maybe_unused]] uint other) {
-        // reconfigure the currently finished buffer to start from the current front buffer (will be back after the swap) - note the other dma has already been started by the finished one
-        dma_channel_set_read_addr(finished, audio::playbackBuffer_->front(), false);
-        // now load the front buffer with user data and adjust the audio levels according to the settings and resolution
-        uint32_t nextSamples = audio::cb_(audio::playbackBuffer_->front(), audio::playbackBuffer_->size() / 2);
-        adjustAudioBuffer(audio::playbackBuffer_->front(), nextSamples * 2);
-        // configure the DMA to transfer only the correct number of samples
-        dma_channel_set_trans_count(finished, nextSamples, false);
-        audio::playbackBuffer_->swap();
     }
 
     void __not_in_flash_func(irqDMADone_)() {
@@ -559,50 +532,154 @@ namespace rckid {
         ST7789::dmaUpdateAsync(pixels, numPixels);
     }
 
-    // audio
+    /** Audio
+     
+        Audio playback is done via two PWM pins. This means that maximum sample rate & bit resolution the RP2040 can provide is 12bits @ 44.1 kHz when overclocked. When running at normal speed (125MHz) this is downgraded to 11bit resolution at the same sample rate. 
 
-    void audioStreamRefill(void * buffer, unsigned int samples) {
-        UNIMPLEMENTED;
+        Note that higher quality audio output can be achieved with either I2S, or pio and delta sigma modulation. The delta-sigma can be useful also for microphone reading.  
+
+        Audio operates with two buffers and two DMAs. While one buffer is being streamed to the audio output via its DMA, the second buffer can be filled by the callback function. When the buffer is done, we switch immediately to the second buffer and then do callback to refill the already finished buffer. For this we can use the double buffer provided by the application.  
+     */
+    void audioConfigurePlaybackDMA(int dma, int other) {
+        auto dmaConf = dma_channel_get_default_config(dma);
+        channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bits (16 per channel, 2 channels)
+        channel_config_set_read_increment(& dmaConf, true);  // increment on read
+        channel_config_set_dreq(&dmaConf, pwm_get_dreq(RP_AUDIO_PWM_SLICE));// DMA is driven by the PWM slice overflowing
+        channel_config_set_chain_to(& dmaConf, other); // chain to the other channel
+        dma_channel_configure(dma, & dmaConf, &pwm_hw->slice[RP_AUDIO_PWM_SLICE].cc, nullptr, 0, false); // the buffer consists of stereo samples, (32bits), i.e. buffer size / 2
+        // enable IRQ0 on the DMA channel (shared with other framework DMA uses such as the display or the SD card)
+        dma_channel_set_irq0_enabled(dma, true);
+    }
+
+    void adjustAudioBuffer(int16_t * buffer, uint32_t bufferLength) {
+        if (audio::volume_ == 0) {
+            // TODO this can be fast memfill
+            for (uint32_t i = 0; i < bufferLength; ++i)
+                 buffer[i] = 0;
+        } else if (audio::bitResolution_ == 12) {
+            for (uint32_t i = 0; i < bufferLength; ++i)
+                buffer[i] = (buffer[i] >> (14 - audio::volume_)) + 2048;
+        } else {
+            ASSERT(audio::bitResolution_ == 11);
+            for (uint32_t i = 0; i < bufferLength; ++i)
+                buffer[i] = (buffer[i] >> (15 - audio::volume_)) + 1024;
+
+        }
+    }
+
+    void __not_in_flash_func(audioPlaybackDMA)(uint finished, [[maybe_unused]] uint other) {
+        // reconfigure the currently finished buffer to start from the current front buffer (will be back after the swap) - note the other dma has already been started by the finished one
+        dma_channel_set_read_addr(finished, audio::playbackBuffer_->front(), false);
+        // now load the front buffer with user data and adjust the audio levels according to the settings and resolution
+        uint32_t nextSamples = audio::cb_(audio::playbackBuffer_->front(), audio::playbackBuffer_->size() / 2);
+        adjustAudioBuffer(audio::playbackBuffer_->front(), nextSamples * 2);
+        // configure the DMA to transfer only the correct number of samples
+        dma_channel_set_trans_count(finished, nextSamples, false);
+        audio::playbackBuffer_->swap();
+    }
+
+    void audioEnable() {
+        if (!io::state_.status.audioEnabled())
+            sendCommand(cmd::AudioOn());
+    }
+
+    void audioDisable() {
+        if (io::state_.status.audioEnabled())
+            sendCommand(cmd::AudioOff());
+    }
+
+    void audioStop(bool audioOff) {
+        if (audio::playback_) {
+            uint32_t ii = save_and_disable_interrupts();
+            dma_channel_abort(audio::dma0_);        
+            dma_channel_abort(audio::dma1_);
+            pwm_set_enabled(RP_AUDIO_PWM_SLICE, false);
+            audio::playback_ = false;
+            restore_interrupts(ii);
+        }
+        if (audioOff)
+            audioDisable();
     }
 
     bool audioHeadphones() {
-        UNIMPLEMENTED;
+        return io::state_.status.audioHeadphones();
     }
 
     bool audioPaused() {
-        UNIMPLEMENTED;
+        if (audio::playback_) {
+            return ! pwm_is_enabled(RP_AUDIO_PWM_SLICE);
+        } else {
+            return false;
+        }
     }
 
     bool audioPlayback() {
-        UNIMPLEMENTED;
+        return audio::playback_;
     }
 
     bool audioRecording() {
-        UNIMPLEMENTED;
+        return false;
     }
 
     uint8_t audioVolume() {
-        UNIMPLEMENTED;
+        return audio::volume_;
     }
 
     void audioSetVolume(uint8_t value) {
-        UNIMPLEMENTED;
+        if (value > 10)
+            value = 10;
+        audio::volume_ = value;
     }
 
     void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb) {
-        UNIMPLEMENTED;
+        audioEnable();
+        // stop the previous playback if any
+        if (audio::playback_)
+            audioStop(false);
+        // set the audio playback buffer
+        audio::playbackBuffer_ = & buffer;
+        audio::playback_ = true;
+        audio::sampleRate_ = sampleRate;
+        audio::cb_ = cb;
+        // set the left and right pins to be used by the PWM
+        gpio_set_function(RP_PIN_PWM_RIGHT, GPIO_FUNC_PWM); 
+        gpio_set_function(RP_PIN_PWM_LEFT, GPIO_FUNC_PWM);
+        // initialize the DMA channels 
+        audioConfigurePlaybackDMA(audio::dma0_, audio::dma1_);
+        audioConfigurePlaybackDMA(audio::dma1_, audio::dma0_);
+        // now we need to load the buffer's front part with audio data
+        audioPlaybackDMA(audio::dma0_, audio::dma1_);
+        // enable the first DMA
+        dma_channel_start(audio::dma0_);
+        // and finally the timers
+        float clkdiv = cpu::clockSpeed() / (4096.0 * sampleRate);
+        if (clkdiv > 1) { // 12 bit sound
+            audio::bitResolution_ = 12;
+            pwm_set_wrap(RP_AUDIO_PWM_SLICE, 4096); // set wrap to 12bit sound levels
+        } else { // 11bit sound
+            clkdiv = cpu::clockSpeed() / (2048.0 * sampleRate);
+            audio::bitResolution_ = 11;
+            pwm_set_wrap(RP_AUDIO_PWM_SLICE, 2048); // set wrap to 12bit sound levels
+        }
+        ASSERT(clkdiv > 1); // otherwise we won't be able to
+        pwm_set_clkdiv(RP_AUDIO_PWM_SLICE, clkdiv);
+        pwm_set_enabled(RP_AUDIO_PWM_SLICE, true);
+        // now we need to load the second buffer while the first one is playing (reload of the buffers will be done by the IRQ handler)
+        audioPlaybackDMA(audio::dma1_, audio::dma0_);
     }
 
     void audioPause() {
-        UNIMPLEMENTED;
+        if (audio::playback_)  
+            pwm_set_enabled(RP_AUDIO_PWM_SLICE, false);
     }
 
     void audioResume() {
-        UNIMPLEMENTED;
+        if (audio::playback_)  
+            pwm_set_enabled(RP_AUDIO_PWM_SLICE, true);
     }
 
     void audioStop() {
-        UNIMPLEMENTED;
+        audioStop(true);
     }
 
     // SD Card access is in sd/sd.cpp file
