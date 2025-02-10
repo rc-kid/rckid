@@ -106,6 +106,18 @@ namespace rckid {
 
         //@}
 
+        /** Renders the given column of the bitmap. 
+         
+            This method allows for easy use of bitmaps in the UI column-wise rendering pipeline. Note that since all rendering only happens in 16 bpp pixel arrays, the method is very slow for 8bpp bitmaps as each pixel has to be translated to 16bpp, whereas 16 to 16 bpp render is a simple memcopy.
+         */
+        void renderColumn(Coord column, rckid::PixelArray<16>::Pixel * buffer, Coord starty, Coord numPixels) {
+            ASSERT(column >= 0 && column < w_);
+            ASSERT(starty >= 0 && starty + numPixels <= h_);
+            // default, very slow implementation
+            for (int y = starty, ye = starty + numPixels; y < ye; ++y)
+                buffer[y - starty] = ColorRGB::fromRaw(at(column, y)).raw16();
+        }
+
     private:
 
         Coord putChar(Coord x, Coord y, Font const & font, char c, Pixel const * colors) {

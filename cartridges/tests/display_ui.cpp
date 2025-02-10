@@ -2,6 +2,7 @@
 #include <rckid/app.h>
 #include <rckid/ui/form.h>
 #include <rckid/ui/panel.h>
+#include <rckid/ui/image.h>
 
 using namespace rckid;
 

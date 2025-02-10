@@ -28,9 +28,29 @@ namespace rckid::ui {
         void setY(Coord y) { y_ = y; }
         void setPos(Point pos) { x_ = pos.x; y_ = pos.y; }
 
-        void setWidth(Coord w) { w_ = w; }
-        void setHeight(Coord h) { h_ = h; }
-        void setRect(Rect rect) { x_ = rect.x; y_ = rect.y; w_ = rect.w; h_ = rect.h; }
+        void setWidth(Coord w) { 
+            if (w_ != w) {
+                w_ = w;
+                resize();
+            }
+        }
+        
+        void setHeight(Coord h) {
+            if (h_ != h) {
+                h_ = h;
+                resize();
+            }
+        }
+        
+        void setRect(Rect rect) { 
+            x_ = rect.x; 
+            y_ = rect.y; 
+            if (w_ != rect.w || h_ != rect.h) {
+                w_ = rect.w; 
+                h_ = rect.h; 
+                resize();
+            }
+        }
 
         virtual ~Widget() = default;
 
@@ -42,15 +62,35 @@ namespace rckid::ui {
 
         Widget(Rect rect): x_{rect.x}, y_{rect.y}, w_{rect.w}, h_{rect.h} {}
 
-        /** Renders given child. */
+        /** Called when the widget is resized so that child classes can override and react to the change such as repositioning their contents. 
+         */
+        virtual void resize() {}
+
+        /** Renders given child. 
+         
+            This is a simple matter of adjusting the rendering parameters for the child widget and calling its renderColumn method if there us anything to render.
+         */
         void renderChild(Widget * w, Coord column, Pixel * buffer, Coord starty, Coord numPixels) {
-            Rect rect = w->rect();
+            adjustRenderParams(w->rect(), column, buffer, starty, numPixels);
+            if (numPixels != 0) 
+                w->renderColumn(column, buffer, starty, numPixels);
+        }
+
+        /** Adjusts the rendering parameters for given rectangle within the widget. 
+         
+            If no rendering should occur, sets the number of pixels to be rendered to zero. In this case no other arguments should be considered valid after the call.
+         */
+        void adjustRenderParams(Rect rect, Coord & column, Pixel * & buffer, Coord & starty, Coord & numPixels) {
             // don't render if the child widget's rectangle does not intersect with the column to be rendered (no horizontal intersection)
-            if (column < rect.left() || column >= rect.right())
+            if (column < rect.left() || column >= rect.right()) {
+                numPixels = 0;
                 return;
+            }
             // don't render if the rect does not intersect with the buffer beginning and the available number of pixels (no vertical intersection)
-            if (rect.top() > numPixels || rect.bottom() < starty)
+            if (rect.top() > numPixels || rect.bottom() < starty) {
+                numPixels = 0;
                 return;
+            }
             // adjust the starty and numPixels for the child's column render and update the buffer's start to match. First determine the start of rendering in child's coordinates. This is zero usually, unless the start of the widget is below our own starty, in which case it has to be adjusted.
             Coord wStart = rect.top() >= starty ? 0 : starty - rect.top();
             ASSERT(wStart >= 0 && wStart < rect.height());
@@ -60,9 +100,6 @@ namespace rckid::ui {
             buffer += bufferAdvance;
             // and adjust the number of pixels to render, which is the minimum of the child's height and the available pixels in the buffer
             numPixels = std::min(numPixels - bufferAdvance, rect.height() - wStart);
-            ASSERT(numPixels > 0);
-            // and finally render the child
-            w->renderColumn(column, buffer, starty, numPixels);
         }
 
         Coord x_;

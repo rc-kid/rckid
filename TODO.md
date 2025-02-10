@@ -14,6 +14,8 @@
 - update the DataSync app so that it actually works as intended
 
 - should audio volume be uint8, or something else? 
+- should Widget::renderColumn be protected?
+- add specialization for 16 bpp bitmap renderColumn that simply does memcopy
 
 > This is updated TODO list for mkIII. It's split into 
 

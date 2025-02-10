@@ -33,6 +33,9 @@ namespace rckid {
             return ColorRGB::RGB(((raw >> 11) & 0x1f) << 3, ((raw >> 5) & 0x3f) << 2, (raw & 0x1f) << 3);
         }
 
+        // shorthand method with implicit bpp based on type deduction for easier use in templates
+        static constexpr ColorRGB fromRaw(uint16_t raw) { return fromRaw16(raw); }
+
         constexpr uint8_t r() const { return (raw_ >> 16) & 0xff; }
         constexpr uint8_t g() const { return (raw_ >> 8) & 0xff; }
         constexpr uint8_t b() const { return raw_ & 0xff; }
