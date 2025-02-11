@@ -24,6 +24,7 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
     add_custom_target(generate-sdk-assets
         COMMAND $<TARGET_FILE:font-converter> assets/fonts/Iosevka.ttf rckid/assets/fonts/Iosevka16.h 16
         COMMAND $<TARGET_FILE:binary-folder> assets/images rckid/assets/images.h --raw-path raw/images
+        COMMAND $<TARGET_FILE:binary-folder> assets/icons/default/64 rckid/assets/icons_default_64.h --raw-path raw/icons --namespace rckid::assets::icons_default_64
         DEPENDS font-converter
         DEPENDS binary-folder
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
