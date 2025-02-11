@@ -12,6 +12,15 @@ namespace rckid::ui {
     public:
         
         Image(Bitmap<BPP> && bmp): bmp_{std::move(bmp)} {
+            w_ = bmp_.width();
+            h_ = bmp_.height();
+            reposition();
+        }
+
+        template <typename... Args>
+        Image(Args&&... args) : bmp_{std::forward<Args>(args)...} {
+            w_ = bmp_.width();
+            h_ = bmp_.height();
             reposition();
         }
 
@@ -24,6 +33,7 @@ namespace rckid::ui {
                 hAlign_ = value;
                 reposition();
             }
+            return;
         }
 
         void setVAlign(VAlign value) {
@@ -31,6 +41,10 @@ namespace rckid::ui {
                 vAlign_ = value;
                 reposition();
             }
+        }
+
+        void setRepeat(bool value) {
+            repeat_ = value;
         }
 
         void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) override {

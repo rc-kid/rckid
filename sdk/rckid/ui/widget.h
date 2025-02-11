@@ -100,6 +100,8 @@ namespace rckid::ui {
             buffer += bufferAdvance;
             // and adjust the number of pixels to render, which is the minimum of the child's height and the available pixels in the buffer
             numPixels = std::min(numPixels - bufferAdvance, rect.height() - wStart);
+            // and the column
+            column -= rect.left();
         }
 
         Coord x_;
