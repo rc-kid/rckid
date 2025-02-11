@@ -40,6 +40,12 @@ namespace rckid {
             Heap::tryFree(img_);
         }
 
+        PNG(PNG const &) = delete;
+        
+        PNG(PNG && other): img_{other.img_} {
+            other.img_ = nullptr;
+        }
+
     private:
 
         struct Decode16 {
