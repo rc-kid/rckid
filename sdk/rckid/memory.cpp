@@ -65,7 +65,8 @@ namespace rckid {
 
         void setNext(HeapChunk * next) {
 #ifdef RCKID_BACKEND_FANTASY
-            next_ = (next == nullptr) ? CHUNK_NULLPTR : reinterpret_cast<char*>(next) - & __bss_end__;
+            next_ = (next == nullptr) ? CHUNK_NULLPTR : (reinterpret_cast<char*>(next) - & __bss_end__);
+            ASSERT(next_ < sizeof(fantasyHeap) || next_ == CHUNK_NULLPTR);
 #else
             next_ = next;
 #endif
@@ -73,7 +74,8 @@ namespace rckid {
 
         void setPrev(HeapChunk * prev) {
 #ifdef RCKID_BACKEND_FANTASY
-            prev_ = (prev == nullptr) ? CHUNK_NULLPTR : reinterpret_cast<char*>(prev) - & __bss_end__;
+            prev_ = (prev == nullptr) ? CHUNK_NULLPTR : (reinterpret_cast<char*>(prev) - & __bss_end__);
+            ASSERT(prev_ < sizeof(fantasyHeap) || prev_ == CHUNK_NULLPTR);
 #else
             prev_ = prev;
 #endif
@@ -138,7 +140,8 @@ namespace rckid {
                 ASSERT(freeChunk->isFree());
                 freeChunk->markAsAllocated();
                 detachChunk(freeChunk);
-                return freeChunk->next();
+                LOG(LL_HEAP, "Allocating " << numBytes << " bytes from " << freeChunk->ptr() << " chunk size " << freeChunk->size());
+                return freeChunk->ptr();
             }
             freeChunk = freeChunk->next();
         }
@@ -163,14 +166,16 @@ namespace rckid {
         ASSERT(!chunk->isFree());
         // if this is the last allocated memory chunk, simply update the heap end instead of putting the chunk to a freelist. This is a transitive operation, i.e. if the chunk after the current one is free chunk, reclaim its memory too
         if (chunk->start() == end_) {
+            LOG(LL_HEAP, "Freeing last chunk " << ptr << " (size " << chunk->size() << ")");
             while (true) {
                 end_ = chunk->end();
                 chunk = (HeapChunk*) chunk->end();
                 if (!chunk->isFree())
                     break;
                 detachChunk(chunk);
+                LOG(LL_HEAP, "Freeing joined chunk " << chunk->ptr() << " (size " << chunk->size() << ")");
             }
-            LOG(LL_HEAP, "Freeing joined chunk " << ptr << " (size " << chunk->size() << ")");
+            LOG(LL_HEAP, "Heap end is now at " << (void*)end_);
             return;
         }
         // get the chunk and prepend it to the freelist
@@ -182,6 +187,7 @@ namespace rckid {
         if (freelist_ != nullptr)
             freelist_->setPrev(chunk);
         freelist_ = chunk;
+        LOG(LL_HEAP, "Heap end is now at " << (void*)end_);
     }
 
     void Heap::tryFree(void * ptr) {
