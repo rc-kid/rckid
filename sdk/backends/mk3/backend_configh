@@ -1,7 +1,5 @@
 #pragma once
-
-/** Memory limits are created automatically by the linker script on the backend so we just have to extern the symbols here. 
+/** Display width & height for the UI. 
  */
-#define RCKID_MEMORY_INITIALIZATION \
-    extern char __bss_end__; \
-    extern char __StackLimit;
+#define RCKID_DISPLAY_WIDTH 320 
+#define RCKID_DISPLAY_HEIGHT 240

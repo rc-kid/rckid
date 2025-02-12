@@ -19,7 +19,7 @@ namespace rckid {
         if (error::extras() != nullptr)
             LOG(LL_ERROR, "Extras:      " << error::extras());
         // and draw the debug console
-        RenderableBitmap<16> fb{320, 240, Arena::allocator()};
+        RenderableBitmap<16> fb{RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT, Arena::allocator()};
         fb.fill(ColorRGB::RGB(0, 0, 255));
         Font f = Font::fromROM<assets::Iosevka16>();
         fb.text(10, 10, f, ColorRGB::RGB(255, 255, 255).toFontColors())

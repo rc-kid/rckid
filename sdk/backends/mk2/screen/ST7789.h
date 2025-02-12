@@ -6,7 +6,9 @@
 #include "rckid/rckid.h"
 #include "rckid/graphics/color.h"
 #include "rckid/graphics/geometry.h"
-#include "backend_config.h"
+
+#define RCKID_BACKEND_CONFIG_INTERNALS
+#include "backend_internals.h"
 
 namespace rckid {
 
@@ -112,10 +114,6 @@ namespace rckid {
             Mostly useful for barebones clearing the screen in debug mode as the fill rate is rather slow. A much better approach is to enter the continous mode and fill the screen using the pio & dma.  
          */
         //static void fill(ColorRGB color);
-
-        /** Resets the update region to entire screen. 
-         */
-        //static void resetUpdateRegion() { setUpdateRegion(Rect::WH(320, 240)); }
 
         /** \name Update mode
          * 
@@ -308,7 +306,7 @@ namespace rckid {
         static inline dma_channel_config dmaConf_;
 
         static inline uint8_t mode_ = 0; // norma & native
-        static inline Rect updateRegion_ = Rect::WH(320, 240);
+        static inline Rect updateRegion_ = Rect::WH(RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT);
         // Update bookkeeping - the callback, whether update is active or not, the current display mode and the update region
         static inline DisplayUpdateCallback cb_;
         static inline volatile uint32_t updating_ = 0;

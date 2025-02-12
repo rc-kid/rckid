@@ -62,13 +62,13 @@ namespace rckid {
         //sendCommand(MADCTL, 0_u8);
         //setDisplayMode(ST7789::DisplayMode::Native);
         sendCommand(INVON);
-        updateRegion_ = Rect::WH(320, 240);
+        updateRegion_ = Rect::WH(RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT);
         // and now do the png file
         // now clear the entire display black
 #if (RCKID_SPLASHSCREEN_OFF)
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
-        for (size_t i = 0, e =320 * 240; i < e; ++i) {
+        for (size_t i = 0, e = RCKID_DISPLAY_WIDTH * RCKID_DISPLAY_HEIGHT; i < e; ++i) {
             sendByte(0);
             sendByte(0);
         }
