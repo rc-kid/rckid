@@ -3,6 +3,8 @@
 #include <platform.h>
 #include <platform/writer.h>
 
+
+#include <backend_config.h>
 #include "graphics/color.h"
 #include "graphics/geometry.h"
 

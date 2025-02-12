@@ -159,8 +159,12 @@ namespace rckid {
         using Bitmap<16>::numPixels;
         using Bitmap<16>::Bitmap;
 
+        RenderableBitmap(Allocator & a = Heap::allocator()):
+            Bitmap{RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT, a} {
+        }
+
         void initialize() {
-            initialize(Rect::Centered(width(), height(), 320, 240), DisplayResolution::Full);
+            initialize(Rect::Centered(width(), height(), RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT), DisplayResolution::Full);
         }
 
         void initialize(Rect updateRect, DisplayResolution resolution) {

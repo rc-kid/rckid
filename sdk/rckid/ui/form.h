@@ -10,11 +10,11 @@ namespace rckid::ui {
     class Form : public Panel {
     public:
         Form(Coord width, Coord height, Allocator & a = Heap::allocator()):
-            Form(Rect::Centered(width, height, 320, 240), a) {
+            Form(Rect::Centered(width, height, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT), a) {
         }
 
         Form(Rect rect, Allocator & a = Heap::allocator()): Panel{rect} {
-            buffer_ = new (a.alloc<DoubleBuffer<uint16_t>>()) DoubleBuffer<uint16_t>(240);
+            buffer_ = new (a.alloc<DoubleBuffer<uint16_t>>()) DoubleBuffer<uint16_t>(RCKID_DISPLAY_HEIGHT);
         }
 
         ~Form() override {
@@ -39,16 +39,16 @@ namespace rckid::ui {
          */
         void render() {
             column_ = width() - 1;
-            renderColumn(column_, buffer_->front(), 0, 240);
-            renderColumn(column_ - 1, buffer_->back(), 0, 240);
+            renderColumn(column_, buffer_->front(), 0, height());
+            renderColumn(column_ - 1, buffer_->back(), 0, height());
             displayWaitVSync();
-            displayUpdate(buffer_->front(), 240, [&]() {
+            displayUpdate(buffer_->front(), height(), [&]() {
                 if (--column_ < 0)
                     return;
                 buffer_->swap();
-                displayUpdate(buffer_->front(), 240);
+                displayUpdate(buffer_->front(), height());
                 if (column_ > 0)
-                    renderColumn(column_ - 1, buffer_->back(), 0, 240);
+                    renderColumn(column_ - 1, buffer_->back(), 0, height());
             });
         }
 

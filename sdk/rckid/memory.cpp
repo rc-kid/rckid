@@ -1,6 +1,6 @@
 #include "rckid.h"
 
-#include <backend_config.h>
+#include <backend_internals.h>
 
 // this includes the memory boundaries - __StackLimit and __bss_end__, whose values are really backend dependent
 RCKID_MEMORY_INITIALIZATION

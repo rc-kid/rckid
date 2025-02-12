@@ -4,14 +4,14 @@
 
 RCKid is based on the [RP2030B](datasheets/rp2350-datasheet.pdf) (80 pin QFN) and uses its requirement for external program flash chip as a feature by allowing swappable cartridges. This is the overall architecture of the system:
           
-                                           +-----------------+
-                         + --------+       | Cartridge       |
-                         | microSD |       | (flash, extras) |                                    
-                         +---------+       +-----------------+                               +-------------+
-                                \\\\       ////                                              | TPA2006D    |
-                       <SPI/SDIO>\\\\     ////<10pin/HSTX,QSPI>                              | (Mono AmpD) |--(spkr)
-                                  \\\\   ////                                                +-------------+
-                                  ||||   ||||                                               /
+                                              +-----------------+
+                            + --------+       | Cartridge       |
+                            | microSD |       | (flash, extras) |                                    
+                            +---------+       +-----------------+                            +-------------+
+                                   \\\\       ////                                           | TPA2006D    |
+                          <SPI/SDIO>\\\\     ////<10pin/HSTX,QSPI>                           | (Mono AmpD) |--(spkr)
+                                     \\\\   ////                                             +-------------+
+                                     ||||   ||||                                            /
        +-----------+  <16bitMCU>   +-------------+     <I2S>       +---------------+       / (analog mono)
        |  ST7789V  |===============|   RP2350B   |=================| TLV320AIC3204 |-------
        | (Display) |               +-------------+                 | (audio codec) |_______   

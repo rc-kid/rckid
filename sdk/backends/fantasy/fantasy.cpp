@@ -78,7 +78,7 @@ namespace rckid {
     namespace display {
         DisplayResolution resolution;
         DisplayRefreshDirection direction;
-        Rect rect = Rect::WH(320, 240);
+        Rect rect = Rect::WH(RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT);
         Image img;
         Texture texture;
         uint8_t brightness;
@@ -143,7 +143,7 @@ namespace rckid {
     void initialize(int argc, char const * argv[]) {
         systemMalloc_ = true;
         InitWindow(640, 480, "RCKid");
-        display::img = GenImageColor(320, 240, BLACK);
+        display::img = GenImageColor(RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT, BLACK);
         display::texture = LoadTextureFromImage(display::img);
         display::lastVSyncTime = std::chrono::steady_clock::now();
         Args::Arg<std::string> sdIso{"sd", "sd.iso"};
@@ -332,7 +332,7 @@ namespace rckid {
     void displaySetUpdateRegion(Coord width, Coord height) {
         switch (display::resolution) {
             case DisplayResolution::Full:
-                displaySetUpdateRegion(Rect::XYWH((320 - width) / 2, (320 - height) / 2, width, height));
+                displaySetUpdateRegion(Rect::XYWH((RCKID_DISPLAY_WIDTH - width) / 2, (RCKID_DISPLAY_HEIGHT - height) / 2, width, height));
                 break;               
             case DisplayResolution::Half:
                 displaySetUpdateRegion(Rect::XYWH((160 - width) / 2, (160 - height) / 2, width, height));
