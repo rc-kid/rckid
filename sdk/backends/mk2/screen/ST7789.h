@@ -59,6 +59,11 @@ namespace rckid {
      */
     class ST7789 {
     public:
+        enum class Resolution {
+            Full, 
+            Half,
+        }; 
+
         /** Supported FPS values for the display. 
          */
         enum class FPS : uint8_t {
@@ -79,15 +84,15 @@ namespace rckid {
          */
         static void reset();
 
-        static DisplayResolution resolution() { 
-            return static_cast<DisplayResolution>(mode_ & 0xf); 
+        static Resolution resolution() { 
+            return static_cast<Resolution>(mode_ & 0xf); 
         }
 
         static DisplayRefreshDirection refreshDirection() {
             return static_cast<DisplayRefreshDirection>(mode_ >> 4);
         }
 
-        static void setResolution(DisplayResolution res) {
+        static void setResolution(Resolution res) {
             setDisplayMode(res, refreshDirection());
         }
 
@@ -95,7 +100,7 @@ namespace rckid {
             setDisplayMode(resolution(), dir);
         }
 
-        static void setDisplayMode(DisplayResolution res, DisplayRefreshDirection dir);
+        static void setDisplayMode(Resolution res, DisplayRefreshDirection dir);
 
         static Rect updateRegion() { return updateRegion_; }
 
@@ -311,10 +316,10 @@ namespace rckid {
         static inline DisplayUpdateCallback cb_;
         static inline volatile uint32_t updating_ = 0;
 
-        static constexpr uint8_t MODE_FULL_NATURAL = static_cast<uint8_t>(DisplayResolution::Full) | (static_cast<uint8_t>(DisplayRefreshDirection::Natural) << 4);
-        static constexpr uint8_t MODE_FULL_NATIVE = static_cast<uint8_t>(DisplayResolution::Full) | (static_cast<uint8_t>(DisplayRefreshDirection::Native) << 4);
-        static constexpr uint8_t MODE_HALF_NATURAL = static_cast<uint8_t>(DisplayResolution::Half) | (static_cast<uint8_t>(DisplayRefreshDirection::Natural) << 4);
-        static constexpr uint8_t MODE_HALF_NATIVE = static_cast<uint8_t>(DisplayResolution::Half) | (static_cast<uint8_t>(DisplayRefreshDirection::Native) << 4);
+        static constexpr uint8_t MODE_FULL_NATURAL = static_cast<uint8_t>(Resolution::Full) | (static_cast<uint8_t>(DisplayRefreshDirection::RowFirst) << 4);
+        static constexpr uint8_t MODE_FULL_NATIVE = static_cast<uint8_t>(Resolution::Full) | (static_cast<uint8_t>(DisplayRefreshDirection::ColumnFirst) << 4);
+        static constexpr uint8_t MODE_HALF_NATURAL = static_cast<uint8_t>(Resolution::Half) | (static_cast<uint8_t>(DisplayRefreshDirection::RowFirst) << 4);
+        static constexpr uint8_t MODE_HALF_NATIVE = static_cast<uint8_t>(Resolution::Half) | (static_cast<uint8_t>(DisplayRefreshDirection::ColumnFirst) << 4);
 
         // Low level driver constants
         static constexpr uint8_t SWRESET = 0x01;

@@ -4,6 +4,7 @@
 
 #include <rckid/graphics/png.h>
 #include <rckid/assets/images.h>
+#include "../backend_internals.h"
 
 namespace rckid {
 
@@ -51,7 +52,7 @@ namespace rckid {
         sendCommand(SWRESET);
         busy_wait_ms(150);
         sendCommand(VSCSAD, (uint8_t)0);
-        setDisplayMode(DisplayResolution::Full, DisplayRefreshDirection::Native);
+        setDisplayMode(Resolution::Full, DisplayRefreshDirection::ColumnFirst);
         sendCommand(TEON, TE_VSYNC);
         sendCommand(SLPOUT);
         busy_wait_ms(150);
@@ -75,7 +76,7 @@ namespace rckid {
         gpio_put(RP_PIN_DISP_DCX, false);
         end();
 #else
-        setDisplayMode(DisplayResolution::Full, DisplayRefreshDirection::Natural);
+        setDisplayMode(Resolution::Full, DisplayRefreshDirection::RowFirst);
         setUpdateRegion(updateRegion_);
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
@@ -86,12 +87,12 @@ namespace rckid {
         });
         gpio_put(RP_PIN_DISP_DCX, false);
         end();
-        setDisplayMode(DisplayResolution::Full, DisplayRefreshDirection::Native);
+        setDisplayMode(Resolution::Full, DisplayRefreshDirection::ColumnFirst);
         setUpdateRegion(updateRegion_);
 #endif
     }
 
-    void ST7789::setDisplayMode(DisplayResolution res, DisplayRefreshDirection dir) {
+    void ST7789::setDisplayMode(Resolution res, DisplayRefreshDirection dir) {
         mode_ = static_cast<uint8_t>(res) | (static_cast<uint8_t>(dir) << 4); 
         enterCommandMode();
         switch (mode_) {

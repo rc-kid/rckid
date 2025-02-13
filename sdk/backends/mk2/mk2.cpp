@@ -477,14 +477,6 @@ namespace rckid {
 
     // display
 
-    DisplayResolution displayResolution() {
-        return ST7789::resolution();
-    }
-
-    void displaySetResolution(DisplayResolution value) {
-        ST7789::setResolution(value);
-    }
-
     DisplayRefreshDirection displayRefreshDirection() {
         return ST7789::refreshDirection();
     }

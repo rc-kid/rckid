@@ -141,27 +141,25 @@ namespace rckid {
      */
     using DisplayUpdateCallback = std::function<void()>;
 
-    enum class DisplayResolution {
+    /*enum class DisplayResolution {
         Full,
         Half
-    }; 
+    }; */ 
 
+    /*
     enum class DisplayRefreshDirection {
         Native, 
         Natural,
-    };
+    }; */
 
-    /** Returns the display resolution. 
-     */
-    DisplayResolution displayResolution(); 
-
-    /** Sets the display resolution (either normal, of half). 
-     */
-    void displaySetResolution(DisplayResolution value);
+    enum class DisplayRefreshDirection {
+        ColumnFirst,
+        RowFirst,
+    }; 
 
     DisplayRefreshDirection displayRefreshDirection();
 
-    void displaySetRefreshDirection(DisplayRefreshDirection value); 
+    void displaySetRefreshDirection(DisplayRefreshDirection value);
 
     /** Returns the display brightness. 
      */

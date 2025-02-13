@@ -91,14 +91,6 @@ namespace rckid {
 
     // display
 
-    DisplayResolution displayResolution() {
-        UNIMPLEMENTED;
-    }
-
-    void displaySetResolution(DisplayResolution value) {
-        UNIMPLEMENTED;
-    }
-
     DisplayRefreshDirection displayRefreshDirection() {
         UNIMPLEMENTED;
     }

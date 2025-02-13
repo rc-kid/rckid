@@ -13,7 +13,7 @@ void fill(uint16_t * fb, size_t size, uint16_t value)  {
 
 int main() {
     initialize();
-    displaySetResolution(DisplayResolution::Full);
+    displaySetRefreshDirection(DisplayRefreshDirection::ColumnFirst);
     displaySetUpdateRegion(Rect::WH(320, 240));
     uint16_t * fb = new uint16_t[FB_SIZE];
     while (true) {
