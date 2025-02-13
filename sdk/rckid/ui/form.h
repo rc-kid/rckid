@@ -22,12 +22,7 @@ namespace rckid::ui {
         }
 
         void initialize() {
-            initialize(DisplayResolution::Full);
-        }
-
-        void initialize(DisplayResolution res) {
-            displaySetResolution(res);
-            displaySetRefreshDirection(DisplayRefreshDirection::Native);
+            displaySetRefreshDirection(DisplayRefreshDirection::ColumnFirst);
             displaySetUpdateRegion(rect());
         }
 

@@ -3,6 +3,7 @@
 #include "sd.h"
 #include "backend_config.h"
 #include "rckid/apps/DataSync.h"
+#include "../backend_internals.h"
 
 namespace rckid {
 

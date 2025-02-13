@@ -76,8 +76,9 @@ namespace rckid {
     }
 
     namespace display {
-        DisplayResolution resolution;
         DisplayRefreshDirection direction;
+        //DisplayResolution resolution;
+        //DisplayRefreshDirection direction;
         Rect rect = Rect::WH(RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT);
         Image img;
         Texture texture;
@@ -274,33 +275,24 @@ namespace rckid {
         SystemMallocGuard g;
         UpdateTexture(display::texture, display::img.data);
         BeginDrawing();
-        DrawTextureEx(display::texture, {0, 0}, 0, (display::resolution == DisplayResolution::Full ? 2.0f : 4.0f), WHITE);
+        DrawTextureEx(display::texture, {0, 0}, 0, 2.0f, WHITE);
         EndDrawing();
         SwapScreenBuffer();
     }
 
     void displayResetDrawRectangle() {
         switch (display::direction) {
-            case DisplayRefreshDirection::Native:
+            case DisplayRefreshDirection::ColumnFirst:
                 display::updateX = display::rect.right() - 1;
                 display::updateY = display::rect.top();
                 break;
-            case DisplayRefreshDirection::Natural:
+            case DisplayRefreshDirection::RowFirst:
                 display::updateX = display::rect.left();
                 display::updateY = display::rect.top();
                 break;
             default:
                 UNREACHABLE;
         }
-    }
-
-    DisplayResolution displayResolution() { 
-        return display::resolution; 
-    }
-
-    void displaySetResolution(DisplayResolution value) {
-        display::resolution = value;
-        displayResetDrawRectangle();
     }
 
     DisplayRefreshDirection displayRefreshDirection() {
@@ -330,16 +322,7 @@ namespace rckid {
     }
 
     void displaySetUpdateRegion(Coord width, Coord height) {
-        switch (display::resolution) {
-            case DisplayResolution::Full:
-                displaySetUpdateRegion(Rect::XYWH((RCKID_DISPLAY_WIDTH - width) / 2, (RCKID_DISPLAY_HEIGHT - height) / 2, width, height));
-                break;               
-            case DisplayResolution::Half:
-                displaySetUpdateRegion(Rect::XYWH((160 - width) / 2, (160 - height) / 2, width, height));
-                break;               
-            default:
-                UNREACHABLE;
-        }
+        displaySetUpdateRegion(Rect::XYWH((RCKID_DISPLAY_WIDTH - width) / 2, (RCKID_DISPLAY_HEIGHT - height) / 2, width, height));
     }
 
     bool displayUpdateActive() {
@@ -375,14 +358,14 @@ namespace rckid {
             ImageDrawPixel(&display::img, display::updateX, display::updateY, { c.r(), c.g(), c.b(), 255});
             --numPixels;
             switch (display::direction) {
-                case DisplayRefreshDirection::Native:
+                case DisplayRefreshDirection::ColumnFirst:
                     if (++display::updateY >= display::rect.bottom()) {
                         display::updateY = display::rect.top();
                         if (--display::updateX < display::rect.left())
                             display::updateX = display::rect.right() - 1; 
                     }
                     break;
-                case DisplayRefreshDirection::Natural:
+                case DisplayRefreshDirection::RowFirst:
                     if (++display::updateX >= display::rect.right()) {
                         display::updateX = display::rect.left();
                         if (++display::updateY >= display::rect.bottom())

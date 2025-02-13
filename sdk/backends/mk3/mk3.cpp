@@ -9,6 +9,8 @@
 
 #include "rckid/rckid.h"
 
+
+// PICO platform sets
 namespace rckid {
 
     void initialize() {

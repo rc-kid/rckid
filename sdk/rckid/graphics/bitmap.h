@@ -164,12 +164,11 @@ namespace rckid {
         }
 
         void initialize() {
-            initialize(Rect::Centered(width(), height(), RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT), DisplayResolution::Full);
+            initialize(Rect::Centered(width(), height(), RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT));
         }
 
-        void initialize(Rect updateRect, DisplayResolution resolution) {
-            displaySetResolution(resolution);
-            displaySetRefreshDirection(DisplayRefreshDirection::Native);
+        void initialize(Rect updateRect) {
+            displaySetRefreshDirection(DisplayRefreshDirection::ColumnFirst);
             displaySetUpdateRegion(updateRect);
         }
 
