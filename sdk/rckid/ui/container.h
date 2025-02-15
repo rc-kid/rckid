@@ -21,6 +21,11 @@ namespace rckid::ui {
         void add(Widget * w) {
             widgets_.push_back(w);
         }
+
+        void update() override {
+            for (auto w : widgets_)
+                w->update();
+        }
         
     protected:
 
