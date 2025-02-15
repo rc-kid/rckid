@@ -4,6 +4,7 @@
 #include <array>
 
 #include <platform.h>
+#include "geometry.h"
 #include "color.h"
 
 namespace rckid {
@@ -62,13 +63,44 @@ namespace rckid {
          */
         template<typename COLOR>
         static std::array<uint16_t, 4> colorToArray(COLOR color) {
-            uint16_t i = color.raw();
+            uint16_t i = color.raw16();
             return std::array<uint16_t, 4>{
                 static_cast<uint16_t>((i - 3) % (1 << COLOR::BPP)),
                 static_cast<uint16_t>((i - 2) % (1 << COLOR::BPP)),
                 static_cast<uint16_t>((i - 1) % (1 << COLOR::BPP)),
                 i, 
             };
+        }
+
+        void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels, GlyphInfo const * gi, uint16_t * palette) {
+            // move to current glyph
+            uint8_t const * glyphPixels = pixels + gi->index;
+            // move to current column
+            int colHeight = gi->height;
+            if (colHeight % 4 != 0)
+                colHeight += 4 - (colHeight % 4);
+            glyphPixels += column * colHeight / 4;
+            // draw 
+            int y = 0;
+            uint32_t bits = 0;
+            uint32_t val = 0;
+            while (numPixels > 0) {
+                if (bits == 0) {
+                    val = *glyphPixels++;
+                    bits = 8;
+                }
+                unsigned a = (val >> 6) & 0x3;
+                if (y >= starty) {
+                    //*buffer = 0xff00;
+                        if (a != 0)
+                        *buffer = palette[a];
+                    ++buffer;
+                    --numPixels;
+                }
+                val <<= 2;
+                bits -= 2;
+                ++y;
+            }
         }
 
     }; // rckid::Font

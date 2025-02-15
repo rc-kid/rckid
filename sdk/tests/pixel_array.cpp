@@ -4,6 +4,8 @@
 using namespace rckid;
 
 TEST(pixelArray, Size) {
+    EXPECT(PixelArray<2>::numBytes(320, 240) == 320 * 240 / 4);
+    EXPECT(PixelArray<4>::numBytes(320, 240) == 320 * 240 / 2);
     EXPECT(PixelArray<8>::numBytes(320, 240) == 320 * 240);
     EXPECT(PixelArray<16>::numBytes(320, 240) == 320 * 240 * 2);
 }

@@ -13,7 +13,7 @@ namespace rckid {
      */
     template<uint32_t BPP>
     class PixelArray {
-        static_assert(BPP == 16 || BPP == 8, "Only 16 and 8 BPP supported");
+        static_assert(BPP == 16 || BPP == 8 || BPP == 4 || BPP == 2, "Only 16, 8, 4, or 2 bpp supported");
     public:
 
         using Pixel = std::conditional_t<BPP == 16, uint16_t, uint8_t>;
@@ -36,7 +36,21 @@ namespace rckid {
         /** Returns the value of given pixel.
          */
         static constexpr Pixel get(Coord x, Coord y, Coord width, Coord height, Pixel const * array) {
-            return array[offset(x, y, width, height)];
+            switch (BPP) {
+                case 16:
+                case 8:
+                    return array[offset(x, y, width, height)];
+                case 4: {
+                    uint32_t o = offset(x, y, width, height);
+                    return (array[o >> 1] >> ((o & 1) * 4)) & 0x0f;
+                }
+                case 2: {
+                    uint32_t o = offset(x, y, width, height);
+                    return (array[o >> 2] >> ((o & 3) * 2)) & 0x03;
+                }
+                default:
+                    UNREACHABLE;
+            }
         }
 
         /** Sets the value of given pixel. If the coordinates are outside of the pixel array bounds, does nothing. 
@@ -51,7 +65,28 @@ namespace rckid {
         /** Sets the value of given pixel assuming the coordinates are within the pixel array bounds.
          */
         static constexpr void setNoCheck(Coord x, Coord y, Coord width, Coord height, Pixel value, Pixel * array) {
-            array[offset(x, y, width, height)] = value;
+            switch (BPP) {
+                case 16:
+                case 8:
+                    array[offset(x, y, width, height)] = value;
+                    return;
+                case 4: {
+                    uint32_t o = offset(x, y, width, height);
+                    Pixel & xx = array[o >> 1];
+                    xx &= ~(0x0f << ((o & 1) * 4));
+                    xx |= value << ((o & 1) * 4);
+                    return;
+                }
+                case 2: {
+                    uint32_t o = offset(x, y, width, height);
+                    Pixel & xx = array[o >> 2];
+                    xx &= ~(0x03 << ((o & 3) * 2));
+                    xx |= value << ((o & 3) * 2);
+                    return;
+                }
+                default:
+                    UNREACHABLE;
+            }
         }
 
         static constexpr Coord putChar(Coord x, Coord y, Coord width, Coord height, Font const & font, char c, Pixel const * colors, Pixel * pixels) {

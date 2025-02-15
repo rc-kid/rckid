@@ -54,13 +54,17 @@ namespace rckid::ui {
 
         virtual ~Widget() = default;
 
-        virtual void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) = 0;
-
     protected:
 
         Widget() = default;
 
+        Widget(Coord x, Coord y):
+            x_{x}, y_{y} {
+        }
+
         Widget(Rect rect): x_{rect.x}, y_{rect.y}, w_{rect.w}, h_{rect.h} {}
+
+        virtual void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) = 0;
 
         /** Called when the widget is resized so that child classes can override and react to the change such as repositioning their contents. 
          */
@@ -104,10 +108,45 @@ namespace rckid::ui {
             column -= rect.left();
         }
 
-        Coord x_;
-        Coord y_;
-        Coord w_;
-        Coord h_;
+        /** Shorthand function that justifies the inner rectangle within inside the current widget. 
+         */
+        Point justifyRectangle(Rect inner, HAlign ha, VAlign va) {
+            return justifyRectangle(Rect::WH(width(), height()), inner, ha, va);
+        }
+
+        /** Justifies the inner widget according to the outer parent and returns the inner widget's topleft coordinates. 
+         */
+        Point justifyRectangle(Rect parent, Rect inner, HAlign ha, VAlign va) {
+            Point res;
+            switch (ha) {
+                case HAlign::Left:
+                    res.x = parent.left();
+                    break;
+                case HAlign::Center:
+                    res.x = parent.left() + (parent.width() - inner.width()) / 2;
+                    break;
+                case HAlign::Right:
+                    res.x = parent.right() - inner.width();
+                    break;
+            }
+            switch (va) {
+                case VAlign::Top:
+                    res.y = parent.top();
+                    break;
+                case VAlign::Center:
+                    res.y = parent.top() + (parent.height() - inner.height()) / 2;
+                    break;
+                case VAlign::Bottom:
+                    res.y = parent.bottom() - inner.height();
+                    break;
+            }
+            return res;
+        }
+
+        Coord x_ = 0;
+        Coord y_ = 0;
+        Coord w_ = 50;
+        Coord h_ = 50;
     }; // rcikd::ui::Element
 
 } // namespace rckid::ui
