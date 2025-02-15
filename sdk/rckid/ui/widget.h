@@ -2,6 +2,7 @@
 
 #include "../graphics/geometry.h"
 #include "../graphics/pixel_array.h"
+#include "../graphics/bitmap.h"
 
 namespace rckid::ui {
 
@@ -15,6 +16,8 @@ namespace rckid::ui {
     public:
         using PixelArray = rckid::PixelArray<16>;
         using Pixel = PixelArray::Pixel;
+
+        virtual ~Widget() = default;
 
         Coord x() const { return x_; }
         Coord y() const { return y_; }
@@ -52,7 +55,19 @@ namespace rckid::ui {
             }
         }
 
-        virtual ~Widget() = default;
+        /** Renders the widget directly to the provided bitmap at given coordinates. 
+         */
+        void renderToBitmap(Coord x, Coord y, Bitmap<16> & bmp) {
+            Coord numPixels = std::min(height(), bmp.height() - y);
+            for (Coord column = std::min(width(), bmp.width() - x); column >= 0; --column) {
+                Pixel * buffer = bmp.columnPixels(column);
+                renderColumn(column, buffer + y, y, numPixels);
+            }
+        }
+
+        /** Update method that can adjust the widget before drawing. 
+         */
+        virtual void update() {}
 
     protected:
 

@@ -61,6 +61,12 @@ namespace rckid {
 
         Pixel const * pixels() const { return pixels_; }
 
+        /** Returns the pixels of the specified column. Expects the column to be in valid range. 
+         */
+        Pixel * columnPixels(Coord column) {
+            return pixels_ + PixelArray::offset(column, 0, w_, h_);
+        }
+
         //@}
 
         /** \name Blitting. 

@@ -4,7 +4,9 @@
 #include <rckid/ui/panel.h>
 #include <rckid/ui/image.h>
 #include <rckid/assets/icons_default_64.h>
+#include <rckid/assets/fonts/OpenDyslexic64.h>
 #include <rckid/ui/label.h>
+#include <rckid/ui/carousel.h>
 
 using namespace rckid;
 
@@ -24,6 +26,7 @@ public:
         img->setVAlign(VAlign::Center);
         img->setRepeat(true);
         ui::Label * l = new ui::Label{0, 50, "Hello world"};
+        l->setFont(Font::fromROM<assets::OpenDyslexic64>());
         l->setColor(ColorRGB{255, 255, 255});
         l->setWidth(320);
         l->setHeight(50);
