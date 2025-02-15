@@ -16,6 +16,11 @@ if (NOT DEFINED RCKID_BACKEND)
     set(RCKID_BACKEND "FANTASY")
 endif()
 
+# if backend is mk3 ensure tell the pico SDK to use RP2350 instead of RP2040
+if (RCKID_BACKEND STREQUAL "MK3")
+    set(PICO_PLATFORM rp2350)
+endif()
+
 # Based on the backend selected, pull in necessary libraries and setup the cmake environment. For fantasy backend, we need to initialize raylib, while the hardware backends pull-in and initialize the Raspberry Pi Pico SDK
 if (RCKID_BACKEND STREQUAL "FANTASY")
     message("RCKID: Building for the fantasy console (with Raylib)")
