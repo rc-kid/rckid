@@ -11,6 +11,9 @@ namespace rckid::ui {
     class Carousel {
     public:
 
+
+    protected:
+    
         /** Renders the specified carousel column onto given buffer. 
          */
         void renderColumn(Coord x, ColorRGB * buffer) const {
@@ -20,7 +23,8 @@ namespace rckid::ui {
         }
 
     private:
-        Bitmap<ColorRGB> icon_;
+
+    Bitmap<ColorRGB> icon_;
         Bitmap<ColorRGB> iconNext_;
 
     }; // rckid::ui::Carousel

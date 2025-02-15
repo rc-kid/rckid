@@ -21,6 +21,8 @@ namespace rckid::ui {
         void add(Widget * w) {
             widgets_.push_back(w);
         }
+        
+    protected:
 
         /** Container's information simply renders columns of all child elements in the order they are defined in the list of children, i.e. the earier children can be overdrawn with the later ones.
          */
@@ -29,7 +31,7 @@ namespace rckid::ui {
                 renderChild(w, column, buffer, starty, numPixels);
         }
 
-    protected:
+    private:
         std::vector<Widget *> widgets_;
 
     }; // rckid::ui::Container

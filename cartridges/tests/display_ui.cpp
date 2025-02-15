@@ -4,6 +4,7 @@
 #include <rckid/ui/panel.h>
 #include <rckid/ui/image.h>
 #include <rckid/assets/icons_default_64.h>
+#include <rckid/ui/label.h>
 
 using namespace rckid;
 
@@ -19,12 +20,17 @@ public:
         p2->setBg(ColorRGB{0, 255, 0});
         ui::Image<16> * img = new ui::Image<16>{PNG::fromBuffer(assets::icons_default_64::game_controller)};
         img->setRect(Rect::XYWH(100, 100, 128, 128));
-        img->setHAlign(HAlign::Left);
-        img->setVAlign(VAlign::Top);
+        img->setHAlign(HAlign::Center);
+        img->setVAlign(VAlign::Center);
         img->setRepeat(true);
+        ui::Label * l = new ui::Label{0, 50, "Hello world"};
+        l->setColor(ColorRGB{255, 255, 255});
+        l->setWidth(320);
+        l->setHeight(50);
         g_.add(p1);
         g_.add(p2);
         g_.add(img);
+        g_.add(l);
         g_.setRect(Rect::WH(320, 240));
     }
 

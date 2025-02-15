@@ -1,6 +1,5 @@
 # TODO
 
-
 - figure out how to make the run() simpler so that we don't have to write it (maybe loop is run?)
 - add rgb and rumbler effects to the SDK (commented out in mkII)
 
@@ -13,7 +12,6 @@
 - update the DataSync app so that it actually works as intended
 
 - should audio volume be uint8, or something else? 
-- should Widget::renderColumn be protected?
 - add specialization for 16 bpp bitmap renderColumn that simply does memcopy
 
 > This is updated TODO list for mkIII. It's split into 

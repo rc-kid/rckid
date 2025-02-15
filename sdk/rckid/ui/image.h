@@ -47,6 +47,8 @@ namespace rckid::ui {
             repeat_ = value;
         }
 
+    protected:
+
         void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) override {
             // the image should not be repeated, translate the actual bitmap's rectangle as if it were a child widget and then use its column rendering
             if (!repeat_) {
@@ -67,34 +69,14 @@ namespace rckid::ui {
             }
         }
 
-    protected:
-        void reposition() {
-            switch (hAlign_) {
-                case HAlign::Left:
-                    imgX_ = 0;
-                    break;
-                case HAlign::Center:
-                    imgX_ = (width() - bmp_.width()) / 2;
-                    break;
-                case HAlign::Right:
-                    imgX_ = width() - bmp_.width();
-                    break;
-            }
-            switch (vAlign_) {
-                case VAlign::Top:
-                    imgY_ = 0;
-                    break;
-                case VAlign::Center:
-                    imgY_ = (height() - bmp_.height()) / 2;
-                    break;
-                case VAlign::Bottom:
-                    imgY_ = height() - bmp_.height();
-                    break;
-            }
-        }
-
         void resize() override {
             reposition();
+        }
+
+        void reposition() {
+            Point x = justifyRectangle(Rect::WH(bmp_.width(), bmp_.height()), hAlign_, vAlign_);
+            imgX_ = x.x;
+            imgY_ = x.y;
         }
 
     private:
