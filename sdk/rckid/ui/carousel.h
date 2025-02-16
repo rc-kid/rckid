@@ -15,20 +15,24 @@ namespace rckid::ui {
     class Carousel : public Widget {
     public:
 
-        void moveLeft() {
+        void set(Image icon, std::string text) {
+            set(std::move(icon), std::move(text), aImg_, aText_);
+        }
+
+        void moveLeft(Image && icon, std::string text) {
 
         }
 
-        void moveRight() {
+        void moveRight(Image && icon, std::string text) {
 
         }
 
-        void moveUp() {
+        void moveUp(Image && icon, std::string text) {
 
         }
 
-        void moveDown() {
-            
+        void moveDown(Image && icon, std::string text) {
+
         }
 
 
@@ -40,10 +44,20 @@ namespace rckid::ui {
     protected:
         void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) override {
         }
+
+        void set(Image && icon, std::string &&text, Image & imgInto, Label & labelInto) {
+            imgInto = std::move(icon);
+            labelInto.setText(text);
+            // TODO position
+        }
     
 
     private:
         Timer t_;
+        Image aImg_;
+        Label aText_;
+        Image bImg_;
+        Label bText_;
 
     }; // rckid::ui::Carousel
 

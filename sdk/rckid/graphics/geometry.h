@@ -12,6 +12,7 @@ namespace rckid {
         Left,
         Center,
         Right,
+        Custom,
     };
 
     /** Vertical alignment for labels and other UI elements. 
@@ -20,6 +21,7 @@ namespace rckid {
         Top,
         Center,
         Bottom,
+        Custom,
     };
 
     template<typename COORD>
