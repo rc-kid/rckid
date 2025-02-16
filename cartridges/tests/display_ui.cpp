@@ -20,7 +20,7 @@ public:
         ui::Panel * p2 = new ui::Panel();
         p2->setRect(Rect::XYWH(-25, -25, 50, 50));
         p2->setBg(ColorRGB{0, 255, 0});
-        ui::Image<16> * img = new ui::Image<16>{PNG::fromBuffer(assets::icons_default_64::game_controller)};
+        ui::Image * img = new ui::Image{Bitmap<16>{PNG::fromBuffer(assets::icons_default_64::game_controller)}};
         img->setRect(Rect::XYWH(100, 100, 128, 128));
         img->setHAlign(HAlign::Center);
         img->setVAlign(VAlign::Center);

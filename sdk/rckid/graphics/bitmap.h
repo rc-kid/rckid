@@ -49,6 +49,17 @@ namespace rckid {
         uint32_t numPixels() const { return w_ * h_; };
         uint32_t numBytes() const { return PixelArray::size(w_, h_); }
 
+        Bitmap & operator = (Bitmap && other) {
+            Heap::tryFree(pixels_);
+            pixels_ = other.pixels_;
+            w_ = other.w_;
+            h_ = other.h_;
+            other.pixels_ = nullptr;
+            other.w_ = 0;
+            other.h_ = 0;
+            return *this;
+        }
+
         /** \name Per-pixel interface 
 
             A very slow interface that provides per pixel access to the bitmap.   

@@ -143,6 +143,9 @@ namespace rckid::ui {
                 case HAlign::Right:
                     res.x = parent.right() - inner.width();
                     break;
+                case HAlign::Custom:
+                    res.x = inner.x;
+                    break;
             }
             switch (va) {
                 case VAlign::Top:
@@ -153,6 +156,9 @@ namespace rckid::ui {
                     break;
                 case VAlign::Bottom:
                     res.y = parent.bottom() - inner.height();
+                    break;
+                case VAlign::Custom:
+                    res.y = inner.y;
                     break;
             }
             return res;
