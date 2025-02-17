@@ -27,9 +27,29 @@ namespace rckid::ui {
         Coord height() const { return h_; }
         Rect rect() const { return Rect::XYWH(x_, y_, w_, h_); }
 
-        void setX(Coord x) { x_ = x; }
-        void setY(Coord y) { y_ = y; }
-        void setPos(Point pos) { x_ = pos.x; y_ = pos.y; }
+        void setX(Coord x) {
+            if (x_ == x)
+                return;
+            x_ = x;
+            resize();
+        }
+
+        void setY(Coord y) { 
+            if (y_ == y)
+                return;
+            y_ = y;
+            resize();
+        }
+
+        void setPos(Point pos) { setPos(pos.x, pos.y); }
+
+        void setPos(Coord x, Coord y) { 
+            if (x_ == x && y_ == y)
+                return;
+            x_ = x; 
+            y_ = y; 
+            resize();
+        }
 
         void setWidth(Coord w) { 
             if (w_ != w) {

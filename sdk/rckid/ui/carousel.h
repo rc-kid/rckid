@@ -15,6 +15,28 @@ namespace rckid::ui {
     class Carousel : public Widget {
     public:
 
+        static constexpr Coord iconToTextSpacer = 5;
+
+        Carousel() {
+            aText_.setHAlign(HAlign::Left);
+            aText_.setVAlign(VAlign::Top);
+            aText_.setHeight(aText_.font().size);
+            bText_.setHAlign(HAlign::Left);
+            bText_.setVAlign(VAlign::Top);
+            bText_.setHeight(bText_.font().size);
+        }
+
+        Font const & font() { return aText_.font(); }
+
+        void setFont(Font const & f) {
+            aText_.setFont(f);
+            bText_.setFont(f);
+            aText_.setHeight(aText_.font().size);
+            bText_.setHeight(bText_.font().size);
+            repositionElements(aImg_, aText_);
+            repositionElements(bImg_, bText_);
+        } 
+
         void set(Image icon, std::string text) {
             set(std::move(icon), std::move(text), aImg_, aText_);
         }
@@ -35,25 +57,35 @@ namespace rckid::ui {
 
         }
 
-
-
         void update() override {
 
         }
 
     protected:
         void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) override {
+            renderChild(& aImg_, column, buffer, starty, numPixels);
+            renderChild(& aText_, column, buffer, starty, numPixels);
         }
 
         void set(Image && icon, std::string &&text, Image & imgInto, Label & labelInto) {
             imgInto = std::move(icon);
             labelInto.setText(text);
-            // TODO position
+            repositionElements(imgInto, labelInto);
+        }
+
+        void repositionElements(Image & imgInto, Label & labelInto) {
+            // set the position of the icon and the text label
+            Coord tw = labelInto.textWidth();
+            labelInto.setWidth(tw);
+            Coord x = (width() - (tw + imgInto.width() + iconToTextSpacer)) / 2;
+            imgInto.setPos(x, (height() - imgInto.height()) / 2);
+            x = x + iconToTextSpacer + imgInto.width();
+            labelInto.setPos(x, (height() - labelInto.font().size) / 2);
         }
     
 
     private:
-        Timer t_;
+        //Timer t_;
         Image aImg_;
         Label aText_;
         Image bImg_;

@@ -79,6 +79,8 @@ namespace rckid {
             };
         }
 
+        static constexpr ColorRGB White() { return ColorRGB{255, 255, 255}; }
+
     private:
         uint32_t raw_ = 0;
     }; // rckid::ColorRGB
