@@ -12,6 +12,8 @@ namespace rckid::ui {
     class Label : public Widget {
     public:
 
+        Label() = default;
+
         Label(Coord x, Coord y, std::string text):
             Widget{x, y}, 
             text_{std::move(text)} {
@@ -51,6 +53,8 @@ namespace rckid::ui {
                 reposition();
             }
         }
+
+        Coord textWidth() const { return font_.textWidth(text_.c_str()); }
 
     protected:
 
@@ -119,7 +123,7 @@ namespace rckid::ui {
         VAlign vAlign_ = VAlign::Center;
         std::string text_;
         Font font_{Font::fromROM<assets::Iosevka16>()};
-        ColorRGB color_;
+        ColorRGB color_{ColorRGB::White()};
         Point textTopLeft_;
         std::vector<Hint> hints_;
     }; //rckid::ui::Label

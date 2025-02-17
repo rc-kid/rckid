@@ -17,6 +17,12 @@ namespace rckid {
         using PixelArray = rckid::PixelArray<BPP>;
         using Pixel = typename PixelArray::Pixel;
 
+        /** Default constructor that creates an empty bitmap with no pixel buffer
+         */
+        Bitmap():
+            pixels_{nullptr}, w_{0}, h_{0} {
+        }
+
         /** Creates the bitmap using given allocator.
          */
         Bitmap(Coord w, Coord h, Allocator & a = Heap::allocator()): pixels_{a.alloc<Pixel>(w * h)}, w_{w}, h_{h} {

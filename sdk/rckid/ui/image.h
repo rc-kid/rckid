@@ -9,6 +9,10 @@ namespace rckid::ui {
      */
     class Image : public Widget {
     public:
+
+        Image():
+            bmp2_{}, bpp_{2} {
+        }
     
         Image(Bitmap<2> && bmp): bmp2_{std::move(bmp)}, bpp_{2} {
             w_ = bmp2_.width();
@@ -39,8 +43,12 @@ namespace rckid::ui {
         }
 
         Image & operator = (Image && other) {
-            clear();
-            assign(std::move(other));
+            if (this != & other) {
+                Widget::operator=(other);
+                clear();
+                assign(std::move(other));
+            }
+            return *this;
         }
 
         ~Image() override {
@@ -121,6 +129,7 @@ namespace rckid::ui {
                 default:
                     UNREACHABLE;
             }
+            bpp_ = other.bpp_;
             hAlign_ = other.hAlign_;
             vAlign_ = other.vAlign_;
             repeat_ = other.repeat_;
