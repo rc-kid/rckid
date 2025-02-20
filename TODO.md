@@ -1,6 +1,9 @@
 # TODO
 
 - image can have pixel arrays form ROM as well - just ensure on the fantasy that we are not deleting the memory if it comes form "ROM"
+- allow bitmaps to render with transparent color
+- when updating multiple attributes of a widget the recalculate after each one of them is not necessary
+- also maybe change the resize to change and make it general method for ui change stuff
 
 - figure out how to make the run() simpler so that we don't have to write it (maybe loop is run?)
 - add rgb and rumbler effects to the SDK (commented out in mkII)

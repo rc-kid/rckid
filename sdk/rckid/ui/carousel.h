@@ -15,7 +15,8 @@ namespace rckid::ui {
     class Carousel : public Widget {
     public:
 
-        static constexpr Coord iconToTextSpacer = 5;
+        static constexpr Coord iconToTextSpacerPx = 5;
+        static constexpr uint32_t defaultTransitionTimeMs = 500;
 
         Carousel() {
             aText_.setHAlign(HAlign::Left);
@@ -25,6 +26,8 @@ namespace rckid::ui {
             bText_.setVAlign(VAlign::Top);
             bText_.setHeight(bText_.font().size);
         }
+
+        bool idle() const { return ! a_.running(); }
 
         Font const & font() { return aText_.font(); }
 
@@ -42,23 +45,28 @@ namespace rckid::ui {
         }
 
         void moveLeft(Image && icon, std::string text) {
-
+            set(std::move(icon), std::move(text), bImg_, bText_);
+            setEffect(Btn::Left);
         }
 
         void moveRight(Image && icon, std::string text) {
-
+            set(std::move(icon), std::move(text), bImg_, bText_);
+            setEffect(Btn::Right);
         }
 
         void moveUp(Image && icon, std::string text) {
-
+            set(std::move(icon), std::move(text), bImg_, bText_);
+            setEffect(Btn::Up);
         }
 
         void moveDown(Image && icon, std::string text) {
-
+            set(std::move(icon), std::move(text), bImg_, bText_);
+            setEffect(Btn::Down);
         }
 
         void update() override {
-
+            a_.update();
+            // TODO 
         }
 
     protected:
@@ -77,19 +85,43 @@ namespace rckid::ui {
             // set the position of the icon and the text label
             Coord tw = labelInto.textWidth();
             labelInto.setWidth(tw);
-            Coord x = (width() - (tw + imgInto.width() + iconToTextSpacer)) / 2;
+            Coord x = (width() - (tw + imgInto.width() + iconToTextSpacerPx)) / 2;
             imgInto.setPos(x, (height() - imgInto.height()) / 2);
-            x = x + iconToTextSpacer + imgInto.width();
+            x = x + iconToTextSpacerPx + imgInto.width();
             labelInto.setPos(x, (height() - labelInto.font().size) / 2);
+        }
+
+        void setEffect(Btn effect) {
+            dir_ = effect;
+            aOffset_ = 0;
+            updateEffect();
+        }
+
+        void updateEffect() {
+            switch (dir_) {
+                case Btn::Home:
+                    break;
+                case Btn::Left:
+                case Btn::Right:
+                case Btn::Up:
+                case Btn::Down:
+                    UNIMPLEMENTED;
+                    break;
+            }
         }
     
 
     private:
-        //Timer t_;
         Image aImg_;
         Label aText_;
         Image bImg_;
         Label bText_;
+
+        Btn dir_ = Btn::Home;
+        Coord aOffset_;
+        Coord bOffset_;
+        Timer a_{defaultTransitionTimeMs};
+
 
     }; // rckid::ui::Carousel
 
