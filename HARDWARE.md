@@ -349,3 +349,8 @@ Bottom side:
 - `TP5` - GPO1 for radio chip (GPIO, protocol select between I2C and SPI)
 - `TP6` - I2C_SDA
 - `TP7` - I2C_SCL
+
+
+# Development Board
+
+The development board is a 10x10cm 4 layer board that mimics the basic layout and connections of the rckid mk3 device, but with simpler components (buttons, RGB lights, etc.), larger passives so that they can be manually tweaked to determine correct values and far more test points. 
