@@ -374,17 +374,31 @@ The development board is a 10x10cm 4 layer board that mimics the basic layout an
 - [X] headphone capacitors 47 uF for typical app?
 - [X] gain resistors for speaker amplifier
 - [X] pull-ups on radio int? 
-- [ ] 3v3 input for the audio
+- [X] 3v3 input for the audio
 - [X] radio & avr external crystal capacitors
 - [X] the whole radio to audio input circuit is likely wrong and has to be thought out
 - [X] micbias resistor? 
 
 Extras:
 
-- [ ] cartridge connector mk II and cartridge itself
 - [X] solderable display (on separate PCB)
-- [ ] get ready for analog vcc being from an ldo
+- [X] get ready for analog vcc being from an ldo
 - [x] 2C pull-ups
-- [ ] SD card detection
+- [X] SD card detection
 - [X] radio GPIOs 
-- [ ] use [this](https://cz.mouser.com/datasheet/2/1628/sj_43504_smt_tr-3510743.pdf) for the headphone jack
+- [X] use [this](https://cz.mouser.com/datasheet/2/1628/sj_43504_smt_tr-3510743.pdf) for the headphone jack
+- [ ] the slots don't work, update the pcb with holes
+- [ ] add top & bottom GND planes and connect the AGND and GND so that it can be cut on the bottom to leave only one left
+
+Extra PCBs:
+
+- [ ] cartridge connector mk II and cartridge itself
+- [ ] potentially, the connector can use this: https://jlcpcb.com/partdetail/gswitch-GT_BTP16010_0180B014B/C41378714, this easily gives 24 pins, which is 3+ more, for !1.5 usd per 
+
+# Things to check on the prototype
+
+- can the radio extra GPIO be used for audio reset? (this saves one pin on RP2350)
+- this can then become SDcard detection
+- avrTX pin can be used as cartridge detect of needs be
+
+
