@@ -118,7 +118,7 @@ The EN pin must be high for the converter to work, so for `3V3` rail we short it
 
 > There is an unpopulated resistor R128 of 33k that when fitted ensures 100uA current drain on the 3v3 rail. Its pad can also serve as a testpoint.
 
-> TODO there is R3, 100k resistor to ground on the converter input. Why? 
+> TODO Do we need a resistor from 3v3 to ground (100k) to ensure regulator would work 
 
 ### 5V Charge Pump
 
@@ -195,11 +195,19 @@ This leads to the following current draw for different voltages:
 > TODO current limiting resistors on I2S lane, see page 45
 > TODO audio reset can perhaps be accomplished by radio GPIO as this is not very useful function.
 
+> TODO capacitors are bit different between RCKid and app note: (https://www.ti.com/lit/ug/slau266a/slau266a.pdf?ts=1740243769370&ref_url=https%253A%252F%252Fwww.ti.com%252Ftool%252FTLV320AIC3204EVM-K)
+
+AVDD - 0.1 & 22 app note, I have 10uF
+HPVDD 0.1 & 22 app note, I have 0.1 1 10
+DVDD 01 & 22 app note, I have 10 uF
+IOVDD - 0.1 and 10, I have 1uF
+REF - 01 and 10, I have 10uF
+
 #### Microphone
 
 As per the typical application, the microphone is connected differentially to `IN1L` and `IN1R` with 1k from MICBIAS to positive mic, 0.1uF capacitor on the positive output to right channel and 1k to ground on the negative channel, which also goes to the left input via 0.1uF capacitor.
 
-> TODO replace the mic with MEMS
+> Is the micbias resistor correct?
 
 #### Headset detection & Microphone
 
@@ -254,6 +262,8 @@ As per the antenna application note, page 31, the embedded antenna is connected 
 
 ### External Crystal
 
+We are using the same crystal as AtTiny3217. The load capacitance is 12.5 pF, which is roughly in the middle of the rangle per datasheet. The 22pF capacitors are used in the datasheet, but also correspond to a relatively small stray trace capacitance ([online calculator](https://ecsxtal.com/crystal-load-capacitance-calculator/?form=MG0AV3))
+
 > TODO the external crystal is the same as for ATTiny3217. Is that ok? Should the capacitors have different values?
 
 ### Output to the audio codec
@@ -291,7 +301,7 @@ Due to low number of pins available, a classic button matrix is used. Buttons ar
 
 ### RTC
 
-In mkII the internal oscillator was used for RTC which led to inaccuracies of up to 10 minutes per day. This time we are using external 32.768 kHz oscillator for better accuracy.
+In mkII the internal oscillator was used for RTC which led to inaccuracies of up to 10 minutes per day. This time we are using external 32.768 kHz oscillator for better accuracy. The crystal load capacitance per the datasheet (page 511) is max 12.5pF which is the value used, so the same circuit as for the radio should work. 
 
 > TODO verify cryctal and capacitors
 
@@ -354,3 +364,27 @@ Bottom side:
 # Development Board
 
 The development board is a 10x10cm 4 layer board that mimics the basic layout and connections of the rckid mk3 device, but with simpler components (buttons, RGB lights, etc.), larger passives so that they can be manually tweaked to determine correct values and far more test points. 
+
+- [X] accel interrupt pullup?
+- [X] ilim resistor for PMIC (270 atm)
+- [X] 100kOhm R130 upopulated (ensure 3v3 even when off load)
+- [ ] R3 100k to ground converter why?
+- [X] pwr-int resistor can we do without it? 
+- [X] audio de-pop circuit
+- [X] headphone capacitors 47 uF for typical app?
+- [X] gain resistors for speaker amplifier
+- [X] pull-ups on radio int? 
+- [ ] 3v3 input for the audio
+- [X] radio & avr external crystal capacitors
+- [X] the whole radio to audio input circuit is likely wrong and has to be thought out
+- [X] micbias resistor? 
+
+Extras:
+
+- [ ] cartridge connector mk II and cartridge itself
+- [X] solderable display (on separate PCB)
+- [ ] get ready for analog vcc being from an ldo
+- [x] 2C pull-ups
+- [ ] SD card detection
+- [X] radio GPIOs 
+- [ ] use [this](https://cz.mouser.com/datasheet/2/1628/sj_43504_smt_tr-3510743.pdf) for the headphone jack
