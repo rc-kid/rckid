@@ -19,6 +19,14 @@
 - should audio volume be uint8, or something else? 
 - add specialization for 16 bpp bitmap renderColumn that simply does memcopy
 
+
+# PCB
+
+- R125 (ilim for PMIC is wrong value)
+- verify with prototype that R124 (PWR_INT pullup is needed)
+- crystal capacitors are wrong values for sure, should be around 22pF (being tested by dev board)
+
+
 > This is updated TODO list for mkIII. It's split into 
 
 - 2.8" 320x240 with fpc: https://www.aliexpress.com/item/1005004629215040.html?pdp_npi=4%40dis%21CZK%21CZK%208.90%21CZK%208.90%21%21%210.36%210.36%21%402103891017375828457015857e954c%2112000035688288567%21sh%21CZ%213305825785%21X&spm=a2g0o.store_pc_allItems_or_groupList.new_all_items_2007508297226.1005004629215040
