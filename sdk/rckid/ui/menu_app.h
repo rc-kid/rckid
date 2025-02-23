@@ -50,7 +50,7 @@ namespace rckid {
             icon_ = new Bitmap<ColorRGB>{64, 64};
             //icon_->loadImage(HEAP(PNG::fromBuffer(assets::icons64::lynx)));
             //icon_->loadImage(HEAP(PNG::fromBuffer(assets::icons64::owl_1)));
-            icon_->loadImage(HEAP(PNG::fromBuffer(assets::icons64::animal_1)));
+            icon_->loadImage(HEAP(PNG::fromBuffer(assets::icons64::animal_3)));
             //icon_->loadImage(HEAP(PNG::fromBuffer(assets::icons64::buggy)));
             rckid::ledSetEffects(
                 RGBEffect::Rainbow(0, 1, 1, 32), 

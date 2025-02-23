@@ -30,14 +30,14 @@ namespace rckid {
 
         Tetris(): GraphicsApp{ARENA(Canvas<Color>{320, 240})} {
             using namespace filesystem;
-            FileRead f = fileRead("tetris.hof", Drive::Cartridge);
+            FileRead f = fileRead("tetris_ada.hof", Drive::Cartridge);
             if (f.good()) {
                 hof_.deserializeFrom(f);
             } else {
-                hof_.add("Ariel", 30000);
-                hof_.add("Rapunzel", 20000);
-                hof_.add("Jaffar", 10000);
-                hof_.add("Noone", 1);
+                hof_.add("ADA", 5000);
+                //hof_.add("Rapunzel", 20000);
+                //hof_.add("Jaffar", 10000);
+                //hof_.add("Noone", 1);
             }
             /*
             FileRead f = fileRead("tetris-x.hof", Drive::Cartridge);
