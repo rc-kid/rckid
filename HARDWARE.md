@@ -388,12 +388,13 @@ Extras:
 - [X] radio GPIOs 
 - [X] use [this](https://cz.mouser.com/datasheet/2/1628/sj_43504_smt_tr-3510743.pdf) for the headphone jack
 - [ ] the slots don't work, update the pcb with holes
-- [ ] add top & bottom GND planes and connect the AGND and GND so that it can be cut on the bottom to leave only one left
+- [ ] add top & bottom GND planes and connect the AGND and GND so that it can be cut on the bottom to leave only one 
 
 Extra PCBs:
 
-- [ ] cartridge connector mk II and cartridge itself
-- [ ] potentially, the connector can use this: https://jlcpcb.com/partdetail/gswitch-GT_BTP16010_0180B014B/C41378714, this easily gives 24 pins, which is 3+ more, for !1.5 usd per 
+- [ ] figure out the hold in place mechanism for the cartridge if the friction of the connectors is not enough
+- [ ] make the PCB larger to fit the entire case, but make sure no components, or useful stuff is above 10cm so that we can always skip it -- this means moving the rpi 1.5mm down(!)
+
 
 # Things to check on the prototype
 
