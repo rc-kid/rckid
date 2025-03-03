@@ -199,6 +199,11 @@ namespace rckid {
             // noting in the finalizer
         }
 
+        /** Renderer's app API, for bitmap there is nothing we need to do.
+         */
+        void update() {
+        }
+
         void render() {
             displayWaitVSync();
             displayUpdate(pixels(), numPixels());

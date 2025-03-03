@@ -363,7 +363,7 @@ Bottom side:
 
 # Development Board
 
-The development board is a 10x10cm 4 layer board that mimics the basic layout and connections of the rckid mk3 device, but with simpler components (buttons, RGB lights, etc.), larger passives so that they can be manually tweaked to determine correct values and far more test points. 
+The development board is a 10x10cm 4 layer board that mimics the basic layout and connections of the rckid mk3 device, but with simpler components (buttons, RGB lights, etc.), larger passives so that they can be manually tweaked to determine correct values and far more test points.
 
 - [X] accel interrupt pullup?
 - [X] ilim resistor for PMIC (270 atm)
