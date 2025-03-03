@@ -19,13 +19,19 @@
 - should audio volume be uint8, or something else? 
 - add specialization for 16 bpp bitmap renderColumn that simply does memcopy
 
+# DevBoard PCB & first batch
+
+- [X] order the cartridge connector pcb (populated)
+- [X] order the cartridge pcb (unpopulated)
+- [ ] order the devboard (populated, x2)
+- [ ] create display riser
+- [X] order the displays (test batch first)
+- [ ] pcb board for the battery connector - can be inside the speaker hole perhaps
 
 # PCB
 
 - R125 (ilim for PMIC is wrong value)
 - verify with prototype that R124 (PWR_INT pullup is needed)
-- crystal capacitors are wrong values for sure, should be around 22pF (being tested by dev board)
-
 
 > This is updated TODO list for mkIII. It's split into 
 

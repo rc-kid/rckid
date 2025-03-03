@@ -4,6 +4,7 @@
 
 #include "../utils/buffers.h"
 #include "panel.h"
+#include "../app.h"
 
 namespace rckid::ui {
 

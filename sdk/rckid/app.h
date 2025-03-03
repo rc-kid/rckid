@@ -86,6 +86,10 @@ namespace rckid {
             g_.initialize();
         }
 
+        void update() override {
+            g_.update();
+        }
+
         void draw() override {
             g_.render();
         }
@@ -93,5 +97,6 @@ namespace rckid {
         RENDERER g_;
 
     }; // rckid::App
+
 
 } // namespace rckid

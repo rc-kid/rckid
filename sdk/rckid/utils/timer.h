@@ -2,7 +2,7 @@
 
 #include "../rckid.h"
 
-namespace rckid::ui {
+namespace rckid {
 
     /** A simple timer. 
      
@@ -86,7 +86,7 @@ namespace rckid::ui {
         uint32_t duration_; 
         uint32_t lastCheck_;
 
-    }; // rckid::ui::Timer
+    }; // rckid::Timer
     
 
-} // namespace rckid::ui
+} // namespace rckid

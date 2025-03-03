@@ -34,6 +34,7 @@ public:
         c->setRect(Rect::XYWH(0, 160, 320, 80));
         c->set(ui::Image{Bitmap<16>{PNG::fromBuffer(assets::icons_default_64::animal_2)}}, "Animal 2");
         c->setFont(Font::fromROM<assets::OpenDyslexic64>());
+        c->moveLeft(ui::Image{Bitmap<16>{PNG::fromBuffer(assets::icons_default_64::animal_1)}}, "Animal 1");
         g_.add(p1);
         g_.add(p2);
         //g_.add(img);

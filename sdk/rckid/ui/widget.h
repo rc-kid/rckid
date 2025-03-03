@@ -115,6 +115,17 @@ namespace rckid::ui {
                 w->renderColumn(column, buffer, starty, numPixels);
         }
 
+        /** Renders the given child at coordinates with given offset.
+         */
+        void renderChild(Widget *w, Coord column, Pixel * buffer, Coord starty, Coord numPixels, Point offset) {
+            Rect rect = w->rect();
+            rect.x += offset.x;
+            rect.y += offset.y;
+            adjustRenderParams(rect, column, buffer, starty, numPixels);
+            if (numPixels != 0) 
+                w->renderColumn(column, buffer, starty, numPixels);
+        }
+
         /** Adjusts the rendering parameters for given rectangle within the widget. 
          
             If no rendering should occur, sets the number of pixels to be rendered to zero. In this case no other arguments should be considered valid after the call.

@@ -1,8 +1,9 @@
 #pragma once
 
 #include "../graphics/bitmap.h"
+#include "../utils/interpolation.h"
+#include "../utils/timer.h"
 
-#include "timer.h"
 #include "image.h"
 #include "label.h"
 
@@ -65,14 +66,27 @@ namespace rckid::ui {
         }
 
         void update() override {
-            a_.update();
-            // TODO 
+            if (dir_ == Btn::Home)
+                return;
+            if (a_.update()) {
+                dir_ = Btn::Home;
+                aImgOffset_ = 0;
+                aTextOffset_ = 0;
+                std::swap(aImg_, bImg_);
+                std::swap(aText_, bText_);
+            } else {
+                updateOffsets();
+            }
         }
 
     protected:
         void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) override {
-            renderChild(& aImg_, column, buffer, starty, numPixels);
-            renderChild(& aText_, column, buffer, starty, numPixels);
+            renderChild(& aImg_, column, buffer, starty, numPixels, Point(aImgOffset_, 0));
+            renderChild(& aText_, column, buffer, starty, numPixels, Point(aTextOffset_, 0));
+            if (dir_ != Btn::Home) {
+                renderChild(& bImg_, column, buffer, starty, numPixels, Point(bImgOffset_, 0));
+                renderChild(& bText_, column, buffer, starty, numPixels, Point(bTextOffset_, 0));
+            }
         }
 
         void set(Image && icon, std::string &&text, Image & imgInto, Label & labelInto) {
@@ -93,23 +107,46 @@ namespace rckid::ui {
 
         void setEffect(Btn effect) {
             dir_ = effect;
-            aOffset_ = 0;
-            updateEffect();
+            aImgOffset_ = 0;
+            aTextOffset_ = 0;
+            a_.startContinuous();
+            updateOffsets();
         }
 
-        void updateEffect() {
+        void updateOffsets() {
             switch (dir_) {
-                case Btn::Home:
-                    break;
+                // new item is coming from left, old goes to right
                 case Btn::Left:
-                case Btn::Right:
-                case Btn::Up:
-                case Btn::Down:
-                    UNIMPLEMENTED;
+                    aImgOffset_ = interpolation::linear(a_, 0, width()).round();
+                    aTextOffset_ = aImgOffset_ * 2;
+                    bTextOffset_ = interpolation::linear(a_, -width(), 0).round();
+                    bImgOffset_ = bTextOffset_ * 2;
                     break;
+                // new item is coming from right, old goes to left
+                case Btn::Right:
+                    aTextOffset_ = interpolation::linear(a_, 0, -width()).round();
+                    aImgOffset_ = aTextOffset_ * 2;
+                    bImgOffset_ = interpolation::linear(a_, width(), 0).round();
+                    bTextOffset_ = bImgOffset_ * 2;
+                    break;
+                // new item is coming from sides, old goes down
+                case Btn::Up:
+                    aTextOffset_ = interpolation::linear(a_, 0, height()).round();
+                    aImgOffset_ = aTextOffset_;
+                    bTextOffset_ = interpolation::linear(a_, width(), 0).round();
+                    bImgOffset_ = - bTextOffset_;
+                    break;
+                // new item is coming the bottom, old goes to the sides
+                case Btn::Down:
+                    aTextOffset_ = interpolation::linear(a_, 0, width()).round();
+                    aImgOffset_ = - aTextOffset_;
+                    bTextOffset_ = interpolation::linear(a_, height(), 0).round();
+                    bImgOffset_ = aTextOffset_;
+                    break;
+                default:
+                    UNREACHABLE;
             }
         }
-    
 
     private:
         Image aImg_;
@@ -118,11 +155,11 @@ namespace rckid::ui {
         Label bText_;
 
         Btn dir_ = Btn::Home;
-        Coord aOffset_;
-        Coord bOffset_;
-        Timer a_{defaultTransitionTimeMs};
-
-
+        Coord aImgOffset_;
+        Coord aTextOffset_;
+        Coord bImgOffset_;
+        Coord bTextOffset_;
+        Timer a_{defaultTransitionTimeMs * 10};
     }; // rckid::ui::Carousel
 
 } // namespace rckid::ui
