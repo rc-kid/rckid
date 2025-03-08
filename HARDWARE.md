@@ -396,6 +396,13 @@ Extra PCBs:
 - [ ] make the PCB larger to fit the entire case, but make sure no components, or useful stuff is above 10cm so that we can always skip it -- this means moving the rpi 1.5mm down(!)
 
 
+# problems
+
+- BMI160 has moved to standard parts, try alternatives, such as https://jlcpcb.com/partdetail/TdkInvensense-MPU6500/C50278
+- sinking USB-C is standard part, use the normal one for the devboard
+- headphones don't show the slot on jlcpcb
+- check accel
+
 # Things to check on the prototype
 
 - can the radio extra GPIO be used for audio reset? (this saves one pin on RP2350)

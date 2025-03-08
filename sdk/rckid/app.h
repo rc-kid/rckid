@@ -12,6 +12,7 @@ namespace rckid {
      */
     class BaseApp {
     public:
+        virtual ~BaseApp() = default;
 
         /** Runs the application. 
          */

@@ -6,6 +6,7 @@
 
 #include "image.h"
 #include "label.h"
+#include "menu.h"
 
 namespace rckid::ui {
 
@@ -161,5 +162,60 @@ namespace rckid::ui {
         Coord bTextOffset_;
         Timer a_{defaultTransitionTimeMs * 10};
     }; // rckid::ui::Carousel
+
+
+    /** Menu holder that visualizes a carousel. 
+     
+     */
+    class CarouselMenu : public Carousel {
+    public:
+
+        /*
+        CarouselMenu(Menu * m):
+            menu_{m} {
+            if (m->size() > 0) {
+                set(menu()[0].icon(), menu.item(0)->text());
+            }
+        }
+
+        Menu const & menu() const { return * menu_; }
+
+        Menu & menu() { return * menu_; }
+
+        void moveLeft() {
+            if (menu_->size() == 0)
+                return;
+            menu_->moveLeft();
+            moveLeft(menu_->item(0)->icon(), menu_->item(0)->text());
+        }
+
+        void moveRight() {
+            if (menu_->size() == 0)
+                return;
+            menu_->moveRight();
+            moveRight(menu_->item(0)->icon(), menu_->item(0)->text());
+        }
+
+        void moveUp() {
+            if (menu_->size() == 0)
+                return;
+            menu_->moveUp();
+            moveUp(menu_->item(0)->icon(), menu_->item(0)->text());
+        }
+
+        void moveDown() {
+            if (menu_->size() == 0)
+                return;
+            menu_->moveDown();
+            moveDown(menu_->item(0)->icon(), menu_->item(0)->text());
+        }
+        */
+
+
+
+    private:
+
+        Menu * menu_;
+    }; // rckid::ui::CarouselMenu
 
 } // namespace rckid::ui
