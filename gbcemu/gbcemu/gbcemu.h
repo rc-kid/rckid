@@ -14,9 +14,14 @@ namespace rckid::gbcemu {
         - memory (video ram, work ram, cartridge rom, cartridge ram) including bank switching 
         - ppu (pixel processing unit)
         - apu (audio processing unit)
+
+
+        Most of this builds on a very good GB/GBC reference available at https://gbdev.io/pandocs/About.html
      */
     class GBCEmu : public BaseApp {
     public:
+
+        GBCEmu(Allocator & a = Heap::allocator());
 
         ~GBCEmu() override;
 
@@ -69,6 +74,22 @@ namespace rckid::gbcemu {
         uint16_t pc() const { return pc_; }
         uint16_t sp() const { return sp_; }
 
+        uint8_t readWRam(uint32_t offset) {
+            uint32_t page = offset >> 12;
+            uint32_t pageOffset = offset & 0xfff;
+            return wram_[page][pageOffset];
+        }
+
+        uint8_t readOam(uint32_t offset) const {
+            return oam_[offset];
+        }
+
+        /** Reads the high RAM at given offset. 
+         */
+        uint8_t readHRam(uint32_t offset) const {
+            // note that we keep hram an io regs as a single array, so need to adjust here for the actual hram start inside hram
+            return hram_[offset + 128];
+        }
 
     protected:
 
@@ -184,7 +205,9 @@ namespace rckid::gbcemu {
             0xfea0 | 0xfeff |       |        | Prohibited
             0xff00 | 0xff7f | 128   |        | IO Registers
             0xff80 | 0xfffe | 127   |        | High RAM 
-            0xffff | 0xffff | 1     |        | Interrupt enable register         
+            0xffff | 0xffff | 1     |        | Interrupt enable register   
+            
+            The memory is divided into 16 4KB blocks, with the last block being a bit more complex as it contains echo ram, oam memory, io regs and hram. Furthemore, all allocations of RAM memories are done in 4KB blocks as well to limit fragmentation due to possibly large allocatons in case of big memories. 
          */
 
         /** Reads one byte from memory. For most reads & writes this simply goes through the memmap, but there are special cases for the shorter memory blocks towards the end of the address space.
@@ -202,19 +225,31 @@ namespace rckid::gbcemu {
          */
         void setRomPage(uint32_t page);
 
+        /** Sets the video ram page. Video ram pages are 8 KB and two of them are available for GBC. 
+         */
+        void setVideoRamPage(uint32_t page);
+
+        /** Sets external ram bank. Valid values are from 0 to 16, external ram banks are 8KB in size.
+         */
+        void setExternalRamPage(uint32_t page); 
+
+        /** Sets the second work ram page (first is always 0). GBC has 8 work ram banks, banks 1 to 7 can be mapped here.
+         */
+        void setWorkRamPage(uint32_t page);
+
+
         /** Faster memory reads for program counter where we assume the address does not belong to the 16th bank with oam and high mem. 
          */
         uint8_t mem8(uint16_t addr);
         uint16_t mem16(uint16_t addr);
 
-
-        uint8_t * vram_ = nullptr;
-        uint8_t * wram_ = nullptr;
+        uint8_t * vram_[4];
+        uint8_t * wram_[8];
         uint8_t * oam_ = nullptr;
         uint8_t * hram_ = nullptr;
 
-        uint8_t * eram_;
-        uint32_t eramSize_;
+        // eram of up to 128kb (32 banks of 4kb)
+        uint8_t * eram_[32] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
         // memory mapping information. For fast access, the memory is divided into 16 4kb regions with pointers to beginning in the array. This is true for all but the last block, which is a bit more complex as it contains echo ram, oam memory, io regs and hram.
         uint8_t * memMap_[16];

@@ -15,7 +15,8 @@ namespace rckid::gbcemu {
         RUN(
             SCF,
         );
-        EXPECT_FLAGS(C);
+        // sets the carry flag, but zero flag exists from the console startup
+        EXPECT_FLAGS(C | Z);
     }
     
     TEST(gbcemu, simple_regLoads) {
