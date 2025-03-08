@@ -14,18 +14,20 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
         "${CMAKE_SOURCE_DIR}/sdk/tests/*.cpp"
         "${CMAKE_SOURCE_DIR}/sdk/tests/*.h"
     )
-    #file(
-    #    GLOB_RECURSE GBCEMU_SRC 
-    #    "${CMAKE_SOURCE_DIR}/cartridges/gbcemu/tests/*.cpp" 
-    #    "${CMAKE_SOURCE_DIR}/cartridges/gbcemu/tests/*.h"
-    #)
     file(
         GLOB_RECURSE PLATFORM_SRC 
         "${CMAKE_SOURCE_DIR}/libs/platform/tests/*.cpp"
         "${CMAKE_SOURCE_DIR}/libs/platform/tests/*.h"
     )
-    add_executable(tests-sdk ${SDK_SRC} ${PLATFORM_SRC})
+    file(
+        GLOB_RECURSE GBCEMU_SRC 
+        "${CMAKE_SOURCE_DIR}/gbcemu/tests/*.cpp" 
+        "${CMAKE_SOURCE_DIR}/gbcemu/tests/*.h"
+    )
+    add_executable(tests-sdk ${SDK_SRC} ${PLATFORM_SRC} ${GBCEMU_SRC})
     link_with_librckid(tests-sdk)
+    target_link_libraries(tests-sdk PRIVATE libgbcemu)
+
 
     add_custom_target(run-tests
         COMMAND tests-sdk

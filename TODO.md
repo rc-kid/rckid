@@ -1,5 +1,9 @@
 # TODO
 
+
+- serialize & deserialize vs load & save
+- how to do menus & widgets for menu displaying
+
 - image can have pixel arrays form ROM as well - just ensure on the fantasy that we are not deleting the memory if it comes form "ROM"
 - allow bitmaps to render with transparent color
 - when updating multiple attributes of a widget the recalculate after each one of them is not necessary
