@@ -1,6 +1,7 @@
 #include "gbcemu.h"
 
 #define A (regs8_[REG_INDEX_A])
+#define F (regs8_[REG_INDEX_F])
 #define B (regs8_[REG_INDEX_B])
 #define C (regs8_[REG_INDEX_C])
 #define D (regs8_[REG_INDEX_D])
@@ -157,8 +158,37 @@ static constexpr int val_1 = 1;
 
 namespace rckid::gbcemu {
 
+    GBCEmu::GBCEmu(Allocator & a):
+        vram_{
+            a.alloc<uint8_t>(0x1000), 
+            a.alloc<uint8_t>(0x1000), 
+            a.alloc<uint8_t>(0x1000), 
+            a.alloc<uint8_t>(0x1000)
+        },
+        wram_{
+            a.alloc<uint8_t>(0x1000),
+            a.alloc<uint8_t>(0x1000), 
+            a.alloc<uint8_t>(0x1000), 
+            a.alloc<uint8_t>(0x1000), 
+            a.alloc<uint8_t>(0x1000), 
+            a.alloc<uint8_t>(0x1000), 
+            a.alloc<uint8_t>(0x1000), 
+            a.alloc<uint8_t>(0x1000)
+        },
+        oam_{a.alloc<uint8_t>(160)},
+        hram_{a.alloc<uint8_t>(256)} {
+    }
+
     GBCEmu::~GBCEmu() {
         Heap::tryFree(gamepak_);
+        for (uint32_t i = 0; i < 4; ++i)
+            Heap::tryFree(vram_[i]);
+        for (uint32_t i = 0; i < 8; ++i)
+            Heap::tryFree(wram_[i]);
+        Heap::tryFree(oam_);
+        Heap::tryFree(hram_);
+        for (uint32_t i = 0; i < 32; ++i)
+            Heap::tryFree(eram_[i]);
         // TODO some more cleanup would be good here
     }
 
@@ -172,17 +202,40 @@ namespace rckid::gbcemu {
 
     void GBCEmu::loadCartridge(GamePak * game) {
         gamepak_ = game;
+        // figure out the size of the external RAM and allocate accordingly
+        for (uint32_t i = 0; i < 32; ++i) {
+            Heap::tryFree(eram_[i]);
+            eram_[i] = nullptr;
+        }
+        uint32_t eramSize = gamepak_->cartridgeRAMSize() / 4096;
+        for (uint32_t i = 0; i < eramSize; ++i)
+            eram_[i] = Heap::alloc<uint8_t>(0x1000);
+        // initialize memory mapping defaults
         memMap_[0] = const_cast<uint8_t *>(gamepak_->getPage(0));
         memMap_[1] = memMap_[0] + 0x1000;
         memMap_[2] = memMap_[0] + 0x2000;
         memMap_[3] = memMap_[0] + 0x3000;
         setRomPage(1);
-        // figure out the size of the external RAM and allocate accordingly
-        // TODO
-
+        setVideoRamPage(0);
+        setExternalRamPage(0);
+        memMap_[12] = wram_[0];
+        memMap_[14] = wram_[0];
+        setWorkRamPage(1);
+        // register initial values as if this is CGB
+        // from https://gbdev.io/pandocs/Power_Up_Sequence.html
+        A = 0x11;
+        F = FLAG_Z;
+        B = 0;
+        C = 0;
+        D = 0;
+        E = 0x08;
+        H = 0x00;
+        L = 0x7c;
+        PC = 0x100;
+        SP = 0xfffe;
+        // and reset counters
         cycles_ = 0;
         totalCycles_ = 0;
-        pc_ = 0x100;
     }
 
     void GBCEmu::run(bool terminateAfterStop) {
@@ -249,6 +302,25 @@ namespace rckid::gbcemu {
         memMap_[5] = memMap_[4] + 0x1000;
         memMap_[6] = memMap_[4] + 0x2000;
         memMap_[7] = memMap_[4] + 0x3000;
+    }
+
+    void GBCEmu::setVideoRamPage(uint32_t page) {
+        ASSERT(page < 2);
+        memMap_[8] = vram_[page * 2];
+        memMap_[9] = vram_[page * 2 + 1];
+    }
+
+    void GBCEmu::setExternalRamPage(uint32_t page) {
+        ASSERT(page < 16);
+        memMap_[10] = eram_[page * 2];
+        memMap_[11] = eram_[page * 2 + 1];
+    }
+
+    void GBCEmu::setWorkRamPage(uint32_t page) {
+        ASSERT(page > 0 && page < 8);
+        memMap_[13] = wram_[page];
+        // don't forget to set the echo ram as well here
+        memMap_[15] = wram_[page];
     }
 
     // arithmetics

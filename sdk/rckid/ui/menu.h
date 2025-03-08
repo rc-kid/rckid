@@ -10,6 +10,10 @@ namespace rckid::ui {
     /** Menu representation.
 
         The UI decouples the menu itself, represented by this class from the actual rendering of the menu items, which is done by widgets such as the Carousel. 
+
+        Item = just fillText and fillIcon 
+        Action = void * payload
+        Submenu = generator payload
      */
     class Menu {
     public:
