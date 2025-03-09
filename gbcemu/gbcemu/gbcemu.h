@@ -293,5 +293,4 @@ namespace rckid::gbcemu {
     }; // rckid::gbcemu::GBCEmu
 
 
-
 } // namespace rckid::gbcemu

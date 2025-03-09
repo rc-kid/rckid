@@ -17,47 +17,79 @@ namespace rckid::ui {
      */
     class Menu {
     public:
+
+
         /** Basic item of a menu.
          
             Each menu items has a text and an optional icon. The menu item can also have a payload, which is a 32-bit value that can be used to store additional information about the item.
          */
         class Item {
         public:
+            static constexpr uint32_t KIND = 0;
 
             virtual ~Item() = default;
 
-            uint32_t payload() const { return payload_; }
-            void setPayload(uint32_t value) { payload_ = value; }
+            virtual uint32_t kind() const { return KIND; }
 
-            virtual void fillText(std::string & text) const = 0;
+            template<typename T>
+            bool is() const {
+                return kind() == T::KIND;
+            }
 
-            virtual bool fillIcon([[maybe_unused]] Bitmap<16> & bmp) const { return false; }
+            template<typename T>
+            T * as() {
+                if (! is<T>())
+                    return nullptr;
+                return static_cast<T*>(this);
+            }
 
-        private:
+            void fillText(std::string & text) const {
+                text = text_;
+            }
 
-            uint32_t payload_ = 0;
-        }; // rckid::ui::Menu::Item
-
-        /** Static menu item with no memory allocation for its contents. This is done by using string literals as text and pointers to images stored in ROM as icons. Note that while the item itself thus does not need any allocations, displaying the item might require allocations for updating the text or setting/decoding the icon. 
-         */
-        class StaticItem : public Item {
-        public:
-
-            void fillText(std::string & text) const override { text = text_; }
-
-            bool fillIcon(Bitmap<16> &bmp) const override {
-                if (iconData_ == nullptr)
+            bool fillIcon([[maybe_unused]] Bitmap<16> & bmp) const { 
+                if (icon_ == nullptr)
                     return false;
-                bmp.loadImage(PNG::fromBuffer(iconData_, iconSize_));
+                // TODO maybe other formats as well? 
+                bmp.loadImage(PNG::fromBuffer(icon_, iconSize_));
                 return true;
             }
 
         private:
-            char const * text_ = nullptr;
-            uint8_t const * iconData_ = nullptr;
-            uint32_t iconSize_ = 0;
-        }; // rckid::ui::Menu::StaticItem
 
+            std::string text_;
+            uint8_t const * icon_ = nullptr;
+            uint32_t iconSize_ = 0;
+
+        }; // rckid::ui::Menu::Item
+
+        /** Item with associated action, which is a simple std::function for simplicity.
+         */
+        class ActionItem : public Item {
+        public:
+            static constexpr uint32_t KIND = 1;
+            uint32_t kind() const override { return KIND; }
+
+            std::function<void()> const & action() const { return action_; }
+            void setAction(std::function<void()> const & action) { action_ = action; }
+
+        private:
+            std::function<void()> action_;
+        }; // rckid::ui::Menu::ActionItem
+
+        /** Item with associated submenu generator. 
+         */
+        class SubmenuItem : public Item {
+        public:
+            static constexpr uint32_t KIND = 2;
+            uint32_t kind() const override { return KIND; }
+
+            std::function<Menu *()> const & generator() const { return generator_; }
+            void setGenerator(std::function<Menu *()> const & generator) { generator_ = generator; }
+
+        private:
+            std::function<Menu *()> generator_;
+        }; // rckid::ui::Menu::SubmenuItem
 
         Menu() = default;
 
