@@ -127,30 +127,30 @@ namespace rckid::ui {
             switch (dir_) {
                 // new item is coming from left, old goes to right
                 case Transition::Left:
-                    aImgOffset_ = interpolation::linear(a_, 0, width()).round();
+                    aImgOffset_ = interpolation::cosine(a_, 0, width()).round();
                     aTextOffset_ = aImgOffset_ * 2;
-                    bTextOffset_ = interpolation::linear(a_, -width(), 0).round();
+                    bTextOffset_ = interpolation::cosine(a_, -width(), 0).round();
                     bImgOffset_ = bTextOffset_ * 2;
                     break;
                 // new item is coming from right, old goes to left
                 case Transition::Right:
-                    aTextOffset_ = interpolation::linear(a_, 0, -width()).round();
+                    aTextOffset_ = interpolation::cosine(a_, 0, -width()).round();
                     aImgOffset_ = aTextOffset_ * 2;
-                    bImgOffset_ = interpolation::linear(a_, width(), 0).round();
+                    bImgOffset_ = interpolation::cosine(a_, width(), 0).round();
                     bTextOffset_ = bImgOffset_ * 2;
                     break;
                 // new item is coming from sides, old goes down
                 case Transition::Up:
-                    aTextOffset_ = interpolation::linear(a_, 0, height()).round();
+                    aTextOffset_ = interpolation::cosine(a_, 0, height()).round();
                     aImgOffset_ = aTextOffset_;
-                    bTextOffset_ = interpolation::linear(a_, width(), 0).round();
+                    bTextOffset_ = interpolation::cosine(a_, width(), 0).round();
                     bImgOffset_ = - bTextOffset_;
                     break;
                 // new item is coming the bottom, old goes to the sides
                 case Transition::Down:
-                    aTextOffset_ = interpolation::linear(a_, 0, width()).round();
+                    aTextOffset_ = interpolation::cosine(a_, 0, width()).round();
                     aImgOffset_ = - aTextOffset_;
-                    bTextOffset_ = interpolation::linear(a_, height(), 0).round();
+                    bTextOffset_ = interpolation::cosine(a_, height(), 0).round();
                     bImgOffset_ = aTextOffset_;
                     break;
                 default:

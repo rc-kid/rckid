@@ -17,6 +17,7 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
 
     add_utility("font-converter" "utils/font_converter.cpp")
     add_utility("binary-folder" "utils/binary_folder.cpp")
+    add_utility("sine-table" "utils/sine_table.cpp")
 
     # Generates the SDK assets
     #
@@ -26,8 +27,10 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
         COMMAND $<TARGET_FILE:font-converter> assets/fonts/OpenDyslexic.otf rckid/assets/fonts/OpenDyslexic64.h 64
         COMMAND $<TARGET_FILE:binary-folder> assets/images rckid/assets/images.h --raw-path raw/images
         COMMAND $<TARGET_FILE:binary-folder> assets/icons/default/64 rckid/assets/icons_default_64.h --raw-path raw/icons --namespace rckid::assets::icons_default_64
+        COMMAND $<TARGET_FILE:sine-table> 256 rckid/assets/sine_table.h
         DEPENDS font-converter
         DEPENDS binary-folder
+        DEPENDS sine-table
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
