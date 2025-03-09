@@ -18,20 +18,12 @@ namespace rckid::gbcemu {
 
         Most of this builds on a very good GB/GBC reference available at https://gbdev.io/pandocs/About.html
      */
-    class GBCEmu : public BaseApp {
+    class GBCEmu : public App {
     public:
 
         GBCEmu(Allocator & a = Heap::allocator());
 
         ~GBCEmu() override;
-
-        void suspend() override {
-            BaseApp::suspend();
-        }
-
-        void resume() override {
-            BaseApp::resume();
-        }
 
         void save([[maybe_unused]] WriteStream & into) override {
             UNIMPLEMENTED;
@@ -40,8 +32,6 @@ namespace rckid::gbcemu {
         void load([[maybe_unused]] ReadStream & from) override {
             UNIMPLEMENTED;
         }
-
-
 
         /** Laods the given gamepak in the emulator. 
          */
@@ -266,6 +256,28 @@ namespace rckid::gbcemu {
          */
         //@{
 
+        /** Object Attribute Memory for a single sprite.
+         
+            Each sprite contains its x and y values, tile number and flags (priority, palettes, flips, etc.). Important note is that the sprite y coordinate is offset by 16 pixels, so the actual sprite y position is y + 16.
+         */
+        PACKED(struct OAMSprite {
+            uint8_t y;
+            uint8_t x;
+            uint8_t tile;
+            uint8_t flags;
+
+            bool priority() const { return flags & 0x80; }
+            bool yFlip() const { return flags & 0x40; }
+            bool xFlip() const { return flags & 0x20; }
+            uint8_t palette() const { return flags & 0x10; }
+            uint8_t bank() const { return flags & 0x08; }
+            uint8_t cgbPalette() const { return flags & 0x07; }
+        });
+
+        static_assert(sizeof(OAMSprite) == 4);
+
+        /** Dots per scanline. There are 154 scanlines, 144 of which are visible on the display. 
+         */
         static constexpr uint32_t DOTS_PER_LINE = 456;
 
         void setMode(unsigned mode);

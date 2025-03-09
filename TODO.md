@@ -5,14 +5,12 @@
 - how to deal with non-16 bpp bitmaps 
 
 - serialize & deserialize vs load & save
-- how to do menus & widgets for menu displaying
 
 - image can have pixel arrays form ROM as well - just ensure on the fantasy that we are not deleting the memory if it comes form "ROM"
 - allow bitmaps to render with transparent color
 - when updating multiple attributes of a widget the recalculate after each one of them is not necessary
 - also maybe change the resize to change and make it general method for ui change stuff
 
-- figure out how to make the run() simpler so that we don't have to write it (maybe loop is run?)
 - add rgb and rumbler effects to the SDK (commented out in mkII)
 
 - ensure that buffers use allocators properly when they are created to construct stuff
@@ -118,38 +116,6 @@
 
 - can have audio player run in the background on second core for most other games, that way people can play & listen to music
 
-## UI
-
-## GalaxyInvaders
-
-- make levels better
-- add hall of fame
-- add intro
-- can be AI playing the game (?)
-- check that stars work on device (they seem to have colors?)
-
-## Sokoban
-
-- show some text after highscore and level unlocked, maybe even reset
-
-## Pong
-
-- make AI less good
-- add hall of fame
-- add intro
-
-## Tetris
-
-## Alarm
-
-- implement alarm in fantasy
-- implement alarm snoozing and turning off
-- alarm sound (!)
-
-## PCB
-
-- see if the riser for the cartridge connector is necessary, or the cartridge leads can be bent, soldered and then the connector glued
-
 ## Mk II Hardware
 
 - I2C problems might be somewhat mitigated by extra pullups in the cartridge, or add a special mode where if DC power is enabled we stop querying and just display that we have entered charging and only stop when charging is stopped? - as a really ugly hack, but will work 
@@ -173,114 +139,22 @@
 
 > The displays I ordered for the prototypes are 8bit interface, while the larger batch is 16. This in itself would not be the worst, but it seems that the 8bit display can no longer be purchased. I have 2 working prototypes for xmas, so if all goes well, it *might* work still, but the plan for the future is to use the extra pins on RP2350B for the 16bit interface so that I can use the displays I have ordered already. 
 
-The RPI has 48 GPIO, the necessary pins are:
-
-- 20 (16 + 4) for the display
-- 2 pins for I2C communication with the AVR
-- 10 pins for the cartridge
-- 4 pins for the SD card
-- 2 pins for stereo audio out
-- 2 pins for the PDM microphone
-
-This is 40 pins already, with 8 pins left. Those can either be used for the buttons, or provide extras such as:
-
-- 1 pin will make I2S sound output possibility
-- 2 pins will make the SDIO interface to the SD card possibility
-- 1 for display read as well
-
-This leaves us with 4 free pins on the RP2350 side. 
-
-Then there is the ATTiny3217, which has 21 GPIO pins:
-
-- 2 pins for I2C
-- 1 pin for power
-- 2 pins for RGB & 5V power
-- 1 vbatt (ADC)
-- 1 vcc (ADC)
-- 1 pin charging detection
-- 1 pin charging on/off
-- 7 pins for the buttons (3x4 matrix, including the home button)
-
-This is 16 pins, with 5 pins left on the AVR side. 
-
-Things we are missing is audio on/off and headphone detection (1 or 2 pins), backlight (1pin), rumbler (1pin)
-
-I can put RP in charge of the audio, while keeping the backlihght & rumbler on AVR, leaving RP with 2 free pins (UART for debugging or some aoutput pins) and 3 pins on AVR (uart for debugging and some leds, etc.)
-
 > Turns out it actually might work even with the 16bit display and the 16bit resolution can even give faster communication and thus more time available for draw in framebuffer mode. 
-
-# Proper memory layoyt
-
-1) allocate everything that should last as long as the app on arena.
-2) allocate everything that should last as long as the draw method on the separate per frame arena
-3) everything else goes on heap
-
-Both arenas are explicit to avoid confusion. 
 
 ## MkIII SDK Revision
 
 > This is the next major rewrite of the SDK, probably will happen after Xmas and is tailored towards the RP2350, although RP2040 should benfit from it as well. 
 
-- make graphic apps simpler, only implement what we have use for, i.e. maybe only use full color buffers in the graphic modes
-- modal apps will be passed the reusable framebuffer that they can deal with any way they like
-- gauge settings should be animated with the menu, i.e. the title will start below and go up, gauge will appear, then go down to the menu 
-
-## MKIII Hardware Revision
-
-- make the PCB smaller (102x102 so that its creation is cheaper)
-
-> RP2350 has 48 GPIO. The cartridge pins must include a QSPI second SS, some SPI, some I2C and ideally the HSTX as well just because we have it
-- 20 (16 + 4) for the display
-- 10 pins for the cartridge
-- 2 pins for I2C
-- 4 + 2 pins for SPI SD card (or SDIO)
-- 2 pins for PDM microphone
-- 3 pins for audio out (I2S or only 2 pins for PWM)
-- free 5
-
-> ATTiny3217, which has 21 GPIO pins
-- 2 pins for I2C
-- 7 pins for the buttons (3x4 matrix, including the home button)
-- 1 pin 3V3 power
-- 2 pins for RGB leds & 5V power
-- 2 pins for charging (enable, charge status)
-- 1 pin for battery voltage
-- 1 pin for USB 5V power detect
-- 2 PWM pins (rumbler & backlight)
-- free 3 
-
-- headphones detect
-- audio on/off
-
-
-
 https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01-1-16r13/
-
-
-- 2 UART
-
-
-- 2 I2C
-- 3 I2S
-- 2 Mic
-- 1 audio en
-- 1 headphones detect
-
 
 
 # mk3 Updates
 
-- use TPS63021 (larger possible output current, might be more efficient)
-- use the correct recommended crystal
-- HX4002 is enough for the LEDs at full power just barely (they are 12mA per channel)
-- completely different audio (PCM5100a)
 - check the IOVDD switch is proper and will work
 - check that the large resistors on VBATT divider can still work with ADC
 - check home button part of the matrix
 
 # mk3 TODO
-
-- an interesting idea is to create extra board for mkIII development with big enough components so that I can solder/desolder them as necessary (can even use RP2040)
 
 - terminating resistors on I2S
 - should I use the PMIC chips? 
@@ -290,17 +164,3 @@ https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01
 - can use also SI4703, but that one does not have internal / external antenna - do I really need it? 
 - this allows for shorter audio paths
 - or just use module? 
-
-
-
-# Simpler Graphics
-
-- only have 2 options - 8 and 16 BPP for rendering. 8 goes through palette, 16 does not
-- tiles, fonts & sprites can have different BPPs (2, 4, 8) and they render either through palette, or through palette offset
-- this should greatly simplify things, as for colors, we have three:
-
-- ColorRGB16, ColorRGB8 and Color256
-- maybe have bitmap & friends only templated by BPP, without actually caring about the color meaning
-- then have ColorRGB which can be full RGBA and this one works with different color representations
-
-- how to fit 16bit RGBA in there? maybe ignore the alpha channel at pio level? that might just work

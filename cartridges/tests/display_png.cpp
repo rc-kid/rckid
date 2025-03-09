@@ -8,9 +8,9 @@
 
 using namespace rckid;
 
-class DisplayPNGApp : public App<RenderableBitmap<16>> {
+class DisplayPNGApp : public BitmapApp<16> {
 public:
-    DisplayPNGApp(Coord w, Coord h): App{RenderableBitmap<16>{w, h}} {
+    DisplayPNGApp(Coord w, Coord h): BitmapApp<16>{RenderableBitmap<16>{w, h}} {
         decTime_ = MEASURE_TIME(
             g_.loadImage(PNG::fromBuffer(assets::logo256));
         );
@@ -18,12 +18,10 @@ public:
         g_.text(10,10, Font::fromROM<assets::Iosevka16>(), ColorRGB{255, 255, 255}.toFontColors()) << "Decoding time: " << decTime_;
     }
 
-    static void run() { DisplayPNGApp t{320, 240}; t.loop(); }
-
 protected:
 
     void draw() override {
-        App::draw();
+        BitmapApp<16>::draw();
     }
 
     uint32_t decTime_;
@@ -32,6 +30,7 @@ protected:
 int main() {
     initialize();
     while (true) {
-        DisplayPNGApp::run();
+        auto app = DisplayPNGApp{320, 240};
+        app.run();
     }
 }

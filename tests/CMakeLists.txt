@@ -25,8 +25,8 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
         "${CMAKE_SOURCE_DIR}/gbcemu/tests/*.h"
     )
     add_executable(tests-sdk ${SDK_SRC} ${PLATFORM_SRC} ${GBCEMU_SRC})
-    link_with_librckid(tests-sdk)
     target_link_libraries(tests-sdk PRIVATE libgbcemu)
+    link_with_librckid(tests-sdk)
 
 
     add_custom_target(run-tests

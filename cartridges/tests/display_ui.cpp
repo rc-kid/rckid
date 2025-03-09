@@ -11,10 +11,10 @@
 
 using namespace rckid;
 
-class DisplayUIApp : public App<ui::Form> {
+class DisplayUIApp : public ui::App {
 public:
 
-    DisplayUIApp(): App{320, 240} {
+    DisplayUIApp(): ui::App{320, 240} {
         ui::Panel * p1 = new ui::Panel();
         p1->setRect(Rect::XYWH(20, 20, 20, 20));
         p1->setBg(ColorRGB{255, 0, 0});
@@ -49,10 +49,8 @@ public:
         g_.setRect(Rect::WH(320, 240));
     }
 
-    static void run() { DisplayUIApp t; t.loop(); }
-
     void update() override {
-        App::update();
+        ui::App::update();
         c_->processEvents();
     }
 
@@ -63,7 +61,8 @@ public:
 int main() {
     initialize();
     while (true) {
-        DisplayUIApp::run();
+        auto app = DisplayUIApp{};
+        app.run();
     }
 }
 

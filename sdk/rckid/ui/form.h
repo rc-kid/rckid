@@ -54,4 +54,6 @@ namespace rckid::ui {
         Coord column_;
     }; 
 
+    using App = RenderableApp<ui::Form>;
+
 } // namespace rckid::ui
