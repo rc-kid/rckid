@@ -27,6 +27,12 @@ namespace rckid::ui {
         public:
             static constexpr uint32_t KIND = 0;
 
+            Item(std::string text): text_{std::move(text)} {
+            }
+
+            Item(std::string text, uint8_t const * icon, uint32_t iconSize): text_{std::move(text)}, icon_{icon}, iconSize_{iconSize} {
+            }
+
             virtual ~Item() = default;
 
             virtual uint32_t kind() const { return KIND; }
@@ -43,16 +49,14 @@ namespace rckid::ui {
                 return static_cast<T*>(this);
             }
 
+            std::string const & text() const { return text_; }
+
             void fillText(std::string & text) const {
                 text = text_;
             }
 
-            bool fillIcon([[maybe_unused]] Bitmap<16> & bmp) const { 
-                if (icon_ == nullptr)
-                    return false;
-                // TODO maybe other formats as well? 
-                bmp.loadImage(PNG::fromBuffer(icon_, iconSize_));
-                return true;
+            Bitmap<16> icon() const {
+                return Bitmap<16>{PNG::fromBuffer(icon_, iconSize_)};
             }
 
         private:
@@ -67,6 +71,17 @@ namespace rckid::ui {
          */
         class ActionItem : public Item {
         public:
+
+            ActionItem(std::string text, std::function<void()> action): Item{std::move(text)}, action_{action} {
+            }
+
+            ActionItem(std::string text, uint8_t const * icon, uint32_t iconSize, std::function<void()> action): Item{std::move(text), icon, iconSize}, action_{action} {
+            }
+
+            template<uint32_t SIZE>
+            ActionItem(std::string text, uint8_t const (&buffer)[SIZE], std::function<void()> action): Item{std::move(text), buffer, SIZE}, action_{action} {
+            }
+
             static constexpr uint32_t KIND = 1;
             uint32_t kind() const override { return KIND; }
 
@@ -108,6 +123,11 @@ namespace rckid::ui {
         uint32_t size() const { return items_.size(); }
 
         Item & operator [] (uint32_t index) {
+            ASSERT(index < items_.size());
+            return *(items_[index]);
+        }
+
+        Item const & operator [] (uint32_t index) const {
             ASSERT(index < items_.size());
             return *(items_[index]);
         }
