@@ -23,24 +23,20 @@ namespace rckid {
         When the app is exitted, the USB device is turned off, which re-enables the DC voltage detection & charging. 
 
      */
-    class DataSync : public App<RenderableBitmap<16>> {
+    class DataSync : public BitmapApp<16> {
     public:
-
-        static void run() {
-            DataSync app{};
-            app.loop();
-        }
 
         static bool active() { return mscActive_; }
 
     protected:
 
         DataSync(): 
-            App{Arena::allocator()}
+            BitmapApp<16>{Arena::allocator()}
             /*icon_{std::move(ARENA(Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(assets::icons64::pen_drive))))} */ {
         }
 
-        void onFocus() override {
+        void focus() override {
+            BitmapApp<16>::focus();
             namespace fs = rckid::filesystem;
             sizeBlocks_ = sdCapacity();
             if (sizeBlocks_ > 0) {
@@ -50,12 +46,11 @@ namespace rckid {
                     fs::unmount();
                 }
             }
-            App::onFocus();
             mscActive_ = false;
         }
 
-        void onBlur() override {
-            App::onBlur();
+        void blur() override {
+            BitmapApp<16>::blur();
             if (mscActive_) {
 #if (defined ARCH_RCKID_2)
                 // disable USB -- reset so that we can again detect DC charge

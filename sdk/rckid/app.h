@@ -10,27 +10,11 @@ namespace rckid {
         Defines the application lifecycle and their stacking. 
      
      */
-    class BaseApp {
+    class App {
     public:
-        virtual ~BaseApp() = default;
+        virtual ~App() = default;
 
-        /** Runs the application. 
-         */
-        void loop(); 
-
-        /** Suspends the app. 
-         
-            For apps that support suspending, the method should be overriden and the app should free as much memory as possible. 
-         */
-        virtual void suspend() {
-            ASSERT(suspended_ == false);
-            suspended_ = true;
-        }
-
-        virtual void resume() {
-            ASSERT(suspended_ == true);
-            suspended_ = false;
-        }
+        virtual void run();
 
         virtual void save([[maybe_unused]] WriteStream & into) {
             LOG(LL_ERROR, "Saving application state not supported");
@@ -42,21 +26,33 @@ namespace rckid {
 
     protected:
 
-        /** Called when the application gains focus, 
+        /** Called when the application should gain focus. 
          
-            i.e. its update & draw methods start being called. This is either after the app is created and before it starts running, or if it was superseded by another app, when that app exitted.  
+            There can only be one focused app at a time. When the app gains focus, it first blurs existing app. If there is existing app, it will become parent of the current app. Then the app resumes own state if suspended and finally sets itself as the focused app. 
          */
-        virtual void onFocus() {}
+        virtual void focus() {
+            // if parent is null, then this is new app that is replacing current app (if any). This is called from the run() loop so we should call blur of current app and set our parent to it. Then install ourselves as the current app. 
+            if (parent_ == nullptr) {
+                parent_ = app_;
+                if (app_ != nullptr)
+                    app_->blur();
+            }
+            // otherwise we are the current app and simply should focus ourselves, so continue with setting ourselves as the app and resuming
+            app_ = this;
+        }
 
-        /** Called when the application is about to loose focus.
+        /** Called when the application should loose focus. 
          
-            i.e. no upate or draw methods will be called after the application blurs. This can happen when either the app exits, or if it is superseded by another app. 
+            When loosing focus the app should clear all its resources that can be easily recreated when focused again. 
          */
-        virtual void onBlur() {}
+        virtual void blur() {
+            // there are two cases when blur occurs - when we are suspending current ap to launch a new child app, in which case the app_ points to the current app. This happens via focus() of the child and so we just blur ourselves and do nothing. Otherwise if the app is empty, we are closing this app and should terefore focus the parent app 
+            if (app_ == nullptr)
+                parent_->focus();
+        }
 
         /** */
         virtual void update() {
-
         }
 
         /** Method responsible for drawing the app contents on the screen. 
@@ -67,24 +63,24 @@ namespace rckid {
 
     private:
 
-        bool suspended_ = false;
-        BaseApp * parent_ = nullptr;
+        App * parent_ = nullptr;
 
-        static inline BaseApp * app_ = nullptr;
+        static inline App * app_ = nullptr;
 
     }; // rckid::BaseApp
 
     /** Application with Renderer that takes care of its rendering on the display.
      */
     template<typename RENDERER>
-    class App : public BaseApp {
+    class RenderableApp : public App {
     protected:
         template <typename... Args>
-        App(Args&&... args) : g_{std::forward<Args>(args)...} {
+        RenderableApp(Args&&... args) : g_{std::forward<Args>(args)...} {
         }
 
-        void onFocus() override {
+        void focus() override {
             g_.initialize();
+            App::focus();
         }
 
         void update() override {
@@ -96,8 +92,8 @@ namespace rckid {
         }
 
         RENDERER g_;
+    }; // rckid::RenderableApp
 
-    }; // rckid::App
 
 
 } // namespace rckid

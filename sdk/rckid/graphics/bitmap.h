@@ -4,6 +4,7 @@
 
 #include "../rckid.h"
 #include "../memory.h"
+#include "../app.h"
 #include "palette.h"
 #include "pixel_array.h"
 #include "font.h"
@@ -210,5 +211,8 @@ namespace rckid {
         }
 
     };
+
+    template<uint32_t BPP>
+    using BitmapApp = RenderableApp<RenderableBitmap<BPP>>;
     
 }
