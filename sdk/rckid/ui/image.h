@@ -10,8 +10,10 @@ namespace rckid::ui {
     class Image : public Widget {
     public:
 
+        /** Creates an image with empty 16bpp bitmap. 
+         */
         Image():
-            bmp2_{}, bpp_{2} {
+            bmp16_{}, bpp_{16} {
         }
     
         Image(Bitmap<2> && bmp): bmp2_{std::move(bmp)}, bpp_{2} {
@@ -51,6 +53,46 @@ namespace rckid::ui {
             return *this;
         }
 
+        Image & operator = (Bitmap<2> && bmp) {
+            clear();
+            new (&bmp2_) Bitmap<2>{std::move(bmp)};
+            bpp_ = 2;
+            w_ = bmp2_.width();
+            h_ = bmp2_.height();
+            reposition();
+            return *this;
+        }
+
+        Image & operator = (Bitmap<4> && bmp) {
+            clear();
+            new (&bmp4_) Bitmap<4>{std::move(bmp)};
+            bpp_ = 4;
+            w_ = bmp4_.width();
+            h_ = bmp4_.height();
+            reposition();
+            return *this;
+        }
+
+        Image & operator = (Bitmap<8> && bmp) {
+            clear();
+            new (&bmp8_) Bitmap<8>{std::move(bmp)};
+            bpp_ = 8;
+            w_ = bmp8_.width();
+            h_ = bmp8_.height();
+            reposition();
+            return *this;
+        }
+
+        Image & operator = (Bitmap<16> && bmp) {
+            clear();
+            new (&bmp16_) Bitmap<16>{std::move(bmp)};
+            bpp_ = 16;
+            w_ = bmp16_.width();
+            h_ = bmp16_.height();
+            reposition();
+            return *this;
+        }
+
         ~Image() override {
             clear();
         }
@@ -77,6 +119,8 @@ namespace rckid::ui {
         void setRepeat(bool value) {
             repeat_ = value;
         }
+
+        uint32_t bpp() const { return bpp_; }
 
     protected:
 

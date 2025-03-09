@@ -7,6 +7,7 @@
 #include <rckid/assets/fonts/OpenDyslexic64.h>
 #include <rckid/ui/label.h>
 #include <rckid/ui/carousel.h>
+#include <rckid/ui/menu.h>
 
 using namespace rckid;
 
@@ -30,20 +31,32 @@ public:
         l->setColor(ColorRGB{255, 255, 255});
         l->setWidth(320);
         l->setHeight(50);
-        ui::Carousel * c = new ui::Carousel{};
-        c->setRect(Rect::XYWH(0, 160, 320, 80));
-        c->set(ui::Image{Bitmap<16>{PNG::fromBuffer(assets::icons_default_64::animal_2)}}, "Animal 2");
-        c->setFont(Font::fromROM<assets::OpenDyslexic64>());
-        c->moveLeft(ui::Image{Bitmap<16>{PNG::fromBuffer(assets::icons_default_64::animal_1)}}, "Animal 1");
+        ui::Menu * m = new ui::Menu{
+            new ui::Menu::ActionItem{"Action 1", assets::icons_default_64::animal_1, []() {  }},
+            new ui::Menu::ActionItem{"Action 2", assets::icons_default_64::animal_2, []() {  }},
+            new ui::Menu::ActionItem{"Action 3", assets::icons_default_64::animal_3, []() {  }},
+        };
+        c_ = new ui::CarouselMenu{m};
+        c_->setRect(Rect::XYWH(0, 160, 320, 80));
+        //c->set(ui::Image{Bitmap<16>{PNG::fromBuffer(assets::icons_default_64::animal_2)}}, "Animal 2");
+        c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
+        //c->moveLeft(ui::Image{Bitmap<16>{PNG::fromBuffer(assets::icons_default_64::animal_1)}}, "Animal 1");
         g_.add(p1);
         g_.add(p2);
         //g_.add(img);
         g_.add(l);
-        g_.add(c);
+        g_.add(c_);
         g_.setRect(Rect::WH(320, 240));
     }
 
     static void run() { DisplayUIApp t; t.loop(); }
+
+    void update() override {
+        App::update();
+        c_->processEvents();
+    }
+
+    ui::CarouselMenu * c_;
 
 }; // DisplayUIApp
 

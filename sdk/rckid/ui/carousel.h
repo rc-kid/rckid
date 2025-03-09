@@ -16,6 +16,13 @@ namespace rckid::ui {
      */
     class Carousel : public Widget {
     public:
+        enum class Transition {
+            None,
+            Left,
+            Right,
+            Up,
+            Down,
+        };
 
         static constexpr Coord iconToTextSpacerPx = 5;
         static constexpr uint32_t defaultTransitionTimeMs = 500;
@@ -42,35 +49,25 @@ namespace rckid::ui {
             repositionElements(bImg_, bText_);
         } 
 
-        void set(Image icon, std::string text) {
-            set(std::move(icon), std::move(text), aImg_, aText_);
-        }
-
-        void moveLeft(Image && icon, std::string text) {
-            set(std::move(icon), std::move(text), bImg_, bText_);
-            setEffect(Btn::Left);
-        }
-
-        void moveRight(Image && icon, std::string text) {
-            set(std::move(icon), std::move(text), bImg_, bText_);
-            setEffect(Btn::Right);
-        }
-
-        void moveUp(Image && icon, std::string text) {
-            set(std::move(icon), std::move(text), bImg_, bText_);
-            setEffect(Btn::Up);
-        }
-
-        void moveDown(Image && icon, std::string text) {
-            set(std::move(icon), std::move(text), bImg_, bText_);
-            setEffect(Btn::Down);
+        void set(Image icon, std::string text, Transition transition = Transition::None) {
+            if (transition == Transition::None) {
+                aImg_ = std::move(icon);
+                aText_.setText(text);
+                repositionElements(aImg_, aText_);
+            } else {
+                bImg_ = std::move(icon);
+                bText_.setText(text);
+                repositionElements(bImg_, bText_);
+            }
+            setTransition(transition);
         }
 
         void update() override {
-            if (dir_ == Btn::Home)
+            if (dir_ == Transition::None)
                 return;
             if (a_.update()) {
-                dir_ = Btn::Home;
+                dir_ = Transition::None;
+                a_.stop();
                 aImgOffset_ = 0;
                 aTextOffset_ = 0;
                 std::swap(aImg_, bImg_);
@@ -81,19 +78,27 @@ namespace rckid::ui {
         }
 
     protected:
+
+        void set(Menu::Item const & item, Transition transition = Transition::None) {
+            if (transition == Transition::None) {
+                aImg_ = item.icon();
+                aText_.setText(item.text());
+                repositionElements(aImg_, aText_);
+            } else {
+                bImg_ = item.icon();
+                bText_.setText(item.text());
+                repositionElements(bImg_, bText_);
+            }
+            setTransition(transition);
+        }
+
         void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) override {
             renderChild(& aImg_, column, buffer, starty, numPixels, Point(aImgOffset_, 0));
             renderChild(& aText_, column, buffer, starty, numPixels, Point(aTextOffset_, 0));
-            if (dir_ != Btn::Home) {
+            if (dir_ != Transition::None) {
                 renderChild(& bImg_, column, buffer, starty, numPixels, Point(bImgOffset_, 0));
                 renderChild(& bText_, column, buffer, starty, numPixels, Point(bTextOffset_, 0));
             }
-        }
-
-        void set(Image && icon, std::string &&text, Image & imgInto, Label & labelInto) {
-            imgInto = std::move(icon);
-            labelInto.setText(text);
-            repositionElements(imgInto, labelInto);
         }
 
         void repositionElements(Image & imgInto, Label & labelInto) {
@@ -106,39 +111,43 @@ namespace rckid::ui {
             labelInto.setPos(x, (height() - labelInto.font().size) / 2);
         }
 
-        void setEffect(Btn effect) {
-            dir_ = effect;
+        void setTransition(Transition transition) {
+            dir_ = transition;
             aImgOffset_ = 0;
             aTextOffset_ = 0;
-            a_.startContinuous();
-            updateOffsets();
+            if (transition != Transition::None) {
+                a_.startContinuous();
+                updateOffsets();
+            } else {
+                a_.stop();
+            }
         }
 
         void updateOffsets() {
             switch (dir_) {
                 // new item is coming from left, old goes to right
-                case Btn::Left:
+                case Transition::Left:
                     aImgOffset_ = interpolation::linear(a_, 0, width()).round();
                     aTextOffset_ = aImgOffset_ * 2;
                     bTextOffset_ = interpolation::linear(a_, -width(), 0).round();
                     bImgOffset_ = bTextOffset_ * 2;
                     break;
                 // new item is coming from right, old goes to left
-                case Btn::Right:
+                case Transition::Right:
                     aTextOffset_ = interpolation::linear(a_, 0, -width()).round();
                     aImgOffset_ = aTextOffset_ * 2;
                     bImgOffset_ = interpolation::linear(a_, width(), 0).round();
                     bTextOffset_ = bImgOffset_ * 2;
                     break;
                 // new item is coming from sides, old goes down
-                case Btn::Up:
+                case Transition::Up:
                     aTextOffset_ = interpolation::linear(a_, 0, height()).round();
                     aImgOffset_ = aTextOffset_;
                     bTextOffset_ = interpolation::linear(a_, width(), 0).round();
                     bImgOffset_ = - bTextOffset_;
                     break;
                 // new item is coming the bottom, old goes to the sides
-                case Btn::Down:
+                case Transition::Down:
                     aTextOffset_ = interpolation::linear(a_, 0, width()).round();
                     aImgOffset_ = - aTextOffset_;
                     bTextOffset_ = interpolation::linear(a_, height(), 0).round();
@@ -155,12 +164,12 @@ namespace rckid::ui {
         Image bImg_;
         Label bText_;
 
-        Btn dir_ = Btn::Home;
+        Transition dir_ = Transition::None;
         Coord aImgOffset_;
         Coord aTextOffset_;
         Coord bImgOffset_;
         Coord bTextOffset_;
-        Timer a_{defaultTransitionTimeMs * 10};
+        Timer a_{defaultTransitionTimeMs};
     }; // rckid::ui::Carousel
 
 
@@ -170,64 +179,55 @@ namespace rckid::ui {
     class CarouselMenu : public Carousel {
     public:
 
-        CarouselMenu(Menu * m):
-            menu_{m} {
-            if (m->size() > 0) {
-                set(menu()[0].icon(), menu.item(0)->text());
-            }
+        CarouselMenu(Menu * m) {
+            setMenu(m);
         }
 
         Menu const * menu() const { return menu_; }
-        void setMenu(Menu * m) {
-            // TODO
+
+        uint32_t index() const { return i_; }
+
+        void setMenu(Menu * m, Transition transition = Transition::None) {
+            Heap::tryFree(menu_);
+            menu_ = m;
+            if (menu_ == nullptr || menu_->size() == 0)
+                return;
+            set((*menu_)[0], transition);
         }
-
-        /*
-        CarouselMenu(Menu * m):
-            menu_{m} {
-            if (m->size() > 0) {
-                set(menu()[0].icon(), menu.item(0)->text());
-            }
-        }
-
-        Menu const & menu() const { return * menu_; }
-
-        Menu & menu() { return * menu_; }
 
         void moveLeft() {
-            if (menu_->size() == 0)
+            if (menu_ == nullptr || menu_->size() == 0)
                 return;
-            menu_->moveLeft();
-            moveLeft(menu_->item(0)->icon(), menu_->item(0)->text());
+            i_ = (i_ + menu_->size() - 1) % menu_->size();
+            set((*menu_)[i_], Transition::Left);
         }
 
         void moveRight() {
-            if (menu_->size() == 0)
+            if (menu_ == nullptr || menu_->size() == 0)
                 return;
-            menu_->moveRight();
-            moveRight(menu_->item(0)->icon(), menu_->item(0)->text());
+            i_ = (i_ + 1) % menu_->size();
+            set((*menu_)[i_], Transition::Right);
         }
 
-        void moveUp() {
-            if (menu_->size() == 0)
+        /** Processes the left and right menu transitions. 
+         */
+        void processEvents() override {
+            // if there is no menu, don't do anything
+            if (menu_ == nullptr || menu_->size() == 0)
                 return;
-            menu_->moveUp();
-            moveUp(menu_->item(0)->icon(), menu_->item(0)->text());
-        }
-
-        void moveDown() {
-            if (menu_->size() == 0)
+            // if we have ongoing animation, don't do anything
+            if (! idle())
                 return;
-            menu_->moveDown();
-            moveDown(menu_->item(0)->icon(), menu_->item(0)->text());
+            if (btnDown(Btn::Left))
+                moveLeft();
+            if (btnDown(Btn::Right))
+                moveRight();
         }
-        */
-
-
 
     private:
 
-        Menu * menu_;
+        Menu * menu_ = nullptr;
+        uint32_t i_ = 0;
 
     }; // rckid::ui::CarouselMenu
 
