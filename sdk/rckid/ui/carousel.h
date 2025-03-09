@@ -170,6 +170,18 @@ namespace rckid::ui {
     class CarouselMenu : public Carousel {
     public:
 
+        CarouselMenu(Menu * m):
+            menu_{m} {
+            if (m->size() > 0) {
+                set(menu()[0].icon(), menu.item(0)->text());
+            }
+        }
+
+        Menu const * menu() const { return menu_; }
+        void setMenu(Menu * m) {
+            // TODO
+        }
+
         /*
         CarouselMenu(Menu * m):
             menu_{m} {
@@ -216,6 +228,7 @@ namespace rckid::ui {
     private:
 
         Menu * menu_;
+
     }; // rckid::ui::CarouselMenu
 
 } // namespace rckid::ui

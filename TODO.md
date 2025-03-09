@@ -1,6 +1,8 @@
 # TODO
 
 
+- create a string class that allows storing char const * or std::string like, something like owning string_view
+
 - serialize & deserialize vs load & save
 - how to do menus & widgets for menu displaying
 
