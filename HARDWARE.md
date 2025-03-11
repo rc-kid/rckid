@@ -334,6 +334,10 @@ All pins are used (48), but in mkIII with FPC display connector, there is theore
 
 Further details of how the HW requirements for the chip should look can be found in [HW Design Notes](datasheets/hardware-design-with-rp2350.pdf).
 
+### USB
+
+Using jlcpcb impedance calculator and 1mm thick board with coplanar differential pair (coplanar because it is bordered by GND on the top layer as well), we get trace spacing of 0.2mm, trace to ground spacing of 0.254mm and trace width of 0.156mm for the USB required 90 Ohm impedance.
+
 ### SD Card
 
 > TODO card presence check
