@@ -41,8 +41,10 @@ INS(0x0f, 0,0,0,C, 1, 4 , "rrca", { A = rrc8(A); })
  */
 INS(0x10, _,_,_,_, 2, 4 , "stop n8", {
     mem8(PC++);
-    if (terminateAfterStop_)
+    if (terminateAfterStop_) {
+        exit();
         return;
+    }
 })
 INS(0x11, _,_,_,_, 3, 12, "ld de, n16", { DE = mem16(PC); PC += 2; })
 INS(0x12, _,_,_,_, 1, 8 , "ld [de], a", { memWr8(DE, A); })
@@ -200,6 +202,7 @@ INS(0x73, _,_,_,_, 1, 8 , "ld [hl], e", { memWr8(HL, E); })
 INS(0x74, _,_,_,_, 1, 8 , "ld [hl], h", { memWr8(HL, H); })
 INS(0x75, _,_,_,_, 1, 8 , "ld [hl], l", { memWr8(HL, L); })
 INS(0x76, _,_,_,_, 1, 4 , "halt", {
+    while(true) {};
     UNIMPLEMENTED;
 })
 INS(0x77, _,_,_,_, 1, 8 , "ld [hl], a", { memWr8(HL, A); })

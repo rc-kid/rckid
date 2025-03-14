@@ -48,7 +48,8 @@ namespace rckid {
         virtual void blur() {
             // there are two cases when blur occurs - when we are suspending current ap to launch a new child app, in which case the app_ points to the current app. This happens via focus() of the child and so we just blur ourselves and do nothing. Otherwise if the app is empty, we are closing this app and should terefore focus the parent app 
             if (app_ == nullptr)
-                parent_->focus();
+                if (parent_ != nullptr)
+                    parent_->focus();
         }
 
         /** */
@@ -60,6 +61,10 @@ namespace rckid {
             While the method runs, 
          */
         virtual void draw() = 0;
+
+        /** Exits the app. The app does not exit immediately, but the next time its run method starts a new frame cycle. 
+         */
+        void exit() { app_ = nullptr;}
 
     private:
 

@@ -110,6 +110,11 @@ static constexpr uint8_t STAT_INT_MODE1 = 1 << 4;
 static constexpr uint8_t STAT_INT_MODE2 = 1 << 5;
 static constexpr uint8_t STAT_INT_LYC = 1 << 6;
 
+
+/** Scroll X and scroll Y values for the background layer. 
+ 
+    The values can be from 0 to 255, which corresponds to 32x32 tilemap of 8x8 tile sizes. Both SCX and SCY wrap around their limits independently. 
+ */
 #define IO_SCY (hram_[0x42])
 #define IO_SCX (hram_[0x43])
 
@@ -118,8 +123,26 @@ static constexpr uint8_t STAT_INT_LYC = 1 << 6;
     Contains the current coordinate of the LCD renderer. 0 to 143 is active renderering, 144 to 153 is VBLANK.  
  */
 #define IO_LY (hram_[0x44])
+
+/** LY compare
+ 
+    When the LY value becomes identical to the LYC value, the STAT bit 2 (LYC == LY) is set and an interrupt can be triggered if enabled. 
+ */
 #define IO_LYC (hram_[0x45])
 #define IO_DMA (hram_[0x46])
+
+/** DMG palette register. Contains color indices for the 4 available colors. 
+ 
+    bits:            7 6 | 5 4 | 3 2 | 1 0
+    pallete indices: -3- | -2- | -1- | -0-
+    
+    The values in the palette indices correspond to the following colors:
+
+    00 = White 
+    01 = Light Gray (green really)
+    02 = Dark Gray
+    03 = Black
+ */
 #define IO_BGB (hram_[0x47])
 #define IO_OBP0 (hram_[0x48])
 #define IO_OBP1 (hram_[0x49])
@@ -176,7 +199,8 @@ namespace rckid::gbcemu {
             a.alloc<uint8_t>(0x1000)
         },
         oam_{a.alloc<uint8_t>(160)},
-        hram_{a.alloc<uint8_t>(256)} {
+        hram_{a.alloc<uint8_t>(256)},
+        pixels_{320,a} {
     }
 
     GBCEmu::~GBCEmu() {
@@ -191,6 +215,37 @@ namespace rckid::gbcemu {
             Heap::tryFree(eram_[i]);
         // TODO some more cleanup would be good here
     }
+
+    void GBCEmu::run() {
+        // set the current app in focus. If there is previous app, it will be blurred. The focus method also updates the parent app so that we can go back with the apps
+        focus();
+
+        runCPU();
+        /*
+        // now run the app
+        while (app_ == this) {
+            tick();
+            update();
+            displayWaitUpdateDone();
+            draw();
+        }
+        */
+        // we are done, should blur ourselves, and refocus parent (if any)
+        blur();
+    }
+
+    void GBCEmu::focus() {
+        App::focus();
+        // set the display to row-first mode, which is what gameboy is expecting and set the resolution to 160x144
+        // TODO this should be changed to some scaling ideally
+        displaySetRefreshDirection(DisplayRefreshDirection::RowFirst);
+        displaySetUpdateRegion(Rect::Centered(160, 144, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT));
+    }
+
+    void GBCEmu::blur() {
+        App::blur();
+    }
+
 
     void GBCEmu::update() {
         // TODO what to do with update? 
@@ -236,10 +291,43 @@ namespace rckid::gbcemu {
         // and reset counters
         cycles_ = 0;
         totalCycles_ = 0;
+        // set the initial values for the IO registers
+        IO_LY = 0; // ensure we'll start with new frame
     }
 
-    void GBCEmu::run(bool terminateAfterStop) {
-        terminateAfterStop_ = terminateAfterStop;
+    void GBCEmu::runCPU() {
+        disassemble(0, 0x100);
+        PC = 0;
+        while (true) {
+            renderLine();
+            while (cycles_ < 456) {
+                if (PC > 16)
+                    totalCycles_ += 1;
+                uint8_t opcode = mem8(PC++);
+                switch (opcode) {
+                    #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
+                    case OPCODE: \
+                        LOG(LL_ERROR, pc_ << ": " << MNEMONIC); \
+                        cycles_ += CYCLES; \
+                        if (val_ ## FLAG_Z != -1) setFlagZ(val_ ## FLAG_Z); \
+                        if (val_ ## FLAG_N != -1) setFlagN(val_ ## FLAG_N); \
+                        if (val_ ## FLAG_H != -1) setFlagH(val_ ## FLAG_H); \
+                        if (val_ ## FLAG_C != -1) setFlagC(val_ ## FLAG_C); \
+                        __VA_ARGS__ \
+                        break;
+                    #include "insns.inc.h"
+                    default:
+                        ASSERT("Unsupported opcode");
+                        break;
+                };
+            }
+            cycles_ -= 456;
+        }
+        /*
+        for (int i = 0; i < 144; ++i)
+            renderLine();
+        while (true) {};
+        return;
         while (true) {
             uint8_t opcode = mem8(PC++);
             switch (opcode) {
@@ -258,6 +346,26 @@ namespace rckid::gbcemu {
                     break;
             };
         }
+        */
+    }
+
+    void GBCEmu::disassemble(uint16_t start, uint16_t end) {
+        for (uint16_t i = start; i < end; ) {
+            uint8_t opcode = mem8(i);
+            switch (opcode) {
+                #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
+                case OPCODE: \
+                    LOG(LL_ERROR, i << ": " << MNEMONIC); \
+                    i += SIZE; \
+                    break;
+                #include "insns.inc.h"
+                default:
+                    LOG(LL_ERROR, i << ": ??? " << opcode);
+                    ASSERT("Unsupported opcode");
+                    i += 1;
+                    break;
+            };
+        }
     }
 
     void GBCEmu::setMode(unsigned mode) {
@@ -272,6 +380,7 @@ namespace rckid::gbcemu {
         }
     }
     
+    /** Special function for setting the LY  */
     void GBCEmu::setLY(uint8_t value) {
         IO_LY = value;
         if (value == 144)
@@ -286,15 +395,61 @@ namespace rckid::gbcemu {
         }
     }
     
-    void GBCEmu::render(uint32_t & dots) {
-        while (dots >= DOTS_PER_LINE) {
-            /*
-            size_t y = IO_LY;
-            for (size_t x = 0; x < 160; ++x) {
-    
+    /** TODO this is the simplest rendering possible where we just render the entire line. 
+     */
+    void GBCEmu::renderLine() {
+        // get the line we will be drawing now
+        uint8_t ly = IO_LY;
+        setLY(ly == 153 ? 0 : ly + 1);
+        // don't do anything in VBlank
+        if (ly >= 144)
+            return;
+
+        // TODO determine which sprites to use
+
+        // calculate the background position we will be drawing. This is the position to the 256x256 background map created by 32x32 tiles. Using the uint8_t values for the coordinates gives us the automatic wraparound
+        uint8_t by = ly + IO_SCY;
+        uint8_t bx = IO_SCX;
+        // determine the row of tiles we will be using and the row of inside the tile (this stays the same for the entire line)
+        uint32_t ty = by / 8;
+        uint32_t tr = by % 8;
+        uint8_t tx = bx / 8;
+        // determine tilemap address, which too stays the same for the entire line, we can also add the line offset
+        uint16_t tilemapAddress = (IO_LCDC & 0x08) ? 0x9c00 : 0x9800;
+        tilemapAddress += ty * 32; 
+        // and determine the tileset address
+        uint16_t tilesetAddress = (IO_LCDC & 0x10) ? 0x8000 : 0x9000;
+
+        // and figure out the palette we will be using for the row
+        uint16_t palette[4];
+        // TODO fill the palette from IO_BGB
+        palette[0] = 0xf0f0;
+        palette[1] = 0x6666;
+        palette[2] = 0xaaaa;
+        palette[3] = 0xffff;
+
+        // render the pixels now, we keep x as the current x coordinate on the screen
+        int16_t x = - (8 - (bx % 8)) & 0x7;
+        while (x < 160) {
+            // determine which tile we are using
+            // TODO for CGB we also need to determine the tile attributes 
+            uint8_t tileIndex = mem8(tilemapAddress + tx);
+            uint16_t tileRow = mem16(tilesetAddress + tileIndex * 16 + tr * 2);
+            // we have the tile pixels, figure out the palette indices, the tile pixels are 2 bits each in 2 panes so we need to first put them together
+            uint8_t upper = tileRow >> 8;
+            uint8_t lower = tileRow & 0xff;
+            for (int i = 7; i >= 0; --i) {
+                uint8_t colorIndex = ((upper >> i) & 1) | (((lower >> i) & 1) << 1);
+                // TODO render the pixel
+                // displaySetPixel(x, ly, palette[colorIndex]);
+                if (x >= 0 && x < 160)
+                    pixels_.front()[x] = palette[colorIndex];
+                ++x;
             }
-            */
         }
+        displayUpdate(pixels_.front(), 160);
+        pixels_.swap();
+
     }
 
     void GBCEmu::setRomPage(uint32_t page) {
@@ -453,7 +608,7 @@ namespace rckid::gbcemu {
         uint32_t page = addr >> 12;
         uint32_t offset = addr & 0xfff;
         if (page < 8) {
-            UNIMPLEMENTED;
+            //UNIMPLEMENTED;
             // TODO bank switching
         } else if (page != 15) {
             memMap_[page][offset] = value;

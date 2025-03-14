@@ -33,6 +33,8 @@
 - [X] order the displays (test batch first)
 - [ ] pcb board for the battery connector - can be inside the speaker hole perhaps
 
+
+- JLCPCB offers 3d printing as well - perhaps I can use it to print stuff from nicer materials such as transparent faceplate or even the case, etc. 
 # PCB
 
 - R125 (ilim for PMIC is wrong value)
