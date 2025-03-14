@@ -49,6 +49,7 @@ add_compile_definitions("RCKID_BACKEND_${RCKID_BACKEND}")
 # setup general include directories
 include_directories("sdk")
 include_directories("libs")
+include_directories("gbcemu")
 
 # Add 3rd party libraries (note that these are part of the repo as they often required changes to be made)
 add_subdirectory("libs/PNGdec")

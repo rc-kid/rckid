@@ -23,3 +23,10 @@ link_with_librckid(display-png)
 add_executable(display-ui "display_ui.cpp")
 link_with_librckid(display-ui)
 
+# simple gbc emu app test
+# TODO might delete this when no longer needed
+add_executable(gbcemu-app "gbcemu_app.cpp")
+target_link_libraries(gbcemu-app PRIVATE libgbcemu)
+link_with_librckid(gbcemu-app)
+
+

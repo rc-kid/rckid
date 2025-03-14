@@ -25,6 +25,8 @@ namespace rckid::gbcemu {
 
         ~GBCEmu() override;
 
+        void run() override;
+
         void save([[maybe_unused]] WriteStream & into) override {
             UNIMPLEMENTED;
         }
@@ -37,14 +39,12 @@ namespace rckid::gbcemu {
          */
         void loadCartridge(GamePak * game);
 
-
-        void run(bool terminateAtStop = false);
-
-
-
-
         /** Test interface
          */
+
+        bool terminateAfterStop() const { return terminateAfterStop_; }
+        void setTerminateAfterStop(bool value) { terminateAfterStop_ = value; }
+
         uint32_t elapsedCycles() const { return cycles_ + totalCycles_; }
 
         uint8_t a() const { return regs8_[REG_INDEX_A]; }
@@ -81,12 +81,16 @@ namespace rckid::gbcemu {
             return hram_[offset + 128];
         }
 
+        /** Disassembles the given section on memory as assembly instructions. 
+         */
+        void disassemble(uint16_t start, uint16_t end);
+
     protected:
 
+        void focus() override;
+        void blur() override;
         void update() override;
-
         void draw() override;
-
 
     private:
 
@@ -281,11 +285,19 @@ namespace rckid::gbcemu {
         static constexpr uint32_t DOTS_PER_LINE = 456;
 
         void setMode(unsigned mode);
+        
         /** Sets the Y LCD coordinate (currently drawn row)
          */
         void setLY(uint8_t value);
-        void render(uint32_t & dots);
+
+        /** Graphics rendering for a single line.
+         */
+        void renderLine();
         //@}
+
+        /** \name CPU 
+         */
+        void runCPU(); 
 
         // Current gamepak
         GamePak * gamepak_ = nullptr;
@@ -301,6 +313,8 @@ namespace rckid::gbcemu {
 
         // when true, the stop instruction terminates the program, useful for debugging & testing
         bool terminateAfterStop_ = false;
+
+        DoubleBuffer<uint16_t> pixels_;
 
     }; // rckid::gbcemu::GBCEmu
 

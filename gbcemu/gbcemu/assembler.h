@@ -226,7 +226,7 @@
 // 0xdd not used
 #define SBC_A_imm8(IMM)         0xde, IMM
 #define RST_18                  0xdf
-#define LDH_ptr8_A(IMM)          0xe0, IMM
+#define LDH_ptr8_A(IMM)         0xe0, IMM
 #define POP_HL                  0xe1
 #define LD_ptrC_A               0xe2
 // 0xe3 not used
@@ -256,7 +256,7 @@
 #define EI                      0xfb
 // 0xfc not used
 // 0xfd not used
-#define CP_A_imm8(ABS)          0xfe
+#define CP_A_imm8(IMM)          0xfe, IMM
 #define RST_38                  0xff
 
 // extended instructions
