@@ -1,6 +1,6 @@
 #include <rckid/rckid.h>
 #include <gbcemu/gbcemu.h>
-#include <gbcemu/bootloader.h>
+#include <gbcemu/../tests/bootloader.h>
 #include <gbcemu/gamepak.h>
 
 using namespace rckid;
