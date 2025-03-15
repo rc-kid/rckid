@@ -24,6 +24,9 @@
 #endif
 #endif
 
+#define LL_GBCEMU_INS 1
+#define LL_GBCEMU_SERIAL 1
+
 namespace rckid {
 
     /** Returns writer intended for debugging purposes.

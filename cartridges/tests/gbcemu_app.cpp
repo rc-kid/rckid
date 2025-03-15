@@ -1,6 +1,7 @@
 #include <rckid/rckid.h>
 #include <gbcemu/gbcemu.h>
 #include <gbcemu/../tests/bootloader.h>
+#include <gbcemu/../tests/roms/blargg_cpu_instrs.h>
 #include <gbcemu/gamepak.h>
 
 #include <rckid/assets/fonts/OpenDyslexic64.h>
@@ -51,7 +52,9 @@ int main() {
     while (true) {
         Arena::enter();
         auto app = gbcemu::GBCEmu{Arena::allocator()};
-        app.loadCartridge(new gbcemu::FlashGamePak{gbcemu::DMGBootloader});
+        //app.loadCartridge(new gbcemu::FlashGamePak{gbcemu::DMGBootloader});
+        app.loadCartridge(new gbcemu::FlashGamePak{rckid::gbcemu::rom::blargg::instrs::op_sp_hl});
+        //app.loadCartridge(new gbcemu::FileGamePak("/mnt/c/delete/testrom.gb"));
         app.setTerminateAfterStop(true);
         uint32_t t = uptimeUs();
         app.run();
