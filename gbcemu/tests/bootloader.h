@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "assembler.h"
+#include "../gbcemu/assembler.h"
 
 namespace rckid::gbcemu {
 

@@ -88,7 +88,9 @@ namespace rckid {
         int updateX = 0;
         int updateY = 0;
         size_t updating = 0;
-        std::chrono::steady_clock::time_point lastVSyncTime;        
+        std::chrono::steady_clock::time_point lastVSyncTime;   
+        size_t pixelsSent = 0;
+        size_t frameSize =  320 * 240;     
     }
 
     namespace audio {
@@ -293,6 +295,8 @@ namespace rckid {
             default:
                 UNREACHABLE;
         }
+        display::pixelsSent = 0;
+        display::frameSize = display::rect.width() * display::rect.height();
     }
 
     DisplayRefreshDirection displayRefreshDirection() {
@@ -323,6 +327,7 @@ namespace rckid {
 
     void displaySetUpdateRegion(Coord width, Coord height) {
         displaySetUpdateRegion(Rect::XYWH((RCKID_DISPLAY_WIDTH - width) / 2, (RCKID_DISPLAY_HEIGHT - height) / 2, width, height));
+        
     }
 
     bool displayUpdateActive() {
@@ -352,6 +357,7 @@ namespace rckid {
 
     void displayUpdate(uint16_t const * pixels, uint32_t numPixels) {
         ++display::updating;
+        display::pixelsSent += numPixels;
         // update the pixels in the internal framebuffer
         while (numPixels != 0) {
             ColorRGB c = ColorRGB::fromRaw16(*pixels++);
@@ -387,7 +393,10 @@ namespace rckid {
             }
             display::updating = 0;
             display::callback = nullptr;
-            displayDraw();
+            if (display::pixelsSent >= display::frameSize) {
+                display::pixelsSent -= display::frameSize;
+                displayDraw();
+            }
         }
     }
 
