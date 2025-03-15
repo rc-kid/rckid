@@ -9,15 +9,18 @@ namespace rckid::gbcemu {
         This is the copy of the gameboy bootloader, which is a very simple test program that can be used to verify the emulator's absolute basics.
      */
     constexpr uint8_t DMGBootloader[] = {
-        LD_SP_imm16(0xfffe),    // $0000  Setup Stack
-        XOR_A_A,                // $0003  Zero the memory from $8000-$9FFF (VRAM)
-        LD_HL_imm16(0x9fff),    // $0004
+        LD_SP_imm16(0xfffe),    // $0000  Setup Stack so that we can call functions
+
+        // now we are going to zero the memory from 0x8000 to 0x9ffff (VRAM)
+        XOR_A_A,                // $0003  set a to 0
+        LD_HL_imm16(0x9fff),    // $0004 load the upper address to HL
         // 0x0007
-        LD_decHL_A,             // $0007
-        BIT_H(7),               // $0008
+        LD_decHL_A,             // $0007 store A (0) to HL, and decrement HL
+        BIT_H(7),               // $0008 check if HL is below 0x8000
         JR_NZ(-5 /*0x0007*/),   // $000a
 
-        LD_HL_imm16(0xff26),    // $000c  Setup Audio
+        // audio setup
+        LD_HL_imm16(0xff26),    // $000c
         LD_C_imm8(0x11),        // $000f
         LD_A_imm8(0x80),        // $0011
         LD_decHL_A,             // $0013
@@ -29,9 +32,12 @@ namespace rckid::gbcemu {
         LD_A_imm8(0x77),        // $001a
         LD_ptrHL_A,             // $001c
 
+        // sets up palette for the bacground layer
         LD_A_imm8(0xfc),        // $001d  Setup BG palette
         LDH_ptr8_A(0x47),       // $001f
+
         LD_DE_imm16(0x0104),    // $0021  Convert and load logo data from cart into Video RAM
+        
         LD_HL_imm16(0x8010),    // $0024
         // 0x0027
         LD_A_ptrDE,             // $0027
@@ -40,7 +46,7 @@ namespace rckid::gbcemu {
         INC_DE,                 // $002e
         LD_A_E,                 // $002f
         CP_A_imm8(0x34),        // $0030
-        JR_NZ(-1 /*0x0027*/),   // $0032
+        JR_NZ(-13 /*0x0027*/),  // $0032
 
         LD_DE_imm16(0x00d8),    // $0034  Load 8 additional bytes into Video RAM
         LD_B_imm8(0x08),        // $0037
@@ -134,17 +140,16 @@ namespace rckid::gbcemu {
         INC_HL,                 // $00a6
         RET,                    // $00a7
 
+
         // 0x00a8
         // Nintendo Logo
         0xce, 0xed, 0x66, 0x66, 0xcc, 0x0d, 0x00, 0x0b, 0x03, 0x73, 0x00, 0x83, 0x00, 0x0c, 0x00, 0x0d,
         0x00, 0x08, 0x11, 0x1f, 0x88, 0x89, 0x00, 0x0e, 0xdc, 0xcc, 0x6e, 0xe6, 0xdd, 0xdd, 0xd9, 0x99,
         0xbb, 0xbb, 0x67, 0x63, 0x6e, 0x0e, 0xec, 0xcc, 0xdd, 0xdc, 0x99, 0x9f, 0xbb, 0xb9, 0x33, 0x3e,
-
         // 0x00d8
         // More video data
         0x3c, 0x42, 0xb9, 0xa5, 0xb9, 0xa5, 0x42, 0x3c,
 
-        STOP(0),
         // Nintendo logo comparison routine
         // 0x00e0
         LD_HL_imm16(0x0104),    // $00e0  point HL to Nintendo logo in cart
@@ -171,7 +176,15 @@ namespace rckid::gbcemu {
                                 //  ... lock up 
 
         LD_A_imm8(0x01),        // $00fc
-        LD_ptr16_A(0xff50),     // $00fe  turn off DMG rom
+        LDH_ptr8_A(0x50),       // $00fe  turn off DMG rom
                                 // and continue to the game    
+        // 0x0100
+        JP(0x0000),             // $0100 (the default cartridge start, jump to the beginning of the bootstrap)
+        0x00,                   // $1003 // padding
+        // 0x0104 
+        // Nintendo Logo - cartridge version
+        0xce, 0xed, 0x66, 0x66, 0xcc, 0x0d, 0x00, 0x0b, 0x03, 0x73, 0x00, 0x83, 0x00, 0x0c, 0x00, 0x0d,
+        0x00, 0x08, 0x11, 0x1f, 0x88, 0x89, 0x00, 0x0e, 0xdc, 0xcc, 0x6e, 0xe6, 0xdd, 0xdd, 0xd9, 0x99,
+        0xbb, 0xbb, 0x67, 0x63, 0x6e, 0x0e, 0xec, 0xcc, 0xdd, 0xdc, 0x99, 0x9f, 0xbb, 0xb9, 0x33, 0x3e,
     };
 } // namespace rckid::gbcemu

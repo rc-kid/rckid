@@ -85,6 +85,12 @@ namespace rckid::gbcemu {
          */
         void disassemble(uint16_t start, uint16_t end);
 
+        void clearTilemap();
+        void setTilemap(uint32_t x, uint32_t y, uint8_t tile);
+
+        void clearTileset();
+        void setTile(uint8_t index, uint8_t * data);
+
     protected:
 
         void focus() override;
