@@ -210,6 +210,9 @@ namespace rckid::gbcemu {
             The memory is divided into 16 4KB blocks, with the last block being a bit more complex as it contains echo ram, oam memory, io regs and hram. Furthemore, all allocations of RAM memories are done in 4KB blocks as well to limit fragmentation due to possibly large allocatons in case of big memories. 
          */
 
+        static constexpr uint8_t MEMMAP_VRAM_0 = 8;
+        static constexpr uint8_t MEMMAP_VRAM_1 = 9;
+
         /** Reads one byte from memory. For most reads & writes this simply goes through the memmap, but there are special cases for the shorter memory blocks towards the end of the address space.
          */
         uint8_t memRd8(uint16_t addr);
@@ -243,7 +246,7 @@ namespace rckid::gbcemu {
         uint8_t mem8(uint16_t addr);
         uint16_t mem16(uint16_t addr);
 
-        uint8_t * vram_[4];
+        uint8_t * vram_[2];
         uint8_t * wram_[8];
         uint8_t * oam_ = nullptr;
         uint8_t * hram_ = nullptr;

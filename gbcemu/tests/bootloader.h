@@ -176,8 +176,9 @@ namespace rckid::gbcemu {
                                 //  ... lock up 
 
         LD_A_imm8(0x01),        // $00fc
-        LDH_ptr8_A(0x50),       // $00fe  turn off DMG rom
+        //LDH_ptr8_A(0x50),       // $00fe  turn off DMG rom
                                 // and continue to the game    
+        STOP(0),
         // 0x0100
         JP(0x0000),             // $0100 (the default cartridge start, jump to the beginning of the bootstrap)
         0x00,                   // $1003 // padding
