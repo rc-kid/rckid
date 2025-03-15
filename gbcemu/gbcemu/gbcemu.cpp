@@ -84,13 +84,21 @@ static constexpr uint8_t IF_VBLANK = 1 << 0;
     bit 7 = LCD & PPU enable / disable
     bit 6 = window tilemap area ( 0 == 0x9800 - 9bff, 1 = 0x9c00 - 0x9fff)
     bit 5 = window enable 
-    bit 4 = BG & Window tilemap area ( 0 = 0x9800 - 0x9bfff, 1 = 0x9c00 - 0x9fff)
+    bit 4 = BG & Window tile data area ( 0 = 0x8800 - 0x97ff, 1 = 0x8000 - 0x8fff)
     bit 3 = BG tilemap area ( 0 = 0x9800 - 0x9bfff, 1 = 0x9c00 - 0x9fff)
     bit 2 = OBJ size (0 = 8x8, 1 = 8x16)
     bit 1 = OBJ enable
     bit 0 = BG/Win enable / priority -- CGB Specific
  */
 #define IO_LCDC (hram_[0x40])
+static constexpr uint8_t LCDC_LCD_ENABLE = 1 << 7;
+static constexpr uint8_t LCDC_WINDOW_TILEMAP = 1 << 6;
+static constexpr uint8_t LCDC_WINDOW_ENABLE = 1 << 5;
+static constexpr uint8_t LCDC_BG_WIN_TILEDATA = 1 << 4;
+static constexpr uint8_t LCDC_BG_TILEMAP = 1 << 3;
+static constexpr uint8_t LCDC_OBJ_SIZE = 1 << 2;
+static constexpr uint8_t LCDC_OBJ_ENABLE = 1 << 1;
+static constexpr uint8_t LCDC_BG_WIN_PRIORITY = 1 << 0;
 
 /** Status and interrupts for the LCD driver
  
@@ -143,23 +151,24 @@ static constexpr uint8_t STAT_INT_LYC = 1 << 6;
     02 = Dark Gray
     03 = Black
  */
-#define IO_BGB (hram_[0x47])
+#define IO_BGP (hram_[0x47])
 #define IO_OBP0 (hram_[0x48])
 #define IO_OBP1 (hram_[0x49])
 #define IO_WY (hram_[0x4a])
 #define IO_WX (hram_[0x4b])
 #define IO_KEY1 (hram_[0x4d])
-#define IO_WBK (hram_[0x4f])
+#define IO_VBK (hram_[0x4f])
 #define IO_HDMA1 (hram_[0x51])
 #define IO_HDMA2 (hram_[0x52])
 #define IO_HDMA3 (hram_[0x53])
 #define IO_HDMA4 (hram_[0x54])
 #define IO_HDMA5 (hram_[0x55])
 #define IO_RP (hram_[0x56])
-#define IO_BCPS_BGPI (hram_[0x68])
-#define IO_BCPD_BGPD (hram_[0x69])
-#define IO_OCPS_OCPI (hram_[0x6a])
-#define IO_OCPD_OBPD (hram_[0x6b])
+#define IO_BCPS (hram_[0x68])
+#define IO_BCPD (hram_[0x69])
+#define IO_OCPS (hram_[0x6a])
+#define IO_OCPD (hram_[0x6b])
+#define IO_SVBK (hram_[0x70])
 #define IO_PCM12 (hram_[0x76])
 #define IO_PCM34 (hram_[0x77])
 #define IO_IE (hram_[0xff])
@@ -288,16 +297,72 @@ namespace rckid::gbcemu {
         L = 0x7c;
         PC = 0x100;
         SP = 0xfffe;
+        // and IO initial values, also from CGB
+        IO_JOYP = 0xcf;
+        IO_SB = 0x00;
+        IO_SC = 0x7f;
+        // IO_DIV = 0x18; // from DMG, can't tell on CBG
+        IO_TIMA = 0x00;
+        IO_TMA = 0x00;
+        IO_TAC = 0xf8;
+        IO_IF = 0xe1;
+        IO_NR10 = 0x80;
+        IO_NR11 = 0xbf;
+        IO_NR12 = 0xf3;
+        IO_NR13 = 0xff;
+        IO_NR14 = 0xbf;
+        IO_NR21 = 0x3f;
+        IO_NR22 = 0x00;
+        IO_NR23 = 0xff;
+        IO_NR24 = 0xbf;
+        IO_NR30 = 0x7f;
+        IO_NR31 = 0xff;
+        IO_NR32 = 0x9f;
+        IO_NR33 = 0xff;
+        IO_NR34 = 0xbf;
+        IO_NR41 = 0xff;
+        IO_NR42 = 0x00;
+        IO_NR43 = 0x00;
+        IO_NR44 = 0xbf;
+        IO_NR50 = 0x77;
+        IO_NR51 = 0xf3;
+        IO_NR52 = 0xf1;
+        IO_LCDC = 0x91;
+        // IO_STAT = 0; -- can't tell
+        IO_SCY = 0;
+        IO_SCX = 0;
+        // IO_LY = 0; // can't tell
+        IO_LYC = 0;
+        IO_DMA = 0;
+        IO_BGP = 0xfc;
+        // IO_OBP0 = 0; // can't tell
+        // IO_OBP1 = 0; // can't tell
+        IO_WY = 0;
+        IO_WY = 1;
+        IO_KEY1 = 0x7e;
+        IO_VBK = 0xfe;
+        IO_HDMA1 = 0xff;
+        IO_HDMA2 = 0xff;
+        IO_HDMA3 = 0xff;
+        IO_HDMA4 = 0xff;
+        IO_HDMA5 = 0xff;
+        IO_RP = 0x3e;
+        // IO_BCPS = 0; // can't tell
+        // IO_BCPD = 0; // can't tell
+        // IO_OCPS = 0; // can't tell
+        // IO_OCPD = 0; // can't tell
+        IO_SVBK = 0xf8;
+        IO_IE = 0;
         // and reset counters
         cycles_ = 0;
         totalCycles_ = 0;
-        // set the initial values for the IO registers
+        // set the initial values for the IO registers 
         IO_LY = 0; // ensure we'll start with new frame
     }
 
     void GBCEmu::runCPU() {
-        disassemble(0, 0x100);
-        PC = 0;
+        clearTilemap();
+        clearTileset();
         while (true) {
             renderLine();
             while (cycles_ < 456) {
@@ -307,7 +372,7 @@ namespace rckid::gbcemu {
                 switch (opcode) {
                     #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
                     case OPCODE: \
-                        LOG(LL_ERROR, pc_ << ": " << MNEMONIC); \
+                        LOG(LL_GBCEMU_INS, pc_ << ": " << MNEMONIC); \
                         cycles_ += CYCLES; \
                         if (val_ ## FLAG_Z != -1) setFlagZ(val_ ## FLAG_Z); \
                         if (val_ ## FLAG_N != -1) setFlagN(val_ ## FLAG_N); \
@@ -323,30 +388,6 @@ namespace rckid::gbcemu {
             }
             cycles_ -= 456;
         }
-        /*
-        for (int i = 0; i < 144; ++i)
-            renderLine();
-        while (true) {};
-        return;
-        while (true) {
-            uint8_t opcode = mem8(PC++);
-            switch (opcode) {
-                #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
-                case OPCODE: \
-                    cycles_ += CYCLES; \
-                    if (val_ ## FLAG_Z != -1) setFlagZ(val_ ## FLAG_Z); \
-                    if (val_ ## FLAG_N != -1) setFlagN(val_ ## FLAG_N); \
-                    if (val_ ## FLAG_H != -1) setFlagH(val_ ## FLAG_H); \
-                    if (val_ ## FLAG_C != -1) setFlagC(val_ ## FLAG_C); \
-                    __VA_ARGS__ \
-                    break;
-                #include "insns.inc.h"
-                default:
-                    ASSERT("Unsupported opcode");
-                    break;
-            };
-        }
-        */
     }
 
     void GBCEmu::disassemble(uint16_t start, uint16_t end) {
@@ -355,17 +396,38 @@ namespace rckid::gbcemu {
             switch (opcode) {
                 #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
                 case OPCODE: \
-                    LOG(LL_ERROR, i << ": " << MNEMONIC); \
+                    LOG(LL_INFO, i << ": " << MNEMONIC); \
                     i += SIZE; \
                     break;
                 #include "insns.inc.h"
                 default:
-                    LOG(LL_ERROR, i << ": ??? " << opcode);
+                    LOG(LL_INFO, i << ": ??? " << opcode);
                     ASSERT("Unsupported opcode");
                     i += 1;
                     break;
             };
         }
+    }
+
+    void GBCEmu::clearTilemap() {
+        for (uint16_t i = 0x9800; i < 0x9fff; ++i)
+            memWr8(i, 0);
+    }
+
+    void GBCEmu::setTilemap(uint32_t x, uint32_t y, uint8_t tile) {
+        uint16_t tAddr = 0x9800 + y * 32 + x;
+        memWr8(tAddr, tile);
+    }
+
+    void GBCEmu::clearTileset() {
+        for (uint16_t i = 0x8000; i < 0x9800; ++i)
+            memWr8(i, 0);
+    }
+
+    void GBCEmu::setTile(uint8_t index, uint8_t * data) {
+        uint16_t tAddr = 0x8800 + index * 16;
+        for (uint16_t i = 0; i < 16; ++i)
+            memWr8(tAddr + i, data[i]);
     }
 
     void GBCEmu::setMode(unsigned mode) {
@@ -404,7 +466,6 @@ namespace rckid::gbcemu {
         // don't do anything in VBlank
         if (ly >= 144)
             return;
-
         // TODO determine which sprites to use
 
         // calculate the background position we will be drawing. This is the position to the 256x256 background map created by 32x32 tiles. Using the uint8_t values for the coordinates gives us the automatic wraparound
@@ -415,25 +476,24 @@ namespace rckid::gbcemu {
         uint32_t tr = by % 8;
         uint8_t tx = bx / 8;
         // determine tilemap address, which too stays the same for the entire line, we can also add the line offset
-        uint16_t tilemapAddress = (IO_LCDC & 0x08) ? 0x9c00 : 0x9800;
-        tilemapAddress += ty * 32; 
+        uint16_t tilemapAddress = (IO_LCDC & LCDC_BG_TILEMAP) ? 0x9c00 : 0x9800;
+        tilemapAddress += ty * 32 + tx; 
         // and determine the tileset address
-        uint16_t tilesetAddress = (IO_LCDC & 0x10) ? 0x8000 : 0x9000;
-
+        uint16_t tilesetAddress = (IO_LCDC & LCDC_BG_WIN_TILEDATA) ? 0x8000 : 0x8800;
         // and figure out the palette we will be using for the row
         uint16_t palette[4];
         // TODO fill the palette from IO_BGB
-        palette[0] = 0xf0f0;
-        palette[1] = 0x6666;
-        palette[2] = 0xaaaa;
-        palette[3] = 0xffff;
+        palette[0] = ColorRGB{155, 188, 15}.raw16();
+        palette[1] = ColorRGB{139, 172, 15}.raw16();    
+        palette[2] = ColorRGB{48, 98, 48}.raw16();
+        palette[3] = ColorRGB{15, 56, 15}.raw16();
 
         // render the pixels now, we keep x as the current x coordinate on the screen
         int16_t x = - (8 - (bx % 8)) & 0x7;
         while (x < 160) {
             // determine which tile we are using
             // TODO for CGB we also need to determine the tile attributes 
-            uint8_t tileIndex = mem8(tilemapAddress + tx);
+            uint8_t tileIndex = mem8(tilemapAddress++);
             uint16_t tileRow = mem16(tilesetAddress + tileIndex * 16 + tr * 2);
             // we have the tile pixels, figure out the palette indices, the tile pixels are 2 bits each in 2 panes so we need to first put them together
             uint8_t upper = tileRow >> 8;
