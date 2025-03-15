@@ -364,13 +364,13 @@ namespace rckid::gbcemu {
         while (true) {
             renderLine();
             while (cycles_ < 456) {
-                if (PC > 16)
+                if (PC >= 0xc000)
                     totalCycles_ += 1;
                 uint8_t opcode = mem8(PC++);
                 switch (opcode) {
                     #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
                     case OPCODE: \
-                        LOG(LL_GBCEMU_INS, pc_ << ": " << MNEMONIC); \
+                        LOG(LL_GBCEMU_INS, hex((uint16_t)(pc_ - 1)) << ": " << MNEMONIC); \
                         cycles_ += CYCLES; \
                         if (val_ ## FLAG_Z != -1) setFlagZ(val_ ## FLAG_Z); \
                         if (val_ ## FLAG_N != -1) setFlagN(val_ ## FLAG_N); \
@@ -666,19 +666,61 @@ namespace rckid::gbcemu {
     void GBCEmu::memWr8(uint16_t addr, uint8_t value) {
         uint32_t page = addr >> 12;
         uint32_t offset = addr & 0xfff;
+        switch (page) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+                // UNIMPLEMENTED;
+                // TODO bank switching
+                break;
+            case 10:
+            case 11:
+                // writing to eram even if there is none is technically allowed and should not break the game
+                if (memMap_[page] != nullptr)
+                    memMap_[page][offset] = value;
+                break;
+            case 8:
+            case 9:
+            case 12:
+            case 14:
+                // vram and wram are always there so we can do what we want
+                memMap_[page][offset] = value;
+                break;
+            case 15:
+                if (offset >= 0xf00) {
+                    hram_[offset - 0xf00] = value;
+                    if (offset == 0xff01)
+                        LOG(LL_GBCEMU_SERIAL, static_cast<char>(value));
+                    // TODO special handling for ioregs and stuff
+                } else if (offset >= 0xe00) {
+                    oam_[offset - 0xe00] = value;
+                } else {
+                    memMap_[page][offset] = value;
+                }
+                break;
+        }
+        /*
         if (page < 8) {
             //UNIMPLEMENTED;
             // TODO bank switching
+        })
         } else if (page != 15) {
             memMap_[page][offset] = value;
         } else if (offset >= 0xf00) {
             hram_[offset - 0xf00] = value;
+            if (offset == 0xff01)
+                LOG(LL_GBCEMU_SERIAL, static_cast<char>(value));
             // TODO special handling for ioregs and stuff
         } else if (offset >= 0xe00) {
             oam_[offset - 0xe00] = value;
         } else {
             memMap_[page][offset] = value;
-        }
+        }*/
     }
 
     void GBCEmu::memWr16(uint16_t addr, uint16_t value) {

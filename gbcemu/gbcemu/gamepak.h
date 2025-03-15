@@ -2,6 +2,10 @@
 
 #include <cstdint>
 
+#ifdef RCKID_BACKEND_FANTASY
+#include <fstream>
+#endif
+
 namespace rckid::gbcemu {
 
     /** GB(C) Cartridge 
@@ -77,5 +81,39 @@ namespace rckid::gbcemu {
 
         uint8_t const * rom_;
     }; 
+
+
+
+
+
+    #ifdef RCKID_BACKEND_FANTASY
+
+    /** Convenience gamepak for testing in fantasy mode where entire file can be loaded to memory and then used similarly to a flash gamepak. Not available on the device because of rather small RAM size not allowing full cartridge to fit.
+     */
+    class FileGamePak : public GamePak {
+    public:
+
+        FileGamePak(std::string const & filename) {
+            std::ifstream input(filename, std::ios::binary | std::ios::ate);
+            std::streamsize fileSize = input.tellg();
+            input.seekg(0, std::ios::beg);
+            rom_ = new uint8_t[fileSize];
+            if (!input.read(reinterpret_cast<char*>(rom_), fileSize))
+                throw std::runtime_error(STR("Error reading file " << filename));
+            input.close();
+        }
+
+        ~FileGamePak() override {
+            delete []rom_;
+        }
+            
+        uint8_t const * getPage(uint32_t page) const override {
+            return rom_ + page * 16 * 1024;
+        }
+    
+    private:
+        uint8_t * rom_;
+    }; // rckid::gbcemu::FileGamePak
+    #endif
 
 } // namespace rckid::gbcemu

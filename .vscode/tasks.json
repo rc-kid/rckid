@@ -35,6 +35,17 @@
             "detail": "Generates the SDK assets for RCKid"
         },
         {
+            "type": "cmake",
+            "label": "Generate GBCEmu ROMs",
+            "command": "build",
+            "targets": [
+                "generate-gbcemu-roms"
+            ],
+            "group": "build",
+            "problemMatcher": [],
+            "detail": "Generates the GBCemu test roms as assets"
+        },
+        {
             "type": "shell",
             "label": "mk 2 - build",
             "detail": "Generates the SDK assets for RCKid",

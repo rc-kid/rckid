@@ -31,7 +31,7 @@ inline std::string convertToClassName(std::string const & from) {
             continue;
         if (start && ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')))
             start = false;
-        if (c == '-')
+        if (c == '-' || c == ' ' || c == ',' || c == '(' || c == ')')
             c = '_';
         result += c;
     }
