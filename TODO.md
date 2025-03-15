@@ -1,5 +1,7 @@
 # TODO
 
+- gbcemu: use direct memory pointers in rendering instead of rd8 and rd16
+
 - create a string class that allows storing char const * or std::string like, something like owning string_view
 
 - how to deal with non-16 bpp bitmaps 

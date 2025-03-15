@@ -3,14 +3,61 @@
 #include <gbcemu/../tests/bootloader.h>
 #include <gbcemu/gamepak.h>
 
+#include <rckid/assets/fonts/OpenDyslexic64.h>
+#include <rckid/ui/label.h>
+#include <rckid/ui/form.h>
+
 using namespace rckid;
+
+/** Comments
+ 
+    NumCycles:              2,191,855
+
+    Initial run:            3,220,456 [uS]
+    Nodraw:                 1,497,884
+    Direct vram addressing: 2,966,504
+ */
+
+
+class GBCStats : public ui::App {
+public:
+
+    GBCStats(uint32_t t, uint32_t cycles): ui::App{320, 240} {
+
+        ui::Label * l = new ui::Label{0, 50, STR(t)};
+        l->setFont(Font::fromROM<assets::OpenDyslexic64>());
+        l->setColor(ColorRGB{255, 255, 255});
+        l->setWidth(320);
+        l->setHeight(50);
+        g_.add(l);
+        ui::Label * l2 = new ui::Label{0, 100, STR(cycles)};
+        l2->setFont(Font::fromROM<assets::OpenDyslexic64>());
+        l2->setColor(ColorRGB{128, 128, 128});
+        l2->setWidth(320);
+        l2->setHeight(50);
+        g_.add(l2);
+        g_.setRect(Rect::WH(320, 240));
+    }
+
+    void update() override {
+        ui::App::update();
+        if (btnPressed(Btn::B))
+            exit();
+    }
+}; // GBCStats
 
 int main() {
     initialize();
-    //while (true) {
-        auto app = gbcemu::GBCEmu{};
+    while (true) {
+        Arena::enter();
+        auto app = gbcemu::GBCEmu{Arena::allocator()};
         app.loadCartridge(new gbcemu::FlashGamePak{gbcemu::DMGBootloader});
+        app.setTerminateAfterStop(true);
+        uint32_t t = uptimeUs();
         app.run();
-        
-    //}
+        t = uptimeUs() - t;
+        auto stats = GBCStats{t, app.elapsedCycles()};
+        stats.run();
+        Arena::leave();
+    }
 }

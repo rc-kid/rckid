@@ -192,10 +192,8 @@ namespace rckid::gbcemu {
 
     GBCEmu::GBCEmu(Allocator & a):
         vram_{
-            a.alloc<uint8_t>(0x1000), 
-            a.alloc<uint8_t>(0x1000), 
-            a.alloc<uint8_t>(0x1000), 
-            a.alloc<uint8_t>(0x1000)
+            a.alloc<uint8_t>(0x2000), 
+            a.alloc<uint8_t>(0x2000), 
         },
         wram_{
             a.alloc<uint8_t>(0x1000),
@@ -214,7 +212,7 @@ namespace rckid::gbcemu {
 
     GBCEmu::~GBCEmu() {
         Heap::tryFree(gamepak_);
-        for (uint32_t i = 0; i < 4; ++i)
+        for (uint32_t i = 0; i < 2; ++i)
             Heap::tryFree(vram_[i]);
         for (uint32_t i = 0; i < 8; ++i)
             Heap::tryFree(wram_[i]);
@@ -476,10 +474,11 @@ namespace rckid::gbcemu {
         uint32_t tr = by % 8;
         uint8_t tx = bx / 8;
         // determine tilemap address, which too stays the same for the entire line, we can also add the line offset
-        uint16_t tilemapAddress = (IO_LCDC & LCDC_BG_TILEMAP) ? 0x9c00 : 0x9800;
+        uint8_t * vram = memMap_[MEMMAP_VRAM_0];
+        uint8_t * tilemapAddress = vram + ((IO_LCDC & LCDC_BG_TILEMAP) ? 0x1c00 : 0x1800);
         tilemapAddress += ty * 32 + tx; 
         // and determine the tileset address
-        uint16_t tilesetAddress = (IO_LCDC & LCDC_BG_WIN_TILEDATA) ? 0x8000 : 0x8800;
+        uint16_t * tilesetAddress = reinterpret_cast<uint16_t *>(vram + ((IO_LCDC & LCDC_BG_WIN_TILEDATA) ? 0x0000 : 0x0800));
         // and figure out the palette we will be using for the row
         uint16_t palette[4];
         // TODO fill the palette from IO_BGB
@@ -493,8 +492,8 @@ namespace rckid::gbcemu {
         while (x < 160) {
             // determine which tile we are using
             // TODO for CGB we also need to determine the tile attributes 
-            uint8_t tileIndex = mem8(tilemapAddress++);
-            uint16_t tileRow = mem16(tilesetAddress + tileIndex * 16 + tr * 2);
+            uint8_t tileIndex = *tilemapAddress++;
+            uint16_t tileRow = *(tilesetAddress + tileIndex * 8 + tr);
             // we have the tile pixels, figure out the palette indices, the tile pixels are 2 bits each in 2 panes so we need to first put them together
             uint8_t upper = tileRow >> 8;
             uint8_t lower = tileRow & 0xff;
@@ -521,8 +520,8 @@ namespace rckid::gbcemu {
 
     void GBCEmu::setVideoRamPage(uint32_t page) {
         ASSERT(page < 2);
-        memMap_[8] = vram_[page * 2];
-        memMap_[9] = vram_[page * 2 + 1];
+        memMap_[MEMMAP_VRAM_0] = vram_[page];
+        memMap_[MEMMAP_VRAM_1] = vram_[page] + 4096;
     }
 
     void GBCEmu::setExternalRamPage(uint32_t page) {
