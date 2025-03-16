@@ -361,11 +361,19 @@ namespace rckid::gbcemu {
     void GBCEmu::runCPU() {
         clearTilemap();
         clearTileset();
+        //setBreakpoint(0xc243);
+        setBreakpoint(0x200);
+        setMemoryBreakpoint(0xc244, 0xc246);
         while (true) {
             renderLine();
             while (cycles_ < 456) {
-                if (PC >= 0xc000)
-                    totalCycles_ += 1;
+#ifdef GBCEMU_INTERACTIVE_DEBUG                
+                if (PC == breakpoint_) {
+                    debugWrite() << "===== BREAKPOINT ===== (pc " << hex(pc_) << ")\n";
+                    logDisassembly(PC, PC + 10);
+                    debugInteractive();
+                }
+#endif
                 uint8_t opcode = mem8(PC++);
                 switch (opcode) {
                     #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
@@ -385,16 +393,20 @@ namespace rckid::gbcemu {
                 };
             }
             cycles_ -= 456;
+            totalCycles_ += 456;
         }
     }
 
-    void GBCEmu::disassemble(uint16_t start, uint16_t end) {
+#ifdef GBCEMU_INTERACTIVE_DEBUG
+
+    void GBCEmu::logDisassembly(uint16_t start, uint16_t end) {
+        debugWrite() << "===== DISASSEMBLY ===== (from " << hex(start) << " to " << hex(end) << ")\n";
         for (uint16_t i = start; i < end; ) {
             uint8_t opcode = mem8(i);
             switch (opcode) {
                 #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
                 case OPCODE: \
-                    LOG(LL_INFO, i << ": " << MNEMONIC); \
+                    debugWrite() << hex(i,false) << ": " << MNEMONIC << "\n"; \
                     i += SIZE; \
                     break;
                 #include "insns.inc.h"
@@ -405,6 +417,26 @@ namespace rckid::gbcemu {
                     break;
             };
         }
+    }
+
+    void GBCEmu::logMemory(uint16_t start, uint16_t end) {
+        debugWrite() << "===== MEMORY ===== (from " << hex(start) << " to " << hex(end) << ")\n";
+        debugWrite() << "      00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f\n";
+        for (uint16_t i = start; i < end; i += 16) {
+            debugWrite() << hex(i, false) << ": ";
+            for (uint16_t j = 0; j < 16; ++j) {
+                debugWrite() << hex(mem8(i + j), false) << ' ';
+            }
+            debugWrite() << '\n';
+        }
+    }
+
+    void GBCEmu::logState() {
+        debugWrite() << "===== CPU STATE =====\n";
+        debugWrite() <<  "af:   " <<  hex(AF, false) << " bc:   " <<  hex(BC, false) << " de:   " <<  hex(DE, false) << " hl:   " <<  hex(HL, false) << " sp:   " <<  hex(SP, false) << " pc:   " <<  hex(PC, false) << '\n';
+
+        debugWrite() << " lcdc: " << hex(IO_LCDC, false) << " stat: " << hex(IO_STAT, false) << " ly:   " << hex(IO_LY, false) << " ie:   " << hex(IO_IE, false) << " if:   " << hex(IO_IF, false) << '\n';
+
     }
 
     void GBCEmu::clearTilemap() {
@@ -427,6 +459,104 @@ namespace rckid::gbcemu {
         for (uint16_t i = 0; i < 16; ++i)
             memWr8(tAddr + i, data[i]);
     }
+    uint32_t GBCEmu::instructionSize(uint8_t opcode) const {
+        switch (opcode) {
+            #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
+            case OPCODE: \
+                return SIZE;
+            #include "insns.inc.h"
+            default:
+                return 1;
+        };
+    }
+
+    void GBCEmu::disassembleInstruction(uint16_t addr) {
+        uint8_t opcode = mem8(addr);
+        uint32_t size = instructionSize(opcode);
+        debugWrite() << hex(addr) << ": " << hex(mem8(addr), false) << ' ';
+        if (size == 1)
+            debugWrite() << "          ";
+        else if (size == 2) 
+            debugWrite() << hex(mem8(addr + 1), false) << "        ";
+        else if (size == 3)
+            debugWrite() << hex(mem8(addr + 1), false) << ' ' << hex(mem8(addr + 2), false) << "     ";
+        else 
+            ASSERT("Invalid instruction size");
+        switch (opcode) {
+            #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
+            case OPCODE: \
+                debugWrite() << MNEMONIC << '\n'; \
+                break;
+            #include "insns.inc.h"
+            default:
+                debugWrite() << "???\n";
+        };
+    }
+
+    void GBCEmu::debugInteractive() {
+        logState();
+        while (true) {
+            uint8_t cmd = debugRead(false);
+            switch (cmd) {
+                // continue running uninterrupted
+                case 'c':
+                    return;
+                // execute single instruction
+                case 'n': {
+                    // TODO this is hacky copy from the main loop maybe not exactly what we want
+                    disassembleInstruction(PC);
+                    uint8_t opcode = mem8(PC++);
+                    switch (opcode) {
+                        #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
+                        case OPCODE: \
+                            cycles_ += CYCLES; \
+                            if (val_ ## FLAG_Z != -1) setFlagZ(val_ ## FLAG_Z); \
+                            if (val_ ## FLAG_N != -1) setFlagN(val_ ## FLAG_N); \
+                            if (val_ ## FLAG_H != -1) setFlagH(val_ ## FLAG_H); \
+                            if (val_ ## FLAG_C != -1) setFlagC(val_ ## FLAG_C); \
+                            __VA_ARGS__ \
+                            break;
+                        #include "insns.inc.h"
+                        default:
+                            ASSERT("Unsupported opcode");
+                            break;
+                    };
+                    break;
+                }
+                // display cpu state
+                case 's':
+                    logState();
+                    break;
+                // display disassembly
+                case 'd': {
+                    debugWrite() << "? disassembly start address ";
+                    uint16_t start = debugReadHex16();
+                    debugWrite() << "\n? length (default 0x10) ";
+                    uint16_t l = debugReadHex16();
+                    if (l == 0)
+                        l = 0x10;
+                    logDisassembly(start, start + l);
+                    break;
+                }
+                // display memory
+                case 'm': {
+                    debugWrite() << "? memory start address ";
+                    uint16_t start = debugReadHex16();
+                    debugWrite() << "\n? length (default 0x10) ";
+                    uint16_t l = debugReadHex16();
+                    if (l == 0)
+                        l = 0x10;
+                    logMemory(start, start + l);
+                    break;
+                }
+                default:
+                    debugWrite() << "! invalid command '" << cmd << "'\n";
+            }
+        }
+        debug_ = false;
+    }
+
+#endif
 
     void GBCEmu::setMode(unsigned mode) {
         IO_STAT &= ~ STAT_PPU_MODE; 
@@ -644,6 +774,13 @@ namespace rckid::gbcemu {
     // memory 
 
     uint8_t GBCEmu::memRd8(uint16_t addr) {
+#ifdef GBCEMU_INTERACTIVE_DEBUG
+        if (addr >= memoryBreakpointStart_ && addr < memoryBreakpointEnd_) {
+            debugWrite() << "===== MEMORY BREAKPOINT ===== (read address " << hex(addr) << ")\n";
+            logMemory(memoryBreakpointStart_, memoryBreakpointEnd_);
+            debug_ = true;
+        }
+#endif
         uint32_t page = addr >> 12;
         uint32_t offset = addr & 0xfff;
         if (page < 15)
@@ -664,6 +801,13 @@ namespace rckid::gbcemu {
     }
 
     void GBCEmu::memWr8(uint16_t addr, uint8_t value) {
+#ifdef GBCEMU_INTERACTIVE_DEBUG
+        if (addr >= memoryBreakpointStart_ && addr < memoryBreakpointEnd_) {
+            debugWrite() << "===== MEMORY BREAKPOINT ===== (write address " << hex(addr) << ", value " << hex(value) << ")\n";
+            logMemory(memoryBreakpointStart_, memoryBreakpointEnd_);
+            debug_ = true;
+        }
+#endif
         uint32_t page = addr >> 12;
         uint32_t offset = addr & 0xfff;
         switch (page) {
