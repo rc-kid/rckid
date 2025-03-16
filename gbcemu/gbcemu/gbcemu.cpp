@@ -362,13 +362,14 @@ namespace rckid::gbcemu {
         clearTilemap();
         clearTileset();
         //setBreakpoint(0xc243);
-        setBreakpoint(0x200);
-        setMemoryBreakpoint(0xc244, 0xc246);
+        setBreakpoint(0xc24f);
+        setBreakpoint(0xc246);
+        //setMemoryBreakpoint(0xdffd, 0xdfff);
         while (true) {
             renderLine();
             while (cycles_ < 456) {
 #ifdef GBCEMU_INTERACTIVE_DEBUG                
-                if (PC == breakpoint_) {
+                if (PC == breakpoint_ || debug_) {
                     debugWrite() << "===== BREAKPOINT ===== (pc " << hex(pc_) << ")\n";
                     logDisassembly(PC, PC + 10);
                     debugInteractive();
@@ -378,7 +379,7 @@ namespace rckid::gbcemu {
                 switch (opcode) {
                     #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
                     case OPCODE: \
-                        LOG(LL_GBCEMU_INS, hex((uint16_t)(pc_ - 1)) << ": " << MNEMONIC); \
+                        /*LOG(LL_GBCEMU_INS, hex((uint16_t)(pc_ - 1)) << ": " << MNEMONIC);*/ \
                         cycles_ += CYCLES; \
                         if (val_ ## FLAG_Z != -1) setFlagZ(val_ ## FLAG_Z); \
                         if (val_ ## FLAG_N != -1) setFlagN(val_ ## FLAG_N); \
@@ -431,12 +432,18 @@ namespace rckid::gbcemu {
         }
     }
 
+    void GBCEmu::logStack(uint32_t n) {
+        debugWrite() << "===== STACK =====\n";
+        for (uint16_t i = SP, e = SP + n; i != e; i += 2) {
+            debugWrite() << hex(i, false) << ": " << hex(mem16(i), false) << '\n';
+        }
+    }
+
     void GBCEmu::logState() {
         debugWrite() << "===== CPU STATE =====\n";
         debugWrite() <<  "af:   " <<  hex(AF, false) << " bc:   " <<  hex(BC, false) << " de:   " <<  hex(DE, false) << " hl:   " <<  hex(HL, false) << " sp:   " <<  hex(SP, false) << " pc:   " <<  hex(PC, false) << '\n';
 
-        debugWrite() << " lcdc: " << hex(IO_LCDC, false) << " stat: " << hex(IO_STAT, false) << " ly:   " << hex(IO_LY, false) << " ie:   " << hex(IO_IE, false) << " if:   " << hex(IO_IF, false) << '\n';
-
+        debugWrite() << "lcdc: " << hex(IO_LCDC, false) << "   stat: " << hex(IO_STAT, false) << "   ly:   " << hex(IO_LY, false) << "   ie:   " << hex(IO_IE, false) << "   if:   " << hex(IO_IF, false) << '\n';
     }
 
     void GBCEmu::clearTilemap() {
@@ -459,6 +466,7 @@ namespace rckid::gbcemu {
         for (uint16_t i = 0; i < 16; ++i)
             memWr8(tAddr + i, data[i]);
     }
+
     uint32_t GBCEmu::instructionSize(uint8_t opcode) const {
         switch (opcode) {
             #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
@@ -473,7 +481,7 @@ namespace rckid::gbcemu {
     void GBCEmu::disassembleInstruction(uint16_t addr) {
         uint8_t opcode = mem8(addr);
         uint32_t size = instructionSize(opcode);
-        debugWrite() << hex(addr) << ": " << hex(mem8(addr), false) << ' ';
+        debugWrite() << hex(addr, false) << ": " << hex(mem8(addr), false) << ' ';
         if (size == 1)
             debugWrite() << "          ";
         else if (size == 2) 
@@ -496,15 +504,18 @@ namespace rckid::gbcemu {
     void GBCEmu::debugInteractive() {
         logState();
         while (true) {
-            uint8_t cmd = debugRead(false);
+            disassembleInstruction(PC);
+            debugWrite() << "? ";
+            uint8_t cmd = debugRead(true);
             switch (cmd) {
                 // continue running uninterrupted
                 case 'c':
+                    debugWrite() << "> continue\n";
+                    debug_ = false;
                     return;
                 // execute single instruction
                 case 'n': {
                     // TODO this is hacky copy from the main loop maybe not exactly what we want
-                    disassembleInstruction(PC);
                     uint8_t opcode = mem8(PC++);
                     switch (opcode) {
                         #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
@@ -523,9 +534,20 @@ namespace rckid::gbcemu {
                     };
                     break;
                 }
-                // display cpu state
-                case 's':
+                // set breakpoint
+                case 'b': {
+                    debugWrite() << "? breakpoint address ";
+                    breakpoint_ = debugReadHex16();
+                    debugWrite() << '\n';
+                    //logBreakpoint();
+                    break;
+                }
+                // display cpu info (state & stuff)
+                case 'i':
                     logState();
+                    break;
+                case 's':
+                    logStack(10);
                     break;
                 // display disassembly
                 case 'd': {
@@ -553,7 +575,7 @@ namespace rckid::gbcemu {
                     debugWrite() << "! invalid command '" << cmd << "'\n";
             }
         }
-        debug_ = false;
+        UNREACHABLE;
     }
 
 #endif
@@ -831,6 +853,7 @@ namespace rckid::gbcemu {
             case 8:
             case 9:
             case 12:
+            case 13:
             case 14:
                 // vram and wram are always there so we can do what we want
                 memMap_[page][offset] = value;

@@ -105,6 +105,8 @@ namespace rckid::gbcemu {
          */
         void logMemory(uint16_t start, uint16_t end);
 
+        void logStack(uint32_t n);
+
         /** Logs the current state of the emulator. 
          */
         void logState(); 

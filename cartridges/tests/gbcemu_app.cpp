@@ -53,7 +53,8 @@ int main() {
         Arena::enter();
         auto app = gbcemu::GBCEmu{Arena::allocator()};
         //app.loadCartridge(new gbcemu::FlashGamePak{gbcemu::DMGBootloader});
-        app.loadCartridge(new gbcemu::FlashGamePak{rckid::gbcemu::rom::blargg::instrs::op_sp_hl});
+        //app.loadCartridge(new gbcemu::FlashGamePak{rckid::gbcemu::rom::blargg::instrs::op_sp_hl});
+        app.loadCartridge(new gbcemu::FlashGamePak{rckid::gbcemu::rom::blargg::instrs::ld_r_r});
         //app.loadCartridge(new gbcemu::FileGamePak("/mnt/c/delete/testrom.gb"));
         app.setTerminateAfterStop(true);
         uint32_t t = uptimeUs();

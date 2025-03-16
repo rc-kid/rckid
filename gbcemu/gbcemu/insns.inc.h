@@ -12,6 +12,10 @@
     Main use of those definitions is the interpreter main loop in the GBCEmu::update method.
  */
 
+ #ifndef VERIFY
+ #define VERIFY(...)
+ #endif
+
 /** Does nothing. 
  */
 INS(0x00, _,_,_,_, 1, 4 , "nop", {})
@@ -509,7 +513,7 @@ INS(0xdf, _,_,_,_, 1, 16, "rst $18", {
     PC = 0x18; 
 })
 INS(0xe0, _,_,_,_, 2, 12, "ldh [a8], a", { memWr8(0xff00 + mem8(PC++), A); })
-INS(0xe1, _,_,_,_, 1, 12, "pop hl", { HL = memRd8(SP); SP += 2; })
+INS(0xe1, _,_,_,_, 1, 12, "pop hl", { HL = memRd16(SP); SP += 2; })
 INS(0xe2, _,_,_,_, 1, 8 , "ld [c], a", {  memWr8(0xff00 + C, A); })
 INS(0xe5, _,_,_,_, 1, 16, "push hl", { SP -= 2; memWr16(SP, HL); })
 INS(0xe6, Z,0,1,0, 2, 8 , "and a, n8", { A = A & mem8(PC++); setFlagZ(A == 0); })
@@ -530,7 +534,7 @@ INS(0xef, _,_,_,_, 1, 16, "rst $28", {
     PC = 0x28; 
 })
 INS(0xf0, _,_,_,_, 2, 12, "ldh a, [a8]", { A = memRd8(0xff00 + mem8(PC++)); })
-INS(0xf1, Z,N,H,C, 1, 12, "pop af", { AF = memRd8(SP); SP += 2; })
+INS(0xf1, Z,N,H,C, 1, 12, "pop af", { AF = memRd16(SP); SP += 2; })
 INS(0xf2, _,_,_,_, 1, 8 , "ld a, [c]", { A = memRd8(0xff00 + C); })
 INS(0xf3, _,_,_,_, 1, 4 , "di", { ime_ = false; })
 INS(0xf5, _,_,_,_, 1, 16, "push af", { SP -= 2; memWr16(SP, AF); })
