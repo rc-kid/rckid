@@ -1,5 +1,8 @@
 # TODO
 
+
+- at 0xc24f Af is different (namely f is different - expected d0, found c0)
+
 - gbcemu: use direct memory pointers in rendering instead of rd8 and rd16
 
 - create a string class that allows storing char const * or std::string like, something like owning string_view

@@ -12,10 +12,6 @@
     Main use of those definitions is the interpreter main loop in the GBCEmu::update method.
  */
 
- #ifndef VERIFY
- #define VERIFY(...)
- #endif
-
 /** Does nothing. 
  */
 INS(0x00, _,_,_,_, 1, 4 , "nop", {})

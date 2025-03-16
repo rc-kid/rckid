@@ -356,9 +356,10 @@ namespace rckid::gbcemu {
         uint16_t breakpoint_ = 0xffff;
         uint16_t memoryBreakpointStart_ = 0xffff;
         uint16_t memoryBreakpointEnd_ = 0xffff;
+        uint32_t overBreakpoint_ = 0xffffff;
 
 
-        void disassembleInstruction(uint16_t addr);
+        uint32_t disassembleInstruction(uint16_t addr);
         void debugInteractive();
 #endif
 

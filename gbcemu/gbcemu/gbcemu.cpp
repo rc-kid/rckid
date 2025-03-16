@@ -363,7 +363,7 @@ namespace rckid::gbcemu {
         clearTileset();
         //setBreakpoint(0xc243);
         setBreakpoint(0xc24f);
-        setBreakpoint(0xc246);
+        setBreakpoint(0xc243);
         //setMemoryBreakpoint(0xdffd, 0xdfff);
         while (true) {
             renderLine();
@@ -372,6 +372,9 @@ namespace rckid::gbcemu {
                 if (PC == breakpoint_ || debug_) {
                     debugWrite() << "===== BREAKPOINT ===== (pc " << hex(pc_) << ")\n";
                     logDisassembly(PC, PC + 10);
+                    logState();
+                    debugInteractive();
+                } else if (PC == overBreakpoint_) {
                     debugInteractive();
                 }
 #endif
@@ -403,20 +406,7 @@ namespace rckid::gbcemu {
     void GBCEmu::logDisassembly(uint16_t start, uint16_t end) {
         debugWrite() << "===== DISASSEMBLY ===== (from " << hex(start) << " to " << hex(end) << ")\n";
         for (uint16_t i = start; i < end; ) {
-            uint8_t opcode = mem8(i);
-            switch (opcode) {
-                #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
-                case OPCODE: \
-                    debugWrite() << hex(i,false) << ": " << MNEMONIC << "\n"; \
-                    i += SIZE; \
-                    break;
-                #include "insns.inc.h"
-                default:
-                    LOG(LL_INFO, i << ": ??? " << opcode);
-                    ASSERT("Unsupported opcode");
-                    i += 1;
-                    break;
-            };
+            i += disassembleInstruction(i);
         }
     }
 
@@ -478,7 +468,7 @@ namespace rckid::gbcemu {
         };
     }
 
-    void GBCEmu::disassembleInstruction(uint16_t addr) {
+    uint32_t GBCEmu::disassembleInstruction(uint16_t addr) {
         uint8_t opcode = mem8(addr);
         uint32_t size = instructionSize(opcode);
         debugWrite() << hex(addr, false) << ": " << hex(mem8(addr), false) << ' ';
@@ -499,19 +489,19 @@ namespace rckid::gbcemu {
             default:
                 debugWrite() << "???\n";
         };
+        return size;
     }
 
     void GBCEmu::debugInteractive() {
-        logState();
+        overBreakpoint_ = 0xffffff; // disable step over breakpoint
+        debug_ = false;
         while (true) {
             disassembleInstruction(PC);
-            debugWrite() << "? ";
-            uint8_t cmd = debugRead(true);
+            uint8_t cmd = debugRead(false);
             switch (cmd) {
                 // continue running uninterrupted
                 case 'c':
                     debugWrite() << "> continue\n";
-                    debug_ = false;
                     return;
                 // execute single instruction
                 case 'n': {
@@ -534,6 +524,9 @@ namespace rckid::gbcemu {
                     };
                     break;
                 }
+                case 'o':
+                    overBreakpoint_ = PC + instructionSize(mem8(PC));
+                    return;
                 // set breakpoint
                 case 'b': {
                     debugWrite() << "? breakpoint address ";
