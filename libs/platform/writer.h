@@ -206,11 +206,16 @@ inline Writer::Converter fillLeft(T const & what, uint32_t width, char fill = ' 
     };
 }
 
+template<typename T>
+Writer::Converter hex(T what, bool header = true);
+
 /** Displays the unsigned 8bit number in hex format (aligned). 
  */
-inline Writer::Converter hex(uint8_t what) {
-    return [what](Writer & writer) {
-        writer << '0' << 'x';
+template<>
+inline Writer::Converter hex(uint8_t what, bool header) {
+    return [what, header](Writer & writer) {
+        if (header)
+            writer << '0' << 'x';
         writer << "0123456789abcdef"[(what >> 4) & 0xf];
         writer << "0123456789abcdef"[what & 0xf];
     };
@@ -218,9 +223,11 @@ inline Writer::Converter hex(uint8_t what) {
 
 /** Displays the unsigned 16bit number in hex format (aligned). 
  */
-inline Writer::Converter hex(uint16_t what) {
-    return [what](Writer & writer) {
-        writer << '0' << 'x';
+template<>
+inline Writer::Converter hex(uint16_t what, bool header) {
+    return [what, header](Writer & writer) {
+        if (header)
+            writer << '0' << 'x';
         writer << "0123456789abcdef"[what >> 12];
         writer << "0123456789abcdef"[(what >> 8) & 0xf];
         writer << "0123456789abcdef"[(what >> 4) & 0xf];
@@ -230,9 +237,11 @@ inline Writer::Converter hex(uint16_t what) {
 
 /** Displays the unsigned 32bit number in hex format (aligned). 
  */
-inline Writer::Converter hex(uint32_t what) {
-    return [what](Writer & writer) {
-        writer << '0' << 'x';
+template<>
+inline Writer::Converter hex(uint32_t what, bool header) {
+    return [what, header](Writer & writer) {
+        if (header)
+            writer << '0' << 'x';
         writer << "0123456789abcdef"[what >> 28];
         writer << "0123456789abcdef"[(what >> 24) & 0xf];
         writer << "0123456789abcdef"[(what >> 20) & 0xf];

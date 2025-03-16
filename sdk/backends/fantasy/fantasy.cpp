@@ -143,6 +143,20 @@ namespace rckid {
         });
     }
 
+    uint8_t debugRead(bool echo) {
+        while (true) {
+            systemMalloc_= true;
+            PollInputEvents();
+            int x = GetCharPressed();
+            systemMalloc_ = false;
+            if (x != 0) {
+                if (echo)
+                    std::cout << static_cast<char>(x) << std::flush;
+                return static_cast<uint8_t>(x);
+            }
+        }
+    }
+
     void initialize(int argc, char const * argv[]) {
         systemMalloc_ = true;
         InitWindow(640, 480, "RCKid");

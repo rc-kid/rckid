@@ -4,6 +4,8 @@
 
 #include "gamepak.h"
 
+#define GBCEMU_INTERACTIVE_DEBUG
+
 namespace rckid::gbcemu {
 
     /** GameBoy Color Emulator App
@@ -81,15 +83,38 @@ namespace rckid::gbcemu {
             return hram_[offset + 128];
         }
 
+#ifdef GBCEMU_INTERACTIVE_DEBUG
+
+        uint32_t instructionSize(uint8_t opcode) const ; 
+
+        uint16_t breakpoint() const { return breakpoint_; }
+        void setBreakpoint(uint16_t address) { breakpoint_ = address; }
+
+        uint16_t memoryBreakpointStart() const { return memoryBreakpointStart_; }
+        uint16_t memoryBreakpointEnd() const { return memoryBreakpointEnd_; }
+        void setMemoryBreakpoint(uint16_t start, uint16_t end) { 
+            memoryBreakpointStart_ = start; 
+            memoryBreakpointEnd_ = end;
+        }
+
         /** Disassembles the given section on memory as assembly instructions. 
          */
-        void disassemble(uint16_t start, uint16_t end);
+        void logDisassembly(uint16_t start, uint16_t end);
+
+        /** Disassembles the given memory section as raw data. 
+         */
+        void logMemory(uint16_t start, uint16_t end);
+
+        /** Logs the current state of the emulator. 
+         */
+        void logState(); 
 
         void clearTilemap();
         void setTilemap(uint32_t x, uint32_t y, uint8_t tile);
 
         void clearTileset();
         void setTile(uint8_t index, uint8_t * data);
+#endif
 
     protected:
 
@@ -322,6 +347,18 @@ namespace rckid::gbcemu {
 
         // when true, the stop instruction terminates the program, useful for debugging & testing
         bool terminateAfterStop_ = false;
+
+#ifdef GBCEMU_INTERACTIVE_DEBUG
+        // breakpoint at which the main loop pauses
+        bool debug_ = false;
+        uint16_t breakpoint_ = 0xffff;
+        uint16_t memoryBreakpointStart_ = 0xffff;
+        uint16_t memoryBreakpointEnd_ = 0xffff;
+
+
+        void disassembleInstruction(uint16_t addr);
+        void debugInteractive();
+#endif
 
         DoubleBuffer<uint16_t> pixels_;
 
