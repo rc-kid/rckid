@@ -37,24 +37,38 @@ namespace rckid {
 
     uint8_t debugRead(bool echo = true);
 
-    inline uint8_t debugReadHexDigit() {
-        uint8_t result = debugRead();
-        if (result >= '0' && result <= '9')
-            return result - '0';
-        if (result >= 'a' && result <= 'f')
-            return result - 'a' + 10;
-        if (result >= 'A' && result <= 'F')
-            return result - 'A' + 10;
-        // invalid
-        return 0;
+    inline bool debugReadAndAddHexDigit(uint32_t & value) {
+        uint8_t x = debugRead();
+        if (x >= '0' && x <= '9')
+            x = x - '0';
+        else if (x >= 'a' && x <= 'f')
+            x = x - 'a' + 10;
+        else if (x >= 'A' && x <= 'F')
+            x = x - 'A' + 10;
+        else 
+            return false;
+        value = (value << 4) | x;
+        return true;
     }
 
     inline uint8_t debugReadHex8() {
-        return (debugReadHexDigit() << 4) | debugReadHexDigit();
+        uint32_t result = 0;
+        if (!debugReadAndAddHexDigit(result))
+            return result;
+        debugReadAndAddHexDigit(result);
+        return result;
     }
 
-    inline uint8_t debugReadHex16() {
-        return (debugReadHex8() << 8) | debugReadHex8();
+    inline uint16_t debugReadHex16() {
+        uint32_t result = 0;
+        if (!debugReadAndAddHexDigit(result))
+            return result;
+        if (!debugReadAndAddHexDigit(result))
+            return result;
+        if (!debugReadAndAddHexDigit(result))
+            return result;
+        debugReadAndAddHexDigit(result);
+        return result;
     }
 
 }

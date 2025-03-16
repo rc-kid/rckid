@@ -137,9 +137,7 @@ namespace rckid {
 
     Writer debugWrite() {
         return Writer([](char c) {
-            std::cout << c;
-            if (c == '\n')
-                std::cout.flush();
+            std::cout << c << std::flush;
         });
     }
 
