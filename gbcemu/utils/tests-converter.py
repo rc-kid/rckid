@@ -7,6 +7,12 @@ def verifyApplicable(test):
     mem = {}
     for (addr, value) in test["initial"]["ram"]:
         mem[addr] = value
+        # check if there are conflicting writes to shadow address
+        if (addr >= 0xc00 and addr < 0xddff):
+            shadowAddr = addr + 0x2000
+            for (a2, v2) in test["initial"]["ram"]:
+                if (a2 == shadowAddr and v2 != value):
+                    return False
     for (addr, value) in test["final"]["ram"]:
         if (addr < 0x8000 and mem[addr] != value):
             return False
@@ -79,12 +85,6 @@ def processTest(test, f):
             print(f"        EXPECT(gbc.readMem(0x{addr:x}), 0x{value:x});", file = f)
 
 def processTests(tests, f, opcode):
-    print( "#include \"../gbctests_insns.h\"", file = f)
-    print(f"#if (defined GBCEMU_INSNS_TESTS_ALL) || (defined GBCEMU_INSNS_TESTS_{opcode})", file = f)
-    print( "#include \"../gbctests.h\"", file = f)
-    print( "", file = f)
-    print( "namespace rckid::gbcemu {" , file = f)
-    print( "", file = f)
     print(f"    TEST(gbcemu, opcode_{opcode}) {{", file = f)
     print( "        GBCEmu gbc{};", file = f)
     print( "        uint8_t cartridge[0x8000];", file = f)
@@ -93,8 +93,6 @@ def processTests(tests, f, opcode):
     for test in tests:
         processTest(test, f)
     print( "    }", file = f)
-    print( "}", file = f)
-    print( "#endif", file = f)
 
 # Access the data
 
@@ -107,10 +105,12 @@ def convertTests(opcode):
         with open(f"{inputDir}/{opcode}.json", "r") as fIn:
             data = json.load(fIn)
             opcode = opcode.replace(" ", "_")
-            with open(f"{outputDir}/{opcode}.cpp", "w") as fOut:
+            with open(f"{outputDir}/{opcode}.inc.h", "w") as fOut:
                 processTests(data, fOut, opcode)
     except:
         print(f"No input tests for opcode {opcode} found")
+
+"""
 
 for opcodeId in range(256):
     opcode = f"{opcodeId:02x}"
@@ -119,3 +119,6 @@ for opcodeId in range(256):
 for opcodeId in range(256):
     opcode = f"cb {opcodeId:02x}"
     convertTests(opcode)
+"""
+
+convertTests("cb 66")
