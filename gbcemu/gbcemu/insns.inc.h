@@ -520,7 +520,7 @@ INS(0xe7, _,_,_,_, 1, 16, "rst $20", {
     PC = 0x20; 
 })
 INS(0xe8, 0,0,H,C, 2, 16, "add sp, e8", {
-    UNIMPLEMENTED;
+    add16(SP, static_cast<int8_t>(mem8(PC++)));
 })
 INS(0xe9, _,_,_,_, 1, 4 , "jp hl", { PC = HL; })
 INS(0xea, _,_,_,_, 3, 16, "ld [a16], a", { memWr8(mem16(PC), A); PC += 2;})
