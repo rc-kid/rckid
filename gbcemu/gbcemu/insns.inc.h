@@ -340,7 +340,7 @@ INS(0xca, _,_,_,_, 3, 12 + 4, "jp z, a16", {
  
     The follow a very simple decoding pattern whereas the 3 LSB identify a register (B, C, D, E, H,  L, [HL], A) and the upper 5 bits specify the operation. 
 */
-INS(0xcb, _,_,_,_, 1, 4 , "prefix", {
+INS(0xcb, Z,N,H,C, 1, 4 , "prefix", {
     uint8_t eo = mem8(PC++); 
     uint8_t reg = eo & 7;
     eo = eo >> 3;
@@ -396,10 +396,16 @@ INS(0xcb, _,_,_,_, 1, 4 , "prefix", {
         case 6: // SWAP
             eo = r & 0xf;
             r = (eo << 4) | (r >> 4);
+            setFlagZ(r == 0);
+            setFlagH(0);
+            setFlagN(0);
+            setFlagC(0);
             break;
         case 7: // SRL
             r = srl8(r);
             setFlagZ(r == 0); // srl already sets carry
+            setFlagH(0);
+            setFlagN(0);
             break;
         default: { // bit operations
             unsigned bit = eo & 7;
@@ -408,7 +414,7 @@ INS(0xcb, _,_,_,_, 1, 4 , "prefix", {
                 case 1: // BIT
                     setFlagZ((r & (1 << bit)) == 0);
                     setFlagN(0);
-                    setFlagH(0);
+                    setFlagH(1);
                     break;
                 case 2: // RES
                     r = r & ~(1 << bit);
