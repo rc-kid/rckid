@@ -1,3 +1,7 @@
+# Takes JSON tests from https://github.com/raddad772/jsmoo/tree/gbc/misc/tests/GeneratedTests/sm83 (which are also listed in this repo as a zip file) and converts them to a format that can be used by the test suite directly.
+#
+# Generates one test in dedicated inc.h file for each instruction. Those files can then be included into a CPP file to actually run the tests. This is because keeping the CPP files around confuses the tooling and it takes ages to analyze the project with that many large cpp files, even if they are disabled. 
+
 import json
 import sys
 
@@ -110,8 +114,6 @@ def convertTests(opcode):
     except:
         print(f"No input tests for opcode {opcode} found")
 
-"""
-
 for opcodeId in range(256):
     opcode = f"{opcodeId:02x}"
     convertTests(opcode)
@@ -119,6 +121,3 @@ for opcodeId in range(256):
 for opcodeId in range(256):
     opcode = f"cb {opcodeId:02x}"
     convertTests(opcode)
-"""
-
-convertTests("cb 66")
