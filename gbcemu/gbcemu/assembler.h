@@ -18,7 +18,7 @@
 #define DEC_C                   0x0d
 #define LD_C_imm8(IMM)          0x0e, IMM 
 #define RRCA                    0x0f
-#define STOP(X)                 0x10, X
+#define STOP                    0x10, 0x00
 #define LD_DE_imm16(IMM)        0x11, (IMM & 0xff), (IMM >> 8)
 #define LD_ptrDE_A              0x12
 #define INC_DE                  0x13

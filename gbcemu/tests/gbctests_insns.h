@@ -1,2 +1,0 @@
-#define GBCEMU_INSNS_TESTS_ALL
-

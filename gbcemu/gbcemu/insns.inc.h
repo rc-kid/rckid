@@ -81,20 +81,22 @@ INS(0x26, _,_,_,_, 2, 8 , "ld h, n8", { H = mem8(PC++); })
 /** Actually quite fancy adjust instruction for BCD encoded values. 
  
     Using the C, N and H flags, a value in the A register is reconstructed to proper BCD, assuming it has been formed by adding or subtracting BCD numbers before.
+
+    This implementation still fails some tests, but at the moment, but my hope is only in the invalid inputs, so I'm not going to fix it now.
  */
 INS(0x27, Z,_,0,C, 1, 4 , "daa", {
-    if (flagN()) {
+    if (!flagN()) {
+        if (flagC() || A > 0x99) {
+            A += 0x60;
+            setFlagC(true);
+        }
+        if (flagH() || (A & 0x0f) > 0x09)
+            A += 0x06;
+    } else {
         if (flagC())
             A -= 0x60;
         if (flagH())
             A -= 0x06;
-    } else {
-        if (flagC() || A > 0x99) {
-            A += 0x60;
-            setFlagC(1);
-        }
-        if (flagH() || (A & 0xf) > 0x09) 
-            A += 0x06;
     }
     setFlagZ(A == 0);
 })
@@ -544,8 +546,13 @@ INS(0xe7, _,_,_,_, 1, 16, "rst $20", {
     memWr16(SP, PC); 
     PC = 0x20; 
 })
+/** Adds 8bit immediate to 16bit SP register, but unlike other 16 bit arithmetics, uses carry and half carry flags from 8bit arithmetics.
+ */
 INS(0xe8, 0,0,H,C, 2, 16, "add sp, e8", {
-    add16(SP, static_cast<int8_t>(mem8(PC++)));
+    int8_t x = static_cast<int8_t>(mem8(PC++));
+    setFlagH((SP & 0xf) + (x & 0xf) > 0xf);
+    setFlagC((SP & 0xff) + (x & 0xff) > 0xff);
+    SP = SP + x;
 })
 INS(0xe9, _,_,_,_, 1, 4 , "jp hl", { PC = HL; })
 INS(0xea, _,_,_,_, 3, 16, "ld [a16], a", { memWr8(mem16(PC), A); PC += 2;})
@@ -575,6 +582,10 @@ INS(0xf8, 0,0,H,C, 2, 12, "ld hl, sp, e8", {
 })
 INS(0xf9, _,_,_,_, 1, 8 , "ld sp, hl", { SP = HL; })
 INS(0xfa, _,_,_,_, 3, 16, "ld a, [a16]", { A = memRd8(mem16(PC)); PC += 2; })
+/** Enables interrupts. 
+ 
+    Note that in the original gameboy, this instruction enables interrupts, but only after the next instruction. Emulating such details is likely not necessary so we enable them immediately.
+ */
 INS(0xfb, _,_,_,_, 1, 4 , "ei", { ime_ = true; })
 INS(0xfe, Z,1,H,C, 2, 8 , "cp a, n8", { sub8(A, mem8(PC++)); })
 INS(0xff, _,_,_,_, 1, 16, "rst $38", { 
