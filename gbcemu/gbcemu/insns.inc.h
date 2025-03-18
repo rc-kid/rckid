@@ -359,21 +359,27 @@ INS(0xcb, _,_,_,_, 1, 4 , "prefix", {
     switch (eo) {
         case 0: // RLC
             r = rlc8(r);
+            setFlagZ(r == 0); // rlc already sets carry
             break;
         case 1: // RRC
             r = rrc8(r);
+            setFlagZ(r == 0); // rrc already sets carry
             break;
         case 2: // RL
             r = rl8(r);
+            setFlagZ(r == 0); // rl already sets carry
             break;
         case 3: // RR
             r = rr8(r);
+            setFlagZ(r == 0); // rr already sets carry
             break;
         case 4: // SLA
             r = sla8(r);
+            setFlagZ(r == 0); // sla already sets carry
             break;
         case 5: // SRA
             r = sra8(r);
+            setFlagZ(r == 0); // sra already sets carry
             break;
         case 6: // SWAP
             eo = r & 0xf;
@@ -381,6 +387,7 @@ INS(0xcb, _,_,_,_, 1, 4 , "prefix", {
             break;
         case 7: // SRL
             r = srl8(r);
+            setFlagZ(r == 0); // srl already sets carry
             break;
         default: { // bit operations
             unsigned bit = eo & 7;
