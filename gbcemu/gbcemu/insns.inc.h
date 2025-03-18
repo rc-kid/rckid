@@ -202,8 +202,9 @@ INS(0x73, _,_,_,_, 1, 8 , "ld [hl], e", { memWr8(HL, E); })
 INS(0x74, _,_,_,_, 1, 8 , "ld [hl], h", { memWr8(HL, H); })
 INS(0x75, _,_,_,_, 1, 8 , "ld [hl], l", { memWr8(HL, L); })
 INS(0x76, _,_,_,_, 1, 4 , "halt", {
-    while(true) {};
-    UNIMPLEMENTED;
+    // what should halt actually do? 
+    //while(true) {};
+    //UNIMPLEMENTED;
 })
 INS(0x77, _,_,_,_, 1, 8 , "ld [hl], a", { memWr8(HL, A); })
 INS(0x78, _,_,_,_, 1, 4 , "ld a, b", { A = B; })
