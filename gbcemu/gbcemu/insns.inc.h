@@ -360,26 +360,38 @@ INS(0xcb, _,_,_,_, 1, 4 , "prefix", {
         case 0: // RLC
             r = rlc8(r);
             setFlagZ(r == 0); // rlc already sets carry
+            setFlagH(0);
+            setFlagN(0);
             break;
         case 1: // RRC
             r = rrc8(r);
             setFlagZ(r == 0); // rrc already sets carry
+            setFlagH(0);
+            setFlagN(0);
             break;
         case 2: // RL
             r = rl8(r);
             setFlagZ(r == 0); // rl already sets carry
+            setFlagH(0);
+            setFlagN(0);
             break;
         case 3: // RR
             r = rr8(r);
             setFlagZ(r == 0); // rr already sets carry
+            setFlagH(0);
+            setFlagN(0);
             break;
         case 4: // SLA
             r = sla8(r);
             setFlagZ(r == 0); // sla already sets carry
+            setFlagH(0);
+            setFlagN(0);
             break;
         case 5: // SRA
             r = sra8(r);
             setFlagZ(r == 0); // sra already sets carry
+            setFlagH(0);
+            setFlagN(0);
             break;
         case 6: // SWAP
             eo = r & 0xf;
