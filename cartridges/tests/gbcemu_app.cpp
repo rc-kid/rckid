@@ -52,10 +52,21 @@ int main() {
     while (true) {
         Arena::enter();
         auto app = gbcemu::GBCEmu{Arena::allocator()};
-        app.loadCartridge(new gbcemu::FlashGamePak{gbcemu::DMGBootloader});
-        //app.loadCartridge(new gbcemu::FlashGamePak{rckid::gbcemu::rom::blargg::instrs::op_sp_hl});
-        //app.loadCartridge(new gbcemu::FlashGamePak{rckid::gbcemu::rom::blargg::instrs::ld_r_r}); -- pass
-        app.loadCartridge(new gbcemu::FlashGamePak{rckid::gbcemu::rom::blargg::instrs::special});
+        //app.loadCartridge(new gbcemu::FlashGamePak{});
+        app.loadCartridge(new gbcemu::FlashGamePak{
+            // gbcemu::DMGBootloader
+            // rckid::gbcemu::rom::blargg::instrs::special // fail on DAA
+            // rckid::gbcemu::rom::blargg::instrs::interrupts // failed #2 (EI)
+            // rckid::gbcemu::rom::blargg::instrs::op_sp_hl
+            // rckid::gbcemu::rom::blargg::instrs::op_r_imm
+            // rckid::gbcemu::rom::blargg::instrs::op_rp
+            // rckid::gbcemu::rom::blargg::instrs::ld_r_r
+            // rckid::gbcemu::rom::blargg::instrs::jr_jp_call_ret_rst
+            // rckid::gbcemu::rom::blargg::instrs::misc_instrs
+            // rckid::gbcemu::rom::blargg::instrs::op_r_r
+            // rckid::gbcemu::rom::blargg::instrs::bit_ops
+            rckid::gbcemu::rom::blargg::instrs::op_a__hl_ // fail test 27, this too could be DAA
+        });
         //app.loadCartridge(new gbcemu::FileGamePak("/mnt/c/delete/testrom.gb"));
         //app.setTerminateAfterStop(true);
         uint32_t t = uptimeUs();
