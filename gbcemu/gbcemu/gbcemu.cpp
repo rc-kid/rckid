@@ -356,19 +356,22 @@ namespace rckid::gbcemu {
         totalCycles_ = 0;
         // set the initial values for the IO registers 
         IO_LY = 0; // ensure we'll start with new frame
+    #ifdef GBCEMU_INTERACTIVE_DEBUG     
+        resetVisited();
+    #endif
     }
 
     void GBCEmu::runCPU() {
         clearTilemap();
         clearTileset();
         //setBreakpoint(0xc243);
-        setBreakpoint(0xc24f);
-        setBreakpoint(0xc243);
+        setBreakpoint(0xcb10);
         //setMemoryBreakpoint(0xdffd, 0xdfff);
         while (true) {
             renderLine();
             while (cycles_ < 456) {
-#ifdef GBCEMU_INTERACTIVE_DEBUG                
+#ifdef GBCEMU_INTERACTIVE_DEBUG     
+                markAsVisited(PC);           
                 if (PC == breakpoint_ || debug_) {
                     debugWrite() << "===== BREAKPOINT ===== (pc " << hex(pc_) << ")\n";
                     logDisassembly(PC, PC + 10);
@@ -399,6 +402,53 @@ namespace rckid::gbcemu {
             cycles_ -= 456;
             totalCycles_ += 456;
         }
+    }
+
+    void GBCEmu::setState(uint16_t pc, uint16_t sp, uint16_t af, uint16_t bc, uint16_t de, uint16_t hl, bool ime, uint8_t ie) {
+        PC = pc;
+        SP = sp;
+        AF = af;
+        BC = bc;
+        DE = de;
+        HL = hl;
+        ime_ = ime;
+        IO_IE = ie;
+    }
+
+    void GBCEmu::writeMem(uint16_t address, std::initializer_list<uint8_t> values) {
+        for (uint8_t value : values) {
+            uint32_t page = address >> 12;
+            uint32_t offset = address & 0xfff;
+            if (page == 15)
+                memWr8(address, value);
+            else 
+                memMap_[page][offset] = value;
+            ++address;
+        }
+    }
+
+    uint8_t GBCEmu::readMem(uint16_t address) {
+        return memRd8(address);
+    }
+
+    void GBCEmu::step() {
+        // TODO this is hacky copy from the main loop maybe not exactly what we want
+        uint8_t opcode = mem8(PC++);
+        switch (opcode) {
+            #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
+            case OPCODE: \
+                cycles_ += CYCLES; \
+                if (val_ ## FLAG_Z != -1) setFlagZ(val_ ## FLAG_Z); \
+                if (val_ ## FLAG_N != -1) setFlagN(val_ ## FLAG_N); \
+                if (val_ ## FLAG_H != -1) setFlagH(val_ ## FLAG_H); \
+                if (val_ ## FLAG_C != -1) setFlagC(val_ ## FLAG_C); \
+                __VA_ARGS__ \
+                break;
+            #include "insns.inc.h"
+            default:
+                ASSERT("Unsupported opcode");
+                break;
+        };
     }
 
 #ifdef GBCEMU_INTERACTIVE_DEBUG
@@ -434,6 +484,37 @@ namespace rckid::gbcemu {
         debugWrite() <<  "af:   " <<  hex(AF, false) << " bc:   " <<  hex(BC, false) << " de:   " <<  hex(DE, false) << " hl:   " <<  hex(HL, false) << " sp:   " <<  hex(SP, false) << " pc:   " <<  hex(PC, false) << '\n';
 
         debugWrite() << "lcdc: " << hex(IO_LCDC, false) << "   stat: " << hex(IO_STAT, false) << "   ly:   " << hex(IO_LY, false) << "   ie:   " << hex(IO_IE, false) << "   if:   " << hex(IO_IF, false) << '\n';
+    }
+
+    void GBCEmu::logVisited() {
+        uint32_t total = 0;
+        debugWrite() << "===== VISITED INSTRUCTIONS =====\n";
+        for (uint32_t i = 0; i < 32; ++i) {
+            for (uint32_t j = 0; j < 8; ++j) {
+                if (visitedInstructions_[i] & (1 << j)) {
+                    debugWrite() << hex<uint8_t>(i * 8 + j, false) << ' ';
+                    ++total;
+                } else {
+                    debugWrite() << "   ";
+                }
+            }
+            if (i & 1)
+                debugWrite() << '\n';
+        }
+        debugWrite() << "Extended (0xcb) prefix:\n";
+        for (uint32_t i = 0; i < 32; ++i) {
+            for (uint32_t j = 0; j < 8; ++j) {
+                if (visitedInstructions_[i + 32] & (1 << j)) {
+                    debugWrite() << hex<uint8_t>(i * 8 + j, false) << ' ';
+                    ++total;
+                } else {
+                    debugWrite() << "   ";
+                }
+            }
+            if (i & 1)
+                debugWrite() << '\n';
+        }
+        debugWrite() << "Total: " << total << '\n';
     }
 
     void GBCEmu::clearTilemap() {
@@ -492,6 +573,20 @@ namespace rckid::gbcemu {
         return size;
     }
 
+    void GBCEmu::markAsVisited(uint16_t pc) {
+        uint32_t opcode = mem8(pc);
+        if (opcode == 0xcb)
+            opcode = 0xff + mem8(pc + 1);
+        uint32_t addr = opcode / 8;
+        uint32_t bit = opcode & 7;
+        visitedInstructions_[addr] |= 1 << bit;
+    }
+
+    void GBCEmu::resetVisited() {
+        for (uint32_t i = 0; i < 64; ++i)
+            visitedInstructions_[i] = 0;
+    }
+
     void GBCEmu::debugInteractive() {
         overBreakpoint_ = 0xffffff; // disable step over breakpoint
         debug_ = false;
@@ -504,26 +599,9 @@ namespace rckid::gbcemu {
                     debugWrite() << "> continue\n";
                     return;
                 // execute single instruction
-                case 'n': {
-                    // TODO this is hacky copy from the main loop maybe not exactly what we want
-                    uint8_t opcode = mem8(PC++);
-                    switch (opcode) {
-                        #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
-                        case OPCODE: \
-                            cycles_ += CYCLES; \
-                            if (val_ ## FLAG_Z != -1) setFlagZ(val_ ## FLAG_Z); \
-                            if (val_ ## FLAG_N != -1) setFlagN(val_ ## FLAG_N); \
-                            if (val_ ## FLAG_H != -1) setFlagH(val_ ## FLAG_H); \
-                            if (val_ ## FLAG_C != -1) setFlagC(val_ ## FLAG_C); \
-                            __VA_ARGS__ \
-                            break;
-                        #include "insns.inc.h"
-                        default:
-                            ASSERT("Unsupported opcode");
-                            break;
-                    };
+                case 'n':
+                    step();
                     break;
-                }
                 case 'o':
                     overBreakpoint_ = PC + instructionSize(mem8(PC));
                     return;
@@ -564,6 +642,10 @@ namespace rckid::gbcemu {
                     logMemory(start, start + l);
                     break;
                 }
+                // shows visited instructions
+                case 'v':
+                    logVisited();
+                    break;
                 default:
                     debugWrite() << "! invalid command '" << cmd << "'\n";
             }
@@ -900,3 +982,5 @@ namespace rckid::gbcemu {
     }
 
 } // namespace rckid::gbcemu
+
+
