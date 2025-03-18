@@ -563,7 +563,11 @@ INS(0xef, _,_,_,_, 1, 16, "rst $28", {
     PC = 0x28; 
 })
 INS(0xf0, _,_,_,_, 2, 12, "ldh a, [a8]", { A = memRd8(0xff00 + mem8(PC++)); })
-INS(0xf1, Z,N,H,C, 1, 12, "pop af", { AF = memRd16(SP); SP += 2; })
+INS(0xf1, Z,N,H,C, 1, 12, "pop af", { 
+    AF = memRd16(SP); SP += 2; 
+    // maybe not necessary, but the lower 4 bits of F are always 0 and should be cleared out for consistency as we might be popping into AF sth that was not F register originally
+    F = F & 0xf0; 
+})
 INS(0xf2, _,_,_,_, 1, 8 , "ld a, [c]", { A = memRd8(0xff00 + C); })
 INS(0xf3, _,_,_,_, 1, 4 , "di", { ime_ = false; })
 INS(0xf5, _,_,_,_, 1, 16, "push af", { SP -= 2; memWr16(SP, AF); })

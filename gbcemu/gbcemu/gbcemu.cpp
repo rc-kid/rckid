@@ -365,7 +365,7 @@ namespace rckid::gbcemu {
         clearTilemap();
         clearTileset();
         //setBreakpoint(0xc243);
-        setBreakpoint(0xcb10);
+        //setBreakpoint(0xcb10);
         //setMemoryBreakpoint(0xdffd, 0xdfff);
         while (true) {
             renderLine();
@@ -936,7 +936,7 @@ namespace rckid::gbcemu {
             case 15:
                 if (offset >= 0xf00) {
                     hram_[offset - 0xf00] = value;
-                    if (offset == 0xff01)
+                    if (offset == 0xf01)
                         LOG(LL_GBCEMU_SERIAL, static_cast<char>(value));
                     // TODO special handling for ioregs and stuff
                 } else if (offset >= 0xe00) {
