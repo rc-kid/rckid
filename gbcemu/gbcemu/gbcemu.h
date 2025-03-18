@@ -1,10 +1,8 @@
 #pragma once
+#define GBCEMU_INTERACTIVE_DEBUG
 
 #include <rckid/app.h>
-
 #include "gamepak.h"
-
-#define GBCEMU_INTERACTIVE_DEBUG
 
 namespace rckid::gbcemu {
 
@@ -66,6 +64,14 @@ namespace rckid::gbcemu {
         uint16_t pc() const { return pc_; }
         uint16_t sp() const { return sp_; }
 
+        bool flagZ() const { return regs8_[REG_INDEX_F] & FLAG_Z; }
+        bool flagN() const { return regs8_[REG_INDEX_F] & FLAG_N; }
+        bool flagH() const { return regs8_[REG_INDEX_F] & FLAG_H; }
+        bool flagC() const { return regs8_[REG_INDEX_F] & FLAG_C; }
+
+        bool ime() const { return ime_; }
+        uint8_t ie() const;
+
         uint8_t readWRam(uint32_t offset) {
             uint32_t page = offset >> 12;
             uint32_t pageOffset = offset & 0xfff;
@@ -82,6 +88,16 @@ namespace rckid::gbcemu {
             // note that we keep hram an io regs as a single array, so need to adjust here for the actual hram start inside hram
             return hram_[offset + 128];
         }
+
+        void setState(uint16_t pc, uint16_t sp, uint16_t af, uint16_t bc, uint16_t de, uint16_t hl, bool ime, uint8_t im);
+
+        void writeMem(uint16_t address, std::initializer_list<uint8_t> values);
+
+        uint8_t readMem(uint16_t address);
+
+        /** Performs single instruction step and returns the number of cycles it took. 
+         */
+        void step();
 
 #ifdef GBCEMU_INTERACTIVE_DEBUG
 
@@ -106,6 +122,8 @@ namespace rckid::gbcemu {
         void logMemory(uint16_t start, uint16_t end);
 
         void logStack(uint32_t n);
+
+        void logVisited();
 
         /** Logs the current state of the emulator. 
          */
@@ -194,11 +212,6 @@ namespace rckid::gbcemu {
         static constexpr uint8_t FLAG_N = 1 << 6;
         static constexpr uint8_t FLAG_H = 1 << 5;
         static constexpr uint8_t FLAG_C = 1 << 4;   
-
-        bool flagZ() const { return regs8_[REG_INDEX_F] & FLAG_Z; }
-        bool flagN() const { return regs8_[REG_INDEX_F] & FLAG_N; }
-        bool flagH() const { return regs8_[REG_INDEX_F] & FLAG_H; }
-        bool flagC() const { return regs8_[REG_INDEX_F] & FLAG_C; }
 
         void setFlagZ(bool value) { value ? regs8_[REG_INDEX_F] |= FLAG_Z : regs8_[REG_INDEX_F] &= ~FLAG_Z; }
 
@@ -357,9 +370,12 @@ namespace rckid::gbcemu {
         uint16_t memoryBreakpointStart_ = 0xffff;
         uint16_t memoryBreakpointEnd_ = 0xffff;
         uint32_t overBreakpoint_ = 0xffffff;
+        uint8_t visitedInstructions_[64];
 
 
         uint32_t disassembleInstruction(uint16_t addr);
+        void markAsVisited(uint16_t pc);
+        void resetVisited();
         void debugInteractive();
 #endif
 

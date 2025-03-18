@@ -182,7 +182,7 @@ INS(0x5f, _,_,_,_, 1, 4 , "ld e, a", { E = A; })
 INS(0x60, _,_,_,_, 1, 4 , "ld h, b", { H = B; })
 INS(0x61, _,_,_,_, 1, 4 , "ld h, c", { H = C; })
 INS(0x62, _,_,_,_, 1, 4 , "ld h, d", { H = D; })
-INS(0x63, _,_,_,_, 1, 4 , "ld h, e", { D = E; })
+INS(0x63, _,_,_,_, 1, 4 , "ld h, e", { H = E; })
 INS(0x64, _,_,_,_, 1, 4 , "ld h, h", {})
 INS(0x65, _,_,_,_, 1, 4 , "ld h, l", { H  = L; })
 INS(0x66, _,_,_,_, 1, 8 , "ld h, [hl]", { H = memRd8(HL); })
@@ -548,7 +548,7 @@ INS(0xf8, 0,0,H,C, 2, 12, "ld hl, sp, e8", {
     setFlagC((SP & 0xff) + (imm & 0xff) > 0xff);
 })
 INS(0xf9, _,_,_,_, 1, 8 , "ld sp, hl", { SP = HL; })
-INS(0xfa, _,_,_,_, 3, 16, "ld a, [a16]", { A = mem16(PC); PC += 2; })
+INS(0xfa, _,_,_,_, 3, 16, "ld a, [a16]", { A = memRd8(mem16(PC)); PC += 2; })
 INS(0xfb, _,_,_,_, 1, 4 , "ei", { ime_ = true; })
 INS(0xfe, Z,1,H,C, 2, 8 , "cp a, n8", { sub8(A, mem8(PC++)); })
 INS(0xff, _,_,_,_, 1, 16, "rst $38", { 
