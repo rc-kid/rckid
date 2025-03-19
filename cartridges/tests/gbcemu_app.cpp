@@ -53,11 +53,11 @@ int main() {
         Arena::enter();
         auto app = gbcemu::GBCEmu{Arena::allocator()};
         //app.loadCartridge(new gbcemu::FlashGamePak{});
-        //if (false)
+        if (false)
         app.loadCartridge(new gbcemu::FlashGamePak{
             // gbcemu::DMGBootloader
-            // rckid::gbcemu::rom::blargg::instrs::special // fail on DAA
-            rckid::gbcemu::rom::blargg::instrs::interrupts // failed #2 (EI)
+            rckid::gbcemu::rom::blargg::instrs::special // fail on DAA
+            // rckid::gbcemu::rom::blargg::instrs::interrupts
             // rckid::gbcemu::rom::blargg::instrs::op_sp_hl
             // rckid::gbcemu::rom::blargg::instrs::op_r_imm
             // rckid::gbcemu::rom::blargg::instrs::op_rp
@@ -68,7 +68,7 @@ int main() {
             // rckid::gbcemu::rom::blargg::instrs::bit_ops
             // rckid::gbcemu::rom::blargg::instrs::op_a__hl_ // fail test 27, this too could be DAA
         });
-        //app.loadCartridge(new gbcemu::FileGamePak("/mnt/c/delete/testrom.gb"));
+        app.loadCartridge(new gbcemu::FileGamePak("/mnt/c/delete/testrom.gb"));
         //app.setTerminateAfterStop(true);
         uint32_t t = uptimeUs();
         app.run();

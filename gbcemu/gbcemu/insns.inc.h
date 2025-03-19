@@ -37,11 +37,11 @@ INS(0x0c, Z,0,H,_, 1, 4 , "inc c", { C = inc8(C); })
 INS(0x0d, Z,1,H,_, 1, 4 , "dec c", { C = dec8(C); })
 INS(0x0e, _,_,_,_, 2, 8 , "ld c, n8", { C = mem8(PC++); })
 INS(0x0f, 0,0,0,C, 1, 4 , "rrca", { A = rrc8(A); })
-/** The stop instruction is also used to stop a program when necessary, which is used for testing extensively. 
+/** TODO similar to halt likely 
  */
 INS(0x10, _,_,_,_, 2, 4 , "stop n8", {
     mem8(PC++);
-    // TODO
+    UNIMPLEMENTED;
 })
 INS(0x11, _,_,_,_, 3, 12, "ld de, n16", { DE = mem16(PC); PC += 2; })
 INS(0x12, _,_,_,_, 1, 8 , "ld [de], a", { memWr8(DE, A); })
@@ -200,10 +200,13 @@ INS(0x72, _,_,_,_, 1, 8 , "ld [hl], d", { memWr8(HL, D); })
 INS(0x73, _,_,_,_, 1, 8 , "ld [hl], e", { memWr8(HL, E); })
 INS(0x74, _,_,_,_, 1, 8 , "ld [hl], h", { memWr8(HL, H); })
 INS(0x75, _,_,_,_, 1, 8 , "ld [hl], l", { memWr8(HL, L); })
+
+/** Halt pauses execution until an interrupt is requested. 
+ 
+    We do this by a trick - halt moves the PC back by one byte so that next instruction will be halt again. This will allow the cycles to continue and other timings to work as instructed, but when an interrupt is being triggered we check if current instruction is HALT and advance to the next instruction in that case. 
+ */
 INS(0x76, _,_,_,_, 1, 4 , "halt", {
-    // what should halt actually do? 
-    //while(true) {};
-    //UNIMPLEMENTED;
+    --PC;
 })
 INS(0x77, _,_,_,_, 1, 8 , "ld [hl], a", { memWr8(HL, A); })
 INS(0x78, _,_,_,_, 1, 4 , "ld a, b", { A = B; })
