@@ -16,9 +16,11 @@
 #define PC (pc_)
 #define SP (sp_)
 
+#define IO_ADDR(REG) (& REG - hram_)
+
 /** The joypad register. 
  
-    Writing to the register's upper nibble chooses between dpad (bit 4) and buttons (bit 5), while the lower nibble contains the values of the buttons. When button is pressed, it should read 0. 
+    Writing to the register's upper nibble chooses between dpad (bit 4) and buttons (bit 5), while the lower nibble contains the values of the buttons. When button is pressed, it should read 0. Internally this really is a button matrix.
 
     bit 5 = select buttons (write)
     bit 4 = select dpad (write)
@@ -26,17 +28,45 @@
     bit 2 = select / up (read)
     bit 1 = B / left (read)
     bit 0 = A / right (read)
+
+    When any of the lower bits transition from 1 to 0, the joypad interrupt is raised.
  */
 #define IO_JOYP (hram_[0x00])
 static constexpr uint8_t JOYP_DPAD = 16;
 static constexpr uint8_t JOYP_BUTTONS = 32;
 
+/** When device wants to transfer a byte via the serial line, it writes it to this register. 
+ */
 #define IO_SB (hram_[0x01])
 #define IO_SC (hram_[0x02])
+
+/** The 16384Hz timer. This value is incremented at a steady rate. Any write to it should reset the value to 0. 
+ 
+    The DMG runs the CPU at 4 194 304 Hz, which means it should be incremented 256 times in a second, while the CGB runs at 8 388 608 Hz, exactly double the rate, which gives 512 increments per second. 
+
+    TODO Determine when & how to update this
+ */
 #define IO_DIV (hram_[0x04])
+
+/** Timer counter. Increments the register value at rate given by IO_TAC. When it overflows 0xff, it is being reset to IO_TMA value. 
+ */
 #define IO_TIMA (hram_[0x05])
+
+/** Timer modulo. When IO_TIMA overflows, it is reset to this value. 
+ */
 #define IO_TMA (hram_[0x06])
+
+/** The Timer control register. 
+ 
+    When the timer is enabled, the IO_TIMA is incremented at the rate given by the lower 2 bits of this register. Note that the IO_DIV is always counting, and unlike the IO_TIMA is not specified in M cycles, but actual Hz so will increment at the same pace in both DMG and CGB, whereas the IO_TIMA will run twice as fast on CGB for the same values. 
+ */
 #define IO_TAC (hram_[0x07])
+static constexpr uint8_t TAC_ENABLE = 4;
+static constexpr uint8_t TAC_CLOCK_SELECT_MASK = 3;
+static constexpr uint8_t TAC_CLOCK_SELECT_256M = 0;
+static constexpr uint8_t TAC_CLOCK_SELECT_4M = 1;
+static constexpr uint8_t TAC_CLOCK_SELECT_16M = 2;
+static constexpr uint8_t TAC_CLOCK_SELECT_64M = 4;
 
 /** The Interrupt Flag Register
  
@@ -302,7 +332,7 @@ namespace rckid::gbcemu {
         // IO_DIV = 0x18; // from DMG, can't tell on CBG
         IO_TIMA = 0x00;
         IO_TMA = 0x00;
-        IO_TAC = 0xf8;
+        setIORegisterOrHRAM(IO_ADDR(IO_TAC), 0xf8);
         IO_IF = 0xe1;
         IO_NR10 = 0x80;
         IO_NR11 = 0xbf;
@@ -352,8 +382,7 @@ namespace rckid::gbcemu {
         IO_SVBK = 0xf8;
         IO_IE = 0;
         // and reset counters
-        cycles_ = 0;
-        totalCycles_ = 0;
+        timerCycles_ = 0;
         // set the initial values for the IO registers 
         IO_LY = 0; // ensure we'll start with new frame
     #ifdef GBCEMU_INTERACTIVE_DEBUG     
@@ -369,8 +398,8 @@ namespace rckid::gbcemu {
         //setMemoryBreakpoint(0xdffd, 0xdfff);
         while (true) {
             renderLine();
-            while (cycles_ < 456) {
-#ifdef GBCEMU_INTERACTIVE_DEBUG     
+            for (uint32_t cycles = 0; cycles < cyclesPerLine_; ) {
+    #ifdef GBCEMU_INTERACTIVE_DEBUG     
                 markAsVisited(PC);           
                 if (PC == breakpoint_ || debug_) {
                     debugWrite() << "===== BREAKPOINT ===== (pc " << hex(pc_) << ")\n";
@@ -380,27 +409,9 @@ namespace rckid::gbcemu {
                 } else if (PC == overBreakpoint_) {
                     debugInteractive();
                 }
-#endif
-                uint8_t opcode = mem8(PC++);
-                switch (opcode) {
-                    #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
-                    case OPCODE: \
-                        /*LOG(LL_GBCEMU_INS, hex((uint16_t)(pc_ - 1)) << ": " << MNEMONIC);*/ \
-                        cycles_ += CYCLES; \
-                        if (val_ ## FLAG_Z != -1) setFlagZ(val_ ## FLAG_Z); \
-                        if (val_ ## FLAG_N != -1) setFlagN(val_ ## FLAG_N); \
-                        if (val_ ## FLAG_H != -1) setFlagH(val_ ## FLAG_H); \
-                        if (val_ ## FLAG_C != -1) setFlagC(val_ ## FLAG_C); \
-                        __VA_ARGS__ \
-                        break;
-                    #include "insns.inc.h"
-                    default:
-                        ASSERT("Unsupported opcode");
-                        break;
-                };
+    #endif
+                cycles += step();
             }
-            cycles_ -= 456;
-            totalCycles_ += 456;
         }
     }
 
@@ -431,13 +442,13 @@ namespace rckid::gbcemu {
         return memRd8(address);
     }
 
-    void GBCEmu::step() {
-        // TODO this is hacky copy from the main loop maybe not exactly what we want
+    uint32_t GBCEmu::step() {
+        uint32_t usedCycles = 0;
         uint8_t opcode = mem8(PC++);
         switch (opcode) {
             #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
             case OPCODE: \
-                cycles_ += CYCLES; \
+                usedCycles = CYCLES; \
                 if (val_ ## FLAG_Z != -1) setFlagZ(val_ ## FLAG_Z); \
                 if (val_ ## FLAG_N != -1) setFlagN(val_ ## FLAG_N); \
                 if (val_ ## FLAG_H != -1) setFlagH(val_ ## FLAG_H); \
@@ -449,6 +460,9 @@ namespace rckid::gbcemu {
                 ASSERT("Unsupported opcode");
                 break;
         };
+        timerCycles_ += usedCycles;
+        updateTimer();
+        return usedCycles;
     }
 
 #ifdef GBCEMU_INTERACTIVE_DEBUG
@@ -930,39 +944,59 @@ namespace rckid::gbcemu {
             case 12:
             case 13:
             case 14:
-                // vram and wram are always there so we can do what we want
+                // vram and wram are always there so we can do what we want, the shadow mem is implemented having the shadow pages identical to the real ones
                 memMap_[page][offset] = value;
                 break;
             case 15:
-                if (offset >= 0xf00) {
-                    hram_[offset - 0xf00] = value;
-                    if (offset == 0xf01)
-                        LOG(LL_GBCEMU_SERIAL, static_cast<char>(value));
-                    // TODO special handling for ioregs and stuff
-                } else if (offset >= 0xe00) {
+                if (offset >= 0xf00)
+                    setIORegisterOrHRAM(offset - 0xf00, value);
+                else if (offset >= 0xe00)
                     oam_[offset - 0xe00] = value;
-                } else {
+                else
                     memMap_[page][offset] = value;
+                break;
+        }
+    }
+
+    void GBCEmu::setIORegisterOrHRAM(uint32_t addr, uint8_t value) {
+        switch (addr) {
+            case 0x00: // IO_JOYP
+                // only the upper nibble is writeable, and once written, update the lower nibble accordingly
+                IO_JOYP = (IO_JOYP & 0xf) | (value & 0xf0);
+                updateIO_JOYP();
+                break;
+            case 0x01: // IO_SB
+                LOG(LL_GBCEMU_SERIAL, static_cast<char>(value));
+                break;
+            case 0x02: // IO_SC
+                break;
+            case 0x04: // IO_DIV
+                // this is the 16374Hz timer. Any write to the register resets the value to zero
+                IO_DIV = 0;
+                return; // do not perform the write
+            case 0x05: // IO_TIMA
+            case 0x06: // IO_TMA
+                break; // no special care necessary for those registers
+            case 0x07: // IO_TAC
+                if (value & TAC_ENABLE == 0)
+                    timerCycles_ = 0;
+                else switch (value & TAC_CLOCK_SELECT_MASK) {
+                    case TAC_CLOCK_SELECT_256M:
+                        timerTIMAModulo_ = 255;
+                        break;
+                    case TAC_CLOCK_SELECT_4M:
+                        timerTIMAModulo_ = 3;
+                        break;
+                    case TAC_CLOCK_SELECT_16M:
+                        timerTIMAModulo_ = 15;
+                        break;
+                    case TAC_CLOCK_SELECT_64M:
+                        timerTIMAModulo_ = 63;
+                        break;
                 }
                 break;
         }
-        /*
-        if (page < 8) {
-            //UNIMPLEMENTED;
-            // TODO bank switching
-        })
-        } else if (page != 15) {
-            memMap_[page][offset] = value;
-        } else if (offset >= 0xf00) {
-            hram_[offset - 0xf00] = value;
-            if (offset == 0xff01)
-                LOG(LL_GBCEMU_SERIAL, static_cast<char>(value));
-            // TODO special handling for ioregs and stuff
-        } else if (offset >= 0xe00) {
-            oam_[offset - 0xe00] = value;
-        } else {
-            memMap_[page][offset] = value;
-        }*/
+        hram_[addr] = value;
     }
 
     void GBCEmu::memWr16(uint16_t addr, uint16_t value) {
@@ -979,6 +1013,43 @@ namespace rckid::gbcemu {
     uint16_t GBCEmu::mem16(uint16_t addr) {
         // TODO this is the naive implementation where we read two bytes and combine them. However, when reading from the lower pages and the read does not cross page boundary, we can optimize this into a single 16bit read
         return mem8(addr) | (mem8(addr + 1) << 8);
+    }
+
+
+    void GBCEmu::updateTimer() {
+        if (timerCycles_ & timerDIVModulo_ == 0)
+            ++IO_DIV;
+        if (timerTIMAModulo_ != 0 && timerCycles_ & timerTIMAModulo_ == 0) {
+            if (++IO_TIMA == 0) {
+                IO_TIMA = IO_TMA;
+                IO_IF |= IF_TIMER;
+            }
+        }
+    }
+
+    void GBCEmu::updateIO_JOYP() {
+        #undef A
+        #undef B
+        uint8_t value;
+        if (IO_JOYP & 0x10) { // dpad
+            value = (btnDown(Btn::Down)   ? 0 : 8) |
+                    (btnDown(Btn::Up)     ? 0 : 4) |
+                    (btnDown(Btn::Left)   ? 0 : 2) |
+                    (btnDown(Btn::Right)  ? 0 : 1);
+        } else { // buttons
+            value = (btnDown(Btn::Start)  ? 0 : 8) |
+                    (btnDown(Btn::Select) ? 0 : 4) |
+                    (btnDown(Btn::B)      ? 0 : 2) |
+                    (btnDown(Btn::A)      ? 0 : 1);
+        }
+        // check if we need an interrupt to be requested
+        if ( ((value & 1) == 0 && IO_JOYP & 1) ||
+             ((value & 2) == 0 && IO_JOYP & 2) ||
+             ((value & 4) == 0 && IO_JOYP & 4) ||
+             ((value & 8) == 0 && IO_JOYP & 8) )
+            IO_IF |= IF_JOYPAD;
+        // set the register
+        IO_JOYP = (IO_JOYP & 0xf0) | value;
     }
 
 } // namespace rckid::gbcemu

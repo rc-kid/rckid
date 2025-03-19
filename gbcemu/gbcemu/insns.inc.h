@@ -43,7 +43,7 @@ INS(0x10, _,_,_,_, 2, 4 , "stop n8", {
     mem8(PC++);
     if (terminateAfterStop_) {
         exit();
-        return;
+        return usedCycles;
     }
 })
 INS(0x11, _,_,_,_, 3, 12, "ld de, n16", { DE = mem16(PC); PC += 2; })
@@ -70,7 +70,7 @@ INS(0x20, _,_,_,_, 2, 8 + 4, "jr nz, e8", {
     if (! flagZ())
         PC += offset;
     else
-        cycles_ -= 4;
+        usedCycles -= 4;
 })
 INS(0x21, _,_,_,_, 3, 12, "ld hl, n16", { HL = mem16(PC); PC += 2; })
 INS(0x22, _,_,_,_, 1, 8 , "ld [hl+], a", { memWr8(HL, A); ++HL; })
@@ -86,17 +86,17 @@ INS(0x26, _,_,_,_, 2, 8 , "ld h, n8", { H = mem8(PC++); })
  */
 INS(0x27, Z,_,0,C, 1, 4 , "daa", {
     if (!flagN()) {
-        if (flagC() || A > 0x99) {
+        if (flagH() || (A & 0x0f) > 0x09)
+            A += 0x06;
+        if (flagC() || A > 0x9f) {
             A += 0x60;
             setFlagC(true);
         }
-        if (flagH() || (A & 0x0f) > 0x09)
-            A += 0x06;
     } else {
-        if (flagC())
-            A -= 0x60;
         if (flagH())
             A -= 0x06;
+        if (flagC())
+            A -= 0x60;
     }
     setFlagZ(A == 0);
 })
@@ -106,7 +106,7 @@ INS(0x28, _,_,_,_, 2, 8 + 4, "jr z, e8", {
     if (flagZ())
         PC += offset;
     else
-        cycles_ -= 4;
+        usedCycles -= 4;
 })
 INS(0x29, _,0,H,C, 1, 8 , "add hl, hl", { HL = add16(HL, HL); })
 INS(0x2a, _,_,_,_, 1, 8 , "ld a, [hl+]", { A = memRd8(HL); ++HL; })
@@ -121,7 +121,7 @@ INS(0x30, _,_,_,_, 2, 8 + 4, "jr nc, e8", {
     if (! flagC())
         PC += offset;
     else
-        cycles_ -= 4;
+        usedCycles -= 4;
 })
 INS(0x31, _,_,_,_, 3, 12, "ld sp, n16", { SP = mem16(PC); PC += 2; })
 INS(0x32, _,_,_,_, 1, 8 , "ld [hl-], a", { memWr8(HL, A); --HL; })
@@ -138,7 +138,7 @@ INS(0x38, _,_,_,_, 2, 8 + 4, "jr c, e8", {
     if (flagC())
         PC += offset;
     else
-        cycles_ -= 4;
+        usedCycles -= 4;
 })
 INS(0x39, _,0,H,C, 1, 8 , "add hl, sp", { HL = add16(HL, SP); })
 INS(0x3a, _,_,_,_, 1, 8 , "ld a, [hl-]", { A = memRd8(HL); --HL; })
@@ -289,7 +289,7 @@ INS(0xc0, _,_,_,_, 1, 8 + 12, "ret nz", {
         PC = memRd16(SP);
         SP += 2;
     } else {
-        cycles_ -= 12;
+        usedCycles -= 12;
     }
 })
 INS(0xc1, _,_,_,_, 1, 12, "pop bc", { BC = memRd16(SP); SP += 2; })
@@ -299,7 +299,7 @@ INS(0xc2, _,_,_,_, 3, 12 + 4, "jp nz, a16", {
     if (! flagZ())
         PC = addr;
     else
-        cycles_ -= 4;
+        usedCycles -= 4;
 })
 INS(0xc3, _,_,_,_, 3, 16, "jp a16", { PC = mem16(PC); })
 INS(0xc4, _,_,_,_, 3, 12 + 12, "call nz, a16", {
@@ -310,7 +310,7 @@ INS(0xc4, _,_,_,_, 3, 12 + 12, "call nz, a16", {
         memWr16(SP, PC);
         PC = addr;
     } else {
-        cycles_ -= 12;
+        usedCycles -= 12;
     }
 })
 INS(0xc5, _,_,_,_, 1, 16, "push bc", { SP -= 2; memWr16(SP, BC); })
@@ -326,7 +326,7 @@ INS(0xc8, _,_,_,_, 1, 8 + 12, "ret z", {
         PC = memRd16(SP);
         SP += 2;
     } else {
-        cycles_ -= 12;
+        usedCycles -= 12;
     }
 })
 INS(0xc9, _,_,_,_, 1, 16, "ret", { PC = memRd16(SP); SP += 2; })
@@ -336,7 +336,7 @@ INS(0xca, _,_,_,_, 3, 12 + 4, "jp z, a16", {
     if (flagZ())
         PC = addr;
     else
-        cycles_ -= 4;
+        usedCycles -= 4;
 })
 /** The prefixed instructions. 
  
@@ -446,7 +446,7 @@ INS(0xcc, _,_,_,_, 3, 12 + 12, "call z, a16", {
         memWr16(SP, PC);
         PC = addr;
     } else {
-        cycles_ -= 12;
+        usedCycles -= 12;
     }
 })
 INS(0xcd, _,_,_,_, 3, 24, "call a16", {
@@ -467,7 +467,7 @@ INS(0xd0, _,_,_,_, 1, 8 + 12, "ret nc", {
         PC = memRd16(SP);
         SP += 2;
     } else {
-        cycles_ -= 12;
+        usedCycles -= 12;
     }
 })
 INS(0xd1, _,_,_,_, 1, 12, "pop de", { DE = memRd16(SP); SP += 2; })
@@ -477,7 +477,7 @@ INS(0xd2, _,_,_,_, 3, 12 + 4, "jp nc, a16", {
     if (! flagC())
         PC = addr;
     else
-        cycles_ -= 4;
+        usedCycles -= 4;
 })
 INS(0xd4, _,_,_,_, 3, 12 + 12, "call nc, a16", {
     // 6 cycles taken, 3 cycles not taken
@@ -487,7 +487,7 @@ INS(0xd4, _,_,_,_, 3, 12 + 12, "call nc, a16", {
         memWr16(SP, PC);
         PC = addr;
     } else {
-        cycles_ -= 12;
+        usedCycles -= 12;
     }
 })
 INS(0xd5, _,_,_,_, 1, 16, "push de", { SP -= 2; memWr16(SP, DE); })
@@ -503,7 +503,7 @@ INS(0xd8, _,_,_,_, 1, 8 + 12, "ret c", {
         PC = memRd16(SP);
         SP += 2;
     } else {
-        cycles_ -= 12;
+        usedCycles -= 12;
     }
 })
 INS(0xd9, _,_,_,_, 1, 16, "reti", {
@@ -517,7 +517,7 @@ INS(0xda, _,_,_,_, 3, 12 + 4, "jp c, a16", {
     if (flagC())
         PC = addr;
     else
-        cycles_ -= 4;
+        usedCycles -= 4;
 })
 INS(0xdc, _,_,_,_, 3, 12 + 12, "call c, a16", {
     // 6 cycles taken, 3 cycles not taken
@@ -527,7 +527,7 @@ INS(0xdc, _,_,_,_, 3, 12 + 12, "call c, a16", {
         memWr16(SP, PC);
         PC = addr;
     } else {
-        cycles_ -= 12;
+        usedCycles -= 12;
     }
 })
 INS(0xde, Z,1,H,C, 2, 8 , "sbc a, n8", { A = sub8(A, mem8(PC++), flagC()); })

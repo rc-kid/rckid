@@ -45,7 +45,7 @@ namespace rckid::gbcemu {
         bool terminateAfterStop() const { return terminateAfterStop_; }
         void setTerminateAfterStop(bool value) { terminateAfterStop_ = value; }
 
-        uint32_t elapsedCycles() const { return cycles_ + totalCycles_; }
+        uint32_t elapsedCycles() const { return timerCycles_; }
 
         uint8_t a() const { return regs8_[REG_INDEX_A]; }
         uint8_t b() const { return regs8_[REG_INDEX_B]; }
@@ -72,23 +72,6 @@ namespace rckid::gbcemu {
         bool ime() const { return ime_; }
         uint8_t ie() const;
 
-        uint8_t readWRam(uint32_t offset) {
-            uint32_t page = offset >> 12;
-            uint32_t pageOffset = offset & 0xfff;
-            return wram_[page][pageOffset];
-        }
-
-        uint8_t readOam(uint32_t offset) const {
-            return oam_[offset];
-        }
-
-        /** Reads the high RAM at given offset. 
-         */
-        uint8_t readHRam(uint32_t offset) const {
-            // note that we keep hram an io regs as a single array, so need to adjust here for the actual hram start inside hram
-            return hram_[offset + 128];
-        }
-
         void setState(uint16_t pc, uint16_t sp, uint16_t af, uint16_t bc, uint16_t de, uint16_t hl, bool ime, uint8_t im);
 
         void writeMem(uint16_t address, std::initializer_list<uint8_t> values);
@@ -97,7 +80,7 @@ namespace rckid::gbcemu {
 
         /** Performs single instruction step and returns the number of cycles it took. 
          */
-        void step();
+        uint32_t  step();
 
 #ifdef GBCEMU_INTERACTIVE_DEBUG
 
@@ -264,6 +247,10 @@ namespace rckid::gbcemu {
         void memWr8(uint16_t addr, uint8_t value);
         void memWr16(uint16_t addr, uint16_t value);
 
+        /** Sets the specific IO register, or HRAM.
+         */
+        void setIORegisterOrHRAM(uint32_t addr, uint8_t value);
+
         /** Sets the second ROM page to the given address. The address must point to a consecutive 16KB bytes long array. 
          */
         void setRomPage(uint32_t page);
@@ -296,6 +283,30 @@ namespace rckid::gbcemu {
 
         // memory mapping information. For fast access, the memory is divided into 16 4kb regions with pointers to beginning in the array. This is true for all but the last block, which is a bit more complex as it contains echo ram, oam memory, io regs and hram.
         uint8_t * memMap_[16];
+
+        /** \name Controls
+         
+            Controls are really simple, the IO_JOYP register controls both the dpad and the buttons as well as selecting whether it is the dpad or the buttons that will be actively monitored. An interrupt is requested whenever a lower bit goes from high to low. 
+
+            Important to note is that button bit being 0 means the button is pressed, while high means released. There is apparently no HW debouncing on the gameboy so multiple presses are possible. 
+         
+            TODO this function should be called regularly at each tick to update the IO_JOYP register with any changes in the button state. 
+         */
+        //{
+        void updateIO_JOYP();
+        //} 
+
+        /** \name Timer
+         */
+        //@{
+        void updateTimer();
+
+        uint32_t timerDIVModulo_ = 255;
+        uint32_t timerTIMAModulo_ = 0;
+        uint32_t timerCycles_ = 0;
+        //@}
+
+
 
         /** \name PPU
      
@@ -331,7 +342,7 @@ namespace rckid::gbcemu {
 
         /** Dots per scanline. There are 154 scanlines, 144 of which are visible on the display. 
          */
-        static constexpr uint32_t DOTS_PER_LINE = 456;
+        uint32_t cyclesPerLine_ = 456; 
 
         void setMode(unsigned mode);
         
@@ -344,17 +355,14 @@ namespace rckid::gbcemu {
         void renderLine();
         //@}
 
+
+
         /** \name CPU 
          */
         void runCPU(); 
 
         // Current gamepak
         GamePak * gamepak_ = nullptr;
-
-        // cycles elapsed since last display update
-        uint32_t cycles_ = 0;
-
-        uint32_t totalCycles_ = 0;
 
         // interrupts enabled flag (cannot be read, only set by insns)
         // TODO is this necessary or can I just use the last high mem byte?
