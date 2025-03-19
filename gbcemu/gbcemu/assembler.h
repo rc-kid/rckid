@@ -256,6 +256,7 @@
 #define EI                      0xfb
 // 0xfc not used
 // 0xfd not used
+#define BKPT                    0xfd
 #define CP_A_imm8(IMM)          0xfe, IMM
 #define RST_38                  0xff
 

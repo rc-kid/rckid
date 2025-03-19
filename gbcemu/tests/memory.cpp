@@ -55,12 +55,11 @@ namespace rckid::gbcemu {
         EXPECT(gbc.hl(), 0xfe03);
         EXPECT(gbc.readMem(0xfe00), 0);
         EXPECT(gbc.readMem(0xfe01), 1);
-        EXPECT(gbc.readMem(0xfe0), 2);
+        EXPECT(gbc.readMem(0xfe02), 2);
         EXPECT(gbc.b(), 0);
         EXPECT(gbc.c(), 1);
         EXPECT(gbc.a(), 2);
     }
-
 
     TEST(gbcemu, memory_hram) {
         GBCEmu gbc{};
