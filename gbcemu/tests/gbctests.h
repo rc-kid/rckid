@@ -36,7 +36,7 @@
     /* 120 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
     /* 130 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, \
     /* 140 */ 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, \
-    __VA_ARGS__ STOP }; gbc.loadCartridge(new FlashGamePak{pgm}); gbc.setTerminateAfterStop(true); gbc.run(); } while (false)
+    __VA_ARGS__ BKPT }; gbc.loadCartridge(new FlashGamePak{pgm}); gbc.setTerminateAfterStop(true); gbc.run(); } while (false)
 
 #define EXPECT_FLAGS(...) EXPECT((int)gbc.f(), (static_cast<int>(__VA_ARGS__)))
 

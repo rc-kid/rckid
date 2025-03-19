@@ -41,10 +41,7 @@ INS(0x0f, 0,0,0,C, 1, 4 , "rrca", { A = rrc8(A); })
  */
 INS(0x10, _,_,_,_, 2, 4 , "stop n8", {
     mem8(PC++);
-    if (terminateAfterStop_) {
-        exit();
-        return usedCycles;
-    }
+    // TODO
 })
 INS(0x11, _,_,_,_, 3, 12, "ld de, n16", { DE = mem16(PC); PC += 2; })
 INS(0x12, _,_,_,_, 1, 8 , "ld [de], a", { memWr8(DE, A); })
@@ -591,6 +588,13 @@ INS(0xfa, _,_,_,_, 3, 16, "ld a, [a16]", { A = memRd8(mem16(PC)); PC += 2; })
     Note that in the original gameboy, this instruction enables interrupts, but only after the next instruction. Emulating such details is likely not necessary so we enable them immediately.
  */
 INS(0xfb, _,_,_,_, 1, 4 , "ei", { ime_ = true; })
+
+
+
+INS(0xfd, _,_,_,_, 1, 4,  "bkpt", {
+    // the bkpt instruction should actually never be executed
+    UNREACHABLE;
+})
 INS(0xfe, Z,1,H,C, 2, 8 , "cp a, n8", { sub8(A, mem8(PC++)); })
 INS(0xff, _,_,_,_, 1, 16, "rst $38", { 
     SP -= 2; 

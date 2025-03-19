@@ -51,6 +51,8 @@ extern "C" {
 
 namespace rckid {
 
+    bool initialized_ = false;
+
     // forward declaration of the bsod function
     NORETURN(void bsod(uint32_t error, uint32_t line = 0, char const * file = nullptr));
 
@@ -77,8 +79,6 @@ namespace rckid {
 
     namespace display {
         DisplayRefreshDirection direction;
-        //DisplayResolution resolution;
-        //DisplayRefreshDirection direction;
         Rect rect = Rect::WH(RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT);
         Image img;
         Texture texture;
@@ -201,6 +201,8 @@ namespace rckid {
 
 
         filesystem::initialize();
+        // mark that we are initialized and the graphics & sound should be used
+        initialized_ = true;
     }
 
     void tick() {
@@ -286,6 +288,8 @@ namespace rckid {
     // display 
 
     void displayDraw() {
+        if (initialized_)
+            return;
         SystemMallocGuard g;
         UpdateTexture(display::texture, display::img.data);
         BeginDrawing();

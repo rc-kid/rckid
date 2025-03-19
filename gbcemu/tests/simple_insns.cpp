@@ -7,7 +7,7 @@ namespace rckid::gbcemu {
         RUN(
             NOP, 
         );
-        EXPECT_CYCLES(8);
+        EXPECT_CYCLES(4);
     }
 
     TEST(gbcemu, simple_scf) {

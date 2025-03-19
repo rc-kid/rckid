@@ -1,5 +1,8 @@
 #pragma once
+
+
 #define GBCEMU_INTERACTIVE_DEBUG
+#define GBCEMU_ENABLE_BKPT
 
 #include <rckid/app.h>
 #include "gamepak.h"

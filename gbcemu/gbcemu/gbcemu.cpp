@@ -410,6 +410,12 @@ namespace rckid::gbcemu {
                     debugInteractive();
                 }
     #endif
+    #ifdef GBCEMU_ENABLE_BKPT
+                if (mem8(PC) == 0xfd) {
+                    exit(); // we'll leave the app too
+                    return;
+                }
+    #endif
                 cycles += step();
             }
         }
