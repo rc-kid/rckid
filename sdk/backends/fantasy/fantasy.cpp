@@ -288,7 +288,7 @@ namespace rckid {
     // display 
 
     void displayDraw() {
-        if (initialized_)
+        if (! initialized_)
             return;
         SystemMallocGuard g;
         UpdateTexture(display::texture, display::img.data);
