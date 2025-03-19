@@ -12,8 +12,8 @@ namespace rckid::gbcemu {
             LD_incHL_A,
         );
         EXPECT(gbc.hl(), 0xc002);
-        EXPECT(gbc.readWRam(0), 0x12);
-        EXPECT(gbc.readWRam(1), 0x13);
+        EXPECT(gbc.readMem(0xc000), 0x12);
+        EXPECT(gbc.readMem(0xc001), 0x13);
     }
 
     TEST(gbcemu, memory_stack) {
@@ -53,9 +53,9 @@ namespace rckid::gbcemu {
             LD_A_incHL,
         );
         EXPECT(gbc.hl(), 0xfe03);
-        EXPECT(gbc.readOam(0), 0);
-        EXPECT(gbc.readOam(1), 1);
-        EXPECT(gbc.readOam(2), 2);
+        EXPECT(gbc.readMem(0xfe00), 0);
+        EXPECT(gbc.readMem(0xfe01), 1);
+        EXPECT(gbc.readMem(0xfe0), 2);
         EXPECT(gbc.b(), 0);
         EXPECT(gbc.c(), 1);
         EXPECT(gbc.a(), 2);
@@ -80,9 +80,9 @@ namespace rckid::gbcemu {
             LD_A_incHL,
         );
         EXPECT(gbc.hl(), 0xff83);
-        EXPECT(gbc.readHRam(0), 10);
-        EXPECT(gbc.readHRam(1), 11);
-        EXPECT(gbc.readHRam(2), 12);
+        EXPECT(gbc.readMem(0xff80), 10);
+        EXPECT(gbc.readMem(0xff81), 11);
+        EXPECT(gbc.readMem(0xff82), 12);
         EXPECT(gbc.b(), 10);
         EXPECT(gbc.c(), 11);
         EXPECT(gbc.a(), 12);
