@@ -3,6 +3,7 @@
 
 #define GBCEMU_INTERACTIVE_DEBUG
 #define GBCEMU_ENABLE_BKPT
+//#define GBCEMU_TRACE_INSTRUCTIONS
 
 #include <rckid/app.h>
 #include "gamepak.h"

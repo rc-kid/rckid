@@ -53,7 +53,7 @@ int main() {
         Arena::enter();
         auto app = gbcemu::GBCEmu{Arena::allocator()};
         //app.loadCartridge(new gbcemu::FlashGamePak{});
-        if (false)
+        //if (false)
         app.loadCartridge(new gbcemu::FlashGamePak{
             // gbcemu::DMGBootloader
             // rckid::gbcemu::rom::blargg::instrs::special // fail on DAA
@@ -68,7 +68,7 @@ int main() {
             // rckid::gbcemu::rom::blargg::instrs::bit_ops
             // rckid::gbcemu::rom::blargg::instrs::op_a__hl_ // fail test 27, this too could be DAA
         });
-        app.loadCartridge(new gbcemu::FileGamePak("/mnt/c/delete/testrom.gb"));
+        //app.loadCartridge(new gbcemu::FileGamePak("/mnt/c/delete/testrom.gb"));
         //app.setTerminateAfterStop(true);
         uint32_t t = uptimeUs();
         app.run();

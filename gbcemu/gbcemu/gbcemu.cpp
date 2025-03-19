@@ -66,7 +66,7 @@ static constexpr uint8_t TAC_CLOCK_SELECT_MASK = 3;
 static constexpr uint8_t TAC_CLOCK_SELECT_256M = 0;
 static constexpr uint8_t TAC_CLOCK_SELECT_4M = 1;
 static constexpr uint8_t TAC_CLOCK_SELECT_16M = 2;
-static constexpr uint8_t TAC_CLOCK_SELECT_64M = 4;
+static constexpr uint8_t TAC_CLOCK_SELECT_64M = 3;
 
 /** The Interrupt Flag Register
  
@@ -80,7 +80,7 @@ static constexpr uint8_t TAC_CLOCK_SELECT_64M = 4;
 static constexpr uint8_t IF_JOYPAD = 1 << 4;
 static constexpr uint8_t IF_SERIAL = 1 << 3;
 static constexpr uint8_t IF_TIMER = 1 << 2;
-static constexpr uint8_t IF_LCD = 1 << 1;
+static constexpr uint8_t IF_STAT = 1 << 1;
 static constexpr uint8_t IF_VBLANK = 1 << 0;
 
 #define IO_NR10 (hram_[0x10])
@@ -333,7 +333,7 @@ namespace rckid::gbcemu {
         IO_TIMA = 0x00;
         IO_TMA = 0x00;
         setIORegisterOrHRAM(IO_ADDR(IO_TAC), 0xf8);
-        IO_IF = 0xe1;
+        setIORegisterOrHRAM(IO_ADDR(IO_IF), 0xe1);
         IO_NR10 = 0x80;
         IO_NR11 = 0xbf;
         IO_NR12 = 0xf3;
@@ -380,7 +380,8 @@ namespace rckid::gbcemu {
         // IO_OCPS = 0; // can't tell
         // IO_OCPD = 0; // can't tell
         IO_SVBK = 0xf8;
-        IO_IE = 0;
+        setIORegisterOrHRAM(IO_ADDR(IO_IE), 0);
+        ime_ = false;
         // and reset counters
         timerCycles_ = 0;
         // set the initial values for the IO registers 
@@ -393,7 +394,7 @@ namespace rckid::gbcemu {
     void GBCEmu::runCPU() {
         clearTilemap();
         clearTileset();
-        //setBreakpoint(0xc243);
+        //setBreakpoint(0xc2b5);
         //setBreakpoint(0xcb10);
         //setMemoryBreakpoint(0xdffd, 0xdfff);
         while (true) {
@@ -449,7 +450,38 @@ namespace rckid::gbcemu {
     }
 
     uint32_t GBCEmu::step() {
+        // first check if there are any interrupts to handle
+        if (ime_ && IO_IF != 0) {
+            uint8_t interrupt = IO_IF & IO_IE;
+            if (interrupt) {
+                ime_ = false;
+                SP -= 2;
+                memWr16(SP, PC);                
+                if (interrupt & IF_VBLANK) {
+                    PC = 0x40;
+                    IO_IF &= ~IF_VBLANK;
+                } else if (interrupt & IF_STAT) {
+                    PC = 0x48;
+                    IO_IF &= ~IF_STAT;
+                } else if (interrupt & IF_TIMER) {
+                    PC = 0x50;
+                    IO_IF &= ~IF_TIMER;
+                } else if (interrupt & IF_SERIAL) {
+                    PC = 0x58;
+                    IO_IF &= ~IF_SERIAL;
+                } else {
+                    ASSERT(interrupt & IF_JOYPAD);
+                    PC = 0x60;
+                    IO_IF &= ~IF_JOYPAD;
+                }
+                return 20;
+            }
+        }
         uint32_t usedCycles = 0;
+#ifdef GBCEMU_TRACE_INSTRUCTIONS
+       if (! debug_)
+           disassembleInstruction(PC);
+#endif        
         uint8_t opcode = mem8(PC++);
         switch (opcode) {
             #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
@@ -696,7 +728,7 @@ namespace rckid::gbcemu {
             IO_STAT |= STAT_LYC_EQ_LY;
             // check LYC LY interrupt
             if (IO_STAT & STAT_INT_LYC)
-                IO_IF |= IF_LCD;
+                IO_IF |= IF_STAT;
         } else {
             IO_STAT &= ~STAT_LYC_EQ_LY;
         }
@@ -705,6 +737,8 @@ namespace rckid::gbcemu {
     /** TODO this is the simplest rendering possible where we just render the entire line. 
      */
     void GBCEmu::renderLine() {
+        if (! IO_LCDC & LCDC_LCD_ENABLE)
+            return;
         // get the line we will be drawing now
         uint8_t ly = IO_LY;
         setLY(ly == 153 ? 0 : ly + 1);
@@ -984,9 +1018,10 @@ namespace rckid::gbcemu {
             case 0x06: // IO_TMA
                 break; // no special care necessary for those registers
             case 0x07: // IO_TAC
-                if (value & TAC_ENABLE == 0)
+                if ((value & TAC_ENABLE) == 0) {
                     timerCycles_ = 0;
-                else switch (value & TAC_CLOCK_SELECT_MASK) {
+                    timerTIMAModulo_ = 0;
+                } else switch (value & TAC_CLOCK_SELECT_MASK) {
                     case TAC_CLOCK_SELECT_256M:
                         timerTIMAModulo_ = 255;
                         break;
@@ -1011,6 +1046,10 @@ namespace rckid::gbcemu {
     }
 
     uint8_t GBCEmu::mem8(uint16_t addr) {
+        // turns out we can actually execute code from hram, so we need to check for that
+        if (addr >= 0xff00)
+            return hram_[addr - 0xff00];
+        // otherwise do the fastpath to the memory pages
         uint32_t page = addr >> 12;
         uint32_t offset = addr & 0xfff;
         return memMap_[page][offset];
@@ -1025,7 +1064,7 @@ namespace rckid::gbcemu {
     void GBCEmu::updateTimer() {
         if (timerCycles_ & timerDIVModulo_ == 0)
             ++IO_DIV;
-        if (timerTIMAModulo_ != 0 && timerCycles_ & timerTIMAModulo_ == 0) {
+        if (timerTIMAModulo_ != 0 && (timerCycles_ & timerTIMAModulo_) == 0) {
             if (++IO_TIMA == 0) {
                 IO_TIMA = IO_TMA;
                 IO_IF |= IF_TIMER;
