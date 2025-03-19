@@ -394,7 +394,7 @@ namespace rckid::gbcemu {
     void GBCEmu::runCPU() {
         clearTilemap();
         clearTileset();
-        //setBreakpoint(0xc2b5);
+        setBreakpoint(0x033d);
         //setBreakpoint(0xcb10);
         //setMemoryBreakpoint(0xdffd, 0xdfff);
         while (true) {
@@ -451,35 +451,41 @@ namespace rckid::gbcemu {
 
     uint32_t GBCEmu::step() {
         // first check if there are any interrupts to handle
-        if (ime_ && IO_IF != 0) {
+        if (IO_IF != 0) {
             uint8_t interrupt = IO_IF & IO_IE;
             if (interrupt) {
-                ime_ = false;
-                SP -= 2;
-                memWr16(SP, PC);                
-                if (interrupt & IF_VBLANK) {
-                    PC = 0x40;
-                    IO_IF &= ~IF_VBLANK;
-                } else if (interrupt & IF_STAT) {
-                    PC = 0x48;
-                    IO_IF &= ~IF_STAT;
-                } else if (interrupt & IF_TIMER) {
-                    PC = 0x50;
-                    IO_IF &= ~IF_TIMER;
-                } else if (interrupt & IF_SERIAL) {
-                    PC = 0x58;
-                    IO_IF &= ~IF_SERIAL;
-                } else {
-                    ASSERT(interrupt & IF_JOYPAD);
-                    PC = 0x60;
-                    IO_IF &= ~IF_JOYPAD;
+                // if we are currently executing halt, move to next instruction to terminate the halting
+                if (mem8(PC) == 0x76)
+                    ++PC;
+                // service the interrupt if enabled
+                if (ime_) {
+                    ime_ = false;
+                    SP -= 2;
+                    memWr16(SP, PC);                
+                    if (interrupt & IF_VBLANK) {
+                        PC = 0x40;
+                        IO_IF &= ~IF_VBLANK;
+                    } else if (interrupt & IF_STAT) {
+                        PC = 0x48;
+                        IO_IF &= ~IF_STAT;
+                    } else if (interrupt & IF_TIMER) {
+                        PC = 0x50;
+                        IO_IF &= ~IF_TIMER;
+                    } else if (interrupt & IF_SERIAL) {
+                        PC = 0x58;
+                        IO_IF &= ~IF_SERIAL;
+                    } else {
+                        ASSERT(interrupt & IF_JOYPAD);
+                        PC = 0x60;
+                        IO_IF &= ~IF_JOYPAD;
+                    }
+                    return 20;
                 }
-                return 20;
             }
         }
         uint32_t usedCycles = 0;
 #ifdef GBCEMU_TRACE_INSTRUCTIONS
-       if (! debug_)
+        if (! debug_)
            disassembleInstruction(PC);
 #endif        
         uint8_t opcode = mem8(PC++);
@@ -737,7 +743,7 @@ namespace rckid::gbcemu {
     /** TODO this is the simplest rendering possible where we just render the entire line. 
      */
     void GBCEmu::renderLine() {
-        if (! IO_LCDC & LCDC_LCD_ENABLE)
+        if (! (IO_LCDC & LCDC_LCD_ENABLE))
             return;
         // get the line we will be drawing now
         uint8_t ly = IO_LY;
@@ -1062,7 +1068,7 @@ namespace rckid::gbcemu {
 
 
     void GBCEmu::updateTimer() {
-        if (timerCycles_ & timerDIVModulo_ == 0)
+        if ((timerCycles_ & timerDIVModulo_) == 0)
             ++IO_DIV;
         if (timerTIMAModulo_ != 0 && (timerCycles_ & timerTIMAModulo_) == 0) {
             if (++IO_TIMA == 0) {
@@ -1088,10 +1094,10 @@ namespace rckid::gbcemu {
                     (btnDown(Btn::A)      ? 0 : 1);
         }
         // check if we need an interrupt to be requested
-        if ( ((value & 1) == 0 && IO_JOYP & 1) ||
-             ((value & 2) == 0 && IO_JOYP & 2) ||
-             ((value & 4) == 0 && IO_JOYP & 4) ||
-             ((value & 8) == 0 && IO_JOYP & 8) )
+        if ( ((value & 1) == 0 && (IO_JOYP & 1)) ||
+             ((value & 2) == 0 && (IO_JOYP & 2)) ||
+             ((value & 4) == 0 && (IO_JOYP & 4)) ||
+             ((value & 8) == 0 && (IO_JOYP & 8)) )
             IO_IF |= IF_JOYPAD;
         // set the register
         IO_JOYP = (IO_JOYP & 0xf0) | value;
