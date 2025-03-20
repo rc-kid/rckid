@@ -55,8 +55,8 @@ int main() {
         //app.loadCartridge(new gbcemu::FlashGamePak{});
         if (false)
         app.loadCartridge(new gbcemu::FlashGamePak{
-            // gbcemu::DMGBootloader
-            rckid::gbcemu::rom::blargg::instrs::special // fail on DAA
+            gbcemu::DMGBootloader
+            // rckid::gbcemu::rom::blargg::instrs::special
             // rckid::gbcemu::rom::blargg::instrs::interrupts
             // rckid::gbcemu::rom::blargg::instrs::op_sp_hl
             // rckid::gbcemu::rom::blargg::instrs::op_r_imm
@@ -66,7 +66,7 @@ int main() {
             // rckid::gbcemu::rom::blargg::instrs::misc_instrs
             // rckid::gbcemu::rom::blargg::instrs::op_r_r
             // rckid::gbcemu::rom::blargg::instrs::bit_ops
-            // rckid::gbcemu::rom::blargg::instrs::op_a__hl_ // fail test 27, this too could be DAA
+            //rckid::gbcemu::rom::blargg::instrs::op_a__hl_
         });
         app.loadCartridge(new gbcemu::FileGamePak("/mnt/c/delete/testrom.gb"));
         //app.setTerminateAfterStop(true);
