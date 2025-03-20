@@ -46,9 +46,6 @@ namespace rckid::gbcemu {
         /** Test interface
          */
 
-        bool terminateAfterStop() const { return terminateAfterStop_; }
-        void setTerminateAfterStop(bool value) { terminateAfterStop_ = value; }
-
         uint32_t elapsedCycles() const { return timerCycles_; }
 
         uint8_t a() const { return regs8_[REG_INDEX_A]; }
@@ -363,7 +360,6 @@ namespace rckid::gbcemu {
 
         /** \name CPU 
          */
-        void runCPU(); 
 
         // Current gamepak
         GamePak * gamepak_ = nullptr;
@@ -371,9 +367,6 @@ namespace rckid::gbcemu {
         // interrupts enabled flag (cannot be read, only set by insns)
         // TODO is this necessary or can I just use the last high mem byte?
         bool ime_ = false;
-
-        // when true, the stop instruction terminates the program, useful for debugging & testing
-        bool terminateAfterStop_ = false;
 
 #ifdef GBCEMU_INTERACTIVE_DEBUG
         // breakpoint at which the main loop pauses

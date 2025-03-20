@@ -56,16 +56,16 @@ int main() {
         if (false)
         app.loadCartridge(new gbcemu::FlashGamePak{
             gbcemu::DMGBootloader
-            // rckid::gbcemu::rom::blargg::instrs::special
-            // rckid::gbcemu::rom::blargg::instrs::interrupts
-            // rckid::gbcemu::rom::blargg::instrs::op_sp_hl
-            // rckid::gbcemu::rom::blargg::instrs::op_r_imm
-            // rckid::gbcemu::rom::blargg::instrs::op_rp
-            // rckid::gbcemu::rom::blargg::instrs::ld_r_r
-            // rckid::gbcemu::rom::blargg::instrs::jr_jp_call_ret_rst
-            // rckid::gbcemu::rom::blargg::instrs::misc_instrs
-            // rckid::gbcemu::rom::blargg::instrs::op_r_r
-            // rckid::gbcemu::rom::blargg::instrs::bit_ops
+            //rckid::gbcemu::rom::blargg::instrs::special
+            //rckid::gbcemu::rom::blargg::instrs::interrupts
+            //rckid::gbcemu::rom::blargg::instrs::op_sp_hl
+            //rckid::gbcemu::rom::blargg::instrs::op_r_imm
+            //rckid::gbcemu::rom::blargg::instrs::op_rp
+            //rckid::gbcemu::rom::blargg::instrs::ld_r_r
+            //rckid::gbcemu::rom::blargg::instrs::jr_jp_call_ret_rst
+            //rckid::gbcemu::rom::blargg::instrs::misc_instrs
+            //rckid::gbcemu::rom::blargg::instrs::op_r_r
+            //rckid::gbcemu::rom::blargg::instrs::bit_ops
             //rckid::gbcemu::rom::blargg::instrs::op_a__hl_
         });
         app.loadCartridge(new gbcemu::FileGamePak("/mnt/c/delete/testrom.gb"));
