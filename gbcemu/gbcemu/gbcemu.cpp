@@ -394,9 +394,7 @@ namespace rckid::gbcemu {
     void GBCEmu::runCPU() {
         clearTilemap();
         clearTileset();
-        setBreakpoint(0x033d);
-        //setBreakpoint(0xcb10);
-        //setMemoryBreakpoint(0xdffd, 0xdfff);
+        //setBreakpoint(0x033d);
         while (true) {
             renderLine();
             for (uint32_t cycles = 0; cycles < cyclesPerLine_; ) {
@@ -431,6 +429,9 @@ namespace rckid::gbcemu {
         HL = hl;
         ime_ = ime;
         IO_IE = ie;
+        IO_IF = 0;
+        timerCycles_ = 0;
+        IO_TIMA = 0;
     }
 
     void GBCEmu::writeMem(uint16_t address, std::initializer_list<uint8_t> values) {
@@ -493,11 +494,11 @@ namespace rckid::gbcemu {
             #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
             case OPCODE: \
                 usedCycles = CYCLES; \
+                __VA_ARGS__ \
                 if (val_ ## FLAG_Z != -1) setFlagZ(val_ ## FLAG_Z); \
                 if (val_ ## FLAG_N != -1) setFlagN(val_ ## FLAG_N); \
                 if (val_ ## FLAG_H != -1) setFlagH(val_ ## FLAG_H); \
                 if (val_ ## FLAG_C != -1) setFlagC(val_ ## FLAG_C); \
-                __VA_ARGS__ \
                 break;
             #include "insns.inc.h"
             default:

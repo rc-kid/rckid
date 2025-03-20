@@ -9,12 +9,6 @@ namespace rckid::gbcemu {
      */
     //#include "insns/10.inc.h"
 
-    /** DAA instruction
-     
-        A complex one with little documentation about corner cases with invalid inputs. At the moment not worth the time investment. 
-     */
-    //#include "insns/27.inc.h"
-
     /** EI instruction
      
         This is a cycle issue as the interrupt enable flag is not enabled immediately after the EI instruction, but after the *next* one. This is ignored by the emulator for now. 

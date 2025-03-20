@@ -37,11 +37,13 @@ INS(0x0c, Z,0,H,_, 1, 4 , "inc c", { C = inc8(C); })
 INS(0x0d, Z,1,H,_, 1, 4 , "dec c", { C = dec8(C); })
 INS(0x0e, _,_,_,_, 2, 8 , "ld c, n8", { C = mem8(PC++); })
 INS(0x0f, 0,0,0,C, 1, 4 , "rrca", { A = rrc8(A); })
-/** TODO similar to halt likely 
+/** Technically, the STOP instruction should enter a deep sleep mode for gameboy, but licensed game ever used this feature, so there is no harm ignoring it as the actual implementation is quite complex (see https://gbdev.io/pandocs/Reducing_Power_Consumption.html#using-the-stop-instruction). 
+ 
+    On CGB the instruction too another function, which is to switch between DMG and CGB modes. 
  */
 INS(0x10, _,_,_,_, 2, 4 , "stop n8", {
     mem8(PC++);
-    UNIMPLEMENTED;
+    // TODO implement CGB mode switching here, otherwise stop does nothing
 })
 INS(0x11, _,_,_,_, 3, 12, "ld de, n16", { DE = mem16(PC); PC += 2; })
 INS(0x12, _,_,_,_, 1, 8 , "ld [de], a", { memWr8(DE, A); })
@@ -83,17 +85,17 @@ INS(0x26, _,_,_,_, 2, 8 , "ld h, n8", { H = mem8(PC++); })
  */
 INS(0x27, Z,_,0,C, 1, 4 , "daa", {
     if (!flagN()) {
-        if (flagH() || (A & 0x0f) > 0x09)
-            A += 0x06;
-        if (flagC() || A > 0x9f) {
+        if (flagC() || A > 0x99) {
             A += 0x60;
             setFlagC(true);
         }
+        if (flagH() || (A & 0x0f) > 0x09)
+            A += 0x06;
     } else {
-        if (flagH())
-            A -= 0x06;
         if (flagC())
             A -= 0x60;
+        if (flagH())
+            A -= 0x06;
     }
     setFlagZ(A == 0);
 })
