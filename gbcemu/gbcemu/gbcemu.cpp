@@ -257,16 +257,33 @@ namespace rckid::gbcemu {
         // set the current app in focus. If there is previous app, it will be blurred. The focus method also updates the parent app so that we can go back with the apps
         focus();
 
-        runCPU();
-        /*
-        // now run the app
-        while (app_ == this) {
-            tick();
-            update();
-            displayWaitUpdateDone();
-            draw();
+        //clearTilemap();
+        //clearTileset();
+        //setBreakpoint(0x033d);
+        while (true) {
+            renderLine();
+            for (uint32_t cycles = 0; cycles < cyclesPerLine_; ) {
+    #ifdef GBCEMU_INTERACTIVE_DEBUG     
+                markAsVisited(PC);           
+                if (PC == breakpoint_ || debug_) {
+                    debugWrite() << "===== BREAKPOINT ===== (pc " << hex(pc_) << ")\n";
+                    logDisassembly(PC, PC + 10);
+                    logState();
+                    debugInteractive();
+                } else if (PC == overBreakpoint_) {
+                    debugInteractive();
+                }
+    #endif
+    #ifdef GBCEMU_ENABLE_BKPT
+                if (mem8(PC) == 0xfd) {
+                    exit(); // we'll leave the app too
+                    return;
+                }
+    #endif
+                cycles += step();
+            }
         }
-        */
+
         // we are done, should blur ourselves, and refocus parent (if any)
         blur();
     }
@@ -389,35 +406,6 @@ namespace rckid::gbcemu {
     #ifdef GBCEMU_INTERACTIVE_DEBUG     
         resetVisited();
     #endif
-    }
-
-    void GBCEmu::runCPU() {
-        clearTilemap();
-        clearTileset();
-        //setBreakpoint(0x033d);
-        while (true) {
-            renderLine();
-            for (uint32_t cycles = 0; cycles < cyclesPerLine_; ) {
-    #ifdef GBCEMU_INTERACTIVE_DEBUG     
-                markAsVisited(PC);           
-                if (PC == breakpoint_ || debug_) {
-                    debugWrite() << "===== BREAKPOINT ===== (pc " << hex(pc_) << ")\n";
-                    logDisassembly(PC, PC + 10);
-                    logState();
-                    debugInteractive();
-                } else if (PC == overBreakpoint_) {
-                    debugInteractive();
-                }
-    #endif
-    #ifdef GBCEMU_ENABLE_BKPT
-                if (mem8(PC) == 0xfd) {
-                    exit(); // we'll leave the app too
-                    return;
-                }
-    #endif
-                cycles += step();
-            }
-        }
     }
 
     void GBCEmu::setState(uint16_t pc, uint16_t sp, uint16_t af, uint16_t bc, uint16_t de, uint16_t hl, bool ime, uint8_t ie) {
@@ -744,13 +732,18 @@ namespace rckid::gbcemu {
     /** TODO this is the simplest rendering possible where we just render the entire line. 
      */
     void GBCEmu::renderLine() {
-        if (! (IO_LCDC & LCDC_LCD_ENABLE))
-            return;
         // get the line we will be drawing now
         uint8_t ly = IO_LY;
         setLY(ly == 153 ? 0 : ly + 1);
         // don't do anything in VBlank
-        if (ly >= 144)
+        if (ly >= 144) {
+            updateIO_JOYP();
+            if (ly == 144)
+                tick();
+            return;
+        }
+        // don't do anything if disabled
+        if (! (IO_LCDC & LCDC_LCD_ENABLE))
             return;
         // TODO determine which sprites to use
 
@@ -1102,6 +1095,10 @@ namespace rckid::gbcemu {
             IO_IF |= IF_JOYPAD;
         // set the register
         IO_JOYP = (IO_JOYP & 0xf0) | value;
+        // enter debug mode if home button is pressed
+        // TODO this will change to showing the home menu instead from here
+        if (btnPressed(Btn::Home))
+            debug_ = true;
     }
 
 } // namespace rckid::gbcemu
