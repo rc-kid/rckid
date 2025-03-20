@@ -53,40 +53,40 @@ def processTest(test, f):
     print( "        gbc.step();", file = f)
     # and now check the final state, this will be a bunch of expects
     x = test["final"]["a"]
-    print(f"        EXPECT(gbc.a(),  0x{x:x});", file = f)
+    print(f"        EXPECT(0x{x:x}, gbc.a());", file = f)
     x = test["final"]["b"]
-    print(f"        EXPECT(gbc.b(),  0x{x:x});", file = f)
+    print(f"        EXPECT(0x{x:x}, gbc.b());", file = f)
     x = test["final"]["c"]
-    print(f"        EXPECT(gbc.c(),  0x{x:x});", file = f)
+    print(f"        EXPECT(0x{x:x}, gbc.c());", file = f)
     x = test["final"]["d"]
-    print(f"        EXPECT(gbc.d(),  0x{x:x});", file = f)
+    print(f"        EXPECT(0x{x:x}, gbc.d());", file = f)
     x = test["final"]["e"]
-    print(f"        EXPECT(gbc.e(),  0x{x:x});", file = f)
+    print(f"        EXPECT(0x{x:x}, gbc.e());", file = f)
     x = test["final"]["h"]
-    print(f"        EXPECT(gbc.h(),  0x{x:x});", file = f)
+    print(f"        EXPECT(0x{x:x}, gbc.h());", file = f)
     x = test["final"]["l"]
-    print(f"        EXPECT(gbc.l(),  0x{x:x});", file = f)
+    print(f"        EXPECT(0x{x:x}, gbc.l());", file = f)
     x = test["final"]["sp"]
-    print(f"        EXPECT(gbc.sp(), 0x{x:x});", file = f)
+    print(f"        EXPECT(0x{x:x}, gbc.sp());", file = f)
     x = test["final"]["pc"]
-    print(f"        EXPECT(gbc.pc(), 0x{x:x});", file = f)
+    print(f"        EXPECT(0x{x:x}, gbc.pc());", file = f)
     x = test["final"]["ime"]
-    print(f"        EXPECT(gbc.ime(), 0x{x:x});", file = f)
+    print(f"        EXPECT(0x{x:x}, gbc.ime());", file = f)
     try:
         x = test["final"]["ie"]
-        print(f"        EXPECT(gbc.ie(), 0x{x:x});", file = f)
+        print(f"        EXPECT(0x{x:x}, gbc.ie());", file = f)
     except:
         pass
     # check flags
     x = test["final"]["f"]
-    print(f"        EXPECT(gbc.flagZ(),  {'true' if (x & 0x80) else 'false'});", file = f)
-    print(f"        EXPECT(gbc.flagN(),  {'true' if (x & 0x40) else 'false'});", file = f)
-    print(f"        EXPECT(gbc.flagH(),  {'true' if (x & 0x20) else 'false'});", file = f)
-    print(f"        EXPECT(gbc.flagC(),  {'true' if (x & 0x10) else 'false'});", file = f)
+    print(f"        EXPECT({'true' if (x & 0x80) else 'false'}, gbc.flagZ());", file = f)
+    print(f"        EXPECT({'true' if (x & 0x40) else 'false'}, gbc.flagN());", file = f)
+    print(f"        EXPECT({'true' if (x & 0x20) else 'false'}, gbc.flagH());", file = f)
+    print(f"        EXPECT({'true' if (x & 0x10) else 'false'}, gbc.flagC());", file = f)
     # check ram
     for (addr, value) in test["final"]["ram"]:
         if (addr >= 0x8000):
-            print(f"        EXPECT(gbc.readMem(0x{addr:x}), 0x{value:x});", file = f)
+            print(f"        EXPECT(0x{value:x}, gbc.readMem(0x{addr:x}));", file = f)
 
 def processTests(tests, f, opcode):
     print(f"    TEST(gbcemu, opcode_{opcode}) {{", file = f)
