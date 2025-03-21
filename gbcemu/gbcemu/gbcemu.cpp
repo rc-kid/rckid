@@ -769,9 +769,18 @@ namespace rckid::gbcemu {
 
     void GBCEmu::initializeDisplay() {
         // set the display to row-first mode, which is what gameboy is expecting and set the resolution to 160x144
-        // TODO this should be changed to some scaling ideally
         displaySetRefreshDirection(DisplayRefreshDirection::RowFirst);
-        displaySetUpdateRegion(Rect::Centered(160, 144, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT));
+        switch (displayMode_) {
+            case DisplayMode::Native:
+                displaySetUpdateRegion(Rect::Centered(160, 144, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT));
+                break;
+            case DisplayMode::Scaled:
+                displaySetUpdateRegion(Rect::Centered(267, 240, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT));
+                break;
+            case DisplayMode::X2:
+                displaySetUpdateRegion(320, 240);
+                break;
+        }
         // set the render line to last of the VBLANK so that we will start drawing from the top immediately in the next scanline
         IO_LY = 153;
     }
@@ -855,6 +864,8 @@ namespace rckid::gbcemu {
         palette[2] = ColorRGB{48, 98, 48}.raw16();
         palette[3] = ColorRGB{15, 56, 15}.raw16();
 
+        uint16_t * buffer = pixels_.front();
+
         // render the pixels now, we keep x as the current x coordinate on the screen
         int16_t x = - (8 - (bx % 8)) & 0x7;
         while (x < 160) {
@@ -870,13 +881,39 @@ namespace rckid::gbcemu {
                 // TODO render the pixel
                 // displaySetPixel(x, ly, palette[colorIndex]);
                 if (x >= 0 && x < 160)
-                    pixels_.front()[x] = palette[colorIndex];
+                    buffer[x] = palette[colorIndex];
                 ++x;
             }
         }
-        displayUpdate(pixels_.front(), 160);
+        switch (displayMode_) {
+            case DisplayMode::Native:
+                displayUpdate(buffer, 160);
+                break;
+            case DisplayMode::Scaled: {
+                uint32_t si = SCALED_WIDTH - 1;
+                for (uint32_t i = 159; i < 160; --i) {
+                    buffer[si--] = buffer[i];
+                    if (colScaling_[i] == 2)
+                        buffer[si--] = buffer[i];
+                }
+                if (rowScaling_[ly] == 1) {
+                    displayUpdate(buffer, 267);
+                } else {
+                    displayUpdate(buffer, 267, [buffer](){
+                        displayUpdate(buffer, 267, nullptr);
+                    });
+                }
+                break;
+            }
+            case DisplayMode::X2:
+                if (ly >= displayX2Start_ && ly < displayX2Start_ + 120) {
+                    displayUpdate(buffer, 160, [buffer](){
+                        displayUpdate(buffer, 160, nullptr);
+                    });
+                }
+                break;
+            }
         pixels_.swap();
-
     }
 
     void GBCEmu::setRomPage(uint32_t page) {

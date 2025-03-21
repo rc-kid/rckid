@@ -25,6 +25,16 @@ namespace rckid::gbcemu {
     class GBCEmu : public App {
     public:
 
+        static constexpr uint32_t SCALED_WIDTH = 267;
+        static constexpr uint32_t SCALED_HEIGHT = 240;
+
+
+        enum class DisplayMode {
+            Native,
+            Scaled,
+            X2
+        }; 
+
         GBCEmu(Allocator & a = Heap::allocator());
 
         ~GBCEmu() override;
@@ -355,7 +365,7 @@ namespace rckid::gbcemu {
         static constexpr uint32_t DOTS_MODE_2 = 80;
         static constexpr uint32_t DOTS_MODE_3 = 172;
         static constexpr uint32_t DOTS_MODE_0 = 204;
-        
+
         void initializeDisplay();
 
         void setPPUMode(unsigned mode);
@@ -369,6 +379,9 @@ namespace rckid::gbcemu {
         void renderLine();
 
         void moveToNextScanline();
+
+        DisplayMode displayMode_ = DisplayMode::Scaled;
+        uint32_t displayX2Start_ = 0;
         //@}
 
         // Current gamepak
@@ -396,6 +409,21 @@ namespace rckid::gbcemu {
 
         DoubleBuffer<uint16_t> pixels_;
 
+
+        /** Nearest Neighbor Precalculations 
+          
+            To facilitate fast scaling to the entire screen, we have nearest neighbor calculations precomputed for cols and rows separately. Those two arrays tell the renderer for each native pixel how many columns and how many rows it will take when scaled. 
+         
+            The algorithm then rescales each line according to the colScaling_ values and sends it to the display either once, or twice, depending on the rowScaling_ values. 
+         */
+        static constexpr uint8_t rowScaling_[144] = {
+#include "rowScaling.inc.h"
+        };
+
+        static constexpr uint8_t colScaling_[160] = {
+#include "colScaling.inc.h"
+        };
+            
     }; // rckid::gbcemu::GBCEmu
 
 
