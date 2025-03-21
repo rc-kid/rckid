@@ -18,6 +18,65 @@
 
 #define IO_ADDR(REG) (& REG - hram_)
 
+#define ADDR_JOYP 0x00
+#define ADDR_SB 0x01
+#define ADDR_SC 0x02
+#define ADDR_DIV 0x04
+#define ADDR_TIMA 0x05
+#define ADDR_TMA 0x06
+#define ADDR_TAC 0x07
+#define ADDR_IF 0x0f
+#define ADDR_NR10 0x10
+#define ADDR_NR11 0x11
+#define ADDR_NR12 0x12
+#define ADDR_NR13 0x13
+#define ADDR_NR14 0x14
+#define ADDR_NR21 0x16
+#define ADDR_NR22 0x17
+#define ADDR_NR23 0x18
+#define ADDR_NR24 0x19
+#define ADDR_NR30 0x1a
+#define ADDR_NR31 0x1b
+#define ADDR_NR32 0x1c
+#define ADDR_NR33 0x1d
+#define ADDR_NR34 0x1e
+#define ADDR_NR41 0x20
+#define ADDR_NR42 0x21
+#define ADDR_NR43 0x22
+#define ADDR_NR44 0x23
+#define ADDR_NR50 0x24
+#define ADDR_NR51 0x25
+#define ADDR_NR52 0x26
+#define ADDR_WAVE_RAM 0x30
+#define ADDR_LCDC 0x40
+#define ADDR_STAT 0x41
+#define ADDR_SCY 0x42
+#define ADDR_SCX 0x43
+#define ADDR_LY 0x44
+#define ADDR_LYC 0x45
+#define ADDR_DMA 0x46
+#define ADDR_BGP 0x47
+#define ADDR_OBP0 0x48
+#define ADDR_OBP1 0x49
+#define ADDR_WY 0x4a
+#define ADDR_WX 0x4b
+#define ADDR_KEY1 0x4d
+#define ADDR_VBK 0x4f
+#define ADDR_HDMA1 0x51
+#define ADDR_HDMA2 0x52
+#define ADDR_HDMA3 0x53
+#define ADDR_HDMA4 0x54
+#define ADDR_HDMA5 0x55
+#define ADDR_RP 0x56
+#define ADDR_BCPS 0x68
+#define ADDR_BCPD 0x69
+#define ADDR_OCPS 0x6a
+#define ADDR_OCPD 0x6b
+#define ADDR_SVBK 0x70
+#define ADDR_PCM12 0x76
+#define ADDR_PCM34 0x77
+#define ADDR_IE 0xff
+
 /** The joypad register. 
  
     Writing to the register's upper nibble chooses between dpad (bit 4) and buttons (bit 5), while the lower nibble contains the values of the buttons. When button is pressed, it should read 0. Internally this really is a button matrix.
@@ -31,14 +90,14 @@
 
     When any of the lower bits transition from 1 to 0, the joypad interrupt is raised.
  */
-#define IO_JOYP (hram_[0x00])
+#define IO_JOYP (hram_[ADDR_JOYP])
 static constexpr uint8_t JOYP_DPAD = 16;
 static constexpr uint8_t JOYP_BUTTONS = 32;
 
 /** When device wants to transfer a byte via the serial line, it writes it to this register. 
  */
-#define IO_SB (hram_[0x01])
-#define IO_SC (hram_[0x02])
+#define IO_SB (hram_[ADDR_SB])
+#define IO_SC (hram_[ADDR_SC])
 
 /** The 16384Hz timer. This value is incremented at a steady rate. Any write to it should reset the value to 0. 
  
@@ -46,21 +105,21 @@ static constexpr uint8_t JOYP_BUTTONS = 32;
 
     TODO Determine when & how to update this
  */
-#define IO_DIV (hram_[0x04])
+#define IO_DIV (hram_[ADDR_DIV])
 
 /** Timer counter. Increments the register value at rate given by IO_TAC. When it overflows 0xff, it is being reset to IO_TMA value. 
  */
-#define IO_TIMA (hram_[0x05])
+#define IO_TIMA (hram_[ADDR_TIMA])
 
 /** Timer modulo. When IO_TIMA overflows, it is reset to this value. 
  */
-#define IO_TMA (hram_[0x06])
+#define IO_TMA (hram_[ADDR_TMA])
 
 /** The Timer control register. 
  
     When the timer is enabled, the IO_TIMA is incremented at the rate given by the lower 2 bits of this register. Note that the IO_DIV is always counting, and unlike the IO_TIMA is not specified in M cycles, but actual Hz so will increment at the same pace in both DMG and CGB, whereas the IO_TIMA will run twice as fast on CGB for the same values. 
  */
-#define IO_TAC (hram_[0x07])
+#define IO_TAC (hram_[ADDR_TAC])
 static constexpr uint8_t TAC_ENABLE = 4;
 static constexpr uint8_t TAC_CLOCK_SELECT_MASK = 3;
 static constexpr uint8_t TAC_CLOCK_SELECT_256M = 0;
@@ -76,38 +135,38 @@ static constexpr uint8_t TAC_CLOCK_SELECT_64M = 3;
     bit 1 = LCD
     bit 0 = VBLANK
  */
-#define IO_IF (hram_[0x0f])
+#define IO_IF (hram_[ADDR_IF])
 static constexpr uint8_t IF_JOYPAD = 1 << 4;
 static constexpr uint8_t IF_SERIAL = 1 << 3;
 static constexpr uint8_t IF_TIMER = 1 << 2;
 static constexpr uint8_t IF_STAT = 1 << 1;
 static constexpr uint8_t IF_VBLANK = 1 << 0;
 
-#define IO_NR10 (hram_[0x10])
-#define IO_NR11 (hram_[0x11])
-#define IO_NR12 (hram_[0x12])
-#define IO_NR13 (hram_[0x13])
-#define IO_NR14 (hram_[0x14])
+#define IO_NR10 (hram_[ADDR_NR10])
+#define IO_NR11 (hram_[ADDR_NR11])
+#define IO_NR12 (hram_[ADDR_NR12])
+#define IO_NR13 (hram_[ADDR_NR13])
+#define IO_NR14 (hram_[ADDR_NR14])
 //static constexpr size_t IO_NR20 = 0x15; // not used
-#define IO_NR21 (hram_[0x16])
-#define IO_NR22 (hram_[0x17])
-#define IO_NR23 (hram_[0x18])
-#define IO_NR24 (hram_[0x19])
-#define IO_NR30 (hram_[0x1a])
-#define IO_NR31 (hram_[0x1b])
-#define IO_NR32 (hram_[0x1c])
-#define IO_NR33 (hram_[0x1d])
-#define IO_NR34 (hram_[0x1e])
+#define IO_NR21 (hram_[ADDR_NR21])
+#define IO_NR22 (hram_[ADDR_NR22])
+#define IO_NR23 (hram_[ADDR_NR23])
+#define IO_NR24 (hram_[ADDR_NR24])
+#define IO_NR30 (hram_[ADDR_NR30])
+#define IO_NR31 (hram_[ADDR_NR31])
+#define IO_NR32 (hram_[ADDR_NR32])
+#define IO_NR33 (hram_[ADDR_NR33])
+#define IO_NR34 (hram_[ADDR_NR34])
 //static constexpr size_t IO_NR40 = 0x1f; // not used
-#define IO_NR41 (hram_[0x20])
-#define IO_NR42 (hram_[0x21])
-#define IO_NR43 (hram_[0x22])
-#define IO_NR44 (hram_[0x23])
-#define IO_NR50 (hram_[0x24])
-#define IO_NR51 (hram_[0x25])
-#define IO_NR52 (hram_[0x26])
+#define IO_NR41 (hram_[ADDR_NR41])
+#define IO_NR42 (hram_[ADDR_NR42])
+#define IO_NR43 (hram_[ADDR_NR43])
+#define IO_NR44 (hram_[ADDR_NR44])
+#define IO_NR50 (hram_[ADDR_NR50])
+#define IO_NR51 (hram_[ADDR_NR51])
+#define IO_NR52 (hram_[ADDR_NR52])
 // TODO the next is 16 bytes? should be changed accordingly?
-#define IO_WAVE_RAM_0 (hram_[0x30]) // 16 bytes
+#define IO_WAVE_RAM_0 (hram_[ADDR_WAVE_RAM]) // 16 bytes
 
 /** LCD Control Register
 
@@ -120,7 +179,7 @@ static constexpr uint8_t IF_VBLANK = 1 << 0;
     bit 1 = OBJ enable
     bit 0 = BG/Win enable / priority -- CGB Specific
  */
-#define IO_LCDC (hram_[0x40])
+#define IO_LCDC (hram_[ADDR_LCDC])
 static constexpr uint8_t LCDC_LCD_ENABLE = 1 << 7;
 static constexpr uint8_t LCDC_WINDOW_TILEMAP = 1 << 6;
 static constexpr uint8_t LCDC_WINDOW_ENABLE = 1 << 5;
@@ -139,7 +198,7 @@ static constexpr uint8_t LCDC_BG_WIN_PRIORITY = 1 << 0;
     bit 2 = LYC == LY
     bits 0 & 1 = PPU mode 
 */
-#define IO_STAT (hram_[0x41])
+#define IO_STAT (hram_[ADDR_STAT])
 static constexpr uint8_t STAT_WRITE_MASK = 0b01111100;
 static constexpr uint8_t STAT_PPU_MODE = 3;
 static constexpr uint8_t STAT_LYC_EQ_LY = 1 << 2;
@@ -148,26 +207,25 @@ static constexpr uint8_t STAT_INT_MODE1 = 1 << 4;
 static constexpr uint8_t STAT_INT_MODE2 = 1 << 5;
 static constexpr uint8_t STAT_INT_LYC = 1 << 6;
 
-
 /** Scroll X and scroll Y values for the background layer. 
  
     The values can be from 0 to 255, which corresponds to 32x32 tilemap of 8x8 tile sizes. Both SCX and SCY wrap around their limits independently. 
  */
-#define IO_SCY (hram_[0x42])
-#define IO_SCX (hram_[0x43])
+#define IO_SCY (hram_[ADDR_SCY])
+#define IO_SCX (hram_[ADDR_SCX])
 
 /** LCD Y Coordinate
      
     Contains the current coordinate of the LCD renderer. 0 to 143 is active renderering, 144 to 153 is VBLANK.  
  */
-#define IO_LY (hram_[0x44])
+#define IO_LY (hram_[ADDR_LY])
 
 /** LY compare
  
     When the LY value becomes identical to the LYC value, the STAT bit 2 (LYC == LY) is set and an interrupt can be triggered if enabled. 
  */
-#define IO_LYC (hram_[0x45])
-#define IO_DMA (hram_[0x46])
+#define IO_LYC (hram_[ADDR_LYC])
+#define IO_DMA (hram_[ADDR_DMA])
 
 /** DMG palette register. Contains color indices for the 4 available colors. 
  
@@ -181,27 +239,27 @@ static constexpr uint8_t STAT_INT_LYC = 1 << 6;
     02 = Dark Gray
     03 = Black
  */
-#define IO_BGP (hram_[0x47])
-#define IO_OBP0 (hram_[0x48])
-#define IO_OBP1 (hram_[0x49])
-#define IO_WY (hram_[0x4a])
-#define IO_WX (hram_[0x4b])
-#define IO_KEY1 (hram_[0x4d])
-#define IO_VBK (hram_[0x4f])
-#define IO_HDMA1 (hram_[0x51])
-#define IO_HDMA2 (hram_[0x52])
-#define IO_HDMA3 (hram_[0x53])
-#define IO_HDMA4 (hram_[0x54])
-#define IO_HDMA5 (hram_[0x55])
-#define IO_RP (hram_[0x56])
-#define IO_BCPS (hram_[0x68])
-#define IO_BCPD (hram_[0x69])
-#define IO_OCPS (hram_[0x6a])
-#define IO_OCPD (hram_[0x6b])
-#define IO_SVBK (hram_[0x70])
-#define IO_PCM12 (hram_[0x76])
-#define IO_PCM34 (hram_[0x77])
-#define IO_IE (hram_[0xff])
+#define IO_BGP (hram_[ADDR_BGP])
+#define IO_OBP0 (hram_[ADDR_OBP0])
+#define IO_OBP1 (hram_[ADDR_OBP1])
+#define IO_WY (hram_[ADDR_WY])
+#define IO_WX (hram_[ADDR_WX])
+#define IO_KEY1 (hram_[ADDR_KEY1])
+#define IO_VBK (hram_[ADDR_VBK])
+#define IO_HDMA1 (hram_[ADDR_HDMA1])
+#define IO_HDMA2 (hram_[ADDR_HDMA2])
+#define IO_HDMA3 (hram_[ADDR_HDMA3])
+#define IO_HDMA4 (hram_[ADDR_HDMA4])
+#define IO_HDMA5 (hram_[ADDR_HDMA5])
+#define IO_RP (hram_[ADDR_RP])
+#define IO_BCPS (hram_[ADDR_BCPS])
+#define IO_BCPD (hram_[ADDR_BCPD])
+#define IO_OCPS (hram_[ADDR_OCPS])
+#define IO_OCPD (hram_[ADDR_OCPD])
+#define IO_SVBK (hram_[ADDR_SVBK])
+#define IO_PCM12 (hram_[ADDR_PCM12])
+#define IO_PCM34 (hram_[ADDR_PCM34])
+#define IO_IE (hram_[ADDR_IE])
 
 /** Flag values to be used with the instruction macro expansion. The ins macro stores the flag values as either of:
  
@@ -261,31 +319,41 @@ namespace rckid::gbcemu {
         //clearTileset();
         //setBreakpoint(0x033d);
         while (true) {
+            setPPUMode(2); // OAM scan
+            runCPU(cgb_ ? DOTS_MODE_2 * 2 : DOTS_MODE_2);
+            setPPUMode(3); // VRAM scan
             renderLine();
-            for (uint32_t cycles = 0; cycles < cyclesPerLine_; ) {
-    #ifdef GBCEMU_INTERACTIVE_DEBUG     
-                markAsVisited(PC);           
-                if (PC == breakpoint_ || debug_) {
-                    debugWrite() << "===== BREAKPOINT ===== (pc " << hex(pc_) << ")\n";
-                    logDisassembly(PC, PC + 10);
-                    logState();
-                    debugInteractive();
-                } else if (PC == overBreakpoint_) {
-                    debugInteractive();
-                }
-    #endif
-    #ifdef GBCEMU_ENABLE_BKPT
-                if (mem8(PC) == 0xfd) {
-                    exit(); // we'll leave the app too
-                    return;
-                }
-    #endif
-                cycles += step();
-            }
+            runCPU(cgb_ ? DOTS_MODE_3 * 2 : DOTS_MODE_3);
+            setPPUMode(0); // HBlank
+            runCPU(cgb_ ? DOTS_MODE_0 * 2 : DOTS_MODE_0);
+            moveToNextScanline();
         }
 
         // we are done, should blur ourselves, and refocus parent (if any)
         blur();
+    }
+
+    void GBCEmu::runCPU(uint32_t cycles) {
+        for (uint32_t c = 0; c < cycles; ) {
+#ifdef GBCEMU_INTERACTIVE_DEBUG     
+            markAsVisited(PC);           
+            if (PC == breakpoint_ || debug_) {
+                debugWrite() << "===== BREAKPOINT ===== (pc " << hex(pc_) << ")\n";
+                logDisassembly(PC, PC + 10);
+                logState();
+                debugInteractive();
+            } else if (PC == overBreakpoint_) {
+                debugInteractive();
+            }
+#endif
+#ifdef GBCEMU_ENABLE_BKPT
+            if (mem8(PC) == 0xfd) {
+                exit(); // we'll leave the app too
+                return;
+            }
+#endif
+            c += step();
+        }
     }
 
     void GBCEmu::focus() {
@@ -657,7 +725,6 @@ namespace rckid::gbcemu {
                     debugWrite() << "? breakpoint address ";
                     breakpoint_ = debugReadHex16();
                     debugWrite() << '\n';
-                    //logBreakpoint();
                     break;
                 }
                 // display cpu info (state & stuff)
@@ -702,24 +769,41 @@ namespace rckid::gbcemu {
 
 #endif
 
-    void GBCEmu::setMode(unsigned mode) {
+    void GBCEmu::setPPUMode(unsigned mode) {
+        // if we are in a vblank technically, don't do anything. This works well because moveToNextScanline sets vblank before updating the line
+        if (IO_LY >= 144)
+            return;
         IO_STAT &= ~ STAT_PPU_MODE; 
         IO_STAT |= (mode & STAT_PPU_MODE);
         // check the interrupts
         switch (mode) {
-            case 0:
-            case 1:
-            case 2:
+            case 0: // HBlank
+                if (IO_STAT & STAT_INT_MODE0)
+                    IO_IF |= IF_STAT;
+                break;
+            case 1: // VBlank
+                if (IO_STAT & STAT_INT_MODE1)
+                    IO_IF |= IF_STAT;
+                 break;
+            case 2: // OAM Scan
+                if (IO_STAT & STAT_INT_MODE2)
+                    IO_IF |= IF_STAT;
+                break;
+            default: // no interrupt on drawing mode
                 break;
         }
     }
     
-    /** Special function for setting the LY  */
-    void GBCEmu::setLY(uint8_t value) {
-        IO_LY = value;
-        if (value == 144)
-            IO_IF |= IF_VBLANK;
-        if (value == IO_LYC) {
+    /** Moves the PPU to the next scanline.  */
+    void GBCEmu::moveToNextScanline() {
+        if (IO_LY == 143) {
+            setPPUMode(1); // VBlank
+            updateIO_JOYP();
+            tick();
+        }
+        IO_LY = IO_LY == 153 ? 0 : IO_LY + 1;
+        // check if we should generate the STAT interrupt
+        if (IO_LY == IO_LYC) {
             IO_STAT |= STAT_LYC_EQ_LY;
             // check LYC LY interrupt
             if (IO_STAT & STAT_INT_LYC)
@@ -732,19 +816,14 @@ namespace rckid::gbcemu {
     /** TODO this is the simplest rendering possible where we just render the entire line. 
      */
     void GBCEmu::renderLine() {
-        // get the line we will be drawing now
-        uint8_t ly = IO_LY;
-        setLY(ly == 153 ? 0 : ly + 1);
-        // don't do anything in VBlank
-        if (ly >= 144) {
-            updateIO_JOYP();
-            if (ly == 144)
-                tick();
-            return;
-        }
         // don't do anything if disabled
         if (! (IO_LCDC & LCDC_LCD_ENABLE))
             return;
+        // don't do anything if in the Vblank mode
+        uint8_t ly = IO_LY;
+        if (ly >= 144)
+            return;
+
         // TODO determine which sprites to use
 
         // calculate the background position we will be drawing. This is the position to the 256x256 background map created by 32x32 tiles. Using the uint8_t values for the coordinates gives us the automatic wraparound
@@ -1000,24 +1079,21 @@ namespace rckid::gbcemu {
 
     void GBCEmu::setIORegisterOrHRAM(uint32_t addr, uint8_t value) {
         switch (addr) {
-            case 0x00: // IO_JOYP
+            case ADDR_JOYP:
                 // only the upper nibble is writeable, and once written, update the lower nibble accordingly
                 IO_JOYP = (IO_JOYP & 0xf) | (value & 0xf0);
                 updateIO_JOYP();
                 break;
-            case 0x01: // IO_SB
+            case ADDR_SB: 
                 LOG(LL_GBCEMU_SERIAL, static_cast<char>(value));
                 break;
-            case 0x02: // IO_SC
+            case ADDR_SC: 
                 break;
-            case 0x04: // IO_DIV
+            case ADDR_DIV: 
                 // this is the 16374Hz timer. Any write to the register resets the value to zero
                 IO_DIV = 0;
                 return; // do not perform the write
-            case 0x05: // IO_TIMA
-            case 0x06: // IO_TMA
-                break; // no special care necessary for those registers
-            case 0x07: // IO_TAC
+            case ADDR_TAC: // IO_TAC
                 if ((value & TAC_ENABLE) == 0) {
                     timerCycles_ = 0;
                     timerTIMAModulo_ = 0;
@@ -1036,8 +1112,9 @@ namespace rckid::gbcemu {
                         break;
                 }
                 break;
+            default:
+                hram_[addr] = value;
         }
-        hram_[addr] = value;
     }
 
     void GBCEmu::memWr16(uint16_t addr, uint16_t value) {
