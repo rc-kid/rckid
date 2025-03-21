@@ -91,6 +91,10 @@ namespace rckid {
         std::chrono::steady_clock::time_point lastVSyncTime;   
         size_t pixelsSent = 0;
         size_t frameSize =  320 * 240;     
+
+        std::chrono::steady_clock::time_point fpsStart;
+        unsigned fps;
+        unsigned currentFps;
     }
 
     namespace audio {
@@ -161,6 +165,7 @@ namespace rckid {
         display::img = GenImageColor(RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT, BLACK);
         display::texture = LoadTextureFromImage(display::img);
         display::lastVSyncTime = std::chrono::steady_clock::now();
+        display::fpsStart = std::chrono::steady_clock::now();
         Args::Arg<std::string> sdIso{"sd", "sd.iso"};
         Args::Arg<std::string> flashIso{"flash", "flash.iso"};
         Args::parse(argc, argv, { sdIso, flashIso });
@@ -291,11 +296,23 @@ namespace rckid {
         if (! initialized_)
             return;
         SystemMallocGuard g;
+        auto now = std::chrono::steady_clock::now();
+        auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(now - display::fpsStart).count();
+        if (elapsed > 1000000) {
+            display::fps = display::currentFps;
+            display::currentFps = 0;
+            display::fpsStart = now;
+            LOG(LL_DISPLAY_FPS, "FPS: " << display::fps);
+        }
         UpdateTexture(display::texture, display::img.data);
         BeginDrawing();
         DrawTextureEx(display::texture, {0, 0}, 0, 2.0f, WHITE);
+    
+        DrawText(TextFormat("FPS: %d", display::fps), 10, 10, 20, RED);
+
         EndDrawing();
         SwapScreenBuffer();
+        ++display::currentFps;
     }
 
     void displayResetDrawRectangle() {
