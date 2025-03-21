@@ -356,6 +356,7 @@ namespace rckid::gbcemu {
         static constexpr uint32_t DOTS_MODE_3 = 172;
         static constexpr uint32_t DOTS_MODE_0 = 204;
         
+        void initializeDisplay();
 
         void setPPUMode(unsigned mode);
         
