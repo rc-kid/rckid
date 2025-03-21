@@ -1170,7 +1170,8 @@ namespace rckid::gbcemu {
         #undef A
         #undef B
         uint8_t value;
-        if (IO_JOYP & 0x10) { // dpad
+        // note that the JOYP is inverted, i.e. 0 means button is pressed or group selected
+        if (IO_JOYP & 0x20) { // dpad
             value = (btnDown(Btn::Down)   ? 0 : 8) |
                     (btnDown(Btn::Up)     ? 0 : 4) |
                     (btnDown(Btn::Left)   ? 0 : 2) |
