@@ -319,6 +319,7 @@ namespace rckid::gbcemu {
         //clearTileset();
         //setBreakpoint(0x0371);
         while (true) {
+            moveToNextScanline();
             setPPUMode(2); // OAM scan
             runCPU(cgb_ ? DOTS_MODE_2 * 2 : DOTS_MODE_2);
             setPPUMode(3); // VRAM scan
@@ -326,7 +327,6 @@ namespace rckid::gbcemu {
             runCPU(cgb_ ? DOTS_MODE_3 * 2 : DOTS_MODE_3);
             setPPUMode(0); // HBlank
             runCPU(cgb_ ? DOTS_MODE_0 * 2 : DOTS_MODE_0);
-            moveToNextScanline();
         }
 
         // we are done, should blur ourselves, and refocus parent (if any)
@@ -358,10 +358,7 @@ namespace rckid::gbcemu {
 
     void GBCEmu::focus() {
         App::focus();
-        // set the display to row-first mode, which is what gameboy is expecting and set the resolution to 160x144
-        // TODO this should be changed to some scaling ideally
-        displaySetRefreshDirection(DisplayRefreshDirection::RowFirst);
-        displaySetUpdateRegion(Rect::Centered(160, 144, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT));
+        initializeDisplay();
     }
 
     void GBCEmu::blur() {
@@ -445,7 +442,7 @@ namespace rckid::gbcemu {
         IO_STAT = 0xff;
         IO_SCY = 0;
         IO_SCX = 0;
-        // IO_LY = 0; // can't tell
+        IO_LY = 0; // can't tell - but note this is set to 153 in initializeDisplay 
         IO_LYC = 0;
         IO_DMA = 0;
         IO_BGP = 0xfc;
@@ -770,6 +767,15 @@ namespace rckid::gbcemu {
 
 #endif
 
+    void GBCEmu::initializeDisplay() {
+        // set the display to row-first mode, which is what gameboy is expecting and set the resolution to 160x144
+        // TODO this should be changed to some scaling ideally
+        displaySetRefreshDirection(DisplayRefreshDirection::RowFirst);
+        displaySetUpdateRegion(Rect::Centered(160, 144, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT));
+        // set the render line to last of the VBLANK so that we will start drawing from the top immediately in the next scanline
+        IO_LY = 153;
+    }
+
     void GBCEmu::setPPUMode(unsigned mode) {
         // if we are in a vblank technically, don't do anything. This works well because moveToNextScanline sets vblank before updating the line
         if (IO_LY >= 144)
@@ -1085,7 +1091,7 @@ namespace rckid::gbcemu {
                 // only the upper nibble is writeable, and once written, update the lower nibble accordingly
                 IO_JOYP = (IO_JOYP & 0xf) | (value & 0xf0);
                 updateIO_JOYP();
-                break;
+                return;
             case ADDR_SB: 
                 LOG(LL_GBCEMU_SERIAL, static_cast<char>(value));
                 break;
@@ -1116,10 +1122,16 @@ namespace rckid::gbcemu {
                 break;
             case ADDR_STAT:
                 IO_STAT = (IO_STAT & ~STAT_WRITE_MASK) | (value & STAT_WRITE_MASK);
+                return;
+            case ADDR_LCDC:
+                if ((IO_LCDC & LCDC_LCD_ENABLE) == 0 && (value & LCDC_LCD_ENABLE))
+                    initializeDisplay();
                 break;
             default:
-                hram_[addr] = value;
+                // fallthrough to the default memory write
+                break;
         }
+        hram_[addr] = value;
     }
 
     void GBCEmu::memWr16(uint16_t addr, uint16_t value) {
