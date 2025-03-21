@@ -150,7 +150,9 @@ namespace rckid::gbcemu {
 
         //@}
 
-        /** The following 8 bit registers are available:
+        /** \name CPU 
+         
+            The following 8 bit registers are available:
 
             - A (accumulator)
             - F (flags), only few bits available as the ZNHC flags. 
@@ -163,6 +165,7 @@ namespace rckid::gbcemu {
             - SP (stack pointer)
             - PC (program counter)
          */
+        //@{
         static constexpr uint32_t REG_INDEX_A = 1;
         static constexpr uint32_t REG_INDEX_F = 0;
         static constexpr uint32_t REG_INDEX_B = 3;
@@ -185,6 +188,10 @@ namespace rckid::gbcemu {
         uint16_t sp_;
         uint16_t pc_;
 
+        /** True if CGB mode is enabled. This is twice the speed and some extra capabilities in rendering, etc. 
+         */
+        bool cgb_ = false;
+
         /** Flags. 
          
             - `Z` (zero flag) set only if the actual result is 0
@@ -204,6 +211,9 @@ namespace rckid::gbcemu {
         void setFlagH(bool value) { value ? regs8_[REG_INDEX_F] |= FLAG_H : regs8_[REG_INDEX_F] &= ~FLAG_H; }
 
         void setFlagC(bool value) { value ? regs8_[REG_INDEX_F] |= FLAG_C : regs8_[REG_INDEX_F] &= ~FLAG_C; }
+
+        void runCPU(uint32_t cycles);
+        //@}
 
         /** Memory.
          
@@ -341,25 +351,24 @@ namespace rckid::gbcemu {
 
         static_assert(sizeof(OAMSprite) == 4);
 
-        /** Dots per scanline. There are 154 scanlines, 144 of which are visible on the display. 
-         */
-        uint32_t cyclesPerLine_ = 456; 
+        static constexpr uint32_t DOTS_PER_LINE = 456;
+        static constexpr uint32_t DOTS_MODE_2 = 80;
+        static constexpr uint32_t DOTS_MODE_3 = 172;
+        static constexpr uint32_t DOTS_MODE_0 = 204;
+        
 
-        void setMode(unsigned mode);
+        void setPPUMode(unsigned mode);
         
         /** Sets the Y LCD coordinate (currently drawn row)
          */
-        void setLY(uint8_t value);
+        //void setLY(uint8_t value);
 
         /** Graphics rendering for a single line.
          */
         void renderLine();
+
+        void moveToNextScanline();
         //@}
-
-
-
-        /** \name CPU 
-         */
 
         // Current gamepak
         GamePak * gamepak_ = nullptr;
