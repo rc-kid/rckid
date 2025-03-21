@@ -199,7 +199,7 @@ static constexpr uint8_t LCDC_BG_WIN_PRIORITY = 1 << 0;
     bits 0 & 1 = PPU mode 
 */
 #define IO_STAT (hram_[ADDR_STAT])
-static constexpr uint8_t STAT_WRITE_MASK = 0b01111100;
+static constexpr uint8_t STAT_WRITE_MASK = 0b01111000;
 static constexpr uint8_t STAT_PPU_MODE = 3;
 static constexpr uint8_t STAT_LYC_EQ_LY = 1 << 2;
 static constexpr uint8_t STAT_INT_MODE0 = 1 << 3;
@@ -317,7 +317,7 @@ namespace rckid::gbcemu {
 
         //clearTilemap();
         //clearTileset();
-        //setBreakpoint(0x033d);
+        //setBreakpoint(0x0371);
         while (true) {
             setPPUMode(2); // OAM scan
             runCPU(cgb_ ? DOTS_MODE_2 * 2 : DOTS_MODE_2);
@@ -442,6 +442,7 @@ namespace rckid::gbcemu {
         IO_NR52 = 0xf1;
         IO_LCDC = 0x91;
         // IO_STAT = 0; -- can't tell
+        IO_STAT = 0xff;
         IO_SCY = 0;
         IO_SCX = 0;
         // IO_LY = 0; // can't tell
@@ -782,9 +783,10 @@ namespace rckid::gbcemu {
                     IO_IF |= IF_STAT;
                 break;
             case 1: // VBlank
+                IO_IF |= IF_VBLANK;
                 if (IO_STAT & STAT_INT_MODE1)
                     IO_IF |= IF_STAT;
-                 break;
+                break;
             case 2: // OAM Scan
                 if (IO_STAT & STAT_INT_MODE2)
                     IO_IF |= IF_STAT;
@@ -1111,6 +1113,9 @@ namespace rckid::gbcemu {
                         timerTIMAModulo_ = 63;
                         break;
                 }
+                break;
+            case ADDR_STAT:
+                IO_STAT = (IO_STAT & ~STAT_WRITE_MASK) | (value & STAT_WRITE_MASK);
                 break;
             default:
                 hram_[addr] = value;
