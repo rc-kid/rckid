@@ -896,14 +896,26 @@ namespace rckid::gbcemu {
 
         // now render the sprites. For now, we are just rendering any and all sprites that cross the line we are drawing, as opposed to scanning and prioritizing them so that only 10 will be displayed. The idea is that this is both simpler algorithm and if the sprite limit is not reached by the game also faster to draw. 
         OAMSprite * sprites = reinterpret_cast<OAMSprite *>(oam_);
+        // TODO on CGB this changes and can be second bank as well
+        tilesetAddress = reinterpret_cast<uint16_t *>(vram_[0]);
         for (uint32_t i = NUM_SPRITES - 1; i < NUM_SPRITES; --i) {
             OAMSprite & s = sprites[i];
             // if the sprite does not intersect the current line, skip it
             if (s.y() > ly || s.y() + 8 <= ly)
                 continue;
-            // we are drawing the sprite, get its tile address
-            uint8_t * tileAddress = vram;  // + (s.tile() * 16);
-            // TODO there are no sprites, we need to implement the OAM DMA first
+            // Calculate the row address of the sprite's tile
+            uint32_t sy = ly - s.y();
+            uint16_t tileRow = *(tilesetAddress + s.tile * 8 + sy);
+            // we have the tile pixels, figure out the palette indices, the tile pixels are 2 bits each in 2 panes so we need to first put them together
+            uint8_t upper = tileRow >> 8;
+            uint8_t lower = tileRow & 0xff;
+            uint32_t x = s.x();
+            for (int i = 7; i >= 0; --i) {
+                uint8_t colorIndex = ((upper >> i) & 1) | (((lower >> i) & 1) << 1);
+                if (x >= 0 && x < 160)
+                    buffer[x] = palette[colorIndex];
+                ++x;
+            }
         }
 
         switch (displayMode_) {
