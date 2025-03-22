@@ -225,6 +225,14 @@ static constexpr uint8_t STAT_INT_LYC = 1 << 6;
     When the LY value becomes identical to the LYC value, the STAT bit 2 (LYC == LY) is set and an interrupt can be triggered if enabled. 
  */
 #define IO_LYC (hram_[ADDR_LYC])
+/** OAM DMA address & start. 
+ 
+    Writing XX to this register starts an OAM transfer from XX00 to FE00 (the OAM memory). During the DMA transfer, the CPU cannot access RAM at all so it usually busy waits for the required number of cycles in HRAM, which is the only accessible memory at the time. 
+
+    For CGB this is less strict (but technically the emulator should not care that much). 
+
+    https://gbdev.io/pandocs/OAM_DMA_Transfer.html#ff46--dma-oam-dma-source-address--start
+ */
 #define IO_DMA (hram_[ADDR_DMA])
 
 /** DMG palette register. Contains color indices for the 4 available colors. 
@@ -885,6 +893,19 @@ namespace rckid::gbcemu {
                 ++x;
             }
         }
+
+        // now render the sprites. For now, we are just rendering any and all sprites that cross the line we are drawing, as opposed to scanning and prioritizing them so that only 10 will be displayed. The idea is that this is both simpler algorithm and if the sprite limit is not reached by the game also faster to draw. 
+        OAMSprite * sprites = reinterpret_cast<OAMSprite *>(oam_);
+        for (uint32_t i = NUM_SPRITES - 1; i < NUM_SPRITES; --i) {
+            OAMSprite & s = sprites[i];
+            // if the sprite does not intersect the current line, skip it
+            if (s.y() > ly || s.y() + 8 <= ly)
+                continue;
+            // we are drawing the sprite, get its tile address
+            uint8_t * tileAddress = vram;  // + (s.tile() * 16);
+            // TODO there are no sprites, we need to implement the OAM DMA first
+        }
+
         switch (displayMode_) {
             case DisplayMode::Native:
                 displayUpdate(buffer, 160);
@@ -1164,6 +1185,14 @@ namespace rckid::gbcemu {
                 if ((IO_LCDC & LCDC_LCD_ENABLE) == 0 && (value & LCDC_LCD_ENABLE))
                     initializeDisplay();
                 break;
+            case ADDR_DMA: {
+                // the DMA works instantenuously, because the CPU is expected to wait the dedicated number of cycles in HRAM immediately after the write so this is fine
+                // TODO the waiting pattern seems to be quite straightforward and the code can be effectively skipped, might save a few cycles if needed
+                uint32_t addr = value << 8;
+                for (uint32_t i = 0; i < 160; ++i)
+                    oam_[i] = mem8(addr + i);
+                return;
+            }
             default:
                 // fallthrough to the default memory write
                 break;
