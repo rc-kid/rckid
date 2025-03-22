@@ -343,13 +343,16 @@ namespace rckid::gbcemu {
 
         /** Object Attribute Memory for a single sprite.
          
-            Each sprite contains its x and y values, tile number and flags (priority, palettes, flips, etc.). Important note is that the sprite y coordinate is offset by 16 pixels, so the actual sprite y position is y + 16.
+            Each sprite contains its x and y values, tile number and flags (priority, palettes, flips, etc.). Important note is that the sprite y coordinate is offset by 16 pixels, so the actual sprite y position is y - 16.
          */
         PACKED(struct OAMSprite {
-            uint8_t y;
-            uint8_t x;
+            uint8_t y_;
+            uint8_t x_;
             uint8_t tile;
             uint8_t flags;
+
+            uint8_t y() const { return y_ - 16; }
+            uint8_t x() const { return x_; }
 
             bool priority() const { return flags & 0x80; }
             bool yFlip() const { return flags & 0x40; }
@@ -361,6 +364,7 @@ namespace rckid::gbcemu {
 
         static_assert(sizeof(OAMSprite) == 4);
 
+        static constexpr uint32_t NUM_SPRITES = 40;
         static constexpr uint32_t DOTS_PER_LINE = 456;
         static constexpr uint32_t DOTS_MODE_2 = 80;
         static constexpr uint32_t DOTS_MODE_3 = 172;
