@@ -268,6 +268,9 @@ namespace rckid::gbcemu {
         void memWr8(uint16_t addr, uint8_t value);
         void memWr16(uint16_t addr, uint16_t value);
 
+
+        void setRom(uint16_t addr, uint8_t value);
+
         /** Sets the specific IO register, or HRAM.
          */
         void setIORegisterOrHRAM(uint32_t addr, uint8_t value);
@@ -304,6 +307,11 @@ namespace rckid::gbcemu {
 
         // memory mapping information. For fast access, the memory is divided into 16 4kb regions with pointers to beginning in the array. This is true for all but the last block, which is a bit more complex as it contains echo ram, oam memory, io regs and hram.
         uint8_t * memMap_[16];
+
+        // MBC type used in the current gamepak
+        MBC mbc_ = MBC::None;
+
+        uint32_t romPage_ = 1;
 
         /** \name Controls
          

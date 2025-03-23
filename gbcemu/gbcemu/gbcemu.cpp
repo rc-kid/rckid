@@ -384,6 +384,17 @@ namespace rckid::gbcemu {
 
     void GBCEmu::loadCartridge(GamePak * game) {
         gamepak_ = game;
+        mbc_ = game->cartridgeMBC();
+        switch (mbc_) {
+            case MBC::None:
+            case MBC::Type1:
+            
+                break;
+            default:
+                LOG(LL_ERROR, "Unsupported MBC type");
+                ASSERT(false);
+                break;
+        }
         // figure out the size of the external RAM and allocate accordingly
         for (uint32_t i = 0; i < 32; ++i) {
             Heap::tryFree(eram_[i]);
@@ -950,6 +961,7 @@ namespace rckid::gbcemu {
     }
 
     void GBCEmu::setRomPage(uint32_t page) {
+        romPage_ = page;
         memMap_[4] = const_cast<uint8_t *>(gamepak_->getPage(page));
         memMap_[5] = memMap_[4] + 0x1000;
         memMap_[6] = memMap_[4] + 0x2000;
@@ -1127,8 +1139,8 @@ namespace rckid::gbcemu {
             case 5:
             case 6:
             case 7:
-                // UNIMPLEMENTED;
-                // TODO bank switching
+                // ROM bank switching
+                setRom(addr, value);
                 break;
             case 10:
             case 11:
@@ -1152,6 +1164,47 @@ namespace rckid::gbcemu {
                 else
                     memMap_[page][offset] = value;
                 break;
+        }
+    }
+
+    void GBCEmu::setRom(uint16_t addr, uint8_t value) {
+        switch (mbc_) {
+            case MBC::None:
+                break;
+            /** MBC1 supports four registers, namely:
+             
+                0000-1fff - writing 0x0a to this enables the external ram, anything else disables it
+                2000-3fff - lower 5 bits of the bank number
+                4000-5fff - upper 2 bits of the bank number, or RAM bank number
+                6000-7fff - banking mode select (0 for simple, 1 for advanced)
+
+                TODO the advanced mode seems to be able to set bank number for the first half or ROM as well, which sound weird a bit. 
+                
+             */
+            case MBC::Type1:
+                if (addr < 0x1fff) {
+                    // enable/disable external ram
+                    UNIMPLEMENTED;
+                } else if (addr < 0x3fff) {
+                    // set the lower 5 bits of the rom bank
+                    uint32_t page = romPage_ & 0xe0 | (value & 0x1f);
+                    if (page == 0)
+                        page = 1;
+                    setRomPage(page);
+                } else if (addr < 0x5fff) {
+                    // set the upper 2 bits of the rom bank
+                    uint32_t page = (page & 0x1f) | ((value & 3) << 5);
+                    setRomPage(page);
+                } else {
+                    ASSERT(addr < 0x8000); 
+                    // we do not support advanced banking yet
+                    if (value & 1)
+                        UNIMPLEMENTED;
+                }
+                break;
+            default:
+                // we should have died earlier
+                UNREACHABLE;
         }
     }
 

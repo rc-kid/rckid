@@ -7,6 +7,7 @@
 #include <rckid/assets/fonts/OpenDyslexic64.h>
 #include <rckid/ui/label.h>
 #include <rckid/ui/form.h>
+#include "../../sd/roms.h"
 
 using namespace rckid;
 
@@ -55,7 +56,8 @@ int main() {
         //app.loadCartridge(new gbcemu::FlashGamePak{});
         if (false)
         app.loadCartridge(new gbcemu::FlashGamePak{
-            gbcemu::DMGBootloader
+            //gbcemu::DMGBootloader
+            gbcemu::roms::testrom,
             //rckid::gbcemu::rom::blargg::instrs::special
             //rckid::gbcemu::rom::blargg::instrs::interrupts
             //rckid::gbcemu::rom::blargg::instrs::op_sp_hl
@@ -68,7 +70,7 @@ int main() {
             //rckid::gbcemu::rom::blargg::instrs::bit_ops
             //rckid::gbcemu::rom::blargg::instrs::op_a__hl_
         });
-        app.loadCartridge(new gbcemu::FileGamePak("/mnt/c/delete/testrom.gb"));
+        app.loadCartridge(new gbcemu::FileGamePak("/mnt/c/delete/testrom2.gb"));
         //app.setTerminateAfterStop(true);
         uint32_t t = uptimeUs();
         app.run();
