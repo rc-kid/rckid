@@ -873,8 +873,17 @@ namespace rckid::gbcemu {
         uint8_t * vram = memMap_[MEMMAP_VRAM_0];
         uint8_t * tilemapAddress = vram + ((IO_LCDC & LCDC_BG_TILEMAP) ? 0x1c00 : 0x1800);
         tilemapAddress += ty * 32 + tx; 
-        // and determine the tileset address
-        uint16_t * tilesetAddress = reinterpret_cast<uint16_t *>(vram + ((IO_LCDC & LCDC_BG_WIN_TILEDATA) ? 0x0000 : 0x0800));
+        // and determine the tileset address. Note the second address is off by 0x800 as the tileIndex is 128 at least now, so doing it here saves us the adjustment in the loop
+        uint16_t * tilesetAddress1;
+        uint16_t * tilesetAddress2;
+        if (IO_LCDC & LCDC_BG_WIN_TILEDATA) {
+            tilesetAddress1 = reinterpret_cast<uint16_t *>(vram + 0x0000);
+            tilesetAddress2 = reinterpret_cast<uint16_t *>(vram + 0x0000);
+        } else {
+            tilesetAddress1 = reinterpret_cast<uint16_t *>(vram + 0x1000);
+            tilesetAddress2 = reinterpret_cast<uint16_t *>(vram + 0x0000);
+        }
+        //uint16_t * tilesetAddress = reinterpret_cast<uint16_t *>(vram + ((IO_LCDC & LCDC_BG_WIN_TILEDATA) ? 0x0000 : 0x0800));
         // and figure out the palette we will be using for the row
         uint16_t palette[4];
         // TODO fill the palette from IO_BGB
@@ -891,7 +900,8 @@ namespace rckid::gbcemu {
             // determine which tile we are using
             // TODO for CGB we also need to determine the tile attributes 
             uint8_t tileIndex = *tilemapAddress++;
-            uint16_t tileRow = *(tilesetAddress + tileIndex * 8 + tr);
+            uint16_t * tileAddress = ((tileIndex < 128) ? tilesetAddress1 : tilesetAddress2) + tileIndex * 8;
+            uint16_t tileRow =  *(tileAddress + tr);
             // we have the tile pixels, figure out the palette indices, the tile pixels are 2 bits each in 2 panes so we need to first put them together
             uint8_t upper = tileRow >> 8;
             uint8_t lower = tileRow & 0xff;
@@ -908,24 +918,36 @@ namespace rckid::gbcemu {
         // now render the sprites. For now, we are just rendering any and all sprites that cross the line we are drawing, as opposed to scanning and prioritizing them so that only 10 will be displayed. The idea is that this is both simpler algorithm and if the sprite limit is not reached by the game also faster to draw. 
         OAMSprite * sprites = reinterpret_cast<OAMSprite *>(oam_);
         // TODO on CGB this changes and can be second bank as well
-        tilesetAddress = reinterpret_cast<uint16_t *>(vram_[0]);
+        uint16_t * tilesetAddress = reinterpret_cast<uint16_t *>(vram_[0]);
+        uint32_t objectSize = IO_LCDC & LCDC_OBJ_SIZE ? 16 : 8;
         for (uint32_t i = NUM_SPRITES - 1; i < NUM_SPRITES; --i) {
             OAMSprite & s = sprites[i];
             // if the sprite does not intersect the current line, skip it
-            if (s.y() > ly || s.y() + 8 <= ly)
+            if (s.y() > ly || s.y() + objectSize <= ly)
                 continue;
             // Calculate the row address of the sprite's tile
             uint32_t sy = ly - s.y();
-            uint16_t tileRow = *(tilesetAddress + s.tile * 8 + sy);
+            uint16_t tileRow = (sy >= 8) ? 
+                *(tilesetAddress + (s.tile + 1) * 8 + (sy - 8)) :
+                *(tilesetAddress + s.tile * 8 + sy);
             // we have the tile pixels, figure out the palette indices, the tile pixels are 2 bits each in 2 panes so we need to first put them together
             uint8_t upper = tileRow >> 8;
             uint8_t lower = tileRow & 0xff;
             uint32_t x = s.x();
-            for (int i = 7; i >= 0; --i) {
-                uint8_t colorIndex = ((upper >> i) & 1) | (((lower >> i) & 1) << 1);
-                if (x >= 0 && x < 160)
-                    buffer[x] = palette[colorIndex];
-                ++x;
+            if (s.xFlip()) {
+                for (int i = 0; i < 8; ++i) {
+                    uint8_t colorIndex = ((upper >> i) & 1) | (((lower >> i) & 1) << 1);
+                    if (colorIndex != 0 && x >= 0 && x < 160) // color 0 is transparent
+                        buffer[x] = palette[colorIndex];
+                    ++x;
+                }
+            } else {
+                for (int i = 7; i >= 0; --i) {
+                    uint8_t colorIndex = ((upper >> i) & 1) | (((lower >> i) & 1) << 1);
+                    if (colorIndex != 0 && x >= 0 && x < 160) // color 0 is transparent
+                        buffer[x] = palette[colorIndex];
+                    ++x;
+                }
             }
         }
 
@@ -1179,7 +1201,6 @@ namespace rckid::gbcemu {
                 6000-7fff - banking mode select (0 for simple, 1 for advanced)
 
                 TODO the advanced mode seems to be able to set bank number for the first half or ROM as well, which sound weird a bit. 
-                
              */
             case MBC::Type1:
                 if (addr < 0x1fff) {
