@@ -310,7 +310,6 @@ namespace rckid::gbcemu {
 
         // MBC type used in the current gamepak
         MBC mbc_ = MBC::None;
-
         uint32_t romPage_ = 1;
 
         /** \name Controls
@@ -420,6 +419,19 @@ namespace rckid::gbcemu {
 #endif
 
         DoubleBuffer<uint16_t> pixels_;
+
+        ColorRGB palette_[4] = {
+            ColorRGB{155, 188, 15},
+            ColorRGB{139, 172, 15},
+            ColorRGB{48, 98, 48},
+            ColorRGB{15, 56, 15},            
+            /*
+           ColorRGB{255, 255, 255}, 
+           ColorRGB{170, 170, 170},
+           ColorRGB(85, 85, 85),
+           ColorRGB{0,0,0},
+           */
+        };
 
 
         /** Nearest Neighbor Precalculations 

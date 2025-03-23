@@ -884,13 +884,14 @@ namespace rckid::gbcemu {
             tilesetAddress2 = reinterpret_cast<uint16_t *>(vram + 0x0000);
         }
         //uint16_t * tilesetAddress = reinterpret_cast<uint16_t *>(vram + ((IO_LCDC & LCDC_BG_WIN_TILEDATA) ? 0x0000 : 0x0800));
+
         // and figure out the palette we will be using for the row
         uint16_t palette[4];
-        // TODO fill the palette from IO_BGB
-        palette[0] = ColorRGB{155, 188, 15}.raw16();
-        palette[1] = ColorRGB{139, 172, 15}.raw16();    
-        palette[2] = ColorRGB{48, 98, 48}.raw16();
-        palette[3] = ColorRGB{15, 56, 15}.raw16();
+        uint8_t bgp = IO_BGP;
+        palette[0] = palette_[bgp & 3].raw16();
+        palette[1] = palette_[(bgp >> 2) & 3].raw16();
+        palette[2] = palette_[(bgp >> 4) & 3].raw16();
+        palette[3] = palette_[(bgp >> 6) & 3].raw16();
 
         uint16_t * buffer = pixels_.front();
 
@@ -906,7 +907,7 @@ namespace rckid::gbcemu {
             uint8_t upper = tileRow >> 8;
             uint8_t lower = tileRow & 0xff;
             for (int i = 7; i >= 0; --i) {
-                uint8_t colorIndex = ((upper >> i) & 1) | (((lower >> i) & 1) << 1);
+                uint8_t colorIndex = ((lower >> i) & 1) | (((upper >> i) & 1) << 1);
                 // TODO render the pixel
                 // displaySetPixel(x, ly, palette[colorIndex]);
                 if (x >= 0 && x < 160)
@@ -936,14 +937,14 @@ namespace rckid::gbcemu {
             uint32_t x = s.x();
             if (s.xFlip()) {
                 for (int i = 0; i < 8; ++i) {
-                    uint8_t colorIndex = ((upper >> i) & 1) | (((lower >> i) & 1) << 1);
+                    uint8_t colorIndex = ((lower >> i) & 1) | (((upper >> i) & 1) << 1);
                     if (colorIndex != 0 && x >= 0 && x < 160) // color 0 is transparent
                         buffer[x] = palette[colorIndex];
                     ++x;
                 }
             } else {
                 for (int i = 7; i >= 0; --i) {
-                    uint8_t colorIndex = ((upper >> i) & 1) | (((lower >> i) & 1) << 1);
+                    uint8_t colorIndex = ((lower >> i) & 1) | (((upper >> i) & 1) << 1);
                     if (colorIndex != 0 && x >= 0 && x < 160) // color 0 is transparent
                         buffer[x] = palette[colorIndex];
                     ++x;
