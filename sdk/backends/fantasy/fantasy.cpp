@@ -360,7 +360,6 @@ namespace rckid {
 
     void displaySetUpdateRegion(Coord width, Coord height) {
         displaySetUpdateRegion(Rect::XYWH((RCKID_DISPLAY_WIDTH - width) / 2, (RCKID_DISPLAY_HEIGHT - height) / 2, width, height));
-        
     }
 
     bool displayUpdateActive() {

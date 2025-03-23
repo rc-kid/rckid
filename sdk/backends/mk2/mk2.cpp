@@ -301,6 +301,12 @@ namespace rckid {
         }};
     }
 
+    uint8_t debugRead(bool echo) {
+        return 0;
+    }
+
+
+
     void initialize([[maybe_unused]] int argc, [[maybe_unused]] char const * argv[]) {
         board_init();
 #if (defined RCKID_ENABLE_STACK_PROTECTION)
@@ -500,6 +506,10 @@ namespace rckid {
 
     void displaySetUpdateRegion(Rect value) {
         ST7789::setUpdateRegion(value);
+    }
+
+    void displaySetUpdateRegion(Coord width, Coord height) {
+        displaySetUpdateRegion(Rect::XYWH((RCKID_DISPLAY_WIDTH - width) / 2, (RCKID_DISPLAY_HEIGHT - height) / 2, width, height));
     }
 
     bool displayUpdateActive() {

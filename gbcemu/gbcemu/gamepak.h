@@ -8,6 +8,30 @@
 
 namespace rckid::gbcemu {
 
+    /** Memory bank controller types. 
+     
+        0000 RAM Enable
+        1fff
+        2000 ROM Bank (0x01 - 0x1f)
+        3fff 
+        4000 RAM Bank or ROM 
+        5fff
+     */
+    enum class MBC {
+        None, 
+        Type1,
+        Type2,
+        Type3,
+        Type5, 
+        Type6,
+        Type7,
+        MMM01,
+        M161,
+        HuC1,
+        HuC3,
+        Other,
+    }; 
+
     /** GB(C) Cartridge 
      
         The gamepak is a wrapper around the ROM of the cartridge. Everything else, i.e. RAM, memory controller, or extra hardware is provided by gbcemu. 
@@ -20,7 +44,7 @@ namespace rckid::gbcemu {
         /** Gamepak type. For details see the documentation in gamepak_type.inc.h 
          */
         enum class Type : uint8_t {
-    #define CTYPE(ID, NAME) NAME = ID,         
+    #define CTYPE(ID, NAME, MBC_NAME) NAME = ID,         
     #include "gamepak_type.inc.h"
         }; // GamePak::Type 
 
@@ -57,6 +81,17 @@ namespace rckid::gbcemu {
             }
         }
 
+        /** Returns the MBC used in the cartridge.
+         */
+        MBC cartridgeMBC() {
+            switch (getPage(0)[HEADER_CARTRIDGE_TYPE]) {
+            #define CTYPE(ID, NAME, MBC_TYPE) case ID: return MBC_TYPE;
+            #include "gamepak_type.inc.h"
+                default:
+                    return MBC::Other;
+            }
+        }
+
     private:
         static constexpr uint32_t HEADER_CBG_FLAG = 0x0143;
         static constexpr uint32_t HEADER_CARTRIDGE_TYPE = 0x0147;
@@ -86,25 +121,17 @@ namespace rckid::gbcemu {
 
 
 
-    #ifdef RCKID_BACKEND_FANTASY
+#ifdef RCKID_BACKEND_FANTASY
 
     /** Convenience gamepak for testing in fantasy mode where entire file can be loaded to memory and then used similarly to a flash gamepak. Not available on the device because of rather small RAM size not allowing full cartridge to fit.
      */
     class FileGamePak : public GamePak {
     public:
 
-        FileGamePak(std::string const & filename) {
-            std::ifstream input(filename, std::ios::binary | std::ios::ate);
-            std::streamsize fileSize = input.tellg();
-            input.seekg(0, std::ios::beg);
-            rom_ = new uint8_t[fileSize];
-            if (!input.read(reinterpret_cast<char*>(rom_), fileSize))
-                throw std::runtime_error(STR("Error reading file " << filename));
-            input.close();
-        }
+        FileGamePak(std::string const & filename);
 
         ~FileGamePak() override {
-            delete []rom_;
+            delete [] rom_;
         }
             
         uint8_t const * getPage(uint32_t page) const override {

@@ -6,3 +6,4 @@ libs/raylib
 libs/pico-sdk
 old*
 gbcemu/tests/insns_json
+sd
