@@ -905,11 +905,17 @@ namespace rckid::gbcemu {
         uint16_t * buffer = pixels_.front();
 
         // render the pixels now, we keep x as the current x coordinate on the screen
-        int16_t x = - (8 - (bx % 8)) & 0x7;
+        int16_t x = - (bx & 0x7);
         while (x < 160) {
             // determine which tile we are using
             // TODO for CGB we also need to determine the tile attributes 
             uint8_t tileIndex = *tilemapAddress++;
+            // if we are overflowing the window, we need to wrap around on the *same* line
+            if (++tx == 32) {
+                tx = 0;
+                tilemapAddress = vram + ((IO_LCDC & LCDC_BG_TILEMAP) ? 0x1c00 : 0x1800);
+                tilemapAddress += ty * 32; 
+            }
             uint16_t * tileAddress = ((tileIndex < 128) ? tilesetAddress1 : tilesetAddress2) + tileIndex * 8;
             uint16_t tileRow =  *(tileAddress + tr);
             // we have the tile pixels, figure out the palette indices, the tile pixels are 2 bits each in 2 panes so we need to first put them together
