@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <sstream>
 #include <iostream>
+#include <cstdint>
 
 #if (! defined STR)
 #define STR(...) static_cast<std::stringstream &&>(std::stringstream() << __VA_ARGS__).str()
