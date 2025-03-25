@@ -1,5 +1,9 @@
 #pragma once
 
+/** When enabled, the emulator will not wait at the end of each frame but would instead run as fast as possible. 
+ */
+//#define GBCEMU_NO_SPEED_LIMIT
+
 
 #define GBCEMU_INTERACTIVE_DEBUG
 #define GBCEMU_ENABLE_BKPT

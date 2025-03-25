@@ -836,6 +836,10 @@ namespace rckid::gbcemu {
             setPPUMode(1); // VBlank
             updateIO_JOYP();
             tick();
+#ifndef GBCEMU_NO_SPEED_LIMIT
+            // TODO do we want a finer grained control here, or is it ok to wait after each frame only? 
+            displayWaitVSync();
+#endif
         }
         IO_LY = IO_LY == 153 ? 0 : IO_LY + 1;
         // check if we should generate the STAT interrupt
