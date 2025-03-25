@@ -287,12 +287,10 @@ INS(0xbe, Z,1,H,C, 1, 8 , "cp a, [hl]", { sub8(A, memRd8(HL)); })
 INS(0xbf, 1,1,0,0, 1, 4 , "cp a, a", { }) 
 INS(0xc0, _,_,_,_, 1, 8 + 12, "ret nz", {
     // 5 cycles taken, 2 cyles not taken
-    if (! flagZ()) {
-        PC = memRd16(SP);
-        SP += 2;
-    } else {
+    if (! flagZ())
+        stackFramePop();
+    else
         usedCycles -= 12;
-    }
 })
 INS(0xc1, _,_,_,_, 1, 12, "pop bc", { BC = memRd16(SP); SP += 2; })
 INS(0xc2, _,_,_,_, 3, 12 + 4, "jp nz, a16", {
@@ -308,8 +306,7 @@ INS(0xc4, _,_,_,_, 3, 12 + 12, "call nz, a16", {
     // 6 cycles taken, 3 cycles not taken
     uint16_t addr = mem16(PC); PC += 2;
     if (! flagZ()) {
-        SP -= 2;
-        memWr16(SP, PC);
+        stackFramePush();
         PC = addr;
     } else {
         usedCycles -= 12;
@@ -318,20 +315,19 @@ INS(0xc4, _,_,_,_, 3, 12 + 12, "call nz, a16", {
 INS(0xc5, _,_,_,_, 1, 16, "push bc", { SP -= 2; memWr16(SP, BC); })
 INS(0xc6, Z,0,H,C, 2, 8 , "add a, n8", { A = add8(A, mem8(PC++)); })
 INS(0xc7, _,_,_,_, 1, 16, "rst $00", {
-    SP -= 2; 
-    memWr16(SP, PC); 
+    stackFramePush();
     PC = 0x00; 
 })
 INS(0xc8, _,_,_,_, 1, 8 + 12, "ret z", {
     // 5 cycles taken, 2 cyles not taken
-    if (flagZ()) {
-        PC = memRd16(SP);
-        SP += 2;
-    } else {
+    if (flagZ())
+        stackFramePop();
+    else
         usedCycles -= 12;
-    }
 })
-INS(0xc9, _,_,_,_, 1, 16, "ret", { PC = memRd16(SP); SP += 2; })
+INS(0xc9, _,_,_,_, 1, 16, "ret", { 
+    stackFramePop();
+})
 INS(0xca, _,_,_,_, 3, 12 + 4, "jp z, a16", {
     // 4 cycles taken, 3 cycles not taken
     uint16_t addr = mem16(PC); PC += 2;
@@ -444,8 +440,7 @@ INS(0xcc, _,_,_,_, 3, 12 + 12, "call z, a16", {
     // 6 cycles taken, 3 cycles not taken
     uint16_t addr = mem16(PC); PC += 2;
     if (flagZ()) {
-        SP -= 2;
-        memWr16(SP, PC);
+        stackFramePush();
         PC = addr;
     } else {
         usedCycles -= 12;
@@ -453,24 +448,20 @@ INS(0xcc, _,_,_,_, 3, 12 + 12, "call z, a16", {
 })
 INS(0xcd, _,_,_,_, 3, 24, "call a16", {
     uint16_t addr = mem16(PC); PC += 2;
-    SP -= 2;
-    memWr16(SP, PC);
+    stackFramePush();
     PC = addr;
 })
 INS(0xce, Z,0,H,C, 2, 8 , "adc a, n8", { A = add8(A, mem8(PC++), flagC()); })
 INS(0xcf, _,_,_,_, 1, 16, "rst $08", {
-    SP -= 2; 
-    memWr16(SP, PC); 
+    stackFramePush();
     PC = 0x08; 
 })
 INS(0xd0, _,_,_,_, 1, 8 + 12, "ret nc", {
     // 5 cycles taken, 2 cyles not taken
-    if (! flagC()) {
-        PC = memRd16(SP);
-        SP += 2;
-    } else {
+    if (! flagC())
+        stackFramePop();
+    else
         usedCycles -= 12;
-    }
 })
 INS(0xd1, _,_,_,_, 1, 12, "pop de", { DE = memRd16(SP); SP += 2; })
 INS(0xd2, _,_,_,_, 3, 12 + 4, "jp nc, a16", {
@@ -485,8 +476,7 @@ INS(0xd4, _,_,_,_, 3, 12 + 12, "call nc, a16", {
     // 6 cycles taken, 3 cycles not taken
     uint16_t addr = mem16(PC); PC += 2;
     if (! flagC()) {
-        SP -= 2;
-        memWr16(SP, PC);
+        stackFramePush();
         PC = addr;
     } else {
         usedCycles -= 12;
@@ -495,23 +485,18 @@ INS(0xd4, _,_,_,_, 3, 12 + 12, "call nc, a16", {
 INS(0xd5, _,_,_,_, 1, 16, "push de", { SP -= 2; memWr16(SP, DE); })
 INS(0xd6, Z,1,H,C, 2, 8 , "sub a, n8", { A = sub8(A, mem8(PC++)); })
 INS(0xd7, _,_,_,_, 1, 16, "rst $10", {
-    SP -= 2; 
-    memWr16(SP, PC); 
+    stackFramePush();
     PC = 0x10; 
 })
 INS(0xd8, _,_,_,_, 1, 8 + 12, "ret c", {
     // 5 cycles taken, 2 cyles not taken
-    if (flagC()) {
-        PC = memRd16(SP);
-        SP += 2;
-    } else {
+    if (flagC())
+        stackFramePop();
+    else
         usedCycles -= 12;
-    }
 })
 INS(0xd9, _,_,_,_, 1, 16, "reti", {
-    PC = memRd16(SP);
-    SP += 2;
-    ime_ = true;
+    stackFramePop(true);
 })
 INS(0xda, _,_,_,_, 3, 12 + 4, "jp c, a16", {
     // 4 cycles taken, 3 cycles not taken
@@ -525,8 +510,7 @@ INS(0xdc, _,_,_,_, 3, 12 + 12, "call c, a16", {
     // 6 cycles taken, 3 cycles not taken
     uint16_t addr = mem16(PC); PC += 2;
     if (flagC()) {
-        SP -= 2;
-        memWr16(SP, PC);
+        stackFramePush();
         PC = addr;
     } else {
         usedCycles -= 12;
@@ -534,18 +518,19 @@ INS(0xdc, _,_,_,_, 3, 12 + 12, "call c, a16", {
 })
 INS(0xde, Z,1,H,C, 2, 8 , "sbc a, n8", { A = sub8(A, mem8(PC++), flagC()); })
 INS(0xdf, _,_,_,_, 1, 16, "rst $18", {
-    SP -= 2; 
-    memWr16(SP, PC); 
+    stackFramePush();
     PC = 0x18; 
 })
-INS(0xe0, _,_,_,_, 2, 12, "ldh [a8], a", { memWr8(0xff00 + mem8(PC++), A); })
+INS(0xe0, _,_,_,_, 2, 12, "ldh [a8], a", { 
+    //setIORegisterOrHRAM(mem8(PC++), A);
+    memWr8(0xff00 + mem8(PC++), A); 
+})
 INS(0xe1, _,_,_,_, 1, 12, "pop hl", { HL = memRd16(SP); SP += 2; })
 INS(0xe2, _,_,_,_, 1, 8 , "ld [c], a", {  memWr8(0xff00 + C, A); })
 INS(0xe5, _,_,_,_, 1, 16, "push hl", { SP -= 2; memWr16(SP, HL); })
 INS(0xe6, Z,0,1,0, 2, 8 , "and a, n8", { A = A & mem8(PC++); setFlagZ(A == 0); })
 INS(0xe7, _,_,_,_, 1, 16, "rst $20", {
-    SP -= 2; 
-    memWr16(SP, PC); 
+    stackFramePush();
     PC = 0x20; 
 })
 /** Adds 8bit immediate to 16bit SP register, but unlike other 16 bit arithmetics, uses carry and half carry flags from 8bit arithmetics.
@@ -560,8 +545,7 @@ INS(0xe9, _,_,_,_, 1, 4 , "jp hl", { PC = HL; })
 INS(0xea, _,_,_,_, 3, 16, "ld [a16], a", { memWr8(mem16(PC), A); PC += 2;})
 INS(0xee, Z,0,0,0, 2, 8 , "xor a, n8", { A = A ^ mem8(PC++); setFlagZ(A == 0); })
 INS(0xef, _,_,_,_, 1, 16, "rst $28", {
-    SP -= 2; 
-    memWr16(SP, PC); 
+    stackFramePush();
     PC = 0x28; 
 })
 INS(0xf0, _,_,_,_, 2, 12, "ldh a, [a8]", { A = memRd8(0xff00 + mem8(PC++)); })
@@ -575,8 +559,7 @@ INS(0xf3, _,_,_,_, 1, 4 , "di", { ime_ = false; })
 INS(0xf5, _,_,_,_, 1, 16, "push af", { SP -= 2; memWr16(SP, AF); })
 INS(0xf6, Z,0,0,0, 2, 8 , "or a, n8", { A = A | mem8(PC++); setFlagZ(A == 0); })
 INS(0xf7, _,_,_,_, 1, 16, "rst $30", { 
-    SP -= 2; 
-    memWr16(SP, PC); 
+    stackFramePush();
     PC = 0x30; 
 })
 INS(0xf8, 0,0,H,C, 2, 12, "ld hl, sp, e8", { 
@@ -593,17 +576,14 @@ INS(0xfa, _,_,_,_, 3, 16, "ld a, [a16]", { A = memRd8(mem16(PC)); PC += 2; })
     Note that in the original gameboy, this instruction enables interrupts, but only after the next instruction. Emulating such details is likely not necessary so we enable them immediately.
  */
 INS(0xfb, _,_,_,_, 1, 4 , "ei", { ime_ = true; })
-
-
-
+/** Custom breakpoint instruction used to denote debugging. The instruction itself is never executed so its execution is unreachable.
+ */
 INS(0xfd, _,_,_,_, 1, 4,  "bkpt", {
-    // the bkpt instruction should actually never be executed
     UNREACHABLE;
 })
 INS(0xfe, Z,1,H,C, 2, 8 , "cp a, n8", { sub8(A, mem8(PC++)); })
 INS(0xff, _,_,_,_, 1, 16, "rst $38", { 
-    SP -= 2; 
-    memWr16(SP, PC); 
+    stackFramePush();
     PC = 0x38; 
 })
 
