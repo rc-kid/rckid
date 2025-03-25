@@ -68,7 +68,7 @@ int main() {
             //rckid::gbcemu::rom::blargg::instrs::bit_ops
             //rckid::gbcemu::rom::blargg::instrs::op_a__hl_
         });
-        app.loadCartridge(new gbcemu::FileGamePak("/mnt/c/delete/testrom2.gb"));
+        app.loadCartridge(new gbcemu::FileGamePak("/mnt/c/delete/testrom4.gb"));
         //app.setTerminateAfterStop(true);
         uint32_t t = uptimeUs();
         app.run();

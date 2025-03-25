@@ -1184,12 +1184,15 @@ namespace rckid::gbcemu {
                 memMap_[page][offset] = value;
                 break;
             case 15:
-                if (offset >= 0xf00)
+                if (offset >= 0xf00) {
                     setIORegisterOrHRAM(offset - 0xf00, value);
-                else if (offset >= 0xe00)
-                    oam_[offset - 0xe00] = value;
-                else
+                } else if (offset >= 0xe00) {
+                    // otherwise there is the prohibited region after OAM and before HRAM
+                    if (offset < 0xea0)
+                        oam_[offset - 0xe00] = value;
+                } else {
                     memMap_[page][offset] = value;
+                }
                 break;
         }
     }
