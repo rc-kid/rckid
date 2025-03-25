@@ -575,8 +575,13 @@ namespace rckid::gbcemu {
                 break;
             #include "insns.inc.h"
             default:
-                ASSERT("Unsupported opcode");
-                break;
+#ifdef GBCEMU_INTERACTIVE_DEBUG
+            LOG(LL_ERROR, "Unknown opcode " << hex(opcode) << " at " << hex<uint16_t>(PC - 1));
+            debug_ = true;
+#else
+            UNREACHABLE;
+#endif
+            break;
         };
         timerCycles_ += usedCycles;
         updateTimer();
