@@ -325,7 +325,7 @@ namespace rckid::gbcemu {
 
         //clearTilemap();
         //clearTileset();
-        //setBreakpoint(0x0371);
+        //setBreakpoint(0xc2a6);
         while (true) {
             moveToNextScanline();
             setPPUMode(2); // OAM scan
@@ -562,6 +562,11 @@ namespace rckid::gbcemu {
            disassembleInstruction(PC);
 #endif        
         uint8_t opcode = mem8(PC++);
+#ifdef GBCEMU_TRACE_PC_OPCODE
+        debugWrite() << hex<uint16_t>(PC - 1, false) <<  ": " << hex(opcode, false) << '\n';
+        // below code depends on system malloc likely so not working yet
+        //printf("%04x: %02x\n", PC - 1, opcode);
+#endif
         switch (opcode) {
             #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
             case OPCODE: \
@@ -620,6 +625,7 @@ namespace rckid::gbcemu {
         debugWrite() <<  "af:   " <<  hex(AF, false) << " bc:   " <<  hex(BC, false) << " de:   " <<  hex(DE, false) << " hl:   " <<  hex(HL, false) << " sp:   " <<  hex(SP, false) << " pc:   " <<  hex(PC, false) << '\n';
 
         debugWrite() << "lcdc: " << hex(IO_LCDC, false) << "   stat: " << hex(IO_STAT, false) << "   ly:   " << hex(IO_LY, false) << "   ie:   " << hex(IO_IE, false) << "   if:   " << hex(IO_IF, false) << '\n';
+        debugWrite() << "TIMA: " << hex(IO_TIMA, false) << " cycles: " << timerCycles_ << '\n';
     }
 
     void GBCEmu::logVisited() {
@@ -685,7 +691,7 @@ namespace rckid::gbcemu {
         };
     }
 
-    uint32_t GBCEmu::disassembleInstruction(uint16_t addr) {
+    uint32_t GBCEmu::disassembleInstruction(uint16_t addr, bool state) {
         uint8_t opcode = mem8(addr);
         uint32_t size = instructionSize(opcode);
         debugWrite() << hex(addr, false) << ": " << hex(mem8(addr), false) << ' ';
@@ -700,12 +706,17 @@ namespace rckid::gbcemu {
         switch (opcode) {
             #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
             case OPCODE: \
-                debugWrite() << MNEMONIC << '\n'; \
+                debugWrite() << fillRight(MNEMONIC, 15); \
                 break;
             #include "insns.inc.h"
             default:
-                debugWrite() << "???\n";
+                debugWrite() << fillRight("???", 15);
         };
+        if (state) {
+            debugWrite() << hex(AF, false) << " " << hex(BC, false) << " " << hex(DE, false) << " " << hex(HL, false) << " " << hex(SP, false);
+            debugWrite() << " " << hex(IO_TIMA, false) << " " << timerCycles_;
+        }
+        debugWrite() << '\n';
         return size;
     }
 
@@ -727,7 +738,7 @@ namespace rckid::gbcemu {
         overBreakpoint_ = 0xffffff; // disable step over breakpoint
         debug_ = false;
         while (true) {
-            disassembleInstruction(PC);
+            disassembleInstruction(PC, true);
             uint8_t cmd = debugRead(false);
             switch (cmd) {
                 // continue running uninterrupted
@@ -1263,22 +1274,25 @@ namespace rckid::gbcemu {
                 // this is the 16374Hz timer. Any write to the register resets the value to zero
                 IO_DIV = 0;
                 return; // do not perform the write
+            case ADDR_TIMA:
+                timerCycles_ = 0;
+                break;
             case ADDR_TAC: // IO_TAC
+                timerCycles_ = 0;
                 if ((value & TAC_ENABLE) == 0) {
-                    timerCycles_ = 0;
                     timerTIMAModulo_ = 0;
                 } else switch (value & TAC_CLOCK_SELECT_MASK) {
                     case TAC_CLOCK_SELECT_256M:
-                        timerTIMAModulo_ = 255;
+                        timerTIMAModulo_ = 1024;
                         break;
                     case TAC_CLOCK_SELECT_4M:
-                        timerTIMAModulo_ = 3;
+                        timerTIMAModulo_ = 16;
                         break;
                     case TAC_CLOCK_SELECT_16M:
-                        timerTIMAModulo_ = 15;
+                        timerTIMAModulo_ = 64;
                         break;
                     case TAC_CLOCK_SELECT_64M:
-                        timerTIMAModulo_ = 63;
+                        timerTIMAModulo_ = 256;
                         break;
                 }
                 break;
@@ -1328,7 +1342,8 @@ namespace rckid::gbcemu {
     void GBCEmu::updateTimer() {
         if ((timerCycles_ & timerDIVModulo_) == 0)
             ++IO_DIV;
-        if (timerTIMAModulo_ != 0 && (timerCycles_ & timerTIMAModulo_) == 0) {
+        if (timerTIMAModulo_ != 0 && (timerCycles_ >= timerTIMAModulo_)) {
+            timerCycles_ = timerCycles_ & (timerTIMAModulo_ - 1);
             if (++IO_TIMA == 0) {
                 IO_TIMA = IO_TMA;
                 IO_IF |= IF_TIMER;

@@ -207,6 +207,19 @@ inline Writer::Converter fillLeft(T const & what, uint32_t width, char fill = ' 
 }
 
 template<typename T>
+inline Writer::Converter fillRight(T const & what, uint32_t width, char fill = ' ') {
+    return [what, width, fill](Writer & writer) mutable {
+        std::string x{STR(what)};
+        writer << x;
+        while (x.size() < width) {
+            writer << fill;
+            --width;
+        }
+    };
+}
+
+
+template<typename T>
 Writer::Converter hex(T what, bool header = true);
 
 /** Displays the unsigned 8bit number in hex format (aligned). 
