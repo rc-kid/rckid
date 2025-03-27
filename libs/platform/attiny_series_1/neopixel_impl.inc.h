@@ -14,7 +14,7 @@ namespace platform {
         using ColorStrip<SIZE>::changed_;
     public:
 
-        NeopixelStrip(Pin pin): 
+        NeopixelStrip(gpio::Pin pin): 
             pin_{pin}, 
             port_{& (GPIO_PIN_VPORT(pin_).OUT)} {
             //pinMode(pin,OUTPUT);
@@ -28,7 +28,6 @@ namespace platform {
             // don't do anything if we don't need to
             if (!changed_ && !force)
                 return;
-    #if (defined ARCH_AVR_MEGATINY)
             uint8_t pinMask = 1 << GPIO_PIN_INDEX(pin_);
             volatile uint16_t
                 i   = SIZE * 3; // Loop counter
@@ -207,16 +206,12 @@ namespace platform {
             #else
                 #error "AVR Frequency not supported!
             #endif
-
-            #else
-                #error "Platform not supported!"
-            #endif
             sei();
         }
         
     private:
 
-        Pin pin_;
+        gpio::Pin pin_;
         volatile uint8_t * port_;
 
     }; 
