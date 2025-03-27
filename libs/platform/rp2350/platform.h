@@ -85,6 +85,10 @@ public:
         gpio_pull_down(pin);
     }
 
+    static void write(Pin pin, bool value) { gpio_put(pin, value); }
+
+    static bool read(Pin pin) { return gpio_get(pin); }
+
     #include "../common/gpio_common.h"
 
     /* TODO do we need this?
