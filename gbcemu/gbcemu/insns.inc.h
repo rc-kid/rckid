@@ -5,7 +5,7 @@
     - the opcode,
     - flags (Z,N,H,C) always in this order, where each flag can be specified as `_` (no change), `0` (clear), `1` (set) or the flag name (Z,N,H,C) if the flag is updated explicitly in the instruction code
     - instruction size in bytes (not really used)
-    - number of cycles the instruction takes (this is always a multiple of 4)
+    - number of T cycles the instruction takes (this is always a multiple of 4)
     - the mnemonic
     - the instruction code
 
