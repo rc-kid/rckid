@@ -51,7 +51,7 @@
             VDD_EN -|            |- PWM_RUMBLER
              BTN_4 -|            |- PWR_INT
                RGB -|            |- AVR_TX
-          BTN_ABXY -| ATTiny3216 |- <UPDI>
+          BTN_ABXY -| ATTiny1616 |- <UPDI>
           BTN_CTRL -|            |- AVR_INT
              BTN_1 -|            |- BTN_DPAD
            <TOSC1> -|            |- QSPI_SS
@@ -279,6 +279,10 @@ public:
     }
 
     static void secondTick() {
+        static bool x = false;
+        x ? gpio::outputFloat(AVR_PIN_AVR_INT) : gpio::outputLow(AVR_PIN_AVR_INT);
+        x = !x;
+        
         ++state_.uptime;
         state_.time.secondTick();
         if (state_.alarm.check(state_.time)) {
