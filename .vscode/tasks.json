@@ -90,11 +90,13 @@
                 "pio-upload.sh",
                 "dev-server",
                 "sdk/backends/mk3/avr/.pio/build/avr-mk3/firmware.hex"
-
             ],
             "options": {
                 "cwd": ""
             },
+            "dependsOn": [
+                "mk 3 - build avr"
+            ],
             "problemMatcher": [
                 "$platformio"
             ]

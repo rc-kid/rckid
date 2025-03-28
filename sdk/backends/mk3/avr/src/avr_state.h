@@ -15,6 +15,25 @@ namespace rckid {
         PACKED(class Status {
         public:
 
+            Status() : a_(0), b_(0) {}
+
+            bool btnLeft()   const { return a_ & BTN_LEFT; }
+            bool btnRight()  const { return a_ & BTN_RIGHT; }
+            bool btnUp()     const { return a_ & BTN_UP; }
+            bool btnDown()   const { return a_ & BTN_DOWN; }
+            bool btnA()      const { return a_ & BTN_A; }
+            bool btnB()      const { return a_ & BTN_B; }
+            bool btnSelect() const { return a_ & BTN_SELECT; }
+            bool btnStart()  const { return a_ & BTN_START; }
+
+            bool btnHome()       const { return b_ & BTN_HOME; }
+            bool btnVolumeUp()   const { return b_ & BTN_VOLUMEUP; }
+            bool btnVolumeDown() const { return b_ & BTN_VOLUMEDOWN; }
+
+            bool pwrInt()        const { return b_ & PWR_INT; }
+            bool accelInt()      const { return b_ & ACCEL_INT; }
+            bool alarmInt()      const { return b_ & ALARM_INT; }
+
 
         private:
 
@@ -22,6 +41,30 @@ namespace rckid {
             void setAccelInt() { b_ |= ACCEL_INT; }
             void setPwrInt() { b_ |= PWR_INT; }
             void clearAlarmInt() { b_ &= ~ALARM_INT; }
+
+            bool setDPadButtons(bool left, bool right, bool up, bool down) {
+                uint8_t aa = (a_ & 0xf0) | ((left ? BTN_LEFT : 0) | (right ? BTN_RIGHT : 0) | (up ? BTN_UP : 0) | (down ? BTN_DOWN : 0));
+                if (aa == a_)
+                    return false;
+                a_ = aa;
+                return true;
+            }
+            bool setABXYtButtons(bool a, bool b, bool select, bool start) {
+                uint8_t aa = (a_ & 0x0f) | ((a ? BTN_A : 0) | (b ? BTN_B : 0) | (select ? BTN_SELECT : 0) | (start ? BTN_START : 0));
+                if (aa == a_)
+                    return false;
+                a_ = aa;
+                return true;
+            }
+
+            bool setControlButtons(bool home, bool volumeUp, bool volumeDown) {
+                uint8_t bb = (b_ & 0xf8) | ((home ? BTN_HOME : 0) | (volumeUp ? BTN_VOLUMEUP : 0) | (volumeDown ? BTN_VOLUMEDOWN : 0));
+                if (bb == b_)
+                    return false;
+                b_ = bb;
+                return true;
+            }
+            
 
             friend class ::RCKid;
 
@@ -53,8 +96,8 @@ namespace rckid {
 
         TinyAlarm alarm;
 
-        uint8_t brightness;
-        uint32_t uptime;
+        uint8_t brightness = RCKID_DISPLAY_BRIGHTNESS;
+        uint32_t uptime = 0;
 
         /** Communications buffer. This is where commands are stored and where extra commands store the data they wish to transfer to the RP. The size is enough for a single byte command and 32 byte payload. 
          */
