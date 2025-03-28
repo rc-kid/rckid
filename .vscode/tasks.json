@@ -87,8 +87,10 @@
             "detail": "Builds the AVR firmware for mk III on the dev server and uploads it to the device immediately.",
             "command": "bash",
             "args": [
-                "sdk/utils/pio-upload.sh",
-                "sdk/backends/mk3/avr"
+                "pio-upload.sh",
+                "dev-server",
+                "sdk/backends/mk3/avr/.pio/build/avr-mk3/firmware.hex"
+
             ],
             "options": {
                 "cwd": ""
