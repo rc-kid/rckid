@@ -5,8 +5,6 @@
 
 
 #include <backend_config.h>
-#include "graphics/color.h"
-#include "graphics/geometry.h"
 
 /** \page sdk RCKid SDK
  
@@ -58,7 +56,6 @@
 #include "memory.h"
 #include "utils/buffers.h"
 
-
 /** Measures the time it takes to compute the statements in the arguments in microseconds (returned as uint32_t). 
  */
 #define MEASURE_TIME(...) [&]() { \
@@ -66,6 +63,12 @@
     __VA_ARGS__; \
     return uptimeUs() - start__; \
 }()
+
+/** Include headers required for the rckid API.
+ */
+#include "graphics/color.h"
+#include "graphics/geometry.h"
+#include "effects.h"
 
 namespace rckid {
 
