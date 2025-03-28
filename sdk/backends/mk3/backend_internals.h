@@ -13,8 +13,16 @@
 #define AVR_I2C_ADDRESS 0x43
 
 /** AVR Pinout 
- */
+ 
+    - I2C is routed to B0 and B1, their default position. 
+    - PWM pins (rumbler and backlight) are routed to TCB0 (alternate) and TCB1 respectively.
+    - button matrix pins are default digital pins. We need iterrupt on the home button (BTN_1 of BTN_CTRL group) to wake up when powered on
+    - AVR_TX is alternate position of serial TxD and can be used for debugging the firmware. Its is also the only free pin.
+    - 
 
+    
+ 
+ */
 #define AVR_PIN_AVR_TX          gpio::A1
 #define AVR_PIN_PWR_INT         gpio::A2
 #define AVR_PIN_PWM_RUMBLER     gpio::A3
