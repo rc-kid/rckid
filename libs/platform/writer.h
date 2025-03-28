@@ -12,7 +12,7 @@
 
 /** A very simple formatter for both human-readable texts and binary representations. 
  
-    To make sure the writer is available even on very low level platforms such as ATTiny chips, it does not use C++'s lambda captures, but rely on passing a void * context poninter to the PutChar function. 
+    To make sure the writer is available even on very low level platforms such as ATTiny chips, it does not use C++'s lambda captures, but rely on passing a void * context pointer to the PutChar function. 
  */
 class Writer {
 public:

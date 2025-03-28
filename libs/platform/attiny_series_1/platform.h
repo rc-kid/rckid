@@ -11,6 +11,10 @@
 
 #include "../definitions.h"
 
+#ifndef ASSERT
+#define ASSERT(...)
+#endif
+
 class cpu {
 public:
     static void delayUs(uint16_t value) {
@@ -173,12 +177,6 @@ public:
     }
 
     #include "../common/gpio_common.h"
-
-    /* TODO do we need this?
-    static void initialize() {
-        //stdio_init_all();
-    }
-    */
     
 }; // gpio
 
@@ -299,5 +297,16 @@ public:
     #include "../common/i2c_common.h"
 
 }; // i2c
-    
+
+class serial {
+public:
+
+    static initialize(bool altLocation = false) {
+
+    }
+
+}; // serial
+
+
+
 // TODO add SPI 

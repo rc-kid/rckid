@@ -1,7 +1,5 @@
 # TODO
 
-- add opcode macros generated from the insns macro
-
 - create a string class that allows storing char const * or std::string like, something like owning string_view
 
 - how to deal with non-16 bpp bitmaps 
