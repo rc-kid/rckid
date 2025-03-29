@@ -1,0 +1,11 @@
+#pragma once
+
+namespace std {
+    class string {
+    public:
+
+        char const * c_str() const { return ""; }
+        size_t size() const { return 0; }
+
+    }; 
+}

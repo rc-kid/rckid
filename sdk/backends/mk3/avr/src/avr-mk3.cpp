@@ -10,13 +10,27 @@
 #include <avr/delay.h>
 #include <avr/interrupt.h>
 
-#undef ASSERT
-#define ASSERT(...) if (!(__VA_ARGS__)) {}
-
 #include <platform.h>
 #include <platform/peripherals/neopixel.h>
+#include <platform/writer.h>
 #include <platform/tinydate.h>
 #include <platform/ringavg.h>
+
+#undef ASSERT
+#define ASSERT(...) if (!(__VA_ARGS__)) { debugWrite() << "ASSERT " << __LINE__ << "\n"; }
+
+#define LOG(...) debugWrite() << __VA_ARGS__ << "\n";
+
+/** \name Debugging support. 
+ 
+    To ease firmware development, the AVR chip supports serial port (only TX) to the programming header (together with UPDI and SWD) as well as using the RGB LEDs to indicate system state.
+    */
+//@{
+
+inline Writer debugWrite() {
+    return Writer(serial::write);
+}
+//@}
 
 #include <backend_config.h>
 #include <backend_internals.h>
@@ -92,10 +106,22 @@ public:
         CCP = CCP_IOREG_gc;
         CLKCTRL.MCLKCTRLB = CLKCTRL_PEN_bm;
         // initialize the RTC that fires every second for a semi-accurate real time clock keeping on the AVR and start counting
+        // TODO select the external osc for the RTC
         RTC.CLKSEL = RTC_CLKSEL_INT32K_gc; // run from the internal 32.768kHz oscillator
         RTC.PITINTCTRL |= RTC_PI_bm; // enable the PIT interrupt
         while (RTC.PITSTATUS & RTC_CTRLBUSY_bm);
         RTC.PITCTRLA = RTC_PERIOD_CYC32768_gc | RTC_PITEN_bm;
+
+        serial::initializeTx(RCKID_AVR_SERIAL_SPEED);
+
+        LOG("init...");
+        i2c::initializeMaster();
+        detectI2CDevices();
+        // setup PMIC, everything else can be setup by the RP2350 when powered on
+        // TODO  
+
+
+
 
         // set sleep mode to powerdown (we only need RTC and GPIO Interrupts)
         set_sleep_mode(SLEEP_MODE_PWR_DOWN);
@@ -108,6 +134,7 @@ public:
 
 
         rgbOn(true);
+        LOG("init done");
     }
 
     static void loop() {
@@ -126,42 +153,51 @@ public:
         }
     }
 
+    /** \name Power & Sleep Controls
+     */
+    //@{
+
+    static constexpr uint8_t SLEEP_ADC = 1;
+    static constexpr uint8_t SLEEP_PWM = 2;
+    static inline uint8_t sleepControl_ = 0;
+
     /** Initializes the device power on state. 
      */
     static void powerOn() {
-        cli();
-        powerVDD(true);
-        // initialize the system ticks which wake the AVR up for actions such as reading user inputs or managing rgb & rumbler effects
-        startSystemTicks();
+        LOG("Power on...");
+        NO_ISR(
+            powerVDD(true);
+            // initialize the system ticks which wake the AVR up for actions such as reading user inputs or managing rgb & rumbler effects
+            startSystemTicks();
 
-        // initialize the PWM subsystem for baclight & rumbler
-        initializePWM();
-        setBacklightPWM(state_.brightness);
-        // TODO set backlight
-        
-        // disable I2C master and start I2C slave
-        TWI0.MCTRLA = 0;
-        i2c::initializeSlave(AVR_I2C_ADDRESS);
-        TWI0.SCTRLA |= TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm;
-        // enable interrupts for ACCEL_INT and PWR_INT
-        GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_RISING_gc;
-        GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_RISING_gc;
+            // initialize the PWM subsystem for baclight & rumbler
+            initializePWM();
+            setBacklightPWM(state_.brightness);
+            // TODO set backlight
+            
+            // disable I2C master and start I2C slave
+            TWI0.MCTRLA = 0;
+            i2c::initializeSlave(RCKID_AVR_I2C_ADDRESS);
+            TWI0.SCTRLA |= TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm;
+            // enable interrupts for ACCEL_INT and PWR_INT
+            GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_RISING_gc;
+            GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_RISING_gc;
 
 
-        initializeButtons();
-        // enable interrupts back
-        sei();
+            initializeButtons();
+        );
     }
 
     /** Initializes the device power off state. 
      */
     static void powerOff() {
-        cli();
-        powerVDD(false);
-        stopSystemTicks();
-        initializeButtons();
-        // TODO initialize I2C master (we can still talk to PMIC, accelerometer and light sensor)
-        sei();
+        LOG("Power off...");
+        NO_ISR(
+            powerVDD(false);
+            stopSystemTicks();
+            initializeButtons();
+            // TODO initialize I2C master (we can still talk to PMIC, accelerometer and light sensor)
+        );
     }
 
     static void powerVDD(bool enable) {
@@ -174,69 +210,78 @@ public:
         }
     }
 
-    static void power5V(bool enable) {
-        // TODO
-    }
-
     /** Reboots the RP2350 chip. 
      */
     static void rebootRP() {
-        cli();
-        powerVDD(false);
-        // do RGB red countdown effect in a busy loop to give the voltages time to settle, the countdown lasts for approximatekly 1 second
-        rgbOn(true);
-        rgbClear();
-        for (unsigned i = 0; i < NUM_RGB_LEDS; ++i) {
-            cpu::wdtReset();
-            rgb_[i] = platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+        LOG("RP reboot...");
+        NO_ISR(
+            powerVDD(false);
+            // do RGB red countdown effect in a busy loop to give the voltages time to settle, the countdown lasts for approximatekly 1 second
+            rgbOn(true);
+            rgbClear();
+            for (unsigned i = 0; i < NUM_RGB_LEDS; ++i) {
+                cpu::wdtReset();
+                rgb_[i] = platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                rgb_.update();
+                cpu::delayMs(200);
+            }
+            rgbClear();
             rgb_.update();
-            cpu::delayMs(200);
-        }
-        rgbClear();
-        rgb_.update();
-        powerVDD(true);
-        sei();
+            powerVDD(true);
+        );
     }
-
 
     /** Reboots the RP2350 chip into bootloader mode. This is done by pulling the QSPI_CS pin low from the AVR  
      */
     static void bootloaderRP() {
-        cli();
-        powerVDD(false);
-        // pull QSPI_SS low to indicate bootloader
-        gpio::outputLow(AVR_PIN_QSPI_SS);
-        // do a one second countdown with enabling power to the VDD rail in the middle so that the QSPI_CS low can be picked up
-        for (unsigned i = 0; i < NUM_RGB_LEDS; ++i) {
+        LOG("RP bootloader...");
+        NO_ISR(
+            powerVDD(false);
+            // pull QSPI_SS low to indicate bootloader
+            gpio::outputLow(AVR_PIN_QSPI_SS);
+            // do a one second countdown with enabling power to the VDD rail in the middle so that the QSPI_CS low can be picked up
+            for (unsigned i = 0; i < NUM_RGB_LEDS; ++i) {
+                cpu::wdtReset();
+                rgb_[i] = platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                rgb_.update();
+                if (i == 3)
+                    powerVDD(true);
+                cpu::delayMs(200);
+            }
+            // reset the QSPI_SS back to float
+            gpio::outputFloat(AVR_PIN_QSPI_SS);
+            // since we are in the bootloader mode now, indicate by breathing all keys in green
+            rgbEffect_[0] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1);
+            rgbEffect_[1] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1);
+            rgbEffect_[3] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1);
+            rgbEffect_[4] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1);
+            rgbEffect_[5] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1);
+        );
+    }
+
+    //@}
+
+    /** \name Master mode
+     
+        The master mode is enabled when the device is not powerd on (i.e. the VDD is off, RP chip is not powered and the only working parts are the PMIC, AVR (mostly sleeping), Accelerometer and light sensor). During this time the AVR acts as a master controller and communicated with the PMIC & sensors to react to changes. 
+     */
+    //@{
+
+    static void initializeMasterMode() {
+        i2c::initializeMaster();
+    }
+
+    static void detectI2CDevices() {
+        LOG("Scanning I2C devices...");
+        for (uint8_t addr = 0; addr < 128; ++addr) {
+            if (i2c::isPresent(addr))
+                LOG(addr);
             cpu::wdtReset();
-            rgb_[i] = platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
-            rgb_.update();
-            if (i == 3)
-                powerVDD(true);
-            cpu::delayMs(200);
+            cpu::delayMs(10);
         }
-        // reset the QSPI_SS back to float
-        gpio::outputFloat(AVR_PIN_QSPI_SS);
-        // since we are in the bootloader mode now, indicate by breathing all keys in green
-        rgbEffect_[0] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1);
-        rgbEffect_[1] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1);
-        rgbEffect_[3] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1);
-        rgbEffect_[4] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1);
-        rgbEffect_[5] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1);
-        sei();
     }
 
-    static void accelInt() {
-        state_.status.setAccelInt();
-        setIrq();
-        // TODO what to do when in master mode?
-    }
-
-    static void pwrInt() {
-        state_.status.setPwrInt();
-        setIrq();
-        // TODO what to do when in master mode?
-    }
+    //@}
 
     /** \name System ticks and clocks.
      
@@ -302,17 +347,31 @@ public:
     //@{
 
     static inline AVRState state_;
+    static inline volatile bool irq_ = false;
 
-    static inline volatile uint8_t i2cTxIdx_ = 0;
-    static inline volatile uint8_t i2cRxIdx_ = 0;
     static inline volatile bool i2cCommandReady_ = false;
+    static inline uint8_t i2cTxIdx_ = 0;
+    static inline uint8_t i2cRxIdx_ = 0;
 
-    static void setIrq() {
-        // TODO
+    static void accelInt() {
+        state_.status.setAccelInt();
+        setIrq();
+        // TODO what to do when in master mode?
     }
 
-    static void clearIrq() {
-        // TODO
+    static void pwrInt() {
+        state_.status.setPwrInt();
+        setIrq();
+        // TODO what to do when in master mode?
+    }
+
+    static void setIrq() {
+        NO_ISR(
+            if (irq_)
+                return;
+            irq_ = true;
+            gpio::outputLow(AVR_PIN_AVR_INT);
+        );        
     }
 
     /** The I2C interrupt handler. 
@@ -332,7 +391,11 @@ public:
         if ((status & I2C_DATA_MASK) == I2C_DATA_TX) {
             TWI0.SDATA = ((uint8_t*) & state_)[i2cTxIdx_];
             TWI0.SCTRLB = TWI_SCMD_RESPONSE_gc;
-            ++i2cTxIdx_;
+            // clear IRQ once we read the state 
+            if (++i2cTxIdx_ == 2) {
+                irq_ = false;
+                gpio::outputFloat(AVR_PIN_AVR_INT);
+            }
             // TODO send nack when done sending all state
         // a byte has been received from master. Store it and send either ACK if we can store more, or NACK if we can't store more
         } else if ((status & I2C_DATA_MASK) == I2C_DATA_RX) {
@@ -410,10 +473,10 @@ public:
             }
         }
         // and reset the command state so that we can read more commands 
-        cli();
-        i2cRxIdx_ = 0;
-        i2cCommandReady_ = false;
-        sei();
+        NO_ISR(
+            i2cRxIdx_ = 0;
+            i2cCommandReady_ = false;
+        );
     }
 
     //@}
@@ -447,27 +510,50 @@ public:
             ! gpio::read(AVR_PIN_BTN_2), // volume up
             ! gpio::read(AVR_PIN_BTN_3)  // volume down
         );
-        // check if there has been change
-        if (changed) {
-        }
         gpio::high(AVR_PIN_BTN_CTRL);
         gpio::low(AVR_PIN_BTN_ABXY);
+        // check if there has been change
+        if (changed) {
+            if (state_.status.debugMode()) {
+                if (state_.status.btnVolumeUp()) {
+                    rebootRP();
+                    return;
+                } 
+                if (state_.status.btnVolumeDown()) {
+                    bootloaderRP();
+                    return;
+                }
+            }
+            setIrq();
+        }
     }
 
     static void readABXYGroup() {
+        bool changed = state_.status.setABXYtButtons(
+            ! gpio::read(AVR_PIN_BTN_2), // a
+            ! gpio::read(AVR_PIN_BTN_1), // b
+            ! gpio::read(AVR_PIN_BTN_4), // sel
+            ! gpio::read(AVR_PIN_BTN_3)  // start
+        );
         gpio::high(AVR_PIN_BTN_ABXY);
         gpio::low(AVR_PIN_BTN_DPAD);
+        if (changed)
+            setIrq();
     }
 
     static void readDPadGroup() {
+        bool changed = state_.status.setDPadButtons(
+            ! gpio::read(AVR_PIN_BTN_2), // left
+            ! gpio::read(AVR_PIN_BTN_4), // right
+            ! gpio::read(AVR_PIN_BTN_1), // up
+            ! gpio::read(AVR_PIN_BTN_3)  // down
+        );
         gpio::high(AVR_PIN_BTN_DPAD);
         gpio::low(AVR_PIN_BTN_CTRL);
+        if (changed)
+            setIrq();
     }
     //@}
-
-
-
-
 
     /** \name PWM (Rumbler and Backlight)
 
