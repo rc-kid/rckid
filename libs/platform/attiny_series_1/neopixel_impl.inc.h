@@ -36,7 +36,7 @@ namespace platform {
                 b   = *ptr++,   // Current byte value
                 hi,             // PORT w/output bit set high
                 lo;             // PORT w/output bit set low
-            cli();
+            cpu::cli();
             // 8 MHz(ish) AVRxt ---------------------------------------------------------
             #if (F_CPU >= 7400000UL) && (F_CPU <= 9500000UL)
 
@@ -206,7 +206,7 @@ namespace platform {
             #else
                 #error "AVR Frequency not supported!
             #endif
-            sei();
+            cpu::sei();
         }
         
     private:

@@ -15,8 +15,6 @@ namespace rckid {
         PACKED(class Status {
         public:
 
-            Status() : a_(0), b_(0) {}
-
             bool btnLeft()   const { return a_ & BTN_LEFT; }
             bool btnRight()  const { return a_ & BTN_RIGHT; }
             bool btnUp()     const { return a_ & BTN_UP; }
@@ -34,6 +32,8 @@ namespace rckid {
             bool accelInt()      const { return b_ & ACCEL_INT; }
             bool alarmInt()      const { return b_ & ALARM_INT; }
 
+            bool debugMode() const { return b_ & DEBUG_MODE; }
+            bool bootloaderMode() const { return b_ & BOOTLOADER_MODE; }
 
         private:
 
@@ -64,29 +64,34 @@ namespace rckid {
                 b_ = bb;
                 return true;
             }
-            
+
+            void setDebugMode(bool value) { value ? (b_ |= DEBUG_MODE) : (b_ &= ~DEBUG_MODE); }
+            void setBootloaderMode(bool value) { value ? (b_ |= BOOTLOADER_MODE) : (b_ &= ~BOOTLOADER_MODE); }
 
             friend class ::RCKid;
 
-            static constexpr unsigned BTN_LEFT   = 1;
-            static constexpr unsigned BTN_RIGHT  = 2;
-            static constexpr unsigned BTN_UP     = 4;
-            static constexpr unsigned BTN_DOWN   = 8;
-            static constexpr unsigned BTN_A      = 16;
-            static constexpr unsigned BTN_B      = 32;
-            static constexpr unsigned BTN_SELECT = 64;
-            static constexpr unsigned BTN_START  = 128;
-            uint8_t a_;
+            static constexpr unsigned BTN_LEFT        = 1;
+            static constexpr unsigned BTN_RIGHT       = 2;
+            static constexpr unsigned BTN_UP          = 4;
+            static constexpr unsigned BTN_DOWN        = 8;
+            static constexpr unsigned BTN_A           = 16;
+            static constexpr unsigned BTN_B           = 32;
+            static constexpr unsigned BTN_SELECT      = 64;
+            static constexpr unsigned BTN_START       = 128;
+            uint8_t a_ = 0;
 
-            static constexpr unsigned BTN_HOME       = 1;
-            static constexpr unsigned BTN_VOLUMEUP   = 2;
-            static constexpr unsigned BTN_VOLUMEDOWN = 4;
-            static constexpr unsigned PWR_INT        = 8;
-            static constexpr unsigned ACCEL_INT      = 16;
-            static constexpr unsigned ALARM_INT      = 32;
-            uint8_t b_;
+            static constexpr unsigned BTN_HOME        = 1;
+            static constexpr unsigned BTN_VOLUMEUP    = 2;
+            static constexpr unsigned BTN_VOLUMEDOWN  = 4;
+            static constexpr unsigned PWR_INT         = 8;
+            static constexpr unsigned ACCEL_INT       = 16;
+            static constexpr unsigned ALARM_INT       = 32;
+            static constexpr unsigned DEBUG_MODE      = 64;
+            static constexpr unsigned BOOTLOADER_MODE = 128;
+            uint8_t b_ = 0;
 
         }); // AVRState::Status
+
 
         Status status;
 

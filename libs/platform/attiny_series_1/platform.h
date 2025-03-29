@@ -8,12 +8,24 @@
 
 #define PLATFORM_AVR_MEGATINY
 #define PLATFORM_LITTLE_ENDIAN
+#define PLATFORM_NOSTDCPP
+
+#undef cli
+#undef sei
 
 #include "../definitions.h"
 
 #ifndef ASSERT
 #define ASSERT(...)
 #endif
+
+namespace std {
+    template<typename T>
+    T && move(T &) {
+        return static_cast<T &&>(T{});
+    }
+}
+
 
 class cpu {
 public:
@@ -42,6 +54,17 @@ public:
     static void wdtReset() __attribute__((always_inline)) {
         __asm__ __volatile__ ("wdr"::);
     }
+
+    static void cli() __attribute__((always_inline)) { 
+        __asm__ __volatile__ ("cli"::);
+    }
+
+    static void sei()  __attribute__((always_inline)){ 
+        __asm__ __volatile__ ("sei"::);
+    }
+
+    #include "../common/cpu_common.h"
+
 
 };
 
@@ -218,20 +241,20 @@ public:
     }
 
     static void initializeMaster() {
-        cli();
-        // turn I2C off in case it was running before
-        disableMaster();
-        // TODO disable slave as well? 
-        // make sure that the pins are nout out - HW issue with the chip, will fail otherwise
-        if (PORTMUX.CTRLB | PORTMUX_TWI0_bm)
-            PORTA.OUTCLR = 0x06; // PA1, PA2
-        else
-            PORTB.OUTCLR = 0x03; // PB0, PB1
-        uint32_t baud = ((F_CPU/100000) - (((F_CPU* /* rise time */300)/1000)/1000)/1000 - 10)/2;
-        TWI0.MBAUD = (uint8_t)baud;
-        TWI0.MCTRLA = TWI_ENABLE_bm;         
-        TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc;
-        sei();
+        NO_ISR(
+            // turn I2C off in case it was running before
+            disableMaster();
+            // TODO disable slave as well? 
+            // make sure that the pins are nout out - HW issue with the chip, will fail otherwise
+            if (PORTMUX.CTRLB | PORTMUX_TWI0_bm)
+                PORTA.OUTCLR = 0x06; // PA1, PA2
+            else
+                PORTB.OUTCLR = 0x03; // PB0, PB1
+            uint32_t baud = ((F_CPU/100000) - (((F_CPU* /* rise time */300)/1000)/1000)/1000 - 10)/2;
+            TWI0.MBAUD = (uint8_t)baud;
+            TWI0.MCTRLA = TWI_ENABLE_bm;         
+            TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc;
+        );
     }
 
     static bool masterTransmit(uint8_t address, uint8_t const * wb, uint8_t wsize, uint8_t * rb, uint8_t rsize) {
@@ -301,12 +324,19 @@ public:
 class serial {
 public:
 
-    static initialize(bool altLocation = false) {
+    static initializeTx(uint32_t speed = 9600) {
+        uint16_t baud = (F_CPU / (16UL * speed)) - 1;
+        USART0.BAUD = baud;
+        USART0.CTRLB = USART_TXEN_bm; // Enable transmitter
+        USART0.CTRLC = USART_CHSIZE_8BIT_gc; // Set frame format: 8 data bits, no parity, 1 stop bit
+    }
 
+    static write(char c) {
+        while (!(USART0.STATUS & USART_DREIF_bm));
+        USART0.TXDATAL = c;
     }
 
 }; // serial
-
 
 
 // TODO add SPI 
