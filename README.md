@@ -59,7 +59,7 @@ And finally, under Windows, enter the Visual Studio Developers prompt and then t
     cmake ..
     cmake --build . --config=Release
 
-### Build Argumente
+### Build Arguments
 
 RCKid's build can be customized using various arguments, such as the `-DARCH` showed above to build for a particular architecture. This section lists other useful build arguments:
 

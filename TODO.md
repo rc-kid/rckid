@@ -1,5 +1,8 @@
 # TODO
 
+- writer in non-functional mode should be able to use hex stuff by passing pointer to stuff and some such
+
+
 - create a string class that allows storing char const * or std::string like, something like owning string_view
 
 - how to deal with non-16 bpp bitmaps 
@@ -24,17 +27,43 @@
 - should audio volume be uint8, or something else? 
 - add specialization for 16 bpp bitmap renderColumn that simply does memcopy
 
+
+# AVR Breadboard tests
+
+- [ ] create version that uses home button to go to deep sleep and wakes up when home button pressed (to be flashed on device)
+- [ ] create version that uses home button to power VDD on or off (to be flashed)
+- [ ] verify that UPDI works when AVR powered with 3v3
+
+# Devboard Power-Up Sequence
+
+- [ ] verify there are no shorts between VCC, VBATT, VDD, 3V3 and ground
+- [ ] add jumper wires for D and audio power (! these *must* be installed before the board is powered)
+- [ ] add connectors for battery
+- [ ] try powering up through battery
+- [ ] see if the PMIC keeps the VCC above threshold - what is the default value?
+- [ ] try powering up via USB
+- [ ] flash AVR that does not enable VDD, but can go to sleep and meausre the current consumption at sleep & power on
+- [ ] enumerate I2C devices without VDD enabled
+- [ ] flash AVR that can enable VDD and test
+- [ ] verify that RP2350 will show itself as USB drive 
+- [ ] enumerate I2C devices in power on mode (still via AVR)
+- [ ] verify cartridge connector tolerances and no shorts present
+- [ ] try flashing RP2350 with basic program that outputs on serial USB
+- ...
+
+
 # DevBoard PCB & first batch
 
 - [X] order the cartridge connector pcb (populated)
 - [X] order the cartridge pcb (unpopulated)
-- [ ] order the devboard (populated, x2)
+- [X] order the devboard (populated, x2)
 - [ ] create display riser
 - [X] order the displays (test batch first)
 - [ ] pcb board for the battery connector - can be inside the speaker hole perhaps
 
 
 - JLCPCB offers 3d printing as well - perhaps I can use it to print stuff from nicer materials such as transparent faceplate or even the case, etc. 
+
 # PCB
 
 - R125 (ilim for PMIC is wrong value)

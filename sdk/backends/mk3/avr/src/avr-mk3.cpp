@@ -95,6 +95,20 @@ inline Writer debugWrite() {
 
 using namespace rckid;
 
+/** The RCKid firmware
+ 
+    The firmware is rather simple in operation, especially compared to mkII as the AVR does not have to deal with that many things - when powered on, it acts as a simple IO controller for buttons, baclight and rumbler. When powered off, the can act as a master of the I2C bus (its subsets that includes the always on devices - power management and sensors) and simply has to react to their interrupts. 
+
+    Internally all functionality happens in the main loop and the interrupt handlers only pass status flags to it - with the exception of I2C communication which also sends or fills in the communications buffer and the state itself. For more details see the subsystems below:
+
+    - initialization & main loop, 
+    - power subsystem
+    - system ticks & clocks
+    - communications (I2C) and master mode routines
+    - button matrix
+    - rumbler & backlight (PWM)
+    - RGB LEDs
+ */
 class RCKid {
 public:
 
@@ -140,6 +154,8 @@ public:
     static void loop() {
         while (true) {
             cpu::wdtReset();
+            // process any interrupt requests
+            processIntRequests();
             // do system tick, if system tick is active and tickCounter is 0, also do the effects tick, which is roughly at 66 frames per second
             if (systemTick() || tickCounter_ == 0) {
                 rgbTick();
@@ -147,44 +163,67 @@ public:
             }
             // see if there were any I2C commands received and if so, execute
             processI2CCommand();
-            // TODO sleep 
-            state_.status.btnHome() ? gpio::outputFloat(AVR_PIN_AVR_INT) : gpio::outputLow(AVR_PIN_AVR_INT);
-
+            // wait for any TX transmissions before going to sleep 
+            serial::waitForTx();
+            // After everything was processed, go to sleep - we will wake up with the ACCEL or PMIC interrupts, or if in power off mode also by the HOME button interrupt
+            sleep_enable();
+            sleep_cpu();
         }
     }
 
     /** \name Power & Sleep Controls
+
+        The power is controlled via the power mode register, which when zero signals device off, in which case the AVR goes to deep sleep only to wake up when the accel or power interrupts are triggered, or the home button is pressed. When non-zero the register acts as a bitmask of possible reasons for the AVR to stay awake. This could be either the user-facing power on mode, when also the RP2350 is powered on, or can be when the device is charging (we need to indicate the charging status using the LEDs), or when waking up (need to calculate the power button press duration). 
      */
     //@{
 
-    static constexpr uint8_t SLEEP_ADC = 1;
-    static constexpr uint8_t SLEEP_PWM = 2;
-    static inline uint8_t sleepControl_ = 0;
+    static constexpr uint8_t POWER_MODE_CHARGING = 1;
+    static constexpr uint8_t POWER_MODE_WAKEUP = 2;
+    static constexpr uint8_t POWER_MODE_ON = 4;
+    static inline uint8_t powerMode_ = 0;
+
+
+    static void setPowerMode(uint8_t mode) {
+        if (powerMode_ & mode)
+            return;
+        // if we are transitionioning from complete off, start system ticks and set sleep mode to standby
+        if (powerMode_ == 0) {
+            set_sleep_mode(SLEEP_MODE_STANDBY);
+            startSystemTicks();
+        }
+        powerMode_ |= mode;
+    }
+
+    static void clearPowerMode(uint8_t mode) {
+        if (!(powerMode_ & mode))
+            return;
+        powerMode_ &= ~mode;
+        // if we are transitioning to complete off, stop system ticks and set sleep mode to power down
+        if (powerMode_ == 0) {
+            stopSystemTicks();
+            set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+        }
+    }
 
     /** Initializes the device power on state. 
      */
     static void powerOn() {
         LOG("Power on...");
         NO_ISR(
+            // set power mode, which also ensures system ticks are running
+            setPowerMode(POWER_MODE_ON);
             powerVDD(true);
-            // initialize the system ticks which wake the AVR up for actions such as reading user inputs or managing rgb & rumbler effects
-            startSystemTicks();
-
             // initialize the PWM subsystem for baclight & rumbler
             initializePWM();
             setBacklightPWM(state_.brightness);
-            // TODO set backlight
-            
-            // disable I2C master and start I2C slave
-            TWI0.MCTRLA = 0;
+            // start the I2C slave as we will be contacted by the RP2350 shortly
             i2c::initializeSlave(RCKID_AVR_I2C_ADDRESS);
             TWI0.SCTRLA |= TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm;
+            // disable home button interrput
+            GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) &= ~PORT_ISC_gm;
             // enable interrupts for ACCEL_INT and PWR_INT
             GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_RISING_gc;
             GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_RISING_gc;
-
-
-            initializeButtons();
         );
     }
 
@@ -193,14 +232,20 @@ public:
     static void powerOff() {
         LOG("Power off...");
         NO_ISR(
+            clearPowerMode(POWER_MODE_ON);
             powerVDD(false);
-            stopSystemTicks();
+            // initialize buttons for power off state (sampling the control group)
             initializeButtons();
-            // TODO initialize I2C master (we can still talk to PMIC, accelerometer and light sensor)
+            // enable interrupts for ACCELa dn PWT interrupts as well as home button
+            GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_RISING_gc;
+            GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_RISING_gc;
+            GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) |= PORT_ISC_FALLING_gc;
         );
     }
 
     static void powerVDD(bool enable) {
+        // TODO do nothing for now - we do not support VDD power yet TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+        return;
         if (enable) {
             gpio::outputFloat(AVR_PIN_AVR_INT);
             gpio::outputHigh(AVR_PIN_VDD_EN);
@@ -261,28 +306,6 @@ public:
 
     //@}
 
-    /** \name Master mode
-     
-        The master mode is enabled when the device is not powerd on (i.e. the VDD is off, RP chip is not powered and the only working parts are the PMIC, AVR (mostly sleeping), Accelerometer and light sensor). During this time the AVR acts as a master controller and communicated with the PMIC & sensors to react to changes. 
-     */
-    //@{
-
-    static void initializeMasterMode() {
-        i2c::initializeMaster();
-    }
-
-    static void detectI2CDevices() {
-        LOG("Scanning I2C devices...");
-        for (uint8_t addr = 0; addr < 128; ++addr) {
-            if (i2c::isPresent(addr))
-                LOG(addr);
-            cpu::wdtReset();
-            cpu::delayMs(10);
-        }
-    }
-
-    //@}
-
     /** \name System ticks and clocks.
      
         System ticks are used only when the device is on and fire every 5ms. 
@@ -296,11 +319,13 @@ public:
     static void startSystemTicks() {
         if (TCA0.SINGLE.CTRLA & TCA_SINGLE_ENABLE_bm)
             return;
+        // initialize the buttons as well - we will be sampling them now that we have system ticks available
+        initializeButtons();
+        // start TCA0 with ~5ms interval 
         TCA0.SINGLE.CTRLD = 0;
         TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_NORMAL_gc;
         TCA0.SINGLE.PER = 625;
         TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV64_gc | TCA_SINGLE_ENABLE_bm;
-        tickCounter_ = 0;
     }
 
     static void stopSystemTicks() {
@@ -342,7 +367,18 @@ public:
 
 
     /** \name I2C Communications
-     * 
+     
+        The I2C communication happens in two modes - slave, which is enabled when the device is in power on mode and acts simply as a I2C slave, and master mode that is temporarily enabled during power off modes when the device can interact with power management and sensors for various functionality. 
+
+        In the slave mode, only the following operations are possible:
+
+        - master read will always read the state starting from the beginning to the end (and technically beyond)
+        - master write will always write stuff to the communications buffer (which is part of the state)
+
+        After each master write, the contents of the comm buffer is interpreted as a command and executed. Only one command can be executed at a time. 
+
+        Furthermore the AVR also communicates with the RP2350 via a dedicated AVR_INT line, which is normally floating, but will be pulled low by the AVR when there is a state change that the RP2350 should react to by reading the status. This happens when there are input changes, or sensor or power interrupts were received. 
+
      */
     //@{
 
@@ -353,16 +389,51 @@ public:
     static inline uint8_t i2cTxIdx_ = 0;
     static inline uint8_t i2cRxIdx_ = 0;
 
-    static void accelInt() {
-        state_.status.setAccelInt();
-        setIrq();
-        // TODO what to do when in master mode?
+    static constexpr uint8_t ACCEL_INT_REQUEST = 1;
+    static constexpr uint8_t PWR_INT_REQUEST = 2;
+    static constexpr uint8_t HOME_BTN_INT_REQUEST = 4;
+
+    static inline volatile uint8_t intRequests_ = 0;
+
+    static void initializeMasterMode() {
+        i2c::initializeMaster();
     }
 
-    static void pwrInt() {
-        state_.status.setPwrInt();
-        setIrq();
-        // TODO what to do when in master mode?
+    static void detectI2CDevices() {
+        LOG("Scanning I2C devices...");
+        for (uint8_t addr = 0; addr < 128; ++addr) {
+            if (i2c::isPresent(addr))
+                LOG(addr);
+            cpu::wdtReset();
+            cpu::delayMs(10);
+        }
+    }
+
+    static void processIntRequests() {
+        if (intRequests_ == 0)
+            return;
+        uint8_t irqs;
+        NO_ISR(
+            irqs = intRequests_;
+            intRequests_ = 0;
+        );
+        if (powerMode_ & POWER_MODE_ON) {
+            if (irqs & ACCEL_INT_REQUEST) {
+                state_.status.setAccelInt();
+                setIrq();
+            }
+            if (irqs & PWR_INT_REQUEST) {
+                state_.status.setPwrInt();
+                setIrq();
+            }
+            ASSERT(irqs & HOME_BTN_INT_REQUEST == 0); 
+        } else {
+            // TODO deal with accel and power interrupts - this probably requires some I2C communcation to determine what is going on
+            // if the power button is pressed, wake up 
+            // TODO this should really go to the wakeup mode and do the long press check accordingly in the future
+            if (irqs & HOME_BTN_INT_REQUEST)
+                powerOn();
+        }
     }
 
     static void setIrq() {
@@ -426,20 +497,21 @@ public:
         if (!i2cCommandReady_)
             return;
         // process the commands
+        LOG("Cmd: " << state_.buffer[0]);
         switch (state_.buffer[0]) {
             case cmd::Nop::ID:
                 break;
             case cmd::PowerOff::ID:
-                // TODO
+                powerOff();
                 break;
             case cmd::Sleep::ID:
                 // TODO
                 break;
             case cmd::ResetRP::ID:
-                // TODO
+                rebootRP();
                 break;
             case cmd::BootloaderRP::ID:
-                // TODO
+                bootloaderRP();
                 break;
             case cmd::ResetAVR::ID:
                 // TODO
@@ -448,13 +520,16 @@ public:
                 // TODO
                 break;
             case cmd::DebugModeOn::ID:
-                // TODO
+                LOG("Debug mode on");
+                state_.status.setDebugMode(true);
                 break;
             case cmd::DebugModeOff::ID:
-                // TODO
+                LOG("Debug mode off");
+                state_.status.setDebugMode(false);
                 break;
             case cmd::SetBrightness::ID: {
                 uint8_t value = cmd::SetBrightness::fromBuffer(state_.buffer).value;
+                LOG("Brightness: " << value);
                 setBacklightPWM(value);
                 state_.brightness = value;
                 break;
@@ -502,6 +577,8 @@ public:
         gpio::outputHigh(AVR_PIN_BTN_CTRL);
         // enable the control group
         gpio::outputLow(AVR_PIN_BTN_CTRL);
+        // reset tick counter to be in sync with the button sampling 
+        tickCounter_ = 0;
     }
 
     static void readControlGroup() {
@@ -677,7 +754,7 @@ ISR(TWI0_TWIS_vect) {
 ISR(PORTA_PORT_vect) {
     static_assert(AVR_PIN_PWR_INT == gpio::A2);
     VPORTA.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_PWR_INT));
-    RCKid::pwrInt();
+    RCKid::intRequests_ |= RCKid::PWR_INT_REQUEST;
 }
 
 /** Home button interrupt ISR.
@@ -685,7 +762,7 @@ ISR(PORTA_PORT_vect) {
 ISR(PORTB_PORT_vect) {
     static_assert(AVR_PIN_BTN_1 == gpio::B4);
     VPORTB.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_BTN_1));
-
+    RCKid::intRequests_ |= RCKid::HOME_BTN_INT_REQUEST;
 }
 
 /** Accel pin ISR.
@@ -693,7 +770,7 @@ ISR(PORTB_PORT_vect) {
 ISR(PORTC_PORT_vect) {
     static_assert(AVR_PIN_ACCEL_INT == gpio::C5);
     VPORTC.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_ACCEL_INT));
-    RCKid::accelInt();
+    RCKid::intRequests_ |= RCKid::ACCEL_INT_REQUEST;
 }
 
 
