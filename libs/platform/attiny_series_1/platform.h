@@ -322,11 +322,21 @@ public:
 class serial {
 public:
 
+    static bool isAlternateLocation() { return PORTMUX.CTRLB | PORTMUX_USART0_bm; }
+
+    static void setAlternateLocation(bool value) {
+        if (value)
+            PORTMUX.CTRLB |= PORTMUX_USART0_bm;
+        else
+            PORTMUX.CTRLB &= ~PORTMUX_USART0_bm;
+    }
+
     static void initializeTx(uint32_t speed = 9600) {
         uint16_t baud = (F_CPU / (16UL * speed)) - 1;
-        USART0.BAUD = baud;
-        USART0.CTRLB = USART_TXEN_bm; // Enable transmitter
+        USART0.BAUD = 347; // 277; // baud;
         USART0.CTRLC = USART_CHSIZE_8BIT_gc; // Set frame format: 8 data bits, no parity, 1 stop bit
+        gpio::setAsOutput(isAlternateLocation() ? gpio::A1 : gpio::B2);
+        USART0.CTRLB = USART_TXEN_bm; // Enable transmitter
     }
 
     static void write(char c) {

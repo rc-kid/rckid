@@ -2,7 +2,6 @@
 
 - writer in non-functional mode should be able to use hex stuff by passing pointer to stuff and some such
 
-
 - create a string class that allows storing char const * or std::string like, something like owning string_view
 
 - how to deal with non-16 bpp bitmaps 
@@ -36,7 +35,7 @@
 
 # Devboard Power-Up Sequence
 
-- [ ] verify there are no shorts between VCC, VBATT, VDD, 3V3 and ground
+- [X] verify there are no shorts between VCC, VBATT, VDD, 3V3 and ground
 - [ ] add jumper wires for D and audio power (! these *must* be installed before the board is powered)
 - [ ] add connectors for battery
 - [ ] try powering up through battery

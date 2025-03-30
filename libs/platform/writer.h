@@ -58,9 +58,9 @@ public:
     }
 
     Writer & operator << (uint8_t x) { return *this << (uint32_t) x; }
-    Writer & operator << (uint16_t x) { return *this << (uint32_t) x; }
+    Writer & operator << (uint16_t x) { return *this << (uint32_t)x; }
     Writer & operator << (uint32_t x) {
-        unsigned order = 1000000000;
+        uint32_t order = 1000000000;
         while (x < order && order > 1)
             order = order / 10;
         while (order >= 10) {
@@ -93,7 +93,6 @@ public:
             return (*this) << static_cast<uint32_t>(reinterpret_cast<uint64_t>(address));
     }
 
-    //std::enable_if<sizeof(int) == 4, Writer &>::type
     Writer & operator << (int value) {
         if (value < 0) {
             putChar_('-');
