@@ -1,3 +1,11 @@
+- [ ] check that sleep mode works with RTC
+- [ ] check that power on & off works with RTC
+- [ ] ditch sleep mode if not working (no need for it)
+- [ ] solder headers & debug stuff on the devboard
+- [ ] try powering it on 
+- [ ] debug the I2C master on the breadboard (?)
+
+
 # TODO
 
 - see if we can run at 5MHz and still talk to neopixel
@@ -38,11 +46,11 @@
 # Devboard Power-Up Sequence
 
 - [X] verify there are no shorts between VCC, VBATT, VDD, 3V3 and ground
-- [ ] add jumper wires for D and audio power (! these *must* be installed before the board is powered)
-- [ ] add connectors for battery
-- [ ] try powering up through battery
-- [ ] see if the PMIC keeps the VCC above threshold - what is the default value?
-- [ ] try powering up via USB
+- [X] add jumper wires for D and audio power (! these *must* be installed before the board is powered)
+- [X] add connectors for battery
+- [X] try powering up through battery
+- [-] see if the PMIC keeps the VCC above threshold - what is the default value? - IT IS NOT - default settings?
+- [X] try powering up via USB
 - [ ] flash AVR that does not enable VDD, but can go to sleep and meausre the current consumption at sleep & power on
 - [ ] enumerate I2C devices without VDD enabled
 - [ ] flash AVR that can enable VDD and test

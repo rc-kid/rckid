@@ -65,7 +65,6 @@ public:
 
     #include "../common/cpu_common.h"
 
-
 };
 
 class gpio {
