@@ -577,6 +577,50 @@ public:
                 state_.status.clearAlarmInt();
                 break;
             }
+            case cmd::Rumbler::ID: {
+                auto & c = cmd::Rumbler::fromBuffer(state_.buffer);
+                if (c.effect.cycles > 0 && c.effect.strength > 0) {
+                    rumblerEffect_ = c.effect;
+                    rumblerCurrent_ = rumblerEffect_;
+                    rumblerCurrent_.timeOn = 0;
+                    rumblerCurrent_.timeOff = 0;
+                } else {
+                    rumblerEffect_ = RumblerEffect::Off();
+                    rumblerCurrent_ = RumblerEffect::Off();
+                }
+                break;
+            }
+            /** Turns the RGB LEDs all off. 
+             
+                We don't simply set the LEDs off to allow the gradual transition to black to happen.
+             */
+            case cmd::RGBOff::ID: {
+                for (int i = 0; i < NUM_RGB_LEDS; ++i)
+                    rgbEffect_[i] = RGBEffect::Off();
+                break;
+            }
+            /** Sets RGB effect for the given LED. 
+             */
+            case cmd::SetRGBEffect::ID: {
+                auto & c = cmd::SetRGBEffect::fromBuffer(state_.buffer);
+                rgbEffect_[c.index] = c.effect;
+                rgbOn(true);
+                break;
+            }
+            /** Sets all RGB effects at once. 
+             
+                TODO how this will actually work depends on whether we have 1, or 2 dpad LEDs. If two DPAD leds, then DPAD effect sould be copied to both of them. 
+             */
+            case cmd::SetRGBEffects::ID: {
+                auto & c = cmd::SetRGBEffects::fromBuffer(state_.buffer);
+                rgbEffect_[0] = c.b;
+                rgbEffect_[1] = c.a;
+                rgbEffect_[3] = c.dpad;
+                rgbEffect_[4] = c.sel;
+                rgbEffect_[5] = c.start;
+                rgbOn(true);
+                break;
+            }
         }
         // and reset the command state so that we can read more commands 
         NO_ISR(
@@ -679,6 +723,10 @@ public:
      */
     //@{
 
+    static inline RumblerEffect rumblerEffect_;
+    static inline RumblerEffect rumblerCurrent_;
+
+
     static void initializePWM() {
         // do not leak voltage and turn the pins as inputs
         static_assert(AVR_PIN_PWM_BACKLIGHT == gpio::C0); // TCB0 WO, alternate position
@@ -705,24 +753,45 @@ public:
             TCB0.CTRLA = 0;
             TCB0.CTRLB = 0;
             gpio::outputFloat(AVR_PIN_PWM_BACKLIGHT);
-            //allowSleepPowerDown(STANDBY_REQUIRED_BRIGHTNESS);
         } else if (value == 255) {
             TCB0.CTRLA = 0;
             TCB0.CTRLB = 0;
             gpio::outputHigh(AVR_PIN_PWM_BACKLIGHT);
-            //allowSleepPowerDown(STANDBY_REQUIRED_BRIGHTNESS);
         } else {
             gpio::outputLow(AVR_PIN_PWM_BACKLIGHT);
             TCB0.CCMPH = value;
             TCB0.CTRLB = TCB_CNTMODE_PWM8_gc | TCB_CCMPEN_bm;
             //TCB0.CTRLA = TCB_CLKSEL_CLKTCA_gc | TCB_ENABLE_bm | TCB_RUNSTDBY_bm;
             TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm | TCB_RUNSTDBY_bm;
-            //requireSleepStandby(STANDBY_REQUIRED_BRIGHTNESS);
+        }
+    }
+
+    /** Turns the rumbler off, disabling the motor and setting the rumbler effect to off. 
+     */
+    static void rumblerOff() {
+        setRumblerPWM(0);
+        rumblerEffect_ = RumblerEffect::Off();
+    }
+
+    static void setRumblerPWM(uint8_t value) {
+        if (value == 0) {
+            TCB1.CTRLA = 0;
+            TCB1.CTRLB = 0;
+            gpio::outputFloat(AVR_PIN_PWM_RUMBLER);
+        } else if (value == 255) {
+            TCB1.CTRLA = 0;
+            TCB1.CTRLB = 0;
+            gpio::outputHigh(AVR_PIN_PWM_RUMBLER);
+        } else {
+            gpio::outputLow(AVR_PIN_PWM_RUMBLER);
+            TCB1.CCMPH = value;
+            TCB1.CTRLB = TCB_CNTMODE_PWM8_gc | TCB_CCMPEN_bm;
+            //TCB1.CTRLA = TCB_CLKSEL_CLKTCA_gc | TCB_ENABLE_bm | TCB_RUNSTDBY_bm;
+            TCB1.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm | TCB_RUNSTDBY_bm;
         }
     }
 
     static void rumblerTick() {
-        /*
         if (rumblerCurrent_.strength != 0) {
             if (rumblerCurrent_.timeOn > 0) {
                 if (--rumblerCurrent_.timeOn > 0) 
@@ -745,7 +814,6 @@ public:
             rumblerEffect_ = RumblerEffect::Off();
             rumblerCurrent_ = RumblerEffect::Off();
         }
-        */
     }
     //@}
 

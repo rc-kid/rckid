@@ -1,5 +1,7 @@
 #pragma once
 
+#include <rckid/effects.h>
+
 namespace rckid::cmd {
 
     #define COMMAND(MSG_ID, NAME, ...)                               \
@@ -40,6 +42,34 @@ namespace rckid::cmd {
     /** Clears the alarm flag in the status and clears the alarm itself. If the alarm should happen again, SetAlarm command must be issued after clearing the alarm.
      */
     COMMAND(12, ClearAlarm);
+
+    COMMAND(40, Rumbler,
+        RumblerEffect effect;
+        Rumbler(RumblerEffect effect): effect{effect} {}
+    );
+
+    COMMAND(100, RGBOff);
+
+    /** Specifies the RGB effect for a particular LED. 
+    */
+    COMMAND(101, SetRGBEffect, 
+        uint8_t index;
+        RGBEffect effect;
+        SetRGBEffect(uint8_t index, RGBEffect const & effect): index{index}, effect{effect} {}
+    );
+
+    COMMAND(102, SetRGBEffects, 
+        RGBEffect a;
+        RGBEffect b;
+        RGBEffect dpad;
+        RGBEffect sel;
+        RGBEffect start;
+        SetRGBEffects(RGBEffect const & a, RGBEffect const & b, RGBEffect const & dpad, RGBEffect const & sel, RGBEffect const & start):
+            a{a}, b{b}, dpad{dpad}, sel{sel}, start{start} {}
+    );
+
+
+
 
 
 } // namespace rckid::cmd
