@@ -334,9 +334,18 @@ public:
 
     static inline uint8_t tickCounter_ = 0;
 
-    /** Starts the system tick on TCA0 with 5ms interval. 
+    /** Starts the system tick on RTC with 5ms interval. 
      */
     static void startSystemTicks() {
+        if (RTC.CTRLA & RTC_RTCEN_bm)
+            return;
+        while (RTC.STATUS);
+        RTC.CTRLA = 0;
+        RTC.PER = 164; // for 5 ms (32768 / 200)
+        RTC.CNT = 0;
+        RTC.CTRLA = RTC_RUNSTDBY_bm | RTC_RTCEN_bm;
+        /*
+
         if (TCA0.SINGLE.CTRLA & TCA_SINGLE_ENABLE_bm)
             return;
         // initialize the buttons as well - we will be sampling them now that we have system ticks available
@@ -346,18 +355,24 @@ public:
         TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_NORMAL_gc;
         TCA0.SINGLE.PER = 625;
         TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV64_gc | TCA_SINGLE_ENABLE_bm;
+        */
     }
 
     static void stopSystemTicks() {
+        while (RTC.STATUS);
+        RTC.CTRLA = 0;
         // no harm disabling multiple times
-        TCA0.SINGLE.CTRLA = 0;
+        //TCA0.SINGLE.CTRLA = 0;
     }
 
     static bool systemTick() {
         // do nothing if system tick interrupt is not requested, clear the flag otherwise
-        if ((TCA0.SINGLE.INTFLAGS & TCA_SINGLE_OVF_bm) == 0)
-            return false;
-        TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm;
+        if ((RTC.INTFLAGS & RTC_OVF_bm) == 0)
+            return;
+        RTC.INTFLAGS = RTC_OVF_bm;
+        //if ((TCA0.SINGLE.INTFLAGS & TCA_SINGLE_OVF_bm) == 0)
+        //    return false;
+        //TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm;
         // increment the system tick counter and perform the tick actions
         switch (tickCounter_++) {
             case 0:
@@ -702,7 +717,8 @@ public:
             gpio::outputLow(AVR_PIN_PWM_BACKLIGHT);
             TCB0.CCMPH = value;
             TCB0.CTRLB = TCB_CNTMODE_PWM8_gc | TCB_CCMPEN_bm;
-            TCB0.CTRLA = TCB_CLKSEL_CLKTCA_gc | TCB_ENABLE_bm | TCB_RUNSTDBY_bm;
+            //TCB0.CTRLA = TCB_CLKSEL_CLKTCA_gc | TCB_ENABLE_bm | TCB_RUNSTDBY_bm;
+            TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm | TCB_RUNSTDBY_bm;
             //requireSleepStandby(STANDBY_REQUIRED_BRIGHTNESS);
         }
     }
