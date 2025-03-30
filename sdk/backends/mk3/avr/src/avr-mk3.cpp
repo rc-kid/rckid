@@ -17,9 +17,9 @@
 #include <platform/ringavg.h>
 
 #undef ASSERT
-#define ASSERT(...) if (!(__VA_ARGS__)) { debugWrite() << "ASSERT " << __LINE__ << "\n"; }
+#define ASSERT(...) if (!(__VA_ARGS__)) { debugWrite() << "ASSERT " << __LINE__ << "\r\n"; }
 
-#define LOG(...) debugWrite() << __VA_ARGS__ << "\n";
+#define LOG(...) debugWrite() << __VA_ARGS__ << "\r\n";
 
 /** \name Debugging support. 
  
@@ -126,11 +126,13 @@ public:
         while (RTC.PITSTATUS & RTC_CTRLBUSY_bm);
         RTC.PITCTRLA = RTC_PERIOD_CYC32768_gc | RTC_PITEN_bm;
 
+        serial::setAlternateLocation(true);
         serial::initializeTx(RCKID_AVR_SERIAL_SPEED);
 
         LOG("init...");
         i2c::initializeMaster();
-        detectI2CDevices();
+        // TODO scanning I2C devices hangs (!)
+        //detectI2CDevices();
         // setup PMIC, everything else can be setup by the RP2350 when powered on
         // TODO  
 
@@ -149,6 +151,8 @@ public:
 
         rgbOn(true);
         LOG("init done");
+        state_.status.setDebugMode(true);
+        cpu::delayMs(300);
     }
 
     static void loop() {
@@ -166,6 +170,7 @@ public:
             // wait for any TX transmissions before going to sleep 
             serial::waitForTx();
             // After everything was processed, go to sleep - we will wake up with the ACCEL or PMIC interrupts, or if in power off mode also by the HOME button interrupt
+            cpu::sei();
             sleep_enable();
             sleep_cpu();
         }
@@ -188,7 +193,9 @@ public:
             return;
         // if we are transitionioning from complete off, start system ticks and set sleep mode to standby
         if (powerMode_ == 0) {
-            set_sleep_mode(SLEEP_MODE_STANDBY);
+            LOG("systick start, sleep standby");
+            //set_sleep_mode(SLEEP_MODE_STANDBY);
+            set_sleep_mode(SLEEP_MODE_IDLE);
             startSystemTicks();
         }
         powerMode_ |= mode;
@@ -200,6 +207,7 @@ public:
         powerMode_ &= ~mode;
         // if we are transitioning to complete off, stop system ticks and set sleep mode to power down
         if (powerMode_ == 0) {
+            LOG("systick stop, sleep pwrdown");
             stopSystemTicks();
             set_sleep_mode(SLEEP_MODE_PWR_DOWN);
         }
@@ -208,7 +216,7 @@ public:
     /** Initializes the device power on state. 
      */
     static void powerOn() {
-        LOG("Power on...");
+        LOG("power on");
         NO_ISR(
             // set power mode, which also ensures system ticks are running
             setPowerMode(POWER_MODE_ON);
@@ -224,13 +232,22 @@ public:
             // enable interrupts for ACCEL_INT and PWR_INT
             GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_RISING_gc;
             GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_RISING_gc;
+
+            // enable RTC, TCA, TCB and ADC in standby mode
+            //RTC.CTRLA |= RTC_RUNSTDBY_bm;
+            TCB0.CTRLA |= TCB_RUNSTDBY_bm;
+            TCB1.CTRLA |= TCB_RUNSTDBY_bm;
+            ADC0.CTRLA |= ADC_RUNSTBY_bm;
+
+            // TODO debug
+            gpio::outputLow(AVR_PIN_AVR_INT);
         );
     }
 
     /** Initializes the device power off state. 
      */
     static void powerOff() {
-        LOG("Power off...");
+        LOG("power off");
         NO_ISR(
             clearPowerMode(POWER_MODE_ON);
             powerVDD(false);
@@ -240,6 +257,9 @@ public:
             GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_RISING_gc;
             GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_RISING_gc;
             GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) |= PORT_ISC_FALLING_gc;
+
+            // TODO debug
+            gpio::outputFloat(AVR_PIN_AVR_INT);
         );
     }
 
@@ -361,6 +381,7 @@ public:
             state_.status.setAlarmInt();
             // TODO deal with IRQ, powering device on, etc.
         }
+        LOG("uptime " << state_.uptime);
 
     }
     //@}
@@ -441,7 +462,8 @@ public:
             if (irq_)
                 return;
             irq_ = true;
-            gpio::outputLow(AVR_PIN_AVR_INT);
+            // TODO enable this once we move from breadboard
+            //gpio::outputLow(AVR_PIN_AVR_INT);
         );        
     }
 
@@ -591,13 +613,21 @@ public:
         gpio::low(AVR_PIN_BTN_ABXY);
         // check if there has been change
         if (changed) {
+            LOG("Ctrl btns: " << state_.status.btnHome() << " " << state_.status.btnVolumeUp() << " " << state_.status.btnVolumeDown());
             if (state_.status.debugMode()) {
+                /* TODO enable this after we leave breadboard where the extra pins do not work
                 if (state_.status.btnVolumeUp()) {
                     rebootRP();
                     return;
                 } 
                 if (state_.status.btnVolumeDown()) {
                     bootloaderRP();
+                    return;
+                }
+                */
+                if (state_.status.btnHome()) {
+                    powerOff();
+                    cpu::delayMs(1000);
                     return;
                 }
             }
@@ -770,7 +800,8 @@ ISR(PORTB_PORT_vect) {
 ISR(PORTC_PORT_vect) {
     static_assert(AVR_PIN_ACCEL_INT == gpio::C5);
     VPORTC.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_ACCEL_INT));
-    RCKid::intRequests_ |= RCKid::ACCEL_INT_REQUEST;
+    // TODO ignore the accel pin on breadboard since we do not have it
+    // RCKid::intRequests_ |= RCKid::ACCEL_INT_REQUEST;
 }
 
 
