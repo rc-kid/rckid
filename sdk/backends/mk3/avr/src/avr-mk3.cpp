@@ -227,16 +227,6 @@ public:
             // start the I2C slave as we will be contacted by the RP2350 shortly
             i2c::initializeSlave(RCKID_AVR_I2C_ADDRESS);
             TWI0.SCTRLA |= TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm;
-            // disable home button interrput
-            GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) &= ~PORT_ISC_gm;
-            // enable interrupts for ACCEL_INT and PWR_INT
-            GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_RISING_gc;
-            GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_RISING_gc;
-
-            // enable RTC, TCA, TCB and ADC in standby mode
-            //RTC.CTRLA |= RTC_RUNSTDBY_bm;
-            TCB0.CTRLA |= TCB_RUNSTDBY_bm;
-            TCB1.CTRLA |= TCB_RUNSTDBY_bm;
             ADC0.CTRLA |= ADC_RUNSTBY_bm;
 
             // TODO debug
@@ -253,11 +243,6 @@ public:
             powerVDD(false);
             // initialize buttons for power off state (sampling the control group)
             initializeButtons();
-            // enable interrupts for ACCELa dn PWT interrupts as well as home button
-            GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_RISING_gc;
-            GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_RISING_gc;
-            GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) |= PORT_ISC_FALLING_gc;
-
             // TODO debug
             gpio::outputFloat(AVR_PIN_AVR_INT);
         );
@@ -344,6 +329,11 @@ public:
         RTC.PER = 164; // for 5 ms (32768 / 200)
         RTC.CNT = 0;
         RTC.CTRLA = RTC_RUNSTDBY_bm | RTC_RTCEN_bm;
+        // whenever system ticks are started, register the IRQ interrupts (rising edge of PWR_INT and ACCEL_INT)
+        GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
+        GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_BOTHEDGES_gc;
+        // do not use interrupt on home button (we handle it in the loop due to matrix row rotation)
+        GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) &= ~PORT_ISC_gm;
         /*
 
         if (TCA0.SINGLE.CTRLA & TCA_SINGLE_ENABLE_bm)
@@ -359,9 +349,13 @@ public:
     }
 
     static void stopSystemTicks() {
+        // no harm disabling multiple times
         while (RTC.STATUS);
         RTC.CTRLA = 0;
-        // no harm disabling multiple times
+        // enable interrupts for the power down mode where only pin change is available
+        GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
+        GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_BOTHEDGES_gc;
+        GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) |= PORT_ISC_BOTHEDGES_gc;
         //TCA0.SINGLE.CTRLA = 0;
     }
 
@@ -700,6 +694,10 @@ public:
         TCB1.CTRLB = 0; 
         TCB1.CCMPL = 255;
         TCB1.CCMPH = 0; 
+        // both interrupts are allowed to run in standby mode
+        TCB0.CTRLA |= TCB_RUNSTDBY_bm;
+        TCB1.CTRLA |= TCB_RUNSTDBY_bm;
+
     }
 
     static void setBacklightPWM(uint8_t value) {
