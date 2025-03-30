@@ -5,6 +5,8 @@
 #include <platform/color_strip.h>
 #include <backend_config.h>
 
+class RCKid;
+
 namespace rckid {
 
     PACKED(class RGBEffect {
@@ -66,13 +68,40 @@ namespace rckid {
             return result;
         }
 
+        bool active() const { return kind != Kind::Off; }
+
+        void turnOff() {
+            kind = Kind::Off;
+        }
+
     private:
+
+        friend class ::RCKid;
 
         RGBEffect(Kind kind, uint8_t speed, uint8_t duration):
             kind{kind},
             speed{speed},
             duration{duration} {
             color_ = Color::Black();
+        }
+
+        Color nextColor(Color const & last) {
+            switch (kind) {
+                case Kind::Solid:
+                    // always return the 
+                    return color_;
+                case Kind::Breathe: 
+                    if (last == color_)
+                        return Color::Black();
+                    else
+                        return color_;
+                case Kind::Rainbow:
+                    rainbow_.hue += rainbow_.step;
+                    return Color::HSV(rainbow_.hue * 256, 255, rainbow_.brightness);
+                case Kind::Off:
+                default:
+                    return Color::Black();
+            }
         }
         
         PACKED(union {

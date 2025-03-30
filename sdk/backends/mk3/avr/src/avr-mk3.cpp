@@ -722,7 +722,30 @@ public:
     }
 
     static void rumblerTick() {
-        // TODO
+        /*
+        if (rumblerCurrent_.strength != 0) {
+            if (rumblerCurrent_.timeOn > 0) {
+                if (--rumblerCurrent_.timeOn > 0) 
+                    return;
+                else 
+                    setRumblerPWM(0);
+            }
+            if (rumblerCurrent_.timeOff > 0) {
+                if (--rumblerCurrent_.timeOff > 0)
+                    return;
+            }
+            if (rumblerCurrent_.cycles != 0) {
+                --rumblerEffect_.cycles;
+                rumblerCurrent_ = rumblerEffect_;
+                if (rumblerCurrent_.timeOn > 0)
+                    setRumblerPWM(rumblerCurrent_.strength);
+                return;
+            }
+            // we are done
+            rumblerEffect_ = RumblerEffect::Off();
+            rumblerCurrent_ = RumblerEffect::Off();
+        }
+        */
     }
     //@}
 
@@ -742,6 +765,9 @@ public:
     static inline platform::ColorStrip<NUM_RGB_LEDS> rgbTarget_;
     static inline platform::NeopixelStrip<NUM_RGB_LEDS> rgb_{AVR_PIN_RGB};
 
+    static constexpr uint8_t RGB_TICKS_PER_SECOND = 66;
+    static inline uint8_t rgbTicks_ = RGB_TICKS_PER_SECOND; 
+
     static void rgbOn(bool value, bool delayAfterPowerOn = true) {
         if (rgbOn_ == value)
             return;
@@ -758,6 +784,7 @@ public:
             rgbClear();
         }
         rgbOn_ = value;
+        rgbTicks_ = RGB_TICKS_PER_SECOND;
     }
 
     /** Clears the RGBs - disables effects and sets the current and target color to black for immediate switch to black color.
@@ -771,11 +798,39 @@ public:
     }
 
     static void rgbTick() {
-        // TODO
+        if (!rgbOn_)
+            return;
+        // if there has been second already, decrement effect durations
+        if (--rgbTicks_ == 0) {
+            rgbTicks_ = RGB_TICKS_PER_SECOND;
+            for (int i = 0; i < NUM_RGB_LEDS; ++i) {
+                // see if the effect should end
+                if (rgbEffect_[i].duration > 0) {
+                    if (--rgbEffect_[i].duration == 0) {
+                        rgbEffect_[i].turnOff();
+                    }
+                }
+            }
+        }
+        // for all LEDs, move them towards their target at speed given by their effect
+        bool turnOff = true;
+        for (int i = 0; i < 6; ++i) {
+            bool done = ! rgb_[i].moveTowards(rgbTarget_[i], rgbEffect_[i].speed);
+            // if the current transition is done, make next effect transition
+            if (done) {
+                rgbTarget_[i] = rgbEffect_[i].nextColor(rgbTarget_[i]);
+                if (rgbEffect_[i].active())
+                    turnOff = false;
+            } else {
+                turnOff = false;
+            }
+        }
+        // if all the LEDs are off, turn the 5V rail off to save power, otherwise update the LEDs
+        if (turnOff)
+            rgbOn(false);
+        else
+            rgb_.update(true);
     }
-
-
-
 
     //@}
 }; // class RCKid
