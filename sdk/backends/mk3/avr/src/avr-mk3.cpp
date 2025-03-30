@@ -330,7 +330,8 @@ public:
         RTC.CNT = 0;
         RTC.CTRLA = RTC_RUNSTDBY_bm | RTC_RTCEN_bm;
         // whenever system ticks are started, register the IRQ interrupts (rising edge of PWR_INT and ACCEL_INT)
-        GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
+        // FIXME only use in real board as the pin is floating on attiny1616
+        //GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
         GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_BOTHEDGES_gc;
         // do not use interrupt on home button (we handle it in the loop due to matrix row rotation)
         GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) &= ~PORT_ISC_gm;
@@ -353,7 +354,8 @@ public:
         while (RTC.STATUS);
         RTC.CTRLA = 0;
         // enable interrupts for the power down mode where only pin change is available
-        GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
+        // FIXME only use in real board as the pin is floating on attiny1616
+        //GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
         GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_BOTHEDGES_gc;
         GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) |= PORT_ISC_BOTHEDGES_gc;
         //TCA0.SINGLE.CTRLA = 0;
@@ -921,7 +923,9 @@ ISR(TWI0_TWIS_vect) {
 ISR(PORTA_PORT_vect) {
     static_assert(AVR_PIN_PWR_INT == gpio::A2);
     VPORTA.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_PWR_INT));
-    RCKid::intRequests_ |= RCKid::PWR_INT_REQUEST;
+    // only do stuff if we were transitioning from low to high
+    if (gpio::read(AVR_PIN_PWR_INT))
+        RCKid::intRequests_ |= RCKid::PWR_INT_REQUEST;
 }
 
 /** Home button interrupt ISR.
@@ -929,7 +933,9 @@ ISR(PORTA_PORT_vect) {
 ISR(PORTB_PORT_vect) {
     static_assert(AVR_PIN_BTN_1 == gpio::B4);
     VPORTB.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_BTN_1));
-    RCKid::intRequests_ |= RCKid::HOME_BTN_INT_REQUEST;
+    // only do stuff if we were tranistioning from high to low (button press)
+    if (gpio::read(AVR_PIN_BTN_1) == false)
+        RCKid::intRequests_ |= RCKid::HOME_BTN_INT_REQUEST;
 }
 
 /** Accel pin ISR.
@@ -937,8 +943,9 @@ ISR(PORTB_PORT_vect) {
 ISR(PORTC_PORT_vect) {
     static_assert(AVR_PIN_ACCEL_INT == gpio::C5);
     VPORTC.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_ACCEL_INT));
-    // TODO ignore the accel pin on breadboard since we do not have it
-    // RCKid::intRequests_ |= RCKid::ACCEL_INT_REQUEST;
+    // only do stuff if we are transitioning from low to high
+    if (gpio::read(AVR_PIN_ACCEL_INT))
+        RCKid::intRequests_ |= RCKid::ACCEL_INT_REQUEST;
 }
 
 
