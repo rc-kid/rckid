@@ -151,5 +151,5 @@ inline uint16_t i2c::readRegister<uint16_t, platform::Endian::Big>(uint8_t addre
     return (result[0] << 8) | result[1];
 }
 
-// open an extra anonymous namespace for the last } in the platform.h
+// open an extra anonymous namespace for the last } in the platform.h (we are no longer in the class definition)
 namespace {

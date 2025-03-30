@@ -7,6 +7,9 @@
 #define RCKID_DISPLAY_BRIGHTNESS 128
 
 
+
+#define RCKID_HOME_BUTTON_LONG_PRESS_FPS 120
+
 /** Default brightness of the RGB LEDs under buttons. Can be anything from 0 (off) to 255 (maximum brightess). High settings affect battery consumption quite a lot and are often not necessary.
  */
 #define RCKID_RGB_LED_DEFAULT_BRIGHTNESS 32

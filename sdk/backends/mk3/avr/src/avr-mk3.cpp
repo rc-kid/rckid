@@ -129,25 +129,16 @@ public:
         serial::setAlternateLocation(true);
         serial::initializeTx(RCKID_AVR_SERIAL_SPEED);
 
-        LOG("init...");
+        LOG("SYSTEM RESET DETECTED: " << RSTCTRL.RSTFR);
         i2c::initializeMaster();
         // TODO scanning I2C devices hangs (!)
         //detectI2CDevices();
         // setup PMIC, everything else can be setup by the RP2350 when powered on
         // TODO  
 
-
-
-
-        // set sleep mode to powerdown (we only need RTC and GPIO Interrupts)
-        set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-
         // TODO AVR TX for debugging
 
-
         powerOn();
-
-
 
         rgbOn(true);
         LOG("init done");
@@ -158,21 +149,25 @@ public:
     static void loop() {
         while (true) {
             cpu::wdtReset();
-            // process any interrupt requests
-            processIntRequests();
             // do system tick, if system tick is active and tickCounter is 0, also do the effects tick, which is roughly at 66 frames per second
-            if (systemTick() || tickCounter_ == 0) {
+            if (systemTick() && tickCounter_ == 0) {
                 rgbTick();
                 rumblerTick();
             }
+            secondTick();
             // see if there were any I2C commands received and if so, execute
             processI2CCommand();
+            // process any interrupt requests
+            processIntRequests();
             // wait for any TX transmissions before going to sleep 
             serial::waitForTx();
             // After everything was processed, go to sleep - we will wake up with the ACCEL or PMIC interrupts, or if in power off mode also by the HOME button interrupt
+            gpio::outputHigh(AVR_PIN_VDD_EN);
             cpu::sei();
             sleep_enable();
             sleep_cpu();
+            gpio::outputLow(AVR_PIN_VDD_EN);
+
         }
     }
 
@@ -241,8 +236,6 @@ public:
         NO_ISR(
             clearPowerMode(POWER_MODE_ON);
             powerVDD(false);
-            // initialize buttons for power off state (sampling the control group)
-            initializeButtons();
             // TODO debug
             gpio::outputFloat(AVR_PIN_AVR_INT);
         );
@@ -317,6 +310,8 @@ public:
      */
     //@{
 
+    static inline volatile bool systemTick_ = false;
+    static inline volatile bool secondTick_ = false;
     static inline uint8_t tickCounter_ = 0;
 
     /** Starts the system tick on RTC with 5ms interval. 
@@ -324,10 +319,18 @@ public:
     static void startSystemTicks() {
         if (RTC.CTRLA & RTC_RTCEN_bm)
             return;
-        while (RTC.STATUS);
+        LOG("systick - enable RTC");
+        // initialize buttons matrix for CTRL row
+        initializeButtons();
+        // initialize the RTC
+        while (RTC.STATUS & RTC_CTRLABUSY_bm);
         RTC.CTRLA = 0;
+        while (RTC.STATUS & RTC_PERBUSY_bm);
         RTC.PER = 164; // for 5 ms (32768 / 200)
+        while (RTC.STATUS & RTC_CNTBUSY_bm);
         RTC.CNT = 0;
+        RTC.INTCTRL = RTC_OVF_bm;
+        while (RTC.STATUS & RTC_CTRLABUSY_bm);
         RTC.CTRLA = RTC_RUNSTDBY_bm | RTC_RTCEN_bm;
         // whenever system ticks are started, register the IRQ interrupts (rising edge of PWR_INT and ACCEL_INT)
         // FIXME only use in real board as the pin is floating on attiny1616
@@ -335,40 +338,31 @@ public:
         GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_BOTHEDGES_gc;
         // do not use interrupt on home button (we handle it in the loop due to matrix row rotation)
         GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) &= ~PORT_ISC_gm;
-        /*
-
-        if (TCA0.SINGLE.CTRLA & TCA_SINGLE_ENABLE_bm)
-            return;
-        // initialize the buttons as well - we will be sampling them now that we have system ticks available
-        initializeButtons();
-        // start TCA0 with ~5ms interval 
-        TCA0.SINGLE.CTRLD = 0;
-        TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_NORMAL_gc;
-        TCA0.SINGLE.PER = 625;
-        TCA0.SINGLE.CTRLA = TCA_SINGLE_CLKSEL_DIV64_gc | TCA_SINGLE_ENABLE_bm;
-        */
     }
 
     static void stopSystemTicks() {
         // no harm disabling multiple times
-        while (RTC.STATUS);
+        LOG("systick - disable RTC");
+        while (RTC.STATUS & RTC_CTRLABUSY_bm);
         RTC.CTRLA = 0;
+        // initialize buttons so that we are always reading control row when system ticks not used
+        initializeButtons();
+        // allow some time for propagation
+        cpu::delayMs(5);
         // enable interrupts for the power down mode where only pin change is available
         // FIXME only use in real board as the pin is floating on attiny1616
         //GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
         GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_BOTHEDGES_gc;
         GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) |= PORT_ISC_BOTHEDGES_gc;
-        //TCA0.SINGLE.CTRLA = 0;
+        // disable any pending system tick
+        systemTick_ = false;
     }
 
     static bool systemTick() {
         // do nothing if system tick interrupt is not requested, clear the flag otherwise
-        if ((RTC.INTFLAGS & RTC_OVF_bm) == 0)
+        if (! systemTick_)
             return;
-        RTC.INTFLAGS = RTC_OVF_bm;
-        //if ((TCA0.SINGLE.INTFLAGS & TCA_SINGLE_OVF_bm) == 0)
-        //    return false;
-        //TCA0.SINGLE.INTFLAGS = TCA_SINGLE_OVF_bm;
+        systemTick_ = false;
         // increment the system tick counter and perform the tick actions
         switch (tickCounter_++) {
             case 0:
@@ -386,17 +380,18 @@ public:
     }
 
     static void secondTick() {
+        if (! secondTick_)
+            return;
+        secondTick_ = false;
         ++state_.uptime;
         state_.time.secondTick();
         if (state_.alarm.check(state_.time)) {
             state_.status.setAlarmInt();
             // TODO deal with IRQ, powering device on, etc.
         }
-        LOG("uptime " << state_.uptime);
-
+        //LOG("uptime " << state_.uptime);
     }
     //@}
-
 
     /** \name I2C Communications
      
@@ -463,12 +458,16 @@ public:
             // TODO deal with accel and power interrupts - this probably requires some I2C communcation to determine what is going on
             // if the power button is pressed, wake up 
             // TODO this should really go to the wakeup mode and do the long press check accordingly in the future
-            if (irqs & HOME_BTN_INT_REQUEST)
-                powerOn();
+            if (irqs & HOME_BTN_INT_REQUEST) {
+                // enter the wakeup mode
+                setPowerMode(POWER_MODE_WAKEUP);
+            }
         }
     }
 
     static void setIrq() {
+        if (! (powerMode_ & POWER_MODE_ON))
+            return;
         NO_ISR(
             if (irq_)
                 return;
@@ -633,7 +632,7 @@ public:
 
     //@}
 
-    /** Initializes the button matrix and gets ready to read the control group.
+    /** \name Buttons
      
         The button matrix is 3 groups of 4 buttons. Namely the BTN_CTRL group selects the Home button and volume up & down side buttons, the BTN_ABXY group selects the A, B and Select & Start buttons and the BTN_DPAD group selects the dpad. 
 
@@ -642,7 +641,11 @@ public:
         All button pins are digital and are read as part of system tick. 
      */
     //@{
+
+    static inline uint8_t homeBtnLongPress_ = 0;
+
     static void initializeButtons() {
+        LOG("init buttons...")
         // pull all buttons up
         gpio::setAsInputPullup(AVR_PIN_BTN_1);
         gpio::setAsInputPullup(AVR_PIN_BTN_2);
@@ -658,17 +661,39 @@ public:
         tickCounter_ = 0;
     }
 
+    static void homeBtnLongPress() {
+        homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
+        if (powerMode_ & POWER_MODE_ON) {
+            powerOff();
+        } else {
+            ASSERT(powerMode_ & POWER_MODE_WAKEUP);
+            powerOn();
+            clearPowerMode(POWER_MODE_WAKEUP);
+        }
+    }
+
     static void readControlGroup() {
         bool changed = state_.status.setControlButtons(
             ! gpio::read(AVR_PIN_BTN_1), // home
             ! gpio::read(AVR_PIN_BTN_2), // volume up
             ! gpio::read(AVR_PIN_BTN_3)  // volume down
         );
-        gpio::high(AVR_PIN_BTN_CTRL);
-        gpio::low(AVR_PIN_BTN_ABXY);
+        // only advance if we are running system ticks
+        if (powerMode_ != 0) {
+            gpio::high(AVR_PIN_BTN_CTRL);
+            gpio::low(AVR_PIN_BTN_ABXY);
+        }
         // check if there has been change
+        if (state_.status.btnHome()) {
+            if (homeBtnLongPress_ > 0 && (--homeBtnLongPress_ == 0))
+                homeBtnLongPress();
+        }
         if (changed) {
             LOG("Ctrl btns: " << state_.status.btnHome() << " " << state_.status.btnVolumeUp() << " " << state_.status.btnVolumeDown());
+            if (! state_.status.btnHome()) {
+                homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
+                clearPowerMode(POWER_MODE_WAKEUP);
+            }
             if (state_.status.debugMode()) {
                 /* TODO enable this after we leave breadboard where the extra pins do not work
                 if (state_.status.btnVolumeUp()) {
@@ -680,11 +705,6 @@ public:
                     return;
                 }
                 */
-                if (state_.status.btnHome()) {
-                    powerOff();
-                    cpu::delayMs(1000);
-                    return;
-                }
             }
             setIrq();
         }
@@ -909,7 +929,12 @@ public:
  */
 ISR(RTC_PIT_vect) {
     RTC.PITINTFLAGS = RTC_PI_bm; // clear the interrupt
-    RCKid::secondTick();
+    RCKid::secondTick_ = true;
+}
+
+ISR(RTC_CNT_vect) {
+    RTC.INTFLAGS = RTC_OVF_bm; // clear the interrupt
+    RCKid::systemTick_ = true;
 }
 
 /** I2C slave action.
