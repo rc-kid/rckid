@@ -1,5 +1,7 @@
 # TODO
 
+- see if we can run at 5MHz and still talk to neopixel
+
 - writer in non-functional mode should be able to use hex stuff by passing pointer to stuff and some such
 
 - create a string class that allows storing char const * or std::string like, something like owning string_view
