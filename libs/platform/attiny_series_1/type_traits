@@ -1,0 +1,49 @@
+#pragma once
+
+namespace std {
+
+    template<bool B, typename T = void>
+    struct enable_if {};
+    
+    // Specialization when the condition is true
+    template<typename T>
+    struct enable_if<true, T> {
+        using type = T;
+    };
+    
+    // Helper alias for ease of use
+    template <bool B, typename T = void>
+    using enable_if_t = typename enable_if<B, T>::type;
+
+    template<typename T>
+    struct is_class {
+    private:
+        template<typename U>
+        static char test(int U::*); // matches classes (U::* is a pointer to member)
+        template<typename U>
+        static int test(...); // catch-all for non-classes
+    public:
+        static constexpr bool value = sizeof(test<T>(nullptr)) == sizeof(char);
+    };
+
+    // base class check
+    template<typename Base, typename Derived, typename = void>
+    struct is_base_of {
+        static constexpr bool value = false; // fallback for invalid cases
+    };
+
+    // specialization when both Base and Derived are classes
+    template<typename Base, typename Derived>
+    struct is_base_of<
+        Base,
+        Derived,
+        typename enable_if<is_class<Base>::value && is_class<Derived>::value>::type> {
+    private:
+        // helper to check if Derived is convertible to Base
+        static char test(const Base*);
+        static int test(...);
+    public:
+        static constexpr bool value = sizeof(test(static_cast<Derived*>(nullptr))) == sizeof(char);
+    };
+    
+}
