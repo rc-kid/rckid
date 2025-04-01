@@ -93,15 +93,36 @@ public:
             return (*this) << static_cast<uint32_t>(reinterpret_cast<uint64_t>(address));
     }
 
-    Writer & operator << (int value) {
+    Writer & operator << (int8_t value) { 
         if (value < 0) {
             putChar_('-');
             value *= -1;
         }
-        if constexpr (sizeof(int) == 4)
-            return (*this) << static_cast<uint32_t>(value);
-        else
-            return (*this) << static_cast<uint64_t>(value);
+        return (*this) << static_cast<uint8_t>(value);
+    }
+
+    Writer & operator << (int16_t value) { 
+        if (value < 0) {
+            putChar_('-');
+            value *= -1;
+        }
+        return (*this) << static_cast<uint16_t>(value);
+    }
+
+    Writer & operator << (int32_t value) { 
+        if (value < 0) {
+            putChar_('-');
+            value *= -1;
+        }
+        return (*this) << static_cast<uint32_t>(value);
+    }
+
+    Writer & operator << (int64_t value) { 
+        if (value < 0) {
+            putChar_('-');
+            value *= -1;
+        }
+        return (*this) << static_cast<uint64_t>(value);
     }
 
 private:

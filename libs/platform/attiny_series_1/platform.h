@@ -250,47 +250,42 @@ public:
             PORTB.OUTCLR = 0x03; // PB0, PB1
         uint32_t baud = ((F_CPU/100000) - (((F_CPU* /* rise time */300)/1000)/1000)/1000 - 10)/2;
         TWI0.MBAUD = (uint8_t)baud;
-        TWI0.MCTRLA = TWI_ENABLE_bm;         
+        TWI0.MCTRLA = TWI_ENABLE_bm | TWI_TIMEOUT_200US_gc;         
         TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc;
     }
 
+    // TODO update for the error detection on every false exit path 
+    // verify writing and reading data
     static bool masterTransmit(uint8_t address, uint8_t const * wb, uint8_t wsize, uint8_t * rb, uint8_t rsize) {
         auto wait = [](){
-            while (!(TWI0.MSTATUS & (TWI_WIF_bm | TWI_RIF_bm))) {}; 
+            while (true) {
+                if (TWI0.MSTATUS & (TWI_WIF_bm | TWI_RIF_bm))
+                    return true;
+                if (TWI0.MSTATUS & (TWI_BUSERR_bm | TWI_ARBLOST_bm))
+                    return false;
+            }
         };
-        auto waitIdle = [](){
-            while (!(TWI0.MSTATUS & TWI_BUSSTATE_IDLE_gc)) {}; 
+        auto start = [address](bool read){
+            TWI0.MADDR = (address << 1) | read;
+            while (true) {
+                if (TWI0.MSTATUS & (TWI_WIF_bm | TWI_RIF_bm))
+                    return (TWI0.MSTATUS & TWI_RXACK_bm) == 0;
+                if ((TWI0.MSTATUS & (TWI_BUSERR_bm | TWI_ARBLOST_bm)))
+                    return false;
+            }
+        };
+        auto stop = [](){
+            TWI0.MCTRLB = TWI_MCMD_STOP_gc;
         };
 
-        auto busLostOrError = [](){
-            return TWI0.MSTATUS & (TWI_BUSERR_bm | TWI_ARBLOST_bm);
-        };
-        auto stop = [&](){
-            TWI0.MCTRLB = TWI_MCMD_STOP_gc;
-            waitIdle();
-        }; 
-        auto start = [&](uint8_t address, bool read) {
-            TWI0.MADDR = (address << 1) | read;
-            wait();
-            if (busLostOrError()) {
-                waitIdle();
-                return false;
-            }
-            if (TWI0.MSTATUS & TWI_RXACK_bm) {
-                stop();
-                return false;
-            }
-            return true;
-        };
         if (wsize > 0) {
-            if (! start(address, false)) 
+            if (! start(false)) 
                 goto i2c_master_error;
-            // we send all we have no matter what 
+            // send what we have
             for (uint8_t i = 0; i < wsize; ++i) {
-                TWI0.MCTRLB = TWI_MCMD_RECVTRANS_gc;                    
+                //TWI0.MCTRLB = TWI_MCMD_RECVTRANS_gc;                    
                 TWI0.MDATA = *(wb++); 
-                wait();
-                if (busLostOrError()) {
+                if (!wait()) {
                     stop();
                     goto i2c_master_error;
                 }
@@ -299,18 +294,18 @@ public:
                 stop();
         }
         if (rsize > 0) {
-            if (! start(address, true))
+            if (! start(true))
                 goto i2c_master_error;
             while (rsize-- > 0) {
                 wait();
                 *(rb++) = TWI0.MDATA;
-                TWI0.MCTRLB = (rsize > 0) ? TWI_MCMD_RECVTRANS_gc : TWI_ACKACT_NACK_gc;
+                TWI0.MCTRLB = (rsize == 0) ? TWI_ACKACT_bm | TWI_MCMD_STOP_gc : TWI_MCMD_RECVTRANS_gc;                
             }
-            stop();
         }
         return true;
     i2c_master_error:
-        TWI0.MCTRLA = TWI_FLUSH_bm;
+        TWI0.MCTRLB = TWI_FLUSH_bm;
+        TWI0.MSTATUS = TWI_BUSSTATE_IDLE_gc;
         return false;
     }
 

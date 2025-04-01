@@ -14,7 +14,7 @@ namespace rckid::cmd {
             }                                                        \
             __VA_ARGS__                                              \
         });                                                          \
-        static_assert(sizeof(NAME) <= 32)              
+        static_assert(sizeof(NAME) <= 35)              
 
     COMMAND(0, Nop);
     COMMAND(1, PowerOff);
@@ -42,10 +42,31 @@ namespace rckid::cmd {
     /** Clears the alarm flag in the status and clears the alarm itself. If the alarm should happen again, SetAlarm command must be issued after clearing the alarm.
      */
     COMMAND(12, ClearAlarm);
+    
 
-    COMMAND(40, Rumbler,
-        RumblerEffect effect;
-        Rumbler(RumblerEffect effect): effect{effect} {}
+
+
+    COMMAND(40, ReadFlashPage,
+        uint16_t page;
+        ReadFlashPage(uint16_t page): page{page} {}
+    );
+
+    COMMAND(41, ReadEEPROMPage,
+        uint16_t page;
+        ReadEEPROMPage(uint16_t page): page{page} {}
+    );
+
+    COMMAND(42, ReadRAMPage,
+        uint16_t page;
+        ReadRAMPage(uint16_t page): page{page} {}
+    );
+
+    COMMAND(43, WriteRAMPage,
+        uint16_t page;
+        uint8_t data[32];
+        WriteRAMPage(uint16_t page, uint8_t const * data): page{page} {
+            memcpy(this->data, data, 32);
+        }
     );
 
     COMMAND(100, RGBOff);
@@ -67,6 +88,23 @@ namespace rckid::cmd {
         SetRGBEffects(RGBEffect const & a, RGBEffect const & b, RGBEffect const & dpad, RGBEffect const & sel, RGBEffect const & start):
             a{a}, b{b}, dpad{dpad}, sel{sel}, start{start} {}
     );
+
+    COMMAND(103, Rumbler,
+        RumblerEffect effect;
+        Rumbler(RumblerEffect effect): effect{effect} {}
+    );
+
+
+    COMMAND(150, SetNotification,
+        RGBEffect effect;
+        SetNotification(RGBEffect const & effect): effect{effect} {}
+    );
+    COMMAND(151, ChargerConnected);
+    COMMAND(152, ChargerDisconnected);
+    COMMAND(153, ChargerDone);
+    COMMAND(154, ChargerError);
+
+
 
 
 

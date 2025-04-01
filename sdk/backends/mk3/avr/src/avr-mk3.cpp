@@ -57,7 +57,10 @@ inline Writer debugWrite() {
 
     - everything is digital, so we only need the ADC for temperature...
     - use system tick of 5ms, this gives us ability to read all buttons every frame 
- 
+
+    NOTE: There is an errate for attiny1616 and smaller chips that states HW bug where turning off RTC turns off PIT as well, which means those chips will *not* work with RCKid as we use RTC for the system tick and PIT for the timekeeping.
+
+    # Breadboard testing
 
     For breadboard testing, this is the layout of the ATTiny1616 chip in SOIC package, where the following pins are missing: 5V_ON, ACCEL_INT, BTN3, BTN2. 
 
@@ -71,6 +74,8 @@ inline Writer debugWrite() {
            <TOSC1> -|            |- QSPI_SS
            <TOSC2> -|            |- PWM_BACKLIGHT
            I2C_SDA -|============|- I2C_SCL
+
+    NOTE: Since the missing pins are effectively floating when in input mode, we cannot use the accel in breadboard mode testing. 
 
  */
 #define AVR_PIN_AVR_TX          gpio::A1
@@ -119,24 +124,28 @@ public:
         // set CLK_PER prescaler to 2, i.e. 10Mhz, which is the maximum the chip supports at voltages as low as 3.0V
         CCP = CCP_IOREG_gc;
         CLKCTRL.MCLKCTRLB = CLKCTRL_PEN_bm;
+        // enable external crystal oscillator for the RTC
+        CCP = CCP_IOREG_gc;
+        CLKCTRL.XOSC32KCTRLA = CLKCTRL_RUNSTDBY_bm | CLKCTRL_ENABLE_bm;
+        
         // initialize the RTC that fires every second for a semi-accurate real time clock keeping on the AVR and start counting
-        // TODO select the external osc for the RTC
-        RTC.CLKSEL = RTC_CLKSEL_INT32K_gc; // run from the internal 32.768kHz oscillator
+        //RTC.CLKSEL = RTC_CLKSEL_INT32K_gc; // run from the internal 32.768kHz oscillator
+        RTC.CLKSEL = RTC_CLKSEL_TOSC32K_gc; // run from the external 32.768kHz oscillator
         RTC.PITINTCTRL |= RTC_PI_bm; // enable the PIT interrupt
         while (RTC.PITSTATUS & RTC_CTRLBUSY_bm);
         RTC.PITCTRLA = RTC_PERIOD_CYC32768_gc | RTC_PITEN_bm;
 
+        // initializes the AVR TX pin for serial debugging
         serial::setAlternateLocation(true);
         serial::initializeTx(RCKID_AVR_SERIAL_SPEED);
 
+        // TODO some initialization routine with checks, etc.
         LOG("SYSTEM RESET DETECTED: " << RSTCTRL.RSTFR);
-        i2c::initializeMaster();
+        initializeMasterMode();
         // TODO scanning I2C devices hangs (!)
-        //detectI2CDevices();
+        detectI2CDevices();
         // setup PMIC, everything else can be setup by the RP2350 when powered on
         // TODO  
-
-        // TODO AVR TX for debugging
 
         powerOn();
 
@@ -144,6 +153,8 @@ public:
         LOG("init done");
         state_.status.setDebugMode(true);
         cpu::delayMs(300);
+
+        //setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
     }
 
     static void loop() {
@@ -155,6 +166,8 @@ public:
                 rumblerTick();
             }
             secondTick();
+            // see if there are ADC measurements to process
+            measureADC();
             // see if there were any I2C commands received and if so, execute
             processI2CCommand();
             // process any interrupt requests
@@ -162,12 +175,9 @@ public:
             // wait for any TX transmissions before going to sleep 
             serial::waitForTx();
             // After everything was processed, go to sleep - we will wake up with the ACCEL or PMIC interrupts, or if in power off mode also by the HOME button interrupt
-            gpio::outputHigh(AVR_PIN_VDD_EN);
             cpu::sei();
             sleep_enable();
             sleep_cpu();
-            gpio::outputLow(AVR_PIN_VDD_EN);
-
         }
     }
 
@@ -239,6 +249,28 @@ public:
             // TODO debug
             gpio::outputFloat(AVR_PIN_AVR_INT);
         );
+    }
+
+    static void chargerConnected() { 
+        setPowerMode(POWER_MODE_CHARGING);
+        setNotification(RGBEffect::Breathe(platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
+    }
+
+    static void chargerDisconnected() {
+        setNotification(RGBEffect::Off());
+        clearPowerMode(POWER_MODE_CHARGING);
+    }
+
+    static void chargerDone() {
+        setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
+    }
+
+    static void chargerError() {
+        // TODO what to do when charger is in error state? 
+    }
+
+    static void lowBatteryWarning() {
+        setNotification(RGBEffect::Breathe(platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
     }
 
     static void powerVDD(bool enable) {
@@ -387,9 +419,15 @@ public:
         state_.time.secondTick();
         if (state_.alarm.check(state_.time)) {
             state_.status.setAlarmInt();
-            // TODO deal with IRQ, powering device on, etc.
+            // power the device on, if not on yet
+            powerOn();
+            // and set the IRQ to notify the RP2350
+            setIrq();
         }
-        //LOG("uptime " << state_.uptime);
+        if (powerMode_ & POWER_MODE_ON) {
+            startADC(ADC_MUXPOS_TEMPSENSE_gc);
+            LOG("uptime " << state_.uptime);
+        }
     }
     //@}
 
@@ -422,12 +460,18 @@ public:
 
     static inline volatile uint8_t intRequests_ = 0;
 
+    static inline uint8_t ramPages_[1024];
+
     static void initializeMasterMode() {
         i2c::initializeMaster();
     }
 
     static void detectI2CDevices() {
         LOG("Scanning I2C devices...");
+        // 0x53 0x68 0x6a
+        // 0x53 == LTR390UV
+        // 0x68 == MPU6500
+        // 0x6a == BQ25895
         for (uint8_t addr = 0; addr < 128; ++addr) {
             if (i2c::isPresent(addr))
                 LOG(addr);
@@ -578,17 +622,28 @@ public:
                 state_.status.clearAlarmInt();
                 break;
             }
-            case cmd::Rumbler::ID: {
-                auto & c = cmd::Rumbler::fromBuffer(state_.buffer);
-                if (c.effect.cycles > 0 && c.effect.strength > 0) {
-                    rumblerEffect_ = c.effect;
-                    rumblerCurrent_ = rumblerEffect_;
-                    rumblerCurrent_.timeOn = 0;
-                    rumblerCurrent_.timeOff = 0;
-                } else {
-                    rumblerEffect_ = RumblerEffect::Off();
-                    rumblerCurrent_ = RumblerEffect::Off();
-                }
+            case cmd::ReadFlashPage::ID: {
+                uint16_t page = cmd::ReadFlashPage::fromBuffer(state_.buffer).page;
+                // TODO - and should we even support this? 
+                break;
+            }
+            case cmd::ReadEEPROMPage::ID: {
+                uint16_t page = cmd::ReadEEPROMPage::fromBuffer(state_.buffer).page;
+                break;
+            }
+            case cmd::ReadRAMPage::ID: {
+                uint16_t page = cmd::ReadRAMPage::fromBuffer(state_.buffer).page;
+                uint16_t offset = page * 32;
+                for (unsigned i = 0; i < 32; ++i)
+                    state_.buffer[i] = ramPages_[offset + i];
+                break;
+            }
+
+            case cmd::WriteRAMPage::ID: {
+                auto & c = cmd::WriteRAMPage::fromBuffer(state_.buffer);
+                uint16_t offset = c.page * 32;
+                for (unsigned i = 0; i < 32; ++i)
+                    ramPages_[offset + i] = c.data[i];
                 break;
             }
             /** Turns the RGB LEDs all off. 
@@ -622,6 +677,39 @@ public:
                 rgbOn(true);
                 break;
             }
+            case cmd::Rumbler::ID: {
+                auto & c = cmd::Rumbler::fromBuffer(state_.buffer);
+                if (c.effect.cycles > 0 && c.effect.strength > 0) {
+                    rumblerEffect_ = c.effect;
+                    rumblerCurrent_ = rumblerEffect_;
+                    rumblerCurrent_.timeOn = 0;
+                    rumblerCurrent_.timeOff = 0;
+                } else {
+                    rumblerEffect_ = RumblerEffect::Off();
+                    rumblerCurrent_ = RumblerEffect::Off();
+                }
+                break;
+            }
+            case cmd::SetNotification::ID: {
+                auto & c = cmd::SetNotification::fromBuffer(state_.buffer);
+                setNotification(c.effect);;
+                break;
+            }
+            // when powered on, the AVR does not directly monitor the charging status, but allows riggering of the charging events by the RP2350 that communicates with the charger
+            case cmd::ChargerConnected::ID:
+                chargerConnected();
+                break;
+            case cmd::ChargerDisconnected::ID:
+                chargerDisconnected();
+                break;
+            case cmd::ChargerDone::ID:
+                chargerDone();
+                break;
+            case cmd::ChargerError::ID:
+                chargerError();
+                break;
+            default:
+                ASSERT(false);
         }
         // and reset the command state so that we can read more commands 
         NO_ISR(
@@ -659,6 +747,7 @@ public:
         gpio::outputLow(AVR_PIN_BTN_CTRL);
         // reset tick counter to be in sync with the button sampling 
         tickCounter_ = 0;
+        homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
     }
 
     static void homeBtnLongPress() {
@@ -679,6 +768,7 @@ public:
             ! gpio::read(AVR_PIN_BTN_3)  // volume down
         );
         // only advance if we are running system ticks
+        // TODO techniclaly this should not be necessary - figure out why it is? do we run systemTick *after* powered off so that it messes with the button row?
         if (powerMode_ != 0) {
             gpio::high(AVR_PIN_BTN_CTRL);
             gpio::low(AVR_PIN_BTN_ABXY);
@@ -737,6 +827,73 @@ public:
     }
     //@}
 
+    /** \name ADC 
+     
+        We use the ADC to measure the temperature, which makes the ADC handling rather simple. The ADC works in a single converstion mode, is triggered manually (e.g. every second for the temperture measurements) and we are notified about the result via interrupt (the ADC can run in standby mode).
+
+        NOTE: For the AAA battery version the ADC will also be used to measure the battery voltage, which will make this slightly more complex, but assuing the APR_INT pin will be used for the battery voltage measurement, we can still use ADC0. 
+     */
+    //@{
+    
+    static void startADC(uint8_t muxpos) {
+        // disable the ADC        
+        ADC0.CTRLA = 0;
+        ADC0.INTCTRL = 0;
+        // set voltage reference to 1v1 for temperature checking
+        VREF.CTRLA &= ~ VREF_ADC0REFSEL_gm;
+        VREF.CTRLA |= VREF_ADC0REFSEL_1V1_gc;
+        // initialize ADC0 common properties without turning it on
+        ADC0.CTRLB = ADC_SAMPNUM_ACC32_gc;
+        ADC0.CTRLD = ADC_INITDLY_DLY32_gc;
+        ADC0.SAMPCTRL = 31;
+        switch (muxpos) {
+            case ADC_MUXPOS_TEMPSENSE_gc:
+                ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_INTREF_gc | ADC_SAMPCAP_bm;
+                ADC0.MUXPOS = ADC_MUXPOS_TEMPSENSE_gc;
+                break;
+            default:
+                ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
+                ADC0.MUXPOS = muxpos;
+                break;
+
+        }
+        // enable the interrupt and start the comversion start the ADC conversion
+        ADC0.INTCTRL = ADC_RESRDY_bm;
+        ADC0.CTRLA = ADC_ENABLE_bm | ADC_RESSEL_10BIT_gc | ADC_RUNSTBY_bm;
+        ADC0.COMMAND = ADC_STCONV_bm;
+    }
+
+    static void measureADC() {
+        if ((ADC0.INTFLAGS & ADC_RESRDY_bm) == 0)
+            return;
+        // clear the flag
+        ADC0.INTFLAGS = ADC_RESRDY_bm;
+        uint16_t value = ADC0.RES / 32;
+        uint8_t muxpos = ADC0.MUXPOS;
+        switch (muxpos) {
+            case ADC_MUXPOS_TEMPSENSE_gc: {
+                int8_t sigrow_offset = SIGROW.TEMPSENSE1; 
+                uint8_t sigrow_gain = SIGROW.TEMPSENSE0;
+                int32_t t = value - sigrow_offset; // Result might overflow 16 bit variable (10bit+8bit)
+                t *= sigrow_gain;
+                // temp is now in kelvin range, to convert to celsius, remove -273.15 (x256)
+                t -= 69926;
+                t += 0x40; // rounding on 0.5 degrees
+                // and now loose precision to 0.5C (x10, i.e. -15 = -1.5C)
+                t = (t >>= 7) * 5;
+                ASSERT(t >= -1000 && t < 1000);
+                state_.temp = static_cast<int16_t>(t);
+                break;
+            }
+            default:
+                // we do not support other ADC channels at this time
+                ASSERT(false);
+        }
+        // turn ADC off to save power
+        ADC0.CTRLA = 0;
+    }
+    //@}
+
     /** \name PWM (Rumbler and Backlight)
 
         The PWM signals used for backlight and rumbler control are generated by the TCB0 and TCB1 respectively.
@@ -747,7 +904,6 @@ public:
 
     static inline RumblerEffect rumblerEffect_;
     static inline RumblerEffect rumblerCurrent_;
-
 
     static void initializePWM() {
         // do not leak voltage and turn the pins as inputs
@@ -767,7 +923,6 @@ public:
         // both interrupts are allowed to run in standby mode
         TCB0.CTRLA |= TCB_RUNSTDBY_bm;
         TCB1.CTRLA |= TCB_RUNSTDBY_bm;
-
     }
 
     static void setBacklightPWM(uint8_t value) {
@@ -843,14 +998,13 @@ public:
     /** \name RGB Effects
      
         The LEDs are powered from a 5V step-up generator that is turned off when the LEDs are not used to conserve power (each neopixel takes a bit more than 1mA even if not on at all).
-    
-     
      */
     //@{
 
     static constexpr unsigned NUM_RGB_LEDS = 6;
 
     static inline bool rgbOn_ = false;
+    static inline RGBEffect notification_{RGBEffect::Off()};
     static inline RGBEffect rgbEffect_[NUM_RGB_LEDS];
     static inline platform::ColorStrip<NUM_RGB_LEDS> rgbTarget_;
     static inline platform::NeopixelStrip<NUM_RGB_LEDS> rgb_{AVR_PIN_RGB};
@@ -877,6 +1031,18 @@ public:
         rgbTicks_ = RGB_TICKS_PER_SECOND;
     }
 
+    /** Sets RGB notification, or turns it off if the effect is Off.  
+     */
+    static void setNotification(RGBEffect effect) {
+        notification_ = effect;
+        if (notification_.active()) {
+            rgbOn(true, false);
+        } 
+        // set target to current top black to ensure smooth transition between the effects
+        for (int i = 0; i < NUM_RGB_LEDS; ++i)
+            rgbTarget_[i] = platform::Color::Black();
+    }
+
     /** Clears the RGBs - disables effects and sets the current and target color to black for immediate switch to black color.
      */
     static void rgbClear() {
@@ -890,36 +1056,48 @@ public:
     static void rgbTick() {
         if (!rgbOn_)
             return;
-        // if there has been second already, decrement effect durations
-        if (--rgbTicks_ == 0) {
-            rgbTicks_ = RGB_TICKS_PER_SECOND;
-            for (int i = 0; i < NUM_RGB_LEDS; ++i) {
-                // see if the effect should end
-                if (rgbEffect_[i].duration > 0) {
-                    if (--rgbEffect_[i].duration == 0) {
-                        rgbEffect_[i].turnOff();
+        if (notification_.active()) {
+            // notifiations do not go away on a timeout, so no need to worry here
+            // for notification, move all LEDs in sync
+            bool done = true;
+            for (int i = 0; i < NUM_RGB_LEDS; ++i)
+                done = done && (! rgb_[i].moveTowards(rgbTarget_[i], notification_.speed));
+            if (done)
+            for (int i = 0; i < NUM_RGB_LEDS; ++i)
+                rgbTarget_[i] = notification_.nextColor(rgbTarget_[i]);
+            rgb_.update(true);
+        } else {
+            // if there has been second already, decrement effect durations
+            if (--rgbTicks_ == 0) {
+                rgbTicks_ = RGB_TICKS_PER_SECOND;
+                for (int i = 0; i < NUM_RGB_LEDS; ++i) {
+                    // see if the effect should end
+                    if (rgbEffect_[i].duration > 0) {
+                        if (--rgbEffect_[i].duration == 0) {
+                            rgbEffect_[i].turnOff();
+                        }
                     }
                 }
             }
-        }
-        // for all LEDs, move them towards their target at speed given by their effect
-        bool turnOff = true;
-        for (int i = 0; i < 6; ++i) {
-            bool done = ! rgb_[i].moveTowards(rgbTarget_[i], rgbEffect_[i].speed);
-            // if the current transition is done, make next effect transition
-            if (done) {
-                rgbTarget_[i] = rgbEffect_[i].nextColor(rgbTarget_[i]);
-                if (rgbEffect_[i].active())
+            // for all LEDs, move them towards their target at speed given by their effect
+            bool turnOff = true;
+            for (int i = 0; i < NUM_RGB_LEDS; ++i) {
+                bool done = ! rgb_[i].moveTowards(rgbTarget_[i], rgbEffect_[i].speed);
+                // if the current transition is done, make next effect transition
+                if (done) {
+                    rgbTarget_[i] = rgbEffect_[i].nextColor(rgbTarget_[i]);
+                    if (rgbEffect_[i].active())
+                        turnOff = false;
+                } else {
                     turnOff = false;
-            } else {
-                turnOff = false;
+                }
             }
+            // if all the LEDs are off, turn the 5V rail off to save power, otherwise update the LEDs
+            if (turnOff)
+                rgbOn(false);
+            else
+                rgb_.update(true);
         }
-        // if all the LEDs are off, turn the 5V rail off to save power, otherwise update the LEDs
-        if (turnOff)
-            rgbOn(false);
-        else
-            rgb_.update(true);
     }
 
     //@}
@@ -932,6 +1110,8 @@ ISR(RTC_PIT_vect) {
     RCKid::secondTick_ = true;
 }
 
+/** RTC CNT interrupt which we use for overflow only for the system tick at ~5ms (200Hz).
+ */
 ISR(RTC_CNT_vect) {
     RTC.INTFLAGS = RTC_OVF_bm; // clear the interrupt
     RCKid::systemTick_ = true;
@@ -940,7 +1120,7 @@ ISR(RTC_CNT_vect) {
 /** I2C slave action.
  */
 ISR(TWI0_TWIS_vect) {
-    RCKid::i2cSlaveIRQHandler();
+    RCKid::i2cSlaveIRQHandler();    
 }
 
 /** Power interrupt ISR.
@@ -973,9 +1153,13 @@ ISR(PORTC_PORT_vect) {
         RCKid::intRequests_ |= RCKid::ACCEL_INT_REQUEST;
 }
 
-
-
-
+/** VCC measurement in sleep node is ready. 
+ */
+ISR(ADC0_RESRDY_vect) {
+    // don't change the flag, we use it, instead disable the interrupt
+    ADC0.INTCTRL = 0;
+    //ADC0.INTFLAGS = ADC_RESRDY_bm;
+}
 
 int main() {
     RCKid::initialize();
