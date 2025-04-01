@@ -241,3 +241,29 @@ inline void hex<uint32_t>::operator()(Writer & writer) {
     writer << "0123456789abcdef"[what_ & 0xf];
 }
 
+/** Binary converter. 
+ */
+template<typename T>
+class bin : public Writer::Converter {
+public:
+    bin(T what, bool header = true): what_{what}, header_{header} {}
+
+    void operator () (Writer & writer);
+private:
+    T what_;
+    bool header_;
+}; // bin
+
+template<>
+inline void bin<uint8_t>::operator()(Writer & writer) {
+    if (header_)
+        writer << '0' << 'b';
+    writer << ((what_ & 128) ? '1' : '0');
+    writer << ((what_ & 64) ? '1' : '0');
+    writer << ((what_ & 32) ? '1' : '0');
+    writer << ((what_ & 16) ? '1' : '0');
+    writer << ((what_ & 8) ? '1' : '0');
+    writer << ((what_ & 4) ? '1' : '0');
+    writer << ((what_ & 2) ? '1' : '0');
+    writer << ((what_ & 1) ? '1' : '0');
+}
