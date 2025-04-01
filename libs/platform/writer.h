@@ -3,6 +3,7 @@
 #include <cstring>
 #include <string>
 #include <functional>
+#include <type_traits>
 
 #if (! defined STR)
 #define STR(...) (StringWriter{} << __VA_ARGS__).str()
@@ -14,28 +15,17 @@
  */
 class Writer {
 public:
+    class Converter{};
 
 #if (defined PLATFORM_NOSTDCPP)
     typedef void (*CharWriter)(char);
-    typedef void (*Converter)(Writer &);
 #else
     using CharWriter = std::function<void(char)>;
-    using Converter = std::function<void(Writer &)>;
 #endif
 
     static constexpr char endl = '\n';
 
     explicit Writer(CharWriter putChar):putChar_{putChar} {}
-
-    Writer & operator << (Converter & conv) {
-        conv(*this);
-        return *this;
-    }
-
-    Writer & operator << (Converter && conv) {
-        conv(*this);
-        return *this;
-    }
 
     Writer & operator << (char const * str) {
         while (*str != 0)
@@ -125,108 +115,129 @@ public:
         return (*this) << static_cast<uint64_t>(value);
     }
 
+    template<typename T>
+    std::enable_if_t<std::is_base_of<Converter, T>::value, Writer &> operator << (T & conv) {
+        conv(*this);
+        return *this;
+    }
+
+    template<typename T>
+    std::enable_if_t<std::is_base_of<Converter, T>::value, Writer &> operator << (T && conv) {
+        conv(*this);
+        return *this;
+    }
+
 private:
 
     CharWriter putChar_;
 }; // Writer
 
-
-#if (! defined PLATFORM_NOSTDCPP)
-/** Very simple string buffer that uses the Writer API to serialize values into a string. 
- */
 class StringWriter {
-public:
-    StringWriter():
-        writer_{[this](char c) { str_ += c; }} {
-    }
-
-    template<typename T>
-    StringWriter & operator << (T x) {
-        writer_ << x;
-        return *this; 
-    }
-
-    std::string str() {
-        return std::move(str_);
-    }
-
-private:
-    std::string str_;
-    Writer writer_;
-
+#if (! defined PLATFORM_NOSTDCPP)
+    public:
+        StringWriter():
+            writer_{[this](char c) { str_ += c; }} {
+        }
+    
+        template<typename T>
+        StringWriter & operator << (T x) {
+            writer_ << x;
+            return *this; 
+        }
+    
+        std::string str() {
+            return std::move(str_);
+        }
+    
+    private:
+        std::string str_;
+        Writer writer_;
+#endif
 }; // StringWriter
 
-/** Writer formatter that ensures width of given value of at least N characters with an optional fill character (defaults to space). 
- */
 template<typename T>
-inline Writer::Converter fillLeft(T const & what, uint32_t width, char fill = ' ') {
-    return [what, width, fill](Writer & writer) mutable {
-        std::string x{STR(what)};
-        while (x.size() < width) {
-            writer << fill;
-            --width;
+class fillLeft : public Writer::Converter {
+public:
+    fillLeft(T const & what, uint32_t width, char fill = ' '):
+        what_{what}, width_{width}, fill_{fill} {}
+    void operator () (Writer & writer) {
+        std::string x{STR(what_)};
+        while (x.size() < width_) {
+            writer << fill_;
+            --width_;
         }
         writer << x;
-    };
-}
+    }
+private:
+    T const & what_;
+    uint32_t width_;
+    char fill_;
+}; // fillLeft
 
 template<typename T>
-inline Writer::Converter fillRight(T const & what, uint32_t width, char fill = ' ') {
-    return [what, width, fill](Writer & writer) mutable {
-        std::string x{STR(what)};
+class fillRight : public Writer::Converter {
+public:
+    fillRight(T const & what, uint32_t width, char fill = ' '):
+        what_{what}, width_{width}, fill_{fill} {}
+    void operator () (Writer & writer) {
+        std::string x{STR(what_)};
         writer << x;
-        while (x.size() < width) {
-            writer << fill;
-            --width;
+        while (x.size() < width_) {
+            writer << fill_;
+            --width_;
         }
-    };
-}
+    }
+private:
+    T const & what_;
+    uint32_t width_;
+    char fill_;
+}; // fillRight
 
+/** Converter that displays numbers in hexadecimal. 
+    
+    The numbers are aligned based on their size and by default contain the `0x` prefix, which can be disabled for more compact output
+ */
 template<typename T>
-Writer::Converter hex(T what, bool header = true);
+class hex : public Writer::Converter {
+public:
+    hex(T what, bool header = true): what_{what}, header_{header} {}
 
-/** Displays the unsigned 8bit number in hex format (aligned). 
- */
+    void operator () (Writer & writer);
+private:
+    T what_;
+    bool header_;
+}; // hex
+
+
 template<>
-inline Writer::Converter hex(uint8_t what, bool header) {
-    return [what, header](Writer & writer) {
-        if (header)
-            writer << '0' << 'x';
-        writer << "0123456789abcdef"[(what >> 4) & 0xf];
-        writer << "0123456789abcdef"[what & 0xf];
-    };
+inline void hex<uint8_t>::operator()(Writer & writer) {
+    if (header_)
+        writer << '0' << 'x';
+    writer << "0123456789abcdef"[(what_ >> 4) & 0xf];
+    writer << "0123456789abcdef"[what_ & 0xf];
 }
 
-/** Displays the unsigned 16bit number in hex format (aligned). 
- */
 template<>
-inline Writer::Converter hex(uint16_t what, bool header) {
-    return [what, header](Writer & writer) {
-        if (header)
-            writer << '0' << 'x';
-        writer << "0123456789abcdef"[what >> 12];
-        writer << "0123456789abcdef"[(what >> 8) & 0xf];
-        writer << "0123456789abcdef"[(what >> 4) & 0xf];
-        writer << "0123456789abcdef"[what & 0xf];
-    };
+inline void hex<uint16_t>::operator()(Writer & writer) {
+    if (header_)
+        writer << '0' << 'x';
+    writer << "0123456789abcdef"[what_ >> 12];
+    writer << "0123456789abcdef"[(what_ >> 8) & 0xf];
+    writer << "0123456789abcdef"[(what_ >> 4) & 0xf];
+    writer << "0123456789abcdef"[what_ & 0xf];
 }
 
-/** Displays the unsigned 32bit number in hex format (aligned). 
- */
 template<>
-inline Writer::Converter hex(uint32_t what, bool header) {
-    return [what, header](Writer & writer) {
-        if (header)
-            writer << '0' << 'x';
-        writer << "0123456789abcdef"[what >> 28];
-        writer << "0123456789abcdef"[(what >> 24) & 0xf];
-        writer << "0123456789abcdef"[(what >> 20) & 0xf];
-        writer << "0123456789abcdef"[(what >> 16) & 0xf];
-        writer << "0123456789abcdef"[(what >> 12) & 0xf];
-        writer << "0123456789abcdef"[(what >> 8) & 0xf];
-        writer << "0123456789abcdef"[(what >> 4) & 0xf];
-        writer << "0123456789abcdef"[what & 0xf];
-    };
+inline void hex<uint32_t>::operator()(Writer & writer) {
+    if (header_)
+        writer << '0' << 'x';
+    writer << "0123456789abcdef"[what_ >> 28];
+    writer << "0123456789abcdef"[(what_ >> 24) & 0xf];
+    writer << "0123456789abcdef"[(what_ >> 20) & 0xf];
+    writer << "0123456789abcdef"[(what_ >> 16) & 0xf];
+    writer << "0123456789abcdef"[(what_ >> 12) & 0xf];
+    writer << "0123456789abcdef"[(what_ >> 8) & 0xf];
+    writer << "0123456789abcdef"[(what_ >> 4) & 0xf];
+    writer << "0123456789abcdef"[what_ & 0xf];
 }
 
-#endif 
