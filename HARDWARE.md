@@ -297,8 +297,6 @@ Remaining functionality is interchangeable as they are used simple digital pins,
 
 Due to low number of pins available, a classic button matrix is used. Buttons are grouped in three columns: DPAD, ABXY (A B Sel and Start, historically) and CTRL (home, vol up & vol down). When the device is power off, the CTRL is the only active group so that Home button interrupt works.
 
-> TODO this is different from mk II - check that home button in the matrix & wakeup works reliably)
-
 ### RTC
 
 In mkII the internal oscillator was used for RTC which led to inaccuracies of up to 10 minutes per day. This time we are using external 32.768 kHz oscillator for better accuracy. The crystal load capacitance per the datasheet (page 511) is max 12.5pF which is the value used, so the same circuit as for the radio should work. 
@@ -412,5 +410,3 @@ Extra PCBs:
 - can the radio extra GPIO be used for audio reset? (this saves one pin on RP2350)
 - this can then become SDcard detection
 - avrTX pin can be used as cartridge detect of needs be
-
-

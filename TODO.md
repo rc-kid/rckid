@@ -1,11 +1,3 @@
-- [ ] check that sleep mode works with RTC
-- [ ] check that power on & off works with RTC
-- [ ] ditch sleep mode if not working (no need for it)
-- [ ] solder headers & debug stuff on the devboard
-- [ ] try powering it on 
-- [ ] debug the I2C master on the breadboard (?)
-
-
 # TODO
 
 - see if we can run at 5MHz and still talk to neopixel
@@ -37,11 +29,19 @@
 - add specialization for 16 bpp bitmap renderColumn that simply does memcopy
 
 
+# PCB Things To Fix
+
+- [ ] RP2350 does not have RUN pin connected (!!)
+
+
 # AVR Breadboard tests
 
 - [ ] create version that uses home button to go to deep sleep and wakes up when home button pressed (to be flashed on device)
+- [ ] add system notification 
+- [ ] verify rumbler & rgb effects
 - [ ] create version that uses home button to power VDD on or off (to be flashed)
-- [ ] verify that UPDI works when AVR powered with 3v3
+- [X] verify that UPDI works when AVR powered with 3v3
+- [ ] switch to external osc for RTC on the devboard
 
 # Devboard Power-Up Sequence
 

@@ -95,7 +95,9 @@ namespace rckid {
 
         Status status;
 
-        // TODO add temperature 
+        /** Temperature in x10 (mind the precision of the measurement at 0.5C).
+         */
+        int16_t temp;
 
         TinyDate time;
 
