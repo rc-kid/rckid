@@ -14,7 +14,12 @@
 #include <platform/peripherals/neopixel.h>
 #include <platform/writer.h>
 #include <platform/tinydate.h>
-#include <platform/ringavg.h>
+
+// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+// flag that can be used to enable breadboard, or device build. The breadboard is only useful while prototyping all breadboard guarded code should eventually disappear
+#define BREADBOARD
+
+// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 
 #undef ASSERT
 #define ASSERT(...) if (!(__VA_ARGS__)) { debugWrite() << "ASSERT " << __LINE__ << "\r\n"; }
@@ -32,6 +37,7 @@ inline Writer debugWrite() {
 }
 //@}
 
+// those have to be included after the debugWrite & LOG declaration above so that we can use RCKid's logging macros
 #include <backend_config.h>
 #include <backend_internals.h>
 #include "avr_state.h"
@@ -113,6 +119,10 @@ using namespace rckid;
     - button matrix
     - rumbler & backlight (PWM)
     - RGB LEDs
+
+    One problem is observability of the AVR state. For general debugging, we have the TX line that can be used to print debug information to serial port, but this has timing effect on the system so may not be perfect. Furthermore it requires the serial monitor to be connected to the device, which is not always practical.
+
+    An alternative is to use debug mode, which can be activated by holding the volume down button while powering the device. When in the debug mode, the rgb colors are turned on immediately after entering the wakeup mode and when powered on, the display brightness is set to 50% immediately. Furthermore the volume keys are not repoprted to the RP2350, but processed by the AVR so that pressing the power up button resets the RP chip, while pressing volume down resets the RP chip into bootloader mode. 
  */
 class RCKid {
 public:
@@ -129,8 +139,11 @@ public:
         CLKCTRL.XOSC32KCTRLA = CLKCTRL_RUNSTDBY_bm | CLKCTRL_ENABLE_bm;
         
         // initialize the RTC that fires every second for a semi-accurate real time clock keeping on the AVR and start counting
-        //RTC.CLKSEL = RTC_CLKSEL_INT32K_gc; // run from the internal 32.768kHz oscillator
+    #ifdef BREADBOARD
+        RTC.CLKSEL = RTC_CLKSEL_INT32K_gc; // run from the internal 32.768kHz oscillator
+    #else
         RTC.CLKSEL = RTC_CLKSEL_TOSC32K_gc; // run from the external 32.768kHz oscillator
+    #endif
         RTC.PITINTCTRL |= RTC_PI_bm; // enable the PIT interrupt
         while (RTC.PITSTATUS & RTC_CTRLBUSY_bm);
         RTC.PITCTRLA = RTC_PERIOD_CYC32768_gc | RTC_PITEN_bm;
@@ -147,15 +160,10 @@ public:
         // setup PMIC, everything else can be setup by the RP2350 when powered on
         // TODO  
 
-        powerOn();
-
-        rgbOn(true);
-        LOG("init done");
-        state_.status.setDebugMode(true);
-        cpu::delayMs(300);
-
-        //setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
-    }
+        // and start the device in powerOff mode, i.e. set sleep mode and start checking ctrl group interrupts
+        stopSystemTicks();
+        set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+   }
 
     static void loop() {
         while (true) {
@@ -187,9 +195,10 @@ public:
      */
     //@{
 
-    static constexpr uint8_t POWER_MODE_CHARGING = 1;
-    static constexpr uint8_t POWER_MODE_WAKEUP = 2;
-    static constexpr uint8_t POWER_MODE_ON = 4;
+    static constexpr uint8_t POWER_MODE_DC = 1;
+    static constexpr uint8_t POWER_MODE_CHARGING = 2;
+    static constexpr uint8_t POWER_MODE_WAKEUP = 4;
+    static constexpr uint8_t POWER_MODE_ON = 8;
     static inline uint8_t powerMode_ = 0;
 
 
@@ -210,6 +219,8 @@ public:
         if (!(powerMode_ & mode))
             return;
         powerMode_ &= ~mode;
+        if (mode == POWER_MODE_ON && state_.status.debugMode())
+            state_.status.setDebugMode(false);
         // if we are transitioning to complete off, stop system ticks and set sleep mode to power down
         if (powerMode_ == 0) {
             LOG("systick stop, sleep pwrdown");
@@ -233,9 +244,6 @@ public:
             i2c::initializeSlave(RCKID_AVR_I2C_ADDRESS);
             TWI0.SCTRLA |= TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm;
             ADC0.CTRLA |= ADC_RUNSTBY_bm;
-
-            // TODO debug
-            gpio::outputLow(AVR_PIN_AVR_INT);
         );
     }
 
@@ -246,22 +254,27 @@ public:
         NO_ISR(
             clearPowerMode(POWER_MODE_ON);
             powerVDD(false);
-            // TODO debug
+            // make the AVR_INT floating so that we do not leak any voltage to the now off RP2350
             gpio::outputFloat(AVR_PIN_AVR_INT);
         );
     }
 
     static void chargerConnected() { 
-        setPowerMode(POWER_MODE_CHARGING);
+        setPowerMode(POWER_MODE_CHARGING | POWER_MODE_DC);
         setNotification(RGBEffect::Breathe(platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
     }
 
     static void chargerDisconnected() {
-        setNotification(RGBEffect::Off());
-        clearPowerMode(POWER_MODE_CHARGING);
+        // no longer in DC mode, go back to system notification for debug mode, if active, or turn system notification off
+        if (state_.status.debugMode())
+            setNotification(RGBEffect::Solid(platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
+        else
+            setNotification(RGBEffect::Off());
+        clearPowerMode(POWER_MODE_CHARGING | POWER_MODE_DC);
     }
 
     static void chargerDone() {
+        clearPowerMode(POWER_MODE_CHARGING);
         setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
     }
 
@@ -271,6 +284,22 @@ public:
 
     static void lowBatteryWarning() {
         setNotification(RGBEffect::Breathe(platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
+    }
+
+    static void enterDebugMode() {
+        LOG("Debug mode on");
+        state_.status.setDebugMode(true);
+        if (! (powerMode_ & POWER_MODE_DC))
+            setNotification(RGBEffect::Solid(platform::Color::White().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
+        if (state_.brightness < 128)
+            setBacklightPWM(128);
+    }
+
+    static void leaveDebugMode() {
+        LOG("Debug mode off");
+        state_.status.setDebugMode(false);
+        if (! (powerMode_ & POWER_MODE_DC))
+            setNotification(RGBEffect::Off());
     }
 
     static void powerVDD(bool enable) {
@@ -365,11 +394,16 @@ public:
         while (RTC.STATUS & RTC_CTRLABUSY_bm);
         RTC.CTRLA = RTC_RUNSTDBY_bm | RTC_RTCEN_bm;
         // whenever system ticks are started, register the IRQ interrupts (rising edge of PWR_INT and ACCEL_INT)
-        // FIXME only use in real board as the pin is floating on attiny1616
-        //GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
+#ifndef BREADBOARD
+        // only use in real board as the pin is floating on attiny3216
+        GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
+#endif
         GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_BOTHEDGES_gc;
         // do not use interrupt on home button (we handle it in the loop due to matrix row rotation)
         GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) &= ~PORT_ISC_gm;
+        // if debug mode is enabled, start system notification to white signifying the debug mode power up
+        if (state_.status.debugMode())
+            setNotification(RGBEffect::Solid(platform::Color::White().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 255));
     }
 
     static void stopSystemTicks() {
@@ -382,12 +416,16 @@ public:
         // allow some time for propagation
         cpu::delayMs(5);
         // enable interrupts for the power down mode where only pin change is available
-        // FIXME only use in real board as the pin is floating on attiny1616
-        //GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
+#ifndef BREADBOARD
+        // only use in real board as the pin is floating on attiny1616
+        GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
+#endif
         GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_BOTHEDGES_gc;
         GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) |= PORT_ISC_BOTHEDGES_gc;
         // disable any pending system tick
         systemTick_ = false;
+        // since we are powering off, make sure the LEDs are off as well so that we do not leak
+        rgbOn(false);
     }
 
     static bool systemTick() {
@@ -478,6 +516,15 @@ public:
             cpu::wdtReset();
             cpu::delayMs(10);
         }
+        // anod now see if we can read from BQ25895
+        /*
+        LOG("BQ25895 register dump:");
+        for (uint8_t i = 0; i < 0x15; ++i) {
+            uint8_t x;
+            i2c::readRegister(0x6a, i, &x, 1);
+            LOG(hex(i) << " = " << hex(x, false) << "(binary " << bin(x, false) << ")");
+        }
+            */
     }
 
     static void processIntRequests() {
@@ -500,11 +547,12 @@ public:
             ASSERT(irqs & HOME_BTN_INT_REQUEST == 0); 
         } else {
             // TODO deal with accel and power interrupts - this probably requires some I2C communcation to determine what is going on
-            // if the power button is pressed, wake up 
-            // TODO this should really go to the wakeup mode and do the long press check accordingly in the future
+            // if the power button is pressed, wake up - enter the debug mode depending on whether the volume down button is pressed
             if (irqs & HOME_BTN_INT_REQUEST) {
-                // enter the wakeup mode
                 setPowerMode(POWER_MODE_WAKEUP);
+                // enable debug mode if volume down is pressed
+                if (! gpio::read(AVR_PIN_BTN_3))
+                    enterDebugMode();
             }
         }
     }
@@ -516,8 +564,9 @@ public:
             if (irq_)
                 return;
             irq_ = true;
-            // TODO enable this once we move from breadboard
-            //gpio::outputLow(AVR_PIN_AVR_INT);
+#ifndef BREADBOARD            
+            gpio::outputLow(AVR_PIN_AVR_INT);
+#endif
         );        
     }
 
@@ -596,12 +645,10 @@ public:
                 // TODO
                 break;
             case cmd::DebugModeOn::ID:
-                LOG("Debug mode on");
-                state_.status.setDebugMode(true);
+                enterDebugMode();
                 break;
             case cmd::DebugModeOff::ID:
-                LOG("Debug mode off");
-                state_.status.setDebugMode(false);
+                leaveDebugMode();
                 break;
             case cmd::SetBrightness::ID: {
                 uint8_t value = cmd::SetBrightness::fromBuffer(state_.buffer).value;
@@ -779,13 +826,16 @@ public:
                 homeBtnLongPress();
         }
         if (changed) {
-            LOG("Ctrl btns: " << state_.status.btnHome() << " " << state_.status.btnVolumeUp() << " " << state_.status.btnVolumeDown());
+            LOG("CTRL: " << state_.status.btnHome() << " " << state_.status.btnVolumeUp() << " " << state_.status.btnVolumeDown());
             if (! state_.status.btnHome()) {
                 homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
                 clearPowerMode(POWER_MODE_WAKEUP);
             }
             if (state_.status.debugMode()) {
-                /* TODO enable this after we leave breadboard where the extra pins do not work
+#ifndef BREADBOARD
+                if (powerMode_ && POWER_MODE_WAKEUP && ! state_.btnVolumeUp())
+                    leaveDebugMode();
+                // the extra button pins are not available on breadboard so the readings are useless
                 if (state_.status.btnVolumeUp()) {
                     rebootRP();
                     return;
@@ -794,7 +844,7 @@ public:
                     bootloaderRP();
                     return;
                 }
-                */
+#endif
             }
             setIrq();
         }
@@ -809,8 +859,11 @@ public:
         );
         gpio::high(AVR_PIN_BTN_ABXY);
         gpio::low(AVR_PIN_BTN_DPAD);
-        if (changed)
+        if (changed) {
+            LOG("ABXY: " << state_.status.btnA() << " " << state_.status.btnB() << " " << state_.status.btnSelect() << " " << state_.status.btnStart());
             setIrq();
+        }
+
     }
 
     static void readDPadGroup() {
@@ -822,8 +875,10 @@ public:
         );
         gpio::high(AVR_PIN_BTN_DPAD);
         gpio::low(AVR_PIN_BTN_CTRL);
-        if (changed)
+        if (changed) {
+            LOG("DPAD: " << state_.status.btnLeft() << " " << state_.status.btnRight() << " " << state_.status.btnUp() << " " << state_.status.btnDown());
             setIrq();
+        }
     }
     //@}
 
@@ -855,7 +910,6 @@ public:
                 ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
                 ADC0.MUXPOS = muxpos;
                 break;
-
         }
         // enable the interrupt and start the comversion start the ADC conversion
         ADC0.INTCTRL = ADC_RESRDY_bm;
