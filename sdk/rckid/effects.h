@@ -56,8 +56,8 @@ namespace rckid {
             return RGBEffect{Kind::Off, 0, 0};
         }
 
-        static RGBEffect Solid(Color color, uint8_t duration = 0) {
-            RGBEffect result{Kind::Solid, 0, duration};
+        static RGBEffect Solid(Color color, uint8_t speed = 1, uint8_t duration = 0) {
+            RGBEffect result{Kind::Solid, speed, duration};
             result.setColor(color);
             return result;
         }

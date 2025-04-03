@@ -1,5 +1,8 @@
 # TODO
 
+- could this be better PMIC? https://www.ti.com/product/BQ25628
+- slimmer connector https://jlcpcb.com/partdetail/XkbConnection-X05A10H40G/C528037
+
 - see if we can run at 5MHz and still talk to neopixel
 
 - writer in non-functional mode should be able to use hex stuff by passing pointer to stuff and some such
@@ -32,16 +35,18 @@
 # PCB Things To Fix
 
 - [ ] RP2350 does not have RUN pin connected (!!)
+- [ ] VREG_VIN should go to IOVDD
+- [ ] ADC_AVDD should to to IOVDD (?)
 
 
 # AVR Breadboard tests
 
 - [ ] create version that uses home button to go to deep sleep and wakes up when home button pressed (to be flashed on device)
-- [ ] add system notification 
+- [X] add system notification 
 - [ ] verify rumbler & rgb effects
 - [ ] create version that uses home button to power VDD on or off (to be flashed)
 - [X] verify that UPDI works when AVR powered with 3v3
-- [ ] switch to external osc for RTC on the devboard
+- [X] switch to external osc for RTC on the devboard
 
 # Devboard Power-Up Sequence
 
