@@ -31,7 +31,7 @@ namespace rckid {
          */
         char * end() { return start() + size(); }
 
-        size_t size() { return header_ & ~3; }
+        uint32_t size() { return header_ & ~3; }
 
         /** Sets size of the chunk and marks it as allocated.
          */

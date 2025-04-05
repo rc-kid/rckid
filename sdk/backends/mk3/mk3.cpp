@@ -7,7 +7,44 @@
 #error "You are building fantasy (RayLib) backend without the indicator macro"
 #endif
 
+#include <pico/rand.h>
+#include <bsp/board.h>
+#include "tusb_config.h"
+#include "tusb.h"
+
+extern "C" {
+    #include <hardware/structs/usb.h>
+    #include <hardware/uart.h>
+    #include <hardware/flash.h>
+}
+
 #include "rckid/rckid.h"
+
+#include "rckid/rckid.h"
+
+extern "C" {
+    extern uint8_t __cartridge_filesystem_start;
+    extern uint8_t __cartridge_filesystem_end;
+}
+
+extern "C" {
+    // implement not really working entropy function to silence the linker warning
+    int _getentropy([[maybe_unused]] void *buffer, [[maybe_unused]] size_t length) {
+        errno = ENOSYS;
+        return -1;
+    }    
+}
+
+extern "C" {
+    void *__wrap_malloc(size_t numBytes) { return rckid::Heap::allocBytes(numBytes); }
+    void __wrap_free(void * ptr) { rckid::Heap::free(ptr); }
+
+    void *__wrap_calloc(size_t numBytes) {
+        void * result = rckid::Heap::allocBytes(numBytes);
+        memset(result, 0, numBytes);
+        return result;
+    }
+}
 
 namespace rckid {
 
@@ -23,6 +60,10 @@ namespace rckid {
     }
 
     Writer debugWrite() {
+        UNIMPLEMENTED;
+    }
+
+    uint8_t debugRead(bool echo) {
         UNIMPLEMENTED;
     }
 
@@ -112,6 +153,10 @@ namespace rckid {
 
     void displaySetUpdateRegion(Rect value) {
         UNIMPLEMENTED;
+    }
+
+    void displaySetUpdateRegion(Coord width, Coord height) {
+        displaySetUpdateRegion(Rect::XYWH((RCKID_DISPLAY_WIDTH - width) / 2, (RCKID_DISPLAY_HEIGHT - height) / 2, width, height));
     }
 
     bool displayUpdateActive() {
@@ -219,6 +264,26 @@ namespace rckid {
     }
 
     void cartridgeErase(uint32_t start) {
+        UNIMPLEMENTED;
+    }
+
+    // rumbler
+
+    void rumblerEffect(RumblerEffect const & effect) {
+        UNIMPLEMENTED;
+    }
+
+    // rgb
+
+    void rgbEffect(uint8_t rgb, RGBEffect const & effect) {
+        UNIMPLEMENTED;
+    }
+    
+    void rgbEffects(RGBEffect const & a, RGBEffect const & b, RGBEffect const & dpad, RGBEffect const & sel, RGBEffect const & start) {
+        UNIMPLEMENTED;
+    }
+    
+    void rgbOff() {
         UNIMPLEMENTED;
     }
 
