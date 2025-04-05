@@ -671,13 +671,21 @@ public:
             }
             case cmd::ReadFlashPage::ID: {
                 uint16_t page = cmd::ReadFlashPage::fromBuffer(state_.buffer).page;
-                // TODO - and should we even support this? 
+                // flash is mapped to 0x8000 for LD/ST instructions
+                uint8_t * addr = 0x8000 + (page * 128);
+                for (unsigned i = 0; i < 128; ++i)
+                    state_.buffer[i] = *(addr + i);
                 break;
             }
             case cmd::ReadEEPROMPage::ID: {
+                static_assert(EEPROM_START == 0x1400); // from the datasheet
                 uint16_t page = cmd::ReadEEPROMPage::fromBuffer(state_.buffer).page;
+                uint8_t * addr = EEPROM_START + (page * 32);
+                for (unsigned i = 0; i < 32; ++i)
+                    state_.buffer[i] = *(addr + i);
                 break;
             }
+
             case cmd::ReadRAMPage::ID: {
                 uint16_t page = cmd::ReadRAMPage::fromBuffer(state_.buffer).page;
                 uint16_t offset = page * 32;
@@ -686,6 +694,17 @@ public:
                 break;
             }
 
+            case cmd::WriteFlashPage::ID: {
+                // TODO unlock the flash update
+                auto & c = cmd::WriteFlashPage::fromBuffer(state_.buffer);
+                uint8_t * addr = 0x8000 + (c.page * 128);
+                for (unsigned i = 0; i < 128; ++i)
+                    *(addr++) = c.data[i];
+                // and write the page
+                _PROTECTED_WRITE_SPM(NVMCTRL.CTRLA, NVMCTRL_CMD_PAGEERASEWRITE_gc);
+                while (NVMCTRL.STATUS & (NVMCTRL_FBUSY_bm | NVMCTRL_EEBUSY_bm));
+                break;
+            }
             case cmd::WriteRAMPage::ID: {
                 auto & c = cmd::WriteRAMPage::fromBuffer(state_.buffer);
                 uint16_t offset = c.page * 32;

@@ -14,7 +14,7 @@ namespace rckid::cmd {
             }                                                        \
             __VA_ARGS__                                              \
         });                                                          \
-        static_assert(sizeof(NAME) <= 35)              
+        static_assert(sizeof(NAME) <= 131)              
 
     COMMAND(0, Nop);
     COMMAND(1, PowerOff);
@@ -61,11 +61,19 @@ namespace rckid::cmd {
         ReadRAMPage(uint16_t page): page{page} {}
     );
 
-    COMMAND(43, WriteRAMPage,
+    COMMAND(43, WriteFlashPage,
+        uint16_t page;
+        uint8_t data[128];
+        WriteFlashPage(uint16_t page, int8_t const * data): page{page} {
+            memcpy(this->data, data, sizeof(data));
+        }
+    );
+
+    COMMAND(44, WriteRAMPage,
         uint16_t page;
         uint8_t data[32];
         WriteRAMPage(uint16_t page, uint8_t const * data): page{page} {
-            memcpy(this->data, data, 32);
+            memcpy(this->data, data, sizeof(data));
         }
     );
 

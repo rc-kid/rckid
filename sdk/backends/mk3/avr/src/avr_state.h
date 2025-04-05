@@ -106,9 +106,9 @@ namespace rckid {
         uint8_t brightness = RCKID_DISPLAY_BRIGHTNESS;
         uint32_t uptime = 0;
 
-        /** Communications buffer. This is where commands are stored and where extra commands store the data they wish to transfer to the RP. The size is enough for a single byte command and 32 byte payload. 
+        /** Communications buffer. This is where commands are stored and where extra commands store the data they wish to transfer to the RP. The size is large enough to 1 byte command, 2 byte page number and 128 byte data, which is necessary to program flash pages on the device.
          */
-        uint8_t buffer[33];
+        uint8_t buffer[131];
 
     }; // rckid::AVRState
 
