@@ -9,12 +9,10 @@ endif()
 
 message("RCKID: mk3 backend selected (RP2350)")
 
-file(GLOB_RECURSE SRC "mk2.cpp" "sd/*.cpp" "usb/*.cpp" "screen/*.cpp" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.h" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.cpp")
+file(GLOB_RECURSE SRC "mk3.cpp" "sd/*.cpp" "usb/*.cpp" "screen/*.cpp" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.h" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.cpp")
 add_library(librckid STATIC ${SRC})
 
-pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/mic_pdm.pio)
-pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/screen/ST7789_rgb.pio)
-pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/screen/ST7789_rgb_double.pio)
+pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/screen/ST7789_rgb16.pio)
 
 # Sets given project to be used with RCKid SDK. 
 #
@@ -28,7 +26,7 @@ function(link_with_librckid target_name)
     target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/sdk/backends/mk3/usb")
     if (target_type STREQUAL "EXECUTABLE")
         pico_add_extra_outputs(${target_name})
-        pico_set_linker_script(${target_name} ${CMAKE_SOURCE_DIR}/sdk/backends/mk2/memmap.ld)
+        pico_set_linker_script(${target_name} ${CMAKE_SOURCE_DIR}/sdk/backends/mk3/memmap.ld)
         target_link_libraries(${target_name} PRIVATE librckid)
         #set_property(TARGET ${target_name} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
     endif()

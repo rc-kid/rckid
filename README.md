@@ -49,7 +49,7 @@ To build RCKid for the device (mk III in this example), do the following:
 
     mkdir build-mk3
     cd build-mk3
-    cmake .. -DARCH=ARCH_RCKID_3
+    cmake .. -DRCKID_BACKEND=MK3
     cmake --build .
 
 And finally, under Windows, enter the Visual Studio Developers prompt and then type:

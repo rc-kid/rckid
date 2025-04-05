@@ -2,11 +2,10 @@
 
     This is RCKid backend template. The functions below have to be implemented in order to port the RCKid SDK to a new platform.
  */
+
 #ifndef RCKID_BACKEND_XXXYYY
 #error "You are building XXXYYY backend without the indicator macro"
 #endif
-
-#include "rckid/rckid.h"
 
 namespace rckid {
 
@@ -22,6 +21,10 @@ namespace rckid {
     }
 
     Writer debugWrite() {
+        UNIMPLEMENTED;
+    }
+
+    uint8_t debugRead(bool echo) {
         UNIMPLEMENTED;
     }
 
@@ -110,6 +113,10 @@ namespace rckid {
     }
 
     void displaySetUpdateRegion(Rect value) {
+        UNIMPLEMENTED;
+    }
+
+    void displaySetUpdateRegion(Coord width, Coord height) {
         UNIMPLEMENTED;
     }
 
