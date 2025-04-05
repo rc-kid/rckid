@@ -277,4 +277,37 @@ namespace rckid {
 
     void cartridgeErase(uint32_t start);
 
+
+    /** \page sdk
+        \section rumbler Rumbler
+
+        RCKid supports a simple rumbler inyterface, where the rumbler motor can be turned on (with given intensity), off, or a specific effect can be played. The effect is a simple repeated on/off cycle with given strength, time on, time off and number of cycles. The rumbler can be used to signal various events, such as notifications, or to provide haptic feedback in games.
+     */
+    //@{
+    void rumblerEffect(RumblerEffect const & effect);
+    
+    inline void rumblerOn(uint8_t strength) {
+        rumblerEffect(RumblerEffect{strength, 0, 0, 0});
+    }
+
+    inline void rumblerOff() {
+        rumblerEffect(RumblerEffect::Off());
+    }
+    //@}
+
+    /** \page sdk
+        \section rgb RGB LEDs
+
+        RCKid has an RGB LED under every front facing buttons. Together those LEDs can be used to signal various events, or to provide visual feedback in games. The LEDs can be set to a specific color, or a specific effect can be played. The effects support animations, such as breathing, rainbow, etc. The effects are defined in the rckid::RGBEffect class. 
+     */
+    //@{
+
+    void rgbEffect(uint8_t rgb, RGBEffect const & effect);
+
+    void rgbEffects(RGBEffect const & a, RGBEffect const & b, RGBEffect const & dpad, RGBEffect const & sel, RGBEffect const & start);
+    
+    void rgbOff();
+
+    //@}
+
 } // namespace rckid

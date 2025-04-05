@@ -108,6 +108,24 @@ namespace rckid {
             Color color_;
             Rainbow rainbow_;
         });
+
+        friend Writer & operator << (Writer & w, RGBEffect const & e) {
+            switch (e.kind) {
+                case Kind::Off:
+                    w << "off";
+                    return w;
+                case Kind::Solid:
+                    w << "solid: " << hex(e.color_.r, false) << hex(e.color_.g, false) << hex(e.color_.b, false);
+                    break;
+                case Kind::Breathe:
+                    w << "breathe: " << hex(e.color_.r, false) << hex(e.color_.g, false) << hex(e.color_.b, false);
+                    break;
+                case Kind::Rainbow:
+                    w << "rainbow: hue: " << e.rainbow_.hue << ", step: " << e.rainbow_.step << ", brightness: " << e.rainbow_.brightness;
+                    break;
+            }
+            return w << ", speed: " << e.speed << ", duration: " << e.duration;
+        }
         
     }); // RCKid::RGBEffect
 
@@ -135,6 +153,9 @@ namespace rckid {
 
         static RumblerEffect Off() { return RumblerEffect{}; }
 
+        friend Writer & operator << (Writer & w, RumblerEffect const & e) {
+            return w << "strength: " << e.strength << ", tOn: " << e.timeOn << ", tOff" <<  e.timeOff << ", cycles: " << e.cycles;
+        }
 
     }); // rckid::RumblerEffect
     

@@ -8,8 +8,6 @@
 
 #include "rckid/rckid.h"
 
-
-
 namespace rckid {
 
     // forward declaration of the bsod function
@@ -220,6 +218,26 @@ namespace rckid {
     }
 
     void cartridgeErase(uint32_t start) {
+        UNIMPLEMENTED;
+    }
+
+    // rumbler
+
+    void rumblerEffect(RumblerEffect const & effect) {
+        UNIMPLEMENTED;
+    }
+
+    // rgb
+
+    void rgbEffect(uint8_t rgb, RGBEffect const & effect) {
+        UNIMPLEMENTED;
+    }
+    
+    void rgbEffects(RGBEffect const & a, RGBEffect const & b, RGBEffect const & dpad, RGBEffect const & sel, RGBEffect const & start) {
+        UNIMPLEMENTED;
+    }
+    
+    void rgbOff() {
         UNIMPLEMENTED;
     }
 
