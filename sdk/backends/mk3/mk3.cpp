@@ -18,6 +18,8 @@ extern "C" {
     #include <hardware/flash.h>
 }
 
+#include "screen/ST7789.h"
+#include "sd/sd.h"
 #include "rckid/rckid.h"
 
 #include "rckid/rckid.h"
@@ -56,11 +58,23 @@ namespace rckid {
     }
 
     void fatalError(uint32_t error, uint32_t line, char const * file) {
-        UNIMPLEMENTED;
+        // simply go top BSOD - no need for HW cleanup
+        bsod(error, line, file);
     }
 
     Writer debugWrite() {
-        UNIMPLEMENTED;
+        return Writer{[](char x) {
+#if (defined RCKID_LOG_TO_SERIAL)
+            uart_putc(uart0, x);
+#else
+            if (x == '\n') {
+                tud_cdc_write("\r\n", 2);
+                tud_cdc_write_flush();            
+            } else {
+                tud_cdc_write(& x, 1);
+            }
+#endif
+        }};
     }
 
     uint8_t debugRead(bool echo) {
@@ -76,11 +90,15 @@ namespace rckid {
     }
 
     void yield() {
-        UNIMPLEMENTED;
+#if (defined RCKID_ENABLE_STACK_PROTECTION)
+        memoryCheckStackProtection();
+#endif
+        tight_loop_contents();
+        tud_task();
     }
 
     uint32_t uptimeUs() {
-        UNIMPLEMENTED;
+        return time_us_32();
     }
 
     // io
@@ -132,11 +150,11 @@ namespace rckid {
     // display
 
     DisplayRefreshDirection displayRefreshDirection() {
-        UNIMPLEMENTED;
+        return ST7789::refreshDirection();
     }
 
     void displaySetRefreshDirection(DisplayRefreshDirection value) {
-        UNIMPLEMENTED;
+        ST7789::setRefreshDirection(value);
     }
 
     uint8_t displayBrightness() {
@@ -148,11 +166,11 @@ namespace rckid {
     }
 
     Rect displayUpdateRegion() {
-        UNIMPLEMENTED;
+        return ST7789::updateRegion();
     }
 
     void displaySetUpdateRegion(Rect value) {
-        UNIMPLEMENTED;
+        ST7789::setUpdateRegion(value);
     }
 
     void displaySetUpdateRegion(Coord width, Coord height) {
@@ -160,23 +178,25 @@ namespace rckid {
     }
 
     bool displayUpdateActive() {
-        UNIMPLEMENTED;
+        return ST7789::dmaUpdateInProgress();
     }
 
     void displayWaitUpdateDone() {
-        UNIMPLEMENTED;
+        // TODO can we be smarter here and go to sleep?  
+        while (displayUpdateActive())
+            yield();
     }
 
     void displayWaitVSync() {
-        UNIMPLEMENTED;
+        ST7789::waitVSync();
     }
 
     void displayUpdate(uint16_t const * pixels, uint32_t numPixels, DisplayUpdateCallback callback) {
-        UNIMPLEMENTED;
+        ST7789::dmaUpdateAsync(pixels, numPixels, callback);
     }
 
     void displayUpdate(uint16_t const * pixels, uint32_t numPixels) {
-        UNIMPLEMENTED;
+        ST7789::dmaUpdateAsync(pixels, numPixels);
     }
 
     // audio
@@ -225,46 +245,53 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
-    // SD Card access
+    // SD Card access is in sd/sd.cpp file
 
-    uint32_t sdCapacity() {
-        UNIMPLEMENTED;
-    }
+    // uint32_t sdCapacity() {}
 
-    bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {
-        UNIMPLEMENTED;
-    }
+    // bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {}
 
-    bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks) {
-        UNIMPLEMENTED;
-    }
+    // bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks) {}
 
     // Cartridge filesystem access
 
     uint32_t cartridgeCapacity() { 
-        UNIMPLEMENTED;
+        return &__cartridge_filesystem_end - &__cartridge_filesystem_start;
     }
 
     uint32_t cartridgeWriteSize() { 
-        UNIMPLEMENTED;
-        return 256; 
+        return FLASH_PAGE_SIZE; // 256
     }
 
     uint32_t cartridgeEraseSize() { 
-        UNIMPLEMENTED;
-        return 4096; 
+        return FLASH_SECTOR_SIZE; // 4096
     }
 
     void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
-        UNIMPLEMENTED;
+        // since flash is memory mapped via XIP, all we need to do is aggregate offset properly 
+        memcpy(buffer, XIP_NOCACHE_NOALLOC_BASE + (&__cartridge_filesystem_start - XIP_BASE) + start, numBytes);
     }
 
     void cartridgeWrite(uint32_t start, uint8_t const * buffer) {
-        UNIMPLEMENTED;
+        ASSERT(start < cartridgeCapacity());
+        ASSERT(start + FLASH_PAGE_SIZE <= cartridgeCapacity());
+        uint32_t offset = reinterpret_cast<uint32_t>(& __cartridge_filesystem_start) - XIP_BASE + start;
+        LOG(LL_LFS, "flash_range_program(" << offset << ", " << (uint32_t)FLASH_PAGE_SIZE << ") - start " << start);
+        uint32_t ints = save_and_disable_interrupts();
+        flash_range_program(offset, buffer, FLASH_PAGE_SIZE);
+        restore_interrupts(ints);
     }
 
     void cartridgeErase(uint32_t start) {
-        UNIMPLEMENTED;
+        ASSERT(start < cartridgeCapacity());
+        ASSERT(start + FLASH_SECTOR_SIZE <= cartridgeCapacity());
+        uint32_t offset = reinterpret_cast<uint32_t>(& __cartridge_filesystem_start) - XIP_BASE + start;
+        //TRACE_LITTLEFS("cart_fs_start: " << (uint32_t)(& __cartridge_filesystem_start));         
+        //TRACE_LITTLEFS("XIP_BASE:      " << (uint32_t)(XIP_BASE));
+        LOG(LL_LFS, "flash_range_erase(" << offset << ", " << (uint32_t)FLASH_SECTOR_SIZE << ") -- start " << start);
+        uint32_t ints = save_and_disable_interrupts();
+        flash_range_erase(offset, FLASH_SECTOR_SIZE);
+        restore_interrupts(ints);
     }
 
     // rumbler
