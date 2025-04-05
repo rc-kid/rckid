@@ -629,4 +629,31 @@ namespace rckid {
         }
     }
 
+    // rumbler
+    void rumblerEffect(RumblerEffect const & effect) {
+        if (effect.strength == 0)
+            LOG(LL_INFO, "rumbler: off");
+        else  
+            LOG(LL_INFO, "rumbler: " << effect);
+    }
+
+    // rgb
+
+    void rgbEffect(uint8_t rgb, RGBEffect const & effect) {
+        LOG(LL_INFO, "rgb: " << rgb << ", effect: " << effect);
+    }
+    
+    void rgbEffects(RGBEffect const & a, RGBEffect const & b, RGBEffect const & dpad, RGBEffect const & sel, RGBEffect const & start) {
+        LOG(LL_INFO, "rgb: a,     effect: " << a);
+        LOG(LL_INFO, "rgb: b,     effect: " << b);
+        LOG(LL_INFO, "rgb: dpad,  effect: " << dpad);
+        LOG(LL_INFO, "rgb: sel,   effect: " << sel);
+        LOG(LL_INFO, "rgb: start, effect: " << start);
+    }
+    
+    void rgbOff() {
+        LOG(LL_INFO, "rgb: off");
+    }
+
+
 }
