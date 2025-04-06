@@ -1,7 +1,6 @@
 # TODO
 
 - could this be better PMIC? https://www.ti.com/product/BQ25628
-- or maybe even LTC3555, which integrates DC convertors 
 - slimmer connector https://jlcpcb.com/partdetail/XkbConnection-X05A10H40G/C528037
 
 - see if we can run at 5MHz and still talk to neopixel

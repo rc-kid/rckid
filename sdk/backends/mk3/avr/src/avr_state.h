@@ -12,6 +12,10 @@ namespace rckid {
     class AVRState {
     public:
         /** Status information, which is a 2 byte structure containing the most important state information, such as button states and interrupt flags. 
+         
+            The status is 3 bytes, first two bytes are mostly button states, with the second button also containing the bootloader & debug mode flags. Those are identical for the whole power on state, but we have space there. The last byte is the state of interrupts and it requires special handling. Its value is only or'd with new updates and the only way to clear it is to call the clearInterrupts() method. 
+
+            Furthermore on the AVR, this byte can only be changed when interrupts are disabled, as it is automatically cleared when the state is transmitted. 
          */
         PACKED(class Status {
         public:
@@ -29,19 +33,34 @@ namespace rckid {
             bool btnVolumeUp()   const { return b_ & BTN_VOLUMEUP; }
             bool btnVolumeDown() const { return b_ & BTN_VOLUMEDOWN; }
 
-            bool pwrInt()        const { return b_ & PWR_INT; }
-            bool accelInt()      const { return b_ & ACCEL_INT; }
-            bool alarmInt()      const { return b_ & ALARM_INT; }
+            bool pwrInt()        const { return c_ & PWR_INT; }
+            bool accelInt()      const { return c_ & ACCEL_INT; }
+            bool alarmInt()      const { return c_ & ALARM_INT; }
+            bool secondInt()     const { return c_ & SECOND_INT; }
 
-            bool debugMode() const { return b_ & DEBUG_MODE; }
+            bool debugMode()      const { return b_ & DEBUG_MODE; }
             bool bootloaderMode() const { return b_ & BOOTLOADER_MODE; }
+
+            /** Updates the AVR status. This changes the values of the buttons immediately, but ors the interrupts so that no interrupts are ever lost. To clear the interrupts, use the clearInterrupts() method.
+             
+             */
+            void updateWith(Status const & other) {
+                a_ = other.a_;
+                b_ = other.b_;
+                // or interrupts, but update the debug & bootloader states
+                c_ = c_ | other.c_;
+            }
+
+            /** Clears the interrupts.
+             */
+            void clearInterrupts() { c_ = 0; }
 
         private:
 
-            void setAlarmInt() { b_ |= ALARM_INT; }
-            void setAccelInt() { b_ |= ACCEL_INT; }
-            void setPwrInt() { b_ |= PWR_INT; }
-            void clearAlarmInt() { b_ &= ~ALARM_INT; }
+            void setPwrInt() { c_ |= PWR_INT; }
+            void setAccelInt() { c_ |= ACCEL_INT; }
+            void setAlarmInt() { c_ |= ALARM_INT; }
+            void setSecondInt() { c_ |= SECOND_INT; }
 
             bool setDPadButtons(bool left, bool right, bool up, bool down) {
                 uint8_t aa = (a_ & 0xf0) | ((left ? BTN_LEFT : 0) | (right ? BTN_RIGHT : 0) | (up ? BTN_UP : 0) | (down ? BTN_DOWN : 0));
@@ -71,25 +90,30 @@ namespace rckid {
 
             friend class ::RCKid;
 
-            static constexpr unsigned BTN_LEFT        = 1;
-            static constexpr unsigned BTN_RIGHT       = 2;
-            static constexpr unsigned BTN_UP          = 4;
-            static constexpr unsigned BTN_DOWN        = 8;
-            static constexpr unsigned BTN_A           = 16;
-            static constexpr unsigned BTN_B           = 32;
-            static constexpr unsigned BTN_SELECT      = 64;
-            static constexpr unsigned BTN_START       = 128;
+            static constexpr uint8_t BTN_LEFT        = 1;
+            static constexpr uint8_t BTN_RIGHT       = 2;
+            static constexpr uint8_t BTN_UP          = 4;
+            static constexpr uint8_t BTN_DOWN        = 8;
+            static constexpr uint8_t BTN_A           = 16;
+            static constexpr uint8_t BTN_B           = 32;
+            static constexpr uint8_t BTN_SELECT      = 64;
+            static constexpr uint8_t BTN_START       = 128;
             uint8_t a_ = 0;
 
-            static constexpr unsigned BTN_HOME        = 1;
-            static constexpr unsigned BTN_VOLUMEUP    = 2;
-            static constexpr unsigned BTN_VOLUMEDOWN  = 4;
-            static constexpr unsigned PWR_INT         = 8;
-            static constexpr unsigned ACCEL_INT       = 16;
-            static constexpr unsigned ALARM_INT       = 32;
-            static constexpr unsigned DEBUG_MODE      = 64;
-            static constexpr unsigned BOOTLOADER_MODE = 128;
+            static constexpr uint8_t BTN_HOME        = 1;
+            static constexpr uint8_t BTN_VOLUMEUP    = 2;
+            static constexpr uint8_t BTN_VOLUMEDOWN  = 4;
+
+            static constexpr uint8_t DEBUG_MODE      = 64;
+            static constexpr uint8_t BOOTLOADER_MODE = 128;
             uint8_t b_ = 0;
+
+            static constexpr uint8_t PWR_INT         = 1;
+            static constexpr uint8_t ACCEL_INT       = 2;
+            static constexpr uint8_t ALARM_INT       = 4;
+            static constexpr uint8_t SECOND_INT      = 8;
+
+            uint8_t c_ = 0;
 
         }); // AVRState::Status
 
@@ -107,10 +131,17 @@ namespace rckid {
         uint8_t brightness = RCKID_DISPLAY_BRIGHTNESS;
         uint32_t uptime = 0;
 
+    }; // rckid::AVRState
+
+    /** The entire transferrable state, which consists of the AVR state itself as well as the communications buffer. On the AVR side, this is used to store the state & buffer close together so that it can be send as one consecutive memory block. 
+     */
+    class TransferrableState : public AVRState {
+    public:
+
         /** Communications buffer. This is where commands are stored and where extra commands store the data they wish to transfer to the RP. The size is large enough to 1 byte command, 2 byte page number and 128 byte data, which is necessary to program flash pages on the device.
          */
         uint8_t buffer[131];
 
-    }; // rckid::AVRState
+    }; 
 
 } // namespace rckid

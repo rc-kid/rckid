@@ -456,13 +456,21 @@ public:
         ++state_.uptime;
         state_.time.secondTick();
         if (state_.alarm.check(state_.time)) {
-            state_.status.setAlarmInt();
             // power the device on, if not on yet
             powerOn();
             // and set the IRQ to notify the RP2350
-            setIrq();
+            NO_ISR(
+                state_.status.setAlarmInt();
+                setIrq();
+            );
         }
         if (powerMode_ & POWER_MODE_ON) {
+            // tell RP to increase second
+            NO_ISR(
+                state_.status.setSecondInt();
+                setIrq();
+            );
+            // start meassuring the temperature
             startADC(ADC_MUXPOS_TEMPSENSE_gc);
             LOG("uptime " << state_.uptime);
         }
@@ -485,7 +493,7 @@ public:
      */
     //@{
 
-    static inline AVRState state_;
+    static inline TransferrableState state_;
     static inline volatile bool irq_ = false;
 
     static inline volatile bool i2cCommandReady_ = false;
@@ -537,12 +545,16 @@ public:
         );
         if (powerMode_ & POWER_MODE_ON) {
             if (irqs & ACCEL_INT_REQUEST) {
-                state_.status.setAccelInt();
-                setIrq();
+                NO_ISR(
+                    state_.status.setAccelInt();
+                    setIrq();
+                );
             }
             if (irqs & PWR_INT_REQUEST) {
-                state_.status.setPwrInt();
-                setIrq();
+                NO_ISR(
+                    state_.status.setPwrInt();
+                    setIrq();
+                );
             }
             ASSERT(irqs & HOME_BTN_INT_REQUEST == 0); 
         } else {
@@ -557,17 +569,19 @@ public:
         }
     }
 
+    /** Sets the IRQ by pulling the AVR_IRQ pin low.
+     
+        NOTE expects interrupts disabled to work properly.
+     */
     static void setIrq() {
         if (! (powerMode_ & POWER_MODE_ON))
             return;
-        NO_ISR(
-            if (irq_)
-                return;
-            irq_ = true;
+        if (irq_)
+            return;
+        irq_ = true;
 #ifndef BREADBOARD            
-            gpio::outputLow(AVR_PIN_AVR_INT);
+        gpio::outputLow(AVR_PIN_AVR_INT);
 #endif
-        );        
     }
 
     /** The I2C interrupt handler. 
@@ -588,9 +602,10 @@ public:
             TWI0.SDATA = ((uint8_t*) & state_)[i2cTxIdx_];
             TWI0.SCTRLB = TWI_SCMD_RESPONSE_gc;
             // clear IRQ once we read the state 
-            if (++i2cTxIdx_ == 2) {
+            if (++i2cTxIdx_ == 3) {
                 irq_ = false;
                 gpio::outputFloat(AVR_PIN_AVR_INT);
+                state_.status.clearInterrupts();
             }
             // TODO send nack when done sending all state
         // a byte has been received from master. Store it and send either ACK if we can store more, or NACK if we can't store more
@@ -663,10 +678,6 @@ public:
             }
             case cmd::SetAlarm::ID: {
                 state_.alarm = cmd::SetAlarm::fromBuffer(state_.buffer).value;
-                break;
-            }
-            case cmd::ClearAlarm::ID: {
-                state_.status.clearAlarmInt();
                 break;
             }
             case cmd::ReadFlashPage::ID: {
@@ -865,7 +876,7 @@ public:
                 }
 #endif
             }
-            setIrq();
+            NO_ISR(setIrq());
         }
     }
 
@@ -880,7 +891,7 @@ public:
         gpio::low(AVR_PIN_BTN_DPAD);
         if (changed) {
             LOG("ABXY: " << state_.status.btnA() << " " << state_.status.btnB() << " " << state_.status.btnSelect() << " " << state_.status.btnStart());
-            setIrq();
+            NO_ISR(setIrq());
         }
 
     }
@@ -896,7 +907,7 @@ public:
         gpio::low(AVR_PIN_BTN_CTRL);
         if (changed) {
             LOG("DPAD: " << state_.status.btnLeft() << " " << state_.status.btnRight() << " " << state_.status.btnUp() << " " << state_.status.btnDown());
-            setIrq();
+            NO_ISR(setIrq());
         }
     }
     //@}
