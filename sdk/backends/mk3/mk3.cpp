@@ -2,6 +2,12 @@
 
     Mark III, currently in development whose hardware specifications are still in progress.
 
+
+
+    # I2C Communication
+
+    Most of the I2C communication is done in async manner, where the RP can register bytes to send/receive via the I2C and will be notified by an interrupt when this is done. 
+
 */
 
 #ifndef RCKID_BACKEND_MK3
@@ -77,13 +83,88 @@ namespace rckid {
 
     } // namespace rckid::io
 
-    /** Sends given I2C command to the AVR. 
-     */
-    template<typename T>
-    static void sendCommand(T const & cmd) {
-        // if we are the first ones waiting, enable the I2C so that the command below will work, otherwise we've already done so in the past
-        i2c_write_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, (uint8_t const *) & cmd, sizeof(T), false);
-    }    
+    namespace i2c {
+        class Packet {
+        public:
+            uint8_t address;
+            uint8_t writeLen;
+            uint8_t readLen;
+            Packet * next = nullptr;
+            void (* callback)(uint8_t) = nullptr;
+
+            Packet(uint8_t addr, uint8_t wlen, uint8_t const * wdata, uint8_t rlen, void (* cb)(uint8_t) = nullptr):
+                address{addr}, 
+                writeLen{wlen}, 
+                readLen{rlen}, 
+                callback{cb} {
+                if (writeLen <= 4) {
+                    uint8_t * x = writeData();
+                    for (size_t i = 0; i < writeLen; ++i) {
+                        x[i] = wdata[i];
+                    }
+                } else {
+                    writeData_ = new uint8_t[writeLen];
+                    memcpy(writeData_, wdata, writeLen);
+                }
+            }
+
+            ~Packet() {
+                if (writeLen > 4)
+                    delete [] writeData_;
+            }
+
+            void transmit() {
+                i2c0->hw->enable = 0;
+                i2c0->hw->tar = address;
+                i2c0->hw->enable = 1;
+                uint8_t * x = writeData();
+                for (size_t i = 0; i < writeLen; ++i)
+                    i2c0->hw->data_cmd = x[i] | (readLen == 0) && i == writeLen - 1 ? I2C_IC_DATA_CMD_STOP_BITS : 0;
+                for (size_t i = 0; i < readLen; ++i)
+                    i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | (i == 0 && writeLen != 0) ? I2C_IC_DATA_CMD_RESTART_BITS : 0;
+                i2c0->hw->rx_tl = readLen == 0 ? 0 : readLen - 1;
+            }
+
+            uint8_t * writeData() {
+                if (writeLen <= 4) {
+                    return reinterpret_cast<uint8_t *>(&writeData_);
+                } else {
+                    return writeData_;
+                }
+            }
+
+        private:
+            uint8_t * writeData_;
+        }; // i2c::Packet
+
+        Packet * currentPacket = nullptr;
+        Packet * lastPacket = nullptr;
+
+        void enqueue(Packet * p) {
+            if (lastPacket == nullptr) {
+                // TODO no ISR
+                currentPacket = p;
+                lastPacket = p;
+                currentPacket->transmit();
+            } else {
+                // TODO no ISR
+                lastPacket->next = p;
+                lastPacket = p;
+            }
+        }
+
+        template<typename T>
+        void sendCommand(T const & cmd) {
+            Packet * p = new Packet(
+                RCKID_AVR_I2C_ADDRESS, 
+                sizeof(T), 
+                reinterpret_cast<uint8_t const *>(& cmd), 
+                0
+            );
+            enqueue(p);
+        }
+
+    } // namespace rckid::i2c
 
     bool buttonState(Btn b, AVRState::Status & status) {
         // TODO this can be made more efficient if we just get the value in the status and or the bits 
@@ -104,7 +185,14 @@ namespace rckid {
         }
     }
 
-    void updateAvrStatus(AVRState::Status status) {
+    /** Updates the AVR status based on the status information received in the I2C buffer (callback function for getting AVR status). 
+     */
+    void updateAvrStatus([[maybe_unused]] uint8_t numBytes) {
+        AVRState::Status status;
+        uint8_t * raw = reinterpret_cast<uint8_t*>(&status);
+        for (unsigned i = 0; i < sizeof(AVRState::Status); ++i) {
+            raw[i] = i2c0->hw->data_cmd;;
+        }
         // archive the old status
         io::lastStatus_ = io::avrState_.status;
         // copy the new one, we take the buttons (first 2 bytes as is) and or the interrupts to make sure none is ever lost, the process them immediately
@@ -120,11 +208,37 @@ namespace rckid {
         io::avrState_.status.clearInterrupts();
     }
 
+    /** Requests AVR status update. 
+     
+        Enqueues AVR status read packet with the updateAVRStatus as callback function. 
+     */
+    void requestAvrStatus() {
+        i2c::enqueue(new i2c::Packet(
+            RCKID_AVR_I2C_ADDRESS, 
+            0, 
+            nullptr, 
+            sizeof(AVRState::Status), 
+            updateAvrStatus
+        ));
+    }
     
     void __not_in_flash_func(irqI2CDone_)() {
         uint32_t cause = i2c0->hw->intr_stat;
         i2c0->hw->clr_intr;
-        // TODO TODO 
+        // remove the packet from the queue and start transmitting the next one, if any
+        i2c::Packet * p = i2c::currentPacket;
+        if (p->next != nullptr) {
+            i2c::currentPacket = p->next;
+            i2c::currentPacket->transmit();
+        } else {
+            i2c::currentPacket = nullptr;
+            i2c::lastPacket = nullptr;
+        }
+        // call the callback
+        if (p->callback != nullptr)
+            // can we get the real number of bytes read somehow if there was an error and the number is smaller?
+            p->callback(p->readLen);
+        delete p;
     }
 
     void __not_in_flash_func(irqDMADone_)() {
@@ -224,6 +338,15 @@ namespace rckid {
         while (tud_cdc_read(& cmd_, 1) != 1) { yield(); };
         LOG(LL_DEBUG, "Received command " << cmd_);
 #endif
+
+        // configure the AVR interrupt pin as input pullup (it's pulled down by the AVR when needed, floating otherwise) and connect an interrupt callback on the falling edge
+        gpio::setAsInputPullup(RP_PIN_AVR_INT);
+        gpio_set_irq_enabled_with_callback(RP_PIN_AVR_INT, GPIO_IRQ_EDGE_FALL, true, [](uint gpio, uint32_t events) {
+            if (gpio == RP_PIN_AVR_INT)
+                requestAvrStatus();
+        });
+        // TODO radio interrupt
+        // TODO audio interrupt
     }
 
     void tick() {
@@ -303,7 +426,7 @@ namespace rckid {
     }
 
     void displaySetBrightness(uint8_t value) {
-        sendCommand(cmd::SetBrightness{value});
+        i2c::sendCommand(cmd::SetBrightness{value});
         // we set the brightness here as it is a simple change outside of the small state we get on interrupts 
         io::avrState_.brightness = value;
     }
@@ -440,21 +563,21 @@ namespace rckid {
     // rumbler
 
     void rumblerEffect(RumblerEffect const & effect) {
-        sendCommand(cmd::Rumbler{effect});
+       i2c::sendCommand(cmd::Rumbler{effect});
     }
 
     // rgb
 
     void rgbEffect(uint8_t rgb, RGBEffect const & effect) {
-        sendCommand(cmd::SetRGBEffect{rgb, effect});
+        i2c::sendCommand(cmd::SetRGBEffect{rgb, effect});
     }
     
     void rgbEffects(RGBEffect const & a, RGBEffect const & b, RGBEffect const & dpad, RGBEffect const & sel, RGBEffect const & start) {
-        sendCommand(cmd::SetRGBEffects{a, b, dpad, sel, start});
+        i2c::sendCommand(cmd::SetRGBEffects{a, b, dpad, sel, start});
     }
     
     void rgbOff() {
-        sendCommand(cmd::RGBOff{});
+        i2c::sendCommand(cmd::RGBOff{});
     }
 
 }
