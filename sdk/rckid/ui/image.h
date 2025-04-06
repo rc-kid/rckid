@@ -40,11 +40,11 @@ namespace rckid::ui {
 
         Image(Image const &) = delete;
 
-        Image(Image && other) {
+        Image(Image && other) noexcept {
             assign(std::move(other));
         }
 
-        Image & operator = (Image && other) {
+        Image & operator = (Image && other) noexcept {
             if (this != & other) {
                 Widget::operator=(other);
                 clear();
@@ -53,7 +53,7 @@ namespace rckid::ui {
             return *this;
         }
 
-        Image & operator = (Bitmap<2> && bmp) {
+        Image & operator = (Bitmap<2> && bmp) noexcept {
             clear();
             new (&bmp2_) Bitmap<2>{std::move(bmp)};
             bpp_ = 2;
@@ -63,7 +63,7 @@ namespace rckid::ui {
             return *this;
         }
 
-        Image & operator = (Bitmap<4> && bmp) {
+        Image & operator = (Bitmap<4> && bmp) noexcept {
             clear();
             new (&bmp4_) Bitmap<4>{std::move(bmp)};
             bpp_ = 4;
@@ -73,7 +73,7 @@ namespace rckid::ui {
             return *this;
         }
 
-        Image & operator = (Bitmap<8> && bmp) {
+        Image & operator = (Bitmap<8> && bmp) noexcept {
             clear();
             new (&bmp8_) Bitmap<8>{std::move(bmp)};
             bpp_ = 8;
@@ -83,7 +83,7 @@ namespace rckid::ui {
             return *this;
         }
 
-        Image & operator = (Bitmap<16> && bmp) {
+        Image & operator = (Bitmap<16> && bmp) noexcept {
             clear();
             new (&bmp16_) Bitmap<16>{std::move(bmp)};
             bpp_ = 16;

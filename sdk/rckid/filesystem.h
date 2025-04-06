@@ -76,7 +76,7 @@ namespace rckid::filesystem {
 
         ~FileRead() override { close(); }
 
-        FileRead(FileRead && from):
+        FileRead(FileRead && from) noexcept:
             drive_{from.drive_} {
             switch (drive_) {
                 case static_cast<unsigned>(Drive::SD):
@@ -93,7 +93,7 @@ namespace rckid::filesystem {
 
         FileRead() = default;
 
-        FileRead & operator = (FileRead && from) {
+        FileRead & operator = (FileRead && from) noexcept {
             close();
             drive_ = from.drive_;
             switch (drive_) {
@@ -137,7 +137,7 @@ namespace rckid::filesystem {
 
         ~FileWrite() override;
 
-        FileWrite(FileWrite && from):
+        FileWrite(FileWrite && from) noexcept:
             drive_{from.drive_} {
             switch (drive_) {
                 case static_cast<unsigned>(Drive::SD):

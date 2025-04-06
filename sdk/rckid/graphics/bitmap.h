@@ -31,7 +31,7 @@ namespace rckid {
 
         Bitmap(Bitmap const &) = delete;
 
-        Bitmap(Bitmap && other): pixels_{other.pixels_}, w_{other.w_}, h_{other.h_} {
+        Bitmap(Bitmap && other) noexcept: pixels_{other.pixels_}, w_{other.w_}, h_{other.h_} {
             other.pixels_ = nullptr;
             other.w_ = 0;
             other.h_ = 0;
@@ -56,7 +56,7 @@ namespace rckid {
         uint32_t numPixels() const { return w_ * h_; };
         uint32_t numBytes() const { return PixelArray::size(w_, h_); }
 
-        Bitmap & operator = (Bitmap && other) {
+        Bitmap & operator = (Bitmap && other) noexcept {
             Heap::tryFree(pixels_);
             pixels_ = other.pixels_;
             w_ = other.w_;
