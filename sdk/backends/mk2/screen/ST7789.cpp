@@ -197,7 +197,7 @@ namespace rckid {
         if (cb_) 
             cb_();
         if (updating_ > 0)
-            --updating_;
+            updating_ = updating_ - 1;
         //gpio::outputLow(gpio::Pin{21});
     }
 
