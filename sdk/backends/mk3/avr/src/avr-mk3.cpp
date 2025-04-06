@@ -150,7 +150,7 @@ public:
 
         // initializes the AVR TX pin for serial debugging
         serial::setAlternateLocation(true);
-        serial::initializeTx(RCKID_AVR_SERIAL_SPEED);
+        serial::initializeTx(RCKID_SERIAL_SPEED);
 
         // TODO some initialization routine with checks, etc.
         LOG("SYSTEM RESET DETECTED: " << hex(RSTCTRL.RSTFR));
