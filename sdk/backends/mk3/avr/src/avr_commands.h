@@ -1,5 +1,7 @@
 #pragma once
 
+#include <platform/tinydate.h>
+
 #include <rckid/effects.h>
 
 namespace rckid::cmd {
@@ -99,7 +101,7 @@ namespace rckid::cmd {
 
     COMMAND(103, Rumbler,
         RumblerEffect effect;
-        Rumbler(RumblerEffect effect): effect{effect} {}
+        Rumbler(RumblerEffect const & effect): effect{effect} {}
     );
 
 
