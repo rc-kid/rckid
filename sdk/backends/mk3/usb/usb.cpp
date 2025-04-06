@@ -140,7 +140,7 @@ extern "C" {
         return desc_fs_configuration;
     }
 
-    uint16_t const * tud_descriptor_string_cb(uint8_t index, uint16_t langid) {
+    uint16_t const * tud_descriptor_string_cb(uint8_t index, [[maybe_unused]] uint16_t langid) {
         uint16_t resultSize = 0;
         switch (index) {
             case 0:

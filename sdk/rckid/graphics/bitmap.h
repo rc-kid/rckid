@@ -148,7 +148,7 @@ namespace rckid {
             return PixelArray::putChar(x, y, w_, h_, font, c, colors, pixels_);
         }
 
-        Pixel * pixels_;
+        Pixel * pixels_ = nullptr;
         Coord w_;
         Coord h_;
     }; // rckid::Bitmap

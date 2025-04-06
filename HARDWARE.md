@@ -71,6 +71,8 @@ Onboard accelerometer [BMI160](datasheets/BMI160.pdf) and ambient light & UV det
 
 ## Power Management
 
+> I am considering using [BQ25628](https://www.ti.com/product/BQ25628) instead. It offers better battery voltage monitoring and seems slightly less complicated - also the package is smaller. I also considered Analog offerings, notably LTC3555, which also includes switching regulators, but it costs  alot more (6 vs 2 USD) and does not measure voltage & current on the ADC. 
+
 The PMIC used is [BQ25895](datasheets/bq25895.pdf). This is a fairly advanced IC that can charge battery really fast, provide 5V for USB OTG, has integrated ADC so that we can use it as battery monitor as well freeing some AVR pins and quite extensive I2C configuration & capabilities. This makes the circuit a bit complex:
 
 - `VBUS` requires 1uF capacitor as close to the device as possible

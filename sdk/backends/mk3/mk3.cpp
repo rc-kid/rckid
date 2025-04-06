@@ -1,6 +1,7 @@
 /** \page backend_mk3 Mk III 
 
     Mark III, currently in development whose hardware specifications are still in progress.
+
 */
 
 #ifndef RCKID_BACKEND_MK3
@@ -17,6 +18,8 @@ extern "C" {
     #include <hardware/uart.h>
     #include <hardware/flash.h>
 }
+
+#include <platform/peripherals/ltr390uv.h>
 
 #include "screen/ST7789.h"
 #include "sd/sd.h"
@@ -62,6 +65,18 @@ namespace rckid {
         void initialize();
     }
 
+    // internal state
+
+    namespace io {
+        LTR390UV alsSensor_;
+
+        uint16_t lightAls_ = 0;
+        uint16_t lightUV_ = 0;
+        AVRState avrState_;
+        AVRState::Status lastStatus_;
+
+    } // namespace rckid::io
+
     /** Sends given I2C command to the AVR. 
      */
     template<typename T>
@@ -70,6 +85,42 @@ namespace rckid {
         i2c_write_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, (uint8_t const *) & cmd, sizeof(T), false);
     }    
 
+    bool buttonState(Btn b, AVRState::Status & status) {
+        // TODO this can be made more efficient if we just get the value in the status and or the bits 
+        switch (b) {
+            case Btn::Up: return status.btnUp();
+            case Btn::Down: return status.btnDown();
+            case Btn::Left: return status.btnLeft();
+            case Btn::Right: return status.btnRight();
+            case Btn::A: return status.btnA();
+            case Btn::B: return status.btnB();
+            case Btn::Select: return status.btnSelect();
+            case Btn::Start: return status.btnStart();
+            case Btn::VolumeUp: return status.btnVolumeUp();
+            case Btn::VolumeDown: return status.btnVolumeDown();
+            case Btn::Home: return status.btnHome();
+            default:
+                UNREACHABLE;
+        }
+    }
+
+    void updateAvrStatus(AVRState::Status status) {
+        // archive the old status
+        io::lastStatus_ = io::avrState_.status;
+        // copy the new one, we take the buttons (first 2 bytes as is) and or the interrupts to make sure none is ever lost, the process them immediately
+        io::avrState_.status.updateWith(status);
+        // if second tick interrupt is on, we must advance our timekeeping. Note that it is remotely possible that we will get an extra second tick interrupt when synchronizing the clock (we'll transmit the updated value, as well as the second tick at the same time) so that time on RP can be one second off at worst. 
+        if (status.secondInt()) {
+            io::avrState_.time.secondTick();
+        }
+        // TODO alarm
+        // TODO pwr
+        // TODO accel
+        // finally clear the interrupts once we have processed them
+        io::avrState_.status.clearInterrupts();
+    }
+
+    
     void __not_in_flash_func(irqI2CDone_)() {
         uint32_t cause = i2c0->hw->intr_stat;
         i2c0->hw->clr_intr;
@@ -81,6 +132,9 @@ namespace rckid {
         //unsigned irqs = dma_hw->ints0;
         //dma_hw->ints0 = irqs;
     }
+
+
+    // sdk functions 
 
     void fatalError(uint32_t error, uint32_t line, char const * file) {
         // simply go top BSOD - no need for HW cleanup
@@ -139,8 +193,8 @@ namespace rckid {
         // initialize the accelerometer & uv light sensor
         // TODO
         //io::accelerometer_.initialize();
-        //io::alsSensor_.initialize();
-        //io::alsSensor_.startALS();
+        io::alsSensor_.initialize();
+        io::alsSensor_.startALS();
 
         // initialize audio
         // TODO
@@ -156,13 +210,14 @@ namespace rckid {
         // enter base arena for the application
         //Arena::enter();
 
-        // read the full AVR state and set last tick for time keeping
-        // TODO
-        //i2c_read_blocking(i2c0, I2C_AVR_ADDRESS, (uint8_t *) & io::state_, sizeof(TransferrableState), false);
-        //time::nextSecond_ = time_us_64() + 1000000;
+        // read the full AVR state (including time information). Do not process the interrupts here, but wait for the first tick, which will or them with the ones obtained here and process when the device is fully initialized
+        i2c_read_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, (uint8_t *) & io::avrState_, sizeof(AVRState), false);
         
-        // set brightness to 50% by default after startup
-        displaySetBrightness(128);
+        // set brightness to the last used value
+        // or at least 16 so that we can see stuff
+        if (io::avrState_.brightness < 16)
+            io::avrState_.brightness = 16;
+        displaySetBrightness(io::avrState_.brightness);
 
 #if (defined RCKID_WAIT_FOR_SERIAL)
         char cmd_ = ' ';
@@ -190,15 +245,15 @@ namespace rckid {
     // io
 
     bool btnDown(Btn b) {
-        UNIMPLEMENTED;
+        return buttonState(b, io::avrState_.status);
     }
 
     bool btnPressed(Btn b) {
-        UNIMPLEMENTED;
+        return buttonState(b, io::avrState_.status) && ! buttonState(b, io::lastStatus_);
     }
 
     bool btnReleased(Btn b) {
-        UNIMPLEMENTED;
+        return ! buttonState(b, io::avrState_.status) && buttonState(b, io::lastStatus_);
     }
 
     int16_t accelX() {
@@ -226,11 +281,11 @@ namespace rckid {
     }
 
     uint16_t lightAmbient() {
-        UNIMPLEMENTED;        
+        return io::lightAls_;
     }
     
     uint16_t lightUV() {
-        UNIMPLEMENTED;
+        return io::lightUV_;
     }
 
     // display
@@ -244,11 +299,13 @@ namespace rckid {
     }
 
     uint8_t displayBrightness() {
-        UNIMPLEMENTED;
+        return io::avrState_.brightness;
     }
 
     void displaySetBrightness(uint8_t value) {
-        UNIMPLEMENTED;
+        sendCommand(cmd::SetBrightness{value});
+        // we set the brightness here as it is a simple change outside of the small state we get on interrupts 
+        io::avrState_.brightness = value;
     }
 
     Rect displayUpdateRegion() {

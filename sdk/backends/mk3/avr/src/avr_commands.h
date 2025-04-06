@@ -41,11 +41,6 @@ namespace rckid::cmd {
         TinyAlarm value;
         SetAlarm(TinyAlarm value): value{value} {}
     );
-    /** Clears the alarm flag in the status and clears the alarm itself. If the alarm should happen again, SetAlarm command must be issued after clearing the alarm.
-     */
-    COMMAND(12, ClearAlarm);
-    
-
 
 
     COMMAND(40, ReadFlashPage,
