@@ -112,7 +112,7 @@ namespace rckid::ui {
             items_{items} {
         }
 
-        Menu(Menu && other): items_{std::move(other.items_)} {
+        Menu(Menu && other) noexcept: items_{std::move(other.items_)} {
         }
 
         ~Menu() {

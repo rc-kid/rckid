@@ -33,8 +33,8 @@ namespace rckid {
 
         int decode16(DecodeCallback16 cb, Allocator & a = Heap::allocator());
 
-        PNG & operator == (PNG const &) = delete;
-        PNG & operator == (PNG &&) = delete;
+        PNG & operator = (PNG const &) = delete;
+        PNG & operator = (PNG &&) = delete;
 
         ~PNG() {
             Heap::tryFree(img_);
@@ -42,7 +42,7 @@ namespace rckid {
 
         PNG(PNG const &) = delete;
         
-        PNG(PNG && other): img_{other.img_} {
+        PNG(PNG && other) noexcept: img_{other.img_} {
             other.img_ = nullptr;
         }
 

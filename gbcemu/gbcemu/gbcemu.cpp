@@ -1243,7 +1243,7 @@ namespace rckid::gbcemu {
                     setRomPage(page);
                 } else if (addr < 0x5fff) {
                     // set the upper 2 bits of the rom bank
-                    uint32_t page = (page & 0x1f) | ((value & 3) << 5);
+                    uint32_t page = (romPage_ & 0x1f) | ((value & 3) << 5);
                     setRomPage(page);
                 } else {
                     ASSERT(addr < 0x8000); 
