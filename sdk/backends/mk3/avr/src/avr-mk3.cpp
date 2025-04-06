@@ -431,7 +431,7 @@ public:
     static bool systemTick() {
         // do nothing if system tick interrupt is not requested, clear the flag otherwise
         if (! systemTick_)
-            return;
+            return false;
         systemTick_ = false;
         // increment the system tick counter and perform the tick actions
         switch (tickCounter_++) {

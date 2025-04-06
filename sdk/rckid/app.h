@@ -83,6 +83,9 @@ namespace rckid {
         RenderableApp(Args&&... args) : g_{std::forward<Args>(args)...} {
         }
 
+        RenderableApp(RenderableApp const &) = delete;
+        RenderableApp(RenderableApp &&) = delete;
+
         void focus() override {
             g_.initialize();
             App::focus();
