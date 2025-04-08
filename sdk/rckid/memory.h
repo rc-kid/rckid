@@ -212,5 +212,4 @@ namespace rckid {
      */
     void memoryCheckStaticProtection();
 
-
 } // namespace

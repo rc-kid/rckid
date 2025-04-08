@@ -327,12 +327,24 @@ namespace rckid::gbcemu {
         //clearTileset();
         //setBreakpoint(0xc2a6);
         while (true) {
+#if (GBCEMU_ENABLE_BKPT == 1)
+            if (mem8(PC) == 0xfd) // bkpt
+                break; 
+#endif
             moveToNextScanline();
             setPPUMode(2); // OAM scan
             runCPU(cgb_ ? DOTS_MODE_2 * 2 : DOTS_MODE_2);
+#if (GBCEMU_ENABLE_BKPT == 1)
+            if (mem8(PC) == 0xfd) // bkpt
+                break; 
+#endif
             setPPUMode(3); // VRAM scan
             renderLine();
             runCPU(cgb_ ? DOTS_MODE_3 * 2 : DOTS_MODE_3);
+#if (GBCEMU_ENABLE_BKPT == 1)
+            if (mem8(PC) == 0xfd) // bkpt
+                break; 
+#endif
             setPPUMode(0); // HBlank
             runCPU(cgb_ ? DOTS_MODE_0 * 2 : DOTS_MODE_0);
         }
@@ -354,7 +366,7 @@ namespace rckid::gbcemu {
                 debugInteractive();
             }
 #endif
-#ifdef GBCEMU_ENABLE_BKPT
+#if (GBCEMU_ENABLE_BKPT == 1)
             if (mem8(PC) == 0xfd) {
                 exit(); // we'll leave the app too
                 return;
