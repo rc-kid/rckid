@@ -3,6 +3,7 @@
 #include "../assets/fonts/Iosevka16.h"
 #include "../graphics/font.h"
 #include "../graphics/color.h"
+#include "../utils/string.h"
 #include "widget.h"
 
 namespace rckid::ui {
@@ -14,15 +15,15 @@ namespace rckid::ui {
 
         Label() = default;
 
-        Label(Coord x, Coord y, std::string text):
+        Label(Coord x, Coord y, String text):
             Widget{x, y}, 
             text_{std::move(text)} {
             reposition();
         }
 
-        std::string const & text() { return text_; }
+        String const & text() { return text_; }
         
-        void setText(std::string value) { 
+        void setText(String value) { 
             text_ = std::move(value);
             reposition();
         }
@@ -121,7 +122,7 @@ namespace rckid::ui {
 
         HAlign hAlign_ = HAlign::Center;
         VAlign vAlign_ = VAlign::Center;
-        std::string text_;
+        String text_;
         Font font_{Font::fromROM<assets::Iosevka16>()};
         ColorRGB color_{ColorRGB::White()};
         Point textTopLeft_;

@@ -4,6 +4,7 @@
 
 #include "../rckid.h"
 #include "../graphics/bitmap.h"
+#include "../utils/string.h"
 
 namespace rckid::ui {
 
@@ -27,10 +28,10 @@ namespace rckid::ui {
         public:
             static constexpr uint32_t KIND = 0;
 
-            Item(std::string text): text_{std::move(text)} {
+            Item(String text): text_{std::move(text)} {
             }
 
-            Item(std::string text, uint8_t const * icon, uint32_t iconSize): text_{std::move(text)}, icon_{icon}, iconSize_{iconSize} {
+            Item(String text, uint8_t const * icon, uint32_t iconSize): text_{std::move(text)}, icon_{icon}, iconSize_{iconSize} {
             }
 
             virtual ~Item() = default;
@@ -49,11 +50,13 @@ namespace rckid::ui {
                 return static_cast<T*>(this);
             }
 
-            std::string const & text() const { return text_; }
+            String const & text() const { return text_; }
 
+            /*
             void fillText(std::string & text) const {
                 text = text_;
             }
+            */
 
             Bitmap<16> icon() const {
                 return Bitmap<16>{PNG::fromBuffer(icon_, iconSize_)};
@@ -61,7 +64,7 @@ namespace rckid::ui {
 
         private:
 
-            std::string text_;
+            String text_;
             uint8_t const * icon_ = nullptr;
             uint32_t iconSize_ = 0;
 
@@ -72,14 +75,14 @@ namespace rckid::ui {
         class ActionItem : public Item {
         public:
 
-            ActionItem(std::string text, std::function<void()> action): Item{std::move(text)}, action_{action} {
+            ActionItem(String text, std::function<void()> action): Item{std::move(text)}, action_{action} {
             }
 
-            ActionItem(std::string text, uint8_t const * icon, uint32_t iconSize, std::function<void()> action): Item{std::move(text), icon, iconSize}, action_{action} {
+            ActionItem(String text, uint8_t const * icon, uint32_t iconSize, std::function<void()> action): Item{std::move(text), icon, iconSize}, action_{action} {
             }
 
             template<uint32_t SIZE>
-            ActionItem(std::string text, uint8_t const (&buffer)[SIZE], std::function<void()> action): Item{std::move(text), buffer, SIZE}, action_{action} {
+            ActionItem(String text, uint8_t const (&buffer)[SIZE], std::function<void()> action): Item{std::move(text), buffer, SIZE}, action_{action} {
             }
 
             static constexpr uint32_t KIND = 1;
