@@ -6,7 +6,7 @@
 
 
 #define GBCEMU_INTERACTIVE_DEBUG
-#define GBCEMU_ENABLE_BKPT
+#define GBCEMU_ENABLE_BKPT 1
 //#define GBCEMU_TRACE_INSTRUCTIONS
 
 /** Very fast very simple tracking of every pc and opcode executed. Note that this only works on fantasy backend as it uses printf for output instead of the debugWrite used elsewhere in rckid's logging.
