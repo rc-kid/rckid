@@ -36,6 +36,7 @@
  */
 #include "error.h"
 #include "log.h"
+#include "utils/string.h"
 
 /** \page sdk
     \section memory Memory Management

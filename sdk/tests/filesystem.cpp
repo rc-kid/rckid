@@ -19,7 +19,6 @@ TEST(filesystem, extension) {
     EXPECT(filesystem::ext(".bar") == "");
 }
 
-
 TEST(filesystem, parent) {
     EXPECT(filesystem::parent("foo.bar") == "/");
     EXPECT(filesystem::parent("foo.bar.baz") == "/");

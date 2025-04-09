@@ -18,7 +18,7 @@ TEST(string, fromLiteral) {
     EXPECT(s[5] == '\0');
 
     // growing the string drops the immutability
-    String s2{x, 10};
+    String s2 = String::withCapacity(x, 10);
     EXPECT(s2.size() == 5);
     EXPECT(s2.capacity() == 10);
     EXPECT(s2.immutable() == false);
@@ -29,12 +29,11 @@ TEST(string, fromLiteral) {
     EXPECT(s2[3] == 'l');
     EXPECT(s2[4] == 'o');
     EXPECT(s2[5] == '\0');
-
 }
 
 TEST(string, shrink) {
     using namespace rckid;
-    String s{"Hello", 20};
+    String s = String::withCapacity("Hello", 20);
     EXPECT(s.size() == 5);
     EXPECT(s.capacity() == 20);
     EXPECT(s.immutable() == false);
@@ -48,5 +47,4 @@ TEST(string, shrink) {
     EXPECT(s[3] == 'l');
     EXPECT(s[4] == 'o');
     EXPECT(s[5] == '\0');
-
 }

@@ -377,7 +377,7 @@ namespace rckid::filesystem {
       
         For SD card it's the filesystem label, but for the cartridge returns always "Cartridge" (labels are not supported by the cartridge filesystem .
      */
-    std::string getLabel(Drive dr = Drive::SD); 
+    String getLabel(Drive dr = Drive::SD); 
 
     /** Returns true if the given path exists (i.e. either directory, or file).
      */
@@ -409,13 +409,13 @@ namespace rckid::filesystem {
 
     Folder folderRead(char const * path, Drive dr = Drive::SD);
 
-    inline FileRead fileRead(std::string const & path, Drive dr = Drive::SD) { return fileRead(path.c_str(), dr); }
-    inline FileWrite fileWrite(std::string const & path, Drive dr = Drive::SD) { return fileWrite(path.c_str(), dr); }
-    inline Folder folderRead(std::string const & path, Drive dr = Drive::SD) { return folderRead(path.c_str(), dr); }
+    inline FileRead fileRead(String const & path, Drive dr = Drive::SD) { return fileRead(path.c_str(), dr); }
+    inline FileWrite fileWrite(String const & path, Drive dr = Drive::SD) { return fileWrite(path.c_str(), dr); }
+    inline Folder folderRead(String const & path, Drive dr = Drive::SD) { return folderRead(path.c_str(), dr); }
 
-    std::string stem(std::string const & path);
-    std::string ext(std::string const & path);
-    std::string join(std::string const & path, std::string const & item);
-    std::string parent(std::string const & path);
+    String stem(String const & path);
+    String ext(String const & path);
+    String join(String const & path, String const & item);
+    String parent(String const & path);
 
 } // namespace rckid::filesystem

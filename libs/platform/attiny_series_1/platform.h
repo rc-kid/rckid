@@ -5,6 +5,8 @@
 #include <avr/sleep.h>
 #include <avr/delay.h>
 #include <avr/interrupt.h>
+#include <avr/io.h>
+#include <cstring>
 
 #define PLATFORM_AVR_MEGATINY
 #define PLATFORM_LITTLE_ENDIAN
@@ -24,6 +26,9 @@ namespace std {
     T && move(T &) {
         return static_cast<T &&>(T{});
     }
+
+    inline void* memcpy(void * dest, const void * src, size_t count) { return ::memcpy(dest, src, count); }
+
 }
 
 
