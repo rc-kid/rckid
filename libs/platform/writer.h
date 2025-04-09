@@ -5,10 +5,6 @@
 #include <functional>
 #include <type_traits>
 
-#if (! defined STR)
-#define STR(...) (StringWriter{} << __VA_ARGS__).str()
-#endif
-
 /** A very simple formatter for both human-readable texts and binary representations. 
  
     To make sure the writer is available even on very low level platforms such as ATTiny chips, it does not use C++'s lambda captures, but rely on passing a void * context pointer to the PutChar function. 
@@ -132,42 +128,64 @@ private:
     CharWriter putChar_;
 }; // Writer
 
-class StringWriter {
-#if (! defined PLATFORM_NOSTDCPP)
-    public:
-        StringWriter():
-            writer_{[this](char c) { str_ += c; }} {
+class BufferedWriter {
+public:
+    BufferedWriter():
+        writer_{[this](char c) { append(c); }} {
+    }
+
+    ~BufferedWriter() {
+        delete[] buffer_;
+    }
+
+    template<typename T>
+    BufferedWriter & operator << (T x) {
+        writer_ << x;
+        return *this; 
+    }
+
+    uint32_t size() const { return size_; }
+
+    uint32_t capacity() const { return capacity_; }
+
+    char const * c_str() { return buffer_; }
+private:
+
+    void append(char c) {
+        if (size_ == capacity_) {
+            capacity_ *= 2;
+            char * newBuffer = new char[capacity_];
+            std::memcpy(newBuffer, buffer_, size_);
+            delete[] buffer_;
+            buffer_ = newBuffer;
         }
-    
-        template<typename T>
-        StringWriter & operator << (T x) {
-            writer_ << x;
-            return *this; 
-        }
-    
-        std::string str() {
-            return std::move(str_);
-        }
-    
-    private:
-        std::string str_;
-        Writer writer_;
-#endif
-}; // StringWriter
+        buffer_[size_++] = c;
+        buffer_[size_] = 0;
+    }
+
+    char * buffer_ = new char[17];;
+    uint32_t size_ = 0;
+    uint32_t capacity_ = 16; 
+    Writer writer_;
+}; // BufferedWriter
 
 template<typename T>
 class fillLeft : public Writer::Converter {
 public:
     fillLeft(T const & what, uint32_t width, char fill = ' '):
-        what_{what}, width_{width}, fill_{fill} {}
+        what_{what}, width_{width}, fill_{fill} {
+    }
+
     void operator () (Writer & writer) {
-        std::string x{STR(what_)};
-        while (x.size() < width_) {
+        BufferedWriter bw;
+        bw << what_;
+        while (bw.size() < width_) {
             writer << fill_;
             --width_;
         }
-        writer << x;
+        writer << bw.c_str();;
     }
+
 private:
     T const & what_;
     uint32_t width_;
@@ -178,15 +196,19 @@ template<typename T>
 class fillRight : public Writer::Converter {
 public:
     fillRight(T const & what, uint32_t width, char fill = ' '):
-        what_{what}, width_{width}, fill_{fill} {}
+        what_{what}, width_{width}, fill_{fill} {
+    }
+
     void operator () (Writer & writer) {
-        std::string x{STR(what_)};
-        writer << x;
-        while (x.size() < width_) {
+        BufferedWriter bw;
+        bw << what_;
+        writer << bw.c_str();
+        while (bw.size() < width_) {
             writer << fill_;
             --width_;
         }
     }
+    
 private:
     T const & what_;
     uint32_t width_;

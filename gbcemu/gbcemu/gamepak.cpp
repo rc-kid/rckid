@@ -1,4 +1,5 @@
 #include <platform.h>
+#include <platform/string_utils.h>
 #include "gamepak.h"
 
 #ifdef RCKID_BACKEND_FANTASY

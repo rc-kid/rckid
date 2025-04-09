@@ -3,6 +3,9 @@
 #include <algorithm> 
 #include <cctype>
 #include <locale>
+#include <sstream>
+
+#define STR(...) (std::stringstream{} << __VA_ARGS__).str()
 
 inline void ltrimInPlace(std::string & s) {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {

@@ -380,10 +380,10 @@ namespace rckid::filesystem {
         }
     }
 
-    std::string getLabel(Drive dr) {
+    String getLabel(Drive dr) {
         switch (dr) {
             case Drive::SD: {
-                std::string result{' ', 12};
+                String result{' ', 12};
                 f_getlabel("",result.data(), 0);
                 return result;
             }
@@ -555,7 +555,7 @@ namespace rckid::filesystem {
 
 
 
-    std::string stem(std::string const & path) {
+    String stem(String const & path) {
         if (path.empty())
             return path;
         size_t end = path.size();
@@ -571,7 +571,7 @@ namespace rckid::filesystem {
         return path.substr(i, end - i);
     }
 
-    std::string ext(std::string const & path) {
+    String ext(String const & path) {
         for (size_t i = path.size() - 1; i > 0; --i) {
             if (path[i] == '.')
                 return path.substr(i);
@@ -579,11 +579,11 @@ namespace rckid::filesystem {
         return "";
     }
 
-    std::string join(std::string const & path, std::string const & item) {
+    String join(String const & path, String const & item) {
         return STR(path << "/" << item);
     }
 
-    std::string parent(std::string const & path) {
+    String parent(String const & path) {
         for (size_t i = path.size() - 1; i > 0; --i) {
             if (path[i] == '/')
                 return path.substr(0, i);

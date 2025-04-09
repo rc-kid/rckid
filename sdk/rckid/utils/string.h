@@ -3,6 +3,11 @@
 #include <platform/writer.h>
 #include "../memory.h"
 
+#ifdef STR
+#undef STR
+#endif
+#define STR(...) (rckid::StringWriter{} << __VA_ARGS__).str()
+
 namespace rckid {
 
     /** Simple string that can hold either const char found in ROM, or mutable string stored on heap.
@@ -13,6 +18,11 @@ namespace rckid {
         /** Creates an empty string. 
          */
         String() = default;
+
+        String(char c, uint32_t n): data_{Heap::alloc<char>(n + 1)}, size_{n}, capacity_{} {
+            memset(data_, c, n);
+            data_[n] = '\0';
+        }
 
         /** Creates string from given literal. 
          
@@ -26,10 +36,10 @@ namespace rckid {
                 grow(size_);
         }
 
-        String(char const * str, uint32_t capacity): data_{const_cast<char*>(str)} {
-            if (str != nullptr)
-                size_ = strlen(str);
-            grow(capacity);
+        String(char const * str, uint32_t size): data_{const_cast<char*>(str)}, size_{size} {
+            // we have to always grow as we are not sure that the substring will end with 0
+            grow(size_);
+            data_[size_] = 0;
         }
 
         String(String const & from) : data_{from.data_}, size_{from.size_}, capacity_{from.capacity_} {
@@ -47,15 +57,16 @@ namespace rckid {
             }
         }
 
-        // TODO constructor that takes std::string
-        // TO BE DELETED WHEN WE SWITCH TO STRING COMPLETELY
-        String(std::string const & str): data_{nullptr}, size_{0}, capacity_{0} {
-            if (str.size() > 0) {
-                data_ = (char*)Heap::allocBytes(str.size() + 1);
-                memcpy(data_, str.c_str(), str.size() + 1);
-                size_ = str.size();
-                capacity_ = str.size();
-            }
+        static String withCapacity(uint32_t size) {
+            String s;
+            s.grow(size);
+            return s;
+        }
+
+        static String withCapacity(char const * str, uint32_t size) {
+            String s{str};
+            s.grow(size);
+            return s;
         }
 
         /** Deletes the string. If the stored string literal belongs to heap, cleans it.
@@ -67,7 +78,7 @@ namespace rckid {
         String & operator = (String const & other) {
             if (capacity_ < other.size_) {
                 Heap::tryFree(data_);
-                data_ = (char*)Heap::allocBytes(other.size_ + 1);
+                data_ = Heap::alloc<char>(other.size_ + 1);
                 capacity_ = other.size_;
             }
             memcpy(data_, other.data_, other.size_ + 1);
@@ -94,6 +105,8 @@ namespace rckid {
 
         char const * c_str() const { return data_; }
 
+        char * data() { return data_; }
+
         uint32_t size() const { return size_; }
 
         char const * begin() const { return data_; }
@@ -101,12 +114,39 @@ namespace rckid {
 
         char operator[](uint32_t index) const { return data_[index]; }
 
+        String & operator += (char x) {
+            if (capacity_ < size_ + 1)
+                grow(size_ == 0 ? 16 : size_ * 2);
+            data_[size_] = x;
+            data_[size_ + 1] = '\0';
+            ++size_;
+            return *this;
+        }
+
+        bool operator == (char const * other) const {
+            return strcmp(data_, other) == 0;
+        }
+
+        bool operator != (char const * other) const {
+            return strcmp(data_, other) != 0;
+        }
+
+        String substr(uint32_t start) const { return substr(start, size_ - start); }
+            
+        String substr(uint32_t start, uint32_t length) const {
+            if (start >= size_)
+                return String{};
+            ASSERT(start + length <= size_);
+            return String{data_ + start, length};
+        }
+
+
         uint32_t capacity() const { return capacity_; }
 
         void grow(uint32_t size) {
             if (size > capacity_) {
-                char * newData = (char*)Heap::allocBytes(size + 1);
-                memcpy(newData, data_, size_);
+                char * newData = Heap::alloc<char>(size + 1);;
+                memcpy(newData, data_, size_ + 1);
                 Heap::tryFree(data_);
                 data_ = newData;
                 capacity_ = size;
@@ -115,8 +155,8 @@ namespace rckid {
 
         void shrink() {
             if (size_ < capacity_) {
-                char * newData = (char*)Heap::allocBytes(size_ + 1);
-                memcpy(newData, data_, size_);
+                char * newData = Heap::alloc<char>(size_ + 1);
+                memcpy(newData, data_, size_ + 1);
                 Heap::tryFree(data_);
                 data_ = newData;
                 capacity_ = size_;
@@ -135,5 +175,26 @@ namespace rckid {
         w << s.c_str();
         return w;
     }
+
+    class StringWriter {
+    public:
+        StringWriter():
+            writer_{[this](char c) { str_ += c; }} {
+        }
+    
+        template<typename T>
+        StringWriter & operator << (T x) {
+            writer_ << x;
+            return *this; 
+        }
+    
+        String str() {
+            return std::move(str_);
+        }
+    
+    private:
+        String str_;
+        Writer writer_;
+    }; // rckid::StringWriter
 
 } // namespace rckid

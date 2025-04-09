@@ -49,7 +49,7 @@ namespace rckid::ui {
             repositionElements(bImg_, bText_);
         } 
 
-        void set(Image icon, std::string text, Transition transition = Transition::None) {
+        void set(Image icon, String text, Transition transition = Transition::None) {
             if (transition == Transition::None) {
                 aImg_ = std::move(icon);
                 aText_.setText(text);

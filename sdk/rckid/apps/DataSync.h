@@ -118,7 +118,7 @@ namespace rckid {
         //Bitmap<ColorRGB> icon_;
         uint32_t sizeBlocks_;
         char const * format_ = nullptr;
-        std::string label_;
+        String label_;
 
         inline static bool mscActive_ = false;
         inline static uint32_t blocksRead_ = 0;
