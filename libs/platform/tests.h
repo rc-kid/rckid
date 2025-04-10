@@ -6,9 +6,7 @@
 #include <iostream>
 #include <cstdint>
 
-#if (! defined STR)
-#define STR(...) static_cast<std::stringstream &&>(std::stringstream() << __VA_ARGS__).str()
-#endif
+#include <platform.h>
 
 /** \page helpersTests Tests
     \brief Unittests infrastructure. 

@@ -13,7 +13,7 @@ class Writer {
 public:
     class Converter{};
 
-#if (defined PLATFORM_NOSTDCPP)
+#if (defined PLATFORM_NO_STDCPP)
     typedef void (*CharWriter)(char, void *);
     #define PUTCHAR(...) putChar_(__VA_ARGS__, this)
 #else
@@ -135,7 +135,7 @@ private:
 class BufferedWriter : protected Writer {
 public:
     BufferedWriter():
-#if (defined PLATFORM_NOSTDCPP)
+#if (defined PLATFORM_NO_STDCPP)
         Writer{[](char c, void * self) { ((BufferedWriter*)self)->append(c); }} {
 #else
         Writer{[this](char c) { append(c); }} {
