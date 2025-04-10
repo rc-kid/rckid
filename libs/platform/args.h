@@ -82,7 +82,7 @@ public:
             std::string name{argv[i] + 2};
             auto arg = keyword.find(name);
             if (arg == keyword.end())
-                throw std::invalid_argument(STR("Unknown keyword argument " << name)); 
+                throw std::invalid_argument(std::string{"Unknown keyword argument "} + name); 
             // move to the value
             ++i;
             if (i >= static_cast<size_t>(argc) || startsWith(argv[i], "--")) {

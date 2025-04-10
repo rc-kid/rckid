@@ -12,6 +12,12 @@
 #include "../definitions.h"
 #include "../writer.h"
 
+
+#if (! defined PLATFORM_NO_STDSTRING)
+#define STR(...) static_cast<std::stringstream &&>(std::stringstream() << __VA_ARGS__).str()
+#endif
+
+
 #if defined(_MSC_VER)
 /** Swaps bytes in an uint16_t. GCC builtin that is not available on MSVC. 
  */

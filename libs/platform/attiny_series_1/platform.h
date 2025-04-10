@@ -10,7 +10,7 @@
 
 #define PLATFORM_AVR_MEGATINY
 #define PLATFORM_LITTLE_ENDIAN
-#define PLATFORM_NOSTDCPP
+#define PLATFORM_NO_STDCPP
 
 #undef cli
 #undef sei

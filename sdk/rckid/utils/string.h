@@ -3,9 +3,6 @@
 #include <platform/writer.h>
 #include "../memory.h"
 
-#ifdef STR
-#undef STR
-#endif
 #define STR(...) (rckid::StringWriter{} << __VA_ARGS__).str()
 
 namespace rckid {
