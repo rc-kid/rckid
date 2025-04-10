@@ -5,8 +5,6 @@
 
 - see if we can run at 5MHz and still talk to neopixel
 
-- create a string class that allows storing char const * or std::string like, something like owning string_view
-
 - how to deal with non-16 bpp bitmaps 
 
 - serialize & deserialize vs load & save
