@@ -5,7 +5,9 @@
 #include <locale>
 #include <sstream>
 
-#define STR(...) (std::stringstream{} << __VA_ARGS__).str()
+#if (! defined STR)
+#define STR(...) static_cast<std::stringstream &&>(std::stringstream() << __VA_ARGS__).str()
+#endif
 
 inline void ltrimInPlace(std::string & s) {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
