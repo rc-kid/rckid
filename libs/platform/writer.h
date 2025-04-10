@@ -14,9 +14,11 @@ public:
     class Converter{};
 
 #if (defined PLATFORM_NOSTDCPP)
-    typedef void (*CharWriter)(char);
+    typedef void (*CharWriter)(char, void *);
+    #define PUTCHAR(...) putChar_(__VA_ARGS__, this)
 #else
     using CharWriter = std::function<void(char)>;
+    #define PUTCHAR(...) putChar_(__VA_ARGS__)
 #endif
 
     static constexpr char endl = '\n';
@@ -25,7 +27,7 @@ public:
 
     Writer & operator << (char const * str) {
         while (*str != 0)
-            putChar_(*(str++));
+            PUTCHAR(*(str++));
         return *this;
     }
 
@@ -34,12 +36,12 @@ public:
     }
 
     Writer & operator << (char c) { 
-        putChar_(c); 
+        PUTCHAR(c); 
         return *this; 
     }
 
     Writer & operator << (bool b) {
-        putChar_(b ? 'T' : 'F');
+        PUTCHAR(b ? 'T' : 'F');
         return *this;
     }
 
@@ -50,11 +52,11 @@ public:
         while (x < order && order > 1)
             order = order / 10;
         while (order >= 10) {
-            putChar_(static_cast<char>((x / order)) + '0');
+            PUTCHAR(static_cast<char>((x / order)) + '0');
             x = x % order;
             order = order / 10;
         }
-        putChar_(static_cast<char>(x) + '0');
+        PUTCHAR(static_cast<char>(x) + '0');
         return *this;
     }
     Writer & operator << (uint64_t x) {
@@ -62,11 +64,11 @@ public:
         while (x < order && order > 1)
             order = order / 10;
         while (order >= 10) {
-            putChar_(static_cast<char>((x / order)) + '0');
+            PUTCHAR(static_cast<char>((x / order)) + '0');
             x = x % order;
             order = order / 10;
         }
-        putChar_(static_cast<char>(x) + '0');
+        PUTCHAR(static_cast<char>(x) + '0');
         return *this;
         return *this;
     }
@@ -81,7 +83,7 @@ public:
 
     Writer & operator << (int8_t value) { 
         if (value < 0) {
-            putChar_('-');
+            PUTCHAR('-');
             value *= -1;
         }
         return (*this) << static_cast<uint8_t>(value);
@@ -89,7 +91,7 @@ public:
 
     Writer & operator << (int16_t value) { 
         if (value < 0) {
-            putChar_('-');
+            PUTCHAR('-');
             value *= -1;
         }
         return (*this) << static_cast<uint16_t>(value);
@@ -97,7 +99,7 @@ public:
 
     Writer & operator << (int32_t value) { 
         if (value < 0) {
-            putChar_('-');
+            PUTCHAR('-');
             value *= -1;
         }
         return (*this) << static_cast<uint32_t>(value);
@@ -105,7 +107,7 @@ public:
 
     Writer & operator << (int64_t value) { 
         if (value < 0) {
-            putChar_('-');
+            PUTCHAR('-');
             value *= -1;
         }
         return (*this) << static_cast<uint64_t>(value);
@@ -128,10 +130,16 @@ private:
     CharWriter putChar_;
 }; // Writer
 
-class BufferedWriter {
+#undef PUTCHAR
+
+class BufferedWriter : protected Writer {
 public:
     BufferedWriter():
-        writer_{[this](char c) { append(c); }} {
+#if (defined PLATFORM_NOSTDCPP)
+        Writer{[](char c, void * self) { ((BufferedWriter*)self)->append(c); }} {
+#else
+        Writer{[this](char c) { append(c); }} {
+#endif
     }
 
     ~BufferedWriter() {
@@ -140,7 +148,7 @@ public:
 
     template<typename T>
     BufferedWriter & operator << (T x) {
-        writer_ << x;
+        (*(Writer*)this) << x;
         return *this; 
     }
 
@@ -166,7 +174,6 @@ private:
     char * buffer_ = new char[17];;
     uint32_t size_ = 0;
     uint32_t capacity_ = 16; 
-    Writer writer_;
 }; // BufferedWriter
 
 template<typename T>
