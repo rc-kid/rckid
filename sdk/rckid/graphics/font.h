@@ -53,7 +53,7 @@ namespace rckid {
             return result;
         }
 
-        int textWidth(std::string const & str) const { return textWidth(str.c_str()); }
+        int textWidth(String const & str) const { return textWidth(str.c_str()); }
 
         GlyphInfo const & glyphInfoFor(char glyph) const { return glyphs[glyph - 32]; }
 

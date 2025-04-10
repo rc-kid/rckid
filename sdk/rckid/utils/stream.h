@@ -178,15 +178,15 @@ namespace rckid {
 
     // serialization of std::string - first serialize uint32_t length, followed by the array itself
     template<>
-    inline void WriteStream::serialize(std::string const & what) {
+    inline void WriteStream::serialize(String const & what) {
         serialize<uint32_t>(static_cast<uint32_t>(what.size()));
-        write(reinterpret_cast<uint8_t const *>(what.data()), static_cast<uint32_t>(what.size()));
+        write(reinterpret_cast<uint8_t const *>(what.data()), what.size());
     }
 
     template<>
-    inline std::string ReadStream::deserialize<std::string>() {
+    inline String ReadStream::deserialize<String>() {
         uint32_t size = deserialize<uint32_t>();
-        std::string result(size, ' ');
+        String result(' ', size);
         read(reinterpret_cast<uint8_t*>(result.data()), size);
         return result;
     }

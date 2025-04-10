@@ -52,12 +52,6 @@ namespace rckid::ui {
 
             String const & text() const { return text_; }
 
-            /*
-            void fillText(std::string & text) const {
-                text = text_;
-            }
-            */
-
             Bitmap<16> icon() const {
                 return Bitmap<16>{PNG::fromBuffer(icon_, iconSize_)};
             }

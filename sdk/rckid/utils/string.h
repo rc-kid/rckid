@@ -106,6 +106,7 @@ namespace rckid {
         char const * c_str() const { return data_; }
 
         char * data() { return data_; }
+        char const * data() const { return data_; }
 
         uint32_t size() const { return size_; }
 
