@@ -6,6 +6,9 @@
 #include <fstream>
 #endif
 
+#include <rckid/utils/string.h>
+
+
 namespace rckid::gbcemu {
 
     /** Memory bank controller types. 
@@ -128,7 +131,7 @@ namespace rckid::gbcemu {
     class FileGamePak : public GamePak {
     public:
 
-        FileGamePak(std::string const & filename);
+        FileGamePak(String const & filename);
 
         ~FileGamePak() override {
             delete [] rom_;
