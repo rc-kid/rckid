@@ -16,7 +16,9 @@ namespace rckid {
          */
         String() = default;
 
-        String(char c, uint32_t n): data_{Heap::alloc<char>(n + 1)}, size_{n}, capacity_{} {
+        explicit String(Allocator & a): a_{a} {}
+
+        String(char c, uint32_t n, Allocator & a = Heap::allocator()): a_{a}, data_{a.alloc<char>(n + 1)}, size_{n}, capacity_{} {
             memset(data_, c, n);
             data_[n] = '\0';
         }
@@ -25,7 +27,7 @@ namespace rckid {
          
             If the string literal comes from heap, creates new heap allocated copy of it. Otherwise just keeps the presumed immuatble pointer. The string must be null terminated, or null.
          */
-        String(char const * str) : data_{const_cast<char*>(str)} {
+        String(char const * str, Allocator & a = Heap::allocator()) : a_{a}, data_{const_cast<char*>(str)} {
             if (str == nullptr)
                 return;
             size_ = strlen(str);
@@ -33,20 +35,20 @@ namespace rckid {
                 grow(size_);
         }
 
-        String(char const * str, uint32_t size): data_{const_cast<char*>(str)}, size_{size} {
+        String(char const * str, uint32_t size, Allocator & a = Heap::allocator()): a_{a}, data_{const_cast<char*>(str)}, size_{size} {
             // we have to always grow as we are not sure that the substring will end with 0
             grow(size_);
             data_[size_] = 0;
         }
 
-        String(String const & from) : data_{from.data_}, size_{from.size_}, capacity_{from.capacity_} {
+        String(String const & from) : a_{from.a_}, data_{from.data_}, size_{from.size_}, capacity_{from.capacity_} {
             if (from.capacity_ > 0) {
-                data_ = (char*)Heap::allocBytes(from.size_ + 1);
+                data_ = a_.alloc<char>(from.size_ + 1);
                 memcpy(data_, from.data_, from.size_ + 1);
             }
         }
 
-        String(String && from): data_{from.data_}, size_{from.size_}, capacity_{from.capacity_} {
+        String(String && from): a_{from.a_}, data_{from.data_}, size_{from.size_}, capacity_{from.capacity_} {
             if (capacity_ != 0) {
                 from.data_ = nullptr;
                 from.size_ = 0;
@@ -54,14 +56,14 @@ namespace rckid {
             }
         }
 
-        static String withCapacity(uint32_t size) {
-            String s;
+        static String withCapacity(uint32_t size, Allocator & a = Heap::allocator()) {
+            String s{a};
             s.grow(size);
             return s;
         }
 
-        static String withCapacity(char const * str, uint32_t size) {
-            String s{str};
+        static String withCapacity(char const * str, uint32_t size, Allocator & a = Heap::allocator()) {
+            String s{str, a};
             s.grow(size);
             return s;
         }
@@ -69,13 +71,13 @@ namespace rckid {
         /** Deletes the string. If the stored string literal belongs to heap, cleans it.
          */
         ~String() {
-            Heap::tryFree(data_);
+            a_.tryFree(data_);
         }
 
         String & operator = (String const & other) {
             if (capacity_ < other.size_) {
-                Heap::tryFree(data_);
-                data_ = Heap::alloc<char>(other.size_ + 1);
+                a_.tryFree(data_);
+                data_ = a_.alloc<char>(other.size_ + 1);
                 capacity_ = other.size_;
             }
             memcpy(data_, other.data_, other.size_ + 1);
@@ -85,7 +87,7 @@ namespace rckid {
 
         String & operator = (String && other) {
             if (this != &other) {
-                Heap::tryFree(data_);
+                a_.tryFree(data_);
                 data_ = other.data_;
                 size_ = other.size_;
                 capacity_ = other.capacity_;
@@ -143,9 +145,9 @@ namespace rckid {
 
         void grow(uint32_t size) {
             if (size > capacity_) {
-                char * newData = Heap::alloc<char>(size + 1);;
+                char * newData = a_.alloc<char>(size + 1);;
                 memcpy(newData, data_, size_ + 1);
-                Heap::tryFree(data_);
+                a_.tryFree(data_);
                 data_ = newData;
                 capacity_ = size;
             }
@@ -153,15 +155,16 @@ namespace rckid {
 
         void shrink() {
             if (size_ < capacity_) {
-                char * newData = Heap::alloc<char>(size_ + 1);
+                char * newData = a_.alloc<char>(size_ + 1);
                 memcpy(newData, data_, size_ + 1);
-                Heap::tryFree(data_);
+                a_.tryFree(data_);
                 data_ = newData;
                 capacity_ = size_;
             }
         }
 
     private:
+        Allocator & a_ = Heap::allocator();
         // start an empty string
         char * data_ = const_cast<char *>("");
         uint32_t size_ = 0;

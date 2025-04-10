@@ -11,6 +11,7 @@ namespace rckid {
     public:
         virtual void * allocBytes(uint32_t bytes) = 0;
         virtual void free(void * ptr) = 0;
+        virtual void tryFree(void * ptr) = 0;
 
         template<typename T>
         T * alloc() { return (T*)allocBytes(sizeof(T)); } 
@@ -28,6 +29,7 @@ namespace rckid {
         public:
             void * allocBytes(uint32_t bytes) { return Heap::allocBytes(bytes); }
             void free(void * ptr) { Heap::free(ptr); }
+            void tryFree(void * ptr) { Heap::tryFree(ptr); }
         }; // Heap::AllocatorSingleton
 
         static AllocatorSingleton & allocator() {
@@ -88,6 +90,7 @@ namespace rckid {
         public:
             void * allocBytes(uint32_t bytes) { return Arena::allocBytes(bytes); }
             void free([[maybe_unused]] void * ptr) { }
+            void tryFree([[maybe_unused]] void * ptr) { }
         }; // Heap::AllocatorSingleton
 
         static AllocatorSingleton & allocator() {
@@ -179,7 +182,7 @@ namespace rckid {
 
         T * allocate(std::size_t n) { return (T *)Arena::allocBytes(static_cast<uint32_t>(n * sizeof(T))); }
         void deallocate([[maybe_unused]] T * ptr, [[maybe_unused]] size_t n) { }
-    };    
+    }; // rckid::ArenaAllocator
 
     class ArenaGuard {
     public:
