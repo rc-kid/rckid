@@ -5,13 +5,27 @@
 //#define GBCEMU_NO_SPEED_LIMIT
 
 
-#define GBCEMU_INTERACTIVE_DEBUG
+#define GBCEMU_INTERACTIVE_DEBUG 1
+
 #define GBCEMU_ENABLE_BKPT 1
-//#define GBCEMU_TRACE_INSTRUCTIONS
+
+/** Log GBC serial transactions.
+ */
+#define LL_GBCEMU_SERIAL 1
+
+/** Log GBC rom bank switching.
+ */
+#define LL_GBCEMU_ROMBANK 1
+
+/** When enabled, every executed instruction will be logged including the state.
+ 
+    While useful for debugging, this is a last resort option as it will slow down the emulator significantly.
+ */
+#define GBCEMU_TRACE_INSTRUCTIONS 0
 
 /** Very fast very simple tracking of every pc and opcode executed. Note that this only works on fantasy backend as it uses printf for output instead of the debugWrite used elsewhere in rckid's logging.
  */
-//#define GBCEMU_TRACE_PC_OPCODE
+#define GBCEMU_TRACE_PC_OPCODE 0
 
 #include <rckid/app.h>
 #include "gamepak.h"
@@ -281,6 +295,7 @@ namespace rckid::gbcemu {
 
         static constexpr uint8_t MEMMAP_VRAM_0 = 8;
         static constexpr uint8_t MEMMAP_VRAM_1 = 9;
+        static constexpr uint16_t ERAM_START = 0xa000;
 
         /** Reads one byte from memory. For most reads & writes this simply goes through the memmap, but there are special cases for the shorter memory blocks towards the end of the address space.
          */
@@ -294,7 +309,10 @@ namespace rckid::gbcemu {
         void memWr16(uint16_t addr, uint16_t value);
 
 
-        void setRom(uint16_t addr, uint8_t value);
+        void writeRom(uint16_t addr, uint8_t value);
+
+        void writeERam(uint16_t offset, uint8_t value);
+        uint8_t readERam(uint16_t offset);
 
         /** Sets the specific IO register, or HRAM.
          */

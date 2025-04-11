@@ -366,7 +366,7 @@ namespace rckid::gbcemu {
             case 5:
             case 6:
             case 7:
-                return 0x10000000 + (romPage_ * 4096) + addr - 4096;
+                return 0x10000000 + (romPage_ * 0x4000) + addr - 0x4000;
             case 8: // video ram
             case 9:
                 UNIMPLEMENTED;
@@ -395,7 +395,7 @@ namespace rckid::gbcemu {
 
     void GBCEmu::runCPU(uint32_t cycles) {
         for (uint32_t c = 0; c < cycles; ) {
-#ifdef GBCEMU_INTERACTIVE_DEBUG     
+#if (GBCEMU_INTERACTIVE_DEBUG == 1)
             markAsVisited(PC);           
             if (PC == breakpoint_ || debug_) {
                 debugWrite() << "===== BREAKPOINT ===== (pc " << hex(pc_) << ")\n";
@@ -440,7 +440,8 @@ namespace rckid::gbcemu {
         switch (mbc_) {
             case MBC::None:
             case MBC::Type1:
-            
+                break;
+            case MBC::Type2:
                 break;
             default:
                 LOG(LL_ERROR, "Unsupported MBC type");
@@ -540,7 +541,7 @@ namespace rckid::gbcemu {
         timerCycles_ = 0;
         // set the initial values for the IO registers 
         IO_LY = 0; // ensure we'll start with new frame
-    #ifdef GBCEMU_INTERACTIVE_DEBUG     
+    #if (GBCEMU_INTERACTIVE_DEBUG == 1)
         resetVisited();
     #endif
     }
@@ -609,12 +610,12 @@ namespace rckid::gbcemu {
             }
         }
         uint32_t usedCycles = 0;
-#ifdef GBCEMU_TRACE_INSTRUCTIONS
+#if (GBCEMU_TRACE_INSTRUCTIONS == 1)
         if (! debug_)
            disassembleInstruction(PC);
 #endif        
         uint8_t opcode = mem8(PC++);
-#ifdef GBCEMU_TRACE_PC_OPCODE
+#if (GBCEMU_TRACE_PC_OPCODE == 1)
         debugWrite() << hex<uint32_t>(convertAddressToAbsolute(PC - 1), false) <<  ": " << hex(opcode, false) << '\n';
         // below code depends on system malloc likely so not working yet
         //printf("%04x: %02x\n", PC - 1, opcode);
@@ -631,7 +632,7 @@ namespace rckid::gbcemu {
                 break;
             #include "insns.inc.h"
             default:
-#ifdef GBCEMU_INTERACTIVE_DEBUG
+#if (GBCEMU_INTERACTIVE_DEBUG == 0)
             LOG(LL_ERROR, "Unknown opcode " << hex(opcode) << " at " << hex<uint16_t>(PC - 1));
             debug_ = true;
 #else
@@ -644,7 +645,7 @@ namespace rckid::gbcemu {
         return usedCycles;
     }
 
-#ifdef GBCEMU_INTERACTIVE_DEBUG
+#if (GBCEMU_INTERACTIVE_DEBUG == 1)
 
     void GBCEmu::logDisassembly(uint16_t start, uint16_t end) {
         debugWrite() << "===== DISASSEMBLY ===== (from " << hex(start) << " to " << hex(end) << ")\n";
@@ -1061,6 +1062,7 @@ namespace rckid::gbcemu {
     }
 
     void GBCEmu::setRomPage(uint32_t page) {
+        LOG(LL_GBCEMU_ROMBANK, "Setting ROM page to " << page << ", from pc " << hex<uint16_t>(PC - 1));
         romPage_ = page;
         memMap_[4] = const_cast<uint8_t *>(gamepak_->getPage(page));
         memMap_[5] = memMap_[4] + 0x1000;
@@ -1194,7 +1196,7 @@ namespace rckid::gbcemu {
     // memory 
 
     uint8_t GBCEmu::memRd8(uint16_t addr) {
-#ifdef GBCEMU_INTERACTIVE_DEBUG
+#if (GBCEMU_INTERACTIVE_DEBUG == 1)
         if (addr >= memoryBreakpointStart_ && addr < memoryBreakpointEnd_) {
             debugWrite() << "===== MEMORY BREAKPOINT ===== (read address " << hex(addr) << ")\n";
             logMemory(memoryBreakpointStart_, memoryBreakpointEnd_);
@@ -1203,16 +1205,36 @@ namespace rckid::gbcemu {
 #endif
         uint32_t page = addr >> 12;
         uint32_t offset = addr & 0xfff;
-        if (page < 15)
-            return memMap_[page][offset];
-        // if the offset is last 256 bytes, return the hram contents
-        if (offset >= 0xf00)
-            return hram_[offset - 0xf00];
-        // otherwise return OAM if in range
-        if (offset >= 0xe00)
-            return oam_[offset - 0xe00];
-        // otherwise this is the echo ram, return the wram mirror contents
-        return memMap_[page][offset];
+        switch (page) {
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+            case 12:
+            case 13:
+            case 14:
+            case 10:
+                return memMap_[page][offset];
+            case 11:
+                return readERam(addr - ERAM_START);
+            case 15:
+                // if the offset is last 256 bytes, return the hram contents
+                if (offset >= 0xf00)
+                    return hram_[offset - 0xf00];
+                // otherwise return OAM if in range
+                if (offset >= 0xe00)
+                    return oam_[offset - 0xe00];
+                // otherwise this is the echo ram, return the wram mirror contents
+                return memMap_[page][offset];
+            default:
+                UNREACHABLE;
+        }
     }
 
     uint16_t GBCEmu::memRd16(uint16_t addr) {
@@ -1221,7 +1243,7 @@ namespace rckid::gbcemu {
     }
 
     void GBCEmu::memWr8(uint16_t addr, uint8_t value) {
-#ifdef GBCEMU_INTERACTIVE_DEBUG
+#if (GBCEMU_INTERACTIVE_DEBUG == 1)
         if (addr >= memoryBreakpointStart_ && addr < memoryBreakpointEnd_) {
             debugWrite() << "===== MEMORY BREAKPOINT ===== (write address " << hex(addr) << ", value " << hex(value) << ")\n";
             logMemory(memoryBreakpointStart_, memoryBreakpointEnd_);
@@ -1239,14 +1261,12 @@ namespace rckid::gbcemu {
             case 5:
             case 6:
             case 7:
-                // ROM bank switching
-                setRom(addr, value);
+                // ROM bank switching, depending on the MBC used
+                writeRom(addr, value);
                 break;
             case 10:
             case 11:
-                // writing to eram even if there is none is technically allowed and should not break the game
-                if (memMap_[page] != nullptr)
-                    memMap_[page][offset] = value;
+                writeERam(addr - ERAM_START, value);
                 break;
             case 8:
             case 9:
@@ -1270,7 +1290,7 @@ namespace rckid::gbcemu {
         }
     }
 
-    void GBCEmu::setRom(uint16_t addr, uint8_t value) {
+    void GBCEmu::writeRom(uint16_t addr, uint8_t value) {
         switch (mbc_) {
             case MBC::None:
                 break;
@@ -1284,16 +1304,16 @@ namespace rckid::gbcemu {
                 TODO the advanced mode seems to be able to set bank number for the first half or ROM as well, which sound weird a bit. 
              */
             case MBC::Type1:
-                if (addr < 0x1fff) {
+                if (addr <= 0x1fff) {
                     // enable/disable external ram
                     UNIMPLEMENTED;
-                } else if (addr < 0x3fff) {
+                } else if (addr <= 0x3fff) {
                     // set the lower 5 bits of the rom bank
                     uint32_t page = romPage_ & 0xe0 | (value & 0x1f);
                     if (page == 0)
                         page = 1;
                     setRomPage(page);
-                } else if (addr < 0x5fff) {
+                } else if (addr <= 0x5fff) {
                     // set the upper 2 bits of the rom bank
                     uint32_t page = (romPage_ & 0x1f) | ((value & 3) << 5);
                     setRomPage(page);
@@ -1304,6 +1324,49 @@ namespace rckid::gbcemu {
                         UNIMPLEMENTED;
                 }
                 break;
+            /** MBC2 supports ROM Banks (0..15) and 512bytes of RAM built into the chip. The 512 ERAM bytes are echoed across the range. There is only single register 0x0000 - 0x3fff which enables / disables the eram and sets the ROM page.
+             */
+            case MBC::Type2:
+                if (addr <= 0x3fff) {
+
+                }
+                break;
+            case MBC::Type3:
+            case MBC::Type5:
+            case MBC::Type6:
+            case MBC::Type7:
+            default:
+                // we should have died earlier
+                UNREACHABLE;
+        }
+    }
+
+    void GBCEmu::writeERam(uint16_t offset, uint8_t value) {
+        switch (mbc_) {
+            case MBC::None:
+                break;
+            case MBC::Type1:
+            case MBC::Type2:
+            case MBC::Type3:
+            case MBC::Type5:
+            case MBC::Type6:
+            case MBC::Type7:
+            default:
+                // we should have died earlier
+                UNREACHABLE;
+        }
+    }
+
+    uint8_t GBCEmu::readERam(uint16_t offset) {
+        switch (mbc_) {
+            case MBC::None:
+                return 0xff;
+            case MBC::Type1:
+            case MBC::Type2:
+            case MBC::Type3:
+            case MBC::Type5:
+            case MBC::Type6:
+            case MBC::Type7:
             default:
                 // we should have died earlier
                 UNREACHABLE;
