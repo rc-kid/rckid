@@ -243,6 +243,10 @@ namespace rckid::gbcemu {
                 ime_ = true;
         }
 
+        /** Takes the GBC relative address and converts it to a unique number that can be used for absolute addressing including banks, etc
+         */
+        uint32_t convertAddressToAbsolute(uint16_t addr);
+
         void runCPU(uint32_t cycles);
         //@}
 

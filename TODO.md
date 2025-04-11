@@ -3,6 +3,8 @@
 - could this be better PMIC? https://www.ti.com/product/BQ25628
 - slimmer connector https://jlcpcb.com/partdetail/XkbConnection-X05A10H40G/C528037
 
+- add default allocator and when allocators are creted, use the default allocator unless specified (so changing the default allocator changes the allocation for everyone in scope)
+
 - see if we can run at 5MHz and still talk to neopixel
 
 - how to deal with non-16 bpp bitmaps 
@@ -99,8 +101,6 @@
 - https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01-1-16r13/ (90 deg cartridge header)
 
 - see if we can have simpler cartridge connector w/o the riser board
-
-- I need a much better way to connect the battery in v3 - soldering and then stuffing it in the enclosure is beyond pain
 
 - generate assets does not generate ui tiles yet - and the ones we have are a bit off
 - make text input better looking and the whole idea of modal apps nicer to work with
