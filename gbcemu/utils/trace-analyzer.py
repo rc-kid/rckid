@@ -39,12 +39,14 @@ def main():
                 pc = int(pc, 16)
                 opcode = int(opcode, 16)
                 if (pc not in pcs):
-                    invalidPcs.add(pc)
-                    #print(f"Error: pc {pc:x} not found in reference file")
+                    if (pc not in invalidPcs):
+                        invalidPcs.add(pc)
+                        print(f"Error: pc {pc:x} not found in reference file")
                     #sys.exit(1);
                 if (opcode not in opcodes):
-                    invalidOpcodes.add(opcode)
-                    #print(f"Error: opcode {opcode:x} not found in reference file")
+                    if (opcode not in invalidOpcodes):
+                        invalidOpcodes.add(opcode)
+                        print(f"Error: opcode {opcode:x} not found in reference file")
                     #sys.exit(1)
             except:
                 continue

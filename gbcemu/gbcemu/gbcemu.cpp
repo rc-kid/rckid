@@ -353,6 +353,46 @@ namespace rckid::gbcemu {
         blur();
     }
 
+    uint32_t GBCEmu::convertAddressToAbsolute(uint16_t addr) {
+        uint32_t page = addr >> 12;
+        uint32_t offset = addr & 0xfff;
+        switch (page) {
+            case 0: // rom bank 0
+            case 1:
+            case 2:
+            case 3:
+                return 0x10000000 + addr;
+            case 4: // rom bank 1 or selected
+            case 5:
+            case 6:
+            case 7:
+                return 0x10000000 + (romPage_ * 4096) + addr - 4096;
+            case 8: // video ram
+            case 9:
+                UNIMPLEMENTED;
+            case 10: // external ram
+            case 11:
+                UNIMPLEMENTED;
+            case 12: // work ram bank 0
+                return 0x20000000 + addr - 0xc000;
+            case 13: // work ram bank 1 or selected
+                // TODO for GBC this is actually selectable 
+                return 0x20000000 + addr - 0xc000;
+            case 14: // echo ram, same as WRAM0
+                // TODO do we want to distinguish this comes from echo ram? 
+                return 0x20000000 + addr - 0xe000;
+            case 15:
+                if (addr > 0xe00)
+                    // TODO selected bank of WRAM for CGB
+                    return 0x20000000 + addr - 0xe000;
+                else
+                    return addr;
+            default:
+                UNREACHABLE;
+        }
+    }
+
+
     void GBCEmu::runCPU(uint32_t cycles) {
         for (uint32_t c = 0; c < cycles; ) {
 #ifdef GBCEMU_INTERACTIVE_DEBUG     
@@ -575,7 +615,7 @@ namespace rckid::gbcemu {
 #endif        
         uint8_t opcode = mem8(PC++);
 #ifdef GBCEMU_TRACE_PC_OPCODE
-        debugWrite() << hex<uint16_t>(PC - 1, false) <<  ": " << hex(opcode, false) << '\n';
+        debugWrite() << hex<uint32_t>(convertAddressToAbsolute(PC - 1), false) <<  ": " << hex(opcode, false) << '\n';
         // below code depends on system malloc likely so not working yet
         //printf("%04x: %02x\n", PC - 1, opcode);
 #endif

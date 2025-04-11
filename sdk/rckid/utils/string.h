@@ -140,7 +140,6 @@ namespace rckid {
             return String{data_ + start, length};
         }
 
-
         uint32_t capacity() const { return capacity_; }
 
         void grow(uint32_t size) {
