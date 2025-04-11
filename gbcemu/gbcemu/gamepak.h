@@ -57,7 +57,12 @@ namespace rckid::gbcemu {
          
             The gamepak itself is responsible for managing the ROM pages and guarantees that the first page (index 0) is always available, and any other page is available at least until the next call of the getPage function. This corresponds to the two pages always mapped by the gameboy wherethe 0th page is always fixed.
          */
-        virtual uint8_t const * getPage(uint32_t page) const = 0;
+        uint8_t const * getPage(uint32_t page) const {
+            if (page == 0)
+                return doGetPage(0);
+            else
+                return doGetPage(page & (cartridgeROMPages() - 1));
+        }
 
         /** Returns the type of the loaded cartridge. 
          */
@@ -66,6 +71,12 @@ namespace rckid::gbcemu {
         /** Returns the size of cartridge's ROM in bytes.
          */
         uint32_t cartridgeROMSize() const { return (1 << getPage(0)[HEADER_ROM_SIZE]) * 32 * 1024; }
+
+        /** Returns the number of ROM pages available in the cartridge. 
+         
+            This could only be 2,4,8,16,32,64,128,256 or 512 for sizes total sizes from 32kb to 8Mb.
+         */
+        uint32_t cartridgeROMPages() const { return (2 << getPage(0)[HEADER_ROM_SIZE]); }
 
         /** Returns the RAM size of the cartridge in bytes. 
          */
@@ -95,6 +106,10 @@ namespace rckid::gbcemu {
             }
         }
 
+    protected:
+
+        virtual uint8_t const * doGetPage(uint32_t page) const = 0;
+
     private:
         static constexpr uint32_t HEADER_CBG_FLAG = 0x0143;
         static constexpr uint32_t HEADER_CARTRIDGE_TYPE = 0x0147;
@@ -111,7 +126,7 @@ namespace rckid::gbcemu {
     
         FlashGamePak(uint8_t const * rom) : rom_(rom){}
 
-        uint8_t const * getPage(uint32_t page) const override {
+        uint8_t const * doGetPage(uint32_t page) const override {
             return rom_ + page * 16 * 1024;
         }
 
@@ -137,7 +152,7 @@ namespace rckid::gbcemu {
             delete [] rom_;
         }
             
-        uint8_t const * getPage(uint32_t page) const override {
+        uint8_t const * doGetPage(uint32_t page) const override {
             return rom_ + page * 16 * 1024;
         }
     

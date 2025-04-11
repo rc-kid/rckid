@@ -347,6 +347,7 @@ namespace rckid::gbcemu {
 
         // eram of up to 128kb (32 banks of 4kb)
         uint8_t * eram_[32] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+        bool eramActive_ = false;
 
         // memory mapping information. For fast access, the memory is divided into 16 4kb regions with pointers to beginning in the array. This is true for all but the last block, which is a bit more complex as it contains echo ram, oam memory, io regs and hram.
         uint8_t * memMap_[16];

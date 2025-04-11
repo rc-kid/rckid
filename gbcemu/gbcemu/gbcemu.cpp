@@ -444,7 +444,7 @@ namespace rckid::gbcemu {
             case MBC::Type2:
                 break;
             default:
-                LOG(LL_ERROR, "Unsupported MBC type");
+                LOG(LL_ERROR, "Unsupported MBC type " << static_cast<uint8_t>(mbc_));
                 ASSERT(false);
                 break;
         }
@@ -632,7 +632,7 @@ namespace rckid::gbcemu {
                 break;
             #include "insns.inc.h"
             default:
-#if (GBCEMU_INTERACTIVE_DEBUG == 0)
+#if (GBCEMU_INTERACTIVE_DEBUG == 1)
             LOG(LL_ERROR, "Unknown opcode " << hex(opcode) << " at " << hex<uint16_t>(PC - 1));
             debug_ = true;
 #else
@@ -931,9 +931,7 @@ namespace rckid::gbcemu {
         uint8_t ly = IO_LY;
         if (ly >= 144)
             return;
-
         // TODO determine which sprites to use
-
         // calculate the background position we will be drawing. This is the position to the 256x256 background map created by 32x32 tiles. Using the uint8_t values for the coordinates gives us the automatic wraparound
         uint8_t by = ly + IO_SCY;
         uint8_t bx = IO_SCX;
@@ -1006,6 +1004,9 @@ namespace rckid::gbcemu {
                 continue;
             // Calculate the row address of the sprite's tile
             uint32_t sy = ly - s.y();
+            // flip the sprite on horizontal axis
+            if (s.yFlip())
+                sy = objectSize - sy;
             uint16_t tileRow = (sy >= 8) ? 
                 *(tilesetAddress + (s.tile + 1) * 8 + (sy - 8)) :
                 *(tilesetAddress + s.tile * 8 + sy);
@@ -1301,19 +1302,21 @@ namespace rckid::gbcemu {
                 4000-5fff - upper 2 bits of the bank number, or RAM bank number
                 6000-7fff - banking mode select (0 for simple, 1 for advanced)
 
-                TODO the advanced mode seems to be able to set bank number for the first half or ROM as well, which sound weird a bit. 
+                The simple mode does not allow ERAM bank switching, but uses the extra bits of the second register for more ROM banks. In the advanced banking mode, this number is used for RAM switch as well as the upper 2 bits of ROM banks for both (!) pages. Finally, if the page calculated is greater than the number of pages supported, it's truncated. 
              */
             case MBC::Type1:
-                if (addr <= 0x1fff) {
-                    // enable/disable external ram
-                    UNIMPLEMENTED;
-                } else if (addr <= 0x3fff) {
+                if (addr < 0x2000) {
+                    // enable/disable external ram by writing 0xa (enable), or anything else to disable
+                    eramActive_ = (value & 0xf) == 0xa;
+                } else if (addr < 0x4000) {
                     // set the lower 5 bits of the rom bank
-                    uint32_t page = romPage_ & 0xe0 | (value & 0x1f);
-                    if (page == 0)
-                        page = 1;
+                    value = value & 0x1f; // only use 5bits
+                    // if this would be 0, treat it as one (note this ignores the extended bits, which causes problems as 0x20, 0x40, etc will be 0x21, etc.). The advanced banking helps with this, but is currently not supported by GBCEmu
+                    if (value == 0)
+                        value = 1;
+                    uint32_t page = (romPage_ & 0xe0) | value;
                     setRomPage(page);
-                } else if (addr <= 0x5fff) {
+                } else if (addr < 0x6000) {
                     // set the upper 2 bits of the rom bank
                     uint32_t page = (romPage_ & 0x1f) | ((value & 3) << 5);
                     setRomPage(page);
@@ -1411,13 +1414,23 @@ namespace rckid::gbcemu {
                         break;
                 }
                 break;
+            case ADDR_LCDC: {
+                bool alreadyEnabled = IO_LCDC & LCDC_LCD_ENABLE;
+                IO_LCDC = value;
+                if (alreadyEnabled) {
+                    if (value & LCDC_LCD_ENABLE == 0) {
+                        IO_LY = 0; // set LY to 0 and keep it there
+                        IO_STAT = (IO_STAT & ~STAT_PPU_MODE) & STAT_INT_MODE0; // set stat mode to hblank
+                    }
+                } else {
+                    if (value & LCDC_LCD_ENABLE)
+                        initializeDisplay();
+                }
+                return;
+            }
             case ADDR_STAT:
                 IO_STAT = (IO_STAT & ~STAT_WRITE_MASK) | (value & STAT_WRITE_MASK);
                 return;
-            case ADDR_LCDC:
-                if ((IO_LCDC & LCDC_LCD_ENABLE) == 0 && (value & LCDC_LCD_ENABLE))
-                    initializeDisplay();
-                break;
             case ADDR_DMA: {
                 // the DMA works instantenuously, because the CPU is expected to wait the dedicated number of cycles in HRAM immediately after the write so this is fine
                 // TODO the waiting pattern seems to be quite straightforward and the code can be effectively skipped, might save a few cycles if needed
