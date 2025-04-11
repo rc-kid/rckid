@@ -11,11 +11,11 @@
 
 /** Log GBC serial transactions.
  */
-#define LL_GBCEMU_SERIAL 1
+#define LL_GBCEMU_SERIAL 0
 
 /** Log GBC rom bank switching.
  */
-#define LL_GBCEMU_ROMBANK 1
+#define LL_GBCEMU_ROMBANK 0
 
 /** When enabled, every executed instruction will be logged including the state.
  

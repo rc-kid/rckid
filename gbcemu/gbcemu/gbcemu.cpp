@@ -932,17 +932,18 @@ namespace rckid::gbcemu {
         if (ly >= 144)
             return;
         // TODO determine which sprites to use
-        // calculate the background position we will be drawing. This is the position to the 256x256 background map created by 32x32 tiles. Using the uint8_t values for the coordinates gives us the automatic wraparound
-        uint8_t by = ly + IO_SCY;
-        uint8_t bx = IO_SCX;
-        // determine the row of tiles we will be using and the row of inside the tile (this stays the same for the entire line)
-        uint32_t ty = by / 8;
-        uint32_t tr = by % 8;
-        uint8_t tx = bx / 8;
-        // determine tilemap address, which too stays the same for the entire line, we can also add the line offset
+
+        // figure out the palette we will be using for the row
+        uint16_t palette[4];
+        uint8_t bgp = IO_BGP;
+        palette[0] = palette_[bgp & 3].raw16();
+        palette[1] = palette_[(bgp >> 2) & 3].raw16();
+        palette[2] = palette_[(bgp >> 4) & 3].raw16();
+        palette[3] = palette_[(bgp >> 6) & 3].raw16();
+
+        uint16_t * buffer = pixels_.front();
+
         uint8_t * vram = memMap_[MEMMAP_VRAM_0];
-        uint8_t * tilemapAddress = vram + ((IO_LCDC & LCDC_BG_TILEMAP) ? 0x1c00 : 0x1800);
-        tilemapAddress += ty * 32 + tx; 
         // and determine the tileset address. Note the second address is off by 0x800 as the tileIndex is 128 at least now, so doing it here saves us the adjustment in the loop
         uint16_t * tilesetAddress1;
         uint16_t * tilesetAddress2;
@@ -953,42 +954,82 @@ namespace rckid::gbcemu {
             tilesetAddress1 = reinterpret_cast<uint16_t *>(vram + 0x1000);
             tilesetAddress2 = reinterpret_cast<uint16_t *>(vram + 0x0000);
         }
-        //uint16_t * tilesetAddress = reinterpret_cast<uint16_t *>(vram + ((IO_LCDC & LCDC_BG_WIN_TILEDATA) ? 0x0000 : 0x0800));
-
-        // and figure out the palette we will be using for the row
-        uint16_t palette[4];
-        uint8_t bgp = IO_BGP;
-        palette[0] = palette_[bgp & 3].raw16();
-        palette[1] = palette_[(bgp >> 2) & 3].raw16();
-        palette[2] = palette_[(bgp >> 4) & 3].raw16();
-        palette[3] = palette_[(bgp >> 6) & 3].raw16();
-
-        uint16_t * buffer = pixels_.front();
-
-        // render the pixels now, we keep x as the current x coordinate on the screen
-        int16_t x = - (bx & 0x7);
-        while (x < 160) {
-            // determine which tile we are using
-            // TODO for CGB we also need to determine the tile attributes 
-            uint8_t tileIndex = *tilemapAddress++;
-            // if we are overflowing the window, we need to wrap around on the *same* line
-            if (++tx == 32) {
-                tx = 0;
-                tilemapAddress = vram + ((IO_LCDC & LCDC_BG_TILEMAP) ? 0x1c00 : 0x1800);
-                tilemapAddress += ty * 32; 
+        // determine if we should draw window, or background. Window is visible when enabled and the current LY is greater or equal the WY register. The WX must also fit within the screen (160 pixels, the WX is +7 from the actual position )
+        bool drawWindow = (IO_LCDC & LCDC_WINDOW_ENABLE) && (IO_LY >= IO_WY) && (IO_WX < 167);
+        // where the window starts x-wise
+        int32_t wx = drawWindow ? IO_WX - 7 : 160;
+        // draw the line up to the beginning of the window (this is just optimization to save the drawing time of something we will later on cover with the window
+        if (! drawWindow || wx <= 0) {
+            // calculate the background position we will be drawing. This is the position to the 256x256 background map created by 32x32 tiles. Using the uint8_t values for the coordinates gives us the automatic wraparound
+            uint8_t by = ly + IO_SCY;
+            uint8_t bx = IO_SCX;
+            // determine the row of tiles we will be using and the row of inside the tile (this stays the same for the entire line)
+            uint32_t ty = by / 8;
+            uint32_t tr = by % 8;
+            uint8_t tx = bx / 8;
+            // determine tilemap address, which too stays the same for the entire line, we can also add the line offset
+            uint8_t * tilemapAddress = vram + ((IO_LCDC & LCDC_BG_TILEMAP) ? 0x1c00 : 0x1800);
+            tilemapAddress += ty * 32 + tx; 
+            // render the pixels now, we keep x as the current x coordinate on the screen
+            int16_t x = - (bx & 0x7);
+            while (x < wx) {
+                // determine which tile we are using
+                // TODO for CGB we also need to determine the tile attributes 
+                uint8_t tileIndex = *tilemapAddress++;
+                // if we are overflowing the window, we need to wrap around on the *same* line
+                if (++tx == 32) {
+                    tx = 0;
+                    tilemapAddress = vram + ((IO_LCDC & LCDC_BG_TILEMAP) ? 0x1c00 : 0x1800);
+                    tilemapAddress += ty * 32; 
+                }
+                uint16_t * tileAddress = ((tileIndex < 128) ? tilesetAddress1 : tilesetAddress2) + tileIndex * 8;
+                uint16_t tileRow =  *(tileAddress + tr);
+                // we have the tile pixels, figure out the palette indices, the tile pixels are 2 bits each in 2 panes so we need to first put them together
+                uint8_t upper = tileRow >> 8;
+                uint8_t lower = tileRow & 0xff;
+                for (int i = 7; i >= 0; --i) {
+                    uint8_t colorIndex = ((lower >> i) & 1) | (((upper >> i) & 1) << 1);
+                    // TODO render the pixel
+                    // displaySetPixel(x, ly, palette[colorIndex]);
+                    if (x >= 0 && x < 160)
+                        buffer[x] = palette[colorIndex];
+                    ++x;
+                }
             }
-            uint16_t * tileAddress = ((tileIndex < 128) ? tilesetAddress1 : tilesetAddress2) + tileIndex * 8;
-            uint16_t tileRow =  *(tileAddress + tr);
-            // we have the tile pixels, figure out the palette indices, the tile pixels are 2 bits each in 2 panes so we need to first put them together
-            uint8_t upper = tileRow >> 8;
-            uint8_t lower = tileRow & 0xff;
-            for (int i = 7; i >= 0; --i) {
-                uint8_t colorIndex = ((lower >> i) & 1) | (((upper >> i) & 1) << 1);
-                // TODO render the pixel
-                // displaySetPixel(x, ly, palette[colorIndex]);
-                if (x >= 0 && x < 160)
-                    buffer[x] = palette[colorIndex];
-                ++x;
+        }
+        // draw the window now. We always start drawing the window from window 0, 0 and the x and y coordinates only tell us where to draw the window on the screen
+        if (drawWindow) {
+            uint16_t * winBuffer = buffer + ((wx < 0) ? 0 : wx); 
+            int16_t winLength = 160 - wx;
+            uint32_t wy = IO_LY - IO_WY;
+            // determine the row and the row of tiles we will be using, window always starts from the first column
+            uint32_t tr = wy % 8;
+            uint32_t ty = wy / 8;
+            uint32_t tx = 0;
+            // determine tilemap address, which too stays the same for the entire line, we can also add the line offset
+            uint8_t * tilemapAddress = vram + ((IO_LCDC & LCDC_WINDOW_TILEMAP) ? 0x1c00 : 0x1800);
+            tilemapAddress += ty * 32; 
+
+            while (wx < winLength) {
+                // determine which tile we are using
+                // TODO for CGB we also need to determine the tile attributes 
+                uint8_t tileIndex = *tilemapAddress++;
+                // if we are overflowing the window, we need to wrap around on the *same* line
+                if (++tx == 32) {
+                    tx = 0;
+                    tilemapAddress = vram + ((IO_LCDC & LCDC_BG_TILEMAP) ? 0x1c00 : 0x1800);
+                    tilemapAddress += ty * 32; 
+                }
+                uint16_t * tileAddress = ((tileIndex < 128) ? tilesetAddress1 : tilesetAddress2) + tileIndex * 8;
+                uint16_t tileRow =  *(tileAddress + tr);
+                uint8_t upper = tileRow >> 8;
+                uint8_t lower = tileRow & 0xff;
+                for (int i = 7; i >= 0; --i) {
+                    uint8_t colorIndex = ((lower >> i) & 1) | (((upper >> i) & 1) << 1);
+                    if (wx >= 0 && wx < winLength)
+                        buffer[wx] = palette[colorIndex];
+                    ++wx;
+                }
             }
         }
 
@@ -1354,6 +1395,7 @@ namespace rckid::gbcemu {
             case MBC::Type5:
             case MBC::Type6:
             case MBC::Type7:
+                UNIMPLEMENTED;
             default:
                 // we should have died earlier
                 UNREACHABLE;
@@ -1370,6 +1412,7 @@ namespace rckid::gbcemu {
             case MBC::Type5:
             case MBC::Type6:
             case MBC::Type7:
+                UNIMPLEMENTED;
             default:
                 // we should have died earlier
                 UNREACHABLE;
