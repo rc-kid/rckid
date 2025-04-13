@@ -8,7 +8,7 @@ namespace rckid {
 
     /** Fixed-point integer value.
 
-        Uses 24 bits for the integer part and 8 bits for the fraction part. 
+        Uses 28 bits for the integer part and 4 bits for the fraction part. This gives us 24bit integer range even for multiplication.
      */
     class FixedInt {
     public:
@@ -18,7 +18,7 @@ namespace rckid {
 
         constexpr FixedInt() = default;
         constexpr FixedInt(int value): value_{value << FRACTION_BITS} {}
-        constexpr FixedInt(int value, uint8_t fraction): value_{(value << FRACTION_BITS) + fraction} {}
+        constexpr FixedInt(int value, uint32_t fraction): value_{static_cast<int>((value << FRACTION_BITS) + fraction)} {}
         constexpr FixedInt(FixedInt const &) = default;
 
         constexpr FixedInt operator + (FixedInt other) const { 
