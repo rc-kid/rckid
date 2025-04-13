@@ -9,6 +9,8 @@
 #include <rckid/ui/carousel.h>
 #include <rckid/ui/menu.h>
 
+#include <rckid/ui/header.h>
+
 using namespace rckid;
 
 class DisplayUIApp : public ui::App {
