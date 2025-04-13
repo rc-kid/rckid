@@ -12,6 +12,7 @@ namespace rckid {
         virtual void * allocBytes(uint32_t bytes) = 0;
         virtual void free(void * ptr) = 0;
         virtual void tryFree(void * ptr) = 0;
+        virtual bool contains(void * ptr) const = 0;
 
         template<typename T>
         T * alloc() { return (T*)allocBytes(sizeof(T)); } 
@@ -27,9 +28,10 @@ namespace rckid {
     public:
         class AllocatorSingleton : public Allocator {
         public:
-            void * allocBytes(uint32_t bytes) { return Heap::allocBytes(bytes); }
-            void free(void * ptr) { Heap::free(ptr); }
-            void tryFree(void * ptr) { Heap::tryFree(ptr); }
+            void * allocBytes(uint32_t bytes) override { return Heap::allocBytes(bytes); }
+            void free(void * ptr) override { Heap::free(ptr); }
+            void tryFree(void * ptr) override { Heap::tryFree(ptr); }
+            bool contains(void * ptr) const override { return Heap::contains(ptr); }
         }; // Heap::AllocatorSingleton
 
         static AllocatorSingleton & allocator() {
@@ -88,9 +90,10 @@ namespace rckid {
 
         class AllocatorSingleton : public Allocator {
         public:
-            void * allocBytes(uint32_t bytes) { return Arena::allocBytes(bytes); }
-            void free([[maybe_unused]] void * ptr) { }
-            void tryFree([[maybe_unused]] void * ptr) { }
+            void * allocBytes(uint32_t bytes) override { return Arena::allocBytes(bytes); }
+            void free([[maybe_unused]] void * ptr) override { }
+            void tryFree([[maybe_unused]] void * ptr) override { }
+            bool contains(void * ptr) const override { return Arena::contains(ptr); }
         }; // Heap::AllocatorSingleton
 
         static AllocatorSingleton & allocator() {

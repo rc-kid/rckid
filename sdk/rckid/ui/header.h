@@ -46,7 +46,7 @@ namespace rckid::ui {
             0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0,
-        }
+        };
     }; // rckid::ui::Header
 
 } // namespace rckid::ui
