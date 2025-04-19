@@ -72,6 +72,9 @@ namespace rckid {
             ASSERT(immutable());
         }
 
+        template<uint32_t SIZE>
+        LazyBuffer(T const (&from)[SIZE], Allocator & a = Heap::allocator()): LazyBuffer(from, SIZE, a) {}
+
         LazyBuffer(LazyBuffer const & from):
             a_{from.a_}, 
             size_{from.size_},
