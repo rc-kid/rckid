@@ -1,5 +1,8 @@
 # TODO
 
+- update sine table to be full waveform (and also use for waveform audio)
+- add triangular waveform and whitenoise waveform generators
+
 - could this be better PMIC? https://www.ti.com/product/BQ25628
 - slimmer connector https://jlcpcb.com/partdetail/XkbConnection-X05A10H40G/C528037
 

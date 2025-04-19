@@ -5,6 +5,13 @@
 
 namespace rckid {
 
+    namespace audio {
+
+        constexpr int16_t min = -32768;
+        constexpr int16_t max = 32767;
+
+    } // namespace audio
+
     /** Given a frequency, returns the corresponding period in microseconds (us) as a fixed integer.
       */
     inline FixedInt frequencyToPeriodUs(uint32_t freq) {

@@ -2,7 +2,7 @@
 
 #include "fixedint.h"
 #include "timer.h"
-#include "../assets/sine_table.h"
+#include "../assets/waveforms.h"
 
 /** Interpolation functions. 
 
@@ -22,16 +22,16 @@ namespace rckid::interpolation {
         return linear(t.t(), t.duration(), min, max);
     }
 
-    /** Cosine easing function. Starts slow, ramps up to top speed in the middle and then slows down again using the cos function. Useful for menu shifting, etc. 
+    /** Cosine easing function. Starts slow, ramps up to top speed in the middle and then slows down again using the cos function. Useful for menu shifting, etc. Can be cheaply calculated using the middle portion of the sine wave and distance from the max int16_t value. 
      */
     inline FixedInt cosine(Timer const & t, int min, int max) {
-        int hwDiv =  32767 * 2; // sine max * 2 
-        FixedInt p2 = t.duration() / 2;
         FixedInt i = t.t();
-        if (i <= p2)
-            return min + (max - min) / 2 - custom(p2 - i, p2, assets::SineTable, sizeof(assets::SineTable) / 2) * (max - min) / hwDiv;
-        i -= p2;
-        return min + (max - min) / 2 + custom(i, p2, assets::SineTable, sizeof(assets::SineTable) / 2) * (max - min) / hwDiv;
+        FixedInt period = t.duration();
+        uint32_t size = sizeof(assets::WaveformSin) / sizeof(int16_t);
+        int value = custom(i, period, assets::WaveformSin + size / 4, size / 2) + 32768;
+        auto x = min + FixedInt{(65536 - value) * (max - min)} / 65535;
+        return x; 
+        return FixedInt{65536 - value} * (max - min) / period;
     }
 
 } // namespace rckid::interpolation

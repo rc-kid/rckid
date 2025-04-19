@@ -15,7 +15,7 @@ namespace rckid {
 
         /** Creates an empty string. 
          */
-        String(Allocator & a = Heap::allocator()): str_{a} {}
+        String(Allocator & a = Heap::allocator()): String{"", a} {}
 
         String(char c, uint32_t n, Allocator & a = Heap::allocator()): 
             str_{n + 1, a} {

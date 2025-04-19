@@ -8,6 +8,7 @@
 #include <rckid/ui/label.h>
 #include <rckid/ui/carousel.h>
 #include <rckid/ui/menu.h>
+#include <rckid/audio/tone.h>
 
 #include <rckid/ui/header.h>
 
