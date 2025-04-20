@@ -52,12 +52,36 @@ public:
         g_.setRect(Rect::WH(320, 240));
     }
 
+
     void update() override {
         ui::App::update();
         c_->processEvents();
+        if (btnPressed(Btn::A)) {
+            t_.on(440);
+        } else if (btnPressed(Btn::B)) {
+            t_.off();
+        }
+    }
+
+    void focus() override {
+        ui::App::focus();
+        t_.setWaveform(Waveform::Sine());
+        t_.setSampleRate(44100);
+        audioPlay(buf_, 44100, [this](int16_t * buf, uint32_t size) {
+            return t_.generateInto(buf, size);
+        });
+    }
+
+    void blur() override {
+        audioStop();
+        t_.off();
+        ui::App::blur();
     }
 
     ui::CarouselMenu * c_;
+
+    Tone t_;
+    DoubleBuffer<int16_t> buf_{2048};
 
 }; // DisplayUIApp
 

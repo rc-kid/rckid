@@ -223,7 +223,7 @@ namespace rckid {
      */
     void audioSetVolume(uint8_t value);
 
-    /** Starts playback of given buffer at spefified sample rate. 
+    /** Starts playback of given buffer at spefified sample rate. It is expected the buffer is empty and the callbackfunction will be called automatically to populate it. 
      */
     void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb);
 

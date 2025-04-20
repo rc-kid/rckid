@@ -69,13 +69,14 @@ namespace rckid {
          */
         uint32_t generateInto(int16_t * buffer, uint32_t numSamples) {
             ASSERT(numSamples > 0); // at least one sample must be generated
+            int16_t * end = buffer + numSamples;
             if (period_ == 0) {
                 // if frequency is 0, just generate silence of appropriate length
-                while (numSamples-- > 0)
+                while (buffer != end)
                     *(buffer++) = 0;
             } else {
                 // generate the waveform - sample rate tells us how much to advance at each step
-                while (numSamples-- > 0) {
+                while (buffer != end) {
                     uint32_t index = interpolation::linear(t_, period_, 0, waveform().size()).round();
                     *(buffer++) = waveform()[index]; // const access only
                     t_ += sr_;
@@ -88,9 +89,9 @@ namespace rckid {
 
     protected:
         // period in milliseconds
-        FixedInt period_;
+        FixedInt period_{0};
         // current position in the period
-        FixedInt t_;
+        FixedInt t_{0};
 
         // sample rate (period)
         FixedInt sr_;
