@@ -399,8 +399,8 @@ namespace rckid::gbcemu {
             uint8_t tile;
             uint8_t flags;
 
-            uint8_t y() const { return y_ - 16; }
-            uint8_t x() const { return x_ - 8; }
+            int32_t y() const { return y_ - 16; }
+            int32_t x() const { return x_ - 8; }
 
             bool priority() const { return flags & 0x80; }
             bool yFlip() const { return flags & 0x40; }
