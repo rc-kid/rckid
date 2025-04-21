@@ -341,6 +341,7 @@ INS(0xca, _,_,_,_, 3, 12 + 4, "jp z, a16", {
     The follow a very simple decoding pattern whereas the 3 LSB identify a register (B, C, D, E, H,  L, [HL], A) and the upper 5 bits specify the operation. 
 */
 INS(0xcb, Z,N,H,C, 1, 4 , "prefix", {
+    constexpr uint8_t NO_WRITEBACK = 0xff;
     uint8_t eo = mem8(PC++); 
     uint8_t reg = eo & 7;
     eo = eo >> 3;
@@ -415,6 +416,7 @@ INS(0xcb, Z,N,H,C, 1, 4 , "prefix", {
                     setFlagZ((r & (1 << bit)) == 0);
                     setFlagN(0);
                     setFlagH(1);
+                    reg = NO_WRITEBACK;
                     break;
                 case 2: // RES
                     r = r & ~(1 << bit);
@@ -434,6 +436,7 @@ INS(0xcb, Z,N,H,C, 1, 4 , "prefix", {
         case 5: L = r; break;
         case 6: memWr8(HL, r); break;
         case 7: A = r; break;
+        case NO_WRITEBACK: break;
     }
 })
 INS(0xcc, _,_,_,_, 3, 12 + 12, "call z, a16", {
@@ -496,7 +499,8 @@ INS(0xd8, _,_,_,_, 1, 8 + 12, "ret c", {
         usedCycles -= 12;
 })
 INS(0xd9, _,_,_,_, 1, 16, "reti", {
-    stackFramePop(true);
+    stackFramePop();
+    ime_ = true; // enable interrupts
 })
 INS(0xda, _,_,_,_, 3, 12 + 4, "jp c, a16", {
     // 4 cycles taken, 3 cycles not taken

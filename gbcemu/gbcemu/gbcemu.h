@@ -244,17 +244,14 @@ namespace rckid::gbcemu {
 
         void setFlagC(bool value) { value ? regs8_[REG_INDEX_F] |= FLAG_C : regs8_[REG_INDEX_F] &= ~FLAG_C; }
 
-        void stackFramePush([[maybe_unused]] bool isInterrupt = false) {
+        void stackFramePush() {
             sp_ -= 2;
             memWr16(sp_, pc_);
-    
         }
 
-        void stackFramePop(bool isInterrupt = false) {
+        void stackFramePop() {
             pc_ = memRd16(sp_);
             sp_ += 2;
-            if (isInterrupt)
-                ime_ = true;
         }
 
         /** Takes the GBC relative address and converts it to a unique number that can be used for absolute addressing including banks, etc

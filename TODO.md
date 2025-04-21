@@ -1,7 +1,6 @@
 # TODO
 
-- update sine table to be full waveform (and also use for waveform audio)
-- add triangular waveform and whitenoise waveform generators
+- add square and white noise waveforms
 
 - could this be better PMIC? https://www.ti.com/product/BQ25628
 - slimmer connector https://jlcpcb.com/partdetail/XkbConnection-X05A10H40G/C528037
@@ -22,7 +21,6 @@
 - ensure that buffers use allocators properly when they are created to construct stuff
 - check audio playback, check the documentation for audio playback
 
-- fix platform for PC and attiny acording to the RP2040 platform
 - waiting for display update done could make the cpu sleep
 
 - update the DataSync app so that it actually works as intended

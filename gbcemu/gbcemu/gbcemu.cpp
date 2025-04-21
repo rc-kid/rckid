@@ -587,7 +587,7 @@ namespace rckid::gbcemu {
                 // service the interrupt if enabled
                 if (ime_) {
                     ime_ = false;
-                    stackFramePush(true);
+                    stackFramePush();
                     if (interrupt & IF_VBLANK) {
                         PC = 0x40;
                         IO_IF &= ~IF_VBLANK;
