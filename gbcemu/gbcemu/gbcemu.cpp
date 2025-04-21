@@ -1040,11 +1040,11 @@ namespace rckid::gbcemu {
         uint32_t objectSize = IO_LCDC & LCDC_OBJ_SIZE ? 16 : 8;
         for (uint32_t i = NUM_SPRITES - 1; i < NUM_SPRITES; --i) {
             OAMSprite & s = sprites[i];
-            // if the sprite does not intersect the current line, skip it
-            if (s.y() > ly || s.y() + objectSize <= ly)
-                continue;
             // Calculate the row address of the sprite's tile
-            uint32_t sy = ly - s.y();
+            int32_t sy = ly - s.y();
+            // if the sprite does not intersect the current line, skip it
+            if (sy < 0 || sy >= objectSize)
+                continue;
             // flip the sprite on horizontal axis
             if (s.yFlip())
                 sy = objectSize - sy;
