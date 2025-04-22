@@ -68,7 +68,7 @@ int main() {
             //rckid::gbcemu::rom::blargg::instrs::bit_ops
             //rckid::gbcemu::rom::blargg::instrs::op_a__hl_
         });
-        app.loadCartridge(new gbcemu::FileGamePak("/mnt/c/delete/testrom5.gb"));
+        app.loadCartridge(new gbcemu::FileGamePak("/mnt/c/delete/testrom15.gb"));
         //app.loadCartridge(new gbcemu::FileGamePak("gbcemu/roms/blargg-test-roms/instr_timing/instr_timing.gb"));
         //app.setTerminateAfterStop(true);
         uint32_t t = uptimeUs();
