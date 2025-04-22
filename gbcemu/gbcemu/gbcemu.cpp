@@ -314,7 +314,7 @@ namespace rckid::gbcemu {
             Heap::tryFree(wram_[i]);
         Heap::tryFree(oam_);
         Heap::tryFree(hram_);
-        for (uint32_t i = 0; i < 32; ++i)
+        for (uint32_t i = 0; i < 16; ++i)
             Heap::tryFree(eram_[i]);
         // TODO some more cleanup would be good here
     }
@@ -449,13 +449,13 @@ namespace rckid::gbcemu {
                 break;
         }
         // figure out the size of the external RAM and allocate accordingly
-        for (uint32_t i = 0; i < 32; ++i) {
+        for (uint32_t i = 0; i < 16; ++i) {
             Heap::tryFree(eram_[i]);
             eram_[i] = nullptr;
         }
-        uint32_t eramSize = gamepak_->cartridgeRAMSize() / 4096;
+        uint32_t eramSize = gamepak_->cartridgeRAMSize() / 8192;
         for (uint32_t i = 0; i < eramSize; ++i)
-            eram_[i] = Heap::alloc<uint8_t>(0x1000);
+            eram_[i] = Heap::alloc<uint8_t>(0x2000);
         // initialize memory mapping defaults
         memMap_[0] = const_cast<uint8_t *>(gamepak_->getPage(0));
         memMap_[1] = memMap_[0] + 0x1000;
@@ -1055,6 +1055,13 @@ namespace rckid::gbcemu {
             uint8_t upper = tileRow >> 8;
             uint8_t lower = tileRow & 0xff;
             uint32_t x = s.x();
+            // update palette for the sprite
+            uint8_t bgp = s.palette() ? IO_OBP1 : IO_OBP0;
+            palette[0] = palette_[bgp & 3].raw16();
+            palette[1] = palette_[(bgp >> 2) & 3].raw16();
+            palette[2] = palette_[(bgp >> 4) & 3].raw16();
+            palette[3] = palette_[(bgp >> 6) & 3].raw16();
+            // and draw the sprite
             if (s.xFlip()) {
                 for (int i = 0; i < 8; ++i) {
                     uint8_t colorIndex = ((lower >> i) & 1) | (((upper >> i) & 1) << 1);
@@ -1120,8 +1127,8 @@ namespace rckid::gbcemu {
 
     void GBCEmu::setExternalRamPage(uint32_t page) {
         ASSERT(page < 16);
-        memMap_[10] = eram_[page * 2];
-        memMap_[11] = eram_[page * 2 + 1];
+        memMap_[10] = eram_[page];
+        memMap_[11] = eram_[page] + 4096;
     }
 
     void GBCEmu::setWorkRamPage(uint32_t page) {
@@ -1261,8 +1268,8 @@ namespace rckid::gbcemu {
             case 12:
             case 13:
             case 14:
-            case 10:
                 return memMap_[page][offset];
+            case 10:
             case 11:
                 return readERam(addr - ERAM_START);
             case 15:
@@ -1390,6 +1397,9 @@ namespace rckid::gbcemu {
             case MBC::None:
                 break;
             case MBC::Type1:
+                if (eramActive_)
+                    memMap_[10][offset] = value;
+                break;
             case MBC::Type2:
             case MBC::Type3:
             case MBC::Type5:
@@ -1407,6 +1417,7 @@ namespace rckid::gbcemu {
             case MBC::None:
                 return 0xff;
             case MBC::Type1:
+                return eramActive_ ? memMap_[10][offset] : 0xff;
             case MBC::Type2:
             case MBC::Type3:
             case MBC::Type5:
