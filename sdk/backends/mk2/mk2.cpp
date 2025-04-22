@@ -709,7 +709,7 @@ namespace rckid {
         ASSERT(start < cartridgeCapacity());
         ASSERT(start + FLASH_PAGE_SIZE <= cartridgeCapacity());
         uint32_t offset = reinterpret_cast<uint32_t>(& __cartridge_filesystem_start) - XIP_BASE + start;
-        LOG(LL_LFS, "flash_range_program(" << offset << ", " << FLASH_PAGE_SIZE << ") - start " << start);
+        LOG(LL_LFS, "flash_range_program(" << offset << ", " << (uint32_t)FLASH_PAGE_SIZE << ") - start " << start);
         uint32_t ints = save_and_disable_interrupts();
         flash_range_program(offset, buffer, FLASH_PAGE_SIZE);
         restore_interrupts(ints);
@@ -721,7 +721,7 @@ namespace rckid {
         uint32_t offset = reinterpret_cast<uint32_t>(& __cartridge_filesystem_start) - XIP_BASE + start;
         //TRACE_LITTLEFS("cart_fs_start: " << (uint32_t)(& __cartridge_filesystem_start));         
         //TRACE_LITTLEFS("XIP_BASE:      " << (uint32_t)(XIP_BASE));
-        LOG(LL_LFS, "flash_range_erase(" << offset << ", " << FLASH_SECTOR_SIZE << ") -- start " << start);
+        LOG(LL_LFS, "flash_range_erase(" << offset << ", " << (uint32_t)FLASH_SECTOR_SIZE << ") -- start " << start);
         uint32_t ints = save_and_disable_interrupts();
         flash_range_erase(offset, FLASH_SECTOR_SIZE);
         restore_interrupts(ints);
