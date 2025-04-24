@@ -14,7 +14,7 @@ namespace rckid {
      
         Uses 24bit RGB with 8 bits per channel and provides conversion to and from RGB 565 and RGB332 variants for 16 and 8 bpp pixels. 
      */
-    class ColorRGB {
+    PACKED(class ColorRGB {
     public:
 
         static constexpr uint8_t BPP = 16;
@@ -83,7 +83,9 @@ namespace rckid {
 
     private:
         uint32_t raw_ = 0;
-    }; // rckid::ColorRGB
+    }); // rckid::ColorRGB
+
+    static_assert(sizeof(ColorRGB) == 4);
 
     /** Indexed color. 
      

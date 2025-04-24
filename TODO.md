@@ -101,8 +101,6 @@
 
 - https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01-1-16r13/ (90 deg cartridge header)
 
-- see if we can have simpler cartridge connector w/o the riser board
-
 - generate assets does not generate ui tiles yet - and the ones we have are a bit off
 - make text input better looking and the whole idea of modal apps nicer to work with
 
@@ -110,20 +108,12 @@
 
 - add fantasy mode where cartridge and SD card are folders on local drive for simplicity
 
-- document stack protection check
- 
-- add the screen off mode as part of the API 
-
 - add file browser as own widget
 
 - on fantasy malloc & free replacement is not complete - causes trouble especially with strings
 - STR does not work with MemoryArena, only on heap (see Data Sync)
 
-- trace arena is broken as it creates new arena for the tracking, which traces itself:)
-- memory leaks in fantasy where we have pointers that are in fantasy heap, but not on arena or heap (see raylib.cpp feee() method)
-
 - tud_deinit (already disconnect does) freezes the device, not sure why? - but interestingly if DC is disconnected first, then it all works, even repeatedly - this no longer seems to be the case
-- maybe move platform to sdk?
 
 - hall of fame and others can be apps of their own that just reuse the canvas from previous run, but delegate the controls? How though
 
@@ -131,15 +121,9 @@
 
 - maybe not use joystick, but keep it as an extra file so that each app can configure it properly, including things like position. But how to integrate with settings? 
 
-- clean music & tone generators, ensure other frequencies work as well, document, benchmark
-
-- move games & apps to SDK, unless they belong in cartridges 
-
 - make mp3 player and video as a TV so that the mp3's have daily schedule that you can do
 
 - update the order of args in drawing methods (pos, color) etc
-
-- add blocking send & test it
 
 - account for PNG's transparency by allowing it to be overlayed on existing bitmap (right now it is set to black which looks ok on black background)
 - maybe even RGBA colors? 
@@ -163,10 +147,6 @@
 - does not work with 5V from laptop
 
 ## Mk III
-
-> on RP2350 we have more memory, so maybe ditch the arena memory allocator and just have full framebuffer form 320x240 allocated as graphics memory at the beginning forever. On 2350 this is some 30% of RAM which is ok. This should greatly simplify the rendering pipeline.
-
-> With ability to read from the display uninterrupted, we can also reinitialize this any time with the existing framebuffer for all kinds of cool effects.
 
 - the 3v3 rail to onboard sensors & RTC is always on, this enables time & steps tracking to be valid even across cartridges. The RTC memory (if present) can be used for some basic storage as well 
 - maybe put SD card under the display, together with RPI, this will save enormous amount of space on the PCB around the buttons for rather small increase in total height, which is probably ok
