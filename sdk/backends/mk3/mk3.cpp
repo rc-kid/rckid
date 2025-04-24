@@ -413,6 +413,14 @@ namespace rckid {
 
     // display
 
+    void displayOn() {
+        UNIMPLEMENTED;
+    }
+
+    void displayOff() {
+        UNIMPLEMENTED;
+    }
+
     DisplayRefreshDirection displayRefreshDirection() {
         return ST7789::refreshDirection();
     }

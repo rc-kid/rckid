@@ -29,6 +29,14 @@ namespace rckid {
         constexpr Tile(Pixel const (& colors)[WIDTH * HEIGHT]);
 
 
+        /** Renders given column of the tile (or its part) to the provided pixel buffer.
+         */
+        /*
+        void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) const {
+            PixelArray<BITS_PER_PIXEL>::renderColumn(pixels_, column, buffer, starty, numPixels);
+        }
+            */
+
     private:
 
         uint8_t pixels_[PixelArray<BITS_PER_PIXEL>::numBytes(WIDTH, HEIGHT)];

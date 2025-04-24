@@ -23,6 +23,7 @@ namespace rckid::ui {
         void renderColumn(Coord column, Pixel * buffer, Coord stary, Coord numPixels) override {
             uint32_t tile = column / 8;
             uint32_t tileColumn = column & 8;
+            
 
         }
 

@@ -332,6 +332,14 @@ namespace rckid {
         display::frameSize = display::rect.width() * display::rect.height();
     }
 
+    void displayOn() {
+        // no need to do anything in fantasy mode
+    }
+
+    void displayOff() {
+        // no need to do anything in fantasy mode
+    }
+
     DisplayRefreshDirection displayRefreshDirection() {
         return display::direction;
     }

@@ -150,6 +150,10 @@ namespace rckid {
         RowFirst,
     }; 
 
+    void displayOn();
+
+    void displayOff();
+
     DisplayRefreshDirection displayRefreshDirection();
 
     void displaySetRefreshDirection(DisplayRefreshDirection value);

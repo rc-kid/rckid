@@ -92,6 +92,14 @@ namespace rckid {
 
     // display
 
+    void displayOn() {
+        UNIMPLEMENTED;
+    }
+
+    void displayOff() {
+        UNIMPLEMENTED;
+    }
+
     DisplayRefreshDirection displayRefreshDirection() {
         UNIMPLEMENTED;
     }
