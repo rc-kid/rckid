@@ -1,3 +1,10 @@
+# New Graphics
+
+- surface which is simply 
+- area, column, or row-based blits (blits)
+
+
+
 # TODO
 
 - add square and white noise waveforms
