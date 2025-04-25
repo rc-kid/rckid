@@ -34,7 +34,14 @@ namespace rckid {
         }
 
         // shorthand method with implicit bpp based on type deduction for easier use in templates
-        static constexpr ColorRGB fromRaw(uint16_t raw) { return fromRaw16(raw); }
+        static constexpr ColorRGB fromRaw(uint32_t raw) { 
+            ASSERT(raw <= 0xffff);
+            return ColorRGB::RGB(((raw >> 11) & 0x1f) << 3, ((raw >> 5) & 0x3f) << 2, (raw & 0x1f) << 3);
+        }
+
+        constexpr uint32_t toRaw() const {
+            return ((r() >> 3) << 11) | ((g() >> 2) << 5) | (b() >> 3);
+        }
 
         constexpr uint8_t r() const { return (raw_ >> 16) & 0xff; }
         constexpr uint8_t g() const { return (raw_ >> 8) & 0xff; }
@@ -81,6 +88,9 @@ namespace rckid {
 
         static constexpr ColorRGB White() { return ColorRGB{255, 255, 255}; }
 
+        constexpr bool operator == (ColorRGB const & other) const { return raw_ == other.raw_; }
+        constexpr bool operator != (ColorRGB const & other) const { return raw_ != other.raw_; }
+
     private:
         uint32_t raw_ = 0;
     }); // rckid::ColorRGB
@@ -97,8 +107,12 @@ namespace rckid {
         static constexpr bool PALETTE = true;
 
         constexpr Color256() = default;
-        static constexpr Color256 fromRaw(uint8_t raw) { return Color256{raw}; }
-        constexpr uint16_t raw() const { return index_; }
+        static constexpr Color256 fromRaw(uint32_t raw) { 
+            ASSERT(raw <= 0xff);
+            return Color256{static_cast<uint8_t>(raw & 0xff)}; 
+        }
+
+        constexpr uint32_t toRaw() const { return index_; }
 
 
         constexpr Color256(uint8_t index): index_{index} {}
@@ -111,5 +125,27 @@ namespace rckid {
     }); // rckid::Color256
 
     static_assert(sizeof(Color256) == 1);
+
+    PACKED(class Color16 {
+    public:
+        static constexpr uint8_t BPP = 4;
+        static constexpr bool PALETTE = true;
+
+        constexpr Color16() = default;
+        static constexpr Color16 fromRaw(uint32_t raw) { 
+            ASSERT(raw <= 0xf);
+            return Color16{static_cast<uint8_t>(raw & 0xf)}; 
+        }
+
+        constexpr uint32_t toRaw() const { return index_; }
+
+        constexpr Color16(uint8_t index): index_{index} {}
+
+        bool operator == (Color16 const & other) const { return index_ == other.index_; }
+        bool operator != (Color16 const & other) const { return index_ != other.index_; }
+
+    private:
+        uint8_t index_ = 0;
+    });
 
 } // namespace rckid

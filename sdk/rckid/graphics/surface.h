@@ -26,9 +26,9 @@ namespace rckid {
 
         /** Single pixel access
          
-            This is excruciatingly slow interface that provides pixel granularity access to the surface. 
+            This is excruciatingly slow interface that provides pixel granularity access to the surface. They serve as a backup for default implementations and for tiny single pixel adjustments. For any real graphics, the blitting and rendering functions below should be used.  
          */
-        static constexpr uint32_t pixelAt(uint16_t const * pixels_, Coord x, Coord y, Coord width, Coord height) {
+        static constexpr uint32_t pixelAt(Coord x, Coord y, Coord width, Coord height, uint16_t const * pixels_) {
             uint32_t offset = pixelOffset(x, y, width, height);
             switch (BPP) {
                 case 16: 
@@ -50,29 +50,29 @@ namespace rckid {
             }
         }
 
-        static constexpr void setPixelAt(uint16_t * pixels_, Coord x, Coord y, Coord width, Coord height, uint32_t color) {
+        static constexpr void setPixelAt(Coord x, Coord y, Coord width, Coord height, uint16_t * pixels_, uint32_t color) {
             uint32_t offset = pixelOffset(x, y, width, height);
             switch (BPP) {
                 case 16: 
                     pixels_[offset] = color;
                     return;
                 case 8:
-                    reinterpret_cast<uint8_t const *>(pixels_)[offset] = color;
+                    reinterpret_cast<uint8_t*>(pixels_)[offset] = color;
                     return;
                 case 4: {
-                    uint8_t & x = reinterpret_cast<uint8_t const *>(pixels_)[offset / 2];
+                    uint8_t & x = reinterpret_cast<uint8_t*>(pixels_)[offset / 2];
                     x = x & (offset & 1) ? 0x0f : 0xf0;
                     x |= color << ((offset & 1) * 4);
                     return;
                 }
                 case 2: {
-                    uint8_t & x = reinterpret_cast<uint8_t const *>(pixels_)[offset / 4];
+                    uint8_t & x = reinterpret_cast<uint8_t*>(pixels_)[offset / 4];
                     x = x & ~ (0x03 << ((offset & 4) * 2));
                     x |= color << ((offset & 4) * 2);
                     return;
                 }
                 case 1: {
-                    uint8_t & x = reinterpret_cast<uint8_t const *>(pixels_)[offset / 8];
+                    uint8_t & x = reinterpret_cast<uint8_t*>(pixels_)[offset / 8];
                     x = x & ~(0x01 << (offset & 7));
                     x |= color << (offset & 7);
                     return;
@@ -80,59 +80,87 @@ namespace rckid {
             }
         }
 
-        // blitting
+        /** Blitting functions
+          
+            The blitting functions copy regions (entire surface, rectangle, single column or single row) from one surface to another, assuming identical source and target bpp. This means blitting does not have to deal with palettes and palette to color transformations, unlike rendering, which always renders to full 16bpp colors. 
 
+         */
         static void blit(uint16_t const * src, Coord srcWidth, Coord srcHeight, uint16_t * dst, Coord dstX, Coord dstY, Coord dstWidth, Coord dstHeight) {
-
+            for (Coord x = srcWidth - 1; x < srcWidth; --x) 
+                for (Coord y = 0; y < srcHeight; ++y)
+                    setPixelAt(x + dstX, y + dstY, dstWidth, dstHeight, dst, pixelAt(x, y, srcWidth, srcHeight, src));
         }
 
         static void blitRect(uint16_t const * src, Rect srcRect, Coord srcWidth, Coord srcHeight, uint16_t * dst, Coord dstX, Coord dstY, Coord dstWidth, Coord dstHeight) {
-            // TODO implement
+            for (Coord x = srcRect.left(), xe = srcRect.right(); x < xe; ++x)
+                for (Coord y = srcRect.top(), ye = srcRect.bottom(); y < ye;++y)
+                    setPixelAt(x + dstX, y + dstY, dstWidth, dstHeight, dst, pixelAt(x, y, srcWidth, srcHeight, src));
         }
 
-        static uint32_t blitColumn(uint16_t const * src, Coord srcColumn, Coord srcStartRow, Coord srcEndRow, Coord srcWidth, Coord srcHeight, uint16_t * dst) {
-
+        static uint32_t blitColumn(uint16_t const * src, Coord srcColumn, Coord srcStartRow, Coord numPixels, Coord srcWidth, Coord srcHeight, uint16_t * dst) {
+            // extremely inefficient implementation where we go pixel by pixel and treat the output buffer as a single column surface
+            for (Coord y = srcStartRow, ye = srcStartRow + numPixels, i = 0; y < ye; ++y, ++i)
+                setPixelAt(0, i, 1, numPixels, dst, pixelAt(srcColumn, y, srcWidth, srcHeight, src));
+            return numPixels * BPP / 16;
         }
 
-        static uint32_t blitRow(uint16_t const * src, Coord srcRow, Coord srcStartColumn, Coord srcEndColumn, Coord srcWidth, Coord srcHeight, uint16_t * dst) {
-
+        static uint32_t blitRow(uint16_t const * src, Coord srcRow, Coord srcStartColumn, Coord numPixels, Coord srcWidth, Coord srcHeight, uint16_t * dst) {
+            ASSERT(numPixels * BPP)
+            // inefficient implementation where we go pixel by pixel and treat the output buffer as a single column surface (although rows are bound to be inefficient)
+            for (Coord x = srcStartColumn, xe = srcStartColumn + numPixels, i = 0; x < xe; ++x, ++i)
+                setPixelAt(0, i, 1, numPixels, dst, pixelAt(x, srcRow, srcWidth, srcHeight, src));
+            return numPixels * BPP / 16;
         }
 
-        // rendering 
+        /** Rendering functions
+         
+            Unlike blitting, rendering always copies the source surface to a 16bpp destination surface or buffers. So for 16bpp sources, rendering is identical to blitting and the palette must be ingnored, while for other bit depths, palette that translates from color indices to actual RGB565 colors must be provided.
 
+         */
         static void render(uint16_t const * src, Coord srcWidth, Coord srcHeight, uint16_t * dst, Coord dstX, Coord dstY, Coord dstWidth, Coord dstHeight, uint16_t const * palette = nullptr) {
-            if (BPP == 16)
+            if (BPP == 16) {
                 ASSERT(palette == nullptr);
-            else 
+                blit(src, srcWidth, srcHeight, dst, dstX, dstY, dstWidth, dstHeight);
+            } else {
                 ASSERT(palette != nullptr);
-
+                for (Coord x = srcWidth - 1; x < srcWidth; --x) 
+                    for (Coord y = 0; y < srcHeight; ++y)
+                        setPixelAt(x + dstX, y + dstY, dstWidth, dstHeight, dst, palette[pixelAt(x, y, srcWidth, srcHeight, src)]);
+            }
         }
 
         static void renderRect(uint16_t const * src, Rect srcRect, Coord srcWidth, Coord srcHeight, uint16_t * dst, Coord dstX, Coord dstY, Coord dstWidth, Coord dstHeight, uint16_t const * palette = nullptr) {
-            if (BPP == 16)
+            if (BPP == 16) {
                 ASSERT(palette == nullptr);
-            else 
+                blitRect(src, srcRect, srcWidth, srcHeight, dst, dstX, dstY, dstWidth, dstHeight);
+            } else {
                 ASSERT(palette != nullptr);
+                UNIMPLEMENTED;
+            }
         }
 
-        static uint32_t renderColumn(uint16_t const * src, Coord srcColumn, Coord srcStartRow, Coord srcEndRow, Coord srcWidth, Coord srcHeight, uint16_t * dst, uint16_t const * palette = nullptr) {
-            if (BPP == 16)
+        static uint32_t renderColumn(uint16_t const * src, Coord srcColumn, Coord srcStartRow, Coord numPixels, Coord srcWidth, Coord srcHeight, uint16_t * dst, uint16_t const * palette = nullptr) {
+            if (BPP == 16) {
                 ASSERT(palette == nullptr);
-            else 
+                return blitColumn(src, srcColumn, srcStartRow, numPixels, srcWidth, srcHeight, dst);
+            } else {
                 ASSERT(palette != nullptr);
+                UNIMPLEMENTED;
+            }
+        }
+
+        static uint32_t renderRow(uint16_t const * src, Coord srcRow, Coord srcStartColumn, Coord numPixels, Coord srcWidth, Coord srcHeight, uint16_t * dst, uint16_t const * palette = nullptr) {
+            if (BPP == 16) {
+                ASSERT(palette == nullptr);
+                return blitRow(src, srcRow, srcStartColumn, numPixels, srcWidth, srcHeight, dst);
+            } else {
+                ASSERT(palette != nullptr);
+                UNIMPLEMENTED;
+            }
 
         }
 
-        static uint32_t renderRow(uint16_t const * src, Coord srcRow, Coord srcStartColumn, Coord srcEndColumn, Coord srcWidth, Coord srcHeight, uint16_t * dst, uint16_t const * palette = nullptr) {
-            if (BPP == 16)
-                ASSERT(palette == nullptr);
-            else 
-                ASSERT(palette != nullptr);
-
-        }
-
-
-    private:
+    protected:
 
         /** Returns the pixel offset for pixel at coordinates (x,y) in a pixel buffer of specified width and height. Assumes the native display orientation, i.e. right-top corner is index 0, column-first format. 
          */
@@ -140,9 +168,101 @@ namespace rckid {
             return (width - x - 1) * height + y;
         }
 
+        /** Returns the offset of the column in half-word (uint16_t) array taking into account the bits per pixel. 
+         */
+        static uint32_t columnOffset(Coord column, Coord width, Coord height) {
+            return (width - column - 1) * height * 8 / BPP;
+        }
+
     }; // Surface
 
+    template<typename PIXEL>
+    class Bitmap : protected Surface<PIXEL::BPP> {
+    public:
+        using Pixel = PIXEL;
+        static constexpr uint32_t BPP = PIXEL::BPP;
+
+        /** Default constructor that creates an empty bitmap with no pixel buffer
+         */
+        Bitmap():
+            pixels_{nullptr}, w_{0}, h_{0} {
+        }
+
+        /** Creates the bitmap using given allocator.
+         */
+        Bitmap(Coord w, Coord h, Allocator & a = Heap::allocator()): pixels_{a.alloc<uint16_t>(numHalfWords(w, h))}, w_{w}, h_{h} {
+        }
+
+        Bitmap(Bitmap const &) = delete;
+
+        Bitmap(Bitmap && other) noexcept: pixels_{other.pixels_}, w_{other.w_}, h_{other.h_} {
+            other.pixels_ = nullptr;
+            other.w_ = 0;
+            other.h_ = 0;
+        }
+
+        /** Frees the bitmap.
+         */
+        ~Bitmap() { Heap::tryFree(pixels_); };
+
+        Coord width() const { return w_; }
+        Coord height() const { return h_; }
+        uint32_t numPixels() const { return w_ * h_; }
+        uint32_t numBytes() const { return numBytes(w_, h_); }
+        uint32_t numHalfWords() const { return numHalfWords(w_, h_); }
+
+        // single pixel access
+
+        Pixel at(Coord x, Coord y) const { return Pixel::fromRaw(pixelAt(x, y, w_, h_, pixels_)); }
+        void setAt(Coord x, Coord y, Pixel c) { setPixelAt(x, y, w_, h_, pixels_, c.toRaw()); }
+
+        // TODO do we really need those?
+        uint16_t const * pixels() const { return pixels_; }
+        uint16_t const * columnPixels(Coord column) const { return pixels_ + columnOffset(column, w_, h_); }
+
+        uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, uint16_t * buffer, uint16_t const * palette = nullptr) const {
+            return renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, palette);
+        }
+
+    private:
+
+        using Surface<BPP>::pixelAt;
+        using Surface<BPP>::setPixelAt;
+        using Surface<BPP>::columnOffset;
+        using Surface<BPP>::numHalfWords;
+
+        uint16_t * pixels_;
+        Coord w_;
+        Coord h_;
+
+    }; // Bitmap
+
+    // renderable bitmap is different
+
+    /** Single tile. 
+     
+        Tile is a surface with statically known width and height. It supports the basic  
+     */
+    template<Coord WIDTH, Coord HEIGHT, typename PIXEL>
+    class Tile : protected Surface<PIXEL::BPP> {
+    public:
+        using Pixel = PIXEL;
+        static constexpr uint32_t BPP = PIXEL::BPP;
+
+        Coord width() const { return WIDTH; }
+        Coord height() const { return HEIGHT; }
 
 
+        // palette is not nullptr as we expect most tiles to use palette indices instead of RGB colors
+        uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, uint16_t * buffer, uint16_t const * palette) const {
+            return renderColumn(pixels_, column, startRow, numPixels, WIDTH, HEIGHT, buffer, palette);
+        }
+
+    private:
+        using Surface<BPP>::numHalfWords;
+        using Surface<BPP>::renderColumn;
+
+        uint16_t pixels_[numHalfWords(WIDTH, HEIGHT)];
+    }; 
 
 }
