@@ -167,6 +167,7 @@ namespace rckid {
             }
         }
 
+
     protected:
 
         /** Returns the pixel offset for pixel at coordinates (x,y) in a pixel buffer of specified width and height. Assumes the native display orientation, i.e. right-top corner is index 0, column-first format. 
@@ -182,38 +183,5 @@ namespace rckid {
         }
 
     }; // Surface
-
-
-    // renderable bitmap is different
-
-    #ifdef HAHA
-
-    /** Single tile. 
-     
-        Tile is a surface with statically known width and height. It supports the basic  
-     */
-    template<Coord WIDTH, Coord HEIGHT, typename PIXEL>
-    class Tile : protected Surface<PIXEL::BPP> {
-    public:
-        using Pixel = PIXEL;
-        static constexpr uint32_t BPP = PIXEL::BPP;
-
-        Coord width() const { return WIDTH; }
-        Coord height() const { return HEIGHT; }
-
-
-        // palette is not nullptr as we expect most tiles to use palette indices instead of RGB colors
-        uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, uint16_t * buffer, uint16_t const * palette) const {
-            return renderColumn(pixels_, column, startRow, numPixels, WIDTH, HEIGHT, buffer, palette);
-        }
-
-    private:
-        using Surface<BPP>::numHalfWords;
-        using Surface<BPP>::renderColumn;
-
-        uint16_t pixels_[numHalfWords(WIDTH, HEIGHT)];
-    }; 
-
-    #endif
 
 }

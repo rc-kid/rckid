@@ -5,6 +5,8 @@
 - should colorRGB be 3 bytes? Or should it be true to the 565 representation? 
 - visit loadImage to determine if the setAt is good enough (conversition from int16 to Color to int16 seems inefficient)
 
+- optimize surface functions for common cases
+
 # TODO
 
 - add square and white noise waveforms
@@ -15,8 +17,6 @@
 - add default allocator and when allocators are creted, use the default allocator unless specified (so changing the default allocator changes the allocation for everyone in scope)
 
 - see if we can run at 5MHz and still talk to neopixel
-
-- how to deal with non-16 bpp bitmaps 
 
 - serialize & deserialize vs load & save
 
