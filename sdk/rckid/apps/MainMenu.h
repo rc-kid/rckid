@@ -7,7 +7,9 @@
 
 namespace rckid {
 
-    /** Main menu application. 
+    /** Main menu application.
+     
+        The app is responsible for displaying the app launcher menu as well as header and basic user information.
      */
     class MainMenu : public ui::App {
     public:
