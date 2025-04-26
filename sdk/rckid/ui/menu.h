@@ -5,6 +5,7 @@
 #include "../rckid.h"
 #include "../graphics/bitmap.h"
 #include "../utils/string.h"
+#include "../graphics/png.h"
 
 namespace rckid::ui {
 
@@ -52,8 +53,8 @@ namespace rckid::ui {
 
             String const & text() const { return text_; }
 
-            Bitmap<16> icon() const {
-                return Bitmap<16>{PNG::fromBuffer(icon_, iconSize_)};
+            Bitmap<ColorRGB> icon() const {
+                return Bitmap<ColorRGB>{PNG::fromBuffer(icon_, iconSize_)};
             }
 
         private:

@@ -183,86 +183,10 @@ namespace rckid {
 
     }; // Surface
 
-    template<typename PIXEL>
-    class Bitmap : protected Surface<PIXEL::BPP> {
-    public:
-        using Pixel = PIXEL;
-        static constexpr uint32_t BPP = PIXEL::BPP;
-
-        /** Default constructor that creates an empty bitmap with no pixel buffer
-         */
-        Bitmap():
-            pixels_{nullptr}, w_{0}, h_{0} {
-        }
-
-        /** Creates the bitmap using given allocator.
-         */
-        Bitmap(Coord w, Coord h, Allocator & a = Heap::allocator()): pixels_{a.alloc<uint16_t>(numHalfWords(w, h))}, w_{w}, h_{h} {
-        }
-
-        Bitmap(Bitmap const &) = delete;
-
-        Bitmap(Bitmap && other) noexcept: pixels_{other.pixels_}, w_{other.w_}, h_{other.h_} {
-            other.pixels_ = nullptr;
-            other.w_ = 0;
-            other.h_ = 0;
-        }
-
-        Bitmap(ImageDecoder && decoder, Allocator &a = Heap::allocator()):
-            Bitmap{decoder.width(), decoder.height(), a} {
-            loadImage(std::move(decoder));
-        }
-
-        /** Frees the bitmap.
-         */
-        ~Bitmap() { Heap::tryFree(pixels_); };
-
-        Coord width() const { return w_; }
-        Coord height() const { return h_; }
-        uint32_t numPixels() const { return w_ * h_; }
-        uint32_t numBytes() const { return numBytes(w_, h_); }
-        uint32_t numHalfWords() const { return numHalfWords(w_, h_); }
-
-        // image loading
-
-        void loadImage(ImageDecoder && decoder, Point at = {0, 0}) {
-            ASSERT(at.x + decoder.width() <= w_);
-            ASSERT(at.y + decoder.height() <= h_);
-            decoder.decode16([this, at](Pixel * line, int lineNum, int lineWidth) {
-                for (int i = 0; i < lineWidth; ++i)
-                    setAt(i + at.x, lineNum + at.y, Pixel::fromRaw(line[i]));
-            });
-        }
-
-        // single pixel access
-
-        Pixel at(Coord x, Coord y) const { return Pixel::fromRaw(pixelAt(x, y, w_, h_, pixels_)); }
-        void setAt(Coord x, Coord y, Pixel c) { setPixelAt(x, y, w_, h_, pixels_, c.toRaw()); }
-
-        // TODO do we really need those?
-        uint16_t const * pixels() const { return pixels_; }
-        uint16_t const * columnPixels(Coord column) const { return pixels_ + columnOffset(column, w_, h_); }
-
-        /** Renders given bitmap column. 
-         */
-        uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, uint16_t * buffer, uint16_t const * palette = nullptr) const {
-            return renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, palette);
-        }
-
-    private:
-
-        using Surface<BPP>::pixelAt;
-        using Surface<BPP>::setPixelAt;
-        using Surface<BPP>::columnOffset;
-        using Surface<BPP>::numHalfWords;
-
-        uint16_t * pixels_;
-        Coord w_;
-        Coord h_;
-
-    }; // Bitmap
 
     // renderable bitmap is different
+
+    #ifdef HAHA
 
     /** Single tile. 
      
@@ -289,5 +213,7 @@ namespace rckid {
 
         uint16_t pixels_[numHalfWords(WIDTH, HEIGHT)];
     }; 
+
+    #endif
 
 }

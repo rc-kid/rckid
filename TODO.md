@@ -1,9 +1,9 @@
 # New Graphics
 
-- surface which is simply 
-- area, column, or row-based blits (blits)
-
-
+- add font rendering and determine how to deal with its palettes (?)
+- add check that verifies that pointer is in RAM
+- should colorRGB be 3 bytes? Or should it be true to the 565 representation? 
+- visit loadImage to determine if the setAt is good enough (conversition from int16 to Color to int16 seems inefficient)
 
 # TODO
 

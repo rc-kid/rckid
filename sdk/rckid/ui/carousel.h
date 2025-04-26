@@ -81,18 +81,18 @@ namespace rckid::ui {
 
         void set(Menu::Item const & item, Transition transition = Transition::None) {
             if (transition == Transition::None) {
-                aImg_ = item.icon();
+                aImg_ = std::move(item.icon());
                 aText_.setText(item.text());
                 repositionElements(aImg_, aText_);
             } else {
-                bImg_ = item.icon();
+                bImg_ = std::move(item.icon());
                 bText_.setText(item.text());
                 repositionElements(bImg_, bText_);
             }
             setTransition(transition);
         }
 
-        void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) override {
+        void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
             renderChild(& aImg_, column, buffer, starty, numPixels, Point(aImgOffset_, 0));
             renderChild(& aText_, column, buffer, starty, numPixels, Point(aTextOffset_, 0));
             if (dir_ != Transition::None) {

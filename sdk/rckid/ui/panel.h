@@ -15,7 +15,7 @@ namespace rckid::ui {
 
     protected:
 
-        void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) override {
+        void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
             for (Coord i = 0; i < numPixels; ++i)
                 buffer[i] = bg_.raw16();
             Container::renderColumn(column, buffer, starty, numPixels);
