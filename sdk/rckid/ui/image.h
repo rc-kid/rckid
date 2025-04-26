@@ -13,28 +13,12 @@ namespace rckid::ui {
         /** Creates an image with empty 16bpp bitmap. 
          */
         Image():
-            bmp16_{}, bpp_{16} {
+            bmp_{} {
         }
     
-        Image(Bitmap<2> && bmp): bmp2_{std::move(bmp)}, bpp_{2} {
-            w_ = bmp2_.width();
-            h_ = bmp2_.height();
-            reposition();
-        }
-
-        Image(Bitmap<4> && bmp): bmp4_{std::move(bmp)}, bpp_{4} {
-            w_ = bmp4_.width();
-            h_ = bmp4_.height();
-            reposition();
-        }
-        Image(Bitmap<8> && bmp): bmp8_{std::move(bmp)}, bpp_{8} {
-            w_ = bmp8_.width();
-            h_ = bmp8_.height();
-            reposition();
-        }
-        Image(Bitmap<16> && bmp): bmp16_{std::move(bmp)}, bpp_{16} {
-            w_ = bmp16_.width();
-            h_ = bmp16_.height();
+        Image(Bitmap<ColorRGB> && bmp): bmp_{std::move(bmp)} {
+            w_ = bmp_.width();
+            h_ = bmp_.height();
             reposition();
         }
 
@@ -53,42 +37,11 @@ namespace rckid::ui {
             return *this;
         }
 
-        Image & operator = (Bitmap<2> && bmp) noexcept {
+        Image & operator = (Bitmap<ColorRGB> && bmp) noexcept {
             clear();
-            new (&bmp2_) Bitmap<2>{std::move(bmp)};
-            bpp_ = 2;
-            w_ = bmp2_.width();
-            h_ = bmp2_.height();
-            reposition();
-            return *this;
-        }
-
-        Image & operator = (Bitmap<4> && bmp) noexcept {
-            clear();
-            new (&bmp4_) Bitmap<4>{std::move(bmp)};
-            bpp_ = 4;
-            w_ = bmp4_.width();
-            h_ = bmp4_.height();
-            reposition();
-            return *this;
-        }
-
-        Image & operator = (Bitmap<8> && bmp) noexcept {
-            clear();
-            new (&bmp8_) Bitmap<8>{std::move(bmp)};
-            bpp_ = 8;
-            w_ = bmp8_.width();
-            h_ = bmp8_.height();
-            reposition();
-            return *this;
-        }
-
-        Image & operator = (Bitmap<16> && bmp) noexcept {
-            clear();
-            new (&bmp16_) Bitmap<16>{std::move(bmp)};
-            bpp_ = 16;
-            w_ = bmp16_.width();
-            h_ = bmp16_.height();
+            new (&bmp_) Bitmap<ColorRGB>{std::move(bmp)};
+            w_ = bmp_.width();
+            h_ = bmp_.height();
             reposition();
             return *this;
         }
@@ -120,11 +73,9 @@ namespace rckid::ui {
             repeat_ = value;
         }
 
-        uint32_t bpp() const { return bpp_; }
-
     protected:
 
-        void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) override {
+        void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
             // the image should not be repeated, translate the actual bitmap's rectangle as if it were a child widget and then use its column rendering
             if (!repeat_) {
                 adjustRenderParams(Rect::XYWH(imgX_, imgY_, bitmapWidth(), bitmapHeight()), column, buffer, starty, numPixels);
@@ -157,23 +108,7 @@ namespace rckid::ui {
     private:
 
         void assign(Image && other) {
-            switch (other.bpp_) {
-                case 2:
-                    bmp2_ = std::move(other.bmp2_);
-                    break;
-                case 4:
-                    bmp4_ = std::move(other.bmp4_);
-                    break;
-                case 8:
-                    bmp8_ = std::move(other.bmp8_);
-                    break;
-                case 16:
-                    bmp16_ = std::move(other.bmp16_);
-                    break;
-                default:
-                    UNREACHABLE;
-            }
-            bpp_ = other.bpp_;
+            bmp_ = std::move(other.bmp_);
             hAlign_ = other.hAlign_;
             vAlign_ = other.vAlign_;
             repeat_ = other.repeat_;
@@ -182,76 +117,22 @@ namespace rckid::ui {
         }
 
         void clear() {
-            switch (bpp_) {
-                case 2:
-                    bmp2_.~Bitmap();
-                    break;
-                case 4:
-                    bmp4_.~Bitmap();
-                    break;
-                case 8:
-                    bmp8_.~Bitmap();
-                    break;
-                case 16:
-                    bmp16_.~Bitmap();
-                    break;
-                default:
-                    UNREACHABLE;
-            }
+            bmp_.~Bitmap();
         }
 
-        void renderBitmapColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) {
-            switch (bpp_) {
-                case 2:
-                    return bmp2_.renderColumn(column, buffer, starty, numPixels);
-                case 4:
-                    return bmp4_.renderColumn(column, buffer, starty, numPixels);
-                case 8:
-                    return bmp8_.renderColumn(column, buffer, starty, numPixels);
-                case 16:
-                    return bmp16_.renderColumn(column, buffer, starty, numPixels);
-                default:
-                    UNREACHABLE;
-            }
+        void renderBitmapColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) {
+            bmp_.renderColumn(column, starty, numPixels, buffer);
         }
 
         Coord bitmapWidth() const {
-            switch (bpp_) {
-                case 2:
-                    return bmp2_.width();
-                case 4:
-                    return bmp4_.width();
-                case 8:
-                    return bmp8_.width();
-                case 16:
-                    return bmp16_.width();
-                default:
-                    UNREACHABLE;
-            }
+            return bmp_.width();
         }
 
         Coord bitmapHeight() const {
-            switch (bpp_) {
-                case 2:
-                    return bmp2_.height();
-                case 4:
-                    return bmp4_.height();
-                case 8:
-                    return bmp8_.height();
-                case 16:
-                    return bmp16_.height();
-                default:
-                    UNREACHABLE;
-            }
+            return bmp_.height();
         }
 
-        union {
-            Bitmap<2> bmp2_;
-            Bitmap<4> bmp4_;
-            Bitmap<8> bmp8_;
-            Bitmap<16> bmp16_;
-        };
-        uint8_t bpp_;
+        Bitmap<ColorRGB> bmp_;
 
         HAlign hAlign_ = HAlign::Center;
         VAlign vAlign_ = VAlign::Center;

@@ -11,7 +11,7 @@ inline void drawTileConstructor(GlyphInfo & gi, unsigned w, unsigned h, std::ost
     // TODO
     int offsetX = (w - gi.image.width) / 2;
     int offsetY = (h - gi.image.height) / 2;
-    s << indent << "Tile<" << w << "," << h << "," << bpp << ">{{" << "\n";
+    s << indent << "Tile<" << w << "," << h << ",Color" << (1 << bpp) << ">{{" << "\n";
     for (int y = 0; y < h; ++y) {
         s << indent << "    ";
         for (int x = 0; x < w; ++x) {
@@ -78,7 +78,7 @@ int main(int argc, char const * argv[]) {
     ofile << indent << "   tiles:          " << fontGlyphs.size() << std::endl;
     ofile << indent << " */" << std::endl;
     std::string className = convertToClassName(STR(std::filesystem::path{inputFile.value()}.stem().string() << fontSize.value()));
-    ofile << indent << "static constexpr Tile<" << tileWidth.value() << "," << tileHeight.value() << "," << bpp.value() << "> " << className << "[] = {" << std::endl;     
+    ofile << indent << "static constexpr Tile<" << tileWidth.value() << "," << tileHeight.value() << ",Color" << (1 << bpp.value()) << "> " << className << "[] = {" << std::endl;     
     ofile << indent << "#define __ 0" << std::endl;
     
     for (size_t i = 0, e = fontGlyphs.size(); i < e; ++i) {

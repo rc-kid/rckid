@@ -20,7 +20,7 @@ namespace rckid::ui {
          
             
          */
-        void renderColumn(Coord column, Pixel * buffer, Coord stary, Coord numPixels) override {
+        void renderColumn(Coord column, uint16_t * buffer, Coord stary, Coord numPixels) override {
             uint32_t tile = column / 8;
             uint32_t tileColumn = column & 8;
             
@@ -28,7 +28,7 @@ namespace rckid::ui {
         }
 
         /** Unlike normal widgets,  */
-        void renderRow(Coord row, Pixel * buffer, Coord startx, Coord numPixels) {
+        void renderRow(Coord row, uint16_t * buffer, Coord startx, Coord numPixels) {
             UNIMPLEMENTED;            
         }
 

@@ -31,7 +31,7 @@ namespace rckid::ui {
 
         /** Container's information simply renders columns of all child elements in the order they are defined in the list of children, i.e. the earier children can be overdrawn with the later ones.
          */
-        void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) override {
+        void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
             for (auto w : widgets_)
                 renderChild(w, column, buffer, starty, numPixels);
         }

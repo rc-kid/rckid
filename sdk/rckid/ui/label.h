@@ -59,7 +59,7 @@ namespace rckid::ui {
 
     protected:
 
-        void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) override {
+        void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
             // don't do anything we are vertically off 
             if (starty >= textTopLeft_.y + font_.size)
                 return;
@@ -79,7 +79,7 @@ namespace rckid::ui {
                     return;
                 ASSERT(column >= 0 && column < h.gi->width);
                 ASSERT(numPixels <= h.gi->height);
-                Pixel colors[] = {
+                uint16_t colors[] = {
                     0, 
                     color_.withAlpha(85),
                     color_.withAlpha(170),

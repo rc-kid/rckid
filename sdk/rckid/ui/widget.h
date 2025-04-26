@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../graphics/geometry.h"
-#include "../graphics/pixel_array.h"
+#include "../graphics/surface.h"
 #include "../graphics/bitmap.h"
 
 namespace rckid::ui {
@@ -14,8 +14,7 @@ namespace rckid::ui {
      */
     class Widget {
     public:
-        using PixelArray = rckid::PixelArray<16>;
-        using Pixel = PixelArray::Pixel;
+        using Surface = rckid::Surface<16>;
 
         virtual ~Widget() = default;
 
@@ -77,10 +76,10 @@ namespace rckid::ui {
 
         /** Renders the widget directly to the provided bitmap at given coordinates. 
          */
-        void renderToBitmap(Coord x, Coord y, Bitmap<16> & bmp) {
+        void renderToBitmap(Coord x, Coord y, Bitmap<ColorRGB> & bmp) {
             Coord numPixels = std::min(height(), bmp.height() - y);
             for (Coord column = std::min(width(), bmp.width() - x); column >= 0; --column) {
-                Pixel * buffer = bmp.columnPixels(column);
+                uint16_t * buffer = bmp.columnPixels(column);
                 renderColumn(column, buffer + y, y, numPixels);
             }
         }
@@ -103,7 +102,7 @@ namespace rckid::ui {
 
         Widget(Rect rect): x_{rect.x}, y_{rect.y}, w_{rect.w}, h_{rect.h} {}
 
-        virtual void renderColumn(Coord column, Pixel * buffer, Coord starty, Coord numPixels) = 0;
+        virtual void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) = 0;
 
         /** Called when the widget is resized so that child classes can override and react to the change such as repositioning their contents. 
          */
@@ -113,7 +112,7 @@ namespace rckid::ui {
          
             This is a simple matter of adjusting the rendering parameters for the child widget and calling its renderColumn method if there us anything to render.
          */
-        void renderChild(Widget * w, Coord column, Pixel * buffer, Coord starty, Coord numPixels) {
+        void renderChild(Widget * w, Coord column, uint16_t * buffer, Coord starty, Coord numPixels) {
             adjustRenderParams(w->rect(), column, buffer, starty, numPixels);
             if (numPixels != 0) 
                 w->renderColumn(column, buffer, starty, numPixels);
@@ -121,7 +120,7 @@ namespace rckid::ui {
 
         /** Renders the given child at coordinates with given offset.
          */
-        void renderChild(Widget *w, Coord column, Pixel * buffer, Coord starty, Coord numPixels, Point offset) {
+        void renderChild(Widget *w, Coord column, uint16_t * buffer, Coord starty, Coord numPixels, Point offset) {
             Rect rect = w->rect();
             rect.x += offset.x;
             rect.y += offset.y;
@@ -134,7 +133,7 @@ namespace rckid::ui {
          
             If no rendering should occur, sets the number of pixels to be rendered to zero. In this case no other arguments should be considered valid after the call.
          */
-        void adjustRenderParams(Rect rect, Coord & column, Pixel * & buffer, Coord & starty, Coord & numPixels) {
+        void adjustRenderParams(Rect rect, Coord & column, uint16_t * & buffer, Coord & starty, Coord & numPixels) {
             // don't render if the child widget's rectangle does not intersect with the column to be rendered (no horizontal intersection)
             if (column < rect.left() || column >= rect.right()) {
                 numPixels = 0;
