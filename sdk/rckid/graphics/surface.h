@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../rckid.h"
+#include "image_decoder.h"
 
 namespace rckid {
 
@@ -98,6 +99,7 @@ namespace rckid {
         }
 
         static uint32_t blitColumn(uint16_t const * src, Coord srcColumn, Coord srcStartRow, Coord numPixels, Coord srcWidth, Coord srcHeight, uint16_t * dst) {
+            ASSERT(numPixels * BPP % 16 == 0);
             // extremely inefficient implementation where we go pixel by pixel and treat the output buffer as a single column surface
             for (Coord y = srcStartRow, ye = srcStartRow + numPixels, i = 0; y < ye; ++y, ++i)
                 setPixelAt(0, i, 1, numPixels, dst, pixelAt(srcColumn, y, srcWidth, srcHeight, src));
@@ -105,7 +107,7 @@ namespace rckid {
         }
 
         static uint32_t blitRow(uint16_t const * src, Coord srcRow, Coord srcStartColumn, Coord numPixels, Coord srcWidth, Coord srcHeight, uint16_t * dst) {
-            ASSERT(numPixels * BPP)
+            ASSERT(numPixels * BPP % 16 == 0);
             // inefficient implementation where we go pixel by pixel and treat the output buffer as a single column surface (although rows are bound to be inefficient)
             for (Coord x = srcStartColumn, xe = srcStartColumn + numPixels, i = 0; x < xe; ++x, ++i)
                 setPixelAt(0, i, 1, numPixels, dst, pixelAt(x, srcRow, srcWidth, srcHeight, src));
@@ -135,7 +137,9 @@ namespace rckid {
                 blitRect(src, srcRect, srcWidth, srcHeight, dst, dstX, dstY, dstWidth, dstHeight);
             } else {
                 ASSERT(palette != nullptr);
-                UNIMPLEMENTED;
+                for (Coord x = srcRect.left(), xe = srcRect.right(); x < xe; ++x)
+                    for (Coord y = srcRect.top(), ye = srcRect.bottom(); y < ye;++y)
+                        setPixelAt(x + dstX, y + dstY, dstWidth, dstHeight, dst, palette[pixelAt(x, y, srcWidth, srcHeight, src)]);
             }
         }
 
@@ -145,7 +149,9 @@ namespace rckid {
                 return blitColumn(src, srcColumn, srcStartRow, numPixels, srcWidth, srcHeight, dst);
             } else {
                 ASSERT(palette != nullptr);
-                UNIMPLEMENTED;
+                for (Coord y = srcStartRow, ye = srcStartRow + numPixels, i = 0; y < ye; ++y, ++i)
+                    dst[i] = palette[pixelAt(srcColumn, y, srcWidth, srcHeight, src)];
+                return numPixels * BPP / 16;
             }
         }
 
@@ -155,9 +161,10 @@ namespace rckid {
                 return blitRow(src, srcRow, srcStartColumn, numPixels, srcWidth, srcHeight, dst);
             } else {
                 ASSERT(palette != nullptr);
-                UNIMPLEMENTED;
+                for (Coord x = srcStartColumn, xe = srcStartColumn + numPixels, i = 0; x < xe; ++x, ++i)
+                    dst[i] = palette[pixelAt(x, srcRow, srcWidth, srcHeight, src)];
+                return numPixels * BPP / 16;
             }
-
         }
 
     protected:
@@ -201,6 +208,11 @@ namespace rckid {
             other.h_ = 0;
         }
 
+        Bitmap(ImageDecoder && decoder, Allocator &a = Heap::allocator()):
+            Bitmap{decoder.width(), decoder.height(), a} {
+            loadImage(std::move(decoder));
+        }
+
         /** Frees the bitmap.
          */
         ~Bitmap() { Heap::tryFree(pixels_); };
@@ -211,6 +223,17 @@ namespace rckid {
         uint32_t numBytes() const { return numBytes(w_, h_); }
         uint32_t numHalfWords() const { return numHalfWords(w_, h_); }
 
+        // image loading
+
+        void loadImage(ImageDecoder && decoder, Point at = {0, 0}) {
+            ASSERT(at.x + decoder.width() <= w_);
+            ASSERT(at.y + decoder.height() <= h_);
+            decoder.decode16([this, at](Pixel * line, int lineNum, int lineWidth) {
+                for (int i = 0; i < lineWidth; ++i)
+                    setAt(i + at.x, lineNum + at.y, Pixel::fromRaw(line[i]));
+            });
+        }
+
         // single pixel access
 
         Pixel at(Coord x, Coord y) const { return Pixel::fromRaw(pixelAt(x, y, w_, h_, pixels_)); }
@@ -220,6 +243,8 @@ namespace rckid {
         uint16_t const * pixels() const { return pixels_; }
         uint16_t const * columnPixels(Coord column) const { return pixels_ + columnOffset(column, w_, h_); }
 
+        /** Renders given bitmap column. 
+         */
         uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, uint16_t * buffer, uint16_t const * palette = nullptr) const {
             return renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, palette);
         }

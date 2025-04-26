@@ -25,10 +25,10 @@ typedef int32_t (PNG_SEEK_CALLBACK)(PNGFILE *pFile, int32_t iPosition);
 
 namespace rckid {
 
-    PNG::Decode16::Decode16(DecodeCallback16 cb, PNG * png, Allocator & a): 
+    PNG::Decode16::Decode16(DecodeCallback16 cb, PNG * png): 
         cb{cb}, 
         png{png}, 
-        line{a.alloc<uint16_t>(png->img_->iWidth)} {
+        line{Heap::alloc<uint16_t>(png->img_->iWidth)} {
     }
 
     PNG::Decode16::~Decode16() {
@@ -61,14 +61,14 @@ namespace rckid {
         return result;
     } 
 
-    int PNG::width() const { return img_->iWidth; }
+    Coord PNG::width() const { return img_->iWidth; }
 
-    int PNG::height() const { return img_->iHeight; }
+    Coord PNG::height() const { return img_->iHeight; }
 
-    int PNG::decode16(DecodeCallback16 cb, Allocator & a) {
-        Decode16 d{cb, this, a};
+    bool PNG::decode16(DecodeCallback16 cb) {
+        Decode16 d{cb, this};
         img_->pfnDraw = decodeLine16_;
-        return DecodePNG(this->img_, & d, 0);
+        return DecodePNG(this->img_, & d, 0) == 0;
     }
 
     PNG::PNG(Allocator & a) {

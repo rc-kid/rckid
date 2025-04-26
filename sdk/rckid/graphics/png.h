@@ -3,6 +3,7 @@
 #include "../utils/stream.h"
 #include "../memory.h"
 #include "color.h"
+#include "image_decoder.h"
 
 // forward declarations of the png's internal structures
 struct png_image_tag;
@@ -16,9 +17,11 @@ namespace rckid {
 
         The decode callback is called every time new row of the image is decoded and thus gives the caller the ability to process the image.
      */
-    class PNG {
+    class PNG : public ImageDecoder {
     public:
-        using DecodeCallback16 = std::function<void(uint16_t * rgb, int lineNum, int lineWidth)>;
+
+        PNG & operator = (PNG const &) = delete;
+        PNG & operator = (PNG &&) = delete;
 
         static PNG fromStream(RandomReadStream & stream, Allocator & a = Heap::allocator());
 
@@ -27,14 +30,11 @@ namespace rckid {
         template<uint32_t SIZE>
         static PNG fromBuffer(uint8_t const (&buffer)[SIZE], Allocator & a = Heap::allocator()) { return fromBuffer(buffer, SIZE, a); }
 
-        int width() const;
+        Coord width() const override;
 
-        int height() const;
+        Coord height() const override;
 
-        int decode16(DecodeCallback16 cb, Allocator & a = Heap::allocator());
-
-        PNG & operator = (PNG const &) = delete;
-        PNG & operator = (PNG &&) = delete;
+        bool decode16(DecodeCallback16 cb) override;
 
         ~PNG() {
             Heap::tryFree(img_);
@@ -53,7 +53,7 @@ namespace rckid {
             PNG * png;
             uint16_t * line;
 
-            Decode16(DecodeCallback16 cb, PNG * png, Allocator & a);
+            Decode16(DecodeCallback16 cb, PNG * png);
             ~Decode16();
         };
 
@@ -62,7 +62,6 @@ namespace rckid {
         static void decodeLine16_(png_draw_tag *pDraw);
 
         png_image_tag * img_;
-
 
     }; 
 }
