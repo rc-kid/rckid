@@ -5,7 +5,7 @@ echo "Setting up RCKid development in ${RCKID_DIR}"
 
 echo "    installing packages for RCKid SDK..."
 sudo apt update -qq
-sudo apt-get install -y -qq cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib ninja-build doxygen graphviz
+sudo apt-get install -y -qq cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib ninja-build doxygen graphviz exfat-fuse
 
 echo "    installing pico-sdk..."
 cd ${RCKID_DIR}/libs
