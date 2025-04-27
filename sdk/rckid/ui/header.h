@@ -14,17 +14,17 @@ namespace rckid::ui {
      */
     class Header : public Widget {
     public:
+        Header() : Widget{Rect::XYWH(0, 0, 320, 16)} {}
 
     protected:
         /** Renders the header by column. 
          
             
          */
-        void renderColumn(Coord column, uint16_t * buffer, Coord stary, Coord numPixels) override {
+        void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
             uint32_t tile = column / 8;
-            uint32_t tileColumn = column & 8;
-            
-
+            uint32_t tileColumn = column % 8;
+            assets::Iosevka16[tileMap_[tile]].renderColumn(tileColumn, starty, numPixels, buffer, 0, palette_);
         }
 
         /** Unlike normal widgets,  */
@@ -47,6 +47,31 @@ namespace rckid::ui {
             0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0,
+        };
+
+        static constexpr uint16_t palette_[] = {
+            0x0000, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
+            0xffff, 
         };
     }; // rckid::ui::Header
 
