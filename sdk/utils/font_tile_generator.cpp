@@ -6,11 +6,10 @@
 
 /** Draws given image centered to a tile of given sizes using the tile constructor macros. 
  */
-inline void drawTileConstructor(GlyphInfo & gi, unsigned w, unsigned h, std::ostream & s, std::string const & indent, uint32_t bpp) {
+inline void drawTileConstructor(GlyphInfo & gi, unsigned w, unsigned h, unsigned fontHeight, std::ostream & s, std::string const & indent, uint32_t bpp) {
     // determine the X and Y offsets of the glyphinfo image inside the tile
-    // TODO
-    int offsetX = (w - gi.image.width) / 2;
-    int offsetY = (h - gi.image.height) / 2;
+    int offsetX = gi.offsetX + (w - gi.image.width) / 2;
+    int offsetY = gi.offsetY + (h - fontHeight) / 2;
     s << indent << "Tile<" << w << "," << h << ",Color" << (1 << bpp) << ">{{" << "\n";
     for (int y = 0; y < h; ++y) {
         s << indent << "    ";
@@ -24,7 +23,7 @@ inline void drawTileConstructor(GlyphInfo & gi, unsigned w, unsigned h, std::ost
                 value = std::min(255u, c + 8); // rounding 
                 value >>= 4;
             }
-            // TODO print the value
+            // print the value
             if (value == 0)
                 s << "__, ";
             else if (value < 10)
@@ -56,7 +55,7 @@ int main(int argc, char const * argv[]) {
     Args::Arg<unsigned> bpp{"bpp", 8};
     Args::parse(argc, argv, { inputFile, outputFile, fontSize, tileWidth, tileHeight, glyphs, ns, bpp});
     // get the glyphs 
-    Glyphs fontGlyphs = glyphs.isDefault() ? getDefaultGlyphs() :  loadGlyphIndices(glyphs.value());
+    Glyphs fontGlyphs = glyphs.isDefault() ? getDefaultGlyphs() : loadGlyphIndices(glyphs.value());
     GlyphInfo * ginfos = loadFontGlyphs(inputFile.value(), fontSize.value(), fontGlyphs);
     // and output them
     std::ofstream ofile{outputFile.value()};
@@ -77,13 +76,13 @@ int main(int argc, char const * argv[]) {
     ofile << indent << "   Tile bpp:       " << bpp.value() << std::endl;
     ofile << indent << "   tiles:          " << fontGlyphs.size() << std::endl;
     ofile << indent << " */" << std::endl;
-    std::string className = convertToClassName(STR(std::filesystem::path{inputFile.value()}.stem().string() << fontSize.value()));
+    std::string className = convertToClassName(std::filesystem::path{outputFile.value()}.stem().string());
     ofile << indent << "static constexpr Tile<" << tileWidth.value() << "," << tileHeight.value() << ",Color" << (1 << bpp.value()) << "> " << className << "[] = {" << std::endl;     
     ofile << indent << "#define __ 0" << std::endl;
     
     for (size_t i = 0, e = fontGlyphs.size(); i < e; ++i) {
         ofile << indent << "// " << i << ": '" << fontGlyphs.names[i] << "', codepoint " << fontGlyphs.codepoints[i] << ", utf8: `" << encodeUTF8(fontGlyphs.codepoints[i]) << "`\n";
-        drawTileConstructor(ginfos[i], tileWidth.value(), tileHeight.value(), ofile, indent, bpp.value());
+        drawTileConstructor(ginfos[i], tileWidth.value(), tileHeight.value(), fontSize.value(), ofile, indent, bpp.value());
     }
 
     ofile << indent << "#undef __" << std::endl;

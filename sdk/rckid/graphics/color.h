@@ -86,11 +86,20 @@ namespace rckid {
             };
         }
 
-        static constexpr ColorRGB White() { return ColorRGB{255, 255, 255}; }
+        static constexpr ColorRGB White()     { return ColorRGB{255, 255, 255}; }
+        static constexpr ColorRGB Black()     { return ColorRGB{0,   0,   0  }; }
+        static constexpr ColorRGB Red()       { return ColorRGB{255, 0,   0  }; }
+        static constexpr ColorRGB Green()     { return ColorRGB{0,   255, 0  }; }
+        static constexpr ColorRGB Blue()      { return ColorRGB{0,   0,   255}; }
+        static constexpr ColorRGB Gray()      { return ColorRGB{192, 192, 192}; }
+        static constexpr ColorRGB DarkGray()  { return ColorRGB{64,  64,  64 }; }
+        static constexpr ColorRGB DarkRed()   { return ColorRGB{128, 0,   0  }; }
+        static constexpr ColorRGB DarkGreen() { return ColorRGB{0,   128, 0  }; }
+        static constexpr ColorRGB DarkBlue()  { return ColorRGB{0,   0,   128}; }
 
         constexpr bool operator == (ColorRGB const & other) const { return raw_ == other.raw_; }
         constexpr bool operator != (ColorRGB const & other) const { return raw_ != other.raw_; }
-
+        
     private:
         uint32_t raw_ = 0;
     }); // rckid::ColorRGB
@@ -113,7 +122,6 @@ namespace rckid {
         }
 
         constexpr uint32_t toRaw() const { return index_; }
-
 
         constexpr Color256(uint8_t index): index_{index} {}
 

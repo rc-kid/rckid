@@ -48,7 +48,7 @@ namespace rckid {
      */
     template<>
     inline constexpr Tile<8, 8, Color256>::Tile(Color256 const (& c)[64]):
-    #define C(A, B) static_cast<uint16_t>((c[A].toRaw() << 8) | c[B].toRaw()) 
+    #define C(A, B) static_cast<uint16_t>((c[B].toRaw() << 8) | c[A].toRaw()) 
         pixels_{
             C(7,15),C(23,31), C(39,47),C(55,63),
             C(6,14),C(22,30), C(38,46),C(54,62),
@@ -66,7 +66,7 @@ namespace rckid {
      */
     template<>
     inline constexpr Tile<8, 16, Color256>::Tile(Color256 const (& c)[128]):
-    #define C(A, B) static_cast<uint16_t>((c[A].toRaw() << 8) | c[B].toRaw()) 
+    #define C(A, B) static_cast<uint16_t>((c[B].toRaw() << 8) | c[A].toRaw()) 
         pixels_{ // 79, 87, 96, 103, 111, 119, 127 
             C(7,15),C(23,31), C(39,47),C(55,63), C(71,79),C(87,95),  C(103,111),C(119,127),
             C(6,14),C(22,30), C(38,46),C(54,62), C(70,78),C(86,94),  C(102,110),C(118,126),
