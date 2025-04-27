@@ -79,6 +79,11 @@ namespace rckid::ui {
 
         void setImgY(Coord value) { imgY_ = value % bitmapHeight(); }
 
+        bool transparent() const { return transparent_ <= 0xffff; }
+        void setTransparent(bool value) { transparent_ = value ? 0 : NO_TRANSPARENCY; }
+        ColorRGB transparentColor() const { return ColorRGB::fromRaw(transparent_); }
+        void setTransparentColor(ColorRGB color) { transparent_ = color.toRaw(); }
+
     protected:
 
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
@@ -131,7 +136,10 @@ namespace rckid::ui {
         }
 
         void renderBitmapColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) {
-            bmp_.renderColumn(column, starty, numPixels, buffer);
+            if (transparent_ < 0xffff)
+                bmp_.renderColumn(column, starty, numPixels, buffer, transparent_);
+            else 
+                bmp_.renderColumn(column, starty, numPixels, buffer);
         }
 
         Coord bitmapWidth() const {
@@ -150,6 +158,8 @@ namespace rckid::ui {
         Coord imgX_;
         Coord imgY_; 
 
+        static constexpr uint32_t NO_TRANSPARENCY = 0xffffffff;
+        uint32_t transparent_ = NO_TRANSPARENCY;
 
     }; // rckid::ui::Image
 

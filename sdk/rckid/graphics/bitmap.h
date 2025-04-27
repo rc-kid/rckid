@@ -90,6 +90,10 @@ namespace rckid {
             return renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, palette);
         }
 
+        uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, uint16_t * buffer, uint32_t transparent, uint16_t const * palette = nullptr) const {
+            return renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent, palette);
+        }
+
         Writer text(Coord x, Coord y, Font const & font, ColorRGB color = ColorRGB::White) {
             UNIMPLEMENTED;
         }

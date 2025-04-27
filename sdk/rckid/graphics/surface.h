@@ -114,6 +114,51 @@ namespace rckid {
             return numPixels * BPP / 16;
         }
 
+        /** Transparent blitting. 
+         
+            This is identical to normal blitting, i.e. only works between surfaces with identical bit depth, but also allows specifying transparent color for the source. 
+         */
+        static void blit(uint16_t const * src, Coord srcWidth, Coord srcHeight, uint16_t * dst, Coord dstX, Coord dstY, Coord dstWidth, Coord dstHeight, uint32_t transparent) {
+            for (Coord x = srcWidth - 1; x < srcWidth; --x) 
+                for (Coord y = 0; y < srcHeight; ++y) {
+                    uint32_t c = pixelAt(x, y, srcWidth, srcHeight, src);
+                    if (c != transparent)
+                        setPixelAt(x + dstX, y + dstY, dstWidth, dstHeight, dst, c);
+                }
+        }
+
+        static void blitRect(uint16_t const * src, Rect srcRect, Coord srcWidth, Coord srcHeight, uint16_t * dst, Coord dstX, Coord dstY, Coord dstWidth, Coord dstHeight, uint32_t transparent) {
+            for (Coord x = srcRect.left(), xe = srcRect.right(); x < xe; ++x)
+                for (Coord y = srcRect.top(), ye = srcRect.bottom(); y < ye;++y) {
+                    uint32_t c = pixelAt(x, y, srcWidth, srcHeight, src);
+                    if (c != transparent)
+                        setPixelAt(x + dstX, y + dstY, dstWidth, dstHeight, dst, c);
+                }
+        }
+
+        static uint32_t blitColumn(uint16_t const * src, Coord srcColumn, Coord srcStartRow, Coord numPixels, Coord srcWidth, Coord srcHeight, uint16_t * dst, uint32_t transparent) {
+            ASSERT(numPixels * BPP % 16 == 0);
+            // extremely inefficient implementation where we go pixel by pixel and treat the output buffer as a single column surface
+            for (Coord y = srcStartRow, ye = srcStartRow + numPixels, i = 0; y < ye; ++y, ++i) {
+                uint32_t c = pixelAt(srcColumn, y, srcWidth, srcHeight, src);
+                if (c != transparent)
+                    setPixelAt(0, i, 1, numPixels, dst, c);
+            }
+            return numPixels * BPP / 16;
+        }
+
+        static uint32_t blitRow(uint16_t const * src, Coord srcRow, Coord srcStartColumn, Coord numPixels, Coord srcWidth, Coord srcHeight, uint16_t * dst, uint32_t transparent) {
+            ASSERT(numPixels * BPP % 16 == 0);
+            // inefficient implementation where we go pixel by pixel and treat the output buffer as a single column surface (although rows are bound to be inefficient)
+            for (Coord x = srcStartColumn, xe = srcStartColumn + numPixels, i = 0; x < xe; ++x, ++i) {
+                uint32_t c = pixelAt(x, srcRow, srcWidth, srcHeight, src);
+                if (c != transparent)
+                    setPixelAt(0, i, 1, numPixels, dst, c);
+            }
+            return numPixels * BPP / 16;
+        }
+
+
         /** Rendering functions
          
             Unlike blitting, rendering always copies the source surface to a 16bpp destination surface or buffers. So for 16bpp sources, rendering is identical to blitting and the palette must be ingnored, while for other bit depths, palette that translates from color indices to actual RGB565 colors must be provided.
@@ -166,6 +211,73 @@ namespace rckid {
                 return numPixels * BPP / 16;
             }
         }
+
+        /** Rendering with transparent color. 
+         
+            Similar to blitting with transparent color, rendering will ignore the transparent source color and leave the existing values in target surfaces or buffers. 
+         */
+        static void render(uint16_t const * src, Coord srcWidth, Coord srcHeight, uint16_t * dst, Coord dstX, Coord dstY, Coord dstWidth, Coord dstHeight, uint32_t transparent, uint16_t const * palette = nullptr) {
+            if (BPP == 16) {
+                ASSERT(palette == nullptr);
+                blit(src, srcWidth, srcHeight, dst, dstX, dstY, dstWidth, dstHeight, transparent);
+            } else {
+                ASSERT(palette != nullptr);
+                for (Coord x = srcWidth - 1; x < srcWidth; --x) 
+                    for (Coord y = 0; y < srcHeight; ++y) {
+                        uint32_t c = pixelAt(x, y, srcWidth, srcHeight, src);
+                        if (c != transparent)
+                            setPixelAt(x + dstX, y + dstY, dstWidth, dstHeight, dst, palette[c]);
+                    }
+            }
+        }
+
+        static void renderRect(uint16_t const * src, Rect srcRect, Coord srcWidth, Coord srcHeight, uint16_t * dst, Coord dstX, Coord dstY, Coord dstWidth, Coord dstHeight, uint32_t transparent, uint16_t const * palette = nullptr) {
+            if (BPP == 16) {
+                ASSERT(palette == nullptr);
+                blitRect(src, srcRect, srcWidth, srcHeight, dst, dstX, dstY, dstWidth, dstHeight, transparent);
+            } else {
+                ASSERT(palette != nullptr);
+                for (Coord x = srcRect.left(), xe = srcRect.right(); x < xe; ++x)
+                    for (Coord y = srcRect.top(), ye = srcRect.bottom(); y < ye;++y) {
+                        uint32_t c = pixelAt(x, y, srcWidth, srcHeight, src);
+                        if (c != transparent)
+                            setPixelAt(x + dstX, y + dstY, dstWidth, dstHeight, dst, palette[c]);
+                    }
+            }
+        }
+
+        static uint32_t renderColumn(uint16_t const * src, Coord srcColumn, Coord srcStartRow, Coord numPixels, Coord srcWidth, Coord srcHeight, uint16_t * dst, uint32_t transparent, uint16_t const * palette = nullptr) {
+            if (BPP == 16) {
+                ASSERT(palette == nullptr);
+                return blitColumn(src, srcColumn, srcStartRow, numPixels, srcWidth, srcHeight, dst, transparent);
+            } else {
+                ASSERT(palette != nullptr);
+                for (Coord y = srcStartRow, ye = srcStartRow + numPixels, i = 0; y < ye; ++y, ++i) {
+                    uint32_t c = pixelAt(srcColumn, y, srcWidth, srcHeight, src);
+                    if (c != transparent)
+                        dst[i] = palette[c];
+                }
+                return numPixels * BPP / 16;
+            }
+        }
+
+        static uint32_t renderRow(uint16_t const * src, Coord srcRow, Coord srcStartColumn, Coord numPixels, Coord srcWidth, Coord srcHeight, uint16_t * dst, uint32_t transparent, uint16_t const * palette = nullptr) {
+            if (BPP == 16) {
+                ASSERT(palette == nullptr);
+                return blitRow(src, srcRow, srcStartColumn, numPixels, srcWidth, srcHeight, dst, transparent);
+            } else {
+                ASSERT(palette != nullptr);
+                for (Coord x = srcStartColumn, xe = srcStartColumn + numPixels, i = 0; x < xe; ++x, ++i) {
+                    uint32_t c = pixelAt(x, srcRow, srcWidth, srcHeight, src);
+                    if (c != transparent)
+                        dst[i] = palette[c];
+                }
+                return numPixels * BPP / 16;
+            }
+        }
+
+
+
 
 
     protected:

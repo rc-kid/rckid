@@ -63,10 +63,12 @@ namespace rckid::ui {
         void set(Image icon, String text, Transition transition = Transition::None) {
             if (transition == Transition::None) {
                 aImg_ = std::move(icon);
+                aImg_.setTransparent(true);
                 aText_.setText(text);
                 repositionElements(aImg_, aText_);
             } else {
                 bImg_ = std::move(icon);
+                bImg_.setTransparent(true);
                 bText_.setText(text);
                 repositionElements(bImg_, bText_);
             }
@@ -101,10 +103,12 @@ namespace rckid::ui {
         void set(Menu::Item const & item, Transition transition = Transition::None) {
             if (transition == Transition::None) {
                 aImg_ = std::move(item.icon());
+                aImg_.setTransparent(true);
                 aText_.setText(item.text());
                 repositionElements(aImg_, aText_);
             } else {
                 bImg_ = std::move(item.icon());
+                bImg_.setTransparent(true);
                 bText_.setText(item.text());
                 repositionElements(bImg_, bText_);
             }
