@@ -38,7 +38,7 @@ namespace rckid {
     
             bg_ = new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::game_controller)}};
             bg_->setRect(Rect::WH(320, 240));
-            bg_->setRepeat(true);
+            //bg_->setRepeat(true);
             c_ = new ui::CarouselMenu{m_};
             g_.add(bg_);
             g_.add(c_);

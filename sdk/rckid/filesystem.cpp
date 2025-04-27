@@ -550,11 +550,6 @@ namespace rckid::filesystem {
         return result;
     }
 
-
-
-
-
-
     String stem(String const & path) {
         if (path.empty())
             return path;
