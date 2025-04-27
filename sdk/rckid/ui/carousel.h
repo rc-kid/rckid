@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "../graphics/bitmap.h"
 #include "../utils/interpolation.h"
 #include "../utils/timer.h"
@@ -12,10 +14,11 @@ namespace rckid::ui {
 
     /** The carousel is used to display a rolling menu.
      
-        Has two sprites and two element texts, and uses the renderColumn rendering to display them at appropriate parts of the screen. 
+        Has two sprites and two element texts, and uses the renderColumn rendering to display them at appropriate parts of the screen. The carousel only concerns itself with rendering of the current item and transitions between items. Its purpose is to be the smallest reusable block. For better UI experience, use the CarouselMenu widget which incorporates extra features such as menu management, etc. 
      */
     class Carousel : public Widget {
     public:
+
         enum class Transition {
             None,
             Left,
@@ -23,6 +26,14 @@ namespace rckid::ui {
             Up,
             Down,
         };
+
+        enum class TransitionState {
+            InProgress,
+            Start,
+            End,
+        };
+
+        using OnTransition = std::function<void(TransitionState, Transition, Timer & )>;
 
         static constexpr Coord iconToTextSpacerPx = 5;
         static constexpr uint32_t defaultTransitionTimeMs = 500;
@@ -66,15 +77,23 @@ namespace rckid::ui {
             if (dir_ == Transition::None)
                 return;
             if (a_.update()) {
-                dir_ = Transition::None;
                 a_.stop();
+                if (onTransition_)
+                    onTransition_(TransitionState::End, dir_, a_);
+                dir_ = Transition::None;
                 aImgOffset_ = 0;
                 aTextOffset_ = 0;
                 std::swap(aImg_, bImg_);
                 std::swap(aText_, bText_);
             } else {
+                if (onTransition_)
+                    onTransition_(TransitionState::InProgress, dir_, a_);
                 updateOffsets();
             }
+        }
+
+        void setOnTransitionEvent(OnTransition e) {
+            onTransition_ = e;
         }
 
     protected:
@@ -118,6 +137,8 @@ namespace rckid::ui {
             if (transition != Transition::None) {
                 a_.startContinuous();
                 updateOffsets();
+                if (onTransition_)
+                    onTransition_(TransitionState::Start, dir_, a_);
             } else {
                 a_.stop();
             }
@@ -170,6 +191,8 @@ namespace rckid::ui {
         Coord bImgOffset_;
         Coord bTextOffset_;
         Timer a_{defaultTransitionTimeMs};
+
+        OnTransition onTransition_;
     }; // rckid::ui::Carousel
 
 

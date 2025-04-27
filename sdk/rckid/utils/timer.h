@@ -33,7 +33,7 @@ namespace rckid {
             state_ = State::Continuous;
         }
 
-        void stop() { state_ = State::Off; }
+        void stop() { state_ = State::Off; t_ = duration_; }
 
         bool running() const { return state_ != State::Off; }
 

@@ -73,6 +73,12 @@ namespace rckid::ui {
             repeat_ = value;
         }
 
+        Coord imgX() const { return imgX_; }
+        Coord imgY() const { return imgY_; }
+        void setImgX(Coord value) { imgX_ = value % bitmapWidth(); }
+
+        void setImgY(Coord value) { imgY_ = value % bitmapHeight(); }
+
     protected:
 
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
@@ -83,8 +89,12 @@ namespace rckid::ui {
                     renderBitmapColumn(column, buffer, starty, numPixels);
             // if repeated, adjust column to always fit into the image, figure out starty and then draw the column over and over the entire height
             } else {
-                column = std::abs(column - imgX_) % bitmapWidth();
-                starty = std::abs(starty - imgY_) % bitmapHeight();
+                column = (column - imgX_) % bitmapWidth();
+                starty = (starty - imgY_) % bitmapHeight();
+                if (column < 0)
+                    column = bitmapWidth() + column;
+                if (starty < 0)
+                    starty = bitmapHeight() + starty;
                 while (numPixels > 0) {
                     Coord n = std::min(numPixels, bitmapHeight() - starty);
                     renderBitmapColumn(column, buffer, starty, n);
