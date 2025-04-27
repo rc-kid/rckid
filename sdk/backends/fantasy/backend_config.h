@@ -10,6 +10,12 @@
     - `--sd=PATH` sets path to the SD card ISO image, which will be accessible as FAT fs. 
     - `--flash=PATH` sets path to the flash (cartdirge) ISO image, which will be accessible as LittleFS.
 
+    It is useful to be able to access the sd and cartridge iso images from the host system. For the sd, which uses exfat, do the following (compatible with Ubuntu 24.02 LTS in WSL2 mode):
+
+    - `sudo losetup -Pf sd.iso`
+    - `sudo mount.exfat-fuse /dev/loop0p1 /mnt/rckid/sd`
+
+    Note that on WSL we must use the fuse driver as exfat is not supported by the kernel.
 
     \section Graphics
 
