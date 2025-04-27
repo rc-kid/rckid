@@ -33,6 +33,10 @@ namespace rckid {
             return renderColumn(pixels_, column, startRow, numPixels, WIDTH, HEIGHT, buffer, palette);
         }
 
+        uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, uint16_t * buffer, uint32_t transparent, uint16_t const * palette) const {
+            return renderColumn(pixels_, column, startRow, numPixels, WIDTH, HEIGHT, buffer, transparent, palette);
+        }
+
     private:
         using Surface<BPP>::numHalfWords;
         using Surface<BPP>::renderColumn;
