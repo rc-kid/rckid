@@ -10,6 +10,10 @@ namespace rckid::ui {
 
     class Form : public Panel {
     public:
+        explicit Form(Allocator & a = Heap::allocator()):
+            Form{320,240, a} {
+        }
+        
         Form(Coord width, Coord height, Allocator & a = Heap::allocator()):
             Form(Rect::Centered(width, height, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT), a) {
         }

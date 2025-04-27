@@ -9,6 +9,7 @@
 #include <rckid/ui/carousel.h>
 #include <rckid/ui/menu.h>
 #include <rckid/audio/tone.h>
+#include <rckid/apps/MainMenu.h>
 
 #include <rckid/ui/header.h>
 
@@ -24,11 +25,11 @@ public:
         ui::Panel * p2 = new ui::Panel();
         p2->setRect(Rect::XYWH(-25, -25, 50, 50));
         p2->setBg(ColorRGB{0, 255, 0});
-        //ui::Image * img = new ui::Image{Bitmap<16>{PNG::fromBuffer(assets::icons_default_64::game_controller)}};
-        //img->setRect(Rect::XYWH(100, 100, 128, 128));
+        ui::Image * img = new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::game_controller)}};
+        img->setRect(Rect::WH(320, 240));
         //img->setHAlign(HAlign::Center);
         //img->setVAlign(VAlign::Center);
-        //img->setRepeat(true);
+        img->setRepeat(true);
         ui::Label * l = new ui::Label{0, 50, "Hello world"};
         l->setFont(Font::fromROM<assets::OpenDyslexic64>());
         l->setColor(ColorRGB{255, 255, 255});
@@ -46,7 +47,7 @@ public:
         //c->moveLeft(ui::Image{Bitmap<16>{PNG::fromBuffer(assets::icons_default_64::animal_1)}}, "Animal 1");
         g_.add(p1);
         g_.add(p2);
-        //g_.add(img);
+        g_.add(img);
         g_.add(l);
         g_.add(c_);
         g_.setRect(Rect::WH(320, 240));
@@ -88,7 +89,8 @@ public:
 int main() {
     initialize();
     while (true) {
-        auto app = DisplayUIApp{};
+        //auto app = DisplayUIApp{};
+        auto app = MainMenu{};
         app.run();
     }
 }
