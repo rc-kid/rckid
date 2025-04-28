@@ -85,7 +85,7 @@ namespace rckid::ui {
                     color_.withAlpha(170),
                     color_
                 };
-                font_.renderColumn(column, buffer, starty, numPixels, h.gi, colors);
+                font_.renderColumn(column, starty, numPixels, h.gi, buffer, colors);
                 return;
             }
         }

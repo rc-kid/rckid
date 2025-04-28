@@ -94,12 +94,27 @@ namespace rckid {
             return renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent, palette);
         }
 
-        Writer text(Coord x, Coord y, Font const & font, ColorRGB color = ColorRGB::White) {
-            UNIMPLEMENTED;
-        }
+        Writer text(Coord x, Coord y, Font const & font, Pixel color) {
+            std::array<uint16_t, 4> colors = Font::colorToArray(color);
+            int startX = x;
+            return Writer{[=](char c) mutable {
+                if (c != '\n') {
+                    if (x < w_)
+                        x += putChar(x, y, w_, h_, font, c, colors.data(), pixels_);
+                } else {
+                    x = startX;
+                    y += font.size;
+                }
+            }};
+        }        
 
-        void fill(PIXEL color) {
-            UNIMPLEMENTED;
+        void fill(Pixel color) { fill(color, Rect::WH(w_, h_)); }
+
+        void fill(Pixel color, Rect rect) {            
+            // default, very slow implementation
+            for (int x = rect.left(), xe = rect.right(); x < xe; ++x)
+                for (int y = rect.top(), ye = rect.bottom(); y < ye; ++y)
+                    setAt(x, y, color);
         }
 
     private:
@@ -109,6 +124,7 @@ namespace rckid {
         using Surface<BPP>::columnOffset;
         using Surface<BPP>::numHalfWords;
         using Surface<BPP>::renderColumn;
+        using Surface<BPP>::putChar;
 
         uint16_t * pixels_;
         Coord w_;

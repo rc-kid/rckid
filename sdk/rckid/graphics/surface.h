@@ -2,6 +2,7 @@
 
 #include "../rckid.h"
 #include "image_decoder.h"
+#include "font.h"
 
 namespace rckid {
 
@@ -276,9 +277,33 @@ namespace rckid {
             }
         }
 
-
-
-
+        /** Drawing primitives. 
+         */
+        static constexpr Coord putChar(Coord x, Coord y, Coord width, Coord height, Font const & font, char c, uint16_t const * palette, uint16_t * pixels) {
+            GlyphInfo const & g = font.glyphs[static_cast<uint8_t>((c - 32 >= 0) ? (c - 32) : 0)];
+            // if the start is after, or the end is before the current bitamp, rsimply advance
+            if (x > width || x + g.advanceX < 0)
+                return g.advanceX;
+            uint8_t const * gPixels = font.pixels + g.index;
+            int ys = y + g.y;
+            int ye = ys + g.height;
+            for (int xx = x + g.x,xe = x + g.x + g.width; xx < xe; ++xx) {
+                uint32_t col;
+                uint32_t bits = 0;
+                for (int yy = ys; yy != ye; ++yy) {
+                    if (bits == 0) {
+                        bits = 8;
+                        col = *gPixels++;
+                    }
+                    unsigned a = (col >> 6) & 0x3;
+                    if (a != 0 && xx >= 0 && xx < width && yy >= 0 && yy < height)
+                        setPixelAt(xx, yy, width, height, pixels, palette[a]);
+                    col = col << 2;
+                    bits -= 2;
+                }
+            }
+            return g.advanceX;
+        }
 
     protected:
 
