@@ -72,7 +72,9 @@ namespace rckid {
             };
         }
 
-        void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels, GlyphInfo const * gi, uint16_t * palette) {
+        /** Mimics the surface's renderColumn interface but this time for font glyphs. 
+         */
+        void renderColumn(Coord column, Coord starty, Coord numPixels, GlyphInfo const * gi, uint16_t * buffer, uint16_t * palette) {
             // move to current glyph
             uint8_t const * glyphPixels = pixels + gi->index;
             // move to current column
@@ -106,18 +108,18 @@ namespace rckid {
     }; // rckid::Font
 
 
-    /** Font color array specialization for RGB565, full color is the specified, others are with decreasing alpha to black.
+    /** Font color array specialization for 565 RGB colors. 
+     
+        In this mode the full color is the one provided, while the others are interpolated between full color and black.
      */
-    /*
     template<>
-    inline std::array<uint16_t, 4> Font::colorToArray(ColorRGB565 color) {
+    inline std::array<uint16_t, 4> Font::colorToArray(ColorRGB color) {
         return std::array<uint16_t, 4>{
             0,
-            color.withAlpha(85).raw(),
-            color.withAlpha(170).raw(),
-            color.raw()
+            static_cast<uint16_t>(color.withAlpha(85).toRaw()),
+            static_cast<uint16_t>(color.withAlpha(170).toRaw()),
+            static_cast<uint16_t>(color.toRaw())
         };
     }
-        */
 
 } // namespace rckid

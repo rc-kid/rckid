@@ -8,10 +8,9 @@
 - update System16 name no to be iosevka
 - maybe increase font size? 
 - proper palette rendering, do offsets
-- proper hdr rendering 
+- proper header rendering 
 - offset & add system glyphs
 
-- add font rendering and determine how to deal with its palettes (?)
 - add check that verifies that pointer is in RAM
 - should colorRGB be 3 bytes? Or should it be true to the 565 representation? 
 - visit loadImage to determine if the setAt is good enough (conversition from int16 to Color to int16 seems inefficient)

@@ -25,12 +25,13 @@ protected:
                 g_.fill(ColorRGB{0, 0, 0});
                 break;
         }
+        /*
         std::array<Bitmap<ColorRGB>::Pixel, 4> colors = {
             ColorRGB{0, 0, 0},
             ColorRGB{85, 85, 80},
             ColorRGB{170, 170, 170},
             ColorRGB{255, 255, 255}
-        };
+        };*/
         g_.text(10,10, Font::fromROM<assets::Iosevka16>(), ColorRGB{255, 255, 255}) << "Hello world!";
         BitmapApp<ColorRGB>::draw();
     }
