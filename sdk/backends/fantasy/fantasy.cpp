@@ -308,7 +308,8 @@ namespace rckid {
         BeginDrawing();
         DrawTextureEx(display::texture, {0, 0}, 0, 2.0f, WHITE);
     
-        DrawText(TextFormat("FPS: %d", display::fps), 10, 10, 20, RED);
+        DrawText(TextFormat("FPS: %d", display::fps), 540, 280, 20, RED);
+        DrawText(TextFormat("MEM: %d", memoryFree() / 1024), 540, 300, 20, RED);
 
         EndDrawing();
         SwapScreenBuffer();

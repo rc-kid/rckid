@@ -94,14 +94,27 @@ namespace rckid::ui {
          */
         class SubmenuItem : public Item {
         public:
+
+            using Generator = std::function<Menu*()>;
+
+            SubmenuItem(String text, Generator generator): Item{std::move(text)}, generator_{std::move(generator)} {
+            }
+
+            SubmenuItem(String text, uint8_t const * icon, uint32_t iconSize, Generator generator): Item{std::move(text), icon, iconSize}, generator_{std::move(generator)} {
+            }
+
+            template<uint32_t SIZE>
+            SubmenuItem(String text, uint8_t const (&buffer)[SIZE], Generator generator): Item{std::move(text), buffer, SIZE}, generator_{std::move(generator)} {
+            }
+
             static constexpr uint32_t KIND = 2;
             uint32_t kind() const override { return KIND; }
 
-            std::function<Menu *()> const & generator() const { return generator_; }
-            void setGenerator(std::function<Menu *()> const & generator) { generator_ = generator; }
+            Generator const & generator() const { return generator_; } 
+            void setGenerator(Generator generator) { generator_ = std::move(generator); }
 
         private:
-            std::function<Menu *()> generator_;
+            Generator generator_;
         }; // rckid::ui::Menu::SubmenuItem
 
         Menu() = default;
