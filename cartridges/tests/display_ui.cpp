@@ -86,9 +86,9 @@ public:
 
 }; // DisplayUIApp
 
-ui::Menu * mainMenuGenerator() {
+ui::Menu * mainMenuGenerator(void*) {
     return new ui::Menu{
-        new ui::Menu::SubmenuItem{"Games", assets::icons_default_64::game_controller, []() { return new ui::Menu{
+        new ui::Menu::SubmenuItem{"Games", assets::icons_default_64::game_controller, [](void*) { return new ui::Menu{
             new ui::Menu::ActionItem{"Game 1", assets::icons_default_64::animal, []() {  }},
             new ui::Menu::ActionItem{"Game 2", assets::icons_default_64::animal_1, []() {  }},
             new ui::Menu::ActionItem{"Game 3", assets::icons_default_64::animal_2, []() {  }},

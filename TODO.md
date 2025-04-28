@@ -2,7 +2,6 @@
 
 - main menu should restart itself if re-enabled with a history
 - memory leaks via reusing large parts for small items, this way we eventually run out of memory
-- allocate main menu history on arena, as it is a stack that won't change unless menu app is running 
 
 - add glyph names to the generators and allow glyph splitting if the glyph width is greater tile width (then I can use double sized symbols)
 - header does some rendering already 

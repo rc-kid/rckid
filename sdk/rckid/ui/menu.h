@@ -95,26 +95,42 @@ namespace rckid::ui {
         class SubmenuItem : public Item {
         public:
 
-            using Generator = std::function<Menu*()>;
+            typedef Menu * (*Generator)(void *);
 
-            SubmenuItem(String text, Generator generator): Item{std::move(text)}, generator_{std::move(generator)} {
+            //using Generator = std::function<Menu*()>;
+
+            SubmenuItem(String text, Generator generator, void * generatorPayload = nullptr): 
+                Item{std::move(text)}, 
+                generator_{std::move(generator)}, 
+                generatorPayload_{generatorPayload} {
             }
 
-            SubmenuItem(String text, uint8_t const * icon, uint32_t iconSize, Generator generator): Item{std::move(text), icon, iconSize}, generator_{std::move(generator)} {
+            SubmenuItem(String text, uint8_t const * icon, uint32_t iconSize, Generator generator, void * generatorPayload = nullptr): 
+                Item{std::move(text), icon, iconSize}, 
+                generator_{std::move(generator)},
+                generatorPayload_{generatorPayload} {
             }
 
             template<uint32_t SIZE>
-            SubmenuItem(String text, uint8_t const (&buffer)[SIZE], Generator generator): Item{std::move(text), buffer, SIZE}, generator_{std::move(generator)} {
+            SubmenuItem(String text, uint8_t const (&buffer)[SIZE], Generator generator, void * generatorPayload = nullptr):
+                Item{std::move(text), buffer, SIZE}, 
+                generator_{std::move(generator)},
+                generatorPayload_{generatorPayload} {
             }
 
             static constexpr uint32_t KIND = 2;
             uint32_t kind() const override { return KIND; }
 
             Generator const & generator() const { return generator_; } 
-            void setGenerator(Generator generator) { generator_ = std::move(generator); }
+            void * generatorPayload() const { return generatorPayload_; }
+            void setGenerator(Generator generator, void * payload = nullptr) { 
+                generator_ = std::move(generator);
+                generatorPayload_ = payload;
+             }
 
         private:
             Generator generator_;
+            void * generatorPayload_ = nullptr;
         }; // rckid::ui::Menu::SubmenuItem
 
         Menu() = default;
