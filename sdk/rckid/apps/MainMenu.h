@@ -8,6 +8,7 @@
 #include "../ui/header.h"
 #include "../assets/icons_default_64.h"
 #include "../assets/fonts/OpenDyslexic64.h"
+#include "../assets/images.h"
 
 
 namespace rckid {
@@ -20,25 +21,15 @@ namespace rckid {
      */
     class MainMenu : public ui::App {
     public:
-        MainMenu() : ui::App{} {
+        MainMenu(ui::Menu::SubmenuItem::Generator generator) : ui::App{} {
             using namespace ui;
-            m_ = new ui::Menu{
-                new ui::Menu::ActionItem{"Games", assets::icons_default_64::game_controller, []() {  }},
-                new ui::Menu::ActionItem{"Music", assets::icons_default_64::music, []() {  }},
-                new ui::Menu::ActionItem{"Messages", assets::icons_default_64::chat, []() {  }},
-                new ui::Menu::ActionItem{"WalkieTalkie", assets::icons_default_64::baby_monitor, []() {  }},
-                new ui::Menu::ActionItem{"Birthdays", assets::icons_default_64::birthday_cake, []() {  }},
-                new ui::Menu::ActionItem{"Clock", assets::icons_default_64::alarm_clock, []() {  }},
-                new ui::Menu::ActionItem{"Remote", assets::icons_default_64::rc_car, []() {  }},
-                new ui::Menu::ActionItem{"Recorder", assets::icons_default_64::microphone, []() {  }},
-                new ui::Menu::ActionItem{"Files", assets::icons_default_64::folder, []() {  }},
-                new ui::Menu::ActionItem{"Composer", assets::icons_default_64::music_1, []() {  }},
-                new ui::Menu::ActionItem{"Drawing", assets::icons_default_64::paint_palette, []() {  }},
-            };
+            // TODO when called again, but with active history, ignore the generator and go from history instead
+            m_ = generator();
+            generator_ = generator;
     
-            bg_ = new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::game_controller)}};
+            bg_ = new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::star)}};
             bg_->setRect(Rect::WH(320, 240));
-            //bg_->setRepeat(true);
+            bg_->setRepeat(true);
             c_ = new ui::CarouselMenu{m_};
             g_.add(bg_);
             g_.add(c_);
@@ -55,6 +46,33 @@ namespace rckid {
         void update() override {
             ui::App::update();
             c_->processEvents();
+            // see if an item has been selected
+            if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                ui::Menu::Item * item = c_->currentItem();
+                if (item == nullptr)
+                    return;
+                switch (item->kind()) {
+                    case ui::Menu::SubmenuItem::KIND: {
+                        historyPush();
+                        auto m = item->as<ui::Menu::SubmenuItem>();
+                        c_->setMenu(m->generator()(), ui::Carousel::Transition::Up);
+                        break;
+                    }
+                    case ui::Menu::ActionItem::KIND:
+                        // do nothing for now, exit the menu app in the future
+                        break;
+                    default:
+                        UNREACHABLE;
+                        break;
+                }
+            }
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                if (history_ != nullptr) {
+                    historyPop();
+                } else {
+                    // TODO some error would be nice 
+                }
+            }
         }
 
         void onCarouselTransition(ui::Carousel::TransitionState state, ui::Carousel::Transition transition, Timer & t) {
@@ -73,6 +91,12 @@ namespace rckid {
                         case Carousel::Transition::Right:
                             bg_->setImgX(imgX_ - interpolation::cosine(t, 0, 80).round());
                             break;
+                        case Carousel::Transition::Up:
+                            bg_->setImgY(imgY_ + interpolation::cosine(t, 0, 60).round());
+                            break;
+                        case Carousel::Transition::Down:
+                            bg_->setImgY(imgY_ - interpolation::cosine(t, 0, 60).round());
+                            break;
                         default:
                             UNIMPLEMENTED;
                             break;
@@ -81,13 +105,39 @@ namespace rckid {
             }
         }
 
+        void historyPush() {
+            history_ = new PreviousMenu{c_->index(), generator_, history_};
+        }
+
+        void historyPop() {
+            if (history_ == nullptr)
+                return;
+            auto * h = history_;
+            history_ = h->previous;
+            c_->setMenu(h->generator(), ui::Carousel::Transition::Down, h->index);
+            Heap::tryFree(h);
+        }
+
     private:
         ui::Menu * m_;
+        ui::Menu::SubmenuItem::Generator generator_;
         ui::CarouselMenu * c_;
         ui::Image * bg_;
         ui::Header * hdr_;
         Coord imgX_;
         Coord imgY_; 
+
+
+        class PreviousMenu {
+        public:
+            PreviousMenu(uint32_t index, ui::Menu::SubmenuItem::Generator generator, PreviousMenu * previous) : index{index}, generator{generator}, previous{previous} {}
+
+            uint32_t index;
+            ui::Menu::SubmenuItem::Generator generator;
+            PreviousMenu * previous;
+        };
+
+        static inline PreviousMenu * history_ = nullptr;
 
     }; // rckid::MainMenu
 

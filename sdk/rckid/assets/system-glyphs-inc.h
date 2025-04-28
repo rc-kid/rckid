@@ -133,3 +133,5 @@ GLYPH(Pipe,                 0x7c)
 GLYPH(CurlyClose,           0x7d)
 GLYPH(Tilde,                0x7e)
 GLYPH(Free7,                0x7f)
+
+#undef GLYPH

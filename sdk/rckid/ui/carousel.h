@@ -116,12 +116,40 @@ namespace rckid::ui {
         }
 
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
+            switch (dir_) {
+                case Transition::Left:
+                case Transition::Right:
+                    renderChild(& bImg_, column, buffer, starty, numPixels, Point(bImgOffset_, 0));
+                    renderChild(& bText_, column, buffer, starty, numPixels, Point(bTextOffset_, 0));
+                    [[fallthrough]];
+                case Transition::None:
+                    renderChild(& aImg_, column, buffer, starty, numPixels, Point(aImgOffset_, 0));
+                    renderChild(& aText_, column, buffer, starty, numPixels, Point(aTextOffset_, 0));
+                    break;                      
+                case Transition::Up:
+                    renderChild(& aImg_, column, buffer, starty, numPixels, Point(0, aImgOffset_));
+                    renderChild(& aText_, column, buffer, starty, numPixels, Point(0, aTextOffset_));
+                    renderChild(& bImg_, column, buffer, starty, numPixels, Point(bImgOffset_, 0));
+                    renderChild(& bText_, column, buffer, starty, numPixels, Point(bTextOffset_, 0));
+                    break;
+                case Transition::Down:
+                    renderChild(& aImg_, column, buffer, starty, numPixels, Point(aImgOffset_, 0));
+                    renderChild(& aText_, column, buffer, starty, numPixels, Point(aTextOffset_, 0));
+                    renderChild(& bImg_, column, buffer, starty, numPixels, Point(0, bImgOffset_));
+                    renderChild(& bText_, column, buffer, starty, numPixels, Point(0, bTextOffset_));
+                    break;
+                default:
+                    UNREACHABLE;
+                    break;
+            }
+            /*
             renderChild(& aImg_, column, buffer, starty, numPixels, Point(aImgOffset_, 0));
             renderChild(& aText_, column, buffer, starty, numPixels, Point(aTextOffset_, 0));
             if (dir_ != Transition::None) {
                 renderChild(& bImg_, column, buffer, starty, numPixels, Point(bImgOffset_, 0));
                 renderChild(& bText_, column, buffer, starty, numPixels, Point(bTextOffset_, 0));
             }
+                */
         }
 
         void repositionElements(Image & imgInto, Label & labelInto) {
@@ -171,12 +199,12 @@ namespace rckid::ui {
                     bTextOffset_ = interpolation::cosine(a_, width(), 0).round();
                     bImgOffset_ = - bTextOffset_;
                     break;
-                // new item is coming the bottom, old goes to the sides
+                // new item is coming from the bottom, old goes to the sides
                 case Transition::Down:
                     aTextOffset_ = interpolation::cosine(a_, 0, width()).round();
                     aImgOffset_ = - aTextOffset_;
                     bTextOffset_ = interpolation::cosine(a_, height(), 0).round();
-                    bImgOffset_ = aTextOffset_;
+                    bImgOffset_ = bTextOffset_;
                     break;
                 default:
                     UNREACHABLE;
@@ -214,12 +242,19 @@ namespace rckid::ui {
 
         uint32_t index() const { return i_; }
 
-        void setMenu(Menu * m, Transition transition = Transition::None) {
+        Menu::Item * currentItem() {
+            if (menu_ == nullptr || menu_->size() == 0)
+                return nullptr;
+            return & (*menu_)[i_];
+        }
+
+        void setMenu(Menu * m, Transition transition = Transition::None, uint32_t index = 0) {
             Heap::tryFree(menu_);
             menu_ = m;
             if (menu_ == nullptr || menu_->size() == 0)
                 return;
-            set((*menu_)[0], transition);
+            set((*menu_)[index], transition);
+            i_ = index;
         }
 
         void moveLeft() {
