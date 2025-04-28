@@ -124,6 +124,27 @@ namespace rckid {
          */
         static void free([[maybe_unused]] void * ptr) {}
 
+
+        /** Attempts to free the given arena pointer of given size. 
+         
+            If the pointer is the last thing allocated in the current arena, the pointer can be removed from the arena and the function returns true. Otherwise the memory cannot be deallocated as it is in the middle of the arena already and false is returned. 
+         */
+        static bool tryFree(void * ptr, uint32_t size) {
+            if (end_ - size == ptr) {
+                end_ -= size;
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        /** Shorthand for tryFree with typed pointer for automatic size detection.
+         */
+        template<typename T>
+        static bool tryFree(T * ptr) {
+            return tryFree(ptr, sizeof(T));
+        }
+
         /** Resets the current arena by deallocating all its objects. 
          */
         static void reset() {

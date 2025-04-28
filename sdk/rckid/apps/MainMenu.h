@@ -21,11 +21,12 @@ namespace rckid {
      */
     class MainMenu : public ui::App {
     public:
-        MainMenu(ui::Menu::SubmenuItem::Generator generator) : ui::App{} {
+        MainMenu(ui::Menu::SubmenuItem::Generator generator, void * generatorPayload = nullptr) : ui::App{} {
             using namespace ui;
             // TODO when called again, but with active history, ignore the generator and go from history instead
-            m_ = generator();
+            m_ = generator(generatorPayload);
             generator_ = generator;
+            generatorPayload_ = generatorPayload;
     
             bg_ = new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::star)}};
             bg_->setRect(Rect::WH(320, 240));
@@ -55,7 +56,9 @@ namespace rckid {
                     case ui::Menu::SubmenuItem::KIND: {
                         historyPush();
                         auto m = item->as<ui::Menu::SubmenuItem>();
-                        c_->setMenu(m->generator()(), ui::Carousel::Transition::Up);
+                        generator_ = m->generator();
+                        generatorPayload_ = m->generatorPayload();
+                        c_->setMenu(generator_(generatorPayload_), ui::Carousel::Transition::Up);
                         break;
                     }
                     case ui::Menu::ActionItem::KIND:
@@ -106,7 +109,7 @@ namespace rckid {
         }
 
         void historyPush() {
-            history_ = new PreviousMenu{c_->index(), generator_, history_};
+            history_ = new (Arena::alloc<PreviousMenu>()) PreviousMenu{c_->index(), generator_, generatorPayload_, history_};
         }
 
         void historyPop() {
@@ -114,13 +117,18 @@ namespace rckid {
                 return;
             auto * h = history_;
             history_ = h->previous;
-            c_->setMenu(h->generator(), ui::Carousel::Transition::Down, h->index);
-            Heap::tryFree(h);
+            generator_ = h->generator;
+            generatorPayload_ = h->generatorPayload;
+            c_->setMenu(generator_(generatorPayload_), ui::Carousel::Transition::Down, h->index);
+            // since we are the only ones in the arena and the menu histories are the only thing being stored there, we must be able to free the latest history
+            bool ok = Arena::tryFree(h);
+            ASSERT(ok);
         }
 
     private:
         ui::Menu * m_;
         ui::Menu::SubmenuItem::Generator generator_;
+        void * generatorPayload_ = nullptr;
         ui::CarouselMenu * c_;
         ui::Image * bg_;
         ui::Header * hdr_;
@@ -130,10 +138,11 @@ namespace rckid {
 
         class PreviousMenu {
         public:
-            PreviousMenu(uint32_t index, ui::Menu::SubmenuItem::Generator generator, PreviousMenu * previous) : index{index}, generator{generator}, previous{previous} {}
+            PreviousMenu(uint32_t index, ui::Menu::SubmenuItem::Generator generator, void * generatorPayload, PreviousMenu * previous) : index{index}, generator{generator}, generatorPayload{generatorPayload}, previous{previous} {}
 
             uint32_t index;
             ui::Menu::SubmenuItem::Generator generator;
+            void * generatorPayload = nullptr;
             PreviousMenu * previous;
         };
 
