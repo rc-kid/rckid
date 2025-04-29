@@ -3,8 +3,9 @@
 #include <vector>
 
 #include "../rckid.h"
-#include "../graphics/bitmap.h"
 #include "../utils/string.h"
+#include "../utils/funptr.h"
+#include "../graphics/bitmap.h"
 #include "../graphics/png.h"
 
 namespace rckid::ui {
@@ -67,72 +68,73 @@ namespace rckid::ui {
 
         }; // rckid::ui::Menu::Item
 
+        using Action = FunPtr<void>;
+
         /** Item with associated action, which is a simple std::function for simplicity.
          */
         class ActionItem : public Item {
         public:
 
-            ActionItem(String text, std::function<void()> action): Item{std::move(text)}, action_{action} {
+            ActionItem(String text, Action action): 
+                Item{std::move(text)}, 
+                action_{std::move(action)} {
             }
 
-            ActionItem(String text, uint8_t const * icon, uint32_t iconSize, std::function<void()> action): Item{std::move(text), icon, iconSize}, action_{action} {
+            ActionItem(String text, uint8_t const * icon, uint32_t iconSize, Action action):
+                Item{std::move(text), icon, iconSize}, 
+                action_{std::move(action)} {
             }
 
             template<uint32_t SIZE>
-            ActionItem(String text, uint8_t const (&buffer)[SIZE], std::function<void()> action): Item{std::move(text), buffer, SIZE}, action_{action} {
+            ActionItem(String text, uint8_t const (&buffer)[SIZE], Action action):
+                Item{std::move(text), buffer, SIZE}, 
+                action_{std::move(action)} {
             }
 
             static constexpr uint32_t KIND = 1;
             uint32_t kind() const override { return KIND; }
 
-            std::function<void()> const & action() const { return action_; }
-            void setAction(std::function<void()> const & action) { action_ = action; }
+            Action const & action() const { return action_; }
+            void setAction(Action action) { action_ = std::move(action); }
 
         private:
-            std::function<void()> action_;
+            Action action_;
+            void * actionPayload_;
         }; // rckid::ui::Menu::ActionItem
 
+        using Generator = FunPtr<Menu*>;
         /** Item with associated submenu generator. 
          */
         class SubmenuItem : public Item {
         public:
 
-            typedef Menu * (*Generator)(void *);
-
-            //using Generator = std::function<Menu*()>;
-
-            SubmenuItem(String text, Generator generator, void * generatorPayload = nullptr): 
+            SubmenuItem(String text, Generator generator): 
                 Item{std::move(text)}, 
-                generator_{std::move(generator)}, 
-                generatorPayload_{generatorPayload} {
+                generator_{std::move(generator)} {
             }
 
-            SubmenuItem(String text, uint8_t const * icon, uint32_t iconSize, Generator generator, void * generatorPayload = nullptr): 
+            SubmenuItem(String text, uint8_t const * icon, uint32_t iconSize, Generator generator): 
                 Item{std::move(text), icon, iconSize}, 
-                generator_{std::move(generator)},
-                generatorPayload_{generatorPayload} {
+                generator_{std::move(generator)} {
             }
 
             template<uint32_t SIZE>
-            SubmenuItem(String text, uint8_t const (&buffer)[SIZE], Generator generator, void * generatorPayload = nullptr):
+            SubmenuItem(String text, uint8_t const (&buffer)[SIZE], Generator generator):
                 Item{std::move(text), buffer, SIZE}, 
-                generator_{std::move(generator)},
-                generatorPayload_{generatorPayload} {
+                generator_{std::move(generator)} {
             }
 
             static constexpr uint32_t KIND = 2;
             uint32_t kind() const override { return KIND; }
 
             Generator const & generator() const { return generator_; } 
-            void * generatorPayload() const { return generatorPayload_; }
-            void setGenerator(Generator generator, void * payload = nullptr) { 
+
+            void setGenerator(Generator generator) { 
                 generator_ = std::move(generator);
-                generatorPayload_ = payload;
              }
 
         private:
             Generator generator_;
-            void * generatorPayload_ = nullptr;
         }; // rckid::ui::Menu::SubmenuItem
 
         Menu() = default;

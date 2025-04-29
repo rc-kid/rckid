@@ -1,0 +1,281 @@
+INFO: Initializing raylib 5.6-dev
+INFO: Platform backend: DESKTOP (GLFW)
+INFO: Supported raylib modules:
+INFO:     > rcore:..... loaded (mandatory)
+INFO:     > rlgl:...... loaded (mandatory)
+INFO:     > rshapes:... loaded (optional)
+INFO:     > rtextures:. loaded (optional)
+INFO:     > rtext:..... loaded (optional)
+INFO:     > rmodels:... loaded (optional)
+INFO:     > raudio:.... loaded (optional)
+INFO: DISPLAY: Device initialized successfully
+INFO:     > Display size: 2880 x 1920
+INFO:     > Screen size:  640 x 480
+INFO:     > Render size:  640 x 480
+INFO:     > Viewport offsets: 0, 0
+INFO: GLAD: OpenGL extensions loaded successfully
+INFO: GL: Supported extensions count: 226
+INFO: GL: OpenGL device information:
+INFO:     > Vendor:   Mesa
+INFO:     > Renderer: llvmpipe (LLVM 19.1.1, 128 bits)
+INFO:     > Version:  4.5 (Core Profile) Mesa 24.2.8-1ubuntu1~24.04.1
+INFO:     > GLSL:     4.50
+INFO: GL: VAO extension detected, VAO functions loaded successfully
+INFO: GL: NPOT textures extension detected, full NPOT textures supported
+INFO: GL: DXT compressed textures supported
+INFO: GL: ETC2/EAC compressed textures supported
+INFO: PLATFORM: DESKTOP (GLFW - X11): Initialized successfully
+INFO: TEXTURE: [ID 1] Texture loaded successfully (1x1 | R8G8B8A8 | 1 mipmaps)
+INFO: TEXTURE: [ID 1] Default texture loaded successfully
+INFO: SHADER: [ID 1] Vertex shader compiled successfully
+INFO: SHADER: [ID 2] Fragment shader compiled successfully
+INFO: SHADER: [ID 3] Program shader loaded successfully
+INFO: SHADER: [ID 3] Default shader loaded successfully
+INFO: RLGL: Render batch vertex buffers loaded successfully in RAM (CPU)
+INFO: RLGL: Render batch vertex buffers loaded successfully in VRAM (GPU)
+INFO: RLGL: Default OpenGL state initialized successfully
+INFO: TEXTURE: [ID 2] Texture loaded successfully (128x128 | GRAY_ALPHA | 1 mipmaps)
+INFO: FONT: Default font loaded successfully (224 glyphs)
+INFO: SYSTEM: Working Directory: /home/peta/devel/rckid
+INFO: TEXTURE: [ID 3] Texture loaded successfully (320x240 | R8G8B8A8 | 1 mipmaps)
+LL_INFO: sd.iso file found, mounting SD card - 8589934592 bytes
+LL_INFO:     blocks: 16777216
+LL_ERROR: flash.iso file not found, cartridge storage not present
+LL_INFO: Free memory: 512
+LL_HEAP: Allocating 28 bytes from 188035585888976
+LL_HEAP: Allocating 484 bytes from 188035585888492
+LL_HEAP: Allocating 484 bytes from 188035585888008
+LL_HEAP: Allocating 68 bytes from 188035585887940
+LL_HEAP: Allocating 48244 bytes from 188035585839696
+LL_HEAP: Allocating 8196 bytes from 188035585831500
+LL_HEAP: Allocating 132 bytes from 188035585831368
+LL_HEAP: Freeing last chunk 188035585831368 (size 132)
+LL_HEAP: Heap end is now at 188035585831496
+LL_HEAP: Freeing standalone chunk 188035585839696 (size 48244)
+LL_HEAP: Heap end is now at 188035585831496
+LL_HEAP: Allocating 484 bytes from 188035585839696 chunk size 48244
+LL_HEAP: Allocating 12 bytes from 188035585831488
+LL_HEAP: Allocating 20 bytes from 188035585831468
+LL_HEAP: Freeing standalone chunk 188035585831488 (size 12)
+LL_HEAP: Heap end is now at 188035585831464
+LL_HEAP: Allocating 28 bytes from 188035585831440
+LL_HEAP: Allocating 36 bytes from 188035585831404
+LL_HEAP: Freeing standalone chunk 188035585831468 (size 20)
+LL_HEAP: Heap end is now at 188035585831400
+LL_HEAP: Allocating 28 bytes from 188035585831376
+LL_HEAP: Allocating 68 bytes from 188035585831308
+LL_HEAP: Allocating 76 bytes from 188035585831232
+LL_HEAP: Allocating 76 bytes from 188035585831156
+LL_HEAP: Allocating 76 bytes from 188035585831080
+LL_HEAP: Allocating 76 bytes from 188035585831004
+LL_HEAP: Allocating 76 bytes from 188035585830928
+LL_HEAP: Allocating 76 bytes from 188035585830852
+LL_HEAP: Allocating 76 bytes from 188035585830776
+LL_HEAP: Allocating 76 bytes from 188035585830700
+LL_HEAP: Allocating 76 bytes from 188035585830624
+LL_HEAP: Allocating 76 bytes from 188035585830548
+LL_HEAP: Allocating 92 bytes from 188035585830456
+LL_HEAP: Allocating 8196 bytes from 188035585822260
+LL_HEAP: Allocating 132 bytes from 188035585822128
+LL_HEAP: Freeing last chunk 188035585822128 (size 132)
+LL_HEAP: Heap end is now at 188035585822256
+LL_HEAP: Allocating 20 bytes from 188035585831468 chunk size 20
+LL_HEAP: Allocating 36 bytes from 188035585822224
+LL_HEAP: Freeing standalone chunk 188035585831468 (size 20)
+LL_HEAP: Heap end is now at 188035585822220
+LL_HEAP: Allocating 68 bytes from 188035585822156
+LL_HEAP: Freeing standalone chunk 188035585822224 (size 36)
+LL_HEAP: Heap end is now at 188035585822152
+LL_HEAP: Allocating 132 bytes from 188035585822024
+LL_HEAP: Freeing standalone chunk 188035585822156 (size 68)
+LL_HEAP: Heap end is now at 188035585822020
+LL_HEAP: Allocating 28 bytes from 188035585822156 chunk size 68
+LL_HEAP: Allocating 76 bytes from 188035585821948
+LL_HEAP: Allocating 76 bytes from 188035585821872
+LL_HEAP: Allocating 76 bytes from 188035585821796
+LL_HEAP: Allocating 28 bytes from 188035585822224 chunk size 36
+LL_HEAP: Freeing standalone chunk 188035585831308 (size 68)
+LL_HEAP: Heap end is now at 188035585821792
+LL_HEAP: Freeing standalone chunk 188035585831232 (size 76)
+LL_HEAP: Heap end is now at 188035585821792
+LL_HEAP: Freeing standalone chunk 188035585831156 (size 76)
+LL_HEAP: Heap end is now at 188035585821792
+LL_HEAP: Freeing standalone chunk 188035585831080 (size 76)
+LL_HEAP: Heap end is now at 188035585821792
+LL_HEAP: Freeing standalone chunk 188035585831004 (size 76)
+LL_HEAP: Heap end is now at 188035585821792
+LL_HEAP: Freeing standalone chunk 188035585830928 (size 76)
+LL_HEAP: Heap end is now at 188035585821792
+LL_HEAP: Freeing standalone chunk 188035585830852 (size 76)
+LL_HEAP: Heap end is now at 188035585821792
+LL_HEAP: Freeing standalone chunk 188035585830776 (size 76)
+LL_HEAP: Heap end is now at 188035585821792
+LL_HEAP: Freeing standalone chunk 188035585830700 (size 76)
+LL_HEAP: Heap end is now at 188035585821792
+LL_HEAP: Freeing standalone chunk 188035585830624 (size 76)
+LL_HEAP: Heap end is now at 188035585821792
+LL_HEAP: Freeing standalone chunk 188035585830548 (size 76)
+LL_HEAP: Heap end is now at 188035585821792
+LL_HEAP: Freeing standalone chunk 188035585830456 (size 92)
+LL_HEAP: Heap end is now at 188035585821792
+LL_HEAP: Freeing standalone chunk 188035585831376 (size 28)
+LL_HEAP: Heap end is now at 188035585821792
+LL_HEAP: Allocating 8196 bytes from 188035585813600
+LL_HEAP: Allocating 132 bytes from 188035585813468
+LL_HEAP: Freeing last chunk 188035585813468 (size 132)
+LL_HEAP: Heap end is now at 188035585813596
+LL_HEAP: Allocating 20 bytes from 188035585831376 chunk size 28
+LL_HEAP: Allocating 36 bytes from 188035585830456 chunk size 92
+LL_HEAP: Freeing standalone chunk 188035585831376 (size 28)
+LL_HEAP: Heap end is now at 188035585813596
+LL_HEAP: Allocating 68 bytes from 188035585830548 chunk size 76
+LL_HEAP: Freeing standalone chunk 188035585830456 (size 92)
+LL_HEAP: Heap end is now at 188035585813596
+LL_HEAP: Allocating 132 bytes from 188035585813468
+LL_HEAP: Freeing standalone chunk 188035585830548 (size 76)
+LL_HEAP: Heap end is now at 188035585813464
+LL_HEAP: Freeing standalone chunk 188035585888976 (size 28)
+LL_HEAP: Heap end is now at 188035585813464
+LL_HEAP: Freeing standalone chunk 188035585831500 (size 8196)
+LL_HEAP: Heap end is now at 188035585813464
+LL_HEAP: Freeing standalone chunk 188035585887940 (size 68)
+LL_HEAP: Heap end is now at 188035585813464
+LL_HEAP: Freeing standalone chunk 188035585821948 (size 76)
+LL_HEAP: Heap end is now at 188035585813464
+LL_HEAP: Freeing standalone chunk 188035585821872 (size 76)
+LL_HEAP: Heap end is now at 188035585813464
+LL_HEAP: Freeing standalone chunk 188035585821796 (size 76)
+LL_HEAP: Heap end is now at 188035585813464
+LL_HEAP: Freeing standalone chunk 188035585822224 (size 36)
+LL_HEAP: Heap end is now at 188035585813464
+LL_HEAP: Freeing standalone chunk 188035585822156 (size 68)
+LL_HEAP: Heap end is now at 188035585813464
+LL_HEAP: Freeing standalone chunk 188035585822024 (size 132)
+LL_HEAP: Heap end is now at 188035585813464
+LL_HEAP: Freeing standalone chunk 188035585822260 (size 8196)
+LL_HEAP: Heap end is now at 188035585813464
+LL_HEAP: Freeing last chunk 188035585813468 (size 132)
+LL_HEAP: Heap end is now at 188035585813596
+LL_HEAP: Freeing last chunk 188035585813600 (size 8196)
+LL_HEAP: Freeing joined chunk 188035585821796 (size 76)
+LL_HEAP: Freeing joined chunk 188035585821872 (size 76)
+LL_HEAP: Freeing joined chunk 188035585821948 (size 76)
+LL_HEAP: Freeing joined chunk 188035585822024 (size 132)
+LL_HEAP: Freeing joined chunk 188035585822156 (size 68)
+LL_HEAP: Freeing joined chunk 188035585822224 (size 36)
+LL_HEAP: Freeing joined chunk 188035585822260 (size 8196)
+LL_HEAP: Freeing joined chunk 188035585830456 (size 92)
+LL_HEAP: Freeing joined chunk 188035585830548 (size 76)
+LL_HEAP: Freeing joined chunk 188035585830624 (size 76)
+LL_HEAP: Freeing joined chunk 188035585830700 (size 76)
+LL_HEAP: Freeing joined chunk 188035585830776 (size 76)
+LL_HEAP: Freeing joined chunk 188035585830852 (size 76)
+LL_HEAP: Freeing joined chunk 188035585830928 (size 76)
+LL_HEAP: Freeing joined chunk 188035585831004 (size 76)
+LL_HEAP: Freeing joined chunk 188035585831080 (size 76)
+LL_HEAP: Freeing joined chunk 188035585831156 (size 76)
+LL_HEAP: Freeing joined chunk 188035585831232 (size 76)
+LL_HEAP: Freeing joined chunk 188035585831308 (size 68)
+LL_HEAP: Freeing joined chunk 188035585831376 (size 28)
+LL_HEAP: Heap end is now at 188035585831400
+LL_HEAP: Freeing standalone chunk 188035585839696 (size 48244)
+LL_HEAP: Heap end is now at 188035585831400
+LL_HEAP: Freeing standalone chunk 188035585831440 (size 28)
+LL_HEAP: Heap end is now at 188035585831400
+LL_HEAP: Freeing last chunk 188035585831404 (size 36)
+LL_HEAP: Freeing joined chunk 188035585831440 (size 28)
+LL_HEAP: Freeing joined chunk 188035585831468 (size 20)
+LL_HEAP: Freeing joined chunk 188035585831488 (size 12)
+LL_HEAP: Freeing joined chunk 188035585831500 (size 8196)
+LL_HEAP: Freeing joined chunk 188035585839696 (size 48244)
+LL_HEAP: Freeing joined chunk 188035585887940 (size 68)
+LL_HEAP: Heap end is now at 188035585888004
+LL_INFO: Free memory: 510
+LL_HEAP: Allocating 28 bytes from 188035585888976 chunk size 28
+LL_HEAP: Allocating 484 bytes from 188035585887524
+LL_HEAP: Allocating 484 bytes from 188035585887040
+LL_HEAP: Allocating 68 bytes from 188035585886972
+LL_HEAP: Allocating 48244 bytes from 188035585838728
+LL_HEAP: Allocating 8196 bytes from 188035585830532
+LL_HEAP: Allocating 132 bytes from 188035585830400
+LL_HEAP: Freeing last chunk 188035585830400 (size 132)
+LL_HEAP: Heap end is now at 188035585830528
+LL_HEAP: Freeing standalone chunk 188035585838728 (size 48244)
+LL_HEAP: Heap end is now at 188035585830528
+LL_HEAP: Allocating 484 bytes from 188035585838728 chunk size 48244
+LL_HEAP: Allocating 12 bytes from 188035585830520
+LL_HEAP: Allocating 20 bytes from 188035585830500
+LL_HEAP: Freeing standalone chunk 188035585830520 (size 12)
+LL_HEAP: Heap end is now at 188035585830496
+LL_HEAP: Allocating 28 bytes from 188035585830472
+LL_HEAP: Allocating 36 bytes from 188035585830436
+LL_HEAP: Freeing standalone chunk 188035585830500 (size 20)
+LL_HEAP: Heap end is now at 188035585830432
+LL_HEAP: Allocating 28 bytes from 188035585830408
+LL_HEAP: Allocating 76 bytes from 188035585830332
+LL_HEAP: Allocating 76 bytes from 188035585830256
+LL_HEAP: Allocating 76 bytes from 188035585830180
+LL_HEAP: Allocating 28 bytes from 188035585830152
+LL_HEAP: Allocating 8196 bytes from 188035585821956
+LL_HEAP: Allocating 132 bytes from 188035585821824
+LL_HEAP: Freeing last chunk 188035585821824 (size 132)
+LL_HEAP: Heap end is now at 188035585821952
+LL_HEAP: Allocating 20 bytes from 188035585830500 chunk size 20
+LL_HEAP: Allocating 36 bytes from 188035585821920
+LL_HEAP: Freeing standalone chunk 188035585830500 (size 20)
+LL_HEAP: Heap end is now at 188035585821916
+LL_HEAP: Allocating 68 bytes from 188035585821852
+LL_HEAP: Freeing standalone chunk 188035585821920 (size 36)
+LL_HEAP: Heap end is now at 188035585821848
+LL_HEAP: Allocating 132 bytes from 188035585821720
+LL_HEAP: Freeing standalone chunk 188035585821852 (size 68)
+LL_HEAP: Heap end is now at 188035585821716
+LL_HEAP: Allocating 28 bytes from 188035585821852 chunk size 68
+LL_HEAP: Allocating 68 bytes from 188035585821652
+LL_HEAP: Allocating 76 bytes from 188035585821576
+LL_HEAP: Allocating 76 bytes from 188035585821500
+LL_HEAP: Allocating 76 bytes from 188035585821424
+LL_HEAP: Allocating 76 bytes from 188035585821348
+LL_HEAP: Allocating 76 bytes from 188035585821272
+LL_HEAP: Allocating 76 bytes from 188035585821196
+LL_HEAP: Allocating 76 bytes from 188035585821120
+LL_HEAP: Allocating 76 bytes from 188035585821044
+LL_HEAP: Allocating 76 bytes from 188035585820968
+LL_HEAP: Allocating 76 bytes from 188035585820892
+LL_HEAP: Allocating 92 bytes from 188035585820800
+LL_HEAP: Freeing standalone chunk 188035585830332 (size 76)
+LL_HEAP: Heap end is now at 188035585820796
+LL_HEAP: Freeing standalone chunk 188035585830256 (size 76)
+LL_HEAP: Heap end is now at 188035585820796
+LL_HEAP: Freeing standalone chunk 188035585830180 (size 76)
+LL_HEAP: Heap end is now at 188035585820796
+LL_HEAP: Freeing standalone chunk 188035585830152 (size 28)
+LL_HEAP: Heap end is now at 188035585820796
+LL_HEAP: Freeing standalone chunk 188035585830408 (size 28)
+LL_HEAP: Heap end is now at 188035585820796
+LL_HEAP: Allocating 8196 bytes from 188035585812604
+LL_HEAP: Allocating 132 bytes from 188035585812472
+LL_HEAP: Freeing last chunk 188035585812472 (size 132)
+LL_HEAP: Heap end is now at 188035585812600
+LL_HEAP: Allocating 20 bytes from 188035585830408 chunk size 28
+LL_HEAP: Allocating 36 bytes from 188035585830180 chunk size 76
+LL_HEAP: Freeing standalone chunk 188035585830408 (size 28)
+LL_HEAP: Heap end is now at 188035585812600
+LL_HEAP: Allocating 68 bytes from 188035585830256 chunk size 76
+LL_HEAP: Freeing standalone chunk 188035585830180 (size 76)
+LL_HEAP: Heap end is now at 188035585812600
+LL_HEAP: Allocating 132 bytes from 188035585812472
+LL_HEAP: Freeing standalone chunk 188035585830256 (size 76)
+LL_HEAP: Heap end is now at 188035585812468
+
+
+
+
+
+
+Allocating 28 bytes from 188035585888976 DEL
+Allocating 484 bytes from 188035585888492
+Allocating 484 bytes from 188035585888008
+
+Heap end is now at 188035585888004
+Free memory: 510

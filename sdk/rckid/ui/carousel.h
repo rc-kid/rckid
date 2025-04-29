@@ -142,14 +142,6 @@ namespace rckid::ui {
                     UNREACHABLE;
                     break;
             }
-            /*
-            renderChild(& aImg_, column, buffer, starty, numPixels, Point(aImgOffset_, 0));
-            renderChild(& aText_, column, buffer, starty, numPixels, Point(aTextOffset_, 0));
-            if (dir_ != Transition::None) {
-                renderChild(& bImg_, column, buffer, starty, numPixels, Point(bImgOffset_, 0));
-                renderChild(& bText_, column, buffer, starty, numPixels, Point(bTextOffset_, 0));
-            }
-                */
         }
 
         void repositionElements(Image & imgInto, Label & labelInto) {
@@ -234,8 +226,10 @@ namespace rckid::ui {
     class CarouselMenu : public Carousel {
     public:
 
-        CarouselMenu(Menu * m) {
-            setMenu(m);
+        CarouselMenu() = default;
+
+        ~CarouselMenu() override {
+            delete menu_;
         }
 
         Menu const * menu() const { return menu_; }
@@ -249,7 +243,7 @@ namespace rckid::ui {
         }
 
         void setMenu(Menu * m, Transition transition = Transition::None, uint32_t index = 0) {
-            Heap::tryFree(menu_);
+            delete menu_;
             menu_ = m;
             if (menu_ == nullptr || menu_->size() == 0)
                 return;

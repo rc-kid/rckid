@@ -20,10 +20,10 @@ using namespace rckid;
  */
 
 
-class GBCStats : public ui::App {
+class GBCStats : public ui::App<void> {
 public:
 
-    GBCStats(uint32_t t, uint32_t cycles): ui::App{320, 240} {
+    GBCStats(uint32_t t, uint32_t cycles): ui::App<void>{320, 240} {
 
         ui::Label * l = new ui::Label{0, 50, STR(t)};
         l->setFont(Font::fromROM<assets::OpenDyslexic64>());
@@ -41,7 +41,7 @@ public:
     }
 
     void update() override {
-        ui::App::update();
+        ui::App<void>::update();
         if (btnPressed(Btn::B))
             exit();
     }

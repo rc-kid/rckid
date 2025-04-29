@@ -19,33 +19,39 @@ namespace rckid {
 
         The app uses background image, carousel menu. can also show extra stuff, like clock, alarm, lives, messages, etc. So maybe just start with simple carousel with 
      */
-    class MainMenu : public ui::App {
+    class MainMenu : public ui::App<ui::Menu::Action> {
     public:
-        MainMenu(ui::Menu::SubmenuItem::Generator generator, void * generatorPayload = nullptr) : ui::App{} {
+        MainMenu(ui::Menu::Generator generator) : ui::App<ui::Menu::Action>{} {
             using namespace ui;
-            // TODO when called again, but with active history, ignore the generator and go from history instead
-            m_ = generator(generatorPayload);
-            generator_ = generator;
-            generatorPayload_ = generatorPayload;
-    
             bg_ = new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::star)}};
             bg_->setRect(Rect::WH(320, 240));
             bg_->setRepeat(true);
-            c_ = new ui::CarouselMenu{m_};
+            c_ = new ui::CarouselMenu{};
             g_.add(bg_);
             g_.add(c_);
             c_->setRect(Rect::XYWH(0, 160, 320, 80));
             c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
             c_->setOnTransitionEvent([this](Carousel::TransitionState state, Carousel::Transition transition, Timer & t) {
-                onCarouselTransition(state, transition, t);
+                if (initialTransition_) {
+                    if (state == Carousel::TransitionState::End)
+                        initialTransition_ = false;
+                } else {
+                    onCarouselTransition(state, transition, t);
+                }
             });
             hdr_ = new ui::Header{};
             g_.add(hdr_);
+            if (history_ == nullptr) {
+                generator_ = generator;
+                c_->setMenu(generator_(), ui::Carousel::Transition::Up);
+            } else {
+                historyPop(ui::Carousel::Transition::Up);
+            }
         }
 
     protected:
         void update() override {
-            ui::App::update();
+            ui::App<ui::Menu::Action>::update();
             c_->processEvents();
             // see if an item has been selected
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
@@ -57,12 +63,14 @@ namespace rckid {
                         historyPush();
                         auto m = item->as<ui::Menu::SubmenuItem>();
                         generator_ = m->generator();
-                        generatorPayload_ = m->generatorPayload();
-                        c_->setMenu(generator_(generatorPayload_), ui::Carousel::Transition::Up);
+                        c_->setMenu(generator_(), ui::Carousel::Transition::Up);
                         break;
                     }
                     case ui::Menu::ActionItem::KIND:
-                        // do nothing for now, exit the menu app in the future
+                        // record where we are
+                        historyPush();
+                        // and exit, if item selected
+                        exit(item->as<ui::Menu::ActionItem>()->action());
                         break;
                     default:
                         UNREACHABLE;
@@ -109,40 +117,40 @@ namespace rckid {
         }
 
         void historyPush() {
-            history_ = new (Arena::alloc<PreviousMenu>()) PreviousMenu{c_->index(), generator_, generatorPayload_, history_};
+            history_ = new (Arena::alloc<PreviousMenu>()) PreviousMenu{c_->index(), generator_, history_};
         }
 
-        void historyPop() {
+        void historyPop(ui::Carousel::Transition transition = ui::Carousel::Transition::Down) {
             if (history_ == nullptr)
                 return;
             auto * h = history_;
             history_ = h->previous;
             generator_ = h->generator;
-            generatorPayload_ = h->generatorPayload;
-            c_->setMenu(generator_(generatorPayload_), ui::Carousel::Transition::Down, h->index);
+            c_->setMenu(generator_(), transition, h->index);
             // since we are the only ones in the arena and the menu histories are the only thing being stored there, we must be able to free the latest history
             bool ok = Arena::tryFree(h);
             ASSERT(ok);
         }
 
     private:
-        ui::Menu * m_;
-        ui::Menu::SubmenuItem::Generator generator_;
-        void * generatorPayload_ = nullptr;
+        ui::Menu::Generator generator_;
         ui::CarouselMenu * c_;
         ui::Image * bg_;
         ui::Header * hdr_;
         Coord imgX_;
         Coord imgY_; 
+        // when 
+        bool initialTransition_ = true;
 
+        // action item to be returned
+        ui::Menu::Action result_;
 
         class PreviousMenu {
         public:
-            PreviousMenu(uint32_t index, ui::Menu::SubmenuItem::Generator generator, void * generatorPayload, PreviousMenu * previous) : index{index}, generator{generator}, generatorPayload{generatorPayload}, previous{previous} {}
+            PreviousMenu(uint32_t index, ui::Menu::Generator generator, PreviousMenu * previous) : index{index}, generator{generator}, previous{previous} {}
 
             uint32_t index;
-            ui::Menu::SubmenuItem::Generator generator;
-            void * generatorPayload = nullptr;
+            ui::Menu::Generator generator;
             PreviousMenu * previous;
         };
 

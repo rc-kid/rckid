@@ -1,6 +1,7 @@
 # New Graphics
 
-- main menu should restart itself if re-enabled with a history
+- tryFree on heap is broken as it does not call destructor, should phase out and integrate into standard free to ensure is called always
+
 - memory leaks via reusing large parts for small items, this way we eventually run out of memory
 
 - add glyph names to the generators and allow glyph splitting if the glyph width is greater tile width (then I can use double sized symbols)

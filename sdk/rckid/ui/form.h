@@ -13,7 +13,7 @@ namespace rckid::ui {
         explicit Form(Allocator & a = Heap::allocator()):
             Form{320,240, a} {
         }
-        
+
         Form(Coord width, Coord height, Allocator & a = Heap::allocator()):
             Form(Rect::Centered(width, height, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT), a) {
         }
@@ -23,7 +23,7 @@ namespace rckid::ui {
         }
 
         ~Form() override {
-            Heap::tryFree(buffer_);
+            delete buffer_;
         }
 
         void initialize() {
@@ -58,6 +58,7 @@ namespace rckid::ui {
         Coord column_;
     }; 
 
-    using App = RenderableApp<ui::Form>;
+    template<typename T>
+    using App = RenderableApp<ui::Form, T>;
 
 } // namespace rckid::ui
