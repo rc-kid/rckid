@@ -31,23 +31,18 @@ namespace rckid::ui {
         Image & operator = (Image && other) noexcept {
             if (this != & other) {
                 Widget::operator=(other);
-                clear();
                 assign(std::move(other));
             }
             return *this;
         }
 
         Image & operator = (Bitmap<ColorRGB> && bmp) noexcept {
-            clear();
+            bmp_.~Bitmap();
             new (&bmp_) Bitmap<ColorRGB>{std::move(bmp)};
             w_ = bmp_.width();
             h_ = bmp_.height();
             reposition();
             return *this;
-        }
-
-        ~Image() override {
-            clear();
         }
 
         HAlign hAlign() const { return hAlign_; }
@@ -129,10 +124,7 @@ namespace rckid::ui {
             repeat_ = other.repeat_;
             imgX_ = other.imgX_;
             imgY_ = other.imgY_;
-        }
-
-        void clear() {
-            bmp_.~Bitmap();
+            transparent_ = other.transparent_;
         }
 
         void renderBitmapColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) {

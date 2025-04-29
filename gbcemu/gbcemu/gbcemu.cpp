@@ -319,7 +319,7 @@ namespace rckid::gbcemu {
         // TODO some more cleanup would be good here
     }
 
-    void GBCEmu::run() {
+    void GBCEmu::loop() {
         // set the current app in focus. If there is previous app, it will be blurred. The focus method also updates the parent app so that we can go back with the apps
         focus();
 

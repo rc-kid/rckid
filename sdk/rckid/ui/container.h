@@ -15,7 +15,7 @@ namespace rckid::ui {
 
         ~Container() override {
             for (auto w : widgets_)
-                Heap::tryFree(w);
+                delete w;
         }
 
         void add(Widget * w) {

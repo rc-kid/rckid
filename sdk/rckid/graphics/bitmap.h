@@ -57,7 +57,9 @@ namespace rckid {
 
         /** Frees the bitmap.
          */
-        ~Bitmap() { Heap::tryFree(pixels_); };
+        ~Bitmap() { 
+            Heap::tryFree(pixels_); 
+        };
 
         Coord width() const { return w_; }
         Coord height() const { return h_; }

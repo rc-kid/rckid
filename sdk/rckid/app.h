@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "rckid.h"
 #include "utils/stream.h"
 
@@ -13,8 +15,6 @@ namespace rckid {
     class App {
     public:
         virtual ~App() = default;
-
-        virtual void run();
 
         virtual void save([[maybe_unused]] WriteStream & into) {
             LOG(LL_ERROR, "Saving application state not supported");
@@ -62,6 +62,12 @@ namespace rckid {
          */
         virtual void draw() = 0;
 
+        /** Application main loop. Calling this method executes the application. 
+         
+            The loop method provides the logic for the periodic updates and drawing of the app. The method is called from the run() method of ModalApp class and should not be called directly.
+         */
+        virtual void loop();
+
         /** Exits the app. The app does not exit immediately, but the next time its run method starts a new frame cycle. 
          */
         void exit() { app_ = nullptr;}
@@ -72,12 +78,39 @@ namespace rckid {
 
         static inline App * app_ = nullptr;
 
-    }; // rckid::BaseApp
+    }; // rckid::App
+
+    template<typename T>
+    class ModalApp : public App {
+    public:
+
+        std::optional<T> run() {
+            loop();
+            return result_;
+        }
+
+        void exit(T result) {
+            result_ = result;
+            App::exit();
+        }
+
+    private:
+
+        std::optional<T> result_;
+    }; // ModalApp
+
+    template<>
+    class ModalApp<void> : public App {
+    public:
+        void run() {
+            loop();
+        }
+    }; // ModalApp<void>
 
     /** Application with Renderer that takes care of its rendering on the display.
      */
-    template<typename RENDERER>
-    class RenderableApp : public App {
+    template<typename RENDERER, typename T = void>
+    class RenderableApp : public ModalApp<T> {
     protected:
         template <typename... Args>
         RenderableApp(Args&&... args) : g_{std::forward<Args>(args)...} {

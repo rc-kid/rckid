@@ -44,7 +44,7 @@ namespace rckid::gbcemu {
 
         Most of this builds on a very good GB/GBC reference available at https://gbdev.io/pandocs/About.html
      */
-    class GBCEmu : public App {
+    class GBCEmu : public ModalApp<void> {
     public:
 
         static constexpr uint32_t SCALED_WIDTH = 267;
@@ -60,8 +60,6 @@ namespace rckid::gbcemu {
         GBCEmu(Allocator & a = Heap::allocator());
 
         ~GBCEmu() override;
-
-        void run() override;
 
         void save([[maybe_unused]] WriteStream & into) override {
             UNIMPLEMENTED;
@@ -154,6 +152,7 @@ namespace rckid::gbcemu {
 
     protected:
 
+        void loop() override;
         void focus() override;
         void blur() override;
         void update() override;
@@ -451,7 +450,6 @@ namespace rckid::gbcemu {
         uint16_t memoryBreakpointEnd_ = 0xffff;
         uint32_t overBreakpoint_ = 0xffffff;
         uint8_t visitedInstructions_[64];
-
 
         uint32_t disassembleInstruction(uint16_t addr, bool state = false);
         void markAsVisited(uint16_t pc);

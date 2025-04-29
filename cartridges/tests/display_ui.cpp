@@ -15,10 +15,10 @@
 
 using namespace rckid;
 
-class DisplayUIApp : public ui::App {
+class DisplayUIApp : public ui::App<void> {
 public:
 
-    DisplayUIApp(): ui::App{320, 240} {
+    DisplayUIApp(): ui::App<void>{320, 240} {
         ui::Panel * p1 = new ui::Panel();
         p1->setRect(Rect::XYWH(20, 20, 20, 20));
         p1->setBg(ColorRGB{255, 0, 0});
@@ -36,11 +36,11 @@ public:
         l->setWidth(320);
         l->setHeight(50);
         ui::Menu * m = new ui::Menu{
-            new ui::Menu::ActionItem{"Action 1", assets::icons_default_64::animal_1, []() {  }},
-            new ui::Menu::ActionItem{"Action 2", assets::icons_default_64::animal_2, []() {  }},
-            new ui::Menu::ActionItem{"Action 3", assets::icons_default_64::animal_3, []() {  }},
+            new ui::Menu::ActionItem{"Action 1", assets::icons_default_64::animal_1, ui::Menu::Action{}},
+            new ui::Menu::ActionItem{"Action 2", assets::icons_default_64::animal_2, ui::Menu::Action{}},
+            new ui::Menu::ActionItem{"Action 3", assets::icons_default_64::animal_3, ui::Menu::Action{}},
         };
-        c_ = new ui::CarouselMenu{m};
+        c_ = new ui::CarouselMenu{};
         c_->setRect(Rect::XYWH(0, 160, 320, 80));
         //c->set(ui::Image{Bitmap<16>{PNG::fromBuffer(assets::icons_default_64::animal_2)}}, "Animal 2");
         c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
@@ -55,7 +55,7 @@ public:
 
 
     void update() override {
-        ui::App::update();
+        ui::App<void>::update();
         c_->processEvents();
         if (btnPressed(Btn::A)) {
             t_.on(440);
@@ -65,7 +65,7 @@ public:
     }
 
     void focus() override {
-        ui::App::focus();
+        ui::App<void>::focus();
         t_.setWaveform(Waveform::Sine());
         t_.setSampleRate(44100);
         audioPlay(buf_, 44100, [this](int16_t * buf, uint32_t size) {
@@ -76,7 +76,7 @@ public:
     void blur() override {
         audioStop();
         t_.off();
-        ui::App::blur();
+        ui::App<void>::blur();
     }
 
     ui::CarouselMenu * c_;
@@ -88,21 +88,21 @@ public:
 
 ui::Menu * mainMenuGenerator(void*) {
     return new ui::Menu{
-        new ui::Menu::SubmenuItem{"Games", assets::icons_default_64::game_controller, [](void*) { return new ui::Menu{
-            new ui::Menu::ActionItem{"Game 1", assets::icons_default_64::animal, []() {  }},
-            new ui::Menu::ActionItem{"Game 2", assets::icons_default_64::animal_1, []() {  }},
-            new ui::Menu::ActionItem{"Game 3", assets::icons_default_64::animal_2, []() {  }},
-        }; }},
-        new ui::Menu::ActionItem{"Music", assets::icons_default_64::music, []() {  }},
-        new ui::Menu::ActionItem{"Messages", assets::icons_default_64::chat, []() {  }},
-        new ui::Menu::ActionItem{"WalkieTalkie", assets::icons_default_64::baby_monitor, []() {  }},
-        new ui::Menu::ActionItem{"Birthdays", assets::icons_default_64::birthday_cake, []() {  }},
-        new ui::Menu::ActionItem{"Clock", assets::icons_default_64::alarm_clock, []() {  }},
-        new ui::Menu::ActionItem{"Remote", assets::icons_default_64::rc_car, []() {  }},
-        new ui::Menu::ActionItem{"Recorder", assets::icons_default_64::microphone, []() {  }},
-        new ui::Menu::ActionItem{"Files", assets::icons_default_64::folder, []() {  }},
-        new ui::Menu::ActionItem{"Composer", assets::icons_default_64::music_1, []() {  }},
-        new ui::Menu::ActionItem{"Drawing", assets::icons_default_64::paint_palette, []() {  }},
+        new ui::Menu::SubmenuItem{"Games", assets::icons_default_64::game_controller, ui::Menu::Generator{[](void*) { return new ui::Menu{
+            new ui::Menu::ActionItem{"Game 1", assets::icons_default_64::animal, ui::Menu::Action{}},
+            new ui::Menu::ActionItem{"Game 2", assets::icons_default_64::animal_1, ui::Menu::Action{}},
+            new ui::Menu::ActionItem{"Game 3", assets::icons_default_64::animal_2, ui::Menu::Action{}},
+        }; }}},
+        new ui::Menu::ActionItem{"Music", assets::icons_default_64::music, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Messages", assets::icons_default_64::chat, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"WalkieTalkie", assets::icons_default_64::baby_monitor, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Birthdays", assets::icons_default_64::birthday_cake, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Clock", assets::icons_default_64::alarm_clock, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Remote", assets::icons_default_64::rc_car, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Recorder", assets::icons_default_64::microphone, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Files", assets::icons_default_64::folder, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Composer", assets::icons_default_64::music_1, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Drawing", assets::icons_default_64::paint_palette, ui::Menu::Action{}},
     };
 }
 
@@ -111,8 +111,8 @@ ui::Menu * mainMenuGenerator(void*) {
 
 int main() {
     initialize();
-    LOG(LL_INFO, "Free memory: " << memoryFree() / 1024);
     while (true) {
+        LOG(LL_INFO, "Free memory: " << memoryFree() / 1024);
         //auto app = DisplayUIApp{};
         auto app = MainMenu{mainMenuGenerator};
         app.run();
