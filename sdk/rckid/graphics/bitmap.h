@@ -196,7 +196,7 @@ namespace rckid {
 
     };
 
-    template<typename PIXEL>
-    using BitmapApp = RenderableApp<RenderableBitmap<PIXEL>>;
+    template<typename PIXEL, typename T = void>
+    using BitmapApp = RenderableApp<RenderableBitmap<PIXEL>, T>;
     
 } // namespace rckid
