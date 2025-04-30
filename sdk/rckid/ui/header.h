@@ -2,7 +2,7 @@
 
 #include "widget.h"
 #include "../graphics/tile.h"
-#include "../assets/tiles/system16.h"
+#include "../assets/tiles/System16.h"
 
 namespace rckid::ui {
 
@@ -24,7 +24,7 @@ namespace rckid::ui {
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
             uint32_t tile = column / 8;
             uint32_t tileColumn = column % 8;
-            assets::system16[tileMap_[tile]].renderColumn(tileColumn, starty, numPixels, buffer, 0, palette_ + 16 * colorOffsets_[tile]);
+            assets::System16[tileMap_[tile]].renderColumn(tileColumn, starty, numPixels, buffer, 0, palette_ + colorOffsets_[tile]);
         }
 
         /** Unlike normal widgets,  */
@@ -39,14 +39,14 @@ namespace rckid::ui {
             '2', '3', '4', '5', '6', '7', '8', '9', 
             ' ', ' ', ' ', ' ', 'R', 'C', 'K', 'i', 
             'd', ' ', 'm', 'k', 'I', 'I', 'I', ' ', 
-            ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 
+            ' ', ' ', ' ', ' ', ' ', '\x00', '\x01', '\x02', 
         };
         static inline uint8_t colorOffsets_[40] = {
             0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 16, 16, 16,
         };
 
         static constexpr uint16_t palette_[] = {
@@ -67,8 +67,9 @@ namespace rckid::ui {
             ColorRGB{0xdd, 0xdd, 0xdd}.toRaw(), 
             ColorRGB{0xee, 0xee, 0xee}.toRaw(), 
             ColorRGB{0xff, 0xff, 0xff}.toRaw(), 
-            0x2222, 
-            0x3333, 
+            0, 
+            ColorRGB{0xff, 0xff, 0xff}.toRaw(), 
+            ColorRGB{0x00, 0xff, 0x00}.toRaw(),
             0x4444, 
             0x5555, 
             0x6666, 

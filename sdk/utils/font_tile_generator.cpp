@@ -55,7 +55,7 @@ int main(int argc, char * argv[]) {
     Args::Arg<unsigned> bpp{"bpp", 8};
     Args::parse(argc, argv, { inputFile, outputFile, fontSize, tileWidth, tileHeight, glyphs, ns, bpp});
     // get the glyphs 
-    Glyphs fontGlyphs = glyphs.isDefault() ? getDefaultGlyphs() : loadGlyphIndices(glyphs.value());
+    Glyphs fontGlyphs = glyphs.isDefault() ? getDefaultTileGlyphs() : loadGlyphIndices(glyphs.value());
     GlyphInfo * ginfos = loadFontGlyphs(inputFile.value(), fontSize.value(), fontGlyphs);
     // and output them
     std::ofstream ofile{outputFile.value()};

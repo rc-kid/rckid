@@ -91,6 +91,22 @@ inline Glyphs getDefaultGlyphs() {
     return result;
 }
 
+/** Default font glyphs for tiles, where the index of the tile corresponds to the ASCII character. 
+ */
+inline Glyphs getDefaultTileGlyphs () {
+    Glyphs result;
+    for (int i = 0; i < 32; ++i) {
+        result.names.push_back(" ");
+        result.codepoints.push_back(32);
+    }
+    for (int i = 32; i < 127; ++i) {
+        result.names.push_back(STR((char)i));
+        result.codepoints.push_back(i);
+    }
+    std::cout << "        generating tile glyphs (" << result.codepoints.size() << " glyphs)" << std::endl;
+    return result;
+}
+
 /** Takes the specified font, font size and glyphs and uses Raylib to generate character glyphs from the font, returning their array. 
  */
 inline GlyphInfo * loadFontGlyphs(std::string const & fontFile, int fontSize, Glyphs const & glyphs) {
