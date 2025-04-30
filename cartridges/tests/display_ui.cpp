@@ -35,11 +35,6 @@ public:
         l->setColor(ColorRGB{255, 255, 255});
         l->setWidth(320);
         l->setHeight(50);
-        ui::Menu * m = new ui::Menu{
-            new ui::Menu::ActionItem{"Action 1", assets::icons_default_64::animal_1, ui::Menu::Action{}},
-            new ui::Menu::ActionItem{"Action 2", assets::icons_default_64::animal_2, ui::Menu::Action{}},
-            new ui::Menu::ActionItem{"Action 3", assets::icons_default_64::animal_3, ui::Menu::Action{}},
-        };
         c_ = new ui::CarouselMenu{};
         c_->setRect(Rect::XYWH(0, 160, 320, 80));
         //c->set(ui::Image{Bitmap<16>{PNG::fromBuffer(assets::icons_default_64::animal_2)}}, "Animal 2");

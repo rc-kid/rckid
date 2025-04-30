@@ -44,7 +44,7 @@ namespace rckid {
         Bitmap & operator = (Bitmap const &) = delete;
         Bitmap & operator = (Bitmap && other) noexcept {
             if (this != &other) {
-                Heap::tryFree(pixels_);
+                delete [] pixels_;
                 pixels_ = other.pixels_;
                 w_ = other.w_;
                 h_ = other.h_;
@@ -58,7 +58,7 @@ namespace rckid {
         /** Frees the bitmap.
          */
         ~Bitmap() { 
-            Heap::tryFree(pixels_); 
+            delete [] pixels_; 
         };
 
         Coord width() const { return w_; }

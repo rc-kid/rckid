@@ -11,7 +11,6 @@ namespace rckid {
     public:
         virtual void * allocBytes(uint32_t bytes) = 0;
         virtual void free(void * ptr) = 0;
-        virtual void tryFree(void * ptr) = 0;
         virtual bool contains(void * ptr) const = 0;
 
         template<typename T>
@@ -30,7 +29,6 @@ namespace rckid {
         public:
             void * allocBytes(uint32_t bytes) override { return Heap::allocBytes(bytes); }
             void free(void * ptr) override { Heap::free(ptr); }
-            void tryFree(void * ptr) override { Heap::tryFree(ptr); }
             bool contains(void * ptr) const override { return Heap::contains(ptr); }
         }; // Heap::AllocatorSingleton
 
@@ -59,12 +57,6 @@ namespace rckid {
          */
         static void free(void * ptr);
 
-        /** Checks that the pointer belongs to the heap and if so, frees it. Does nothing otherwise. 
-         
-            This method is useful when freeing pointers that could have been allocated inside an arena, such as when using the Allocator class above to allocate them.
-         */
-        static void tryFree(void * ptr);
-
         /** Returns true if given pointer belongs to the heap. 
          
             This is true if it happens to be anywhere between current heap's end and stack limit. 
@@ -92,7 +84,6 @@ namespace rckid {
         public:
             void * allocBytes(uint32_t bytes) override { return Arena::allocBytes(bytes); }
             void free([[maybe_unused]] void * ptr) override { }
-            void tryFree([[maybe_unused]] void * ptr) override { }
             bool contains(void * ptr) const override { return Arena::contains(ptr); }
         }; // Heap::AllocatorSingleton
 

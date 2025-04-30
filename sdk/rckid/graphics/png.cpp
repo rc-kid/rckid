@@ -32,7 +32,7 @@ namespace rckid {
     }
 
     PNG::Decode16::~Decode16() {
-        Heap::tryFree(line);
+        delete [] line;
     }
 
     PNG PNG::fromStream(RandomReadStream & stream, Allocator & a) {
@@ -82,6 +82,10 @@ namespace rckid {
         // TODO background is set to 0, which means the icons look good on black, but real transparency is not really working at this point
         PNGRGB565(pDraw, dec->line, PNG_RGB565_LITTLE_ENDIAN, 0x0, dec->png->img_->iHasAlpha);
         dec->cb(dec->line, pDraw->y, pDraw->iWidth);
+    }
+
+    PNG::~PNG() {
+        delete img_;
     }
 
 }

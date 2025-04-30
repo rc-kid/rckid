@@ -307,15 +307,15 @@ namespace rckid::gbcemu {
     }
 
     GBCEmu::~GBCEmu() {
-        Heap::tryFree(gamepak_);
+        delete gamepak_;
         for (uint32_t i = 0; i < 2; ++i)
-            Heap::tryFree(vram_[i]);
+            delete [] vram_[i];
         for (uint32_t i = 0; i < 8; ++i)
-            Heap::tryFree(wram_[i]);
-        Heap::tryFree(oam_);
-        Heap::tryFree(hram_);
+            delete [] wram_[i];
+        delete [] oam_;
+        delete [] hram_;
         for (uint32_t i = 0; i < 16; ++i)
-            Heap::tryFree(eram_[i]);
+            delete eram_[i];
         // TODO some more cleanup would be good here
     }
 
@@ -450,7 +450,7 @@ namespace rckid::gbcemu {
         }
         // figure out the size of the external RAM and allocate accordingly
         for (uint32_t i = 0; i < 16; ++i) {
-            Heap::tryFree(eram_[i]);
+            delete [] eram_[i];
             eram_[i] = nullptr;
         }
         uint32_t eramSize = gamepak_->cartridgeRAMSize() / 8192;

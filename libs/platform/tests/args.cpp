@@ -3,7 +3,7 @@
 
 TEST(platform, args_string) {
     Args::Arg<std::string> arg{""};
-    char const * argv[] = { "", "foobar"};
+    char * argv[] = { "", "foobar"};
     Args::parse(2, argv, {arg});
     EXPECT(arg.isDefault() == false);
     EXPECT(arg.value() == "foobar");    
@@ -12,7 +12,7 @@ TEST(platform, args_string) {
 TEST(platform, args_int) {
     Args::Arg<int> arg1{0};
     Args::Arg<int> arg2{0};
-    char const * argv[] = { "", "565", "-67"};
+    char * argv[] = { "", "565", "-67"};
     Args::parse(3, argv, {arg1, arg2});
     EXPECT(arg1.isDefault() == false);
     EXPECT(arg1.value() == 565);    
@@ -22,7 +22,7 @@ TEST(platform, args_int) {
 
 TEST(platform, args_unsigned) {
     Args::Arg<unsigned> arg{0};
-    char const * argv[] = { "", "67262536"};
+    char * argv[] = { "", "67262536"};
     Args::parse(2, argv, {arg});
     EXPECT(arg.isDefault() == false);
     EXPECT(arg.value() == 67262536);
@@ -30,7 +30,7 @@ TEST(platform, args_unsigned) {
 
 TEST(platform, args_double) {
     Args::Arg<double> arg{0};
-    char const * argv[] = { "", "1.67"};
+    char * argv[] = { "", "1.67"};
     Args::parse(2, argv, {arg});
     EXPECT(arg.isDefault() == false);
     EXPECT(arg.value() == 1.67);
@@ -39,7 +39,7 @@ TEST(platform, args_double) {
 TEST(platform, args_bool) {
     Args::Arg<bool> arg1{false};
     Args::Arg<bool> arg2{false};
-    char const * argv[] = { "", "T", "F"};
+    char * argv[] = { "", "T", "F"};
     Args::parse(3, argv, {arg1, arg2});
     EXPECT(arg1.isDefault() == false);
     EXPECT(arg1.value() == true);
@@ -50,7 +50,7 @@ TEST(platform, args_bool) {
 TEST(platform, args_keyword) {
     Args::Arg<int> foo{"foo", 0};
     Args::Arg<int> bar{"bar", 0};
-    char const * argv[] = { "", "--foo", "3", "--bar", "67"};
+    char * argv[] = { "", "--foo", "3", "--bar", "67"};
     Args::parse(5, argv, {foo, bar});
     EXPECT(foo.isDefault() == false);
     EXPECT(foo.value() == 3);
@@ -61,7 +61,7 @@ TEST(platform, args_keyword) {
 TEST(platform, args_bool_novalue) {
     Args::Arg<int> foo{"foo", 0};
     Args::Arg<bool> bar{"bar", false};
-    char const * argv[] = { "", "--foo", "3", "--bar"};
+    char * argv[] = { "", "--foo", "3", "--bar"};
     Args::parse(4, argv, {foo, bar});
     EXPECT(foo.isDefault() == false);
     EXPECT(foo.value() == 3);

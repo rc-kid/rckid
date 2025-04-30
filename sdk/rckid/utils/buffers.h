@@ -16,8 +16,8 @@ namespace rckid {
         }
 
         ~DoubleBuffer() {
-            Heap::tryFree(front_);
-            Heap::tryFree(back_);
+            delete [] front_;
+            delete [] back_;
         }
 
         void swap() {
@@ -25,8 +25,8 @@ namespace rckid {
         }
 
         void resize(uint32_t size, Allocator & a = Heap::allocator()) {
-            Heap::tryFree(front_);
-            Heap::tryFree(back_);
+            delete [] front_;
+            delete []back_;
             size_ = size;
             front_ = a.alloc<T>(size);
             back_ = a.alloc<T>(size);
@@ -101,11 +101,13 @@ namespace rckid {
         }
 
         ~LazyBuffer() {
-            a_.tryFree(data_);
+            if (a_.contains(data_))
+                delete [] data_;
         }
 
         LazyBuffer & operator = (LazyBuffer const & from) {
-            a_.tryFree(data_);
+            if (a_.contains(data_))
+                delete [] data_;
             size_ = from.size_;
             capacity_ = from.capacity_;
             data_ = from.data_;
@@ -118,7 +120,8 @@ namespace rckid {
         }
 
         LazyBuffer & operator = (LazyBuffer && from) {
-            a_.tryFree(data_);
+            if (a_.contains(data_))
+                delete [] data_;
             size_ = from.size_;
             capacity_ = from.capacity_;
             data_ = from.data_;
@@ -188,7 +191,8 @@ namespace rckid {
         void resize(uint32_t newCapacity) {
             T * newData = a_.alloc<T>(newCapacity);
             memcpy(newData, data_, size_ * sizeof(T));
-            a_.tryFree(data_);
+            if (a_.contains(data_))
+                delete [] data_;
             data_ = newData;
             capacity_ = newCapacity;
         }

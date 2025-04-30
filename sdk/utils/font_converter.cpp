@@ -10,7 +10,7 @@
         font-converter FONT_FILE OUTPUT_FILE FONT_SIZE [ --glyphs GLYPH_FILE ] [--namespace NAMESPACE]
 
  */
-int main(int argc, char const * argv[]) {
+int main(int argc, char * argv[]) {
     Args::Arg<std::string> inputFile{""};
     Args::Arg<std::string> outputFile{""};
     Args::Arg<unsigned> fontSize{16};

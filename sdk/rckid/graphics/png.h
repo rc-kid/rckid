@@ -36,9 +36,7 @@ namespace rckid {
 
         bool decode16(DecodeCallback16 cb) override;
 
-        ~PNG() {
-            Heap::tryFree(img_);
-        }
+        ~PNG();
 
         PNG(PNG const &) = delete;
         

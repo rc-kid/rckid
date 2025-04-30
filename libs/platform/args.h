@@ -49,7 +49,7 @@ public:
      
         The arguments given are expected to be first positional, and then named. All positional arguments are required and all named arguments are not. For named arguments, their name must start with '--' and their value is in the next argument. If there is no next argument, or if the next argument starts with '--' then their value will be reported to the parse function as nullptr. 
      */
-    static void parse(int argc, char const ** argv, std::initializer_list<std::reference_wrapper<BaseArg>> args) {
+    static void parse(int argc, char * argv[], std::initializer_list<std::reference_wrapper<BaseArg>> args) {
         std::vector<std::reference_wrapper<BaseArg>> positional;
         std::unordered_map<std::string, std::reference_wrapper<BaseArg>> keyword;
         for (BaseArg & arg : args) {
