@@ -36,7 +36,10 @@ extern "C" {
 
 extern "C" {
     void *__wrap_malloc(size_t numBytes) { return rckid::Heap::allocBytes(numBytes); }
-    void __wrap_free(void * ptr) { rckid::Heap::free(ptr); }
+    void __wrap_free(void * ptr) { 
+        if (rckid::Heap::contains(ptr))
+            rckid::Heap::free(ptr); 
+    }
 
     void *__wrap_calloc(size_t numBytes) {
         void * result = rckid::Heap::allocBytes(numBytes);

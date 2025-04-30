@@ -190,11 +190,6 @@ namespace rckid {
         LOG(LL_HEAP, "Heap end is now at " << (void*)end_);
     }
 
-    void Heap::tryFree(void * ptr) {
-        if (contains(ptr))
-            Heap::free(ptr);
-    }
-
     bool Heap::contains(void const * ptr) {
         return ptr >= Heap::end_ && ptr <= & __StackLimit;
 

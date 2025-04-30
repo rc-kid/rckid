@@ -50,7 +50,10 @@ extern "C" {
 
 extern "C" {
     void *__wrap_malloc(size_t numBytes) { return rckid::Heap::allocBytes(numBytes); }
-    void __wrap_free(void * ptr) { rckid::Heap::free(ptr); }
+    void __wrap_free(void * ptr) { 
+        if (rckid::Heap::contains(ptr))
+            rckid::Heap::free(ptr); 
+    }
 
     void *__wrap_calloc(size_t numBytes) {
         void * result = rckid::Heap::allocBytes(numBytes);
@@ -274,7 +277,7 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
-    void initialize([[maybe_unused]] int argc, [[maybe_unused]] char const * argv[]) {
+    void initialize([[maybe_unused]] int argc, [[maybe_unused]] char * argv[]) {
         board_init();
 #if (RCKID_ENABLE_STACK_PROTECTION == 1)
         memoryInstrumentStackProtection();

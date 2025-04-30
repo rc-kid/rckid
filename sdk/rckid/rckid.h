@@ -42,7 +42,7 @@
     \section memory Memory Management
 
     As the device has only a limited amount of RAM (~512 KB excluding stacks for mk III), some careful management is necessary. RCKid supports two dynamic allocation schemes, a normal heap and arena allocators.
-
+    
     Stack Protection
 
     Another variable in the memory layout is relative small stack sizes (only 4kb per core). Those stacks can easily overflow and corrupt the heap, or one another. Stack protection scheme can be employed to detect stack overflow into a the heap and prevent further execution (recovery at this point is impossible). 
@@ -77,7 +77,7 @@ namespace rckid {
      
         This must be the first SDK function called by the application. Its task is to set up the console and completely depends on the backend used - while the device backends initialize the actual hardware after power on, the fantasy backend sets up the console window, etc. 
      */
-    void initialize(int argc, char const * argv[]);
+    void initialize(int argc, char * argv[]);
     inline void initialize() { initialize(0, nullptr); }
 
     void tick();

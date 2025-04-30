@@ -38,13 +38,15 @@ extern "C" {
 
     // if the pointer to be freed belongs to RCKId's heap, we should use own heap free, otherwise use normal free (and assert it does not belong to fantasy heap in general as that would be weird)
     void free(void * ptr) {
-        if (rckid::Heap::contains(ptr))
-            // if we are in system malloc phase, we should not be deallocating rckid memory, as this only happens during shutdown
-            //if (!systemMalloc_)
+        if (rckid::Heap::contains(ptr)) {
             rckid::Heap::free(ptr);
-        // TODO there is some issue wit fantasy heap and arenas where we have pointers from fantasy heap that are not in the arena or heap getting here and then not getting deallocated properly in fantasy
-        else if (ptr < & __bss_end__ || ptr > & __StackLimit)
+        } else if (rckid::Arena::contains(ptr)) {
+            // don't do anything if the pointer comes from arena
+            return;
+        // otherwise this is a libc pointer and should be deleted accordingly
+        } else {
             __libc_free(ptr);
+        }
    }
 } // extern C
 #endif
@@ -159,7 +161,7 @@ namespace rckid {
         }
     }
 
-    void initialize(int argc, char const * argv[]) {
+    void initialize(int argc, char * argv[]) {
         systemMalloc_ = true;
         InitWindow(640, 480, "RCKid");
         display::img = GenImageColor(RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT, BLACK);
@@ -208,6 +210,10 @@ namespace rckid {
         filesystem::initialize();
         // mark that we are initialized and the graphics & sound should be used
         initialized_ = true;
+    }
+
+    void initializeNoWindow(int argc, char * argv[]) {
+        systemMalloc_ = false;
     }
 
     void tick() {
