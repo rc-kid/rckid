@@ -81,19 +81,19 @@ namespace rckid {
             return value_ >= min.value_ && value_ <= max.value_;
         }
 
-        constexpr int clip() const { 
+        constexpr int32_t clip() const { 
             return (value_ >> FRACTION_BITS);
         }
 
-        constexpr int round() const {
+        constexpr int32_t round() const {
             return ((value_ >= 0) ? (value_ + FRACTION_HALF) : (value_ - FRACTION_HALF)) >> FRACTION_BITS;
         }
 
-        constexpr int raw() const { return value_; }
+        constexpr int32_t raw() const { return value_; }
 
     private:
 
-        int value_ = 0;
+        int32_t value_ = 0;
 
     }; // rckid::FixedInt
 
