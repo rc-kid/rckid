@@ -10,11 +10,11 @@
 - proper header rendering 
 - offset & add system glyphs
 
-- add check that verifies that pointer is in RAM
 - should colorRGB be 3 bytes? Or should it be true to the 565 representation? 
 - visit loadImage to determine if the setAt is good enough (conversition from int16 to Color to int16 seems inefficient)
 
 - optimize surface functions for common cases
+- add specialization for 16 bpp bitmap renderColumn that simply does memcopy
 
 # TODO
 
@@ -41,7 +41,6 @@
 - update the DataSync app so that it actually works as intended
 
 - should audio volume be uint8, or something else? 
-- add specialization for 16 bpp bitmap renderColumn that simply does memcopy
 
 
 # PCB Things To Fix
@@ -116,29 +115,21 @@
 
 - https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01-1-16r13/ (90 deg cartridge header)
 
-- generate assets does not generate ui tiles yet - and the ones we have are a bit off
-- make text input better looking and the whole idea of modal apps nicer to work with
-
 - the SD card initialization routine does not work for SDHC cards, only for SDXC (not a blocker for xmas)
 
 - add fantasy mode where cartridge and SD card are folders on local drive for simplicity
 
 - add file browser as own widget
 
-- on fantasy malloc & free replacement is not complete - causes trouble especially with strings
 - STR does not work with MemoryArena, only on heap (see Data Sync)
 
 - tud_deinit (already disconnect does) freezes the device, not sure why? - but interestingly if DC is disconnected first, then it all works, even repeatedly - this no longer seems to be the case
 
 - hall of fame and others can be apps of their own that just reuse the canvas from previous run, but delegate the controls? How though
 
-- add blit that ignores particular color
-
 - maybe not use joystick, but keep it as an extra file so that each app can configure it properly, including things like position. But how to integrate with settings? 
 
 - make mp3 player and video as a TV so that the mp3's have daily schedule that you can do
-
-- update the order of args in drawing methods (pos, color) etc
 
 - account for PNG's transparency by allowing it to be overlayed on existing bitmap (right now it is set to black which looks ok on black background)
 - maybe even RGBA colors? 
