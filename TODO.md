@@ -1,14 +1,16 @@
 # New Graphics
 
+- switch system tiles to using color16 instead of color256
+- add 12x24 constructor
+- add sprite 
+- implement text dialog
 - memory leaks via reusing large parts for small items, this way we eventually run out of memory
+- connector height could be 2.2mm (with cartridge pcb height of 1.2mm this gives us 1mm width, which is within the 0.8 - 1.4mm working range for the spring contact)
 
 - add glyph names to the generators and allow glyph splitting if the glyph width is greater tile width (then I can use double sized symbols)
 - header does some rendering already 
-- update System16 name no to be iosevka
-- maybe increase font size? 
 - proper palette rendering, do offsets
 - proper header rendering 
-- offset & add system glyphs
 
 - should colorRGB be 3 bytes? Or should it be true to the 565 representation? 
 - visit loadImage to determine if the setAt is good enough (conversition from int16 to Color to int16 seems inefficient)
@@ -23,7 +25,7 @@
 - could this be better PMIC? https://www.ti.com/product/BQ25628
 - slimmer connector https://jlcpcb.com/partdetail/XkbConnection-X05A10H40G/C528037
 
-- add default allocator and when allocators are creted, use the default allocator unless specified (so changing the default allocator changes the allocation for everyone in scope)
+- add default allocator and when allocators are created, use the default allocator unless specified (so changing the default allocator changes the allocation for everyone in scope)
 
 - see if we can run at 5MHz and still talk to neopixel
 

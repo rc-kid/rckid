@@ -24,6 +24,18 @@ namespace rckid {
             LOG(LL_ERROR, "Loading application state not supported");
         }
 
+        /** Runs given application in its own arena. 
+         
+            The function takes the optional payload argument to be compatible with main menu action items. 
+         */
+        template<typename T>
+        static void run([[maybe_unused]] void * payload = nullptr) {
+            ArenaGuard g{};
+            T * app = new (Arena::alloc<T>()) T{};
+            app->loop();
+            delete app;
+        }
+
     protected:
 
         /** Called when the application should gain focus. 

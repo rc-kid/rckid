@@ -3,6 +3,7 @@
 #include "widget.h"
 #include "../graphics/tile.h"
 #include "../assets/tiles/System16.h"
+#include "tilemap.h"
 
 namespace rckid::ui {
 
@@ -12,20 +13,15 @@ namespace rckid::ui {
 
         If we use UI tiles then the header proper is very simple to do both column and row wise and can be displayed over large variety of renderers. So go make tiles:)
      */
-    class Header : public Widget {
+    class Header : public Tilemap<Tile<8, 16, Color256>> {
     public:
-        Header() : Widget{Rect::XYWH(0, 0, 320, 16)} {}
+        Header() : Tilemap{40, 1, assets::System16, palette_} {
+            at(39, 0).setPaletteOffset(16) = 2;
+            at(38, 0).setPaletteOffset(16) = 1;
+            at(37, 0).setPaletteOffset(16) = 0;
+        }
 
     protected:
-        /** Renders the header by column. 
-         
-            
-         */
-        void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
-            uint32_t tile = column / 8;
-            uint32_t tileColumn = column % 8;
-            assets::System16[tileMap_[tile]].renderColumn(tileColumn, starty, numPixels, buffer, 0, palette_ + colorOffsets_[tile]);
-        }
 
         /** Unlike normal widgets,  */
         void renderRow(Coord row, uint16_t * buffer, Coord startx, Coord numPixels) {
@@ -33,21 +29,6 @@ namespace rckid::ui {
         }
 
     private:
-        // tilemap 
-        static inline uint8_t tileMap_[40] = {
-            '0', '0', ':', '0', '0', ' ', '0', '1', 
-            '2', '3', '4', '5', '6', '7', '8', '9', 
-            ' ', ' ', ' ', ' ', 'R', 'C', 'K', 'i', 
-            'd', ' ', 'm', 'k', 'I', 'I', 'I', ' ', 
-            ' ', ' ', ' ', ' ', ' ', '\x00', '\x01', '\x02', 
-        };
-        static inline uint8_t colorOffsets_[40] = {
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 16, 16, 16,
-        };
 
         static constexpr uint16_t palette_[] = {
             // gray
