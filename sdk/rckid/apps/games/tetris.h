@@ -7,11 +7,9 @@ namespace rckid {
 
     /** A simple tetris game. 
      */
-    class Tetris : public BitmapApp<16> {
+    class Tetris : public BitmapApp<ColorRGB> {
     public:
-        Tetris(): BitmapApp<16>{RenderableBitmap<16>{}} {
-
-        }
+       
 
     protected:
 

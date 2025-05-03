@@ -25,8 +25,8 @@ namespace rckid {
          */
         constexpr Tile(PIXEL const (& colors)[WIDTH * HEIGHT]);
 
-        Coord width() const { return WIDTH; }
-        Coord height() const { return HEIGHT; }
+        static constexpr Coord width() { return WIDTH; }
+        static constexpr Coord height() { return HEIGHT; }
 
         // palette is not nullptr as we expect most tiles to use palette indices instead of RGB colors
         uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, uint16_t * buffer, uint16_t const * palette) const {
@@ -80,5 +80,26 @@ namespace rckid {
     #undef C
     }
     
+    /** The UI font tile with specific 12x24 size and 16 colors. 
+     */
+    /**
+    template<>
+    inline constexpr Tile<12, 24, Color256>::Tile(Color256 const (& c)[12 * 24]):
+    #define AT(R, C) c[(C) + (R) * 12]
+    #define PACK2(a,b) static_cast<uint8_t>(static_cast<uint8_t>(b << 4) | a)
+    #define PACK(C, RS) PACK2(AT(RS, C), AT(RS + 1, C)), PACK2(AT(RS + 2, C), AT(RS + 3, C)), PACK2(AT(RS + 4, C), AT(RS + 5, C)), PACK2(AT(RS + 6, C), AT(RS + 7, C))
+    #define COL(C) PACK(C, 0), PACK(C, 8), PACK(C, 16)
+        pixels_{
+            COL(11), COL(10), COL(9), COL(8), 
+            COL(7), COL(6), COL(5), COL(4), 
+            COL(3), COL(2), COL(1), COL(0)
+        } {
+    #undef COL
+    #undef PACK
+    #undef AT
+    }
+
+    */
+
 
 } // namespace rckid

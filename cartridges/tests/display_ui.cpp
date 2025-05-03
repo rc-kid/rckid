@@ -13,6 +13,9 @@
 
 #include <rckid/ui/header.h>
 
+//#include <rckid/apps/dialogs/TextDialog.h>
+
+
 using namespace rckid;
 
 class DisplayUIApp : public ui::App<void> {
@@ -84,6 +87,7 @@ public:
 ui::Menu * mainMenuGenerator(void*) {
     return new ui::Menu{
         new ui::Menu::SubmenuItem{"Games", assets::icons_default_64::game_controller, ui::Menu::Generator{[](void*) { return new ui::Menu{
+            new ui::Menu::ActionItem{"Tetris", assets::icons_default_64::tetris, ui::Menu::Action{App::run<DisplayUIApp>}},
             new ui::Menu::ActionItem{"Game 1", assets::icons_default_64::animal, ui::Menu::Action{}},
             new ui::Menu::ActionItem{"Game 2", assets::icons_default_64::animal_1, ui::Menu::Action{}},
             new ui::Menu::ActionItem{"Game 3", assets::icons_default_64::animal_2, ui::Menu::Action{}},

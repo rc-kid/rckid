@@ -6,6 +6,12 @@
 
 namespace rckid {
 
+    /** Maps coordinates into a 2D array into one dimensional array in a column first manner where the first indes is mapped to the last column, first row. This mapping is tailored to the native display rendering where column by column rendering means simply incrementing the array index after the first one.  
+     */
+    constexpr inline uint32_t mapIndexColumnFirst(Coord x, Coord y, Coord width, Coord height) {
+        return (width - x - 1) * height + y;
+    }
+
     template<uint32_t BITS_PER_PIXEL>
     class Surface {
     public:
@@ -31,7 +37,7 @@ namespace rckid {
             This is excruciatingly slow interface that provides pixel granularity access to the surface. They serve as a backup for default implementations and for tiny single pixel adjustments. For any real graphics, the blitting and rendering functions below should be used.  
          */
         static constexpr uint32_t pixelAt(Coord x, Coord y, Coord width, Coord height, uint16_t const * pixels_) {
-            uint32_t offset = pixelOffset(x, y, width, height);
+            uint32_t offset = mapIndexColumnFirst(x, y, width, height);
             switch (BPP) {
                 case 16: 
                     return pixels_[offset];
@@ -53,7 +59,7 @@ namespace rckid {
         }
 
         static constexpr void setPixelAt(Coord x, Coord y, Coord width, Coord height, uint16_t * pixels_, uint32_t color) {
-            uint32_t offset = pixelOffset(x, y, width, height);
+            uint32_t offset = mapIndexColumnFirst(x, y, width, height);
             switch (BPP) {
                 case 16: 
                     pixels_[offset] = color;
@@ -197,7 +203,7 @@ namespace rckid {
                 ASSERT(palette != nullptr);
                 for (Coord y = srcStartRow, ye = srcStartRow + numPixels, i = 0; y < ye; ++y, ++i)
                     dst[i] = palette[pixelAt(srcColumn, y, srcWidth, srcHeight, src)];
-                return numPixels * BPP / 16;
+                return numPixels;
             }
         }
 
@@ -209,7 +215,7 @@ namespace rckid {
                 ASSERT(palette != nullptr);
                 for (Coord x = srcStartColumn, xe = srcStartColumn + numPixels, i = 0; x < xe; ++x, ++i)
                     dst[i] = palette[pixelAt(x, srcRow, srcWidth, srcHeight, src)];
-                return numPixels * BPP / 16;
+                return numPixels;
             }
         }
 
@@ -258,7 +264,7 @@ namespace rckid {
                     if (c != transparent)
                         dst[i] = palette[c];
                 }
-                return numPixels * BPP / 16;
+                return numPixels;
             }
         }
 
@@ -273,7 +279,7 @@ namespace rckid {
                     if (c != transparent)
                         dst[i] = palette[c];
                 }
-                return numPixels * BPP / 16;
+                return numPixels;
             }
         }
 
@@ -306,12 +312,6 @@ namespace rckid {
         }
 
     protected:
-
-        /** Returns the pixel offset for pixel at coordinates (x,y) in a pixel buffer of specified width and height. Assumes the native display orientation, i.e. right-top corner is index 0, column-first format. 
-         */
-        static uint32_t pixelOffset(Coord x, Coord y, Coord width, Coord height) {
-            return (width - x - 1) * height + y;
-        }
 
         /** Returns the offset of the column in half-word (uint16_t) array taking into account the bits per pixel. 
          */
