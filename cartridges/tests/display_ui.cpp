@@ -13,7 +13,7 @@
 
 #include <rckid/ui/header.h>
 
-//#include <rckid/apps/dialogs/TextDialog.h>
+#include <rckid/apps/dialogs/TextDialog.h>
 
 
 using namespace rckid;
@@ -87,7 +87,7 @@ public:
 ui::Menu * mainMenuGenerator(void*) {
     return new ui::Menu{
         new ui::Menu::SubmenuItem{"Games", assets::icons_default_64::game_controller, ui::Menu::Generator{[](void*) { return new ui::Menu{
-            new ui::Menu::ActionItem{"Tetris", assets::icons_default_64::tetris, ui::Menu::Action{App::run<DisplayUIApp>}},
+            new ui::Menu::ActionItem{"Tetris", assets::icons_default_64::tetris, ui::Menu::Action{App::run<TextDialog>}},
             new ui::Menu::ActionItem{"Game 1", assets::icons_default_64::animal, ui::Menu::Action{}},
             new ui::Menu::ActionItem{"Game 2", assets::icons_default_64::animal_1, ui::Menu::Action{}},
             new ui::Menu::ActionItem{"Game 3", assets::icons_default_64::animal_2, ui::Menu::Action{}},
@@ -113,8 +113,31 @@ int main() {
     while (true) {
         LOG(LL_INFO, "Free memory: " << memoryFree() / 1024);
         //auto app = DisplayUIApp{};
-        auto app = MainMenu{mainMenuGenerator};
-        app.run();
+        auto app = MainMenu::run(mainMenuGenerator);
+        if (app.has_value()) {
+            app.value()();
+        }
+/*
+        auto menu = MainMenu{mainMenuGenerator};
+        auto app = menu.run();
+        if (app.has_value()) {
+            auto text = app.value();
+            auto dialog = TextDialog::run("You selected: " + text);
+            if (dialog.has_value()) {
+                LOG(LL_INFO, "Dialog result: " << dialog.value());
+            } else {
+                LOG(LL_INFO, "Dialog cancelled");
+            }
+        } else {
+            LOG(LL_INFO, "Menu cancelled");
+        }
+            app = app.value();
+        else
+            break;
+        ASSERT(app.has_value());
+        ui::Menu::ActionItem app = menu.run();
+        app.action()();
+        */
     }
 }
 

@@ -67,7 +67,20 @@ namespace rckid::ui {
                 numPixels -= x;
                 starty = 0;
                 buffer += x;
+                ++ti;
             }
+        }
+
+        void fill(char c, uint8_t paletteOffset = 0) {
+            for (uint32_t i = 0, e = cols_ * rows_; i != e;  ++i)
+                tileMap_[i] = TileInfo{c, paletteOffset};
+        }
+
+        Writer text(Coord x, Coord y) {
+            ASSERT(x < cols_ && y < rows_);
+            return Writer{[x, y, this](char c) mutable {
+                at(x++, y) = c;
+            }};
         }
 
     private:

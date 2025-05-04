@@ -106,6 +106,8 @@ namespace rckid {
             App::exit();
         }
 
+        using App::exit;
+
     private:
 
         std::optional<T> result_;

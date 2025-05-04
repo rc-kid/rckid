@@ -1,9 +1,7 @@
 # New Graphics
 
+- palettes in the UI stuff (header & textDialog)
 - switch system tiles to using color16 instead of color256
-- add 12x24 constructor
-- add sprite 
-- implement text dialog
 - memory leaks via reusing large parts for small items, this way we eventually run out of memory
 - connector height could be 2.2mm (with cartridge pcb height of 1.2mm this gives us 1mm width, which is within the 0.8 - 1.4mm working range for the spring contact)
 
