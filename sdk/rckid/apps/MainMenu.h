@@ -49,6 +49,13 @@ namespace rckid {
             }
         }
 
+        static std::optional<ui::Menu::Action> run(ui::Menu::Generator generator) {
+            MainMenu menu{generator};
+            return menu.run();
+        }
+
+        using ui::App<ui::Menu::Action>::run;
+
     protected:
         void update() override {
             ui::App<ui::Menu::Action>::update();

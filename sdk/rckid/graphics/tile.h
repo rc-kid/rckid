@@ -82,11 +82,10 @@ namespace rckid {
     
     /** The UI font tile with specific 12x24 size and 16 colors. 
      */
-    /**
     template<>
     inline constexpr Tile<12, 24, Color256>::Tile(Color256 const (& c)[12 * 24]):
     #define AT(R, C) c[(C) + (R) * 12]
-    #define PACK2(a,b) static_cast<uint8_t>(static_cast<uint8_t>(b << 4) | a)
+    #define PACK2(a,b) static_cast<uint16_t>((b.toRaw() << 8) | a.toRaw())
     #define PACK(C, RS) PACK2(AT(RS, C), AT(RS + 1, C)), PACK2(AT(RS + 2, C), AT(RS + 3, C)), PACK2(AT(RS + 4, C), AT(RS + 5, C)), PACK2(AT(RS + 6, C), AT(RS + 7, C))
     #define COL(C) PACK(C, 0), PACK(C, 8), PACK(C, 16)
         pixels_{
@@ -98,8 +97,6 @@ namespace rckid {
     #undef PACK
     #undef AT
     }
-
-    */
 
 
 } // namespace rckid
