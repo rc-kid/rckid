@@ -60,7 +60,7 @@ namespace rckid {
         LazyBuffer(uint32_t capacity, Allocator & a = Heap::allocator()):
             a_{a}, 
             size_{0}, 
-            capacity_{0} {
+            capacity_{capacity} {
             data_ = a_.alloc<T>(capacity);
         }
 
@@ -69,7 +69,12 @@ namespace rckid {
             size_{size}, 
             capacity_{0},
             data_{const_cast<T*>(from)} {
-            ASSERT(immutable());
+            // if not immutable, we need to copy, but do not delete, or attempt to delete the source (this is mostly important for fantasy backend where immutable is not supported)
+            if (!immutable()) {
+                data_ = a_.alloc<T>(size_);
+                capacity_ = size_;
+                memcpy(data_, from, sizeof(T) * size_);
+            }
         }
 
         template<uint32_t SIZE>
@@ -101,12 +106,14 @@ namespace rckid {
         }
 
         ~LazyBuffer() {
-            if (a_.contains(data_))
+            if (!immutable())
                 delete [] data_;
+            //if (a_.contains(data_))
+            //    delete [] data_;
         }
 
         LazyBuffer & operator = (LazyBuffer const & from) {
-            if (a_.contains(data_))
+            if (!immutable())
                 delete [] data_;
             size_ = from.size_;
             capacity_ = from.capacity_;
@@ -120,7 +127,7 @@ namespace rckid {
         }
 
         LazyBuffer & operator = (LazyBuffer && from) {
-            if (a_.contains(data_))
+            if (!immutable())
                 delete [] data_;
             size_ = from.size_;
             capacity_ = from.capacity_;
@@ -152,6 +159,8 @@ namespace rckid {
         void grow(uint32_t size) {
             if (size > capacity_)
                 resize(size);
+            else 
+                size_ = size;
         }
 
         void shrink() {
@@ -159,7 +168,7 @@ namespace rckid {
                 resize(size_);
         }
 
-        bool immutable() const { return ! a_.contains(data_); }
+        bool immutable() const { return memoryIsImmutable(data_); }
 
         void makeMutable() {
             if (immutable())
@@ -182,7 +191,7 @@ namespace rckid {
         void append(T const & value) {
             if (capacity_ <= size_) 
                 grow(size_ == 0 ? 16 : size_ * 2);
-            data_[size_] = value;
+            data_[size_++] = value;
         }
         
         Allocator & allocator() const { return const_cast<Allocator &>(a_); }
@@ -191,7 +200,7 @@ namespace rckid {
         void resize(uint32_t newCapacity) {
             T * newData = a_.alloc<T>(newCapacity);
             memcpy(newData, data_, size_ * sizeof(T));
-            if (a_.contains(data_))
+            if (!immutable())
                 delete [] data_;
             data_ = newData;
             capacity_ = newCapacity;

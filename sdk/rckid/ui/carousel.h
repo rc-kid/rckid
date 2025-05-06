@@ -60,7 +60,7 @@ namespace rckid::ui {
             repositionElements(bImg_, bText_);
         } 
 
-        void set(Image icon, String text, Transition transition = Transition::None) {
+        void set(String text, Image icon, Transition transition = Transition::None) {
             if (transition == Transition::None) {
                 aImg_ = std::move(icon);
                 aImg_.setTransparent(true);
@@ -101,18 +101,7 @@ namespace rckid::ui {
     protected:
 
         void set(Menu::Item const & item, Transition transition = Transition::None) {
-            if (transition == Transition::None) {
-                aImg_ = std::move(item.icon());
-                aImg_.setTransparent(true);
-                aText_.setText(item.text());
-                repositionElements(aImg_, aText_);
-            } else {
-                bImg_ = std::move(item.icon());
-                bImg_.setTransparent(true);
-                bText_.setText(item.text());
-                repositionElements(bImg_, bText_);
-            }
-            setTransition(transition);
+            set(item.text(), item.icon(), transition);
         }
 
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {

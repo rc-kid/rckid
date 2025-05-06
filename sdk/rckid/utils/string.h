@@ -35,6 +35,7 @@ namespace rckid {
             str_{length + 1, from.str_.allocator()} {
             memcpy(str_.data(), from.str_.data() + start, length);
             str_[length] = '\0';
+            str_.grow(length + 1);
         } 
 
         String(char const * str, uint32_t size, Allocator & a = Heap::allocator()): 
@@ -102,6 +103,14 @@ namespace rckid {
             return strcmp(str_.data(), other) != 0;
         }
 
+        bool operator == (String const & other) const {
+            return strcmp(str_.data(), other.str_.data()) == 0;
+        }
+
+        bool operator != (String const & other) const {
+            return strcmp(str_.data(), other.str_.data()) != 0;
+        }
+
         String substr(uint32_t start) const { return substr(start, size() - start); }
             
         String substr(uint32_t start, uint32_t length) const {
@@ -114,6 +123,12 @@ namespace rckid {
         void shrink() { str_.shrink(); }
 
         void grow(uint32_t size) { str_.grow(size + 1); }
+
+        bool endsWith(char other) const {
+            if (size() == 0)
+                return false;
+            return c_str()[size() - 1] == other;
+        }
 
     private:
         LazyBuffer<char> str_;
@@ -147,3 +162,15 @@ namespace rckid {
     }; // rckid::StringWriter
 
 } // namespace rckid
+
+namespace std {
+    template<>
+    struct hash<rckid::String> {
+        size_t operator()(rckid::String const & obj) const noexcept {
+            size_t result = 0;
+            for (uint32_t i = 0, e = obj.size(); i != e; ++i)
+                result += std::hash<char>{}(obj[i]) + 0x9e3779b9 + (result << 6) + (result >> 2);
+            return result;
+        }
+    }; // std::hash<rckid::String>
+} // namespac std

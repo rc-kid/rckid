@@ -9,19 +9,36 @@ namespace rckid::ui {
 
     /** Application hedear. 
      
-        The header displays information such as current time, battery status, sound volume, signal strength, etc.
+        The header displays information such as current time, battery status, sound volume, signal strength, etc. Icons and displayed from right whle text is displayed from left. 
 
-        If we use UI tiles then the header proper is very simple to do both column and row wise and can be displayed over large variety of renderers. So go make tiles:)
+        - charging
+        - battery status
+        - headphones
+        - volume
+        - recording
+        - wifi
+        - bluetooth
+        - radio
+
      */
     class Header : public Tilemap<Tile<8, 16, Color256>> {
     public:
         Header() : Tilemap{40, 1, assets::System16, palette_} {
+            fill(' ');
             at(39, 0).setPaletteOffset(16) = 2;
             at(38, 0).setPaletteOffset(16) = 1;
             at(37, 0).setPaletteOffset(16) = 0;
         }
 
     protected:
+
+        /** Updates the header. 
+         
+            Adds stuff like battery, etc. 
+         */
+        void update() override {
+            text(0,0) << "RCKid";
+        }
 
         /** Unlike normal widgets,  */
         void renderRow(Coord row, uint16_t * buffer, Coord startx, Coord numPixels) {
