@@ -310,7 +310,7 @@ namespace rckid {
 
 
 
-    void initialize([[maybe_unused]] int argc, [[maybe_unused]] char const * argv[]) {
+    void initialize([[maybe_unused]] int argc, [[maybe_unused]] char * argv[]) {
         board_init();
 #if (defined RCKID_ENABLE_STACK_PROTECTION)
         memoryInstrumentStackProtection();
@@ -728,6 +728,13 @@ namespace rckid {
         uint32_t ints = save_and_disable_interrupts();
         flash_range_erase(offset, FLASH_SECTOR_SIZE);
         restore_interrupts(ints);
+    }
+
+    // memory
+
+    bool memoryIsImmutable(void const * ptr) {
+        // TODO enable immutable memory from ROM
+        return false;
     }
 
 }

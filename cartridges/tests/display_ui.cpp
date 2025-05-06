@@ -14,6 +14,7 @@
 #include <rckid/ui/header.h>
 
 #include <rckid/apps/dialogs/TextDialog.h>
+#include <rckid/apps/dialogs/FileDialog.h>
 
 
 using namespace rckid;
@@ -99,7 +100,7 @@ ui::Menu * mainMenuGenerator(void*) {
         new ui::Menu::ActionItem{"Clock", assets::icons_default_64::alarm_clock, ui::Menu::Action{}},
         new ui::Menu::ActionItem{"Remote", assets::icons_default_64::rc_car, ui::Menu::Action{}},
         new ui::Menu::ActionItem{"Recorder", assets::icons_default_64::microphone, ui::Menu::Action{}},
-        new ui::Menu::ActionItem{"Files", assets::icons_default_64::folder, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Files", assets::icons_default_64::folder, ui::Menu::Action{App::run<FileDialog>}},
         new ui::Menu::ActionItem{"Composer", assets::icons_default_64::music_1, ui::Menu::Action{}},
         new ui::Menu::ActionItem{"Drawing", assets::icons_default_64::paint_palette, ui::Menu::Action{}},
     };

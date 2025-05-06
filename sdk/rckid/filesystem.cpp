@@ -575,7 +575,10 @@ namespace rckid::filesystem {
     }
 
     String join(String const & path, String const & item) {
-        return STR(path << "/" << item);
+        if (path.endsWith('/'))
+            return STR(path << item);
+        else
+            return STR(path << "/" << item);
     }
 
     String parent(String const & path) {

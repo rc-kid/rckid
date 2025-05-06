@@ -23,7 +23,6 @@ While paired the remote periodically updates the controller every 1/100th of a s
 
 ## Power
 
-
 The controller brick operates from any voltage between 5 and 9 volts, inclusive. It uses a special connector that supports connecting 2 Li-Ion cells in series as well as other configurations:
 
     1N    2P  

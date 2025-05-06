@@ -413,9 +413,20 @@ namespace rckid::filesystem {
     inline FileWrite fileWrite(String const & path, Drive dr = Drive::SD) { return fileWrite(path.c_str(), dr); }
     inline Folder folderRead(String const & path, Drive dr = Drive::SD) { return folderRead(path.c_str(), dr); }
 
+    /** Returns the path stem, i.e. the file, or last folder name without any extensions. 
+     */
     String stem(String const & path);
+
+    /** Returns the extension of the file or folder at given path. The path does not have to exist. 
+     */
     String ext(String const & path);
+
+    /** Joins two paths together. 
+     */
     String join(String const & path, String const & item);
+
+    /** Returns the parent folder of given path. If the path is file, returns the containing folder, otherwise returns the parent folder.
+     */
     String parent(String const & path);
 
 } // namespace rckid::filesystem

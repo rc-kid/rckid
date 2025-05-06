@@ -256,4 +256,11 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
+    // memory
+
+    bool memoryIsImmutable(void const * ptr) {
+        // change this to specific platform implementation if immutable memory is supported
+        return false;
+    }
+
 }

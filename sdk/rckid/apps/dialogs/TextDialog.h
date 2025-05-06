@@ -32,6 +32,9 @@ namespace rckid {
                 drawText();
                 selRect_ = new ui::Rectangle{Rect::WH(24, 24)};
                 g_.add(selRect_);
+                cursorLine_ = new ui::VLine{Rect::WH(24, 24)};
+                cursorLine_->setX(12 + (cursor_ - left_) * 12);
+                g_.add(cursorLine_);
             }
 
     protected:
@@ -44,7 +47,6 @@ namespace rckid {
         static constexpr Point KEY_KEYBOARD_MODE{1,1};
         static constexpr Point KEY_LEFT{2,2};
         static constexpr Point KEY_RIGHT{4,2};
-
 
         void update() override {
             // if back button is selected, do return nullopt
@@ -102,6 +104,7 @@ namespace rckid {
             if (cursor_ < left_)
                 --left_;
             drawText();
+            cursorLine_->setX(12 + (cursor_ - left_) * 12);
         }
 
         void cursorRight() {
@@ -111,6 +114,7 @@ namespace rckid {
             if (cursor_ - left_ > 24)
                 ++left_;
             drawText();
+            cursorLine_->setX(12 + (cursor_ - left_) * 12);
         }
 
         void keyPress() {
@@ -119,6 +123,7 @@ namespace rckid {
             } else if (select_ == KEY_BACKSPACE) {
                 cursorLeft();
                 text_.erase(cursor_, 1);
+                drawText();
             } else if (select_ == KEY_ENTER) {
                 // return the text
                 exit();
@@ -218,6 +223,7 @@ namespace rckid {
 
         ui::Tilemap<Tile<12,24,Color256>> * tileMap_; 
         ui::Rectangle * selRect_;
+        ui::VLine * cursorLine_;
 
         Point select_{4, 0}; 
         Point last_;

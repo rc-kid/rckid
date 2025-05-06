@@ -591,4 +591,11 @@ namespace rckid {
         i2c::sendCommand(cmd::RGBOff{});
     }
 
+    // memory
+
+    bool memoryIsImmutable(void const * ptr) {
+        // TODO enable immutable memory from ROM
+        return false;
+    }
+
 }

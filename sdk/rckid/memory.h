@@ -230,4 +230,8 @@ namespace rckid {
      */
     void memoryCheckStaticProtection();
 
+    /** Returns true if the memory comes from immutable region (ROM on the device)
+     */
+    bool memoryIsImmutable(void const * ptr);
+
 } // namespace

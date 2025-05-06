@@ -671,4 +671,8 @@ namespace rckid {
     }
 
 
+    bool memoryIsImmutable(void const * ptr) {
+        return false;
+    }
+
 }

@@ -33,8 +33,10 @@ namespace rckid::ui {
             Item(String text): text_{std::move(text)} {
             }
 
-            Item(String text, uint8_t const * icon, uint32_t iconSize): text_{std::move(text)}, icon_{icon}, iconSize_{iconSize} {
-            }
+            Item(String text, uint8_t const * icon, uint32_t iconSize): text_{std::move(text)}, icon_{icon}, iconSize_{iconSize} { }
+
+            template<uint32_t SIZE>
+            Item(String text, uint8_t const (&buffer)[SIZE]): Item(text, buffer, SIZE) { }
 
             virtual ~Item() = default;
 
