@@ -111,11 +111,18 @@ ui::Menu * mainMenuGenerator(void*) {
 
 int main() {
     initialize();
+    ASSERT(false);
     while (true) {
         LOG(LL_INFO, "Free memory: " << memoryFree() / 1024);
         //auto app = DisplayUIApp{};
         auto app = MainMenu::run(mainMenuGenerator);
+        LOG(LL_INFO, "MainMenu done");
+        yield();
+        LOG(LL_INFO, "Free memory: " << memoryFree() / 1024);
+        yield();
         if (app.has_value()) {
+            LOG(LL_INFO, "Running app...");
+            yield();
             app.value()();
         }
 /*

@@ -23,15 +23,18 @@ namespace rckid {
         fb.fill(ColorRGB::RGB(0, 0, 255));
         Font f = Font::fromROM<assets::Iosevka16>();
         fb.text(10, 10, f, ColorRGB::RGB(255, 255, 255))
+            ; /*
             << ":(  Error: " << error << "\n"
             << "    Arg:   " << error::arg() << "\n\n"
             << "    File:  " << ((file != nullptr) ? file : "???") << "\n"
             << "    Line:  " << line << "\n\n"
             << "    Extra: " << ((error::extras() != nullptr) ? error::extras() : "-") << "\n\n"
             << "    Long press home button to reset.";
+        */
         fb.initialize();
         fb.render();
         while (true) {
+            yield();
 #ifdef RCKID_BACKEND_FANTASY
             tick();
 #endif

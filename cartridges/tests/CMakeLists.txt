@@ -7,6 +7,14 @@ else()
     add_compile_options(-Wall -Wextra)
 endif()
 
+# simple COM port logging verification
+add_executable(logging "logging.cpp")
+link_with_librckid(logging)
+
+# blue screen of death working test
+add_executable(bsodtest "bsodtest.cpp")
+link_with_librckid(bsodtest)
+
 # the simplest program that simply cycles through red, green and blue full color on the display as fast as possible (note that in fantasy console this actually means at the preset 60 fps)
 add_executable(display-fill "display_fill.cpp")
 link_with_librckid(display-fill)

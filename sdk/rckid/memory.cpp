@@ -120,10 +120,10 @@ namespace rckid {
     /** Internal function that resets the entire memory (heap and arena). Use with extreme caution. Pretty much the only sensible thing to do after memoryReset is to show the blue screen of death.
      */
     void memoryReset() {
-        freelist_ = nullptr;
         Heap::end_ = & __StackLimit;
         Arena::start_ = & __bss_end__;
         Arena::end_ = & __bss_end__;
+        freelist_ = nullptr;
     }
 
     void * Heap::allocBytes(uint32_t numBytes) {
