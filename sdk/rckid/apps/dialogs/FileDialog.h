@@ -22,15 +22,15 @@ namespace rckid {
         void update() override {
             ui::App<String>::update();
             c_->processEvents();
-            // see if an item has been selected
-            /*
+            // see if an item has been selected, or if we shoudl leave, if up & down were used for traversing the folder strcuture, they have already been cleared by the processEvents
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
-                ui::Menu::Item * item = c_->currentItem();
-                if (item == nullptr)
-                    return;
-                exit(item->text());
+                LOG(LL_DEBUG, "FileDialog: returning path " << c_->currentPath());
+                exit(c_->currentPath());
             }
-            */
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                LOG(LL_DEBUG, "FileDialog: cancelling");
+                exit();
+            }
         }
 
     private:

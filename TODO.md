@@ -2,7 +2,6 @@
 
 - bsod is not working on device (memoryReset & heap clearing leads to some error when using the writer (could it be heap allocation of the capture in there?))
 
-- add event processed for buttons and stuff 
 - add events for getting icon for files & on file selected for file browser
 - add actions for file browser such as rename, copy, mkdir, etc.  
 - rename filesystem to fs? 

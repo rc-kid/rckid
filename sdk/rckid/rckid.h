@@ -118,6 +118,12 @@ namespace rckid {
     /** Returns true if the given button has been released since last frame (i.e. its state went from down to up). The value is stable within one frame. */
     bool btnReleased(Btn b);
 
+    /** Clears the pressed state of given button. 
+     
+        Useful for marking button event as processed so that further button press checks in the same period will not fire. Only works for the pressed and released events, button down state is not affected as it always reflects the current state of the button.
+     */
+    void btnClear(Btn b);
+
     /** Returns the accelerometer readings. 
      */
     int16_t accelX(); 

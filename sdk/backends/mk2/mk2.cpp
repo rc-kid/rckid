@@ -453,6 +453,10 @@ namespace rckid {
         return ! buttonState(b, io::state_.status) && buttonState(b, io::lastStatus_);
     }
 
+    void btnClear(Btn b) {
+        setButtonState(b, io::lastStatus_, btnDown(b));
+    }
+
     int16_t accelX() {
         return io::aState_.accelX; 
     }

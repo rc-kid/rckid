@@ -212,7 +212,7 @@ namespace rckid {
         initialized_ = true;
     }
 
-    void initializeNoWindow(int argc, char * argv[]) {
+    void initializeNoWindow([[maybe_unused]] int argc, [[maybe_unused]] char * argv[]) {
         systemMalloc_ = false;
     }
 
@@ -270,7 +270,13 @@ namespace rckid {
 
     bool btnReleased(Btn b) {
         return btnDown(b) && ! (io::lastButtons_ & static_cast<uint32_t>(b));
-    }    
+    }
+    
+    void btnClear(Btn b) {
+        // simply ensure last state is identical to current state
+        io::lastButtons_ &= ~static_cast<uint32_t>(b);
+        io::lastButtons_ |= (io::buttons_ & static_cast<uint32_t>(b));
+    }
 
     int16_t accelX() { 
         return io::accelX_; 
@@ -671,7 +677,7 @@ namespace rckid {
     }
 
 
-    bool memoryIsImmutable(void const * ptr) {
+    bool memoryIsImmutable([[maybe_unused]] void const * ptr) {
         return false;
     }
 

@@ -69,7 +69,7 @@ namespace rckid {
                 a_ = aa;
                 return true;
             }
-            bool setABXYtButtons(bool a, bool b, bool select, bool start) {
+            bool setABXYButtons(bool a, bool b, bool select, bool start) {
                 uint8_t aa = (a_ & 0x0f) | ((a ? BTN_A : 0) | (b ? BTN_B : 0) | (select ? BTN_SELECT : 0) | (start ? BTN_START : 0));
                 if (aa == a_)
                     return false;

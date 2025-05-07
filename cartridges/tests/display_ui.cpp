@@ -111,7 +111,6 @@ ui::Menu * mainMenuGenerator(void*) {
 
 int main() {
     initialize();
-    ASSERT(false);
     while (true) {
         LOG(LL_INFO, "Free memory: " << memoryFree() / 1024);
         //auto app = DisplayUIApp{};
