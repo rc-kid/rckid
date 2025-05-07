@@ -62,6 +62,32 @@ extern "C" {
     }
 }
 
+/** Static class that is friends with the internal state so it can modify it.
+ */
+class RCKid {
+public:
+
+    static void setButtonState(rckid::Btn b, rckid::AVRState::Status & status, bool value) {
+        using namespace rckid;
+        switch (b) {
+            case Btn::Up: status.setDPadButtons(status.btnLeft(), status.btnRight(), value, status.btnDown()); return;
+            case Btn::Down: status.setDPadButtons(status.btnLeft(), status.btnRight(), status.btnUp(), value); return;
+            case Btn::Left: status.setDPadButtons(value, status.btnRight(), status.btnUp(), status.btnDown()); return;
+            case Btn::Right: status.setDPadButtons(status.btnLeft(), value, status.btnUp(), status.btnDown()); return;
+            case Btn::A: status.setABXYButtons(value, status.btnB(), status.btnSelect(), status.btnStart()); return;
+            case Btn::B: status.setABXYButtons(status.btnA(), value, status.btnSelect(), status.btnStart()); return;
+            case Btn::Select: status.setABXYButtons(status.btnA(), status.btnB(), value, status.btnStart()); return;
+            case Btn::Start: status.setABXYButtons(status.btnA(), status.btnB(), status.btnSelect(), value); return;
+            case Btn::VolumeUp: status.setControlButtons(status.btnHome(), value, status.btnVolumeDown()); return;
+            case Btn::VolumeDown: status.setControlButtons(status.btnHome(), status.btnVolumeUp(), value); return;
+            case Btn::Home: status.setControlButtons(value, status.btnVolumeUp(), status.btnVolumeDown()); return;
+            default:
+                UNREACHABLE;
+        }
+    }
+
+}; // class RCKid
+
 namespace rckid {
 
     // various forward declarations
@@ -381,6 +407,11 @@ namespace rckid {
     bool btnReleased(Btn b) {
         return ! buttonState(b, io::avrState_.status) && buttonState(b, io::lastStatus_);
     }
+
+    void btnClear(Btn b) {
+        RCKid::setButtonState(b, io::lastStatus_, btnDown(b));
+    }
+
 
     int16_t accelX() {
         UNIMPLEMENTED;

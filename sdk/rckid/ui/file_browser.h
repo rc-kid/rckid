@@ -19,6 +19,12 @@ namespace rckid::ui {
             loadDir(std::move(dir));
         }
 
+        String currentPath() const { 
+            if (entries_.size() == 0)
+                return path_;
+            return filesystem::join(path_, entries_[i_].name());
+        }
+
         /** Processes the left and right menu transitions. 
          */
         void processEvents() override {
@@ -39,13 +45,17 @@ namespace rckid::ui {
             if (btnDown(Btn::Down) || btnDown(Btn::B)) {
                 if (! dirStack_.empty()) {
                     loadDir(filesystem::parent(path_), Transition::Down);
-                    // TODO mark event as handled
+                    // clear the button state (cancellation is handled by button press)
+                    btnClear(Btn::Down);
+                    btnClear(Btn::B);
                 }
             }
             if (btnDown(Btn::Up) || btnDown(Btn::A)) {
                 if (entries_[i_].isFolder()) {
                     loadDir(filesystem::join(path_, entries_[i_].name()), Transition::Up);
-                    // TODO mark event as handled
+                    // clear the button state (selection is handled by button press)
+                    btnClear(Btn::Up);
+                    btnClear(Btn::A);
                 } 
             }
         }

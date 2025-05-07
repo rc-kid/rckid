@@ -58,6 +58,10 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
+    void btnClear(Btn b) {
+        UNIMPLEMENTED;
+    }
+
     int16_t accelX() {
         UNIMPLEMENTED;
     }
