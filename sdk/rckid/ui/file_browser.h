@@ -17,6 +17,8 @@ namespace rckid::ui {
 
         FileBrowser(String dir) {
             loadDir(std::move(dir));
+            // if we started not in a root, clear the dir stack so that the file explorer will not allow going under the root it was launched in
+            dirStack_.clear();
         }
 
         String currentPath() const { 
@@ -61,6 +63,11 @@ namespace rckid::ui {
         }
 
     protected:
+        virtual void onFileChanged() {}
+        virtual void onFolderChanged() {}
+        virtual bool onFileFilter(String const & name) { return true; }
+
+    protected:
 
         void loadDir(String path, Transition transition = Transition::Up) {
             LOG(LL_INFO, "Loading dir " << path);
@@ -75,8 +82,11 @@ namespace rckid::ui {
             path_ = std::move(path);
             entries_.clear();
             filesystem::Folder folder = filesystem::folderRead(path_.c_str(), drive_);
-            for (auto entry : folder)
+            for (auto entry : folder) {
+                if (entry.isFile() && ! onFileFilter(entry.name()))
+                    continue;
                 entries_.push_back(entry);
+            }
             setEntry(i_, transition);
         }
 
@@ -97,6 +107,10 @@ namespace rckid::ui {
 
         void setEntry(uint32_t i, Transition transition) {
             set(filesystem::stem(entries_[i].name()), getIconFor(entries_[i]), transition);
+            if (entries_[i].isFolder())
+                onFolderChanged();
+            else
+                onFileChanged();
         }
 
     private:

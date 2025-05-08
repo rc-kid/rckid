@@ -130,6 +130,13 @@ namespace rckid {
             return c_str()[size() - 1] == other;
         }
 
+        bool endsWith(char const * other) const {
+            uint32_t len = strlen(other);
+            if (len > size())
+                return false;
+            return strcmp(c_str() + size() - len, other) == 0;
+        }
+
     private:
         LazyBuffer<char> str_;
     }; // rckid::String

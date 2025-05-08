@@ -26,7 +26,7 @@ namespace rckid {
 
         void resize(uint32_t size, Allocator & a = Heap::allocator()) {
             delete [] front_;
-            delete []back_;
+            delete [] back_;
             size_ = size;
             front_ = a.alloc<T>(size);
             back_ = a.alloc<T>(size);

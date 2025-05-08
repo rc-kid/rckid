@@ -8,7 +8,9 @@ using namespace rckid;
  */
 int main() {
     initialize();
-    ASSERT(false);
-    while (true)
-        yield();
+    while (true) {
+        tick();
+        if (btnPressed(Btn::A))
+            ERROR(1234);
+    }
 }

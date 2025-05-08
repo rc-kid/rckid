@@ -120,10 +120,14 @@ namespace rckid {
     /** Internal function that resets the entire memory (heap and arena). Use with extreme caution. Pretty much the only sensible thing to do after memoryReset is to show the blue screen of death.
      */
     void memoryReset() {
+        LOG(LL_HEAP, "Resetting memory");
         Heap::end_ = & __StackLimit;
         Arena::start_ = & __bss_end__;
         Arena::end_ = & __bss_end__;
         freelist_ = nullptr;
+        LOG(LL_HEAP, "Heap end: " << (void*)Heap::end_);
+        LOG(LL_HEAP, "Arena start: " << (void*)Arena::start_);
+        LOG(LL_HEAP, "Arena end: " << (void*)Arena::end_);
     }
 
     void * Heap::allocBytes(uint32_t numBytes) {
@@ -218,6 +222,11 @@ namespace rckid {
 
     void memoryCheckStackProtection() {
         char * x = & __StackLimit;
+        if ((size_t) &x < (size_t) & __StackLimit)
+            LOG(LL_ERROR, "Stack underflow");
+        if ((x[0] != 'R' || x[1] != 'C' || x[2] != 'k' || x[3] != 'i' || x[4] != 'd'))
+            LOG(LL_ERROR, "Stack corruption");
+        return;
 #ifdef __GNUC__        
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"

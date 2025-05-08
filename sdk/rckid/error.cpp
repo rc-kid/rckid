@@ -22,8 +22,8 @@ namespace rckid {
         RenderableBitmap<ColorRGB> fb{RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT, Arena::allocator()};
         fb.fill(ColorRGB::RGB(0, 0, 255));
         Font f = Font::fromROM<assets::Iosevka16>();
+        /*
         fb.text(10, 10, f, ColorRGB::RGB(255, 255, 255))
-            ; /*
             << ":(  Error: " << error << "\n"
             << "    Arg:   " << error::arg() << "\n\n"
             << "    File:  " << ((file != nullptr) ? file : "???") << "\n"

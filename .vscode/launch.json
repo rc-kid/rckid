@@ -40,7 +40,7 @@
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/build/cartridges/tests/display-ui",
-            //"program": "${workspaceFolder}/build/cartridges/tests/graphics-appRGB",
+            //"program": "${workspaceFolder}/build/cartridges/tests/bsodtest",
             "args": [],
             "stopAtEntry": false,
             "externalConsole": false,
