@@ -52,6 +52,8 @@ namespace rckid {
 
     // forward declaration of the bsod function
     NORETURN(void bsod(uint32_t error, uint32_t line = 0, char const * file = nullptr));
+    // forward declaration of memory stack protection check
+    void memoryCheckStackProtection();
 
     void audioPlaybackDMA(uint finished, uint other);
     namespace filesystem {
@@ -296,7 +298,10 @@ namespace rckid {
 #else
             if (x == '\n') {
                 tud_cdc_write("\r\n", 2);
-                tud_cdc_write_flush();            
+                tud_cdc_write_flush();   
+                // ensure that we pass the buffer to the host
+                for (int i = 0; i < 20; ++i)
+                    yield();         
             } else {
                 tud_cdc_write(& x, 1);
             }
@@ -381,7 +386,7 @@ namespace rckid {
 #if (defined RCKID_WAIT_FOR_SERIAL)
         char cmd_ = ' ';
         while (tud_cdc_read(& cmd_, 1) != 1) { yield(); };
-        LOG("Received command " << cmd_);
+        LOG(LL_ERROR, "Received command " << cmd_);
 #endif
     }
 

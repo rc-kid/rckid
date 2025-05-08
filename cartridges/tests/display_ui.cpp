@@ -15,6 +15,7 @@
 
 #include <rckid/apps/dialogs/TextDialog.h>
 #include <rckid/apps/dialogs/FileDialog.h>
+#include <rckid/apps/AudioPlayer.h>
 
 
 using namespace rckid;
@@ -93,7 +94,7 @@ ui::Menu * mainMenuGenerator(void*) {
             new ui::Menu::ActionItem{"Game 2", assets::icons_default_64::animal_1, ui::Menu::Action{}},
             new ui::Menu::ActionItem{"Game 3", assets::icons_default_64::animal_2, ui::Menu::Action{}},
         }; }}},
-        new ui::Menu::ActionItem{"Music", assets::icons_default_64::music, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Music", assets::icons_default_64::music, ui::Menu::Action{App::run<AudioPlayer>}},
         new ui::Menu::ActionItem{"Messages", assets::icons_default_64::chat, ui::Menu::Action{}},
         new ui::Menu::ActionItem{"WalkieTalkie", assets::icons_default_64::baby_monitor, ui::Menu::Action{}},
         new ui::Menu::ActionItem{"Birthdays", assets::icons_default_64::birthday_cake, ui::Menu::Action{}},

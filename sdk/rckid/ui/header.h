@@ -25,9 +25,13 @@ namespace rckid::ui {
     public:
         Header() : Tilemap{40, 1, assets::System16, palette_} {
             fill(' ');
+            // battery
             at(39, 0).setPaletteOffset(16) = 2;
             at(38, 0).setPaletteOffset(16) = 1;
             at(37, 0).setPaletteOffset(16) = 0;
+            // sd card
+            at(36, 0).setPaletteOffset(16) = 4;
+            at(35, 0).setPaletteOffset(16) = 3;
         }
 
     protected:

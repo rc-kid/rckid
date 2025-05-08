@@ -48,7 +48,7 @@ namespace rckid {
         }
 
         void setSampleRate(uint32_t sampleRate) {
-            sr_ = frequencyToPeriodUs(sampleRate);
+            sr_ = audio::frequencyToPeriodUs(sampleRate);
         }
 
         Waveform const & waveform() const { return wf_; }
@@ -56,7 +56,7 @@ namespace rckid {
         /** Turns the tone on with given frequency.
          */
         void on(uint32_t freq) { 
-            period_ = frequencyToPeriodUs(freq);
+            period_ = audio::frequencyToPeriodUs(freq);
         }
 
         /** Turns the tone off. 

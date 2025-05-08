@@ -7,7 +7,7 @@
 #define IS_LOGLEVEL_ENABLED(X) (IS_LOGLEVEL_ENABLED_HELPER(X)[0] == '1')
 #define LOG(LOGLEVEL,...) do { if (IS_LOGLEVEL_ENABLED(LOGLEVEL)) rckid::debugWrite() << #LOGLEVEL << ": " << __VA_ARGS__ << '\n'; } while (false)
 
-#define LL_HEAP 0
+#define LL_HEAP 1
 #define LL_INFO 1
 #define LL_DEBUG 1
 

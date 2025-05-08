@@ -123,10 +123,17 @@ namespace rckid {
     class SystemMallocGuard {
     public:
         SystemMallocGuard() { 
-            ASSERT(systemMalloc_ == false); // nested malloc guards are not supported
+            // system malloc should not be enabled when entering malloc guards
+            ASSERT(numGuards_ > 0 || systemMalloc_ == false);
             systemMalloc_ = true;
+            ++numGuards_;
         }
-        ~SystemMallocGuard() { systemMalloc_ = false; }
+        ~SystemMallocGuard() { 
+            if (--numGuards_ == 0)
+                systemMalloc_ = false;
+        }
+
+        static inline size_t numGuards_ = 0;
     }; 
 
     void fatalError(uint32_t error, uint32_t line, char const * file) {
