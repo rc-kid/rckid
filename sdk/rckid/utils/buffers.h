@@ -9,10 +9,10 @@ namespace rckid {
     template<typename T>
     class DoubleBuffer {
     public:
-        DoubleBuffer(uint32_t size, Allocator & a = Heap::allocator()): 
+        DoubleBuffer(uint32_t size): 
             size_{size},
-            front_{a.alloc<T>(size)}, 
-            back_{a.alloc<T>(size)} {
+            front_{new T[size]}, 
+            back_{new T[size]} {
         }
 
         ~DoubleBuffer() {
@@ -24,12 +24,12 @@ namespace rckid {
             std::swap(front_, back_);
         }
 
-        void resize(uint32_t size, Allocator & a = Heap::allocator()) {
+        void resize(uint32_t size) {
             delete [] front_;
             delete [] back_;
             size_ = size;
-            front_ = a.alloc<T>(size);
-            back_ = a.alloc<T>(size);
+            front_ = new T[size];
+            back_ = new T[size];
         }
 
         uint32_t size() const { return size_; }
@@ -50,51 +50,46 @@ namespace rckid {
     class LazyBuffer {
     public:
 
-        LazyBuffer(Allocator & a = Heap::allocator):
-            a_{a}, 
+        LazyBuffer():
             size_{0},
             capacity_{0},
             data_{nullptr} {
         }
 
-        LazyBuffer(uint32_t capacity, Allocator & a = Heap::allocator()):
-            a_{a}, 
+        LazyBuffer(uint32_t capacity):
             size_{0}, 
             capacity_{capacity} {
-            data_ = a_.alloc<T>(capacity);
+            data_ = new T[capacity];
         }
 
-        LazyBuffer(T const * from, uint32_t size, Allocator & a = Heap::allocator()):
-            a_{a}, 
+        LazyBuffer(T const * from, uint32_t size):
             size_{size}, 
             capacity_{0},
             data_{const_cast<T*>(from)} {
             // if not immutable, we need to copy, but do not delete, or attempt to delete the source (this is mostly important for fantasy backend where immutable is not supported)
             if (!immutable()) {
-                data_ = a_.alloc<T>(size_);
+                data_ = new T[size_];
                 capacity_ = size_;
                 memcpy(data_, from, sizeof(T) * size_);
             }
         }
 
         template<uint32_t SIZE>
-        LazyBuffer(T const (&from)[SIZE], Allocator & a = Heap::allocator()): LazyBuffer(from, SIZE, a) {}
+        LazyBuffer(T const (&from)[SIZE]): LazyBuffer(from, SIZE) {}
 
         LazyBuffer(LazyBuffer const & from):
-            a_{from.a_}, 
             size_{from.size_},
             capacity_{from.capacity_}, 
             data_{from.data_} {
             // if not immutable, we need to copy
             if (!immutable()) {
-                data_ = a_.alloc<T>(size_);
+                data_ = new T[size_];
                 capacity_ = size_;
                 memcpy(data_, from.data_, sizeof(T) * size_);
             }
         }
 
         LazyBuffer(LazyBuffer && from): 
-            a_{from.a_},
             size_{from.size_},
             capacity_{from.capacity_},
             data_{from.data_} {
@@ -119,7 +114,7 @@ namespace rckid {
             capacity_ = from.capacity_;
             data_ = from.data_;
             if (! immutable()) {
-                data_ = a_.alloc<T>(size_);
+                data_ = new T[size_];
                 capacity_ = size_;
                 memcpy(data_, from.data_, sizeof(T) * size_);
             }
@@ -194,11 +189,10 @@ namespace rckid {
             data_[size_++] = value;
         }
         
-        Allocator & allocator() const { return const_cast<Allocator &>(a_); }
     protected:
 
         void resize(uint32_t newCapacity) {
-            T * newData = a_.alloc<T>(newCapacity);
+            T * newData = new T[newCapacity];
             memcpy(newData, data_, size_ * sizeof(T));
             if (!immutable())
                 delete [] data_;
@@ -207,7 +201,6 @@ namespace rckid {
         }
 
     private:
-        Allocator & a_ = Heap::allocator();
         uint32_t size_;
         uint32_t capacity_;
         T * data_;

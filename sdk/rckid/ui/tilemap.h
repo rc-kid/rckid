@@ -13,6 +13,8 @@ namespace rckid::ui {
             char c = ' ';
             uint8_t paletteOffset = 0;
 
+            TileInfo() = default;
+
             TileInfo(char c, uint8_t paletteOffset = 0):
                 c{c}, paletteOffset{paletteOffset} {
             }
@@ -23,13 +25,13 @@ namespace rckid::ui {
 
         using Tile = TILE;
 
-        Tilemap(Coord cols, Coord rows, Tile const * tileset, uint16_t const * palette, Allocator & allocator = Heap::allocator()):
+        Tilemap(Coord cols, Coord rows, Tile const * tileset, uint16_t const * palette):
             Widget{Rect::WH(cols * TILE::width(), rows * TILE::height())},
             cols_{cols}, 
             rows_{rows}, 
             tileSet_{tileset}, 
             palette_{palette} {
-            tileMap_ = static_cast<TileInfo *>(allocator.allocBytes(sizeof(TileInfo) * cols * rows));            
+            tileMap_ = new TileInfo[cols * rows]; 
         }
 
         ~Tilemap() override {

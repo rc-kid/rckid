@@ -31,7 +31,7 @@ namespace rckid {
     protected:
 
         DataSync(): 
-            BitmapApp<ColorRGB>{Arena::allocator()}
+            BitmapApp<ColorRGB>{}
             /*icon_{std::move(ARENA(Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(assets::icons64::pen_drive))))} */ {
         }
 

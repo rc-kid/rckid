@@ -37,7 +37,7 @@ namespace rckid {
                 filesystem::FileRead f = filesystem::fileRead(path);
                 if (ext == ".mp3") {
                     ArenaGuard g{};
-                    MP3Stream mp3{f, Arena::allocator()};
+                    MP3Stream mp3{f};
                     Player::run(path, mp3);
                 } else {
                     LOG(LL_ERROR, "AudioPlayer: unsupported file type " << ext);

@@ -120,6 +120,7 @@ TEST(memory, ownHeapManagementEnabled) {
     delete [] b;
 }
 
+/*
 TEST(memory, astring) {
     using namespace rckid;
     Arena::reset();
@@ -134,6 +135,7 @@ TEST(memory, astring) {
     EXPECT(Arena::currentSize() >= strl);
     Arena::reset();
 }
+    */
 
 /*
 TEST(memory, defaultAllocationIsHeap) {

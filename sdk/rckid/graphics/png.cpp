@@ -35,8 +35,8 @@ namespace rckid {
         delete [] line;
     }
 
-    PNG PNG::fromStream(RandomReadStream & stream, Allocator & a) {
-        PNG result(a);
+    PNG PNG::fromStream(RandomReadStream & stream) {
+        PNG result;
         result.img_->ucMemType = PNG_MEM_RAM;
         result.img_->pfnRead = readStream;
         result.img_->pfnSeek = seekStream;
@@ -48,8 +48,8 @@ namespace rckid {
         return result;
     }
 
-    PNG PNG::fromBuffer(uint8_t const * buffer, uint32_t numBytes, Allocator & a) {
-        PNG result{a};
+    PNG PNG::fromBuffer(uint8_t const * buffer, uint32_t numBytes) {
+        PNG result{};
         result.img_->ucMemType = PNG_MEM_RAM;
         result.img_->pfnRead = readRAM;
         result.img_->pfnSeek = seekMem;
@@ -71,8 +71,8 @@ namespace rckid {
         return DecodePNG(this->img_, & d, 0) == 0;
     }
 
-    PNG::PNG(Allocator & a) {
-        img_ = a.alloc<png_image_tag>();
+    PNG::PNG() {
+        img_ = new png_image_tag{};
         memset(img_, 0, sizeof(png_image_tag));
     }
 

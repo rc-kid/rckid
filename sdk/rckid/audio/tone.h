@@ -12,17 +12,17 @@ namespace rckid {
      */
     class Waveform : public LazyBuffer<int16_t> {
     public:
-        Waveform(Allocator & a = Heap::allocator()): 
-            LazyBuffer{square50_, a} {
+        Waveform(): 
+            LazyBuffer{square50_} {
         }
 
         template<size_t SIZE>
-        Waveform(int16_t const (&from)[SIZE], Allocator & a = Heap::allocator()): 
-            LazyBuffer{from, SIZE, a} {
+        Waveform(int16_t const (&from)[SIZE]): 
+            LazyBuffer{from, SIZE} {
         }
 
-        static Waveform Sine(Allocator & a = Heap::allocator()) {
-            return Waveform{assets::WaveformSin, a};
+        static Waveform Sine() {
+            return Waveform{assets::WaveformSin};
         }
 
         using LazyBuffer::LazyBuffer;

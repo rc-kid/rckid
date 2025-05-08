@@ -10,16 +10,16 @@ namespace rckid::ui {
 
     class Form : public Panel {
     public:
-        explicit Form(Allocator & a = Heap::allocator()):
-            Form{320,240, a} {
+        explicit Form():
+            Form{320,240} {
         }
 
-        Form(Coord width, Coord height, Allocator & a = Heap::allocator()):
-            Form(Rect::Centered(width, height, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT), a) {
+        Form(Coord width, Coord height):
+            Form(Rect::Centered(width, height, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT)) {
         }
 
-        Form(Rect rect, Allocator & a = Heap::allocator()): Panel{rect} {
-            buffer_ = new (a.alloc<DoubleBuffer<uint16_t>>()) DoubleBuffer<uint16_t>(RCKID_DISPLAY_HEIGHT);
+        Form(Rect rect): Panel{rect} {
+            buffer_ = new DoubleBuffer<uint16_t>{RCKID_DISPLAY_HEIGHT};
         }
 
         ~Form() override {
