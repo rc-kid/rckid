@@ -12,7 +12,6 @@ namespace rckid {
     public:
 
         Sprite(Coord width, Coord height): Bitmap<COLOR>{width, height} {}
-        Sprite(Coord width, Coord height, Allocator & a): Bitmap<COLOR>{width, height, a} {}
 
         using Bitmap<COLOR>::width;
         using Bitmap<COLOR>::height;

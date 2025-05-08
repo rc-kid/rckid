@@ -23,12 +23,12 @@ namespace rckid {
         PNG & operator = (PNG const &) = delete;
         PNG & operator = (PNG &&) = delete;
 
-        static PNG fromStream(RandomReadStream & stream, Allocator & a = Heap::allocator());
+        static PNG fromStream(RandomReadStream & stream);
 
-        static PNG fromBuffer(uint8_t const * buffer, uint32_t numBytes, Allocator & a = Heap::allocator()); 
+        static PNG fromBuffer(uint8_t const * buffer, uint32_t numBytes); 
 
         template<uint32_t SIZE>
-        static PNG fromBuffer(uint8_t const (&buffer)[SIZE], Allocator & a = Heap::allocator()) { return fromBuffer(buffer, SIZE, a); }
+        static PNG fromBuffer(uint8_t const (&buffer)[SIZE]) { return fromBuffer(buffer, SIZE); }
 
         Coord width() const override;
 
@@ -55,7 +55,7 @@ namespace rckid {
             ~Decode16();
         };
 
-        PNG(Allocator & a);
+        PNG();
 
         static void decodeLine16_(png_draw_tag *pDraw);
 

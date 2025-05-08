@@ -15,10 +15,10 @@ namespace rckid {
 
         /** Creates an empty string. 
          */
-        String(Allocator & a = Heap::allocator()): String{"", a} {}
+        String(): String{""} {}
 
-        String(char c, uint32_t n, Allocator & a = Heap::allocator()): 
-            str_{n + 1, a} {
+        String(char c, uint32_t n): 
+            str_{n + 1} {
             memset(str_.data(), c, n);
             str_[size()] = '\0';
         }
@@ -27,19 +27,19 @@ namespace rckid {
          
             If the string literal comes from heap, creates new heap allocated copy of it. Otherwise just keeps the presumed immuatble pointer. The string must be null terminated, or null.
          */
-        String(char const * str, Allocator & a = Heap::allocator()) : 
-            str_{str, static_cast<uint32_t>(strlen(str) + 1), a} {
+        String(char const * str) : 
+            str_{str, static_cast<uint32_t>(strlen(str) + 1)} {
         }
 
         String(String const & from, uint32_t start, uint32_t length):
-            str_{length + 1, from.str_.allocator()} {
+            str_{length + 1} {
             memcpy(str_.data(), from.str_.data() + start, length);
             str_[length] = '\0';
             str_.grow(length + 1);
         } 
 
-        String(char const * str, uint32_t size, Allocator & a = Heap::allocator()): 
-            str_{str, size + 1, a} {
+        String(char const * str, uint32_t size): 
+            str_{str, size + 1} {
         }
 
         String(String const & from) = default;
@@ -49,14 +49,14 @@ namespace rckid {
         String & operator = (String const &) = default;
         String & operator = (String &&) = default;
 
-        static String withCapacity(uint32_t size, Allocator & a = Heap::allocator()) {
-            String s{a};
+        static String withCapacity(uint32_t size) {
+            String s{};
             s.str_.grow(size + 1);
             return s;
         }
 
-        static String withCapacity(char const * str, uint32_t size, Allocator & a = Heap::allocator()) {
-            String s{str, a};
+        static String withCapacity(char const * str, uint32_t size) {
+            String s{str};
             s.str_.grow(size + 1);
             return s;
         }

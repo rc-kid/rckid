@@ -30,7 +30,7 @@ TEST(bitmap, colorRGB) {
     EXPECT(bmp.pixels()[1] == y.toRaw());
 }
 
-
+/*
 TEST(bitmap, arena_allocator_8bpp) {
     using namespace rckid;
     ArenaGuard g_;
@@ -44,5 +44,6 @@ TEST(bitmap, arena_allocator_8bpp) {
     EXPECT(bmp.at(10, 67) == x);
     EXPECT(bmp.at(5, 57) == y);
 }
+    */
 
 

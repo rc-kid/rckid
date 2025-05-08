@@ -5,37 +5,11 @@
 
 namespace rckid {
 
-    /** Allocator base class that provides the basic allocation primitives for allocation and deallocation.
-     */
-    class Allocator {
-    public:
-        virtual void * allocBytes(uint32_t bytes) = 0;
-        virtual void free(void * ptr) = 0;
-        virtual bool contains(void * ptr) const = 0;
-
-        template<typename T>
-        T * alloc() { return (T*)allocBytes(sizeof(T)); } 
-
-        template<typename T>
-        T * alloc(uint32_t numItems) { return (T*)allocBytes(sizeof(T) * numItems); }
-    }; 
-
     /** Heap allocation and management. 
      
      */
     class Heap {
     public:
-        class AllocatorSingleton : public Allocator {
-        public:
-            void * allocBytes(uint32_t bytes) override { return Heap::allocBytes(bytes); }
-            void free(void * ptr) override { Heap::free(ptr); }
-            bool contains(void * ptr) const override { return Heap::contains(ptr); }
-        }; // Heap::AllocatorSingleton
-
-        static AllocatorSingleton & allocator() {
-            static AllocatorSingleton singleton;
-            return singleton;
-        }
 
         /** Allocates given amount of bytes on heap.
          
@@ -80,18 +54,6 @@ namespace rckid {
     class Arena {
     public:
 
-        class AllocatorSingleton : public Allocator {
-        public:
-            void * allocBytes(uint32_t bytes) override { return Arena::allocBytes(bytes); }
-            void free([[maybe_unused]] void * ptr) override { }
-            bool contains(void * ptr) const override { return Arena::contains(ptr); }
-        }; // Heap::AllocatorSingleton
-
-        static AllocatorSingleton & allocator() {
-            static AllocatorSingleton singleton;
-            return singleton;
-        }
-
         /** Allocates given number of bytes on the current arena. 
          */
         static void * allocBytes(uint32_t numBytes) {
@@ -109,12 +71,6 @@ namespace rckid {
 
         template<typename T>
         static T* alloc(uint32_t items) { return (T*)allocBytes(sizeof(T) * items); }
-
-
-        /** Free API for allocator. Does nothing as arena does not support per item deallocation.
-         */
-        static void free([[maybe_unused]] void * ptr) {}
-
 
         /** Attempts to free the given arena pointer of given size. 
          
@@ -183,22 +139,6 @@ namespace rckid {
 
     }; // rckid::Arena
 
-    /** Arena memory allocator. 
-     
-        A simple C++ allocator to be used with stdlib classes that allocates on current arena.
-     */
-    template<typename T>
-    class ArenaAllocator {
-    public:
-        using value_type = T;
-        using size_type = std::size_t;
-        using difference_type = std::ptrdiff_t;
-        using propagate_on_container_move_assignment = std::true_type;
-
-        T * allocate(std::size_t n) { return (T *)Arena::allocBytes(static_cast<uint32_t>(n * sizeof(T))); }
-        void deallocate([[maybe_unused]] T * ptr, [[maybe_unused]] size_t n) { }
-    }; // rckid::ArenaAllocator
-
     class ArenaGuard {
     public:
         ArenaGuard() { Arena::enter(); }
@@ -208,10 +148,6 @@ namespace rckid {
         ArenaGuard(ArenaGuard &&) = delete;
     
     }; // rckid::ArenaGuard
-
-    /** Shorthand typedef for an arena allocated string. 
-     */
-    using astring = std::basic_string<char, std::char_traits<char>, ArenaAllocator<char>>;
 
     /** Returns the number of free memory, i.e. the unclaimed space between arena and heap. 
      

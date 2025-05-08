@@ -51,7 +51,7 @@ int main() {
     initialize();
     while (true) {
         Arena::enter();
-        auto app = gbcemu::GBCEmu{Arena::allocator()};
+        auto app = gbcemu::GBCEmu{};
         //app.loadCartridge(new gbcemu::FlashGamePak{});
         //if (false)
         app.loadCartridge(new gbcemu::FlashGamePak{

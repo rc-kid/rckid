@@ -23,9 +23,9 @@ namespace rckid {
             pixels_{nullptr}, w_{0}, h_{0} {
         }
 
-        /** Creates the bitmap using given allocator.
+        /** Creates the bitmap.
          */
-        Bitmap(Coord w, Coord h, Allocator & a = Heap::allocator()): pixels_{a.alloc<uint16_t>(numHalfWords(w, h))}, w_{w}, h_{h} {
+        Bitmap(Coord w, Coord h): pixels_{new uint16_t[numHalfWords(w, h)]}, w_{w}, h_{h} {
         }
 
         Bitmap(Bitmap const &) = delete;
@@ -36,8 +36,8 @@ namespace rckid {
             other.h_ = 0;
         }
 
-        Bitmap(ImageDecoder && decoder, Allocator & a = Heap::allocator()):
-            Bitmap{decoder.width(), decoder.height(), a} {
+        Bitmap(ImageDecoder && decoder):
+            Bitmap{decoder.width(), decoder.height()} {
             loadImage(std::move(decoder));
         }
 
@@ -149,7 +149,7 @@ namespace rckid {
 
     /** Bitmap that can render itself. 
      
-        Defined as template and specialized based on used color and allocators. See the specializations below for more information.  
+        Defined as template and specialized based on used color. See the specializations below for more information.  
      */
     template<typename PIXEL>
     class RenderableBitmap;
@@ -167,8 +167,8 @@ namespace rckid {
         using Bitmap<ColorRGB>::numPixels;
         using Bitmap<ColorRGB>::Bitmap;
 
-        RenderableBitmap(Allocator & a = Heap::allocator()):
-            Bitmap{RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT, a} {
+        RenderableBitmap():
+            Bitmap{RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT} {
         }
 
         void initialize() {

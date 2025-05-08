@@ -49,10 +49,10 @@ namespace rckid {
     
     protected:
 
-        AudioStream(uint32_t bufferSize, Allocator & a) {
-            playbackBuffer_ = new (a.alloc<DoubleBuffer<int16_t>>()) DoubleBuffer<int16_t>(bufferSize, a);
+        AudioStream(uint32_t bufferSize) {
+            playbackBuffer_ = new DoubleBuffer<int16_t>{bufferSize};
         }
-        
+
     private:
 
         friend void audioPlay(AudioStream & stream);

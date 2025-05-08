@@ -286,24 +286,24 @@ static constexpr int val_1 = 1;
 
 namespace rckid::gbcemu {
 
-    GBCEmu::GBCEmu(Allocator & a):
+    GBCEmu::GBCEmu():
         vram_{
-            a.alloc<uint8_t>(0x2000), 
-            a.alloc<uint8_t>(0x2000), 
+            new uint8_t[0x2000],
+            new uint8_t[0x2000],
         },
         wram_{
-            a.alloc<uint8_t>(0x1000),
-            a.alloc<uint8_t>(0x1000), 
-            a.alloc<uint8_t>(0x1000), 
-            a.alloc<uint8_t>(0x1000), 
-            a.alloc<uint8_t>(0x1000), 
-            a.alloc<uint8_t>(0x1000), 
-            a.alloc<uint8_t>(0x1000), 
-            a.alloc<uint8_t>(0x1000)
+            new uint8_t[0x1000],
+            new uint8_t[0x1000],
+            new uint8_t[0x1000],
+            new uint8_t[0x1000],
+            new uint8_t[0x1000],
+            new uint8_t[0x1000],
+            new uint8_t[0x1000],
+            new uint8_t[0x1000],
         },
-        oam_{a.alloc<uint8_t>(160)},
-        hram_{a.alloc<uint8_t>(256)},
-        pixels_{320,a} {
+        oam_{ new uint8_t[160]},
+        hram_{new uint8_t[256]},
+        pixels_{320} {
     }
 
     GBCEmu::~GBCEmu() {

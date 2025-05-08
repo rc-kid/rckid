@@ -9,15 +9,15 @@ namespace rckid {
 
     class MP3Stream : public AudioStream {
     public:
-        MP3Stream(ReadStream & input, Allocator & a = Heap::allocator()):
-            AudioStream{1152 * 2, a},
+        MP3Stream(ReadStream & input):
+            AudioStream{1152 * 2},
             in_{input}, 
-            buffer_{reinterpret_cast<uint8_t*>(a.allocBytes(BUFFER_SIZE))},
+            buffer_{new uint8_t[BUFFER_SIZE]},
             dec_{MP3InitDecoder()} {
         }
 
         ~MP3Stream() override {
-            delete buffer_;
+            delete [] buffer_;
             MP3FreeDecoder(dec_);
         }
 

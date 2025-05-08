@@ -57,7 +57,7 @@ namespace rckid::gbcemu {
             X2
         }; 
 
-        GBCEmu(Allocator & a = Heap::allocator());
+        GBCEmu();
 
         ~GBCEmu() override;
 
