@@ -30,7 +30,7 @@ namespace rckid {
          */
         template<typename T>
         static void run([[maybe_unused]] void * payload = nullptr) {
-            ArenaGuard g{};
+            NewArenaGuard g{};
             T * app = new (Arena::alloc<T>()) T{};
             app->loop();
             delete app;

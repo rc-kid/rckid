@@ -107,9 +107,6 @@ ui::Menu * mainMenuGenerator(void*) {
     };
 }
 
-
-
-
 int main() {
     initialize();
     while (true) {

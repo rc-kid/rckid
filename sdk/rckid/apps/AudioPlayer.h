@@ -36,7 +36,7 @@ namespace rckid {
                 String ext = filesystem::ext(path);
                 filesystem::FileRead f = filesystem::fileRead(path);
                 if (ext == ".mp3") {
-                    ArenaGuard g{};
+                    NewArenaGuard g{};
                     MP3Stream mp3{f};
                     Player::run(path, mp3);
                 } else {

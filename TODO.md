@@ -1,6 +1,9 @@
 # TODO
 
+- the new simpler heap management does not work on the device, check why (?)
 - actually not even stack protection is working. Could be some mismatch there? 
+- test mp3, make less memory and test on device
+
 
 - bsod is not working on device (memoryReset & heap clearing leads to some error when using the writer (could it be heap allocation of the capture in there?))
 

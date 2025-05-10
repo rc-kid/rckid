@@ -16,6 +16,14 @@ namespace rckid {
 
     HeapChunk * freelist_ = nullptr;
 
+    /** Beginning of the stack used for stack protection check for stack size.
+     */
+#ifdef RCKID_BACKEND_FANTASY    
+    thread_local char ** stackStart_ = nullptr;
+#else
+    char ** stackStart_ = nullptr;
+#endif
+
     /** Heap allocated chunk.
      
         Chunk consists of header and body. Chunk header is 4 bytes long and is the chunk size (including the header). Since chunk sizes must be in multiples of 4, ths LSB (2 of them in fact) is free and is used to determine whether the chunk is allocated (0), or part of the freelist (1). When the chunk is allocated, its body is the user data, but when the chunk becomes part of the freelist, the body consists of a pointer to the previous and next chunks in the freelist.  
@@ -120,6 +128,7 @@ namespace rckid {
     /** Internal function that resets the entire memory (heap and arena). Use with extreme caution. Pretty much the only sensible thing to do after memoryReset is to show the blue screen of death.
      */
     void memoryReset() {
+        // reset the heap and arena pointers to the beginning of the memory        
         LOG(LL_HEAP, "Resetting memory");
         Heap::end_ = & __StackLimit;
         Arena::start_ = & __bss_end__;
@@ -203,8 +212,18 @@ namespace rckid {
         return ptr >= & __bss_end__ && ptr < Arena::end_;
     }
 
+
     void memoryInstrumentStackProtection() {
+#if (defined RCKID_ENABLE_STACK_PROTECTION)
         char * x = & __StackLimit;
+        // initialize the stack start
+#ifdef RCKID_BACKEND_FANTASY
+        // add some magic number to the stack address (this happens inside a function, not at the main level)
+        stackStart_ = & x + 0x80;
+#else
+        // on real devices, we know the stack end address precisely from the configuration/internals
+        stackStart_ = RCKID_STACK_END;
+#endif
 #ifdef __GNUC__        
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"        
@@ -218,15 +237,17 @@ namespace rckid {
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
+#endif
     }
 
+#if (defined RCKID_ENABLE_STACK_PROTECTION)
     void memoryCheckStackProtection() {
         char * x = & __StackLimit;
-        if ((size_t) &x < (size_t) & __StackLimit)
-            LOG(LL_ERROR, "Stack underflow");
-        if ((x[0] != 'R' || x[1] != 'C' || x[2] != 'k' || x[3] != 'i' || x[4] != 'd'))
-            LOG(LL_ERROR, "Stack corruption");
-        return;
+        if (stackStart_ == nullptr)
+            return;
+        size_t xd = reinterpret_cast<size_t>(stackStart_) - reinterpret_cast<size_t>(& x);
+        // check if our current stack is within the stack limit
+        ERROR_IF(error::StackProtectionFailure, (xd > RCKID_STACK_LIMIT_SIZE));
 #ifdef __GNUC__        
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Warray-bounds"
@@ -236,5 +257,6 @@ namespace rckid {
 #pragma GCC diagnostic pop
 #endif
     }
+#endif
 
 } // namespace rckid

@@ -22,6 +22,10 @@
     Raylib is used for rendering. For now, focus on native rendering only
 */
 
+#define RCKID_ENABLE_STACK_PROTECTION
+#define RCKID_STACK_LIMIT_SIZE 4000
+#define RCKID_MEMORY_SIZE (256 * 1024)
+
 /** Display width & height for the UI. 
  */
 #define RCKID_DISPLAY_WIDTH 320 

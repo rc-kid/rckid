@@ -58,8 +58,8 @@ namespace rckid::ui {
 
             Bitmap<ColorRGB> icon() const {
                 // when decoding the icon, create new arena to avoid fragmentation as the PNG buffer will be disable immediately after the decoding takes place
-                ArenaGuard g{};
-                return Bitmap<ColorRGB>{PNG::fromBuffer(icon_, iconSize_)};
+                NewArenaGuard g{};
+                return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(icon_, iconSize_))};
             }
 
         private:
