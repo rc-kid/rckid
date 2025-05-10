@@ -222,7 +222,7 @@ namespace rckid {
         stackStart_ = & x + 0x80;
 #else
         // on real devices, we know the stack end address precisely from the configuration/internals
-        stackStart_ = RCKID_STACK_END;
+        stackStart_ = reinterpret_cast<char**>(RCKID_STACK_END);
 #endif
 #ifdef __GNUC__        
 #pragma GCC diagnostic push

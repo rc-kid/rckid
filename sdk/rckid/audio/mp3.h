@@ -10,10 +10,13 @@ namespace rckid {
     class MP3Stream : public AudioStream {
     public:
         MP3Stream(ReadStream & input):
-            AudioStream{1152 * 2},
+            AudioStream{1152 * 4},
             in_{input}, 
             buffer_{new uint8_t[BUFFER_SIZE]},
             dec_{MP3InitDecoder()} {
+            // get next frame infor for sample rate
+            int32_t sw = ensureFrameInBuffer();
+            err_ = MP3GetNextFrameInfo(dec_, &fInfo_, buffer_ + sw);
         }
 
         ~MP3Stream() override {
@@ -52,12 +55,10 @@ namespace rckid {
 
     protected:
 
-        /** Decodes next frame in the mp3 stream and returns the number of samples read. Returning 0 signifies eof, or an error.
-         */
-        uint32_t decodeNextFrame(int16_t * out) {
+        int32_t ensureFrameInBuffer() {
             // we always start at the beginning of the buffer 
-            int sw = -1;
-            while (true) {
+            int32_t sw = -1;
+            while (! eof_) {
                 sw = MP3FindSyncWord(buffer_, bufferSize_);
                 // if we have found the sync word, progress to decoding
                 if (sw != -1)
@@ -68,9 +69,18 @@ namespace rckid {
                 // if nothing was read, we are done decoding
                 if (bufferSize_ == 0) {
                     eof_ = true;
-                    return 0;
+                    return -1;
                 }
             }
+            return sw;
+        }
+
+        /** Decodes next frame in the mp3 stream and returns the number of samples read. Returning 0 signifies eof, or an error.
+         */
+        uint32_t decodeNextFrame(int16_t * out) {
+            int32_t sw = ensureFrameInBuffer();
+            if (sw == -1)
+                return 0;
             LOG(LL_MP3, "Sync word at " << (int32_t)sw << ", bufferSize " << bufferSize_);
             uint8_t * buf;
             int remaining;

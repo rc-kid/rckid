@@ -1,13 +1,9 @@
 # TODO
 
-- the new simpler heap management does not work on the device, check why (?)
-- actually not even stack protection is working. Could be some mismatch there? 
-- test mp3, make less memory and test on device
+- mp3 playback is double rate-ish and very noisy in fantasy - only one audio can be played, then dead
 
 
-- bsod is not working on device (memoryReset & heap clearing leads to some error when using the writer (could it be heap allocation of the capture in there?))
-
-- finish mp3 player, figure out the audio pipeline with audiostreams etc. Maybe only allow playback of audiostteams and they can either refill the default audio buffer, or have their own buffer and do mixing, etc. Or maybe have audostream static buffer that will be used if audio stream is played on the hw? 
+- make less memory and test on device
 
 - add events for getting icon for files & on file selected for file browser
 - add actions for file browser such as rename, copy, mkdir, etc.  
