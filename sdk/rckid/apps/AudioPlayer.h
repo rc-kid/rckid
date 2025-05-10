@@ -35,6 +35,10 @@ namespace rckid {
                 LOG(LL_DEBUG, "AudioPlayer: starting playback of " << path);
                 String ext = filesystem::ext(path);
                 filesystem::FileRead f = filesystem::fileRead(path);
+                if (!f.good()) {
+                    LOG(LL_ERROR, "AudioPlayer: file not found " << path);
+                    return;
+                }
                 if (ext == ".mp3") {
                     NewArenaGuard g{};
                     MP3Stream mp3{f};
@@ -81,9 +85,14 @@ namespace rckid {
                 audioPlay(as_);
             }
 
+            ~Player() override {
+                audioStop();
+            }
+
             static bool run(String path, AudioStream & s) {
                 Player * p = new (Arena::alloc<Player>()) Player{path, s};
                 std::optional<bool> res = p->run();
+                delete p;
                 if (res.has_value())
                     return res.value();
                 return false;
@@ -94,7 +103,10 @@ namespace rckid {
         protected:
 
             void update() override {
-                // TODO
+                ui::App<bool>::update();
+                if (btnPressed(Btn::B)) {
+                    exit();
+                }
             }
         private:
             AudioStream & as_;

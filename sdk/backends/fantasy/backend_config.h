@@ -15,7 +15,9 @@
     - `sudo losetup -Pf sd.iso`
     - `sudo mount.exfat-fuse /dev/loop0p1 /mnt/rckid/sd`
 
-    Note that on WSL we must use the fuse driver as exfat is not supported by the kernel.
+    Note that on WSL we must use the fuse driver as exfat is not supported by the kernel. To detach, run:ADJ_ESTERROR
+    - `sudo umount /mnt/rckid/sd`
+    - `sudo losetup -d /dev/loop0`
 
     \section Graphics
 
