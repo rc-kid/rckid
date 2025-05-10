@@ -71,7 +71,7 @@ namespace rckid {
                     return 0;
                 }
             }
-            LOG(LL_MP3, "Sync word at " << sw << ", bufferSize " << bufferSize_);
+            LOG(LL_MP3, "Sync word at " << (int32_t)sw << ", bufferSize " << bufferSize_);
             uint8_t * buf;
             int remaining;
             // we have found sync word, try decoding starting from the sync word
@@ -81,7 +81,7 @@ namespace rckid {
                 LOG(LL_MP3, "Before: " << platform::hash(buffer_, bufferSize_));
                 err_ = MP3Decode(dec_, & buf,  & remaining, out, 0);
                 LOG(LL_MP3, "      : " << platform::hash(buffer_, bufferSize_));
-                LOG(LL_MP3, "Decoding: " << err_ << " buffer hash " << platform::hash(buffer_ + sw, bufferSize_ - sw - remaining) << ", output hash " << platform::hash((uint8_t *)out, 1152 * 4) << " remaining: " << remaining << ", sw: " << sw << ", bs: " << bufferSize_);
+                LOG(LL_MP3, "Decoding: " << (int32_t)err_ << " buffer hash " << platform::hash(buffer_ + sw, bufferSize_ - sw - remaining) << ", output hash " << platform::hash((uint8_t *)out, 1152 * 4) << " remaining: " << (int32_t)remaining << ", sw: " << (int32_t)sw << ", bs: " << bufferSize_);
                 // no error, we are done
                 if (err_ == ERR_MP3_NONE)
                     break;
@@ -91,7 +91,7 @@ namespace rckid {
                         continue;
                 }
                 ++frameErrors_;
-                LOG(LL_MP3, "frame error: " << err_ << ", remaining " << remaining);
+                LOG(LL_MP3, "frame error: " << (int32_t)err_ << ", remaining " << (int32_t)remaining);
                 //return 0;
                 if (remaining == static_cast<int>(bufferSize_ - sw))
                     remaining -= 3; // MP3 sync word length 

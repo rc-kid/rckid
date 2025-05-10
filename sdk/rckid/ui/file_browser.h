@@ -91,17 +91,17 @@ namespace rckid::ui {
         }
 
         Bitmap<ColorRGB> getIconFor(filesystem::Entry const & entry) {
-            ArenaGuard g{};
+            NewArenaGuard g{};
             if (entry.isFolder()) {
-                return Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::folder)};
+                return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_default_64::folder))};
             } else {
                 String ext = filesystem::ext(entry.name());
                 if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
-                    return Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::paint_palette)};
+                    return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_default_64::paint_palette))};
                 else if (ext == ".mp3") 
-                    return Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::music_note)};
+                    return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_default_64::music_note))};
                 else
-                    return Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::notes)};
+                    return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_default_64::notes))};
             }
         }
 

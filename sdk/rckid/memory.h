@@ -2,6 +2,11 @@
 
 #include "error.h"
 
+#define ARENA(...) [&]() { \
+    rckid::ArenaAllocationGuard __guard; \
+    return __VA_ARGS__; \
+}()
+
 
 namespace rckid {
 
@@ -37,13 +42,21 @@ namespace rckid {
          */
         static bool contains(void const * ptr);
 
+        static bool isDefaultTarget() { return default_; }
+
     private:
         friend class Arena;
         friend uint32_t memoryFree();
         friend void memoryReset(); // internal
 
+        template<typename T>
+        friend void memorySetDefaultTarget();
+    
         // pointer to end of heap so that we can detect OOME during allocations
         static char * end_;
+
+        // is heap default allocation target
+        static inline bool default_ = true;
 
     }; // rckid::Heap
 
@@ -129,6 +142,8 @@ namespace rckid {
          */
         static uint32_t currentSize() { return static_cast<uint32_t>(end_ - start_); }
 
+        static bool isDefaultTarget() { return ! Heap::default_; }
+
     private:
         friend class Heap;
         friend uint32_t memoryFree();
@@ -138,16 +153,6 @@ namespace rckid {
         static char * end_;
 
     }; // rckid::Arena
-
-    class ArenaGuard {
-    public:
-        ArenaGuard() { Arena::enter(); }
-        ~ArenaGuard() { Arena::leave(); }
-
-        ArenaGuard(ArenaGuard const &) = delete;
-        ArenaGuard(ArenaGuard &&) = delete;
-    
-    }; // rckid::ArenaGuard
 
     /** Returns the number of free memory, i.e. the unclaimed space between arena and heap. 
      
@@ -164,10 +169,60 @@ namespace rckid {
 
     /** Verifies that the stack protection magic numbers are intact and raises a fatal error if corrupted. This function should be periodically called to be effective.
      */
-    void memoryCheckStaticProtection();
+#if (defined RCKID_ENABLE_STACK_PROTECTION)
+    void memoryCheckStackProtection();
+#else
+    inline void memoryCheckStackProtection() {}
+#endif
 
     /** Returns true if the memory comes from immutable region (ROM on the device)
      */
     bool memoryIsImmutable(void const * ptr);
+
+    template<typename T>
+    void memorySetDefaultTarget();
+
+    template<>
+    inline void memorySetDefaultTarget<Heap>() {
+        Heap::default_ = true;
+    }
+
+    template<>
+    inline void memorySetDefaultTarget<Arena>() {
+        Heap::default_ = false;
+    }
+
+    class NewArenaGuard {
+        public:
+            NewArenaGuard() { Arena::enter(); }
+            ~NewArenaGuard() { Arena::leave(); }
+    
+            NewArenaGuard(NewArenaGuard const &) = delete;
+            NewArenaGuard(NewArenaGuard &&) = delete;
+        
+    }; // rckid::NewArenaGuard
+    
+
+    /** Guards arena allocation as default method. 
+     */
+    class ArenaAllocationGuard {
+        public:
+            ArenaAllocationGuard():
+                restoreHeap_{Heap::isDefaultTarget()} {
+                memorySetDefaultTarget<Arena>();
+            }
+    
+            ~ArenaAllocationGuard() {
+                if (restoreHeap_)
+                    memorySetDefaultTarget<Heap>();
+            }
+    
+            ArenaAllocationGuard(ArenaAllocationGuard const &) = delete;
+            ArenaAllocationGuard(ArenaAllocationGuard &&) = delete;
+        private:
+            bool const restoreHeap_; 
+        }; // rckid::ArenaAllocationGuard
+    
+
 
 } // namespace

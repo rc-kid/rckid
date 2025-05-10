@@ -4,12 +4,7 @@
 
 namespace rckid {
 
-    // forward declaration for the memor reset function
-    void memoryReset();
-
     void bsod(uint32_t error, uint32_t line, char const * file) {
-        // reset the memory so that we have enough space
-        memoryReset();
         // print the error to debug console
         LOG(LL_ERROR, "Fatal error: " << error << " (arg " << error::arg() << ")");
         if (file != nullptr) {
@@ -22,7 +17,6 @@ namespace rckid {
         RenderableBitmap<ColorRGB> fb{RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT};
         fb.fill(ColorRGB::RGB(0, 0, 255));
         Font f = Font::fromROM<assets::Iosevka16>();
-        /*
         fb.text(10, 10, f, ColorRGB::RGB(255, 255, 255))
             << ":(  Error: " << error << "\n"
             << "    Arg:   " << error::arg() << "\n\n"
@@ -30,7 +24,6 @@ namespace rckid {
             << "    Line:  " << line << "\n\n"
             << "    Extra: " << ((error::extras() != nullptr) ? error::extras() : "-") << "\n\n"
             << "    Long press home button to reset.";
-        */
         fb.initialize();
         fb.render();
         while (true) {
