@@ -41,7 +41,7 @@ namespace rckid::ui {
             Adds stuff like battery, etc. 
          */
         void update() override {
-            text(0,0) << "RCKid";
+            text(0,0) << memoryFree() << " ";
         }
 
         /** Unlike normal widgets,  */

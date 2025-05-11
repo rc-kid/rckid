@@ -6,6 +6,8 @@
 
 #include <backend_config.h>
 
+#include "utils/funptr.h"
+
 /** \page sdk RCKid SDK
  
     RCKid provides custom API to abstract from the hardware details of the console and to provide common functionality useful for 

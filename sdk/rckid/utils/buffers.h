@@ -21,7 +21,9 @@ namespace rckid {
         }
 
         void swap() {
-            std::swap(front_, back_);
+            T * tmp = front_;
+            front_ = back_;
+            back_ = tmp;
         }
 
         void resize(uint32_t size) {
@@ -138,6 +140,11 @@ namespace rckid {
         uint32_t size() const { return size_; }
         uint32_t capacity() const { return capacity_; }
 
+        void setSize(uint32_t size) {
+            ASSERT(size <= capacity_);
+            size_ = size;
+        }
+
         T const * begin() const { return data_; }
         T const * end() const { return data_ + size_; }
 
@@ -188,7 +195,7 @@ namespace rckid {
                 grow(size_ == 0 ? 16 : size_ * 2);
             data_[size_++] = value;
         }
-        
+
     protected:
 
         void resize(uint32_t newCapacity) {

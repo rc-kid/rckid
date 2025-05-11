@@ -147,8 +147,18 @@ namespace rckid {
         if (numBytes < 12)
             numBytes = 12;
         HeapChunk * freeChunk = freelist_;
+        HeapChunk * best = nullptr;
         // see if we can use a chunk from freelist
         while (freeChunk != nullptr) {
+            if (freeChunk->size() == numBytes) {
+                best = freeChunk;
+                break;
+            } else if (freeChunk->size() > numBytes) {
+                if (best == nullptr || freeChunk->size() < best->size()) {
+                    best = freeChunk;
+                }
+            }
+            /*
             if (freeChunk->size() >= numBytes) {
                 ASSERT(freeChunk->isFree());
                 freeChunk->markAsAllocated();
@@ -156,7 +166,16 @@ namespace rckid {
                 LOG(LL_HEAP, "Allocating " << numBytes << " bytes from " << freeChunk->ptr() << " chunk size " << freeChunk->size());
                 return freeChunk->ptr();
             }
+            */
             freeChunk = freeChunk->next();
+        }
+        if (best != nullptr) {
+            // we have found a chunk in the freelist, detach it and return it
+            ASSERT(best->isFree());
+            best->markAsAllocated();
+            detachChunk(best);
+            LOG(LL_HEAP, "Allocating " << numBytes << " bytes from " << best->ptr() << " chunk size " << best->size());
+            return best->ptr();
         }
         // we haven't found anything in the freelist, use the end of the heap to create one and advance the heap end
         end_ -= numBytes;
@@ -176,6 +195,7 @@ namespace rckid {
         ASSERT(Heap::contains(ptr)); 
         // deal with the chunk
         HeapChunk * chunk = (HeapChunk *)((char*) ptr - 4);
+        LOG(LL_HEAP, "Freeing chunk " << ptr << " (size " << chunk->size() << ")");
         ASSERT(!chunk->isFree());
         // if this is the last allocated memory chunk, simply update the heap end instead of putting the chunk to a freelist. This is a transitive operation, i.e. if the chunk after the current one is free chunk, reclaim its memory too
         if (chunk->start() == end_) {

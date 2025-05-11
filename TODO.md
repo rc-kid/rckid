@@ -1,5 +1,35 @@
 # TODO
 
+LL_HEAP: Heap end is now at 536960276
+LL_HEAP: Freeing chunk 537016788 (size 28)
+LL_HEAP: Freeing standalone chunk 537016788 (size 28)
+LL_HEAP: Heap end is now at 536960276
+LL_INFO: Form: destructor: 537141116
+LL_INFO: front: 537130928
+LL_INFO: back: 537130444
+LL_HEAP: Freeing chunk 537130444 (size 484)
+LL_HEAP: Freeing standalone chunk 537130444 (size 484)
+LL_HEAP: Heap end is now at 536960276
+LL_HEAP: Freeing chunk 537130444 (size 484)
+LL_ERROR: Fatal error: 3 (arg 0)
+LL_ERROR: Line:        199
+LL_ERROR: File:        /home/peta/devel/rckid/sdk/rckid/memory.cpp
+LL_ERROR: Fatal error: 3 (arg 0)
+LL_ERROR: Line:        184
+LL_ERROR: File:        /home/peta/devel/rckid/sdk/rckid/memory.cpp
+LL_ERROR: Fatal error: 3 (arg 0)
+LL_ERROR: Line:        184
+LL_ERROR: File:        /home/peta/devel/rckid/sdk/rckid/memory.cpp
+LL_ERROR: Fatal error: 3 (arg 0)
+LL_ERROR: Line:        184
+
+- this looks like some weird corruption - at some points I saw twice calls to form destructor, then I saw from & back being the same values
+- and this also looks weird, not sure how at all possible - could it really be memory corruption? 
+
+- we run out of memory on device very soon and bsod does not work (!)
+- remove memory allocation from callback function on display
+- improve memory allocator (heap)
+- verify other std::string uses
 - mp3 playback is double rate-ish and very noisy in fantasy - only one audio can be played, then dead
 
 
