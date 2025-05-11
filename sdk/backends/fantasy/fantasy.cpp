@@ -218,6 +218,11 @@ namespace rckid {
             LOG(LL_ERROR, flashIso.value() << " file not found, cartridge storage not present");
         }
 #endif
+
+        // initialize the audio device
+        InitAudioDevice();
+
+
         systemMalloc_ = false;
 
 
@@ -501,7 +506,7 @@ namespace rckid {
         int16_t * stereo = reinterpret_cast<int16_t*>(buffer);
         while (samples-- != 0) {
             if (audio::bufferI >= audio::bufferSize) {
-                audio::bufferSize = audio::cb(audio::buffer->front(), static_cast<uint32_t>(audio::buffer->size()) / 2);
+                audio::bufferSize = audio::cb(audio::buffer->front(), static_cast<uint32_t>(audio::buffer->size()) / 2) * 2;
                 audio::bufferI = 0;
                 audio::buffer->swap();
             }
@@ -567,23 +572,24 @@ namespace rckid {
             audioStop();
         {
             SystemMallocGuard g;
-            InitAudioDevice();
+            audio::cb = cb;
+            audio::buffer = & buffer;
+            audio::stream = LoadAudioStream(sampleRate, 16, 2);
+            SetAudioStreamCallback(audio::stream, audioStreamRefill);   
+            audio::mode = audio::Mode::Play;
+            PlayAudioStream(audio::stream);
         }
-        audio::cb = cb;
-        audio::buffer = & buffer;
-        audio::stream = LoadAudioStream(sampleRate, 16, 2);
-        SetAudioStreamCallback(audio::stream, audioStreamRefill);   
-        audio::mode = audio::Mode::Play;
-        PlayAudioStream(audio::stream);
-    }
+    }   
 
     void audioPause() {
         memoryCheckStackProtection();
         if (!audioPaused()) {
             switch (audio::mode) {
-                case audio::Mode::Play:
+                case audio::Mode::Play: {
+                    SystemMallocGuard g;
                     PauseAudioStream(audio::stream);
                     break;
+                }
                 case audio::Mode::Record:
                     UNIMPLEMENTED;
                 case audio::Mode::Off:
@@ -594,9 +600,19 @@ namespace rckid {
 
     void audioResume() {
         memoryCheckStackProtection();
-        if (audioPaused())
-            // it's toggle in raylib
-            audioPause();
+        if (audioPaused()) {
+            switch (audio::mode) {
+                case audio::Mode::Play: {
+                    SystemMallocGuard g;
+                    ResumeAudioStream(audio::stream);
+                    break;
+                }
+                case audio::Mode::Record:
+                    UNIMPLEMENTED;
+                case audio::Mode::Off:
+                    break;
+            }
+        }
     }
 
     void audioStop() {

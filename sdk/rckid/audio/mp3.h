@@ -24,7 +24,9 @@ namespace rckid {
             MP3FreeDecoder(dec_);
         }
 
-        uint32_t refillSamples(int16_t * buffer, uint32_t numSamples) override {
+        uint32_t refillSamples(int16_t * buffer, [[maybe_unused]] uint32_t numSamples) override {
+            // we don't expect to be called with less free space than one full frame
+            ASSERT(numSamples >= 1152);
             uint32_t res = 0;
             while (res == 0) {
                 res = decodeNextFrame(buffer);

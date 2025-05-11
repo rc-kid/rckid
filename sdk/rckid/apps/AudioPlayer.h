@@ -104,9 +104,22 @@ namespace rckid {
 
             void update() override {
                 ui::App<bool>::update();
-                if (btnPressed(Btn::B)) {
-                    exit();
+                // when back or down is pressed, return from the player mode
+                if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                    btnClear(Btn::B);
+                    btnClear(Btn::Down);
+                    exit(false);
                 }
+                // btn up, or button A is audio pause
+                if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                    if (audioPaused())
+                        audioResume();
+                    else
+                        audioPause();
+                }
+                // btn left & right is immediate return
+                if (!audioPlayback())
+                    exit(true);
             }
         private:
             AudioStream & as_;
