@@ -30,7 +30,6 @@ LL_ERROR: Line:        184
 - remove memory allocation from callback function on display
 - improve memory allocator (heap)
 - verify other std::string uses
-- mp3 playback is double rate-ish and very noisy in fantasy - only one audio can be played, then dead
 
 
 - make less memory and test on device
@@ -61,6 +60,7 @@ LL_ERROR: Line:        184
 
 - add square and white noise waveforms
 - should audio volume be uint8, or something else? 
+- in fantasy, add dedicated thread for audio buffer refill so that the audio is clean
 
 ## Graphics
 

@@ -209,6 +209,10 @@ namespace rckid {
 
      */
 
+    /** Audio callback to fill/empty audio buffers during playback/recording. During playback, stereo buffer is expected, and hence the second input argument is number of stereo samples and the rerurned value is the number of stereo samples written. 
+     
+        TODO recording
+     */
     using AudioCallback = std::function<uint32_t(int16_t *, uint32_t)>;
 
     /** Returns true if headphones are connected. 
