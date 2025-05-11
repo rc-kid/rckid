@@ -4,6 +4,7 @@
 #include "../../ui/tilemap.h"
 #include "../../ui/geometry.h"
 #include "../../utils/interpolation.h"
+#include "../../utils/string.h"
 #include "../../assets/tiles/System24.h"
 
 namespace rckid {
@@ -13,7 +14,7 @@ namespace rckid {
       
         Uses a simple tilemap and a sprite for the selection.  
      */
-    class TextDialog : public ui::App<std::string> {
+    class TextDialog : public ui::App<String> {
     public:
 
         enum class KeyboardType {
@@ -24,7 +25,7 @@ namespace rckid {
         }; // TextInput::KeyboardType
 
         TextDialog():
-            ui::App<std::string>{Rect::XYWH(4, 144, 312, 96)} {
+            ui::App<String>{Rect::XYWH(4, 144, 312, 96)} {
                 using namespace ui;
                 tileMap_ = new ui::Tilemap<Tile<12, 24, Color256>>{26, 4, assets::System24, palette_};
                 g_.add(tileMap_);
@@ -63,7 +64,7 @@ namespace rckid {
             selRect_->setPos(x, y);
 
             // check any keyboard actions
-            ui::App<std::string>::update();
+            ui::App<String>::update();
             if (! a_.running()) {
                 if (btnDown(Btn::Right)) {
                     select_.x += 2;
@@ -91,7 +92,7 @@ namespace rckid {
         }
 
         void insertChar(char c) {
-            text_.insert(cursor_, 1, c);
+            text_.insert(cursor_, c);
             if (keyboardType_ == KeyboardType::FirstUpper)
                 keyboardType_ = KeyboardType::LowerCase;
             cursorRight();
@@ -108,7 +109,7 @@ namespace rckid {
         }
 
         void cursorRight() {
-            if (cursor_ >= static_cast<int>(text_.size()))
+            if (cursor_ > static_cast<int>(text_.size()))
                 return;
             ++cursor_;
             if (cursor_ - left_ > 24)
@@ -211,8 +212,8 @@ namespace rckid {
 
         Timer a_{250};
 
-        std::string text_;
-        std::string placeholder_;
+        String text_;
+        String placeholder_;
 
         KeyboardType keyboardType_ = KeyboardType::UpperCase;
         KeyboardType keyboardBackup_; 

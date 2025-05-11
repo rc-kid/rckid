@@ -124,6 +124,25 @@ namespace rckid {
 
         void grow(uint32_t size) { str_.grow(size + 1); }
 
+        void erase(uint32_t index, uint32_t length) {
+            ASSERT(index + length <= size());
+            if (index + length == size()) {
+                str_[index] = '\0';
+            } else {
+                memmove(str_.data() + index, str_.data() + index + length, str_.size() - index - length + 1);
+            }
+            str_.setSize(str_.size() - length);
+        }
+
+        void insert(uint32_t index, char c) {
+            ASSERT(index <= size());
+            uint32_t oldSize = str_.size();
+            str_.grow(oldSize + 1);
+            memmove(str_.data() + index + 1, str_.data() + index, oldSize - index);
+            str_[index] = c;
+            str_.setSize(oldSize + 1);
+        }
+
         bool endsWith(char other) const {
             if (size() == 0)
                 return false;
@@ -142,6 +161,11 @@ namespace rckid {
     }; // rckid::String
 
     // support for the writer interface
+    inline Writer operator<<(Writer && w, String const & s) {
+        w << s.c_str();
+        return std::move(w);
+    }
+
     inline Writer & operator<<(Writer & w, String const & s) {
         w << s.c_str();
         return w;

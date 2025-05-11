@@ -18,12 +18,15 @@ namespace rckid::ui {
             Form(Rect::Centered(width, height, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT)) {
         }
 
-        Form(Rect rect): Panel{rect} {
-            buffer_ = new DoubleBuffer<uint16_t>{RCKID_DISPLAY_HEIGHT};
+        Form(Rect rect): 
+            Panel{rect},
+            buffer_{RCKID_DISPLAY_HEIGHT} {
         }
 
         ~Form() override {
-            delete buffer_;
+            LOG(LL_INFO, "Form: destructor: " << this);
+            LOG(LL_INFO, "front: " << buffer_.front());
+            LOG(LL_INFO, "back: " << buffer_.back());
         }
 
         void initialize() {
@@ -39,22 +42,22 @@ namespace rckid::ui {
          */
         void render() {
             column_ = width() - 1;
-            renderColumn(column_, buffer_->front(), 0, height());
-            renderColumn(column_ - 1, buffer_->back(), 0, height());
+            renderColumn(column_, buffer_.front(), 0, height());
+            renderColumn(column_ - 1, buffer_.back(), 0, height());
             displayWaitVSync();
-            displayUpdate(buffer_->front(), height(), [&]() {
+            displayUpdate(buffer_.front(), height(), [&]() {
                 if (--column_ < 0)
                     return;
-                buffer_->swap();
-                displayUpdate(buffer_->front(), height());
+                buffer_.swap();
+                displayUpdate(buffer_.front(), height());
                 if (column_ > 0)
-                    renderColumn(column_ - 1, buffer_->back(), 0, height());
+                    renderColumn(column_ - 1, buffer_.back(), 0, height());
             });
         }
 
     protected:
 
-        DoubleBuffer<uint16_t> * buffer_;
+        DoubleBuffer<uint16_t> buffer_;
         Coord column_;
     }; 
 

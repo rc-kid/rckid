@@ -79,7 +79,7 @@ namespace rckid::json {
 
     Object parse(ReadStream && stream) {
         // TODO implement the parser
-
+        UNIMPLEMENTED;
     }
 
     /** Parses JSON object from given buffer. Internally wraps the buffer in a read stream and calls the streamed parser.

@@ -6,10 +6,16 @@ TEST(string, fromLiteral) {
     using namespace rckid;
     char const * x = "Hello";
     String s{x};
+#if defined(RCKID_BACKEND_FANTASY)
+    EXPECT(s.size() == 5);
+    EXPECT(s.capacity() == 5);
+    EXPECT(s.immutable() == false);
+#else
     EXPECT(s.size() == 5);
     EXPECT(s.capacity() == 0);
     EXPECT(s.immutable() == true);
     EXPECT(s.c_str() == x);
+#endif
     EXPECT(s[0] == 'H');
     EXPECT(s[1] == 'e');
     EXPECT(s[2] == 'l');
@@ -47,4 +53,49 @@ TEST(string, shrink) {
     EXPECT(s[3] == 'l');
     EXPECT(s[4] == 'o');
     EXPECT(s[5] == '\0');
+}
+
+TEST(string, insertErase) {
+    using namespace rckid;
+    String s = "hello";
+    s.insert(0, 'H');
+    EXPECT(s == "Hhello");
+    s.erase(1,1);
+    EXPECT(s == "Hello");
+}
+
+TEST(string, insertInEmpty) {
+    using namespace rckid;
+    String s = "";
+    s.insert(0, 'H');
+    EXPECT(s == "H");
+    s.insert(1, 'e');
+    EXPECT(s == "He");
+    s.insert(2, 'l');
+    EXPECT(s == "Hel");
+    s.insert(3, 'l');
+    EXPECT(s == "Hell");
+    s.insert(4, 'o');
+    EXPECT(s == "Hello");
+}
+
+TEST(string, insertInEmptyFromStart) {
+    using namespace rckid;
+    String s = "";
+    s.insert(0, 'o');
+    EXPECT(s == "o");
+    s.insert(0, 'l');
+    EXPECT(s == "lo");
+    s.insert(0, 'l');
+    EXPECT(s == "llo");
+    s.insert(0, 'e');
+    EXPECT(s == "ello");
+    s.insert(0, 'H');
+    EXPECT(s == "Hello");
+    s.erase(2, 3);
+    EXPECT(s == "He");
+    s = "Hello";
+    EXPECT(s == "Hello");
+    s.erase(1,3);
+    EXPECT(s == "Ho");
 }
