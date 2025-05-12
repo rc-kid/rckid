@@ -71,6 +71,24 @@ The SDK library is at the core of RCKid as it provides an abstraction layer over
 
 > For now, fantasy console via raylib (Windows and Linux), RCKid mk3 (RP2350) and RCKid mk2 (RP2040) are supported. Once mk3 hardware is available the mk2 version will be retired. 
 
+
+## Debugging on the Device
+
+For devel-server with OpenOCD installed, wires on the back connector for mkII are: 
+    
+    green | empty | yellow | blue
+
+Then run:
+
+    openocd -f interface/raspberrypi-swd.cfg -f target/rp2040.cfg
+
+And finally run gdb:
+
+    gdb app.elf
+    target remote :3333
+
+(from https://betanet.net/view-post/using-openocd-on-raspberry-pi-4-a)
+
 ## Attribution
 
 - doxygen theme: https://github.com/jothepro/doxygen-awesome-css

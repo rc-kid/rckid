@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 
 /** Literal constructors for unsigned types with varying sizes. 
  */
