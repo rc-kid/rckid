@@ -100,13 +100,10 @@ TEST(memory, nonImmediateDeleteDeallocates) {
     EXPECT(rckid::memoryFree() == freeHeap);
 }
 
-#ifdef RCKID_BACKEND_FANTASY
-extern thread_local bool systemMalloc_;
-#endif
 
 TEST(memory, ownHeapManagementEnabled) {
 #ifdef RCKID_BACKEND_FANTASY
-    systemMalloc_ = false;
+    rckid::SystemMallocGuard::disable();
 #endif
     using namespace rckid;
     uint8_t * a = (uint8_t *)malloc(128);
@@ -118,6 +115,7 @@ TEST(memory, ownHeapManagementEnabled) {
     EXPECT(! Arena::contains(b));
     free(a);
     delete [] b;
+    rckid::SystemMallocGuard::enable();
 }
 
 /*

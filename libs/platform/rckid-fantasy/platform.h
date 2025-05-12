@@ -7,3 +7,7 @@
 #define PLATFORM_NO_STDSTRING
 
 #include "../pc/platform.h"
+
+// generally useful, particularly for the host filesystem
+#include <fstream>
+#include <filesystem>

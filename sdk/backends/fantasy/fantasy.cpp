@@ -16,14 +16,6 @@ namespace rckid {
     extern thread_local char ** stackStart_;
 }
 
-/** Start in system malloc so that any pre-main initialization does not pollute rckid's heap. 
- 
-    The code below replaces malloc and free functions with own versions that depending the flag either use system malloc, or rckid's heap allocator, which can be used for tracking memory footprint of applications even in the fantasy backend setting. 
-
-    TODO that this only works on linux now - replacing system malloc on windows does not seem to be as easy. 
- */
-thread_local bool systemMalloc_ = true;
-
 #ifndef _WIN32
 extern "C" {
     extern void *__libc_malloc(size_t);
@@ -31,7 +23,7 @@ extern "C" {
 
     //depending on whether we are in system malloc, or not use libc malloc, or RCKid's heap
     void * malloc(size_t numBytes) {
-        if (systemMalloc_)
+        if (rckid::SystemMallocGuard::isDefault())
             return __libc_malloc(numBytes);
         else if (rckid::Heap::isDefaultTarget())
             return rckid::Heap::allocBytes(numBytes);
@@ -125,29 +117,17 @@ namespace rckid {
         void initialize();
     }
 
-    class SystemMallocGuard {
-    public:
-        SystemMallocGuard():
-            old_{systemMalloc_} { 
-            systemMalloc_ = true;
-        }
-        ~SystemMallocGuard() { 
-            systemMalloc_ = old_;
-        }
-
-        bool old_;
-    }; 
-
     void fatalError(uint32_t error, uint32_t line, char const * file) {
         // disable stack protection (in case we bailed out because of the stack)
         stackStart_ = nullptr;
         // close the SD and flash files
-        systemMalloc_ = true;
-        if (sd::iso_.good())
-            sd::iso_.close();
-        if (flash::iso_.good())
-            flash::iso_.close();
-        systemMalloc_ = false;
+        {
+            SystemMallocGuard g_;
+            if (sd::iso_.good())
+                sd::iso_.close();
+            if (flash::iso_.good())
+                flash::iso_.close();
+        }
         // reset the memory so that we have enough space
         memoryReset();
         // finally, go for BSOD
@@ -156,16 +136,17 @@ namespace rckid {
 
     Writer debugWrite() {
         return Writer([](char c) {
+            SystemMallocGuard g;
             std::cout << c << std::flush;
         });
     }
 
     uint8_t debugRead(bool echo) {
         while (true) {
-            systemMalloc_= true;
+            SystemMallocGuard::enable();
             PollInputEvents();
             int x = GetCharPressed();
-            systemMalloc_ = false;
+            SystemMallocGuard::disable();
             if (x != 0) {
                 if (echo)
                     std::cout << static_cast<char>(x) << std::flush;
@@ -175,7 +156,7 @@ namespace rckid {
     }
 
     void initialize(int argc, char * argv[]) {
-        systemMalloc_ = true;
+        SystemMallocGuard::enable();
         memoryInstrumentStackProtection();
         InitWindow(640, 480, "RCKid");
         display::img = GenImageColor(RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT, BLACK);
@@ -186,7 +167,9 @@ namespace rckid {
         Args::Arg<std::string> flashIso{"flash", "flash.iso"};
         Args::parse(argc, argv, { sdIso, flashIso });
 
-#ifndef RCKID_FANTASY_FS_DIRECT
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        UNIMPLEMENTED;
+#else
         // see if there is sd.iso file so that we can simulate SD card
         sd::iso_.open(sdIso.value(), std::ios::in | std::ios::out | std::ios::binary);
         if (sd::iso_.is_open()) {
@@ -222,9 +205,7 @@ namespace rckid {
         // initialize the audio device
         InitAudioDevice();
 
-
-        systemMalloc_ = false;
-
+        SystemMallocGuard::disable();
 
         filesystem::initialize();
         // mark that we are initialized and the graphics & sound should be used
@@ -232,7 +213,7 @@ namespace rckid {
     }
 
     void initializeNoWindow([[maybe_unused]] int argc, [[maybe_unused]] char * argv[]) {
-        systemMalloc_ = false;
+        SystemMallocGuard::disable();
     }
 
     void tick() {

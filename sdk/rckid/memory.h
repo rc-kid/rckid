@@ -7,7 +7,6 @@
     return __VA_ARGS__; \
 }()
 
-
 namespace rckid {
 
     /** Heap allocation and management. 
@@ -221,8 +220,32 @@ namespace rckid {
             ArenaAllocationGuard(ArenaAllocationGuard &&) = delete;
         private:
             bool const restoreHeap_; 
-        }; // rckid::ArenaAllocationGuard
-    
+    }; // rckid::ArenaAllocationGuard
 
+#ifdef RCKID_BACKEND_FANTASY
+    class SystemMallocGuard {
+    public:
+        SystemMallocGuard():
+            old_{systemMalloc_} { 
+            systemMalloc_ = true;
+        }
+        ~SystemMallocGuard() { 
+            systemMalloc_ = old_;
+        }
+
+        static bool isDefault() { return systemMalloc_; }
+
+        static void enable() { systemMalloc_ = true; }
+        static void disable() { systemMalloc_ = false; }
+
+    private:
+        bool old_;
+        /** Start in system malloc so that any pre-main initialization does not pollute rckid's heap. 
+         
+            The code below replaces malloc and free functions with own versions that depending the flag either use system malloc, or rckid's heap allocator, which can be used for tracking memory footprint of applications even in the fantasy backend setting. 
+        */
+        static inline thread_local bool systemMalloc_ = true;
+    }; 
+#endif    
 
 } // namespace

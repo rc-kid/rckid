@@ -140,6 +140,7 @@ namespace rckid {
     }
 
     void * Heap::allocBytes(uint32_t numBytes) {
+        memoryCheckStackProtection();
         // we only allow total number of bytes reserved (including the header) to be divisible by 4, bump the number of bytes here accordingly
         numBytes = numBytes + sizeof(ChunkHeader);
         if ((numBytes & 3) != 0)
@@ -189,6 +190,7 @@ namespace rckid {
     }
 
     void Heap::free(void * ptr) {
+        memoryCheckStackProtection();
         // deleting nullptr is noop        
         if (ptr == nullptr)
             return;
@@ -233,6 +235,13 @@ namespace rckid {
     }
 
 
+#ifdef __GNUC__        
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"        
+#pragma GCC diagnostic ignored "-Wdangling-pointer"        
+#pragma GCC diagnostic ignored "-Wstringop-overflow"        
+#endif
+
     void memoryInstrumentStackProtection() {
 #if (defined RCKID_ENABLE_STACK_PROTECTION)
         char * x = & __StackLimit;
@@ -244,21 +253,18 @@ namespace rckid {
         // on real devices, we know the stack end address precisely from the configuration/internals
         stackStart_ = reinterpret_cast<char**>(RCKID_STACK_END);
 #endif
-#ifdef __GNUC__        
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Warray-bounds"        
-#pragma GCC diagnostic ignored "-Wstringop-overflow"        
-#endif
         x[0] = 'R';
         x[1] = 'C';
         x[2] = 'k';
         x[3] = 'i';
         x[4] = 'd';
+#endif
+    }
+
 #ifdef __GNUC__
 #pragma GCC diagnostic pop
 #endif
-#endif
-    }
+    
 
 #if (defined RCKID_ENABLE_STACK_PROTECTION)
     void memoryCheckStackProtection() {
