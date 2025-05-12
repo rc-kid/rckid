@@ -23,12 +23,6 @@ namespace rckid::ui {
             buffer_{RCKID_DISPLAY_HEIGHT} {
         }
 
-        ~Form() override {
-            LOG(LL_INFO, "Form: destructor: " << this);
-            LOG(LL_INFO, "front: " << buffer_.front());
-            LOG(LL_INFO, "back: " << buffer_.back());
-        }
-
         void initialize() {
             displaySetRefreshDirection(DisplayRefreshDirection::ColumnFirst);
             displaySetUpdateRegion(rect());
@@ -45,7 +39,7 @@ namespace rckid::ui {
             renderColumn(column_, buffer_.front(), 0, height());
             renderColumn(column_ - 1, buffer_.back(), 0, height());
             displayWaitVSync();
-            displayUpdate(buffer_.front(), height(), [&]() {
+            displayUpdate(buffer_.front(), height(), [&](){
                 if (--column_ < 0)
                     return;
                 buffer_.swap();

@@ -24,6 +24,8 @@ namespace rckid {
             ASSERT(action_ != nullptr);
             return action_(payload_, std::forward<Args>(args)...);
         }
+
+        operator bool() const { return valid(); }
     
     private:
         Ret (*action_)(void*, Args...);

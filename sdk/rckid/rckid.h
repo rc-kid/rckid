@@ -3,10 +3,7 @@
 #include <platform.h>
 #include <platform/writer.h>
 
-
 #include <backend_config.h>
-
-#include "utils/funptr.h"
 
 /** \page sdk RCKid SDK
  

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <functional>
 #include <platform/utils.h>
 
 #include "rckid/rckid.h"
