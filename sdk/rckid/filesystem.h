@@ -1,4 +1,5 @@
 #pragma once
+
 #include "FatFS/ff.h"
 #include "littlefs/lfs.h"
 
@@ -22,7 +23,7 @@ namespace rckid::filesystem {
         FAT32,
         exFAT,
         LittleFS, 
-        Unrecognized
+        Unrecognized,
     };
 
     inline char const * formatToStr(Filesystem f) {
@@ -78,6 +79,10 @@ namespace rckid::filesystem {
 
         FileRead(FileRead && from) noexcept:
             drive_{from.drive_} {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+            host_ = from.host_;
+            from.host_ = nullptr;
+#else
             switch (drive_) {
                 case static_cast<unsigned>(Drive::SD):
                     sd_ = from.sd_;
@@ -88,6 +93,7 @@ namespace rckid::filesystem {
                 default:
                     break;
             }
+#endif
             from.drive_ = 0;
         }
 
@@ -96,6 +102,11 @@ namespace rckid::filesystem {
         FileRead & operator = (FileRead && from) noexcept {
             close();
             drive_ = from.drive_;
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+            delete host_;
+            host_ = from.host_;
+            from.host_ = nullptr;
+#else
             switch (drive_) {
                 case static_cast<unsigned>(Drive::SD):
                     sd_ = from.sd_;
@@ -106,6 +117,7 @@ namespace rckid::filesystem {
                 default:
                     break;
             }
+#endif
             from.drive_ = 0;
             return *this;
         }
@@ -118,6 +130,9 @@ namespace rckid::filesystem {
         union {
             FIL sd_;
             lfs_file_t cart_;
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+            std::ifstream * host_;
+#endif
         };
     }; 
 
@@ -139,7 +154,12 @@ namespace rckid::filesystem {
 
         FileWrite(FileWrite && from) noexcept:
             drive_{from.drive_} {
-            switch (drive_) {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+            delete host_;
+            host_ = from.host_;
+            from.host_ = nullptr;
+#else
+                    switch (drive_) {
                 case static_cast<unsigned>(Drive::SD):
                     sd_ = from.sd_;
                     break;
@@ -149,6 +169,7 @@ namespace rckid::filesystem {
                 default:
                     break;
             }
+#endif
             from.drive_ = 0;
         }
 
@@ -163,15 +184,29 @@ namespace rckid::filesystem {
         union {
             FIL sd_;
             lfs_file_t cart_;
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+            std::ofstream * host_;
+#endif
+
         };
     };
 
     class Entry {
     public:
 
+        ~Entry() {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+            delete host_;
+#endif
+        }
+
         bool good() const { return drive_ != 0; }
 
         char const * name() const {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+            ASSERT(host_ != nullptr);
+            return host_->path().c_str();
+#else
             switch (drive_) {
                 case static_cast<unsigned>(Drive::SD):
                     return sd_.fname;
@@ -180,9 +215,14 @@ namespace rckid::filesystem {
                 default:
                     return ""; // avoid nullptr
             }
+#endif
         }
 
         uint32_t size() const {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+            ASSERT(host_ != nullptr);
+            return static_cast<uint32_t>(host_->file_size());
+#else
             switch (drive_) {
                 case static_cast<unsigned>(Drive::SD):
                     return static_cast<uint32_t>(sd_.fsize);
@@ -191,9 +231,14 @@ namespace rckid::filesystem {
                 default:
                     return 0;
             }
+#endif
         }
 
         bool isFile() const {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+            ASSERT(host_ != nullptr);
+            return host_->is_regular_file();
+#else
             switch (drive_) {
                 case static_cast<unsigned>(Drive::SD):
                     return (sd_.fattrib & AM_DIR) == 0;
@@ -202,9 +247,14 @@ namespace rckid::filesystem {
                 default:
                     return false;
             }
+#endif
         }
 
         bool isFolder() const {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+            ASSERT(host_ != nullptr);
+            return host_->is_directory();
+#else
             switch (drive_) {
                 case static_cast<unsigned>(Drive::SD):
                     return (sd_.fattrib & AM_DIR) != 0;
@@ -213,11 +263,17 @@ namespace rckid::filesystem {
                 default:
                     return false;
             }
+#endif
         }
 
         bool operator == (Entry const & other) const {
             if (drive_ != other.drive_)
                 return false;
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+            ASSERT(host_ != nullptr);
+            ASSERT(other.host_ != nullptr);
+            return host_->path() == other.host_->path();
+#else
             switch (drive_) {
                 case static_cast<unsigned>(Drive::SD):
                     return (sd_.fsize == other.sd_.fsize) &&
@@ -235,11 +291,17 @@ namespace rckid::filesystem {
                 default:
                     UNREACHABLE;
             }
+#endif
         }
 
         bool operator != (Entry const & other) const {
             if (drive_ != other.drive_)
                 return true;
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+            ASSERT(host_ != nullptr);
+            ASSERT(other.host_ != nullptr);
+            return host_->path() != other.host_->path();
+#else
             switch (drive_) {
                 case static_cast<unsigned>(Drive::SD):
                     return (sd_.fsize != other.sd_.fsize) ||
@@ -257,6 +319,7 @@ namespace rckid::filesystem {
                 default:
                     UNREACHABLE;
             }
+#endif
         }
         
     private:
@@ -268,6 +331,9 @@ namespace rckid::filesystem {
         union {
             FILINFO sd_;
             lfs_info cart_;
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+            std::filesystem::directory_entry * host_;
+#endif
         };
     }; // Entry
 
@@ -329,6 +395,9 @@ namespace rckid::filesystem {
         union {
             DIR sd_;
             lfs_dir_t cart_;
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+            std::filesystem::directory_iterator * host_;
+#endif            
         }; 
 
     }; // rckid::filesystem::Folder

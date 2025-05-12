@@ -442,91 +442,112 @@ namespace rckid {
     }
 
     uint32_t uptimeUs() {
+        memoryCheckStackProtection();
         return time_us_32();
     }
 
     // io
 
     bool btnDown(Btn b) {
+        memoryCheckStackProtection();
         return buttonState(b, io::state_.status);
     }
 
     bool btnPressed(Btn b) {
+        memoryCheckStackProtection();
         return buttonState(b, io::state_.status) && ! buttonState(b, io::lastStatus_);
     }
 
     bool btnReleased(Btn b) {
+        memoryCheckStackProtection();
         return ! buttonState(b, io::state_.status) && buttonState(b, io::lastStatus_);
     }
 
     void btnClear(Btn b) {
+        memoryCheckStackProtection();
         setButtonState(b, io::lastStatus_, btnDown(b));
     }
 
     int16_t accelX() {
+        memoryCheckStackProtection();
         return io::aState_.accelX; 
     }
 
     int16_t accelY() {
+        memoryCheckStackProtection();
         return io::aState_.accelY; 
     }
 
     int16_t accelZ() {
+        memoryCheckStackProtection();
         return io::aState_.accelX; 
     }
 
     int16_t gyroX() {
+        memoryCheckStackProtection();
         return io::aState_.gyroX; 
     }
 
     int16_t gyroY() {
+        memoryCheckStackProtection();
         return io::aState_.gyroY; 
     }
 
     int16_t gyroZ() {
+        memoryCheckStackProtection();
         return io::aState_.gyroZ; 
     }
 
     uint16_t lightAmbient() { 
+        memoryCheckStackProtection();
         return io::lightAls_;
     }
 
     uint16_t lightUV() { 
+        memoryCheckStackProtection();
         return io::lightUV_;
     }
 
     // display
 
     DisplayRefreshDirection displayRefreshDirection() {
+        memoryCheckStackProtection();
         return ST7789::refreshDirection();
     }
 
     void displaySetRefreshDirection(DisplayRefreshDirection value) {
+        memoryCheckStackProtection();
         ST7789::setRefreshDirection(value);
     }
 
     uint8_t displayBrightness() {
+        memoryCheckStackProtection();
         return io::state_.brightness;
     }
 
     void displaySetBrightness(uint8_t value) {
         sendCommand(cmd::SetBrightness{value});
+        memoryCheckStackProtection();
         io::state_.brightness = value;
     }
 
     Rect displayUpdateRegion() {
+        memoryCheckStackProtection();
         return ST7789::updateRegion();
     }
 
     void displaySetUpdateRegion(Rect value) {
         ST7789::setUpdateRegion(value);
+        memoryCheckStackProtection();
     }
 
     void displaySetUpdateRegion(Coord width, Coord height) {
         displaySetUpdateRegion(Rect::XYWH((RCKID_DISPLAY_WIDTH - width) / 2, (RCKID_DISPLAY_HEIGHT - height) / 2, width, height));
+        memoryCheckStackProtection();
     }
 
     bool displayUpdateActive() {
+        memoryCheckStackProtection();
         return ST7789::dmaUpdateInProgress();
     }
 
@@ -538,14 +559,17 @@ namespace rckid {
 
     void displayWaitVSync() {
         ST7789::waitVSync();
+        memoryCheckStackProtection();
     }
 
     void displayUpdate(uint16_t const * pixels, uint32_t numPixels, DisplayUpdateCallback callback) {
         ST7789::dmaUpdateAsync(pixels, numPixels, callback);
+        memoryCheckStackProtection();
     }
 
     void displayUpdate(uint16_t const * pixels, uint32_t numPixels) {
         ST7789::dmaUpdateAsync(pixels, numPixels);
+        memoryCheckStackProtection();
     }
 
     /** Audio
@@ -597,11 +621,13 @@ namespace rckid {
     void audioEnable() {
         if (!io::state_.status.audioEnabled())
             sendCommand(cmd::AudioOn());
+        memoryCheckStackProtection();
     }
 
     void audioDisable() {
         if (io::state_.status.audioEnabled())
             sendCommand(cmd::AudioOff());
+        memoryCheckStackProtection();
     }
 
     void audioStop(bool audioOff) {
@@ -615,13 +641,16 @@ namespace rckid {
         }
         if (audioOff)
             audioDisable();
+        memoryCheckStackProtection();
     }
 
     bool audioHeadphones() {
+        memoryCheckStackProtection();
         return io::state_.status.audioHeadphones();
     }
 
     bool audioPaused() {
+        memoryCheckStackProtection();
         if (audio::playback_) {
             return ! pwm_is_enabled(RP_AUDIO_PWM_SLICE);
         } else {
@@ -630,18 +659,22 @@ namespace rckid {
     }
 
     bool audioPlayback() {
+        memoryCheckStackProtection();
         return audio::playback_;
     }
 
     bool audioRecording() {
+        memoryCheckStackProtection();
         return false;
     }
 
     uint8_t audioVolume() {
+        memoryCheckStackProtection();
         return audio::volume_;
     }
 
     void audioSetVolume(uint8_t value) {
+        memoryCheckStackProtection();
         if (value > 10)
             value = 10;
         audio::volume_ = value;
@@ -682,20 +715,24 @@ namespace rckid {
         pwm_set_enabled(RP_AUDIO_PWM_SLICE, true);
         // now we need to load the second buffer while the first one is playing (reload of the buffers will be done by the IRQ handler)
         audioPlaybackDMA(audio::dma1_, audio::dma0_);
+        memoryCheckStackProtection();
     }
 
     void audioPause() {
         if (audio::playback_)  
             pwm_set_enabled(RP_AUDIO_PWM_SLICE, false);
+        memoryCheckStackProtection();
     }
 
     void audioResume() {
         if (audio::playback_)  
             pwm_set_enabled(RP_AUDIO_PWM_SLICE, true);
+        memoryCheckStackProtection();
     }
 
     void audioStop() {
         audioStop(true);
+        memoryCheckStackProtection();
     }
 
     // SD Card access is in sd/sd.cpp file
@@ -703,20 +740,24 @@ namespace rckid {
     // Cartridge filesystem access
 
     uint32_t cartridgeCapacity() { 
+        memoryCheckStackProtection();
         return &__cartridge_filesystem_end - &__cartridge_filesystem_start;
     }
 
     uint32_t cartridgeWriteSize() {
+        memoryCheckStackProtection();
         return FLASH_PAGE_SIZE; // 256
     }
 
     uint32_t cartridgeEraseSize() {
+        memoryCheckStackProtection();
         return FLASH_SECTOR_SIZE; // 4096
     }
 
     void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
         // since flash is memory mapped via XIP, all we need to do is aggregate offset properly 
         memcpy(buffer, XIP_NOCACHE_NOALLOC_BASE + (&__cartridge_filesystem_start - XIP_BASE) + start, numBytes);
+        memoryCheckStackProtection();
     }
 
     void cartridgeWrite(uint32_t start, uint8_t const * buffer) {
@@ -727,6 +768,7 @@ namespace rckid {
         uint32_t ints = save_and_disable_interrupts();
         flash_range_program(offset, buffer, FLASH_PAGE_SIZE);
         restore_interrupts(ints);
+        memoryCheckStackProtection();
     }
 
     void cartridgeErase(uint32_t start) {
@@ -739,11 +781,13 @@ namespace rckid {
         uint32_t ints = save_and_disable_interrupts();
         flash_range_erase(offset, FLASH_SECTOR_SIZE);
         restore_interrupts(ints);
+        memoryCheckStackProtection();
     }
 
     // memory
 
     bool memoryIsImmutable(void const * ptr) {
+        memoryCheckStackProtection();
         // TODO enable immutable memory from ROM
         return false;
     }

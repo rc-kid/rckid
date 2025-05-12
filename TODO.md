@@ -26,6 +26,8 @@ LL_ERROR: Line:        184
 - this looks like some weird corruption - at some points I saw twice calls to form destructor, then I saw from & back being the same values
 - and this also looks weird, not sure how at all possible - could it really be memory corruption? 
 
+- add some way to start the sd & cartridge in directories, check that the path they return corresponds to the proper path in the folders, etc. 
+
 - we run out of memory on device very soon and bsod does not work (!)
 - remove memory allocation from callback function on display
 - improve memory allocator (heap)

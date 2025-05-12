@@ -91,7 +91,6 @@ namespace rckid::filesystem {
 
     namespace {
         FATFS * fs_ = nullptr;
-
         lfs_t lfs_;
         lfs_config lfsCfg_;
     }
@@ -123,6 +122,15 @@ namespace rckid::filesystem {
     }
 
     uint32_t FileRead::size() const {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        if (host_ == nullptr)
+            return 0;
+        std::streampos currentPos = host_->tellg();
+        host_->seekg(0, std::ios::end);
+        std::streamsize size = host_->tellg();
+        host_->seekg(currentPos);
+        return static_cast<uint32_t>(size);
+#else
         switch (drive_) {
             case static_cast<unsigned>(Drive::SD):
                return static_cast<uint32_t>(f_size(&sd_));
@@ -131,9 +139,16 @@ namespace rckid::filesystem {
             default:
                 return 0;
         }
+#endif
     }
 
     uint32_t FileRead::seek(uint32_t position) {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        ASSERT(host_ != nullptr);
+        host_->seekg(position, std::ios::beg);
+        std::streamsize size = host_->tellg();
+        return static_cast<uint32_t>(size);
+#else
         switch (drive_) {
             case static_cast<unsigned>(Drive::SD):
                 f_lseek(& sd_, position);
@@ -144,10 +159,16 @@ namespace rckid::filesystem {
             default:
                 ASSERT(false); // seeking invalid file is not allowed
         }
+#endif
     }
 
     uint32_t FileRead::read(uint8_t * buffer, uint32_t numBytes) {
-            switch (drive_) {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        ASSERT(host_ != nullptr);
+        host_->read(reinterpret_cast<char *>(buffer), numBytes);
+        return static_cast<uint32_t>(host_->gcount());
+#else
+        switch (drive_) {
                 case static_cast<unsigned>(Drive::SD): {
                     UINT bytesRead = 0;
                     f_read(& sd_, buffer, numBytes, & bytesRead);
@@ -158,9 +179,15 @@ namespace rckid::filesystem {
                 default:
                     ASSERT(false); // trying to read from invalid file
             }
+#endif
     }
 
     void FileRead::close() {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        ASSERT(host_ != nullptr);
+        delete host_;
+        host_ = nullptr;
+#else
         switch (drive_) {
             case static_cast<unsigned>(Drive::SD):
                 f_close(& sd_);
@@ -171,11 +198,17 @@ namespace rckid::filesystem {
             default:
                 break;
         }
+#endif
     }
 
     // FileWrite 
 
     uint32_t FileWrite::write(uint8_t const * buffer, uint32_t numBytes) {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        ASSERT(host_ != nullptr);
+        host_->write(reinterpret_cast<char const *>(buffer), numBytes);
+        return numBytes;
+#else
         switch (drive_) {
             case static_cast<unsigned>(Drive::SD): {
                 UINT bytesWritten = 0; 
@@ -187,9 +220,14 @@ namespace rckid::filesystem {
             default:
                 ASSERT(false); // writing invalid file
         }
+#endif
     }
 
     FileWrite::~FileWrite() {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        delete host_;
+        host_ = nullptr;
+#else
         switch (drive_) {
             case static_cast<unsigned>(Drive::SD):
                 f_close(& sd_);
@@ -200,11 +238,15 @@ namespace rckid::filesystem {
             default:
                 break;
         }
+#endif
     }
 
     // Folder
 
     Folder::~Folder() {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        delete host_;
+#else
         switch(drive_) {
             case static_cast<unsigned>(Drive::SD):
                 f_closedir(& sd_);
@@ -215,9 +257,13 @@ namespace rckid::filesystem {
             default:
                 break;
         }
+#endif
     }
 
     void Folder::rewind() {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        UNIMPLEMENTED;
+#else
         switch(drive_) {
             case static_cast<unsigned>(Drive::SD):
                 f_rewinddir(& sd_);
@@ -228,9 +274,20 @@ namespace rckid::filesystem {
             default:
                 UNREACHABLE;
         }
+#endif
     }
 
     void Folder::readNext(Entry & into) {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        ASSERT(host_ != nullptr);
+        SystemMallocGuard g;
+        if (host_->operator++() == std::filesystem::directory_iterator{}) {
+            into.drive_ = 0; // invalidate the entry
+            return;
+        }
+        into.drive_ = drive_;
+        into.host_ = new std::filesystem::directory_entry{**host_};
+#else
         into.drive_ = 0; // invalidate the entry
         switch (drive_) {
             case static_cast<unsigned>(Drive::SD):
@@ -250,9 +307,15 @@ namespace rckid::filesystem {
             default:
                 UNREACHABLE;
         }
+#endif
     }
 
     bool format(Drive dr) {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        // can actually just delete the contents of the folder
+        UNIMPLEMENTED;
+        return false;
+#else        
         switch (dr) {
             case Drive::SD: {
                 MKFS_PARM opts;
@@ -272,9 +335,13 @@ namespace rckid::filesystem {
             default:
                 UNREACHABLE;
         }
+#endif
     }
 
-    bool mount(Drive dr) {
+    bool mount([[maybe_unused]] Drive dr) {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        return true;
+#else
         switch (dr) {
             case Drive::SD:
                 if (fs_ != nullptr) {
@@ -301,9 +368,13 @@ namespace rckid::filesystem {
             default:
                 UNREACHABLE;
         }
+#endif
     }
 
-    void unmount(Drive dr) {
+    void unmount([[maybe_unused]] Drive dr) {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#else
+
         switch (dr) {
             case Drive::SD:
                 f_unmount("");
@@ -317,9 +388,13 @@ namespace rckid::filesystem {
             default:
                 UNREACHABLE;
         }
+#endif
     }
 
-    bool isMounted(Drive dr) {
+    bool isMounted([[maybe_unused]] Drive dr) {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        return true;
+#else
         switch (dr) {
             case Drive::SD:
                 return fs_ != nullptr;
@@ -328,9 +403,13 @@ namespace rckid::filesystem {
             default:
                 UNREACHABLE;
         }
+#endif
     }
 
     uint64_t getCapacity(Drive dr) {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        UNIMPLEMENTED;   
+#else        
         switch (dr) {
             case Drive::SD:
                 return static_cast<uint64_t>(fs_->n_fatent - 2) * fs_->csize * 512;
@@ -339,9 +418,13 @@ namespace rckid::filesystem {
             default:
                 UNREACHABLE;
         }
+#endif
     }
 
     uint64_t getFreeCapacity(Drive dr) {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        UNIMPLEMENTED;   
+#else        
         switch (dr) {
             case Drive::SD: {
                 DWORD n;
@@ -358,9 +441,13 @@ namespace rckid::filesystem {
             default:
                 UNREACHABLE;
         }
+#endif
     }
 
     Filesystem getFormat(Drive dr) {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        return Filesystem::exFAT;   
+#else        
         switch (dr) {
             case Drive::SD: 
                 switch (fs_->fs_type) {
@@ -378,9 +465,21 @@ namespace rckid::filesystem {
             default:
                 UNREACHABLE;
         }
+#endif
     }
 
     String getLabel(Drive dr) {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        switch (dr) {
+            case Drive::SD: {
+                return "SD_HOST";
+            }
+            case Drive::Cartridge:
+                return "Cartridge_Host";
+            default:
+                UNREACHABLE;
+        }
+#else        
         switch (dr) {
             case Drive::SD: {
                 String result{' ', 12};
@@ -392,6 +491,7 @@ namespace rckid::filesystem {
             default:
                 UNREACHABLE;
         }
+#endif
     }
 
     bool exists(char const * path, Drive dr) {
@@ -484,6 +584,16 @@ namespace rckid::filesystem {
 
     FileRead fileRead(char const * path, Drive dr) {
         FileRead result;
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        SystemMallocGuard g;
+        result.host_ = new std::ifstream{path, std::ios::binary};
+        if (result.host_->is_open())
+            result.drive_ = static_cast<unsigned>(dr);
+        else {
+            delete result.host_;
+            result.host_ = nullptr;
+        }
+#else
         switch (dr) {
             case Drive::SD:
                 if (f_open(& result.sd_, path, FA_READ) == FR_OK)
@@ -496,11 +606,22 @@ namespace rckid::filesystem {
             default:
                 UNREACHABLE;
         }
+#endif
         return result;
     }
 
     FileWrite fileWrite(char const * path, Drive dr) {
         FileWrite result;
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        SystemMallocGuard g;
+        result.host_ = new std::ofstream{path, std::ios::binary};
+        if (result.host_->is_open())
+            result.drive_ = static_cast<unsigned>(dr);
+        else {
+            delete result.host_;
+            result.host_ = nullptr;
+        }
+#else
         switch (dr) {
             case Drive::SD:
                 if (f_open(& result.sd_, path, FA_WRITE | FA_CREATE_ALWAYS) == FR_OK)
@@ -513,11 +634,22 @@ namespace rckid::filesystem {
             default:
                 UNREACHABLE;
         }
+#endif
         return result;
     }
 
     FileWrite fileAppend(char const * path, Drive dr) {
         FileWrite result;
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        SystemMallocGuard g;
+        result.host_ = new std::ofstream{path, std::ios::binary | std::ios::app};
+        if (result.host_->is_open())
+            result.drive_ = static_cast<unsigned>(dr);
+        else {
+            delete result.host_;
+            result.host_ = nullptr;
+        }
+#else
         switch (dr) {
             case Drive::SD:
                 if (f_open(& result.sd_, path, FA_WRITE | FA_OPEN_APPEND) == FR_OK)
@@ -530,6 +662,7 @@ namespace rckid::filesystem {
             default:
                 UNREACHABLE;
         }
+#endif
         return result;
     }
 
