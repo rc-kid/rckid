@@ -44,7 +44,7 @@ inline void drawTileConstructor(GlyphInfo & gi, unsigned w, unsigned h, unsigned
         font-tile-generator FONT_FILE OUTPUT_FILE FONT_SIZE TILE_WIDTH TILE_HEIGHT [ --glyphs GLYPH_FILE ] [--namespace NAMESPACE]
  */
 
-int main(int argc, char * argv[]) {
+int main(int argc, char const * argv[]) {
     Args::Arg<std::string> inputFile{""};
     Args::Arg<std::string> outputFile{""};
     Args::Arg<unsigned> fontSize{16};

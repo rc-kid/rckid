@@ -320,7 +320,7 @@ namespace rckid {
 
 
 
-    void initialize([[maybe_unused]] int argc, [[maybe_unused]] char * argv[]) {
+    void initialize([[maybe_unused]] int argc, [[maybe_unused]] char const * argv[]) {
         board_init();
         memoryInstrumentStackProtection();
         // TODO in mkII we can't enable the USB in general as it leaks voltage into the USB pwr, which in turn leaks voltage to the battery switch mosfet

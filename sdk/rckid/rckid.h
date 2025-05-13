@@ -76,7 +76,7 @@ namespace rckid {
      
         This must be the first SDK function called by the application. Its task is to set up the console and completely depends on the backend used - while the device backends initialize the actual hardware after power on, the fantasy backend sets up the console window, etc. 
      */
-    void initialize(int argc, char * argv[]);
+    void initialize(int argc, char const * argv[]);
     inline void initialize() { initialize(0, nullptr); }
 
     void tick();

@@ -303,7 +303,7 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
-    void initialize([[maybe_unused]] int argc, [[maybe_unused]] char * argv[]) {
+    void initialize([[maybe_unused]] int argc, [[maybe_unused]] char const * argv[]) {
         board_init();
 #if (RCKID_ENABLE_STACK_PROTECTION == 1)
         memoryInstrumentStackProtection();
