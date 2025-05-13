@@ -10,7 +10,7 @@ namespace fs = std::filesystem;
 
 /** Generates waveform tables for sine, triangular, sawtooth and square waves of different duty cycles.
  */
-int main(int argc, char * argv[]) {
+int main(int argc, char const * argv[]) {
     Args::Arg<uint32_t> values{0};
     Args::Arg<std::string> outputFile{""};
     Args::Arg<std::string> ns{"namespace", "rckid::assets"};

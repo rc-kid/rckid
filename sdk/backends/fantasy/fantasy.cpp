@@ -155,7 +155,7 @@ namespace rckid {
         }
     }
 
-    void initialize(int argc, char * argv[]) {
+    void initialize(int argc, char const * argv[]) {
         SystemMallocGuard::enable();
         memoryInstrumentStackProtection();
         InitWindow(640, 480, "RCKid");

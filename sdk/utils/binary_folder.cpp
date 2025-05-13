@@ -5,7 +5,7 @@
 
 namespace fs = std::filesystem;
 
-int main(int argc, char * argv[]) {
+int main(int argc, char const * argv[]) {
     Args::Arg<std::string> inputFolder{""};
     Args::Arg<std::string> outputFile{""};
     Args::Arg<std::string> ns{"namespace", "rckid::assets"};

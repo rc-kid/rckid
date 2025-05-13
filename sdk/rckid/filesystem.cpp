@@ -93,6 +93,10 @@ namespace rckid::filesystem {
         FATFS * fs_ = nullptr;
         lfs_t lfs_;
         lfs_config lfsCfg_;
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        std::filesystem::path sdRoot_;
+        std::filesystem::path cartridgeRoot_;
+#endif
     }
 
     void initialize() {
