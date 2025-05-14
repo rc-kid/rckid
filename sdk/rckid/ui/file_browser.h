@@ -82,7 +82,7 @@ namespace rckid::ui {
             path_ = std::move(path);
             entries_.clear();
             filesystem::Folder folder = filesystem::folderRead(path_.c_str(), drive_);
-            for (auto entry : folder) {
+            for (auto & entry : folder) {
                 if (entry.isFile() && ! onFileFilter(entry.name()))
                     continue;
                 entries_.push_back(entry);

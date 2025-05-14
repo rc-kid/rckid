@@ -1,40 +1,11 @@
 # TODO
 
-LL_HEAP: Heap end is now at 536960276
-LL_HEAP: Freeing chunk 537016788 (size 28)
-LL_HEAP: Freeing standalone chunk 537016788 (size 28)
-LL_HEAP: Heap end is now at 536960276
-LL_INFO: Form: destructor: 537141116
-LL_INFO: front: 537130928
-LL_INFO: back: 537130444
-LL_HEAP: Freeing chunk 537130444 (size 484)
-LL_HEAP: Freeing standalone chunk 537130444 (size 484)
-LL_HEAP: Heap end is now at 536960276
-LL_HEAP: Freeing chunk 537130444 (size 484)
-LL_ERROR: Fatal error: 3 (arg 0)
-LL_ERROR: Line:        199
-LL_ERROR: File:        /home/peta/devel/rckid/sdk/rckid/memory.cpp
-LL_ERROR: Fatal error: 3 (arg 0)
-LL_ERROR: Line:        184
-LL_ERROR: File:        /home/peta/devel/rckid/sdk/rckid/memory.cpp
-LL_ERROR: Fatal error: 3 (arg 0)
-LL_ERROR: Line:        184
-LL_ERROR: File:        /home/peta/devel/rckid/sdk/rckid/memory.cpp
-LL_ERROR: Fatal error: 3 (arg 0)
-LL_ERROR: Line:        184
+- document host file system
 
-- this looks like some weird corruption - at some points I saw twice calls to form destructor, then I saw from & back being the same values
-- and this also looks weird, not sure how at all possible - could it really be memory corruption? 
-
-- add some way to start the sd & cartridge in directories, check that the path they return corresponds to the proper path in the folders, etc. 
-
-- we run out of memory on device very soon and bsod does not work (!)
-- remove memory allocation from callback function on display
+- bsod does not work (!)
+- check why device allocates every tick? DOes not seem to be display driver
 - improve memory allocator (heap)
 - verify other std::string uses
-
-
-- make less memory and test on device
 
 - add events for getting icon for files & on file selected for file browser
 - add actions for file browser such as rename, copy, mkdir, etc.  
@@ -80,7 +51,6 @@ LL_ERROR: Line:        184
 ## Others
 
 - memory leaks via reusing large parts for small items, this way we eventually run out of memory
-- add default allocator and when allocators are created, use the default allocator unless specified (so changing the default allocator changes the allocation for everyone in scope)
 - waiting for display update done could make the cpu sleep
 - serialize & deserialize vs load & save
 
@@ -142,9 +112,6 @@ LL_ERROR: Line:        184
 - 3.9" 320x320 https://www.aliexpress.com/item/1005006170307995.html?pdp_npi=4%40dis%21CZK%21CZK%20299.00%21CZK%20299.00%21%21%2112.09%2112.09%21%40211b819117375814797795352e5cdc%2112000036095035873%21sh%21CZ%213305825785%21X&spm=a2g0o.store_pc_allItems_or_groupList.new_all_items_2007508297226.1005006170307995
 
 > MK III ideas
-- buy the RP recommended crystal at jlcpcb
-- check if I can solder the inductor myself (might be just able to)
-- test the 90 degree cartridge connector feasibility
 - better sound driver (PCM5102) for fully 16bit sound
 - simplify HW - no light sensor, no notification LED. This makes for smaller PCB, fewer parts. Arguably can keep the light detector and put it under the display, 
 - can use DMA & control blocks to do the 256 palette lookup with FB w/o involving the CPU
@@ -157,12 +124,6 @@ LL_ERROR: Line:        184
 - https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01-1-16r13/ (90 deg cartridge header)
 
 - the SD card initialization routine does not work for SDHC cards, only for SDXC (not a blocker for xmas)
-
-- add fantasy mode where cartridge and SD card are folders on local drive for simplicity
-
-- add file browser as own widget
-
-- STR does not work with MemoryArena, only on heap (see Data Sync)
 
 - tud_deinit (already disconnect does) freezes the device, not sure why? - but interestingly if DC is disconnected first, then it all works, even repeatedly - this no longer seems to be the case
 

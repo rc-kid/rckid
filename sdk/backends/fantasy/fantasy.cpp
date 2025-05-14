@@ -115,6 +115,7 @@ namespace rckid {
     // forward declarations of internal functions
     namespace filesystem {
         void initialize();
+        void initialize(std::string const & sdRoot, std::string const & flashRoot);
     }
 
     void fatalError(uint32_t error, uint32_t line, char const * file) {
@@ -163,12 +164,17 @@ namespace rckid {
         display::texture = LoadTextureFromImage(display::img);
         display::lastVSyncTime = std::chrono::steady_clock::now();
         display::fpsStart = std::chrono::steady_clock::now();
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        Args::Arg<std::string> sdIso{"sd", "sd"};
+        Args::Arg<std::string> flashIso{"flash", "flash"};
+#else
         Args::Arg<std::string> sdIso{"sd", "sd.iso"};
         Args::Arg<std::string> flashIso{"flash", "flash.iso"};
+#endif
         Args::parse(argc, argv, { sdIso, flashIso });
 
 #ifdef RCKID_ENABLE_HOST_FILESYSTEM
-        UNIMPLEMENTED;
+        filesystem::initialize(sdIso.value(), flashIso.value());
 #else
         // see if there is sd.iso file so that we can simulate SD card
         sd::iso_.open(sdIso.value(), std::ios::in | std::ios::out | std::ios::binary);
