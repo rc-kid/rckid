@@ -99,3 +99,13 @@ TEST(string, insertInEmptyFromStart) {
     s.erase(1,3);
     EXPECT(s == "Ho");
 }
+
+TEST(string, assign) {
+    using namespace rckid;
+    String s1;
+    String s2;
+    s1 = "Hello";
+    s2 = "World";
+    s2 = s1;
+    s1 = s2;
+}
