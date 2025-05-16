@@ -15,11 +15,9 @@
 #include <platform/writer.h>
 #include <platform/tinydate.h>
 
-// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+// TODO  
 // flag that can be used to enable breadboard, or device build. The breadboard is only useful while prototyping all breadboard guarded code should eventually disappear
 #define BREADBOARD
-
-// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 
 #undef ASSERT
 #define ASSERT(...) if (!(__VA_ARGS__)) { debugWrite() << "ASSERT " << __LINE__ << "\r\n"; }
@@ -303,8 +301,6 @@ public:
     }
 
     static void powerVDD(bool enable) {
-        // TODO do nothing for now - we do not support VDD power yet TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-        return;
         if (enable) {
             gpio::outputFloat(AVR_PIN_AVR_INT);
             gpio::outputHigh(AVR_PIN_VDD_EN);
@@ -845,7 +841,6 @@ public:
             ! gpio::read(AVR_PIN_BTN_3)  // volume down
         );
         // only advance if we are running system ticks
-        // TODO techniclaly this should not be necessary - figure out why it is? do we run systemTick *after* powered off so that it messes with the button row?
         if (powerMode_ != 0) {
             gpio::high(AVR_PIN_BTN_CTRL);
             gpio::low(AVR_PIN_BTN_ABXY);

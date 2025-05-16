@@ -32,9 +32,13 @@ extern "C" {
 extern "C" {
     extern uint8_t __cartridge_filesystem_start;
     extern uint8_t __cartridge_filesystem_end;
-}
 
-extern "C" {
+    // implement not really working entropy function to silence the linker warning
+    int _getentropy([[maybe_unused]] void *buffer, [[maybe_unused]] size_t length) {
+        errno = ENOSYS;
+        return -1;
+    }    
+
     void *__wrap_malloc(size_t numBytes) { return rckid::Heap::allocBytes(numBytes); }
     void __wrap_free(void * ptr) { 
         if (rckid::Heap::contains(ptr))
