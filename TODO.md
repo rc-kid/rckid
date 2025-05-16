@@ -1,3 +1,46 @@
+# DevBoard Checklist
+
+- [X] verify there are no shorts between VCC, VBATT, VDD, 3V3 and ground
+- [X] add jumper wires for D and audio power (! these *must* be installed before the board is powered)
+- [X] add connectors for battery
+- [X] try powering up through battery connector at 4.0V
+- [X] try powering up through USB at 5 volts
+- [-] try powering up through battery at 3.0 volts to see if the PMIC keeps the VCC above threshold 
+
+> This could be due to the fact that OTG is not enabled, check if enabling it fixes the problem. If PMIC is changed, this might not be a problem any more.
+
+- [ ] verify cartridge connector integrity on unpopulated dev board
+- [ ] solder cartridge connector on dev board
+- [X] verify that UPDI works when AVR powered with 3v3
+- [ ] breadboatd AVR test Serial out
+- [ ] breadboard AVR test RGB
+- [ ] breadboard AVR test rumbler
+- [ ] breadboard AVR test buttons
+- [ ] breadboard AVR test I2C master ennumeration and some basic I2C comms
+- [ ] breadboard AVR test power on / power off
+- [ ] modify avr to not power rp2350 on
+    - [ ] flash the AVR on device
+    - [ ] device AVR test Serial out
+    - [ ] device AVR test RGB
+    - [ ] device AVR test rumbler
+    - [ ] device AVR test buttons
+    - [ ] device AVR test I2C master ennumeration
+    - [X] switch to external osc for RTC on the devboard
+    - [ ] test device clock accuracy with external clock
+- [ ] modify AVR to turn on/off
+- [ ] device AVR test power on / power off
+- [ ] check that RP2350 shows on host machine as USB drive (can be flashed)
+- [ ] enumerate I2C devices (now we should see also audio & radio)
+- [ ] flash RP2350 with serial test and see output
+- [ ] check that AVR can reboot RP
+- [ ] verify that AVR can reset RP2350 into bootloader mode
+- [ ] check that RP can talk to I2C devices
+- [ ] check that RP can talk to the display & show data
+- [ ] check that RP can talk to SD card
+- [ ] check that we can play music, listen to radio, record music, record radio
+- [ ] check SD card insertion detection
+- [ ] disable debug mode on by default on AVR
+
 # TODO
 
 - document host file system
@@ -63,43 +106,6 @@
 - [X] VREG_VIN should go to IOVDD
 - [X] ADC_AVDD should to to IOVDD (?)
 - [ ] test ADC_AVDD to IOVDD connection and if necessary
-
-
-# AVR Breadboard tests
-
-- [ ] create version that uses home button to go to deep sleep and wakes up when home button pressed (to be flashed on device)
-- [X] add system notification 
-- [ ] verify rumbler & rgb effects
-- [ ] create version that uses home button to power VDD on or off (to be flashed)
-- [X] verify that UPDI works when AVR powered with 3v3
-- [X] switch to external osc for RTC on the devboard
-
-# Devboard Power-Up Sequence
-
-- [X] verify there are no shorts between VCC, VBATT, VDD, 3V3 and ground
-- [X] add jumper wires for D and audio power (! these *must* be installed before the board is powered)
-- [X] add connectors for battery
-- [X] try powering up through battery
-- [-] see if the PMIC keeps the VCC above threshold - what is the default value? - IT IS NOT - default settings?
-- [X] try powering up via USB
-- [ ] flash AVR that does not enable VDD, but can go to sleep and meausre the current consumption at sleep & power on
-- [ ] enumerate I2C devices without VDD enabled
-- [ ] flash AVR that can enable VDD and test
-- [ ] verify that RP2350 will show itself as USB drive 
-- [ ] enumerate I2C devices in power on mode (still via AVR)
-- [ ] verify cartridge connector tolerances and no shorts present
-- [ ] try flashing RP2350 with basic program that outputs on serial USB
-- ...
-
-
-# DevBoard PCB & first batch
-
-- [X] order the cartridge connector pcb (populated)
-- [X] order the cartridge pcb (unpopulated)
-- [X] order the devboard (populated, x2)
-- [ ] create display riser
-- [X] order the displays (test batch first)
-- [ ] pcb board for the battery connector - can be inside the speaker hole perhaps
 
 
 - JLCPCB offers 3d printing as well - perhaps I can use it to print stuff from nicer materials such as transparent faceplate or even the case, etc. 
