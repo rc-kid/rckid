@@ -301,6 +301,8 @@ public:
     }
 
     static void powerVDD(bool enable) {
+        // TODO enable / disbale power on for testing purposes
+        //return;
         if (enable) {
             gpio::outputFloat(AVR_PIN_AVR_INT);
             gpio::outputHigh(AVR_PIN_VDD_EN);
