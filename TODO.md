@@ -1,25 +1,28 @@
 # TODO
 
 - document host file system
+- main menu mem efficiency can be improved by having 
 
-- bsod does not work (!)
+- fix/check device fatal eror & stack protection
 - check why device allocates every tick? DOes not seem to be display driver
 - improve memory allocator (heap)
 - verify other std::string uses
 
 - add events for getting icon for files & on file selected for file browser
 - add actions for file browser such as rename, copy, mkdir, etc.  
-- rename filesystem to fs? 
+- rename filesystem to fs?
 
 ## HW
 
 - connector height could be 2.2mm (with cartridge pcb height of 1.2mm this gives us 1mm width, which is within the 0.8 - 1.4mm working range for the spring contact)
 - could this be better PMIC? https://www.ti.com/product/BQ25628
 - slimmer connector https://jlcpcb.com/partdetail/XkbConnection-X05A10H40G/C528037
+- order breakouts for the improved PMIC
 
 ## AVR
 
 - see if we can run at 5MHz and still talk to neopixel
+- verify I2C master works
 
 ## UI
 
@@ -56,9 +59,10 @@
 
 # PCB Things To Fix
 
-- [ ] RP2350 does not have RUN pin connected (!!)
-- [ ] VREG_VIN should go to IOVDD
-- [ ] ADC_AVDD should to to IOVDD (?)
+- [X] RP2350 does not have RUN pin connected (!!)
+- [X] VREG_VIN should go to IOVDD
+- [X] ADC_AVDD should to to IOVDD (?)
+- [ ] test ADC_AVDD to IOVDD connection and if necessary
 
 
 # AVR Breadboard tests
@@ -109,14 +113,8 @@
 
 - 2.8" 320x240 with fpc: https://www.aliexpress.com/item/1005004629215040.html?pdp_npi=4%40dis%21CZK%21CZK%208.90%21CZK%208.90%21%21%210.36%210.36%21%402103891017375828457015857e954c%2112000035688288567%21sh%21CZ%213305825785%21X&spm=a2g0o.store_pc_allItems_or_groupList.new_all_items_2007508297226.1005004629215040
 
-- 3.9" 320x320 https://www.aliexpress.com/item/1005006170307995.html?pdp_npi=4%40dis%21CZK%21CZK%20299.00%21CZK%20299.00%21%21%2112.09%2112.09%21%40211b819117375814797795352e5cdc%2112000036095035873%21sh%21CZ%213305825785%21X&spm=a2g0o.store_pc_allItems_or_groupList.new_all_items_2007508297226.1005006170307995
-
 > MK III ideas
-- better sound driver (PCM5102) for fully 16bit sound
-- simplify HW - no light sensor, no notification LED. This makes for smaller PCB, fewer parts. Arguably can keep the light detector and put it under the display, 
 - can use DMA & control blocks to do the 256 palette lookup with FB w/o involving the CPU
-
-
 - when using NiMH batteries, due to very flat discharge curve, the battery voltage reading might not be really useful
 
 > After XMAS, but can be done with RP2040:
@@ -148,20 +146,11 @@
 
 - can have audio player run in the background on second core for most other games, that way people can play & listen to music
 
-## Mk II Hardware
-
-- I2C problems might be somewhat mitigated by extra pullups in the cartridge, or add a special mode where if DC power is enabled we stop querying and just display that we have entered charging and only stop when charging is stopped? - as a really ugly hack, but will work 
-
-- does not work with 5V from laptop
-
 ## Mk III
 
 - the 3v3 rail to onboard sensors & RTC is always on, this enables time & steps tracking to be valid even across cartridges. The RTC memory (if present) can be used for some basic storage as well 
-- maybe put SD card under the display, together with RPI, this will save enormous amount of space on the PCB around the buttons for rather small increase in total height, which is probably ok
-- have version with both solderable contants and FPC for the display?  
 
 - can have sinking USB-C https://jlcpcb.com/partdetail/Xunpu-TYPEC_302BRP16SC21/C5760470
-- I can technically solder headphone jack 
 
 ### Display woes
 
