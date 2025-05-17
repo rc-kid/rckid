@@ -18,13 +18,34 @@ namespace rckid::ui {
         Label(Coord x, Coord y, String text):
             Widget{x, y}, 
             text_{std::move(text)} {
-            reposition();
+            if (autosize_)
+                resizeToText();
+            else
+                reposition();
         }
 
         String const & text() { return text_; }
+
+        bool autosize() const { return autosize_; }
+        void setAutosize(bool value) { 
+            if (autosize_ != value) {
+                autosize_ = value;
+                if (autosize_)
+                    resizeToText();
+            }
+        }
         
         void setText(String value) { 
             text_ = std::move(value);
+            if (autosize_)
+                resizeToText();
+            else
+                reposition();
+        }
+
+        void resizeToText() {
+            w_ = textWidth();
+            h_ = font_.size;
             reposition();
         }
 
@@ -127,6 +148,7 @@ namespace rckid::ui {
         ColorRGB color_{ColorRGB::White()};
         Point textTopLeft_;
         std::vector<Hint> hints_;
+        bool autosize_ = true;
     }; //rckid::ui::Label
 
 } // namespace rckid::ui

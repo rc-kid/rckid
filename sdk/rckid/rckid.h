@@ -89,6 +89,7 @@ namespace rckid {
      */
     uint32_t uptimeUs();
 
+
     /** \page sdk
         \section io IO
 

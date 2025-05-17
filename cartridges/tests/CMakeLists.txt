@@ -11,6 +11,10 @@ endif()
 add_executable(logging "logging.cpp")
 link_with_librckid(logging)
 
+# simple COM port logging verification
+add_executable(hwtest "hwtest.cpp")
+link_with_librckid(hwtest)
+
 # blue screen of death working test
 add_executable(bsodtest "bsodtest.cpp")
 link_with_librckid(bsodtest)
