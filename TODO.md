@@ -14,8 +14,9 @@
 - [X] verify that UPDI works when AVR powered with 3v3
 - [X] breadboatd AVR test Serial out
 - [X] breadboard AVR test RGB
-- [ ] breadboard AVR test rumbler
-- [ ] breadboard AVR test backlight
+- [X] breadboard AVR test rumbler
+- [X] breadboard AVR test backlight
+- [X] breadboard AVR test IRQ
 - [X] breadboard AVR test buttons
 - [ ] breadboard AVR test I2C master ennumeration and some basic I2C comms
 - [X] breadboard AVR test power on / power off

@@ -243,6 +243,7 @@ public:
             TWI0.SCTRLA |= TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm;
             ADC0.CTRLA |= ADC_RUNSTBY_bm;
         );
+        setRumblerEffect(RumblerEffect::OK());
     }
 
     /** Initializes the device power off state. 
@@ -252,8 +253,11 @@ public:
         NO_ISR(
             clearPowerMode(POWER_MODE_ON);
             powerVDD(false);
+            disablePWM();
             // make the AVR_INT floating so that we do not leak any voltage to the now off RP2350
             gpio::outputFloat(AVR_PIN_AVR_INT);
+            // clear IRQ
+            irq_ = false;
         );
         // disable debug mode (only exists in power on mode)
         state_.status.setDebugMode(false);
@@ -756,15 +760,7 @@ public:
             }
             case cmd::Rumbler::ID: {
                 auto & c = cmd::Rumbler::fromBuffer(state_.buffer);
-                if (c.effect.cycles > 0 && c.effect.strength > 0) {
-                    rumblerEffect_ = c.effect;
-                    rumblerCurrent_ = rumblerEffect_;
-                    rumblerCurrent_.timeOn = 0;
-                    rumblerCurrent_.timeOff = 0;
-                } else {
-                    rumblerEffect_ = RumblerEffect::Off();
-                    rumblerCurrent_ = RumblerEffect::Off();
-                }
+                setRumblerEffect(c.effect);
                 break;
             }
             case cmd::SetNotification::ID: {
@@ -1008,6 +1004,15 @@ public:
         TCB1.CTRLA |= TCB_RUNSTDBY_bm;
     }
 
+    static void disablePWM() {
+        TCB0.CTRLA = 0;
+        TCB0.CTRLB = 0;
+        gpio::outputFloat(AVR_PIN_PWM_BACKLIGHT);
+        TCB1.CTRLA = 0;
+        TCB1.CTRLB = 0;
+        gpio::outputFloat(AVR_PIN_PWM_RUMBLER);
+    }
+
     static void setBacklightPWM(uint8_t value) {
         if (value == 0) {
             TCB0.CTRLA = 0;
@@ -1031,6 +1036,18 @@ public:
     static void rumblerOff() {
         setRumblerPWM(0);
         rumblerEffect_ = RumblerEffect::Off();
+    }
+
+    static void setRumblerEffect(RumblerEffect effect) {
+        if (effect.cycles > 0 && effect.strength > 0) {
+            rumblerEffect_ = effect;
+            rumblerCurrent_ = rumblerEffect_;
+            rumblerCurrent_.timeOn = 0;
+            rumblerCurrent_.timeOff = 0;
+        } else {
+            rumblerEffect_ = RumblerEffect::Off();
+            rumblerCurrent_ = RumblerEffect::Off();
+        }
     }
 
     static void setRumblerPWM(uint8_t value) {
