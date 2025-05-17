@@ -40,5 +40,11 @@ namespace cpu {
     }
 }
 
+namespace i2c {
+    inline bool isDevicePresent([[maybe_unused]] uint8_t address) {
+        return false;
+    }
+}
+
 #include "../utils.h"
 

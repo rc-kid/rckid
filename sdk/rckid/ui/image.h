@@ -37,12 +37,16 @@ namespace rckid::ui {
         }
 
         Image & operator = (Bitmap<ColorRGB> && bmp) noexcept {
+            setBitmap(std::move(bmp));
+            return *this;
+        }
+
+        void setBitmap(Bitmap<ColorRGB> && bmp) noexcept {
             bmp_.~Bitmap();
             new (&bmp_) Bitmap<ColorRGB>{std::move(bmp)};
             w_ = bmp_.width();
             h_ = bmp_.height();
             reposition();
-            return *this;
         }
 
         HAlign hAlign() const { return hAlign_; }
