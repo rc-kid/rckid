@@ -13,7 +13,7 @@
 - [ ] solder cartridge connector on dev board
 - [X] verify that UPDI works when AVR powered with 3v3
 - [X] breadboatd AVR test Serial out
-- [ ] breadboard AVR test RGB
+- [X] breadboard AVR test RGB
 - [ ] breadboard AVR test rumbler
 - [ ] breadboard AVR test backlight
 - [X] breadboard AVR test buttons

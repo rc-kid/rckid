@@ -255,6 +255,8 @@ public:
             // make the AVR_INT floating so that we do not leak any voltage to the now off RP2350
             gpio::outputFloat(AVR_PIN_AVR_INT);
         );
+        // disable debug mode (only exists in power on mode)
+        state_.status.setDebugMode(false);
     }
 
     static void chargerConnected() { 
@@ -306,9 +308,11 @@ public:
         if (enable) {
             gpio::outputFloat(AVR_PIN_AVR_INT);
             gpio::outputHigh(AVR_PIN_VDD_EN);
+            LOG("VDD on");
         } else {
             gpio::outputFloat(AVR_PIN_AVR_INT);
             gpio::outputFloat(AVR_PIN_VDD_EN);
+            LOG("VDD off");
         }
     }
 
@@ -577,9 +581,7 @@ public:
         if (irq_)
             return;
         irq_ = true;
-#ifndef BREADBOARD            
         gpio::outputLow(AVR_PIN_AVR_INT);
-#endif
     }
 
     /** The I2C interrupt handler. 
@@ -1097,6 +1099,7 @@ public:
         if (rgbOn_ == value)
             return;
         if (value) {
+            LOG("RGB on");
             gpio::outputHigh(AVR_PIN_5V_ON);
             gpio::setAsOutput(AVR_PIN_RGB);
             if (delayAfterPowerOn) {
@@ -1104,9 +1107,10 @@ public:
                 cpu::delayMs(100);
             }
         } else {
+            LOG("RGB off");
+            rgbClear();
             gpio::outputFloat(AVR_PIN_RGB);
             gpio::outputFloat(AVR_PIN_5V_ON);
-            rgbClear();
         }
         rgbOn_ = value;
         rgbTicks_ = RGB_TICKS_PER_SECOND;
@@ -1132,6 +1136,9 @@ public:
             rgb_[i] = platform::Color::Black();
             rgbTarget_[i] = platform::Color::Black();
         }
+        // and ensure the RGB state is propagated to the RGB LEDs
+        if (rgbOn_)
+            rgb_.update(true);        
     }
 
     static void rgbTick() {
