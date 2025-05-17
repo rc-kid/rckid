@@ -41,7 +41,8 @@ namespace cpu {
 }
 
 namespace i2c {
-    inline bool isDevicePresent([[maybe_unused]] uint8_t address) {
+    // actually from common
+    inline bool isPresent([[maybe_unused]] uint8_t address) {
         return false;
     }
 }

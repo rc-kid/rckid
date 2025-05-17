@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <cstddef>
 
 /** Literal constructors for unsigned types with varying sizes. 
  */
@@ -65,11 +64,11 @@ namespace platform {
     }
 
 
-    inline uint32_t hash(uint8_t const * buffer, size_t n) {
+    inline uint32_t hash(uint8_t const * buffer, uint32_t n) {
         uint32_t r = 0;
-        for (size_t i = 0; i < n; ++i)
+        for (uint32_t i = 0; i < n; ++i)
             r = r + (buffer[i] << (i % 24));
-        return static_cast<uint32_t>(r + n);
+        return r + n;
     }
 
 } // namespace platform 

@@ -74,6 +74,8 @@ The SDK library is at the core of RCKid as it provides an abstraction layer over
 
 ## Debugging on the Device
 
+> For this is for mkII only. Will be updated once I start testing on mkIII.
+
 For devel-server with OpenOCD installed, wires on the back connector for mkII are: 
     
     green | empty | yellow | blue
@@ -88,6 +90,16 @@ And finally run gdb:
     target remote :3333
 
 (from https://betanet.net/view-post/using-openocd-on-raspberry-pi-4-a)
+
+### AVR Serial TX
+
+AVR does not support on-chip debugging, but to provide at least some debugging hints, the TX pin is available on the debugging header together with AVR UPDI and RP SWD pins. To connect to it connect the TX pin (green cable in devel-server case) and then launch picocom at 115200 baud:
+
+    picocom -b 115200 /dev/ttyAMA0
+
+Where `/dev/ttyAMA0` is your USB device, this one is the default with devel-server. 
+
+> To exit picocom, use C-A C-X. 
 
 ## Attribution
 

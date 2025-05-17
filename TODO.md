@@ -9,15 +9,16 @@
 
 > This could be due to the fact that OTG is not enabled, check if enabling it fixes the problem. If PMIC is changed, this might not be a problem any more.
 
-- [ ] verify cartridge connector integrity on unpopulated dev board
+- [X] verify cartridge connector integrity on unpopulated dev board
 - [ ] solder cartridge connector on dev board
 - [X] verify that UPDI works when AVR powered with 3v3
-- [ ] breadboatd AVR test Serial out
+- [X] breadboatd AVR test Serial out
 - [ ] breadboard AVR test RGB
 - [ ] breadboard AVR test rumbler
-- [ ] breadboard AVR test buttons
+- [ ] breadboard AVR test backlight
+- [X] breadboard AVR test buttons
 - [ ] breadboard AVR test I2C master ennumeration and some basic I2C comms
-- [ ] breadboard AVR test power on / power off
+- [X] breadboard AVR test power on / power off
 - [ ] modify avr to not power rp2350 on
     - [ ] flash the AVR on device
     - [ ] device AVR test Serial out
