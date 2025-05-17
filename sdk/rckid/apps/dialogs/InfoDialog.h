@@ -32,6 +32,7 @@ namespace rckid {
 
         static void error(String title, String text) {
             NewArenaGuard g;
+            ArenaAllocationGuard gg;
             InfoDialog * d  = new InfoDialog{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::poo)}, std::move(title), std::move(text)};
             d->run();
             delete d;
@@ -39,6 +40,7 @@ namespace rckid {
 
         static void info(String title, String text) {
             NewArenaGuard g;
+            ArenaAllocationGuard gg;
             InfoDialog * d  = new InfoDialog{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::info)}, std::move(title), std::move(text)};
             d->run();
             delete d;

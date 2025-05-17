@@ -878,7 +878,7 @@ public:
     }
 
     static void readABXYGroup() {
-        bool changed = state_.status.setABXYtButtons(
+        bool changed = state_.status.setABXYButtons(
             ! gpio::read(AVR_PIN_BTN_2), // a
             ! gpio::read(AVR_PIN_BTN_1), // b
             ! gpio::read(AVR_PIN_BTN_4), // sel
