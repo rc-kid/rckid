@@ -5,6 +5,7 @@
 #include "../ui/header.h"
 #include "../audio/mp3.h"
 #include "../assets/icons_default_64.h"
+#include "../assets/fonts/OpenDyslexic32.h"
 
 namespace rckid {
 
@@ -87,6 +88,7 @@ namespace rckid {
                 lastUs_ = uptimeUs();
                 elapsedUs_ = 0;
                 title_ = new ui::Label{80, 10, filesystem::stem(path)};
+                title_->setFont(Font::fromROM<assets::OpenDyslexic32>());
                 elapsed_ = new ui::Label{80, 54, String{""}};
                 icon_ = new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::play)}};
                 icon_->setPos(8,8);

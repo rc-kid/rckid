@@ -16,7 +16,7 @@ namespace rckid {
 
     /** Low level driver for the ST7789 display driver. 
      
-        The driver takes care of display initialization and provides basic functions for display updates via DMA.
+        The driver takes care of display initialization and provides basic functions for display updates via DMA. The driver assumes MCU 16 bit interface, and only works with 320x240 displays. Tested on 37pin hand-solderable display as well as a 40pin FPC cable, whose pinouts are described below. 
 
         RCKid uses a 37pin hand-solderable version of 2.8" 320x240 TFT display with the following pinout:
 

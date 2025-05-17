@@ -92,6 +92,16 @@
 
 ## Apps
 
+### AudioPlayer
+
+- label scrolling
+- maybe smaller icon?
+- image picture
+- song left/right, repeat/no repeat
+- does not work on mk2
+
+### DataSync
+
 - update the DataSync app so that it actually works as intended
 
 ## Others
