@@ -15,6 +15,12 @@ namespace rckid::ui {
         Image():
             bmp_{} {
         }
+
+        Image(Rect rect, Bitmap<ColorRGB> && bmp):
+            Widget{rect},
+            bmp_{std::move(bmp)} {
+            reposition();
+        }
     
         Image(Bitmap<ColorRGB> && bmp): bmp_{std::move(bmp)} {
             w_ = bmp_.width();

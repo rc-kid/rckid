@@ -74,6 +74,7 @@
         "*.inc": "cpp",
         "charconv": "cpp",
         "format": "cpp",
-        "span": "cpp"
+        "span": "cpp",
+        "any": "cpp"
     }
 }

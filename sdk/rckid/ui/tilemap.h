@@ -85,6 +85,22 @@ namespace rckid::ui {
             }};
         }
 
+        Writer textMultiline(Coord x, Coord y) {
+            ASSERT(x < cols_ && y < rows_);
+            return Writer{[x, y, this](char c) mutable {
+                if (c == '\n') {
+                    x = 0;
+                    ++y;
+                } else if (x < cols_ && y < rows_) {
+                    at(x++, y) = c;
+                    if (x == cols_) {
+                        x = 0;
+                        ++y;
+                    }
+                }
+            }};
+        }
+
     private:
 
         static_assert(sizeof(TileInfo) == 2);

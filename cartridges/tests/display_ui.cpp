@@ -15,6 +15,7 @@
 
 #include <rckid/apps/dialogs/TextDialog.h>
 #include <rckid/apps/dialogs/FileDialog.h>
+#include <rckid/apps/dialogs/InfoDialog.h>
 #include <rckid/apps/AudioPlayer.h>
 
 
@@ -117,10 +118,12 @@ int main() {
         yield();
         LOG(LL_INFO, "Free memory: " << memoryFree() / 1024);
         yield();
-        if (app.has_value()) {
+        if (app.has_value() && app.value().valid()) {
             LOG(LL_INFO, "Running app...");
             yield();
             app.value()();
+        } else {
+            InfoDialog::error("Empty app", "The app you have chosen is empty. Ouch");
         }
 /*
         auto menu = MainMenu{mainMenuGenerator};

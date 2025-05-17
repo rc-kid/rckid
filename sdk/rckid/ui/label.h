@@ -55,7 +55,10 @@ namespace rckid::ui {
         Font const & font() const { return font_; }
         void setFont(Font const & value) { 
             font_ = value;
-            reposition();
+            if (autosize_)
+                resizeToText();
+            else
+                reposition();
         }
 
         HAlign hAlign() const { return hAlign_; }
