@@ -530,7 +530,13 @@ public:
             cpu::wdtReset();
             cpu::delayMs(10);
         }
+        LOG("I2C scan done");
         // anod now see if we can read from BQ25895
+        LOG("INA219 register dump:");
+        for (uint8_t i = 0; i < 6; ++i) {
+            uint16_t x = i2c::readRegister<uint16_t>(0x64, i);
+            LOG(hex(i) << " = " << hex(x, false) << "(binary " << bin(x, false) << ")");
+        }
         /*
         LOG("BQ25895 register dump:");
         for (uint8_t i = 0; i < 0x15; ++i) {

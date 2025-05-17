@@ -296,3 +296,25 @@ inline void bin<uint8_t>::operator()(Writer & writer) {
     writer << ((what_ & 2) ? '1' : '0');
     writer << ((what_ & 1) ? '1' : '0');
 }
+
+template<>
+inline void bin<uint16_t>::operator()(Writer & writer) {
+    if (header_)
+        writer << '0' << 'b';
+    writer << ((what_ & 32768) ? '1' : '0');
+    writer << ((what_ & 16384) ? '1' : '0');
+    writer << ((what_ & 8192) ? '1' : '0');
+    writer << ((what_ & 4096) ? '1' : '0');
+    writer << ((what_ & 2048) ? '1' : '0');
+    writer << ((what_ & 1024) ? '1' : '0');
+    writer << ((what_ & 512) ? '1' : '0');
+    writer << ((what_ & 256) ? '1' : '0');
+    writer << ((what_ & 128) ? '1' : '0');
+    writer << ((what_ & 64) ? '1' : '0');
+    writer << ((what_ & 32) ? '1' : '0');
+    writer << ((what_ & 16) ? '1' : '0');
+    writer << ((what_ & 8) ? '1' : '0');
+    writer << ((what_ & 4) ? '1' : '0');
+    writer << ((what_ & 2) ? '1' : '0');
+    writer << ((what_ & 1) ? '1' : '0');
+}

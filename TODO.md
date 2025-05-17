@@ -67,7 +67,7 @@
 ## AVR
 
 - see if we can run at 5MHz and still talk to neopixel
-- verify I2C master works
+- I2C master enumeration works, but read register does not
 
 ## UI
 
