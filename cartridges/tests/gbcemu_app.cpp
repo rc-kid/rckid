@@ -49,6 +49,7 @@ public:
 }; // GBCStats
 
 int main() {
+    cpu::overclock();
     initialize();
     while (true) {
         Arena::enter();
