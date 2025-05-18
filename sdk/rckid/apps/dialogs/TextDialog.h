@@ -25,16 +25,18 @@ namespace rckid {
         }; // TextInput::KeyboardType
 
         TextDialog():
-            ui::App<String>{Rect::XYWH(4, 144, 312, 96)} {
+            ui::App<String>{Rect::XYWH(0, 144, 320, 96)} {
                 using namespace ui;
+                g_.setBg(ColorRGB::White().withAlpha(32));
                 tileMap_ = new ui::Tilemap<Tile<12, 24, Color256>>{26, 4, assets::System24, palette_};
+                tileMap_->setPos(4, 0);
                 g_.add(tileMap_);
                 drawKeyboard(KeyboardType::UpperCase);
                 drawText();
                 selRect_ = new ui::Rectangle{Rect::WH(24, 24)};
                 g_.add(selRect_);
                 cursorLine_ = new ui::VLine{Rect::WH(24, 24)};
-                cursorLine_->setX(12 + (cursor_ - left_) * 12);
+                cursorLine_->setX(16 + (cursor_ - left_) * 12);
                 g_.add(cursorLine_);
             }
 
@@ -55,7 +57,7 @@ namespace rckid {
                 exit();
             // deal with the animation timer
             a_.update();
-            int x = select_.x * 12 - 6;
+            int x = select_.x * 12 - 2;
             int y = select_.y * 24 + 24;
             if (a_.running()) {
                 x = interpolation::cosine(a_, last_.x, x).round();
@@ -105,7 +107,7 @@ namespace rckid {
             if (cursor_ < left_)
                 --left_;
             drawText();
-            cursorLine_->setX(12 + (cursor_ - left_) * 12);
+            cursorLine_->setX(16 + (cursor_ - left_) * 12);
         }
 
         void cursorRight() {
@@ -115,7 +117,7 @@ namespace rckid {
             if (cursor_ - left_ > 24)
                 ++left_;
             drawText();
-            cursorLine_->setX(12 + (cursor_ - left_) * 12);
+            cursorLine_->setX(16 + (cursor_ - left_) * 12);
         }
 
         void keyPress() {

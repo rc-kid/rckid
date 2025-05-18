@@ -329,3 +329,16 @@ namespace rckid {
     }
 
 }
+
+extern "C" {
+
+    void memset32(uint32_t * buffer, uint32_t size, uint32_t value) {
+        while (size-- != 0)
+            *(buffer++) = value;
+    }
+
+    void memset16(uint16_t * buffer, uint32_t size, uint16_t value) {
+        while (size-- != 0)
+            *(buffer++) = value;
+    }
+}
