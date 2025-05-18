@@ -85,6 +85,7 @@ namespace rckid::ui {
             for (auto & entry : folder) {
                 if (entry.isFile() && ! onFileFilter(entry.name()))
                     continue;
+                LOG(LL_DEBUG, "FileBrowser: adding entry " << entry.name());
                 entries_.push_back(entry);
             }
             setEntry(i_, transition);

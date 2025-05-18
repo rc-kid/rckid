@@ -76,6 +76,12 @@ namespace rckid {
             return result;
         }
 
+        static void * tryAllocBytes(uint32_t numBytes) {
+            if (end_ + numBytes >= Heap::end_)
+                return nullptr;
+            return allocBytes(numBytes);
+        }
+
         /** Allocates arena for given type. 
          */
         template<typename T>

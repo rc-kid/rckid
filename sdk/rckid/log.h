@@ -9,7 +9,7 @@
 
 #define LL_HEAP 0
 #define LL_INFO 1
-#define LL_DEBUG 0
+#define LL_DEBUG 1
 
 #ifndef LL_ERROR
 #define LL_ERROR 1

@@ -7,7 +7,7 @@
 #endif
 
 #include <rckid/utils/string.h>
-
+#include <rckid/utils/stream.h>
 
 namespace rckid::gbcemu {
 
@@ -37,9 +37,7 @@ namespace rckid::gbcemu {
 
     /** GB(C) Cartridge 
      
-        The gamepak is a wrapper around the ROM of the cartridge. Everything else, i.e. RAM, memory controller, or extra hardware is provided by gbcemu. 
-
-        TODO in the future, the gamepak is also responsible for loading the cartridge ROM into RP2350 RAM from various sources, but for now this is simplified by having the entire ROM present in either RAM or ROM.  
+        The gamepak is a wrapper around the ROM of the cartridge. Everything else, i.e. RAM, memory controller, or extra hardware is provided by gbcemu. The GamePak provides the basic interface while the actual implementation is provided by the subclasses below. 
      */
     class GamePak {
     public:
@@ -107,6 +105,7 @@ namespace rckid::gbcemu {
         }
 
     protected:
+        static constexpr uint32_t PAGE_SIZE = 16 * 1024;
 
         virtual uint8_t const * doGetPage(uint32_t page) const = 0;
 
@@ -126,8 +125,10 @@ namespace rckid::gbcemu {
     
         FlashGamePak(uint8_t const * rom) : rom_(rom){}
 
+    protected:
+
         uint8_t const * doGetPage(uint32_t page) const override {
-            return rom_ + page * 16 * 1024;
+            return rom_ + page * PAGE_SIZE;
         }
 
     private:
@@ -135,9 +136,116 @@ namespace rckid::gbcemu {
         uint8_t const * rom_;
     }; 
 
+    /** Gamepak with ROM page caching. 
+     
+        As the RCKid RAM size is much smaller than the max size of GBC cartridges, the cached gamepak employs a simple LRU caching scheme to keep the most recently used pages in RAM (arena). 
+     */
+    template<typename T>
+    class CachedGamePak : public GamePak {
+    public:
 
+        CachedGamePak(T && s):
+            s_{std::move(s)} {
+                Arena::allocBytes(PAGE_SIZE * 4);
 
+        }
 
+        ~CachedGamePak() override {
+            PageInfo * p = cache_;
+            while (p != nullptr) {
+                PageInfo * next = p->last;
+                delete p;
+                p = next;
+            }
+            delete page0_;
+        }
+
+    protected:
+
+        struct PageInfo {
+            static constexpr uint32_t EMPTY = 0xffffffff;
+
+            uint8_t * buffer;
+            PageInfo * last = nullptr;
+            uint32_t page = EMPTY;
+
+            PageInfo(uint8_t * buffer):
+                buffer{buffer} {
+            }
+
+            void detach() {
+                last = nullptr;
+            }
+
+            void reset() {
+                page = EMPTY;
+                detach();
+            }
+
+        };
+
+        uint8_t const * doGetPage(uint32_t page) const override {
+            // page0 must always be available and hence is removed from the caching
+            if (page == 0) {
+                if (page0_ == nullptr) {
+                    page0_ = new PageInfo{reinterpret_cast<uint8_t*>(Arena::tryAllocBytes(PAGE_SIZE))};
+                    fetchPage(0, page0_);
+                }
+                return page0_->buffer;
+            // rest is LRU cached for as long as there is memory available
+            } else {
+                PageInfo * p = getPage(page);
+                if (p->page != page)
+                    fetchPage(page, p);
+                p->last = cache_;
+                cache_ = p;
+                return p->buffer;
+            }
+        }
+
+        PageInfo * getPage(uint32_t page) const {
+            PageInfo * p = cache_;
+            PageInfo * prev = nullptr;
+            while (p != nullptr) {
+                // if we found the page, we need to remove it from the cache for the LRU to work
+                if (p->page == page) {
+                    if (prev != nullptr)
+                        prev->last = p->last;
+                    else
+                        cache_ = p->last;
+                    p->detach();
+                    return p;
+                }
+                if (p->last == nullptr)
+                    break;
+                prev = p;
+                p = p->last;
+            }
+            // haven't found the page, try creating one first
+            uint8_t * buffer = reinterpret_cast<uint8_t*>(Arena::tryAllocBytes(PAGE_SIZE));
+            if (buffer != nullptr) {
+                p = new PageInfo{buffer};
+                return p;
+            }
+            prev->last = nullptr;
+            p->reset();
+            return p;
+        }
+
+        void fetchPage(uint32_t page, PageInfo * p) const {
+            uint32_t offset = page * PAGE_SIZE;
+            s_.seek(offset);
+            s_.read(p->buffer, PAGE_SIZE);
+            p->page = page;
+        }
+
+    private:
+
+        mutable PageInfo * cache_ = nullptr;
+        mutable PageInfo * page0_ = nullptr;
+
+        mutable T s_;
+    }; 
 
 #ifdef RCKID_BACKEND_FANTASY
 
@@ -151,9 +259,11 @@ namespace rckid::gbcemu {
         ~FileGamePak() override {
             delete [] rom_;
         }
+
+    protected:
             
         uint8_t const * doGetPage(uint32_t page) const override {
-            return rom_ + page * 16 * 1024;
+            return rom_ + page * PAGE_SIZE;
         }
     
     private:
