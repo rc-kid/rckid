@@ -17,9 +17,10 @@ namespace rckid {
     class InfoDialog : public ui::App<void> {
     public:
         InfoDialog(Bitmap<ColorRGB> && icon, String title, String text):
-            ui::App<void>{Rect::XYWH(4, 144, 312, 96)} {
+            ui::App<void>{Rect::XYWH(0, 144, 320, 96)} {
             using namespace ui;
             icon_ = new ui::Image{Rect::WH(96, 96), std::move(icon)};
+            icon_->setTransparentColor(ColorRGB::Black());
             title_ = new ui::Label{ 96, 5, std::move(title)};
             title_->setFont(Font::fromROM<assets::OpenDyslexic32>());
             text_ = new ui::Tilemap<Tile<8, 16, Color256>>{27, 3, assets::System16, palette_};
@@ -34,6 +35,7 @@ namespace rckid {
             NewArenaGuard g;
             ArenaAllocationGuard gg;
             InfoDialog * d  = new InfoDialog{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::poo)}, std::move(title), std::move(text)};
+            d->g_.setBg(ColorRGB::Red().withAlpha(32));
             d->run();
             delete d;
         }

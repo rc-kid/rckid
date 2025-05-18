@@ -338,8 +338,8 @@ namespace rckid {
         BeginDrawing();
         DrawTextureEx(display::texture, {0, 0}, 0, 2.0f, WHITE);
     
-        DrawText(TextFormat("FPS: %d", display::fps), 540, 280, 20, RED);
-        DrawText(TextFormat("MEM: %d", memoryFree() / 1024), 540, 300, 20, RED);
+        DrawText(TextFormat("FPS: %d", display::fps), 540, 240, 20, RED);
+        DrawText(TextFormat("MEM: %d", memoryFree() / 1024), 540, 260, 20, RED);
 
         EndDrawing();
         SwapScreenBuffer();
@@ -751,6 +751,25 @@ namespace rckid {
     bool memoryIsImmutable([[maybe_unused]] void const * ptr) {
         memoryCheckStackProtection();
         return false;
+    }
+
+}
+
+extern "C" {
+
+    void memset8(uint8_t * buffer, uint8_t value, uint32_t size) {
+        while (size-- != 0)
+            *(buffer++) = value;
+    }
+
+    void memset16(uint16_t * buffer, uint16_t value, uint32_t size) {
+        while (size-- != 0)
+            *(buffer++) = value;
+    }
+
+    void memset32(uint32_t * buffer, uint32_t value, uint32_t size) {
+        while (size-- != 0)
+            *(buffer++) = value;
     }
 
 }
