@@ -17,7 +17,7 @@
 
 // TODO  
 // flag that can be used to enable breadboard, or device build. The breadboard is only useful while prototyping all breadboard guarded code should eventually disappear
-#define BREADBOARD
+#define BREADBOARD__
 
 #undef ASSERT
 #define ASSERT(...) if (!(__VA_ARGS__)) { debugWrite() << "ASSERT " << __LINE__ << "\r\n"; }
@@ -151,7 +151,7 @@ public:
         serial::initializeTx(RCKID_SERIAL_SPEED);
 
         // TODO some initialization routine with checks, etc.
-        LOG("SYSTEM RESET DETECTED: " << hex(RSTCTRL.RSTFR));
+        LOG("\n\n\nSYSTEM RESET DETECTED: " << hex(RSTCTRL.RSTFR));
         initializeMasterMode();
         // TODO scanning I2C devices hangs (!)
         detectI2CDevices();
@@ -294,7 +294,7 @@ public:
         LOG("Debug mode on");
         state_.status.setDebugMode(true);
         if (! (powerMode_ & POWER_MODE_DC))
-            setNotification(RGBEffect::Solid(platform::Color::White().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
+            setNotification(RGBEffect::Breathe(platform::Color::White().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
         if (state_.brightness < 128)
             setBacklightPWM(128);
     }
@@ -308,7 +308,7 @@ public:
 
     static void powerVDD(bool enable) {
         // TODO enable / disbale power on for testing purposes
-        //return;
+        return;
         if (enable) {
             gpio::outputFloat(AVR_PIN_AVR_INT);
             gpio::outputHigh(AVR_PIN_VDD_EN);
@@ -519,32 +519,14 @@ public:
     }
 
     static void detectI2CDevices() {
-        LOG("Scanning I2C devices...");
-        // 0x53 0x68 0x6a
-        // 0x53 == LTR390UV
-        // 0x68 == MPU6500
-        // 0x6a == BQ25895
-        for (uint8_t addr = 0; addr < 128; ++addr) {
-            if (i2c::isPresent(addr))
-                LOG(addr);
-            cpu::wdtReset();
-            cpu::delayMs(10);
-        }
-        LOG("I2C scan done");
-        // anod now see if we can read from BQ25895
-        LOG("INA219 register dump:");
-        for (uint8_t i = 0; i < 6; ++i) {
-            uint16_t x = i2c::readRegister<uint16_t>(0x64, i);
-            LOG(hex(i) << " = " << hex(x, false) << "(binary " << bin(x, false) << ")");
-        }
-        /*
-        LOG("BQ25895 register dump:");
-        for (uint8_t i = 0; i < 0x15; ++i) {
-            uint8_t x;
-            i2c::readRegister(0x6a, i, &x, 1);
-            LOG(hex(i) << " = " << hex(x, false) << "(binary " << bin(x, false) << ")");
-        }
-            */
+        using namespace platform;
+        LOG("Detecting I2C devices...");
+        LOG("  LTR390UV (0x53):   " << (i2c::isPresent(0x53) ? "ok" : "not found"));
+        LOG("  MPU6500 (0x68):    " << (i2c::isPresent(0x68) ? "ok" : "not found"));
+        LOG("  BQ25895 (0x6a):    " << (i2c::isPresent(0x6a) ? "ok" : "not found"));
+        LOG("  INA219 (0x40):     " << (i2c::isPresent(0x40) ? "ok" : "not found"));
+        //LOG("  TLV320 (0xXX):     " << (i2c::isPresent(0xXX) ? "ok" : "not found"));
+        //LOG("  SI4705 (0xXX):     " << (i2c::isPresent(0xXX) ? "ok" : "not found"));
     }
 
     static void processIntRequests() {
@@ -864,7 +846,7 @@ public:
             }
             if (state_.status.debugMode()) {
 #ifndef BREADBOARD
-                if (powerMode_ && POWER_MODE_WAKEUP && ! state_.btnVolumeUp())
+                if (powerMode_ && POWER_MODE_WAKEUP && ! state_.status.btnVolumeUp())
                     leaveDebugMode();
                 // the extra button pins are not available on breadboard so the readings are useless
                 if (state_.status.btnVolumeUp()) {

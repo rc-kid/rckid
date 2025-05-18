@@ -18,9 +18,9 @@
 - [X] breadboard AVR test backlight
 - [X] breadboard AVR test IRQ
 - [X] breadboard AVR test buttons
-- [ ] breadboard AVR test I2C master ennumeration and some basic I2C comms
+- [X] breadboard AVR test I2C master ennumeration and some basic I2C comms
 - [X] breadboard AVR test power on / power off
-- [ ] modify avr to not power rp2350 on
+- [X] modify avr to not power rp2350 on, switch to ATTiny3217
     - [ ] flash the AVR on device
     - [ ] device AVR test Serial out
     - [ ] device AVR test RGB
