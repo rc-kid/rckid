@@ -52,7 +52,7 @@ int main(int argc, char const * argv[]) {
     Args::Arg<unsigned> tileHeight{16};
     Args::Arg<std::string> glyphs{"glyphs", ""};
     Args::Arg<std::string> ns{"namespace", "rckid::assets"};
-    Args::Arg<unsigned> bpp{"bpp", 8};
+    Args::Arg<unsigned> bpp{"bpp", 4};
     Args::parse(argc, argv, { inputFile, outputFile, fontSize, tileWidth, tileHeight, glyphs, ns, bpp});
     // get the glyphs 
     Glyphs fontGlyphs = glyphs.isDefault() ? getDefaultTileGlyphs() : loadGlyphIndices(glyphs.value());

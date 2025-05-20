@@ -49,7 +49,9 @@ public:
 }; // GBCStats
 
 int main() {
+#ifndef RCKID_BACKEND_FANTASY    
     cpu::overclock();
+#endif
     initialize();
     while (true) {
         Arena::enter();

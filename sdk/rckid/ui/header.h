@@ -21,7 +21,7 @@ namespace rckid::ui {
         - radio
 
      */
-    class Header : public Tilemap<Tile<8, 16, Color256>> {
+    class Header : public Tilemap<Tile<8, 16, Color16>> {
     public:
         Header() : Tilemap{40, 1, assets::System16, palette_} {
             fill(' ');
