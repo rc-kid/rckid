@@ -306,7 +306,17 @@ namespace rckid {
     }
 
     uint8_t debugRead(bool echo) {
-        UNIMPLEMENTED;
+        char cmd_ = ' ';
+#if (RCKID_LOG_TO_SERIAL == 1)
+        cmd_ = uart_getc(uart0);
+#else 
+        while (tud_cdc_read(& cmd_, 1) != 1) { yield(); };
+        if (echo) {
+            tud_cdc_write(& cmd_, 1);
+            tud_cdc_write_flush();
+        }
+#endif
+        return static_cast<uint8_t>(cmd_);
     }
 
     void initialize([[maybe_unused]] int argc, [[maybe_unused]] char const * argv[]) {
@@ -366,10 +376,8 @@ namespace rckid {
             io::avrState_.brightness = 16;
         displaySetBrightness(io::avrState_.brightness);
 
-#if (defined RCKID_WAIT_FOR_SERIAL)
-        char cmd_ = ' ';
-        while (tud_cdc_read(& cmd_, 1) != 1) { yield(); };
-        LOG(LL_DEBUG, "Received command " << cmd_);
+#if (RCKID_WAIT_FOR_SERIAL == 1)
+        debugRead(true);
 #endif
 
         // configure the AVR interrupt pin as input pullup (it's pulled down by the AVR when needed, floating otherwise) and connect an interrupt callback on the falling edge

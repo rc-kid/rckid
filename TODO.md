@@ -21,12 +21,12 @@
 - [X] breadboard AVR test I2C master ennumeration and some basic I2C comms
 - [X] breadboard AVR test power on / power off
 - [X] modify avr to not power rp2350 on, switch to ATTiny3217
-    - [ ] flash the AVR on device
-    - [ ] device AVR test Serial out
-    - [ ] device AVR test RGB
+    - [X] flash the AVR on device
+    - [X] device AVR test Serial out
+    - [X] device AVR test RGB
     - [ ] device AVR test rumbler
-    - [ ] device AVR test buttons
-    - [ ] device AVR test I2C master ennumeration
+    - [X] device AVR test buttons
+    - [X] device AVR test I2C master ennumeration
     - [X] switch to external osc for RTC on the devboard
     - [ ] test device clock accuracy with external clock
 - [ ] modify AVR to turn on/off
@@ -49,7 +49,6 @@
 - main menu mem efficiency can be improved by having 
 
 - fix/check device fatal eror & stack protection
-- check why device allocates every tick? DOes not seem to be display driver
 - improve memory allocator (heap)
 - verify other std::string uses
 
@@ -73,7 +72,7 @@
 
 - switch system tiles to using color16 instead of color256
 - proper palette rendering, do offsets
-- palettes in the UI stuff (header & textDialog)
+- palettes in the UI stuff (header & dialogs)
 - when updating multiple attributes of a widget the recalculate after each one of them is not necessary
 - also maybe change the resize to change and make it general method for ui change stuff
 
@@ -105,6 +104,10 @@
 ### DataSync
 
 - update the DataSync app so that it actually works as intended
+
+### GBCEmu
+
+- tearing is kinda ugly, can be fixed by framebuffer, will cost around 23k, but then scaling & rendering can be done by other core
 
 ## Others
 
