@@ -23,7 +23,7 @@ namespace rckid {
             icon_->setTransparentColor(ColorRGB::Black());
             title_ = new ui::Label{ 96, 5, std::move(title)};
             title_->setFont(Font::fromROM<assets::OpenDyslexic32>());
-            text_ = new ui::Tilemap<Tile<8, 16, Color256>>{27, 3, assets::System16, palette_};
+            text_ = new ui::Tilemap<Tile<8, 16, Color16>>{27, 3, assets::System16, palette_};
             text_->setPos(96, 48);
             text_->textMultiline(0, 0) << text;
             g_.add(icon_);
@@ -61,7 +61,7 @@ namespace rckid {
 
       ui::Image * icon_;
       ui::Label * title_;
-      ui::Tilemap<Tile<8, 16, Color256>> * text_;
+      ui::Tilemap<Tile<8, 16, Color16>> * text_;
 
 
         static constexpr uint16_t palette_[] = {

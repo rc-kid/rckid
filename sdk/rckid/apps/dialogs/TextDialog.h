@@ -28,7 +28,7 @@ namespace rckid {
             ui::App<String>{Rect::XYWH(0, 144, 320, 96)} {
                 using namespace ui;
                 g_.setBg(ColorRGB::White().withAlpha(32));
-                tileMap_ = new ui::Tilemap<Tile<12, 24, Color256>>{26, 4, assets::System24, palette_};
+                tileMap_ = new ui::Tilemap<Tile<12, 24, Color16>>{26, 4, assets::System24, palette_};
                 tileMap_->setPos(4, 0);
                 g_.add(tileMap_);
                 drawKeyboard(KeyboardType::UpperCase);
@@ -224,7 +224,7 @@ namespace rckid {
         int cursor_ = 0;
         int left_ = 0;
 
-        ui::Tilemap<Tile<12,24,Color256>> * tileMap_; 
+        ui::Tilemap<Tile<12,24,Color16>> * tileMap_; 
         ui::Rectangle * selRect_;
         ui::VLine * cursorLine_;
 

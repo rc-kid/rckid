@@ -46,7 +46,6 @@
 # TODO
 
 - document host file system
-- main menu mem efficiency can be improved by having 
 
 - fix/check device fatal eror & stack protection
 - improve memory allocator (heap)
@@ -70,7 +69,6 @@
 
 ## UI
 
-- switch system tiles to using color16 instead of color256
 - proper palette rendering, do offsets
 - palettes in the UI stuff (header & dialogs)
 - when updating multiple attributes of a widget the recalculate after each one of them is not necessary
