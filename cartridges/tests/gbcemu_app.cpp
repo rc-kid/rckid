@@ -71,7 +71,7 @@ int main() {
             //rckid::gbcemu::rom::blargg::instrs::op_a__hl_
         //});
         filesystem::mount();
-        app.loadCartridge(new gbcemu::CachedGamePak(filesystem::fileRead("/games/testrom.gb")));
+        app.loadCartridge(new gbcemu::CachedGamePak(filesystem::fileRead("/games/testrom2.gb")));
         //app.loadCartridge(new gbcemu::FileGamePak("/mnt/c/delete/testrom2.gb"));
         //app.loadCartridge(new gbcemu::FileGamePak("gbcemu/roms/blargg-test-roms/instr_timing/instr_timing.gb"));
         //app.setTerminateAfterStop(true);

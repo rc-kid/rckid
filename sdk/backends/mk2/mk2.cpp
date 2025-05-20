@@ -302,7 +302,7 @@ namespace rckid {
 
     Writer debugWrite() {
         return Writer{[](char x) {
-#if (defined RCKID_LOG_TO_SERIAL)
+#if (RCKID_LOG_TO_SERIAL == 1)
             uart_putc(uart0, x);
 #else
             if (x == '\n') {
@@ -319,12 +319,23 @@ namespace rckid {
     }
 
     uint8_t debugRead(bool echo) {
-        return 0;
+        char cmd_ = ' ';
+#if (RCKID_LOG_TO_SERIAL == 1)
+        cmd_ = uart_getc(uart0);
+#else 
+        while (tud_cdc_read(& cmd_, 1) != 1) { yield(); };
+        if (echo) {
+            tud_cdc_write(& cmd_, 1);
+            tud_cdc_write_flush();
+        }
+#endif
+        return static_cast<uint8_t>(cmd_);
     }
 
 
 
     void initialize([[maybe_unused]] int argc, [[maybe_unused]] char const * argv[]) {
+        uint32_t freeMem = memoryFree();
         board_init();
         memoryInstrumentStackProtection();
         // TODO in mkII we can't enable the USB in general as it leaks voltage into the USB pwr, which in turn leaks voltage to the battery switch mosfet
@@ -342,7 +353,7 @@ namespace rckid {
         // Make the I2C pins available to picotool
         bi_decl(bi_2pins_with_func(RP_PIN_SDA, RP_PIN_SCL, GPIO_FUNC_I2C)); 
 
-#if (defined RCKID_LOG_TO_SERIAL)
+#if (RCKID_LOG_TO_SERIAL == 1)
         // initialize uart0 on pins 16 & 17 as serial out
         uart_init(uart0, 74880);
         gpio_set_function(16, GPIO_FUNC_UART);
@@ -390,11 +401,12 @@ namespace rckid {
         // set brightness to 50% by default after startup
         displaySetBrightness(128);
 
-#if (defined RCKID_WAIT_FOR_SERIAL)
-        char cmd_ = ' ';
-        while (tud_cdc_read(& cmd_, 1) != 1) { yield(); };
-        LOG(LL_ERROR, "Received command " << cmd_);
+
+#if (RCKID_WAIT_FOR_SERIAL == 1)
+        debugRead(true);
 #endif
+        LOG(LL_INFO, "Free memory before init: " << freeMem);
+        LOG(LL_INFO, "Free memory now:         " << memoryFree());
     }
 
     void tick() {
