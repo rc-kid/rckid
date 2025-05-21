@@ -307,8 +307,6 @@ public:
     }
 
     static void powerVDD(bool enable) {
-        // TODO enable / disbale power on for testing purposes
-        return;
         if (enable) {
             gpio::outputFloat(AVR_PIN_AVR_INT);
             gpio::outputHigh(AVR_PIN_VDD_EN);
@@ -840,6 +838,11 @@ public:
         }
         if (changed) {
             LOG("CTRL: " << state_.status.btnHome() << " " << state_.status.btnVolumeUp() << " " << state_.status.btnVolumeDown());
+            // TODO delete this after we test external crystal accuracy
+            if (state_.status.btnVolumeUp()) {
+                LOG("resetting uptime");
+                state_.uptime = 0;
+            }
             if (! state_.status.btnHome()) {
                 homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
                 clearPowerMode(POWER_MODE_WAKEUP);
@@ -1024,6 +1027,7 @@ public:
     static void rumblerOff() {
         setRumblerPWM(0);
         rumblerEffect_ = RumblerEffect::Off();
+        LOG("Rumbler off");
     }
 
     static void setRumblerEffect(RumblerEffect effect) {
@@ -1054,6 +1058,7 @@ public:
             //TCB1.CTRLA = TCB_CLKSEL_CLKTCA_gc | TCB_ENABLE_bm | TCB_RUNSTDBY_bm;
             TCB1.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm | TCB_RUNSTDBY_bm;
         }
+        LOG("rumbler on " << value);
     }
 
     static void rumblerTick() {

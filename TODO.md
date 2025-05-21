@@ -24,18 +24,20 @@
     - [X] flash the AVR on device
     - [X] device AVR test Serial out
     - [X] device AVR test RGB
-    - [ ] device AVR test rumbler
     - [X] device AVR test buttons
     - [X] device AVR test I2C master ennumeration
     - [X] switch to external osc for RTC on the devboard
     - [ ] test device clock accuracy with external clock
-- [ ] modify AVR to turn on/off
-- [ ] device AVR test power on / power off
-- [ ] check that RP2350 shows on host machine as USB drive (can be flashed)
+- [X] modify AVR to turn on/off
+- [X] device AVR test power on / power off
+- [ ] device AVR test rumbler -- it runs off IOVDD, has to be checked after IOVDD en 
+- [X] check that RP2350 shows on host machine as USB drive
 - [ ] enumerate I2C devices (now we should see also audio & radio)
+- [X] check serial test on RPi Pico 2
 - [ ] flash RP2350 with serial test and see output
 - [ ] check that AVR can reboot RP
 - [ ] verify that AVR can reset RP2350 into bootloader mode
+- [ ] ensure logging works with initialize() call as well
 - [ ] check that RP can talk to I2C devices
 - [ ] check that RP can talk to the display & show data
 - [ ] check that RP can talk to SD card
@@ -44,6 +46,8 @@
 - [ ] disable debug mode on by default on AVR
 
 # TODO
+
+- determine correct rumbler settings for ok fail and nudge
 
 - document host file system
 
