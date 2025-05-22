@@ -10,7 +10,7 @@
 > This could be due to the fact that OTG is not enabled, check if enabling it fixes the problem. If PMIC is changed, this might not be a problem any more.
 
 - [X] verify cartridge connector integrity on unpopulated dev board
-- [ ] solder cartridge connector on dev board
+- [X] solder cartridge connector on dev board
 - [X] verify that UPDI works when AVR powered with 3v3
 - [X] breadboatd AVR test Serial out
 - [X] breadboard AVR test RGB
@@ -27,23 +27,23 @@
     - [X] device AVR test buttons
     - [X] device AVR test I2C master ennumeration
     - [X] switch to external osc for RTC on the devboard
-    - [ ] test device clock accuracy with external clock
+    - [X] test device clock accuracy with external clock
 - [X] modify AVR to turn on/off
 - [X] device AVR test power on / power off
 - [ ] device AVR test rumbler -- it runs off IOVDD, has to be checked after IOVDD en 
 - [X] check that RP2350 shows on host machine as USB drive
 - [ ] enumerate I2C devices (now we should see also audio & radio)
 - [X] check serial test on RPi Pico 2
-- [ ] flash RP2350 with serial test and see output
-- [ ] check that AVR can reboot RP
-- [ ] verify that AVR can reset RP2350 into bootloader mode
+- [X] flash RP2350 with serial test and see output
+- [X] check that AVR can reboot RP
+- [X] verify that AVR can reset RP2350 into bootloader mode
 - [ ] ensure logging works with initialize() call as well
 - [ ] check that RP can talk to I2C devices
 - [ ] check that RP can talk to the display & show data
 - [ ] check that RP can talk to SD card
 - [ ] check that we can play music, listen to radio, record music, record radio
 - [ ] check SD card insertion detection
-- [ ] disable debug mode on by default on AVR
+- [X] disable debug mode on by default on AVR
 
 # TODO
 

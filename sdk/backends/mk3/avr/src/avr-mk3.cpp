@@ -293,10 +293,12 @@ public:
     static void enterDebugMode() {
         LOG("Debug mode on");
         state_.status.setDebugMode(true);
-        if (! (powerMode_ & POWER_MODE_DC))
-            setNotification(RGBEffect::Breathe(platform::Color::White().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
-        if (state_.brightness < 128)
-            setBacklightPWM(128);
+        if (powerMode_ & POWER_MODE_ON) {
+            if (state_.brightness < 128)
+                setBacklightPWM(128);
+            if (! (powerMode_ & POWER_MODE_DC))
+                setNotification(RGBEffect::Solid(platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
+        }
     }
 
     static void leaveDebugMode() {
@@ -313,10 +315,12 @@ public:
             LOG("VDD on");
         } else {
             gpio::outputFloat(AVR_PIN_AVR_INT);
-            gpio::outputFloat(AVR_PIN_VDD_EN);
+            // drive the pin low to ensure the regulator turns off immediately
+            gpio::outputLow(AVR_PIN_VDD_EN);
             LOG("VDD off");
         }
     }
+
 
     /** Reboots the RP2350 chip. 
      */
@@ -553,8 +557,11 @@ public:
             // TODO deal with accel and power interrupts - this probably requires some I2C communcation to determine what is going on
             // if the power button is pressed, wake up - enter the debug mode depending on whether the volume down button is pressed
             if (irqs & HOME_BTN_INT_REQUEST) {
+                // reset home button long press timeout
+                homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
+                // wakeup to start counting
                 setPowerMode(POWER_MODE_WAKEUP);
-                // enable debug mode if volume down is pressed
+                // tentatively set debug mode if we read volume down button pressed, it will be cleared if the button is released before entering the power on mode
                 if (! gpio::read(AVR_PIN_BTN_3))
                     enterDebugMode();
             }
@@ -810,13 +817,17 @@ public:
     }
 
     static void homeBtnLongPress() {
-        homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
         if (powerMode_ & POWER_MODE_ON) {
             powerOff();
         } else {
             ASSERT(powerMode_ & POWER_MODE_WAKEUP);
             powerOn();
             clearPowerMode(POWER_MODE_WAKEUP);
+            // if we are in debug mode at this point, re-enable it again now that we have powered the IOVDD rail. This will turn on the LEDs and set backlight as well 
+            if (state_.status.debugMode()) {
+                enterDebugMode();
+                state_.status.setControlButtons(true, false, true);
+            }
         }
     }
 
@@ -831,38 +842,40 @@ public:
             gpio::high(AVR_PIN_BTN_CTRL);
             gpio::low(AVR_PIN_BTN_ABXY);
         }
-        // check if there has been change
+        if (powerMode_ & POWER_MODE_ON) {
+            if (changed) {
+                LOG("CTRL: " << state_.status.btnHome() << " " << state_.status.btnVolumeUp() << " " << state_.status.btnVolumeDown());
+                if (! state_.status.btnHome())
+                    homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
+                if (state_.status.debugMode() && ! state_.status.btnHome()) {
+#ifndef BREADBOARD
+                    // the extra button pins are not available on breadboard so the readings are useless
+                    if (state_.status.btnVolumeUp()) {
+                        rebootRP();
+                        return;
+                    } 
+                    if (state_.status.btnVolumeDown()) {
+                        bootloaderRP();
+                        return;
+                    }
+#endif
+                }
+                NO_ISR(setIrq());
+            }
+
+        } else if (powerMode_ & POWER_MODE_WAKEUP) {
+#ifndef BREADBOARD
+            // 
+            if (! state_.status.btnHome())
+                clearPowerMode(POWER_MODE_WAKEUP);
+            if (state_.status.debugMode() && ! state_.status.btnVolumeDown())
+                leaveDebugMode();
+#endif
+        }
+        // check if there has been long home button press - it's important we do this *after* the power on checks above as otherwise the long press can enter power on, but with wrong state 
         if (state_.status.btnHome()) {
             if (homeBtnLongPress_ > 0 && (--homeBtnLongPress_ == 0))
                 homeBtnLongPress();
-        }
-        if (changed) {
-            LOG("CTRL: " << state_.status.btnHome() << " " << state_.status.btnVolumeUp() << " " << state_.status.btnVolumeDown());
-            // TODO delete this after we test external crystal accuracy
-            if (state_.status.btnVolumeUp()) {
-                LOG("resetting uptime");
-                state_.uptime = 0;
-            }
-            if (! state_.status.btnHome()) {
-                homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
-                clearPowerMode(POWER_MODE_WAKEUP);
-            }
-            if (state_.status.debugMode()) {
-#ifndef BREADBOARD
-                if (powerMode_ && POWER_MODE_WAKEUP && ! state_.status.btnVolumeUp())
-                    leaveDebugMode();
-                // the extra button pins are not available on breadboard so the readings are useless
-                if (state_.status.btnVolumeUp()) {
-                    rebootRP();
-                    return;
-                } 
-                if (state_.status.btnVolumeDown()) {
-                    bootloaderRP();
-                    return;
-                }
-#endif
-            }
-            NO_ISR(setIrq());
         }
     }
 
