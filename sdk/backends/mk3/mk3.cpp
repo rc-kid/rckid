@@ -26,6 +26,7 @@ extern "C" {
 }
 
 #include <platform/peripherals/ltr390uv.h>
+#include <platform/peripherals/si4705.h>
 
 #include "screen/ST7789.h"
 #include "sd/sd.h"
@@ -351,7 +352,7 @@ namespace rckid {
         cpu::delayMs(10);
         gpio::setAsInputPullup(RP_PIN_RADIO_RESET);
         // TODO after radio chip is ready, we need to tell it to reset the audio chip as well via its GPIO
-        
+
 
         // TODO remove this when AVR is checked
         return; 
