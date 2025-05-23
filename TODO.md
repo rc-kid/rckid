@@ -43,7 +43,7 @@
 - [ ] check that RP can talk to SD card
 - [ ] check that we can play music, listen to radio, record music, record radio
 - [ ] check SD card insertion detection
-- [X] disable debug mode on by default on AVR
+- [ ] disable debug mode on by default on AVR (end of initialize)
 
 # TODO
 

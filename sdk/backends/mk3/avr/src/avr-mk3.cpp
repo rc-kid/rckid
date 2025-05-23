@@ -161,6 +161,13 @@ public:
         // and start the device in powerOff mode, i.e. set sleep mode and start checking ctrl group interrupts
         stopSystemTicks();
         set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+
+        // force enter debug mode right after power on
+        // TODO remove this after testing 
+        setPowerMode(POWER_MODE_WAKEUP);
+        enterDebugMode();
+        homeBtnLongPress();
+        homeBtnLongPress_ = 0;
    }
 
     static void loop() {
