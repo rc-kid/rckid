@@ -344,6 +344,18 @@ namespace rckid {
         // make the I2C IRQ priority larger than that of the DMA (0x80) to ensure that I2C comms do not have to wait for render done if preparing data takes longer than sending them
         irq_set_priority(I2C0_IRQ, 0x40); 
 
+
+
+        // the radio chip needs to be reset in order to work properly with the I2C 
+        gpio::outputLow(RP_PIN_RADIO_RESET);
+        cpu::delayMs(10);
+        gpio::setAsInputPullup(RP_PIN_RADIO_RESET);
+        // TODO after radio chip is ready, we need to tell it to reset the audio chip as well via its GPIO
+        
+
+        // TODO remove this when AVR is checked
+        return; 
+
         // initialize the display
         ST7789::initialize();
 

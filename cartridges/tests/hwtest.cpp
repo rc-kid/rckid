@@ -19,8 +19,24 @@ void listI2CDevices() {
  */
 int main() {
     initialize();
+    uint32_t i = 0;
+    while (true) {
+        if (i % 2 == 0)
+            gpio::outputHigh(15);
+        else
+            gpio::outputLow(15);
+        LOG(LL_ERROR, "Tick " << (i++));
+        listI2CDevices();        
+        uint32_t next = uptimeUs() + 10000000;
+        while (uptimeUs() < next) {
+            yield();
+        }
+    }
+
+    /*
     listI2CDevices();
     while (true) {
         tick();
     }
+        */
 }

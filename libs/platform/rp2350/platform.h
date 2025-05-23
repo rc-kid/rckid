@@ -103,10 +103,16 @@ class i2c {
 public:
 
     static bool masterTransmit(uint8_t address, uint8_t const * wb, uint8_t wsize, uint8_t * rb, uint8_t rsize) {
-        if (wsize != 0)
-            i2c_write_blocking(i2c0, address, wb, wsize, rsize != 0);
-        if (rsize != 0)
-            i2c_read_blocking(i2c0, address, rb, rsize, false);
+        if (wsize != 0) {
+            int x = i2c_write_blocking(i2c0, address, wb, wsize, rsize != 0);
+            if (x != wsize)
+                return false;
+        }
+        if (rsize != 0) {
+            int x = i2c_read_blocking(i2c0, address, rb, rsize, false);
+            if (x != rsize)
+                return false;
+        }
         return true;
     }
 

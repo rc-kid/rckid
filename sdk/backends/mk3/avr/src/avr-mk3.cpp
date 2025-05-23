@@ -527,8 +527,8 @@ public:
         LOG("  MPU6500 (0x68):    " << (i2c::isPresent(0x68) ? "ok" : "not found"));
         LOG("  BQ25895 (0x6a):    " << (i2c::isPresent(0x6a) ? "ok" : "not found"));
         LOG("  INA219 (0x40):     " << (i2c::isPresent(0x40) ? "ok" : "not found"));
-        //LOG("  TLV320 (0xXX):     " << (i2c::isPresent(0xXX) ? "ok" : "not found"));
-        //LOG("  SI4705 (0xXX):     " << (i2c::isPresent(0xXX) ? "ok" : "not found"));
+        //LOG("  TLV320 (0xXX):     " << (i2c::isPresent(0x18) ? "ok" : "not found"));
+        //LOG("  SI4705 (0xXX):     " << (i2c::isPresent(0x11) ? "ok" : "not found"));
     }
 
     static void processIntRequests() {
