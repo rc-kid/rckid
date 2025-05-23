@@ -32,12 +32,12 @@
 - [X] device AVR test power on / power off
 - [ ] device AVR test rumbler -- it runs off IOVDD, has to be checked after IOVDD en 
 - [X] check that RP2350 shows on host machine as USB drive
-- [ ] enumerate I2C devices (now we should see also audio & radio)
+- [X] enumerate I2C devices (now we should see also audio & radio)
 - [X] check serial test on RPi Pico 2
 - [X] flash RP2350 with serial test and see output
 - [X] check that AVR can reboot RP
 - [X] verify that AVR can reset RP2350 into bootloader mode
-- [ ] ensure logging works with initialize() call as well
+- [X] ensure logging works with initialize() call as well
 - [ ] check that RP can talk to I2C devices
 - [ ] check that RP can talk to the display & show data
 - [ ] check that RP can talk to SD card
@@ -46,6 +46,11 @@
 - [X] disable debug mode on by default on AVR
 
 # TODO
+
+- SD card detection works-ish, the sd detect pin is floating when no card and connected to ground when card - figure how to use
+- resetting audio codec must be done in order for it to work? or would pullup be enough? or just use Si4705 GPIO? maybe that
+
+
 
 - determine correct rumbler settings for ok fail and nudge
 
