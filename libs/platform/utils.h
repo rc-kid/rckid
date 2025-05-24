@@ -44,6 +44,18 @@ namespace platform {
         return (x >> 8) | (x << 8);
     }
 
+    inline void swapBytesInPlace(uint16_t & x) {
+        x = (x >> 8) | (x << 8);
+    }
+
+    inline uint8_t highByte(uint16_t x) {
+        return (x >> 8) & 0x0f;
+    }
+
+    inline uint8_t lowByte(uint16_t x) {
+        return x & 0x0f;
+    }
+
     template<typename T> 
     void writeMask(T & where, T mask, bool value) {
         where = value ? (where | mask) : (where & ~mask);

@@ -91,7 +91,7 @@ namespace rckid {
 
     // various forward declarations
 
-    NORETURN(void bsod(uint32_t error, uint32_t line = 0, char const * file = nullptr));
+    NORETURN(void bsod(uint32_t error, uint32_t arg,  uint32_t line = 0, char const * file = nullptr));
 
     void memoryCheckStackProtection();
 
@@ -102,6 +102,7 @@ namespace rckid {
     // internal state
 
     namespace io {
+        Si4705 radio_;
         LTR390UV alsSensor_;
 
         uint16_t lightAls_ = 0;
@@ -283,12 +284,12 @@ namespace rckid {
 
     // sdk functions 
 
-    void fatalError(uint32_t error, uint32_t line, char const * file) {
+    void fatalError(uint32_t error, uint32_t arg, uint32_t line, char const * file) {
         // simply go top BSOD - no need for HW cleanup
         // TODO Really?
         // TODO memory reset 
         // TODO reset stack pointer as well 
-        bsod(error, line, file);
+        bsod(error, arg, line, file);
     }
 
     Writer debugWrite() {
@@ -346,11 +347,58 @@ namespace rckid {
         irq_set_priority(I2C0_IRQ, 0x40); 
 
 
+#if (RCKID_WAIT_FOR_SERIAL == 1)
+        // wait for input on the serial port before proceeding, so that we can debug the boot process
+        debugRead(true);
+#endif
+
+        // TODO enable the display initilaization after we switch to 16bit interface
+        // initialize the display
+        // ST7789::initialize();
+
+        // check the I2C devices we expect to find on the bus
+        LOG(LL_INFO, "Detecting I2C devices...");
+        LOG(LL_INFO, "  AVR (0x43):        " << (::i2c::isPresent(0x43) ? "ok" : "not found"));
+        LOG(LL_INFO, "  LTR390UV (0x53):   " << (::i2c::isPresent(0x53) ? "ok" : "not found"));
+        LOG(LL_INFO, "  MPU6500 (0x68):    " << (::i2c::isPresent(0x68) ? "ok" : "not found"));
+        LOG(LL_INFO, "  BQ25895 (0x6a):    " << (::i2c::isPresent(0x6a) ? "ok" : "not found"));
+        LOG(LL_INFO, "  TLV320 (0x18):     " << (::i2c::isPresent(0x18) ? "ok" : "not found"));
+        LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
+
+        // try talking to the AVR chip and see that all is well
+        // read the full AVR state (including time information). Do not process the interrupts here, but wait for the first tick, which will or them with the ones obtained here and process when the device is fully initialized
+        {
+            int n = i2c_read_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, (uint8_t *) & io::avrState_, sizeof(AVRState), false);
+            if (n != sizeof(AVRState))
+                ERROR(error::HardwareProblem, n);
+            LOG(LL_INFO, "AVR uptime: " << io::avrState_.uptime);
+            LOG(LL_INFO, "Current time: " << io::avrState_.time);
+        }
+
+        // initialize the audio chips - first radio, then audio chip
+        // TODO check that a pullup on the audio codec reset pin is sufficient to start it properly?
+        io::radio_.reset(RP_PIN_RADIO_RESET);
+        // 
+
+        // do we see the radio chip after reset?
+        LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
+        {
+            // TODO this will fail now asthe radio is not powered on yet
+            Si4705::VersionInfo v = io::radio_.getVersion();
+            LOG(LL_INFO, "Radio chip version: ");
+            LOG(LL_INFO, "  response:      " << bin(v.response.rawResponse()));
+            LOG(LL_INFO, "  part #:        " << v.partNumber);
+            LOG(LL_INFO, "  fw:            " << v.fwMajor << "." << v.fwMinor);
+            LOG(LL_INFO, "  patch:         " << v.patch);
+            LOG(LL_INFO, "  comp:          " << v.compMajor << "." << v.compMinor);
+            LOG(LL_INFO, "  chip revision: " << v.chipRevision);
+            LOG(LL_INFO, "  cid:           " << v.cid);
+        }
 
         // the radio chip needs to be reset in order to work properly with the I2C 
-        gpio::outputLow(RP_PIN_RADIO_RESET);
-        cpu::delayMs(10);
-        gpio::setAsInputPullup(RP_PIN_RADIO_RESET);
+        //gpio::outputLow(RP_PIN_RADIO_RESET);
+        //cpu::delayMs(10);
+        //gpio::setAsInputPullup(RP_PIN_RADIO_RESET);
         // TODO after radio chip is ready, we need to tell it to reset the audio chip as well via its GPIO
 
 
@@ -389,9 +437,6 @@ namespace rckid {
             io::avrState_.brightness = 16;
         displaySetBrightness(io::avrState_.brightness);
 
-#if (RCKID_WAIT_FOR_SERIAL == 1)
-        debugRead(true);
-#endif
 
         // configure the AVR interrupt pin as input pullup (it's pulled down by the AVR when needed, floating otherwise) and connect an interrupt callback on the falling edge
         gpio::setAsInputPullup(RP_PIN_AVR_INT);

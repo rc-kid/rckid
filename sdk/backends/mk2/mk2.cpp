@@ -57,7 +57,7 @@ namespace rckid {
     void memoryReset();
 
     // forward declaration of the bsod function
-    NORETURN(void bsod(uint32_t error, uint32_t line = 0, char const * file = nullptr));
+    NORETURN(void bsod(uint32_t error, uint32_t arg, uint32_t line = 0, char const * file = nullptr));
     
     // forward declaration of memory stack protection check
     void memoryCheckStackProtection();
@@ -292,12 +292,12 @@ namespace rckid {
 
     // rckid API impleemntation
 
-    void fatalError(uint32_t error, uint32_t line, char const * file) {
+    void fatalError(uint32_t error, uint32_t arg, uint32_t line, char const * file) {
         // simply go top BSOD - no need for HW cleanup
         // TODO Really?
         // TODO memory reset 
         // TODO reset stack pointer as well 
-        bsod(error, line, file);
+        bsod(error, arg, line, file);
     }
 
     Writer debugWrite() {
