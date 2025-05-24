@@ -1,6 +1,7 @@
 #pragma once
 
-#include "platform.h"
+#include <platform.h>
+#include <platform/utils.h>
 
 /** FM Radio Chip
  
@@ -26,7 +27,7 @@ public:
         bool stcInt() const { return raw_ & 0x01; }
 
         /** Returns the raw vresponse code. */
-        uint8_t raw() const { return raw_; }
+        uint8_t rawResponse() const { return raw_; }
     private:
         friend class Si4705;
         uint8_t raw_;
@@ -46,7 +47,44 @@ public:
         uint8_t chipRevision;
         uint8_t reserved[5];
         uint8_t cid;
+    private:
+        friend class Si4705;
     }); // Si4705::VersionInfo
+
+    PACKED(class TuneStatus {
+    public:
+        Response response;
+
+        bool seekBandLimit() const { return result_ & 0x80; }
+        bool afcRail() const { return result_ & 0x02; }
+        bool valid() const { return result_ & 0x01; }
+
+        uint16_t frequency10kHz() const { return frequency_; }
+        uint8_t rssi() const { return rssi_; }
+        uint8_t snr() const { return snr_; }
+        uint8_t multipath() const { return mult_; }
+        uint8_t antCap() const { return antCap_; }
+
+    private:
+        friend class Si4705;
+        uint8_t result_;
+        uint16_t frequency_;
+        uint8_t rssi_;
+        uint8_t snr_;
+        uint8_t mult_;
+        uint8_t antCap_;
+
+    }); // Si4705::TuneStatus
+
+    PACKED(class SignalStatus {
+    public:
+        Response response;
+
+        // TODO
+
+    }); // Si4705::SignalStatus
+
+    Si4705() : i2c::Device{I2C_ADDRESS} {}
 
     static constexpr uint8_t I2C_ADDRESS = 0x11;
 
@@ -60,15 +98,18 @@ public:
         gpio::setAsInputPullup(resetPin);
     }
 
+    /** Returns response of the last command sent to the radio chip.
+     */
+    Response lastResponse() const { return last_; }
+
     /** Turns the radio off. 
      
         Note that GPIOs do not work when powered off. 
      */
     Response powerOff() {
         uint8_t cmd = CMD_POWER_DOWN;
-        Response response;
-        i2c::masterTransmit(I2C_ADDRESS, & cmd, 1, & response.raw_, 1);
-        return response;
+        i2c::masterTransmit(I2C_ADDRESS, & cmd, 1, & last_.raw_, 1);
+        return last_;
     }
 
     /** Powers the radio on and starts receiving on the FM band. 
@@ -79,62 +120,133 @@ public:
             (enableIrq ? 0x80 : 0x00) | 0x10, // CTS interrupt enabled(?) + external oscillator
             0b00000101, // FM receive opmode
         };
-        Response response;
-        i2c::masterTransmit(I2C_ADDRESS, cmd, sizeof(cmd), & response.raw_, 1);
-        return response;
+        i2c::masterTransmit(I2C_ADDRESS, cmd, sizeof(cmd), & last_.raw_, 1);
+        return last_;
     }
 
-    VersionInfo getRevision() {
+    /** Returns the device version & software revision information.
+     */
+    VersionInfo getVersion() {
         uint8_t cmd = CMD_GET_REV;
         VersionInfo version;
         i2c::masterTransmit(I2C_ADDRESS, & cmd, 1, (uint8_t *) & version, sizeof(version));
+        last_ = version.response;
+        version.patch = platform::swapBytes(version.patch);
         return version;
     }
 
+    /** Sets the given property ID to provided value. 
+     
+        NOTE this is very low level interface and should be used with care.
+     */
+    Response setProperty(uint16_t property, uint16_t value) {
+        uint8_t cmd[] = {
+            CMD_SET_PROPERTY,
+            0, // an extra 0 byte from the datasheet
+            platform::highByte(property),
+            platform::lowByte(property),
+            platform::highByte(value),
+            platform::lowByte(value),
+        };
+        i2c::masterTransmit(I2C_ADDRESS, cmd, sizeof(cmd), & last_.raw_, 1);
+        return last_;
+    }
+
+    /** Returns the raw value of gien property. 
+     */
+    uint16_t getProperty(uint16_t property) {
+        uint8_t cmd[] = {
+            CMD_GET_PROPERTY,
+            0, // an extra 0 byte from the datasheet
+            platform::highByte(property),
+            platform::lowByte(property),
+        };
+        // the response is 4 bytes, first byte is the response code, second byte is reserved, third and fourth are the property value
+        uint8_t response[4];
+        i2c::masterTransmit(I2C_ADDRESS, cmd, sizeof(cmd), response, sizeof(response));
+        last_.raw_ = response[0];
+        return (static_cast<uint16_t>(response[2]) << 8) | response[3];
+    }
+
+    /** Returns device status (the response byte). 
+     */
     Response getStatus() {
         uint8_t cmd = CMD_GET_INT_STATUS;
-        Response response;
-        i2c::masterTransmit(I2C_ADDRESS, & cmd, 1, & response.raw_, 1);
-        return response;
+        i2c::masterTransmit(I2C_ADDRESS, & cmd, 1, & last_.raw_, 1);
+        return last_;
     }
 
+    /** Commands the radio to tune the given frequency.
+     
+        Valid frequency range is from 68MHz to 108MHz with 10kHz resolution, i.e. values from 6800 to 10800 are permitted. In order words, the value is the frequency in MHz multipled by 100, so for instance 93.7Mhz is 9370.
+
+        TODO freeze & fast & how the command stops, etc? 
+     */
+    Response tuneFrequency(uint16_t freq10kHz) {
+        uint8_t cmd[] = {
+            CMD_FM_TUNE_FREQ,
+            0, // no freeze or fast mode
+            platform::highByte(freq10kHz),
+            platform::lowByte(freq10kHz),
+            0, // automatic antenna tuning capacitor value
+        };
+        i2c::masterTransmit(I2C_ADDRESS, cmd, sizeof(cmd), & last_.raw_, 1);
+        return last_;
+    }
+
+    /** Starts automatic seek to the next valid channel (frequency up), with wrap around at the end of the band.
+     */
+    Response seekUp() {
+        uint8_t cmd[] = {
+            CMD_FM_SEEK_START,
+            0x08 | 0x04, // seek up, wrap around
+        };
+        i2c::masterTransmit(I2C_ADDRESS, cmd, sizeof(cmd), & last_.raw_, 1);
+        return last_;
+    }
+
+    /** Starts automatic seek to the previous valid channel (frequency down), with wrap around at the beginning of the band.
+     */
+    Response seekDown() {
+        uint8_t cmd[] = {
+            CMD_FM_SEEK_START,
+            0x04, // seek down, wrap around
+        };
+        i2c::masterTransmit(I2C_ADDRESS, cmd, sizeof(cmd), & last_.raw_, 1);
+        return last_;
+    }
+
+    /** Returns the current tune status and optionally clears the Seek/Tune Complete interrput (SIC). 
+     */
+    TuneStatus getTuneStatus(bool intAck = false) {
+        uint8_t cmd[] = {
+            CMD_FM_TUNE_STATUS,
+            intAck ? 0x01 : 0x00, // acknowledge the interrupt if requested
+        };
+        TuneStatus result;
+        i2c::masterTransmit(I2C_ADDRESS, cmd, sizeof(cmd),  (uint8_t *) & result, sizeof(result));
+        result.frequency_ = platform::swapBytes(result.frequency_);
+        last_ = result.response;
+        return result;
+    }
+
+    /** Enables or disables the GPO1 pin. When disabled, the pin is left floating, otherwise its either high or low, based on the last setGPO1 function call value (low by default).
+     */
     Response enableGPO1(bool value) {
         uint8_t cmd[] = { CMD_GPIO_CTL, value ? 0x02 : 0x00 };
-        Response response;
-        i2c::masterTransmit(I2C_ADDRESS, cmd, sizeof(cmd), & response.raw_, 1);
-        return response;
+        i2c::masterTransmit(I2C_ADDRESS, cmd, sizeof(cmd), & last_.raw_, 1);
+        return last_;
     }
 
+    /** Determines the GPO1 pin value, if enabled. 
+     */
     Response setGPO1(bool value) {
         uint8_t cmd[] = { CMD_GPIO_SET, value ? 0x02 : 0x00 };
-        Response response;
-        i2c::masterTransmit(I2C_ADDRESS, cmd, sizeof(cmd), & response.raw_, 1);
-        return response;
+        i2c::masterTransmit(I2C_ADDRESS, cmd, sizeof(cmd), & last_.raw_, 1);
+        return last_;
     }
 
-private:
-
-    /* Commands - from 5.2 of AN332, Si4705 programming. 
-    */
-    static constexpr uint8_t CMD_POWER_UP = 0x01;
-    static constexpr uint8_t CMD_GET_REV = 0x10;
-    static constexpr uint8_t CMD_POWER_DOWN = 0x11;
-    static constexpr uint8_t CMD_SET_PROPERTY = 0x12;
-    static constexpr uint8_t CMD_GET_PROPERTY = 0x13;
-    static constexpr uint8_t CMD_GET_INT_STATUS = 0x14;
-    static constexpr uint8_t CMD_PATCH_ARGS = 0x15;
-    static constexpr uint8_t CMD_PATCH_DATA = 0x16;
-    static constexpr uint8_t CMD_FM_TUNE_FREQ = 0x20;
-    static constexpr uint8_t CMD_FM_SEEK_START = 0x21;
-    static constexpr uint8_t CMD_FM_TUNE_STATUS = 0x22;
-    static constexpr uint8_t CMD_FM_RSQ_STATUS = 0x23;
-    static constexpr uint8_t CMD_FM_RDS_STATUS = 0x24;
-    static constexpr uint8_t CMD_FM_AGC_STATUS = 0x27;
-    static constexpr uint8_t CMD_FM_AGC_OVERRIDE = 0x28;
-    static constexpr uint8_t CMD_GPIO_CTL = 0x80;
-    static constexpr uint8_t CMD_GPIO_SET = 0x81;
-
-    /* Properties - from 5.2 AN332, Si4705 programming. 
+/* Properties - from 5.2 AN332, Si4705 programming. 
      */
     static constexpr uint16_t PROP_GPO_IEN = 0x0001;
     static constexpr uint16_t PROP_DIGITAL_OUTPUT_FORMAT = 0x0102;
@@ -198,6 +310,32 @@ private:
     static constexpr uint16_t PROP_FM_HICUT_MULTIPATH_END_THRESHOLD = 0x1a05;
     static constexpr uint16_t PROP_FM_HICUT_CUTOFF_FREQUENCY = 0x1a06;
     static constexpr uint16_t PROP_RX_VOLUME = 0x4000;
-    static constexpr uint16_t PROP_RX_HARD_MUTE = 0x4001;
+    static constexpr uint16_t PROP_RX_HARD_MUTE = 0x4001;    
+
+private:
+
+    /* Commands - from 5.2 of AN332, Si4705 programming. 
+    */
+    static constexpr uint8_t CMD_POWER_UP = 0x01;
+    static constexpr uint8_t CMD_GET_REV = 0x10;
+    static constexpr uint8_t CMD_POWER_DOWN = 0x11;
+    static constexpr uint8_t CMD_SET_PROPERTY = 0x12;
+    static constexpr uint8_t CMD_GET_PROPERTY = 0x13;
+    static constexpr uint8_t CMD_GET_INT_STATUS = 0x14;
+    static constexpr uint8_t CMD_PATCH_ARGS = 0x15;
+    static constexpr uint8_t CMD_PATCH_DATA = 0x16;
+    static constexpr uint8_t CMD_FM_TUNE_FREQ = 0x20;
+    static constexpr uint8_t CMD_FM_SEEK_START = 0x21;
+    static constexpr uint8_t CMD_FM_TUNE_STATUS = 0x22;
+    static constexpr uint8_t CMD_FM_RSQ_STATUS = 0x23;
+    static constexpr uint8_t CMD_FM_RDS_STATUS = 0x24;
+    static constexpr uint8_t CMD_FM_AGC_STATUS = 0x27;
+    static constexpr uint8_t CMD_FM_AGC_OVERRIDE = 0x28;
+    static constexpr uint8_t CMD_GPIO_CTL = 0x80;
+    static constexpr uint8_t CMD_GPIO_SET = 0x81;
+
+    
+
+    Response last_; 
 
 }; // Si4705

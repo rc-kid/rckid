@@ -283,5 +283,14 @@ private:
 
 static_assert(sizeof(TinyAlarm) == 3);
 
-
-// 8166
+/** Helper function for tiny date serialization to writer-like classes (writer stream, stdout, etc).
+ */
+template<typename WRITER>
+inline WRITER & operator << (WRITER & writer, TinyDate const & date) {
+    return writer << date.year() << '-' 
+                  << date.month() << '-' 
+                  << date.day() << ' '
+                  << date.hour() << ':' 
+                  << date.minute() << ':' 
+                  << date.second();
+} // operator <<

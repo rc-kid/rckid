@@ -40,6 +40,30 @@ namespace cpu {
     }
 }
 
+namespace gpio {
+    using Pin = uint16_t;
+
+    inline void setAsOutput([[maybe_unused]] Pin pin) {
+        // TODO
+    }
+
+    inline void setAsInput([[maybe_unused]] Pin pin) {
+        // TODO
+    }
+
+    inline void setAsInputPullup([[maybe_unused]] Pin pin) {
+        // TODO
+    }
+
+    inline void outputHigh([[maybe_unused]] Pin pin) {
+        // TODO
+    }
+
+    inline void outputLow([[maybe_unused]] Pin pin) {
+        // TODO
+    }
+}
+
 namespace i2c {
     // actually from common
     inline bool isPresent([[maybe_unused]] uint8_t address) {

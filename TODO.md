@@ -50,7 +50,8 @@
 - SD card detection works-ish, the sd detect pin is floating when no card and connected to ground when card - figure how to use
 - resetting audio codec must be done in order for it to work? or would pullup be enough? or just use Si4705 GPIO? maybe that
 
-
+- swap mic & radio input so that we can do low power audio pass through from radio directly to headphone amps of the audio codec
+- 4k7 Ohm pull up from ldo select to vcc (now direct connection)
 
 - determine correct rumbler settings for ok fail and nudge
 

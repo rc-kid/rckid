@@ -36,7 +36,7 @@ namespace platform {
 #if defined(_MSC_VER)
 #define NORETURN(...) __declspec(noreturn) __VA_ARGS__
 #else
-#define NORETURN(...) __VA_ARGS__ __attribute__((noreturn))
+#define NORETURN(...) __attribute__((noreturn)) __VA_ARGS__
 #endif
 
 

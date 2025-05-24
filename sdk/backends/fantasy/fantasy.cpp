@@ -53,7 +53,7 @@ namespace rckid {
     bool initialized_ = false;
 
     // forward declaration of the bsod function
-    NORETURN(void bsod(uint32_t error, uint32_t line = 0, char const * file = nullptr));
+    NORETURN(void bsod(uint32_t error, uint32_t arg, uint32_t line = 0, char const * file = nullptr));
 
     namespace sd {
         std::fstream iso_;
@@ -118,7 +118,7 @@ namespace rckid {
         void initialize(std::string const & sdRoot, std::string const & flashRoot);
     }
 
-    void fatalError(uint32_t error, uint32_t line, char const * file) {
+    void fatalError(uint32_t error, uint32_t arg, uint32_t line, char const * file) {
         // disable stack protection (in case we bailed out because of the stack)
         stackStart_ = nullptr;
         // close the SD and flash files
@@ -132,7 +132,7 @@ namespace rckid {
         // reset the memory so that we have enough space
         memoryReset();
         // finally, go for BSOD
-        bsod(error, line, file);
+        bsod(error, arg, line, file);
     }
 
     Writer debugWrite() {
