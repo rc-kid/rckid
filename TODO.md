@@ -39,8 +39,8 @@
 - [X] verify that AVR can reset RP2350 into bootloader mode
 - [X] ensure logging works with initialize() call as well
 - [X] check that RP can talk to I2C devices
-- [ ] check that RP can talk to the display & show data
 - [ ] check that RP can talk to SD card
+- [ ] check that RP can talk to the display & show data
 - [ ] check TLV320 power consumption after reset
 - [ ] check TLV320 power consumption in standby / sleep modes
 - [ ] check that we can play music, listen to radio, record music, record radio

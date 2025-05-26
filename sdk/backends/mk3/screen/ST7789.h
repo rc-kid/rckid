@@ -16,46 +16,62 @@ namespace rckid {
 
     /** Low level driver for the ST7789 display driver. 
      
-        The driver takes care of display initialization and provides basic functions for display updates via DMA. The driver assumes MCU 16 bit interface, and only works with 320x240 displays. Tested on 37pin hand-solderable display as well as a 40pin FPC cable, whose pinouts are described below. 
+        The driver takes care of display initialization and provides basic functions for display updates via DMA. The driver assumes MCU 16 bit interface, and only works with 320x240 displays. Tested on 40pin FPC cable, but should also work with 37pin hand solderable displays that I have from previous purchase (for later projects). For the 40pin version, the pinout in the datasheets is reversed in pin numbers to the pin numbers in the schematic. The table below shows both numbers:
 
-        RCKid uses a 37pin hand-solderable version of 2.8" 320x240 TFT display with the following pinout:
+        Datasheet | Schematic | Function
+        ----------|-----------|----------------
+        1         | 40        | NC (top on mkIII board)
+        2         | 39        | NC
+        3         | 38        | NC
+        4         | 37        | NC
+        5         | 36        | GND
+        6         | 35        | VDDI
+        7         | 34        | VDD
+        8         | 33        | TE
+        9         | 32        | CSX/SPI_CS
+        10        | 31        | DCX/SPI_CLK
+        11        | 30        | WRX/SPI_DC
+        12        | 39        | RDX
+        13        | 38        | SPI_MOSI
+        14        | 37        | SPI_MISO
+        15        | 36        | RESX
+        16        | 35        | GND
+        17        | 34        | DB0
+        18        | 33        | DB1
+        19        | 32        | DB2
+        20        | 31        | DB3
+        21        | 30        | DB4
+        22        | 19        | DB5
+        23        | 18        | DB6
+        24        | 17        | DB7
+        25        | 16        | DB8
+        26        | 15        | DB9
+        27        | 14        | DB10
+        28        | 13        | DB11
+        29        | 12        | DB12
+        30        | 11        | DB13
+        31        | 10        | DB14
+        32        | 9         | DB15
+        33        | 8         | LED-A
+        34        | 7         | LED-K
+        35        | 6         | LED-K
+        36        | 5         | LED-K
+        37        | 4         | GND
+        38        | 3         | IM0
+        39        | 2         | IM1
+        40        | 1         | IM2 (bottom on mkIII board)
 
-        1 - DBO
-        2 - DB1
-        3 - DP2
-        4 - DB3
-        5 - GND
-        6 - VDDI
-        7 - CSX
-        8 - DCX
-        9 - WRX
-        10 - RDX
-        11 - NC
-        12 - NC
-        13 - NC
-        14 - NC
-        15 - NC
-        16 - LED-A
-        17 - LED-K
-        18 - LED-K
-        19 - LED-K
-        20 - LED-K
-        21 - TE
-        22 - DB4
-        23 - DB8
-        24 - DB9
-        25 - DB10
-        26 - DB11
-        27 - DB12
-        28 - DB13
-        29 - DB14
-        30 - DB15
-        31 - RESX
-        32 - VDD
-        33 - VDDI
-        35 - DB5
-        36 - DB6
-        37 - DB7
+        Based on the IM0-2 values, the display can be configured to work in different modes:
+        
+        IM2 | IM1 | IM0 | Mode
+        ----|-----|-----|----------------
+        0   | 0   | 0   | 16bit MCU DB15-DB0
+        0   | 0   | 1   | 8bit MCU DB15-DB8
+        1   | 0   | 1   | 3line 9bit  
+        1   | 1   | 0   | 4line 8bit
+
+        For sending the raw data bytes, the full width of the display bus is used, but for the command interface, only the lower bits are used. From the display datasheet and ST7789S datasheet, it looks like the actual interface used is MCU 16bit II (IM3 being set to high inside the display).   
+        
      */
     class ST7789 {
     public:
