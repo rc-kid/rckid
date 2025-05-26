@@ -2,6 +2,14 @@
         uint8_t x_;
         return i2c::masterTransmit(address, nullptr, 0, & x_, 1);
     }
+
+    static inline int masterWrite(uint8_t address, uint8_t * data, uint8_t size) {
+        return i2c::masterTransmit(address, data, size, nullptr, 0);
+    }
+
+    static int masterRead(uint8_t address, uint8_t * buffer, uint8_t size) {
+        return i2c::masterTransmit(address, nullptr, 0, buffer, size);
+    }
     
     template<typename T, platform::Endian DEVICE_ENDIAN = platform::Endian::Little>
     static void write(uint8_t address, T data);

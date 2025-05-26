@@ -7,6 +7,10 @@
  
     Technically, this driver will work with all kinds of Si FM receivers, not just Si4705 (which is the fancy I2S ADC (which we are not using), RDS and 2 external antennas). Unlike most other I2C devices, the chip does not have registers, but instead uses commands and properties to accomplish control.
 
+    A command is sent as a separate START-STOP write transaction. Each command returns a response, which is either a single status byte, or a status byte followed by the response data. There is however a catch that the response can only be read after the CTS bit in the first response byte (the status) is set. So we need to be polling the first status byte until its MSB is set, after which we can read the rest of the response data. 
+
+    Alternativel the CTS IRQ can be enabled, in which case the chip will send an interrupt when the CTS bit is ready and the response can be read in full.
+
  */
 class Si4705 : public i2c::Device {
 public:
@@ -114,14 +118,13 @@ public:
 
     /** Powers the radio on and starts receiving on the FM band. 
      */
-    Response powerOn(bool enableIrq = true) {
+    void powerOn() {
         uint8_t cmd[] = { 
             CMD_POWER_UP,
-            (enableIrq ? 0x80 : 0x00) | 0x10, // CTS interrupt enabled(?) + external oscillator
-            0b00000101, // FM receive opmode
+            0, //CMD_POWER_UP_CTSIEN | CMD_POWER_UP_GPO2OEN | CMD_POWER_UP_XOSCEN,
+            CMD_POWER_UP_FM_RECEIVER,
         };
-        i2c::masterTransmit(I2C_ADDRESS, cmd, sizeof(cmd), & last_.raw_, 1);
-        return last_;
+        i2c::masterWrite(I2C_ADDRESS, cmd, sizeof(cmd));
     }
 
     /** Returns the device version & software revision information.
@@ -129,7 +132,8 @@ public:
     VersionInfo getVersion() {
         uint8_t cmd = CMD_GET_REV;
         VersionInfo version;
-        i2c::masterTransmit(I2C_ADDRESS, & cmd, 1, (uint8_t *) & version, sizeof(version));
+        i2c::masterWrite(I2C_ADDRESS, cmd, 1);
+        i2c::masterRead(I2C_ADDRESS, (uint8_t *) & version, sizeof(version));
         last_ = version.response;
         version.patch = platform::swapBytes(version.patch);
         return version;
@@ -172,7 +176,8 @@ public:
      */
     Response getStatus() {
         uint8_t cmd = CMD_GET_INT_STATUS;
-        i2c::masterTransmit(I2C_ADDRESS, & cmd, 1, & last_.raw_, 1);
+        i2c::masterWrite(I2C_ADDRESS, & cmd, 1);
+        i2c::masterRead(I2C_ADDRESS, & last_.raw_, 1);
         return last_;
     }
 
@@ -317,6 +322,11 @@ private:
     /* Commands - from 5.2 of AN332, Si4705 programming. 
     */
     static constexpr uint8_t CMD_POWER_UP = 0x01;
+    static constexpr uint8_t CMD_POWER_UP_CTSIEN = 0x80; // CTS interrupt enabled
+    static constexpr uint8_t CMD_POWER_UP_GPO2OEN = 0x40; // GPO2 output enabled (interrupt)
+    static constexpr uint8_t CMD_POWER_UP_PATCH = 0x20; // patch mode enabled (not used)
+    static constexpr uint8_t CMD_POWER_UP_XOSCEN = 0x10; // external oscillator enabled
+    static constexpr uint8_t CMD_POWER_UP_FM_RECEIVER = 0b00000101; // FM receive mode
     static constexpr uint8_t CMD_GET_REV = 0x10;
     static constexpr uint8_t CMD_POWER_DOWN = 0x11;
     static constexpr uint8_t CMD_SET_PROPERTY = 0x12;
