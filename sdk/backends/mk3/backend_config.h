@@ -42,6 +42,9 @@
 #define RCKID_LOG_SERIAL_TX_PIN 12
 #define RCKID_LOG_SERIAL_RX_PIN 13
 
+#define RCKID_WAIT_FOR_SERIAL 1
+
+
 /** When turned on, enables stack protection where magic values are stored to the end of stack and are periodically checked for corruption to give an early warning in case of stack underflow into the heap/arena area.
  */
 #define RCKID_ENABLE_STACK_PROTECTION

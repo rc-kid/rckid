@@ -38,9 +38,11 @@
 - [X] check that AVR can reboot RP
 - [X] verify that AVR can reset RP2350 into bootloader mode
 - [X] ensure logging works with initialize() call as well
-- [ ] check that RP can talk to I2C devices
+- [X] check that RP can talk to I2C devices
 - [ ] check that RP can talk to the display & show data
 - [ ] check that RP can talk to SD card
+- [ ] check TLV320 power consumption after reset
+- [ ] check TLV320 power consumption in standby / sleep modes
 - [ ] check that we can play music, listen to radio, record music, record radio
 - [ ] check SD card insertion detection
 - [ ] disable debug mode on by default on AVR (end of initialize)
@@ -49,6 +51,10 @@
 
 - SD card detection works-ish, the sd detect pin is floating when no card and connected to ground when card - figure how to use
 - resetting audio codec must be done in order for it to work? or would pullup be enough? or just use Si4705 GPIO? maybe that
+- pullup is enough, add pullup to audio codec rst
+- si4705 does not seem to support multiple start sessions, rewrite the Si4705 platform library for proper command sending & response polling
+- then try an I2C device driver using the I2C queue, etc. 
+
 
 - swap mic & radio input so that we can do low power audio pass through from radio directly to headphone amps of the audio codec
 - 4k7 Ohm pull up from ldo select to vcc (now direct connection)

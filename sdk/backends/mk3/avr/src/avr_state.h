@@ -9,7 +9,7 @@ namespace rckid {
 
     /** AVR State information */
 
-    class AVRState {
+    PACKED(class AVRState {
     public:
         /** Status information, which is a 2 byte structure containing the most important state information, such as button states and interrupt flags. 
          
@@ -131,17 +131,17 @@ namespace rckid {
         uint8_t brightness = RCKID_DISPLAY_BRIGHTNESS;
         uint32_t uptime = 0;
 
-    }; // rckid::AVRState
+    }); // rckid::AVRState
 
     /** The entire transferrable state, which consists of the AVR state itself as well as the communications buffer. On the AVR side, this is used to store the state & buffer close together so that it can be send as one consecutive memory block. 
      */
-    class TransferrableState : public AVRState {
+    PACKED(class TransferrableState : public AVRState {
     public:
 
         /** Communications buffer. This is where commands are stored and where extra commands store the data they wish to transfer to the RP. The size is large enough to 1 byte command, 2 byte page number and 128 byte data, which is necessary to program flash pages on the device.
          */
         uint8_t buffer[131];
 
-    }; 
+    }); 
 
 } // namespace rckid

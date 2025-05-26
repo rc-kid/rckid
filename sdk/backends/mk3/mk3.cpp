@@ -378,11 +378,44 @@ namespace rckid {
         // initialize the audio chips - first radio, then audio chip
         // TODO check that a pullup on the audio codec reset pin is sufficient to start it properly?
         io::radio_.reset(RP_PIN_RADIO_RESET);
+        cpu::delayMs(100);
         // 
 
         // do we see the radio chip after reset?
         LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
-        {
+
+        uint8_t cmd[] = {0x01, 0b11010000, 0x05};
+        ::i2c::masterTransmit(0x11, cmd, 3, nullptr, 0);
+        //i2c_write_blocking(i2c0, 0x11, cmd, 3, false);
+        while (true) {
+            uint8_t res = 0;
+            i2c_read_blocking(i2c0, 0x11, & res, 1, false);
+            LOG(LL_INFO, "res: " << hex(res));
+            if (res >= 0x80)
+                break;
+            yield();
+            cpu::delayMs(50);
+            yield();
+            yield();
+            yield();
+            yield();
+        }
+        LOG(LL_INFO, "Radio chip is ready OK");
+
+        if (false) {
+            io::radio_.powerOn();
+            cpu::delayMs(500);
+            auto res = io::radio_.getStatus();
+            LOG(LL_INFO, "get stat: " << bin(res.rawResponse()));
+            cpu::delayMs(500);
+            res = io::radio_.getStatus();
+            LOG(LL_INFO, "get stat: " << bin(res.rawResponse()));
+            cpu::delayMs(500);
+            res = io::radio_.getStatus();
+            LOG(LL_INFO, "get stat: " << bin(res.rawResponse()));
+            cpu::delayMs(500);
+            res = io::radio_.getStatus();
+            LOG(LL_INFO, "get stat: " << bin(res.rawResponse()));
             // TODO this will fail now asthe radio is not powered on yet
             Si4705::VersionInfo v = io::radio_.getVersion();
             LOG(LL_INFO, "Radio chip version: ");
@@ -393,7 +426,13 @@ namespace rckid {
             LOG(LL_INFO, "  comp:          " << v.compMajor << "." << v.compMinor);
             LOG(LL_INFO, "  chip revision: " << v.chipRevision);
             LOG(LL_INFO, "  cid:           " << v.cid);
-        }
+            cpu::delayMs(500);
+            res = io::radio_.setGPO1(true);
+            LOG(LL_INFO, "set gpo1: " << bin(res.rawResponse()));
+            cpu::delayMs(500);
+            res = io::radio_.enableGPO1(true);
+            LOG(LL_INFO, "enable gpo1: " << bin(res.rawResponse()));
+       }
 
         // the radio chip needs to be reset in order to work properly with the I2C 
         //gpio::outputLow(RP_PIN_RADIO_RESET);
