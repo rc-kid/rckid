@@ -8,6 +8,7 @@
 namespace rckid {
 
     void ST7789::initialize() {
+        /*
         // load and initialize the PIO programs for single and double precission
         pio_ = pio0;
         sm_ = pio_claim_unused_sm(pio_, true);
@@ -25,15 +26,16 @@ namespace rckid {
         dma_channel_set_irq0_enabled(dma_, true);
         //irq_add_shared_handler(DMA_IRQ_0, irqDMADone,  PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY);
         irq_set_enabled(DMA_IRQ_0, true);
-        // reset the display
+        */
 
+        // reset the display
         reset();
     }
 
     void ST7789::reset() {
         // reset updating - forcefully since we are resetting the display anyways
-        dma_channel_abort(dma_);
-        pio_sm_set_enabled(pio_, sm_, false);
+       //dma_channel_abort(dma_);
+       // pio_sm_set_enabled(pio_, sm_, false);
         updating_ = 0;
 
         gpio_init(RP_PIN_DISP_TE);
@@ -63,14 +65,14 @@ namespace rckid {
         //setDisplayMode(ST7789::DisplayMode::Native);
         sendCommand(INVON);
         updateRegion_ = Rect::WH(RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT);
+        setUpdateRegion(updateRegion_);
         // and now do the png file
         // now clear the entire display black
-#if (RCKID_SPLASHSCREEN_OFF)
+#if (RCKID_SPLASHSCREEN_OFF == 1)
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
         for (size_t i = 0, e = RCKID_DISPLAY_WIDTH * RCKID_DISPLAY_HEIGHT; i < e; ++i) {
-            sendByte(0);
-            sendByte(0);
+            sendWord(0xaa33);
         }
         gpio_put(RP_PIN_DISP_DCX, false);
         end();
@@ -186,11 +188,39 @@ namespace rckid {
     //}
 
     void ST7789::initializePinsBitBang() {
-        uint32_t outputPinsMask = (1 << RP_PIN_DISP_WRX) | (0xff << RP_PIN_DISP_DB8); // DB8..DB15 are consecutive
-        gpio_init_mask(outputPinsMask);
-        gpio_set_dir_masked(outputPinsMask, outputPinsMask);
+
+        constexpr uint64_t outputPinsMask = 0xffff_u64 << RP_PIN_DISP_DB15; // DB0..DB15 are consecutive
+        gpio_set_dir_masked64(outputPinsMask, 0xffffffffffffffffll); // set all pins to output
+        gpio_put_masked64(outputPinsMask, 0);
+        gpio_set_function_masked64(outputPinsMask, GPIO_FUNC_SIO);
+        //gpio_init_mask(outputPinsMask);
+        //gpio_set_dir_masked64(outputPinsMask, outputPinsMask);
         //gpio_put_masked(outputPinsMask, false);
-        gpio_put(RP_PIN_DISP_WRX, false);
+
+        /*
+        gpio_init(RP_PIN_DISP_DB0);
+        gpio_init(RP_PIN_DISP_DB1);
+        gpio_init(RP_PIN_DISP_DB2);
+        gpio_init(RP_PIN_DISP_DB3);
+        gpio_init(RP_PIN_DISP_DB4);
+        gpio_init(RP_PIN_DISP_DB5);
+        gpio_set_dir(RP_PIN_DISP_DB0, GPIO_OUT);
+        gpio_set_dir(RP_PIN_DISP_DB1, GPIO_OUT);
+        gpio_set_dir(RP_PIN_DISP_DB2, GPIO_OUT);
+        gpio_set_dir(RP_PIN_DISP_DB3, GPIO_OUT);
+        gpio_set_dir(RP_PIN_DISP_DB4, GPIO_OUT);
+        gpio_set_dir(RP_PIN_DISP_DB5, GPIO_OUT);
+        */
+
+
+        gpio_init(RP_PIN_DISP_WRX);
+        gpio_set_dir(RP_PIN_DISP_WRX, GPIO_OUT);
+        gpio_put(RP_PIN_DISP_WRX, true);
+
+        gpio_init(RP_PIN_DISP_RDX);
+        gpio_set_dir(RP_PIN_DISP_RDX, GPIO_OUT);
+        gpio_put(RP_PIN_DISP_RDX, true);
+
     }
 
     void ST7789::irqHandler() {

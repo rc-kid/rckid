@@ -199,6 +199,8 @@ This leads to the following current draw for different voltages:
 
 > TODO capacitors are bit different between RCKid and app note: (https://www.ti.com/lit/ug/slau266a/slau266a.pdf?ts=1740243769370&ref_url=https%253A%252F%252Fwww.ti.com%252Ftool%252FTLV320AIC3204EVM-K)
 
+> TODO Swap radio & mic inputs so that radio can go via low powerbypass to output directly (check this on the devboard)
+
 AVDD - 0.1 & 22 app note, I have 10uF
 HPVDD 0.1 & 22 app note, I have 0.1 1 10
 DVDD 01 & 22 app note, I have 10 uF
@@ -303,8 +305,6 @@ Due to low number of pins available, a classic button matrix is used. Buttons ar
 
 In mkII the internal oscillator was used for RTC which led to inaccuracies of up to 10 minutes per day. This time we are using external 32.768 kHz oscillator for better accuracy. The crystal load capacitance per the datasheet (page 511) is max 12.5pF which is the value used, so the same circuit as for the radio should work. 
 
-> TODO verify cryctal and capacitors
-
 ### Rumbler
 
 Rumbler is connected to IOVDD and triggered by AVR PWM. Protective diode is used as well. 
@@ -396,14 +396,12 @@ Extras:
 
 Extra PCBs:
 
-- [ ] figure out the hold in place mechanism for the cartridge if the friction of the connectors is not enough
 - [ ] make the PCB larger to fit the entire case, but make sure no components, or useful stuff is above 10cm so that we can always skip it -- this means moving the rpi 1.5mm down(!)
 
 
 # problems
 
 - BMI160 has moved to standard parts, try alternatives, such as https://jlcpcb.com/partdetail/TdkInvensense-MPU6500/C50278
-- sinking USB-C is standard part, use the normal one for the devboard
 - headphones don't show the slot on jlcpcb
 - check accel
 

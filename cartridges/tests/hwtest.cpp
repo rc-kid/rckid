@@ -25,7 +25,7 @@ int main() {
             gpio::outputHigh(15);
         else
             gpio::outputLow(15);
-        LOG(LL_ERROR, "Tick " << (i++));
+        LOG(LL_ERROR, "TickX " << (i++));
         //listI2CDevices();        
         uint32_t next = uptimeUs() + 10000000;
         while (uptimeUs() < next) {

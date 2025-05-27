@@ -132,7 +132,7 @@ public:
     VersionInfo getVersion() {
         uint8_t cmd = CMD_GET_REV;
         VersionInfo version;
-        i2c::masterWrite(I2C_ADDRESS, cmd, 1);
+        i2c::masterWrite(I2C_ADDRESS, & cmd, 1);
         i2c::masterRead(I2C_ADDRESS, (uint8_t *) & version, sizeof(version));
         last_ = version.response;
         version.patch = platform::swapBytes(version.patch);
