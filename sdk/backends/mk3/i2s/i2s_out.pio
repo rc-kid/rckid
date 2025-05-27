@@ -1,0 +1,5 @@
+; I2C output
+; 
+; 32 bit value (2 channels) from the input fifo and serializes it into two channels. 
+; 
+; TODO

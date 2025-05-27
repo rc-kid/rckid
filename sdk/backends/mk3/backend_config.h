@@ -6,6 +6,8 @@
 #define RCKID_DISPLAY_WIDTH 320 
 #define RCKID_DISPLAY_HEIGHT 240
 
+#define RCKID_SPLASHSCREEN_OFF 0
+
 /** Default display brightness. 
  */
 #define RCKID_DISPLAY_BRIGHTNESS 128
@@ -42,7 +44,7 @@
 #define RCKID_LOG_SERIAL_TX_PIN 12
 #define RCKID_LOG_SERIAL_RX_PIN 13
 
-#define RCKID_WAIT_FOR_SERIAL 1
+#define RCKID_WAIT_FOR_SERIAL 0
 
 
 /** When turned on, enables stack protection where magic values are stored to the end of stack and are periodically checked for corruption to give an early warning in case of stack underflow into the heap/arena area.

@@ -14,6 +14,10 @@
 #error "You are building fantasy (RayLib) backend without the indicator macro"
 #endif
 
+#ifdef PICO_RP2350A
+#error "Oh noez"
+#endif
+
 #include <pico/rand.h>
 #include <bsp/board.h>
 #include "tusb_config.h"
@@ -346,15 +350,40 @@ namespace rckid {
         // make the I2C IRQ priority larger than that of the DMA (0x80) to ensure that I2C comms do not have to wait for render done if preparing data takes longer than sending them
         irq_set_priority(I2C0_IRQ, 0x40); 
 
+        rp2350_chip_version();
+
+        // TODO enable the display initilaization after we switch to 16bit interface
+        // initialize the display
+        ST7789::initialize();
+        //ST7789::sendWord(0x0);
+        //ST7789::sendByte(0b11000011);
+        /*
+        constexpr uint64_t mask = 0xffff_u64 << 20; // 0xff00_u64 << 20;
+        gpio_put_masked64( mask, 0xffffffffffffffffll);
+        gpio_put(RP_PIN_DISP_DB0, true);
+        gpio_put(RP_PIN_DISP_DB1, true);
+        gpio_put(RP_PIN_DISP_DB2, false);
+        gpio_put(RP_PIN_DISP_DB3, false);
+        gpio_put(RP_PIN_DISP_DB4, false);
+        gpio_put(RP_PIN_DISP_DB5, true);
+        gpio_put(RP_PIN_DISP_DB6, false);
+        gpio_put(RP_PIN_DISP_DB7, false);
+        */
+        /*
+        gpio_put(RP_PIN_DISP_DB8, true);
+        gpio_put(RP_PIN_DISP_DB9, true);
+        gpio_put(RP_PIN_DISP_DB10, true);
+        gpio_put(RP_PIN_DISP_DB11, true);
+        gpio_put(RP_PIN_DISP_DB12, true);
+        gpio_put(RP_PIN_DISP_DB13, true);
+        gpio_put(RP_PIN_DISP_DB14, true);
+        gpio_put(RP_PIN_DISP_DB15, true);
+        */
 
 #if (RCKID_WAIT_FOR_SERIAL == 1)
         // wait for input on the serial port before proceeding, so that we can debug the boot process
         debugRead(true);
 #endif
-
-        // TODO enable the display initilaization after we switch to 16bit interface
-        // initialize the display
-        // ST7789::initialize();
 
         // check the I2C devices we expect to find on the bus
         LOG(LL_INFO, "Detecting I2C devices...");
@@ -383,6 +412,14 @@ namespace rckid {
 
         // do we see the radio chip after reset?
         LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
+
+        // initialize the SD card
+        sdInitialize();
+
+        // initialize the filesystem
+        filesystem::initialize();
+
+        return;
 
         uint8_t cmd[] = {0x01, 0b11010000, 0x05};
         ::i2c::masterTransmit(0x11, cmd, 3, nullptr, 0);
@@ -440,12 +477,6 @@ namespace rckid {
         //gpio::setAsInputPullup(RP_PIN_RADIO_RESET);
         // TODO after radio chip is ready, we need to tell it to reset the audio chip as well via its GPIO
 
-
-        // TODO remove this when AVR is checked
-        return; 
-
-        // initialize the display
-        ST7789::initialize();
 
         // initialize the accelerometer & uv light sensor
         // TODO

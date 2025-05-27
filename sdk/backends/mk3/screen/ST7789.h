@@ -71,7 +71,6 @@ namespace rckid {
         1   | 1   | 0   | 4line 8bit
 
         For sending the raw data bytes, the full width of the display bus is used, but for the command interface, only the lower bits are used. From the display datasheet and ST7789S datasheet, it looks like the actual interface used is MCU 16bit II (IM3 being set to high inside the display).   
-        
      */
     class ST7789 {
     public:
@@ -217,7 +216,7 @@ namespace rckid {
                 yield();
         }
 
-    private:
+    //private:
 
         friend void irqDMADone_();
 
@@ -284,7 +283,8 @@ namespace rckid {
             According to the datasheet (page 41), the read byte cycle is at least 66ns with both high and low pulses being at least 15ns. To work in the worst supported case at 250MHz, we insert 24 NOP instructions in total for 96ns, which adds about 30% safety margin. This will double in the 125MHz default speed, since the driver should mostly utilize the PIO driven DMA access, it should not be a problem. 
          */
         static void sendByte(uint32_t b) {
-            gpio_put_masked(0xff << RP_PIN_DISP_DB8, b << RP_PIN_DISP_DB8);
+            b = platform::reverseByte(b);
+            gpio_put_masked64(0xff_u64 << RP_PIN_DISP_DB7, static_cast<uint64_t>(b) << RP_PIN_DISP_DB7);
             cpu::nop();
             cpu::nop();
             cpu::nop();
@@ -314,8 +314,34 @@ namespace rckid {
         }
 
         static void sendWord(uint32_t w) {
-            sendByte((w >> 8) & 0xff);
-            sendByte(w & 0xff);
+            w = platform::reverse2Bytes(w);
+            gpio_put_masked64(0xffff_u64 << RP_PIN_DISP_DB15, static_cast<uint64_t>(w) << RP_PIN_DISP_DB15);
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            gpio_put(RP_PIN_DISP_WRX, true);
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            cpu::nop();
+            gpio_put(RP_PIN_DISP_WRX, false);
         }
 
         // PIO settings including the DMA used for the display and the addresses for the pio drivers for normal and double modes.

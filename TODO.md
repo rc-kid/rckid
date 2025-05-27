@@ -39,15 +39,32 @@
 - [X] verify that AVR can reset RP2350 into bootloader mode
 - [X] ensure logging works with initialize() call as well
 - [X] check that RP can talk to I2C devices
-- [ ] check that RP can talk to SD card
+- [X] check that RP can talk to SD card
 - [ ] check that RP can talk to the display & show data
-- [ ] check TLV320 power consumption after reset
+- [X] check TLV320 power consumption after reset (seems small)
 - [ ] check TLV320 power consumption in standby / sleep modes
-- [ ] check that we can play music, listen to radio, record music, record radio
+- [ ] check TLV320 detects headphones and headphone button press 
+- [ ] check TLV320 I2S DAC headphone output
+- [ ] check TLV320 I2S DAC line out/speaker output
+- [ ] check TLV320 can route Si4705 output
+- [ ] check Si4705 works with headphones antenna
+- [ ] check Si4705 works with internal antenna
+- [ ] check TLV320 can record from radio
+- [ ] check TLV320 can record from microphone
+- [ ] check low power radio bypass via analog input 1 (requires rerouting mic & radio on the board) - maybe not necessary
 - [ ] check SD card insertion detection
 - [ ] disable debug mode on by default on AVR (end of initialize)
+- [ ] order breakout for new PMIC chip and verify its functionality separately
+- [ ] charging/discharging
+- [ ] boost for below 3.3V battery
+- [ ] check that 2 LEDs under DPAD work better for a tilting DPAD (in HW.md)
 
 # TODO
+
+- display bit banging works, but only right after flashing. After reset nothing happens, not sure why (!)
+- also, display pio for data transfers is not working (commented out)
+- clean-up the code around display initialization
+
 
 - SD card detection works-ish, the sd detect pin is floating when no card and connected to ground when card - figure how to use
 - resetting audio codec must be done in order for it to work? or would pullup be enough? or just use Si4705 GPIO? maybe that
@@ -73,7 +90,6 @@
 
 ## HW
 
-- connector height could be 2.2mm (with cartridge pcb height of 1.2mm this gives us 1mm width, which is within the 0.8 - 1.4mm working range for the spring contact)
 - could this be better PMIC? https://www.ti.com/product/BQ25628
 - slimmer connector https://jlcpcb.com/partdetail/XkbConnection-X05A10H40G/C528037
 - order breakouts for the improved PMIC
@@ -81,7 +97,7 @@
 ## AVR
 
 - see if we can run at 5MHz and still talk to neopixel
-- I2C master enumeration works, but read register does not
+- I2C master enumeration works, but read register does not - is this true still? 
 
 ## UI
 

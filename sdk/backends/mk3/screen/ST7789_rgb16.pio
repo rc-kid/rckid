@@ -7,10 +7,8 @@
 .side_set 1
 
 .wrap_target
-    out pins, 8     side 0
-    nop             side 1
-    out pins, 8     side 0
-    nop             side 1
+    out pins, 16     side 0
+    nop              side 1
 
 % c-sdk {
 
@@ -28,7 +26,15 @@ inline void ST7789_rgb16_program_init(PIO pio, uint sm, uint offset, uint wrPin,
     pio_gpio_init(pio, dataPin + 5);
     pio_gpio_init(pio, dataPin + 6);
     pio_gpio_init(pio, dataPin + 7);
-    pio_sm_set_consecutive_pindirs(pio, sm, dataPin, 8, true);
+    pio_gpio_init(pio, dataPin + 8);
+    pio_gpio_init(pio, dataPin + 9);
+    pio_gpio_init(pio, dataPin + 10);
+    pio_gpio_init(pio, dataPin + 11);
+    pio_gpio_init(pio, dataPin + 12);
+    pio_gpio_init(pio, dataPin + 13);
+    pio_gpio_init(pio, dataPin + 14);
+    pio_gpio_init(pio, dataPin + 15);
+    pio_sm_set_consecutive_pindirs(pio, sm, dataPin, 16, true);
     pio_sm_config c = ST7789_rgb_program_get_default_config(offset);
     sm_config_set_sideset_pins(&c, wrPin);
     sm_config_set_out_pins(&c, dataPin, 8);
