@@ -62,8 +62,8 @@
 # TODO
 
 - display bit banging works, but only right after flashing. After reset nothing happens, not sure why (!)
-- also, display pio for data transfers is not working (commented out)
 - clean-up the code around display initialization
+- colors are revrsed on mk3. This can either be solved in software by using reversed color values, or in theory could be done by the pio itself. Is it necessary?
 
 
 - SD card detection works-ish, the sd detect pin is floating when no card and connected to ground when card - figure how to use
@@ -73,8 +73,6 @@
 - then try an I2C device driver using the I2C queue, etc. 
 
 
-- swap mic & radio input so that we can do low power audio pass through from radio directly to headphone amps of the audio codec
-- 4k7 Ohm pull up from ldo select to vcc (now direct connection)
 
 - determine correct rumbler settings for ok fail and nudge
 
@@ -93,6 +91,10 @@
 - could this be better PMIC? https://www.ti.com/product/BQ25628
 - slimmer connector https://jlcpcb.com/partdetail/XkbConnection-X05A10H40G/C528037
 - order breakouts for the improved PMIC
+- swap mic & radio input so that we can do low power audio pass through from radio directly to headphone amps of the audio codec
+- 4k7 Ohm pull up from ldo select to vcc (now direct connection)
+- display RESX to vcc via pullup and likely to a pin
+- display MOSI to gnd
 
 ## AVR
 

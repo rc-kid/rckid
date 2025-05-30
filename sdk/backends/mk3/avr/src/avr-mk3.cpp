@@ -151,7 +151,7 @@ public:
         serial::initializeTx(RCKID_SERIAL_SPEED);
 
         // TODO some initialization routine with checks, etc.
-        LOG("\n\n\nSYSTEM RESET DETECTED: " << hex(RSTCTRL.RSTFR));
+        LOG("\n\n\nSYSTEM RESET DETECTED (AVR): " << hex(RSTCTRL.RSTFR));
         initializeMasterMode();
         // TODO scanning I2C devices hangs (!)
         detectI2CDevices();

@@ -16,12 +16,13 @@ int main() {
     displaySetRefreshDirection(DisplayRefreshDirection::ColumnFirst);
     displaySetUpdateRegion(Rect::WH(320, 240));
     uint16_t * fb = new uint16_t[FB_SIZE];
+    uint32_t x = 0;
     while (true) {
+        LOG(LL_INFO, "Tick " << (x++));
         fill(fb, FB_SIZE, ColorRGB{255, 0, 0});
         //displayWaitVSync();
-        displayUpdate(fb, FB_SIZE);
+        displayUpdate(fb, FB_SIZE );
         displayWaitUpdateDone();
-
 
         fill(fb, FB_SIZE, ColorRGB{0, 255, 0});
         //displayWaitVSync();
@@ -37,5 +38,6 @@ int main() {
         //displayWaitVSync();
         displayUpdate(fb, FB_SIZE);
         displayWaitUpdateDone();
+
     }
 }
