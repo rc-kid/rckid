@@ -5,12 +5,13 @@
 .program ST7789_rgb16
 ; set aside 1 bit for the WRX 
 .side_set 1
-
+.fifo tx
+.out 16 left auto 16
 .wrap_target
     out pins, 16     side 0
     nop              side 1
 
-% c-sdk {
+% c-sdk {  
 
 #include "rckid/rckid.h"
 
@@ -35,12 +36,12 @@ inline void ST7789_rgb16_program_init(PIO pio, uint sm, uint offset, uint wrPin,
     pio_gpio_init(pio, dataPin + 14);
     pio_gpio_init(pio, dataPin + 15);
     pio_sm_set_consecutive_pindirs(pio, sm, dataPin, 16, true);
-    pio_sm_config c = ST7789_rgb_program_get_default_config(offset);
+    pio_sm_config c = ST7789_rgb16_program_get_default_config(offset);
     sm_config_set_sideset_pins(&c, wrPin);
-    sm_config_set_out_pins(&c, dataPin, 8);
-    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+    sm_config_set_out_pins(&c, dataPin, 16);
+    //sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
     // enable autopull
-    sm_config_set_out_shift(&c, false, true, 16);
+    //sm_config_set_out_shift(&c, false, true, 16);
     pio_sm_init(pio, sm, offset, &c);
     pio_set_clock_speed(pio, sm, RCKID_ST7789_SPEED * 2);
 }

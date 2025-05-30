@@ -101,6 +101,19 @@ Where `/dev/ttyAMA0` is your USB device, this one is the default with devel-serv
 
 > To exit picocom, use C-A C-X. 
 
+### Debug Cartridge
+
+For easier debugging, the debug cartridge has protruding wires to some of the GPIO pins available, namely:
+
+Wire Color | Function
+-----------|-----------
+Black      | GND
+Red        | 3V3
+Green      | GPIO 12, UART0 TX
+White      | GPIO 13, UART0 RX
+Blue       | GPIO 14
+Yellow     | GPIO 15
+
 ## Attribution
 
 - doxygen theme: https://github.com/jothepro/doxygen-awesome-css

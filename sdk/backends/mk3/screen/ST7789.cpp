@@ -8,14 +8,17 @@
 namespace rckid {
 
     void ST7789::initialize() {
-        /*
         // load and initialize the PIO programs for single and double precission
         pio_ = pio0;
+        pio_set_gpio_base(pio_, 16);
         sm_ = pio_claim_unused_sm(pio_, true);
+        LOG(LL_INFO, "SM: " << (uint32_t)sm_);
         offsetSingle_ = pio_add_program(pio_, & ST7789_rgb16_program);
+        LOG(LL_INFO, "Offset single: " << (uint32_t)offsetSingle_);
         //offsetDouble_ = pio_add_program(pio_, & ST7789_rgb_double_program);
         // initialize the DMA channel and set up interrupts
         dma_ = dma_claim_unused_channel(true);
+        LOG(LL_INFO, "DMA: " << (uint32_t)dma_);
         dmaConf_ = dma_channel_get_default_config(dma_); // create default channel config, write does not increment, read does increment, 32bits size
         channel_config_set_transfer_data_size(& dmaConf_, DMA_SIZE_16); // transfer 16 bytes
         channel_config_set_dreq(& dmaConf_, pio_get_dreq(pio_, sm_, true)); // tell our PIO
@@ -25,8 +28,6 @@ namespace rckid {
         // enable IRQ0 on the DMA channel
         dma_channel_set_irq0_enabled(dma_, true);
         //irq_add_shared_handler(DMA_IRQ_0, irqDMADone,  PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY);
-        irq_set_enabled(DMA_IRQ_0, true);
-        */
 
         // reset the display
         reset();
@@ -34,8 +35,8 @@ namespace rckid {
 
     void ST7789::reset() {
         // reset updating - forcefully since we are resetting the display anyways
-       //dma_channel_abort(dma_);
-       // pio_sm_set_enabled(pio_, sm_, false);
+        dma_channel_abort(dma_);
+        pio_sm_set_enabled(pio_, sm_, false);
         updating_ = 0;
 
         gpio_init(RP_PIN_DISP_TE);
@@ -162,7 +163,7 @@ namespace rckid {
             switch (mode_) {
                 case MODE_FULL_NATIVE:
                 case MODE_FULL_NATURAL:
-                    ST7789_rgb16_program_init(pio_, sm_, offsetSingle_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
+                    ST7789_rgb16_program_init(pio_, sm_, offsetSingle_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB15);
                     break;
                 /*
                 case MODE_HALF_NATIVE:

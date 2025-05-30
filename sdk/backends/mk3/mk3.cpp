@@ -281,8 +281,11 @@ namespace rckid {
 
     void __not_in_flash_func(irqDMADone_)() {
         //gpio::outputHigh(GPIO21);
-        //unsigned irqs = dma_hw->ints0;
-        //dma_hw->ints0 = irqs;
+        unsigned irqs = dma_hw->ints0;
+        dma_hw->ints0 = irqs;
+        // display DMA IRQ
+        if (irqs & ( 1u << ST7789::dma_))
+            ST7789::irqHandler();
     }
 
 
@@ -299,6 +302,8 @@ namespace rckid {
     Writer debugWrite() {
         return Writer{[](char x) {
 #if (RCKID_LOG_TO_SERIAL == 1)
+            if (x == '\n')
+                uart_putc(uart0, '\r');
             uart_putc(uart0, x);
 #else
             if (x == '\n') {
@@ -349,8 +354,12 @@ namespace rckid {
         irq_set_enabled(I2C0_IRQ, true);
         // make the I2C IRQ priority larger than that of the DMA (0x80) to ensure that I2C comms do not have to wait for render done if preparing data takes longer than sending them
         irq_set_priority(I2C0_IRQ, 0x40); 
+        // enable DMA IRQ (used by display, audio, etc.)
+        irq_set_enabled(DMA_IRQ_0, true);
 
-        rp2350_chip_version();
+
+        LOG(LL_INFO, "\n\n\nSYSTEM RESET DETECTED (RP2350): ");
+        LOG(LL_INFO, "RP2350 chip version: " << rp2350_chip_version());
 
         // TODO enable the display initilaization after we switch to 16bit interface
         // initialize the display
@@ -494,7 +503,6 @@ namespace rckid {
 
         // initialize the filesystem
         filesystem::initialize();
-
         // enter base arena for the application
         //Arena::enter();
 
@@ -521,7 +529,7 @@ namespace rckid {
 
     void tick() {
         yield();
-        UNIMPLEMENTED;
+        // TODO check AVR state, etc? 
     }
 
     void yield() {
