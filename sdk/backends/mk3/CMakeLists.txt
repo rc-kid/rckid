@@ -13,6 +13,7 @@ file(GLOB_RECURSE SRC "mk3.cpp" "sd/*.cpp" "usb/*.cpp" "screen/*.cpp" "${CMAKE_S
 add_library(librckid STATIC ${SRC})
 
 pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/screen/ST7789_rgb16.pio)
+pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/i2s/i2s_out16.pio)
 
 # Sets given project to be used with RCKid SDK. 
 #

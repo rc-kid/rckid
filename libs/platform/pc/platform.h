@@ -8,6 +8,7 @@
 #include <iostream>
 
 #define ARCH_PC
+#define PLATFORM_LITTLE_ENDIAN
 
 #include "../definitions.h"
 #include "../writer.h"
@@ -65,10 +66,13 @@ namespace gpio {
 }
 
 namespace i2c {
-    // actually from common
-    inline bool isPresent([[maybe_unused]] uint8_t address) {
-        return false;
+
+    inline bool masterTransmit([[maybe_unused]] uint8_t address, [[maybe_unused]] uint8_t const * wb, [[maybe_unused]] uint8_t wsize, [[maybe_unused]] uint8_t * rb, [[maybe_unused]] uint8_t rsize) {
+        // do nothing
+        return false; 
     }
+
+    #include "../common/i2c_common.h"
 }
 
 #include "../utils.h"

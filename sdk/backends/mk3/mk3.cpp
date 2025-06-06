@@ -31,12 +31,14 @@ extern "C" {
 
 #include <platform/peripherals/ltr390uv.h>
 #include <platform/peripherals/si4705.h>
+#include <platform/peripherals/tlv320.h>
 
 #include "screen/ST7789.h"
 #include "sd/sd.h"
 #include "rckid/rckid.h"
 
-#include "rckid/rckid.h"
+#include "i2s_out16.pio.h"
+
 #include "avr/src/avr_commands.h"
 #include "avr/src/avr_state.h"
 
@@ -99,6 +101,8 @@ namespace rckid {
 
     void memoryCheckStackProtection();
 
+    void audioPlaybackDMA(uint finished, uint other);
+
     namespace filesystem {
         void initialize();
     }
@@ -115,6 +119,26 @@ namespace rckid {
         AVRState::Status lastStatus_;
 
     } // namespace rckid::io
+
+    namespace audio {
+        enum class State {
+            Idle, 
+            Playback, 
+            PlaybackPaused,
+            Recording,
+            RecordingPaused,
+        }; 
+        State state_ = State::Idle;
+        std::function<uint32_t(int16_t *, uint32_t)> cb_;
+        uint8_t volume_ = 10;
+        uint playbackSm_;
+        uint playbackOffset_;
+        uint dma0_ = 0;
+        uint dma1_ = 0;
+        DoubleBuffer<int16_t> * playbackBuffer_ = nullptr;
+        uint32_t sampleRate_ = 44100;
+
+    }
 
     /** I2C Queue
      
@@ -283,6 +307,14 @@ namespace rckid {
         //gpio::outputHigh(GPIO21);
         unsigned irqs = dma_hw->ints0;
         dma_hw->ints0 = irqs;
+        // for audio, reset the DMA start address to the beginning of the buffer and tell the double buffer to refill
+        if (audio::state_ == audio::State::Playback) {
+            if (irqs & (1u << audio::dma0_))
+                audioPlaybackDMA(audio::dma0_, audio::dma1_);
+            if (irqs & (1u << audio::dma1_))
+                audioPlaybackDMA(audio::dma1_, audio::dma0_);
+        }
+
         // display DMA IRQ
         if (irqs & ( 1u << ST7789::dma_))
             ST7789::irqHandler();
@@ -357,37 +389,11 @@ namespace rckid {
         // enable DMA IRQ (used by display, audio, etc.)
         irq_set_enabled(DMA_IRQ_0, true);
 
-
         LOG(LL_INFO, "\n\n\nSYSTEM RESET DETECTED (RP2350): ");
         LOG(LL_INFO, "RP2350 chip version: " << rp2350_chip_version());
 
-        // TODO enable the display initilaization after we switch to 16bit interface
         // initialize the display
         ST7789::initialize();
-        //ST7789::sendWord(0x0);
-        //ST7789::sendByte(0b11000011);
-        /*
-        constexpr uint64_t mask = 0xffff_u64 << 20; // 0xff00_u64 << 20;
-        gpio_put_masked64( mask, 0xffffffffffffffffll);
-        gpio_put(RP_PIN_DISP_DB0, true);
-        gpio_put(RP_PIN_DISP_DB1, true);
-        gpio_put(RP_PIN_DISP_DB2, false);
-        gpio_put(RP_PIN_DISP_DB3, false);
-        gpio_put(RP_PIN_DISP_DB4, false);
-        gpio_put(RP_PIN_DISP_DB5, true);
-        gpio_put(RP_PIN_DISP_DB6, false);
-        gpio_put(RP_PIN_DISP_DB7, false);
-        */
-        /*
-        gpio_put(RP_PIN_DISP_DB8, true);
-        gpio_put(RP_PIN_DISP_DB9, true);
-        gpio_put(RP_PIN_DISP_DB10, true);
-        gpio_put(RP_PIN_DISP_DB11, true);
-        gpio_put(RP_PIN_DISP_DB12, true);
-        gpio_put(RP_PIN_DISP_DB13, true);
-        gpio_put(RP_PIN_DISP_DB14, true);
-        gpio_put(RP_PIN_DISP_DB15, true);
-        */
 
 #if (RCKID_WAIT_FOR_SERIAL == 1)
         // wait for input on the serial port before proceeding, so that we can debug the boot process
@@ -427,6 +433,15 @@ namespace rckid {
 
         // initialize the filesystem
         filesystem::initialize();
+
+
+        // initialize the audio output
+        audio::playbackSm_ = pio_claim_unused_sm(pio1, true);
+        audio::playbackOffset_ = pio_add_program(pio1, & i2s_out16_program);
+        audio::dma0_ = dma_claim_unused_channel(true);
+        audio::dma1_ = dma_claim_unused_channel(true);
+        i2s_out16_program_init(pio1, audio::playbackSm_, audio::playbackOffset_, RP_PIN_I2S_DOUT, RP_PIN_I2S_LRCK);
+      
 
         return;
 
@@ -684,6 +699,27 @@ namespace rckid {
 
     // audio
 
+    void audioConfigurePlaybackDMA(int dma, int other) {
+        auto dmaConf = dma_channel_get_default_config(dma);
+        channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bits (16 per channel, 2 channels)
+        channel_config_set_read_increment(& dmaConf, true);  // increment on read
+        channel_config_set_dreq(&dmaConf,  pio_get_dreq(pio1, audio::playbackSm_, true)); // DMA is driven by the I2S playback pio
+        channel_config_set_chain_to(& dmaConf, other); // chain to the other channel
+        dma_channel_configure(dma, & dmaConf, &pio1->txf[audio::playbackSm_], nullptr, 0, false); // the buffer consists of stereo samples, (32bits), i.e. buffer size / 2
+        // enable IRQ0 on the DMA channel (shared with other framework DMA uses such as the display or the SD card)
+        dma_channel_set_irq0_enabled(dma, true);
+    }
+
+    void __not_in_flash_func(audioPlaybackDMA)(uint finished, [[maybe_unused]] uint other) {
+        // reconfigure the currently finished buffer to start from the current front buffer (will be back after the swap) - note the other dma has already been started by the finished one
+        dma_channel_set_read_addr(finished, audio::playbackBuffer_->front(), false);
+        // now load the front buffer with user data and adjust the audio levels according to the settings and resolution
+        uint32_t nextSamples = audio::cb_(audio::playbackBuffer_->front(), audio::playbackBuffer_->size() / 2);
+        // configure the DMA to transfer only the correct number of samples
+        dma_channel_set_trans_count(finished, nextSamples, false);
+        audio::playbackBuffer_->swap();
+    }
+
     void audioStreamRefill(void * buffer, unsigned int samples) {
         memoryCheckStackProtection();
         UNIMPLEMENTED;
@@ -721,7 +757,24 @@ namespace rckid {
 
     void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb) {
         memoryCheckStackProtection();
-        UNIMPLEMENTED;
+        // 
+        audio::playbackBuffer_ = & buffer;
+        audio::state_ = audio::State::Playback;
+        audio::sampleRate_ = sampleRate;
+        audio::cb_ = cb;
+        // initialize the DMA channels 
+        audioConfigurePlaybackDMA(audio::dma0_, audio::dma1_);
+        audioConfigurePlaybackDMA(audio::dma1_, audio::dma0_);
+        // now we need to load the buffer's front part with audio data
+        audioPlaybackDMA(audio::dma0_, audio::dma1_);
+        // enable the first DMA
+        dma_channel_start(audio::dma0_);
+        // start the pio program with appropriate sample rate speed
+        audio::state_ = audio::State::Playback;
+        pio_set_clock_speed(pio1, audio::playbackSm_, sampleRate * 34 * 2);
+        pio_sm_set_enabled(pio1, audio::playbackSm_, true);
+        // now we need to load the second buffer while the first one is playing (reload of the buffers will be done by the IRQ handler)
+        audioPlaybackDMA(audio::dma1_, audio::dma0_);
     }
 
     void audioPause() {

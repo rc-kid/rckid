@@ -18,6 +18,8 @@ public:
         Cellular = 0x03,
     };
 
+    TLV320(): i2c::Device(0x18) {
+    }
 
     /** Powers the device on, enables the basic blocks necessaru for communication and enters standby mode.
      
@@ -26,9 +28,9 @@ public:
     void standby() {
         // wakes up from sleep mode, this is from the sleep modes datasheet
         // step 1: configure AVDD supply
-        w(0x00, 0x02, 0x09); // power up ALDO
-        w(0x00, 0x01, 0x08); // disable weak AVDD to DVDD connection
-        w(0x00, 0x02, 0x01); // keep ALDO powered, enable master analog power control
+        w(0x01, 0x02, 0x09); // power down ALDO, enable mastar analog power control
+        w(0x01, 0x01, 0x08); // disable weak AVDD to DVDD connection
+        w(0x01, 0x02, 0x01); // ALDO powered, enable master analog power control
         // step 2: power up clock generation tree
         w(0x00, 0x05, 0x91); // power up PLL
         w(0x00, 0x12, 0x02); // keep NADC = 2, powered down for sync mode
@@ -62,8 +64,8 @@ public:
 
 
         // enable headset detection
-        w(0x01, 0x02, 0x09); // AVDD LDO on, Analog block on (required for the headphone detection)
-        w(0x00, 0x67, 0x80); // enable headset detection, headset debounce 16ms, headeset button debounce off (default values)
+        w(0x01, 0x02, 0x01); // AVDD LDO on, Analog block on (required for the headphone detection) (note that LDO on is bit3 == 0)
+        w(0x00, 0x43, 0x80); // enable headset detection, headset debounce 16ms, headeset button debounce off (default values)
     }
     
     /** Enters sleep mode.
@@ -75,14 +77,14 @@ public:
     /** Returns the headset type detected. 
      */
     Headset connectedHeadset() {
-        return static_cast<Headset>((r(0x00, 0x67) >> 5) & 3);
+        return static_cast<Headset>((r(0x00, 0x43) >> 5) & 3);
     }
 
     /** Returns true if the headset button is currently pressed.
      */
     bool headsetButtonDown() {
         // interrupt flag 2 - current value of the button press 
-        return r(0x00, 0x46) & 0x20);
+        return r(0x00, 0x2e) & 0x20;
     }
 
     /** Sets master output volume.
@@ -170,8 +172,10 @@ protected:
             page_ = page;
         }
         uint8_t cmd[] = { reg, value };
-        i2c::masterWrite(address_, cmd, sizeof(cmd));
+        i2c::masterWrite(address, cmd, sizeof(cmd));
     }
+
+public:
 
     uint8_t r(uint8_t page, uint8_t reg) {
         if (page_ != page) {
@@ -179,7 +183,7 @@ protected:
             page_ = page;
         }
         uint8_t value;
-        i2c::masterRead(address_, &reg, 1, &value, 1);
+        i2c::masterTransmit(address, &reg, 1, &value, 1);
         return value;
     }
 

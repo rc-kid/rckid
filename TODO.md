@@ -41,6 +41,7 @@
 - [X] check that RP can talk to I2C devices
 - [X] check that RP can talk to SD card
 - [ ] check that RP can talk to the display & show data
+- [X] check TLV320 GPIO
 - [X] check TLV320 power consumption after reset (seems small)
 - [ ] check TLV320 power consumption in standby / sleep modes
 - [ ] check TLV320 detects headphones and headphone button press 
@@ -60,6 +61,8 @@
 - [ ] check that 2 LEDs under DPAD work better for a tilting DPAD (in HW.md)
 
 # TODO
+
+- detects headphones in, but not out, and does not detect cellular, only stereo. This could be because of two microphones being attached to the micbias
 
 - display bit banging works, but only right after flashing. After reset nothing happens, not sure why (!)
 - clean-up the code around display initialization
@@ -89,8 +92,9 @@
 ## HW
 
 - could this be better PMIC? https://www.ti.com/product/BQ25628
+- could this be better audio codec? https://jlcpcb.com/partdetail/NuvotonTech-NAU88C22YG/C914209 (it's cheaper, has integrated speaker driver, simpler to interact with, but requires MCLK, that has to be provided by the chip, it has headphone detection and one extra GPIO, no HW reset pin required)
 - slimmer connector https://jlcpcb.com/partdetail/XkbConnection-X05A10H40G/C528037
-- order breakouts for the improved PMIC
+- order breakouts for the improved PMIC and audio codec
 - swap mic & radio input so that we can do low power audio pass through from radio directly to headphone amps of the audio codec
 - 4k7 Ohm pull up from ldo select to vcc (now direct connection)
 - display RESX to vcc via pullup and likely to a pin
