@@ -31,16 +31,16 @@ namespace rckid {
         9         | 32        | CSX/SPI_CS
         10        | 31        | DCX/SPI_CLK
         11        | 30        | WRX/SPI_DC
-        12        | 39        | RDX
-        13        | 38        | SPI_MOSI
-        14        | 37        | SPI_MISO
-        15        | 36        | RESX
-        16        | 35        | GND
-        17        | 34        | DB0
-        18        | 33        | DB1
-        19        | 32        | DB2
-        20        | 31        | DB3
-        21        | 30        | DB4
+        12        | 29        | RDX
+        13        | 28        | SPI_MOSI
+        14        | 27        | SPI_MISO
+        15        | 26        | RESX
+        16        | 25        | GND
+        17        | 24        | DB0
+        18        | 23        | DB1
+        19        | 22        | DB2
+        20        | 21        | DB3
+        21        | 20        | DB4
         22        | 19        | DB5
         23        | 18        | DB6
         24        | 17        | DB7

@@ -1,0 +1,45 @@
+; I2C output
+; 
+; 32 bit value (2 channels) from the input fifo and serializes it into two channels. 
+; 
+
+.program i2s_out16
+; set aside 2 bits for LRCLK and BCLK
+.side_set 2
+.fifo tx
+.out 1 left auto 32
+
+.wrap_target
+    ; thanks to auto pull we now have 32 bits loaded, we first shift the left frame, then the right one
+    set x, 16         side 0b00
+    nop               side 0b01 ; change clock with no data
+leftBit:
+    out pins, 1       side 0b00
+    jmp x-- leftBit   side 0b01
+    set x, 16         side 0b10 ; done with left, prepare to send right
+    nop               side 0b11 ; change clock with no data
+rightBit:
+    out pins, 1       side 0b10
+    jmp x-- rightBit  side 0b11
+  
+% c-sdk {  
+
+#include "rckid/rckid.h"
+
+inline void i2s_out16_program_init(PIO pio, uint sm, uint offset, uint dataPin, uint clkPins) {
+    // claim the resources required for the continuous mode
+    pio_gpio_init(pio, dataPin);
+    pio_sm_set_consecutive_pindirs(pio, sm, dataPin, 1, true);
+    pio_gpio_init(pio, clkPins);
+    pio_gpio_init(pio, clkPins + 1);
+    pio_sm_set_consecutive_pindirs(pio, sm, clkPins, 2, true);
+    pio_sm_config c = i2s_out16_program_get_default_config(offset);
+    sm_config_set_sideset_pins(&c, clkPins);
+    sm_config_set_out_pins(&c, dataPin, 1);
+    pio_sm_init(pio, sm, offset, &c);
+    // do not set the speed
+    //pio_set_clock_speed(pio, sm, RCKID_ST7789_SPEED * 2);
+}
+
+
+%}
