@@ -113,14 +113,21 @@ public:
         return (*this) << static_cast<uint64_t>(value);
     }
 
-    template<typename T>
-    std::enable_if_t<std::is_base_of<Converter, T>::value, Writer &> operator << (T & conv) {
-        conv(*this);
+    Writer & operator << (double value) {
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer), "%g", value);
+        *this << buffer;
         return *this;
     }
 
     template<typename T>
     std::enable_if_t<std::is_base_of<Converter, T>::value, Writer &> operator << (T && conv) {
+        conv(*this);
+        return *this;
+    }
+
+    template<typename T>
+    std::enable_if_t<std::is_base_of<Converter, T>::value, Writer &> operator << (T & conv) {
         conv(*this);
         return *this;
     }

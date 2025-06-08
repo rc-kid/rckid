@@ -7,36 +7,35 @@
         return i2c::masterTransmit(address, data, size, nullptr, 0);
     }
 
-    static int masterRead(uint8_t address, uint8_t * buffer, uint8_t size) {
+    static inline int masterRead(uint8_t address, uint8_t * buffer, uint8_t size) {
         return i2c::masterTransmit(address, nullptr, 0, buffer, size);
     }
     
     template<typename T, platform::Endian DEVICE_ENDIAN = platform::Endian::Little>
-    static void write(uint8_t address, T data);
+    static inline void write(uint8_t address, T data);
 
     static inline void write(uint8_t address, uint8_t * data, uint8_t size) {
         i2c::masterTransmit(address, data, size, nullptr, 0);
     }
 
     template<typename T, platform::Endian DEVICE_ENDIAN = platform::Endian::Little>
-    static T read(uint8_t address); 
+    static inline T read(uint8_t address); 
 
     static inline uint8_t read(uint8_t address, uint8_t * buffer, uint8_t size) {
         return i2c::masterTransmit(address, buffer, size, nullptr, 0) ? size : 0;
     }
 
     template<typename T, platform::Endian DEVICE_ENDIAN = platform::Endian::Little>
-    static void writeRegister(uint8_t address, uint8_t reg, T value);
+    static inline void writeRegister(uint8_t address, uint8_t reg, T value);
 
     template<typename T, platform::Endian DEVICE_ENDIAN = platform::Endian::Little>
-    static T readRegister(uint8_t address, uint8_t reg);
+    static inline T readRegister(uint8_t address, uint8_t reg);
 
     /** Reads dynamically sized buffer starting at given register. 
      */
-    static void readRegister(uint8_t address, uint8_t reg, uint8_t * buffer, size_t size) {
+    static inline void readRegister(uint8_t address, uint8_t reg, uint8_t * buffer, size_t size) {
         i2c::masterTransmit(address, & reg, 1, buffer, size);
     }
-
 
     class Device {
     public:
