@@ -12,3 +12,10 @@ The currently supported backends are:
 
 - fantasy 
 
+
+
+
+## SD Card Contents
+
+The SDK expects for most of its functionality to have an SD card attached in the device. The SD card contains most of the user data, media files, etc. The following format of the SD card is expected:
+
