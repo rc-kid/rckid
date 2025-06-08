@@ -27,7 +27,7 @@ namespace rckid::ui {
 
         /** Renders the given column, 
          */
-        void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
+        void renderColumn(Coord column, uint16_t * buffer, [[maybe_unused]] Coord starty, Coord numPixels) override {
             if (column < lineWidth_) {
                 // just fill with the color
                 while (numPixels-- > 0) {

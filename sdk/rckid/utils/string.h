@@ -35,7 +35,7 @@ namespace rckid {
             str_{length + 1} {
             memcpy(str_.data(), from.str_.data() + start, length);
             str_[length] = '\0';
-            str_.grow(length + 1);
+            str_.reserve(length + 1);
         } 
 
         String(char const * str, uint32_t size): 
@@ -51,13 +51,13 @@ namespace rckid {
 
         static String withCapacity(uint32_t size) {
             String s{};
-            s.str_.grow(size + 1);
+            s.str_.reserve(size + 1);
             return s;
         }
 
         static String withCapacity(char const * str, uint32_t size) {
             String s{str};
-            s.str_.grow(size + 1);
+            s.str_.reserve(size + 1);
             return s;
         }
 
@@ -89,9 +89,27 @@ namespace rckid {
 
         char operator[](uint32_t index) const { return str_[index]; }
 
-        String & operator += (char x) {
-            str_[size()] = x;
-            str_.append('\0');
+        void append(char c) {
+            if (str_.size() == 0) {
+                str_.reserve(2);
+                str_.setSize(2);
+                str_[0] = c;
+                str_[1] = '\0';
+            } else {
+                str_[size()] = c;
+                str_.reserve(str_.size() + 1);
+                str_.setSize(str_.size() + 1);
+                str_[size()] = '\0';
+            }
+        }
+
+        void clear() {
+            str_.setSize(1);
+            str_[0] = '\0';
+        }
+
+        String & operator += (char c) {
+            append(c);
             return *this;
         }
 
@@ -122,7 +140,7 @@ namespace rckid {
 
         void shrink() { str_.shrink(); }
 
-        void grow(uint32_t size) { str_.grow(size + 1); }
+        void reserve(uint32_t size) { str_.reserve(size + 1); }
 
         void erase(uint32_t index, uint32_t length) {
             ASSERT(index + length <= size());
@@ -137,11 +155,12 @@ namespace rckid {
         void insert(uint32_t index, char c) {
             ASSERT(index <= size());
             uint32_t oldSize = str_.size();
-            str_.grow(oldSize + 1);
+            str_.reserve(oldSize + 1);
             memmove(str_.data() + index + 1, str_.data() + index, oldSize - index);
             str_[index] = c;
             str_.setSize(oldSize + 1);
         }
+
 
         bool endsWith(char other) const {
             if (size() == 0)
@@ -154,6 +173,12 @@ namespace rckid {
             if (len > size())
                 return false;
             return strcmp(c_str() + size() - len, other) == 0;
+        }
+
+        Writer write() {
+            return Writer([this](char c) {
+                append(c);
+            });
         }
 
     private:
@@ -174,11 +199,17 @@ namespace rckid {
     class StringWriter {
     public:
         StringWriter():
-            writer_{[this](char c) { str_ += c; }} {
+            writer_{str_.write()} {
         }
-    
+
         template<typename T>
-        StringWriter & operator << (T x) {
+        StringWriter & operator << (T && x) {
+            writer_ << x;
+            return *this; 
+        }
+
+        template<typename T>
+        StringWriter & operator << (T const & x) {
             writer_ << x;
             return *this; 
         }
@@ -186,7 +217,7 @@ namespace rckid {
         String str() {
             return std::move(str_);
         }
-    
+
     private:
         String str_;
         Writer writer_;

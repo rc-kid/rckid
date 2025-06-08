@@ -16,6 +16,8 @@ namespace rckid {
          */
         virtual uint32_t read(uint8_t * buffer, uint32_t bufferSize) = 0;
 
+        virtual bool eof() const = 0;
+
         uint8_t read() {
             uint8_t result;
             bool res = read(& result, 1);
@@ -112,6 +114,10 @@ namespace rckid {
                 pos_ += available;
             }
             return available;
+        }
+
+        bool eof() const {
+            return pos_ >= bufferSize_;
         }
 
         /** Returns the size of the underlying memory buffer. 

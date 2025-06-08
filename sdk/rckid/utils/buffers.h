@@ -158,7 +158,7 @@ namespace rckid {
             return data_ + size_;
         }
 
-        void grow(uint32_t size) {
+        void reserve(uint32_t size) {
             if (size > capacity_)
                 resize(size);
             else 
@@ -192,7 +192,7 @@ namespace rckid {
 
         void append(T const & value) {
             if (capacity_ <= size_) 
-                grow(size_ == 0 ? 16 : size_ * 2);
+                reserve(size_ == 0 ? 16 : size_ * 2);
             data_[size_++] = value;
         }
 

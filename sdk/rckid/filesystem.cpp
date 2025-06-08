@@ -207,6 +207,23 @@ namespace rckid::filesystem {
 #endif
     }
 
+    bool FileRead::eof() const {
+#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+        if (host_ == nullptr)
+            return true;
+        return host_->eof();
+#else
+        switch (drive_) {
+            case static_cast<unsigned>(Drive::SD):
+                return f_eof(& sd_);
+            case static_cast<unsigned>(Drive::Cartridge):
+                return lfs_file_tell(& lfs_, & cart_) == lfs_file_size(& lfs_, & cart_);
+            default:
+                return true;
+        }
+#endif          
+    }
+
     void FileRead::close() {
 #ifdef RCKID_ENABLE_HOST_FILESYSTEM
         ASSERT(host_ != nullptr);

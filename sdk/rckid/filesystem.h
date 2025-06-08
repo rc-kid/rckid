@@ -73,6 +73,8 @@ namespace rckid::filesystem {
 
         uint32_t read(uint8_t * buffer, uint32_t numBytes) override;
 
+        bool eof() const override;
+
         void close(); 
 
         ~FileRead() override { close(); }
@@ -129,7 +131,7 @@ namespace rckid::filesystem {
         unsigned drive_ = 0;
         union {
             FIL sd_;
-            lfs_file_t cart_;
+            mutable lfs_file_t cart_;
 #ifdef RCKID_ENABLE_HOST_FILESYSTEM
             std::ifstream * host_;
 #endif
