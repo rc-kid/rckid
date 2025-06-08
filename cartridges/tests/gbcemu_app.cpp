@@ -26,18 +26,16 @@ public:
 
     GBCStats(uint32_t t, uint32_t cycles): ui::App<void>{320, 240} {
 
-        ui::Label * l = new ui::Label{0, 50, STR(t)};
+        ui::Label * l = g_.addChild(new ui::Label{0, 50, STR(t)});
         l->setFont(Font::fromROM<assets::OpenDyslexic64>());
         l->setColor(ColorRGB{255, 255, 255});
         l->setWidth(320);
         l->setHeight(50);
-        g_.add(l);
-        ui::Label * l2 = new ui::Label{0, 100, STR(cycles)};
+        ui::Label * l2 = g_.addChild(new ui::Label{0, 100, STR(cycles)});
         l2->setFont(Font::fromROM<assets::OpenDyslexic64>());
         l2->setColor(ColorRGB{128, 128, 128});
         l2->setWidth(320);
         l2->setHeight(50);
-        g_.add(l2);
         g_.setRect(Rect::WH(320, 240));
     }
 

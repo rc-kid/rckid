@@ -19,12 +19,10 @@ namespace rckid {
             // mount the SD card
             filesystem::mount();
             // TODO whatif not mounted? 
-            c_ = new FileBrowser{this};
-            g_.add(c_);
+            c_ = g_.addChild(new FileBrowser{this});
             c_->setRect(Rect::XYWH(0, 160, 320, 80));
             c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
-            hdr_ = new ui::Header{};
-            g_.add(hdr_);
+            hdr_ = g_.addChild(new ui::Header{});
         }
 
         void update() override {
@@ -87,14 +85,11 @@ namespace rckid {
                 audioPlay(as_);
                 lastUs_ = uptimeUs();
                 elapsedUs_ = 0;
-                title_ = new ui::Label{80, 10, filesystem::stem(path)};
+                title_ = g_.addChild(new ui::Label{80, 10, filesystem::stem(path)});
                 title_->setFont(Font::fromROM<assets::OpenDyslexic32>());
-                elapsed_ = new ui::Label{80, 54, String{""}};
-                icon_ = new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::play)}};
+                elapsed_ = g_.addChild(new ui::Label{80, 54, String{""}});
+                icon_ = g_.addChild(new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::play)}});
                 icon_->setPos(8,8);
-                g_.add(title_);
-                g_.add(icon_);
-                g_.add(elapsed_);
             }
 
             ~Player() override {

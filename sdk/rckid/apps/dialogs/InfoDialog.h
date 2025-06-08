@@ -19,16 +19,13 @@ namespace rckid {
         InfoDialog(Bitmap<ColorRGB> && icon, String title, String text):
             ui::App<void>{Rect::XYWH(0, 144, 320, 96)} {
             using namespace ui;
-            icon_ = new ui::Image{Rect::WH(96, 96), std::move(icon)};
+            icon_ = g_.addChild(new ui::Image{Rect::WH(96, 96), std::move(icon)});
             icon_->setTransparentColor(ColorRGB::Black());
-            title_ = new ui::Label{ 96, 5, std::move(title)};
+            title_ = g_.addChild(new ui::Label{ 96, 5, std::move(title)});
             title_->setFont(Font::fromROM<assets::OpenDyslexic32>());
-            text_ = new ui::Tilemap<Tile<8, 16, Color16>>{27, 3, assets::System16, palette_};
+            text_ = g_.addChild(new ui::Tilemap<Tile<8, 16, Color16>>{27, 3, assets::System16, palette_});
             text_->setPos(96, 48);
             text_->textMultiline(0, 0) << text;
-            g_.add(icon_);
-            g_.add(title_);
-            g_.add(text_);
         }
 
         static void error(String title, String text) {

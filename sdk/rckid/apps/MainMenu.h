@@ -23,12 +23,10 @@ namespace rckid {
     public:
         MainMenu(ui::Menu::Generator generator) : ui::App<ui::Menu::Action>{} {
             using namespace ui;
-            bg_ = new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::star)}};
+            bg_ = g_.addChild(new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::star)}});
             bg_->setRect(Rect::WH(320, 240));
             bg_->setRepeat(true);
-            c_ = new ui::CarouselMenu{};
-            g_.add(bg_);
-            g_.add(c_);
+            c_ = g_.addChild(new ui::CarouselMenu{});
             c_->setRect(Rect::XYWH(0, 160, 320, 80));
             c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
             c_->setOnTransitionEvent([this](Carousel::TransitionState state, Carousel::Transition transition, Timer & t) {
@@ -39,8 +37,7 @@ namespace rckid {
                     onCarouselTransition(state, transition, t);
                 }
             });
-            hdr_ = new ui::Header{};
-            g_.add(hdr_);
+            hdr_ = g_.addChild(new ui::Header{});
             if (history_ == nullptr) {
                 generator_ = generator;
                 c_->setMenu(generator_(), ui::Carousel::Transition::Up);
