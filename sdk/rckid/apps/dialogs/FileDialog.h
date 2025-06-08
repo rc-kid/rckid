@@ -11,8 +11,7 @@ namespace rckid {
             // mount the SD card
             filesystem::mount();
             // TODO whatif not mounted? 
-            c_ = new ui::FileBrowser{"/"};
-            g_.add(c_);
+            c_ = g_.addChild(new ui::FileBrowser{"/"});
             c_->setRect(Rect::XYWH(0, 160, 320, 80));
             c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
         }

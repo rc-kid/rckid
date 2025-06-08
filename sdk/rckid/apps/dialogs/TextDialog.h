@@ -28,16 +28,13 @@ namespace rckid {
             ui::App<String>{Rect::XYWH(0, 144, 320, 96)} {
                 using namespace ui;
                 g_.setBg(ColorRGB::White().withAlpha(32));
-                tileMap_ = new ui::Tilemap<Tile<12, 24, Color16>>{26, 4, assets::System24, palette_};
+                tileMap_ = g_.addChild(new ui::Tilemap<Tile<12, 24, Color16>>{26, 4, assets::System24, palette_});
                 tileMap_->setPos(4, 0);
-                g_.add(tileMap_);
                 drawKeyboard(KeyboardType::UpperCase);
                 drawText();
-                selRect_ = new ui::Rectangle{Rect::WH(24, 24)};
-                g_.add(selRect_);
-                cursorLine_ = new ui::VLine{Rect::WH(24, 24)};
+                selRect_ = g_.addChild(new ui::Rectangle{Rect::WH(24, 24)});
+                cursorLine_ = g_.addChild(new ui::VLine{Rect::WH(24, 24)});
                 cursorLine_->setX(16 + (cursor_ - left_) * 12);
-                g_.add(cursorLine_);
             }
 
     protected:
