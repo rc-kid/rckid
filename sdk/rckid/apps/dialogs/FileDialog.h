@@ -1,6 +1,9 @@
 #pragma once
 #include "../../ui/file_browser.h"
 
+
+#include "PopupMenu.h"
+
 namespace rckid {
 
     class FileDialog : public ui::App<String> {
@@ -14,6 +17,16 @@ namespace rckid {
             c_ = g_.addChild(new ui::FileBrowser{"/"});
             c_->setRect(Rect::XYWH(0, 160, 320, 80));
             c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
+            contextMenu_.add(new ui::Menu::Item{"First"});
+            contextMenu_.add(new ui::Menu::Item{"Second"});
+            contextMenu_.add(new ui::Menu::Item{"And Third"});
+            contextMenu_.add(new ui::Menu::Item{"Some Fourth"});
+            contextMenu_.add(new ui::Menu::Item{"Fantasic Five"});
+            contextMenu_.add(new ui::Menu::Item{"Six"});
+            contextMenu_.add(new ui::Menu::Item{"Seven Se7en"});
+            contextMenu_.add(new ui::Menu::Item{"Eight"});
+            contextMenu_.add(new ui::Menu::Item{"9"});
+            contextMenu_.add(new ui::Menu::Item{"Last But Not Least 10"});
         }
 
     protected:
@@ -30,10 +43,14 @@ namespace rckid {
                 LOG(LL_DEBUG, "FileDialog: cancelling");
                 exit();
             }
+            if (btnPressed(Btn::Select)) {
+                PopupMenu::show(& contextMenu_);
+            }
         }
 
     private:
         ui::FileBrowser * c_;
+        ui::Menu contextMenu_; 
 
     }; // rckid::FileDialog
 

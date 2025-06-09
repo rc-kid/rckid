@@ -16,6 +16,7 @@
 #include <rckid/apps/dialogs/TextDialog.h>
 #include <rckid/apps/dialogs/FileDialog.h>
 #include <rckid/apps/dialogs/InfoDialog.h>
+#include <rckid/apps/dialogs/PopupMenu.h>
 #include <rckid/apps/AudioPlayer.h>
 
 

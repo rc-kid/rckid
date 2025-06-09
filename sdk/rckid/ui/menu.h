@@ -175,6 +175,14 @@ namespace rckid::ui {
             items_.clear();
         }
 
+        std::vector<Item *>::iterator begin() {
+            return items_.begin();
+        }
+        
+        std::vector<Item *>::iterator end() {
+            return items_.end();
+        }
+
     private:
 
         std::vector<Item *> items_;
