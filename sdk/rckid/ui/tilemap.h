@@ -78,6 +78,8 @@ namespace rckid::ui {
                 tileMap_[i] = TileInfo{c, paletteOffset};
         }
 
+        void clear() { fill(' '); }
+
         Writer text(Coord x, Coord y) {
             ASSERT(x < cols_ && y < rows_);
             return Writer{[x, y, this](char c) mutable {

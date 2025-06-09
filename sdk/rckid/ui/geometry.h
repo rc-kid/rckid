@@ -48,19 +48,18 @@ namespace rckid::ui {
 
         Rectangle(Rect rect): Widget{rect} {}
 
-        void setColor(ColorRGB color) {
-            color_ = color;
-        }
+        void setColor(ColorRGB color) { color_ = color; }
 
-        void setLineWidth(Coord width) {
-            lineWidth_ = width;
-        }   
+        void setLineWidth(Coord width) { lineWidth_ = width; }   
+
+        bool fill() const { return fill_; }
+        void setFill(bool fill) { fill_ = fill; }
 
     protected:
         /** Renders the given column, 
          */
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
-            if ((column < lineWidth_) || (column + lineWidth_ >= width())) {
+            if (fill_ || (column < lineWidth_) || (column + lineWidth_ >= width())) {
                 // just fill with the color
                 while (numPixels-- > 0) {
                     *buffer = color_.toRaw();
@@ -79,6 +78,7 @@ namespace rckid::ui {
     private:
         ColorRGB color_ = ColorRGB::Red();
         Coord lineWidth_ = 1;
+        bool fill_ = false;
 
     }; // rckid::ui::Rect`
 

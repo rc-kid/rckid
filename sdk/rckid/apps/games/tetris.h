@@ -9,6 +9,10 @@ namespace rckid {
      */
     class Tetris : public BitmapApp<ColorRGB> {
     public:
+
+        Tetris(): BitmapApp<ColorRGB>{Rect::WH(320, 240)} {
+            
+        }
        
 
     protected:

@@ -14,6 +14,18 @@ namespace rckid {
     class Friends : public ui::App<void> {
     public:
 
+
+
+
+
+
+
+
+
+
+    private:
+        ui::Header * hdr_;
+
     }; // rckid::Friends
 
 } // namespace rckid
