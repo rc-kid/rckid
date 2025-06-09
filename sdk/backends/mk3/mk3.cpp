@@ -103,7 +103,7 @@ namespace rckid {
 
     void audioPlaybackDMA(uint finished, uint other);
 
-    namespace filesystem {
+    namespace fs {
         void initialize();
     }
 
@@ -432,7 +432,7 @@ namespace rckid {
         sdInitialize();
 
         // initialize the filesystem
-        filesystem::initialize();
+        fs::initialize();
 
 
         // initialize the audio output
@@ -517,7 +517,7 @@ namespace rckid {
         sdInitialize();
 
         // initialize the filesystem
-        filesystem::initialize();
+        fs::initialize();
         // enter base arena for the application
         //Arena::enter();
 

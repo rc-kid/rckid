@@ -63,7 +63,8 @@ namespace rckid {
     void memoryCheckStackProtection();
 
     void audioPlaybackDMA(uint finished, uint other);
-    namespace filesystem {
+    
+    namespace fs {
         void initialize();
     }
     namespace io {
@@ -389,7 +390,7 @@ namespace rckid {
         sdInitialize();
 
         // initialize the filesystem
-        filesystem::initialize();
+        fs::initialize();
 
         // enter base arena for the application
         //Arena::enter();

@@ -41,14 +41,14 @@ namespace rckid {
         class Item : public MenuItem {
         public:
 
-            Item(filesystem::Entry const & e) {
+            Item(fs::Entry const & e) {
                 text_ = e.name();
             }
 
             std::string const & filename() const { return text_; }    
 
             void text(std::string & text) const override {
-                text = filesystem::stem(text_); 
+                text = fs::stem(text_); 
             }
 
             bool icon(Bitmap<ColorRGB> &bmp) const override {
@@ -63,7 +63,7 @@ namespace rckid {
 
 
         SlidingPuzzle(): GraphicsApp{ARENA(Canvas<Color>{320, 240})} {
-            filesystem::mount();
+            fs::mount();
             imageSelectMode_ = loadFolder();
             if (! imageSelectMode_) {
                 resetGame();
@@ -72,7 +72,7 @@ namespace rckid {
         }
 
         ~SlidingPuzzle() {
-            filesystem::unmount();
+            fs::unmount();
         }
 
         void reset() {
@@ -248,11 +248,11 @@ namespace rckid {
                 hole_ = nullptr;
             }
             if (files_.size() > 0) {
-                filesystem::mount();
+                fs::mount();
                 std::string filename{STR("apps/SlidingPuzzle/" << currentItem()->filename())};
-                filesystem::FileRead f = filesystem::fileRead(filename);
+                fs::FileRead f = fs::fileRead(filename);
                 g_.loadImage(PNG::fromStream(f));
-                filesystem::unmount();
+                fs::unmount();
             } else {
                 g_.loadImage(PNG::fromBuffer(assets::images::logo16));
             }
@@ -325,7 +325,7 @@ namespace rckid {
         bool canMoveDown() { return holeY_ > 0; }
 
         bool loadFolder() {
-            filesystem::Folder f = filesystem::folderRead("apps/SlidingPuzzle");
+            fs::Folder f = fs::folderRead("apps/SlidingPuzzle");
             if (!f.good())
                 return false;
             files_.clear();
