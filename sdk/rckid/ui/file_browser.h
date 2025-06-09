@@ -24,7 +24,7 @@ namespace rckid::ui {
         String currentPath() const { 
             if (entries_.size() == 0)
                 return path_;
-            return filesystem::join(path_, entries_[i_].name());
+            return fs::join(path_, entries_[i_].name());
         }
 
         /** Processes the left and right menu transitions. 
@@ -46,7 +46,7 @@ namespace rckid::ui {
             }
             if (btnDown(Btn::Down) || btnDown(Btn::B)) {
                 if (! dirStack_.empty()) {
-                    loadDir(filesystem::parent(path_), Transition::Down);
+                    loadDir(fs::parent(path_), Transition::Down);
                     // clear the button state (cancellation is handled by button press)
                     btnClear(Btn::Down);
                     btnClear(Btn::B);
@@ -54,7 +54,7 @@ namespace rckid::ui {
             }
             if (btnDown(Btn::Up) || btnDown(Btn::A)) {
                 if (entries_[i_].isFolder()) {
-                    loadDir(filesystem::join(path_, entries_[i_].name()), Transition::Up);
+                    loadDir(fs::join(path_, entries_[i_].name()), Transition::Up);
                     // clear the button state (selection is handled by button press)
                     btnClear(Btn::Up);
                     btnClear(Btn::A);
@@ -81,7 +81,7 @@ namespace rckid::ui {
             }
             path_ = std::move(path);
             entries_.clear();
-            filesystem::Folder folder = filesystem::folderRead(path_.c_str(), drive_);
+            fs::Folder folder = fs::folderRead(path_.c_str(), drive_);
             for (auto & entry : folder) {
                 if (entry.isFile() && ! onFileFilter(entry.name()))
                     continue;
@@ -91,12 +91,12 @@ namespace rckid::ui {
             setEntry(i_, transition);
         }
 
-        Bitmap<ColorRGB> getIconFor(filesystem::Entry const & entry) {
+        Bitmap<ColorRGB> getIconFor(fs::Entry const & entry) {
             NewArenaGuard g{};
             if (entry.isFolder()) {
                 return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_default_64::folder))};
             } else {
-                String ext = filesystem::ext(entry.name());
+                String ext = fs::ext(entry.name());
                 if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
                     return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_default_64::paint_palette))};
                 else if (ext == ".mp3") 
@@ -107,7 +107,7 @@ namespace rckid::ui {
         }
 
         void setEntry(uint32_t i, Transition transition) {
-            set(filesystem::stem(entries_[i].name()), getIconFor(entries_[i]), transition);
+            set(fs::stem(entries_[i].name()), getIconFor(entries_[i]), transition);
             if (entries_[i].isFolder())
                 onFolderChanged();
             else
@@ -115,10 +115,10 @@ namespace rckid::ui {
         }
 
     private:
-        filesystem::Drive drive_ = filesystem::Drive::SD;
+        fs::Drive drive_ = fs::Drive::SD;
         String path_;
         uint32_t i_ = 0;
-        std::vector<filesystem::Entry> entries_;
+        std::vector<fs::Entry> entries_;
         std::vector<uint32_t> dirStack_;
     }; 
 

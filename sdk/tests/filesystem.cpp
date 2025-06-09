@@ -4,25 +4,25 @@
 using namespace rckid;
 
 TEST(filesystem, stem) {
-    EXPECT(filesystem::stem("foo.bar") == "foo");
-    EXPECT(filesystem::stem("/foo.bar") == "foo");
-    EXPECT(filesystem::stem("foo/foo.bar") == "foo");
-    EXPECT(filesystem::stem("foo") == "foo");
-    EXPECT(filesystem::stem("/foo") == "foo");
-    EXPECT(filesystem::stem("foo/foo") == "foo");
+    EXPECT(fs::stem("foo.bar") == "foo");
+    EXPECT(fs::stem("/foo.bar") == "foo");
+    EXPECT(fs::stem("foo/foo.bar") == "foo");
+    EXPECT(fs::stem("foo") == "foo");
+    EXPECT(fs::stem("/foo") == "foo");
+    EXPECT(fs::stem("foo/foo") == "foo");
 }
 
 TEST(filesystem, extension) {
-    EXPECT(filesystem::ext("foo.bar") == ".bar");
-    EXPECT(filesystem::ext("foo.bar.baz") == ".baz");
-    EXPECT(filesystem::ext("foobar") == "");
-    EXPECT(filesystem::ext(".bar") == "");
+    EXPECT(fs::ext("foo.bar") == ".bar");
+    EXPECT(fs::ext("foo.bar.baz") == ".baz");
+    EXPECT(fs::ext("foobar") == "");
+    EXPECT(fs::ext(".bar") == "");
 }
 
 TEST(filesystem, parent) {
-    EXPECT(filesystem::parent("foo.bar") == "/");
-    EXPECT(filesystem::parent("foo.bar.baz") == "/");
-    EXPECT(filesystem::parent("/foobar") == "/");
-    EXPECT(filesystem::parent("/foo/bar/baz.bar") == "/foo/bar");
+    EXPECT(fs::parent("foo.bar") == "/");
+    EXPECT(fs::parent("foo.bar.baz") == "/");
+    EXPECT(fs::parent("/foobar") == "/");
+    EXPECT(fs::parent("/foo/bar/baz.bar") == "/foo/bar");
 }
 

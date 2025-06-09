@@ -12,7 +12,7 @@ namespace rckid {
         FileDialog() : ui::App<String>{} {
             using namespace ui;
             // mount the SD card
-            filesystem::mount();
+            fs::mount();
             // TODO whatif not mounted? 
             c_ = g_.addChild(new ui::FileBrowser{"/"});
             c_->setRect(Rect::XYWH(0, 160, 320, 80));

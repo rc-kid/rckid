@@ -113,7 +113,7 @@ namespace rckid {
     }
 
     // forward declarations of internal functions
-    namespace filesystem {
+    namespace fs {
         void initialize();
         void initialize(std::string const & sdRoot, std::string const & flashRoot);
     }
@@ -174,7 +174,7 @@ namespace rckid {
         Args::parse(argc, argv, { sdIso, flashIso });
 
 #ifdef RCKID_ENABLE_HOST_FILESYSTEM
-        filesystem::initialize(sdIso.value(), flashIso.value());
+        fs::initialize(sdIso.value(), flashIso.value());
 #else
         // see if there is sd.iso file so that we can simulate SD card
         sd::iso_.open(sdIso.value(), std::ios::in | std::ios::out | std::ios::binary);
@@ -213,7 +213,7 @@ namespace rckid {
 
         SystemMallocGuard::disable();
 
-        filesystem::initialize();
+        fs::initialize();
         // mark that we are initialized and the graphics & sound should be used
         initialized_ = true;
     }

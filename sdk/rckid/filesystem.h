@@ -6,7 +6,7 @@
 #include "rckid.h"
 #include "utils/stream.h"
 
-namespace rckid::filesystem {
+namespace rckid::fs {
 
     /** RCKid supports two filesystems, SD card and a pieces of the flash memory inside cartridge. 
      */
@@ -451,9 +451,9 @@ namespace rckid::filesystem {
 #endif            
         }; 
 #ifdef RCKID_ENABLE_HOST_FILESYSTEM
-        std::filesystem::path hostPath_;
+        std::filesystemilesystem::path hostPath_;
 #endif
-    }; // rckid::filesystem::Folder
+    }; // rckid::fs::Folder
 
     /** Formats the drive. 
      

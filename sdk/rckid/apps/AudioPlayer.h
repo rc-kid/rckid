@@ -17,7 +17,7 @@ namespace rckid {
     public:
         AudioPlayer() : ui::App<void>{} {
             // mount the SD card
-            filesystem::mount();
+            fs::mount();
             // TODO whatif not mounted? 
             c_ = g_.addChild(new FileBrowser{this});
             c_->setRect(Rect::XYWH(0, 160, 320, 80));
@@ -33,8 +33,8 @@ namespace rckid {
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                 String path = c_->currentPath();
                 LOG(LL_DEBUG, "AudioPlayer: starting playback of " << path);
-                String ext = filesystem::ext(path);
-                filesystem::FileRead f = filesystem::fileRead(path);
+                String ext = fs::ext(path);
+                fs::FileRead f = fs::fileRead(path);
                 if (!f.good()) {
                     LOG(LL_ERROR, "AudioPlayer: file not found " << path);
                     return;
@@ -85,7 +85,7 @@ namespace rckid {
                 audioPlay(as_);
                 lastUs_ = uptimeUs();
                 elapsedUs_ = 0;
-                title_ = g_.addChild(new ui::Label{80, 10, filesystem::stem(path)});
+                title_ = g_.addChild(new ui::Label{80, 10, fs::stem(path)});
                 title_->setFont(Font::fromROM<assets::OpenDyslexic32>());
                 elapsed_ = g_.addChild(new ui::Label{80, 54, String{""}});
                 icon_ = g_.addChild(new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::play)}});

@@ -79,8 +79,8 @@ namespace rckid {
             /*
             // This is too dangerous to have here
             if (btnPressed(Btn::Start)) {
-                filesystem::unmount();
-                filesystem::format();
+                fs::unmount();
+                fs::format();
                 exit();
             }
             */

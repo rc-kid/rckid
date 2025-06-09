@@ -87,7 +87,7 @@ extern "C" {
     }
 }
 
-namespace rckid::filesystem {
+namespace rckid::fs {
 
     namespace {
         [[maybe_unused]]

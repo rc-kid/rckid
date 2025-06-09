@@ -82,7 +82,9 @@
 
 - add events for getting icon for files & on file selected for file browser
 - add actions for file browser such as rename, copy, mkdir, etc.  
-- rename filesystem to fs?
+
+
+- make the popupmenu use animations and labels instead of the tilemap
 
 ## HW
 
