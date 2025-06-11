@@ -54,6 +54,10 @@
 - [ ] check TLV320 can record from microphone
 - [ ] check low power radio bypass via analog input 1 (requires rerouting mic & radio on the board) - maybe not necessary
 - [ ] check SD card insertion detection
+- [ ] check powered from real battery works
+- [ ] check USB detection works when powered from battery
+- [ ] check DataSync app
+- [ ] check the above still works if we add USB ESD protection
 - [ ] disable debug mode on by default on AVR (end of initialize)
 - [X] order breakout for new PMIC chip and verify its functionality separately
 - [ ] charging/discharging
@@ -61,8 +65,6 @@
 - [ ] check that 2 LEDs under DPAD work better for a tilting DPAD (in HW.md)
 
 # TODO
-
-- header should have its own singleton object that it uses and populates and can be drawn on things
 
 - detects headphones in, but not out, and does not detect cellular, only stereo. This could be because of two microphones being attached to the micbias
 

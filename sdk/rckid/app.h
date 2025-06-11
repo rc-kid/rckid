@@ -148,16 +148,6 @@ namespace rckid {
             g_.render();
         }
 
-        bool checkAndExit() {
-            if (btnPressed(Btn::B)) {
-                exit();
-                btnClear(Btn::B);
-                return true;
-            } else {
-                return false;
-            }
-        }
-
         RENDERER g_;
     }; // rckid::RenderableApp
 

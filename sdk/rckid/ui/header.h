@@ -34,6 +34,12 @@ namespace rckid::ui {
             at(35, 0).setPaletteOffset(16) = 3;
         }
 
+        static Header * instance() {
+            if (instance_ == nullptr)
+                instance_ = new Header{};
+            return instance_;
+        }
+
     protected:
 
         /** Updates the header. 
@@ -50,6 +56,8 @@ namespace rckid::ui {
         }
 
     private:
+
+        static inline Header * instance_ = nullptr;
 
         static constexpr uint16_t palette_[] = {
             // gray
