@@ -62,6 +62,9 @@
 
 # TODO
 
+- scrolling does not work too well between app transitions
+- header should have its own singleton object that it uses and populates and can be drawn on things
+
 - detects headphones in, but not out, and does not detect cellular, only stereo. This could be because of two microphones being attached to the micbias
 
 - clean-up the code around display initialization

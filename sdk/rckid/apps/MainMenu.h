@@ -23,26 +23,14 @@ namespace rckid {
     public:
         MainMenu(ui::Menu::Generator generator) : ui::App<ui::Menu::Action>{} {
             using namespace ui;
-            bg_ = g_.addChild(new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::star)}});
-            bg_->setRect(Rect::WH(320, 240));
-            bg_->setRepeat(true);
             c_ = g_.addChild(new ui::CarouselMenu{});
             c_->setRect(Rect::XYWH(0, 160, 320, 80));
             c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
-            c_->setOnTransitionEvent([this](Carousel::TransitionState state, Carousel::Transition transition, Timer & t) {
-                if (initialTransition_) {
-                    if (state == Carousel::TransitionState::End)
-                        initialTransition_ = false;
-                } else {
-                    onCarouselTransition(state, transition, t);
-                }
-            });
-            hdr_ = g_.addChild(new ui::Header{});
             if (history_ == nullptr) {
                 generator_ = generator;
-                c_->setMenu(generator_(), ui::Carousel::Transition::Up);
+                c_->setMenu(generator_(), Direction::Up);
             } else {
-                historyPop(ui::Carousel::Transition::Up);
+                historyPop(Direction::Up);
             }
         }
 
@@ -67,7 +55,7 @@ namespace rckid {
                         historyPush();
                         auto m = item->as<ui::Menu::SubmenuItem>();
                         generator_ = m->generator();
-                        c_->setMenu(generator_(), ui::Carousel::Transition::Up);
+                        c_->setMenu(generator_(), Direction::Up);
                         break;
                     }
                     case ui::Menu::ActionItem::KIND:
@@ -90,41 +78,11 @@ namespace rckid {
             }
         }
 
-        void onCarouselTransition(ui::Carousel::TransitionState state, ui::Carousel::Transition transition, Timer & t) {
-            using namespace ui;
-            switch (state) {
-                case Carousel::TransitionState::Start:
-                    imgX_ = bg_->imgX();
-                    imgY_ = bg_->imgY();
-                    break;
-                default:
-                    // either end or in progress
-                    switch (transition) {
-                        case Carousel::Transition::Left:
-                            bg_->setImgX(imgX_ + interpolation::cosine(t, 0, 80).round());
-                            break;
-                        case Carousel::Transition::Right:
-                            bg_->setImgX(imgX_ - interpolation::cosine(t, 0, 80).round());
-                            break;
-                        case Carousel::Transition::Up:
-                            bg_->setImgY(imgY_ + interpolation::cosine(t, 0, 60).round());
-                            break;
-                        case Carousel::Transition::Down:
-                            bg_->setImgY(imgY_ - interpolation::cosine(t, 0, 60).round());
-                            break;
-                        default:
-                            UNIMPLEMENTED;
-                            break;
-                    }
-                    break;
-            }
-        }
-
         void historyPush() {
             history_ = new (Arena::alloc<PreviousMenu>()) PreviousMenu{c_->index(), generator_, history_};
         }
 
-        void historyPop(ui::Carousel::Transition transition = ui::Carousel::Transition::Down) {
+        void historyPop(Direction transition = Direction::Down) {
             if (history_ == nullptr)
                 return;
             auto * h = history_;
@@ -139,12 +97,6 @@ namespace rckid {
     private:
         ui::Menu::Generator generator_;
         ui::CarouselMenu * c_;
-        ui::Image * bg_;
-        ui::Header * hdr_;
-        Coord imgX_;
-        Coord imgY_; 
-        // when 
-        bool initialTransition_ = true;
 
         // action item to be returned
         ui::Menu::Action result_;

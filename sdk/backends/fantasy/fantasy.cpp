@@ -11,6 +11,7 @@
 #include <platform/args.h>
 
 #include "rckid/rckid.h"
+#include "rckid/filesystem.h"
 
 namespace rckid {
     extern thread_local char ** stackStart_;
@@ -206,6 +207,7 @@ namespace rckid {
         } else {
             LOG(LL_ERROR, flashIso.value() << " file not found, cartridge storage not present");
         }
+        fs::initialize();
 #endif
 
         // initialize the audio device
@@ -213,7 +215,10 @@ namespace rckid {
 
         SystemMallocGuard::disable();
 
-        fs::initialize();
+        // mount the SD card (if present)
+        if (! fs::mount(fs::Drive::SD))
+            LOG(LL_ERROR, "Failed to mount the SD card");
+
         // mark that we are initialized and the graphics & sound should be used
         initialized_ = true;
     }

@@ -126,6 +126,8 @@ namespace rckid {
     template<typename RENDERER, typename T = void>
     class RenderableApp : public ModalApp<T> {
     protected:
+
+        using ModalApp<T>::exit;
         template <typename... Args>
         RenderableApp(Args&&... args) : g_{std::forward<Args>(args)...} {
         }
@@ -144,6 +146,16 @@ namespace rckid {
 
         void draw() override {
             g_.render();
+        }
+
+        bool checkAndExit() {
+            if (btnPressed(Btn::B)) {
+                exit();
+                btnClear(Btn::B);
+                return true;
+            } else {
+                return false;
+            }
         }
 
         RENDERER g_;

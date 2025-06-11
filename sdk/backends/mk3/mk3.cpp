@@ -36,6 +36,7 @@ extern "C" {
 #include "screen/ST7789.h"
 #include "sd/sd.h"
 #include "rckid/rckid.h"
+#include "rckid/filesystem.h"
 
 #include "i2s_out16.pio.h"
 
@@ -431,9 +432,10 @@ namespace rckid {
         // initialize the SD card
         sdInitialize();
 
-        // initialize the filesystem
+        // initialize the filesystem and mount the SD card
         fs::initialize();
-
+        if (! fs::mount(fs::Drive::SD))
+            LOG(LL_ERROR, "Failed to mount the SD card");
 
         // initialize the audio output
         audio::playbackSm_ = pio_claim_unused_sm(pio1, true);

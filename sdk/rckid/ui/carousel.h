@@ -9,23 +9,16 @@
 #include "image.h"
 #include "label.h"
 #include "menu.h"
+#include "form.h"
 
 namespace rckid::ui {
 
     /** The carousel is used to display a rolling menu.
      
-        Has two sprites and two element texts, and uses the renderColumn rendering to display them at appropriate parts of the screen. The carousel only concerns itself with rendering of the current item and transitions between items. Its purpose is to be the smallest reusable block. For better UI experience, use the CarouselMenu widget which incorporates extra features such as menu management, etc. 
+        Has two sprites and two element texts, and uses the renderColumn rendering to display them at appropriate parts of the screen. The carousel only concerns itself with rendering of the current item and directions between items. Its purpose is to be the smallest reusable block. For better UI experience, use the CarouselMenu widget which incorporates extra features such as menu management, etc. 
      */
     class Carousel : public Widget {
     public:
-
-        enum class Transition {
-            None,
-            Left,
-            Right,
-            Up,
-            Down,
-        };
 
         enum class TransitionState {
             InProgress,
@@ -33,7 +26,7 @@ namespace rckid::ui {
             End,
         };
 
-        using OnTransition = std::function<void(TransitionState, Transition, Timer & )>;
+        using OnTransition = std::function<void(TransitionState, Direction, Timer & )>;
 
         static constexpr Coord iconToTextSpacerPx = 5;
         static constexpr uint32_t defaultTransitionTimeMs = 500;
@@ -60,8 +53,8 @@ namespace rckid::ui {
             repositionElements(bImg_, bText_);
         } 
 
-        void set(String text, Image icon, Transition transition = Transition::None) {
-            if (transition == Transition::None) {
+        void set(String text, Image icon, Direction direction = Direction::None) {
+            if (direction == Direction::None) {
                 aImg_ = std::move(icon);
                 aImg_.setTransparent(true);
                 aText_.setText(text);
@@ -72,22 +65,24 @@ namespace rckid::ui {
                 bText_.setText(text);
                 repositionElements(bImg_, bText_);
             }
-            setTransition(transition);
+            setTransition(direction);
         }
 
         void update() override {
-            if (dir_ == Transition::None)
+            if (dir_ == Direction::None)
                 return;
             if (a_.update()) {
                 a_.stop();
+                Form::backgroundTransition(dir_, a_);
                 if (onTransition_)
                     onTransition_(TransitionState::End, dir_, a_);
-                dir_ = Transition::None;
+                dir_ = Direction::None;
                 aImgOffset_ = 0;
                 aTextOffset_ = 0;
                 std::swap(aImg_, bImg_);
                 std::swap(aText_, bText_);
             } else {
+                Form::backgroundTransition(dir_, a_);
                 if (onTransition_)
                     onTransition_(TransitionState::InProgress, dir_, a_);
                 updateOffsets();
@@ -100,28 +95,28 @@ namespace rckid::ui {
 
     protected:
 
-        void set(Menu::Item const & item, Transition transition = Transition::None) {
-            set(item.text(), item.icon(), transition);
+        void set(Menu::Item const & item, Direction direction = Direction::None) {
+            set(item.text(), item.icon(), direction);
         }
 
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
             switch (dir_) {
-                case Transition::Left:
-                case Transition::Right:
+                case Direction::Left:
+                case Direction::Right:
                     renderChild(& bImg_, column, buffer, starty, numPixels, Point(bImgOffset_, 0));
                     renderChild(& bText_, column, buffer, starty, numPixels, Point(bTextOffset_, 0));
                     [[fallthrough]];
-                case Transition::None:
+                case Direction::None:
                     renderChild(& aImg_, column, buffer, starty, numPixels, Point(aImgOffset_, 0));
                     renderChild(& aText_, column, buffer, starty, numPixels, Point(aTextOffset_, 0));
                     break;                      
-                case Transition::Up:
+                case Direction::Up:
                     renderChild(& aImg_, column, buffer, starty, numPixels, Point(0, aImgOffset_));
                     renderChild(& aText_, column, buffer, starty, numPixels, Point(0, aTextOffset_));
                     renderChild(& bImg_, column, buffer, starty, numPixels, Point(bImgOffset_, 0));
                     renderChild(& bText_, column, buffer, starty, numPixels, Point(bTextOffset_, 0));
                     break;
-                case Transition::Down:
+                case Direction::Down:
                     renderChild(& aImg_, column, buffer, starty, numPixels, Point(aImgOffset_, 0));
                     renderChild(& aText_, column, buffer, starty, numPixels, Point(aTextOffset_, 0));
                     renderChild(& bImg_, column, buffer, starty, numPixels, Point(0, bImgOffset_));
@@ -143,13 +138,14 @@ namespace rckid::ui {
             labelInto.setPos(x, (height() - labelInto.font().size) / 2);
         }
 
-        void setTransition(Transition transition) {
-            dir_ = transition;
+        void setTransition(Direction direction) {
+            dir_ = direction;
             aImgOffset_ = 0;
             aTextOffset_ = 0;
-            if (transition != Transition::None) {
+            if (direction != Direction::None) {
                 a_.startContinuous();
                 updateOffsets();
+                Form::backgroundTransition(dir_, a_);
                 if (onTransition_)
                     onTransition_(TransitionState::Start, dir_, a_);
             } else {
@@ -160,28 +156,28 @@ namespace rckid::ui {
         void updateOffsets() {
             switch (dir_) {
                 // new item is coming from left, old goes to right
-                case Transition::Left:
+                case Direction::Left:
                     aImgOffset_ = interpolation::cosine(a_, 0, width()).round();
                     aTextOffset_ = aImgOffset_ * 2;
                     bTextOffset_ = interpolation::cosine(a_, -width(), 0).round();
                     bImgOffset_ = bTextOffset_ * 2;
                     break;
                 // new item is coming from right, old goes to left
-                case Transition::Right:
+                case Direction::Right:
                     aTextOffset_ = interpolation::cosine(a_, 0, -width()).round();
                     aImgOffset_ = aTextOffset_ * 2;
                     bImgOffset_ = interpolation::cosine(a_, width(), 0).round();
                     bTextOffset_ = bImgOffset_ * 2;
                     break;
                 // new item is coming from sides, old goes down
-                case Transition::Up:
+                case Direction::Up:
                     aTextOffset_ = interpolation::cosine(a_, 0, height()).round();
                     aImgOffset_ = aTextOffset_;
                     bTextOffset_ = interpolation::cosine(a_, width(), 0).round();
                     bImgOffset_ = - bTextOffset_;
                     break;
                 // new item is coming from the bottom, old goes to the sides
-                case Transition::Down:
+                case Direction::Down:
                     aTextOffset_ = interpolation::cosine(a_, 0, width()).round();
                     aImgOffset_ = - aTextOffset_;
                     bTextOffset_ = interpolation::cosine(a_, height(), 0).round();
@@ -198,7 +194,7 @@ namespace rckid::ui {
         Image bImg_;
         Label bText_;
 
-        Transition dir_ = Transition::None;
+        Direction dir_ = Direction::None;
         Coord aImgOffset_;
         Coord aTextOffset_;
         Coord bImgOffset_;
@@ -231,12 +227,12 @@ namespace rckid::ui {
             return & (*menu_)[i_];
         }
 
-        void setMenu(Menu * m, Transition transition = Transition::None, uint32_t index = 0) {
+        void setMenu(Menu * m, Direction direction = Direction::None, uint32_t index = 0) {
             delete menu_;
             menu_ = m;
             if (menu_ == nullptr || menu_->size() == 0)
                 return;
-            set((*menu_)[index], transition);
+            set((*menu_)[index], direction);
             i_ = index;
         }
 
@@ -244,17 +240,17 @@ namespace rckid::ui {
             if (menu_ == nullptr || menu_->size() == 0)
                 return;
             i_ = (i_ + menu_->size() - 1) % menu_->size();
-            set((*menu_)[i_], Transition::Left);
+            set((*menu_)[i_], Direction::Left);
         }
 
         void moveRight() {
             if (menu_ == nullptr || menu_->size() == 0)
                 return;
             i_ = (i_ + 1) % menu_->size();
-            set((*menu_)[i_], Transition::Right);
+            set((*menu_)[i_], Direction::Right);
         }
 
-        /** Processes the left and right menu transitions. 
+        /** Processes the left and right menu directions. 
          */
         void processEvents() override {
             // if there is no menu, don't do anything

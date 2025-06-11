@@ -6,6 +6,14 @@ namespace rckid {
 
     using Coord = int32_t;
 
+    enum class Direction {
+        None, 
+        Left,
+        Right,
+        Up, 
+        Down,
+    }; // rckid::Direction
+
     /** Horizontal alignment for labels and other UI elements. 
      */
     enum class HAlign {

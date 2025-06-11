@@ -3,8 +3,15 @@
 #include <vector>
 
 #include "../utils/buffers.h"
-#include "panel.h"
+#include "../utils/timer.h"
+#include "../utils/interpolation.h"
+#include "../graphics/png.h"
 #include "../app.h"
+#include "../assets/images.h"
+#include "panel.h"
+#include "image.h"
+#include "header.h"
+
 
 namespace rckid::ui {
 
@@ -14,22 +21,37 @@ namespace rckid::ui {
             Form{320,240} {
         }
 
-        Form(Coord width, Coord height):
-            Form(Rect::Centered(width, height, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT)) {
+        Form(Coord width, Coord height, bool raw = false):
+            Form(Rect::Centered(width, height, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT), raw) {
         }
 
-        Form(Rect rect): 
+        Form(Rect rect, bool raw = false): 
             Panel{rect},
-            buffer_{RCKID_DISPLAY_HEIGHT} {
+            buffer_{RCKID_DISPLAY_HEIGHT},
+            bgImage_{! raw},
+            header_{! raw} {
         }
 
         void initialize() {
             displaySetRefreshDirection(DisplayRefreshDirection::ColumnFirst);
             displaySetUpdateRegion(rect());
+            if (bgImage_ && bg_ == nullptr)
+                loadBackgroundImage();
+            if (header_ && hdr_ == nullptr)
+                hdr_ = new Header{};
         }
 
         void finalize() {
             // nothing to do in the finalizer
+        }
+
+        void loadBackgroundImage() {
+            if (bg_ != nullptr)
+                delete bg_;
+            bg_ = new Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::star)}};
+            bg_->setRect(Rect::WH(320, 240));
+            bg_->setRepeat(true);
+
         }
 
         /** Renders the form on the display in a column-wise manner.
@@ -49,11 +71,59 @@ namespace rckid::ui {
             });
         }
 
+        static void backgroundTransition(Direction dir, Timer & t) {
+            if (bg_ == nullptr)
+                return;
+            switch (dir) {
+                case Direction::Left:
+                    bg_->setImgX(bgX_ + interpolation::cosine(t, 0, 80).round());
+                    break;
+                case Direction::Right:
+                    bg_->setImgX(bgX_ - interpolation::cosine(t, 0, 80).round());
+                    break;
+                case Direction::Up:
+                    bg_->setImgY(bgY_ + interpolation::cosine(t, 0, 60).round());
+                    break;
+                case Direction::Down:
+                    bg_->setImgY(bgY_ - interpolation::cosine(t, 0, 60).round());
+                    break;
+                default:
+                    UNIMPLEMENTED;
+                    break;
+            }
+            if (! t.running()) {
+                bgX_ = bg_->imgX();
+                bgY_ = bg_->imgY();
+            }
+        }
+
     protected:
+
+        void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
+            if (bgImage_) {
+                ASSERT(bg_ != nullptr);
+                renderChild(bg_, column, buffer, starty, numPixels);
+                Widget::renderColumn(column, buffer, starty, numPixels);
+            } else {
+                Panel::renderColumn(column, buffer, starty, numPixels);    
+            }
+            if (header_) {
+                ASSERT(hdr_ != nullptr);
+                renderChild(hdr_, column, buffer, starty, numPixels);
+            }
+        }
 
         DoubleBuffer<uint16_t> buffer_;
         Coord column_;
+        bool bgImage_ = true;
+        bool header_ = true;
+
+        static inline Coord bgX_ = 0;
+        static inline Coord bgY_ = 0;
+        static inline Image * bg_ = nullptr;
+        static inline Header * hdr_ = nullptr;
     }; 
+
 
     template<typename T>
     using App = RenderableApp<ui::Form, T>;
