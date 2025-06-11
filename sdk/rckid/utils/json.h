@@ -19,6 +19,43 @@ namespace rckid::json {
             Struct,
         }; 
 
+        class Iterator {
+        public:
+            Iterator(Object & object, uint32_t index) : object_{object}, index_{index} {}
+
+            Object & operator * () { return *get(); }
+
+            Object * operator -> () { return get(); }
+
+            Iterator & operator ++ () {
+                if (index_ < object_.size())
+                    ++index_;
+                return *this;
+            }
+
+            bool operator == (Iterator const & other) const {
+                return &object_ == &other.object_ && index_ == other.index_;
+            }
+
+            bool operator != (Iterator const & other) const {
+                return !(*this == other);
+            }
+        private:
+
+            Object * get() {
+                if (object_.isArray()) {
+                    return &object_.array_[index_];
+                } else {
+                    auto it = object_.struct_.begin();
+                    std::advance(it, index_);
+                    return &it->second;
+                }
+            }
+
+            Object & object_;
+            uint32_t index_;
+        }; // json::Object::Iterator
+
         Object() : kind_{Kind::Null} {}
 
         Object(Object && other) : kind_{other.kind_} {
@@ -146,6 +183,18 @@ namespace rckid::json {
             return string_;
         }
 
+        String asStringOrDefault(String defaultValue) const {
+            if (kind_ == Kind::String)
+                return string_;
+            else 
+                return defaultValue;
+        }
+
+        bool has(String const & key) const {
+            ASSERT(kind_ == Kind::Struct);
+            return struct_.find(key) != struct_.end();
+        }
+
         uint32_t size() const {
             switch (kind_) {
                 case Kind::Null:
@@ -173,6 +222,20 @@ namespace rckid::json {
             return struct_[key];
         }
 
+        Object const & operator[](uint32_t index) const {
+            ASSERT(kind_ == Kind::Array);
+            return array_[index];
+        }
+
+        Object const & operator[](String const & key) const {
+            ASSERT(kind_ == Kind::Struct);
+            return struct_.find(key)->second;
+        }
+
+        Iterator begin() { return Iterator{*this, 0}; }
+
+        Iterator end() { return Iterator{*this, size()}; }
+
         void add(Object && object) {
             ASSERT(kind_ == Kind::Array);
             array_.push_back(std::move(object));
@@ -187,6 +250,7 @@ namespace rckid::json {
             ASSERT(kind_ == Kind::Struct);
             struct_[String{key}] = std::move(object);
         }
+
 
     private:
 

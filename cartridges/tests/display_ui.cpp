@@ -18,6 +18,7 @@
 #include <rckid/apps/dialogs/InfoDialog.h>
 #include <rckid/apps/dialogs/PopupMenu.h>
 #include <rckid/apps/AudioPlayer.h>
+#include <rckid/apps/Friends.h>
 
 
 using namespace rckid;
@@ -94,7 +95,7 @@ ui::Menu * mainMenuGenerator(void*) {
         new ui::Menu::ActionItem{"Music", assets::icons_default_64::music, ui::Menu::Action{App::run<AudioPlayer>}},
         new ui::Menu::ActionItem{"Messages", assets::icons_default_64::chat, ui::Menu::Action{}},
         new ui::Menu::ActionItem{"WalkieTalkie", assets::icons_default_64::baby_monitor, ui::Menu::Action{}},
-        new ui::Menu::ActionItem{"Birthdays", assets::icons_default_64::birthday_cake, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Friends", assets::icons_default_64::birthday_cake, ui::Menu::Action{App::run<Friends>}},
         new ui::Menu::ActionItem{"Clock", assets::icons_default_64::alarm_clock, ui::Menu::Action{}},
         new ui::Menu::ActionItem{"Remote", assets::icons_default_64::rc_car, ui::Menu::Action{}},
         new ui::Menu::ActionItem{"Recorder", assets::icons_default_64::microphone, ui::Menu::Action{}},

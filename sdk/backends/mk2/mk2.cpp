@@ -24,6 +24,7 @@ extern "C" {
 #include "screen/ST7789.h"
 #include "sd/sd.h"
 #include "rckid/rckid.h"
+#include "rckid/filesystem.h"
 
 #include "avr/src/commands.h"
 #include "avr/src/status.h"
@@ -63,7 +64,7 @@ namespace rckid {
     void memoryCheckStackProtection();
 
     void audioPlaybackDMA(uint finished, uint other);
-    
+
     namespace fs {
         void initialize();
     }
@@ -389,8 +390,10 @@ namespace rckid {
         // initialize the SD card
         sdInitialize();
 
-        // initialize the filesystem
+        // initialize the filesystem and mount the SD card
         fs::initialize();
+        if (! fs::mount(fs::Drive::SD))
+            LOG(LL_ERROR, "Failed to mount the SD card");
 
         // enter base arena for the application
         //Arena::enter();

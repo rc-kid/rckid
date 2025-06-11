@@ -38,15 +38,15 @@ namespace rckid::ui {
                 return;
             if (btnDown(Btn::Left)) {
                 i_ = (i_ + entries_.size() - 1) % entries_.size();
-                setEntry(i_, Transition::Left);
+                setEntry(i_, Direction::Left);
             }
             if (btnDown(Btn::Right)) {
                 i_ = (i_ + 1) % entries_.size();
-                setEntry(i_, Transition::Right);
+                setEntry(i_, Direction::Right);
             }
             if (btnDown(Btn::Down) || btnDown(Btn::B)) {
                 if (! dirStack_.empty()) {
-                    loadDir(fs::parent(path_), Transition::Down);
+                    loadDir(fs::parent(path_), Direction::Down);
                     // clear the button state (cancellation is handled by button press)
                     btnClear(Btn::Down);
                     btnClear(Btn::B);
@@ -54,7 +54,7 @@ namespace rckid::ui {
             }
             if (btnDown(Btn::Up) || btnDown(Btn::A)) {
                 if (entries_[i_].isFolder()) {
-                    loadDir(fs::join(path_, entries_[i_].name()), Transition::Up);
+                    loadDir(fs::join(path_, entries_[i_].name()), Direction::Up);
                     // clear the button state (selection is handled by button press)
                     btnClear(Btn::Up);
                     btnClear(Btn::A);
@@ -69,9 +69,9 @@ namespace rckid::ui {
 
     protected:
 
-        void loadDir(String path, Transition transition = Transition::Up) {
+        void loadDir(String path, Direction transition = Direction::Up) {
             LOG(LL_INFO, "Loading dir " << path);
-            if (transition == Transition::Up) {
+            if (transition == Direction::Up) {
                 if (path != "/")
                     dirStack_.push_back(i_);
                 i_ = 0;
@@ -106,7 +106,7 @@ namespace rckid::ui {
             }
         }
 
-        void setEntry(uint32_t i, Transition transition) {
+        void setEntry(uint32_t i, Direction transition) {
             set(fs::stem(entries_[i].name()), getIconFor(entries_[i]), transition);
             if (entries_[i].isFolder())
                 onFolderChanged();

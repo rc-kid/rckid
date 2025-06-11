@@ -20,7 +20,7 @@ namespace rckid {
         /** Image used with the contact. This must be image from the device's SD card. */
         String image;
         /** Telegram ID for the contact, which is also used as a walkie-talkie identifier. */
-        uint64_t id;
+        String id;
 
         String email;
         String phone;
@@ -29,8 +29,22 @@ namespace rckid {
 
         /** Creates the contact from given JSON object.
          */
-        Contact(json::Object && from) {
+        Contact(json::Object const & from) {
+            if (from.has("name"))
+                name = from["name"].asStringOrDefault("???");
+            if (from.has("image"))
+                image = from["image"].asStringOrDefault("icons/star.png");
+            if (from.has("id"))
+                id = from["id"].asStringOrDefault("");
 
+            if (from.has("email"))
+                email = from["email"].asStringOrDefault("");
+            if (from.has("phone"))
+                phone = from["phone"].asStringOrDefault("");
+            if (from.has("address"))
+                address = from["address"].asStringOrDefault("");
+            if (from.has("note"))
+                note = from["note"].asStringOrDefault("");
         }
 
 

@@ -18,7 +18,7 @@ namespace rckid {
         static constexpr Coord TileHeight = 24;
 
         PopupMenu(ui::Menu * menu):
-            ui::App<uint32_t>{Rect::XYWH(0, 240 - getNumRows(menu) * TileHeight - 4, getLongestText(menu) * TileWidth + 4, getNumRows(menu) * TileHeight + 4)},
+            ui::App<uint32_t>{Rect::XYWH(0, 240 - getNumRows(menu) * TileHeight - 4, getLongestText(menu) * TileWidth + 4, getNumRows(menu) * TileHeight + 4), /* raw */ true},
             menu_{menu} {
             using namespace ui;
             g_.setBg(ColorRGB::White().withAlpha(32));

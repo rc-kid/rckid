@@ -17,7 +17,7 @@ namespace rckid {
     class InfoDialog : public ui::App<void> {
     public:
         InfoDialog(Bitmap<ColorRGB> && icon, String title, String text):
-            ui::App<void>{Rect::XYWH(0, 144, 320, 96)} {
+            ui::App<void>{Rect::XYWH(0, 144, 320, 96), /* raw */ true} {
             using namespace ui;
             icon_ = g_.addChild(new ui::Image{Rect::WH(96, 96), std::move(icon)});
             icon_->setTransparentColor(ColorRGB::Black());

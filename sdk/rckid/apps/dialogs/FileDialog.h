@@ -37,10 +37,14 @@ namespace rckid {
             // see if an item has been selected, or if we shoudl leave, if up & down were used for traversing the folder strcuture, they have already been cleared by the processEvents
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                 LOG(LL_DEBUG, "FileDialog: returning path " << c_->currentPath());
+                btnClear(Btn::A);
+                btnClear(Btn::Up);
                 exit(c_->currentPath());
             }
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 LOG(LL_DEBUG, "FileDialog: cancelling");
+                btnClear(Btn::B);
+                btnClear(Btn::Down);
                 exit();
             }
             if (btnPressed(Btn::Select)) {

@@ -451,7 +451,7 @@ namespace rckid::fs {
 #endif            
         }; 
 #ifdef RCKID_ENABLE_HOST_FILESYSTEM
-        std::filesystemilesystem::path hostPath_;
+        std::filesystem::path hostPath_;
 #endif
     }; // rckid::fs::Folder
 

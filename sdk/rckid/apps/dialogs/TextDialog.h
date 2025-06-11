@@ -25,7 +25,7 @@ namespace rckid {
         }; // TextInput::KeyboardType
 
         TextDialog():
-            ui::App<String>{Rect::XYWH(0, 144, 320, 96)} {
+            ui::App<String>{Rect::XYWH(0, 144, 320, 96), /* raw */ true} {
                 using namespace ui;
                 g_.setBg(ColorRGB::White().withAlpha(32));
                 tileMap_ = g_.addChild(new ui::Tilemap<Tile<12, 24, Color16>>{26, 4, assets::System24, palette_});
