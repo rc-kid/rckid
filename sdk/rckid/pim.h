@@ -36,7 +36,8 @@ namespace rckid {
                 image = from["image"].asStringOrDefault("icons/star.png");
             if (from.has("id"))
                 id = from["id"].asStringOrDefault("");
-
+            if (from.has("birthday"))
+                birthday = TinyDate::fromRaw(static_cast<uint32_t>(from["birthday"].asIntegerOrDefault(0)));
             if (from.has("email"))
                 email = from["email"].asStringOrDefault("");
             if (from.has("phone"))
@@ -46,9 +47,6 @@ namespace rckid {
             if (from.has("note"))
                 note = from["note"].asStringOrDefault("");
         }
-
-
-
 
 
     }; // rckid::Contact

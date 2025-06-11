@@ -124,7 +124,7 @@ namespace rckid {
          */
         int16_t temp;
 
-        TinyDate time;
+        TinyDateTime time;
 
         TinyAlarm alarm;
 

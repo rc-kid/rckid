@@ -34,6 +34,20 @@ namespace rckid {
                 btnClear(Btn::B);
                 return exit();
             }
+            if (btnDown(Btn::Left) && c_->idle()) {
+                if (i_ > 0) {
+                    setContact(i_ - 1, Direction::Left);
+                } else {
+                    setContact(contacts_.size() - 1, Direction::Left);
+                }
+            }
+            if (btnDown(Btn::Right) && c_->idle()) {
+                if (i_ + 1 < contacts_.size()) {
+                    setContact(i_ + 1, Direction::Right);
+                } else {
+                    setContact(0, Direction::Right);
+                }
+            }
         }
 
     private:

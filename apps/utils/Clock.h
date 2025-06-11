@@ -65,7 +65,7 @@ namespace rckid {
             Font const & fTiny = assets::font::Iosevka32::font;
             Font const & fSym = assets::font::Symbols64::font;
 
-            TinyDate now = dateTime();
+            TinyDateTime now = dateTime();
             std::string h{STR(fillLeft(now.hour(), 2, '0'))};
             std::string m{STR(fillLeft(now.minute(), 2, '0'))};
             int hWidth = f.textWidth(h.c_str());

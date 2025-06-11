@@ -12,7 +12,7 @@
     raw 2 : YYYhhhhh
     raw 3 : YYYddddd
 */
-PACKED(class TinyDate {
+PACKED(class TinyDateTime {
 public:
 
     static constexpr uint16_t YEAR_START = 2023;
@@ -187,6 +187,12 @@ public:
         return incYear();
     }
 
+    static bool isLeapYear(uint16_t year) {
+        if (year % 4 != 0)
+            return false;
+        return (year % 100 != 0) || (year % 400 == 0);
+    }
+
     static uint8_t daysInMonth(uint16_t year, uint8_t month) {
         switch (month) {
             case 1: // Jan
@@ -198,8 +204,7 @@ public:
             case 12: // Dec
                 return 31;
             case 2 : // Feb
-                // I'm ignoring the every 100 years leap year skip as the code will hopefully not be around for that long:)
-                return (year % 4 == 0) ? 29 : 28;
+                return isLeapYear(year) ? 29 : 28;
             case 4:
             case 6:
             case 9:
@@ -209,10 +214,25 @@ public:
         }
     }
 
-    bool operator == (TinyDate const & other) const {
+    bool operator == (TinyDateTime const & other) const {
         return (raw_[0] == other.raw_[0]) && (raw_[1] == other.raw_[1]) && (raw_[2] == other.raw_[2]) && (raw_[3] == other.raw_[3]);
     }
 
+    uint32_t asRaw() const {
+        return (static_cast<uint32_t>(raw_[0]) << 24) 
+             | (static_cast<uint32_t>(raw_[1]) << 16) 
+             | (static_cast<uint32_t>(raw_[2]) << 8) 
+             | static_cast<uint32_t>(raw_[3]);
+    }
+
+    static TinyDateTime fromRaw(uint32_t raw) {
+        TinyDateTime result;
+        result.raw_[0] = (raw >> 24) & 0xff;
+        result.raw_[1] = (raw >> 16) & 0xff;
+        result.raw_[2] = (raw >> 8) & 0xff;
+        result.raw_[3] = raw & 0xff;
+        return result;
+    }
 
 private:
     static constexpr uint8_t SECOND_MASK = 63;
@@ -224,10 +244,64 @@ private:
 
     uint8_t raw_[4] = { 0xff, 0xff, 0xff, 0xff};
 
-}); // __attribute__((packed)); // TinyDate
+}); // TinyDateTime
+
+static_assert(sizeof(TinyDateTime) == 4);
+
+/** Date only, which fits into 4 bytes. Unlike TinyDateTime, which is best suited to tracking current time thanks to the small year range, TinyDate will work with years from -32768 to +32767.
+ */
+PACKED(class TinyDate{
+public:
+
+    uint8_t day() const { return raw_[0]; }
+    uint8_t month() const { return raw_[1]; }
+    int16_t year() const { return (static_cast<int16_t>(raw_[2]) << 8) | raw_[3]; }
+
+    void setDay(uint8_t value) {
+        if (value == 0)
+            value = 1;
+        raw_[0] = value;
+    }
+
+    void setMonth(uint8_t value) {
+        if (value == 0)
+            value = 1;
+        if (value > 12)
+            value = 12;
+        raw_[1] = value;
+    }
+
+    void setYear(int16_t value) {
+        raw_[2] = (value >> 8) & 255;
+        raw_[3] = value & 255;
+    }
+
+    bool operator == (TinyDate const & other) const {
+        return (raw_[0] == other.raw_[0]) && (raw_[1] == other.raw_[1]) && (raw_[2] == other.raw_[2]);
+    }
+
+    uint32_t asRaw() const {
+        return (static_cast<uint32_t>(raw_[0]) << 24) 
+             | (static_cast<uint32_t>(raw_[1]) << 16) 
+             | (static_cast<uint32_t>(raw_[2]) << 8) 
+             | static_cast<uint32_t>(raw_[3]);
+    }
+
+    static TinyDate fromRaw(uint32_t raw) {
+        TinyDate result;
+        result.raw_[0] = (raw >> 24) & 0xff;
+        result.raw_[1] = (raw >> 16) & 0xff;
+        result.raw_[2] = (raw >> 8) & 0xff;
+        result.raw_[3] = raw & 0xff;
+        return result;
+    }
+
+
+private:
+    uint8_t raw_[4] = { 1, 1, 0, 0 };
+}); // TinyDate
 
 static_assert(sizeof(TinyDate) == 4);
-
 
 /** Simple alarm. 
  
@@ -266,7 +340,7 @@ public:
             raw_[2] &= ~(1 << day);
     }
 
-    bool check(TinyDate const & date) {
+    bool check(TinyDateTime const & date) {
         if (date.second() != 0)
             return false;
         if (date.minute() != raw_[1])
@@ -286,7 +360,7 @@ static_assert(sizeof(TinyAlarm) == 3);
 /** Helper function for tiny date serialization to writer-like classes (writer stream, stdout, etc).
  */
 template<typename WRITER>
-inline WRITER & operator << (WRITER & writer, TinyDate const & date) {
+inline WRITER & operator << (WRITER & writer, TinyDateTime const & date) {
     return writer << date.year() << '-' 
                   << date.month() << '-' 
                   << date.day() << ' '

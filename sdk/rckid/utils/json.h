@@ -190,6 +190,13 @@ namespace rckid::json {
                 return defaultValue;
         }
 
+        int32_t asIntegerOrDefault(int32_t defaultValue) const {
+            if (kind_ == Kind::Integer)
+                return int_;
+            else 
+                return defaultValue;
+        }
+
         bool has(String const & key) const {
             ASSERT(kind_ == Kind::Struct);
             return struct_.find(key) != struct_.end();

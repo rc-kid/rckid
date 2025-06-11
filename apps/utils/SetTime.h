@@ -61,7 +61,7 @@ namespace rckid {
             int x = interpolation::easingCos(t_, 0, 511);
             Color active = Color{x < 256 ? x : 256 - (x - 255), 0, 0};
             g_.fill();
-            TinyDate now = dateTime();
+            TinyDateTime now = dateTime();
             Font const & f = assets::font::OpenDyslexic128::font;
             Font const & fSmall = assets::font::OpenDyslexic64::font;
 
@@ -111,7 +111,7 @@ namespace rckid {
 
 
 
-        TinyDate d_;
+        TinyDateTime d_;
         Timer t_{500};
 
         static constexpr unsigned AE_HOUR = 0;
