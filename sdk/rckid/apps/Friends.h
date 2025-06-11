@@ -29,8 +29,11 @@ namespace rckid {
 
         void update() override {
             ui::App<void>::update();
-            if (checkAndExit())
-                return;
+            if (btnPressed(Btn::Down) || btnPressed(Btn::B)) {
+                btnClear(Btn::Down);
+                btnClear(Btn::B);
+                return exit();
+            }
         }
 
     private:
@@ -55,7 +58,7 @@ namespace rckid {
             }
         }
 
-        void setContact(uint32_t i, Direction transition = Direction::None) {
+        void setContact(uint32_t i, Direction transition = Direction::Up) {
             ASSERT(i < contacts_.size());
             Contact const & c = contacts_[i];
             // load the icon associated with the contact

@@ -32,17 +32,20 @@ namespace rckid::ui {
             header_{! raw} {
         }
 
-        void initialize() {
-            displaySetRefreshDirection(DisplayRefreshDirection::ColumnFirst);
-            displaySetUpdateRegion(rect());
-            if (bgImage_ && bg_ == nullptr)
-                loadBackgroundImage();
-            if (header_ && hdr_ == nullptr)
-                hdr_ = new Header{};
+        
+        bool bgImage() const { return bgImage_; }
+        bool header() const { return header_; }
+
+        void enableBgImage() {
+            if (bgImage_)
+                return;
+            bgImage_ = true;
         }
 
-        void finalize() {
-            // nothing to do in the finalizer
+        void enableHeader() {
+            if (header_)
+                return;
+            header_ = true;
         }
 
         void loadBackgroundImage() {
@@ -51,7 +54,17 @@ namespace rckid::ui {
             bg_ = new Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::star)}};
             bg_->setRect(Rect::WH(320, 240));
             bg_->setRepeat(true);
+        }
 
+        void initialize() {
+            displaySetRefreshDirection(DisplayRefreshDirection::ColumnFirst);
+            displaySetUpdateRegion(rect());
+            if (bgImage_ && bg_ == nullptr)
+                loadBackgroundImage();
+        }
+
+        void finalize() {
+            // nothing to do in the finalizer
         }
 
         /** Renders the form on the display in a column-wise manner.
@@ -110,10 +123,8 @@ namespace rckid::ui {
             } else {
                 Panel::renderColumn(column, buffer, starty, numPixels);    
             }
-            if (header_) {
-                ASSERT(hdr_ != nullptr);
-                renderChild(hdr_, column, buffer, starty, numPixels);
-            }
+            if (header_)
+                renderChild(Header::instance(), column, buffer, starty, numPixels);
         }
 
         DoubleBuffer<uint16_t> buffer_;
@@ -124,7 +135,6 @@ namespace rckid::ui {
         static inline Coord bgX_ = 0;
         static inline Coord bgY_ = 0;
         static inline Image * bg_ = nullptr;
-        static inline Header * hdr_ = nullptr;
     }; 
 
 
