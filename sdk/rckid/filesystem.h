@@ -81,7 +81,7 @@ namespace rckid::fs {
 
         FileRead(FileRead && from) noexcept:
             drive_{from.drive_} {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
             host_ = from.host_;
             from.host_ = nullptr;
 #else
@@ -104,7 +104,7 @@ namespace rckid::fs {
         FileRead & operator = (FileRead && from) noexcept {
             close();
             drive_ = from.drive_;
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
             delete host_;
             host_ = from.host_;
             from.host_ = nullptr;
@@ -132,7 +132,7 @@ namespace rckid::fs {
         union {
             FIL sd_;
             mutable lfs_file_t cart_;
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
             std::ifstream * host_;
 #endif
         };
@@ -156,7 +156,7 @@ namespace rckid::fs {
 
         FileWrite(FileWrite && from) noexcept:
             drive_{from.drive_} {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
             delete host_;
             host_ = from.host_;
             from.host_ = nullptr;
@@ -186,7 +186,7 @@ namespace rckid::fs {
         union {
             FIL sd_;
             lfs_file_t cart_;
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
             std::ofstream * host_;
 #endif
 
@@ -198,7 +198,7 @@ namespace rckid::fs {
 
         Entry(Entry const & from):
             drive_{from.drive_} {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
             SystemMallocGuard g;
             new (&host_) HostFileInfo{from.host_};
 #else
@@ -216,7 +216,7 @@ namespace rckid::fs {
         }
         Entry(Entry && from) noexcept:
             drive_{from.drive_} {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
             new (&host_) HostFileInfo{std::move(from.host_)};
 #else
             switch (drive_) {
@@ -233,7 +233,7 @@ namespace rckid::fs {
         }
 
         ~Entry() {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
             host_.~HostFileInfo();;
 #endif
         }
@@ -241,7 +241,7 @@ namespace rckid::fs {
         bool good() const { return drive_ != 0; }
 
         char const * name() const {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
             return host_.name.c_str();
 #else
             switch (drive_) {
@@ -256,7 +256,7 @@ namespace rckid::fs {
         }
 
         uint32_t size() const {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
             return host_.size;
 #else
             switch (drive_) {
@@ -271,7 +271,7 @@ namespace rckid::fs {
         }
 
         bool isFile() const {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
             return host_.isFile;
 #else
             switch (drive_) {
@@ -286,7 +286,7 @@ namespace rckid::fs {
         }
 
         bool isFolder() const {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
             return ! host_.isFile; 
 #else
             switch (drive_) {
@@ -303,7 +303,7 @@ namespace rckid::fs {
         bool operator == (Entry const & other) const {
             if (drive_ != other.drive_)
                 return false;
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
             return host_ == other.host_;
 #else
             switch (drive_) {
@@ -329,7 +329,7 @@ namespace rckid::fs {
         bool operator != (Entry const & other) const {
             if (drive_ != other.drive_)
                 return true;
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
             return host_ != other.host_;
 #else
             switch (drive_) {
@@ -353,7 +353,7 @@ namespace rckid::fs {
         }
     private:
 
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         struct HostFileInfo {
             String name;
             String path;
@@ -371,7 +371,7 @@ namespace rckid::fs {
 
         friend class Folder;
 
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         Entry(): host_{} {}
 #else
         Entry() = default;
@@ -382,7 +382,7 @@ namespace rckid::fs {
         union {
             FILINFO sd_;
             lfs_info cart_;
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
             HostFileInfo host_;
 #endif
         };
@@ -446,11 +446,11 @@ namespace rckid::fs {
         union {
             DIR sd_;
             lfs_dir_t cart_;
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
             std::filesystem::directory_iterator * host_;
 #endif            
         }; 
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         std::filesystem::path hostPath_;
 #endif
     }; // rckid::fs::Folder

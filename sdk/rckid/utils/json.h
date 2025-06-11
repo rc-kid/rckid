@@ -516,7 +516,7 @@ namespace rckid::json {
             if (isDouble) {
                 return Object{atof(number.c_str())};
             } else {
-                return Object{atoi(number.c_str())};
+                return Object{(int32_t)atoi(number.c_str())};
             }
         }
 

@@ -89,6 +89,8 @@ namespace rckid::ui {
         ColorRGB transparentColor() const { return ColorRGB::fromRaw(transparent_); }
         void setTransparentColor(ColorRGB color) { transparent_ = color.toRaw(); }
 
+        bool empty() { return bmp_.empty(); }
+
     protected:
 
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {

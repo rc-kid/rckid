@@ -65,6 +65,8 @@ namespace rckid::ui {
                 bText_.setText(text);
                 repositionElements(bImg_, bText_);
             }
+            if (initialized_ < 2)
+                initialized_++;
             setTransition(direction);
         }
 
@@ -73,7 +75,7 @@ namespace rckid::ui {
                 return;
             if (a_.update()) {
                 a_.stop();
-                Form::backgroundTransition(dir_, a_);
+                Form::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
                 if (onTransition_)
                     onTransition_(TransitionState::End, dir_, a_);
                 dir_ = Direction::None;
@@ -82,7 +84,7 @@ namespace rckid::ui {
                 std::swap(aImg_, bImg_);
                 std::swap(aText_, bText_);
             } else {
-                Form::backgroundTransition(dir_, a_);
+                Form::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
                 if (onTransition_)
                     onTransition_(TransitionState::InProgress, dir_, a_);
                 updateOffsets();
@@ -145,7 +147,7 @@ namespace rckid::ui {
             if (direction != Direction::None) {
                 a_.startContinuous();
                 updateOffsets();
-                Form::backgroundTransition(dir_, a_);
+                Form::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
                 if (onTransition_)
                     onTransition_(TransitionState::Start, dir_, a_);
             } else {
@@ -189,6 +191,7 @@ namespace rckid::ui {
         }
 
     private:
+        uint32_t initialized_ = 0;
         Image aImg_;
         Label aText_;
         Image bImg_;

@@ -19,7 +19,6 @@ namespace rckid {
     public:
 
         Friends() : ui::App<void>{320, 240} {
-            hdr_ = g_.addChild(new ui::Header{});
             c_ = g_.addChild(new ui::Carousel{});
             c_->setRect(Rect::XYWH(0, 160, 320, 80));
             c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
@@ -50,7 +49,7 @@ namespace rckid {
                 }
                 for (auto const & item : contacts)
                     contacts_.push_back((Contact{item}));
-                LOG(LL_INFO, "Loaded " << contacts_.size() << " contacts");
+                LOG(LL_INFO, "Loaded " << (uint32_t) contacts_.size() << " contacts");
             } else {
                 LOG(LL_INFO, "No contacts file found, starting with an empty list");
             }
@@ -68,8 +67,6 @@ namespace rckid {
             i_ = i;
         }
 
-
-        ui::Header * hdr_;
         ui::Carousel * c_;
 
         std::vector<Contact> contacts_;

@@ -87,6 +87,9 @@ namespace rckid::ui {
                 case Direction::Down:
                     bg_->setImgY(bgY_ - interpolation::cosine(t, 0, 60).round());
                     break;
+                case Direction::None:
+                    // don't do anything for no direction
+                    break;
                 default:
                     UNIMPLEMENTED;
                     break;
