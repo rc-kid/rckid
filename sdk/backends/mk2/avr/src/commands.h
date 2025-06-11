@@ -51,8 +51,8 @@ namespace rckid::cmd {
     );
 
     COMMAND(13, SetTime, 
-        TinyDate value;
-        SetTime(TinyDate value): value{value} {}
+        TinyDateTime value;
+        SetTime(TinyDateTime value): value{value} {}
     );
 
     /** Sets the alarm to given value and enables it. 

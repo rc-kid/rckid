@@ -32,8 +32,8 @@ namespace rckid::cmd {
         SetBrightness(uint8_t value): value{value} {}
     );
     COMMAND(10, SetTime, 
-        TinyDate value;
-        SetTime(TinyDate value): value{value} {}
+        TinyDateTime value;
+        SetTime(TinyDateTime value): value{value} {}
     );
     /** Sets the alarm to given value and enables it. 
      */

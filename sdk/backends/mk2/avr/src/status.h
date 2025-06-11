@@ -159,7 +159,7 @@ namespace rckid {
         Status status;
         /** Current date & time as kept by the RTC. 
          */
-        TinyDate time;
+        TinyDateTime time;
         /** Alarm.
          */
         TinyAlarm alarm;
