@@ -243,7 +243,7 @@ namespace rckid {
 #endif
 
     void memoryInstrumentStackProtection() {
-#if (defined RCKID_ENABLE_STACK_PROTECTION)
+#if RCKID_ENABLE_STACK_PROTECTION
         char * x = & __StackLimit;
         // initialize the stack start
 #ifdef RCKID_BACKEND_FANTASY
@@ -266,7 +266,7 @@ namespace rckid {
 #endif
     
 
-#if (defined RCKID_ENABLE_STACK_PROTECTION)
+#if RCKID_ENABLE_STACK_PROTECTION
     void memoryCheckStackProtection() {
         char * x = & __StackLimit;
         if (stackStart_ == nullptr)

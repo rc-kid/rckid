@@ -94,7 +94,7 @@ namespace rckid::fs {
         FATFS * fs_ = nullptr;
         lfs_t lfs_;
         lfs_config lfsCfg_;
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         std::filesystem::path sdRoot_;
         std::filesystem::path cartridgeRoot_;
         bool sdMounted_ = false;
@@ -128,7 +128,7 @@ namespace rckid::fs {
         }
     }
 
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
     void initialize(std::string const & sdRoot, std::string const & cartridgeRoot) {
         if (std::filesystem::is_directory(sdRoot))
             sdRoot_ = sdRoot;
@@ -147,7 +147,7 @@ namespace rckid::fs {
 #endif    
 
     uint32_t FileRead::size() const {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         if (host_ == nullptr)
             return 0;
         std::streampos currentPos = host_->tellg();
@@ -168,7 +168,7 @@ namespace rckid::fs {
     }
 
     uint32_t FileRead::seek(uint32_t position) {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         ASSERT(host_ != nullptr);
         host_->seekg(position, std::ios::beg);
         std::streamsize size = host_->tellg();
@@ -188,7 +188,7 @@ namespace rckid::fs {
     }
 
     uint32_t FileRead::read(uint8_t * buffer, uint32_t numBytes) {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         ASSERT(host_ != nullptr);
         host_->read(reinterpret_cast<char *>(buffer), numBytes);
         return static_cast<uint32_t>(host_->gcount());
@@ -208,7 +208,7 @@ namespace rckid::fs {
     }
 
     bool FileRead::eof() const {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         if (host_ == nullptr)
             return true;
         return host_->eof();
@@ -225,7 +225,7 @@ namespace rckid::fs {
     }
 
     void FileRead::close() {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         ASSERT(host_ != nullptr);
         delete host_;
         host_ = nullptr;
@@ -246,7 +246,7 @@ namespace rckid::fs {
     // FileWrite 
 
     uint32_t FileWrite::write(uint8_t const * buffer, uint32_t numBytes) {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         ASSERT(host_ != nullptr);
         host_->write(reinterpret_cast<char const *>(buffer), numBytes);
         return numBytes;
@@ -266,7 +266,7 @@ namespace rckid::fs {
     }
 
     FileWrite::~FileWrite() {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         delete host_;
         host_ = nullptr;
 #else
@@ -286,7 +286,7 @@ namespace rckid::fs {
     // Folder
 
     Folder::~Folder() {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         delete host_;
 #else
         switch(drive_) {
@@ -303,7 +303,7 @@ namespace rckid::fs {
     }
 
     void Folder::rewind() {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         SystemMallocGuard g;
         delete host_;
         try {
@@ -328,7 +328,7 @@ namespace rckid::fs {
     }
 
     void Folder::readNext(Entry & into) {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         ASSERT(host_ != nullptr);
         SystemMallocGuard g;
         if (*host_ == std::filesystem::directory_iterator{}) {
@@ -367,7 +367,7 @@ namespace rckid::fs {
     }
 
     bool format(Drive dr) {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         // can actually just delete the contents of the folder
         UNIMPLEMENTED;
         return false;
@@ -395,7 +395,7 @@ namespace rckid::fs {
     }
 
     bool mount(Drive dr) {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         switch (dr) {
             case Drive::SD:
                 if (sdRoot_.empty())
@@ -441,7 +441,7 @@ namespace rckid::fs {
     }
 
     void unmount(Drive dr) {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         switch (dr) {
             case Drive::SD:
                 sdMounted_ = false;
@@ -470,7 +470,7 @@ namespace rckid::fs {
     }
 
     bool isMounted(Drive dr) {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         switch (dr) {
             case Drive::SD:
                 return sdMounted_;
@@ -492,7 +492,7 @@ namespace rckid::fs {
     }
 
     uint64_t getCapacity(Drive dr) {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         UNIMPLEMENTED;   
 #else        
         switch (dr) {
@@ -507,7 +507,7 @@ namespace rckid::fs {
     }
 
     uint64_t getFreeCapacity(Drive dr) {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         UNIMPLEMENTED;   
 #else        
         switch (dr) {
@@ -530,7 +530,7 @@ namespace rckid::fs {
     }
 
     Filesystem getFormat(Drive dr) {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         return Filesystem::exFAT;   
 #else        
         switch (dr) {
@@ -554,7 +554,7 @@ namespace rckid::fs {
     }
 
     String getLabel(Drive dr) {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         switch (dr) {
             case Drive::SD: {
                 return sdRoot_.c_str();
@@ -580,7 +580,7 @@ namespace rckid::fs {
     }
 
     bool exists(char const * path, Drive dr) {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         SystemMallocGuard g;
         std::filesystem::path p{getHostPath(dr, path)};
         return std::filesystem::exists(p);
@@ -603,7 +603,7 @@ namespace rckid::fs {
     }
 
     bool isFolder(char const * path, Drive dr) {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         SystemMallocGuard g;
         std::filesystem::path p{getHostPath(dr, path)};
         return std::filesystem::is_directory(p);
@@ -628,7 +628,7 @@ namespace rckid::fs {
     }
 
     bool isFile(char const * path, Drive dr) {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         SystemMallocGuard g;
         std::filesystem::path p{getHostPath(dr, path)};
         return std::filesystem::is_regular_file(p);
@@ -653,7 +653,7 @@ namespace rckid::fs {
     }
 
     bool createFolder(char const * path, Drive dr) {
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         UNIMPLEMENTED;
 #else
         switch (dr) {
@@ -691,7 +691,7 @@ namespace rckid::fs {
 
     FileRead fileRead(char const * path, Drive dr) {
         FileRead result;
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         SystemMallocGuard g;
         std::filesystem::path p{getHostPath(dr, path)};
         result.host_ = new std::ifstream{p, std::ios::binary};
@@ -720,7 +720,7 @@ namespace rckid::fs {
 
     FileWrite fileWrite(char const * path, Drive dr) {
         FileWrite result;
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         SystemMallocGuard g;
         std::filesystem::path p{getHostPath(dr, path)};
         result.host_ = new std::ofstream{p, std::ios::binary};
@@ -749,7 +749,7 @@ namespace rckid::fs {
 
     FileWrite fileAppend(char const * path, Drive dr) {
         FileWrite result;
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         SystemMallocGuard g;
         std::filesystem::path p{getHostPath(dr, path)};
         result.host_ = new std::ofstream{p, std::ios::binary | std::ios::app};
@@ -778,7 +778,7 @@ namespace rckid::fs {
 
     Folder folderRead(char const * path, Drive dr) {
         Folder result;
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         SystemMallocGuard g;
         std::filesystem::path p{getHostPath(dr, path)};
         try {

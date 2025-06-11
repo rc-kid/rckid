@@ -24,13 +24,13 @@
     Raylib is used for rendering. For now, focus on native rendering only
 */
 
-#define RCKID_ENABLE_STACK_PROTECTION
+#define RCKID_ENABLE_STACK_PROTECTION 1
 #define RCKID_STACK_LIMIT_SIZE 4000
 #define RCKID_MEMORY_SIZE (256 * 1024)
 
 /** Enables host filesystem where the FatFS and LittleFS drivers are bypassed and std::filesystem is used directly to access the sd and cartridge folders on the host machine. This is useful for general fantasy console work as the filesystem drivers do not have to be engaged and both rckid and the host machine can access the sd and cartridge files with ease. 
  */
-#define RCKID_ENABLE_HOST_FILESYSTEM_ 0
+#define RCKID_ENABLE_HOST_FILESYSTEM 1
 
 
 /** Display width & height for the UI. 

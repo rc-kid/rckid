@@ -37,7 +37,6 @@ namespace rckid {
 
         void focus() override {
             BitmapApp<ColorRGB>::focus();
-            namespace fs = rckid::filesystem;
             sizeBlocks_ = sdCapacity();
             if (sizeBlocks_ > 0) {
                 if (fs::mount()) {

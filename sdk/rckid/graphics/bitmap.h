@@ -61,6 +61,8 @@ namespace rckid {
             delete [] pixels_; 
         };
 
+        bool empty() const { return pixels_ == nullptr; }
+
         Coord width() const { return w_; }
         Coord height() const { return h_; }
         uint32_t numPixels() const { return w_ * h_; }

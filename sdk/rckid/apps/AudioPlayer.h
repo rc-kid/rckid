@@ -22,7 +22,6 @@ namespace rckid {
             c_ = g_.addChild(new FileBrowser{this});
             c_->setRect(Rect::XYWH(0, 160, 320, 80));
             c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
-            hdr_ = g_.addChild(new ui::Header{});
         }
 
         void update() override {
@@ -162,7 +161,6 @@ namespace rckid {
         }; // AudioPlayer::Player
 
         FileBrowser * c_;
-        ui::Header * hdr_;
 
     }; // rckid::MusicPlayer
 

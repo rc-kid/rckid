@@ -49,7 +49,7 @@
 
 /** When turned on, enables stack protection where magic values are stored to the end of stack and are periodically checked for corruption to give an early warning in case of stack underflow into the heap/arena area.
  */
-#define RCKID_ENABLE_STACK_PROTECTION
+#define RCKID_ENABLE_STACK_PROTECTION 1
 /** Slightly lower than the 4096 bytes actually available per core stack to get the warning earlier-ish.
  */
 #define RCKID_STACK_LIMIT_SIZE 4000

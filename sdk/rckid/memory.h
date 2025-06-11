@@ -174,7 +174,7 @@ namespace rckid {
 
     /** Verifies that the stack protection magic numbers are intact and raises a fatal error if corrupted. This function should be periodically called to be effective.
      */
-#if (defined RCKID_ENABLE_STACK_PROTECTION)
+#if RCKID_ENABLE_STACK_PROTECTION
     void memoryCheckStackProtection();
 #else
     inline void memoryCheckStackProtection() {}

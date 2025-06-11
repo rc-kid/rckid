@@ -165,7 +165,7 @@ namespace rckid {
         display::texture = LoadTextureFromImage(display::img);
         display::lastVSyncTime = std::chrono::steady_clock::now();
         display::fpsStart = std::chrono::steady_clock::now();
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         Args::Arg<std::string> sdIso{"sd", "sd"};
         Args::Arg<std::string> flashIso{"flash", "flash"};
 #else
@@ -174,7 +174,7 @@ namespace rckid {
 #endif
         Args::parse(argc, argv, { sdIso, flashIso });
 
-#ifdef RCKID_ENABLE_HOST_FILESYSTEM
+#if RCKID_ENABLE_HOST_FILESYSTEM
         fs::initialize(sdIso.value(), flashIso.value());
 #else
         // see if there is sd.iso file so that we can simulate SD card
