@@ -66,6 +66,10 @@
 
 # TODO
 
+- file browser should be similar to contacts, i.e. the dialog in launcher menu instead of ui element and separate browser app 
+
+- todo figure out how context menu can be planted to apps (or perhaps let the dialogs handle them)
+
 - detects headphones in, but not out, and does not detect cellular, only stereo. This could be because of two microphones being attached to the micbias
 
 - clean-up the code around display initialization
