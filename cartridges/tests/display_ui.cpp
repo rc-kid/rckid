@@ -3,7 +3,7 @@
 #include <rckid/ui/form.h>
 #include <rckid/ui/panel.h>
 #include <rckid/ui/image.h>
-#include <rckid/assets/icons_default_64.h>
+#include <rckid/assets/icons_64.h>
 #include <rckid/assets/fonts/OpenDyslexic64.h>
 #include <rckid/ui/label.h>
 #include <rckid/ui/carousel.h>
@@ -33,7 +33,7 @@ public:
         ui::Panel * p2 = g_.addChild(new ui::Panel());
         p2->setRect(Rect::XYWH(-25, -25, 50, 50));
         p2->setBg(ColorRGB{0, 255, 0});
-        ui::Image * img = g_.addChild(new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::game_controller)}});
+        ui::Image * img = g_.addChild(new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_64::game_controller)}});
         img->setRect(Rect::WH(320, 240));
         //img->setHAlign(HAlign::Center);
         //img->setVAlign(VAlign::Center);
@@ -45,9 +45,9 @@ public:
         l->setHeight(50);
         c_ = g_.addChild(new ui::CarouselMenu{});
         c_->setRect(Rect::XYWH(0, 160, 320, 80));
-        //c->set(ui::Image{Bitmap<16>{PNG::fromBuffer(assets::icons_default_64::animal_2)}}, "Animal 2");
+        //c->set(ui::Image{Bitmap<16>{PNG::fromBuffer(assets::icons_64::animal_2)}}, "Animal 2");
         c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
-        //c->moveLeft(ui::Image{Bitmap<16>{PNG::fromBuffer(assets::icons_default_64::animal_1)}}, "Animal 1");
+        //c->moveLeft(ui::Image{Bitmap<16>{PNG::fromBuffer(assets::icons_64::animal_1)}}, "Animal 1");
         g_.setRect(Rect::WH(320, 240));
     }
 
@@ -86,22 +86,22 @@ public:
 
 ui::Menu * mainMenuGenerator(void*) {
     return new ui::Menu{
-        new ui::Menu::SubmenuItem{"Games", assets::icons_default_64::game_controller, ui::Menu::Generator{[](void*) { return new ui::Menu{
-            new ui::Menu::ActionItem{"Tetris", assets::icons_default_64::tetris, ui::Menu::Action{App::run<TextDialog>}},
-            new ui::Menu::ActionItem{"Game 1", assets::icons_default_64::animal, ui::Menu::Action{}},
-            new ui::Menu::ActionItem{"Game 2", assets::icons_default_64::animal_1, ui::Menu::Action{}},
-            new ui::Menu::ActionItem{"Game 3", assets::icons_default_64::animal_2, ui::Menu::Action{}},
+        new ui::Menu::SubmenuItem{"Games", assets::icons_64::game_controller, ui::Menu::Generator{[](void*) { return new ui::Menu{
+            new ui::Menu::ActionItem{"Tetris", assets::icons_64::tetris, ui::Menu::Action{App::run<TextDialog>}},
+            new ui::Menu::ActionItem{"Game 1", assets::icons_64::gameboy, ui::Menu::Action{}},
+            new ui::Menu::ActionItem{"Game 2", assets::icons_64::gameboy, ui::Menu::Action{}},
+            new ui::Menu::ActionItem{"Game 3", assets::icons_64::gameboy, ui::Menu::Action{}},
         }; }}},
-        new ui::Menu::ActionItem{"Music", assets::icons_default_64::music, ui::Menu::Action{App::run<AudioPlayer>}},
-        new ui::Menu::ActionItem{"Messages", assets::icons_default_64::chat, ui::Menu::Action{}},
-        new ui::Menu::ActionItem{"WalkieTalkie", assets::icons_default_64::baby_monitor, ui::Menu::Action{}},
-        new ui::Menu::ActionItem{"Friends", assets::icons_default_64::birthday_cake, ui::Menu::Action{App::run<Friends>}},
-        new ui::Menu::ActionItem{"Clock", assets::icons_default_64::alarm_clock, ui::Menu::Action{}},
-        new ui::Menu::ActionItem{"Remote", assets::icons_default_64::rc_car, ui::Menu::Action{}},
-        new ui::Menu::ActionItem{"Recorder", assets::icons_default_64::microphone, ui::Menu::Action{}},
-        new ui::Menu::ActionItem{"Files", assets::icons_default_64::folder, ui::Menu::Action{App::run<FileDialog>}},
-        new ui::Menu::ActionItem{"Composer", assets::icons_default_64::music_1, ui::Menu::Action{}},
-        new ui::Menu::ActionItem{"Drawing", assets::icons_default_64::paint_palette, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Music", assets::icons_64::music, ui::Menu::Action{App::run<AudioPlayer>}},
+        new ui::Menu::ActionItem{"Messages", assets::icons_64::chat, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"WalkieTalkie", assets::icons_64::baby_monitor, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Friends", assets::icons_64::birthday_cake, ui::Menu::Action{App::run<Friends>}},
+        new ui::Menu::ActionItem{"Clock", assets::icons_64::alarm_clock, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Remote", assets::icons_64::rc_car, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Recorder", assets::icons_64::microphone, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Files", assets::icons_64::folder, ui::Menu::Action{App::run<FileDialog>}},
+        new ui::Menu::ActionItem{"Composer", assets::icons_64::music_1, ui::Menu::Action{}},
+        new ui::Menu::ActionItem{"Drawing", assets::icons_64::paint_palette, ui::Menu::Action{}},
     };
 }
 

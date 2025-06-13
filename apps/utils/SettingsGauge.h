@@ -3,7 +3,7 @@
 #include <rckid/app.h>
 #include <rckid/graphics/canvas.h>
 #include <rckid/ui/gauge.h>
-#include <rckid/assets/icons64.h>
+#include <rckid/assets/icons_64.h>
 #include <rckid/assets/fonts/OpenDyslexic48.h>
 #include <rckid/ui/header.h>
 
@@ -59,14 +59,14 @@ namespace rckid {
 
     void setBrightness() {
         ArenaScope _{};
-        SettingsGauge::run(0, 255, displayBrightness(), 16, "Brightness", Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(assets::icons64::brightness)), [](int value) {
+        SettingsGauge::run(0, 255, displayBrightness(), 16, "Brightness", Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(assets::icons_64::brightness)), [](int value) {
             displaySetBrightness(value);
         });
     }
 
     void setVolume() {
         ArenaScope _{};
-        SettingsGauge::run(0, 10, audioVolume(), 1, "volume", Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(assets::icons64::high_volume)), [](int value) { audioSetVolume(value); });
+        SettingsGauge::run(0, 10, audioVolume(), 1, "volume", Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(assets::icons_64::high_volume)), [](int value) { audioSetVolume(value); });
     }
 
 } // namespace rckid 

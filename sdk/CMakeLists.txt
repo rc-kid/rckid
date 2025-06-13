@@ -26,10 +26,11 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
     add_custom_target(generate-sdk-assets
         #COMMAND $<TARGET_FILE:font-converter> assets/fonts/Iosevka.ttf rckid/assets/fonts/Iosevka16.h 16
         #COMMAND $<TARGET_FILE:font-converter> assets/fonts/OpenDyslexic.otf rckid/assets/fonts/OpenDyslexic64.h 64
-        COMMAND $<TARGET_FILE:font-converter> assets/fonts/OpenDyslexic.otf rckid/assets/fonts/OpenDyslexic32.h 32
-        COMMAND $<TARGET_FILE:font-converter> assets/fonts/OpenDyslexic.otf rckid/assets/fonts/OpenDyslexic24.h 24
+        #COMMAND $<TARGET_FILE:font-converter> assets/fonts/OpenDyslexic.otf rckid/assets/fonts/OpenDyslexic32.h 32
+        #COMMAND $<TARGET_FILE:font-converter> assets/fonts/OpenDyslexic.otf rckid/assets/fonts/OpenDyslexic24.h 24
         #COMMAND $<TARGET_FILE:binary-folder> assets/images rckid/assets/images.h --raw-path raw/images
-        #COMMAND $<TARGET_FILE:binary-folder> assets/icons/default/64 rckid/assets/icons_default_64.h --raw-path raw/icons --namespace rckid::assets::icons_default_64
+        COMMAND $<TARGET_FILE:binary-folder> assets/icons/64 rckid/assets/icons_64.h --raw-path raw/icons_64 --namespace rckid::assets::icons_64
+        COMMAND $<TARGET_FILE:binary-folder> assets/icons/24 rckid/assets/icons_24.h --raw-path raw/icons24 --namespace rckid::assets::icons_24
         #COMMAND $<TARGET_FILE:waveforms> 256 rckid/assets/waveforms.h
         #COMMAND $<TARGET_FILE:font-tile-generator> assets/fonts/Iosevka.ttf rckid/assets/tiles/System16_template.h 16 8 16
         #COMMAND $<TARGET_FILE:font-tile-generator> assets/fonts/Iosevka.ttf rckid/assets/tiles/System24_template.h 24 12 24
