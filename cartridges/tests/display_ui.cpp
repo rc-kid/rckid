@@ -84,14 +84,28 @@ public:
 
 }; // DisplayUIApp
 
+/** Game menu generator. 
+ 
+    Returns the games available in the system. The games are either statically known, such as built-in games, or cartridge stored ROMs, or can be dynamic, by looking at roms in the games folder.
+ */
+ui::Menu * gamesGenerator(void*) {
+    
+    ui::Menu * result = new ui::Menu{
+        new ui::Menu::ActionItem{"Tetris", assets::icons_64::tetris, ui::Menu::Action{App::run<TextDialog>}},
+    };
+    // now get all the menus 
+    fs::Folder games = fs::folderRead("/games");
+    for (auto & entry : games) {
+        if (entry.isFile() && (fs::ext(entry.name()) == ".gb")) {
+            LOG(LL_INFO, "Found game: " << entry.name());
+        }
+    }
+    return result;
+}
+
 ui::Menu * mainMenuGenerator(void*) {
     return new ui::Menu{
-        new ui::Menu::SubmenuItem{"Games", assets::icons_64::game_controller, ui::Menu::Generator{[](void*) { return new ui::Menu{
-            new ui::Menu::ActionItem{"Tetris", assets::icons_64::tetris, ui::Menu::Action{App::run<TextDialog>}},
-            new ui::Menu::ActionItem{"Game 1", assets::icons_64::gameboy, ui::Menu::Action{}},
-            new ui::Menu::ActionItem{"Game 2", assets::icons_64::gameboy, ui::Menu::Action{}},
-            new ui::Menu::ActionItem{"Game 3", assets::icons_64::gameboy, ui::Menu::Action{}},
-        }; }}},
+        new ui::Menu::SubmenuItem{"Games", assets::icons_64::game_controller, ui::Menu::Generator{gamesGenerator}},
         new ui::Menu::ActionItem{"Music", assets::icons_64::music, ui::Menu::Action{App::run<AudioPlayer>}},
         new ui::Menu::ActionItem{"Messages", assets::icons_64::chat, ui::Menu::Action{}},
         new ui::Menu::ActionItem{"WalkieTalkie", assets::icons_64::baby_monitor, ui::Menu::Action{}},
