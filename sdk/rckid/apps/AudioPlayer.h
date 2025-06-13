@@ -52,7 +52,7 @@ namespace rckid {
     protected:
         class FileBrowser : public ui::FileBrowser {
         public:
-            FileBrowser(AudioPlayer * player) : ui::FileBrowser{"/audio"}, player_{player} {
+            FileBrowser(AudioPlayer * player) : ui::FileBrowser{"/files/music"}, player_{player} {
             }
 
         protected:

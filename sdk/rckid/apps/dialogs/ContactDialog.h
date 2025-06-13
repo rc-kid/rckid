@@ -93,9 +93,12 @@ namespace rckid {
             Contact const & c = contacts_[i];
             // load the icon associated with the contact
             NewArenaGuard g{};
-            auto f = fs::fileRead(STR("/images/" << c.image));
+            auto f = fs::fileRead(c.image);
             // tell the carousel
-            c_->set(c.name, Bitmap<ColorRGB>{ARENA(PNG::fromStream(f))}, transition);
+            if (f.good()) 
+                c_->set(c.name, Bitmap<ColorRGB>{ARENA(PNG::fromStream(f))}, transition);
+            else
+                c_->set(c.name, Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_64::girl))}, transition);
             // and store the index
             i_ = i;
         }

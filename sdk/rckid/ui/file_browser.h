@@ -105,6 +105,8 @@ namespace rckid::ui {
                     return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_64::paint_palette))};
                 else if (ext == ".mp3") 
                     return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_64::music_note))};
+                else if (ext == ".gb" || ext == ".gbc")
+                    return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_64::gameboy))};
                 else
                     return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_64::notes))};
             }

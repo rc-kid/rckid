@@ -65,6 +65,7 @@ namespace rckid::ui {
         private:
 
             String text_;
+            String iconFile_; 
             uint8_t const * icon_ = nullptr;
             uint32_t iconSize_ = 0;
 

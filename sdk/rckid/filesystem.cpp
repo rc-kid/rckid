@@ -226,9 +226,12 @@ namespace rckid::fs {
 
     void FileRead::close() {
 #if RCKID_ENABLE_HOST_FILESYSTEM
-        ASSERT(host_ != nullptr);
-        delete host_;
-        host_ = nullptr;
+        // if file does not exist, host is nullptr
+        if (host_ != nullptr) {
+            ASSERT(host_ != nullptr);
+            delete host_;
+            host_ = nullptr;
+        }
 #else
         switch (drive_) {
             case static_cast<unsigned>(Drive::SD):
