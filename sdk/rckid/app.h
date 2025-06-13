@@ -96,21 +96,43 @@ namespace rckid {
     class ModalApp : public App {
     public:
 
+        /** Runs the modal app in dialog mode, where when ready, the app returns the value.
+         */
         std::optional<T> run() {
             loop();
             return result_;
         }
 
-        void exit(T result) {
-            result_ = result;
-            App::exit();
+        /** Runs the modal app in launcher mode, where when ready, the app calls the given callback function instead.
+         */
+        void run(std::function<void(T)> callback) {
+            callback_ = std::move(callback);
+            loop();
         }
 
         using App::exit;
 
+    protected:
+
+        void exit(T result) {
+            ASSERT(callback_ == nullptr);
+            result_ = result;
+            App::exit();
+        }
+
+        void select(T result) {
+            if (callback_) {
+                callback_(result);
+            } else {
+                result_ = result;
+                App::exit();
+            }
+        }
+
     private:
 
         std::optional<T> result_;
+        std::function<void(T)> callback_;
     }; // ModalApp
 
     template<>

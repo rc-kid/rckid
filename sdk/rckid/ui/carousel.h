@@ -95,6 +95,13 @@ namespace rckid::ui {
             onTransition_ = e;
         }
 
+        void clear() {
+            aImg_.clear();
+            aText_.clear();
+            bImg_.clear();
+            bText_.clear();
+        }
+
     protected:
 
         void set(Menu::Item const & item, Direction direction = Direction::None) {

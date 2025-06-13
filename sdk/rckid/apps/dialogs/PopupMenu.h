@@ -45,7 +45,7 @@ namespace rckid {
                 exit();
             if (btnPressed(Btn::A)) {
                 // return the selected item
-                exit(selected_);
+                select(selected_);
             }
             if (btnPressed(Btn::Up)) {
                 if (selected_ > 0)

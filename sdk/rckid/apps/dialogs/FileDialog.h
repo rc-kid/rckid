@@ -39,7 +39,7 @@ namespace rckid {
                 LOG(LL_DEBUG, "FileDialog: returning path " << c_->currentPath());
                 btnClear(Btn::A);
                 btnClear(Btn::Up);
-                exit(c_->currentPath());
+                select(c_->currentPath());
             }
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 LOG(LL_DEBUG, "FileDialog: cancelling");
