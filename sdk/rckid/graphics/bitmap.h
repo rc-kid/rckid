@@ -121,6 +121,13 @@ namespace rckid {
                     setAt(x, y, color);
         }
 
+        void clear() {
+            delete [] pixels_;
+            pixels_ = nullptr;
+            w_ = 0;
+            h_ = 0;
+        }
+
     private:
 
         using Surface<BPP>::pixelAt;

@@ -62,7 +62,7 @@ namespace rckid {
                         // record where we are
                         historyPush();
                         // and exit, if item selected
-                        exit(item->as<ui::Menu::ActionItem>()->action());
+                        select(item->as<ui::Menu::ActionItem>()->action());
                         break;
                     default:
                         UNREACHABLE;

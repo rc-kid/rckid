@@ -91,6 +91,10 @@ namespace rckid::ui {
 
         bool empty() { return bmp_.empty(); }
 
+        void clear() {
+            bmp_.clear();
+        }
+
     protected:
 
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {

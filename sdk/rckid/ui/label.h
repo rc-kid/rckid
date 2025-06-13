@@ -81,6 +81,10 @@ namespace rckid::ui {
 
         Coord textWidth() const { return font_.textWidth(text_.c_str()); }
 
+        void clear() {
+            setText("");
+        }
+
     protected:
 
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
