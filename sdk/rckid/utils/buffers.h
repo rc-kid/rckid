@@ -196,6 +196,19 @@ namespace rckid {
             data_[size_++] = value;
         }
 
+        /** Shrinks the internal buffer and releases it, i.e. transfers the ownership to the caller. 
+         
+            This is a very dangerous function that should be used with extreme care. Note that it is up to caller to determine the size before calling the release function and to treat the returned pointer as immutable if part of immutable memory.
+         */
+        T * release() {
+            shrink();
+            T * result = data_;
+            data_ = nullptr;
+            size_ = 0;
+            capacity_ = 0;
+            return result;
+        }
+
     protected:
 
         void resize(uint32_t newCapacity) {

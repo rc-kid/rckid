@@ -8,7 +8,23 @@
 #include "../graphics/bitmap.h"
 #include "../graphics/png.h"
 
+#include "../graphics/icon.h"
+
 namespace rckid::ui {
+
+    /** Menu item. 
+     
+        Each menu item consists of text, optional icon and a payload. A menu is simply an array of menu items 
+     */
+    template<typename T>
+    class MenuItem {
+    public:
+        Icon icon;
+        String text;
+        T payload;
+    }; // rckid::MenuItem
+
+
 
     /** Menu representation.
 
@@ -33,10 +49,7 @@ namespace rckid::ui {
             Item(String text): text_{std::move(text)} {
             }
 
-            Item(String text, uint8_t const * icon, uint32_t iconSize): text_{std::move(text)}, icon_{icon}, iconSize_{iconSize} { }
-
-            template<uint32_t SIZE>
-            Item(String text, uint8_t const (&buffer)[SIZE]): Item(text, buffer, SIZE) { }
+            Item(String text, Icon icon): text_{std::move(text)}, icon_{std::move(icon)} { }
 
             virtual ~Item() = default;
 
@@ -56,19 +69,12 @@ namespace rckid::ui {
 
             String const & text() const { return text_; }
 
-            Bitmap<ColorRGB> icon() const {
-                // when decoding the icon, create new arena to avoid fragmentation as the PNG buffer will be disable immediately after the decoding takes place
-                NewArenaGuard g{};
-                return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(icon_, iconSize_))};
-            }
+            Icon const & icon() const { return icon_; }
 
         private:
 
             String text_;
-            String iconFile_; 
-            uint8_t const * icon_ = nullptr;
-            uint32_t iconSize_ = 0;
-
+            Icon icon_;
         }; // rckid::ui::Menu::Item
 
         using Action = FunPtr<void>;
@@ -83,14 +89,8 @@ namespace rckid::ui {
                 action_{std::move(action)} {
             }
 
-            ActionItem(String text, uint8_t const * icon, uint32_t iconSize, Action action):
-                Item{std::move(text), icon, iconSize}, 
-                action_{std::move(action)} {
-            }
-
-            template<uint32_t SIZE>
-            ActionItem(String text, uint8_t const (&buffer)[SIZE], Action action):
-                Item{std::move(text), buffer, SIZE}, 
+            ActionItem(String text, Icon icon, Action action):
+                Item{std::move(text), std::move(icon)}, 
                 action_{std::move(action)} {
             }
 
@@ -116,14 +116,8 @@ namespace rckid::ui {
                 generator_{std::move(generator)} {
             }
 
-            SubmenuItem(String text, uint8_t const * icon, uint32_t iconSize, Generator generator): 
-                Item{std::move(text), icon, iconSize}, 
-                generator_{std::move(generator)} {
-            }
-
-            template<uint32_t SIZE>
-            SubmenuItem(String text, uint8_t const (&buffer)[SIZE], Generator generator):
-                Item{std::move(text), buffer, SIZE}, 
+            SubmenuItem(String text, Icon icon, Generator generator): 
+                Item{std::move(text), std::move(icon)}, 
                 generator_{std::move(generator)} {
             }
 

@@ -3,6 +3,7 @@
 #include <functional>
 
 #include "../graphics/bitmap.h"
+#include "../graphics/icon.h"
 #include "../utils/interpolation.h"
 #include "../utils/timer.h"
 #include "../assets/icons_64.h"
@@ -54,14 +55,16 @@ namespace rckid::ui {
             repositionElements(bImg_, bText_);
         } 
 
-        void set(String text, Image icon, Direction direction = Direction::None) {
+        /** Sets the carousel's current element to given text and icon. 
+         */
+        void set(String text, Icon const & icon, Direction direction = Direction::None) {
             if (direction == Direction::None) {
-                aImg_ = std::move(icon);
+                aImg_ = icon.toBitmap();
                 aImg_.setTransparent(true);
                 aText_.setText(text);
                 repositionElements(aImg_, aText_);
             } else {
-                bImg_ = std::move(icon);
+                bImg_ = icon.toBitmap();
                 bImg_.setTransparent(true);
                 bText_.setText(text);
                 repositionElements(bImg_, bText_);
@@ -104,14 +107,10 @@ namespace rckid::ui {
         }
 
         void showEmpty(Direction d = Direction::None) {
-            set("", Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_64::empty_box))}, d);
+            set("", Icon{assets::icons_64::empty_box}, d);
         }
 
     protected:
-
-        void set(Menu::Item const & item, Direction direction = Direction::None) {
-            set(item.text(), item.icon(), direction);
-        }
 
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
             switch (dir_) {
@@ -247,7 +246,8 @@ namespace rckid::ui {
             menu_ = m;
             if (menu_ == nullptr || menu_->size() == 0)
                 return;
-            set((*menu_)[index], direction);
+            Menu::Item const & item = (*menu_)[index];
+            set(item.text(), item.icon(), direction);
             i_ = index;
         }
 
@@ -255,14 +255,16 @@ namespace rckid::ui {
             if (menu_ == nullptr || menu_->size() == 0)
                 return;
             i_ = (i_ + menu_->size() - 1) % menu_->size();
-            set((*menu_)[i_], Direction::Left);
+            Menu::Item const & item = (*menu_)[i_];
+            set(item.text(), item.icon(), Direction::Left);
         }
 
         void moveRight() {
             if (menu_ == nullptr || menu_->size() == 0)
                 return;
             i_ = (i_ + 1) % menu_->size();
-            set((*menu_)[i_], Direction::Right);
+            Menu::Item const & item = (*menu_)[i_];
+            set(item.text(), item.icon(), Direction::Right);
         }
 
         /** Processes the left and right menu directions. 
