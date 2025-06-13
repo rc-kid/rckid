@@ -181,6 +181,10 @@ namespace rckid {
             });
         }
 
+        char const * release() {
+            return str_.release();
+        }
+
     private:
         LazyBuffer<char> str_;
     }; // rckid::String
