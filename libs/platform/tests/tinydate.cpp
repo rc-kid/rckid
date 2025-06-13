@@ -38,3 +38,15 @@ TEST(tinydate, TinyDate) {
     EXPECT(d2.year() == d.year());
     EXPECT(d2 == d);
 }
+
+TEST(tinydate, daysTillAnnual) {
+    TinyDate d1{1, 1, 2024};
+    TinyDate d2{1, 2, 2024};
+    EXPECT(d1.daysTillNextAnnual(d2) == 31);
+    d2 = TinyDate{1, 3, 2024};
+    EXPECT(d1.daysTillNextAnnual(d2) == 60);
+    d2 = TinyDate{10, 3, 2024};
+    EXPECT(d1.daysTillNextAnnual(d2) == 69);
+    d1 = TinyDate{6, 7, 2024};
+    EXPECT(d1.daysTillNextAnnual(d2) == 247);
+}
