@@ -4,7 +4,7 @@
 #include "../../ui/tilemap.h"
 #include "../../ui/geometry.h"
 #include "../../utils/string.h"
-#include "../../assets/icons_default_64.h"
+#include "../../assets/icons_64.h"
 #include "../../assets/fonts/OpenDyslexic32.h"
 
 
@@ -31,7 +31,7 @@ namespace rckid {
         static void error(String title, String text) {
             NewArenaGuard g;
             ArenaAllocationGuard gg;
-            InfoDialog * d  = new InfoDialog{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::poo)}, std::move(title), std::move(text)};
+            InfoDialog * d  = new InfoDialog{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_64::poo)}, std::move(title), std::move(text)};
             d->g_.setBg(ColorRGB::Red().withAlpha(32));
             d->run();
             delete d;
@@ -40,7 +40,7 @@ namespace rckid {
         static void info(String title, String text) {
             NewArenaGuard g;
             ArenaAllocationGuard gg;
-            InfoDialog * d  = new InfoDialog{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::info)}, std::move(title), std::move(text)};
+            InfoDialog * d  = new InfoDialog{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_64::book)}, std::move(title), std::move(text)};
             d->run();
             delete d;
         }

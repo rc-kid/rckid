@@ -6,7 +6,7 @@
 #include "../ui/carousel.h"
 #include "../ui/menu.h"
 #include "../ui/header.h"
-#include "../assets/icons_default_64.h"
+#include "../assets/icons_64.h"
 #include "../assets/fonts/OpenDyslexic64.h"
 #include "../assets/images.h"
 

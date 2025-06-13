@@ -13,7 +13,7 @@
 #include <rckid/assets/fonts/OpenDyslexic48.h>
 #include <rckid/assets/fonts/HemiHead64.h>
 #include <rckid/assets/icons24.h>
-#include <rckid/assets/icons64.h>
+#include <rckid/assets/icons_64.h>
 
 
 namespace rckid {
@@ -113,7 +113,7 @@ namespace rckid {
             imgs_[1].loadImage(PNG::fromBuffer(assets::icons24::wooden_box));
             imgs_[2].loadImage(PNG::fromBuffer(assets::icons24::gps));
             imgs_[3].loadImage(PNG::fromBuffer(assets::icons24::boy));
-            icon_.loadImage(PNG::fromBuffer(assets::icons64::wooden_box));
+            icon_.loadImage(PNG::fromBuffer(assets::icons_64::wooden_box));
             loadLevelStatus();
             // find the last unlocked level and move towards it
             for (level_ = 0; level_ < NUM_LEVELS; ++level_)

@@ -32,7 +32,7 @@ namespace rckid {
 
         DataSync(): 
             BitmapApp<ColorRGB>{}
-            /*icon_{std::move(ARENA(Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(assets::icons64::pen_drive))))} */ {
+            /*icon_{std::move(ARENA(Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(assets::icons_64::pen_drive))))} */ {
         }
 
         void focus() override {

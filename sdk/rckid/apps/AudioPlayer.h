@@ -4,7 +4,7 @@
 #include "../ui/file_browser.h"
 #include "../ui/header.h"
 #include "../audio/mp3.h"
-#include "../assets/icons_default_64.h"
+#include "../assets/icons_64.h"
 #include "../assets/fonts/OpenDyslexic32.h"
 
 namespace rckid {
@@ -87,7 +87,7 @@ namespace rckid {
                 title_ = g_.addChild(new ui::Label{80, 10, fs::stem(path)});
                 title_->setFont(Font::fromROM<assets::OpenDyslexic32>());
                 elapsed_ = g_.addChild(new ui::Label{80, 54, String{""}});
-                icon_ = g_.addChild(new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::play)}});
+                icon_ = g_.addChild(new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_64::play)}});
                 icon_->setPos(8,8);
             }
 
@@ -125,11 +125,11 @@ namespace rckid {
                 // btn up, or button A is audio pause
                 if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                     if (audioPaused()) {
-                        icon_->setBitmap(Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::play)});
+                        icon_->setBitmap(Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_64::play)});
                         audioResume();
                         lastUs_ = uptimeUs();
                     } else {
-                        icon_->setBitmap(Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_default_64::pause)});
+                        icon_->setBitmap(Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_64::pause)});
                         audioPause();
                     }
                 }

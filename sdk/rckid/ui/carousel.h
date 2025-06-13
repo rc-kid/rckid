@@ -5,6 +5,7 @@
 #include "../graphics/bitmap.h"
 #include "../utils/interpolation.h"
 #include "../utils/timer.h"
+#include "../assets/icons_64.h"
 
 #include "image.h"
 #include "label.h"
@@ -100,6 +101,10 @@ namespace rckid::ui {
             aText_.clear();
             bImg_.clear();
             bText_.clear();
+        }
+
+        void showEmpty(Direction d = Direction::None) {
+            set("", Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_64::empty_box))}, d);
         }
 
     protected:

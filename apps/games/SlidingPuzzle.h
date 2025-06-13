@@ -9,7 +9,7 @@
 #include <rckid/ui/carousel.h>
 #include <rckid/assets/fonts/OpenDyslexic48.h>
 #include <rckid/assets/fonts/OpenDyslexic32.h>
-#include <rckid/assets/icons64.h>
+#include <rckid/assets/icons_64.h>
 #include <rckid/filesystem.h>
 #include <rckid/assets/images.h>
 
@@ -52,7 +52,7 @@ namespace rckid {
             }
 
             bool icon(Bitmap<ColorRGB> &bmp) const override {
-                bmp.loadImage(PNG::fromBuffer(assets::icons64::screenshot));
+                bmp.loadImage(PNG::fromBuffer(assets::icons_64::screenshot));
                 return true;
             }
 

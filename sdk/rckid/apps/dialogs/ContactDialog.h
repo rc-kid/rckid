@@ -25,18 +25,20 @@ namespace rckid {
                 btnClear(Btn::B);
                 return exit();
             }
-            if (btnDown(Btn::Left) && c_->idle()) {
-                if (i_ > 0) {
-                    setContact(i_ - 1, Direction::Left);
-                } else {
-                    setContact(contacts_.size() - 1, Direction::Left);
+            if (! contacts_.empty()) {
+                if (btnDown(Btn::Left) && c_->idle()) {
+                    if (i_ > 0) {
+                        setContact(i_ - 1, Direction::Left);
+                    } else {
+                        setContact(contacts_.size() - 1, Direction::Left);
+                    }
                 }
-            }
-            if (btnDown(Btn::Right) && c_->idle()) {
-                if (i_ + 1 < contacts_.size()) {
-                    setContact(i_ + 1, Direction::Right);
-                } else {
-                    setContact(0, Direction::Right);
+                if (btnDown(Btn::Right) && c_->idle()) {
+                    if (i_ + 1 < contacts_.size()) {
+                        setContact(i_ + 1, Direction::Right);
+                    } else {
+                        setContact(0, Direction::Right);
+                    }
                 }
             }
         }
@@ -47,11 +49,15 @@ namespace rckid {
             loadContacts();
             if (i_ == FIRST_RUN) {
                 if (contacts_.size() > 0)
-                    setContact(0);
+                    setContact(0, Direction::Up);
+                else
+                    c_->showEmpty(Direction::Up);
             } else if (contacts_.size() > i_)
-                setContact(i_, Direction::None);
+                setContact(i_);
             else if (contacts_.size() > 0)
-                setContact(0, Direction::None);
+                setContact(0);
+            else
+                c_->showEmpty();
         }
 
         void blur() {
@@ -82,7 +88,7 @@ namespace rckid {
             }
         }
 
-        void setContact(uint32_t i, Direction transition = Direction::Up) {
+        void setContact(uint32_t i, Direction transition = Direction::None) {
             ASSERT(i < contacts_.size());
             Contact const & c = contacts_[i];
             // load the icon associated with the contact

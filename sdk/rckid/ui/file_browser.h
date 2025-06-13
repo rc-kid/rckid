@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../assets/icons_default_64.h"
+#include "../assets/icons_64.h"
 #include "../filesystem.h"
 #include "carousel.h"
 
@@ -88,21 +88,25 @@ namespace rckid::ui {
                 LOG(LL_DEBUG, "FileBrowser: adding entry " << entry.name());
                 entries_.push_back(entry);
             }
-            setEntry(i_, transition);
+            if (entries_.empty()) {
+                showEmpty(transition);
+            } else {
+                setEntry(i_, transition);
+            }
         }
 
         Bitmap<ColorRGB> getIconFor(fs::Entry const & entry) {
             NewArenaGuard g{};
             if (entry.isFolder()) {
-                return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_default_64::folder))};
+                return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_64::folder))};
             } else {
                 String ext = fs::ext(entry.name());
                 if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
-                    return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_default_64::paint_palette))};
+                    return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_64::paint_palette))};
                 else if (ext == ".mp3") 
-                    return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_default_64::music_note))};
+                    return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_64::music_note))};
                 else
-                    return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_default_64::notes))};
+                    return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_64::notes))};
             }
         }
 
