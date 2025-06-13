@@ -253,6 +253,14 @@ static_assert(sizeof(TinyDateTime) == 4);
 PACKED(class TinyDate{
 public:
 
+    TinyDate() = default;
+
+    TinyDate(uint8_t day, uint8_t month, int16_t year) {
+        setDay(day);
+        setMonth(month);
+        setYear(year);
+    }
+
     uint8_t day() const { return raw_[0]; }
     uint8_t month() const { return raw_[1]; }
     int16_t year() const { return (static_cast<int16_t>(raw_[2]) << 8) | raw_[3]; }
@@ -293,6 +301,34 @@ public:
         result.raw_[1] = (raw >> 16) & 0xff;
         result.raw_[2] = (raw >> 8) & 0xff;
         result.raw_[3] = raw & 0xff;
+        return result;
+    }
+
+    /** Returns number of days till the next date, ignoring the year, useful for birthdays, etc. 
+     */
+    uint32_t daysTillNextAnnual(TinyDate const & other) const {
+        uint32_t result = 0;
+        uint32_t y = year();
+        uint32_t m1 = month();
+        uint32_t d1 = day();
+        uint32_t m2 = other.month();
+        uint32_t d2 = other.day();
+        while (true) {
+            if (m1 == m2) {
+                if (d1 <= d2) {
+                    result += d2 - d1;
+                    break;
+                }
+            }
+            uint32_t daysInMonth = TinyDateTime::daysInMonth(y, m1);
+            result += daysInMonth - d1 + 1;
+            d1 = 1;
+            m1++;
+            if (m1 > 12) {
+                m1 = 1;
+                y++;
+            }
+        }
         return result;
     }
 

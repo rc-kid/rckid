@@ -23,6 +23,7 @@ void listI2CDevices() {
  */
 int main() {
     initialize();
+    /*
     DoubleBuffer<int16_t> buf_{2048};
     Tone t;
     t.setWaveform(Waveform::Sine());
@@ -31,6 +32,7 @@ int main() {
     audioPlay(buf_, 44100, [&](int16_t * buf, uint32_t size) {
         return t.generateInto(buf, size);
     });
+    */
 
     //TLV320 ac;
     //ac.standby();

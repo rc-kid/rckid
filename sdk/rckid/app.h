@@ -121,6 +121,7 @@ namespace rckid {
         }
     }; // ModalApp<void>
 
+
     /** Application with Renderer that takes care of its rendering on the display.
      */
     template<typename RENDERER, typename T = void>
