@@ -78,7 +78,7 @@ namespace rckid {
         class Player : public ui::App<bool> {
         public:
             Player(String path, AudioStream & s) : 
-                ui::App<bool>{Rect::XYWH(0, 160, 320, 80)}, 
+                ui::App<bool>{Rect::XYWH(0, 160, 320, 80), /*raw*/ true}, 
                 as_{s} {
                 // TODO
                 audioPlay(as_);
