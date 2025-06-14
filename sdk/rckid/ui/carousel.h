@@ -22,13 +22,7 @@ namespace rckid::ui {
     class Carousel : public Widget {
     public:
 
-        enum class TransitionState {
-            InProgress,
-            Start,
-            End,
-        };
-
-        using OnTransition = std::function<void(TransitionState, Direction, Timer & )>;
+        using OnTransition = std::function<void(Direction, Timer & )>;
 
         static constexpr Coord iconToTextSpacerPx = 5;
         static constexpr uint32_t defaultTransitionTimeMs = 500;
@@ -81,7 +75,7 @@ namespace rckid::ui {
                 a_.stop();
                 Form::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
                 if (onTransition_)
-                    onTransition_(TransitionState::End, dir_, a_);
+                    onTransition_(dir_, a_);
                 dir_ = Direction::None;
                 aImgOffset_ = 0;
                 aTextOffset_ = 0;
@@ -90,7 +84,7 @@ namespace rckid::ui {
             } else {
                 Form::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
                 if (onTransition_)
-                    onTransition_(TransitionState::InProgress, dir_, a_);
+                    onTransition_(dir_, a_);
                 updateOffsets();
             }
         }
@@ -160,7 +154,7 @@ namespace rckid::ui {
                 updateOffsets();
                 Form::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
                 if (onTransition_)
-                    onTransition_(TransitionState::Start, dir_, a_);
+                    onTransition_(dir_, a_);
             } else {
                 a_.stop();
             }
