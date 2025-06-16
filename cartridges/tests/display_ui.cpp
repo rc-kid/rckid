@@ -98,6 +98,7 @@ ui::Menu * gamesGenerator() {
     for (auto & entry : games) {
         if (entry.isFile() && (fs::ext(entry.name()) == ".gb")) {
             LOG(LL_INFO, "Found game: " << entry.name());
+            result->add(MainMenu::GameLauncher(fs::stem(entry.name()), assets::icons_64::gameboy, entry.name()));
         }
     }
     return result;
@@ -138,8 +139,11 @@ int main() {
                     LOG(LL_INFO, "Running app...");
                     yield();
                     action();
+                },
+                [](MainMenuGameLauncher const & gl) {
+                    LOG(LL_INFO, "running game: " << gl.file);
+                    InfoDialog::error("Empty app", "The app you have chosen is empty. Ouch");
                 }
-
             }, app.value());
         } else {
             InfoDialog::error("Empty app", "The app you have chosen is empty. Ouch");
