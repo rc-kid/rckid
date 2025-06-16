@@ -15,9 +15,14 @@
 
 namespace rckid {
 
+    struct MainMenuGameLauncher {
+        String file;
+    };
+
     using MainMenuPayload = std::variant<
         ui::Menu::Generator, 
-        ui::Menu::Action
+        ui::Menu::Action,
+        MainMenuGameLauncher
     >;
 
 
@@ -43,6 +48,11 @@ namespace rckid {
                 payload{std::move(generator)} {
             }
 
+            Item(String text, Icon icon, MainMenuGameLauncher gameLauncher) :
+                ui::Menu::Item{std::move(text), std::move(icon)},
+                payload{std::move(gameLauncher)} {
+            }
+
             MainMenuPayload payload;
         }; // rckid::MainMenu::Item
 
@@ -52,6 +62,10 @@ namespace rckid {
 
         static Item * Submenu(String text, Icon icon, ui::Menu::Generator generator) {
             return new Item{text, std::move(icon), generator};
+        }
+
+        static Item * GameLauncher(String text, Icon icon, String gameFile) {
+            return new Item{text, std::move(icon), MainMenuGameLauncher{std::move(gameFile)}};
         }
 
         MainMenu(ui::Menu::Generator generator) : ui::App<MainMenuPayload>{} {
@@ -85,20 +99,17 @@ namespace rckid {
                 Item * item = reinterpret_cast<Item *>(c_->currentItem());
                 if (item == nullptr)
                     return;
-                std::visit(overload{
-                    [this](ui::Menu::Generator const & gen) {
-                        historyPush();
-                        generator_ = gen;
-                        c_->setMenu(generator_());
-                        c_->setItem(0, Direction::Up);
-                    },
-                    [this, item](ui::Menu::Action const & action) {
-                        // record where we are
-                        historyPush();
-                        // and exit, if item selected
-                        select(item->payload);
-                    }
-                }, item->payload);
+                if (std::holds_alternative<ui::Menu::Generator>(item->payload)) {
+                    historyPush();
+                    generator_ = std::get<ui::Menu::Generator>(item->payload);;
+                    c_->setMenu(generator_());
+                    c_->setItem(0, Direction::Up);
+                } else {
+                    // record where we are
+                    historyPush();
+                    // and exit, if item selected
+                    select(item->payload);
+                }
                 /*
                 switch (item->kind()) {
                     case ui::Menu::SubmenuItem::KIND: {
