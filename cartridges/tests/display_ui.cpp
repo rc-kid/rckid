@@ -88,10 +88,10 @@ public:
  
     Returns the games available in the system. The games are either statically known, such as built-in games, or cartridge stored ROMs, or can be dynamic, by looking at roms in the games folder.
  */
-ui::Menu * gamesGenerator(void*) {
+ui::Menu * gamesGenerator() {
     
     ui::Menu * result = new ui::Menu{
-        new ui::Menu::ActionItem{"Tetris", assets::icons_64::tetris, ui::Menu::Action{App::run<TextDialog>}},
+        MainMenu::Action("Tetris", assets::icons_64::tetris, App::run<TextDialog>),
     };
     // now get all the menus 
     fs::Folder games = fs::folderRead("/games");
@@ -103,19 +103,19 @@ ui::Menu * gamesGenerator(void*) {
     return result;
 }
 
-ui::Menu * mainMenuGenerator(void*) {
+ui::Menu * mainMenuGenerator() {
     return new ui::Menu{
-        new ui::Menu::SubmenuItem{"Games", assets::icons_64::game_controller, ui::Menu::Generator{gamesGenerator}},
-        new ui::Menu::ActionItem{"Music", assets::icons_64::music, ui::Menu::Action{App::run<AudioPlayer>}},
-        new ui::Menu::ActionItem{"Messages", assets::icons_64::chat, ui::Menu::Action{}},
-        new ui::Menu::ActionItem{"WalkieTalkie", assets::icons_64::baby_monitor, ui::Menu::Action{}},
-        new ui::Menu::ActionItem{"Friends", assets::icons_64::birthday_cake, ui::Menu::Action{App::run<Friends>}},
-        new ui::Menu::ActionItem{"Clock", assets::icons_64::alarm_clock, ui::Menu::Action{}},
-        new ui::Menu::ActionItem{"Remote", assets::icons_64::rc_car, ui::Menu::Action{}},
-        new ui::Menu::ActionItem{"Recorder", assets::icons_64::microphone, ui::Menu::Action{}},
-        new ui::Menu::ActionItem{"Files", assets::icons_64::folder, ui::Menu::Action{App::run<FileDialog>}},
-        new ui::Menu::ActionItem{"Composer", assets::icons_64::music_1, ui::Menu::Action{}},
-        new ui::Menu::ActionItem{"Drawing", assets::icons_64::paint_palette, ui::Menu::Action{}},
+        MainMenu::Submenu("Games", assets::icons_64::game_controller, gamesGenerator),
+        MainMenu::Action("Music", assets::icons_64::music, App::run<AudioPlayer>),
+        MainMenu::Action("Messages", assets::icons_64::chat, nullptr),
+        MainMenu::Action("WalkieTalkie", assets::icons_64::baby_monitor, nullptr),
+        MainMenu::Action("Friends", assets::icons_64::birthday_cake, App::run<Friends>),
+        MainMenu::Action("Clock", assets::icons_64::alarm_clock, nullptr),
+        MainMenu::Action("Remote", assets::icons_64::rc_car, nullptr),
+        MainMenu::Action("Recorder", assets::icons_64::microphone, nullptr),
+        MainMenu::Action("Files", assets::icons_64::folder, App::run<FileDialog>),
+        MainMenu::Action("Composer", assets::icons_64::music_1, nullptr),
+        MainMenu::Action("Drawing", assets::icons_64::paint_palette, nullptr),
     };
 }
 
@@ -129,10 +129,18 @@ int main() {
         yield();
         LOG(LL_INFO, "Free memory: " << memoryFree() / 1024);
         yield();
-        if (app.has_value() && app.value().valid()) {
-            LOG(LL_INFO, "Running app...");
-            yield();
-            app.value()();
+        if (app.has_value()) {
+            std::visit(overload{
+                [](ui::Menu::Generator const & gen) {
+                    UNREACHABLE; // Should not see menu generator here
+                },
+                [](ui::Menu::Action const & action) {
+                    LOG(LL_INFO, "Running app...");
+                    yield();
+                    action();
+                }
+
+            }, app.value());
         } else {
             InfoDialog::error("Empty app", "The app you have chosen is empty. Ouch");
         }

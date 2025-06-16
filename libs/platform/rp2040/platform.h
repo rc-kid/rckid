@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <utility>
+
 #include <hardware/gpio.h>
 #include <hardware/clocks.h>
 #include <hardware/pio.h>
@@ -21,6 +23,8 @@
 #define PLATFORM_LITTLE_ENDIAN
 
 #include "../definitions.h"
+#include "../overload.h"
+
 
 class cpu {
 public:

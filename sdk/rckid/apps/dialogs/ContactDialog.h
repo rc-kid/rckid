@@ -13,7 +13,13 @@ namespace rckid {
     public:
 
         ContactDialog() : ui::App<Contact>{320, 240} {
-            c_ = g_.addChild(new ui::Carousel{});
+            c_ = g_.addChild(new ui::EventBasedCarousel{
+                [this](){ return contacts_.size(); },
+                [this](uint32_t index, Direction direction) {
+                    Contact const & c = contacts_[index];
+                    c_->set(c.name, Icon{c.image}, direction);
+                }
+            });
             c_->setRect(Rect::XYWH(0, 160, 320, 80));
             c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
         }
@@ -25,37 +31,23 @@ namespace rckid {
                 btnClear(Btn::B);
                 return exit();
             }
-            if (! contacts_.empty()) {
-                if (btnDown(Btn::Left) && c_->idle()) {
-                    if (i_ > 0) {
-                        setContact(i_ - 1, Direction::Left);
-                    } else {
-                        setContact(contacts_.size() - 1, Direction::Left);
-                    }
-                }
-                if (btnDown(Btn::Right) && c_->idle()) {
-                    if (i_ + 1 < contacts_.size()) {
-                        setContact(i_ + 1, Direction::Right);
-                    } else {
-                        setContact(0, Direction::Right);
-                    }
-                }
-            }
+            c_->processEvents();
         }
 
         void focus() override {
             ui::App<Contact>::focus();
             // if we have contact
             loadContacts();
-            if (i_ == FIRST_RUN) {
+            if (firstRun_) {
                 if (contacts_.size() > 0)
-                    setContact(0, Direction::Up);
+                    c_->setItem(0, Direction::Up);
                 else
                     c_->showEmpty(Direction::Up);
-            } else if (contacts_.size() > i_)
-                setContact(i_);
+                firstRun_ = false;
+            } else if (contacts_.size() > c_->currentIndex())
+                c_->setItem(c_->currentIndex());
             else if (contacts_.size() > 0)
-                setContact(0);
+                c_->setItem(0);
             else
                 c_->showEmpty();
         }
@@ -64,7 +56,6 @@ namespace rckid {
             // cleanup for the next app
             contacts_.clear();
         }
-
 
     private:
 
@@ -88,21 +79,11 @@ namespace rckid {
             }
         }
 
-        void setContact(uint32_t i, Direction transition = Direction::None) {
-            ASSERT(i < contacts_.size());
-            Contact const & c = contacts_[i];
-            // tell the carousel
-            c_->set(c.name, Icon{c.image}, transition);
-            // and store the index
-            i_ = i;
-        }
-
-        static constexpr uint32_t FIRST_RUN = 0xffffffff;
-
-        ui::Carousel * c_;
+        ui::EventBasedCarousel * c_;
 
         std::vector<Contact> contacts_;
-        uint32_t i_ = FIRST_RUN; // first run
+        // determines on focus if this has been the first time the dialog appears (different transition is used then)
+        bool firstRun_ = true;
     }; // rckid::ContactDialog
 
 

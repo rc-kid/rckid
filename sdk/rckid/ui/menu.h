@@ -12,127 +12,29 @@
 
 namespace rckid::ui {
 
-    /** Menu item. 
-     
-        Each menu item consists of text, optional icon and a payload. A menu is simply an array of menu items 
-     */
-    template<typename T>
-    class MenuItem {
-    public:
-        Icon icon;
-        String text;
-        T payload;
-    }; // rckid::MenuItem
 
-
-
-    /** Menu representation.
-
-        The UI decouples the menu itself, represented by this class from the actual rendering of the menu items, which is done by widgets such as the Carousel. 
-
-        Item = just fillText and fillIcon 
-        Action = void * payload
-        Submenu = generator payload
-     */
     class Menu {
     public:
 
-
-        /** Basic item of a menu.
-         
-            Each menu items has a text and an optional icon. The menu item can also have a payload, which is a 32-bit value that can be used to store additional information about the item.
-         */
         class Item {
         public:
-            static constexpr uint32_t KIND = 0;
+            String text;
+            Icon icon;
 
-            Item(String text): text_{std::move(text)} {
+            explicit Item(String text):
+                text{std::move(text)} {
             }
 
-            Item(String text, Icon icon): text_{std::move(text)}, icon_{std::move(icon)} { }
+            Item(String text, Icon icon):
+                text{std::move(text)}, 
+                icon{std::move(icon)} {
+            }
 
             virtual ~Item() = default;
+        }; // rckid::Menu::Item
 
-            virtual uint32_t kind() const { return KIND; }
-
-            template<typename T>
-            bool is() const {
-                return kind() == T::KIND;
-            }
-
-            template<typename T>
-            T * as() {
-                if (! is<T>())
-                    return nullptr;
-                return static_cast<T*>(this);
-            }
-
-            String const & text() const { return text_; }
-
-            Icon const & icon() const { return icon_; }
-
-        private:
-
-            String text_;
-            Icon icon_;
-        }; // rckid::ui::Menu::Item
-
-        using Action = FunPtr<void>;
-
-        /** Item with associated action, which is a simple std::function for simplicity.
-         */
-        class ActionItem : public Item {
-        public:
-
-            ActionItem(String text, Action action): 
-                Item{std::move(text)}, 
-                action_{std::move(action)} {
-            }
-
-            ActionItem(String text, Icon icon, Action action):
-                Item{std::move(text), std::move(icon)}, 
-                action_{std::move(action)} {
-            }
-
-            static constexpr uint32_t KIND = 1;
-            uint32_t kind() const override { return KIND; }
-
-            Action const & action() const { return action_; }
-            void setAction(Action action) { action_ = std::move(action); }
-
-        private:
-            Action action_;
-            void * actionPayload_;
-        }; // rckid::ui::Menu::ActionItem
-
-        using Generator = FunPtr<Menu*>;
-        /** Item with associated submenu generator. 
-         */
-        class SubmenuItem : public Item {
-        public:
-
-            SubmenuItem(String text, Generator generator): 
-                Item{std::move(text)}, 
-                generator_{std::move(generator)} {
-            }
-
-            SubmenuItem(String text, Icon icon, Generator generator): 
-                Item{std::move(text), std::move(icon)}, 
-                generator_{std::move(generator)} {
-            }
-
-            static constexpr uint32_t KIND = 2;
-            uint32_t kind() const override { return KIND; }
-
-            Generator const & generator() const { return generator_; } 
-
-            void setGenerator(Generator generator) { 
-                generator_ = std::move(generator);
-             }
-
-        private:
-            Generator generator_;
-        }; // rckid::ui::Menu::SubmenuItem
+        using Generator = std::function<ui::Menu *()>;
+        using Action = std::function<void()>; 
 
         Menu() = default;
 
@@ -144,43 +46,35 @@ namespace rckid::ui {
         }
 
         ~Menu() {
-            for (auto & mi : items_)
-                delete mi;
+            clear();
         }
 
+        Item const & operator [](uint32_t index) const {
+            ASSERT(index < items_.size());
+            return *items_[index];
+        }
+
+        Item & operator [](uint32_t index) {
+            ASSERT(index < items_.size());
+            return *items_[index];
+        }
         uint32_t size() const { return items_.size(); }
-
-        Item & operator [] (uint32_t index) {
-            ASSERT(index < items_.size());
-            return *(items_[index]);
-        }
-
-        Item const & operator [] (uint32_t index) const {
-            ASSERT(index < items_.size());
-            return *(items_[index]);
-        }
-
+        
         void add(Item * item) {
             items_.push_back(item);
         }
-
         void clear() {
-            for (auto mi : items_)
+            for (auto & mi : items_)
                 delete mi;
             items_.clear();
         }
 
-        std::vector<Item *>::iterator begin() {
-            return items_.begin();
-        }
-        
-        std::vector<Item *>::iterator end() {
-            return items_.end();
-        }
+        std::vector<Item *>::iterator begin() { return items_.begin(); }
+        std::vector<Item *>::iterator end() { return items_.end(); }
 
     private:
+        std::vector<Item*> items_;
 
-        std::vector<Item *> items_;
-    }; // rckid::ui::Menu
+    }; // rckid::Menu
 
 } // namespace rckid::ui
