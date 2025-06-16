@@ -68,6 +68,10 @@
 
 - file browser should be similar to contacts, i.e. the dialog in launcher menu instead of ui element and separate browser app 
 
+- main menu should also show next birthdays, alarm if any, and oher most current information
+
+- add version of background wher the background just bounces so that the background can be some actual image
+
 - todo figure out how context menu can be planted to apps (or perhaps let the dialogs handle them)
 
 - detects headphones in, but not out, and does not detect cellular, only stereo. This could be because of two microphones being attached to the micbias

@@ -94,7 +94,47 @@ namespace rckid::ui {
             set("", Icon{assets::icons_64::empty_box}, d);
         }
 
+        uint32_t currentIndex() const { return i_; }
+
+        /** Returns the number of elements in the carousel. 
+         */
+        virtual uint32_t size() const = 0;
+
+        void moveLeft() {
+            uint32_t s = size();
+            if (s == 0)
+                return;
+            i_ = (i_ == 0) ? (s - 1) : (i_ - 1);
+            setItem(i_, Direction::Left);
+        }
+
+        void moveRight() {
+            uint32_t s = size();
+            if (s == 0)
+                return;
+            ++i_;
+            if (i_ >= s)
+                i_ = 0;
+            setItem(i_, Direction::Right);
+        }
+
+        void processEvents() override {
+            if (!idle() || size() == 0)
+                return;
+            if (btnDown(Btn::Left))
+                moveLeft();
+            if (btnDown(Btn::Right))
+                moveRight();
+        }
+
+        void setItem(uint32_t index, Direction direction = Direction::None) {
+            i_ = index;
+            doSetItem(index, direction);
+        }
+
     protected:
+
+        virtual void doSetItem(uint32_t index, Direction direction) = 0;
 
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
             switch (dir_) {
@@ -196,77 +236,64 @@ namespace rckid::ui {
         Coord bImgOffset_;
         Coord bTextOffset_;
         Timer a_{defaultTransitionTimeMs};
+
+        uint32_t i_ = 0;
     }; // rckid::ui::Carousel
 
-
-    /** Menu holder that visualizes a carousel. 
-     
+    /** Carousel specialization with event handlers instead of the virtual abstract function for size & element setting. Using this class is beneficial for custom carousels where it allows easier customization compared to subclassing carousel and overriding the methods.
      */
+    class EventBasedCarousel : public Carousel {
+    public:
+        EventBasedCarousel(std::function<uint32_t()> getSizeHandler, std::function<void(uint32_t, Direction)> setItemHandler):
+            getSizeHandler_{std::move(getSizeHandler)},
+            setItemHandler_{std::move(setItemHandler)} {
+        }
+
+        uint32_t size() const override {
+            return getSizeHandler_();
+        }
+
+    protected:
+
+        void doSetItem(uint32_t index, Direction direction) override {
+            setItemHandler_(index, direction);
+        }        
+
+    private:
+        std::function<uint32_t()> getSizeHandler_;
+        std::function<void(uint32_t, Direction)> setItemHandler_;
+    };
+
     class CarouselMenu : public Carousel {
     public:
 
-        CarouselMenu() = default;
-
-        ~CarouselMenu() override {
-            delete menu_;
-        }
-
         Menu const * menu() const { return menu_; }
 
-        uint32_t index() const { return i_; }
+        uint32_t size() const override { return (menu_ == nullptr) ? 0 : menu_->size(); }
+
+        void setMenu(Menu * m) {
+            delete menu_;
+            menu_ = m;
+        }
 
         Menu::Item * currentItem() {
             if (menu_ == nullptr || menu_->size() == 0)
                 return nullptr;
-            return & (*menu_)[i_];
+            return & (*menu_)[currentIndex()];
         }
 
-        void setMenu(Menu * m, Direction direction = Direction::None, uint32_t index = 0) {
-            delete menu_;
-            menu_ = m;
-            if (menu_ == nullptr || menu_->size() == 0)
-                return;
+    protected:
+
+        void doSetItem(uint32_t index, Direction direction = Direction::None) override {
+            ASSERT(menu_ != nullptr);
+            ASSERT(index < menu_->size());
             Menu::Item const & item = (*menu_)[index];
-            set(item.text(), item.icon(), direction);
-            i_ = index;
-        }
-
-        void moveLeft() {
-            if (menu_ == nullptr || menu_->size() == 0)
-                return;
-            i_ = (i_ + menu_->size() - 1) % menu_->size();
-            Menu::Item const & item = (*menu_)[i_];
-            set(item.text(), item.icon(), Direction::Left);
-        }
-
-        void moveRight() {
-            if (menu_ == nullptr || menu_->size() == 0)
-                return;
-            i_ = (i_ + 1) % menu_->size();
-            Menu::Item const & item = (*menu_)[i_];
-            set(item.text(), item.icon(), Direction::Right);
-        }
-
-        /** Processes the left and right menu directions. 
-         */
-        void processEvents() override {
-            // if there is no menu, don't do anything
-            if (menu_ == nullptr || menu_->size() == 0)
-                return;
-            // if we have ongoing animation, don't do anything
-            if (! idle())
-                return;
-            if (btnDown(Btn::Left))
-                moveLeft();
-            if (btnDown(Btn::Right))
-                moveRight();
+            set(item.text, item.icon, direction);
         }
 
     private:
 
         Menu * menu_ = nullptr;
-        uint32_t i_ = 0;
-
-    }; // rckid::ui::CarouselMenu
+    }; 
 
 } // namespace rckid::ui

@@ -68,8 +68,8 @@ namespace rckid {
         static Coord getLongestText(ui::Menu * menu) {
             uint32_t longest = 0;
             for (auto & item : *menu) {
-                if (item->text().size() > longest)
-                    longest = item->text().size();
+                if (item->text.size() > longest)
+                    longest = item->text.size();
             }
             return longest;
         }
@@ -81,7 +81,7 @@ namespace rckid {
         void fillText() {
             tm_->clear();
             for (Coord i = 0; i < getNumRows(menu_); ++i) {
-                tm_->text(0, i) << (*menu_)[i + top_].text();
+                tm_->text(0, i) << (*menu_)[i + top_].text;
             }
         }
 

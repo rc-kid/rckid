@@ -24,7 +24,7 @@ namespace rckid::ui {
         String currentPath() const { 
             if (entries_.size() == 0)
                 return path_;
-            return fs::join(path_, entries_[i_].name());
+            return fs::join(path_, entries_[currentIndex()].name());
         }
 
         /** Processes the left and right menu transitions. 
@@ -36,14 +36,9 @@ namespace rckid::ui {
             // if we have ongoing animation, don't do anything
             if (! idle())
                 return;
-            if (btnDown(Btn::Left)) {
-                i_ = (i_ + entries_.size() - 1) % entries_.size();
-                setEntry(i_, Direction::Left);
-            }
-            if (btnDown(Btn::Right)) {
-                i_ = (i_ + 1) % entries_.size();
-                setEntry(i_, Direction::Right);
-            }
+
+            Carousel::processEvents();
+
             if (btnDown(Btn::Down) || btnDown(Btn::B)) {
                 if (! dirStack_.empty()) {
                     loadDir(fs::parent(path_), Direction::Down);
@@ -53,8 +48,8 @@ namespace rckid::ui {
                 }
             }
             if (btnDown(Btn::Up) || btnDown(Btn::A)) {
-                if (entries_[i_].isFolder()) {
-                    loadDir(fs::join(path_, entries_[i_].name()), Direction::Up);
+                if (entries_[currentIndex()].isFolder()) {
+                    loadDir(fs::join(path_, entries_[currentIndex()].name()), Direction::Up);
                     // clear the button state (selection is handled by button press)
                     btnClear(Btn::Up);
                     btnClear(Btn::A);
@@ -62,7 +57,18 @@ namespace rckid::ui {
             }
         }
 
+        uint32_t size() const override { return entries_.size(); }
+
     protected:
+
+        void doSetItem(uint32_t index, Direction direction) override {
+            set(fs::stem(entries_[index].name()), getIconFor(entries_[index]), direction);
+            if (entries_[index].isFolder())
+                onFolderChanged();
+            else
+                onFileChanged();
+        }
+
         virtual void onFileChanged() {}
         virtual void onFolderChanged() {}
         virtual bool onFileFilter(String const & name) { return true; }
@@ -71,12 +77,12 @@ namespace rckid::ui {
 
         void loadDir(String path, Direction transition = Direction::Up) {
             LOG(LL_INFO, "Loading dir " << path);
+            uint32_t newIndex = 0;
             if (transition == Direction::Up) {
                 if (path != "/")
-                    dirStack_.push_back(i_);
-                i_ = 0;
+                    dirStack_.push_back(currentIndex());
             } else {
-                i_ = dirStack_.back();
+                newIndex = dirStack_.back();
                 dirStack_.pop_back();
             }
             path_ = std::move(path);
@@ -91,7 +97,7 @@ namespace rckid::ui {
             if (entries_.empty()) {
                 showEmpty(transition);
             } else {
-                setEntry(i_, transition);
+                setItem(newIndex, transition);
             }
         }
 
@@ -112,6 +118,8 @@ namespace rckid::ui {
             }
         }
 
+        /*
+
         void setEntry(uint32_t i, Direction transition) {
             set(fs::stem(entries_[i].name()), getIconFor(entries_[i]), transition);
             if (entries_[i].isFolder())
@@ -120,10 +128,11 @@ namespace rckid::ui {
                 onFileChanged();
         }
 
+        */
+
     private:
         fs::Drive drive_ = fs::Drive::SD;
         String path_;
-        uint32_t i_ = 0;
         std::vector<fs::Entry> entries_;
         std::vector<uint32_t> dirStack_;
     }; 

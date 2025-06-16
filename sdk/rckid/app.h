@@ -25,11 +25,9 @@ namespace rckid {
         }
 
         /** Runs given application in its own arena. 
-         
-            The function takes the optional payload argument to be compatible with main menu action items. 
          */
         template<typename T>
-        static void run([[maybe_unused]] void * payload = nullptr) {
+        static void run() {
             NewArenaGuard g{};
             T * app = new (Arena::alloc<T>()) T{};
             app->loop();
