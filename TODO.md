@@ -66,6 +66,9 @@
 
 # TODO
 
+- running GBCemu runs out of memory during cached cartridge initialization, figure out why?
+- does gbcemu still work otherwise? 
+
 - file browser should be similar to contacts, i.e. the dialog in launcher menu instead of ui element and separate browser app 
 
 - main menu should also show next birthdays, alarm if any, and oher most current information
