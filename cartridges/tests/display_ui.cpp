@@ -20,6 +20,9 @@
 #include <rckid/apps/AudioPlayer.h>
 #include <rckid/apps/Friends.h>
 
+#include <gbcemu/gbcemu.h>
+#include <gbcemu/gamepak.h>
+
 
 using namespace rckid;
 
@@ -141,8 +144,12 @@ int main() {
                     action();
                 },
                 [](MainMenuGameLauncher const & gl) {
+                    // TODO some nicer way to run the game? 
+                    NewArenaGuard g{};
                     LOG(LL_INFO, "running game: " << gl.file);
-                    InfoDialog::error("Empty app", "The app you have chosen is empty. Ouch");
+                    auto app = gbcemu::GBCEmu{};
+                    app.loadCartridge(new gbcemu::CachedGamePak{fs::fileRead(STR("/games/" << gl.file))});
+                    app.run();
                 }
             }, app.value());
         } else {

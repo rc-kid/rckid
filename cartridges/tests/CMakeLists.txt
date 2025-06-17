@@ -33,6 +33,7 @@ link_with_librckid(display-png)
 
 # displays simple ui elements to verify the framework works
 add_executable(display-ui "display_ui.cpp")
+target_link_libraries(display-ui PRIVATE libgbcemu)
 link_with_librckid(display-ui)
 
 # simple gbc emu app test
