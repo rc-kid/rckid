@@ -66,8 +66,8 @@
 
 # TODO
 
-- running GBCemu runs out of memory during cached cartridge initialization, figure out why?
-- does gbcemu still work otherwise? 
+- ok, so it is not out of memory, but stack protection kicks in 
+- there is also problem with memory on device (large 48160 chunk is allocated and then reused for small items)
 
 - file browser should be similar to contacts, i.e. the dialog in launcher menu instead of ui element and separate browser app 
 

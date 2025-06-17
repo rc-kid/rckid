@@ -267,6 +267,10 @@ namespace rckid::ui {
     class CarouselMenu : public Carousel {
     public:
 
+        ~CarouselMenu() override {
+            delete menu_;
+        }
+
         Menu const * menu() const { return menu_; }
 
         uint32_t size() const override { return (menu_ == nullptr) ? 0 : menu_->size(); }
@@ -281,6 +285,7 @@ namespace rckid::ui {
                 return nullptr;
             return & (*menu_)[currentIndex()];
         }
+
 
     protected:
 
