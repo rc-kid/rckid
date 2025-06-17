@@ -155,7 +155,7 @@ namespace rckid {
                 best = freeChunk;
                 break;
             } else if (freeChunk->size() > numBytes) {
-                if (best == nullptr || freeChunk->size() < best->size()) {
+                if (best == nullptr || (freeChunk->size() < best->size())) {
                     best = freeChunk;
                 }
             }
