@@ -45,6 +45,13 @@ namespace rckid {
             delete d;
         }
 
+        /** Dialog budgeting mirrors that of its parent.
+         */
+        bool isBudgeted() const override { 
+            if (parent() != nullptr) 
+                return parent()->isBudgeted();
+            return true;
+        }
 
     protected:
         void update() override {

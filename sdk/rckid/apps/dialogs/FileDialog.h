@@ -29,6 +29,14 @@ namespace rckid {
             contextMenu_.add(new ui::Menu::Item{"Last But Not Least 10"});
         }
 
+        /** Dialog budgeting mirrors that of its parent.
+         */
+        bool isBudgeted() const override{ 
+            if (parent() != nullptr) 
+                return parent()->isBudgeted();
+            return true;
+        }
+
     protected:
 
         void update() override {

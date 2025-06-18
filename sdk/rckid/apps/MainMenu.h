@@ -90,6 +90,10 @@ namespace rckid {
 
         using ui::App<MainMenuPayload>::run;
 
+        /** Main menu is explicitly not budgeted app as it is the gateway to other applications.
+         */
+        bool isBudgeted() const override { return false; }
+
     protected:
         void update() override {
             ui::App<MainMenuPayload>::update();
