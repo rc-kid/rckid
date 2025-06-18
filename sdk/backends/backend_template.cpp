@@ -348,6 +348,32 @@ namespace rckid {
         return false;
     }
 
+    // budget
+
+    uint32_t budget() {
+        memoryCheckStackProtection();
+        UNIMPLEMENTED;
+    }
+
+    uint32_t budgetDaily() {
+        memoryCheckStackProtection();
+        UNIMPLEMENTED;
+    }
+
+    void budgetSet(uint32_t seconds) {
+        memoryCheckStackProtection();
+        UNIMPLEMENTED;
+    }
+
+    void budgetDailySet(uint32_t seconds) {
+        memoryCheckStackProtection();
+        UNIMPLEMENTED;
+    }
+
+    void budgetReset() {
+        memoryCheckStackProtection();
+        UNIMPLEMENTED;
+    }
 }
 
 extern "C" {

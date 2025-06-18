@@ -66,6 +66,8 @@
 
 # TODO
 
+- reset budget at AVR on each day
+
 - add apps budget to avrstate and its tracking to the tick implementation based on current app's budget settings, display budget in header
 
 - ok, so it is not out of memory, but stack protection kicks in 

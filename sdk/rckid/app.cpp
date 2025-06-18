@@ -1,4 +1,9 @@
+
 #include "app.h"
+
+#include "apps/dialogs/InfoDialog.h"
+#include "ui/header.h"
+
 
 namespace rckid {
 
@@ -18,5 +23,12 @@ namespace rckid {
         displayWaitUpdateDone();
         // we are done, should blur ourselves, and refocus parent (if any)
         blur();
+    }
+
+    void App::onSecondTick() {
+        ui::Header::refresh();
+        if (app_ != nullptr && app_->verifyBudgetAllowance()) {
+            InfoDialog::error("No more budget", "Wait till midnight when budget is reset, or get more");
+        }
     }
 }

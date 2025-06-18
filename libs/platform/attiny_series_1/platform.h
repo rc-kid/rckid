@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <avr/sleep.h>
 #include <avr/delay.h>

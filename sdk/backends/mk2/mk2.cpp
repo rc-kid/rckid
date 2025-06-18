@@ -441,7 +441,7 @@ namespace rckid {
                 time::idleTimeout_ = RCKID_IDLE_TIMETOUT;
                 time::idleTimeoutKeepalive_ = RCKID_IDLE_TIMETOUT_KEEPALIVE;
             }
-            ui::Header::refresh();
+            App::onSecondTick();
         }
         ++io::ticks_;
         // make sure the I2C is off, then set it up so that it can talk to the accelerometer
@@ -850,6 +850,33 @@ namespace rckid {
     bool memoryIsImmutable(void const * ptr) {
         memoryCheckStackProtection();
         return (reinterpret_cast<uint32_t>(ptr) < 0x20000000); 
+    }
+
+    // budget
+
+    uint32_t budget() {
+        memoryCheckStackProtection();
+        return 3600;
+    }
+
+    uint32_t budgetDaily() {
+        memoryCheckStackProtection();
+        return 3600;
+    }
+
+    void budgetSet(uint32_t seconds) {
+        memoryCheckStackProtection();
+        // not supported on mkII
+    }
+
+    void budgetDailySet(uint32_t seconds) {
+        memoryCheckStackProtection();
+        // not supported on mkII
+    }
+
+    void budgetReset() {
+        memoryCheckStackProtection();
+        // nothing to do
     }
 
 }

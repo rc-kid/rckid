@@ -581,7 +581,7 @@ namespace rckid {
                 time::idleTimeout_ = RCKID_IDLE_TIMETOUT;
                 time::idleTimeoutKeepalive_ = RCKID_IDLE_TIMETOUT_KEEPALIVE;
             }
-            ui::Header::refresh();
+            App::onSecondTick();
         }
 
         // TODO check AVR state, etc? 
@@ -937,6 +937,41 @@ namespace rckid {
     bool memoryIsImmutable(void const * ptr) {
         // TODO enable immutable memory from ROM
         return false;
+    }
+
+    // budget
+
+    uint32_t budget() {
+        memoryCheckStackProtection();
+        return io::avrState_.budget;
+    }
+
+    uint32_t budgetDaily() {
+        memoryCheckStackProtection();
+        return io::avrState_.dailyBudget;
+    }
+
+    void budgetSet(uint32_t seconds) {
+        memoryCheckStackProtection();
+        if (seconds == io::avrState_.budget - 1) {
+            --io::avrState_.budget;
+            i2c::sendCommand(cmd::DecBudget{});
+        } else {
+            io::avrState_.budget = seconds;
+            i2c::sendCommand(cmd::SetBudget{seconds});
+        }
+    }
+
+    void budgetDailySet(uint32_t seconds) {
+        memoryCheckStackProtection();
+        io::avrState_.dailyBudget = seconds;
+        i2c::sendCommand(cmd::SetDailyBudget{seconds});
+    }
+
+    void budgetReset() {
+        memoryCheckStackProtection();
+        io::avrState_.budget = io::avrState_.dailyBudget;
+        i2c::sendCommand(cmd::ResetBudget{});
     }
 
 }
