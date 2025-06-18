@@ -34,6 +34,14 @@ namespace rckid {
             delete app;
         }
 
+        /** Returns true if the current app should count towards the daily app time budget managed by the device. By default all apps count towards the budget, whereas some apps may decide otherwise.
+        */
+        virtual bool isBudgeted() const { return true; }
+
+        /** Returns the current (active) application. May also return nullptr during app transitions, or when the system code not managed by the App class (which should be exceedingly rare).
+         */
+        static App * currentApp() { return app_; }
+
     protected:
 
         /** Called when the application should gain focus. 
@@ -80,7 +88,11 @@ namespace rckid {
 
         /** Exits the app. The app does not exit immediately, but the next time its run method starts a new frame cycle. 
          */
-        void exit() { app_ = nullptr;}
+        void exit() { app_ = nullptr; }
+
+        /** Returns parent app, or nullptr currently root. 
+         */
+        App * parent() const { return parent_;}
 
     private:
 

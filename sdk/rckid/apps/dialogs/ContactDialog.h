@@ -57,6 +57,14 @@ namespace rckid {
             contacts_.clear();
         }
 
+        /** Dialog budgeting mirrors that of its parent.
+         */
+        bool isBudgeted() const override { 
+            if (parent() != nullptr) 
+                return parent()->isBudgeted();
+            return true;
+        }
+
     private:
 
         static constexpr char const * CONTACTS_PATH = "/contacts.json";

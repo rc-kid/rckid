@@ -37,6 +37,14 @@ namespace rckid {
                 cursorLine_->setX(16 + (cursor_ - left_) * 12);
             }
 
+        /** Dialog budgeting mirrors that of its parent.
+         */
+        bool isBudgeted() const override { 
+            if (parent() != nullptr) 
+                return parent()->isBudgeted();
+            return true;
+        }
+
     protected:
 
         static constexpr Point KEY_UNKNOWN{2,0};

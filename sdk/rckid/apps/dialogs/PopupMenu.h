@@ -63,6 +63,14 @@ namespace rckid {
             }
         }
 
+        /** Dialog budgeting mirrors that of its parent.
+         */
+        bool isBudgeted() const override { 
+            if (parent() != nullptr) 
+                return parent()->isBudgeted();
+            return true;
+        }
+
     private:
 
         static Coord getLongestText(ui::Menu * menu) {
