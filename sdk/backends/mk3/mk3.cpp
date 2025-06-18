@@ -37,6 +37,7 @@ extern "C" {
 #include "sd/sd.h"
 #include "rckid/rckid.h"
 #include "rckid/filesystem.h"
+#include "rckid/ui/header.h"
 
 #include "i2s_out16.pio.h"
 
@@ -53,14 +54,20 @@ extern "C" {
         return -1;
     }    
 
-    void *__wrap_malloc(size_t numBytes) { return rckid::Heap::allocBytes(numBytes); }
+    void *__wrap_malloc(size_t numBytes) {
+        if (rckid::Heap::isDefaultTarget())
+            return rckid::Heap::allocBytes(numBytes); 
+        else 
+            return rckid::Arena::allocBytes(numBytes);
+    }
+
     void __wrap_free(void * ptr) { 
         if (rckid::Heap::contains(ptr))
             rckid::Heap::free(ptr); 
     }
 
     void *__wrap_calloc(size_t numBytes) {
-        void * result = rckid::Heap::allocBytes(numBytes);
+        void * result = __wrap_malloc(numBytes);
         memset(result, 0, numBytes);
         return result;
     }
@@ -574,6 +581,7 @@ namespace rckid {
                 time::idleTimeout_ = RCKID_IDLE_TIMETOUT;
                 time::idleTimeoutKeepalive_ = RCKID_IDLE_TIMETOUT_KEEPALIVE;
             }
+            ui::Header::refresh();
         }
 
         // TODO check AVR state, etc? 
