@@ -12,6 +12,7 @@
 
 #include "rckid/rckid.h"
 #include "rckid/filesystem.h"
+#include "rckid/ui/header.h"
 
 namespace rckid {
     extern thread_local char ** stackStart_;
@@ -76,6 +77,12 @@ namespace rckid {
         int16_t gyroY_;
         int16_t gyroZ_;
     }
+
+    namespace time {
+        TinyDateTime time_;
+        std::chrono::steady_clock::time_point uptimeStart_;
+        uint64_t nextSecond_ = 0;
+    }; 
 
     namespace display {
         DisplayRefreshDirection direction;
@@ -219,6 +226,21 @@ namespace rckid {
         if (! fs::mount(fs::Drive::SD))
             LOG(LL_ERROR, "Failed to mount the SD card");
 
+        // initialize the device time - on real device this is obtained from the always on avr rtc, here we get the system time
+        auto now = std::chrono::system_clock::now();
+        std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+        std::tm* now_tm = std::localtime(&now_time);
+        time::time_.set(
+            now_tm->tm_mday, 
+            now_tm->tm_mon, 
+            now_tm->tm_year,
+            now_tm->tm_hour, 
+            now_tm->tm_min, 
+            now_tm->tm_sec
+        );
+        // initialize the next second and uptime counters
+        time::uptimeStart_ = std::chrono::steady_clock::now();
+        time::nextSecond_ = uptimeUs64() + 1000000;
         // mark that we are initialized and the graphics & sound should be used
         initialized_ = true;
     }
@@ -231,7 +253,14 @@ namespace rckid {
         SystemMallocGuard g_;
         if (WindowShouldClose())
             std::exit(-1);
-
+        // update timekeeping
+        uint64_t now = uptimeUs64();
+        while (now > time::nextSecond_) {
+            time::nextSecond_ += 1000000;
+            time::time_.secondTick();
+            ui::Header::refresh();
+        }
+        // and get button states
         io::lastButtons_ = io::buttons_;
         io::buttons_ = 0;
         PollInputEvents();
@@ -264,12 +293,23 @@ namespace rckid {
         // nothing yet to be be done here in fantasy mode
     }
 
+    void keepAlive() {
+        memoryCheckStackProtection();
+        // nothing to do here in fantasy mode, the device is always on
+    }
+
     uint32_t uptimeUs() {
         memoryCheckStackProtection();
         using namespace std::chrono;
-        static auto first = steady_clock::now();
-        return static_cast<uint32_t>(duration_cast<microseconds>(steady_clock::now() - first).count()); 
+        return static_cast<uint32_t>(duration_cast<microseconds>(steady_clock::now() - time::uptimeStart_).count()); 
     }
+
+    uint64_t uptimeUs64() {
+        using namespace std::chrono;
+        return static_cast<uint64_t>(duration_cast<microseconds>(steady_clock::now() - time::uptimeStart_).count()); 
+    }
+
+    TinyDateTime timeNow() { return time::time_; }
 
     // io
 
@@ -376,6 +416,14 @@ namespace rckid {
     void displayOff() {
         memoryCheckStackProtection();
         // no need to do anything in fantasy mode
+    }
+
+    void displayClear(ColorRGB color) {
+        memoryCheckStackProtection();
+        // fill the internal framebuffer with the given color
+        ImageClearBackground(&display::img, { color.r(), color.g(), color.b(), 255 });
+        // reset the draw rectangle
+        displayResetDrawRectangle();
     }
 
     DisplayRefreshDirection displayRefreshDirection() {

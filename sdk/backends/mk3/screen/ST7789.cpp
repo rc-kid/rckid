@@ -70,13 +70,7 @@ namespace rckid {
         // and now do the png file
         // now clear the entire display black
 #if (RCKID_SPLASHSCREEN_OFF == 1)
-        beginCommand(RAMWR);
-        gpio_put(RP_PIN_DISP_DCX, true);
-        for (size_t i = 0, e = RCKID_DISPLAY_WIDTH * RCKID_DISPLAY_HEIGHT; i < e; ++i) {
-            sendWord(0xaa33);
-        }
-        gpio_put(RP_PIN_DISP_DCX, false);
-        end();
+        clear(0x0000);
 #else
         setDisplayMode(Resolution::Full, DisplayRefreshDirection::RowFirst);
         setUpdateRegion(updateRegion_);
@@ -119,6 +113,19 @@ namespace rckid {
                 break;
             */
         }
+    }
+
+    void ST7789::clear(uint16_t color) {
+        setDisplayMode(Resolution::Full, DisplayRefreshDirection::RowFirst);
+        setUpdateRegion(Rect::WH(RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT));
+        enterCommandMode();
+        beginCommand(RAMWR);
+        gpio_put(RP_PIN_DISP_DCX, true);
+        for (size_t i = 0, e = RCKID_DISPLAY_WIDTH * RCKID_DISPLAY_HEIGHT; i < e; ++i)
+            sendWord(color);
+
+        gpio_put(RP_PIN_DISP_DCX, false);
+        end();
     }
 
     void ST7789::setUpdateRegion(Rect rect) {

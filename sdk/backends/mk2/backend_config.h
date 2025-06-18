@@ -21,15 +21,15 @@
 
 
 #define RCKID_LOG_TO_SERIAL 0
-#define RCKID_WAIT_FOR_SERIAL 0
+#define RCKID_WAIT_FOR_SERIAL 1
 
 /** Idle timer in seconds, after which the device powers off. 
  */
-#define IDLE_TIMEOUT 300
+#define RCKID_IDLE_TIMETOUT 300
 
 /** Idle timeout fallback that is not affected by the keepalive function call. 
  */
-#define IDLE_TIMEOUT_FALLBACK 1800
+#define RCKID_IDLE_TIMETOUT_KEEPALIVE 1800
 
 /** Display width & height for the UI. 
  */

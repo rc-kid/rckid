@@ -121,6 +121,13 @@ namespace rckid {
 
     } // namespace rckid::io
 
+    namespace time {
+        uint64_t nextSecond_ = 0;
+        bool idle_ = true;
+        uint32_t idleTimeout_ = RCKID_IDLE_TIMETOUT; 
+        uint32_t idleTimeoutKeepalive_ = RCKID_IDLE_TIMETOUT_KEEPALIVE;
+    }
+
     namespace audio {
         enum class State {
             Idle, 
@@ -396,6 +403,9 @@ namespace rckid {
         // initialize the display
         ST7789::initialize();
 
+        // initialize next second counter for on device time keeping. This is not 100% precise as we do not know the time at which the second should actually be updated, but will incur in at most 1s imprecision at each start. Those do not add up as AVR keeps track of the time correctly and will reset the RP clock again on next device start
+        time::nextSecond_ = uptimeUs64() + 1000000;
+
 #if (RCKID_WAIT_FOR_SERIAL == 1)
         // wait for input on the serial port before proceeding, so that we can debug the boot process
         debugRead(true);
@@ -444,6 +454,9 @@ namespace rckid {
         audio::dma1_ = dma_claim_unused_channel(true);
         i2s_out16_program_init(pio1, audio::playbackSm_, audio::playbackOffset_, RP_PIN_I2S_DOUT, RP_PIN_I2S_LRCK);
       
+
+        time::nextSecond_ += 1000000;
+
 
         return;
 
@@ -546,6 +559,23 @@ namespace rckid {
 
     void tick() {
         yield();
+        // advance local time and check idle countdowns
+        uint64_t now = time_us_64();
+        while (now > time::nextSecond_) {
+            time::nextSecond_ += 1000000;
+            io::avrState_.time.secondTick();
+            if (time::idle_) {
+                --time::idleTimeoutKeepalive_;
+                --time::idleTimeout_;
+                if (time::idleTimeoutKeepalive_ == 0 || time::idleTimeout_ == 0)
+                    i2c::sendCommand(cmd::PowerOff{});
+            } else {
+                time::idle_ = true;
+                time::idleTimeout_ = RCKID_IDLE_TIMETOUT;
+                time::idleTimeoutKeepalive_ = RCKID_IDLE_TIMETOUT_KEEPALIVE;
+            }
+        }
+
         // TODO check AVR state, etc? 
     }
 
@@ -555,9 +585,25 @@ namespace rckid {
         tud_task();
     }
 
+    void keepAlive() {
+        memoryCheckStackProtection();
+        time::idleTimeout_ = RCKID_IDLE_TIMETOUT;
+    }
+
     uint32_t uptimeUs() {
         memoryCheckStackProtection();
         return time_us_32();
+    }
+
+    uint64_t uptimeUs64() {
+        memoryCheckStackProtection();
+        return time_us_64();
+    }
+
+    TinyDateTime now() {
+        memoryCheckStackProtection();
+        // return the current time from the AVR state
+        return io::avrState_.time;
     }
 
     // io
@@ -633,6 +679,11 @@ namespace rckid {
     void displayOff() {
         memoryCheckStackProtection();
         UNIMPLEMENTED;
+    }
+
+    void displayClear(ColorRGB color) {
+        memoryCheckStackProtection();
+        ST7789::clear(color.raw16());
     }
 
     DisplayRefreshDirection displayRefreshDirection() {

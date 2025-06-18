@@ -267,11 +267,20 @@ namespace rckid {
     
 
 #if RCKID_ENABLE_STACK_PROTECTION
+    uint32_t maxStackSize_ = 0;
+
+    uint32_t memoryMaxStackSize() { return maxStackSize_; }
+
+    void memoryResetMaxStackSize() { maxStackSize_ = 0; }
+
+
     void memoryCheckStackProtection() {
         char * x = & __StackLimit;
         if (stackStart_ == nullptr)
             return;
         size_t xd = reinterpret_cast<size_t>(stackStart_) - reinterpret_cast<size_t>(& x);
+        if (maxStackSize_ < xd)
+            maxStackSize_ = static_cast<uint32_t>(xd);
         // check if our current stack is within the stack limit
         ERROR_IF(error::StackProtectionFailure, (xd > RCKID_STACK_LIMIT_SIZE));
 #ifdef __GNUC__        

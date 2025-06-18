@@ -176,6 +176,8 @@ namespace rckid {
      */
 #if RCKID_ENABLE_STACK_PROTECTION
     void memoryCheckStackProtection();
+    uint32_t memoryMaxStackSize();
+    void memoryResetMaxStackSize();
 #else
     inline void memoryCheckStackProtection() {}
 #endif
