@@ -124,6 +124,14 @@ namespace rckid {
          */
         int16_t temp;
 
+        /** Budget in seconds for budgeted apps. This is kept by the AVR and reset at midnight each day. Certain apps count their run time towards the budget.
+         */
+        uint32_t budget;
+
+        /** Daily budget, value to which the budget resets automatically every midnight. 
+         */
+        uint32_t dailyBudget = 3600; 
+
         TinyDateTime time;
 
         TinyAlarm alarm;

@@ -3,6 +3,7 @@
 #include "../../ui/form.h"
 #include "../../ui/tilemap.h"
 #include "../../ui/geometry.h"
+#include "../../ui/label.h"
 #include "../../utils/string.h"
 #include "../../assets/icons_64.h"
 #include "../../assets/fonts/OpenDyslexic32.h"
@@ -45,13 +46,9 @@ namespace rckid {
             delete d;
         }
 
-        /** Dialog budgeting mirrors that of its parent.
+        /** Info dialog is the only one that is *not* budgeted (we use it to inform user that we are out of budget.
          */
-        bool isBudgeted() const override { 
-            if (parent() != nullptr) 
-                return parent()->isBudgeted();
-            return true;
-        }
+        bool isBudgeted() const override { return false; }
 
     protected:
         void update() override {

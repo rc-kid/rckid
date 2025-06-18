@@ -73,7 +73,7 @@
 
 namespace rckid {
 
-        /** Initializes the RCKid console. 
+    /** Initializes the RCKid console. 
      
         This must be the first SDK function called by the application. Its task is to set up the console and completely depends on the backend used - while the device backends initialize the actual hardware after power on, the fantasy backend sets up the console window, etc. 
      */
@@ -341,6 +341,34 @@ namespace rckid {
     
     void rgbOff();
 
+    //@}
+
+    /** \page sdk
+        \section user User Information
+     
+
+     */
+    //@{
+
+    /** Returns currently available budget in seconds. 
+     */
+    uint32_t budget();
+
+    /** Returns the daily budget allowance set on the device in seconds. This is the value to which the budget is reset every day at midnight.
+     */
+    uint32_t budgetDaily();
+
+    /** Sets the budget to given value. 
+     */
+    void budgetSet(uint32_t value);
+
+    /** Sets the daily budget allowance to the given value. 
+     */
+    void budgetDailySet(uint32_t value);
+
+    /** Performs manual budget allowance reset, i.e. what the device does automatically at midnight.
+     */
+    void budgetReset();
     //@}
 
 } // namespace rckid

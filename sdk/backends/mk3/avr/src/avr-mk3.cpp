@@ -389,6 +389,7 @@ public:
     static inline volatile bool systemTick_ = false;
     static inline volatile bool secondTick_ = false;
     static inline uint8_t tickCounter_ = 0;
+    static inline uint32_t budgetResetCountdown_ = 0;
 
     /** Starts the system tick on RTC with 5ms interval. 
      */
@@ -488,6 +489,12 @@ public:
             // start meassuring the temperature
             startADC(ADC_MUXPOS_TEMPSENSE_gc);
             LOG("uptime " << state_.uptime);
+        }
+        if (budgetResetCountdown_ > 0) {
+            --budgetResetCountdown_;
+        } else if (state_.time.hour() == 0) {
+            state_.budget = state_.dailyBudget;
+            budgetResetCountdown_ = 3600 * 24;
         }
     }
     //@}
@@ -682,6 +689,24 @@ public:
             }
             case cmd::SetAlarm::ID: {
                 state_.alarm = cmd::SetAlarm::fromBuffer(state_.buffer).value;
+                break;
+            }
+            case cmd::SetBudget::ID: {
+                state_.budget = cmd::SetBudget::fromBuffer(state_.buffer).seconds;
+                break;
+            }
+            case cmd::SetDailyBudget::ID: {
+                state_.dailyBudget = cmd::SetDailyBudget::fromBuffer(state_.buffer).seconds;
+                break;
+            }
+            case cmd::DecBudget::ID: {
+                if (state_.budget > 0)
+                    --state_.budget;
+                break;
+            }
+            case cmd::ResetBudget::ID: {
+                state_.budget = state_.dailyBudget;
+                budgetResetCountdown_ = 3600 * 24; // reset the countdown to 24 hours
                 break;
             }
             case cmd::ReadFlashPage::ID: {

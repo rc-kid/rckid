@@ -96,6 +96,23 @@ namespace rckid {
 
     private:
 
+        friend void tick();
+
+        static void onSecondTick();
+
+        bool verifyBudgetAllowance() {
+            if (!isBudgeted())
+                return false;
+            uint32_t b = budget();
+            if (b == 0) {
+                exit();
+                return true;
+            } else {
+                budgetSet(b - 1);
+                return false;
+            }
+        }
+
         App * parent_ = nullptr;
 
         static inline App * app_ = nullptr;

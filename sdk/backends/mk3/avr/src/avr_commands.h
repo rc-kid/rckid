@@ -1,5 +1,4 @@
 #pragma once
-
 #include <platform/tinydate.h>
 
 #include <rckid/effects.h>
@@ -35,12 +34,35 @@ namespace rckid::cmd {
         TinyDateTime value;
         SetTime(TinyDateTime value): value{value} {}
     );
+
     /** Sets the alarm to given value and enables it. 
      */
     COMMAND(11, SetAlarm, 
         TinyAlarm value;
         SetAlarm(TinyAlarm value): value{value} {}
     );
+
+    /** Explicitly sets the budget to given value. Note that setting the budget does not affect the reset counter. This command can be used to update the budget value when counting down, or top-up the budget when appropriate.
+     */
+    COMMAND(12, SetBudget, 
+        uint32_t seconds;
+        SetBudget(uint32_t value): seconds{value} {}
+    );
+
+    /** Sets the daily budget allowance. This is the value to which budget is reset at midnight. 
+     */
+    COMMAND(13, SetDailyBudget, 
+        uint32_t seconds;
+        SetDailyBudget(uint32_t value): seconds{value} {}
+    );
+
+    /** Decrements budget by single second. This message is sent to the AVR every second during which a budget counted app is active. This ensures that (a) if there is RP crash, the budget will be valid, and (b) at midnight, there will be no data race between budget update and budget decrement.
+     */
+    COMMAND(14, DecBudget);
+
+    /** Resets the budget to its daily allowance. 
+     */
+    COMMAND(15, ResetBudget);
 
 
     COMMAND(40, ReadFlashPage,

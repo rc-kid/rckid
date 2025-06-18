@@ -126,6 +126,11 @@ namespace rckid {
         void initialize(std::string const & sdRoot, std::string const & flashRoot);
     }
 
+    namespace budgetInfo {
+        uint32_t budget_ = 120;
+        uint32_t budgetDaily_ = 3600;
+    }
+
     void fatalError(uint32_t error, uint32_t arg, uint32_t line, char const * file) {
         // disable stack protection (in case we bailed out because of the stack)
         stackStart_ = nullptr;
@@ -258,7 +263,7 @@ namespace rckid {
         while (now > time::nextSecond_) {
             time::nextSecond_ += 1000000;
             time::time_.secondTick();
-            ui::Header::refresh();
+            App::onSecondTick();
         }
         // and get button states
         io::lastButtons_ = io::buttons_;
@@ -800,11 +805,40 @@ namespace rckid {
         LOG(LL_INFO, "rgb: off");
     }
 
+    // memory
 
     bool memoryIsImmutable([[maybe_unused]] void const * ptr) {
         memoryCheckStackProtection();
         return false;
     }
+
+    // budget
+
+    uint32_t budget() {
+        memoryCheckStackProtection();
+        return budgetInfo::budget_;
+    }
+
+    uint32_t budgetDaily() {
+        memoryCheckStackProtection();
+        return budgetInfo::budgetDaily_;
+    }
+
+    void budgetSet(uint32_t seconds) {
+        memoryCheckStackProtection();
+        budgetInfo::budget_ = seconds;
+    }
+
+    void budgetDailySet(uint32_t seconds) {
+        memoryCheckStackProtection();
+        budgetInfo::budgetDaily_ = seconds;
+    }
+
+    void budgetReset() {
+        memoryCheckStackProtection();
+        budgetInfo::budget_ = budgetInfo::budgetDaily_; 
+    }
+
 
 }
 
