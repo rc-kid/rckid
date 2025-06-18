@@ -40,6 +40,17 @@ namespace rckid::ui {
             return instance_;
         }
 
+        /** Gathers the displayed data and updates the header. 
+         
+            If there is no header, but the displayed data are important, creates the header so that it can be displayed by the current app. 
+         */
+        static void refresh() {
+            // TODO determine if necessary to display
+            if (instance_ == nullptr)
+                return;
+            instance_->update();
+        }
+
     protected:
 
         /** Updates the header. 
@@ -47,7 +58,16 @@ namespace rckid::ui {
             Adds stuff like battery, etc. 
          */
         void update() override {
-            text(0,0) << memoryFree() << " ";
+#if RCKID_ENABLE_STACK_PROTECTION
+            // if tracking stack protection, display the memory usage and stack size
+            text(0,0) << (memoryFree() / 1024) << '/' << memoryMaxStackSize() << ' ';
+            memoryResetMaxStackSize();
+#else 
+            TinyDateTime now = timeNow();
+            // if not tracking stack protection, just display the free memory
+            text(0,0) << fillLeft(now.hour(), 2, '0') << ':' 
+                      << fillLeft(now.minute(), 2, '0');
+#endif
         }
 
         /** Unlike normal widgets,  */

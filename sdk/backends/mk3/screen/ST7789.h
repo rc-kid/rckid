@@ -99,6 +99,8 @@ namespace rckid {
          */
         static void reset();
 
+        static void clear(uint16_t color);
+
         static Resolution resolution() { 
             return static_cast<Resolution>(mode_ & 0xf); 
         }
@@ -216,7 +218,7 @@ namespace rckid {
                 yield();
         }
 
-    //private:
+    private:
 
         friend void irqDMADone_();
 

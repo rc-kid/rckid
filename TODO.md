@@ -67,7 +67,7 @@
 # TODO
 
 - ok, so it is not out of memory, but stack protection kicks in 
-- there is also problem with memory on device (large 48160 chunk is allocated and then reused for small items)
+- there is also problem with memory on device (large 48160 chunk is allocated and then reused for small items) - this is the png stuff not being allocated on arena - figure out why?
 
 - file browser should be similar to contacts, i.e. the dialog in launcher menu instead of ui element and separate browser app 
 
@@ -78,6 +78,10 @@
 - todo figure out how context menu can be planted to apps (or perhaps let the dialogs handle them)
 
 - detects headphones in, but not out, and does not detect cellular, only stereo. This could be because of two microphones being attached to the micbias
+
+- when we do mk3, make sure that when a button press is detected, the idle flag is cleared 
+- keepalive when plugged in can be indefinite? 
+
 
 - clean-up the code around display initialization
 - colors are revrsed on mk3. This can either be solved in software by using reversed color values, or in theory could be done by the pio itself. Is it necessary?

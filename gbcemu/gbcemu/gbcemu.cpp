@@ -855,6 +855,7 @@ namespace rckid::gbcemu {
 #endif
 
     void GBCEmu::initializeDisplay() {
+        displayClear();
         // set the display to row-first mode, which is what gameboy is expecting and set the resolution to 160x144
         displaySetRefreshDirection(DisplayRefreshDirection::RowFirst);
         switch (displayMode_) {

@@ -68,6 +68,7 @@ namespace rckid {
     namespace fs {
         void initialize();
     }
+
     namespace io {
         BMI160 accelerometer_;
         LTR390UV alsSensor_;
@@ -95,8 +96,8 @@ namespace rckid {
         uint64_t nextSecond_ = 0;
 
         bool idle_ = true;
-        uint32_t idleTimeout_ = IDLE_TIMEOUT; 
-        uint32_t idleTimeoutFallback_ = IDLE_TIMEOUT_FALLBACK;
+        uint32_t idleTimeout_ = RCKID_IDLE_TIMETOUT; 
+        uint32_t idleTimeoutKeepalive_ = RCKID_IDLE_TIMETOUT_KEEPALIVE;
     }
 
     namespace audio {
@@ -406,6 +407,8 @@ namespace rckid {
         displaySetBrightness(128);
 
 
+        time::nextSecond_ = uptimeUs64() + 1000000;
+
 #if (RCKID_WAIT_FOR_SERIAL == 1)
         debugRead(true);
 #endif
@@ -422,14 +425,14 @@ namespace rckid {
             time::nextSecond_ += 1000000;
             io::state_.time.secondTick();
             if (time::idle_) {
-                --time::idleTimeoutFallback_;
+                --time::idleTimeoutKeepalive_;
                 --time::idleTimeout_;
-                if (time::idleTimeoutFallback_ == 0 || time::idleTimeout_ == 0)
+                if (time::idleTimeoutKeepalive_ == 0 || time::idleTimeout_ == 0)
                     sendCommand(cmd::PowerOff{});
             } else {
                 time::idle_ = true;
-                time::idleTimeout_ = IDLE_TIMEOUT;
-                time::idleTimeoutFallback_ = IDLE_TIMEOUT_FALLBACK;
+                time::idleTimeout_ = RCKID_IDLE_TIMETOUT;
+                time::idleTimeoutKeepalive_ = RCKID_IDLE_TIMETOUT_KEEPALIVE;
             }
         }
         ++io::ticks_;
@@ -461,9 +464,24 @@ namespace rckid {
         tud_task();
     }
 
+    void keepAlive() {
+        memoryCheckStackProtection();
+        time::idleTimeout_ = RCKID_IDLE_TIMETOUT;
+    }
+
     uint32_t uptimeUs() {
         memoryCheckStackProtection();
         return time_us_32();
+    }
+
+    uint64_t uptimeUs64() {
+        memoryCheckStackProtection();
+        return time_us_64();
+    }
+
+    TinyDateTime timeNow() {
+        memoryCheckStackProtection();
+        return io::state_.time;
     }
 
     // io
@@ -529,6 +547,21 @@ namespace rckid {
     }
 
     // display
+
+    void displayOn() {
+        memoryCheckStackProtection();
+        // TODO
+    }
+
+    void displayOff() {
+        memoryCheckStackProtection();
+        // TODO 
+    }
+
+    void displayClear(ColorRGB color) {
+        memoryCheckStackProtection();
+        ST7789::clear(color.raw16());
+    }
 
     DisplayRefreshDirection displayRefreshDirection() {
         memoryCheckStackProtection();
@@ -808,8 +841,7 @@ namespace rckid {
 
     bool memoryIsImmutable(void const * ptr) {
         memoryCheckStackProtection();
-        // TODO enable immutable memory from ROM
-        return false;
+        return (reinterpret_cast<uint32_t>(ptr) < 0x20000000); 
     }
 
 }

@@ -2,6 +2,7 @@
 
 #include <platform.h>
 #include <platform/writer.h>
+#include <platform/tinydate.h>
 
 #include <backend_config.h>
 
@@ -83,12 +84,27 @@ namespace rckid {
 
     void yield();
 
+    /** Programatically resets the idle timer that automatically powers the device off. 
+    
+        Internally, there are two counters - idle and keepalive countdowns. Both counters are reset at any button press, and the idle counter can also be reset by calling the keepAlive() function, effectively switching to the longer keepalive timeout for device power off. This is particularly useful for media playback, when no user feedback is necessary for extended periods of time.
+
+        Use with care only in cases where it makes sense (such as when playing media) otherwise this has obviously  very negative impact on the battery. 
+     */
+    void keepAlive();
+
     /** Returns the system's uptime in microseconds. 
      
         For performance reasons, this uses uint32_t as the result value and as such will overflow every hour & something. The intended purpose of this function is not precise timekeeping, but delta time measurements, so the overflows are fine. 
      */
     uint32_t uptimeUs();
 
+    /** Returns system uptime in microseconds with greater resolution. 
+     */
+    uint64_t uptimeUs64();
+
+    /** Returns the current time as measured by the device. 
+     */
+    TinyDateTime timeNow();
 
     /** \page sdk
         \section io IO
@@ -159,6 +175,8 @@ namespace rckid {
     void displayOn();
 
     void displayOff();
+
+    void displayClear(ColorRGB color = ColorRGB::Black());
 
     DisplayRefreshDirection displayRefreshDirection();
 

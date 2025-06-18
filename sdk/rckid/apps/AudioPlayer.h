@@ -109,12 +109,15 @@ namespace rckid {
         protected:
 
             void update() override {
+
                 ui::App<bool>::update();
                 if (! audioPaused()) {
                     uint32_t t = uptimeUs();
                     elapsedUs_ += t - lastUs_;
                     lastUs_ = t;
                     setElapsedTime();
+                    // when not paused, keep the device alive
+                    keepAlive();
                 }
                 // when back or down is pressed, return from the player mode
                 if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {

@@ -49,7 +49,22 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
+    void keepAlive() {
+        memoryCheckStackProtection();
+        UNIMPLEMENTED;
+    }
+
     uint32_t uptimeUs() {
+        memoryCheckStackProtection();
+        UNIMPLEMENTED;
+    }
+
+    uint64_t uptimeUs64() {
+        memoryCheckStackProtection();
+        UNIMPLEMENTED;
+    }
+
+    TinyDateTime now() {
         memoryCheckStackProtection();
         UNIMPLEMENTED;
     }
@@ -124,6 +139,11 @@ namespace rckid {
     }
 
     void displayOff() {
+        memoryCheckStackProtection();
+        UNIMPLEMENTED;
+    }
+
+    void displayClear(ColorRGB color) {
         memoryCheckStackProtection();
         UNIMPLEMENTED;
     }
