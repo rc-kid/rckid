@@ -21,7 +21,7 @@
 
 
 #define RCKID_LOG_TO_SERIAL 0
-#define RCKID_WAIT_FOR_SERIAL 1
+#define RCKID_WAIT_FOR_SERIAL 0
 
 /** Idle timer in seconds, after which the device powers off. 
  */

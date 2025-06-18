@@ -69,7 +69,6 @@
 - add apps budget to avrstate and its tracking to the tick implementation based on current app's budget settings, display budget in header
 
 - ok, so it is not out of memory, but stack protection kicks in 
-- there is also problem with memory on device (large 48160 chunk is allocated and then reused for small items) - this is the png stuff not being allocated on arena - figure out why?
 
 - file browser should be similar to contacts, i.e. the dialog in launcher menu instead of ui element and separate browser app 
 
