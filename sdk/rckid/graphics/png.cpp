@@ -21,6 +21,11 @@ int32_t seekStream(PNGFILE * pFile, int32_t iPosition) {
     return s->seek(iPosition);
 }
 
+void closeStream(void * handle) {
+    rckid::RandomReadStream * s = static_cast<rckid::RandomReadStream*>(handle);
+    delete s;
+}
+
 typedef int32_t (PNG_SEEK_CALLBACK)(PNGFILE *pFile, int32_t iPosition);
 
 namespace rckid {
@@ -35,15 +40,15 @@ namespace rckid {
         delete [] line;
     }
 
-    PNG PNG::fromStream(RandomReadStream & stream) {
+    PNG PNG::fromStream(RandomReadStream * stream) {
         PNG result;
         result.img_->ucMemType = PNG_MEM_RAM;
         result.img_->pfnRead = readStream;
         result.img_->pfnSeek = seekStream;
         result.img_->pfnOpen = nullptr;
-        result.img_->pfnClose = nullptr;
-        result.img_->PNGFile.iSize = stream.size();
-        result.img_->PNGFile.fHandle = & stream;
+        result.img_->pfnClose = closeStream;
+        result.img_->PNGFile.iSize = stream->size();
+        result.img_->PNGFile.fHandle = stream;
         PNGInit(result.img_);
         return result;
     }
@@ -85,6 +90,8 @@ namespace rckid {
     }
 
     PNG::~PNG() {
+        if (img_->pfnClose != nullptr)
+            img_->pfnClose(img_->PNGFile.fHandle);
         delete img_;
     }
 

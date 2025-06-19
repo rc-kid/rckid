@@ -37,11 +37,12 @@ namespace rckid {
         void draw() override {}
 
         void loop() override {
-            ContactDialog * cd = new ContactDialog{};
+            ContactDialog * cd = ARENA(new ContactDialog{});
             // run the contact dialog in launcher mode with contact viewer as callback app
             cd->run([](Contact c) {
                 // TODO
             });
+            delete cd;
         }
     }; // rckid::Friends
 } // namespace rckid
