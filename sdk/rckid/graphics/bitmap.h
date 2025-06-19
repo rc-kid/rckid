@@ -128,6 +128,13 @@ namespace rckid {
             h_ = 0;
         }
 
+        void resize(Coord w, Coord h) {
+            clear();
+            pixels_ = new uint16_t[numHalfWords(w, h)];
+            w_ = w;
+            h_ = h;
+        }
+
     private:
 
         using Surface<BPP>::pixelAt;

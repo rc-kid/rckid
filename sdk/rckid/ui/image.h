@@ -50,8 +50,17 @@ namespace rckid::ui {
         void setBitmap(Bitmap<ColorRGB> && bmp) noexcept {
             bmp_.~Bitmap();
             new (&bmp_) Bitmap<ColorRGB>{std::move(bmp)};
-            w_ = bmp_.width();
-            h_ = bmp_.height();
+            shrinkToFit();
+        }
+
+        void shrinkToFit() {
+            if (bmp_.empty()) {
+                w_ = 0;
+                h_ = 0;
+            } else {
+                w_ = bmp_.width();
+                h_ = bmp_.height();
+            }
             reposition();
         }
 
@@ -84,6 +93,12 @@ namespace rckid::ui {
 
         void setImgY(Coord value) { imgY_ = value % bitmapHeight(); }
 
+        void reposition() {
+            Point x = justifyRectangle(Rect::WH(bitmapWidth(), bitmapHeight()), hAlign_, vAlign_);
+            imgX_ = x.x;
+            imgY_ = x.y;
+        }
+
         bool transparent() const { return transparent_ <= 0xffff; }
         void setTransparent(bool value) { transparent_ = value ? 0 : NO_TRANSPARENCY; }
         ColorRGB transparentColor() const { return ColorRGB::fromRaw(transparent_); }
@@ -94,6 +109,8 @@ namespace rckid::ui {
         void clear() {
             bmp_.clear();
         }
+
+        Bitmap<ColorRGB> & bitmap() { return bmp_; }
 
     protected:
 
@@ -123,12 +140,6 @@ namespace rckid::ui {
 
         void resize() override {
             reposition();
-        }
-
-        void reposition() {
-            Point x = justifyRectangle(Rect::WH(bitmapWidth(), bitmapHeight()), hAlign_, vAlign_);
-            imgX_ = x.x;
-            imgY_ = x.y;
         }
 
     private:
