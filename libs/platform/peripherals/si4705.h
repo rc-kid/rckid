@@ -99,7 +99,7 @@ public:
     void reset(gpio::Pin resetPin) {
         gpio::outputLow(resetPin);
         cpu::delayMs(10);
-        gpio::setAsInputPullup(resetPin);
+        gpio::setAsInputPullUp(resetPin);
     }
 
     /** Returns response of the last command sent to the radio chip.

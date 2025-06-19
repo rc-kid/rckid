@@ -78,7 +78,7 @@ public:
         gpio_set_dir(pin, GPIO_IN);
     }
 
-    static void setAsInputPullup(Pin pin) {
+    static void setAsInputPullUp(Pin pin) {
         gpio_set_dir(pin, GPIO_IN);
         gpio_pull_up(pin);
     }
