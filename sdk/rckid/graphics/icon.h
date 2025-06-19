@@ -87,7 +87,7 @@ namespace rckid {
             if (bufferSize_ == BUFFER_FILE_PATH) {
                 auto f = fs::fileRead(reinterpret_cast<char const *>(buffer_));
                 if (f.good())
-                    return ARENA(PNG::fromStream(f));
+                    return ARENA(PNG::fromStream(std::move(f)));
             } else if (valid()) {
                 return ARENA(PNG::fromBuffer(buffer_, bufferSize_));
             }

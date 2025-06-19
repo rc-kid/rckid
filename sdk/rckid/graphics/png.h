@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 #include "../utils/stream.h"
 #include "../memory.h"
 #include "color.h"
@@ -23,7 +25,12 @@ namespace rckid {
         PNG & operator = (PNG const &) = delete;
         PNG & operator = (PNG &&) = delete;
 
-        static PNG fromStream(RandomReadStream & stream);
+        static PNG fromStream(RandomReadStream * stream);
+
+        template<typename STREAM>
+        static typename std::enable_if<std::is_base_of<RandomReadStream, STREAM>::value, PNG>::type fromStream(STREAM && stream) {
+            return fromStream(new STREAM{std::move(stream)});
+        }
 
         static PNG fromBuffer(uint8_t const * buffer, uint32_t numBytes); 
 
@@ -45,6 +52,7 @@ namespace rckid {
         }
 
     private:
+
 
         struct Decode16 {
             DecodeCallback16 cb;
