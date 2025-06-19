@@ -67,17 +67,33 @@ namespace rckid {
          */
         Bitmap<ColorRGB> toBitmap() const {
             NewArenaGuard g{};
-            if (bufferSize_ == BUFFER_FILE_PATH) {
-                auto f = fs::fileRead(reinterpret_cast<char const *>(buffer_));
-                if (f.good())
-                    return Bitmap<ColorRGB>{ARENA(PNG::fromStream(f))};
-            } else if (valid()) {
-                return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(buffer_, bufferSize_))};
+            return Bitmap<ColorRGB>{getDecoder()};
+        }
+
+        /** Materializes the icon into given bitmap. If the bitmap is already the correct size, this makes the operation use less memory.
+         */
+        void intoBitmap(Bitmap<ColorRGB> & bitmap) const {
+            NewArenaGuard g{};
+            PNG png{getDecoder()};
+            if (png.width() > bitmap.width() || png.height() > bitmap.height()) {
+                bitmap.resize(png.width(), png.height());
             }
-            return Bitmap<ColorRGB>{ARENA(PNG::fromBuffer(assets::icons_64::poo))};
+            bitmap.loadImage(std::move(png));
         }
 
     private:
+
+        PNG getDecoder() const {
+            if (bufferSize_ == BUFFER_FILE_PATH) {
+                auto f = fs::fileRead(reinterpret_cast<char const *>(buffer_));
+                if (f.good())
+                    return ARENA(PNG::fromStream(f));
+            } else if (valid()) {
+                return ARENA(PNG::fromBuffer(buffer_, bufferSize_));
+            }
+            return ARENA(PNG::fromBuffer(assets::icons_64::poo));
+        }
+
         static constexpr uint32_t BUFFER_FILE_PATH = 0xffffffff; 
         uint8_t const * buffer_ = nullptr;
         uint32_t bufferSize_ = 0;

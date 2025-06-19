@@ -51,12 +51,14 @@ namespace rckid::ui {
          */
         void set(String text, Icon const & icon, Direction direction = Direction::None) {
             if (direction == Direction::None) {
-                aImg_ = icon.toBitmap();
+                icon.intoBitmap(aImg_.bitmap());
+                aImg_.shrinkToFit();
                 aImg_.setTransparent(true);
                 aText_.setText(text);
                 repositionElements(aImg_, aText_);
             } else {
-                bImg_ = icon.toBitmap();
+                icon.intoBitmap(bImg_.bitmap());
+                bImg_.shrinkToFit();
                 bImg_.setTransparent(true);
                 bText_.setText(text);
                 repositionElements(bImg_, bText_);
