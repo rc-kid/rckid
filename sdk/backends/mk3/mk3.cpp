@@ -193,12 +193,26 @@ namespace rckid {
                 i2c0->hw->enable = 0;
                 i2c0->hw->tar = address;
                 i2c0->hw->enable = 1;
-                uint8_t * x = writeData();
-                for (size_t i = 0; i < writeLen; ++i)
-                    i2c0->hw->data_cmd = x[i] | (readLen == 0) && i == writeLen - 1 ? I2C_IC_DATA_CMD_STOP_BITS : 0;
-                for (size_t i = 0; i < readLen; ++i)
-                    i2c0->hw->data_cmd = I2C_IC_DATA_CMD_CMD_BITS | (i == 0 && writeLen != 0) ? I2C_IC_DATA_CMD_RESTART_BITS : 0;
-                i2c0->hw->rx_tl = readLen == 0 ? 0 : readLen - 1;
+                // if there are data to send, write them first. Do not forget to set the stop bit if no data to red
+                if (writeLen > 0) {
+                    uint8_t * x = writeData();
+                    for (uint32_t i = 0, e = writeLen - 1; i <= e; ++i)
+                        i2c0->hw->data_cmd = x[i] | ((i == e && readLen == 0) ? I2C_IC_DATA_CMD_STOP_BITS : 0);
+                }
+                // if there are data to read, write the recv bits
+                if (readLen > 0) {
+                    for (uint32_t i = 0, e = readLen - 1; i <= e; ++i) {
+                        uint32_t cmd = I2C_IC_DATA_CMD_CMD_BITS;
+                        if (i == 0 && writeLen != 0)
+                            cmd |= I2C_IC_DATA_CMD_RESTART_BITS;
+                        if (i == e)
+                            cmd |= I2C_IC_DATA_CMD_STOP_BITS;
+                        i2c0->hw->data_cmd = cmd;
+                    }
+                }
+                // set the rx threshold accordingly so that we get interrupt properly
+                // TODO what if we are not reading anything only writing? 
+                i2c0->hw->rx_tl = (readLen == 0) ? 0 : readLen - 1;
             }
 
             uint8_t * writeData() {
@@ -464,6 +478,10 @@ namespace rckid {
 
         time::nextSecond_ += 1000000;
 
+        // enable I2C interrupts so that we can start processing the I2C packet queues
+        i2c0->hw->intr_mask = I2C_IC_INTR_MASK_M_RX_FULL_BITS | I2C_IC_INTR_MASK_M_TX_ABRT_BITS;
+
+
 
         return;
 
@@ -566,6 +584,7 @@ namespace rckid {
 
     void tick() {
         yield();
+        requestAvrStatus();
         // advance local time and check idle countdowns
         uint64_t now = time_us_64();
         while (now > time::nextSecond_) {
@@ -608,7 +627,7 @@ namespace rckid {
         return time_us_64();
     }
 
-    TinyDateTime now() {
+    TinyDateTime timeNow() {
         memoryCheckStackProtection();
         // return the current time from the AVR state
         return io::avrState_.time;
