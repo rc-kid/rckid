@@ -1,0 +1,64 @@
+#pragma once
+
+#include "../app.h"
+#include "../ui/form.h"
+#include "../ui/label.h"
+#include "../assets/fonts/OpenDyslexic128.h"
+
+
+namespace rckid {
+    class Clock : public ui::App<void> {
+    public:
+
+        Clock() : ui::App<void>{} {
+            h_ = g_.addChild(new ui::Label{Rect::XYWH(0, 30, 150, 130), "0"});
+            h_->setFont(Font::fromROM<assets::OpenDyslexic128>());
+            h_->setHAlign(HAlign::Right);
+            m_ = g_.addChild(new ui::Label{Rect::XYWH(170, 30, 150, 130), "0"});
+            m_->setFont(Font::fromROM<assets::OpenDyslexic128>());
+            m_->setHAlign(HAlign::Left);
+            colon_ = g_.addChild(new ui::Label{Rect::XYWH(150, 30, 20, 130), ":"});
+            colon_->setFont(Font::fromROM<assets::OpenDyslexic128>());
+            contextMenu_.add(new ui::Menu::Item("Set time"));
+            contextMenu_.add(new ui::Menu::Item("Set date"));
+            contextMenu_.add(new ui::Menu::Item("Set alarm"));
+        }
+
+        void update() override {
+            ui::App<void>::update();
+            
+            TinyDateTime t = timeNow();
+            h_->setText(STR(t.hour()));
+            m_->setText(STR(fillLeft(t.minute(), 2, '0')));
+            colon_->setVisible(t.second() & 1);
+
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down))
+                exit();
+            if (btnPressed(Btn::Select)) {
+                auto action = PopupMenu::show(&contextMenu_);
+                if (action.has_value()) {
+                    switch (action.value()) {
+                        case 0: // Set time
+                            break;
+                        case 1: // Set date
+                            break;
+                        case 2: // Set alarm
+                            break;
+                    }
+                }
+            }
+        }
+
+        /** There is no harm checking the time.
+         */
+        bool isBudgeted() const override { return false; }
+
+    private:
+        ui::Label * h_;
+        ui::Label * m_;
+        ui::Label * colon_;
+        ui::Menu contextMenu_; 
+
+    }; // rckid::Clock
+
+} // namespace rckid
