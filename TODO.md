@@ -66,7 +66,9 @@
 
 # TODO
 
-- figure out what to do with app when budget dies
+- comment PNG loading stuff
+
+- figure out what to do with app when budget dies (maybe just call its save if applicable)
 - display budget in header
 
 - ok, so it is not out of memory, but stack protection kicks in 
