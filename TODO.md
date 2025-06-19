@@ -63,8 +63,12 @@
 - [ ] charging/discharging
 - [ ] boost for below 3.3V battery
 - [ ] check that 2 LEDs under DPAD work better for a tilting DPAD (in HW.md)
+- [ ] mk3 idle and keepalive timers are too high, move lower again
 
 # TODO
+
+- mk3 avr comms should work on irq, but they do not - looks like IRQ line is not reset? 
+- horizontal and vertical dpad are swapped
 
 - comment PNG loading stuff
 
@@ -116,6 +120,8 @@
 - slimmer connector https://jlcpcb.com/partdetail/XkbConnection-X05A10H40G/C528037
 - swap mic & radio input so that we can do low power audio pass through from radio directly to headphone amps of the audio codec
 - 4k7 Ohm pull up from ldo select to vcc (now direct connection)
+
+- A button should be square (turned 45deg)
 
 ## AVR
 

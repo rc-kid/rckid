@@ -308,7 +308,7 @@ namespace rckid {
             RCKID_AVR_I2C_ADDRESS, 
             0, 
             nullptr, 
-            sizeof(AVRState::Status), 
+            sizeof(AVRState::Status) + 3, 
             updateAvrStatus
         ));
     }
@@ -347,6 +347,17 @@ namespace rckid {
         // display DMA IRQ
         if (irqs & ( 1u << ST7789::dma_))
             ST7789::irqHandler();
+    }
+
+    void __not_in_flash_func(irqGPIO_)(uint pin, uint32_t events) {
+        switch (pin) {
+            case RP_PIN_AVR_INT:
+                requestAvrStatus();
+                //break;
+            default:
+                LOG(LL_ERROR, "Unknown GPIO IRQ on pin " << (uint32_t)pin << " with events " << events);
+                break;
+        }
     }
 
 
@@ -440,6 +451,12 @@ namespace rckid {
         LOG(LL_INFO, "  BQ25895 (0x6a):    " << (::i2c::isPresent(0x6a) ? "ok" : "not found"));
         LOG(LL_INFO, "  TLV320 (0x18):     " << (::i2c::isPresent(0x18) ? "ok" : "not found"));
         LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
+
+        // initialize the interrupt pins and set the interrupt handlers (enable pull-up as AVR pulls it low or leaves floating)
+        gpio_set_irq_callback(irqGPIO_);
+        gpio::setAsInputPullUp(RP_PIN_AVR_INT);
+        gpio_set_irq_enabled(RP_PIN_AVR_INT, GPIO_IRQ_EDGE_FALL, true);
+        
 
         // try talking to the AVR chip and see that all is well
         // read the full AVR state (including time information). Do not process the interrupts here, but wait for the first tick, which will or them with the ones obtained here and process when the device is fully initialized
@@ -572,11 +589,11 @@ namespace rckid {
 
 
         // configure the AVR interrupt pin as input pullup (it's pulled down by the AVR when needed, floating otherwise) and connect an interrupt callback on the falling edge
-        gpio::setAsInputPullup(RP_PIN_AVR_INT);
-        gpio_set_irq_enabled_with_callback(RP_PIN_AVR_INT, GPIO_IRQ_EDGE_FALL, true, [](uint gpio, uint32_t events) {
-            if (gpio == RP_PIN_AVR_INT)
-                requestAvrStatus();
-        });
+        //gpio::setAsInputPullUp(RP_PIN_AVR_INT);
+        //gpio_set_irq_enabled_with_callback(RP_PIN_AVR_INT, GPIO_IRQ_EDGE_FALL, true, [](uint gpio, uint32_t events) {
+        //    if (gpio == RP_PIN_AVR_INT)
+        //        requestAvrStatus();
+        //});
 
         // TODO radio interrupt
         // TODO audio interrupt
@@ -584,7 +601,6 @@ namespace rckid {
 
     void tick() {
         yield();
-        requestAvrStatus();
         // advance local time and check idle countdowns
         uint64_t now = time_us_64();
         while (now > time::nextSecond_) {

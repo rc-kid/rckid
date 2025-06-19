@@ -14,11 +14,13 @@
 
 /** Idle timer in seconds, after which the device powers off. 
  */
-#define RCKID_IDLE_TIMETOUT 300
+//#define RCKID_IDLE_TIMETOUT 300
+#define RCKID_IDLE_TIMETOUT 3600
 
 /** Idle timeout fallback that is not affected by the keepalive function call. 
  */
-#define RCKID_IDLE_TIMETOUT_KEEPALIVE 1800
+//#define RCKID_IDLE_TIMETOUT_KEEPALIVE 1800
+#define RCKID_IDLE_TIMETOUT_KEEPALIVE 3600
 
 /** Frames per long press of the home button (at 60 fps). The home button long press is automatically detected by the AVR and will either turn the device on when powered off, or will force it to shutdown mode if powered on. 
  */
