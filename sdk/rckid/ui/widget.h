@@ -94,6 +94,12 @@ namespace rckid::ui {
             }
         }
 
+        bool visible() const { return visible_; }
+        
+        void setVisible(bool value) {
+            visible_ = value;
+        }
+
         /** Update method that can adjust the widget before drawing. 
          */
         virtual void update() {
@@ -131,6 +137,8 @@ namespace rckid::ui {
             This is a simple matter of adjusting the rendering parameters for the child widget and calling its renderColumn method if there us anything to render.
          */
         void renderChild(Widget * w, Coord column, uint16_t * buffer, Coord starty, Coord numPixels) {
+            if (!w->visible_)
+                return;
             adjustRenderParams(w->rect(), column, buffer, starty, numPixels);
             if (numPixels != 0) 
                 w->renderColumn(column, buffer, starty, numPixels);
@@ -139,6 +147,8 @@ namespace rckid::ui {
         /** Renders the given child at coordinates with given offset.
          */
         void renderChild(Widget *w, Coord column, uint16_t * buffer, Coord starty, Coord numPixels, Point offset) {
+            if (!w->visible_)
+                return;
             Rect rect = w->rect();
             rect.x += offset.x;
             rect.y += offset.y;
@@ -215,6 +225,8 @@ namespace rckid::ui {
             }
             return res;
         }
+
+        bool visible_ = true;
 
         Coord x_ = 0;
         Coord y_ = 0;

@@ -24,6 +24,13 @@ namespace rckid::ui {
                 reposition();
         }
 
+        Label(Rect rect, String text):
+            Widget{rect}, 
+            text_{std::move(text)},
+            autosize_{false} {
+            reposition();
+        }
+
         String const & text() { return text_; }
 
         bool autosize() const { return autosize_; }

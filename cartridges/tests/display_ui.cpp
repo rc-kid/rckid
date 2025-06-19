@@ -19,6 +19,7 @@
 #include <rckid/apps/dialogs/PopupMenu.h>
 #include <rckid/apps/AudioPlayer.h>
 #include <rckid/apps/Friends.h>
+#include <rckid/apps/Clock.h>
 
 #include <gbcemu/gbcemu.h>
 #include <gbcemu/gamepak.h>
@@ -114,7 +115,7 @@ ui::Menu * mainMenuGenerator() {
         MainMenu::Action("Messages", assets::icons_64::chat, nullptr),
         MainMenu::Action("WalkieTalkie", assets::icons_64::baby_monitor, nullptr),
         MainMenu::Action("Friends", assets::icons_64::birthday_cake, App::run<Friends>),
-        MainMenu::Action("Clock", assets::icons_64::alarm_clock, nullptr),
+        MainMenu::Action("Clock", assets::icons_64::alarm_clock, App::run<Clock>),
         MainMenu::Action("Remote", assets::icons_64::rc_car, nullptr),
         MainMenu::Action("Recorder", assets::icons_64::microphone, nullptr),
         MainMenu::Action("Files", assets::icons_64::folder, App::run<FileDialog>),
