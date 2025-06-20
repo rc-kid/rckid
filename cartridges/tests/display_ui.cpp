@@ -108,24 +108,55 @@ ui::Menu * gamesGenerator() {
     return result;
 }
 
+ui::Menu * utilsMenuGenerator() {
+    return new ui::Menu{
+        MainMenu::Action("Clock", assets::icons_64::alarm_clock, App::run<Clock>),
+        MainMenu::Action("Stopwatch", assets::icons_64::poo, nullptr),
+        MainMenu::Action("Timer", assets::icons_64::poo, nullptr),
+        MainMenu::Action("Files", assets::icons_64::folder, App::run<FileDialog>),
+    };
+}
+
+ui::Menu * commsMenuGenerator() {
+    return new ui::Menu{
+        MainMenu::Action("Messages", assets::icons_64::chat, nullptr),
+        MainMenu::Action("WalkieTalkie", assets::icons_64::baby_monitor, nullptr),
+        MainMenu::Action("Friends", assets::icons_64::birthday_cake, App::run<Friends>),
+    };
+}
+
+ui::Menu * audioMenuGenerator() {
+    return new ui::Menu{
+        MainMenu::Action("Recorder", assets::icons_64::microphone, nullptr),
+        MainMenu::Action("Composer", assets::icons_64::music_1, nullptr),
+        // TODO browser for audio files alone
+    };
+}
+
+ui::Menu * imagesMenuGenerator() {
+    return new ui::Menu{
+        MainMenu::Action("Drawing", assets::icons_64::paint_palette, nullptr),
+        // TODO browser for images alone
+    };
+}
+
 ui::Menu * mainMenuGenerator() {
     return new ui::Menu{
         MainMenu::Submenu("Games", assets::icons_64::game_controller, gamesGenerator),
         MainMenu::Action("Music", assets::icons_64::music, App::run<AudioPlayer>),
-        MainMenu::Action("Messages", assets::icons_64::chat, nullptr),
-        MainMenu::Action("WalkieTalkie", assets::icons_64::baby_monitor, nullptr),
-        MainMenu::Action("Friends", assets::icons_64::birthday_cake, App::run<Friends>),
-        MainMenu::Action("Clock", assets::icons_64::alarm_clock, App::run<Clock>),
+        MainMenu::Submenu("Comms", assets::icons_64::chat, commsMenuGenerator),
+        MainMenu::Submenu("Audio", assets::icons_64::poo, audioMenuGenerator),
+        MainMenu::Submenu("Images", assets::icons_64::poo, imagesMenuGenerator),
         MainMenu::Action("Remote", assets::icons_64::rc_car, nullptr),
-        MainMenu::Action("Recorder", assets::icons_64::microphone, nullptr),
-        MainMenu::Action("Files", assets::icons_64::folder, App::run<FileDialog>),
-        MainMenu::Action("Composer", assets::icons_64::music_1, nullptr),
-        MainMenu::Action("Drawing", assets::icons_64::paint_palette, nullptr),
+        MainMenu::Submenu("Utilities", assets::icons_64::poo, utilsMenuGenerator),
     };
 }
 
 int main() {
     initialize();
+
+    //PNG png{PNG::fromStream(fs::fileRead(STR("files/images/backgrounds/wish16.png")))};
+    //LOG(LL_INFO, "PNG loaded: " << png.width() << "x" << png.height() << ", bpp: " << png.bpp());
     while (true) {
         LOG(LL_INFO, "Free memory: " << memoryFree() / 1024);
         //auto app = DisplayUIApp{};

@@ -70,39 +70,6 @@ static const uint16_t usGrayTo565[] = {0x0000,0x0000,0x0000,0x0000,0x0020,0x0020
 //
 // C interface
 //
-#ifndef __cplusplus
-// C API
-int PNG_openRAM(PNGIMAGE *pPNG, uint8_t *pData, int iDataSize, PNG_DRAW_CALLBACK *pfnDraw)
-{
-    pPNG->iError = PNG_SUCCESS;
-    pPNG->pfnRead = readMem;
-    pPNG->pfnSeek = seekMem;
-    pPNG->pfnDraw = pfnDraw;
-    pPNG->pfnOpen = NULL;
-    pPNG->pfnClose = NULL;
-    pPNG->PNGFile.iSize = iDataSize;
-    pPNG->PNGFile.pData = pData;
-    return PNGInit(pPNG);
-} /* PNG_openRAM() */
-
-#ifdef __LINUX__
-int PNG_openFile(PNGIMAGE *pPNG, const char *szFilename, PNG_DRAW_CALLBACK *pfnDraw)
-{
-    pPNG->iError = PNG_SUCCESS;
-    pPNG->pfnRead = readFile;
-    pPNG->pfnSeek = seekFile;
-    pPNG->pfnDraw = pfnDraw;
-    pPNG->pfnOpen = NULL;
-    pPNG->pfnClose = closeFile;
-    pPNG->PNGFile.fHandle = fopen(szFilename, "r+b");
-    if (pPNG->PNGFile.fHandle == NULL)
-       return 0;
-    fseek((FILE *)pPNG->PNGFile.fHandle, 0, SEEK_END);
-    pPNG->PNGFile.iSize = (int)ftell((FILE *)pPNG->PNGFile.fHandle);
-    fseek((FILE *)pPNG->PNGFile.fHandle, 0, SEEK_SET);
-    return PNGInit(pPNG);
-} /* PNG_openFile() */
-#endif // __LINUX__
 void PNG_close(PNGIMAGE *pPNG)
 {
     if (pPNG->pfnClose)
@@ -118,6 +85,10 @@ int PNG_getHeight(PNGIMAGE *pPNG)
 {
     return pPNG->iHeight;
 } /* PNG_getHeight() */
+
+int PNG_getBpp(PNGIMAGE *pPNG) {
+    return pPNG->ucBpp;
+} // missing impl in upstream
 
 int PNG_getLastError(PNGIMAGE *pPNG)
 {
@@ -139,7 +110,6 @@ uint8_t * PNG_getBuffer(PNGIMAGE *pPNG)
     return pPNG->pImage;
 } /* PNG_getBuffer() */
 
-#endif // !__cplusplus
 PNG_STATIC uint8_t PNGMakeMask(PNGDRAW *pDraw, uint8_t *pMask, uint8_t ucThreshold)
 {
     uint8_t alpha, c, *s, *d, *pPal;

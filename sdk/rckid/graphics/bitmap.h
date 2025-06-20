@@ -168,7 +168,9 @@ namespace rckid {
         Defined as template and specialized based on used color. See the specializations below for more information.  
      */
     template<typename PIXEL>
-    class RenderableBitmap;
+    class RenderableBitmap : public Bitmap<PIXEL> {
+
+    }; 
 
     /** Renderable bitmap specialization for Full 16bit RGB colors. 
      

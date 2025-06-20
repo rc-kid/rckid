@@ -7,6 +7,7 @@
 #include "../utils/interpolation.h"
 #include "../graphics/png.h"
 #include "../app.h"
+#include "../filesystem.h"
 #include "../assets/images.h"
 #include "panel.h"
 #include "image.h"

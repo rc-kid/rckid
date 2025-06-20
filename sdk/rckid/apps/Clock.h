@@ -11,10 +11,10 @@ namespace rckid {
     public:
 
         Clock() : ui::App<void>{} {
-            h_ = g_.addChild(new ui::Label{Rect::XYWH(0, 30, 150, 130), "0"});
+            h_ = g_.addChild(new ui::Label{Rect::XYWH(0, 30, 150, 130), ""});
             h_->setFont(Font::fromROM<assets::OpenDyslexic128>());
             h_->setHAlign(HAlign::Right);
-            m_ = g_.addChild(new ui::Label{Rect::XYWH(170, 30, 150, 130), "0"});
+            m_ = g_.addChild(new ui::Label{Rect::XYWH(170, 30, 150, 130), ""});
             m_->setFont(Font::fromROM<assets::OpenDyslexic128>());
             m_->setHAlign(HAlign::Left);
             colon_ = g_.addChild(new ui::Label{Rect::XYWH(150, 30, 20, 130), ":"});
@@ -28,22 +28,28 @@ namespace rckid {
             ui::App<void>::update();
             
             TinyDateTime t = timeNow();
-            h_->setText(STR(t.hour()));
+            h_->setText(STR(fillLeft(t.hour(), 2, '0')));
             m_->setText(STR(fillLeft(t.minute(), 2, '0')));
             colon_->setVisible(t.second() & 1);
 
             if (btnPressed(Btn::B) || btnPressed(Btn::Down))
                 exit();
+
             if (btnPressed(Btn::Select)) {
                 auto action = PopupMenu::show(&contextMenu_);
                 if (action.has_value()) {
                     switch (action.value()) {
                         case 0: // Set time
+                            UNIMPLEMENTED;
                             break;
                         case 1: // Set date
+                            UNIMPLEMENTED;
                             break;
                         case 2: // Set alarm
+                            UNIMPLEMENTED;
                             break;
+                        default:
+                            UNREACHABLE;
                     }
                 }
             }
