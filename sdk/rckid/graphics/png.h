@@ -41,6 +41,10 @@ namespace rckid {
 
         Coord height() const override;
 
+        uint32_t bpp() const override;
+
+        ColorRGB * palette() const override;
+
         bool decode16(DecodeCallback16 cb) override;
 
         ~PNG();

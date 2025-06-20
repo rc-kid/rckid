@@ -153,45 +153,13 @@ typedef struct png_image_tag
     uint8_t ucFileBuf[PNG_FILE_BUF_SIZE]; // holds temp file data
 } PNGIMAGE;
 
-#ifdef __cplusplus
-#define PNG_STATIC static
-//
-// The PNG class wraps portable C code which does the actual work
-//
-/*
-class PNG
-{
-  public:
-    int openRAM(uint8_t *pData, int iDataSize, PNG_DRAW_CALLBACK *pfnDraw);
-    int openFLASH(uint8_t *pData, int iDataSize, PNG_DRAW_CALLBACK *pfnDraw);
-    int open(const char *szFilename, PNG_OPEN_CALLBACK *pfnOpen, PNG_CLOSE_CALLBACK *pfnClose, PNG_READ_CALLBACK *pfnRead, PNG_SEEK_CALLBACK *pfnSeek, PNG_DRAW_CALLBACK *pfnDraw);
-    void close();
-    int decode(void *pUser, int iOptions);
-    int getWidth();
-    int getHeight();
-    int getBpp();
-    int hasAlpha();
-    uint32_t getTransparentColor();
-    int isInterlaced();
-    uint8_t * getPalette();
-    int getPixelType();
-    int getLastError();
-    int getBufferSize();
-    uint8_t *getBuffer();
-    void setBuffer(uint8_t *pBuffer);
-    uint8_t getAlphaMask(PNGDRAW *pDraw, uint8_t *pMask, uint8_t ucThreshold);
-    void getLineAsRGB565(PNGDRAW *pDraw, uint16_t *pPixels, int iEndianness, uint32_t u32Bkgd);
-
-  private:
-    PNGIMAGE _png;
-}; */
-#else
 #define PNG_STATIC
+int PNGInit(PNGIMAGE *pPNG); // missing in upstream
 int PNG_openRAM(PNGIMAGE *pPNG, uint8_t *pData, int iDataSize);
 int PNG_openFile(PNGIMAGE *pPNG, const char *szFilename);
 int PNG_getWidth(PNGIMAGE *pPNG);
 int PNG_getHeight(PNGIMAGE *pPNG);
-int PNG_decode(PNGIMAGE *pPNG, void *pUser, int iOptions);
+int DecodePNG(PNGIMAGE *pPNG, void *pUser, int iOptions); // typo in upstream
 void PNG_close(PNGIMAGE *pPNG);
 int PNG_getLastError(PNGIMAGE *pPNG);
 int PNG_getBpp(PNGIMAGE *pPNG);
@@ -203,7 +171,11 @@ int PNG_hasAlpha(PNGIMAGE *pPNG);
 int PNG_isInterlaced(PNGIMAGE *pPNG);
 uint8_t *PNG_getBuffer(PNGIMAGE *pPNG);
 void PNG_setBuffer(PNGIMAGE *pPNG, uint8_t *pBuffer);
-#endif // __cplusplus
+void PNGRGB565(PNGDRAW *pDraw, uint16_t *pPixels, int iEndiannes, uint32_t u32Bkgd, int iHasAlpha); // missing in upstream
+
+int32_t seekMem(PNGFILE * pFile, int32_t iPosition); // missing upstream
+int32_t readRAM(PNGFILE * pFile, uint8_t * pBuf, int32_t iLen); // missing upstream
+
 
 // Due to unaligned memory causing an exception, we have to do these macros the slow way
 #define INTELSHORT(p) ((*p) + (*(p+1)<<8))

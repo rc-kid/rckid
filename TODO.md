@@ -64,11 +64,15 @@
 - [ ] boost for below 3.3V battery
 - [ ] check that 2 LEDs under DPAD work better for a tilting DPAD (in HW.md)
 - [ ] mk3 idle and keepalive timers are too high, move lower again
+- [ ] check overclocking
+- [ ] add way to clear memory when necessary (e.g. remove background, etc.)
 
 # TODO
 
 - mk3 avr comms should work on irq, but they do not - looks like IRQ line is not reset? 
 - horizontal and vertical dpad are swapped
+
+- maybe have bitmap to be variable bpp, unlike tiles. And then have canvas which is like bitmap, but fixed depth and drawing primitives. 
 
 - comment PNG loading stuff
 
@@ -112,6 +116,8 @@
 
 
 - make the popupmenu use animations and labels instead of the tilemap
+- add icons for stopwatch, timer, audio Images and utilities
+
 
 ## HW
 

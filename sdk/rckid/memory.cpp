@@ -159,15 +159,6 @@ namespace rckid {
                     best = freeChunk;
                 }
             }
-            /*
-            if (freeChunk->size() >= numBytes) {
-                ASSERT(freeChunk->isFree());
-                freeChunk->markAsAllocated();
-                detachChunk(freeChunk);
-                LOG(LL_HEAP, "Allocating " << numBytes << " bytes from " << freeChunk->ptr() << " chunk size " << freeChunk->size());
-                return freeChunk->ptr();
-            }
-            */
             freeChunk = freeChunk->next();
         }
         if (best != nullptr) {

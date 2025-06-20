@@ -4,12 +4,12 @@
 
 
 // forward references
-PNG_STATIC int PNGInit(PNGIMAGE *pPNG);
-PNG_STATIC int DecodePNG(PNGIMAGE *pImage, void *pUser, int iOptions);
-PNG_STATIC uint8_t PNGMakeMask(PNGDRAW *pDraw, uint8_t *pMask, uint8_t ucThreshold);
+//PNG_STATIC int PNGInit(PNGIMAGE *pPNG);
+//PNG_STATIC int DecodePNG(PNGIMAGE *pImage, void *pUser, int iOptions);
+//PNG_STATIC uint8_t PNGMakeMask(PNGDRAW *pDraw, uint8_t *pMask, uint8_t ucThreshold);
 
 // Include the C code which does the actual work
-#include <PNGdec/src/png.inl>
+//#include <PNGdec/src/png.inl>
 
 int32_t readStream(PNGFILE * pFile, uint8_t * pBuf, int32_t iLen) {
     rckid::RandomReadStream * s = static_cast<rckid::RandomReadStream*>(pFile->fHandle);
@@ -69,6 +69,24 @@ namespace rckid {
     Coord PNG::width() const { return img_->iWidth; }
 
     Coord PNG::height() const { return img_->iHeight; }
+
+    uint32_t PNG::bpp() const { return PNG_getBpp(img_); }
+
+    ColorRGB * PNG::palette() const {
+        uint8_t * p = PNG_getPalette(img_);
+        if (p == nullptr)
+            return nullptr;
+        uint32_t numColors = 1 << bpp();
+        ColorRGB * result = new ColorRGB[numColors];
+        for (uint32_t i = 0; i < numColors; ++i) {
+            result[i] = ColorRGB::RGB(
+                p[i * 4], 
+                p[i * 4 + 1],
+                p[i * 4 + 2]
+            );
+        }
+        return result;
+    }
 
     bool PNG::decode16(DecodeCallback16 cb) {
         Decode16 d{cb, this};

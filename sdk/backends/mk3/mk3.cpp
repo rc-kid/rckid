@@ -456,7 +456,6 @@ namespace rckid {
         gpio_set_irq_callback(irqGPIO_);
         gpio::setAsInputPullUp(RP_PIN_AVR_INT);
         gpio_set_irq_enabled(RP_PIN_AVR_INT, GPIO_IRQ_EDGE_FALL, true);
-        
 
         // try talking to the AVR chip and see that all is well
         // read the full AVR state (including time information). Do not process the interrupts here, but wait for the first tick, which will or them with the ones obtained here and process when the device is fully initialized
