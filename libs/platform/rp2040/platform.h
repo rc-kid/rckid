@@ -80,11 +80,13 @@ public:
     }
 
     static void setAsInputPullup(Pin pin) {
+        gpio_init(pin);
         gpio_set_dir(pin, GPIO_IN);
         gpio_pull_up(pin);
     }
 
     static void setAsInputPullDown(Pin pin) {
+        gpio_init(pin);
         gpio_set_dir(pin, GPIO_IN);
         gpio_pull_down(pin);
     }

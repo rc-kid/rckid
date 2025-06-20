@@ -913,8 +913,8 @@ public:
 
     static void readABXYGroup() {
         bool changed = state_.status.setABXYButtons(
-            ! gpio::read(AVR_PIN_BTN_2), // a
-            ! gpio::read(AVR_PIN_BTN_1), // b
+            ! gpio::read(AVR_PIN_BTN_1), // a
+            ! gpio::read(AVR_PIN_BTN_2), // b
             ! gpio::read(AVR_PIN_BTN_4), // sel
             ! gpio::read(AVR_PIN_BTN_3)  // start
         );
@@ -924,15 +924,14 @@ public:
             LOG("ABXY: " << state_.status.btnA() << " " << state_.status.btnB() << " " << state_.status.btnSelect() << " " << state_.status.btnStart());
             NO_ISR(setIrq());
         }
-
     }
 
     static void readDPadGroup() {
         bool changed = state_.status.setDPadButtons(
-            ! gpio::read(AVR_PIN_BTN_2), // left
-            ! gpio::read(AVR_PIN_BTN_4), // right
-            ! gpio::read(AVR_PIN_BTN_1), // up
-            ! gpio::read(AVR_PIN_BTN_3)  // down
+            ! gpio::read(AVR_PIN_BTN_3), // left
+            ! gpio::read(AVR_PIN_BTN_1), // right
+            ! gpio::read(AVR_PIN_BTN_2), // up
+            ! gpio::read(AVR_PIN_BTN_4)  // down
         );
         gpio::high(AVR_PIN_BTN_DPAD);
         gpio::low(AVR_PIN_BTN_CTRL);
