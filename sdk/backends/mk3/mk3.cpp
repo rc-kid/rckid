@@ -308,7 +308,7 @@ namespace rckid {
             RCKID_AVR_I2C_ADDRESS, 
             0, 
             nullptr, 
-            sizeof(AVRState::Status) + 3, 
+            sizeof(AVRState::Status), 
             updateAvrStatus
         ));
     }
@@ -353,13 +353,12 @@ namespace rckid {
         switch (pin) {
             case RP_PIN_AVR_INT:
                 requestAvrStatus();
-                //break;
+                break;
             default:
                 LOG(LL_ERROR, "Unknown GPIO IRQ on pin " << (uint32_t)pin << " with events " << events);
                 break;
         }
     }
-
 
     // sdk functions 
 
@@ -428,6 +427,9 @@ namespace rckid {
         irq_set_priority(I2C0_IRQ, 0x40); 
         // enable DMA IRQ (used by display, audio, etc.)
         irq_set_enabled(DMA_IRQ_0, true);
+        // enable GPIO IRQ
+        irq_set_enabled(IO_IRQ_BANK0, true);
+
 
         LOG(LL_INFO, "\n\n\nSYSTEM RESET DETECTED (RP2350): ");
         LOG(LL_INFO, "RP2350 chip version: " << rp2350_chip_version());

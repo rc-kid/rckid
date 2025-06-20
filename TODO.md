@@ -69,9 +69,6 @@
 
 # TODO
 
-- mk3 avr comms should work on irq, but they do not - looks like IRQ line is not reset? 
-- horizontal and vertical dpad are swapped
-
 - maybe have bitmap to be variable bpp, unlike tiles. And then have canvas which is like bitmap, but fixed depth and drawing primitives. 
 
 - comment PNG loading stuff
