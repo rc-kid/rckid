@@ -43,9 +43,11 @@ namespace rckid {
 
         uint32_t bpp() const override;
 
-        ColorRGB * palette() const override;
+        uint16_t * palette() const override;
 
-        bool decode16(DecodeCallback16 cb) override;
+        bool decodeRGB(DecodeCallbackRGB cb) override;
+        bool decode(DecodeCallback cb) override;
+
 
         ~PNG();
 
@@ -58,18 +60,27 @@ namespace rckid {
     private:
 
 
-        struct Decode16 {
-            DecodeCallback16 cb;
+        struct DecodeRGB {
+            DecodeCallbackRGB cb;
             PNG * png;
             uint16_t * line;
 
-            Decode16(DecodeCallback16 cb, PNG * png);
-            ~Decode16();
+            DecodeRGB(DecodeCallbackRGB cb, PNG * png);
+            ~DecodeRGB();
+        };
+
+        // maybe not needed, all should be in the draw
+        struct Decode {
+            DecodeCallback cb;
+            PNG * png;
+
+            Decode(DecodeCallback cb, PNG * png): cb{cb}, png{png} {}
         };
 
         PNG();
 
-        static void decodeLine16_(png_draw_tag *pDraw);
+        static void decodeLineRGB_(png_draw_tag *pDraw);
+        static void decodeLine_(png_draw_tag *pDraw);
 
         png_image_tag * img_;
 

@@ -30,13 +30,13 @@ typedef int32_t (PNG_SEEK_CALLBACK)(PNGFILE *pFile, int32_t iPosition);
 
 namespace rckid {
 
-    PNG::Decode16::Decode16(DecodeCallback16 cb, PNG * png): 
+    PNG::DecodeRGB::DecodeRGB(DecodeCallbackRGB cb, PNG * png): 
         cb{cb}, 
         png{png}, 
         line{Heap::alloc<uint16_t>(png->img_->iWidth)} {
     }
 
-    PNG::Decode16::~Decode16() {
+    PNG::DecodeRGB::~DecodeRGB() {
         delete [] line;
     }
 
@@ -72,39 +72,55 @@ namespace rckid {
 
     uint32_t PNG::bpp() const { return PNG_getBpp(img_); }
 
-    ColorRGB * PNG::palette() const {
+    uint16_t * PNG::palette() const {
         uint8_t * p = PNG_getPalette(img_);
         if (p == nullptr)
             return nullptr;
         uint32_t numColors = 1 << bpp();
-        ColorRGB * result = new ColorRGB[numColors];
+        uint16_t * result = new uint16_t[numColors];
         for (uint32_t i = 0; i < numColors; ++i) {
             result[i] = ColorRGB::RGB(
                 p[i * 4], 
                 p[i * 4 + 1],
                 p[i * 4 + 2]
-            );
+            ).raw16();
         }
         return result;
     }
 
-    bool PNG::decode16(DecodeCallback16 cb) {
-        Decode16 d{cb, this};
-        img_->pfnDraw = decodeLine16_;
+    bool PNG::decodeRGB(DecodeCallbackRGB cb) {
+        DecodeRGB d{cb, this};
+        img_->pfnDraw = decodeLineRGB_;
         return DecodePNG(this->img_, & d, 0) == 0;
     }
+
+    bool PNG::decode(DecodeCallback cb) {
+        img_->pfnDraw = decodeLine_;
+        return DecodePNG(this->img_, &cb, 0) == 0;
+    }
+
 
     PNG::PNG() {
         img_ = new png_image_tag{};
         memset(img_, 0, sizeof(png_image_tag));
     }
 
-    void PNG::decodeLine16_(png_draw_tag *pDraw) {
-        Decode16 * dec = reinterpret_cast<Decode16*>(pDraw->pUser);
+    void PNG::decodeLineRGB_(png_draw_tag *pDraw) {
+        DecodeRGB * dec = reinterpret_cast<DecodeRGB*>(pDraw->pUser);
         //PNGRGB565(pDraw, line, PNG_RGB565_LITTLE_ENDIAN, 0xffffffff, png->iHasAlpha);
         // TODO background is set to 0, which means the icons look good on black, but real transparency is not really working at this point
         PNGRGB565(pDraw, dec->line, PNG_RGB565_LITTLE_ENDIAN, 0x0, dec->png->img_->iHasAlpha);
         dec->cb(dec->line, pDraw->y, pDraw->iWidth);
+    }
+
+    void PNG::decodeLine_(png_draw_tag * pDraw) {
+        /*
+        DecodeCallback * cb = reinterpret_cast<DecodeCallback*>(pDraw->pUser);
+        uint16_t * pixels = Heap::alloc<uint16_t>(pDraw->iWidth);
+        PNGRGB565(pDraw, pixels, PNG_RGB565_LITTLE_ENDIAN, 0x0, pDraw->iHasAlpha);
+        (*cb)(pixels, pDraw->y, pDraw->iWidth);
+        delete [] pixels;
+        */
     }
 
     PNG::~PNG() {

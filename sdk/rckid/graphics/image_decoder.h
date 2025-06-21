@@ -11,7 +11,8 @@ namespace rckid {
      */
     class ImageDecoder {
     public:
-        using DecodeCallback16 = std::function<void(uint16_t * rgb, int lineNum, int lineWidth)>;
+        using DecodeCallbackRGB = std::function<void(uint16_t * rgb, int lineNum, int lineWidth)>;
+        using DecodeCallback = std::function<void(uint16_t * pixels, int lineNum, int lineWidth)>;
 
         virtual ~ImageDecoder() = default;
 
@@ -20,9 +21,10 @@ namespace rckid {
 
         virtual uint32_t bpp() const = 0;
 
-        virtual ColorRGB * palette() const = 0;
+        virtual uint16_t * palette() const = 0;
 
-        virtual bool decode16(DecodeCallback16 cb) = 0;
+        virtual bool decodeRGB(DecodeCallbackRGB cb) = 0;
+        virtual bool decode(DecodeCallback cb) = 0;
 
     }; // rckid::Decoder
 
