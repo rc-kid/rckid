@@ -90,6 +90,10 @@ int PNG_getBpp(PNGIMAGE *pPNG) {
     return pPNG->ucBpp;
 } // missing impl in upstream
 
+int PNG_getPixelType(PNGIMAGE *pPNG) {
+    return pPNG->ucPixelType;
+} // missing impl in upstream
+
 int PNG_getLastError(PNGIMAGE *pPNG)
 {
     return pPNG->iError;

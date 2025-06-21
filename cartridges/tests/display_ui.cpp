@@ -37,7 +37,7 @@ public:
         ui::Panel * p2 = g_.addChild(new ui::Panel());
         p2->setRect(Rect::XYWH(-25, -25, 50, 50));
         p2->setBg(ColorRGB{0, 255, 0});
-        ui::Image * img = g_.addChild(new ui::Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::icons_64::game_controller)}});
+        ui::Image * img = g_.addChild(new ui::Image{Bitmap2{PNG::fromBuffer(assets::icons_64::game_controller)}});
         img->setRect(Rect::WH(320, 240));
         //img->setHAlign(HAlign::Center);
         //img->setVAlign(VAlign::Center);

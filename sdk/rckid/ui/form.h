@@ -52,7 +52,9 @@ namespace rckid::ui {
         void loadBackgroundImage() {
             if (bg_ != nullptr)
                 delete bg_;
-            bg_ = new Image{Bitmap<ColorRGB>{PNG::fromBuffer(assets::star)}};
+            auto f = fs::fileRead("files/images/backgrounds/shack16.png");
+            bg_ = new Image{Bitmap2{ARENA(PNG::fromStream(std::move(f)))}};//fs::fileRead("files/images/backgrounds/shack16.png"))}};
+            //bg_ = new Image{Bitmap2{PNG::fromBuffer(assets::star)}};
             bg_->setRect(Rect::WH(320, 240));
             bg_->setRepeat(true);
         }
