@@ -69,7 +69,7 @@ namespace rckid {
                     return;
                 case 4: {
                     uint8_t & x = reinterpret_cast<uint8_t*>(pixels_)[offset / 2];
-                    x = x & (offset & 1) ? 0x0f : 0xf0;
+                    x = x & ((offset & 1) ? 0x0f : 0xf0);
                     x |= color << ((offset & 1) * 4);
                     return;
                 }

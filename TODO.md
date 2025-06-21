@@ -71,6 +71,11 @@
 
 # TODO
 
+- fix widget render to bitmap to go to canvas
+- fix bitmap tests for canvas
+
+
+- convert info dialog to use icons
 - see if we can enable exceptions, what are the runtime & stack costs of them running
 
 - ColorRGB is weird, should be colorRGBA and then have Color565 as a version that wraps around 15bpp? Then change uint16_t everywhere in palettes

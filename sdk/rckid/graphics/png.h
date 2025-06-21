@@ -49,32 +49,31 @@ namespace rckid {
         bool decode(DecodeCallback cb) override;
 
 
-        ~PNG();
+        ~PNG() override;
 
         PNG(PNG const &) = delete;
         
-        PNG(PNG && other) noexcept: img_{other.img_} {
+        PNG(PNG && other) noexcept: img_{other.img_}, line_{other.line_} {
             other.img_ = nullptr;
+            other.line_ = nullptr;
         }
 
     private:
 
-
         struct DecodeRGB {
             DecodeCallbackRGB cb;
             PNG * png;
-            uint16_t * line;
 
-            DecodeRGB(DecodeCallbackRGB cb, PNG * png);
-            ~DecodeRGB();
+            DecodeRGB(DecodeCallbackRGB cb, PNG * png): 
+                cb{cb}, png{png} { }
         };
 
-        // maybe not needed, all should be in the draw
         struct Decode {
             DecodeCallback cb;
             PNG * png;
 
-            Decode(DecodeCallback cb, PNG * png): cb{cb}, png{png} {}
+            Decode(DecodeCallback cb, PNG * png):
+                cb{cb}, png{png} { }
         };
 
         PNG();
@@ -83,6 +82,6 @@ namespace rckid {
         static void decodeLine_(png_draw_tag *pDraw);
 
         png_image_tag * img_;
-
+        uint16_t * line_;
     }; 
 }

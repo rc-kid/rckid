@@ -68,13 +68,12 @@ namespace rckid {
         uint32_t numPixels() const { return w_ * h_; }
         uint32_t numHalfWords() const { return numBytes() / 2; }
 
+        // 285 kb left with 16bpp only
         void loadImage(ImageDecoder && decoder) {
             clear();
             w_ = decoder.width();
             h_ = decoder.height();
-            // TODO fix this for 16bpp now as we use the old loading scheme
-            bpp_ = 16;
-            //bpp_ = decoder.bpp();
+            bpp_ = decoder.bpp();
             pixels_ = new uint16_t[numHalfWords()];
             if (bpp_ == 16) {
                 palette_ = nullptr; // no palette for 16bpp
@@ -83,8 +82,41 @@ namespace rckid {
                         Surface<16>::setPixelAt(i, lineNum, w_, h_, pixels_, rgb[i]);
                 });
             } else {
+                decoder.decode([this](uint16_t * pixels, int lineNum, int lineWidth) {
+                    switch (bpp_) {
+                        case 8:
+                            for (int i = 0; i < lineWidth; ++i)
+                                Surface<8>::setPixelAt(i, lineNum, w_, h_, pixels_, pixels[i]);
+                            break;
+                        case 4:
+                            for (int i = 0; i < lineWidth; ++i)
+                                Surface<4>::setPixelAt(i, lineNum, w_, h_, pixels_, pixels[i]);
+                            break;
+                        case 2:
+                            for (int i = 0; i < lineWidth; ++i)
+                                Surface<2>::setPixelAt(i, lineNum, w_, h_, pixels_, pixels[i]);
+                            break;
+                        case 1:
+                            for (int i = 0; i < lineWidth; ++i)
+                                Surface<1>::setPixelAt(i, lineNum, w_, h_, pixels_, pixels[i]);
+                            break;
+                        default:
+                            UNREACHABLE; // invalid bpp
+                    }
+                });
                 palette_ = decoder.palette();
-                UNIMPLEMENTED;
+                /*
+                palette_[0] = 0xffff;
+                palette_[1] = 0x0000;
+                palette_[2] = 0x00f0;
+                palette_[3] = 0x0f00;
+                palette_[4] = 0xf000;
+                palette_[5] = 0x00ff;
+                palette_[6] = 0x0f0f;
+                palette_[7] = 0xf00f;
+                palette_[8] = 0x0ff0;
+                palette_[15] = 0x0000;
+                */
             }
         }
 
@@ -98,23 +130,23 @@ namespace rckid {
             bpp_ = 16; // why not
         }
         
-        uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, uint16_t buffer) {
+        uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, uint16_t * buffer) {
             switch (bpp_) {
                 case 16:
                     ASSERT(palette_ == nullptr);
-                    return Surface<16>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, &buffer, nullptr);
+                    return Surface<16>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, nullptr);
                 case 8:
                     ASSERT(palette_ != nullptr);
-                    return Surface<8>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, &buffer, palette_);
+                    return Surface<8>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, palette_);
                 case 4:
                     ASSERT(palette_ != nullptr);
-                    return Surface<4>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, &buffer, palette_);
+                    return Surface<4>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, palette_);
                 case 2:
                     ASSERT(palette_ != nullptr);
-                    return Surface<2>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, &buffer, palette_);
+                    return Surface<2>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, palette_);
                 case 1:
                     ASSERT(palette_ != nullptr);
-                    return Surface<1>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, &buffer, palette_);
+                    return Surface<1>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, palette_);
                 default:
                     UNREACHABLE; // invalid bpp
             }    
@@ -150,6 +182,7 @@ namespace rckid {
         uint16_t * pixels_ = nullptr;
         uint16_t * palette_ = nullptr;
     }; // rckid::Bitmap
+
 
     template<typename PIXEL>
     class Bitmap : protected Surface<PIXEL::BPP> {
@@ -356,5 +389,7 @@ namespace rckid {
 
     template<typename PIXEL, typename T = void>
     using BitmapApp = RenderableApp<RenderableBitmap<PIXEL>, T>;
-    
+
+
+
 } // namespace rckid

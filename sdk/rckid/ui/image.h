@@ -16,13 +16,13 @@ namespace rckid::ui {
             bmp_{} {
         }
 
-        Image(Rect rect, Bitmap<ColorRGB> && bmp):
+        Image(Rect rect, Bitmap2 && bmp):
             Widget{rect},
             bmp_{std::move(bmp)} {
             reposition();
         }
     
-        Image(Bitmap<ColorRGB> && bmp): bmp_{std::move(bmp)} {
+        Image(Bitmap2 && bmp): bmp_{std::move(bmp)} {
             w_ = bmp_.width();
             h_ = bmp_.height();
             reposition();
@@ -42,14 +42,14 @@ namespace rckid::ui {
             return *this;
         }
 
-        Image & operator = (Bitmap<ColorRGB> && bmp) noexcept {
+        Image & operator = (Bitmap2 && bmp) noexcept {
             setBitmap(std::move(bmp));
             return *this;
         }
 
-        void setBitmap(Bitmap<ColorRGB> && bmp) noexcept {
-            bmp_.~Bitmap();
-            new (&bmp_) Bitmap<ColorRGB>{std::move(bmp)};
+        void setBitmap(Bitmap2 && bmp) noexcept {
+            bmp_.~Bitmap2();
+            new (&bmp_) Bitmap2{std::move(bmp)};
             shrinkToFit();
         }
 
@@ -110,7 +110,7 @@ namespace rckid::ui {
             bmp_.clear();
         }
 
-        Bitmap<ColorRGB> & bitmap() { return bmp_; }
+        Bitmap2 & bitmap() { return bmp_; }
 
     protected:
 
@@ -169,7 +169,7 @@ namespace rckid::ui {
             return bmp_.height();
         }
 
-        Bitmap<ColorRGB> bmp_;
+        Bitmap2 bmp_;
 
         HAlign hAlign_ = HAlign::Center;
         VAlign vAlign_ = VAlign::Center;
