@@ -619,8 +619,6 @@ namespace rckid {
             }
             App::onSecondTick();
         }
-
-        // TODO check AVR state, etc? 
     }
 
     void yield() {

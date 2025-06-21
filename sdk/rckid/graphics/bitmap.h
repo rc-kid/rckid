@@ -11,6 +11,146 @@
 
 namespace rckid {
 
+    /** Bitmap is a simple renderable container that holds both pixel data (surface), and a palette, where appropriate. 
+     
+        The bitmap works with any bit depth and provides a simple rendering interface. 
+     */
+    class Bitmap2 {
+    public:
+
+        Bitmap2() = default;
+
+        Bitmap2(Coord w, Coord h, uint32_t bpp = 16):
+            w_{w}, h_{h}, bpp_{bpp} {
+            ASSERT(bpp == 16 || bpp == 8 || bpp == 4 || bpp == 2 || bpp == 1);
+            pixels_ = new uint16_t[numHalfWords()];
+            // TODO deal with palette
+        }
+
+        Bitmap2(Bitmap2 const &) = delete;
+        
+        Bitmap2(Bitmap2 && other) noexcept:
+            w_{other.w_}, 
+            h_{other.h_}, 
+            bpp_{other.bpp_}, 
+            pixels_{other.pixels_}, 
+            palette_{other.palette_} {
+            other.pixels_ = nullptr;
+            other.palette_ = nullptr;
+            other.clear(); // reset the w & h & bpp too
+        }
+
+        Bitmap2(ImageDecoder && decoder) {
+            loadImage(std::move(decoder));
+        }
+
+        Bitmap2 & operator = (Bitmap2 const &) = delete;
+
+        Bitmap2 & operator = (Bitmap2 && other) noexcept {
+            if (this != &other) {
+                clear();
+                pixels_ = other.pixels_;
+                palette_ = other.palette_;
+                w_ = other.w_;
+                h_ = other.h_;
+                bpp_ = other.bpp_;
+                other.pixels_ = nullptr;
+                other.palette_ = nullptr;
+                other.clear();
+            }
+            return *this;
+        }
+
+        bool empty() const { return pixels_ == nullptr; }
+        Coord width() const { return w_; }
+        Coord height() const { return h_; }
+        uint32_t numBytes() const { return w_ * h_ * bpp_ / 8; }
+        uint32_t numPixels() const { return w_ * h_; }
+        uint32_t numHalfWords() const { return numBytes() / 2; }
+
+        void loadImage(ImageDecoder && decoder) {
+            clear();
+            w_ = decoder.width();
+            h_ = decoder.height();
+            // TODO fix this for 16bpp now as we use the old loading scheme
+            bpp_ = 16;
+            //bpp_ = decoder.bpp();
+            pixels_ = new uint16_t[numHalfWords()];
+            if (bpp_ == 16) {
+                palette_ = nullptr; // no palette for 16bpp
+                decoder.decodeRGB([this](uint16_t * rgb, int lineNum, int lineWidth) {
+                    for (int i = 0; i < lineWidth; ++i)
+                        Surface<16>::setPixelAt(i, lineNum, w_, h_, pixels_, rgb[i]);
+                });
+            } else {
+                palette_ = decoder.palette();
+                UNIMPLEMENTED;
+            }
+        }
+
+        void clear() {
+            delete [] pixels_;
+            delete [] palette_;
+            pixels_ = nullptr;
+            palette_ = nullptr;
+            w_ = 0;
+            h_ = 0;
+            bpp_ = 16; // why not
+        }
+        
+        uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, uint16_t buffer) {
+            switch (bpp_) {
+                case 16:
+                    ASSERT(palette_ == nullptr);
+                    return Surface<16>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, &buffer, nullptr);
+                case 8:
+                    ASSERT(palette_ != nullptr);
+                    return Surface<8>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, &buffer, palette_);
+                case 4:
+                    ASSERT(palette_ != nullptr);
+                    return Surface<4>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, &buffer, palette_);
+                case 2:
+                    ASSERT(palette_ != nullptr);
+                    return Surface<2>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, &buffer, palette_);
+                case 1:
+                    ASSERT(palette_ != nullptr);
+                    return Surface<1>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, &buffer, palette_);
+                default:
+                    UNREACHABLE; // invalid bpp
+            }    
+        }
+
+        uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, uint16_t * buffer, uint32_t transparent) const {
+            switch (bpp_) {
+                case 16:
+                    ASSERT(palette_ == nullptr);
+                    return Surface<16>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent);
+                case 8:
+                    ASSERT(palette_ != nullptr);
+                    return Surface<8>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent, palette_);
+                case 4:
+                    ASSERT(palette_ != nullptr);
+                    return Surface<4>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent, palette_);
+                case 2:
+                    ASSERT(palette_ != nullptr);
+                    return Surface<2>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent, palette_);
+                case 1:
+                    ASSERT(palette_ != nullptr);
+                    return Surface<1>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent, palette_);
+                default:
+                    UNREACHABLE; // invalid bpp
+            }    
+        }
+
+    private:
+        Coord w_ = 0;
+        Coord h_ = 0;
+        uint32_t bpp_ = 16;
+
+        uint16_t * pixels_ = nullptr;
+        uint16_t * palette_ = nullptr;
+    }; // rckid::Bitmap
+
     template<typename PIXEL>
     class Bitmap : protected Surface<PIXEL::BPP> {
     public:
@@ -155,7 +295,7 @@ namespace rckid {
     inline void Bitmap<ColorRGB>::loadImage(ImageDecoder && decoder, Point at) {
         ASSERT(at.x + decoder.width() <= w_);
         ASSERT(at.y + decoder.height() <= h_);
-        decoder.decode16([this, at](uint16_t * line, int lineNum, int lineWidth) {
+        decoder.decodeRGB([this, at](uint16_t * line, int lineNum, int lineWidth) {
             for (int i = 0; i < lineWidth; ++i)
                 setAt(i + at.x, lineNum + at.y, Pixel::fromRaw(line[i]));
         });

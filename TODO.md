@@ -62,12 +62,18 @@
 - [X] order breakout for new PMIC chip and verify its functionality separately
 - [ ] charging/discharging
 - [ ] boost for below 3.3V battery
-- [ ] check that 2 LEDs under DPAD work better for a tilting DPAD (in HW.md)
+- [X] check that 2 LEDs under DPAD sides work ok (HW.md)
+- [ ] check that titlting dpad is better 
+- [ ] check new case works better with battery
 - [ ] mk3 idle and keepalive timers are too high, move lower again
 - [ ] check overclocking
 - [ ] add way to clear memory when necessary (e.g. remove background, etc.)
 
 # TODO
+
+- see if we can enable exceptions, what are the runtime & stack costs of them running
+
+- ColorRGB is weird, should be colorRGBA and then have Color565 as a version that wraps around 15bpp? Then change uint16_t everywhere in palettes
 
 - maybe have bitmap to be variable bpp, unlike tiles. And then have canvas which is like bitmap, but fixed depth and drawing primitives. 
 
@@ -91,10 +97,8 @@
 - when we do mk3, make sure that when a button press is detected, the idle flag is cleared 
 - keepalive when plugged in can be indefinite? 
 
-
 - clean-up the code around display initialization
 - colors are revrsed on mk3. This can either be solved in software by using reversed color values, or in theory could be done by the pio itself. Is it necessary?
-
 
 - SD card detection works-ish, the sd detect pin is floating when no card and connected to ground when card - figure how to use
 - si4705 does not seem to support multiple start sessions, rewrite the Si4705 platform library for proper command sending & response polling
