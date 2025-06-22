@@ -65,14 +65,14 @@ namespace rckid {
          
             If the icon is not specified, materializes the default icon (poo:). 
          */
-        Bitmap2 toBitmap() const {
+        Bitmap toBitmap() const {
             NewArenaGuard g{};
-            return Bitmap2{getDecoder()};
+            return Bitmap{getDecoder()};
         }
 
         /** Materializes the icon into given bitmap. If the bitmap is already the correct size, this makes the operation use less memory.
          */
-        void intoBitmap(Bitmap2 & bitmap) const {
+        void intoBitmap(Bitmap & bitmap) const {
             NewArenaGuard g{};
             PNG png{getDecoder()};
             /*

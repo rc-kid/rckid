@@ -11,6 +11,7 @@
 #include <platform/args.h>
 
 #include "rckid/rckid.h"
+#include "rckid/app.h"
 #include "rckid/filesystem.h"
 #include "rckid/ui/header.h"
 

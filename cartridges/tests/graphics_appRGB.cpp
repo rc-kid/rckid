@@ -1,12 +1,12 @@
 #include <rckid/rckid.h>
 #include <rckid/app.h>
-#include <rckid/graphics/bitmap.h>
+#include <rckid/graphics/canvas.h>
 #include <rckid/assets/fonts/Iosevka16.h>
 
 using namespace rckid;
-class TestAppRGB : public BitmapApp<ColorRGB> {
+class TestAppRGB : public CanvasApp<ColorRGB> {
 public:
-    TestAppRGB(Coord w, Coord h): BitmapApp<ColorRGB>{RenderableBitmap<ColorRGB>{w, h}} {}
+    TestAppRGB(Coord w, Coord h): CanvasApp<ColorRGB>{RenderableCanvas<ColorRGB>{w, h}} {}
 
 protected:
 
@@ -33,7 +33,7 @@ protected:
             ColorRGB{255, 255, 255}
         };*/
         g_.text(10,10, Font::fromROM<assets::Iosevka16>(), ColorRGB{255, 255, 255}) << "Hello world!";
-        BitmapApp<ColorRGB>::draw();
+        CanvasApp<ColorRGB>::draw();
     }
 
     uint32_t i_ = 0;
