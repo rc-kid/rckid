@@ -24,6 +24,7 @@ extern "C" {
 #include "screen/ST7789.h"
 #include "sd/sd.h"
 #include "rckid/rckid.h"
+#include "rckid/app.h"
 #include "rckid/filesystem.h"
 #include "rckid/ui/header.h"
 

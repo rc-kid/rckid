@@ -1,22 +1,22 @@
 #include <platform/tests.h>
-#include <rckid/graphics/bitmap.h>
+#include <rckid/graphics/canvas.h>
 
 using namespace rckid;
 
-TEST(bitmap, color256) {
-    Bitmap<Color256> bmp{320, 240};
-    Bitmap<Color256>::Pixel x{78};
-    Bitmap<Color256>::Pixel y{56};
+TEST(canvas, color256) {
+    Canvas<Color256> bmp{320, 240};
+    Canvas<Color256>::Pixel x{78};
+    Canvas<Color256>::Pixel y{56};
     bmp.setAt(10, 67, x);
     bmp.setAt(5, 57, y);
     EXPECT(bmp.at(10, 67) == x);
     EXPECT(bmp.at(5, 57) == y);
 }
 
-TEST(bitmap, colorRGB) {
-    Bitmap<ColorRGB> bmp{320, 240};
-    Bitmap<ColorRGB>::Pixel x = ColorRGB::fromRaw(13);
-    Bitmap<ColorRGB>::Pixel y = ColorRGB::fromRaw(8);
+TEST(canvas, colorRGB) {
+    Canvas<ColorRGB> bmp{320, 240};
+    Canvas<ColorRGB>::Pixel x = ColorRGB::fromRaw(13);
+    Canvas<ColorRGB>::Pixel y = ColorRGB::fromRaw(8);
     bmp.setAt(10, 67, x);
     bmp.setAt(5, 57, y);
     EXPECT(bmp.at(10, 67) == x);

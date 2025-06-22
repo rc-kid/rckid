@@ -84,16 +84,6 @@ namespace rckid::ui {
             return child;
         }
 
-        /** Renders the widget directly to the provided bitmap at given coordinates. 
-         */
-        void renderToBitmap(Coord x, Coord y, Bitmap<ColorRGB> & bmp) {
-            Coord numPixels = std::min(height(), bmp.height() - y);
-            for (Coord column = std::min(width(), bmp.width() - x); column >= 0; --column) {
-                uint16_t * buffer = bmp.columnPixels(column);
-                renderColumn(column, buffer + y, y, numPixels);
-            }
-        }
-
         bool visible() const { return visible_; }
         
         void setVisible(bool value) {

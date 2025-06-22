@@ -128,10 +128,13 @@
 ## HW
 
 - could this be better PMIC? https://www.ti.com/product/BQ25628
+(E) variant. Actually no - see https://e2e.ti.com/support/power-management-group/power-management/f/power-management-forum/1257114/faq-bq25620-how-is-vsys-regulated-for-bq25620-22-and-bq25628-29-what-conditions-determine-how-it-s-regulated-when-is-sysmin-threshold-valid, the VSYS is not regulated when charger not connected. We should go back to simple charger and buck-boost converters for 3v3
+- use https://www.ti.com/product/TPS63001 instead - seems smallish enough hopefully
 - could this be better audio codec? https://jlcpcb.com/partdetail/NuvotonTech-NAU88C22YG/C914209 (it's cheaper, has integrated speaker driver, simpler to interact with, but requires MCLK, that has to be provided by the chip, it has headphone detection and one extra GPIO, no HW reset pin required)
 - slimmer connector https://jlcpcb.com/partdetail/XkbConnection-X05A10H40G/C528037
 - swap mic & radio input so that we can do low power audio pass through from radio directly to headphone amps of the audio codec
 - 4k7 Ohm pull up from ldo select to vcc (now direct connection)
+- buy header pins (plenty for the connectors)
 
 - A button should be square (turned 45deg)
 

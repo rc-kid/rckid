@@ -27,10 +27,6 @@ link_with_librckid(display-fill)
 add_executable(graphics-appRGB "graphics_appRGB.cpp")
 link_with_librckid(graphics-appRGB)
 
-# displays PNG image 
-add_executable(display-png "display_png.cpp")
-link_with_librckid(display-png)
-
 # displays simple ui elements to verify the framework works
 add_executable(display-ui "display_ui.cpp")
 target_link_libraries(display-ui PRIVATE libgbcemu)

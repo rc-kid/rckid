@@ -1,5 +1,5 @@
 #include "rckid.h"
-#include "graphics/bitmap.h"
+#include "graphics/canvas.h"
 #include "assets/fonts/Iosevka16.h"
 
 namespace rckid {
@@ -12,7 +12,7 @@ namespace rckid {
             LOG(LL_ERROR, "File:        " << file);
         }
         // and draw the debug console
-        RenderableBitmap<ColorRGB> fb{RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT};
+        RenderableCanvas<ColorRGB> fb{RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT};
         fb.fill(ColorRGB::RGB(0, 0, 255));
         Font f = Font::fromROM<assets::Iosevka16>();
         fb.text(10, 10, f, ColorRGB::RGB(255, 255, 255))

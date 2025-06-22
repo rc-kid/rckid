@@ -16,13 +16,13 @@ namespace rckid::ui {
             bmp_{} {
         }
 
-        Image(Rect rect, Bitmap2 && bmp):
+        Image(Rect rect, Bitmap && bmp):
             Widget{rect},
             bmp_{std::move(bmp)} {
             reposition();
         }
     
-        Image(Bitmap2 && bmp): bmp_{std::move(bmp)} {
+        Image(Bitmap && bmp): bmp_{std::move(bmp)} {
             w_ = bmp_.width();
             h_ = bmp_.height();
             reposition();
@@ -42,14 +42,14 @@ namespace rckid::ui {
             return *this;
         }
 
-        Image & operator = (Bitmap2 && bmp) noexcept {
+        Image & operator = (Bitmap && bmp) noexcept {
             setBitmap(std::move(bmp));
             return *this;
         }
 
-        void setBitmap(Bitmap2 && bmp) noexcept {
-            bmp_.~Bitmap2();
-            new (&bmp_) Bitmap2{std::move(bmp)};
+        void setBitmap(Bitmap && bmp) noexcept {
+            bmp_.~Bitmap();
+            new (&bmp_) Bitmap{std::move(bmp)};
             shrinkToFit();
         }
 
@@ -110,7 +110,7 @@ namespace rckid::ui {
             bmp_.clear();
         }
 
-        Bitmap2 & bitmap() { return bmp_; }
+        Bitmap & bitmap() { return bmp_; }
 
     protected:
 
@@ -169,7 +169,7 @@ namespace rckid::ui {
             return bmp_.height();
         }
 
-        Bitmap2 bmp_;
+        Bitmap bmp_;
 
         HAlign hAlign_ = HAlign::Center;
         VAlign vAlign_ = VAlign::Center;
