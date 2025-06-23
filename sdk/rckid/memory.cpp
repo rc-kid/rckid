@@ -11,8 +11,9 @@ namespace rckid {
     struct HeapChunk;
 
     char * Heap::end_ = & __StackLimit;
-    char * Arena::start_ = & __bss_end__;
-    char * Arena::end_ = & __bss_end__;
+    // FIXHEAP
+    //char * Arena::start_ = & __bss_end__;
+    //char * Arena::end_ = & __bss_end__;
 
     HeapChunk * freelist_ = nullptr;
 
@@ -130,13 +131,14 @@ namespace rckid {
     void memoryReset() {
         // reset the heap and arena pointers to the beginning of the memory        
         LOG(LL_HEAP, "Resetting memory");
+        // FIXHEAP
         Heap::end_ = & __StackLimit;
-        Arena::start_ = & __bss_end__;
-        Arena::end_ = & __bss_end__;
+        //Arena::start_ = & __bss_end__;
+        //Arena::end_ = & __bss_end__;
         freelist_ = nullptr;
         LOG(LL_HEAP, "Heap end: " << (void*)Heap::end_);
-        LOG(LL_HEAP, "Arena start: " << (void*)Arena::start_);
-        LOG(LL_HEAP, "Arena end: " << (void*)Arena::end_);
+        //LOG(LL_HEAP, "Arena start: " << (void*)Arena::start_);
+        //LOG(LL_HEAP, "Arena end: " << (void*)Arena::end_);
     }
 
     void * Heap::allocBytes(uint32_t numBytes) {
@@ -173,7 +175,8 @@ namespace rckid {
         end_ -= numBytes;
         HeapChunk * result = (HeapChunk*) end_;
         // if we are over the limit, panic
-        ASSERT(end_ >= Arena::end_);
+        // FIXHEAP
+        //ASSERT(end_ >= Arena::end_);
         // set the chunk's size and return it 
         result->setSize(numBytes);
         LOG(LL_HEAP, "Allocating " << numBytes << " bytes from " << (result->ptr()));
@@ -221,10 +224,13 @@ namespace rckid {
 
     }
 
-    bool Arena::contains(void const * ptr) {
-        return ptr >= & __bss_end__ && ptr < Arena::end_;
-    }
 
+
+    uint32_t memoryFree() {
+        memoryCheckStackProtection();
+        // return the number of bytes between the heap end and the stack limit
+        return static_cast<uint32_t>(Heap::end_ -  & __bss_end__);
+    }
 
 #ifdef __GNUC__        
 #pragma GCC diagnostic push

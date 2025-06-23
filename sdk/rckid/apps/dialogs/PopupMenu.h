@@ -31,11 +31,8 @@ namespace rckid {
         }
 
         static std::optional<uint32_t> show(ui::Menu * menu) {
-            NewArenaGuard g;
-            ArenaAllocationGuard gg;
-            PopupMenu * pm = new PopupMenu{menu};
-            std::optional<uint32_t> res = pm->run();
-            delete pm;
+            PopupMenu pm{menu};
+            std::optional<uint32_t> res = pm.run();
             return res;
         }
 

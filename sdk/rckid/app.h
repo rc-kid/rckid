@@ -28,10 +28,8 @@ namespace rckid {
          */
         template<typename T>
         static void run() {
-            NewArenaGuard g{};
-            T * app = new (Arena::alloc<T>()) T{};
-            app->loop();
-            delete app;
+            T app{};
+            app.loop();
         }
 
         /** Returns true if the current app should count towards the daily app time budget managed by the device. By default all apps count towards the budget, whereas some apps may decide otherwise.

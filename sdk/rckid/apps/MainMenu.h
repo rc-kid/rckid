@@ -145,7 +145,7 @@ namespace rckid {
         }
 
         void historyPush() {
-            history_ = new (Arena::alloc<PreviousMenu>()) PreviousMenu{c_->currentIndex(), generator_, history_};
+            history_ = new PreviousMenu{c_->currentIndex(), generator_, history_};
         }
 
         void historyPop(Direction transition = Direction::Down) {
@@ -157,8 +157,7 @@ namespace rckid {
             c_->setMenu(generator_());
             c_->setItem(h->index, transition);
             // since we are the only ones in the arena and the menu histories are the only thing being stored there, we must be able to free the latest history
-            bool ok = Arena::tryFree(h);
-            ASSERT(ok);
+            delete h;
         }
 
     private:

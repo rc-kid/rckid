@@ -180,9 +180,8 @@ int main() {
                 },
                 [](MainMenuGameLauncher const & gl) {
                     // TODO some nicer way to run the game? 
-                    NewArenaGuard g{};
                     LOG(LL_INFO, "running game: " << gl.file);
-                    auto app = gbcemu::GBCEmu{};
+                    gbcemu::GBCEmu app{};
                     app.loadCartridge(new gbcemu::CachedGamePak{fs::fileRead(STR("/games/" << gl.file))});
                     app.run();
                 }

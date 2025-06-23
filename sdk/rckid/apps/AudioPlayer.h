@@ -39,7 +39,6 @@ namespace rckid {
                     return;
                 }
                 if (ext == ".mp3") {
-                    NewArenaGuard g{};
                     MP3Stream mp3{f};
                     Player::run(path, mp3);
                 } else {
@@ -96,9 +95,8 @@ namespace rckid {
             }
 
             static bool run(String path, AudioStream & s) {
-                Player * p = new (Arena::alloc<Player>()) Player{path, s};
-                std::optional<bool> res = p->run();
-                delete p;
+                Player p{path, s};
+                std::optional<bool> res = p.run();
                 if (res.has_value())
                     return res.value();
                 return false;
