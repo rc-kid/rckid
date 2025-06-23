@@ -146,7 +146,8 @@ namespace rckid::gbcemu {
 
         CachedGamePak(T && s):
             s_{std::move(s)} {
-                Arena::allocBytes(PAGE_SIZE * 4);
+                // FIXHEAP -- why was this here?
+                //Arena::allocBytes(PAGE_SIZE * 4);
 
         }
 
@@ -188,7 +189,7 @@ namespace rckid::gbcemu {
             // page0 must always be available and hence is removed from the caching
             if (page == 0) {
                 if (page0_ == nullptr) {
-                    page0_ = new PageInfo{reinterpret_cast<uint8_t*>(Arena::tryAllocBytes(PAGE_SIZE))};
+                    page0_ = new PageInfo{new uint8_t[PAGE_SIZE]};
                     fetchPage(0, page0_);
                 }
                 return page0_->buffer;
@@ -222,7 +223,7 @@ namespace rckid::gbcemu {
                 p = p->last;
             }
             // haven't found the page, try creating one first
-            uint8_t * buffer = reinterpret_cast<uint8_t*>(Arena::tryAllocBytes(PAGE_SIZE));
+            uint8_t * buffer = new uint8_t[PAGE_SIZE];
             if (buffer != nullptr) {
                 p = new PageInfo{buffer};
                 return p;

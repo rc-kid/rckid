@@ -28,19 +28,14 @@ extern "C" {
     void * malloc(size_t numBytes) {
         if (rckid::SystemMallocGuard::isDefault())
             return __libc_malloc(numBytes);
-        else if (rckid::Heap::isDefaultTarget())
-            return rckid::Heap::allocBytes(numBytes);
         else 
-            return rckid::Arena::allocBytes(numBytes);
+            return rckid::Heap::allocBytes(numBytes);
     }
 
     // if the pointer to be freed belongs to RCKId's heap, we should use own heap free, otherwise use normal free (and assert it does not belong to fantasy heap in general as that would be weird)
     void free(void * ptr) {
         if (rckid::Heap::contains(ptr)) {
             rckid::Heap::free(ptr);
-        } else if (rckid::Arena::contains(ptr)) {
-            // don't do anything if the pointer comes from arena
-            return;
         // otherwise this is a libc pointer and should be deleted accordingly
         } else {
             __libc_free(ptr);

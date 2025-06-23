@@ -30,20 +30,14 @@ namespace rckid {
         }
 
         static void error(String title, String text) {
-            NewArenaGuard g;
-            ArenaAllocationGuard gg;
-            InfoDialog * d  = new InfoDialog{Icon{assets::icons_64::poo}, std::move(title), std::move(text)};
-            d->g_.setBg(ColorRGB::Red().withAlpha(32));
-            d->run();
-            delete d;
+            InfoDialog d{Icon{assets::icons_64::poo}, std::move(title), std::move(text)};
+            d.g_.setBg(ColorRGB::Red().withAlpha(32));
+            d.run();
         }
 
         static void info(String title, String text) {
-            NewArenaGuard g;
-            ArenaAllocationGuard gg;
-            InfoDialog * d  = new InfoDialog{Icon{assets::icons_64::book}, std::move(title), std::move(text)};
-            d->run();
-            delete d;
+            InfoDialog d{Icon{assets::icons_64::book}, std::move(title), std::move(text)};
+            d.run();
         }
 
         /** Info dialog is the only one that is *not* budgeted (we use it to inform user that we are out of budget.

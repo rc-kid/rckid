@@ -102,7 +102,6 @@ namespace rckid::ui {
         }
 
         Icon getIconFor(fs::Entry const & entry) {
-            NewArenaGuard g{};
             if (entry.isFolder()) {
                 return Icon{assets::icons_64::folder};
             } else {

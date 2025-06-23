@@ -1,63 +1,6 @@
 #include <platform/tests.h>
 #include <rckid/rckid.h>
 
-TEST(memory, arenaAllocation) {
-    using namespace rckid;
-    Arena::enter();
-    uint8_t * a = (uint8_t*)Arena::allocBytes(128);
-    uint8_t * b = (uint8_t*)Arena::allocBytes(128);
-    EXPECT(a < b);
-    EXPECT(b == a + 128);
-    EXPECT(Arena::contains(a));
-    EXPECT(Arena::contains(b));
-    EXPECT(!Heap::contains(a));
-    EXPECT(!Heap::contains(b));
-    Arena::leave();
-}
-
-TEST(memory, arenaReset) {
-    using namespace rckid;
-    Arena::enter();
-    uint8_t * a = (uint8_t*)Arena::allocBytes(128);
-    uint8_t * b = (uint8_t*)Arena::allocBytes(128);
-    Arena::reset();
-    uint8_t * c = (uint8_t*)Arena::allocBytes(128);
-    uint8_t * d = (uint8_t*)Arena::allocBytes(128);
-    EXPECT(a == c);
-    EXPECT(b == d);
-    Arena::leave();
-}
-
-TEST(memory, arenaLeave) {
-    using namespace rckid;
-    Arena::enter();
-    uint8_t * a = (uint8_t*)Arena::allocBytes(128);
-    uint8_t * b = (uint8_t*)Arena::allocBytes(128);
-    Arena::leave();
-    Arena::enter();
-    uint8_t * c = (uint8_t*)Arena::allocBytes(128);
-    uint8_t * d = (uint8_t*)Arena::allocBytes(128);
-    EXPECT(a == c);
-    EXPECT(b == d);
-    Arena::leave();
-}
-
-TEST(memory, arenaLeaveMemoryFootprint) {
-    using namespace rckid;
-    uint32_t freeHeap = memoryFree();
-    Arena::enter();
-    uint32_t afterArena = memoryFree();
-    // entering arena allocated new arena header, total free memory should be lower by that
-    EXPECT(freeHeap - sizeof(void*) == afterArena);
-    Arena::allocBytes(128);
-    uint32_t afterAlloc = memoryFree();
-    // the 128bytes, no header
-    EXPECT(afterArena - 128 == afterAlloc);
-    Arena::leave();
-    // everything gets deleted when done
-    EXPECT(freeHeap == memoryFree());
-}
-
 TEST(memory, heapAllocation) {
     using namespace rckid;
     uint8_t * a = (uint8_t *)Heap::allocBytes(128);
@@ -65,8 +8,6 @@ TEST(memory, heapAllocation) {
     EXPECT(a + 128 != b);
     EXPECT(Heap::contains(a));
     EXPECT(Heap::contains(b));
-    EXPECT(! Arena::contains(a));
-    EXPECT(! Arena::contains(b));
     Heap::free(a);
     Heap::free(b);
 }
@@ -111,8 +52,6 @@ TEST(memory, ownHeapManagementEnabled) {
     EXPECT(a + 128 != b);
     EXPECT(Heap::contains(a));
     EXPECT(Heap::contains(b));
-    EXPECT(! Arena::contains(a));
-    EXPECT(! Arena::contains(b));
     free(a);
     delete [] b;
     rckid::SystemMallocGuard::enable();

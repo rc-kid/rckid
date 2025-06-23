@@ -52,7 +52,6 @@ int main() {
 #endif
     initialize();
     while (true) {
-        Arena::enter();
         auto app = gbcemu::GBCEmu{};
         //app.loadCartridge(new gbcemu::FlashGamePak{});
         //if (false)
@@ -80,6 +79,5 @@ int main() {
         t = uptimeUs() - t;
         auto stats = GBCStats{t, app.elapsedCycles()};
         stats.run();
-        Arena::leave();
     }
 }

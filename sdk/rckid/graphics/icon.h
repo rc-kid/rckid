@@ -67,14 +67,12 @@ namespace rckid {
             If the icon is not specified, materializes the default icon (poo:). 
          */
         Bitmap toBitmap() const {
-            NewArenaGuard g{};
-            return Bitmap{getDecoder()};
+           return Bitmap{getDecoder()};
         }
 
         /** Materializes the icon into given bitmap. If the bitmap is already the correct size, this makes the operation use less memory.
          */
         void intoBitmap(Bitmap & bitmap) const {
-            NewArenaGuard g{};
             PNG png{getDecoder()};
             /*
             if (png.width() > bitmap.width() || png.height() > bitmap.height()) {
@@ -90,11 +88,11 @@ namespace rckid {
             if (bufferSize_ == BUFFER_FILE_PATH) {
                 auto f = fs::fileRead(reinterpret_cast<char const *>(buffer_));
                 if (f.good())
-                    return ARENA(PNG::fromStream(std::move(f)));
+                    return PNG::fromStream(std::move(f));
             } else if (valid()) {
-                return ARENA(PNG::fromBuffer(buffer_, bufferSize_));
+                return PNG::fromBuffer(buffer_, bufferSize_);
             }
-            return ARENA(PNG::fromBuffer(assets::icons_64::poo));
+            return PNG::fromBuffer(assets::icons_64::poo);
         }
 
         static constexpr uint32_t BUFFER_FILE_PATH = 0xffffffff; 
