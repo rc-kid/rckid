@@ -17,10 +17,10 @@ namespace rckid {
      */
     class InfoDialog : public ui::App<void> {
     public:
-        InfoDialog(Bitmap && icon, String title, String text):
+        InfoDialog(Icon const & icon, String title, String text):
             ui::App<void>{Rect::XYWH(0, 144, 320, 96), /* raw */ true} {
             using namespace ui;
-            icon_ = g_.addChild(new ui::Image{Rect::WH(96, 96), std::move(icon)});
+            icon_ = g_.addChild(new ui::Image{Rect::WH(96, 96), icon});
             icon_->setTransparentColor(ColorRGB::Black());
             title_ = g_.addChild(new ui::Label{ 96, 5, std::move(title)});
             title_->setFont(Font::fromROM<assets::OpenDyslexic32>());
@@ -32,7 +32,7 @@ namespace rckid {
         static void error(String title, String text) {
             NewArenaGuard g;
             ArenaAllocationGuard gg;
-            InfoDialog * d  = new InfoDialog{Bitmap{PNG::fromBuffer(assets::icons_64::poo)}, std::move(title), std::move(text)};
+            InfoDialog * d  = new InfoDialog{Icon{assets::icons_64::poo}, std::move(title), std::move(text)};
             d->g_.setBg(ColorRGB::Red().withAlpha(32));
             d->run();
             delete d;
@@ -41,7 +41,7 @@ namespace rckid {
         static void info(String title, String text) {
             NewArenaGuard g;
             ArenaAllocationGuard gg;
-            InfoDialog * d  = new InfoDialog{Bitmap{PNG::fromBuffer(assets::icons_64::book)}, std::move(title), std::move(text)};
+            InfoDialog * d  = new InfoDialog{Icon{assets::icons_64::book}, std::move(title), std::move(text)};
             d->run();
             delete d;
         }

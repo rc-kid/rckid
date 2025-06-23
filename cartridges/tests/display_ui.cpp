@@ -173,7 +173,10 @@ int main() {
                 [](ui::Menu::Action const & action) {
                     LOG(LL_INFO, "Running app...");
                     yield();
-                    action();
+                    if (action)
+                        action();
+                    else
+                        InfoDialog::error("Empty app", "The app you have chosen is empty. Ouch");
                 },
                 [](MainMenuGameLauncher const & gl) {
                     // TODO some nicer way to run the game? 

@@ -40,6 +40,10 @@ namespace rckid {
             loadImage(std::move(decoder));
         }
 
+        ~Bitmap() {
+            clear();
+        }
+
         Bitmap & operator = (Bitmap const &) = delete;
 
         Bitmap & operator = (Bitmap && other) noexcept {

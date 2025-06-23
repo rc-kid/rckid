@@ -71,9 +71,8 @@
 
 # TODO
 
-- fix widget render to bitmap to go to canvas
-- fix bitmap tests for canvas
-
+- Icon::toBitmap should really not use the arena, but heap instead to ensure that the icons that are created as part of the 
+- or actually use arena, but in Image::create the image first according to the decoder's width and height, then enger new arena for the decoder, decode, leave arena, be done 
 
 - convert info dialog to use icons
 - see if we can enable exceptions, what are the runtime & stack costs of them running
@@ -276,3 +275,4 @@ https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01
 - can use also SI4703, but that one does not have internal / external antenna - do I really need it? 
 - this allows for shorter audio paths
 - or just use module? 
+
