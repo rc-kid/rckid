@@ -190,7 +190,19 @@ namespace rckid {
                     delete [] writeData_;
             }
 
+            /** Returns true if the packet is a control request callback, a special packet that does not get send, but instead calls the callback, thus actually giving the callback function full control over the I2C bus. 
+             */
+            bool isControlCallback() const {
+                return address == 0 && writeLen == 0 && readLen == 0;
+            }
+
             void transmit() {
+                // if this is control callback, call the callback instead of transmitting
+                if (isControlCallback()) {
+                    if (callback)
+                        callback(0);
+                    return;
+                }
                 i2c0->hw->enable = 0;
                 i2c0->hw->tar = address;
                 i2c0->hw->enable = 1;
@@ -242,6 +254,17 @@ namespace rckid {
                 lastPacket->next = p;
                 lastPacket = p;
             }
+        }
+
+        void resume() {
+            ASSERT(currentPacket->isControlCallback());
+            Packet * p = currentPacket;
+            currentPacket = p->next;
+            if (currentPacket != nullptr)
+                currentPacket->transmit();
+            else
+                lastPacket = nullptr;
+            delete currentPacket;
         }
 
         template<typename T>

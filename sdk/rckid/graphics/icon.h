@@ -2,6 +2,7 @@
 
 #include "bitmap.h"
 #include "../filesystem.h"
+#include "../assets/icons_64.h"
 
 namespace rckid {
 

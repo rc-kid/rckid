@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../graphics/bitmap.h"
+#include "../graphics/icon.h"
 #include "widget.h"
 
 namespace rckid::ui {
@@ -21,11 +22,19 @@ namespace rckid::ui {
             bmp_{std::move(bmp)} {
             reposition();
         }
+
+        Image(Rect rect, Icon const & icon):
+            Image{rect, icon.toBitmap()} {
+        }
     
         Image(Bitmap && bmp): bmp_{std::move(bmp)} {
             w_ = bmp_.width();
             h_ = bmp_.height();
             reposition();
+        }
+
+        Image(Icon const & icon):
+            Image{icon.toBitmap()} {
         }
 
         Image(Image const &) = delete;
