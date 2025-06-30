@@ -7,12 +7,6 @@
  */
 // ================================================================================================
 
-/** Memory limits are created automatically by the linker script on the backend so we just have to extern the symbols here. 
- */
-#define RCKID_MEMORY_INITIALIZATION \
-    extern char __bss_end__; \
-    extern char __StackLimit;
-
 /** Critical voltage at which the device will not allow itself to be started (3v3 power rail). To prevent spurious measurements when the device is powering on or off, a configurable amount of consecutive vcc measurements must be below the threshold top trigger the reaction. 
  
     TODO The limit here is the fact that AVR runs off the VCC rail while communicating with RP over I2C (i.e. SDA and SCL will be 3v3. If we went lower, we could get past AVR's tolerance). In version 3 this (and the warning numbers can be lowered to extend battery life a bit). 

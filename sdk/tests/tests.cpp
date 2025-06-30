@@ -1,5 +1,7 @@
 #include "platform/tests.h"
 
+#include "rckid/memory.h"
+
 namespace rckid {
     void initializeNoWindow(int argc, char * argv[]);
 }

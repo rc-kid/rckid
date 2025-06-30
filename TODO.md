@@ -71,6 +71,14 @@
 
 # TODO
 
+- when stack protection fails, it will fail in the error code as well forever, update stack on device, do new thread on rckid? 
+
+- best fit with only actually fitting stuff seems to work better
+- add comments
+
+- make backgrounds more resilient
+
+
 - Icon::toBitmap should really not use the arena, but heap instead to ensure that the icons that are created as part of the 
 - or actually use arena, but in Image::create the image first according to the decoder's width and height, then enger new arena for the decoder, decode, leave arena, be done 
 

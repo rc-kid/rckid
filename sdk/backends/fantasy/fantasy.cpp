@@ -15,10 +15,6 @@
 #include "rckid/filesystem.h"
 #include "rckid/ui/header.h"
 
-namespace rckid {
-    extern thread_local char ** stackStart_;
-}
-
 #ifndef _WIN32
 extern "C" {
     extern void *__libc_malloc(size_t);
@@ -29,13 +25,13 @@ extern "C" {
         if (rckid::SystemMallocGuard::isDefault())
             return __libc_malloc(numBytes);
         else 
-            return rckid::Heap::allocBytes(numBytes);
+            return rckid::RAMHeap::alloc(numBytes);
     }
 
     // if the pointer to be freed belongs to RCKId's heap, we should use own heap free, otherwise use normal free (and assert it does not belong to fantasy heap in general as that would be weird)
     void free(void * ptr) {
-        if (rckid::Heap::contains(ptr)) {
-            rckid::Heap::free(ptr);
+        if (rckid::RAMHeap::contains(ptr)) {
+            rckid::RAMHeap::free(ptr);
         // otherwise this is a libc pointer and should be deleted accordingly
         } else {
             __libc_free(ptr);
@@ -129,7 +125,7 @@ namespace rckid {
 
     void fatalError(uint32_t error, uint32_t arg, uint32_t line, char const * file) {
         // disable stack protection (in case we bailed out because of the stack)
-        stackStart_ = nullptr;
+        // stackStart_ = nullptr;
         // close the SD and flash files
         {
             SystemMallocGuard g_;
@@ -166,8 +162,8 @@ namespace rckid {
     }
 
     void initialize(int argc, char const * argv[]) {
+        StackProtection::currentSize();
         SystemMallocGuard::enable();
-        memoryInstrumentStackProtection();
         InitWindow(640, 480, "RCKid");
         display::img = GenImageColor(RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT, BLACK);
         display::texture = LoadTextureFromImage(display::img);
@@ -244,9 +240,13 @@ namespace rckid {
         time::nextSecond_ = uptimeUs64() + 1000000;
         // mark that we are initialized and the graphics & sound should be used
         initialized_ = true;
+        LOG(LL_INFO, "Initialization done.");
+        LOG(LL_INFO, "Heap used  " << RAMHeap::usedBytes());
+        LOG(LL_INFO, "Stack size " << StackProtection::currentSize());
     }
 
     void initializeNoWindow([[maybe_unused]] int argc, [[maybe_unused]] char * argv[]) {
+        std::cout << "RCKid initialization w/o window" << std::endl;
         SystemMallocGuard::disable();
     }
 
@@ -290,17 +290,17 @@ namespace rckid {
     }
 
     void yield() {
-        memoryCheckStackProtection();   
+        StackProtection::check();   
         // nothing yet to be be done here in fantasy mode
     }
 
     void keepAlive() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // nothing to do here in fantasy mode, the device is always on
     }
 
     uint32_t uptimeUs() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         using namespace std::chrono;
         return static_cast<uint32_t>(duration_cast<microseconds>(steady_clock::now() - time::uptimeStart_).count()); 
     }
@@ -315,54 +315,54 @@ namespace rckid {
     // io
 
     bool btnDown(Btn b) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::buttons_ & static_cast<uint32_t>(b);
     }    
 
     bool btnPressed(Btn b) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return btnDown(b) && ! (io::lastButtons_ & static_cast<uint32_t>(b));
     }    
 
     bool btnReleased(Btn b) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return btnDown(b) && ! (io::lastButtons_ & static_cast<uint32_t>(b));
     }
     
     void btnClear(Btn b) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // simply ensure last state is identical to current state
         io::lastButtons_ &= ~static_cast<uint32_t>(b);
         io::lastButtons_ |= (io::buttons_ & static_cast<uint32_t>(b));
     }
 
     int16_t accelX() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::accelX_; 
     }
 
     int16_t accelY() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::accelY_; 
     }
 
     int16_t accelZ() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::accelZ_; 
     }
 
     int16_t gyroX() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::gyroX_; 
     }
 
     int16_t gyroY() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::gyroY_; 
     }
 
     int16_t gyroZ() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::gyroZ_; 
     }
 
@@ -410,17 +410,17 @@ namespace rckid {
     }
 
     void displayOn() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // no need to do anything in fantasy mode
     }
 
     void displayOff() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // no need to do anything in fantasy mode
     }
 
     void displayClear(ColorRGB color) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // fill the internal framebuffer with the given color
         ImageClearBackground(&display::img, { color.r(), color.g(), color.b(), 255 });
         // reset the draw rectangle
@@ -428,49 +428,49 @@ namespace rckid {
     }
 
     DisplayRefreshDirection displayRefreshDirection() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return display::direction;
     }
 
     void displaySetRefreshDirection(DisplayRefreshDirection value) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         display::direction = value;
         displayResetDrawRectangle();
     }
 
     uint8_t displayBrightness() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         return display::brightness;
     }
 
     void displaySetBrightness(uint8_t value) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         display::brightness = value;
     }
 
     Rect displayUpdateRegion() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return display::rect;
     }
 
     void displaySetUpdateRegion(Rect value) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         display::rect = value;
         displayResetDrawRectangle();
     }
 
     void displaySetUpdateRegion(Coord width, Coord height) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         displaySetUpdateRegion(Rect::XYWH((RCKID_DISPLAY_WIDTH - width) / 2, (RCKID_DISPLAY_HEIGHT - height) / 2, width, height));
     }
 
     bool displayUpdateActive() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return display::updating;
     }
 
     void displayWaitUpdateDone() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         while (displayUpdateActive())
             yield();
     }
@@ -492,7 +492,7 @@ namespace rckid {
     }
 
     void displayUpdate(uint16_t const * pixels, uint32_t numPixels) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         ++display::updating;
         display::pixelsSent += numPixels;
         // update the pixels in the internal framebuffer
@@ -542,7 +542,7 @@ namespace rckid {
     /** Refills the raylib's audio stream. 
      */
     void audioStreamRefill(void * buffer, unsigned int samples) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // get the stereo view of the input buffer
         int16_t * stereo = reinterpret_cast<int16_t*>(buffer);
         while (samples-- != 0) {
@@ -568,13 +568,13 @@ namespace rckid {
     }
 
     bool audioHeadphones() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // TODO make this conditional on something
         return false;
     }
 
     bool audioPaused() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         switch (audio::mode) {
             case audio::Mode::Play:
                 return !IsAudioStreamPlaying(audio::stream);
@@ -588,27 +588,27 @@ namespace rckid {
     }
 
     bool audioPlayback() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return audio::mode == audio::Mode::Play;
     }
 
     bool audioRecording() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return audio::mode == audio::Mode::Record;
     }
 
     uint8_t audioVolume() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return audio::volume;
     }
 
     void audioSetVolume(uint8_t value) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         audio::volume = value;
     }
 
     void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         if (audio::mode != audio::Mode::Off)
             audioStop();
         {
@@ -623,7 +623,7 @@ namespace rckid {
     }   
 
     void audioPause() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         if (!audioPaused()) {
             switch (audio::mode) {
                 case audio::Mode::Play: {
@@ -640,7 +640,7 @@ namespace rckid {
     }
 
     void audioResume() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         if (audioPaused()) {
             switch (audio::mode) {
                 case audio::Mode::Play: {
@@ -657,7 +657,7 @@ namespace rckid {
     }
 
     void audioStop() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         switch (audio::mode) {
             case audio::Mode::Play: {
                 SystemMallocGuard g;
@@ -679,12 +679,12 @@ namespace rckid {
     // SD Card access
 
     uint32_t sdCapacity() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return sd::numBlocks_;
     }
 
     bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         ASSERT(sd::numBlocks_ != 0);
         try {
             SystemMallocGuard g;
@@ -698,7 +698,7 @@ namespace rckid {
     }
 
     bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         ASSERT(sd::numBlocks_ != 0);
         try {
             SystemMallocGuard g;
@@ -714,22 +714,22 @@ namespace rckid {
     // Cartridge filesystem access
 
     uint32_t cartridgeCapacity() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         return flash::size_;
     }
 
     uint32_t cartridgeWriteSize() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         return 256; 
     }
 
     uint32_t cartridgeEraseSize() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         return 4096; 
     }
 
     void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         ASSERT(start + numBytes <= flash::size_);
         try {
             SystemMallocGuard g;
@@ -742,7 +742,7 @@ namespace rckid {
     }
 
     void cartridgeWrite(uint32_t start, uint8_t const * buffer) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         ASSERT(start % 256 == 0);
         ASSERT(start + 256 <= flash::size_);
         try {
@@ -756,7 +756,7 @@ namespace rckid {
     }
 
     void cartridgeErase(uint32_t start) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         ASSERT(start % 4096 == 0);
         ASSERT(start + 4096 <= flash::size_);
         try {
@@ -773,7 +773,7 @@ namespace rckid {
 
     // rumbler
     void rumblerEffect(RumblerEffect const & effect) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         if (effect.strength == 0)
             LOG(LL_INFO, "rumbler: off");
         else  
@@ -783,12 +783,12 @@ namespace rckid {
     // rgb
 
     void rgbEffect(uint8_t rgb, RGBEffect const & effect) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         LOG(LL_INFO, "rgb: " << rgb << ", effect: " << effect);
     }
     
     void rgbEffects(RGBEffect const & a, RGBEffect const & b, RGBEffect const & dpad, RGBEffect const & sel, RGBEffect const & start) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         LOG(LL_INFO, "rgb: a,     effect: " << a);
         LOG(LL_INFO, "rgb: b,     effect: " << b);
         LOG(LL_INFO, "rgb: dpad,  effect: " << dpad);
@@ -797,41 +797,41 @@ namespace rckid {
     }
     
     void rgbOff() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         LOG(LL_INFO, "rgb: off");
     }
 
     // memory
 
     bool memoryIsImmutable([[maybe_unused]] void const * ptr) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return false;
     }
 
     // budget
 
     uint32_t budget() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return budgetInfo::budget_;
     }
 
     uint32_t budgetDaily() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return budgetInfo::budgetDaily_;
     }
 
     void budgetSet(uint32_t seconds) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         budgetInfo::budget_ = seconds;
     }
 
     void budgetDailySet(uint32_t seconds) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         budgetInfo::budgetDaily_ = seconds;
     }
 
     void budgetReset() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         budgetInfo::budget_ = budgetInfo::budgetDaily_; 
     }
 
