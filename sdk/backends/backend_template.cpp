@@ -16,7 +16,7 @@ namespace rckid {
     NORETURN(void bsod(uint32_t error, uint32_t arg, uint32_t line = 0, char const * file = nullptr));
 
     // forward declaration of memory stack protection check
-    void memoryCheckStackProtection();
+    void StackProtection::check();
 
     namespace filesystem {
         void initialize();
@@ -40,310 +40,310 @@ namespace rckid {
     }
 
     void tick() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void yield() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void keepAlive() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     uint32_t uptimeUs() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     uint64_t uptimeUs64() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     TinyDateTime now() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     // io
 
     bool btnDown(Btn b) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     bool btnPressed(Btn b) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     bool btnReleased(Btn b) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void btnClear(Btn b) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     int16_t accelX() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     int16_t accelY() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     int16_t accelZ() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     int16_t gyroX() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     int16_t gyroY() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     int16_t gyroZ() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     uint16_t lightAmbient() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;        
     }
     
     uint16_t lightUV() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     // display
 
     void displayOn() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void displayOff() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void displayClear(ColorRGB color) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     DisplayRefreshDirection displayRefreshDirection() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void displaySetRefreshDirection(DisplayRefreshDirection value) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     uint8_t displayBrightness() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void displaySetBrightness(uint8_t value) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     Rect displayUpdateRegion() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void displaySetUpdateRegion(Rect value) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void displaySetUpdateRegion(Coord width, Coord height) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     bool displayUpdateActive() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void displayWaitUpdateDone() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void displayWaitVSync() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void displayUpdate(uint16_t const * pixels, uint32_t numPixels, DisplayUpdateCallback callback) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void displayUpdate(uint16_t const * pixels, uint32_t numPixels) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     // audio
 
     void audioStreamRefill(void * buffer, unsigned int samples) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     bool audioHeadphones() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     bool audioPaused() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     bool audioPlayback() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     bool audioRecording() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     uint8_t audioVolume() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void audioSetVolume(uint8_t value) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void audioPause() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void audioResume() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void audioStop() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     // SD Card access
 
     uint32_t sdCapacity() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     // Cartridge filesystem access
 
     uint32_t cartridgeCapacity() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     uint32_t cartridgeWriteSize() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
         return 256; 
     }
 
     uint32_t cartridgeEraseSize() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
         return 4096; 
     }
 
     void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void cartridgeWrite(uint32_t start, uint8_t const * buffer) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void cartridgeErase(uint32_t start) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     // rumbler
 
     void rumblerEffect(RumblerEffect const & effect) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     // rgb
 
     void rgbEffect(uint8_t rgb, RGBEffect const & effect) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
     
     void rgbEffects(RGBEffect const & a, RGBEffect const & b, RGBEffect const & dpad, RGBEffect const & sel, RGBEffect const & start) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
     
     void rgbOff() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     // memory
 
     bool memoryIsImmutable(void const * ptr) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // change this to specific platform implementation if immutable memory is supported
         return false;
     }
@@ -351,27 +351,27 @@ namespace rckid {
     // budget
 
     uint32_t budget() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     uint32_t budgetDaily() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void budgetSet(uint32_t seconds) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void budgetDailySet(uint32_t seconds) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void budgetReset() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 }

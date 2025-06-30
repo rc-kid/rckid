@@ -74,7 +74,7 @@ namespace rckid {
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
         PNG png = PNG::fromBuffer(assets::logo16);
-        png.decode16([&](uint16_t * line, [[maybe_unused]] int lineNum, int lineWidth){
+        png.decodeRGB([&](uint16_t * line, [[maybe_unused]] int lineNum, int lineWidth){
             for (int i = 0; i < lineWidth; ++i)
                 sendWord(line[i]);
         });

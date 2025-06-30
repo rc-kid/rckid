@@ -56,15 +56,12 @@ extern "C" {
     }    
 
     void *__wrap_malloc(size_t numBytes) {
-        if (rckid::Heap::isDefaultTarget())
-            return rckid::Heap::allocBytes(numBytes); 
-        else 
-            return rckid::Arena::allocBytes(numBytes);
+        return rckid::RAMHeap::alloc(numBytes);
     }
 
     void __wrap_free(void * ptr) { 
-        if (rckid::Heap::contains(ptr))
-            rckid::Heap::free(ptr); 
+        if (rckid::RAMHeap::contains(ptr))
+            rckid::RAMHeap::free(ptr); 
     }
 
     void *__wrap_calloc(size_t numBytes) {
@@ -107,8 +104,6 @@ namespace rckid {
     // various forward declarations
 
     NORETURN(void bsod(uint32_t error, uint32_t arg,  uint32_t line = 0, char const * file = nullptr));
-
-    void memoryCheckStackProtection();
 
     void audioPlaybackDMA(uint finished, uint other);
 
@@ -427,7 +422,6 @@ namespace rckid {
 
     void initialize([[maybe_unused]] int argc, [[maybe_unused]] char const * argv[]) {
         board_init();
-        memoryInstrumentStackProtection();
         // initialize the USB
         // TODO verify in mkIII that initializing the USB does not interfere with detection & stuff with the PMIC chip
         tud_init(BOARD_TUD_RHPORT);
@@ -646,28 +640,28 @@ namespace rckid {
     }
 
     void yield() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         tight_loop_contents();
         tud_task();
     }
 
     void keepAlive() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         time::idleTimeout_ = RCKID_IDLE_TIMETOUT;
     }
 
     uint32_t uptimeUs() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return time_us_32();
     }
 
     uint64_t uptimeUs64() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return time_us_64();
     }
 
     TinyDateTime timeNow() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // return the current time from the AVR state
         return io::avrState_.time;
     }
@@ -675,144 +669,144 @@ namespace rckid {
     // io
 
     bool btnDown(Btn b) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return buttonState(b, io::avrState_.status);
     }
 
     bool btnPressed(Btn b) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return buttonState(b, io::avrState_.status) && ! buttonState(b, io::lastStatus_);
     }
 
     bool btnReleased(Btn b) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return ! buttonState(b, io::avrState_.status) && buttonState(b, io::lastStatus_);
     }
 
     void btnClear(Btn b) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         RCKid::setButtonState(b, io::lastStatus_, btnDown(b));
     }
 
 
     int16_t accelX() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     int16_t accelY() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     int16_t accelZ() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     int16_t gyroX() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     int16_t gyroY() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     int16_t gyroZ() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     uint16_t lightAmbient() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::lightAls_;
     }
     
     uint16_t lightUV() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::lightUV_;
     }
 
     // display
 
     void displayOn() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void displayOff() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void displayClear(ColorRGB color) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         ST7789::clear(color.raw16());
     }
 
     DisplayRefreshDirection displayRefreshDirection() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return ST7789::refreshDirection();
     }
 
     void displaySetRefreshDirection(DisplayRefreshDirection value) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         ST7789::setRefreshDirection(value);
     }
 
     uint8_t displayBrightness() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::avrState_.brightness;
     }
 
     void displaySetBrightness(uint8_t value) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         i2c::sendCommand(cmd::SetBrightness{value});
         // we set the brightness here as it is a simple change outside of the small state we get on interrupts 
         io::avrState_.brightness = value;
     }
 
     Rect displayUpdateRegion() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return ST7789::updateRegion();
     }
 
     void displaySetUpdateRegion(Rect value) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         ST7789::setUpdateRegion(value);
     }
 
     void displaySetUpdateRegion(Coord width, Coord height) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         displaySetUpdateRegion(Rect::XYWH((RCKID_DISPLAY_WIDTH - width) / 2, (RCKID_DISPLAY_HEIGHT - height) / 2, width, height));
     }
 
     bool displayUpdateActive() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return ST7789::dmaUpdateInProgress();
     }
 
     void displayWaitUpdateDone() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // TODO can we be smarter here and go to sleep?  
         while (displayUpdateActive())
             yield();
     }
 
     void displayWaitVSync() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         ST7789::waitVSync();
     }
 
     void displayUpdate(uint16_t const * pixels, uint32_t numPixels, DisplayUpdateCallback callback) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         ST7789::dmaUpdateAsync(pixels, numPixels, callback);
     }
 
     void displayUpdate(uint16_t const * pixels, uint32_t numPixels) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         ST7789::dmaUpdateAsync(pixels, numPixels);
     }
 
@@ -840,42 +834,42 @@ namespace rckid {
     }
 
     void audioStreamRefill(void * buffer, unsigned int samples) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     bool audioHeadphones() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     bool audioPaused() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     bool audioPlayback() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     bool audioRecording() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     uint8_t audioVolume() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void audioSetVolume(uint8_t value) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // 
         audio::playbackBuffer_ = & buffer;
         audio::state_ = audio::State::Playback;
@@ -897,17 +891,17 @@ namespace rckid {
     }
 
     void audioPause() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void audioResume() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void audioStop() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         UNIMPLEMENTED;
     }
 
@@ -922,28 +916,28 @@ namespace rckid {
     // Cartridge filesystem access
 
     uint32_t cartridgeCapacity() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         return &__cartridge_filesystem_end - &__cartridge_filesystem_start;
     }
 
     uint32_t cartridgeWriteSize() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         return FLASH_PAGE_SIZE; // 256
     }
 
     uint32_t cartridgeEraseSize() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         return FLASH_SECTOR_SIZE; // 4096
     }
 
     void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // since flash is memory mapped via XIP, all we need to do is aggregate offset properly 
         memcpy(buffer, XIP_NOCACHE_NOALLOC_BASE + (&__cartridge_filesystem_start - XIP_BASE) + start, numBytes);
     }
 
     void cartridgeWrite(uint32_t start, uint8_t const * buffer) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         ASSERT(start < cartridgeCapacity());
         ASSERT(start + FLASH_PAGE_SIZE <= cartridgeCapacity());
         uint32_t offset = reinterpret_cast<uint32_t>(& __cartridge_filesystem_start) - XIP_BASE + start;
@@ -954,7 +948,7 @@ namespace rckid {
     }
 
     void cartridgeErase(uint32_t start) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         ASSERT(start < cartridgeCapacity());
         ASSERT(start + FLASH_SECTOR_SIZE <= cartridgeCapacity());
         uint32_t offset = reinterpret_cast<uint32_t>(& __cartridge_filesystem_start) - XIP_BASE + start;
@@ -969,24 +963,24 @@ namespace rckid {
     // rumbler
 
     void rumblerEffect(RumblerEffect const & effect) {
-        memoryCheckStackProtection();
+        StackProtection::check();
        i2c::sendCommand(cmd::Rumbler{effect});
     }
 
     // rgb
 
     void rgbEffect(uint8_t rgb, RGBEffect const & effect) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         i2c::sendCommand(cmd::SetRGBEffect{rgb, effect});
     }
     
     void rgbEffects(RGBEffect const & a, RGBEffect const & b, RGBEffect const & dpad, RGBEffect const & sel, RGBEffect const & start) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         i2c::sendCommand(cmd::SetRGBEffects{a, b, dpad, sel, start});
     }
     
     void rgbOff() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         i2c::sendCommand(cmd::RGBOff{});
     }
 
@@ -1000,17 +994,17 @@ namespace rckid {
     // budget
 
     uint32_t budget() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::avrState_.budget;
     }
 
     uint32_t budgetDaily() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::avrState_.dailyBudget;
     }
 
     void budgetSet(uint32_t seconds) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         if (seconds == io::avrState_.budget - 1) {
             --io::avrState_.budget;
             i2c::sendCommand(cmd::DecBudget{});
@@ -1021,13 +1015,13 @@ namespace rckid {
     }
 
     void budgetDailySet(uint32_t seconds) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         io::avrState_.dailyBudget = seconds;
         i2c::sendCommand(cmd::SetDailyBudget{seconds});
     }
 
     void budgetReset() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         io::avrState_.budget = io::avrState_.dailyBudget;
         i2c::sendCommand(cmd::ResetBudget{});
     }

@@ -1,6 +1,58 @@
 #include <platform/tests.h>
 #include <rckid/rckid.h>
 
+TEST(memory, heapAlloc) {
+    using namespace rckid;
+
+    RAMHeap::reset();
+    EXPECT(RAMHeap::usedBytes() == 0);
+    uint8_t * a = new uint8_t[10];
+    EXPECT(RAMHeap::usedBytes() == 16);
+    uint8_t * b = new uint8_t[20];
+    EXPECT(RAMHeap::usedBytes() == 16 + 24);
+
+    delete [] b;
+    EXPECT(RAMHeap::usedBytes() == 16);
+    delete [] a;
+    EXPECT(RAMHeap::usedBytes() == 0);
+
+    a = new uint8_t[10];
+    b = new uint8_t[20];
+    EXPECT(RAMHeap::usedBytes() == 16 + 24);
+    delete [] a;
+    EXPECT(RAMHeap::usedBytes() == 16 + 24);
+    delete [] b;
+    EXPECT(RAMHeap::usedBytes() == 0);
+}
+
+TEST(memory, heapAllocFromFreelist) {
+    using namespace rckid;
+
+    RAMHeap::reset();
+    EXPECT(RAMHeap::usedBytes() == 0);
+    uint8_t * a0 = new uint8_t[10];
+    uint8_t * a1 = new uint8_t[10];
+    uint8_t * a2 = new uint8_t[10];
+    uint8_t * a3 = new uint8_t[10];
+    uint8_t * a4 = new uint8_t[10];
+    EXPECT(RAMHeap::freeBytes() == 0);
+    EXPECT(RAMHeap::usedBytes() == 16 * 5);
+    delete [] a0;
+    EXPECT(RAMHeap::freeBytes() == 12);
+    delete [] a1;
+    EXPECT(RAMHeap::freeBytes() == 12 * 2);
+    delete [] a3;
+    EXPECT(RAMHeap::freeBytes() == 12 * 3);
+    EXPECT(RAMHeap::usedBytes() == 16 * 5);
+    delete [] a2;
+    delete [] a4;
+    EXPECT(RAMHeap::usedBytes() == 0);
+    EXPECT(RAMHeap::freeBytes() == 0);
+
+}
+
+/*
+
 TEST(memory, heapAllocation) {
     using namespace rckid;
     uint8_t * a = (uint8_t *)Heap::allocBytes(128);
@@ -56,6 +108,8 @@ TEST(memory, ownHeapManagementEnabled) {
     delete [] b;
     rckid::SystemMallocGuard::enable();
 }
+
+*/
 
 /*
 TEST(memory, astring) {

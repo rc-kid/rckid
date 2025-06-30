@@ -43,15 +43,12 @@ extern "C" {
     }    
 
     void *__wrap_malloc(size_t numBytes) { 
-        if (rckid::Heap::isDefaultTarget())
-            return rckid::Heap::allocBytes(numBytes); 
-        else 
-            return rckid::Arena::allocBytes(numBytes);
+        return rckid::RAMHeap::alloc(numBytes);
     }
 
     void __wrap_free(void * ptr) { 
-        if (rckid::Heap::contains(ptr))
-            rckid::Heap::free(ptr); 
+        if (rckid::RAMHeap::contains(ptr))
+            rckid::RAMHeap::free(ptr); 
     }
 
     void *__wrap_calloc(size_t numBytes) {
@@ -68,9 +65,6 @@ namespace rckid {
     // forward declaration of the bsod function
     NORETURN(void bsod(uint32_t error, uint32_t arg, uint32_t line = 0, char const * file = nullptr));
     
-    // forward declaration of memory stack protection check
-    void memoryCheckStackProtection();
-
     void audioPlaybackDMA(uint finished, uint other);
 
     namespace fs {
@@ -348,7 +342,6 @@ namespace rckid {
     void initialize([[maybe_unused]] int argc, [[maybe_unused]] char const * argv[]) {
         uint32_t freeMem = memoryFree();
         board_init();
-        memoryInstrumentStackProtection();
         // TODO in mkII we can't enable the USB in general as it leaks voltage into the USB pwr, which in turn leaks voltage to the battery switch mosfet
         // initialize the USB
         tud_init(BOARD_TUD_RHPORT);
@@ -468,148 +461,148 @@ namespace rckid {
     }
 
     void yield() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         tight_loop_contents();
         tud_task();
     }
 
     void keepAlive() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         time::idleTimeout_ = RCKID_IDLE_TIMETOUT;
     }
 
     uint32_t uptimeUs() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return time_us_32();
     }
 
     uint64_t uptimeUs64() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return time_us_64();
     }
 
     TinyDateTime timeNow() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::state_.time;
     }
 
     // io
 
     bool btnDown(Btn b) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return buttonState(b, io::state_.status);
     }
 
     bool btnPressed(Btn b) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return buttonState(b, io::state_.status) && ! buttonState(b, io::lastStatus_);
     }
 
     bool btnReleased(Btn b) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return ! buttonState(b, io::state_.status) && buttonState(b, io::lastStatus_);
     }
 
     void btnClear(Btn b) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         setButtonState(b, io::lastStatus_, btnDown(b));
     }
 
     int16_t accelX() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::aState_.accelX; 
     }
 
     int16_t accelY() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::aState_.accelY; 
     }
 
     int16_t accelZ() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::aState_.accelX; 
     }
 
     int16_t gyroX() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::aState_.gyroX; 
     }
 
     int16_t gyroY() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::aState_.gyroY; 
     }
 
     int16_t gyroZ() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::aState_.gyroZ; 
     }
 
     uint16_t lightAmbient() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::lightAls_;
     }
 
     uint16_t lightUV() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::lightUV_;
     }
 
     // display
 
     void displayOn() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // TODO
     }
 
     void displayOff() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // TODO 
     }
 
     void displayClear(ColorRGB color) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         ST7789::clear(color.raw16());
     }
 
     DisplayRefreshDirection displayRefreshDirection() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return ST7789::refreshDirection();
     }
 
     void displaySetRefreshDirection(DisplayRefreshDirection value) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         ST7789::setRefreshDirection(value);
     }
 
     uint8_t displayBrightness() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::state_.brightness;
     }
 
     void displaySetBrightness(uint8_t value) {
         sendCommand(cmd::SetBrightness{value});
-        memoryCheckStackProtection();
+        StackProtection::check();
         io::state_.brightness = value;
     }
 
     Rect displayUpdateRegion() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return ST7789::updateRegion();
     }
 
     void displaySetUpdateRegion(Rect value) {
         ST7789::setUpdateRegion(value);
-        memoryCheckStackProtection();
+        StackProtection::check();
     }
 
     void displaySetUpdateRegion(Coord width, Coord height) {
         displaySetUpdateRegion(Rect::XYWH((RCKID_DISPLAY_WIDTH - width) / 2, (RCKID_DISPLAY_HEIGHT - height) / 2, width, height));
-        memoryCheckStackProtection();
+        StackProtection::check();
     }
 
     bool displayUpdateActive() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return ST7789::dmaUpdateInProgress();
     }
 
@@ -621,17 +614,17 @@ namespace rckid {
 
     void displayWaitVSync() {
         ST7789::waitVSync();
-        memoryCheckStackProtection();
+        StackProtection::check();
     }
 
     void displayUpdate(uint16_t const * pixels, uint32_t numPixels, DisplayUpdateCallback callback) {
         ST7789::dmaUpdateAsync(pixels, numPixels, callback);
-        memoryCheckStackProtection();
+        StackProtection::check();
     }
 
     void displayUpdate(uint16_t const * pixels, uint32_t numPixels) {
         ST7789::dmaUpdateAsync(pixels, numPixels);
-        memoryCheckStackProtection();
+        StackProtection::check();
     }
 
     /** Audio
@@ -683,13 +676,13 @@ namespace rckid {
     void audioEnable() {
         if (!io::state_.status.audioEnabled())
             sendCommand(cmd::AudioOn());
-        memoryCheckStackProtection();
+        StackProtection::check();
     }
 
     void audioDisable() {
         if (io::state_.status.audioEnabled())
             sendCommand(cmd::AudioOff());
-        memoryCheckStackProtection();
+        StackProtection::check();
     }
 
     void audioStop(bool audioOff) {
@@ -703,16 +696,16 @@ namespace rckid {
         }
         if (audioOff)
             audioDisable();
-        memoryCheckStackProtection();
+        StackProtection::check();
     }
 
     bool audioHeadphones() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return io::state_.status.audioHeadphones();
     }
 
     bool audioPaused() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         if (audio::playback_) {
             return ! pwm_is_enabled(RP_AUDIO_PWM_SLICE);
         } else {
@@ -721,22 +714,22 @@ namespace rckid {
     }
 
     bool audioPlayback() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return audio::playback_;
     }
 
     bool audioRecording() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return false;
     }
 
     uint8_t audioVolume() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return audio::volume_;
     }
 
     void audioSetVolume(uint8_t value) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         if (value > 10)
             value = 10;
         audio::volume_ = value;
@@ -777,24 +770,24 @@ namespace rckid {
         pwm_set_enabled(RP_AUDIO_PWM_SLICE, true);
         // now we need to load the second buffer while the first one is playing (reload of the buffers will be done by the IRQ handler)
         audioPlaybackDMA(audio::dma1_, audio::dma0_);
-        memoryCheckStackProtection();
+        StackProtection::check();
     }
 
     void audioPause() {
         if (audio::playback_)  
             pwm_set_enabled(RP_AUDIO_PWM_SLICE, false);
-        memoryCheckStackProtection();
+        StackProtection::check();
     }
 
     void audioResume() {
         if (audio::playback_)  
             pwm_set_enabled(RP_AUDIO_PWM_SLICE, true);
-        memoryCheckStackProtection();
+        StackProtection::check();
     }
 
     void audioStop() {
         audioStop(true);
-        memoryCheckStackProtection();
+        StackProtection::check();
     }
 
     // SD Card access is in sd/sd.cpp file
@@ -802,24 +795,24 @@ namespace rckid {
     // Cartridge filesystem access
 
     uint32_t cartridgeCapacity() { 
-        memoryCheckStackProtection();
+        StackProtection::check();
         return &__cartridge_filesystem_end - &__cartridge_filesystem_start;
     }
 
     uint32_t cartridgeWriteSize() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return FLASH_PAGE_SIZE; // 256
     }
 
     uint32_t cartridgeEraseSize() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return FLASH_SECTOR_SIZE; // 4096
     }
 
     void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
         // since flash is memory mapped via XIP, all we need to do is aggregate offset properly 
         memcpy(buffer, XIP_NOCACHE_NOALLOC_BASE + (&__cartridge_filesystem_start - XIP_BASE) + start, numBytes);
-        memoryCheckStackProtection();
+        StackProtection::check();
     }
 
     void cartridgeWrite(uint32_t start, uint8_t const * buffer) {
@@ -830,7 +823,7 @@ namespace rckid {
         uint32_t ints = save_and_disable_interrupts();
         flash_range_program(offset, buffer, FLASH_PAGE_SIZE);
         restore_interrupts(ints);
-        memoryCheckStackProtection();
+        StackProtection::check();
     }
 
     void cartridgeErase(uint32_t start) {
@@ -843,40 +836,40 @@ namespace rckid {
         uint32_t ints = save_and_disable_interrupts();
         flash_range_erase(offset, FLASH_SECTOR_SIZE);
         restore_interrupts(ints);
-        memoryCheckStackProtection();
+        StackProtection::check();
     }
 
     // memory
 
     bool memoryIsImmutable(void const * ptr) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return (reinterpret_cast<uint32_t>(ptr) < 0x20000000); 
     }
 
     // budget
 
     uint32_t budget() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return 3600;
     }
 
     uint32_t budgetDaily() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         return 3600;
     }
 
     void budgetSet(uint32_t seconds) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // not supported on mkII
     }
 
     void budgetDailySet(uint32_t seconds) {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // not supported on mkII
     }
 
     void budgetReset() {
-        memoryCheckStackProtection();
+        StackProtection::check();
         // nothing to do
     }
 

@@ -37,24 +37,6 @@
 #include "error.h"
 #include "log.h"
 #include "utils/string.h"
-
-/** \page sdk
-    \section memory Memory Management
-
-    As the device has only a limited amount of RAM (~512 KB excluding stacks for mk III), some careful management is necessary. RCKid supports two dynamic allocation schemes, a normal heap and arena allocators.
-    
-    Stack Protection
-
-    Another variable in the memory layout is relative small stack sizes (only 4kb per core). Those stacks can easily overflow and corrupt the heap, or one another. Stack protection scheme can be employed to detect stack overflow into a the heap and prevent further execution (recovery at this point is impossible). 
-
-    To enable the protection, memoryInstrumentStackProtection() must be called first, which writes magic bytes to the end of the stack regions (just above RAM). Subsequent periodic calls to memoryCheckStaticProtection() then compare the memory to the expected magic value and will raise an error (error::StackProtectionFailure) upon failure. 
-
-    NOTE that the stack protection scheme is only meaningful on the actual devices, the fantasy console uses the OS callstack instead and this will likely never overflow into the fantasy heap region. 
-
-    \ref memoryFree, \ref Heap, \ref Arena, 
-*/
-
-#include "memory.h"
 #include "utils/buffers.h"
 
 /** Measures the time it takes to compute the statements in the arguments in microseconds (returned as uint32_t). 
@@ -270,6 +252,32 @@ namespace rckid {
     /** Stops playback or recording. 
      */
     void audioStop();
+
+    /** \page sdk
+        \section memory Memory Management
+
+        As the device has only a limited amount of RAM (~512 KB excluding stacks for mk III), some careful management is necessary. RCKid supports two dynamic allocation schemes, a normal heap and arena allocators.
+        
+        Stack Protection
+
+        Another variable in the memory layout is relative small stack sizes (only 4kb per core). Those stacks can easily overflow and corrupt the heap, or one another. Stack protection scheme can be employed to detect stack overflow into a the heap and prevent further execution (recovery at this point is impossible). 
+
+        To enable the protection, memoryInstrumentStackProtection() must be called first, which writes magic bytes to the end of the stack regions (just above RAM). Subsequent periodic calls to memoryCheckStaticProtection() then compare the memory to the expected magic value and will raise an error (error::StackProtectionFailure) upon failure. 
+
+        NOTE that the stack protection scheme is only meaningful on the actual devices, the fantasy console uses the OS callstack instead and this will likely never overflow into the fantasy heap region. 
+
+        \ref memoryFree, \ref Heap, \ref Arena, 
+    */
+
+    /** Returns the number of free memory, i.e. the unclaimed space between heap and stack
+     
+        This is the upper limit of what new memory can be allocated. The actual free memory can be larger because of free holes in the heap space that this method does not track. 
+     */
+    uint32_t memoryFree();
+
+    /** Returns true if the memory comes from immutable region (ROM on the device)
+     */
+    bool memoryIsImmutable(void const * ptr);
 
     /** \page sdk
         \section sdfs SD Card Filesystem access. 

@@ -142,6 +142,9 @@ namespace rckid {
                     // TODO some error would be nice 
                 }
             }
+            if (btnPressed(Btn::Start)) {
+                RAMHeap::traceChunks();
+            }
         }
 
         void historyPush() {

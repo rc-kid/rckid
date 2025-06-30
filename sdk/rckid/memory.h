@@ -1,81 +1,201 @@
 #pragma once
 
+#include "backend_config.h"
 #include "error.h"
+
+
+#ifndef RCKID_BACKEND_FANTASY
+extern char __bss_end__;
+extern char __StackTop;
+#endif
 
 namespace rckid {
 
-    /** Heap allocation and management. 
-     
-     */
-    class Heap {
+    class RAMHeap {
     public:
-
-        /** Allocates given amount of bytes on heap.
-         
-            This is under all circumstances equivalent to a standard malloc call irrespective of the default allocation mode.
-         */
-        static void * allocBytes(uint32_t bytes); 
-    
-        /** Allocates memory for given type. Will allways allocate on heap. 
-         */
-        template<typename T>
-        static T * alloc() { return (T*)allocBytes(sizeof(T)); }
-
-        template<typename T>
-        static T* alloc(uint32_t items) { return (T*)allocBytes(sizeof(T) * items); }
-
-        /** Frees the given pointer. 
-         
-            Expects the pointer actually belongs to heap, i.e. should only be explicitly called on pointers created with Heap::malloc explicitly. If a pointer was allocated by the default function (malloc, rckid::malloc, new) the generic deletion (free, rckid::free, delete) should be called. 
-         */
+        static void * alloc(uint32_t numBytes);
         static void free(void * ptr);
 
-        /** Returns true if given pointer belongs to the heap. 
-         
-            This is true if it happens to be anywhere between current heap's end and stack limit. 
-         */
-        static bool contains(void const * ptr);
+        static bool contains(void const * ptr) { return ptr >= heapStart() && ptr < heapEnd_; }
 
-        static bool isDefaultTarget() { return default_; }
+        static uint32_t usedBytes() { return (heapEnd_ - heapStart()) * sizeof(Chunk);}
+
+        static uint32_t freeBytes();
+
+        static void reset() {
+            heapEnd_ = heapStart();
+            lastSize_ = 0;
+            freelist_ = nullptr;
+        }
+
+        static void traceChunks();
 
     private:
+
+        friend class StackProtection;
         friend uint32_t memoryFree();
-        friend void memoryReset(); // internal
 
-        template<typename T>
-        friend void memorySetDefaultTarget();
-    
-        // pointer to end of heap so that we can detect OOME during allocations
-        static char * end_;
+        class Chunk {
+        public:
 
-        // is heap default allocation target
-        static inline bool default_ = true;
+            uint32_t payloadSize() const { return headerSize_ * sizeof(Chunk) - 4; }
 
-    }; // rckid::Heap
+            bool isFree() const { return (headerPrevSize_ & 0x8000) != 0; }
 
-    /** Returns the number of free memory, i.e. the unclaimed space between heap and stack
-     
-        This is the upper limit of what new memory can be allocated. The actual free memory can be larger because of free holes in the heap space that this method does not track. 
-     */
-    uint32_t memoryFree();
+            Chunk * nextFree() { return offsetToPtr(nextFree_); }
+            Chunk * prevFree() { return offsetToPtr(prevFree_); }
 
-    /** Instruments the end of stack with magic numbers so that if the app would run out of stack and overwrite the heap, it can at least be noticed by periodic calls to the memoryCheckStaticProtection function. 
-     */
-    void memoryInstrumentStackProtection();
+            Chunk * nextAllocation() { return this + headerSize_; }
 
-    /** Verifies that the stack protection magic numbers are intact and raises a fatal error if corrupted. This function should be periodically called to be effective.
-     */
-#if RCKID_ENABLE_STACK_PROTECTION
-    void memoryCheckStackProtection();
-    uint32_t memoryMaxStackSize();
-    void memoryResetMaxStackSize();
+            Chunk * prevAllocation() { 
+                uint32_t prevSize = headerPrevSize_ & ~FREE_BIT;
+                return prevSize == 0 ? nullptr : this - prevSize;
+            }
+
+            uint16_t prevAllocationSize() const { return headerPrevSize_ & ~FREE_BIT; }
+
+            void initializeAllocated(uint16_t size, uint16_t prevSize) {
+                ASSERT(size > 0);
+                headerSize_ = size;
+                headerPrevSize_ = prevSize;
+            }
+
+            void detachFromFreelist() {
+                ASSERT(isFree());
+                if (freelist_ == this) {
+                    freelist_ = prevFree();
+                } else {
+                    if (prevFree_ != OFFSET_NULL)
+                        prevFree()->nextFree_ = nextFree_;
+                    if (nextFree_ != OFFSET_NULL)
+                        nextFree()->prevFree_ = prevFree_;
+                }
+            }
+
+            void addToFreelist() {
+                ASSERT(!isFree());
+                headerPrevSize_ |= FREE_BIT;
+                prevFree_ = ptrToOffset(freelist_);
+                if (freelist_ != nullptr)
+                    freelist_->nextFree_ = ptrToOffset(this);
+                freelist_ = this;
+            }
+
+            void makeAllocated() {
+                ASSERT(isFree());
+                headerPrevSize_ &= ~FREE_BIT;
+            }
+
+            void * data() { return reinterpret_cast<uint8_t*>(this) + 4; }
+
+        private:
+
+            friend class RAMHeap;
+
+            uint16_t headerSize_;
+            uint16_t headerPrevSize_;
+            uint16_t prevFree_;
+            uint16_t nextFree_;
+
+            static constexpr uint16_t FREE_BIT = 0x8000;
+            static constexpr uint16_t OFFSET_NULL = 0xffff;
+
+            static Chunk * offsetToPtr(uint16_t offset) {
+                if (offset == OFFSET_NULL)
+                    return nullptr;
+                else 
+                    return heapStart() + offset;
+            }
+
+            static uint16_t ptrToOffset(Chunk * ptr) {
+                if (ptr == nullptr)
+                    return OFFSET_NULL;
+                return ptr - heapStart();
+            }
+
+        } __attribute__((packed)); // RAMHeap::Chunk
+
+        static_assert(sizeof(Chunk) == 8);
+
+        /** Returns the address of the start of the heap.
+         */
+        static Chunk * heapStart() {
+#ifdef RCKID_BACKEND_FANTASY
+            static char fantasyHeap[RCKID_MEMORY_SIZE];
+            return reinterpret_cast<Chunk*>(& fantasyHeap);
 #else
-    inline void memoryCheckStackProtection() {}
+            return reinterpret_cast<Chunk*>(& __bss_end__);
 #endif
+        }
 
-    /** Returns true if the memory comes from immutable region (ROM on the device)
-     */
-    bool memoryIsImmutable(void const * ptr);
+        static inline Chunk * heapEnd_ = heapStart();
+        static inline Chunk * freelist_ = nullptr;
+        static inline uint16_t lastSize_ = 0;
+
+    }; 
+
+    class StackProtection {
+    public:
+        static uint32_t currentSize() {
+            return stackStart() - currentStack();
+        }
+
+        static uint32_t maxSize() { return maxSize_; }
+
+        static void resetMaxSize() { maxSize_ = 0;}
+
+        static void check() {
+#ifdef RCKID_ENABLE_STACK_PROTECTION
+            uint32_t cur = currentSize();
+            if (cur > maxSize_)
+                maxSize_ = cur;
+    #ifdef RCKID_BACKEND_FANTASY
+            ERROR_IF(error::StackProtectionFailure, cur + RAMHeap::usedBytes() >= RCKID_MEMORY_SIZE);
+    #else
+            ERROR_IF(error::StackProtectionFailure, currentStack() < reinterpret_cast<char*>(RAMHeap::heapEnd_));
+    #endif
+#endif
+        }
+
+    private:
+
+        friend uint32_t memoryFree();
+
+        static char * stackStart() {
+#ifdef RCKID_BACKEND_FANTASY
+            ASSERT(stackTop_ != nullptr);
+            return stackTop_;
+#else
+            return & __StackTop;
+#endif
+        }
+
+        static char * currentStack() {
+            uintptr_t sp;
+#ifdef RCKID_BACKEND_FANTASY
+    #if defined(__x86_64__) || defined(_M_X64)
+            asm volatile("mov %%rsp, %0" : "=r"(sp));
+    #elif defined(__aarch64__) || defined(_M_ARM64)
+            asm volatile("mov %0, sp" : "=r"(sp));
+    #elif RCKID_ENABLE_STACK_PROTECTION
+            #error "Only aarch64 and x86_64 are supported for RCKid stack protection in fantasy backend"
+    #else
+            UNIMPLEMENTED;
+    #endif
+#else 
+            // Cortex-M 
+            asm volatile("mov %0, sp" : "=r"(sp));
+#endif
+            return (char*)sp;
+        }
+
+        static inline uint32_t maxSize_ = 0;
+#ifdef RCKID_BACKEND_FANTASY
+        static inline thread_local char * stackTop_ = currentStack(); 
+#endif        
+    };
+
+
 
 #ifdef RCKID_BACKEND_FANTASY
     class SystemMallocGuard {

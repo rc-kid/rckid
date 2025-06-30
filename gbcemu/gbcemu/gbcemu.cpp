@@ -455,7 +455,7 @@ namespace rckid::gbcemu {
         }
         uint32_t eramSize = gamepak_->cartridgeRAMSize() / 8192;
         for (uint32_t i = 0; i < eramSize; ++i)
-            eram_[i] = Heap::alloc<uint8_t>(0x2000);
+            eram_[i] = new uint8_t[0x2000];
         // initialize memory mapping defaults
         memMap_[0] = const_cast<uint8_t *>(gamepak_->getPage(0));
         memMap_[1] = memMap_[0] + 0x1000;

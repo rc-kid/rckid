@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../app.h"
-#include "../graphics/bitmap.h"
+#include "../graphics/canvas.h"
 #include "../graphics/png.h"
 #include "../filesystem.h"
 
@@ -23,7 +23,7 @@ namespace rckid {
         When the app is exitted, the USB device is turned off, which re-enables the DC voltage detection & charging. 
 
      */
-    class DataSync : public BitmapApp<ColorRGB> {
+    class DataSync : public CanvasApp<ColorRGB> {
     public:
 
         static bool active() { return mscActive_; }
@@ -31,12 +31,12 @@ namespace rckid {
     protected:
 
         DataSync(): 
-            BitmapApp<ColorRGB>{}
+            CanvasApp<ColorRGB>{}
             /*icon_{std::move(ARENA(Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(assets::icons_64::pen_drive))))} */ {
         }
 
         void focus() override {
-            BitmapApp<ColorRGB>::focus();
+            CanvasApp<ColorRGB>::focus();
             sizeBlocks_ = sdCapacity();
             if (sizeBlocks_ > 0) {
                 if (fs::mount()) {
@@ -49,7 +49,7 @@ namespace rckid {
         }
 
         void blur() override {
-            BitmapApp<ColorRGB>::blur();
+            CanvasApp<ColorRGB>::blur();
             if (mscActive_) {
 #if (defined ARCH_RCKID_2)
                 // disable USB -- reset so that we can again detect DC charge
@@ -74,7 +74,7 @@ namespace rckid {
                 memset(reinterpret_cast<uint8_t *>(usb_hw), 0, sizeof(*usb_hw));
             }
 #endif
-            BitmapApp<ColorRGB>::update();
+            CanvasApp<ColorRGB>::update();
             /*
             // This is too dangerous to have here
             if (btnPressed(Btn::Start)) {

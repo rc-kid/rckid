@@ -1,8 +1,12 @@
 #pragma once
 
-#include "../memory.h"
+#include "../error.h"
+#include "../log.h"
 
 namespace rckid {
+
+    // forward declaration
+    bool memoryIsImmutable(void const * ptr);
 
     /** Very simple double buffer. 
      */
