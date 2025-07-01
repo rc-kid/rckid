@@ -54,8 +54,8 @@ namespace rckid {
         /** Returns a writer for formatter and serialized writes to the stream.
          */
         Writer writer() {
-            return Writer([this](char c) {
-                bool result = writeByte(static_cast<uint8_t>(c));
+            return Writer([](char c, void * self) {
+                bool result = reinterpret_cast<WriteStream*>(self)->writeByte(static_cast<uint8_t>(c));
                 ASSERT(result);
             });
         }
