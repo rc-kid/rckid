@@ -72,17 +72,15 @@
 # TODO
 
 - when stack protection fails, it will fail in the error code as well forever, update stack on device, do new thread on rckid? 
-
-- best fit with only actually fitting stuff seems to work better
-- add comments
+- perfect fit strategy seems to be less wasteful, but will have to add fallback
+- merging chunks/splitting large ones? 
+- add comments to memory 
+- on device, we allocate heap while logging, which causes infinite loop when log heap is enabled
 
 - make backgrounds more resilient
 
 
-- Icon::toBitmap should really not use the arena, but heap instead to ensure that the icons that are created as part of the 
-- or actually use arena, but in Image::create the image first according to the decoder's width and height, then enger new arena for the decoder, decode, leave arena, be done 
 
-- convert info dialog to use icons
 - see if we can enable exceptions, what are the runtime & stack costs of them running
 
 - ColorRGB is weird, should be colorRGBA and then have Color565 as a version that wraps around 15bpp? Then change uint16_t everywhere in palettes

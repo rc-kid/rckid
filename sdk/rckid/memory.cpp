@@ -6,6 +6,7 @@ namespace rckid {
         // first determine how many bytes we actually need by adding the extra header size (4 bytes) and then convert bytes to chunk sizes granularity
         numBytes += 4;
         uint32_t numChunks = (numBytes % 8 == 0) ? (numBytes >> 3) : ((numBytes >> 3) + 1);
+        ASSERT(numChunks < 32768);
         // walk the freelist to see if we can reuse some free chunk from the middle of the heap
         Chunk * bestFit = nullptr;
         Chunk * x = freelist_;
@@ -46,6 +47,7 @@ namespace rckid {
 
     void RAMHeap::free(void * ptr) {
         LOG(LL_HEAP, "Freeing " << ptr);
+
         ASSERT(contains(ptr));
         // get the actual chunk pointer
         Chunk * chunk = reinterpret_cast<Chunk*>(reinterpret_cast<uint8_t*>(ptr) - 4);
@@ -85,11 +87,19 @@ namespace rckid {
     }
 
     void RAMHeap::traceChunks() {
+        LOG(LL_INFO, "Heap start: " << heapStart());
+        LOG(LL_INFO, "Heap end:   " << heapEnd_);
         LOG(LL_INFO, "Heap chunks:");
         Chunk * x = heapStart();
         while (x < heapEnd_) {
-            LOG(LL_INFO, "  " << x->headerSize_ << (x->isFree() ? " f" : ""));
+            LOG(LL_INFO, "  " << (x->headerSize_) << (x->isFree() ? " f" : ""));
             x = x->nextAllocation();
+        }
+        LOG(LL_INFO, "Freelist:");
+        x = freelist_;
+        while (x != nullptr) {
+            LOG(LL_INFO, "  " << (x->headerSize_) << (x->isFree() ? " f" : ""));
+            x = x->prevFree();
         }
     }
 

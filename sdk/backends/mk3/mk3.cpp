@@ -451,6 +451,8 @@ namespace rckid {
 
         LOG(LL_INFO, "\n\n\nSYSTEM RESET DETECTED (RP2350): ");
         LOG(LL_INFO, "RP2350 chip version: " << rp2350_chip_version());
+        
+        RAMHeap::traceChunks();
 
         // initialize the display
         ST7789::initialize();
@@ -517,6 +519,7 @@ namespace rckid {
         // enable I2C interrupts so that we can start processing the I2C packet queues
         i2c0->hw->intr_mask = I2C_IC_INTR_MASK_M_RX_FULL_BITS | I2C_IC_INTR_MASK_M_TX_ABRT_BITS;
 
+        RAMHeap::traceChunks();
 
 
         return;
