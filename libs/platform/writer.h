@@ -13,17 +13,12 @@ class Writer {
 public:
     class Converter{};
 
-#if (defined PLATFORM_NO_STDCPP)
     typedef void (*CharWriter)(char, void *);
-    #define PUTCHAR(...) putChar_(__VA_ARGS__, this)
-#else
-    using CharWriter = std::function<void(char)>;
-    #define PUTCHAR(...) putChar_(__VA_ARGS__)
-#endif
+    #define PUTCHAR(...) putChar_(__VA_ARGS__, arg_)
 
     static constexpr char endl = '\n';
 
-    explicit Writer(CharWriter putChar):putChar_{putChar} {}
+    explicit Writer(CharWriter putChar, void * arg = nullptr):putChar_{putChar}, arg_{arg} {}
 
     Writer & operator << (char const * str) {
         while (*str != 0)
@@ -135,6 +130,7 @@ public:
 private:
 
     CharWriter putChar_;
+    void * arg_;
 }; // Writer
 
 #undef PUTCHAR
@@ -142,11 +138,7 @@ private:
 class BufferedWriter : protected Writer {
 public:
     BufferedWriter():
-#if (defined PLATFORM_NO_STDCPP)
-        Writer{[](char c, void * self) { ((BufferedWriter*)self)->append(c); }} {
-#else
-        Writer{[this](char c) { append(c); }} {
-#endif
+        Writer{[](char c, void * self) { ((BufferedWriter*)self)->append(c); }, this} {
     }
 
     ~BufferedWriter() {

@@ -389,8 +389,12 @@ namespace rckid {
         bsod(error, arg, line, file);
     }
 
+    bool debugReady = false;
+
     Writer debugWrite() {
-        return Writer{[](char x) {
+        return Writer{[](char x, void *) {
+            if (debugReady == false)
+                return;
 #if (RCKID_LOG_TO_SERIAL == 1)
             if (x == '\n')
                 uart_putc(uart0, '\r');
@@ -431,6 +435,7 @@ namespace rckid {
         gpio_set_function(RCKID_LOG_SERIAL_TX_PIN, GPIO_FUNC_UART);
         gpio_set_function(RCKID_LOG_SERIAL_RX_PIN, GPIO_FUNC_UART);
 #endif
+        debugReady = true;
         // initialize the I2C bus we use to talk to AVR & peripherals (unlike mkII this is not expected to be user accessible)
         i2c_init(i2c0, RCKID_I2C_SPEED); 
         i2c0->hw->intr_mask = 0; // disable interrupts for now

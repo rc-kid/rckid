@@ -82,22 +82,28 @@ namespace rckid::ui {
 
         Writer text(Coord x, Coord y) {
             ASSERT(x < cols_ && y < rows_);
-            return Writer{[x, y, this](char c) mutable {
-                at(x++, y) = c;
-            }};
+            textX_ = x;
+            textY_ = y;
+            return Writer{[](char c, void * arg) {
+                Tilemap * self = reinterpret_cast<Tilemap*>(arg);
+                self->at(self->textX_++, self->textY_) = c;
+            }, this};
         }
 
         Writer textMultiline(Coord x, Coord y) {
             ASSERT(x < cols_ && y < rows_);
-            return Writer{[x, y, this](char c) mutable {
+            textX_ = x;
+            textY_ = y;
+            return Writer{[](char c, void * arg) {
+                Tilemap * self = reinterpret_cast<Tilemap*>(arg);
                 if (c == '\n') {
-                    x = 0;
-                    ++y;
-                } else if (x < cols_ && y < rows_) {
-                    at(x++, y) = c;
-                    if (x == cols_) {
-                        x = 0;
-                        ++y;
+                    self->textX_ = 0;
+                    ++self->textY_;
+                } else if (self->textX_ < self->cols_ && self->textY_ < self->rows_) {
+                    self->at(self->textX_++, self->textY_) = c;
+                    if (self->textX_ == self->cols_) {
+                        self->textX_ = 0;
+                        ++self->textY_;
                     }
                 }
             }};
@@ -112,6 +118,10 @@ namespace rckid::ui {
         TileInfo * tileMap_ = nullptr;
         Tile const * tileSet_ = nullptr;
         uint16_t const * palette_; 
+
+        // capture for current text out coordinates Writers allow only a single void * argument which is this
+        Coord textX_ = 0;
+        Coord textY_ = 0;
 
     }; // rckid::ui::Tilemap<TILE>
 

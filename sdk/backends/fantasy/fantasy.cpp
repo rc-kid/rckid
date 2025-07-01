@@ -141,7 +141,7 @@ namespace rckid {
     }
 
     Writer debugWrite() {
-        return Writer([](char c) {
+        return Writer([](char c, void *) {
             SystemMallocGuard g;
             std::cout << c << std::flush;
         });

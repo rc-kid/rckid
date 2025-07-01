@@ -176,9 +176,9 @@ namespace rckid {
         }
 
         Writer write() {
-            return Writer([this](char c) {
-                append(c);
-            });
+            return Writer([](char c, void * self) {
+                reinterpret_cast<String*>(self)->append(c);
+            }, this);
         }
 
         char const * release() {

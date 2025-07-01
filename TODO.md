@@ -75,10 +75,6 @@
 - perfect fit strategy seems to be less wasteful, but will have to add fallback
 - merging chunks/splitting large ones? 
 - add comments to memory 
-- on device, we allocate heap while logging, which causes infinite loop when log heap is enabled
-
-- make backgrounds more resilient
-
 
 
 - see if we can enable exceptions, what are the runtime & stack costs of them running

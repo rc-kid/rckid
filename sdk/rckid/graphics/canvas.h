@@ -4,6 +4,7 @@
 #include "../app.h"
 #include "surface.h"
 #include "font.h"
+#include "../assets/fonts/Iosevka16.h"
 
 namespace rckid {
 
@@ -89,18 +90,40 @@ namespace rckid {
             return renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent, palette);
         }
 
+
+        Pixel fg() const { return fg_; }
+
+        void setFg(Pixel color) {
+            fg_ = color;
+            fontColors_ = Font::colorToArray(fg_);
+        }
+
+
+
+
+        Font const & font() const { return font_; }
+
+        void setFont(Font const & font) {
+            font_ = font;
+        }   
+
         Writer text(Coord x, Coord y, Font const & font, Pixel color) {
-            std::array<uint16_t, 4> colors = Font::colorToArray(color);
-            int startX = x;
-            return Writer{[=](char c) mutable {
+            setFg(color);
+            font_ = font;
+            textStartX_ = x;
+            textX_ = x;
+            textY_ = y;
+            return Writer{[](char c, void * arg) {
+                Canvas * self = reinterpret_cast<Canvas*>(arg);
                 if (c != '\n') {
-                    if (x < w_)
-                        x += putChar(x, y, w_, h_, font, c, colors.data(), pixels_);
+                    if (self->textX_ < self->w_) {
+                        self->textX_ += self->putChar(self->textX_, self->textY_, self->w_, self->h_, self->font_, c, self->fontColors_.data(), self->pixels_);
+                    }
                 } else {
-                    x = startX;
-                    y += font.size;
+                    self->textX_ = self->textStartX_;
+                    self->textY_ += self->font_.size;
                 }
-            }};
+            }, this};
         }        
 
         void fill(Pixel color) { fill(color, Rect::WH(w_, h_)); }
@@ -139,6 +162,16 @@ namespace rckid {
         Coord w_;
         Coord h_;
 
+
+        Pixel fg_;
+        Font font_ = Font::fromROM<assets::Iosevka16>();
+
+        std::array<uint16_t, 4> fontColors_;
+        // capture for current text out coordinates Writers allow only a single void * argument which is this
+        Coord textStartX_ = 0;
+        Coord textX_ = 0;
+        Coord textY_ = 0;
+        
     }; // Canvas
 
     /** Canvas that can render itself. 
