@@ -106,7 +106,7 @@ namespace rckid::ui {
                         ++self->textY_;
                     }
                 }
-            }};
+            }, this};
         }
 
     private:

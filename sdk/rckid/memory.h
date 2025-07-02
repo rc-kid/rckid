@@ -34,6 +34,7 @@ namespace rckid {
 
         friend class StackProtection;
         friend uint32_t memoryFree();
+        friend bool memoryIsImmutable(void const * ptr);
 
         class Chunk {
         public:
@@ -194,8 +195,6 @@ namespace rckid {
         static inline thread_local char * stackTop_ = currentStack(); 
 #endif        
     };
-
-
 
 #ifdef RCKID_BACKEND_FANTASY
     class SystemMallocGuard {

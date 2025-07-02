@@ -803,9 +803,11 @@ namespace rckid {
 
     // memory
 
-    bool memoryIsImmutable([[maybe_unused]] void const * ptr) {
+    bool memoryIsImmutable(void const * ptr) {
         StackProtection::check();
         return false;
+        // TODO for this to work the 
+        //return ptr < RAMHeap::heapStart() || ptr >= RAMHeap::heapEnd_;
     }
 
     // budget
