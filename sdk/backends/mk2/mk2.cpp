@@ -306,7 +306,7 @@ namespace rckid {
     }
 
     Writer debugWrite() {
-        return Writer{[](char x) {
+        return Writer{[](char x, void *) {
 #if (RCKID_LOG_TO_SERIAL == 1)
             uart_putc(uart0, x);
 #else

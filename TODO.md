@@ -76,6 +76,7 @@
 - merging chunks/splitting large ones? 
 - add comments to memory 
 
+- verify that filesystem is resilient against non-mounted fs
 
 - see if we can enable exceptions, what are the runtime & stack costs of them running
 

@@ -56,12 +56,17 @@ extern "C" {
     }    
 
     void *__wrap_malloc(size_t numBytes) {
-        return rckid::RAMHeap::alloc(numBytes);
+        auto x = save_and_disable_interrupts();
+        void * result = rckid::RAMHeap::alloc(numBytes);
+        restore_interrupts(x);
+        return result;
     }
 
     void __wrap_free(void * ptr) { 
+        auto x = save_and_disable_interrupts();
         if (rckid::RAMHeap::contains(ptr))
             rckid::RAMHeap::free(ptr); 
+        restore_interrupts(x);
     }
 
     void *__wrap_calloc(size_t numBytes) {

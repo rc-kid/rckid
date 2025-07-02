@@ -705,6 +705,8 @@ namespace rckid::fs {
             result.host_ = nullptr;
         }
 #else
+        if (! isMounted(dr))
+            return result;
         switch (dr) {
             case Drive::SD:
                 if (f_open(& result.sd_, path, FA_READ) == FR_OK)
@@ -734,6 +736,8 @@ namespace rckid::fs {
             result.host_ = nullptr;
         }
 #else
+        if (! isMounted(dr))
+            return result;
         switch (dr) {
             case Drive::SD:
                 if (f_open(& result.sd_, path, FA_WRITE | FA_CREATE_ALWAYS) == FR_OK)
@@ -763,6 +767,8 @@ namespace rckid::fs {
             result.host_ = nullptr;
         }
 #else
+        if (! isMounted(dr))
+            return result;
         switch (dr) {
             case Drive::SD:
                 if (f_open(& result.sd_, path, FA_WRITE | FA_OPEN_APPEND) == FR_OK)
@@ -792,6 +798,8 @@ namespace rckid::fs {
             LOG(LL_ERROR, "Failed to open folder: " << p.c_str());
         }
 #else
+        if (! isMounted(dr))
+            return result;
         switch (dr) {
             case Drive::SD:
                 if (f_opendir(& result.sd_, path) == FR_OK)
@@ -825,9 +833,11 @@ namespace rckid::fs {
     }
 
     String ext(String const & path) {
-        for (size_t i = path.size() - 1; i > 0; --i) {
-            if (path[i] == '.')
-                return path.substr(i);
+        if (path.size() > 1) {    
+            for (size_t i = path.size() - 1; i > 0; --i) {
+                if (path[i] == '.')
+                    return path.substr(i);
+            }
         }
         return "";
     }

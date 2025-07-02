@@ -90,6 +90,7 @@ namespace rckid {
         char operator[](uint32_t index) const { return str_[index]; }
 
         void append(char c) {
+            str_.makeMutable();
             if (str_.size() == 0) {
                 str_.reserve(2);
                 str_.setSize(2);
