@@ -70,7 +70,6 @@ namespace rckid {
         static constexpr char const * CONTACTS_PATH = "/contacts.json";
 
         void loadContacts() {
-            fs::mount(fs::Drive::SD);
             contacts_.clear();
             if (fs::exists(CONTACTS_PATH)) {
                 fs::FileRead f = fs::fileRead(CONTACTS_PATH);

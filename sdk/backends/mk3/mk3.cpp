@@ -513,8 +513,6 @@ namespace rckid {
 
         // initialize the filesystem and mount the SD card
         fs::initialize();
-        if (! fs::mount(fs::Drive::SD))
-            LOG(LL_ERROR, "Failed to mount the SD card");
 
         // initialize the audio output
         audio::playbackSm_ = pio_claim_unused_sm(pio1, true);
@@ -1000,8 +998,10 @@ namespace rckid {
     // memory
 
     bool memoryIsImmutable(void const * ptr) {
-        // TODO enable immutable memory from ROM
+        StackProtection::check();
         return false;
+        // TODO enable immutable memory when ready
+        // return (reinterpret_cast<uint32_t>(ptr) < 0x20000000); 
     }
 
     // budget

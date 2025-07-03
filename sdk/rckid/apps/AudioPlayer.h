@@ -16,9 +16,6 @@ namespace rckid {
     class AudioPlayer : public ui::App<void> {
     public:
         AudioPlayer() : ui::App<void>{} {
-            // mount the SD card
-            fs::mount();
-            // TODO whatif not mounted? 
             c_ = g_.addChild(new FileBrowser{this});
             c_->setRect(Rect::XYWH(0, 160, 320, 80));
             c_->setFont(Font::fromROM<assets::OpenDyslexic64>());

@@ -394,8 +394,6 @@ namespace rckid {
 
         // initialize the filesystem and mount the SD card
         fs::initialize();
-        if (! fs::mount(fs::Drive::SD))
-            LOG(LL_ERROR, "Failed to mount the SD card");
 
         // enter base arena for the application
         //Arena::enter();

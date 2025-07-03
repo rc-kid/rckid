@@ -70,13 +70,13 @@ namespace rckid {
 
         MainMenu(ui::Menu::Generator generator) : ui::App<MainMenuPayload>{} {
             using namespace ui;
-            c_ = g_.addChild(new ui::CarouselMenu{});
-            c_->setRect(Rect::XYWH(0, 160, 320, 80));
-            c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
+            g_.addChild(& c_);
+            c_.setRect(Rect::XYWH(0, 160, 320, 80));
+            c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
             if (history_ == nullptr) {
                 generator_ = generator;
-                c_->setMenu(generator_());
-                c_->setItem(0, Direction::Up);
+                c_.setMenu(generator_());
+                c_.setItem(0, Direction::Up);
                 //c_->setMenu(generator_(), Direction::Up);
             } else {
                 historyPop(Direction::Up);
@@ -97,17 +97,17 @@ namespace rckid {
     protected:
         void update() override {
             ui::App<MainMenuPayload>::update();
-            c_->processEvents();
+            c_.processEvents();
             // see if an item has been selected
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
-                Item * item = reinterpret_cast<Item *>(c_->currentItem());
+                Item * item = reinterpret_cast<Item *>(c_.currentItem());
                 if (item == nullptr)
                     return;
                 if (std::holds_alternative<ui::Menu::Generator>(item->payload)) {
                     historyPush();
                     generator_ = std::get<ui::Menu::Generator>(item->payload);;
-                    c_->setMenu(generator_());
-                    c_->setItem(0, Direction::Up);
+                    c_.setMenu(generator_());
+                    c_.setItem(0, Direction::Up);
                 } else {
                     // record where we are
                     historyPush();
@@ -148,7 +148,7 @@ namespace rckid {
         }
 
         void historyPush() {
-            history_ = new PreviousMenu{c_->currentIndex(), generator_, history_};
+            history_ = new PreviousMenu{c_.currentIndex(), generator_, history_};
         }
 
         void historyPop(Direction transition = Direction::Down) {
@@ -157,8 +157,8 @@ namespace rckid {
             auto * h = history_;
             history_ = h->previous;
             generator_ = h->generator;
-            c_->setMenu(generator_());
-            c_->setItem(h->index, transition);
+            c_.setMenu(generator_());
+            c_.setItem(h->index, transition);
             // since we are the only ones in the arena and the menu histories are the only thing being stored there, we must be able to free the latest history
             delete h;
         }
@@ -166,7 +166,7 @@ namespace rckid {
     private:
 
         ui::Menu::Generator generator_;
-        ui::CarouselMenu * c_;
+        ui::CarouselMenu c_;
 
         // action item to be returned
         //Payload result_;
