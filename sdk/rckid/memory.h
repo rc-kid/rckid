@@ -3,7 +3,6 @@
 #include "backend_config.h"
 #include "error.h"
 
-
 #ifndef RCKID_BACKEND_FANTASY
 extern char __bss_end__;
 extern char __StackTop;
@@ -11,6 +10,8 @@ extern char __StackTop;
 
 namespace rckid {
 
+    /** RAM Heap Manager
+     */
     class RAMHeap {
     public:
         static void * alloc(uint32_t numBytes);
@@ -188,7 +189,7 @@ namespace rckid {
             asm volatile("mov %0, sp" : "=r"(sp));
 #endif
             return (char*)sp;
-        }
+        }   
 
         static inline uint32_t maxSize_ = 0;
 #ifdef RCKID_BACKEND_FANTASY
@@ -197,6 +198,12 @@ namespace rckid {
     };
 
 #ifdef RCKID_BACKEND_FANTASY
+    /** Default system malloc switch for fantasy backend. 
+     
+        On fantasy backend, various extra-sdk features such as audio, video playback, host filesystem, etc. require the use of normal heap as their memory consumption should not be counted towards RCKid limited RAM. This guard simply ensures that when active all malloc (and hence new) calls will go through original system malloc. 
+
+        When the memory is freed, the fantasy implementation will use RAMHeap if the pointer comes from RAM heap, or default implementation otherwise.
+     */
     class SystemMallocGuard {
     public:
         SystemMallocGuard():

@@ -16,9 +16,14 @@ namespace rckid::ui {
     public:
         using Surface = rckid::Surface<16>;
 
+        /** Delete all children that are allocated on heap.
+         
+            Non-heap children (presumably coming from stack) are not deallocated by the widget itself so that stack and heap based allocation is supported for the UI trees.
+         */
         virtual ~Widget() {
             for (auto w : children_)
-                delete w;
+                if (RAMHeap::contains(w))
+                    delete w;
 
         }
 

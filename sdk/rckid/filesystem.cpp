@@ -126,6 +126,9 @@ namespace rckid::fs {
                 mount(Drive::Cartridge);
             }
         }
+        // also mount the SD card if present
+        if (sdCapacity() != 0)
+            mount(Drive::SD);
     }
 
 #if RCKID_ENABLE_HOST_FILESYSTEM
@@ -498,6 +501,8 @@ namespace rckid::fs {
 #if RCKID_ENABLE_HOST_FILESYSTEM
         UNIMPLEMENTED;   
 #else        
+        if (!isMounted(dr))
+            return 0;
         switch (dr) {
             case Drive::SD:
                 return static_cast<uint64_t>(fs_->n_fatent - 2) * fs_->csize * 512;
@@ -513,6 +518,8 @@ namespace rckid::fs {
 #if RCKID_ENABLE_HOST_FILESYSTEM
         UNIMPLEMENTED;   
 #else        
+        if (!isMounted(dr))
+            return 0;
         switch (dr) {
             case Drive::SD: {
                 DWORD n;
@@ -536,6 +543,8 @@ namespace rckid::fs {
 #if RCKID_ENABLE_HOST_FILESYSTEM
         return Filesystem::exFAT;   
 #else        
+        if (!isMounted(dr))
+            return Filesystem::Unrecognized;
         switch (dr) {
             case Drive::SD: 
                 switch (fs_->fs_type) {
@@ -568,6 +577,8 @@ namespace rckid::fs {
                 UNREACHABLE;
         }
 #else        
+        if (!isMounted(dr))
+            return "";
         switch (dr) {
             case Drive::SD: {
                 String result{' ', 12};
@@ -588,6 +599,8 @@ namespace rckid::fs {
         std::filesystem::path p{getHostPath(dr, path)};
         return std::filesystem::exists(p);
 #else
+        if (!isMounted(dr))
+            return false;
         switch (dr) {
             case Drive::SD: {
                 FILINFO f;
@@ -611,6 +624,8 @@ namespace rckid::fs {
         std::filesystem::path p{getHostPath(dr, path)};
         return std::filesystem::is_directory(p);
 #else
+        if (!isMounted(dr))
+            return false;
         switch (dr) {
             case Drive::SD: {
                 FILINFO f;
@@ -636,6 +651,8 @@ namespace rckid::fs {
         std::filesystem::path p{getHostPath(dr, path)};
         return std::filesystem::is_regular_file(p);
 #else
+        if (!isMounted(dr))
+            return false;
         switch (dr) {
             case Drive::SD: {
                 FILINFO f;
@@ -659,6 +676,8 @@ namespace rckid::fs {
 #if RCKID_ENABLE_HOST_FILESYSTEM
         UNIMPLEMENTED;
 #else
+        if (!isMounted(dr))
+            return false;
         switch (dr) {
             case Drive::SD:
                 return f_mkdir(path) == FR_OK;
@@ -858,4 +877,4 @@ namespace rckid::fs {
 
     }
 
-} // namespace rckid::filesystem
+} // namespace rckid::fs

@@ -219,10 +219,6 @@ namespace rckid {
 
         SystemMallocGuard::disable();
 
-        // mount the SD card (if present)
-        if (! fs::mount(fs::Drive::SD))
-            LOG(LL_ERROR, "Failed to mount the SD card");
-
         // initialize the device time - on real device this is obtained from the always on avr rtc, here we get the system time
         auto now = std::chrono::system_clock::now();
         std::time_t now_time = std::chrono::system_clock::to_time_t(now);
@@ -806,8 +802,6 @@ namespace rckid {
     bool memoryIsImmutable(void const * ptr) {
         StackProtection::check();
         return false;
-        // TODO for this to work the 
-        //return ptr < RAMHeap::heapStart() || ptr >= RAMHeap::heapEnd_;
     }
 
     // budget
