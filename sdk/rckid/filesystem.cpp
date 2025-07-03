@@ -374,9 +374,26 @@ namespace rckid::fs {
 
     bool format(Drive dr) {
 #if RCKID_ENABLE_HOST_FILESYSTEM
-        // can actually just delete the contents of the folder
-        UNIMPLEMENTED;
-        return false;
+        try {
+            SystemMallocGuard g_;
+            switch (dr) {
+                case Drive::SD:
+                    if (sdRoot_.empty())
+                        return false;
+                    std::filesystem::remove_all(sdRoot_);
+                    break;
+                case Drive::Cartridge:
+                    if (cartridgeRoot_.empty())
+                        return false;
+                    std::filesystem::remove_all(cartridgeRoot_);
+                    break;
+                default:
+                    return false;
+            }
+            return true;
+        } catch (...) {
+            return false;
+        }
 #else        
         switch (dr) {
             case Drive::SD: {
@@ -499,7 +516,23 @@ namespace rckid::fs {
 
     uint64_t getCapacity(Drive dr) {
 #if RCKID_ENABLE_HOST_FILESYSTEM
-        UNIMPLEMENTED;   
+        try {
+            SystemMallocGuard g_;
+            switch (dr) {
+                case Drive::SD:
+                    if (sdRoot_.empty())
+                        return 0;
+                    return std::filesystem::space(sdRoot_).capacity;
+                case Drive::Cartridge:
+                    if (cartridgeRoot_.empty())
+                        return 0;
+                    return std::filesystem::space(cartridgeRoot_).capacity;
+                default:
+                    return 0;
+            }
+        } catch (...) {
+            return 0;
+        }
 #else        
         if (!isMounted(dr))
             return 0;
@@ -516,7 +549,23 @@ namespace rckid::fs {
 
     uint64_t getFreeCapacity(Drive dr) {
 #if RCKID_ENABLE_HOST_FILESYSTEM
-        UNIMPLEMENTED;   
+        try {
+            SystemMallocGuard g_;
+            switch (dr) {
+                case Drive::SD:
+                    if (sdRoot_.empty())
+                        return 0;
+                    return std::filesystem::space(sdRoot_).available;
+                case Drive::Cartridge:
+                    if (cartridgeRoot_.empty())
+                        return 0;
+                    return std::filesystem::space(cartridgeRoot_).available;
+                default:
+                    return 0;
+            }
+        } catch (...) {
+            return 0;
+        }
 #else        
         if (!isMounted(dr))
             return 0;
@@ -541,7 +590,19 @@ namespace rckid::fs {
 
     Filesystem getFormat(Drive dr) {
 #if RCKID_ENABLE_HOST_FILESYSTEM
-        return Filesystem::exFAT;   
+        switch (dr) {
+            case Drive::SD:
+                if (! sdRoot_.empty())
+                    return Filesystem::exFAT;
+                break;
+            case Drive::Cartridge:
+                if (! cartridgeRoot_.empty())
+                    return Filesystem::LittleFS;
+                break;
+            default:
+                break;
+        }
+        return Filesystem::Unrecognized;
 #else        
         if (!isMounted(dr))
             return Filesystem::Unrecognized;
@@ -674,7 +735,23 @@ namespace rckid::fs {
 
     bool createFolder(char const * path, Drive dr) {
 #if RCKID_ENABLE_HOST_FILESYSTEM
-        UNIMPLEMENTED;
+        try {
+            SystemMallocGuard g_;
+            switch (dr) {
+                case Drive::SD:
+                    if (sdRoot_.empty())
+                        return false;
+                    return std::filesystem::create_directory(sdRoot_ / path);
+                case Drive::Cartridge:
+                    if (cartridgeRoot_.empty())
+                        return false;
+                    return std::filesystem::create_directory(cartridgeRoot_ / path);
+                default:
+                    return false;
+            }
+        } catch (...) {
+            return false;
+        }
 #else
         if (!isMounted(dr))
             return false;
