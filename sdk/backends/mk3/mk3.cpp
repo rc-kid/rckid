@@ -999,9 +999,8 @@ namespace rckid {
 
     bool memoryIsImmutable(void const * ptr) {
         StackProtection::check();
-        return false;
-        // TODO enable immutable memory when ready
-        // return (reinterpret_cast<uint32_t>(ptr) < 0x20000000); 
+        // memory is immutable when it comes from flash
+        return (reinterpret_cast<uint32_t>(ptr) < 0x20000000); 
     }
 
     // budget
