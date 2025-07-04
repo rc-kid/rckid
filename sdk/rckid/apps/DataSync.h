@@ -6,8 +6,6 @@
 #include "../ui/label.h"
 #include "../ui/image.h"
 
-
-
 #if (defined ARCH_RCKID_2)
 #include "tusb.h"
 #include "hardware/structs/usb.h"

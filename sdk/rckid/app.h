@@ -32,6 +32,10 @@ namespace rckid {
             app.loop();
         }
 
+        /** Returns the latest frames per second value. This is reset every second and if all goes well should be 60. As this is calculated by the app main loop itself, applications using different main loop strategies should indrement the number of redraws in their logic (see the redraw_ protected field).
+         */
+        static uint32_t fps() { return fps_; }
+
         /** Returns true if the current app should count towards the daily app time budget managed by the device. By default all apps count towards the budget, whereas some apps may decide otherwise.
         */
         virtual bool isBudgeted() const { return true; }
@@ -92,6 +96,10 @@ namespace rckid {
          */
         App * parent() const { return parent_;}
 
+        /** Current number of redraws. Reset automatically every second, should be incremented at each display redraw. 
+         */
+        static inline uint32_t redraws_ = 0;
+
     private:
 
         friend void tick();
@@ -114,6 +122,8 @@ namespace rckid {
         App * parent_ = nullptr;
 
         static inline App * app_ = nullptr;
+
+        static inline uint32_t fps_ = 0;
 
     }; // rckid::App
 

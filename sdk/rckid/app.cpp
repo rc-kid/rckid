@@ -18,6 +18,7 @@ namespace rckid {
             update();
             displayWaitUpdateDone();
             draw();
+            ++redraws_;
         }
         // wait for the last display update to finish so that the display routine does not interfere with the app unloading
         displayWaitUpdateDone();
@@ -30,5 +31,7 @@ namespace rckid {
         if (app_ != nullptr && app_->verifyBudgetAllowance()) {
             InfoDialog::error("No more budget", "Wait till midnight when budget is reset, or get more");
         }
+        fps_ = redraws_;
+        redraws_ = 0;
     }
 }
