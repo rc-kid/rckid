@@ -157,7 +157,6 @@ namespace rckid {
             //++stats::sdReadBlocks_;
             ++start;
             buffer += 512;
-            ++DataSync::blocksRead_;
         }
         return true;
     }
@@ -186,7 +185,6 @@ namespace rckid {
             //++stats::sdWriteBlocks_;
             ++start;
             buffer += 512;
-            ++DataSync::blocksWrite_;
         }
         return true;
     }

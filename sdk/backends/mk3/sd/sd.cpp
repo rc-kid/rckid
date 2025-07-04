@@ -155,10 +155,8 @@ namespace rckid {
             res = 0xff;
             spi_write_blocking(RP_SD_SPI, & res, 1);
             // verify the CRC
-            //++stats::sdReadBlocks_;
             ++start;
             buffer += 512;
-            ++DataSync::blocksRead_;
         }
         return true;
     }
@@ -184,10 +182,8 @@ namespace rckid {
             // wait for busy
             while (cmd[0] != 0xff)
                 spi_read_blocking(RP_SD_SPI, 0xff, cmd, 1);
-            //++stats::sdWriteBlocks_;
             ++start;
             buffer += 512;
-            ++DataSync::blocksWrite_;
         }
         return true;
     }

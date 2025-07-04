@@ -71,6 +71,10 @@
 
 # TODO
 
+- USB connection is not detected
+- make usb work in mkIII as well
+- can the SD initialization routine be improved? 
+
 - when stack protection fails, it will fail in the error code as well forever, update stack on device, do new thread on rckid? 
 - perfect fit strategy seems to be less wasteful, but will have to add fallback
 - merging chunks/splitting large ones? 
@@ -80,14 +84,10 @@
 
 - ColorRGB is weird, should be colorRGBA and then have Color565 as a version that wraps around 15bpp? Then change uint16_t everywhere in palettes
 
-- maybe have bitmap to be variable bpp, unlike tiles. And then have canvas which is like bitmap, but fixed depth and drawing primitives. 
-
 - comment PNG loading stuff
 
 - figure out what to do with app when budget dies (maybe just call its save if applicable)
 - display budget in header
-
-- ok, so it is not out of memory, but stack protection kicks in 
 
 - file browser should be similar to contacts, i.e. the dialog in launcher menu instead of ui element and separate browser app 
 

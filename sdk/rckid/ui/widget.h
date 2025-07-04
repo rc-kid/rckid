@@ -89,6 +89,11 @@ namespace rckid::ui {
             return child;
         }
 
+        void addChild(Widget & child) {
+            ASSERT(! RAMHeap::contains(&child)); // we really expect the ptr version to be used for this
+            children_.push_back(&child);
+        }
+
         bool visible() const { return visible_; }
         
         void setVisible(bool value) {

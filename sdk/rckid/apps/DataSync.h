@@ -1,9 +1,10 @@
 #pragma once
 
 #include "../app.h"
-#include "../graphics/canvas.h"
-#include "../graphics/png.h"
 #include "../filesystem.h"
+#include "../ui/form.h"
+#include "../ui/label.h"
+#include "../ui/image.h"
 
 
 
@@ -12,7 +13,112 @@
 #include "hardware/structs/usb.h"
 #endif
 
+extern "C" {
+    bool tud_msc_start_stop_cb(uint8_t, uint8_t, bool, bool);
+    int32_t tud_msc_read10_cb(uint8_t, uint32_t, uint32_t, void *, uint32_t);
+    int32_t tud_msc_write10_cb(uint8_t, uint32_t, uint32_t, uint8_t*, uint32_t);
+}
+
 namespace rckid {
+
+    /** SD Card as USB MSC
+     
+        At this point it only works if the USB is already connected when the app is started. Disconnect & connect detection does not work properly. Only tested on mk2 so far.
+     */
+    class DataSync : public ui::App<void> {
+    public:
+
+        DataSync():
+            ui::App<void>{},
+            icon_{Icon{assets::icons_64::pen_drive}},
+            info_{Rect::XYWH(0, 150, 320, 20), "SD card not found"},
+            status_{Rect::XYWH(0, 180, 320, 20), "Disconnected"} 
+        {
+            icon_.setTransparent(true);
+            icon_.setPos(160 - icon_.width() / 2, 60);
+            status_.setHAlign(HAlign::Center);
+            g_.addChild(icon_);
+            g_.addChild(info_);
+            g_.addChild(status_);
+            fs::mount(fs::Drive::SD);
+            if (fs::isMounted()) {
+                info_.setText(STR("SD card: " << sdCapacity() / 2 / 1024 << "MB, label " << fs::getLabel()));
+                fs::unmount();
+                mscStatus_ = Status::Disconnected;
+            }
+
+        }
+
+        void update() override {
+            ui::App<void>::update();
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                btnClear(Btn::B);
+                btnClear(Btn::Down);
+                exit();
+            }
+        }
+
+        void draw() override {
+
+            switch (mscStatus_) {
+                case Status::Inactive:
+                    status_.setText("Inactive");
+                    break;
+                case Status::Disconnected:
+                    status_.setText("Disconnected");
+                    break;
+                case Status::Connected:
+                    status_.setText(STR("Connected, r: " << blocksRead_ << ", w: " << blocksWrite_));
+                    break;
+                default:
+                    UNREACHABLE;
+            }
+
+
+
+            ui::App<void>::draw();
+        }
+
+        static bool active() {
+            return mscStatus_ != Status::Inactive;
+        }
+
+
+    private:
+        friend bool ::tud_msc_start_stop_cb(uint8_t, uint8_t, bool, bool);
+        friend int32_t ::tud_msc_read10_cb(uint8_t, uint32_t, uint32_t, void *, uint32_t);
+        friend int32_t ::tud_msc_write10_cb(uint8_t, uint32_t, uint32_t, uint8_t*, uint32_t);
+
+        ui::Image icon_;
+        ui::Label info_;
+        ui::Label status_;
+
+        static void connect() {
+            ASSERT(mscStatus_ == Status::Disconnected);
+            fs::unmount(fs::Drive::SD);
+            mscStatus_ = Status::Connected;
+            blocksRead_ = 0;
+            blocksWrite_ = 0;
+        }
+
+        static void disconnect() {
+            if (active())
+                mscStatus_ = Status::Disconnected;
+        }
+
+        enum class Status {
+            Inactive, 
+            Disconnected, 
+            Connected,
+        }; 
+
+        static inline Status mscStatus_ = Status::Inactive;
+        static inline uint32_t blocksRead_ = 0;
+        static inline uint32_t blocksWrite_ = 0;
+
+    }; // DataSync
+
+#ifdef FOO
 
     /** USB Mass Storage device.  
      
@@ -124,5 +230,7 @@ namespace rckid {
         inline static uint32_t blocksWrite_ = 0;
 
     }; // rckid::DataSync
+
+#endif
 
 } // namespace rckid
