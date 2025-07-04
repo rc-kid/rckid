@@ -60,7 +60,7 @@ namespace rckid::ui {
         void update() override {
 #if RCKID_ENABLE_STACK_PROTECTION
             // if tracking stack protection, display the memory usage and stack size
-            text(0,0) << (memoryFree() / 1024) << '/' << StackProtection::maxSize() << ' ';
+            text(0,0) << (memoryFree() / 1024) << '/' << StackProtection::maxSize() << ' ' << App::fps() << ' ';
             StackProtection::resetMaxSize();
 #else 
             TinyDateTime now = timeNow();
