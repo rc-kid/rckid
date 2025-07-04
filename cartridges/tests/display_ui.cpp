@@ -20,6 +20,7 @@
 #include <rckid/apps/AudioPlayer.h>
 #include <rckid/apps/Friends.h>
 #include <rckid/apps/Clock.h>
+#include <rckid/apps/DataSync.h>
 
 #include <gbcemu/gbcemu.h>
 #include <gbcemu/gamepak.h>
@@ -114,6 +115,7 @@ ui::Menu * utilsMenuGenerator() {
         MainMenu::Action("Stopwatch", assets::icons_64::poo, nullptr),
         MainMenu::Action("Timer", assets::icons_64::poo, nullptr),
         MainMenu::Action("Files", assets::icons_64::folder, App::run<FileDialog>),
+        MainMenu::Action("Data Sync", assets::icons_64::pen_drive, App::run<DataSync>),
     };
 }
 

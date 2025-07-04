@@ -52,7 +52,7 @@ namespace rckid::ui {
         void loadBackgroundImage() {
             if (bg_ != nullptr)
                 delete bg_;
-            auto f = fs::fileRead("files/images/backgrounds/shack163.png");
+            auto f = fs::fileRead("files/images/backgrounds/shack16.png");
             if (f.good())
                 bg_ = new Image{Bitmap{PNG::fromStream(std::move(f))}};
             else
