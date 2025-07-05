@@ -6,8 +6,8 @@
 #define RCKID_PMIC_I2C_ADDRESS 0x6b
 #define RCKID_ACCEL_I2C_ADDRESS 0x19
 #define RCKID_ALS_I2C_ADDRESS 0x29
-#define RCKID_AUDIO_CODEC_ADDRESS 0x1a
-#define RCKID_FM_RADIO_ADDRESS 0x60
+#define RCKID_AUDIO_CODEC_I2C_ADDRESS 0x1a
+#define RCKID_FM_RADIO_I2C_ADDRESS 0x11
 
 /** Speed of the communication with ST7789 display when in PIO mode (for fast display data transfers). Defaults to 20MHz which is just within the display datasheet's capabilities. 
  */

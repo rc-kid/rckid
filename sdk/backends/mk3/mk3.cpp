@@ -33,17 +33,21 @@ extern "C" {
 #include <platform/peripherals/si4705.h>
 #include <platform/peripherals/tlv320.h>
 
+#include <rckid/rckid.h>
+#include <rckid/radio.h>
 #include "screen/ST7789.h"
 #include "sd/sd.h"
-#include "rckid/rckid.h"
-#include "rckid/app.h"
-#include "rckid/filesystem.h"
-#include "rckid/ui/header.h"
+#include "i2c.h"
+#include <rckid/app.h>
+#include <rckid/filesystem.h>
+#include <rckid/ui/header.h>
 
 #include "i2s_out16.pio.h"
 
 #include "avr/src/avr_commands.h"
 #include "avr/src/avr_state.h"
+
+
 
 extern "C" {
     extern uint8_t __cartridge_filesystem_start;
@@ -156,130 +160,6 @@ namespace rckid {
 
     }
 
-    /** I2C Queue
-     
-        Unlike v2 where I2C was handled either blocking, or async in the tick interrupts, which created cumbersome problems when user code was interfering with the tick routines, I2C in mkIII is handled via a queue. Each packet specifies a full transaction with bytes to send and bytes to receive. When the packet is processed an associated callback is executed from within the ISR.
-     */
-    namespace i2c {
-        class Packet {
-        public:
-            uint8_t address;
-            uint8_t writeLen;
-            uint8_t readLen;
-            Packet * next = nullptr;
-            void (* callback)(uint8_t) = nullptr;
-
-            Packet(uint8_t addr, uint8_t wlen, uint8_t const * wdata, uint8_t rlen, void (* cb)(uint8_t) = nullptr):
-                address{addr}, 
-                writeLen{wlen}, 
-                readLen{rlen}, 
-                callback{cb} {
-                if (writeLen <= 4) {
-                    uint8_t * x = writeData();
-                    for (size_t i = 0; i < writeLen; ++i) {
-                        x[i] = wdata[i];
-                    }
-                } else {
-                    writeData_ = new uint8_t[writeLen];
-                    memcpy(writeData_, wdata, writeLen);
-                }
-            }
-
-            ~Packet() {
-                if (writeLen > 4)
-                    delete [] writeData_;
-            }
-
-            /** Returns true if the packet is a control request callback, a special packet that does not get send, but instead calls the callback, thus actually giving the callback function full control over the I2C bus. 
-             */
-            bool isControlCallback() const {
-                return address == 0 && writeLen == 0 && readLen == 0;
-            }
-
-            void transmit() {
-                // if this is control callback, call the callback instead of transmitting
-                if (isControlCallback()) {
-                    if (callback)
-                        callback(0);
-                    return;
-                }
-                i2c0->hw->enable = 0;
-                i2c0->hw->tar = address;
-                i2c0->hw->enable = 1;
-                // if there are data to send, write them first. Do not forget to set the stop bit if no data to red
-                if (writeLen > 0) {
-                    uint8_t * x = writeData();
-                    for (uint32_t i = 0, e = writeLen - 1; i <= e; ++i)
-                        i2c0->hw->data_cmd = x[i] | ((i == e && readLen == 0) ? I2C_IC_DATA_CMD_STOP_BITS : 0);
-                }
-                // if there are data to read, write the recv bits
-                if (readLen > 0) {
-                    for (uint32_t i = 0, e = readLen - 1; i <= e; ++i) {
-                        uint32_t cmd = I2C_IC_DATA_CMD_CMD_BITS;
-                        if (i == 0 && writeLen != 0)
-                            cmd |= I2C_IC_DATA_CMD_RESTART_BITS;
-                        if (i == e)
-                            cmd |= I2C_IC_DATA_CMD_STOP_BITS;
-                        i2c0->hw->data_cmd = cmd;
-                    }
-                }
-                // set the rx threshold accordingly so that we get interrupt properly
-                // TODO what if we are not reading anything only writing? 
-                i2c0->hw->rx_tl = (readLen == 0) ? 0 : readLen - 1;
-            }
-
-            uint8_t * writeData() {
-                if (writeLen <= 4) {
-                    return reinterpret_cast<uint8_t *>(&writeData_);
-                } else {
-                    return writeData_;
-                }
-            }
-
-        private:
-            uint8_t * writeData_;
-        }; // i2c::Packet
-
-        Packet * currentPacket = nullptr;
-        Packet * lastPacket = nullptr;
-
-        void enqueue(Packet * p) {
-            if (lastPacket == nullptr) {
-                // TODO no ISR
-                currentPacket = p;
-                lastPacket = p;
-                currentPacket->transmit();
-            } else {
-                // TODO no ISR
-                lastPacket->next = p;
-                lastPacket = p;
-            }
-        }
-
-        void resume() {
-            ASSERT(currentPacket->isControlCallback());
-            Packet * p = currentPacket;
-            currentPacket = p->next;
-            if (currentPacket != nullptr)
-                currentPacket->transmit();
-            else
-                lastPacket = nullptr;
-            delete currentPacket;
-        }
-
-        template<typename T>
-        void sendCommand(T const & cmd) {
-            Packet * p = new Packet(
-                RCKID_AVR_I2C_ADDRESS, 
-                sizeof(T), 
-                reinterpret_cast<uint8_t const *>(& cmd), 
-                0
-            );
-            enqueue(p);
-        }
-
-    } // namespace rckid::i2c
-
     bool buttonState(Btn b, AVRState::Status & status) {
 
         // TODO this can be made more efficient if we just get the value in the status and or the bits 
@@ -304,10 +184,8 @@ namespace rckid {
      */
     void updateAvrStatus([[maybe_unused]] uint8_t numBytes) {
         AVRState::Status status;
-        uint8_t * raw = reinterpret_cast<uint8_t*>(&status);
-        for (unsigned i = 0; i < sizeof(AVRState::Status); ++i) {
-            raw[i] = i2c0->hw->data_cmd;;
-        }
+        // TODO what if numBytes != status read? 
+        i2c::readResponse(reinterpret_cast<uint8_t*>(&status), sizeof(AVRState::Status));
         // archive the old status
         io::lastStatus_ = io::avrState_.status;
         // copy the new one, we take the buttons (first 2 bytes as is) and or the interrupts to make sure none is ever lost, the process them immediately
@@ -341,14 +219,7 @@ namespace rckid {
         uint32_t cause = i2c0->hw->intr_stat;
         i2c0->hw->clr_intr;
         // remove the packet from the queue and start transmitting the next one, if any
-        i2c::Packet * p = i2c::currentPacket;
-        if (p->next != nullptr) {
-            i2c::currentPacket = p->next;
-            i2c::currentPacket->transmit();
-        } else {
-            i2c::currentPacket = nullptr;
-            i2c::lastPacket = nullptr;
-        }
+        i2c::Packet * p = i2c::transmitNextPacket();
         // call the callback
         if (p->callback != nullptr)
             // can we get the real number of bytes read somehow if there was an error and the number is smaller?
@@ -499,14 +370,16 @@ namespace rckid {
             LOG(LL_INFO, "Current time: " << io::avrState_.time);
         }
 
+        Radio::initialize();
+
         // initialize the audio chips - first radio, then audio chip
         // TODO check that a pullup on the audio codec reset pin is sufficient to start it properly?
-        io::radio_.reset(RP_PIN_RADIO_RESET);
-        cpu::delayMs(100);
+        //io::radio_.reset(RP_PIN_RADIO_RESET);
+        //cpu::delayMs(100);
         // 
 
         // do we see the radio chip after reset?
-        LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
+        //LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
 
         // initialize the SD card
         sdInitialize();
