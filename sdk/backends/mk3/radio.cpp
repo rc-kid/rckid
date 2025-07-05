@@ -24,6 +24,22 @@ namespace rckid {
     }
 
     void Radio::setFrequency(uint16_t freq_10kHz) {
+        // TODO wait for not busy
+        uint8_t cmd[] = {
+            CMD_FM_TUNE_FREQ,
+            0, // no freeze or fast mode
+            platform::highByte(freq_10kHz),
+            platform::lowByte(freq_10kHz),
+            0, // automatic antenna tuning capacitor value
+        };
+        status_ = Status::Tune;
+        i2c::enqueue(new i2c::Packet(
+            RCKID_FM_RADIO_I2C_ADDRESS,
+            sizeof(cmd),
+            cmd,
+            1, // read 1 byte response
+            getStatusResponse
+        ));
     }
 
     void Radio::seekUp() {

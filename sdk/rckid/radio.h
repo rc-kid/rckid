@@ -25,12 +25,21 @@ namespace rckid {
             Off,
             On,
             Busy,
-            Seek,
+            Tune,
         }; // Radio::Status
 
+        /** Returns the current radio status. 
+         */
         Status status() const { return status_; }
 
+        /** Enables, or disables the radio chip. 
+         */
         void enable(bool value);
+
+        /** Sets the FM frequency in multiples of 10kHz, i.e. 9370 for 93.7MHz. 
+            
+            The frequency must be in the range of 6800 to 10800, i.e. 68MHz to 108MHz. As with any other commands, if the radio is busy, the app will block until the previous command has been processed and the radio is ready for the next command.
+         */
         void setFrequency(uint16_t freq_10kHz);
         void seekUp();
         void seekDown();
