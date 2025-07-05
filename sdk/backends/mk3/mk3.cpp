@@ -249,6 +249,9 @@ namespace rckid {
             case RP_PIN_AVR_INT:
                 requestAvrStatus();
                 break;
+            case RP_PIN_RADIO_INT:
+                Radio::irqHandler();
+                break;
             default:
                 LOG(LL_ERROR, "Unknown GPIO IRQ on pin " << (uint32_t)pin << " with events " << events);
                 break;

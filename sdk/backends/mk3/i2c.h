@@ -16,7 +16,7 @@ namespace rckid::i2c {
         Packet * next = nullptr;
         void (* callback)(uint8_t) = nullptr;
 
-        Packet(uint8_t addr, uint8_t wlen, uint8_t const * wdata, uint8_t rlen, void (* cb)(uint8_t) = nullptr):
+        Packet(uint8_t addr, uint8_t wlen, uint8_t const * wdata, uint8_t rlen, void (* cb)(uint8_t)):
             address{addr}, 
             writeLen{wlen}, 
             readLen{rlen}, 
@@ -31,6 +31,7 @@ namespace rckid::i2c {
                 memcpy(writeData_, wdata, writeLen);
             }
         }
+        Packet(uint8_t addr, uint8_t wlen, uint8_t const * wdata): Packet(addr, wlen, wdata, 0, nullptr) { }
 
         ~Packet() {
             if (writeLen > 4)
@@ -128,8 +129,7 @@ namespace rckid::i2c {
         Packet * p = new Packet(
             RCKID_AVR_I2C_ADDRESS, 
             sizeof(T), 
-            reinterpret_cast<uint8_t const *>(& cmd), 
-            0
+            reinterpret_cast<uint8_t const *>(& cmd)
         );
         enqueue(p);
     }

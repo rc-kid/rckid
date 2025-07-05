@@ -4,22 +4,34 @@
 namespace rckid {
 
     void Radio::enable(bool value) {
-        if (value && status_ == Status::Off) {
+        if (value) {
+            if (enabled())
+                return;
             uint8_t cmd[] = {
                 CMD_POWER_UP, 
                 CMD_POWER_UP_CTSIEN | CMD_POWER_UP_GPO2OEN | CMD_POWER_UP_XOSCEN, 
                 CMD_POWER_UP_FM_RECEIVER
             };
-            status_ = Status::Busy;
+            status_.clearCts();
+            expectedResponse_ = ExpectedResponse::Status;
             i2c::enqueue(new i2c::Packet(
                 RCKID_FM_RADIO_I2C_ADDRESS,
                 sizeof(cmd),
-                cmd,
-                0, // no data to read
-                getStatusResponse
+                cmd
             ));
-        } else if (!value && status_ != Status::Off) {}  {
-            // TODO turn off (wait for not busy)
+        } else {
+            waitNotBusy();
+            uint8_t cmd[] = {
+                CMD_POWER_UP, 
+                0, 
+                0
+            };
+            expectedResponse_ = ExpectedResponse::PowerOff;
+            i2c::enqueue(new i2c::Packet(
+                RCKID_FM_RADIO_I2C_ADDRESS,
+                sizeof(cmd),
+                cmd
+            ));
         }
     }
 
@@ -32,20 +44,44 @@ namespace rckid {
             platform::lowByte(freq_10kHz),
             0, // automatic antenna tuning capacitor value
         };
-        status_ = Status::Tune;
+        status_.clearCts();
+        status_.clearStc();
+        expectedResponse_ = ExpectedResponse::Status;
         i2c::enqueue(new i2c::Packet(
             RCKID_FM_RADIO_I2C_ADDRESS,
             sizeof(cmd),
-            cmd,
-            1, // read 1 byte response
-            getStatusResponse
+            cmd
         ));
     }
 
     void Radio::seekUp() {
+        uint8_t cmd[] = {
+            CMD_FM_SEEK_START,
+            0x08 | 0x04, // seek up, wrap around
+        };
+        status_.clearCts();
+        status_.clearStc();
+        expectedResponse_ = ExpectedResponse::Status;
+        i2c::enqueue(new i2c::Packet(
+            RCKID_FM_RADIO_I2C_ADDRESS,
+            sizeof(cmd),
+            cmd
+        ));
     }
 
     void Radio::seekDown() {
+        uint8_t cmd[] = {
+            CMD_FM_SEEK_START,
+            0x04, // seek down, wrap around
+        };
+        status_.clearCts();
+        status_.clearStc();
+        expectedResponse_ = ExpectedResponse::Status;
+        i2c::enqueue(new i2c::Packet(
+            RCKID_FM_RADIO_I2C_ADDRESS,
+            sizeof(cmd),
+            cmd
+        ));
     }
 
     void Radio::initialize() {
@@ -59,6 +95,9 @@ namespace rckid {
             LOG(LL_INFO, "  Si4705: not found");
             instance_ = nullptr;
         }
+        gpio::setAsInputPullUp(RP_PIN_RADIO_INT);
+        gpio_set_irq_enabled(RP_PIN_RADIO_INT, GPIO_IRQ_EDGE_FALL, true);
+
     }
 
     void Radio::reset() {
@@ -67,24 +106,30 @@ namespace rckid {
         gpio::setAsInputPullUp(RP_PIN_RADIO_RESET);
     }
 
-    void Radio::getStatusResponse([[maybe_unused]] uint8_t numBytes) {
-        ASSERT(instance_->status_ == Status::Busy);
-        uint8_t cmd = CMD_GET_INT_STATUS;
-        i2c::enqueue(new i2c::Packet(
-            RCKID_FM_RADIO_I2C_ADDRESS,
-            sizeof(cmd),
-            &cmd,
-            1,
-            processStatusResponse
-        ));        
+
+    void Radio::irqHandler() {
+        switch (instance_->expectedResponse_) {
+            case ExpectedResponse::Status: {
+                uint8_t cmd = CMD_GET_INT_STATUS;
+                i2c::enqueue(new i2c::Packet(
+                    RCKID_FM_RADIO_I2C_ADDRESS,
+                    sizeof(cmd),
+                    &cmd,
+                    1,
+                    processStatusResponse
+                ));        
+                break;
+            }
+            default:
+                UNIMPLEMENTED;
+        }
+        instance_->expectedResponse_ = ExpectedResponse::None;
     }
 
     void Radio::processStatusResponse(uint8_t numBytes) {
         ASSERT(numBytes == 1);
-        instance_->status_ = Status::On;
-        i2c::readResponse(reinterpret_cast<uint8_t*>(&instance_->response_), numBytes);
-        if (instance_->response_.cts())
-            instance_->status_ = Status::On;
+        i2c::readResponse((uint8_t *)&instance_->status_.raw_, numBytes);
+
     }
 
 

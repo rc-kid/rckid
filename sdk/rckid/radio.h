@@ -21,16 +21,11 @@ namespace rckid {
          */
         Radio * instance() { return instance_; }
 
-        enum class Status {
-            Off,
-            On,
-            Busy,
-            Tune,
-        }; // Radio::Status
+        bool enabled() const { return expectedResponse_ != ExpectedResponse::PowerOff; }
 
-        /** Returns the current radio status. 
-         */
-        Status status() const { return status_; }
+        bool busy() const { return status_.cts() == false; }
+
+        bool tuning() const { return status_.stcInt() == false; }
 
         /** Enables, or disables the radio chip. 
          */
@@ -41,6 +36,7 @@ namespace rckid {
             The frequency must be in the range of 6800 to 10800, i.e. 68MHz to 108MHz. As with any other commands, if the radio is busy, the app will block until the previous command has been processed and the radio is ready for the next command.
          */
         void setFrequency(uint16_t freq_10kHz);
+
         void seekUp();
         void seekDown();
 
@@ -49,7 +45,7 @@ namespace rckid {
         public:
             /** When high, new command can be sent. */
             bool cts() const { return raw_ & 0x80; }
-            /** True when there was an error with the last command. */
+            /** When high, there was an error with the last command. */
             bool err() const { return raw_ & 0x40; }
             /** Received signal quality interrupt (active high). */
             bool rsqInt() const { return raw_ & 0x08; }
@@ -61,12 +57,28 @@ namespace rckid {
             uint8_t rawResponse() const { return raw_; }
         private:
             friend class Radio;
-            uint8_t raw_;
+
+            void clearCts() { raw_ &= ~0x80; }
+            void clearStc() { raw_ &= ~0x01; }
+
+            volatile uint8_t raw_;
         }); // Radio::Response
+
+        void waitNotBusy() const {
+            while (! status_.cts())
+                yield();
+        }
 
     private:
 
+        enum class ExpectedResponse {
+            PowerOff,
+            None, 
+            Status,
+        }; // ExpectedResponse
+
         friend void initialize(int argc, char const * argv[]);
+        friend void irqGPIO_(uint pin, uint32_t events);
 
         static void initialize();
 
@@ -76,15 +88,14 @@ namespace rckid {
         */
         static void reset();
 
-        static void getStatusResponse(uint8_t numBytes);
+        static void irqHandler();
 
         static void processStatusResponse(uint8_t numBytes);
 
         static inline Radio * instance_ = nullptr;
 
-        Status status_ = Status::Off;
-
-        Response response_;
+        ExpectedResponse expectedResponse_ = ExpectedResponse::PowerOff;
+        Response status_;
 
         /* Commands - from 5.2 of AN332, Si4705 programming. 
          */
