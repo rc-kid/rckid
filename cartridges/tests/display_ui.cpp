@@ -25,6 +25,8 @@
 #include <gbcemu/gbcemu.h>
 #include <gbcemu/gamepak.h>
 
+#include <rckid/radio.h>
+
 
 using namespace rckid;
 

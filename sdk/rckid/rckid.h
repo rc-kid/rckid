@@ -19,6 +19,12 @@
     \subpage backend_fantasy
  */
 
+ /** \page sdk
+     \section peripherals Peripherals & Cartridge Drivers
+
+     The SDK provides various backend & cartridge specific peripherals and drivers that can be used to access the specific hardware, such as FM radio, WiFi, NRF & LoRa cartridges, etc. Those are not part of this header file, but are specific classes with singleton instances that must be checked for their presentce before use (see the radio.h for an example). 
+  */
+
 /** \page sdk 
     \section err_log Errors and Logging
 
