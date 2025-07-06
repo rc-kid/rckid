@@ -10,7 +10,7 @@ else()
     add_compile_options(-Wall -Wextra)
 endif()
 
-file(GLOB_RECURSE SRC "fantasy.cpp" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.h" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.cpp" "${CMAKE_SOURCE_DIR}/sdk/assets-bin/*.cpp")
+file(GLOB_RECURSE SRC "fantasy.cpp" "radio.cpp" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.h" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.cpp" "${CMAKE_SOURCE_DIR}/sdk/assets-bin/*.cpp")
 add_library(librckid STATIC ${SRC})
 target_include_directories(librckid PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/raylib/src")
 

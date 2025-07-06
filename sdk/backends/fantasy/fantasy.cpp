@@ -10,10 +10,11 @@
 #include <platform/string_utils.h>
 #include <platform/args.h>
 
-#include "rckid/rckid.h"
-#include "rckid/app.h"
-#include "rckid/filesystem.h"
-#include "rckid/ui/header.h"
+#include <rckid/rckid.h>
+#include <rckid/app.h>
+#include <rckid/filesystem.h>
+#include <rckid/ui/header.h>
+#include <rckid/radio.h>
 
 #ifndef _WIN32
 extern "C" {
@@ -218,6 +219,8 @@ namespace rckid {
         InitAudioDevice();
 
         SystemMallocGuard::disable();
+
+        Radio::initialize();
 
         // initialize the device time - on real device this is obtained from the always on avr rtc, here we get the system time
         auto now = std::chrono::system_clock::now();

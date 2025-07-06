@@ -71,6 +71,13 @@
 
 # TODO
 
+
+- p246 of si4705 datasheet - a much simpler version could be where all the cts timings are taken from the datasheet as they are fixed, and the int is only used for the tuning end. That way, sending and receiving stuff should be much simpler
+- also start with blocking comms which I know work
+- Si4705 likely requires resetting manually, pulling the RST high from the beginning does not work
+
+- radio can only resend after the response for the first command was processed, not just while not busy
+
 - USB connection is not detected
 - make usb work in mkIII as well
 - can the SD initialization routine be improved? 
