@@ -66,14 +66,12 @@
 - [ ] check that titlting dpad is better 
 - [ ] check new case works better with battery
 - [ ] mk3 idle and keepalive timers are too high, move lower again
-- [ ] check overclocking
+- [X] check overclocking -- seems to go to 250MHz w/o overvolt
 - [ ] add way to clear memory when necessary (e.g. remove background, etc.)
 
 # TODO
 
-
-- p246 of si4705 datasheet - a much simpler version could be where all the cts timings are taken from the datasheet as they are fixed, and the int is only used for the tuning end. That way, sending and receiving stuff should be much simpler
-- also start with blocking comms which I know work
+- comms with Si4705 seems to be working, but tuning returns error, not sure why
 - Si4705 likely requires resetting manually, pulling the RST high from the beginning does not work
 
 - radio can only resend after the response for the first command was processed, not just while not busy

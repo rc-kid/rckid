@@ -221,6 +221,9 @@ namespace rckid {
     void __not_in_flash_func(irqI2CDone_)() {
         uint32_t cause = i2c0->hw->intr_stat;
         i2c0->hw->clr_intr;
+        // disable the I2C interrupts (otherwise they might fire again immediately despite clearing, especially the TX_EMPTY one)
+        i2c0->hw->intr_mask = 0;
+        LOG(LL_I2C, "IRQ " << hex(cause) << " -- " << hex(i2c0->hw->intr_stat));
         // remove the packet from the queue and start transmitting the next one, if any
         i2c::Packet * p = i2c::transmitNextPacket();
         // call the callback
@@ -407,10 +410,9 @@ namespace rckid {
         time::nextSecond_ += 1000000;
 
         // enable I2C interrupts so that we can start processing the I2C packet queues
-        i2c0->hw->intr_mask = I2C_IC_INTR_MASK_M_RX_FULL_BITS | I2C_IC_INTR_MASK_M_TX_ABRT_BITS;
+        //i2c0->hw->intr_mask = I2C_IC_INTR_MASK_M_RX_FULL_BITS | I2C_IC_INTR_MASK_M_TX_ABRT_BITS;
 
         RAMHeap::traceChunks();
-
 
         return;
 

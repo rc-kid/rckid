@@ -43,7 +43,8 @@ namespace rckid {
     }
 
     void Radio::sendCommand(uint8_t const * cmd, uint8_t cmdSize, uint32_t ctsTime) {
-        ASSERT(busy_ & RADIO_COMMAND_BUSY == 0);
+        LOG(LL_INFO, "radio cmd " << hex(cmd[0]));
+        ASSERT((busy_ & RADIO_COMMAND_BUSY) == 0);
         busy_ |= RADIO_COMMAND_BUSY;
         i2c::enqueue(new i2c::Packet(
             RCKID_FM_RADIO_I2C_ADDRESS,
@@ -56,7 +57,8 @@ namespace rckid {
     }
 
     void Radio::getResponse(uint8_t responseBytes) {
-        ASSERT(busy_ & RADIO_COMMAND_BUSY == 0);
+        LOG(LL_INFO, "request response " << responseBytes);
+        ASSERT((busy_ & RADIO_COMMAND_BUSY) == 0);
         busy_ |= RADIO_COMMAND_BUSY;
         responseSize_  = responseBytes;
         i2c::enqueue(new i2c::Packet(
@@ -96,6 +98,7 @@ namespace rckid {
         MaxResponse r;
         i2c::readResponse((uint8_t *)& r.raw_, numBytes);
         instance_->status_ = r;
+        LOG(LL_INFO, "radio response: " << hex(r.rawResponse()));
         // clear busy flag
         instance_->busy_ &= ~RADIO_COMMAND_BUSY;
     }

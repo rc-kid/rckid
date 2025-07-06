@@ -158,6 +158,7 @@ ui::Menu * mainMenuGenerator() {
 }
 
 int main() {
+    //cpu::overclock(250000000);
     initialize();
 
     //PNG png{PNG::fromStream(fs::fileRead(STR("files/images/backgrounds/wish16.png")))};
