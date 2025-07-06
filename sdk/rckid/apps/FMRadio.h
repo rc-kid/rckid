@@ -34,6 +34,9 @@ namespace rckid {
                 LOG(LL_INFO, "  comp:          " << version.compMajor << "." << version.compMinor);
                 LOG(LL_INFO, "  chip revision: " << version.chipRevision);
                 LOG(LL_INFO, "  cid:           " << version.cid);
+                cpu::delayMs(1000);
+                radio_->setFrequency(9370);
+                cpu::delayMs(100);
                 auto tuneStatus = radio_->getTuneStatus();
                 LOG(LL_INFO, "  frequency:     " << tuneStatus.frequency10kHz() << " [10kHz]");
                 LOG(LL_INFO, "  rssi:          " << tuneStatus.rssi());

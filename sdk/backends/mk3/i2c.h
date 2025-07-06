@@ -54,6 +54,7 @@ namespace rckid::i2c {
                     callback(0);
                 return;
             }
+            LOG(LL_I2C, "tx " << hex(address) << " wlen " << writeLen << " rlen " << readLen);
             i2c0->hw->enable = 0;
             i2c0->hw->tar = address;
             i2c0->hw->enable = 1;
@@ -74,9 +75,16 @@ namespace rckid::i2c {
                     i2c0->hw->data_cmd = cmd;
                 }
             }
-            // set the rx threshold accordingly so that we get interrupt properly
-            // TODO what if we are not reading anything only writing? 
-            i2c0->hw->rx_tl = (readLen == 0) ? 0 : readLen - 1;
+            // depending on the packet, set the conditions for interrupt when done, or aborted. If we are not reading, we set the TX threshold to 0 (i.e. all tx bytes sent) and enable the interrupt for TX empty and TX abort. When we are reading, then set the RX threshold to number of bytes to read minus one (its when the RX buffer is *above* the threshold) and enable RX full and TX abort. 
+            // TODO could this happen *before* we get here? maybe disable interrupts for the function first?
+            // TODO ensure that the TX abort is also set when RX won't read everything we wanted.
+            if (readLen == 0) {
+                i2c0->hw->rx_tl = 0;
+                i2c0->hw->intr_mask = I2C_IC_INTR_MASK_M_TX_EMPTY_BITS | I2C_IC_INTR_MASK_M_TX_ABRT_BITS;
+            } else {
+                i2c0->hw->rx_tl = readLen - 1;
+                i2c0->hw->intr_mask = I2C_IC_INTR_MASK_M_RX_FULL_BITS | I2C_IC_INTR_MASK_M_TX_ABRT_BITS;
+            }
         }
 
         uint8_t * writeData() {
@@ -102,6 +110,7 @@ namespace rckid::i2c {
     }; // i2c::Packet
 
     inline void enqueue(Packet * p) {
+        LOG(LL_I2C, "enqueue " << p << ", current " << Packet::current_ << ", last " << Packet::last_);
         if (Packet::last_ == nullptr) {
             // TODO no ISR
             Packet::current_ = p;
