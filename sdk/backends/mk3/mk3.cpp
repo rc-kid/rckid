@@ -883,7 +883,9 @@ namespace rckid {
 
     uint32_t budget() {
         StackProtection::check();
-        return io::avrState_.budget;
+        // TODO this is a temporary hack, we need to get the budget from AVR and work with it
+        return 1000;
+        //return io::avrState_.budget;
     }
 
     uint32_t budgetDaily() {

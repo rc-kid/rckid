@@ -10,7 +10,7 @@ namespace rckid {
 
         ## Communication details
 
-        The chip is connected to the I2C bus, but the I2C communication is somewhat special as the command response times take time to process. This can be dealt with via either blocking reads of status byte until command is processed, followed by the read of the response, or by use the interrupt pin. As we want to use the I2C comms queue on mkIII, we use the interrupt-based approach. 
+        The chip is connected to the I2C bus, but the I2C communication is somewhat special as the command response times take time to process. This can be dealt with via either blocking reads of status byte until command is processed, followed by the read of the response, or by use the interrupt pin. Howwver, as per the programming guide, the command execution time is quite straightforward, being 100ms for power up and 300us for all other commands (table 50 at page 248). Additionally, there is the variable length seek complete, which is only used for tuning commands and the 10ms completion time for set property command. 
 
      */
     class Radio {
@@ -19,28 +19,8 @@ namespace rckid {
          
             If the radio is not present, returns nullptr and this *must* be checked before operating the radio. 
          */
-        Radio * instance() { return instance_; }
+        static Radio * instance() { return instance_; }
 
-        bool enabled() const { return expectedResponse_ != ExpectedResponse::PowerOff; }
-
-        bool busy() const { return status_.cts() == false; }
-
-        bool tuning() const { return status_.stcInt() == false; }
-
-        /** Enables, or disables the radio chip. 
-         */
-        void enable(bool value);
-
-        /** Sets the FM frequency in multiples of 10kHz, i.e. 9370 for 93.7MHz. 
-            
-            The frequency must be in the range of 6800 to 10800, i.e. 68MHz to 108MHz. As with any other commands, if the radio is busy, the app will block until the previous command has been processed and the radio is ready for the next command.
-         */
-        void setFrequency(uint16_t freq_10kHz);
-
-        void seekUp();
-        void seekDown();
-
-    protected:
         PACKED(class Response {
         public:
             /** When high, new command can be sent. */
@@ -61,25 +41,165 @@ namespace rckid {
             void clearCts() { raw_ &= ~0x80; }
             void clearStc() { raw_ &= ~0x01; }
 
-            volatile uint8_t raw_;
+            volatile uint8_t raw_ = 0xff;
         }); // Radio::Response
 
-        void waitNotBusy() const {
-            while (! status_.cts())
-                yield();
+        /** Version information returned by the GET_REV command. 
+         */
+        PACKED(class VersionInfo {
+        public:
+            uint8_t partNumber;
+            uint8_t fwMajor;
+            uint8_t fwMinor;
+            uint16_t patch;
+            uint8_t compMajor;
+            uint8_t compMinor;
+            uint8_t chipRevision;
+            uint8_t reserved[5];
+            uint8_t cid;
+        }); // Radio::VersionInfo
+
+
+        PACKED(class TuneStatus {
+        public:
+            bool seekBandLimit() const { return result_ & 0x80; }
+            bool afcRail() const { return result_ & 0x02; }
+            bool valid() const { return result_ & 0x01; }
+
+            uint16_t frequency10kHz() const { return frequency_; }
+            uint8_t rssi() const { return rssi_; }
+            uint8_t snr() const { return snr_; }
+            uint8_t multipath() const { return mult_; }
+            uint8_t antCap() const { return antCap_; }
+
+        private:
+
+            friend class Radio;
+
+            uint8_t result_;
+            uint16_t frequency_;
+            uint8_t rssi_;
+            uint8_t snr_;
+            uint8_t mult_;
+            uint8_t antCap_;
+        }); // Radio::TuneStatus
+
+        bool enabled() const { return busy_ & RADIO_ENABLED; }
+
+        bool busy() const { return status_.cts() == false; }
+
+        bool tuning() const { return status_.stcInt() == false; }
+
+        /** Enables, or disables the radio chip. 
+         */
+        void enable(bool value);
+
+        /** Returns the device version & software revision information.
+         */
+        VersionInfo getVersionInfo() {
+            sendCommand({ CMD_GET_REV });
+            getResponse(sizeof(VersionInfo) + 1);
+            status_.versionInfo.patch = platform::swapBytes(status_.versionInfo.patch);
+            return status_.versionInfo;
+        }
+
+        /** Sets the FM frequency in multiples of 10kHz, i.e. 9370 for 93.7MHz. 
+            
+            The frequency must be in the range of 6800 to 10800, i.e. 68MHz to 108MHz. As with any other commands, if the radio is busy, the app will block until the previous command has been processed and the radio is ready for the next command.
+         */
+        void setFrequency(uint16_t freq_10kHz) {
+            busy_ |= RADIO_TUNE_BUSY;
+            sendCommand({
+                CMD_FM_TUNE_FREQ,
+                0, // no freeze or fast mode
+                platform::highByte(freq_10kHz),
+                platform::lowByte(freq_10kHz),
+                0, // automatic antenna tuning capacitor value
+            });
+            getResponse();
+        }
+
+        /** Starts automatic seek to the next valid channel (frequency up), with wrap around at the end of the band.
+         */
+        void seekUp() {
+            busy_ |= RADIO_TUNE_BUSY;
+            sendCommand({
+                CMD_FM_SEEK_START,
+                0x08 | 0x04, // seek up, wrap around
+            });
+            getResponse();
+        }
+
+        /** Starts automatic seek to the previous valid channel (frequency down), with wrap around at the beginning of the band.
+         */
+        void seekDown() {
+            busy_ |= RADIO_TUNE_BUSY;
+            sendCommand({
+                CMD_FM_SEEK_START,
+                0x04, // seek down, wrap around
+            });
+            getResponse();
+        }
+
+        /** Returns the current tuning status. 
+         */
+        TuneStatus getTuneStatus() {
+            sendCommand({
+                CMD_FM_TUNE_STATUS,
+                0x00, // no interrupt acknowledge
+            });
+            getResponse(8); 
+            status_.tuneStatus.frequency_ = platform::swapBytes(status_.tuneStatus.frequency_);
+            return status_.tuneStatus;
+        }
+
+        /** Enables or disables the GPO1 pin. When disabled, the pin is left floating, otherwise its either high or low, based on the last setGPO1 function call value (low by default).
+         */
+        void enableGPO1(bool value) {
+            sendCommand({
+                CMD_GPIO_CTL,
+                value ? 0x01 : 0x00, // GPO1 output enabled
+            });
+            getResponse();
+        }
+
+        /** Determines the GPO1 pin value, if enabled. 
+         */
+        void setGPO1(bool value) {
+            sendCommand({
+                CMD_GPIO_SET,
+                value ? 0x01 : 0x00, // GPO1 output value
+            });
+            getResponse();
         }
 
     private:
-
-        enum class ExpectedResponse {
-            PowerOff,
-            None, 
-            Status,
-        }; // ExpectedResponse
+        // TODO delete this when done
+        friend class FMRadio;
 
         friend void initialize(int argc, char const * argv[]);
         friend void irqGPIO_(uint pin, uint32_t events);
 
+
+        PACKED(class PropertyValue {
+        public:
+            uint8_t result_; // always 0
+            uint16_t value;
+        }); // Radio::PropertyValue
+
+        PACKED(class MaxResponse : public Response {
+        public:
+            union {
+                uint8_t data[15];
+                PropertyValue propertyValue;
+                TuneStatus tuneStatus;
+                VersionInfo versionInfo;
+            };
+        });
+
+        static_assert(sizeof(Response) == 1);
+        static_assert(sizeof(MaxResponse) == 16);
+    
         static void initialize();
 
         /** Performs reset of the radio chip. 
@@ -88,14 +208,76 @@ namespace rckid {
         */
         static void reset();
 
+        /** Handler to detect when I2C command has been sent.
+         */
+        static void commandSentHandler(uint8_t bytesReceived) {
+            instance_->busy_ &= ~RADIO_COMMAND_BUSY;
+        }
+
+        void sendCommand(uint8_t const * cmd, uint8_t cmdSize, uint32_t ctsTime = 1);
+
+        template<size_t N>
+        void sendCommand(uint8_t const (&cmd)[N], uint32_t ctsTime = 1) { sendCommand(cmd, N, ctsTime); }
+
+        void getResponse(uint8_t expectedBytes = 1);
+
+        void waitForCts(uint32_t ctsTime) {
+            while (busy_ & RADIO_COMMAND_BUSY)
+                yield();
+            cpu::delayMs(ctsTime);
+        }
+
+        uint16_t getProperty(uint16_t property) {
+            sendCommand({
+                CMD_GET_PROPERTY,
+                0, // an extra 0 byte from the datasheet
+                platform::highByte(property),
+                platform::lowByte(property),
+            });
+            // as per the datasheet, response is 4 bytes (status, 0, hi & lo)
+            getResponse(4);
+            status_.propertyValue.value = platform::swapBytes(status_.propertyValue.value);
+            return status_.propertyValue.value;
+        }
+
+        void setProperty(uint16_t property, uint16_t value) {
+            sendCommand({
+                CMD_SET_PROPERTY,
+                0, // an extra 0 byte from the datasheet
+                platform::highByte(property),
+                platform::lowByte(property),
+                platform::highByte(value),
+                platform::lowByte(value),
+            }, 11); // 1 for the command, 10 for the completion
+            getResponse();
+        }
+
+        void getStatus() {
+            sendCommand({ CMD_GET_INT_STATUS });
+            // as per the datasheet, response is 1 byte (status)
+            getResponse(1);
+        }
+
+
+
         static void irqHandler();
 
-        static void processStatusResponse(uint8_t numBytes);
+        static void processResponse(uint8_t numBytes);
 
         static inline Radio * instance_ = nullptr;
 
-        ExpectedResponse expectedResponse_ = ExpectedResponse::PowerOff;
-        Response status_;
+        MaxResponse status_;
+
+        uint8_t responseSize_ = 0;
+
+
+
+        /** Flags to determine the radio status. 
+         */
+        volatile uint8_t busy_ = 0;
+        static constexpr uint8_t RADIO_COMMAND_BUSY = 0x01;
+        static constexpr uint8_t RADIO_TUNE_BUSY = 0x02;
+        static constexpr uint8_t RADIO_ENABLED = 0x80;
 
         /* Commands - from 5.2 of AN332, Si4705 programming. 
          */

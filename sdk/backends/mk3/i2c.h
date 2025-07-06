@@ -21,6 +21,9 @@ namespace rckid::i2c {
             writeLen{wlen}, 
             readLen{rlen}, 
             callback{cb} {
+            // make sure we are not overloading the tx & rx buffers
+            ASSERT(wlen <= 16);
+            ASSERT(rlen <= 16);
             if (writeLen <= 4) {
                 uint8_t * x = writeData();
                 for (size_t i = 0; i < writeLen; ++i) {

@@ -25,7 +25,7 @@
 #include <gbcemu/gbcemu.h>
 #include <gbcemu/gamepak.h>
 
-#include <rckid/radio.h>
+#include <rckid/apps/FMRadio.h>
 
 
 using namespace rckid;
@@ -148,6 +148,7 @@ ui::Menu * mainMenuGenerator() {
     return new ui::Menu{
         MainMenu::Submenu("Games", assets::icons_64::game_controller, gamesGenerator),
         MainMenu::Action("Music", assets::icons_64::music, App::run<AudioPlayer>),
+        MainMenu::Action("Radio", assets::icons_64::poo, App::run<FMRadio>),
         MainMenu::Submenu("Comms", assets::icons_64::chat, commsMenuGenerator),
         MainMenu::Submenu("Audio", assets::icons_64::poo, audioMenuGenerator),
         MainMenu::Submenu("Images", assets::icons_64::poo, imagesMenuGenerator),
