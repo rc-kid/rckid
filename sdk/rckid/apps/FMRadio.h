@@ -35,11 +35,11 @@ namespace rckid {
                 LOG(LL_INFO, "  chip revision: " << version.chipRevision);
                 LOG(LL_INFO, "  cid:           " << version.cid);
                 auto tuneStatus = radio_->getTuneStatus();
-                LOG(LL_INFO, "  frequency:     " << tuneStatus.frequency10kHz() << "10kHz");
-                LOG(LL_INFO, "  rssi:         " << static_cast<int>(tuneStatus.rssi()));
-                LOG(LL_INFO, "  snr:          " << static_cast<int>(tuneStatus.snr()));
-                LOG(LL_INFO, "  multipath:    " << static_cast<int>(tuneStatus.multipath()));
-                LOG(LL_INFO, "  antCap:       " << static_cast<int>(tuneStatus.antCap()));
+                LOG(LL_INFO, "  frequency:     " << tuneStatus.frequency10kHz() << " [10kHz]");
+                LOG(LL_INFO, "  rssi:          " << tuneStatus.rssi());
+                LOG(LL_INFO, "  snr:           " << tuneStatus.snr());
+                LOG(LL_INFO, "  multipath:     " << tuneStatus.multipath());
+                LOG(LL_INFO, "  antCap:        " << tuneStatus.antCap());
             }
         }
 

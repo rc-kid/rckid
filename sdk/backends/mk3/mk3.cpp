@@ -42,6 +42,7 @@ extern "C" {
 #include <rckid/filesystem.h>
 #include <rckid/ui/header.h>
 
+#include "i2s_mclk.pio.h"
 #include "i2s_out16.pio.h"
 
 #include "avr/src/avr_commands.h"
@@ -151,6 +152,8 @@ namespace rckid {
         State state_ = State::Idle;
         std::function<uint32_t(int16_t *, uint32_t)> cb_;
         uint8_t volume_ = 10;
+        uint mclkSm_;
+        uint mclkOffset_;
         uint playbackSm_;
         uint playbackOffset_;
         uint dma0_ = 0;
@@ -391,13 +394,16 @@ namespace rckid {
         fs::initialize();
 
         // initialize the audio output
+        audio::mclkSm_ = pio_claim_unused_sm(pio1, true);
+        audio::mclkOffset_ = pio_add_program(pio1, & i2s_mclk_program);
         audio::playbackSm_ = pio_claim_unused_sm(pio1, true);
         audio::playbackOffset_ = pio_add_program(pio1, & i2s_out16_program);
         audio::dma0_ = dma_claim_unused_channel(true);
         audio::dma1_ = dma_claim_unused_channel(true);
         i2s_out16_program_init(pio1, audio::playbackSm_, audio::playbackOffset_, RP_PIN_I2S_DOUT, RP_PIN_I2S_LRCK);
+        // TODO enable the MCLK pin and test that the generator works
+        // i2s_mclk_program_init(pio1, audio::mclkSm_, audio::mclkOffset_, RP_PIN_I2S_MCLK);
       
-
         time::nextSecond_ += 1000000;
 
         // enable I2C interrupts so that we can start processing the I2C packet queues

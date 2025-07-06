@@ -1,4 +1,4 @@
-; I2C output
+; I2S output
 ; 
 ; 32 bit value (2 channels) from the input fifo and serializes it into two channels. 
 ; 
