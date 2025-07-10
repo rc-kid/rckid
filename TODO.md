@@ -71,10 +71,8 @@
 
 # TODO
 
-- comms with Si4705 seems to be working, but tuning returns error, not sure why
 - Si4705 likely requires resetting manually, pulling the RST high from the beginning does not work
-
-- radio can only resend after the response for the first command was processed, not just while not busy
+- also, the radio chip might benefit from smaller oscillator caps (18 or even 15pF) - and so would the AVR? (stray capacitance of 3-8pF should be taken into account, the VPP of the crystal seems small)
 
 - USB connection is not detected
 - make usb work in mkIII as well
@@ -281,4 +279,47 @@ https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01
 - can use also SI4703, but that one does not have internal / external antenna - do I really need it? 
 - this allows for shorter audio paths
 - or just use module? 
+
+
+# Pins after revision
+
+On the AVR side, I need the following:
+
+- 1 charging status
+- 1 battery/sys voltage
+- 2 i2c
+- 1 int to rp
+- 7 buttons
+- 1 backlight
+- 1 rumbler
+- 1 rgb enable
+- 1 rgb
+- 1 accel int
+- 1 qspi ss
+- 1 vdd en
+
+Because of measuring the VBATT and sensing the charging status, we've lost the AVR_TX pin for debugging, which is a shame - can we recover it? 
+
+Then on RP2350:
+
+- 2 I2C
+- 1 AVR IRQ
+- 1 Radio IRQ
+- 1 Radio Reset
+- 16 display data
+- 5 disp control rdx, wrx, dcx, csx, te
+- 4 SD card (SPI)
+- 2 SD card SDIO (???)
+- 1 SD card insertion detection
+- 8 Cartridge HSTX
+- 2 Cartridge Analog/QSPI CE
+- 5 I2S to codec MCLK, BCLK, LRCLK, ADC, DAC
+- 1 Audio Codec Interrupt
+
+This leaves 3 gpios on the radio if using external clock, 
+
+
+^- is 49, but we only have 40, so the radio reset via audio chip will put us back in game, but ideally one more for radio clock? 
+
+
 

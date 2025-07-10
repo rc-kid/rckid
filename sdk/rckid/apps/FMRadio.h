@@ -27,6 +27,7 @@ namespace rckid {
             if (radio_ != nullptr) {
                 LOG(LL_INFO, "Si4705 info:");
                 radio_->enable(true);
+                cpu::delayMs(1000);
                 auto version = radio_->getVersionInfo();
                 LOG(LL_INFO, "  part #:        " << version.partNumber);
                 LOG(LL_INFO, "  fw:            " << version.fwMajor << "." << version.fwMinor);
@@ -34,7 +35,7 @@ namespace rckid {
                 LOG(LL_INFO, "  comp:          " << version.compMajor << "." << version.compMinor);
                 LOG(LL_INFO, "  chip revision: " << version.chipRevision);
                 LOG(LL_INFO, "  cid:           " << version.cid);
-                cpu::delayMs(1000);
+                radio_->enableGPO1(true);
                 radio_->setFrequency(9370);
                 cpu::delayMs(100);
                 auto tuneStatus = radio_->getTuneStatus();
@@ -56,6 +57,30 @@ namespace rckid {
             }
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 exit();
+            }
+            if (btnPressed(Btn::Left))
+                radio_->enableEmbeddedAntenna(true);
+                //radio_->seekUp();
+            if (btnPressed(Btn::Up)) {
+                auto rsq = radio_->getRSQStatus();
+                LOG(LL_INFO, "  valid:         " << rsq.valid());
+                LOG(LL_INFO, "  afcRail:       " << rsq.afcRail());
+                LOG(LL_INFO, "  softMute:      " << rsq.softMute());
+                LOG(LL_INFO, "  stereoPilot:   " << rsq.stereoPilot());
+                LOG(LL_INFO, "  stereo:        " << rsq.stereo());
+                LOG(LL_INFO, "  rssi:          " << rsq.rssi());
+                LOG(LL_INFO, "  snr:           " << rsq.snr());
+                LOG(LL_INFO, "  multipath:     " << rsq.multipath());
+                LOG(LL_INFO, "  freqOffset:    " << rsq.frequencyOffset());
+
+                //radio_->enableGPO1(true);
+                //radio_->setGPO1(true);
+            }
+            if (btnPressed(Btn::Right)) {
+                radio_->enableEmbeddedAntenna(false);
+                //radio_->seekDown();
+                //radio_->enableGPO1(true);
+                //radio_->setGPO1(false);
             }
         }
 

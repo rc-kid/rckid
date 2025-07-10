@@ -49,11 +49,11 @@ namespace platform {
     }
 
     inline uint8_t highByte(uint16_t x) {
-        return (x >> 8) & 0x0f;
+        return (x >> 8) & 0xff;
     }
 
     inline uint8_t lowByte(uint16_t x) {
-        return x & 0x0f;
+        return x & 0xff;
     }
 
     /** Reverses single byte

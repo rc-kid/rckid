@@ -84,6 +84,32 @@ namespace rckid {
             uint8_t antCap_;
         }); // Radio::TuneStatus
 
+        PACKED(class RSQStatus {
+        public:
+            // TODO the interrupt
+            bool valid() const { return resp2_ & 0x01; }
+            bool afcRail() const { return resp2_ & 0x02; }
+            bool softMute() const { return resp2_ & 0x08; }
+            bool stereoPilot() const { return resp3_ & 0x80; }
+            uint8_t stereo() const { return resp3_ & 0x7f; }
+            uint8_t rssi() const { return rssi_; }
+            uint8_t snr() const { return snr_; }
+            uint8_t multipath() const { return mult_; }
+            int8_t frequencyOffset() const { return freqOffset_; }
+
+        private:
+            friend class Radio;
+
+            uint8_t resp1_;
+            uint8_t resp2_;
+            uint8_t resp3_;
+            uint8_t rssi_;
+            uint8_t snr_;
+            uint8_t mult_;
+            int8_t freqOffset_;
+
+        }); // Radio::RSQStatus
+
         bool enabled() const { return busy_ & RADIO_ENABLED; }
 
         bool busy() const { return status_.cts() == false; }
@@ -153,12 +179,30 @@ namespace rckid {
             return status_.tuneStatus;
         }
 
+        RSQStatus getRSQStatus() {
+            sendCommand({
+                CMD_FM_RSQ_STATUS,
+                0x00, // no interrupt acknowledge
+            });
+            getResponse(8); 
+            return status_.rsqStatus;
+
+        }
+
+        void enableEmbeddedAntenna(bool value = true) {
+            setProperty(PROP_FM_ANTENNA_INPUT, value ? 0x0001 : 0x0000);
+        }
+
+        bool embeddedAntennaEnabled() {
+            return getProperty(PROP_FM_ANTENNA_INPUT) != 0;
+        }
+
         /** Enables or disables the GPO1 pin. When disabled, the pin is left floating, otherwise its either high or low, based on the last setGPO1 function call value (low by default).
          */
         void enableGPO1(bool value) {
             sendCommand({
                 CMD_GPIO_CTL,
-                value ? 0x01 : 0x00, // GPO1 output enabled
+                value ? 0x02_u8 : 0x00_u8, // GPO1 output enabled
             });
             getResponse();
         }
@@ -168,7 +212,7 @@ namespace rckid {
         void setGPO1(bool value) {
             sendCommand({
                 CMD_GPIO_SET,
-                value ? 0x01 : 0x00, // GPO1 output value
+                value ? 0x02_u8 : 0x00_u8, // GPO1 output value
             });
             getResponse();
         }
@@ -194,6 +238,7 @@ namespace rckid {
                 PropertyValue propertyValue;
                 TuneStatus tuneStatus;
                 VersionInfo versionInfo;
+                RSQStatus rsqStatus;
             };
         });
 
