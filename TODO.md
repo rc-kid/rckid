@@ -60,7 +60,8 @@
 - [ ] check the above still works if we add USB ESD protection
 - [ ] disable debug mode on by default on AVR (end of initialize)
 - [X] order breakout for new PMIC chip and verify its functionality separately
-- [ ] charging/discharging
+- [X] charging/discharging - will use MCP charger from mkII
+- [ ] check AVR can read battery voltage with large resistors (100k , 200k?)
 - [ ] boost for below 3.3V battery
 - [X] check that 2 LEDs under DPAD sides work ok (HW.md)
 - [ ] check that titlting dpad is better 
