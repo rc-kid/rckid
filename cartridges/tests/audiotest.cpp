@@ -30,7 +30,6 @@ int main() {
     audioPlay(buf_, 44100, [&](int16_t * buf, uint32_t size) {
         return t.generateInto(buf, size);
     });
-    uint32_t i = 0;
     while (true) {
         yield();
     }

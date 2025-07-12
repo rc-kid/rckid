@@ -186,7 +186,6 @@ namespace rckid {
             });
             getResponse(8); 
             return status_.rsqStatus;
-
         }
 
         void enableEmbeddedAntenna(bool value = true) {
@@ -195,6 +194,11 @@ namespace rckid {
 
         bool embeddedAntennaEnabled() {
             return getProperty(PROP_FM_ANTENNA_INPUT) != 0;
+        }
+
+        void enableStereo(bool value = true) {
+            setProperty(PROP_FM_BLEND_RSSI_STEREO_THRESHOLD, value ? 0x0031 : 0x007f);
+            setProperty(PROP_FM_BLEND_MONO_THRESHOLD, value ? 0x0001 : 0x007f);
         }
 
         /** Enables or disables the GPO1 pin. When disabled, the pin is left floating, otherwise its either high or low, based on the last setGPO1 function call value (low by default).

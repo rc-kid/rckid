@@ -73,3 +73,9 @@
 #define RP_SD_SPI spi1
 
 
+
+
+
+#define RP_PIN_I2S_MCLK 19
+
+
