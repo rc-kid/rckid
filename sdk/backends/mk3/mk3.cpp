@@ -42,8 +42,7 @@ extern "C" {
 #include <rckid/filesystem.h>
 #include <rckid/ui/header.h>
 
-#include "i2s_mclk.pio.h"
-#include "i2s_out16.pio.h"
+#include "i2s/codec.h"
 
 #include "avr/src/avr_commands.h"
 #include "avr/src/avr_state.h"
@@ -152,8 +151,6 @@ namespace rckid {
         State state_ = State::Idle;
         std::function<uint32_t(int16_t *, uint32_t)> cb_;
         uint8_t volume_ = 10;
-        uint mclkSm_;
-        uint mclkOffset_;
         uint playbackSm_;
         uint playbackOffset_;
         uint dma0_ = 0;
@@ -363,11 +360,12 @@ namespace rckid {
         LOG(LL_INFO, "  BQ25895 (0x6a):    " << (::i2c::isPresent(0x6a) ? "ok" : "not found"));
         LOG(LL_INFO, "  TLV320 (0x18):     " << (::i2c::isPresent(0x18) ? "ok" : "not found"));
         LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
+        LOG(LL_INFO, "  NAU88C22YG (0x1a): " << (::i2c::isPresent(0x1a) ? "ok" : "not found"));
 
         // initialize the interrupt pins and set the interrupt handlers (enable pull-up as AVR pulls it low or leaves floating)
         gpio_set_irq_callback(irqGPIO_);
         gpio::setAsInputPullUp(RP_PIN_AVR_INT);
-        gpio_set_irq_enabled(RP_PIN_AVR_INT, GPIO_IRQ_EDGE_FALL, true);
+        //gpio_set_irq_enabled(RP_PIN_AVR_INT, GPIO_IRQ_EDGE_FALL, true);
 
         // try talking to the AVR chip and see that all is well
         // read the full AVR state (including time information). Do not process the interrupts here, but wait for the first tick, which will or them with the ones obtained here and process when the device is fully initialized
@@ -397,13 +395,13 @@ namespace rckid {
         fs::initialize();
 
         // initialize the audio output
-        audio::mclkSm_ = pio_claim_unused_sm(pio1, true);
-        audio::mclkOffset_ = pio_add_program(pio1, & i2s_mclk_program);
-        audio::playbackSm_ = pio_claim_unused_sm(pio1, true);
-        audio::playbackOffset_ = pio_add_program(pio1, & i2s_out16_program);
-        audio::dma0_ = dma_claim_unused_channel(true);
-        audio::dma1_ = dma_claim_unused_channel(true);
-        i2s_out16_program_init(pio1, audio::playbackSm_, audio::playbackOffset_, RP_PIN_I2S_DOUT, RP_PIN_I2S_LRCK);
+        //audio::mclkSm_ = pio_claim_unused_sm(pio1, true);
+        //audio::mclkOffset_ = pio_add_program(pio1, & i2s_mclk_program);
+        //audio::playbackSm_ = pio_claim_unused_sm(pio1, true);
+        //audio::playbackOffset_ = pio_add_program(pio1, & i2s_out16_program);
+        //audio::dma0_ = dma_claim_unused_channel(true);
+        //audio::dma1_ = dma_claim_unused_channel(true);
+        //i2s_out16_program_init(pio1, audio::playbackSm_, audio::playbackOffset_, RP_PIN_I2S_DOUT, RP_PIN_I2S_LRCK);
         // TODO enable the MCLK pin and test that the generator works
         // i2s_mclk_program_init(pio1, audio::mclkSm_, audio::mclkOffset_, RP_PIN_I2S_MCLK);
       
@@ -413,6 +411,37 @@ namespace rckid {
         //i2c0->hw->intr_mask = I2C_IC_INTR_MASK_M_RX_FULL_BITS | I2C_IC_INTR_MASK_M_TX_ABRT_BITS;
 
         RAMHeap::traceChunks();
+
+
+        Codec::initialize();
+
+        Codec::reset();
+        Codec::powerUp();
+
+
+        // start radio audio just for test
+        auto radio = Radio::instance();
+        radio->enable(true);
+        cpu::delayMs(500);
+        radio->enableStereo(false);
+        radio->setFrequency(9370);
+        cpu::delayMs(250);
+        auto tuneStatus = radio->getTuneStatus();
+        LOG(LL_INFO, "  frequency:     " << tuneStatus.frequency10kHz() << " [10kHz]");
+        LOG(LL_INFO, "  rssi:          " << tuneStatus.rssi());
+        LOG(LL_INFO, "  snr:           " << tuneStatus.snr());
+        LOG(LL_INFO, "  multipath:     " << tuneStatus.multipath());
+        LOG(LL_INFO, "  antCap:        " << tuneStatus.antCap());
+
+        cpu::delayMs(250);
+
+
+        Codec::playbackLineInDirect();
+        Codec::setSpeakerVolume(63);
+        Codec::setHeadphonesVolume(0);
+        Codec::showRegisters();
+        Codec::enableMasterClock(48000);
+
 
         return;
 

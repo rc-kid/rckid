@@ -15,6 +15,10 @@ link_with_librckid(logging)
 add_executable(hwtest "hwtest.cpp")
 link_with_librckid(hwtest)
 
+# audio sine wave and audio codec test
+add_executable(audiotest "audiotest.cpp")
+link_with_librckid(audiotest)
+
 # blue screen of death working test
 add_executable(bsodtest "bsodtest.cpp")
 link_with_librckid(bsodtest)
