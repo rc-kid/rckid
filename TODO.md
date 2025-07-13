@@ -30,7 +30,7 @@
     - [X] test device clock accuracy with external clock
 - [X] modify AVR to turn on/off
 - [X] device AVR test power on / power off
-- [ ] device AVR test rumbler -- it runs off IOVDD, has to be checked after IOVDD en 
+- [X] device AVR test rumbler -- it runs off IOVDD, has to be checked after IOVDD en 
 - [X] check that RP2350 shows on host machine as USB drive
 - [X] enumerate I2C devices (now we should see also audio & radio)
 - [X] check serial test on RPi Pico 2
@@ -44,15 +44,16 @@
 - [X] check NAU88C22 basic communication
 - [X] check MCLK generation
 - [X] check NAU88C22 radio aux to headphones (with 100uF cap ok)
-- [ ] check NAU88C22 radio aux to speaker
+- [X] check NAU88C22 radio aux to speaker
+- [ ] speaker works in BTL but there are some hiccups present, not sure why
 - [ ] check NAU88C22 power consumption with idle, speaker and headphones outputs
-- [ ] check NAU88C22 radio aux to ADC to DAC to headphones & speaker
+- [X] check NAU88C22 radio aux to ADC to DAC to headphones & speaker (only when I2S in master mode)
 - [ ] check NAU88C22 DAC output
 - [ ] check NAU88C22 ADC input (radio)
 - [ ] check NAU88C22 ADC input with PGA (microphone)
 - [X] check Si4705 works with headphones antenna
-- [ ] check the headphone outputs while using the antenna
-- [ ] check Si4705 works with internal antenna
+- [X] check the headphone outputs while using the antenna
+- [X] check Si4705 works with internal antenna (seems to work, but not very well)
 - [ ] check SD card insertion detection
 - [ ] check powered from real battery works
 - [ ] check USB detection works when powered from battery
