@@ -38,11 +38,11 @@ extern "C" {
 #include "screen/ST7789.h"
 #include "sd/sd.h"
 #include "i2c.h"
+#include "audio/codec.h"
 #include <rckid/app.h>
 #include <rckid/filesystem.h>
 #include <rckid/ui/header.h>
 
-#include "i2s/codec.h"
 
 #include "avr/src/avr_commands.h"
 #include "avr/src/avr_state.h"
@@ -140,6 +140,7 @@ namespace rckid {
         uint32_t idleTimeoutKeepalive_ = RCKID_IDLE_TIMETOUT_KEEPALIVE;
     }
 
+    // TODO move this to the audio codec
     namespace audio {
         enum class State {
             Idle, 
@@ -185,7 +186,7 @@ namespace rckid {
     void updateAvrStatus([[maybe_unused]] uint8_t numBytes) {
         AVRState::Status status;
         // TODO what if numBytes != status read? 
-        i2c::readResponse(reinterpret_cast<uint8_t*>(&status), sizeof(AVRState::Status));
+        i2c::getTransactionResponse(reinterpret_cast<uint8_t*>(&status), sizeof(AVRState::Status));
         // archive the old status
         io::lastStatus_ = io::avrState_.status;
         // copy the new one, we take the buttons (first 2 bytes as is) and or the interrupts to make sure none is ever lost, the process them immediately
@@ -206,28 +207,7 @@ namespace rckid {
         Enqueues AVR status read packet with the updateAVRStatus as callback function. 
      */
     void requestAvrStatus() {
-        i2c::enqueue(new i2c::Packet(
-            RCKID_AVR_I2C_ADDRESS, 
-            0, 
-            nullptr, 
-            sizeof(AVRState::Status), 
-            updateAvrStatus
-        ));
-    }
-    
-    void __not_in_flash_func(irqI2CDone_)() {
-        uint32_t cause = i2c0->hw->intr_stat;
-        i2c0->hw->clr_intr;
-        // disable the I2C interrupts (otherwise they might fire again immediately despite clearing, especially the TX_EMPTY one)
-        i2c0->hw->intr_mask = 0;
-        LOG(LL_I2C, "IRQ " << hex(cause) << " -- " << hex(i2c0->hw->intr_stat));
-        // remove the packet from the queue and start transmitting the next one, if any
-        i2c::Packet * p = i2c::transmitNextPacket();
-        // call the callback
-        if (p->callback != nullptr)
-            // can we get the real number of bytes read somehow if there was an error and the number is smaller?
-            p->callback(p->readLen);
-        delete p;
+        i2c::enqueue(RCKID_AVR_I2C_ADDRESS, nullptr, 0, sizeof(AVRState::Status), updateAvrStatus);
     }
 
     void __not_in_flash_func(irqDMADone_)() {
@@ -318,22 +298,15 @@ namespace rckid {
         gpio_set_function(RCKID_LOG_SERIAL_RX_PIN, GPIO_FUNC_UART);
 #endif
         debugReady = true;
-        // initialize the I2C bus we use to talk to AVR & peripherals (unlike mkII this is not expected to be user accessible)
-        i2c_init(i2c0, RCKID_I2C_SPEED); 
-        i2c0->hw->intr_mask = 0; // disable interrupts for now
-        gpio_set_function(RP_PIN_I2C_SDA, GPIO_FUNC_I2C);
-        gpio_set_function(RP_PIN_I2C_SCL, GPIO_FUNC_I2C);
         // set the single DMA IRQ 0 handler reserved for the SDK
         irq_set_exclusive_handler(DMA_IRQ_0, irqDMADone_);
-        irq_set_exclusive_handler(I2C0_IRQ, irqI2CDone_);
         //irq_set_exclusive_handler(TIMER_IRQ_0, irqBSOD_);
-        irq_set_enabled(I2C0_IRQ, true);
-        // make the I2C IRQ priority larger than that of the DMA (0x80) to ensure that I2C comms do not have to wait for render done if preparing data takes longer than sending them
-        irq_set_priority(I2C0_IRQ, 0x40); 
         // enable DMA IRQ (used by display, audio, etc.)
         irq_set_enabled(DMA_IRQ_0, true);
         // enable GPIO IRQ
         irq_set_enabled(IO_IRQ_BANK0, true);
+
+        i2c::initialize();
 
 
         LOG(LL_INFO, "\n\n\nSYSTEM RESET DETECTED (RP2350): ");
@@ -361,11 +334,6 @@ namespace rckid {
         LOG(LL_INFO, "  TLV320 (0x18):     " << (::i2c::isPresent(0x18) ? "ok" : "not found"));
         LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
         LOG(LL_INFO, "  NAU88C22YG (0x1a): " << (::i2c::isPresent(0x1a) ? "ok" : "not found"));
-
-        // initialize the interrupt pins and set the interrupt handlers (enable pull-up as AVR pulls it low or leaves floating)
-        gpio_set_irq_callback(irqGPIO_);
-        gpio::setAsInputPullUp(RP_PIN_AVR_INT);
-        //gpio_set_irq_enabled(RP_PIN_AVR_INT, GPIO_IRQ_EDGE_FALL, true);
 
         // try talking to the AVR chip and see that all is well
         // read the full AVR state (including time information). Do not process the interrupts here, but wait for the first tick, which will or them with the ones obtained here and process when the device is fully initialized
@@ -435,12 +403,19 @@ namespace rckid {
 
         cpu::delayMs(250);
 
-
         Codec::playbackLineInDirect();
         Codec::setSpeakerVolume(63);
-        Codec::setHeadphonesVolume(0);
+        Codec::setHeadphonesVolume(63);
         Codec::showRegisters();
         Codec::enableMasterClock(48000);
+
+
+        // initialize the interrupt pins and set the interrupt handlers (enable pull-up as AVR pulls it low or leaves floating)
+        gpio_set_irq_callback(irqGPIO_);
+        gpio::setAsInputPullUp(RP_PIN_AVR_INT);
+        gpio_set_irq_enabled(RP_PIN_AVR_INT, GPIO_IRQ_EDGE_FALL, true);
+        //  
+        requestAvrStatus();
 
 
         return;
@@ -553,7 +528,7 @@ namespace rckid {
                 --time::idleTimeoutKeepalive_;
                 --time::idleTimeout_;
                 if (time::idleTimeoutKeepalive_ == 0 || time::idleTimeout_ == 0)
-                    i2c::sendCommand(cmd::PowerOff{});
+                    i2c::sendAvrCommand(cmd::PowerOff{});
             } else {
                 time::idle_ = true;
                 time::idleTimeout_ = RCKID_IDLE_TIMETOUT;
@@ -687,7 +662,7 @@ namespace rckid {
 
     void displaySetBrightness(uint8_t value) {
         StackProtection::check();
-        i2c::sendCommand(cmd::SetBrightness{value});
+        i2c::sendAvrCommand(cmd::SetBrightness{value});
         // we set the brightness here as it is a simple change outside of the small state we get on interrupts 
         io::avrState_.brightness = value;
     }
@@ -888,24 +863,24 @@ namespace rckid {
 
     void rumblerEffect(RumblerEffect const & effect) {
         StackProtection::check();
-       i2c::sendCommand(cmd::Rumbler{effect});
+       i2c::sendAvrCommand(cmd::Rumbler{effect});
     }
 
     // rgb
 
     void rgbEffect(uint8_t rgb, RGBEffect const & effect) {
         StackProtection::check();
-        i2c::sendCommand(cmd::SetRGBEffect{rgb, effect});
+        i2c::sendAvrCommand(cmd::SetRGBEffect{rgb, effect});
     }
     
     void rgbEffects(RGBEffect const & a, RGBEffect const & b, RGBEffect const & dpad, RGBEffect const & sel, RGBEffect const & start) {
         StackProtection::check();
-        i2c::sendCommand(cmd::SetRGBEffects{a, b, dpad, sel, start});
+        i2c::sendAvrCommand(cmd::SetRGBEffects{a, b, dpad, sel, start});
     }
     
     void rgbOff() {
         StackProtection::check();
-        i2c::sendCommand(cmd::RGBOff{});
+        i2c::sendAvrCommand(cmd::RGBOff{});
     }
 
     // memory
@@ -934,23 +909,23 @@ namespace rckid {
         StackProtection::check();
         if (seconds == io::avrState_.budget - 1) {
             --io::avrState_.budget;
-            i2c::sendCommand(cmd::DecBudget{});
+            i2c::sendAvrCommand(cmd::DecBudget{});
         } else {
             io::avrState_.budget = seconds;
-            i2c::sendCommand(cmd::SetBudget{seconds});
+            i2c::sendAvrCommand(cmd::SetBudget{seconds});
         }
     }
 
     void budgetDailySet(uint32_t seconds) {
         StackProtection::check();
         io::avrState_.dailyBudget = seconds;
-        i2c::sendCommand(cmd::SetDailyBudget{seconds});
+        i2c::sendAvrCommand(cmd::SetDailyBudget{seconds});
     }
 
     void budgetReset() {
         StackProtection::check();
         io::avrState_.budget = io::avrState_.dailyBudget;
-        i2c::sendCommand(cmd::ResetBudget{});
+        i2c::sendAvrCommand(cmd::ResetBudget{});
     }
 
 }

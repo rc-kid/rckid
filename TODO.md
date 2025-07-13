@@ -41,30 +41,28 @@
 - [X] check that RP can talk to I2C devices
 - [X] check that RP can talk to SD card
 - [X] check that RP can talk to the display & show data (worst but RST pin must be held high)
-- [X] check TLV320 GPIO
-- [X] check TLV320 power consumption after reset (seems small)
-- [ ] check TLV320 power consumption in standby / sleep modes
-- [ ] check TLV320 detects headphones and headphone button press 
-- [ ] check TLV320 I2S DAC headphone output
-- [ ] check TLV320 I2S DAC line out/speaker output
-- [ ] check TLV320 can route Si4705 output
-- [ ] check Si4705 works with headphones antenna
+- [X] check NAU88C22 basic communication
+- [X] check MCLK generation
+- [X] check NAU88C22 radio aux to headphones (with 100uF cap ok)
+- [ ] check NAU88C22 radio aux to speaker
+- [ ] check NAU88C22 power consumption with idle, speaker and headphones outputs
+- [ ] check NAU88C22 radio aux to ADC to DAC to headphones & speaker
+- [ ] check NAU88C22 DAC output
+- [ ] check NAU88C22 ADC input (radio)
+- [ ] check NAU88C22 ADC input with PGA (microphone)
+- [X] check Si4705 works with headphones antenna
+- [ ] check the headphone outputs while using the antenna
 - [ ] check Si4705 works with internal antenna
-- [ ] check TLV320 can record from radio
-- [ ] check TLV320 can record from microphone
-- [ ] check low power radio bypass via analog input 1 (requires rerouting mic & radio on the board) - maybe not necessary
 - [ ] check SD card insertion detection
 - [ ] check powered from real battery works
 - [ ] check USB detection works when powered from battery
 - [ ] check DataSync app
 - [ ] check the above still works if we add USB ESD protection
 - [ ] disable debug mode on by default on AVR (end of initialize)
-- [X] order breakout for new PMIC chip and verify its functionality separately
 - [X] charging/discharging - will use MCP charger from mkII
 - [ ] check AVR can read battery voltage with large resistors (100k , 200k?)
-- [ ] boost for below 3.3V battery
 - [X] check that 2 LEDs under DPAD sides work ok (HW.md)
-- [ ] check that titlting dpad is better 
+- [ ] check that tilting dpad is better 
 - [ ] check new case works better with battery
 - [ ] mk3 idle and keepalive timers are too high, move lower again
 - [X] check overclocking -- seems to go to 250MHz w/o overvolt

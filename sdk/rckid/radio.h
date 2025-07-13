@@ -257,24 +257,12 @@ namespace rckid {
         */
         static void reset();
 
-        /** Handler to detect when I2C command has been sent.
-         */
-        static void commandSentHandler(uint8_t bytesReceived) {
-            instance_->busy_ &= ~RADIO_COMMAND_BUSY;
-        }
-
         void sendCommand(uint8_t const * cmd, uint8_t cmdSize, uint32_t ctsTime = 1);
 
         template<size_t N>
         void sendCommand(uint8_t const (&cmd)[N], uint32_t ctsTime = 1) { sendCommand(cmd, N, ctsTime); }
 
         void getResponse(uint8_t expectedBytes = 1);
-
-        void waitForCts(uint32_t ctsTime) {
-            while (busy_ & RADIO_COMMAND_BUSY)
-                yield();
-            cpu::delayMs(ctsTime);
-        }
 
         uint16_t getProperty(uint16_t property) {
             sendCommand({
@@ -311,8 +299,6 @@ namespace rckid {
 
         static void irqHandler();
 
-        static void processResponse(uint8_t numBytes);
-
         static inline Radio * instance_ = nullptr;
 
         MaxResponse status_;
@@ -324,7 +310,6 @@ namespace rckid {
         /** Flags to determine the radio status. 
          */
         volatile uint8_t busy_ = 0;
-        static constexpr uint8_t RADIO_COMMAND_BUSY = 0x01;
         static constexpr uint8_t RADIO_TUNE_BUSY = 0x02;
         static constexpr uint8_t RADIO_ENABLED = 0x80;
 

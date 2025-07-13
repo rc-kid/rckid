@@ -44,32 +44,16 @@ namespace rckid {
 
     void Radio::sendCommand(uint8_t const * cmd, uint8_t cmdSize, uint32_t ctsTime) {
         LOG(LL_INFO, "radio cmd " << hex(cmd[0]));
-        ASSERT((busy_ & RADIO_COMMAND_BUSY) == 0);
-        busy_ |= RADIO_COMMAND_BUSY;
-        i2c::enqueue(new i2c::Packet(
-            RCKID_FM_RADIO_I2C_ADDRESS,
-            cmdSize,
-            cmd,
-            0,
-            commandSentHandler
-        ));
-        waitForCts(ctsTime);
+        i2c::enqueueAndWait(RCKID_FM_RADIO_I2C_ADDRESS, cmd, cmdSize, nullptr, 0);
+        cpu::delayMs(ctsTime);
     }
 
     void Radio::getResponse(uint8_t responseBytes) {
         LOG(LL_INFO, "request response " << responseBytes);
-        ASSERT((busy_ & RADIO_COMMAND_BUSY) == 0);
-        busy_ |= RADIO_COMMAND_BUSY;
-        responseSize_  = responseBytes;
-        i2c::enqueue(new i2c::Packet(
-            RCKID_FM_RADIO_I2C_ADDRESS,
-            0,
-            nullptr,
-            responseBytes,
-            processResponse
-        ));
-        // wait for the command to be processed, but no need to wait after (no cts timeout on response)
-        waitForCts(0);
+        MaxResponse r;
+        i2c::enqueueAndWait(RCKID_FM_RADIO_I2C_ADDRESS, nullptr, 0, (uint8_t *)(& r), responseBytes);
+        instance_->status_ = r;
+        LOG(LL_INFO, "radio response: " << hex(r.rawResponse()));
     }
 
     void Radio::irqHandler() {
@@ -92,19 +76,5 @@ namespace rckid {
         instance_->expectedResponse_ = ExpectedResponse::None;
         */
     }
-
-    void Radio::processResponse(uint8_t numBytes) {
-        ASSERT(numBytes == instance_->responseSize_);
-        MaxResponse r;
-        i2c::readResponse((uint8_t *)& r.raw_, numBytes);
-        instance_->status_ = r;
-        LOG(LL_INFO, "radio response: " << hex(r.rawResponse()));
-        // clear busy flag
-        instance_->busy_ &= ~RADIO_COMMAND_BUSY;
-    }
-
-
-
-
 
 } // namespace rckid

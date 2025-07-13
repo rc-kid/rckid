@@ -6,11 +6,14 @@
 
 #include <platform.h>
 #include <rckid/log.h>
-//#include "../i2c.h"
+#include "../i2c.h"
 
 
 namespace rckid {
 
+    /** NAU88C22GY Audio Codec driver
+     
+     */
     class Codec {
     public:
 
@@ -66,8 +69,8 @@ namespace rckid {
             setRegister(REG_CLK_CTRL_1, 0); 
 
 
-            // for right spaker enable direct connection from rmix to spkr bypassing the submixer
-            setRegister(REG_RSPKR_SUBMIX, RMIXMUT | RSUBBYP);
+            // for right spaker enable the inverted output so that we have BTL speaker driver
+            setRegister(REG_RSPKR_SUBMIX, RSUBBYP);
         }
 
         static void powerDown() {
@@ -110,14 +113,11 @@ namespace rckid {
             // enable the RMIX and LMIX sections (keep the speaker on as well)
             setRegister(REG_PWR_MGMT_3, RSPKEN | LSPKEN | RMIXEN | LMIXEN);
             // connect the AUX inputs to the ADC boost section
-            setRegister(REG_LADC_BOOST, 0b111); // 0db, use 111 for max 6db 
-            setRegister(REG_RADC_BOOST, 0b111);
+            setRegister(REG_LADC_BOOST, 0b101); // 0db, use 111 for max 6db 
+            setRegister(REG_RADC_BOOST, 0b101);
             // and connect the ADC boost section to the output mixers
-            setRegister(REG_LMIXER, 0b11110);
-            setRegister(REG_RMIXER, 0b11110);
-
-            // try the spkr boost
-
+            setRegister(REG_LMIXER, 0b10110);
+            setRegister(REG_RMIXER, 0b10110);
         }
 
 
@@ -168,6 +168,31 @@ LL_INFO:   52: 0x003f exp: 0x007f
 LL_INFO:   53: 0x003f exp: 0x007f
 LL_INFO:   54: 0x003f exp: 0x007f
 LL_INFO:   55: 0x003f exp: 0x007f
+
+Working snapshot:
+
+LL_INFO: radio response: 0x81
+LL_INFO:   frequency:     9370 [10kHz]
+LL_INFO:   rssi:          38
+LL_INFO:   snr:           31
+LL_INFO:   multipath:     0
+LL_INFO:   antCap:        1
+LL_INFO: Codec registers:
+LL_INFO:    1: 0x000d exp: 0x000d
+LL_INFO:    2: 0x01b0 exp: 0x01b0
+LL_INFO:    3: 0x006c exp: 0x006c
+LL_INFO:   43: 0x0030 exp: 0x0000
+LL_INFO:   47: 0x0007 exp: 0x0005
+LL_INFO:   48: 0x0007 exp: 0x0005
+LL_INFO:   49: 0x01ff exp: 0x0002
+LL_INFO:   50: 0x01ff exp: 0x0016
+LL_INFO:   51: 0x001e exp: 0x0016
+LL_INFO:   52: 0x01ff exp: 0x007f
+LL_INFO:   53: 0x0040 exp: 0x007f
+LL_INFO:   54: 0x003f exp: 0x007f
+LL_INFO:   55: 0x003f exp: 0x007f
+LL_INFO: Enabling MCLK at 24576000Hz
+
 
 */            
         }
@@ -296,13 +321,15 @@ LL_INFO:   55: 0x003f exp: 0x007f
                 static_cast<uint8_t>((reg << 1) | ((value >> 8) & 0x01)),
                 static_cast<uint8_t>(value & 0xff)
             };
-            ::i2c::masterTransmit(RCKID_AUDIO_CODEC_I2C_ADDRESS, cmd, 2, nullptr, 0);
+            i2c::enqueueAndWait(RCKID_AUDIO_CODEC_I2C_ADDRESS, cmd, sizeof(cmd));
+            //::i2c::masterTransmit(RCKID_AUDIO_CODEC_I2C_ADDRESS, cmd, 2, nullptr, 0);
         }
 
         static uint16_t getRegister(uint8_t reg) {
             uint8_t result[2];
             reg <<= 1;
-            ::i2c::masterTransmit(RCKID_AUDIO_CODEC_I2C_ADDRESS, & reg, 1, result, 2);
+            i2c::enqueueAndWait(RCKID_AUDIO_CODEC_I2C_ADDRESS, & reg, 1, result, 2);
+            //::i2c::masterTransmit(RCKID_AUDIO_CODEC_I2C_ADDRESS, & reg, 1, result, 2);
             return (result[0] << 8) | result[1];;
         }
 
