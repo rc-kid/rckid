@@ -55,6 +55,24 @@ public:
         set_sys_clock_khz(clockSpeedkHz_, true);
     }
 
+    class DisableInterruptsGuard {
+    public:
+        DisableInterruptsGuard() {
+            savedIrqState_ = save_and_disable_interrupts();
+        }
+
+        ~DisableInterruptsGuard() {
+            restore_interrupts(savedIrqState_);
+        }
+
+        DisableInterruptsGuard(DisableInterruptsGuard const &) = delete;
+        DisableInterruptsGuard & operator=(DisableInterruptsGuard const &) = delete;
+        
+    private:
+        unsigned savedIrqState_;
+
+    }; // cpu::DisableInterruptsGuard
+
 private:
 
     static inline unsigned clockSpeedkHz_ = 125000;
