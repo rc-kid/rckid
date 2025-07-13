@@ -392,6 +392,7 @@ namespace rckid {
         radio->enable(true);
         cpu::delayMs(500);
         radio->enableStereo(false);
+        //radio->enableEmbeddedAntenna(true);
         radio->setFrequency(9370);
         cpu::delayMs(250);
         auto tuneStatus = radio->getTuneStatus();
@@ -404,6 +405,7 @@ namespace rckid {
         cpu::delayMs(250);
 
         Codec::playbackLineInDirect();
+        //Codec::playbackLineIn();
         Codec::setSpeakerVolume(63);
         Codec::setHeadphonesVolume(63);
         Codec::showRegisters();

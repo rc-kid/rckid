@@ -120,6 +120,30 @@ namespace rckid {
             setRegister(REG_RMIXER, 0b10110);
         }
 
+        /** Configfures the codec for aux line in playback using the digital bypass, i.e. from ADC to DAC. 
+         
+            This is very useful for testing and it *might* also enable the digital equalizer (?). In order to work properly, it requires MCLK and the chip to operate in master mode. 
+         */
+        static void playbackLineIn() {
+            // BCLK and FSCLK are driven by the chip for now, just to see stuff?
+            // this is actually necessary for the bypass to work properly
+            // TODO delete this when possible
+            // setRegister(REG_CLK_CTRL_1, CLKIOEN);
+
+            // enable the ADC and ADC mix/boost stages (and heep the headphone drivers enabled, but muted)
+            setRegister(REG_PWR_MGMT_2, RHPEN | LHPEN | RBSTEN | LBSTEN | RADCEN | LADCEN);
+            // enable the DAC & mixer sections, keep the speaker enabled
+            setRegister(REG_PWR_MGMT_3, RSPKEN | LSPKEN | RMIXEN | LMIXEN | RDACEN | LDACEN);
+            // connect the AUX inputs to the ADC boost section
+            setRegister(REG_LADC_BOOST, 0b101); // 0db, use 111 for max 6db 
+            setRegister(REG_RADC_BOOST, 0b101);
+            // enable digital passthrough
+            setRegister(REG_COMPANDING, ADDAP);
+            // and connect the DAC section to the output mixers
+            setRegister(REG_LMIXER, 0b10101);
+            setRegister(REG_RMIXER, 0b10101);
+        }
+
 
         static void showRegisters() {
             LOG(LL_INFO, "Codec registers:");
@@ -213,16 +237,25 @@ LL_INFO: Enabling MCLK at 24576000Hz
         static constexpr uint16_t LHPEN = 128;
         static constexpr uint16_t RBSTEN = 32;
         static constexpr uint16_t LBSTEN = 16;
+        static constexpr uint16_t RADCEN = 2;
+        static constexpr uint16_t LADCEN = 1;
 
         static constexpr uint8_t REG_PWR_MGMT_3 = 3;
         static constexpr uint16_t LSPKEN = 64;
         static constexpr uint16_t RSPKEN = 32;
         static constexpr uint16_t RMIXEN = 8;
         static constexpr uint16_t LMIXEN = 4;
+        static constexpr uint16_t RDACEN = 2;
+        static constexpr uint16_t LDACEN = 1;
 
         static constexpr uint8_t REG_AUDIO_INTERFACE = 4;
+        
         static constexpr uint8_t REG_COMPANDING = 5;
+        static constexpr uint16_t ADDAP = 1;
+
         static constexpr uint8_t REG_CLK_CTRL_1 = 6;
+        static constexpr uint16_t CLKIOEN = 1;
+
         static constexpr uint8_t REG_CLK_CTRL_2 = 7;
         static constexpr uint8_t REG_GPIO = 8;
         static constexpr uint8_t REG_JACK_DETECT_1 = 9;
