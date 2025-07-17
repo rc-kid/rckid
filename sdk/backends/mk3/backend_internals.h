@@ -27,10 +27,10 @@
 #define RP_PIN_AVR_INT 3
 #define RP_PIN_RADIO_INT 4
 #define RP_PIN_AUDIO_INT 5
-#define RP_PIN_I2S_DOUT 6
-#define RP_PIN_I2S_DIN 7
-#define RP_PIN_I2S_LRCK 8
-#define RP_PIN_I2S_BCK 9
+//#define RP_PIN_I2S_DOUT 6
+//#define RP_PIN_I2S_DIN 7
+//#define RP_PIN_I2S_LRCK 8
+//#define RP_PIN_I2S_BCLK 9
 #define RP_PIN_SD_CD 10
 #define RP_PIN_DISP_RDX 11
 #define RP_PIN_GPIO_12 12
@@ -75,7 +75,10 @@
 
 
 
-
+// TODO remove those (for devboard only)
 #define RP_PIN_I2S_MCLK 19
+#define RP_PIN_I2S_BCLK 18
+#define RP_PIN_I2S_LRCK 17
+#define RP_PIN_I2S_DOUT 16
 
 

@@ -45,12 +45,13 @@
 - [X] check MCLK generation
 - [X] check NAU88C22 radio aux to headphones (with 100uF cap ok)
 - [X] check NAU88C22 radio aux to speaker
-- [ ] speaker works in BTL but there are some hiccups present, not sure why
+- [X] speaker works in BTL but there are some hiccups present, power issues, need caps next to the codec
 - [ ] check NAU88C22 power consumption with idle, speaker and headphones outputs
 - [X] check NAU88C22 radio aux to ADC to DAC to headphones & speaker (only when I2S in master mode)
 - [ ] check NAU88C22 DAC output
 - [ ] check NAU88C22 ADC input (radio)
 - [ ] check NAU88C22 ADC input with PGA (microphone)
+- [ ] check NAU88C22 headphone detection
 - [X] check Si4705 works with headphones antenna
 - [X] check the headphone outputs while using the antenna
 - [X] check Si4705 works with internal antenna (seems to work, but not very well)
@@ -61,7 +62,7 @@
 - [ ] check the above still works if we add USB ESD protection
 - [ ] disable debug mode on by default on AVR (end of initialize)
 - [X] charging/discharging - will use MCP charger from mkII
-- [ ] check AVR can read battery voltage with large resistors (100k , 200k?)
+- [X] check AVR can read battery voltage with large resistors (220 and 330k seems to work, add 10 or 100nf cap to the ADC pin to ground)
 - [X] check that 2 LEDs under DPAD sides work ok (HW.md)
 - [ ] check that tilting dpad is better 
 - [ ] check new case works better with battery
@@ -70,6 +71,12 @@
 - [ ] add way to clear memory when necessary (e.g. remove background, etc.)
 
 # TODO
+
+- I2S playback basics working, but there are few issues: weird glitches in the data (maybe tone related). When MCLK is running, the codec does not seem to understand I2C and also when tone is enabled, frame rate drops to 30. why? 
+
+- the pull-ups in I2C are barely able to pull the clock fast enough, maybe we need more?
+
+- jack detection by the codec cannot be observed so we need extra pin. However as the codec uses no interrupt and no reset lines, we can take the GPIO1 which can be I/O pin and use it for radio reset instead, radio reset can then become headphone detection on the RP2350
 
 - Si4705 likely requires resetting manually, pulling the RST high from the beginning does not work
 - also, the radio chip might benefit from smaller oscillator caps (18 or even 15pF) - and so would the AVR? (stray capacitance of 3-8pF should be taken into account, the VPP of the crystal seems small)
@@ -139,12 +146,15 @@
 - 4k7 Ohm pull up from ldo select to vcc (now direct connection)
 - buy header pins (plenty for the connectors)
 
+- add large capacitors close to the audio codec to supply it with enough power so that it can drive the speaker effectively
+
 - A button should be square (turned 45deg)
 
 ## AVR
 
 - see if we can run at 5MHz and still talk to neopixel
 - I2C master enumeration works, but read register does not - is this true still? 
+- PWR_INT is now to read the battery level (vcc really) via 220k and 330k voltage divider with 10 or 100nf capacitor from the ADC pin to ground, fix the ADC readout section
 
 ## UI
 

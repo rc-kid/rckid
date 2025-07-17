@@ -192,7 +192,7 @@ public:
 
 /** Convenience function for setting PIO speed. 
  */
-inline void pio_set_clock_speed(PIO pio, unsigned sm, unsigned hz) {
+inline void pio_sm_set_clock_speed(PIO pio, unsigned sm, unsigned hz) {
     uint kHz = hz / 1000;
     uint clk = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_SYS); // [kHz]
     uint clkdiv = (clk / kHz);

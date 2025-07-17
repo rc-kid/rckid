@@ -237,13 +237,13 @@ namespace rckid {
 
         PACKED(class MaxResponse : public Response {
         public:
-            union {
+            PACKED(union {
                 uint8_t data[15];
                 PropertyValue propertyValue;
                 TuneStatus tuneStatus;
                 VersionInfo versionInfo;
                 RSQStatus rsqStatus;
-            };
+            });
         });
 
         static_assert(sizeof(Response) == 1);

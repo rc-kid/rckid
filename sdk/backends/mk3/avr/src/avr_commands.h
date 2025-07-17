@@ -84,7 +84,7 @@ namespace rckid::cmd {
         uint16_t page;
         uint8_t data[128];
         WriteFlashPage(uint16_t page, int8_t const * data): page{page} {
-            memcpy(this->data, data, sizeof(data));
+            memcpy(this->data, data, sizeof(this->data));
         }
     );
 
@@ -92,7 +92,7 @@ namespace rckid::cmd {
         uint16_t page;
         uint8_t data[32];
         WriteRAMPage(uint16_t page, uint8_t const * data): page{page} {
-            memcpy(this->data, data, sizeof(data));
+            memcpy(this->data, data, sizeof(this->data));
         }
     );
 

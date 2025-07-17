@@ -210,11 +210,6 @@ namespace rckid {
 
     // audio
 
-    void audioStreamRefill(void * buffer, unsigned int samples) {
-        StackProtection::check();
-        UNIMPLEMENTED;
-    }
-
     bool audioHeadphones() {
         StackProtection::check();
         UNIMPLEMENTED;

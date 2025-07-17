@@ -152,8 +152,6 @@ namespace rckid {
         State state_ = State::Idle;
         std::function<uint32_t(int16_t *, uint32_t)> cb_;
         uint8_t volume_ = 10;
-        uint playbackSm_;
-        uint playbackOffset_;
         uint dma0_ = 0;
         uint dma1_ = 0;
         DoubleBuffer<int16_t> * playbackBuffer_ = nullptr;
@@ -367,8 +365,8 @@ namespace rckid {
         //audio::mclkOffset_ = pio_add_program(pio1, & i2s_mclk_program);
         //audio::playbackSm_ = pio_claim_unused_sm(pio1, true);
         //audio::playbackOffset_ = pio_add_program(pio1, & i2s_out16_program);
-        //audio::dma0_ = dma_claim_unused_channel(true);
-        //audio::dma1_ = dma_claim_unused_channel(true);
+        audio::dma0_ = dma_claim_unused_channel(true);
+        audio::dma1_ = dma_claim_unused_channel(true);
         //i2s_out16_program_init(pio1, audio::playbackSm_, audio::playbackOffset_, RP_PIN_I2S_DOUT, RP_PIN_I2S_LRCK);
         // TODO enable the MCLK pin and test that the generator works
         // i2s_mclk_program_init(pio1, audio::mclkSm_, audio::mclkOffset_, RP_PIN_I2S_MCLK);
@@ -385,7 +383,6 @@ namespace rckid {
 
         Codec::reset();
         Codec::powerUp();
-
 
         // start radio audio just for test
         auto radio = Radio::instance();
@@ -410,6 +407,9 @@ namespace rckid {
         Codec::setHeadphonesVolume(63);
         Codec::showRegisters();
         Codec::enableMasterClock(48000);
+
+        Codec::setSpeakerVolume(15);
+        Codec::setHeadphonesVolume(15);
 
 
         // initialize the interrupt pins and set the interrupt handlers (enable pull-up as AVR pulls it low or leaves floating)
@@ -717,9 +717,9 @@ namespace rckid {
         auto dmaConf = dma_channel_get_default_config(dma);
         channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bits (16 per channel, 2 channels)
         channel_config_set_read_increment(& dmaConf, true);  // increment on read
-        channel_config_set_dreq(&dmaConf,  pio_get_dreq(pio1, audio::playbackSm_, true)); // DMA is driven by the I2S playback pio
+        channel_config_set_dreq(&dmaConf,  Codec::playbackDReq()); // DMA is driven by the I2S playback pio
         channel_config_set_chain_to(& dmaConf, other); // chain to the other channel
-        dma_channel_configure(dma, & dmaConf, &pio1->txf[audio::playbackSm_], nullptr, 0, false); // the buffer consists of stereo samples, (32bits), i.e. buffer size / 2
+        dma_channel_configure(dma, & dmaConf, Codec::playbackTxFifo(), nullptr, 0, false); // the buffer consists of stereo samples, (32bits), i.e. buffer size / 2
         // enable IRQ0 on the DMA channel (shared with other framework DMA uses such as the display or the SD card)
         dma_channel_set_irq0_enabled(dma, true);
     }
@@ -732,11 +732,7 @@ namespace rckid {
         // configure the DMA to transfer only the correct number of samples
         dma_channel_set_trans_count(finished, nextSamples, false);
         audio::playbackBuffer_->swap();
-    }
-
-    void audioStreamRefill(void * buffer, unsigned int samples) {
-        StackProtection::check();
-        UNIMPLEMENTED;
+       
     }
 
     bool audioHeadphones() {
@@ -783,12 +779,11 @@ namespace rckid {
         audioPlaybackDMA(audio::dma0_, audio::dma1_);
         // enable the first DMA
         dma_channel_start(audio::dma0_);
-        // start the pio program with appropriate sample rate speed
-        audio::state_ = audio::State::Playback;
-        pio_set_clock_speed(pio1, audio::playbackSm_, sampleRate * 34 * 2);
-        pio_sm_set_enabled(pio1, audio::playbackSm_, true);
+        // instruct the codec to start the playback at given sample rate
+        Codec::playbackI2S(sampleRate);
         // now we need to load the second buffer while the first one is playing (reload of the buffers will be done by the IRQ handler)
         audioPlaybackDMA(audio::dma1_, audio::dma0_);
+        Codec::showRegisters();
     }
 
     void audioPause() {

@@ -161,6 +161,19 @@ int main() {
     //cpu::overclock(250000000);
     initialize();
 
+    DoubleBuffer<int16_t> buf_{2048};
+    Tone t;
+    //t.setWaveform(Waveform::Sine());
+    //t.setWaveform(Waveform{assets::WaveformTriangle});
+    t.setSampleRate(48000);
+    t.on(220);
+    /*
+    audioPlay(buf_, 48000, [&](int16_t * buf, uint32_t size) {
+        return t.generateInto(buf, size);
+    }); */
+    LOG(LL_INFO, "Audio play enabled");
+
+
     //PNG png{PNG::fromStream(fs::fileRead(STR("files/images/backgrounds/wish16.png")))};
     //LOG(LL_INFO, "PNG loaded: " << png.width() << "x" << png.height() << ", bpp: " << png.bpp());
     while (true) {
