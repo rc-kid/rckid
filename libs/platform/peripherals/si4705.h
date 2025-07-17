@@ -226,7 +226,7 @@ public:
     TuneStatus getTuneStatus(bool intAck = false) {
         uint8_t cmd[] = {
             CMD_FM_TUNE_STATUS,
-            intAck ? 0x01 : 0x00, // acknowledge the interrupt if requested
+            intAck ? 0x01_u8 : 0x00_u8, // acknowledge the interrupt if requested
         };
         TuneStatus result;
         i2c::masterTransmit(I2C_ADDRESS, cmd, sizeof(cmd),  (uint8_t *) & result, sizeof(result));
@@ -238,7 +238,7 @@ public:
     /** Enables or disables the GPO1 pin. When disabled, the pin is left floating, otherwise its either high or low, based on the last setGPO1 function call value (low by default).
      */
     Response enableGPO1(bool value) {
-        uint8_t cmd[] = { CMD_GPIO_CTL, value ? 0x02 : 0x00 };
+        uint8_t cmd[] = { CMD_GPIO_CTL, value ? 0x02_u8 : 0x00_u8 };
         i2c::masterTransmit(I2C_ADDRESS, cmd, sizeof(cmd), & last_.raw_, 1);
         return last_;
     }
@@ -246,7 +246,7 @@ public:
     /** Determines the GPO1 pin value, if enabled. 
      */
     Response setGPO1(bool value) {
-        uint8_t cmd[] = { CMD_GPIO_SET, value ? 0x02 : 0x00 };
+        uint8_t cmd[] = { CMD_GPIO_SET, value ? 0x02_u8 : 0x00_u8 };
         i2c::masterTransmit(I2C_ADDRESS, cmd, sizeof(cmd), & last_.raw_, 1);
         return last_;
     }

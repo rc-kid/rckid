@@ -13,6 +13,13 @@ namespace rckid {
 
     /** NAU88C22GY Audio Codec driver
      
+
+        Jack Detection  
+
+        GPIO2 to be used (or 3). Slow clock must be enabled for the jack detection. 
+
+        R8, R9, R13
+
      */
     class Codec {
     public:
@@ -22,10 +29,26 @@ namespace rckid {
             // we use pio1 as the I2S pins are in the lower bank (pio0 is occupied by the display)
             // TODO can this be shared instead, i.e. can we move those up, or maybe just the mclk generation?
             pio_set_gpio_base(pio1, 0);
+
             mclkSm_ = pio_claim_unused_sm(pio1, true);
             mclkOffset_ = pio_add_program(pio1, & i2s_mclk_program);
-            LOG(LL_INFO, "      sm: " << (uint32_t)mclkSm_);
-            LOG(LL_INFO, "  offset: " << (uint32_t)mclkOffset_);
+            LOG(LL_INFO, "      mclk sm: " << (uint32_t)mclkSm_);
+            LOG(LL_INFO, "  mclk offset: " << (uint32_t)mclkOffset_);
+            i2s_mclk_program_init(pio1, mclkSm_, mclkOffset_, RP_PIN_I2S_MCLK);
+
+            playbackSm_ = pio_claim_unused_sm(pio1, true);
+            playbackOffset_ = pio_add_program(pio1, & i2s_out16_program);
+            LOG(LL_INFO, "      play sm: " << (uint32_t)playbackSm_);
+            LOG(LL_INFO, "  play offset: " << (uint32_t)playbackOffset_);
+            i2s_out16_program_init(pio1, playbackSm_, playbackOffset_, RP_PIN_I2S_DOUT, RP_PIN_I2S_LRCK);
+        }
+
+        static uint playbackDReq() {
+            return pio_get_dreq(pio1, playbackSm_, true);
+        }
+
+        static io_wo_32 * playbackTxFifo() {
+            return & pio1->txf[playbackSm_];
         }
 
         /** Enables the MCLK generation for given sample rate. 
@@ -36,9 +59,9 @@ namespace rckid {
             uint32_t hz = sampleRate * 256 * 2; // two instructions per cycle
             LOG(LL_INFO, "Enabling MCLK at " << hz << "Hz");
             pio_sm_set_enabled(pio1, mclkSm_, false); // disable the SM first
-            i2s_mclk_program_init(pio1, mclkSm_, mclkOffset_, RP_PIN_I2S_MCLK);
-            pio_set_clock_speed(pio1, mclkSm_, hz);
+            pio_sm_set_clock_speed(pio1, mclkSm_, hz);
             pio_sm_set_enabled(pio1, mclkSm_, true); // and finally enable 
+            // TODO set the sample rate for filters
         }
 
         static void reset() {
@@ -55,7 +78,7 @@ namespace rckid {
          */
         static void powerUp() {
             // enable thermal shutdown and disable boosts (ideal for < 3.6V operation)
-            setRegister(REG_OUTPUT_CONTROL, TSEN);
+            setRegister(REG_OUTPUT_CONTROL, TSEN /* | SPKBST */);
             // enable tie off buffer
             setRegister(REG_PWR_MGMT_1, IOBUFEN);
             // allow the ref voltage to charge slowly by the internal coupling resistors
@@ -71,17 +94,21 @@ namespace rckid {
 
             // for right spaker enable the inverted output so that we have BTL speaker driver
             setRegister(REG_RSPKR_SUBMIX, RSUBBYP);
+
+
+            // enable slow clock (necessary for the jack detection)
+            setRegister(REG_CLK_CTRL_2, SCLKEN);
+            // enable the audio jack detection or GPIO2 and automatic headphone & speaker switching, corresponding to high (pulled up) on no jack and low (connected to ground through 220k resistor) on jack connected
+            // TODO do not do this yet, want to see headphones for testing purposes
+            //setRegister(REG_JACK_DETECT_1, JCKDEN | JCKDIO2);
+            //setRegister(REG_JACK_DETECT_2, JCKDOEN1_SPEAKER | JCKDOEN0_HEADPHONES);
         }
 
         static void powerDown() {
 
         }
 
-
-
-
-        /** Sets the speaker volume, 0..63. When 0 is set instead of the lowest volume supported  
-         * 
+        /** Sets the speaker volume, 0..63. When 0 is set instead of the lowest volume supported, the output is muted. Note that the speaker output is also dependent on the headphone jack state in general.   
          */
         static void setSpeakerVolume(uint8_t volume) {
             if (volume == 0) {
@@ -103,11 +130,26 @@ namespace rckid {
             }
         }
 
+        /** Stops all the audio processing. 
+         */
+        static void stop() {
+            // disable MCLK before any codec setting - somehow it seems the mclk causes issues with the codec
+            pio_sm_set_enabled(pio1, mclkSm_, false);
+
+            LOG(LL_INFO, "Codec stop");
+            // disable headphones, ADC boost, ADC and PGA
+            setRegister(REG_PWR_MGMT_2, 0);
+            // disable speaker, mixers and DAC
+            setRegister(REG_PWR_MGMT_3, 0);
+        }
+
         /** Configures the codec for simple playback from the aux line in inputs.
          
             We can't use the normal line in inputs that go through the PGA as they are also used as the headphone jack detection.    
           */
         static void playbackLineInDirect() {
+            stop();
+            LOG(LL_INFO, "Codec playback line in direct");
             // enable the ADC mix/boost stages (and heep the headphone drivers enabled, but muted)
             setRegister(REG_PWR_MGMT_2, RHPEN | LHPEN | RBSTEN | LBSTEN);
             // enable the RMIX and LMIX sections (keep the speaker on as well)
@@ -125,6 +167,8 @@ namespace rckid {
             This is very useful for testing and it *might* also enable the digital equalizer (?). In order to work properly, it requires MCLK and the chip to operate in master mode. 
          */
         static void playbackLineIn() {
+            stop();
+            LOG(LL_INFO, "Codec playback line in");
             // BCLK and FSCLK are driven by the chip for now, just to see stuff?
             // this is actually necessary for the bypass to work properly
             // TODO delete this when possible
@@ -144,6 +188,28 @@ namespace rckid {
             setRegister(REG_RMIXER, 0b10101);
         }
 
+        /** Enables playback from the I2S data sent by the RP2350. 
+         */
+        static void playbackI2S(uint32_t sampleRate) {
+            stop();
+            LOG(LL_INFO, "Codec I2S playback at " << sampleRate << "Hz");
+            // keep headphones enabled
+            setRegister(REG_PWR_MGMT_2, RHPEN | LHPEN);
+            // enable the DAC & mixer sections, keep the speaker enabled
+            setRegister(REG_PWR_MGMT_3, RSPKEN | LSPKEN | RMIXEN | LMIXEN | RDACEN | LDACEN);
+            // and connect the DAC section to the output mixers
+            setRegister(REG_LMIXER, 0b10101);
+            setRegister(REG_RMIXER, 0b10101);
+            // enable master clock generation for the given sample rate
+            enableMasterClock(sampleRate);
+            // enable the I2S playback pio program at given BCLK (which is 34 bits per sample)
+            pio_sm_set_clock_speed(pio1, playbackSm_, sampleRate * 34 * 2);
+            pio_sm_set_enabled(pio1, playbackSm_, true);
+
+            Codec::setSpeakerVolume(15);
+            Codec::setHeadphonesVolume(15);
+
+        }
 
         static void showRegisters() {
             LOG(LL_INFO, "Codec registers:");
@@ -257,12 +323,28 @@ LL_INFO: Enabling MCLK at 24576000Hz
         static constexpr uint16_t CLKIOEN = 1;
 
         static constexpr uint8_t REG_CLK_CTRL_2 = 7;
+        static constexpr uint16_t SCLKEN = 1;
+        
         static constexpr uint8_t REG_GPIO = 8;
+
+
         static constexpr uint8_t REG_JACK_DETECT_1 = 9;
+        static constexpr uint16_t JCKDEN = 0b1000000;
+        static constexpr uint16_t JCKDIO1 = 0;
+        static constexpr uint16_t JCKDIO2 = 0b010000;
+        static constexpr uint16_t JCKDIO3 = 0b100000;
+
         static constexpr uint8_t REG_DAC_CTRL = 10;
         static constexpr uint8_t REG_LDAC_VOLUME = 11;
         static constexpr uint8_t REG_RDAC_VOLUME = 12;
+
         static constexpr uint8_t REG_JACK_DETECT_2 = 13;
+        static constexpr uint16_t JCKDOEN1_SPEAKER = 0b00100000;
+        static constexpr uint16_t JCKDOEN1_HEADPHONES = 0b00010000;
+        static constexpr uint16_t JCKDOEN0_SPEAKER = 0b0010;
+        static constexpr uint16_t JCKDOEN0_HEADPHONES = 0b0001;
+
+
         static constexpr uint8_t REG_ADC_CTRL = 14;
         static constexpr uint8_t REG_LADC_VOLUME = 15;
         static constexpr uint8_t REG_RADC_VOLUME = 16;
@@ -304,6 +386,7 @@ LL_INFO: Enabling MCLK at 24576000Hz
 
         static constexpr uint8_t REG_OUTPUT_CONTROL = 49;
         static constexpr uint16_t TSEN  = 2;
+        static constexpr uint16_t SPKBST = 0b100;
 
         static constexpr uint8_t REG_LMIXER = 50;
         static constexpr uint8_t REG_RMIXER = 51;
@@ -368,6 +451,11 @@ LL_INFO: Enabling MCLK at 24576000Hz
 
         static inline int mclkSm_ = -1;
         static inline uint mclkOffset_ = 0;
+
+        static inline int playbackSm_ = -1;
+        static inline uint playbackOffset_ = 0;
+
+
 
     }; // rckid::Codec
 

@@ -414,7 +414,6 @@ public:
         // only use in real board as the pin is floating on attiny3216
         GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
 #endif
-        GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_BOTHEDGES_gc;
         // do not use interrupt on home button (we handle it in the loop due to matrix row rotation)
         GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) &= ~PORT_ISC_gm;
         // if debug mode is enabled, start system notification to white signifying the debug mode power up
@@ -436,7 +435,6 @@ public:
         // only use in real board as the pin is floating on attiny1616
         GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
 #endif
-        GPIO_PIN_PINCTRL(AVR_PIN_PWR_INT) |= PORT_ISC_BOTHEDGES_gc;
         GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) |= PORT_ISC_BOTHEDGES_gc;
         // disable any pending system tick
         systemTick_ = false;
@@ -487,7 +485,8 @@ public:
                 setIrq();
             );
             // start meassuring the temperature
-            startADC(ADC_MUXPOS_TEMPSENSE_gc);
+            //startADC(ADC_MUXPOS_TEMPSENSE_gc);
+            startADC(ADC_MUXPOS_AIN2_gc);
             LOG("uptime " << state_.uptime);
         }
         if (budgetResetCountdown_ > 0) {
@@ -523,8 +522,7 @@ public:
     static inline uint8_t i2cRxIdx_ = 0;
 
     static constexpr uint8_t ACCEL_INT_REQUEST = 1;
-    static constexpr uint8_t PWR_INT_REQUEST = 2;
-    static constexpr uint8_t HOME_BTN_INT_REQUEST = 4;
+    static constexpr uint8_t HOME_BTN_INT_REQUEST = 2;
 
     static inline volatile uint8_t intRequests_ = 0;
 
@@ -557,12 +555,6 @@ public:
             if (irqs & ACCEL_INT_REQUEST) {
                 NO_ISR(
                     state_.status.setAccelInt();
-                    setIrq();
-                );
-            }
-            if (irqs & PWR_INT_REQUEST) {
-                NO_ISR(
-                    state_.status.setPwrInt();
                     setIrq();
                 );
             }
@@ -946,7 +938,7 @@ public:
      
         We use the ADC to measure the temperature, which makes the ADC handling rather simple. The ADC works in a single converstion mode, is triggered manually (e.g. every second for the temperture measurements) and we are notified about the result via interrupt (the ADC can run in standby mode).
 
-        NOTE: For the AAA battery version the ADC will also be used to measure the battery voltage, which will make this slightly more complex, but assuing the APR_INT pin will be used for the battery voltage measurement, we can still use ADC0. 
+        NOTE: For the AAA battery version the ADC will also be used to measure the battery voltage, which will make this slightly more complex, but assuming the APR_INT pin will be used for the battery voltage measurement, we can still use ADC0. 
      */
     //@{
     
@@ -965,6 +957,10 @@ public:
             case ADC_MUXPOS_TEMPSENSE_gc:
                 ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_INTREF_gc | ADC_SAMPCAP_bm;
                 ADC0.MUXPOS = ADC_MUXPOS_TEMPSENSE_gc;
+                break;
+            case ADC_MUXPOS_AIN2_gc:
+                ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
+                ADC0.MUXPOS = ADC_MUXPOS_AIN2_gc;
                 break;
             default:
                 ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
@@ -999,6 +995,10 @@ public:
                 state_.temp = static_cast<int16_t>(t);
                 break;
             }
+            case ADC_MUXPOS_AIN2_gc:
+                // this is the battery voltage, which we do not support at this time
+                LOG("ADC AIN2: " << value);
+                break;
             default:
                 // we do not support other ADC channels at this time
                 ASSERT(false);
@@ -1263,16 +1263,6 @@ ISR(RTC_CNT_vect) {
  */
 ISR(TWI0_TWIS_vect) {
     RCKid::i2cSlaveIRQHandler();    
-}
-
-/** Power interrupt ISR.
- */
-ISR(PORTA_PORT_vect) {
-    static_assert(AVR_PIN_PWR_INT == gpio::A2);
-    VPORTA.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_PWR_INT));
-    // only do stuff if we were transitioning from low to high
-    if (gpio::read(AVR_PIN_PWR_INT))
-        RCKid::intRequests_ |= RCKid::PWR_INT_REQUEST;
 }
 
 /** Home button interrupt ISR.

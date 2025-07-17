@@ -69,7 +69,7 @@ namespace rckid {
          */
         uint32_t generateInto(int16_t * buffer, uint32_t numSamples) {
             ASSERT(numSamples > 0); // at least one sample must be generated
-            int16_t * end = buffer + numSamples;
+            int16_t * end = buffer + (numSamples * 2); // stereo samples
             if (period_ == 0) {
                 // if frequency is 0, just generate silence of appropriate length
                 while (buffer != end)

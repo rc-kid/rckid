@@ -11,16 +11,16 @@
 
 .wrap_target
     ; thanks to auto pull we now have 32 bits loaded, we first shift the left frame, then the right one
-    set x, 16         side 0b00
-    nop               side 0b01 ; change clock with no data
+    set x, 15         side 0b10 ; prepare to send left (fsclk high)
+    nop               side 0b11 ; ignored bit
 leftBit:
-    out pins, 1       side 0b00
-    jmp x-- leftBit   side 0b01
-    set x, 16         side 0b10 ; done with left, prepare to send right
-    nop               side 0b11 ; change clock with no data
+    out pins, 1       side 0b10 ; output bit
+    jmp x-- leftBit   side 0b11 ; slave will read on rising clk edge
+    set x, 15         side 0b00 ; done with left, prepare to send right
+    nop               side 0b01 ; ignored bit
 rightBit:
-    out pins, 1       side 0b10
-    jmp x-- rightBit  side 0b11
+    out pins, 1       side 0b00 ; output bit
+    jmp x-- rightBit  side 0b01 ; slave read on rising clock
   
 % c-sdk {  
 
@@ -38,7 +38,6 @@ inline void i2s_out16_program_init(PIO pio, uint sm, uint offset, uint dataPin, 
     sm_config_set_out_pins(&c, dataPin, 1);
     pio_sm_init(pio, sm, offset, &c);
     // do not set the speed
-    //pio_set_clock_speed(pio, sm, RCKID_ST7789_SPEED * 2);
 }
 
 
