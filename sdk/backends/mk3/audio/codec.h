@@ -206,8 +206,8 @@ namespace rckid {
             pio_sm_set_clock_speed(pio1, playbackSm_, sampleRate * 34 * 2);
             pio_sm_set_enabled(pio1, playbackSm_, true);
 
-            Codec::setSpeakerVolume(15);
-            Codec::setHeadphonesVolume(15);
+            //Codec::setSpeakerVolume(30);
+            //Codec::setHeadphonesVolume(30);
 
         }
 

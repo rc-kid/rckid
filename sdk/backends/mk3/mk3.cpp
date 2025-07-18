@@ -402,14 +402,14 @@ namespace rckid {
         cpu::delayMs(250);
 
         Codec::playbackLineInDirect();
-        //Codec::playbackLineIn();
+        //Codec::playbackLineIn(); do not use this as it does not work now 
         Codec::setSpeakerVolume(63);
         Codec::setHeadphonesVolume(63);
         Codec::showRegisters();
         Codec::enableMasterClock(48000);
 
-        Codec::setSpeakerVolume(15);
-        Codec::setHeadphonesVolume(15);
+        //Codec::setSpeakerVolume(15);
+        //Codec::setHeadphonesVolume(15);
 
 
         // initialize the interrupt pins and set the interrupt handlers (enable pull-up as AVR pulls it low or leaves floating)

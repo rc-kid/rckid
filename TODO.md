@@ -48,7 +48,7 @@
 - [X] speaker works in BTL but there are some hiccups present, power issues, need caps next to the codec
 - [ ] check NAU88C22 power consumption with idle, speaker and headphones outputs
 - [X] check NAU88C22 radio aux to ADC to DAC to headphones & speaker (only when I2S in master mode)
-- [ ] check NAU88C22 DAC output
+- [X] check NAU88C22 DAC output
 - [ ] check NAU88C22 ADC input (radio)
 - [ ] check NAU88C22 ADC input with PGA (microphone)
 - [ ] check NAU88C22 headphone detection
@@ -72,9 +72,9 @@
 
 # TODO
 
-- I2S playback basics working, but there are few issues: weird glitches in the data (maybe tone related). When MCLK is running, the codec does not seem to understand I2C and also when tone is enabled, frame rate drops to 30. why? 
+- I2S playback working. Tone does not seem to work well (glitch data in square waveform, and maybe others). It also drops framerate to 30 when enabled which is weird
 
-- the pull-ups in I2C are barely able to pull the clock fast enough, maybe we need more?
+- audio codec I2C does not work when MCLK is active. This could be because of enormous I2C rise time for SDA & SCL (well over 1500ns, where 300ns is the limit) - there is sth in the bus design as this would suggest 1nF capacitance of the traces
 
 - jack detection by the codec cannot be observed so we need extra pin. However as the codec uses no interrupt and no reset lines, we can take the GPIO1 which can be I/O pin and use it for radio reset instead, radio reset can then become headphone detection on the RP2350
 

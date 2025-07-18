@@ -162,15 +162,20 @@ int main() {
     initialize();
 
     DoubleBuffer<int16_t> buf_{2048};
+    /*
+    for (uint32_t i = 0; i < 1024; ++i) {
+        buf_.front()[i] = -32768;
+        buf_.back()[i] = 32767;
+    }
+    */
     Tone t;
     //t.setWaveform(Waveform::Sine());
     //t.setWaveform(Waveform{assets::WaveformTriangle});
     t.setSampleRate(48000);
     t.on(220);
-    /*
     audioPlay(buf_, 48000, [&](int16_t * buf, uint32_t size) {
         return t.generateInto(buf, size);
-    }); */
+    });
     LOG(LL_INFO, "Audio play enabled");
 
 
