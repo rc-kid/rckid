@@ -2,7 +2,7 @@
 
 #include "i2s_mclk.pio.h"
 #include "i2s_out16.pio.h"
-
+#include "i2s_in16.pio.h"
 
 #include <platform.h>
 #include <rckid/log.h>
@@ -40,7 +40,12 @@ namespace rckid {
             playbackOffset_ = pio_add_program(pio1, & i2s_out16_program);
             LOG(LL_INFO, "      play sm: " << (uint32_t)playbackSm_);
             LOG(LL_INFO, "  play offset: " << (uint32_t)playbackOffset_);
-            i2s_out16_program_init(pio1, playbackSm_, playbackOffset_, RP_PIN_I2S_DOUT, RP_PIN_I2S_LRCK);
+            //i2s_out16_program_init(pio1, playbackSm_, playbackOffset_, RP_PIN_I2S_DOUT, RP_PIN_I2S_LRCK);
+
+            recordSm_ = pio_claim_unused_sm(pio1, true);
+            recordOffset_ = pio_add_program(pio1, & i2s_in16_program);
+            LOG(LL_INFO, "       rec sm: " << (uint32_t)recordSm_);
+            LOG(LL_INFO, "   rec offset: " << (uint32_t)recordOffset_);
         }
 
         static uint playbackDReq() {
@@ -49,6 +54,14 @@ namespace rckid {
 
         static io_wo_32 * playbackTxFifo() {
             return & pio1->txf[playbackSm_];
+        }
+
+        static uint recordDReq() {
+            return pio_get_dreq(pio1, recordSm_, false);
+        }
+
+        static io_ro_32 * recordRxFifo() {
+            return & pio1->rxf[recordSm_];
         }
 
         /** Enables the MCLK generation for given sample rate. 
@@ -88,13 +101,15 @@ namespace rckid {
             // now enable the outputs (but keep them muted)
             setRegister(REG_PWR_MGMT_2, RHPEN | LHPEN);
             setRegister(REG_PWR_MGMT_3, RSPKEN | LSPKEN);
-            // ensure that we use mclk and not the pio (MCLK direct, no PLL, slave mode, no MCLK divider)
-            setRegister(REG_CLK_CTRL_1, 0); 
+            // ensure that we use mclk and not the pll (MCLK direct, no PLL, slave mode, no MCLK divider)
+            setRegister(REG_CLK_CTRL_1, CLKM_MCLK); 
 
 
             // for right spaker enable the inverted output so that we have BTL speaker driver
             setRegister(REG_RSPKR_SUBMIX, RSUBBYP);
 
+            // set audio interface to 16bit I2S
+            setRegister(REG_AUDIO_INTERFACE, WLEN_16 | AIFMT_I2S);
 
             // enable slow clock (necessary for the jack detection)
             setRegister(REG_CLK_CTRL_2, SCLKEN);
@@ -133,10 +148,11 @@ namespace rckid {
         /** Stops all the audio processing. 
          */
         static void stop() {
-            // disable MCLK before any codec setting - somehow it seems the mclk causes issues with the codec
-            pio_sm_set_enabled(pio1, mclkSm_, false);
-
             LOG(LL_INFO, "Codec stop");
+            // disable all pio programs, if any are running (mclk, playback, record)
+            pio_sm_set_enabled(pio1, mclkSm_, false);
+            pio_sm_set_enabled(pio1, playbackSm_, false);
+            pio_sm_set_enabled(pio1, recordSm_, false);
             // disable headphones, ADC boost, ADC and PGA
             setRegister(REG_PWR_MGMT_2, 0);
             // disable speaker, mixers and DAC
@@ -174,7 +190,7 @@ namespace rckid {
             // TODO delete this when possible
             // setRegister(REG_CLK_CTRL_1, CLKIOEN);
 
-            // enable the ADC and ADC mix/boost stages (and heep the headphone drivers enabled, but muted)
+            // enable the ADC and ADC mix/boost stages (and keep the headphone drivers enabled)
             setRegister(REG_PWR_MGMT_2, RHPEN | LHPEN | RBSTEN | LBSTEN | RADCEN | LADCEN);
             // enable the DAC & mixer sections, keep the speaker enabled
             setRegister(REG_PWR_MGMT_3, RSPKEN | LSPKEN | RMIXEN | LMIXEN | RDACEN | LDACEN);
@@ -203,12 +219,31 @@ namespace rckid {
             // enable master clock generation for the given sample rate
             enableMasterClock(sampleRate);
             // enable the I2S playback pio program at given BCLK (which is 34 bits per sample)
+            i2s_out16_program_init(pio1, playbackSm_, playbackOffset_, RP_PIN_I2S_DOUT, RP_PIN_I2S_LRCK);
             pio_sm_set_clock_speed(pio1, playbackSm_, sampleRate * 34 * 2);
             pio_sm_set_enabled(pio1, playbackSm_, true);
+        }
 
-            //Codec::setSpeakerVolume(30);
-            //Codec::setHeadphonesVolume(30);
+        static void recordLineIn(uint32_t sampleRate) {
+            stop();
+            LOG(LL_INFO, "Codec I2S record from line in at " << sampleRate << "Hz");
+            // enable the ADC and ADC mix/boost stages (), keep the hp drivers enabled
+            setRegister(REG_PWR_MGMT_2, RHPEN | LHPEN | RBSTEN | LBSTEN | RADCEN | LADCEN);
+            // enable the DAC & mixer sections, keep the speaker enabled, since we are recording from line in we can aplso playback it 
+            setRegister(REG_PWR_MGMT_3, RSPKEN | LSPKEN | RMIXEN | LMIXEN | RDACEN | LDACEN);
+            // connect the AUX inputs to the ADC boost section
+            setRegister(REG_LADC_BOOST, 0b101); // 0db, use 111 for max 6db 
+            setRegister(REG_RADC_BOOST, 0b101);
 
+            // enable I2S master mode so that we output stuff even without the pio for testing
+            //setRegister(REG_CLK_CTRL_1, CLKM_MCLK | CLKIOEN); 
+
+            // enable master clock generation for the given sample rate
+            enableMasterClock(sampleRate);
+            // enable the I2S record pio program at given BCLK (34 bits per sample for I2S stereo 16bit sound)
+            i2s_in16_program_init(pio1, recordSm_, recordOffset_, RP_PIN_I2S_DIN, RP_PIN_I2S_LRCK);
+            pio_sm_set_clock_speed(pio1, recordSm_, sampleRate * 34 * 2);
+            pio_sm_set_enabled(pio1, recordSm_, true);
         }
 
         static void showRegisters() {
@@ -315,11 +350,21 @@ LL_INFO: Enabling MCLK at 24576000Hz
         static constexpr uint16_t LDACEN = 1;
 
         static constexpr uint8_t REG_AUDIO_INTERFACE = 4;
+        static constexpr uint16_t WLEN_16 = 0b0000000;
+        static constexpr uint16_t WLEN_20 = 0b0100000;
+        static constexpr uint16_t WLEN_24 = 0b1000000;
+        static constexpr uint16_t WLEN_32 = 0b1100000;
+        static constexpr uint16_t AIFMT_RJ = 0b00000;
+        static constexpr uint16_t AIFMT_LJ = 0b01000;
+        static constexpr uint16_t AIFMT_I2S = 0b10000;
+        static constexpr uint16_t AIFMT_PCM = 0b11000;
         
         static constexpr uint8_t REG_COMPANDING = 5;
         static constexpr uint16_t ADDAP = 1;
 
         static constexpr uint8_t REG_CLK_CTRL_1 = 6;
+        static constexpr uint16_t CLKM_MCLK = 0;
+        static constexpr uint16_t CLKM_PLL = 0b100000000;
         static constexpr uint16_t CLKIOEN = 1;
 
         static constexpr uint8_t REG_CLK_CTRL_2 = 7;
@@ -455,7 +500,8 @@ LL_INFO: Enabling MCLK at 24576000Hz
         static inline int playbackSm_ = -1;
         static inline uint playbackOffset_ = 0;
 
-
+        static inline int recordSm_ = -1;
+        static inline uint recordOffset_ = 0;
 
     }; // rckid::Codec
 

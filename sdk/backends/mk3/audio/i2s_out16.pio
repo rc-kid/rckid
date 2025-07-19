@@ -1,6 +1,6 @@
 ; I2S output
 ; 
-; 32 bit value (2 channels) from the input fifo and serializes it into two channels. 
+; 32 bit value (2 channels) from the input fifo and serializes it into two channels. Data should be written on the falling BCLK, they are read by the codec on rising BCLK edge). 
 ; 
 
 .program i2s_out16
@@ -39,6 +39,5 @@ inline void i2s_out16_program_init(PIO pio, uint sm, uint offset, uint dataPin, 
     pio_sm_init(pio, sm, offset, &c);
     // do not set the speed
 }
-
 
 %}

@@ -173,10 +173,24 @@ int main() {
     //t.setWaveform(Waveform{assets::WaveformTriangle});
     t.setSampleRate(48000);
     t.on(220);
+    /*
     audioPlay(buf_, 48000, [&](int16_t * buf, uint32_t size) {
         return t.generateInto(buf, size);
     });
     LOG(LL_INFO, "Audio play enabled");
+    */
+
+    uint32_t x = 0;
+    audioRecordLineIn(buf_, 8000, [&x](int16_t * buf, uint32_t size) {
+        LOG(LL_INFO, "tx: " << x++ << " " << (uint32_t)buf);
+        return size;
+    });
+
+
+
+//    uint32_t sample = pio_sm_get_blocking(pio, sm);
+// upper 16 bits = right channel
+// lower 16 bits = left channel
 
 
     //PNG png{PNG::fromStream(fs::fileRead(STR("files/images/backgrounds/wish16.png")))};
