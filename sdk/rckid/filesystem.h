@@ -150,9 +150,11 @@ namespace rckid::fs {
             return static_cast<Drive>(drive_); 
         }
 
+        void close();
+
         uint32_t write(uint8_t const * buffer, uint32_t numBytes) override;
 
-        ~FileWrite() override;
+        ~FileWrite() override { close(); }
 
         FileWrite(FileWrite && from) noexcept:
             drive_{from.drive_} {

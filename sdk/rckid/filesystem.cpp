@@ -251,6 +251,24 @@ namespace rckid::fs {
 
     // FileWrite 
 
+    void FileWrite::close() {
+#if RCKID_ENABLE_HOST_FILESYSTEM
+        delete host_;
+        host_ = nullptr;
+#else
+        switch (drive_) {
+            case static_cast<unsigned>(Drive::SD):
+                f_close(& sd_);
+                break;
+            case static_cast<unsigned>(Drive::Cartridge):
+                lfs_file_close(& lfs_, & cart_);
+                break;
+            default:
+                break;
+        }
+#endif
+    }
+
     uint32_t FileWrite::write(uint8_t const * buffer, uint32_t numBytes) {
 #if RCKID_ENABLE_HOST_FILESYSTEM
         ASSERT(host_ != nullptr);
@@ -267,24 +285,6 @@ namespace rckid::fs {
                 return lfs_file_write(& lfs_, & cart_, buffer, numBytes);
             default:
                 ASSERT(false); // writing invalid file
-        }
-#endif
-    }
-
-    FileWrite::~FileWrite() {
-#if RCKID_ENABLE_HOST_FILESYSTEM
-        delete host_;
-        host_ = nullptr;
-#else
-        switch (drive_) {
-            case static_cast<unsigned>(Drive::SD):
-                f_close(& sd_);
-                break;
-            case static_cast<unsigned>(Drive::Cartridge):
-                lfs_file_close(& lfs_, & cart_);
-                break;
-            default:
-                break;
         }
 #endif
     }
