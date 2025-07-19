@@ -1,0 +1,115 @@
+; I2S input
+; 
+; 32 bit value (2 channels) are serialized from din for each frame. The codec writes the data on the falling BCLK edge and we can read them on the rising edge
+
+.program i2s_in16
+; set aside 2 bits for LRCLK and BCLK
+.side_set 2
+.fifo rx
+.in 1 left auto 32
+
+.wrap_target
+    set x, 14        side 0b10
+    nop              side 0b11
+    nop              side 0b10 ; clk down, codec writes
+leftBit:
+    in pins, 1       side 0b11 ; clk up, we can read
+    jmp x-- leftBit  side 0b10 ; clk down, codec writes
+    in pins, 1       side 0b11 ; clk up, we can read last bit
+    set x, 14        side 0b00 ; bclk and fs low, do nothing
+    nop              side 0b01 ; clk up, the empty bit
+    nop              side 0b00 ; clk down, codec writes first bit
+rightBit:
+    in pins, 1       side 0b01 ; clk up, read bit
+    jmp x-- rightBit side 0b00 ; clk down, codec writes
+    in pins, 1       side 0b01 ; clk up, read the last bit
+
+; example         x  DIN LRCLK BCLK 
+; set x, 14       14       1    0
+; nop             14  XX   1    1
+; nop             14       1    0
+; in pins, 1      14  0    1    1    
+; jmp x--         14       1    0 
+; in pins, 1      13  1    1    1 
+; jmp x--         13       1    0 
+; in pins, 1      12  2    1    1 
+; jmp x--         12       1    0 
+; in pins, 1      11  3    1    1 
+; jmp x--         11       1    0 
+; in pins, 1      10  4    1    1 
+; jmp x--         10       1    0 
+; in pins, 1      9   5    1    1 
+; jmp x--         9        1    0 
+; in pins, 1      8   6    1    1 
+; jmp x--         8        1    0 
+; in pins, 1      7   7    1    1 
+; jmp x--         7        1    0 
+; in pins, 1      6   8    1    1 
+; jmp x--         6        1    0 
+; in pins, 1      5   9    1    1 
+; jmp x--         5        1    0 
+; in pins, 1      4   10   1    1 
+; jmp x--         4        1    0 
+; in pins, 1      3   11   1    1 
+; jmp x--         3        1    0 
+; in pins, 1      2   12   1    1 
+; jmp x--         2        1    0 
+; in pins, 1      1   13   1    1 
+; jmp x--         1        1    0 
+; in pins, 1      0   14   1    1 
+; jmp x--         0        1    0 
+; in pins, 1      0   15   1    1
+; set x, 14       14       0    0
+; nop             14  XX   0    1
+; nop             14       0    0
+; in pins, 1      14  0    0    1    
+; jmp x--         14       0    0 
+; in pins, 1      13  1    0    1 
+; jmp x--         13       0    0 
+; in pins, 1      12  2    0    1 
+; jmp x--         12       0    0 
+; in pins, 1      11  3    0    1 
+; jmp x--         11       0    0 
+; in pins, 1      10  4    0    1 
+; jmp x--         10       0    0 
+; in pins, 1      9   5    0    1 
+; jmp x--         9        0    0 
+; in pins, 1      8   6    0    1 
+; jmp x--         8        0    0 
+; in pins, 1      7   7    0    1 
+; jmp x--         7        0    0 
+; in pins, 1      6   8    0    1 
+; jmp x--         6        0    0 
+; in pins, 1      5   9    0    1 
+; jmp x--         5        0    0 
+; in pins, 1      4   10   0    1 
+; jmp x--         4        0    0 
+; in pins, 1      3   11   0    1 
+; jmp x--         3        0    0 
+; in pins, 1      2   12   0    1 
+; jmp x--         2        0    0 
+; in pins, 1      1   13   0    1 
+; jmp x--         1        0    0 
+; in pins, 1      0   14   0    1 
+; jmp x--         0        0    0 
+; in pins, 1      0   15   0    1
+
+% c-sdk {  
+
+#include "rckid/rckid.h"
+
+inline void i2s_in16_program_init(PIO pio, uint sm, uint offset, uint dataPin, uint clkPins) {
+    // claim the resources required for the continuous mode
+    pio_gpio_init(pio, dataPin);
+    pio_sm_set_consecutive_pindirs(pio, sm, dataPin, 1, false); // input
+    pio_gpio_init(pio, clkPins);
+    pio_gpio_init(pio, clkPins + 1);
+    pio_sm_set_consecutive_pindirs(pio, sm, clkPins, 2, true);
+    pio_sm_config c = i2s_in16_program_get_default_config(offset);
+    sm_config_set_sideset_pins(&c, clkPins);
+    sm_config_set_in_pins(&c, dataPin);
+    pio_sm_init(pio, sm, offset, &c);
+    // do not set the speed
+}
+
+%}

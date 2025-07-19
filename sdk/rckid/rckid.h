@@ -247,6 +247,14 @@ namespace rckid {
      */
     void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb);
 
+    /** Starts recording the microphone at specified sample rate. When the buffer is filled, the callback function will be called so that the data can be processed. 
+     */
+    void audioRecordMic(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb);
+
+    /** Starts recording the line in input (FM radio on the device)  at specified rate. The callback function is called everytime the buffer is filled.
+     */
+    void audioRecordLineIn(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb);
+
     /** Pauses audio playback or recording. 
      */
     void audioPause();

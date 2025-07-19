@@ -80,5 +80,6 @@
 #define RP_PIN_I2S_BCLK 18
 #define RP_PIN_I2S_LRCK 17
 #define RP_PIN_I2S_DOUT 16
+#define RP_PIN_I2S_DIN 15
 
 

@@ -46,7 +46,7 @@
 - [X] check NAU88C22 radio aux to headphones (with 100uF cap ok)
 - [X] check NAU88C22 radio aux to speaker
 - [X] speaker works in BTL but there are some hiccups present, power issues, need caps next to the codec
-- [ ] check NAU88C22 power consumption with idle, speaker and headphones outputs
+- [X] check NAU88C22 power consumption with idle, speaker and headphones outputs
 - [X] check NAU88C22 radio aux to ADC to DAC to headphones & speaker (only when I2S in master mode)
 - [X] check NAU88C22 DAC output
 - [ ] check NAU88C22 ADC input (radio)
@@ -77,6 +77,8 @@
 - audio codec I2C does not work when MCLK is active. This could be because of enormous I2C rise time for SDA & SCL (well over 1500ns, where 300ns is the limit) - there is sth in the bus design as this would suggest 1nF capacitance of the traces
 
 - jack detection by the codec cannot be observed so we need extra pin. However as the codec uses no interrupt and no reset lines, we can take the GPIO1 which can be I/O pin and use it for radio reset instead, radio reset can then become headphone detection on the RP2350
+
+- run at full speed with no vsycn waiting to see how much free room there is
 
 - Si4705 likely requires resetting manually, pulling the RST high from the beginning does not work
 - also, the radio chip might benefit from smaller oscillator caps (18 or even 15pF) - and so would the AVR? (stray capacitance of 3-8pF should be taken into account, the VPP of the crystal seems small)
@@ -333,3 +335,9 @@ This leaves 3 gpios on the radio if using external clock,
 
 
 
+# Power Measurements
+
+- 50% brightness, radio on 80mA @ 5V
+- speaker at default volume 100mA @ 5V
+- with extra power, we get at 120mA @5V
+- headphones are small, ~82mA
