@@ -180,11 +180,34 @@ int main() {
     LOG(LL_INFO, "Audio play enabled");
     */
 
-    uint32_t x = 0;
-    audioRecordLineIn(buf_, 8000, [&x](int16_t * buf, uint32_t size) {
-        LOG(LL_INFO, "tx: " << x++ << " " << (uint32_t)buf);
+    uint32_t records = 0;
+    volatile int16_t * outbuf = nullptr;
+
+    audioRecordLineIn(buf_, 8000, [&records, &outbuf](int16_t * buf, uint32_t size) {
+        if (outbuf != nullptr)
+            LOG(LL_ERROR, "Buffer overlap");
+        outbuf = buf;
         return size;
     });
+
+    fs::FileWrite f{fs::fileWrite("test8.raw")};
+    if (f.good()) {
+        LOG(LL_INFO, "File opened for recording");
+    } else {
+        LOG(LL_ERROR, "Failed to open file for recording");
+        records = 80000;
+    }
+
+    while (records < 80000) {
+        while (outbuf == nullptr)
+            yield();
+        f.write((uint8_t *)outbuf, 4096);
+        outbuf = nullptr;
+        records += 1024;
+        LOG(LL_INFO, "  recorded: " << records << " samples");        
+    }
+    f.close();
+    LOG(LL_INFO, "file closed after 10s or error");
 
 
 
