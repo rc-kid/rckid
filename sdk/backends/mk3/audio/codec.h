@@ -115,8 +115,8 @@ namespace rckid {
             setRegister(REG_CLK_CTRL_2, SCLKEN);
             // enable the audio jack detection or GPIO2 and automatic headphone & speaker switching, corresponding to high (pulled up) on no jack and low (connected to ground through 220k resistor) on jack connected
             // TODO do not do this yet, want to see headphones for testing purposes
-            //setRegister(REG_JACK_DETECT_1, JCKDEN | JCKDIO2);
-            //setRegister(REG_JACK_DETECT_2, JCKDOEN1_SPEAKER | JCKDOEN0_HEADPHONES);
+            setRegister(REG_JACK_DETECT_1, JCKDEN | JCKDIO2);
+            setRegister(REG_JACK_DETECT_2, JCKDOEN1_SPEAKER | JCKDOEN0_HEADPHONES);
         }
 
         static void powerDown() {
@@ -246,6 +246,30 @@ namespace rckid {
             pio_sm_set_enabled(pio1, recordSm_, true);
         }
 
+        static void recordMic(uint32_t sampleRate) {
+            stop();
+            LOG(LL_INFO, "Codec I2S record from microphone at " << sampleRate << "Hz");
+            // enable mic bias 
+            setRegister(REG_PWR_MGMT_1, MICBIASEN | REF_IMP_80K | IOBUFEN | ABIASEN);
+            // enable the right channel PGA (where the mic is connected)
+            // TODO this might change on the actual HW
+            setRegister(REG_PWR_MGMT_2, RHPEN | LHPEN | RADCEN | RBSTEN | RPGAEN);
+            // enable ALC on the right channel
+            setRegister(REG_ALC_CTRL_1, ALCEN_RIGHT | ALC_MAX_GAIN_35 | ALC_MIN_GAIN_NEG_12);
+
+            // connect the right channel ADC to the output mixers
+            //setRegister(REG_LADC_BOOST, 0b101); // 0db, use 111 for max 6db 
+            setRegister(REG_RADC_BOOST, 0b101010000);
+
+
+            // enable master clock generation for the given sample rate
+            enableMasterClock(sampleRate);
+            // enable the I2S record pio program at given BCLK (34 bits per sample for I2S stereo 16bit sound)
+            i2s_in16_program_init(pio1, recordSm_, recordOffset_, RP_PIN_I2S_DIN, RP_PIN_I2S_LRCK);
+            pio_sm_set_clock_speed(pio1, recordSm_, sampleRate * 34 * 2);
+            pio_sm_set_enabled(pio1, recordSm_, true);
+        }
+
         static void showRegisters() {
             LOG(LL_INFO, "Codec registers:");
             LOG(LL_INFO, "   1: " <<  hex(getRegister(1)) << " exp: 0x000d");
@@ -330,6 +354,7 @@ LL_INFO: Enabling MCLK at 24576000Hz
 
         static constexpr uint8_t REG_PWR_MGMT_1 = 1;
         static constexpr uint16_t REF_IMP_80K = 0x01;
+        static constexpr uint16_t MICBIASEN = 0b10000;
         static constexpr uint16_t IOBUFEN = 4;
         static constexpr uint16_t ABIASEN = 8;
 
@@ -338,6 +363,8 @@ LL_INFO: Enabling MCLK at 24576000Hz
         static constexpr uint16_t LHPEN = 128;
         static constexpr uint16_t RBSTEN = 32;
         static constexpr uint16_t LBSTEN = 16;
+        static constexpr uint16_t RPGAEN = 8; 
+        static constexpr uint16_t LPGAEN = 4;
         static constexpr uint16_t RADCEN = 2;
         static constexpr uint16_t LADCEN = 1;
 
@@ -409,6 +436,12 @@ LL_INFO: Enabling MCLK at 24576000Hz
         static constexpr uint8_t REG_NOTCH_FILTER_4 = 30;
         // no 31
         static constexpr uint8_t REG_ALC_CTRL_1 = 32;
+        static constexpr uint16_t ALCEN_LEFT = 0b100000000;
+        static constexpr uint16_t ALCEN_RIGHT = 0b10000000;
+        static constexpr uint16_t ALC_MAX_GAIN_35 = 0b111000;
+        static constexpr uint16_t ALC_MIN_GAIN_NEG_12 = 0b000; 
+
+
         static constexpr uint8_t REG_ALC_CTRL_2 = 33;
         static constexpr uint8_t REG_ALC_CTRL_3 = 34;
         static constexpr uint8_t REG_NOISE_GATE = 35;
@@ -426,8 +459,9 @@ LL_INFO: Enabling MCLK at 24576000Hz
         static constexpr uint8_t REG_INPUT_CTRL = 44;
         static constexpr uint8_t REG_LINPUT_PGA_GAIN = 45;
         static constexpr uint8_t REG_RINPUT_PGA_GAIN = 46;
-        static constexpr uint8_t REG_LADC_BOOST = 47 ;
+        static constexpr uint8_t REG_LADC_BOOST = 47;
         static constexpr uint8_t REG_RADC_BOOST = 48;
+
 
         static constexpr uint8_t REG_OUTPUT_CONTROL = 49;
         static constexpr uint16_t TSEN  = 2;

@@ -160,7 +160,7 @@ ui::Menu * mainMenuGenerator() {
 int main() {
     //cpu::overclock(250000000);
     initialize();
-
+#ifdef HAHA
     DoubleBuffer<int16_t> buf_{2048};
     /*
     for (uint32_t i = 0; i < 1024; ++i) {
@@ -183,9 +183,21 @@ int main() {
     uint32_t records = 0;
     volatile int16_t * outbuf = nullptr;
 
-    audioRecordLineIn(buf_, 8000, [&records, &outbuf](int16_t * buf, uint32_t size) {
-        if (outbuf != nullptr)
-            LOG(LL_ERROR, "Buffer overlap");
+    uint16_t m = 0;
+
+    /*
+    audioRecordMic(buf_, 8000, [& m, &records, &outbuf](int16_t * buf, uint32_t size) {
+        bool changed = false;
+        for (uint32_t i = 0; i < size * 2; ++i) {
+            if (buf[i] > m) {
+                m = buf[i];
+                changed = true;
+            }
+        }
+        if (changed)
+            LOG(LL_INFO, "Max: " << m);
+        //if (outbuf != nullptr)
+        //    LOG(LL_ERROR, "Buffer overlap");
         outbuf = buf;
         return size;
     });
@@ -198,6 +210,8 @@ int main() {
         records = 80000;
     }
 
+    //records = 80000;
+
     while (records < 80000) {
         while (outbuf == nullptr)
             yield();
@@ -208,13 +222,13 @@ int main() {
     }
     f.close();
     LOG(LL_INFO, "file closed after 10s or error");
-
-
+    */
 
 //    uint32_t sample = pio_sm_get_blocking(pio, sm);
 // upper 16 bits = right channel
 // lower 16 bits = left channel
 
+#endif
 
     //PNG png{PNG::fromStream(fs::fileRead(STR("files/images/backgrounds/wish16.png")))};
     //LOG(LL_INFO, "PNG loaded: " << png.width() << "x" << png.height() << ", bpp: " << png.bpp());

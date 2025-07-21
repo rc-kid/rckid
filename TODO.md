@@ -50,8 +50,9 @@
 - [X] check NAU88C22 radio aux to ADC to DAC to headphones & speaker (only when I2S in master mode)
 - [X] check NAU88C22 DAC output
 - [X] check NAU88C22 ADC input (radio) - seems to work, have some trouble writing data fast enough in raw mode even at 8000kHz, but the I2S comms work - its also quite faint, but the adc boost is not running at 100%
-- [ ] check NAU88C22 ADC input with PGA (microphone)
-- [ ] check NAU88C22 headphone detection
+- [X] check NAU88C22 ADC input with PGA (microphone) - but not with the one on board (?)
+- [X] check NAU88C22 headphone detection - but makes very noisy fm radio
+- [X] check NAU88C22 works in smaller capacitance settings for I2C, or with the low pass filters as per datasheet installed
 - [X] check Si4705 works with headphones antenna
 - [X] check the headphone outputs while using the antenna
 - [X] check Si4705 works with internal antenna (seems to work, but not very well)
@@ -71,6 +72,8 @@
 - [ ] add way to clear memory when necessary (e.g. remove background, etc.)
 
 # TODO
+
+- can I create SD card SPI in PIO so that I can use SDIO and SPI as well? 
 
 - I2S playback working. Tone does not seem to work well (glitch data in square waveform, and maybe others). It also drops framerate to 30 when enabled which is weird
 - for the input / output, it might be easier to use different format, such as PCM as it would allow to send whole 32bits in one loop
