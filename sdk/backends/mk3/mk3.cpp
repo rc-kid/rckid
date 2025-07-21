@@ -428,10 +428,10 @@ namespace rckid {
         Codec::setHeadphonesVolume(63);
         Codec::showRegisters();
         //Codec::recordLineIn(48000);
-        //Codec::enableMasterClock(48000);
+        Codec::enableMasterClock(48000);
 
-        //Codec::setSpeakerVolume(15);
-        //Codec::setHeadphonesVolume(15);
+        Codec::setSpeakerVolume(45);
+        Codec::setHeadphonesVolume(45);
 
 
         // initialize the interrupt pins and set the interrupt handlers (enable pull-up as AVR pulls it low or leaves floating)
@@ -830,7 +830,21 @@ namespace rckid {
     }
 
     void audioRecordMic(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb) {
-        // TODO
+        audioStop();
+
+        audio::buffer_ = & buffer;
+        audio::state_ = audio::State::Recording;
+        audio::sampleRate_ = sampleRate;
+        audio::cb_ = cb;
+        
+        // initialize the DMA channels 
+        audioConfigureRecordDMA(audio::dma0_, audio::dma1_, buffer.front(), buffer.size() / 2);
+        audioConfigureRecordDMA(audio::dma1_, audio::dma0_, buffer.back(), buffer.size() / 2);
+        // enable the first DMA
+        dma_channel_start(audio::dma0_);
+        // instruct the codec to start the playback at given sample rate
+        Codec::recordMic(sampleRate);
+        Codec::showRegisters();
     }
 
     void audioRecordLineIn(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb) {

@@ -7,13 +7,13 @@ RCKid is based on the [RP2030B](datasheets/rp2350-datasheet.pdf) (80 pin QFN) an
                                               +-----------------+
                             + --------+       | Cartridge       |
                             | microSD |       | (flash, extras) |                                    
-                            +---------+       +-----------------+                            +-------------+
-                                   \\\\       ////                                           | TPA2006D    |
-                          <SPI/SDIO>\\\\     ////<10pin/HSTX,QSPI>                           | (Mono AmpD) |--(spkr)
-                                     \\\\   ////                                             +-------------+
+                            +---------+       +-----------------+                            
+                                   \\\\       ////                                           
+                          <SPI/SDIO>\\\\     ////<10pin/HSTX,QSPI>                           
+                                     \\\\   ////                                             /---- speaker
                                      ||||   ||||                                            /
        +-----------+  <16bitMCU>   +-------------+     <I2S>       +---------------+       / (analog mono)
-       |  ST7789V  |===============|   RP2350B   |=================| TLV320AIC3204 |-------
+       |  ST7789V  |===============|   RP2350B   |=================| NAU88C22GY    |-------
        | (Display) |               +-------------+                 | (audio codec) |_______   
        +-----------+                     ||                   //===+---------------+       \ (analog stereo)
               |                          ||                  //       |                     \         +------------+
@@ -35,12 +35,12 @@ RCKid is based on the [RP2030B](datasheets/rp2350-datasheet.pdf) (80 pin QFN) an
                     \         ----|    ATTiny3217   |
                      \------------| (IO, time, pwr) |----------(RGB)
                              /----+-----------------+
-                            /            ||              +---------+
-             (rumbler)-----/       <I2C> ||==============| BQ25895 |----(battery)
-                          <PWM>          ||              | (PMIC)  | 
-                                        //\\             +---------+
+                            /            ||         \     +-----------+
+             (rumbler)-----/       <I2C> ||          \----| MCP73832  |----(battery)
+                          <PWM>          ||               | (charger) | 
+                                        //\\              +-----------+
                                        //  \\
-                                      //    \\
+                                      //    \\  (optional?)
                              +---------+     +--------+
                              | BMI160  |     | LTR390 |
                              | (Accel) |     |  (ALS) |
@@ -70,6 +70,11 @@ Onboard accelerometer [BMI160](datasheets/BMI160.pdf) and ambient light & UV det
 > TODO is pull-up/down on the accelerometer interrupt pin required?
 
 ## Power Management
+
+> After I realized that the advanced I2C controlled PMIC chips such as [BQ25628](https://www.ti.com/product/BQ25628) do not really increase the VSYS voltage above some threshold when powered by battery alone, I have reverted back to the good old simple MCP73832 battery charger already used in mkII. 
+
+Power management consists of a standalone Li-Ion battery charger [MCP73832]() and a power path via a MOSFET and diode that enables DC power when connected, and battery otherwise. MCP73832 *must* be used as the AVR runs on 3.3V while the charger runs at 5V so outputting charger high when charge is complete as the 73831 does could destroy the chip. There is no such danger with MCP73832 as the STAT pin behavior is HiZ when not charging and low when charging.
+
 
 > I am considering using [BQ25628](https://www.ti.com/product/BQ25628) instead. It offers better battery voltage monitoring and seems slightly less complicated - also the package is smaller. I also considered Analog offerings, notably LTC3555, which also includes switching regulators, but it costs  alot more (6 vs 2 USD) and does not measure voltage & current on the ADC. 
 
@@ -167,6 +172,9 @@ This leads to the following current draw for different voltages:
 
 ## Audio
 
+[NAU88C22GY]() chip is used, which is relatively simple, yet it offers all the features we need - 16bit audio playback & record, line-in for the radio, microphone input, integrated headphone and mono speaker (BTL) drivers. While the chip features audio jack detection and can automatically enable/disable headphones based on the jack status, it does not offer any way to report the jack status, hence the jack detection pin is shared with RP2350 which can read it. The chip also provides no interrupt (no events available) and provides one simple digital GPIO that can be set high or low (used for the radio reset line). In terms of I2S, the chip requires MCLK to be provided, but it does not have to be of the exact frequency needed as the internal PLL can adjust it - but we are not using this feature. Pinout:
+
+
 [TLV320aic3204](datasheets/tlv320aic3204.pdf) is used, which is yet another fairly complex chip. It is controlled via I2C and RESET line (the RESET line is necessary), interrupt line and 4 more pins for I2S playback and recording (BCLK, WCLK, DIN and DOUT). It provides integrated headphone amplifier, line out and three analog stereo inputs (or 3 floating inputs). The chip also contains integrated LDO to power the core & analog parts that require smaller and cleaner voltages. Furthermore the chip is used for headphone detection and speaker on/off via a GPIO. Pinout:
 
 - `MCLK` master clock is not used (TP3)
@@ -213,18 +221,9 @@ As per the typical application, the microphone is connected differentially to `I
 
 > Is the micbias resistor correct?
 
-#### Headset detection & Microphone
+#### Headset detection
 
 > TODO
-
-### Speaker Amplifier
-
-We use [TPA2006](datasheets/tpa2006.pdf), which is a mono class-D amplifier with 1.45W output. This is fine as the speaker used is only rated for 0.7 amps, so we are well within the specification. As per the datasheet (page 15) no ferrite beads or other filtering is necessary on the output for speaker lines below 10cm. 
-
-The input resistors set the gain of the amplifier (page 20). 
-
-> TODO what gain should be used?
-> TODO ensure that audio codec can output mono differentially on the line output
 
 ### FM Radio
 

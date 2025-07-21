@@ -1,15 +1,18 @@
 ; ST7789 continuous driver for RGB colors (565)
 ; 
-; The simplest of the programs that simply stores the bits as they arrive in the pixels. 
+; The simplest of the programs that simply stores the bits as they arrive in the pixels. However, since the data lanes are reversed on the device (and I do not want to change them in hardware as it would create ugly interconnects that would be visible, and hence susceptible to mechanical wear from the back of the pcb), we need to reverse the bits first. 
+; 
+; Luckily pio has the mov instruction with `::` operator for bit reversal and we can use it with both source and destination being the OSR register. Since we are reading 16bit values per pull, the reverse will just move them from low 16bits to high 16 bits so in order to shift them we need to change the out direction to left. Finally, the mov on the OSR does not do autopull so we need to pull manually. 
 
 .program ST7789_rgb16
 ; set aside 1 bit for the WRX 
 .side_set 1
 .fifo tx
-.out 16 left auto 16
+.out 16 left
 .wrap_target
-    out pins, 16     side 0
-    nop              side 1
+    pull             side 1 [2]
+    mov osr, ::osr   side 0
+    out pins, 16     side 0  
 
 % c-sdk {  
 
@@ -43,7 +46,7 @@ inline void ST7789_rgb16_program_init(PIO pio, uint sm, uint offset, uint wrPin,
     // enable autopull
     //sm_config_set_out_shift(&c, false, true, 16);
     pio_sm_init(pio, sm, offset, &c);
-    pio_set_clock_speed(pio, sm, RCKID_ST7789_SPEED * 2);
+    pio_sm_set_clock_speed(pio, sm, RCKID_ST7789_SPEED * 4);
 }
 
 %}
