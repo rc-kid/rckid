@@ -1,6 +1,6 @@
 # Hardware Design
 
-> This is hardware description of RCKid mk III (version 19/1/25 and above). For brief history and to clear any confusion, mk I was much larger, hand soldered version powered by Raspberry Pi Zero 2W and mk II was slightly slimmer version powered by RP2040 with 8bit parallel screen interface.
+> This is hardware description of RCKid mk III (version 29/7/25 and above). For brief history and to clear any confusion, mk I was much larger, hand soldered version powered by Raspberry Pi Zero 2W and mk II was slightly slimmer version powered by RP2040 with 8bit parallel screen interface.
 
 RCKid is based on the [RP2030B](datasheets/rp2350-datasheet.pdf) (80 pin QFN) and uses its requirement for external program flash chip as a feature by allowing swappable cartridges. This is the overall architecture of the system:
           
@@ -18,114 +18,75 @@ RCKid is based on the [RP2030B](datasheets/rp2350-datasheet.pdf) (80 pin QFN) an
        +-----------+                     ||                   //===+---------------+       \ (analog stereo)
               |                          ||                  //       |                     \         +------------+
               |                          ||                 //        | (analog stereo)      \--------| 3.5mm jack |
-              |                    <I2C> ||================//         |                      /        +------------+
+              |                    <I2C> ||================//         | (reset)              /        +------------+
               |                          ||                      +------------+             / (FM atnenna)
               |                          ||======================|   Si4705   |------------/
               |                          ||                      | (FM Radio) |--- (embedded antenna)
               | <PWM>                    ||                      +------------+
               | (Backlight)              ||
-              |                   +--------------+
-              |                   |   TS5A23159  |
-              |               ----| (analog mux) |====(gnd) when powered off
-               \              |   +--------------+
-                \             |          ||
-                 \            |          || <I2C>     
-                  \           |          ||           //======(buttons, 3x4 mtrix)
-                   \          |   +-----------------+//
-                    \         ----|    ATTiny3217   |
-                     \------------| (IO, time, pwr) |----------(RGB)
+               \                         ||
+                \                        || <I2C>     
+                 \                       ||           //======(buttons, 3x4 mtrix)
+                  \               +-----------------+//
+                   \              |    ATTiny3217   |
+                    \-------------| (IO, time, pwr) |----------(RGB)
                              /----+-----------------+
                             /            ||         \     +-----------+
              (rumbler)-----/       <I2C> ||          \----| MCP73832  |----(battery)
                           <PWM>          ||               | (charger) | 
-                                        //\\              +-----------+
-                                       //  \\
-                                      //    \\  (optional?)
-                             +---------+     +--------+
-                             | BMI160  |     | LTR390 |
-                             | (Accel) |     |  (ALS) |
-                             +---------+     +--------+
+                                    +----------+ 
+                                    | MPU6500  | 
+                                    | (Accel)  | 
+                                    +----------+
 
 Next to the control & logic elements above, there are also various power rails, their short description is below:
 
 - `VUSB` is the +5V coming from the USB port, active when USB is connected, used for charging
 - `VBATT` is the battery terminal 
-- `VCC` is the system output from the PMIC chip. This is regulated to never fall below 3.5V and is processed by the 3 DC-DC converters below:
-- `3V3` is step-down converter from `VCC` and is always on. This powers the ATTiny3217 and sensors (accel & als) and the I2C multiplexer
+- `VCC` is the main system rail. This comes either from the battery, or from the USB when connected. Valid voltages are from 3v to 5v. This rail is measured by the AVR to determine battery status / USB presence and is fed to the 3 DC-DC converters below:
+- `3V3` and `IOVDD` are identical buck-boost converters to 3v3. The `3V3` rail is always on and powers the AVR, accelerometer, display backlight and rumbler. The `IOVDD` can be enabled by the AVR and powers the RP2350B, cartridge and audio system
 - `5V` is a charge pump to 5V required by the RGB lights (controlled by AVR)
-- `IOVDD` is a step-down converter (identical to `3V3`) that provides power to RP2350, cartridge, display and audio systems (controlled by AVR) 
 
 ## I2C Bus
 
-Most of the perihperals are connected to a single I2C bus (accesible on `TP6` and `TP7`). This poses a problem as when the device is turned off (`IOVDD` disabled), the pullups on `3V3` for the SDA and SCL lines would leak power to the RP2350 & friends. To solve this, an analog multiplexer ([TS5A23159](datasheets/ts5a23159.pdf)) on the I2C bus is used so that when power is turned off, the RP2350 end of the I2C is switched to ground pull-downs. When `IOVDD` is powered on, the I2C is switched to the valid bus. This also means that while the device is off, AVR is the master of the I2C bus and can talk to the always on peripherals (PMIC, sensors). 
-
-When powered on, the RP2350 is the sole master on the I2C bus and other devices have means of signalling changes via interrupt lines. There is an interrupt line from the audio codec (headphone detection, heaset button press, etc.), one from the FM radio (frequency scan) and one from the AVR.
-
-The AVR interrupt is used when either AVR wishes to signal (I/O, etc.), or when any of the interrupts connected to the AVR itself fire (Accelerometer, PMIC). 
+Most of the perihperals are connected to a single I2C bus (accesible on `TP6` and `TP7`). The pull-ups of the bus go to the `IOVDD` so that the bus is only working when the device is on. To make sure eveything works, before AVR turns `IOVDD` off, it emits `START` condition on the bus, which is followed by `STOP` condition transmitted right after `IOVDD` is enabled back. 
 
 ### Sensors
 
-Onboard accelerometer [BMI160](datasheets/BMI160.pdf) and ambient light & UV detector [LTR390](datasheets/LTR-390UV.pdf) are present. The accelerometer has its interrupt connected to AVR so that we can intercept taps, steps, etc. The sensors are always on, which does drain the battery a bit more, but allows the accel to work as pedometer as well.
+The only active sensor in mkIII is the onboard accelerometer [PMU6500](datasheets/MPU6500.pdf). As it is also capable of working as a pedometer, it is always on, connected to the `3V3` rail. The accelerometer has its interrupt connected to AVR so that we can intercept taps, steps, etc.
 
-> TODO is pull-up/down on the accelerometer interrupt pin required?
+Furthermore several of the devices connected to the I2C bus also supoort temperature measurements (including the AVR itself).
 
 ## Power Management
 
-> After I realized that the advanced I2C controlled PMIC chips such as [BQ25628](https://www.ti.com/product/BQ25628) do not really increase the VSYS voltage above some threshold when powered by battery alone, I have reverted back to the good old simple MCP73832 battery charger already used in mkII. 
+Power management consists of a standalone Li-Ion battery charger [MCP73832](datasheets/MCP73832.pdf) and a power path via a MOSFET and diode that enables DC power when connected, and battery otherwise. MCP73832 *must* be used as the AVR runs on 3.3V while the charger runs at 5V so outputting charger high when charge is complete as the 73831 does could destroy the chip. There is no such danger with MCP73832 as the STAT pin behavior is HiZ when not charging and low when charging.
 
-Power management consists of a standalone Li-Ion battery charger [MCP73832]() and a power path via a MOSFET and diode that enables DC power when connected, and battery otherwise. MCP73832 *must* be used as the AVR runs on 3.3V while the charger runs at 5V so outputting charger high when charge is complete as the 73831 does could destroy the chip. There is no such danger with MCP73832 as the STAT pin behavior is HiZ when not charging and low when charging.
+The charger pinout is as follows:
 
+- `VDD` is connected to the VUSB (5v)
+- `STAT` is the charger state output (low when charging, floating otherwise)
+- `VBAT` goes to the battery
+- `PROG` is connected to `2k2` resistor for `???` max charge current
 
-> I am considering using [BQ25628](https://www.ti.com/product/BQ25628) instead. It offers better battery voltage monitoring and seems slightly less complicated - also the package is smaller. I also considered Analog offerings, notably LTC3555, which also includes switching regulators, but it costs  alot more (6 vs 2 USD) and does not measure voltage & current on the ADC. 
+The AVR monitors the `VCC` rail (after power path), which enables it to determine battery voltage when powered from battery (value <= `4.2V`) and if USB is connected (VCC above `4.2V`). This is done through a `100k/200k` voltage divider that is always on. This seeps negligible battery power and is above the `50k` input impedance of the AVR adc, but we compensate for this by longer capture times. Charger status is monitored via the `STAT` pin that is connected to a `100k/200k` voltage divider on the `VUSB` (so that it is pulled high at `3v3` when USB connected, `0` otherwise). As per the datasheet, the `STAT` pin is floating when not charging and goes to `0` while charging. This gives the following power scenarios:
 
-The PMIC used is [BQ25895](datasheets/bq25895.pdf). This is a fairly advanced IC that can charge battery really fast, provide 5V for USB OTG, has integrated ADC so that we can use it as battery monitor as well freeing some AVR pins and quite extensive I2C configuration & capabilities. This makes the circuit a bit complex:
+- `VCC<=4.2V` battery is connected, `STAT` should be 0 (but can really be ignored)
+- `VCC>4.2V` and `STAT` is low means USB is connected and the device is charged
+- `VCC>4.2V` and `STAT` is high means USB is connected, but charging is done
 
-- `VBUS` requires 1uF capacitor as close to the device as possible
-- `D+` and `D-` are used to determine what type of charger has been connected. But as we do not use this functionality, they are shorted together which makes the device think it is dealing with USB_DCP (over 3A current capability) - from [reference design](datasheets/battery-charger-app-note.pdf) - available from [TI](https://www.ti.com/lit/an/sluaam6/sluaam6.pdf?ts=1736634296011&ref_url=https%253A%252F%252Fwww.ti.com%252Fproduct%252FBQ25895)
-- I2C is used for communication, pulled up by 3V3 (always on), interrupt line is also available to AVR. The interrupt has to be pulled-up and the datasheet recommends 10k pull-up value. AVR pull-ups are between 20-50k so they might not work and we need a dedicated external resistor.
-- `STAT` pin is not used (LED indicator, can be left floating)
-- `OTG` pin is connected to GND via 10k because OTG functionality is disabled
-- `CE` is connected to GND (active low) because charging is enabled (and can in theory be disabled by SW)
-- `ILIM` is used for HW limit of max input current (see below)) 
-- `TS` is battery thermisor, which we do not have, this left at between REGN & GND
-- `QON` is the shipping mode switch
-- `BAT` goes to battery
-- `SYS` goes to system output (with 20uF capacitors)
-- `PGND` is GND
-- `SW` is the switching node, goes to the inductor and 47nF bootstrap capacitor
-- `BTST` is for the cap above to SW
-- `REGN` needs 4.7uF (10V) to AGND (close to IC) 
-- `PMID` is the output of 5V OTG, needs at least 8.1uF capacitance, or 40uF for at most 2.4V output. We have 2x22uF in case
-- `DSEL` is used for USB data selection (PMID/MCU) to negotiate charging, can be left floated when not used
+### Running from AAA batteries
 
-Inductor used is 2.2uH as per the datasheet, this time Vishay, another reputable brand is used with saturation current of 3A, which again should be well within the needs of the device.
+The device also supports a different configuration when it can be powered via 3 `AAA` batteries in series. This gives maximum voltage of `4.5V` (for alkaline, will be around `3.6` for NiMH) and minimum voltage can go *very* low for alkaline, or about `3V` for NiMH. In those settings the cutoff voltage is defined by the minimal input voltage of the DC-DC regulators, and particularly the `5V` charge pump, whose minimal voltage is `2.7V`
 
-The `ILIM` pin is used for HW setting of maximum input current. The way to calculate its value is taken from the datasheet, page 26, where: 
+To enable the `AAA` mode, the charger chip simply should not be soldered. 
 
-    Iinmax = Kilim / Rilim
+> If the batteries are replaced while the device is powered by USB, there is no data loss wrt timekeeping, or user information. 
 
-For Kilim of max 390, the 270R value translates to maximum input current of 1.44A, which is within the specs for 0.5A charging current (see power consumption below). 
+### 3.3V Buck-Boost converters
 
-### 3.3V Step-Down converters
+The design uses two identical step down converters - [TPS63001](datasheets/tps63001.pdf). This is newer chip than the original designs in mkII and devboard and provides greater efficience and range. As per its datasheet, it is capable of providing `800mA` in boost mode (and `1.2A` in buck), which is within the limits (500mA cartridge + 300mA for RP2350B and audio is the limiting factor here). 
 
-The design uses two identical step down converters - [TPS62825](datasheets/tps62825.pdf) (small 2x2 QFN). They should provide efficiency above 95% for loads over 10mA, and should work down to 100uA, which hopefully is enough for the sleeping AVR & sensors. They provide output current of 2A, which is well withing the requirements (1A max for IOVDD, 100mA for always on 3V3). They are adjustable versions and their output is regulated using the following equation (from datasheet page 12, eq. 4)
-
-             R1 = R2 * (Vout / 0.6 - 1)
-        R1 / R2 = VOut / 0.6 - 1
-
-For VOut of 3.3V and R2 being the recommended 100k, we get the following:
-
-    R1 / 100 = 3.3 & 0.6 - 1
-    R1 / 100 = 5.5 - 1
-          R1 = 450
-
-Thus 450k and 100k resistors are used with 120pF feedforward capacitor for 100k resistors as suggested by the datasheet. The capacitors are used as per the datasheet, i.e. 4.7uF on input and 22uF on output with inductor of [470nH](https://jlcpcb.com/partdetail/Tdk-TFM201610ALCR47MTAA/C2045043), saturation current at 5.1 well above the switching frequency, from TDK, a respectable brand in hopes of avoiding coil whine).
-
-The EN pin must be high for the converter to work, so for `3V3` rail we short it to input voltage. For `IOVDD` it is controlled by the AVR, which runs at 3.3V but this is ok as the datasheet specifies that voltages above 1V on the EN pin are logic high (page 5).
-
-> There is an unpopulated resistor R128 of 33k that when fitted ensures 100uA current drain on the 3v3 rail. Its pad can also serve as a testpoint.
-
-> TODO Do we need a resistor from 3v3 to ground (100k) to ensure regulator would work 
+The converter is variable output resistor configuration straight from the datasheet is used for `3v3` output. So is the inductor and the recommended layout. The two DC-DC blocks are almost identical with the exception of the on switch, which for `3v3` is tied to input voltage for always enable, while for the `IOVDD` is pulled down with `100k` resistor for default off behavior and will be pulled high to `3v3` by the AVR when enabled (this is well above the logic high threshold for the chip at `1.2V`. The chip tolerates up to `7V` on the `EN` pin regardless of the input voltage, so even with very low VCC (technically we can go as low as `2.4V` the chip will work).
 
 ### 5V Charge Pump
 
@@ -135,95 +96,56 @@ WS2812 compatible, but smaller & less powerful LEDs are used. As they require 5V
 
 > TODO should the single LED in DPAD be replaced so that a proper DPAD with tilting can be used? If we use multiple LEDs we will be exceeding the power generator output, but it is likely fine, as currently the LEDs run at 12.5% of full power and seem to be fine.
 
-### Running on Batteries
-
-The idea is that when running on batteries (3x AAA for 4.5V), the whole PMIC circuitry will be left unpopulated, while the bottom side of the board will be populated with a VUSB / VBATT switch as was in the mkII and a battery voltage voltage divider connected to the PWR_INT pin (which is available on ADC0). 
-
-The voltage divider should use 300k and 570k resistors to transform 5V to 3.296V. 
-
-> TODO those registers are really large and maybe the ADC on ATTiny won't be able to read the voltage - should check. 
-
-Since we do not have the PMIC to ensure VSYS is never below 3.3V, the step down converters will stop operating when battery voltage drops below 3.3V (or they will output lower voltage, which might be fine for a while). Anyways, for NiMH this should not be much of a problem as the discharge curve is extremely flat. 
-
-NOTE when running on batteries, the PWR_INT pull-up resistor must not be fitted!
-
-> TODO For alkaline batteries, this could pose a problem as they discharge all the way down to 0V, but this can be solved by extra board with boost converter I presume. 
-
 ### Power Consumption
 
-At worst case we expect relatively negligible mA on 3V3 and close to 1A on IOVDD, which for the sake of simplicity is 1A of 3V3 + 240mA on 5V for the neopixels. Assuming neopixel charge pump efficiency of 80% and DC-DC converter efficiency of 90%, we get:
+To share the load between the two DC-DC converters, teh display backlight and the rumbler (which can separately be turned off) are connected to the `3V3` rail. The `TPS63001` is very effective at high loads, so we assume `90%` efficiency (will be a bit higher in reality). The calculation for the maximum power that can be drawn from the battery at the lower acceptable level (`3V`) is thus:
 
-    MAX = 1000 * 3.3 / 0.9 + 240 * 5.0 / 0.8 = 5166
+    MAX = (800 * 3.3 / 3.0 / 0.9 * 2) + (240 * 5 / 3 / 0.8)
+    MAX = 1955 +                        500
+    MAX = 2455 [mA] @ 3V
 
-However, in reality, we expect about 300mA for the system (IOVDD) and 50mA for the 5V charge pump, i.e:
+For a more realistic example, let's assume full utilization of the `IOVDD` converter (i.e. 300mA for the RP2350 and 500mA for the cartridge), 110mA utilization for the `3V3` converter (100mA brightness, 10mA for rumbler as mostly off), and 50mA for the RGBs (red at 50%):
 
-    EXP = 300 * 3.3 / 0.9 + 50 * 5.0 / 0.8 = 1412
+    REAL_MAX = (800 * 3.3 / 3 / 0.9) + (110 * 3.3 / 3 / 0.9) + (50 * 5 / 3 / 0.8)
+    REAL_MAX = 977                    + 134                   + 104
+    REAL_MAX = 1215 [mA] @ 3V
 
-This leads to the following current draw for different voltages:
-
-    Input Voltage | Imax   | Iexp   |Comments
-    --------------|--------|--------|---------------
-    3.0           | 1700mA | 470mA  | Battery depleted (worst case before shutdown)
-    3.7           | 1400mA | 381mA  | Battery nominal
-    4.2           | 1230mA | 336mA  | Battery fully charged
-    5.0           | 1033mA | 282mA  | USB attached
-
-> NOTE that while this is well withing the switching capabilities of the power components used, it does exceed the 1C discharge rate for the battery so the worst case might be a problem. If we assume 2C, then everything is allright. Also note that this does not take into account the boost converter employed by the PMIC chip which will also increase the battery drain at lowest settings. 
+This is within the `1C` discharge rate for the battery, which is good. 
 
 ## Audio
 
-[NAU88C22GY]() chip is used, which is relatively simple, yet it offers all the features we need - 16bit audio playback & record, line-in for the radio, microphone input, integrated headphone and mono speaker (BTL) drivers. While the chip features audio jack detection and can automatically enable/disable headphones based on the jack status, it does not offer any way to report the jack status, hence the jack detection pin is shared with RP2350 which can read it. The chip also provides no interrupt (no events available) and provides one simple digital GPIO that can be set high or low (used for the radio reset line). In terms of I2S, the chip requires MCLK to be provided, but it does not have to be of the exact frequency needed as the internal PLL can adjust it - but we are not using this feature. Pinout:
+[NAU88C22GY](datasheet/nau88c22gy.pdf) chip is used, which is relatively simple, yet it offers all the features we need - 16bit audio playback & record, line-in for the radio, microphone input, integrated headphone and mono speaker (BTL) drivers. While the chip features audio jack detection and can automatically enable/disable headphones based on the jack status, it does not offer any way to report the jack status, hence the jack detection pin is shared with RP2350 which can read it. The chip also provides no interrupt (no events available) and provides one simple digital GPIO that can be set high or low (used for the radio reset line). In terms of I2S, the chip requires MCLK to be provided, but it does not have to be of the exact frequency needed as the internal PLL can adjust it - but we are not using this feature. Pinout:
 
+- `VDDA`, `VDDB`, `VDDC` and `VDDSPK` are all connected to the `IOVDD` 3v3 rail for simplicity, decoupled with `4u7` caps
+- `VSSA`, `VSSD` and `VSSSPK` are all connected to `GND`
+- `SCLK` and `SDIO` are connected to `SCL` and `SDA` respectively via a `220` resistor and `33pF` capacitor, as per the datasheet to add filtering to the lines
+- `FS`, `BCLK`, `ADCOUT` and `DACIN` are connected to the `I2S` bus
+- `MCLK` is connected to the master clock generated from the RP2350
+- `LHP` and `RHP` are connected to headphones via large `220uF` capacitors
+- `LSPKOUT` and `RSPKOUT` are connected to directly to the speaker in BTL mode
+- `RAUXIN` and `LAUXIN` are connected via `1uF` capacitors to the radio analog output (as per the datasheet)
+- `LMICP` and `LMICN` go to positive and negative microphone terminals via `1uF` capacitors (as per the datasheet)
+- `MICBIAS` is connecte to ground via `4u7` capacitor and to positive mic input via `2k2` resistor (as per the datasheet)
+- `RMICP`, `RMICN`, `AUXOUT1` and `AUXOUT2` are left floating (as per the datasheet for unused analog inputs/outputs)
+- `GPIO1` goes to radio reset line (via `100k` pull-up)
+- `GPIO2` goes to headset detection
+- `GPIO3` is tied to ground as per the dataset for unused gpio
+- `MODE` is tied to ground for I2C selection
 
-[TLV320aic3204](datasheets/tlv320aic3204.pdf) is used, which is yet another fairly complex chip. It is controlled via I2C and RESET line (the RESET line is necessary), interrupt line and 4 more pins for I2S playback and recording (BCLK, WCLK, DIN and DOUT). It provides integrated headphone amplifier, line out and three analog stereo inputs (or 3 floating inputs). The chip also contains integrated LDO to power the core & analog parts that require smaller and cleaner voltages. Furthermore the chip is used for headphone detection and speaker on/off via a GPIO. Pinout:
-
-- `MCLK` master clock is not used (TP3)
-- `BCLK`, `WCLK`, `DIN` and `DOUT` -> I2S connection to RP2350B
-- `IOVDD` is IO voltage power supply, 3.3V with 1uF to GND (from typical app, page 40)
-- `IOVSS`, `AVSS`, `DVSS` is ground
-- `MFP3` is headphone detect input (see below)
-- `SCL`, `SDA` for I2C communication
-- `MFP4` is AUDIO_INT to RP2350 (can be routed to either INT1 or INT2)
-- `SPI_SELECT` goes to ground (to disable SPI, enable I2C)
-- `IN1L` and `IN1R` are connected to the embedded microphone (differential)
-- `IN2L` and `IN2R` are connected to the FM radio (single ended)
-- `REF` is connected to ground via 10uF (from typical app, page 48)
-- `MICBIAS` is microphone bias used for headset mic, headset detection and embedded mic
-- `IN3R` is connected to headset microphone
-- `IN3L` is unused, connected to GND via 0.1uF capacitor (datasheet page 42)
-- `LOL`, `LOR` is line output, which is connected to speaker amplifier (see below)
-- `AVDD` filtered analog voltage (using internal LDO), 10uF to GND
-- `HPL` and `HPR` go to headphones via 220uF capacitors. For headphone impedance of 32Ohm, this forms a high pass filter with cutoff frequency at 22Hz
-- `LDOIN` is input voltage for the internal linear regulator, connected to 3.3V and heavily filtered (0.1, 1 and 10 uF)
-- `DVDD` is digital (core) voltage, supplied by the internal LDO, here only filtered with 10uF to ground
-- `LDO_SELECT` enables the internal LDO so that we can run from single power source, connected to 3.3V
-- `RESET` is chip reset, active low, connected to RP2350
-- `GPIO` is used as GPIO pin that turns the speaker amplifier on and off (controlled by the RP2350)
-
-> TODO de-pop circuit (?) see page 45
-> TODO Typical app uses only 47uF capacitors on the headphone lines, but that is cutoff at 100Hz, isn't it too high?
-> TODO current limiting resistors on I2S lane, see page 45
-> TODO audio reset can perhaps be accomplished by radio GPIO as this is not very useful function.
-
-> TODO capacitors are bit different between RCKid and app note: (https://www.ti.com/lit/ug/slau266a/slau266a.pdf?ts=1740243769370&ref_url=https%253A%252F%252Fwww.ti.com%252Ftool%252FTLV320AIC3204EVM-K)
-
-> TODO Swap radio & mic inputs so that radio can go via low powerbypass to output directly (check this on the devboard)
-
-AVDD - 0.1 & 22 app note, I have 10uF
-HPVDD 0.1 & 22 app note, I have 0.1 1 10
-DVDD 01 & 22 app note, I have 10 uF
-IOVDD - 0.1 and 10, I have 1uF
-REF - 01 and 10, I have 10uF
+> TODO verify the pull-up on the radio reset line makes sense and add it to the schematics and pcb
 
 #### Microphone
 
-As per the typical application, the microphone is connected differentially to `IN1L` and `IN1R` with 1k from MICBIAS to positive mic, 0.1uF capacitor on the positive output to right channel and 1k to ground on the negative channel, which also goes to the left input via 0.1uF capacitor.
+As per the typical application, the microphone is connected differentially to `LMICP` and `LMICN` with `2k2` from MICBIAS to positive mic, 0.1uF capacitor on the positive output to right channel and direct connection to ground on the negative channel, which also goes to the left input via 0.1uF capacitor.
 
-> Is the micbias resistor correct?
+> TDOO Is the micbias resistor correct?
+> TODO add mic datasheet
 
 #### Headset detection
 
-> TODO
+Headset detection is via a `100k` resistor to the `IOVDD` line to second ground terminal of the headphone jack. This will read high when headphones are not detected and will go to `0` when headphones are inserted as the ground will be connected to both terminals. The headset detection line is then fed to the audio codec for automatic speaker/headhone switching and to the RP2350 as well to determine the headphone status. 
+
+> TODO verify the pull-up is ok - would this work for headsets with microphones as well? 
 
 ### FM Radio
 
@@ -252,9 +174,8 @@ The rest of the pins are used as follows:
 
 ### Headset Antenna
 
-The headset antenna is described in the antenna datasheet, page 19. Headset ground is connected to gnd via 270nH inductor as per the datasheet and to the FMI pin via a 100pF capacitor.
+The headset antenna is described in the antenna datasheet, page 19. Headset ground is connected to gnd via 270nH inductor as per the datasheet and to the FMI pin via a 100pF capacitor. To insulate the ground antenna, ferrite beads are installed on both left and right audio outputs, as well as the headphone detection line. 
 
-> TODO ESD protection diode
 > TODO the module has additional 6.8nH inductor from the gnd to the pin as well as a larger, 1nF capacitor. Why? 
 
 ### Embedded antenna
@@ -268,13 +189,6 @@ As per the antenna application note, page 31, the embedded antenna is connected 
 We are using the same crystal as AtTiny3217. The load capacitance is 12.5 pF, which is roughly in the middle of the rangle per datasheet. The 22pF capacitors are used in the datasheet, but also correspond to a relatively small stray trace capacitance ([online calculator](https://ecsxtal.com/crystal-load-capacitance-calculator/?form=MG0AV3))
 
 > TODO the external crystal is the same as for ATTiny3217. Is that ok? Should the capacitors have different values?
-
-### Output to the audio codec
-
-The audio output is single ended stereo channels have a Vrms of max 90mV (datasheet page 14). They are connected through 10k resistors to ground and via a 100nF capacitors to the analog input of the audio codec.
-
-> TODO this is likely wrong and seems to be taken from the analog output information instead. Must be calculated properly for the audio codec & used gain, etc.
-> TODO what is the DC bias? (1/2 VCC?)
 
 ## AVR (ATTiny3217)
 
