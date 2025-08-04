@@ -9,7 +9,7 @@ RCKid is based on the [RP2030B](datasheets/rp2350-datasheet.pdf) (80 pin QFN) an
                             | microSD |       | (flash, extras) |                                    
                             +---------+       +-----------------+                            
                                    \\\\       ////                                           
-                          <SPI/SDIO>\\\\     ////<10pin/HSTX,QSPI>                           
+                          <SPI/SDIO>\\\\     ////<8pin/HSTX,2/ADC,QSPI>                           
                                      \\\\   ////                                             /---- speaker
                                      ||||   ||||                                            /
        +-----------+  <16bitMCU>   +-------------+     <I2S>       +---------------+       / (analog mono)
@@ -34,7 +34,7 @@ RCKid is based on the [RP2030B](datasheets/rp2350-datasheet.pdf) (80 pin QFN) an
                             /            ||         \     +-----------+
              (rumbler)-----/       <I2C> ||          \----| MCP73832  |----(battery)
                           <PWM>          ||               | (charger) | 
-                                    +----------+ 
+                                    +----------+          +-----------+
                                     | MPU6500  | 
                                     | (Accel)  | 
                                     +----------+
@@ -74,6 +74,12 @@ The AVR monitors the `VCC` rail (after power path), which enables it to determin
 - `VCC>4.2V` and `STAT` is low means USB is connected and the device is charged
 - `VCC>4.2V` and `STAT` is high means USB is connected, but charging is done
 
+### Li-Po Battery
+
+By default the device runs from a LiPo battery such as [TODO]().
+
+> See if we can also run from a cell phone battery, such as some nokia one (in this case it would be great if the battery connectors can be soldered directly to the PCB already for ease of assembly)
+
 ### Running from AAA batteries
 
 The device also supports a different configuration when it can be powered via 3 `AAA` batteries in series. This gives maximum voltage of `4.5V` (for alkaline, will be around `3.6` for NiMH) and minimum voltage can go *very* low for alkaline, or about `3V` for NiMH. In those settings the cutoff voltage is defined by the minimal input voltage of the DC-DC regulators, and particularly the `5V` charge pump, whose minimal voltage is `2.7V`
@@ -81,6 +87,8 @@ The device also supports a different configuration when it can be powered via 3 
 To enable the `AAA` mode, the charger chip simply should not be soldered. 
 
 > If the batteries are replaced while the device is powered by USB, there is no data loss wrt timekeeping, or user information. 
+
+> The plan is to use clip-on contacts on the batteries for lowest possible clearance, those will be added to two extra pcbs that will slide to the extended case and connected by wires to the +/- BATT terminals
 
 ### 3.3V Buck-Boost converters
 
@@ -132,8 +140,6 @@ This is within the `1C` discharge rate for the battery, which is good.
 - `GPIO3` is tied to ground as per the dataset for unused gpio
 - `MODE` is tied to ground for I2C selection
 
-> TODO verify the pull-up on the radio reset line makes sense and add it to the schematics and pcb
-
 #### Microphone
 
 As per the typical application, the microphone is connected differentially to `LMICP` and `LMICN` with `2k2` from MICBIAS to positive mic, 0.1uF capacitor on the positive output to right channel and direct connection to ground on the negative channel, which also goes to the left input via 0.1uF capacitor.
@@ -146,6 +152,10 @@ As per the typical application, the microphone is connected differentially to `L
 Headset detection is via a `100k` resistor to the `IOVDD` line to second ground terminal of the headphone jack. This will read high when headphones are not detected and will go to `0` when headphones are inserted as the ground will be connected to both terminals. The headset detection line is then fed to the audio codec for automatic speaker/headhone switching and to the RP2350 as well to determine the headphone status. 
 
 > TODO verify the pull-up is ok - would this work for headsets with microphones as well? 
+
+### Radio Reset
+
+As the audio codec's `GPIO1` can be used as a general purpose digital output, we use it as a radio reset line to save pins at the RP2350B. The line pulled up by default (no reset). 
 
 ### FM Radio
 
@@ -169,7 +179,6 @@ The rest of the pins are used as follows:
 - `GPO2` is connected to the RADIO_INT and goes to RP2350, pull-up does not seem to be necessary
 - `GPO1` is not used
 
-> TODO do we need pull-up on INT line? TP4 can be used to test, and internal pull-up on RP2350 can be used if needed
 > TODO do we need an LDO for 3v3 for the VA of the radio or can single source be used at all? The example module uses ferrite bead and capacitors instead? 
 
 ### Headset Antenna
@@ -186,29 +195,27 @@ As per the antenna application note, page 31, the embedded antenna is connected 
 
 ### External Crystal
 
-We are using the same crystal as AtTiny3217. The load capacitance is 12.5 pF, which is roughly in the middle of the rangle per datasheet. The 22pF capacitors are used in the datasheet, but also correspond to a relatively small stray trace capacitance ([online calculator](https://ecsxtal.com/crystal-load-capacitance-calculator/?form=MG0AV3))
-
-> TODO the external crystal is the same as for ATTiny3217. Is that ok? Should the capacitors have different values?
+We are using the same crystal as AtTiny3217. The load capacitance is 12.5 pF, which is roughly in the middle of the rangle per datasheet. While the dev-board had 22pF capacitors, the crystal looked like it is not swinging fully, so we are trying 15pF for the device, which would correspond to 5pF stray capacitance. This is under the assumption that lower than ideal capacitance is better than higher than ideal, but needs to be verified. Internet says this should not degrade the crystal accuracy too much as only a few seconds per week max. 
 
 ## AVR (ATTiny3217)
 
-[ATTiny3217](datasheets/ATTiny3217.pdf) is used in QFN package and is responsible for power management, input & output (buttons, rumbler and display PWM) and some sensors (RTC clock, temperature sensor). All pins are used, with serial TX being routed to the debug port so that serial output (or simple pin) can be observed (unlike mkII where debugging the AVR was pain). The chip also runs from 3.3V as well, so it can't use VCC measurement to check battery levels (instead this is provided by the PMIC chip). Fixed pinout is as follows:
+[ATTiny3217](datasheets/ATTiny3217.pdf) is used in QFN package and is responsible for power management, input & output (buttons, rumbler and display PWM) and some sensors (RTC clock, temperature sensor). All pins are used, the AVR_INT pin plays double duty as AVR interrupt to RP2350 and serial TX from the AVR chip for debugging (on RPI the pin matches alt UART0 RX). The chip also runs from 3.3V as well, so it can't use VCC measurement to check battery levels (instead it uses dedicated 100/200kOhm divider into a pin for voltage measurements. Pinout is as follows:
 
 - display backlight PWM on `PC0` (TCB0 WO alt)
 - rumbler PWM on `PA3` (TCB1 WO)
-- I2C SDA and SCL on `PB0` and `PB1` (default)
-- AVR_TX on `PA1` (UART TxD alt)
+- I2C SCL and SDA on `PB0` and `PB1` (default)
+- AVR_INT (and TX) on `PA1` (UART TxD alt)
 - 32.768kHz ext oscillator at `PB2` and `PB3`
-- PWR_INT at `PA2` (which is AIN2 for ADC0 in AAA battery mode)
+- VCC_SENSE at `PA2` (which is AIN2 for ADC0 in AAA battery mode)
 
 Remaining functionality is interchangeable as they are used simple digital pins, namely:
-- BTN_1, BTN_2, BTN_3 and BTN_4 for button matrix rows
-- BTN_DPAD, BTN_ABXY, BTN_CTRL for button matrix cols
-- ACCEL_INT (input from accel)
-- AVR_INT (output to RP2350)
-- VDD_ON and 5V_ON for IOVDD and 5V power rails
-- RGB for neopixel control
-- QSPI_SS, connected to RP2350 QSPI_SS pin to boot into bootloader and/or sense cartridge presence
+- BTN_1, BTN_2, BTN_3 and BTN_4 for button matrix rows (`PA6`, `PB7`, `PA7` and `PC2` respectively)
+- BTN_DPAD, BTN_ABXY, BTN_CTRL for button matrix cols (`PC4`, `PB5` and `PB6` respectively)
+- ACCEL_INT (input from accel) at `PB4`
+- CHARGING detection (low when not charging, high when charging) at `PA5`
+- IOVDD_EN and 5V_EN for IOVDD and 5V power rails at `PC1` and `PA4`
+- RGB for neopixel control at `PC3`
+- QSPI_SS, connected to RP2350 QSPI_SS pin to boot into bootloader at `PC5`
 
 ### Buttons
 
@@ -220,106 +227,77 @@ In mkII the internal oscillator was used for RTC which led to inaccuracies of up
 
 ### Rumbler
 
-Rumbler is connected to IOVDD and triggered by AVR PWM. Protective diode is used as well. 
-
-> TODO it's on the opposite side of the RP IOVDD, and will draw large amounts of power when used - perhaps it could run off from the 3V3 rail instead, which uses much less mA for better system stability? Or add some capacitors?
+Rumbler is connected to 3V3 and triggered by AVR PWM. Protective diode is used as well. 
 
 ## RP2350B
 
-[RP2350B](datasheets/rp2350-datasheet.pdf) - 2 Cortex M33 core @150Mhz, 520KB RAM, PIO and so on. Arguably, there are chips that are more powerful (high-end STM, ESP32 would provide WiFi for "free"), but none I have tried beats the fun of programming RP2350:) So I am sticking with it. 
+[RP2350B](datasheets/rp2350-datasheet.pdf) - 2 Cortex M33 core @150Mhz, 520KB RAM, PIO and so on. Arguably, there are chips that are more powerful (high-end STM, ESP32 would provide WiFi for "free"), but none I have tried beats the fun of programming RP2350:) So I am sticking with it. Further details of how the HW requirements for the chip should look can be found in [HW Design Notes](datasheets/hardware-design-with-rp2350.pdf). Basic pinout is below, for more details see the desciption of subsystems below
 
-All pins are used (48), but in mkIII with FPC display connector, there is theoretical room for some savings as we are no longer bound to 16bit MCU interface:
-
-- 1 second QSPI SS on cartridge, also analog in (pin 47)
-- 6 pins for SD card (SPI & SDIO)
-- 5 pins for display control (write *and* read, tearing effect)
-- 16 pins for display data
-- 8 pins for cartridge (also HSTX, pins 19 - 12)
-- 1 pin for cartridge (pin 11)
-- 6 pins for audio (reset, int, I2S in & out)
-- 2 pins for radio (reset, int)
-- 2 pins for I2C
-- 1 pin for AVR IRQ
-
-> TODO Pin 11 is not special, we might exchange it for say pin 46 and move the rest to provide 2 ADC pins on the cartridge, but it simplifies the wiring - but might be worth it.
-> TODO The VCC and GND should be organized as GND VCC GND VCC GND so that only 2 pins (1 gnd and 1 vcc) can be used for the smallest cartridges
-> TODO the QSPI SS pull-up can be part of the cartridge to enable the AVR to check that cartridge is present (there can be a 0805 DNF resistor on the board to enable both ways?)
-
-Further details of how the HW requirements for the chip should look can be found in [HW Design Notes](datasheets/hardware-design-with-rp2350.pdf).
+- I2C SDA & SCL (gpio `0` and `1`)
+- Radio interrupt (`2`)
+- AVR interrupt (and debug UART TX) at `3`
+- I2S MCLK at `4` (its own pio sm)
+- I2S DIN, DOUT, BCLK and LRCLK (`5`, `6`, `7`, `8`) (record & playback sms)
+- HEADSET_DETECT (`9`)
+- SD_CD (card detect) `10`
+- display RDX at `11`
+- cartridge HSTX (`12`-`19`)
+- display DB15-DB0 (`20`-`35`)
+- display WRX, DCX, CSX (`36`, `37`, `38`)
+- display TE (input at `39`)
+- SD card SCK, TX, RX, SDIO1, SDIO2 and CSN (`40` - `45`)
+- cartridge ADC (`46`, `47`) 
 
 ### USB
 
 Using jlcpcb impedance calculator and 1mm thick board with coplanar differential pair (coplanar because it is bordered by GND on the top layer as well), we get trace spacing of 0.2mm, trace to ground spacing of 0.254mm and trace width of 0.156mm for the USB required 90 Ohm impedance.
 
+> TODO review the width & stuff
+> TODO Verify how this works with ESD protection and device attached detection
+
+### I2S
+
+I2S connection to the audio codec is done via LRCLK (FCLK), BCLK and DIN & DOUT pins for playback and recording respectively. Furthermore MCLK has to generate steady clock at 256x the framerate (LRCLK) for the codec to operate. 
+
+> TODO terminating resistors
+
 ### SD Card
 
-> TODO card presence check
+Although the SD card supports SPI protocol, in is not connected to any of the HW SPI pins. Instead connection scheme that will work for SDIO (with the data pins being sequential) is used and a dediacated SPI PIO will be used for the SPI comms. This allows device to later support the faster SD interface instead. 
+
+SD card detect works ising internal pull-up on the `SD_CD` line. When no card is present, it will read high, but when card is inserted this is connected to ground and will read low. The internal pull-up is high enough to make the power draw for this negligible. 
 
 ### Display
 
-[ST7789v](datasheets/ST7789V.pdf) in 16bit parallel MCU interface is used with FPC connector for easier assembly. 
+[ST7789v](datasheets/ST7789V.pdf) in 16bit parallel MCU interface is used with FPC connector for easier assembly. The display uses both power supplies, `IOVDD` for the digital interface and `IOVDD` for backlight. This allows for a better load distribution (otherwise the `3v3` always on SMPS has not much to do most of the time with only the AVR connected). The display uses 16bit parallel interface to speed up the data transfer process, which is extremely useful especially in framebuffer applications. The RDX line is also available so that the CPU can read from the display as well (can be used in the future for visua effects). 
 
-> TODO figure out the IM settings from the datasheet to enable the correct interface. This is also change from mk II where we used 8bit MCU. Technically, 8bit MCU can also be used on the FPC display version, but the 16 bit interface should fill the screen faster leaving more time to draw.
-> TODO should the backlight voltage be larger than 3.3V? There is a space on the board for a charge pump or boost
+> TODO determine backlight resistor value 
+
+## Programming & Debugging
+
+The device provides 2 programming & debugging ports for the AVR and RP2350 chips. The RP2350 uses the standard 3pin SWD interface known from the Pico boards. The AVR chip has a 2 wire UPDI programming interface (UPDI & GND). Both are unpopulated, but as they use standard 2.54" spaced holes, they can be populated with connectors and are located in places where case cutouts can be made for easy access.
+
+> TODO in the future, if we use I2C bootloader for the AVR chip, there should be no need for an user accessing UPDI connector any more, but maybe it is still convenient to have.
 
 ## Test Points
 
-Top side:
+- `SDA` and `SCL` lines for I2C
+- `INT/TX` for the AVR_INT/TX line to be able to debug the AVR chip
+- [ ] all unconnected pins, so that we can do fixes on the board if necessary
 
-- `TP2` - VUSB
+## DFM & DFA
 
-Bottom side:
+At this stage the PCB is still fairly prototype stage as there is a reasonably high amount of hand soldering and careful steps to manufacture & assemble the device:
 
-- `TP1` - QON pin of PMIC chip (connect to ground for battery reset & exit from the shipping mode)
-- `TP3` - MCLK for audio codec
-- `TP4` - RADIO_INT
-- `TP5` - GPO1 for radio chip (GPIO, protocol select between I2C and SPI)
-- `TP6` - I2C_SDA
-- `TP7` - I2C_SCL
+- the biggest problem is probably the custom cartridge connector which consists of a separate board and has to be hand soldered. For a large run - perhaps a better spring contact can be found that can attach to the bottom of the PCB and can be soldered automatically with 2 sided assembly
+- bottom side buttons - will be fixed by 2 sided assembly
+- battery connector is again a custom PCB connected via hand soldered wires and connectors. If we get battery with standard connector, this too can be fixed by a bottom side soldered connector (another option would be to use cell phone batteries)
+- speaker - requires soldering of the wires, maybe for plarge production can use speaker that has spring contects to the pcb (but how would the sound box work?)
+- rumbler - can be had with connector in large quantities
 
-
-# Development Board
-
-The development board is a 10x10cm 4 layer board that mimics the basic layout and connections of the rckid mk3 device, but with simpler components (buttons, RGB lights, etc.), larger passives so that they can be manually tweaked to determine correct values and far more test points.
-
-- [X] accel interrupt pullup?
-- [X] ilim resistor for PMIC (270 atm)
-- [X] 100kOhm R130 upopulated (ensure 3v3 even when off load)
-- [ ] R3 100k to ground converter why?
-- [X] pwr-int resistor can we do without it? 
-- [X] audio de-pop circuit
-- [X] headphone capacitors 47 uF for typical app?
-- [X] gain resistors for speaker amplifier
-- [X] pull-ups on radio int? 
-- [X] 3v3 input for the audio
-- [X] radio & avr external crystal capacitors
-- [X] the whole radio to audio input circuit is likely wrong and has to be thought out
-- [X] micbias resistor? 
 
 Extras:
 
-- [X] solderable display (on separate PCB)
-- [X] get ready for analog vcc being from an ldo
-- [x] 2C pull-ups
-- [X] SD card detection
-- [X] radio GPIOs 
 - [X] use [this](https://cz.mouser.com/datasheet/2/1628/sj_43504_smt_tr-3510743.pdf) for the headphone jack
-- [ ] the slots don't work, update the pcb with holes
-- [ ] add top & bottom GND planes and connect the AGND and GND so that it can be cut on the bottom to leave only one 
-
-Extra PCBs:
-
-- [ ] make the PCB larger to fit the entire case, but make sure no components, or useful stuff is above 10cm so that we can always skip it -- this means moving the rpi 1.5mm down(!)
 
 
-# problems
-
-- BMI160 has moved to standard parts, try alternatives, such as https://jlcpcb.com/partdetail/TdkInvensense-MPU6500/C50278
-- headphones don't show the slot on jlcpcb
-- check accel
-
-# Things to check on the prototype
-
-- can the radio extra GPIO be used for audio reset? (this saves one pin on RP2350)
-- this can then become SDcard detection
-- avrTX pin can be used as cartridge detect of needs be
