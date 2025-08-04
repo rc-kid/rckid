@@ -56,6 +56,7 @@
 - [X] check Si4705 works with headphones antenna
 - [X] check the headphone outputs while using the antenna
 - [X] check Si4705 works with internal antenna (seems to work, but not very well)
+- [ ] check accelerometer works
 - [ ] check SD card insertion detection
 - [ ] check powered from real battery works
 - [ ] check USB detection works when powered from battery
