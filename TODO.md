@@ -1,14 +1,13 @@
 # DevBoard Checklist
 
+> X means cone, - means cannot be done
+
 - [X] verify there are no shorts between VCC, VBATT, VDD, 3V3 and ground
 - [X] add jumper wires for D and audio power (! these *must* be installed before the board is powered)
 - [X] add connectors for battery
 - [X] try powering up through battery connector at 4.0V
 - [X] try powering up through USB at 5 volts
 - [-] try powering up through battery at 3.0 volts to see if the PMIC keeps the VCC above threshold 
-
-> This could be due to the fact that OTG is not enabled, check if enabling it fixes the problem. If PMIC is changed, this might not be a problem any more.
-
 - [X] verify cartridge connector integrity on unpopulated dev board
 - [X] solder cartridge connector on dev board
 - [X] verify that UPDI works when AVR powered with 3v3
@@ -58,23 +57,28 @@
 - [X] check Si4705 works with internal antenna (seems to work, but not very well)
 - [ ] check accelerometer works
 - [ ] check SD card insertion detection
-- [ ] check powered from real battery works
-- [ ] check USB detection works when powered from battery
-- [ ] check DataSync app
-- [ ] check the above still works if we add USB ESD protection
+- [-] check powered from real battery works
+- [-] check USB detection works when powered from battery
+- [-] check DataSync app
+- [-] check the above still works if we add USB ESD protection
 - [ ] disable debug mode on by default on AVR (end of initialize)
 - [X] charging/discharging - will use MCP charger from mkII
 - [X] check AVR can read battery voltage with large resistors (220 and 330k seems to work, add 10 or 100nf cap to the ADC pin to ground)
 - [X] check that 2 LEDs under DPAD sides work ok (HW.md)
 - [ ] check that tilting dpad is better 
-- [ ] check new case works better with battery
+- [X] check new case works better with battery
 - [ ] mk3 idle and keepalive timers are too high, move lower again
 - [X] check overclocking -- seems to go to 250MHz w/o overvolt
 - [ ] add way to clear memory when necessary (e.g. remove background, etc.)
 
 # TODO
 
-- can I create SD card SPI in PIO so that I can use SDIO and SPI as well? 
+- HIGH IMPORTANCE: Instead of MPU6500 use [ICM-20948](). For roughly similar price, we also get magnetometer *and* the DMP functionality examples can be ported from [Sparkfun Library](https://github.com/sparkfun/SparkFun_ICM-20948_ArduinoLibrary/tree/main) 
+
+- see if we can enable exceptions, what are the runtime & stack costs of them running
+
+
+- can I create SD card SPI in PIO so that I can use SDIO and SPI as well? yes
 
 - I2S playback working. Tone does not seem to work well (glitch data in square waveform, and maybe others). It also drops framerate to 30 when enabled which is weird
 - for the input / output, it might be easier to use different format, such as PCM as it would allow to send whole 32bits in one loop
@@ -85,9 +89,6 @@
 
 - run at full speed with no vsycn waiting to see how much free room there is
 
-- Si4705 likely requires resetting manually, pulling the RST high from the beginning does not work
-- also, the radio chip might benefit from smaller oscillator caps (18 or even 15pF) - and so would the AVR? (stray capacitance of 3-8pF should be taken into account, the VPP of the crystal seems small)
-
 - USB connection is not detected
 - make usb work in mkIII as well
 - can the SD initialization routine be improved? 
@@ -96,8 +97,6 @@
 - perfect fit strategy seems to be less wasteful, but will have to add fallback
 - merging chunks/splitting large ones? 
 - add comments to memory 
-
-- see if we can enable exceptions, what are the runtime & stack costs of them running
 
 - ColorRGB is weird, should be colorRGBA and then have Color565 as a version that wraps around 15bpp? Then change uint16_t everywhere in palettes
 

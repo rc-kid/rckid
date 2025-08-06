@@ -53,7 +53,7 @@ Most of the perihperals are connected to a single I2C bus (accesible on `TP6` an
 
 ### Sensors
 
-The only active sensor in mkIII is the onboard accelerometer [PMU6500](datasheets/MPU6500.pdf). As it is also capable of working as a pedometer, it is always on, connected to the `3V3` rail. The accelerometer has its interrupt connected to AVR so that we can intercept taps, steps, etc.
+The only extra sensor in mkIII is the onboard acceleromeneter [LSM6DSV](datasheets/lsm6dsv.pdf). Unlike MPU6500 or various TDK alternatives is relatively simple to use (similar to the discontinued BMI160 used in mkII). As it is also capable of working as a pedometer, it is always on, connected to the `3V3` rail. The accelerometer has its interrupt connected to AVR so that we can intercept taps, steps, etc.
 
 Furthermore several of the devices connected to the I2C bus also supoort temperature measurements (including the AVR itself).
 
@@ -76,9 +76,7 @@ The AVR monitors the `VCC` rail (after power path), which enables it to determin
 
 ### Li-Po Battery
 
-By default the device runs from a LiPo battery such as [TODO]().
-
-> See if we can also run from a cell phone battery, such as some nokia one (in this case it would be great if the battery connectors can be soldered directly to the PCB already for ease of assembly)
+By default the device runs from a LiPo battery such as [503759](https://www.tme.eu/cz/details/aky-lp503759/akumulatory/akyga-battery/aky0107/).
 
 ### Running from AAA batteries
 
@@ -144,9 +142,6 @@ This is within the `1C` discharge rate for the battery, which is good.
 
 As per the typical application, the microphone is connected differentially to `LMICP` and `LMICN` with `2k2` from MICBIAS to positive mic, 0.1uF capacitor on the positive output to right channel and direct connection to ground on the negative channel, which also goes to the left input via 0.1uF capacitor.
 
-> TDOO Is the micbias resistor correct?
-> TODO add mic datasheet
-
 #### Headset detection
 
 Headset detection is via a `100k` resistor to the `IOVDD` line to second ground terminal of the headphone jack. This will read high when headphones are not detected and will go to `0` when headphones are inserted as the ground will be connected to both terminals. The headset detection line is then fed to the audio codec for automatic speaker/headhone switching and to the RP2350 as well to determine the headphone status. 
@@ -179,19 +174,13 @@ The rest of the pins are used as follows:
 - `GPO2` is connected to the RADIO_INT and goes to RP2350, pull-up does not seem to be necessary
 - `GPO1` is not used
 
-> TODO do we need an LDO for 3v3 for the VA of the radio or can single source be used at all? The example module uses ferrite bead and capacitors instead? 
-
 ### Headset Antenna
 
 The headset antenna is described in the antenna datasheet, page 19. Headset ground is connected to gnd via 270nH inductor as per the datasheet and to the FMI pin via a 100pF capacitor. To insulate the ground antenna, ferrite beads are installed on both left and right audio outputs, as well as the headphone detection line. 
 
-> TODO the module has additional 6.8nH inductor from the gnd to the pin as well as a larger, 1nF capacitor. Why? 
-
 ### Embedded antenna
 
 As per the antenna application note, page 31, the embedded antenna is connected directly to the LPI pin win 120nH inductor to the ground. The inductor is 0805 so that it's hand-solderable. The ESD protection and current limiting resistor are not necessary as there is no exposed connector to the embedded antenna. 
-
-> TODO the module above also uses a 100pF capacitor between the pin and the antenna connector, why? 
 
 ### External Crystal
 
@@ -210,7 +199,7 @@ We are using the same crystal as AtTiny3217. The load capacitance is 12.5 pF, wh
 
 Remaining functionality is interchangeable as they are used simple digital pins, namely:
 - BTN_1, BTN_2, BTN_3 and BTN_4 for button matrix rows (`PA6`, `PB7`, `PA7` and `PC2` respectively)
-- BTN_DPAD, BTN_ABXY, BTN_CTRL for button matrix cols (`PC4`, `PB5` and `PB6` respectively)
+- BTN_DPAD, BTN_ABXY, BTN_CTRL for button matrix cols (`PC4`, `PB6` and `PB5` respectively)
 - ACCEL_INT (input from accel) at `PB4`
 - CHARGING detection (low when not charging, high when charging) at `PA5`
 - IOVDD_EN and 5V_EN for IOVDD and 5V power rails at `PC1` and `PA4`
@@ -252,14 +241,9 @@ Rumbler is connected to 3V3 and triggered by AVR PWM. Protective diode is used a
 
 Using jlcpcb impedance calculator and 1mm thick board with coplanar differential pair (coplanar because it is bordered by GND on the top layer as well), we get trace spacing of 0.2mm, trace to ground spacing of 0.254mm and trace width of 0.156mm for the USB required 90 Ohm impedance.
 
-> TODO review the width & stuff
-> TODO Verify how this works with ESD protection and device attached detection
-
 ### I2S
 
-I2S connection to the audio codec is done via LRCLK (FCLK), BCLK and DIN & DOUT pins for playback and recording respectively. Furthermore MCLK has to generate steady clock at 256x the framerate (LRCLK) for the codec to operate. 
-
-> TODO terminating resistors
+I2S connection to the audio codec is done via LRCLK (FCLK), BCLK and DIN & DOUT pins for playback and recording respectively. Furthermore MCLK has to generate steady clock at 256x the framerate (LRCLK) for the codec to operate. 47Ohm terminating resistors are used for all the I2S lines and MCLK.
 
 ### SD Card
 
