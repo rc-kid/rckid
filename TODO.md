@@ -73,7 +73,9 @@
 
 # TODO
 
-- HIGH IMPORTANCE: Instead of MPU6500 use [ICM-20948](). For roughly similar price, we also get magnetometer *and* the DMP functionality examples can be ported from [Sparkfun Library](https://github.com/sparkfun/SparkFun_ICM-20948_ArduinoLibrary/tree/main) 
+- square button needs square peg
+- might get super pretty front panels from here: https://www.hopesens-glass.com/
+
 
 - see if we can enable exceptions, what are the runtime & stack costs of them running
 
