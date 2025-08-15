@@ -90,7 +90,7 @@ To enable the `AAA` mode, the charger chip simply should not be soldered.
 
 ### 3.3V Buck-Boost converters
 
-The design uses two identical step down converters - [TPS63001](datasheets/tps63001.pdf). This is newer chip than the original designs in mkII and devboard and provides greater efficience and range. As per its datasheet, it is capable of providing `800mA` in boost mode (and `1.2A` in buck), which is within the limits (500mA cartridge + 300mA for RP2350B and audio is the limiting factor here). 
+The design uses two identical step down converters - [TPS631000](datasheets/tps631000.pdf). This is newer chip than the original designs in mkII and devboard and provides greater efficience and range. As per its datasheet, it is capable of providing `800mA` in boost mode (and `1.2A` in buck), which is within the limits (500mA cartridge + 300mA for RP2350B and audio is the limiting factor here). 
 
 The converter is variable output resistor configuration straight from the datasheet is used for `3v3` output. So is the inductor and the recommended layout. The two DC-DC blocks are almost identical with the exception of the on switch, which for `3v3` is tied to input voltage for always enable, while for the `IOVDD` is pulled down with `100k` resistor for default off behavior and will be pulled high to `3v3` by the AVR when enabled (this is well above the logic high threshold for the chip at `1.2V`. The chip tolerates up to `7V` on the `EN` pin regardless of the input voltage, so even with very low VCC (technically we can go as low as `2.4V` the chip will work).
 
@@ -100,7 +100,7 @@ We are using [HX4002](datasheets/hx4002.pdf) charge pump, same as in mk II. The 
 
 WS2812 compatible, but smaller & less powerful LEDs are used. As they require 5V and the AVR that controls them runs on 3.3V we use a converter.
 
-> TODO should the single LED in DPAD be replaced so that a proper DPAD with tilting can be used? If we use multiple LEDs we will be exceeding the power generator output, but it is likely fine, as currently the LEDs run at 12.5% of full power and seem to be fine.
+> TODO should there be 4 LEDs in the DPAD? maybe yes
 
 ### Power Consumption
 
