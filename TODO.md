@@ -55,7 +55,7 @@
 - [X] check Si4705 works with headphones antenna
 - [X] check the headphone outputs while using the antenna
 - [X] check Si4705 works with internal antenna (seems to work, but not very well)
-- [ ] check accelerometer works
+- [-] check accelerometer works (using different accelerometer)
 - [ ] check SD card insertion detection
 - [-] check powered from real battery works
 - [-] check USB detection works when powered from battery
@@ -70,6 +70,36 @@
 - [ ] mk3 idle and keepalive timers are too high, move lower again
 - [X] check overclocking -- seems to go to 250MHz w/o overvolt
 - [ ] add way to clear memory when necessary (e.g. remove background, etc.)
+- [X] verify resistor for backlight - using AP2502 in the end
+- [ ] verify on forums the Si4705 headset antenna ESD & filters
+- [ ] verify on forums the USB ESD protection
+- [ ] verify on forums about the I2S termination resistors and their placement
+- [ ] should there be ground under switches? 
+- [X] verify rumbler position & wire length
+- [X] draw RM2 cartridge
+- [ ] draw LoRA cartridge
+- [ ] draw NRF24l01P cartridge
+- [X] make room for embedded antenna on device case
+- [ ] add board for battery connector
+- [ ] add board for debug connectors
+- [X] add holes in case for debug connectors
+- [X] verify glass top has cutouts for antenna
+- [X] add fused cartridge for resin printing
+- [ ] add fused buttons for resin printing
+- [X] IR LED (via DMP1045u as it sources over 20mA)
+- [X] white LED (can be wired via AP2502 which I can get from TME)
+
+
+
+
+White LED from TME:
+
+https://www.tme.eu/cz/details/hl-as2835-3cpct-ww/vykonove-diody-led-emiter/hongli-zhihui/hl-as-2835h466w-3c-s1-08l-pct-hr3/
+https://www.tme.eu/cz/details/ap2502ktr-g1/stabilizator-napeti-obvody-dc-dc/diodes-incorporated/
+
+IR LED from TME:
+https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
+
 
 # TODO
 
