@@ -27,6 +27,9 @@
 
 #include <rckid/apps/FMRadio.h>
 
+#include <rckid/apps/games/Tetris.h>
+#include <rckid/apps/games/SlidingPuzzle.h>
+
 
 using namespace rckid;
 
@@ -98,7 +101,8 @@ public:
 ui::Menu * gamesGenerator() {
     
     ui::Menu * result = new ui::Menu{
-        MainMenu::Action("Tetris", assets::icons_64::tetris, App::run<TextDialog>),
+        //MainMenu::Action("Tetris", assets::icons_64::tetris, App::run<TextDialog>),
+        MainMenu::Action("Tetris", assets::icons_64::tetris, App::run<Tetris>),
     };
     // now get all the menus 
     fs::Folder games = fs::folderRead("/games");
