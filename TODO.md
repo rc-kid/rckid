@@ -78,7 +78,7 @@
 - [X] verify rumbler position & wire length
 - [X] draw RM2 cartridge
 - [ ] draw LoRA cartridge
-- [ ] draw NRF24l01P cartridge
+- [X] draw NRF24l01P cartridge
 - [X] make room for embedded antenna on device case
 - [ ] add board for battery connector
 - [ ] add board for debug connectors
@@ -89,8 +89,7 @@
 - [X] IR LED (via DMP1045u as it sources over 20mA)
 - [X] white LED (can be wired via AP2502 which I can get from TME)
 
-
-
+## Software Tasks
 
 White LED from TME:
 

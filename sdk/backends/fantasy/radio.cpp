@@ -24,6 +24,4 @@ namespace rckid {
 
     void Radio::irqHandler() { }
 
-    void Radio::processResponse(uint8_t) { } 
-
 } // namespace rckid
