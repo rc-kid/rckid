@@ -117,9 +117,7 @@ namespace rckid {
             font_ = font;
         }   
 
-        Writer text(Coord x, Coord y, Font const & font, Pixel color) {
-            setFg(color);
-            font_ = font;
+        Writer text(Coord x, Coord y) {
             textStartX_ = x;
             textX_ = x;
             textY_ = y;
@@ -134,6 +132,12 @@ namespace rckid {
                     self->textY_ += self->font_.size;
                 }
             }, this};
+        }
+
+        Writer text(Coord x, Coord y, Font const & font, Pixel color) {
+            setFg(color);
+            setFont(font);
+            return text(x, y);
         }
 
         /** Draws text so that color of each letter is independently determined by calling the provided function. 
