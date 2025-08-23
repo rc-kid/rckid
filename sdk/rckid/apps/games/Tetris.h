@@ -30,6 +30,10 @@ namespace rckid {
                         resetGame();
                         mode_ = Mode::Game;
                     }
+                    if (btnPressed(Btn::B)) {
+                        exit();
+                        btnClear(Btn::B);
+                    }
                     for (unsigned i = 0; i < NUM_FALLING_PIECES; ++i) {
                         fallingY_[i] += 1;
                         if (fallingY_[i] == 240) {

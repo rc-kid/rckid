@@ -182,6 +182,31 @@ namespace rckid {
         return deserialize<uint16_t>() + (deserialize<uint16_t>() << 16);
     }
 
+    template<>
+    inline void WriteStream::serialize<uint64_t>(uint64_t const & what) {
+        serialize<uint32_t>(what & 0xffffffff);
+        serialize<uint32_t>(what >> 32);
+    }
+
+    template<>
+    inline uint64_t ReadStream::deserialize<uint64_t>() {
+        return deserialize<uint32_t>() + (static_cast<uint64_t>(deserialize<uint32_t>()) << 32);
+    }
+
+
+    // serialization of boolean
+
+    template<>
+    inline void WriteStream::serialize(bool const & value) {
+        value ? serialize<uint8_t>(1) : serialize<uint8_t>(0);
+    }
+
+    template<>
+    inline bool ReadStream::deserialize<bool>() {
+        uint8_t x = deserialize<uint8_t>();
+        return x == 1;
+    } 
+
     // serialization of std::string - first serialize uint32_t length, followed by the array itself
     template<>
     inline void WriteStream::serialize(String const & what) {
@@ -196,5 +221,57 @@ namespace rckid {
         read(reinterpret_cast<uint8_t*>(result.data()), size);
         return result;
     }
+
+    // serialization of TinyDateTime & friends
+
+    template<>
+    inline void WriteStream::serialize(TinyDateTime const & time) {
+        static_assert(sizeof(TinyDateTime) == sizeof(uint32_t));
+        serialize<uint32_t>(*reinterpret_cast<uint32_t const *>(& time));
+    }
+
+    template<>
+    inline TinyDateTime ReadStream::deserialize<TinyDateTime>() {
+        static_assert(sizeof(TinyDateTime) == sizeof(uint32_t));
+        uint32_t x = deserialize<uint32_t>();
+        return * reinterpret_cast<TinyDateTime*>(& x);
+    }
+
+    template<>
+    inline void WriteStream::serialize(TinyDate const & time) {
+        static_assert(sizeof(TinyDate) == sizeof(uint32_t));
+        serialize<uint32_t>(*reinterpret_cast<uint32_t const *>(& time));
+    }
+
+    template<>
+    inline TinyDate ReadStream::deserialize<TinyDate>() {
+        static_assert(sizeof(TinyDate) == sizeof(uint32_t));
+        uint32_t x = deserialize<uint32_t>();
+        return * reinterpret_cast<TinyDate*>(& x);
+    }
+
+    template<>
+    inline void WriteStream::serialize(TinyAlarm const & time) {
+        static_assert(sizeof(TinyAlarm) == 3);
+        uint8_t const * x = reinterpret_cast<uint8_t const *>(& time);
+        serialize<uint8_t>(x[0]);
+        serialize<uint8_t>(x[1]);
+        serialize<uint8_t>(x[2]);
+    }
+
+    template<>
+    inline TinyAlarm ReadStream::deserialize<TinyAlarm>() {
+        static_assert(sizeof(TinyAlarm) == 3);
+        TinyAlarm result;
+        uint8_t * x = reinterpret_cast<uint8_t *>(& result);
+        x[0] = deserialize<uint8_t>();
+        x[1] = deserialize<uint8_t>();
+        x[2] = deserialize<uint8_t>();
+        return result;
+
+    }
+
+
+
 
 } // namespace rckid

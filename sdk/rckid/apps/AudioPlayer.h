@@ -21,6 +21,8 @@ namespace rckid {
             c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
         }
 
+    protected:
+
         void update() override {
             ui::App<void>::update();
             c_->processEvents();
@@ -44,8 +46,6 @@ namespace rckid {
             }
         }
 
-
-    protected:
         class FileBrowser : public ui::FileBrowser {
         public:
             FileBrowser(AudioPlayer * player) : ui::FileBrowser{"/files/music"}, player_{player} {
@@ -136,6 +136,15 @@ namespace rckid {
                     exit(true);
             }
 
+            /** Only redraw if there is change in the visual elements. This saves precious CPU time on the device for the audio decoding. As it effectively limits the FPS to 1 frane per second. 
+             */
+            void draw() override {
+                if (redraw_) {
+                    redraw_ = false;
+                    ui::App<bool>::draw(); 
+                }
+            }
+
             void setElapsedTime() {
                 uint32_t seconds = elapsedUs_ / 1000000;
                 uint32_t minutes = seconds / 60;
@@ -146,7 +155,9 @@ namespace rckid {
                 if (hours > 0)
                     sw << hours << ":";
                 sw << fillLeft(minutes, 2, '0') << ":" << fillLeft(seconds, 2, '0');
-                elapsed_->setText(sw.str());
+                // only redraw if there is change in the elapsed time
+                if (elapsed_->setText(sw.str()))
+                    redraw_ = true;
             }
         private:
             AudioStream & as_;
@@ -155,6 +166,8 @@ namespace rckid {
             ui::Image * icon_;
             uint64_t elapsedUs_ = 0;
             uint32_t lastUs_ = 0;
+            // when true, the player window will redraw itself
+            bool redraw_ = false;
 
         }; // AudioPlayer::Player
 

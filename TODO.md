@@ -102,12 +102,13 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 # TODO
 
-- square button needs square peg
+- for messages, add widgets for the various message types that can be viewed
+
+- how to blitting & stuff? (bitmap is multi bpp, while surfaces such as canvas are fixed bpp), this makes blitting harder a bit
+
 - might get super pretty front panels from here: https://www.hopesens-glass.com/
 
-
 - see if we can enable exceptions, what are the runtime & stack costs of them running
-
 
 - can I create SD card SPI in PIO so that I can use SDIO and SPI as well? yes
 
@@ -115,8 +116,6 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 - for the input / output, it might be easier to use different format, such as PCM as it would allow to send whole 32bits in one loop
 
 - audio codec I2C does not work when MCLK is active. This could be because of enormous I2C rise time for SDA & SCL (well over 1500ns, where 300ns is the limit) - there is sth in the bus design as this would suggest 1nF capacitance of the traces
-
-- jack detection by the codec cannot be observed so we need extra pin. However as the codec uses no interrupt and no reset lines, we can take the GPIO1 which can be I/O pin and use it for radio reset instead, radio reset can then become headphone detection on the RP2350
 
 - run at full speed with no vsycn waiting to see how much free room there is
 
@@ -144,17 +143,10 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 - todo figure out how context menu can be planted to apps (or perhaps let the dialogs handle them)
 
-- detects headphones in, but not out, and does not detect cellular, only stereo. This could be because of two microphones being attached to the micbias
-
 - when we do mk3, make sure that when a button press is detected, the idle flag is cleared 
 - keepalive when plugged in can be indefinite? 
 
 - clean-up the code around display initialization
-- colors are revrsed on mk3. This can either be solved in software by using reversed color values, or in theory could be done by the pio itself. Is it necessary?
-
-- SD card detection works-ish, the sd detect pin is floating when no card and connected to ground when card - figure how to use
-- si4705 does not seem to support multiple start sessions, rewrite the Si4705 platform library for proper command sending & response polling
-- then try an I2C device driver using the I2C queue, etc. 
 
 - determine correct rumbler settings for ok fail and nudge
 
@@ -174,18 +166,7 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 ## HW
 
-- could this be better PMIC? https://www.ti.com/product/BQ25628
-(E) variant. Actually no - see https://e2e.ti.com/support/power-management-group/power-management/f/power-management-forum/1257114/faq-bq25620-how-is-vsys-regulated-for-bq25620-22-and-bq25628-29-what-conditions-determine-how-it-s-regulated-when-is-sysmin-threshold-valid, the VSYS is not regulated when charger not connected. We should go back to simple charger and buck-boost converters for 3v3
-- use https://www.ti.com/product/TPS63001 instead - seems smallish enough hopefully
-- could this be better audio codec? https://jlcpcb.com/partdetail/NuvotonTech-NAU88C22YG/C914209 (it's cheaper, has integrated speaker driver, simpler to interact with, but requires MCLK, that has to be provided by the chip, it has headphone detection and one extra GPIO, no HW reset pin required)
-- slimmer connector https://jlcpcb.com/partdetail/XkbConnection-X05A10H40G/C528037
-- swap mic & radio input so that we can do low power audio pass through from radio directly to headphone amps of the audio codec
-- 4k7 Ohm pull up from ldo select to vcc (now direct connection)
 - buy header pins (plenty for the connectors)
-
-- add large capacitors close to the audio codec to supply it with enough power so that it can drive the speaker effectively
-
-- A button should be square (turned 45deg)
 
 ## AVR
 
@@ -246,13 +227,7 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 - [X] ADC_AVDD should to to IOVDD (?)
 - [ ] test ADC_AVDD to IOVDD connection and if necessary
 
-
-- JLCPCB offers 3d printing as well - perhaps I can use it to print stuff from nicer materials such as transparent faceplate or even the case, etc. 
-
 # PCB
-
-- R125 (ilim for PMIC is wrong value)
-- verify with prototype that R124 (PWR_INT pullup is needed)
 
 > This is updated TODO list for mkIII. It's split into 
 
