@@ -19,6 +19,7 @@
 #include <rckid/apps/dialogs/PopupMenu.h>
 #include <rckid/apps/AudioPlayer.h>
 #include <rckid/apps/Friends.h>
+#include <rckid/apps/Messages.h>
 #include <rckid/apps/Clock.h>
 #include <rckid/apps/DataSync.h>
 
@@ -28,7 +29,7 @@
 #include <rckid/apps/FMRadio.h>
 
 #include <rckid/apps/games/Tetris.h>
-#include <rckid/apps/games/SlidingPuzzle.h>
+//#include <rckid/apps/games/SlidingPuzzle.h>
 
 
 using namespace rckid;
@@ -150,6 +151,7 @@ ui::Menu * imagesMenuGenerator() {
 
 ui::Menu * mainMenuGenerator() {
     return new ui::Menu{
+        MainMenu::Action("Test", assets::icons_64::heart, App::run<Messages::Conversation>),
         MainMenu::Submenu("Games", assets::icons_64::game_controller, gamesGenerator),
         MainMenu::Action("Music", assets::icons_64::music, App::run<AudioPlayer>),
         MainMenu::Action("Radio", assets::icons_64::poo, App::run<FMRadio>),

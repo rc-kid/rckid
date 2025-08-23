@@ -41,13 +41,18 @@ namespace rckid::ui {
                     resizeToText();
             }
         }
-        
-        void setText(String value) { 
+
+        /** Sets the text of the label and returns true if the text differs from previous value, false otherwise. Setting text that is already in the label is a no-op.
+         */
+        bool setText(String value) { 
+            if (value == text_)
+                return false;
             text_ = std::move(value);
             if (autosize_)
                 resizeToText();
             else
                 reposition();
+            return true;
         }
 
         void resizeToText() {

@@ -168,7 +168,7 @@ namespace rckid::ui {
                 return;
             }
             // don't render if the rect does not intersect with the buffer beginning and the available number of pixels (no vertical intersection)
-            if (rect.top() > numPixels || rect.bottom() < starty) {
+            if (rect.top() >= (numPixels + starty) || rect.bottom() <= starty) {
                 numPixels = 0;
                 return;
             }
@@ -177,12 +177,13 @@ namespace rckid::ui {
             ASSERT(wStart >= 0 && wStart < rect.height());
             // knowing the start of actual rendering in the child, advance the buffer in the appropriate number of pixels 
             Coord bufferAdvance = rect.top() - starty + wStart;
-            ASSERT(bufferAdvance <= numPixels);
+            ASSERT(bufferAdvance < numPixels);
             buffer += bufferAdvance;
             // and adjust the number of pixels to render, which is the minimum of the child's height and the available pixels in the buffer
             numPixels = std::min(numPixels - bufferAdvance, rect.height() - wStart);
             // and the column
             column -= rect.left();
+            starty = wStart;
         }
 
         /** Shorthand function that justifies the inner rectangle within inside the current widget. 
