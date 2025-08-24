@@ -9,8 +9,9 @@
 namespace rckid {
 
     template<typename PIXEL>
-    class Canvas : protected Surface<PIXEL::BPP> {
+    class Canvas {
     public:
+        using Surface = Surface<PIXEL::BPP>;
         using Pixel = PIXEL;
         static constexpr uint32_t BPP = PIXEL::BPP;
 
@@ -22,7 +23,7 @@ namespace rckid {
 
         /** Creates the bitmap.
          */
-        Canvas(Coord w, Coord h): pixels_{new uint16_t[numHalfWords(w, h)]}, w_{w}, h_{h} {
+        Canvas(Coord w, Coord h): pixels_{new uint16_t[Surface::numHalfWords(w, h)]}, w_{w}, h_{h} {
         }
 
         Canvas(Canvas const &) = delete;
@@ -66,12 +67,12 @@ namespace rckid {
 
         // single pixel access
 
-        Pixel at(Coord x, Coord y) const { return Pixel::fromRaw(pixelAt(x, y, w_, h_, pixels_)); }
+        Pixel at(Coord x, Coord y) const { return Pixel::fromRaw(Surface::pixelAt(x, y, w_, h_, pixels_)); }
         void setAt(Coord x, Coord y, Pixel c) { 
             // don't draw anything if we are out of bounds - slow, but fail safe as canvas should be
             if ( x < 0 || x >= w_ || y < 0 || y >= h_)
                 return;
-            setPixelAt(x, y, w_, h_, pixels_, c.toRaw()); 
+            Surface::setPixelAt(x, y, w_, h_, pixels_, c.toRaw()); 
         }
 
         /** Access to pixels & column pixels for direct rendering. 
@@ -81,9 +82,9 @@ namespace rckid {
             Note that the non-const versions are potentially dangerous if ROM backed bitmaps are used. 
          */
         uint16_t const * pixels() const { return pixels_; }
-        uint16_t const * columnPixels(Coord column) const { return pixels_ + columnOffset(column, w_, h_); }
+        uint16_t const * columnPixels(Coord column) const { return pixels_ + Surface::columnOffset(column, w_, h_); }
         uint16_t * pixels() { return pixels_; }
-        uint16_t * columnPixels(Coord column) { return pixels_ + columnOffset(column, w_, h_); }
+        uint16_t * columnPixels(Coord column) { return pixels_ + Surface::columnOffset(column, w_, h_); }
 
         /** Renders given bitmap column. 
          */
@@ -125,7 +126,7 @@ namespace rckid {
                 Canvas * self = reinterpret_cast<Canvas*>(arg);
                 if (c != '\n') {
                     if (self->textX_ < self->w_) {
-                        self->textX_ += self->putChar(self->textX_, self->textY_, self->w_, self->h_, self->font_, c, self->fontColors_.data(), self->pixels_);
+                        self->textX_ += Surface::putChar(self->textX_, self->textY_, self->w_, self->h_, self->font_, c, self->fontColors_.data(), self->pixels_);
                     }
                 } else {
                     self->textX_ = self->textStartX_;
@@ -202,13 +203,6 @@ namespace rckid {
 
     private:
 
-        using Surface<BPP>::pixelAt;
-        using Surface<BPP>::setPixelAt;
-        using Surface<BPP>::columnOffset;
-        using Surface<BPP>::numHalfWords;
-        using Surface<BPP>::renderColumn;
-        using Surface<BPP>::putChar;
-
         uint16_t * pixels_;
         Coord w_;
         Coord h_;
@@ -249,7 +243,7 @@ namespace rckid {
             };
             if (c != '\n') {
                 if (self->textX_ < self->width())
-                    self->textX_ += putChar(self->textX_, self->textY_,self->w_, self->h_, self->font_, c, colors, self->pixels_);
+                    self->textX_ += Surface::putChar(self->textX_, self->textY_,self->w_, self->h_, self->font_, c, colors, self->pixels_);
             } else {
                 self->textX_ = self->textStartX_;
                 self->textY_ += self->font_.size;
