@@ -102,6 +102,10 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 # TODO
 
+- home menu, save state for apps
+- how to resume state when app restarted
+- do not allow to start measured app if we have no more allowance (otherwise it starts for a second, then stops)
+
 - for messages, add widgets for the various message types that can be viewed
 
 - how to blitting & stuff? (bitmap is multi bpp, while surfaces such as canvas are fixed bpp), this makes blitting harder a bit

@@ -147,7 +147,7 @@ namespace rckid {
 
 
 
-    // serialization of uint8_t 
+    // serialization of uint8_t & int8_t
     template<>
     inline void WriteStream::serialize<uint8_t>(uint8_t const & what) {
         writeByte(what);
@@ -158,7 +158,17 @@ namespace rckid {
         return read();
     }
 
-    // serialization of uint16_t 
+    template<>
+    inline void WriteStream::serialize<int8_t>(int8_t const & what) {
+        writeByte(static_cast<uint8_t>(what));
+    }
+
+    template<>
+    inline int8_t ReadStream::deserialize<int8_t>() {
+        return static_cast<int8_t>(read());
+    }
+
+    // serialization of uint16_t & int16_t
     template<>
     inline void WriteStream::serialize<uint16_t>(uint16_t const & what) {
         serialize<uint8_t>(what & 0xff);
@@ -170,7 +180,17 @@ namespace rckid {
         return deserialize<uint8_t>() + (deserialize<uint8_t>() << 8);
     }
 
-    // serialization of uint32_t 
+    template<>
+    inline void WriteStream::serialize<int16_t>(int16_t const & what) {
+        serialize(static_cast<uint16_t>(what));
+    }
+
+    template<>
+    inline int16_t ReadStream::deserialize<int16_t>() {
+        return static_cast<int16_t>(deserialize<uint16_t>());
+    }
+
+    // serialization of uint32_t & int32_t
     template<>
     inline void WriteStream::serialize<uint32_t>(uint32_t const & what) {
         serialize<uint16_t>(what & 0xffff);
@@ -183,6 +203,18 @@ namespace rckid {
     }
 
     template<>
+    inline void WriteStream::serialize<int32_t>(int32_t const & what) {
+        serialize(static_cast<uint32_t>(what));
+    }
+
+    template<>
+    inline int32_t ReadStream::deserialize<int32_t>() {
+        return static_cast<int32_t>(deserialize<uint32_t>());
+    }
+
+    // serialization of uint64_t & int64_t
+
+    template<>
     inline void WriteStream::serialize<uint64_t>(uint64_t const & what) {
         serialize<uint32_t>(what & 0xffffffff);
         serialize<uint32_t>(what >> 32);
@@ -193,6 +225,15 @@ namespace rckid {
         return deserialize<uint32_t>() + (static_cast<uint64_t>(deserialize<uint32_t>()) << 32);
     }
 
+    template<>
+    inline void WriteStream::serialize<int64_t>(int64_t const & what) {
+        serialize(static_cast<uint64_t>(what));
+    }
+
+    template<>
+    inline int64_t ReadStream::deserialize<int64_t>() {
+        return static_cast<int64_t>(deserialize<uint64_t>());
+    }
 
     // serialization of boolean
 

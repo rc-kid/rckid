@@ -12,14 +12,54 @@ namespace rckid {
     class Tetris : public CanvasApp<ColorRGB> {
     public:
 
+        static constexpr uint8_t VERSION = 1;
+
         Tetris(): CanvasApp<ColorRGB>{} {
+            // TODO Determine some initial state? 
             for (unsigned i = 0; i < NUM_FALLING_PIECES; ++i) {
                 fallingPieces_[i].randomize();
                 fallingX_[i] = random() % 320;
                 fallingY_[i] = - random() % 240;
             }
         }
-       
+
+        // TODO for cur & next we need to save also the color
+        void save(WriteStream & into) override {
+            into.serialize(VERSION);
+            // save the actual state - level & score
+            into.serialize(score_);
+            into.serialize(level_);
+            // save extra state info 
+            into.serialize(levelCompacted_);
+            into.serialize(countdown_);
+            into.serialize(speed_); 
+            into.serialize(allowDown_);
+            // save the grid & tetromino properties
+            into.write(grid_, sizeof(grid_));
+            into.serialize(static_cast<uint8_t>(cur_.kind()));
+            into.serialize(x_);
+            into.serialize(y_);
+            into.serialize(static_cast<uint8_t>(next_.kind()));
+        }
+        
+        void load(ReadStream & from) override {
+            if (from.deserialize<uint8_t>() != VERSION) {
+                LOG(LL_WARN,  "Unsupported save version, skipping");
+                return;
+            }
+            score_ = from.deserialize<uint32_t>();
+            level_ = from.deserialize<uint32_t>();
+            levelCompacted_ = from.deserialize<uint32_t>();
+            countdown_ = from.deserialize<uint32_t>();
+            speed_ = from.deserialize<uint32_t>();
+            allowDown_ = from.deserialize<bool>();
+            from.read(grid_, sizeof(grid_));
+
+            x_ = from.deserialize<Coord>();
+            y_ = from.deserialize<Coord>();
+
+        }
+      
 
     protected:
 

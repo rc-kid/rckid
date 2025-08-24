@@ -11,9 +11,9 @@ namespace rckid {
         Tile is a surface with statically known width and height. It supports the basic  
      */
     template<Coord WIDTH, Coord HEIGHT, typename PIXEL>
-    class Tile : protected Surface<PIXEL::BPP> {
+    class Tile {
     public:
-        
+        using Surface = Surface<PIXEL::BPP>;
         using Pixel = PIXEL;
         static constexpr uint32_t BPP = PIXEL::BPP;
 
@@ -34,14 +34,12 @@ namespace rckid {
         }
 
         uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, uint16_t * buffer, uint32_t transparent, uint16_t const * palette) const {
-            return renderColumn(pixels_, column, startRow, numPixels, WIDTH, HEIGHT, buffer, transparent, palette);
+            return Surface::renderColumn(pixels_, column, startRow, numPixels, WIDTH, HEIGHT, buffer, transparent, palette);
         }
 
     private:
-        using Surface<BPP>::numHalfWords;
-        using Surface<BPP>::renderColumn;
 
-        uint16_t pixels_[numHalfWords(WIDTH, HEIGHT)];
+        uint16_t pixels_[Surface::numHalfWords(WIDTH, HEIGHT)];
     }; 
 
     /** The simplest tile - 8x8 pixels with 256 colors. 
