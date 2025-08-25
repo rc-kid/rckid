@@ -93,7 +93,7 @@ namespace rckid {
 
             static bool run(String path, AudioStream & s) {
                 Player p{path, s};
-                std::optional<bool> res = p.run();
+                std::optional<bool> res = p.runModal();
                 if (res.has_value())
                     return res.value();
                 return false;

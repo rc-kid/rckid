@@ -2,10 +2,20 @@
 #include "app.h"
 
 #include "apps/dialogs/InfoDialog.h"
+#include "apps/dialogs/HomeMenu.h"
 #include "ui/header.h"
 
 
+
 namespace rckid {
+
+    void App::update() {
+        if (btnPressed(Btn::Home)) {
+            std::optional<bool> x = App::run<HomeMenu>();
+            if (x.has_value() && x.value())
+                exit();
+        }
+    }
 
     void App::loop() {
         // wait for the previous display update to finish to avoid interfering with the old app unloading

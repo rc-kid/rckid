@@ -43,7 +43,7 @@ int main() {
     initialize();
     while (true) {
         auto t = TestAppRGB{200, 200};
-        t.run();
+        t.runModal();
     }
 }
 

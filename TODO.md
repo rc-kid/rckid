@@ -102,6 +102,15 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 # TODO
 
+- home menu & main menu should share some hierarchical menu base class that does the submenus & stuff
+- loop() should change to run and be public
+- most of the run() invocations should be disabled and the App::run() should be used instead with the arguments passed appropriately
+
+- home menu has simple carousel that allows setting basic settings (volume, brightness, sleep, power off. exit game) and can be augmented with extra menu items created by the application (e.g. save state, load previous state, etc.)
+
+- TODO would be good if image could work immediately with static in memory pictures
+- do we need bitmap in graphics now? its more like bitmap is now image really
+
 - home menu, save state for apps
 - how to resume state when app restarted
 - do not allow to start measured app if we have no more allowance (otherwise it starts for a second, then stops)

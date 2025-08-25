@@ -32,7 +32,7 @@ namespace rckid {
 
         static std::optional<uint32_t> show(ui::Menu * menu) {
             PopupMenu pm{menu};
-            std::optional<uint32_t> res = pm.run();
+            std::optional<uint32_t> res = pm.runModal();
             return res;
         }
 
