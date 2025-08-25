@@ -149,7 +149,7 @@ namespace rckid {
                 default:
                     UNREACHABLE;
             }
-            // handle back button
+            // handle home button & friends
             GraphicsApp::update();
         }
 

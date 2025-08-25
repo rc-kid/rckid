@@ -14,6 +14,8 @@ namespace rckid {
      */
     class App {
     public:
+        using MODAL_RESULT = void;
+
         virtual ~App() = default;
 
         virtual void save([[maybe_unused]] WriteStream & into) {
@@ -24,13 +26,19 @@ namespace rckid {
             LOG(LL_ERROR, "Loading application state not supported");
         }
 
-        /** Runs given application in its own arena. 
+        /** Runs given application. Returns value if the application returns value. 
          */
-        template<typename T>
-        static void run() {
-            T app{};
-            app.loop();
+        template<typename T, typename ... ARGS>
+        static typename T::MODAL_RESULT run(ARGS ... args) {
+            T app{args...};
+            return app.runModal();
         }
+
+        /** Runs the app modally. 
+         
+            All apps are run modally, app subclasses that return result should update this function to return the result of the app. 
+         */
+        void runModal() { loop(); }
 
         /** Returns the latest frames per second value. This is reset every second and if all goes well should be 60. As this is calculated by the app main loop itself, applications using different main loop strategies should indrement the number of redraws in their logic (see the redraw_ protected field).
          */
@@ -73,8 +81,7 @@ namespace rckid {
         }
 
         /** */
-        virtual void update() {
-        }
+        virtual void update();
 
         /** Method responsible for drawing the app contents on the screen. 
          
@@ -130,10 +137,11 @@ namespace rckid {
     template<typename T>
     class ModalApp : public App {
     public:
+        using MODAL_RESULT = std::optional<T>;
 
-        /** Runs the modal app in dialog mode, where when ready, the app returns the value.
+        /** Runs the app modally
          */
-        std::optional<T> run() {
+        std::optional<T> runModal() {
             loop();
             return result_;
         }
@@ -173,9 +181,6 @@ namespace rckid {
     template<>
     class ModalApp<void> : public App {
     public:
-        void run() {
-            loop();
-        }
     }; // ModalApp<void>
 
 
@@ -199,6 +204,7 @@ namespace rckid {
         }
 
         void update() override {
+            App::update();
             g_.update();
         }
 

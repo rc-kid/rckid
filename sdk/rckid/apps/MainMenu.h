@@ -85,7 +85,7 @@ namespace rckid {
 
         static std::optional<MainMenuPayload> run(ui::Menu::Generator generator) {
             MainMenu menu{generator};
-            return menu.run();
+            return menu.runModal();
         }
 
         using ui::App<MainMenuPayload>::run;

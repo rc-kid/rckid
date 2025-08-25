@@ -264,7 +264,7 @@ int main() {
                     LOG(LL_INFO, "running game: " << gl.file);
                     gbcemu::GBCEmu app{};
                     app.loadCartridge(new gbcemu::CachedGamePak{fs::fileRead(STR("/games/" << gl.file))});
-                    app.run();
+                    app.runModal();
                 }
             }, app.value());
         } else {
