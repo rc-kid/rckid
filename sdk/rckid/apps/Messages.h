@@ -44,6 +44,11 @@ namespace rckid {
          */
         class Conversation : public ui::App<void> {
         public:
+
+            /** Use umbrella names for all messages stuff.
+             */
+            String name() const override { return "Messages"; }
+
             Conversation() {
                 view_ = g_.addChild(new ui::ScrollView{});
                 view_->setRect(Rect::XYWH(0, 20, 320, 200));

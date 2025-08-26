@@ -8,6 +8,8 @@ namespace rckid {
     class FileDialog : public ui::App<String> {
     public:
 
+        String name() const override { return "FileDialog"; }
+
         FileDialog() : ui::App<String>{} {
             using namespace ui;
             c_ = g_.addChild(new ui::FileBrowser{"/"});
@@ -43,7 +45,7 @@ namespace rckid {
                 LOG(LL_DEBUG, "FileDialog: returning path " << c_->currentPath());
                 btnClear(Btn::A);
                 btnClear(Btn::Up);
-                select(c_->currentPath());
+                exit(c_->currentPath());
             }
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 LOG(LL_DEBUG, "FileDialog: cancelling");

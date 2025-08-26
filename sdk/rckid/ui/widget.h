@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../graphics/geometry.h"
-#include "../graphics/surface.h"
+#include "../graphics/pixel_surface.h"
 #include "../graphics/bitmap.h"
 
 namespace rckid::ui {
@@ -14,7 +14,7 @@ namespace rckid::ui {
      */
     class Widget {
     public:
-        using Surface = rckid::Surface<16>;
+        using Surface = rckid::PixelSurface<16>;
 
         /** Delete all children that are allocated on heap.
          

@@ -17,6 +17,8 @@ namespace rckid {
     class TextDialog : public ui::App<String> {
     public:
 
+        String name() const override { return "TextDialog"; }
+
         enum class KeyboardType {
             UpperCase, 
             LowerCase,

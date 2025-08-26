@@ -15,6 +15,10 @@ namespace rckid {
     class PopupMenu : public ui::App<PAYLOAD> {
     public:
 
+        /** It's ok that all popup menus have the same name as they do not use any of the name associated functionality. 
+         */
+        String name() const override { return "PopupMenu"; }
+
         static constexpr Coord TileWidth = 12;
         static constexpr Coord TileHeight = 24;
 
@@ -39,7 +43,7 @@ namespace rckid {
                 // return the selected item
                 auto & item = (*menu_)[selected_];
                 ASSERT(item.isAction()); // generators not supported yet
-                select(item.action());
+                exit(item.action());
             }
             if (btnPressed(Btn::Up)) {
                 if (selected_ > 0)
@@ -70,7 +74,6 @@ namespace rckid {
         using ui::App<PAYLOAD>::g_;
         using ui::App<PAYLOAD>::exit;
         using ui::App<PAYLOAD>::parent;
-        using ui::App<PAYLOAD>::select;
 
         static Coord getLongestText(ui::Menu<PAYLOAD> * menu) {
             uint32_t longest = 0;

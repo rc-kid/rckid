@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../graphics/surface.h"
+#include "../graphics/pixel_surface.h"
 
 namespace rckid::ui {
 

@@ -18,6 +18,8 @@ namespace rckid {
     class MainMenu : public ui::App<ui::Action> {
     public:
 
+        String name() const override { return "MainMenu"; }
+
         MainMenu(ui::ActionMenu::MenuGenerator initialGenerator):
             ui::App<ui::Action>{} {
             g_.addChild(c_);
@@ -50,6 +52,12 @@ namespace rckid {
             if (btnPressed(Btn::Start)) {
                 RAMHeap::traceChunks();
             }
+        }
+
+        /** Main menu does not support any extra home menu actions (including the exit). 
+         */
+        ui::ActionMenu::MenuGenerator homeMenuGenerator() override {
+            return [](){ return new ui::ActionMenu{}; };
         }
 
     private:

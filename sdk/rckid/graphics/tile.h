@@ -1,7 +1,7 @@
 #pragma once
 
 #include "geometry.h"
-#include "surface.h"
+#include "pixel_surface.h"
 #include "color.h"
 
 namespace rckid {
@@ -13,7 +13,7 @@ namespace rckid {
     template<Coord WIDTH, Coord HEIGHT, typename PIXEL>
     class Tile {
     public:
-        using Surface = Surface<PIXEL::BPP>;
+        using Surface = PixelSurface<PIXEL::BPP>;
         using Pixel = PIXEL;
         static constexpr uint32_t BPP = PIXEL::BPP;
 

@@ -12,6 +12,8 @@ namespace rckid {
     class Tetris : public CanvasApp<ColorRGB> {
     public:
 
+        String name() const override { return "Tetris"; }
+
         static constexpr uint8_t VERSION = 1;
 
         Tetris(): CanvasApp<ColorRGB>{} {

@@ -6,6 +6,9 @@
 using namespace rckid;
 class TestAppRGB : public CanvasApp<ColorRGB> {
 public:
+
+    String name() const override { return "TestAppRGB"; }
+    
     TestAppRGB(Coord w, Coord h): CanvasApp<ColorRGB>{RenderableCanvas<ColorRGB>{w, h}} {}
 
 protected:
