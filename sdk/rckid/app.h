@@ -4,6 +4,7 @@
 
 #include "rckid.h"
 #include "utils/stream.h"
+#include "ui/menu.h"
 
 namespace rckid {
 
@@ -86,6 +87,25 @@ namespace rckid {
 
         /** */
         virtual void update();
+
+        /** Overriding this function allows the app to specify its own items for the home menu. 
+         
+            The home menu for the application is created by calling the generator this function returns first, which is then updated by the general home menu options (exit, power off, brightness & volume, etc.)
+         */
+        virtual ui::ActionMenu::MenuGenerator homeMenuGenerator() {
+            return [this](){ 
+                ui::ActionMenu * m =  new ui::ActionMenu{}; 
+                addDefaultHomeActionsInto(m);
+                return m;
+            };
+        }
+
+        void addDefaultHomeActionsInto(ui::ActionMenu * menu) {
+            // TODO add state stuff, etc. 
+            menu->add(ui::ActionMenu::Item("Exit", assets::icons_64::poo, [this](){
+                exit();
+            }));
+        }
 
         /** Method responsible for drawing the app contents on the screen. 
          

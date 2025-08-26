@@ -12,14 +12,15 @@ namespace rckid {
     /** Home menu dialog.
      
         The home menu is always accessible by short press of the home button and allows setting the basic functionality such as powering the device off, setting it to sleep, controlling the radios, brightness and sound volume, etc. Furthermore, each application can add its own menu items that can deal with things like saving & restoring the app previous state, etc. 
+
      */
-    class HomeMenu : public ui::App<bool> {
+    class HomeMenu : public ui::App<ui::Action> {
     public:
 
         HomeMenu() : HomeMenu{nullptr} {}
 
         HomeMenu(ui::ActionMenu::MenuGenerator generator):
-            ui::App<bool>{Rect::XYWH(0, 160, 320, 80), /* raw */ true} {
+            ui::App<ui::Action>{Rect::XYWH(0, 160, 320, 80), /* raw */ true} {
             g_.addChild(c_);
             c_.setRect(Rect::XYWH(0, 0, 320, 80));
             c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
@@ -37,7 +38,7 @@ namespace rckid {
     protected:
 
         void focus() override {
-            ui::App<bool>::focus();
+            ui::App<ui::Action>::focus();
             if (c_.menu() == nullptr) {
                 c_.setMenu([this](){
                     ui::ActionMenu * m = customGenerator_ == nullptr ? (new ui::ActionMenu{}) : customGenerator_();;
@@ -58,21 +59,31 @@ namespace rckid {
                 if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                     auto action = c_.currentItem();
                     ASSERT(action->isAction());
-                    action->action()();
+                    if (isCurrentItemCustom())
+                        exit(action->action());
+                    else 
+                        action->action()();
                 };
             }
         }
 
     private:
 
+        bool isCurrentItemCustom() {
+            auto history = c_.history();
+            if (history == nullptr)
+                return c_.currentIndex() < customItems_;
+            while (history->previous != nullptr)
+                history = history->previous;
+            return history->index < customItems_;
+        }
+
         void extendMenu(ui::ActionMenu * menu) {
             menu->add(ui::ActionMenu::Generator("Custom", assets::icons_64::book, customGenerator));
-            if (parent()->parent() != nullptr) {
-                menu->add(ui::ActionMenu::Item("Exit", assets::icons_64::poo, [this](){
-                    exit(true);
-                }));
-            }
+            // set custom items to after exit (exit returns to the previous app as well)
+            customItems_ = menu->size();
             menu->add(ui::ActionMenu::Item("Plane mode", assets::icons_64::airplane_mode, [](){
+                InfoDialog::info("Plane mode", "Plane mode selected");
                 // TODO airplane mode
             }));
             menu->add(ui::ActionMenu::Item("Sleep", assets::icons_64::poo, []() {
@@ -98,6 +109,10 @@ namespace rckid {
 
         // custom generator supplied by the app
         ui::ActionMenu::MenuGenerator customGenerator_; 
+        // number of custom actions
+        uint32_t customItems_ = 0;
+        // determines whether the home menu is inside custom items returned by the app (i.e. will return to the app), or the home menu items which return to the home menu by default.
+        bool activeCustomItem_ = false;
 
     }; // rckid::HomeMenu
 
