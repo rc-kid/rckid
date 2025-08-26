@@ -2,7 +2,7 @@
 
 #include "../rckid.h"
 #include "../app.h"
-#include "surface.h"
+#include "pixel_surface.h"
 #include "font.h"
 #include "../assets/fonts/Iosevka16.h"
 
@@ -11,7 +11,7 @@ namespace rckid {
     template<typename PIXEL>
     class Canvas {
     public:
-        using Surface = Surface<PIXEL::BPP>;
+        using Surface = PixelSurface<PIXEL::BPP>;
         using Pixel = PIXEL;
         static constexpr uint32_t BPP = PIXEL::BPP;
 

@@ -24,6 +24,8 @@ using namespace rckid;
 class GBCStats : public ui::App<void> {
 public:
 
+    String name() const override { return "GBCStats"; }
+
     GBCStats(uint32_t t, uint32_t cycles): ui::App<void>{320, 240} {
 
         ui::Label * l = g_.addChild(new ui::Label{0, 50, STR(t)});

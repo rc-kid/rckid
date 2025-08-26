@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../rckid.h"
-#include "surface.h"
+#include "pixel_surface.h"
 #include "image_decoder.h"
 
 namespace rckid {
@@ -79,26 +79,26 @@ namespace rckid {
                 palette_ = nullptr; // no palette for 16bpp
                 decoder.decodeRGB([this](uint16_t * rgb, int lineNum, int lineWidth) {
                     for (int i = 0; i < lineWidth; ++i)
-                        Surface<16>::setPixelAt(i, lineNum, w_, h_, pixels_, rgb[i]);
+                        PixelSurface<16>::setPixelAt(i, lineNum, w_, h_, pixels_, rgb[i]);
                 });
             } else {
                 decoder.decode([this](uint16_t * pixels, int lineNum, int lineWidth) {
                     switch (bpp_) {
                         case 8:
                             for (int i = 0; i < lineWidth; ++i)
-                                Surface<8>::setPixelAt(i, lineNum, w_, h_, pixels_, pixels[i]);
+                                PixelSurface<8>::setPixelAt(i, lineNum, w_, h_, pixels_, pixels[i]);
                             break;
                         case 4:
                             for (int i = 0; i < lineWidth; ++i)
-                                Surface<4>::setPixelAt(i, lineNum, w_, h_, pixels_, pixels[i]);
+                                PixelSurface<4>::setPixelAt(i, lineNum, w_, h_, pixels_, pixels[i]);
                             break;
                         case 2:
                             for (int i = 0; i < lineWidth; ++i)
-                                Surface<2>::setPixelAt(i, lineNum, w_, h_, pixels_, pixels[i]);
+                                PixelSurface<2>::setPixelAt(i, lineNum, w_, h_, pixels_, pixels[i]);
                             break;
                         case 1:
                             for (int i = 0; i < lineWidth; ++i)
-                                Surface<1>::setPixelAt(i, lineNum, w_, h_, pixels_, pixels[i]);
+                                PixelSurface<1>::setPixelAt(i, lineNum, w_, h_, pixels_, pixels[i]);
                             break;
                         default:
                             UNREACHABLE; // invalid bpp
@@ -122,19 +122,19 @@ namespace rckid {
             switch (bpp_) {
                 case 16:
                     ASSERT(palette_ == nullptr);
-                    return Surface<16>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, nullptr);
+                    return PixelSurface<16>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, nullptr);
                 case 8:
                     ASSERT(palette_ != nullptr);
-                    return Surface<8>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, palette_);
+                    return PixelSurface<8>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, palette_);
                 case 4:
                     ASSERT(palette_ != nullptr);
-                    return Surface<4>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, palette_);
+                    return PixelSurface<4>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, palette_);
                 case 2:
                     ASSERT(palette_ != nullptr);
-                    return Surface<2>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, palette_);
+                    return PixelSurface<2>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, palette_);
                 case 1:
                     ASSERT(palette_ != nullptr);
-                    return Surface<1>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, palette_);
+                    return PixelSurface<1>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, palette_);
                 default:
                     UNREACHABLE; // invalid bpp
             }    
@@ -144,19 +144,19 @@ namespace rckid {
             switch (bpp_) {
                 case 16:
                     ASSERT(palette_ == nullptr);
-                    return Surface<16>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent);
+                    return PixelSurface<16>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent);
                 case 8:
                     ASSERT(palette_ != nullptr);
-                    return Surface<8>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent, palette_);
+                    return PixelSurface<8>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent, palette_);
                 case 4:
                     ASSERT(palette_ != nullptr);
-                    return Surface<4>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent, palette_);
+                    return PixelSurface<4>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent, palette_);
                 case 2:
                     ASSERT(palette_ != nullptr);
-                    return Surface<2>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent, palette_);
+                    return PixelSurface<2>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent, palette_);
                 case 1:
                     ASSERT(palette_ != nullptr);
-                    return Surface<1>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent, palette_);
+                    return PixelSurface<1>::renderColumn(pixels_, column, startRow, numPixels, w_, h_, buffer, transparent, palette_);
                 default:
                     UNREACHABLE; // invalid bpp
             }    

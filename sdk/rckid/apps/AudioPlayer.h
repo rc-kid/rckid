@@ -15,6 +15,9 @@ namespace rckid {
      */
     class AudioPlayer : public ui::App<void> {
     public:
+
+        String name() const override { return "AudioPlayer"; }
+
         AudioPlayer() : ui::App<void>{} {
             c_ = g_.addChild(new FileBrowser{this});
             c_->setRect(Rect::XYWH(0, 160, 320, 80));
@@ -73,6 +76,11 @@ namespace rckid {
 
         class Player : public ui::App<bool> {
         public:
+
+            /** Use umbrella name for all audio player stuff. 
+             */
+            String name() const override { return "AudioPlayer"; }
+
             Player(String path, AudioStream & s) : 
                 ui::App<bool>{Rect::XYWH(0, 160, 320, 80), /*raw*/ true}, 
                 as_{s} {

@@ -17,6 +17,9 @@ namespace rckid {
      */
     class InfoDialog : public ui::App<void> {
     public:
+
+        String name() const override { return "InfoDialog"; }
+        
         InfoDialog(Icon const & icon, String title, String text):
             ui::App<void>{Rect::XYWH(0, 144, 320, 96), /* raw */ true} {
             using namespace ui;

@@ -102,11 +102,9 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 # TODO
 
-- main menu should return empty custom home menu, disallowing exit
-- maybe cleaner way of exitting apps & linking parents & stuff, or maybe not 
-- add comments to menus & stuff
+- finding gameboy games, assingning icons should move to gbcemu
+- gbcemu app name should reflect also the game name
 - gbcemu is leaking memory
-- for modal app, maybe use exit for both exit & select, and let decide based on callbacks
 
 - file browswer can also use the new carouselMenu?
 

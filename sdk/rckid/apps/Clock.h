@@ -10,6 +10,8 @@ namespace rckid {
     class Clock : public ui::App<void> {
     public:
 
+        String name() const override { return "Clock"; }
+
         Clock() : ui::App<void>{} {
             h_ = g_.addChild(new ui::Label{Rect::XYWH(0, 30, 150, 130), ""});
             h_->setFont(Font::fromROM<assets::OpenDyslexic128>());

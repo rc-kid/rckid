@@ -8,11 +8,17 @@ namespace rckid {
      */
     class Friends : public App {
     public:
+
+        String name() const override { return "Friends"; }
+
         /** Signle Contact Viewer and editor. 
          */
         class ContactViewer : public ui::App<void> {
         public:
 
+            /** Use umbrella name for all friends apps.
+             */
+            String name() const override { return "Friends"; }
 
 
 

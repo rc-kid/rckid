@@ -11,11 +11,16 @@ namespace rckid {
 
     /** Home menu dialog.
      
-        The home menu is always accessible by short press of the home button and allows setting the basic functionality such as powering the device off, setting it to sleep, controlling the radios, brightness and sound volume, etc. Furthermore, each application can add its own menu items that can deal with things like saving & restoring the app previous state, etc. 
+        The home menu is always accessible by short press of the home button and allows setting the basic functionality such as powering the device off, setting it to sleep, controlling the radios, brightness and sound volume, etc. 
+        
+        Furthermore, each application can add its own menu items that can deal with things like saving & restoring the app previous state, etc. As a modal app, the result of running home menu is this custom app action that the app needs to execute (this is to ensure the action is executed in correct app context). 
 
+        General home menu actions (settings, modes, etc.) are executed as part of the home menu and do not always return to the menu. 
      */
     class HomeMenu : public ui::App<ui::Action> {
     public:
+
+        String name() const override { return "HomeMenu"; }
 
         HomeMenu() : HomeMenu{nullptr} {}
 

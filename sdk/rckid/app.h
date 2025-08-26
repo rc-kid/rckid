@@ -19,6 +19,12 @@ namespace rckid {
 
         virtual ~App() = default;
 
+        /** Returns the name of the app. 
+            
+            App name is used in various places, such as loading & saving states, etc. Every app must provide one and names of apps in the system should be unique.
+         */
+        virtual String name() const = 0;
+
         virtual void save([[maybe_unused]] WriteStream & into) {
             LOG(LL_ERROR, "Saving application state not supported");
         }   
@@ -52,6 +58,10 @@ namespace rckid {
         /** Returns true if the current app should count towards the daily app time budget managed by the device. By default all apps count towards the budget, whereas some apps may decide otherwise.
         */
         virtual bool isBudgeted() const { return true; }
+
+        /** Returns true if the app supports saving and reloading its state (i.e. if the save and load methods are implemented). By default apps do not support state saving.
+         */
+        virtual bool supportsSaveState() const { return false; }
 
         /** Returns the current (active) application. May also return nullptr during app transitions, or when the system code not managed by the App class (which should be exceedingly rare).
          */
@@ -100,6 +110,10 @@ namespace rckid {
             };
         }
 
+        /** Adds default app actions to given home menu. 
+         
+            This function is to be called from the custom home menu generators where it generates the default app actions, such as exit, or state loads & saves where applicable. 
+         */
         void addDefaultHomeActionsInto(ui::ActionMenu * menu) {
             // TODO add state stuff, etc. 
             menu->add(ui::ActionMenu::Item("Exit", assets::icons_64::poo, [this](){
@@ -177,18 +191,16 @@ namespace rckid {
 
     protected:
 
+        /** Exits the modal app with given result. 
+         
+            Note that in case the app is run in the callback mode, the app does not actually exit, but rather calls the callback function with the result and returns to the app logic afterwards.
+         */
         void exit(T result) {
-            ASSERT(callback_ == nullptr);
-            result_ = result;
-            App::exit();
-        }
-
-        void select(T result) {
-            if (callback_) {
-                callback_(result);
-            } else {
+            if (callback_ == nullptr) {
                 result_ = result;
                 App::exit();
+            } else {
+                callback_(result);
             }
         }
 

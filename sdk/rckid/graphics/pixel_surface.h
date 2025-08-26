@@ -13,7 +13,7 @@ namespace rckid {
     }
 
     template<uint32_t BITS_PER_PIXEL>
-    class Surface {
+    class PixelSurface {
     public:
 
         static constexpr uint32_t BPP = BITS_PER_PIXEL;
@@ -319,6 +319,6 @@ namespace rckid {
             return (width - column - 1) * height * 8 / BPP;
         }
 
-    }; // Surface
+    }; // PixelSurface
 
 }

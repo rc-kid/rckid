@@ -26,6 +26,8 @@ namespace rckid {
     class DataSync : public ui::App<void> {
     public:
 
+        String name() const override { return "DataSync"; }
+
         DataSync():
             ui::App<void>{},
             icon_{Icon{assets::icons_64::pen_drive}},

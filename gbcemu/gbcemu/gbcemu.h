@@ -47,6 +47,8 @@ namespace rckid::gbcemu {
     class GBCEmu : public ModalApp<void> {
     public:
 
+        String name() const override { return "GBCEmu"; }
+
         static constexpr uint32_t SCALED_WIDTH = 267;
         static constexpr uint32_t SCALED_HEIGHT = 240;
 

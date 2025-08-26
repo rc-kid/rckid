@@ -14,6 +14,9 @@ namespace rckid {
      */
     class FMRadio : public ui::App<void> {
     public:
+        
+        String name() const override { return "FMRadio"; }
+
         FMRadio() :
             ui::App<void>{},
             freq_{Rect::XYWH(0, 30, 320, 130), ""},

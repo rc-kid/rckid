@@ -12,6 +12,8 @@ namespace rckid {
     class ContactDialog : public ui::App<Contact> {
     public:
 
+        String name() const override { return "ContactDialog"; }
+
         ContactDialog() : ui::App<Contact>{320, 240} {
             c_ = g_.addChild(new ui::EventBasedCarousel{
                 [this](){ return contacts_.size(); },

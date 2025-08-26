@@ -15,6 +15,8 @@ namespace rckid {
     class SlidingPuzzle : public CanvasApp<ColorRGB> {
     public:
 
+        String name() const override { return "SlidingPuzzle"; }
+
         SlidingPuzzle(): CanvasApp<ColorRGB>{} {
             
         }
