@@ -19,9 +19,9 @@ namespace rckid {
             m_->setHAlign(HAlign::Left);
             colon_ = g_.addChild(new ui::Label{Rect::XYWH(150, 30, 20, 130), ":"});
             colon_->setFont(Font::fromROM<assets::OpenDyslexic128>());
-            contextMenu_.add(new ui::Menu::Item("Set time"));
-            contextMenu_.add(new ui::Menu::Item("Set date"));
-            contextMenu_.add(new ui::Menu::Item("Set alarm"));
+            contextMenu_.add(ui::ActionMenu::Item("Set time"));
+            contextMenu_.add(ui::ActionMenu::Item("Set date"));
+            contextMenu_.add(ui::ActionMenu::Item("Set alarm"));
         }
 
         void update() override {
@@ -36,6 +36,8 @@ namespace rckid {
                 exit();
 
             if (btnPressed(Btn::Select)) {
+                App::run<PopupMenu<ui::Action>>(&contextMenu_);
+                /*
                 auto action = PopupMenu::show(&contextMenu_);
                 if (action.has_value()) {
                     switch (action.value()) {
@@ -52,6 +54,7 @@ namespace rckid {
                             UNREACHABLE;
                     }
                 }
+                */
             }
         }
 
@@ -63,7 +66,7 @@ namespace rckid {
         ui::Label * h_;
         ui::Label * m_;
         ui::Label * colon_;
-        ui::Menu contextMenu_; 
+        ui::ActionMenu contextMenu_; 
 
     }; // rckid::Clock
 

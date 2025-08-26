@@ -107,9 +107,12 @@ namespace rckid::ui {
                 w->update();
         }
 
-        /** If the widget offers any interactivity, calling this method during the app's update call will allow it to respond to the user inputs. Note though that it is the UI itself does not deal with focus, etc. and the app must determine which widget(s) to call this method on.
+        /** If the widget offers any interactivity, calling this method during the app's update call will allow it to respond to the user inputs. 
+         
+            Note though that it is the UI itself does not deal with focus, etc. and the app must determine which widget(s) to call this method on. The method returns true if all possible widget interactions have been processed and false if some interactions could not be handled and should be dealt with by the app itself. 
+         * 
          */
-        virtual void processEvents() {}
+        virtual bool processEvents() { return true; }
 
     protected:
 

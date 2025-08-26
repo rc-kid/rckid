@@ -1,7 +1,6 @@
 #pragma once
 #include "../../ui/file_browser.h"
 
-
 #include "PopupMenu.h"
 
 namespace rckid {
@@ -14,16 +13,16 @@ namespace rckid {
             c_ = g_.addChild(new ui::FileBrowser{"/"});
             c_->setRect(Rect::XYWH(0, 160, 320, 80));
             c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
-            contextMenu_.add(new ui::Menu::Item{"First"});
-            contextMenu_.add(new ui::Menu::Item{"Second"});
-            contextMenu_.add(new ui::Menu::Item{"And Third"});
-            contextMenu_.add(new ui::Menu::Item{"Some Fourth"});
-            contextMenu_.add(new ui::Menu::Item{"Fantasic Five"});
-            contextMenu_.add(new ui::Menu::Item{"Six"});
-            contextMenu_.add(new ui::Menu::Item{"Seven Se7en"});
-            contextMenu_.add(new ui::Menu::Item{"Eight"});
-            contextMenu_.add(new ui::Menu::Item{"9"});
-            contextMenu_.add(new ui::Menu::Item{"Last But Not Least 10"});
+            contextMenu_.add(ui::ActionMenu::Item("First"));
+            contextMenu_.add(ui::ActionMenu::Item("Second"));
+            contextMenu_.add(ui::ActionMenu::Item("And Third"));
+            contextMenu_.add(ui::ActionMenu::Item("Some Fourth"));
+            contextMenu_.add(ui::ActionMenu::Item("Fantasic Five"));
+            contextMenu_.add(ui::ActionMenu::Item("Six"));
+            contextMenu_.add(ui::ActionMenu::Item("Seven Se7en"));
+            contextMenu_.add(ui::ActionMenu::Item("Eight"));
+            contextMenu_.add(ui::ActionMenu::Item("9"));
+            contextMenu_.add(ui::ActionMenu::Item("Last But Not Least 10"));
         }
 
         /** Dialog budgeting mirrors that of its parent.
@@ -53,13 +52,13 @@ namespace rckid {
                 exit();
             }
             if (btnPressed(Btn::Select)) {
-                PopupMenu::show(& contextMenu_);
+                App::run<PopupMenu<ui::Action>>(& contextMenu_);
             }
         }
 
     private:
         ui::FileBrowser * c_;
-        ui::Menu contextMenu_; 
+        ui::ActionMenu contextMenu_; 
 
     }; // rckid::FileDialog
 

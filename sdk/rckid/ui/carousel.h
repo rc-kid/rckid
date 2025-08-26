@@ -120,13 +120,14 @@ namespace rckid::ui {
             setItem(i_, Direction::Right);
         }
 
-        void processEvents() override {
+        bool processEvents() override {
             if (!idle() || size() == 0)
-                return;
+                return true;
             if (btnDown(Btn::Left))
                 moveLeft();
             if (btnDown(Btn::Right))
                 moveRight();
+            return true;
         }
 
         void setItem(uint32_t index, Direction direction = Direction::None) {
@@ -266,6 +267,7 @@ namespace rckid::ui {
         std::function<void(uint32_t, Direction)> setItemHandler_;
     };
 
+    template<typename PAYLOAD>
     class CarouselMenu : public Carousel {
     public:
 
@@ -273,34 +275,107 @@ namespace rckid::ui {
             delete menu_;
         }
 
-        Menu const * menu() const { return menu_; }
+        Menu<PAYLOAD> const * menu() const { return menu_; }
 
         uint32_t size() const override { return (menu_ == nullptr) ? 0 : menu_->size(); }
 
-        void setMenu(Menu * m) {
+        void setMenu(typename Menu<PAYLOAD>::MenuGenerator generator) {
+            generator_ = generator;
             delete menu_;
-            menu_ = m;
+            menu_ = generator_();
+            setItem(0, Direction::Up);
         }
 
-        Menu::Item * currentItem() {
+        typename Menu<PAYLOAD>::MenuItem * currentItem() {
             if (menu_ == nullptr || menu_->size() == 0)
                 return nullptr;
             return & (*menu_)[currentIndex()];
         }
 
+        bool processEvents() override {
+            if (!idle()) // do not accept extra events if idle
+                return true;
+            if (btnDown(Btn::Up) || btnDown(Btn::A)) {
+                auto item = currentItem();
+                if (item == nullptr)
+                    return true; // nothing to process 
+                if (item->isAction())
+                    return false ; // we could not process the event, it will be processed by our owner
+                historyPush();
+                generator_ = item->generator();
+                ASSERT(generator_ != nullptr);
+                delete menu_;
+                menu_ = generator_();
+                setItem(0, Direction::Up);
+            }
+            if (btnDown(Btn::Down) || btnDown(Btn::B)) {
+                if (previous_ != nullptr)
+                    historyPop();
+                else 
+                    return false; // we could not process the event
+            }
+            return Carousel::processEvents();
+        }
+
+        typename Menu<PAYLOAD>::HistoryItem * detachHistory() {
+            // save current state
+            historyPush();
+            // and return the detached history
+            auto result = previous_;
+            previous_ = nullptr;
+            return result;
+        }
+
+        void attachHistory(typename Menu<PAYLOAD>::HistoryItem * history) {
+            ASSERT(previous_ == nullptr); // we do not expect reloading from history when there is history already present
+            if (history == nullptr) {
+                // no history, start with clean state
+                // TODO really? 
+
+            } else {
+                previous_ = history;
+                historyPop(Direction::Up);
+            }
+        }
 
     protected:
 
+        /** Pushes current menu context to the history stack. 
+         
+            This is always simple operation where we just store the state.
+         */
+        void historyPush() {
+            previous_ = new typename Menu<PAYLOAD>::HistoryItem{currentIndex(), generator_, previous_};
+        }
+
+        /** Leaves current submenu. 
+        
+         */
+        void historyPop(Direction transition = Direction::Down) {
+            ASSERT(previous_ != nullptr);
+            auto h = previous_;
+            previous_ = previous_->previous;
+            generator_ = h->generator;
+            // replace the menu
+            delete menu_;
+            menu_ = generator_();
+            setItem(h->index, transition);
+            // delete the history item;
+            delete h;
+        }
+        
         void doSetItem(uint32_t index, Direction direction = Direction::None) override {
             ASSERT(menu_ != nullptr);
             ASSERT(index < menu_->size());
-            Menu::Item const & item = (*menu_)[index];
+            typename Menu<PAYLOAD>::MenuItem const & item = (*menu_)[index];
             set(item.text, item.icon, direction);
         }
 
-    private:
+    private: 
 
-        Menu * menu_ = nullptr;
+        Menu<PAYLOAD> * menu_= nullptr;
+        typename Menu<PAYLOAD>::MenuGenerator generator_ = nullptr;
+        typename Menu<PAYLOAD>::HistoryItem * previous_ = nullptr;
     }; 
 
 } // namespace rckid::ui
