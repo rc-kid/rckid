@@ -34,6 +34,10 @@ namespace rckid {
             return app.runModal();
         }
 
+        /** Returns parent app, or nullptr currently root. 
+         */
+        App * parent() const { return parent_;}
+
         /** Runs the app modally. 
          
             All apps are run modally, app subclasses that return result should update this function to return the result of the app. 
@@ -98,10 +102,6 @@ namespace rckid {
         /** Exits the app. The app does not exit immediately, but the next time its run method starts a new frame cycle. 
          */
         void exit() { app_ = nullptr; }
-
-        /** Returns parent app, or nullptr currently root. 
-         */
-        App * parent() const { return parent_;}
 
         /** Current number of redraws. Reset automatically every second, should be incremented at each display redraw. 
          */

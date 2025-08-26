@@ -15,6 +15,54 @@
 
 namespace rckid {
 
+    class MainMenu : public ui::App<ui::Action> {
+    public:
+
+        MainMenu(ui::ActionMenu::MenuGenerator initialGenerator):
+            ui::App<ui::Action>{} {
+            g_.addChild(c_);
+            c_.setRect(Rect::XYWH(0, 160, 320, 80));
+            c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
+            if (history_ == nullptr)
+                history_ = new ui::ActionMenu::HistoryItem{0, initialGenerator, nullptr};
+            c_.attachHistory(history_);
+        }
+
+        /** Main menu is explicitly not budgeted app as it is the gateway to other applications.
+         */
+        bool isBudgeted() const override { return false; }
+
+    protected:
+        void focus() override {
+            ui::App<ui::Action>::focus();
+        }
+
+        void update() override {
+            ui::App<ui::Action>::update();
+            if (!c_.processEvents()) {
+                if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                    auto action = c_.currentItem();
+                    ASSERT(action->isAction());
+                    exit(action->action());
+                    history_ = c_.detachHistory();
+                }
+            }
+            if (btnPressed(Btn::Start)) {
+                RAMHeap::traceChunks();
+            }
+        }
+
+    private:
+       
+        ui::CarouselMenu<ui::Action> c_;
+
+        static inline ui::ActionMenu::HistoryItem * history_ = nullptr;
+
+    }; // MainMenu
+
+
+#ifdef OLD
+
     struct MainMenuGameLauncher {
         String file;
     };
@@ -24,7 +72,6 @@ namespace rckid {
         ui::Menu::Action,
         MainMenuGameLauncher
     >;
-
 
     /** Main menu application.
      
@@ -184,5 +231,7 @@ namespace rckid {
 
     }; // rckid::MainMenu
 
+
+    #endif
 
 } // namespace rckid

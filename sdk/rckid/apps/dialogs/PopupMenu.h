@@ -11,14 +11,15 @@ namespace rckid {
      
         The popup menu is a simple menu visualizer. 
      */
-    class PopupMenu : public ui::App<uint32_t> {
+    template<typename PAYLOAD>
+    class PopupMenu : public ui::App<PAYLOAD> {
     public:
 
         static constexpr Coord TileWidth = 12;
         static constexpr Coord TileHeight = 24;
 
-        PopupMenu(ui::Menu * menu):
-            ui::App<uint32_t>{Rect::XYWH(0, 240 - getNumRows(menu) * TileHeight - 4, getLongestText(menu) * TileWidth + 4, getNumRows(menu) * TileHeight + 4), /* raw */ true},
+        PopupMenu(ui::Menu<PAYLOAD> * menu):
+            ui::App<PAYLOAD>{Rect::XYWH(0, 240 - getNumRows(menu) * TileHeight - 4, getLongestText(menu) * TileWidth + 4, getNumRows(menu) * TileHeight + 4), /* raw */ true},
             menu_{menu} {
             using namespace ui;
             g_.setBg(ColorRGB::White().withAlpha(32));
@@ -30,19 +31,15 @@ namespace rckid {
             fillText();
         }
 
-        static std::optional<uint32_t> show(ui::Menu * menu) {
-            PopupMenu pm{menu};
-            std::optional<uint32_t> res = pm.runModal();
-            return res;
-        }
-
         void update() override {
             // if back button is selected, do return nullopt
             if (btnPressed(Btn::B))
                 exit();
             if (btnPressed(Btn::A)) {
                 // return the selected item
-                select(selected_);
+                auto & item = (*menu_)[selected_];
+                ASSERT(item.isAction()); // generators not supported yet
+                select(item.action());
             }
             if (btnPressed(Btn::Up)) {
                 if (selected_ > 0)
@@ -70,16 +67,21 @@ namespace rckid {
 
     private:
 
-        static Coord getLongestText(ui::Menu * menu) {
+        using ui::App<PAYLOAD>::g_;
+        using ui::App<PAYLOAD>::exit;
+        using ui::App<PAYLOAD>::parent;
+        using ui::App<PAYLOAD>::select;
+
+        static Coord getLongestText(ui::Menu<PAYLOAD> * menu) {
             uint32_t longest = 0;
-            for (auto & item : *menu) {
-                if (item->text.size() > longest)
-                    longest = item->text.size();
+            for (auto const & item : *menu) {
+                if (item.text.size() > longest)
+                    longest = item.text.size();
             }
             return longest;
         }
 
-        static Coord getNumRows(ui::Menu * menu) {
+        static Coord getNumRows(ui::Menu<PAYLOAD> * menu) {
             return menu->size() > 6 ? 6 : menu->size(); 
         }
 
@@ -101,7 +103,7 @@ namespace rckid {
             selectedRect_->setPos(2, 2 + (selected_ - top_) * TileHeight);
         }
 
-        ui::Menu * menu_; 
+        ui::Menu<PAYLOAD> * menu_; 
         ui::Rectangle * selectedRect_; 
         ui::Tilemap<Tile<12, 24, Color16>> * tm_;
         uint32_t top_ = 0;
