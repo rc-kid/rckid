@@ -11,9 +11,9 @@ namespace rckid {
 
     void App::update() {
         if (btnPressed(Btn::Home)) {
-            std::optional<bool> x = App::run<HomeMenu>();
-            if (x.has_value() && x.value())
-                exit();
+            std::optional<ui::Action> a = App::run<HomeMenu>(homeMenuGenerator());
+            if (a.has_value())
+                a.value()();
         }
     }
 

@@ -326,7 +326,7 @@ namespace rckid::gbcemu {
         //clearTilemap();
         //clearTileset();
         //setBreakpoint(0xc2a6);
-        while (true) {
+        while (currentApp() == this) {
 #if (GBCEMU_ENABLE_BKPT == 1)
             if (mem8(PC) == 0xfd) // bkpt
                 break; 
@@ -347,6 +347,8 @@ namespace rckid::gbcemu {
 #endif
             setPPUMode(0); // HBlank
             runCPU(cgb_ ? DOTS_MODE_0 * 2 : DOTS_MODE_0);
+            // deal with home button press
+            ModalApp::update();
         }
 
         // we are done, should blur ourselves, and refocus parent (if any)
@@ -423,15 +425,6 @@ namespace rckid::gbcemu {
 
     void GBCEmu::blur() {
         App::blur();
-    }
-
-
-    void GBCEmu::update() {
-        // TODO what to do with update? 
-    }
-
-    void GBCEmu::draw() {
-        // TODO do noithing for now as drawing is done as part of the update function ATM
     }
 
     void GBCEmu::loadCartridge(GamePak * game) {
@@ -1588,8 +1581,8 @@ namespace rckid::gbcemu {
         IO_JOYP = (IO_JOYP & 0xf0) | value;
         // enter debug mode if home button is pressed
         // TODO this will change to showing the home menu instead from here
-        if (btnPressed(Btn::Home))
-            debug_ = true;
+        //if (btnPressed(Btn::Home))
+        //    debug_ = true;
     }
 
 } // namespace rckid::gbcemu

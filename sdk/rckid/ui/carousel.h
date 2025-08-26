@@ -317,6 +317,10 @@ namespace rckid::ui {
             return Carousel::processEvents();
         }
 
+        typename Menu<PAYLOAD>::HistoryItem const * history() const {
+            return previous_;
+        }
+
         typename Menu<PAYLOAD>::HistoryItem * detachHistory() {
             // save current state
             historyPush();

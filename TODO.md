@@ -102,7 +102,11 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 # TODO
 
-- actually not sure what to do with the mainmenu's home menu showing exit? - how to determine we are running inside a main menu? -- deal with this after main menu uses Menu
+- main menu should return empty custom home menu, disallowing exit
+- maybe cleaner way of exitting apps & linking parents & stuff, or maybe not 
+- add comments to menus & stuff
+- gbcemu is leaking memory
+- for modal app, maybe use exit for both exit & select, and let decide based on callbacks
 
 - file browswer can also use the new carouselMenu?
 

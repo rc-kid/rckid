@@ -155,8 +155,25 @@ namespace rckid::gbcemu {
         void loop() override;
         void focus() override;
         void blur() override;
-        void update() override;
-        void draw() override;
+
+        /** Draw does nothing as drawing is part of the emulators custom loop, but draw is abstract in the base class so we have to provide it here. 
+         */
+        void draw() override {}
+
+        ui::ActionMenu::MenuGenerator homeMenuGenerator() {
+            return [this](){
+                ui::ActionMenu * m = new ui::ActionMenu{};
+                addDefaultHomeActionsInto(m);
+                m->add(ui::ActionMenu::Item(
+                    "Debug Mode",
+                    assets::icons_64::poo,
+                    [this](){
+                        debug_ = true;
+                    }
+                ));
+                return m;
+            };
+        }
 
     private:
 
