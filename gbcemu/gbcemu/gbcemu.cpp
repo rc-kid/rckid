@@ -329,17 +329,21 @@ namespace rckid::gbcemu {
         pixels_{320} {
     }
 
-    GBCEmu::~GBCEmu() {
+    void GBCEmu::clear() {
         delete gamepak_;
+        for (uint32_t i = 0; i < 16; ++i)
+            delete eram_[i];
+        // TODO some more cleanup would be good here
+    }
+
+    GBCEmu::~GBCEmu() {
+        clear();
         for (uint32_t i = 0; i < 2; ++i)
             delete [] vram_[i];
         for (uint32_t i = 0; i < 8; ++i)
             delete [] wram_[i];
         delete [] oam_;
         delete [] hram_;
-        for (uint32_t i = 0; i < 16; ++i)
-            delete eram_[i];
-        // TODO some more cleanup would be good here
     }
 
     void GBCEmu::loop() {
@@ -451,37 +455,39 @@ namespace rckid::gbcemu {
     }
 
     void GBCEmu::loadCartridge(GamePak * game) {
+        clear();
         gamepak_ = game;
-        mbc_ = game->cartridgeMBC();
-        switch (mbc_) {
-            case MBC::None:
-            case MBC::Type1:
-            case MBC::Type2:
-            case MBC::Type3:
-                break;
-            default:
-                LOG(LL_ERROR, "Unsupported MBC type " << static_cast<uint8_t>(mbc_));
-                ASSERT(false);
-                break;
+        if (gamepak_ == nullptr) {
+            mbc_ = MBC::None;
+            // TODO do we want to clear memmap? or not necessary?
+        } else {
+            mbc_ = game->cartridgeMBC();
+            switch (mbc_) {
+                case MBC::None:
+                case MBC::Type1:
+                case MBC::Type2:
+                case MBC::Type3:
+                    break;
+                default:
+                    LOG(LL_ERROR, "Unsupported MBC type " << static_cast<uint8_t>(mbc_));
+                    ASSERT(false);
+                    break;
+            }
+            // figure out the size of the external RAM and allocate accordingly
+            uint32_t eramSize = gamepak_->cartridgeRAMSize() / 8192;
+            for (uint32_t i = 0; i < eramSize; ++i)
+                eram_[i] = new uint8_t[0x2000];
+            // initialize memory mapping defaults
+            memMap_[0] = const_cast<uint8_t *>(gamepak_->getPage(0));
+            memMap_[1] = memMap_[0] + 0x1000;
+            memMap_[2] = memMap_[0] + 0x2000;
+            memMap_[3] = memMap_[0] + 0x3000;
+            setRomPage(1);
+            setVideoRamPage(0);
+            setExternalRamPage(0);
+            memMap_[12] = wram_[0];
+            memMap_[14] = wram_[0];
         }
-        // figure out the size of the external RAM and allocate accordingly
-        for (uint32_t i = 0; i < 16; ++i) {
-            delete [] eram_[i];
-            eram_[i] = nullptr;
-        }
-        uint32_t eramSize = gamepak_->cartridgeRAMSize() / 8192;
-        for (uint32_t i = 0; i < eramSize; ++i)
-            eram_[i] = new uint8_t[0x2000];
-        // initialize memory mapping defaults
-        memMap_[0] = const_cast<uint8_t *>(gamepak_->getPage(0));
-        memMap_[1] = memMap_[0] + 0x1000;
-        memMap_[2] = memMap_[0] + 0x2000;
-        memMap_[3] = memMap_[0] + 0x3000;
-        setRomPage(1);
-        setVideoRamPage(0);
-        setExternalRamPage(0);
-        memMap_[12] = wram_[0];
-        memMap_[14] = wram_[0];
         setWorkRamPage(1);
         // register initial values as if this is CGB
         // from https://gbdev.io/pandocs/Power_Up_Sequence.html
