@@ -90,7 +90,7 @@ def processTest(test, f):
 
 def processTests(tests, f, opcode):
     print(f"    TEST(gbcemu, opcode_{opcode}) {{", file = f)
-    print( "        GBCEmu gbc{};", file = f)
+    print( "        GBCEmu gbc{\"\", nullptr};", file = f)
     print( "        uint8_t cartridge[0x8000];", file = f)
     print( "        cartridge[0x149] = 0x02; // 8kb external RAM", file = f)
     print( "        gbc.loadCartridge(new FlashGamePak(cartridge));", file = f)

@@ -54,7 +54,7 @@ int main() {
 #endif
     initialize();
     while (true) {
-        auto app = gbcemu::GBCEmu{};
+        auto app = gbcemu::GBCEmu{"", nullptr};
         //app.loadCartridge(new gbcemu::FlashGamePak{});
         //if (false)
         //app.loadCartridge(new gbcemu::FlashGamePak{

@@ -2,7 +2,7 @@
 
 namespace rckid::gbcemu {
     TEST(gbcemu, arithmetic_add8) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_A_imm8(0x12),
             LD_B_imm8(0x05),
@@ -27,7 +27,7 @@ namespace rckid::gbcemu {
     }
 
     TEST(gbcemu, arithmetic_inc) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_A_imm8(0x12),
             INC_A,
@@ -55,7 +55,7 @@ namespace rckid::gbcemu {
     }
 
     TEST(gbcemu, arithmetic_dec) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_A_imm8(0x12),
             DEC_A,
@@ -71,7 +71,7 @@ namespace rckid::gbcemu {
     }
 
     TEST(gbcemu, clear_flags) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_A_imm8(0x01), 
             ADD_A_A,
@@ -81,7 +81,7 @@ namespace rckid::gbcemu {
     }
 
     TEST(gbcemu, arithmetic_add16) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_A_imm8(0x01), // clear Z flag
             ADD_A_A,
@@ -101,7 +101,7 @@ namespace rckid::gbcemu {
     }
 
     TEST(gbcemu, add_a_n8) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_A_imm8(0x01),
             ADD_A_imm8(0x02),
@@ -135,7 +135,7 @@ namespace rckid::gbcemu {
     }
 
     TEST(gbcemu, adc_a_n8) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_A_imm8(0x01),
             ADC_A_imm8(0x02),
@@ -157,7 +157,7 @@ namespace rckid::gbcemu {
     }
 
     TEST(gbcemu, sub_a_n8) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_A_imm8(0x01),
             SUB_A_imm8(0x02),
@@ -179,7 +179,7 @@ namespace rckid::gbcemu {
     }
 
     TEST(gbcemu, cp_a_n8) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_A_imm8(0x01),
             CP_A_imm8(0x02),
@@ -198,7 +198,7 @@ namespace rckid::gbcemu {
     }
 
     TEST(gbcemu, rra) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_A_imm8(0x01),
             RRA,

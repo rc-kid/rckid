@@ -1,5 +1,5 @@
     TEST(gbcemu, opcode_8a) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         uint8_t cartridge[0x8000];
         cartridge[0x149] = 0x02; // 8kb external RAM
         gbc.loadCartridge(new FlashGamePak(cartridge));

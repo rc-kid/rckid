@@ -3,7 +3,7 @@
 namespace rckid::gbcemu {
 
     TEST(gbcemu, simple_nop) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             NOP, 
         );
@@ -11,7 +11,7 @@ namespace rckid::gbcemu {
     }
 
     TEST(gbcemu, simple_scf) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             SCF,
         );
@@ -20,7 +20,7 @@ namespace rckid::gbcemu {
     }
     
     TEST(gbcemu, simple_regLoads) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_A_imm8(0x12),
             LD_B_imm8(0x34),
@@ -35,7 +35,7 @@ namespace rckid::gbcemu {
     }
 
     TEST(gbcemu, opcode_test) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         uint8_t cartridge[0x8000];
         gbc.loadCartridge(new FlashGamePak(cartridge));
         // 01 0000
