@@ -146,9 +146,6 @@ namespace rckid::gbcemu {
 
         CachedGamePak(T && s):
             s_{std::move(s)} {
-                // FIXHEAP -- why was this here?
-                //Arena::allocBytes(PAGE_SIZE * 4);
-
         }
 
         ~CachedGamePak() override {
@@ -172,6 +169,10 @@ namespace rckid::gbcemu {
 
             PageInfo(uint8_t * buffer):
                 buffer{buffer} {
+            }
+
+            ~PageInfo() {
+                delete [] buffer;
             }
 
             void detach() {
