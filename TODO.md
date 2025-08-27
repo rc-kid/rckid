@@ -102,7 +102,6 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 # TODO
 
-- finding gameboy games, assingning icons should move to gbcemu
 - gbcemu app name should reflect also the game name
 - gbcemu is leaking memory
 

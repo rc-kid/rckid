@@ -44,24 +44,10 @@ ui::ActionMenu * gamesGenerator() {
         //MainMenu::Action("Tetris", assets::icons_64::tetris, App::run<TextDialog>),
         ui::ActionMenu::Item("Tetris", assets::icons_64::tetris, App::run<Tetris>),
     };
-    // now get all the menus 
-    fs::Folder games = fs::folderRead("/games");
-    for (auto & entry : games) {
-        if (entry.isFile() && (fs::ext(entry.name()) == ".gb")) {
-            LOG(LL_INFO, "Found game: " << entry.name());
-            String eName = entry.name();
-            result->add(ui::ActionMenu::Item(
-                fs::stem(eName),
-                assets::icons_64::gameboy,
-                [eName](){
-                    LOG(LL_INFO, "running game: " << eName);
-                    gbcemu::GBCEmu app{};
-                    app.loadCartridge(new gbcemu::CachedGamePak{fs::fileRead(STR("/games/" << eName))});    
-                    app.runModal();
-                }
-            ));
-        }
-    }
+    // append available gbcemu ROMs
+    gbcemu::GBCEmu::appendGamesFrom("/games", result);
+
+    // and return the menu
     return result;
 }
 

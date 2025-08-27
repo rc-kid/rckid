@@ -52,6 +52,11 @@ namespace rckid::gbcemu {
         static constexpr uint32_t SCALED_WIDTH = 267;
         static constexpr uint32_t SCALED_HEIGHT = 240;
 
+        /** Searches given folder for compatible game ROMs and adds them to the provided menu. 
+         
+            The menu item actions will start GBCEmu with the selected game loaded as cartridge. Any file with `gb` extension in the provided folder is assumed to be a compatible ROM.
+         */
+        static void appendGamesFrom(char const * path, ui::ActionMenu * into);
 
         enum class DisplayMode {
             Native,

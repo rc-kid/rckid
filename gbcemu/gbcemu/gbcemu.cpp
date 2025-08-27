@@ -286,6 +286,27 @@ static constexpr int val_1 = 1;
 
 namespace rckid::gbcemu {
 
+    void GBCEmu::appendGamesFrom(char const * path, ui::ActionMenu * into) {
+        fs::Folder games = fs::folderRead(path);
+        for (auto & entry : games) {
+            if (entry.isFile() && (fs::ext(entry.name()) == ".gb")) {
+                LOG(LL_INFO, "Found game: " << entry.name());
+                String eName = entry.name();
+                into->add(ui::ActionMenu::Item(
+                    fs::stem(eName),
+                    assets::icons_64::gameboy,
+                    [eName](){
+                        LOG(LL_INFO, "running game: " << eName);
+                        gbcemu::GBCEmu app{};
+                        app.loadCartridge(new gbcemu::CachedGamePak{fs::fileRead(STR("/games/" << eName))});    
+                        app.runModal();
+                    }
+                ));
+            }
+        }
+    }
+
+
     GBCEmu::GBCEmu():
         vram_{
             new uint8_t[0x2000],
