@@ -245,6 +245,8 @@ namespace rckid {
     }
 
     void initializeNoWindow([[maybe_unused]] int argc, [[maybe_unused]] char * argv[]) {
+        StackProtection::currentSize();
+        SystemMallocGuard::enable();
         std::cout << "RCKid initialization w/o window" << std::endl;
         SystemMallocGuard::disable();
     }
