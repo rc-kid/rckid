@@ -47,7 +47,7 @@ namespace rckid::gbcemu {
     class GBCEmu : public ModalApp<void> {
     public:
 
-        String name() const override { return "GBCEmu"; }
+        String name() const override { return STR("GBCEmu_" << appName_); }
 
         static constexpr uint32_t SCALED_WIDTH = 267;
         static constexpr uint32_t SCALED_HEIGHT = 240;
@@ -64,7 +64,10 @@ namespace rckid::gbcemu {
             X2
         }; 
 
-        GBCEmu();
+        GBCEmu(String appName, GamePak * gamepak):
+            GBCEmu(std::move(appName)) {
+            loadCartridge(gamepak);
+        }
 
         ~GBCEmu() override;
 
@@ -158,6 +161,8 @@ namespace rckid::gbcemu {
 #endif
 
     protected:
+
+        GBCEmu(String appName);
 
         void loop() override;
         void focus() override;
@@ -458,6 +463,9 @@ namespace rckid::gbcemu {
         DisplayMode displayMode_ = DisplayMode::Scaled;
         uint32_t displayX2Start_ = 0;
         //@}
+
+        // name of the cartridge used
+        String appName_;
 
         // Current gamepak
         GamePak * gamepak_ = nullptr;

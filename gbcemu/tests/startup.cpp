@@ -3,7 +3,7 @@
 namespace rckid::gbcemu {
 
     TEST(gbcemu, startup_flags) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             NOP,
         );

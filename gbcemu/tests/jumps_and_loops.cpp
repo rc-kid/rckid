@@ -3,7 +3,7 @@
 namespace rckid::gbcemu {
 
     TEST(gbcemu, jumps_jp) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             // 0x150
             LD_A_imm8(123),
@@ -19,7 +19,7 @@ namespace rckid::gbcemu {
 
 
     TEST(gbcemu, jumps_jp_c_nc) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             // 0
             LD_A_imm8(123),
@@ -47,7 +47,7 @@ namespace rckid::gbcemu {
     }
 
     TEST(gbcemu, jumps_jr) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_A_imm8(123),
             JR(2),
@@ -58,7 +58,7 @@ namespace rckid::gbcemu {
     }
 
     TEST(gbcemu, jumps_jr_c_nc) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_A_imm8(123),
             JR_C(2),

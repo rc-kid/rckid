@@ -3,7 +3,7 @@
 namespace rckid::gbcemu {
 
     TEST(gbcemu, memory_storeload8) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_HL_imm16(0xc000),
             LD_A_imm8(0x12),
@@ -17,7 +17,7 @@ namespace rckid::gbcemu {
     }
 
     TEST(gbcemu, memory_stack) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_SP_imm16(0xd000),
             LD_HL_imm16(0xcffe),
@@ -36,7 +36,7 @@ namespace rckid::gbcemu {
     }
 
     TEST(gbcemu, memory_oam) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_HL_imm16(0xfe00),
             LD_A_L,
@@ -62,7 +62,7 @@ namespace rckid::gbcemu {
     }
 
     TEST(gbcemu, memory_hram) {
-        GBCEmu gbc{};
+        GBCEmu gbc{"", nullptr};
         RUN(
             LD_HL_imm16(0xff80),
             LD_A_imm8(10),

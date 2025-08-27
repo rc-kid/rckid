@@ -297,8 +297,9 @@ namespace rckid::gbcemu {
                     assets::icons_64::gameboy,
                     [eName](){
                         LOG(LL_INFO, "running game: " << eName);
-                        gbcemu::GBCEmu app{};
-                        app.loadCartridge(new gbcemu::CachedGamePak{fs::fileRead(STR("/games/" << eName))});    
+                        GamePak * gamepak = new gbcemu::CachedGamePak{fs::fileRead(STR("/games/" << eName))};
+                        gbcemu::GBCEmu app{fs::stem(eName), gamepak};
+                        //app.loadCartridge(new gbcemu::CachedGamePak{fs::fileRead(STR("/games/" << eName))});    
                         app.runModal();
                     }
                 ));
@@ -307,7 +308,8 @@ namespace rckid::gbcemu {
     }
 
 
-    GBCEmu::GBCEmu():
+    GBCEmu::GBCEmu(String appName):
+        appName_{std::move(appName)},
         vram_{
             new uint8_t[0x2000],
             new uint8_t[0x2000],
