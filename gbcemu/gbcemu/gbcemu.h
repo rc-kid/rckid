@@ -80,6 +80,8 @@ namespace rckid::gbcemu {
         }
 
         /** Laods the given gamepak in the emulator. 
+         
+            This function should only be used during testing, the default constructor with application name and gamepak should be the only user-facing way of starting GBCEmu.
          */
         void loadCartridge(GamePak * game);
 
@@ -163,6 +165,10 @@ namespace rckid::gbcemu {
     protected:
 
         GBCEmu(String appName);
+
+        /** Clears all the structures asociated with GBCEmu. Useful for teardown, or between cartridge swaps. 
+         */
+        void clear();
 
         void loop() override;
         void focus() override;
@@ -365,8 +371,8 @@ namespace rckid::gbcemu {
         uint8_t mem8(uint16_t addr);
         uint16_t mem16(uint16_t addr);
 
-        uint8_t * vram_[2];
-        uint8_t * wram_[8];
+        uint8_t * vram_[2] = { 0,0 };
+        uint8_t * wram_[8] = { 0,0,0,0,0,0,0,0 };
         uint8_t * oam_ = nullptr;
         uint8_t * hram_ = nullptr;
 
@@ -375,7 +381,7 @@ namespace rckid::gbcemu {
         bool eramActive_ = false;
 
         // memory mapping information. For fast access, the memory is divided into 16 4kb regions with pointers to beginning in the array. This is true for all but the last block, which is a bit more complex as it contains echo ram, oam memory, io regs and hram.
-        uint8_t * memMap_[16];
+        uint8_t * memMap_[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 
         // MBC type used in the current gamepak
         MBC mbc_ = MBC::None;
