@@ -102,8 +102,6 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 # TODO
 
-- memory leak guard is probably not accurate with 32 bytes lost for each app? Or maybe app has issues? (less likely)
-
 - file browswer can also use the new carouselMenu?
 
 - TODO would be good if image could work immediately with static in memory pictures
