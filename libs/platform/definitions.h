@@ -21,8 +21,11 @@ namespace platform {
     __VA_ARGS__ ; \
     __pragma(pack(pop)) \
     static_assert(true)
+// TODO this is not right
+#define PACKED_ALIGNED(N, ...) PACKED(__VA_ARGS__)
 #else
-#define PACKED(...) __VA_ARGS__ __attribute__((packed))  
+#define PACKED(...) __VA_ARGS__ __attribute__((packed))
+#define PACKED_ALIGNED(N, ...) __VA_ARGS__ __attribute__((packed, aligned(N)))
 #endif
 
 #ifdef _MSC_VER

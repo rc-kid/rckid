@@ -2,6 +2,7 @@
 
 #include "backend_config.h"
 #include "error.h"
+#include "log.h"
 
 #ifndef RCKID_BACKEND_FANTASY
 extern char __bss_end__;
@@ -9,6 +10,8 @@ extern char __StackTop;
 #endif
 
 namespace rckid {
+
+    uint32_t memoryFree();
 
     /** RAM Heap Manager
      */
@@ -19,8 +22,13 @@ namespace rckid {
 
         static bool contains(void const * ptr) { return ptr >= heapStart() && ptr < heapEnd_; }
 
+        /** Returns the total number of bytes used by the heap. This includes the chunk headers and all chunks (and their headers) in the freelist. */
         static uint32_t usedBytes() { return (heapEnd_ - heapStart()) * sizeof(Chunk);}
 
+        /** Returns the number of bytes in the freelist. 
+         
+            Note that this number *includes* the chunk headers as well - this means that the number is slightly higher than the actual sum of user-available free bytes in the freelist, and is extremely likely to be larger than the largest freelist chunk.
+         */
         static uint32_t freeBytes();
 
         static void reset() {
@@ -39,6 +47,7 @@ namespace rckid {
 
         class Chunk {
         public:
+            static constexpr uint32_t HEADER_SIZE = 4;
 
             uint32_t payloadSize() const { return headerSize_ * sizeof(Chunk) - 4; }
 
@@ -135,6 +144,21 @@ namespace rckid {
         static inline uint16_t lastSize_ = 0;
 
     }; 
+
+    class MemoryLeakGuard {
+    public:
+        MemoryLeakGuard(): freeMem_{memoryFree()} {}
+
+        ~MemoryLeakGuard() {
+            uint32_t newFree = memoryFree();
+            if (newFree < freeMem_)
+                LOG(LL_ERROR, "Memory leak: " << (freeMem_ - newFree) << " bytes lost");
+        }
+
+    private:
+        uint32_t const freeMem_;
+
+    }; // rckid::MemoryLeakGuard
 
     class StackProtection {
     public:

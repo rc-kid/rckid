@@ -102,7 +102,6 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 # TODO
 
-- gbcemu app name should reflect also the game name
 - gbcemu is leaking memory
 
 - file browswer can also use the new carouselMenu?

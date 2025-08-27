@@ -80,7 +80,7 @@ namespace rckid {
         while (x != nullptr) {
             ASSERT(x->isFree());
             ASSERT(x->headerSize_ > 0);
-            result += x->payloadSize();
+            result += x->payloadSize() + Chunk::HEADER_SIZE; 
             x = x->prevFree();
         }
         return result;
@@ -111,13 +111,17 @@ namespace rckid {
         RAMHeap::reset();
     }
 
-    uint32_t memoryFree() {
+    uint32_t memoryUnclaimed() {
 #ifdef RCKID_BACKEND_FANTASY
         return RCKID_MEMORY_SIZE - (RAMHeap::usedBytes() + StackProtection::currentSize());
 #else
         return StackProtection::currentStack() - reinterpret_cast<char*>(RAMHeap::heapEnd_);
         StackProtection::check();
 #endif
+    }
+
+    uint32_t memoryFree() {
+        return memoryUnclaimed() + RAMHeap::freeBytes();
     }
 
 } // namespace rckid

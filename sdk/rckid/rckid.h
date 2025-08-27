@@ -283,15 +283,20 @@ namespace rckid {
         \ref memoryFree, \ref Heap, \ref Arena, 
     */
 
-    /** Returns the number of free memory, i.e. the unclaimed space between heap and stack
+    /** Returns the unclaimed memory, i.e. the memory that can be taken up by either stack, or heap.
+     */
+    uint32_t memoryUnclaimed(); 
+
+    /** Returns the number of free memory. 
      
-        This is the upper limit of what new memory can be allocated. The actual free memory can be larger because of free holes in the heap space that this method does not track. 
+        This is the unclaimed memory plus sum of all free chunks claimed by the heap (i.e. those in the middle of the heap). As this function walks the freelist, it may be "expensive". 
      */
     uint32_t memoryFree();
-
+    
     /** Returns true if the memory comes from immutable region (ROM on the device)
      */
     bool memoryIsImmutable(void const * ptr);
+
 
     /** \page sdk
         \section sdfs SD Card Filesystem access. 
