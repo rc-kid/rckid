@@ -39,6 +39,22 @@ namespace rckid {
 
         static void traceChunks();
 
+        class LeakGuard {
+        public:
+            LeakGuard(): usedHeap_{usedBytes() - freeBytes()} {}
+
+            ~LeakGuard() {
+                uint32_t newUsed = usedBytes() - freeBytes();
+                if (newUsed < usedHeap_)
+                    LOG(LL_ERROR, "Memory leak: " << (usedHeap_ - newUsed) << " bytes lost");
+            }
+
+        private:
+            uint32_t const usedHeap_;
+
+
+        }; // RAMHeap::LeakGuard
+
     private:
 
         friend class StackProtection;
@@ -144,21 +160,6 @@ namespace rckid {
         static inline uint16_t lastSize_ = 0;
 
     }; 
-
-    class MemoryLeakGuard {
-    public:
-        MemoryLeakGuard(): freeMem_{memoryFree()} {}
-
-        ~MemoryLeakGuard() {
-            uint32_t newFree = memoryFree();
-            if (newFree < freeMem_)
-                LOG(LL_ERROR, "Memory leak: " << (freeMem_ - newFree) << " bytes lost");
-        }
-
-    private:
-        uint32_t const freeMem_;
-
-    }; // rckid::MemoryLeakGuard
 
     class StackProtection {
     public:

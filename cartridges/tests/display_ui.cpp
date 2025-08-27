@@ -112,7 +112,7 @@ int main() {
         yield();
         ASSERT(app.has_value());
         {
-            MemoryLeakGuard g_;
+            RAMHeap::LeakGuard g_;
             app.value()();
         }
     }
