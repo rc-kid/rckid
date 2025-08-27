@@ -12,7 +12,7 @@
     raw 2 : YYYhhhhh
     raw 3 : YYYddddd
 */
-PACKED(class TinyDateTime {
+PACKED_ALIGNED(4, class TinyDateTime {
 public:
 
     static constexpr uint16_t YEAR_START = 2023;
@@ -250,7 +250,7 @@ static_assert(sizeof(TinyDateTime) == 4);
 
 /** Date only, which fits into 4 bytes. Unlike TinyDateTime, which is best suited to tracking current time thanks to the small year range, TinyDate will work with years from -32768 to +32767.
  */
-PACKED(class TinyDate{
+PACKED_ALIGNED(4, class TinyDate{
 public:
 
     TinyDate() = default;

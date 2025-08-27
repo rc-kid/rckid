@@ -111,7 +111,10 @@ int main() {
         LOG(LL_INFO, "Free memory: " << memoryFree() / 1024);
         yield();
         ASSERT(app.has_value());
-        app.value()();
+        {
+            MemoryLeakGuard g_;
+            app.value()();
+        }
     }
 }
 
