@@ -44,7 +44,7 @@ namespace rckid {
 
         String(String const & from) = default;
 
-        String(String && from) = default;
+        String(String && from) noexcept = default;
 
         String & operator = (String const &) = default;
         String & operator = (String &&) = default;
