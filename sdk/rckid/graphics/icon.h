@@ -37,7 +37,7 @@ namespace rckid {
 
         Icon(String const & str): Icon{str.c_str()} {}
 
-        Icon(String && str): buffer_{reinterpret_cast<uint8_t const *>(str.release())}, bufferSize_{BUFFER_FILE_PATH} {}
+        Icon(String && str) noexcept: buffer_{reinterpret_cast<uint8_t const *>(str.release())}, bufferSize_{BUFFER_FILE_PATH} {}
 
         Icon(Icon const & other):
             buffer_{other.buffer_},
