@@ -12,6 +12,7 @@ extern char __StackTop;
 namespace rckid {
 
     uint32_t memoryFree();
+    uint32_t memoryUnclaimed();
 
     /** RAM Heap Manager
      */
@@ -58,7 +59,7 @@ namespace rckid {
     private:
 
         friend class StackProtection;
-        friend uint32_t memoryFree();
+        friend uint32_t memoryUnclaimed();
         friend bool memoryIsImmutable(void const * ptr);
 
         class Chunk {
@@ -187,6 +188,7 @@ namespace rckid {
     private:
 
         friend uint32_t memoryFree();
+        friend uint32_t memoryUnclaimed();
 
         static char * stackStart() {
 #ifdef RCKID_BACKEND_FANTASY
