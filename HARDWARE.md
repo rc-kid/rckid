@@ -28,7 +28,7 @@ RCKid is based on the [RP2030B](datasheets/rp2350-datasheet.pdf) (80 pin QFN) an
                 \                        || <I2C>     
                  \                       ||           //======(buttons, 3x4 mtrix)
                   \               +-----------------+//
-                   \              |    ATTiny3217   |
+                   \              |    ATTiny3217   |/
                     \-------------| (IO, time, pwr) |----------(RGB)
                              /----+-----------------+
                             /            ||         \     +-----------+
