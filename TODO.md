@@ -74,59 +74,43 @@
 - [ ] verify on forums the Si4705 headset antenna ESD & filters
 - [ ] verify on forums the USB ESD protection
 - [ ] verify on forums about the I2S termination resistors and their placement
-- [ ] should there be ground under switches? 
+- [X] should there be ground under switches? (no)
 - [X] verify rumbler position & wire length
 - [X] draw RM2 cartridge
 - [ ] draw LoRA cartridge
 - [X] draw NRF24l01P cartridge
 - [X] make room for embedded antenna on device case
-- [ ] add board for battery connector
+- [X] add board for battery connector
 - [ ] add board for debug connectors
 - [X] add holes in case for debug connectors
 - [X] verify glass top has cutouts for antenna
 - [X] add fused cartridge for resin printing
-- [ ] add fused buttons for resin printing
+- [X] add fused buttons for resin printing
 - [X] IR LED (via DMP1045u as it sources over 20mA)
 - [X] white LED (can be wired via AP2502 which I can get from TME)
 
-# Check before prototype order
 
-- [X] 2x assembly the cartridge connector pcb
-- [ ] 5x basic cartridge
-    - [ ] drawing background
-- [X] 5x RM2 cartridge
-- [X] 5x NRF24L01P cartridge 
-- [ ] 5x LoRa cartridge
-    - [ ] add for module I have
-    - [ ] do other modules as well
-- [X] 5x pcb of the battery connector
+## Prototype Order
 
-- [ ] 2x assembly (but pay for 5x) of RCKid
-    - [X] add testpoints
-    - [X] FMA connector is wrong (SMT)
-    - [X] cutpout for strap
-    - [X] verify SD card connections
-    - [ ] verify audio codec and FM radio stuff
-    - [X] verify RP2350 power domains
-    - [X] verify voltage converters
-    - [X] convert to https://jlcpcb.com/partdetail/ALPSALPINE-SKRRAAE010/C97437
-    - [X] remove pcb traces from prohibited areas under buttons
-    - [ ] verify PCB in general
+PCB & assembly:
 
-- [X] bottom + cartridge nylon black
-    - [X] add strap holes
-    - [X] add strap loop cutout in case bottom
-- [X] bottom + cartridge transparent
-- [X] bottom + cartridge translucent
-- [X] top single piece transparent
-- [X] top plate only transparent
-- [X] display shield transparent
-- [X] top plate for display shield black
-- [X] top plate for display shield translucent
-- [X] top insert natural gray
-- [X] buttons trasparent
-- [X] buttons translucent
+- [ ] 5x main board with multicolor stencil + assembly (2x with LiPo, 2x with AAA, 1 spare), have to desolder charger circuits for the AAA version
+- [ ] 2x cartridge connector + assembly
+- [ ] 5x RM2 Cartridge multicolor stencil (PCB only)
+- [ ] 5x battery connector (PCB only)
+- [ ] 5x NRF Cartridge (PCB only, ENIG)
+- [ ] 5x Basic cartridge (PCB only, HASL)
 
+3D printed parts
+- [ ] 2x black nylon bottom
+- [ ] 2x translucent bottom
+- [ ] 1x transparent bottom
+- [ ] 3x transparent top fused
+- [ ] 2x black nylon top for display cover
+- [ ] 2x black nylon cartridge fused
+- [ ] 2x translucent cartridge fused
+- [ ] 1x transparent cartridge fused
+- [ ] 5x translucent buttons fused 
 
 ## Software Tasks
 
