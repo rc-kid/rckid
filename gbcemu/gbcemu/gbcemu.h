@@ -28,7 +28,9 @@
 #define GBCEMU_TRACE_PC_OPCODE 0
 
 #include <rckid/app.h>
+#include <rckid/utils/fixedint.h>
 #include "gamepak.h"
+#include "apu.h"
 
 namespace rckid::gbcemu {
 
@@ -460,15 +462,18 @@ namespace rckid::gbcemu {
          */
         //void setLY(uint8_t value);
 
+        void moveToNextScanline();
+
         /** Graphics rendering for a single line.
          */
         void renderLine();
 
-        void moveToNextScanline();
-
         DisplayMode displayMode_ = DisplayMode::Scaled;
         uint32_t displayX2Start_ = 0;
         //@}
+
+        // APU implementation
+        APU apu_;
 
         // name of the cartridge used
         String appName_;

@@ -26,27 +26,6 @@
 #define ADDR_TMA 0x06
 #define ADDR_TAC 0x07
 #define ADDR_IF 0x0f
-#define ADDR_NR10 0x10
-#define ADDR_NR11 0x11
-#define ADDR_NR12 0x12
-#define ADDR_NR13 0x13
-#define ADDR_NR14 0x14
-#define ADDR_NR21 0x16
-#define ADDR_NR22 0x17
-#define ADDR_NR23 0x18
-#define ADDR_NR24 0x19
-#define ADDR_NR30 0x1a
-#define ADDR_NR31 0x1b
-#define ADDR_NR32 0x1c
-#define ADDR_NR33 0x1d
-#define ADDR_NR34 0x1e
-#define ADDR_NR41 0x20
-#define ADDR_NR42 0x21
-#define ADDR_NR43 0x22
-#define ADDR_NR44 0x23
-#define ADDR_NR50 0x24
-#define ADDR_NR51 0x25
-#define ADDR_NR52 0x26
 #define ADDR_WAVE_RAM 0x30
 #define ADDR_LCDC 0x40
 #define ADDR_STAT 0x41
@@ -142,29 +121,34 @@ static constexpr uint8_t IF_TIMER = 1 << 2;
 static constexpr uint8_t IF_STAT = 1 << 1;
 static constexpr uint8_t IF_VBLANK = 1 << 0;
 
-#define IO_NR10 (hram_[ADDR_NR10])
-#define IO_NR11 (hram_[ADDR_NR11])
-#define IO_NR12 (hram_[ADDR_NR12])
-#define IO_NR13 (hram_[ADDR_NR13])
-#define IO_NR14 (hram_[ADDR_NR14])
+#define IO_NR10 (hram_[APU::ADDR_NR10])
+#define IO_NR11 (hram_[APU::ADDR_NR11])
+#define IO_NR12 (hram_[APU::ADDR_NR12])
+#define IO_NR13 (hram_[APU::ADDR_NR13])
+#define IO_NR14 (hram_[APU::ADDR_NR14])
 //static constexpr size_t IO_NR20 = 0x15; // not used
-#define IO_NR21 (hram_[ADDR_NR21])
-#define IO_NR22 (hram_[ADDR_NR22])
-#define IO_NR23 (hram_[ADDR_NR23])
-#define IO_NR24 (hram_[ADDR_NR24])
-#define IO_NR30 (hram_[ADDR_NR30])
-#define IO_NR31 (hram_[ADDR_NR31])
-#define IO_NR32 (hram_[ADDR_NR32])
-#define IO_NR33 (hram_[ADDR_NR33])
-#define IO_NR34 (hram_[ADDR_NR34])
+#define IO_NR21 (hram_[APU::ADDR_NR21])
+#define IO_NR22 (hram_[APU::ADDR_NR22])
+#define IO_NR23 (hram_[APU::ADDR_NR23])
+#define IO_NR24 (hram_[APU::ADDR_NR24])
+#define IO_NR30 (hram_[APU::ADDR_NR30])
+#define IO_NR31 (hram_[APU::ADDR_NR31])
+#define IO_NR32 (hram_[APU::ADDR_NR32])
+#define IO_NR33 (hram_[APU::ADDR_NR33])
+#define IO_NR34 (hram_[APU::ADDR_NR34])
 //static constexpr size_t IO_NR40 = 0x1f; // not used
-#define IO_NR41 (hram_[ADDR_NR41])
-#define IO_NR42 (hram_[ADDR_NR42])
-#define IO_NR43 (hram_[ADDR_NR43])
-#define IO_NR44 (hram_[ADDR_NR44])
-#define IO_NR50 (hram_[ADDR_NR50])
-#define IO_NR51 (hram_[ADDR_NR51])
-#define IO_NR52 (hram_[ADDR_NR52])
+#define IO_NR41 (hram_[APU::ADDR_NR41])
+#define IO_NR42 (hram_[APU::ADDR_NR42])
+#define IO_NR43 (hram_[APU::ADDR_NR43])
+#define IO_NR44 (hram_[APU::ADDR_NR44])
+#define IO_NR50 (hram_[APU::ADDR_NR50])
+#define IO_NR51 (hram_[APU::ADDR_NR51])
+#define IO_NR52 (hram_[APU::ADDR_NR52])
+static constexpr uint8_t NR52_APU_ON = 1 << 7;
+static constexpr uint8_t NR52_CHANNEL_4_ON = 1 << 3;
+static constexpr uint8_t NR52_CHANNEL_3_ON = 1 << 2;
+static constexpr uint8_t NR52_CHANNEL_2_ON = 1 << 1;
+static constexpr uint8_t NR52_CHANNEL_1_ON = 1 << 0;
 // TODO the next is 16 bytes? should be changed accordingly?
 #define IO_WAVE_RAM_0 (hram_[ADDR_WAVE_RAM]) // 16 bytes
 
@@ -561,6 +545,8 @@ namespace rckid::gbcemu {
         ime_ = false;
         // and reset counters
         timerCycles_ = 0;
+        // enable the APU since it is on by default
+        apu_.enable(true);
         // set the initial values for the IO registers 
         IO_LY = 0; // ensure we'll start with new frame
     #if (GBCEMU_INTERACTIVE_DEBUG == 1)
@@ -1133,6 +1119,8 @@ namespace rckid::gbcemu {
         pixels_.swap();
     }
 
+    // memory
+
     void GBCEmu::setRomPage(uint32_t page) {
         LOG(LL_GBCEMU_ROMBANK, "Setting ROM page to " << page << ", from pc " << hex<uint16_t>(PC - 1));
         romPage_ = page;
@@ -1545,6 +1533,9 @@ namespace rckid::gbcemu {
                 return;
             }
             default:
+                // if we are changing the APU registers, let APU handle the effects of the change and the actual HRAM write)
+                if (addr >= APU::ADDR_NR10 && addr <= APU::ADDR_NR52)
+                    return apu_.setRegister(addr, value, hram_);
                 // fallthrough to the default memory write
                 break;
         }

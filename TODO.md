@@ -125,6 +125,8 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 # TODO
 
+- change logo to petalface:)
+
 - file browswer can also use the new carouselMenu?
 
 - TODO would be good if image could work immediately with static in memory pictures
