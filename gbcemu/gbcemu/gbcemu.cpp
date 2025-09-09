@@ -311,9 +311,11 @@ namespace rckid::gbcemu {
         oam_{ new uint8_t[160]},
         hram_{new uint8_t[256]},
         pixels_{320} {
+        apu_.initialize(hram_ + ADDR_WAVE_RAM);
     }
 
     void GBCEmu::clear() {
+        apu_.enable(false);
         delete gamepak_;
         for (uint32_t i = 0; i < 16; ++i)
             delete eram_[i];
@@ -432,9 +434,15 @@ namespace rckid::gbcemu {
     void GBCEmu::focus() {
         App::focus();
         initializeDisplay();
+        // continue playing audio if enabled
+        if (apu_.enabled())
+            audioResume();
     }
 
     void GBCEmu::blur() {
+        // pause audio (w/o the game running there is no-one to generate samples)
+        if (apu_.enabled())
+            audioPause();
         App::blur();
     }
 
