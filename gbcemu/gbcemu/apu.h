@@ -158,7 +158,7 @@ namespace rckid::gbcemu {
            
             uint8_t const * waveTable = nullptr;
 
-            uint8_t volume; 
+            uint8_t outputLevel; 
             uint8_t initialLength;
             uint16_t period;
 
@@ -170,6 +170,8 @@ namespace rckid::gbcemu {
             void trigger() {
                 active_ = true;
                 lengthCounter_ = initialLength;
+                // make sure we have the right sample at start
+                readCurrentSample();
             }
 
         private:
@@ -181,7 +183,7 @@ namespace rckid::gbcemu {
             /** Length tick, which happens at 256Hz interval, i.e. 4 times per audio callback routine. Only used when the channel length is enabled. */
             void lengthTick() {
                 if (lengthEnabled) {
-                    if (lengthCounter_ < 64)
+                    if (lengthCounter_ < 255)
                         lengthCounter_++;
                     else
                         active_ = false;
@@ -190,39 +192,38 @@ namespace rckid::gbcemu {
 
             uint8_t lengthCounter_ = 0;
 
+            /** Generates 128 stereo samples of the channel's waveform into the provided buffer.  */
             void generateWaveform(int16_t * into, APU & apu) {
-                // don't do anything if not active
-                if (!active_)
+                // don't do anything if not active or if muted
+                if (!active_ || outputLevel == 0)
                     return;
-                /*
-                int16_t x = volume_ * 1170 / 15;
                 for (uint32_t i = 0; i < 128; ++i) {
-                    int16_t sample = (sampleIndex_ < dutyCycle) ? x : - x;
-
-
-                    into[i * 2] += (sample * enableLeft) * apu.volumeLeft_;
-                    into[i * 2 + 1] += (sample * enableRight) * apu.volumeRight_;
+                    into[i * 2] += (lastSample_ * enableLeft) * apu.volumeLeft_;
+                    into[i * 2 + 1] += (lastSample_ * enableRight) * apu.volumeRight_;
                     // move to next sample
-                    periodCounter_ += 32;
+                    periodCounter_ += 64; // wave channel period increments once per 2 dots
                     while (periodCounter_ >= 2048) {
                         periodCounter_ = periodCounter_ - 2048 + period;
                         sampleIndex_ = (sampleIndex_ + 1) & 31;
+                        readCurrentSample();
                     }
                 }
-                    */
             }
 
-            uint8_t getCurrentSample() {
+            void readCurrentSample() {
                 if (waveTable == nullptr)
-                    return 0;
+                    return;
                 uint8_t b = waveTable[sampleIndex_ >> 1];
                 if ((sampleIndex_ & 1) == 0)
                     b = b >> 4;
-                return b & 0x0f;
+                // get the stored value, apply output level shift and resize to +/- 1170 so that it matches square wave
+                lastSample_ = ((b & 0x0f) >> (outputLevel - 1)) * (1170 * 2) / 16;
+                lastSample_ -= 1170;
             }
 
             uint16_t periodCounter_;
             uint8_t sampleIndex_ = 0;
+            int16_t lastSample_ = 0;
 
         }; // APU::WaveChannel
 
@@ -404,7 +405,7 @@ namespace rckid::gbcemu {
                 case ADDR_NR32:
                     //                               | 7   6   5   4   3   2   1   0 |
                     // NR32 = volume                 |   | Init vol|                 |
-                    ch3_.volume = value >> 4 & 3;
+                    ch3_.outputLevel = value >> 4 & 3;
                     break;
                 case ADDR_NR33:
                     //                               | 7   6   5   4   3   2   1   0 |
