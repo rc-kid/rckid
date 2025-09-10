@@ -40,6 +40,7 @@ namespace rckid {
         ui::Header::refresh();
         if (app_ != nullptr && app_->verifyBudgetAllowance()) {
             InfoDialog::error("No more budget", "Wait till midnight when budget is reset, or get more");
+            app_->exit();
         }
         fps_ = redraws_;
         redraws_ = 0;

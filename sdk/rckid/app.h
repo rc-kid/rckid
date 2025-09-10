@@ -152,7 +152,6 @@ namespace rckid {
                 return false;
             uint32_t b = budget();
             if (b == 0) {
-                exit();
                 return true;
             } else {
                 budgetSet(b - 1);
