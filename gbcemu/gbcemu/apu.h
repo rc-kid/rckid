@@ -227,15 +227,138 @@ namespace rckid::gbcemu {
 
         }; // APU::WaveChannel
 
+        /** Noise channel. 
+
+            The noise channel is a simple LFSR where the frequency is determined by a clock divider and clock shift, while the function feedback for the LFSR is the following function:
+
+                not (b0 xor b1)
+
+            On the GB hardware, the LFSR is either 15, or 7 bits long, whereas the implementation is more generic and allows setting a LFSR mask that can specify exactly the bit where feedback will be written (and thus the length of the LFSR). 
+
+            The LFSR is shifted at the following frequency:
+
+                    262144
+                ---------------
+                div * 2 ^ shift
+
+            Where divider can be 0.5, 1...7 and shift can be 0..15. To stay within integer math, we will recalculate this as:
+
+                    524288
+                --------------------
+                (div *2) * 2^(shift)
+
+         */
         class NoiseChannel {
         public:
             bool enableLeft = false;
             bool enableRight = false;
+            /** Initial volume after triggering (0..15). On GBC this is set set by the NRx2 register.
+              */
+            uint8_t initialVolume;
+            uint8_t envelopeDirection;
+            uint8_t envelopePace;
+            uint8_t initialLength;
+            /** When enabled, the LFSR will be 7bits long instead of the default 15.
+             */
+            uint16_t lfsrMask; 
+            /** Clock shift 0..15 
+             */
+            uint8_t clkShift;
+            /** Clock divider 0..7, where 0 is treated as 0.5, i.e. twice the speed
+             */
+            uint8_t clkDiv;
+
+            /** True if the channel length counting is enabled */
+            bool lengthEnabled;
 
             bool active() const { return active_; }
 
+            void trigger() {
+                active_ = true;
+                lengthCounter_ = initialLength;
+                volume_ = initialVolume;
+                volumeDir_ = envelopeDirection;
+                volumeSweepPace_ = envelopePace;
+                volumeSweepCounter_ = 0;
+                // reset lfsr when triggered
+                lfsr_ = 0;
+                static constexpr int32_t dividers[] = { 1, 2, 4, 6, 8, 10, 12, 14 };
+                period_ = dividers[clkDiv] * (2 ^ clkShift);
+            }
+
         private:
+
+            friend class APU;
+
             bool active_ = false;
+
+            /** Length tick, which happens at 256Hz interval, i.e. 4 times per audio callback routine. Only used when the channel length is enabled. */
+            void lengthTick() {
+                if (lengthEnabled) {
+                    if (lengthCounter_ < 64)
+                        lengthCounter_++;
+                    else
+                        active_ = false;
+                }
+            }
+
+            uint8_t lengthCounter_ = 0;
+
+            /** Envelope tick, which happens at 64Hz, i.e. once per audio callback routine. Setting the pace to 0 disables the envelope. */
+            void envelopeTick() {
+                if (++volumeSweepCounter_ == volumeSweepPace_) {
+                    volumeSweepCounter_ = 0;
+                    if (volumeDir_ != 0) {
+                        volume_ = volume_ + volumeDir_;
+                        // clamp volume to 0..15
+                        if (volume_ == 15) {
+                            volumeDir_ = 0;
+                        } else if (volume_ == 0) {
+                            active_ = false;
+                            volumeDir_ = 0;
+                        }
+                    }
+                }
+            }
+
+            uint8_t volume_ = 0;
+            int8_t volumeDir_ = 0; // +1, 0, -1
+            uint8_t volumeSweepPace_ = 0;
+            uint8_t volumeSweepCounter_ = 0;
+
+            void generateWaveform(int16_t * into, APU & apu) {
+                // don't do anything if not active
+                if (!active_)
+                    return;
+                int16_t x = volume_ * 1170 / 15;
+                for (uint32_t i = 0; i < 128; ++i) {
+                    int16_t sample = (lfsr_ & 1) ? x : - x;
+                    into[i * 2] += (sample * enableLeft) * apu.volumeLeft_;
+                    into[i * 2 + 1] += (sample * enableRight) * apu.volumeRight_;
+                    // determine when to shift the register
+                    // TODO this is not correct we should lfsr as many times as the frequency dictates, not just once per sample - maybe not noticeable?
+                    periodCounter_ -= 16;
+                    if (periodCounter_ < 0) {
+                        periodCounter_ = period_;
+                        lfsrTick();
+                    }
+                }
+            }
+
+            void lfsrTick() {
+                // do the b0 xor b1 and then invert the first bit and copy result to whole value so that we  can mask
+                uint16_t x = (lfsr_ & 2) >> 1;
+                x = x ^ (lfsr_ & 1);
+                x = x ? 0x0: 0xffff;
+                lfsr_ >>= 1;
+                lfsr_ &= lfsrMask;
+                lfsr_ |= (x & ~lfsrMask);
+            }
+
+
+            int32_t periodCounter_;
+            int32_t period_;
+            uint16_t lfsr_;
 
         }; // APU::NoiseChannel
 
@@ -424,22 +547,28 @@ namespace rckid::gbcemu {
                 case ADDR_NR41:
                     //                               | 7   6   5   4   3   2   1   0 |
                     // NR41 = length                 |       | Init length           |
-                    // UNIMPLEMENTED;
+                    ch4_.initialLength = value & 0x3f;
                     break;
                 case ADDR_NR42:
                     //                               | 7   6   5   4   3   2   1   0 |
                     // NR42 = volume & envelope      | Init Vol      |Dir| Sweep pace|
-                    //UNIMPLEMENTED;
+                    ch4_.initialVolume = value >> 4;
+                    ch4_.envelopeDirection = (value & 0x08) ? +1 : -1;
+                    ch4_.envelopePace = value & 0x07;
                     break;
                 case ADDR_NR43:
                     //                               | 7   6   5   4   3   2   1   0 |
                     // NR43 = freq randomness        | ClkShift      |LFSR|ClkDiv    |
-                    // UNIMPLEMENTED;
+                    ch4_.lfsrMask = (value & 0x08) ? 0x7f : 0x7fff;
+                    ch4_.clkShift = (value >> 4) & 0x0f;
+                    ch4_.clkDiv = value & 0x07;
                     break;
                 case ADDR_NR44:
                     //                               | 7   6   5   4   3   2   1   0 |
                     // NR44 = ctrl                   |Trg|LEn|                       |
-                    // UNIMPLEMENTED;
+                    ch4_.lengthEnabled = (value & 0x40);
+                    if (value & 0x80)
+                        ch4_.trigger();
                     break;
                 // global APU settings
                 case ADDR_NR50:
@@ -500,14 +629,14 @@ namespace rckid::gbcemu {
             ch1_.lengthTick();
             ch2_.lengthTick();
             ch3_.lengthTick();
-            //ch4_.lengthTick();
+            ch4_.lengthTick();
         }
 
         void envelopeTick() {
             ch1_.envelopeTick();
             ch2_.envelopeTick();
             //ch3_.envelopeTick();
-            //ch4_.envelopeTick();
+            ch4_.envelopeTick();
         }
 
         void sweepTick() {
@@ -521,7 +650,7 @@ namespace rckid::gbcemu {
             ch1_.generateWaveform(into, *this);
             ch2_.generateWaveform(into, *this);
             ch3_.generateWaveform(into, *this);
-            //ch4_.generateWaveform(into, *this);
+            ch4_.generateWaveform(into, *this);
         }
 
         // translation table from NR11/21 register duty bits to actual duty cycle
