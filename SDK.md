@@ -13,17 +13,35 @@ The currently supported backends are:
 - fantasy 
 
 
-
-
 ## SD Card Contents
 
 The SDK expects for most of its functionality to have an SD card attached in the device. The SD card contains most of the user data, media files, etc. The following format of the SD card is expected:
 
     \
     |-- contacts.json
-    |-- myself.json
-    |-- audio
-    |     |-- ...
-    |-- images
-    |     |-- ...     
+    |-- settings.json
+    |-- apps
+    |     |-- apps by names and their contents
+    |     ...
+    |
+    |-- files
+    |     |-- icons
+    |     |-- images
+    |     |-- music
+    |     |-- recording
+    |     ...
+    |
+    |-- games
+    |     |-- gamefiles for emulators
+    ...
 
+### Application Folders
+
+Each application has its own folder under the `apps` root folder. The folder has the following structure:
+
+    AppName
+       |-- data
+       |-- resources
+       |-- saves
+
+The `data` folder is the app home and is completely in the application's control. The SDK does not understand what it is, nor does it  

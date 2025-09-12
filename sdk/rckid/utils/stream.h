@@ -31,6 +31,10 @@ namespace rckid {
          */
         template<typename T>
         T deserialize(); 
+
+        template<typename T>
+        void deserializeInto(T & into) { into = deserialize<T>(); }
+
     }; // rckid::InStream
 
     /** Simplest write stream interface. 

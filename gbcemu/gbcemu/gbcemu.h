@@ -51,6 +51,8 @@ namespace rckid::gbcemu {
 
         String name() const override { return STR("GBCEmu_" << appName_); }
 
+        static constexpr uint8_t VERSION = 1;
+
         static constexpr uint32_t SCALED_WIDTH = 267;
         static constexpr uint32_t SCALED_HEIGHT = 240;
 
@@ -72,14 +74,34 @@ namespace rckid::gbcemu {
         }
 
         ~GBCEmu() override;
-
-        void save([[maybe_unused]] WriteStream & into) override {
+        
+        /** Saves the game state to the provided savefile stream. 
+         */
+        void save(WriteStream & into) override {
+            into.serialize(VERSION);
+            // serialize the CPU state
+            into.write(regs8_, 8);
+            into.serialize(sp_);
+            into.serialize(pc_);
+            // serialize RAM
             UNIMPLEMENTED;
         }
 
-        void load([[maybe_unused]] ReadStream & from) override {
-            UNIMPLEMENTED;
+        /** Loads the game state from the given savefile. 
+         */
+        void load(ReadStream & from) override {
+            if (from.deserialize<uint8_t>() != VERSION) {
+                LOG(LL_WARN,  "Unsupported save version, skipping");
+                return;
+            }
+            // load CPU state
+            from.read(regs8_, 8);
+            from.deserializeInto(sp_);
+            from.deserializeInto(pc_);
+            // load RAM
+            UNIMPLEMENTED; 
         }
+
 
         /** Laods the given gamepak in the emulator. 
          
