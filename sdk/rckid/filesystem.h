@@ -421,6 +421,12 @@ namespace rckid::fs {
             Entry entry_;
         }; 
 
+        Folder() {
+#if RCKID_ENABLE_HOST_FILESYSTEM
+            host_ = nullptr;
+#endif
+        }
+
         ~Folder();
 
         bool good() const { return drive_ != 0; }

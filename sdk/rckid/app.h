@@ -67,6 +67,13 @@ namespace rckid {
          */
         static App * currentApp() { return app_; }
 
+
+        /** Returns the hole folder of the application. This is `/apps/AppName` on the SD card
+         */
+        String homeFolder() const {
+            return fs::join("/apps", name());
+        }
+
     protected:
 
         /** Called when the application should gain focus. 
@@ -115,10 +122,30 @@ namespace rckid {
             This function is to be called from the custom home menu generators where it generates the default app actions, such as exit, or state loads & saves where applicable. 
          */
         void addDefaultHomeActionsInto(ui::ActionMenu * menu) {
-            // TODO add state stuff, etc. 
+            // application exit 
             menu->add(ui::ActionMenu::Item("Exit", assets::icons_64::poo, [this](){
                 exit();
             }));
+            // if app supports save states, add save & load actions
+            if (supportsSaveState()) {
+                menu->add(ui::ActionMenu::Item("Save state", assets::icons_64::poo, [this](){
+                    // TODO save state
+                }));
+                menu->add(ui::ActionMenu::Generator("Load state", assets::icons_64::poo, [this](){
+                    ui::ActionMenu * m = new ui::ActionMenu{};
+                    fs::Folder folder = fs::folderRead(fs::join(homeFolder(), "saves"));
+                    for (auto & entry : folder) {
+                        if (!entry.isFile())
+                            continue;
+                        String entryName{entry.name()};
+                        m->add(ui::ActionMenu::Item(entryName, assets::icons_64::poo, [this, entryName]() {
+                            // TODO load state
+                        }));
+                        LOG(LL_DEBUG, "FileBrowser: adding entry " << entry.name());
+                    }
+                    return m;
+                }));
+            }
         }
 
         /** Method responsible for drawing the app contents on the screen. 

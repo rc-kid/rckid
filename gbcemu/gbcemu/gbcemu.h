@@ -75,6 +75,8 @@ namespace rckid::gbcemu {
 
         ~GBCEmu() override;
         
+        bool supportsSaveState() const override { return true; }
+
         /** Saves the game state to the provided savefile stream. 
          */
         void save(WriteStream & into) override {

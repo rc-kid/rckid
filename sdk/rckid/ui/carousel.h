@@ -55,12 +55,14 @@ namespace rckid::ui {
                 aImg_.shrinkToFit();
                 aImg_.setTransparent(true);
                 aText_.setText(text);
+                aText_.setColor(ColorRGB::White());
                 repositionElements(aImg_, aText_);
             } else {
                 icon.intoBitmap(bImg_.bitmap());
                 bImg_.shrinkToFit();
                 bImg_.setTransparent(true);
                 bText_.setText(text);
+                bText_.setColor(ColorRGB::White());
                 repositionElements(bImg_, bText_);
             }
             if (initialized_ < 2)
@@ -93,7 +95,8 @@ namespace rckid::ui {
         }
 
         void showEmpty(Direction d = Direction::None) {
-            set("", Icon{assets::icons_64::empty_box}, d);
+            set("Empty", Icon{assets::icons_64::empty_box}, d);
+            bText_.setColor(ColorRGB::RGB(64, 64, 64));
         }
 
         uint32_t currentIndex() const { return i_; }
@@ -370,9 +373,13 @@ namespace rckid::ui {
         
         void doSetItem(uint32_t index, Direction direction = Direction::None) override {
             ASSERT(menu_ != nullptr);
-            ASSERT(index < menu_->size());
-            typename Menu<PAYLOAD>::MenuItem const & item = (*menu_)[index];
-            set(item.text, item.icon, direction);
+            if (menu_->size() == 0) {
+                showEmpty(Direction::Up);
+            } else {
+                ASSERT(index < menu_->size());
+                typename Menu<PAYLOAD>::MenuItem const & item = (*menu_)[index];
+                set(item.text, item.icon, direction);
+            }
         }
 
     private: 

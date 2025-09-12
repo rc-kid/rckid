@@ -25,6 +25,8 @@ namespace rckid {
             }
         }
 
+        bool supportsSaveState() const override { return true; }
+
         // TODO for cur & next we need to save also the color
         void save(WriteStream & into) override {
             into.serialize(VERSION);
@@ -61,7 +63,6 @@ namespace rckid {
             y_ = from.deserialize<Coord>();
 
         }
-      
 
     protected:
 
