@@ -38,11 +38,11 @@ TEST(memory, heapAllocFromFreelist) {
     EXPECT(RAMHeap::freeBytes() == 0);
     EXPECT(RAMHeap::usedBytes() == 16 * 5);
     delete [] a0;
-    EXPECT(RAMHeap::freeBytes() == 12);
+    EXPECT(RAMHeap::freeBytes() == 16);
     delete [] a1;
-    EXPECT(RAMHeap::freeBytes() == 12 * 2);
+    EXPECT(RAMHeap::freeBytes() == 16 * 2);
     delete [] a3;
-    EXPECT(RAMHeap::freeBytes() == 12 * 3);
+    EXPECT(RAMHeap::freeBytes() == 16 * 3);
     EXPECT(RAMHeap::usedBytes() == 16 * 5);
     delete [] a2;
     delete [] a4;

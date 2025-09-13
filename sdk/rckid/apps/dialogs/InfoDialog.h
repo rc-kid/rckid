@@ -43,6 +43,11 @@ namespace rckid {
             d.loop();
         }
 
+        static void success(String title, String text) {
+            InfoDialog d{Icon{assets::icons_64::poo}, std::move(title), std::move(text)};
+            d.loop();
+        }
+
         /** Info dialog is the only one that is *not* budgeted (we use it to inform user that we are out of budget.
          */
         bool isBudgeted() const override { return false; }

@@ -26,3 +26,11 @@ TEST(filesystem, parent) {
     EXPECT(fs::parent("/foo/bar/baz.bar") == "/foo/bar");
 }
 
+TEST(filesystem, root) {
+    EXPECT(fs::root("foo/bar/baz") == "foo");
+    EXPECT(fs::root("/foo/bar/baz") == "/foo");
+    EXPECT(fs::root("foo") == "foo");
+    EXPECT(fs::root("/foo") == "/foo");
+    EXPECT(fs::root("") == "");
+}
+

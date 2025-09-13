@@ -33,6 +33,25 @@ namespace rckid {
             LOG(LL_ERROR, "Loading application state not supported");
         }
 
+        /** Saves the app's state under the given name. Only works if the app supports the feature.
+         */
+        void saveState(String const & name) {
+            LOG(LL_INFO, "Saving app state " << name);
+            String folder = fs::join(homeFolder(), "saves");
+            fs::createFolders(folder);
+            fs::FileWrite f{fs::fileWrite(fs::join(folder, name))};
+            save(f);
+        }
+
+        /** Loads state of given name. Only works if the app supports the feature.
+         */
+        void loadState(String const & name) {
+            LOG(LL_INFO, "Loading app state " << name);
+            String path = fs::join(fs::join(homeFolder(), "saves"), name);
+            fs::FileRead f{fs::fileRead(path)};
+            load(f);
+        }
+
         /** Runs given application. Returns value if the application returns value. 
          */
         template<typename T, typename ... ARGS>
@@ -121,32 +140,7 @@ namespace rckid {
          
             This function is to be called from the custom home menu generators where it generates the default app actions, such as exit, or state loads & saves where applicable. 
          */
-        void addDefaultHomeActionsInto(ui::ActionMenu * menu) {
-            // application exit 
-            menu->add(ui::ActionMenu::Item("Exit", assets::icons_64::poo, [this](){
-                exit();
-            }));
-            // if app supports save states, add save & load actions
-            if (supportsSaveState()) {
-                menu->add(ui::ActionMenu::Item("Save state", assets::icons_64::poo, [this](){
-                    // TODO save state
-                }));
-                menu->add(ui::ActionMenu::Generator("Load state", assets::icons_64::poo, [this](){
-                    ui::ActionMenu * m = new ui::ActionMenu{};
-                    fs::Folder folder = fs::folderRead(fs::join(homeFolder(), "saves"));
-                    for (auto & entry : folder) {
-                        if (!entry.isFile())
-                            continue;
-                        String entryName{entry.name()};
-                        m->add(ui::ActionMenu::Item(entryName, assets::icons_64::poo, [this, entryName]() {
-                            // TODO load state
-                        }));
-                        LOG(LL_DEBUG, "FileBrowser: adding entry " << entry.name());
-                    }
-                    return m;
-                }));
-            }
-        }
+        void addDefaultHomeActionsInto(ui::ActionMenu * menu);
 
         /** Method responsible for drawing the app contents on the screen. 
          

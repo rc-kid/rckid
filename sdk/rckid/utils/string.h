@@ -38,9 +38,20 @@ namespace rckid {
             str_.reserve(length + 1);
         } 
 
-        String(char const * str, uint32_t size): 
-            str_{str, size + 1} {
-        }
+        /** Creates string from a subset of char pointer. 
+         
+            If the char pointer is null terminated at given size, will simply wrap it in lazy buffer which might save allocations for immutable memory. Otherwise allocates new heap memory and copies the data over, appending a null terminator.
+         */
+        String(char const * str, uint32_t size) {
+            if (str[size] == '\0') {
+                str_ = LazyBuffer<char>{str, size + 1};
+            } else {
+                str_ = LazyBuffer<char>{size + 1};
+                str_.setSize(size + 1);
+                memcpy(str_.data(), str, size);
+                str_[size] = '\0';
+            }
+        } 
 
         String(String const & from) = default;
 
@@ -185,6 +196,10 @@ namespace rckid {
         char const * release() {
             return str_.release();
         }
+
+        /** Conversion operator to const char * (null terminated string). 
+         */
+        operator char const * () const { return str_.data(); }
 
     private:
         LazyBuffer<char> str_;

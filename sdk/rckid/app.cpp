@@ -17,6 +17,38 @@ namespace rckid {
         }
     }
 
+    void App::addDefaultHomeActionsInto(ui::ActionMenu * menu) {
+        // application exit 
+        menu->add(ui::ActionMenu::Item("Exit", assets::icons_64::poo, [this](){
+            exit();
+        }));
+        // if app supports save states, add save & load actions
+        if (supportsSaveState()) {
+            menu->add(ui::ActionMenu::Item("Save state", assets::icons_64::poo, [this](){
+                // TODO actually select which slot to use, or let the user choose 
+                String saveName = "test";
+                saveState(saveName);
+                InfoDialog::success("Done", STR("App state saved in " << saveName));
+            }));
+            menu->add(ui::ActionMenu::Generator("Load state", assets::icons_64::poo, [this](){
+                ui::ActionMenu * m = new ui::ActionMenu{};
+                fs::Folder folder = fs::folderRead(fs::join(homeFolder(), "saves"));
+                for (auto & entry : folder) {
+                    if (!entry.isFile())
+                        continue;
+                    String entryName{entry.name()};
+                    m->add(ui::ActionMenu::Item(entryName, assets::icons_64::poo, [this, entryName]() {
+                        loadState(entryName);
+                        InfoDialog::success("Done", STR("App state loaded from " << entryName));
+                    }));
+                    LOG(LL_DEBUG, "FileBrowser: adding entry " << entry.name());
+                }
+                return m;
+            }));
+        }
+    }
+
+
     void App::loop() {
         // wait for the previous display update to finish to avoid interfering with the old app unloading
         displayWaitUpdateDone();

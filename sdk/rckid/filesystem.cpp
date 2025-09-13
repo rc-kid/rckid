@@ -735,23 +735,9 @@ namespace rckid::fs {
 
     bool createFolder(char const * path, Drive dr) {
 #if RCKID_ENABLE_HOST_FILESYSTEM
-        try {
-            SystemMallocGuard g_;
-            switch (dr) {
-                case Drive::SD:
-                    if (sdRoot_.empty())
-                        return false;
-                    return std::filesystem::create_directory(sdRoot_ / path);
-                case Drive::Cartridge:
-                    if (cartridgeRoot_.empty())
-                        return false;
-                    return std::filesystem::create_directory(cartridgeRoot_ / path);
-                default:
-                    return false;
-            }
-        } catch (...) {
-            return false;
-        }
+        SystemMallocGuard g_;
+        std::filesystem::path p{getHostPath(dr, path)};
+        return std::filesystem::create_directory(p);
 #else
         if (!isMounted(dr))
             return false;
@@ -764,6 +750,27 @@ namespace rckid::fs {
                 UNREACHABLE;
         }
 #endif
+    }
+
+    bool createFolders(char const * path, Drive dr) {
+        if (isMounted(dr))
+            return false;
+        if (path == nullptr || path[0] == 0)
+            return false;
+        uint32_t i = 0;
+        if (path[0] == '/') 
+            ++i;
+        while (true) {
+            if (path[i] == '/' || path[i] == 0) {
+                String p{path, i};
+                if (! isFolder(p.c_str(), dr) &&  (! createFolder(p.c_str(), dr)))
+                    return false;
+                if (path[i] == 0)
+                    break;
+            }
+            ++i;
+        }
+        return true;
     }
 
     uint32_t hash(char const * path, Drive dr) {
@@ -951,7 +958,17 @@ namespace rckid::fs {
                 return path.substr(0, i);
         }
         return "/";
+    }
 
+    String root(String const & path) {
+        if (path.empty())
+            return path;
+        uint32_t i = 0;
+        if (path[0] == '/')
+            ++i; 
+        while (i < path.size() && path[i] != '/') 
+            ++i;
+        return path.substr(0, i);
     }
 
 } // namespace rckid::fs

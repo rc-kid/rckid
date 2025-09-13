@@ -521,9 +521,13 @@ namespace rckid::fs {
      */
     bool isFile(char const * path, Drive dr = Drive::SD); 
 
-    /** Creates given folder. 
+    /** Creates given folder.
      */
     bool createFolder(char const * path, Drive dr = Drive::SD);
+
+    /** Creates all folders in the given path that do not yet exist.
+     */
+    bool createFolders(char const * path, Drive dr = Drive::SD);
 
     /** Returns hash of given file. 
      */
@@ -558,5 +562,9 @@ namespace rckid::fs {
     /** Returns the parent folder of given path. If the path is file, returns the containing folder, otherwise returns the parent folder.
      */
     String parent(String const & path);
+
+    /** Returns the first component of the path (i.e. the root folder). If the path has only one component, returns that component.
+     */
+    String root(String const & path);
 
 } // namespace rckid::filesystem
