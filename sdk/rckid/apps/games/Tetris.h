@@ -29,49 +29,45 @@ namespace rckid {
 
         // TODO for cur & next we need to save also the color
         void save(WriteStream & into) override {
-            into.serialize(VERSION);
-            // first save the app mode, if we are not in a game, there is no point serializing further
-            into.serialize(static_cast<uint8_t>(mode_));
+            serialize(into, VERSION);
+            serialize(into, static_cast<uint8_t>(mode_));
             if (mode_ != Mode::Game)
                 return;
             // save the actual state - level & score
-            into.serialize(score_);
-            into.serialize(level_);
-            // save extra state info 
-            into.serialize(levelCompacted_);
-            into.serialize(countdown_);
-            into.serialize(speed_); 
-            into.serialize(allowDown_);
+            serialize(into, score_);
+            serialize(into, level_);
+            // save extra state info
+            serialize(into, levelCompacted_);
+            serialize(into, countdown_);
+            serialize(into, speed_);
+            serialize(into, allowDown_);
             // save the grid & tetromino properties
-            into.write(grid_, sizeof(grid_));
-            cur_.save(into);
-            next_.save(into);
-            into.serialize(x_);
-            into.serialize(y_);
+            serialize(into, grid_, sizeof(grid_));
+            serialize(into, cur_);
+            serialize(into, next_);
+            serialize(into, x_);
+            serialize(into, y_);
         }
         
         void load(ReadStream & from) override {
-            if (from.deserialize<uint8_t>() != VERSION) {
+            if (deserialize<uint8_t>(from) != VERSION) {
                 LOG(LL_WARN,  "Unsupported save version, skipping");
                 return;
             }
-            mode_ = static_cast<Mode>(from.deserialize<uint8_t>());
+            mode_ = static_cast<Mode>(deserialize<uint8_t>(from));
             if (mode_ == Mode::Game) {
                 // only deserialize state if we are in the game mode
-                score_ = from.deserialize<uint32_t>();
-                level_ = from.deserialize<uint32_t>();
-                levelCompacted_ = from.deserialize<uint32_t>();
-                countdown_ = from.deserialize<uint32_t>();
-                speed_ = from.deserialize<uint32_t>();
-                allowDown_ = from.deserialize<bool>();
-
-                from.read(grid_, sizeof(grid_));
-
-                cur_.load(from);
-                next_.load(from);
-
-                x_ = from.deserialize<Coord>();
-                y_ = from.deserialize<Coord>();
+                deserialize(from, score_);
+                deserialize(from, level_);
+                deserialize(from, levelCompacted_);
+                deserialize(from, countdown_);
+                deserialize(from, speed_);
+                deserialize(from, allowDown_);
+                deserialize(from, grid_, sizeof(grid_));
+                deserialize(from, cur_);
+                deserialize(from, next_);
+                deserialize(from, x_);
+                deserialize(from, y_);
             }
         }
 
@@ -245,24 +241,19 @@ namespace rckid {
             void randomize() {
                 kind_ = static_cast<Kind>(random() % (static_cast<uint32_t>(Kind::Stairs2) + 1));
                 color_ = (random() % (NUM_COLORS - 1)) + 1;
-                for (unsigned x = 0; x < 4; ++x)
-                    for (unsigned y = 0; y < 4; ++y)
-                        grid_[y][x] = tetrominos_[static_cast<unsigned>(kind_)][y][x] ? color_ : 0;
+                fillGrid();
             }
 
-            void save(WriteStream & into) {
-                into.serialize(static_cast<uint8_t>(kind_));
-                into.serialize(color_);
+            friend void serialize(WriteStream & into, Tetromino const & t) {
+                serialize(into, static_cast<uint8_t>(t.kind_));
+                serialize(into, t.color_);
             }
 
-            void load(ReadStream & from) {
-                kind_ = static_cast<Kind>(from.deserialize<uint8_t>());
-                from.deserializeInto(color_);
-                for (unsigned x = 0; x < 4; ++x)
-                    for (unsigned y = 0; y < 4; ++y)
-                        grid_[y][x] = tetrominos_[static_cast<unsigned>(kind_)][y][x] ? color_ : 0;
+            friend void deserialize(ReadStream & from, Tetromino & t) {
+                t.kind_ = static_cast<Kind>(deserialize<uint8_t>(from));
+                deserialize(from, t.color_);
+                t.fillGrid();
             }
-
 
             /** Rotates the tetromino by 90 degrees. 
              
@@ -276,6 +267,12 @@ namespace rckid {
                     for (unsigned y = 0; y < max; ++y)
                         result.grid_[y][x] = grid_[x][max - y - 1];
                 return result;
+            }
+
+            void fillGrid() {
+                for (unsigned x = 0; x < 4; ++x)
+                    for (unsigned y = 0; y < 4; ++y)
+                        grid_[y][x] = tetrominos_[static_cast<unsigned>(kind_)][y][x] ? color_ : 0;
             }
 
         private:

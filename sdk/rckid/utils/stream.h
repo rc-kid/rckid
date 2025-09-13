@@ -25,16 +25,6 @@ namespace rckid {
             return result;
         }
 
-        /** Deserializes value of the specified type from the stream. 
-         
-            Those methods form a counterpart to the WriteStream::serialize. 
-         */
-        template<typename T>
-        T deserialize(); 
-
-        template<typename T>
-        void deserializeInto(T & into) { into = deserialize<T>(); }
-
     }; // rckid::InStream
 
     /** Simplest write stream interface. 
@@ -63,13 +53,6 @@ namespace rckid {
                 ASSERT(result);
             });
         }
-
-        /** Serializes the given value into the writer using a binary format 
-         
-            Specializations are provided for different types and can be extended further by providing template specializations.
-        */
-        template<typename T>
-        void serialize(T const & what); 
 
     }; // rckid::WriteStream
 
@@ -146,180 +129,12 @@ namespace rckid {
         uint32_t pos_;
     }; // rckid::MemoryReadStream
 
+    // serialization functions
 
-
-
-
-
-    // serialization of uint8_t & int8_t
-    template<>
-    inline void WriteStream::serialize<uint8_t>(uint8_t const & what) {
-        writeByte(what);
+    inline void serialize(WriteStream & into, uint8_t const * what, uint32_t size) {
+        into.write(what, size);
     }
 
-    template<>
-    inline uint8_t ReadStream::deserialize<uint8_t>() {
-        return read();
-    }
-
-    template<>
-    inline void WriteStream::serialize<int8_t>(int8_t const & what) {
-        writeByte(static_cast<uint8_t>(what));
-    }
-
-    template<>
-    inline int8_t ReadStream::deserialize<int8_t>() {
-        return static_cast<int8_t>(read());
-    }
-
-    // serialization of uint16_t & int16_t
-    template<>
-    inline void WriteStream::serialize<uint16_t>(uint16_t const & what) {
-        serialize<uint8_t>(what & 0xff);
-        serialize<uint8_t>(what >> 8);
-    }
-
-    template<>
-    inline uint16_t ReadStream::deserialize<uint16_t>() {
-        return deserialize<uint8_t>() + (deserialize<uint8_t>() << 8);
-    }
-
-    template<>
-    inline void WriteStream::serialize<int16_t>(int16_t const & what) {
-        serialize(static_cast<uint16_t>(what));
-    }
-
-    template<>
-    inline int16_t ReadStream::deserialize<int16_t>() {
-        return static_cast<int16_t>(deserialize<uint16_t>());
-    }
-
-    // serialization of uint32_t & int32_t
-    template<>
-    inline void WriteStream::serialize<uint32_t>(uint32_t const & what) {
-        serialize<uint16_t>(what & 0xffff);
-        serialize<uint16_t>(what >> 16);
-    }
-
-    template<>
-    inline uint32_t ReadStream::deserialize<uint32_t>() {
-        return deserialize<uint16_t>() + (deserialize<uint16_t>() << 16);
-    }
-
-    template<>
-    inline void WriteStream::serialize<int32_t>(int32_t const & what) {
-        serialize(static_cast<uint32_t>(what));
-    }
-
-    template<>
-    inline int32_t ReadStream::deserialize<int32_t>() {
-        return static_cast<int32_t>(deserialize<uint32_t>());
-    }
-
-    // serialization of uint64_t & int64_t
-
-    template<>
-    inline void WriteStream::serialize<uint64_t>(uint64_t const & what) {
-        serialize<uint32_t>(what & 0xffffffff);
-        serialize<uint32_t>(what >> 32);
-    }
-
-    template<>
-    inline uint64_t ReadStream::deserialize<uint64_t>() {
-        return deserialize<uint32_t>() + (static_cast<uint64_t>(deserialize<uint32_t>()) << 32);
-    }
-
-    template<>
-    inline void WriteStream::serialize<int64_t>(int64_t const & what) {
-        serialize(static_cast<uint64_t>(what));
-    }
-
-    template<>
-    inline int64_t ReadStream::deserialize<int64_t>() {
-        return static_cast<int64_t>(deserialize<uint64_t>());
-    }
-
-    // serialization of boolean
-
-    template<>
-    inline void WriteStream::serialize(bool const & value) {
-        value ? serialize<uint8_t>(1) : serialize<uint8_t>(0);
-    }
-
-    template<>
-    inline bool ReadStream::deserialize<bool>() {
-        uint8_t x = deserialize<uint8_t>();
-        return x == 1;
-    } 
-
-    // serialization of std::string - first serialize uint32_t length, followed by the array itself
-    template<>
-    inline void WriteStream::serialize(String const & what) {
-        serialize<uint32_t>(static_cast<uint32_t>(what.size()));
-        write(reinterpret_cast<uint8_t const *>(what.data()), what.size());
-    }
-
-    template<>
-    inline String ReadStream::deserialize<String>() {
-        uint32_t size = deserialize<uint32_t>();
-        String result(' ', size);
-        read(reinterpret_cast<uint8_t*>(result.data()), size);
-        return result;
-    }
-
-    // serialization of TinyDateTime & friends
-
-    template<>
-    inline void WriteStream::serialize(TinyDateTime const & time) {
-        static_assert(sizeof(TinyDateTime) == sizeof(uint32_t));
-        serialize<uint32_t>(*reinterpret_cast<uint32_t const *>(& time));
-    }
-
-    template<>
-    inline TinyDateTime ReadStream::deserialize<TinyDateTime>() {
-        static_assert(sizeof(TinyDateTime) == sizeof(uint32_t));
-        uint32_t x = deserialize<uint32_t>();
-        return * reinterpret_cast<TinyDateTime*>(& x);
-    }
-
-    template<>
-    inline void WriteStream::serialize(TinyDate const & time) {
-        static_assert(sizeof(TinyDate) == sizeof(uint32_t));
-        serialize<uint32_t>(*reinterpret_cast<uint32_t const *>(& time));
-    }
-
-    template<>
-    inline TinyDate ReadStream::deserialize<TinyDate>() {
-        static_assert(sizeof(TinyDate) == sizeof(uint32_t));
-        uint32_t x = deserialize<uint32_t>();
-        return * reinterpret_cast<TinyDate*>(& x);
-    }
-
-    template<>
-    inline void WriteStream::serialize(TinyAlarm const & time) {
-        static_assert(sizeof(TinyAlarm) == 3);
-        uint8_t const * x = reinterpret_cast<uint8_t const *>(& time);
-        serialize<uint8_t>(x[0]);
-        serialize<uint8_t>(x[1]);
-        serialize<uint8_t>(x[2]);
-    }
-
-    template<>
-    inline TinyAlarm ReadStream::deserialize<TinyAlarm>() {
-        static_assert(sizeof(TinyAlarm) == 3);
-        TinyAlarm result;
-        uint8_t * x = reinterpret_cast<uint8_t *>(& result);
-        x[0] = deserialize<uint8_t>();
-        x[1] = deserialize<uint8_t>();
-        x[2] = deserialize<uint8_t>();
-        return result;
-
-    }
-
-
-
-
-    // new serialization functions
     inline void serialize(WriteStream & into, uint8_t const & what) {
         into.writeByte(what);
     }
@@ -382,8 +197,18 @@ namespace rckid {
         serialize(into, x[2]);
     }
 
-    // new deserialization functions
+    // deserialization functions
 
+    template<typename T>
+    inline T deserialize(ReadStream & from) {
+        T result;
+        deserialize(from, result);
+        return result;
+    }
+
+    inline void deserialize(ReadStream & from, uint8_t * data, uint32_t size) {
+        from.read(data, size);
+    }
 
     inline void deserialize(ReadStream & from, uint8_t & into) {
         into = from.read();

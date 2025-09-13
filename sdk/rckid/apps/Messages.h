@@ -35,6 +35,35 @@ namespace rckid {
             uint64_t sender;
             uint32_t size;
             uint8_t data[];
+
+            friend void serialize(WriteStream & stream, Record const & record) {
+                serialize(stream, static_cast<uint8_t>(record.kind));
+                serialize(stream, record.time);
+                serialize(stream, record.sender);
+                serialize(stream, record.size);
+                serialize(stream, record.data, record.size);
+                serialize(stream, record.size);
+            }
+
+            friend void deserialize(ReadStream & stream, Record * & record) {
+                if (stream.eof()) {
+                    record = nullptr;
+                    return;
+                }
+                Messages::Record::Kind kind = static_cast<Messages::Record::Kind>(deserialize<uint8_t>(stream));
+                TinyDateTime time = deserialize<TinyDateTime>(stream);
+                uint64_t sender = deserialize<uint64_t>(stream);
+                uint32_t size = deserialize<uint32_t>(stream);
+                // alloocate the necessary space
+                record = (Record*) malloc(sizeof(Record) + size);
+                record->kind = kind;
+                record->time = time;
+                record->sender = sender;
+                record->size = size;
+                deserialize(stream, record->data, size);
+                uint32_t sizeAgain = deserialize<uint32_t>(stream);
+                ASSERT(sizeAgain == size);
+            }
         }; // Messages::Record
 
     //protected:
@@ -84,42 +113,9 @@ namespace rckid {
 
             ui::ScrollView * view_;
             std::vector<ui::Label *> msgs_;
-            
-
 
         }; // Messages::Conversation
 
     }; // Messages
-
-
-    template<>
-    Messages::Record * ReadStream::deserialize<Messages::Record *>() {
-        if (eof())
-            return nullptr;
-        Messages::Record::Kind kind = static_cast<Messages::Record::Kind>(deserialize<uint8_t>());
-        TinyDateTime time = deserialize<TinyDateTime>();
-        uint64_t sender = deserialize<uint64_t>();
-        uint32_t size = deserialize<uint32_t>();
-        // alloocate the necessary space
-        Messages::Record * result = (Messages::Record*) malloc(sizeof(Messages::Record) + size);
-        result->kind = kind;
-        result->time = time;
-        result->sender = sender;
-        result->size = size;
-        read(result->data, size);
-        uint32_t sizeAgain = deserialize<uint32_t>();
-        ASSERT(sizeAgain == size);
-        return result;
-    }
-
-    template<>
-    void WriteStream::serialize(Messages::Record const * const & what) {
-        serialize(static_cast<uint8_t>(what->kind));
-        serialize(what->time);
-        serialize(what->sender);
-        serialize(what->size);
-        write(what->data, what->size);
-        serialize(what->size);
-    }
 
 } // namespace rckid

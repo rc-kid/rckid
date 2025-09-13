@@ -739,30 +739,30 @@ namespace rckid::gbcemu {
 
         /** Saves the current APU state into given stream (useful for saving game states).
          */
-        void save(WriteStream & into) {
-            serialize(into, ch1_);
-            serialize(into, ch2_);
-            serialize(into, ch3_);
-            serialize(into, ch4_);
-            serialize(into, enabled_);
-            serialize(into, volumeLeft_);
-            serialize(into, volumeRight_);
+        friend void serialize(WriteStream & into, APU const & apu) {
+            serialize(into, apu.ch1_);
+            serialize(into, apu.ch2_);
+            serialize(into, apu.ch3_);
+            serialize(into, apu.ch4_);
+            serialize(into, apu.enabled_);
+            serialize(into, apu.volumeLeft_);
+            serialize(into, apu.volumeRight_);
         }
 
         /** Loads APU state from given stream. 
          */
-        void load(ReadStream & from) {
-            deserialize(from, ch1_);
-            deserialize(from, ch2_);
-            deserialize(from, ch3_);
-            deserialize(from, ch4_);
-            deserialize(from, enabled_);
-            deserialize(from, volumeLeft_);
-            deserialize(from, volumeRight_);
-            if (enabled_) {
+        friend void deserialize(ReadStream & from, APU & apu) {
+            deserialize(from, apu.ch1_);
+            deserialize(from, apu.ch2_);
+            deserialize(from, apu.ch3_);
+            deserialize(from, apu.ch4_);
+            deserialize(from, apu.enabled_);
+            deserialize(from, apu.volumeLeft_);
+            deserialize(from, apu.volumeRight_);
+            if (apu.enabled_) {
                 audioStop();
-                enabled_ = false;
-                enable(true);
+                apu.enabled_ = false;
+                apu.enable(true);
                 audioPause();
             }
        }

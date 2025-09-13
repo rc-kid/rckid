@@ -102,8 +102,6 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 # TODO
 
-- rewrite serialization to have a function that can be overloaded as frind
-
 - improve audio fidelity for GBCEmu
 - change logo to petalface:)
 

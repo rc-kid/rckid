@@ -333,71 +333,72 @@ namespace rckid::gbcemu {
     }
 
     void GBCEmu::save(WriteStream & into) {
-        into.serialize(VERSION);
+        serialize(into, VERSION);
         // serialize the CPU state
-        into.write(regs8_, 8);
-        into.serialize(sp_);
-        into.serialize(pc_);
-        into.serialize(cgb_);
-        into.serialize(ime_);
+        serialize(into, regs8_, 8);
+        serialize(into, sp_);
+        serialize(into, pc_);
+        serialize(into, cgb_);
+        serialize(into, ime_);
         // save the internal state of the timer
-        into.serialize(timerDIVModulo_);
-        into.serialize(timerTIMAModulo_);
-        into.serialize(timerCycles_);
+        serialize(into, timerDIVModulo_);
+        serialize(into, timerTIMAModulo_);
+        serialize(into, timerCycles_);
         // serialize VRAM and WRAM
-        into.write(vram_[0], 0x2000);
-        into.write(vram_[1], 0x2000);
+        serialize(into, vram_[0], 0x2000);
+        serialize(into, vram_[1], 0x2000);
         for (unsigned i = 0; i < 8; ++i)
-            into.write(wram_[i], 0x1000);
-        // serialize oam and hram
-        into.write(oam_, 160);
-        into.write(hram_, 256);
+            serialize(into, wram_[i], 0x1000);
+        // serialize OAM and HRAM
+        serialize(into, oam_, 160);
+        serialize(into, hram_, 256);
         // now we need to serialize the gamepak's data, which is the eram and the state of the MBC (if any). We do not need to serialize the gamepak as this should be handled by the app name already (i.e. different gamepaks go to different save folders as each gamepak appears as a different app)
         uint32_t eramSize = gamepak_->cartridgeRAMSize() / 8192;
         for (uint32_t i = 0; i < eramSize; ++i)
-            into.write(eram_[i], 0x2000);
-        into.serialize(getRomPage());
-        into.serialize(getVideoRamPage());
-        into.serialize(getWorkRamPage());
-        into.serialize(getExternalRamPage());
+            serialize(into, eram_[i], 0x2000);
+        serialize(into, getRomPage());
+        serialize(into, getVideoRamPage());
+        serialize(into, getWorkRamPage());
+        serialize(into, getExternalRamPage());
         // save the APU state
-        apu_.save(into);
+        serialize(into, apu_);
         // we do not have to save the PPU state as we only allow interrupting the game during a VBLANK period
     }
 
     void GBCEmu::load(ReadStream & from) {
-        if (from.deserialize<uint8_t>() != VERSION) {
+        if (deserialize<uint8_t>(from) != VERSION) {
             LOG(LL_WARN,  "Unsupported save version, skipping");
             return;
         }
         // load CPU state
-        from.read(regs8_, 8);
-        from.deserializeInto(sp_);
-        from.deserializeInto(pc_);
-        from.deserializeInto(cgb_);
-        from.deserializeInto(ime_);
-        // load timer internal state
-        from.deserializeInto(timerDIVModulo_);
-        from.deserializeInto(timerTIMAModulo_);
-        from.deserializeInto(timerCycles_);
+        deserialize(from, regs8_, 8);
+        deserialize(from, sp_);
+        deserialize(from, pc_);
+        deserialize(from, cgb_);
+        deserialize(from, ime_);
+        // load CPU internal state
+        deserialize(from, timerDIVModulo_);
+        deserialize(from, timerTIMAModulo_);
+        deserialize(from, timerCycles_);
         // load VRAM and WRAM
-        from.read(vram_[0], 0x2000);
-        from.read(vram_[1], 0x2000);
+        deserialize(from, vram_[0], 0x2000);
+        deserialize(from, vram_[1], 0x2000);
         for (unsigned i = 0; i < 8; ++i)
-            from.read(wram_[i], 0x1000);
+            deserialize(from, wram_[i], 0x1000);
         // load oam and hram
-        from.read(oam_, 160);
-        from.read(hram_, 256);
+        deserialize(from, oam_, 160);
+        deserialize(from, hram_, 256);
         // load the eram and gamepak state and set the various memory pages properly
         uint32_t eramSize = gamepak_->cartridgeRAMSize() / 8192;
         for (uint32_t i = 0; i < eramSize; ++i)
-            from.read(eram_[i], 0x2000);
-        setRomPage(from.deserialize<uint32_t>());
-        setVideoRamPage(from.deserialize<uint32_t>());
-        setWorkRamPage(from.deserialize<uint32_t>());
-        setExternalRamPage(from.deserialize<uint32_t>());
+            deserialize(from, eram_[i], 0x2000);
+        setRomPage(deserialize<uint32_t>(from));
+        setVideoRamPage(deserialize<uint32_t>(from));
+        setWorkRamPage(deserialize<uint32_t>(from));
+        setExternalRamPage(deserialize<uint32_t>(from));
         // load the APU state
-        apu_.load(from);
+        deserialize(from, apu_);
+        // we do not have to load the PPU state as we only allow interrupting the game during a VBLANK period
     }
 
     void GBCEmu::loop() {
