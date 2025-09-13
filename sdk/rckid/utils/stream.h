@@ -319,4 +319,152 @@ namespace rckid {
 
 
 
+    // new serialization functions
+    inline void serialize(WriteStream & into, uint8_t const & what) {
+        into.writeByte(what);
+    }
+
+    inline void serialize(WriteStream & into, int8_t const & what) {
+        into.writeByte(static_cast<uint8_t>(what));
+    }
+
+    inline void serialize(WriteStream & into, uint16_t const & what) {
+        serialize(into, static_cast<uint8_t>(what & 0xff));
+        serialize(into, static_cast<uint8_t>(what >> 8));
+    }
+
+    inline void serialize(WriteStream & into, int16_t const & what) {
+        serialize(into, static_cast<uint16_t>(what));
+    }
+
+    inline void serialize(WriteStream & into, uint32_t const & what) {
+        serialize(into, static_cast<uint16_t>(what & 0xffff));
+        serialize(into, static_cast<uint16_t>(what >> 16));
+    }
+
+    inline void serialize(WriteStream & into, int32_t const & what) {
+        serialize(into, static_cast<uint32_t>(what));
+    }
+
+    inline void serialize(WriteStream & into, uint64_t const & what) {
+        serialize(into, static_cast<uint32_t>(what & 0xffffffff));
+        serialize(into, static_cast<uint32_t>(what >> 32));
+    }
+
+    inline void serialize(WriteStream & into, int64_t const & what) {
+        serialize(into, static_cast<uint64_t>(what));
+    }
+
+    inline void serialize(WriteStream & into, bool const & value) {
+        value ? serialize(into, static_cast<uint8_t>(1)) : serialize(into, static_cast<uint8_t>(0));
+    }
+
+    inline void serialize(WriteStream & into, String const & what) {
+        serialize(into, static_cast<uint32_t>(what.size()));
+        into.write(reinterpret_cast<uint8_t const *>(what.data()), what.size());
+    }
+
+    inline void serialize(WriteStream & into, TinyDateTime const & time) {
+        static_assert(sizeof(TinyDateTime) == sizeof(uint32_t));
+        serialize(into, *reinterpret_cast<uint32_t const *>(& time));
+    }
+
+    inline void serialize(WriteStream & into, TinyDate const & time) {
+        static_assert(sizeof(TinyDate) == sizeof(uint32_t));
+        serialize(into, *reinterpret_cast<uint32_t const *>(& time));
+    }
+
+    inline void serialize(WriteStream & into, TinyAlarm const & time) {
+        static_assert(sizeof(TinyAlarm) == 3);
+        uint8_t const * x = reinterpret_cast<uint8_t const *>(& time);
+        serialize(into, x[0]);
+        serialize(into, x[1]);
+        serialize(into, x[2]);
+    }
+
+    // new deserialization functions
+
+
+    inline void deserialize(ReadStream & from, uint8_t & into) {
+        into = from.read();
+    }
+
+    inline void deserialize(ReadStream & from, int8_t & into) {
+        uint8_t x = from.read();
+        into = static_cast<int8_t>(x);
+    }
+
+    inline void deserialize(ReadStream & from, uint16_t & into) {
+        uint8_t lo = from.read();
+        uint8_t hi = from.read();
+        into = lo + (hi << 8);
+    }
+
+    inline void deserialize(ReadStream & from, int16_t & into) {
+        uint16_t x;
+        deserialize(from, x);
+        into = static_cast<int16_t>(x);
+    }
+
+    inline void deserialize(ReadStream & from, uint32_t & into) {
+        uint16_t lo, hi;
+        deserialize(from, lo);
+        deserialize(from, hi);
+        into = lo + (static_cast<uint32_t>(hi) << 16);
+    }
+
+    inline void deserialize(ReadStream & from, int32_t & into) {
+        uint32_t x;
+        deserialize(from, x);
+        into = static_cast<int32_t>(x);
+    }
+
+    inline void deserialize(ReadStream & from, uint64_t & into) {
+        uint32_t lo, hi;
+        deserialize(from, lo);
+        deserialize(from, hi);
+        into = lo + (static_cast<uint64_t>(hi) << 32);
+    }
+
+    inline void deserialize(ReadStream & from, int64_t & into) {
+        uint64_t x;
+        deserialize(from, x);
+        into = static_cast<int64_t>(x);
+    }
+
+    inline void deserialize(ReadStream & from, bool & into) {
+        uint8_t x;
+        deserialize(from, x);
+        into = (x == 1);
+    }
+
+    inline void deserialize(ReadStream & from, String & into) {
+        uint32_t size;
+        deserialize(from, size);
+        into = String(' ', size);
+        from.read(reinterpret_cast<uint8_t*>(into.data()), size);
+    }
+
+    inline void deserialize(ReadStream & from, TinyDateTime & into) {
+        static_assert(sizeof(TinyDateTime) == sizeof(uint32_t));
+        uint32_t x;
+        deserialize(from, x);
+        into = *reinterpret_cast<TinyDateTime*>(& x);
+    }
+
+    inline void deserialize(ReadStream & from, TinyDate & into) {
+        static_assert(sizeof(TinyDate) == sizeof(uint32_t));
+        uint32_t x;
+        deserialize(from, x);
+        into = *reinterpret_cast<TinyDate*>(& x);
+    }
+
+    inline void deserialize(ReadStream & from, TinyAlarm & into) {
+        static_assert(sizeof(TinyAlarm) == 3);
+        uint8_t * x = reinterpret_cast<uint8_t *>(&into);
+        deserialize(from, x[0]);
+        deserialize(from, x[1]);
+        deserialize(from, x[2]);
+    }
+
 } // namespace rckid

@@ -79,30 +79,11 @@ namespace rckid::gbcemu {
 
         /** Saves the game state to the provided savefile stream. 
          */
-        void save(WriteStream & into) override {
-            into.serialize(VERSION);
-            // serialize the CPU state
-            into.write(regs8_, 8);
-            into.serialize(sp_);
-            into.serialize(pc_);
-            // serialize RAM
-            UNIMPLEMENTED;
-        }
-
+        void save(WriteStream & into) override;
+        
         /** Loads the game state from the given savefile. 
          */
-        void load(ReadStream & from) override {
-            if (from.deserialize<uint8_t>() != VERSION) {
-                LOG(LL_WARN,  "Unsupported save version, skipping");
-                return;
-            }
-            // load CPU state
-            from.read(regs8_, 8);
-            from.deserializeInto(sp_);
-            from.deserializeInto(pc_);
-            // load RAM
-            UNIMPLEMENTED; 
-        }
+        void load(ReadStream & from) override;
 
 
         /** Laods the given gamepak in the emulator. 
@@ -378,18 +359,22 @@ namespace rckid::gbcemu {
         /** Sets the second ROM page to the given address. The address must point to a consecutive 16KB bytes long array. 
          */
         void setRomPage(uint32_t page);
+        uint32_t getRomPage() const;
 
         /** Sets the video ram page. Video ram pages are 8 KB and two of them are available for GBC. 
          */
         void setVideoRamPage(uint32_t page);
-
-        /** Sets external ram bank. Valid values are from 0 to 16, external ram banks are 8KB in size.
-         */
-        void setExternalRamPage(uint32_t page); 
+        uint32_t getVideoRamPage() const;
 
         /** Sets the second work ram page (first is always 0). GBC has 8 work ram banks, banks 1 to 7 can be mapped here.
          */
         void setWorkRamPage(uint32_t page);
+        uint32_t getWorkRamPage() const;
+
+        /** Sets external ram bank. Valid values are from 0 to 16, external ram banks are 8KB in size.
+         */
+        void setExternalRamPage(uint32_t page); 
+        uint32_t getExternalRamPage() const;
 
 
         /** Faster memory reads for program counter where we assume the address does not belong to the 16th bank with oam and high mem. 

@@ -332,6 +332,74 @@ namespace rckid::gbcemu {
         delete [] hram_;
     }
 
+    void GBCEmu::save(WriteStream & into) {
+        into.serialize(VERSION);
+        // serialize the CPU state
+        into.write(regs8_, 8);
+        into.serialize(sp_);
+        into.serialize(pc_);
+        into.serialize(cgb_);
+        into.serialize(ime_);
+        // save the internal state of the timer
+        into.serialize(timerDIVModulo_);
+        into.serialize(timerTIMAModulo_);
+        into.serialize(timerCycles_);
+        // serialize VRAM and WRAM
+        into.write(vram_[0], 0x2000);
+        into.write(vram_[1], 0x2000);
+        for (unsigned i = 0; i < 8; ++i)
+            into.write(wram_[i], 0x1000);
+        // serialize oam and hram
+        into.write(oam_, 160);
+        into.write(hram_, 256);
+        // now we need to serialize the gamepak's data, which is the eram and the state of the MBC (if any). We do not need to serialize the gamepak as this should be handled by the app name already (i.e. different gamepaks go to different save folders as each gamepak appears as a different app)
+        uint32_t eramSize = gamepak_->cartridgeRAMSize() / 8192;
+        for (uint32_t i = 0; i < eramSize; ++i)
+            into.write(eram_[i], 0x2000);
+        into.serialize(getRomPage());
+        into.serialize(getVideoRamPage());
+        into.serialize(getWorkRamPage());
+        into.serialize(getExternalRamPage());
+        // save the APU state
+        apu_.save(into);
+        // we do not have to save the PPU state as we only allow interrupting the game during a VBLANK period
+    }
+
+    void GBCEmu::load(ReadStream & from) {
+        if (from.deserialize<uint8_t>() != VERSION) {
+            LOG(LL_WARN,  "Unsupported save version, skipping");
+            return;
+        }
+        // load CPU state
+        from.read(regs8_, 8);
+        from.deserializeInto(sp_);
+        from.deserializeInto(pc_);
+        from.deserializeInto(cgb_);
+        from.deserializeInto(ime_);
+        // load timer internal state
+        from.deserializeInto(timerDIVModulo_);
+        from.deserializeInto(timerTIMAModulo_);
+        from.deserializeInto(timerCycles_);
+        // load VRAM and WRAM
+        from.read(vram_[0], 0x2000);
+        from.read(vram_[1], 0x2000);
+        for (unsigned i = 0; i < 8; ++i)
+            from.read(wram_[i], 0x1000);
+        // load oam and hram
+        from.read(oam_, 160);
+        from.read(hram_, 256);
+        // load the eram and gamepak state and set the various memory pages properly
+        uint32_t eramSize = gamepak_->cartridgeRAMSize() / 8192;
+        for (uint32_t i = 0; i < eramSize; ++i)
+            from.read(eram_[i], 0x2000);
+        setRomPage(from.deserialize<uint32_t>());
+        setVideoRamPage(from.deserialize<uint32_t>());
+        setWorkRamPage(from.deserialize<uint32_t>());
+        setExternalRamPage(from.deserialize<uint32_t>());
+        // load the APU state
+        apu_.load(from);
+    }
+
     void GBCEmu::loop() {
         // set the current app in focus. If there is previous app, it will be blurred. The focus method also updates the parent app so that we can go back with the apps
         focus();
@@ -360,8 +428,9 @@ namespace rckid::gbcemu {
 #endif
             setPPUMode(0); // HBlank
             runCPU(cgb_ ? DOTS_MODE_0 * 2 : DOTS_MODE_0);
-            // deal with home button press
-            ModalApp::update();
+            // if we have reached the end of the frame, check the home menu during the VBLANL period
+            if (IO_LY == 144)
+                ModalApp::update();
         }
 
         // we are done, should blur ourselves, and refocus parent (if any)
@@ -1138,16 +1207,18 @@ namespace rckid::gbcemu {
         memMap_[7] = memMap_[4] + 0x3000;
     }
 
+    uint32_t GBCEmu::getRomPage() const {
+        return romPage_;
+    }
+
     void GBCEmu::setVideoRamPage(uint32_t page) {
         ASSERT(page < 2);
         memMap_[MEMMAP_VRAM_0] = vram_[page];
         memMap_[MEMMAP_VRAM_1] = vram_[page] + 4096;
     }
 
-    void GBCEmu::setExternalRamPage(uint32_t page) {
-        ASSERT(page < 16);
-        memMap_[10] = eram_[page];
-        memMap_[11] = eram_[page] + 4096;
+    uint32_t GBCEmu::getVideoRamPage() const {
+        return (memMap_[MEMMAP_VRAM_0] == vram_[0]) ? 0 : 1;
     }
 
     void GBCEmu::setWorkRamPage(uint32_t page) {
@@ -1156,6 +1227,29 @@ namespace rckid::gbcemu {
         // don't forget to set the echo ram as well here
         memMap_[15] = wram_[page];
     }
+
+    uint32_t GBCEmu::getWorkRamPage() const {
+        for (uint32_t i = 0; i < 8; ++i)
+            if (memMap_[13] == wram_[i])
+                return i;
+        UNREACHABLE;
+        return 0;
+    }
+
+    void GBCEmu::setExternalRamPage(uint32_t page) {
+        ASSERT(page < 16);
+        memMap_[10] = eram_[page];
+        memMap_[11] = eram_[page] + 4096;
+    }
+
+    uint32_t GBCEmu::getExternalRamPage() const {
+        for (uint32_t i = 0; i < 16; ++i)
+            if (memMap_[10] == eram_[i])
+                return i;
+        UNREACHABLE;
+        return 0;
+    }
+
 
     // arithmetics
 

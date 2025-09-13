@@ -89,29 +89,6 @@
 - [X] IR LED (via DMP1045u as it sources over 20mA)
 - [X] white LED (can be wired via AP2502 which I can get from TME)
 
-
-## Prototype Order
-
-PCB & assembly:
-
-- [ ] 5x main board with multicolor stencil + assembly (2x with LiPo, 2x with AAA, 1 spare), have to desolder charger circuits for the AAA version
-- [ ] 2x cartridge connector + assembly
-- [ ] 5x RM2 Cartridge multicolor stencil (PCB only)
-- [ ] 5x battery connector (PCB only)
-- [ ] 5x NRF Cartridge (PCB only, ENIG)
-- [ ] 5x Basic cartridge (PCB only, HASL)
-
-3D printed parts
-- [ ] 2x black nylon bottom
-- [ ] 2x translucent bottom
-- [ ] 1x transparent bottom
-- [ ] 3x transparent top fused
-- [ ] 2x black nylon top for display cover
-- [ ] 2x black nylon cartridge fused
-- [ ] 2x translucent cartridge fused
-- [ ] 1x transparent cartridge fused
-- [ ] 5x translucent buttons fused 
-
 ## Software Tasks
 
 White LED from TME:
@@ -125,6 +102,8 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 # TODO
 
+- rewrite serialization to have a function that can be overloaded as frind
+
 - improve audio fidelity for GBCEmu
 - change logo to petalface:)
 
@@ -133,8 +112,9 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 - TODO would be good if image could work immediately with static in memory pictures
 - do we need bitmap in graphics now? its more like bitmap is now image really
 
-- save state for apps
-- how to resume state when app restarted
+
+- allow saving external ram to cartridge when gbc game exits? 
+- how to resume state when app restarted (automatic)
 - do not allow to start measured app if we have no more allowance (otherwise it starts for a second, then stops)
 
 - for messages, add widgets for the various message types that can be viewed
