@@ -30,6 +30,10 @@ namespace rckid {
         // TODO for cur & next we need to save also the color
         void save(WriteStream & into) override {
             into.serialize(VERSION);
+            // first save the app mode, if we are not in a game, there is no point serializing further
+            into.serialize(static_cast<uint8_t>(mode_));
+            if (mode_ != Mode::Game)
+                return;
             // save the actual state - level & score
             into.serialize(score_);
             into.serialize(level_);
@@ -40,10 +44,10 @@ namespace rckid {
             into.serialize(allowDown_);
             // save the grid & tetromino properties
             into.write(grid_, sizeof(grid_));
-            into.serialize(static_cast<uint8_t>(cur_.kind()));
+            cur_.save(into);
+            next_.save(into);
             into.serialize(x_);
             into.serialize(y_);
-            into.serialize(static_cast<uint8_t>(next_.kind()));
         }
         
         void load(ReadStream & from) override {
@@ -51,17 +55,24 @@ namespace rckid {
                 LOG(LL_WARN,  "Unsupported save version, skipping");
                 return;
             }
-            score_ = from.deserialize<uint32_t>();
-            level_ = from.deserialize<uint32_t>();
-            levelCompacted_ = from.deserialize<uint32_t>();
-            countdown_ = from.deserialize<uint32_t>();
-            speed_ = from.deserialize<uint32_t>();
-            allowDown_ = from.deserialize<bool>();
-            from.read(grid_, sizeof(grid_));
+            mode_ = static_cast<Mode>(from.deserialize<uint8_t>());
+            if (mode_ == Mode::Game) {
+                // only deserialize state if we are in the game mode
+                score_ = from.deserialize<uint32_t>();
+                level_ = from.deserialize<uint32_t>();
+                levelCompacted_ = from.deserialize<uint32_t>();
+                countdown_ = from.deserialize<uint32_t>();
+                speed_ = from.deserialize<uint32_t>();
+                allowDown_ = from.deserialize<bool>();
 
-            x_ = from.deserialize<Coord>();
-            y_ = from.deserialize<Coord>();
+                from.read(grid_, sizeof(grid_));
 
+                cur_.load(from);
+                next_.load(from);
+
+                x_ = from.deserialize<Coord>();
+                y_ = from.deserialize<Coord>();
+            }
         }
 
     protected:
@@ -233,10 +244,23 @@ namespace rckid {
              */
             void randomize() {
                 kind_ = static_cast<Kind>(random() % (static_cast<uint32_t>(Kind::Stairs2) + 1));
-                uint8_t color = (random() % (NUM_COLORS - 1)) + 1;
+                color_ = (random() % (NUM_COLORS - 1)) + 1;
                 for (unsigned x = 0; x < 4; ++x)
                     for (unsigned y = 0; y < 4; ++y)
-                        grid_[y][x] = tetrominos_[static_cast<unsigned>(kind_)][y][x] ? color : 0;
+                        grid_[y][x] = tetrominos_[static_cast<unsigned>(kind_)][y][x] ? color_ : 0;
+            }
+
+            void save(WriteStream & into) {
+                into.serialize(static_cast<uint8_t>(kind_));
+                into.serialize(color_);
+            }
+
+            void load(ReadStream & from) {
+                kind_ = static_cast<Kind>(from.deserialize<uint8_t>());
+                from.deserializeInto(color_);
+                for (unsigned x = 0; x < 4; ++x)
+                    for (unsigned y = 0; y < 4; ++y)
+                        grid_[y][x] = tetrominos_[static_cast<unsigned>(kind_)][y][x] ? color_ : 0;
             }
 
 
@@ -256,6 +280,7 @@ namespace rckid {
 
         private:
             Kind kind_;
+            uint8_t color_;
             uint8_t grid_[4][4];
         }; 
 
