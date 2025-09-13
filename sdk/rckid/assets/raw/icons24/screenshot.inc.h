@@ -1,4 +1,4 @@
-// File: assets/icons/24/039-screenshot.png
+// File: assets/icons/24/034-screenshot.png
 // Size: 878
 137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,
 0,0,0,24,0,0,0,24,8,6,0,0,0,224,119,61,

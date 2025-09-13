@@ -54,8 +54,8 @@ ui::ActionMenu * gamesGenerator() {
 ui::ActionMenu * utilsMenuGenerator() {
     return new ui::ActionMenu{
         ui::ActionMenu::Item("Clock", assets::icons_64::alarm_clock, App::run<Clock>),
-        ui::ActionMenu::Item("Stopwatch", assets::icons_64::poo, nullptr),
-        ui::ActionMenu::Item("Timer", assets::icons_64::poo, nullptr),
+        ui::ActionMenu::Item("Stopwatch", assets::icons_64::chronometer, nullptr),
+        ui::ActionMenu::Item("Timer", assets::icons_64::hourglass, nullptr),
         ui::ActionMenu::Item("Files", assets::icons_64::folder, App::run<FileDialog>),
         ui::ActionMenu::Item("Data Sync", assets::icons_64::pen_drive, App::run<DataSync>),
     };
@@ -72,7 +72,7 @@ ui::ActionMenu * commsMenuGenerator() {
 ui::ActionMenu * audioMenuGenerator() {
     return new ui::ActionMenu{
         ui::ActionMenu::Item("Recorder", assets::icons_64::microphone, nullptr),
-        ui::ActionMenu::Item("Composer", assets::icons_64::music_1, nullptr),
+        ui::ActionMenu::Item("Composer", assets::icons_64::music_2, nullptr),
         // TODO browser for audio files alone
     };
 }
@@ -89,12 +89,12 @@ ui::ActionMenu * mainMenuGenerator() {
         ui::ActionMenu::Item("Test", assets::icons_64::heart, App::run<Messages::Conversation>),
         ui::ActionMenu::Generator("Games", assets::icons_64::game_controller, gamesGenerator),
         ui::ActionMenu::Item("Music", assets::icons_64::music, App::run<AudioPlayer>),
-        ui::ActionMenu::Item("Radio", assets::icons_64::poo, App::run<FMRadio>),
+        ui::ActionMenu::Item("Radio", assets::icons_64::radio_cassette, App::run<FMRadio>),
         ui::ActionMenu::Generator("Comms", assets::icons_64::chat, commsMenuGenerator),
-        ui::ActionMenu::Generator("Audio", assets::icons_64::poo, audioMenuGenerator),
-        ui::ActionMenu::Generator("Images", assets::icons_64::poo, imagesMenuGenerator),
+        ui::ActionMenu::Generator("Audio", assets::icons_64::music_wave, audioMenuGenerator),
+        ui::ActionMenu::Generator("Images", assets::icons_64::picture, imagesMenuGenerator),
         ui::ActionMenu::Item("Remote", assets::icons_64::rc_car, nullptr),
-        ui::ActionMenu::Generator("Utilities", assets::icons_64::poo, utilsMenuGenerator),
+        ui::ActionMenu::Generator("Utilities", assets::icons_64::configuration, utilsMenuGenerator),
     };
 }
 

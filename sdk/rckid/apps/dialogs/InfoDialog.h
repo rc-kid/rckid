@@ -33,18 +33,18 @@ namespace rckid {
         }
 
         static void error(String title, String text) {
-            InfoDialog d{Icon{assets::icons_64::poo}, std::move(title), std::move(text)};
+            InfoDialog d{Icon{assets::icons_64::sad_face}, std::move(title), std::move(text)};
             d.g_.setBg(ColorRGB::Red().withAlpha(32));
             d.loop();
         }
 
         static void info(String title, String text) {
-            InfoDialog d{Icon{assets::icons_64::book}, std::move(title), std::move(text)};
+            InfoDialog d{Icon{assets::icons_64::read}, std::move(title), std::move(text)};
             d.loop();
         }
 
         static void success(String title, String text) {
-            InfoDialog d{Icon{assets::icons_64::poo}, std::move(title), std::move(text)};
+            InfoDialog d{Icon{assets::icons_64::happy_face}, std::move(title), std::move(text)};
             d.loop();
         }
 

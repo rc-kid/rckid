@@ -84,14 +84,14 @@ namespace rckid {
         }
 
         void extendMenu(ui::ActionMenu * menu) {
-            menu->add(ui::ActionMenu::Generator("Custom", assets::icons_64::book, customGenerator));
+            menu->add(ui::ActionMenu::Generator("Custom", assets::icons_64::appointment_book, customGenerator));
             // set custom items to after exit (exit returns to the previous app as well)
             customItems_ = menu->size();
             menu->add(ui::ActionMenu::Item("Plane mode", assets::icons_64::airplane_mode, [](){
                 InfoDialog::info("Plane mode", "Plane mode selected");
                 // TODO airplane mode
             }));
-            menu->add(ui::ActionMenu::Item("Sleep", assets::icons_64::poo, []() {
+            menu->add(ui::ActionMenu::Item("Sleep", assets::icons_64::sleeping, []() {
                 // TODO exit & sleep
             }));
             menu->add(ui::ActionMenu::Item("Power Off", assets::icons_64::power_off, [](){
@@ -104,7 +104,7 @@ namespace rckid {
             m->add(ui::ActionMenu::Item("Custom 1", assets::icons_64::chronometer, [](){
                 // TODO
             }));
-            m->add(ui::ActionMenu::Item("Custom 2", assets::icons_64::sad, [](){
+            m->add(ui::ActionMenu::Item("Custom 2", assets::icons_64::sad_face, [](){
                 // TODO
             }));
             return m;

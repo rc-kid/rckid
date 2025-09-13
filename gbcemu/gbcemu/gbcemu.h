@@ -191,7 +191,7 @@ namespace rckid::gbcemu {
                 addDefaultHomeActionsInto(m);
                 m->add(ui::ActionMenu::Item(
                     "Debug Mode",
-                    assets::icons_64::poo,
+                    assets::icons_64::ladybug,
                     [this](){
                         debug_ = true;
                     }

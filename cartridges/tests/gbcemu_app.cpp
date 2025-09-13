@@ -1,6 +1,5 @@
 #include <rckid/rckid.h>
 #include <gbcemu/gbcemu.h>
-#include <gbcemu/../tests/bootloader.h>
 #include <gbcemu/../tests/roms/blargg_cpu_instrs.h>
 #include <gbcemu/gamepak.h>
 
@@ -58,7 +57,6 @@ int main() {
         //app.loadCartridge(new gbcemu::FlashGamePak{});
         //if (false)
         //app.loadCartridge(new gbcemu::FlashGamePak{
-        //    gbcemu::DMGBootloader
             //rckid::gbcemu::rom::blargg::instrs::special
             //rckid::gbcemu::rom::blargg::instrs::interrupts
             //rckid::gbcemu::rom::blargg::instrs::op_sp_hl
