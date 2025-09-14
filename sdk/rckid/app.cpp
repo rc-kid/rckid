@@ -10,6 +10,12 @@
 namespace rckid {
 
     void App::update() {
+        if (checkBudget_) {
+            checkBudget_ = false;
+            // verify the budget allowance for the app (if the app is exitting due to expired budget, exit the method immediately)
+            if (!verifyBudgetAllowance(true))
+                return;
+        }
         if (btnPressed(Btn::Home)) {
             std::optional<ui::Action> a = App::run<HomeMenu>(homeMenuGenerator());
             if (a.has_value())
@@ -70,8 +76,7 @@ namespace rckid {
 
     void App::onSecondTick() {
         ui::Header::refresh();
-        if (app_ != nullptr)
-            app_->verifyBudgetAllowance(true);
+        checkBudget_ = true;
         fps_ = redraws_;
         redraws_ = 0;
     }
@@ -83,7 +88,7 @@ namespace rckid {
         if (b == 0) {
             // TODO save to latest slot?
             InfoDialog::error("No more budget", "Wait till midnight when budget is reset, or get more");
-            app_->exit();
+            exit();
             return false;
         } else {
             if (decrement)

@@ -102,8 +102,6 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 # TODO
 
-- figure out what to do with app when budget dies (maybe just call its save if applicable)
-
 - improve audio fidelity for GBCEmu
 - change logo to petalface:)
 
@@ -153,8 +151,6 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 - add version of background wher the background just bounces so that the background can be some actual image
 
-- todo figure out how context menu can be planted to apps (or perhaps let the dialogs handle them)
-
 - when we do mk3, make sure that when a button press is detected, the idle flag is cleared 
 - keepalive when plugged in can be indefinite? 
 
@@ -171,10 +167,7 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 - add events for getting icon for files & on file selected for file browser
 - add actions for file browser such as rename, copy, mkdir, etc.  
 
-
 - make the popupmenu use animations and labels instead of the tilemap
-- add icons for stopwatch, timer, audio Images and utilities
-
 
 ## HW
 

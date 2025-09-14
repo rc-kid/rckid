@@ -17,6 +17,8 @@ namespace rckid {
     public:
         using MODAL_RESULT = void;
 
+        static constexpr char const * LATEST_SLOT = "Latest";
+
         virtual ~App() = default;
 
         /** Returns the name of the app. 
@@ -129,7 +131,10 @@ namespace rckid {
                     parent_->focus();
         }
 
-        /** */
+        /** Basic app update functionality. 
+         
+            In the simplest form, the update method checks home button press for the home menu which should be available from any app and checks the budget if applicable. The app expects the update method to be called after every frame.
+         */
         virtual void update();
 
         /** Overriding this function allows the app to specify its own items for the home menu. 
@@ -156,9 +161,15 @@ namespace rckid {
          */
         virtual void draw() = 0;
 
-        /** Exits the app. The app does not exit immediately, but the next time its run method starts a new frame cycle. 
+        /** Exits the app. 
+         
+            The app does not exit immediately, but the next time its run method starts a new frame cycle. Overriding the method allows intercepting the app exit (but not cancelling the action). The default behavior is to save the game state into the _Latest_ slot, if the app supports save states.
          */
-        void exit() { app_ = nullptr; }
+        virtual void exit() {
+            if (supportsSaveState())
+                saveState(LATEST_SLOT);
+            app_ = nullptr; 
+        }
 
         /** Current number of redraws. Reset automatically every second, should be incremented at each display redraw. 
          */
@@ -179,6 +190,9 @@ namespace rckid {
         App * parent_ = nullptr;
 
         static inline App * app_ = nullptr;
+
+        /** Falg that tells the update() method to check the app budget.  */
+        static inline bool checkBudget_ = false;
 
         static inline uint32_t fps_ = 0;
 
