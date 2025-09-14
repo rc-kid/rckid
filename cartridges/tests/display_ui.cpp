@@ -17,7 +17,7 @@
 #include <rckid/apps/dialogs/FileDialog.h>
 #include <rckid/apps/dialogs/InfoDialog.h>
 #include <rckid/apps/dialogs/PopupMenu.h>
-#include <rckid/apps/AudioPlayer.h>
+#include <rckid/apps/MusicPlayer.h>
 #include <rckid/apps/Friends.h>
 #include <rckid/apps/Messages.h>
 #include <rckid/apps/Clock.h>
@@ -88,7 +88,7 @@ ui::ActionMenu * mainMenuGenerator() {
     return new ui::ActionMenu{
         ui::ActionMenu::Item("Test", assets::icons_64::heart, App::run<Messages::Conversation>),
         ui::ActionMenu::Generator("Games", assets::icons_64::game_controller, gamesGenerator),
-        ui::ActionMenu::Item("Music", assets::icons_64::music, App::run<AudioPlayer>),
+        ui::ActionMenu::Item("Music", assets::icons_64::music, App::run<MusicPlayer>),
         ui::ActionMenu::Item("Radio", assets::icons_64::radio_cassette, App::run<FMRadio>),
         ui::ActionMenu::Generator("Comms", assets::icons_64::chat, commsMenuGenerator),
         ui::ActionMenu::Generator("Audio", assets::icons_64::music_wave, audioMenuGenerator),
