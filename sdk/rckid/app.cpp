@@ -70,11 +70,25 @@ namespace rckid {
 
     void App::onSecondTick() {
         ui::Header::refresh();
-        if (app_ != nullptr && app_->verifyBudgetAllowance()) {
-            InfoDialog::error("No more budget", "Wait till midnight when budget is reset, or get more");
-            app_->exit();
-        }
+        if (app_ != nullptr)
+            app_->verifyBudgetAllowance(true);
         fps_ = redraws_;
         redraws_ = 0;
+    }
+
+    bool App::verifyBudgetAllowance(bool decrement) {
+        if (!isBudgeted())
+            return true;
+        uint32_t b = budget();
+        if (b == 0) {
+            // TODO save to latest slot?
+            InfoDialog::error("No more budget", "Wait till midnight when budget is reset, or get more");
+            app_->exit();
+            return false;
+        } else {
+            if (decrement)
+                budgetSet(b - 1);
+            return true;
+        }
     }
 }

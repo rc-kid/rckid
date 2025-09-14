@@ -57,7 +57,8 @@ namespace rckid {
         template<typename T, typename ... ARGS>
         static typename T::MODAL_RESULT run(ARGS ... args) {
             T app{args...};
-            app.loop();
+            if (app.verifyBudgetAllowance(false))
+                app.loop();
             return app.result();
         }
 
@@ -169,17 +170,11 @@ namespace rckid {
 
         static void onSecondTick();
 
-        bool verifyBudgetAllowance() {
-            if (!isBudgeted())
-                return false;
-            uint32_t b = budget();
-            if (b == 0) {
-                return true;
-            } else {
-                budgetSet(b - 1);
-                return false;
-            }
-        }
+        /** Verifies there is enough budget to play the app and returns true if ok.
+         
+            If the app is over budget, shows a dialog and causes the app to exit. If decrement is true, the system budget allowance will be decreased by 1 if the app is budgeted and there is budget (this is to be executed regularly every second).
+         */
+        bool verifyBudgetAllowance(bool decrement);
 
         App * parent_ = nullptr;
 

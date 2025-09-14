@@ -102,6 +102,8 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 # TODO
 
+- figure out what to do with app when budget dies (maybe just call its save if applicable)
+
 - improve audio fidelity for GBCEmu
 - change logo to petalface:)
 
@@ -113,7 +115,6 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 - allow saving external ram to cartridge when gbc game exits? 
 - how to resume state when app restarted (automatic)
-- do not allow to start measured app if we have no more allowance (otherwise it starts for a second, then stops)
 
 - for messages, add widgets for the various message types that can be viewed
 
@@ -125,12 +126,11 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 - can I create SD card SPI in PIO so that I can use SDIO and SPI as well? yes
 
-- I2S playback working. Tone does not seem to work well (glitch data in square waveform, and maybe others). It also drops framerate to 30 when enabled which is weird
-- for the input / output, it might be easier to use different format, such as PCM as it would allow to send whole 32bits in one loop
+- I2S playback working. Tone does not seem to work well (glitch data in square waveform, and maybe others). It also drops framerate to 30 when enabled which is weird (note ? for the input / output, it might be easier to use different format, such as PCM as it would allow to send whole 32bits in one loop)
 
 - audio codec I2C does not work when MCLK is active. This could be because of enormous I2C rise time for SDA & SCL (well over 1500ns, where 300ns is the limit) - there is sth in the bus design as this would suggest 1nF capacitance of the traces
 
-- run at full speed with no vsycn waiting to see how much free room there is
+- run at full speed with no vsync waiting to see how much free room there is
 
 - USB connection is not detected
 - make usb work in mkIII as well
@@ -145,7 +145,6 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 - comment PNG loading stuff
 
-- figure out what to do with app when budget dies (maybe just call its save if applicable)
 - display budget in header
 
 - file browser should be similar to contacts, i.e. the dialog in launcher menu instead of ui element and separate browser app 
