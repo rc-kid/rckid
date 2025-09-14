@@ -74,9 +74,9 @@ int main() {
         //app.loadCartridge(new gbcemu::FileGamePak("gbcemu/roms/blargg-test-roms/instr_timing/instr_timing.gb"));
         //app.setTerminateAfterStop(true);
         uint32_t t = uptimeUs();
-        app.runModal();
+        app.loop();
         t = uptimeUs() - t;
         auto stats = GBCStats{t, app.elapsedCycles()};
-        stats.runModal();
+        stats.loop();
     }
 }

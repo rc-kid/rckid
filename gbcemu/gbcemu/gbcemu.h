@@ -85,7 +85,6 @@ namespace rckid::gbcemu {
          */
         void load(ReadStream & from) override;
 
-
         /** Laods the given gamepak in the emulator. 
          
             This function should only be used during testing, the default constructor with application name and gamepak should be the only user-facing way of starting GBCEmu.
@@ -95,7 +94,11 @@ namespace rckid::gbcemu {
         /** Test interface
          */
 
-        uint32_t elapsedCycles() const { return timerCycles_; }
+        /** Main loop of the VM. 
+         */
+        void loop() override;
+
+         uint32_t elapsedCycles() const { return timerCycles_; }
 
         uint8_t a() const { return regs8_[REG_INDEX_A]; }
         uint8_t b() const { return regs8_[REG_INDEX_B]; }
@@ -177,7 +180,6 @@ namespace rckid::gbcemu {
          */
         void clear();
 
-        void loop() override;
         void focus() override;
         void blur() override;
 

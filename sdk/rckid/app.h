@@ -57,18 +57,13 @@ namespace rckid {
         template<typename T, typename ... ARGS>
         static typename T::MODAL_RESULT run(ARGS ... args) {
             T app{args...};
-            return app.runModal();
+            app.loop();
+            return app.result();
         }
 
         /** Returns parent app, or nullptr currently root. 
          */
         App * parent() const { return parent_;}
-
-        /** Runs the app modally. 
-         
-            All apps are run modally, app subclasses that return result should update this function to return the result of the app. 
-         */
-        void runModal() { loop(); }
 
         /** Returns the latest frames per second value. This is reset every second and if all goes well should be 60. As this is calculated by the app main loop itself, applications using different main loop strategies should indrement the number of redraws in their logic (see the redraw_ protected field).
          */
@@ -92,6 +87,18 @@ namespace rckid {
         String homeFolder() const {
             return fs::join("/apps", name());
         }
+
+        /** Application main loop. Calling this method executes the application. 
+         
+            The loop method provides the logic for the periodic updates and drawing of the app. The method is called from the run() method of ModalApp class and should not be called directly.
+         */
+        virtual void loop();
+
+        /** Returns the modal result of the application. 
+         
+            This method is overloaded in modal apps that actually might return something and the definition here only allows non-modal apps to be executed via the same code.
+         */
+        void result() const {}
 
     protected:
 
@@ -148,12 +155,6 @@ namespace rckid {
          */
         virtual void draw() = 0;
 
-        /** Application main loop. Calling this method executes the application. 
-         
-            The loop method provides the logic for the periodic updates and drawing of the app. The method is called from the run() method of ModalApp class and should not be called directly.
-         */
-        virtual void loop();
-
         /** Exits the app. The app does not exit immediately, but the next time its run method starts a new frame cycle. 
          */
         void exit() { app_ = nullptr; }
@@ -193,19 +194,17 @@ namespace rckid {
     public:
         using MODAL_RESULT = std::optional<T>;
 
-        /** Runs the app modally
-         */
-        std::optional<T> runModal() {
-            loop();
-            return result_;
-        }
-
         /** Runs the modal app in launcher mode, where when ready, the app calls the given callback function instead.
          */
         void run(std::function<void(T)> callback) {
             callback_ = std::move(callback);
             loop();
         }
+
+        /** Returns the app's return value (if any).
+         */
+        MODAL_RESULT const & result() const { return result_; }
+        MODAL_RESULT & result() { return result_; }
 
         using App::exit;
 

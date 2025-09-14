@@ -284,7 +284,7 @@ namespace rckid::gbcemu {
                         GamePak * gamepak = new gbcemu::CachedGamePak{fs::fileRead(STR("/games/" << eName))};
                         gbcemu::GBCEmu app{fs::stem(eName), gamepak};
                         //app.loadCartridge(new gbcemu::CachedGamePak{fs::fileRead(STR("/games/" << eName))});    
-                        app.runModal();
+                        app.loop();
                     }
                 ));
             }

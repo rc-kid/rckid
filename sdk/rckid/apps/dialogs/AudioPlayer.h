@@ -41,18 +41,6 @@ namespace rckid {
             audioStop();
         }
 
-        /*
-        static bool run(String path, AudioStream & s) {
-            AudioPlayer p{path, s};
-            std::optional<> res = p.runModal();
-            if (res.has_value())
-                return res.value();
-            return false;
-        }
-            */
-
-        //using ui::App<>::run;
-
     protected:
 
         void update() override {
