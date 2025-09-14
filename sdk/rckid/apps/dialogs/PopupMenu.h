@@ -12,7 +12,7 @@ namespace rckid {
         The popup menu is a simple menu visualizer. 
      */
     template<typename PAYLOAD>
-    class PopupMenu : public ui::App<PAYLOAD> {
+    class PopupMenu : public ui::Form<PAYLOAD> {
     public:
 
         /** It's ok that all popup menus have the same name as they do not use any of the name associated functionality. 
@@ -23,7 +23,7 @@ namespace rckid {
         static constexpr Coord TileHeight = 24;
 
         PopupMenu(ui::Menu<PAYLOAD> * menu):
-            ui::App<PAYLOAD>{Rect::XYWH(0, 240 - getNumRows(menu) * TileHeight - 4, getLongestText(menu) * TileWidth + 4, getNumRows(menu) * TileHeight + 4), /* raw */ true},
+            ui::Form<PAYLOAD>{Rect::XYWH(0, 240 - getNumRows(menu) * TileHeight - 4, getLongestText(menu) * TileWidth + 4, getNumRows(menu) * TileHeight + 4), /* raw */ true},
             menu_{menu} {
             using namespace ui;
             g_.setBg(ColorRGB::White().withAlpha(32));
@@ -71,9 +71,9 @@ namespace rckid {
 
     private:
 
-        using ui::App<PAYLOAD>::g_;
-        using ui::App<PAYLOAD>::exit;
-        using ui::App<PAYLOAD>::parent;
+        using ui::Form<PAYLOAD>::g_;
+        using ui::Form<PAYLOAD>::exit;
+        using ui::Form<PAYLOAD>::parent;
 
         static Coord getLongestText(ui::Menu<PAYLOAD> * menu) {
             uint32_t longest = 0;

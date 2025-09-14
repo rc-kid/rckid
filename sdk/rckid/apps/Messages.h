@@ -71,7 +71,7 @@ namespace rckid {
         /** Single conversation.
          
          */
-        class Conversation : public ui::App<void> {
+        class Conversation : public ui::Form<void> {
         public:
 
             /** Use umbrella names for all messages stuff.

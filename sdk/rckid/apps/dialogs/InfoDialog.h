@@ -15,13 +15,13 @@ namespace rckid {
         
         The dialog consists of optional icon, title and text. 
      */
-    class InfoDialog : public ui::App<void> {
+    class InfoDialog : public ui::Form<void> {
     public:
 
         String name() const override { return "InfoDialog"; }
         
         InfoDialog(Icon const & icon, String title, String text):
-            ui::App<void>{Rect::XYWH(0, 144, 320, 96), /* raw */ true} {
+            ui::Form<void>{Rect::XYWH(0, 144, 320, 96), /* raw */ true} {
             using namespace ui;
             icon_ = g_.addChild(new ui::Image{Rect::WH(96, 96), icon});
             icon_->setTransparentColor(ColorRGB::Black());
@@ -54,7 +54,7 @@ namespace rckid {
 
     protected:
         void update() override {
-            ui::App<void>::update();
+            ui::Form<void>::update();
             // when back or down is pressed, return from the player mode
             if (btnPressed(Btn::B) || btnPressed(Btn::A))
                 exit();

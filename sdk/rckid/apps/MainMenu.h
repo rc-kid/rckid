@@ -15,13 +15,13 @@
 
 namespace rckid {
 
-    class MainMenu : public ui::App<ui::Action> {
+    class MainMenu : public ui::Form<ui::Action> {
     public:
 
         String name() const override { return "MainMenu"; }
 
         MainMenu(ui::ActionMenu::MenuGenerator initialGenerator):
-            ui::App<ui::Action>{} {
+            ui::Form<ui::Action>{} {
             g_.addChild(c_);
             c_.setRect(Rect::XYWH(0, 160, 320, 80));
             c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
@@ -36,11 +36,11 @@ namespace rckid {
 
     protected:
         void focus() override {
-            ui::App<ui::Action>::focus();
+            ui::Form<ui::Action>::focus();
         }
 
         void update() override {
-            ui::App<ui::Action>::update();
+            ui::Form<ui::Action>::update();
             if (!c_.processEvents()) {
                 if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                     auto action = c_.currentItem();

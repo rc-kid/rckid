@@ -14,12 +14,12 @@ namespace rckid {
      
         This will be simple file browser and when a file is selected, it will start audio decoding and playback.
      */
-    class MusicPlayer : public ui::App<void> {
+    class MusicPlayer : public ui::Form<void> {
     public:
 
         String name() const override { return "AudioPlayer"; }
 
-        MusicPlayer() : ui::App<void>{} {
+        MusicPlayer() : ui::Form<void>{} {
             c_ = g_.addChild(new FileBrowser{this});
             c_->setRect(Rect::XYWH(0, 160, 320, 80));
             c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
@@ -28,7 +28,7 @@ namespace rckid {
     protected:
 
         void update() override {
-            ui::App<void>::update();
+            ui::Form<void>::update();
             c_->processEvents();
             if (btnPressed(Btn::B) || btnPressed(Btn::Down))
                 exit();

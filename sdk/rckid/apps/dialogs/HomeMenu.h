@@ -17,7 +17,7 @@ namespace rckid {
 
         General home menu actions (settings, modes, etc.) are executed as part of the home menu and do not always return to the menu. 
      */
-    class HomeMenu : public ui::App<ui::Action> {
+    class HomeMenu : public ui::Form<ui::Action> {
     public:
 
         String name() const override { return "HomeMenu"; }
@@ -25,7 +25,7 @@ namespace rckid {
         HomeMenu() : HomeMenu{nullptr} {}
 
         HomeMenu(ui::ActionMenu::MenuGenerator generator):
-            ui::App<ui::Action>{Rect::XYWH(0, 160, 320, 80), /* raw */ true} {
+            ui::Form<ui::Action>{Rect::XYWH(0, 160, 320, 80), /* raw */ true} {
             g_.addChild(c_);
             c_.setRect(Rect::XYWH(0, 0, 320, 80));
             c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
@@ -43,7 +43,7 @@ namespace rckid {
     protected:
 
         void focus() override {
-            ui::App<ui::Action>::focus();
+            ui::Form<ui::Action>::focus();
             if (c_.menu() == nullptr) {
                 c_.setMenu([this](){
                     ui::ActionMenu * m = customGenerator_ == nullptr ? (new ui::ActionMenu{}) : customGenerator_();;

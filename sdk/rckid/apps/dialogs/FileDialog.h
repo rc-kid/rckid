@@ -5,12 +5,12 @@
 
 namespace rckid {
 
-    class FileDialog : public ui::App<String> {
+    class FileDialog : public ui::Form<String> {
     public:
 
         String name() const override { return "FileDialog"; }
 
-        FileDialog() : ui::App<String>{} {
+        FileDialog() : ui::Form<String>{} {
             using namespace ui;
             c_ = g_.addChild(new ui::FileBrowser{"/"});
             c_->setRect(Rect::XYWH(0, 160, 320, 80));
@@ -38,7 +38,7 @@ namespace rckid {
     protected:
 
         void update() override {
-            ui::App<String>::update();
+            ui::Form<String>::update();
             c_->processEvents();
             // see if an item has been selected, or if we shoudl leave, if up & down were used for traversing the folder strcuture, they have already been cleared by the processEvents
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {

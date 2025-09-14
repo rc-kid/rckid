@@ -13,7 +13,7 @@ namespace rckid {
 
         /** Signle Contact Viewer and editor. 
          */
-        class ContactViewer : public ui::App<void> {
+        class ContactViewer : public ui::Form<void> {
         public:
 
             /** Use umbrella name for all friends apps.

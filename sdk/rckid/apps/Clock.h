@@ -7,12 +7,12 @@
 
 
 namespace rckid {
-    class Clock : public ui::App<void> {
+    class Clock : public ui::Form<void> {
     public:
 
         String name() const override { return "Clock"; }
 
-        Clock() : ui::App<void>{} {
+        Clock() : ui::Form<void>{} {
             h_ = g_.addChild(new ui::Label{Rect::XYWH(0, 30, 150, 130), ""});
             h_->setFont(Font::fromROM<assets::OpenDyslexic128>());
             h_->setHAlign(HAlign::Right);
@@ -27,7 +27,7 @@ namespace rckid {
         }
 
         void update() override {
-            ui::App<void>::update();
+            ui::Form<void>::update();
             
             TinyDateTime t = timeNow();
             h_->setText(STR(fillLeft(t.hour(), 2, '0')));

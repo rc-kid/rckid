@@ -14,7 +14,7 @@ namespace rckid {
       
         Uses a simple tilemap and a sprite for the selection.  
      */
-    class TextDialog : public ui::App<String> {
+    class TextDialog : public ui::Form<String> {
     public:
 
         String name() const override { return "TextDialog"; }
@@ -27,7 +27,7 @@ namespace rckid {
         }; // TextInput::KeyboardType
 
         TextDialog():
-            ui::App<String>{Rect::XYWH(0, 144, 320, 96), /* raw */ true} {
+            ui::Form<String>{Rect::XYWH(0, 144, 320, 96), /* raw */ true} {
                 using namespace ui;
                 g_.setBg(ColorRGB::White().withAlpha(32));
                 tileMap_ = g_.addChild(new ui::Tilemap<Tile<12, 24, Color16>>{26, 4, assets::System24, palette_});
@@ -73,7 +73,7 @@ namespace rckid {
             selRect_->setPos(x, y);
 
             // check any keyboard actions
-            ui::App<String>::update();
+            ui::Form<String>::update();
             if (! a_.running()) {
                 if (btnDown(Btn::Right)) {
                     select_.x += 2;

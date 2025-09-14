@@ -75,14 +75,14 @@ namespace rckid::ui {
                 return;
             if (a_.update()) {
                 a_.stop();
-                Form::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
+                FormWidget::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
                 dir_ = Direction::None;
                 aImgOffset_ = 0;
                 aTextOffset_ = 0;
                 std::swap(aImg_, bImg_);
                 std::swap(aText_, bText_);
             } else {
-                Form::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
+                FormWidget::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
                 updateOffsets();
             }
         }
@@ -188,7 +188,7 @@ namespace rckid::ui {
             if (direction != Direction::None) {
                 a_.startContinuous();
                 updateOffsets();
-                Form::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
+                FormWidget::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
             } else {
                 a_.stop();
             }

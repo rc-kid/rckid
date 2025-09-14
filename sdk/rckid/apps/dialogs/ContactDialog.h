@@ -9,12 +9,12 @@
 
 namespace rckid {
 
-    class ContactDialog : public ui::App<Contact> {
+    class ContactDialog : public ui::Form<Contact> {
     public:
 
         String name() const override { return "ContactDialog"; }
 
-        ContactDialog() : ui::App<Contact>{320, 240} {
+        ContactDialog() : ui::Form<Contact>{320, 240} {
             c_ = g_.addChild(new ui::EventBasedCarousel{
                 [this](){ return contacts_.size(); },
                 [this](uint32_t index, Direction direction) {
@@ -27,7 +27,7 @@ namespace rckid {
         }
 
         void update() override {
-            ui::App<Contact>::update();
+            ui::Form<Contact>::update();
             if (btnPressed(Btn::Down) || btnPressed(Btn::B)) {
                 btnClear(Btn::Down);
                 btnClear(Btn::B);
@@ -37,7 +37,7 @@ namespace rckid {
         }
 
         void focus() override {
-            ui::App<Contact>::focus();
+            ui::Form<Contact>::focus();
             // if we have contact
             loadContacts();
             if (firstRun_) {

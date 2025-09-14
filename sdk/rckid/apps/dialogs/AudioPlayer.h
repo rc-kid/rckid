@@ -16,7 +16,7 @@ namespace rckid {
         PlayNext
     }; // AudioPlayerResult
 
-    class AudioPlayer : public ui::App<AudioPlayerResult> {
+    class AudioPlayer : public ui::Form<AudioPlayerResult> {
     public:
 
         /** Use umbrella name for all audio player stuff. 
@@ -24,7 +24,7 @@ namespace rckid {
         String name() const override { return "AudioPlayer"; }
 
         AudioPlayer(String path, AudioStream & s) : 
-            ui::App<AudioPlayerResult>{Rect::XYWH(0, 160, 320, 80), /*raw*/ true}, 
+            ui::Form<AudioPlayerResult>{Rect::XYWH(0, 160, 320, 80), /*raw*/ true}, 
             as_{s} {
             // TODO
             audioPlay(as_);
@@ -45,7 +45,7 @@ namespace rckid {
 
         void update() override {
 
-            ui::App<AudioPlayerResult>::update();
+            ui::Form<AudioPlayerResult>::update();
             if (! audioPaused()) {
                 uint32_t t = uptimeUs();
                 elapsedUs_ += t - lastUs_;
@@ -81,7 +81,7 @@ namespace rckid {
         void draw() override {
             if (redraw_) {
                 redraw_ = false;
-                ui::App<AudioPlayerResult>::draw(); 
+                ui::Form<AudioPlayerResult>::draw(); 
             }
         }
 

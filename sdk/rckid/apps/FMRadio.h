@@ -12,13 +12,13 @@ namespace rckid {
 
     /** A simple FM radio. 
      */
-    class FMRadio : public ui::App<void> {
+    class FMRadio : public ui::Form<void> {
     public:
         
         String name() const override { return "FMRadio"; }
 
         FMRadio() :
-            ui::App<void>{},
+            ui::Form<void>{},
             freq_{Rect::XYWH(0, 30, 320, 130), ""},
             rds_{Rect::XYWH(0, 170, 320, 80), ""} {
             freq_.setFont(Font::fromROM<assets::OpenDyslexic128>());
@@ -53,7 +53,7 @@ namespace rckid {
     protected:
 
         void update() override {
-            ui::App<void>::update();
+            ui::Form<void>::update();
             if (radio_ == nullptr) {
                 InfoDialog::error("No radio", "This device does not have a radio chip.");
                 exit();
@@ -89,7 +89,7 @@ namespace rckid {
 
         void draw() override {
             rds_.setText(STR(hex(radio_->status_.rawResponse()) << " ")); //  << gpio::read(RP_PIN_RADIO_INT)));
-            ui::App<void>::draw();
+            ui::Form<void>::draw();
         }
 
         void blur() {

@@ -102,8 +102,6 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 # TODO
 
-- ui::App is not intuitive, just use form
-
 - improve audio fidelity for GBCEmu
 - change logo to petalface:)
 

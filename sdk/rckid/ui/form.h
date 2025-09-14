@@ -16,17 +16,17 @@
 
 namespace rckid::ui {
 
-    class Form : public Panel {
+    class FormWidget : public Panel {
     public:
-        explicit Form():
-            Form{320,240} {
+        FormWidget():
+            FormWidget{320,240} {
         }
 
-        Form(Coord width, Coord height, bool raw = false):
-            Form(Rect::Centered(width, height, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT), raw) {
+        FormWidget(Coord width, Coord height, bool raw = false):
+            FormWidget(Rect::Centered(width, height, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT), raw) {
         }
 
-        Form(Rect rect, bool raw = false): 
+        FormWidget(Rect rect, bool raw = false): 
             Panel{rect},
             buffer_{RCKID_DISPLAY_HEIGHT},
             bgImage_{! raw},
@@ -144,6 +144,6 @@ namespace rckid::ui {
 
 
     template<typename T>
-    using App = RenderableApp<ui::Form, T>;
+    using Form = RenderableApp<ui::FormWidget, T>;
 
 } // namespace rckid::ui

@@ -23,13 +23,13 @@ namespace rckid {
      
         At this point it only works if the USB is already connected when the app is started. Disconnect & connect detection does not work properly. Only tested on mk2 so far.
      */
-    class DataSync : public ui::App<void> {
+    class DataSync : public ui::Form<void> {
     public:
 
         String name() const override { return "DataSync"; }
 
         DataSync():
-            ui::App<void>{},
+            ui::Form<void>{},
             icon_{Icon{assets::icons_64::pen_drive}},
             info_{Rect::XYWH(0, 150, 320, 20), "SD card not found"},
             status_{Rect::XYWH(0, 180, 320, 20), "Disconnected"} 
@@ -50,7 +50,7 @@ namespace rckid {
         }
 
         void update() override {
-            ui::App<void>::update();
+            ui::Form<void>::update();
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 btnClear(Btn::B);
                 btnClear(Btn::Down);
@@ -76,7 +76,7 @@ namespace rckid {
 
 
 
-            ui::App<void>::draw();
+            ui::Form<void>::draw();
         }
 
         static bool active() {
