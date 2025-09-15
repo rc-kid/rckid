@@ -209,7 +209,6 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 - maybe smaller icon?
 - image picture
 - song left/right, repeat/no repeat
-- does not work on mk2
 
 ### DataSync
 

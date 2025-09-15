@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../rckid.h"
+#include "fixedint.h"
 
 namespace rckid {
 
@@ -87,6 +88,67 @@ namespace rckid {
         uint32_t lastCheck_;
 
     }; // rckid::Timer
-    
+
+    class Animation1D {
+    public:
+        using Interpolation = std::function<FixedInt(Timer const &, int, int)>;
+
+        Animation1D() = default;
+
+        Animation1D(Coord start, Coord end, Interpolation interp):
+            start_{start}, end_{end}, value_{start}, interp_{interp} {
+        }
+
+        void reverse() {
+            Coord t = start_;
+            start_ = end_;
+            end_ = t;
+            value_ = start_;
+        }
+
+        Coord value() const { return value_; }
+        
+        Coord update(Timer const & t) {
+            value_ = interp_(t, start_, end_).round();
+            return value_;
+        }
+
+    private:
+        Coord start_;
+        Coord end_;
+        Coord value_;
+        Interpolation interp_;
+    }; // rckid::Animation1D
+
+    class Animation2D {
+    public:
+        using Interpolation = std::function<FixedInt(Timer const &, int, int)>;
+
+        Animation2D() = default;
+
+        Animation2D(Point start, Point end, Interpolation interp):
+            start_{start}, end_{end}, value_{start}, interp_{interp} {
+        }
+
+        void reverse() {
+            Point t = start_;
+            start_ = end_;
+            end_ = t;
+            value_ = start_;
+        }
+
+        Point value() const { return value_; }
+
+        Point update(Timer const & t) {
+            value_.x = interp_(t, start_.x, end_.x).round();
+            value_.y = interp_(t, start_.y, end_.y).round();
+            return value_;
+        }
+    private:
+        Point start_;
+        Point end_;
+        Point value_;
+        Interpolation interp_;
+    }; // rckid::Animation2D
 
 } // namespace rckid

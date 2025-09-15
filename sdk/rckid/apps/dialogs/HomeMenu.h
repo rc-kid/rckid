@@ -5,6 +5,7 @@
 #include "../../ui/menu.h"
 #include "../../assets/icons_64.h"
 #include "../../assets/fonts/OpenDyslexic64.h"
+#include "Slider.h"
 
 
 namespace rckid {
@@ -25,20 +26,27 @@ namespace rckid {
         HomeMenu() : HomeMenu{nullptr} {}
 
         HomeMenu(ui::ActionMenu::MenuGenerator generator):
-            ui::Form<ui::Action>{Rect::XYWH(0, 160, 320, 80), /* raw */ true} {
+            ui::Form<ui::Action>{Rect::XYWH(0, 144, 320, 96), /* raw */ true} {
             g_.addChild(c_);
-            c_.setRect(Rect::XYWH(0, 0, 320, 80));
+            c_.setRect(Rect::XYWH(0, 0, 320, 96));
             c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
             customGenerator_ = std::move(generator);
+            active_ = true;
         }
 
         ~HomeMenu() {
-
+            active_ = false;
         }
 
         /** Home menu is explicitly not budgeted app.
          */
         bool isBudgeted() const override { return false; }
+
+        /** Returns if there is home menu active in the system (i.e. if home menu is anywhere on the app stack). 
+         
+            If this function returns true, current app runs as part of home menu.
+         */
+        static bool active() { return active_; }
 
     protected:
 
@@ -84,9 +92,22 @@ namespace rckid {
         }
 
         void extendMenu(ui::ActionMenu * menu) {
-            menu->add(ui::ActionMenu::Generator("Custom", assets::icons_64::appointment_book, customGenerator));
             // set custom items to after exit (exit returns to the previous app as well)
             customItems_ = menu->size();
+            menu->add(ui::ActionMenu::Item("Volume", assets::icons_64::high_volume, [this](){
+                Slider s{assets::icons_64::high_volume, "Volume", 0, 15, audioVolume(), [](uint32_t value) { 
+                    audioSetVolume(value); 
+                }};
+                s.setAnimation(c_.iconPosition(), c_.textPosition());
+                s.loop();
+            }));
+            menu->add(ui::ActionMenu::Item("Brightness", assets::icons_64::brightness, [this](){
+                Slider s{assets::icons_64::brightness, "Brightness", 0, 15, displayBrightness() >> 4, [](uint32_t value) {
+                     displaySetBrightness(value * 16 + value); 
+                }};
+                s.setAnimation(c_.iconPosition(), c_.textPosition());
+                s.loop();
+            }));
             menu->add(ui::ActionMenu::Item("Plane mode", assets::icons_64::airplane_mode, [](){
                 InfoDialog::info("Plane mode", "Plane mode selected");
                 // TODO airplane mode
@@ -99,17 +120,6 @@ namespace rckid {
             }));
         }
 
-        static ui::ActionMenu * customGenerator() {
-            ui::ActionMenu * m = new ui::ActionMenu{};
-            m->add(ui::ActionMenu::Item("Custom 1", assets::icons_64::chronometer, [](){
-                // TODO
-            }));
-            m->add(ui::ActionMenu::Item("Custom 2", assets::icons_64::sad_face, [](){
-                // TODO
-            }));
-            return m;
-        }
-
         ui::CarouselMenu<ui::Action> c_;
 
         // custom generator supplied by the app
@@ -118,6 +128,9 @@ namespace rckid {
         uint32_t customItems_ = 0;
         // determines whether the home menu is inside custom items returned by the app (i.e. will return to the app), or the home menu items which return to the home menu by default.
         bool activeCustomItem_ = false;
+
+        // true if there is home menu active in the system
+        static inline bool active_ = false;
 
     }; // rckid::HomeMenu
 

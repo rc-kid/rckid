@@ -31,7 +31,7 @@ namespace rckid::interpolation {
         int value = custom(i, period, assets::WaveformSin + size / 4, size / 2) + 32768;
         auto x = min + FixedInt{(65536 - value) * (max - min)} / 65535;
         return x; 
-        return FixedInt{65536 - value} * (max - min) / period;
+        //return FixedInt{65536 - value} * (max - min) / period;
     }
 
 } // namespace rckid::interpolation

@@ -16,7 +16,7 @@ namespace rckid {
             if (!verifyBudgetAllowance(true))
                 return;
         }
-        if (btnPressed(Btn::Home)) {
+        if (! HomeMenu::active() && btnPressed(Btn::Home)) {
             std::optional<ui::Action> a = App::run<HomeMenu>(homeMenuGenerator());
             if (a.has_value())
                 a.value()();
