@@ -3,7 +3,7 @@
     The AVR chip reads user inputs, controls the pwm backlight and rumbler peripherals, serves as a RTC and monitors the power. As the chip is always on, it is also used as simple device-bound data storage across cartridges and power cycles (modulo battery changes). 
 
     The AVR operates in two modes - when the device is powered on, the AVR acts as an I2C slave and only responds to RP2350 commands.
-    
+
  */
 
 #include <avr/sleep.h>
@@ -15,14 +15,16 @@
 #include <platform/writer.h>
 #include <platform/tinydate.h>
 
-// TODO  
-// flag that can be used to enable breadboard, or device build. The breadboard is only useful while prototyping all breadboard guarded code should eventually disappear
-#define BREADBOARD__
+#define AVR_INT_IS_SERIAL_TX 0
 
 #undef ASSERT
 #define ASSERT(...) if (!(__VA_ARGS__)) { debugWrite() << "ASSERT " << __LINE__ << "\r\n"; }
 
-#define LOG(...) debugWrite() << __VA_ARGS__ << "\r\n";
+#if AVR_INT_IS_SERIAL_TX
+    #define LOG(...) debugWrite() << __VA_ARGS__ << "\r\n";
+#else
+    #define LOG(...)
+#endif
 
 /** \name Debugging support. 
  
@@ -62,45 +64,28 @@ inline Writer debugWrite() {
     - everything is digital, so we only need the ADC for temperature...
     - use system tick of 5ms, this gives us ability to read all buttons every frame 
 
-    NOTE: There is an errate for attiny1616 and smaller chips that states HW bug where turning off RTC turns off PIT as well, which means those chips will *not* work with RCKid as we use RTC for the system tick and PIT for the timekeeping.
-
-    # Breadboard testing
-
-    For breadboard testing, this is the layout of the ATTiny1616 chip in SOIC package, where the following pins are missing: 5V_ON, ACCEL_INT, BTN3, BTN2. 
-
-               VDD -|============|- GND
-            VDD_EN -|            |- PWM_RUMBLER
-             BTN_4 -|            |- PWR_INT
-               RGB -|            |- AVR_TX
-          BTN_ABXY -| ATTiny1616 |- <UPDI>
-          BTN_CTRL -|            |- AVR_INT
-             BTN_1 -|            |- BTN_DPAD
-           <TOSC1> -|            |- QSPI_SS
-           <TOSC2> -|            |- PWM_BACKLIGHT
-           I2C_SDA -|============|- I2C_SCL
-
-    NOTE: Since the missing pins are effectively floating when in input mode, we cannot use the accel in breadboard mode testing. 
-
+    NOTE: There is an errata for attiny1616 and smaller chips that states HW bug where turning off RTC turns off PIT as well, which means those chips will *not* work with RCKid as we use RTC for the system tick and PIT for the timekeeping.
  */
-#define AVR_PIN_AVR_TX          gpio::A1
-#define AVR_PIN_PWR_INT         gpio::A2
+
+#define AVR_PIN_AVR_INT         gpio::A1
+#define AVR_PIN_VCC_SENSE       gpio::A2
 #define AVR_PIN_PWM_RUMBLER     gpio::A3
-#define AVR_PIN_VDD_EN          gpio::A4
-#define AVR_PIN_BTN_4           gpio::A5
-#define AVR_PIN_RGB             gpio::A6
-#define AVR_PIN_BTN_ABXY        gpio::A7
+#define AVR_PIN_5V_EN           gpio::A4
+#define AVR_PIN_CHARGING        gpio::A5
+#define AVR_PIN_BTN_1           gpio::A6
+#define AVR_PIN_BTN_3           gpio::A7
 #define AVR_PIN_I2C_SCL         gpio::B0
 #define AVR_PIN_I2C_SDA         gpio::B1
-#define AVR_PIN_BTN_1           gpio::B4
+#define AVR_PIN_ACCEL_INT       gpio::B4
 #define AVR_PIN_BTN_CTRL        gpio::B5
-#define AVR_PIN_BTN_3           gpio::B6
+#define AVR_PIN_BTN_ABXY        gpio::B6
 #define AVR_PIN_BTN_2           gpio::B7
 #define AVR_PIN_PWM_BACKLIGHT   gpio::C0
-#define AVR_PIN_QSPI_SS         gpio::C1
-#define AVR_PIN_BTN_DPAD        gpio::C2
-#define AVR_PIN_AVR_INT         gpio::C3
-#define AVR_PIN_5V_ON           gpio::C4
-#define AVR_PIN_ACCEL_INT       gpio::C5
+#define AVR_PIN_IOVDD_EN        gpio::C1
+#define AVR_PIN_BTN_4           gpio::C2
+#define AVR_PIN_RGB             gpio::C3
+#define AVR_PIN_BTN_DPAD        gpio::C4
+#define AVR_PIN_QSPI_SS         gpio::C5
 
 using namespace rckid;
 
@@ -135,20 +120,17 @@ public:
         // enable external crystal oscillator for the RTC
         CCP = CCP_IOREG_gc;
         CLKCTRL.XOSC32KCTRLA = CLKCTRL_RUNSTDBY_bm | CLKCTRL_ENABLE_bm;
-        
         // initialize the RTC that fires every second for a semi-accurate real time clock keeping on the AVR and start counting
-    #ifdef BREADBOARD
-        RTC.CLKSEL = RTC_CLKSEL_INT32K_gc; // run from the internal 32.768kHz oscillator
-    #else
         RTC.CLKSEL = RTC_CLKSEL_TOSC32K_gc; // run from the external 32.768kHz oscillator
-    #endif
         RTC.PITINTCTRL |= RTC_PI_bm; // enable the PIT interrupt
         while (RTC.PITSTATUS & RTC_CTRLBUSY_bm);
         RTC.PITCTRLA = RTC_PERIOD_CYC32768_gc | RTC_PITEN_bm;
 
+    #if AVR_INT_IS_SERIAL_TX
         // initializes the AVR TX pin for serial debugging
         serial::setAlternateLocation(true);
         serial::initializeTx(RCKID_SERIAL_SPEED);
+    #endif
 
         // TODO some initialization routine with checks, etc.
         LOG("\n\n\nSYSTEM RESET DETECTED (AVR): " << hex(RSTCTRL.RSTFR));
@@ -185,8 +167,10 @@ public:
             processI2CCommand();
             // process any interrupt requests
             processIntRequests();
+#if AVR_INT_IS_SERIAL_TX
             // wait for any TX transmissions before going to sleep 
             serial::waitForTx();
+#endif
             // After everything was processed, go to sleep - we will wake up with the ACCEL or PMIC interrupts, or if in power off mode also by the HOME button interrupt
             cpu::sei();
             sleep_enable();
@@ -205,7 +189,6 @@ public:
     static constexpr uint8_t POWER_MODE_WAKEUP = 4;
     static constexpr uint8_t POWER_MODE_ON = 8;
     static inline uint8_t powerMode_ = 0;
-
 
     static void setPowerMode(uint8_t mode) {
         if (powerMode_ & mode)
@@ -241,7 +224,7 @@ public:
         NO_ISR(
             // set power mode, which also ensures system ticks are running
             setPowerMode(POWER_MODE_ON);
-            powerVDD(true);
+            powerIOVDD(true);
             // initialize the PWM subsystem for baclight & rumbler
             initializePWM();
             setBacklightPWM(state_.brightness);
@@ -259,7 +242,7 @@ public:
         LOG("power off");
         NO_ISR(
             clearPowerMode(POWER_MODE_ON);
-            powerVDD(false);
+            powerIOVDD(false);
             disablePWM();
             // make the AVR_INT floating so that we do not leak any voltage to the now off RP2350
             gpio::outputFloat(AVR_PIN_AVR_INT);
@@ -289,10 +272,6 @@ public:
         setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
     }
 
-    static void chargerError() {
-        // TODO what to do when charger is in error state? 
-    }
-
     static void lowBatteryWarning() {
         setNotification(RGBEffect::Breathe(platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
     }
@@ -315,15 +294,16 @@ public:
             setNotification(RGBEffect::Off());
     }
 
-    static void powerVDD(bool enable) {
+    static void powerIOVDD(bool enable) {
+        // TODO take I2C and initialize start condition, release I2C and issue stop condition when powered off
         if (enable) {
             gpio::outputFloat(AVR_PIN_AVR_INT);
-            gpio::outputHigh(AVR_PIN_VDD_EN);
+            gpio::outputHigh(AVR_PIN_IOVDD_EN);
             LOG("VDD on");
         } else {
             gpio::outputFloat(AVR_PIN_AVR_INT);
             // drive the pin low to ensure the regulator turns off immediately
-            gpio::outputLow(AVR_PIN_VDD_EN);
+            gpio::outputLow(AVR_PIN_IOVDD_EN);
             LOG("VDD off");
         }
     }
@@ -334,7 +314,7 @@ public:
     static void rebootRP() {
         LOG("RP reboot...");
         NO_ISR(
-            powerVDD(false);
+            powerIOVDD(false);
             // do RGB red countdown effect in a busy loop to give the voltages time to settle, the countdown lasts for approximatekly 1 second
             rgbOn(true);
             rgbClear();
@@ -346,7 +326,7 @@ public:
             }
             rgbClear();
             rgb_.update();
-            powerVDD(true);
+            powerIOVDD(true);
         );
     }
 
@@ -355,7 +335,7 @@ public:
     static void bootloaderRP() {
         LOG("RP bootloader...");
         NO_ISR(
-            powerVDD(false);
+            powerIOVDD(false);
             // pull QSPI_SS low to indicate bootloader
             gpio::outputLow(AVR_PIN_QSPI_SS);
             // do a one second countdown with enabling power to the VDD rail in the middle so that the QSPI_CS low can be picked up
@@ -364,7 +344,7 @@ public:
                 rgb_[i] = platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
                 rgb_.update();
                 if (i == 3)
-                    powerVDD(true);
+                    powerIOVDD(true);
                 cpu::delayMs(200);
             }
             // reset the QSPI_SS back to float
@@ -410,10 +390,8 @@ public:
         while (RTC.STATUS & RTC_CTRLABUSY_bm);
         RTC.CTRLA = RTC_RUNSTDBY_bm | RTC_RTCEN_bm;
         // whenever system ticks are started, register the IRQ interrupts (rising edge of PWR_INT and ACCEL_INT)
-#ifndef BREADBOARD
         // only use in real board as the pin is floating on attiny3216
         GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
-#endif
         // do not use interrupt on home button (we handle it in the loop due to matrix row rotation)
         GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) &= ~PORT_ISC_gm;
         // if debug mode is enabled, start system notification to white signifying the debug mode power up
@@ -431,10 +409,8 @@ public:
         // allow some time for propagation
         cpu::delayMs(5);
         // enable interrupts for the power down mode where only pin change is available
-#ifndef BREADBOARD
         // only use in real board as the pin is floating on attiny1616
         GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
-#endif
         GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) |= PORT_ISC_BOTHEDGES_gc;
         // disable any pending system tick
         systemTick_ = false;
@@ -872,8 +848,6 @@ public:
                 if (! state_.status.btnHome())
                     homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
                 if (state_.status.debugMode() && ! state_.status.btnHome()) {
-#ifndef BREADBOARD
-                    // the extra button pins are not available on breadboard so the readings are useless
                     if (state_.status.btnVolumeUp()) {
                         rebootRP();
                         return;
@@ -882,19 +856,16 @@ public:
                         bootloaderRP();
                         return;
                     }
-#endif
                 }
                 NO_ISR(setIrq());
             }
 
         } else if (powerMode_ & POWER_MODE_WAKEUP) {
-#ifndef BREADBOARD
             // 
             if (! state_.status.btnHome())
                 clearPowerMode(POWER_MODE_WAKEUP);
             if (state_.status.debugMode() && ! state_.status.btnVolumeDown())
                 leaveDebugMode();
-#endif
         }
         // check if there has been long home button press - it's important we do this *after* the power on checks above as otherwise the long press can enter power on, but with wrong state 
         if (state_.status.btnHome()) {
@@ -1154,7 +1125,7 @@ public:
             return;
         if (value) {
             LOG("RGB on");
-            gpio::outputHigh(AVR_PIN_5V_ON);
+            gpio::outputHigh(AVR_PIN_5V_EN);
             gpio::setAsOutput(AVR_PIN_RGB);
             if (delayAfterPowerOn) {
                 cpu::wdtReset();
@@ -1164,7 +1135,7 @@ public:
             LOG("RGB off");
             rgbClear();
             gpio::outputFloat(AVR_PIN_RGB);
-            gpio::outputFloat(AVR_PIN_5V_ON);
+            gpio::outputFloat(AVR_PIN_5V_EN);
         }
         rgbOn_ = value;
         rgbTicks_ = RGB_TICKS_PER_SECOND;
@@ -1267,9 +1238,9 @@ ISR(TWI0_TWIS_vect) {
 
 /** Home button interrupt ISR.
  */
-ISR(PORTB_PORT_vect) {
-    static_assert(AVR_PIN_BTN_1 == gpio::B4);
-    VPORTB.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_BTN_1));
+ISR(PORTA_PORT_vect) {
+    static_assert(AVR_PIN_BTN_1 == gpio::A6);
+    VPORTA.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_BTN_1));
     // only do stuff if we were tranistioning from high to low (button press)
     if (gpio::read(AVR_PIN_BTN_1) == false)
         RCKid::intRequests_ |= RCKid::HOME_BTN_INT_REQUEST;
@@ -1277,9 +1248,9 @@ ISR(PORTB_PORT_vect) {
 
 /** Accel pin ISR.
  */
-ISR(PORTC_PORT_vect) {
-    static_assert(AVR_PIN_ACCEL_INT == gpio::C5);
-    VPORTC.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_ACCEL_INT));
+ISR(PORTB_PORT_vect) {
+    static_assert(AVR_PIN_ACCEL_INT == gpio::B4);
+    VPORTB.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_ACCEL_INT));
     // only do stuff if we are transitioning from low to high
     if (gpio::read(AVR_PIN_ACCEL_INT))
         RCKid::intRequests_ |= RCKid::ACCEL_INT_REQUEST;
