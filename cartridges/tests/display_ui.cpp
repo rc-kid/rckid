@@ -29,6 +29,7 @@
 #include <rckid/apps/FMRadio.h>
 
 #include <rckid/apps/games/Tetris.h>
+#include <rckid/apps/games/Checkers.h>
 //#include <rckid/apps/games/SlidingPuzzle.h>
 
 
@@ -43,6 +44,7 @@ ui::ActionMenu * gamesGenerator() {
     ui::ActionMenu * result = new ui::ActionMenu{
         //MainMenu::Action("Tetris", assets::icons_64::tetris, App::run<TextDialog>),
         ui::ActionMenu::Item("Tetris", assets::icons_64::tetris, App::run<Tetris>),
+        ui::ActionMenu::Item("Checkers", assets::icons_64::poo, App::run<Checkers>),
     };
     // append available gbcemu ROMs
     gbcemu::GBCEmu::appendGamesFrom("/games", result);

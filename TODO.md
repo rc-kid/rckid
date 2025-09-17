@@ -99,6 +99,12 @@ https://www.tme.eu/cz/details/ap2502ktr-g1/stabilizator-napeti-obvody-dc-dc/diod
 IR LED from TME:
 https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
+Connector for battery pcb
+https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01-1-16r13/
+
+And mouser:
+https://cz.mouser.com/ProductDetail/490-SJ-43504-SMT-TR - headphones connector
+https://cz.mouser.com/ProductDetail/Diodes-Incorporated/AP2502KTR-G1 - AP2502
 
 # TODO
 
@@ -286,7 +292,6 @@ https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
 
 > This is the next major rewrite of the SDK, probably will happen after Xmas and is tailored towards the RP2350, although RP2040 should benfit from it as well. 
 
-https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01-1-16r13/
 
 
 # mk3 Updates
