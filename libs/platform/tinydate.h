@@ -73,7 +73,6 @@ public:
         return (y + y / 4 - y / 100 +y / 400 + "-bed=pen+mad."[m] + d) % 7;
     }
 
-
     void setSecond(uint8_t value) { 
         if (value >= 60)
             value = 59;

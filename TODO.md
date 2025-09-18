@@ -108,6 +108,11 @@ https://cz.mouser.com/ProductDetail/Diodes-Incorporated/AP2502KTR-G1 - AP2502
 
 # TODO
 
+- critical battery error
+- add RGB signalization to the avr mkIII
+- add interrupt for the charging pin as well when the device is off to detect VUSB insertion and charging enabled/disabled
+- avr int as serial tx mabe add 0r resistor on the line to avoid bleeding into rp2350
+
 - improve audio fidelity for GBCEmu
 - change logo to petalface:)
 

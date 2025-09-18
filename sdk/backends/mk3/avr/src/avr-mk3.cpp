@@ -15,10 +15,23 @@
 #include <platform/writer.h>
 #include <platform/tinydate.h>
 
+/** \name Debugging support. 
+ 
+    To ease firmware development, the AVR chip supports serial port (only TX) as alternate function of the AVR_INT pin. The functionality has to be enabled in the macro below as it is offby default. 
+ */
+//@{
+
 #define AVR_INT_IS_SERIAL_TX 0
 
-#undef ASSERT
+inline Writer debugWrite() {
+    return Writer(serial::write);
+}
+//@}
+
+
 #define ASSERT(...) if (!(__VA_ARGS__)) { debugWrite() << "ASSERT " << __LINE__ << "\r\n"; }
+#define UNREACHABLE do { debugWrite() << "Unreachable: " << __LINE__; while (true) {} } while (false)
+#define UNIMPLEMENTED do { debugWrite() << "Unimplemented: " << __LINE__; while (true) {} } while (false)
 
 #if AVR_INT_IS_SERIAL_TX
     #define LOG(...) debugWrite() << __VA_ARGS__ << "\r\n";
@@ -26,16 +39,6 @@
     #define LOG(...)
 #endif
 
-/** \name Debugging support. 
- 
-    To ease firmware development, the AVR chip supports serial port (only TX) to the programming header (together with UPDI and SWD) as well as using the RGB LEDs to indicate system state.
-    */
-//@{
-
-inline Writer debugWrite() {
-    return Writer(serial::write);
-}
-//@}
 
 // those have to be included after the debugWrite & LOG declaration above so that we can use RCKid's logging macros
 #include <backend_config.h>
@@ -134,11 +137,6 @@ public:
 
         // TODO some initialization routine with checks, etc.
         LOG("\n\n\nSYSTEM RESET DETECTED (AVR): " << hex(RSTCTRL.RSTFR));
-        initializeMasterMode();
-        // TODO scanning I2C devices hangs (!)
-        detectI2CDevices();
-        // setup PMIC, everything else can be setup by the RP2350 when powered on
-        // TODO  
 
         // and start the device in powerOff mode, i.e. set sleep mode and start checking ctrl group interrupts
         stopSystemTicks();
@@ -228,9 +226,6 @@ public:
             // initialize the PWM subsystem for baclight & rumbler
             initializePWM();
             setBacklightPWM(state_.brightness);
-            // start the I2C slave as we will be contacted by the RP2350 shortly
-            i2c::initializeSlave(RCKID_AVR_I2C_ADDRESS);
-            TWI0.SCTRLA |= TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm;
             ADC0.CTRLA |= ADC_RUNSTBY_bm;
         );
         setRumblerEffect(RumblerEffect::OK());
@@ -294,22 +289,43 @@ public:
             setNotification(RGBEffect::Off());
     }
 
+    /** Turns the IOVDD on or off. 
+     
+        Because the IOVDD powers the pullups on the I2C lines, we want to ensure the always on devices connected to the bus (mainly the accelerometer) will see defined state by issuing START condition immediately before power off, followed by shorting the SDA and SCL lines to GND and by issuing STOP condition and releasing the I2C lanes rigfht after power on.
+     */
     static void powerIOVDD(bool enable) {
-        // TODO take I2C and initialize start condition, release I2C and issue stop condition when powered off
         if (enable) {
             gpio::outputFloat(AVR_PIN_AVR_INT);
             gpio::outputHigh(AVR_PIN_IOVDD_EN);
+            // wait a bit and then release the I2C pins by issuing STOP condition
+            cpu::delayMs(5);
+            gpio::setAsInput(AVR_PIN_I2C_SCL);
+            cpu::delayUs(100);
+            gpio::setAsInput(AVR_PIN_I2C_SDA);
+            // start the I2C slave as we will be contacted by the RP2350 shortly
+            i2c::initializeSlave(RCKID_AVR_I2C_ADDRESS);
+            TWI0.SCTRLA |= TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm;
             LOG("VDD on");
         } else {
+#if !AVR_INT_IS_SERIAL_TX            
+            // clear the interrupt line to ensure we are not bleeding voltage through it
             gpio::outputFloat(AVR_PIN_AVR_INT);
+#endif
+            // capture I2C lines and issue START condition so that the accelerometer's I2C does not float
+            i2c::disable();
+            TWI0.SCTRLA = 0;
+            gpio::outputLow(AVR_PIN_I2C_SDA);
+            cpu::delayUs(100);
+            gpio::outputLow(AVR_PIN_I2C_SCL);
             // drive the pin low to ensure the regulator turns off immediately
             gpio::outputLow(AVR_PIN_IOVDD_EN);
             LOG("VDD off");
         }
     }
 
-
     /** Reboots the RP2350 chip. 
+     
+        Rebooting the RP is done by a simple power cycle on the IOVDD line. 
      */
     static void rebootRP() {
         LOG("RP reboot...");
@@ -330,7 +346,11 @@ public:
         );
     }
 
-    /** Reboots the RP2350 chip into bootloader mode. This is done by pulling the QSPI_CS pin low from the AVR  
+    /** Reboots the RP2350 chip into bootloader mode. 
+     
+        This is done by pulling the QSPI_CS pin low from the AVR during IOVDD power cycle, which signals to the RP to enter bootloader.
+        
+        NOTE that as the QSPI_CS pin is available on the cartridge as well it is technically possible to implement a real HW bootloader button on the cartridge itself similar to the RP Pico boards, but the AVR controlled reset & pull down of the QSPI line is more user friendly.
      */
     static void bootloaderRP() {
         LOG("RP bootloader...");
@@ -362,7 +382,11 @@ public:
 
     /** \name System ticks and clocks.
      
-        System ticks are used only when the device is on and fire every 5ms. 
+        System ticks are used only when the AVR is outside of the power off mode. They provide basic clock for RGB and rumbler effects (div by 3) and control the timing of reading button matrix and home button long press.
+
+        The second tick is always on and keeps the RTC count. When not in power off mode it also alternates between measuring the temperatur and battery voltage. 
+
+        Second tick is also responsible for checking the alarm and for resetting the daily budget. The budget it reset at midnight every day, but the app also keeps a countdown to next available reset to avoid resetting the budget too often in case the date & time are changed by the user.
      */
     //@{
 
@@ -390,7 +414,6 @@ public:
         while (RTC.STATUS & RTC_CTRLABUSY_bm);
         RTC.CTRLA = RTC_RUNSTDBY_bm | RTC_RTCEN_bm;
         // whenever system ticks are started, register the IRQ interrupts (rising edge of PWR_INT and ACCEL_INT)
-        // only use in real board as the pin is floating on attiny3216
         GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
         // do not use interrupt on home button (we handle it in the loop due to matrix row rotation)
         GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) &= ~PORT_ISC_gm;
@@ -460,11 +483,16 @@ public:
                 state_.status.setSecondInt();
                 setIrq();
             );
-            // start meassuring the temperature
-            //startADC(ADC_MUXPOS_TEMPSENSE_gc);
-            startADC(ADC_MUXPOS_AIN2_gc);
+            // read either battery voltage, or temperature every other second using ADC0
+            if (state_.uptime & 1 == 0) {
+                static_assert(AVR_PIN_VCC_SENSE == gpio::A2);
+                startADC(ADC_MUXPOS_AIN2_gc);
+            } else {
+                startADC(ADC_MUXPOS_TEMPSENSE_gc);
+            }
             LOG("uptime " << state_.uptime);
         }
+        // and finally, reset the daily budget if needed. The hour check and the countdown ensure that we only reset the budget once per day at midnight, even if the time is changed by the user
         if (budgetResetCountdown_ > 0) {
             --budgetResetCountdown_;
         } else if (state_.time.hour() == 0) {
@@ -503,21 +531,6 @@ public:
     static inline volatile uint8_t intRequests_ = 0;
 
     static inline uint8_t ramPages_[1024];
-
-    static void initializeMasterMode() {
-        i2c::initializeMaster();
-    }
-
-    static void detectI2CDevices() {
-        using namespace platform;
-        LOG("Detecting I2C devices...");
-        LOG("  LTR390UV (0x53):   " << (i2c::isPresent(0x53) ? "ok" : "not found"));
-        LOG("  MPU6500 (0x68):    " << (i2c::isPresent(0x68) ? "ok" : "not found"));
-        LOG("  BQ25895 (0x6a):    " << (i2c::isPresent(0x6a) ? "ok" : "not found"));
-        LOG("  INA219 (0x40):     " << (i2c::isPresent(0x40) ? "ok" : "not found"));
-        //LOG("  TLV320 (0xXX):     " << (i2c::isPresent(0x18) ? "ok" : "not found"));
-        //LOG("  SI4705 (0xXX):     " << (i2c::isPresent(0x11) ? "ok" : "not found"));
-    }
 
     static void processIntRequests() {
         if (intRequests_ == 0)
@@ -560,7 +573,10 @@ public:
         if (irq_)
             return;
         irq_ = true;
+#if !AVR_INT_IS_SERIAL_TX        
+        // only change the pin state if we are not using it for serial TX
         gpio::outputLow(AVR_PIN_AVR_INT);
+#endif
     }
 
     /** The I2C interrupt handler. 
@@ -583,7 +599,10 @@ public:
             // clear IRQ once we read the state 
             if (++i2cTxIdx_ == 3) {
                 irq_ = false;
+#if !AVR_INT_IS_SERIAL_TX                
+                // only change the pin state if we are not using it for serial TX
                 gpio::outputFloat(AVR_PIN_AVR_INT);
+#endif
                 state_.status.clearInterrupts();
             }
             // TODO send nack when done sending all state
@@ -738,16 +757,28 @@ public:
                 break;
             }
             /** Sets all RGB effects at once. 
-             
-                TODO how this will actually work depends on whether we have 1, or 2 dpad LEDs. If two DPAD leds, then DPAD effect sould be copied to both of them. 
              */
             case cmd::SetRGBEffects::ID: {
                 auto & c = cmd::SetRGBEffects::fromBuffer(state_.buffer);
-                rgbEffect_[0] = c.b;
-                rgbEffect_[1] = c.a;
-                rgbEffect_[3] = c.dpad;
-                rgbEffect_[4] = c.sel;
-                rgbEffect_[5] = c.start;
+                rgbEffect_[RGB_LED_BTN_B] = c.b;
+                rgbEffect_[RGB_LED_BTN_A] = c.a;
+                rgbEffect_[RGB_LED_DPAD_TOP_LEFT] = c.dpad;
+                rgbEffect_[RGB_LED_DPAD_TOP_RIGHT] = c.dpad;
+                rgbEffect_[RGB_LED_DPAD_BOTTOM_LEFT] = c.dpad;
+                rgbEffect_[RGB_LED_DPAD_BOTTOM_RIGHT] = c.dpad;
+                rgbEffect_[RGB_LED_BTN_SELECT] = c.sel;
+                rgbEffect_[RGB_LED_BTN_START] = c.start;
+                rgbOn(true);
+                break;
+            }
+            /** Set only the DPAD led effects. 
+             */
+            case cmd::SetRGBEffectDPAD::ID: {
+                auto & c = cmd::SetRGBEffectDPAD::fromBuffer(state_.buffer);
+                rgbEffect_[RGB_LED_DPAD_TOP_LEFT] = c.topLeft;
+                rgbEffect_[RGB_LED_DPAD_TOP_RIGHT] = c.topRight;
+                rgbEffect_[RGB_LED_DPAD_BOTTOM_LEFT] = c.bottomLeft;
+                rgbEffect_[RGB_LED_DPAD_BOTTOM_RIGHT] = c.bottomRight;
                 rgbOn(true);
                 break;
             }
@@ -761,19 +792,6 @@ public:
                 setNotification(c.effect);;
                 break;
             }
-            // when powered on, the AVR does not directly monitor the charging status, but allows riggering of the charging events by the RP2350 that communicates with the charger
-            case cmd::ChargerConnected::ID:
-                chargerConnected();
-                break;
-            case cmd::ChargerDisconnected::ID:
-                chargerDisconnected();
-                break;
-            case cmd::ChargerDone::ID:
-                chargerDone();
-                break;
-            case cmd::ChargerError::ID:
-                chargerError();
-                break;
             default:
                 ASSERT(false);
         }
@@ -907,9 +925,7 @@ public:
 
     /** \name ADC 
      
-        We use the ADC to measure the temperature, which makes the ADC handling rather simple. The ADC works in a single converstion mode, is triggered manually (e.g. every second for the temperture measurements) and we are notified about the result via interrupt (the ADC can run in standby mode).
-
-        NOTE: For the AAA battery version the ADC will also be used to measure the battery voltage, which will make this slightly more complex, but assuming the APR_INT pin will be used for the battery voltage measurement, we can still use ADC0. 
+        The ADC is used to measure battery voltage and temperature, alternating every second between the two. This should be a compromise between the latency of the measurements and power consumption. The ADC works in a single converstion mode, is triggered manually and we are notified about the result via interrupt (the ADC can run in standby mode).
      */
     //@{
     
@@ -926,14 +942,18 @@ public:
         ADC0.SAMPCTRL = 31;
         switch (muxpos) {
             case ADC_MUXPOS_TEMPSENSE_gc:
+                // for temperature sensor, use the internal 1.1V reference
                 ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_INTREF_gc | ADC_SAMPCAP_bm;
                 ADC0.MUXPOS = ADC_MUXPOS_TEMPSENSE_gc;
                 break;
             case ADC_MUXPOS_AIN2_gc:
+                // use VDD as reference for battery voltage measurement
                 ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
                 ADC0.MUXPOS = ADC_MUXPOS_AIN2_gc;
                 break;
             default:
+                // default values, athough we do not support other channel and this should never happen
+                UNREACHABLE;
                 ADC0.CTRLC = ADC_PRESC_DIV8_gc | ADC_REFSEL_VDDREF_gc | ADC_SAMPCAP_bm;
                 ADC0.MUXPOS = muxpos;
                 break;
@@ -945,6 +965,7 @@ public:
     }
 
     static void measureADC() {
+        // don't measure if not ready
         if ((ADC0.INTFLAGS & ADC_RESRDY_bm) == 0)
             return;
         // clear the flag
@@ -967,16 +988,31 @@ public:
                 break;
             }
             case ADC_MUXPOS_AIN2_gc:
-                // this is the battery voltage, which we do not support at this time
-                LOG("ADC AIN2: " << value);
+                // the battery voltage can be anything from 2.5 to 5V since the voltage of the AVR is fixed at 3v3, the VCC is measured through a voltage divider of 100k + 200k. With 10bit ADC this gives us 1023 being equal 4.95V and lsb of 4.838mV. 
+                // this converts the 16bit value to volts x 100:
+                value = (48 * value + 50) / 100;
+                state_.status.setVcc(value);
+                // change state accordingly
+                if (state_.status.vusb() != (value > RCKID_VUSB_THRESHOLD)) {
+                    state_.status.setVUsb(value > RCKID_VUSB_THRESHOLD);
+                    setIrq();
+                }
+                if (state_.status.lowBattery() != (value < RCKID_LOW_BATTERY_THRESHOLD)) {
+                    state_.status.setLowBattery(value < RCKID_LOW_BATTERY_THRESHOLD);
+                    setIrq();
+                }
+                // emergency shutdown if battery too low
+                if (value < RCKID_POWER_ON_THRESHOLD && (powerMode_ & POWER_MODE_ON)) {
+                    // TODO notify & die, we might need a ring buffer for this to elliminate spurious shutdowns etc
+                }
                 break;
             default:
-                // we do not support other ADC channels at this time
-                ASSERT(false);
+                UNREACHABLE;
         }
         // turn ADC off to save power
         ADC0.CTRLA = 0;
     }
+
     //@}
 
     /** \name PWM (Rumbler and Backlight)
@@ -1109,7 +1145,7 @@ public:
      */
     //@{
 
-    static constexpr unsigned NUM_RGB_LEDS = 6;
+    static constexpr unsigned NUM_RGB_LEDS = 8;
 
     static inline bool rgbOn_ = false;
     static inline RGBEffect notification_{RGBEffect::Off()};

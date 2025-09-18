@@ -9,6 +9,10 @@
 #define RCKID_AUDIO_CODEC_I2C_ADDRESS 0x1a
 #define RCKID_FM_RADIO_I2C_ADDRESS 0x11
 
+#define RCKID_VUSB_THRESHOLD 460 
+#define RCKID_LOW_BATTERY_THRESHOLD 330 
+#define RCKID_POWER_ON_THRESHOLD 300
+
 /** Speed of the communication with ST7789 display when in PIO mode (for fast display data transfers). Defaults to 15MHz which is just within the display datasheet's capabilities.
  */
 #define RCKID_ST7789_SPEED 15000000

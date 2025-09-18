@@ -64,21 +64,4 @@ namespace platform {
     #define WARNINGS_ON _Pragma("GCC diagnostic pop")
 #endif
 
-
-#ifndef ASSERT
-#define ASSERT(...)
-#endif
-
-#ifndef UNREACHABLE
-#define UNREACHABLE while (true) {}
-#endif
-
-#ifndef UNIMPLEMENTED
-#define UNIMPLEMENTED while (true) {}
-#endif
-
-#ifndef LOG
-#define LOG(...)
-#endif
-
 #endif

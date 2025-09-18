@@ -66,3 +66,13 @@
 /** Actually the beginning of stack for core 0, but end of stack region for incremental memory mapping.
  */
 #define RCKID_STACK_END 0x20082000
+
+
+#define RGB_LED_DPAD_TOP_LEFT 1
+#define RGB_LED_DPAD_TOP_RIGHT 0
+#define RGB_LED_DPAD_BOTTOM_LEFT 2
+#define RGB_LED_DPAD_BOTTOM_RIGHT 3
+#define RGB_LED_BTN_A 7
+#define RGB_LED_BTN_B 6
+#define RGB_LED_BTN_SELECT 4
+#define RGB_LED_BTN_START 5

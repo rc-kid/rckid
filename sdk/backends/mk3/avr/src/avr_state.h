@@ -38,8 +38,15 @@ namespace rckid {
             bool alarmInt()      const { return c_ & ALARM_INT; }
             bool secondInt()     const { return c_ & SECOND_INT; }
 
+            bool lowBattery()     const { return b_ & LOW_BATT; }
+            bool vusb()           const { return b_ & VUSB; }
+            bool charging()       const { return b_ & CHARGING; }
             bool debugMode()      const { return b_ & DEBUG_MODE; }
             bool bootloaderMode() const { return b_ & BOOTLOADER_MODE; }
+
+            uint16_t vcc() const {
+                return (vcc_ == 0) ? 0 : (vcc_ + 245);
+            }
 
             /** Updates the AVR status. This changes the values of the buttons immediately, but ors the interrupts so that no interrupts are ever lost. To clear the interrupts, use the clearInterrupts() method.
              
@@ -47,6 +54,7 @@ namespace rckid {
             void updateWith(Status const & other) {
                 a_ = other.a_;
                 b_ = other.b_;
+                vcc_ = other.vcc_;
                 // or interrupts, but update the debug & bootloader states
                 c_ = c_ | other.c_;
             }
@@ -85,8 +93,20 @@ namespace rckid {
                 return true;
             }
 
+            void setLowBattery(bool value) { value ? (b_ |= LOW_BATT) : (b_ &= ~LOW_BATT); }
+            void setVUsb(bool value) { value ? (b_ |= VUSB) : (b_ &= ~VUSB); }
+            void setCharging(bool value) { value ? (b_ |= CHARGING) : (b_ &= ~CHARGING); }
             void setDebugMode(bool value) { value ? (b_ |= DEBUG_MODE) : (b_ &= ~DEBUG_MODE); }
             void setBootloaderMode(bool value) { value ? (b_ |= BOOTLOADER_MODE) : (b_ &= ~BOOTLOADER_MODE); }
+
+            void setVcc(uint16_t vx100) {
+                if (vx100 < 250)
+                    vcc_ = 0;
+                else if (vx100 > 500)
+                    vcc_ = 255;
+                else
+                    vcc_ = static_cast<uint8_t>(vx100 - 245);
+            }
 
             friend class ::RCKid;
 
@@ -103,7 +123,9 @@ namespace rckid {
             static constexpr uint8_t BTN_HOME        = 1;
             static constexpr uint8_t BTN_VOLUMEUP    = 2;
             static constexpr uint8_t BTN_VOLUMEDOWN  = 4;
-
+            static constexpr uint8_t LOW_BATT        = 8;
+            static constexpr uint8_t VUSB            = 16;
+            static constexpr uint8_t CHARGING        = 32;
             static constexpr uint8_t DEBUG_MODE      = 64;
             static constexpr uint8_t BOOTLOADER_MODE = 128;
             uint8_t b_ = 0;
@@ -112,8 +134,9 @@ namespace rckid {
             static constexpr uint8_t ACCEL_INT       = 2;
             static constexpr uint8_t ALARM_INT       = 4;
             static constexpr uint8_t SECOND_INT      = 8;
-
             uint8_t c_ = 0;
+
+            uint8_t vcc_ = 0;
 
         }); // AVRState::Status
 

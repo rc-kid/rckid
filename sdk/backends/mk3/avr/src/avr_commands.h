@@ -106,6 +106,10 @@ namespace rckid::cmd {
         SetRGBEffect(uint8_t index, RGBEffect const & effect): index{index}, effect{effect} {}
     );
 
+    /** Sets RGB effects for all LEDs. 
+        
+        As the DPAD contains multiple LEDs, the DPAD effect is applied to all DPAD LEDs at once. For finer control over the DPAD LEDs, eithe select the individual LEDs using SetRGBEffect, or use the SetRGBEffectDPAD command to control just the DPAD LEDs.
+     */
     COMMAND(102, SetRGBEffects, 
         RGBEffect a;
         RGBEffect b;
@@ -116,7 +120,18 @@ namespace rckid::cmd {
             a{a}, b{b}, dpad{dpad}, sel{sel}, start{start} {}
     );
 
-    COMMAND(103, Rumbler,
+    /** Sets RGB effects on the DPAD LEDs alone.
+     */
+    COMMAND(103, SetRGBEffectDPAD, 
+        RGBEffect topLeft;
+        RGBEffect topRight;
+        RGBEffect bottomLeft;
+        RGBEffect bottomRight;
+        SetRGBEffectDPAD(RGBEffect const & topLeft, RGBEffect const & topRight, RGBEffect const & bottomLeft, RGBEffect const & bottomRight):
+            topLeft{topLeft}, topRight{topRight}, bottomLeft{bottomLeft}, bottomRight{bottomRight} {}
+    );
+
+    COMMAND(104, Rumbler,
         RumblerEffect effect;
         Rumbler(RumblerEffect const & effect): effect{effect} {}
     );
@@ -126,15 +141,5 @@ namespace rckid::cmd {
         RGBEffect effect;
         SetNotification(RGBEffect const & effect): effect{effect} {}
     );
-    COMMAND(151, ChargerConnected);
-    COMMAND(152, ChargerDisconnected);
-    COMMAND(153, ChargerDone);
-    COMMAND(154, ChargerError);
-
-
-
-
-
-
 
 } // namespace rckid::cmd
