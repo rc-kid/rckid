@@ -1,7 +1,5 @@
 #include <rckid/rckid.h>
 
-#include <platform/peripherals/tlv320.h>
-
 #include <rckid/audio/tone.h>
 
 using namespace rckid;

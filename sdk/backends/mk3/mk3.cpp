@@ -31,7 +31,6 @@ extern "C" {
 
 #include <platform/peripherals/ltr390uv.h>
 #include <platform/peripherals/si4705.h>
-#include <platform/peripherals/tlv320.h>
 
 #include <rckid/rckid.h>
 #include <rckid/radio.h>
