@@ -89,23 +89,6 @@
 - [X] IR LED (via DMP1045u as it sources over 20mA)
 - [X] white LED (can be wired via AP2502 which I can get from TME)
 
-## Software Tasks
-
-White LED from TME:
-
-https://www.tme.eu/cz/details/hl-as2835-3cpct-ww/vykonove-diody-led-emiter/hongli-zhihui/hl-as-2835h466w-3c-s1-08l-pct-hr3/
-https://www.tme.eu/cz/details/ap2502ktr-g1/stabilizator-napeti-obvody-dc-dc/diodes-incorporated/
-
-IR LED from TME:
-https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/
-
-Connector for battery pcb
-https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01-1-16r13/
-
-And mouser:
-https://cz.mouser.com/ProductDetail/490-SJ-43504-SMT-TR - headphones connector
-https://cz.mouser.com/ProductDetail/Diodes-Incorporated/AP2502KTR-G1 - AP2502
-
 # TODO
 
 - critical battery error
