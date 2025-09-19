@@ -75,6 +75,9 @@ namespace rckid::ui {
         /** Renders the form on the display in a column-wise manner.
          */
         void render() {
+            // call the draw method of widgets to update drawing parameters before rendering columns
+            draw();
+            // render columns one by one
             column_ = width() - 1;
             renderColumn(column_, buffer_.front(), 0, height());
             renderColumn(column_ - 1, buffer_.back(), 0, height());

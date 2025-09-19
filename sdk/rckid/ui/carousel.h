@@ -70,7 +70,7 @@ namespace rckid::ui {
             setTransition(direction);
         }
 
-        void update() override {
+        void draw() override {
             if (dir_ == Direction::None)
                 return;
             if (a_.update()) {
@@ -85,6 +85,7 @@ namespace rckid::ui {
                 FormWidget::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
                 updateOffsets();
             }
+            Widget::draw();
         }
 
         void clear() {

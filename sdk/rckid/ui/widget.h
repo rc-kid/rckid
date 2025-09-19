@@ -100,11 +100,24 @@ namespace rckid::ui {
             visible_ = value;
         }
 
-        /** Update method that can adjust the widget before drawing. 
+        /** Update method
+         
+            Called while the UI is being re-drawn, i.e. without the drawing lock. This method can be used to update any state that the widget may have before the draw() method is called. Generally this method precomputes data that will later be used by drawing.
          */
         virtual void update() {
             for (auto w : children_)
                 w->update();
+        }
+
+        /** Draw method. 
+         
+            The draw method is called by the renderer before any columns are rendered to the sceen, but with lock on the drawing data, which makes it the place to adjust widget parameters before the actual rendering. 
+         */
+        virtual void draw() {
+            if (! visible_)
+                return;
+            for (auto w : children_)
+                w->draw();
         }
 
         /** If the widget offers any interactivity, calling this method during the app's update call will allow it to respond to the user inputs. 
