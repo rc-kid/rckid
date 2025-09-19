@@ -11,6 +11,6 @@ int main() {
     while (true) {
         tick();
         if (btnPressed(Btn::A))
-            ERROR(1234);
+            FATAL_ERROR(1234);
     }
 }

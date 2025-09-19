@@ -47,9 +47,6 @@ namespace rckid {
 
     bool initialized_ = false;
 
-    // forward declaration of the bsod function
-    NORETURN(void bsod(uint32_t error, uint32_t arg, uint32_t line = 0, char const * file = nullptr));
-
     namespace sd {
         std::fstream iso_;
         uint32_t numBlocks_ = 0;
@@ -124,7 +121,7 @@ namespace rckid {
         uint32_t budgetDaily_ = 3600;
     }
 
-    void fatalError(uint32_t error, uint32_t arg, uint32_t line, char const * file) {
+    void Error::setFatal(Error err) {
         // disable stack protection (in case we bailed out because of the stack)
         // stackStart_ = nullptr;
         // close the SD and flash files
@@ -137,8 +134,9 @@ namespace rckid {
         }
         // reset the memory so that we have enough space
         memoryReset();
+        set(err);
         // finally, go for BSOD
-        bsod(error, arg, line, file);
+        bsod();
     }
 
     Writer debugWrite() {

@@ -533,7 +533,7 @@ namespace rckid::gbcemu {
                     break;
                 default:
                     LOG(LL_ERROR, "Unsupported MBC type " << static_cast<uint8_t>(mbc_));
-                    ASSERT(false);
+                    ASSERT((false));
                     break;
             }
             // figure out the size of the external RAM and allocate accordingly
@@ -688,7 +688,7 @@ namespace rckid::gbcemu {
                         PC = 0x58;
                         IO_IF &= ~IF_SERIAL;
                     } else {
-                        ASSERT(interrupt & IF_JOYPAD);
+                        ASSERT((interrupt & IF_JOYPAD));
                         PC = 0x60;
                         IO_IF &= ~IF_JOYPAD;
                     }
@@ -842,7 +842,7 @@ namespace rckid::gbcemu {
         else if (size == 3)
             debugWrite() << hex(mem8(addr + 1), false) << ' ' << hex(mem8(addr + 2), false) << "     ";
         else 
-            ASSERT("Invalid instruction size");
+            UNREACHABLE; // invalid instruction size
         switch (opcode) {
             #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
             case OPCODE: \
@@ -1214,7 +1214,7 @@ namespace rckid::gbcemu {
     }
 
     void GBCEmu::setVideoRamPage(uint32_t page) {
-        ASSERT(page < 2);
+        ASSERT((page < 2));
         memMap_[MEMMAP_VRAM_0] = vram_[page];
         memMap_[MEMMAP_VRAM_1] = vram_[page] + 4096;
     }
@@ -1224,7 +1224,7 @@ namespace rckid::gbcemu {
     }
 
     void GBCEmu::setWorkRamPage(uint32_t page) {
-        ASSERT(page > 0 && page < 8);
+        ASSERT((page > 0 && page < 8));
         memMap_[13] = wram_[page];
         // don't forget to set the echo ram as well here
         memMap_[15] = wram_[page];
@@ -1239,7 +1239,7 @@ namespace rckid::gbcemu {
     }
 
     void GBCEmu::setExternalRamPage(uint32_t page) {
-        ASSERT(page < 16);
+        ASSERT((page < 16));
         memMap_[10] = eram_[page];
         memMap_[11] = eram_[page] + 4096;
     }
@@ -1484,7 +1484,7 @@ namespace rckid::gbcemu {
                     uint32_t page = (romPage_ & 0x1f) | ((value & 3) << 5);
                     setRomPage(page);
                 } else {
-                    ASSERT(addr < 0x8000); 
+                    ASSERT((addr < 0x8000)); 
                     // we do not support advanced banking yet
                     if (value & 1)
                         UNIMPLEMENTED;
@@ -1513,7 +1513,7 @@ namespace rckid::gbcemu {
                     // set the eram page, or RTC clock register
                     // TODO
                 } else {
-                    ASSERT(addr < 0x8000); 
+                    ASSERT((addr < 0x8000)); 
                     // RTC latch
                     // TODO
                 }

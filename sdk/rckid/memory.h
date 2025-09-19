@@ -178,9 +178,9 @@ namespace rckid {
             if (cur > maxSize_)
                 maxSize_ = cur;
     #ifdef RCKID_BACKEND_FANTASY
-            ERROR_IF(error::stackProtectionFailure, cur + RAMHeap::usedBytes() >= RCKID_MEMORY_SIZE);
+            FATAL_ERROR_IF((cur + RAMHeap::usedBytes() >= RCKID_MEMORY_SIZE), Error::stackProtectionFailure);
     #else
-            ERROR_IF(error::stackProtectionFailure, currentStack() < reinterpret_cast<char*>(RAMHeap::heapEnd_));
+            FATAL_ERROR_IF((currentStack() < reinterpret_cast<char*>(RAMHeap::heapEnd_)), Error::stackProtectionFailure);
     #endif
 #endif
         }

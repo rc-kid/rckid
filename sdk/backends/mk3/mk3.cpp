@@ -111,8 +111,6 @@ namespace rckid {
 
     // various forward declarations
 
-    NORETURN(void bsod(uint32_t error, uint32_t arg,  uint32_t line = 0, char const * file = nullptr));
-
     void audioPlaybackDMA(uint finished, uint other);
     void audioRecordDMA(uint finished, uint other);
 
@@ -261,12 +259,13 @@ namespace rckid {
 
     // sdk functions 
 
-    void fatalError(uint32_t error, uint32_t arg, uint32_t line, char const * file) {
+    void Error::setFatal(Error err) {
         // simply go top BSOD - no need for HW cleanup
         // TODO Really?
         // TODO memory reset 
         // TODO reset stack pointer as well 
-        bsod(error, arg, line, file);
+        set(err);
+        bsod();
     }
 
     bool debugReady = false;
@@ -358,7 +357,7 @@ namespace rckid {
         {
             int n = i2c_read_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, (uint8_t *) & io::avrState_, sizeof(AVRState), false);
             if (n != sizeof(AVRState))
-                ERROR(error::hardwareFailure, n);
+                FATAL_ERROR(Error::hardwareFailure, n);
             LOG(LL_INFO, "AVR uptime: " << io::avrState_.uptime);
             LOG(LL_INFO, "Current time: " << io::avrState_.time);
         }

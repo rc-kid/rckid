@@ -4,22 +4,24 @@
 
 namespace rckid {
 
-    void bsod(uint32_t error, uint32_t arg, uint32_t line, char const * file) {
+    Error Error::last_;
+
+    void Error::bsod() {
         // print the error to debug console
-        LOG(LL_ERROR, "Fatal error: " << error << " (arg " << arg << ")");
-        if (file != nullptr) {
-            LOG(LL_ERROR, "Line:        " << line);
-            LOG(LL_ERROR, "File:        " << file);
+        LOG(LL_ERROR, "Fatal error: " << last_.code << " (arg " << last_.arg << ")");
+        if (last_.file != nullptr) {
+            LOG(LL_ERROR, "Line:        " << last_.line);
+            LOG(LL_ERROR, "File:        " << last_.file);
         }
         // and draw the debug console
         RenderableCanvas<ColorRGB> fb{RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT};
         fb.fill(ColorRGB::RGB(0, 0, 255));
         Font f = Font::fromROM<assets::Iosevka16>();
         fb.text(10, 10, f, ColorRGB::RGB(255, 255, 255))
-            << ":(  Error: " << error << "\n"
-            << "    Arg:   " << arg << "\n\n"
-            << "    File:  " << ((file != nullptr) ? file : "???") << "\n"
-            << "    Line:  " << line << "\n\n"
+            << ":(  Error: " << last_.code << "\n"
+            << "    Arg:   " << last_.arg << "\n\n"
+            << "    File:  " << ((last_.file != nullptr) ? last_.file : "???") << "\n"
+            << "    Line:  " << last_.line << "\n\n"
             << "    Long press home button to reset.";
         fb.initialize();
         fb.render();

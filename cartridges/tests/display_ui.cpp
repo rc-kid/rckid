@@ -106,20 +106,16 @@ int main() {
     //PNG png{PNG::fromStream(fs::fileRead(STR("files/images/backgrounds/wish16.png")))};
     //LOG(LL_INFO, "PNG loaded: " << png.width() << "x" << png.height() << ", bpp: " << png.bpp());
     while (true) {
-        try {
-            LOG(LL_INFO, "Free memory: " << memoryFree() / 1024);
-            auto app = App::run<MainMenu>(mainMenuGenerator);
-            LOG(LL_INFO, "MainMenu done");
-            yield();
-            LOG(LL_INFO, "Free memory: " << memoryFree() / 1024);
-            yield();
-            ASSERT(app.has_value());
-            {
-                RAMHeap::LeakGuard g_;
-                app.value()();
-            }
-        } catch (...) {
-            LOG(LL_ERROR, "Unhandled exception in main loop");
+        LOG(LL_INFO, "Free memory: " << memoryFree() / 1024);
+        auto app = App::run<MainMenu>(mainMenuGenerator);
+        LOG(LL_INFO, "MainMenu done");
+        yield();
+        LOG(LL_INFO, "Free memory: " << memoryFree() / 1024);
+        yield();
+        ASSERT((app.has_value()));
+        {
+            RAMHeap::LeakGuard g_;
+            app.value()();
         }
     }
 }

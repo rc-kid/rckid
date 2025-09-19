@@ -33,7 +33,6 @@ else()
     message("RCKID: Building for hardware (RP2350 or RP2040)")
     # skip the pico malloc library setup
     set(SKIP_PICO_MALLOC 1)
-    set(PICO_CXX_ENABLE_EXCEPTIONS 1)
     # Pull in SDK (must be before project)
     include(${CMAKE_SOURCE_DIR}/libs/pico-sdk/pico_sdk_init.cmake)
     project(rckid C CXX ASM)
