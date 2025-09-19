@@ -358,7 +358,7 @@ namespace rckid {
         {
             int n = i2c_read_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, (uint8_t *) & io::avrState_, sizeof(AVRState), false);
             if (n != sizeof(AVRState))
-                ERROR(error::HardwareProblem, n);
+                ERROR(error::hardwareFailure, n);
             LOG(LL_INFO, "AVR uptime: " << io::avrState_.uptime);
             LOG(LL_INFO, "Current time: " << io::avrState_.time);
         }

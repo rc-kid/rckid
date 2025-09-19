@@ -91,6 +91,13 @@
 
 # TODO
 
+- see if we can enable exceptions, what are the runtime & stack costs of them running
+- exceptions seem to be worthy, very little cost, mostly in binary size, but stack increases are small-ish
+- so should try to convert the API to use exceptions instead of the signalling it does now
+
+1475kb, 448 mem, 992 stack
+1517kb, 448 mem , 1024 stack (exceptions enabled, but no checking)
+
 - critical battery error
 - add RGB signalization to the avr mkIII
 - add interrupt for the charging pin as well when the device is off to detect VUSB insertion and charging enabled/disabled
@@ -113,8 +120,6 @@
 - how to blitting & stuff? (bitmap is multi bpp, while surfaces such as canvas are fixed bpp), this makes blitting harder a bit
 
 - might get super pretty front panels from here: https://www.hopesens-glass.com/
-
-- see if we can enable exceptions, what are the runtime & stack costs of them running
 
 - can I create SD card SPI in PIO so that I can use SDIO and SPI as well? yes
 

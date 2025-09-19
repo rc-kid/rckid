@@ -43,6 +43,7 @@ namespace rckid {
         void draw() override {}
 
         void loop() override {
+            //throw "foobar";
             ContactDialog cd{};
             // run the contact dialog in launcher mode with contact viewer as callback app
             cd.run([](Contact c) {

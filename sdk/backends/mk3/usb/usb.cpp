@@ -228,7 +228,7 @@ extern "C" {
         if (lba >= sdCapacity()) 
             return -1;
         if (bufsize != 512)
-            ERROR(rckid::error::USBMSCRead);
+            ERROR(rckid::error::hardwareFailure);
 
         sdReadBlocks(lba, reinterpret_cast<uint8_t*>(buffer), 1);
         ++rckid::DataSync::blocksRead_;
@@ -244,7 +244,7 @@ extern "C" {
         if (lba >= sdCapacity()) 
             return -1;
         if (bufsize != 512)
-            ERROR(rckid::error::USBMSCWrite);
+            ERROR(rckid::error::hardwareFailure);
 
         sdWriteBlocks(lba, buffer, 1);
         ++rckid::DataSync::blocksWrite_;
