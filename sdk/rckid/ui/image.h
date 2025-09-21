@@ -37,6 +37,13 @@ namespace rckid::ui {
             Image{icon.toBitmap()} {
         }
 
+        Image(Coord x, Coord y, Icon const & icon):
+            Image{icon.toBitmap()} {
+            setPos(x, y);
+        }
+
+        Image(Point pos, Icon const & icon): Image{pos.x, pos.y, std::move(icon)} {}
+
         Image(Image const &) = delete;
 
         Image(Image && other) noexcept {

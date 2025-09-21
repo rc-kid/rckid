@@ -139,8 +139,8 @@ namespace rckid::ui {
             doSetItem(index, direction);
         }
 
-        Point iconPosition() const { return aImg_.pos(); }
-        Point textPosition() const { return aText_.pos(); }
+        Point iconPosition() const { return aImg_.pos() + pos(); }
+        Point textPosition() const { return aText_.pos() + pos(); }
 
     protected:
 

@@ -24,6 +24,8 @@ namespace rckid::ui {
                 reposition();
         }
 
+        Label(Point pos, String text): Label{pos.x, pos.y, std::move(text)} {}
+
         Label(Rect rect, String text):
             Widget{rect}, 
             text_{std::move(text)},

@@ -37,17 +37,7 @@ namespace rckid {
 
         void update() override {
             ui::Form<int32_t>::update();
-            if (t_.running()) {
-                t_.update();
-                icon_.setPos(aIcon_.update(t_));
-                title_.setPos(aText_.update(t_));
-                if (! t_.running()) {
-                    if (exitAtEnd_)
-                        exit();
-                    else
-                        slider_.setVisible(true);
-                }
-            } else {
+            if (! t_.running()) {
                 // when back or down is pressed, return from the player mode
                 if (btnPressed(Btn::B) || btnPressed(Btn::A) || btnPressed(Btn::Down)) {
                     if (t_.duration() != 0) {
@@ -75,6 +65,21 @@ namespace rckid {
                         cb_(slider_.value());
                 }
             }
+        }
+
+        void draw() override {
+            if (t_.running()) {
+                t_.update();
+                icon_.setPos(aIcon_.update(t_));
+                title_.setPos(aText_.update(t_));
+                if (! t_.running()) {
+                    if (exitAtEnd_)
+                        exit();
+                    else
+                        slider_.setVisible(true);
+                }
+            }
+            ui::Form<int32_t>::draw();
         }
 
     private:

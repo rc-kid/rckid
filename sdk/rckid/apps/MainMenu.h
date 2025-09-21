@@ -9,12 +9,15 @@
 #include "../ui/menu.h"
 #include "../ui/header.h"
 #include "../assets/icons_64.h"
+#include "../assets/icons_24.h"
 #include "../assets/fonts/OpenDyslexic64.h"
 #include "../assets/images.h"
 
 
 namespace rckid {
 
+    /** Main menu displays the apps available on the system and also shows kid's centered dashboard with next birthdays and events, etc.  
+     */
     class MainMenu : public ui::Form<ui::Action> {
     public:
 
@@ -23,6 +26,8 @@ namespace rckid {
         MainMenu(ui::ActionMenu::MenuGenerator initialGenerator):
             ui::Form<ui::Action>{} {
             g_.addChild(c_);
+            g_.addChild(bdayImg_);
+            bdayImg_.setTransparentColor(ColorRGB::Black());
             c_.setRect(Rect::XYWH(0, 160, 320, 80));
             c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
             if (history_ == nullptr)
@@ -63,6 +68,7 @@ namespace rckid {
     private:
        
         ui::CarouselMenu<ui::Action> c_;
+        ui::Image bdayImg_{8, 18, Icon{assets::icons_24::birthday_cake}};
 
         static inline ui::ActionMenu::HistoryItem * history_ = nullptr;
 

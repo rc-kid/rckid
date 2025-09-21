@@ -27,8 +27,7 @@ namespace rckid {
         public:
             enum class Kind : uint8_t {
                 Text,
-                Image,
-                Audio
+                File,
             }; // Record::Kind
             Kind kind;
             TinyDateTime time;
@@ -66,19 +65,35 @@ namespace rckid {
             }
         }; // Messages::Record
 
+
+        /** Manages single conversation. 
+         
+            
+         */
+        class Conversation {
+        public:
+
+        private:
+            
+
+        }; // Messages::Conversation
+
+
     //protected:
 
         /** Single conversation.
          
+            The conversation is a simple scrollable view of the conversation history that displays the messages and buttons for viewing the extra content (images, audio). 
+         
          */
-        class Conversation : public ui::Form<void> {
+        class ConversationView : public ui::Form<void> {
         public:
 
             /** Use umbrella names for all messages stuff.
              */
             String name() const override { return "Messages"; }
 
-            Conversation() {
+            ConversationView() {
                 view_ = g_.addChild(new ui::ScrollView{});
                 view_->setRect(Rect::XYWH(0, 20, 320, 200));
                 for (uint32_t i = 0; i < 50; ++i) {
@@ -114,7 +129,7 @@ namespace rckid {
             ui::ScrollView * view_;
             std::vector<ui::Label *> msgs_;
 
-        }; // Messages::Conversation
+        }; // Messages::ConversationView
 
     }; // Messages
 

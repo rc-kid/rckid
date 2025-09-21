@@ -88,7 +88,7 @@ ui::ActionMenu * imagesMenuGenerator() {
 
 ui::ActionMenu * mainMenuGenerator() {
     return new ui::ActionMenu{
-        ui::ActionMenu::Item("Test", assets::icons_64::heart, App::run<Messages::Conversation>),
+        ui::ActionMenu::Item("Test", assets::icons_64::heart, App::run<Messages::ConversationView>),
         ui::ActionMenu::Generator("Games", assets::icons_64::game_controller, gamesGenerator),
         ui::ActionMenu::Item("Music", assets::icons_64::music, App::run<MusicPlayer>),
         ui::ActionMenu::Item("Radio", assets::icons_64::radio_cassette, App::run<FMRadio>),

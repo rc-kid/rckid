@@ -7,6 +7,9 @@ namespace rckid::ui {
     class ScrollView : public Widget {
     public:
 
+        ScrollView() = default;
+        ScrollView(Rect pos): Widget{pos} {}
+
         Coord offsetLeft() const { return offsetLeft_; }
         Coord offsetTop() const { return offsetTop_; }
         Point offset() const { return Point{offsetLeft_, offsetTop_}; }

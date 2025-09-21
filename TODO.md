@@ -91,10 +91,15 @@
 
 # TODO
 
+- switch to INI for data storage in human readable form on the device
+- add calendar
+
+- add counters, namely how long the redraw of the screen takes, from the beginning of render to the end of render
+- also a counter on how long we wait for the display update to finish
+
 - see if we can enable exceptions, what are the runtime & stack costs of them running
 - exceptions seem to be worthy, very little cost, mostly in binary size, but stack increases are small-ish
 - so should try to convert the API to use exceptions instead of the signalling it does now
-
 1475kb, 448 mem, 992 stack
 1517kb, 448 mem , 1024 stack (exceptions enabled, but no checking)
 
@@ -170,8 +175,6 @@
 
 ## HW
 
-- buy header pins (plenty for the connectors)
-
 ## AVR
 
 - see if we can run at 5MHz and still talk to neopixel
@@ -241,8 +244,6 @@
 - when using NiMH batteries, due to very flat discharge curve, the battery voltage reading might not be really useful
 
 > After XMAS, but can be done with RP2040:
-
-- https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01-1-16r13/ (90 deg cartridge header)
 
 - the SD card initialization routine does not work for SDHC cards, only for SDXC (not a blocker for xmas)
 
