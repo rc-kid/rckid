@@ -46,8 +46,6 @@ extern "C" {
 #include "avr/src/avr_commands.h"
 #include "avr/src/avr_state.h"
 
-
-
 extern "C" {
     extern uint8_t __cartridge_filesystem_start;
     extern uint8_t __cartridge_filesystem_end;

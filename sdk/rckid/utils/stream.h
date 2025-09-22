@@ -25,6 +25,22 @@ namespace rckid {
             return result;
         }
 
+        /** Reads entire line from the stream.
+         
+            The returned line does not contain the line end character. End of file reads will return empty line (and so will empty lines).
+         */
+        String readLine() {
+            String result;
+            while (!eof()) {
+                char c = static_cast<char>(read());
+                if (c == '\n')
+                    break;
+                if (c != '\r')
+                    result += c;
+            }
+            return result;
+        }
+
     }; // rckid::InStream
 
     /** Simplest write stream interface. 
