@@ -41,7 +41,7 @@ extern "C" {
 #include <rckid/app.h>
 #include <rckid/filesystem.h>
 #include <rckid/ui/header.h>
-
+#include <rckid/ui/style.h>
 
 #include "avr/src/avr_commands.h"
 #include "avr/src/avr_state.h"
@@ -375,6 +375,9 @@ namespace rckid {
 
         // initialize the SD card
         sdInitialize();
+
+        // initalize the ui style
+        ui::Style::load();
 
         // initialize the filesystem and mount the SD card
         fs::initialize();

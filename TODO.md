@@ -94,6 +94,9 @@
 - switch to INI for data storage in human readable form on the device
 - add calendar
 
+- rewrite popup to use ui style, icons, etc.
+- and same for text dialog
+
 - add counters, namely how long the redraw of the screen takes, from the beginning of render to the end of render
 - also a counter on how long we wait for the display update to finish
 

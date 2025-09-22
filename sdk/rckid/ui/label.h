@@ -5,6 +5,7 @@
 #include "../graphics/color.h"
 #include "../utils/string.h"
 #include "widget.h"
+#include "style.h"
 
 namespace rckid::ui {
 
@@ -166,7 +167,7 @@ namespace rckid::ui {
         VAlign vAlign_ = VAlign::Center;
         String text_;
         Font font_{Font::fromROM<assets::Iosevka16>()};
-        ColorRGB color_{ColorRGB::White()};
+        ColorRGB color_{Style::fg()};
         Point textTopLeft_;
         std::vector<Hint> hints_;
         bool autosize_ = true;

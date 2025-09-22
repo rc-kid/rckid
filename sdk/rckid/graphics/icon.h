@@ -60,6 +60,18 @@ namespace rckid {
                 delete [] buffer_;
         }
 
+        Icon & operator = (Icon && other) {
+            if (this != & other) {
+                if (! memoryIsImmutable(buffer_))
+                    delete [] buffer_;
+                buffer_ = other.buffer_;
+                bufferSize_ = other.bufferSize_;
+                other.buffer_ = nullptr;
+                other.bufferSize_ = 0;
+            }
+            return *this;
+        }
+
         bool valid() const { return buffer_ != nullptr; }
 
         /** Materializes the icon into an RGB bitmap. 
@@ -80,6 +92,15 @@ namespace rckid {
             }
             */
             bitmap.loadImage(std::move(png));
+        }
+
+        bool isFile() const { return bufferSize_ == BUFFER_FILE_PATH; }
+
+        char const * filename() {
+            if (bufferSize_ == BUFFER_FILE_PATH)
+                return reinterpret_cast<char const *>(buffer_);
+            else
+                return nullptr;
         }
 
     private:

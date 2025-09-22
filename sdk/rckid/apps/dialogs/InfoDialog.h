@@ -40,11 +40,13 @@ namespace rckid {
 
         static void info(String title, String text) {
             InfoDialog d{Icon{assets::icons_64::read}, std::move(title), std::move(text)};
+            d.g_.setBg(ui::Style::bg());
             d.loop();
         }
 
         static void success(String title, String text) {
             InfoDialog d{Icon{assets::icons_64::happy_face}, std::move(title), std::move(text)};
+            d.g_.setBg(ui::Style::accentFg());
             d.loop();
         }
 

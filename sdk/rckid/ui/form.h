@@ -12,6 +12,7 @@
 #include "panel.h"
 #include "image.h"
 #include "header.h"
+#include "style.h"
 
 
 namespace rckid::ui {
@@ -52,13 +53,10 @@ namespace rckid::ui {
         void loadBackgroundImage() {
             if (bg_ != nullptr)
                 delete bg_;
-            auto f = fs::fileRead("files/images/backgrounds/shack16.png");
-            if (f.good())
-                bg_ = new Image{Bitmap{PNG::fromStream(std::move(f))}};
-            else
-                bg_ = new Image{Bitmap{PNG::fromBuffer(assets::star)}};
+            bg_ = new Image{Style::loadBackgroundImage()};
             bg_->setRect(Rect::WH(320, 240));
             bg_->setRepeat(true);
+            bg_->setTransparent(false);
         }
 
         void initialize() {

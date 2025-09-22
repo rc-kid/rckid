@@ -15,6 +15,7 @@
 #include <rckid/filesystem.h>
 #include <rckid/ui/header.h>
 #include <rckid/radio.h>
+#include <rckid/ui/style.h>
 
 #ifndef _WIN32
 extern "C" {
@@ -235,6 +236,9 @@ namespace rckid {
         // initialize the next second and uptime counters
         time::uptimeStart_ = std::chrono::steady_clock::now();
         time::nextSecond_ = uptimeUs64() + 1000000;
+
+        // load the UI style
+        ui::Style::load();
         // mark that we are initialized and the graphics & sound should be used
         initialized_ = true;
         LOG(LL_INFO, "Initialization done.");
@@ -803,7 +807,6 @@ namespace rckid {
     // memory
 
     bool memoryIsImmutable(void const * ptr) {
-        StackProtection::check();
         return false;
     }
 

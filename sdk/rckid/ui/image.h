@@ -138,7 +138,7 @@ namespace rckid::ui {
         Coord imgY_; 
 
         static constexpr uint32_t NO_TRANSPARENCY = 0xffffffff;
-        uint32_t transparent_ = NO_TRANSPARENCY;
+        uint32_t transparent_ = 0; // black
 
     }; // rckid::ui::CustomImage
 

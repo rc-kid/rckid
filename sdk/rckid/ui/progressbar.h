@@ -2,6 +2,7 @@
 
 #include "../graphics/color.h"
 #include "widget.h"
+#include "style.h"
 
 namespace rckid::ui {
     class ProgressBar : public Widget {
@@ -87,8 +88,8 @@ namespace rckid::ui {
         }
 
     private:
-        ColorRGB fg_{ColorRGB::Blue()};
-        ColorRGB bg_{ColorRGB::DarkGray()};
+        ColorRGB fg_{Style::accentFg()};
+        ColorRGB bg_{Style::accentBg()};
         int32_t min_;
         int32_t max_;
         int32_t value_;

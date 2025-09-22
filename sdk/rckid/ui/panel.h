@@ -1,6 +1,7 @@
 #pragma once
 
 #include "widget.h"
+#include "style.h"
 
 namespace rckid::ui {
 
@@ -23,7 +24,7 @@ namespace rckid::ui {
 
     private:
 
-        ColorRGB bg_;
+        ColorRGB bg_{Style::bg()};
 
     }; // rckid::ui::Panel
 

@@ -23,4 +23,16 @@ namespace rckid::assets {
         #include "raw/images/logo256.inc.h"
     };
 
+    // File: assets/images/background256.png
+    // Size: 62013
+    static constexpr uint8_t background256[] = {
+        #include "raw/images/background256.inc.h"
+    };
+
+    // File: assets/images/background16.png
+    // Size: 19762
+    static constexpr uint8_t background16[] = {
+        #include "raw/images/background16.inc.h"
+    };
+
 } // namespace rckid::assets
