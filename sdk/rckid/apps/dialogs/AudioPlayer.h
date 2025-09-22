@@ -25,16 +25,18 @@ namespace rckid {
 
         AudioPlayer(String path, AudioStream & s) : 
             ui::Form<AudioPlayerResult>{Rect::XYWH(0, 160, 320, 80), /*raw*/ true}, 
-            as_{s} {
+            as_{s},
+            title_{80,10,fs::stem(path)},
+            elapsed_{80,54,String{""}},
+            icon_{8,8,Icon{assets::icons_64::play_button}} {
             // TODO
             audioPlay(as_);
             lastUs_ = uptimeUs();
             elapsedUs_ = 0;
-            title_ = g_.addChild(new ui::Label{80, 10, fs::stem(path)});
-            title_->setFont(Font::fromROM<assets::OpenDyslexic32>());
-            elapsed_ = g_.addChild(new ui::Label{80, 54, String{""}});
-            icon_ = g_.addChild(new ui::Image{Bitmap{PNG::fromBuffer(assets::icons_64::play_button)}});
-            icon_->setPos(8,8);
+            title_.setFont(Font::fromROM<assets::OpenDyslexic32>());
+            g_.addChild(title_);
+            g_.addChild(elapsed_);
+            g_.addChild(icon_);
         }
 
         ~AudioPlayer() override {
@@ -63,11 +65,11 @@ namespace rckid {
             // btn up, or button A is audio pause
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                 if (audioPaused()) {
-                    icon_->setBitmap(Bitmap{PNG::fromBuffer(assets::icons_64::play_button)});
+                    icon_ = Icon{assets::icons_64::play_button};
                     audioResume();
                     lastUs_ = uptimeUs();
                 } else {
-                    icon_->setBitmap(Bitmap{PNG::fromBuffer(assets::icons_64::pause)});
+                    icon_ = Icon{assets::icons_64::pause};
                     audioPause();
                 }
             }
@@ -96,14 +98,14 @@ namespace rckid {
                 sw << hours << ":";
             sw << fillLeft(minutes, 2, '0') << ":" << fillLeft(seconds, 2, '0');
             // only redraw if there is change in the elapsed time
-            if (elapsed_->setText(sw.str()))
+            if (elapsed_.setText(sw.str()))
                 redraw_ = true;
         }
     private:
         AudioStream & as_;
-        ui::Label * title_;
-        ui::Label * elapsed_;
-        ui::Image * icon_;
+        ui::Label title_;
+        ui::Label elapsed_;
+        ui::Image icon_;
         uint64_t elapsedUs_ = 0;
         uint32_t lastUs_ = 0;
         // when true, the player window will redraw itself

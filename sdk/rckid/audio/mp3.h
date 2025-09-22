@@ -19,6 +19,8 @@ namespace rckid {
             err_ = MP3GetNextFrameInfo(dec_, &fInfo_, buffer_ + sw);
         }
 
+        MP3Stream(MP3Stream const &) = delete;
+
         ~MP3Stream() override {
             delete [] buffer_;
             MP3FreeDecoder(dec_);

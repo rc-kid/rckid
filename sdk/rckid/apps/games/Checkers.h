@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../ui/form.h"
+#include "../../ui/image.h"
 
 namespace rckid {
     class Checkers : public ui::Form<void> {
@@ -24,10 +25,12 @@ namespace rckid {
         protected:
           
             void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
+                uint16_t * bgBuf = buffer;
                 for (Coord y = starty; y < starty + numPixels; ++y) {
                     bool is1 = (column / 30 + (starty + y) / 30) % 2 == 0;
-                    *buffer++ = (is1 ? color1_ : color2_).toRaw();
+                    *bgBuf++ = (is1 ? color1_ : color2_).toRaw();
                 }
+                Widget::renderColumn(column, buffer, starty, numPixels);
             }
 
         private:
@@ -38,10 +41,31 @@ namespace rckid {
 
         Checkers(): ui::Form<void>{Rect::XYWH(0, 0, 320, 240), /* raw */ true} {
             g_.addChild(board_);
+            reset();
+        }
+
+    protected:
+        void reset() {
+            board_.clearChildren();
+            for (int i = 0; i < 2; ++i) {
+                for (int j = 0; j < 12; ++j) {
+                    pieces_[i][j] = new ui::SharedImage{ & pieceBitmaps_[i]};
+                    board_.addChild(pieces_[i][j]);
+                    pieces_[i][j]->setTransparent(true);
+                    pieces_[i][j]->setPos(i * 50 + j * 20, j* 20);
+                }
+            }
         }
 
     private:
         Board board_;
+        Bitmap pieceBitmaps_[2] = { 
+            Icon{assets::icons_24::poo}.toBitmap(), 
+            Icon{assets::icons_24::bookmark}.toBitmap()
+        };
+
+        ui::SharedImage * pieces_[2][12];
+
 
     }; // rckid::Checkers
 } // namespace rckid

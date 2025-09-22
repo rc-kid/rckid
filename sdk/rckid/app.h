@@ -57,8 +57,8 @@ namespace rckid {
         /** Runs given application. Returns value if the application returns value. 
          */
         template<typename T, typename ... ARGS>
-        static typename T::MODAL_RESULT run(ARGS ... args) {
-            T app{args...};
+        static typename T::MODAL_RESULT run(ARGS &&... args) {
+            T app{std::forward<ARGS>(args)...};
             if (app.verifyBudgetAllowance(false))
                 app.loop();
             return app.result();

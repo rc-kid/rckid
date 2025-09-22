@@ -21,10 +21,7 @@ namespace rckid::ui {
             Non-heap children (presumably coming from stack) are not deallocated by the widget itself so that stack and heap based allocation is supported for the UI trees.
          */
         virtual ~Widget() {
-            for (auto w : children_)
-                if (RAMHeap::contains(w))
-                    delete w;
-
+            clearChildren();
         }
 
         Coord x() const { return x_; }
@@ -92,6 +89,13 @@ namespace rckid::ui {
         void addChild(Widget & child) {
             ASSERT(! RAMHeap::contains(&child)); // we really expect the ptr version to be used for this
             children_.push_back(&child);
+        }
+
+        void clearChildren() {
+            for (auto w : children_)
+                if (RAMHeap::contains(w))
+                    delete w;
+            children_.clear();
         }
 
         bool visible() const { return visible_; }
