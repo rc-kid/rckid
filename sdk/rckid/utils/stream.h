@@ -103,6 +103,12 @@ namespace rckid {
             pos_{0} {
         }
 
+        /** Create memory read strem from given null terminaed string.
+         */
+        MemoryReadStream(char const * buffer):
+            MemoryReadStream(reinterpret_cast<uint8_t const *>(buffer), static_cast<uint32_t>(strlen(buffer))) {
+        }
+
         /** Creates new stream from given buffer and sets the reading cusror to the beginning. 
          */
         template<uint32_t SIZE>

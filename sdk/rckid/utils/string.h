@@ -13,6 +13,8 @@ namespace rckid {
     class String {
     public:
 
+        static constexpr uint32_t NPOS = static_cast<uint32_t>(-1);
+
         /** Creates an empty string. 
          */
         String(): String{""} {}
@@ -59,6 +61,11 @@ namespace rckid {
 
         String & operator = (String const &) = default;
         String & operator = (String &&) = default;
+
+        String & operator = (char const * str) {
+            str_ = LazyBuffer<char>{str, static_cast<uint32_t>(strlen(str) + 1)};
+            return *this;
+        }
 
         static String withCapacity(uint32_t size) {
             String s{};
@@ -173,6 +180,26 @@ namespace rckid {
             str_.setSize(oldSize + 1);
         }
 
+        uint32_t find(char c, uint32_t start = 0) const {
+            for (uint32_t i = start; i < size(); ++i) {
+                if (str_[i] == c)
+                    return i;
+            }
+            return NPOS;
+        }
+
+        bool startsWith(char what) const {
+            if (size() == 0)
+                return false;
+            return c_str()[0] == what;
+        }
+
+        bool startsWith(char const * what) const {
+            uint32_t len = strlen(what);
+            if (len > size())
+                return false;
+            return strncmp(c_str(), what, len) == 0;
+        }
 
         bool endsWith(char other) const {
             if (size() == 0)
