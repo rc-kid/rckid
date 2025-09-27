@@ -94,9 +94,7 @@ using namespace rckid;
 
 /** The RCKid firmware
  
-    The firmware is rather simple in operation, especially compared to mkII as the AVR does not have to deal with that many things - when powered on, it acts as a simple IO controller for buttons, baclight and rumbler. When powered off, the can act as a master of the I2C bus (its subsets that includes the always on devices - power management and sensors) and simply has to react to their interrupts. 
-
-    Internally all functionality happens in the main loop and the interrupt handlers only pass status flags to it - with the exception of I2C communication which also sends or fills in the communications buffer and the state itself. For more details see the subsystems below:
+    The AVR in RCKid acts as an IO controller (buttons, RGB, rumbler, backlight), power controller (on/off/flash, charging, battery monitoring) and always on RTC. The firmware is very simple with all work happening in the main loop and various interrupts simply setting flags to notify main loop about events. The chip also acts as an I2C slave and can be queried by the RP2350 about device status. Optionally the AVR allows debugging over USART which is shared with the interrupt pin to the RP2350. For more details see the subsystems below:
 
     - initialization & main loop, 
     - power subsystem
@@ -294,6 +292,9 @@ public:
         Because the IOVDD powers the pullups on the I2C lines, we want to ensure the always on devices connected to the bus (mainly the accelerometer) will see defined state by issuing START condition immediately before power off, followed by shorting the SDA and SCL lines to GND and by issuing STOP condition and releasing the I2C lanes rigfht after power on.
      */
     static void powerIOVDD(bool enable) {
+        // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+        // for now IOVDD cannot be turned on is disabled forever util we test the basic AVR functionality
+        return;
         if (enable) {
             gpio::outputFloat(AVR_PIN_AVR_INT);
             gpio::outputHigh(AVR_PIN_IOVDD_EN);
@@ -325,7 +326,7 @@ public:
 
     /** Reboots the RP2350 chip. 
      
-        Rebooting the RP is done by a simple power cycle on the IOVDD line. 
+        Rebooting the RP is done by a simple power cycle on the IOVDD line. Signalled by red lights. 
      */
     static void rebootRP() {
         LOG("RP reboot...");
@@ -334,9 +335,28 @@ public:
             // do RGB red countdown effect in a busy loop to give the voltages time to settle, the countdown lasts for approximatekly 1 second
             rgbOn(true);
             rgbClear();
-            for (unsigned i = 0; i < NUM_RGB_LEDS; ++i) {
+            for (unsigned i = 0; i < 5; ++i) {
                 cpu::wdtReset();
-                rgb_[i] = platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                switch (i) {
+                    case 0:
+                        rgb_[0] = platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        rgb_[1] = platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        rgb_[2] = platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        rgb_[3] = platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        break;
+                    case 1:
+                        rgb_[RGB_LED_BTN_B] = platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        break;
+                    case 2:
+                        rgb_[RGB_LED_BTN_A] = platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        break;
+                    case 3:
+                        rgb_[RGB_LED_BTN_SELECT] = platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        break;
+                    default:
+                        rgb_[RGB_LED_BTN_START] = platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        break;
+                }
                 rgb_.update();
                 cpu::delayMs(200);
             }
@@ -348,7 +368,7 @@ public:
 
     /** Reboots the RP2350 chip into bootloader mode. 
      
-        This is done by pulling the QSPI_CS pin low from the AVR during IOVDD power cycle, which signals to the RP to enter bootloader.
+        This is done by pulling the QSPI_CS pin low from the AVR during IOVDD power cycle, which signals to the RP to enter bootloader. Signalled by green lights, while in bootloader mode, all LEDs flash with green.
         
         NOTE that as the QSPI_CS pin is available on the cartridge as well it is technically possible to implement a real HW bootloader button on the cartridge itself similar to the RP Pico boards, but the AVR controlled reset & pull down of the QSPI line is more user friendly.
      */
@@ -358,23 +378,42 @@ public:
             powerIOVDD(false);
             // pull QSPI_SS low to indicate bootloader
             gpio::outputLow(AVR_PIN_QSPI_SS);
+            // reset the RGB LEDs
+            rgbOn(true);
+            rgbClear();
             // do a one second countdown with enabling power to the VDD rail in the middle so that the QSPI_CS low can be picked up
-            for (unsigned i = 0; i < NUM_RGB_LEDS; ++i) {
+            for (unsigned i = 0; i < 5; ++i) {
                 cpu::wdtReset();
-                rgb_[i] = platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                switch (i) {
+                    case 0:
+                        rgb_[0] = platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        rgb_[1] = platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        rgb_[2] = platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        rgb_[3] = platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        break;
+                    case 1:
+                        rgb_[RGB_LED_BTN_B] = platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        break;
+                    case 2:
+                        rgb_[RGB_LED_BTN_A] = platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        break;
+                    case 3:
+                        rgb_[RGB_LED_BTN_SELECT] = platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        break;
+                    default:
+                        rgb_[RGB_LED_BTN_START] = platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        break;
+                }
                 rgb_.update();
-                if (i == 3)
+                if (i == 2)
                     powerIOVDD(true);
-                cpu::delayMs(200);
+                cpu::delayMs(300);
             }
             // reset the QSPI_SS back to float
             gpio::outputFloat(AVR_PIN_QSPI_SS);
             // since we are in the bootloader mode now, indicate by breathing all keys in green
-            rgbEffect_[0] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1);
-            rgbEffect_[1] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1);
-            rgbEffect_[3] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1);
-            rgbEffect_[4] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1);
-            rgbEffect_[5] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1);
+            for (uint8_t i = 0; i < NUM_RGB_LEDS; ++i)
+                rgbEffect_[i] = RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1);
         );
     }
 
@@ -1246,6 +1285,65 @@ public:
                 rgbOn(false);
             else
                 rgb_.update(true);
+        }
+    }
+
+    /** Debug function that simply enables the RGB leds and sets their color according to the three bytes given. Particularly useful for logging purposes. The bits are displayed in LSB first, in the following order
+     
+        DPAD_TOP_LEFT       1
+        DPAD_TOP_RIGHT      2
+        DPAD_BOTTOM_LEFT    4
+        DPAD_BOTTOM_RIGHT   8
+        BTN_B              16
+        BTN_A              32
+        BTN_SELECT         64
+        BTN_START         128
+     */
+    static void rgbSetBits(uint8_t r, uint8_t g = 0, uint8_t b = 0) {
+        rgbOn(true);
+        rgbClear();
+        for (uint8_t i = 0; i < 8; ++i) {
+            uint8_t rr = ((r >> i) & 1) ? RCKID_RGB_LED_DEFAULT_BRIGHTNESS : 0; 
+            uint8_t gg = ((g >> i) & 1) ? RCKID_RGB_LED_DEFAULT_BRIGHTNESS : 0;
+            uint8_t bb = ((b >> i) & 1) ? RCKID_RGB_LED_DEFAULT_BRIGHTNESS : 0;
+            switch (i) {
+                case 0:
+                    rgb_[RGB_LED_DPAD_TOP_LEFT] = platform::Color::RGB(rr, gg, bb);
+                    break;
+                case 1:
+                    rgb_[RGB_LED_DPAD_TOP_RIGHT] = platform::Color::RGB(rr, gg, bb);
+                    break;
+                case 2:
+                    rgb_[RGB_LED_DPAD_BOTTOM_LEFT] = platform::Color::RGB(rr, gg, bb);
+                    break;
+                case 3:
+                    rgb_[RGB_LED_DPAD_BOTTOM_RIGHT] = platform::Color::RGB(rr, gg, bb);
+                    break;
+                case 4:
+                    rgb_[RGB_LED_BTN_B] = platform::Color::RGB(rr, gg, bb);
+                    break;
+                case 5:
+                    rgb_[RGB_LED_BTN_A] = platform::Color::RGB(rr, gg, bb);
+                    break;
+                case 6:
+                    rgb_[RGB_LED_BTN_SELECT] = platform::Color::RGB(rr, gg, bb);
+                    break;
+                case 7:
+                    rgb_[RGB_LED_BTN_START] = platform::Color::RGB(rr, gg, bb);
+                    break;
+            }
+        }
+        rgb_.update(true);
+    }
+
+    /** Fatal error routine which simply displays the argument value, line information and then enters infinite loop.
+     */
+    static void fatalError(uint16_t line, uint8_t arg = 0) {
+        rgbSetBits(arg, line >> 8, line & 0xff);
+        // TODO maybe this should instead just wait for long home button press, or something
+        while (true) {
+            cpu::wdtReset();
+            cpu::delayMs(100);
         }
     }
 

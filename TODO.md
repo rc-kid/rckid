@@ -1,6 +1,6 @@
 # DevBoard Checklist
 
-> X means cone, - means cannot be done
+> X means done, - means cannot be done
 
 - [X] verify there are no shorts between VCC, VBATT, VDD, 3V3 and ground
 - [X] add jumper wires for D and audio power (! these *must* be installed before the board is powered)
@@ -88,6 +88,21 @@
 - [X] add fused buttons for resin printing
 - [X] IR LED (via DMP1045u as it sources over 20mA)
 - [X] white LED (can be wired via AP2502 which I can get from TME)
+
+# MkIII Checklist
+
+- [ ] verify no shorts on board and basic connections
+- [ ] try with USB power, verify nothing burns or breaks
+- [ ] solder cartridge connector, solder UPDI & SWD header, side buttons and headphone jack
+- [ ] program AVR, verify LEDs, verify rumbler, verify backlight PWM
+- [ ] verify RP2350 can be powered on and talked to via USB
+- [ ] flash cartridge
+- [ ] verify battery operation works 
+- [ ] add missing AVR features (charging detection, etc.)
+
+
+- [ ] buy torx M2x10mm (https://www.nerezka.cz/sroub-m-2-x-10-din-965tx-a2) 
+
 
 # TODO
 
@@ -178,11 +193,14 @@
 
 ## HW
 
+- top plate does not have hole large enough for the SD card holder
+- SD card hole in case bottom is too low
+- USB hole in case bottom is too low
+- cartridge insertion is too tight (maybe smaller cartridges)
+
 ## AVR
 
 - see if we can run at 5MHz and still talk to neopixel
-- I2C master enumeration works, but read register does not - is this true still? 
-- PWR_INT is now to read the battery level (vcc really) via 220k and 330k voltage divider with 10 or 100nf capacitor from the ADC pin to ground, fix the ADC readout section
 
 ## UI
 
