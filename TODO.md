@@ -193,6 +193,8 @@
 
 ## HW
 
+- case bottom increase thickness below battery connector by 1mm and have a path for rumbler wires
+- pcb cutoff for volume down should be larger
 - top plate does not have hole large enough for the SD card holder
 - SD card hole in case bottom is too low
 - USB hole in case bottom is too low
