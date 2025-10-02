@@ -112,26 +112,8 @@ class RCKid {
 public:
 
     static void initialize() {
-        // enable 2 second watchdog so that the second tick resets it always with enough time to spare
-        while (WDT.STATUS & WDT_SYNCBUSY_bm); // required busy wait
-            _PROTECTED_WRITE(WDT.CTRLA, WDT_PERIOD_2KCLK_gc);      
-        // set CLK_PER prescaler to 2, i.e. 10Mhz, which is the maximum the chip supports at voltages as low as 3.0V
-        CCP = CCP_IOREG_gc;
-        CLKCTRL.MCLKCTRLB = CLKCTRL_PEN_bm;
-        // enable external crystal oscillator for the RTC
-        CCP = CCP_IOREG_gc;
-        CLKCTRL.XOSC32KCTRLA = CLKCTRL_RUNSTDBY_bm | CLKCTRL_ENABLE_bm;
-        // initialize the RTC that fires every second for a semi-accurate real time clock keeping on the AVR and start counting
-        RTC.CLKSEL = RTC_CLKSEL_TOSC32K_gc; // run from the external 32.768kHz oscillator
-        RTC.PITINTCTRL |= RTC_PI_bm; // enable the PIT interrupt
-        while (RTC.PITSTATUS & RTC_CTRLBUSY_bm);
-        RTC.PITCTRLA = RTC_PERIOD_CYC32768_gc | RTC_PITEN_bm;
-
-    #if AVR_INT_IS_SERIAL_TX
-        // initializes the AVR TX pin for serial debugging
-        serial::setAlternateLocation(true);
-        serial::initializeTx(RCKID_SERIAL_SPEED);
-    #endif
+        // initialize the AVR chip
+        initializeAVR();
 
         // TODO some initialization routine with checks, etc.
         LOG("\n\n\nSYSTEM RESET DETECTED (AVR): " << hex(RSTCTRL.RSTFR));
@@ -146,7 +128,7 @@ public:
         enterDebugMode();
         homeBtnLongPress();
         homeBtnLongPress_ = 0;
-   }
+    }
 
     static void loop() {
         while (true) {
@@ -172,6 +154,32 @@ public:
             sleep_enable();
             sleep_cpu();
         }
+    }
+
+    /** Basic initialization of the AVR firmware. Sets clock frequency, enables RTC (including interrupt) and in case debugging over serial wire is used, enables the serial out on AVR_IRQ pin as well. 
+     */
+    static void initializeAVR() {
+        // enable 2 second watchdog so that the second tick resets it always with enough time to spare
+        while (WDT.STATUS & WDT_SYNCBUSY_bm); // required busy wait
+            _PROTECTED_WRITE(WDT.CTRLA, WDT_PERIOD_2KCLK_gc);      
+        // set CLK_PER prescaler to 2, i.e. 10Mhz, which is the maximum the chip supports at voltages as low as 3.0V
+        CCP = CCP_IOREG_gc;
+        CLKCTRL.MCLKCTRLB = CLKCTRL_PEN_bm;
+        // enable external crystal oscillator for the RTC
+        CCP = CCP_IOREG_gc;
+        CLKCTRL.XOSC32KCTRLA = CLKCTRL_RUNSTDBY_bm | CLKCTRL_ENABLE_bm;
+        // initialize the RTC that fires every second for a semi-accurate real time clock keeping on the AVR and start counting
+        RTC.CLKSEL = RTC_CLKSEL_TOSC32K_gc; // run from the external 32.768kHz oscillator
+        RTC.PITINTCTRL |= RTC_PI_bm; // enable the PIT interrupt
+        while (RTC.PITSTATUS & RTC_CTRLBUSY_bm);
+        RTC.PITCTRLA = RTC_PERIOD_CYC32768_gc | RTC_PITEN_bm;
+
+    #if AVR_INT_IS_SERIAL_TX
+        // initializes the AVR TX pin for serial debugging
+        serial::setAlternateLocation(true);
+        serial::initializeTx(RCKID_SERIAL_SPEED);
+    #endif
+
     }
 
     /** \name Power & Sleep Controls
@@ -292,9 +300,6 @@ public:
         Because the IOVDD powers the pullups on the I2C lines, we want to ensure the always on devices connected to the bus (mainly the accelerometer) will see defined state by issuing START condition immediately before power off, followed by shorting the SDA and SCL lines to GND and by issuing STOP condition and releasing the I2C lanes rigfht after power on.
      */
     static void powerIOVDD(bool enable) {
-        // TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-        // for now IOVDD cannot be turned on is disabled forever util we test the basic AVR functionality
-        return;
         if (enable) {
             gpio::outputFloat(AVR_PIN_AVR_INT);
             gpio::outputHigh(AVR_PIN_IOVDD_EN);
@@ -1249,10 +1254,10 @@ public:
             // for notification, move all LEDs in sync
             bool done = true;
             for (int i = 0; i < NUM_RGB_LEDS; ++i)
-                done = done && (! rgb_[i].moveTowards(rgbTarget_[i], notification_.speed));
+                done = (! rgb_[i].moveTowards(rgbTarget_[i], notification_.speed)) && done;
             if (done)
-            for (int i = 0; i < NUM_RGB_LEDS; ++i)
-                rgbTarget_[i] = notification_.nextColor(rgbTarget_[i]);
+              for (int i = 0; i < NUM_RGB_LEDS; ++i)
+                  rgbTarget_[i] = notification_.nextColor(rgbTarget_[i]);
             rgb_.update(true);
         } else {
             // if there has been second already, decrement effect durations
@@ -1348,6 +1353,32 @@ public:
     }
 
     //@}
+
+    /** \name Test routines
+     
+        The below routines can be used to verify the basic functionality of the AVR firmware one by one. Firmware methods used in production are used whenever possible.
+     */
+    //@{
+
+    static void testRGB() {
+        initializeAVR();
+        cpu::delayMs(100);
+        rgbOn(true);
+        cpu::delayMs(100);
+        rgb_[0] = platform::Color::Red();
+        rgb_[1] = platform::Color::Green();
+        rgb_[2] = platform::Color::Blue();
+        rgb_[3] = platform::Color::Cyan();
+        rgb_[4] = platform::Color::Yellow();
+        rgb_[5] = platform::Color::White();
+        rgb_.update(true);
+        while (true) {
+            cpu::wdtReset();
+            cpu::delayMs(100);
+        }
+    }
+    //@}
+
 }; // class RCKid
 
 /** Interrupt for a second tick from the RTC. We need the interrupt routine so that the CPU can wake up and increment the real time clock and uptime. 
@@ -1399,6 +1430,8 @@ ISR(ADC0_RESRDY_vect) {
 }
 
 int main() {
+    //RCKid::testRGB();
+
     RCKid::initialize();
     RCKid::loop();
 }

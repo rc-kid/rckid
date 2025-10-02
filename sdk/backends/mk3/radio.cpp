@@ -37,9 +37,11 @@ namespace rckid {
     }
 
     void Radio::reset() {
+        /*
         gpio::outputLow(RP_PIN_RADIO_RESET);
         cpu::delayMs(10);
         gpio::setAsInputPullUp(RP_PIN_RADIO_RESET);
+        */
     }
 
     void Radio::sendCommand(uint8_t const * cmd, uint8_t cmdSize, uint32_t ctsTime) {

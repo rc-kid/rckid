@@ -27,14 +27,14 @@
  */
 #define RP_PIN_I2C_SDA 0
 #define RP_PIN_I2C_SCL 1
-#define RP_PIN_RADIO_RESET 2
+#define RP_PIN_RADIO_INT 2
 #define RP_PIN_AVR_INT 3
-#define RP_PIN_RADIO_INT 4
-#define RP_PIN_AUDIO_INT 5
-//#define RP_PIN_I2S_DOUT 6
-//#define RP_PIN_I2S_DIN 7
-//#define RP_PIN_I2S_LRCK 8
-//#define RP_PIN_I2S_BCLK 9
+#define RP_PIN_I2S_MCLK 4
+#define RP_PIN_I2S_DAC 5
+#define RP_PIN_I2S_ADC 6
+#define RP_PIN_I2S_BCLK 7
+#define RP_PIN_I2S_LRCK 8
+#define RP_PIN_HEADSET_DETECT 9
 #define RP_PIN_SD_CD 10
 #define RP_PIN_DISP_RDX 11
 #define RP_PIN_GPIO_12 12
@@ -65,25 +65,11 @@
 #define RP_PIN_DISP_DCX 37
 #define RP_PIN_DISP_CSX 38
 #define RP_PIN_DISP_TE 39
-#define RP_PIN_SD_SDIO_2 40
-#define RP_PIN_SD_SDIO_1 41
-#define RP_PIN_SD_SCK 42
-#define RP_PIN_SD_TX 43
-#define RP_PIN_SD_RX 44
+#define RP_PIN_SD_SCK 40
+#define RP_PIN_SD_TX 41
+#define RP_PIN_SD_RX 42
+#define RP_PIN_SD_SDIO_1 43
+#define RP_PIN_SD_SDIO_2 44
 #define RP_PIN_SD_CSN 45
 #define RP_PIN_GPIO_46 46
 #define RP_PIN_GPIO_47 47
-
-#define RP_SD_SPI spi1
-
-
-
-
-// TODO remove those (for devboard only)
-#define RP_PIN_I2S_MCLK 19
-#define RP_PIN_I2S_BCLK 18
-#define RP_PIN_I2S_LRCK 17
-#define RP_PIN_I2S_DOUT 16
-#define RP_PIN_I2S_DIN 15
-
-

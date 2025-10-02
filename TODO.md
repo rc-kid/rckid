@@ -91,20 +91,28 @@
 
 # MkIII Checklist
 
-- [ ] verify no shorts on board and basic connections
-- [ ] try with USB power, verify nothing burns or breaks
-- [ ] solder cartridge connector, solder UPDI & SWD header, side buttons and headphone jack
-- [ ] program AVR, verify LEDs, verify rumbler, verify backlight PWM
-- [ ] verify RP2350 can be powered on and talked to via USB
+- [X] verify no shorts on board and basic connections
+- [X] try with USB power, verify nothing burns or breaks
+- [X] solder cartridge connector, solder UPDI & SWD header, side buttons
+- [X] program AVR, verify LEDs, 
+- [ ] verify rumbler, verify backlight PWM
+- [X] verify RP2350 can be powered on and talked to via USB
 - [ ] flash cartridge
 - [ ] verify battery operation works 
 - [ ] add missing AVR features (charging detection, etc.)
+- [ ] solder headphone jack
+- [ ] determine the actual speed & how to set it to 8MHz? Or even 5? 
 
-
-- [ ] buy torx M2x10mm (https://www.nerezka.cz/sroub-m-2-x-10-din-965tx-a2) 
+- [X] buy torx M2x10mm (https://www.nerezka.cz/sroub-m-2-x-10-din-965tx-a2) 
+- [ ] buy threaded inserts for thermosets (https://www.tme.eu/cz/en/details/b2_bn1054/threaded-insertions/bossard/1386727/)
+- [ ] order extra batteries (TME)
+- [ ] order headphone jacks (mouser)
 
 
 # TODO
+
+- radio reset (radio.cpp)
+- sd card access (sd.cpp)
 
 - switch to INI for data storage in human readable form on the device
 - add calendar
@@ -193,12 +201,12 @@
 
 ## HW
 
-- case bottom increase thickness below battery connector by 1mm and have a path for rumbler wires
-- pcb cutoff for volume down should be larger
-- top plate does not have hole large enough for the SD card holder
-- SD card hole in case bottom is too low
-- USB hole in case bottom is too low
-- cartridge insertion is too tight (maybe smaller cartridges)
+- SD card hole in case bottom is too low (fixed, check)
+- USB hole in case bottom is too low (fixed, check)
+- cartridge insertion is too tight (the top part of bottom case) (fixed, check)
+- bottom case needs extra plastic to line up perfectly with the pcb (fixed, check)
+- side buttons are too thin
+
 
 ## AVR
 

@@ -4,9 +4,9 @@ echo "Syncing ${2} via ${1}"
 scp "${2}" ${1}:/home/peta/firmware.hex
 echo "Flashing..."
 # the real device (QFN 3217)
-#ssh ${1} "~/.local/bin/pymcuprog write -t uart -u /dev/ttyUSB0 -d attiny3217 -f firmware.hex --erase --verify"
+ssh ${1} "~/.local/bin/pymcuprog write -t uart -u /dev/ttyUSB0 -d attiny3217 -f firmware.hex --erase --verify"
 # breadboard (SOIC 3216)
-ssh ${1} "~/.local/bin/pymcuprog write -t uart -u /dev/ttyUSB0 -d attiny3216 -f firmware.hex --erase --verify"
+#ssh ${1} "~/.local/bin/pymcuprog write -t uart -u /dev/ttyUSB0 -d attiny3216 -f firmware.hex --erase --verify"
 
 #echo "Syncing firmware $1/.pio/build/$2/firmware.bin"
 #rsync -ar -ssh $1/.pio/build/$2/firmware.elf $1/.pio/build/$2/ld peta@10.0.0.38:/home/peta/devel/rckid2/$1/.pio/build/$2

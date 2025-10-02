@@ -219,7 +219,7 @@ namespace rckid {
             // enable master clock generation for the given sample rate
             enableMasterClock(sampleRate);
             // enable the I2S playback pio program at given BCLK (which is 34 bits per sample)
-            i2s_out16_program_init(pio1, playbackSm_, playbackOffset_, RP_PIN_I2S_DOUT, RP_PIN_I2S_LRCK);
+            i2s_out16_program_init(pio1, playbackSm_, playbackOffset_, RP_PIN_I2S_DAC, RP_PIN_I2S_LRCK);
             pio_sm_set_clock_speed(pio1, playbackSm_, sampleRate * 34 * 2);
             pio_sm_set_enabled(pio1, playbackSm_, true);
         }
@@ -241,7 +241,7 @@ namespace rckid {
             // enable master clock generation for the given sample rate
             enableMasterClock(sampleRate);
             // enable the I2S record pio program at given BCLK (34 bits per sample for I2S stereo 16bit sound)
-            i2s_in16_program_init(pio1, recordSm_, recordOffset_, RP_PIN_I2S_DIN, RP_PIN_I2S_LRCK);
+            i2s_in16_program_init(pio1, recordSm_, recordOffset_, RP_PIN_I2S_ADC, RP_PIN_I2S_LRCK);
             pio_sm_set_clock_speed(pio1, recordSm_, sampleRate * 34 * 2);
             pio_sm_set_enabled(pio1, recordSm_, true);
         }
@@ -265,7 +265,7 @@ namespace rckid {
             // enable master clock generation for the given sample rate
             enableMasterClock(sampleRate);
             // enable the I2S record pio program at given BCLK (34 bits per sample for I2S stereo 16bit sound)
-            i2s_in16_program_init(pio1, recordSm_, recordOffset_, RP_PIN_I2S_DIN, RP_PIN_I2S_LRCK);
+            i2s_in16_program_init(pio1, recordSm_, recordOffset_, RP_PIN_I2S_ADC, RP_PIN_I2S_LRCK);
             pio_sm_set_clock_speed(pio1, recordSm_, sampleRate * 34 * 2);
             pio_sm_set_enabled(pio1, recordSm_, true);
         }

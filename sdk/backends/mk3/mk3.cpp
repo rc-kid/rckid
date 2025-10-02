@@ -399,6 +399,17 @@ namespace rckid {
         RAMHeap::traceChunks();
 
 
+        // initialize the interrupt pins and set the interrupt handlers (enable pull-up as AVR pulls it low or leaves floating)
+        gpio_set_irq_callback(irqGPIO_);
+        gpio::setAsInputPullUp(RP_PIN_AVR_INT);
+        gpio_set_irq_enabled(RP_PIN_AVR_INT, GPIO_IRQ_EDGE_FALL, true);
+        //  
+        requestAvrStatus();
+
+        // TODO initialize audio and stuff
+        return;
+
+
         Codec::initialize();
 
         Codec::reset();
@@ -433,12 +444,6 @@ namespace rckid {
         Codec::setHeadphonesVolume(45);
 
 
-        // initialize the interrupt pins and set the interrupt handlers (enable pull-up as AVR pulls it low or leaves floating)
-        gpio_set_irq_callback(irqGPIO_);
-        gpio::setAsInputPullUp(RP_PIN_AVR_INT);
-        gpio_set_irq_enabled(RP_PIN_AVR_INT, GPIO_IRQ_EDGE_FALL, true);
-        //  
-        requestAvrStatus();
 
 
         return;

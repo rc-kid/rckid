@@ -20,6 +20,8 @@ namespace rckid {
         [2] http://elm-chan.org/docs/mmc/mmc_e.html#dataxfer
      */
     bool sdInitialize() {
+        return false;
+/*        
         // to initialize, the SPI baudrate must be between 100-400kHz for the initialization
         spi_init(RP_SD_SPI, 200000);
         gpio_set_function(RP_PIN_SD_SCK, GPIO_FUNC_SPI);
@@ -103,9 +105,12 @@ namespace rckid {
         sdNumBlocks_ = ((buffer[8] << 16) + (buffer[9] << 8) + buffer[10] + 1) * 1024;
         LOG(LL_INFO, "SD card initialized, blocks: " << sdNumBlocks_);
         return true;
+    */
     }
 
     uint8_t sdSendCommand(uint8_t const (&cmd)[6], uint8_t * response, size_t responseSize, unsigned maxDelay) {
+        return 0xff;
+        /*
         //gpio::low(RP_PIN_SD_CSN);
         spi_write_blocking(RP_SD_SPI, cmd,  6);
         uint8_t result = SD_BUSY;
@@ -118,6 +123,7 @@ namespace rckid {
         spi_write_blocking(RP_SD_SPI, & tmp, 1);
         //gpio::high(RP_PIN_SD_CSN);
         return result;
+        */
     }
 
     // rckid API functions
@@ -127,6 +133,8 @@ namespace rckid {
     }
 
     bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {
+        return false;
+    /*
         while (numBlocks-- != 0) {
             //gpio::low(RP_PIN_SD_CSN);
             uint8_t cmd[] = { 
@@ -159,9 +167,12 @@ namespace rckid {
             buffer += 512;
         }
         return true;
+        */
     }
 
     bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks) {
+        return false;
+    /*
         while (numBlocks-- != 0) {
             uint8_t cmd[] = { 
                 0x58,
@@ -186,6 +197,7 @@ namespace rckid {
             buffer += 512;
         }
         return true;
+        */
     }
 
 } // namespace rckid
