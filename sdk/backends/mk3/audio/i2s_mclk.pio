@@ -4,7 +4,7 @@
 ; 
 
 .program i2s_mclk
-; set aside 2 bits for LRCLK and BCLK
+; set aside 1 bits for MCLK
 .side_set 1
 
 .wrap_target

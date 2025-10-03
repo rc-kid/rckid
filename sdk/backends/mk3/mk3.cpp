@@ -249,6 +249,13 @@ namespace rckid {
             case RP_PIN_RADIO_INT:
                 Radio::irqHandler();
                 break;
+            case RP_PIN_HEADSET_DETECT:
+                if (events & GPIO_IRQ_EDGE_FALL)
+                    LOG(LL_INFO, "HI");
+                else if (events & GPIO_IRQ_EDGE_RISE)
+                    LOG(LL_INFO, "HO");
+                break;
+
             default:
                 LOG(LL_ERROR, "Unknown GPIO IRQ on pin " << (uint32_t)pin << " with events " << events);
                 break;
@@ -343,12 +350,26 @@ namespace rckid {
         // check the I2C devices we expect to find on the bus
         LOG(LL_INFO, "Detecting I2C devices...");
         LOG(LL_INFO, "  AVR (0x43):        " << (::i2c::isPresent(0x43) ? "ok" : "not found"));
-        LOG(LL_INFO, "  LTR390UV (0x53):   " << (::i2c::isPresent(0x53) ? "ok" : "not found"));
-        LOG(LL_INFO, "  MPU6500 (0x68):    " << (::i2c::isPresent(0x68) ? "ok" : "not found"));
-        LOG(LL_INFO, "  BQ25895 (0x6a):    " << (::i2c::isPresent(0x6a) ? "ok" : "not found"));
-        LOG(LL_INFO, "  TLV320 (0x18):     " << (::i2c::isPresent(0x18) ? "ok" : "not found"));
-        LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
+        LOG(LL_INFO, "  LSM6DSV (0x6a):    " << (::i2c::isPresent(0x6a) ? "ok" : "not found"));
         LOG(LL_INFO, "  NAU88C22YG (0x1a): " << (::i2c::isPresent(0x1a) ? "ok" : "not found"));
+        
+        LOG(LL_INFO, "Initializing codec...");
+        // check for radio - we need to first reset it via the audio codec chip
+        Codec::initialize();
+        Codec::reset();
+        Codec::powerUp();
+        cpu::delayMs(100);
+        Codec::setGPIO1(true);
+        cpu::delayMs(10);
+        Codec::setGPIO1(false);
+        Codec::showRegisters();
+        cpu::delayMs(10);
+        Codec::setGPIO1(true);
+        cpu::delayMs(100);
+        Codec::showRegisters();
+        // and check if we have radio
+        LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
+        LOG(LL_INFO, "  SI4705 (0x10):     " << (::i2c::isPresent(0x10) ? "ok" : "not found"));
 
         // try talking to the AVR chip and see that all is well
         // read the full AVR state (including time information). Do not process the interrupts here, but wait for the first tick, which will or them with the ones obtained here and process when the device is fully initialized
@@ -403,6 +424,9 @@ namespace rckid {
         gpio_set_irq_callback(irqGPIO_);
         gpio::setAsInputPullUp(RP_PIN_AVR_INT);
         gpio_set_irq_enabled(RP_PIN_AVR_INT, GPIO_IRQ_EDGE_FALL, true);
+        // enable headset detection
+        gpio::setAsInput(RP_PIN_HEADSET_DETECT);
+        gpio_set_irq_enabled(RP_PIN_HEADSET_DETECT, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE, true);
         //  
         requestAvrStatus();
 
@@ -763,7 +787,6 @@ namespace rckid {
     }
 
     void __not_in_flash_func(audioPlaybackDMA)(uint finished, [[maybe_unused]] uint other) {
-        LOG(LL_INFO, "OH NOEZ");
         // reconfigure the currently finished buffer to start from the current front buffer (will be back after the swap) - note the other dma has already been started by the finished one
         dma_channel_set_read_addr(finished, audio::buffer_->front(), false);
         // now load the front buffer with user data and adjust the audio levels according to the settings and resolution

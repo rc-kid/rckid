@@ -219,7 +219,7 @@ namespace rckid {
             // enable master clock generation for the given sample rate
             enableMasterClock(sampleRate);
             // enable the I2S playback pio program at given BCLK (which is 34 bits per sample)
-            i2s_out16_program_init(pio1, playbackSm_, playbackOffset_, RP_PIN_I2S_DAC, RP_PIN_I2S_LRCK);
+            i2s_out16_program_init(pio1, playbackSm_, playbackOffset_, RP_PIN_I2S_DAC, RP_PIN_I2S_BCLK);
             pio_sm_set_clock_speed(pio1, playbackSm_, sampleRate * 34 * 2);
             pio_sm_set_enabled(pio1, playbackSm_, true);
         }
@@ -241,7 +241,7 @@ namespace rckid {
             // enable master clock generation for the given sample rate
             enableMasterClock(sampleRate);
             // enable the I2S record pio program at given BCLK (34 bits per sample for I2S stereo 16bit sound)
-            i2s_in16_program_init(pio1, recordSm_, recordOffset_, RP_PIN_I2S_ADC, RP_PIN_I2S_LRCK);
+            i2s_in16_program_init(pio1, recordSm_, recordOffset_, RP_PIN_I2S_ADC, RP_PIN_I2S_BCLK);
             pio_sm_set_clock_speed(pio1, recordSm_, sampleRate * 34 * 2);
             pio_sm_set_enabled(pio1, recordSm_, true);
         }
@@ -265,9 +265,17 @@ namespace rckid {
             // enable master clock generation for the given sample rate
             enableMasterClock(sampleRate);
             // enable the I2S record pio program at given BCLK (34 bits per sample for I2S stereo 16bit sound)
-            i2s_in16_program_init(pio1, recordSm_, recordOffset_, RP_PIN_I2S_ADC, RP_PIN_I2S_LRCK);
+            i2s_in16_program_init(pio1, recordSm_, recordOffset_, RP_PIN_I2S_ADC, RP_PIN_I2S_BCLK);
             pio_sm_set_clock_speed(pio1, recordSm_, sampleRate * 34 * 2);
             pio_sm_set_enabled(pio1, recordSm_, true);
+        }
+
+        static void setGPIO1(bool high) {
+            setRegister(REG_GPIO, high ? GPIO1_HIGH : GPIO1_LOW);
+        }
+
+        static void resetGPIO1() {
+            setRegister(REG_GPIO, GPIO1_FLOAT);
         }
 
         static void showRegisters() {
@@ -275,6 +283,7 @@ namespace rckid {
             LOG(LL_INFO, "   1: " <<  hex(getRegister(1)) << " exp: 0x000d");
             LOG(LL_INFO, "   2: " <<  hex(getRegister(2)) << " exp: 0x01b0");
             LOG(LL_INFO, "   3: " <<  hex(getRegister(3)) << " exp: 0x006c"); 
+            LOG(LL_INFO, "   8: " <<  hex(getRegister(8)) << " exp: 0x00??"); 
             LOG(LL_INFO, "  43: " << hex(getRegister(43)) << " exp: 0x0000"); // might invert the polarity for BTL
             LOG(LL_INFO, "  47: " << hex(getRegister(47)) << " exp: 0x0005");
             LOG(LL_INFO, "  48: " << hex(getRegister(48)) << " exp: 0x0005");
@@ -398,6 +407,9 @@ LL_INFO: Enabling MCLK at 24576000Hz
         static constexpr uint16_t SCLKEN = 1;
         
         static constexpr uint8_t REG_GPIO = 8;
+        static constexpr uint16_t GPIO1_FLOAT = 0b000;
+        static constexpr uint16_t GPIO1_HIGH = 0b110;
+        static constexpr uint16_t GPIO1_LOW = 0b111;
 
 
         static constexpr uint8_t REG_JACK_DETECT_1 = 9;

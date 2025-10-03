@@ -111,6 +111,13 @@
 
 # TODO
 
+- not sure how I2S could have worked, does not work now
+- headphone detection not working
+- radio does not answer
+
+- button presses don't work because the last state does not change at the end of the tick
+
+
 - radio reset (radio.cpp)
 - sd card access (sd.cpp)
 

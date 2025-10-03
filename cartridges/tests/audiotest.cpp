@@ -4,6 +4,8 @@
 
 using namespace rckid;
 
+uint32_t numTicks = 0;
+
 void listI2CDevices() {
     debugWrite() << "I2C probe:\n";
     uint32_t n = 0;
@@ -28,9 +30,26 @@ int main() {
     t.setSampleRate(44100);
     t.on(440);
     audioPlay(buf_, 44100, [&](int16_t * buf, uint32_t size) {
+        ++numTicks;
         return t.generateInto(buf, size);
     });
     while (true) {
         yield();
+        cpu::delayMs(100);
+        yield();
+        cpu::delayMs(100);
+        yield();
+        cpu::delayMs(100);
+        yield();
+        cpu::delayMs(100);
+        yield();
+        cpu::delayMs(100);
+        yield();
+        cpu::delayMs(100);
+        yield();
+        cpu::delayMs(100);
+        yield();
+        cpu::delayMs(100);
+        LOG(LL_INFO, "ticks: " << numTicks);
     }
 }
