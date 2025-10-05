@@ -354,6 +354,11 @@ namespace rckid {
         LOG(LL_INFO, "  NAU88C22YG (0x1a): " << (::i2c::isPresent(0x1a) ? "ok" : "not found"));
         
         LOG(LL_INFO, "Initializing codec...");
+        audio::dma0_ = dma_claim_unused_channel(true);
+        audio::dma1_ = dma_claim_unused_channel(true);
+        LOG(LL_INFO, "  audio dma0: " << static_cast<uint32_t>(audio::dma0_));
+        LOG(LL_INFO, "  audio dma1: " << static_cast<uint32_t>(audio::dma1_));
+        
         // check for radio - we need to first reset it via the audio codec chip
         Codec::initialize();
         Codec::reset();
@@ -403,8 +408,6 @@ namespace rckid {
         //audio::mclkOffset_ = pio_add_program(pio1, & i2s_mclk_program);
         //audio::playbackSm_ = pio_claim_unused_sm(pio1, true);
         //audio::playbackOffset_ = pio_add_program(pio1, & i2s_out16_program);
-        audio::dma0_ = dma_claim_unused_channel(true);
-        audio::dma1_ = dma_claim_unused_channel(true);
         //i2s_out16_program_init(pio1, audio::playbackSm_, audio::playbackOffset_, RP_PIN_I2S_DOUT, RP_PIN_I2S_LRCK);
         // TODO enable the MCLK pin and test that the generator works
         // i2s_mclk_program_init(pio1, audio::mclkSm_, audio::mclkOffset_, RP_PIN_I2S_MCLK);
@@ -437,33 +440,6 @@ namespace rckid {
         //Codec::reset();
         //Codec::powerUp();
 
-        // start radio audio just for test
-        auto radio = Radio::instance();
-        radio->enable(true);
-        cpu::delayMs(500);
-        radio->enableStereo(false);
-        //radio->enableEmbeddedAntenna(true);
-        radio->setFrequency(9370);
-        cpu::delayMs(250);
-        auto tuneStatus = radio->getTuneStatus();
-        LOG(LL_INFO, "  frequency:     " << tuneStatus.frequency10kHz() << " [10kHz]");
-        LOG(LL_INFO, "  rssi:          " << tuneStatus.rssi());
-        LOG(LL_INFO, "  snr:           " << tuneStatus.snr());
-        LOG(LL_INFO, "  multipath:     " << tuneStatus.multipath());
-        LOG(LL_INFO, "  antCap:        " << tuneStatus.antCap());
-
-        cpu::delayMs(250);
-
-        Codec::playbackLineInDirect();
-        //Codec::playbackLineIn(); do not use this as it does not work now 
-        Codec::setSpeakerVolume(63);
-        Codec::setHeadphonesVolume(63);
-        Codec::showRegisters();
-        //Codec::recordLineIn(48000);
-        Codec::enableMasterClock(48000);
-
-        Codec::setSpeakerVolume(45);
-        Codec::setHeadphonesVolume(45);
 
 
 
@@ -765,6 +741,7 @@ namespace rckid {
         auto dmaConf = dma_channel_get_default_config(dma);
         channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bits (16 per channel, 2 channels)
         channel_config_set_read_increment(& dmaConf, true);  // increment on read
+        channel_config_set_write_increment(& dmaConf, false);  // do not increment on write
         channel_config_set_dreq(&dmaConf,  Codec::playbackDReq()); // DMA is driven by the I2S playback pio
         channel_config_set_chain_to(& dmaConf, other); // chain to the other channel
         dma_channel_configure(dma, & dmaConf, Codec::playbackTxFifo(), nullptr, 0, false); // the buffer consists of stereo samples, (32bits), i.e. buffer size / 2
@@ -846,10 +823,10 @@ namespace rckid {
         audioConfigurePlaybackDMA(audio::dma1_, audio::dma0_);
         // now we need to load the buffer's front part with audio data
         audioPlaybackDMA(audio::dma0_, audio::dma1_);
-        // enable the first DMA
-        dma_channel_start(audio::dma0_);
         // instruct the codec to start the playback at given sample rate
         Codec::playbackI2S(sampleRate);
+        // enable the first DMA
+        dma_channel_start(audio::dma0_);
         // now we need to load the second buffer while the first one is playing (reload of the buffers will be done by the IRQ handler)
         audioPlaybackDMA(audio::dma1_, audio::dma0_);
     }

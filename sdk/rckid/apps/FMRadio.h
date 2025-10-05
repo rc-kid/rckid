@@ -47,6 +47,7 @@ namespace rckid {
                 LOG(LL_INFO, "  snr:           " << tuneStatus.snr());
                 LOG(LL_INFO, "  multipath:     " << tuneStatus.multipath());
                 LOG(LL_INFO, "  antCap:        " << tuneStatus.antCap());
+
             }
         }
 
@@ -104,5 +105,41 @@ namespace rckid {
         ui::Label rds_;
 
     }; // rckid::Radio
+
+
+    /* This is from initialize test when radio was being tested:
+    
+
+        // start radio audio just for test
+        auto radio = Radio::instance();
+        radio->enable(true);
+        cpu::delayMs(500);
+        radio->enableStereo(false);
+        //radio->enableEmbeddedAntenna(true);
+        radio->setFrequency(9370);
+        cpu::delayMs(250);
+        auto tuneStatus = radio->getTuneStatus();
+        LOG(LL_INFO, "  frequency:     " << tuneStatus.frequency10kHz() << " [10kHz]");
+        LOG(LL_INFO, "  rssi:          " << tuneStatus.rssi());
+        LOG(LL_INFO, "  snr:           " << tuneStatus.snr());
+        LOG(LL_INFO, "  multipath:     " << tuneStatus.multipath());
+        LOG(LL_INFO, "  antCap:        " << tuneStatus.antCap());
+
+        cpu::delayMs(250);
+
+        Codec::playbackLineInDirect();
+        //Codec::playbackLineIn(); do not use this as it does not work now 
+        Codec::setSpeakerVolume(63);
+        Codec::setHeadphonesVolume(63);
+        Codec::showRegisters();
+        //Codec::recordLineIn(48000);
+        Codec::enableMasterClock(48000);
+
+        Codec::setSpeakerVolume(45);
+        Codec::setHeadphonesVolume(45);
+
+    
+    
+    */
 
 } // namespace rckid

@@ -222,6 +222,9 @@ namespace rckid {
             i2s_out16_program_init(pio1, playbackSm_, playbackOffset_, RP_PIN_I2S_DAC, RP_PIN_I2S_BCLK);
             pio_sm_set_clock_speed(pio1, playbackSm_, sampleRate * 34 * 2);
             pio_sm_set_enabled(pio1, playbackSm_, true);
+            if (!pio_sm_is_enabled(pio1, playbackSm_))
+                LOG(LL_ERROR, "  record SM not enabled");
+
         }
 
         static void recordLineIn(uint32_t sampleRate) {
