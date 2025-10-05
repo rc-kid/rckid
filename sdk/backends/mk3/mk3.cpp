@@ -361,15 +361,12 @@ namespace rckid {
         cpu::delayMs(100);
         Codec::setGPIO1(true);
         cpu::delayMs(10);
-        Codec::setGPIO1(false);
-        Codec::showRegisters();
+        Codec::setGPIO1(false); // radio reset is active low
         cpu::delayMs(10);
         Codec::setGPIO1(true);
         cpu::delayMs(100);
-        Codec::showRegisters();
         // and check if we have radio
         LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
-        LOG(LL_INFO, "  SI4705 (0x10):     " << (::i2c::isPresent(0x10) ? "ok" : "not found"));
 
         // try talking to the AVR chip and see that all is well
         // read the full AVR state (including time information). Do not process the interrupts here, but wait for the first tick, which will or them with the ones obtained here and process when the device is fully initialized
@@ -425,19 +422,20 @@ namespace rckid {
         gpio::setAsInputPullUp(RP_PIN_AVR_INT);
         gpio_set_irq_enabled(RP_PIN_AVR_INT, GPIO_IRQ_EDGE_FALL, true);
         // enable headset detection
-        gpio::setAsInput(RP_PIN_HEADSET_DETECT);
+        // TODO the external pullup is too weak (100kOhm, enabling pull-up will help)
+        gpio::setAsInputPullUp(RP_PIN_HEADSET_DETECT);
         gpio_set_irq_enabled(RP_PIN_HEADSET_DETECT, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE, true);
         //  
         requestAvrStatus();
 
         // TODO initialize audio and stuff
-        return;
+        //return;
 
 
-        Codec::initialize();
+        //Codec::initialize();
 
-        Codec::reset();
-        Codec::powerUp();
+        //Codec::reset();
+        //Codec::powerUp();
 
         // start radio audio just for test
         auto radio = Radio::instance();

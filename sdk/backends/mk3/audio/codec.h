@@ -271,7 +271,8 @@ namespace rckid {
         }
 
         static void setGPIO1(bool high) {
-            setRegister(REG_GPIO, high ? GPIO1_HIGH : GPIO1_LOW);
+            // NOTE there seems to be an error in the register map and the GPIO is inverted actually. 
+            setRegister(REG_GPIO, high ? GPIO1_LOW : GPIO1_HIGH);
         }
 
         static void resetGPIO1() {
@@ -284,6 +285,7 @@ namespace rckid {
             LOG(LL_INFO, "   2: " <<  hex(getRegister(2)) << " exp: 0x01b0");
             LOG(LL_INFO, "   3: " <<  hex(getRegister(3)) << " exp: 0x006c"); 
             LOG(LL_INFO, "   8: " <<  hex(getRegister(8)) << " exp: 0x00??"); 
+            LOG(LL_INFO, "   9: " <<  hex(getRegister(9)) << " exp: 0x00??"); 
             LOG(LL_INFO, "  43: " << hex(getRegister(43)) << " exp: 0x0000"); // might invert the polarity for BTL
             LOG(LL_INFO, "  47: " << hex(getRegister(47)) << " exp: 0x0005");
             LOG(LL_INFO, "  48: " << hex(getRegister(48)) << " exp: 0x0005");
