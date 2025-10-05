@@ -16,6 +16,7 @@ pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/screen/ST7789_rgb1
 pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/audio/i2s_out16.pio)
 pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/audio/i2s_in16.pio)
 pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/audio/i2s_mclk.pio)
+pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/sd/sd_spi.pio)
 
 # Sets given project to be used with RCKid SDK. 
 #

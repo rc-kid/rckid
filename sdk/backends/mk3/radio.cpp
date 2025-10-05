@@ -1,10 +1,16 @@
 #include <rckid/radio.h>
 #include "i2c.h"
+#include "audio/codec.h"
 
 namespace rckid {
 
     void Radio::enable(bool value) {
         if (value) {
+            Codec::playbackLineInDirect();
+            Codec::setSpeakerVolume(45);
+            Codec::setHeadphonesVolume(45);
+            // we need to generate master clock for the codec to work - not sure why
+            Codec::enableMasterClock(48000);
             if (enabled())
                 return;
             sendCommand({
@@ -14,7 +20,9 @@ namespace rckid {
             }, 150);
             busy_ |= RADIO_ENABLED;
             getResponse();
+
         } else {
+            Codec::stop();
             sendCommand({CMD_POWER_DOWN});
             busy_ &= ~RADIO_ENABLED;
             // no need to wait for response, as the radio should be off now

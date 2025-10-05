@@ -1,0 +1,35 @@
+; SD Card SPI driver
+; 
+; For future compatibility the SD card is connected so that the pins correspond to what is required for the SDIO mode controller via the PIO. But this means that we can't use the hardware SPI for the simpler SPI protocol. This PIO program should provide a programmable IO replacement.
+
+.program sd_spi
+.side_set 1
+
+   out pins, 1 side 0 
+   in pins, 1  side 1 
+
+% c-sdk {
+
+#include "rckid/rckid.h"
+
+inline void sd_spi_program_init(PIO pio, uint sm, uint offset, uint misoPin, uint mosiPin, uint clkPin) {
+    pio_gpio_init(pio, misoPin);
+    pio_gpio_init(pio, mosiPin);
+    pio_gpio_init(pio, clkPin);
+    pio_sm_config c = i2s_out16_program_get_default_config(offset);
+    // miso is input
+    pio_sm_set_consecutive_pindirs(pio, sm, misoPin, 1, false);
+    sm_config_set_in_pins(&c, misoPin);
+    // mosi and clk are out
+    pio_sm_set_consecutive_pindirs(pio, sm, mosiPin, 1, true);
+    sm_config_set_out_pins(&c, mosiPin);
+    pio_sm_set_consecutive_pindirs(pio, sm, clkPin, 1, true);
+    sm_config_set_sideset_pins(&c, clkPin);
+
+    // bypass pio input sychronizer for smaller input delay (from the pio example)
+    hw_set_bits(&pio->input_sync_bypass, 1u << misoPin);
+
+    pio_sm_init(pio, sm, offset, &c);
+}
+
+%}

@@ -111,12 +111,7 @@
 
 # TODO
 
-- not sure how I2S could have worked, does not work now
-- headphone detection not working
-- radio does not answer
-
 - button presses don't work because the last state does not change at the end of the tick
-
 
 - radio reset (radio.cpp)
 - sd card access (sd.cpp)
@@ -213,7 +208,7 @@
 - cartridge insertion is too tight (the top part of bottom case) (fixed, check)
 - bottom case needs extra plastic to line up perfectly with the pcb (fixed, check)
 - side buttons are too thin
-
+- pull-up for the headphone detect is too weak, try sth like 40kOhm? 
 
 ## AVR
 
