@@ -4,11 +4,46 @@
 #include "backend_config.h"
 #include "rckid/apps/DataSync.h"
 #include "../backend_internals.h"
+#include "sd_spi.pio.h"
 
 namespace rckid {
 
     namespace {
         uint32_t sdNumBlocks_ = 0;    
+        uint spiSm_;
+        uint spiOffset_;
+
+
+        void sd_spi_write_blocking(uint8_t const * data, uint32_t size) {
+            uint32_t rxlen = size;
+            while (size > 0 && rxlen > 0) {
+                if (size > 0 && !pio_sm_is_tx_fifo_full(pio0, spiSm_)) {
+                    pio_sm_put(pio0, spiSm_, *data++);
+                    --size;
+                }
+                if (rxlen > 0 && !pio_sm_is_rx_fifo_empty(pio0, spiSm_)) {
+                    pio_sm_get(pio0, spiSm_);
+                    --rxlen;
+                }
+                tight_loop_contents();
+            }
+        }
+
+
+        void sd_spi_read_blocking(uint8_t byteToSend, uint8_t * data, uint32_t size) {
+            uint32_t txlen = size;
+            while (size > 0 && txlen > 0) {
+                if (txlen > 0 && !pio_sm_is_tx_fifo_full(pio0, spiSm_)) {
+                    pio_sm_put(pio0, spiSm_, byteToSend);
+                    --txlen;
+                }
+                if (size > 0 && !pio_sm_is_rx_fifo_empty(pio0, spiSm_)) {
+                    *data++ = pio_sm_get(pio0, spiSm_);
+                    --size;
+                }
+                tight_loop_contents();
+            }
+        }
     }; // anonymous namespace
 
 
@@ -20,6 +55,31 @@ namespace rckid {
         [2] http://elm-chan.org/docs/mmc/mmc_e.html#dataxfer
      */
     bool sdInitialize() {
+        LOG(LL_INFO, "SD init");
+        // initialize the PIO for SPI communication with the SD card, use the same pio as the display driver since its base is already set to 16
+        spiSm_ = pio_claim_unused_sm(pio0, true);
+        spiOffset_ = pio_add_program(pio0, & sd_spi_program);
+        sd_spi_program_init(pio0, spiSm_, spiOffset_, RP_PIN_SD_RX, RP_PIN_SD_TX, RP_PIN_SD_SCK);
+        // set to 200kHz for initialization
+        pio_sm_set_clock_speed(pio0, spiSm_, 200000);
+        pio_sm_set_enabled(pio0, spiSm_, true);
+        LOG(LL_INFO, "  spi sm: " << (uint32_t)spiSm_);
+        LOG(LL_INFO, "  spi offset: " << (uint32_t)spiOffset_);
+        LOG(LL_INFO, "  sm enabled: " << pio_sm_is_enabled(pio0, spiSm_));
+        gpio::outputHigh(RP_PIN_SD_CSN);
+        // create the buffer and fill it with 0xff
+        uint8_t buffer[16];
+        memset(buffer, 0xff, sizeof(buffer));
+        // while CS is high, send at least 74 times 0xff
+        sd_spi_write_blocking(buffer, sizeof(buffer));
+        // tell the card to go idle
+        gpio::low(RP_PIN_SD_CSN);
+        uint8_t status = sdSendCommand(CMD0);
+        if (status != SD_IDLE) {
+            LOG(LL_ERROR, "  CMD0 fail, status: " << hex(status));
+            return false;
+        }
+
         return false;
 /*        
         // to initialize, the SPI baudrate must be between 100-400kHz for the initialization
@@ -109,21 +169,18 @@ namespace rckid {
     }
 
     uint8_t sdSendCommand(uint8_t const (&cmd)[6], uint8_t * response, size_t responseSize, unsigned maxDelay) {
-        return 0xff;
-        /*
         //gpio::low(RP_PIN_SD_CSN);
-        spi_write_blocking(RP_SD_SPI, cmd,  6);
+        sd_spi_write_blocking(cmd,  6);
         uint8_t result = SD_BUSY;
         while (result == SD_BUSY && maxDelay-- != 0)
-            spi_read_blocking(RP_SD_SPI, 0xff, reinterpret_cast<uint8_t*>(& result), 1);
+            sd_spi_read_blocking(0xff, reinterpret_cast<uint8_t*>(& result), 1);
         if (responseSize != 0 && response != nullptr)
-            spi_read_blocking(RP_SD_SPI, 0xff, response, responseSize);
+            sd_spi_read_blocking(0xff, response, responseSize);
         // after reading each response, it is important to send extra one byte to allow the SD crd to "recover"
         uint8_t tmp = 0xff;
-        spi_write_blocking(RP_SD_SPI, & tmp, 1);
+        sd_spi_write_blocking(& tmp, 1);
         //gpio::high(RP_PIN_SD_CSN);
         return result;
-        */
     }
 
     // rckid API functions
