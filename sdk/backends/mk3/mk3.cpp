@@ -243,9 +243,6 @@ namespace rckid {
 
     void __not_in_flash_func(irqGPIO_)(uint pin, uint32_t events) {
         switch (pin) {
-            case RP_PIN_AVR_INT:
-                requestAvrStatus();
-                break;
             case RP_PIN_RADIO_INT:
                 Radio::irqHandler();
                 break;
@@ -423,7 +420,6 @@ namespace rckid {
         // initialize the interrupt pins and set the interrupt handlers (enable pull-up as AVR pulls it low or leaves floating)
         gpio_set_irq_callback(irqGPIO_);
         gpio::setAsInputPullUp(RP_PIN_AVR_INT);
-        gpio_set_irq_enabled(RP_PIN_AVR_INT, GPIO_IRQ_EDGE_FALL, true);
         // enable headset detection
         // TODO the external pullup is too weak (100kOhm, enabling pull-up will help)
         gpio::setAsInputPullUp(RP_PIN_HEADSET_DETECT);
@@ -544,6 +540,7 @@ namespace rckid {
     }
 
     void tick() {
+        requestAvrStatus();
         yield();
         // advance local time and check idle countdowns
         uint64_t now = time_us_64();

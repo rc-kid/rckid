@@ -305,7 +305,7 @@ namespace rckid::ui {
                 if (item == nullptr)
                     return true; // nothing to process 
                 if (item->isAction())
-                    return false ; // we could not process the event, it will be processed by our owner
+                    return false; // we could not process the event, it will be processed by our owner
                 historyPush();
                 generator_ = item->generator();
                 ASSERT(generator_ != nullptr);

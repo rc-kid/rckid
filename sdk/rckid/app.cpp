@@ -16,7 +16,7 @@ namespace rckid {
             if (!verifyBudgetAllowance(true))
                 return;
         }
-        if (! HomeMenu::active() && btnPressed(Btn::Home)) {
+        if (! HomeMenu::active() && btnReleased(Btn::Home)) {
             std::optional<ui::Action> a = App::run<HomeMenu>(homeMenuGenerator());
             if (a.has_value())
                 a.value()();
@@ -29,7 +29,7 @@ namespace rckid {
             exit();
         }));
         // if app supports save states, add save & load actions
-        if (supportsSaveState()) {
+        if (supportsSaveState() && fs::isMounted()) {
             menu->add(ui::ActionMenu::Item("Save state", assets::icons_64::bookmark, [this](){
                 // TODO actually select which slot to use, or let the user choose 
                 String saveName = "test";
@@ -62,11 +62,11 @@ namespace rckid {
         focus();
         // now run the app
         while (app_ == this) {
-            tick();
             update();
             displayWaitUpdateDone();
             draw();
             ++redraws_;
+            tick();
         }
         // wait for the last display update to finish so that the display routine does not interfere with the app unloading
         displayWaitUpdateDone();

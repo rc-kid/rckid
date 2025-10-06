@@ -51,6 +51,12 @@ namespace rckid {
             }
         }
 
+        ~FMRadio() override {
+            if (radio_ != nullptr) {
+                radio_->enable(false);
+            }
+        }
+
     protected:
 
         void update() override {
@@ -91,12 +97,6 @@ namespace rckid {
         void draw() override {
             rds_.setText(STR(hex(radio_->status_.rawResponse()) << " ")); //  << gpio::read(RP_PIN_RADIO_INT)));
             ui::Form<void>::draw();
-        }
-
-        void blur() {
-            if (radio_ != nullptr) {
-                radio_->enable(false);
-            }
         }
 
     protected:

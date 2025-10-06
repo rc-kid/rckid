@@ -38,6 +38,8 @@ namespace rckid {
         /** Saves the app's state under the given name. Only works if the app supports the feature.
          */
         void saveState(String const & name) {
+            if (!fs::isMounted())
+                return;
             LOG(LL_INFO, "Saving app state " << name);
             String folder = fs::join(homeFolder(), "saves");
             fs::createFolders(folder);
