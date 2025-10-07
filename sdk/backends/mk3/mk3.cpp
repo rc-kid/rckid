@@ -182,7 +182,7 @@ namespace rckid {
         i2c::getTransactionResponse(reinterpret_cast<uint8_t*>(&status), sizeof(AVRState::Status));
         // archive the old status
         io::lastStatus_ = io::avrState_.status;
-        // copy the new one, we take the buttons (first 2 bytes as is) and or the interrupts to make sure none is ever lost, the process them immediately
+        // copy the new one, we take the buttons as is and or the interrupts to make sure none is ever lost, then process them immediately
         io::avrState_.status.updateWith(status);
         // if second tick interrupt is on, we must advance our timekeeping. Note that it is remotely possible that we will get an extra second tick interrupt when synchronizing the clock (we'll transmit the updated value, as well as the second tick at the same time) so that time on RP can be one second off at worst. 
         if (status.secondInt()) {

@@ -111,7 +111,7 @@
 
 # TODO
 
-- button presses don't work because the last state does not change at the end of the tick
+- add rapid fire to buttons (N ticks will reset the last state button downs)
 
 - radio reset (radio.cpp)
 - sd card access (sd.cpp)

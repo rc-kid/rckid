@@ -55,6 +55,8 @@ namespace rckid {
     }
 
 
+    extern volatile bool avrStatusRequest_;
+
     void App::loop() {
         // wait for the previous display update to finish to avoid interfering with the old app unloading
         displayWaitUpdateDone();
@@ -63,10 +65,11 @@ namespace rckid {
         // now run the app
         while (app_ == this) {
             update();
+            // ticks happen right after update as they request current state from the AVR and this minimizes the likelihood of the arrival of new state during the next update cycle
+            tick();
             displayWaitUpdateDone();
             draw();
             ++redraws_;
-            tick();
         }
         // wait for the last display update to finish so that the display routine does not interfere with the app unloading
         displayWaitUpdateDone();
