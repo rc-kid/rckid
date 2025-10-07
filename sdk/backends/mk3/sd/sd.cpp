@@ -13,16 +13,20 @@ namespace rckid {
         uint spiSm_;
         uint spiOffset_;
 
-
         void sd_spi_write_blocking(uint8_t const * data, uint32_t size) {
+            // this is from the Pico SDK where the io_rw_8 replicates the byte to all 4 bytes from the 32bit FIFO
+            // TODO not sure how the read can work
+            // TODO would this work with DMA? 
+            io_rw_8 *txfifo = (io_rw_8 *) &RCKID_SD_PIO->txf[spiSm_];
+            io_rw_8 *rxfifo = (io_rw_8 *) &RCKID_SD_PIO->rxf[spiSm_];            
             uint32_t rxlen = size;
             while (size > 0 && rxlen > 0) {
-                if (size > 0 && !pio_sm_is_tx_fifo_full(pio0, spiSm_)) {
-                    pio_sm_put(pio0, spiSm_, *data++);
+                if (size > 0 && !pio_sm_is_tx_fifo_full(RCKID_SD_PIO, spiSm_)) {
+                    *txfifo = *data++;
                     --size;
                 }
-                if (rxlen > 0 && !pio_sm_is_rx_fifo_empty(pio0, spiSm_)) {
-                    pio_sm_get(pio0, spiSm_);
+                if (rxlen > 0 && !pio_sm_is_rx_fifo_empty(RCKID_SD_PIO, spiSm_)) {
+                    (void) *rxfifo;
                     --rxlen;
                 }
                 tight_loop_contents();
@@ -31,14 +35,16 @@ namespace rckid {
 
 
         void sd_spi_read_blocking(uint8_t byteToSend, uint8_t * data, uint32_t size) {
+            io_rw_8 *txfifo = (io_rw_8 *) &RCKID_SD_PIO->txf[spiSm_];
+            io_rw_8 *rxfifo = (io_rw_8 *) &RCKID_SD_PIO->rxf[spiSm_];            
             uint32_t txlen = size;
             while (size > 0 && txlen > 0) {
-                if (txlen > 0 && !pio_sm_is_tx_fifo_full(pio0, spiSm_)) {
-                    pio_sm_put(pio0, spiSm_, byteToSend);
+                if (txlen > 0 && !pio_sm_is_tx_fifo_full(RCKID_SD_PIO, spiSm_)) {
+                    *txfifo = byteToSend;
                     --txlen;
                 }
-                if (size > 0 && !pio_sm_is_rx_fifo_empty(pio0, spiSm_)) {
-                    *data++ = pio_sm_get(pio0, spiSm_);
+                if (size > 0 && !pio_sm_is_rx_fifo_empty(RCKID_SD_PIO, spiSm_)) {
+                    *data++ = *rxfifo;
                     --size;
                 }
                 tight_loop_contents();
@@ -55,32 +61,26 @@ namespace rckid {
         [2] http://elm-chan.org/docs/mmc/mmc_e.html#dataxfer
      */
     bool sdInitialize() {
+        return false;
         LOG(LL_INFO, "SD init");
         // initialize the PIO for SPI communication with the SD card, use the same pio as the display driver since its base is already set to 16
-        spiSm_ = pio_claim_unused_sm(pio0, true);
-        spiOffset_ = pio_add_program(pio0, & sd_spi_program);
-        sd_spi_program_init(pio0, spiSm_, spiOffset_, RP_PIN_SD_RX, RP_PIN_SD_TX, RP_PIN_SD_SCK);
+        spiSm_ = pio_claim_unused_sm(RCKID_SD_PIO, true);
+        spiOffset_ = pio_add_program(RCKID_SD_PIO, & sd_spi_program);
+        sd_spi_program_init(RCKID_SD_PIO, spiSm_, spiOffset_, RP_PIN_SD_RX, RP_PIN_SD_TX, RP_PIN_SD_SCK);
+        //sd_spi_program_init(RCKID_SD_PIO, spiSm_, spiOffset_, 19, 18, 17);
         // set to 200kHz for initialization
-        pio_sm_set_clock_speed(pio0, spiSm_, 200000);
-        pio_sm_set_enabled(pio0, spiSm_, true);
+        pio_sm_set_clock_speed(RCKID_SD_PIO, spiSm_, RCKID_SD_SPI_INIT_SPEED * 4);
+        pio_sm_set_enabled(RCKID_SD_PIO, spiSm_, true);
         LOG(LL_INFO, "  spi sm: " << (uint32_t)spiSm_);
         LOG(LL_INFO, "  spi offset: " << (uint32_t)spiOffset_);
-        LOG(LL_INFO, "  sm enabled: " << pio_sm_is_enabled(pio0, spiSm_));
+        LOG(LL_INFO, "  sm enabled: " << pio_sm_is_enabled(RCKID_SD_PIO, spiSm_));
         gpio::outputHigh(RP_PIN_SD_CSN);
         // create the buffer and fill it with 0xff
         uint8_t buffer[16];
-        memset(buffer, 0xff, sizeof(buffer));
+        memset(buffer, 0xf0, sizeof(buffer));
         // while CS is high, send at least 74 times 0xff
         sd_spi_write_blocking(buffer, sizeof(buffer));
-        // tell the card to go idle
-        gpio::low(RP_PIN_SD_CSN);
-        uint8_t status = sdSendCommand(CMD0);
-        if (status != SD_IDLE) {
-            LOG(LL_ERROR, "  CMD0 fail, status: " << hex(status));
-            return false;
-        }
 
-        return false;
 /*        
         // to initialize, the SPI baudrate must be between 100-400kHz for the initialization
         spi_init(RP_SD_SPI, 200000);
@@ -95,6 +95,7 @@ namespace rckid {
         memset(buffer, 0xff, sizeof(buffer));
         // while CS is high, send at least 74 times 0xff
         spi_write_blocking(RP_SD_SPI, buffer, sizeof(buffer));
+        */
         // tell the card to go idle
         gpio::low(RP_PIN_SD_CSN);
         uint8_t status = sdSendCommand(CMD0);
@@ -150,7 +151,8 @@ namespace rckid {
             return false;
         }
         // increase speed to 20MHz
-        spi_init(RP_SD_SPI, 20000000);
+        //spi_init(RP_SD_SPI, 20000000);
+        pio_sm_set_clock_speed(RCKID_SD_PIO, spiSm_, RCKID_SD_SPI_SPEED * 4);
         // if the card is not SDHC, set block length to 512 bytes
         if (((buffer[0] & 64) == 0) && sdSendCommand(CMD16) != SD_NO_ERROR) {
             LOG(LL_ERROR, "SD card did not respond to CMD16, status: " << hex(status));
@@ -165,7 +167,6 @@ namespace rckid {
         sdNumBlocks_ = ((buffer[8] << 16) + (buffer[9] << 8) + buffer[10] + 1) * 1024;
         LOG(LL_INFO, "SD card initialized, blocks: " << sdNumBlocks_);
         return true;
-    */
     }
 
     uint8_t sdSendCommand(uint8_t const (&cmd)[6], uint8_t * response, size_t responseSize, unsigned maxDelay) {
@@ -190,8 +191,6 @@ namespace rckid {
     }
 
     bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {
-        return false;
-    /*
         while (numBlocks-- != 0) {
             //gpio::low(RP_PIN_SD_CSN);
             uint8_t cmd[] = { 
@@ -211,25 +210,22 @@ namespace rckid {
             // wait for the block start
             uint8_t res = 0xff;
             while (res != 0xfe)
-                spi_read_blocking(RP_SD_SPI, 0xff, &res, 1);
+                sd_spi_read_blocking(0xff, &res, 1);
             // read the block
-            spi_read_blocking(RP_SD_SPI, 0xff, buffer, 512);
+            sd_spi_read_blocking(0xff, buffer, 512);
             // and read the CRC
             uint16_t crc;
-            spi_read_blocking(RP_SD_SPI, 0xff, reinterpret_cast<uint8_t*>(&crc), 2);
+            sd_spi_read_blocking(0xff, reinterpret_cast<uint8_t*>(&crc), 2);
             res = 0xff;
-            spi_write_blocking(RP_SD_SPI, & res, 1);
+            sd_spi_write_blocking(& res, 1);
             // verify the CRC
             ++start;
             buffer += 512;
         }
         return true;
-        */
     }
 
     bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks) {
-        return false;
-    /*
         while (numBlocks-- != 0) {
             uint8_t cmd[] = { 
                 0x58,
@@ -243,18 +239,17 @@ namespace rckid {
                 return false;
             cmd[0] = 0xff;
             cmd[1] = 0xfe; // start of data block
-            spi_write_blocking(RP_SD_SPI, cmd, 2); // 1 byte wait + start data block
-            spi_write_blocking(RP_SD_SPI, buffer, 512);
-            spi_write_blocking(RP_SD_SPI, cmd, 2); // CRC
-            spi_read_blocking(RP_SD_SPI, 0xff, cmd, 1); // get the data response
+            sd_spi_write_blocking(cmd, 2); // 1 byte wait + start data block
+            sd_spi_write_blocking(buffer, 512);
+            sd_spi_write_blocking(cmd, 2); // CRC
+            sd_spi_read_blocking(0xff, cmd, 1); // get the data response
             // wait for busy
             while (cmd[0] != 0xff)
-                spi_read_blocking(RP_SD_SPI, 0xff, cmd, 1);
+                sd_spi_read_blocking(0xff, cmd, 1);
             ++start;
             buffer += 512;
         }
         return true;
-        */
     }
 
 } // namespace rckid
