@@ -187,11 +187,11 @@ namespace rckid {
         // make the card go to SPI mode 
         sdEnterSPIMode();
 
-        // the card should now be in SPI mode, tell it to go idle
+        // the card should now be in SPI mode, tell it to go idle via CMD0, we'll repeat this 10 times in case the card takes long time (maybe not necessary)
         uint8_t buffer[16];
         gpio::low(RP_PIN_SD_CSN);
         uint8_t status = SD_IDLE;
-        for (uint32_t i = 0; i < 20; ++i) {
+        for (uint32_t i = 0; i < 10; ++i) {
             status = sdSendCommand(CMD0);
             if (status != 0xff)
                 break;
@@ -201,18 +201,68 @@ namespace rckid {
             LOG(LL_ERROR, "SD card did not respond to CMD0, status: " << hex(status));
             return false;
         }
-        // send interface condition to verify the communication. this is not supported by v1 cards so if we get illegal command continue with the initialization process
+        LOG(LL_INFO, "  idle (CMD0)");
+        // determine if the card is v2 or v1 by sending CMD8 with the pattern 0x1aa. As v1 cards only support up to 2GB, we do not really care about them now so illegal command is failed initiliazation. We can also verify the communication is ok, by checking the pattern (0xaa) is echoed back
         status = sdSendCommand(CMD8, buffer, 4);
-        if (status != SD_ILLEGAL_COMMAND) {
-            if (status != SD_IDLE) {
-                LOG(LL_ERROR, "SD card did not respond to CMD8, status: " << hex(status));
-                return false;
-            }
-            if (buffer[3] != 0xaa) {
-                LOG(LL_ERROR, "SD card CMD8 response[3] error: " << hex(buffer[3]));
-                return false;
-            }
+        if (status != SD_IDLE) {
+            LOG(LL_ERROR, "  v1 not supported, or invalid status: "  << hex(status));
+            return false;
         }
+        if (buffer[3] != 0xaa) {
+            LOG(LL_ERROR, "  echo mismatch: " << hex(buffer[3]));
+            return false;
+        }
+        // now repeatedly send ACMD41 (which is CMD55 followed by CMD41) until the card goes to ready state (not idle anymore)
+        for (uint32_t i = 0; i < 100; ++i) {
+            status = sdSendCommand(CMD55);
+            if (status != SD_IDLE) {
+                LOG(LL_ERROR, "  cmd55 error: " << hex(status));
+                return false;
+            }
+            status = sdSendCommand(ACMD41);
+            if (status == SD_NO_ERROR)
+                break;
+            yield();
+            cpu::delayMs(10);
+        }
+        if (status != SD_NO_ERROR) {
+            LOG(LL_ERROR, "  power up timeout: " << hex(status));
+            return false;
+        }
+        // read the OCR register, this tells us whether the card supports 3.3V (they all do) and whether it is standard capacity (below 2GB, byte addressable, or SDHC/SDXC which are both block addressable). As we have previously discarded cards below 2GB anyways, we can safely only support block addressable cards
+        status = sdSendCommand(CMD58, buffer, 4);
+        if (status != SD_NO_ERROR) {
+            LOG(LL_ERROR, "  ocr error: " << hex(status));
+            return false;
+        }
+        if (buffer[0] & 0x40 != 0x40) {
+            LOG(LL_ERROR, "  byte addressable not supported");
+        }
+        // now the card is powered up and we can increase the speed
+        pio_sm_set_clock_speed(RCKID_SD_PIO, spiSm_, RCKID_SD_SPI_SPEED * RCKID_SD_SPI_SPEED_MULTIPLIER);
+        // and determine the card capacity by reading the CSD register via CMD9
+        status = sdSendCommand(CMD9, buffer, 16);
+        if (status != SD_NO_ERROR) {
+            LOG(LL_ERROR, "  csd error: " << hex(status));
+            return false;
+        }
+        for (uint32_t i = 0; i < 16; ++i)
+            LOG(LL_INFO, "    csd[" << i << "]: " << hex(buffer[i]));
+
+        // get number of blocks from the CS card's capacity. For SDXC and SDHC cards, this is (CSIZE + 1) * 512KB, so we divide the CSIZE + 1 by 1024 to get size in 512 byte blocks
+        sdNumBlocks_ = ((buffer[8] << 16) + (buffer[9] << 8) + buffer[10] + 1) * 1024;
+        LOG(LL_INFO, "  SD blocks: " << sdNumBlocks_);
+        return true;
+
+
+
+
+
+
+
+
+
+        
         // read the OCR register and check the card supports the 3v3 voltage range. This is likely not necessary as every card should be 3v3 compatible, but just to be sure
         status = sdSendCommand(CMD58, buffer, 4);
         if (status != SD_IDLE) {
@@ -268,7 +318,7 @@ namespace rckid {
     }
 
     uint8_t sdSendCommand(uint8_t const (&cmd)[6], uint8_t * response, size_t responseSize, unsigned maxDelay) {
-        //gpio::low(RP_PIN_SD_CSN);
+        gpio::low(RP_PIN_SD_CSN);
         sd_spi_write_blocking(cmd,  6);
         uint8_t result = SD_BUSY;
         while (result == SD_BUSY && maxDelay-- != 0)
@@ -278,7 +328,8 @@ namespace rckid {
         // after reading each response, it is important to send extra one byte to allow the SD crd to "recover"
         uint8_t tmp = 0xff;
         sd_spi_write_blocking(& tmp, 1);
-        //gpio::high(RP_PIN_SD_CSN);
+        gpio::high(RP_PIN_SD_CSN);
+        cpu::delayUs(50);
         return result;
     }
 
