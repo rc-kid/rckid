@@ -396,6 +396,7 @@ namespace rckid {
 
         // initialize the SD card
         sdInitialize();
+        sdInitializeCard();
 
         // initalize the ui style
         ui::Style::load();

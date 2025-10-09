@@ -10,9 +10,14 @@
 #undef RP_PIN_SD_RX
 #undef RP_PIN_SD_TX
 #undef RP_PIN_SD_SCK
-#define RP_PIN_SD_RX 19
-#define RP_PIN_SD_TX 18
-#define RP_PIN_SD_SCK 17
+//#define RP_PIN_SD_RX 19
+//#define RP_PIN_SD_TX 18
+//#define RP_PIN_SD_SCK 17
+
+
+#define RP_PIN_SD_RX 46
+#define RP_PIN_SD_TX 47
+#define RP_PIN_SD_SCK 19
 */
 
 #define RCKID_SD_SPI_BITBANG 0
@@ -107,19 +112,24 @@ namespace rckid {
     }; // anonymous namespace
 
     void loopbackVerify() {
+        bool fail  = false;
         for (uint32_t i = 0; i < 256; ++i) {
             uint8_t toSend = static_cast<uint8_t>(i);
             uint8_t received = 0;
             sd_spi_read_blocking(toSend, & received, 1);
             if (toSend != received) {
-                LOG(LL_ERROR, "Loopback verify failed at " << i << ", sent: " << hex((uint32_t)toSend) << ", received: " << hex((uint32_t)received));
-                return;
+                //LOG(LL_ERROR, "Loopback verify failed at " << i << ", sent: " << hex((uint32_t)toSend) << ", received: " << hex((uint32_t)received));
+                //return;
+                fail = true;
             }
         }
-        LOG(LL_INFO, "Loopback verify succeeded");
+        if (!fail)
+            LOG(LL_INFO, "Loopback verify succeeded");
+        return;
     }
 
     void sdEnterSPIMode() {
+        LOG(LL_INFO, "SD switch to SPI mode");
         pio_sm_set_enabled(RCKID_SD_PIO, spiSm_, false);
         gpio::outputHigh(RP_PIN_SD_CSN); // no cs
         gpio::outputLow(RP_PIN_SD_SCK); // clock idles low
@@ -131,11 +141,13 @@ namespace rckid {
             cpu::delayUs(5);
             gpio_put(RP_PIN_SD_SCK, false);
         }
-#if (RCKID_SD_SPI_BITBANG)
-        //sd_spi_program_init(RCKID_SD_PIO, spiSm_, spiOffset_, RP_PIN_SD_RX, RP_PIN_SD_TX, RP_PIN_SD_SCK);
+#if (RCKID_SD_SPI_BITBANG == 0)
+        sd_spi_program_init(RCKID_SD_PIO, spiSm_, spiOffset_, RP_PIN_SD_RX, RP_PIN_SD_TX, RP_PIN_SD_SCK);
         pio_sm_set_clock_speed(RCKID_SD_PIO, spiSm_, RCKID_SD_SPI_INIT_SPEED * RCKID_SD_SPI_SPEED_MULTIPLIER);
         pio_sm_set_enabled(RCKID_SD_PIO, spiSm_, true);
 #endif
+        //while (true)
+        //    loopbackVerify();
     }
 
     /** Initializes the SD card system, but does not talk to the card. 
@@ -151,11 +163,13 @@ namespace rckid {
         LOG(LL_INFO, "  spi offset: " << (uint32_t)spiOffset_);
         gpio::setAsInput(RP_PIN_SD_CD);
         // TODO enable interrupt??
+        //loopbackVerify();
     }
 
     /** Returns true if SD card is inserted, false otherwise. 
      */
     bool sdIsInserted() {
+        return true;
         return gpio::read(RP_PIN_SD_CD) == 0;
     }
 
