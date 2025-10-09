@@ -142,7 +142,7 @@ namespace rckid {
      
         Simply loads the PIO and initializes the card detect pin.
      */
-    bool sdInitialize() {
+    void sdInitialize() {
         LOG(LL_INFO, "SD init");
         // initialize the PIO for SPI communication with the SD card, use the same pio as the display driver since its base is already set to 16
         spiSm_ = pio_claim_unused_sm(RCKID_SD_PIO, true);

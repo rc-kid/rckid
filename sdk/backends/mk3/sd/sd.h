@@ -42,7 +42,7 @@ namespace rckid {
     constexpr uint8_t SD_VALID = 128;
     constexpr uint8_t SD_BUSY = 255;
 
-    bool sdInitialize();
+    void sdInitialize();
 
     uint8_t sdSendCommand(uint8_t const (&cmd)[6], uint8_t * response = nullptr, size_t responseSize = 0, unsigned maxDelay = 128);
 

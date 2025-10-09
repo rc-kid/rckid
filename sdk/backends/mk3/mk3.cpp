@@ -132,8 +132,9 @@ namespace rckid {
     namespace time {
         uint64_t nextSecond_ = 0;
         bool idle_ = true;
-        uint32_t idleTimeout_ = RCKID_IDLE_TIMETOUT; 
-        uint32_t idleTimeoutKeepalive_ = RCKID_IDLE_TIMETOUT_KEEPALIVE;
+        uint32_t idleTimeout_ = RCKID_IDLE_TIMEOUT; 
+        uint32_t idleTimeoutKeepalive_ = RCKID_IDLE_TIMEOUT_KEEPALIVE;
+        uint32_t numTicks_ = 0;
     }
 
     // TODO move this to the audio codec
@@ -182,6 +183,8 @@ namespace rckid {
         i2c::getTransactionResponse(reinterpret_cast<uint8_t*>(&status), sizeof(AVRState::Status));
         // archive the old status
         io::lastStatus_ = io::avrState_.status;
+        if (time::numTicks_ % RCKID_DEFAULT_RAPIDFIRE_TICKS == 0)
+            io::lastStatus_.clearButtons();
         // copy the new one, we take the buttons as is and or the interrupts to make sure none is ever lost, then process them immediately
         io::avrState_.status.updateWith(status);
         // if second tick interrupt is on, we must advance our timekeeping. Note that it is remotely possible that we will get an extra second tick interrupt when synchronizing the clock (we'll transmit the updated value, as well as the second tick at the same time) so that time on RP can be one second off at worst. 
@@ -540,6 +543,7 @@ namespace rckid {
     }
 
     void tick() {
+        ++time::numTicks_;
         requestAvrStatus();
         yield();
         // advance local time and check idle countdowns
@@ -554,8 +558,8 @@ namespace rckid {
                     i2c::sendAvrCommand(cmd::PowerOff{});
             } else {
                 time::idle_ = true;
-                time::idleTimeout_ = RCKID_IDLE_TIMETOUT;
-                time::idleTimeoutKeepalive_ = RCKID_IDLE_TIMETOUT_KEEPALIVE;
+                time::idleTimeout_ = RCKID_IDLE_TIMEOUT;
+                time::idleTimeoutKeepalive_ = RCKID_IDLE_TIMEOUT_KEEPALIVE;
             }
             App::onSecondTick();
         }
@@ -569,7 +573,7 @@ namespace rckid {
 
     void keepAlive() {
         StackProtection::check();
-        time::idleTimeout_ = RCKID_IDLE_TIMETOUT;
+        time::idleTimeout_ = RCKID_IDLE_TIMEOUT;
     }
 
     uint32_t uptimeUs() {

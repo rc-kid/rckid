@@ -63,6 +63,13 @@ namespace rckid {
              */
             void clearInterrupts() { c_ = 0; }
 
+            /** Clears the pressed state of all buttons. This method is useful for rapidfire where every interval, we reset the button state in last state giving us btnPressed again.
+             */
+            void clearButtons() {
+                a_ = 0;
+                b_ &= ~(BTN_HOME | BTN_VOLUMEUP | BTN_VOLUMEDOWN);
+            }
+
         private:
 
             void setPwrInt() { c_ |= PWR_INT; }

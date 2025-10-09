@@ -10,9 +10,17 @@
 .fifo tx
 .out 16 left
 .wrap_target
-    pull             side 1 [2]
-    mov osr, ::osr   side 0
-    out pins, 16     side 0  
+    out pins, 16  side 0
+    nop           side 1
+
+    ;pull             side 0
+    ;mov osr, ::osr   side 0
+    ;out pins, 16     side 0
+    ;nop              side 1 [3]  
+
+    ;pull             side 1 [2]
+    ;mov osr, ::osr   side 0
+    ;out pins, 16     side 0  
 
 % c-sdk {  
 
@@ -44,9 +52,9 @@ inline void ST7789_rgb16_program_init(PIO pio, uint sm, uint offset, uint wrPin,
     sm_config_set_out_pins(&c, dataPin, 16);
     //sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
     // enable autopull
-    //sm_config_set_out_shift(&c, false, true, 16);
+    sm_config_set_out_shift(&c, false, true, 16);
     pio_sm_init(pio, sm, offset, &c);
-    pio_sm_set_clock_speed(pio, sm, RCKID_ST7789_SPEED * 4);
+    pio_sm_set_clock_speed(pio, sm, RCKID_ST7789_SPEED * 2);
 }
 
 %}

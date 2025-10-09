@@ -14,13 +14,13 @@
 
 /** Idle timer in seconds, after which the device powers off. 
  */
-//#define RCKID_IDLE_TIMETOUT 300
-#define RCKID_IDLE_TIMETOUT 3600
+//#define RCKID_IDLE_TIMEOUT 300
+#define RCKID_IDLE_TIMEOUT 3600
 
 /** Idle timeout fallback that is not affected by the keepalive function call. 
  */
-//#define RCKID_IDLE_TIMETOUT_KEEPALIVE 1800
-#define RCKID_IDLE_TIMETOUT_KEEPALIVE 3600
+//#define RCKID_IDLE_TIMEOUT_KEEPALIVE 1800
+#define RCKID_IDLE_TIMEOUT_KEEPALIVE 3600
 
 /** Frames per long press of the home button (at 60 fps). The home button long press is automatically detected by the AVR and will either turn the device on when powered off, or will force it to shutdown mode if powered on. 
  */
@@ -29,6 +29,10 @@
 /** Default brightness of the RGB LEDs under buttons. Can be anything from 0 (off) to 255 (maximum brightess). High settings affect battery consumption quite a lot and are often not necessary.
  */
 #define RCKID_RGB_LED_DEFAULT_BRIGHTNESS 32
+
+/** Have the rapid fire trigger roughly every 250ms. 
+ */
+#define RCKID_DEFAULT_RAPIDFIRE_TICKS 15
 
 /** Default values for the rumbler effects. 
  
