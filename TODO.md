@@ -111,7 +111,6 @@
 
 # TODO
 
-- data wee bit distorted when sent to the display (last rows are displayed first), interestingly, this affects both framebuffer *and* tiles... has to do with polarity of the clock in display driver, simple fix introduces "jitter", needs more checking - perhaps start at offset for more stable stuff? 
 - the rapid fire as is is kind of working, but maybe need per buttom settings, etc. 
 
 - radio reset (radio.cpp)
