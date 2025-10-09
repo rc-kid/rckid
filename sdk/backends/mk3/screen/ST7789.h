@@ -239,7 +239,7 @@ namespace rckid {
         static void initializePinsBitBang();
 
         static void beginCommand(uint8_t cmd) {
-            ASSERT(!pio_sm_is_enabled(pio_, sm_) && "Commands are bitbanged so the pins can't belong to the pio");
+            ASSERT(!pio_sm_is_enabled(RCKID_ST7789_PIO, sm_) && "Commands are bitbanged so the pins can't belong to the pio");
             gpio_put(RP_PIN_DISP_CSX, false);
             gpio_put(RP_PIN_DISP_DCX, false);
             // RP_PIN_DISP_WRX is expected to be low 
@@ -347,7 +347,6 @@ namespace rckid {
         }
 
         // PIO settings including the DMA used for the display and the addresses for the pio drivers for normal and double modes.
-        static inline PIO pio_;
         static inline uint sm_;
         static inline uint offsetSingle_;
         static inline uint offsetDouble_;

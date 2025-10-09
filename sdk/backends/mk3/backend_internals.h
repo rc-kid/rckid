@@ -16,6 +16,7 @@
 /** Speed of the communication with ST7789 display when in PIO mode (for fast display data transfers). Defaults to 15MHz which is just within the display datasheet's capabilities.
  */
 #define RCKID_ST7789_SPEED 15000000
+#define RCKID_ST7789_PIO pio0
 
 
 #define RCKID_SERIAL_SPEED 115200

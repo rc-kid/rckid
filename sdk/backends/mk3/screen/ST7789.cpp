@@ -9,21 +9,20 @@ namespace rckid {
 
     void ST7789::initialize() {
         // load and initialize the PIO programs for single and double precission
-        pio_ = pio0;
-        pio_set_gpio_base(pio_, 16);
-        sm_ = pio_claim_unused_sm(pio_, true);
+        pio_set_gpio_base(RCKID_ST7789_PIO, 16);
+        sm_ = pio_claim_unused_sm(RCKID_ST7789_PIO, true);
         LOG(LL_INFO, "SM: " << (uint32_t)sm_);
-        offsetSingle_ = pio_add_program(pio_, & ST7789_rgb16_program);
+        offsetSingle_ = pio_add_program(RCKID_ST7789_PIO, & ST7789_rgb16_program);
         LOG(LL_INFO, "Offset single: " << (uint32_t)offsetSingle_);
-        //offsetDouble_ = pio_add_program(pio_, & ST7789_rgb_double_program);
+        //offsetDouble_ = pio_add_programRCKID_ST7789_PIO, & ST7789_rgb_double_program);
         // initialize the DMA channel and set up interrupts
         dma_ = dma_claim_unused_channel(true);
         LOG(LL_INFO, "DMA: " << (uint32_t)dma_);
         dmaConf_ = dma_channel_get_default_config(dma_); // create default channel config, write does not increment, read does increment, 32bits size
         channel_config_set_transfer_data_size(& dmaConf_, DMA_SIZE_16); // transfer 16 bytes
-        channel_config_set_dreq(& dmaConf_, pio_get_dreq(pio_, sm_, true)); // tell our PIO
+        channel_config_set_dreq(& dmaConf_, pio_get_dreq(RCKID_ST7789_PIO, sm_, true)); // tell our PIO
         channel_config_set_read_increment(& dmaConf_, true);
-        dma_channel_configure(dma_, & dmaConf_, &pio_->txf[sm_], nullptr, 0, false); // start
+        dma_channel_configure(dma_, & dmaConf_, &RCKID_ST7789_PIO->txf[sm_], nullptr, 0, false); // start
 
         // enable IRQ0 on the DMA channel
         dma_channel_set_irq0_enabled(dma_, true);
@@ -36,7 +35,7 @@ namespace rckid {
     void ST7789::reset() {
         // reset updating - forcefully since we are resetting the display anyways
         dma_channel_abort(dma_);
-        pio_sm_set_enabled(pio_, sm_, false);
+        pio_sm_set_enabled(RCKID_ST7789_PIO, sm_, false);
         updating_ = 0;
 
         gpio_init(RP_PIN_DISP_TE);
@@ -151,11 +150,11 @@ namespace rckid {
     }
 
     void ST7789::enterCommandMode() {
-        if (pio_sm_is_enabled(pio_, sm_)) {
+        if (pio_sm_is_enabled(RCKID_ST7789_PIO, sm_)) {
             // let the last display update finish (blocking)
             waitUpdateDone();  
             cb_ = nullptr; // to be sure
-            pio_sm_set_enabled(pio_, sm_, false);
+            pio_sm_set_enabled(RCKID_ST7789_PIO, sm_, false);
             end(); // end the RAMWR command
             // mark pins at bitbanged
             initializePinsBitBang();
@@ -163,26 +162,26 @@ namespace rckid {
     }
 
     void ST7789::enterUpdateMode() {
-        if (!pio_sm_is_enabled(pio_, sm_)) {
+        if (!pio_sm_is_enabled(RCKID_ST7789_PIO, sm_)) {
             beginCommand(RAMWR);
             gpio_put(RP_PIN_DISP_DCX, true);
             // initialize the corresponding PIO program
             switch (mode_) {
                 case MODE_FULL_NATIVE:
                 case MODE_FULL_NATURAL:
-                    ST7789_rgb16_program_init(pio_, sm_, offsetSingle_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB15);
+                    ST7789_rgb16_program_init(RCKID_ST7789_PIO, sm_, offsetSingle_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB15);
                     break;
                 /*
                 case MODE_HALF_NATIVE:
                 case MODE_HALF_NATURAL:
-                    ST7789_rgb_double_program_init(pio_, sm_, offsetDouble_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
+                    ST7789_rgb_double_program_initRCKID_ST7789_PIO, sm_, offsetDouble_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
                     break;
                 */
                 default:
                     UNREACHABLE;
             }
             // and start the pio
-            pio_sm_set_enabled(pio_, sm_, true);
+            pio_sm_set_enabled(RCKID_ST7789_PIO, sm_, true);
         }
     }
 

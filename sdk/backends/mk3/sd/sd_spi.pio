@@ -1,20 +1,57 @@
 ; SD Card SPI driver
 ; 
 ; For future compatibility the SD card is connected so that the pins correspond to what is required for the SDIO mode controller via the PIO. But this means that we can't use the hardware SPI for the simpler SPI protocol. This PIO program should provide a programmable IO replacement.
+; 
+; The SD card uses SPI mode 0, (CPHA = 0, CPOL = 0), which means that 
 
 .program sd_spi
 .side_set 1
-
-   out pins, 1 side 0
-   nop         side 1 
-   in pins, 1  side 1
-   nop         side 0 
+   
+   nop         side 0
+   out pins, 1 side 0; shift when clock goes down (or is down)
+   nop         side 1
+   in pins, 1  side 1; latch when clock is up
 
 % c-sdk {
 
 #include "rckid/rckid.h"
 
+#define RCKID_SD_SPI_SPEED_MULTIPLIER 4
+
 inline void sd_spi_program_init(PIO pio, uint sm, uint offset, uint misoPin, uint mosiPin, uint clkPin) {
+
+
+    pio_sm_config c = sd_spi_program_get_default_config(offset);
+
+    sm_config_set_out_pins(&c, mosiPin, 1);
+    sm_config_set_in_pins(&c, misoPin);
+    sm_config_set_sideset_pins(&c, clkPin);
+
+    sm_config_set_out_shift(&c, false, true, 8);
+    sm_config_set_in_shift(&c, false, true, 8);
+
+    // MOSI, SCK output are low, MISO is input
+    pio_sm_set_pins_with_mask64(pio, sm, 0, (1ul << clkPin) | (1ul << mosiPin));
+    pio_sm_set_pindirs_with_mask64(pio, sm, (1ul << clkPin) | (1ul << mosiPin), (1ul << clkPin) | (1ul << mosiPin) | (1ul << misoPin));
+    pio_gpio_init(pio, mosiPin);
+    pio_gpio_init(pio, misoPin);
+    pio_gpio_init(pio, clkPin);
+
+    // The pin muxes can be configured to invert the output (among other things
+    // and this is a cheesy way to get CPOL=1
+    //gpio_set_outover(pin_sck, cpol ? GPIO_OVERRIDE_INVERT : GPIO_OVERRIDE_NORMAL);
+    // SPI is synchronous, so bypass input synchroniser to reduce input delay.
+    //hw_set_bits(&pio->input_sync_bypass, 1u << (misoPin - 16));
+
+    pio_sm_init(pio, sm, offset, &c);
+    //pio_sm_set_enabled(pio, sm, true);
+
+
+
+
+
+
+    /*
 
     pio_sm_config c = sd_spi_program_get_default_config(offset);
 
@@ -35,9 +72,10 @@ inline void sd_spi_program_init(PIO pio, uint sm, uint offset, uint misoPin, uin
 
 
     // bypass pio input sychronizer for smaller input delay (from the pio example)
-    hw_set_bits(&pio->input_sync_bypass, 1u << misoPin);
+    hw_set_bits(&pio->input_sync_bypass, 1ul << misoPin);
 
     pio_sm_init(pio, sm, offset, &c);
+    */
 }
 
 %}
