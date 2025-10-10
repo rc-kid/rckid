@@ -114,7 +114,6 @@
 - the rapid fire as is is kind of working, but maybe need per buttom settings, etc. 
 
 - radio reset (radio.cpp)
-- sd card access (sd.cpp)
 
 - switch to INI for data storage in human readable form on the device
 - add calendar

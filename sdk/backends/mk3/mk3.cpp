@@ -394,7 +394,7 @@ namespace rckid {
         // do we see the radio chip after reset?
         //LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
 
-        // initialize the SD card
+        // initialize the SD card communication & sd card itself if present
         sdInitialize();
         sdInitializeCard();
 

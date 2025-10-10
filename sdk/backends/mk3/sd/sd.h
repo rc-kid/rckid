@@ -42,14 +42,15 @@ namespace rckid {
     constexpr uint8_t SD_VALID = 128;
     constexpr uint8_t SD_BUSY = 255;
 
+    constexpr uint8_t SD_MAX_DELAY = 128;
     constexpr uint8_t SD_DATA_TOKEN = 0xfe;
 
     void sdInitialize();
     bool sdIsInserted();
     bool sdInitializeCard();
 
-    uint8_t sdSendCommand(uint8_t const (&cmd)[6], uint8_t * response = nullptr, size_t responseSize = 0, unsigned maxDelay = 128);
+    //uint8_t sdSendCommand(uint8_t const (&cmd)[6], uint8_t * response = nullptr, size_t responseSize = 0, unsigned maxDelay = 128);
 
-    uint8_t sdReadBlocks(uint8_t const (&cmd)[6], uint8_t * response, uint32_t responseSize, uint32_t numBlocks = 1, uint32_t maxDelay = 128);
+    //uint8_t sdReadBlocks(uint8_t const (&cmd)[6], uint8_t * response, uint32_t responseSize, uint32_t numBlocks = 1, uint32_t maxDelay = 128);
 
 } // namespace rckid
