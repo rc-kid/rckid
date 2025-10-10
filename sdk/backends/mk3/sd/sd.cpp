@@ -239,9 +239,11 @@ namespace rckid {
             LOG(LL_ERROR, "  byte addressable not supported");
         }
         // now the card is powered up and we can increase the speed
+        pio_sm_set_enabled(RCKID_SD_PIO, spiSm_, false);
         pio_sm_set_clock_speed(RCKID_SD_PIO, spiSm_, RCKID_SD_SPI_SPEED * RCKID_SD_SPI_SPEED_MULTIPLIER);
+        pio_sm_set_enabled(RCKID_SD_PIO, spiSm_, true);
         // and determine the card capacity by reading the CSD register via CMD9
-        status = sdSendCommand(CMD9, buffer, 16);
+        status = sdReadBlocks(CMD9, buffer, 16);
         if (status != SD_NO_ERROR) {
             LOG(LL_ERROR, "  csd error: " << hex(status));
             return false;
@@ -307,7 +309,7 @@ namespace rckid {
             return false;
         }
         // determine the card capacity by reading the CSD
-        if (sdSendCommand(CMD9, buffer, 16) != SD_NO_ERROR) {
+        if (sdReadBlocks(CMD9, buffer, 16) != SD_NO_ERROR) {
             LOG(LL_ERROR, "SD card did not respond to CMD9, status: " << hex(status));
            return false;
         }
@@ -337,6 +339,35 @@ namespace rckid {
 
     uint32_t sdCapacity() {
         return sdNumBlocks_;
+    }
+
+    uint8_t sdReadBlocks(uint8_t const (&cmd)[6], uint8_t * response, uint32_t responseSize, uint32_t numBlocks, uint32_t maxDelay) {
+        ASSERT(numBlocks == 1); // not implemented others yet
+        gpio::low(RP_PIN_SD_CSN);
+        // write the command
+        sd_spi_write_blocking(cmd,  6);
+        // wait for response, if R1 response fails, exit immediately
+        uint8_t result = SD_BUSY;
+        while (result == SD_BUSY && maxDelay-- != 0)
+            sd_spi_read_blocking(0xff, & result, 1);
+        if (result != SD_NO_ERROR) {
+            gpio::high(RP_PIN_SD_CSN);
+            return result;
+        }
+        // now wait for the data token (0xfe)
+        do {
+            sd_spi_read_blocking(0xff, & result, 1);
+        } while (result != SD_DATA_TOKEN);
+        // read the data
+        sd_spi_read_blocking( 0xff, response, responseSize);
+        // read the CRC
+        uint8_t crc[2];
+        sd_spi_read_blocking(0xff, crc, 2);
+        // and add one more extra byte to allow the card to recover
+        result = 0xff;
+        sd_spi_write_blocking(& result, 1);
+        gpio::high(RP_PIN_SD_CSN);
+        return SD_NO_ERROR;
     }
 
     bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {

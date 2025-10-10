@@ -17,6 +17,14 @@
 #define RCKID_SD_SPI_SPEED_MULTIPLIER 2
 
 inline void sd_spi_program_init(PIO pio, uint sm, uint offset, uint misoPin, uint mosiPin, uint clkPin) {
+
+    // for better signal integrity, enable fast slew rate for miso & mosi pins and increase drive strength to 8mA (from the default 4). Those settings enable 20MHz SPI speed when talking to the card
+    gpio_set_slew_rate(clkPin, GPIO_SLEW_RATE_FAST);
+    gpio_set_drive_strength(clkPin, GPIO_DRIVE_STRENGTH_8MA);
+    gpio_set_slew_rate(mosiPin, GPIO_SLEW_RATE_FAST);
+    gpio_set_drive_strength(mosiPin, GPIO_DRIVE_STRENGTH_8MA);
+
+
     // clk pin is output (and will be sideset)
     pio_gpio_init(pio, clkPin);
     pio_sm_set_consecutive_pindirs(pio, sm, clkPin, 1, true);
@@ -34,6 +42,8 @@ inline void sd_spi_program_init(PIO pio, uint sm, uint offset, uint misoPin, uin
 
     sm_config_set_out_shift(&c, false, true, 8);
     sm_config_set_in_shift(&c, false, true, 8);
+
+    hw_set_bits(&pio->input_sync_bypass, 1u << (misoPin - 16));
 
     pio_sm_init(pio, sm, offset, &c);
 }
