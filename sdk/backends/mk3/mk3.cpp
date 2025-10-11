@@ -139,14 +139,6 @@ namespace rckid {
 
     // TODO move this to the audio codec
     namespace audio {
-        enum class State {
-            Idle, 
-            Playback, 
-            PlaybackPaused,
-            Recording,
-            RecordingPaused,
-        }; 
-        State state_ = State::Idle;
         std::function<uint32_t(int16_t *, uint32_t)> cb_;
         uint8_t volume_ = 10;
         uint dma0_ = 0;
@@ -211,34 +203,22 @@ namespace rckid {
         unsigned irqs = dma_hw->ints0;
         dma_hw->ints0 = irqs;
         // for audio, reset the DMA start address to the beginning of the buffer and tell the double buffer to refill
-        if (irqs & (1u << audio::dma0_))
-            switch (audio::state_) {
-                case audio::State::Playback:
-                case audio::State::PlaybackPaused:
-                    audioPlaybackDMA(audio::dma0_, audio::dma1_);
-                    break;
-                case audio::State::Recording:
-                case audio::State::RecordingPaused:
-                    audioRecordDMA(audio::dma0_, audio::dma1_);
-                    break;
-                default:
-                    UNREACHABLE; // not expected to have IRQ when audio is idle
-                    break;
-            }
-        if (irqs & (1u << audio::dma1_))
-            switch (audio::state_) {
-                case audio::State::Playback:
-                case audio::State::PlaybackPaused:
-                    audioPlaybackDMA(audio::dma1_, audio::dma0_);
-                    break;
-                case audio::State::Recording:
-                case audio::State::RecordingPaused:
-                    audioRecordDMA(audio::dma1_, audio::dma0_);
-                    break;
-                default:
-                    UNREACHABLE; // not expected to have IRQ when audio is idle
-                    break;
-            }
+        if (irqs & (1u << audio::dma0_)) {
+            if (audioPlayback())
+                audioPlaybackDMA(audio::dma0_, audio::dma1_);
+            else if (audioRecording())
+                audioRecordDMA(audio::dma0_, audio::dma1_);
+            else
+                UNREACHABLE; // not expected to have IRQ when audio is idle
+        }
+        if (irqs & (1u << audio::dma1_)) {
+            if (audioPlayback())
+                audioPlaybackDMA(audio::dma1_, audio::dma0_);
+            else if (audioRecording())
+                audioRecordDMA(audio::dma1_, audio::dma0_);
+            else 
+                UNREACHABLE; // not expected to have IRQ when audio is idle
+        }
         // display DMA IRQ
         if (irqs & ( 1u << ST7789::dma_))
             ST7789::irqHandler();
@@ -347,32 +327,24 @@ namespace rckid {
         debugRead(true);
 #endif
 
-        // check the I2C devices we expect to find on the bus
-        LOG(LL_INFO, "Detecting I2C devices...");
-        LOG(LL_INFO, "  AVR (0x43):        " << (::i2c::isPresent(0x43) ? "ok" : "not found"));
-        LOG(LL_INFO, "  LSM6DSV (0x6a):    " << (::i2c::isPresent(0x6a) ? "ok" : "not found"));
-        LOG(LL_INFO, "  NAU88C22YG (0x1a): " << (::i2c::isPresent(0x1a) ? "ok" : "not found"));
-        
+        // initialize the audio codec and power it up so that we are ready to play sounds when required
         LOG(LL_INFO, "Initializing codec...");
         audio::dma0_ = dma_claim_unused_channel(true);
         audio::dma1_ = dma_claim_unused_channel(true);
         LOG(LL_INFO, "  audio dma0: " << static_cast<uint32_t>(audio::dma0_));
         LOG(LL_INFO, "  audio dma1: " << static_cast<uint32_t>(audio::dma1_));
-        
-
         Codec::initialize();
         Codec::reset();
         Codec::powerUp();
 
-        // check for radio - we need to first reset it via the audio codec chip
-        cpu::delayMs(100);
-        Codec::setGPIO1(true);
-        cpu::delayMs(10);
-        Codec::setGPIO1(false); // radio reset is active low
-        cpu::delayMs(10);
-        Codec::setGPIO1(true);
-        cpu::delayMs(100);
-        // and check if we have radio
+        // reset radio chip so that we can detect its presence - note this must happen after codec initialization as codec's GPIO1 is wired to the radio reset pin
+        Radio::reset();
+
+        // check the I2C devices we expect to find on the bus
+        LOG(LL_INFO, "Detecting I2C devices...");
+        LOG(LL_INFO, "  AVR (0x43):        " << (::i2c::isPresent(0x43) ? "ok" : "not found"));
+        LOG(LL_INFO, "  LSM6DSV (0x6a):    " << (::i2c::isPresent(0x6a) ? "ok" : "not found"));
+        LOG(LL_INFO, "  NAU88C22YG (0x1a): " << (::i2c::isPresent(0x1a) ? "ok" : "not found"));
         LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
 
         // try talking to the AVR chip and see that all is well
@@ -388,16 +360,10 @@ namespace rckid {
             Codec::setVolumeHeadphones(io::avrState_.audio.volumeHeadphones());
         }
 
+        // initialize the other peripherals we have
         Radio::initialize();
+        // TODO initialize the accelerometer 
 
-        // initialize the audio chips - first radio, then audio chip
-        // TODO check that a pullup on the audio codec reset pin is sufficient to start it properly?
-        //io::radio_.reset(RP_PIN_RADIO_RESET);
-        //cpu::delayMs(100);
-        // 
-
-        // do we see the radio chip after reset?
-        //LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
 
         // initialize the SD card communication & sd card itself if present
         sdInitialize();
@@ -408,15 +374,6 @@ namespace rckid {
 
         // initialize the filesystem and mount the SD card
         fs::initialize();
-
-        // initialize the audio output
-        //audio::mclkSm_ = pio_claim_unused_sm(pio1, true);
-        //audio::mclkOffset_ = pio_add_program(pio1, & i2s_mclk_program);
-        //audio::playbackSm_ = pio_claim_unused_sm(pio1, true);
-        //audio::playbackOffset_ = pio_add_program(pio1, & i2s_out16_program);
-        //i2s_out16_program_init(pio1, audio::playbackSm_, audio::playbackOffset_, RP_PIN_I2S_DOUT, RP_PIN_I2S_LRCK);
-        // TODO enable the MCLK pin and test that the generator works
-        // i2s_mclk_program_init(pio1, audio::mclkSm_, audio::mclkOffset_, RP_PIN_I2S_MCLK);
       
         time::nextSecond_ += 1000000;
 
@@ -433,17 +390,9 @@ namespace rckid {
         // TODO the external pullup is too weak (100kOhm, enabling pull-up will help)
         gpio::setAsInputPullUp(RP_PIN_HEADSET_DETECT);
         gpio_set_irq_enabled(RP_PIN_HEADSET_DETECT, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE, true);
-        //  
-        requestAvrStatus();
 
-        // TODO initialize audio and stuff
-        //return;
-
-
-        //Codec::initialize();
-
-        //Codec::reset();
-        //Codec::powerUp();
+        // 
+        //requestAvrStatus();
 
 
 
@@ -795,17 +744,17 @@ namespace rckid {
 
     bool audioPaused() {
         StackProtection::check();
-        UNIMPLEMENTED;
+        return Codec::isPaused();
     }
 
     bool audioPlayback() {
         StackProtection::check();
-        UNIMPLEMENTED;
+        return Codec::isPlaybackI2S();
     }
 
     bool audioRecording() {
         StackProtection::check();
-        UNIMPLEMENTED;
+        return Codec::isRecordingI2S();
     }
 
     uint8_t audioVolume() {
@@ -830,9 +779,10 @@ namespace rckid {
 
     void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb) {
         StackProtection::check();
+        audioStop();
         // 
         audio::buffer_ = & buffer;
-        audio::state_ = audio::State::Playback;
+        //audio::state_ = audio::State::Playback;
         audio::sampleRate_ = sampleRate;
         audio::cb_ = cb;
         // initialize the DMA channels 
@@ -852,7 +802,7 @@ namespace rckid {
         audioStop();
 
         audio::buffer_ = & buffer;
-        audio::state_ = audio::State::Recording;
+        //audio::state_ = audio::State::Recording;
         audio::sampleRate_ = sampleRate;
         audio::cb_ = cb;
         
@@ -863,14 +813,13 @@ namespace rckid {
         dma_channel_start(audio::dma0_);
         // instruct the codec to start the playback at given sample rate
         Codec::recordMic(sampleRate);
-        Codec::showRegisters();
     }
 
     void audioRecordLineIn(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb) {
         audioStop();
 
         audio::buffer_ = & buffer;
-        audio::state_ = audio::State::Recording;
+        //audio::state_ = audio::State::Recording;
         audio::sampleRate_ = sampleRate;
         audio::cb_ = cb;
         
@@ -885,30 +834,24 @@ namespace rckid {
 
     void audioPause() {
         StackProtection::check();
-        UNIMPLEMENTED;
+        Codec::pause();
     }
 
     void audioResume() {
         StackProtection::check();
-        UNIMPLEMENTED;
+        Codec::resume();
     }
 
     void audioStop() {
         StackProtection::check();
-        if (audio::state_ == audio::State::Idle)
-            return;
         Codec::stop();
         dma_channel_abort(audio::dma0_);
         dma_channel_abort(audio::dma1_);
-        audio::state_ = audio::State::Idle;
     }
 
     // SD Card access is in sd/sd.cpp file
-
     // uint32_t sdCapacity() {}
-
     // bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {}
-
     // bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks) {}
 
     // Cartridge filesystem access

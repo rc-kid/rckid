@@ -33,6 +33,8 @@ namespace rckid {
             if (btnPressed(Btn::B) || btnPressed(Btn::Down))
                 exit();
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                btnClear(Btn::A);
+                btnClear(Btn::Up);
                 String path = c_->currentPath();
                 LOG(LL_DEBUG, "AudioPlayer: starting playback of " << path);
                 String ext = fs::ext(path);

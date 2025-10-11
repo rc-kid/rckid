@@ -12,7 +12,6 @@
 namespace rckid {
 
     /** NAU88C22GY Audio Codec driver
-     
 
         Jack Detection  
 
@@ -23,6 +22,36 @@ namespace rckid {
      */
     class Codec {
     public:
+
+        /** Returns if the codec is in a playback mode with data sent via I2S, whether paused or not
+         */
+        static bool isPlaybackI2S() {
+            return activeSm_ == playbackSm_;
+        }
+
+        /** Returns true if the codec is currently recording with data from ADC on I2S, whether paused or not
+         */
+        static bool isRecordingI2S() {
+            return activeSm_ == recordSm_;
+        }
+
+        static bool isPaused() {
+            if (activeSm_ == -1)
+                return false;
+            return ! pio_sm_is_enabled(pio1, activeSm_);          
+        }
+
+        static void pause() {
+            if (activeSm_ == -1)
+                return;
+            pio_sm_set_enabled(pio1, activeSm_, false);
+        }
+
+        static void resume() {
+            if (activeSm_ == -1)
+                return;
+            pio_sm_set_enabled(pio1, activeSm_, true);
+        }
 
         static void initialize() {
             // initialize the PIO, which we use for MCLK and I2S communication
@@ -46,6 +75,7 @@ namespace rckid {
             recordOffset_ = pio_add_program(pio1, & i2s_in16_program);
             LOG(LL_INFO, "       rec sm: " << (uint32_t)recordSm_);
             LOG(LL_INFO, "   rec offset: " << (uint32_t)recordOffset_);
+            activeSm_ = -1;
         }
 
         static uint playbackDReq() {
@@ -83,6 +113,7 @@ namespace rckid {
             cpu::delayMs(10);
             LOG(LL_INFO, "  rev " << hex(getRegister(REG_DEV_REVISION)));
             LOG(LL_INFO, "   id " << hex(getRegister(REG_DEV_ID)));
+            activeSm_ = -1;
         }
 
         /** Powers the codec up.
@@ -104,7 +135,6 @@ namespace rckid {
             // ensure that we use mclk and not the pll (MCLK direct, no PLL, slave mode, no MCLK divider)
             setRegister(REG_CLK_CTRL_1, CLKM_MCLK); 
 
-
             // for right spaker enable the inverted output so that we have BTL speaker driver
             setRegister(REG_RSPKR_SUBMIX, RSUBBYP);
 
@@ -117,10 +147,11 @@ namespace rckid {
             // TODO do not do this yet, want to see headphones for testing purposes
             setRegister(REG_JACK_DETECT_1, JCKDEN | JCKDIO2);
             setRegister(REG_JACK_DETECT_2, JCKDOEN1_SPEAKER | JCKDOEN0_HEADPHONES);
+            activeSm_ = -1;
         }
 
         static void powerDown() {
-
+            // TODO
         }
 
         /** Sets the speaker volume, 0..63. When 0 is set instead of the lowest volume supported, the output is muted. Note that the speaker output is also dependent on the headphone jack state in general.   
@@ -153,6 +184,7 @@ namespace rckid {
             pio_sm_set_enabled(pio1, mclkSm_, false);
             pio_sm_set_enabled(pio1, playbackSm_, false);
             pio_sm_set_enabled(pio1, recordSm_, false);
+            activeSm_ = -1;
             // disable headphones, ADC boost, ADC and PGA
             setRegister(REG_PWR_MGMT_2, 0);
             // disable speaker, mixers and DAC
@@ -222,9 +254,7 @@ namespace rckid {
             i2s_out16_program_init(pio1, playbackSm_, playbackOffset_, RP_PIN_I2S_DAC, RP_PIN_I2S_BCLK);
             pio_sm_set_clock_speed(pio1, playbackSm_, sampleRate * 34 * 2);
             pio_sm_set_enabled(pio1, playbackSm_, true);
-            if (!pio_sm_is_enabled(pio1, playbackSm_))
-                LOG(LL_ERROR, "  record SM not enabled");
-
+            activeSm_ = playbackSm_;
         }
 
         static void recordLineIn(uint32_t sampleRate) {
@@ -247,6 +277,7 @@ namespace rckid {
             i2s_in16_program_init(pio1, recordSm_, recordOffset_, RP_PIN_I2S_ADC, RP_PIN_I2S_BCLK);
             pio_sm_set_clock_speed(pio1, recordSm_, sampleRate * 34 * 2);
             pio_sm_set_enabled(pio1, recordSm_, true);
+            activeSm_ = recordSm_;
         }
 
         static void recordMic(uint32_t sampleRate) {
@@ -271,6 +302,7 @@ namespace rckid {
             i2s_in16_program_init(pio1, recordSm_, recordOffset_, RP_PIN_I2S_ADC, RP_PIN_I2S_BCLK);
             pio_sm_set_clock_speed(pio1, recordSm_, sampleRate * 34 * 2);
             pio_sm_set_enabled(pio1, recordSm_, true);
+            activeSm_ = recordSm_;
         }
 
         static void setGPIO1(bool high) {
@@ -300,64 +332,6 @@ namespace rckid {
             LOG(LL_INFO, "  54: " << hex(getRegister(54)) << " exp: 0x007f");
             LOG(LL_INFO, "  55: " << hex(getRegister(55)) << " exp: 0x007f");
 
-/*
-LL_INFO: Codec registers
-:
-LL_INFO:    1: 0x000d
-LL_INFO:    2: 0x01b0
-LL_INFO:    3: 0x01b0
-LL_INFO:   43: 0x0020
-LL_INFO:   49: 0x0002
-LL_INFO:   50: 0x0002
-LL_INFO:   51: 0x0002
-LL_INFO:   52: 0x007f
-LL_INFO:   53: 0x007f
-LL_INFO:   54: 0x0039
-LL_INFO:   55: 0x0039
-
-
-LL_INFO: Codec registers
-:
-LL_INFO:    1: 0x0000 exp: 0x000d
-LL_INFO:    2: 0x01b0 exp: 0x01b0
-LL_INFO:    3: 0x006c exp: 0x006c
-LL_INFO:   43: 0x0020 exp: 0x0000
-LL_INFO:   47: 0x0005 exp: 0x0005
-LL_INFO:   48: 0x0005 exp: 0x0005
-LL_INFO:   49: 0x0002 exp: 0x0002
-LL_INFO:   50: 0x0016 exp: 0x0016
-LL_INFO:   51: 0x0016 exp: 0x0016
-LL_INFO:   52: 0x003f exp: 0x007f
-LL_INFO:   53: 0x003f exp: 0x007f
-LL_INFO:   54: 0x003f exp: 0x007f
-LL_INFO:   55: 0x003f exp: 0x007f
-
-Working snapshot:
-
-LL_INFO: radio response: 0x81
-LL_INFO:   frequency:     9370 [10kHz]
-LL_INFO:   rssi:          38
-LL_INFO:   snr:           31
-LL_INFO:   multipath:     0
-LL_INFO:   antCap:        1
-LL_INFO: Codec registers:
-LL_INFO:    1: 0x000d exp: 0x000d
-LL_INFO:    2: 0x01b0 exp: 0x01b0
-LL_INFO:    3: 0x006c exp: 0x006c
-LL_INFO:   43: 0x0030 exp: 0x0000
-LL_INFO:   47: 0x0007 exp: 0x0005
-LL_INFO:   48: 0x0007 exp: 0x0005
-LL_INFO:   49: 0x01ff exp: 0x0002
-LL_INFO:   50: 0x01ff exp: 0x0016
-LL_INFO:   51: 0x001e exp: 0x0016
-LL_INFO:   52: 0x01ff exp: 0x007f
-LL_INFO:   53: 0x0040 exp: 0x007f
-LL_INFO:   54: 0x003f exp: 0x007f
-LL_INFO:   55: 0x003f exp: 0x007f
-LL_INFO: Enabling MCLK at 24576000Hz
-
-
-*/            
         }
 
     private:
@@ -553,6 +527,8 @@ LL_INFO: Enabling MCLK at 24576000Hz
 
         static inline int recordSm_ = -1;
         static inline uint recordOffset_ = 0;
+
+        static inline int activeSm_ = -1;
 
     }; // rckid::Codec
 

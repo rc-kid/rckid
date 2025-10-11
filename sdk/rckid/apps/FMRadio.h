@@ -69,8 +69,8 @@ namespace rckid {
                 exit();
             }
             if (btnPressed(Btn::Left))
-                radio_->enableEmbeddedAntenna(true);
-                //radio_->seekUp();
+                //radio_->enableEmbeddedAntenna(true);
+                radio_->seekDown();
             if (btnPressed(Btn::Up)) {
                 auto rsq = radio_->getRSQStatus();
                 LOG(LL_INFO, "  valid:         " << rsq.valid());
@@ -87,8 +87,8 @@ namespace rckid {
                 //radio_->setGPO1(true);
             }
             if (btnPressed(Btn::Right)) {
-                radio_->enableEmbeddedAntenna(false);
-                //radio_->seekDown();
+                //radio_->enableEmbeddedAntenna(false);
+                radio_->seekUp();
                 //radio_->enableGPO1(true);
                 //radio_->setGPO1(false);
             }

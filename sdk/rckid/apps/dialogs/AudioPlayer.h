@@ -72,6 +72,7 @@ namespace rckid {
                     icon_ = Icon{assets::icons_64::pause};
                     audioPause();
                 }
+                redraw_ = true;
             }
             // TODO btn left & right is immediate return
             if (!audioPlayback())
