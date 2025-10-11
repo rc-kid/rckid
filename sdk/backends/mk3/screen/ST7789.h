@@ -287,62 +287,22 @@ namespace rckid {
         static void sendByte(uint32_t b) {
             b = platform::reverseByte(b);
             gpio_put_masked64(0xff_u64 << RP_PIN_DISP_DB7, static_cast<uint64_t>(b) << RP_PIN_DISP_DB7);
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
+            for (uint32_t i = 0; i < 24; ++i)
+                cpu::nop();
             gpio_put(RP_PIN_DISP_WRX, true);
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
+            for (uint32_t i = 0; i < 24; ++i)
+                cpu::nop();
             gpio_put(RP_PIN_DISP_WRX, false);
         }
 
         static void sendWord(uint32_t w) {
             w = platform::reverse2Bytes(w);
             gpio_put_masked64(0xffff_u64 << RP_PIN_DISP_DB15, static_cast<uint64_t>(w) << RP_PIN_DISP_DB15);
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
+            for (uint32_t i = 0; i < 24; ++i)
+                cpu::nop();
             gpio_put(RP_PIN_DISP_WRX, true);
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
-            cpu::nop();
+            for (uint32_t i = 0; i < 24; ++i)
+                cpu::nop();
             gpio_put(RP_PIN_DISP_WRX, false);
         }
 

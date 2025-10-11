@@ -254,6 +254,7 @@ namespace rckid {
             i2s_out16_program_init(pio1, playbackSm_, playbackOffset_, RP_PIN_I2S_DAC, RP_PIN_I2S_BCLK);
             pio_sm_set_clock_speed(pio1, playbackSm_, sampleRate * 34 * 2);
             pio_sm_set_enabled(pio1, playbackSm_, true);
+            ASSERT(pio_sm_is_enabled(pio1, playbackSm_));
             activeSm_ = playbackSm_;
         }
 

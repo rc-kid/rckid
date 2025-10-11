@@ -111,6 +111,8 @@
 
 # TODO
 
+- mp3 audio playback does not work (audio player) - not sure why, seems to be related to playback & resume (?), gbcemu works
+
 - the rapid fire as is is kind of working, but maybe need per buttom settings, etc. 
 
 - switch to INI for data storage in human readable form on the device
