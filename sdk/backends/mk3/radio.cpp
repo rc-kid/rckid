@@ -7,8 +7,8 @@ namespace rckid {
     void Radio::enable(bool value) {
         if (value) {
             Codec::playbackLineInDirect();
-            Codec::setSpeakerVolume(45);
-            Codec::setHeadphonesVolume(45);
+            Codec::setVolumeSpeaker(45);
+            Codec::setVolumeHeadphones(45);
             // we need to generate master clock for the codec to work - not sure why
             Codec::enableMasterClock(48000);
             if (enabled())

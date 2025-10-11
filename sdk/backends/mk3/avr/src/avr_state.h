@@ -147,6 +147,20 @@ namespace rckid {
 
         }); // AVRState::Status
 
+        PACKED(struct AudioSettings {
+        public:
+
+            uint8_t volumeHeadphones() const { return volume_ & 0x0f; }
+            uint8_t volumeSpeaker()     const { return (volume_ >> 4) & 0x0f; }
+
+            void setVolumeHeadphones(uint8_t v) { volume_ = (volume_ & 0xf0) | (v & 0x0f); }
+            void setVolumeSpeaker(uint8_t v) { volume_ = (volume_ & 0x0f) | ((v & 0x0f) << 4); }
+
+        private:
+            
+            uint8_t volume_ = 0x88;
+
+        }); // AVRState::AudioSettings
 
         Status status;
 
@@ -168,6 +182,8 @@ namespace rckid {
 
         uint8_t brightness = RCKID_DISPLAY_BRIGHTNESS;
         uint32_t uptime = 0;
+
+        AudioSettings audio;
 
     }); // rckid::AVRState
 

@@ -359,10 +359,12 @@ namespace rckid {
         LOG(LL_INFO, "  audio dma0: " << static_cast<uint32_t>(audio::dma0_));
         LOG(LL_INFO, "  audio dma1: " << static_cast<uint32_t>(audio::dma1_));
         
-        // check for radio - we need to first reset it via the audio codec chip
+
         Codec::initialize();
         Codec::reset();
         Codec::powerUp();
+
+        // check for radio - we need to first reset it via the audio codec chip
         cpu::delayMs(100);
         Codec::setGPIO1(true);
         cpu::delayMs(10);
@@ -381,6 +383,9 @@ namespace rckid {
                 FATAL_ERROR(Error::hardwareFailure, n);
             LOG(LL_INFO, "AVR uptime: " << io::avrState_.uptime);
             LOG(LL_INFO, "Current time: " << io::avrState_.time);
+            // update the volume on the audio codec based on the values received from AVR (last settings)
+            Codec::setVolumeSpeaker(io::avrState_.audio.volumeSpeaker());
+            Codec::setVolumeHeadphones(io::avrState_.audio.volumeHeadphones());
         }
 
         Radio::initialize();
@@ -785,7 +790,7 @@ namespace rckid {
 
     bool audioHeadphones() {
         StackProtection::check();
-        UNIMPLEMENTED;
+        return gpio::read(RP_PIN_HEADSET_DETECT) == 0;
     }
 
     bool audioPaused() {
@@ -805,12 +810,22 @@ namespace rckid {
 
     uint8_t audioVolume() {
         StackProtection::check();
-        UNIMPLEMENTED;
+        return audioHeadphones() ? io::avrState_.audio.volumeHeadphones() : io::avrState_.audio.volumeSpeaker();
     }
 
     void audioSetVolume(uint8_t value) {
         StackProtection::check();
-        UNIMPLEMENTED;
+        value = (value & 0xf);
+        uint8_t rawValue = (value << 2) | (value & 0x3);
+        if (audioHeadphones()) {
+            Codec::setVolumeHeadphones(rawValue);
+            io::avrState_.audio.setVolumeHeadphones(value);
+        } else {
+            Codec::setVolumeSpeaker(rawValue);
+            io::avrState_.audio.setVolumeSpeaker(value);
+        }
+        // tell AVR that we change the volume
+        i2c::sendAvrCommand(cmd::SetAudioSettings{io::avrState_.audio});
     }
 
     void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb) {

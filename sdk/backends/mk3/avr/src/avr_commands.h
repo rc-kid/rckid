@@ -3,6 +3,8 @@
 
 #include <rckid/effects.h>
 
+#include "avr_state.h"
+
 namespace rckid::cmd {
 
     #define COMMAND(MSG_ID, NAME, ...)                               \
@@ -140,6 +142,11 @@ namespace rckid::cmd {
     COMMAND(150, SetNotification,
         RGBEffect effect;
         SetNotification(RGBEffect const & effect): effect{effect} {}
+    );
+
+    COMMAND(200, SetAudioSettings,
+        AVRState::AudioSettings settings;
+        SetAudioSettings(AVRState::AudioSettings const & settings): settings{settings} {}
     );
 
 } // namespace rckid::cmd
