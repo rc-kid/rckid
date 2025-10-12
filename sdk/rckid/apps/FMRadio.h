@@ -11,6 +11,17 @@
 namespace rckid {
 
     /** A simple FM radio. 
+     
+        TODO
+        - display frequency
+        - display RDS info, signal strength, etc
+        - allow switching between mono/stereo
+        - allow switching internal/headphone antenna
+        - allow forcing speaker even if headphones are on
+        - allow playing music while the app is not active
+
+        - presets
+
      */
     class FMRadio : public ui::Form<void> {
     public:
@@ -19,7 +30,7 @@ namespace rckid {
 
         FMRadio() :
             ui::Form<void>{},
-            freq_{Rect::XYWH(0, 30, 320, 130), ""},
+            freq_{Rect::XYWH(0, 30, 320, 130), "93.7"},
             rds_{Rect::XYWH(0, 170, 320, 80), ""} {
             freq_.setFont(Font::fromROM<assets::OpenDyslexic128>());
             freq_.setHAlign(HAlign::Center);

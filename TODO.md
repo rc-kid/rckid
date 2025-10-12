@@ -209,7 +209,7 @@
 - side buttons are too thin
 - pull-up for the headphone detect is too weak, try sth like 40kOhm? 
 
-## AVR
+## AVRz
 
 - see if we can run at 5MHz and still talk to neopixel
 

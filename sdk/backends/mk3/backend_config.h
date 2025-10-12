@@ -32,7 +32,7 @@
 
 /** Have the rapid fire trigger roughly every 250ms. 
  */
-#define RCKID_DEFAULT_RAPIDFIRE_TICKS 15
+#define RCKID_DEFAULT_RAPIDFIRE_TICKS 60
 
 /** Default values for the rumbler effects. 
  

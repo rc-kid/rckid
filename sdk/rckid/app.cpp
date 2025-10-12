@@ -9,6 +9,20 @@
 
 namespace rckid {
 
+
+    void App::saveState(String const & name) {
+        if (!fs::isMounted())
+            return;
+        LOG(LL_INFO, "Saving app state " << name);
+        String folder = fs::join(homeFolder(), "saves");
+        if (!fs::createFolders(folder)) {
+            InfoDialog::error("Cannot save state", STR("Cannot create folder " << folder));
+            return;
+        }
+        fs::FileWrite f{fs::fileWrite(fs::join(folder, name))};
+        save(f);
+    }
+
     void App::update() {
         if (checkBudget_) {
             checkBudget_ = false;
