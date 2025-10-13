@@ -103,6 +103,7 @@ namespace rckid {
                     msgs_.push_back(msg);
                 }
                 view_->setOffsetTop(10);
+                InfoDialog::info("Hello", "On noez");
                 /*
                 p_ = view_->addChild(new ui::Panel{});
                 p_->setRect(Rect::XYWH(-10,-10,20,20));

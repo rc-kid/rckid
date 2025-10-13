@@ -77,11 +77,8 @@ namespace rckid::ui {
         CustomImage(Rect rect, Bitmap * bmp): 
             Widget{rect},
             bmp_{bmp} {
-            if (bmp_ != nullptr) {
-                w_ = bmp_->width();
-                h_ = bmp_->height();
+            if (bmp_ != nullptr)
                 reposition();
-            }
         }   
 
         CustomImage(CustomImage const & other) = default;

@@ -21,17 +21,19 @@ namespace rckid {
         String name() const override { return "InfoDialog"; }
         
         InfoDialog(Icon const & icon, String title, String text):
-            ui::Form<void>{Rect::XYWH(0, 144, 320, 96), /* raw */ true} {
+            ui::Form<void>{Rect::XYWH(0, 144, 320, 96), /* raw */ true},
+            icon_{Rect::WH(96, 96), icon},
+            title_{96, 5, std::move(title)},
+            text_{27, 3, assets::System16, palette_} {
             using namespace ui;
-            icon_ = g_.addChild(new ui::Image{Rect::WH(96, 96), icon});
-            icon_->setTransparentColor(ColorRGB::Black());
-            title_ = g_.addChild(new ui::Label{ 96, 5, std::move(title)});
-            title_->setFont(Font::fromROM<assets::OpenDyslexic32>());
-            text_ = g_.addChild(new ui::Tilemap<Tile<8, 16, Color16>>{27, 3, assets::System16, palette_});
-            icon_->setVAlign(VAlign::Center);
-            icon_->setHAlign(HAlign::Center);
-            text_->setPos(96, 48);
-            text_->textMultiline(0, 0) << text;
+            g_.addChild(icon_);
+            g_.addChild(title_);
+            g_.addChild(text_);
+
+            icon_.setTransparentColor(ColorRGB::Black());
+            title_.setFont(Font::fromROM<assets::OpenDyslexic32>());
+            text_.setPos(96, 48);
+            text_.textMultiline(0, 0) << text;
         }
 
         static void error(String title, String text) {
@@ -66,9 +68,9 @@ namespace rckid {
 
     private:
 
-      ui::Image * icon_;
-      ui::Label * title_;
-      ui::Tilemap<Tile<8, 16, Color16>> * text_;
+      ui::Image icon_;
+      ui::Label title_;
+      ui::Tilemap<Tile<8, 16, Color16>> text_;
 
 
         static constexpr uint16_t palette_[] = {
