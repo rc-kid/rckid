@@ -753,7 +753,7 @@ namespace rckid::fs {
     }
 
     bool createFolders(char const * path, Drive dr) {
-        if (isMounted(dr))
+        if (!isMounted(dr))
             return false;
         if (path == nullptr || path[0] == 0)
             return false;

@@ -15,7 +15,7 @@ namespace rckid {
                 return;
             sendCommand({
                 CMD_POWER_UP, 
-                CMD_POWER_UP_GPO2OEN | CMD_POWER_UP_XOSCEN, 
+                CMD_POWER_UP_GPO2OEN | CMD_POWER_UP_XOSCEN | CMD_POWER_UP_CTSIEN, 
                 CMD_POWER_UP_FM_RECEIVER
             }, 150);
             busy_ |= RADIO_ENABLED;
@@ -30,14 +30,10 @@ namespace rckid {
     }
 
     void Radio::initialize() {
-        reset();
-        // TODO or should we wait less? 
-        cpu::delayMs(100);
         if (::i2c::isPresent(RCKID_FM_RADIO_I2C_ADDRESS)) {
             instance_ = new Radio{};
-            LOG(LL_INFO, "  Si4705: " << hex<uint8_t>(RCKID_FM_RADIO_I2C_ADDRESS));
         } else {
-            LOG(LL_INFO, "  Si4705: not found");
+            LOG(LL_INFO, "FM Radio chip not detected");
             instance_ = nullptr;
         }
         gpio::setAsInputPullUp(RP_PIN_RADIO_INT);
@@ -50,7 +46,13 @@ namespace rckid {
         Codec::setGPIO1(false); // radio reset is active low
         cpu::delayMs(10);
         Codec::setGPIO1(true);
-        cpu::delayMs(30);
+        cpu::delayMs(10);
+
+        /*
+        gpio::outputLow(RP_PIN_RADIO_RESET);
+        cpu::delayMs(10);
+        gpio::setAsInputPullUp(RP_PIN_RADIO_RESET);
+        */
     }
 
     void Radio::sendCommand(uint8_t const * cmd, uint8_t cmdSize, uint32_t ctsTime) {
@@ -67,7 +69,10 @@ namespace rckid {
         LOG(LL_INFO, "radio response: " << hex(r.rawResponse()));
     }
 
+
+
     void Radio::irqHandler() {
+        ++irqs_;
         /*
         switch (instance_->expectedResponse_) {
             case ExpectedResponse::Status: {

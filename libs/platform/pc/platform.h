@@ -40,6 +40,7 @@ namespace cpu {
     inline void delayUs(size_t value) {
         std::this_thread::sleep_for(std::chrono::microseconds(value));
     }
+
 }
 
 namespace gpio {

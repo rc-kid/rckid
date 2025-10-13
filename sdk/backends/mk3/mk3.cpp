@@ -526,6 +526,18 @@ namespace rckid {
         tud_task();
     }
 
+    void sleep() {
+        StackProtection::check();
+        // TODO disable all peripherals, audio, display, etc. 
+        // tell AVR that we are going to sleep, AVR will wake us up when home button will be pressed
+        //i2c::sendAvrCommand(cmd::Sleep{});
+    }
+
+    void powerOff() {
+        StackProtection::check();
+        i2c::sendAvrCommand(cmd::PowerOff{});
+    }
+
     void keepAlive() {
         StackProtection::check();
         time::idleTimeout_ = RCKID_IDLE_TIMEOUT;

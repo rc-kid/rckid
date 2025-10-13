@@ -46,8 +46,8 @@ namespace rckid {
     protected:
 
         void update() override {
-
             ui::Form<AudioPlayerResult>::update();
+            // deal with controls
             if (! audioPaused()) {
                 uint32_t t = uptimeUs();
                 elapsedUs_ += t - lastUs_;
@@ -64,6 +64,7 @@ namespace rckid {
             }
             // btn up, or button A is audio pause
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                LOG(LL_INFO, "btn down");
                 if (audioPaused()) {
                     icon_ = Icon{assets::icons_64::play_button};
                     audioResume();

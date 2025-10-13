@@ -44,6 +44,16 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
+    void sleep() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
+    void powerOff() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
     void yield() {
         StackProtection::check();
         UNIMPLEMENTED;

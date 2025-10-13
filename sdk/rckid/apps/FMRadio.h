@@ -30,7 +30,7 @@ namespace rckid {
 
         FMRadio() :
             ui::Form<void>{},
-            freq_{Rect::XYWH(0, 30, 320, 130), "93.7"},
+            freq_{Rect::XYWH(0, 30, 320, 130), "???"},
             rds_{Rect::XYWH(0, 170, 320, 80), ""} {
             freq_.setFont(Font::fromROM<assets::OpenDyslexic128>());
             freq_.setHAlign(HAlign::Center);
@@ -58,7 +58,7 @@ namespace rckid {
                 LOG(LL_INFO, "  snr:           " << tuneStatus.snr());
                 LOG(LL_INFO, "  multipath:     " << tuneStatus.multipath());
                 LOG(LL_INFO, "  antCap:        " << tuneStatus.antCap());
-
+                updateFrequency();
             }
         }
 
@@ -69,6 +69,13 @@ namespace rckid {
         }
 
     protected:
+
+        void updateFrequency() {
+            ASSERT(radio_ != nullptr);
+            uint32_t freqMhz = radio_->frequency() / 100;
+            uint32_t freqFrac = radio_->frequency() % 100;
+            freq_.setText(STR(freqMhz << '.' << freqFrac));
+        }
 
         void update() override {
             ui::Form<void>::update();
@@ -106,7 +113,8 @@ namespace rckid {
         }
 
         void draw() override {
-            rds_.setText(STR(hex(radio_->status_.rawResponse()) << " ")); //  << gpio::read(RP_PIN_RADIO_INT)));
+            //rds_.setText(STR(hex(radio_->status_.rawResponse()) << " ")); //  << gpio::read(RP_PIN_RADIO_INT)));
+            rds_.setText(STR(radio_->irqs() << " ")); //  << gpio::read(RP_PIN_RADIO_INT)));
             ui::Form<void>::draw();
         }
 

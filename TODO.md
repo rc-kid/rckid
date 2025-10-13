@@ -111,7 +111,7 @@
 
 # TODO
 
-- mp3 audio playback does not work (audio player) - not sure why, seems to be related to playback & resume (?), gbcemu works
+- mp3 audio playback does not work (audio player) - not sure why, seems to be related to playback & resume (?), gbcemu works, could it be related to reading the SD card while in IRQ? 
 
 - the rapid fire as is is kind of working, but maybe need per buttom settings, etc. 
 
@@ -153,8 +153,6 @@
 
 - might get super pretty front panels from here: https://www.hopesens-glass.com/
 
-- can I create SD card SPI in PIO so that I can use SDIO and SPI as well? yes
-
 - I2S playback working. Tone does not seem to work well (glitch data in square waveform, and maybe others). It also drops framerate to 30 when enabled which is weird (note ? for the input / output, it might be easier to use different format, such as PCM as it would allow to send whole 32bits in one loop)
 
 - audio codec I2C does not work when MCLK is active. This could be because of enormous I2C rise time for SDA & SCL (well over 1500ns, where 300ns is the limit) - there is sth in the bus design as this would suggest 1nF capacitance of the traces
@@ -163,7 +161,6 @@
 
 - USB connection is not detected
 - make usb work in mkIII as well
-- can the SD initialization routine be improved? 
 
 - when stack protection fails, it will fail in the error code as well forever, update stack on device, do new thread on rckid? 
 - perfect fit strategy seems to be less wasteful, but will have to add fallback

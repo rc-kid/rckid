@@ -292,6 +292,14 @@ namespace rckid {
             io::buttons_ |= static_cast<uint32_t>(Btn::Home);
     }
 
+    void sleep() {
+        // nothing to do in fantasy mode
+    }
+
+    void powerOff() {
+        std::exit(0);
+    }
+
     void yield() {
         StackProtection::check();   
         // nothing yet to be be done here in fantasy mode

@@ -28,6 +28,8 @@ namespace rckid {
             title_ = g_.addChild(new ui::Label{ 96, 5, std::move(title)});
             title_->setFont(Font::fromROM<assets::OpenDyslexic32>());
             text_ = g_.addChild(new ui::Tilemap<Tile<8, 16, Color16>>{27, 3, assets::System16, palette_});
+            icon_->setVAlign(VAlign::Center);
+            icon_->setHAlign(HAlign::Center);
             text_->setPos(96, 48);
             text_->textMultiline(0, 0) << text;
         }

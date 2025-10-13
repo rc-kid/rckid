@@ -46,7 +46,7 @@ namespace rckid {
         virtual uint32_t refillSamples(int16_t * buffer, uint32_t numSamples) = 0;
 
         virtual uint32_t sampleRate() const = 0;
-    
+   
     protected:
 
         AudioStream(uint32_t bufferSize) {

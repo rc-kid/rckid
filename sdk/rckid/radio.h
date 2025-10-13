@@ -143,7 +143,13 @@ namespace rckid {
                 0, // automatic antenna tuning capacitor value
             });
             getResponse();
+            // remember the frequency
+            frequency_ = freq_10kHz;
         }
+
+        /** Returns the frequency we are listening on now.
+         */
+        uint16_t frequency() const { return frequency_; }
 
         /** Starts automatic seek to the next valid channel (frequency up), with wrap around at the end of the band.
          */
@@ -176,6 +182,8 @@ namespace rckid {
             });
             getResponse(8); 
             status_.tuneStatus.frequency_ = platform::swapBytes(status_.tuneStatus.frequency_);
+            // keep the frequency we got as well
+            frequency_ = status_.tuneStatus.frequency10kHz();
             return status_.tuneStatus;
         }
 
@@ -220,6 +228,8 @@ namespace rckid {
             });
             getResponse();
         }
+
+        uint32_t irqs() const { return irqs_; }
 
     private:
         // TODO delete this when done
@@ -305,6 +315,10 @@ namespace rckid {
 
         uint8_t responseSize_ = 0;
 
+        uint16_t frequency_ = 0; // in 10kHz steps
+
+
+        static inline uint32_t irqs_ = 0;
 
 
         /** Flags to determine the radio status. 

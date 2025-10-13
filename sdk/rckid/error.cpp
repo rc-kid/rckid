@@ -13,6 +13,12 @@ namespace rckid {
             LOG(LL_ERROR, "Line:        " << last_.line);
             LOG(LL_ERROR, "File:        " << last_.file);
         }
+        LOG(LL_ERROR, "  heap: " << RAMHeap::usedBytes() << " bytes used, " << RAMHeap::freeBytes() << " bytes free");
+        LOG(LL_ERROR, "  stack: " << StackProtection::currentSize() << " bytes used, max " << StackProtection::maxSize() << " bytes");
+        // stop
+        while (true) {
+
+        }
         // and draw the debug console
         RenderableCanvas<ColorRGB> fb{RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT};
         fb.fill(ColorRGB::RGB(0, 0, 255));

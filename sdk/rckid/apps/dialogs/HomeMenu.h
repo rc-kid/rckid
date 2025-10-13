@@ -113,10 +113,11 @@ namespace rckid {
                 // TODO airplane mode
             }));
             menu->add(ui::ActionMenu::Item("Sleep", assets::icons_64::sleeping, []() {
-                // TODO exit & sleep
+                sleep();
             }));
             menu->add(ui::ActionMenu::Item("Power Off", assets::icons_64::power_off, [](){
-                // TODO power off
+                // TODO save previous app state
+                powerOff();
             }));
         }
 
