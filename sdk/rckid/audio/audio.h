@@ -46,6 +46,15 @@ namespace rckid {
         virtual uint32_t refillSamples(int16_t * buffer, uint32_t numSamples) = 0;
 
         virtual uint32_t sampleRate() const = 0;
+
+        /** To be called periodically in the main loop, checks there is need for more audio data to be generated and calls the refill samples function accordingly.
+         */
+        void update() {
+            if (frontBufferSamples_ == 0)
+                frontBufferSamples_ = refillSamples(playbackBuffer_->front(), playbackBuffer_->size() / 2);
+            if (backBufferSamples_ == 0)
+                backBufferSamples_ = refillSamples(playbackBuffer_->back(), playbackBuffer_->size() / 2);
+        }
    
     protected:
 
@@ -59,14 +68,34 @@ namespace rckid {
 
         
         DoubleBuffer<int16_t> * playbackBuffer_ = nullptr;
-
-    }; // rckid::AudioPlayr
+        volatile uint32_t backBufferSamples_ = 0;
+        volatile uint32_t frontBufferSamples_ = 0;
+    }; // rckid::AudioPlayer
 
     inline void audioPlay(AudioStream & stream) {
         uint32_t sampleRate = stream.sampleRate();
+
+        audioPlay(sampleRate, [ & stream](int16_t *& buffer) {
+            if (buffer != nullptr) {
+                //LOG(LL_INFO, (void *)buffer);
+                //ASSERT(buffer == stream.playbackBuffer_->front());
+                // swap the buffer so that what was back now becomes front and send the front buffer for refill
+                stream.playbackBuffer_->swap();
+                buffer = stream.playbackBuffer_->front();
+                uint32_t bufferSize = stream.backBufferSamples_;
+                stream.backBufferSamples_ = 0;
+                return bufferSize;
+            } else {
+                buffer = stream.playbackBuffer_->front();
+                stream.playbackBuffer_->swap();
+                return stream.frontBufferSamples_;
+            }
+        });
+        /*
         audioPlay(*(stream.playbackBuffer_), sampleRate, [& stream](int16_t * buffer, uint32_t samples) {
             return stream.refillSamples(buffer, samples);
         });
+        */
     }
 
 

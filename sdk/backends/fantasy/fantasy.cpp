@@ -102,10 +102,17 @@ namespace rckid {
             Record
         };
         Mode mode;
-        AudioCallback cb;
-        DoubleBuffer<int16_t> * buffer = nullptr;
+
+        AudioCallback2 cb2;
+        int16_t * bufferCurrent = nullptr;
         size_t bufferSize = 0;
         size_t bufferI = 0;
+
+
+
+
+        AudioCallback cb;
+        DoubleBuffer<int16_t> * buffer = nullptr;
         bool playback = false;
         uint8_t volume = 10;
         AudioStream stream;
@@ -578,6 +585,31 @@ namespace rckid {
         }
     }
 
+    void audioStreamRefill2(void * buffer, unsigned int samples) {
+        StackProtection::check();
+        // get the stereo view of the input buffer
+        int16_t * stereo = reinterpret_cast<int16_t*>(buffer);
+        while (samples-- != 0) {
+            if (audio::bufferI >= audio::bufferSize) {
+                audio::bufferSize = audio::cb2(audio::bufferCurrent) * 2;
+                audio::bufferI = 0;
+            }
+            int16_t l = audio::bufferCurrent[audio::bufferI++];
+            int16_t r = audio::bufferCurrent[audio::bufferI++];
+            if (audio::volume == 0) {
+                l = 0;
+                r = 0;
+            } else {
+                l >>= (10 - audio::volume);
+                l = l & 0xfff0;
+                r >>= (10 - audio::volume);
+                r = r & 0xfff0;
+            }
+            *(stereo++) = l;
+            *(stereo++) = r;
+        }
+    }
+
     bool audioHeadphones() {
         StackProtection::check();
         // TODO make this conditional on something
@@ -632,6 +664,23 @@ namespace rckid {
             PlayAudioStream(audio::stream);
         }
     }   
+
+    void audioPlay(uint32_t sampleRate, AudioCallback2 cb) {
+        StackProtection::check();
+        if (audio::mode != audio::Mode::Off)
+            audioStop();
+        {
+            SystemMallocGuard g;
+            audio::cb2 = cb;
+            audio::bufferCurrent = nullptr;
+            audio::bufferSize = 0;
+            audio::bufferI = 0;
+            audio::stream = LoadAudioStream(sampleRate, 16, 2);
+            SetAudioStreamCallback(audio::stream, audioStreamRefill2);   
+            audio::mode = audio::Mode::Play;
+            PlayAudioStream(audio::stream);
+        }
+    }
 
     void audioPause() {
         StackProtection::check();

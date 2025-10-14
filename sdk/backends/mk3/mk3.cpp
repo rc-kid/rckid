@@ -109,6 +109,8 @@ namespace rckid {
 
     // various forward declarations
 
+    void audioPlaybackDMA0();
+    void audioPlaybackDMA1();
     void audioPlaybackDMA(uint finished, uint other);
     void audioRecordDMA(uint finished, uint other);
 
@@ -145,6 +147,13 @@ namespace rckid {
         uint dma1_ = 0;
         DoubleBuffer<int16_t> * buffer_ = nullptr;
         uint32_t sampleRate_ = 44100;
+
+
+        int16_t * buffer0_ = nullptr;
+        int16_t * buffer1_ = nullptr;
+        uint32_t bufferSize0_ = 0;
+        uint32_t bufferSize1_ = 0;
+        AudioCallback2 cb2_;
     }
 
     bool buttonState(Btn b, AVRState::Status & status) {
@@ -205,7 +214,8 @@ namespace rckid {
         // for audio, reset the DMA start address to the beginning of the buffer and tell the double buffer to refill
         if (irqs & (1u << audio::dma0_)) {
             if (audioPlayback())
-                audioPlaybackDMA(audio::dma0_, audio::dma1_);
+                audioPlaybackDMA0();
+                //audioPlaybackDMA(audio::dma0_, audio::dma1_);
             else if (audioRecording())
                 audioRecordDMA(audio::dma0_, audio::dma1_);
             else
@@ -213,7 +223,8 @@ namespace rckid {
         }
         if (irqs & (1u << audio::dma1_)) {
             if (audioPlayback())
-                audioPlaybackDMA(audio::dma1_, audio::dma0_);
+                audioPlaybackDMA1();
+                //audioPlaybackDMA(audio::dma1_, audio::dma0_);
             else if (audioRecording())
                 audioRecordDMA(audio::dma1_, audio::dma0_);
             else 
@@ -717,6 +728,19 @@ namespace rckid {
         dma_channel_set_irq0_enabled(dma, true);
     }
 
+    void audioConfigurePlaybackDMA(int dma, int16_t * buffer, uint32_t bufferSize, int other) {
+        LOG(LL_INFO, "DMA configuration for " << (int32_t)dma << " buffer " << (void *)buffer << " size " << bufferSize << " other " << (int32_t)other);
+        auto dmaConf = dma_channel_get_default_config(dma);
+        channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bits (16 per channel, 2 channels)
+        channel_config_set_read_increment(& dmaConf, true);  // increment on read
+        channel_config_set_write_increment(& dmaConf, false);  // do not increment on write
+        channel_config_set_dreq(&dmaConf, Codec::playbackDReq()); // DMA is driven by the I2S playback pio
+        channel_config_set_chain_to(& dmaConf, other); // chain to the other channel
+        dma_channel_configure(dma, & dmaConf, Codec::playbackTxFifo(), buffer, bufferSize, false); // the buffer consists of stereo samples, (32bits)
+        // enable IRQ0 on the DMA channel (shared with other framework DMA uses such as the display or the SD card)
+        dma_channel_set_irq0_enabled(dma, true);
+    }
+
     void audioConfigureRecordDMA(int dma, int other, int16_t * writeTo, uint32_t transferCount) {
         auto dmaConf = dma_channel_get_default_config(dma);
         channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bits (16 per channel, 2 channels)
@@ -737,6 +761,18 @@ namespace rckid {
         // configure the DMA to transfer only the correct number of samples
         dma_channel_set_trans_count(finished, nextSamples, false);
         audio::buffer_->swap();
+    }
+
+    void __not_in_flash_func(audioPlaybackDMA0)() {
+        audio::bufferSize0_ = audio::cb2_(audio::buffer0_);
+        dma_channel_set_read_addr(audio::dma0_, audio::buffer0_, false);
+        dma_channel_set_trans_count(audio::dma0_, audio::bufferSize0_, false);
+    }
+
+    void __not_in_flash_func(audioPlaybackDMA1)() {
+        audio::bufferSize1_ = audio::cb2_(audio::buffer1_);
+        dma_channel_set_read_addr(audio::dma1_, audio::buffer1_, false);
+        dma_channel_set_trans_count(audio::dma1_, audio::bufferSize1_, false);
     }
 
     void __not_in_flash_func(audioRecordDMA)(uint finished, [[maybe_unused]] uint other) {
@@ -808,6 +844,21 @@ namespace rckid {
         dma_channel_start(audio::dma0_);
         // now we need to load the second buffer while the first one is playing (reload of the buffers will be done by the IRQ handler)
         audioPlaybackDMA(audio::dma1_, audio::dma0_);
+    }
+
+    void audioPlay(uint32_t sampleRate, AudioCallback2 cb) {
+        StackProtection::check();
+        audioStop();
+
+        audio::cb2_ = cb;
+        audio::buffer0_ = nullptr;
+        audio::buffer1_ = nullptr;
+        audio::bufferSize0_ = audio::cb2_(audio::buffer0_);
+        audio::bufferSize1_ = audio::cb2_(audio::buffer1_);
+        audioConfigurePlaybackDMA(audio::dma0_, audio::buffer0_, audio::bufferSize0_, audio::dma1_);
+        audioConfigurePlaybackDMA(audio::dma1_, audio::buffer1_, audio::bufferSize1_, audio::dma0_);
+        Codec::playbackI2S(sampleRate);
+        dma_channel_start(audio::dma0_);
     }
 
     void audioRecordMic(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb) {

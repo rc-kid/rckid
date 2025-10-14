@@ -227,6 +227,9 @@ namespace rckid {
      */
     using AudioCallback = std::function<uint32_t(int16_t *, uint32_t)>;
 
+    /* Audio callback function that when called gives a buffer buffer that has been used, and expects the buffer to change to new buffer, returning the number of samples in the new buffer. */ 
+    using AudioCallback2 = std::function<uint32_t(int16_t * &)>;
+
     /** Returns true if headphones are connected. 
      */
     bool audioHeadphones(); 
@@ -254,6 +257,10 @@ namespace rckid {
     /** Starts playback of given buffer at spefified sample rate. It is expected the buffer is empty and the callbackfunction will be called automatically to populate it. 
      */
     void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb);
+
+    /** Starts playback with the given sample rate and callback function.
+     */
+    void audioPlay(uint32_t sampleRate, AudioCallback2 cb);
 
     /** Starts recording the microphone at specified sample rate. When the buffer is filled, the callback function will be called so that the data can be processed. 
      */

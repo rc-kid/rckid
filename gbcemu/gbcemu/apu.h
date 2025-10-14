@@ -820,7 +820,6 @@ namespace rckid::gbcemu {
 
         DoubleBuffer<int16_t> soundBuffer_{1024};
 
-
     }; // gbcemu::APU
 
 
