@@ -72,7 +72,7 @@ namespace rckid::ui {
 
         virtual void onFileChanged() {}
         virtual void onFolderChanged() {}
-        virtual bool onFileFilter(String const & name) { return true; }
+        virtual bool onFileFilter([[maybe_unused]] String const & name) { return true; }
 
     protected:
 

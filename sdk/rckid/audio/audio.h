@@ -20,12 +20,13 @@ namespace rckid {
         /** Converts mono buffer into stereo one, duplicating all samples in it in place (from last to first). 
          */
         inline void convertToStereo(int16_t * buffer, uint32_t numSamples) {
-            for (; numSamples > 0; --numSamples) {
-                int16_t x = buffer[numSamples];
-                buffer[numSamples * 2] = x;
-                buffer[numSamples * 2 + 1] = x;
+            if (numSamples == 0)
+                return;
+            for (uint32_t i = numSamples; i > 0; --i) {
+                int16_t x = buffer[i - 1];
+                buffer[(i - 1) * 2] = x;
+                buffer[(i - 1) * 2 + 1] = x;
             }
-            buffer[1] = buffer[0];
         }
 
     } // namespace audio

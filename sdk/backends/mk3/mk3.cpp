@@ -285,7 +285,7 @@ namespace rckid {
         }};
     }
 
-    uint8_t debugRead(bool echo) {
+    uint8_t debugRead([[maybe_unused]] bool echo) {
         char cmd_ = ' ';
 #if (RCKID_LOG_TO_SERIAL == 1)
         cmd_ = uart_getc(uart0);

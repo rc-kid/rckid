@@ -863,7 +863,7 @@ namespace rckid {
 
     // memory
 
-    bool memoryIsImmutable(void const * ptr) {
+    bool memoryIsImmutable([[maybe_unused]] void const * ptr) {
         return false;
     }
 

@@ -251,7 +251,7 @@ namespace rckid {
             LOG(LL_ERROR, "  ocr error: " << hex(status));
             return false;
         }
-        if (buffer[0] & 0x40 != 0x40) {
+        if ((buffer[0] & 0x40) != 0x40) {
             LOG(LL_ERROR, "  byte addressable not supported");
         }
         // now the card is powered up and we can increase the speed

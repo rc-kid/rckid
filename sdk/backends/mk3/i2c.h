@@ -108,12 +108,16 @@ namespace rckid {
             Transaction * next;
 
             /** Returns the data to be written to the slave as part of the transaction. Those are stored directly after the transaction object. */
+            // the warning is false positive (the cb check above ensures that we are in fact a blocking transaction and hence not outside bounds)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
             uint8_t const * wdata() const {
                 if (cb == enqueueAndWaitCallback)
                     return reinterpret_cast<BlockingTransaction const *>(this)->wb;
                 else 
                     return reinterpret_cast<uint8_t const *>(this + 1);
             }
+#pragma GCC diagnostic pop
 
             /** Ennqueues the transaction after the last transaction in the queue.
              */

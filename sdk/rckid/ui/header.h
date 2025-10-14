@@ -71,7 +71,7 @@ namespace rckid::ui {
         }
 
         /** Unlike normal widgets,  */
-        void renderRow(Coord row, uint16_t * buffer, Coord startx, Coord numPixels) {
+        void renderRow([[maybe_unused]] Coord row, [[maybe_unused]] uint16_t * buffer, [[maybe_unused]] Coord startx, [[maybe_unused]] Coord numPixels) {
             UNIMPLEMENTED;            
         }
 
