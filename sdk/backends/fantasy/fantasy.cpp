@@ -103,7 +103,7 @@ namespace rckid {
         };
         Mode mode;
 
-        AudioCallback2 cb2;
+        AudioCallback cb;
         int16_t * bufferCurrent = nullptr;
         uint32_t bufferSize = 0;
         uint32_t bufferI = 0;
@@ -111,8 +111,6 @@ namespace rckid {
         int16_t * bufferNext = nullptr;
         uint32_t bufferNextSize = 0;
 
-        AudioCallback cb;
-        DoubleBuffer<int16_t> * buffer = nullptr;
         bool playback = false;
         uint8_t volume = 10;
         AudioStream stream;
@@ -557,35 +555,7 @@ namespace rckid {
 
     // audio
 
-    /** Refills the raylib's audio stream. 
-     */
     void audioStreamRefill(void * buffer, unsigned int samples) {
-        StackProtection::check();
-        // get the stereo view of the input buffer
-        int16_t * stereo = reinterpret_cast<int16_t*>(buffer);
-        while (samples-- != 0) {
-            if (audio::bufferI >= audio::bufferSize) {
-                audio::bufferSize = audio::cb(audio::buffer->front(), static_cast<uint32_t>(audio::buffer->size()) / 2) * 2;
-                audio::bufferI = 0;
-                audio::buffer->swap();
-            }
-            int16_t l = audio::buffer->back()[audio::bufferI++];
-            int16_t r = audio::buffer->back()[audio::bufferI++];
-            if (audio::volume == 0) {
-                l = 0;
-                r = 0;
-            } else {
-                l >>= (10 - audio::volume);
-                l = l & 0xfff0;
-                r >>= (10 - audio::volume);
-                r = r & 0xfff0;
-            }
-            *(stereo++) = l;
-            *(stereo++) = r;
-        }
-    }
-
-    void audioStreamRefill2(void * buffer, unsigned int samples) {
         StackProtection::check();
         // get the stereo view of the input buffer
         int16_t * stereo = reinterpret_cast<int16_t*>(buffer);
@@ -596,7 +566,7 @@ namespace rckid {
                 std::swap(audio::bufferSize, audio::bufferNextSize);
                 audio::bufferI = 0;
                 // inform the callback that we have retired the current buffer and ask for replacement, which will be our next buffer
-                audio::cb2(audio::bufferNext, audio::bufferNextSize);
+                audio::cb(audio::bufferNext, audio::bufferNextSize);
             }
             int16_t l = audio::bufferCurrent[audio::bufferI++];
             int16_t r = audio::bufferCurrent[audio::bufferI++];
@@ -654,39 +624,24 @@ namespace rckid {
         audio::volume = value;
     }
 
-    void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb) {
+    void audioPlay(uint32_t sampleRate, AudioCallback cb) {
         StackProtection::check();
         if (audio::mode != audio::Mode::Off)
             audioStop();
         {
             SystemMallocGuard g;
             audio::cb = cb;
-            audio::buffer = & buffer;
-            audio::stream = LoadAudioStream(sampleRate, 16, 2);
-            SetAudioStreamCallback(audio::stream, audioStreamRefill);   
-            audio::mode = audio::Mode::Play;
-            PlayAudioStream(audio::stream);
-        }
-    }   
-
-    void audioPlay(uint32_t sampleRate, AudioCallback2 cb) {
-        StackProtection::check();
-        if (audio::mode != audio::Mode::Off)
-            audioStop();
-        {
-            SystemMallocGuard g;
-            audio::cb2 = cb;
             audio::bufferCurrent = nullptr;
             audio::bufferNext = nullptr;
             audio::bufferSize = 0;
             audio::bufferI = 0;
 
             // preload the two buffers with the desired size
-            audio::cb2(audio::bufferCurrent, audio::bufferSize);
-            audio::cb2(audio::bufferNext, audio::bufferNextSize);
+            audio::cb(audio::bufferCurrent, audio::bufferSize);
+            audio::cb(audio::bufferNext, audio::bufferNextSize);
 
             audio::stream = LoadAudioStream(sampleRate, 16, 2);
-            SetAudioStreamCallback(audio::stream, audioStreamRefill2);   
+            SetAudioStreamCallback(audio::stream, audioStreamRefill);   
             audio::mode = audio::Mode::Play;
             PlayAudioStream(audio::stream);
         }
@@ -733,7 +688,8 @@ namespace rckid {
                 SystemMallocGuard g;
                 StopAudioStream(audio::stream);
                 UnloadAudioStream(audio::stream);
-                audio::buffer = nullptr;
+                audio::bufferCurrent = nullptr;
+                audio::bufferNext = nullptr;
                 //audio::bufferSize_ = 0;
                 //audio::bufferI_ = 0;
                 break;

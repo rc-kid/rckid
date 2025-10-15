@@ -111,7 +111,8 @@
 
 # TODO
 
-- mp3 audio playback does not work (audio player) - not sure why, seems to be related to playback & resume (?), gbcemu works, could it be related to reading the SD card while in IRQ? 
+- clean up mk3 audio api
+- document audio api
 
 - the rapid fire as is is kind of working, but maybe need per buttom settings, etc. 
 
