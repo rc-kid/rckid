@@ -38,6 +38,8 @@ namespace rckid {
             freelist_ = nullptr;
         }
 
+        static void * heapEnd() { return reinterpret_cast<void*>(heapEnd_); }
+
         static void traceChunks();
 
         class LeakGuard {
@@ -173,7 +175,7 @@ namespace rckid {
         static void resetMaxSize() { maxSize_ = 0;}
 
         static void check() {
-#ifdef RCKID_ENABLE_STACK_PROTECTION
+#if RCKID_ENABLE_STACK_PROTECTION == 1
             uint32_t cur = currentSize();
             if (cur > maxSize_)
                 maxSize_ = cur;
@@ -206,7 +208,7 @@ namespace rckid {
             asm volatile("mov %%rsp, %0" : "=r"(sp));
     #elif defined(__aarch64__) || defined(_M_ARM64)
             asm volatile("mov %0, sp" : "=r"(sp));
-    #elif RCKID_ENABLE_STACK_PROTECTION
+    #elif RCKID_ENABLE_STACK_PROTECTION == 1
             #error "Only aarch64 and x86_64 are supported for RCKid stack protection in fantasy backend"
     #else
             UNIMPLEMENTED;

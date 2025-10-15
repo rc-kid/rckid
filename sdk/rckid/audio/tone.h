@@ -78,7 +78,9 @@ namespace rckid {
                 // generate the waveform - sample rate tells us how much to advance at each step
                 while (buffer != end) {
                     uint32_t index = interpolation::linear(t_, period_, 0, waveform().size()).round();
-                    *(buffer++) = waveform()[index]; // const access only
+                    int16_t x = waveform()[index];
+                    *(buffer++) = x; // const access only
+                    *(buffer++) = x; // const access only
                     t_ += sr_;
                     if (t_ >= period_)
                         t_ -= period_;

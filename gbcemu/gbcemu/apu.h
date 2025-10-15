@@ -493,7 +493,12 @@ namespace rckid::gbcemu {
             if (value == enabled_)
                 return;
             if (value) {
-                audioPlay(soundBuffer_, 32768, [this](int16_t * buffer, uint32_t stereoSamples){
+                audioPlay(32768, [this](int16_t * & buffer, uint32_t & size){
+                    if (buffer == nullptr) {
+                        buffer = soundBuffer_.front();
+                        size = APU_STEREO_SAMPLES;
+                        soundBuffer_.swap();
+                    }
                     memset32(reinterpret_cast<uint32_t*>(buffer), 0, APU_STEREO_SAMPLES);
                     //for (int i = 0; i < 128; ++i)
                     //    buffer[i] = 2048;
@@ -508,7 +513,6 @@ namespace rckid::gbcemu {
                     lengthTick();
                     sweepTick();
                     envelopeTick();
-                    return stereoSamples;
                 });
             } else {
                 audioStop();
@@ -769,7 +773,6 @@ namespace rckid::gbcemu {
 
     private:
 
-
         void lengthTick() {
             ch1_.lengthTick();
             ch2_.lengthTick();
@@ -819,7 +822,6 @@ namespace rckid::gbcemu {
         uint8_t volumeRight_;
 
         DoubleBuffer<int16_t> soundBuffer_{1024};
-
     }; // gbcemu::APU
 
 

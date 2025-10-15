@@ -215,7 +215,6 @@ namespace rckid {
         if (irqs & (1u << audio::dma0_)) {
             if (audioPlayback())
                 audioPlaybackDMA0();
-                //audioPlaybackDMA(audio::dma0_, audio::dma1_);
             else if (audioRecording())
                 audioRecordDMA(audio::dma0_, audio::dma1_);
             else
@@ -224,7 +223,6 @@ namespace rckid {
         if (irqs & (1u << audio::dma1_)) {
             if (audioPlayback())
                 audioPlaybackDMA1();
-                //audioPlaybackDMA(audio::dma1_, audio::dma0_);
             else if (audioRecording())
                 audioRecordDMA(audio::dma1_, audio::dma0_);
             else 
@@ -764,13 +762,13 @@ namespace rckid {
     }
 
     void __not_in_flash_func(audioPlaybackDMA0)() {
-        audio::bufferSize0_ = audio::cb2_(audio::buffer0_);
+        audio::cb2_(audio::buffer0_, audio::bufferSize0_);
         dma_channel_set_read_addr(audio::dma0_, audio::buffer0_, false);
         dma_channel_set_trans_count(audio::dma0_, audio::bufferSize0_, false);
     }
 
     void __not_in_flash_func(audioPlaybackDMA1)() {
-        audio::bufferSize1_ = audio::cb2_(audio::buffer1_);
+        audio::cb2_(audio::buffer1_, audio::bufferSize1_);
         dma_channel_set_read_addr(audio::dma1_, audio::buffer1_, false);
         dma_channel_set_trans_count(audio::dma1_, audio::bufferSize1_, false);
     }
@@ -853,8 +851,10 @@ namespace rckid {
         audio::cb2_ = cb;
         audio::buffer0_ = nullptr;
         audio::buffer1_ = nullptr;
-        audio::bufferSize0_ = audio::cb2_(audio::buffer0_);
-        audio::bufferSize1_ = audio::cb2_(audio::buffer1_);
+        audio::bufferSize0_ = 0;
+        audio::bufferSize1_ = 0;
+        audio::cb2_(audio::buffer0_, audio::bufferSize0_);
+        audio::cb2_(audio::buffer1_, audio::bufferSize1_);
         audioConfigurePlaybackDMA(audio::dma0_, audio::buffer0_, audio::bufferSize0_, audio::dma1_);
         audioConfigurePlaybackDMA(audio::dma1_, audio::buffer1_, audio::bufferSize1_, audio::dma0_);
         Codec::playbackI2S(sampleRate);

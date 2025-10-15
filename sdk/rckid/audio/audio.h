@@ -20,13 +20,12 @@ namespace rckid {
         /** Converts mono buffer into stereo one, duplicating all samples in it in place (from last to first). 
          */
         inline void convertToStereo(int16_t * buffer, uint32_t numSamples) {
-            if (numSamples == 0)
-                return;
-            for (uint32_t i = numSamples; i > 0; --i) {
-                int16_t x = buffer[i - 1];
-                buffer[(i - 1) * 2] = x;
-                buffer[(i - 1) * 2 + 1] = x;
+            for (; numSamples > 0; --numSamples) {
+                int16_t x = buffer[numSamples - 1];
+                buffer[numSamples * 2 - 2] = x;
+                buffer[numSamples * 2 - 1] = x;
             }
+            //buffer[1] = buffer[0];
         }
 
     } // namespace audio
@@ -51,10 +50,10 @@ namespace rckid {
         /** To be called periodically in the main loop, checks there is need for more audio data to be generated and calls the refill samples function accordingly.
          */
         void update() {
-            if (frontBufferSamples_ == 0)
-                frontBufferSamples_ = refillSamples(playbackBuffer_->front(), playbackBuffer_->size() / 2);
-            if (backBufferSamples_ == 0)
-                backBufferSamples_ = refillSamples(playbackBuffer_->back(), playbackBuffer_->size() / 2);
+            if (refill_ != nullptr) {
+                *refillSize_ = refillSamples(refill_, *refillSize_);
+                refill_ = nullptr;
+            }
         }
    
     protected:
@@ -69,34 +68,27 @@ namespace rckid {
 
         
         DoubleBuffer<int16_t> * playbackBuffer_ = nullptr;
-        volatile uint32_t backBufferSamples_ = 0;
-        volatile uint32_t frontBufferSamples_ = 0;
+        uint32_t * refillSize_ = nullptr;
+        int16_t * refill_ = nullptr;
     }; // rckid::AudioPlayer
 
     inline void audioPlay(AudioStream & stream) {
         uint32_t sampleRate = stream.sampleRate();
 
-        audioPlay(sampleRate, [ & stream](int16_t *& buffer) {
-            if (buffer != nullptr) {
-                //LOG(LL_INFO, (void *)buffer);
-                //ASSERT(buffer == stream.playbackBuffer_->front());
-                // swap the buffer so that what was back now becomes front and send the front buffer for refill
-                stream.playbackBuffer_->swap();
+        audioPlay(sampleRate, [& stream](int16_t * & buffer, uint32_t & size) {
+            
+            if (buffer == nullptr) {
+                size = stream.refillSamples(stream.playbackBuffer_->front(), stream.playbackBuffer_->size() / 2);
                 buffer = stream.playbackBuffer_->front();
-                uint32_t bufferSize = stream.backBufferSamples_;
-                stream.backBufferSamples_ = 0;
-                return bufferSize;
+                stream.playbackBuffer_->swap();
             } else {
-                buffer = stream.playbackBuffer_->front();
-                stream.playbackBuffer_->swap();
-                return stream.frontBufferSamples_;
+                if (stream.refill_ != nullptr) {
+                    // we haven't yet filled the buffer, ouch
+                }
+                stream.refill_ = buffer;
+                stream.refillSize_ = & size;
             }
         });
-        /*
-        audioPlay(*(stream.playbackBuffer_), sampleRate, [& stream](int16_t * buffer, uint32_t samples) {
-            return stream.refillSamples(buffer, samples);
-        });
-        */
     }
 
 

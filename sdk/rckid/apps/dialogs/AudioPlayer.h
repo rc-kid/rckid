@@ -45,12 +45,7 @@ namespace rckid {
         }
 
     protected:
-
         void update() override {
-            // TODO I really have no idea what is going on, no matter how high number I put here, the memory just keeps being a bit above that, so when 200k it will keep printing a bit over 200k, when 400k it will print a bit above 400k
-            // WHY WHY WHY? 
-            if (RAMHeap::usedBytes() > 400000)
-                LOG(LL_INFO, "Used bytes: " << RAMHeap::usedBytes());
             ui::Form<AudioPlayerResult>::update();
             as_.update();
             // deal with controls
@@ -58,7 +53,7 @@ namespace rckid {
                 uint32_t t = uptimeUs();
                 elapsedUs_ += t - lastUs_;
                 lastUs_ = t;
-                setElapsedTime();
+                //setElapsedTime();
                 // when not paused, keep the device alive
                 keepAlive();
             }
@@ -68,7 +63,6 @@ namespace rckid {
                 btnClear(Btn::Down);
                 exit(AudioPlayerResult::Done);
             }
-            /*
             // btn up, or button A is audio pause
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                 LOG(LL_INFO, "btn down");
@@ -82,7 +76,6 @@ namespace rckid {
                 }
                 redraw_ = true;
             }
-                */
             // TODO btn left & right is immediate return
             if (!audioPlayback())
                 exit(AudioPlayerResult::PlayNext);
@@ -91,7 +84,7 @@ namespace rckid {
         /** Only redraw if there is change in the visual elements. This saves precious CPU time on the device for the audio decoding. As it effectively limits the FPS to 1 frane per second. 
          */
         void draw() override {
-            if (redraw_) {
+            if (redraw_ || true) {
                 redraw_ = false;
                 ui::Form<AudioPlayerResult>::draw(); 
             }

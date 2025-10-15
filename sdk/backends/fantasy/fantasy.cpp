@@ -105,11 +105,11 @@ namespace rckid {
 
         AudioCallback2 cb2;
         int16_t * bufferCurrent = nullptr;
-        size_t bufferSize = 0;
-        size_t bufferI = 0;
+        uint32_t bufferSize = 0;
+        uint32_t bufferI = 0;
 
-
-
+        int16_t * bufferNext = nullptr;
+        uint32_t bufferNextSize = 0;
 
         AudioCallback cb;
         DoubleBuffer<int16_t> * buffer = nullptr;
@@ -590,9 +590,13 @@ namespace rckid {
         // get the stereo view of the input buffer
         int16_t * stereo = reinterpret_cast<int16_t*>(buffer);
         while (samples-- != 0) {
-            if (audio::bufferI >= audio::bufferSize) {
-                audio::bufferSize = audio::cb2(audio::bufferCurrent) * 2;
+            if (audio::bufferI >= audio::bufferSize * 2) {
+                // go for the next buffer which should already be preloaded
+                std::swap(audio::bufferCurrent, audio::bufferNext);
+                std::swap(audio::bufferSize, audio::bufferNextSize);
                 audio::bufferI = 0;
+                // inform the callback that we have retired the current buffer and ask for replacement, which will be our next buffer
+                audio::cb2(audio::bufferNext, audio::bufferNextSize);
             }
             int16_t l = audio::bufferCurrent[audio::bufferI++];
             int16_t r = audio::bufferCurrent[audio::bufferI++];
@@ -673,8 +677,14 @@ namespace rckid {
             SystemMallocGuard g;
             audio::cb2 = cb;
             audio::bufferCurrent = nullptr;
+            audio::bufferNext = nullptr;
             audio::bufferSize = 0;
             audio::bufferI = 0;
+
+            // preload the two buffers with the desired size
+            audio::cb2(audio::bufferCurrent, audio::bufferSize);
+            audio::cb2(audio::bufferNext, audio::bufferNextSize);
+
             audio::stream = LoadAudioStream(sampleRate, 16, 2);
             SetAudioStreamCallback(audio::stream, audioStreamRefill2);   
             audio::mode = audio::Mode::Play;

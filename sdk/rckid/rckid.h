@@ -228,7 +228,7 @@ namespace rckid {
     using AudioCallback = std::function<uint32_t(int16_t *, uint32_t)>;
 
     /* Audio callback function that when called gives a buffer buffer that has been used, and expects the buffer to change to new buffer, returning the number of samples in the new buffer. */ 
-    using AudioCallback2 = std::function<uint32_t(int16_t * &)>;
+    using AudioCallback2 = std::function<void(int16_t * &, uint32_t &)>;
 
     /** Returns true if headphones are connected. 
      */

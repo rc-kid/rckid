@@ -27,7 +27,6 @@ namespace rckid {
         }
 
         uint32_t refillSamples(int16_t * buffer, [[maybe_unused]] uint32_t numSamples) override {
-            //LOG(LL_INFO, "Refilling samples");
             // we don't expect to be called with less free space than one full frame
             ASSERT(numSamples >= 1152);
             uint32_t res = 0;
@@ -38,7 +37,9 @@ namespace rckid {
                     return res / 2;
                 }
             }
-            //LOG(LL_INFO, "ref done " << res);
+            int32_t crc = 0;
+            for (uint32_t i = 0; i < res; ++i)
+                crc += buffer[i];
             return res / 2;
         };
 

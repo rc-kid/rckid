@@ -23,18 +23,24 @@ void listI2CDevices() {
  */
 int main() {
     initialize();
-    DoubleBuffer<int16_t> buf_{2048};
+    DoubleBuffer<int16_t> buf_{2000};
     Tone t;
     t.setWaveform(Waveform::Sine());
     //t.setWaveform(Waveform{assets::WaveformTriangle});
-    t.setSampleRate(44100);
+    t.setSampleRate(44000);
     t.on(440);
-    audioPlay(buf_, 44100, [&](int16_t * buf, uint32_t size) {
+    audioPlay(44000, [&](int16_t * & buf, uint32_t & size) {
+        if (buf == nullptr) {
+            buf = buf_.front();
+            LOG(LL_INFO, "Buffer size is " << buf_.size());
+            size = buf_.size() / 2;
+            buf_.swap();
+            t.generateInto(buf, size);
+        }
         ++numTicks;
-        return t.generateInto(buf, size);
     });
     while (true) {
-        yield();
+        yield(); /*
         cpu::delayMs(100);
         yield();
         cpu::delayMs(100);
@@ -51,5 +57,6 @@ int main() {
         yield();
         cpu::delayMs(100);
         LOG(LL_INFO, "ticks: " << numTicks);
+        */
     }
 }

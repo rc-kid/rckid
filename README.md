@@ -65,20 +65,32 @@ The SDK library is at the core of RCKid as it provides an abstraction layer over
 
 ## Debugging on the Device
 
-> For this is for mkII only. Will be updated once I start testing on mkIII.
-
-For devel-server with OpenOCD installed, wires on the back connector for mkII are: 
+    sudo apt-get install pkg-config libjim-dev libudev-dev
+    git clone https://github.com/raspberrypi/openocd.git
     
-    green | empty | yellow | blue
+    cd openocd
+    ./bootstrap
+    ./configure --disable-werror --enable-sysfsgpio --enable-bcm2835gpio
+    make -j4
+    sudo make install
 
-Then run:
+Connect the SWD port for the RCKid (on devel-server the wires are, from top to bottom, looking from the back):
 
-    openocd -f interface/raspberrypi-swd.cfg -f target/rp2040.cfg
+         | GND   |
+    -----|-------|---------
+    blue | green | yeallow
+    
 
-And finally run gdb:
+Then run openocd on the rpi with the following command:
+
+    openocd -f interface/cmsis-dap.cfg -f target/rp2350.cfg -c "adapter speed 5000" -c "bindto 0.0.0.0"
+
+And to run the debugger, can run gdb from the computer that compiled the cartridges:
 
     gdb app.elf
-    target remote :3333
+    target remote IP_ADDR:3333
+
+Where `IP_ADDR` is the IP address of the rpi server. 
 
 (from https://betanet.net/view-post/using-openocd-on-raspberry-pi-4-a)
 
