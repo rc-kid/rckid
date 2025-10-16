@@ -124,9 +124,6 @@
 
 - see if we can enable exceptions, what are the runtime & stack costs of them running
 - exceptions seem to be worthy, very little cost, mostly in binary size, but stack increases are small-ish
-- so should try to convert the API to use exceptions instead of the signalling it does now
-1475kb, 448 mem, 992 stack
-1517kb, 448 mem , 1024 stack (exceptions enabled, but no checking)
 
 - critical battery error
 - add RGB signalization to the avr mkIII
@@ -151,7 +148,6 @@
 
 - might get super pretty front panels from here: https://www.hopesens-glass.com/
 
-- I2S playback working. Tone does not seem to work well (glitch data in square waveform, and maybe others). It also drops framerate to 30 when enabled which is weird (note ? for the input / output, it might be easier to use different format, such as PCM as it would allow to send whole 32bits in one loop)
 
 - audio codec I2C does not work when MCLK is active. This could be because of enormous I2C rise time for SDA & SCL (well over 1500ns, where 300ns is the limit) - there is sth in the bus design as this would suggest 1nF capacitance of the traces
 

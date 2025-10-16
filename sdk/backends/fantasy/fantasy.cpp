@@ -621,6 +621,8 @@ namespace rckid {
 
     void audioSetVolume(uint8_t value) {
         StackProtection::check();
+        if (value > 15)
+            value = 15;
         audio::volume = value;
     }
 

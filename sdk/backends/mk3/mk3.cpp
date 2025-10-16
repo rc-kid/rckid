@@ -766,7 +766,8 @@ namespace rckid {
 
     void audioSetVolume(uint8_t value) {
         StackProtection::check();
-        value = (value & 0xf);
+        if (value > 15)
+            value = 15;
         uint8_t rawValue = (value << 2) | (value & 0x3);
         if (audioHeadphones()) {
             Codec::setVolumeHeadphones(rawValue);

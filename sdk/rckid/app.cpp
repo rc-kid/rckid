@@ -35,6 +35,14 @@ namespace rckid {
             if (a.has_value())
                 a.value()();
         }
+        if (btnPressed(Btn::VolumeUp)) {
+            btnClear(Btn::VolumeUp);
+            audioSetVolume(audioVolume() + 1);
+        }
+        if (btnPressed(Btn::VolumeDown)) {
+            btnClear(Btn::VolumeDown);
+            audioSetVolume(audioVolume() - 1);
+        }
     }
 
     void App::addDefaultHomeActionsInto(ui::ActionMenu * menu) {
