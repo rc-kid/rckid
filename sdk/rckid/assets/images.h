@@ -5,28 +5,10 @@
 
 namespace rckid::assets {
 
-    // File: assets/images/star.png
-    // Size: 736
-    static constexpr uint8_t star[] = {
-        #include "raw/images/star.inc.h"
-    };
-
     // File: assets/images/logo16.png
-    // Size: 3186
+    // Size: 3421
     static constexpr uint8_t logo16[] = {
         #include "raw/images/logo16.inc.h"
-    };
-
-    // File: assets/images/logo256.png
-    // Size: 7268
-    static constexpr uint8_t logo256[] = {
-        #include "raw/images/logo256.inc.h"
-    };
-
-    // File: assets/images/background256.png
-    // Size: 62013
-    static constexpr uint8_t background256[] = {
-        #include "raw/images/background256.inc.h"
     };
 
     // File: assets/images/background16.png
