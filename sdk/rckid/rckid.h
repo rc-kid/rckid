@@ -215,12 +215,14 @@ namespace rckid {
     /** \page sdk
         \section audio Audio Playback & Recording
 
-        The audio uses 16bit signed format and supports either mono, or stereo playback and mono recording via the buil-in microphone with sample rates of up to 48kHz. To conserve memory, both playback and recording require the app to supply the audio system with a double buffer that the audio system will use to cache and stream out the audio data, and a callback function. 
+        The audio uses 16bit signed format and supports stereo playback and recording. The audio system is very simple and both playback and recording are done via DMA and require at least double buffering with the ability to use tripple or even larger buffers if necessary.
 
-        The callback function for the playback takes a buffer and its size in *stereo samples* and should fill the buffer with up to the specified number of stereo samples, returning the number of stereo samples actually written (which can be smaller then the number of samples the buffer can hold). Internally, the device uses the double buffer so that when one part is being streamed out via DMA, the other part can be refilled by the application.
+        This is done by the configurable callback function that is takes a reference to a sample buffer and its size (always in the number of stereo samples). The input arguments are always a buffer and its size that is being released by the audio system and can be re-used (for playback), or consumed (for recording) by the application. As both the buffer and its by reference the callback should also provide a new buffer and its size that will be used next by the audio system. At the beginning of playback, the callback is called twice to get the initial buffers required for double buffer - in case of recording those buffers will then be filled with the audio and retired via the callback function. 
 
+        Internally, the audio uses pio to drive the codec with I2C with a double buffer confirguration and and back-to-back chained two DMA channels, i.e. while the callback for buffer 0 retirement/processing is being called, the second buffer is being processed by the codec.
+
+        This provides seamless buffer transition, but requires that the callback function for playback provides the next buffer and especially its size immediately as the DMA reconfiguration happens immediately after the callback. So if the buffer sizes are always the same (such as the MP3 format), double buffering is enough (size stays the same, and the data can be filled later via the main loop as long as it happens before the other buffer is retired). Buf if frame sizes differ, then tripple buffering is necessary so that while one buffer is being played, another is being retired and the third one is already ready to be swapped for (via the reference parameters). 
      */
-
 
     /* Audio callback function that when called gives a buffer buffer that has been used, and expects the buffer to change to new buffer, returning the number of samples in the new buffer. */ 
     using AudioCallback = std::function<void(int16_t * &, uint32_t &)>;
