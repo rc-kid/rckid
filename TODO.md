@@ -111,7 +111,6 @@
 
 # TODO
 
-- clean up mk3 audio api
 - document audio api
 
 - the rapid fire as is is kind of working, but maybe need per buttom settings, etc. 

@@ -29,8 +29,6 @@ namespace rckid {
             title_{80,10,fs::stem(path)},
             elapsed_{80,54,String{""}},
             icon_{8,8,Icon{assets::icons_64::play_button}} {
-            // TODO
-            as_.update();
             audioPlay(as_);
             lastUs_ = uptimeUs();
             elapsedUs_ = 0;
@@ -65,7 +63,6 @@ namespace rckid {
             }
             // btn up, or button A is audio pause
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
-                LOG(LL_INFO, "btn down");
                 if (audioPaused()) {
                     icon_ = Icon{assets::icons_64::play_button};
                     audioResume();
