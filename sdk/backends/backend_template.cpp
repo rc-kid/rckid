@@ -250,7 +250,16 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
-    void audioPlay(DoubleBuffer<int16_t> & buffer, uint32_t sampleRate, AudioCallback cb) {
+    void audioPlay(uint32_t sampleRate, AudioCallback cb) {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
+    void audioRecordMic(uint32_t sampleRate, AudioCallback cb) {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+    void audioRecordLineIn(uint32_t sampleRate, AudioCallback cb) {
         StackProtection::check();
         UNIMPLEMENTED;
     }
