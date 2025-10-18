@@ -28,61 +28,23 @@ namespace rckid::cmd {
     COMMAND(6, BootloaderAVR);
     COMMAND(7, DebugModeOn);
     COMMAND(8, DebugModeOff);
-    COMMAND(9, SetBrightness,
-        uint8_t value;
-        SetBrightness(uint8_t value): value{value} {}
-    );
-    COMMAND(10, SetTime, 
-        TinyDateTime value;
-        SetTime(TinyDateTime value): value{value} {}
-    );
 
-    /** Sets the alarm to given value and enables it. 
-     */
-    COMMAND(11, SetAlarm, 
-        TinyAlarm value;
-        SetAlarm(TinyAlarm value): value{value} {}
-    );
-
-    /** Explicitly sets the budget to given value. Note that setting the budget does not affect the reset counter. This command can be used to update the budget value when counting down, or top-up the budget when appropriate.
-     */
-    COMMAND(12, SetBudget, 
-        uint32_t seconds;
-        SetBudget(uint32_t value): seconds{value} {}
-    );
-
-    /** Sets the daily budget allowance. This is the value to which budget is reset at midnight. 
-     */
-    COMMAND(13, SetDailyBudget, 
-        uint32_t seconds;
-        SetDailyBudget(uint32_t value): seconds{value} {}
-    );
-
-    /** Decrements budget by single second. This message is sent to the AVR every second during which a budget counted app is active. This ensures that (a) if there is RP crash, the budget will be valid, and (b) at midnight, there will be no data race between budget update and budget decrement.
-     */
-    COMMAND(14, DecBudget);
-
-    /** Resets the budget to its daily allowance. 
-     */
-    COMMAND(15, ResetBudget);
-
-
-    COMMAND(40, ReadFlashPage,
+    COMMAND(27, ReadFlashPage,
         uint16_t page;
         ReadFlashPage(uint16_t page): page{page} {}
     );
 
-    COMMAND(41, ReadEEPROMPage,
+    COMMAND(28, ReadEEPROMPage,
         uint16_t page;
         ReadEEPROMPage(uint16_t page): page{page} {}
     );
 
-    COMMAND(42, ReadRAMPage,
+    COMMAND(29, ReadRAMPage,
         uint16_t page;
         ReadRAMPage(uint16_t page): page{page} {}
     );
 
-    COMMAND(43, WriteFlashPage,
+    COMMAND(30, WriteFlashPage,
         uint16_t page;
         uint8_t data[128];
         WriteFlashPage(uint16_t page, int8_t const * data): page{page} {
@@ -90,7 +52,7 @@ namespace rckid::cmd {
         }
     );
 
-    COMMAND(44, WriteRAMPage,
+    COMMAND(31, WriteRAMPage,
         uint16_t page;
         uint8_t data[32];
         WriteRAMPage(uint16_t page, uint8_t const * data): page{page} {
@@ -98,11 +60,64 @@ namespace rckid::cmd {
         }
     );
 
-    COMMAND(100, RGBOff);
+
+
+    COMMAND(32, SetNotification,
+        RGBEffect effect;
+        SetNotification(RGBEffect const & effect): effect{effect} {}
+    );
+
+    COMMAND(33, SetBrightness,
+        uint8_t value;
+        SetBrightness(uint8_t value): value{value} {}
+    );
+    COMMAND(34, SetTime,
+        TinyDateTime value;
+        SetTime(TinyDateTime value): value{value} {}
+    );
+
+    /** Sets the alarm to given value and enables it. 
+     */
+    COMMAND(35, SetAlarm, 
+        TinyAlarm value;
+        SetAlarm(TinyAlarm value): value{value} {}
+    );
+
+
+    COMMAND(36, SetAudioSettings,
+        AVRState::AudioSettings settings;
+        SetAudioSettings(AVRState::AudioSettings const & settings): settings{settings} {}
+    );
+
+    /** Explicitly sets the budget to given value. Note that setting the budget does not affect the reset counter. This command can be used to update the budget value when counting down, or top-up the budget when appropriate.
+     */
+    COMMAND(37, SetBudget, 
+        uint32_t seconds;
+        SetBudget(uint32_t value): seconds{value} {}
+    );
+
+    /** Sets the daily budget allowance. This is the value to which budget is reset at midnight. 
+     */
+    COMMAND(38, SetDailyBudget, 
+        uint32_t seconds;
+        SetDailyBudget(uint32_t value): seconds{value} {}
+    );
+
+    /** Decrements budget by single second. This message is sent to the AVR every second during which a budget counted app is active. This ensures that (a) if there is RP crash, the budget will be valid, and (b) at midnight, there will be no data race between budget update and budget decrement.
+     */
+    COMMAND(39, DecBudget);
+
+    /** Resets the budget to its daily allowance. 
+     */
+    COMMAND(40, ResetBudget);
+
+
+    
+    COMMAND(41, RGBOff);
 
     /** Specifies the RGB effect for a particular LED. 
     */
-    COMMAND(101, SetRGBEffect, 
+    COMMAND(42, SetRGBEffect, 
         uint8_t index;
         RGBEffect effect;
         SetRGBEffect(uint8_t index, RGBEffect const & effect): index{index}, effect{effect} {}
@@ -112,7 +127,7 @@ namespace rckid::cmd {
         
         As the DPAD contains multiple LEDs, the DPAD effect is applied to all DPAD LEDs at once. For finer control over the DPAD LEDs, eithe select the individual LEDs using SetRGBEffect, or use the SetRGBEffectDPAD command to control just the DPAD LEDs.
      */
-    COMMAND(102, SetRGBEffects, 
+    COMMAND(43, SetRGBEffects, 
         RGBEffect a;
         RGBEffect b;
         RGBEffect dpad;
@@ -124,7 +139,7 @@ namespace rckid::cmd {
 
     /** Sets RGB effects on the DPAD LEDs alone.
      */
-    COMMAND(103, SetRGBEffectDPAD, 
+    COMMAND(44, SetRGBEffectDPAD, 
         RGBEffect topLeft;
         RGBEffect topRight;
         RGBEffect bottomLeft;
@@ -133,20 +148,9 @@ namespace rckid::cmd {
             topLeft{topLeft}, topRight{topRight}, bottomLeft{bottomLeft}, bottomRight{bottomRight} {}
     );
 
-    COMMAND(104, Rumbler,
+    COMMAND(45, Rumbler,
         RumblerEffect effect;
         Rumbler(RumblerEffect const & effect): effect{effect} {}
-    );
-
-
-    COMMAND(150, SetNotification,
-        RGBEffect effect;
-        SetNotification(RGBEffect const & effect): effect{effect} {}
-    );
-
-    COMMAND(200, SetAudioSettings,
-        AVRState::AudioSettings settings;
-        SetAudioSettings(AVRState::AudioSettings const & settings): settings{settings} {}
     );
 
 } // namespace rckid::cmd

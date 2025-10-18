@@ -528,7 +528,7 @@ public:
                 setIrq();
             );
             // read either battery voltage, or temperature every other second using ADC0
-            if (state_.uptime & 1 == 0) {
+            if ((state_.uptime & 1) == 0) {
                 static_assert(AVR_PIN_VCC_SENSE == gpio::A2);
                 startADC(ADC_MUXPOS_AIN2_gc);
             } else {

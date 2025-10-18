@@ -180,8 +180,9 @@ namespace rckid {
 
         TinyAlarm alarm;
 
-        uint8_t brightness = RCKID_DISPLAY_BRIGHTNESS;
         uint32_t uptime = 0;
+
+        uint8_t brightness = RCKID_DISPLAY_BRIGHTNESS;
 
         AudioSettings audio;
 

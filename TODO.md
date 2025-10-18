@@ -48,6 +48,8 @@ Nice extras would include:
 
 # TODO
 
+- Audio playback is smaller than the home menu and so if home menu activated, it looks ugly (bar on top)
+
 - when home btn hit from audio, audio should pause if not paused yet (or audio can register background task? do we allow bg tasks?)
 
 - check power settings on AVR (seems to be completely off)
