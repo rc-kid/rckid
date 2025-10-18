@@ -101,6 +101,11 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
+    void btnClear() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
     int16_t accelX() {
         StackProtection::check();
         UNIMPLEMENTED;

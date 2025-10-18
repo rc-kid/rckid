@@ -136,6 +136,10 @@ namespace rckid {
      */
     void btnClear(Btn b);
 
+    /** Clears pressed button states for *all* buttons. 
+     */
+    void btnClear();
+
     /** Returns the accelerometer readings. 
      */
     int16_t accelX(); 

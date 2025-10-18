@@ -352,6 +352,11 @@ namespace rckid {
         io::lastButtons_ |= (io::buttons_ & static_cast<uint32_t>(b));
     }
 
+    void btnClear() {
+        StackProtection::check();
+        io::lastButtons_ = 0xffffffff;
+    }
+
     int16_t accelX() { 
         StackProtection::check();
         return io::accelX_; 

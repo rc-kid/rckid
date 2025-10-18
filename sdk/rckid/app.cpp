@@ -80,6 +80,7 @@ namespace rckid {
     extern volatile bool avrStatusRequest_;
 
     void App::loop() {
+        btnClear();
         // wait for the previous display update to finish to avoid interfering with the old app unloading
         displayWaitUpdateDone();
         // set the current app in focus. If there is previous app, it will be blurred. The focus method also updates the parent app so that we can go back with the apps
@@ -97,6 +98,7 @@ namespace rckid {
         displayWaitUpdateDone();
         // we are done, should blur ourselves, and refocus parent (if any)
         blur();
+        btnClear();
     }
 
     void App::onSecondTick() {

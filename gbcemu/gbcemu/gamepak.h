@@ -223,12 +223,16 @@ namespace rckid::gbcemu {
                 prev = p;
                 p = p->last;
             }
-            // haven't found the page, try creating one first
-            uint8_t * buffer = new uint8_t[PAGE_SIZE];
-            if (buffer != nullptr) {
+            // see if creating new page is a possibility
+            if (numPages_ < MAX_ACTIVE_PAGES) {
+                uint8_t * buffer = new uint8_t[PAGE_SIZE];
+                ASSERT(buffer != nullptr);
+                ++numPages_;
+                LOG(LL_INFO, "Active pages: " << numPages_);
                 p = new PageInfo{buffer};
                 return p;
             }
+            // otherwise recycle the last page
             prev->last = nullptr;
             p->reset();
             return p;
@@ -243,8 +247,11 @@ namespace rckid::gbcemu {
 
     private:
 
+        static constexpr uint32_t MAX_ACTIVE_PAGES = 14;
+
         mutable PageInfo * cache_ = nullptr;
         mutable PageInfo * page0_ = nullptr;
+        mutable uint32_t numPages_  = 0;
 
         mutable T s_;
     }; 

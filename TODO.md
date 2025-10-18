@@ -104,12 +104,16 @@
 - [ ] determine the actual speed & how to set it to 8MHz? Or even 5? 
 
 - [X] buy torx M2x10mm (https://www.nerezka.cz/sroub-m-2-x-10-din-965tx-a2) 
-- [ ] buy threaded inserts for thermosets (https://www.tme.eu/cz/en/details/b2_bn1054/threaded-insertions/bossard/1386727/)
-- [ ] order extra batteries (TME)
+- [X] buy threaded inserts for thermosets (https://www.tme.eu/cz/en/details/b2_bn1054/threaded-insertions/bossard/1386727/)
+- [X] buy LEDs with proper forward voltage (https://www.tme.eu/cz/details/l128-4080ca3500001/vykonove-diody-led-emiter/lumileds/)
+- [X] order extra batteries (TME)
 - [ ] order headphone jacks (mouser)
+- [ ] order AP2502 extras (mouser)
 
 
 # TODO
+
+- RM2 cartridges do not connect flash to 3v3(!!)
 
 - the rapid fire as is is kind of working, but maybe need per buttom settings, etc. 
 

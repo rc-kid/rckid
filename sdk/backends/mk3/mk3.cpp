@@ -591,6 +591,10 @@ namespace rckid {
         RCKid::setButtonState(b, io::lastStatus_, btnDown(b));
     }
 
+    void btnClear() {
+        StackProtection::check();
+        io::lastStatus_ = io::avrState_.status;
+    }
 
     int16_t accelX() {
         StackProtection::check();

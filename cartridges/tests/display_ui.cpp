@@ -22,6 +22,7 @@
 #include <rckid/apps/Messages.h>
 #include <rckid/apps/Clock.h>
 #include <rckid/apps/DataSync.h>
+#include <rckid/apps/Flashlight.h>
 
 #include <gbcemu/gbcemu.h>
 #include <gbcemu/gamepak.h>
@@ -97,6 +98,7 @@ ui::ActionMenu * mainMenuGenerator() {
         ui::ActionMenu::Generator("Images", assets::icons_64::picture, imagesMenuGenerator),
         ui::ActionMenu::Item("Remote", assets::icons_64::rc_car, nullptr),
         ui::ActionMenu::Generator("Utilities", assets::icons_64::configuration, utilsMenuGenerator),
+        ui::ActionMenu::Item("Flashlight", assets::icons_64::flashlight, App::run<Flashlight>),
     };
 }
 
