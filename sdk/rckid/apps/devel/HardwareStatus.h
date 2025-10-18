@@ -56,6 +56,11 @@ namespace rckid {
 
             text_.text(15, 6) << (isBudgeted() ? "Y " : "N  ");
             text_.text(17, 6) << budget();
+
+            text_.text(15, 7) << (powerUsbConnected() ? "USB " : "    ");
+            text_.text(19, 7) << (powerCharging() ? "CHRG " : "     ");
+            text_.text(24, 7) << powerVcc();
+
         }
 
     private:

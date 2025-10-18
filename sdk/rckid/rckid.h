@@ -80,6 +80,20 @@ namespace rckid {
      */
     void powerOff();
 
+    /** Returns the current system voltage in 10mV increments, i.e. value of 500 corresponds to 5 volts, 2370 to 3.7 volts, etc.
+     */
+    uint16_t powerVcc();
+
+    /** Returns true if the USB cable is connected, i.e. if the device is powered via DC and not battery. 
+     */
+    bool powerUsbConnected();
+
+    /** Returns true if the device is currently charging the battery.
+     
+        This can only return true if the usb is connected. 
+     */
+    bool powerCharging();
+
     /** Programatically resets the idle timer that automatically powers the device off. 
     
         Internally, there are two counters - idle and keepalive countdowns. Both counters are reset at any button press, and the idle counter can also be reset by calling the keepAlive() function, effectively switching to the longer keepalive timeout for device power off. This is particularly useful for media playback, when no user feedback is necessary for extended periods of time.

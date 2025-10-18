@@ -2,59 +2,6 @@
 
 > X means done, - means cannot be done
 
-- [X] verify there are no shorts between VCC, VBATT, VDD, 3V3 and ground
-- [X] add jumper wires for D and audio power (! these *must* be installed before the board is powered)
-- [X] add connectors for battery
-- [X] try powering up through battery connector at 4.0V
-- [X] try powering up through USB at 5 volts
-- [-] try powering up through battery at 3.0 volts to see if the PMIC keeps the VCC above threshold 
-- [X] verify cartridge connector integrity on unpopulated dev board
-- [X] solder cartridge connector on dev board
-- [X] verify that UPDI works when AVR powered with 3v3
-- [X] breadboatd AVR test Serial out
-- [X] breadboard AVR test RGB
-- [X] breadboard AVR test rumbler
-- [X] breadboard AVR test backlight
-- [X] breadboard AVR test IRQ
-- [X] breadboard AVR test buttons
-- [X] breadboard AVR test I2C master ennumeration and some basic I2C comms
-- [X] breadboard AVR test power on / power off
-- [X] modify avr to not power rp2350 on, switch to ATTiny3217
-    - [X] flash the AVR on device
-    - [X] device AVR test Serial out
-    - [X] device AVR test RGB
-    - [X] device AVR test buttons
-    - [X] device AVR test I2C master ennumeration
-    - [X] switch to external osc for RTC on the devboard
-    - [X] test device clock accuracy with external clock
-- [X] modify AVR to turn on/off
-- [X] device AVR test power on / power off
-- [X] device AVR test rumbler -- it runs off IOVDD, has to be checked after IOVDD en 
-- [X] check that RP2350 shows on host machine as USB drive
-- [X] enumerate I2C devices (now we should see also audio & radio)
-- [X] check serial test on RPi Pico 2
-- [X] flash RP2350 with serial test and see output
-- [X] check that AVR can reboot RP
-- [X] verify that AVR can reset RP2350 into bootloader mode
-- [X] ensure logging works with initialize() call as well
-- [X] check that RP can talk to I2C devices
-- [X] check that RP can talk to SD card
-- [X] check that RP can talk to the display & show data (worst but RST pin must be held high)
-- [X] check NAU88C22 basic communication
-- [X] check MCLK generation
-- [X] check NAU88C22 radio aux to headphones (with 100uF cap ok)
-- [X] check NAU88C22 radio aux to speaker
-- [X] speaker works in BTL but there are some hiccups present, power issues, need caps next to the codec
-- [X] check NAU88C22 power consumption with idle, speaker and headphones outputs
-- [X] check NAU88C22 radio aux to ADC to DAC to headphones & speaker (only when I2S in master mode)
-- [X] check NAU88C22 DAC output
-- [X] check NAU88C22 ADC input (radio) - seems to work, have some trouble writing data fast enough in raw mode even at 8000kHz, but the I2S comms work - its also quite faint, but the adc boost is not running at 100%
-- [X] check NAU88C22 ADC input with PGA (microphone) - but not with the one on board (?)
-- [X] check NAU88C22 headphone detection - but makes very noisy fm radio
-- [X] check NAU88C22 works in smaller capacitance settings for I2C, or with the low pass filters as per datasheet installed
-- [X] check Si4705 works with headphones antenna
-- [X] check the headphone outputs while using the antenna
-- [X] check Si4705 works with internal antenna (seems to work, but not very well)
 - [-] check accelerometer works (using different accelerometer)
 - [ ] check SD card insertion detection
 - [-] check powered from real battery works
@@ -62,45 +9,17 @@
 - [-] check DataSync app
 - [-] check the above still works if we add USB ESD protection
 - [ ] disable debug mode on by default on AVR (end of initialize)
-- [X] charging/discharging - will use MCP charger from mkII
-- [X] check AVR can read battery voltage with large resistors (220 and 330k seems to work, add 10 or 100nf cap to the ADC pin to ground)
-- [X] check that 2 LEDs under DPAD sides work ok (HW.md)
 - [ ] check that tilting dpad is better 
-- [X] check new case works better with battery
 - [ ] mk3 idle and keepalive timers are too high, move lower again
-- [X] check overclocking -- seems to go to 250MHz w/o overvolt
 - [ ] add way to clear memory when necessary (e.g. remove background, etc.)
-- [X] verify resistor for backlight - using AP2502 in the end
-- [ ] verify on forums the Si4705 headset antenna ESD & filters
-- [ ] verify on forums the USB ESD protection
-- [ ] verify on forums about the I2S termination resistors and their placement
-- [X] should there be ground under switches? (no)
-- [X] verify rumbler position & wire length
-- [X] draw RM2 cartridge
 - [ ] draw LoRA cartridge
-- [X] draw NRF24l01P cartridge
-- [X] make room for embedded antenna on device case
-- [X] add board for battery connector
 - [ ] add board for debug connectors
-- [X] add holes in case for debug connectors
-- [X] verify glass top has cutouts for antenna
-- [X] add fused cartridge for resin printing
-- [X] add fused buttons for resin printing
-- [X] IR LED (via DMP1045u as it sources over 20mA)
-- [X] white LED (can be wired via AP2502 which I can get from TME)
 
 # MkIII Checklist
 
-- [X] verify no shorts on board and basic connections
-- [X] try with USB power, verify nothing burns or breaks
-- [X] solder cartridge connector, solder UPDI & SWD header, side buttons
-- [X] program AVR, verify LEDs, 
-- [ ] verify rumbler, verify backlight PWM
-- [X] verify RP2350 can be powered on and talked to via USB
-- [ ] flash cartridge
+- [ ] verify rumbler
 - [ ] verify battery operation works 
 - [ ] add missing AVR features (charging detection, etc.)
-- [ ] solder headphone jack
 - [ ] determine the actual speed & how to set it to 8MHz? Or even 5? 
 
 - [X] buy torx M2x10mm (https://www.nerezka.cz/sroub-m-2-x-10-din-965tx-a2) 
@@ -110,8 +29,9 @@
 - [ ] order headphone jacks (mouser)
 - [ ] order AP2502 extras (mouser)
 
-
 # TODO
+
+- check power settings on AVR (seems to be completely off)
 
 - RM2 cartridges do not connect flash to 3v3(!!)
 

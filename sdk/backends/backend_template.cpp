@@ -54,6 +54,21 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
+    uint16_t powerVcc() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
+    bool powerUsbConnected() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
+    bool powerCharging() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
     void yield() {
         StackProtection::check();
         UNIMPLEMENTED;

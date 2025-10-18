@@ -305,6 +305,12 @@ namespace rckid {
         std::exit(0);
     }
 
+    uint16_t powerVcc() { return 500; }
+
+    bool powerUsbConnected() { return true; }
+
+    bool powerCharging() { return false; }
+
     void yield() {
         StackProtection::check();   
         // nothing yet to be be done here in fantasy mode

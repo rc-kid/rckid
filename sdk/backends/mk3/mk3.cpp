@@ -548,6 +548,21 @@ namespace rckid {
         i2c::sendAvrCommand(cmd::PowerOff{});
     }
 
+    uint16_t powerVcc() {
+        StackProtection::check();
+        return io::avrState_.status.vcc();
+    }
+
+    bool powerUsbConnected() {
+        StackProtection::check();
+        return io::avrState_.status.vusb();
+    }
+
+    bool powerCharging() {
+        StackProtection::check();
+        return io::avrState_.status.charging();
+    }
+
     void keepAlive() {
         StackProtection::check();
         time::idleTimeout_ = RCKID_IDLE_TIMEOUT;
