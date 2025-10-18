@@ -39,7 +39,7 @@ namespace rckid::ui {
 
             Carousel::processEvents();
 
-            if (btnDown(Btn::Down) || btnDown(Btn::B)) {
+            if (btnPressed(Btn::Down) || btnPressed(Btn::B)) {
                 if (! dirStack_.empty()) {
                     loadDir(fs::parent(path_), Direction::Down);
                     // clear the button state (cancellation is handled by button press)
@@ -47,7 +47,7 @@ namespace rckid::ui {
                     btnClear(Btn::B);
                 }
             }
-            if (btnDown(Btn::Up) || btnDown(Btn::A)) {
+            if (btnPressed(Btn::Up) || btnPressed(Btn::A)) {
                 if (entries_[currentIndex()].isFolder()) {
                     loadDir(fs::join(path_, entries_[currentIndex()].name()), Direction::Up);
                     // clear the button state (selection is handled by button press)

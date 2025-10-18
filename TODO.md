@@ -29,7 +29,26 @@
 - [ ] order headphone jacks (mouser)
 - [ ] order AP2502 extras (mouser)
 
+# XMas delivery checklist
+
+- [X] audio player keeps button presses - fix
+- [ ] repeat function
+- [ ] automatic next function
+- [ ] lock functionality for screen (can be accessed from home menu, or also from apps)
+- [ ] fm radio app fixes (display frequency)
+- [ ] verify embedded antenna
+- [ ] allow background playback
+
+Nice extras would include:
+
+- [ ] LED flashlight
+- [ ] shuffle function in audio playback
+- [ ] telegram messenger
+- [ ] extra settings (colors, etc. for system & gbcemu)
+
 # TODO
+
+- when home btn hit from audio, audio should pause if not paused yet (or audio can register background task? do we allow bg tasks?)
 
 - check power settings on AVR (seems to be completely off)
 
