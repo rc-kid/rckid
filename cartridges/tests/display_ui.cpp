@@ -24,6 +24,8 @@
 #include <rckid/apps/DataSync.h>
 #include <rckid/apps/Flashlight.h>
 
+#include <rckid/apps/devel/HardwareStatus.h>
+
 #include <gbcemu/gbcemu.h>
 #include <gbcemu/gamepak.h>
 
@@ -61,6 +63,7 @@ ui::ActionMenu * utilsMenuGenerator() {
         ui::ActionMenu::Item("Timer", assets::icons_64::hourglass, nullptr),
         ui::ActionMenu::Item("Files", assets::icons_64::folder, App::run<FileDialog>),
         ui::ActionMenu::Item("Data Sync", assets::icons_64::pen_drive, App::run<DataSync>),
+        ui::ActionMenu::Item("HW Status", assets::icons_64::pen_drive, App::run<HardwareStatus>),
     };
 }
 
