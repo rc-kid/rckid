@@ -51,7 +51,7 @@ namespace rckid {
                 uint32_t t = uptimeUs();
                 elapsedUs_ += t - lastUs_;
                 lastUs_ = t;
-                //setElapsedTime();
+                setElapsedTime();
                 // when not paused, keep the device alive
                 keepAlive();
             }
