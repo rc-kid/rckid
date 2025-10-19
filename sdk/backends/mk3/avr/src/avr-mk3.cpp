@@ -205,6 +205,19 @@ public:
             startSystemTicks();
         }
         powerMode_ |= mode;
+        switch (mode) {
+            case POWER_MODE_DC:
+                state_.status.setVUsb(true);
+                setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
+                break;
+            case POWER_MODE_CHARGING:
+                state_.status.setCharging(true);
+                setNotification(RGBEffect::Breathe(platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
+                break;
+            default:
+                // no action
+                break;
+        }
     }
 
     static void clearPowerMode(uint8_t mode) {
@@ -218,6 +231,22 @@ public:
             LOG("systick stop, sleep pwrdown");
             stopSystemTicks();
             set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+        }
+        switch (mode) {
+            case POWER_MODE_DC:
+                state_.status.setVUsb(false);
+                if (state_.status.debugMode())
+                    setNotification(RGBEffect::Solid(platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
+                else
+                    setNotification(RGBEffect::Off());
+                break;
+            case POWER_MODE_CHARGING:
+                state_.status.setCharging(false);
+                setNotification(RGBEffect::Breathe(platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
+                break;
+            default:
+                // no action
+                break;  
         }
     }
 
@@ -252,25 +281,6 @@ public:
         );
         // disable debug mode (only exists in power on mode)
         state_.status.setDebugMode(false);
-    }
-
-    static void chargerConnected() { 
-        setPowerMode(POWER_MODE_CHARGING | POWER_MODE_DC);
-        setNotification(RGBEffect::Breathe(platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
-    }
-
-    static void chargerDisconnected() {
-        // no longer in DC mode, go back to system notification for debug mode, if active, or turn system notification off
-        if (state_.status.debugMode())
-            setNotification(RGBEffect::Solid(platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
-        else
-            setNotification(RGBEffect::Off());
-        clearPowerMode(POWER_MODE_CHARGING | POWER_MODE_DC);
-    }
-
-    static void chargerDone() {
-        clearPowerMode(POWER_MODE_CHARGING);
-        setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
     }
 
     static void lowBatteryWarning() {
@@ -461,6 +471,8 @@ public:
         GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
         // do not use interrupt on home button (we handle it in the loop due to matrix row rotation)
         GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) &= ~PORT_ISC_gm;
+        // do not use interrupt on charging pin either
+        GPIO_PIN_PINCTRL(AVR_PIN_CHARGING) &= ~PORT_ISC_gm;
         // if debug mode is enabled, start system notification to white signifying the debug mode power up
         if (state_.status.debugMode())
             setNotification(RGBEffect::Solid(platform::Color::White().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 255));
@@ -476,9 +488,9 @@ public:
         // allow some time for propagation
         cpu::delayMs(5);
         // enable interrupts for the power down mode where only pin change is available
-        // only use in real board as the pin is floating on attiny1616
         GPIO_PIN_PINCTRL(AVR_PIN_ACCEL_INT) |= PORT_ISC_BOTHEDGES_gc;
         GPIO_PIN_PINCTRL(AVR_PIN_BTN_1) |= PORT_ISC_BOTHEDGES_gc;
+        GPIO_PIN_PINCTRL(AVR_PIN_CHARGING) |= PORT_ISC_BOTHEDGES_gc;
         // disable any pending system tick
         systemTick_ = false;
         // since we are powering off, make sure the LEDs are off as well so that we do not leak
@@ -571,6 +583,7 @@ public:
 
     static constexpr uint8_t ACCEL_INT_REQUEST = 1;
     static constexpr uint8_t HOME_BTN_INT_REQUEST = 2;
+    static constexpr uint8_t CHARGING_INT_REQUEST = 4;
 
     static inline volatile uint8_t intRequests_ = 0;
 
@@ -591,7 +604,8 @@ public:
                     setIrq();
                 );
             }
-            ASSERT(irqs & HOME_BTN_INT_REQUEST == 0); 
+            ASSERT(irqs & HOME_BTN_INT_REQUEST == 0);
+            ASSERT(irqs & CHARGING_INT_REQUEST == 0);
         } else {
             // TODO deal with accel and power interrupts - this probably requires some I2C communcation to determine what is going on
             // if the power button is pressed, wake up - enter the debug mode depending on whether the volume down button is pressed
@@ -603,6 +617,18 @@ public:
                 // tentatively set debug mode if we read volume down button pressed, it will be cleared if the button is released before entering the power on mode
                 if (! gpio::read(AVR_PIN_BTN_3))
                     enterDebugMode();
+            }
+            // if the charging pin is high, it means VUSB is connected, and the battery is not charging. We set the USB to true so that the brief pulse of STAT high when the chip is powered on will ensure proper transitioning to USB power as well 
+            if (irqs & CHARGING_INT_REQUEST) {
+                if (gpio::read(AVR_PIN_CHARGING) == true) {
+                    setPowerMode(POWER_MODE_DC);
+                    clearPowerMode(POWER_MODE_CHARGING);
+                // if the pin is low, and we are in USB power, it means we are charging
+                } else if (state_.status.vusb()) {
+                    setPowerMode(POWER_MODE_CHARGING);
+                } else {
+                    clearPowerMode(POWER_MODE_CHARGING);
+                }
             }
         }
     }
@@ -921,13 +947,21 @@ public:
                 }
                 NO_ISR(setIrq());
             }
-
         } else if (powerMode_ & POWER_MODE_WAKEUP) {
             // 
             if (! state_.status.btnHome())
                 clearPowerMode(POWER_MODE_WAKEUP);
             if (state_.status.debugMode() && ! state_.status.btnVolumeDown())
                 leaveDebugMode();
+        } else {
+            // we need to be in the DC mode, otherwise there is no way buttons are chcecked via control group
+            ASSERT(powerMode_ & POWER_MODE_DC);
+            // simulate the ISR routine to be picked in the main loop
+            if (changed && state_.status.btnHome()) {
+                NO_ISR(
+                    intRequests_ |= HOME_BTN_INT_REQUEST;
+                );
+            }
         }
         // check if there has been long home button press - it's important we do this *after* the power on checks above as otherwise the long press can enter power on, but with wrong state 
         if (state_.status.btnHome()) {
@@ -1036,10 +1070,17 @@ public:
                 // this converts the 16bit value to volts x 100:
                 value = (48 * value + 50) / 100;
                 state_.status.setVcc(value);
-                // change state accordingly
-                if (state_.status.vusb() != (value > RCKID_VUSB_THRESHOLD)) {
-                    state_.status.setVUsb(value > RCKID_VUSB_THRESHOLD);
-                    setIrq();
+                // if we are below VCC threshold, clear the DC and VUSB power modes, which also forces the device to go to sleep unless other power mode is enabled
+                if (state_.status.vusb() && (value < RCKID_VUSB_THRESHOLD)) {
+                    clearPowerMode(POWER_MODE_CHARGING);
+                    clearPowerMode(POWER_MODE_DC);
+                } else if (value > RCKID_VUSB_THRESHOLD) {
+                    setPowerMode(POWER_MODE_DC);
+                    if (gpio::read(AVR_PIN_CHARGING) == 0) {
+                        setPowerMode(POWER_MODE_CHARGING);
+                    } else {
+                        clearPowerMode(POWER_MODE_CHARGING);
+                    }
                 }
                 if (state_.status.lowBattery() != (value < RCKID_LOW_BATTERY_THRESHOLD)) {
                     state_.status.setLowBattery(value < RCKID_LOW_BATTERY_THRESHOLD);
@@ -1405,10 +1446,17 @@ ISR(TWI0_TWIS_vect) {
  */
 ISR(PORTA_PORT_vect) {
     static_assert(AVR_PIN_BTN_1 == gpio::A6);
-    VPORTA.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_BTN_1));
-    // only do stuff if we were tranistioning from high to low (button press)
-    if (gpio::read(AVR_PIN_BTN_1) == false)
-        RCKid::intRequests_ |= RCKid::HOME_BTN_INT_REQUEST;
+    static_assert(AVR_PIN_CHARGING == gpio::A5);
+    if (VPORTA.INTFLAGS & (1 << GPIO_PIN_INDEX(AVR_PIN_BTN_1))) {
+        VPORTA.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_BTN_1));
+        // only do stuff if we were tranistioning from high to low (button press)
+        if (gpio::read(AVR_PIN_BTN_1) == false)
+            RCKid::intRequests_ |= RCKid::HOME_BTN_INT_REQUEST;
+    }
+    if (VPORTA.INTFLAGS & (1 << GPIO_PIN_INDEX(AVR_PIN_CHARGING))) {
+        VPORTA.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_CHARGING));
+        RCKid::intRequests_ |= RCKid::CHARGING_INT_REQUEST;
+    }
 }
 
 /** Accel pin ISR.

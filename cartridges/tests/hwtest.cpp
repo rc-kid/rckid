@@ -30,5 +30,6 @@ int main() {
         LOG(LL_INFO, "Uptime : " << (uptimeUs64() / 1000000) << " ms");
         LOG(LL_INFO, "  VCC: " << powerVcc() << " (usb: " << (powerUsbConnected() ? "Y" : "N") << ", chrg: " << (powerCharging() ? "Y" : "N") << ")");
         LOG(LL_INFO, "  Headphones: " << (audioHeadphones() ? "Y" : "N"));
+        rumblerEffect(RumblerEffect::Fail());
     }
 }

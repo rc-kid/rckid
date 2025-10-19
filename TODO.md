@@ -48,6 +48,10 @@ Nice extras would include:
 
 # TODO
 
+- make rgb LED effect much slower with speed 1
+- home button press is not registered when running in non-power -off mode
+> home button press in DC mode alone also triggers the ISR, this should help with the wakeup, the other thing is when voltage is lowered the DC mode is not exitted, or maybe it is, but the lights are still on(!) - check with enabled, if the USB power is turned off with low enough voltage
+
 - Audio playback is smaller than the home menu and so if home menu activated, it looks ugly (bar on top)
 
 - when home btn hit from audio, audio should pause if not paused yet (or audio can register background task? do we allow bg tasks?)
