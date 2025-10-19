@@ -20,9 +20,13 @@
 #include <rckid/apps/MusicPlayer.h>
 #include <rckid/apps/Friends.h>
 #include <rckid/apps/Messages.h>
-#include <rckid/apps/Clock.h>
 #include <rckid/apps/DataSync.h>
-#include <rckid/apps/Flashlight.h>
+#include <rckid/apps/utils/Clock.h>
+#include <rckid/apps/utils/Timer.h>
+#include <rckid/apps/utils/Stopwatch.h>
+#include <rckid/apps/utils/Flashlight.h>
+
+
 
 #include <rckid/apps/devel/HardwareStatus.h>
 
@@ -58,8 +62,9 @@ ui::ActionMenu * gamesGenerator() {
 
 ui::ActionMenu * utilsMenuGenerator() {
     return new ui::ActionMenu{
+        ui::ActionMenu::Item("Flashlight", assets::icons_64::flashlight, App::run<Flashlight>),
         ui::ActionMenu::Item("Clock", assets::icons_64::alarm_clock, App::run<Clock>),
-        ui::ActionMenu::Item("Stopwatch", assets::icons_64::chronometer, nullptr),
+        ui::ActionMenu::Item("Stopwatch", assets::icons_64::chronometer, App::run<Stopwatch>),
         ui::ActionMenu::Item("Timer", assets::icons_64::hourglass, nullptr),
         ui::ActionMenu::Item("Files", assets::icons_64::folder, App::run<FileDialog>),
         ui::ActionMenu::Item("Data Sync", assets::icons_64::pen_drive, App::run<DataSync>),
@@ -101,7 +106,6 @@ ui::ActionMenu * mainMenuGenerator() {
         ui::ActionMenu::Generator("Images", assets::icons_64::picture, imagesMenuGenerator),
         ui::ActionMenu::Item("Remote", assets::icons_64::rc_car, nullptr),
         ui::ActionMenu::Generator("Utilities", assets::icons_64::configuration, utilsMenuGenerator),
-        ui::ActionMenu::Item("Flashlight", assets::icons_64::flashlight, App::run<Flashlight>),
     };
 }
 

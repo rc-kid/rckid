@@ -242,7 +242,7 @@ public:
                 break;
             case POWER_MODE_CHARGING:
                 state_.status.setCharging(false);
-                setNotification(RGBEffect::Breathe(platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
+                setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
                 break;
             default:
                 // no action
@@ -533,12 +533,15 @@ public:
                 setIrq();
             );
         }
-        if (powerMode_ & POWER_MODE_ON) {
-            // tell RP to increase second
-            NO_ISR(
-                state_.status.setSecondInt();
-                setIrq();
-            );
+        if (powerMode_ != 0) {
+            if (powerMode_ & POWER_MODE_ON) {
+                // tell RP to increase second
+                NO_ISR(
+                    state_.status.setSecondInt();
+                    setIrq();
+                );
+                LOG("uptime " << state_.uptime);
+            }
             // read either battery voltage, or temperature every other second using ADC0
             if ((state_.uptime & 1) == 0) {
                 static_assert(AVR_PIN_VCC_SENSE == gpio::A2);
@@ -546,7 +549,6 @@ public:
             } else {
                 startADC(ADC_MUXPOS_TEMPSENSE_gc);
             }
-            LOG("uptime " << state_.uptime);
         }
         // and finally, reset the daily budget if needed. The hour check and the countdown ensure that we only reset the budget once per day at midnight, even if the time is changed by the user
         if (budgetResetCountdown_ > 0) {

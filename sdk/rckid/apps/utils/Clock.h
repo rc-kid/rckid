@@ -1,12 +1,12 @@
 #pragma once
 
-#include "../app.h"
-#include "../ui/form.h"
-#include "../ui/label.h"
-#include "../ui/image.h"
-#include "../assets/fonts/OpenDyslexic128.h"
-#include "../assets/fonts/OpenDyslexic64.h"
-#include "../assets/icons_24.h"
+#include "../../app.h"
+#include "../../ui/form.h"
+#include "../../ui/label.h"
+#include "../../ui/image.h"
+#include "../../assets/fonts/OpenDyslexic128.h"
+#include "../../assets/fonts/OpenDyslexic64.h"
+#include "../../assets/icons_24.h"
 
 
 namespace rckid {

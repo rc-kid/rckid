@@ -34,11 +34,18 @@
 - [X] audio player keeps button presses - fix
 - [X] repeat function
 - [X] automatic next function
+- [ ] header
+  - [ ] show budget
+  - [ ] show time
 - [ ] lock functionality for screen (can be accessed from home menu, or also from apps)
 - [ ] fm radio app fixes (display frequency)
 - [ ] verify embedded antenna
 - [ ] allow background playback
-- [ ] time apps (clock, timer, stopwatch, alarm)
+- [ ] time apps
+  - [ ] clock settings
+  - [ ] timer
+  - [X] stopwatch
+  - [ ] alarm
 
 Nice extras would include:
 
@@ -53,10 +60,7 @@ Nice extras would include:
 
 - icons for shuffle and icons for repeat
 
-
 - make rgb LED effect much slower with speed 1
-- home button press is not registered when running in non-power -off mode
-> home button press in DC mode alone also triggers the ISR, this should help with the wakeup, the other thing is when voltage is lowered the DC mode is not exitted, or maybe it is, but the lights are still on(!) - check with enabled, if the USB power is turned off with low enough voltage
 
 - budget is not decreasing on mk3
 
@@ -84,13 +88,11 @@ Nice extras would include:
 - avr int as serial tx mabe add 0r resistor on the line to avoid bleeding into rp2350
 
 - improve audio fidelity for GBCEmu
-- change logo to petalface:)
 
 - file browswer can also use the new carouselMenu?
 
 - TODO would be good if image could work immediately with static in memory pictures
 - do we need bitmap in graphics now? its more like bitmap is now image really
-
 
 - allow saving external ram to cartridge when gbc game exits? 
 - how to resume state when app restarted (automatic)

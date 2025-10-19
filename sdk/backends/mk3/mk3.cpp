@@ -364,7 +364,7 @@ namespace rckid {
             if (n != sizeof(AVRState))
                 FATAL_ERROR(Error::hardwareFailure, static_cast<uint32_t>(n));
             LOG(LL_INFO, "AVR uptime: " << io::avrState_.uptime);
-            LOG(LL_INFO, "Current time: " << io::avrState_.time;);
+            LOG(LL_INFO, "Current time: " << io::avrState_.time);
             // update the volume on the audio codec based on the values received from AVR (last settings)
             Codec::setVolumeSpeaker(io::avrState_.audio.volumeSpeaker());
             Codec::setVolumeHeadphones(io::avrState_.audio.volumeHeadphones());

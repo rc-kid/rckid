@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../app.h"
-#include "../ui/form.h"
-#include "../ui/label.h"
-#include "../assets/fonts/OpenDyslexic128.h"
+#include "../../app.h"
+#include "../../ui/form.h"
+#include "../../ui/label.h"
+#include "../../assets/fonts/OpenDyslexic128.h"
 
 
 namespace rckid {
