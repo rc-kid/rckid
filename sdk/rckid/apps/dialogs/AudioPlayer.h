@@ -24,11 +24,11 @@ namespace rckid {
         String name() const override { return "AudioPlayer"; }
 
         AudioPlayer(String path, AudioStream & s) : 
-            ui::Form<AudioPlayerResult>{Rect::XYWH(0, 160, 320, 80), /*raw*/ true}, 
+            ui::Form<AudioPlayerResult>{Rect::XYWH(0, 144, 320, 96), /*raw*/ true}, 
             as_{s},
-            title_{80,10,fs::stem(path)},
-            elapsed_{80,54,String{""}},
-            icon_{8,8,Icon{assets::icons_64::play_button}} {
+            title_{80,18,fs::stem(path)},
+            elapsed_{80,62,String{""}},
+            icon_{8,16,Icon{assets::icons_64::play_button}} {
             audioPlay(as_);
             lastUs_ = uptimeUs();
             elapsedUs_ = 0;
