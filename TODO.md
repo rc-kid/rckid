@@ -32,8 +32,8 @@
 # XMas delivery checklist
 
 - [X] audio player keeps button presses - fix
-- [ ] repeat function
-- [ ] automatic next function
+- [X] repeat function
+- [X] automatic next function
 - [ ] lock functionality for screen (can be accessed from home menu, or also from apps)
 - [ ] fm radio app fixes (display frequency)
 - [ ] verify embedded antenna
@@ -42,11 +42,15 @@
 Nice extras would include:
 
 - [ ] LED flashlight
-- [ ] shuffle function in audio playback
+- [X] shuffle function in audio playback
 - [ ] telegram messenger
 - [ ] extra settings (colors, etc. for system & gbcemu)
 
 # TODO
+
+
+- icons for shuffle and icons for repeat
+
 
 - make rgb LED effect much slower with speed 1
 - home button press is not registered when running in non-power -off mode
@@ -55,8 +59,6 @@ Nice extras would include:
 - budget is not decreasing on mk3
 
 - when home btn hit from audio, audio should pause if not paused yet (or audio can register background task? do we allow bg tasks?)
-
-- check power settings on AVR (seems to be completely off)
 
 - RM2 cartridges do not connect flash to 3v3(!!)
 
@@ -148,8 +150,9 @@ Nice extras would include:
 - bottom case needs extra plastic to line up perfectly with the pcb (fixed, check)
 - side buttons are too thin
 - pull-up for the headphone detect is too weak, try sth like 40kOhm? 
+- is there a way how to make the headphones work with headphones that have microphone as well? maybe by connecting tip with some large resistor to 0 (68k or so) and then connecting the tip mate via even higher resistor to VCC as a pull up. Then it will read close to 0 when not inserted and VCC when inserted. But will this upset the audio? It actually might work and I can ignore the second sleeve and it would work with all headphones! (can I make it work with current audio setup by rewiring?)
 
-## AVRz
+## AVR
 
 - see if we can run at 5MHz and still talk to neopixel
 
@@ -163,7 +166,6 @@ Nice extras would include:
 ## Audio
 
 - add square and white noise waveforms
-- should audio volume be uint8, or something else? 
 - in fantasy, add dedicated thread for audio buffer refill so that the audio is clean
 
 ## Graphics

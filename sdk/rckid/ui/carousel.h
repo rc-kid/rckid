@@ -104,22 +104,26 @@ namespace rckid::ui {
          */
         virtual uint32_t size() const = 0;
 
-        void moveLeft() {
+        uint32_t getIndexLeft() const {
             uint32_t s = size();
             if (s == 0)
-                return;
-            i_ = (i_ == 0) ? (s - 1) : (i_ - 1);
-            setItem(i_, Direction::Left);
+                return 0;
+            return (i_ == 0) ? (s - 1) : (i_ - 1);
+        }
+
+        uint32_t getIndexRight() const {
+            uint32_t s = size();
+            if (s == 0)
+                return 0;
+            return (i_ + 1) % s;
+        }
+
+        void moveLeft() {
+            setItem(getIndexLeft(), Direction::Left);
         }
 
         void moveRight() {
-            uint32_t s = size();
-            if (s == 0)
-                return;
-            ++i_;
-            if (i_ >= s)
-                i_ = 0;
-            setItem(i_, Direction::Right);
+            setItem(getIndexRight(), Direction::Right);
         }
 
         bool processEvents() override {

@@ -5,16 +5,24 @@
 #include "../../ui/label.h"
 #include "../../audio/mp3.h"
 #include "../../assets/icons_64.h"
+#include "../../assets/icons_24.h"
 #include "../../assets/fonts/OpenDyslexic32.h"
 
 
 namespace rckid {
 
     enum class AudioPlayerResult {
+        Stop,
         Done,
         PlayPrev,
         PlayNext
     }; // AudioPlayerResult
+
+    enum class AudioPlayerMode {
+        Normal,
+        Repeat,
+        Shuffle
+    }; // AudioPlayerMode
 
     class AudioPlayer : public ui::Form<AudioPlayerResult> {
     public:
@@ -23,12 +31,21 @@ namespace rckid {
          */
         String name() const override { return "AudioPlayer"; }
 
-        AudioPlayer(String path, AudioStream & s) : 
+        AudioPlayer(String path, AudioStream & s, AudioPlayerMode & mode) : 
+            AudioPlayer{path, s} {
+            mode_ = &mode;
+            repeatIcon_.setVisible(mode == AudioPlayerMode::Repeat);
+            shuffleIcon_.setVisible(mode == AudioPlayerMode::Shuffle);
+        }
+
+        AudioPlayer(String path, AudioStream & s):
             ui::Form<AudioPlayerResult>{Rect::XYWH(0, 144, 320, 96), /*raw*/ true}, 
             as_{s},
-            title_{80,18,fs::stem(path)},
-            elapsed_{80,62,String{""}},
-            icon_{8,16,Icon{assets::icons_64::play_button}} {
+            title_{88,18,fs::stem(path)},
+            elapsed_{88,62,String{""}},
+            icon_{8,16,Icon{assets::icons_64::play_button}},
+            repeatIcon_{50, 58, Icon{assets::icons_24::play_button}},
+            shuffleIcon_{50, 58, Icon{assets::icons_24::pause}} {
             audioPlay(as_);
             lastUs_ = uptimeUs();
             elapsedUs_ = 0;
@@ -36,6 +53,10 @@ namespace rckid {
             g_.addChild(title_);
             g_.addChild(elapsed_);
             g_.addChild(icon_);
+            g_.addChild(repeatIcon_);
+            g_.addChild(shuffleIcon_);
+            repeatIcon_.setVisible(false);
+            shuffleIcon_.setVisible(false);
         }
 
         ~AudioPlayer() override {
@@ -59,7 +80,7 @@ namespace rckid {
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 btnClear(Btn::B);
                 btnClear(Btn::Down);
-                exit(AudioPlayerResult::Done);
+                exit(AudioPlayerResult::Stop);
             }
             // btn up, or button A is audio pause
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
@@ -73,9 +94,39 @@ namespace rckid {
                 }
                 redraw_ = true;
             }
+            if (btnPressed(Btn::Left)) {
+                btnClear(Btn::Left);
+                exit(AudioPlayerResult::PlayPrev);
+            }
+            if (btnPressed(Btn::Right)) {
+                btnClear(Btn::Right);
+                exit(AudioPlayerResult::PlayNext);
+            }
+            if (mode_ != nullptr && btnPressed(Btn::Start)) {
+                switch (*mode_) {
+                    case AudioPlayerMode::Normal:
+                        *mode_ = AudioPlayerMode::Repeat;
+                        repeatIcon_.setVisible(true);
+                        shuffleIcon_.setVisible(false);
+                        break;
+                    case AudioPlayerMode::Repeat:
+                        *mode_ = AudioPlayerMode::Shuffle;
+                        repeatIcon_.setVisible(false);
+                        shuffleIcon_.setVisible(true);
+                        break;
+                    case AudioPlayerMode::Shuffle:
+                        *mode_ = AudioPlayerMode::Normal;
+                        repeatIcon_.setVisible(false);
+                        shuffleIcon_.setVisible(false);
+                        break;
+                    default:
+                        UNREACHABLE;
+                }
+                redraw_ = true;
+            }
             // TODO btn left & right is immediate return
             if (!audioPlayback())
-                exit(AudioPlayerResult::PlayNext);
+                exit(AudioPlayerResult::Done);
         }
 
         /** Only redraw if there is change in the visual elements. This saves precious CPU time on the device for the audio decoding. As it effectively limits the FPS to 1 frane per second. 
@@ -106,10 +157,14 @@ namespace rckid {
         ui::Label title_;
         ui::Label elapsed_;
         ui::Image icon_;
+        ui::Image repeatIcon_;
+        ui::Image shuffleIcon_;
         uint64_t elapsedUs_ = 0;
         uint32_t lastUs_ = 0;
         // when true, the player window will redraw itself
         bool redraw_ = false;
+
+        AudioPlayerMode * mode_ = nullptr;
 
     }; // AudioPlayer::Player
 
