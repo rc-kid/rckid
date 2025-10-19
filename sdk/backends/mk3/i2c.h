@@ -99,6 +99,8 @@ namespace rckid {
             The transaction consists of a number of bytes to send and number of bytes to receive. Due to the limitations of the I2C HW at the RPI chip, a single transaction can send up to 16 bytes and receive up to 16 bytes as well giving total transaction max size of 32 bytes. 
 
          */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
         PACKED(class Transaction {
         public:
             uint8_t address;
@@ -109,15 +111,12 @@ namespace rckid {
 
             /** Returns the data to be written to the slave as part of the transaction. Those are stored directly after the transaction object. */
             // the warning is false positive (the cb check above ensures that we are in fact a blocking transaction and hence not outside bounds)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Warray-bounds"
             uint8_t const * wdata() const {
                 if (cb == enqueueAndWaitCallback)
                     return reinterpret_cast<BlockingTransaction const *>(this)->wb;
                 else 
                     return reinterpret_cast<uint8_t const *>(this + 1);
             }
-#pragma GCC diagnostic pop
 
             /** Ennqueues the transaction after the last transaction in the queue.
              */
@@ -182,6 +181,7 @@ namespace rckid {
             uint8_t * rb;
             volatile bool * done; 
         });
+#pragma GCC diagnostic pop
 
         /** Callback for the enqueue and wait transaction. 
          */

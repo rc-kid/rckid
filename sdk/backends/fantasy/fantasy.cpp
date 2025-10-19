@@ -71,6 +71,7 @@ namespace rckid {
 
     namespace time {
         TinyDateTime time_;
+        TinyAlarm alarm_;
         std::chrono::steady_clock::time_point uptimeStart_;
         uint64_t nextSecond_ = 0;
     }; 
@@ -333,6 +334,10 @@ namespace rckid {
     }
 
     TinyDateTime timeNow() { return time::time_; }
+
+    TinyAlarm timeAlarm() { return time::alarm_; }
+
+    void setTimeAlarm(TinyAlarm alarm) { time::alarm_ = alarm; }
 
     // io
 

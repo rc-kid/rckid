@@ -116,6 +116,14 @@ namespace rckid {
      */
     TinyDateTime timeNow();
 
+    /** Returns the current alarm settings. 
+     */
+    TinyAlarm timeAlarm();
+
+    /** Sets alarm. 
+     */
+    void setTimeAlarm(TinyAlarm alarm);
+
     /** \page sdk
         \section io IO
 

@@ -241,7 +241,7 @@ private:
     static constexpr uint8_t MONTH_MASK = 192; 
     static constexpr uint8_t YEAR_MASK = 224;
 
-    uint8_t raw_[4] = { 0xff, 0xff, 0xff, 0xff};
+    uint8_t raw_[4] = { 0x0, 0x0, 0x0, 0x0 };
 
 }); // TinyDateTime
 

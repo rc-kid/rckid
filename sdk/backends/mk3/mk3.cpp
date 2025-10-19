@@ -362,9 +362,9 @@ namespace rckid {
         {
             int n = i2c_read_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, (uint8_t *) & io::avrState_, sizeof(AVRState), false);
             if (n != sizeof(AVRState))
-                FATAL_ERROR(Error::hardwareFailure, n);
+                FATAL_ERROR(Error::hardwareFailure, static_cast<uint32_t>(n));
             LOG(LL_INFO, "AVR uptime: " << io::avrState_.uptime);
-            LOG(LL_INFO, "Current time: " << io::avrState_.time);
+            LOG(LL_INFO, "Current time: " << io::avrState_.time;);
             // update the volume on the audio codec based on the values received from AVR (last settings)
             Codec::setVolumeSpeaker(io::avrState_.audio.volumeSpeaker());
             Codec::setVolumeHeadphones(io::avrState_.audio.volumeHeadphones());
@@ -582,6 +582,17 @@ namespace rckid {
         StackProtection::check();
         // return the current time from the AVR state
         return io::avrState_.time;
+    }
+
+    TinyAlarm timeAlarm() {
+        StackProtection::check();
+        return io::avrState_.alarm;
+    }
+
+    void timeSetAlarm(TinyAlarm const & alarm) {
+        StackProtection::check();
+        i2c::sendAvrCommand(cmd::SetAlarm{alarm});
+        io::avrState_.alarm = alarm;
     }
 
     // io

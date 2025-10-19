@@ -38,6 +38,7 @@
 - [ ] fm radio app fixes (display frequency)
 - [ ] verify embedded antenna
 - [ ] allow background playback
+- [ ] time apps (clock, timer, stopwatch, alarm)
 
 Nice extras would include:
 
@@ -45,6 +46,7 @@ Nice extras would include:
 - [X] shuffle function in audio playback
 - [ ] telegram messenger
 - [ ] extra settings (colors, etc. for system & gbcemu)
+- [ ] accelerometer controller background & background selection
 
 # TODO
 

@@ -89,7 +89,17 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
-    TinyDateTime now() {
+    TinyDateTime timeNow() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
+    TinyAlarm timeAlarm() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
+    void setTimeAlarm(TinyAlarm alarm) {
         StackProtection::check();
         UNIMPLEMENTED;
     }
