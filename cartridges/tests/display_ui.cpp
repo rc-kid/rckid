@@ -21,6 +21,7 @@
 #include <rckid/apps/Friends.h>
 #include <rckid/apps/Messages.h>
 #include <rckid/apps/DataSync.h>
+#include <rckid/apps/Recorder.h>
 #include <rckid/apps/utils/Clock.h>
 #include <rckid/apps/utils/Timer.h>
 #include <rckid/apps/utils/Stopwatch.h>
@@ -29,6 +30,7 @@
 
 
 #include <rckid/apps/devel/HardwareStatus.h>
+#include <rckid/apps/devel/SDTest.h>
 
 #include <gbcemu/gbcemu.h>
 #include <gbcemu/gamepak.h>
@@ -69,6 +71,7 @@ ui::ActionMenu * utilsMenuGenerator() {
         ui::ActionMenu::Item("Files", assets::icons_64::folder, App::run<FileDialog>),
         ui::ActionMenu::Item("Data Sync", assets::icons_64::pen_drive, App::run<DataSync>),
         ui::ActionMenu::Item("HW Status", assets::icons_64::pen_drive, App::run<HardwareStatus>),
+        ui::ActionMenu::Item("SD Test", assets::icons_64::pen_drive, App::run<SDTest>),
     };
 }
 
@@ -82,7 +85,7 @@ ui::ActionMenu * commsMenuGenerator() {
 
 ui::ActionMenu * audioMenuGenerator() {
     return new ui::ActionMenu{
-        ui::ActionMenu::Item("Recorder", assets::icons_64::microphone, nullptr),
+        ui::ActionMenu::Item("Recorder", assets::icons_64::microphone, App::run<Recorder>),
         ui::ActionMenu::Item("Composer", assets::icons_64::music_2, nullptr),
         // TODO browser for audio files alone
     };

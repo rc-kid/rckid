@@ -19,6 +19,8 @@ namespace rckid {
         }
 
         ~Flashlight() override {
+            //gpio::outputLow(47);
+            //gpio::outputLow(46);
             gpio::setAsInput(47);
             gpio::setAsInput(46);
         }

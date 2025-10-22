@@ -315,6 +315,8 @@ namespace rckid {
         return true;
     }
 
+    uint32_t sd_write_blocks = 0;
+
     bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks) {
         while (numBlocks-- != 0) {
             uint8_t cmd[] = { 
@@ -339,10 +341,14 @@ namespace rckid {
             sd_spi_write_blocking(cmd, 2); // CRC -- we ignore the CRC
             sd_spi_read_blocking(0xff, & status, 1); // get the data response
             // wait for busy
+            uint64_t x = uptimeUs64();
             while (status != SD_BUSY)
                 sd_spi_read_blocking(0xff, & status, 1);
+            sd_write_blocks += uptimeUs64() - x;
             ++start;
             buffer += 512;
+            gpio::high(RP_PIN_SD_CSN);
+            ++sd_write_blocks;
         }
         return true;
     }

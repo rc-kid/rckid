@@ -286,15 +286,19 @@ namespace rckid {
             LOG(LL_INFO, "Codec I2S record from microphone at " << sampleRate << "Hz");
             // enable mic bias 
             setRegister(REG_PWR_MGMT_1, MICBIASEN | REF_IMP_80K | IOBUFEN | ABIASEN);
-            // enable the right channel PGA (where the mic is connected)
-            // TODO this might change on the actual HW
-            setRegister(REG_PWR_MGMT_2, RHPEN | LHPEN | RADCEN | RBSTEN | RPGAEN);
-            // enable ALC on the right channel
-            setRegister(REG_ALC_CTRL_1, ALCEN_RIGHT | ALC_MAX_GAIN_35 | ALC_MIN_GAIN_NEG_12);
+            // enable the left channel PGA (where the mic is connected)
+            setRegister(REG_PWR_MGMT_2, RHPEN | LHPEN | LADCEN | LBSTEN | LPGAEN);
+            // enable ALC on the left channel
+            //setRegister(REG_ALC_CTRL_1, 0);
+            setRegister(REG_ALC_CTRL_1, ALCEN_LEFT | ALC_MAX_GAIN_35 | ALC_MIN_GAIN_NEG_12);
+            setRegister(REG_ALC_CTRL_2, 0b000001111);
 
-            // connect the right channel ADC to the output mixers
+
+            //setRegister(REG_LINPUT_PGA_GAIN, 0b100111111);
+
+            // connect the left channel ADC to the output mixers
             //setRegister(REG_LADC_BOOST, 0b101); // 0db, use 111 for max 6db 
-            setRegister(REG_RADC_BOOST, 0b101010000);
+            //setRegister(REG_LADC_BOOST, 0b101110000);
 
 
             // enable master clock generation for the given sample rate

@@ -76,5 +76,6 @@
         "format": "cpp",
         "span": "cpp",
         "any": "cpp"
-    }
+    },
+    "idf.pythonInstallPath": "/usr/bin/python3"
 }

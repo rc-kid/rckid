@@ -64,7 +64,7 @@ namespace rckid {
         }
 
     private:
-      ui::Tilemap<Tile<8, 16, Color16>> text_;
+       ui::Tilemap<Tile<8, 16, Color16>> text_;
 
 
         static constexpr uint16_t palette_[] = {

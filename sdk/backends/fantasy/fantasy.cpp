@@ -667,12 +667,12 @@ namespace rckid {
 
     void audioRecordMic([[maybe_unused]] uint32_t sampleRate, [[maybe_unused]] AudioCallback cb) {
         StackProtection::check();
-        UNIMPLEMENTED;
+        //UNIMPLEMENTED;
     }
 
     void audioRecordLineIn([[maybe_unused]] uint32_t sampleRate, [[maybe_unused]] AudioCallback cb) {
         StackProtection::check();
-        UNIMPLEMENTED;
+        //UNIMPLEMENTED;
     }
 
     void audioPause() {

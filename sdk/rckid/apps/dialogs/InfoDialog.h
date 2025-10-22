@@ -24,7 +24,8 @@ namespace rckid {
             ui::Form<void>{Rect::XYWH(0, 144, 320, 96), /* raw */ true},
             icon_{Rect::WH(96, 96), icon},
             title_{96, 5, std::move(title)},
-            text_{27, 3, assets::System16, palette_} {
+            text_{27, 3, assets::System16, palette_} 
+        {
             using namespace ui;
             g_.addChild(icon_);
             g_.addChild(title_);

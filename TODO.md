@@ -4,7 +4,7 @@
 
 - [-] check accelerometer works (using different accelerometer)
 - [ ] check SD card insertion detection
-- [-] check powered from real battery works
+- [X] check powered from real battery works
 - [-] check USB detection works when powered from battery
 - [-] check DataSync app
 - [-] check the above still works if we add USB ESD protection
@@ -17,8 +17,8 @@
 
 # MkIII Checklist
 
-- [ ] verify rumbler
-- [ ] verify battery operation works 
+- [X] verify rumbler
+- [X] verify battery operation works 
 - [ ] add missing AVR features (charging detection, etc.)
 - [ ] determine the actual speed & how to set it to 8MHz? Or even 5? 
 
@@ -31,6 +31,7 @@
 
 # XMas delivery checklist
 
+- [ ] battery protection
 - [X] audio player keeps button presses - fix
 - [X] repeat function
 - [X] automatic next function
@@ -39,8 +40,6 @@
   - [ ] show time
 - [ ] lock functionality for screen (can be accessed from home menu, or also from apps)
 - [ ] fm radio app fixes (display frequency)
-- [ ] verify embedded antenna
-- [ ] allow background playback
 - [ ] time apps
   - [ ] clock settings
   - [ ] timer
@@ -49,14 +48,18 @@
 
 Nice extras would include:
 
-- [ ] LED flashlight
+- [X] LED flashlight
 - [X] shuffle function in audio playback
 - [ ] telegram messenger
 - [ ] extra settings (colors, etc. for system & gbcemu)
 - [ ] accelerometer controller background & background selection
+- [ ] verify embedded antenna
+- [ ] allow background playback
+- [ ] extra devices (would have to order quickly)
 
 # TODO
 
+> !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
 - icons for shuffle and icons for repeat
 
