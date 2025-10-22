@@ -120,6 +120,10 @@ namespace rckid {
          */
         void enable(bool value);
 
+        Response getResponse() const { return status_; }
+
+        bool update();
+
         /** Returns the device version & software revision information.
          */
         VersionInfo getVersionInfo() {
@@ -144,7 +148,7 @@ namespace rckid {
             });
             getResponse();
             // remember the frequency
-            frequency_ = freq_10kHz;
+            // frequency_ = freq_10kHz;
         }
 
         /** Returns the frequency we are listening on now.
@@ -311,6 +315,8 @@ namespace rckid {
 
         static inline Radio * instance_ = nullptr;
 
+        static volatile inline bool irq_ = false;
+
         MaxResponse status_;
 
         uint8_t responseSize_ = 0;
@@ -355,6 +361,9 @@ namespace rckid {
         /* Properties - from 5.2 AN332, Si4705 programming. 
          */
         static constexpr uint16_t PROP_GPO_IEN = 0x0001;
+        static constexpr uint16_t GPO_IEN_STCIEN = 0b1;
+        static constexpr uint16_t GPO_IEN_RDSIEN = 0b100;
+        static constexpr uint16_t GPO_IEN_RSQIEN = 0b1000;
         static constexpr uint16_t PROP_DIGITAL_OUTPUT_FORMAT = 0x0102;
         static constexpr uint16_t PROP_DIGITAL_OUTPUT_SAMPLE_RATE = 0x104;
         static constexpr uint16_t PROP_REFCLK_FREQ = 0x0201;
@@ -387,6 +396,7 @@ namespace rckid {
         static constexpr uint16_t PROP_FM_RDS_INT_SOURCE = 0x1500;
         static constexpr uint16_t PROP_FM_RDS_INT_FIFO_COUNT = 0x1501;
         static constexpr uint16_t PROP_FM_RDS_CONFIG = 0x1502;
+        static constexpr uint16_t FM_RDS_RDSEN = 0b1;
         static constexpr uint16_t PROP_FM_RDS_CONFIDENCE = 0x1503;
         static constexpr uint16_t PROP_FM_AGC_ATTACK_RATE = 0x1700;
         static constexpr uint16_t PROP_FM_AGC_RELEASE_RATE = 0x1701;

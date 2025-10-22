@@ -15,11 +15,13 @@ namespace rckid {
                 return;
             sendCommand({
                 CMD_POWER_UP, 
-                CMD_POWER_UP_GPO2OEN | CMD_POWER_UP_XOSCEN | CMD_POWER_UP_CTSIEN, 
+                CMD_POWER_UP_GPO2OEN | CMD_POWER_UP_XOSCEN, 
                 CMD_POWER_UP_FM_RECEIVER
             }, 150);
             busy_ |= RADIO_ENABLED;
             getResponse();
+            setProperty(PROP_GPO_IEN, GPO_IEN_STCIEN | GPO_IEN_RDSIEN | GPO_IEN_RSQIEN);
+            setProperty(PROP_FM_RDS_CONFIG, FM_RDS_RDSEN);
 
         } else {
             Codec::stop();
@@ -69,10 +71,28 @@ namespace rckid {
         LOG(LL_INFO, "radio response: " << hex(r.rawResponse()));
     }
 
-
+    bool Radio::update() {
+        // TODO also read the FM_RSQ_status periodically for stereo
+        // and deal with rds 
+        if (!irq_)
+            return false;
+        irq_ = false;
+        getStatus();
+        irqs_ = status_.rawResponse();
+        if (status_.stcInt())
+            getTuneStatus();
+        return true;
+    }
 
     void Radio::irqHandler() {
-        ++irqs_;
+        uint8_t cmd = CMD_GET_INT_STATUS; 
+        irq_ = true;
+        /*
+        i2c::enqueue(RCKID_FM_RADIO_I2C_ADDRESS, & cmd, sizeof(cmd), 1, [](uint8_t numBytes) {
+            i2c::getTransactionResponse(reinterpret_cast<uint8_t*>(& instance_->status_), 1);
+            ++irqs_;
+            irqs_ = instance_->status_.rawResponse();
+        }); */
         /*
         switch (instance_->expectedResponse_) {
             case ExpectedResponse::Status: {

@@ -83,6 +83,9 @@ namespace rckid {
                 InfoDialog::error("No radio", "This device does not have a radio chip.");
                 exit();
             }
+            if (radio_->update()) {
+                updateFrequency();
+            }
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 exit();
             }

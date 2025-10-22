@@ -31,7 +31,6 @@
 
 # XMas delivery checklist
 
-- [ ] battery protection
 - [X] audio player keeps button presses - fix
 - [X] repeat function
 - [X] automatic next function
@@ -39,7 +38,8 @@
   - [ ] show budget
   - [ ] show time
 - [ ] lock functionality for screen (can be accessed from home menu, or also from apps)
-- [ ] fm radio app fixes (display frequency)
+- [X] fm radio app fixes (display frequency)
+- [ ] RDS, signal quality
 - [ ] time apps
   - [ ] clock settings
   - [ ] timer
@@ -55,7 +55,9 @@ Nice extras would include:
 - [ ] accelerometer controller background & background selection
 - [ ] verify embedded antenna
 - [ ] allow background playback
+- [ ] radio presets?
 - [ ] extra devices (would have to order quickly)
+
 
 # TODO
 
