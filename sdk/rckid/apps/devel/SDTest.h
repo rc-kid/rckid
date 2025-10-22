@@ -77,7 +77,6 @@ namespace rckid {
 // 4278289  41849   4149817
 // 43360066 412867  42100412
         uint32_t test(uint32_t numBytes) {
-            uint32_t before = sd_write_blocks;
             uint64_t startTime = uptimeUs64();
             fs::FileWrite f{fs::fileWrite("/sdtest.bin")};
             if (! f.good()) {
@@ -91,8 +90,6 @@ namespace rckid {
             f.close();
             uint64_t endTime = uptimeUs64();
             uint32_t durationUs = endTime - startTime;
-            uint32_t speedKbps = (numBytes / 1024.0f) / (durationUs / 1000000.0f);
-            after = sd_write_blocks - before;
             //return speedKbps;
             return durationUs;
         }

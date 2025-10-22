@@ -718,6 +718,10 @@ namespace rckid::gbcemu {
                         hram[ADDR_NR52] = 0;
                     }
                     break;
+                case 21:
+                case 31: 
+                    // unused
+                    break;
                 default:
                     // invalid or unimplemented register
                     UNREACHABLE;
