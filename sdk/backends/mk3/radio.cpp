@@ -20,8 +20,12 @@ namespace rckid {
             }, 150);
             busy_ |= RADIO_ENABLED;
             getResponse();
-            setProperty(PROP_GPO_IEN, GPO_IEN_STCIEN | GPO_IEN_RDSIEN | GPO_IEN_RSQIEN);
+            setProperty(PROP_FM_RSQ_INT_SOURCE, FM_RSQ_INT_SOURCE_BLENDIEN | FM_RSQ_INT_SOURCE_SNRHIEN | FM_RSQ_INT_SOURCE_SNRLIEN | FM_RSQ_INT_SOURCE_RSSIHIEN | FM_RSQ_INT_SOURCE_RSSILIEN);
+            setProperty(PROP_FM_RDS_INT_SOURCE, FM_RDS_INT_SOURCE_RDSRECV);
             setProperty(PROP_FM_RDS_CONFIG, FM_RDS_RDSEN);
+            // somehow the repeated int handling is necessary here so far to receive the interrupts
+            // figure out why
+            setProperty(PROP_GPO_IEN, GPO_IEN_STCIEN | GPO_IEN_RDSIEN | GPO_IEN_RSQIEN | (1 << 10) | (1 << 11));
 
         } else {
             Codec::stop();

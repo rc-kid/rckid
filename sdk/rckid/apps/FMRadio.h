@@ -113,14 +113,17 @@ namespace rckid {
         ui::Label radioText_;
         ui::Label signal_;
 
+        uint32_t irqs_ = 0;
+
         void refreshUi() {
             ASSERT(radio_ != nullptr);
+            ++irqs_;
             uint32_t freqMhz = radio_->frequency() / 100;
             uint32_t freqFrac = radio_->frequency() % 100;
             freq_.setText(STR(freqMhz << '.' << freqFrac));
             stationName_.setText(radio_->stationName());
             radioText_.setText(radio_->radioText());
-            signal_.setText(STR((uint32_t)radio_->rssi() << " " << (uint32_t)radio_->snr() << (radio_->stereo() > 50 ? " STEREO" : " MONO")));
+            signal_.setText(STR((uint32_t)radio_->rssi() << " " << (uint32_t)radio_->snr() << " " << radio_->stereo() << " " << irqs_));
         }
 
 

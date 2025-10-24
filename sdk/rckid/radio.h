@@ -430,6 +430,11 @@ namespace rckid {
         static constexpr uint16_t PROP_FM_ANTENNA_INPUT = 0x1107;
         static constexpr uint16_t PROP_FM_MAX_TUNE_ERROR = 0x1108;
         static constexpr uint16_t PROP_FM_RSQ_INT_SOURCE = 0x1200;
+        static constexpr uint16_t FM_RSQ_INT_SOURCE_BLENDIEN = 1 << 7;
+        static constexpr uint16_t FM_RSQ_INT_SOURCE_SNRHIEN = 1 << 3;
+        static constexpr uint16_t FM_RSQ_INT_SOURCE_SNRLIEN = 1 << 2;
+        static constexpr uint16_t FM_RSQ_INT_SOURCE_RSSIHIEN = 1 << 1;
+        static constexpr uint16_t FM_RSQ_INT_SOURCE_RSSILIEN = 1 << 0;
         static constexpr uint16_t PROP_FM_RSQ_SNR_HI_THRESHOLD = 0x1201;
         static constexpr uint16_t PROP_FM_RSQ_SNR_LO_THRESHOLD = 0x1202;
         static constexpr uint16_t PROP_FM_RSQ_RSSI_HI_THRESHOLD = 0x1203;
@@ -449,6 +454,7 @@ namespace rckid {
         static constexpr uint16_t PROP_FM_SEEK_TUNE_SNR_THRESHOLD = 0x1403;
         static constexpr uint16_t PROP_FM_SEEK_TUNE_RSSI_THRESHOLD = 0x1404;
         static constexpr uint16_t PROP_FM_RDS_INT_SOURCE = 0x1500;
+        static constexpr uint16_t FM_RDS_INT_SOURCE_RDSRECV = 0b1;
         static constexpr uint16_t PROP_FM_RDS_INT_FIFO_COUNT = 0x1501;
         static constexpr uint16_t PROP_FM_RDS_CONFIG = 0x1502;
         static constexpr uint16_t FM_RDS_RDSEN = 0b1;
