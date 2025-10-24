@@ -83,7 +83,7 @@ Connect the SWD port for the RCKid (on devel-server the wires are, from top to b
 
 Then run openocd on the rpi with the following command:
 
-    openocd -f interface/cmsis-dap.cfg -f target/rp2350.cfg -c "adapter speed 5000" -c "bindto 0.0.0.0"
+    openocd -f interface/raspberrypi-swd.cfg -f target/rp2350.cfg -c "adapter speed 5000" -c "bindto 0.0.0.0"
 
 And to run the debugger, can run gdb from the computer that compiled the cartridges:
 

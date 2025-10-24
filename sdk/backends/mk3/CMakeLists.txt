@@ -38,6 +38,8 @@ function(link_with_librckid target_name)
     target_link_libraries(${target_name} PRIVATE
         pico_stdlib
         pico_unique_id
+        #pico_cyw43_arch_poll
+        pico_cyw43_arch_lwip_poll
         tinyusb_device
         tinyusb_board
         pico_rand

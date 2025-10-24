@@ -78,14 +78,16 @@ namespace rckid {
             return false;
         irq_ = false;
         getStatus();
-        irqs_ = status_.rawResponse();
         if (status_.stcInt())
             getTuneStatus();
+        if (status_.rsqInt())
+            getRSQStatus();
+        if (status_.rdsInt())
+            getRDSStatus();
         return true;
     }
 
     void Radio::irqHandler() {
-        uint8_t cmd = CMD_GET_INT_STATUS; 
         irq_ = true;
         /*
         i2c::enqueue(RCKID_FM_RADIO_I2C_ADDRESS, & cmd, sizeof(cmd), 1, [](uint8_t numBytes) {

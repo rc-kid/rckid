@@ -31,6 +31,7 @@
 
 #include <rckid/apps/devel/HardwareStatus.h>
 #include <rckid/apps/devel/SDTest.h>
+#include <rckid/apps/devel/WiFiScan.h>
 
 #include <gbcemu/gbcemu.h>
 #include <gbcemu/gamepak.h>
@@ -72,6 +73,7 @@ ui::ActionMenu * utilsMenuGenerator() {
         ui::ActionMenu::Item("Data Sync", assets::icons_64::pen_drive, App::run<DataSync>),
         ui::ActionMenu::Item("HW Status", assets::icons_64::pen_drive, App::run<HardwareStatus>),
         ui::ActionMenu::Item("SD Test", assets::icons_64::pen_drive, App::run<SDTest>),
+        ui::ActionMenu::Item("WiFi Scan", assets::icons_64::pen_drive, App::run<WiFiScan>),
     };
 }
 
@@ -113,7 +115,7 @@ ui::ActionMenu * mainMenuGenerator() {
 }
 
 int main() {
-    cpu::overclock(250000000);
+    //cpu::overclock(250000000);
     initialize();
     //PNG png{PNG::fromStream(fs::fileRead(STR("files/images/backgrounds/wish16.png")))};
     //LOG(LL_INFO, "PNG loaded: " << png.width() << "x" << png.height() << ", bpp: " << png.bpp());

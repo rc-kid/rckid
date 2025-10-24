@@ -21,6 +21,147 @@ namespace rckid {
          */
         static Radio * instance() { return instance_; }
 
+
+        /** Version information returned by the GET_REV command. 
+         */
+        PACKED(class VersionInfo {
+        public:
+            uint8_t partNumber;
+            uint8_t fwMajor;
+            uint8_t fwMinor;
+            uint16_t patch;
+            uint8_t compMajor;
+            uint8_t compMinor;
+            uint8_t chipRevision;
+            uint8_t reserved[5];
+            uint8_t cid;
+        }); // Radio::VersionInfo
+
+
+
+        bool enabled() const { return busy_ & RADIO_ENABLED; }
+
+        bool busy() const { return status_.cts() == false; }
+
+        bool tuning() const { return status_.stcInt() == false; }
+
+        /** Enables, or disables the radio chip. 
+         */
+        void enable(bool value);
+
+        bool update();
+
+
+        /** Returns true if the current channel is valid, false if noise.
+         */
+        bool valid() const { return valid_; }
+
+        /** Returns the frequency we are listening on now.
+         */
+        uint16_t frequency() const { return frequency_; }
+
+        uint8_t rssi() const { return rssi_; }
+
+        uint8_t snr() const { return snr_; }
+
+        /** Returns the percentage of stereo signal. 0 means mono, 100 means fully stereo signal. 
+         */
+        uint8_t stereo() const { return stereo_; }
+
+        String const & stationName() const { return stationName_; }
+
+        String const & radioText() const { return radioText_; }
+
+        /** Returns the device version & software revision information.
+         */
+        VersionInfo getVersionInfo() {
+            sendCommand({ CMD_GET_REV });
+            getResponse(sizeof(VersionInfo) + 1);
+            status_.versionInfo.patch = platform::swapBytes(status_.versionInfo.patch);
+            return status_.versionInfo;
+        }
+
+        /** Sets the FM frequency in multiples of 10kHz, i.e. 9370 for 93.7MHz. 
+            
+            The frequency must be in the range of 6800 to 10800, i.e. 68MHz to 108MHz. As with any other commands, if the radio is busy, the app will block until the previous command has been processed and the radio is ready for the next command.
+         */
+        void setFrequency(uint16_t freq_10kHz) {
+            busy_ |= RADIO_TUNE_BUSY;
+            sendCommand({
+                CMD_FM_TUNE_FREQ,
+                0, // no freeze or fast mode
+                platform::highByte(freq_10kHz),
+                platform::lowByte(freq_10kHz),
+                0, // automatic antenna tuning capacitor value
+            });
+            getResponse();
+            // remember the frequency
+            // frequency_ = freq_10kHz;
+        }
+
+        /** Starts automatic seek to the next valid channel (frequency up), with wrap around at the end of the band.
+         */
+        void seekUp() {
+            busy_ |= RADIO_TUNE_BUSY;
+            sendCommand({
+                CMD_FM_SEEK_START,
+                0x08 | 0x04, // seek up, wrap around
+            });
+            getResponse();
+        }
+
+        /** Starts automatic seek to the previous valid channel (frequency down), with wrap around at the beginning of the band.
+         */
+        void seekDown() {
+            busy_ |= RADIO_TUNE_BUSY;
+            sendCommand({
+                CMD_FM_SEEK_START,
+                0x04, // seek down, wrap around
+            });
+            getResponse();
+        }
+
+        void enableEmbeddedAntenna(bool value = true) {
+            setProperty(PROP_FM_ANTENNA_INPUT, value ? 0x0001 : 0x0000);
+        }
+
+        bool embeddedAntennaEnabled() {
+            return getProperty(PROP_FM_ANTENNA_INPUT) != 0;
+        }
+
+        void enableStereo(bool value = true) {
+            setProperty(PROP_FM_BLEND_RSSI_STEREO_THRESHOLD, value ? 0x0031 : 0x007f);
+            setProperty(PROP_FM_BLEND_MONO_THRESHOLD, value ? 0x0001 : 0x007f);
+        }
+
+        /** Enables or disables the GPO1 pin. When disabled, the pin is left floating, otherwise its either high or low, based on the last setGPO1 function call value (low by default).
+         */
+        void enableGPO1(bool value) {
+            sendCommand({
+                CMD_GPIO_CTL,
+                value ? 0x02_u8 : 0x00_u8, // GPO1 output enabled
+            });
+            getResponse();
+        }
+
+        /** Determines the GPO1 pin value, if enabled. 
+         */
+        void setGPO1(bool value) {
+            sendCommand({
+                CMD_GPIO_SET,
+                value ? 0x02_u8 : 0x00_u8, // GPO1 output value
+            });
+            getResponse();
+        }
+
+    private:
+        // TODO delete this when done
+        friend class FMRadio;
+
+        friend void initialize(int argc, char const * argv[]);
+        friend void irqGPIO_(uint pin, uint32_t events);
+
+
         PACKED(class Response {
         public:
             /** When high, new command can be sent. */
@@ -44,21 +185,11 @@ namespace rckid {
             volatile uint8_t raw_ = 0xff;
         }); // Radio::Response
 
-        /** Version information returned by the GET_REV command. 
-         */
-        PACKED(class VersionInfo {
+        PACKED(class PropertyValue {
         public:
-            uint8_t partNumber;
-            uint8_t fwMajor;
-            uint8_t fwMinor;
-            uint16_t patch;
-            uint8_t compMajor;
-            uint8_t compMinor;
-            uint8_t chipRevision;
-            uint8_t reserved[5];
-            uint8_t cid;
-        }); // Radio::VersionInfo
-
+            uint8_t result_; // always 0
+            uint16_t value;
+        }); // Radio::PropertyValue
 
         PACKED(class TuneStatus {
         public:
@@ -110,144 +241,22 @@ namespace rckid {
 
         }); // Radio::RSQStatus
 
-        bool enabled() const { return busy_ & RADIO_ENABLED; }
-
-        bool busy() const { return status_.cts() == false; }
-
-        bool tuning() const { return status_.stcInt() == false; }
-
-        /** Enables, or disables the radio chip. 
-         */
-        void enable(bool value);
-
-        Response getResponse() const { return status_; }
-
-        bool update();
-
-        /** Returns the device version & software revision information.
-         */
-        VersionInfo getVersionInfo() {
-            sendCommand({ CMD_GET_REV });
-            getResponse(sizeof(VersionInfo) + 1);
-            status_.versionInfo.patch = platform::swapBytes(status_.versionInfo.patch);
-            return status_.versionInfo;
-        }
-
-        /** Sets the FM frequency in multiples of 10kHz, i.e. 9370 for 93.7MHz. 
-            
-            The frequency must be in the range of 6800 to 10800, i.e. 68MHz to 108MHz. As with any other commands, if the radio is busy, the app will block until the previous command has been processed and the radio is ready for the next command.
-         */
-        void setFrequency(uint16_t freq_10kHz) {
-            busy_ |= RADIO_TUNE_BUSY;
-            sendCommand({
-                CMD_FM_TUNE_FREQ,
-                0, // no freeze or fast mode
-                platform::highByte(freq_10kHz),
-                platform::lowByte(freq_10kHz),
-                0, // automatic antenna tuning capacitor value
-            });
-            getResponse();
-            // remember the frequency
-            // frequency_ = freq_10kHz;
-        }
-
-        /** Returns the frequency we are listening on now.
-         */
-        uint16_t frequency() const { return frequency_; }
-
-        /** Starts automatic seek to the next valid channel (frequency up), with wrap around at the end of the band.
-         */
-        void seekUp() {
-            busy_ |= RADIO_TUNE_BUSY;
-            sendCommand({
-                CMD_FM_SEEK_START,
-                0x08 | 0x04, // seek up, wrap around
-            });
-            getResponse();
-        }
-
-        /** Starts automatic seek to the previous valid channel (frequency down), with wrap around at the beginning of the band.
-         */
-        void seekDown() {
-            busy_ |= RADIO_TUNE_BUSY;
-            sendCommand({
-                CMD_FM_SEEK_START,
-                0x04, // seek down, wrap around
-            });
-            getResponse();
-        }
-
-        /** Returns the current tuning status. 
-         */
-        TuneStatus getTuneStatus() {
-            sendCommand({
-                CMD_FM_TUNE_STATUS,
-                0x00, // no interrupt acknowledge
-            });
-            getResponse(8); 
-            status_.tuneStatus.frequency_ = platform::swapBytes(status_.tuneStatus.frequency_);
-            // keep the frequency we got as well
-            frequency_ = status_.tuneStatus.frequency10kHz();
-            return status_.tuneStatus;
-        }
-
-        RSQStatus getRSQStatus() {
-            sendCommand({
-                CMD_FM_RSQ_STATUS,
-                0x00, // no interrupt acknowledge
-            });
-            getResponse(8); 
-            return status_.rsqStatus;
-        }
-
-        void enableEmbeddedAntenna(bool value = true) {
-            setProperty(PROP_FM_ANTENNA_INPUT, value ? 0x0001 : 0x0000);
-        }
-
-        bool embeddedAntennaEnabled() {
-            return getProperty(PROP_FM_ANTENNA_INPUT) != 0;
-        }
-
-        void enableStereo(bool value = true) {
-            setProperty(PROP_FM_BLEND_RSSI_STEREO_THRESHOLD, value ? 0x0031 : 0x007f);
-            setProperty(PROP_FM_BLEND_MONO_THRESHOLD, value ? 0x0001 : 0x007f);
-        }
-
-        /** Enables or disables the GPO1 pin. When disabled, the pin is left floating, otherwise its either high or low, based on the last setGPO1 function call value (low by default).
-         */
-        void enableGPO1(bool value) {
-            sendCommand({
-                CMD_GPIO_CTL,
-                value ? 0x02_u8 : 0x00_u8, // GPO1 output enabled
-            });
-            getResponse();
-        }
-
-        /** Determines the GPO1 pin value, if enabled. 
-         */
-        void setGPO1(bool value) {
-            sendCommand({
-                CMD_GPIO_SET,
-                value ? 0x02_u8 : 0x00_u8, // GPO1 output value
-            });
-            getResponse();
-        }
-
-        uint32_t irqs() const { return irqs_; }
-
-    private:
-        // TODO delete this when done
-        friend class FMRadio;
-
-        friend void initialize(int argc, char const * argv[]);
-        friend void irqGPIO_(uint pin, uint32_t events);
-
-
-        PACKED(class PropertyValue {
+        PACKED(class RDSStatus {
         public:
-            uint8_t result_; // always 0
-            uint16_t value;
-        }); // Radio::PropertyValue
+
+        private:
+            friend class Radio;
+
+            uint8_t resp1_;
+            uint8_t resp2_;
+            uint8_t resp3_;
+            uint16_t blockA_;
+            uint16_t blockB_;
+            uint16_t blockC_;
+            uint16_t blockD_;
+            uint8_t resp12_;
+
+        }); // Radio::RDSStatus
 
         PACKED(class MaxResponse : public Response {
         public:
@@ -257,6 +266,7 @@ namespace rckid {
                 TuneStatus tuneStatus;
                 VersionInfo versionInfo;
                 RSQStatus rsqStatus;
+                RDSStatus rdsStatus;
             });
         });
 
@@ -277,6 +287,48 @@ namespace rckid {
         void sendCommand(uint8_t const (&cmd)[N], uint32_t ctsTime = 1) { sendCommand(cmd, N, ctsTime); }
 
         void getResponse(uint8_t expectedBytes = 1);
+
+        /** Returns the current tuning status. 
+         */
+        void getTuneStatus() {
+            sendCommand({
+                CMD_FM_TUNE_STATUS,
+                0x00, // no interrupt acknowledge
+            });
+            getResponse(8); 
+            status_.tuneStatus.frequency_ = platform::swapBytes(status_.tuneStatus.frequency_);
+            // keep the frequency we got as well
+            frequency_ = status_.tuneStatus.frequency10kHz();
+            rssi_ = status_.tuneStatus.rssi();
+            snr_ = status_.tuneStatus.snr();
+            valid_ = status_.tuneStatus.valid();
+        }
+
+        void getRSQStatus() {
+            sendCommand({
+                CMD_FM_RSQ_STATUS,
+                0x00, // no interrupt acknowledge
+            });
+            getResponse(8); 
+            rssi_ = status_.rsqStatus.rssi();
+            snr_ = status_.rsqStatus.snr();
+            stereo_ = status_.rsqStatus.stereo();
+            valid_ = status_.rsqStatus.valid();
+        }
+
+        void getRDSStatus() {
+            sendCommand({
+                CMD_FM_RDS_STATUS,
+                0x00, // no interrupt acknowledge
+            });
+            getResponse(12);
+            status_.rdsStatus.blockA_ = platform::swapBytes(status_.rdsStatus.blockA_);
+            status_.rdsStatus.blockB_ = platform::swapBytes(status_.rdsStatus.blockB_);
+            status_.rdsStatus.blockC_ = platform::swapBytes(status_.rdsStatus.blockC_);
+            status_.rdsStatus.blockD_ = platform::swapBytes(status_.rdsStatus.blockD_);
+            // process RDS data
+            // TODO
+        }
 
         uint16_t getProperty(uint16_t property) {
             sendCommand({
@@ -321,11 +373,14 @@ namespace rckid {
 
         uint8_t responseSize_ = 0;
 
+        bool valid_ = false;
         uint16_t frequency_ = 0; // in 10kHz steps
+        uint8_t rssi_ = 0;
+        uint8_t snr_ = 0;
+        uint8_t stereo_ = 0;
 
-
-        static inline uint32_t irqs_ = 0;
-
+        String stationName_{'?', 8};
+        String radioText_{'?', 64};
 
         /** Flags to determine the radio status. 
          */

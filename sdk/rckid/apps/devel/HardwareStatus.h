@@ -9,9 +9,8 @@
 
 namespace rckid {
 
-    /** Serial monitor
+    /** Hardware Status Monitor
      
-        A simple serial monitor, that can be used to either capture serial information via cartridge pins. 
      */
     class HardwareStatus  : public ui::Form<void> {
     public:
@@ -91,6 +90,6 @@ namespace rckid {
         };
 
 
-    }; // rckid::SerialMonitor
+    }; // rckid::HardwareStatus
 
 } // namespace rckid

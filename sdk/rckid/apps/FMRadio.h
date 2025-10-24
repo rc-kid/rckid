@@ -30,13 +30,20 @@ namespace rckid {
 
         FMRadio() :
             ui::Form<void>{},
-            freq_{Rect::XYWH(0, 30, 320, 130), "???"},
-            rds_{Rect::XYWH(0, 170, 320, 80), ""} {
+            freq_{Rect::XYWH(0, 20, 320, 128), "???"},
+            stationName_{Rect::XYWH(0, 150, 320, 32), "City937"},
+            radioText_{Rect::XYWH(0, 180, 320, 32), "Some nice song: Here"},
+            signal_{Rect::XYWH(0, 130, 320, 20), "56 78 STEREO"}
+        {
             freq_.setFont(Font::fromROM<assets::OpenDyslexic128>());
             freq_.setHAlign(HAlign::Center);
             freq_.setVAlign(VAlign::Center);
+            stationName_.setFont(Font::fromROM<assets::OpenDyslexic32>());
+            radioText_.setFont(Font::fromROM<assets::OpenDyslexic32>());
             g_.addChild(freq_);
-            g_.addChild(rds_);
+            g_.addChild(stationName_);
+            g_.addChild(radioText_);
+            g_.addChild(signal_);
             radio_ = Radio::instance();
             if (radio_ != nullptr) {
                 LOG(LL_INFO, "Si4705 info:");
@@ -51,14 +58,6 @@ namespace rckid {
                 LOG(LL_INFO, "  cid:           " << version.cid);
                 radio_->enableGPO1(true);
                 radio_->setFrequency(9370);
-                cpu::delayMs(100);
-                auto tuneStatus = radio_->getTuneStatus();
-                LOG(LL_INFO, "  frequency:     " << tuneStatus.frequency10kHz() << " [10kHz]");
-                LOG(LL_INFO, "  rssi:          " << tuneStatus.rssi());
-                LOG(LL_INFO, "  snr:           " << tuneStatus.snr());
-                LOG(LL_INFO, "  multipath:     " << tuneStatus.multipath());
-                LOG(LL_INFO, "  antCap:        " << tuneStatus.antCap());
-                updateFrequency();
             }
         }
 
@@ -70,12 +69,6 @@ namespace rckid {
 
     protected:
 
-        void updateFrequency() {
-            ASSERT(radio_ != nullptr);
-            uint32_t freqMhz = radio_->frequency() / 100;
-            uint32_t freqFrac = radio_->frequency() % 100;
-            freq_.setText(STR(freqMhz << '.' << freqFrac));
-        }
 
         void update() override {
             ui::Form<void>::update();
@@ -83,9 +76,7 @@ namespace rckid {
                 InfoDialog::error("No radio", "This device does not have a radio chip.");
                 exit();
             }
-            if (radio_->update()) {
-                updateFrequency();
-            }
+            refresh_ = radio_->update();
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 exit();
             }
@@ -93,16 +84,6 @@ namespace rckid {
                 //radio_->enableEmbeddedAntenna(true);
                 radio_->seekDown();
             if (btnPressed(Btn::Up)) {
-                auto rsq = radio_->getRSQStatus();
-                LOG(LL_INFO, "  valid:         " << rsq.valid());
-                LOG(LL_INFO, "  afcRail:       " << rsq.afcRail());
-                LOG(LL_INFO, "  softMute:      " << rsq.softMute());
-                LOG(LL_INFO, "  stereoPilot:   " << rsq.stereoPilot());
-                LOG(LL_INFO, "  stereo:        " << rsq.stereo());
-                LOG(LL_INFO, "  rssi:          " << rsq.rssi());
-                LOG(LL_INFO, "  snr:           " << rsq.snr());
-                LOG(LL_INFO, "  multipath:     " << rsq.multipath());
-                LOG(LL_INFO, "  freqOffset:    " << rsq.frequencyOffset());
 
                 //radio_->enableGPO1(true);
                 //radio_->setGPO1(true);
@@ -116,52 +97,36 @@ namespace rckid {
         }
 
         void draw() override {
+            if (refresh_) {
+                refresh_ = false;
+                refreshUi();
+            }
             //rds_.setText(STR(hex(radio_->status_.rawResponse()) << " ")); //  << gpio::read(RP_PIN_RADIO_INT)));
-            rds_.setText(STR(radio_->irqs() << " ")); //  << gpio::read(RP_PIN_RADIO_INT)));
             ui::Form<void>::draw();
         }
 
-    protected:
+    private:
         Radio * radio_;
+        bool refresh_ = false;
         ui::Label freq_;
-        ui::Label rds_;
+        ui::Label stationName_;
+        ui::Label radioText_;
+        ui::Label signal_;
+
+        void refreshUi() {
+            ASSERT(radio_ != nullptr);
+            uint32_t freqMhz = radio_->frequency() / 100;
+            uint32_t freqFrac = radio_->frequency() % 100;
+            freq_.setText(STR(freqMhz << '.' << freqFrac));
+            stationName_.setText(radio_->stationName());
+            radioText_.setText(radio_->radioText());
+            signal_.setText(STR((uint32_t)radio_->rssi() << " " << (uint32_t)radio_->snr() << (radio_->stereo() > 50 ? " STEREO" : " MONO")));
+        }
+
 
     }; // rckid::Radio
 
 
-    /* This is from initialize test when radio was being tested:
-    
 
-        // start radio audio just for test
-        auto radio = Radio::instance();
-        radio->enable(true);
-        cpu::delayMs(500);
-        radio->enableStereo(false);
-        //radio->enableEmbeddedAntenna(true);
-        radio->setFrequency(9370);
-        cpu::delayMs(250);
-        auto tuneStatus = radio->getTuneStatus();
-        LOG(LL_INFO, "  frequency:     " << tuneStatus.frequency10kHz() << " [10kHz]");
-        LOG(LL_INFO, "  rssi:          " << tuneStatus.rssi());
-        LOG(LL_INFO, "  snr:           " << tuneStatus.snr());
-        LOG(LL_INFO, "  multipath:     " << tuneStatus.multipath());
-        LOG(LL_INFO, "  antCap:        " << tuneStatus.antCap());
-
-        cpu::delayMs(250);
-
-        Codec::playbackLineInDirect();
-        //Codec::playbackLineIn(); do not use this as it does not work now 
-        Codec::setSpeakerVolume(63);
-        Codec::setHeadphonesVolume(63);
-        Codec::showRegisters();
-        //Codec::recordLineIn(48000);
-        Codec::enableMasterClock(48000);
-
-        Codec::setSpeakerVolume(45);
-        Codec::setHeadphonesVolume(45);
-
-    
-    
-    */
 
 } // namespace rckid

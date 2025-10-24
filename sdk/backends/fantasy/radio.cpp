@@ -14,6 +14,11 @@ namespace rckid {
         LOG(LL_INFO, "Radio reset");
     }
 
+    bool Radio::update() {
+        //LOG(LL_INFO, "Radio update");
+        return true;
+    }
+
     void Radio::sendCommand(uint8_t const *, uint8_t, uint32_t) {
         LOG(LL_INFO, "Radio send command");
     }

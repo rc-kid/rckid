@@ -21,6 +21,16 @@ if (RCKID_BACKEND STREQUAL "MK3")
     set(PICO_BOARD none)
     set(PICO_PLATFORM rp2350)
     message("RCKID: Building for the mk3 (RP2350)")
+
+    add_definitions(-DCYW43_DEFAULT_PIN_WL_DATA_OUT=15)
+    add_definitions(-DCYW43_DEFAULT_PIN_WL_DATA_IN=15)
+    add_definitions(-DCYW43_DEFAULT_PIN_WL_HOST_WAKE=15)
+    add_definitions(-DCYW43_DEFAULT_PIN_WL_CLOCK=16)
+    add_definitions(-DCYW43_DEFAULT_PIN_WL_CS=14)
+    add_definitions(-DCYW43_DEFAULT_PIN_WL_REG_ON=13)
+    #add_definitions(-DCYW43_DEFAULT_PIN_WL_REG_ON=13) # this is for BT
+    add_definitions(-DCYW43_{PIN_WL_DYNAMIC=0})
+    set(PICO_CYW43_SUPPORTED true)
 endif()
 
 # Based on the backend selected, pull in necessary libraries and setup the cmake environment. For fantasy backend, we need to initialize raylib, while the hardware backends pull-in and initialize the Raspberry Pi Pico SDK
