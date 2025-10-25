@@ -63,6 +63,10 @@ Nice extras would include:
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
+- trim lines in RDS mode
+- make signal strength nicer
+- reset RDS info when frequency changed
+
 - icons for shuffle and icons for repeat
 
 - make rgb LED effect much slower with speed 1

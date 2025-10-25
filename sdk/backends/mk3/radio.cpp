@@ -26,6 +26,7 @@ namespace rckid {
             // somehow the repeated int handling is necessary here so far to receive the interrupts
             // figure out why
             setProperty(PROP_GPO_IEN, GPO_IEN_STCIEN | GPO_IEN_RDSIEN | GPO_IEN_RSQIEN | (1 << 10) | (1 << 11));
+            setProperty(PROP_FM_RDS_INT_FIFO_COUNT, 20);
 
         } else {
             Codec::stop();

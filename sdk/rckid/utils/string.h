@@ -21,6 +21,7 @@ namespace rckid {
 
         String(char c, uint32_t n): 
             str_{n + 1} {
+            str_.setSize(n + 1);
             memset(str_.data(), c, n);
             str_[size()] = '\0';
         }
@@ -106,6 +107,8 @@ namespace rckid {
         char const * end() const { return str_.begin() + size(); }
 
         char operator[](uint32_t index) const { return str_[index]; }
+        
+        char & operator[](uint32_t index) { return str_[index]; }
 
         void append(char c) {
             str_.makeMutable();

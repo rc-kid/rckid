@@ -9,8 +9,6 @@
 #include "../../ui/tilemap.h"
 
 
-#include <pico/cyw43_arch.h>
-
 
 namespace rckid {
 
@@ -18,6 +16,8 @@ namespace rckid {
     public:
 
         String name() const override { return "WiFiScan"; }
+
+/*
 
         WiFiScan():
             ui::Form<void>{},
@@ -90,6 +90,8 @@ namespace rckid {
                 return 0;
             }
         }
+
+        */
 
 
         static constexpr uint16_t palette_[] = {

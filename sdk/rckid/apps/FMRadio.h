@@ -31,18 +31,21 @@ namespace rckid {
         FMRadio() :
             ui::Form<void>{},
             freq_{Rect::XYWH(0, 20, 320, 128), "???"},
-            stationName_{Rect::XYWH(0, 150, 320, 32), "City937"},
-            radioText_{Rect::XYWH(0, 180, 320, 32), "Some nice song: Here"},
-            signal_{Rect::XYWH(0, 130, 320, 20), "56 78 STEREO"}
+            stationName_{Rect::XYWH(0, 130, 320, 32), ""},
+            radioText1_{Rect::XYWH(0, 160, 320, 32), ""},
+            radioText2_{Rect::XYWH(0, 190, 320, 32), ""},
+            signal_{Rect::XYWH(0, 25, 320, 20), "56 78 STEREO"}
         {
             freq_.setFont(Font::fromROM<assets::OpenDyslexic128>());
             freq_.setHAlign(HAlign::Center);
             freq_.setVAlign(VAlign::Center);
             stationName_.setFont(Font::fromROM<assets::OpenDyslexic32>());
-            radioText_.setFont(Font::fromROM<assets::OpenDyslexic32>());
+            radioText1_.setFont(Font::fromROM<assets::OpenDyslexic32>());
+            radioText2_.setFont(Font::fromROM<assets::OpenDyslexic32>());
             g_.addChild(freq_);
             g_.addChild(stationName_);
-            g_.addChild(radioText_);
+            g_.addChild(radioText1_);
+            g_.addChild(radioText2_);
             g_.addChild(signal_);
             radio_ = Radio::instance();
             if (radio_ != nullptr) {
@@ -110,7 +113,8 @@ namespace rckid {
         bool refresh_ = false;
         ui::Label freq_;
         ui::Label stationName_;
-        ui::Label radioText_;
+        ui::Label radioText1_;
+        ui::Label radioText2_;
         ui::Label signal_;
 
         uint32_t irqs_ = 0;
@@ -122,7 +126,8 @@ namespace rckid {
             uint32_t freqFrac = radio_->frequency() % 100;
             freq_.setText(STR(freqMhz << '.' << freqFrac));
             stationName_.setText(radio_->stationName());
-            radioText_.setText(radio_->radioText());
+            radioText1_.setText(radio_->radioText1());
+            radioText2_.setText(radio_->radioText2());
             signal_.setText(STR((uint32_t)radio_->rssi() << " " << (uint32_t)radio_->snr() << " " << radio_->stereo() << " " << irqs_));
         }
 

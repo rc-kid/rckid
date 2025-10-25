@@ -109,3 +109,12 @@ TEST(string, assign) {
     s2 = s1;
     s1 = s2;
 }
+
+TEST(string, charAssign) {
+    using namespace rckid;
+    String s{' ', 8};
+    s[0] = 'H';
+    s[1] = 'e';
+    EXPECT(s[0] == 'H');
+    EXPECT(s[1] == 'e');
+}

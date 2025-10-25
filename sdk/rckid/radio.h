@@ -70,7 +70,9 @@ namespace rckid {
 
         String const & stationName() const { return stationName_; }
 
-        String const & radioText() const { return radioText_; }
+        String const & radioText1() const { return radioText1_; }
+
+        String const & radioText2() const { return radioText2_; }
 
         /** Returns the device version & software revision information.
          */
@@ -243,6 +245,7 @@ namespace rckid {
 
         PACKED(class RDSStatus {
         public:
+            uint8_t fifoUsed() const { return resp3_; }
 
         private:
             friend class Radio;
@@ -317,17 +320,68 @@ namespace rckid {
         }
 
         void getRDSStatus() {
-            sendCommand({
-                CMD_FM_RDS_STATUS,
-                0x00, // no interrupt acknowledge
-            });
-            getResponse(12);
-            status_.rdsStatus.blockA_ = platform::swapBytes(status_.rdsStatus.blockA_);
-            status_.rdsStatus.blockB_ = platform::swapBytes(status_.rdsStatus.blockB_);
-            status_.rdsStatus.blockC_ = platform::swapBytes(status_.rdsStatus.blockC_);
-            status_.rdsStatus.blockD_ = platform::swapBytes(status_.rdsStatus.blockD_);
-            // process RDS data
-            // TODO
+            while (true) {
+                sendCommand({
+                    CMD_FM_RDS_STATUS,
+                    0x00, // no interrupt acknowledge
+                });
+                getResponse(12);
+                status_.rdsStatus.blockA_ = platform::swapBytes(status_.rdsStatus.blockA_);
+                status_.rdsStatus.blockB_ = platform::swapBytes(status_.rdsStatus.blockB_);
+                status_.rdsStatus.blockC_ = platform::swapBytes(status_.rdsStatus.blockC_);
+                status_.rdsStatus.blockD_ = platform::swapBytes(status_.rdsStatus.blockD_);
+                // process RDS data
+                uint8_t groupType = (status_.rdsStatus.blockB_ >> 12) & 0x0f;
+                uint8_t version = (status_.rdsStatus.blockB_ >> 11) & 0x01;
+                //stationName_ = STR(groupType << " " << (version ? "B" : "A") << " ");
+                //return;
+                switch (groupType) {
+                    case 0: { // 0A or 0B - station name
+                        uint32_t charPos = (status_.rdsStatus.blockB_ & 0x03) * 2;
+                        if (charPos <= 6) {
+                            stationNameBuffer_[charPos] = static_cast<char>(status_.rdsStatus.blockD_ >> 8);
+                            stationNameBuffer_[charPos + 1] = static_cast<char>(status_.rdsStatus.blockD_ & 0xff);
+                            if (charPos == stationNameIndex_) {
+                                if (charPos == 6) {
+                                    stationName_ = String{stationNameBuffer_};
+                                    stationNameIndex_ = 0;
+                                } else {
+                                    stationNameIndex_ += 2;
+                                }
+                            } else {
+                                stationNameIndex_ = 0;
+                            }
+                        } 
+                        break;
+                    }
+                    case 2: { // 2A or 2B - radio text
+                        uint32_t charPos = (status_.rdsStatus.blockB_ & 0x0f) * 4;
+                        uint32_t bufferPos = charPos % 32;
+                        radioTextBuffer_[bufferPos] = static_cast<char>(status_.rdsStatus.blockC_ >> 8);
+                        radioTextBuffer_[bufferPos + 1] = static_cast<char>(status_.rdsStatus.blockC_ & 0xff);
+                        radioTextBuffer_[bufferPos + 2] = static_cast<char>(status_.rdsStatus.blockD_ >> 8);
+                        radioTextBuffer_[bufferPos + 3] = static_cast<char>(status_.rdsStatus.blockD_ & 0xff);
+                        if (charPos == radioTextIndex_) {
+                            if (charPos == 28) {
+                                radioText1_ = String{radioTextBuffer_};
+                                radioTextIndex_ = 32;
+
+                            } else if (charPos == 60) {
+                                radioText2_ = String{radioTextBuffer_};
+                                radioTextIndex_ = 0;
+                            } else {
+                                radioTextIndex_ += 4;
+                            }
+                        } else {
+                            radioTextIndex_ = 0;
+                        }
+                        break;
+                    }
+                }
+                // if we read all the fifo, end
+                if (status_.rdsStatus.fifoUsed() == 0)
+                    break;
+            }
         }
 
         uint16_t getProperty(uint16_t property) {
@@ -379,8 +433,13 @@ namespace rckid {
         uint8_t snr_ = 0;
         uint8_t stereo_ = 0;
 
-        String stationName_{'?', 8};
-        String radioText_{'?', 64};
+        String stationName_{};
+        String radioText1_{};
+        String radioText2_{};
+        char stationNameBuffer_[9] = {0};
+        uint8_t stationNameIndex_ = 0;
+        char radioTextBuffer_[33] = {0};
+        uint8_t radioTextIndex_ = 0;
 
         /** Flags to determine the radio status. 
          */
