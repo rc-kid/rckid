@@ -13,13 +13,10 @@ namespace rckid {
     /** A simple FM radio. 
      
         TODO
-        - display frequency
-        - display RDS info, signal strength, etc
         - allow switching between mono/stereo
         - allow switching internal/headphone antenna
         - allow forcing speaker even if headphones are on
         - allow playing music while the app is not active
-
         - presets
 
      */
@@ -119,6 +116,29 @@ namespace rckid {
 
         uint32_t irqs_ = 0;
 
+
+        char const * snrToQuality() {
+            uint8_t snr = radio_->snr();
+            if (snr >= 25)
+                return ">> >> >>";
+            else if (snr >= 20)
+                return ">> >> --";
+            else if (snr >= 15)
+                return ">> -- --";
+            else
+                return "-- -- --";
+        }
+
+        char const * stereoToStr() {
+            uint8_t stereo = radio_->stereo();
+            if (stereo >= 80)
+                return "STEREO";
+            else if (stereo >= 50)
+                return "BLENDED";
+            else
+                return "MONO"; 
+        }
+
         void refreshUi() {
             ASSERT(radio_ != nullptr);
             ++irqs_;
@@ -128,9 +148,8 @@ namespace rckid {
             stationName_.setText(radio_->stationName());
             radioText1_.setText(radio_->radioText1());
             radioText2_.setText(radio_->radioText2());
-            signal_.setText(STR((uint32_t)radio_->rssi() << " " << (uint32_t)radio_->snr() << " " << radio_->stereo() << " " << irqs_));
+            signal_.setText((STR(snrToQuality() << "   " << stereoToStr())));
         }
-
 
     }; // rckid::Radio
 

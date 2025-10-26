@@ -39,7 +39,8 @@
   - [ ] show time
 - [ ] lock functionality for screen (can be accessed from home menu, or also from apps)
 - [X] fm radio app fixes (display frequency)
-- [ ] RDS, signal quality
+- [X] rm radio rds, 
+- [X] fm radio signal quality, stereo
 - [ ] time apps
   - [ ] clock settings
   - [ ] timer
@@ -57,6 +58,7 @@ Nice extras would include:
 - [ ] allow background playback
 - [ ] radio presets?
 - [ ] extra devices (would have to order quickly)
+- [ ] fm radio rds time setting
 
 
 # TODO

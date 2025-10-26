@@ -343,7 +343,7 @@ namespace rckid {
                             stationNameBuffer_[charPos + 1] = static_cast<char>(status_.rdsStatus.blockD_ & 0xff);
                             if (charPos == stationNameIndex_) {
                                 if (charPos == 6) {
-                                    stationName_ = String{stationNameBuffer_};
+                                    copyTrimmed(stationNameBuffer_, 8, stationName_);
                                     stationNameIndex_ = 0;
                                 } else {
                                     stationNameIndex_ += 2;
@@ -363,11 +363,11 @@ namespace rckid {
                         radioTextBuffer_[bufferPos + 3] = static_cast<char>(status_.rdsStatus.blockD_ & 0xff);
                         if (charPos == radioTextIndex_) {
                             if (charPos == 28) {
-                                radioText1_ = String{radioTextBuffer_};
+                                copyTrimmed(radioTextBuffer_, 32, radioText1_);
                                 radioTextIndex_ = 32;
 
                             } else if (charPos == 60) {
-                                radioText2_ = String{radioTextBuffer_};
+                                copyTrimmed(radioTextBuffer_, 32, radioText2_);
                                 radioTextIndex_ = 0;
                             } else {
                                 radioTextIndex_ += 4;
@@ -377,11 +377,37 @@ namespace rckid {
                         }
                         break;
                     }
+                    case 4: { // 4A - clock time
+                        // TODO the time can be useful 
+                        /*
+                        // MJD (Modified Julian Date) in blocks C+D
+                        uint16_t mjd = (C << 15) | (D >> 1); // 17 bits
+                        int offset = (D & 0x1F);             // local time offset in half-hours
+                        int offset_sign = (D & 0x20) ? -1 : 1;
+
+                        // UTC time in block D bits 6–20
+                        int hours = (D >> 12) & 0x1F;
+                        int minutes = (D >> 6) & 0x3F;
+
+                        rds->hours = hours + offset_sign * (offset / 2);
+                        rds->minutes = minutes + (offset_sign * (offset % 2)) * 30;
+                        rds->has_time = 1;
+                        */
+                        break;
+                    }
                 }
                 // if we read all the fifo, end
                 if (status_.rdsStatus.fifoUsed() == 0)
                     break;
             }
+        }
+
+        void copyTrimmed(char * buffer, uint32_t bufferSize, String & into) {
+            int32_t end = bufferSize - 1;
+            while (end >= 0 && buffer[end] == ' ')
+                --end;
+            buffer[end + 1] = '\0';
+            into = String{buffer};
         }
 
         uint16_t getProperty(uint16_t property) {
