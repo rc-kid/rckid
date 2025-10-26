@@ -71,7 +71,7 @@ namespace rckid::ui {
         static inline Icon background_{assets::background16};
         static inline ColorRGB fg_{ColorRGB::White()};
         static inline ColorRGB bg_{ColorRGB::RGB(32, 32, 32)};
-        static inline ColorRGB accentFg_{ColorRGB::RGB(0, 128, 0)};
+        static inline ColorRGB accentFg_{ColorRGB::RGB(0, 255, 0)};
         static inline ColorRGB accentBg_{ColorRGB::RGB(16, 16, 16)};
 
     }; // rckid::ui::Style

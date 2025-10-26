@@ -520,7 +520,6 @@ namespace rckid {
         uint64_t now = time_us_64();
         while (now > time::nextSecond_) {
             time::nextSecond_ += 1000000;
-            io::avrState_.time.secondTick();
             if (time::idle_) {
                 --time::idleTimeoutKeepalive_;
                 --time::idleTimeout_;
@@ -975,9 +974,7 @@ namespace rckid {
 
     uint32_t budget() {
         StackProtection::check();
-        // TODO this is a temporary hack, we need to get the budget from AVR and work with it
-        return 1000;
-        //return io::avrState_.budget;
+        return io::avrState_.budget;
     }
 
     uint32_t budgetDaily() {

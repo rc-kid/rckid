@@ -306,9 +306,9 @@ namespace rckid {
         std::exit(0);
     }
 
-    uint16_t powerVcc() { return 500; }
+    uint16_t powerVcc() { return 390; }
 
-    bool powerUsbConnected() { return true; }
+    bool powerUsbConnected() { return false; }
 
     bool powerCharging() { return false; }
 

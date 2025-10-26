@@ -84,6 +84,16 @@ namespace rckid {
      */
     uint16_t powerVcc();
 
+    inline uint32_t powerBatteryLevel() {
+        uint32_t x = powerVcc();
+        if (x >= 420)
+            return 100;
+        else if (x >= 300)
+            return (x - 300) * 100 / (420 - 300);
+        else
+            return 0;
+    }
+
     /** Returns true if the USB cable is connected, i.e. if the device is powered via DC and not battery. 
      */
     bool powerUsbConnected();

@@ -20,36 +20,52 @@ namespace rckid::ui {
         - bluetooth
         - radio
 
+        System tray, which is the right part of the header that shows the following system icons, from right to left:
+
+        - battery status
+            - lightning bolt inside if charging
+            - checkmark inside if full & DC power on
+        - SD card (error if inserted, but not readable)
+        - Speaker / headphones icon & volume level
+        - WiFi icon 
+            - default color when enabled
+            - accent color when connected
+
+        The rest (from left to end of system tray beginning) can be filled with arbitrary information (mostly text). 
+
+        To display all the things, the header uses a 40x1 tilemap with 8x16 tiles and a palette, that follows this layoput: 
+
+            0 - 15 = normal color shading
+            16 - 31 = normal color with 1 accent color,
+            32 - 47 = normal color with 2 accent colors,
+            48 - 63 = normal color with 3 accent colors
+            and so on
+        
      */
     class Header : public Tilemap<Tile<8, 16, Color16>> {
     public:
         Header() : Tilemap{40, 1, assets::System16, palette_} {
+            createPalette(palette_);
             fill(' ');
-            // battery
-            at(39, 0).setPaletteOffset(16) = 2;
-            at(38, 0).setPaletteOffset(16) = 1;
-            at(37, 0).setPaletteOffset(16) = 0;
-            // sd card
-            at(36, 0).setPaletteOffset(16) = 4;
-            at(35, 0).setPaletteOffset(16) = 3;
         }
 
         static Header * instance() {
-            if (instance_ == nullptr)
+            if (instance_ == nullptr) {
                 instance_ = new Header{};
+                refresh();
+            }
             return instance_;
         }
 
         /** Gathers the displayed data and updates the header. 
          
-            If there is no header, but the displayed data are important, creates the header so that it can be displayed by the current app. 
+            If there is no header, but the displayed data are important, creates the header so that it can be displayed by the current app. This is called by the application's second tick handler.
          */
-        static void refresh() {
-            // TODO determine if necessary to display
-            if (instance_ == nullptr)
-                return;
-            instance_->update();
-        }
+        static void refresh();
+
+
+
+        static void createPalette(uint16_t * palette);
 
     protected:
 
@@ -57,18 +73,7 @@ namespace rckid::ui {
          
             Adds stuff like battery, etc. 
          */
-        void update() override {
-#if RCKID_ENABLE_STACK_PROTECTION
-            // if tracking stack protection, display the memory usage and stack size
-            text(0,0) << (memoryFree() / 1024) << '/' << StackProtection::maxSize() << ' ' << App::fps() << ' ';
-            StackProtection::resetMaxSize();
-#else 
-            TinyDateTime now = timeNow();
-            // if not tracking stack protection, just display the free memory
-            text(0,0) << fillLeft(now.hour(), 2, '0') << ':' 
-                      << fillLeft(now.minute(), 2, '0');
-#endif
-        }
+        void update() override;
 
         /** Unlike normal widgets,  */
         void renderRow([[maybe_unused]] Coord row, [[maybe_unused]] uint16_t * buffer, [[maybe_unused]] Coord startx, [[maybe_unused]] Coord numPixels) {
@@ -77,48 +82,14 @@ namespace rckid::ui {
 
     private:
 
+        static constexpr uint32_t PALETTE_FG = 0;
+        static constexpr uint32_t PALETTE_ACCENT_FG = 16;
+        static constexpr uint32_t PALETTE_ACCENT = 32;
+        static constexpr uint32_t PALETTE_RED = 35;
+
         static inline Header * instance_ = nullptr;
 
-        static constexpr uint16_t palette_[] = {
-            // gray
-            ColorRGB{0x00, 0x00, 0x00}.toRaw(), 
-            ColorRGB{0x11, 0x11, 0x11}.toRaw(), 
-            ColorRGB{0x22, 0x22, 0x22}.toRaw(), 
-            ColorRGB{0x33, 0x33, 0x33}.toRaw(), 
-            ColorRGB{0x44, 0x44, 0x44}.toRaw(), 
-            ColorRGB{0x55, 0x55, 0x55}.toRaw(), 
-            ColorRGB{0x66, 0x66, 0x66}.toRaw(), 
-            ColorRGB{0x77, 0x77, 0x77}.toRaw(), 
-            ColorRGB{0x88, 0x88, 0x88}.toRaw(), 
-            ColorRGB{0x99, 0x99, 0x99}.toRaw(), 
-            ColorRGB{0xaa, 0xaa, 0xaa}.toRaw(), 
-            ColorRGB{0xbb, 0xbb, 0xbb}.toRaw(), 
-            ColorRGB{0xcc, 0xcc, 0xcc}.toRaw(), 
-            ColorRGB{0xdd, 0xdd, 0xdd}.toRaw(), 
-            ColorRGB{0xee, 0xee, 0xee}.toRaw(), 
-            ColorRGB{0xff, 0xff, 0xff}.toRaw(), 
-            0, 
-            ColorRGB{0xff, 0xff, 0xff}.toRaw(), 
-            ColorRGB{0x00, 0xff, 0x00}.toRaw(),
-            0x4444, 
-            0x5555, 
-            0x6666, 
-            0x7777, 
-            0x8888, 
-            0x9999, 
-            0xaaaa, 
-            0xbbbb, 
-            0xcccc, 
-            0xdddd, 
-            0xeeee, 
-            0xffff, 
-            0xffff, 
-            0xffff, 
-            0xffff, 
-            0xffff, 
-            0xffff, 
-            0xffff, 
-        };
+        uint16_t palette_[256]; 
     }; // rckid::ui::Header
 
 } // namespace rckid::ui

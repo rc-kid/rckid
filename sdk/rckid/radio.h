@@ -96,6 +96,7 @@ namespace rckid {
                 platform::lowByte(freq_10kHz),
                 0, // automatic antenna tuning capacitor value
             });
+            resetRDS();
             getResponse();
             // remember the frequency
             // frequency_ = freq_10kHz;
@@ -109,6 +110,7 @@ namespace rckid {
                 CMD_FM_SEEK_START,
                 0x08 | 0x04, // seek up, wrap around
             });
+            resetRDS();
             getResponse();
         }
 
@@ -120,6 +122,7 @@ namespace rckid {
                 CMD_FM_SEEK_START,
                 0x04, // seek down, wrap around
             });
+            resetRDS();
             getResponse();
         }
 
@@ -162,7 +165,6 @@ namespace rckid {
 
         friend void initialize(int argc, char const * argv[]);
         friend void irqGPIO_(uint pin, uint32_t events);
-
 
         PACKED(class Response {
         public:
@@ -441,7 +443,13 @@ namespace rckid {
             getResponse(1);
         }
 
-
+        void resetRDS() {
+            stationName_ = "";
+            radioText1_ = "";
+            radioText2_ = "";
+            stationNameIndex_ = 0;
+            radioTextIndex_ = 0;
+        }
 
         static void irqHandler();
 

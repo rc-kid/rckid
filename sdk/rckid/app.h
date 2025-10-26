@@ -21,6 +21,8 @@ namespace rckid {
 
         virtual ~App() = default;
 
+        virtual String title() const { return name(); }
+
         /** Returns the name of the app. 
             
             App name is used in various places, such as loading & saving states, etc. Every app must provide one and names of apps in the system should be unique.

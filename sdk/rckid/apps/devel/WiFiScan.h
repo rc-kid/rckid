@@ -38,7 +38,8 @@ namespace rckid {
                         return true;
                     } else {
                         println(STR(ssid << " " << rssi << "dBm " << authMode));
-                        return true;
+                        return line_ < 10;
+                        //return true;
                     }
                 });
             }

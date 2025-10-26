@@ -19,7 +19,7 @@
 
 - [X] verify rumbler
 - [X] verify battery operation works 
-- [ ] add missing AVR features (charging detection, etc.)
+- [X] add missing AVR features (charging detection, etc.)
 - [ ] determine the actual speed & how to set it to 8MHz? Or even 5? 
 
 - [X] buy torx M2x10mm (https://www.nerezka.cz/sroub-m-2-x-10-din-965tx-a2) 
@@ -34,9 +34,10 @@
 - [X] audio player keeps button presses - fix
 - [X] repeat function
 - [X] automatic next function
-- [ ] header
-  - [ ] show budget
-  - [ ] show time
+- [X] header
+  - [X] show budget
+  - [X] show time
+  - [X] show volume
 - [ ] lock functionality for screen (can be accessed from home menu, or also from apps)
 - [X] fm radio app fixes (display frequency)
 - [X] rm radio rds, 
@@ -65,15 +66,9 @@ Nice extras would include:
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
-- trim lines in RDS mode
-- make signal strength nicer
-- reset RDS info when frequency changed
-
 - icons for shuffle and icons for repeat
 
 - make rgb LED effect much slower with speed 1
-
-- budget is not decreasing on mk3
 
 - when home btn hit from audio, audio should pause if not paused yet (or audio can register background task? do we allow bg tasks?)
 
@@ -130,8 +125,6 @@ Nice extras would include:
 - ColorRGB is weird, should be colorRGBA and then have Color565 as a version that wraps around 15bpp? Then change uint16_t everywhere in palettes
 
 - comment PNG loading stuff
-
-- display budget in header
 
 - file browser should be similar to contacts, i.e. the dialog in launcher menu instead of ui element and separate browser app 
 

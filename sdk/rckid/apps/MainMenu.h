@@ -23,6 +23,11 @@ namespace rckid {
 
         String name() const override { return "MainMenu"; }
 
+        String title() const override { 
+            TinyDateTime t = timeNow();
+            return STR(fillLeft(t.hour(), 2, '0') << (t.second() % 2 ? ':' : ' ') << fillLeft(t.minute(), 2, '0'));
+        }
+
         MainMenu(ui::ActionMenu::MenuGenerator initialGenerator):
             ui::Form<ui::Action>{} {
             g_.addChild(c_);

@@ -51,6 +51,11 @@ namespace rckid {
         return res == 0;
     }
 
+    void WiFi::connect(String const & ssid, String const & password) {
+        LOG(LL_INFO, "WiFi connect to SSID: " << ssid);
+        //cyw43_arch_wifi_connect_async(ssid.c_str(), password.empty() ? nullptr : password.c_str(), CYW43_WPA_AUTH_DEFAULT);
+    }
+
     WiFi * WiFi::initialize() {
         if (cyw43_arch_init_with_country(CYW43_COUNTRY_WORLDWIDE) != 0) {
             LOG(LL_ERROR, "Failed to initialize WiFi");

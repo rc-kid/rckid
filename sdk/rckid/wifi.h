@@ -58,7 +58,8 @@ namespace rckid {
         bool connected() const;
 
         bool scan(ScanCallback callback);
-        
+
+        void connect(String const & ssid, String const & password); 
 
     private:
 
