@@ -32,11 +32,31 @@ namespace rckid {
         return status == CYW43_LINK_UP;
     }
 
-    void WiFi::initialize() {
+    static int cyw43_wifi_scan_callback(void * env, cyw43_ev_scan_result_t const * result) {
+        WiFi::ScanCallback * cb = static_cast<WiFi::ScanCallback *>(env);
+        if (result == nullptr) {
+            (*cb)(String{}, 0, WiFi::AuthMode::Open); // signal end of scan
+            return 0;
+        }
+        String ssid{reinterpret_cast<char const *>(result->ssid), result->ssid_len};
+        int16_t rssi = result->rssi;
+        WiFi::AuthMode authMode = static_cast<WiFi::AuthMode>(result->auth_mode);
+        return (*cb)(std::move(ssid), rssi, authMode) ? 0 : 1;
+    }
+
+    bool WiFi::scan(WiFi::ScanCallback callback) {
+        scanCallback_ = callback;
+        cyw43_wifi_scan_options_t options = {0};
+        int32_t res = cyw43_wifi_scan(&cyw43_state, & options, & scanCallback_, cyw43_wifi_scan_callback);
+        return res == 0;
+    }
+
+    WiFi * WiFi::initialize() {
         if (cyw43_arch_init_with_country(CYW43_COUNTRY_WORLDWIDE) != 0) {
             LOG(LL_ERROR, "Failed to initialize WiFi");
-            return;
+            return nullptr;
         }
+        return new WiFi{};
     }
 
     WiFi::~WiFi() {

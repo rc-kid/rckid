@@ -11,11 +11,31 @@ namespace rckid {
      */
     class WiFi {
     public:
+
+        enum class AuthMode {
+            Open = 0,
+            WPA_TKIP_PSK = 0x00020002, // WPA
+            WPA2_AES_PSK = 0x00400004, // WPA2
+            WPA2_MIXED_PSK = 0x00400006, // WPA2/WPA mixed
+            WPA3_SAE_AES_PSK = 0x01000004, // WPA3 AES
+            WPA3_WPA2_AES_PSK = 0x01400004 // WPA2/WPA2
+        };
+
+        using ScanCallback = std::function<bool(String && ssid, int16_t rssi, AuthMode authMode)>;
+
         /** Returns the singleton instance of the WiFi manager. 
          
             If WiFi is not available on the current hardware, returns nullptr and this *must* be checked before use. 
          */
-        static WiFi * instance() { return instance_; }
+        static WiFi * instance() { 
+            if (instance_ == nullptr)
+                instance_ = initialize();
+            return instance_; 
+        }
+
+        static bool hasInstance() {
+            return instance_ != nullptr;
+        }
 
         /** Enables the WiFi. 
             
@@ -37,16 +57,47 @@ namespace rckid {
          */
         bool connected() const;
 
+        bool scan(ScanCallback callback);
+        
+
     private:
 
         friend void initialize(int argc, char const * argv[]);
 
-        static void initialize();
+        static WiFi * initialize();
 
         ~WiFi();
+
+        ScanCallback scanCallback_;
 
         static inline WiFi * instance_ = nullptr;
     }; // class rckid::WiFi
 
+    inline Writer & operator << (Writer & w, WiFi::AuthMode const & mode) {
+        switch (mode) {
+            case WiFi::AuthMode::Open:
+                w << "Open";
+                break;
+            case WiFi::AuthMode::WPA_TKIP_PSK:
+                w << "WPA";
+                break;
+            case WiFi::AuthMode::WPA2_AES_PSK:
+                w << "WPA2";
+                break;
+            case WiFi::AuthMode::WPA2_MIXED_PSK:
+                w << "WPA2/WPA";
+                break;
+            case WiFi::AuthMode::WPA3_SAE_AES_PSK:
+                w << "WPA3";
+                break;
+            case WiFi::AuthMode::WPA3_WPA2_AES_PSK:
+                w << "WPA2/WPA3";
+                break;
+            default:
+                w << "unknown(" << static_cast<uint32_t>(mode) << ")";
+                break;
+        }
+        return w;
+    }
 
 } // namespace rckid

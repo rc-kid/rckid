@@ -29,7 +29,8 @@ if (RCKID_BACKEND STREQUAL "MK3")
     add_definitions(-DCYW43_DEFAULT_PIN_WL_CS=14)
     add_definitions(-DCYW43_DEFAULT_PIN_WL_REG_ON=13)
     #add_definitions(-DCYW43_DEFAULT_PIN_WL_REG_ON=13) # this is for BT
-    add_definitions(-DCYW43_{PIN_WL_DYNAMIC=0})
+    add_definitions(-DCYW43_PIN_WL_DYNAMIC=0)
+    add_definitions(-DPICO_CYW43_SUPPORTED=1)
     set(PICO_CYW43_SUPPORTED true)
 endif()
 

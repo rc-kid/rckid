@@ -23,6 +23,10 @@
 #include "tusb_config.h"
 #include "tusb.h"
 
+#if (PICO_CYW43_SUPPORTED == 1)
+#include <pico/cyw43_arch.h>
+#endif
+
 extern "C" {
     #include <hardware/structs/usb.h>
     #include <hardware/uart.h>
@@ -34,6 +38,7 @@ extern "C" {
 
 #include <rckid/rckid.h>
 #include <rckid/radio.h>
+#include <rckid/wifi.h>
 #include "screen/ST7789.h"
 #include "sd/sd.h"
 #include "i2c.h"
@@ -534,6 +539,10 @@ namespace rckid {
         StackProtection::check();
         tight_loop_contents();
         tud_task();
+#if (PICO_CYW43_SUPPORTED == 1)
+        if (WiFi::hasInstance())
+            cyw43_arch_poll();
+#endif
     }
 
     void sleep() {

@@ -132,11 +132,11 @@ namespace rckid {
         char const * stereoToStr() {
             uint8_t stereo = radio_->stereo();
             if (stereo >= 80)
-                return "STEREO";
+                return "STEREO ";
             else if (stereo >= 50)
                 return "BLENDED";
             else
-                return "MONO"; 
+                return " MONO  "; 
         }
 
         void refreshUi() {
@@ -152,8 +152,5 @@ namespace rckid {
         }
 
     }; // rckid::Radio
-
-
-
 
 } // namespace rckid

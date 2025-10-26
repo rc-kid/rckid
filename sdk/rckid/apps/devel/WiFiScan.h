@@ -8,7 +8,7 @@
 #include "../../assets/fonts/OpenDyslexic128.h"
 #include "../../ui/tilemap.h"
 
-
+#include "../../wifi.h"
 
 namespace rckid {
 
@@ -17,6 +17,47 @@ namespace rckid {
 
         String name() const override { return "WiFiScan"; }
 
+        WiFiScan():
+            ui::Form<void>{},
+            text_{40,15, assets::System16, palette_} {
+            g_.addChild(text_);
+            text_.setPos(0, 16);
+            text_.text(0, 0) << "WiFi Scan";
+            wifi_ = WiFi::instance();
+            wifi_->enable();
+        } 
+
+        void update() override {
+            ui::Form<void>::update();
+            if (btnPressed(Btn::A)) {
+                line_ = 0;
+                println("Scanning...         ");
+                wifi_->scan([this](String && ssid, int16_t rssi, WiFi::AuthMode authMode) {
+                    if (ssid.empty()) {
+                        println("Scan complete      ");
+                        return true;
+                    } else {
+                        println(STR(ssid << " " << rssi << "dBm " << authMode));
+                        return true;
+                    }
+                });
+            }
+        }
+
+    private:
+
+        void println(String const & str) {
+            text_.text(0, line_) << str;
+            line_++;
+            if (line_ >= 14) {
+                line_ = 0;
+            }
+        }
+
+        ui::Tilemap<Tile<8, 16, Color16>> text_;
+        Coord line_ = 0;
+
+        WiFi * wifi_;
 /*
 
         WiFiScan():

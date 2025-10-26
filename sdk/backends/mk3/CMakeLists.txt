@@ -9,7 +9,7 @@ endif()
 
 message("RCKID: mk3 backend selected (RP2350)")
 
-file(GLOB_RECURSE SRC "mk3.cpp" "radio.cpp" "sd/*.cpp" "usb/*.cpp" "screen/*.cpp" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.h" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.cpp")
+file(GLOB_RECURSE SRC "mk3.cpp" "radio.cpp" "wifi.cpp" "sd/*.cpp" "usb/*.cpp" "screen/*.cpp" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.h" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.cpp")
 add_library(librckid STATIC ${SRC})
 
 pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/screen/ST7789_rgb16.pio)
