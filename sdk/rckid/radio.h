@@ -332,13 +332,11 @@ namespace rckid {
                 status_.rdsStatus.blockB_ = platform::swapBytes(status_.rdsStatus.blockB_);
                 status_.rdsStatus.blockC_ = platform::swapBytes(status_.rdsStatus.blockC_);
                 status_.rdsStatus.blockD_ = platform::swapBytes(status_.rdsStatus.blockD_);
-                // process RDS data
-                uint8_t groupType = (status_.rdsStatus.blockB_ >> 12) & 0x0f;
-                uint8_t version = (status_.rdsStatus.blockB_ >> 11) & 0x01;
-                //stationName_ = STR(groupType << " " << (version ? "B" : "A") << " ");
-                //return;
-                switch (groupType) {
+                // process RDS data - put group data (x2) & version into single value
+                uint8_t kind = (status_.rdsStatus.blockB_ >> 11) & 0x1f; 
+                switch (kind) {
                     case 0: { // 0A or 0B - station name
+                    case 1:
                         uint32_t charPos = (status_.rdsStatus.blockB_ & 0x03) * 2;
                         if (charPos <= 6) {
                             stationNameBuffer_[charPos] = static_cast<char>(status_.rdsStatus.blockD_ >> 8);
@@ -356,7 +354,7 @@ namespace rckid {
                         } 
                         break;
                     }
-                    case 2: { // 2A or 2B - radio text
+                    case 4: { // 2A
                         uint32_t charPos = (status_.rdsStatus.blockB_ & 0x0f) * 4;
                         uint32_t bufferPos = charPos % 32;
                         radioTextBuffer_[bufferPos] = static_cast<char>(status_.rdsStatus.blockC_ >> 8);
@@ -379,7 +377,7 @@ namespace rckid {
                         }
                         break;
                     }
-                    case 4: { // 4A - clock time
+                    case 8: { // 4A - clock time
                         // TODO the time can be useful 
                         /*
                         // MJD (Modified Julian Date) in blocks C+D
