@@ -37,7 +37,8 @@ namespace rckid {
             if (from.has("id"))
                 id = from["id"].asStringOrDefault("");
             if (from.has("birthday"))
-                birthday = TinyDate::fromRaw(static_cast<uint32_t>(from["birthday"].asIntegerOrDefault(0)));
+                // TODO - we are moving to ini anyways
+                //birthday = TinyDate::fromRaw(static_cast<uint32_t>(from["birthday"].asIntegerOrDefault(0)));
             if (from.has("email"))
                 email = from["email"].asStringOrDefault("");
             if (from.has("phone"))

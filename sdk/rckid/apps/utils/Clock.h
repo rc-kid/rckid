@@ -8,7 +8,7 @@
 #include "../../assets/fonts/OpenDyslexic64.h"
 #include "../../assets/icons_24.h"
 #include "../dialogs/TimeDialog.h"
-
+#include "../dialogs/DateDialog.h"
 
 namespace rckid {
     class Clock : public ui::Form<void> {
@@ -44,13 +44,18 @@ namespace rckid {
                 auto t = App::run<TimeDialog>();
                 if (t.has_value()) {
                     TinyDateTime now = timeNow();
-                    now.setHour(t->hour());
-                    now.setMinute(t->minute());
-                    now.setSecond(t->second());
+                    now.time = t.value();
                     setTimeNow(now);
                 }
             }));
-            contextMenu_.add(ui::ActionMenu::Item("Set date"));
+            contextMenu_.add(ui::ActionMenu::Item("Set date", [this]() {
+                auto d = App::run<DateDialog>();
+                if (d.has_value()) {
+                    TinyDateTime now = timeNow();
+                    now.date = d.value();
+                    setTimeNow(now);
+                }
+            }));
             contextMenu_.add(ui::ActionMenu::Item("Set alarm"));
         }
 
@@ -97,10 +102,10 @@ namespace rckid {
         void draw() override {
             TinyDateTime t = timeNow();
             TinyAlarm a = timeAlarm();
-            h_.setText(STR(fillLeft(t.hour(), 2, '0')));
-            m_.setText(STR(fillLeft(t.minute(), 2, '0')));
-            colon_.setVisible(t.second() & 1);
-            date_.setText(STR(t.day() << "/" << t.month() << "/" << t.year()));
+            h_.setText(STR(fillLeft(t.time.hour(), 2, '0')));
+            m_.setText(STR(fillLeft(t.time.minute(), 2, '0')));
+            colon_.setVisible(t.time.second() & 1);
+            date_.setText(STR(t.date.day() << "/" << t.date.month() << "/" << t.date.year()));
             alarm_.setText(STR(fillLeft(a.hour(), 2, '0') << ":" << fillLeft(a.minute(), 2, '0')));
 
             ui::Form<void>::draw();

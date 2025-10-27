@@ -25,7 +25,7 @@ namespace rckid {
 
         String title() const override { 
             TinyDateTime t = timeNow();
-            return STR(fillLeft(t.hour(), 2, '0') << (t.second() % 2 ? ':' : ' ') << fillLeft(t.minute(), 2, '0'));
+            return STR(fillLeft(t.time.hour(), 2, '0') << (t.time.second() % 2 ? ':' : ' ') << fillLeft(t.time.minute(), 2, '0'));
         }
 
         MainMenu(ui::ActionMenu::MenuGenerator initialGenerator):

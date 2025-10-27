@@ -523,7 +523,7 @@ public:
             return;
         secondTick_ = false;
         ++state_.uptime;
-        state_.time.secondTick();
+        state_.time.inc();
         if (state_.alarm.check(state_.time)) {
             // power the device on, if not on yet
             powerOn();
@@ -553,7 +553,7 @@ public:
         // and finally, reset the daily budget if needed. The hour check and the countdown ensure that we only reset the budget once per day at midnight, even if the time is changed by the user
         if (budgetResetCountdown_ > 0) {
             --budgetResetCountdown_;
-        } else if (state_.time.hour() == 0) {
+        } else if (state_.time.time.hour() == 0) {
             state_.budget = state_.dailyBudget;
             budgetResetCountdown_ = 3600 * 24;
         }

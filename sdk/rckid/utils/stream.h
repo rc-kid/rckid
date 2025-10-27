@@ -201,14 +201,19 @@ namespace rckid {
         into.write(reinterpret_cast<uint8_t const *>(what.data()), what.size());
     }
 
-    inline void serialize(WriteStream & into, TinyDateTime const & time) {
-        static_assert(sizeof(TinyDateTime) == sizeof(uint32_t));
-        serialize(into, *reinterpret_cast<uint32_t const *>(& time));
+    inline void serialize(WriteStream & into, TinyTime const & time) {
+        uint8_t const * x = reinterpret_cast<uint8_t const *>(& time);
+        into.write(x, sizeof(TinyTime));
     }
 
     inline void serialize(WriteStream & into, TinyDate const & time) {
-        static_assert(sizeof(TinyDate) == sizeof(uint32_t));
-        serialize(into, *reinterpret_cast<uint32_t const *>(& time));
+        uint8_t const * x = reinterpret_cast<uint8_t const *>(& time);
+        into.write(x, sizeof(TinyDate));
+    }
+
+    inline void serialize(WriteStream & into, TinyDateTime const & time) {
+        serialize(into, time.time);
+        serialize(into, time.date);
     }
 
     inline void serialize(WriteStream & into, TinyAlarm const & time) {
@@ -292,18 +297,19 @@ namespace rckid {
         from.read(reinterpret_cast<uint8_t*>(into.data()), size);
     }
 
-    inline void deserialize(ReadStream & from, TinyDateTime & into) {
-        static_assert(sizeof(TinyDateTime) == sizeof(uint32_t));
-        uint32_t x;
-        deserialize(from, x);
-        into = *reinterpret_cast<TinyDateTime*>(& x);
+    inline void deserialize(ReadStream & from, TinyTime & into) {
+        uint8_t * x = reinterpret_cast<uint8_t *>(&into);
+        from.read(x, sizeof(TinyTime));
     }
 
     inline void deserialize(ReadStream & from, TinyDate & into) {
-        static_assert(sizeof(TinyDate) == sizeof(uint32_t));
-        uint32_t x;
-        deserialize(from, x);
-        into = *reinterpret_cast<TinyDate*>(& x);
+        uint8_t * x = reinterpret_cast<uint8_t *>(&into);
+        from.read(x, sizeof(TinyDate));
+    }
+
+    inline void deserialize(ReadStream & from, TinyDateTime & into) {
+        deserialize(from, into.time);
+        deserialize(from, into.date);
     }
 
     inline void deserialize(ReadStream & from, TinyAlarm & into) {

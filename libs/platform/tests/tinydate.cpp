@@ -22,17 +22,13 @@ TEST(tinydate, TinyDate) {
     d.setYear(1982);
     EXPECT(d.year() == 1982);
 
-    d.setYear(10000);
-    EXPECT(d.year() == 10000);
-
     d.setYear(64);
     EXPECT(d.year() == 64);
     
-    d.setYear(-3000);
-    EXPECT(d.year() == -3000);
+    d.setYear(3000);
+    EXPECT(d.year() == 3000);
 
-    uint32_t r = d.asRaw();
-    TinyDate d2 = TinyDate::fromRaw(r);
+    TinyDate d2 = d;
     EXPECT(d2.day() == d.day());
     EXPECT(d2.month() == d.month());
     EXPECT(d2.year() == d.year());

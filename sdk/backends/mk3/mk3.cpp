@@ -188,7 +188,7 @@ namespace rckid {
         io::avrState_.status.updateWith(status);
         // if second tick interrupt is on, we must advance our timekeeping. Note that it is remotely possible that we will get an extra second tick interrupt when synchronizing the clock (we'll transmit the updated value, as well as the second tick at the same time) so that time on RP can be one second off at worst. 
         if (status.secondInt()) {
-            io::avrState_.time.secondTick();
+            io::avrState_.time.inc();
         }
         // TODO alarm
         // TODO pwr

@@ -43,7 +43,7 @@
 - [X] rm radio rds, 
 - [X] fm radio signal quality, stereo
 - [ ] time apps
-  - [ ] clock settings
+  - [X] clock settings
   - [ ] timer
   - [X] stopwatch
   - [ ] alarm
@@ -52,21 +52,21 @@ Nice extras would include:
 
 - [X] LED flashlight
 - [X] shuffle function in audio playback
-- [ ] telegram messenger
 - [ ] extra settings (colors, etc. for system & gbcemu)
+- [ ] birthdays & PIM
+- [ ] telegram messenger
 - [ ] accelerometer controller background & background selection
-- [ ] verify embedded antenna
+- [ ] fmradio embedded antenna
 - [ ] allow background playback
 - [ ] radio presets?
-- [ ] extra devices (would have to order quickly)
 - [ ] fm radio rds time setting
+
+- [ ] extra devices (would have to order quickly)
 
 
 # TODO
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
-
-- fix date dialog (year proper, deal with TinyDate/Time/DateTime, leap years, bounds, etc.)
 
 - all dialogs should be not budgeted. This is to ensure that the app can never be paused mid dialog, in which case the saving of the state will not work
 

@@ -74,7 +74,7 @@ namespace rckid::ui {
             at(37, 0).setPaletteOffset(PALETTE_ACCENT) = SYSTEM16_BATTERY_BOTTOM_FULL;
         } else {
             uint32_t vBatt = powerBatteryLevel();
-            if (vBatt < 20 && t.second() % 2)
+            if (vBatt < 20 && t.time.second() % 2)
                 at(37, 0).setPaletteOffset(PALETTE_RED) = SYSTEM16_BATTERY_BOTTOM_EMPTY;
             else if (vBatt < 30)
                 at(37, 0).setPaletteOffset(PALETTE_RED) = SYSTEM16_BATTERY_BOTTOM_FULL;
@@ -109,7 +109,7 @@ namespace rckid::ui {
         // if the budget is below 10 minutes, display it as part of the header
         uint32_t b = budget();
         if (b < 600) {
-            if ((b <= 120) && (timeNow().second() % 2 == 0)) {
+            if ((b <= 120) && (timeNow().time.second() % 2 == 0)) {
                 at(0,0).setPaletteOffset(PALETTE_RED) = ' ';
                 at(1,0).setPaletteOffset(PALETTE_RED) = ' ';
             } else {

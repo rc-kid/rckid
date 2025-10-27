@@ -22,13 +22,13 @@ namespace rckid {
             return true;
         }
 
-        DateDialog(TinyDate initialDate = TinyDate{timeNow()}):
+        DateDialog(TinyDate initialDate = timeNow().date):
             ui::Form<TinyDate>{Rect::XYWH(0, 144, 320, 96), /* raw */ true},
             d_{Rect::XYWH(0, 20, 90, 76), ""},
             m_{Rect::XYWH(110, 20, 50, 76), ""},
             y_{Rect::XYWH(180, 20, 150, 76), ""},
-            dow_{Rect::XYWH(0, 8, 90, 32), "Monday"},
-            mon_{Rect::XYWH(110, 8, 200, 32), "January"},
+            dow_{Rect::XYWH(0, 8, 110, 32), ""},
+            mon_{Rect::XYWH(120, 8, 200, 32), ""},
             sep1_{Rect::XYWH(90, 20, 20, 76), "/"},
             sep2_{Rect::XYWH(160, 20, 20, 76), "/"} {
             g_.addChild(d_);
@@ -70,17 +70,17 @@ namespace rckid {
             if (btnPressed(Btn::Up)) {
                 switch (active_) {
                     case 0:
-                        dd_ = (dd_ % TinyDateTime::daysInMonth(mm_, yy_)) + 1;
+                        dd_ = (dd_ % TinyDate::daysInMonth(mm_, yy_)) + 1;
                         break;
                     case 1:
                         mm_ = (mm_ % 12) + 1;
-                        if (dd_ > TinyDateTime::daysInMonth(mm_, yy_))
-                            dd_ = TinyDateTime::daysInMonth(mm_, yy_);
+                        if (dd_ > TinyDate::daysInMonth(mm_, yy_))
+                            dd_ = TinyDate::daysInMonth(mm_, yy_);
                         break;
                     case 2:
-                        yy_ = (yy_ + 1) % 100;
-                        if (dd_ > TinyDateTime::daysInMonth(mm_, yy_))
-                            dd_ = TinyDateTime::daysInMonth(mm_, yy_);
+                        yy_ = (yy_ + 1) % 4096;
+                        if (dd_ > TinyDate::daysInMonth(mm_, yy_))
+                            dd_ = TinyDate::daysInMonth(mm_, yy_);
                         break;
                 }
                 updateValues();
@@ -88,17 +88,17 @@ namespace rckid {
             if (btnPressed(Btn::Down)) {
                 switch (active_) {
                     case 0:
-                        dd_ = (dd_ + TinyDateTime::daysInMonth(mm_, yy_) - 2) % TinyDateTime::daysInMonth(mm_, yy_) + 1;
+                        dd_ = (dd_ + TinyDate::daysInMonth(mm_, yy_) - 2) % TinyDate::daysInMonth(mm_, yy_) + 1;
                         break;
                     case 1:
                         mm_ = (mm_ + 10) % 12 + 1;
-                        if (dd_ > TinyDateTime::daysInMonth(mm_, yy_))
-                            dd_ = TinyDateTime::daysInMonth(mm_, yy_);
+                        if (dd_ > TinyDate::daysInMonth(mm_, yy_))
+                            dd_ = TinyDate::daysInMonth(mm_, yy_);
                         break;
                     case 2:
-                        yy_ = (yy_ + 99) % 100;
-                        if (dd_ > TinyDateTime::daysInMonth(mm_, yy_))
-                            dd_ = TinyDateTime::daysInMonth(mm_, yy_);
+                        yy_ = (yy_ + 4095) % 4096;
+                        if (dd_ > TinyDate::daysInMonth(mm_, yy_))
+                            dd_ = TinyDate::daysInMonth(mm_, yy_);
                         break;
                 }
                 updateValues();
@@ -142,6 +142,8 @@ namespace rckid {
             d_.setText(STR(fillLeft(dd_, 2, ' ')));
             m_.setText(STR(fillLeft(mm_, 2, ' ')));
             y_.setText(STR(fillLeft(yy_, 2, ' ')));
+            dow_.setText(STR(TinyDate::dayOfWeek(dd_, mm_, yy_)));
+            mon_.setText(STR(static_cast<TinyDate::Month>(mm_)));
         }
 
     private:
@@ -157,7 +159,7 @@ namespace rckid {
         ui::Label sep2_;
         uint8_t mm_ = 0;
         uint8_t dd_ = 0;
-        uint8_t yy_ = 0;
+        uint16_t yy_ = 0;
         uint8_t active_ = 0;
 
     }; // rckid::TimeDialog

@@ -231,13 +231,15 @@ namespace rckid {
         auto now = std::chrono::system_clock::now();
         std::time_t now_time = std::chrono::system_clock::to_time_t(now);
         std::tm* now_tm = std::localtime(&now_time);
-        time::time_.set(
-            now_tm->tm_mday, 
-            now_tm->tm_mon, 
-            now_tm->tm_year,
+        time::time_.time.set(
             now_tm->tm_hour, 
             now_tm->tm_min, 
             now_tm->tm_sec
+        );
+        time::time_.date.set(
+            now_tm->tm_mday, 
+            now_tm->tm_mon + 1, 
+            now_tm->tm_year + 1900
         );
         // initialize the next second and uptime counters
         time::uptimeStart_ = std::chrono::steady_clock::now();
@@ -267,7 +269,7 @@ namespace rckid {
         uint64_t now = uptimeUs64();
         while (now > time::nextSecond_) {
             time::nextSecond_ += 1000000;
-            time::time_.secondTick();
+            time::time_.inc();
             App::onSecondTick();
         }
         // and get button states

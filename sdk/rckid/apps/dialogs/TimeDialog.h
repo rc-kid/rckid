@@ -21,7 +21,7 @@ namespace rckid {
             return true;
         }
 
-        TimeDialog(TinyTime initialTime = TinyTime{timeNow()}):
+        TimeDialog(TinyTime initialTime = timeNow().time):
             ui::Form<TinyTime>{Rect::XYWH(0, 144, 320, 96), /* raw */ true},
             h_{Rect::XYWH(0, 0, 150, 96), ""},
             m_{Rect::XYWH(170, 0, 150, 96), ""},

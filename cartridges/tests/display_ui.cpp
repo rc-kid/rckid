@@ -18,7 +18,6 @@
 #include <rckid/apps/dialogs/InfoDialog.h>
 #include <rckid/apps/dialogs/PopupMenu.h>
 #include <rckid/apps/dialogs/ColorPicker.h>
-#include <rckid/apps/dialogs/DateDialog.h>
 #include <rckid/apps/MusicPlayer.h>
 #include <rckid/apps/Friends.h>
 #include <rckid/apps/Messages.h>
@@ -119,7 +118,7 @@ ui::ActionMenu * mainMenuGenerator() {
 int main() {
     //cpu::overclock(250000000);
     initialize();
-    App::run<DateDialog>();
+    //App::run<DateDialog>();
     //PNG png{PNG::fromStream(fs::fileRead(STR("files/images/backgrounds/wish16.png")))};
     //LOG(LL_INFO, "PNG loaded: " << png.width() << "x" << png.height() << ", bpp: " << png.bpp());
     while (true) {
