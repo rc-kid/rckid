@@ -70,6 +70,8 @@ Nice extras would include:
 
 - bsod not working, just hangs
 
+- debug mode should take precendence over usb power and charging, bootloader mode should reset itself after first I2C communication (go from blue back to whatever it was)
+
 - all dialogs should be not budgeted. This is to ensure that the app can never be paused mid dialog, in which case the saving of the state will not work
 
 - radio is not budgeted it seems even though it ought be

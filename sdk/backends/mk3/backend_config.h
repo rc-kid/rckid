@@ -30,6 +30,10 @@
  */
 #define RCKID_RGB_LED_DEFAULT_BRIGHTNESS 32
 
+/** Default speed of the breathing effect for system notifications (power, debug mode, purple, etc.)
+ */
+#define RCKID_RGB_NOTIFICATION_SPEED 6
+
 /** Have the rapid fire trigger roughly every 250ms. 
  */
 #define RCKID_DEFAULT_RAPIDFIRE_TICKS 60

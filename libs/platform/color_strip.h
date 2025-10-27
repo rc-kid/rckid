@@ -173,6 +173,7 @@ namespace platform {
         static Color Purple() { return Color{255,0,255}; }
         static Color Yellow() { return Color{255,255,0}; }
         static Color Cyan() { return Color{0,255,255}; }
+        static Color Orange() { return Color{255,165,0}; }
 
         static Color DarkRed() { return Color{128, 0, 0}; }
         static Color DarkPurple() { return Color{128, 0, 128}; }
