@@ -79,6 +79,10 @@ namespace rckid::ui {
             return MenuItem{std::move(name), std::move(icon), std::move(action) };
         }
 
+        static MenuItem Item(String name, PAYLOAD action) {
+            return MenuItem{std::move(name), Icon{}, std::move(action) };
+        }
+
         static MenuItem Generator(String name, Icon icon, MenuGenerator generator) {
             ASSERT(generator != nullptr);
             return MenuItem{std::move(name), std::move(icon), std::move(generator) };

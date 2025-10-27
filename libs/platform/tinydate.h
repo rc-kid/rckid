@@ -338,6 +338,50 @@ private:
 
 static_assert(sizeof(TinyDate) == 4);
 
+/** A very simple format for just time.
+ */
+PACKED(class TinyTime {
+public:
+
+    TinyTime(uint8_t h = 0, uint8_t m = 0, uint8_t s = 0) {
+        setHour(h);
+        setMinute(m);
+        setSecond(s);
+    }
+
+    TinyTime(TinyDateTime const & dt) {
+        setHour(dt.hour());
+        setMinute(dt.minute());
+        setSecond(dt.second());
+    }
+
+    uint8_t hour() const { return raw_[0]; }
+    uint8_t minute() const { return raw_[1]; }
+    uint8_t second() const { return raw_[2]; }
+
+    void setHour(uint8_t value) {
+        if (value >= 24)
+            value = 23;
+        raw_[0] = value;
+    }
+
+    void setMinute(uint8_t value) {
+        if (value >= 60)
+            value = 59;
+        raw_[1] = value;
+    }
+
+    void setSecond(uint8_t value) {
+        if (value >= 60)
+            value = 59;
+        raw_[2] = value;
+    }
+
+private:
+    uint8_t raw_[3] = { 0, 0, 0 };
+}); // TinyTime
+
+
 /** Simple alarm. 
  
     Hours, minutes and days of the week when the alarm is active. Since we need at least 18 bits to store this information, the alarm uses 3 bytes internally for hours, minutes and days of the week respectively. 

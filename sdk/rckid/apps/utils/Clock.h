@@ -7,6 +7,7 @@
 #include "../../assets/fonts/OpenDyslexic128.h"
 #include "../../assets/fonts/OpenDyslexic64.h"
 #include "../../assets/icons_24.h"
+#include "../dialogs/TimeDialog.h"
 
 
 namespace rckid {
@@ -39,7 +40,16 @@ namespace rckid {
             alarm_.setFont(Font::fromROM<assets::OpenDyslexic64>());
             alarm_.setHAlign(HAlign::Left);
             g_.addChild(alarmIcon_);
-            contextMenu_.add(ui::ActionMenu::Item("Set time"));
+            contextMenu_.add(ui::ActionMenu::Item("Set time", [this]() {
+                auto t = App::run<TimeDialog>();
+                if (t.has_value()) {
+                    TinyDateTime now = timeNow();
+                    now.setHour(t->hour());
+                    now.setMinute(t->minute());
+                    now.setSecond(t->second());
+                    setTimeNow(now);
+                }
+            }));
             contextMenu_.add(ui::ActionMenu::Item("Set date"));
             contextMenu_.add(ui::ActionMenu::Item("Set alarm"));
         }
@@ -60,7 +70,9 @@ namespace rckid {
                 exit();
 
             if (btnPressed(Btn::Select)) {
-                App::run<PopupMenu<ui::Action>>(&contextMenu_);
+                auto action = App::run<PopupMenu<ui::Action>>(&contextMenu_);
+                if (action.has_value())
+                    action.value()();
                 /*
                 auto action = PopupMenu::show(&contextMenu_);
                 if (action.has_value()) {

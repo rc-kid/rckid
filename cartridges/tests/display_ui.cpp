@@ -118,6 +118,7 @@ ui::ActionMenu * mainMenuGenerator() {
 int main() {
     //cpu::overclock(250000000);
     initialize();
+    //App::run<TimeDialog>();
     //PNG png{PNG::fromStream(fs::fileRead(STR("files/images/backgrounds/wish16.png")))};
     //LOG(LL_INFO, "PNG loaded: " << png.width() << "x" << png.height() << ", bpp: " << png.bpp());
     while (true) {

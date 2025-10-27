@@ -66,6 +66,8 @@ Nice extras would include:
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
+- radio is not budgeted it seems even though it ought be
+
 - icons for shuffle and icons for repeat
 
 - make rgb LED effect much slower with speed 1

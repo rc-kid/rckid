@@ -34,4 +34,19 @@ namespace rckid::interpolation {
         //return FixedInt{65536 - value} * (max - min) / period;
     }
 
+    inline FixedInt cosineLoop(Timer const & t, int min, int max) {
+        FixedInt i = t.t();
+        FixedInt period = t.duration();
+        FixedInt halfPeriod = period / 2;
+        uint32_t size = sizeof(assets::WaveformSin) / sizeof(int16_t);
+        int value;
+        if (i < halfPeriod) {
+            value = custom(i, halfPeriod, assets::WaveformSin + size / 4, size / 2) + 32768;
+        } else {
+            value = custom(i - halfPeriod, halfPeriod, assets::WaveformSin + size / 4, size / 2) + 32768;
+        }
+        auto x = min + FixedInt{(65536 - value) * (max - min)} / 65535;
+        return x; 
+    }
+
 } // namespace rckid::interpolation

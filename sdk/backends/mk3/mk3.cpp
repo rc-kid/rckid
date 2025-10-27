@@ -592,6 +592,12 @@ namespace rckid {
         return io::avrState_.time;
     }
 
+    void setTimeNow(TinyDateTime const & dt) {
+        StackProtection::check();
+        i2c::sendAvrCommand(cmd::SetTime{dt});
+        io::avrState_.time = dt;
+    }
+
     TinyAlarm timeAlarm() {
         StackProtection::check();
         return io::avrState_.alarm;

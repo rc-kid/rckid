@@ -94,6 +94,11 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
+    void setTimeNow(TinyDateTime const & t) {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
     TinyAlarm timeAlarm() {
         StackProtection::check();
         UNIMPLEMENTED;

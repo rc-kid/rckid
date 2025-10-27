@@ -335,6 +335,8 @@ namespace rckid {
 
     TinyDateTime timeNow() { return time::time_; }
 
+    void setTimeNow(TinyDateTime const & t) { time::time_ = t; }
+
     TinyAlarm timeAlarm() { return time::alarm_; }
 
     void setTimeAlarm(TinyAlarm alarm) { time::alarm_ = alarm; }

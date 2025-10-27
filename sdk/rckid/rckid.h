@@ -126,6 +126,9 @@ namespace rckid {
      */
     TinyDateTime timeNow();
 
+    /** Sets the current time. */
+    void setTimeNow(TinyDateTime const & t);
+
     /** Returns the current alarm settings. 
      */
     TinyAlarm timeAlarm();
