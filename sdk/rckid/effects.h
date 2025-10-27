@@ -27,6 +27,8 @@ namespace rckid {
         });
 
         Kind kind;
+        /** Speeds 0..31 means that this many frames will be the duration single step of the effect, while larger speeds change every frame, but by an increased delta.
+         */
         uint8_t speed;
         uint8_t duration;
 
@@ -72,6 +74,22 @@ namespace rckid {
 
         void turnOff() {
             kind = Kind::Off;
+        }
+
+        uint8_t skipTicks() const {
+            // for speeds 0..31, we skip speed - 1 ticks, for larger speeds we do not skip any ticks
+            if (speed <= 31)
+                return 32 - speed;
+            else
+                return 0;
+        }
+
+        uint8_t changeDelta() const {
+            // for speeds 0..31, we change by 1 each frame, for larger speeds we change by speed - 31 each frame
+            if (speed <= 31)
+                return 1;
+            else
+                return speed - 31;
         }
 
     private:

@@ -368,6 +368,10 @@ namespace rckid {
             int n = i2c_read_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, (uint8_t *) & io::avrState_, sizeof(AVRState), false);
             if (n != sizeof(AVRState))
                 FATAL_ERROR(Error::hardwareFailure, static_cast<uint32_t>(n));
+            if (io::avrState_.avrVersion != AVR_VERSION) {
+                LOG(LL_ERROR, "Incompatible AVR version detected: " << static_cast<uint32_t>(io::avrState_.avrVersion) << ", expected " << static_cast<uint32_t>(AVR_VERSION));
+                FATAL_ERROR(Error::hardwareFailure, static_cast<uint32_t>(io::avrState_.avrVersion), "Incompatible AVR version");
+            }
             LOG(LL_INFO, "AVR uptime: " << io::avrState_.uptime);
             LOG(LL_INFO, "Current time: " << io::avrState_.time);
             // update the volume on the audio codec based on the values received from AVR (last settings)

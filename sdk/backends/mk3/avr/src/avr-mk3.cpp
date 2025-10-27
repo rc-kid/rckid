@@ -114,6 +114,10 @@ public:
     static void initialize() {
         // initialize the AVR chip
         initializeAVR();
+        // set date to something meaningful
+        state_.time.date.setYear(2026);
+        state_.time.date.setMonth(1);
+        state_.time.date.setDay(1);
 
         // TODO some initialization routine with checks, etc.
         LOG("\n\n\nSYSTEM RESET DETECTED (AVR): " << hex(RSTCTRL.RSTFR));
@@ -208,11 +212,11 @@ public:
         switch (mode) {
             case POWER_MODE_DC:
                 state_.status.setVUsb(true);
-                setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
+                setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 28));
                 break;
             case POWER_MODE_CHARGING:
                 state_.status.setCharging(true);
-                setNotification(RGBEffect::Breathe(platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 1));
+                setNotification(RGBEffect::Breathe(platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 28));
                 break;
             default:
                 // no action
@@ -1236,7 +1240,9 @@ public:
 
     static inline bool rgbOn_ = false;
     static inline RGBEffect notification_{RGBEffect::Off()};
+    static inline uint8_t notificationTimeout_ = 0;
     static inline RGBEffect rgbEffect_[NUM_RGB_LEDS];
+    static inline uint8_t rgbEffectTimeout_[NUM_RGB_LEDS] = {0};
     static inline platform::ColorStrip<NUM_RGB_LEDS> rgbTarget_;
     static inline platform::NeopixelStrip<NUM_RGB_LEDS> rgb_{AVR_PIN_RGB};
 
@@ -1293,11 +1299,16 @@ public:
         if (!rgbOn_)
             return;
         if (notification_.active()) {
+            if (notificationTimeout_ > 0) {
+                --notificationTimeout_;
+                return;
+            }
+            notificationTimeout_ = notification_.skipTicks();
             // notifiations do not go away on a timeout, so no need to worry here
             // for notification, move all LEDs in sync
             bool done = true;
             for (int i = 0; i < NUM_RGB_LEDS; ++i)
-                done = (! rgb_[i].moveTowards(rgbTarget_[i], notification_.speed)) && done;
+                done = (! rgb_[i].moveTowards(rgbTarget_[i], notification_.changeDelta())) && done;
             if (done)
               for (int i = 0; i < NUM_RGB_LEDS; ++i)
                   rgbTarget_[i] = notification_.nextColor(rgbTarget_[i]);
@@ -1318,7 +1329,13 @@ public:
             // for all LEDs, move them towards their target at speed given by their effect
             bool turnOff = true;
             for (int i = 0; i < NUM_RGB_LEDS; ++i) {
-                bool done = ! rgb_[i].moveTowards(rgbTarget_[i], rgbEffect_[i].speed);
+                if (rgbEffectTimeout_[i] > 0) {
+                    --rgbEffectTimeout_[i];
+                    turnOff = false;
+                    continue;
+                }
+                rgbEffectTimeout_[i] = rgbEffect_[i].skipTicks();
+                bool done = ! rgb_[i].moveTowards(rgbTarget_[i], rgbEffect_[i].changeDelta());
                 // if the current transition is done, make next effect transition
                 if (done) {
                     rgbTarget_[i] = rgbEffect_[i].nextColor(rgbTarget_[i]);

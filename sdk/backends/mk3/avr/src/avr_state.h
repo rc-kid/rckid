@@ -7,6 +7,14 @@ class RCKid;
 
 namespace rckid {
 
+    /** AVR version.
+     
+        The AVR version is returned as part of the AVR extended state right after status itself so that it can be used by cartridges to refuse to run on devices with incompatible AVR firmware, which can lead to different commands being issued, etc. 
+
+        Ensure to bump the version whenever there are backwards incompatible changes to the AVR firmware such as new commands, status layout changes, etc.
+     */
+    static constexpr uint8_t AVR_VERSION = 0x00;
+
     /** AVR State information */
 
     PACKED(class AVRState {
@@ -163,6 +171,10 @@ namespace rckid {
         }); // AVRState::AudioSettings
 
         Status status;
+
+        /** AVR version to ensure incompatible cartridge & device will not talk to each other.
+         */
+        uint8_t avrVersion = AVR_VERSION;
 
         /** Temperature in x10 (mind the precision of the measurement at 0.5C).
          */
