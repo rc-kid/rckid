@@ -260,6 +260,12 @@ public:
         setYear(year);
     }
 
+    TinyDate(TinyDateTime const & dt) {
+        setDay(dt.day());
+        setMonth(dt.month());
+        setYear(dt.year());
+    }
+
     uint8_t day() const { return raw_[0]; }
     uint8_t month() const { return raw_[1]; }
     int16_t year() const { return (static_cast<int16_t>(raw_[2]) << 8) | raw_[3]; }

@@ -66,6 +66,10 @@ Nice extras would include:
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
+- fix date dialog (year proper, deal with TinyDate/Time/DateTime, leap years, bounds, etc.)
+
+- all dialogs should be not budgeted. This is to ensure that the app can never be paused mid dialog, in which case the saving of the state will not work
+
 - radio is not budgeted it seems even though it ought be
 
 - icons for shuffle and icons for repeat
