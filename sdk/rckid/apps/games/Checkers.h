@@ -9,6 +9,10 @@ namespace rckid {
 
         String name() const override { return "Checkers"; }
 
+        /** Games are buddgeted.
+         */
+        bool isBudgeted() const override { return true; }
+
         /** Simple board widget with alternating squares of different colors. Each square is 30x30 pixels in size, so that full 8x8 board fits exactly in the 240 rows available.
          */
         class Board : public ui::Widget {

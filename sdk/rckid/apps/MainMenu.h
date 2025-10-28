@@ -40,10 +40,6 @@ namespace rckid {
             c_.attachHistory(history_);
         }
 
-        /** Main menu is explicitly not budgeted app as it is the gateway to other applications.
-         */
-        bool isBudgeted() const override { return false; }
-
     protected:
         void focus() override {
             ui::Form<ui::Action>::focus();

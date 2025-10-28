@@ -71,14 +71,6 @@ namespace rckid {
             contacts_.clear();
         }
 
-        /** Dialog budgeting mirrors that of its parent.
-         */
-        bool isBudgeted() const override { 
-            if (parent() != nullptr) 
-                return parent()->isBudgeted();
-            return true;
-        }
-
         Point iconPosition() const { return c_.iconPosition(); }
         Point textPosition() const { return c_.textPosition(); }
 

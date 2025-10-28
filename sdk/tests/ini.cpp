@@ -4,7 +4,7 @@
 using namespace rckid;
 
 TEST(ini, sections) {
-    auto s = std::make_unique<MemoryReadStream>(""
+    MemoryReadStream s{""
         "[section1]\n"
         "key1=value1\n"
         "key2=value2\n"
@@ -12,7 +12,7 @@ TEST(ini, sections) {
         "[section2]\n"
         "keyA=valueA\n"
         "keyB=valueB\n"
-    );
+    };
     ini::Reader p{std::move(s)};
     EXPECT(p.nextSection(), "section1");
     auto ov = p.nextValue();

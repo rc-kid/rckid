@@ -111,10 +111,6 @@ namespace rckid {
             ui::Form<void>::draw();
         }
 
-        /** There is no harm checking the time.
-         */
-        bool isBudgeted() const override { return false; }
-
     private:
         ui::Label h_;
         ui::Label m_;

@@ -63,7 +63,7 @@ namespace rckid::ui {
          */
         static void refresh();
 
-
+        static void refreshStyle();
 
         static void createPalette(uint16_t * palette);
 

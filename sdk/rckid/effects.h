@@ -20,7 +20,7 @@ namespace rckid {
 
         using Color = platform::Color;
 
-        PACKED(struct Rainbow {
+        PACKED(struct RainbowData {
             uint8_t hue;
             uint8_t step;
             uint8_t brightness;
@@ -58,15 +58,23 @@ namespace rckid {
             return RGBEffect{Kind::Off, 0, 0};
         }
 
-        static RGBEffect Solid(Color color, uint8_t speed = 1, uint8_t duration = 0) {
+        static RGBEffect Solid(Color color, uint8_t speed = 8, uint8_t duration = 0) {
             RGBEffect result{Kind::Solid, speed, duration};
             result.setColor(color);
             return result;
         }
 
-        static RGBEffect Breathe(Color color, uint8_t speed, uint8_t duration = 0) {
+        static RGBEffect Breathe(Color color, uint8_t speed = 8, uint8_t duration = 0) {
             RGBEffect result{Kind::Breathe, speed, duration};
             result.setColor(color);
+            return result;
+        }
+
+        static RGBEffect Rainbow(uint8_t hue, uint8_t step, uint8_t speed = 8, uint8_t brightness = 255, uint16_t duration = 0) {
+            RGBEffect result(Kind::Rainbow, speed, duration);
+            result.rainbow_.hue = hue;
+            result.rainbow_.step = step;
+            result.rainbow_.brightness = brightness;
             return result;
         }
 
@@ -124,7 +132,7 @@ namespace rckid {
         
         PACKED(union {
             Color color_;
-            Rainbow rainbow_;
+            RainbowData rainbow_;
         });
 
         friend Writer & operator << (Writer & w, RGBEffect const & e) {

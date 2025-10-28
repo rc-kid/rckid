@@ -314,6 +314,10 @@ namespace rckid {
 
     bool powerCharging() { return false; }
 
+    bool debugMode() { return false; }
+
+    void setDebugMode(bool) { }
+
     void yield() {
         StackProtection::check();   
         // nothing yet to be be done here in fantasy mode

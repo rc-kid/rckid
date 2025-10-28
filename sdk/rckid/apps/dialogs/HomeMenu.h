@@ -38,10 +38,6 @@ namespace rckid {
             active_ = false;
         }
 
-        /** Home menu is explicitly not budgeted app.
-         */
-        bool isBudgeted() const override { return false; }
-
         /** Returns if there is home menu active in the system (i.e. if home menu is anywhere on the app stack). 
          
             If this function returns true, current app runs as part of home menu.

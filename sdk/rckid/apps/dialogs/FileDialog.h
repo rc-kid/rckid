@@ -10,11 +10,12 @@ namespace rckid {
 
         String name() const override { return "FileDialog"; }
 
-        FileDialog() : ui::Form<String>{} {
+        FileDialog(char const * path = "/") : ui::Form<String>{},
+            c_{path} {
             using namespace ui;
-            c_ = g_.addChild(new ui::FileBrowser{"/"});
-            c_->setRect(Rect::XYWH(0, 160, 320, 80));
-            c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
+            c_.setRect(Rect::XYWH(0, 160, 320, 80));
+            c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
+            g_.addChild(c_);
             contextMenu_.add(ui::ActionMenu::Item("First"));
             contextMenu_.add(ui::ActionMenu::Item("Second"));
             contextMenu_.add(ui::ActionMenu::Item("And Third"));
@@ -27,25 +28,17 @@ namespace rckid {
             contextMenu_.add(ui::ActionMenu::Item("Last But Not Least 10"));
         }
 
-        /** Dialog budgeting mirrors that of its parent.
-         */
-        bool isBudgeted() const override{ 
-            if (parent() != nullptr) 
-                return parent()->isBudgeted();
-            return true;
-        }
-
     protected:
 
         void update() override {
             ui::Form<String>::update();
-            c_->processEvents();
+            c_.processEvents();
             // see if an item has been selected, or if we shoudl leave, if up & down were used for traversing the folder strcuture, they have already been cleared by the processEvents
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
-                LOG(LL_DEBUG, "FileDialog: returning path " << c_->currentPath());
+                LOG(LL_DEBUG, "FileDialog: returning path " << c_.currentPath());
                 btnClear(Btn::A);
                 btnClear(Btn::Up);
-                exit(c_->currentPath());
+                exit(c_.currentPath());
             }
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 LOG(LL_DEBUG, "FileDialog: cancelling");
@@ -59,7 +52,7 @@ namespace rckid {
         }
 
     private:
-        ui::FileBrowser * c_;
+        ui::FileBrowser c_;
         ui::ActionMenu contextMenu_; 
 
     }; // rckid::FileDialog

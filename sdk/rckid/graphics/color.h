@@ -3,6 +3,7 @@
 #include <array>
 #include <platform.h>
 #include <platform/utils.h>
+#include "../utils/string.h"
 
 // on windows, there is RGB macro, which clases with the 565 and 332 colors
 #ifdef RGB
@@ -125,6 +126,11 @@ namespace rckid {
             uint32_t g = platform::fromHex(str[3]) << 4 | platform::fromHex(str[4]);
             uint32_t b = platform::fromHex(str[5]) << 4 | platform::fromHex(str[6]);
             return ColorRGB::RGB(r, g, b);
+        }
+
+        String toString() const {
+            using namespace platform;
+            return STR('#' << fillLeft(hex(r(), false), 2) << fillLeft(hex(g(), false), 2) << fillLeft(hex(b(), false), 2));
         }
 
         constexpr uint32_t toRaw() const {

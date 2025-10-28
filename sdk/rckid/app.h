@@ -70,7 +70,7 @@ namespace rckid {
 
         /** Returns true if the current app should count towards the daily app time budget managed by the device. By default all apps count towards the budget, whereas some apps may decide otherwise.
         */
-        virtual bool isBudgeted() const { return true; }
+        virtual bool isBudgeted() const { return false; }
 
         /** Returns true if the app supports saving and reloading its state (i.e. if the save and load methods are implemented). By default apps do not support state saving.
          */

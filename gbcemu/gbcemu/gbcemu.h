@@ -51,6 +51,10 @@ namespace rckid::gbcemu {
 
         String name() const override { return STR("GBCEmu_" << appName_); }
 
+        /** Games are buddgeted.
+         */
+        bool isBudgeted() const override { return true; }
+
         static constexpr uint8_t VERSION = 1;
 
         static constexpr uint32_t SCALED_WIDTH = 267;
@@ -187,20 +191,7 @@ namespace rckid::gbcemu {
          */
         void draw() override {}
 
-        ui::ActionMenu::MenuGenerator homeMenuGenerator() {
-            return [this](){
-                ui::ActionMenu * m = new ui::ActionMenu{};
-                addDefaultHomeActionsInto(m);
-                m->add(ui::ActionMenu::Item(
-                    "Debug Mode",
-                    assets::icons_64::ladybug,
-                    [this](){
-                        debug_ = true;
-                    }
-                ));
-                return m;
-            };
-        }
+        ui::ActionMenu::MenuGenerator homeMenuGenerator() override;
 
     private:
 

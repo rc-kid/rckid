@@ -9,14 +9,12 @@ namespace rckid::ini {
     /** Parser for simplified INI  */
     class Reader {
     public:
-        explicit Reader(std::unique_ptr<ReadStream> from):
-            from_{std::move(from)} {
+
+        template<typename T>
+        Reader(T && from):
+            from_{std::make_unique<T>(std::forward<T>(from))} {
         }
 
-        /*
-        template<typename T,  std::enable_if_t<!std::is_same_v<std::decay_t<T>, Reader>, int> = 0>
-        explicit Reader(T && from): Reader{std::make_unique<T>(std::forward<T>(from))} {}
-        */
         bool eof() const { return from_->eof(); }
 
         String nextSection() {
@@ -47,7 +45,7 @@ namespace rckid::ini {
                     String name = line_.substr(0, eq);
                     if (line_[eq + 1] == '"') {
                         ASSERT(line_[line_.size() - 1] == '"');
-                        value = line_.substr(eq + 2, line_.size() - eq - 2);
+                        value = line_.substr(eq + 2, line_.size() - eq - 3);
                     } else {
                         value = line_.substr(eq + 1);
                     }
@@ -69,8 +67,10 @@ namespace rckid::ini {
      */
     class Writer {
     public:
-        Writer(std::unique_ptr<WriteStream> into):
-            into_{std::move(into)} {
+
+        template<typename T>
+        Writer(T && into): 
+            into_{std::make_unique<T>(std::forward<T>(into))} {
         }
 
         void writeSection(String const & name) {
@@ -78,8 +78,12 @@ namespace rckid::ini {
         }
 
         void writeValue(String const & name, String const & value) {
-            into_->writer() << name << "=" << value << "\n";
+            into_->writer() << name << "=\"" << value << "\"\n";
         }   
+
+        void writeValue(String const & name, int32_t value) {
+            into_->writer() << name << "=" << value << "\n";
+        }
 
     private:
 

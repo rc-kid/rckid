@@ -67,7 +67,7 @@ namespace rckid {
             return Writer([](char c, void * self) {
                 bool result = reinterpret_cast<WriteStream*>(self)->writeByte(static_cast<uint8_t>(c));
                 ASSERT(result);
-            });
+            }, this);
         }
 
     }; // rckid::WriteStream

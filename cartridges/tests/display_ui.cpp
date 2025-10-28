@@ -107,33 +107,36 @@ ui::ActionMenu * styleMenuGenerator() {
             auto c = App::run<ColorPicker>(ui::Style::fg());
             if (c.has_value()) {
                 ui::Style::setFg(c.value());
+                ui::Style::saveAndRefresh();
             }
         }),
         ui::ActionMenu::Item("Bg", assets::icons_64::paint_palette, [](){
             auto c = App::run<ColorPicker>(ui::Style::bg());
             if (c.has_value()) {
                 ui::Style::setBg(c.value());
+                ui::Style::saveAndRefresh();
             }
         }),
         ui::ActionMenu::Item("Accent Text", assets::icons_64::paint_palette, []() {
             auto c = App::run<ColorPicker>(ui::Style::accentFg());
             if (c.has_value()) {
                 ui::Style::setAccentFg(c.value());
+                ui::Style::saveAndRefresh();
             }
         }),
         ui::ActionMenu::Item("Accent Bg", assets::icons_64::paint_palette, [](){
             auto c = App::run<ColorPicker>(ui::Style::accentBg());
             if (c.has_value()) {
                 ui::Style::setAccentBg(c.value());
+                ui::Style::saveAndRefresh();
             }
         }),
         ui::ActionMenu::Item("Background", assets::icons_64::picture, [](){
-            /*
-            auto icon = App::run<FileDialog>("files/images/backgrounds", "png,jpg,bmp", FileDialog::Mode::OpenFile);
+            auto icon = App::run<FileDialog>("/files/images");
             if (icon.has_value()) {
                 ui::Style::setBackground(Icon{icon.value().c_str()});
+                ui::Style::saveAndRefresh();
             }
-            */
         }),
     };
 }
@@ -141,6 +144,14 @@ ui::ActionMenu * styleMenuGenerator() {
 ui::ActionMenu * settingsMenuGenerator() {
     return new ui::ActionMenu{
         ui::ActionMenu::Generator("Style", assets::icons_64::paint_palette, styleMenuGenerator),
+    };
+}
+
+ui::ActionMenu * debugMenuGenerator() {
+    return new ui::ActionMenu{
+        ui::ActionMenu::Item("Debug Off", assets::icons_64::ladybug, [](){
+            rckid::setDebugMode(false);
+        }),
     };
 }
 
@@ -157,6 +168,7 @@ ui::ActionMenu * mainMenuGenerator() {
         ui::ActionMenu::Item("Remote", assets::icons_64::rc_car, nullptr),
         ui::ActionMenu::Generator("Utilities", assets::icons_64::configuration, utilsMenuGenerator),
         ui::ActionMenu::Generator("Settings", assets::icons_64::settings, settingsMenuGenerator),
+        ui::ActionMenu::Generator("Debug", assets::icons_64::ladybug, debugMenuGenerator),
     };
 }
 
@@ -164,6 +176,15 @@ ui::ActionMenu * mainMenuGenerator() {
 int main() {
     //cpu::overclock(250000000);
     initialize();
+    /*
+    rgbEffects(
+        RGBEffect::Rainbow(0, 1, 8, 32), 
+        RGBEffect::Rainbow(51, 1, 8, 32), 
+        RGBEffect::Rainbow(102, 1, 8, 32), 
+        RGBEffect::Rainbow(153, 1, 8, 32), 
+        RGBEffect::Rainbow(204, 1, 8, 32)
+    );
+    */
     //App::run<DateDialog>();
     //PNG png{PNG::fromStream(fs::fileRead(STR("files/images/backgrounds/wish16.png")))};
     //LOG(LL_INFO, "PNG loaded: " << png.width() << "x" << png.height() << ", bpp: " << png.bpp());

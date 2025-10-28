@@ -14,14 +14,6 @@ namespace rckid {
     public:
         String name() const override { return "DateDialog"; }
 
-        /** Dialog budgeting mirrors that of its parent.
-         */
-        bool isBudgeted() const override { 
-            if (parent() != nullptr) 
-                return parent()->isBudgeted();
-            return true;
-        }
-
         DateDialog(TinyDate initialDate = timeNow().date):
             ui::Form<TinyDate>{Rect::XYWH(0, 144, 320, 96), /* raw */ true},
             d_{Rect::XYWH(0, 20, 90, 76), ""},

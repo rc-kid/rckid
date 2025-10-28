@@ -61,14 +61,6 @@ namespace rckid {
             }
         }
 
-        /** Dialog budgeting mirrors that of its parent.
-         */
-        bool isBudgeted() const override { 
-            if (parent() != nullptr) 
-                return parent()->isBudgeted();
-            return true;
-        }
-
     private:
 
         using ui::Form<PAYLOAD>::g_;

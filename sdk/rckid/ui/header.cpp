@@ -25,6 +25,11 @@ namespace rckid::ui {
         instance_->update();
     }
 
+    void Header::refreshStyle() {
+        if (instance_ != nullptr)
+            createPalette(instance_->palette_);
+    }
+
     void Header::createPalette(uint16_t * palette) {
         // 0..15 is foreground color shading for fonts
         for (uint32_t i = 0; i < 16; ++i)

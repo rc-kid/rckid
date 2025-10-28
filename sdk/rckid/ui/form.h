@@ -119,6 +119,13 @@ namespace rckid::ui {
             }
         }
 
+        static void refreshStyle() {
+            if (bg_ != nullptr) {
+                bg_->clear();
+                (*bg_) = Style::loadBackgroundImage();
+            }
+        }
+
     protected:
 
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {

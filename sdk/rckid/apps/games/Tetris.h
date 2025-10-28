@@ -14,6 +14,10 @@ namespace rckid {
 
         String name() const override { return "Tetris"; }
 
+        /** Games are buddgeted.
+         */
+        bool isBudgeted() const override { return true; }
+
         static constexpr uint8_t VERSION = 1;
 
         Tetris(): CanvasApp<ColorRGB>{} {

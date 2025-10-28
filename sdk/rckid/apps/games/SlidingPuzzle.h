@@ -17,6 +17,10 @@ namespace rckid {
 
         String name() const override { return "SlidingPuzzle"; }
 
+        /** Games are buddgeted.
+         */
+        bool isBudgeted() const override { return true; }
+
         SlidingPuzzle(): CanvasApp<ColorRGB>{} {
             
         }

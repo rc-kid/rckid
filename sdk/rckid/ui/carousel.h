@@ -54,13 +54,13 @@ namespace rckid::ui {
                 aImg_ = icon;
                 aImg_.setTransparent(true);
                 aText_.setText(text);
-                aText_.setColor(ColorRGB::White());
+                aText_.setColor(ui::Style::fg());
                 repositionElements(aImg_, aText_);
             } else {
                 bImg_ = icon;
                 bImg_.setTransparent(true);
                 bText_.setText(text);
-                bText_.setColor(ColorRGB::White());
+                bText_.setColor(ui::Style::fg());
                 repositionElements(bImg_, bText_);
             }
             if (initialized_ < 2)

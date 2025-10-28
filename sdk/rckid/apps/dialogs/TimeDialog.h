@@ -13,14 +13,6 @@ namespace rckid {
     public:
         String name() const override { return "TimeDialog"; }
 
-        /** Dialog budgeting mirrors that of its parent.
-         */
-        bool isBudgeted() const override { 
-            if (parent() != nullptr) 
-                return parent()->isBudgeted();
-            return true;
-        }
-
         TimeDialog(TinyTime initialTime = timeNow().time):
             ui::Form<TinyTime>{Rect::XYWH(0, 144, 320, 96), /* raw */ true},
             h_{Rect::XYWH(0, 0, 150, 96), ""},

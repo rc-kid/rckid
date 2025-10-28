@@ -14,14 +14,6 @@ namespace rckid {
 
         String name() const override { return "ColorPicker"; }
 
-        /** Dialog budgeting mirrors that of its parent.
-         */
-        bool isBudgeted() const override { 
-            if (parent() != nullptr) 
-                return parent()->isBudgeted();
-            return true;
-        }
-
         ColorPicker(ColorRGB initialColor = ui::Style::accentFg()):
             ui::Form<ColorRGB>{Rect::XYWH(0, 144, 320, 96), /* raw */ true},
             red_{Rect::XYWH(10, 12, 200, 16), 0, 255, initialColor.r()},

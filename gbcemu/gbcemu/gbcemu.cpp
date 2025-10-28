@@ -1,3 +1,4 @@
+#include <rckid/apps/dialogs/ColorPicker.h>
 #include "gbcemu.h"
 
 #define A (regs8_[REG_INDEX_A])
@@ -321,6 +322,70 @@ namespace rckid::gbcemu {
         for (uint32_t i = 0; i < 16; ++i)
             delete eram_[i];
         // TODO some more cleanup would be good here
+    }
+
+    ui::ActionMenu::MenuGenerator GBCEmu::homeMenuGenerator() {
+        return [this](){
+            ui::ActionMenu * m = new ui::ActionMenu{};
+            addDefaultHomeActionsInto(m);
+            m->add(ui::ActionMenu::Generator("Style", assets::icons_64::paint_palette, [this]() {
+                ui::ActionMenu * m = new ui::ActionMenu{};
+                m->add(ui::ActionMenu::Item(
+                    "Classic",
+                    assets::icons_64::gameboy,
+                    [this](){
+                        palette_[0] = ColorRGB{155, 188, 15};
+                        palette_[1] = ColorRGB{139, 172, 15};
+                        palette_[2] = ColorRGB{48, 98, 48};
+                        palette_[3] = ColorRGB{15, 56, 15};
+                    }
+                ));
+                m->add(ui::ActionMenu::Item(
+                    "Pocket",
+                    assets::icons_64::gameboy,
+                    [this](){
+                        palette_[0] = ColorRGB{255, 255, 255};
+                        palette_[1] = ColorRGB{170, 170, 170};
+                        palette_[2] = ColorRGB{85, 85, 85};
+                        palette_[3] = ColorRGB{0, 0, 0};
+                    }
+                ));
+                m->add(ui::ActionMenu::Item(
+                    "White on Black",
+                    assets::icons_64::gameboy,
+                    [this](){
+                        palette_[0] = ColorRGB{0, 0, 0};
+                        palette_[1] = ColorRGB{85, 85, 85};
+                        palette_[2] = ColorRGB{170, 170, 170};
+                        palette_[3] = ColorRGB{255, 255, 255};
+                    }
+                ));
+                m->add(ui::ActionMenu::Generator("Customize", assets::icons_64::paint_palette, [this]() {
+                    ui::ActionMenu * m = new ui::ActionMenu{};
+                    for (uint32_t i = 0; i < 4; ++i) {
+                        m->add(ui::ActionMenu::Item(
+                            STR("Color " << i),
+                            assets::icons_64::poo,
+                            [this, i](){
+                                auto c = App::run<ColorPicker>(palette_[i]);
+                                if (c.has_value())
+                                    palette_[i] = c.value();
+                            }
+                        ));
+                    }
+                    return m;
+                }));
+                return m;
+            }));
+            m->add(ui::ActionMenu::Item(
+                "Debug Mode",
+                assets::icons_64::ladybug,
+                [this](){
+                    debug_ = true;
+                }
+            ));
+            return m;
+        };
     }
 
     GBCEmu::~GBCEmu() {

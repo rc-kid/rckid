@@ -575,6 +575,20 @@ namespace rckid {
         return io::avrState_.status.charging();
     }
 
+    bool debugMode() {
+        StackProtection::check();
+        return io::avrState_.status.debugMode();
+    }
+
+    void setDebugMode(bool value) {
+        StackProtection::check();
+        if (value)
+            i2c::sendAvrCommand(cmd::DebugModeOn{});
+        else
+            i2c::sendAvrCommand(cmd::DebugModeOff{});
+        // don't set the debug mode in state (will be updated automatically on next AVR status read)
+    }
+
     void keepAlive() {
         StackProtection::check();
         time::idleTimeout_ = RCKID_IDLE_TIMEOUT;

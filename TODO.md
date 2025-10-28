@@ -47,6 +47,7 @@
   - [ ] timer
   - [X] stopwatch
   - [ ] alarm
+- [X] theme style settings (colors & background) 
 
 Nice extras would include:
 
@@ -68,21 +69,26 @@ Nice extras would include:
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
-- fix basic style settings, refresh style when reloaded (header, main menu)
-- save properly
-- fix the ini creation template
+- for gbcemu - somehow it got faster? why? (could it be just updated things?)
+- the color settings should be stored, perhaps per game? 
+- and when colors are updated, different colors should be update-able at the same time
 
 > fix below when at home
 - style reading does not work on device
 - bsod not working, just hangs
 - data sync app is ugly
 - use faster SD card
+- sending RGB effects does not work
+
+
+
+- make overclocking part of the SDK so that it can be used per app
 
 - debug mode should take precendence over usb power and charging, bootloader mode should reset itself after first I2C communication (go from blue back to whatever it was)
+- debug mode cannot be re-enabled when powering on
+- actually the charging lights on keyboard should only be used when device is off, otherwise use the RGB lights as used by the apps, same for debug mode, when enabled replace colors until cartridge rewrites them
 
-- all dialogs should be not budgeted. This is to ensure that the app can never be paused mid dialog, in which case the saving of the state will not work
-
-- radio is not budgeted it seems even though it ought be
+- verify that gameboy emulator & tetris are indeed budgeted
 
 - icons for shuffle and icons for repeat
 

@@ -106,6 +106,10 @@ namespace rckid {
      */
     bool powerCharging();
 
+    bool debugMode();
+
+    void setDebugMode(bool value);
+
     /** Programatically resets the idle timer that automatically powers the device off. 
     
         Internally, there are two counters - idle and keepalive countdowns. Both counters are reset at any button press, and the idle counter can also be reset by calling the keepAlive() function, effectively switching to the longer keepalive timeout for device power off. This is particularly useful for media playback, when no user feedback is necessary for extended periods of time.

@@ -55,10 +55,6 @@ namespace rckid {
             d.loop();
         }
 
-        /** Info dialog is the only one that is *not* budgeted (we use it to inform user that we are out of budget.
-         */
-        bool isBudgeted() const override { return false; }
-
     protected:
         void update() override {
             ui::Form<void>::update();
