@@ -74,19 +74,19 @@ Nice extras would include:
 - and when colors are updated, different colors should be update-able at the same time
 
 > fix below when at home
-- style reading does not work on device
 - bsod not working, just hangs
 - data sync app is ugly
 - use faster SD card
-- sending RGB effects does not work
 
+
+
+
+
+
+- some avr commands are longer than 16 bytes, which means it cannot be stored via the I2C async commands
 
 
 - make overclocking part of the SDK so that it can be used per app
-
-- debug mode should take precendence over usb power and charging, bootloader mode should reset itself after first I2C communication (go from blue back to whatever it was)
-- debug mode cannot be re-enabled when powering on
-- actually the charging lights on keyboard should only be used when device is off, otherwise use the RGB lights as used by the apps, same for debug mode, when enabled replace colors until cartridge rewrites them
 
 - verify that gameboy emulator & tetris are indeed budgeted
 

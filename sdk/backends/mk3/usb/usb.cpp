@@ -206,12 +206,14 @@ extern "C" {
         - Start = 1 : active mode, if load_eject = 1 : load disk storage
     */
     bool tud_msc_start_stop_cb([[maybe_unused]] uint8_t lun, [[maybe_unused]] uint8_t power_condition, bool start, bool load_eject) {
+        /*
         if (start)
             DataSync::connect();
         else if (load_eject)
             DataSync::disconnect();
-        //if (load_eject) 
-        //    start ? DataSync::connect() : DataSync::disconnect();
+        */
+        if (load_eject) 
+            start ? DataSync::connect() : DataSync::disconnect();
         return true;
     }
 

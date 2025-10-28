@@ -388,12 +388,14 @@ namespace rckid {
         sdInitialize();
         sdInitializeCard();
 
-        // initalize the ui style
-        ui::Style::load();
 
         // initialize the filesystem and mount the SD card
         fs::initialize();
-      
+
+        // initalize the ui style
+        ui::Style::load();
+
+
         time::nextSecond_ += 1000000;
 
         // enable I2C interrupts so that we can start processing the I2C packet queues
@@ -978,7 +980,16 @@ namespace rckid {
     
     void rgbEffects(RGBEffect const & a, RGBEffect const & b, RGBEffect const & dpad, RGBEffect const & sel, RGBEffect const & start) {
         StackProtection::check();
-        i2c::sendAvrCommand(cmd::SetRGBEffects{a, b, dpad, sel, start});
+        rgbEffect(0, dpad);
+        rgbEffect(1, dpad);
+        rgbEffect(2, dpad);
+        rgbEffect(3, dpad);
+        rgbEffect(4, sel);
+        rgbEffect(5, start);
+        rgbEffect(6, b);
+        rgbEffect(7, a);
+        // TODO can't send log commands
+        //i2c::sendAvrCommand(cmd::SetRGBEffects{a, b, dpad, sel, start});
     }
     
     void rgbOff() {

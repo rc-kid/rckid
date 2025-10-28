@@ -264,9 +264,6 @@ namespace rckid {
             LOG(LL_ERROR, "  csd error: " << hex(status));
             return false;
         }
-        for (uint32_t i = 0; i < 16; ++i)
-            LOG(LL_INFO, "    csd[" << i << "]: " << hex(buffer[i]));
-
         // get number of blocks from the CS card's capacity. For SDXC and SDHC cards, this is (CSIZE + 1) * 512KB, so we divide the CSIZE + 1 by 1024 to get size in 512 byte blocks
         // as the CSIZE is stored in bits 48-69
         // [ 0] 120

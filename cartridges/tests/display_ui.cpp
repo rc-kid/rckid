@@ -176,15 +176,15 @@ ui::ActionMenu * mainMenuGenerator() {
 int main() {
     //cpu::overclock(250000000);
     initialize();
-    /*
+    LOG(LL_INFO, "Init done, rgb effects");
     rgbEffects(
-        RGBEffect::Rainbow(0, 1, 8, 32), 
-        RGBEffect::Rainbow(51, 1, 8, 32), 
-        RGBEffect::Rainbow(102, 1, 8, 32), 
-        RGBEffect::Rainbow(153, 1, 8, 32), 
-        RGBEffect::Rainbow(204, 1, 8, 32)
+        RGBEffect::Rainbow(0, 1, 4, 32), 
+        RGBEffect::Rainbow(51, 1, 4, 32), 
+        RGBEffect::Rainbow(102, 1, 4, 32), 
+        RGBEffect::Rainbow(153, 1, 4, 32), 
+        RGBEffect::Rainbow(204, 1, 4, 32)
     );
-    */
+    LOG(LL_INFO, "RGB effects sent");
     //App::run<DateDialog>();
     //PNG png{PNG::fromStream(fs::fileRead(STR("files/images/backgrounds/wish16.png")))};
     //LOG(LL_INFO, "PNG loaded: " << png.width() << "x" << png.height() << ", bpp: " << png.bpp());

@@ -65,7 +65,7 @@ namespace rckid {
                     status_.setText("Inactive");
                     break;
                 case Status::Disconnected:
-                    status_.setText("Disconnected");
+                    status_.setText(STR("Disconnected, r: " << blocksRead_ << ", w: " << blocksWrite_));
                     break;
                 case Status::Connected:
                     status_.setText(STR("Connected, r: " << blocksRead_ << ", w: " << blocksWrite_));

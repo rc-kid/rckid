@@ -132,6 +132,8 @@ public:
         enterDebugMode();
         homeBtnLongPress();
         homeBtnLongPress_ = 0;
+        // simulate we pressed the power on button
+        state_.status.setControlButtons(true, false, false);
     }
 
     static void loop() {
@@ -209,14 +211,20 @@ public:
             startSystemTicks();
         }
         powerMode_ |= mode;
+        // if turning on, clear any notification (power when off)
         switch (mode) {
+            case POWER_MODE_ON:
+                setNotification(RGBEffect::Off());
+                break;
             case POWER_MODE_DC:
                 state_.status.setVUsb(true);
-                setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+                if (! (powerMode_ & POWER_MODE_ON)) 
+                    setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
                 break;
             case POWER_MODE_CHARGING:
                 state_.status.setCharging(true);
-                setNotification(RGBEffect::Breathe(platform::Color::Orange().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+                if (! (powerMode_ & POWER_MODE_ON)) 
+                    setNotification(RGBEffect::Breathe(platform::Color::Orange().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
                 break;
             default:
                 // no action
@@ -237,16 +245,24 @@ public:
             set_sleep_mode(SLEEP_MODE_PWR_DOWN);
         }
         switch (mode) {
+            case POWER_MODE_ON:
+                // if we are turning off, set notification according to other power modes
+                if (powerMode_ & POWER_MODE_CHARGING)
+                    setNotification(RGBEffect::Breathe(platform::Color::Orange().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+                else if (powerMode_ & POWER_MODE_DC)
+                    setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+                else
+                    setNotification(RGBEffect::Off());
+                break;
             case POWER_MODE_DC:
                 state_.status.setVUsb(false);
-                if (state_.status.debugMode())
-                    setNotification(RGBEffect::Solid(platform::Color::Purple().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
-                else
+                if (! (powerMode_ & POWER_MODE_ON))
                     setNotification(RGBEffect::Off());
                 break;
             case POWER_MODE_CHARGING:
                 state_.status.setCharging(false);
-                setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+                if (! (powerMode_ & POWER_MODE_ON))
+                    setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
                 break;
             default:
                 // no action
@@ -267,7 +283,10 @@ public:
             setBacklightPWM(state_.brightness);
             ADC0.CTRLA |= ADC_RUNSTBY_bm;
         );
+        for (int i = 0; i < NUM_RGB_LEDS; ++i)
+            rgbEffect_[i] = RGBEffect::Off();
         setRumblerEffect(RumblerEffect::OK());
+
     }
 
     /** Initializes the device power off state. 
@@ -297,16 +316,20 @@ public:
         if (powerMode_ & POWER_MODE_ON) {
             if (state_.brightness < 128)
                 setBacklightPWM(128);
-            if (! (powerMode_ & POWER_MODE_DC))
-                setNotification(RGBEffect::Solid(platform::Color::Purple().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+            // TODO TODO TODO
+            for (uint8_t i = 0; i < NUM_RGB_LEDS; ++i)
+                rgbEffect_[i] = RGBEffect::Breathe(platform::Color::Purple().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED);
+            rgbOn(true);
         }
     }
 
     static void leaveDebugMode() {
         LOG("Debug mode off");
         state_.status.setDebugMode(false);
-        if (! (powerMode_ & POWER_MODE_DC))
-            setNotification(RGBEffect::Off());
+        // turn the RGB LEDs off
+        // TODO TODO TODO 
+        for (int i = 0; i < NUM_RGB_LEDS; ++i)
+            rgbEffect_[i] = RGBEffect::Off();
     }
 
     /** Turns the IOVDD on or off. 
@@ -431,9 +454,9 @@ public:
             // reset the QSPI_SS back to float
             gpio::outputFloat(AVR_PIN_QSPI_SS);
             // since we are in the bootloader mode now, indicate by breathing all keys in green
-            setNotification(RGBEffect::Breathe(platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 7));
-            //for (uint8_t i = 0; i < NUM_RGB_LEDS; ++i)
-            //    rgbEffect_[i] = RGBEffect::Breathe(platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 7);
+            //setNotification(RGBEffect::Breathe(platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 7));
+            for (uint8_t i = 0; i < NUM_RGB_LEDS; ++i)
+                rgbEffect_[i] = RGBEffect::Breathe(platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 7);
         );
     }
 
@@ -619,8 +642,7 @@ public:
                 // wakeup to start counting
                 setPowerMode(POWER_MODE_WAKEUP);
                 // tentatively set debug mode if we read volume down button pressed, it will be cleared if the button is released before entering the power on mode
-                if (! gpio::read(AVR_PIN_BTN_3))
-                    enterDebugMode();
+                enterDebugMode();
             }
             // if the charging pin is high, it means VUSB is connected, and the battery is not charging. We set the USB to true so that the brief pulse of STAT high when the chip is powered on will ensure proper transitioning to USB power as well 
             if (irqs & CHARGING_INT_REQUEST) {
@@ -916,10 +938,8 @@ public:
             powerOn();
             clearPowerMode(POWER_MODE_WAKEUP);
             // if we are in debug mode at this point, re-enable it again now that we have powered the IOVDD rail. This will turn on the LEDs and set backlight as well 
-            if (state_.status.debugMode()) {
+            if (state_.status.debugMode())
                 enterDebugMode();
-                state_.status.setControlButtons(true, false, true);
-            }
         }
     }
 
