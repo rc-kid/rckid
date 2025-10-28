@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <platform.h>
 #include <platform/writer.h>
 #include <platform/tinydate.h>

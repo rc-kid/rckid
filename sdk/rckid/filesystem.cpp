@@ -214,7 +214,8 @@ namespace rckid::fs {
 #if RCKID_ENABLE_HOST_FILESYSTEM
         if (host_ == nullptr)
             return true;
-        return host_->eof();
+
+        return host_->tellg() == fileLength_;
 #else
         switch (drive_) {
             case static_cast<unsigned>(Drive::SD):
@@ -801,9 +802,13 @@ namespace rckid::fs {
         SystemMallocGuard g;
         std::filesystem::path p{getHostPath(dr, path)};
         result.host_ = new std::ifstream{p, std::ios::binary};
-        if (result.host_->is_open())
+        if (result.host_->is_open()) {
             result.drive_ = static_cast<unsigned>(dr);
-        else {
+            std::streampos currentPos = result.host_->tellg();
+            result.host_->seekg(0, std::ios::end);
+            result.fileLength_ = result.host_->tellg();
+            result.host_->seekg(currentPos);
+        } else {
             delete result.host_;
             result.host_ = nullptr;
         }

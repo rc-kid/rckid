@@ -101,6 +101,50 @@ ui::ActionMenu * imagesMenuGenerator() {
     };
 }
 
+ui::ActionMenu * styleMenuGenerator() {
+    return new ui::ActionMenu{
+        ui::ActionMenu::Item("Text", assets::icons_64::paint_palette, []() {
+            auto c = App::run<ColorPicker>(ui::Style::fg());
+            if (c.has_value()) {
+                ui::Style::setFg(c.value());
+            }
+        }),
+        ui::ActionMenu::Item("Bg", assets::icons_64::paint_palette, [](){
+            auto c = App::run<ColorPicker>(ui::Style::bg());
+            if (c.has_value()) {
+                ui::Style::setBg(c.value());
+            }
+        }),
+        ui::ActionMenu::Item("Accent Text", assets::icons_64::paint_palette, []() {
+            auto c = App::run<ColorPicker>(ui::Style::accentFg());
+            if (c.has_value()) {
+                ui::Style::setAccentFg(c.value());
+            }
+        }),
+        ui::ActionMenu::Item("Accent Bg", assets::icons_64::paint_palette, [](){
+            auto c = App::run<ColorPicker>(ui::Style::accentBg());
+            if (c.has_value()) {
+                ui::Style::setAccentBg(c.value());
+            }
+        }),
+        ui::ActionMenu::Item("Background", assets::icons_64::picture, [](){
+            /*
+            auto icon = App::run<FileDialog>("files/images/backgrounds", "png,jpg,bmp", FileDialog::Mode::OpenFile);
+            if (icon.has_value()) {
+                ui::Style::setBackground(Icon{icon.value().c_str()});
+            }
+            */
+        }),
+    };
+}
+
+ui::ActionMenu * settingsMenuGenerator() {
+    return new ui::ActionMenu{
+        ui::ActionMenu::Generator("Style", assets::icons_64::paint_palette, styleMenuGenerator),
+    };
+}
+
+
 ui::ActionMenu * mainMenuGenerator() {
     return new ui::ActionMenu{
         ui::ActionMenu::Item("Test", assets::icons_64::heart, App::run<Messages::ConversationView>),
@@ -112,8 +156,10 @@ ui::ActionMenu * mainMenuGenerator() {
         ui::ActionMenu::Generator("Images", assets::icons_64::picture, imagesMenuGenerator),
         ui::ActionMenu::Item("Remote", assets::icons_64::rc_car, nullptr),
         ui::ActionMenu::Generator("Utilities", assets::icons_64::configuration, utilsMenuGenerator),
+        ui::ActionMenu::Generator("Settings", assets::icons_64::settings, settingsMenuGenerator),
     };
 }
+
 
 int main() {
     //cpu::overclock(250000000);

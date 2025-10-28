@@ -3,6 +3,8 @@
 #include "../graphics/color.h"
 #include "../graphics/icon.h"
 #include "../assets/images.h"
+#include "../utils/ini.h"
+#include "../filesystem.h"
 
 namespace rckid::ui {
 
@@ -12,6 +14,12 @@ namespace rckid::ui {
      */
     class Style {
     public:
+
+        static constexpr char const * STYLE_SETTINGS_FILE = "style.ini";
+        static constexpr char const * SECTION_DEFAULT = "default";
+        static constexpr char const * SECTION_ACCENT = "accent";
+        static constexpr char const * SECTION_BACKGROUND = "background";
+
         static ColorRGB fg() { return fg_; }
         static ColorRGB bg() { return bg_; }
         static ColorRGB accentFg() { return accentFg_; }
@@ -52,7 +60,49 @@ namespace rckid::ui {
         }
 
         static void load() {
-            // TODO load from persistent storage
+            fs::FileRead f{fs::fileRead(STYLE_SETTINGS_FILE)};
+            if (! f.good()) {
+                LOG(LL_INFO, "Style settings not found, using defaults");
+                return;
+            }
+            ini::Reader reader{std::make_unique<fs::FileRead>(std::move(f))};
+            while (!reader.eof()) {
+                String section = reader.nextSection();
+                if (section == SECTION_DEFAULT) {
+                    while (auto o = reader.nextValue()) {
+                        auto v = o.value();
+                        if (v.first == "fg") {
+                            fg_ = ColorRGB::fromString(v.second);
+                        } else if (v.first == "bg") {
+                            bg_ = ColorRGB::fromString(v.second);
+                        } else {
+                            LOG(LL_ERROR, "Unknown default style property " << v.first);
+                        }
+                    }
+                } else if (section == SECTION_ACCENT) {
+                    while (auto o = reader.nextValue()) {
+                        auto v = o.value();
+                        if (v.first == "fg") {
+                            accentFg_ = ColorRGB::fromString(v.second);
+                        } else if (v.first == "bg") {
+                            accentBg_ = ColorRGB::fromString(v.second);
+                        } else {
+                            LOG(LL_ERROR, "Unknown default style property " << v.first);
+                        }
+                    }
+                } else if (section == SECTION_BACKGROUND) {
+                    while (auto o = reader.nextValue()) {
+                        auto v = o.value();
+                        if (v.first == "file") {
+                            background_ = Icon{v.second.c_str()};
+                        } else {
+                            LOG(LL_ERROR, "Unknown background style property " << v.first);
+                        }
+                    }
+                } else {
+                    LOG(LL_ERROR, "Unknown style section " << section);
+                }
+            }
         }
 
         static Bitmap loadBackgroundImage() {

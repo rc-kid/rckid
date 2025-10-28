@@ -21,7 +21,6 @@ namespace rckid {
          */
         static Radio * instance() { return instance_; }
 
-
         /** Version information returned by the GET_REV command. 
          */
         PACKED(class VersionInfo {
@@ -37,8 +36,6 @@ namespace rckid {
             uint8_t cid;
         }); // Radio::VersionInfo
 
-
-
         bool enabled() const { return busy_ & RADIO_ENABLED; }
 
         bool busy() const { return status_.cts() == false; }
@@ -50,7 +47,6 @@ namespace rckid {
         void enable(bool value);
 
         bool update();
-
 
         /** Returns true if the current channel is valid, false if noise.
          */

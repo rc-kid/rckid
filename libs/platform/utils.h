@@ -18,7 +18,7 @@ namespace platform {
         return reinterpret_cast<T>(__builtin_assume_aligned(x, 4));
     }
 
-    inline uint8_t fromHex(char c) {
+    inline constexpr uint8_t fromHex(char c) {
         if (c >= '0' && c <= '9')
             return c - '0';
         else if (c >= 'A' && c <= 'F')
@@ -29,7 +29,7 @@ namespace platform {
             return 0;
     }
 
-    inline char toHex(uint8_t value) {
+    inline constexpr char toHex(uint8_t value) {
         if (value < 10)
             return '0' + value;
         else if (value < 16)
@@ -40,19 +40,19 @@ namespace platform {
 
     /** Swaps the high and low nibble of an uint16_t. 
      */
-    inline uint16_t swapBytes(uint16_t x) {
+    inline constexpr uint16_t swapBytes(uint16_t x) {
         return (x >> 8) | (x << 8);
     }
 
-    inline void swapBytesInPlace(uint16_t & x) {
+    inline constexpr void swapBytesInPlace(uint16_t & x) {
         x = (x >> 8) | (x << 8);
     }
 
-    inline uint8_t highByte(uint16_t x) {
+    inline constexpr uint8_t highByte(uint16_t x) {
         return (x >> 8) & 0xff;
     }
 
-    inline uint8_t lowByte(uint16_t x) {
+    inline constexpr uint8_t lowByte(uint16_t x) {
         return x & 0xff;
     }
 

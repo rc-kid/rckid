@@ -2,6 +2,7 @@
 
 #include <array>
 #include <platform.h>
+#include <platform/utils.h>
 
 // on windows, there is RGB macro, which clases with the 565 and 332 colors
 #ifdef RGB
@@ -116,6 +117,14 @@ namespace rckid {
         static constexpr ColorRGB fromRaw(uint32_t raw) { 
             ASSERT(raw <= 0xffff);
             return ColorRGB::RGB(((raw >> 11) & 0x1f) << 3, ((raw >> 5) & 0x3f) << 2, (raw & 0x1f) << 3);
+        }
+
+        static constexpr ColorRGB fromString(char const * str) {
+            ASSERT(str[0] == '#');
+            uint32_t r = platform::fromHex(str[1]) << 4 | platform::fromHex(str[2]);
+            uint32_t g = platform::fromHex(str[3]) << 4 | platform::fromHex(str[4]);
+            uint32_t b = platform::fromHex(str[5]) << 4 | platform::fromHex(str[6]);
+            return ColorRGB::RGB(r, g, b);
         }
 
         constexpr uint32_t toRaw() const {

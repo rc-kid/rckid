@@ -83,6 +83,7 @@ namespace rckid::fs {
             drive_{from.drive_} {
 #if RCKID_ENABLE_HOST_FILESYSTEM
             host_ = from.host_;
+            fileLength_ = from.fileLength_;
             from.host_ = nullptr;
 #else
             switch (drive_) {
@@ -133,7 +134,10 @@ namespace rckid::fs {
             FIL sd_;
             mutable lfs_file_t cart_;
 #if RCKID_ENABLE_HOST_FILESYSTEM
-            std::ifstream * host_;
+            struct {
+                std::ifstream * host_;
+                int64_t fileLength_;
+            };
 #endif
         };
     }; 

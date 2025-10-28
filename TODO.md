@@ -60,15 +60,23 @@ Nice extras would include:
 - [ ] allow background playback
 - [ ] radio presets?
 - [ ] fm radio rds time setting
-
 - [ ] extra devices (would have to order quickly)
+- [ ] data sync app
 
 
 # TODO
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
+- fix basic style settings, refresh style when reloaded (header, main menu)
+- save properly
+- fix the ini creation template
+
+> fix below when at home
+- style reading does not work on device
 - bsod not working, just hangs
+- data sync app is ugly
+- use faster SD card
 
 - debug mode should take precendence over usb power and charging, bootloader mode should reset itself after first I2C communication (go from blue back to whatever it was)
 
