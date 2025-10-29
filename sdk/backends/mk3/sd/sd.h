@@ -48,6 +48,7 @@ namespace rckid {
     void sdInitialize();
     bool sdIsInserted();
     bool sdInitializeCard();
+    void sdAdjustSpeed();
 
     //uint8_t sdSendCommand(uint8_t const (&cmd)[6], uint8_t * response = nullptr, size_t responseSize = 0, unsigned maxDelay = 128);
 

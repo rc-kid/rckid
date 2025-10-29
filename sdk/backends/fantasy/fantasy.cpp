@@ -261,6 +261,12 @@ namespace rckid {
         SystemMallocGuard::disable();
     }
 
+    uint32_t speedPct() { return 100; }
+
+    bool setSpeedPct(uint32_t pct) { return pct == 100; }
+
+    void setSpeedMax() { }
+
     void tick() {
         SystemMallocGuard g_;
         if (WindowShouldClose())

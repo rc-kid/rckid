@@ -71,6 +71,13 @@ namespace rckid {
     void initialize(int argc, char const * argv[]);
     inline void initialize() { initialize(0, nullptr); }
 
+
+    uint32_t speedPct();
+
+    bool setSpeedPct(uint32_t pct);
+
+    void setSpeedMax();
+
     void tick();
 
     void yield();

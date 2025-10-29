@@ -78,6 +78,14 @@ namespace rckid {
             activeSm_ = -1;
         }
 
+        static void adjustSpeed() {
+            if (pio_sm_is_enabled(pio1, mclkSm_)) {
+                enableMasterClock(sampleRate_);
+                if (activeSm_ != -1)
+                    pio_sm_set_clock_speed(pio1, activeSm_, sampleRate_ * 34 * 2);
+            }
+        }
+
         static uint playbackDReq() {
             return pio_get_dreq(pio1, playbackSm_, true);
         }
@@ -105,6 +113,7 @@ namespace rckid {
             pio_sm_set_clock_speed(pio1, mclkSm_, hz);
             pio_sm_set_enabled(pio1, mclkSm_, true); // and finally enable 
             // TODO set the sample rate for filters
+            sampleRate_ = sampleRate;
         }
 
         static void reset() {
@@ -256,6 +265,7 @@ namespace rckid {
             pio_sm_set_enabled(pio1, playbackSm_, true);
             ASSERT(pio_sm_is_enabled(pio1, playbackSm_));
             activeSm_ = playbackSm_;
+            sampleRate_ = sampleRate;
         }
 
         static void recordLineIn(uint32_t sampleRate) {
@@ -279,6 +289,7 @@ namespace rckid {
             pio_sm_set_clock_speed(pio1, recordSm_, sampleRate * 34 * 2);
             pio_sm_set_enabled(pio1, recordSm_, true);
             activeSm_ = recordSm_;
+            sampleRate_ = sampleRate;
         }
 
         static void recordMic(uint32_t sampleRate) {
@@ -308,6 +319,7 @@ namespace rckid {
             pio_sm_set_clock_speed(pio1, recordSm_, sampleRate * 34 * 2);
             pio_sm_set_enabled(pio1, recordSm_, true);
             activeSm_ = recordSm_;
+            sampleRate_ = sampleRate;
         }
 
         static void setGPIO1(bool high) {
@@ -534,6 +546,8 @@ namespace rckid {
         static inline uint recordOffset_ = 0;
 
         static inline int activeSm_ = -1;
+
+        static inline uint32_t sampleRate_ = 0;
 
     }; // rckid::Codec
 

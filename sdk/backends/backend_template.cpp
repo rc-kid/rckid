@@ -39,6 +39,18 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
+    uint32_t speedPct() {
+        UNIMPLEMENTED;
+     }
+
+    bool setSpeedPct(uint32_t pct) { 
+        UNIMPLEMENTED;
+    }
+
+    void setSpeedMax() { 
+        UNIMPLEMENTED;
+    }
+
     void tick() {
         StackProtection::check();
         UNIMPLEMENTED;

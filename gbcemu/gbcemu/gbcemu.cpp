@@ -569,6 +569,7 @@ namespace rckid::gbcemu {
 
     void GBCEmu::focus() {
         App::focus();
+        setSpeedMax();
         initializeDisplay();
         // continue playing audio if enabled
         if (apu_.enabled())
@@ -579,6 +580,7 @@ namespace rckid::gbcemu {
         // pause audio (w/o the game running there is no-one to generate samples)
         if (apu_.enabled())
             audioPause();
+        setSpeedPct(100);
         App::blur();
     }
 

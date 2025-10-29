@@ -31,6 +31,7 @@ extern "C" {
     #include <hardware/structs/usb.h>
     #include <hardware/uart.h>
     #include <hardware/flash.h>
+    #include <hardware/clocks.h>
 }
 
 #include <platform/peripherals/ltr390uv.h>
@@ -516,6 +517,28 @@ namespace rckid {
 
         // TODO radio interrupt
         // TODO audio interrupt
+    }
+
+    uint32_t speedPct() {
+        return clock_get_hz(clk_sys) / 1500000;
+    }
+
+    bool setSpeedPct(uint32_t pct) { 
+        if (pct > 166)
+            return false;
+        // disable all peripherals running off the system clock
+        ST7789::waitUpdateDone();
+        if (! set_sys_clock_khz(pct * 1500, true))
+            return false;
+        // re-enable the peripherals
+        Codec::adjustSpeed();
+        ST7789::adjustSpeed();
+        sdAdjustSpeed();
+        return true;
+    }
+
+    void setSpeedMax() {
+        setSpeedPct(166);
     }
 
     void tick() {

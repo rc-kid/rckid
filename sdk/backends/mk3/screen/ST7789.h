@@ -218,6 +218,10 @@ namespace rckid {
                 yield();
         }
 
+        static void adjustSpeed() {
+            pio_sm_set_clock_speed(RCKID_ST7789_PIO, sm_, RCKID_ST7789_SPEED * 4); // 2 cycles per pixel
+        }
+
     private:
 
         friend void irqDMADone_();
