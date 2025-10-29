@@ -44,9 +44,16 @@ namespace rckid {
             if (fs::isMounted()) {
                 info_.setText(STR("SD card: " << sdCapacity() / 2 / 1024 << "MB, label " << fs::getLabel()));
                 fs::unmount();
-                mscStatus_ = Status::Disconnected;
+                connected_ = false;
+                instance_ = this;
             }
 
+        }
+
+        ~DataSync() {
+            instance_ = nullptr;
+            // re-mount the SD card for normal use
+            fs::mount(fs::Drive::SD);
         }
 
         void update() override {
@@ -59,28 +66,19 @@ namespace rckid {
         }
 
         void draw() override {
-
-            switch (mscStatus_) {
-                case Status::Inactive:
-                    status_.setText("Inactive");
-                    break;
-                case Status::Disconnected:
-                    status_.setText(STR("Disconnected, r: " << blocksRead_ << ", w: " << blocksWrite_));
-                    break;
-                case Status::Connected:
-                    status_.setText(STR("Connected, r: " << blocksRead_ << ", w: " << blocksWrite_));
-                    break;
-                default:
-                    UNREACHABLE;
-            }
-
-
-
+            if (connected_)
+                status_.setText(STR("Connected, r: " << blocksRead_ << ", w: " << blocksWrite_));
+            else
+                status_.setText(STR("Disconnected, r: " << blocksRead_ << ", w: " << blocksWrite_));
             ui::Form<void>::draw();
         }
 
         static bool active() {
-            return mscStatus_ != Status::Inactive;
+            if (instance_ == nullptr)
+                return false;
+            if (! instance_->connected_)
+                instance_->connect();
+            return true;
         }
 
 
@@ -93,28 +91,26 @@ namespace rckid {
         ui::Label info_;
         ui::Label status_;
 
-        static void connect() {
-            ASSERT(mscStatus_ == Status::Disconnected);
-            fs::unmount(fs::Drive::SD);
-            mscStatus_ = Status::Connected;
+        void connect() {
+            ASSERT(connected_ == false);
+            connected_ = true;
             blocksRead_ = 0;
             blocksWrite_ = 0;
+            LOG(LL_INFO, "MSC connected");
         }
 
-        static void disconnect() {
-            if (active())
-                mscStatus_ = Status::Disconnected;
+        void disconnect() {
+            if (connected_)
+                connected_ = false;
+            instance_ = nullptr;
+            LOG(LL_INFO, "MSC disconnected");
         }
 
-        enum class Status {
-            Inactive, 
-            Disconnected, 
-            Connected,
-        }; 
+        static inline DataSync * instance_ = nullptr;
 
-        static inline Status mscStatus_ = Status::Inactive;
-        static inline uint32_t blocksRead_ = 0;
-        static inline uint32_t blocksWrite_ = 0;
+        bool connected_ = false;
+        uint32_t blocksRead_ = 0;
+        uint32_t blocksWrite_ = 0;
 
     }; // DataSync
 

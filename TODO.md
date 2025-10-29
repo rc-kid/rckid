@@ -74,7 +74,6 @@ Nice extras would include:
 - and when colors are updated, different colors should be update-able at the same time
 
 > fix below when at home
-- bsod not working, just hangs
 - data sync app is ugly
 - use faster SD card
 

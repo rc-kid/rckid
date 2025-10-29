@@ -206,14 +206,20 @@ extern "C" {
         - Start = 1 : active mode, if load_eject = 1 : load disk storage
     */
     bool tud_msc_start_stop_cb([[maybe_unused]] uint8_t lun, [[maybe_unused]] uint8_t power_condition, bool start, bool load_eject) {
+        if (rckid::DataSync::instance_ != nullptr) {
+            if (start)
+                rckid::DataSync::instance_->connect();
+            if (load_eject)
+                rckid::DataSync::instance_->disconnect();
+        }
         /*
         if (start)
             DataSync::connect();
         else if (load_eject)
             DataSync::disconnect();
         */
-        if (load_eject) 
-            start ? DataSync::connect() : DataSync::disconnect();
+        //if (load_eject) 
+        //    start ? DataSync::connect() : DataSync::disconnect();
         return true;
     }
 
@@ -233,7 +239,8 @@ extern "C" {
             FATAL_ERROR(rckid::Error::hardwareFailure);
 
         sdReadBlocks(lba, reinterpret_cast<uint8_t*>(buffer), 1);
-        ++rckid::DataSync::blocksRead_;
+        if (rckid::DataSync::instance_ != nullptr)
+            ++rckid::DataSync::instance_->blocksRead_;
         return (int32_t) bufsize;
     }
 
@@ -249,7 +256,8 @@ extern "C" {
             FATAL_ERROR(rckid::Error::hardwareFailure);
 
         sdWriteBlocks(lba, buffer, 1);
-        ++rckid::DataSync::blocksWrite_;
+        if (rckid::DataSync::instance_ != nullptr)
+            ++rckid::DataSync::instance_->blocksWrite_;
         //uint8_t* addr = msc_disk0[lba]  + offset;
         //memcpy(addr, buffer, bufsize);
 
