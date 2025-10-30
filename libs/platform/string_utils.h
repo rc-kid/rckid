@@ -73,3 +73,17 @@ inline std::string encodeUTF8(uint32_t codepoint) {
     } 
     return result;   
 }
+
+inline int parseInt(char const * & str) {
+    int result = 0;
+    bool negative = false;
+    if (*str == '-') {
+        negative = true;
+        ++str;
+    }
+    while (*str >= '0' && *str <= '9') {
+        result = result * 10 + (*str - '0');
+        ++str;
+    }
+    return negative ? -result : result;
+}

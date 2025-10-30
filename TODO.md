@@ -73,16 +73,14 @@ Nice extras would include:
 - the color settings should be stored, perhaps per game? 
 - and when colors are updated, different colors should be update-able at the same time
 
+- main menu should show also holidays (xmas, etc.)
+
 > fix below when at home
 - data sync app is ugly
 - use faster SD card
 
 - clean old overclocking code
 - make overclocking part of the SDK so that it can be used per app
-
-
-
-
 
 - some avr commands are longer than 16 bytes, which means it cannot be stored via the I2C async commands
 
@@ -98,7 +96,6 @@ Nice extras would include:
 
 - the rapid fire as is is kind of working, but maybe need per buttom settings, etc. 
 
-- switch to INI for data storage in human readable form on the device
 - add calendar
 
 - rewrite popup to use ui style, icons, etc.
@@ -149,8 +146,6 @@ Nice extras would include:
 - comment PNG loading stuff
 
 - file browser should be similar to contacts, i.e. the dialog in launcher menu instead of ui element and separate browser app 
-
-- main menu should also show next birthdays, alarm if any, and oher most current information
 
 - add version of background wher the background just bounces so that the background can be some actual image
 

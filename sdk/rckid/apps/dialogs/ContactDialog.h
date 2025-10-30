@@ -76,22 +76,17 @@ namespace rckid {
 
     private:
 
-        static constexpr char const * CONTACTS_PATH = "/contacts.json";
+        static constexpr char const * CONTACTS_PATH = "/contacts.ini";
 
         void loadContacts() {
             contacts_.clear();
-            if (fs::exists(CONTACTS_PATH)) {
-                fs::FileRead f = fs::fileRead(CONTACTS_PATH);
-                json::Object contacts = json::parse(f);
-                if (! contacts.isArray()) {
-                    LOG(LL_ERROR, "Contacts file is not an array");
-                    return;
-                }
-                for (auto const & item : contacts)
-                    contacts_.push_back((Contact{item}));
+            Contact::forEach([this](Contact c) {
+                contacts_.push_back(std::move(c));
+            });
+            if (contacts_.size() > 0) {
                 LOG(LL_INFO, "Loaded " << (uint32_t) contacts_.size() << " contacts");
             } else {
-                LOG(LL_INFO, "No contacts file found, starting with an empty list");
+                LOG(LL_INFO, "No contacts file found, or empty");
             }
         }
 

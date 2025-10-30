@@ -3,7 +3,7 @@
 #include <platform/tinydate.h>
 
 #include "rckid.h"
-#include "utils/json.h"
+#include "utils/ini.h"
 
 namespace rckid {
 
@@ -13,42 +13,72 @@ namespace rckid {
      */
     class Contact {
     public:
+
+        static constexpr char const * CONTACTS_PATH = "/contacts.ini";
+
         /** Name of the contact. */
         String name;
         /** Birthday (time is ignored). */
         TinyDate birthday;
         /** Image used with the contact. This must be image from the device's SD card. */
         String image;
-        /** Telegram ID for the contact, which is also used as a walkie-talkie identifier. */
-        String id;
 
         String email;
         String phone;
         String address;
         String note;
 
-        /** Creates the contact from given JSON object.
-         */
-        Contact(json::Object const & from) {
-            if (from.has("name"))
-                name = from["name"].asStringOrDefault("???");
-            if (from.has("image"))
-                image = from["image"].asStringOrDefault("icons/star.png");
-            if (from.has("id"))
-                id = from["id"].asStringOrDefault("");
-            if (from.has("birthday"))
-                // TODO - we are moving to ini anyways
-                //birthday = TinyDate::fromRaw(static_cast<uint32_t>(from["birthday"].asIntegerOrDefault(0)));
-            if (from.has("email"))
-                email = from["email"].asStringOrDefault("");
-            if (from.has("phone"))
-                phone = from["phone"].asStringOrDefault("");
-            if (from.has("address"))
-                address = from["address"].asStringOrDefault("");
-            if (from.has("note"))
-                note = from["note"].asStringOrDefault("");
+        Contact(ini::Reader & reader) {
+            while (std::optional<std::pair<String, String>> kv = reader.nextValue()) {
+                if (kv->first == "name") {
+                    name = kv->second;
+                } else if (kv->first == "image") {
+                    image = kv->second;
+                } else if (kv->first == "email") {
+                    email = kv->second;
+                } else if (kv->first == "phone") {
+                    phone = kv->second;
+                } else if (kv->first == "address") {
+                    address = kv->second;
+                } else if (kv->first == "note") {
+                    note = kv->second;
+                } else if (kv->first == "birthday") {
+                    if (!birthday.setFromString(kv->second.c_str()))
+                        LOG(LL_ERROR, "Invalid birthday format for contact " << name << ": " << kv->second);
+                }
+            }
         }
 
+        uint32_t daysTillBirthday() const {
+            TinyDate today = timeNow().date;
+            return today.daysTillNextAnnual(birthday);  
+        }
+
+        static void forEach(std::function<void(Contact)> f) {
+            if (fs::exists(CONTACTS_PATH)) {
+                ini::Reader reader{fs::fileRead(CONTACTS_PATH)};
+                while (auto section = reader.nextSection()) {
+                    if (section.value() != "contact") {
+                        LOG(LL_ERROR, "Invalid contact section: " << section.value());
+                        continue;
+                    }
+                    f(Contact{reader});
+                }
+            }
+        }
+
+        static std::optional<Contact> getNearestBirthday() {
+            std::optional<Contact> nearest;
+            uint32_t minDays = 366;
+            forEach([&](Contact c) {
+                uint32_t days = c.daysTillBirthday();
+                if (days < minDays) {
+                    minDays = days;
+                    nearest = c;
+                }
+            });
+            return nearest;
+        }
 
     }; // rckid::Contact
 

@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include "definitions.h"
+#include "string_utils.h"
 
 
 /** Day, month and year stored in 3 bytes. 
@@ -67,6 +68,23 @@ public:
         year_ = year & 0xff;
         if (day_ > daysInMonth())
             day_ = daysInMonth();
+    }
+
+    bool setFromString(char const * str) {
+        // expected format: DD / MM / YYYY
+        int day = parseInt(str);
+        if (*str != '/' || day < 1 || day > 31)
+            return false;
+        ++str;
+        int month = parseInt(str);
+        if (*str != '/' || month < 1 || month > 12)
+            return false;
+        ++str;
+        int year = parseInt(str);
+        if (year < 0 || year > 4095)
+            return false;
+        set(static_cast<uint8_t>(day), static_cast<uint8_t>(month), static_cast<uint16_t>(year));
+        return true;
     }
 
     void setDay(uint8_t day) {

@@ -78,24 +78,6 @@ namespace rckid {
                 auto action = App::run<PopupMenu<ui::Action>>(&contextMenu_);
                 if (action.has_value())
                     action.value()();
-                /*
-                auto action = PopupMenu::show(&contextMenu_);
-                if (action.has_value()) {
-                    switch (action.value()) {
-                        case 0: // Set time
-                            UNIMPLEMENTED;
-                            break;
-                        case 1: // Set date
-                            UNIMPLEMENTED;
-                            break;
-                        case 2: // Set alarm
-                            UNIMPLEMENTED;
-                            break;
-                        default:
-                            UNREACHABLE;
-                    }
-                }
-                */
             }
         }
 

@@ -26,18 +26,22 @@ namespace rckid {
             NumbersAndSymbols,
         }; // TextInput::KeyboardType
 
-        TextDialog():
-            ui::Form<String>{Rect::XYWH(0, 144, 320, 96), /* raw */ true} {
-                using namespace ui;
-                g_.setBg(ColorRGB::White().withAlpha(32));
-                tileMap_ = g_.addChild(new ui::Tilemap<Tile<12, 24, Color16>>{26, 4, assets::System24, palette_});
-                tileMap_->setPos(4, 0);
-                drawKeyboard(KeyboardType::UpperCase);
-                drawText();
-                selRect_ = g_.addChild(new ui::Rectangle{Rect::WH(24, 24)});
-                cursorLine_ = g_.addChild(new ui::VLine{Rect::WH(24, 24)});
-                cursorLine_->setX(16 + (cursor_ - left_) * 12);
-            }
+        TextDialog(char const * initialText = ""):
+            ui::Form<String>{Rect::XYWH(0, 144, 320, 96), /* raw */ true},
+            text_{initialText},
+            cursor_{static_cast<Coord>(text_.size())},
+            left_{(cursor_ >= 24) ? (cursor_ - 24) : 0}
+        {
+            using namespace ui;
+            g_.setBg(ColorRGB::White().withAlpha(32));
+            tileMap_ = g_.addChild(new ui::Tilemap<Tile<12, 24, Color16>>{26, 4, assets::System24, palette_});
+            tileMap_->setPos(4, 0);
+            drawKeyboard(KeyboardType::UpperCase);
+            drawText();
+            selRect_ = g_.addChild(new ui::Rectangle{Rect::WH(24, 24)});
+            cursorLine_ = g_.addChild(new ui::VLine{Rect::WH(24, 24)});
+            cursorLine_->setX(16 + (cursor_ - left_) * 12);
+        }
 
     protected:
 
@@ -128,7 +132,7 @@ namespace rckid {
                 drawText();
             } else if (select_ == KEY_ENTER) {
                 // return the text
-                exit();
+                exit(text_);
             //} else if (select_ == KEY_SPACE) {
             //    insertChar(' ');
             } else if (select_ == KEY_SHIFT) {
@@ -220,8 +224,8 @@ namespace rckid {
         KeyboardType keyboardBackup_; 
 
         // cursor and the left offset of the displayed text
-        int cursor_ = 0;
-        int left_ = 0;
+        Coord cursor_ = 0;
+        Coord left_ = 0;
 
         ui::Tilemap<Tile<12,24,Color16>> * tileMap_; 
         ui::Rectangle * selRect_;

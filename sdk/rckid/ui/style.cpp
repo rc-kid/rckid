@@ -14,9 +14,8 @@ namespace rckid::ui {
             return;
         }
         ini::Reader reader{std::move(f)};
-        while (!reader.eof()) {
-            String section = reader.nextSection();
-            if (section == SECTION_DEFAULT) {
+        while (auto section = reader.nextSection()) {
+            if (section.value() == SECTION_DEFAULT) {
                 while (auto o = reader.nextValue()) {
                     auto v = o.value();
                     if (v.first == "fg") {
@@ -27,7 +26,7 @@ namespace rckid::ui {
                         LOG(LL_ERROR, "Unknown default style property " << v.first);
                     }
                 }
-            } else if (section == SECTION_ACCENT) {
+            } else if (section.value() == SECTION_ACCENT) {
                 while (auto o = reader.nextValue()) {
                     auto v = o.value();
                     if (v.first == "fg") {
@@ -38,7 +37,7 @@ namespace rckid::ui {
                         LOG(LL_ERROR, "Unknown default style property " << v.first);
                     }
                 }
-            } else if (section == SECTION_BACKGROUND) {
+            } else if (section.value() == SECTION_BACKGROUND) {
                 while (auto o = reader.nextValue()) {
                     auto v = o.value();
                     if (v.first == "file") {
@@ -48,7 +47,7 @@ namespace rckid::ui {
                     }
                 }
             } else {
-                LOG(LL_ERROR, "Unknown style section " << section);
+                LOG(LL_ERROR, "Unknown style section " << section.value());
             }
         }
     }

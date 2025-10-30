@@ -7,11 +7,14 @@
 #include "../ui/image.h"
 #include "../ui/carousel.h"
 #include "../ui/menu.h"
+#include "../ui/style.h"
 #include "../ui/header.h"
 #include "../assets/icons_64.h"
 #include "../assets/icons_24.h"
 #include "../assets/fonts/OpenDyslexic64.h"
+#include "../assets/fonts/OpenDyslexic24.h"
 #include "../assets/images.h"
+#include "../pim.h"
 
 
 namespace rckid {
@@ -32,12 +35,27 @@ namespace rckid {
             ui::Form<ui::Action>{} {
             g_.addChild(c_);
             g_.addChild(bdayImg_);
+            g_.addChild(bdayLabel_);
             bdayImg_.setTransparentColor(ColorRGB::Black());
+            bdayLabel_.setFont(Font::fromROM<assets::OpenDyslexic24>());
+            bdayLabel_.setColor(ui::Style::accentFg());
             c_.setRect(Rect::XYWH(0, 160, 320, 80));
             c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
             if (history_ == nullptr)
                 history_ = new ui::ActionMenu::HistoryItem{0, initialGenerator, nullptr};
             c_.attachHistory(history_);
+
+            auto nextBDay = Contact::getNearestBirthday();
+            if (nextBDay.has_value()) {
+                Contact const & who = nextBDay.value();
+                bdayLabel_.setText(STR(who.name << ", in " << who.daysTillBirthday() << " days"));
+            } else {
+                bdayImg_.setVisible(false);
+                bdayLabel_.setVisible(false);
+            }
+            
+
+
         }
 
     protected:
@@ -70,6 +88,7 @@ namespace rckid {
        
         ui::CarouselMenu<ui::Action> c_;
         ui::Image bdayImg_{8, 18, Icon{assets::icons_24::birthday_cake}};
+        ui::Label bdayLabel_{40, 18, ""};
 
         static inline ui::ActionMenu::HistoryItem * history_ = nullptr;
 

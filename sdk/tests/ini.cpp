@@ -14,7 +14,7 @@ TEST(ini, sections) {
         "keyB=valueB\n"
     };
     ini::Reader p{std::move(s)};
-    EXPECT(p.nextSection(), "section1");
+    EXPECT(p.nextSection().value(), "section1");
     auto ov = p.nextValue();
     EXPECT(ov.has_value());
     auto v = ov.value();
@@ -26,7 +26,7 @@ TEST(ini, sections) {
     v = p.nextValue().value();
     EXPECT(v.first, "");
     EXPECT(v.second, "");
-    EXPECT(p.nextSection(), "section2");
+    EXPECT(p.nextSection().value(), "section2");
     v = p.nextValue().value();
     EXPECT(v.first, "keyA");
     EXPECT(v.second, "valueA");
@@ -36,6 +36,6 @@ TEST(ini, sections) {
     ov = p.nextValue();
     EXPECT(!ov.has_value());
     EXPECT(p.eof());
-    EXPECT(p.nextSection(), "");
+    EXPECT(p.nextSection().has_value() == false);
     EXPECT(p.eof());
 }

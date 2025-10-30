@@ -17,7 +17,7 @@ namespace rckid::ini {
 
         bool eof() const { return from_->eof(); }
 
-        String nextSection() {
+        std::optional<String> nextSection() {
             while (!eof()) {
                 if (line_.empty())
                     line_ = from_->readLine();
@@ -27,7 +27,7 @@ namespace rckid::ini {
                     return result;
                 }
             }
-            return "";
+            return std::nullopt;
         }
 
         std::optional<std::pair<String, String>> nextValue() {

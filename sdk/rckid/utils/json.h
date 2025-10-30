@@ -574,13 +574,13 @@ namespace rckid::json {
 
     /** Parses JSON value from the given stream and returns the resulting JSON object. 
      */
-    Object parse(ReadStream & stream) {
+    inline Object parse(ReadStream & stream) {
         return Parser::parse(stream);
     }
 
     /** Parses JSON object from given buffer. Internally wraps the buffer in a read stream and calls the streamed parser.
      */
-    Object parse(char const * json) {
+    inline Object parse(char const * json) {
         auto s = MemoryReadStream(reinterpret_cast<uint8_t const *>(json), strlen(json));
         return parse(s);
     }
