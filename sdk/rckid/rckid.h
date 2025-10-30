@@ -71,13 +71,22 @@ namespace rckid {
     void initialize(int argc, char const * argv[]);
     inline void initialize() { initialize(0, nullptr); }
 
-
+    /** Returns the current speed of the main CPU in percentage of nominal speed.
+     
+        The nominal speed is 150MHz for mkIII (RP2350).
+     */
     uint32_t speedPct();
 
+    /** Sets the CPU speed to given percentage of the nominal speed. Returns true if the clock setting was successful, false otherwise.
+     
+        For mkIII, maximum overclock is 166%, which rougly corresponds to 250MHz. 
+     */
     bool setSpeedPct(uint32_t pct);
 
+    /** Overclocks to the maximum speed supported by the current backend. 
+     */
     void setSpeedMax();
-
+    
     void tick();
 
     void yield();

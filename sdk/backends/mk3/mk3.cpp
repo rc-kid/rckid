@@ -528,6 +528,11 @@ namespace rckid {
             return false;
         // disable all peripherals running off the system clock
         ST7789::waitUpdateDone();
+        // should we ever overvolt the chip? 
+        // if (overvolt) {
+        //     vreg_set_voltage(VREG_VOLTAGE_1_20);
+        //     sleep_ms(10);
+        // }
         if (! set_sys_clock_khz(pct * 1500, true))
             return false;
         // re-enable the peripherals

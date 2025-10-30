@@ -41,10 +41,6 @@ namespace cpu {
         std::this_thread::sleep_for(std::chrono::microseconds(value));
     }
 
-    inline void overclock(unsigned) {
-        // do nothing
-    }
-
 }
 
 namespace gpio {

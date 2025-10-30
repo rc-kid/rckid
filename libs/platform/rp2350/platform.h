@@ -42,19 +42,6 @@ public:
 
     // platform extras
 
-    static size_t clockSpeed() { return clockSpeedkHz_ * 1000; } 
-
-    static void overclock(unsigned hz=200000000, bool overvolt = false) {
-        if (overvolt) {
-            vreg_set_voltage(VREG_VOLTAGE_1_20);
-            sleep_ms(10);
-        } else {
-            // TODO non-overvolt                
-        }
-        clockSpeedkHz_ = hz / 1000;
-        set_sys_clock_khz(clockSpeedkHz_, true);
-    }
-
     class DisableInterruptsGuard {
     public:
         DisableInterruptsGuard() {
@@ -72,10 +59,6 @@ public:
         unsigned savedIrqState_;
 
     }; // cpu::DisableInterruptsGuard
-
-private:
-
-    static inline unsigned clockSpeedkHz_ = 125000;
 
 }; // cpu
 

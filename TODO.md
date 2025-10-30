@@ -79,9 +79,6 @@ Nice extras would include:
 - data sync app is ugly
 - use faster SD card
 
-- clean old overclocking code
-- make overclocking part of the SDK so that it can be used per app
-
 - some avr commands are longer than 16 bytes, which means it cannot be stored via the I2C async commands
 
 
