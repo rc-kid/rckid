@@ -77,7 +77,14 @@ public:
             return false;
         ++str;
         int month = parseInt(str);
-        if (*str != '/' || month < 1 || month > 12)
+        if (month < 1 || month > 12)
+            return false;
+        if (*str == '\0') {
+            // only day and month provided, use current year
+            set(static_cast<uint8_t>(day), static_cast<uint8_t>(month), 0);
+            return true;
+        }
+        if (*str != '/')
             return false;
         ++str;
         int year = parseInt(str);

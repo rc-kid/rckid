@@ -38,7 +38,6 @@
   - [X] show budget
   - [X] show time
   - [X] show volume
-- [ ] lock functionality for screen (can be accessed from home menu, or also from apps)
 - [X] fm radio app fixes (display frequency)
 - [X] rm radio rds, 
 - [X] fm radio signal quality, stereo
@@ -48,13 +47,18 @@
   - [X] stopwatch
   - [ ] alarm
 - [X] theme style settings (colors & background) 
+- [ ] improve text input dialog
+- [ ] birthdays & PIM (edit friends)
+- [ ] pin locking
+- [ ] parents mode
+- [ ] screen lock (double home tap)
+
 
 Nice extras would include:
 
 - [X] LED flashlight
 - [X] shuffle function in audio playback
 - [ ] extra settings (colors, etc. for system & gbcemu)
-- [ ] birthdays & PIM
 - [ ] telegram messenger
 - [ ] accelerometer controller background & background selection
 - [ ] fmradio embedded antenna

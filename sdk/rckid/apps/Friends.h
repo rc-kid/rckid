@@ -12,6 +12,24 @@ namespace rckid {
     class Friends : public App {
     public:
 
+/*
+        std::vector<Anniversary> static getNext(uint32_t n) {
+            std::vector<Anniversary> all;
+            Contact::forEach([&](Contact c) {
+                all.push_back(Anniversary{c});
+            });
+            Holiday::forEach([&](Holiday h) {
+                all.push_back(Anniversary{h});
+            });
+            std::sort(all.begin(), all.end(), [](Anniversary const & a, Anniversary const & b) {
+                return a.daysTillAnniversary() < b.daysTillAnniversary();
+            });
+            if (all.size() > n)
+                all.resize(n);
+            return all;
+        }
+*/
+
         String name() const override { return "Friends"; }
 
         /** Signle Contact Viewer and editor. 

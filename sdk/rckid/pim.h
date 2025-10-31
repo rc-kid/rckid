@@ -1,5 +1,9 @@
 #pragma once
 
+#include <algorithm>
+#include <vector>
+#include <functional>
+
 #include <platform/tinydate.h>
 
 #include "rckid.h"
@@ -11,7 +15,7 @@ namespace rckid {
      
         Basic contact information. As a child oriented device, we do not bother with names & surnames, everything is under single name. Contacts can be birthday and associated image, etc.
      */
-    class Contact {
+    class Contact{
     public:
 
         static constexpr char const * CONTACTS_PATH = "/contacts.ini";
@@ -81,6 +85,51 @@ namespace rckid {
         }
 
     }; // rckid::Contact
+
+    class Holiday {
+    public:
+        static constexpr char const * HOLIDAY_PATH = "/holidays.ini";
+
+        String name;
+        TinyDate date;
+        String image;
+
+        Holiday(ini::Reader & reader) {
+            while (std::optional<std::pair<String, String>> kv = reader.nextValue()) {
+                if (kv->first == "name") {
+                    name = kv->second;
+                } else if (kv->first == "image") {
+                    image = kv->second;
+                } else if (kv->first == "date") {
+                    if (!date.setFromString(kv->second.c_str()))
+                        LOG(LL_ERROR, "Invalid date format for holiday " << name << ": " << kv->second);
+                } else if (kv->first == "algorithm") {
+                    // TODO not to do with this
+                } else {
+                    LOG(LL_ERROR, "Unknown holiday property " << kv->first);
+                }       
+            }
+        }
+
+        uint32_t daysTillHoliday() const {
+            TinyDate today = timeNow().date;
+            return today.daysTillNextAnnual(date);  
+        }
+
+        static void forEach(std::function<void(Holiday)> f) {
+            if (fs::exists(HOLIDAY_PATH)) {
+                ini::Reader reader{fs::fileRead(HOLIDAY_PATH)};
+                while (auto section = reader.nextSection()) {
+                    if (section.value() != "date") {
+                        LOG(LL_ERROR, "Invalid holiday section: " << section.value());
+                        continue;
+                    }
+                    f(Holiday{reader});
+                }
+            }
+        }
+
+    }; // rckid::Holiday
 
     /** User of the device. 
      
