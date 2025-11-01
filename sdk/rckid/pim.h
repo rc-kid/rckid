@@ -58,6 +58,17 @@ namespace rckid {
             return today.daysTillNextAnnual(birthday);  
         }
 
+        void save(ini::Writer & writer) const {
+            writer.writeSection("contact");
+            writer.writeValue("name", name);
+            writer.writeValue("image", image);
+            writer.writeValue("birthday", STR(birthday.day() << "/" << birthday.month() << "/" << birthday.year()));
+            writer.writeValue("email", email);
+            writer.writeValue("phone", phone);
+            writer.writeValue("address", address);
+            writer.writeValue("note", note);
+        }
+
         static void forEach(std::function<void(Contact)> f) {
             if (fs::exists(CONTACTS_PATH)) {
                 ini::Reader reader{fs::fileRead(CONTACTS_PATH)};
@@ -82,6 +93,12 @@ namespace rckid {
                 }
             });
             return nearest;
+        }
+
+        static void saveAll(std::vector<Contact> const & contacts) {
+            ini::Writer writer{fs::fileWrite(CONTACTS_PATH)};
+            for (auto const & c : contacts)
+                c.save(writer);
         }
 
     }; // rckid::Contact

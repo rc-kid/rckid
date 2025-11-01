@@ -48,42 +48,51 @@
   - [ ] alarm
 - [X] theme style settings (colors & background) 
 - [ ] improve text input dialog
-- [ ] birthdays & PIM (edit friends)
-- [ ] pin locking
-- [ ] parents mode
-- [ ] screen lock (double home tap)
+- [X] screen lock (double home tap)
+- [ ] settings menu for button lights
+- [ ] rumbler effects on button presses
+- [ ] preserve volume settings
+
 
 
 Nice extras would include:
 
 - [X] LED flashlight
 - [X] shuffle function in audio playback
+- [X] birthdays & PIM
+- [ ] allow background playback
+- [ ] pin locking
+- [ ] parents mode
 - [ ] extra settings (colors, etc. for system & gbcemu)
 - [ ] telegram messenger
 - [ ] accelerometer controller background & background selection
 - [ ] fmradio embedded antenna
-- [ ] allow background playback
 - [ ] radio presets?
 - [ ] fm radio rds time setting
 - [ ] extra devices (would have to order quickly)
 - [ ] data sync app
+- [ ] RGB dimming that preserves colors (? is possible)
 
 
 # TODO
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
+- clean mk3 initialization routine
+- clean debug prints (headphones, etc)
+
 - for gbcemu - somehow it got faster? why? (could it be just updated things?)
 - the color settings should be stored, perhaps per game? 
 - and when colors are updated, different colors should be update-able at the same time
 
-- main menu should show also holidays (xmas, etc.)
-
 > fix below when at home
-- data sync app is ugly
-- use faster SD card
+- data sync app will not re-sync when ejected
 
 - some avr commands are longer than 16 bytes, which means it cannot be stored via the I2C async commands
+
+- mp3 player not working for some mp3 files (variable bitrate most notably, also reproducible on fantasy)
+
+- there is a big delay at the beginning of the app startup (before the keyboard LED lights are on) (likely because of some delay with I2C comms?)
 
 
 

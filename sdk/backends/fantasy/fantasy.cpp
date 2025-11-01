@@ -306,6 +306,10 @@ namespace rckid {
             io::buttons_ |= static_cast<uint32_t>(Btn::Home);
     }
 
+    void lock() {
+        // no locking in fantasy mode
+    }
+
     void sleep() {
         // nothing to do in fantasy mode
     }

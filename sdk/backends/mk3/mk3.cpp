@@ -578,6 +578,23 @@ namespace rckid {
 #endif
     }
 
+    void lock() {
+        displayOff();
+        rgbOff();
+        LOG(LL_INFO, "Entering display lock mode");
+        while (true) {
+            cpu::delayMs(100);
+            yield();
+            tick();
+            if (btnPressed(Btn::Home)) {
+                LOG(LL_INFO, "Lock mode wakeup");
+                btnClear(Btn::Home);
+                displayOn();
+                break;
+            }
+        }
+    }
+
     void sleep() {
         StackProtection::check();
         // TODO disable all peripherals, audio, display, etc. 
@@ -728,12 +745,12 @@ namespace rckid {
 
     void displayOn() {
         StackProtection::check();
-        UNIMPLEMENTED;
+        i2c::sendAvrCommand(cmd::SetBrightness{io::avrState_.brightness});
     }
 
     void displayOff() {
         StackProtection::check();
-        UNIMPLEMENTED;
+        i2c::sendAvrCommand(cmd::SetBrightness{0});
     }
 
     void displayClear(ColorRGB color) {

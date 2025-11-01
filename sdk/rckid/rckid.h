@@ -86,10 +86,12 @@ namespace rckid {
     /** Overclocks to the maximum speed supported by the current backend. 
      */
     void setSpeedMax();
-    
+
     void tick();
 
     void yield();
+
+    void lock();
 
     /** Puts the device to sleep. */
     void sleep();

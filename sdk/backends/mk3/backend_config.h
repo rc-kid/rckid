@@ -58,7 +58,7 @@
 
 /** When enabled, all logging information will be pushed not only to the USB tty, but also to hardware serial port connected to the given TX and RX pins. By default they correspond to the first 2 cartridge pins. Only uart0 is available for this purpose, and will be locked for the SDK usage as only uart0 pins are exposed on the cartridge.
  */
-#define RCKID_LOG_TO_SERIAL 1
+#define RCKID_LOG_TO_SERIAL 0
 #define RCKID_LOG_SERIAL_TX_PIN 12
 #define RCKID_LOG_SERIAL_RX_PIN 13
 

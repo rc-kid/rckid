@@ -88,8 +88,8 @@ namespace rckid {
             if (sw == -1)
                 return 0;
             LOG(LL_MP3, "Sync word at " << (int32_t)sw << ", bufferSize " << bufferSize_);
-            uint8_t * buf;
-            int remaining;
+            uint8_t * buf;// = buffer_ + sw;
+            int remaining;// = bufferSize_ - sw;
             // we have found sync word, try decoding starting from the sync word
             while (true) {
                 buf = buffer_ + sw;
@@ -102,8 +102,9 @@ namespace rckid {
                 if (err_ == ERR_MP3_NONE)
                     break;
                 // input data underflow, read some more and try again - if refill buffer returns 0, we can't really refill thebufer and should terminate as there is no more data
-                if (err_ == ERR_MP3_INDATA_UNDERFLOW) {
-                    if (refillBuffer() > 0)
+                // the same goes for free bitrate sync errors, just load more data so that the sync word can be found
+                if (err_ == ERR_MP3_INDATA_UNDERFLOW || err_ == ERR_MP3_FREE_BITRATE_SYNC) {
+                    if (refillBuffer() > 0) 
                         continue;
                 }
                 ++frameErrors_;

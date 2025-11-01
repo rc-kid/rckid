@@ -59,6 +59,10 @@ namespace rckid {
 
         void update() override {
             g_.update();
+            if (btnPressed(Btn::Home)) {
+                btnClear(Btn::Home);
+                lock();
+            }
             if (! c_.processEvents()) {
                 if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                     btnClear(Btn::B);

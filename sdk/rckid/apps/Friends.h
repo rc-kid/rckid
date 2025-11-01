@@ -4,39 +4,21 @@
 #include "dialogs/TextDialog.h"
 #include "dialogs/DateDialog.h"
 #include "../ui/scrollview.h"
+#include "../ui/carousel.h"
+
 
 namespace rckid {
 
     /** The friends app is a simple ContactDialog in a launcher mode where the launched app is contact viewer & editor. 
      */
-    class Friends : public App {
+    class Friends : public ui::Form<void> {
     public:
-
-/*
-        std::vector<Anniversary> static getNext(uint32_t n) {
-            std::vector<Anniversary> all;
-            Contact::forEach([&](Contact c) {
-                all.push_back(Anniversary{c});
-            });
-            Holiday::forEach([&](Holiday h) {
-                all.push_back(Anniversary{h});
-            });
-            std::sort(all.begin(), all.end(), [](Anniversary const & a, Anniversary const & b) {
-                return a.daysTillAnniversary() < b.daysTillAnniversary();
-            });
-            if (all.size() > n)
-                all.resize(n);
-            return all;
-        }
-*/
-
-        String name() const override { return "Friends"; }
 
         /** Signle Contact Viewer and editor. 
          
             Displays the contact information and allows its eedits. 
          */
-        class ContactViewer : public ui::Form<void> {
+        class ContactViewer : public ui::Form<bool> {
         public:
 
             /** Use umbrella name for all friends apps.
@@ -44,7 +26,7 @@ namespace rckid {
             String name() const override { return "Friends"; }
 
             ContactViewer(Contact & c) : 
-                ui::Form<void>{Rect::XYWH(0, 0, 320, 240)},
+                ui::Form<bool>{Rect::XYWH(0, 0, 320, 240)},
                 c_{c},
                 image_{8, 18, Icon{c.image}},
                 name_{80, 20, c.name},
@@ -77,6 +59,7 @@ namespace rckid {
                     if (n.has_value()) {
                         c_.name = n.value();
                         name_.setText(c_.name);
+                        setResult(true); // mark dirty
                     }
                 }));
                 contextMenu_.add(ui::ActionMenu::Item("Edit birthday", [this]() {
@@ -85,6 +68,7 @@ namespace rckid {
                         c_.birthday = d.value();
                         birthday_.setText(STR(c_.birthday.day() << "/" << c_.birthday.month() << "/" << c_.birthday.year()));
                         bdayExtras_.setText(STR("(" << c_.daysTillBirthday() << " days)"));
+                        setResult(true); // mark dirty
                     }
                 }));
                 contextMenu_.add(ui::ActionMenu::Item("Edit phone", [this]() {
@@ -92,6 +76,7 @@ namespace rckid {
                     if (n.has_value()) {
                         c_.phone = n.value();
                         phone_.setText(c_.phone);
+                        setResult(true); // mark dirty
                     }
                 }));
                 contextMenu_.add(ui::ActionMenu::Item("Edit email", [this]() {
@@ -99,6 +84,7 @@ namespace rckid {
                     if (n.has_value()) {
                         c_.email = n.value();
                         email_.setText(c_.email);
+                        setResult(true); // mark dirty
                     }
                 }));
                 contextMenu_.add(ui::ActionMenu::Item("Edit address", [this]() {
@@ -106,6 +92,7 @@ namespace rckid {
                     if (n.has_value()) {
                         c_.address = n.value();
                         address_.setText(c_.address);
+                        setResult(true); // mark dirty
                     }
                 }));
                 contextMenu_.add(ui::ActionMenu::Item("Edit note", [this]() {
@@ -113,6 +100,7 @@ namespace rckid {
                     if (n.has_value()) {
                         c_.note = n.value();
                         note_.setText(c_.note);
+                        setResult(true); // mark dirty
                     }
                 }));
             }
@@ -147,7 +135,7 @@ namespace rckid {
                     if (action.has_value())
                         action.value()();
                 }
-                ui::Form<void>::update();
+                ui::Form<bool>::update();
             }
 
             void draw() override {
@@ -162,7 +150,7 @@ namespace rckid {
                             contents_.setVisible(true);
                     }
                 }
-                ui::Form<void>::draw();
+                ui::Form<bool>::draw();
             }
 
         protected:
@@ -187,29 +175,146 @@ namespace rckid {
             bool exitAtEnd_ = false;
             Animation2D aImage_;
             Animation2D aName_;
-
             ui::ActionMenu contextMenu_;
-        }; // ContactViewer
+        }; // Friends::ContactViewer
 
-        Friends() : App{} {}
+        String name() const override { return "Friends"; }
+
+        Friends():
+            ui::Form<void>{},
+            c_{
+                [this](){ return contacts_.size(); },
+                [this](uint32_t index, Direction direction) {
+                    Contact const & contact = contacts_[index];
+                    c_.set(contact.name, Icon{contact.image}, direction);
+                }
+            }
+        {
+            g_.addChild(c_);
+            c_.setRect(Rect::XYWH(0, 160, 320, 80));
+            c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
+            // fill in the contacts list
+            Contact::forEach([this](Contact c) {
+                contacts_.push_back(c);
+            });
+            refreshNextBirthdays();
+        }
+
 
     protected:
 
         friend class App;
 
-        void draw() override {}
-
-        void loop() override {
-            //throw "foobar";
-            ContactDialog cd{};
-            // run the contact dialog in launcher mode with contact viewer as callback app
-            cd.run([& cd](Contact c) {
-                // show the contact viewer for the appropriate contact
-                ContactViewer cv{c};
-                cv.setAnimation(cd.iconPosition(), cd.textPosition());
-                cv.loop();
-                //App::run<ContactViewer>(c);
-            });
+        void refreshNextBirthdays() {
+            for (NextBirthday & nb : nextBirthdays_) {
+                nb.numDays_ = 366;
+                nb.icon_.setVisible(true);
+                nb.label_.setVisible(true);
+            }
+            for (uint32_t i = 0; i < NUM_NEXT_BIRTHDAYS; ++i) {
+                g_.addChild(nextBirthdays_[i].icon_);
+                g_.addChild(nextBirthdays_[i].label_);
+            }
+            // fill next birthdays list
+            for (Contact & c : contacts_) {
+                uint32_t days = c.daysTillBirthday();
+                for (uint32_t i = 0; i < NUM_NEXT_BIRTHDAYS; ++i) {
+                    if (days < nextBirthdays_[i].numDays_) {
+                        // insert here
+                        for (uint32_t j = NUM_NEXT_BIRTHDAYS - 1; j > i; --j) {
+                            nextBirthdays_[j].label_.setText(nextBirthdays_[j - 1].label_.text());
+                            nextBirthdays_[j].numDays_ = nextBirthdays_[j - 1].numDays_;
+                        }
+                        nextBirthdays_[i].numDays_ = days;
+                        nextBirthdays_[i].label_.setText(c.name);
+                        break;
+                    } else if (days == nextBirthdays_[i].numDays_) {
+                        nextBirthdays_[i].label_.setText(STR(nextBirthdays_[i].label_.text() << ", " << c.name));
+                        break;
+                    }
+                }
+            }
+            for (NextBirthday & nb: nextBirthdays_) {
+                if (nb.numDays_ >= 366) {
+                    nb.icon_.setVisible(false);
+                    nb.label_.setVisible(false);
+                } else {
+                    nb.label_.setText(STR(nb.label_.text() << " (" << nb.numDays_ << " days)"));
+                }
+            }
         }
+
+        void update() override {
+            ui::Form<void>::update();
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down))
+                return exit();
+            if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                btnClear(Btn::A);
+                btnClear(Btn::Up);
+                if (contacts_.size() != 0) {
+                    Contact & c = contacts_[c_.currentIndex()];
+                    ContactViewer cv{const_cast<Contact&>(c)};
+                    cv.setAnimation(c_.iconPosition(), c_.textPosition());
+                    cv.loop();
+                    c_.setItem(c_.currentIndex(), Direction::None);
+                    if (cv.result().has_value() && cv.result().value()) {
+                        // we have edited the contact, so we need to save the contacts we have now
+                        Contact::saveAll(contacts_);
+                        refreshNextBirthdays();
+                    }
+                }
+            }
+            c_.processEvents();
+        }
+
+        void focus() override {
+            ui::Form<void>::focus();
+            if (firstRun_) {
+                if (contacts_.size() > 0)
+                    c_.setItem(0, Direction::Up);
+                else
+                    c_.showEmpty(Direction::Up);
+                firstRun_ = false;
+            } else if (contacts_.size() > c_.currentIndex())
+                c_.setItem(c_.currentIndex());
+            else if (contacts_.size() > 0)
+                c_.setItem(0);
+            else
+                c_.showEmpty();
+        }
+
+    private:
+
+        static constexpr uint32_t NUM_NEXT_BIRTHDAYS = 3;
+
+        class NextBirthday {
+        public:
+            ui::Image icon_;
+            ui::Label label_;
+            uint32_t numDays_ = 366;
+
+            NextBirthday(Coord index):
+                icon_{8, 18 + index * 32, Icon{assets::icons_24::birthday_cake}},
+                label_{40, 18 + index * 32, ""}
+            {
+                label_.setFont(Font::fromROM<assets::OpenDyslexic24>());
+            }
+        }; 
+
+
+        ui::EventBasedCarousel c_;
+        NextBirthday nextBirthdays_[NUM_NEXT_BIRTHDAYS] = {
+            NextBirthday(0),
+            NextBirthday(1),
+            NextBirthday(2),
+        };
+        std::vector<Contact> contacts_;
+
+
+
+
+        bool firstRun_ = true;
+
     }; // rckid::Friends
+
 } // namespace rckid

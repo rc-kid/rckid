@@ -209,7 +209,7 @@ namespace rckid {
         /** Returns the app's return value (if any).
          */
         MODAL_RESULT const & result() const { return result_; }
-        MODAL_RESULT & result() { return result_; }
+        //MODAL_RESULT & result() { return result_; }
 
         using App::exit;
 
@@ -226,6 +226,10 @@ namespace rckid {
             } else {
                 callback_(result);
             }
+        }
+
+        void setResult(T result) {
+            result_ = result;
         }
 
     private:
