@@ -49,9 +49,8 @@ namespace rckid {
             // enqueue the transaction in the list
             t->enqueue();
             // if this was the first transaction in the queue, proceed with immediate transmit
-            if (current_ == t) 
+            if (current_ == t)
                 t->transmit();
-
         }
 
         /** Blocking I2C transaction. Enqueues the packet, but waits for its completion, returning the read parts into the provided buffer. 

@@ -12,6 +12,7 @@
 
 #include <rckid/rckid.h>
 #include <rckid/app.h>
+#include <rckid/task.h>
 #include <rckid/filesystem.h>
 #include <rckid/ui/header.h>
 #include <rckid/radio.h>
@@ -268,6 +269,7 @@ namespace rckid {
     void setSpeedMax() { }
 
     void tick() {
+        Task::runAll();
         SystemMallocGuard g_;
         if (WindowShouldClose())
             std::exit(-1);

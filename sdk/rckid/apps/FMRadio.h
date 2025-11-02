@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../app.h"
+#include "../task.h"
 #include "../ui/form.h"
 #include "../radio.h"
 #include "../ui/label.h"
@@ -69,7 +70,6 @@ namespace rckid {
 
     protected:
 
-
         void update() override {
             ui::Form<void>::update();
             if (radio_ == nullptr) {
@@ -106,6 +106,48 @@ namespace rckid {
         }
 
     private:
+
+        /** Background task for radio player. 
+         
+            Simply keeps the radio enabled even if the app is not running
+         */
+        class RadioTask : public Task {
+        public:
+
+            RadioTask * instance() {
+                if (instance_ == nullptr)
+                    instance_ = new RadioTask{};
+                return instance_;
+            }
+
+            RadioTask():
+                radio_{Radio::instance()} 
+            {
+                ASSERT(instance_ == nullptr);
+                if (radio_ != nullptr) {
+                    radio_->enable(true);
+                }
+            }
+
+            ~RadioTask() override {
+                instance_ = nullptr;
+                if (radio_ != nullptr)
+                    radio_->enable(false);
+            }
+
+            Radio * radio() const { return radio_;}
+
+        protected:
+            void run() override {
+                // for radio, no need to do anything
+            }
+
+            Radio * radio_;
+            uint32_t startup_ = 60; // we need to wait one second before the radio is ready
+
+            static inline RadioTask * instance_ = nullptr;
+        }; 
+
         Radio * radio_;
         bool refresh_ = false;
         ui::Label freq_;

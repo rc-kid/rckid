@@ -45,6 +45,7 @@ extern "C" {
 #include "i2c.h"
 #include "audio/codec.h"
 #include <rckid/app.h>
+#include <rckid/task.h>
 #include <rckid/filesystem.h>
 #include <rckid/ui/header.h>
 #include <rckid/ui/style.h>
@@ -447,6 +448,7 @@ namespace rckid {
         ++time::numTicks_;
         requestAvrStatus();
         yield();
+        Task::runAll();
         // advance local time and check idle countdowns
         uint64_t now = time_us_64();
         while (now > time::nextSecond_) {

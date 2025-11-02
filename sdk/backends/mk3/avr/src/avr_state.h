@@ -198,6 +198,10 @@ namespace rckid {
 
         AudioSettings audio;
 
+        /** BCD device pin (0000-9999), or 0xffff if the pin is disabled
+         */
+        uint16_t pin = 0xffff;
+
     }); // rckid::AVRState
 
     /** The entire transferrable state, which consists of the AVR state itself as well as the communications buffer. On the AVR side, this is used to store the state & buffer close together so that it can be send as one consecutive memory block. 

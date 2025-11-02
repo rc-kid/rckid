@@ -153,4 +153,9 @@ namespace rckid::cmd {
         Rumbler(RumblerEffect const & effect): effect{effect} {}
     );
 
+    COMMAND(46, SetPin, 
+        uint16_t pin;
+        SetPin(uint16_t pin): pin{pin} {}
+    );
+
 } // namespace rckid::cmd

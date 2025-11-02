@@ -887,6 +887,11 @@ public:
                 setRumblerEffect(c.effect);
                 break;
             }
+            case cmd::SetPin::ID: {
+                auto & c = cmd::SetPin::fromBuffer(state_.buffer);
+                state_.pin = c.pin;
+                break;
+            }
             case cmd::SetNotification::ID: {
                 auto & c = cmd::SetNotification::fromBuffer(state_.buffer);
                 setNotification(c.effect);;
@@ -1271,17 +1276,13 @@ public:
     static constexpr uint8_t RGB_TICKS_PER_SECOND = 66;
     static inline uint8_t rgbTicks_ = RGB_TICKS_PER_SECOND; 
 
-    static void rgbOn(bool value, bool delayAfterPowerOn = true) {
+    static void rgbOn(bool value) {
         if (rgbOn_ == value)
             return;
         if (value) {
             LOG("RGB on");
             gpio::outputHigh(AVR_PIN_5V_EN);
             gpio::setAsOutput(AVR_PIN_RGB);
-            if (delayAfterPowerOn) {
-                cpu::wdtReset();
-                cpu::delayMs(100);
-            }
         } else {
             LOG("RGB off");
             rgbClear();
@@ -1297,7 +1298,7 @@ public:
     static void setNotification(RGBEffect effect) {
         notification_ = effect;
         if (notification_.active()) {
-            rgbOn(true, false);
+            rgbOn(true);
         } 
         // set target to current top black to ensure smooth transition between the effects
         for (int i = 0; i < NUM_RGB_LEDS; ++i)

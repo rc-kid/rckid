@@ -402,8 +402,9 @@ namespace rckid {
                             hours += 24;
                             mjd -= 1;
                         }
-                        TinyDate date{mjd};
-                        // TODO set the time accordingly here, and flag that time has been set
+                        // update the date & time from the received values
+                        setTimeNow(TinyDateTime{TinyDate{mjd}, TinyTime{static_cast<uint8_t>(hours), static_cast<uint8_t>(minutes), 0}});
+                        // TODO should we notify someone? 
                         break;
                     }
                 }

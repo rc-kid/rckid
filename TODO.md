@@ -46,29 +46,28 @@
   - [ ] timer
   - [X] stopwatch
   - [ ] alarm
-- [X] theme style settings (colors & background) 
 - [ ] improve text input dialog
 - [X] screen lock (double home tap)
 - [ ] settings menu for button lights
-- [ ] rumbler effects on button presses
-- [ ] preserve volume settings
-
-
+- [X] preserve volume settings
+- [ ] low battery error and device won't power on
 
 Nice extras would include:
 
 - [X] LED flashlight
 - [X] shuffle function in audio playback
 - [X] birthdays & PIM
+- [ ] rumbler effects on button presses
 - [ ] allow background playback
 - [ ] pin locking
 - [ ] parents mode
+- [X] theme style settings (colors & background) 
 - [ ] extra settings (colors, etc. for system & gbcemu)
 - [ ] telegram messenger
 - [ ] accelerometer controller background & background selection
 - [ ] fmradio embedded antenna
 - [ ] radio presets?
-- [ ] fm radio rds time setting (enable time setting & make automatic, code already there)
+- [ ] fm radio rds time setting (make automatic in the background)
 - [X] data sync app
 - [ ] RGB dimming that preserves colors (? is possible)
 
@@ -76,6 +75,8 @@ Nice extras would include:
 # TODO
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
+
+- lock when returning should come back to the app
 
 - clean debug prints (headphones, etc)
 - background tasks so that they can also determine when to increase the CPU speed for proper mp3 playback
@@ -90,8 +91,6 @@ Nice extras would include:
 - data sync app will not re-sync when ejected
 
 - some avr commands are longer than 16 bytes, which means it cannot be stored via the I2C async commands
-
-- there is a big delay at the beginning of the app startup (before the keyboard LED lights are on) (likely because of some delay with I2C comms?)
 
 - platform string utils should not be used, instead everything should run off rckid::String
 

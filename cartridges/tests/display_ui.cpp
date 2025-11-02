@@ -144,6 +144,18 @@ ui::ActionMenu * styleMenuGenerator() {
 ui::ActionMenu * settingsMenuGenerator() {
     return new ui::ActionMenu{
         ui::ActionMenu::Generator("Style", assets::icons_64::paint_palette, styleMenuGenerator),
+        ui::ActionMenu::Item("RGB Off", assets::icons_64::poo, [](){
+            rckid::rgbOff();
+        }),
+        ui::ActionMenu::Item("RGB Rainbow", assets::icons_64::poo, [](){
+            rckid::rgbEffects(
+                RGBEffect::Rainbow(0, 1, 4, 32), 
+                RGBEffect::Rainbow(51, 1, 4, 32), 
+                RGBEffect::Rainbow(102, 1, 4, 32), 
+                RGBEffect::Rainbow(153, 1, 4, 32), 
+                RGBEffect::Rainbow(204, 1, 4, 32)
+            );
+        }),
     };
 }
 
