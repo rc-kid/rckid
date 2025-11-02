@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../app.h"
+#include "../task.h"
 #include "../ui/file_browser.h"
 #include "../ui/header.h"
 #include "../audio/mp3.h"
@@ -26,6 +27,17 @@ namespace rckid {
         }
 
     protected:
+
+        class MusicPlayerTask : public Task {
+        public:
+
+        protected:
+
+            void run() override {
+                
+            }
+
+        }; // MusicPlayer::MusicPlayerTask
 
         void update() override {
             ui::Form<void>::update();

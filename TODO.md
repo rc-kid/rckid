@@ -76,11 +76,10 @@ Nice extras would include:
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
-- lock when returning should come back to the app
-
 - clean debug prints (headphones, etc)
 - background tasks so that they can also determine when to increase the CPU speed for proper mp3 playback
 - bg tasks have to be properly closed when some app says it is not compatible with them
+- keepalive for mp3 and radio
 
 
 - for gbcemu - somehow it got faster? why? (could it be just updated things?)

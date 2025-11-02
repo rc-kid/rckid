@@ -245,6 +245,20 @@ namespace rckid {
         public:
             uint8_t fifoUsed() const { return resp3_; }
 
+            /** Checks if any of the blocks has unreverable number of errors.
+             */
+            bool valid() const {
+                if ((resp12_ & 0b11000000) == 0b11000000)
+                    return false;
+                if ((resp12_ & 0b00110000) == 0b00110000)
+                    return false;
+                if ((resp12_ & 0b00001100) == 0b00001100)
+                    return false;
+                if ((resp12_ & 0b00000011) == 0b00000011)
+                    return false;
+                return true;
+            }
+
         private:
             friend class Radio;
 
@@ -330,6 +344,9 @@ namespace rckid {
                 status_.rdsStatus.blockD_ = platform::swapBytes(status_.rdsStatus.blockD_);
                 // process RDS data - put group data (x2) & version into single value
                 uint8_t kind = (status_.rdsStatus.blockB_ >> 11) & 0x1f; 
+                // if the packet is not valid, ignore it
+                if (! status_.rdsStatus.valid())
+                    kind = 0xff;
                 switch (kind) {
                     case 0: { // 0A or 0B - station name
                     case 1:
@@ -402,11 +419,14 @@ namespace rckid {
                             hours += 24;
                             mjd -= 1;
                         }
-                        // update the date & time from the received values
+                        LOG(LL_INFO, "RDS time: MJD " << mjd << " (offset " << offset << ") " << hours << ":" << minutes);
                         setTimeNow(TinyDateTime{TinyDate{mjd}, TinyTime{static_cast<uint8_t>(hours), static_cast<uint8_t>(minutes), 0}});
                         // TODO should we notify someone? 
                         break;
                     }
+                    default:
+                        // unknown or onrecognizable group
+                        break;
                 }
                 // if we read all the fifo, end
                 if (status_.rdsStatus.fifoUsed() == 0)
