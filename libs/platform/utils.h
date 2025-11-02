@@ -38,6 +38,20 @@ namespace platform {
             return '?'; // error
     }
 
+    inline int parseInt(char const * & str) {
+        int result = 0;
+        bool negative = false;
+        if (*str == '-') {
+            negative = true;
+            ++str;
+        }
+        while (*str >= '0' && *str <= '9') {
+            result = result * 10 + (*str - '0');
+            ++str;
+        }
+        return negative ? -result : result;
+    }    
+
     /** Swaps the high and low nibble of an uint16_t. 
      */
     inline constexpr uint16_t swapBytes(uint16_t x) {

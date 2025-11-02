@@ -20,6 +20,7 @@ namespace rckid {
             ui::Form<void>{},
             h_{Rect::XYWH(0, 30, 150, 130), ""},
             m_{Rect::XYWH(170, 30, 150, 130), ""},
+            s_{Rect::XYWH(260, 42, 60, 130), ""},
             colon_{Rect::XYWH(150, 30, 20, 130), ":" },
             date_{Rect::XYWH(0, 140, 320, 40), ""},
             alarm_{Rect::XYWH(120, 200, 320, 40), "00:00"},
@@ -31,6 +32,10 @@ namespace rckid {
             g_.addChild(m_);
             m_.setFont(Font::fromROM<assets::OpenDyslexic128>());
             m_.setHAlign(HAlign::Left);
+            g_.addChild(s_);
+            s_.setFont(Font::fromROM<assets::OpenDyslexic64>());
+            s_.setHAlign(HAlign::Left);
+            s_.setColor(ui::Style::accentFg());
             g_.addChild(colon_);
             colon_.setFont(Font::fromROM<assets::OpenDyslexic128>());
             g_.addChild(date_);
@@ -86,6 +91,7 @@ namespace rckid {
             TinyAlarm a = timeAlarm();
             h_.setText(STR(fillLeft(t.time.hour(), 2, '0')));
             m_.setText(STR(fillLeft(t.time.minute(), 2, '0')));
+            s_.setText(STR(fillLeft(t.time.second(), 2, '0')));
             colon_.setVisible(t.time.second() & 1);
             date_.setText(STR(t.date.day() << "/" << t.date.month() << "/" << t.date.year()));
             alarm_.setText(STR(fillLeft(a.hour(), 2, '0') << ":" << fillLeft(a.minute(), 2, '0')));
@@ -96,6 +102,7 @@ namespace rckid {
     private:
         ui::Label h_;
         ui::Label m_;
+        ui::Label s_;
         ui::Label colon_;
         ui::Label date_;
         ui::Label alarm_;

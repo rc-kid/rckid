@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include "definitions.h"
-#include "string_utils.h"
+#include "utils.h"
 
 
 /** Day, month and year stored in 3 bytes. 
@@ -72,11 +72,11 @@ public:
 
     bool setFromString(char const * str) {
         // expected format: DD / MM / YYYY
-        int day = parseInt(str);
+        int day = platform::parseInt(str);
         if (*str != '/' || day < 1 || day > 31)
             return false;
         ++str;
-        int month = parseInt(str);
+        int month = platform::parseInt(str);
         if (month < 1 || month > 12)
             return false;
         if (*str == '\0') {
@@ -87,7 +87,7 @@ public:
         if (*str != '/')
             return false;
         ++str;
-        int year = parseInt(str);
+        int year = platform::parseInt(str);
         if (year < 0 || year > 4095)
             return false;
         set(static_cast<uint8_t>(day), static_cast<uint8_t>(month), static_cast<uint16_t>(year));

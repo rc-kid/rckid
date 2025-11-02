@@ -78,7 +78,6 @@ Nice extras would include:
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
-- clean mk3 initialization routine
 - clean debug prints (headphones, etc)
 
 - for gbcemu - somehow it got faster? why? (could it be just updated things?)
@@ -94,11 +93,10 @@ Nice extras would include:
 
 - there is a big delay at the beginning of the app startup (before the keyboard LED lights are on) (likely because of some delay with I2C comms?)
 
-
-
-- verify that gameboy emulator & tetris are indeed budgeted
+- platform string utils should not be used, instead everything should run off rckid::String
 
 - icons for shuffle and icons for repeat
+- icons for PIM (address, etc, holidays)
 
 - when home btn hit from audio, audio should pause if not paused yet (or audio can register background task? do we allow bg tasks?)
 

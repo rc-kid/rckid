@@ -774,6 +774,10 @@ public:
                 state_.alarm = cmd::SetAlarm::fromBuffer(state_.buffer).value;
                 break;
             }
+            case cmd::SetAudioSettings::ID: {
+                state_.audio = cmd::SetAudioSettings::fromBuffer(state_.buffer).settings;
+                break;
+            }
             case cmd::SetBudget::ID: {
                 state_.budget = cmd::SetBudget::fromBuffer(state_.buffer).seconds;
                 break;
