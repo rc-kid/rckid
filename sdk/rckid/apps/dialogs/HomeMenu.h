@@ -62,6 +62,8 @@ namespace rckid {
             if (btnPressed(Btn::Home)) {
                 btnClear(Btn::Home);
                 lock();
+                // and return from the menu when unlocked
+                exit();
             }
             if (! c_.processEvents()) {
                 if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
