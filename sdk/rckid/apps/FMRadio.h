@@ -23,7 +23,7 @@ namespace rckid {
     class FMRadio : public ui::Form<void> {
     public:
         
-        String name() const override { return "FMRadio"; }
+        String name() const override { return "Radio"; }
 
         FMRadio() :
             ui::Form<void>{},

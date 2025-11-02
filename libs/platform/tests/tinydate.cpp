@@ -46,3 +46,11 @@ TEST(tinydate, daysTillAnnual) {
     d1 = TinyDate{6, 7, 2024};
     EXPECT(d1.daysTillNextAnnual(d2) == 247);
 }
+
+TEST(tinydate, ModifiedJulianDay) {
+    TinyDate d1{30, 1, 2000};
+    TinyDate d2{51573};
+    EXPECT(d1.day() == d2.day());
+    EXPECT(d1.month() == d2.month());
+    EXPECT(d1.year() == d2.year());
+}

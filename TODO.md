@@ -68,9 +68,8 @@ Nice extras would include:
 - [ ] accelerometer controller background & background selection
 - [ ] fmradio embedded antenna
 - [ ] radio presets?
-- [ ] fm radio rds time setting
-- [ ] extra devices (would have to order quickly)
-- [ ] data sync app
+- [ ] fm radio rds time setting (enable time setting & make automatic, code already there)
+- [X] data sync app
 - [ ] RGB dimming that preserves colors (? is possible)
 
 

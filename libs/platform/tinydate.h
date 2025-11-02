@@ -43,6 +43,22 @@ public:
         set(d, m, y);
     }
 
+    TinyDate(uint32_t mjd) {
+        // convert MJD to day, month, year
+        // algorithm from https://en.wikipedia.org/wiki/Julian_day
+        uint32_t j = mjd + 2400001 + 68569;
+        uint32_t c = (4 * j) / 146097;
+        j = j - (146097 * c + 3) / 4;
+        uint32_t y = (4000 * (j + 1)) / 1461001;
+        j = j - (1461 * y) / 4 + 31;
+        uint32_t m = (80 * j) / 2447;
+        uint8_t day = static_cast<uint8_t>(j - (2447 * m) / 80);
+        j = m / 11;
+        uint8_t month = static_cast<uint8_t>(m + 2 - (12 * j));
+        uint16_t year = static_cast<uint16_t>(100 * (c - 49) + y + j);
+        set(day, month, year);
+    }
+
     TinyDate & operator = (TinyDate const & other)  = default;
 
     bool operator == (TinyDate const & other) const {

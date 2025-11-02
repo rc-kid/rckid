@@ -374,21 +374,36 @@ namespace rckid {
                         break;
                     }
                     case 8: { // 4A - clock time
-                        // TODO the time can be useful 
-                        /*
-                        // MJD (Modified Julian Date) in blocks C+D
-                        uint16_t mjd = (C << 15) | (D >> 1); // 17 bits
-                        int offset = (D & 0x1F);             // local time offset in half-hours
-                        int offset_sign = (D & 0x20) ? -1 : 1;
-
-                        // UTC time in block D bits 6–20
-                        int hours = (D >> 12) & 0x1F;
-                        int minutes = (D >> 6) & 0x3F;
-
-                        rds->hours = hours + offset_sign * (offset / 2);
-                        rds->minutes = minutes + (offset_sign * (offset % 2)) * 30;
-                        rds->has_time = 1;
-                        */
+                        // the time is stored in parts of B, C and D blocks (from wikipedia)
+                        // modified julian date is 2 bits ib B, & 15 bits in C
+                        uint32_t mjd = (status_.rdsStatus.blockB_ & 0x03) << 15 | (status_.rdsStatus.blockC_ >> 1);
+                        // this is followed by the UTC hrs which is 1 bit in C and 4 bits in D
+                        int32_t hours = ((status_.rdsStatus.blockC_ & 0x01) << 4) | (status_.rdsStatus.blockD_ >> 12);
+                        // minutes are 6 bits shifted to 6 in D
+                        int32_t minutes = (status_.rdsStatus.blockD_ >> 6) & 0x3F;
+                        // UTF offset in 5 lsbs of D, with the 6th being sign (1 for negative)
+                        int32_t offset = status_.rdsStatus.blockD_ & 0x1f;
+                        if (status_.rdsStatus.blockD_ & 0x20)
+                            offset = -offset;
+                        // adjust hrs and minutes (and mjd if needed based on the UTC offset)
+                        hours += (offset / 2);
+                        minutes += (offset % 2) * 30;
+                        if (minutes >= 60) {
+                            minutes -= 60;
+                            hours += 1;
+                        } else if (minutes < 0) {
+                            minutes += 60;
+                            hours -= 1;
+                        }
+                        if (hours >= 24) {
+                            hours -= 24;
+                            mjd += 1;
+                        } else if (hours < 0) {
+                            hours += 24;
+                            mjd -= 1;
+                        }
+                        TinyDate date{mjd};
+                        // TODO set the time accordingly here, and flag that time has been set
                         break;
                     }
                 }

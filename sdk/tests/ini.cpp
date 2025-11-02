@@ -23,9 +23,7 @@ TEST(ini, sections) {
     v = p.nextValue().value();
     EXPECT(v.first, "key2");
     EXPECT(v.second, "value2");
-    v = p.nextValue().value();
-    EXPECT(v.first, "");
-    EXPECT(v.second, "");
+    EXPECT(p.nextValue().has_value() == false);
     EXPECT(p.nextSection().value(), "section2");
     v = p.nextValue().value();
     EXPECT(v.first, "keyA");
