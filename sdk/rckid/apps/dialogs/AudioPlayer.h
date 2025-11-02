@@ -132,9 +132,11 @@ namespace rckid {
         /** Only redraw if there is change in the visual elements. This saves precious CPU time on the device for the audio decoding. As it effectively limits the FPS to 1 frane per second. 
          */
         void draw() override {
-            if (redraw_ || true) {
+            if (redraw_) {
                 redraw_ = false;
                 ui::Form<AudioPlayerResult>::draw(); 
+            } else {
+                displayWaitVSync();
             }
         }
 
