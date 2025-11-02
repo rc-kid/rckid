@@ -78,6 +78,9 @@ Nice extras would include:
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
 - clean debug prints (headphones, etc)
+- background tasks so that they can also determine when to increase the CPU speed for proper mp3 playback
+- bg tasks have to be properly closed when some app says it is not compatible with them
+
 
 - for gbcemu - somehow it got faster? why? (could it be just updated things?)
 - the color settings should be stored, perhaps per game? 
@@ -87,8 +90,6 @@ Nice extras would include:
 - data sync app will not re-sync when ejected
 
 - some avr commands are longer than 16 bytes, which means it cannot be stored via the I2C async commands
-
-- mp3 player not working for some mp3 files (variable bitrate most notably, also reproducible on fantasy)
 
 - there is a big delay at the beginning of the app startup (before the keyboard LED lights are on) (likely because of some delay with I2C comms?)
 

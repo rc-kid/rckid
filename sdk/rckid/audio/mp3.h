@@ -12,8 +12,12 @@ namespace rckid {
         MP3Stream(ReadStream & input):
             AudioStream{1152 * 4},
             in_{input}, 
-            buffer_{new uint8_t[BUFFER_SIZE]},
+            buffer_{new uint8_t[MP3_BUFFER_SIZE]},
             dec_{MP3InitDecoder()} {
+            // initially fill the buffer
+            bufferSize_ = in_.read(buffer_, MP3_BUFFER_SIZE);
+            // and skip the ID3 tag, if any - this is necessary for the decoder to work properly
+            skipID3v2Tags();
             // get next frame infor for sample rate
             int32_t sw = ensureFrameInBuffer();
             err_ = MP3GetNextFrameInfo(dec_, &fInfo_, buffer_ + sw);
@@ -61,6 +65,30 @@ namespace rckid {
 
     protected:
 
+        void skipID3v2Tags() {
+            // check for ID3v2 tag at the beginning of the stream
+            if (bufferSize_ >= 10 && buffer_[0] == 'I' && buffer_[1] == 'D' && buffer_[2] == '3') {
+                // size is stored in bytes 6-9 as "synchsafe integers"
+                uint32_t tagSize = (static_cast<uint32_t>(buffer_[6] & 0x7f) << 21) |
+                                   (static_cast<uint32_t>(buffer_[7] & 0x7f) << 14) |
+                                   (static_cast<uint32_t>(buffer_[8] & 0x7f) << 7)  |
+                                   (static_cast<uint32_t>(buffer_[9] & 0x7f) << 0);
+                tagSize += 10; // include header size
+                LOG(LL_MP3, "ID3v2 tag detected, size " << tagSize);
+                while (tagSize > 0) {
+                    if (tagSize > bufferSize_) {
+                        tagSize -= bufferSize_;
+                        bufferSize_ = in_.read(buffer_, MP3_BUFFER_SIZE);
+                    } else {
+                        // tag is fully in the buffer
+                        memmove(buffer_, buffer_ + tagSize, bufferSize_ - tagSize);
+                        bufferSize_ -= tagSize;
+                        tagSize = 0;
+                    }
+                }
+            }
+        }
+
         int32_t ensureFrameInBuffer() {
             // we always start at the beginning of the buffer 
             int32_t sw = -1;
@@ -88,8 +116,8 @@ namespace rckid {
             if (sw == -1)
                 return 0;
             LOG(LL_MP3, "Sync word at " << (int32_t)sw << ", bufferSize " << bufferSize_);
-            uint8_t * buf;// = buffer_ + sw;
-            int remaining;// = bufferSize_ - sw;
+            uint8_t * buf;
+            int remaining;
             // we have found sync word, try decoding starting from the sync word
             while (true) {
                 buf = buffer_ + sw;
@@ -98,14 +126,35 @@ namespace rckid {
                 err_ = MP3Decode(dec_, & buf,  & remaining, out, 0);
                 LOG(LL_MP3, "      : " << platform::hash(buffer_, bufferSize_));
                 LOG(LL_MP3, "Decoding: " << (int32_t)err_ << " buffer hash " << platform::hash(buffer_ + sw, bufferSize_ - sw - remaining) << ", output hash " << platform::hash((uint8_t *)out, 1152 * 4) << " remaining: " << (int32_t)remaining << ", sw: " << (int32_t)sw << ", bs: " << bufferSize_);
-                // no error, we are done
-                if (err_ == ERR_MP3_NONE)
-                    break;
                 // input data underflow, read some more and try again - if refill buffer returns 0, we can't really refill thebufer and should terminate as there is no more data
                 // the same goes for free bitrate sync errors, just load more data so that the sync word can be found
-                if (err_ == ERR_MP3_INDATA_UNDERFLOW || err_ == ERR_MP3_FREE_BITRATE_SYNC) {
-                    if (refillBuffer() > 0) 
-                        continue;
+                switch (err_) {
+                    case ERR_MP3_NONE:
+                        ++frames_;
+                        // if there are data remaining, we must copy them to the beginning of the buffer 
+                        removeConsumedBytes(buf, remaining);
+                        // and return the number of samples created
+                        MP3GetLastFrameInfo(dec_, &fInfo_);
+                        if (fInfo_.nChans == 1) {
+                            audio::convertToStereo(out, fInfo_.outputSamps);
+                            return fInfo_.outputSamps * 2;
+                        } else {
+                            return fInfo_.outputSamps;
+                        }
+                        break;
+                    case ERR_MP3_INDATA_UNDERFLOW:
+                        if (refillBuffer() > 0)
+                            continue;
+                        break;
+                    case ERR_MP3_FREE_BITRATE_SYNC:
+                        removeConsumedBytes(buf, remaining);
+                        refillBuffer();
+                        sw = MP3FindSyncWord(buffer_, bufferSize_);
+                        if (sw != -1)
+                            continue;
+                        break;
+                    default:
+                        break;
                 }
                 ++frameErrors_;
                 LOG(LL_MP3, "frame error: " << (int32_t)err_ << ", remaining " << (int32_t)remaining);
@@ -115,25 +164,19 @@ namespace rckid {
                 if (remaining < 0)
                     remaining = 0;
                 // we have decoding error on our hands, hopefully this will be reflected in the samples
-                break;
             }
-            ++frames_;
-            // if there are data remaining, we must copy them to the beginning of the buffer 
+            UNREACHABLE;
+            return 0;
+        }
+
+        void removeConsumedBytes(uint8_t * buf, int remaining) {
             if (remaining > 0)
                 memmove(buffer_, buf, remaining);
             bufferSize_ = remaining;
-            // and return the number of samples created
-            MP3GetLastFrameInfo(dec_, &fInfo_);
-            if (fInfo_.nChans == 1) {
-                audio::convertToStereo(out, fInfo_.outputSamps);
-                return fInfo_.outputSamps * 2;
-            } else {
-                return fInfo_.outputSamps;
-            }
         }
 
         uint32_t refillBuffer() {
-            uint32_t max = BUFFER_SIZE - bufferSize_;
+            uint32_t max = MP3_BUFFER_SIZE - bufferSize_;
             if (max > 512)
                 max = max - (max % 512);
             uint32_t rd = in_.read(buffer_ + bufferSize_, max);
@@ -149,7 +192,7 @@ namespace rckid {
     
         ReadStream & in_;
 
-        static constexpr uint32_t BUFFER_SIZE = 2048;
+        static constexpr uint32_t MP3_BUFFER_SIZE = 4096;
         uint8_t * buffer_;
         uint32_t bufferSize_ = 0;
         HMP3Decoder dec_;
