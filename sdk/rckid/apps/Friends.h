@@ -163,13 +163,13 @@ namespace rckid {
             ui::Image bdayImg_{50, 0, Icon{assets::icons_24::birthday_cake}};
             ui::Label birthday_;
             ui::Label bdayExtras_;
-            ui::Image phoneImg_{50, 30, Icon{assets::icons_24::poo}};
+            ui::Image phoneImg_{50, 30, Icon{assets::icons_24::phone}};
             ui::Label phone_;
-            ui::Image emailImg_{50, 60, Icon{assets::icons_24::poo}};
+            ui::Image emailImg_{50, 60, Icon{assets::icons_24::email}};
             ui::Label email_;
-            ui::Image addressImg_{50, 90, Icon{assets::icons_24::poo}};
+            ui::Image addressImg_{50, 90, Icon{assets::icons_24::house}};
             ui::Label address_;
-            ui::Image noteImg_{50, 120, Icon{assets::icons_24::poo}};
+            ui::Image noteImg_{50, 120, Icon{assets::icons_24::bookmark}};
             ui::Label note_;
             Timer t_{0};
             bool exitAtEnd_ = false;

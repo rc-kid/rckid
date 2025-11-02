@@ -5,10 +5,10 @@
 
 namespace rckid::assets::icons_24 {
 
-    // File: assets/icons/24/035-pen-drive.png
-    // Size: 611
-    static constexpr uint8_t pen_drive[] = {
-        #include "raw/icons24/pen_drive.inc.h"
+    // File: assets/icons/24/040-hourglass.png
+    // Size: 892
+    static constexpr uint8_t hourglass[] = {
+        #include "raw/icons24/hourglass.inc.h"
     };
 
     // File: assets/icons/24/004-film-slate.png
@@ -17,46 +17,46 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/film_slate.inc.h"
     };
 
-    // File: assets/icons/24/047-bookmark.png
-    // Size: 613
-    static constexpr uint8_t bookmark[] = {
-        #include "raw/icons24/bookmark.inc.h"
+    // File: assets/icons/24/062-fireworks.png
+    // Size: 1083
+    static constexpr uint8_t fireworks[] = {
+        #include "raw/icons24/fireworks.inc.h"
     };
 
-    // File: assets/icons/24/041-hourglass.png
-    // Size: 892
-    static constexpr uint8_t hourglass[] = {
-        #include "raw/icons24/hourglass.inc.h"
+    // File: assets/icons/24/042-happy-face.png
+    // Size: 939
+    static constexpr uint8_t happy_face[] = {
+        #include "raw/icons24/happy_face.inc.h"
     };
 
-    // File: assets/icons/24/040-medal.png
-    // Size: 968
-    static constexpr uint8_t medal[] = {
-        #include "raw/icons24/medal.inc.h"
+    // File: assets/icons/24/054-music-wave.png
+    // Size: 1121
+    static constexpr uint8_t music_wave[] = {
+        #include "raw/icons24/music_wave.inc.h"
     };
 
-    // File: assets/icons/24/024-chat.png
-    // Size: 993
-    static constexpr uint8_t chat[] = {
-        #include "raw/icons24/chat.inc.h"
+    // File: assets/icons/24/066-rainbow.png
+    // Size: 910
+    static constexpr uint8_t rainbow[] = {
+        #include "raw/icons24/rainbow.inc.h"
     };
 
-    // File: assets/icons/24/038-pause.png
-    // Size: 954
-    static constexpr uint8_t pause[] = {
-        #include "raw/icons24/pause.inc.h"
+    // File: assets/icons/24/064-color-picker.png
+    // Size: 1120
+    static constexpr uint8_t color_picker[] = {
+        #include "raw/icons24/color_picker.inc.h"
     };
 
-    // File: assets/icons/24/034-screenshot.png
-    // Size: 878
-    static constexpr uint8_t screenshot[] = {
-        #include "raw/icons24/screenshot.inc.h"
+    // File: assets/icons/24/048-sleeping.png
+    // Size: 1009
+    static constexpr uint8_t sleeping[] = {
+        #include "raw/icons24/sleeping.inc.h"
     };
 
-    // File: assets/icons/24/044-sad-face.png
-    // Size: 1102
-    static constexpr uint8_t sad_face[] = {
-        #include "raw/icons24/sad_face.inc.h"
+    // File: assets/icons/24/061-santa-claus.png
+    // Size: 1245
+    static constexpr uint8_t santa_claus[] = {
+        #include "raw/icons24/santa_claus.inc.h"
     };
 
     // File: assets/icons/24/007-brightness.png
@@ -65,16 +65,16 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/brightness.inc.h"
     };
 
-    // File: assets/icons/24/031-music-note.png
-    // Size: 857
-    static constexpr uint8_t music_note[] = {
-        #include "raw/icons24/music_note.inc.h"
+    // File: assets/icons/24/038-money-bag.png
+    // Size: 901
+    static constexpr uint8_t money_bag[] = {
+        #include "raw/icons24/money_bag.inc.h"
     };
 
-    // File: assets/icons/24/025-microphone.png
-    // Size: 1253
-    static constexpr uint8_t microphone[] = {
-        #include "raw/icons24/microphone.inc.h"
+    // File: assets/icons/24/053-configuration.png
+    // Size: 1188
+    static constexpr uint8_t configuration[] = {
+        #include "raw/icons24/configuration.inc.h"
     };
 
     // File: assets/icons/24/017-presents.png
@@ -89,16 +89,34 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/signal.inc.h"
     };
 
-    // File: assets/icons/24/048-appointment-book.png
-    // Size: 740
-    static constexpr uint8_t appointment_book[] = {
-        #include "raw/icons24/appointment_book.inc.h"
+    // File: assets/icons/24/023-chat.png
+    // Size: 993
+    static constexpr uint8_t chat[] = {
+        #include "raw/icons24/chat.inc.h"
     };
 
-    // File: assets/icons/24/050-read.png
-    // Size: 1179
-    static constexpr uint8_t read[] = {
-        #include "raw/icons24/read.inc.h"
+    // File: assets/icons/24/046-bookmark.png
+    // Size: 613
+    static constexpr uint8_t bookmark[] = {
+        #include "raw/icons24/bookmark.inc.h"
+    };
+
+    // File: assets/icons/24/050-ladybug.png
+    // Size: 990
+    static constexpr uint8_t ladybug[] = {
+        #include "raw/icons24/ladybug.inc.h"
+    };
+
+    // File: assets/icons/24/036-empty-box.png
+    // Size: 1004
+    static constexpr uint8_t empty_box[] = {
+        #include "raw/icons24/empty_box.inc.h"
+    };
+
+    // File: assets/icons/24/029-notes.png
+    // Size: 1086
+    static constexpr uint8_t notes[] = {
+        #include "raw/icons24/notes.inc.h"
     };
 
     // File: assets/icons/24/013-wifi.png
@@ -113,40 +131,58 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/rc_car.inc.h"
     };
 
-    // File: assets/icons/24/051-ladybug.png
-    // Size: 990
-    static constexpr uint8_t ladybug[] = {
-        #include "raw/icons24/ladybug.inc.h"
+    // File: assets/icons/24/058-email.png
+    // Size: 487
+    static constexpr uint8_t email[] = {
+        #include "raw/icons24/email.inc.h"
     };
 
-    // File: assets/icons/24/029-tetris.png
+    // File: assets/icons/24/041-applications.png
+    // Size: 1097
+    static constexpr uint8_t applications[] = {
+        #include "raw/icons24/applications.inc.h"
+    };
+
+    // File: assets/icons/24/063-star.png
+    // Size: 927
+    static constexpr uint8_t star[] = {
+        #include "raw/icons24/star.inc.h"
+    };
+
+    // File: assets/icons/24/052-play-button.png
+    // Size: 728
+    static constexpr uint8_t play_button[] = {
+        #include "raw/icons24/play_button.inc.h"
+    };
+
+    // File: assets/icons/24/060-exchange.png
+    // Size: 949
+    static constexpr uint8_t exchange[] = {
+        #include "raw/icons24/exchange.inc.h"
+    };
+
+    // File: assets/icons/24/056-phone.png
+    // Size: 930
+    static constexpr uint8_t phone[] = {
+        #include "raw/icons24/phone.inc.h"
+    };
+
+    // File: assets/icons/24/049-read.png
+    // Size: 1179
+    static constexpr uint8_t read[] = {
+        #include "raw/icons24/read.inc.h"
+    };
+
+    // File: assets/icons/24/028-tetris.png
     // Size: 528
     static constexpr uint8_t tetris[] = {
         #include "raw/icons24/tetris.inc.h"
     };
 
-    // File: assets/icons/24/056-radio-cassette.png
-    // Size: 920
-    static constexpr uint8_t radio_cassette[] = {
-        #include "raw/icons24/radio_cassette.inc.h"
-    };
-
-    // File: assets/icons/24/036-gameboy.png
-    // Size: 728
-    static constexpr uint8_t gameboy[] = {
-        #include "raw/icons24/gameboy.inc.h"
-    };
-
-    // File: assets/icons/24/032-boy.png
-    // Size: 1249
-    static constexpr uint8_t boy[] = {
-        #include "raw/icons24/boy.inc.h"
-    };
-
-    // File: assets/icons/24/042-applications.png
-    // Size: 1097
-    static constexpr uint8_t applications[] = {
-        #include "raw/icons24/applications.inc.h"
+    // File: assets/icons/24/068-easter.png
+    // Size: 1250
+    static constexpr uint8_t easter[] = {
+        #include "raw/icons24/easter.inc.h"
     };
 
     // File: assets/icons/24/018-heart.png
@@ -155,10 +191,10 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/heart.inc.h"
     };
 
-    // File: assets/icons/24/030-notes.png
-    // Size: 1086
-    static constexpr uint8_t notes[] = {
-        #include "raw/icons24/notes.inc.h"
+    // File: assets/icons/24/022-game-controller.png
+    // Size: 1093
+    static constexpr uint8_t game_controller[] = {
+        #include "raw/icons24/game_controller.inc.h"
     };
 
     // File: assets/icons/24/015-poo.png
@@ -167,16 +203,40 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/poo.inc.h"
     };
 
+    // File: assets/icons/24/025-folder.png
+    // Size: 1026
+    static constexpr uint8_t folder[] = {
+        #include "raw/icons24/folder.inc.h"
+    };
+
     // File: assets/icons/24/020-playlist.png
     // Size: 767
     static constexpr uint8_t playlist[] = {
         #include "raw/icons24/playlist.inc.h"
     };
 
-    // File: assets/icons/24/026-folder.png
-    // Size: 1026
-    static constexpr uint8_t folder[] = {
-        #include "raw/icons24/folder.inc.h"
+    // File: assets/icons/24/055-radio-cassette.png
+    // Size: 920
+    static constexpr uint8_t radio_cassette[] = {
+        #include "raw/icons24/radio_cassette.inc.h"
+    };
+
+    // File: assets/icons/24/027-paint-palette.png
+    // Size: 1251
+    static constexpr uint8_t paint_palette[] = {
+        #include "raw/icons24/paint_palette.inc.h"
+    };
+
+    // File: assets/icons/24/059-shuffle.png
+    // Size: 1005
+    static constexpr uint8_t shuffle[] = {
+        #include "raw/icons24/shuffle.inc.h"
+    };
+
+    // File: assets/icons/24/026-music-2.png
+    // Size: 1307
+    static constexpr uint8_t music_2[] = {
+        #include "raw/icons24/music_2.inc.h"
     };
 
     // File: assets/icons/24/002-music.png
@@ -185,28 +245,28 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/music.inc.h"
     };
 
-    // File: assets/icons/24/045-picture.png
-    // Size: 1323
-    static constexpr uint8_t picture[] = {
-        #include "raw/icons24/picture.inc.h"
+    // File: assets/icons/24/030-music-note.png
+    // Size: 857
+    static constexpr uint8_t music_note[] = {
+        #include "raw/icons24/music_note.inc.h"
     };
 
-    // File: assets/icons/24/022-multimedia.png
-    // Size: 1193
-    static constexpr uint8_t multimedia[] = {
-        #include "raw/icons24/multimedia.inc.h"
+    // File: assets/icons/24/043-sad-face.png
+    // Size: 1102
+    static constexpr uint8_t sad_face[] = {
+        #include "raw/icons24/sad_face.inc.h"
     };
 
-    // File: assets/icons/24/043-happy-face.png
-    // Size: 939
-    static constexpr uint8_t happy_face[] = {
-        #include "raw/icons24/happy_face.inc.h"
+    // File: assets/icons/24/031-boy.png
+    // Size: 1249
+    static constexpr uint8_t boy[] = {
+        #include "raw/icons24/boy.inc.h"
     };
 
-    // File: assets/icons/24/049-sleeping.png
-    // Size: 1009
-    static constexpr uint8_t sleeping[] = {
-        #include "raw/icons24/sleeping.inc.h"
+    // File: assets/icons/24/047-appointment-book.png
+    // Size: 740
+    static constexpr uint8_t appointment_book[] = {
+        #include "raw/icons24/appointment_book.inc.h"
     };
 
     // File: assets/icons/24/012-alarm-clock.png
@@ -215,10 +275,28 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/alarm_clock.inc.h"
     };
 
+    // File: assets/icons/24/035-gameboy.png
+    // Size: 728
+    static constexpr uint8_t gameboy[] = {
+        #include "raw/icons24/gameboy.inc.h"
+    };
+
+    // File: assets/icons/24/065-light.png
+    // Size: 1023
+    static constexpr uint8_t light[] = {
+        #include "raw/icons24/light.inc.h"
+    };
+
     // File: assets/icons/24/008-high-volume.png
     // Size: 911
     static constexpr uint8_t high_volume[] = {
         #include "raw/icons24/high_volume.inc.h"
+    };
+
+    // File: assets/icons/24/069-lock.png
+    // Size: 639
+    static constexpr uint8_t lock[] = {
+        #include "raw/icons24/lock.inc.h"
     };
 
     // File: assets/icons/24/009-power-off.png
@@ -227,10 +305,10 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/power_off.inc.h"
     };
 
-    // File: assets/icons/24/054-configuration.png
-    // Size: 1188
-    static constexpr uint8_t configuration[] = {
-        #include "raw/icons24/configuration.inc.h"
+    // File: assets/icons/24/033-screenshot.png
+    // Size: 878
+    static constexpr uint8_t screenshot[] = {
+        #include "raw/icons24/screenshot.inc.h"
     };
 
     // File: assets/icons/24/016-birthday-cake.png
@@ -239,28 +317,10 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/birthday_cake.inc.h"
     };
 
-    // File: assets/icons/24/052-product.png
-    // Size: 793
-    static constexpr uint8_t product[] = {
-        #include "raw/icons24/product.inc.h"
-    };
-
     // File: assets/icons/24/010-airplane-mode.png
     // Size: 749
     static constexpr uint8_t airplane_mode[] = {
         #include "raw/icons24/airplane_mode.inc.h"
-    };
-
-    // File: assets/icons/24/028-paint-palette.png
-    // Size: 1251
-    static constexpr uint8_t paint_palette[] = {
-        #include "raw/icons24/paint_palette.inc.h"
-    };
-
-    // File: assets/icons/24/033-girl.png
-    // Size: 1299
-    static constexpr uint8_t girl[] = {
-        #include "raw/icons24/girl.inc.h"
     };
 
     // File: assets/icons/24/021-chronometer.png
@@ -275,22 +335,16 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/baby_monitor.inc.h"
     };
 
-    // File: assets/icons/24/039-money-bag.png
-    // Size: 901
-    static constexpr uint8_t money_bag[] = {
-        #include "raw/icons24/money_bag.inc.h"
-    };
-
     // File: assets/icons/24/005-baby-crib.png
     // Size: 1132
     static constexpr uint8_t baby_crib[] = {
         #include "raw/icons24/baby_crib.inc.h"
     };
 
-    // File: assets/icons/24/037-empty-box.png
-    // Size: 1004
-    static constexpr uint8_t empty_box[] = {
-        #include "raw/icons24/empty_box.inc.h"
+    // File: assets/icons/24/039-medal.png
+    // Size: 968
+    static constexpr uint8_t medal[] = {
+        #include "raw/icons24/medal.inc.h"
     };
 
     // File: assets/icons/24/019-music-1.png
@@ -299,28 +353,52 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/music_1.inc.h"
     };
 
-    // File: assets/icons/24/027-music-2.png
-    // Size: 1307
-    static constexpr uint8_t music_2[] = {
-        #include "raw/icons24/music_2.inc.h"
+    // File: assets/icons/24/057-house.png
+    // Size: 1265
+    static constexpr uint8_t house[] = {
+        #include "raw/icons24/house.inc.h"
     };
 
-    // File: assets/icons/24/023-game-controller.png
-    // Size: 1093
-    static constexpr uint8_t game_controller[] = {
-        #include "raw/icons24/game_controller.inc.h"
+    // File: assets/icons/24/067-turn-off.png
+    // Size: 815
+    static constexpr uint8_t turn_off[] = {
+        #include "raw/icons24/turn_off.inc.h"
     };
 
-    // File: assets/icons/24/046-logout.png
-    // Size: 648
-    static constexpr uint8_t logout[] = {
-        #include "raw/icons24/logout.inc.h"
+    // File: assets/icons/24/044-picture.png
+    // Size: 1323
+    static constexpr uint8_t picture[] = {
+        #include "raw/icons24/picture.inc.h"
     };
 
-    // File: assets/icons/24/053-play-button.png
-    // Size: 728
-    static constexpr uint8_t play_button[] = {
-        #include "raw/icons24/play_button.inc.h"
+    // File: assets/icons/24/034-pen-drive.png
+    // Size: 611
+    static constexpr uint8_t pen_drive[] = {
+        #include "raw/icons24/pen_drive.inc.h"
+    };
+
+    // File: assets/icons/24/024-microphone.png
+    // Size: 1253
+    static constexpr uint8_t microphone[] = {
+        #include "raw/icons24/microphone.inc.h"
+    };
+
+    // File: assets/icons/24/051-product.png
+    // Size: 793
+    static constexpr uint8_t product[] = {
+        #include "raw/icons24/product.inc.h"
+    };
+
+    // File: assets/icons/24/037-pause.png
+    // Size: 954
+    static constexpr uint8_t pause[] = {
+        #include "raw/icons24/pause.inc.h"
+    };
+
+    // File: assets/icons/24/032-girl.png
+    // Size: 1299
+    static constexpr uint8_t girl[] = {
+        #include "raw/icons24/girl.inc.h"
     };
 
     // File: assets/icons/24/011-settings.png
@@ -335,10 +413,10 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/flashlight.inc.h"
     };
 
-    // File: assets/icons/24/055-music-wave.png
-    // Size: 1121
-    static constexpr uint8_t music_wave[] = {
-        #include "raw/icons24/music_wave.inc.h"
+    // File: assets/icons/24/045-logout.png
+    // Size: 632
+    static constexpr uint8_t logout[] = {
+        #include "raw/icons24/logout.inc.h"
     };
 
 } // namespace rckid::assets::icons_24

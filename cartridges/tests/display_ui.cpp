@@ -103,28 +103,28 @@ ui::ActionMenu * imagesMenuGenerator() {
 
 ui::ActionMenu * styleMenuGenerator() {
     return new ui::ActionMenu{
-        ui::ActionMenu::Item("Text", assets::icons_64::paint_palette, []() {
+        ui::ActionMenu::Item("Text", assets::icons_64::color_picker, []() {
             auto c = App::run<ColorPicker>(ui::Style::fg());
             if (c.has_value()) {
                 ui::Style::setFg(c.value());
                 ui::Style::saveAndRefresh();
             }
         }),
-        ui::ActionMenu::Item("Bg", assets::icons_64::paint_palette, [](){
+        ui::ActionMenu::Item("Bg", assets::icons_64::color_picker, [](){
             auto c = App::run<ColorPicker>(ui::Style::bg());
             if (c.has_value()) {
                 ui::Style::setBg(c.value());
                 ui::Style::saveAndRefresh();
             }
         }),
-        ui::ActionMenu::Item("Accent Text", assets::icons_64::paint_palette, []() {
+        ui::ActionMenu::Item("Accent Text", assets::icons_64::color_picker, []() {
             auto c = App::run<ColorPicker>(ui::Style::accentFg());
             if (c.has_value()) {
                 ui::Style::setAccentFg(c.value());
                 ui::Style::saveAndRefresh();
             }
         }),
-        ui::ActionMenu::Item("Accent Bg", assets::icons_64::paint_palette, [](){
+        ui::ActionMenu::Item("Accent Bg", assets::icons_64::color_picker, [](){
             auto c = App::run<ColorPicker>(ui::Style::accentBg());
             if (c.has_value()) {
                 ui::Style::setAccentBg(c.value());
@@ -144,10 +144,10 @@ ui::ActionMenu * styleMenuGenerator() {
 ui::ActionMenu * settingsMenuGenerator() {
     return new ui::ActionMenu{
         ui::ActionMenu::Generator("Style", assets::icons_64::paint_palette, styleMenuGenerator),
-        ui::ActionMenu::Item("RGB Off", assets::icons_64::poo, [](){
+        ui::ActionMenu::Item("RGB Off", assets::icons_64::turn_off, [](){
             rckid::rgbOff();
         }),
-        ui::ActionMenu::Item("RGB Rainbow", assets::icons_64::poo, [](){
+        ui::ActionMenu::Item("RGB Rainbow", assets::icons_64::rainbow, [](){
             rckid::rgbEffects(
                 RGBEffect::Rainbow(0, 1, 4, 32), 
                 RGBEffect::Rainbow(51, 1, 4, 32), 

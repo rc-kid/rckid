@@ -1,4 +1,4 @@
-// File: assets/icons/24/042-applications.png
+// File: assets/icons/24/041-applications.png
 // Size: 1097
 137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,
 0,0,0,24,0,0,0,24,8,6,0,0,0,224,119,61,

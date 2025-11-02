@@ -93,9 +93,6 @@ Nice extras would include:
 
 - platform string utils should not be used, instead everything should run off rckid::String
 
-- icons for shuffle and icons for repeat
-- icons for PIM (address, etc, holidays)
-
 - when home btn hit from audio, audio should pause if not paused yet (or audio can register background task? do we allow bg tasks?)
 
 - RM2 cartridges do not connect flash to 3v3(!!)

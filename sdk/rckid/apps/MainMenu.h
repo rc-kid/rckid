@@ -73,10 +73,10 @@ namespace rckid {
                     if (h.image != "")
                         holidayIcon = Icon{h.image};
                     else
-                        holidayIcon = Icon{assets::icons_24::poo};
+                        holidayIcon = Icon{assets::icons_24::star};
                 } else if (days == holidayDays) {
                     holidayName = STR(holidayName << ", " << h.name);
-                    holidayIcon = Icon{assets::icons_24::poo};
+                    holidayIcon = Icon{assets::icons_24::star};
                 }
             });
 

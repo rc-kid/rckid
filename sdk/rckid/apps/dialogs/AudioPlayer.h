@@ -44,8 +44,8 @@ namespace rckid {
             title_{88,18,fs::stem(path)},
             elapsed_{88,62,String{""}},
             icon_{8,16,Icon{assets::icons_64::play_button}},
-            repeatIcon_{50, 58, Icon{assets::icons_24::play_button}},
-            shuffleIcon_{50, 58, Icon{assets::icons_24::pause}} {
+            repeatIcon_{50, 58, Icon{assets::icons_24::exchange}},
+            shuffleIcon_{50, 58, Icon{assets::icons_24::shuffle}} {
             audioPlay(as_);
             lastUs_ = uptimeUs();
             elapsedUs_ = 0;

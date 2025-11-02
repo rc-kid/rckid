@@ -1,4 +1,4 @@
-// File: assets/icons/64/054-configuration.png
+// File: assets/icons/64/053-configuration.png
 // Size: 2729
 137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,
 0,0,0,64,0,0,0,64,8,6,0,0,0,170,105,113,

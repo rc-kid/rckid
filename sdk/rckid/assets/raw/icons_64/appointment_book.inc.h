@@ -1,4 +1,4 @@
-// File: assets/icons/64/048-appointment-book.png
+// File: assets/icons/64/047-appointment-book.png
 // Size: 1770
 137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82,
 0,0,0,64,0,0,0,64,8,6,0,0,0,170,105,113,
