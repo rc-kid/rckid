@@ -59,15 +59,16 @@ Nice extras would include:
 - [X] birthdays & PIM
 - [ ] rumbler effects on button presses
 - [ ] allow background playback
-- [ ] pin locking
+- [X] pin locking
 - [ ] parents mode
 - [X] theme style settings (colors & background) 
 - [ ] extra settings (colors, etc. for system & gbcemu)
 - [ ] telegram messenger
 - [ ] accelerometer controller background & background selection
-- [ ] fmradio embedded antenna
-- [ ] radio presets?
-- [ ] fm radio rds time setting (make automatic in the background)
+- [X] fm radio rds time setting
+- [ ] fm radio rds in background
+- [ ] fm radio embedded antenna (tested)
+- [ ] fm radio presets
 - [X] data sync app
 - [ ] RGB dimming that preserves colors (? is possible)
 

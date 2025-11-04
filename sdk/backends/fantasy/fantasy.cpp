@@ -359,6 +359,15 @@ namespace rckid {
 
     void setTimeAlarm(TinyAlarm alarm) { time::alarm_ = alarm; }
 
+    uint16_t pinCurrent() {
+        return 0x1234;
+    }
+
+    void pinSet(uint16_t newPin) {
+        LOG(LL_INFO, "PIN set to " << hex(newPin));
+    }
+
+
     // io
 
     bool btnDown(Btn b) {

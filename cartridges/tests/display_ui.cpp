@@ -14,6 +14,7 @@
 #include <rckid/ui/header.h>
 
 #include <rckid/apps/dialogs/TextDialog.h>
+#include <rckid/apps/dialogs/PinDialog.h>
 #include <rckid/apps/dialogs/FileDialog.h>
 #include <rckid/apps/dialogs/InfoDialog.h>
 #include <rckid/apps/dialogs/PopupMenu.h>
@@ -144,6 +145,30 @@ ui::ActionMenu * styleMenuGenerator() {
 ui::ActionMenu * settingsMenuGenerator() {
     return new ui::ActionMenu{
         ui::ActionMenu::Generator("Style", assets::icons_64::paint_palette, styleMenuGenerator),
+        ui::ActionMenu::Item("Pin", assets::icons_64::lock, [](){
+            if (pinCurrent() != 0xffff) {
+                auto x = App::run<PinDialog>("Current pin");
+                if (! x.has_value())
+                    return;
+                if (x.value() != pinCurrent()) {
+                    InfoDialog::error("Incorrect PIN", "The PIN you entered is incorrect.");
+                    return;
+                }
+            }
+            auto x = App::run<PinDialog>("New pin");
+            if (! x.has_value())
+                return;
+            uint16_t newPin = x.value();
+            x = App::run<PinDialog>("New pin again");
+            if (! x.has_value())
+                return;
+            if (x.value() != newPin) {
+                InfoDialog::error("PIN mismatch", "The new PIN entries do not match.");
+                return;
+            }
+            pinSet(newPin);
+            InfoDialog::success("Done", "PIN changed successfully");
+        }),
         ui::ActionMenu::Item("RGB Off", assets::icons_64::turn_off, [](){
             rckid::rgbOff();
         }),
@@ -197,7 +222,7 @@ int main() {
         RGBEffect::Rainbow(204, 1, 4, 32)
     );
     LOG(LL_INFO, "RGB effects sent");
-    //App::run<DateDialog>();
+    //App::run<PinDialog>();
     //PNG png{PNG::fromStream(fs::fileRead(STR("files/images/backgrounds/wish16.png")))};
     //LOG(LL_INFO, "PNG loaded: " << png.width() << "x" << png.height() << ", bpp: " << png.bpp());
     while (true) {

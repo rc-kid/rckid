@@ -94,6 +94,10 @@ namespace rckid {
                 //radio_->enableGPO1(true);
                 //radio_->setGPO1(false);
             }
+            if (btnPressed(Btn::Select))
+                radio_->enableEmbeddedAntenna(false);
+            if (btnPressed(Btn::Start))
+                radio_->enableEmbeddedAntenna(true);
         }
 
         void draw() override {

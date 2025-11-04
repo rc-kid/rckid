@@ -50,6 +50,9 @@ extern "C" {
 #include <rckid/ui/header.h>
 #include <rckid/ui/style.h>
 
+#include <rckid/apps/dialogs/InfoDialog.h>
+#include <rckid/apps/dialogs/PinDialog.h>
+
 #include "avr/src/avr_commands.h"
 #include "avr/src/avr_state.h"
 
@@ -415,6 +418,17 @@ namespace rckid {
         gpio_set_irq_enabled(RP_PIN_HEADSET_DETECT, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE, true);
 
         LOG(LL_INFO, "Initialization done");
+
+        while (io::avrState_.pin != 0xffff) {
+            LOG(LL_INFO, "Pin lock");
+            auto x = App::run<PinDialog>();
+            if (x.has_value() && x.value() == io::avrState_.pin) {
+                LOG(LL_INFO, "Pin correct");
+                break;
+            }             
+            LOG(LL_INFO, "Pin incorrect");
+            InfoDialog::error("Incorrect PIN", "The PIN you entered is incorrect. Please try again.");
+        }
     }
 
     uint32_t speedPct() {
@@ -571,6 +585,17 @@ namespace rckid {
         StackProtection::check();
         i2c::sendAvrCommand(cmd::SetAlarm{alarm});
         io::avrState_.alarm = alarm;
+    }
+
+    uint16_t pinCurrent() {
+        StackProtection::check();
+        return io::avrState_.pin;
+    }
+
+    void pinSet(uint16_t newPin) {
+        StackProtection::check();
+        i2c::sendAvrCommand(cmd::SetPin{newPin});
+        io::avrState_.pin = newPin;
     }
 
     // io

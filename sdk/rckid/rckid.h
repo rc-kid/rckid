@@ -161,6 +161,18 @@ namespace rckid {
      */
     void setTimeAlarm(TinyAlarm alarm);
 
+    /** Returns the current pin value. 
+     
+        The pin is encoded as a 4 digit bcd value, i.e. pin 1234 is returned as 0x1234. Value of 0xffff means no pin is set.
+     */
+    uint16_t pinCurrent();
+
+    /** Sets the pin.
+     
+        The pin is encoded as a 4 digit bcd value, i.e. pin 1234 is passed as 0x1234. Value of 0xffff means no pin is set.
+     */
+    void pinSet(uint16_t newPin);
+
     /** \page sdk
         \section io IO
 
