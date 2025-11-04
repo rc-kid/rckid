@@ -41,7 +41,8 @@ namespace rckid {
         }
         if (btnPressed(Btn::VolumeDown)) {
             btnClear(Btn::VolumeDown);
-            audioSetVolume(audioVolume() - 1);
+            uint8_t vol = audioVolume();
+            audioSetVolume(vol == 0 ? 0 : vol - 1);
         }
     }
 

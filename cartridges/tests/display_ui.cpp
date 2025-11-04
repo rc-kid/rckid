@@ -107,35 +107,35 @@ ui::ActionMenu * styleMenuGenerator() {
             auto c = App::run<ColorPicker>(ui::Style::fg());
             if (c.has_value()) {
                 ui::Style::setFg(c.value());
-                ui::Style::saveAndRefresh();
+                ui::Style::refreshAndSave();
             }
         }),
         ui::ActionMenu::Item("Bg", assets::icons_64::color_picker, [](){
             auto c = App::run<ColorPicker>(ui::Style::bg());
             if (c.has_value()) {
                 ui::Style::setBg(c.value());
-                ui::Style::saveAndRefresh();
+                ui::Style::refreshAndSave();
             }
         }),
         ui::ActionMenu::Item("Accent Text", assets::icons_64::color_picker, []() {
             auto c = App::run<ColorPicker>(ui::Style::accentFg());
             if (c.has_value()) {
                 ui::Style::setAccentFg(c.value());
-                ui::Style::saveAndRefresh();
+                ui::Style::refreshAndSave();
             }
         }),
         ui::ActionMenu::Item("Accent Bg", assets::icons_64::color_picker, [](){
             auto c = App::run<ColorPicker>(ui::Style::accentBg());
             if (c.has_value()) {
                 ui::Style::setAccentBg(c.value());
-                ui::Style::saveAndRefresh();
+                ui::Style::refreshAndSave();
             }
         }),
         ui::ActionMenu::Item("Background", assets::icons_64::picture, [](){
             auto icon = App::run<FileDialog>("/files/images");
             if (icon.has_value()) {
                 ui::Style::setBackground(Icon{icon.value().c_str()});
-                ui::Style::saveAndRefresh();
+                ui::Style::refreshAndSave();
             }
         }),
     };

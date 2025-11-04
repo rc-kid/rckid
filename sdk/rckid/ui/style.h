@@ -65,7 +65,9 @@ namespace rckid::ui {
 
         static void refresh();
 
-        static void saveAndRefresh() { save(); refresh(); }
+        /** Refresh the style first, only then save so that any errors during the refresh will not propagate to the saving and brick the device.
+         */
+        static void refreshAndSave() { refresh(); save(); }
 
     private:
 

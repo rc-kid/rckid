@@ -230,11 +230,6 @@ Nice extras would include:
 
 # PCB Things To Fix
 
-- [X] RP2350 does not have RUN pin connected (!!)
-- [X] VREG_VIN should go to IOVDD
-- [X] ADC_AVDD should to to IOVDD (?)
-- [ ] test ADC_AVDD to IOVDD connection and if necessary
-
 # PCB
 
 > This is updated TODO list for mkIII. It's split into 
