@@ -123,6 +123,7 @@ namespace rckid {
         }
 
         void enableEmbeddedAntenna(bool value = true) {
+            LOG(LL_INFO, "Embedded antenna " << (value ? "enabled" : "disabled"));
             setProperty(PROP_FM_ANTENNA_INPUT, value ? 0x0001 : 0x0000);
         }
 

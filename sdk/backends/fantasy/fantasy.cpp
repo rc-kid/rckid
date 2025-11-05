@@ -635,6 +635,11 @@ namespace rckid {
         return false;
     }
 
+    bool audioHeadphonesChanged() {
+        StackProtection::check();
+        return false;
+    }
+
     bool audioPaused() {
         StackProtection::check();
         switch (audio::mode) {

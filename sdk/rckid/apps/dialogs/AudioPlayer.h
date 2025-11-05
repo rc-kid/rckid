@@ -57,10 +57,12 @@ namespace rckid {
             g_.addChild(shuffleIcon_);
             repeatIcon_.setVisible(false);
             shuffleIcon_.setVisible(false);
+            //setSpeedMax();
         }
 
         ~AudioPlayer() override {
             audioStop();
+            //setSpeedPct(100);
         }
 
     protected:
@@ -132,8 +134,9 @@ namespace rckid {
         /** Only redraw if there is change in the visual elements. This saves precious CPU time on the device for the audio decoding. As it effectively limits the FPS to 1 frane per second. 
          */
         void draw() override {
-            if (redraw_) {
+            if (redraw_ || true) {
                 redraw_ = false;
+                elapsed_.setText(STR(as_.underflowCount()));
                 ui::Form<AudioPlayerResult>::draw(); 
             } else {
                 displayWaitVSync();

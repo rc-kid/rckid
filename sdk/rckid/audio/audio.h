@@ -55,6 +55,8 @@ namespace rckid {
                 refill_ = nullptr;
             }
         }
+
+        uint32_t underflowCount() const { return underflowCount_; }
    
     protected:
 
@@ -65,6 +67,7 @@ namespace rckid {
     private:
 
         friend void audioPlay(AudioStream & stream);
+        uint32_t underflowCount_ = 0;
 
         
         DoubleBuffer<int16_t> * playbackBuffer_ = nullptr;
@@ -82,9 +85,8 @@ namespace rckid {
                 buffer = stream.playbackBuffer_->front();
                 stream.playbackBuffer_->swap();
             } else {
-                if (stream.refill_ != nullptr) {
-                    // we haven't yet filled the buffer, ouch
-                }
+                if (stream.refill_ != nullptr)
+                    ++stream.underflowCount_;
                 stream.refill_ = buffer;
                 stream.refillSize_ = & size;
             }

@@ -277,6 +277,11 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
+    bool audioHeadphonesChanged() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
     bool audioPaused() {
         StackProtection::check();
         UNIMPLEMENTED;

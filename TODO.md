@@ -51,6 +51,7 @@
 - [ ] settings menu for button lights
 - [X] preserve volume settings
 - [ ] low battery error and device won't power on
+- [ ] AVR debouncing
 
 Nice extras would include:
 
@@ -67,7 +68,7 @@ Nice extras would include:
 - [ ] accelerometer controller background & background selection
 - [X] fm radio rds time setting
 - [ ] fm radio rds in background
-- [ ] fm radio embedded antenna (tested)
+- [X] fm radio embedded antenna (tested)
 - [ ] fm radio presets
 - [X] data sync app
 - [ ] RGB dimming that preserves colors (? is possible)
@@ -77,13 +78,18 @@ Nice extras would include:
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
+- mp3 playback does not seem to work well. Could it be SD card instead of decoder related? 
+- need to verify decode times & io times as well as wait times
+
+- verify that battery fits in the new cases
+- AVR debounce buttons
+- would be nice to have menu-like transitions between apps (i.e. multimain menu stuff)
+
 - clean debug prints (headphones, etc)
 - background tasks so that they can also determine when to increase the CPU speed for proper mp3 playback
 - bg tasks have to be properly closed when some app says it is not compatible with them
 - keepalive for mp3 and radio
 
-
-- for gbcemu - somehow it got faster? why? (could it be just updated things?)
 - the color settings should be stored, perhaps per game? 
 - and when colors are updated, different colors should be update-able at the same time
 

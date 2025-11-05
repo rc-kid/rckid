@@ -133,6 +133,7 @@ namespace rckid {
                         ++frames_;
                         // if there are data remaining, we must copy them to the beginning of the buffer 
                         removeConsumedBytes(buf, remaining);
+                        refillBuffer();
                         // and return the number of samples created
                         MP3GetLastFrameInfo(dec_, &fInfo_);
                         if (fInfo_.nChans == 1) {
@@ -192,7 +193,7 @@ namespace rckid {
     
         ReadStream & in_;
 
-        static constexpr uint32_t MP3_BUFFER_SIZE = 4096;
+        static constexpr uint32_t MP3_BUFFER_SIZE = 2048;
         uint8_t * buffer_;
         uint32_t bufferSize_ = 0;
         HMP3Decoder dec_;

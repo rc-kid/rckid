@@ -151,6 +151,7 @@ namespace rckid {
         uint dma0_ = 0;
         uint dma1_ = 0;
         uint32_t sampleRate_ = 44100;
+        bool lastHeadphones_ = false;
 
 
         int16_t * buffer0_ = nullptr;
@@ -250,10 +251,7 @@ namespace rckid {
                 Radio::irqHandler();
                 break;
             case RP_PIN_HEADSET_DETECT:
-                if (events & GPIO_IRQ_EDGE_FALL)
-                    LOG(LL_INFO, "HI");
-                else if (events & GPIO_IRQ_EDGE_RISE)
-                    LOG(LL_INFO, "HO");
+                // TODO do we wan to do anything on headphone change
                 break;
 
             default:
@@ -479,6 +477,7 @@ namespace rckid {
             }
             App::onSecondTick();
         }
+        audio::lastHeadphones_ = audioHeadphones();
     }
 
     void yield() {
@@ -775,6 +774,11 @@ namespace rckid {
     bool audioHeadphones() {
         StackProtection::check();
         return gpio::read(RP_PIN_HEADSET_DETECT) == 0;
+    }
+
+    bool audioHeadphonesChanged() {
+        StackProtection::check();
+        return audio::lastHeadphones_ != audioHeadphones();
     }
 
     bool audioPaused() {

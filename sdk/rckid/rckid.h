@@ -306,6 +306,10 @@ namespace rckid {
      */
     bool audioHeadphones(); 
 
+    /** Returns true if the headphone status has changed since last tick.
+     */
+    bool audioHeadphonesChanged();
+
     /** Reuturns true if audio processing is paused (playback or recording). 
      */
     bool audioPaused();

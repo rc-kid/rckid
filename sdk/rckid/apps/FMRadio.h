@@ -47,31 +47,25 @@ namespace rckid {
             g_.addChild(signal_);
             radio_ = Radio::instance();
             if (radio_ != nullptr) {
-                LOG(LL_INFO, "Si4705 info:");
-                radio_->enable(true);
+                // enable the embedded antenna if we do not have headphones attached
+                radio_->enableEmbeddedAntenna(! audioHeadphones());
+                // ensure the background task is running
+                RadioTask::instance();
                 cpu::delayMs(1000);
-                auto version = radio_->getVersionInfo();
-                LOG(LL_INFO, "  part #:        " << version.partNumber);
-                LOG(LL_INFO, "  fw:            " << version.fwMajor << "." << version.fwMinor);
-                LOG(LL_INFO, "  patch:         " << version.patch);
-                LOG(LL_INFO, "  comp:          " << version.compMajor << "." << version.compMinor);
-                LOG(LL_INFO, "  chip revision: " << version.chipRevision);
-                LOG(LL_INFO, "  cid:           " << version.cid);
-                radio_->enableGPO1(true);
                 radio_->setFrequency(9370);
             }
         }
 
         ~FMRadio() override {
-            if (radio_ != nullptr) {
-                radio_->enable(false);
-            }
+            RadioTask::deleteInstance();
         }
 
     protected:
 
         void update() override {
             ui::Form<void>::update();
+            if (audioHeadphonesChanged())
+                radio_->enableEmbeddedAntenna(! audioHeadphones());
             if (radio_ == nullptr) {
                 InfoDialog::error("No radio", "This device does not have a radio chip.");
                 exit();
@@ -118,11 +112,20 @@ namespace rckid {
         class RadioTask : public Task {
         public:
 
-            RadioTask * instance() {
+            static RadioTask * instance() {
                 if (instance_ == nullptr)
                     instance_ = new RadioTask{};
                 return instance_;
             }
+
+            static void deleteInstance() {
+                delete instance_;
+                instance_ = nullptr;
+            }
+
+            Radio * radio() const { return radio_;}
+
+        protected:
 
             RadioTask():
                 radio_{Radio::instance()} 
@@ -130,6 +133,7 @@ namespace rckid {
                 ASSERT(instance_ == nullptr);
                 if (radio_ != nullptr) {
                     radio_->enable(true);
+                    radio_->enableEmbeddedAntenna(! audioHeadphones());
                 }
             }
 
@@ -139,11 +143,11 @@ namespace rckid {
                     radio_->enable(false);
             }
 
-            Radio * radio() const { return radio_;}
-
-        protected:
+            /** The run task simply checks whether we have a headphone attach/detach and switches the embedded antenna internally.
+             */
             void run() override {
-                // for radio, no need to do anything
+                if (audioHeadphonesChanged())
+                    radio_->enableEmbeddedAntenna(! audioHeadphones());
             }
 
             Radio * radio_;
@@ -161,7 +165,6 @@ namespace rckid {
         ui::Label signal_;
 
         uint32_t irqs_ = 0;
-
 
         char const * snrToQuality() {
             uint8_t snr = radio_->snr();
