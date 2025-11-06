@@ -395,6 +395,11 @@ namespace rckid {
                         // the time is stored in parts of B, C and D blocks (from wikipedia)
                         // modified julian date is 2 bits ib B, & 15 bits in C
                         uint32_t mjd = (status_.rdsStatus.blockB_ & 0x03) << 15 | (status_.rdsStatus.blockC_ >> 1);
+                        // just a precaution, if the mjd comes from the past, ignore it
+                        if (mjd < 60000) {
+                            LOG(LL_WARN, "RDS MJD invalid: " << mjd << ", skipping likely invalid RDS");
+                            break;
+                        }
                         // this is followed by the UTC hrs which is 1 bit in C and 4 bits in D
                         int32_t hours = ((status_.rdsStatus.blockC_ & 0x01) << 4) | (status_.rdsStatus.blockD_ >> 12);
                         // minutes are 6 bits shifted to 6 in D

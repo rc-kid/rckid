@@ -28,6 +28,7 @@ namespace rckid {
 
     protected:
 
+        /** The music player task  */
         class MusicPlayerTask : public Task {
         public:
 
