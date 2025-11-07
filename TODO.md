@@ -26,6 +26,7 @@
 - [X] buy threaded inserts for thermosets (https://www.tme.eu/cz/en/details/b2_bn1054/threaded-insertions/bossard/1386727/)
 - [X] buy LEDs with proper forward voltage (https://www.tme.eu/cz/details/l128-4080ca3500001/vykonove-diody-led-emiter/lumileds/)
 - [X] order extra batteries (TME)
+- [X] order extra enclosures
 - [ ] order headphone jacks (mouser)
 - [ ] order AP2502 extras (mouser)
 
@@ -179,10 +180,6 @@ Nice extras would include:
 
 ## HW
 
-- SD card hole in case bottom is too low (fixed, check)
-- USB hole in case bottom is too low (fixed, check)
-- cartridge insertion is too tight (the top part of bottom case) (fixed, check)
-- bottom case needs extra plastic to line up perfectly with the pcb (fixed, check)
 - side buttons are too thin
 - pull-up for the headphone detect is too weak, try sth like 40kOhm? 
 - is there a way how to make the headphones work with headphones that have microphone as well? maybe by connecting tip with some large resistor to 0 (68k or so) and then connecting the tip mate via even higher resistor to VCC as a pull up. Then it will read close to 0 when not inserted and VCC when inserted. But will this upset the audio? It actually might work and I can ignore the second sleeve and it would work with all headphones! (can I make it work with current audio setup by rewiring?)

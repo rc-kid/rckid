@@ -62,7 +62,7 @@ namespace rckid {
                             break;
                         }
                         if (ext == ".mp3") {
-                            MP3Stream mp3{f};
+                            MP3Stream mp3{f, ""};
                             res = App::run<AudioPlayer>(path, mp3, mode_);
                         } else {
                             InfoDialog::error("Unsupported format", STR("File format " << ext << " is not supported"));

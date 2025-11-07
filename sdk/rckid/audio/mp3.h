@@ -9,9 +9,10 @@ namespace rckid {
 
     class MP3Stream : public AudioStream {
     public:
-        MP3Stream(ReadStream & input):
+        MP3Stream(ReadStream & input, String name):
             AudioStream{1152 * 4},
             in_{input}, 
+            name_{name},
             buffer_{new uint8_t[MP3_BUFFER_SIZE]},
             dec_{MP3InitDecoder()} {
             // initially fill the buffer
@@ -29,6 +30,8 @@ namespace rckid {
             delete [] buffer_;
             MP3FreeDecoder(dec_);
         }
+
+        String name() const override { return name_; };
 
         uint32_t refillSamples(int16_t * buffer, [[maybe_unused]] uint32_t numSamples) override {
             // we don't expect to be called with less free space than one full frame
@@ -192,6 +195,7 @@ namespace rckid {
     private:
     
         ReadStream & in_;
+        String name_;
 
         static constexpr uint32_t MP3_BUFFER_SIZE = 2048;
         uint8_t * buffer_;

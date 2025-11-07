@@ -43,6 +43,8 @@ namespace rckid {
             delete playbackBuffer_;
         }
 
+        virtual String name() const = 0;
+
         virtual uint32_t refillSamples(int16_t * buffer, uint32_t numSamples) = 0;
 
         virtual uint32_t sampleRate() const = 0;
@@ -73,7 +75,7 @@ namespace rckid {
         DoubleBuffer<int16_t> * playbackBuffer_ = nullptr;
         uint32_t * refillSize_ = nullptr;
         int16_t * refill_ = nullptr;
-    }; // rckid::AudioPlayer
+    }; // rckid::AudioStream
 
     inline void audioPlay(AudioStream & stream) {
         uint32_t sampleRate = stream.sampleRate();

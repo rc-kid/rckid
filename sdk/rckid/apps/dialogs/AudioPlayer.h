@@ -174,4 +174,223 @@ namespace rckid {
     }; // AudioPlayer::Player
 
 
+
+
+    class AudioPlayer2 : public ui::Form<void> {
+    public:
+
+        class Playlist {
+        public:
+
+            virtual ~Playlist() = default;
+
+            virtual AudioStream * current() = 0;
+
+            virtual AudioStream * next(bool shuffle = false) = 0;
+
+            virtual AudioStream * prev(bool shuffle = false) = 0;
+
+            virtual bool supportsShuffle() const { return false; }
+
+        }; // AudioPlayer::Playlist
+
+        String name() const override { return "AudioPlayer"; }
+
+        AudioPlayer2(Playlist * playlist):
+            ui::Form<void>{Rect::XYWH(0, 144, 320, 96), /*raw*/ true}, 
+            playlist_{playlist},
+            task_{new PlayerTask{this}},
+            title_{88,18,""},
+            elapsed_{88,62,""},
+            icon_{8,16,Icon{assets::icons_64::play_button}},
+            repeatIcon_{50, 58, Icon{assets::icons_24::exchange}},
+            shuffleIcon_{50, 58, Icon{assets::icons_24::shuffle}}
+        {
+            title_.setFont(Font::fromROM<assets::OpenDyslexic32>());
+            g_.addChild(title_);
+            g_.addChild(elapsed_);
+            g_.addChild(icon_);
+            g_.addChild(repeatIcon_);
+            g_.addChild(shuffleIcon_);
+            repeatIcon_.setVisible(false);
+            shuffleIcon_.setVisible(false);
+            playStream(playlist_->next());
+
+
+        }
+
+        ~AudioPlayer2() override {
+            delete task_;
+            delete playlist_;
+        }
+
+    protected:
+
+        class PlayerTask : public Task {
+        public:
+
+            PlayerTask(AudioPlayer2 * player) : player_{player} { }
+
+            ~PlayerTask() override {
+                audioStop();
+            }
+
+            void run() override {
+                player_->updateAudio();
+            }
+
+        private:
+
+            AudioPlayer2 * player_;
+
+        }; // PlayerTask
+
+        void updateAudio() {
+            if (as_ == nullptr)
+                return;
+            if (!audioPaused())
+                keepAlive();
+            as_->update();
+            if (!audioPlayback()) {
+                if (mode_ == AudioPlayerMode::Repeat) {
+                    delete as_;
+                    playStream(playlist_->current());
+                } else {
+                    playNext();
+                }
+            }
+        }
+
+        void playNext() {
+            delete as_;
+            playStream(playlist_->next(mode_ == AudioPlayerMode::Shuffle));
+        }
+
+        void playPrev() {
+            delete as_;
+            playStream(playlist_->prev(mode_ == AudioPlayerMode::Shuffle));
+        }
+
+        void playStream(AudioStream * s) {
+            as_ = s;
+            if (as_ != nullptr) {
+                audioPlay(*as_);
+                lastUs_ = uptimeUs();
+                elapsedUs_ = 0;
+                title_.setText(as_->name());
+
+
+            }
+            // TODO reset clock, update title label
+        }
+
+        void setElapsedTime() {
+            uint32_t seconds = elapsedUs_ / 1000000;
+            uint32_t minutes = seconds / 60;
+            uint32_t hours = minutes / 60;
+            seconds = seconds % 60;
+            minutes = minutes % 60;
+            StringWriter sw;
+            if (hours > 0)
+                sw << hours << ":";
+            sw << fillLeft(minutes, 2, '0') << ":" << fillLeft(seconds, 2, '0');
+            // only redraw if there is change in the elapsed time
+            if (elapsed_.setText(sw.str()))
+                redraw_ = true;
+        }
+
+        void update() override {
+            ui::Form<void>::update();
+            // deal with controls
+            if (! audioPaused()) {
+                uint32_t t = uptimeUs();
+                elapsedUs_ += t - lastUs_;
+                lastUs_ = t;
+                setElapsedTime();
+            }
+            // when back or down is pressed, return from the player mode
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                exit();
+            }
+            // btn up, or button A is audio pause
+            if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                if (audioPaused()) {
+                    icon_ = Icon{assets::icons_64::play_button};
+                    audioResume();
+                    lastUs_ = uptimeUs();
+                } else {
+                    icon_ = Icon{assets::icons_64::pause};
+                    audioPause();
+                }
+                redraw_ = true;
+            }
+            if (btnPressed(Btn::Left)) {
+                btnClear(Btn::Left);
+                playPrev();
+            }
+            if (btnPressed(Btn::Right)) {
+                btnClear(Btn::Right);
+                playNext();
+            }
+            if (btnPressed(Btn::Start)) {
+                switch (mode_) {
+                    case AudioPlayerMode::Normal:
+                        mode_ = AudioPlayerMode::Repeat;
+                        repeatIcon_.setVisible(true);
+                        shuffleIcon_.setVisible(false);
+                        break;
+                    case AudioPlayerMode::Repeat:
+                        if (playlist_->supportsShuffle()) {
+                            mode_ = AudioPlayerMode::Shuffle;
+                            repeatIcon_.setVisible(false);
+                            shuffleIcon_.setVisible(true);
+                            break;
+                        }
+                        [[fallthrough]]
+                    case AudioPlayerMode::Shuffle:
+                        mode_ = AudioPlayerMode::Normal;
+                        repeatIcon_.setVisible(false);
+                        shuffleIcon_.setVisible(false);
+                        break;
+                    default:
+                        UNREACHABLE;
+                }
+                redraw_ = true;
+            }
+        }
+
+        /** Only redraw if there is change in the visual elements. This saves precious CPU time on the device for the audio decoding. As it effectively limits the FPS to 1 frane per second. 
+         */
+        void draw() override {
+            if (redraw_ || true) {
+                redraw_ = false;
+                //elapsed_.setText(STR(as_->underflowCount()));
+                ui::Form<void>::draw(); 
+            } else {
+                displayWaitVSync();
+            }
+        }
+
+    private:
+
+        Playlist * playlist_;
+        PlayerTask * task_;
+        AudioStream * as_;
+        AudioPlayerMode mode_ = AudioPlayerMode::Normal;
+        bool redraw_ = false;
+
+        ui::Label title_;
+        ui::Label elapsed_;
+        ui::Image icon_;
+        ui::Image repeatIcon_;
+        ui::Image shuffleIcon_;
+        uint64_t elapsedUs_ = 0;
+        uint32_t lastUs_ = 0;
+
+        
+
+    }; // AudioPlayer2
+
+
+
 } // namespace rckid
