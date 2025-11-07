@@ -39,6 +39,9 @@ namespace rckid {
      */
     class AudioStream {
     public:
+
+        static AudioStream * fromFile(String const & path);
+
         virtual ~AudioStream() {
             delete playbackBuffer_;
         }

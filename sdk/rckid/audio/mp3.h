@@ -9,14 +9,14 @@ namespace rckid {
 
     class MP3Stream : public AudioStream {
     public:
-        MP3Stream(ReadStream & input, String name):
+        MP3Stream(std::unique_ptr<ReadStream> input, String name):
             AudioStream{1152 * 4},
-            in_{input}, 
+            in_{std::move(input)}, 
             name_{name},
             buffer_{new uint8_t[MP3_BUFFER_SIZE]},
             dec_{MP3InitDecoder()} {
             // initially fill the buffer
-            bufferSize_ = in_.read(buffer_, MP3_BUFFER_SIZE);
+            bufferSize_ = in_->read(buffer_, MP3_BUFFER_SIZE);
             // and skip the ID3 tag, if any - this is necessary for the decoder to work properly
             skipID3v2Tags();
             // get next frame infor for sample rate
@@ -81,7 +81,7 @@ namespace rckid {
                 while (tagSize > 0) {
                     if (tagSize > bufferSize_) {
                         tagSize -= bufferSize_;
-                        bufferSize_ = in_.read(buffer_, MP3_BUFFER_SIZE);
+                        bufferSize_ = in_->read(buffer_, MP3_BUFFER_SIZE);
                     } else {
                         // tag is fully in the buffer
                         memmove(buffer_, buffer_ + tagSize, bufferSize_ - tagSize);
@@ -101,7 +101,7 @@ namespace rckid {
                 if (sw != -1)
                     break;
                 // otherwise read next chunk - we can completely throw what we have in the buffer because if there is no sync word, no need to worry about it. This should definitely be enough to hold an mp3 frame
-                bufferSize_ = in_.read(buffer_, 512 * 3);
+                bufferSize_ = in_->read(buffer_, 512 * 3);
                 //TRACE_MP3("buffer reset: " << bufferSize_);
                 // if nothing was read, we are done decoding
                 if (bufferSize_ == 0) {
@@ -183,7 +183,7 @@ namespace rckid {
             uint32_t max = MP3_BUFFER_SIZE - bufferSize_;
             if (max > 512)
                 max = max - (max % 512);
-            uint32_t rd = in_.read(buffer_ + bufferSize_, max);
+            uint32_t rd = in_->read(buffer_ + bufferSize_, max);
             LOG(LL_MP3, "buffer refill " << rd << " bytes (max " << max << "), from index " << bufferSize_ << ", hash " << platform::hash(buffer_ + bufferSize_, rd));
             if (rd == 0)
                 eof_ = true;
@@ -194,7 +194,7 @@ namespace rckid {
 
     private:
     
-        ReadStream & in_;
+        std::unique_ptr<ReadStream> in_;
         String name_;
 
         static constexpr uint32_t MP3_BUFFER_SIZE = 2048;

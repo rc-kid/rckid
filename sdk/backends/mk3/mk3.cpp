@@ -495,9 +495,13 @@ namespace rckid {
         rgbOff();
         LOG(LL_INFO, "Entering display lock mode");
         while (true) {
-            cpu::delayMs(100);
+            uint64_t t = uptimeUs64();
             yield();
             tick();
+            t = uptimeUs64() - t;
+            // repeat the ticks at 60 fps 
+            if (t < 16666)
+                cpu::delayUs(16666 - t);
             if (btnPressed(Btn::Home)) {
                 LOG(LL_INFO, "Lock mode wakeup");
                 btnClear(Btn::Home);

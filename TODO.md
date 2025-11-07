@@ -60,7 +60,7 @@ Nice extras would include:
 - [X] shuffle function in audio playback
 - [X] birthdays & PIM
 - [ ] rumbler effects on button presses
-- [ ] allow background playback
+- [X] allow background playback
 - [X] pin locking
 - [ ] parents mode
 - [X] theme style settings (colors & background) 
@@ -81,13 +81,12 @@ Nice extras would include:
 
 - mp3 playback does not seem to work well. Could it be SD card instead of decoder related? 
 - need to verify decode times & io times as well as wait times
+- when song ends, it hangs instead of moving to next song
 
-- verify that battery fits in the new cases
 - AVR debounce buttons
 - would be nice to have menu-like transitions between apps (i.e. multimain menu stuff)
 
 - clean debug prints (headphones, etc)
-- background tasks so that they can also determine when to increase the CPU speed for proper mp3 playback
 - bg tasks have to be properly closed when some app says it is not compatible with them
 - keepalive for mp3 and radio
 

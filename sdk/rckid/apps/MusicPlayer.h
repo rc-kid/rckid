@@ -28,17 +28,46 @@ namespace rckid {
 
     protected:
 
-        /** The music player task  */
-        class MusicPlayerTask : public Task {
+        /** A very simple playlist that is connected to the music player file display and allows playing multiple files from the playlist.
+         
+            NOTE that the playlist requires the music player to exist, i.e. it is not possible to run the audio player or its background task without the music player being also on the app stack. This enables listening to music while in home menu, or when the screen is locked, but not while running other apps than the music player.
+         */
+        class FolderPlaylist : public AudioPlayer::Playlist {
         public:
+            FolderPlaylist(MusicPlayer & player): player_{player} {}
 
-        protected:
+            AudioStream * current() override { return AudioStream::fromFile(player_.c_->currentPath()); }
 
-            void run() override {
-                
+            bool next(bool shuffle = false) override {
+                while (true) {
+                    uint32_t next = shuffle ? 
+                        (rand() % player_.c_->size()) : 
+                        player_.c_->getIndexRight();
+                    player_.c_->setItem(next, Direction::None);
+                    if (fs::isFile(player_.c_->currentPath()))
+                        return true;
+                }
             }
 
-        }; // MusicPlayer::MusicPlayerTask
+            bool prev(bool shuffle = false) override {
+                while (true) {
+                    uint32_t next = shuffle ? 
+                        (rand() % player_.c_->size()) : 
+                        player_.c_->getIndexLeft();
+                    player_.c_->setItem(next, Direction::None);
+                    if (fs::isFile(player_.c_->currentPath()))
+                        return true;
+                }
+            }
+
+            bool supportsShuffle() const override { return true; }
+
+        private:
+
+            MusicPlayer & player_;
+
+        }; // MusicPlayer::FolderPlaylist
+
 
         void update() override {
             ui::Form<void>::update();
@@ -48,57 +77,7 @@ namespace rckid {
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                 btnClear(Btn::A);
                 btnClear(Btn::Up);
-                std::optional<AudioPlayerResult> res;
-                // to deal with shuffle and repeat modes, the playback is in a loop
-                while (true) {
-                    String path = c_->currentPath();
-                    if (fs::isFile(path)) {
-                        LOG(LL_DEBUG, "AudioPlayer: starting playback of " << path);
-                        String ext = fs::ext(path);
-                        fs::FileRead f = fs::fileRead(path);
-                        if (!f.good()) {
-                            // this should really not happen, ever
-                            InfoDialog::error("File not found", STR("Cannot open file " << path));
-                            break;
-                        }
-                        if (ext == ".mp3") {
-                            MP3Stream mp3{f, ""};
-                            res = App::run<AudioPlayer>(path, mp3, mode_);
-                        } else {
-                            InfoDialog::error("Unsupported format", STR("File format " << ext << " is not supported"));
-                            break;
-                        }
-                    }
-                    // now deal with rhe result
-                    if (!res.has_value()) {
-                        LOG(LL_ERROR, "Unexpected error during playback");
-                        break;
-                    }
-                    // user explicitly stopped the playback, break the loop
-                    if (res.value() == AudioPlayerResult::Stop) {
-                        break;
-                    }
-                    if (res.value() == AudioPlayerResult::Done) {
-                        if (mode_ == AudioPlayerMode::Repeat) {
-                            // continue to play the same file
-                            continue;
-                        } else if (mode_ == AudioPlayerMode::Shuffle) {
-                            res = AudioPlayerResult::PlayNext;
-                        } 
-                    }
-                    if (res.value() == AudioPlayerResult::PlayNext) {
-                        uint32_t next = mode_ == AudioPlayerMode::Shuffle ? 
-                            (rand() % c_->size()) : 
-                            c_->getIndexRight();
-                        c_->setItem(next, Direction::None);
-                    }
-                    if (res.value() == AudioPlayerResult::PlayPrev) {
-                        uint32_t next = mode_ == AudioPlayerMode::Shuffle ? 
-                            (rand() % c_->size()) : 
-                            c_->getIndexLeft();
-                        c_->setItem(next, Direction::None);
-                    }
-                }
+                App::run<AudioPlayer>(std::make_unique<FolderPlaylist>(*this));
             }
         }
 
