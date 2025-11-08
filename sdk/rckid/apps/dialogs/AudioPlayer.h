@@ -179,8 +179,9 @@ namespace rckid {
         }
 
         void update() override {
-            task_->player_ = nullptr;
             ui::Form<void>::update();
+            // this has to be *after* the general update so that we do not disable the bg tasks for home menu launches, etc.
+            task_->player_ = nullptr;
             // deal with controls
             if (! audioPaused()) {
                 uint32_t t = uptimeUs();

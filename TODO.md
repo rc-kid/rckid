@@ -39,14 +39,13 @@
   - [X] show budget
   - [X] show time
   - [X] show volume
+  - [ ] allow showing header even if not part of the renderable area
 - [X] fm radio app fixes (display frequency)
 - [X] rm radio rds, 
 - [X] fm radio signal quality, stereo
-- [ ] time apps
+- [X] time apps
   - [X] clock settings
-  - [ ] timer
   - [X] stopwatch
-  - [ ] alarm
 - [ ] improve text input dialog
 - [X] screen lock (double home tap)
 - [ ] settings menu for button lights
@@ -73,6 +72,8 @@ Nice extras would include:
 - [ ] fm radio presets
 - [X] data sync app
 - [ ] RGB dimming that preserves colors (? is possible)
+- [ ] timer app
+- [ ] alarm app
 
 
 # TODO
