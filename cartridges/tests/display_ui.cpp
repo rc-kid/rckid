@@ -189,6 +189,9 @@ ui::ActionMenu * debugMenuGenerator() {
         ui::ActionMenu::Item("Debug Off", assets::icons_64::ladybug, [](){
             rckid::setDebugMode(false);
         }),
+        ui::ActionMenu::Item("Debug On", assets::icons_64::ladybug, [](){
+            rckid::setDebugMode(true);
+        }),
     };
 }
 

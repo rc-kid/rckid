@@ -10,7 +10,7 @@
 - [-] check the above still works if we add USB ESD protection
 - [ ] disable debug mode on by default on AVR (end of initialize)
 - [ ] check that tilting dpad is better 
-- [ ] mk3 idle and keepalive timers are too high, move lower again
+- [X] mk3 idle and keepalive timers are too high, move lower again
 - [ ] add way to clear memory when necessary (e.g. remove background, etc.)
 - [ ] draw LoRA cartridge
 - [ ] add board for debug connectors

@@ -457,6 +457,8 @@ namespace rckid {
     }
 
     void tick() {
+        if (io::avrState_.status.debugMode())
+            keepAlive();
         ++time::numTicks_;
         requestAvrStatus();
         yield();
