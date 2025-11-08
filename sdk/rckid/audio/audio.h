@@ -44,6 +44,7 @@ namespace rckid {
 
         virtual ~AudioStream() {
             delete playbackBuffer_;
+            LOG(LL_INFO, "AS delete");
         }
 
         virtual String name() const = 0;

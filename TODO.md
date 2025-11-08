@@ -81,7 +81,6 @@ Nice extras would include:
 
 - mp3 playback does not seem to work well. Could it be SD card instead of decoder related? 
 - need to verify decode times & io times as well as wait times
-- when song ends, it hangs instead of moving to next song
 
 - AVR debounce buttons
 - would be nice to have menu-like transitions between apps (i.e. multimain menu stuff)
@@ -99,10 +98,6 @@ Nice extras would include:
 - some avr commands are longer than 16 bytes, which means it cannot be stored via the I2C async commands
 
 - platform string utils should not be used, instead everything should run off rckid::String
-
-- when home btn hit from audio, audio should pause if not paused yet (or audio can register background task? do we allow bg tasks?)
-
-- RM2 cartridges do not connect flash to 3v3(!!)
 
 - the rapid fire as is is kind of working, but maybe need per buttom settings, etc. 
 
@@ -179,8 +174,10 @@ Nice extras would include:
 
 ## HW
 
+- RM2 cartridges do not connect flash to 3v3(!!)
 - side buttons are too thin
 - pull-up for the headphone detect is too weak, try sth like 40kOhm? 
+- home button can be centered in the hole so that it is a bit higher up
 - is there a way how to make the headphones work with headphones that have microphone as well? maybe by connecting tip with some large resistor to 0 (68k or so) and then connecting the tip mate via even higher resistor to VCC as a pull up. Then it will read close to 0 when not inserted and VCC when inserted. But will this upset the audio? It actually might work and I can ignore the second sleeve and it would work with all headphones! (can I make it work with current audio setup by rewiring?)
 
 ## AVR

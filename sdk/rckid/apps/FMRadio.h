@@ -145,7 +145,7 @@ namespace rckid {
 
             /** The run task simply checks whether we have a headphone attach/detach and switches the embedded antenna internally.
              */
-            void run() override {
+            void tick() override {
                 if (audioHeadphonesChanged())
                     radio_->enableEmbeddedAntenna(! audioHeadphones());
             }

@@ -39,7 +39,7 @@ namespace rckid {
             uint32_t res = 0;
             while (res == 0) {
                 res = decodeNextFrame(buffer);
-                if (res == 0 && eof()) {
+                if ((res == 0) && eof()) {
                     audioStop();
                     return res / 2;
                 }
@@ -116,8 +116,12 @@ namespace rckid {
          */
         uint32_t decodeNextFrame(int16_t * out) {
             int32_t sw = ensureFrameInBuffer();
-            if (sw == -1)
+            // if ensuring frame failed, we are at eof by definition and the rest of the buffer should be discarded
+            if (sw == -1) {
+                eof_ = true;
+                bufferSize_ = 0;
                 return 0;
+            }
             LOG(LL_MP3, "Sync word at " << (int32_t)sw << ", bufferSize " << bufferSize_);
             uint8_t * buf;
             int remaining;
@@ -149,14 +153,14 @@ namespace rckid {
                     case ERR_MP3_INDATA_UNDERFLOW:
                         if (refillBuffer() > 0)
                             continue;
-                        break;
+                        return 0;
                     case ERR_MP3_FREE_BITRATE_SYNC:
                         removeConsumedBytes(buf, remaining);
                         refillBuffer();
                         sw = MP3FindSyncWord(buffer_, bufferSize_);
                         if (sw != -1)
                             continue;
-                        break;
+                        return 0;
                     default:
                         break;
                 }

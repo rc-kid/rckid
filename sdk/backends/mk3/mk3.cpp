@@ -460,7 +460,7 @@ namespace rckid {
         ++time::numTicks_;
         requestAvrStatus();
         yield();
-        Task::runAll();
+        Task::tickAll();
         // advance local time and check idle countdowns
         uint64_t now = time_us_64();
         while (now > time::nextSecond_) {
@@ -484,6 +484,7 @@ namespace rckid {
         StackProtection::check();
         tight_loop_contents();
         tud_task();
+        Task::yieldAll();
 #if (PICO_CYW43_SUPPORTED == 1)
         if (WiFi::hasInstance())
             cyw43_arch_poll();

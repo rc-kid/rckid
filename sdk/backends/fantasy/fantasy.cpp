@@ -269,7 +269,7 @@ namespace rckid {
     void setSpeedMax() { }
 
     void tick() {
-        Task::runAll();
+        Task::tickAll();
         SystemMallocGuard g_;
         if (WindowShouldClose())
             std::exit(-1);
@@ -332,7 +332,7 @@ namespace rckid {
 
     void yield() {
         StackProtection::check();   
-        // nothing yet to be be done here in fantasy mode
+        Task::yieldAll();
     }
 
     void keepAlive() {

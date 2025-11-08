@@ -72,7 +72,6 @@ namespace rckid {
         AudioPlayer(std::unique_ptr<Playlist> playlist):
             ui::Form<void>{Rect::XYWH(0, 144, 320, 96), /*raw*/ true}, 
             playlist_{std::move(playlist)},
-            task_{new PlayerTask{this}},
             title_{88,18,""},
             elapsed_{88,62,""},
             icon_{8,16,Icon{assets::icons_64::play_button}},
@@ -88,6 +87,7 @@ namespace rckid {
             repeatIcon_.setVisible(false);
             shuffleIcon_.setVisible(false);
             playStream(playlist_->current());
+            task_ = new PlayerTask(this);
         }
 
         ~AudioPlayer() override {
@@ -106,11 +106,16 @@ namespace rckid {
                 audioStop();
             }
 
-            void run() override {
-                player_->updateAudio();
+            void tick() override { }
+
+            void yield() override {
+                if (player_ != nullptr)
+                    player_->updateAudio();
             }
 
         private:
+
+            friend class AudioPlayer;
 
             AudioPlayer * player_;
 
@@ -125,6 +130,7 @@ namespace rckid {
             if (!audioPlayback()) {
                 if (mode_ == AudioPlayerMode::Repeat) {
                     delete as_;
+                    as_ = nullptr;
                     playStream(playlist_->current());
                 } else {
                     playNext();
@@ -134,29 +140,27 @@ namespace rckid {
 
         void playNext() {
             delete as_;
+            as_ = nullptr;
             if (playlist_->next(mode_ == AudioPlayerMode::Shuffle))
                 playStream(playlist_->current());
-            else
-                as_ = nullptr;
         }
 
         void playPrev() {
             delete as_;
+            as_ = nullptr;
             if (playlist_->prev(mode_ == AudioPlayerMode::Shuffle))
                 playStream(playlist_->current());
-            else
-                as_ = nullptr;
         }
 
         void playStream(AudioStream * s) {
             as_ = s;
             if (as_ != nullptr) {
+                LOG(LL_INFO, "Playing " << as_->name());
                 audioPlay(*as_);
                 lastUs_ = uptimeUs();
                 elapsedUs_ = 0;
                 title_.setText(as_->name());
             }
-            // TODO reset clock, update title label
         }
 
         void setElapsedTime() {
@@ -175,6 +179,7 @@ namespace rckid {
         }
 
         void update() override {
+            task_->player_ = nullptr;
             ui::Form<void>::update();
             // deal with controls
             if (! audioPaused()) {
@@ -183,6 +188,9 @@ namespace rckid {
                 lastUs_ = t;
                 setElapsedTime();
             }
+            // when playback is done, return from the player mode
+            if (as_ == nullptr)
+                exit();
             // when back or down is pressed, return from the player mode
             if (btnPressed(Btn::B) || btnPressed(Btn::Down) || as_ == nullptr) {
                 exit();
@@ -200,11 +208,11 @@ namespace rckid {
                 redraw_ = true;
             }
             if (btnPressed(Btn::Left)) {
-                btnClear(Btn::Left);
+                audioStop();
                 playPrev();
             }
             if (btnPressed(Btn::Right)) {
-                btnClear(Btn::Right);
+                audioStop();
                 playNext();
             }
             if (btnPressed(Btn::Start)) {
@@ -232,6 +240,7 @@ namespace rckid {
                 }
                 redraw_ = true;
             }
+            task_->player_ = this;
         }
 
         /** Only redraw if there is change in the visual elements. This saves precious CPU time on the device for the audio decoding. As it effectively limits the FPS to 1 frane per second. 
