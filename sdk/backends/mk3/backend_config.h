@@ -34,14 +34,16 @@
 
 /** Have the rapid fire trigger roughly every 250ms. 
  */
-#define RCKID_DEFAULT_RAPIDFIRE_TICKS 60
+#define RCKID_DEFAULT_RAPIDFIRE_TICKS 6
+
+#define RCKID_BUTTON_DEBOUNCE_TICKS 4
 
 /** Default values for the rumbler effects. 
  
     TODO fill in meaningful values and units.
  */
 #define RCKID_RUMBLER_DEFAULT_STRENGTH 128
-#define RCKID_RUMBLER_OK_STRENGTH 128
+#define RCKID_RUMBLER_OK_STRENGTH 192
 #define RCKID_RUMBLER_OK_TIME_ON 5
 #define RCKID_RUMBLER_OK_TIME_OFF 1
 #define RCKID_RUMBLER_OK_CYCLES 1
@@ -54,7 +56,6 @@
 #define RCKID_RUMBLER_NUDGE_TIME_OFF 1
 #define RCKID_RUMBLER_NUDGE_CYCLES 1
 
-#define RCKID_BUTTON_DEBOUNCE_TICKS 3
 
 /** When enabled, all logging information will be pushed not only to the USB tty, but also to hardware serial port connected to the given TX and RX pins. By default they correspond to the first 2 cartridge pins. Only uart0 is available for this purpose, and will be locked for the SDK usage as only uart0 pins are exposed on the cartridge.
  */

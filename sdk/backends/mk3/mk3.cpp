@@ -127,12 +127,12 @@ namespace rckid {
 
     namespace io {
         Si4705 radio_;
-        LTR390UV alsSensor_;
 
-        uint16_t lightAls_ = 0;
-        uint16_t lightUV_ = 0;
         AVRState avrState_;
         AVRState::Status lastStatus_;
+
+        bool rapidFire_ = false;
+        uint32_t rapidFireSpeed_ = RCKID_DEFAULT_RAPIDFIRE_TICKS;
 
     } // namespace rckid::io
 
@@ -192,7 +192,7 @@ namespace rckid {
         }
         // archive the old status
         io::lastStatus_ = io::avrState_.status;
-        if (time::numTicks_ % RCKID_DEFAULT_RAPIDFIRE_TICKS == 0)
+        if (io::rapidFire_ && time::numTicks_ % io::rapidFireSpeed_ == 0)
             io::lastStatus_.clearButtons();
         // copy the new one, we take the buttons as is and or the interrupts to make sure none is ever lost, then process them immediately
         io::avrState_.status.updateWith(status);
@@ -494,6 +494,7 @@ namespace rckid {
         displayOff();
         rgbOff();
         LOG(LL_INFO, "Entering display lock mode");
+        bool armed = false;
         while (true) {
             uint64_t t = uptimeUs64();
             yield();
@@ -503,8 +504,10 @@ namespace rckid {
             if (t < 16666)
                 cpu::delayUs(16666 - t);
             if (btnPressed(Btn::Home)) {
+                armed = true;
+            }
+            if (armed && btnReleased(Btn::Home)) {
                 LOG(LL_INFO, "Lock mode wakeup");
-                btnClear(Btn::Home);
                 displayOn();
                 break;
             }
@@ -603,6 +606,26 @@ namespace rckid {
 
     // io
 
+    void btnEnableRapidFire(bool value) {
+        StackProtection::check();
+        io::rapidFire_ = value;
+    }
+
+    bool btnRapidFireEnabled() {
+        StackProtection::check();
+        return io::rapidFire_;
+    }
+
+    void btnSetRapidFireSpeed(uint32_t ticks) {
+        StackProtection::check();
+        io::rapidFireSpeed_ = ticks;
+    }
+
+    uint32_t btnRapidFireSpeed() {
+        StackProtection::check();
+        return io::rapidFireSpeed_;
+    }
+
     bool btnDown(Btn b) {
         StackProtection::check();
         return buttonState(b, io::avrState_.status);
@@ -656,16 +679,6 @@ namespace rckid {
     int16_t gyroZ() {
         StackProtection::check();
         UNIMPLEMENTED;
-    }
-
-    uint16_t lightAmbient() {
-        StackProtection::check();
-        return io::lightAls_;
-    }
-    
-    uint16_t lightUV() {
-        StackProtection::check();
-        return io::lightUV_;
     }
 
     // display

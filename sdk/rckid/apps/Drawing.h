@@ -28,6 +28,40 @@ namespace rckid {
 
     protected:
 
+        void focus() override {
+            ui::Form<void>::focus();
+            btnEnableRapidFire(true);
+        }
+
+        void blur() override {
+            ui::Form<void>::blur();
+            btnEnableRapidFire(false);
+        }
+
+        void update() override {
+            ui::Form<void>::update();
+            if (btnPressed(Btn::Left)) {
+                Point p = zoomedImage_.cursor();
+                zoomedImage_.setCursor(Point{p.x - 1, p.y});
+            }
+            if (btnPressed(Btn::Right)) {
+                Point p = zoomedImage_.cursor();
+                zoomedImage_.setCursor(Point{p.x + 1, p.y});
+            }
+            if (btnPressed(Btn::Up)) {
+                Point p = zoomedImage_.cursor();
+                zoomedImage_.setCursor(Point{p.x, p.y - 1});
+            }
+            if (btnPressed(Btn::Down)) {
+                Point p = zoomedImage_.cursor();
+                zoomedImage_.setCursor(Point{p.x, p.y + 1});
+            }
+        }
+
+        void draw() override {
+            ui::Form<void>::draw();
+        }
+
 
         /** Canvas that allows editing & zooming and stuff.  */
         class ZoomedImage : public ui::Widget {
@@ -84,31 +118,6 @@ namespace rckid {
             ui::Image * source_;
 
         }; 
-
-
-        void update() override {
-            ui::Form<void>::update();
-            if (btnPressed(Btn::Left)) {
-                Point p = zoomedImage_.cursor();
-                zoomedImage_.setCursor(Point{p.x - 1, p.y});
-            }
-            if (btnPressed(Btn::Right)) {
-                Point p = zoomedImage_.cursor();
-                zoomedImage_.setCursor(Point{p.x + 1, p.y});
-            }
-            if (btnPressed(Btn::Up)) {
-                Point p = zoomedImage_.cursor();
-                zoomedImage_.setCursor(Point{p.x, p.y - 1});
-            }
-            if (btnPressed(Btn::Down)) {
-                Point p = zoomedImage_.cursor();
-                zoomedImage_.setCursor(Point{p.x, p.y + 1});
-            }
-        }
-
-        void draw() override {
-            ui::Form<void>::draw();
-        }
 
     private:
         ui::Image image_{Rect::XYWH(0, 32, 64, 64), Icon{assets::icons_64::paint_palette}};

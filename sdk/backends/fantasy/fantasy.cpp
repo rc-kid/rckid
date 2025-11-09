@@ -68,6 +68,8 @@ namespace rckid {
         int16_t gyroX_;
         int16_t gyroY_;
         int16_t gyroZ_;
+        bool rapidFire_ = false;
+        uint32_t rapidFireSpeed_ = RCKID_DEFAULT_RAPIDFIRE_TICKS;
     }
 
     namespace time {
@@ -75,6 +77,7 @@ namespace rckid {
         TinyAlarm alarm_;
         std::chrono::steady_clock::time_point uptimeStart_;
         uint64_t nextSecond_ = 0;
+        uint64_t numTicks_ = 0;
     }; 
 
     namespace display {
@@ -269,6 +272,7 @@ namespace rckid {
     void setSpeedMax() { }
 
     void tick() {
+        ++time::numTicks_;
         Task::tickAll();
         SystemMallocGuard g_;
         if (WindowShouldClose())
@@ -306,6 +310,9 @@ namespace rckid {
             io::buttons_ |= static_cast<uint32_t>(Btn::VolumeDown);
         if (IsKeyDown(KEY_H))
             io::buttons_ |= static_cast<uint32_t>(Btn::Home);
+        // clear button status if rapid fire
+        if (io::rapidFire_ && time::numTicks_ % io::rapidFireSpeed_ == 0)
+            io::lastButtons_ &= ~io::buttons_;
     }
 
     void lock() {
@@ -367,8 +374,27 @@ namespace rckid {
         LOG(LL_INFO, "PIN set to " << hex(newPin));
     }
 
-
     // io
+
+    void btnEnableRapidFire(bool value) {
+        StackProtection::check();
+        io::rapidFire_ = value;
+    }
+
+    bool btnRapidFireEnabled() {
+        StackProtection::check();
+        return io::rapidFire_;
+    }
+
+    void btnSetRapidFireSpeed(uint32_t ticks) {
+        StackProtection::check();
+        io::rapidFireSpeed_ = ticks;
+    }
+
+    uint32_t btnRapidFireSpeed() {
+        StackProtection::check();
+        return io::rapidFireSpeed_;
+    }
 
     bool btnDown(Btn b) {
         StackProtection::check();

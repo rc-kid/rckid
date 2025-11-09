@@ -191,6 +191,14 @@ namespace rckid {
         VolumeDown = 1 << 10,
     }; // rckid::Btn
 
+    void btnEnableRapidFire(bool value);
+
+    bool btnRapidFireEnabled();
+
+    void btnSetRapidFireSpeed(uint32_t ticks);
+
+    uint32_t btnRapidFireSpeed();
+
     /** Returns true if the given button is currently down. 
      */
     bool btnDown(Btn b);
@@ -222,9 +230,6 @@ namespace rckid {
     int16_t gyroX();
     int16_t gyroY();
     int16_t gyroZ();
-
-    uint16_t lightAmbient();
-    uint16_t lightUV();
 
     /** \page sdk
         \section display Display Driver

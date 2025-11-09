@@ -128,6 +128,26 @@ namespace rckid {
 
     // io
 
+    void btnEnableRapidFire(bool value) {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
+    bool btnRapidFireEnabled() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
+    void btnSetRapidFireSpeed(uint32_t ticks) {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
+    uint32_t btnRapidFireSpeed() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
     bool btnDown(Btn b) {
         StackProtection::check();
         UNIMPLEMENTED;
@@ -179,16 +199,6 @@ namespace rckid {
     }
 
     int16_t gyroZ() {
-        StackProtection::check();
-        UNIMPLEMENTED;
-    }
-
-    uint16_t lightAmbient() {
-        StackProtection::check();
-        UNIMPLEMENTED;        
-    }
-    
-    uint16_t lightUV() {
         StackProtection::check();
         UNIMPLEMENTED;
     }

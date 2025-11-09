@@ -51,7 +51,7 @@
 - [ ] settings menu for button lights
 - [X] preserve volume settings
 - [ ] low battery error and device won't power on
-- [ ] AVR debouncing
+- [X] AVR debouncing
 
 Nice extras would include:
 
@@ -81,8 +81,6 @@ Nice extras would include:
 # TODO
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
-
-- AVR debounce buttons (CHECK)
 
 - mp3 playback does not seem to work well. Could it be SD card instead of decoder related? 
 - need to verify decode times & io times as well as wait times
