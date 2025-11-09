@@ -68,6 +68,23 @@ namespace rckid {
         uint32_t numPixels() const { return w_ * h_; }
         uint32_t numHalfWords() const { return numBytes() / 2; }
 
+        ColorRGB colorAt(Coord x, Coord y) const {
+            switch (bpp_) {
+                case 16:
+                    return ColorRGB::fromRaw(PixelSurface<16>::pixelAt(x, y, w_, h_, pixels_));
+                case 8:
+                    return ColorRGB::fromRaw(palette_[PixelSurface<8>::pixelAt(x, y, w_, h_, pixels_)]);
+                case 4:
+                    return ColorRGB::fromRaw(palette_[PixelSurface<4>::pixelAt(x, y, w_, h_, pixels_)]);
+                case 2:
+                    return ColorRGB::fromRaw(palette_[PixelSurface<2>::pixelAt(x, y, w_, h_, pixels_)]);
+                case 1:
+                    return ColorRGB::fromRaw(palette_[PixelSurface<1>::pixelAt(x, y, w_, h_, pixels_)]);
+                default:
+                    UNREACHABLE; // invalid bpp
+            }
+        }
+
         // 285 kb left with 16bpp only
         void loadImage(ImageDecoder && decoder) {
             clear();

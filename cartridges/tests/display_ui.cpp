@@ -24,6 +24,7 @@
 #include <rckid/apps/Messages.h>
 #include <rckid/apps/DataSync.h>
 #include <rckid/apps/Recorder.h>
+#include <rckid/apps/Drawing.h>
 #include <rckid/apps/utils/Clock.h>
 #include <rckid/apps/utils/Timer.h>
 #include <rckid/apps/utils/Stopwatch.h>
@@ -97,7 +98,7 @@ ui::ActionMenu * audioMenuGenerator() {
 
 ui::ActionMenu * imagesMenuGenerator() {
     return new ui::ActionMenu{
-        ui::ActionMenu::Item("Drawing", assets::icons_64::paint_palette, nullptr),
+        ui::ActionMenu::Item("Drawing", assets::icons_64::paint_palette, App::run<Drawing>),
         // TODO browser for images alone
     };
 }

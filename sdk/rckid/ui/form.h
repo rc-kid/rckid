@@ -38,16 +38,16 @@ namespace rckid::ui {
         bool bgImage() const { return bgImage_; }
         bool header() const { return header_; }
 
-        void enableBgImage() {
-            if (bgImage_)
+        void enableBgImage(bool value = true) {
+            if (bgImage_ == value)
                 return;
-            bgImage_ = true;
+            bgImage_ = value;
         }
 
-        void enableHeader() {
-            if (header_)
+        void enableHeader(bool value = true) {
+            if (header_ == value)
                 return;
-            header_ = true;
+            header_ = value;
         }
 
         void loadBackgroundImage() {
