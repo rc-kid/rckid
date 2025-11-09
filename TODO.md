@@ -58,6 +58,8 @@ Nice extras would include:
 - [X] LED flashlight
 - [X] shuffle function in audio playback
 - [X] birthdays & PIM
+- [ ] select icon for contacts
+- [ ] larger font in contact details
 - [ ] rumbler effects on button presses
 - [X] allow background playback
 - [X] pin locking
@@ -83,6 +85,7 @@ Nice extras would include:
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
 - mp3 playback does not seem to work well. Could it be SD card instead of decoder related? 
+- seems 320kbps and variable length playback is too much - maybe can be fixed by more buffers
 - need to verify decode times & io times as well as wait times
 
 

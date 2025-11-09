@@ -45,7 +45,7 @@ namespace rckid {
             if (! memoryIsImmutable(buffer_)) {
                 uint32_t bufSize = bufferSize_ == BUFFER_FILE_PATH ? strlen(reinterpret_cast<char const *>(buffer_)) + 1 : bufferSize_;
                 uint8_t * newBuffer = new uint8_t[bufSize];
-                memcpy(newBuffer, other.buffer_, bufferSize_);
+                memcpy(newBuffer, other.buffer_, bufSize);
                 buffer_ = newBuffer;
             }
         }
@@ -96,7 +96,7 @@ namespace rckid {
 
         bool isFile() const { return bufferSize_ == BUFFER_FILE_PATH; }
 
-        char const * filename() {
+        char const * filename() const {
             if (bufferSize_ == BUFFER_FILE_PATH)
                 return reinterpret_cast<char const *>(buffer_);
             else

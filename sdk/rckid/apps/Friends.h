@@ -28,7 +28,7 @@ namespace rckid {
             ContactViewer(Contact & c) : 
                 ui::Form<bool>{Rect::XYWH(0, 0, 320, 240)},
                 c_{c},
-                image_{8, 18, Icon{c.image}},
+                image_{8, 18, c.image},
                 name_{80, 20, c.name},
                 birthday_{80, 0, STR(c.birthday.day() << "/" << c.birthday.month() << "/" << c.birthday.year())},
                 bdayExtras_{150, 0, STR("(" << c.daysTillBirthday() << " days)")},
@@ -186,7 +186,7 @@ namespace rckid {
                 [this](){ return contacts_.size(); },
                 [this](uint32_t index, Direction direction) {
                     Contact const & contact = contacts_[index];
-                    c_.set(contact.name, Icon{contact.image}, direction);
+                    c_.set(contact.name, contact.image, direction);
                 }
             }
         {
@@ -198,6 +198,25 @@ namespace rckid {
                 contacts_.push_back(c);
             });
             refreshNextBirthdays();
+
+            contextMenu_.add(ui::ActionMenu::Item("Add contact", [this]() {
+                auto name = App::run<TextDialog>("");
+                if (! name.has_value())
+                    return;
+                Contact c{name.value()};
+                contacts_.push_back(c);
+                Contact::saveAll(contacts_);
+                c_.setItem(contacts_.size() - 1, Direction::None);
+                editCurrentContact();
+            }));
+            contextMenu_.add(ui::ActionMenu::Item("Delete contact", [this]() {
+                if (contacts_.size() == 0)
+                    return;
+                contacts_.erase(contacts_.begin() + c_.currentIndex());
+                Contact::saveAll(contacts_);
+                c_.setItem(0, Direction::Up);
+                refreshNextBirthdays();
+            }));
         }
 
 
@@ -251,18 +270,13 @@ namespace rckid {
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                 btnClear(Btn::A);
                 btnClear(Btn::Up);
-                if (contacts_.size() != 0) {
-                    Contact & c = contacts_[c_.currentIndex()];
-                    ContactViewer cv{const_cast<Contact&>(c)};
-                    cv.setAnimation(c_.iconPosition(), c_.textPosition());
-                    cv.loop();
-                    c_.setItem(c_.currentIndex(), Direction::None);
-                    if (cv.result().has_value() && cv.result().value()) {
-                        // we have edited the contact, so we need to save the contacts we have now
-                        Contact::saveAll(contacts_);
-                        refreshNextBirthdays();
-                    }
-                }
+                editCurrentContact();
+            }
+            if (btnPressed(Btn::Select)) {
+                btnClear(Btn::Select);
+                auto action = App::run<PopupMenu<ui::Action>>(&contextMenu_);
+                if (action.has_value())
+                    action.value()();
             }
             c_.processEvents();
         }
@@ -281,6 +295,21 @@ namespace rckid {
                 c_.setItem(0);
             else
                 c_.showEmpty();
+        }
+
+        void editCurrentContact() {
+            if (contacts_.size() != 0) {
+                Contact & c = contacts_[c_.currentIndex()];
+                ContactViewer cv{const_cast<Contact&>(c)};
+                cv.setAnimation(c_.iconPosition(), c_.textPosition());
+                cv.loop();
+                c_.setItem(c_.currentIndex(), Direction::None);
+                if (cv.result().has_value() && cv.result().value()) {
+                    // we have edited the contact, so we need to save the contacts we have now
+                    Contact::saveAll(contacts_);
+                    refreshNextBirthdays();
+                }
+            }
         }
 
     private:
@@ -303,6 +332,10 @@ namespace rckid {
 
 
         ui::EventBasedCarousel c_;
+
+        ui::ActionMenu contextMenu_;
+
+
         NextBirthday nextBirthdays_[NUM_NEXT_BIRTHDAYS] = {
             NextBirthday(0),
             NextBirthday(1),

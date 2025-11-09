@@ -148,6 +148,7 @@ namespace rckid {
             void tick() override {
                 if (audioHeadphonesChanged())
                     radio_->enableEmbeddedAntenna(! audioHeadphones());
+                keepAlive();
             }
 
             Radio * radio_;

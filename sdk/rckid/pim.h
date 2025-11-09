@@ -25,7 +25,7 @@ namespace rckid {
         /** Birthday (time is ignored). */
         TinyDate birthday;
         /** Image used with the contact. This must be image from the device's SD card. */
-        String image;
+        Icon image{assets::icons_64::happy_face};
 
         String email;
         String phone;
@@ -53,6 +53,11 @@ namespace rckid {
             }
         }
 
+        Contact(String name):
+            name{name},
+            image{Icon{assets::icons_64::happy_face}} {
+        }
+
         uint32_t daysTillBirthday() const {
             TinyDate today = timeNow().date;
             return today.daysTillNextAnnual(birthday);  
@@ -61,7 +66,8 @@ namespace rckid {
         void save(ini::Writer & writer) const {
             writer.writeSection("contact");
             writer.writeValue("name", name);
-            writer.writeValue("image", image);
+            if (image.isFile())
+                writer.writeValue("image", image.filename());
             writer.writeValue("birthday", STR(birthday.day() << "/" << birthday.month() << "/" << birthday.year()));
             writer.writeValue("email", email);
             writer.writeValue("phone", phone);
