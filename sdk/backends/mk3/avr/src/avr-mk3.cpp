@@ -763,7 +763,9 @@ public:
                 uint8_t value = cmd::SetBrightness::fromBuffer(state_.buffer).value;
                 LOG("Brightness: " << value);
                 setBacklightPWM(value);
-                state_.brightness = value;
+                // only update the stored brightness if requested
+                if (cmd::SetBrightness::fromBuffer(state_.buffer).updateState)
+                    state_.brightness = value;
                 break;
             }
             case cmd::SetTime::ID: {

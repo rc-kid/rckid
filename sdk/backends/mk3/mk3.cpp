@@ -680,7 +680,8 @@ namespace rckid {
 
     void displayOff() {
         StackProtection::check();
-        i2c::sendAvrCommand(cmd::SetBrightness{0});
+        // turning off the display does not change the brightness setting
+        i2c::sendAvrCommand(cmd::SetBrightness{0, false});
     }
 
     void displayClear(ColorRGB color) {

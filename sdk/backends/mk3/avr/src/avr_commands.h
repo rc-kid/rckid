@@ -69,7 +69,8 @@ namespace rckid::cmd {
 
     COMMAND(33, SetBrightness,
         uint8_t value;
-        SetBrightness(uint8_t value): value{value} {}
+        bool updateState;
+        SetBrightness(uint8_t value, bool updateState = true): value{value}, updateState{updateState} {}
     );
     COMMAND(34, SetTime,
         TinyDateTime value;
