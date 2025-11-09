@@ -54,6 +54,8 @@
 #define RCKID_RUMBLER_NUDGE_TIME_OFF 1
 #define RCKID_RUMBLER_NUDGE_CYCLES 1
 
+#define RCKID_BUTTON_DEBOUNCE_TICKS 3
+
 /** When enabled, all logging information will be pushed not only to the USB tty, but also to hardware serial port connected to the given TX and RX pins. By default they correspond to the first 2 cartridge pins. Only uart0 is available for this purpose, and will be locked for the SDK usage as only uart0 pins are exposed on the cartridge.
  */
 #define RCKID_LOG_TO_SERIAL 0

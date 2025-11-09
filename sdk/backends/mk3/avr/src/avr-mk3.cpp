@@ -919,7 +919,22 @@ public:
      */
     //@{
 
+    enum class Button : uint8_t {
+        Left = 0,
+        Right,
+        Up,
+        Down,
+        A,
+        B,
+        Select,
+        Start,
+        Home,
+        VolumeUp,
+        VolumeDown,
+    };
+
     static inline uint8_t homeBtnLongPress_ = 0;
+    static inline uint8_t debounceCounters_[11] = {0};
 
     static void initializeButtons() {
         LOG("init buttons...")
@@ -939,6 +954,73 @@ public:
         homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
     }
 
+
+    static bool getButtonLastValue(Button btn) {
+        switch (btn) {
+            case Button::Home:
+                return state_.status.btnHome();
+            case Button::VolumeUp:
+                return state_.status.btnVolumeUp();
+            case Button::VolumeDown:
+                return state_.status.btnVolumeDown();
+            case Button::A:
+                return state_.status.btnA();
+            case Button::B:
+                return state_.status.btnB();
+            case Button::Select:
+                return state_.status.btnSelect();
+            case Button::Start:
+                return state_.status.btnStart();
+            case Button::Left:
+                return state_.status.btnLeft();
+            case Button::Right:
+                return state_.status.btnRight();
+            case Button::Up:
+                return state_.status.btnUp();
+            case Button::Down:
+                return state_.status.btnDown();
+            default:
+                ASSERT(false);
+                return false;
+        }
+    }
+
+    static bool getButtonValue(Button btn) {
+        bool last = getButtonLastValue(btn);
+        bool current; 
+
+        if (debounceCounters_[static_cast<uint8_t>(btn)] != 0) {
+            --debounceCounters_[static_cast<uint8_t>(btn)];
+            return last;
+        }
+        switch (btn) {
+            case Button::Home:
+            case Button::A:
+            case Button::Right:
+                current = ! gpio::read(AVR_PIN_BTN_1);
+                break;
+            case Button::VolumeUp:
+            case Button::B:
+            case Button::Up:
+                current = ! gpio::read(AVR_PIN_BTN_2);
+                break;
+            case Button::VolumeDown:
+            case Button::Start:
+            case Button::Left:
+                current = ! gpio::read(AVR_PIN_BTN_3);
+                break;
+            case Button::Select:
+            case Button::Down:
+                current = ! gpio::read(AVR_PIN_BTN_4);
+                break;
+            default:
+                ASSERT(false);
+        }
+        if (current != last)
+            debounceCounters_[static_cast<uint8_t>(btn)] = RCKID_BUTTON_DEBOUNCE_TICKS;
+        return current;
+    }
+
     static void homeBtnLongPress() {
         if (powerMode_ & POWER_MODE_ON) {
             powerOff();
@@ -953,11 +1035,11 @@ public:
     }
 
     static void readControlGroup() {
-        bool changed = state_.status.setControlButtons(
-            ! gpio::read(AVR_PIN_BTN_1), // home
-            ! gpio::read(AVR_PIN_BTN_2), // volume up
-            ! gpio::read(AVR_PIN_BTN_3)  // volume down
-        );
+        bool btnHome = getButtonValue(Button::Home);
+        bool btnVolumeUp = getButtonValue(Button::VolumeUp);
+        bool btnVolumeDown = getButtonValue(Button::VolumeDown);
+        bool changed = state_.status.setControlButtons(btnHome, btnVolumeUp, btnVolumeDown);
+
         // only advance if we are running system ticks
         if (powerMode_ != 0) {
             gpio::high(AVR_PIN_BTN_CTRL);
@@ -1004,12 +1086,12 @@ public:
     }
 
     static void readABXYGroup() {
-        bool changed = state_.status.setABXYButtons(
-            ! gpio::read(AVR_PIN_BTN_1), // a
-            ! gpio::read(AVR_PIN_BTN_2), // b
-            ! gpio::read(AVR_PIN_BTN_4), // sel
-            ! gpio::read(AVR_PIN_BTN_3)  // start
-        );
+        bool btnA = getButtonValue(Button::A);
+        bool btnB = getButtonValue(Button::B);
+        bool btnSelect = getButtonValue(Button::Select);
+        bool btnStart = getButtonValue(Button::Start);
+        bool changed = state_.status.setABXYButtons(btnA, btnB, btnSelect, btnStart);
+
         gpio::high(AVR_PIN_BTN_ABXY);
         gpio::low(AVR_PIN_BTN_DPAD);
         if (changed) {
@@ -1019,12 +1101,12 @@ public:
     }
 
     static void readDPadGroup() {
-        bool changed = state_.status.setDPadButtons(
-            ! gpio::read(AVR_PIN_BTN_3), // left
-            ! gpio::read(AVR_PIN_BTN_1), // right
-            ! gpio::read(AVR_PIN_BTN_2), // up
-            ! gpio::read(AVR_PIN_BTN_4)  // down
-        );
+        bool btnLeft = getButtonValue(Button::Left);
+        bool btnRight = getButtonValue(Button::Right);
+        bool btnUp = getButtonValue(Button::Up);
+        bool btnDown = getButtonValue(Button::Down);
+        bool changed = state_.status.setDPadButtons(btnLeft, btnRight, btnUp, btnDown);
+
         gpio::high(AVR_PIN_BTN_DPAD);
         gpio::low(AVR_PIN_BTN_CTRL);
         if (changed) {

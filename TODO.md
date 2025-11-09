@@ -27,8 +27,8 @@
 - [X] buy LEDs with proper forward voltage (https://www.tme.eu/cz/details/l128-4080ca3500001/vykonove-diody-led-emiter/lumileds/)
 - [X] order extra batteries (TME)
 - [X] order extra enclosures
-- [ ] order headphone jacks (mouser)
-- [ ] order AP2502 extras (mouser)
+- [X] order headphone jacks (mouser)
+- [X] order AP2502 extras (mouser)
 
 # XMas delivery checklist
 
@@ -179,6 +179,7 @@ Nice extras would include:
 - side buttons are too thin
 - pull-up for the headphone detect is too weak, try sth like 40kOhm? 
 - home button can be centered in the hole so that it is a bit higher up
+- connector pcb should move the pins as close to edge as possible for better contact (or make cartridges a bit taller, and meybe both)
 - is there a way how to make the headphones work with headphones that have microphone as well? maybe by connecting tip with some large resistor to 0 (68k or so) and then connecting the tip mate via even higher resistor to VCC as a pull up. Then it will read close to 0 when not inserted and VCC when inserted. But will this upset the audio? It actually might work and I can ignore the second sleeve and it would work with all headphones! (can I make it work with current audio setup by rewiring?)
 
 ## AVR
