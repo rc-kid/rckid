@@ -96,11 +96,9 @@ The converter is variable output resistor configuration straight from the datash
 
 ### 5V Charge Pump
 
-We are using [HX4002](datasheets/hx4002.pdf) charge pump, same as in mk II. The pump is capable of delivering in excess of 240mA for 3.6V input voltage (it runs from VCC, which is stepped up above 3.3v). It only powers the RGB leds, which take at most 12mA per channel, which gives us 6.6 RGBs at full power.
+We are using [HX4002](datasheets/hx4002.pdf) charge pump, same as in mk II. The pump is capable of delivering in excess of 240mA for 3.6V input voltage (it runs from VCC, which is stepped up above 3.3v). It only powers the [RGB leds](datasheets/rgb.pdf), which take at most 5mA per channel, which gives us 120mA when at full power.
 
-WS2812 compatible, but smaller & less powerful LEDs are used. As they require 5V and the AVR that controls them runs on 3.3V we use a converter.
-
-> TODO should there be 4 LEDs in the DPAD? maybe yes
+> TODO that the LEDs indeed sourse only that much.
 
 ### Power Consumption
 
@@ -142,11 +140,15 @@ This is within the `1C` discharge rate for the battery, which is good.
 
 As per the typical application, the microphone is connected differentially to `LMICP` and `LMICN` with `2k2` from MICBIAS to positive mic, 0.1uF capacitor on the positive output to right channel and direct connection to ground on the negative channel, which also goes to the left input via 0.1uF capacitor.
 
+> TODO Verify the microphone works
+
 #### Headset detection
 
 Headset detection is via a `100k` resistor to the `IOVDD` line to second ground terminal of the headphone jack. This will read high when headphones are not detected and will go to `0` when headphones are inserted as the ground will be connected to both terminals. The headset detection line is then fed to the audio codec for automatic speaker/headhone switching and to the RP2350 as well to determine the headphone status. 
 
-> TODO verify the pull-up is ok - would this work for headsets with microphones as well? 
+We use two switch, 3 contact [headset connector](datasheets/headphone%20jack.pdf), half sinking for better profile. 
+
+> TODO the pullup is wrong (too high) and also, maybe by connecting tip with some large resistor to 0 (68k or so) and then connecting the tip mate via even higher resistor to VCC as a pull up. Then it will read close to 0 when not inserted and VCC when inserted. But will this upset the audio? It actually might work and I can ignore the second sleeve and it would work with all headphones! (can I make it work with current audio setup by rewiring?)
 
 ### Radio Reset
 
@@ -255,7 +257,7 @@ SD card detect works ising internal pull-up on the `SD_CD` line. When no card is
 
 [ST7789v](datasheets/ST7789V.pdf) in 16bit parallel MCU interface is used with FPC connector for easier assembly. The display uses both power supplies, `IOVDD` for the digital interface and `IOVDD` for backlight. This allows for a better load distribution (otherwise the `3v3` always on SMPS has not much to do most of the time with only the AVR connected). The display uses 16bit parallel interface to speed up the data transfer process, which is extremely useful especially in framebuffer applications. The RDX line is also available so that the CPU can read from the display as well (can be used in the future for visua effects). 
 
-> TODO determine backlight resistor value 
+For backlight, we use [AP2502](datasheets/AP2502), which can sink up to 80mA of current in total of 4 channels. This is less bright than the max of 100mA recommended by the display datasheet, but is still comfortably high. 
 
 ## Programming & Debugging
 
@@ -267,7 +269,6 @@ The device provides 2 programming & debugging ports for the AVR and RP2350 chips
 
 - `SDA` and `SCL` lines for I2C
 - `INT/TX` for the AVR_INT/TX line to be able to debug the AVR chip
-- [ ] all unconnected pins, so that we can do fixes on the board if necessary
 
 ## DFM & DFA
 
@@ -279,9 +280,5 @@ At this stage the PCB is still fairly prototype stage as there is a reasonably h
 - speaker - requires soldering of the wires, maybe for plarge production can use speaker that has spring contects to the pcb (but how would the sound box work?)
 - rumbler - can be had with connector in large quantities
 
-
-Extras:
-
-- [X] use [this](https://cz.mouser.com/datasheet/2/1628/sj_43504_smt_tr-3510743.pdf) for the headphone jack
 
 

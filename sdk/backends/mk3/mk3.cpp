@@ -138,7 +138,6 @@ namespace rckid {
 
     namespace time {
         uint64_t nextSecond_ = 0;
-        bool idle_ = true;
         uint32_t idleTimeout_ = RCKID_IDLE_TIMEOUT; 
         uint32_t idleTimeoutKeepalive_ = RCKID_IDLE_TIMEOUT_KEEPALIVE;
         uint32_t numTicks_ = 0;
@@ -186,6 +185,11 @@ namespace rckid {
         AVRState::Status status;
         // TODO what if numBytes != status read? 
         i2c::getTransactionResponse(reinterpret_cast<uint8_t*>(&status), sizeof(AVRState::Status));
+        // if there has been change in button states, reset the timeout & keepalive counters
+        if (status.controlChange(io::avrState_.status)) {
+            time::idleTimeout_ = RCKID_IDLE_TIMEOUT;
+            time::idleTimeoutKeepalive_ = RCKID_IDLE_TIMEOUT_KEEPALIVE;
+        }
         // archive the old status
         io::lastStatus_ = io::avrState_.status;
         if (time::numTicks_ % RCKID_DEFAULT_RAPIDFIRE_TICKS == 0)
@@ -197,7 +201,6 @@ namespace rckid {
             io::avrState_.time.inc();
         }
         // TODO alarm
-        // TODO pwr
         // TODO accel
         // finally clear the interrupts once we have processed them
         io::avrState_.status.clearInterrupts();
@@ -467,16 +470,10 @@ namespace rckid {
         uint64_t now = time_us_64();
         while (now > time::nextSecond_) {
             time::nextSecond_ += 1000000;
-            if (time::idle_) {
-                --time::idleTimeoutKeepalive_;
-                --time::idleTimeout_;
-                if (time::idleTimeoutKeepalive_ == 0 || time::idleTimeout_ == 0)
-                    i2c::sendAvrCommand(cmd::PowerOff{});
-            } else {
-                time::idle_ = true;
-                time::idleTimeout_ = RCKID_IDLE_TIMEOUT;
-                time::idleTimeoutKeepalive_ = RCKID_IDLE_TIMEOUT_KEEPALIVE;
-            }
+            --time::idleTimeoutKeepalive_;
+            --time::idleTimeout_;
+            if (time::idleTimeoutKeepalive_ == 0 || time::idleTimeout_ == 0)
+                i2c::sendAvrCommand(cmd::PowerOff{});
             App::onSecondTick();
         }
         audio::lastHeadphones_ = audioHeadphones();

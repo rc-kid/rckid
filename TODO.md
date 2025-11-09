@@ -74,21 +74,30 @@ Nice extras would include:
 - [ ] RGB dimming that preserves colors (? is possible)
 - [ ] timer app
 - [ ] alarm app
+- [ ] port more games (15 puzzle at least)
+- [ ] add high scores
 
 
 # TODO
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
+- AVR debounce buttons (CHECK)
+
+
+
 - mp3 playback does not seem to work well. Could it be SD card instead of decoder related? 
 - need to verify decode times & io times as well as wait times
 
-- AVR debounce buttons
+
+- add some onPowerOff event that will be called when device decides to power off *and* when avr decides to power the device off as well (so that we can save state, etc)
+- numbered save slots for games + latest
+- audio settings are not loaded properly when startup (headphone/speaker switch, etc)
+
 - would be nice to have menu-like transitions between apps (i.e. multimain menu stuff)
 
 - clean debug prints (headphones, etc)
 - bg tasks have to be properly closed when some app says it is not compatible with them
-- keepalive for mp3 and radio
 
 - the color settings should be stored, perhaps per game? 
 - and when colors are updated, different colors should be update-able at the same time
@@ -108,14 +117,12 @@ Nice extras would include:
 - and same for text dialog
 
 - add counters, namely how long the redraw of the screen takes, from the beginning of render to the end of render
-- also a counter on how long we wait for the display update to finish
 
 - see if we can enable exceptions, what are the runtime & stack costs of them running
 - exceptions seem to be worthy, very little cost, mostly in binary size, but stack increases are small-ish
 
 - critical battery error
 - add RGB signalization to the avr mkIII
-- add interrupt for the charging pin as well when the device is off to detect VUSB insertion and charging enabled/disabled
 - avr int as serial tx mabe add 0r resistor on the line to avoid bleeding into rp2350
 
 - improve audio fidelity for GBCEmu

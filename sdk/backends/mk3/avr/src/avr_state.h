@@ -78,6 +78,16 @@ namespace rckid {
                 b_ &= ~(BTN_HOME | BTN_VOLUMEUP | BTN_VOLUMEDOWN);
             }
 
+            /** Returns true if any of the button state changed between this state and the other one. 
+             */
+            bool controlChange(Status const & other) const {
+                if (a_ != other.a_)
+                    return true;
+                if ((b_ & (BTN_HOME | BTN_VOLUMEUP | BTN_VOLUMEDOWN)) != (other.b_ & (BTN_HOME | BTN_VOLUMEUP | BTN_VOLUMEDOWN)))
+                    return true;
+                return false;
+            }
+
         private:
 
             void setPwrInt() { c_ |= PWR_INT; }
