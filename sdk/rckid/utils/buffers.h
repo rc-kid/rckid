@@ -52,6 +52,89 @@ namespace rckid {
 
     }; // rckid::DoubleBuffer<T>
 
+    /**  */
+    template<typename T>
+    class MultiBuffer {
+    public:
+
+        MultiBuffer(uint32_t size, uint32_t numBuffers):
+            bufferSize_{size},
+            numBuffers_{numBuffers},
+            buffers_{new Buffer*[numBuffers_]}
+        {
+            for (uint32_t i = 0; i < numBuffers_; ++i) {
+                buffers_[i] = static_cast<Buffer*>(operator new(sizeof(Buffer) + sizeof(T) * bufferSize_));
+                markFree(buffers_[i]->data);
+            }
+        }
+
+        ~MultiBuffer() {
+            for (uint32_t i = 0; i < numBuffers_; ++i)
+                delete buffers_[i];
+            delete [] buffers_;
+        }
+
+        uint32_t size() const { return bufferSize_; }
+        uint32_t numBuffers() const { return numBuffers_; }
+
+        /** Returns next free buffer that can be refilled with data. If all buffers are in use, returns nullptr.
+         */
+        T * nextFree() {
+            if (free_ == nullptr)
+                return nullptr;
+            T * result = free_->data;
+            free_ = free_->next;
+            return result;
+        }
+
+        /** Returns next ready buffer, i.e. buffer that can be consumed. Buffers are consumed in the order they were marked as ready. Returns nullptr if no ready buffer is available.
+         */
+        T * nextReady() {
+            if (ready_ == nullptr)
+                return nullptr;
+            T * result = ready_->data;
+            ready_ = ready_->next;
+            if (ready_ == nullptr)
+                readyEnd_ = nullptr;
+            return result;
+        }
+
+        /** Makrs the buffer as free. 
+         */
+        void markFree(T * buffer) {
+            Buffer * buf = reinterpret_cast<Buffer*>(buffer) - 1;
+            buf->next = free_;
+            free_ = buf;
+        }
+
+        /** Marks the bufer as ready to be consumed. Buffers are consumed in the order they were marked ready.
+         */
+        void markReady(T * buffer) {
+            Buffer * buf = reinterpret_cast<Buffer*>(buffer) - 1;
+            buf->next = nullptr;
+            if (readyEnd_ == nullptr) {
+                ready_ = buf;
+                readyEnd_ = buf;
+            } else {
+                readyEnd_->next = buf;
+                readyEnd_ = buf;
+            }
+        }
+
+    private:
+        struct Buffer {
+            Buffer * next;
+            T data[];
+        }; 
+
+        uint32_t bufferSize_;
+        uint32_t numBuffers_;
+        Buffer ** buffers_ = nullptr;
+        Buffer * free_ = nullptr;
+        Buffer * ready_ = nullptr;
+        Buffer * readyEnd_ = nullptr;
+    }; // rckid::MultiBuffer<T>
+
     template<typename T>
     class LazyBuffer {
     public:
