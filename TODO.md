@@ -84,14 +84,8 @@ Nice extras would include:
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
-- mp3 playback does not seem to work well. Could it be SD card instead of decoder related? 
-- seems 320kbps and variable length playback is too much - maybe can be fixed by more buffers
-- need to verify decode times & io times as well as wait times
-
-
 - add some onPowerOff event that will be called when device decides to power off *and* when avr decides to power the device off as well (so that we can save state, etc)
 - numbered save slots for games + latest
-- audio settings are not loaded properly when startup (headphone/speaker switch, etc)
 
 - would be nice to have menu-like transitions between apps (i.e. multimain menu stuff)
 
@@ -107,8 +101,6 @@ Nice extras would include:
 - some avr commands are longer than 16 bytes, which means it cannot be stored via the I2C async commands
 
 - platform string utils should not be used, instead everything should run off rckid::String
-
-- the rapid fire as is is kind of working, but maybe need per buttom settings, etc. 
 
 - add calendar
 

@@ -53,13 +53,16 @@ namespace rckid {
     }; // rckid::DoubleBuffer<T>
 
 
+    /** Counted buffer consists of a buffer and size, which can be used to indicate how much of the counted buffer's allocated space is currently used. This is particularly useful for things like variable frame size playback.
+     */
     template<typename T>
-    PACKED(struct CountedBuffer {
-        uint32_t size = 0;
+    struct CountedBuffer {
+        size_t size = 0;
         T data[];
-    });
+    };
 
-    /**  */
+    /** MultiBuffer keeps multiple counted buffers which can move from free to taken to ready states while the multi buffer keeps track of their state transitions. Compared to simple double buffering, this provides much better resilience wrt real-time playback as the number of say preloaded frames can be increased so when a single frame decode takes more time, the playback still has ready buffers to take from.
+     */
     template<typename T>
     class MultiBuffer {
     public:
@@ -107,11 +110,15 @@ namespace rckid {
             return result;
         }
 
-        /** Makrs the buffer as free. 
+        /** Marks the buffer as free. 
          */
-        void markFree(CountedBuffer<T> * buffer) {
-            Buffer * buf = reinterpret_cast<Buffer*>(buffer->data) - 1;
-            buffer->size = bufferSize_;
+        void markFree(CountedBuffer<T> * buffer) { markFree(buffer->data); }
+
+        /** Marks the raw buffer as free. This is a convenience function for cases where only the data pointer is available.
+         */
+        void markFree(T * data) {
+            Buffer * buf = reinterpret_cast<Buffer*>(data) - 1;
+            buf->buffer.size = bufferSize_;
             buf->next = free_;
             free_ = buf;
         }
@@ -131,12 +138,12 @@ namespace rckid {
         }
 
     private:
-        PACKED(struct Buffer {
+        struct Buffer {
             Buffer * next;
             CountedBuffer<T> buffer;
-        }); 
+        }; 
 
-        static_assert(sizeof(Buffer) == sizeof(Buffer*) + sizeof(uint32_t));
+        static_assert(sizeof(Buffer) == sizeof(size_t) + sizeof(Buffer*));
 
         uint32_t bufferSize_;
         uint32_t numBuffers_;

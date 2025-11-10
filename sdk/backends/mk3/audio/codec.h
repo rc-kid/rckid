@@ -165,7 +165,7 @@ namespace rckid {
 
         /** Sets the speaker volume, 0..63. When 0 is set instead of the lowest volume supported, the output is muted. Note that the speaker output is also dependent on the headphone jack state in general.   
          */
-        static void setVolumeSpeaker(uint8_t volume) {
+        static void setVolumeSpeakerRaw(uint8_t volume) {
             if (volume == 0) {
                 setRegister(REG_LSPKOUT_VOLUME, SPEAKER_MUTE);
                 setRegister(REG_RSPKOUT_VOLUME, SPEAKER_MUTE | UPDATE_BIT);
@@ -175,7 +175,7 @@ namespace rckid {
             }
         }
 
-        static void setVolumeHeadphones(uint8_t volume) {
+        static void setVolumeHeadphonesRaw(uint8_t volume) {
             if (volume == 0) {
                 setRegister(REG_LHP_VOLUME, HEADPHONE_MUTE);
                 setRegister(REG_RHP_VOLUME, HEADPHONE_MUTE | UPDATE_BIT);
@@ -183,6 +183,14 @@ namespace rckid {
                 setRegister(REG_LHP_VOLUME, volume);
                 setRegister(REG_RHP_VOLUME, volume | UPDATE_BIT);
             }
+        }
+
+        static void setVolumeSpeaker(uint8_t volume) {
+            setVolumeSpeakerRaw((volume << 2) | (volume & 0x3));
+        }
+
+        static void setVolumeHeadphones(uint8_t volume) {
+            setVolumeHeadphonesRaw((volume << 2) | (volume & 0x3));
         }
 
         /** Stops all the audio processing. 

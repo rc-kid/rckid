@@ -823,12 +823,11 @@ namespace rckid {
         StackProtection::check();
         if (value > 15)
             value = 15;
-        uint8_t rawValue = (value << 2) | (value & 0x3);
         if (audioHeadphones()) {
-            Codec::setVolumeHeadphones(rawValue);
+            Codec::setVolumeHeadphones(value);
             io::avrState_.audio.setVolumeHeadphones(value);
         } else {
-            Codec::setVolumeSpeaker(rawValue);
+            Codec::setVolumeSpeaker(value);
             io::avrState_.audio.setVolumeSpeaker(value);
         }
         // tell AVR that we change the volume

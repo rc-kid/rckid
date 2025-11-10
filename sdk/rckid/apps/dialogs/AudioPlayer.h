@@ -91,8 +91,10 @@ namespace rckid {
         }
 
         ~AudioPlayer() override {
+            AudioStream * as = as_;
+            as_ = nullptr;
             delete task_;
-            delete as_;
+            delete as;
         }
 
     protected:

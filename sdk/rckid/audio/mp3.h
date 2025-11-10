@@ -9,8 +9,8 @@ namespace rckid {
 
     class MP3Stream : public AudioStream {
     public:
-        MP3Stream(std::unique_ptr<ReadStream> input, String name):
-            AudioStream{1152 * 4},
+        MP3Stream(std::unique_ptr<ReadStream> input, String name, uint32_t numBuffers = 4):
+            AudioStream{1152 * 4, numBuffers},
             in_{std::move(input)}, 
             name_{name},
             buffer_{new uint8_t[MP3_BUFFER_SIZE]},

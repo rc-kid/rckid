@@ -40,11 +40,10 @@ namespace rckid {
     class AudioStream {
     public:
 
-        static AudioStream * fromFile(String const & path);
+        static AudioStream * fromFile(String const & path, uint32_t numBuffers = 4);
 
         virtual ~AudioStream() {
             delete playbackBuffer_;
-            LOG(LL_INFO, "AS delete");
         }
 
         virtual String name() const = 0;
@@ -56,9 +55,12 @@ namespace rckid {
         /** To be called periodically in the main loop, checks there is need for more audio data to be generated and calls the refill samples function accordingly.
          */
         void update() {
-            if (refill_ != nullptr) {
-                *refillSize_ = refillSamples(refill_, *refillSize_);
-                refill_ = nullptr;
+            for (uint32_t i = 0, e = playbackBuffer_->numBuffers(); i < e; ++i) {
+                CountedBuffer<int16_t> * buffer = playbackBuffer_->nextFree();
+                if (buffer == nullptr)
+                    break;
+                buffer->size = refillSamples(buffer->data, buffer->size / 2);
+                playbackBuffer_->markReady(buffer);
             }
         }
 
@@ -66,8 +68,8 @@ namespace rckid {
    
     protected:
 
-        AudioStream(uint32_t bufferSize) {
-            playbackBuffer_ = new DoubleBuffer<int16_t>{bufferSize};
+        AudioStream(uint32_t bufferSize, uint32_t numBuffers = 4) {
+            playbackBuffer_ = new MultiBuffer<int16_t>{bufferSize, numBuffers};
         }
 
     private:
@@ -76,9 +78,7 @@ namespace rckid {
         uint32_t underflowCount_ = 0;
 
         
-        DoubleBuffer<int16_t> * playbackBuffer_ = nullptr;
-        uint32_t * refillSize_ = nullptr;
-        int16_t * refill_ = nullptr;
+        MultiBuffer<int16_t> * playbackBuffer_ = nullptr;
     }; // rckid::AudioStream
 
     inline void audioPlay(AudioStream & stream) {
@@ -87,14 +87,18 @@ namespace rckid {
         audioPlay(sampleRate, [& stream](int16_t * & buffer, uint32_t & size) {
             
             if (buffer == nullptr) {
-                size = stream.refillSamples(stream.playbackBuffer_->front(), stream.playbackBuffer_->size() / 2);
-                buffer = stream.playbackBuffer_->front();
-                stream.playbackBuffer_->swap();
+                CountedBuffer<int16_t> * b = stream.playbackBuffer_->nextFree();
+                size = stream.refillSamples(b->data, b->size / 2);
+                buffer = b->data;
             } else {
-                if (stream.refill_ != nullptr)
+                CountedBuffer<int16_t> * b = stream.playbackBuffer_->nextReady();
+                if (b == nullptr) {
                     ++stream.underflowCount_;
-                stream.refill_ = buffer;
-                stream.refillSize_ = & size;
+                } else {
+                    stream.playbackBuffer_->markFree(buffer);
+                    buffer = b->data;
+                    size = b->size;
+                }
             }
         });
     }
