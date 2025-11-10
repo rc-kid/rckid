@@ -24,16 +24,16 @@ TEST(platform, multibuffer) {
     EXPECT(mb.numBuffers() == 8);
     EXPECT(mb.nextReady() == nullptr);
     // test single buffer  
-    uint16_t * x = mb.nextFree();
+    CountedBuffer<uint16_t> * x = mb.nextFree();
     EXPECT(x != nullptr);
     mb.markReady(x);
-    uint16_t * y = mb.nextReady();
+    CountedBuffer<uint16_t> * y = mb.nextReady();
     EXPECT(y == x);
     EXPECT(mb.nextReady() == nullptr);
     // return to free buffers
     mb.markFree(y);
     // get all free buffers
-    uint16_t * buffers[8];
+    CountedBuffer<uint16_t> * buffers[8];
     for (uint32_t i = 0; i < 8; ++i) {
         buffers[i] = mb.nextFree();
         EXPECT(buffers[i] != nullptr);
@@ -44,7 +44,7 @@ TEST(platform, multibuffer) {
         mb.markReady(buffers[i]);
     // verify
     for (uint32_t i = 0; i < 8; ++i) {
-        uint16_t * b = mb.nextReady();
+        CountedBuffer<uint16_t> * b = mb.nextReady();
         EXPECT(b == buffers[i]);
     }
     EXPECT(mb.nextReady() == nullptr);

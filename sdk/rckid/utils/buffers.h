@@ -52,6 +52,13 @@ namespace rckid {
 
     }; // rckid::DoubleBuffer<T>
 
+
+    template<typename T>
+    PACKED(struct CountedBuffer {
+        uint32_t size = 0;
+        T data[];
+    });
+
     /**  */
     template<typename T>
     class MultiBuffer {
@@ -64,7 +71,8 @@ namespace rckid {
         {
             for (uint32_t i = 0; i < numBuffers_; ++i) {
                 buffers_[i] = static_cast<Buffer*>(operator new(sizeof(Buffer) + sizeof(T) * bufferSize_));
-                markFree(buffers_[i]->data);
+                buffers_[i]->buffer.size = bufferSize_;
+                markFree(& buffers_[i]->buffer);
             }
         }
 
@@ -79,20 +87,20 @@ namespace rckid {
 
         /** Returns next free buffer that can be refilled with data. If all buffers are in use, returns nullptr.
          */
-        T * nextFree() {
+        CountedBuffer<T> * nextFree() {
             if (free_ == nullptr)
                 return nullptr;
-            T * result = free_->data;
+            CountedBuffer<T> * result = & free_->buffer;
             free_ = free_->next;
             return result;
         }
 
         /** Returns next ready buffer, i.e. buffer that can be consumed. Buffers are consumed in the order they were marked as ready. Returns nullptr if no ready buffer is available.
          */
-        T * nextReady() {
+        CountedBuffer<T> * nextReady() {
             if (ready_ == nullptr)
                 return nullptr;
-            T * result = ready_->data;
+            CountedBuffer<T> * result = & ready_->buffer;
             ready_ = ready_->next;
             if (ready_ == nullptr)
                 readyEnd_ = nullptr;
@@ -101,16 +109,17 @@ namespace rckid {
 
         /** Makrs the buffer as free. 
          */
-        void markFree(T * buffer) {
-            Buffer * buf = reinterpret_cast<Buffer*>(buffer) - 1;
+        void markFree(CountedBuffer<T> * buffer) {
+            Buffer * buf = reinterpret_cast<Buffer*>(buffer->data) - 1;
+            buffer->size = bufferSize_;
             buf->next = free_;
             free_ = buf;
         }
 
         /** Marks the bufer as ready to be consumed. Buffers are consumed in the order they were marked ready.
          */
-        void markReady(T * buffer) {
-            Buffer * buf = reinterpret_cast<Buffer*>(buffer) - 1;
+        void markReady(CountedBuffer<T> * buffer) {
+            Buffer * buf = reinterpret_cast<Buffer*>(buffer->data) - 1;
             buf->next = nullptr;
             if (readyEnd_ == nullptr) {
                 ready_ = buf;
@@ -122,10 +131,12 @@ namespace rckid {
         }
 
     private:
-        struct Buffer {
+        PACKED(struct Buffer {
             Buffer * next;
-            T data[];
-        }; 
+            CountedBuffer<T> buffer;
+        }); 
+
+        static_assert(sizeof(Buffer) == sizeof(Buffer*) + sizeof(uint32_t));
 
         uint32_t bufferSize_;
         uint32_t numBuffers_;
