@@ -128,6 +128,8 @@ namespace rckid::ui {
 
     protected:
 
+        friend class Header;
+
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
             if (bgImage_) {
                 ASSERT(bg_ != nullptr);

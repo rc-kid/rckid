@@ -130,10 +130,12 @@ namespace rckid {
     void ST7789::setUpdateRegion(Rect rect) {
         enterCommandMode();
         switch (mode_) {
-            case MODE_FULL_NATIVE:
+            case MODE_FULL_NATIVE: {
+                Coord offset = 320 - rect.right();
                 setColumnRange(rect.top(), rect.bottom() - 1);
-                setRowRange(rect.left(), rect.right() - 1);
+                setRowRange(rect.left() + offset, rect.right() + offset - 1);
                 break;
+            }
             case MODE_HALF_NATIVE:
                 UNIMPLEMENTED;
                 break;

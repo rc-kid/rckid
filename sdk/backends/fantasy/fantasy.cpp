@@ -700,6 +700,7 @@ namespace rckid {
         if (value > 15)
             value = 15;
         audio::volume = value;
+        ui::Header::requireRefresh();
     }
 
     void audioPlay(uint32_t sampleRate, AudioCallback cb) {

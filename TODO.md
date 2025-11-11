@@ -84,15 +84,16 @@ Nice extras would include:
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
 - clean-up the code around display initialization
+- clean debug prints (headphones, etc)
 - document host file system
 
+- header update almost always happens in the actual window as if the window switch is not registered, but not sure why. Sometimes the window switch registers though, but on a wrong transition
 
 - add some onPowerOff event that will be called when device decides to power off *and* when avr decides to power the device off as well (so that we can save state, etc)
 - numbered save slots for games + latest
 
 - would be nice to have menu-like transitions between apps (i.e. multimain menu stuff)
 
-- clean debug prints (headphones, etc)
 - bg tasks have to be properly closed when some app says it is not compatible with them
 
 - the color settings should be stored, perhaps per game? 

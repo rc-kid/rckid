@@ -92,6 +92,7 @@ namespace rckid {
             // ticks happen right after update as they request current state from the AVR and this minimizes the likelihood of the arrival of new state during the next update cycle
             tick();
             displayWaitUpdateDone();
+            ui::Header::renderIfRequired();
             draw();
             ++redraws_;
         }

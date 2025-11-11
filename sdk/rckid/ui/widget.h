@@ -131,6 +131,13 @@ namespace rckid::ui {
          */
         virtual bool processEvents() { return true; }
 
+        /** Widget simply renders columns of all child elements in the order they are defined in the list of children, i.e. the earier children can be overdrawn with the later ones. Override this function in child classes to provide the widget specific rendering. 
+         */
+        virtual void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) {
+            for (auto w : children_)
+                renderChild(w, column, buffer, starty, numPixels);
+        }
+
     protected:
 
         Widget() = default;
@@ -141,12 +148,6 @@ namespace rckid::ui {
 
         Widget(Rect rect): x_{rect.x}, y_{rect.y}, w_{rect.w}, h_{rect.h} {}
 
-        /** Widget simply renders columns of all child elements in the order they are defined in the list of children, i.e. the earier children can be overdrawn with the later ones. Override this function in child classes to provide the widget specific rendering. 
-         */
-        virtual void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) {
-            for (auto w : children_)
-                renderChild(w, column, buffer, starty, numPixels);
-        }
 
         /** Called when the widget is resized so that child classes can override and react to the change such as repositioning their contents. 
          */

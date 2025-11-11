@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <platform/writer.h>
 
 namespace rckid {
 
@@ -95,5 +96,10 @@ namespace rckid {
 
     using Rect = TRect<Coord>;
     using Point = TPoint<Coord>;
+
+    inline Writer & operator << (Writer & w, Rect const & r) {
+        w << "Rect[" << r.x << ", " << r.y << ", " << r.w << ", " << r.h << "]";
+        return w;
+    }
 
 } // namespace rckid

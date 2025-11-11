@@ -3,6 +3,7 @@
 #include "../radio.h"
 
 #include "style.h"
+#include "form.h"
 #include "header.h"
 
 
@@ -139,5 +140,39 @@ namespace rckid::ui {
             }
         }
     }
+
+    void ui::Header::renderIfRequired() {
+        if (! refreshRequired_)
+            return;
+        refreshRequired_ = false;
+        if (instance_ == nullptr)
+            instance();
+        Rect oldRegion = displayUpdateRegion();
+        displayWaitUpdateDone();
+        displaySetUpdateRegion(Rect::XYWH(0, 0, RCKID_DISPLAY_WIDTH, 16));
+        DoubleBuffer<uint16_t> buffer{16};
+        Coord column = 319;
+        instance_->renderRawColumn(column, buffer.front(), 0, 16);
+        instance_->renderRawColumn(column, buffer.back(), 0, 16);
+        displayUpdate(buffer.front(), 16, [&]() {
+            if (--column < 0)
+                return;
+            buffer.swap();
+            displayUpdate(buffer.front(), 16);
+            if (column > 0)
+                instance_->renderRawColumn(column - 1, buffer.back(), 0, 16);
+        });
+        displayWaitUpdateDone();
+        cpu::delayUs(2000);
+        displaySetUpdateRegion(oldRegion);
+    }
+
+    void ui::Header::renderRawColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) {
+        if (FormWidget::bg_ != nullptr)
+            FormWidget::bg_->renderColumn(column, buffer, starty, numPixels);
+        Tilemap::renderColumn(column, buffer, starty, numPixels);
+    }
+
+
 
 } // namespace rckid::ui

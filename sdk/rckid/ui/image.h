@@ -64,27 +64,6 @@ namespace rckid::ui {
 
         Bitmap const * bitmap() const { return bmp_; }
     
-    protected:
-
-        CustomImage(Bitmap * bmp): bmp_{bmp} {
-            if (bmp_ != nullptr) {
-                w_ = bmp_->width();
-                h_ = bmp_->height();
-                reposition();
-            }
-        }
-
-        CustomImage(Rect rect, Bitmap * bmp): 
-            Widget{rect},
-            bmp_{bmp} {
-            if (bmp_ != nullptr)
-                reposition();
-        }   
-
-        CustomImage(CustomImage const & other) = default;
-
-        CustomImage & operator = (CustomImage const & other) = default;
-
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
             if (bmp_ == nullptr)
                 return;
@@ -110,6 +89,27 @@ namespace rckid::ui {
                 }
             }
         }
+
+    protected:
+
+        CustomImage(Bitmap * bmp): bmp_{bmp} {
+            if (bmp_ != nullptr) {
+                w_ = bmp_->width();
+                h_ = bmp_->height();
+                reposition();
+            }
+        }
+
+        CustomImage(Rect rect, Bitmap * bmp): 
+            Widget{rect},
+            bmp_{bmp} {
+            if (bmp_ != nullptr)
+                reposition();
+        }   
+
+        CustomImage(CustomImage const & other) = default;
+
+        CustomImage & operator = (CustomImage const & other) = default;
 
         void resize() override {
             reposition();

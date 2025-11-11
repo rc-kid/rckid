@@ -832,6 +832,7 @@ namespace rckid {
         }
         // tell AVR that we change the volume
         i2c::sendAvrCommand(cmd::SetAudioSettings{io::avrState_.audio});
+        ui::Header::requireRefresh();
     }
 
     void audioPlay(uint32_t sampleRate, AudioCallback cb) {

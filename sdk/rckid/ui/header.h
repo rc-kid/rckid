@@ -63,9 +63,15 @@ namespace rckid::ui {
          */
         static void refresh();
 
+        static bool refreshRequired() { return refreshRequired_; }
+
+        static void requireRefresh() { refreshRequired_ = true; }
+
         static void refreshStyle();
 
         static void createPalette(uint16_t * palette);
+
+        static void renderIfRequired(); 
 
     protected:
 
@@ -75,10 +81,17 @@ namespace rckid::ui {
          */
         void update() override;
 
+        void draw() override {
+            Tilemap::draw();
+            refreshRequired_ = false;
+        }
+
         /** Unlike normal widgets,  */
         void renderRow([[maybe_unused]] Coord row, [[maybe_unused]] uint16_t * buffer, [[maybe_unused]] Coord startx, [[maybe_unused]] Coord numPixels) {
             UNIMPLEMENTED;            
         }
+
+        void renderRawColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels);
 
     private:
 
@@ -88,6 +101,7 @@ namespace rckid::ui {
         static constexpr uint32_t PALETTE_RED = 35;
 
         static inline Header * instance_ = nullptr;
+        static inline bool refreshRequired_ = false;
 
         uint16_t palette_[256]; 
     }; // rckid::ui::Header
