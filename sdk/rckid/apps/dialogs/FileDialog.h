@@ -10,8 +10,10 @@ namespace rckid {
 
         String name() const override { return "FileDialog"; }
 
-        FileDialog(char const * path = "/") : ui::Form<String>{},
-            c_{path} {
+        String title() const { return title_; }
+
+        FileDialog(char const * path = "/", String title = "FileDialog") : ui::Form<String>{},
+            c_{path}, title_{title} {
             using namespace ui;
             c_.setRect(Rect::XYWH(0, 160, 320, 80));
             c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
@@ -53,6 +55,7 @@ namespace rckid {
 
     private:
         ui::FileBrowser c_;
+        String title_;
         ui::ActionMenu contextMenu_; 
 
     }; // rckid::FileDialog

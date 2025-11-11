@@ -107,14 +107,24 @@ namespace rckid::ui {
                 return Icon{assets::icons_64::folder};
             } else {
                 String ext = fs::ext(entry.name());
-                if (ext == ".png" || ext == ".jpg" || ext == ".jpeg")
+                if (ext == ".png") {
+                    String fullPath = fs::join(path_, entry.name());
+                    // if the file has size we need (64x64), use the file as its own icon
+                    PNG png = PNG::fromStream(fs::fileRead(fullPath));
+                    if (png.width() == 64 && png.height() == 64) {
+                        return Icon{fs::join(path_, entry.name()).c_str()};
+                    } else {
+                        return Icon{assets::icons_64::paint_palette};
+                    }
+                } else if (ext == ".jpg" || ext == ".jpeg") {
                     return Icon{assets::icons_64::paint_palette};
-                else if (ext == ".mp3") 
+                } else if (ext == ".mp3") {
                     return Icon{assets::icons_64::music_note};
-                else if (ext == ".gb" || ext == ".gbc")
+                } else if (ext == ".gb" || ext == ".gbc") {
                     return Icon{assets::icons_64::gameboy};
-                else
+                } else {
                     return Icon{assets::icons_64::notes};
+                }
             }
         }
 

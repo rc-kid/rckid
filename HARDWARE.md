@@ -136,6 +136,8 @@ This is within the `1C` discharge rate for the battery, which is good.
 - `GPIO3` is tied to ground as per the dataset for unused gpio
 - `MODE` is tied to ground for I2C selection
 
+Note that I2C communication with the chip was not working when MCLK was being generated on the breadboard. This was fixed by adding the RC filter to I2C lines as per the datasheet (220R, 33pF). 
+
 #### Microphone
 
 As per the typical application, the microphone is connected differentially to `LMICP` and `LMICN` with `2k2` from MICBIAS to positive mic, 0.1uF capacitor on the positive output to right channel and direct connection to ground on the negative channel, which also goes to the left input via 0.1uF capacitor.

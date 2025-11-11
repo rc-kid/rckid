@@ -5,6 +5,7 @@
 #include "dialogs/DateDialog.h"
 #include "../ui/scrollview.h"
 #include "../ui/carousel.h"
+#include "../assets/fonts/Iosevka24.h"
 
 
 namespace rckid {
@@ -31,7 +32,7 @@ namespace rckid {
                 image_{8, 18, c.image},
                 name_{80, 20, c.name},
                 birthday_{80, 0, STR(c.birthday.day() << "/" << c.birthday.month() << "/" << c.birthday.year())},
-                bdayExtras_{150, 0, STR("(" << c.daysTillBirthday() << " days)")},
+                bdayExtras_{200, 0, STR("(" << c.daysTillBirthday() << " days)")},
                 phone_{80, 30, c.phone},
                 email_{80, 60, c.email},
                 address_{80, 90, c.address},
@@ -51,6 +52,12 @@ namespace rckid {
                 contents_.addChild(email_);
                 contents_.addChild(address_);
                 contents_.addChild(note_);
+                birthday_.setFont(Font::fromROM<assets::Iosevka24>());
+                phone_.setFont(Font::fromROM<assets::Iosevka24>());
+                email_.setFont(Font::fromROM<assets::Iosevka24>());
+                address_.setFont(Font::fromROM<assets::Iosevka24>());
+                note_.setFont(Font::fromROM<assets::Iosevka24>());
+                bdayExtras_.setFont(Font::fromROM<assets::Iosevka24>());
                 image_.setTransparentColor(ColorRGB::Black());
                 name_.setFont(Font::fromROM<assets::OpenDyslexic64>());
                 bdayExtras_.setColor(ui::Style::accentFg());
@@ -59,6 +66,14 @@ namespace rckid {
                     if (n.has_value()) {
                         c_.name = n.value();
                         name_.setText(c_.name);
+                        setResult(true); // mark dirty
+                    }
+                }));
+                contextMenu_.add(ui::ActionMenu::Item("Edit image", [this]() {
+                    auto icon = App::run<FileDialog>("/files/icons", "Select friend icon");
+                    if (icon.has_value()) {
+                        c_.image = Icon{icon.value().c_str()};
+                        image_ = c_.image;
                         setResult(true); // mark dirty
                     }
                 }));

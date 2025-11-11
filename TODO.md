@@ -21,7 +21,6 @@
 - [X] verify battery operation works 
 - [X] add missing AVR features (charging detection, etc.)
 - [ ] determine the actual speed & how to set it to 8MHz? Or even 5? 
-
 - [X] buy torx M2x10mm (https://www.nerezka.cz/sroub-m-2-x-10-din-965tx-a2) 
 - [X] buy threaded inserts for thermosets (https://www.tme.eu/cz/en/details/b2_bn1054/threaded-insertions/bossard/1386727/)
 - [X] buy LEDs with proper forward voltage (https://www.tme.eu/cz/details/l128-4080ca3500001/vykonove-diody-led-emiter/lumileds/)
@@ -58,8 +57,8 @@ Nice extras would include:
 - [X] LED flashlight
 - [X] shuffle function in audio playback
 - [X] birthdays & PIM
-- [ ] select icon for contacts
-- [ ] larger font in contact details
+- [X] select icon for contacts
+- [X] larger font in contact details
 - [ ] rumbler effects on button presses
 - [X] allow background playback
 - [X] pin locking
@@ -84,6 +83,10 @@ Nice extras would include:
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
+- clean-up the code around display initialization
+- document host file system
+
+
 - add some onPowerOff event that will be called when device decides to power off *and* when avr decides to power the device off as well (so that we can save state, etc)
 - numbered save slots for games + latest
 
@@ -94,9 +97,6 @@ Nice extras would include:
 
 - the color settings should be stored, perhaps per game? 
 - and when colors are updated, different colors should be update-able at the same time
-
-> fix below when at home
-- data sync app will not re-sync when ejected
 
 - some avr commands are longer than 16 bytes, which means it cannot be stored via the I2C async commands
 
@@ -132,9 +132,6 @@ Nice extras would include:
 
 - might get super pretty front panels from here: https://www.hopesens-glass.com/
 
-
-- audio codec I2C does not work when MCLK is active. This could be because of enormous I2C rise time for SDA & SCL (well over 1500ns, where 300ns is the limit) - there is sth in the bus design as this would suggest 1nF capacitance of the traces
-
 - run at full speed with no vsync waiting to see how much free room there is
 
 - USB connection is not detected
@@ -156,11 +153,7 @@ Nice extras would include:
 - when we do mk3, make sure that when a button press is detected, the idle flag is cleared 
 - keepalive when plugged in can be indefinite? 
 
-- clean-up the code around display initialization
-
 - determine correct rumbler settings for ok fail and nudge
-
-- document host file system
 
 - fix/check device fatal eror & stack protection
 - improve memory allocator (heap)
@@ -190,11 +183,11 @@ Nice extras would include:
 - palettes in the UI stuff (header & dialogs)
 - when updating multiple attributes of a widget the recalculate after each one of them is not necessary
 - also maybe change the resize to change and make it general method for ui change stuff
+- review dialogs & how they are configured and used (custom title, context menu for file dialog, etc.)
 
 ## Audio
 
 - add square and white noise waveforms
-- in fantasy, add dedicated thread for audio buffer refill so that the audio is clean
 
 ## Graphics
 
@@ -212,11 +205,11 @@ Nice extras would include:
 - label scrolling
 - maybe smaller icon?
 - image picture
-- song left/right, repeat/no repeat
 
 ### DataSync
 
 - update the DataSync app so that it actually works as intended
+- data sync app will not re-sync when ejected
 
 ### GBCEmu
 
@@ -265,87 +258,9 @@ Nice extras would include:
 
 - make timer run a ... b ... a as well (then I can replace the blinking code in clock)
 
-- can have audio player run in the background on second core for most other games, that way people can play & listen to music
-
-## Mk III
-
-- the 3v3 rail to onboard sensors & RTC is always on, this enables time & steps tracking to be valid even across cartridges. The RTC memory (if present) can be used for some basic storage as well 
-
-- can have sinking USB-C https://jlcpcb.com/partdetail/Xunpu-TYPEC_302BRP16SC21/C5760470
-
-### Display woes
-
-> The displays I ordered for the prototypes are 8bit interface, while the larger batch is 16. This in itself would not be the worst, but it seems that the 8bit display can no longer be purchased. I have 2 working prototypes for xmas, so if all goes well, it *might* work still, but the plan for the future is to use the extra pins on RP2350B for the 16bit interface so that I can use the displays I have ordered already. 
-
-> Turns out it actually might work even with the 16bit display and the 16bit resolution can even give faster communication and thus more time available for draw in framebuffer mode. 
-
-## MkIII SDK Revision
-
-> This is the next major rewrite of the SDK, probably will happen after Xmas and is tailored towards the RP2350, although RP2040 should benfit from it as well. 
-
-
-
-# mk3 Updates
-
-- check the IOVDD switch is proper and will work
-- check that the large resistors on VBATT divider can still work with ADC
-- check home button part of the matrix
-
-# mk3 TODO
-
-- terminating resistors on I2S
-- should I use the PMIC chips? 
-- check radio can output to the audio codec
-- footprints for the devices on the RP2350 switching regulator are bad, check when the parts really exist in jlcpcb
-- use https://jlcpcb.com/partdetail/skyworks_siliconLabs-SI4705_D60GMR/C2654632 for radio
-- can use also SI4703, but that one does not have internal / external antenna - do I really need it? 
-- this allows for shorter audio paths
-- or just use module? 
-
-
-# Pins after revision
-
-On the AVR side, I need the following:
-
-- 1 charging status
-- 1 battery/sys voltage
-- 2 i2c
-- 1 int to rp
-- 7 buttons
-- 1 backlight
-- 1 rumbler
-- 1 rgb enable
-- 1 rgb
-- 1 accel int
-- 1 qspi ss
-- 1 vdd en
-
-Because of measuring the VBATT and sensing the charging status, we've lost the AVR_TX pin for debugging, which is a shame - can we recover it? 
-
-Then on RP2350:
-
-- 2 I2C
-- 1 AVR IRQ
-- 1 Radio IRQ
-- 1 Radio Reset
-- 16 display data
-- 5 disp control rdx, wrx, dcx, csx, te
-- 4 SD card (SPI)
-- 2 SD card SDIO (???)
-- 1 SD card insertion detection
-- 8 Cartridge HSTX
-- 2 Cartridge Analog/QSPI CE
-- 5 I2S to codec MCLK, BCLK, LRCLK, ADC, DAC
-- 1 Audio Codec Interrupt
-
-This leaves 3 gpios on the radio if using external clock, 
-
-
-^- is 49, but we only have 40, so the radio reset via audio chip will put us back in game, but ideally one more for radio clock? 
-
-
-
 # Power Measurements
+
+> Those are from mk2, keepin them for reference, should verify with mkIII
 
 - 50% brightness, radio on 80mA @ 5V
 - speaker at default volume 100mA @ 5V
