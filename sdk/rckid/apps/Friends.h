@@ -219,6 +219,7 @@ namespace rckid {
                 if (! name.has_value())
                     return;
                 Contact c{name.value()};
+                c.birthday = timeNow().date;
                 contacts_.push_back(c);
                 Contact::saveAll(contacts_);
                 c_.setItem(contacts_.size() - 1, Direction::None);
