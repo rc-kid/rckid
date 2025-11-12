@@ -129,6 +129,7 @@ namespace rckid {
 
     void ST7789::setUpdateRegion(Rect rect) {
         enterCommandMode();
+        updateRegion_ = rect;
         switch (mode_) {
             case MODE_FULL_NATIVE: {
                 Coord offset = 320 - rect.right();
@@ -155,6 +156,8 @@ namespace rckid {
         if (pio_sm_is_enabled(RCKID_ST7789_PIO, sm_)) {
             // let the last display update finish (blocking)
             waitUpdateDone();  
+            // wait for the pio tx to be empty
+            while (!pio_sm_is_tx_fifo_empty(RCKID_ST7789_PIO, sm_)) {};
             cb_ = nullptr; // to be sure
             pio_sm_set_enabled(RCKID_ST7789_PIO, sm_, false);
             end(); // end the RAMWR command

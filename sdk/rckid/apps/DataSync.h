@@ -6,13 +6,13 @@
 #include "../ui/label.h"
 #include "../ui/image.h"
 
-#if (defined ARCH_RCKID_2)
+#if (defined PLATFORM_RP2350)
 #include "tusb.h"
-#include "hardware/structs/usb.h"
 #endif
 
 extern "C" {
-    bool tud_msc_start_stop_cb(uint8_t, uint8_t, bool, bool);
+
+    //bool tud_msc_start_stop_cb(uint8_t, uint8_t, bool, bool);
     int32_t tud_msc_read10_cb(uint8_t, uint32_t, uint32_t, void *, uint32_t);
     int32_t tud_msc_write10_cb(uint8_t, uint32_t, uint32_t, uint8_t*, uint32_t);
 }
@@ -63,6 +63,10 @@ namespace rckid {
                 btnClear(Btn::Down);
                 exit();
             }
+#if (defined PLATFORM_RP2350)
+            if (connected_ && ! tud_ready())
+                doDisconnect();
+#endif
         }
 
         void draw() override {
@@ -81,9 +85,20 @@ namespace rckid {
             return true;
         }
 
+        static void connect() {
+            if (instance_ == nullptr)
+                return;
+            instance_->doConnect();
+        }
+
+        static void disconnect() {
+            if (instance_ == nullptr)
+                return;
+            instance_->doDisconnect();
+        }
 
     private:
-        friend bool ::tud_msc_start_stop_cb(uint8_t, uint8_t, bool, bool);
+        //friend bool ::tud_msc_start_stop_cb(uint8_t, uint8_t, bool, bool);
         friend int32_t ::tud_msc_read10_cb(uint8_t, uint32_t, uint32_t, void *, uint32_t);
         friend int32_t ::tud_msc_write10_cb(uint8_t, uint32_t, uint32_t, uint8_t*, uint32_t);
 
@@ -91,7 +106,7 @@ namespace rckid {
         ui::Label info_;
         ui::Label status_;
 
-        void connect() {
+        void doConnect() {
             ASSERT(connected_ == false);
             connected_ = true;
             blocksRead_ = 0;
@@ -99,7 +114,7 @@ namespace rckid {
             LOG(LL_INFO, "MSC connected");
         }
 
-        void disconnect() {
+        void doDisconnect() {
             if (connected_)
                 connected_ = false;
             instance_ = nullptr;

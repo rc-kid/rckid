@@ -82,6 +82,8 @@ namespace rckid::ui {
         void update() override;
 
         void draw() override {
+            if (refreshRequired_)
+                refresh();
             Tilemap::draw();
             refreshRequired_ = false;
         }

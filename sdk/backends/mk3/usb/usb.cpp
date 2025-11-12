@@ -91,6 +91,19 @@ static uint16_t _desc_str[32];
 
 //@}
 
+extern "C" {
+    void tud_mount_cb(void) {
+        LOG(LL_INFO, "USB connected");
+    }
+
+    void tud_umount_cb(void) {
+        LOG(LL_INFO, "USB disconnected");
+        rckid::DataSync::disconnect();
+    }
+}
+
+
+
 /** \name CDC (USB Serial Adapter)
  * 
  */
@@ -206,12 +219,12 @@ extern "C" {
         - Start = 1 : active mode, if load_eject = 1 : load disk storage
     */
     bool tud_msc_start_stop_cb([[maybe_unused]] uint8_t lun, [[maybe_unused]] uint8_t power_condition, bool start, bool load_eject) {
-        if (rckid::DataSync::instance_ != nullptr) {
+        //if (rckid::DataSync::instance_ != nullptr) {
             if (start)
-                rckid::DataSync::instance_->connect();
+                rckid::DataSync::connect();
             if (load_eject)
-                rckid::DataSync::instance_->disconnect();
-        }
+                rckid::DataSync::disconnect();
+        //}
         /*
         if (start)
             DataSync::connect();

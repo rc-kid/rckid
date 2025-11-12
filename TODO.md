@@ -38,7 +38,7 @@
   - [X] show budget
   - [X] show time
   - [X] show volume
-  - [ ] allow showing header even if not part of the renderable area
+  - [X] allow showing header even if not part of the renderable area
 - [X] fm radio app fixes (display frequency)
 - [X] rm radio rds, 
 - [X] fm radio signal quality, stereo
@@ -78,16 +78,17 @@ Nice extras would include:
 - [ ] port more games (15 puzzle at least)
 - [ ] add high scores
 - [ ] app for creating icons (64x64) so that kids can design their own. Eventually this can go larger and larger
+- [ ] in header, show volume value, not just bar when changing (?)
 
 # TODO
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
+- for DataSync, remove tud mount & umount, then add cable detection based on the tud_ready, when disconnected, allow reconnect only if cable disconnected in the meantime
+
 - clean-up the code around display initialization
 - clean debug prints (headphones, etc)
 - document host file system
-
-- header update almost always happens in the actual window as if the window switch is not registered, but not sure why. Sometimes the window switch registers though, but on a wrong transition
 
 - add some onPowerOff event that will be called when device decides to power off *and* when avr decides to power the device off as well (so that we can save state, etc)
 - numbered save slots for games + latest
@@ -96,22 +97,18 @@ Nice extras would include:
 
 - bg tasks have to be properly closed when some app says it is not compatible with them
 
-- the color settings should be stored, perhaps per game? 
+- the color settings should be stored, perhaps per game?  (gameboy)
 - and when colors are updated, different colors should be update-able at the same time
+- multiple save slots
 
 - some avr commands are longer than 16 bytes, which means it cannot be stored via the I2C async commands
 
 - platform string utils should not be used, instead everything should run off rckid::String
 
-- add calendar
-
 - rewrite popup to use ui style, icons, etc.
 - and same for text dialog
 
 - add counters, namely how long the redraw of the screen takes, from the beginning of render to the end of render
-
-- see if we can enable exceptions, what are the runtime & stack costs of them running
-- exceptions seem to be worthy, very little cost, mostly in binary size, but stack increases are small-ish
 
 - critical battery error
 - add RGB signalization to the avr mkIII
@@ -125,13 +122,10 @@ Nice extras would include:
 - do we need bitmap in graphics now? its more like bitmap is now image really
 
 - allow saving external ram to cartridge when gbc game exits? 
-- how to resume state when app restarted (automatic)
 
 - for messages, add widgets for the various message types that can be viewed
 
 - how to blitting & stuff? (bitmap is multi bpp, while surfaces such as canvas are fixed bpp), this makes blitting harder a bit
-
-- might get super pretty front panels from here: https://www.hopesens-glass.com/
 
 - run at full speed with no vsync waiting to see how much free room there is
 
@@ -173,6 +167,7 @@ Nice extras would include:
 - home button can be centered in the hole so that it is a bit higher up
 - connector pcb should move the pins as close to edge as possible for better contact (or make cartridges a bit taller, and meybe both)
 - is there a way how to make the headphones work with headphones that have microphone as well? maybe by connecting tip with some large resistor to 0 (68k or so) and then connecting the tip mate via even higher resistor to VCC as a pull up. Then it will read close to 0 when not inserted and VCC when inserted. But will this upset the audio? It actually might work and I can ignore the second sleeve and it would work with all headphones! (can I make it work with current audio setup by rewiring?)
+- might get super pretty front panels from here: https://www.hopesens-glass.com/
 
 ## AVR
 

@@ -147,8 +147,10 @@ namespace rckid::ui {
         refreshRequired_ = false;
         if (instance_ == nullptr)
             instance();
+        instance_->refresh();
         Rect oldRegion = displayUpdateRegion();
-        displayWaitUpdateDone();
+        DisplayRefreshDirection oldDirection = displayRefreshDirection();
+        displaySetRefreshDirection(DisplayRefreshDirection::ColumnFirst);
         displaySetUpdateRegion(Rect::XYWH(0, 0, RCKID_DISPLAY_WIDTH, 16));
         DoubleBuffer<uint16_t> buffer{16};
         Coord column = 319;
@@ -162,8 +164,7 @@ namespace rckid::ui {
             if (column > 0)
                 instance_->renderRawColumn(column - 1, buffer.back(), 0, 16);
         });
-        displayWaitUpdateDone();
-        cpu::delayUs(2000);
+        displaySetRefreshDirection(oldDirection);
         displaySetUpdateRegion(oldRegion);
     }
 

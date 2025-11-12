@@ -150,6 +150,7 @@ namespace rckid {
         uint dma0_ = 0;
         uint dma1_ = 0;
         uint32_t sampleRate_ = 44100;
+        bool headphones_ = false;
         bool lastHeadphones_ = false;
 
 
@@ -253,10 +254,6 @@ namespace rckid {
             case RP_PIN_RADIO_INT:
                 Radio::irqHandler();
                 break;
-            case RP_PIN_HEADSET_DETECT:
-                // TODO do we wan to do anything on headphone change
-                break;
-
             default:
                 LOG(LL_ERROR, "Unknown GPIO IRQ on pin " << (uint32_t)pin << " with events " << events);
                 break;
@@ -416,7 +413,6 @@ namespace rckid {
         // enable headset detection
         // TODO the external pullup is too weak (100kOhm, enabling pull-up will help)
         gpio::setAsInputPullUp(RP_PIN_HEADSET_DETECT);
-        gpio_set_irq_enabled(RP_PIN_HEADSET_DETECT, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE, true);
 
         LOG(LL_INFO, "Initialization done");
 
@@ -476,7 +472,11 @@ namespace rckid {
                 i2c::sendAvrCommand(cmd::PowerOff{});
             App::onSecondTick();
         }
-        audio::lastHeadphones_ = audioHeadphones();
+        // update headphones status (this ensures that we detect headphones as any other button)
+        audio::lastHeadphones_ = audio::headphones_;
+        audio::headphones_ = gpio::read(RP_PIN_HEADSET_DETECT) == 0;
+        if (audioHeadphonesChanged())
+            ui::Header::requireRefresh();
     }
 
     void yield() {
@@ -798,12 +798,12 @@ namespace rckid {
 
     bool audioHeadphones() {
         StackProtection::check();
-        return gpio::read(RP_PIN_HEADSET_DETECT) == 0;
+        return audio::headphones_;
     }
 
     bool audioHeadphonesChanged() {
         StackProtection::check();
-        return audio::lastHeadphones_ != audioHeadphones();
+        return audio::lastHeadphones_ != audio::headphones_;
     }
 
     bool audioPaused() {
