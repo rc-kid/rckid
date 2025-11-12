@@ -499,8 +499,15 @@ namespace rckid {
             uint64_t t = uptimeUs64();
             yield();
             tick();
-            t = uptimeUs64() - t;
+            // when locked, process the volume buttons as well
+            if (btnPressed(Btn::VolumeUp))
+                audioSetVolume(audioVolume() + 1);
+            if (btnPressed(Btn::VolumeDown)) {
+                uint8_t vol = audioVolume();
+                audioSetVolume(vol == 0 ? 0 : vol - 1);
+            }
             // repeat the ticks at 60 fps 
+            t = uptimeUs64() - t;
             if (t < 16666)
                 cpu::delayUs(16666 - t);
             if (btnPressed(Btn::Home)) {
