@@ -151,6 +151,14 @@ namespace rckid {
             return strcmp(str_.data(), other.str_.data()) != 0;
         }
 
+        bool operator < (String const & other) const {
+            return strcmp(str_.data(), other.str_.data()) < 0;
+        }
+
+        bool operator > (String const & other) const {
+            return strcmp(str_.data(), other.str_.data()) > 0;
+        }
+
         String substr(uint32_t start) const { return substr(start, size() - start); }
             
         String substr(uint32_t start, uint32_t length) const {

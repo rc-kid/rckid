@@ -213,6 +213,7 @@ namespace rckid {
                 contacts_.push_back(c);
             });
             refreshNextBirthdays();
+            sort();
 
             contextMenu_.add(ui::ActionMenu::Item("Add contact", [this]() {
                 auto name = App::run<TextDialog>("");
@@ -224,6 +225,7 @@ namespace rckid {
                 Contact::saveAll(contacts_);
                 c_.setItem(contacts_.size() - 1, Direction::None);
                 editCurrentContact();
+                sort(contacts_.back().name.c_str());
             }));
             contextMenu_.add(ui::ActionMenu::Item("Delete contact", [this]() {
                 if (contacts_.size() == 0)
@@ -232,6 +234,8 @@ namespace rckid {
                 Contact::saveAll(contacts_);
                 c_.setItem(0, Direction::Up);
                 refreshNextBirthdays();
+                sort();
+
             }));
         }
 
@@ -275,6 +279,22 @@ namespace rckid {
                     nb.label_.setVisible(false);
                 } else {
                     nb.label_.setText(STR(nb.label_.text() << " (" << nb.numDays_ << " days)"));
+                }
+            }
+        }
+
+        /** Sorts the contact, selecting the given name when done. This is done by comparing the c_str pointers, which will not affected by the sort.
+         */
+        void sort(char const * currentName = nullptr) {
+            std::sort(contacts_.begin(), contacts_.end(), [](Contact const & a, Contact const & b) {
+                return a.name < b.name;
+            });
+            if (currentName != nullptr) {
+                for (uint32_t i = 0; i < contacts_.size(); ++i) {
+                    if (contacts_[i].name.c_str() == currentName) {
+                        c_.setItem(i, Direction::None);
+                        break;
+                    }
                 }
             }
         }
@@ -324,6 +344,7 @@ namespace rckid {
                     // we have edited the contact, so we need to save the contacts we have now
                     Contact::saveAll(contacts_);
                     refreshNextBirthdays();
+                    sort(contacts_[c_.currentIndex()].name.c_str());
                 }
             }
         }
