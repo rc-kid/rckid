@@ -84,8 +84,6 @@ Nice extras would include:
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
-- for DataSync, remove tud mount & umount, then add cable detection based on the tud_ready, when disconnected, allow reconnect only if cable disconnected in the meantime
-
 - clean-up the code around display initialization
 - clean debug prints (headphones, etc)
 - document host file system
@@ -201,11 +199,6 @@ Nice extras would include:
 - label scrolling
 - maybe smaller icon?
 - image picture
-
-### DataSync
-
-- update the DataSync app so that it actually works as intended
-- data sync app will not re-sync when ejected
 
 ### GBCEmu
 
