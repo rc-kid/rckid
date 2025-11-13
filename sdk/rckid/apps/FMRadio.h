@@ -28,11 +28,11 @@ namespace rckid {
 
         FMRadio() :
             ui::Form<void>{},
-            freq_{Rect::XYWH(0, 20, 320, 128), "???"},
-            stationName_{Rect::XYWH(0, 130, 320, 32), ""},
+            freq_{Rect::XYWH(0, 20, 320, 128), "---"},
+            stationName_{Rect::XYWH(0, 130, 320, 32), "Initializing..."},
             radioText1_{Rect::XYWH(0, 160, 320, 32), ""},
             radioText2_{Rect::XYWH(0, 190, 320, 32), ""},
-            signal_{Rect::XYWH(0, 25, 320, 20), "56 78 STEREO"}
+            signal_{Rect::XYWH(0, 25, 320, 20), "-- -- -- ----"}
         {
             freq_.setFont(Font::fromROM<assets::OpenDyslexic128>());
             freq_.setHAlign(HAlign::Center);
@@ -51,19 +51,53 @@ namespace rckid {
                 radio_->enableEmbeddedAntenna(! audioHeadphones());
                 // ensure the background task is running
                 RadioTask::instance();
-                cpu::delayMs(1000);
-                radio_->setFrequency(9370);
+                initDelay_ = 60; // wait one second before loading settings & setting frequency
             }
         }
 
         ~FMRadio() override {
             RadioTask::deleteInstance();
+            if (fs::isMounted() && fs::createFolders(homeFolder())) {
+                ini::Writer ini{fs::fileWrite(fs::join(homeFolder(), "settings.ini"))};
+                ini.writeSection("settings");
+                ini.writeValue("frequency", radio_->frequency());
+                // TODO save presets as well
+            }
         }
 
     protected:
 
+        void loadSettings() {
+            bool fSet = false;
+            if (fs::isMounted()) {
+                String path = fs::join(homeFolder(), "settings.ini");
+                if (fs::exists(path)) {
+                    ini::Reader ini{fs::fileRead(fs::join(homeFolder(), "settings.ini"))};
+                    while (auto section = ini.nextSection()) {
+                        if (section.value() == "settings") {
+                            while (auto kv = ini.nextValue()) {
+                                if (kv->first == "frequency") {
+                                    uint32_t freq = std::atoi(kv->second.c_str());
+                                    radio_->setFrequency(freq);
+                                    fSet = true;
+                                } else {
+                                    LOG(LL_ERROR, "Unknown FM radio setting: " << kv->first);
+                                }
+                            }
+                        } else {
+                            LOG(LL_ERROR, "Invalid settings section: " << section.value());
+                        }
+                    }
+                }
+            }
+            if (! fSet)
+                radio_->setFrequency(9370);
+        }
+
         void update() override {
             ui::Form<void>::update();
+            if (initDelay_ > 0 && --initDelay_ == 0)
+                loadSettings();
             if (audioHeadphonesChanged())
                 radio_->enableEmbeddedAntenna(! audioHeadphones());
             if (radio_ == nullptr) {
@@ -74,20 +108,11 @@ namespace rckid {
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 exit();
             }
+            // left and right to seek directly
             if (btnPressed(Btn::Left))
-                //radio_->enableEmbeddedAntenna(true);
                 radio_->seekDown();
-            if (btnPressed(Btn::Up)) {
-
-                //radio_->enableGPO1(true);
-                //radio_->setGPO1(true);
-            }
-            if (btnPressed(Btn::Right)) {
-                //radio_->enableEmbeddedAntenna(false);
+            if (btnPressed(Btn::Right))
                 radio_->seekUp();
-                //radio_->enableGPO1(true);
-                //radio_->setGPO1(false);
-            }
             if (btnPressed(Btn::Select))
                 radio_->enableEmbeddedAntenna(false);
             if (btnPressed(Btn::Start))
@@ -164,6 +189,7 @@ namespace rckid {
         ui::Label radioText1_;
         ui::Label radioText2_;
         ui::Label signal_;
+        uint32_t initDelay_;
 
         uint32_t irqs_ = 0;
 
