@@ -51,6 +51,7 @@
 - [X] preserve volume settings
 - [ ] low battery error and device won't power on
 - [X] AVR debouncing
+- [X] multiple saves for apps
 
 Nice extras would include:
 

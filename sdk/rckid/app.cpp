@@ -53,11 +53,15 @@ namespace rckid {
         }));
         // if app supports save states, add save & load actions
         if (supportsSaveState() && fs::isMounted()) {
-            menu->add(ui::ActionMenu::Item("Save state", assets::icons_64::bookmark, [this](){
-                // TODO actually select which slot to use, or let the user choose 
-                String saveName = "test";
-                saveState(saveName);
-                InfoDialog::success("Done", STR("App state saved in " << saveName));
+            menu->add(ui::ActionMenu::Generator("Save state", assets::icons_64::bookmark, [this](){
+                ui::ActionMenu * m = new ui::ActionMenu{};
+                for (uint32_t i = 1; i <= 4; ++i) {
+                    String slotName = STR(i);
+                    m->add(ui::ActionMenu::Item(slotName, assets::icons_64::bookmark, [this, i]() {
+                        saveState(STR(i));
+                    }));
+                }
+                return m;
             }));
             menu->add(ui::ActionMenu::Generator("Load state", assets::icons_64::appointment_book, [this](){
                 ui::ActionMenu * m = new ui::ActionMenu{};
@@ -68,9 +72,7 @@ namespace rckid {
                     String entryName{entry.name()};
                     m->add(ui::ActionMenu::Item(entryName, assets::icons_64::product, [this, entryName]() {
                         loadState(entryName);
-                        InfoDialog::success("Done", STR("App state loaded from " << entryName));
                     }));
-                    LOG(LL_DEBUG, "FileBrowser: adding entry " << entry.name());
                 }
                 return m;
             }));

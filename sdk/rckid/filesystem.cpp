@@ -133,14 +133,18 @@ namespace rckid::fs {
 
 #if RCKID_ENABLE_HOST_FILESYSTEM
     void initialize(std::string const & sdRoot, std::string const & cartridgeRoot) {
-        if (std::filesystem::is_directory(sdRoot))
+        if (std::filesystem::is_directory(sdRoot)) {
             sdRoot_ = sdRoot;
-        else
+            mount(Drive::SD);
+        } else {
             LOG(LL_ERROR, "SD root path is not a directory: " << sdRoot);
-        if (std::filesystem::is_directory(cartridgeRoot))
+        }
+        if (std::filesystem::is_directory(cartridgeRoot)) {
             cartridgeRoot_ = cartridgeRoot;
-        else
-            LOG(LL_ERROR, "Cartridge root path is not a directory: " << cartridgeRoot);
+            mount(Drive::Cartridge);
+        } else {
+                LOG(LL_ERROR, "Cartridge root path is not a directory: " << cartridgeRoot);
+        }
     }
 
     std::filesystem::path getHostPath(Drive dr, char const * path) {
