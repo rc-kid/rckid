@@ -226,7 +226,7 @@ int main() {
         RGBEffect::Rainbow(204, 1, 4, 32)
     );
     LOG(LL_INFO, "RGB effects sent");
-    //App::run<PinDialog>();
+    App::run<TextDialog>();
     //PNG png{PNG::fromStream(fs::fileRead(STR("files/images/backgrounds/wish16.png")))};
     //LOG(LL_INFO, "PNG loaded: " << png.width() << "x" << png.height() << ", bpp: " << png.bpp());
     while (true) {

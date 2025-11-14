@@ -173,6 +173,8 @@ namespace rckid {
         void reserve(uint32_t size) { str_.reserve(size + 1); }
 
         void erase(uint32_t index, uint32_t length) {
+            if (index >= size() || length == 0)
+                return;
             ASSERT(index + length <= size());
             if (index + length == size()) {
                 str_[index] = '\0';
