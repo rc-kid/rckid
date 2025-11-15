@@ -72,7 +72,7 @@ ui::ActionMenu * utilsMenuGenerator() {
         ui::ActionMenu::Item("Clock", assets::icons_64::alarm_clock, App::run<Clock>),
         ui::ActionMenu::Item("Stopwatch", assets::icons_64::chronometer, App::run<Stopwatch>),
         ui::ActionMenu::Item("Timer", assets::icons_64::hourglass, nullptr),
-        ui::ActionMenu::Item("Files", assets::icons_64::folder, App::run<FileDialog>),
+        //ui::ActionMenu::Item("Files", assets::icons_64::folder, App::run<FileDialog>),
         ui::ActionMenu::Item("Data Sync", assets::icons_64::pen_drive, App::run<DataSync>),
         ui::ActionMenu::Item("HW Status", assets::icons_64::pen_drive, App::run<HardwareStatus>),
         ui::ActionMenu::Item("SD Test", assets::icons_64::pen_drive, App::run<SDTest>),
@@ -226,7 +226,7 @@ int main() {
         RGBEffect::Rainbow(204, 1, 4, 32)
     );
     LOG(LL_INFO, "RGB effects sent");
-    App::run<TextDialog>();
+    //App::run<TextDialog>("Input text");
     //PNG png{PNG::fromStream(fs::fileRead(STR("files/images/backgrounds/wish16.png")))};
     //LOG(LL_INFO, "PNG loaded: " << png.width() << "x" << png.height() << ", bpp: " << png.bpp());
     while (true) {

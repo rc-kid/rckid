@@ -171,6 +171,8 @@ namespace rckid::ui {
     void ui::Header::renderRawColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) {
         if (FormWidget::bg_ != nullptr)
             FormWidget::bg_->renderColumn(column, buffer, starty, numPixels);
+        else
+            memset16(buffer, 0, numPixels);
         Tilemap::renderColumn(column, buffer, starty, numPixels);
     }
 

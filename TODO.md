@@ -45,7 +45,7 @@
 - [X] time apps
   - [X] clock settings
   - [X] stopwatch
-- [ ] improve text input dialog
+- [X] improve text input dialog
 - [X] screen lock (double home tap)
 - [ ] settings menu for button lights
 - [X] preserve volume settings

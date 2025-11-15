@@ -62,7 +62,7 @@ namespace rckid {
                 name_.setFont(Font::fromROM<assets::OpenDyslexic64>());
                 bdayExtras_.setColor(ui::Style::accentFg());
                 contextMenu_.add(ui::ActionMenu::Item("Edit name", [this]() {
-                    auto n = App::run<TextDialog>(c_.name);
+                    auto n = App::run<TextDialog>( "Name", c_.name);
                     if (n.has_value()) {
                         c_.name = n.value();
                         name_.setText(c_.name);
@@ -70,7 +70,7 @@ namespace rckid {
                     }
                 }));
                 contextMenu_.add(ui::ActionMenu::Item("Edit image", [this]() {
-                    auto icon = App::run<FileDialog>("/files/icons", "Select friend icon");
+                    auto icon = App::run<FileDialog>("Select friend icon", "/files/icons");
                     if (icon.has_value()) {
                         c_.image = Icon{icon.value().c_str()};
                         image_ = c_.image;
@@ -87,7 +87,7 @@ namespace rckid {
                     }
                 }));
                 contextMenu_.add(ui::ActionMenu::Item("Edit phone", [this]() {
-                    auto n = App::run<TextDialog>(c_.phone);
+                    auto n = App::run<TextDialog>("Phone", c_.phone);
                     if (n.has_value()) {
                         c_.phone = n.value();
                         phone_.setText(c_.phone);
@@ -95,7 +95,7 @@ namespace rckid {
                     }
                 }));
                 contextMenu_.add(ui::ActionMenu::Item("Edit email", [this]() {
-                    auto n = App::run<TextDialog>(c_.email);
+                    auto n = App::run<TextDialog>("Email", c_.email);
                     if (n.has_value()) {
                         c_.email = n.value();
                         email_.setText(c_.email);
@@ -103,7 +103,7 @@ namespace rckid {
                     }
                 }));
                 contextMenu_.add(ui::ActionMenu::Item("Edit address", [this]() {
-                    auto n = App::run<TextDialog>(c_.address);
+                    auto n = App::run<TextDialog>("Address", c_.address);
                     if (n.has_value()) {
                         c_.address = n.value();
                         address_.setText(c_.address);
@@ -111,7 +111,7 @@ namespace rckid {
                     }
                 }));
                 contextMenu_.add(ui::ActionMenu::Item("Edit note", [this]() {
-                    auto n = App::run<TextDialog>(c_.note);
+                    auto n = App::run<TextDialog>("Note", c_.note);
                     if (n.has_value()) {
                         c_.note = n.value();
                         note_.setText(c_.note);
@@ -216,7 +216,7 @@ namespace rckid {
             sort();
 
             contextMenu_.add(ui::ActionMenu::Item("Add contact", [this]() {
-                auto name = App::run<TextDialog>("");
+                auto name = App::run<TextDialog>("Enter name");
                 if (! name.has_value())
                     return;
                 Contact c{name.value()};

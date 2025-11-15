@@ -19,6 +19,8 @@ namespace rckid {
 
         String name() const override { return "TextDialog"; }
 
+        String title() const { return title_; }
+
         enum class KeyboardType {
             UpperCase, 
             LowerCase,
@@ -26,9 +28,10 @@ namespace rckid {
             NumbersAndSymbols,
         }; // TextInput::KeyboardType
 
-        TextDialog(char const * initialText = ""):
+        TextDialog(String title, String value = ""):
             ui::Form<String>{Rect::XYWH(0, 144, 320, 96), /* raw */ true},
-            text_{initialText},
+            title_{std::move(title)},
+            text_{std::move(value)},
             cursor_{static_cast<Coord>(text_.size())},
             left_{(cursor_ >= 24) ? (cursor_ - 24) : 0},
             tileMap_{26, 4, assets::System24, palette_},
@@ -41,7 +44,7 @@ namespace rckid {
             g_.addChild(selRect_);
             g_.addChild(cursorLine_);
             tileMap_.setPos(4, 0);
-            drawKeyboard(KeyboardType::UpperCase);
+            drawKeyboard();
             drawText();
             cursorLine_.setX(16 + (cursor_ - left_) * 12);
             blink_.startContinuous();
@@ -110,8 +113,10 @@ namespace rckid {
 
         void insertChar(char c) {
             text_.insert(cursor_, c);
-            if (keyboardType_ == KeyboardType::FirstUpper)
+            if (keyboardType_ == KeyboardType::FirstUpper) {
                 keyboardType_ = KeyboardType::LowerCase;
+                drawKeyboard();
+            }
             cursorRight();
         }
 
@@ -162,7 +167,7 @@ namespace rckid {
                         // TODO maybe normal button?
                         break;
                 }
-                drawKeyboard(keyboardType_);
+                drawKeyboard();
             } else if (select_ == KEY_KEYBOARD_MODE) {
                 if (keyboardType_ == KeyboardType::NumbersAndSymbols) {
                     keyboardType_ = keyboardBackup_;
@@ -170,7 +175,7 @@ namespace rckid {
                     keyboardBackup_ = keyboardType_;
                     keyboardType_ = KeyboardType::NumbersAndSymbols;
                 }
-                drawKeyboard(keyboardType_);
+                drawKeyboard();
             } else if (select_ == KEY_LEFT) {
                 cursorLeft();
             } else if (select_ == KEY_RIGHT) {
@@ -180,22 +185,26 @@ namespace rckid {
             }
         }
 
-        void drawKeyboard(KeyboardType type) {
-            switch (type) {
+        void drawKeyboard() {
+            switch (keyboardType_) {
                 case KeyboardType::UpperCase:
+                    tileMap_.text(0, 1) << "  \x19 Q W E R T Y U I O P \x1e ";
+                    tileMap_.text(0, 2) << " \x1d \x1a A S D F G H J K L \x18  ";
+                    tileMap_.text(0, 3) << "  < > Z X C V B N M _ . , ";
+                    break;
                 case KeyboardType::FirstUpper:
-                    tileMap_.text(0, 1) << "  \x1b Q W E R T Y U I O P \x1e ";
-                    tileMap_.text(0, 2) << " \x1d \x1c A S D F G H J K L \x1a  ";
+                    tileMap_.text(0, 1) << "  \x19 Q W E R T Y U I O P \x1e ";
+                    tileMap_.text(0, 2) << " \x1d \x1b A S D F G H J K L \x18  ";
                     tileMap_.text(0, 3) << "  < > Z X C V B N M _ . , ";
                     break;
                 case KeyboardType::LowerCase:
-                    tileMap_.text(0, 1) << "  \x1b q w e r t y u i o p \x1e ";
-                    tileMap_.text(0, 2) << " \x1d \x1c a s d f g h j k l \x1a  ";
+                    tileMap_.text(0, 1) << "  \x19 q w e r t y u i o p \x1e ";
+                    tileMap_.text(0, 2) << " \x1d \x1c a s d f g h j k l \x18  ";
                     tileMap_.text(0, 3) << "  < > z x c v b n m _ . , ";
                     break;
                 case KeyboardType::NumbersAndSymbols:
-                    tileMap_.text(0, 1) << "  \x1b 1 2 3 4 5 6 7 8 9 @ \x1e ";
-                    tileMap_.text(0, 2) << " \x1d \x1c ( ) [ ] ! ? @ # $ \x1a  ";
+                    tileMap_.text(0, 1) << "  \x19 1 2 3 4 5 6 7 8 9 @ \x1e ";
+                    tileMap_.text(0, 2) << " \x1d \x1c ( ) [ ] ! ? @ # $ \x18  ";
                     tileMap_.text(0, 3) << "  < > % ^ & * ' \" ~ _ . , ";
                     break;
             }
@@ -206,7 +215,6 @@ namespace rckid {
             if (text_.empty()) {
                 cursor_ = 0;
                 left_ = 0;
-                tileMap_.text(1, 0) << placeholder_;
             } else {
                 tileMap_.text(1, 0) << (text_.c_str() + left_);
             }
@@ -230,11 +238,11 @@ namespace rckid {
         Timer a_{250};
         Timer blink_{1000};
 
+        String title_;
 
         String text_;
-        String placeholder_;
 
-        KeyboardType keyboardType_ = KeyboardType::UpperCase;
+        KeyboardType keyboardType_ = KeyboardType::FirstUpper;
         KeyboardType keyboardBackup_; 
 
         // cursor and the left offset of the displayed text

@@ -112,10 +112,10 @@ namespace rckid {
             }
 
         private:
+            ui::Image * source_;
             Point cursorPos_;
             ui::Rectangle cursor_;
             uint32_t zoom_ = 3;
-            ui::Image * source_;
 
         }; 
 

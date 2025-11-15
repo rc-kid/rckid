@@ -86,6 +86,8 @@ namespace rckid {
         btnClear();
         // wait for the previous display update to finish to avoid interfering with the old app unloading
         displayWaitUpdateDone();
+        // require header refresh when app starts
+        ui::Header::requireRefresh();
         // set the current app in focus. If there is previous app, it will be blurred. The focus method also updates the parent app so that we can go back with the apps
         focus();
         // now run the app
@@ -102,6 +104,8 @@ namespace rckid {
         displayWaitUpdateDone();
         // we are done, should blur ourselves, and refocus parent (if any)
         blur();
+        // ensure that we will display header in the parent app as well
+        ui::Header::requireRefresh();
         btnClear();
     }
 
