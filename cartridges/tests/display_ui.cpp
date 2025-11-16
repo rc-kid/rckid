@@ -30,6 +30,7 @@
 #include <rckid/apps/utils/Timer.h>
 #include <rckid/apps/utils/Stopwatch.h>
 #include <rckid/apps/utils/Flashlight.h>
+#include <rckid/apps/utils/PiggyBank.h>
 
 
 
@@ -144,11 +145,36 @@ ui::ActionMenu * styleMenuGenerator() {
     };
 }
 
+ui::ActionMenu * parentMenuGenerator() {
+    if (parentMode()) {
+        return new ui::ActionMenu{
+            ui::ActionMenu::Item("Leave", assets::icons_64::logout, [](){
+                rckid::setParentMode(false);
+            }),
+            ui::ActionMenu::Item("Top-Up", assets::icons_64::up_arrow, [](){
+                auto result = App::run<TimeDialog>("Top up time", TinyTime{0, 30});
+                if (result.has_value()) {
+                    budgetSet(budget() + (result.value().hour() * 60 + result.value().minute()) * 60);
+                }
+            }),
+            ui::ActionMenu::Item("Clear Pin", assets::icons_64::lock, [](){
+                pinSet(0xffff);
+            }),
+        };
+    } else {
+        return new ui::ActionMenu{
+            ui::ActionMenu::Item("Enter", assets::icons_64::family, [](){
+                // TODO change this to check the password, etc.
+                rckid::setParentMode(true);
+            }),
+        };
+    }
+}
+
 ui::ActionMenu * settingsMenuGenerator() {
     return new ui::ActionMenu{
         ui::ActionMenu::Generator("Style", assets::icons_64::paint_palette, styleMenuGenerator),
-        // TODO change to idea
-        ui::ActionMenu::Generator("Lights", assets::icons_64::poo, []() {
+        ui::ActionMenu::Generator("Lights", assets::icons_64::brightness_1, []() {
             return new ui::ActionMenu{
                 ui::ActionMenu::Item("Off", assets::icons_64::turn_off, [](){
                     ui::Style::setRgbStyle(ui::RGBStyle::Off);
@@ -199,7 +225,7 @@ ui::ActionMenu * settingsMenuGenerator() {
                     ui::Style::save();
                 }),
                 ui::ActionMenu::Item("Brightness", assets::icons_64::brightness, [](){
-                    Slider s{assets::icons_64::brightness, "Brightness", 0, 31, ui::Style::rgbBrightness() >> 1, [](uint32_t value) {
+                    Slider s{assets::icons_64::brightness_1, "Brightness", 0, 31, ui::Style::rgbBrightness() >> 1, [](uint32_t value) {
                         ui::Style::setRgbBrightness((value << 1)  + (value & 1)); 
                     }};
                     // TODO we do not support generic animations here, fix when we have UI overhaul
@@ -209,8 +235,8 @@ ui::ActionMenu * settingsMenuGenerator() {
                 }),
             };
         }),
-        ui::ActionMenu::Item("Rumbler", assets::icons_64::poo, [](){
-            Slider s{assets::icons_64::poo, "Rumbler", 0, 7, ui::Style::rumblerKeyPressIntensity() >> 5, [](uint32_t value) {
+        ui::ActionMenu::Item("Rumbler", assets::icons_64::vibration, [](){
+            Slider s{assets::icons_64::vibration, "Rumbler", 0, 7, ui::Style::rumblerKeyPressIntensity() >> 5, [](uint32_t value) {
                 ui::Style::setRumblerKeyPressIntensity((value << 5) + (value << 2) + (value & 0x03)); 
             }};
             // TODO we do not support generic animations here, fix when we have UI overhaul
@@ -242,7 +268,7 @@ ui::ActionMenu * settingsMenuGenerator() {
             pinSet(newPin);
             InfoDialog::success("Done", "PIN changed successfully");
         }),
-
+        ui::ActionMenu::Generator("Parent Mode", assets::icons_64::family, parentMenuGenerator)
     };
 }
 
@@ -264,10 +290,12 @@ ui::ActionMenu * mainMenuGenerator() {
         ui::ActionMenu::Generator("Games", assets::icons_64::game_controller, gamesGenerator),
         ui::ActionMenu::Item("Music", assets::icons_64::music, App::run<MusicPlayer>),
         ui::ActionMenu::Item("Radio", assets::icons_64::radio_cassette, App::run<FMRadio>),
-        ui::ActionMenu::Generator("Comms", assets::icons_64::chat, commsMenuGenerator),
+        ui::ActionMenu::Item("Friends", assets::icons_64::birthday_cake, App::run<Friends>),
+        ui::ActionMenu::Item("Piggy Bank", assets::icons_64::piggy_bank, App::run<PiggyBank>),
+        //ui::ActionMenu::Generator("Comms", assets::icons_64::chat, commsMenuGenerator),
         ui::ActionMenu::Generator("Audio", assets::icons_64::music_wave, audioMenuGenerator),
         ui::ActionMenu::Generator("Images", assets::icons_64::picture, imagesMenuGenerator),
-        ui::ActionMenu::Item("Remote", assets::icons_64::rc_car, nullptr),
+        //ui::ActionMenu::Item("Remote", assets::icons_64::rc_car, nullptr),
         ui::ActionMenu::Generator("Utilities", assets::icons_64::configuration, utilsMenuGenerator),
         ui::ActionMenu::Generator("Settings", assets::icons_64::settings, settingsMenuGenerator),
         ui::ActionMenu::Generator("Debug", assets::icons_64::ladybug, debugMenuGenerator),

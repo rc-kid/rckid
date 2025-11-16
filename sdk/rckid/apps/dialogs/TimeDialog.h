@@ -13,8 +13,11 @@ namespace rckid {
     public:
         String name() const override { return "TimeDialog"; }
 
-        TimeDialog(TinyTime initialTime = timeNow().time):
+        String title() const { return title_; }
+
+        TimeDialog(String title, TinyTime initialTime = timeNow().time):
             ui::Form<TinyTime>{Rect::XYWH(0, 144, 320, 96), /* raw */ true},
+            title_{std::move(title)},
             h_{Rect::XYWH(0, 0, 150, 96), ""},
             m_{Rect::XYWH(170, 0, 150, 96), ""},
             colon_{Rect::XYWH(150, 0, 20, 96), ":"} {
@@ -82,6 +85,8 @@ namespace rckid {
     private:
 
         Timer a_{1000};
+
+        String title_;
 
         ui::Label h_;
         ui::Label m_;

@@ -34,7 +34,7 @@ namespace platform {
             return Color{r, g, b};
         }
 
-        static Color RGB(uint8_t r, uint8_t g, uint8_t b) {
+        static constexpr Color RGB(uint8_t r, uint8_t g, uint8_t b) {
             return Color{r, g, b};
         }        
 
@@ -42,8 +42,8 @@ namespace platform {
          
             The code is straight from Adafruit Neopixel library.
         */
-        static Color HSV(uint16_t h, uint8_t s, uint8_t v) {
-            uint8_t red, green, blue;
+        static constexpr Color HSV(uint16_t h, uint8_t s, uint8_t v) {
+            uint8_t red = 0, green = 0, blue = 0;
             // Remap 0-65535 to 0-1529. Pure red is CENTERED on the 64K rollover;
             // 0 is not the start of pure red, but the midpoint...a few values above
             // zero and a few below 65536 all yield pure red (similarly, 32768 is the
@@ -180,7 +180,7 @@ namespace platform {
 
     private:
 
-        Color(uint8_t r, uint8_t g, uint8_t b):
+        constexpr Color(uint8_t r, uint8_t g, uint8_t b):
             g{g},
             r{r},
             b{b} {

@@ -134,6 +134,7 @@ namespace rckid {
         bool rapidFire_ = false;
         uint32_t rapidFireSpeed_ = RCKID_DEFAULT_RAPIDFIRE_TICKS;
         uint8_t btnRainbowHue_ = 0;
+        bool parentMode_ = false;
 
     } // namespace rckid::io
 
@@ -643,6 +644,16 @@ namespace rckid {
         else
             i2c::sendAvrCommand(cmd::DebugModeOff{});
         // don't set the debug mode in state (will be updated automatically on next AVR status read)
+    }
+
+    bool parentMode() {
+        StackProtection::check();
+        return io::parentMode_;
+    }
+
+    void setParentMode(bool value) {
+        StackProtection::check();
+        io::parentMode_ = value;
     }
 
     void keepAlive() {

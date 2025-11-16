@@ -17,6 +17,12 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/film_slate.inc.h"
     };
 
+    // File: assets/icons/24/074-up-arrow.png
+    // Size: 559
+    static constexpr uint8_t up_arrow[] = {
+        #include "raw/icons24/up_arrow.inc.h"
+    };
+
     // File: assets/icons/24/062-fireworks.png
     // Size: 1083
     static constexpr uint8_t fireworks[] = {
@@ -45,6 +51,12 @@ namespace rckid::assets::icons_24 {
     // Size: 1120
     static constexpr uint8_t color_picker[] = {
         #include "raw/icons24/color_picker.inc.h"
+    };
+
+    // File: assets/icons/24/071-family.png
+    // Size: 1555
+    static constexpr uint8_t family[] = {
+        #include "raw/icons24/family.inc.h"
     };
 
     // File: assets/icons/24/048-sleeping.png
@@ -155,6 +167,12 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/play_button.inc.h"
     };
 
+    // File: assets/icons/24/073-vibration.png
+    // Size: 372
+    static constexpr uint8_t vibration[] = {
+        #include "raw/icons24/vibration.inc.h"
+    };
+
     // File: assets/icons/24/060-exchange.png
     // Size: 949
     static constexpr uint8_t exchange[] = {
@@ -219,6 +237,12 @@ namespace rckid::assets::icons_24 {
     // Size: 920
     static constexpr uint8_t radio_cassette[] = {
         #include "raw/icons24/radio_cassette.inc.h"
+    };
+
+    // File: assets/icons/24/070-idea.png
+    // Size: 718
+    static constexpr uint8_t idea[] = {
+        #include "raw/icons24/idea.inc.h"
     };
 
     // File: assets/icons/24/027-paint-palette.png
@@ -347,6 +371,12 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/medal.inc.h"
     };
 
+    // File: assets/icons/24/075-brightness-1.png
+    // Size: 644
+    static constexpr uint8_t brightness_1[] = {
+        #include "raw/icons24/brightness_1.inc.h"
+    };
+
     // File: assets/icons/24/019-music-1.png
     // Size: 950
     static constexpr uint8_t music_1[] = {
@@ -387,6 +417,12 @@ namespace rckid::assets::icons_24 {
     // Size: 793
     static constexpr uint8_t product[] = {
         #include "raw/icons24/product.inc.h"
+    };
+
+    // File: assets/icons/24/072-piggy-bank.png
+    // Size: 974
+    static constexpr uint8_t piggy_bank[] = {
+        #include "raw/icons24/piggy_bank.inc.h"
     };
 
     // File: assets/icons/24/037-pause.png

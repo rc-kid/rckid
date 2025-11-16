@@ -17,6 +17,12 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/film_slate.inc.h"
     };
 
+    // File: assets/icons/64/074-up-arrow.png
+    // Size: 1384
+    static constexpr uint8_t up_arrow[] = {
+        #include "raw/icons_64/up_arrow.inc.h"
+    };
+
     // File: assets/icons/64/062-fireworks.png
     // Size: 2848
     static constexpr uint8_t fireworks[] = {
@@ -45,6 +51,12 @@ namespace rckid::assets::icons_64 {
     // Size: 2650
     static constexpr uint8_t color_picker[] = {
         #include "raw/icons_64/color_picker.inc.h"
+    };
+
+    // File: assets/icons/64/071-family.png
+    // Size: 4909
+    static constexpr uint8_t family[] = {
+        #include "raw/icons_64/family.inc.h"
     };
 
     // File: assets/icons/64/048-sleeping.png
@@ -155,6 +167,12 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/play_button.inc.h"
     };
 
+    // File: assets/icons/64/073-vibration.png
+    // Size: 1508
+    static constexpr uint8_t vibration[] = {
+        #include "raw/icons_64/vibration.inc.h"
+    };
+
     // File: assets/icons/64/060-exchange.png
     // Size: 2357
     static constexpr uint8_t exchange[] = {
@@ -219,6 +237,12 @@ namespace rckid::assets::icons_64 {
     // Size: 2110
     static constexpr uint8_t radio_cassette[] = {
         #include "raw/icons_64/radio_cassette.inc.h"
+    };
+
+    // File: assets/icons/64/070-idea.png
+    // Size: 1682
+    static constexpr uint8_t idea[] = {
+        #include "raw/icons_64/idea.inc.h"
     };
 
     // File: assets/icons/64/027-paint-palette.png
@@ -347,6 +371,12 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/medal.inc.h"
     };
 
+    // File: assets/icons/64/075-brightness-1.png
+    // Size: 1359
+    static constexpr uint8_t brightness_1[] = {
+        #include "raw/icons_64/brightness_1.inc.h"
+    };
+
     // File: assets/icons/64/019-music-1.png
     // Size: 2182
     static constexpr uint8_t music_1[] = {
@@ -387,6 +417,12 @@ namespace rckid::assets::icons_64 {
     // Size: 2004
     static constexpr uint8_t product[] = {
         #include "raw/icons_64/product.inc.h"
+    };
+
+    // File: assets/icons/64/072-piggy-bank.png
+    // Size: 2579
+    static constexpr uint8_t piggy_bank[] = {
+        #include "raw/icons_64/piggy_bank.inc.h"
     };
 
     // File: assets/icons/64/037-pause.png

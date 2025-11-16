@@ -70,6 +70,7 @@ namespace rckid {
         int16_t gyroZ_;
         bool rapidFire_ = false;
         uint32_t rapidFireSpeed_ = RCKID_DEFAULT_RAPIDFIRE_TICKS;
+        bool parentMode_ = false;
     }
 
     namespace time {
@@ -336,6 +337,10 @@ namespace rckid {
     bool debugMode() { return false; }
 
     void setDebugMode(bool) { }
+
+    bool parentMode() { return io::parentMode_; }
+
+    void setParentMode(bool value) { io::parentMode_ = value; }
 
     void yield() {
         StackProtection::check();   

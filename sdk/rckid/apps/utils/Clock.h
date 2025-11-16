@@ -46,7 +46,7 @@ namespace rckid {
             alarm_.setHAlign(HAlign::Left);
             g_.addChild(alarmIcon_);
             contextMenu_.add(ui::ActionMenu::Item("Set time", [this]() {
-                auto t = App::run<TimeDialog>();
+                auto t = App::run<TimeDialog>("Select time");
                 if (t.has_value()) {
                     TinyDateTime now = timeNow();
                     now.time = t.value();

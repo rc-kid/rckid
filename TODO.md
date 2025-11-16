@@ -64,6 +64,7 @@ Nice extras would include:
 - [X] allow background playback
 - [X] pin locking
 - [ ] parents mode
+- [ ] piggy bank
 - [X] theme style settings (colors & background) 
 - [ ] extra settings (colors, etc. for system & gbcemu)
 - [X] settings menu for button lights
@@ -89,6 +90,10 @@ Must-have before wider release
 # TODO
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
+
+- piggy bank topup-monthly, etc.
+- parent mode too
+- parent mode lock
 
 - for rumbler in AVR, ignore the values that are below some threshold that is observable on mk3
 - icons for rgb light, key and rainbow kay, breathe & solid effects

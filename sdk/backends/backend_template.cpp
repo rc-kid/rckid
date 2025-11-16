@@ -86,6 +86,26 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
+    bool debugMode() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
+    void setDebugMode(bool value) {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
+    bool parentMode() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
+    void setParentMode(bool value) {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
     void yield() {
         StackProtection::check();
         UNIMPLEMENTED;
