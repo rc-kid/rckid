@@ -437,7 +437,6 @@ namespace rckid {
 
     void cartridgeErase(uint32_t start);
 
-
     /** \page sdk
         \section rumbler Rumbler
 

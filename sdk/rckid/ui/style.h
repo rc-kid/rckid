@@ -8,7 +8,7 @@ namespace rckid::ui {
 
     /** RGB button visuals. 
      */
-    enum class RGBStyle {
+    enum class RGBStyle : uint8_t {
         Off,
         Rainbow, 
         RainbowWave,

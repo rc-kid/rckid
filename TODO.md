@@ -55,7 +55,8 @@
 Nice extras would include:
 
 - [X] LED flashlight
-- [ ] make the LED flashlight more user friendly
+- [X] make the LED flashlight more user friendly
+- [ ] make start negate the state regardless of its value
 - [X] shuffle function in audio playback
 - [X] birthdays & PIM
 - [X] select icon for contacts
@@ -94,6 +95,11 @@ Must-have before wider release
 - piggy bank topup-monthly, etc.
 - parent mode too
 - parent mode lock
+
+- move brightness and audio settings from avr status
+- add parent mode password instead
+
+- for the flashlight, somehow at the beginning there is a faint glow even when turned off, this seems to disappear after a while
 
 - for rumbler in AVR, ignore the values that are below some threshold that is observable on mk3
 - icons for rgb light, key and rainbow kay, breathe & solid effects
