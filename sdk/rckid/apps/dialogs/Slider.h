@@ -15,7 +15,7 @@ namespace rckid {
             ui::Form<int32_t>{Rect::XYWH(0, 144, 320, 96), /* raw */ true},
             cb_{cb},
             step_{step},
-            icon_{Rect::WH(64, 64), icon},
+            icon_{Rect::XYWH(16, 16, 64, 64), icon},
             title_{ 96, 0, std::move(title)},
             slider_{Rect::XYWH(96, 58, 200, 20), min, max, value} {
             icon_.setTransparentColor(ColorRGB::Black());

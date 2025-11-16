@@ -19,6 +19,7 @@
 #include <rckid/apps/dialogs/InfoDialog.h>
 #include <rckid/apps/dialogs/PopupMenu.h>
 #include <rckid/apps/dialogs/ColorPicker.h>
+#include <rckid/apps/dialogs/Slider.h>
 #include <rckid/apps/MusicPlayer.h>
 #include <rckid/apps/Friends.h>
 #include <rckid/apps/Messages.h>
@@ -146,6 +147,77 @@ ui::ActionMenu * styleMenuGenerator() {
 ui::ActionMenu * settingsMenuGenerator() {
     return new ui::ActionMenu{
         ui::ActionMenu::Generator("Style", assets::icons_64::paint_palette, styleMenuGenerator),
+        // TODO change to idea
+        ui::ActionMenu::Generator("Lights", assets::icons_64::poo, []() {
+            return new ui::ActionMenu{
+                ui::ActionMenu::Item("Off", assets::icons_64::turn_off, [](){
+                    ui::Style::setRgbStyle(ui::RGBStyle::Off);
+                    ui::Style::save();
+                }),
+                ui::ActionMenu::Item("Rainbow", assets::icons_64::rainbow, [](){
+                    ui::Style::setRgbStyle(ui::RGBStyle::Rainbow);
+                    ui::Style::save();
+                }),
+                ui::ActionMenu::Item("Rainbow Wave", assets::icons_64::rainbow, [](){
+                    ui::Style::setRgbStyle(ui::RGBStyle::RainbowWave);
+                    ui::Style::save();
+                }),
+                ui::ActionMenu::Item("Breathe", assets::icons_64::light, [](){
+                    auto c = App::run<ColorPicker>(ui::Style::rgbColor());
+                    if (c.has_value()) {
+                        ui::Style::setRgbColor(c.value());
+                        ui::Style::setRgbStyle(ui::RGBStyle::Breathe);
+                    ui::Style::save();
+                    }
+                }),
+                ui::ActionMenu::Item("Breathe Wave", assets::icons_64::light, [](){
+                    auto c = App::run<ColorPicker>(ui::Style::rgbColor());
+                    if (c.has_value()) {
+                        ui::Style::setRgbColor(c.value());
+                        ui::Style::setRgbStyle(ui::RGBStyle::BreatheWave);
+                    ui::Style::save();
+                    }
+                }),
+                ui::ActionMenu::Item("Solid", assets::icons_64::light, [](){
+                    auto c = App::run<ColorPicker>(ui::Style::rgbColor());
+                    if (c.has_value()) {
+                        ui::Style::setRgbColor(c.value());
+                        ui::Style::setRgbStyle(ui::RGBStyle::Solid);
+                    ui::Style::save();
+                    }
+                }),
+                ui::ActionMenu::Item("Key", assets::icons_64::poo, [](){
+                    auto c = App::run<ColorPicker>(ui::Style::rgbColor());
+                    if (c.has_value()) {
+                        ui::Style::setRgbColor(c.value());
+                        ui::Style::setRgbStyle(ui::RGBStyle::Key);
+                        ui::Style::save();
+                    }
+                }),
+                ui::ActionMenu::Item("Rainbow Key", assets::icons_64::poo, [](){
+                    ui::Style::setRgbStyle(ui::RGBStyle::RainbowKey);
+                    ui::Style::save();
+                }),
+                ui::ActionMenu::Item("Brightness", assets::icons_64::brightness, [](){
+                    Slider s{assets::icons_64::brightness, "Brightness", 0, 31, ui::Style::rgbBrightness() >> 1, [](uint32_t value) {
+                        ui::Style::setRgbBrightness((value << 1)  + (value & 1)); 
+                    }};
+                    // TODO we do not support generic animations here, fix when we have UI overhaul
+                    //s.setAnimation(c_.iconPosition(), c_.textPosition());
+                    s.loop();
+                    ui::Style::save();
+                }),
+            };
+        }),
+        ui::ActionMenu::Item("Rumbler", assets::icons_64::poo, [](){
+            Slider s{assets::icons_64::poo, "Rumbler", 0, 7, ui::Style::rumblerKeyPressIntensity() >> 5, [](uint32_t value) {
+                ui::Style::setRumblerKeyPressIntensity((value << 5) + (value << 2) + (value & 0x03)); 
+            }};
+            // TODO we do not support generic animations here, fix when we have UI overhaul
+            //s.setAnimation(c_.iconPosition(), c_.textPosition());
+            s.loop();
+            ui::Style::save();
+        }),
         ui::ActionMenu::Item("Pin", assets::icons_64::lock, [](){
             if (pinCurrent() != 0xffff) {
                 auto x = App::run<PinDialog>("Current pin");
@@ -170,18 +242,7 @@ ui::ActionMenu * settingsMenuGenerator() {
             pinSet(newPin);
             InfoDialog::success("Done", "PIN changed successfully");
         }),
-        ui::ActionMenu::Item("RGB Off", assets::icons_64::turn_off, [](){
-            rckid::rgbOff();
-        }),
-        ui::ActionMenu::Item("RGB Rainbow", assets::icons_64::rainbow, [](){
-            rckid::rgbEffects(
-                RGBEffect::Rainbow(0, 1, 4, 32), 
-                RGBEffect::Rainbow(51, 1, 4, 32), 
-                RGBEffect::Rainbow(102, 1, 4, 32), 
-                RGBEffect::Rainbow(153, 1, 4, 32), 
-                RGBEffect::Rainbow(204, 1, 4, 32)
-            );
-        }),
+
     };
 }
 
@@ -217,16 +278,7 @@ ui::ActionMenu * mainMenuGenerator() {
 int main() {
     //cpu::overclock(250000000);
     initialize();
-    LOG(LL_INFO, "Init done, rgb effects");
-    rgbEffects(
-        RGBEffect::Rainbow(0, 1, 4, 32), 
-        RGBEffect::Rainbow(51, 1, 4, 32), 
-        RGBEffect::Rainbow(102, 1, 4, 32), 
-        RGBEffect::Rainbow(153, 1, 4, 32), 
-        RGBEffect::Rainbow(204, 1, 4, 32)
-    );
-    LOG(LL_INFO, "RGB effects sent");
-    //App::run<TextDialog>("Input text");
+   //App::run<TextDialog>("Input text");
     //PNG png{PNG::fromStream(fs::fileRead(STR("files/images/backgrounds/wish16.png")))};
     //LOG(LL_INFO, "PNG loaded: " << png.width() << "x" << png.height() << ", bpp: " << png.bpp());
     while (true) {

@@ -88,6 +88,18 @@ namespace rckid {
                 return false;
             }
 
+            uint32_t buttonChangeDown(Status const & other) const {
+                uint32_t last = other.a_ | ((other.b_ & (BTN_HOME | BTN_VOLUMEUP | BTN_VOLUMEDOWN)) << 8);
+                uint32_t curr = a_ | ((b_ & (BTN_HOME | BTN_VOLUMEUP | BTN_VOLUMEDOWN)) << 8);
+                return curr & (~last);
+            }
+
+            uint32_t buttonChangeUp(Status const & other) const {
+                uint32_t last = other.a_ | ((other.b_ & (BTN_HOME | BTN_VOLUMEUP | BTN_VOLUMEDOWN)) << 8);
+                uint32_t curr = a_ | ((b_ & (BTN_HOME | BTN_VOLUMEUP | BTN_VOLUMEDOWN)) << 8);
+                return (~curr) & last;
+            }
+
         private:
 
             void setPwrInt() { c_ |= PWR_INT; }

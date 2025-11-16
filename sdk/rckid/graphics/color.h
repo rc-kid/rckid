@@ -3,6 +3,7 @@
 #include <array>
 #include <platform.h>
 #include <platform/utils.h>
+#include <platform/color_strip.h>
 #include "../utils/string.h"
 
 // on windows, there is RGB macro, which clases with the 565 and 332 colors
@@ -135,6 +136,10 @@ namespace rckid {
 
         constexpr uint32_t toRaw() const {
             return ((r() >> 3) << 11) | ((g() >> 2) << 5) | (b() >> 3);
+        }
+
+        constexpr platform::Color toPlatformColor() const {
+            return platform::Color::RGB(r(), g(), b());
         }
 
         constexpr uint8_t r() const { return (raw_ >> 16) & 0xff; }

@@ -47,7 +47,6 @@
   - [X] stopwatch
 - [X] improve text input dialog
 - [X] screen lock (double home tap)
-- [ ] settings menu for button lights
 - [X] preserve volume settings
 - [ ] low battery error and device won't power on
 - [X] AVR debouncing
@@ -56,17 +55,18 @@
 Nice extras would include:
 
 - [X] LED flashlight
+- [ ] make the LED flashlight more user friendly
 - [X] shuffle function in audio playback
 - [X] birthdays & PIM
 - [X] select icon for contacts
 - [X] larger font in contact details
-- [ ] rumbler effects on button presses
+- [X] rumbler effects on button presses
 - [X] allow background playback
 - [X] pin locking
 - [ ] parents mode
 - [X] theme style settings (colors & background) 
 - [ ] extra settings (colors, etc. for system & gbcemu)
-- [ ] telegram messenger
+- [X] settings menu for button lights
 - [ ] accelerometer controller background & background selection
 - [X] fm radio rds time setting
 - [ ] fm radio rds in background
@@ -81,16 +81,30 @@ Nice extras would include:
 - [ ] app for creating icons (64x64) so that kids can design their own. Eventually this can go larger and larger
 - [ ] in header, show volume value, not just bar when changing (?)
 
+Must-have before wider release
+
+- [ ] AVR bootloader so that AVR firmware can be updated too
+- [ ] telegram messenger
+
 # TODO
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
+
+- for rumbler in AVR, ignore the values that are below some threshold that is observable on mk3
+- icons for rgb light, key and rainbow kay, breathe & solid effects
+- allow breathing to start at specified offset in the animation
+
+- make ini writing use writers interface instead of the strings
 
 - clean-up the code around display initialization
 - clean debug prints (headphones, etc)
 - document host file system
 
+- maybe have the icon editor use 32x32 and double sized pixels? Will be easier to use and simpler, for now... or wait till we have assets editor proper? 
+
 - add some onPowerOff event that will be called when device decides to power off *and* when avr decides to power the device off as well (so that we can save state, etc)
-- numbered save slots for games + latest
+
+- would be nice to have some simple way of specifying ini file parsing...
 
 - would be nice to have menu-like transitions between apps (i.e. multimain menu stuff)
 

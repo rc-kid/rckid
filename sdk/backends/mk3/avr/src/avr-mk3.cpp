@@ -219,12 +219,12 @@ public:
             case POWER_MODE_DC:
                 state_.status.setVUsb(true);
                 if (! (powerMode_ & POWER_MODE_ON)) 
-                    setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+                    setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
                 break;
             case POWER_MODE_CHARGING:
                 state_.status.setCharging(true);
                 if (! (powerMode_ & POWER_MODE_ON)) 
-                    setNotification(RGBEffect::Breathe(platform::Color::Orange().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+                    setNotification(RGBEffect::Breathe(platform::Color::Orange().withBrightness(RCKID_RGB_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
                 break;
             default:
                 // no action
@@ -248,9 +248,9 @@ public:
             case POWER_MODE_ON:
                 // if we are turning off, set notification according to other power modes
                 if (powerMode_ & POWER_MODE_CHARGING)
-                    setNotification(RGBEffect::Breathe(platform::Color::Orange().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+                    setNotification(RGBEffect::Breathe(platform::Color::Orange().withBrightness(RCKID_RGB_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
                 else if (powerMode_ & POWER_MODE_DC)
-                    setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+                    setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
                 else
                     setNotification(RGBEffect::Off());
                 break;
@@ -262,7 +262,7 @@ public:
             case POWER_MODE_CHARGING:
                 state_.status.setCharging(false);
                 if (! (powerMode_ & POWER_MODE_ON))
-                    setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+                    setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
                 break;
             default:
                 // no action
@@ -307,7 +307,7 @@ public:
     }
 
     static void lowBatteryWarning() {
-        setNotification(RGBEffect::Breathe(platform::Color::Red().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 8));
+        setNotification(RGBEffect::Breathe(platform::Color::Red().withBrightness(RCKID_RGB_BRIGHTNESS), 8));
     }
 
     static void enterDebugMode() {
@@ -318,7 +318,7 @@ public:
                 setBacklightPWM(128);
             // TODO TODO TODO
             for (uint8_t i = 0; i < NUM_RGB_LEDS; ++i)
-                rgbEffect_[i] = RGBEffect::Breathe(platform::Color::Purple().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED);
+                rgbEffect_[i] = RGBEffect::Breathe(platform::Color::Purple().withBrightness(RCKID_RGB_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED);
             rgbOn(true);
         }
     }
@@ -381,22 +381,22 @@ public:
                 cpu::wdtReset();
                 switch (i) {
                     case 0:
-                        rgb_[0] = platform::Color::Cyan().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
-                        rgb_[1] = platform::Color::Cyan().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
-                        rgb_[2] = platform::Color::Cyan().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
-                        rgb_[3] = platform::Color::Cyan().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        rgb_[0] = platform::Color::Cyan().withBrightness(RCKID_RGB_BRIGHTNESS);
+                        rgb_[1] = platform::Color::Cyan().withBrightness(RCKID_RGB_BRIGHTNESS);
+                        rgb_[2] = platform::Color::Cyan().withBrightness(RCKID_RGB_BRIGHTNESS);
+                        rgb_[3] = platform::Color::Cyan().withBrightness(RCKID_RGB_BRIGHTNESS);
                         break;
                     case 1:
-                        rgb_[RGB_LED_BTN_B] = platform::Color::Cyan().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        rgb_[RGB_LED_BTN_B] = platform::Color::Cyan().withBrightness(RCKID_RGB_BRIGHTNESS);
                         break;
                     case 2:
-                        rgb_[RGB_LED_BTN_A] = platform::Color::Cyan().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        rgb_[RGB_LED_BTN_A] = platform::Color::Cyan().withBrightness(RCKID_RGB_BRIGHTNESS);
                         break;
                     case 3:
-                        rgb_[RGB_LED_BTN_SELECT] = platform::Color::Cyan().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        rgb_[RGB_LED_BTN_SELECT] = platform::Color::Cyan().withBrightness(RCKID_RGB_BRIGHTNESS);
                         break;
                     default:
-                        rgb_[RGB_LED_BTN_START] = platform::Color::Cyan().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        rgb_[RGB_LED_BTN_START] = platform::Color::Cyan().withBrightness(RCKID_RGB_BRIGHTNESS);
                         break;
                 }
                 rgb_.update();
@@ -428,22 +428,22 @@ public:
                 cpu::wdtReset();
                 switch (i) {
                     case 0:
-                        rgb_[0] = platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
-                        rgb_[1] = platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
-                        rgb_[2] = platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
-                        rgb_[3] = platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        rgb_[0] = platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS);
+                        rgb_[1] = platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS);
+                        rgb_[2] = platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS);
+                        rgb_[3] = platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS);
                         break;
                     case 1:
-                        rgb_[RGB_LED_BTN_B] = platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        rgb_[RGB_LED_BTN_B] = platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS);
                         break;
                     case 2:
-                        rgb_[RGB_LED_BTN_A] = platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        rgb_[RGB_LED_BTN_A] = platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS);
                         break;
                     case 3:
-                        rgb_[RGB_LED_BTN_SELECT] = platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        rgb_[RGB_LED_BTN_SELECT] = platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS);
                         break;
                     default:
-                        rgb_[RGB_LED_BTN_START] = platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS);
+                        rgb_[RGB_LED_BTN_START] = platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS);
                         break;
                 }
                 rgb_.update();
@@ -456,7 +456,7 @@ public:
             // since we are in the bootloader mode now, indicate by breathing all keys in green
             //setNotification(RGBEffect::Breathe(platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 7));
             for (uint8_t i = 0; i < NUM_RGB_LEDS; ++i)
-                rgbEffect_[i] = RGBEffect::Breathe(platform::Color::Blue().withBrightness(RCKID_RGB_LED_DEFAULT_BRIGHTNESS), 7);
+                rgbEffect_[i] = RGBEffect::Breathe(platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS), 7);
         );
     }
 
@@ -1475,9 +1475,9 @@ public:
         rgbOn(true);
         rgbClear();
         for (uint8_t i = 0; i < 8; ++i) {
-            uint8_t rr = ((r >> i) & 1) ? RCKID_RGB_LED_DEFAULT_BRIGHTNESS : 0; 
-            uint8_t gg = ((g >> i) & 1) ? RCKID_RGB_LED_DEFAULT_BRIGHTNESS : 0;
-            uint8_t bb = ((b >> i) & 1) ? RCKID_RGB_LED_DEFAULT_BRIGHTNESS : 0;
+            uint8_t rr = ((r >> i) & 1) ? RCKID_RGB_BRIGHTNESS : 0; 
+            uint8_t gg = ((g >> i) & 1) ? RCKID_RGB_BRIGHTNESS : 0;
+            uint8_t bb = ((b >> i) & 1) ? RCKID_RGB_BRIGHTNESS : 0;
             switch (i) {
                 case 0:
                     rgb_[RGB_LED_DPAD_TOP_LEFT] = platform::Color::RGB(rr, gg, bb);

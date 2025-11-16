@@ -133,6 +133,7 @@ namespace rckid {
 
         bool rapidFire_ = false;
         uint32_t rapidFireSpeed_ = RCKID_DEFAULT_RAPIDFIRE_TICKS;
+        uint8_t btnRainbowHue_ = 0;
 
     } // namespace rckid::io
 
@@ -180,6 +181,79 @@ namespace rckid {
         }
     }
 
+    void updateKeyPressRGBs(uint32_t downMask, uint32_t upMask) {
+        ui::RGBStyle style = ui::Style::rgbStyle();
+        platform::Color color;
+        if (style == ui::RGBStyle::Key) {
+            color = ui::Style::rgbColor().toPlatformColor().withBrightness(ui::Style::rgbBrightness());
+        } else if (style == ui::RGBStyle::RainbowKey) {
+            color = platform::Color::HSV(io::btnRainbowHue_ * 256, 255, ui::Style::rgbBrightness());
+            io::btnRainbowHue_ += 13;
+        } else {    
+            return;
+        }
+        if (downMask != 0) {
+            if (downMask & static_cast<uint32_t>(Btn::Up)) {
+                rgbEffect(0, RGBEffect::Solid(color, 32, 0));
+                rgbEffect(1, RGBEffect::Solid(color, 32, 0));
+            }
+            if (downMask & static_cast<uint32_t>(Btn::Down)) {
+                rgbEffect(2, RGBEffect::Solid(color, 32, 0));
+                rgbEffect(3, RGBEffect::Solid(color, 32, 0));
+            }
+            if (downMask & static_cast<uint32_t>(Btn::Left)) {
+                rgbEffect(1, RGBEffect::Solid(color, 32, 0));
+                rgbEffect(2, RGBEffect::Solid(color, 32, 0));
+            }
+            if (downMask & static_cast<uint32_t>(Btn::Right)) {
+                rgbEffect(0, RGBEffect::Solid(color, 32, 0));
+                rgbEffect(3, RGBEffect::Solid(color, 32, 0));
+            }
+            if (downMask & static_cast<uint32_t>(Btn::A)) {
+                rgbEffect(7, RGBEffect::Solid(color, 32, 0));
+            }
+            if (downMask & static_cast<uint32_t>(Btn::B)) {
+                rgbEffect(6, RGBEffect::Solid(color, 32, 0));
+            }
+            if (downMask & static_cast<uint32_t>(Btn::Select)) {
+                rgbEffect(4, RGBEffect::Solid(color, 32, 0));       
+            }
+            if (downMask & static_cast<uint32_t>(Btn::Start)) {
+                rgbEffect(5, RGBEffect::Solid(color, 32, 0));       
+            }
+        }
+        if (upMask != 0) {
+            if (upMask & static_cast<uint32_t>(Btn::Up)) {
+                rgbEffect(0, RGBEffect::Solid(platform::Color::Black()));
+                rgbEffect(1, RGBEffect::Solid(platform::Color::Black()));
+            }
+            if (upMask & static_cast<uint32_t>(Btn::Down)) {
+                rgbEffect(2, RGBEffect::Solid(platform::Color::Black()));
+                rgbEffect(3, RGBEffect::Solid(platform::Color::Black()));
+            }
+            if (upMask & static_cast<uint32_t>(Btn::Left)) {
+                rgbEffect(1, RGBEffect::Solid(platform::Color::Black()));
+                rgbEffect(2, RGBEffect::Solid(platform::Color::Black()));
+            }
+            if (upMask & static_cast<uint32_t>(Btn::Right)) {
+                rgbEffect(0, RGBEffect::Solid(platform::Color::Black()));
+                rgbEffect(3, RGBEffect::Solid(platform::Color::Black()));
+            }
+            if (upMask & static_cast<uint32_t>(Btn::A)) {
+                rgbEffect(7, RGBEffect::Solid(platform::Color::Black()));
+            }
+            if (upMask & static_cast<uint32_t>(Btn::B)) {
+                rgbEffect(6, RGBEffect::Solid(platform::Color::Black()));
+            }
+            if (upMask & static_cast<uint32_t>(Btn::Select)) {
+                rgbEffect(4, RGBEffect::Solid(platform::Color::Black()));
+            }
+            if (upMask & static_cast<uint32_t>(Btn::Start)) {
+                rgbEffect(5, RGBEffect::Solid(platform::Color::Black()));
+            }
+        }
+    }
+
     /** Updates the AVR status based on the status information received in the I2C buffer (callback function for getting AVR status). 
      */
     void updateAvrStatus([[maybe_unused]] uint8_t numBytes) {
@@ -187,9 +261,19 @@ namespace rckid {
         // TODO what if numBytes != status read? 
         i2c::getTransactionResponse(reinterpret_cast<uint8_t*>(&status), sizeof(AVRState::Status));
         // if there has been change in button states, reset the timeout & keepalive counters
-        if (status.controlChange(io::avrState_.status)) {
+
+        uint32_t downMask = status.buttonChangeDown(io::avrState_.status);
+        uint32_t upMask = status.buttonChangeUp(io::avrState_.status);
+
+        if (downMask != 0 || upMask != 0) {
             time::idleTimeout_ = RCKID_IDLE_TIMEOUT;
             time::idleTimeoutKeepalive_ = RCKID_IDLE_TIMEOUT_KEEPALIVE;
+            // if rumbling enabled, rumble
+            uint8_t i = ui::Style::rumblerKeyPressIntensity();
+            if (i && downMask != 0)
+                rumblerEffect(RumblerEffect{i, RCKID_RUMBLER_NUDGE_TIME_ON, RCKID_RUMBLER_NUDGE_TIME_OFF, RCKID_RUMBLER_NUDGE_CYCLES});
+            // now deal with the button RGB events
+            updateKeyPressRGBs(downMask, upMask);    
         }
         // archive the old status
         io::lastStatus_ = io::avrState_.status;
@@ -397,7 +481,7 @@ namespace rckid {
 
         // initalize the ui style
         ui::Style::load();
-
+        ui::Style::showRGBStyle();
 
         time::nextSecond_ += 1000000;
 
@@ -405,7 +489,6 @@ namespace rckid {
         //i2c0->hw->intr_mask = I2C_IC_INTR_MASK_M_RX_FULL_BITS | I2C_IC_INTR_MASK_M_TX_ABRT_BITS;
 
         RAMHeap::traceChunks();
-
 
         // initialize the interrupt pins and set the interrupt handlers (enable pull-up as AVR pulls it low or leaves floating)
         gpio_set_irq_callback(irqGPIO_);
