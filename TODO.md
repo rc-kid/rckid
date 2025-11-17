@@ -66,6 +66,7 @@ Nice extras would include:
 - [X] pin locking
 - [ ] parents mode
 - [ ] piggy bank
+- [ ] owner info
 - [X] theme style settings (colors & background) 
 - [ ] extra settings (colors, etc. for system & gbcemu)
 - [X] settings menu for button lights
@@ -93,8 +94,6 @@ Must-have before wider release
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
-- carousel does not correctly show when empty (this affects presets too as they do not show what first item/empty if they are empty)
-- add add preset to presets menu? And make select just launch the presets menu? 
 - piggy bank topup-monthly, etc.
 - parent mode too
 - parent mode lock

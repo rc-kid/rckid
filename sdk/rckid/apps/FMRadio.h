@@ -17,9 +17,6 @@ namespace rckid {
         - allow switching between mono/stereo
         - allow switching internal/headphone antenna
         - allow forcing speaker even if headphones are on
-        - allow playing music while the app is not active
-        - presets
-
      */
     class FMRadio : public ui::Form<void> {
     public:
@@ -56,16 +53,6 @@ namespace rckid {
                 // ensure the background task is running
                 RadioTask::instance();
                 initDelay_ = 60; // wait one second before loading settings & setting frequency
-                contextMenu_.add(ui::ActionMenu::Item("Presets", [this](){
-                    auto p = App::run<PresetMenu>(this);
-                    if (p.has_value())
-                        radio_->setFrequency(p.value().frequency);
-                }));
-                contextMenu_.add(ui::ActionMenu::Item("Add preset", [this](){
-                    auto name = App::run<TextDialog>("Preset name", radio_->stationName());
-                    if (name.has_value())
-                        presets_.push_back(Preset{name.value(), radio_->frequency()});
-                }));
             }
         }
 
@@ -135,9 +122,9 @@ namespace rckid {
             if (btnPressed(Btn::Right))
                 radio_->seekUp();
             if (btnPressed(Btn::Select)) {
-                auto action = App::run<PopupMenu<ui::Action>>(&contextMenu_);
-                if (action.has_value())
-                    action.value()();
+                auto p = App::run<PresetMenu>(this);
+                if (p.has_value())
+                    radio_->setFrequency(p.value().frequency);
             }
             /*
             if (btnPressed(Btn::Select))
@@ -243,6 +230,15 @@ namespace rckid {
                     }
                 }
             { 
+                contextMenu_.add(ui::ActionMenu::Item("Add preset", [this](){
+                    auto name = App::run<TextDialog>("Preset name", radio_->radio_->stationName());
+                    if (name.has_value()) {
+                        radio_->presets_.push_back(Preset{name.value(), radio_->radio_->frequency()});
+                        if (radio_->presets_.size() == 1)
+                            c_.setItem(0, Direction::Up);
+                    }
+                }));
+
                 contextMenu_.add(ui::ActionMenu::Item("Rename", [this]() {
                     if (radio_->presets_.size() == 0)
                         return;
@@ -256,12 +252,18 @@ namespace rckid {
                     if (radio_->presets_.size() == 0)
                         return;
                     radio_->presets_.erase(radio_->presets_.begin() + c_.currentIndex());
-                    c_.setItem(0, Direction::Up);
+                    if (radio_->presets_.size() == 0)
+                        c_.showEmpty(Direction::Up);
+                    else
+                        c_.setItem(0, Direction::Up);
                 }));
                 g_.addChild(c_);
                 c_.setRect(Rect::XYWH(0, 0, 320, 96));
                 c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
-                c_.setItem(0, Direction::Up);
+                if (radio_->presets_.size() > 0)
+                    c_.setItem(0, Direction::Up);
+                else
+                    c_.showEmpty(Direction::Up);
             }
 
         protected:
@@ -289,7 +291,6 @@ namespace rckid {
             FMRadio * radio_;
             ui::EventBasedCarousel c_;
             ui::ActionMenu contextMenu_;
-
         }; 
 
         friend class PresetMenu;
@@ -301,7 +302,6 @@ namespace rckid {
         ui::Label radioText1_;
         ui::Label radioText2_;
         ui::Label signal_;
-        ui::ActionMenu contextMenu_;
 
         std::vector<Preset> presets_;
 
