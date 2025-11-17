@@ -99,6 +99,11 @@ Must-have before wider release
 - piggy bank data load & save
 - parent mode lock
 
+- bootloader cartridge (this will only flash the memory)
+- parent mode cartridge
+
+- move WiFi into task interface
+
 - move brightness and audio settings from avr status
 - add parent mode password instead
 

@@ -27,6 +27,10 @@ namespace rckid {
             wifi_->enable();
         } 
 
+        ~WiFiScan() override {
+            wifi_->disable();
+        }
+
         void update() override {
             ui::Form<void>::update();
             if (btnPressed(Btn::A)) {
