@@ -73,7 +73,7 @@ Nice extras would include:
 - [X] fm radio rds time setting
 - [ ] fm radio rds in background
 - [X] fm radio embedded antenna (tested)
-- [ ] fm radio presets
+- [X] fm radio presets
 - [X] data sync app
 - [ ] RGB dimming that preserves colors (? is possible)
 - [ ] timer app
@@ -82,6 +82,7 @@ Nice extras would include:
 - [ ] add high scores
 - [ ] app for creating icons (64x64) so that kids can design their own. Eventually this can go larger and larger
 - [ ] in header, show volume value, not just bar when changing (?)
+- [ ] some way app can show which buttons it reacts to (faint glow for key press, only use the effect on valid keys otherwise)
 
 Must-have before wider release
 
@@ -92,6 +93,8 @@ Must-have before wider release
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
+- carousel does not correctly show when empty (this affects presets too as they do not show what first item/empty if they are empty)
+- add add preset to presets menu? And make select just launch the presets menu? 
 - piggy bank topup-monthly, etc.
 - parent mode too
 - parent mode lock

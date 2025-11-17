@@ -40,6 +40,10 @@ namespace rckid {
             stationName_.setFont(Font::fromROM<assets::OpenDyslexic32>());
             radioText1_.setFont(Font::fromROM<assets::OpenDyslexic32>());
             radioText2_.setFont(Font::fromROM<assets::OpenDyslexic32>());
+            stationName_.setColor(ui::Style::accentFg());
+            radioText1_.setColor(ui::Style::accentFg());
+            radioText2_.setColor(ui::Style::accentFg());
+            signal_.setColor(ui::Style::accentFg());
             g_.addChild(freq_);
             g_.addChild(stationName_);
             g_.addChild(radioText1_);
@@ -52,17 +56,22 @@ namespace rckid {
                 // ensure the background task is running
                 RadioTask::instance();
                 initDelay_ = 60; // wait one second before loading settings & setting frequency
+                contextMenu_.add(ui::ActionMenu::Item("Presets", [this](){
+                    auto p = App::run<PresetMenu>(this);
+                    if (p.has_value())
+                        radio_->setFrequency(p.value().frequency);
+                }));
+                contextMenu_.add(ui::ActionMenu::Item("Add preset", [this](){
+                    auto name = App::run<TextDialog>("Preset name", radio_->stationName());
+                    if (name.has_value())
+                        presets_.push_back(Preset{name.value(), radio_->frequency()});
+                }));
             }
         }
 
         ~FMRadio() override {
             RadioTask::deleteInstance();
-            if (fs::isMounted() && fs::createFolders(homeFolder())) {
-                ini::Writer ini{fs::fileWrite(fs::join(homeFolder(), "settings.ini"))};
-                ini.writeSection("settings");
-                ini.writeValue("frequency", radio_->frequency());
-                // TODO save presets as well
-            }
+            saveSettings();
         }
 
     protected:
@@ -84,6 +93,18 @@ namespace rckid {
                                     LOG(LL_ERROR, "Unknown FM radio setting: " << kv->first);
                                 }
                             }
+                        } else if (section.value() == "preset") {
+                            Preset preset;
+                            while (auto kv = ini.nextValue()) {
+                                if (kv->first == "frequency") {
+                                    preset.frequency = std::atoi(kv->second.c_str());
+                                } else if (kv->first == "name") {
+                                    preset.name = kv->second;
+                                } else {
+                                    LOG(LL_ERROR, "Unknown FM radio preset setting: " << kv->first);
+                                }
+                            }
+                            presets_.push_back(preset);
                         } else {
                             LOG(LL_ERROR, "Invalid settings section: " << section.value());
                         }
@@ -113,10 +134,17 @@ namespace rckid {
                 radio_->seekDown();
             if (btnPressed(Btn::Right))
                 radio_->seekUp();
+            if (btnPressed(Btn::Select)) {
+                auto action = App::run<PopupMenu<ui::Action>>(&contextMenu_);
+                if (action.has_value())
+                    action.value()();
+            }
+            /*
             if (btnPressed(Btn::Select))
                 radio_->enableEmbeddedAntenna(false);
             if (btnPressed(Btn::Start))
                 radio_->enableEmbeddedAntenna(true);
+            */
         }
 
         void draw() override {
@@ -129,6 +157,19 @@ namespace rckid {
         }
 
     private:
+
+        class Preset {
+        public:
+            String name;
+            uint16_t frequency;
+
+            Preset() = default;
+
+            Preset(String name, uint16_t frequency) :
+                name{std::move(name)},
+                frequency{frequency} {
+            }
+        }; // FMRadio::Preset
 
         /** Background task for radio player. 
          
@@ -182,6 +223,77 @@ namespace rckid {
             static inline RadioTask * instance_ = nullptr;
         }; 
 
+        class PresetMenu : public ui::Form<Preset> {
+        public:
+        
+            String name() const override { return "Radio"; }
+
+            String title() const override { return "Select preset"; }
+
+            PresetMenu(FMRadio * radio):
+                ui::Form<Preset>{Rect::XYWH(0, 144, 320, 96), /* raw */ true},
+                radio_{radio},
+                c_{
+                    [this]() {
+                        return radio_->presets_.size();
+                    },
+                    [this](uint32_t index, Direction direction) {
+                        Preset & p = radio_->presets_[index];
+                        c_.set(p.name, Icon{assets::icons_64::music_wave}, direction);
+                    }
+                }
+            { 
+                contextMenu_.add(ui::ActionMenu::Item("Rename", [this]() {
+                    if (radio_->presets_.size() == 0)
+                        return;
+                    auto name = App::run<TextDialog>("Preset name", radio_->presets_[c_.currentIndex()].name);
+                    if (name.has_value()) {
+                        radio_->presets_[c_.currentIndex()].name = name.value();
+                        c_.setItem(c_.currentIndex(), Direction::Up);
+                    }
+                }));
+                contextMenu_.add(ui::ActionMenu::Item("Delete", [this]() {
+                    if (radio_->presets_.size() == 0)
+                        return;
+                    radio_->presets_.erase(radio_->presets_.begin() + c_.currentIndex());
+                    c_.setItem(0, Direction::Up);
+                }));
+                g_.addChild(c_);
+                c_.setRect(Rect::XYWH(0, 0, 320, 96));
+                c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
+                c_.setItem(0, Direction::Up);
+            }
+
+        protected:
+
+            void update() override {
+                if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                    exit();
+                }
+                if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                    btnClear(Btn::A);
+                    btnClear(Btn::Up);
+                    Preset & p = radio_->presets_[c_.currentIndex()];
+                    exit(p);
+                }
+                if (btnPressed(Btn::Select)) {
+                    auto action = App::run<PopupMenu<ui::Action>>(&contextMenu_);
+                    if (action.has_value())
+                        action.value()();
+                }
+                c_.processEvents();
+            }
+
+        private:
+
+            FMRadio * radio_;
+            ui::EventBasedCarousel c_;
+            ui::ActionMenu contextMenu_;
+
+        }; 
+
+        friend class PresetMenu;
+
         Radio * radio_;
         bool refresh_ = false;
         ui::Label freq_;
@@ -189,6 +301,10 @@ namespace rckid {
         ui::Label radioText1_;
         ui::Label radioText2_;
         ui::Label signal_;
+        ui::ActionMenu contextMenu_;
+
+        std::vector<Preset> presets_;
+
         uint32_t initDelay_;
 
         uint32_t irqs_ = 0;
@@ -225,6 +341,20 @@ namespace rckid {
             radioText1_.setText(radio_->radioText1());
             radioText2_.setText(radio_->radioText2());
             signal_.setText((STR(snrToQuality() << "   " << stereoToStr())));
+        }
+
+        void saveSettings() {
+            if (fs::isMounted() && fs::createFolders(homeFolder())) {
+                ini::Writer ini{fs::fileWrite(fs::join(homeFolder(), "settings.ini"))};
+                ini.writeSection("settings");
+                ini.writeValue("frequency", radio_->frequency());
+                // save presets
+                for (auto & p : presets_) {
+                    ini.writeSection("preset");
+                    ini.writeValue("frequency", p.frequency);
+                    ini.writeValue("name", p.name);
+                }
+            }
         }
 
     }; // rckid::Radio
