@@ -56,7 +56,7 @@ Nice extras would include:
 
 - [X] LED flashlight
 - [X] make the LED flashlight more user friendly
-- [ ] make start negate the state regardless of its value
+- [X] make start negate the state regardless of its value
 - [X] shuffle function in audio playback
 - [X] birthdays & PIM
 - [X] select icon for contacts
@@ -89,6 +89,7 @@ Must-have before wider release
 
 - [ ] AVR bootloader so that AVR firmware can be updated too
 - [ ] telegram messenger
+- [ ] webpage, releases, updates, etc.
 
 # TODO
 

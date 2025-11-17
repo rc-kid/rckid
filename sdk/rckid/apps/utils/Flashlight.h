@@ -55,7 +55,16 @@ namespace rckid {
                     setBrightness();
                 }
             }
-            if (!on_) {
+            if (on_) {
+                if (icon_.visible() && btnDown(Btn::Start)) {
+                    icon_.setVisible(false);
+                    setBrightness();
+                }
+                if (! icon_.visible() && ! btnDown(Btn::Start)) {
+                    icon_.setVisible(true);
+                    setBrightness();
+                }
+            } else {
                 if (icon_.visible() && ! btnDown(Btn::Start)) {
                     icon_.setVisible(false);
                     setBrightness();
