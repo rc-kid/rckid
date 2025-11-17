@@ -61,7 +61,7 @@ RCKid's build can be customized using various arguments, such as the `-DARCH` sh
 
 The SDK library is at the core of RCKid as it provides an abstraction layer over the console's hardware. Furthermore, it makes RCKid also a fantasy console by being able to run on a PC for most of the features. Therefore the SDK comes in two folder, `rckid` where the common interface resides, and `backends` where specific implementation for the various hardware versions and fantasy consoles is implemented. 
 
-> For now, fantasy console via raylib (Windows and Linux), RCKid mk3 (RP2350) and RCKid mk2 (RP2040) are supported. Once mk3 hardware is available the mk2 version will be retired. 
+> For now, fantasy console via raylib (Windows and Linux) and  RCKid mk3 (RP2350) are supported. There are plans for future platforms & variations. Note that the fantasy platform is mostly for debugging only.
 
 ## Debugging on the Device
 

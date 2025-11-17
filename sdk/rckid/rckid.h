@@ -17,7 +17,6 @@
     Most of the API provided abstract from the hardware details of the device (this is not true for specific cartridge interfaces) so that as long as the SDK is used for HW access, different physical hardware can be used, including fantasy consoles. To this end the hardware specific functionality of the SDK is implemented in different _backends_.
 
     \subpage backend_mk3
-    \subpage backend_mk2
     \subpage backend_fantasy
  */
 

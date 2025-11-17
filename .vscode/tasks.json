@@ -47,22 +47,6 @@
         },
         {
             "type": "shell",
-            "label": "mk 2 - build",
-            "detail": "Generates the SDK assets for RCKid",
-            "options": {
-                "cwd": "${workspaceFolder}/build-mk2"
-            },
-
-            "command": "cmake",
-            "args" : [
-                "--build", 
-                ".",
-                "--parallel"
-            ],
-            "problemMatcher": ["$gcc"]
-        },
-        {
-            "type": "shell",
             "label": "mk 3 - build",
             "detail": "Generates the SDK assets for RCKid",
             "options": {

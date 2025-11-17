@@ -10,14 +10,14 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #
 # -DRCKID_BACKEND=FANTASY for the fantasy console using raylib for graphics and sound, should run at least on on x86 and Aarch64, Linux and Windows
 # -DRCKID_BACKEND=MK3 for the mkIII RCKid device, powered by RP2350
-# -DRCKID_BACKEND=MK2 for the mkII device (obsoleted, powered by RP2040)
 if (NOT DEFINED RCKID_BACKEND)
     message("RCKID: No backend specified, defaulting to RCKID_BACKEND_FANTASY")
     set(RCKID_BACKEND "FANTASY")
 endif()
 
-# if backend is mk3 ensure tell the pico SDK to use RP2350 instead of RP2040
+# Based on the backend selected, pull in necessary libraries and setup the cmake environment. For fantasy backend, we need to initialize raylib, while the hardware backends pull-in and initialize the Raspberry Pi Pico SDK
 if (RCKID_BACKEND STREQUAL "MK3")
+    # if backend is mk3 ensure tell the pico SDK to use RP2350 instead of RP2040
     set(PICO_BOARD none)
     set(PICO_PLATFORM rp2350)
     message("RCKID: Building for the mk3 (RP2350)")
@@ -32,16 +32,7 @@ if (RCKID_BACKEND STREQUAL "MK3")
     add_definitions(-DCYW43_PIN_WL_DYNAMIC=0)
     add_definitions(-DPICO_CYW43_SUPPORTED=1)
     set(PICO_CYW43_SUPPORTED true)
-endif()
 
-# Based on the backend selected, pull in necessary libraries and setup the cmake environment. For fantasy backend, we need to initialize raylib, while the hardware backends pull-in and initialize the Raspberry Pi Pico SDK
-if (RCKID_BACKEND STREQUAL "FANTASY")
-    message("RCKID: Building for the fantasy console (with Raylib)")
-    project(rckid)
-    add_definitions(-DSUPPORT_CUSTOM_FRAME_CONTROL)
-    add_subdirectory(libs/raylib)
-else()
-    message("RCKID: Building for hardware (RP2350 or RP2040)")
     # skip the pico malloc library setup
     set(SKIP_PICO_MALLOC 1)
     # Pull in SDK (must be before project)
@@ -54,6 +45,13 @@ else()
     if (PICO_SDK_VERSION_STRING VERSION_LESS "2.0.0")
         message(FATAL_ERROR "Raspberry Pi Pico SDK version 2.0.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
     endif()
+elseif (RCKID_BACKEND STREQUAL "FANTASY")
+    message("RCKID: Building for the fantasy console (with Raylib)")
+    project(rckid)
+    add_definitions(-DSUPPORT_CUSTOM_FRAME_CONTROL)
+    add_subdirectory(libs/raylib)
+else()
+    message(FATAL_ERROR "Unknown RCKid backend selected: ${RCKID_BACKEND}. Supported backends: FANTASY, MK3")
 endif()
 
 # adds the specific backend definition so that the code knows as well which backend we are using

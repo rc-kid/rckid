@@ -14,7 +14,6 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
-
 else()
     message("GBCEmu roms are only available in RCKID_BACKEND=FANTASY, skipping")
 endif()

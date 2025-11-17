@@ -20,8 +20,8 @@ extern "C" {
 namespace rckid {
 
     /** SD Card as USB MSC
-     
-        At this point it only works if the USB is already connected when the app is started. Disconnect & connect detection does not work properly. Only tested on mk2 so far.
+
+        Note that due to the USB speeds reachable with RP2350, the USB MSC performance is just barely useable. For any larger transfers, it is recommended to remove the SD card and use a proper card reader.
      */
     class DataSync : public ui::Form<void> {
     public:
