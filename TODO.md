@@ -95,7 +95,7 @@ Must-have before wider release
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
 - piggy bank topup-monthly, etc.
-- parent mode too
+- piggy bank data load & save
 - parent mode lock
 
 - move brightness and audio settings from avr status

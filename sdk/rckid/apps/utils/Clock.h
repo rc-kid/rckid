@@ -45,22 +45,24 @@ namespace rckid {
             alarm_.setFont(Font::fromROM<assets::OpenDyslexic64>());
             alarm_.setHAlign(HAlign::Left);
             g_.addChild(alarmIcon_);
-            contextMenu_.add(ui::ActionMenu::Item("Set time", [this]() {
-                auto t = App::run<TimeDialog>("Select time");
-                if (t.has_value()) {
-                    TinyDateTime now = timeNow();
-                    now.time = t.value();
-                    setTimeNow(now);
-                }
-            }));
-            contextMenu_.add(ui::ActionMenu::Item("Set date", [this]() {
-                auto d = App::run<DateDialog>();
-                if (d.has_value()) {
-                    TinyDateTime now = timeNow();
-                    now.date = d.value();
-                    setTimeNow(now);
-                }
-            }));
+            if (parentMode()) {
+                contextMenu_.add(ui::ActionMenu::Item("Set time", [this]() {
+                    auto t = App::run<TimeDialog>("Select time");
+                    if (t.has_value()) {
+                        TinyDateTime now = timeNow();
+                        now.time = t.value();
+                        setTimeNow(now);
+                    }
+                }));
+                contextMenu_.add(ui::ActionMenu::Item("Set date", [this]() {
+                    auto d = App::run<DateDialog>();
+                    if (d.has_value()) {
+                        TinyDateTime now = timeNow();
+                        now.date = d.value();
+                        setTimeNow(now);
+                    }
+                }));
+            }
             contextMenu_.add(ui::ActionMenu::Item("Set alarm"));
         }
 

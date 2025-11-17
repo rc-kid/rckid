@@ -5,6 +5,7 @@
 #include "rckid.h"
 #include "utils/stream.h"
 #include "ui/menu.h"
+#include "utils/ini.h"
 
 namespace rckid {
 
@@ -170,6 +171,23 @@ namespace rckid {
         /** Current number of redraws. Reset automatically every second, should be incremented at each display redraw. 
          */
         static inline uint32_t redraws_ = 0;
+
+        std::optional<ini::Writer> settingsWriter() {
+            if (! fs::isMounted())
+                return std::nullopt;
+            fs::createFolders(homeFolder());
+            String path = fs::join(homeFolder(), "settings.ini");
+            return ini::Writer{fs::fileWrite(path)};
+        }
+
+        std::optional<ini::Reader> settingsReader() {
+            if (! fs::isMounted())
+                return std::nullopt;
+            String path = fs::join(homeFolder(), "settings.ini");
+            if (! fs::exists(path))
+                return std::nullopt;
+            return ini::Reader{fs::fileRead(path)};
+        }
 
     private:
 

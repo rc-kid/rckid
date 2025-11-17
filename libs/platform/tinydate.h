@@ -343,6 +343,13 @@ inline WRITER & operator << (WRITER & writer, TinyDateTime const & date) {
 } // operator <<
 
 template<typename WRITER>
+inline WRITER & operator << (WRITER & writer, TinyDate const & date) {
+    return writer << date.year() << '-' 
+                  << date.month() << '-' 
+                  << date.day();
+} // operator <<
+
+template<typename WRITER>
 inline WRITER & operator << (WRITER & writer, TinyDate::DayOfWeek d) {
     switch (d) {
         case TinyDate::DayOfWeek::Monday:

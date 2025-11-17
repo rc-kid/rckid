@@ -91,5 +91,4 @@ namespace rckid::ini {
 
     }; // rckid::ini::Writer
 
-
 } // namespace rckid::ini

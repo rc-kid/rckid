@@ -20,6 +20,8 @@ public:
 
     explicit Writer(CharWriter putChar, void * arg = nullptr):putChar_{putChar}, arg_{arg} {}
 
+    void putChar(char c) { PUTCHAR(c); }
+
     Writer & operator << (char const * str) {
         while (*str != 0)
             PUTCHAR(*(str++));

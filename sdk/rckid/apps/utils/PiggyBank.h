@@ -21,8 +21,20 @@ namespace rckid {
             cash_{Rect::XYWH(0, 30, 320, 130), ""}
          {
             g_.addChild(cash_);
+            g_.addChild(topupIcon_);
+            g_.addChild(topUp_);
             cash_.setFont(Font::fromROM<assets::OpenDyslexic128>());
             cash_.setHAlign(HAlign::Center);
+            topUp_.setFont(Font::fromROM<assets::OpenDyslexic32>());
+            // topup countdown
+            TinyDate now = timeNow().date;
+            TinyDate topUp{1, static_cast<uint8_t>((now.month() == 12) ? 1 : (now.month() + 1)), now.year()};
+            uint32_t daysTillTopUp = now.daysTillNextAnnual(topUp);
+            topUp_.setText(STR("+" << monthlyAllowance_ << " in " << daysTillTopUp << " days"));
+            Coord w = topUp_.textWidth() + 24;
+            topupIcon_.setPos(160 - (w / 2), 144);
+            topUp_.setPos(160 - (w / 2) + 24, 140);
+
             value_ = 200;
             cash_.setText(STR(value_));
             contextMenu_.add(ui::ActionMenu::Item("Add", [this]() {
@@ -48,13 +60,18 @@ namespace rckid {
             contextMenu_.add(ui::ActionMenu::Item("Set monthly value"));
         }
 
+        ~PiggyBank() override {
+            saveSettings();
+        }
+
         void update() override {
             ui::Form<void>::update();
 
             if (btnPressed(Btn::B) || btnPressed(Btn::Down))
                 exit();
 
-            if (btnPressed(Btn::Select)) {
+            // piggy bank actions only work in parent mode
+            if (btnPressed(Btn::Select) && parentMode()) {
                 auto action = App::run<PopupMenu<ui::Action>>(&contextMenu_);
                 if (action.has_value())
                     action.value()();
@@ -65,11 +82,18 @@ namespace rckid {
             ui::Form<void>::draw();
         }
 
+        void saveSettings() {
+        }
+
     private:
         ui::Label cash_;
+        ui::Label topUp_;
+        ui::Image topupIcon_{Rect::XYWH(130, 180, 24, 24), Icon{assets::icons_24::money_bag}};
         ui::ActionMenu contextMenu_; 
 
         int32_t value_ = 0;
+        int32_t monthlyAllowance_ = 200;
+        TinyDate lastTopUp_;
 
     }; // rckid::Clock
 
