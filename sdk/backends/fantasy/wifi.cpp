@@ -1,18 +1,15 @@
 #include <rckid/wifi.h>
 
 namespace rckid {
-    void WiFi::enable() {
-    }
-
-    void WiFi::disable() {
-    }
-
     bool WiFi::enabled() const {
         return false;
     }
 
     bool WiFi::connected() const {
         return false;
+    }
+
+    void WiFi::enable([[maybe_unused]] bool value) {
     }
 
     bool WiFi::scan(WiFi::ScanCallback callback) {
@@ -25,6 +22,9 @@ namespace rckid {
     }
 
     WiFi::~WiFi() {
+    }
+
+    void WiFi::tick() {
     }
 
 

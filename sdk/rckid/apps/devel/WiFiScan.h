@@ -23,12 +23,14 @@ namespace rckid {
             g_.addChild(text_);
             text_.setPos(0, 16);
             text_.text(0, 0) << "WiFi Scan";
-            wifi_ = WiFi::instance();
-            wifi_->enable();
+            wifi_ = WiFi::getOrCreateInstance();
+            if (wifi_ != nullptr) {
+                wifi_->enable();
+            }
         } 
 
         ~WiFiScan() override {
-            wifi_->disable();
+            wifi_->enable(false);
         }
 
         void update() override {

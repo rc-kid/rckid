@@ -103,7 +103,7 @@ namespace rckid::ui {
         }
         // check wifi
         if (WiFi::hasInstance()) {
-            WiFi * wifi = WiFi::instance();
+            WiFi * wifi = WiFi::getOrCreateInstance();
             if (wifi->connected()) {
                 at(--x, 0).setPaletteOffset(PALETTE_ACCENT) = SYSTEM16_WIFI_RIGHT;
                 at(--x, 0).setPaletteOffset(PALETTE_ACCENT) = SYSTEM16_WIFI_LEFT;

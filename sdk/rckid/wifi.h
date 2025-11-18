@@ -10,7 +10,7 @@ namespace rckid {
         The wifi manager defines a common API that backends should then implement to provide internet functionality. For now this means using the RM2 module for the mkIII hardware and using direct access for the fantasy console, but in the future other options are possible as well, such as using non-internet long distance radio to connect to a base station, etc. 
 
      */
-    class WiFi {
+    class WiFi : public Task {
     public:
 
         enum class AuthMode {
@@ -24,56 +24,52 @@ namespace rckid {
 
         using ScanCallback = std::function<bool(String && ssid, int16_t rssi, AuthMode authMode)>;
 
-        /** Returns the singleton instance of the WiFi manager. 
-         
-            If WiFi is not available on the current hardware, returns nullptr and this *must* be checked before use. 
-         */
-        static WiFi * instance() { 
+
+        static WiFi * getOrCreateInstance() {
             if (instance_ == nullptr)
                 instance_ = initialize();
             return instance_; 
         }
 
-        static bool hasInstance() {
-            return instance_ != nullptr;
-        }
-
-        /** Enables the WiFi. 
-            
-            This does not connect to any network, but simply enables the hardware. Must be the first function called.
-         */
-        void enable();
-
-        /** Disables the WiFi.
-         
-            Turns the module off, but does not deinitialize the driver.
-         */
-        void disable();
+        static bool hasInstance() { return instance_ != nullptr; }
 
         /** Returns true if the wifi is enabled, false otherwise.
          */
         bool enabled() const;
 
-        /** Returns true if the wifi is connected. 
+        /** Returns true if the wifi is connected to a network.
          */
         bool connected() const;
 
+        /** Enables, or disables the WiFi.
+            
+            Enabling the wifi does no connect to any network, but simply enables the hardware. Must be the first function called.
+         */
+        void enable(bool value = true);
+        
         bool scan(ScanCallback callback);
 
         void connect(String const & ssid, String const & password); 
 
-    private:
+        void disconnect();
 
-        friend void initialize(int argc, char const * argv[]);
+    protected:
+
+        WiFi() = default;
+
+        ~WiFi() override;
+
+        void tick() override;
 
         static WiFi * initialize();
 
-        ~WiFi();
+    private:
 
         ScanCallback scanCallback_;
 
         static inline WiFi * instance_ = nullptr;
-    }; // class rckid::WiFi
+
+    }; 
 
     inline Writer & operator << (Writer & w, WiFi::AuthMode const & mode) {
         switch (mode) {
