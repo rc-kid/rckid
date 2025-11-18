@@ -32,22 +32,6 @@ namespace rckid {
             }
         }
 
-        /** Runs the yield method for all registered background tasks. 
-
-            The yield methods are guarded re-entrance so that if a task's yield method yields itself we won't recurse.
-         */
-        static void yieldAll() {
-            if (yieldActive_)
-                return;
-            yieldActive_ = true;
-            Task * x = taskList_;
-            while (x != nullptr) {
-                x->yield();
-                x = x->next_;
-            }
-            yieldActive_ = false;
-        }
-
     protected:
 
         Task() {
@@ -56,8 +40,6 @@ namespace rckid {
         }
 
         virtual void tick() = 0;
-
-        virtual void yield() {}
 
     private:
 

@@ -344,7 +344,6 @@ namespace rckid {
 
     void yield() {
         StackProtection::check();   
-        Task::yieldAll();
     }
 
     void keepAlive() {

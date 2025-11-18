@@ -108,9 +108,7 @@ namespace rckid {
                 audioStop();
             }
 
-            void tick() override { }
-
-            void yield() override {
+            void tick() override { 
                 if (player_ != nullptr)
                     player_->updateAudio();
             }

@@ -567,7 +567,6 @@ namespace rckid {
         StackProtection::check();
         tight_loop_contents();
         tud_task();
-        Task::yieldAll();
 #if (PICO_CYW43_SUPPORTED == 1)
         if (WiFi::hasInstance())
             cyw43_arch_poll();

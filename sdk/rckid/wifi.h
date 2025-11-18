@@ -1,6 +1,7 @@
 #pragma once
 
 #include "rckid.h"
+#include "task.h"
 
 namespace rckid {
 
