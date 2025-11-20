@@ -29,13 +29,13 @@ namespace rckid::ui {
 
         /** Processes the left and right menu transitions. 
          */
-        bool processEvents() override {
+        void processEvents() override {
             // if there is no menu, don't do anything
             if (entries_.size() == 0)
-                return true;
+                return;
             // if we have ongoing animation, don't do anything
             if (! idle())
-                return true;
+                return;
 
             Carousel::processEvents();
 
@@ -55,7 +55,6 @@ namespace rckid::ui {
                     btnClear(Btn::A);
                 } 
             }
-            return true;
         }
 
         uint32_t size() const override { return entries_.size(); }

@@ -116,17 +116,16 @@ namespace rckid {
     protected:
         void focus() override {
             ui::Form<ui::Action>::focus();
+            c_.focus();
         }
 
         void update() override {
             ui::Form<ui::Action>::update();
-            if (!c_.processEvents()) {
-                if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
-                    auto action = c_.currentItem();
-                    ASSERT(action->isAction());
-                    exit(action->action());
-                    history_ = c_.detachHistory();
-                }
+            if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                auto action = c_.currentItem();
+                ASSERT(action->isAction());
+                exit(action->action());
+                history_ = c_.detachHistory();
             }
             if (btnPressed(Btn::Start)) {
                 RAMHeap::traceChunks();

@@ -45,11 +45,11 @@ namespace rckid {
                 Contact const & c = contacts_[c_.currentIndex()];
                 return exit(c);
             }
-            c_.processEvents();
         }
 
         void focus() override {
             ui::Form<Contact>::focus();
+            c_.focus();
             // if we have contact
             loadContacts();
             if (firstRun_) {

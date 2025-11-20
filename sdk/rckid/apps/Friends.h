@@ -314,11 +314,11 @@ namespace rckid {
                 if (action.has_value())
                     action.value()();
             }
-            c_.processEvents();
         }
 
         void focus() override {
             ui::Form<void>::focus();
+            c_.focus();
             if (firstRun_) {
                 if (contacts_.size() > 0)
                     c_.setItem(0, Direction::Up);

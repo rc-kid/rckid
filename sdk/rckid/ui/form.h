@@ -153,7 +153,36 @@ namespace rckid::ui {
     }; 
 
 
+    /** App that uses ui::Form as its renderer. 
+     
+        The class provides basic functionality for all ui based apps. Focus handling saves current focus when the app is blurred and restores when focused.
+     */
     template<typename T>
-    using Form = RenderableApp<ui::FormWidget, T>;
+    class Form : public RenderableApp<ui::FormWidget, T> {
+    public:
+        template <typename... Args>
+        Form(Args&&... args) : 
+            RenderableApp<ui::FormWidget, T>{std::forward<Args>(args)...} 
+        {
+        }
+
+    protected:
+
+        void focus() override {
+            RenderableApp<ui::FormWidget, T>::focus();
+            if (oldFocus_ != nullptr)
+                oldFocus_->focus();
+
+        }
+
+        void blur() override {
+            RenderableApp<ui::FormWidget, T>::blur();
+            oldFocus_ = Widget::focusedWidget();
+        }
+
+    private:
+        Widget * oldFocus_ = nullptr;
+
+    }; 
 
 } // namespace rckid::ui

@@ -268,7 +268,13 @@ namespace rckid {
 
         protected:
 
+            void focus() override {
+                ui::Form<Preset>::focus();
+                c_.focus();
+            }
+
             void update() override {
+                ui::Form<Preset>::update();
                 if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                     exit();
                 }
@@ -283,7 +289,6 @@ namespace rckid {
                     if (action.has_value())
                         action.value()();
                 }
-                c_.processEvents();
             }
 
         private:

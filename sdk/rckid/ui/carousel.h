@@ -126,14 +126,13 @@ namespace rckid::ui {
             setItem(getIndexRight(), Direction::Right);
         }
 
-        bool processEvents() override {
+        void processEvents() override {
             if (!idle() || size() == 0)
-                return true;
+                return;
             if (btnDown(Btn::Left))
                 moveLeft();
             if (btnDown(Btn::Right))
                 moveRight();
-            return true;
         }
 
         void setItem(uint32_t index, Direction direction = Direction::None) {
@@ -301,29 +300,35 @@ namespace rckid::ui {
             return & (*menu_)[currentIndex()];
         }
 
-        bool processEvents() override {
+        void processEvents() override {
             if (!idle()) // do not accept extra events if idle
-                return true;
-            if (btnDown(Btn::Up) || btnDown(Btn::A)) {
+                return;
+            if (btnPressed(Btn::Up) || btnPressed(Btn::A)) {
                 auto item = currentItem();
                 if (item == nullptr)
-                    return true; // nothing to process 
+                    return; // nothing to process 
                 if (item->isAction())
-                    return false; // we could not process the event, it will be processed by our owner
+                    return; // we could not process the event, it will be processed by our owner
                 historyPush();
                 generator_ = item->generator();
                 ASSERT(generator_ != nullptr);
                 delete menu_;
                 menu_ = generator_();
                 setItem(0, Direction::Up);
+                // clear the button as we have processed the event already here
+                btnClear(Btn::Up);
+                btnClear(Btn::A);
             }
             if (btnDown(Btn::Down) || btnDown(Btn::B)) {
-                if (previous_ != nullptr)
+                if (previous_ != nullptr) {
+                    btnClear(Btn::Down);
+                    btnClear(Btn::B);
                     historyPop();
-                else 
-                    return false; // we could not process the event
+                } else {
+                    return; // we could not process the event
+                }
             }
-            return Carousel::processEvents();
+            Carousel::processEvents();
         }
 
         typename Menu<PAYLOAD>::HistoryItem const * history() const {

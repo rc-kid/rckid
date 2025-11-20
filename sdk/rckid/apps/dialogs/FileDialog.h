@@ -32,9 +32,13 @@ namespace rckid {
 
     protected:
 
+        void focus() override {
+            ui::Form<String>::focus();
+            c_.focus();
+        }
+
         void update() override {
             ui::Form<String>::update();
-            c_.processEvents();
             // see if an item has been selected, or if we shoudl leave, if up & down were used for traversing the folder strcuture, they have already been cleared by the processEvents
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                 LOG(LL_DEBUG, "FileDialog: returning path " << c_.currentPath());

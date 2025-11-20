@@ -104,6 +104,20 @@ namespace rckid::ui {
             visible_ = value;
         }
 
+        /** Returns true if the widget is focused. 
+         
+            Focused widget will have its processEvents() method called during update. 
+         */
+        bool focused() const { return focused_ == this; }
+
+        /** Focuses the widget on which the method is called. 
+         */
+        void focus() { focused_ = this; }
+
+        /** Returns the currenly focused widget, or nullptr if no widget is in focus. 
+         */
+        static Widget * focusedWidget() { return focused_; }
+
         /** Update method
          
             Called while the UI is being re-drawn, i.e. without the drawing lock. This method can be used to update any state that the widget may have before the draw() method is called. Generally this method precomputes data that will later be used by drawing.
@@ -111,6 +125,8 @@ namespace rckid::ui {
         virtual void update() {
             for (auto w : children_)
                 w->update();
+            if (focused())
+                processEvents();
         }
 
         /** Draw method. 
@@ -126,10 +142,9 @@ namespace rckid::ui {
 
         /** If the widget offers any interactivity, calling this method during the app's update call will allow it to respond to the user inputs. 
          
-            Note though that it is the UI itself does not deal with focus, etc. and the app must determine which widget(s) to call this method on. The method returns true if all possible widget interactions have been processed and false if some interactions could not be handled and should be dealt with by the app itself. 
-         * 
+            Called automatically if a widget is focused, but may be called manually as well. 
          */
-        virtual bool processEvents() { return true; }
+        virtual void processEvents() { }
 
         /** Widget simply renders columns of all child elements in the order they are defined in the list of children, i.e. the earier children can be overdrawn with the later ones. Override this function in child classes to provide the widget specific rendering. 
          */
@@ -256,6 +271,8 @@ namespace rckid::ui {
         Coord h_ = 50;
 
         std::vector<Widget *> children_;
+
+        static inline Widget * focused_ = nullptr;
 
     }; // rcikd::ui::Widget
 

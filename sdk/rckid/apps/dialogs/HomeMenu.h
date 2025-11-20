@@ -48,6 +48,7 @@ namespace rckid {
 
         void focus() override {
             ui::Form<ui::Action>::focus();
+            c_.focus();
             if (c_.menu() == nullptr) {
                 c_.setMenu([this](){
                     ui::ActionMenu * m = customGenerator_ == nullptr ? (new ui::ActionMenu{}) : customGenerator_();;
@@ -58,28 +59,26 @@ namespace rckid {
         }
 
         void update() override {
-            g_.update();
+            ui::Form<ui::Action>::update();
             if (btnPressed(Btn::Home)) {
                 btnClear(Btn::Home);
                 lock();
                 // and return from the menu when unlocked
                 exit();
             }
-            if (! c_.processEvents()) {
-                if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
-                    btnClear(Btn::B);
-                    btnClear(Btn::Down);
-                    exit();
-                };
-                if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
-                    auto action = c_.currentItem();
-                    ASSERT(action->isAction());
-                    if (isCurrentItemCustom())
-                        exit(action->action());
-                    else 
-                        action->action()();
-                };
-            }
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                btnClear(Btn::B);
+                btnClear(Btn::Down);
+                exit();
+            };
+            if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                auto action = c_.currentItem();
+                ASSERT(action->isAction());
+                if (isCurrentItemCustom())
+                    exit(action->action());
+                else 
+                    action->action()();
+            };
         }
 
     private:
