@@ -48,6 +48,8 @@ namespace rckid::ui {
 
         Rectangle(Rect rect): Widget{rect} {}
 
+        ColorRGB color() const { return color_; }
+
         void setColor(ColorRGB color) { color_ = color; }
 
         void setLineWidth(Coord width) { lineWidth_ = width; }   

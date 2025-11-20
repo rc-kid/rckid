@@ -47,11 +47,13 @@ namespace rckid {
          */
         void enable(bool value = true);
         
+        /** Scans the available networks.
+         */
         bool scan(ScanCallback callback);
-
-        void connect(String const & ssid, String const & password); 
-
-        void disconnect();
+        
+        /** Connects to given WiFi network using specified authentification.
+         */
+        bool connect(String const & ssid, String const & password, AuthMode authMode); 
 
     protected:
 

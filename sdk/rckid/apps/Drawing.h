@@ -12,6 +12,7 @@ namespace rckid {
     /** Simple drawing app. 
      
         The point of the drawing app is to create icons and pixel art that can be stored on the device.
+
      */
     class Drawing : public ui::Form<void> {
     public:
@@ -24,6 +25,8 @@ namespace rckid {
             g_.setBg(ColorRGB::Black());
             g_.addChild(image_);
             g_.addChild(zoomedImage_);
+
+            blink_.startContinuous();
         }
 
     protected:
@@ -59,6 +62,10 @@ namespace rckid {
         }
 
         void draw() override {
+            // blink the cursor
+            blink_.update();
+            zoomedImage_.setCursorColor(ui::Style::accentFg().withAlpha(interpolation::cosineLoop(blink_, 0, 255).round()));
+
             ui::Form<void>::draw();
         }
 
@@ -92,6 +99,10 @@ namespace rckid {
                 cursor_.setRect(Rect::XYWH(p.x * zoom_, p.y * zoom_, zoom_ + 2, zoom_ + 2));
             }
 
+            ColorRGB cursorColor() const { return cursor_.color(); }
+
+            void setCursorColor(ColorRGB color) { cursor_.setColor(color); }
+
         protected:
             void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
 
@@ -103,7 +114,7 @@ namespace rckid {
 
             ColorRGB colorAt(Coord x, Coord y) const {
                 if (x < 1 || y < 1 || x > 192 || y > 192)
-                    return ui::Style::accentBg();
+                    return ui::Style::bg();
                 x -= 1;
                 y -= 1;
                 Coord xc = x / zoom_;
@@ -120,7 +131,10 @@ namespace rckid {
         }; 
 
     private:
-        ui::Image image_{Rect::XYWH(0, 32, 64, 64), Icon{assets::icons_64::paint_palette}};
+
+        Timer blink_{1000};
+
+        ui::Image image_{Rect::XYWH(0, 32, 96, 96), Icon{assets::icons_64::paint_palette}};
         ZoomedImage zoomedImage_{Rect::XYWH(108,32,194,194), &image_};
     
 

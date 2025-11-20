@@ -49,14 +49,15 @@ namespace rckid {
 
     bool WiFi::scan(WiFi::ScanCallback callback) {
         scanCallback_ = callback;
-        cyw43_wifi_scan_options_t options = {0};
+        cyw43_wifi_scan_options_t options = {};
         int32_t res = cyw43_wifi_scan(&cyw43_state, & options, & scanCallback_, cyw43_wifi_scan_callback);
         return res == 0;
     }
 
-    void WiFi::connect(String const & ssid, String const & password) {
+    bool WiFi::connect(String const & ssid, String const & password, AuthMode authMode) {
         LOG(LL_INFO, "WiFi connect to SSID: " << ssid);
-        //cyw43_arch_wifi_connect_async(ssid.c_str(), password.empty() ? nullptr : password.c_str(), CYW43_WPA_AUTH_DEFAULT);
+        int32_t res = cyw43_arch_wifi_connect_async(ssid.c_str(), password.empty() ? nullptr : password.c_str(), static_cast<uint32_t>(authMode));
+        return res == 0;
     }
 
     WiFi::~WiFi() {

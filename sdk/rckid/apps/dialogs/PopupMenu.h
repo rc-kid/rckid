@@ -26,9 +26,9 @@ namespace rckid {
             ui::Form<PAYLOAD>{Rect::XYWH(0, 240 - getNumRows(menu) * TileHeight - 4, getLongestText(menu) * TileWidth + 4, getNumRows(menu) * TileHeight + 4), /* raw */ true},
             menu_{menu} {
             using namespace ui;
-            g_.setBg(ColorRGB::White().withAlpha(32));
+            g_.setBg(ui::Style::bg());
             selectedRect_ = g_.addChild(new Rectangle{Rect::XYWH(2, 2, g_.width() - 4, TileHeight)});
-            selectedRect_->setColor(ColorRGB::Red().withAlpha(64));
+            selectedRect_->setColor(ui::Style::accentBg());
             selectedRect_->setFill(true);
             tm_ = g_.addChild(new Tilemap<Tile<12, 24, Color16>>{getLongestText(menu), getNumRows(menu), assets::System24, palette_});
             tm_->setPos(2,2);

@@ -68,6 +68,8 @@ namespace rckid {
         uint32_t numPixels() const { return w_ * h_; }
         uint32_t numHalfWords() const { return numBytes() / 2; }
 
+        uint32_t bpp() const { return bpp_; }
+
         ColorRGB colorAt(Coord x, Coord y) const {
             switch (bpp_) {
                 case 16:
@@ -80,6 +82,28 @@ namespace rckid {
                     return ColorRGB::fromRaw(palette_[PixelSurface<2>::pixelAt(x, y, w_, h_, pixels_)]);
                 case 1:
                     return ColorRGB::fromRaw(palette_[PixelSurface<1>::pixelAt(x, y, w_, h_, pixels_)]);
+                default:
+                    UNREACHABLE; // invalid bpp
+            }
+        }
+
+        void setPixelAt(Coord x, Coord y, uint32_t rawValue) {
+            switch (bpp_) {
+                case 16:
+                    PixelSurface<16>::setPixelAt(x, y, w_, h_, pixels_, rawValue);
+                    break;
+                case 8:
+                    PixelSurface<8>::setPixelAt(x, y, w_, h_, pixels_, rawValue);
+                    break;
+                case 4:
+                    PixelSurface<4>::setPixelAt(x, y, w_, h_, pixels_, rawValue);
+                    break;
+                case 2:
+                    PixelSurface<2>::setPixelAt(x, y, w_, h_, pixels_, rawValue);
+                    break;
+                case 1:
+                    PixelSurface<1>::setPixelAt(x, y, w_, h_, pixels_, rawValue);
+                    break;
                 default:
                     UNREACHABLE; // invalid bpp
             }

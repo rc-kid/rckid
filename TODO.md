@@ -102,8 +102,6 @@ Must-have before wider release
 - bootloader cartridge (this will only flash the memory)
 - parent mode cartridge
 
-- move WiFi into task interface
-
 - move brightness and audio settings from avr status
 - add parent mode password instead
 
@@ -114,16 +112,14 @@ Must-have before wider release
 - allow breathing to start at specified offset in the animation
 
 - make ini writing use writers interface instead of the strings
+- would be nice to have some simple way of specifying ini file parsing...
 
 - clean-up the code around display initialization
-- clean debug prints (headphones, etc)
 - document host file system
 
 - maybe have the icon editor use 32x32 and double sized pixels? Will be easier to use and simpler, for now... or wait till we have assets editor proper? 
 
 - add some onPowerOff event that will be called when device decides to power off *and* when avr decides to power the device off as well (so that we can save state, etc)
-
-- would be nice to have some simple way of specifying ini file parsing...
 
 - would be nice to have menu-like transitions between apps (i.e. multimain menu stuff)
 
@@ -131,14 +127,11 @@ Must-have before wider release
 
 - the color settings should be stored, perhaps per game?  (gameboy)
 - and when colors are updated, different colors should be update-able at the same time
-- multiple save slots
 
 - some avr commands are longer than 16 bytes, which means it cannot be stored via the I2C async commands
 
 - platform string utils should not be used, instead everything should run off rckid::String
-
-- rewrite popup to use ui style, icons, etc.
-- and same for text dialog
+- verify other std::string uses
 
 - add counters, namely how long the redraw of the screen takes, from the beginning of render to the end of render
 
@@ -159,11 +152,6 @@ Must-have before wider release
 
 - how to blitting & stuff? (bitmap is multi bpp, while surfaces such as canvas are fixed bpp), this makes blitting harder a bit
 
-- run at full speed with no vsync waiting to see how much free room there is
-
-- USB connection is not detected
-- make usb work in mkIII as well
-
 - when stack protection fails, it will fail in the error code as well forever, update stack on device, do new thread on rckid? 
 - perfect fit strategy seems to be less wasteful, but will have to add fallback
 - merging chunks/splitting large ones? 
@@ -173,23 +161,13 @@ Must-have before wider release
 
 - comment PNG loading stuff
 
-- file browser should be similar to contacts, i.e. the dialog in launcher menu instead of ui element and separate browser app 
-
 - add version of background wher the background just bounces so that the background can be some actual image
-
-- when we do mk3, make sure that when a button press is detected, the idle flag is cleared 
-- keepalive when plugged in can be indefinite? 
-
-- determine correct rumbler settings for ok fail and nudge
 
 - fix/check device fatal eror & stack protection
 - improve memory allocator (heap)
-- verify other std::string uses
 
 - add events for getting icon for files & on file selected for file browser
 - add actions for file browser such as rename, copy, mkdir, etc.  
-
-- make the popupmenu use animations and labels instead of the tilemap
 
 ## HW
 
@@ -231,7 +209,6 @@ Must-have before wider release
 ### AudioPlayer
 
 - label scrolling
-- maybe smaller icon?
 - image picture
 
 ### GBCEmu
@@ -260,15 +237,10 @@ Must-have before wider release
 
 - the SD card initialization routine does not work for SDHC cards, only for SDXC (not a blocker for xmas)
 
-- tud_deinit (already disconnect does) freezes the device, not sure why? - but interestingly if DC is disconnected first, then it all works, even repeatedly - this no longer seems to be the case
-
 - hall of fame and others can be apps of their own that just reuse the canvas from previous run, but delegate the controls? How though
 
 - maybe not use joystick, but keep it as an extra file so that each app can configure it properly, including things like position. But how to integrate with settings? 
 
-- make mp3 player and video as a TV so that the mp3's have daily schedule that you can do
-
-- account for PNG's transparency by allowing it to be overlayed on existing bitmap (right now it is set to black which looks ok on black background)
 - maybe even RGBA colors? 
 - rumbler & LED effect done event
 
@@ -276,10 +248,6 @@ Must-have before wider release
 
 - libopus decoder & encoder library
 - jpeg decoding library
-
-- can swap RAM arenas to disk if necessary
-
-- make timer run a ... b ... a as well (then I can replace the blinking code in clock)
 
 # Power Measurements
 
