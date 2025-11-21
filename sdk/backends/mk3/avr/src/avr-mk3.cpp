@@ -47,49 +47,6 @@ inline Writer debugWrite() {
 #include "avr_commands.h"
 #include <rckid/effects.h>
 
-
-/** AVR Pinout 
- 
-    - I2C is routed to B0 and B1, their default position. 
-    - PWM pins (rumbler and backlight) are routed to TCB0 (alternate) and TCB1 respectively.
-    - button matrix pins are default digital pins. We need iterrupt on the home button (BTN_1 of BTN_CTRL group) to wake up when powered on
-    - AVR_TX is alternate position of serial TxD and can be used for debugging the firmware. Its is also the only free pin.
-    - 
-
-    Powered On:
-    
-    - monitor buttons
-    - update RGB LEDs
-    - update rumbler
-    - respond to I2C commands
-    - control RP reboot & bootloading
-
-    - everything is digital, so we only need the ADC for temperature...
-    - use system tick of 5ms, this gives us ability to read all buttons every frame 
-
-    NOTE: There is an errata for attiny1616 and smaller chips that states HW bug where turning off RTC turns off PIT as well, which means those chips will *not* work with RCKid as we use RTC for the system tick and PIT for the timekeeping.
- */
-
-#define AVR_PIN_AVR_INT         gpio::A1
-#define AVR_PIN_VCC_SENSE       gpio::A2
-#define AVR_PIN_PWM_RUMBLER     gpio::A3
-#define AVR_PIN_5V_EN           gpio::A4
-#define AVR_PIN_CHARGING        gpio::A5
-#define AVR_PIN_BTN_1           gpio::A6
-#define AVR_PIN_BTN_3           gpio::A7
-#define AVR_PIN_I2C_SCL         gpio::B0
-#define AVR_PIN_I2C_SDA         gpio::B1
-#define AVR_PIN_ACCEL_INT       gpio::B4
-#define AVR_PIN_BTN_CTRL        gpio::B5
-#define AVR_PIN_BTN_ABXY        gpio::B6
-#define AVR_PIN_BTN_2           gpio::B7
-#define AVR_PIN_PWM_BACKLIGHT   gpio::C0
-#define AVR_PIN_IOVDD_EN        gpio::C1
-#define AVR_PIN_BTN_4           gpio::C2
-#define AVR_PIN_RGB             gpio::C3
-#define AVR_PIN_BTN_DPAD        gpio::C4
-#define AVR_PIN_QSPI_SS         gpio::C5
-
 using namespace rckid;
 
 /** The RCKid firmware
@@ -1346,8 +1303,6 @@ public:
         The LEDs are powered from a 5V step-up generator that is turned off when the LEDs are not used to conserve power (each neopixel takes a bit more than 1mA even if not on at all).
      */
     //@{
-
-    static constexpr unsigned NUM_RGB_LEDS = 8;
 
     static inline bool rgbOn_ = false;
     static inline RGBEffect notification_{RGBEffect::Off()};

@@ -69,6 +69,11 @@ public:
         __asm__ __volatile__ ("sei"::);
     }
 
+    static uint16_t bootloaderSize() {
+        // get this from reading appropriate register or memory location
+        return FUSE_BOOTEND << 8;
+    }
+
     #include "../common/cpu_common.h"
 
 };

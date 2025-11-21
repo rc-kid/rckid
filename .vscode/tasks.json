@@ -83,6 +83,27 @@
             ]
         },
         {
+            "label": "mk 3 - build avr bootloader",
+            "detail": "Builds the AVR firmware for the mk III device.",
+            "type": "shell",
+            "command": "~/.platformio/penv/bin/pio",
+            "args": [
+                "run"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/sdk/backends/mk3/avr-bootloader",
+                "shell": {
+                    "executable": "/bin/zsh",
+                    "args": [
+                        "-c"
+                    ]
+                }
+            },
+            "problemMatcher": [
+                "$platformio"
+            ]
+        },
+        {
             "label": "mk 3  - upload avr",
             "detail": "Builds the AVR firmware for mk III on the dev server and uploads it to the device immediately.",
             "command": "bash",

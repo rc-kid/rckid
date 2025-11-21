@@ -17,6 +17,10 @@ namespace rckid {
         return false;
     }
 
+    bool WiFi::connect([[maybe_unused]] String const & ssid, [[maybe_unused]] String const & password, [[maybe_unused]] AuthMode authMode) {
+        return true;
+    }
+
     WiFi * WiFi::initialize() {
         return nullptr;
     }

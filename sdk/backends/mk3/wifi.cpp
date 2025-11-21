@@ -4,16 +4,30 @@
 
 namespace rckid {
 
+    /** The wifi driver uses different authentication values in the wifi scan results (not very documented) and different values for the wifi connect.
+     */
+    static WiFi::AuthMode scanAuthModeToConnectAuthMode(uint8_t authMode) {
+        switch (authMode) {
+            case 0: return WiFi::AuthMode::Open;
+            case 3: return WiFi::AuthMode::WPA_TKIP_PSK;
+            case 5: return WiFi::AuthMode::WPA2_AES_PSK;
+            case 7: return WiFi::AuthMode::WPA2_MIXED_PSK;
+            default:
+                return WiFi::AuthMode::Open;
+        }
+    }
+
     static int cyw43_wifi_scan_callback(void * env, cyw43_ev_scan_result_t const * result) {
         WiFi::ScanCallback * cb = static_cast<WiFi::ScanCallback *>(env);
-        if (result == nullptr) {
-            (*cb)(String{}, 0, WiFi::AuthMode::Open); // signal end of scan
-            return 0;
+        if (result != nullptr) {
+            String ssid{reinterpret_cast<char const *>(result->ssid), result->ssid_len};
+            if (! ssid.empty()) { // do not support hidden networks
+                int16_t rssi = result->rssi;
+                WiFi::AuthMode authMode = scanAuthModeToConnectAuthMode(result->auth_mode);
+                (*cb)(std::move(ssid), rssi, authMode);
+            }
         }
-        String ssid{reinterpret_cast<char const *>(result->ssid), result->ssid_len};
-        int16_t rssi = result->rssi;
-        WiFi::AuthMode authMode = static_cast<WiFi::AuthMode>(result->auth_mode);
-        return (*cb)(std::move(ssid), rssi, authMode) ? 0 : 1;
+        return 0;
     }
 
     // WiFi 
@@ -55,7 +69,7 @@ namespace rckid {
     }
 
     bool WiFi::connect(String const & ssid, String const & password, AuthMode authMode) {
-        LOG(LL_INFO, "WiFi connect to SSID: " << ssid);
+        LOG(LL_INFO, "WiFi connect to SSID: " << ssid << " password " << password << " auth " << static_cast<uint32_t>(authMode));
         int32_t res = cyw43_arch_wifi_connect_async(ssid.c_str(), password.empty() ? nullptr : password.c_str(), static_cast<uint32_t>(authMode));
         return res == 0;
     }
@@ -68,6 +82,11 @@ namespace rckid {
 
     void WiFi::tick() {
         cyw43_arch_poll();
+        if (scanCallback_ && (cyw43_wifi_scan_active(&cyw43_state) == 0)) {
+            LOG(LL_INFO, "WiFi scan complete");
+            scanCallback_(String{}, 0, AuthMode::Open);
+            scanCallback_ = nullptr;
+        };
     }
 
     WiFi * WiFi::initialize() {

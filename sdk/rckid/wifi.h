@@ -2,6 +2,8 @@
 
 #include "rckid.h"
 #include "task.h"
+#include "utils/ini.h"
+#include "filesystem.h"
 
 namespace rckid {
 
@@ -13,6 +15,11 @@ namespace rckid {
     class WiFi : public Task {
     public:
 
+        struct NetworkInfo {
+            String ssid;
+            String password;
+        };
+
         enum class AuthMode {
             Open = 0,
             WPA_TKIP_PSK = 0x00020002, // WPA
@@ -22,7 +29,9 @@ namespace rckid {
             WPA3_WPA2_AES_PSK = 0x01400004 // WPA2/WPA2
         };
 
-        using ScanCallback = std::function<bool(String && ssid, int16_t rssi, AuthMode authMode)>;
+        /** Cannback function for wifi network scanning.
+         */
+        using ScanCallback = std::function<void(String && ssid, int16_t rssi, AuthMode authMode)>;
 
 
         static WiFi * getOrCreateInstance() {
@@ -55,6 +64,34 @@ namespace rckid {
          */
         bool connect(String const & ssid, String const & password, AuthMode authMode); 
 
+        /** Checks all available networks and connects to the most preferred one from those found. 
+         
+            Returns true if the scan was started successfully. The actual connection process is asynchronous and the connection result must be checked using connected().
+         */
+        bool connect() {
+            if (knownNetworks_.empty())
+                loadKnownNetworks();
+            uint32_t index = knownNetworks_.size();
+            AuthMode auth = AuthMode::Open;
+            return scan([this, index, auth](String && ssid, [[maybe_unused]] int16_t rssi, AuthMode authMode) mutable {
+                if (ssid.empty()) {
+                    if (index < knownNetworks_.size())
+                        connect(knownNetworks_[index].ssid, knownNetworks_[index].password, auth);
+                    else
+                        LOG(LL_INFO, "No known networks found");
+                } else {
+                    LOG(LL_INFO, "Found network: " << ssid);
+                    for (uint32_t i = 0; i < index; ++i) {
+                        if (knownNetworks_[i].ssid == ssid) {
+                            index = i;
+                            auth = authMode;
+                            break;
+                        }
+                    }
+                }
+            });
+        }
+
     protected:
 
         WiFi() = default;
@@ -67,7 +104,36 @@ namespace rckid {
 
     private:
 
+        static constexpr char const * KNOWN_NETWORKS_PATH = "/wifi.ini";
+
+        void loadKnownNetworks() {
+            knownNetworks_.clear();
+            ini::Reader reader{fs::fileRead(KNOWN_NETWORKS_PATH)};
+            if (reader.eof())
+                return;
+            while (auto section = reader.nextSection()) {
+                if (section == "network") {
+                    NetworkInfo n;
+                    while (auto kv = reader.nextValue()) {
+                        if (kv->first == "ssid") {
+                            n.ssid = kv->second;
+                        } else if (kv->first == "password") {
+                            n.password = kv->second;
+                        } else {
+                            LOG(LL_ERROR, "Unknown wifi network property " << kv->first);
+                        }
+                    }
+                    knownNetworks_.push_back(n);
+                } else {
+                    LOG(LL_ERROR, "Invalid wifi section: " << section.value());
+                }
+                LOG(LL_INFO, "Known networks loaded: " << (uint32_t) knownNetworks_.size());
+            }
+        }
+
         ScanCallback scanCallback_;
+
+        std::vector<NetworkInfo> knownNetworks_;
 
         static inline WiFi * instance_ = nullptr;
 

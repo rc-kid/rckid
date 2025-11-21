@@ -36,18 +36,19 @@ namespace rckid {
         void update() override {
             ui::Form<void>::update();
             if (btnPressed(Btn::A)) {
+                wifi_->connect();
+
+/*                
                 line_ = 0;
                 println("Scanning...         ");
                 wifi_->scan([this](String && ssid, int16_t rssi, WiFi::AuthMode authMode) {
                     if (ssid.empty()) {
                         println("Scan complete      ");
-                        return true;
                     } else {
                         println(STR(ssid << " " << rssi << "dBm " << authMode));
-                        return line_ < 10;
-                        //return true;
                     }
                 });
+*/
             }
         }
 
