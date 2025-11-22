@@ -1,6 +1,5 @@
 #include "../app.h"
-#include "../wifi.h"
-#include "../radio.h"
+#include "../task.h"
 
 #include "style.h"
 #include "form.h"
@@ -46,6 +45,10 @@ namespace rckid::ui {
         palette[35] = 0;
         palette[36] = Style::fg().toRaw();
         palette[37] = ColorRGB::Red().toRaw();
+        // 38 is black + fg + blue
+        palette[38] = 0;
+        palette[39] = Style::fg().toRaw();
+        palette[40] = ColorRGB::Blue().toRaw();
     }
 
         /** Updates the header. 
@@ -101,17 +104,14 @@ namespace rckid::ui {
             at(--x, 0).setPaletteOffset((vol == 0) ? PALETTE_RED + 1 : PALETTE_ACCENT) = SYSTEM16_SPEAKER_RIGHT;
             at(--x, 0).setPaletteOffset((vol == 0) ? PALETTE_RED + 1 : PALETTE_ACCENT) = SYSTEM16_SPEAKER_LEFT;
         }
-        // check wifi
-        if (WiFi::hasInstance()) {
-            WiFi * wifi = WiFi::getOrCreateInstance();
-            if (wifi->connected()) {
-                at(--x, 0).setPaletteOffset(PALETTE_ACCENT) = SYSTEM16_WIFI_RIGHT;
-                at(--x, 0).setPaletteOffset(PALETTE_ACCENT) = SYSTEM16_WIFI_LEFT;
-            } else {
-                at(--x, 0).setPaletteOffset(PALETTE_ACCENT + 1) = SYSTEM16_WIFI_RIGHT;
-                at(--x, 0).setPaletteOffset(PALETTE_ACCENT + 1) = SYSTEM16_WIFI_LEFT;
+        // check tasks
+        {
+            Task * t = Task::taskList_;
+            while (t != nullptr) {
+                x = t->updateHeader(*this, x);
+                t = t->next_;
             }
-        }   
+        }
         // if the budget is below 10 minutes, display it as part of the header
         uint32_t b = budget();
         if (b < 600) {

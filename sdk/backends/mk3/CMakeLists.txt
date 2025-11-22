@@ -40,6 +40,9 @@ function(link_with_librckid target_name)
         pico_unique_id
         #pico_cyw43_arch_poll
         pico_cyw43_arch_lwip_poll
+        pico_lwip_http
+        pico_lwip_mbedtls
+        pico_mbedtls
         tinyusb_device
         tinyusb_board
         pico_rand

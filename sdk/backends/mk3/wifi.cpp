@@ -32,23 +32,20 @@ namespace rckid {
 
     // WiFi 
 
-    bool WiFi::enabled() const {
+    WiFi::Status WiFi::status() const {
         // NOTE we can get the same for AP mode which currently rckid does not support
-        int32_t status = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
+        int32_t status = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);
         switch (status) {
             case CYW43_LINK_DOWN:
+                return Status::Disconnected;
             case CYW43_LINK_JOIN:
             case CYW43_LINK_NOIP:
+                return Status::Connecting;
             case CYW43_LINK_UP:
-                return true;
+                return Status::Connected;
             default:
-                return false;
-        }        
-    }
-
-    bool WiFi::connected() const {
-        int32_t status = cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA);
-        return status == CYW43_LINK_UP;
+                return Status::Off;
+        }
     }
 
     void WiFi::enable(bool value) {
@@ -72,6 +69,14 @@ namespace rckid {
         LOG(LL_INFO, "WiFi connect to SSID: " << ssid << " password " << password << " auth " << static_cast<uint32_t>(authMode));
         int32_t res = cyw43_arch_wifi_connect_async(ssid.c_str(), password.empty() ? nullptr : password.c_str(), static_cast<uint32_t>(authMode));
         return res == 0;
+    }
+
+    uint32_t ipAddress() {
+        struct netif *netif = &cyw43_state.netif[CYW43_ITF_STA];
+        if (netif)
+            return netif_ip4_addr(netif)->addr;
+        else
+            return 0;
     }
 
     WiFi::~WiFi() {

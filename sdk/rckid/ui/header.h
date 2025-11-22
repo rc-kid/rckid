@@ -44,6 +44,13 @@ namespace rckid::ui {
      */
     class Header : public Tilemap<Tile<8, 16, Color16>> {
     public:
+
+        static constexpr uint32_t PALETTE_FG = 0;
+        static constexpr uint32_t PALETTE_ACCENT_FG = 16;
+        static constexpr uint32_t PALETTE_ACCENT = 32;
+        static constexpr uint32_t PALETTE_RED = 35;
+        static constexpr uint32_t PALETTE_BLUE = 38;
+
         Header() : Tilemap{40, 1, assets::System16, palette_} {
             createPalette(palette_);
             fill(' ');
@@ -96,11 +103,6 @@ namespace rckid::ui {
         void renderRawColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels);
 
     private:
-
-        static constexpr uint32_t PALETTE_FG = 0;
-        static constexpr uint32_t PALETTE_ACCENT_FG = 16;
-        static constexpr uint32_t PALETTE_ACCENT = 32;
-        static constexpr uint32_t PALETTE_RED = 35;
 
         static inline Header * instance_ = nullptr;
         static inline bool refreshRequired_ = false;

@@ -1,12 +1,9 @@
 #include <rckid/wifi.h>
 
 namespace rckid {
-    bool WiFi::enabled() const {
-        return false;
-    }
 
-    bool WiFi::connected() const {
-        return false;
+    WiFi::Status WiFi::status() const {
+        return Status::Connected;
     }
 
     void WiFi::enable([[maybe_unused]] bool value) {

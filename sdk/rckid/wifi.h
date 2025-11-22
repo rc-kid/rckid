@@ -4,6 +4,7 @@
 #include "task.h"
 #include "utils/ini.h"
 #include "filesystem.h"
+#include "ui/header.h"
 
 namespace rckid {
 
@@ -14,6 +15,13 @@ namespace rckid {
      */
     class WiFi : public Task {
     public:
+
+        enum class Status {
+            Off,
+            Disconnected,
+            Connecting,
+            Connected
+        }; 
 
         struct NetworkInfo {
             String ssid;
@@ -42,13 +50,15 @@ namespace rckid {
 
         static bool hasInstance() { return instance_ != nullptr; }
 
+        Status status() const; 
+
         /** Returns true if the wifi is enabled, false otherwise.
          */
-        bool enabled() const;
+        bool enabled() const { return status() != Status::Off; }
 
         /** Returns true if the wifi is connected to a network.
          */
-        bool connected() const;
+        bool connected() const { return status() == Status::Connected; }
 
         /** Enables, or disables the WiFi.
             
@@ -92,6 +102,8 @@ namespace rckid {
             });
         }
 
+        uint32_t ipAddress();
+
     protected:
 
         WiFi() = default;
@@ -99,6 +111,26 @@ namespace rckid {
         ~WiFi() override;
 
         void tick() override;
+
+        Coord updateHeader(ui::Header & header, Coord endOffset) override {
+            uint8_t paletteOffset;
+            switch (status()) {
+                case Status::Off:
+                    return endOffset;
+                case Status::Disconnected:
+                    paletteOffset = ui::Header::PALETTE_RED + 1;
+                    break;
+                case Status::Connecting:
+                    paletteOffset = ui::Header::PALETTE_FG;
+                    break;
+                case Status::Connected:
+                    paletteOffset = ui::Header::PALETTE_ACCENT + 1;
+                    break;
+            }
+            header.at(--endOffset, 0).setPaletteOffset(paletteOffset) = assets::SYSTEM16_WIFI_RIGHT;
+            header.at(--endOffset, 0).setPaletteOffset(paletteOffset) = assets::SYSTEM16_WIFI_LEFT;
+            return endOffset;
+        }
 
         static WiFi * initialize();
 

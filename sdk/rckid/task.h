@@ -1,6 +1,9 @@
 #pragma once
 
 namespace rckid {
+    namespace ui {
+        class Header;
+    } // namespace ui
 
     /** Background task base class.
      
@@ -34,12 +37,16 @@ namespace rckid {
 
     protected:
 
+        friend class ui::Header;
+
         Task() {
             next_ = taskList_;
             taskList_ = this;
         }
 
         virtual void tick() = 0;
+
+        virtual Coord updateHeader([[maybe_unused]] ui::Header & header, Coord endOffset) { return endOffset; }
 
     private:
 

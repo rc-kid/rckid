@@ -230,7 +230,7 @@ namespace rckid {
                             shuffleIcon_.setVisible(true);
                             break;
                         }
-                        [[fallthrough]]
+                        [[fallthrough]];
                     case AudioPlayerMode::Shuffle:
                         mode_ = AudioPlayerMode::Normal;
                         repeatIcon_.setVisible(false);

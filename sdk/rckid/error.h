@@ -11,6 +11,12 @@
 #define FATAL_ERROR(...) do {rckid::Error::setFatal(rckid::Error{__LINE__, __FILE__, __VA_ARGS__ }); } while (false)
 #define FATAL_ERROR_IF(COND, ...) do { if (COND) FATAL_ERROR(__VA_ARGS__); } while (false)
 
+extern "C" {
+    /** printf-like wrapper around the debugWrite() rckid function so that third party libraries can be used seamlessly.
+     */
+    void debug_printf(char const * fmt, ...);
+}
+
 namespace rckid {
     struct Error {
         static constexpr uint32_t success = 0;
