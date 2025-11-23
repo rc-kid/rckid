@@ -1,8 +1,51 @@
 #include <pico/cyw43_arch.h>
+#include <lwip/apps/http_client.h>
+#include <lwip/altcp_tls.h>
+
 
 #include <rckid/wifi.h>
 
 namespace rckid {
+
+    namespace {
+        mbedtls_ssl_config mbedtls_config;
+
+        static altcp_tls_config * tls_config = nullptr;
+
+        // This is the PUBLIC root certificate exported from a browser
+        // Note that the newlines are needed
+        static constexpr uint8_t rootCertificate[] = "-----BEGIN CERTIFICATE-----\n\
+        MIIC+jCCAn+gAwIBAgICEAAwCgYIKoZIzj0EAwIwgbcxCzAJBgNVBAYTAkdCMRAw\n\
+        DgYDVQQIDAdFbmdsYW5kMRIwEAYDVQQHDAlDYW1icmlkZ2UxHTAbBgNVBAoMFFJh\n\
+        c3BiZXJyeSBQSSBMaW1pdGVkMRwwGgYDVQQLDBNSYXNwYmVycnkgUEkgRUNDIENB\n\
+        MR0wGwYDVQQDDBRSYXNwYmVycnkgUEkgUm9vdCBDQTEmMCQGCSqGSIb3DQEJARYX\n\
+        c3VwcG9ydEByYXNwYmVycnlwaS5jb20wIBcNMjExMjA5MTEzMjU1WhgPMjA3MTEx\n\
+        MjcxMTMyNTVaMIGrMQswCQYDVQQGEwJHQjEQMA4GA1UECAwHRW5nbGFuZDEdMBsG\n\
+        A1UECgwUUmFzcGJlcnJ5IFBJIExpbWl0ZWQxHDAaBgNVBAsME1Jhc3BiZXJyeSBQ\n\
+        SSBFQ0MgQ0ExJTAjBgNVBAMMHFJhc3BiZXJyeSBQSSBJbnRlcm1lZGlhdGUgQ0Ex\n\
+        JjAkBgkqhkiG9w0BCQEWF3N1cHBvcnRAcmFzcGJlcnJ5cGkuY29tMHYwEAYHKoZI\n\
+        zj0CAQYFK4EEACIDYgAEcN9K6Cpv+od3w6yKOnec4EbyHCBzF+X2ldjorc0b2Pq0\n\
+        N+ZvyFHkhFZSgk2qvemsVEWIoPz+K4JSCpgPstz1fEV6WzgjYKfYI71ghELl5TeC\n\
+        byoPY+ee3VZwF1PTy0cco2YwZDAdBgNVHQ4EFgQUJ6YzIqFh4rhQEbmCnEbWmHEo\n\
+        XAUwHwYDVR0jBBgwFoAUIIAVCSiDPXut23NK39LGIyAA7NAwEgYDVR0TAQH/BAgw\n\
+        BgEB/wIBADAOBgNVHQ8BAf8EBAMCAYYwCgYIKoZIzj0EAwIDaQAwZgIxAJYM+wIM\n\
+        PC3wSPqJ1byJKA6D+ZyjKR1aORbiDQVEpDNWRKiQ5QapLg8wbcED0MrRKQIxAKUT\n\
+        v8TJkb/8jC/oBVTmczKlPMkciN+uiaZSXahgYKyYhvKTatCTZb+geSIhc0w/2w==\n\
+        -----END CERTIFICATE-----\n";
+    }
+
+    // Override altcp_tls_alloc to set sni
+    /*
+    static struct altcp_pcb *altcp_tls_alloc_sni(void *arg, u8_t ip_type) {
+        struct altcp_pcb *pcb = altcp_tls_alloc(tls_config, ip_type);
+        if (!pcb) {
+            HTTP_ERROR("Failed to allocate PCB\n");
+            return NULL;
+        }
+        mbedtls_ssl_set_hostname(altcp_tls_context(pcb), req->hostname);
+        return pcb;
+    }
+        */
 
     /** The wifi driver uses different authentication values in the wifi scan results (not very documented) and different values for the wifi connect.
      */
@@ -30,6 +73,61 @@ namespace rckid {
         return 0;
     }
 
+    static err_t cyw43_wifi_receive_header_fn(httpc_state_t *connection, void *arg, struct pbuf *hdr, u16_t hdr_len, u32_t content_len) {
+        LOG(LL_INFO, "headers received ");
+        LOG(LL_INFO, "  hdr_len: " << hdr_len);
+        LOG(LL_INFO, "  content_len: " << content_len);
+        while (hdr != nullptr) {
+            LOG(LL_INFO, "  pbuf tot_len: " << hdr->tot_len);
+            LOG(LL_INFO, "  pbuf len: " << hdr->len);
+            for (uint32_t i = 0; i < hdr->len; ++i) {
+                debugWrite() << ((char *)(hdr->payload))[i];
+            }
+            hdr = hdr->next;
+        }
+        /*
+        EXAMPLE_HTTP_REQUEST_T *req = (EXAMPLE_HTTP_REQUEST_T*)arg;
+        if (req->headers_fn) {
+            return req->headers_fn(connection, req->callback_arg, hdr, hdr_len, content_len);
+        }*/
+        return ERR_OK;
+    }
+
+    static err_t cyw43_wifi_receive_fn(void *arg, altcp_pcb * conn, pbuf * p, err_t err) {
+        LOG(LL_INFO, "request received " << (int32_t) err);
+        while (p != nullptr) {
+            LOG(LL_INFO, "  pbuf tot_len: " << p->tot_len);
+            LOG(LL_INFO, "  pbuf len: " << p->len);
+            for (uint32_t i = 0; i < p->len; ++i) {
+                debugWrite() << ((char *)(p->payload))[i];
+            }
+            p = p->next;
+        }
+        /*
+        EXAMPLE_HTTP_REQUEST_T *req = (EXAMPLE_HTTP_REQUEST_T*)arg;
+        if (req->recv_fn) {
+            return req->recv_fn(req->callback_arg, conn, p, err);
+        }
+        */
+        return ERR_OK;
+    }    
+
+    static void cyw43_wifi_result_fn(void *arg, httpc_result_t httpc_result, u32_t rx_content_len, u32_t srv_res, err_t err) {
+        LOG(LL_INFO, "request done " << (int32_t) err);
+        LOG(LL_INFO, "  result: " << (int32_t) httpc_result);
+        LOG(LL_INFO, "  rx_content_len: " << rx_content_len);
+        LOG(LL_INFO, "  srv_res: " << srv_res);
+        /*
+        EXAMPLE_HTTP_REQUEST_T *req = (EXAMPLE_HTTP_REQUEST_T*)arg;
+        HTTP_DEBUG("result %d len %u server_response %u err %d\n", httpc_result, rx_content_len, srv_res, err);
+        req->complete = true;
+        req->result = httpc_result;
+        if (req->result_fn) {
+            req->result_fn(req->callback_arg, httpc_result, rx_content_len, srv_res, err);
+        }
+            */
+    }    
+
     // WiFi 
 
     WiFi::Status WiFi::status() const {
@@ -52,9 +150,14 @@ namespace rckid {
         if (value) {
             LOG(LL_INFO, "Enabling WiFi");
             cyw43_arch_enable_sta_mode();
+            mbedtls_ssl_config_init(&mbedtls_config);
+            tls_config = altcp_tls_create_config_client(nullptr, 0);
+            //tls_config = altcp_tls_create_config_client(rootCertificate, sizeof(rootCertificate));
         } else {
             LOG(LL_INFO, "Disabling WiFi");
             cyw43_arch_disable_sta_mode();
+            altcp_tls_free_config(tls_config);
+            tls_config = nullptr;
         }
     }
 
@@ -78,6 +181,46 @@ namespace rckid {
         else
             return 0;
     }
+
+    /* Notes:
+
+       - the http_connection_t must be alive for as long as the connection is
+     
+     */
+    bool WiFi::http_get(char const * hostname, char const * path, RequestCallback callback) {
+        static httpc_connection_t settings = {};
+        settings.headers_done_fn = cyw43_wifi_receive_header_fn;
+        settings.result_fn = cyw43_wifi_result_fn;
+        httpc_state_t * conn;
+        int32_t result = httpc_get_file_dns(
+            hostname, 
+            80, 
+            path, 
+            & settings,
+            cyw43_wifi_receive_fn,
+            nullptr, // callback arg
+            & conn);
+        LOG(LL_INFO, "HTTP GET result: " << result);
+        return result == ERR_OK;
+    }
+
+    bool WiFi::https_get(char const * hostname, char const * path, RequestCallback callback) {
+        static httpc_connection_t settings = {};
+        settings.headers_done_fn = cyw43_wifi_receive_header_fn;
+        settings.result_fn = cyw43_wifi_result_fn;
+        httpc_state_t * conn;
+        int32_t result = httpc_get_file_dns(
+            hostname, 
+            443, 
+            path, 
+            & settings,
+            cyw43_wifi_receive_fn,
+            nullptr, // callback arg
+            & conn);
+        LOG(LL_INFO, "HTTPS GET result: " << result);
+        return result == ERR_OK;
+    }
+
 
     WiFi::~WiFi() {
         enable(false);

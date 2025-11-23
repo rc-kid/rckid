@@ -50,6 +50,11 @@ namespace rckid {
                 });
 */
             }
+            if (btnPressed(Btn::Start)) {
+                wifi_->https_get("api.telegram.org", "/botFoobar/getMe", [this]() {
+                    println("HTTPS GET complete");
+                });
+            }
         }
 
     private:

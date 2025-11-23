@@ -94,6 +94,7 @@ extern void debug_printf(char const * fmt, ...);
 #define TCPIP_DEBUG                 LWIP_DBG_OFF
 #define PPP_DEBUG                   LWIP_DBG_OFF
 #define SLIP_DEBUG                  LWIP_DBG_OFF
-#define DHCP_DEBUG                  LWIP_DBG_ON
+#define DHCP_DEBUG                  LWIP_DBG_OFF
+#define ALTCP_MBEDTLS_DEBUG         LWIP_DBG_ON
 
 #endif /* __LWIPOPTS_H__ */

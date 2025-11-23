@@ -41,6 +41,7 @@ namespace rckid {
          */
         using ScanCallback = std::function<void(String && ssid, int16_t rssi, AuthMode authMode)>;
 
+        using RequestCallback = std::function<void()>;
 
         static WiFi * getOrCreateInstance() {
             if (instance_ == nullptr)
@@ -102,7 +103,17 @@ namespace rckid {
             });
         }
 
+        /** Returns the current IP address as a single 32bit number. Returns 0 if no valid address/not connected.
+         */
         uint32_t ipAddress();
+
+        /** Simple HTTP request
+         */
+        bool http_get(char const * hostname, char const * path, RequestCallback callback);
+
+        /** Simple HTTPS request
+         */
+        bool https_get(char const * hostname, char const * path, RequestCallback callback);
 
     protected:
 
