@@ -95,6 +95,8 @@ Must-have before wider release
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
+- pngenc: https://github.com/bitbank2/PNGenc
+
 - a more polished and reasonable palette for the header
 - callback to wifi status
 - wifi connection (eventually this will be done with connection pipes?)
@@ -103,13 +105,14 @@ Must-have before wider release
 
 - piggy bank topup-monthly, etc.
 - piggy bank data load & save
-- parent mode lock
 
-- bootloader cartridge (this will only flash the memory)
+- parent mode lock
+- add parent mode password instead
 - parent mode cartridge
 
+- bootloader cartridge (this will only flash the memory)
+
 - move brightness and audio settings from avr status
-- add parent mode password instead
 
 - for the flashlight, somehow at the beginning there is a faint glow even when turned off, this seems to disappear after a while
 

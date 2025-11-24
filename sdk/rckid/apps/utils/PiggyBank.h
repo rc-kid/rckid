@@ -64,6 +64,8 @@ namespace rckid {
             saveSettings();
         }
 
+    protected:
+
         void update() override {
             ui::Form<void>::update();
 
@@ -83,6 +85,7 @@ namespace rckid {
         }
 
         void saveSettings() {
+
         }
 
     private:
@@ -92,7 +95,7 @@ namespace rckid {
         ui::ActionMenu contextMenu_; 
 
         int32_t value_ = 0;
-        int32_t monthlyAllowance_ = 200;
+        int32_t monthlyAllowance_ = 0;
         TinyDate lastTopUp_;
 
     }; // rckid::Clock

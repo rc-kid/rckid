@@ -80,7 +80,8 @@ extern "C" {
         restore_interrupts(x);
     }
 
-    void *__wrap_calloc(size_t numBytes) {
+    void *__wrap_calloc(size_t numElements, size_t elementSize) {
+        size_t numBytes = numElements * elementSize;
         void * result = __wrap_malloc(numBytes);
         memset(result, 0, numBytes);
         return result;

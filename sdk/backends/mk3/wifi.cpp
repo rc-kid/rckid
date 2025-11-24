@@ -2,16 +2,19 @@
 #include <lwip/apps/http_client.h>
 #include <lwip/altcp_tls.h>
 
-
 #include <rckid/wifi.h>
 
 namespace rckid {
 
     namespace {
-        mbedtls_ssl_config mbedtls_config;
 
         static altcp_tls_config * tls_config = nullptr;
 
+        static altcp_allocator_t tls_allocator;
+
+        String lastHostname;
+
+        // from pico examples
         // This is the PUBLIC root certificate exported from a browser
         // Note that the newlines are needed
         static constexpr uint8_t rootCertificate[] = "-----BEGIN CERTIFICATE-----\n\
@@ -35,17 +38,13 @@ namespace rckid {
     }
 
     // Override altcp_tls_alloc to set sni
-    /*
     static struct altcp_pcb *altcp_tls_alloc_sni(void *arg, u8_t ip_type) {
-        struct altcp_pcb *pcb = altcp_tls_alloc(tls_config, ip_type);
-        if (!pcb) {
-            HTTP_ERROR("Failed to allocate PCB\n");
-            return NULL;
-        }
-        mbedtls_ssl_set_hostname(altcp_tls_context(pcb), req->hostname);
+        char const * hostname = (char const *)(arg);
+        LOG(LL_INFO, "Allocating TLS PCB for hostname: " << hostname);
+        altcp_pcb * pcb = altcp_tls_alloc(tls_config, ip_type);
+        mbedtls_ssl_set_hostname((mbedtls_ssl_context *)altcp_tls_context(pcb), hostname);
         return pcb;
     }
-        */
 
     /** The wifi driver uses different authentication values in the wifi scan results (not very documented) and different values for the wifi connect.
      */
@@ -150,8 +149,9 @@ namespace rckid {
         if (value) {
             LOG(LL_INFO, "Enabling WiFi");
             cyw43_arch_enable_sta_mode();
-            mbedtls_ssl_config_init(&mbedtls_config);
+            //mbedtls_ssl_config_init(&mbedtls_config);
             tls_config = altcp_tls_create_config_client(nullptr, 0);
+            tls_allocator.alloc = altcp_tls_alloc_sni;
             //tls_config = altcp_tls_create_config_client(rootCertificate, sizeof(rootCertificate));
         } else {
             LOG(LL_INFO, "Disabling WiFi");
@@ -208,6 +208,9 @@ namespace rckid {
         static httpc_connection_t settings = {};
         settings.headers_done_fn = cyw43_wifi_receive_header_fn;
         settings.result_fn = cyw43_wifi_result_fn;
+        settings.altcp_allocator = & tls_allocator;
+        lastHostname = hostname;
+        tls_allocator.arg = (void *)lastHostname.c_str();;
         httpc_state_t * conn;
         int32_t result = httpc_get_file_dns(
             hostname, 

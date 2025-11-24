@@ -64,6 +64,9 @@
 #define MBEDTLS_ECP_C
 #define MBEDTLS_ECDSA_C
 #define MBEDTLS_ASN1_WRITE_C
+// required for telegram API authentication
+#define MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
+
 
 // The following is needed to parse a certificate
 #define MBEDTLS_PEM_PARSE_C

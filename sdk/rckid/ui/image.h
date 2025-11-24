@@ -62,7 +62,7 @@ namespace rckid::ui {
             imgY_ = x.y;
         }
 
-        Bitmap const * bitmap() const { return bmp_; }
+        Bitmap * bitmap() const { return bmp_; }
     
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
             if (bmp_ == nullptr)

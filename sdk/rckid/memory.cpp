@@ -94,12 +94,14 @@ namespace rckid {
         while (x < heapEnd_) {
             LOG(LL_INFO, "  " << (x->headerSize_) << (x->isFree() ? " f" : ""));
             x = x->nextAllocation();
+            yield();
         }
         LOG(LL_INFO, "Freelist:");
         x = freelist_;
         while (x != nullptr) {
-            LOG(LL_INFO, "  " << (x->headerSize_) << (x->isFree() ? " f" : ""));
+            LOG(LL_INFO, "  " << (x->headerSize_) << (x->isFree() ? " f" : "") << "next: " << hex((uint32_t)x->prevFree()));
             x = x->prevFree();
+            yield();
         }
     }
 

@@ -1,28 +1,27 @@
 # RCKid mk3
 
-This is the third iteration of the RCKid handheld gaming device for kids. The handheld is a homage to 90's handheld consoles with easy controls and swappable cartridges that offer both software *and* hardware extensibility. 
+RCKid is an open‑source handheld console designed for young creators. It’s built to be the first piece of technology that feels truly personal to a child — not just a screen to consume, but a tool to imagine, build, and share. RCKid also supports kids in everyday tools like a clock, alarm, piggy bank, contacts, or music player. This balance of fun and function turns RCKid into a trusted companion, introducing kids to digital literacy, technology, and STEM skills in a way that grows with them.
 
-Technical specifications:
+Starting at age 5, kids can design sprites, tiles, and music inside native games, learning problem‑solving naturally through play. As they grow, RCKid supports MakeCode Arcade (blocks → JavaScript/TypeScript), GBStudio for retro game creation, and finally a full C++ SDK for teens and adults ready to explore hardware and systems programming.
 
-- powered by RP2350 (2x ARM Cortex M-33 or RISC-V, 520KB RAM)
-- 320x240 IPS LCD screen at 60fps and 65536 colors (framebuffer and tilemap modes)
-- mono speaker, stereo headphones out, I2S 16bit sound at 48kHz
-- 3 axis accelerometer, pedometer, ambient light sensor
-- rumbler
-- DPAD, A, B, Sel and Start keys with own backlight, Home and dedicated volume buttons
-- SD card for large file storage
-- ~1000mAh Li-Pol battery for ~10hrs (?) of operation
+A defining feature is RCKid’s cartridge system — not just for games, but for extending hardware. Cartridges can add Wi‑Fi for messaging, radios for mesh networking, JACDAC peripherals, IR remotes, or even exposed pins for DIY tinkering. Each cartridge carries its own firmware, making creations tangible, shareable, and hackable.
 
-Cartridge specifications:
+Powered by the RP2350 MCU (dual Cortex‑M33, 520KB RAM, PIO), RCKid combines raw performance with developer‑friendly design. It features a 2.8" IPS display at 60 FPS, stereo audio up to 48kHz, SD storage, RGB‑backlit controls, accelerometer, haptics, FM radio, and flexible power (USB‑C Li‑Ion or AAA batteries). Everything is built to be fun, approachable, and resilient.
 
-- flash up to 16MB
-- 10 GPIO pins
-- 3V3 capable of 600mA loads
-- optional PSRAM support (up to 8MB)
+## Technical Details
 
-Almost identical to mkII with RP2040, but ~1mm wider for easier & more secure battery installation and ~1mm thicker to accomodate for accessible SD card holder and display connector. The cartridge connector is also upgraded from CNC machinec pins that are expensive on the cartridge side and quite fragile to custom built cartridge connector for "cheap" gold fingered cartridges.
+- RP2350 MCU from RaspberryPi that mixes raw power (520KB RAM, 2x Cortex M33 cores at 150MHz with overclocking possibility) and ease of use (C++ SDK, micropython). Further supported by great community and skillfully designed so that programming it is *fun* even for experienced developers (PIO)
+- unique cartridge system: the firmware is not stored on the device, but in every cartridge. Cartridges can be swapped, shared, or reprogrammed with any computer easily. On top of the mandatory FLASH for the firmware, cartridges contain 8 high speed digital pins (HSTX, SPI, I2C, UART, PWM) and 2 analog pins to enable hardware tinkering
+- 2.8" 320x240 IPS display with 65536 colors. Perfect for retro gaming and pixel art with enough catchy detail, but not too many pixels to design. 60 FPS refresh rate.
+- 16bit stereo sound (headphones & mono speaker) with up to 48kHz playback. Powerful enough for MP3 playback
+- SD card for media & settings, up to 64GB supported. FAT32 and exFAT filesystem 
+- DPAD, A, B, Select and Start buttons with customizable RGB backlight
+- 3 axis accelerometer with integrated pedometer
+- rumbler for haptic feedback (simple motor)
+- FM radio with RDS
+- 1300mAh LiIon rechargeable battery with USB-C charging, or 3x AAA batteries, both options should give around 10 hours of active time. 
 
-![RCKid mkII](docs/photos/rckid.jpg "RCKid prototype. The specks of dust on screen are not speck of dust but moving stars in the game:)")
+![RCKid mkIII](docs/photos/mkIII-front.jpeg "RCKid prototype")
 
 ## Directory Structure
 
@@ -74,11 +73,11 @@ The SDK library is at the core of RCKid as it provides an abstraction layer over
     make -j4
     sudo make install
 
-Connect the SWD port for the RCKid (on devel-server the wires are, from top to bottom, looking from the back):
+Connect the SWD port for the RCKid (on devel-server the wires are, from top to bottom, looking from the back, from top to bottom):
 
          | GND   |
     -----|-------|---------
-    blue | green | yeallow
+    blue | green | yellow
     
 
 Then run openocd on the rpi with the following command:

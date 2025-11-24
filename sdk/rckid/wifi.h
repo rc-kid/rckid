@@ -12,6 +12,10 @@ namespace rckid {
      
         The wifi manager defines a common API that backends should then implement to provide internet functionality. For now this means using the RM2 module for the mkIII hardware and using direct access for the fantasy console, but in the future other options are possible as well, such as using non-internet long distance radio to connect to a base station, etc. 
 
+        # MkIII backend
+
+        For mkIII, the default wifi provider is the RM2 module by RPi themselves, which is the same chip that powers Pico W. Unfortunately, the documentation of the Pico W is quite lacking compared to the normal pico, so the implementation is trial & error.
+
      */
     class WiFi : public Task {
     public:

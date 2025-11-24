@@ -18,6 +18,19 @@ namespace rckid {
         return true;
     }
 
+    uint32_t WiFi::ipAddress() { 
+        return 0; 
+    }
+
+
+    bool WiFi::http_get(char const * hostname, char const * path, RequestCallback callback) {
+        return false;
+    }
+
+    bool WiFi::https_get(char const * hostname, char const * path, RequestCallback callback) {
+        return false;
+    }
+
     WiFi * WiFi::initialize() {
         return nullptr;
     }
