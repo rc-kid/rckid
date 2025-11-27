@@ -44,6 +44,17 @@ namespace rckid {
                 );
                 nextUpdateTime_ += 60 * 10000000; // check every minute
             }
+            if (btnPressed(Btn::A)) {
+                wifi_->https_get(
+                    "api.telegram.org", 
+                    STR("/bot" << botId_ << ':' << botToken_ << "/sendMessage?chat_id=202159443&text=Hello+friend"),
+                    [this](uint32_t status, uint32_t size, uint8_t const * data) {
+                        if (status == 200)
+                            LOG(LL_INFO, "Message sent successfully");
+                    }
+
+                );
+            }
         }
 
     private:
@@ -52,6 +63,48 @@ namespace rckid {
             auto s = MemoryReadStream{data, size};
             json::Object res = json::parse(s);
             LOG(LL_INFO, "Update response: \n" << res);
+            if (res["ok"].asBoolean()) {
+                for (auto & item : res["result"]) {
+                    uint64_t updateId = item["update_id"].asInteger();
+                    if (item.has("message")) {
+                        auto & msg = item["message"];
+                        int64_t from = msg["from"]["id"].asInteger();
+                        int64_t chatId = msg["chat"]["id"].asInteger();
+                        String text = msg["text"].asString();
+                        LOG(LL_INFO, "Message from " << from << " in chat " << chatId << ": " << text);
+                        // now we need to determine what to do with the message 
+                    }
+                    // TODO do updateId + 1 as the next updte id
+
+                }
+
+                /*
+                auto results = res["result"].asArray();
+                for (auto & item : results) {
+                    auto updateId = item["update_id"].asInteger();
+                    if (updateId >= lastOffset_)
+                        lastOffset_ = updateId + 1;
+                    auto message = item["message"];
+                    auto from = message["from"];
+                    auto chat = message["chat"];
+                    auto text = message["text"].asString();
+                    auto senderId = from["id"].asInteger();
+                    auto chatId = chat["id"].asInteger();
+                    LOG(LL_INFO, "Message from " << from["username"].asString() << " (id " << senderId << ") in chat " << chatId << ": " << text);
+                    // only respond to parent
+                    if (senderId == parentId_) {
+                        // echo the message back
+                        String payload = STR("{\"chat_id\":" << chatId << ",\"text\":\"You said: " << text << "\"}");
+                        wifi_->https_get(
+                            "api.telegram.org",
+                            STR("/bot" << botId_ << ':' << botToken_ << "/sendMessage?payload=" << urlEncode(payload)),
+                            [](uint32_t status, uint32_t size, uint8_t const * data){
+                                LOG(LL_INFO, "Send message response (" << status << "): " << String{reinterpret_cast<char const *>(data), size});
+                            }
+                        );
+                    }
+                } */
+            }
 
 
         }
