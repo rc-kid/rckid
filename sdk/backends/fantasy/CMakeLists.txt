@@ -1,5 +1,6 @@
 include_directories(${CMAKE_SOURCE_DIR}/libs/raylib/src)
 find_package(Threads REQUIRED)
+find_package(CURL REQUIRED)
 
 # Set general compiler options, C++ standard and warning levels
 set(CMAKE_CXX_STANDARD 17)  
@@ -13,6 +14,7 @@ endif()
 file(GLOB_RECURSE SRC "fantasy.cpp" "radio.cpp" "wifi.cpp" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.h" "${CMAKE_SOURCE_DIR}/sdk/rckid/*.cpp" "${CMAKE_SOURCE_DIR}/sdk/assets-bin/*.cpp")
 add_library(librckid STATIC ${SRC})
 target_include_directories(librckid PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/raylib/src")
+target_link_libraries(librckid PUBLIC CURL::libcurl)
 
 # Sets given project to be used with RCKid SDK. 
 #

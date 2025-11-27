@@ -51,6 +51,7 @@ namespace rckid {
         void processUpdate(uint32_t size, uint8_t const * data) {
             auto s = MemoryReadStream{data, size};
             json::Object res = json::parse(s);
+            LOG(LL_INFO, "Update response: \n" << res);
 
 
         }

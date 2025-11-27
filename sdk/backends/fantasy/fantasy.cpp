@@ -6,6 +6,8 @@
 #include <string>
 #include <fstream>
 #include <chrono>
+#include <curl/curl.h>
+
 
 #include <platform/string_utils.h>
 #include <platform/args.h>
@@ -175,6 +177,7 @@ namespace rckid {
     void initialize(int argc, char const * argv[]) {
         StackProtection::currentSize();
         SystemMallocGuard::enable();
+        curl_global_init(CURL_GLOBAL_DEFAULT);
         InitWindow(640, 480, "RCKid");
         display::img = GenImageColor(RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT, BLACK);
         display::texture = LoadTextureFromImage(display::img);

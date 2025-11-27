@@ -213,7 +213,7 @@ namespace rckid {
      
      */
     WiFi::Connection WiFi::http_get(char const * hostname, char const * path, ConnectionCallback callback) {
-        Connection ci{new ConnectionInternals{hostname, callback}};
+        Connection ci{new ConnectionInternals{hostname, std::move(callback)}};
         ci.c_->httpc.headers_done_fn = cyw43_wifi_receive_header_fn;
         ci.c_->httpc.result_fn = cyw43_wifi_result_fn;
         int32_t result = httpc_get_file_dns(
@@ -249,7 +249,7 @@ namespace rckid {
     }
 
     WiFi::Connection WiFi::https_get(char const * hostname, char const * path, ConnectionCallback callback) {
-        Connection ci{new ConnectionInternals{hostname, callback}};
+        Connection ci{new ConnectionInternals{hostname, std::move(callback)}};
         ci.c_->httpc.headers_done_fn = cyw43_wifi_receive_header_fn;
         ci.c_->httpc.result_fn = cyw43_wifi_result_fn;
         ci.c_->httpc.altcp_allocator = new altcp_allocator_t{};
