@@ -51,8 +51,10 @@ namespace rckid {
 */
             }
             if (btnPressed(Btn::Start)) {
-                wifi_->https_get("api.telegram.org", "/botFoobar/getMe", [this]() {
-                    println("HTTPS GET complete");
+                wifi_->http_get("api.telegram.org", "/botFoobar/getMe", [this](uint32_t status, uint32_t size, uint8_t const * data) {
+                    LOG(LL_INFO, "HTTPS GET complete, status: " <<  status << ", size: " << size);
+                    for (uint32_t i = 0; i < size; ++i)
+                        debugWrite() << (char)(data[i]);
                 });
             }
         }

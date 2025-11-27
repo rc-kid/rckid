@@ -11,6 +11,7 @@
 #define LL_INFO 1
 #define LL_DEBUG 0
 #define LL_I2C 0
+#define LL_WIFI 1
 
 #ifndef LL_ERROR
 #define LL_ERROR 1

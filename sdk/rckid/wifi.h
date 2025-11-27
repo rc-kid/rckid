@@ -20,6 +20,28 @@ namespace rckid {
     class WiFi : public Task {
     public:
 
+        /** Connection internals. The implementation of this class is backend & cartridge specific.
+         */
+        class ConnectionInternals;
+
+        class Connection {
+        public:
+
+            Connection(Connection & other) noexcept :
+                c_{other.c_} {
+            }
+
+            bool good() const { return c_ != nullptr; }
+
+        private:
+            friend class WiFi;
+
+            Connection() : c_{nullptr} {}
+            Connection(ConnectionInternals * c): c_{c} {}
+
+            ConnectionInternals * c_;
+        }; 
+
         enum class Status {
             Off,
             Disconnected,
@@ -45,7 +67,7 @@ namespace rckid {
          */
         using ScanCallback = std::function<void(String && ssid, int16_t rssi, AuthMode authMode)>;
 
-        using RequestCallback = std::function<void()>;
+        using ConnectionCallback = std::function<void(uint32_t status, uint32_t size, uint8_t const * data)>;
 
         static WiFi * getOrCreateInstance() {
             if (instance_ == nullptr)
@@ -113,11 +135,11 @@ namespace rckid {
 
         /** Simple HTTP request
          */
-        bool http_get(char const * hostname, char const * path, RequestCallback callback);
+        Connection http_get(char const * hostname, char const * path, ConnectionCallback callback);
 
         /** Simple HTTPS request
          */
-        bool https_get(char const * hostname, char const * path, RequestCallback callback);
+        Connection https_get(char const * hostname, char const * path, ConnectionCallback callback);
 
     protected:
 
@@ -150,6 +172,8 @@ namespace rckid {
         static WiFi * initialize();
 
     private:
+
+        friend class Connection;
 
         static constexpr char const * KNOWN_NETWORKS_PATH = "/wifi.ini";
 

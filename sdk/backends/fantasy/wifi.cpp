@@ -23,12 +23,12 @@ namespace rckid {
     }
 
 
-    bool WiFi::http_get(char const * hostname, char const * path, RequestCallback callback) {
-        return false;
+    WiFi::Connection WiFi::http_get(char const * hostname, char const * path, ConnectionCallback callback) {
+        return Connection{};
     }
 
-    bool WiFi::https_get(char const * hostname, char const * path, RequestCallback callback) {
-        return false;
+    WiFi::Connection WiFi::https_get(char const * hostname, char const * path, ConnectionCallback callback) {
+        return Connection{};
     }
 
     WiFi * WiFi::initialize() {

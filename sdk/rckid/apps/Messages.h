@@ -1,9 +1,103 @@
 #pragma once
 
-#include "../rckid.h"
-#include "../utils/stream.h"
-#include "../ui/scrollview.h"
-#include "../ui/panel.h"
+#include "../app.h"
+#include "../ui/form.h"
+#include "../ui/label.h"
+#include "../ui/image.h"
+#include "../assets/fonts/OpenDyslexic128.h"
+#include "../assets/fonts/OpenDyslexic64.h"
+#include "../assets/icons_24.h"
+#include "../wifi.h"
+#include "../utils/ini.h"
+#include "../utils/json.h"
+
+
+namespace rckid {
+
+    class Messages : public ui::Form<void> {
+    public:
+
+        String name() const override { return "Messages"; }
+
+        Messages():
+            ui::Form<void>{} {
+            wifi_ = WiFi::getOrCreateInstance();
+            wifi_->enable();
+            wifi_->connect();
+
+            loadSettings();
+        }
+
+    protected:
+    
+        void update() override {
+            ui::Form<void>::update();
+            if (wifi_->connected() && (uptimeUs64() >= nextUpdateTime_)) {
+                LOG(LL_INFO, "Checking for new updates...");
+                wifi_->https_get(
+                    "api.telegram.org", 
+                    STR("/bot" << botId_ << ':' << botToken_ << "/getUpdates?offset=" << lastOffset_),
+                    [this](uint32_t status, uint32_t size, uint8_t const * data) {
+                        if (status == 200)
+                            processUpdate(size, data);
+                    }
+                );
+                nextUpdateTime_ += 60 * 10000000; // check every minute
+            }
+        }
+
+    private:
+
+        void processUpdate(uint32_t size, uint8_t const * data) {
+            auto s = MemoryReadStream{data, size};
+            json::Object res = json::parse(s);
+
+
+        }
+
+        void loadSettings() {
+            ini::Reader ini{fs::fileRead(fs::join(homeFolder(), "settings.ini"))};
+            if (! ini.eof()) {
+                while (auto section = ini.nextSection()) {
+                    if (section.value() == "myself") {
+                        while (auto kv = ini.nextValue()) {
+                            if (kv->first == "token") {
+                                botToken_ = kv->second;
+                            } else if (kv->first == "id") {
+                                botId_ = std::atoll(kv->second);
+                            } else {
+                                LOG(LL_ERROR, "Unknown telegram setting: " << kv->first);
+                            }
+                        }
+                    } else if (section.value() == "parent") {
+                        while (auto kv = ini.nextValue()) {
+                            if (kv->first == "id") {
+                                parentId_ = std::atoll(kv->second);
+                            } else {
+                                LOG(LL_ERROR, "Unknown telegram setting: " << kv->first);
+                            }
+                        }
+                    } else {
+                        LOG(LL_ERROR, "Invalid settings section: " << section.value());
+                    }
+                }
+            }
+
+        }
+
+
+
+        WiFi * wifi_;
+        String botToken_;
+        uint64_t botId_;
+        uint64_t lastOffset_ = 0;
+        uint64_t parentId_;
+        uint64_t nextUpdateTime_ = 0;
+    }; // rckid::Messages
+
+} // namespace rckid
+
+#ifdef FOOBAR
 
 namespace rckid {
 
@@ -134,4 +228,8 @@ namespace rckid {
 
     }; // Messages
 
+
 } // namespace rckid
+
+#endif
+

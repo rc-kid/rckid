@@ -291,6 +291,7 @@ ui::ActionMenu * mainMenuGenerator() {
         ui::ActionMenu::Item("Music", assets::icons_64::music, App::run<MusicPlayer>),
         ui::ActionMenu::Item("Radio", assets::icons_64::radio_cassette, App::run<FMRadio>),
         ui::ActionMenu::Item("Friends", assets::icons_64::birthday_cake, App::run<Friends>),
+        ui::ActionMenu::Item("Messages", assets::icons_64::chat, App::run<Messages>),
         ui::ActionMenu::Item("Piggy Bank", assets::icons_64::piggy_bank, App::run<PiggyBank>),
         //ui::ActionMenu::Generator("Comms", assets::icons_64::chat, commsMenuGenerator),
         ui::ActionMenu::Generator("Audio", assets::icons_64::music_wave, audioMenuGenerator),

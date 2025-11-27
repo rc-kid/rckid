@@ -99,7 +99,7 @@ namespace rckid {
         LOG(LL_INFO, "Freelist:");
         x = freelist_;
         while (x != nullptr) {
-            LOG(LL_INFO, "  " << (x->headerSize_) << (x->isFree() ? " f" : "") << "next: " << hex((uint32_t)x->prevFree()));
+            LOG(LL_INFO, "  " << (x->headerSize_) << (x->isFree() ? " f" : ""));
             x = x->prevFree();
             yield();
         }

@@ -86,6 +86,7 @@ namespace rckid::json {
 
         explicit Object(bool value) : kind_{Kind::Boolean}, boolean_{value} {}
         explicit Object(int32_t value) : kind_{Kind::Integer}, int_{value} {}
+        explicit Object(int64_t value) : kind_{Kind::Integer}, int_{value} {}
         explicit Object(double value) : kind_{Kind::Double}, double_{value} {}
         explicit Object(String const & value) : kind_{Kind::String}, string_{value} {}
         explicit Object(char const * value) : kind_{Kind::String}, string_{value} {}
@@ -163,7 +164,7 @@ namespace rckid::json {
             return kind_;
         }
 
-        int32_t asInteger() const {
+        int64_t asInteger() const {
             ASSERT(kind_ == Kind::Integer);
             return int_;
         }
@@ -190,7 +191,7 @@ namespace rckid::json {
                 return defaultValue;
         }
 
-        int32_t asIntegerOrDefault(int32_t defaultValue) const {
+        int64_t asIntegerOrDefault(int64_t defaultValue) const {
             if (kind_ == Kind::Integer)
                 return int_;
             else 
@@ -373,7 +374,7 @@ namespace rckid::json {
         Kind kind_;
         union {
             bool boolean_;
-            int32_t int_;
+            int64_t int_;
             double double_;
             String string_;
             std::vector<Object> array_;
@@ -523,7 +524,7 @@ namespace rckid::json {
             if (isDouble) {
                 return Object{atof(number.c_str())};
             } else {
-                return Object{(int32_t)atoi(number.c_str())};
+                return Object{(int64_t)atoll(number.c_str())};
             }
         }
 

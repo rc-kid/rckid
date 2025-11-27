@@ -99,8 +99,6 @@ Must-have before wider release
 
 - a more polished and reasonable palette for the header
 - callback to wifi status
-- wifi connection (eventually this will be done with connection pipes?)
-- then http_client can be used for some simple http(s) gets
 - https://github.com/raspberrypi/pico-examples/blob/master/pico_w/wifi/http_client/example_http_client_util.c
 
 - piggy bank topup-monthly, etc.
