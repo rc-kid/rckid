@@ -271,6 +271,34 @@ inline void hex<uint32_t>::operator()(Writer & writer) {
     writer << "0123456789abcdef"[what_ & 0xf];
 }
 
+template<typename T>
+class urlEncode : public Writer::Converter {
+public:
+    urlEncode(T what): what_{what} {}
+    void operator () (Writer & writer);
+private:
+    T what_;
+}; // urlEncode
+
+template<>
+inline void urlEncode<char const *>::operator()(Writer & writer) {
+    char const * str = what_;
+    while (*str != 0) {
+        char c = *(str++);
+        if ((c >= 'a' && c <= 'z') ||
+            (c >= 'A' && c <= 'Z') ||
+            (c >= '0' && c <= '9') ||
+            c == '-' || c == '_' || c == '.' || c == '~') {
+            writer << c;
+        } else if (c == ' ') {
+            writer << '+';
+        } else {
+            writer << '%';
+            writer << hex<uint8_t>(static_cast<uint8_t>(c), false);
+        }
+    }
+}
+
 /** Binary converter. 
  */
 template<typename T>

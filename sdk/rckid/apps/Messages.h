@@ -28,6 +28,12 @@ namespace rckid {
             loadSettings();
         }
 
+        ~Messages() override {
+            for (auto chat : chats_)
+                delete chat;
+            wifi_->enable(false);
+        }
+
     protected:
     
         void update() override {
@@ -59,10 +65,52 @@ namespace rckid {
 
     private:
 
+        /** Chat information. 
+         
+            The app keeps a list of chats in one ini file, where for each chat we remember the chat id, name and icon (name and icon are customizable). 
+         */
+        class Chat {
+        public:
+            uint64_t id;
+            String name;
+            Icon image{assets::icons_64::chat};
+
+            Chat(uint64_t id, String const & name):
+                id{id}, name{name} {
+            }
+
+            Chat(ini::Reader & reader) {
+                while (std::optional<std::pair<String, String>> kv = reader.nextValue()) {
+                    if (kv->first == "id") {
+                        id = std::atoll(kv->second);
+                    } else if (kv->first == "name") {
+                        name = kv->second;
+                    } else if (kv->first == "image") {
+                        image = kv->second;
+                    } else {
+                        LOG(LL_ERROR, "Invalid chat field " << kv->first);
+                    }
+                }
+            }
+
+            void addMessage(uint64_t from, String const & text) {
+                LOG(LL_INFO, "New message from " << from << " in chat " << id << ": " << text);
+                // TODO store the message in the chat
+            }
+        }; // Messages::Chat
+
+
+        Chat * getKnownChat(uint64_t chatId) {
+            auto it = chatMap_.find(chatId);
+            if (it != chatMap_.end())
+                return it->second;
+            return nullptr;
+        }
+
         void processUpdate(uint32_t size, uint8_t const * data) {
             auto s = MemoryReadStream{data, size};
             json::Object res = json::parse(s);
-            LOG(LL_INFO, "Update response: \n" << res);
+            //LOG(LL_INFO, "Update response: \n" << res);
             if (res["ok"].asBoolean()) {
                 for (auto & item : res["result"]) {
                     uint64_t updateId = item["update_id"].asInteger();
@@ -71,44 +119,57 @@ namespace rckid {
                         int64_t from = msg["from"]["id"].asInteger();
                         int64_t chatId = msg["chat"]["id"].asInteger();
                         String text = msg["text"].asString();
-                        LOG(LL_INFO, "Message from " << from << " in chat " << chatId << ": " << text);
-                        // now we need to determine what to do with the message 
+                        Chat * chat = getKnownChat(chatId);
+                        if (text[0] == '/') {
+                            if (from != parentId_)
+                                LOG(LL_ERROR, "Ignoring command from unknown user " << from << ": " << text);
+                            else
+                                processCommand(std::move(text), chatId);
+                        } else if (chat == nullptr) {
+                            LOG(LL_ERROR, "Message from " << from << " in unknown chat " << chatId << ": " << text);
+                        } else {
+                            chat->addMessage(from, text);
+                        }
                     }
                     // TODO do updateId + 1 as the next updte id
-
                 }
-
-                /*
-                auto results = res["result"].asArray();
-                for (auto & item : results) {
-                    auto updateId = item["update_id"].asInteger();
-                    if (updateId >= lastOffset_)
-                        lastOffset_ = updateId + 1;
-                    auto message = item["message"];
-                    auto from = message["from"];
-                    auto chat = message["chat"];
-                    auto text = message["text"].asString();
-                    auto senderId = from["id"].asInteger();
-                    auto chatId = chat["id"].asInteger();
-                    LOG(LL_INFO, "Message from " << from["username"].asString() << " (id " << senderId << ") in chat " << chatId << ": " << text);
-                    // only respond to parent
-                    if (senderId == parentId_) {
-                        // echo the message back
-                        String payload = STR("{\"chat_id\":" << chatId << ",\"text\":\"You said: " << text << "\"}");
-                        wifi_->https_get(
-                            "api.telegram.org",
-                            STR("/bot" << botId_ << ':' << botToken_ << "/sendMessage?payload=" << urlEncode(payload)),
-                            [](uint32_t status, uint32_t size, uint8_t const * data){
-                                LOG(LL_INFO, "Send message response (" << status << "): " << String{reinterpret_cast<char const *>(data), size});
-                            }
-                        );
-                    }
-                } */
             }
-
-
         }
 
+        void processCommand(String command, uint64_t chatId) {
+            LOG(LL_INFO, "Processing command: " << command << " (in chat " << chatId << ")");
+            // telegram global message - should introduce the bot
+            if (command.startsWith("/start")) {
+                // TODO
+            // telegram global message - should print help
+            } else if (command.startsWith("/help")) {
+                // TODO
+            // rckid command - join new chat, which creates the chat structure and allows messages in that chat to be processed
+            } else if (command.startsWith("/join ")) {
+                String chatName = command.substr(6);
+                Chat * chat = new Chat{chatId, chatName};
+                chats_.push_back(chat);
+                chatMap_.insert(std::make_pair(chat->id, chat));
+                sendMessage(chatId, STR("RCKID: Chat '" << chatName << "' enabled."));
+            } else {
+                LOG(LL_ERROR, "Unknown command: " << command);
+                sendMessage(chatId, STR("RCKID: Unknown command: " << command << ", use /help for list of available commands."));
+            }
+        }
+
+        void sendMessage(uint64_t chatId, String const & text) {
+            wifi_->https_get(
+                "api.telegram.org", 
+                STR("/bot" << botId_ << ':' << botToken_ << "/sendMessage?chat_id=" << chatId << "&text=" << urlEncode(text.c_str())),
+                [this](uint32_t status, uint32_t size, uint8_t const * data) {
+                    if (status == 200)
+                        LOG(LL_INFO, "Message sent successfully");
+                }
+            );
+        }
+
+        /** Loads the messenger settings. 
+         */
         void loadSettings() {
             ini::Reader ini{fs::fileRead(fs::join(homeFolder(), "settings.ini"))};
             if (! ini.eof()) {
@@ -136,17 +197,32 @@ namespace rckid {
                     }
                 }
             }
-
         }
 
-
-
+        /** Loads the chats. 
+         */
+        void loadChats() {
+            ini::Reader ini{fs::fileRead(fs::join(homeFolder(), "settings.ini"))};
+            if (! ini.eof()) {
+                while (auto section = ini.nextSection()) {
+                    if (section.value() == "chat") {
+                        Chat * chat = new Chat{ini};
+                        chats_.push_back(chat);
+                        chatMap_.insert(std::make_pair(chat->id, chat));
+                    }
+                }
+            }
+        }
+        
         WiFi * wifi_;
         String botToken_;
         uint64_t botId_;
         uint64_t lastOffset_ = 0;
         uint64_t parentId_;
         uint64_t nextUpdateTime_ = 0;
+
+        std::vector<Chat *> chats_;
+        std::unordered_map<uint64_t, Chat *> chatMap_;
     }; // rckid::Messages
 
 } // namespace rckid
