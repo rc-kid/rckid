@@ -89,6 +89,8 @@ Must-have before wider release
 
 - [ ] AVR bootloader so that AVR firmware can be updated too
 - [ ] telegram messenger
+-   [ ] notification
+-   [ ] run in background
 - [ ] webpage, releases, updates, etc.
 
 # TODO

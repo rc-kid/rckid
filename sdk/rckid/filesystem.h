@@ -163,7 +163,6 @@ namespace rckid::fs {
         FileWrite(FileWrite && from) noexcept:
             drive_{from.drive_} {
 #if RCKID_ENABLE_HOST_FILESYSTEM
-            delete host_;
             host_ = from.host_;
             from.host_ = nullptr;
 #else

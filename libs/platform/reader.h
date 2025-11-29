@@ -3,6 +3,9 @@
 #include <cstdint>
 #include <functional>
 
+
+// TODO verify how this works and if it works at all and then change the APIs accordingly to mirrow the writer that changed a lot
+
 class Reader {
 public:
     Reader(std::function<uint8_t()> getByte): getByte_{getByte} {}
@@ -44,4 +47,3 @@ inline std::string Reader::deserialize<std::string>() {
     readBuffer(reinterpret_cast<uint8_t*>(result.data()), len);
     return result;
 }
-

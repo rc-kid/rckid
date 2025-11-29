@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../app.h"
+#include "../task.h"
 #include "../ui/form.h"
 #include "../ui/label.h"
 #include "../ui/image.h"
@@ -17,212 +18,438 @@ namespace rckid {
     class Messages : public ui::Form<void> {
     public:
 
-        String name() const override { return "Messages"; }
+        class Task;
+        class Conversation;
 
-        Messages():
-            ui::Form<void>{} {
-            wifi_ = WiFi::getOrCreateInstance();
-            wifi_->enable();
-            wifi_->connect();
+        /** Single chat room.  
 
-            loadSettings();
-        }
+            Each chat corresponds to a telegram chat, or group chat. Chats cannot be created by the user directly, but only joined via bot commands from the specified parent.
 
-        ~Messages() override {
-            for (auto chat : chats_)
-                delete chat;
-            wifi_->enable(false);
-        }
-
-    protected:
-    
-        void update() override {
-            ui::Form<void>::update();
-            if (wifi_->connected() && (uptimeUs64() >= nextUpdateTime_)) {
-                LOG(LL_INFO, "Checking for new updates...");
-                wifi_->https_get(
-                    "api.telegram.org", 
-                    STR("/bot" << botId_ << ':' << botToken_ << "/getUpdates?offset=" << lastOffset_),
-                    [this](uint32_t status, uint32_t size, uint8_t const * data) {
-                        if (status == 200)
-                            processUpdate(size, data);
-                    }
-                );
-                nextUpdateTime_ += 60 * 10000000; // check every minute
-            }
-            if (btnPressed(Btn::A)) {
-                wifi_->https_get(
-                    "api.telegram.org", 
-                    STR("/bot" << botId_ << ':' << botToken_ << "/sendMessage?chat_id=202159443&text=Hello+friend"),
-                    [this](uint32_t status, uint32_t size, uint8_t const * data) {
-                        if (status == 200)
-                            LOG(LL_INFO, "Message sent successfully");
-                    }
-
-                );
-            }
-        }
-
-    private:
-
-        /** Chat information. 
-         
-            The app keeps a list of chats in one ini file, where for each chat we remember the chat id, name and icon (name and icon are customizable). 
+            Each chat is stored as a single file where messages are stored as entries one by one. Each message entry ends with the total size of the entry, which allows for easy backwards reading. 
          */
         class Chat {
         public:
-            uint64_t id;
-            String name;
-            Icon image{assets::icons_64::chat};
 
-            Chat(uint64_t id, String const & name):
-                id{id}, name{name} {
+            class Entry {
+            public:
+                enum class Kind {
+                    Text,
+                };
+                Kind kind;
+                TinyDateTime time;
+                int64_t sender;
+                String payload;
+
+                static Entry Message(int64_t from, String text) {
+                    return Entry{Kind::Text, timeNow(), from, std::move(text)};
+                }
+
+                friend void serialize(WriteStream & stream, Entry const & entry) {
+                    serialize(stream, static_cast<uint32_t>(entry.kind));
+                    serialize(stream, entry.time);
+                    serialize(stream, entry.sender);
+                    uint32_t size;
+                    switch (entry.kind) {
+                        case Kind::Text:
+                            size = entry.payload.size();
+                            // the first size will be serialized as part of the payload string
+                            serialize(stream, entry.payload);
+                            break;
+                        default:
+                            UNREACHABLE;
+                    }
+                    serialize(stream, size + HEADER_SIZE + 4);
+                }
+            private:
+
+                static constexpr uint32_t HEADER_SIZE = sizeof(uint32_t) + sizeof(TinyDateTime) + sizeof(int64_t) + sizeof(uint32_t);
+
+                Entry(Kind kind, TinyDateTime time, int64_t sender, String payload):
+                    kind{kind}, time{time}, sender{sender}, payload{std::move(payload)} {
+                }
+            }; // Messages::Chat::Entry
+
+            /** Telegram id of the chat. 
+             */
+            int64_t id() const { return id_; }
+
+            /** Name of the chat, used by RCKid, changeable by the user. 
+             */
+            String const & name() const { return name_; }
+
+            /** Chat icon to be used in RCKid, changeable by the user. 
+             */
+            Icon const & image() const { return image_; }
+
+            /** True if there are unread messages in the chat. 
+             */
+            bool unread() const { return unread_; }
+
+        private:
+            friend class Task;
+            friend class Conversation;
+            
+            Chat(int64_t id, String const & name):
+                id_{id}, name_{name} {
             }
 
             Chat(ini::Reader & reader) {
                 while (std::optional<std::pair<String, String>> kv = reader.nextValue()) {
                     if (kv->first == "id") {
-                        id = std::atoll(kv->second);
+                        id_ = std::atoll(kv->second);
                     } else if (kv->first == "name") {
-                        name = kv->second;
+                        name_ = kv->second;
                     } else if (kv->first == "image") {
-                        image = kv->second;
+                        image_ = kv->second;
+                    } else if (kv->first == "unread") {
+                        unread_ = (kv->second == "true");
                     } else {
                         LOG(LL_ERROR, "Invalid chat field " << kv->first);
                     }
                 }
             }
 
-            void addMessage(uint64_t from, String const & text) {
-                LOG(LL_INFO, "New message from " << from << " in chat " << id << ": " << text);
-                // TODO store the message in the chat
+            void saveTo(ini::Writer & writer) const {
+                writer.writeSection("chat");
+                writer.writeValue("id", STR(id_));
+                writer.writeValue("name", name_);
+                if (image_.isFile())
+                    writer.writeValue("image", image_.filename());
+                if (unread_)
+                    writer.writeValue("unread", "true");
             }
+
+            void appendMessage(uint64_t from, String text) {
+                LOG(LL_INFO, "New message from " << from << " in chat " << id_ << ": " << text);
+                // open the conversation file for appending, create the message entry and then serialize
+                auto f = fs::fileAppend(conversationPath());
+                serialize(f, Entry::Message(from, std::move(text)));
+                f.close();
+                // now either mark as unread, or if the chat is opened, append the entry to the chat view as well
+                if (conversation_ != nullptr) {
+                    // TODO tell the opened conversation and decide if unread or not
+                } else {
+                    unread_ = true;
+                    // TODO do we want to save this somewhere?
+                }
+            }
+
+            String conversationPath() const {
+                return STR("/apps/Messages/chats/" << id_ << ".dat");
+            }
+
+            int64_t id_;
+            String name_;
+            Icon image_{assets::icons_64::chat};
+            bool unread_ = false;
+
+            Conversation * conversation_ = nullptr;
+
         }; // Messages::Chat
 
+        /** Single conversation.
+         
+            The conversation is a simple scrollable view of the conversation history that displays the messages and buttons for viewing the extra content (images, audio). 
+         
+         */
+        class Conversation : public ui::Form<void> {
+        public:
 
-        Chat * getKnownChat(uint64_t chatId) {
-            auto it = chatMap_.find(chatId);
-            if (it != chatMap_.end())
-                return it->second;
-            return nullptr;
-        }
+            /** Use umbrella names for all messages stuff.
+             */
+            String name() const override { return "Messages"; }
 
-        void processUpdate(uint32_t size, uint8_t const * data) {
-            auto s = MemoryReadStream{data, size};
-            json::Object res = json::parse(s);
-            //LOG(LL_INFO, "Update response: \n" << res);
-            if (res["ok"].asBoolean()) {
-                for (auto & item : res["result"]) {
-                    uint64_t updateId = item["update_id"].asInteger();
-                    if (item.has("message")) {
-                        auto & msg = item["message"];
-                        int64_t from = msg["from"]["id"].asInteger();
-                        int64_t chatId = msg["chat"]["id"].asInteger();
-                        String text = msg["text"].asString();
-                        Chat * chat = getKnownChat(chatId);
-                        if (text[0] == '/') {
-                            if (from != parentId_)
-                                LOG(LL_ERROR, "Ignoring command from unknown user " << from << ": " << text);
-                            else
-                                processCommand(std::move(text), chatId);
-                        } else if (chat == nullptr) {
-                            LOG(LL_ERROR, "Message from " << from << " in unknown chat " << chatId << ": " << text);
+            String title() const override { return chat_->name(); }
+
+            Conversation(Chat * chat):
+                ui::Form<void>{Rect::XYWH(0, 0, 320, 240), /* raw */ true},
+                chat_{chat},
+                view_{Rect::XYWH(0, 24, 320, 216)}
+            {
+                chat_->conversation_ = this;
+                // as we always display newest messages, mark the chat as read
+                chat_->unread_ = false;
+                g_.addChild(view_);
+                // TODO load the messages here
+            }
+
+            ~Conversation() override {
+                chat_->conversation_ = nullptr;
+            }
+        protected:
+
+            void update() override {
+                ui::Form<void>::update();
+                // quit the conversation view when B is pressed
+                if (btnPressed(Btn::B))
+                    exit();
+                // A sends new message
+                if (btnPressed(Btn::A)) {
+                    auto text = App::run<TextDialog>("Enter message");
+                    if (text.has_value()) {
+                        Messages::Task::getOrCreate()->sendMessage(
+                            chat_->id(),
+                            text.value()
+                        );
+                    }
+                }
+            }
+
+        private:
+            Chat * chat_;
+
+            ui::ScrollView view_;
+            std::vector<ui::Label> msgs_;
+        }; // Conversation
+
+        /** Task responsible for the message delivery and actions. 
+         */
+        class Task : public rckid::Task {
+        public:
+
+            static Task * getOrCreate() {
+                if (instance_ == nullptr)
+                    instance_ = new Task{};
+                return instance_;
+            }
+
+            ~Task() override {
+                wifi_->enable(false);
+                for (Chat * chat : chats_)
+                    delete chat;
+            }
+
+            Chat * getKnownChat(uint64_t chatId) {
+                auto it = chatMap_.find(chatId);
+                if (it != chatMap_.end())
+                    return it->second;
+                return nullptr;
+            }
+
+        protected:
+
+            void tick() override {
+                if (wifi_->connected() && (uptimeUs64() >= nextUpdateTime_)) {
+                    LOG(LL_INFO, "Checking for new updates...");
+                    wifi_->https_get(
+                        "api.telegram.org", 
+                        STR("/bot" << botId_ << ':' << botToken_ << "/getUpdates?offset=" << lastOffset_),
+                        [this](uint32_t status, uint32_t size, uint8_t const * data) {
+                            if (status == 200)
+                                processUpdate(size, data);
+                        }
+                    );
+                    nextUpdateTime_ += 60 * 10000000; // check every minute
+                }
+            }
+
+            void processUpdate(uint32_t size, uint8_t const * data) {
+                auto s = MemoryReadStream{data, size};
+                json::Object res = json::parse(s);
+                //LOG(LL_INFO, "Update response: \n" << res);
+                if (res["ok"].asBoolean()) {
+                    for (auto & item : res["result"]) {
+                        uint64_t updateId = item["update_id"].asInteger();
+                        if (item.has("message")) {
+                            auto & msg = item["message"];
+                            int64_t from = msg["from"]["id"].asInteger();
+                            int64_t chatId = msg["chat"]["id"].asInteger();
+                            String text = msg["text"].asString();
+                            Chat * chat = getKnownChat(chatId);
+                            if (text[0] == '/') {
+                                if (from != parentId_)
+                                    LOG(LL_ERROR, "Ignoring command from unknown user " << from << ": " << text);
+                                else
+                                    processCommand(std::move(text), chatId);
+                            } else if (chat == nullptr) {
+                                LOG(LL_ERROR, "Message from " << from << " in unknown chat " << chatId << ": " << text);
+                            } else {
+                                chat->appendMessage(from, text);
+                            }
+                        }
+                        // TODO do updateId + 1 as the next updte id
+                    }
+                }
+            }
+
+            void processCommand(String command, int64_t chatId) {
+                LOG(LL_INFO, "Processing command: " << command << " (in chat " << chatId << ")");
+                // telegram global message - should introduce the bot
+                if (command.startsWith("/start")) {
+                    // TODO
+                // telegram global message - should print help
+                } else if (command.startsWith("/help")) {
+                    // TODO
+                // rckid command - join new chat, which creates the chat structure and allows messages in that chat to be processed
+                } else if (command.startsWith("/join ")) {
+                    if (chatMap_.find(chatId) != chatMap_.end()) {
+                        LOG(LL_ERROR, "Chat " << chatId << " already joined");
+                        sendMessage(chatId, STR("RCKID: Chat already joined."));
+                        return;
+                    }
+                    String chatName = command.substr(6);
+                    Chat * chat = new Chat{chatId, chatName};
+                    chats_.push_back(chat);
+                    chatMap_.insert(std::make_pair(chat->id_, chat));
+                    saveChats();
+                    //c_.setItem(chats_.size() - 1, Direction::Up);
+                    sendMessage(chatId, STR("RCKID: Chat '" << chatName << "' enabled."));
+                } else {
+                    LOG(LL_ERROR, "Unknown command: " << command);
+                    sendMessage(chatId, STR("RCKID: Unknown command: " << command << ", use /help for list of available commands."));
+                }
+            }
+
+            void sendMessage(uint64_t chatId, String const & text) {
+                // TODO keep the message so that we can resend if there is network failure or something
+                wifi_->https_get(
+                    "api.telegram.org", 
+                    STR("/bot" << botId_ << ':' << botToken_ << "/sendMessage?chat_id=" << chatId << "&text=" << urlEncode(text.c_str())),
+                    [this](uint32_t status, uint32_t size, uint8_t const * data) {
+                        if (status == 200)
+                            LOG(LL_INFO, "Message sent successfully");
+                    }
+                );
+                Chat * chat = getKnownChat(chatId);
+                if (chat != nullptr)
+                    chat->appendMessage(botId_, text);
+            }
+
+            /** Home folder of the task is shared with the messages app.
+             */
+            String homeFolder() const { return "/apps/Messages"; }
+
+        private:
+
+            friend class Messages;
+
+            Task():
+                wifi_{WiFi::getOrCreateInstance()} 
+            {
+                fs::createFolders(fs::join(homeFolder(), "chats"));
+                wifi_->enable();
+                wifi_->connect();
+                loadSettings();
+                loadChats();
+            }
+
+            /** Loads the messenger settings. 
+             */
+            void loadSettings() {
+                ini::Reader ini{fs::fileRead(fs::join(homeFolder(), "settings.ini"))};
+                if (! ini.eof()) {
+                    while (auto section = ini.nextSection()) {
+                        if (section.value() == "myself") {
+                            while (auto kv = ini.nextValue()) {
+                                if (kv->first == "token") {
+                                    botToken_ = kv->second;
+                                } else if (kv->first == "id") {
+                                    botId_ = std::atoll(kv->second);
+                                } else {
+                                    LOG(LL_ERROR, "Unknown telegram setting: " << kv->first);
+                                }
+                            }
+                        } else if (section.value() == "parent") {
+                            while (auto kv = ini.nextValue()) {
+                                if (kv->first == "id") {
+                                    parentId_ = std::atoll(kv->second);
+                                } else {
+                                    LOG(LL_ERROR, "Unknown telegram setting: " << kv->first);
+                                }
+                            }
                         } else {
-                            chat->addMessage(from, text);
+                            LOG(LL_ERROR, "Invalid settings section: " << section.value());
                         }
                     }
-                    // TODO do updateId + 1 as the next updte id
                 }
             }
-        }
 
-        void processCommand(String command, uint64_t chatId) {
-            LOG(LL_INFO, "Processing command: " << command << " (in chat " << chatId << ")");
-            // telegram global message - should introduce the bot
-            if (command.startsWith("/start")) {
-                // TODO
-            // telegram global message - should print help
-            } else if (command.startsWith("/help")) {
-                // TODO
-            // rckid command - join new chat, which creates the chat structure and allows messages in that chat to be processed
-            } else if (command.startsWith("/join ")) {
-                String chatName = command.substr(6);
-                Chat * chat = new Chat{chatId, chatName};
-                chats_.push_back(chat);
-                chatMap_.insert(std::make_pair(chat->id, chat));
-                sendMessage(chatId, STR("RCKID: Chat '" << chatName << "' enabled."));
-            } else {
-                LOG(LL_ERROR, "Unknown command: " << command);
-                sendMessage(chatId, STR("RCKID: Unknown command: " << command << ", use /help for list of available commands."));
-            }
-        }
-
-        void sendMessage(uint64_t chatId, String const & text) {
-            wifi_->https_get(
-                "api.telegram.org", 
-                STR("/bot" << botId_ << ':' << botToken_ << "/sendMessage?chat_id=" << chatId << "&text=" << urlEncode(text.c_str())),
-                [this](uint32_t status, uint32_t size, uint8_t const * data) {
-                    if (status == 200)
-                        LOG(LL_INFO, "Message sent successfully");
-                }
-            );
-        }
-
-        /** Loads the messenger settings. 
-         */
-        void loadSettings() {
-            ini::Reader ini{fs::fileRead(fs::join(homeFolder(), "settings.ini"))};
-            if (! ini.eof()) {
-                while (auto section = ini.nextSection()) {
-                    if (section.value() == "myself") {
-                        while (auto kv = ini.nextValue()) {
-                            if (kv->first == "token") {
-                                botToken_ = kv->second;
-                            } else if (kv->first == "id") {
-                                botId_ = std::atoll(kv->second);
-                            } else {
-                                LOG(LL_ERROR, "Unknown telegram setting: " << kv->first);
-                            }
+            /** Loads the chats. 
+             */
+            void loadChats() {
+                ini::Reader ini{fs::fileRead(fs::join(homeFolder(), "chats.ini"))};
+                if (! ini.eof()) {
+                    while (auto section = ini.nextSection()) {
+                        if (section.has_value() && section.value() == "chat") {
+                            Chat * chat = new Chat{ini};
+                            chats_.push_back(chat);
+                            chatMap_.insert(std::make_pair(chat->id_, chat));
                         }
-                    } else if (section.value() == "parent") {
-                        while (auto kv = ini.nextValue()) {
-                            if (kv->first == "id") {
-                                parentId_ = std::atoll(kv->second);
-                            } else {
-                                LOG(LL_ERROR, "Unknown telegram setting: " << kv->first);
-                            }
-                        }
-                    } else {
-                        LOG(LL_ERROR, "Invalid settings section: " << section.value());
                     }
                 }
             }
-        }
 
-        /** Loads the chats. 
-         */
-        void loadChats() {
-            ini::Reader ini{fs::fileRead(fs::join(homeFolder(), "settings.ini"))};
-            if (! ini.eof()) {
-                while (auto section = ini.nextSection()) {
-                    if (section.value() == "chat") {
-                        Chat * chat = new Chat{ini};
-                        chats_.push_back(chat);
-                        chatMap_.insert(std::make_pair(chat->id, chat));
-                    }
+            void saveChats() {
+                fs::createFolders(homeFolder());
+                ini::Writer writer{fs::fileWrite(fs::join(homeFolder(), "chats.ini"))};
+                for (auto chat : chats_)
+                    chat->saveTo(writer);
+            }
+            
+
+            WiFi * wifi_;
+            int64_t botId_;
+            String botToken_;
+            int64_t parentId_;
+
+            int64_t lastOffset_ = 0;
+            uint64_t nextUpdateTime_ = 0;
+
+            std::vector<Chat *> chats_;
+            std::unordered_map<uint64_t, Chat *> chatMap_;
+
+            static inline Task * instance_ = nullptr;
+
+        }; // Messages::Task
+
+        String name() const override { return "Messages"; }
+
+        Messages():
+            ui::Form<void>{},
+            t_{Task::getOrCreate()},
+            c_{
+                [this](){ return t_->chats_.size(); },
+                [this](uint32_t index, Direction direction) {
+                    Chat * c = t_->chats_[index];
+                    c_.set(c->name(), c->image(), direction);
                 }
             }
+        {
+
+            g_.addChild(c_);
+            c_.setRect(Rect::XYWH(0, 160, 320, 80));
+            c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
+            c_.focus();
+            if (t_->chats_.size() > 0)
+                c_.setItem(0, Direction::Up);
+            else
+                c_.showEmpty(Direction::Up);
         }
+
+        ~Messages() override {
+        }
+
+    protected:
+    
+        void update() override {
+            ui::Form<void>::update();
+            if ((btnPressed(Btn::A) || btnPressed(Btn::Up)) && t_->chats_.size() > 0) {
+                uint32_t index = c_.currentIndex();
+                if (index < t_->chats_.size()) {
+                    Chat * chat = t_->chats_[index];
+                    App::run<Conversation>(chat);
+                }
+            }
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down))
+                exit();
+        }
+
+    private:
         
-        WiFi * wifi_;
-        String botToken_;
-        uint64_t botId_;
-        uint64_t lastOffset_ = 0;
-        uint64_t parentId_;
-        uint64_t nextUpdateTime_ = 0;
+        Task * t_;
 
-        std::vector<Chat *> chats_;
-        std::unordered_map<uint64_t, Chat *> chatMap_;
+        ui::EventBasedCarousel c_;
+
     }; // rckid::Messages
 
 } // namespace rckid

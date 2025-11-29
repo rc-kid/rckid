@@ -26,6 +26,7 @@ namespace rckid::ini {
                     line_ = "";
                     return result;
                 }
+                line_ = "";
             }
             return std::nullopt;
         }
