@@ -21,12 +21,11 @@ namespace rckid {
         String name() const override { return "AudioPlayer"; }
 
         MusicPlayer() : 
-            ui::Form<void>{}, 
-            c_{this}
+            ui::Form<void>{}
         {
-            g_.addChild(c_);
-            c_.setRect(Rect::XYWH(0, 160, 320, 80));
-            c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
+            c_ = g_.addChild(new FileBrowser{this});
+            c_->setRect(Rect::XYWH(0, 160, 320, 80));
+            c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
         }
 
     protected:
@@ -39,15 +38,15 @@ namespace rckid {
         public:
             FolderPlaylist(MusicPlayer & player): player_{player} {}
 
-            AudioStream * current() override { return AudioStream::fromFile(player_.c_.currentPath()); }
+            AudioStream * current() override { return AudioStream::fromFile(player_.c_->currentPath()); }
 
             bool next(bool shuffle = false) override {
                 while (true) {
                     uint32_t next = shuffle ? 
-                        (rand() % player_.c_.size()) : 
-                        player_.c_.getIndexRight();
-                    player_.c_.setItem(next, Direction::None);
-                    if (fs::isFile(player_.c_.currentPath()))
+                        (rand() % player_.c_->size()) : 
+                        player_.c_->getIndexRight();
+                    player_.c_->setItem(next, Direction::None);
+                    if (fs::isFile(player_.c_->currentPath()))
                         return true;
                 }
             }
@@ -55,10 +54,10 @@ namespace rckid {
             bool prev(bool shuffle = false) override {
                 while (true) {
                     uint32_t next = shuffle ? 
-                        (rand() % player_.c_.size()) : 
-                        player_.c_.getIndexLeft();
-                    player_.c_.setItem(next, Direction::None);
-                    if (fs::isFile(player_.c_.currentPath()))
+                        (rand() % player_.c_->size()) : 
+                        player_.c_->getIndexLeft();
+                    player_.c_->setItem(next, Direction::None);
+                    if (fs::isFile(player_.c_->currentPath()))
                         return true;
                 }
             }
@@ -110,10 +109,10 @@ namespace rckid {
 
         void focus() override {
             ui::Form<void>::focus();
-            c_.focus();
+            c_->focus();
         }
 
-        FileBrowser c_;
+        FileBrowser * c_;
         AudioPlayerMode mode_ = AudioPlayerMode::Normal;
 
     }; // rckid::MusicPlayer

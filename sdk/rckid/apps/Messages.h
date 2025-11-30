@@ -279,22 +279,20 @@ namespace rckid {
                 Message(Chat::Entry && entry, Contact const * sender):
                     ui::Widget{Rect::WH(320, 40)},
                     entry_{std::move(entry)},
-                    sender_{sender},
-                    who_{Rect::XYWH(4, 4, 312, 16), sender_ != nullptr ? sender_->name : "Me"},
-                    what_{Rect::XYWH(4, 16, 312, 24), entry_.payload}
+                    sender_{sender}
                 {
-                    addChild(who_);
-                    addChild(what_);
-                    who_.setFont(Font::fromROM<assets::Iosevka16>());
-                    what_.setFont(Font::fromROM<assets::Iosevka24>());
+                    who_ = addChild(new ui::Label{Rect::XYWH(4, 4, 312, 16), sender_ != nullptr ? sender_->name : "Me"});
+                    what_ = addChild(new ui::Label{Rect::XYWH(4, 16, 312, 24), entry_.payload});
+                    who_->setFont(Font::fromROM<assets::Iosevka16>());
+                    what_->setFont(Font::fromROM<assets::Iosevka24>());
                     if (sender_ != nullptr) {
-                        who_.setColor(sender_->color);
-                        what_.setColor(sender_->color);
-                        who_.setHAlign(HAlign::Left);
-                        what_.setHAlign(HAlign::Left);
+                        who_->setColor(sender_->color);
+                        what_->setColor(sender_->color);
+                        who_->setHAlign(HAlign::Left);
+                        what_->setHAlign(HAlign::Left);
                     } else {
-                        who_.setHAlign(HAlign::Right);
-                        what_.setHAlign(HAlign::Right);
+                        who_->setHAlign(HAlign::Right);
+                        what_->setHAlign(HAlign::Right);
                     }
                 }
 
@@ -304,8 +302,8 @@ namespace rckid {
                 Chat::Entry entry_;
                 // who sent the message, nullptr if own msg
                 Contact const * sender_;
-                ui::Label who_;
-                ui::Label what_;
+                ui::Label * who_;
+                ui::Label * what_;
             }; // Conversation::Message
 
             /** Use umbrella names for all messages stuff.
@@ -316,13 +314,12 @@ namespace rckid {
 
             Conversation(Chat * chat):
                 ui::Form<void>{Rect::XYWH(0, 0, 320, 240), /* raw */ true},
-                chat_{chat},
-                view_{Rect::XYWH(0, 24, 320, 216)}
+                chat_{chat}
             {
                 chat_->conversation_ = this;
                 // as we always display newest messages, mark the chat as read
                 chat_->unread_ = false;
-                g_.addChild(view_);
+                view_ = g_.addChild(new ui::ScrollView{Rect::XYWH(0, 24, 320, 216)});
                 // load contacts as we will need them
                 Contact::forEach([this](Contact c){
                     if (c.telegramId != 0)
@@ -365,7 +362,7 @@ namespace rckid {
                     msg->setY(offset);
                     offset += msg->height();
                     messages_.push_back(msg);
-                    view_.addChild(msg);
+                    view_->addChild(msg);
                 });
             }
 
@@ -383,7 +380,7 @@ namespace rckid {
         private:
             Chat * chat_;
 
-            ui::ScrollView view_;
+            ui::ScrollView * view_;
             std::vector<Message *> messages_;
             std::unordered_map<int64_t, Contact> contacts_;
             Contact unknown_{"Unknown"};
@@ -480,7 +477,7 @@ namespace rckid {
                     chats_.push_back(chat);
                     chatMap_.insert(std::make_pair(chat->id_, chat));
                     saveChats();
-                    //c_.setItem(chats_.size() - 1, Direction::Up);
+                    //c_->setItem(chats_.size() - 1, Direction::Up);
                     sendMessage(chatId, STR("RCKID: Chat '" << chatName << "' enabled."), false);
                 } else {
                     LOG(LL_ERROR, "Unknown command: " << command);
@@ -596,24 +593,23 @@ namespace rckid {
 
         Messages():
             ui::Form<void>{},
-            t_{Task::getOrCreate()},
-            c_{
+            t_{Task::getOrCreate()}
+        {
+
+            c_ = g_.addChild(new ui::EventBasedCarousel{
                 [this](){ return t_->chats_.size(); },
                 [this](uint32_t index, Direction direction) {
                     Chat * c = t_->chats_[index];
-                    c_.set(c->name(), c->image(), direction);
+                    c_->set(c->name(), c->image(), direction);
                 }
-            }
-        {
-
-            g_.addChild(c_);
-            c_.setRect(Rect::XYWH(0, 160, 320, 80));
-            c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
-            c_.focus();
+            });
+            c_->setRect(Rect::XYWH(0, 160, 320, 80));
+            c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
+            c_->focus();
             if (t_->chats_.size() > 0)
-                c_.setItem(0, Direction::Up);
+                c_->setItem(0, Direction::Up);
             else
-                c_.showEmpty(Direction::Up);
+                c_->showEmpty(Direction::Up);
         }
 
         ~Messages() override {
@@ -624,7 +620,7 @@ namespace rckid {
         void update() override {
             ui::Form<void>::update();
             if ((btnPressed(Btn::A) || btnPressed(Btn::Up)) && t_->chats_.size() > 0) {
-                uint32_t index = c_.currentIndex();
+                uint32_t index = c_->currentIndex();
                 if (index < t_->chats_.size()) {
                     Chat * chat = t_->chats_[index];
                     App::run<Conversation>(chat);
@@ -638,7 +634,7 @@ namespace rckid {
         
         Task * t_;
 
-        ui::EventBasedCarousel c_;
+        ui::EventBasedCarousel * c_;
 
     }; // rckid::Messages
 

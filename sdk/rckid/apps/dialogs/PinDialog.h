@@ -21,27 +21,24 @@ namespace rckid {
 
         PinDialog(char const * placeholder = "Enter PIN"):
             ui::Form<uint16_t>{Rect::XYWH(0, 144, 320, 96), /* raw */ true},
-            placeholder_{placeholder},
-            icon_{Rect::WH(110, 96), Icon{assets::icons_64::lock}},
-            tileMap_{15, 4, assets::System24, palette_},
-            selRect_{Rect::WH(24, 24)}
+            placeholder_{placeholder}
         {
             using namespace ui;
             g_.setBg(ColorRGB::White().withAlpha(32));
-            g_.addChild(icon_);
-            g_.addChild(tileMap_);
-            g_.addChild(selRect_);
-            tileMap_.setPos(110, 0);
-            selRect_.setPos(118, 48);
+            icon_ = g_.addChild(new ui::Image{Rect::WH(110, 96), Icon{assets::icons_64::lock}});
+            tileMap_ = g_.addChild(new ui::Tilemap<Tile<12,24,Color16>>{15, 4, assets::System24, palette_});
+            selRect_ = g_.addChild(new ui::Rectangle{Rect::WH(24, 24)});
+            tileMap_->setPos(110, 0);
+            selRect_->setPos(118, 48);
             drawKeyboard();
-            tileMap_.text(0, 0) << placeholder_;
+            tileMap_->text(0, 0) << placeholder_;
         }
 
     protected:
 
         void drawKeyboard() {
-            tileMap_.text(0, 2) << " 1 2 3 4 5 * < ";
-            tileMap_.text(0, 3) << " 6 7 8 9 0 # x ";
+            tileMap_->text(0, 2) << " 1 2 3 4 5 * < ";
+            tileMap_->text(0, 3) << " 6 7 8 9 0 # x ";
         }
 
         void wrapSelectPosition() {
@@ -53,7 +50,7 @@ namespace rckid {
                 select_.y = 1;
             if (select_.y > 1)
                 select_.y = 0;
-            last_ = selRect_.pos();
+            last_ = selRect_->pos();
             a_.start();
         }
 
@@ -72,12 +69,12 @@ namespace rckid {
                         break;
                     case 6: // backspace
                         if (length_ > 0) {
-                            tileMap_.text(length_--, 0) << ' ';
+                            tileMap_->text(length_--, 0) << ' ';
                             pin_ >>= 4;
                             pin_ |= 0xf000;
                             if (length_ == 0) {
-                                tileMap_.text(0, 0) << "               ";
-                                tileMap_.text(0, 0) << placeholder_;
+                                tileMap_->text(0, 0) << "               ";
+                                tileMap_->text(0, 0) << placeholder_;
                             }
                         }
                         break;
@@ -109,8 +106,8 @@ namespace rckid {
 
         void insert(uint8_t what) {
             if (length_ == 0)
-                tileMap_.text(0, 0) << "               ";
-            tileMap_.text(++length_, 0) << '-';
+                tileMap_->text(0, 0) << "               ";
+            tileMap_->text(++length_, 0) << '-';
             pin_ <<= 4;
             pin_ |= what & 0x0f;
             if (length_ == 4)
@@ -128,7 +125,7 @@ namespace rckid {
                 x = interpolation::cosine(a_, last_.x, x).round();
                 y = interpolation::cosine(a_, last_.y, y).round();
             }
-            selRect_.setPos(x, y);
+            selRect_->setPos(x, y);
 
             if (! a_.running()) {
                 if (btnDown(Btn::Right)) {
@@ -159,9 +156,9 @@ namespace rckid {
         uint32_t length_ = 0;
         String placeholder_;
 
-        ui::Image icon_;
-        ui::Tilemap<Tile<12,24,Color16>> tileMap_; 
-        ui::Rectangle selRect_;
+        ui::Image * icon_;
+        ui::Tilemap<Tile<12,24,Color16>> * tileMap_; 
+        ui::Rectangle * selRect_;
 
         Point select_{0, 0}; 
         Point last_;

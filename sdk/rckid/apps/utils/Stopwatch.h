@@ -13,15 +13,13 @@ namespace rckid {
 
         String name() const override { return "Stopwatch"; }
 
-        Stopwatch(): 
-            ui::Form<void>{},
-            time_{Rect::XYWH(0, 50, 320, 130), ""},
-            msTime_{Rect::XYWH(0, 180, 320, 40), ""}
-         {
-            g_.addChild(time_);
-            time_.setFont(Font::fromROM<assets::OpenDyslexic128>());
-            g_.addChild(msTime_);
-            msTime_.setFont(Font::fromROM<assets::OpenDyslexic64>());
+          Stopwatch(): 
+                ui::Form<void>{}
+            {
+                time_ = g_.addChild(new ui::Label{Rect::XYWH(0, 50, 320, 130), ""});
+                time_->setFont(Font::fromROM<assets::OpenDyslexic128>());
+                msTime_ = g_.addChild(new ui::Label{Rect::XYWH(0, 180, 320, 40), ""});
+                msTime_->setFont(Font::fromROM<assets::OpenDyslexic64>());
         }
 
         void update() override {
@@ -64,8 +62,8 @@ namespace rckid {
         }
 
         void draw() override {
-            time_.setText(STR(h_ << ":" << fillLeft(m_, 2, '0') << ":" << fillLeft(s_, 2, '0')));
-            msTime_.setText(STR("." << fillLeft(ms_, 3, '0')));
+            time_->setText(STR(h_ << ":" << fillLeft(m_, 2, '0') << ":" << fillLeft(s_, 2, '0')));
+            msTime_->setText(STR("." << fillLeft(ms_, 3, '0')));
             ui::Form<void>::draw();
         }
 
@@ -75,8 +73,8 @@ namespace rckid {
         uint32_t m_ = 0;
         uint32_t h_ = 0;
 
-        ui::Label time_;
-        ui::Label msTime_;
+        ui::Label * time_;
+        ui::Label * msTime_;
 
         bool running_ = false;
         uint32_t lastTime_ = 0;

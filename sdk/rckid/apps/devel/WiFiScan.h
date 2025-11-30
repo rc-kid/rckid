@@ -18,11 +18,10 @@ namespace rckid {
         String name() const override { return "WiFiScan"; }
 
         WiFiScan():
-            ui::Form<void>{},
-            text_{40,15, assets::System16, palette_} {
-            g_.addChild(text_);
-            text_.setPos(0, 16);
-            text_.text(0, 0) << "WiFi Scan";
+            ui::Form<void>{} {
+            text_ = g_.addChild(new ui::Tilemap<Tile<8, 16, Color16>>{40,15, assets::System16, palette_});
+            text_->setPos(0, 16);
+            text_->text(0, 0) << "WiFi Scan";
             wifi_ = WiFi::getOrCreateInstance();
             if (wifi_ != nullptr) {
                 wifi_->enable();
@@ -30,7 +29,8 @@ namespace rckid {
         } 
 
         ~WiFiScan() override {
-            wifi_->enable(false);
+            if (wifi_ != nullptr)
+                wifi_->enable(false);
         }
 
         void update() override {
@@ -62,14 +62,14 @@ namespace rckid {
     private:
 
         void println(String const & str) {
-            text_.text(0, line_) << str;
+            text_->text(0, line_) << str;
             line_++;
             if (line_ >= 14) {
                 line_ = 0;
             }
         }
 
-        ui::Tilemap<Tile<8, 16, Color16>> text_;
+        ui::Tilemap<Tile<8, 16, Color16>> * text_;
         Coord line_ = 0;
 
         WiFi * wifi_;

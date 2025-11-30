@@ -24,28 +24,23 @@ namespace rckid {
         String name() const override { return "Radio"; }
 
         FMRadio() :
-            ui::Form<void>{},
-            freq_{Rect::XYWH(0, 20, 320, 128), "---"},
-            stationName_{Rect::XYWH(0, 130, 320, 32), "Initializing..."},
-            radioText1_{Rect::XYWH(0, 160, 320, 32), ""},
-            radioText2_{Rect::XYWH(0, 190, 320, 32), ""},
-            signal_{Rect::XYWH(0, 25, 320, 20), "-- -- -- ----"}
+            ui::Form<void>{}
         {
-            freq_.setFont(Font::fromROM<assets::OpenDyslexic128>());
-            freq_.setHAlign(HAlign::Center);
-            freq_.setVAlign(VAlign::Center);
-            stationName_.setFont(Font::fromROM<assets::OpenDyslexic32>());
-            radioText1_.setFont(Font::fromROM<assets::OpenDyslexic32>());
-            radioText2_.setFont(Font::fromROM<assets::OpenDyslexic32>());
-            stationName_.setColor(ui::Style::accentFg());
-            radioText1_.setColor(ui::Style::accentFg());
-            radioText2_.setColor(ui::Style::accentFg());
-            signal_.setColor(ui::Style::accentFg());
-            g_.addChild(freq_);
-            g_.addChild(stationName_);
-            g_.addChild(radioText1_);
-            g_.addChild(radioText2_);
-            g_.addChild(signal_);
+            freq_ = g_.addChild(new ui::Label{Rect::XYWH(0, 20, 320, 128), "---"});
+            stationName_ = g_.addChild(new ui::Label{Rect::XYWH(0, 130, 320, 32), "Initializing..."});
+            radioText1_ = g_.addChild(new ui::Label{Rect::XYWH(0, 160, 320, 32), ""});
+            radioText2_ = g_.addChild(new ui::Label{Rect::XYWH(0, 190, 320, 32), ""});
+            signal_ = g_.addChild(new ui::Label{Rect::XYWH(0, 25, 320, 20), "-- -- -- ----"});
+            freq_->setFont(Font::fromROM<assets::OpenDyslexic128>());
+            freq_->setHAlign(HAlign::Center);
+            freq_->setVAlign(VAlign::Center);
+            stationName_->setFont(Font::fromROM<assets::OpenDyslexic32>());
+            radioText1_->setFont(Font::fromROM<assets::OpenDyslexic32>());
+            radioText2_->setFont(Font::fromROM<assets::OpenDyslexic32>());
+            stationName_->setColor(ui::Style::accentFg());
+            radioText1_->setColor(ui::Style::accentFg());
+            radioText2_->setColor(ui::Style::accentFg());
+            signal_->setColor(ui::Style::accentFg());
             radio_ = Radio::instance();
             if (radio_ != nullptr) {
                 // enable the embedded antenna if we do not have headphones attached
@@ -219,58 +214,57 @@ namespace rckid {
 
             PresetMenu(FMRadio * radio):
                 ui::Form<Preset>{Rect::XYWH(0, 144, 320, 96), /* raw */ true},
-                radio_{radio},
-                c_{
+                radio_{radio}
+            { 
+                c_ = g_.addChild(new ui::EventBasedCarousel{
                     [this]() {
                         return radio_->presets_.size();
                     },
                     [this](uint32_t index, Direction direction) {
                         Preset & p = radio_->presets_[index];
-                        c_.set(p.name, Icon{assets::icons_64::music_wave}, direction);
+                        c_->set(p.name, Icon{assets::icons_64::music_wave}, direction);
                     }
-                }
-            { 
+                });
                 contextMenu_.add(ui::ActionMenu::Item("Add preset", [this](){
                     auto name = App::run<TextDialog>("Preset name", radio_->radio_->stationName());
                     if (name.has_value()) {
                         radio_->presets_.push_back(Preset{name.value(), radio_->radio_->frequency()});
                         if (radio_->presets_.size() == 1)
-                            c_.setItem(0, Direction::Up);
+                            c_->setItem(0, Direction::Up);
                     }
                 }));
 
                 contextMenu_.add(ui::ActionMenu::Item("Rename", [this]() {
                     if (radio_->presets_.size() == 0)
                         return;
-                    auto name = App::run<TextDialog>("Preset name", radio_->presets_[c_.currentIndex()].name);
+                    auto name = App::run<TextDialog>("Preset name", radio_->presets_[c_->currentIndex()].name);
                     if (name.has_value()) {
-                        radio_->presets_[c_.currentIndex()].name = name.value();
-                        c_.setItem(c_.currentIndex(), Direction::Up);
+                        radio_->presets_[c_->currentIndex()].name = name.value();
+                        c_->setItem(c_->currentIndex(), Direction::Up);
                     }
                 }));
                 contextMenu_.add(ui::ActionMenu::Item("Delete", [this]() {
                     if (radio_->presets_.size() == 0)
                         return;
-                    radio_->presets_.erase(radio_->presets_.begin() + c_.currentIndex());
+                    radio_->presets_.erase(radio_->presets_.begin() + c_->currentIndex());
                     if (radio_->presets_.size() == 0)
-                        c_.showEmpty(Direction::Up);
+                        c_->showEmpty(Direction::Up);
                     else
-                        c_.setItem(0, Direction::Up);
+                        c_->setItem(0, Direction::Up);
                 }));
-                g_.addChild(c_);
-                c_.setRect(Rect::XYWH(0, 0, 320, 96));
-                c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
+                c_->setRect(Rect::XYWH(0, 0, 320, 96));
+                c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
                 if (radio_->presets_.size() > 0)
-                    c_.setItem(0, Direction::Up);
+                    c_->setItem(0, Direction::Up);
                 else
-                    c_.showEmpty(Direction::Up);
+                    c_->showEmpty(Direction::Up);
             }
 
         protected:
 
             void focus() override {
                 ui::Form<Preset>::focus();
-                c_.focus();
+                c_->focus();
             }
 
             void update() override {
@@ -281,7 +275,7 @@ namespace rckid {
                 if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                     btnClear(Btn::A);
                     btnClear(Btn::Up);
-                    Preset & p = radio_->presets_[c_.currentIndex()];
+                    Preset & p = radio_->presets_[c_->currentIndex()];
                     exit(p);
                 }
                 if (btnPressed(Btn::Select)) {
@@ -294,7 +288,7 @@ namespace rckid {
         private:
 
             FMRadio * radio_;
-            ui::EventBasedCarousel c_;
+            ui::EventBasedCarousel * c_;
             ui::ActionMenu contextMenu_;
         }; 
 
@@ -302,11 +296,11 @@ namespace rckid {
 
         Radio * radio_;
         bool refresh_ = false;
-        ui::Label freq_;
-        ui::Label stationName_;
-        ui::Label radioText1_;
-        ui::Label radioText2_;
-        ui::Label signal_;
+        ui::Label * freq_;
+        ui::Label * stationName_;
+        ui::Label * radioText1_;
+        ui::Label * radioText2_;
+        ui::Label * signal_;
 
         std::vector<Preset> presets_;
 
@@ -341,11 +335,11 @@ namespace rckid {
             ++irqs_;
             uint32_t freqMhz = radio_->frequency() / 100;
             uint32_t freqFrac = radio_->frequency() % 100;
-            freq_.setText(STR(freqMhz << '.' << freqFrac));
-            stationName_.setText(radio_->stationName());
-            radioText1_.setText(radio_->radioText1());
-            radioText2_.setText(radio_->radioText2());
-            signal_.setText((STR(snrToQuality() << "   " << stereoToStr())));
+            freq_->setText(STR(freqMhz << '.' << freqFrac));
+            stationName_->setText(radio_->stationName());
+            radioText1_->setText(radio_->radioText1());
+            radioText2_->setText(radio_->radioText2());
+            signal_->setText((STR(snrToQuality() << "   " << stereoToStr())));
         }
 
         void saveSettings() {

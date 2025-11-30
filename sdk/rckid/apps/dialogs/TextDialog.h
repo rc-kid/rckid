@@ -33,20 +33,17 @@ namespace rckid {
             title_{std::move(title)},
             text_{std::move(value)},
             cursor_{static_cast<Coord>(text_.size())},
-            left_{(cursor_ >= 24) ? (cursor_ - 24) : 0},
-            tileMap_{26, 4, assets::System24, palette_},
-            selRect_{Rect::WH(24, 24)},
-            cursorLine_{Rect::WH(24, 24)}
+            left_{(cursor_ >= 24) ? (cursor_ - 24) : 0}
         {
             using namespace ui;
             g_.setBg(ColorRGB::White().withAlpha(32));
-            g_.addChild(tileMap_);
-            g_.addChild(selRect_);
-            g_.addChild(cursorLine_);
-            tileMap_.setPos(4, 0);
+            tileMap_ = g_.addChild(new ui::Tilemap<Tile<12,24,Color16>>{26, 4, assets::System24, palette_});
+            selRect_ = g_.addChild(new ui::Rectangle{Rect::WH(24, 24)});
+            cursorLine_ = g_.addChild(new ui::VLine{Rect::WH(24, 24)});
+            tileMap_->setPos(4, 0);
             drawKeyboard();
             drawText();
-            cursorLine_.setX(16 + (cursor_ - left_) * 12);
+            cursorLine_->setX(16 + (cursor_ - left_) * 12);
             blink_.startContinuous();
         }
 
@@ -73,7 +70,7 @@ namespace rckid {
                 x = interpolation::cosine(a_, last_.x, x).round();
                 y = interpolation::cosine(a_, last_.y, y).round();
             }
-            selRect_.setPos(x, y);
+            selRect_->setPos(x, y);
 
             // check any keyboard actions
             ui::Form<String>::update();
@@ -106,8 +103,8 @@ namespace rckid {
         void draw() override {
             // blink the cursor
             blink_.update();
-            selRect_.setColor(ui::Style::accentFg().withAlpha(interpolation::cosineLoop(blink_, 0, 255).round()));
-            cursorLine_.setColor(ui::Style::accentFg().withAlpha(interpolation::cosineLoop(blink_, 0, 255).round()));
+            selRect_->setColor(ui::Style::accentFg().withAlpha(interpolation::cosineLoop(blink_, 0, 255).round()));
+            cursorLine_->setColor(ui::Style::accentFg().withAlpha(interpolation::cosineLoop(blink_, 0, 255).round()));
             ui::Form<String>::draw();
         }
 
@@ -127,7 +124,7 @@ namespace rckid {
             if (cursor_ < left_)
                 --left_;
             drawText();
-            cursorLine_.setX(16 + (cursor_ - left_) * 12);
+            cursorLine_->setX(16 + (cursor_ - left_) * 12);
         }
 
         void cursorRight() {
@@ -137,7 +134,7 @@ namespace rckid {
             if (cursor_ - left_ > 24)
                 ++left_;
             drawText();
-            cursorLine_.setX(16 + (cursor_ - left_) * 12);
+            cursorLine_->setX(16 + (cursor_ - left_) * 12);
         }
 
         void keyPress() {
@@ -181,42 +178,42 @@ namespace rckid {
             } else if (select_ == KEY_RIGHT) {
                 cursorRight();
             } else {
-                insertChar(tileMap_.at(select_.x, select_.y + 1).c);
+                insertChar(tileMap_->at(select_.x, select_.y + 1).c);
             }
         }
 
         void drawKeyboard() {
             switch (keyboardType_) {
                 case KeyboardType::UpperCase:
-                    tileMap_.text(0, 1) << "  \x19 Q W E R T Y U I O P \x1e ";
-                    tileMap_.text(0, 2) << " \x1d \x1a A S D F G H J K L \x18  ";
-                    tileMap_.text(0, 3) << "  < > Z X C V B N M _ . , ";
+                    tileMap_->text(0, 1) << "  \x19 Q W E R T Y U I O P \x1e ";
+                    tileMap_->text(0, 2) << " \x1d \x1a A S D F G H J K L \x18  ";
+                    tileMap_->text(0, 3) << "  < > Z X C V B N M _ . , ";
                     break;
                 case KeyboardType::FirstUpper:
-                    tileMap_.text(0, 1) << "  \x19 Q W E R T Y U I O P \x1e ";
-                    tileMap_.text(0, 2) << " \x1d \x1b A S D F G H J K L \x18  ";
-                    tileMap_.text(0, 3) << "  < > Z X C V B N M _ . , ";
+                    tileMap_->text(0, 1) << "  \x19 Q W E R T Y U I O P \x1e ";
+                    tileMap_->text(0, 2) << " \x1d \x1b A S D F G H J K L \x18  ";
+                    tileMap_->text(0, 3) << "  < > Z X C V B N M _ . , ";
                     break;
                 case KeyboardType::LowerCase:
-                    tileMap_.text(0, 1) << "  \x19 q w e r t y u i o p \x1e ";
-                    tileMap_.text(0, 2) << " \x1d \x1c a s d f g h j k l \x18  ";
-                    tileMap_.text(0, 3) << "  < > z x c v b n m _ . , ";
+                    tileMap_->text(0, 1) << "  \x19 q w e r t y u i o p \x1e ";
+                    tileMap_->text(0, 2) << " \x1d \x1c a s d f g h j k l \x18  ";
+                    tileMap_->text(0, 3) << "  < > z x c v b n m _ . , ";
                     break;
                 case KeyboardType::NumbersAndSymbols:
-                    tileMap_.text(0, 1) << "  \x19 1 2 3 4 5 6 7 8 9 @ \x1e ";
-                    tileMap_.text(0, 2) << " \x1d \x1c ( ) [ ] ! ? @ # $ \x18  ";
-                    tileMap_.text(0, 3) << "  < > % ^ & * ' \" ~ _ . , ";
+                    tileMap_->text(0, 1) << "  \x19 1 2 3 4 5 6 7 8 9 @ \x1e ";
+                    tileMap_->text(0, 2) << " \x1d \x1c ( ) [ ] ! ? @ # $ \x18  ";
+                    tileMap_->text(0, 3) << "  < > % ^ & * ' \" ~ _ . , ";
                     break;
             }
         }
 
         void drawText() {
-            tileMap_.text(0,0) << "<                        >";
+            tileMap_->text(0,0) << "<                        >";
             if (text_.empty()) {
                 cursor_ = 0;
                 left_ = 0;
             } else {
-                tileMap_.text(1, 0) << (text_.c_str() + left_);
+                tileMap_->text(1, 0) << (text_.c_str() + left_);
             }
         }
 
@@ -229,7 +226,7 @@ namespace rckid {
                 select_.y = 2;
             if (select_.y > 2)
                 select_.y = 0;
-            last_ = selRect_.pos();
+            last_ = selRect_->pos();
             a_.start();
         }
         
@@ -249,9 +246,9 @@ namespace rckid {
         Coord cursor_ = 0;
         Coord left_ = 0;
 
-        ui::Tilemap<Tile<12,24,Color16>> tileMap_; 
-        ui::Rectangle selRect_;
-        ui::VLine cursorLine_;
+        ui::Tilemap<Tile<12,24,Color16>> * tileMap_; 
+        ui::Rectangle * selRect_;
+        ui::VLine * cursorLine_;
 
         Point select_{4, 0}; 
         Point last_;

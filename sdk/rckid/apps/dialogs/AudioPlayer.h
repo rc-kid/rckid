@@ -71,21 +71,16 @@ namespace rckid {
          */
         AudioPlayer(std::unique_ptr<Playlist> playlist):
             ui::Form<void>{Rect::XYWH(0, 144, 320, 96), /*raw*/ true}, 
-            playlist_{std::move(playlist)},
-            title_{88,18,""},
-            elapsed_{88,62,""},
-            icon_{8,16,Icon{assets::icons_64::play_button}},
-            repeatIcon_{50, 58, Icon{assets::icons_24::exchange}},
-            shuffleIcon_{50, 58, Icon{assets::icons_24::shuffle}}
+            playlist_{std::move(playlist)}
         {
-            title_.setFont(Font::fromROM<assets::OpenDyslexic32>());
-            g_.addChild(title_);
-            g_.addChild(elapsed_);
-            g_.addChild(icon_);
-            g_.addChild(repeatIcon_);
-            g_.addChild(shuffleIcon_);
-            repeatIcon_.setVisible(false);
-            shuffleIcon_.setVisible(false);
+            title_ = g_.addChild(new ui::Label{88, 18, ""});
+            elapsed_ = g_.addChild(new ui::Label{88, 62, ""});
+            icon_ = g_.addChild(new ui::Image{8, 16, Icon{assets::icons_64::play_button}});
+            repeatIcon_ = g_.addChild(new ui::Image{50, 58, Icon{assets::icons_24::exchange}});
+            shuffleIcon_ = g_.addChild(new ui::Image{50, 58, Icon{assets::icons_24::shuffle}});
+            title_->setFont(Font::fromROM<assets::OpenDyslexic32>());
+            repeatIcon_->setVisible(false);
+            shuffleIcon_->setVisible(false);
             playStream(playlist_->current());
             task_ = new PlayerTask(this);
         }
@@ -159,7 +154,7 @@ namespace rckid {
                 audioPlay(*as_);
                 lastUs_ = uptimeUs();
                 elapsedUs_ = 0;
-                title_.setText(as_->name());
+                title_->setText(as_->name());
             }
         }
 
@@ -174,7 +169,7 @@ namespace rckid {
                 sw << hours << ":";
             sw << fillLeft(minutes, 2, '0') << ":" << fillLeft(seconds, 2, '0');
             // only redraw if there is change in the elapsed time
-            if (elapsed_.setText(sw.str()))
+            if (elapsed_->setText(sw.str()))
                 redraw_ = true;
         }
 
@@ -199,11 +194,11 @@ namespace rckid {
             // btn up, or button A is audio pause
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                 if (audioPaused()) {
-                    icon_ = Icon{assets::icons_64::play_button};
+                    *icon_ = Icon{assets::icons_64::play_button};
                     audioResume();
                     lastUs_ = uptimeUs();
                 } else {
-                    icon_ = Icon{assets::icons_64::pause};
+                    *icon_ = Icon{assets::icons_64::pause};
                     audioPause();
                 }
                 redraw_ = true;
@@ -220,21 +215,21 @@ namespace rckid {
                 switch (mode_) {
                     case AudioPlayerMode::Normal:
                         mode_ = AudioPlayerMode::Repeat;
-                        repeatIcon_.setVisible(true);
-                        shuffleIcon_.setVisible(false);
+                        repeatIcon_->setVisible(true);
+                        shuffleIcon_->setVisible(false);
                         break;
                     case AudioPlayerMode::Repeat:
                         if (playlist_->supportsShuffle()) {
                             mode_ = AudioPlayerMode::Shuffle;
-                            repeatIcon_.setVisible(false);
-                            shuffleIcon_.setVisible(true);
+                            repeatIcon_->setVisible(false);
+                            shuffleIcon_->setVisible(true);
                             break;
                         }
                         [[fallthrough]];
                     case AudioPlayerMode::Shuffle:
                         mode_ = AudioPlayerMode::Normal;
-                        repeatIcon_.setVisible(false);
-                        shuffleIcon_.setVisible(false);
+                        repeatIcon_->setVisible(false);
+                        shuffleIcon_->setVisible(false);
                         break;
                     default:
                         UNREACHABLE;
@@ -264,11 +259,11 @@ namespace rckid {
         AudioPlayerMode mode_ = AudioPlayerMode::Normal;
         bool redraw_ = false;
 
-        ui::Label title_;
-        ui::Label elapsed_;
-        ui::Image icon_;
-        ui::Image repeatIcon_;
-        ui::Image shuffleIcon_;
+        ui::Label * title_;
+        ui::Label * elapsed_;
+        ui::Image * icon_;
+        ui::Image * repeatIcon_;
+        ui::Image * shuffleIcon_;
         uint64_t elapsedUs_ = 0;
         uint32_t lastUs_ = 0;
 

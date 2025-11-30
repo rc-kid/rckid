@@ -17,10 +17,9 @@ namespace rckid {
         String name() const override { return "WiFiManager"; }
 
         WiFiManager(): 
-            ui::Form<void>{},
-            icon_{160 - 32, 60, Icon{assets::icons_64::wifi}}
+            ui::Form<void>{}
         {
-            g_.addChild(icon_);
+            icon_ = g_.addChild(new ui::Image{160 - 32, 60, Icon{assets::icons_64::wifi}});
         }
 
     protected:
@@ -33,7 +32,7 @@ namespace rckid {
 
     private:
 
-        ui::Image icon_;
+        ui::Image * icon_;
 
     }; // rckid::Alarm
 }

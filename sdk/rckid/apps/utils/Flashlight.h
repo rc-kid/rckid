@@ -18,15 +18,15 @@ namespace rckid {
         Flashlight() : 
             ui::Form<void>{}
         {
-            setBrightness();
             //gpio::outputHigh(47);
             //gpio::outputHigh(46);
-            g_.addChild(icon_);
-            g_.addChild(brightness_);
+            icon_ = g_.addChild(new ui::Image{160 - 32, 60, Icon{assets::icons_64::flashlight}});
+            brightness_ = g_.addChild(new ui::ProgressBar{Rect::XYWH(20, 170, 280, 20), 0, 15, 8});
+            setBrightness();
         }
 
         ~Flashlight() override {
-            brightness_.setValue(0);
+            brightness_->setValue(0);
             setBrightness();
             //gpio::outputLow(47);
             //gpio::outputLow(46);
@@ -40,37 +40,37 @@ namespace rckid {
                 exit();
             if (btnPressed(Btn::A)) {
                 on_ = ! on_;
-                icon_.setVisible(! icon_.visible());
+                icon_->setVisible(! icon_->visible());
                 setBrightness();
             }
             if (btnPressed(Btn::Left)) {
-                if (brightness_.value() > brightness_.min()) {
-                    brightness_.setValue(brightness_.value() - 1);
+                if (brightness_->value() > brightness_->min()) {
+                    brightness_->setValue(brightness_->value() - 1);
                     setBrightness();
                 }
             }
             if (btnPressed(Btn::Right)) {
-                if (brightness_.value() < brightness_.max()) {
-                    brightness_.setValue(brightness_.value() + 1);
+                if (brightness_->value() < brightness_->max()) {
+                    brightness_->setValue(brightness_->value() + 1);
                     setBrightness();
                 }
             }
             if (on_) {
-                if (icon_.visible() && btnDown(Btn::Start)) {
-                    icon_.setVisible(false);
+                if (icon_->visible() && btnDown(Btn::Start)) {
+                    icon_->setVisible(false);
                     setBrightness();
                 }
-                if (! icon_.visible() && ! btnDown(Btn::Start)) {
-                    icon_.setVisible(true);
+                if (! icon_->visible() && ! btnDown(Btn::Start)) {
+                    icon_->setVisible(true);
                     setBrightness();
                 }
             } else {
-                if (icon_.visible() && ! btnDown(Btn::Start)) {
-                    icon_.setVisible(false);
+                if (icon_->visible() && ! btnDown(Btn::Start)) {
+                    icon_->setVisible(false);
                     setBrightness();
                 }
-                if (! icon_.visible() && btnDown(Btn::Start)) {
-                    icon_.setVisible(true);
+                if (! icon_->visible() && btnDown(Btn::Start)) {
+                    icon_->setVisible(true);
                     setBrightness();
                 }
             }
@@ -84,8 +84,8 @@ namespace rckid {
 
         void setBrightness() {
 #if defined(PLATFORM_RP2350)
-            uint8_t level = brightness_.value() << 4 | brightness_.value();
-            if (! icon_.visible())
+            uint8_t level = brightness_->value() << 4 | brightness_->value();
+            if (! icon_->visible())
                 level = 0;
             if (level == 0) {
                 gpio_set_function(FLASHLIGHT_PIN, GPIO_FUNC_SIO);
@@ -103,8 +103,8 @@ namespace rckid {
 #endif
         }
 
-        ui::Image icon_{160 - 32, 60, Icon{assets::icons_64::flashlight}};
-        ui::ProgressBar brightness_{Rect::XYWH(20, 170, 280, 20), 0, 15, 8};
+        ui::Image * icon_;
+        ui::ProgressBar * brightness_;
 
         bool on_ = true;
 

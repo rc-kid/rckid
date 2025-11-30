@@ -29,20 +29,17 @@ namespace rckid {
         String name() const override { return "DataSync"; }
 
         DataSync():
-            ui::Form<void>{},
-            icon_{Icon{assets::icons_64::pen_drive}},
-            info_{Rect::XYWH(0, 150, 320, 20), "SD card not found"},
-            status_{Rect::XYWH(0, 180, 320, 20), "Disconnected"} 
+            ui::Form<void>{}
         {
-            icon_.setTransparent(true);
-            icon_.setPos(160 - icon_.width() / 2, 60);
-            status_.setHAlign(HAlign::Center);
-            g_.addChild(icon_);
-            g_.addChild(info_);
-            g_.addChild(status_);
+            icon_ = g_.addChild(new ui::Image{Icon{assets::icons_64::pen_drive}});
+            info_ = g_.addChild(new ui::Label{Rect::XYWH(0, 150, 320, 20), "SD card not found"});
+            status_ = g_.addChild(new ui::Label{Rect::XYWH(0, 180, 320, 20), "Disconnected"});
+            icon_->setTransparent(true);
+            icon_->setPos(160 - icon_->width() / 2, 60);
+            status_->setHAlign(HAlign::Center);
             fs::mount(fs::Drive::SD);
             if (fs::isMounted()) {
-                info_.setText(STR("SD card: " << sdCapacity() / 2 / 1024 << "MB, label " << fs::getLabel()));
+                info_->setText(STR("SD card: " << sdCapacity() / 2 / 1024 << "MB, label " << fs::getLabel()));
                 fs::unmount();
                 connected_ = false;
                 instance_ = this;
@@ -76,11 +73,11 @@ namespace rckid {
 
         void draw() override {
             if (connected_)
-                status_.setText(STR("Connected, r: " << blocksRead_ << ", w: " << blocksWrite_));
+                status_->setText(STR("Connected, r: " << blocksRead_ << ", w: " << blocksWrite_));
             else if (attached_)
-                status_.setText(STR("Disconnected, r: " << blocksRead_ << ", w: " << blocksWrite_));
+                status_->setText(STR("Disconnected, r: " << blocksRead_ << ", w: " << blocksWrite_));
             else 
-                status_.setText(STR("Not Attached, r: " << blocksRead_ << ", w: " << blocksWrite_));
+                status_->setText(STR("Not Attached, r: " << blocksRead_ << ", w: " << blocksWrite_));
             ui::Form<void>::draw();
         }
 
@@ -109,9 +106,9 @@ namespace rckid {
         friend int32_t ::tud_msc_read10_cb(uint8_t, uint32_t, uint32_t, void *, uint32_t);
         friend int32_t ::tud_msc_write10_cb(uint8_t, uint32_t, uint32_t, uint8_t*, uint32_t);
 
-        ui::Image icon_;
-        ui::Label info_;
-        ui::Label status_;
+        ui::Image * icon_;
+        ui::Label * info_;
+        ui::Label * status_;
 
         void doConnect() {
             ASSERT(connected_ == false);

@@ -17,18 +17,15 @@ namespace rckid {
 
         TimeDialog(String title, TinyTime initialTime = timeNow().time):
             ui::Form<TinyTime>{Rect::XYWH(0, 144, 320, 96), /* raw */ true},
-            title_{std::move(title)},
-            h_{Rect::XYWH(0, 0, 150, 96), ""},
-            m_{Rect::XYWH(170, 0, 150, 96), ""},
-            colon_{Rect::XYWH(150, 0, 20, 96), ":"} {
-            g_.addChild(h_);
-            g_.addChild(m_);
-            g_.addChild(colon_);
-            h_.setFont(Font::fromROM<assets::OpenDyslexic128>());
-            h_.setHAlign(HAlign::Right);
-            m_.setFont(Font::fromROM<assets::OpenDyslexic128>());
-            m_.setHAlign(HAlign::Left);
-            colon_.setFont(Font::fromROM<assets::OpenDyslexic128>());
+            title_{std::move(title)} {
+            h_ = g_.addChild(new ui::Label{Rect::XYWH(0, 0, 150, 96), ""});
+            m_ = g_.addChild(new ui::Label{Rect::XYWH(170, 0, 150, 96), ""});
+            colon_ = g_.addChild(new ui::Label{Rect::XYWH(150, 0, 20, 96), ":"});
+            h_->setFont(Font::fromROM<assets::OpenDyslexic128>());
+            h_->setHAlign(HAlign::Right);
+            m_->setFont(Font::fromROM<assets::OpenDyslexic128>());
+            m_->setHAlign(HAlign::Left);
+            colon_->setFont(Font::fromROM<assets::OpenDyslexic128>());
             a_.startContinuous();
             hh_ = initialTime.hour();
             mm_ = initialTime.minute();
@@ -62,24 +59,24 @@ namespace rckid {
             if (btnPressed(Btn::Left) || btnPressed(Btn::Right)) {
                 activeH_ = !activeH_;
                 if (activeH_)
-                    m_.setColor(ui::Style::fg());
+                    m_->setColor(ui::Style::fg());
                 else
-                    h_.setColor(ui::Style::fg());
+                    h_->setColor(ui::Style::fg());
             }
             a_.update();
         }
 
         void draw() override {
             if (activeH_) 
-                h_.setColor(ui::Style::accentFg().withAlpha(interpolation::cosineLoop(a_, 0, 255).round()));
+                h_->setColor(ui::Style::accentFg().withAlpha(interpolation::cosineLoop(a_, 0, 255).round()));
             else
-                m_.setColor(ui::Style::accentFg().withAlpha(interpolation::cosineLoop(a_, 0, 255).round()));
+                m_->setColor(ui::Style::accentFg().withAlpha(interpolation::cosineLoop(a_, 0, 255).round()));
             ui::Form<TinyTime>::draw();
         }
 
         void updateValues() {
-            h_.setText(STR(fillLeft(hh_, 2, '0')));
-            m_.setText(STR(fillLeft(mm_, 2, '0')));
+            h_->setText(STR(fillLeft(hh_, 2, '0')));
+            m_->setText(STR(fillLeft(mm_, 2, '0')));
         }
 
     private:
@@ -88,9 +85,9 @@ namespace rckid {
 
         String title_;
 
-        ui::Label h_;
-        ui::Label m_;
-        ui::Label colon_;
+        ui::Label * h_;
+        ui::Label * m_;
+        ui::Label * colon_;
         uint8_t hh_ = 0;
         uint8_t mm_ = 0;
         bool activeH_ = true;

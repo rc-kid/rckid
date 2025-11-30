@@ -86,14 +86,9 @@ namespace rckid::ui {
             return child;
         }
 
-        void addChild(Widget & child) {
-            children_.push_back(&child);
-        }
-
         void clearChildren() {
             for (auto w : children_)
-                if (RAMHeap::contains(w))
-                    delete w;
+                delete w;
             children_.clear();
         }
 

@@ -25,11 +25,11 @@ namespace rckid {
             // TODO implement
             g_.enableBgImage(false);
             g_.setBg(ColorRGB::Black());
-            g_.addChild(image_);
-            g_.addChild(zoomedImage_);
+            image_ = g_.addChild(new ui::Image{Rect::XYWH(0, 32, 96, 96), Icon{assets::icons_64::paint_palette}});
+            zoomedImage_ = g_.addChild(new ZoomedImage{Rect::XYWH(108,32,194,194), image_});
 
             blink_.startContinuous();
-            zoomedImage_.focus();
+            zoomedImage_->focus();
         }
 
     protected:
@@ -51,7 +51,7 @@ namespace rckid {
         void draw() override {
             // blink the cursor
             blink_.update();
-            zoomedImage_.setCursorColor(ui::Style::accentFg().withAlpha(interpolation::cosineLoop(blink_, 0, 255).round()));
+            zoomedImage_->setCursorColor(ui::Style::accentFg().withAlpha(interpolation::cosineLoop(blink_, 0, 255).round()));
 
             ui::Form<void>::draw();
         }
@@ -64,10 +64,9 @@ namespace rckid {
             ZoomedImage(Rect rect, ui::Image * source):
                 ui::Widget{rect},
                 source_{source},
-                cursorPos_{0,0},
-                cursor_{Rect::WH(5, 5)}
+                cursorPos_{0,0}
             {
-                addChild(cursor_);
+                cursor_ = addChild(new ui::Rectangle{Rect::WH(5, 5)});
 
             }
 
@@ -83,12 +82,12 @@ namespace rckid {
                 else if (p.y >= source_->bitmap()->height())
                     p.y = 0;
                 cursorPos_ = p;
-                cursor_.setRect(Rect::XYWH(p.x * zoom_, p.y * zoom_, zoom_ + 2, zoom_ + 2));
+                cursor_->setRect(Rect::XYWH(p.x * zoom_, p.y * zoom_, zoom_ + 2, zoom_ + 2));
             }
 
-            ColorRGB cursorColor() const { return cursor_.color(); }
+            ColorRGB cursorColor() const { return cursor_->color(); }
 
-            void setCursorColor(ColorRGB color) { cursor_.setColor(color); }
+            void setCursorColor(ColorRGB color) { cursor_->setColor(color); }
 
         protected:
 
@@ -130,7 +129,7 @@ namespace rckid {
         private:
             ui::Image * source_;
             Point cursorPos_;
-            ui::Rectangle cursor_;
+            ui::Rectangle * cursor_;
             uint32_t zoom_ = 3;
             uint16_t colorFg_ = ColorRGB::White().toRaw();
             uint16_t colorBg_ = ColorRGB::Black().toRaw();
@@ -148,8 +147,8 @@ namespace rckid {
 
         Timer blink_{1000};
 
-        ui::Image image_{Rect::XYWH(0, 32, 96, 96), Icon{assets::icons_64::paint_palette}};
-        ZoomedImage zoomedImage_{Rect::XYWH(108,32,194,194), &image_};
+        ui::Image * image_;
+        ZoomedImage * zoomedImage_;
     
 
     }; // rckid::Drawing

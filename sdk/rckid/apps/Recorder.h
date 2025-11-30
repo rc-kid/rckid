@@ -16,12 +16,10 @@ namespace rckid {
         String name() const override { return "InfoDialog"; }
 
         Recorder(): 
-            ui::Form<void>{Rect::XYWH(0, 144, 320, 96), /* raw */ true},
-            time_{Rect::XYWH(0, 0, 320, 20), ""},
-            waveform_{}
+            ui::Form<void>{Rect::XYWH(0, 144, 320, 96), /* raw */ true}
         {
-            g_.addChild(time_);
-            g_.addChild(waveform_);
+            time_ = g_.addChild(new ui::Label{Rect::XYWH(0, 0, 320, 20), ""});
+            waveform_ = g_.addChild(new Waveform{});
             audioRecordMic(8000, [this](int16_t * & samples, uint32_t & numSamples) {
                 if (samples == nullptr) {
                     // provide buffer to fill
@@ -29,7 +27,7 @@ namespace rckid {
                     numSamples = buf_.size() / 2;
                     buf_.swap();
                 } else {
-                    waveform_.processSamples(samples, numSamples);
+                    waveform_->processSamples(samples, numSamples);
                 }
             });
         }
@@ -99,12 +97,12 @@ namespace rckid {
             int16_t max_ = -32768;
         };
 
-        ui::Label time_;
+        ui::Label * time_;
 
         uint32_t samples_ = 0;
 
         DoubleBuffer<int16_t> buf_{1024};
-        Waveform waveform_;
+        Waveform * waveform_;
         
     }; // rckid::Recorder
 

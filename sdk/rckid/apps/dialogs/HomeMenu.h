@@ -27,9 +27,9 @@ namespace rckid {
 
         HomeMenu(ui::ActionMenu::MenuGenerator generator):
             ui::Form<ui::Action>{Rect::XYWH(0, 144, 320, 96), /* raw */ true} {
-            g_.addChild(c_);
-            c_.setRect(Rect::XYWH(0, 0, 320, 96));
-            c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
+            c_ = g_.addChild(new ui::CarouselMenu<ui::Action>{});
+            c_->setRect(Rect::XYWH(0, 0, 320, 96));
+            c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
             customGenerator_ = std::move(generator);
             active_ = true;
         }
@@ -48,9 +48,9 @@ namespace rckid {
 
         void focus() override {
             ui::Form<ui::Action>::focus();
-            c_.focus();
-            if (c_.menu() == nullptr) {
-                c_.setMenu([this](){
+            c_->focus();
+            if (c_->menu() == nullptr) {
+                c_->setMenu([this](){
                     ui::ActionMenu * m = customGenerator_ == nullptr ? (new ui::ActionMenu{}) : customGenerator_();;
                     extendMenu(m);
                     return m;
@@ -72,7 +72,7 @@ namespace rckid {
                 exit();
             };
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
-                auto action = c_.currentItem();
+                auto action = c_->currentItem();
                 ASSERT(action->isAction());
                 if (isCurrentItemCustom())
                     exit(action->action());
@@ -84,9 +84,9 @@ namespace rckid {
     private:
 
         bool isCurrentItemCustom() {
-            auto history = c_.history();
+            auto history = c_->history();
             if (history == nullptr)
-                return c_.currentIndex() < customItems_;
+                return c_->currentIndex() < customItems_;
             while (history->previous != nullptr)
                 history = history->previous;
             return history->index < customItems_;
@@ -99,14 +99,14 @@ namespace rckid {
                 Slider s{assets::icons_64::high_volume, "Volume", 0, 15, audioVolume(), [](uint32_t value) { 
                     audioSetVolume(value); 
                 }};
-                s.setAnimation(c_.iconPosition(), c_.textPosition());
+                s.setAnimation(c_->iconPosition(), c_->textPosition());
                 s.loop();
             }));
             menu->add(ui::ActionMenu::Item("Brightness", assets::icons_64::brightness, [this](){
                 Slider s{assets::icons_64::brightness, "Brightness", 0, 15, displayBrightness() >> 4, [](uint32_t value) {
                      displaySetBrightness(value * 16 + value); 
                 }};
-                s.setAnimation(c_.iconPosition(), c_.textPosition());
+                s.setAnimation(c_->iconPosition(), c_->textPosition());
                 s.loop();
             }));
             menu->add(ui::ActionMenu::Item("Plane mode", assets::icons_64::airplane_mode, [](){
@@ -122,7 +122,7 @@ namespace rckid {
             }));
         }
 
-        ui::CarouselMenu<ui::Action> c_;
+        ui::CarouselMenu<ui::Action> * c_;
 
         // custom generator supplied by the app
         ui::ActionMenu::MenuGenerator customGenerator_; 

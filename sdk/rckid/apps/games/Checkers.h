@@ -96,12 +96,12 @@ namespace rckid {
 
 
         Checkers(): ui::Form<void>{Rect::XYWH(0, 0, 320, 240), /* raw */ true} {
-            g_.addChild(board_);
-            board_.reset();
+            board_ = g_.addChild(new Board{});
+            board_->reset();
         }
 
     private:
-        Board board_;
+        Board * board_;
 
 
     }; // rckid::Checkers

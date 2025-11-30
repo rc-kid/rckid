@@ -17,17 +17,17 @@ namespace rckid {
         String name() const override { return "ContactDialog"; }
 
         ContactDialog() : 
-            ui::Form<Contact>{320, 240},
-            c_{
+            ui::Form<Contact>{320, 240}
+        {
+            c_ = g_.addChild(new ui::EventBasedCarousel{
                 [this](){ return contacts_.size(); },
                 [this](uint32_t index, Direction direction) {
                     Contact const & c = contacts_[index];
-                    c_.set(c.name, Icon{c.image}, direction);
+                    c_->set(c.name, Icon{c.image}, direction);
                 }
-            } {
-            g_.addChild(c_);
-            c_.setRect(Rect::XYWH(0, 160, 320, 80));
-            c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
+            });
+            c_->setRect(Rect::XYWH(0, 160, 320, 80));
+            c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
         }
 
         void update() override {
@@ -42,28 +42,28 @@ namespace rckid {
                 btnClear(Btn::Up);
                 if (contacts_.size() == 0)
                     return;
-                Contact const & c = contacts_[c_.currentIndex()];
+                Contact const & c = contacts_[c_->currentIndex()];
                 return exit(c);
             }
         }
 
         void focus() override {
             ui::Form<Contact>::focus();
-            c_.focus();
+            c_->focus();
             // if we have contact
             loadContacts();
             if (firstRun_) {
                 if (contacts_.size() > 0)
-                    c_.setItem(0, Direction::Up);
+                    c_->setItem(0, Direction::Up);
                 else
-                    c_.showEmpty(Direction::Up);
+                    c_->showEmpty(Direction::Up);
                 firstRun_ = false;
-            } else if (contacts_.size() > c_.currentIndex())
-                c_.setItem(c_.currentIndex());
+            } else if (contacts_.size() > c_->currentIndex())
+                c_->setItem(c_->currentIndex());
             else if (contacts_.size() > 0)
-                c_.setItem(0);
+                c_->setItem(0);
             else
-                c_.showEmpty();
+                c_->showEmpty();
         }
 
         void blur() {
@@ -71,8 +71,8 @@ namespace rckid {
             contacts_.clear();
         }
 
-        Point iconPosition() const { return c_.iconPosition(); }
-        Point textPosition() const { return c_.textPosition(); }
+        Point iconPosition() const { return c_->iconPosition(); }
+        Point textPosition() const { return c_->textPosition(); }
 
     private:
 
@@ -90,7 +90,7 @@ namespace rckid {
             }
         }
 
-        ui::EventBasedCarousel c_;
+        ui::EventBasedCarousel * c_;
 
         std::vector<Contact> contacts_;
         // determines on focus if this has been the first time the dialog appears (different transition is used then)

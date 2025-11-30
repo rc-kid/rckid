@@ -12,12 +12,14 @@ namespace rckid {
 
         String title() const { return title_; }
 
-        FileDialog(String title, char const * path = "/") : ui::Form<String>{},
-            c_{path}, title_{std::move(title)} {
+        FileDialog(String title, char const * path = "/") : 
+            ui::Form<String>{},
+            title_{std::move(title)} 
+        {
             using namespace ui;
-            c_.setRect(Rect::XYWH(0, 160, 320, 80));
-            c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
-            g_.addChild(c_);
+            c_ = g_.addChild(new ui::FileBrowser{path});
+            c_->setRect(Rect::XYWH(0, 160, 320, 80));
+            c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
             contextMenu_.add(ui::ActionMenu::Item("First"));
             contextMenu_.add(ui::ActionMenu::Item("Second"));
             contextMenu_.add(ui::ActionMenu::Item("And Third"));
@@ -34,17 +36,17 @@ namespace rckid {
 
         void focus() override {
             ui::Form<String>::focus();
-            c_.focus();
+            c_->focus();
         }
 
         void update() override {
             ui::Form<String>::update();
             // see if an item has been selected, or if we shoudl leave, if up & down were used for traversing the folder strcuture, they have already been cleared by the processEvents
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
-                LOG(LL_DEBUG, "FileDialog: returning path " << c_.currentPath());
+                LOG(LL_DEBUG, "FileDialog: returning path " << c_->currentPath());
                 btnClear(Btn::A);
                 btnClear(Btn::Up);
-                exit(c_.currentPath());
+                exit(c_->currentPath());
             }
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 LOG(LL_DEBUG, "FileDialog: cancelling");
@@ -58,7 +60,7 @@ namespace rckid {
         }
 
     private:
-        ui::FileBrowser c_;
+        ui::FileBrowser * c_;
         String title_;
         ui::ActionMenu contextMenu_; 
 

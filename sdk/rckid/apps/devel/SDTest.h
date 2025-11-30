@@ -18,10 +18,9 @@ namespace rckid {
         String name() const override { return "SDTest"; }
 
         SDTest():
-            ui::Form<void>{},
-            text_{40,15, assets::System16, palette_} {
-            g_.addChild(text_);
-            text_.setPos(0, 16);
+            ui::Form<void>{} {
+            text_ = g_.addChild(new ui::Tilemap<Tile<8, 16, Color16>>{40,15, assets::System16, palette_});
+            text_->setPos(0, 16);
 
         }
 
@@ -31,39 +30,39 @@ namespace rckid {
                 case NO_TEST: {
                     if (btnPressed(Btn::A)) {
                         test_ = TEST_1k;
-                        text_.text(0, 2) << "1k";
+                        text_->text(0, 2) << "1k";
                     }
                     break;
                 }
                 case TEST_1k: {
                     test_ = TEST_10k;
                     uint32_t t = test(1024);
-                    text_.text(15, 2) << t;
-                    text_.text(30, 2) << after;
-                    text_.text(0, 3) << "10k";
+                    text_->text(15, 2) << t;
+                    text_->text(30, 2) << after;
+                    text_->text(0, 3) << "10k";
                     break;
                 }
                 case TEST_10k: {
                     test_ = TEST_100k;
                     uint32_t t = test(10240);
-                    text_.text(15, 3) << t;
-                    text_.text(30, 3) << after;
-                    text_.text(0, 4) << "100k";
+                    text_->text(15, 3) << t;
+                    text_->text(30, 3) << after;
+                    text_->text(0, 4) << "100k";
                     break;
                 }
                 case TEST_100k: {
                     test_ = TEST_1M;
                     uint32_t t = test(102400);
-                    text_.text(15, 4) << t;
-                    text_.text(30, 4) << after;
-                    text_.text(0, 5) << "1M";
+                    text_->text(15, 4) << t;
+                    text_->text(30, 4) << after;
+                    text_->text(0, 5) << "1M";
                     break;
                 }
                 case TEST_1M: {
                     test_ = NO_TEST;
                     uint32_t t = test(1024000);
-                    text_.text(15, 5) << t;
-                    text_.text(30, 5) << after;
+                    text_->text(15, 5) << t;
+                    text_->text(30, 5) << after;
                     break;
                 }
             }
@@ -80,7 +79,7 @@ namespace rckid {
             uint64_t startTime = uptimeUs64();
             fs::FileWrite f{fs::fileWrite("/sdtest.bin")};
             if (! f.good()) {
-                text_.text(0, 14) << "Cannot open file for write";
+                text_->text(0, 14) << "Cannot open file for write";
                 return 0;
             }
             for (uint32_t i = 0; i < numBytes; ++i) {
@@ -104,7 +103,7 @@ namespace rckid {
 
         uint32_t after = 0;
 
-        ui::Tilemap<Tile<8, 16, Color16>> text_;
+        ui::Tilemap<Tile<8, 16, Color16>> * text_;
 
 
         static constexpr uint16_t palette_[] = {

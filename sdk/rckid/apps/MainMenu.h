@@ -34,20 +34,20 @@ namespace rckid {
         MainMenu(ui::ActionMenu::MenuGenerator initialGenerator):
             ui::Form<ui::Action>{}
         {
-            g_.addChild(c_);
-            for (uint32_t i = 0; i < 2; ++i) {
-                g_.addChild(anniversaryIcons_[i]);
-                g_.addChild(anniversaryLabels_[i]);
-                anniversaryIcons_[i].setTransparentColor(ColorRGB::Black());
-                anniversaryLabels_[i].setFont(Font::fromROM<assets::OpenDyslexic24>());
-                anniversaryLabels_[i].setColor(ui::Style::fg());
+            c_ = g_.addChild(new ui::CarouselMenu<ui::Action>{});
+            for (Coord i = 0; i < 2; ++i) {
+                anniversaryIcons_[i] = g_.addChild(new ui::Image{8, 18 + i * 32, Icon{assets::icons_24::birthday_cake}});
+                anniversaryLabels_[i] = g_.addChild(new ui::Label{40, 18 + i * 32, ""});
+                anniversaryIcons_[i]->setTransparentColor(ColorRGB::Black());
+                anniversaryLabels_[i]->setFont(Font::fromROM<assets::OpenDyslexic24>());
+                anniversaryLabels_[i]->setColor(ui::Style::fg());
             }
 
-            c_.setRect(Rect::XYWH(0, 160, 320, 80));
-            c_.setFont(Font::fromROM<assets::OpenDyslexic64>());
+            c_->setRect(Rect::XYWH(0, 160, 320, 80));
+            c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
             if (history_ == nullptr)
                 history_ = new ui::ActionMenu::HistoryItem{0, initialGenerator, nullptr};
-            c_.attachHistory(history_);
+            c_->attachHistory(history_);
 
             uint32_t bdayDays = 366;
             uint32_t holidayDays = 366;
@@ -82,33 +82,33 @@ namespace rckid {
 
             if (bdayDays <= holidayDays) {
                 if (bdayDays < 366) {
-                    anniversaryIcons_[0] = Icon{assets::icons_24::birthday_cake};
-                    anniversaryLabels_[0].setText(STR(bdayName << " (" << bdayDays << " days)"));
+                    *anniversaryIcons_[0] = Icon{assets::icons_24::birthday_cake};
+                    anniversaryLabels_[0]->setText(STR(bdayName << " (" << bdayDays << " days)"));
                 } else {
-                    anniversaryIcons_[0].setVisible(false);
-                    anniversaryLabels_[0].setVisible(false);
+                    anniversaryIcons_[0]->setVisible(false);
+                    anniversaryLabels_[0]->setVisible(false);
                 }
                 if (holidayDays < 366) {
-                    anniversaryIcons_[1] = holidayIcon;
-                    anniversaryLabels_[1].setText(STR(holidayName << " (" << holidayDays << " days)"));
+                    *anniversaryIcons_[1] = holidayIcon;
+                    anniversaryLabels_[1]->setText(STR(holidayName << " (" << holidayDays << " days)"));
                 } else {
-                    anniversaryIcons_[1].setVisible(false);
-                    anniversaryLabels_[1].setVisible(false);
+                    anniversaryIcons_[1]->setVisible(false);
+                    anniversaryLabels_[1]->setVisible(false);
                 }
             } else {
                 if (holidayDays < 366) {
-                    anniversaryIcons_[0] = holidayIcon;
-                    anniversaryLabels_[0].setText(STR(holidayName << " (" << holidayDays << " days)"));
+                    *anniversaryIcons_[0] = holidayIcon;
+                    anniversaryLabels_[0]->setText(STR(holidayName << " (" << holidayDays << " days)"));
                 } else {
-                    anniversaryIcons_[0].setVisible(false);
-                    anniversaryLabels_[0].setVisible(false);
+                    anniversaryIcons_[0]->setVisible(false);
+                    anniversaryLabels_[0]->setVisible(false);
                 }
                 if (bdayDays < 366) {
-                    anniversaryIcons_[1] = Icon{assets::icons_24::birthday_cake};
-                    anniversaryLabels_[1].setText(STR(bdayName << " (" << bdayDays << " days)"));
+                    *anniversaryIcons_[1] = Icon{assets::icons_24::birthday_cake};
+                    anniversaryLabels_[1]->setText(STR(bdayName << " (" << bdayDays << " days)"));
                 } else {
-                    anniversaryIcons_[1].setVisible(false);
-                    anniversaryLabels_[1].setVisible(false);
+                    anniversaryIcons_[1]->setVisible(false);
+                    anniversaryLabels_[1]->setVisible(false);
                 }
             }
         }
@@ -116,16 +116,16 @@ namespace rckid {
     protected:
         void focus() override {
             ui::Form<ui::Action>::focus();
-            c_.focus();
+            c_->focus();
         }
 
         void update() override {
             ui::Form<ui::Action>::update();
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
-                auto action = c_.currentItem();
+                auto action = c_->currentItem();
                 ASSERT(action->isAction());
                 exit(action->action());
-                history_ = c_.detachHistory();
+                history_ = c_->detachHistory();
             }
             if (btnPressed(Btn::Start)) {
                 RAMHeap::traceChunks();
@@ -140,18 +140,10 @@ namespace rckid {
 
     private:
        
-        ui::CarouselMenu<ui::Action> c_;
+        ui::CarouselMenu<ui::Action> * c_;
 
-        ui::Image anniversaryIcons_[2]{ 
-            ui::Image{8, 18, Icon{assets::icons_24::birthday_cake}},
-            ui::Image{8, 50, Icon{assets::icons_24::birthday_cake}},
-        };
-        ui::Label anniversaryLabels_[2]{
-            ui::Label{40, 18, ""},
-            ui::Label{40, 50, ""},
-        };
-        //ui::Image bdayImg_{8, 18, Icon{assets::icons_24::birthday_cake}};
-        //ui::Label bdayLabel_{40, 18, ""};
+        ui::Image * anniversaryIcons_[2]; 
+        ui::Label * anniversaryLabels_[2];
 
         static inline ui::ActionMenu::HistoryItem * history_ = nullptr;
 
