@@ -28,6 +28,7 @@
 #define GBCEMU_TRACE_PC_OPCODE 0
 
 #include <rckid/app.h>
+#include <rckid/task.h>
 #include <rckid/utils/fixedint.h>
 #include "gamepak.h"
 #include "apu.h"
@@ -486,6 +487,9 @@ namespace rckid::gbcemu {
         // interrupts enabled flag (cannot be read, only set by insns)
         // TODO is this necessary or can I just use the last high mem byte?
         bool ime_ = false;
+
+        // disables background tasks while the emulator is running
+        Task::DisableGuard taskDisableGuard_;
 
 #ifdef GBCEMU_INTERACTIVE_DEBUG
         // breakpoint at which the main loop pauses

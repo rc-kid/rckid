@@ -419,10 +419,15 @@ namespace rckid {
                 return instance_;
             }
 
+            static void stop() {
+                delete instance_;
+                instance_ = nullptr;
+            }
+
             ~Task() override {
-                wifi_->enable(false);
                 for (Chat * chat : chats_)
                     delete chat;
+                WiFi::stop();
             }
 
             Chat * getKnownChat(uint64_t chatId) {
@@ -709,6 +714,8 @@ namespace rckid {
         }
 
         ~Messages() override {
+            // TODO isn't this a bit too harsh
+            Task::stop();
         }
 
     protected:

@@ -115,6 +115,9 @@ namespace rckid {
         FileBrowser * c_;
         AudioPlayerMode mode_ = AudioPlayerMode::Normal;
 
+        // disables background tasks while the music player is running
+        Task::DisableGuard taskDisableGuard_;
+
     }; // rckid::MusicPlayer
 
 } // namespace rckid

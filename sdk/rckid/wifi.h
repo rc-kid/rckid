@@ -75,6 +75,11 @@ namespace rckid {
             return instance_; 
         }
 
+        static void stop() {
+            delete instance_;
+            instance_ = nullptr;
+        }
+
         static bool hasInstance() { return instance_ != nullptr; }
 
         Status status() const; 

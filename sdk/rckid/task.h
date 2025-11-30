@@ -12,6 +12,14 @@ namespace rckid {
     class Task {
     public:
 
+        /** Simple RAII guard that disables background tasks for its lifetime.
+         */
+        class DisableGuard {
+        public:
+            DisableGuard() { Task::disableTasks(); }
+            ~DisableGuard() { Task::enableTasks(); }
+        };
+
         virtual ~Task() {
             // remove the task from the list
             if (taskList_ == this) {
@@ -28,11 +36,44 @@ namespace rckid {
         /** Runs the tick method for all registered background tasks.
          */
         static void tickAll() {
+            if (disable_ > 0)
+                return;
             Task * x = taskList_;
             while (x != nullptr) {
                 x->tick();
                 x = x->next_;
             }
+        }
+
+        /** Returns true of background tasks are enabled. 
+         */
+        static bool enabled() { return disable_ == 0; }
+
+        /** Enables background tasks. 
+         
+            An enable without preceding disable has no effect. Enable should be matched with preceding disable and tasks will only be re-enabled after the call if this was the last disable call to be undone.
+         */
+        static void enableTasks() {
+            if (disable_ > 0)
+                disable_--;
+        }
+
+        /** Disables background tasks. Each disable has to be matched with an enable, if multiple disable calls are issued, they all have to by undone by their corresponding enable call for the tasks to be enabled again. 
+         */
+        static void disableTasks() {
+            disable_++;
+        }
+
+        /** Deletes all tasks that currently run in the background.
+         */
+        static void killAllTasks() {
+            Task * x = taskList_;
+            while (x != nullptr) {
+                Task * next = x->next_;
+                delete x;
+                x = next;
+            }
+            taskList_ = nullptr;
         }
 
     protected:
@@ -54,6 +95,7 @@ namespace rckid {
 
         static inline Task * taskList_ = nullptr;
         static inline bool yieldActive_ = false;
+        static inline uint32_t disable_ = 0;
     };
 
 } // namespace rckid
