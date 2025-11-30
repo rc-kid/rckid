@@ -12,7 +12,7 @@ namespace rckid {
     
     /** A simple dialog app that returns text written by the user via an on screen keyboard.
       
-        Uses a simple tilemap and a sprite for the selection.  
+        Uses a simple tilemap and a sprite for the selection. DPAD to move selected key on the keyboard, which copies the QUERTY layout. A button to select the key, special keys include Enter to finish input, backspace, < > to move cursor and shift & keyboard mode select (alpha / numeric). Select key is shorthand for space and Start key is shorthand to finish typing. B button cancels the dialog.
      */
     class TextDialog : public ui::Form<String> {
     public:
@@ -95,8 +95,10 @@ namespace rckid {
                 }
                 if (btnPressed(Btn::A))
                     keyPress();
+                if (btnPressed(Btn::Select))
+                    insertChar(' ');
                 if (btnPressed(Btn::Start))
-                    insertChar(' ');    
+                    exit(text_);
             }   
         }
 
@@ -200,7 +202,7 @@ namespace rckid {
                     tileMap_->text(0, 3) << "  < > z x c v b n m _ . , ";
                     break;
                 case KeyboardType::NumbersAndSymbols:
-                    tileMap_->text(0, 1) << "  \x19 1 2 3 4 5 6 7 8 9 @ \x1e ";
+                    tileMap_->text(0, 1) << "  \x19 1 2 3 4 5 6 7 8 9 0 \x1e ";
                     tileMap_->text(0, 2) << " \x1d \x1c ( ) [ ] ! ? @ # $ \x18  ";
                     tileMap_->text(0, 3) << "  < > % ^ & * ' \" ~ _ . , ";
                     break;

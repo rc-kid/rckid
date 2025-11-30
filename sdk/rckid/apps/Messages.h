@@ -442,12 +442,29 @@ namespace rckid {
                         "api.telegram.org", 
                         STR("/bot" << botId_ << ':' << botToken_ << "/getUpdates?offset=" << lastOffset_),
                         [this](uint32_t status, uint32_t size, uint8_t const * data) {
-                            if (status == 200)
+                            if (status == 200) {
+                                retries_ = 0;
                                 processUpdate(size, data);
+                            } else {
+                                LOG(LL_ERROR, "Failed to get updates, status: " << status);
+                                // if wifi is connected still, schedule a retry with some backoff
+                                // immediately 0.5s 1s 2s 4s 8s 16s 32s...
+                                if (wifi_->connected() && retries_ < 5) {
+                                    nextUpdateTime_ = uptimeUs64() + (retries_ == 0 ) ? 0 : (1 << (retries_ -1)) * 500000;
+                                    if (++retries_ > 8)
+                                        retries_ = 0;                                     
+                                }
+                            }
                         }
                     );
                     nextUpdateTime_ = now + 60 * 1000000; // check every minute
                 }
+                // and see if there is anything to send
+                processOutgoingMessages();
+            }
+
+            void requestUpdate() {
+                nextUpdateTime_ = 0;
             }
 
             void processUpdate(uint32_t size, uint8_t const * data) {
@@ -456,6 +473,7 @@ namespace rckid {
                 //LOG(LL_INFO, "Update response: \n" << res);
                 if (res["ok"].asBoolean()) {
                     bool changed = false;
+                    bool newMsg = false;
                     for (auto & item : res["result"]) {
                         int64_t updateId = item["update_id"].asInteger();
                         // if we have already seen the message, skip it
@@ -467,7 +485,7 @@ namespace rckid {
                             int64_t chatId = msg["chat"]["id"].asInteger();
                             String text = msg["text"].asString();
                             Chat * chat = getKnownChat(chatId);
-                            if (text[0] == '/') {
+                            if (text.startsWith("/")) {
                                 if (from != parentId_)
                                     LOG(LL_ERROR, "Ignoring command from unknown user " << from << ": " << text);
                                 else
@@ -476,13 +494,17 @@ namespace rckid {
                                 LOG(LL_ERROR, "Message from " << from << " in unknown chat " << chatId << ": " << text);
                             } else {
                                 chat->appendMessage(from, text);
+                                if (!newMsg) {
+                                    newMsg = true;
+                                    rumblerEffect(RumblerEffect::OK());
+                                }
                             }
                         }
                         lastOffset_ = updateId + 1;
                         changed = true;
                     }
                     if (changed)
-                        nextUpdateTime_ = 0;
+                        requestUpdate();
                 }
             }
 
@@ -514,20 +536,50 @@ namespace rckid {
                 }
             }
 
-            void sendMessage(uint64_t chatId, String const & text, bool addToChat = true) {
-                // TODO keep the message so that we can resend if there is network failure or something
-                wifi_->https_get(
-                    "api.telegram.org", 
-                    STR("/bot" << botId_ << ':' << botToken_ << "/sendMessage?chat_id=" << chatId << "&text=" << urlEncode(text.c_str())),
-                    [this](uint32_t status, uint32_t size, uint8_t const * data) {
-                        if (status == 200)
-                            LOG(LL_INFO, "Message sent successfully");
-                    }
-                );
-                if (addToChat) {
-                    Chat * chat = getKnownChat(chatId);
-                    if (chat != nullptr)
-                        chat->appendMessage(botId_, text);
+            void sendMessage(int64_t chatId, String text, bool addToChat = true) {
+                outgoing_ = new OutgoingMessage{chatId, std::move(text), addToChat, outgoing_};
+            }
+
+            void processOutgoingMessages() {
+                if (outgoing_ == nullptr)
+                    return;
+                // remove the message from the outgoing queue
+                OutgoingMessage * msg = outgoing_;
+                outgoing_ = outgoing_->next;
+                // if we are not connected, there is nothing we can do
+                if (! wifi_->connected()) {
+                    if (msg->addToChat)
+                        InfoDialog::error("No WiFi", "Cannot send message, no wifi connection available");
+                    else 
+                        LOG(LL_ERROR, "Cannot send message, wifi not connected");
+                    delete msg;
+                } else {
+                    wifi_->https_get(
+                        "api.telegram.org", 
+                        STR("/bot" << botId_ << ':' << botToken_ << "/sendMessage?chat_id=" << msg->chatId << "&text=" << urlEncode(msg->text.c_str())),
+                        [this, msg](uint32_t status, [[maybe_unused]] uint32_t size, [[maybe_unused]] uint8_t const * data) {
+                            if (status == 200) {
+                                LOG(LL_INFO, "Message sent successfully");
+                                if (msg->addToChat) {
+                                    Chat * chat = getKnownChat(msg->chatId);
+                                    if (chat != nullptr)
+                                        chat->appendMessage(botId_, msg->text);
+                                }
+                                delete msg;
+                            } else {
+                                if (++(msg->retries) > 10) {
+                                    if (msg->addToChat)
+                                        InfoDialog::error("WiFi error", "Cannot send message, too many retries");
+                                    else 
+                                        LOG(LL_ERROR, "Cannot send message, too many retries");
+                                    delete msg;
+                                } else {
+                                    msg->next = outgoing_;
+                                    outgoing_ = msg;
+                                }
+                            }
+                        }
+                    );
                 }
             }
 
@@ -538,6 +590,18 @@ namespace rckid {
         private:
 
             friend class Messages;
+
+            struct OutgoingMessage {
+                int64_t chatId;
+                String text;
+                uint32_t retries = 0;
+                bool addToChat;
+                OutgoingMessage * next;
+
+                OutgoingMessage(int64_t chatId, String && text, bool addToChat, OutgoingMessage * next):
+                    chatId{chatId}, text(std::move(text)), addToChat(addToChat), next(next) {
+                }
+            };
 
             Task():
                 wifi_{WiFi::getOrCreateInstance()} 
@@ -610,9 +674,12 @@ namespace rckid {
 
             int64_t lastOffset_ = 0;
             uint64_t nextUpdateTime_ = 0;
+            uint32_t retries_ = 0;
 
             std::vector<Chat *> chats_;
             std::unordered_map<uint64_t, Chat *> chatMap_;
+
+            OutgoingMessage * outgoing_ = nullptr;
 
             static inline Task * instance_ = nullptr;
 

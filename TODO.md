@@ -100,16 +100,11 @@ Must-have before wider release
 
 - pngenc: https://github.com/bitbank2/PNGenc
 - when new conversaton is added and its the first conversation, it is not displayed
-- add next offset to messages & calculation
-- add effects to new messages being added
 - make messages prettier
 - multi-line label
-- msg sending, does it go to conversation? 
 - keep the offset so that we can go back
 - check wifi available, etc. 
 - make more robust
-
-- keyboard use start is space, select is enter
 
 - a more polished and reasonable palette for the header
 - callback to wifi status
