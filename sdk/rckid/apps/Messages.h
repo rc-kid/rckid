@@ -270,15 +270,32 @@ namespace rckid {
         public:
 
             /** Single messgae visualization.
+                
+                TODO in the future, this can be a lot more, but for now make it simple, a small label for who? 
              */
             class Message : public ui::Widget {
             public:
                 
                 Message(Chat::Entry && entry, Contact const * sender):
-                    ui::Widget{Rect::WH(320, 24)},
+                    ui::Widget{Rect::WH(320, 40)},
                     entry_{std::move(entry)},
-                    sender_{sender}
+                    sender_{sender},
+                    who_{Rect::XYWH(4, 4, 312, 16), sender_ != nullptr ? sender_->name : "Me"},
+                    what_{Rect::XYWH(4, 16, 312, 24), entry_.payload}
                 {
+                    addChild(who_);
+                    addChild(what_);
+                    who_.setFont(Font::fromROM<assets::Iosevka16>());
+                    what_.setFont(Font::fromROM<assets::Iosevka24>());
+                    if (sender_ != nullptr) {
+                        who_.setColor(sender_->color);
+                        what_.setColor(sender_->color);
+                        who_.setHAlign(HAlign::Left);
+                        what_.setHAlign(HAlign::Left);
+                    } else {
+                        who_.setHAlign(HAlign::Right);
+                        what_.setHAlign(HAlign::Right);
+                    }
                 }
 
                 bool isOwnMessage() const { return sender_ == nullptr; }
@@ -287,6 +304,8 @@ namespace rckid {
                 Chat::Entry entry_;
                 // who sent the message, nullptr if own msg
                 Contact const * sender_;
+                ui::Label who_;
+                ui::Label what_;
             }; // Conversation::Message
 
             /** Use umbrella names for all messages stuff.
@@ -338,37 +357,36 @@ namespace rckid {
 
             void loadMessages() {
                 Chat::Reader reader{*chat_};
-                reader.read(20, [this](Chat::Entry e){
+                Coord offset = 0;
+                reader.read(20, [this, & offset](Chat::Entry e){
                     LOG(LL_INFO, "Loaded message: " << e.payload);
-                    /*
-                    Contact const * sender = nullptr;
-                    auto it = contacts_.find(e.sender);
-                    if (it != contacts_.end())
-                        sender = &it->second;
-                    msgs_.emplace_back(std::move(e), sender);
-                    view_.addChild(msgs_.back());
-                    */
+                    Contact * sender = getContactFor(e.sender);
+                    Message * msg = new Message(std::move(e), sender);
+                    msg->setY(offset);
+                    offset += msg->height();
+                    messages_.push_back(msg);
+                    view_.addChild(msg);
                 });
-                reader.seek(-10);
-                reader.read(20, [this](Chat::Entry e){
-                    LOG(LL_INFO, "Loaded message: " << e.payload);
-                    /*
-                    Contact const * sender = nullptr;
-                    auto it = contacts_.find(e.sender);
-                    if (it != contacts_.end())
-                        sender = &it->second;
-                    msgs_.emplace_back(std::move(e), sender);
-                    view_.addChild(msgs_.back());
-                    */
-                });
+            }
+
+            Contact * getContactFor(int64_t sender) {
+                // check if the sender is us
+                if (sender == Messages::Task::getOrCreate()->botId_)
+                    return nullptr;
+                // check if we have the sender
+                auto it = contacts_.find(sender);
+                if (it != contacts_.end())
+                    return &it->second;
+                return & unknown_;
             }
 
         private:
             Chat * chat_;
 
             ui::ScrollView view_;
-            std::vector<ui::Label> msgs_;
+            std::vector<Message *> messages_;
             std::unordered_map<int64_t, Contact> contacts_;
+            Contact unknown_{"Unknown"};
         }; // Conversation
 
         /** Task responsible for the message delivery and actions. 

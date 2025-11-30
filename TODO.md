@@ -100,6 +100,8 @@ Must-have before wider release
 
 - pngenc: https://github.com/bitbank2/PNGenc
 - when new conversaton is added and its the first conversation, it is not displayed
+- widget does not work well - children owned & not owned mixing is not good
+- maybe ditch the ownership? 
 
 - a more polished and reasonable palette for the header
 - callback to wifi status
