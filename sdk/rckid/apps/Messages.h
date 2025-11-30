@@ -237,11 +237,12 @@ namespace rckid {
                 LOG(LL_INFO, "New message from " << from << " in chat " << id_ << ": " << text);
                 // open the conversation file for appending, create the message entry and then serialize
                 auto f = fs::fileAppend(conversationPath());
-                serialize(f, Entry::Message(from, std::move(text)));
+                Entry msgEntry{Entry::Message(from, std::move(text))};
+                serialize(f, msgEntry);
                 f.close();
                 // now either mark as unread, or if the chat is opened, append the entry to the chat view as well
                 if (conversation_ != nullptr) {
-                    // TODO tell the opened conversation and decide if unread or not
+                    unread_ = conversation_->appendMessage(std::move(msgEntry));
                 } else {
                     unread_ = true;
                     // TODO do we want to save this somewhere?
@@ -313,7 +314,7 @@ namespace rckid {
             String title() const override { return chat_->name(); }
 
             Conversation(Chat * chat):
-                ui::Form<void>{Rect::XYWH(0, 0, 320, 240), /* raw */ true},
+                ui::Form<void>{Rect::XYWH(0, 0, 320, 240)},
                 chat_{chat}
             {
                 chat_->conversation_ = this;
@@ -335,6 +336,8 @@ namespace rckid {
 
         protected:
 
+            friend class Chat;
+
             void update() override {
                 ui::Form<void>::update();
                 // quit the conversation view when B is pressed
@@ -354,16 +357,35 @@ namespace rckid {
 
             void loadMessages() {
                 Chat::Reader reader{*chat_};
-                Coord offset = 0;
-                reader.read(20, [this, & offset](Chat::Entry e){
+                reader.read(20, [this](Chat::Entry e){
                     LOG(LL_INFO, "Loaded message: " << e.payload);
-                    Contact * sender = getContactFor(e.sender);
-                    Message * msg = new Message(std::move(e), sender);
-                    msg->setY(offset);
-                    offset += msg->height();
-                    messages_.push_back(msg);
-                    view_->addChild(msg);
+                    addMessage(std::move(e));
                 });
+            }
+
+            bool atEnd() const {
+                // TODO does not work
+                return true;
+            }
+
+            /** Appends message to the conversation. 
+             * 
+             */
+            bool appendMessage(Chat::Entry && entry) {
+                if (! atEnd())
+                    return true;
+                addMessage(std::move(entry));
+                // scroll into view? 
+                return false;
+            }
+
+            void addMessage(Chat::Entry && entry) {
+                ui::Widget * last = view_->lastChild();
+                Coord offset = last == nullptr ? 0 : last->y() + last->height();
+                Contact * sender = getContactFor(entry.sender);
+                Message * msg = new Message(std::move(entry), sender);
+                msg->setY(offset);
+                view_->addChild(msg);
             }
 
             Contact * getContactFor(int64_t sender) {
@@ -381,7 +403,6 @@ namespace rckid {
             Chat * chat_;
 
             ui::ScrollView * view_;
-            std::vector<Message *> messages_;
             std::unordered_map<int64_t, Contact> contacts_;
             Contact unknown_{"Unknown"};
         }; // Conversation

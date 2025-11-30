@@ -92,6 +92,12 @@ namespace rckid::ui {
             children_.clear();
         }
 
+        Widget * lastChild() const {
+            if (children_.size() == 0)
+                return nullptr;
+            return children_.back();
+        }
+
         bool visible() const { return visible_; }
         
         void setVisible(bool value) {
