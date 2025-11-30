@@ -19,6 +19,8 @@
 #include <pico/stdlib.h>
 #include <pico/rand.h>
 
+#include <limits>
+
 #define PLATFORM_RP2350
 #define PLATFORM_LITTLE_ENDIAN
 

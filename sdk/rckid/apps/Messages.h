@@ -326,8 +326,9 @@ namespace rckid {
                     if (c.telegramId != 0)
                         contacts_.insert(std::make_pair(c.telegramId, std::move(c)));
                 });
-                // TODO load the messages here
+                // load the messages
                 loadMessages();
+                view_->scrollBottomLeft();
             }
 
             ~Conversation() override {
@@ -375,7 +376,7 @@ namespace rckid {
                 if (! atEnd())
                     return true;
                 addMessage(std::move(entry));
-                // scroll into view? 
+                view_->scrollBottomLeft();
                 return false;
             }
 
@@ -434,8 +435,8 @@ namespace rckid {
         protected:
 
             void tick() override {
-                return; // TODO remove this, is only for testing now
-                if (wifi_->connected() && (uptimeUs64() >= nextUpdateTime_)) {
+                uint64_t now = uptimeUs64();
+                if (wifi_->connected() && (now >= nextUpdateTime_)) {
                     LOG(LL_INFO, "Checking for new updates...");
                     wifi_->https_get(
                         "api.telegram.org", 
@@ -445,7 +446,7 @@ namespace rckid {
                                 processUpdate(size, data);
                         }
                     );
-                    nextUpdateTime_ += 60 * 10000000; // check every minute
+                    nextUpdateTime_ = now + 60 * 1000000; // check every minute
                 }
             }
 
@@ -454,8 +455,12 @@ namespace rckid {
                 json::Object res = json::parse(s);
                 //LOG(LL_INFO, "Update response: \n" << res);
                 if (res["ok"].asBoolean()) {
+                    bool changed = false;
                     for (auto & item : res["result"]) {
-                        uint64_t updateId = item["update_id"].asInteger();
+                        int64_t updateId = item["update_id"].asInteger();
+                        // if we have already seen the message, skip it
+                        if (lastOffset_ > updateId)
+                            continue;
                         if (item.has("message")) {
                             auto & msg = item["message"];
                             int64_t from = msg["from"]["id"].asInteger();
@@ -473,8 +478,11 @@ namespace rckid {
                                 chat->appendMessage(from, text);
                             }
                         }
-                        // TODO do updateId + 1 as the next updte id
+                        lastOffset_ = updateId + 1;
+                        changed = true;
                     }
+                    if (changed)
+                        nextUpdateTime_ = 0;
                 }
             }
 

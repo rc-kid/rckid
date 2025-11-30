@@ -106,6 +106,8 @@ Must-have before wider release
 - multi-line label
 - msg sending, does it go to conversation? 
 - keep the offset so that we can go back
+- check wifi available, etc. 
+- make more robust
 
 - keyboard use start is space, select is enter
 
