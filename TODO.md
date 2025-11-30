@@ -100,7 +100,6 @@ Must-have before wider release
 
 - pngenc: https://github.com/bitbank2/PNGenc
 - when new conversaton is added and its the first conversation, it is not displayed
-- do not add service messages to conversations
 
 - a more polished and reasonable palette for the header
 - callback to wifi status

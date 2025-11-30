@@ -454,7 +454,7 @@ namespace rckid {
                 } else if (command.startsWith("/join ")) {
                     if (chatMap_.find(chatId) != chatMap_.end()) {
                         LOG(LL_ERROR, "Chat " << chatId << " already joined");
-                        sendMessage(chatId, STR("RCKID: Chat already joined."));
+                        sendMessage(chatId, STR("RCKID: Chat already joined."), false);
                         return;
                     }
                     String chatName = command.substr(6);
@@ -463,14 +463,14 @@ namespace rckid {
                     chatMap_.insert(std::make_pair(chat->id_, chat));
                     saveChats();
                     //c_.setItem(chats_.size() - 1, Direction::Up);
-                    sendMessage(chatId, STR("RCKID: Chat '" << chatName << "' enabled."));
+                    sendMessage(chatId, STR("RCKID: Chat '" << chatName << "' enabled."), false);
                 } else {
                     LOG(LL_ERROR, "Unknown command: " << command);
-                    sendMessage(chatId, STR("RCKID: Unknown command: " << command << ", use /help for list of available commands."));
+                    sendMessage(chatId, STR("RCKID: Unknown command: " << command << ", use /help for list of available commands."), false);
                 }
             }
 
-            void sendMessage(uint64_t chatId, String const & text) {
+            void sendMessage(uint64_t chatId, String const & text, bool addToChat = true) {
                 // TODO keep the message so that we can resend if there is network failure or something
                 wifi_->https_get(
                     "api.telegram.org", 
@@ -480,9 +480,11 @@ namespace rckid {
                             LOG(LL_INFO, "Message sent successfully");
                     }
                 );
-                Chat * chat = getKnownChat(chatId);
-                if (chat != nullptr)
-                    chat->appendMessage(botId_, text);
+                if (addToChat) {
+                    Chat * chat = getKnownChat(chatId);
+                    if (chat != nullptr)
+                        chat->appendMessage(botId_, text);
+                }
             }
 
             /** Home folder of the task is shared with the messages app.
