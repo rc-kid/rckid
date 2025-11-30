@@ -3,6 +3,8 @@
 #include "dialogs/ContactDialog.h"
 #include "dialogs/TextDialog.h"
 #include "dialogs/DateDialog.h"
+#include "dialogs/ColorPicker.h"
+#include "dialogs/FileDialog.h"
 #include "../ui/scrollview.h"
 #include "../ui/carousel.h"
 #include "../assets/fonts/Iosevka24.h"
@@ -110,6 +112,14 @@ namespace rckid {
                         setResult(true); // mark dirty
                     }
                 }));
+                contextMenu_.add(ui::ActionMenu::Item("Edit color", [this]() {
+                    auto c = App::run<ColorPicker>(c_.color);
+                    if (c.has_value()) {
+                        c_.color = c.value();
+                        updateContactColor();
+                        setResult(true); // mark dirty
+                    }
+                }));
                 contextMenu_.add(ui::ActionMenu::Item("Edit note", [this]() {
                     auto n = App::run<TextDialog>("Note", c_.note);
                     if (n.has_value()) {
@@ -118,6 +128,19 @@ namespace rckid {
                         setResult(true); // mark dirty
                     }
                 }));
+                // in parent mode allow also setting telegram IDs
+                if (parentMode()) {
+                    contextMenu_.add(ui::ActionMenu::Item("Edit Telegram ID", [this]() {
+                        // TODO this should really use just the number keyboard
+                        String input = (c_.telegramId != 0) ? STR(c_.telegramId) : "";
+                        auto id = App::run<TextDialog>("Telegram ID", input);
+                        if (id.has_value()) {
+                            c_.telegramId = std::atoll(id.value().c_str());
+                            setResult(true); // mark dirty
+                        }
+                    }));
+                }
+                updateContactColor();
             }
 
             void setAnimation(Point iconStart, Point textStart, uint32_t durationMs = 500) {
@@ -130,11 +153,12 @@ namespace rckid {
                 contents_.setVisible(false);
             }
 
+        protected:
+
             void update() override {
                 if (t_.running())
                     return;
-                if (btnPressed(Btn::B)) {
-                    btnClear(Btn::B);
+                if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                     if (t_.duration() != 0) {
                         exitAtEnd_ = true;
                         aImage_.reverse();
@@ -168,7 +192,14 @@ namespace rckid {
                 ui::Form<bool>::draw();
             }
 
-        protected:
+            void updateContactColor() {
+                name_.setColor(c_.color);
+                birthday_.setColor(c_.color);
+                phone_.setColor(c_.color);
+                email_.setColor(c_.color);
+                address_.setColor(c_.color);
+                note_.setColor(c_.color);
+            }
 
         private:
             Contact & c_;

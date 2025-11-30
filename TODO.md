@@ -91,6 +91,7 @@ Must-have before wider release
 - [ ] telegram messenger
 -   [ ] notification
 -   [ ] run in background
+-   [X] add telegram ids to users
 - [ ] webpage, releases, updates, etc.
 
 # TODO
@@ -98,6 +99,8 @@ Must-have before wider release
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
 
 - pngenc: https://github.com/bitbank2/PNGenc
+- when new conversaton is added and its the first conversation, it is not displayed
+- do not add service messages to conversations
 
 - a more polished and reasonable palette for the header
 - callback to wifi status

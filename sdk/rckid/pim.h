@@ -8,6 +8,7 @@
 
 #include "rckid.h"
 #include "utils/ini.h"
+#include "ui/style.h"
 
 namespace rckid {
 
@@ -15,7 +16,7 @@ namespace rckid {
      
         Basic contact information. As a child oriented device, we do not bother with names & surnames, everything is under single name. Contacts can be birthday and associated image, etc.
      */
-    class Contact{
+    class Contact {
     public:
 
         static constexpr char const * CONTACTS_PATH = "/contacts.ini";
@@ -31,6 +32,11 @@ namespace rckid {
         String phone;
         String address;
         String note;
+        /** Color identifying the contact. 
+         */
+        ColorRGB color = ui::Style::fg();
+
+        int64_t telegramId = 0;
 
         Contact(ini::Reader & reader) {
             while (std::optional<std::pair<String, String>> kv = reader.nextValue()) {
@@ -46,6 +52,10 @@ namespace rckid {
                     address = kv->second;
                 } else if (kv->first == "note") {
                     note = kv->second;
+                } else if (kv->first == "color") {
+                    color = ColorRGB::fromString(kv->second);
+                } else if (kv->first == "telegramId") {
+                    telegramId = std::atoll(kv->second.c_str());
                 } else if (kv->first == "birthday") {
                     if (!birthday.setFromString(kv->second.c_str()))
                         LOG(LL_ERROR, "Invalid birthday format for contact " << name << ": " << kv->second);
@@ -73,6 +83,10 @@ namespace rckid {
             writer.writeValue("phone", phone);
             writer.writeValue("address", address);
             writer.writeValue("note", note);
+            if (color != ui::Style::fg())
+                writer.writeValue("color", color.toString());
+            if (telegramId != 0)
+                writer.writeValue("telegramId", STR(telegramId));
         }
 
         static void forEach(std::function<void(Contact)> f) {

@@ -60,6 +60,7 @@ namespace rckid {
                     }
                     serialize(stream, size + HEADER_SIZE + 4);
                 }
+
             private:
 
                 static constexpr uint32_t HEADER_SIZE = sizeof(uint32_t) + sizeof(TinyDateTime) + sizeof(int64_t) + sizeof(uint32_t);
@@ -68,6 +69,14 @@ namespace rckid {
                     kind{kind}, time{time}, sender{sender}, payload{std::move(payload)} {
                 }
             }; // Messages::Chat::Entry
+
+            /** Simple conversation files reader.
+             
+                Allows reading and seeking of individual message entries.
+             */
+            class Reader {
+
+            }; // Messages::Chat::Reader
 
             /** Telegram id of the chat. 
              */
@@ -155,6 +164,26 @@ namespace rckid {
         class Conversation : public ui::Form<void> {
         public:
 
+            /** Single messgae visualization.
+             */
+            class Message : public ui::Widget {
+            public:
+                
+                Message(Chat::Entry && entry, Contact const * sender):
+                    ui::Widget{Rect::WH(320, 24)},
+                    entry_{std::move(entry)},
+                    sender_{sender}
+                {
+                }
+
+                bool isOwnMessage() const { return sender_ == nullptr; }
+
+            private:
+                Chat::Entry entry_;
+                // who sent the message, nullptr if own msg
+                Contact const * sender_;
+            }; // Conversation::Message
+
             /** Use umbrella names for all messages stuff.
              */
             String name() const override { return "Messages"; }
@@ -170,6 +199,11 @@ namespace rckid {
                 // as we always display newest messages, mark the chat as read
                 chat_->unread_ = false;
                 g_.addChild(view_);
+                // load contacts as we will need them
+                Contact::forEach([this](Contact c){
+                    if (c.telegramId != 0)
+                        contacts_.insert(std::make_pair(c.telegramId, std::move(c)));
+                });
                 // TODO load the messages here
             }
 
@@ -200,6 +234,7 @@ namespace rckid {
 
             ui::ScrollView view_;
             std::vector<ui::Label> msgs_;
+            std::unordered_map<int64_t, Contact> contacts_;
         }; // Conversation
 
         /** Task responsible for the message delivery and actions. 
