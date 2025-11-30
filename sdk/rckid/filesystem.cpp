@@ -194,6 +194,23 @@ namespace rckid::fs {
 #endif
     }
 
+    uint32_t FileRead::tell() const {
+#if RCKID_ENABLE_HOST_FILESYSTEM
+        ASSERT(host_ != nullptr);
+        std::streamsize size = host_->tellg();
+        return static_cast<uint32_t>(size);
+#else
+        switch (drive_) {
+            case static_cast<unsigned>(Drive::SD):
+                return static_cast<uint32_t>(sd_.fptr);
+            case static_cast<unsigned>(Drive::Cartridge):
+                return lfs_file_tell(& lfs_, & cart_);
+            default:
+                ASSERT(false); // telling position of invalid file is not allowed
+        }
+#endif
+    }
+
     uint32_t FileRead::read(uint8_t * buffer, uint32_t numBytes) {
 #if RCKID_ENABLE_HOST_FILESYSTEM
         ASSERT(host_ != nullptr);

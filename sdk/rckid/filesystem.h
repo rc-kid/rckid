@@ -71,6 +71,8 @@ namespace rckid::fs {
 
         uint32_t seek(uint32_t position) override;
 
+        uint32_t tell() const;
+
         uint32_t read(uint8_t * buffer, uint32_t numBytes) override;
 
         bool eof() const override;

@@ -40,6 +40,10 @@ namespace rckid {
                 int64_t sender;
                 String payload;
 
+                /** Creates an empty entry, should only be useful for deserialization purposes - otherwise entries should be created via the named static method constructors. 
+                 */
+                Entry(): kind{Kind::Text}, sender{0} { }
+
                 static Entry Message(int64_t from, String text) {
                     return Entry{Kind::Text, timeNow(), from, std::move(text)};
                 }
@@ -61,6 +65,24 @@ namespace rckid {
                     serialize(stream, size + HEADER_SIZE + 4);
                 }
 
+                friend void deserialize(ReadStream & stream, Entry & entry) {
+                    uint32_t kind;
+                    deserialize(stream, kind);
+                    entry.kind = static_cast<Kind>(kind);
+                    deserialize(stream, entry.time);
+                    deserialize(stream, entry.sender);
+                    switch (entry.kind) {
+                        case Kind::Text:
+                            deserialize(stream, entry.payload);
+                            break;
+                        default:
+                            UNREACHABLE;
+                    }
+                    // total size, can be ignored, only useful for backwards searching
+                    uint32_t size;
+                    deserialize(stream, size); 
+                }
+
             private:
 
                 static constexpr uint32_t HEADER_SIZE = sizeof(uint32_t) + sizeof(TinyDateTime) + sizeof(int64_t) + sizeof(uint32_t);
@@ -72,9 +94,92 @@ namespace rckid {
 
             /** Simple conversation files reader.
              
-                Allows reading and seeking of individual message entries.
+                Allows reading and seeking of individual message entries. Since the FatFS only allows single handle per file, the reader should must be used carefully and constructed only when needed, destroyed immediately afterwards.
              */
             class Reader {
+            public:
+
+                /** Creates the conversation reader, opens the conversation file and seeks to the beginning of the conversation.
+                 */
+                Reader(Chat const & chat):
+                    f_{fs::fileRead(chat.conversationPath())} {
+                }
+
+                /** Creates the conversation reader, opens the conversation file and seeks to the given position (in bytes)
+                 */
+                Reader(Chat const & chat, uint32_t position):
+                    f_{fs::fileRead(chat.conversationPath())} {
+                    f_.seek(position);
+                }
+
+                /** Returns true if the reader is at the end of the conversation file.
+                 */
+                bool eof() const { return f_.eof(); }
+
+                /** Seeks given number of entries from the current position.
+                 
+                    Positive values seek to newer messages, negative values seek to older messages. Returns the number of entries actually seeked, which may be less than requested if start or end of the file is reached.
+                 */
+                int32_t seek(int32_t offset) {
+                    int32_t count = 0;
+                    while (offset < 0) {
+                        uint32_t curr = f_.tell();
+                        if (curr == 0)
+                            break;
+                        f_.seek(curr - 4);
+                        uint32_t previousSize;
+                        deserialize(f_, previousSize);
+                        f_.seek(curr - previousSize);
+                        count -= 1;
+                        ++offset;
+                    }
+                    while (offset > 0) {
+                        if (f_.eof())
+                            break;
+                        Chat::Entry e;
+                        deserialize(f_, e);
+                        count += 1;
+                        --offset;
+                    }
+                    return count;
+                }
+
+                /** Seeks to the start of the conversation. 
+                 */
+                void seekStart(int32_t offset = 0) {
+                    f_.seek(0);
+                    if (offset != 0)
+                        seek(offset);
+                }
+
+                /** Seeks to the end of the conversation file.
+                 */
+                void seekEnd(int32_t offset = 0) {
+                    f_.seek(f_.size());
+                    if (offset != 0)
+                        seek(offset);
+                }
+
+                /** Reads up to maxEntries from current position.
+                 
+                    Calls the provided callback for each entry read. Returns the number of entries actually read.
+                 */
+                uint32_t read(uint32_t maxEntries, std::function<void(Entry)> callback) {
+                    uint32_t count = 0;
+                    while (count < maxEntries && ! eof()) {
+                        Chat::Entry e;
+                        deserialize(f_, e);
+                        callback(std::move(e));
+                        ++count;
+                    }
+                    return count;
+                }
+
+                uint32_t currentPos() const { return f_.tell(); }
+
+            private:
+
+                fs::FileRead f_;
 
             }; // Messages::Chat::Reader
 
@@ -205,11 +310,13 @@ namespace rckid {
                         contacts_.insert(std::make_pair(c.telegramId, std::move(c)));
                 });
                 // TODO load the messages here
+                loadMessages();
             }
 
             ~Conversation() override {
                 chat_->conversation_ = nullptr;
             }
+
         protected:
 
             void update() override {
@@ -227,6 +334,33 @@ namespace rckid {
                         );
                     }
                 }
+            }
+
+            void loadMessages() {
+                Chat::Reader reader{*chat_};
+                reader.read(20, [this](Chat::Entry e){
+                    LOG(LL_INFO, "Loaded message: " << e.payload);
+                    /*
+                    Contact const * sender = nullptr;
+                    auto it = contacts_.find(e.sender);
+                    if (it != contacts_.end())
+                        sender = &it->second;
+                    msgs_.emplace_back(std::move(e), sender);
+                    view_.addChild(msgs_.back());
+                    */
+                });
+                reader.seek(-10);
+                reader.read(20, [this](Chat::Entry e){
+                    LOG(LL_INFO, "Loaded message: " << e.payload);
+                    /*
+                    Contact const * sender = nullptr;
+                    auto it = contacts_.find(e.sender);
+                    if (it != contacts_.end())
+                        sender = &it->second;
+                    msgs_.emplace_back(std::move(e), sender);
+                    view_.addChild(msgs_.back());
+                    */
+                });
             }
 
         private:
@@ -264,6 +398,7 @@ namespace rckid {
         protected:
 
             void tick() override {
+                return; // TODO remove this, is only for testing now
                 if (wifi_->connected() && (uptimeUs64() >= nextUpdateTime_)) {
                     LOG(LL_INFO, "Checking for new updates...");
                     wifi_->https_get(
@@ -488,140 +623,3 @@ namespace rckid {
     }; // rckid::Messages
 
 } // namespace rckid
-
-#ifdef FOOBAR
-
-namespace rckid {
-
-    /** Simple messaging app
-     
-        Using telegram bot API, the messaging app should look & feel like a very simple telegram client.
-
-        Chat app is just a list of text with possible icons for images or sounds sent. The chats are read from a file that contains the text and links to stored documents. The format is such that it is easy to travel between them in both ways
-
-     */
-    class Messages {
-    public:
-
-        /** Record in the message history.
-         
-            Records are simple structures that store the record kind (text message, other content, etc.), date & time when the message was received or sent (incoming or outgoing), the size of the payload and the payload itself. To make the file in which records are stored walkable in both directions, after the payload, the size of the payload is repeated again for simple backward searching.
-         
-            For the text messages, the payload is the null terminated string itself. For content kinds (audio, image), the payload is the filename of the downloaded content. 
-         */
-        class Record {
-        public:
-            enum class Kind : uint8_t {
-                Text,
-                File,
-            }; // Record::Kind
-            Kind kind;
-            TinyDateTime time;
-            uint64_t sender;
-            uint32_t size;
-            uint8_t data[];
-
-            friend void serialize(WriteStream & stream, Record const & record) {
-                serialize(stream, static_cast<uint8_t>(record.kind));
-                serialize(stream, record.time);
-                serialize(stream, record.sender);
-                serialize(stream, record.size);
-                serialize(stream, record.data, record.size);
-                serialize(stream, record.size);
-            }
-
-            friend void deserialize(ReadStream & stream, Record * & record) {
-                if (stream.eof()) {
-                    record = nullptr;
-                    return;
-                }
-                Messages::Record::Kind kind = static_cast<Messages::Record::Kind>(deserialize<uint8_t>(stream));
-                TinyDateTime time = deserialize<TinyDateTime>(stream);
-                uint64_t sender = deserialize<uint64_t>(stream);
-                uint32_t size = deserialize<uint32_t>(stream);
-                // alloocate the necessary space
-                record = (Record*) malloc(sizeof(Record) + size);
-                record->kind = kind;
-                record->time = time;
-                record->sender = sender;
-                record->size = size;
-                deserialize(stream, record->data, size);
-                uint32_t sizeAgain = deserialize<uint32_t>(stream);
-                ASSERT(sizeAgain == size);
-            }
-        }; // Messages::Record
-
-
-        /** Manages single conversation. 
-         
-            
-         */
-        class Conversation {
-        public:
-
-        private:
-            
-
-        }; // Messages::Conversation
-
-
-    //protected:
-
-        /** Single conversation.
-         
-            The conversation is a simple scrollable view of the conversation history that displays the messages and buttons for viewing the extra content (images, audio). 
-         
-         */
-        class ConversationView : public ui::Form<void> {
-        public:
-
-            /** Use umbrella names for all messages stuff.
-             */
-            String name() const override { return "Messages"; }
-
-            ConversationView() {
-                view_ = g_.addChild(new ui::ScrollView{});
-                view_->setRect(Rect::XYWH(0, 20, 320, 200));
-                for (uint32_t i = 0; i < 50; ++i) {
-                    ui::Label * msg = view_->addChild(new ui::Label());
-                    msg->setRect(Rect::XYWH(0, i * 20, 320, 20));
-                    msg->setText(STR("Me: This is msg #" << i));
-                    msgs_.push_back(msg);
-                }
-                view_->setOffsetTop(10);
-                InfoDialog::info("Hello", "On noez");
-                /*
-                p_ = view_->addChild(new ui::Panel{});
-                p_->setRect(Rect::XYWH(-10,-10,20,20));
-                p_->setBg(ColorRGB::Blue());
-                */
-            }
-
-        protected:
-
-            void update() override {
-                if (btnPressed(Btn::Up))
-                    view_->setOffsetTop(view_->offsetTop() - 10);
-                if (btnPressed(Btn::Down))
-                    view_->setOffsetTop(view_->offsetTop() + 10);
-                if (btnPressed(Btn::Left))
-                    view_->setOffsetLeft(view_->offsetLeft() - 10);
-                if (btnPressed(Btn::Right))
-                    view_->setOffsetLeft(view_->offsetLeft() + 10);
-
-            }
-
-        private:
-
-            ui::ScrollView * view_;
-            std::vector<ui::Label *> msgs_;
-
-        }; // Messages::ConversationView
-
-    }; // Messages
-
-
-} // namespace rckid
-
-#endif
-
