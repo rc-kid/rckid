@@ -100,8 +100,9 @@ Must-have before wider release
 
 - pngenc: https://github.com/bitbank2/PNGenc
 - when new conversaton is added and its the first conversation, it is not displayed
-- make messages prettier
-- multi-line label
+- own messages not displayed right
+- add border
+- scrollview scrolling when focused
 - keep the offset so that we can go back
 - check wifi available, etc. 
 - make more robust

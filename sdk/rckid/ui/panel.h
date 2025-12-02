@@ -14,6 +14,8 @@ namespace rckid::ui {
 
         void setBg(ColorRGB bg) { bg_ = bg; }
 
+        ColorRGB bg() const { return bg_;}
+
     protected:
 
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {

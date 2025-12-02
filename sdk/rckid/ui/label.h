@@ -58,6 +58,49 @@ namespace rckid::ui {
             return true;
         }
 
+        /** Sets part of the string that fits in a single line using the given label size, returning the rest. 
+         */
+        String setTextLine(String const & value) {
+            uint32_t end = 0; // end of the text that fits
+            uint32_t endSep = 0;
+            Coord w = 0;
+            while (end < value.size()) {
+                char c = value[end];
+                GlyphInfo const & gi = font_.glyphInfoFor(c);
+                if (w + gi.advanceX > width())
+                    break;
+                w += gi.advanceX;
+                ++end;
+                if (isWordSeparator(c))
+                    endSep = end;
+                if (c == '\n')
+                    break;
+            }
+            uint32_t start; // start of the remainder
+            if ((endSep > 0) && (end < value.size() - 1)) {
+                end = endSep - 1;
+                start = endSep;
+            } else {
+                start = end;
+            }
+            String res = value.substr(start);
+            String newText = value.substr(0, end);
+            setText(std::move(newText));
+            return res;
+        }
+
+        static bool isWordSeparator(char c) {
+            if (c >= 'a' && c <= 'z')
+                return false;
+            if (c >= 'A' && c <= 'Z')
+                return false;
+            if (c >= '0' && c <= '9')
+                return false;
+            if (c == '_')
+                return false;
+            return true;
+        }
+
         void resizeToText() {
             w_ = textWidth();
             h_ = font_.size;

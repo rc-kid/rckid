@@ -279,32 +279,82 @@ namespace rckid {
                 
                 Message(Chat::Entry && entry, Contact const * sender):
                     ui::Widget{Rect::WH(320, 40)},
-                    entry_{std::move(entry)},
+                    //entry_{std::move(entry)},
                     sender_{sender}
                 {
-                    who_ = addChild(new ui::Label{Rect::XYWH(4, 4, 312, 16), sender_ != nullptr ? sender_->name : "Me"});
-                    what_ = addChild(new ui::Label{Rect::XYWH(4, 16, 312, 24), entry_.payload});
-                    who_->setFont(Font::fromROM<assets::Iosevka16>());
-                    what_->setFont(Font::fromROM<assets::Iosevka24>());
-                    if (sender_ != nullptr) {
-                        who_->setColor(sender_->color);
-                        what_->setColor(sender_->color);
+                    if (! isOwnMessage()) {
+                        who_ = addChild(new ui::Label{Rect::XYWH(14, 4, 312, 16), sender_->name});
+                        who_->resizeToText();
+                        //who_->setColor(sender_->color);
                         who_->setHAlign(HAlign::Left);
-                        what_->setHAlign(HAlign::Left);
+                        bg_ = sender->color.withAlpha(64);
                     } else {
-                        who_->setHAlign(HAlign::Right);
-                        what_->setHAlign(HAlign::Right);
+                        bg_ = ui::Style::accentFg().withAlpha(64);
                     }
+                    addText(std::move(entry.payload));
                 }
 
                 bool isOwnMessage() const { return sender_ == nullptr; }
 
+                void addText(String text) {
+                    ui::Widget * last = lastChild();
+                    Coord offsetY = last == nullptr ? 0 : (last->y() + last->height());
+                    while (text.size() > 0) {
+                        ui::Label * l = new ui::Label{Rect::XYWH(isOwnMessage() ? 4 : 14, offsetY, 298, 24),""};
+                        l->setFont(Font::fromROM<assets::OpenDyslexic32>());
+                        text = l->setTextLine(text);
+                        if (sender_ != nullptr) {
+                            l->setHAlign(HAlign::Left); 
+                            l->setColor(sender_->color);
+                        } else {
+                            l->setHAlign(HAlign::Right);
+                        }
+                        l->resizeToText();
+                        addChild(l);
+                        offsetY += l->height() - 4;
+
+                    }
+                    setHeight(offsetY);
+                    adjustRectangle();
+                }
+
+                void adjustRectangle() {
+                    Coord width = 0;
+                    for (auto child : children_) {
+                        if (child != who_ && child->width() > width)
+                            width = child->width();
+                    }
+                    width += 22;
+                    setWidth(width);
+                    if (isOwnMessage())
+                        setX(320 - width);
+                    else
+                        setX(0);
+                }
+
+            protected:
+
+                void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
+                    uint16_t rawBg = bg_.raw16();
+                    if (isOwnMessage() && (column >= width() - 10)) {
+                        for (Coord i = starty, e = width() - column; i < e; ++i)
+                            buffer[i - starty] = rawBg;
+                    } else if (! isOwnMessage() && (column < 10)) {
+                        for (Coord i = starty; i < column; ++i)
+                            buffer[i - starty] = rawBg;
+                    } else {
+                        for (Coord i = 0; i < numPixels; ++i)
+                            buffer[i] = rawBg;
+                    }
+                    Widget::renderColumn(column, buffer, starty, numPixels);
+                }
+
+
             private:
-                Chat::Entry entry_;
                 // who sent the message, nullptr if own msg
                 Contact const * sender_;
                 ui::Label * who_;
-                ui::Label * what_;
+                ColorRGB bg_;
             }; // Conversation::Message
 
             /** Use umbrella names for all messages stuff.
@@ -327,7 +377,11 @@ namespace rckid {
                         contacts_.insert(std::make_pair(c.telegramId, std::move(c)));
                 });
                 // load the messages
-                loadMessages();
+                {
+                    Chat::Reader reader{*chat_};
+                    reader.seekEnd(-20);
+                    loadMessages(reader);
+                }
                 view_->scrollBottomLeft();
             }
 
@@ -356,8 +410,7 @@ namespace rckid {
                 }
             }
 
-            void loadMessages() {
-                Chat::Reader reader{*chat_};
+            void loadMessages(Chat::Reader & reader) {
                 reader.read(20, [this](Chat::Entry e){
                     LOG(LL_INFO, "Loaded message: " << e.payload);
                     addMessage(std::move(e));
@@ -382,7 +435,7 @@ namespace rckid {
 
             void addMessage(Chat::Entry && entry) {
                 ui::Widget * last = view_->lastChild();
-                Coord offset = last == nullptr ? 0 : last->y() + last->height();
+                Coord offset = last == nullptr ? 0 : last->y() + last->height() + 6;
                 Contact * sender = getContactFor(entry.sender);
                 Message * msg = new Message(std::move(entry), sender);
                 msg->setY(offset);
@@ -440,13 +493,15 @@ namespace rckid {
         protected:
 
             void tick() override {
-                uint64_t now = uptimeUs64();
-                if (wifi_->connected() && (now >= nextUpdateTime_)) {
+                //uint64_t now = uptimeUs64();
+                if (wifi_->connected() && ! updateInProgress_) {
                     LOG(LL_INFO, "Checking for new updates...");
+                    updateInProgress_ = true;
                     wifi_->https_get(
                         "api.telegram.org", 
-                        STR("/bot" << botId_ << ':' << botToken_ << "/getUpdates?offset=" << lastOffset_),
+                        STR("/bot" << botId_ << ':' << botToken_ << "/getUpdates?timeout=60&offset=" << lastOffset_),
                         [this](uint32_t status, uint32_t size, uint8_t const * data) {
+                            updateInProgress_ = false;
                             if (status == 200) {
                                 retries_ = 0;
                                 processUpdate(size, data);
@@ -454,30 +509,33 @@ namespace rckid {
                                 LOG(LL_ERROR, "Failed to get updates, status: " << status);
                                 // if wifi is connected still, schedule a retry with some backoff
                                 // immediately 0.5s 1s 2s 4s 8s 16s 32s...
+                                /*
                                 if (wifi_->connected() && retries_ < 5) {
                                     nextUpdateTime_ = uptimeUs64() + (retries_ == 0 ) ? 0 : (1 << (retries_ -1)) * 500000;
                                     if (++retries_ > 8)
                                         retries_ = 0;                                     
                                 }
+                                        */
                             }
                         }
                     );
-                    nextUpdateTime_ = now + 60 * 1000000; // check every minute
+                    //nextUpdateTime_ = now + 60 * 1000000; // check every minute
                 }
                 // and see if there is anything to send
                 processOutgoingMessages();
             }
-
+            /*
             void requestUpdate() {
                 nextUpdateTime_ = 0;
             }
+                */
 
             void processUpdate(uint32_t size, uint8_t const * data) {
                 auto s = MemoryReadStream{data, size};
                 json::Object res = json::parse(s);
                 //LOG(LL_INFO, "Update response: \n" << res);
                 if (res["ok"].asBoolean()) {
-                    bool changed = false;
+                    //bool changed = false;
                     bool newMsg = false;
                     for (auto & item : res["result"]) {
                         int64_t updateId = item["update_id"].asInteger();
@@ -506,10 +564,10 @@ namespace rckid {
                             }
                         }
                         lastOffset_ = updateId + 1;
-                        changed = true;
+                        //changed = true;
                     }
-                    if (changed)
-                        requestUpdate();
+                    //if (changed)
+                    //    requestUpdate();
                 }
             }
 
@@ -678,6 +736,7 @@ namespace rckid {
             int64_t parentId_;
 
             int64_t lastOffset_ = 0;
+            bool updateInProgress_ = false;
             uint64_t nextUpdateTime_ = 0;
             uint32_t retries_ = 0;
 
