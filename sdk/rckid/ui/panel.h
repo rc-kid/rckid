@@ -18,6 +18,10 @@ namespace rckid::ui {
 
     protected:
 
+        Panel(Rect rect, FormWidget * form):
+            Widget{rect, form} {
+        }
+
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
             for (Coord i = 0; i < numPixels; ++i)
                 buffer[i] = bg_.raw16();

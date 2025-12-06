@@ -28,7 +28,7 @@ namespace rckid::ui {
         }
 
         FormWidget(Rect rect, bool raw = false): 
-            Panel{rect},
+            Panel{rect, this},
             buffer_{RCKID_DISPLAY_HEIGHT},
             bgImage_{! raw},
             header_{! raw} {
@@ -126,6 +126,19 @@ namespace rckid::ui {
             }
         }
 
+        Widget * focused() const { return focused_; }
+
+        void setFocused(Widget * widget) {
+            ASSERT(widget->form() == this);
+            focused_ = widget;
+        }
+
+        void update() override {
+            Panel::update();
+            if (focused_ != nullptr)
+                focused_->processEvents();
+        }
+
     protected:
 
         friend class Header;
@@ -147,6 +160,8 @@ namespace rckid::ui {
         bool bgImage_ = true;
         bool header_ = true;
 
+        Widget * focused_ = nullptr;
+
         static inline Coord bgX_ = 0;
         static inline Coord bgY_ = 0;
         static inline Image * bg_ = nullptr;
@@ -165,23 +180,6 @@ namespace rckid::ui {
             RenderableApp<ui::FormWidget, T>{std::forward<Args>(args)...} 
         {
         }
-
-    protected:
-
-        void focus() override {
-            RenderableApp<ui::FormWidget, T>::focus();
-            if (oldFocus_ != nullptr)
-                oldFocus_->focus();
-
-        }
-
-        void blur() override {
-            RenderableApp<ui::FormWidget, T>::blur();
-            oldFocus_ = Widget::focusedWidget();
-        }
-
-    private:
-        Widget * oldFocus_ = nullptr;
 
     }; 
 

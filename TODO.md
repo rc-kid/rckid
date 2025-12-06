@@ -106,7 +106,6 @@ Must-have before wider release
 - make more robust
 - music player disables background tasks, yet uses own bg tasks, which of course does not work
 
-
 - a more polished and reasonable palette for the header
 - callback to wifi status
 - https://github.com/raspberrypi/pico-examples/blob/master/pico_w/wifi/http_client/example_http_client_util.c

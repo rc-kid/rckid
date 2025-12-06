@@ -297,7 +297,7 @@ namespace rckid {
                 bool isOwnMessage() const { return sender_ == nullptr; }
 
                 void addText(String text) {
-                    ui::Widget * last = lastChild();
+                    ui::Widget * last = children().empty() ? nullptr : children().back();
                     Coord offsetY = last == nullptr ? 0 : (last->bottom());
                     while (text.size() > 0) {
                         ui::Label * l = new ui::Label{Rect::XYWH(isOwnMessage() ? 4 : 14, offsetY, 298, 24),""};
@@ -476,6 +476,8 @@ namespace rckid {
                     LOG(LL_INFO, "Loaded message: " << e.payload);
                     addMessage(std::move(e));
                 });
+                if (! view_->children().empty())
+                    view_->children().back()->focus();
             }
 
             bool atEnd() const {
@@ -495,7 +497,7 @@ namespace rckid {
             }
 
             void addMessage(Chat::Entry && entry) {
-                ui::Widget * last = view_->lastChild();
+                ui::Widget * last = view_->children().empty() ? nullptr : view_->children().back();
                 Coord offset = last == nullptr ? 0 : last->bottom() + 6;
                 Contact * sender = getContactFor(entry.sender);
                 Message * msg = new Message(std::move(entry), sender);

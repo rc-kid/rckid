@@ -6,6 +6,8 @@
 
 namespace rckid::ui {
 
+    class FormWidget; 
+
     /** Basic UI element.
      
         Each UI element has its own position and defines the rendering of a single column of pixels, which allows very flexible rendering of many UI elements with very little memory footprint as only a single column buffer is necessaary regardless of the number of elements.
@@ -85,6 +87,7 @@ namespace rckid::ui {
         template<typename T>
         T * addChild(T * child) {
             children_.push_back(child);
+            child->form_ = form_;
             return child;
         }
 
@@ -96,12 +99,6 @@ namespace rckid::ui {
 
         std::vector<Widget *> const & children() const { return children_; }
 
-        Widget * lastChild() const {
-            if (children_.size() == 0)
-                return nullptr;
-            return children_.back();
-        }
-
         bool visible() const { return visible_; }
         
         void setVisible(bool value) {
@@ -112,15 +109,19 @@ namespace rckid::ui {
          
             Focused widget will have its processEvents() method called during update. 
          */
-        bool focused() const { return focused_ == this; }
+        bool focused() const;
 
         /** Focuses the widget on which the method is called. 
          */
-        void focus() { focused_ = this; }
+        void focus();
+
+        /** Returns the form the widget belongs to. 
+         */
+        FormWidget * form() const { return form_; }
 
         /** Returns the currenly focused widget, or nullptr if no widget is in focus. 
          */
-        static Widget * focusedWidget() { return focused_; }
+        //static Widget * focusedWidget() { return focused_; }
 
         /** Update method
          
@@ -129,8 +130,6 @@ namespace rckid::ui {
         virtual void update() {
             for (auto w : children_)
                 w->update();
-            if (focused())
-                processEvents();
         }
 
         /** Draw method. 
@@ -165,7 +164,13 @@ namespace rckid::ui {
             x_{x}, y_{y} {
         }
 
-        Widget(Rect rect): x_{rect.x}, y_{rect.y}, w_{rect.w}, h_{rect.h} {}
+        Widget(Rect rect): 
+            x_{rect.x}, y_{rect.y}, w_{rect.w}, h_{rect.h} {
+        }
+
+        Widget(Rect rect, FormWidget * form): 
+            x_{rect.x}, y_{rect.y}, w_{rect.w}, h_{rect.h}, form_{form} {
+        }
 
 
         /** Called when the widget is resized so that child classes can override and react to the change such as repositioning their contents. 
@@ -276,7 +281,7 @@ namespace rckid::ui {
 
         std::vector<Widget *> children_;
 
-        static inline Widget * focused_ = nullptr;
+        FormWidget * form_ = nullptr;
 
     }; // rcikd::ui::Widget
 
