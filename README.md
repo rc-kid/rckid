@@ -91,6 +91,9 @@ And to run the debugger, can run gdb from the computer that compiled the cartrid
 
 Where `IP_ADDR` is the IP address of the rpi server. 
 
+    monitor reset init
+    
+
 (from https://betanet.net/view-post/using-openocd-on-raspberry-pi-4-a)
 
 ### AVR Serial TX

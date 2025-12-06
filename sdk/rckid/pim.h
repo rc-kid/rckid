@@ -35,6 +35,7 @@ namespace rckid {
         /** Color identifying the contact. 
          */
         ColorRGB color = ui::Style::fg();
+        ColorRGB bgColor = ui::Style::bg();
 
         int64_t telegramId = 0;
 
@@ -54,6 +55,8 @@ namespace rckid {
                     note = kv->second;
                 } else if (kv->first == "color") {
                     color = ColorRGB::fromString(kv->second);
+                } else if (kv->first == "bgColor") {
+                    bgColor = ColorRGB::fromString(kv->second);
                 } else if (kv->first == "telegramId") {
                     telegramId = std::atoll(kv->second.c_str());
                 } else if (kv->first == "birthday") {
@@ -85,6 +88,8 @@ namespace rckid {
             writer.writeValue("note", note);
             if (color != ui::Style::fg())
                 writer.writeValue("color", color.toString());
+            if (bgColor != ui::Style::bg())
+                writer.writeValue("bgColor", color.toString());
             if (telegramId != 0)
                 writer.writeValue("telegramId", STR(telegramId));
         }

@@ -24,8 +24,10 @@ namespace rckid::ui {
             clearChildren();
         }
 
-        Coord x() const { return x_; }
-        Coord y() const { return y_; }
+        Coord left() const { return x_; }
+        Coord top() const { return y_; }
+        Coord bottom() const { return y_ + h_; }
+        Coord right() const { return x_ + w_; }
         Point pos() const { return Point{x_, y_}; }
 
         Coord width() const { return w_; }
@@ -91,6 +93,8 @@ namespace rckid::ui {
                 delete w;
             children_.clear();
         }
+
+        std::vector<Widget *> const & children() const { return children_; }
 
         Widget * lastChild() const {
             if (children_.size() == 0)

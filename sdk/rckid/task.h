@@ -36,8 +36,8 @@ namespace rckid {
         /** Runs the tick method for all registered background tasks.
          */
         static void tickAll() {
-            if (disable_ > 0)
-                return;
+            //if (disable_ > 0)
+            //    return;
             Task * x = taskList_;
             while (x != nullptr) {
                 x->tick();

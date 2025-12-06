@@ -100,12 +100,12 @@ Must-have before wider release
 
 - pngenc: https://github.com/bitbank2/PNGenc
 - when new conversaton is added and its the first conversation, it is not displayed
-- own messages not displayed right
-- add border
 - scrollview scrolling when focused
 - keep the offset so that we can go back
 - check wifi available, etc. 
 - make more robust
+- music player disables background tasks, yet uses own bg tasks, which of course does not work
+
 
 - a more polished and reasonable palette for the header
 - callback to wifi status
@@ -121,6 +121,9 @@ Must-have before wider release
 - bootloader cartridge (this will only flash the memory)
 
 - move brightness and audio settings from avr status
+- update & processEvents are not really honoured in the ui 
+
+- update scrollview to be able to scroll horizontally as well, check its update method for scrolling handling, cleanup the code
 
 - for the flashlight, somehow at the beginning there is a faint glow even when turned off, this seems to disappear after a while
 

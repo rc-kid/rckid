@@ -287,9 +287,9 @@ namespace rckid {
                         who_->resizeToText();
                         //who_->setColor(sender_->color);
                         who_->setHAlign(HAlign::Left);
-                        bg_ = sender->color.withAlpha(64);
+                        bg_ = sender->bgColor;
                     } else {
-                        bg_ = ui::Style::accentFg().withAlpha(64);
+                        bg_ = ui::Style::accentBg();
                     }
                     addText(std::move(entry.payload));
                 }
@@ -298,7 +298,7 @@ namespace rckid {
 
                 void addText(String text) {
                     ui::Widget * last = lastChild();
-                    Coord offsetY = last == nullptr ? 0 : (last->y() + last->height());
+                    Coord offsetY = last == nullptr ? 0 : (last->bottom());
                     while (text.size() > 0) {
                         ui::Label * l = new ui::Label{Rect::XYWH(isOwnMessage() ? 4 : 14, offsetY, 298, 24),""};
                         l->setFont(Font::fromROM<assets::OpenDyslexic32>());
@@ -308,11 +308,13 @@ namespace rckid {
                             l->setColor(sender_->color);
                         } else {
                             l->setHAlign(HAlign::Right);
+                            l->setColor(ui::Style::accentFg());
                         }
                         l->resizeToText();
                         addChild(l);
                         offsetY += l->height() - 4;
-
+                        for (uint32_t i = 0; i < 100; ++i)
+                            yield();
                     }
                     setHeight(offsetY);
                     adjustRectangle();
@@ -335,16 +337,54 @@ namespace rckid {
             protected:
 
                 void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
+                    ASSERT(numPixels > 0);
+                    // draw message bubble background first
                     uint16_t rawBg = bg_.raw16();
                     if (isOwnMessage() && (column >= width() - 10)) {
-                        for (Coord i = starty, e = width() - column; i < e; ++i)
+                        for (Coord i = starty, e = width() - column; (i < e) && (i - starty < numPixels); ++i)
                             buffer[i - starty] = rawBg;
                     } else if (! isOwnMessage() && (column < 10)) {
-                        for (Coord i = starty; i < column; ++i)
+                        for (Coord i = starty; (i < column) && (i - starty < numPixels); ++i)
                             buffer[i - starty] = rawBg;
                     } else {
                         for (Coord i = 0; i < numPixels; ++i)
                             buffer[i] = rawBg;
+                    } 
+                    // if the message is focused, draw border around it
+                    if (focused()) {
+                        rawBg = (sender_ == nullptr) ? ui::Style::accentFg().raw16() : sender_->color.raw16();
+                        // top, which is always part of the border
+                        if (starty == 0)
+                            buffer[0] = rawBg;
+                        if (isOwnMessage()) {
+                            if (column >= width() - 10) {
+                                Coord x = width() - column - 1 - starty;
+                                if (x >= 0 && x < numPixels)
+                                    buffer[x] = rawBg;
+                            } else if (column == width() - 11) {
+                                for (Coord i = (starty < 10) ? (10 - starty) : 0; i < numPixels; ++i)
+                                    buffer[i] = rawBg;
+                            } else if (column == 0) {
+                                for (Coord i = 1; i < numPixels; ++i)
+                                    buffer[i] = rawBg;
+                            } else if (numPixels + starty == height()) {
+                                buffer[numPixels - 1] = rawBg;
+                            }
+                        } else {
+                            if (column < 10) {
+                                Coord x = column - starty;
+                                if (x >= 0 && x < numPixels)
+                                    buffer[x] = rawBg;
+                            } else if (column == 10) {
+                                for (Coord i = (starty < 10) ? (10 - starty) : 0; i < numPixels; ++i)
+                                    buffer[i] = rawBg;
+                            } else if (column == width() - 1) {
+                                for (Coord i = 1; i < numPixels; ++i)
+                                    buffer[i] = rawBg;
+                            } else if (starty + numPixels == height()) {
+                                buffer[numPixels - 1] = rawBg;
+                            }
+                        }
                     }
                     Widget::renderColumn(column, buffer, starty, numPixels);
                 }
@@ -379,10 +419,15 @@ namespace rckid {
                 // load the messages
                 {
                     Chat::Reader reader{*chat_};
-                    reader.seekEnd(-20);
-                    loadMessages(reader);
+                    if (reader.eof()) {
+                        // TODO do something
+                    } else {
+                        reader.seekEnd(-20);
+                        loadMessages(reader);
+                    }
                 }
                 view_->scrollBottomLeft();
+                i_ = view_->children().size() - 1;
             }
 
             ~Conversation() override {
@@ -406,6 +451,22 @@ namespace rckid {
                             chat_->id(),
                             text.value()
                         );
+                    }
+                }
+                if (btnPressed(Btn::Up)) {
+                    if (i_ > 0) {
+                        --i_;
+                        ui::Widget * w = view_->children()[i_];
+                        w->focus();
+                        view_->scrollToView(w);
+                    }
+                }
+                if (btnPressed(Btn::Down)) {
+                    if (i_ + 1 < view_->children().size()) {
+                        ++i_;
+                        ui::Widget * w = view_->children()[i_];
+                        w->focus();
+                        view_->scrollToView(w);
                     }
                 }
             }
@@ -435,7 +496,7 @@ namespace rckid {
 
             void addMessage(Chat::Entry && entry) {
                 ui::Widget * last = view_->lastChild();
-                Coord offset = last == nullptr ? 0 : last->y() + last->height() + 6;
+                Coord offset = last == nullptr ? 0 : last->bottom() + 6;
                 Contact * sender = getContactFor(entry.sender);
                 Message * msg = new Message(std::move(entry), sender);
                 msg->setY(offset);
@@ -459,6 +520,8 @@ namespace rckid {
             ui::ScrollView * view_;
             std::unordered_map<int64_t, Contact> contacts_;
             Contact unknown_{"Unknown"};
+
+            uint32_t i_ = 0;
         }; // Conversation
 
         /** Task responsible for the message delivery and actions. 
@@ -533,7 +596,7 @@ namespace rckid {
             void processUpdate(uint32_t size, uint8_t const * data) {
                 auto s = MemoryReadStream{data, size};
                 json::Object res = json::parse(s);
-                //LOG(LL_INFO, "Update response: \n" << res);
+                LOG(LL_INFO, "Update response: \n" << res);
                 if (res["ok"].asBoolean()) {
                     //bool changed = false;
                     bool newMsg = false;
@@ -544,22 +607,24 @@ namespace rckid {
                             continue;
                         if (item.has("message")) {
                             auto & msg = item["message"];
-                            int64_t from = msg["from"]["id"].asInteger();
-                            int64_t chatId = msg["chat"]["id"].asInteger();
-                            String text = msg["text"].asString();
-                            Chat * chat = getKnownChat(chatId);
-                            if (text.startsWith("/")) {
-                                if (from != parentId_)
-                                    LOG(LL_ERROR, "Ignoring command from unknown user " << from << ": " << text);
-                                else
-                                    processCommand(std::move(text), chatId);
-                            } else if (chat == nullptr) {
-                                LOG(LL_ERROR, "Message from " << from << " in unknown chat " << chatId << ": " << text);
-                            } else {
-                                chat->appendMessage(from, text);
-                                if (!newMsg) {
-                                    newMsg = true;
-                                    rumblerEffect(RumblerEffect::OK());
+                            if (msg.has("text")) {
+                                int64_t from = msg["from"]["id"].asInteger();
+                                int64_t chatId = msg["chat"]["id"].asInteger();
+                                String text = msg["text"].asString();
+                                Chat * chat = getKnownChat(chatId);
+                                if (text.startsWith("/")) {
+                                    if (from != parentId_)
+                                        LOG(LL_ERROR, "Ignoring command from unknown user " << from << ": " << text);
+                                    else
+                                        processCommand(std::move(text), chatId);
+                                } else if (chat == nullptr) {
+                                    LOG(LL_ERROR, "Message from " << from << " in unknown chat " << chatId << ": " << text);
+                                } else {
+                                    chat->appendMessage(from, text);
+                                    if (!newMsg) {
+                                        newMsg = true;
+                                        rumblerEffect(RumblerEffect::OK());
+                                    }
                                 }
                             }
                         }
@@ -780,6 +845,7 @@ namespace rckid {
     protected:
     
         void update() override {
+            ASSERT(c_->focused());
             ui::Form<void>::update();
             if ((btnPressed(Btn::A) || btnPressed(Btn::Up)) && t_->chats_.size() > 0) {
                 uint32_t index = c_->currentIndex();

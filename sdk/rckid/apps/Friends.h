@@ -112,6 +112,14 @@ namespace rckid {
                         setResult(true); // mark dirty
                     }
                 }));
+                contextMenu_.add(ui::ActionMenu::Item("Edit background color", [this]() {
+                    auto c = App::run<ColorPicker>(c_.bgColor);
+                    if (c.has_value()) {
+                        c_.bgColor = c.value();
+                        updateContactColor();
+                        setResult(true); // mark dirty
+                    }
+                }));
                 contextMenu_.add(ui::ActionMenu::Item("Edit note", [this]() {
                     auto n = App::run<TextDialog>("Note", c_.note);
                     if (n.has_value()) {
@@ -185,7 +193,7 @@ namespace rckid {
             }
 
             void updateContactColor() {
-                name_->setColor(c_.color);
+                //name_->setColor(c_.color);
                 birthday_->setColor(c_.color);
                 phone_->setColor(c_.color);
                 email_->setColor(c_.color);
