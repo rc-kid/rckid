@@ -204,6 +204,11 @@ ui::ActionMenu * parentMenuGenerator() {
 
 ui::ActionMenu * settingsMenuGenerator() {
     return new ui::ActionMenu{
+        ui::ActionMenu::Item("Myself", Myself::contact().image, []() {
+            auto x = App::run<Friends::ContactViewer>(Myself::contact());
+            if (x.has_value() && x.value())
+                Myself::save();
+        }),
         ui::ActionMenu::Generator("Style", assets::icons_64::paint_palette, styleMenuGenerator),
         ui::ActionMenu::Generator("Lights", assets::icons_64::brightness_1, []() {
             return new ui::ActionMenu{

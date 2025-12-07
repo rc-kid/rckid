@@ -67,33 +67,37 @@ Nice extras would include:
 - [X] parent mode
 - [X] parent mode lock
 - [ ] piggy bank
-- [ ] owner info
+- [X] owner info
 - [X] theme style settings (colors & background) 
-- [ ] extra settings (colors, etc. for system & gbcemu)
 - [X] settings menu for button lights
-- [ ] accelerometer controller background & background selection
 - [X] fm radio rds time setting
 - [ ] fm radio rds in background
 - [X] fm radio embedded antenna (tested)
 - [X] fm radio presets
 - [X] data sync app
-- [ ] RGB dimming that preserves colors (? is possible)
 - [ ] timer app
 - [ ] alarm app
 - [ ] port more games (15 puzzle at least)
 - [ ] add high scores
 - [ ] app for creating icons (64x64) so that kids can design their own. Eventually this can go larger and larger
-- [ ] in header, show volume value, not just bar when changing (?)
-- [ ] some way app can show which buttons it reacts to (faint glow for key press, only use the effect on valid keys otherwise)
 
 Must-have before wider release
 
 - [ ] AVR bootloader so that AVR firmware can be updated too
-- [ ] telegram messenger
+- [X] telegram messenger
 -   [ ] notification
+-   [ ] delete chats
+-   [ ] add to contact
 -   [ ] run in background
 -   [X] add telegram ids to users
 - [ ] webpage, releases, updates, etc.
+
+Polish
+- [ ] RGB dimming that preserves colors (? is possible)
+- [ ] in header, show volume value, not just bar when changing (?)
+- [ ] some way app can show which buttons it reacts to (faint glow for key press, only use the effect on valid keys otherwise)
+- [ ] extra settings (colors, etc. for system & gbcemu)
+- [ ] accelerometer controller background & background selection
 
 # TODO
 
