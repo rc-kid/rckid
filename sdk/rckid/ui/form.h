@@ -126,8 +126,14 @@ namespace rckid::ui {
             }
         }
 
+        /** Returns the currently focused widget, or nullptr if no widget has focus.
+         */
         Widget * focused() const { return focused_; }
 
+        /** Focuses given widget. 
+         
+            The widget should transitively belong to the form. 
+         */
         void setFocused(Widget * widget) {
             ASSERT(widget->form() == this);
             focused_ = widget;

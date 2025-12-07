@@ -119,10 +119,6 @@ namespace rckid::ui {
          */
         FormWidget * form() const { return form_; }
 
-        /** Returns the currenly focused widget, or nullptr if no widget is in focus. 
-         */
-        //static Widget * focusedWidget() { return focused_; }
-
         /** Update method
          
             Called while the UI is being re-drawn, i.e. without the drawing lock. This method can be used to update any state that the widget may have before the draw() method is called. Generally this method precomputes data that will later be used by drawing.

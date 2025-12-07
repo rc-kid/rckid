@@ -14,6 +14,7 @@
 
 #include <rckid/rckid.h>
 #include <rckid/app.h>
+#include <rckid/pim.h>
 #include <rckid/task.h>
 #include <rckid/filesystem.h>
 #include <rckid/ui/header.h>
@@ -255,6 +256,10 @@ namespace rckid {
 
         // load the UI style
         ui::Style::load();
+
+        // load device user info
+        Myself::initialize();
+
         // mark that we are initialized and the graphics & sound should be used
         initialized_ = true;
         LOG(LL_INFO, "Initialization done.");

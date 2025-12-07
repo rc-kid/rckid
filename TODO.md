@@ -64,7 +64,8 @@ Nice extras would include:
 - [X] rumbler effects on button presses
 - [X] allow background playback
 - [X] pin locking
-- [ ] parents mode
+- [X] parent mode
+- [X] parent mode lock
 - [ ] piggy bank
 - [ ] owner info
 - [X] theme style settings (colors & background) 

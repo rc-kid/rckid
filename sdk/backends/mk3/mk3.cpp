@@ -45,6 +45,7 @@ extern "C" {
 #include "i2c.h"
 #include "audio/codec.h"
 #include <rckid/app.h>
+#include <rckid/pim.h>
 #include <rckid/task.h>
 #include <rckid/filesystem.h>
 #include <rckid/ui/header.h>
@@ -484,6 +485,9 @@ namespace rckid {
         // initalize the ui style
         ui::Style::load();
         ui::Style::showRGBStyle();
+
+        // load device user info
+        Myself::initialize();
 
         time::nextSecond_ += 1000000;
 

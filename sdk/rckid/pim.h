@@ -180,15 +180,81 @@ namespace rckid {
         Aside from other contacts, the user also has the game-specific information, such as global coins and remaining screen time. 
 
      */
-    class User : public Contact {
+    class Myself {
     public:
 
+        static constexpr char const * MYSELF_PATH = "/myself.ini";
 
+        static Contact & contact() {
+            if (contact_ == nullptr)
+                loadContact();
+            return *contact_;
+        }
 
+        static String const & parentPassword() {
+            return parentPassword_;
+        }
+
+        static void setParentPassword(String const & password) {
+            parentPassword_ = password;
+            save();
+        }
+
+        static void initialize() {
+            if (fs::exists(MYSELF_PATH)) {
+                ini::Reader reader{fs::fileRead(MYSELF_PATH)};
+                while (auto section = reader.nextSection()) {
+                    if (section.value() == "contact") {
+                        if (contact_ == nullptr)
+                            contact_ = new Contact{reader};
+                    } else if (section.value() == "settings") {
+                        while (std::optional<std::pair<String, String>> kv = reader.nextValue()) {
+                            if (kv->first == "parentPassword") {
+                                parentPassword_ = kv->second;
+                            } else if (kv->first == "dailyBudget") {
+                                uint32_t b = static_cast<uint32_t>(std::atoi(kv->second.c_str()));
+                                budgetDailySet(b);
+                            } else {
+                                LOG(LL_ERROR, "Unknown myself setting: " << kv->first);
+                            }
+                        }
+                    } else {
+                        LOG(LL_ERROR, "Invalid myself section: " << section.value());
+                    }
+                }
+            }
+            if (contact_ == nullptr)
+                contact_ = new Contact{"Myself"};
+        }
+
+        static void save() {
+            ini::Writer writer{fs::fileWrite(MYSELF_PATH)};
+            contact_->save(writer);
+            writer.writeSection("settings");
+            if (!parentPassword_.empty())
+                writer.writeValue("parentPassword", parentPassword_);
+            writer.writeValue("dailyBudget", STR(budgetDaily()));
+        }
 
     protected:
-        uint32_t remainingScreenTime_ = 0; 
-        uint32_t coins_ = 0;
+
+        static void loadContact() {
+            if (fs::exists(MYSELF_PATH)) {
+                ini::Reader reader{fs::fileRead(MYSELF_PATH)};
+                while (auto section = reader.nextSection()) {
+                    if (section.value() == "myself") {
+                        if (contact_ == nullptr)
+                            contact_ = new Contact{reader};
+                    }
+                }
+            }
+            if (contact_ == nullptr)
+                contact_ = new Contact{"Myself"};
+        }
+
+    protected:
+        static inline String parentPassword_; 
+        static inline Contact * contact_ = nullptr;
 
     }; // rckid::User
 

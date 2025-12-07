@@ -157,14 +157,45 @@ ui::ActionMenu * parentMenuGenerator() {
                     budgetSet(budget() + (result.value().hour() * 60 + result.value().minute()) * 60);
                 }
             }),
+            ui::ActionMenu::Item("Daily Budget", assets::icons_64::heart, [](){
+                auto result = App::run<TimeDialog>("Daily Budget", TinyTime{budgetDaily()});
+                if (result.has_value()) {
+                    // store the daily budget in both *avr* and in the ini file on the SD card
+                    budgetDailySet(result.value().hour() * 60 + result.value().minute());
+                    Myself::save();
+                }
+            }),
             ui::ActionMenu::Item("Clear Pin", assets::icons_64::lock, [](){
                 pinSet(0xffff);
+            }),
+            ui::ActionMenu::Item("Set password", assets::icons_64::lock, [](){
+                auto x = App::run<TextDialog>("New password");
+                if (! x.has_value())
+                    return;
+                String newPassword = x.value();
+                x = App::run<TextDialog>("New password again");
+                if (! x.has_value())
+                    return;
+                if (x.value() != newPassword) {
+                    InfoDialog::error("Incorrect Password", "The passwords you entered do not match.");
+                    return;
+                }
+                Myself::setParentPassword(newPassword);
             }),
         };
     } else {
         return new ui::ActionMenu{
             ui::ActionMenu::Item("Enter", assets::icons_64::family, [](){
-                // TODO change this to check the password, etc.
+                if (! Myself::parentPassword().empty()) {
+                    auto x = App::run<TextDialog>("Parent Password");
+                    if (! x.has_value())
+                        return;
+                    if (x.value() != Myself::parentPassword()) {
+                        InfoDialog::error("Incorrect Password", "The password you entered is incorrect.");
+                        // TODO should there be budget penalty? 
+                        return;
+                    }
+                }
                 rckid::setParentMode(true);
             }),
         };

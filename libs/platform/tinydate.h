@@ -233,6 +233,12 @@ public:
 
     TinyTime() : hour_{0}, minute_{0}, second_{0} {}
 
+    TinyTime(uint32_t seconds): 
+        hour_{static_cast<uint8_t>((seconds / 3600) % 24)},
+        minute_{static_cast<uint8_t>((seconds / 60) % 60)},
+        second_{static_cast<uint8_t>(seconds % 60)} {
+    }
+
     TinyTime(uint8_t h, uint8_t m, uint8_t s = 0) {
         set(h, m, s);
     }
