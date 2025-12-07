@@ -795,6 +795,25 @@ namespace rckid::fs {
         return true;
     }
 
+    bool eraseFile(char const * path, Drive dr) {
+#if RCKID_ENABLE_HOST_FILESYSTEM
+        SystemMallocGuard g;
+        std::filesystem::path p{getHostPath(dr, path)};
+        return std::filesystem::remove(p);
+#else
+        if (!isMounted(dr))
+            return false;
+        switch (dr) {
+            case Drive::SD:
+                return f_unlink(path) == FR_OK;
+            case Drive::Cartridge:
+                return lfs_remove(&lfs_, path) == 0;
+            default:
+                UNREACHABLE;
+        }
+#endif
+    }
+
     uint32_t hash(char const * path, Drive dr) {
         FileRead f = fileRead(path, dr); 
         if (!f.good())

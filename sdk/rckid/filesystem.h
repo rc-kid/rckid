@@ -534,6 +534,10 @@ namespace rckid::fs {
      */
     bool createFolders(char const * path, Drive dr = Drive::SD);
 
+    /** Deletes given file.
+     */
+    bool eraseFile(char const * path, Drive dr = Drive::SD);
+
     /** Returns hash of given file. 
      */
     uint32_t hash(char const * path, Drive dr = Drive::SD);

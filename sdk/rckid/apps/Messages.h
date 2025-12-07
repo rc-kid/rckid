@@ -11,6 +11,7 @@
 #include "../wifi.h"
 #include "../utils/ini.h"
 #include "../utils/json.h"
+#include "../apps/dialogs/PopupMenu.h"
 
 
 namespace rckid {
@@ -198,6 +199,15 @@ namespace rckid {
             /** True if there are unread messages in the chat. 
              */
             bool unread() const { return unread_; }
+
+
+            void setName(String name) {
+                name_ = std::move(name);
+            }
+
+            void setImage(Icon image) {
+                image_ = std::move(image);
+            }
 
         private:
             friend class Task;
@@ -618,6 +628,18 @@ namespace rckid {
                 return nullptr;
             }
 
+            void deleteChat(Chat * chat) {
+                auto it = chatMap_.find(chat->id_);
+                if (it != chatMap_.end())
+                    chatMap_.erase(it);
+                auto vecIt = std::find(chats_.begin(), chats_.end(), chat);
+                if (vecIt != chats_.end())
+                    chats_.erase(vecIt);
+                fs::eraseFile(chat->conversationPath());
+                delete chat;
+                saveChats();
+            }
+
         protected:
 
             void tick() override {
@@ -912,6 +934,8 @@ namespace rckid {
         void update() override {
             ASSERT(c_->focused());
             ui::Form<void>::update();
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down))
+                exit();
             if ((btnPressed(Btn::A) || btnPressed(Btn::Up)) && t_->chats_.size() > 0) {
                 uint32_t index = c_->currentIndex();
                 if (index < t_->chats_.size()) {
@@ -919,8 +943,49 @@ namespace rckid {
                     App::run<Conversation>(chat);
                 }
             }
-            if (btnPressed(Btn::B) || btnPressed(Btn::Down))
-                exit();
+            if (btnPressed(Btn::Select) && ! t_->chats_.empty()) {
+                ui::ActionMenu popup{
+                    ui::ActionMenu::Item("Rename", [this]() {
+                        uint32_t index = c_->currentIndex();
+                        ASSERT(index < t_->chats_.size());
+                        Chat * chat = t_->chats_[index];
+                        auto name = App::run<TextDialog>("Rename chat", chat->name());
+                        if (name.has_value()) {
+                            chat->setName(std::move(name.value()));
+                            t_->saveChats();
+                            c_->setItem(index, Direction::None);
+                        }
+                    }),
+                    ui::ActionMenu::Item("Change image", [this]() {
+                        uint32_t index = c_->currentIndex();
+                        ASSERT(index < t_->chats_.size());
+                        Chat * chat = t_->chats_[index];
+                        auto icon = App::run<FileDialog>("Select chat icon", "/files/icons");
+                        if (icon.has_value()) {
+                            chat->setImage(std::move(icon.value()));
+                            t_->saveChats();
+                            c_->setItem(index, Direction::None);
+                        }
+                    })
+                };
+                if (parentMode()) {
+                    popup.add(ui::ActionMenu::Item("Delete chat", [this]() {
+                        uint32_t index = c_->currentIndex();
+                        ASSERT(index < t_->chats_.size());
+                        Chat * chat = t_->chats_[index];
+                        t_->deleteChat(chat);
+                        if (t_->chats_.empty())
+                            c_->showEmpty(Direction::None);
+                        else
+                            c_->setItem(0, Direction::None);
+                    }));
+                }
+                auto x = App::run<PopupMenu<ui::Action>>(& popup);
+                if (x.has_value()) {
+                    x.value()();
+                }
+            }
+                
         }
 
     private:

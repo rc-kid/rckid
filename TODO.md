@@ -51,6 +51,7 @@
 - [ ] low battery error and device won't power on
 - [X] AVR debouncing
 - [X] multiple saves for apps
+- [ ] remove non-used / non-functioning apps
 
 Nice extras would include:
 
@@ -86,7 +87,8 @@ Must-have before wider release
 - [ ] AVR bootloader so that AVR firmware can be updated too
 - [X] telegram messenger
 -   [ ] notification
--   [ ] delete chats
+-   [X] delete chats
+-   [X] chat names & icons 
 -   [X] add contacts
 -   [ ] run in background
 -   [X] add telegram ids to users
@@ -102,6 +104,8 @@ Polish
 # TODO
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb.
+
+- fix MainMenu.h:126 assert triggering
 
 - pngenc: https://github.com/bitbank2/PNGenc
 - when new conversaton is added and its the first conversation, it is not displayed
@@ -121,6 +125,10 @@ Polish
 - allow messages to save to existing contact as opposed to always a new one
 
 - parent mode cartridge
+
+
+- add confirmation dialog to many deletions
+- why popup menu takes pointer and not a reference? 
 
 - bootloader cartridge (this will only flash the memory)
 
