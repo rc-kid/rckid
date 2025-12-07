@@ -87,7 +87,7 @@ Must-have before wider release
 - [X] telegram messenger
 -   [ ] notification
 -   [ ] delete chats
--   [ ] add to contact
+-   [X] add contacts
 -   [ ] run in background
 -   [X] add telegram ids to users
 - [ ] webpage, releases, updates, etc.
@@ -118,8 +118,8 @@ Polish
 - piggy bank topup-monthly, etc.
 - piggy bank data load & save
 
-- parent mode lock
-- add parent mode password instead
+- allow messages to save to existing contact as opposed to always a new one
+
 - parent mode cartridge
 
 - bootloader cartridge (this will only flash the memory)

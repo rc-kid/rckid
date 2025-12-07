@@ -89,7 +89,7 @@ namespace rckid {
             if (color != ui::Style::fg())
                 writer.writeValue("color", color.toString());
             if (bgColor != ui::Style::bg())
-                writer.writeValue("bgColor", color.toString());
+                writer.writeValue("bgColor", bgColor.toString());
             if (telegramId != 0)
                 writer.writeValue("telegramId", STR(telegramId));
         }
@@ -124,6 +124,12 @@ namespace rckid {
             ini::Writer writer{fs::fileWrite(CONTACTS_PATH)};
             for (auto const & c : contacts)
                 c.save(writer);
+        }
+
+        static void saveAll(std::vector<Contact *> const & contacts) {
+            ini::Writer writer{fs::fileWrite(CONTACTS_PATH)};
+            for (Contact * c : contacts)
+                c->save(writer);
         }
 
     }; // rckid::Contact

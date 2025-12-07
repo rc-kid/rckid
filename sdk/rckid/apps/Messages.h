@@ -277,24 +277,20 @@ namespace rckid {
             class Message : public ui::Widget {
             public:
                 
-                Message(Chat::Entry && entry, Contact const * sender):
+                Message(Chat::Entry && entry, Contact * sender):
                     ui::Widget{Rect::WH(320, 40)},
-                    //entry_{std::move(entry)},
                     sender_{sender}
                 {
                     if (! isOwnMessage()) {
                         who_ = addChild(new ui::Label{Rect::XYWH(14, 4, 312, 16), sender_->name});
                         who_->resizeToText();
-                        //who_->setColor(sender_->color);
+                        who_->setColor(sender_->color);
                         who_->setHAlign(HAlign::Left);
-                        bg_ = sender->bgColor;
-                    } else {
-                        bg_ = ui::Style::accentBg();
-                    }
+                    } 
                     addText(std::move(entry.payload));
                 }
 
-                bool isOwnMessage() const { return sender_ == nullptr; }
+                bool isOwnMessage() const { return sender_ == & Myself::contact(); }
 
                 void addText(String text) {
                     ui::Widget * last = children().empty() ? nullptr : children().back();
@@ -303,13 +299,8 @@ namespace rckid {
                         ui::Label * l = new ui::Label{Rect::XYWH(isOwnMessage() ? 4 : 14, offsetY, 298, 24),""};
                         l->setFont(Font::fromROM<assets::OpenDyslexic32>());
                         text = l->setTextLine(text);
-                        if (sender_ != nullptr) {
-                            l->setHAlign(HAlign::Left); 
-                            l->setColor(sender_->color);
-                        } else {
-                            l->setHAlign(HAlign::Right);
-                            l->setColor(ui::Style::accentFg());
-                        }
+                        l->setHAlign(isOwnMessage() ? HAlign::Right : HAlign::Left);
+                        l->setColor(sender_->color);
                         l->resizeToText();
                         addChild(l);
                         offsetY += l->height() - 4;
@@ -334,12 +325,21 @@ namespace rckid {
                         setX(0);
                 }
 
+                Contact * sender() const { return sender_; }
+
+                void refresh() {
+                    if (who_ != nullptr) {
+                        who_->setText(sender_->name);
+                        who_->resizeToText();
+                    }
+                }
+
             protected:
 
                 void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
                     ASSERT(numPixels > 0);
                     // draw message bubble background first
-                    uint16_t rawBg = bg_.raw16();
+                    uint16_t rawBg = sender_->bgColor.raw16();
                     if (isOwnMessage() && (column >= width() - 10)) {
                         for (Coord i = starty, e = width() - column; (i < e) && (i - starty < numPixels); ++i)
                             buffer[i - starty] = rawBg;
@@ -352,7 +352,7 @@ namespace rckid {
                     } 
                     // if the message is focused, draw border around it
                     if (focused()) {
-                        rawBg = (sender_ == nullptr) ? ui::Style::accentFg().raw16() : sender_->color.raw16();
+                        rawBg = sender_->color.raw16();
                         // top, which is always part of the border
                         if (starty == 0)
                             buffer[0] = rawBg;
@@ -392,9 +392,8 @@ namespace rckid {
 
             private:
                 // who sent the message, nullptr if own msg
-                Contact const * sender_;
-                ui::Label * who_;
-                ColorRGB bg_;
+                Contact * sender_;
+                ui::Label * who_ = nullptr;
             }; // Conversation::Message
 
             /** Use umbrella names for all messages stuff.
@@ -414,7 +413,9 @@ namespace rckid {
                 // load contacts as we will need them
                 Contact::forEach([this](Contact c){
                     if (c.telegramId != 0)
-                        contacts_.insert(std::make_pair(c.telegramId, std::move(c)));
+                        contacts_.insert(std::make_pair(c.telegramId, new Contact{std::move(c)}));
+                    else
+                        noId_.push_back(new Contact{std::move(c)});
                 });
                 // load the messages
                 {
@@ -432,6 +433,12 @@ namespace rckid {
 
             ~Conversation() override {
                 chat_->conversation_ = nullptr;
+                for (auto & c : contacts_)
+                    delete c.second;
+                for (auto & c : unknown_)
+                    delete c.second;
+                for (auto c : noId_)
+                    delete c;
             }
 
         protected:
@@ -444,13 +451,46 @@ namespace rckid {
                 if (btnPressed(Btn::B))
                     exit();
                 // A sends new message
-                if (btnPressed(Btn::A)) {
+                if (btnPressed(Btn::A) || btnPressed(Btn::Start)) {
                     auto text = App::run<TextDialog>("Enter message");
                     if (text.has_value()) {
                         Messages::Task::getOrCreate()->sendMessage(
                             chat_->id(),
                             text.value()
                         );
+                    }
+                }
+                if (btnPressed(Btn::Select)) {
+                    Message * msg = static_cast<Message *>(g_.focused());
+                    if (msg == nullptr)
+                        return;
+                    // we have three types of senders - can be ourselves, known contact or an unknown contact
+                    Contact * c = msg->sender();
+                    if (c == &Myself::contact()) {
+                        auto x = App::run<Friends::ContactViewer>(*c);
+                        if (x.has_value() && x.value()) 
+                            Myself::save();
+                        return;
+                    } 
+                    // see what contact we are editing
+                    auto it = unknown_.find(c->telegramId);
+                    // if the contact is known we have to first name it
+                    if (it != unknown_.end()) {
+                        auto name = App::run<TextDialog>("Enter contact name");
+                        // if no name was provided, do nothing
+                        if (! name.has_value())
+                            return;
+                        c->name = name.value();
+                        contacts_.insert(std::make_pair(c->telegramId, c));
+                        unknown_.erase(it);
+                        // now also show the contact editor for further details
+                        App::run<Friends::ContactViewer>(*c);
+                        refreshMessagesAndSaveContacts();
+                    } else {
+                        auto x = App::run<Friends::ContactViewer>(*c);
+                        if (x.has_value() && x.value()) {
+                            refreshMessagesAndSaveContacts();
+                        }
                     }
                 }
                 if (btnPressed(Btn::Up)) {
@@ -469,6 +509,20 @@ namespace rckid {
                         view_->scrollToView(w);
                     }
                 }
+            }
+
+            void refreshMessagesAndSaveContacts() {
+                for (auto child : view_->children()) {
+                    Message * msg = static_cast<Message *>(child);
+                    msg->refresh();
+                }
+                // and now save the contacts
+                std::vector<Contact *> x{noId_};
+                for (auto & c : contacts_) {
+                    if (c.second != &Myself::contact())
+                        x.push_back(c.second);
+                }
+                Contact::saveAll(x);
             }
 
             void loadMessages(Chat::Reader & reader) {
@@ -508,20 +562,29 @@ namespace rckid {
             Contact * getContactFor(int64_t sender) {
                 // check if the sender is us
                 if (sender == Messages::Task::getOrCreate()->botId_)
-                    return nullptr;
-                // check if we have the sender
+                    return & Myself::contact();
+                // check if we have the sender in regular contacts
                 auto it = contacts_.find(sender);
-                if (it != contacts_.end())
-                    return &it->second;
-                return & unknown_;
+                if (it == contacts_.end()) {
+                    // check if we have the sender in unknown contacts
+                    it = unknown_.find(sender);
+                    // create new temporary contact for this so that we can display something useful
+                    if (it == unknown_.end()) {
+                        Contact * c = new Contact{"???"};
+                        c->telegramId = sender;
+                        it = unknown_.insert(std::make_pair(sender, c)).first;
+                    }
+                }
+                return it->second;
             }
 
         private:
             Chat * chat_;
 
             ui::ScrollView * view_;
-            std::unordered_map<int64_t, Contact> contacts_;
-            Contact unknown_{"Unknown"};
+            std::unordered_map<int64_t, Contact *> contacts_;
+            std::unordered_map<int64_t, Contact *> unknown_;
+            std::vector<Contact *> noId_;
 
             uint32_t i_ = 0;
         }; // Conversation
