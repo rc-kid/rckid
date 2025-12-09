@@ -156,6 +156,8 @@ public:
     static constexpr uint8_t POWER_MODE_WAKEUP = 4;
     static constexpr uint8_t POWER_MODE_ON = 8;
     static inline uint8_t powerMode_ = 0;
+
+    static inline bool criticalBattery_ = false;
     
     static void setPowerMode(uint8_t mode) {
         if (powerMode_ & mode)
@@ -174,6 +176,8 @@ public:
                 setNotification(RGBEffect::Off());
                 break;
             case POWER_MODE_DC:
+                // clear the critical battery flag when DC power is connected
+                criticalBattery_ = false;
                 state_.status.setVUsb(true);
                 if (! (powerMode_ & POWER_MODE_ON)) 
                     setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
@@ -417,6 +421,25 @@ public:
         );
     }
 
+    /** Shows critical battery warning (3x red light blinking) 
+     */
+    static void criticalBattery() {
+        criticalBattery_ = true;
+        NO_ISR(
+            rgbOn(true);
+            rgbClear();
+            for (uint8_t i = 0; i < 3; ++i) {
+                for (uint8_t j = 0; j < NUM_RGB_LEDS; ++j)
+                    rgb_[j] = platform::Color::Red().withBrightness(RCKID_RGB_BRIGHTNESS);
+                rgb_.update();
+                cpu::delayMs(100);
+                rgbClear();
+                cpu::delayMs(200);
+            }
+            rgbOn(false);
+        );
+    }
+
     //@}
 
     /** \name System ticks and clocks.
@@ -594,6 +617,10 @@ public:
             // TODO deal with accel and power interrupts - this probably requires some I2C communcation to determine what is going on
             // if the power button is pressed, wake up - enter the debug mode depending on whether the volume down button is pressed
             if (irqs & HOME_BTN_INT_REQUEST) {
+                if (criticalBattery_) {
+                    criticalBattery();
+                    return;
+                }
                 // reset home button long press timeout
                 homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
                 // wakeup to start counting
@@ -1080,7 +1107,7 @@ public:
         The ADC is used to measure battery voltage and temperature, alternating every second between the two. This should be a compromise between the latency of the measurements and power consumption. The ADC works in a single converstion mode, is triggered manually and we are notified about the result via interrupt (the ADC can run in standby mode).
      */
     //@{
-    
+
     static void startADC(uint8_t muxpos) {
         // disable the ADC        
         ADC0.CTRLA = 0;
@@ -1162,7 +1189,9 @@ public:
                 }
                 // emergency shutdown if battery too low
                 if (value < RCKID_POWER_ON_THRESHOLD && (powerMode_ & POWER_MODE_ON)) {
-                    // TODO notify & die, we might need a ring buffer for this to elliminate spurious shutdowns etc
+                    // TODO we might need a ring buffer for this to elliminate spurious shutdowns etc
+                    powerOff();
+                    criticalBattery();
                 }
                 break;
             default:

@@ -107,6 +107,9 @@ Polish
 
 - fix MainMenu.h:126 assert triggering
 
+- verify the critical battery error works
+- lower the critical battery threshold back to 300 for testing and test the battery can indeed go that low
+
 - pngenc: https://github.com/bitbank2/PNGenc
 - when new conversaton is added and its the first conversation, it is not displayed
 - scrollview scrolling when focused

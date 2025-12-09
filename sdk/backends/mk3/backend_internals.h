@@ -11,7 +11,8 @@
 
 #define RCKID_VUSB_THRESHOLD 460 
 #define RCKID_LOW_BATTERY_THRESHOLD 330 
-#define RCKID_POWER_ON_THRESHOLD 300
+//#define RCKID_POWER_ON_THRESHOLD 300
+#define RCKID_POWER_ON_THRESHOLD 350
 
 /** Speed of the communication with ST7789 display when in PIO mode (for fast display data transfers). Defaults to 15MHz which is just within the display datasheet's capabilities.
  */
