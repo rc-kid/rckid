@@ -12,6 +12,7 @@
 #include "../utils/ini.h"
 #include "../utils/json.h"
 #include "../apps/dialogs/PopupMenu.h"
+#include "../apps/dialogs/InfoDialog.h"
 
 
 namespace rckid {

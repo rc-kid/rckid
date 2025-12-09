@@ -8,6 +8,7 @@
 #include "../ui/scrollview.h"
 #include "../ui/carousel.h"
 #include "../assets/fonts/Iosevka24.h"
+#include "../assets/fonts/OpenDyslexic24.h"
 
 
 namespace rckid {

@@ -9,6 +9,7 @@
 #include "../../assets/icons_24.h"
 #include "../dialogs/TimeDialog.h"
 #include "../dialogs/DateDialog.h"
+#include "../dialogs/PopupMenu.h"
 
 namespace rckid {
     class Clock : public ui::Form<void> {

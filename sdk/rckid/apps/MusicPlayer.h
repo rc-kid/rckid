@@ -7,6 +7,7 @@
 #include "../audio/mp3.h"
 #include "../assets/icons_64.h"
 #include "../assets/fonts/OpenDyslexic32.h"
+#include "../assets/fonts/OpenDyslexic64.h"
 #include "dialogs/AudioPlayer.h"
 
 namespace rckid {

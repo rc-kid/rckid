@@ -2,6 +2,7 @@
 
 #include "../../ui/form.h"
 #include "../../ui/image.h"
+#include "../../assets/icons_24.h"
 
 namespace rckid {
     class Checkers : public ui::Form<void> {
