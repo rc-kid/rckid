@@ -675,11 +675,22 @@ namespace rckid {
                 // and see if there is anything to send
                 processOutgoingMessages();
             }
-            /*
-            void requestUpdate() {
-                nextUpdateTime_ = 0;
+
+            Coord updateHeader(ui::Header & hdr, Coord offset) override {
+                using namespace assets;
+                bool unread = false;
+                for (auto chat : chats_) {
+                    if (chat->unread()) {
+                        unread = true;
+                        break;
+                    }
+                }
+                if (unread) {
+                    hdr.at(--offset, 0).setPaletteOffset(ui::Header::PALETTE_ACCENT + 1) = SYSTEM16_MESSAGE_RIGHT;
+                    hdr.at(--offset, 0).setPaletteOffset(ui::Header::PALETTE_ACCENT + 1) = SYSTEM16_MESSAGE_LEFT;
+                }
+                return offset;
             }
-                */
 
             void processUpdate(uint32_t size, uint8_t const * data) {
                 auto s = MemoryReadStream{data, size};

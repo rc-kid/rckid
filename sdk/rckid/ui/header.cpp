@@ -72,7 +72,7 @@ namespace rckid::ui {
 */
         // update the system tray first 
         TinyDateTime t = timeNow();
-        uint32_t x = 37; // battery takes 3 tiles, we have 40 in total
+        Coord x = 37; // battery takes 3 tiles, we have 40 in total
         if (powerCharging()) {
             at(39, 0).setPaletteOffset(PALETTE_ACCENT) = SYSTEM16_BATTERY_TOP_FULL;
             at(38, 0).setPaletteOffset(PALETTE_ACCENT) = SYSTEM16_BATTERY_CHARGING_FULL;
@@ -112,6 +112,7 @@ namespace rckid::ui {
                 t = t->next_;
             }
         }
+        Coord start = 0;
         // if the budget is below 10 minutes, display it as part of the header
         uint32_t b = budget();
         if (b < 600) {
@@ -128,17 +129,21 @@ namespace rckid::ui {
             at(3, 0).setPaletteOffset(0) = ':';
             at(4, 0).setPaletteOffset(0) = '0' + (bs / 10);
             at(5, 0).setPaletteOffset(0) = '0' + (bs % 10);
+            start = 6;
         // otherwise display the current time
         } else {
             App * app = App::currentApp();
             String const info = (app != nullptr) ? app->title() : "";
-            for (uint32_t i = 0; i < x; ++i) {
-                if (i >= info.size())
-                    at(i, 0).setPaletteOffset(0) = ' ';
+            for (; start < x; ++start) {
+                if (start >= static_cast<Coord>(info.size()))
+                    at(start, 0).setPaletteOffset(0) = ' ';
                 else 
-                    at(i, 0).setPaletteOffset(0) = info[i];
+                    at(start, 0).setPaletteOffset(0) = info[start];
             }
+            ++start;
         }
+        for (; start < x; ++start)
+            at(start, 0).setPaletteOffset(0) = ' ';
     }
 
     void ui::Header::renderIfRequired() {

@@ -51,7 +51,7 @@
 - [X] low battery error and device won't power on
 - [X] AVR debouncing
 - [X] multiple saves for apps
-- [ ] remove non-used / non-functioning apps
+- [X] remove non-used / non-functioning apps
 
 Nice extras would include:
 
@@ -86,7 +86,9 @@ Must-have before wider release
 
 - [ ] AVR bootloader so that AVR firmware can be updated too
 - [X] telegram messenger
--   [ ] notification
+-   [X] notification
+-   [ ] preserve unread notification across runs
+-   [ ] show unread message icon with chat menu
 -   [X] delete chats
 -   [X] chat names & icons 
 -   [X] add contacts
