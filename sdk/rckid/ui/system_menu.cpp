@@ -86,7 +86,8 @@ namespace rckid::ui {
             ui::ActionMenu::Item("Flashlight", assets::icons_64::flashlight, App::run<Flashlight>),
             ui::ActionMenu::Item("Clock", assets::icons_64::alarm_clock, App::run<Clock>),
             ui::ActionMenu::Item("Stopwatch", assets::icons_64::chronometer, App::run<Stopwatch>),
-            ui::ActionMenu::Item("Timer", assets::icons_64::hourglass, nullptr),
+            // TODO write the app
+            //ui::ActionMenu::Item("Timer", assets::icons_64::hourglass, nullptr),
             // TODO enable (monthly topup, update via telegram api)
             //ui::ActionMenu::Item("Piggy Bank", assets::icons_64::piggy_bank, App::run<PiggyBank>),
             // TODO enable proper file browser (once we have actual files)

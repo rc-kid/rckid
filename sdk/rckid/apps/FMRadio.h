@@ -37,10 +37,7 @@ namespace rckid {
             stationName_->setFont(Font::fromROM<assets::OpenDyslexic32>());
             radioText1_->setFont(Font::fromROM<assets::OpenDyslexic32>());
             radioText2_->setFont(Font::fromROM<assets::OpenDyslexic32>());
-            stationName_->setColor(ui::Style::accentFg());
-            radioText1_->setColor(ui::Style::accentFg());
-            radioText2_->setColor(ui::Style::accentFg());
-            signal_->setColor(ui::Style::accentFg());
+            freq_->setColor(ui::Style::accentFg());
             radio_ = Radio::instance();
             if (radio_ != nullptr) {
                 // enable the embedded antenna if we do not have headphones attached

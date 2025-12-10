@@ -377,13 +377,16 @@ namespace rckid::gbcemu {
                 }));
                 return m;
             }));
-            m->add(ui::ActionMenu::Item(
-                "Debug Mode",
-                assets::icons_64::ladybug,
-                [this](){
-                    debug_ = true;
+            // only allow entering debug mode when the device itself is in debug mode
+            if (debugMode()) {
+                m->add(ui::ActionMenu::Item(
+                    "Debug Mode",
+                    assets::icons_64::ladybug,
+                    [this](){
+                        debug_ = true;
+                    }
+                ));
                 }
-            ));
             return m;
         };
     }

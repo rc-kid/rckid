@@ -109,6 +109,7 @@ namespace rckid {
                 s.setAnimation(c_->iconPosition(), c_->textPosition());
                 s.loop();
             }));
+            /*
             menu->add(ui::ActionMenu::Item("Plane mode", assets::icons_64::airplane_mode, [](){
                 InfoDialog::info("Plane mode", "Plane mode selected");
                 // TODO airplane mode
@@ -116,6 +117,7 @@ namespace rckid {
             menu->add(ui::ActionMenu::Item("Sleep", assets::icons_64::sleeping, []() {
                 sleep();
             }));
+            */
             menu->add(ui::ActionMenu::Item("Power Off", assets::icons_64::power_off, [](){
                 // TODO save previous app state
                 powerOff();

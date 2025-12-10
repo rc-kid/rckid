@@ -48,7 +48,7 @@
 - [X] improve text input dialog
 - [X] screen lock (double home tap)
 - [X] preserve volume settings
-- [ ] low battery error and device won't power on
+- [X] low battery error and device won't power on
 - [X] AVR debouncing
 - [X] multiple saves for apps
 - [ ] remove non-used / non-functioning apps
@@ -114,6 +114,9 @@ Polish
 - check wifi available, etc. 
 - make more robust
 - music player disables background tasks, yet uses own bg tasks, which of course does not work
+
+- add airplane mode & sleep function (also uncomment the options in home menu)
+- figure out how debug mode for gbcemu should work now
 
 - a more polished and reasonable palette for the header
 - callback to wifi status
