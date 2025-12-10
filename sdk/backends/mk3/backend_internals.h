@@ -11,8 +11,7 @@
 
 #define RCKID_VUSB_THRESHOLD 460 
 #define RCKID_LOW_BATTERY_THRESHOLD 330 
-//#define RCKID_POWER_ON_THRESHOLD 300
-#define RCKID_POWER_ON_THRESHOLD 350
+#define RCKID_POWER_ON_THRESHOLD 310
 
 /** Speed of the communication with ST7789 display when in PIO mode (for fast display data transfers). Defaults to 15MHz which is just within the display datasheet's capabilities.
  */
@@ -26,8 +25,6 @@
 //#define RCKID_SD_SPI_SPEED 12000000
 #define RCKID_SD_SPI_SPEED 20000000
 #define RCKID_SD_PIO pio0
-
-
 
 
 /** RP2350 Pinout

@@ -427,8 +427,11 @@ public:
         criticalBattery_ = true;
         NO_ISR(
             rgbOn(true);
+            cpu::delayMs(50);
             rgbClear();
+            cpu::delayMs(100);
             for (uint8_t i = 0; i < 3; ++i) {
+                cpu::wdtReset();
                 for (uint8_t j = 0; j < NUM_RGB_LEDS; ++j)
                     rgb_[j] = platform::Color::Red().withBrightness(RCKID_RGB_BRIGHTNESS);
                 rgb_.update();
