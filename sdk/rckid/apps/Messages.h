@@ -930,6 +930,7 @@ namespace rckid {
             c_->setRect(Rect::XYWH(0, 160, 320, 80));
             c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
             c_->focus();
+            msg_ = g_.addChild(new ui::Image{assets::icons_24::email});
             if (t_->chats_.size() > 0)
                 c_->setItem(0, Direction::Up);
             else
@@ -997,7 +998,21 @@ namespace rckid {
                     x.value()();
                 }
             }
-                
+        }
+
+        void draw() override {
+            if (!c_->idle()) {
+                msg_->setVisible(false);
+            } else if (! t_->chats_.empty()) {
+                uint32_t index = c_->currentIndex();
+                ASSERT(index < t_->chats_.size());
+                Chat * chat = t_->chats_[index];
+                if (chat->unread()) {
+                    msg_->setVisible(true);
+                    msg_->setPos(c_->iconPosition() + Point{ 48, 48 });
+                }                
+            } 
+            ui::Form<void>::draw();
         }
 
     private:
@@ -1005,6 +1020,7 @@ namespace rckid {
         Task * t_;
 
         ui::EventBasedCarousel * c_;
+        ui::Image * msg_;
 
     }; // rckid::Messages
 
