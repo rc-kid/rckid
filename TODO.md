@@ -87,7 +87,7 @@ Must-have before wider release
 - [ ] AVR bootloader so that AVR firmware can be updated too
 - [X] telegram messenger
 -   [X] notification
--   [ ] preserve unread notification across runs
+-   [X] preserve unread notification across runs
 -   [X] show unread message icon with chat menu
 -   [X] delete chats
 -   [X] chat names & icons 
@@ -110,12 +110,12 @@ Polish
 - fix MainMenu.h:126 assert triggering
 
 - pngenc: https://github.com/bitbank2/PNGenc
-- when new conversaton is added and its the first conversation, it is not displayed
 - scrollview scrolling when focused
 - keep the offset so that we can go back
 - check wifi available, etc. 
 - make more robust
 - music player disables background tasks, yet uses own bg tasks, which of course does not work
+- Friends::ContactViewer should be own dialog, not part of friends ideally
 
 - add airplane mode & sleep function (also uncomment the options in home menu)
 - figure out how debug mode for gbcemu should work now

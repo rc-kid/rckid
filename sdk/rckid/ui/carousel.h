@@ -50,6 +50,8 @@ namespace rckid::ui {
         /** Sets the carousel's current element to given text and icon. 
          */
         void set(String text, Icon const & icon, Direction direction = Direction::None) {
+            // whenever we call set, we are not empty (if called via showEmpty, we'll set empty later)
+            empty_ = false;
             if (direction == Direction::None) {
                 aImg_ = icon;
                 aImg_.setTransparent(true);
@@ -96,7 +98,10 @@ namespace rckid::ui {
         void showEmpty(Direction d = Direction::None) {
             set("Empty", Icon{assets::icons_64::empty_box}, d);
             bText_.setColor(ColorRGB::RGB(64, 64, 64));
+            empty_ = true;
         }
+
+        bool empty() const { return empty_; }
 
         uint32_t currentIndex() const { return i_; }
 
@@ -249,6 +254,7 @@ namespace rckid::ui {
         Timer a_{defaultTransitionTimeMs};
 
         uint32_t i_ = 0;
+        bool empty_ = false;
     }; // rckid::ui::Carousel
 
     /** Carousel specialization with event handlers instead of the virtual abstract function for size & element setting. Using this class is beneficial for custom carousels where it allows easier customization compared to subclassing carousel and overriding the methods.

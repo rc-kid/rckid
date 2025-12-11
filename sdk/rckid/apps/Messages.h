@@ -1,10 +1,13 @@
 #pragma once
 
 #include "../app.h"
+#include "../pim.h"
 #include "../task.h"
 #include "../ui/form.h"
 #include "../ui/label.h"
 #include "../ui/image.h"
+#include "../ui/scrollview.h"
+#include "../ui/carousel.h"
 #include "../assets/fonts/OpenDyslexic128.h"
 #include "../assets/fonts/OpenDyslexic64.h"
 #include "../assets/icons_24.h"
@@ -13,6 +16,9 @@
 #include "../utils/json.h"
 #include "../apps/dialogs/PopupMenu.h"
 #include "../apps/dialogs/InfoDialog.h"
+#include "../apps/dialogs/FileDialog.h"
+#include "../apps/dialogs/TextDialog.h"
+#include "Friends.h"
 
 
 namespace rckid {
@@ -201,6 +207,9 @@ namespace rckid {
              */
             bool unread() const { return unread_; }
 
+            /** Marks the chat as read. This is a noop if already read, but if unread, changes to read and saves the info.
+             */
+            void markRead();
 
             void setName(String name) {
                 name_ = std::move(name);
@@ -244,21 +253,9 @@ namespace rckid {
                     writer.writeValue("unread", "true");
             }
 
-            void appendMessage(uint64_t from, String text) {
-                LOG(LL_INFO, "New message from " << from << " in chat " << id_ << ": " << text);
-                // open the conversation file for appending, create the message entry and then serialize
-                auto f = fs::fileAppend(conversationPath());
-                Entry msgEntry{Entry::Message(from, std::move(text))};
-                serialize(f, msgEntry);
-                f.close();
-                // now either mark as unread, or if the chat is opened, append the entry to the chat view as well
-                if (conversation_ != nullptr) {
-                    unread_ = conversation_->appendMessage(std::move(msgEntry));
-                } else {
-                    unread_ = true;
-                    // TODO do we want to save this somewhere?
-                }
-            }
+            /** Appends message to the chat.
+             */
+            void appendMessage(uint64_t from, String text);
 
             String conversationPath() const {
                 return STR("/apps/Messages/chats/" << id_ << ".dat");
@@ -419,7 +416,7 @@ namespace rckid {
             {
                 chat_->conversation_ = this;
                 // as we always display newest messages, mark the chat as read
-                chat_->unread_ = false;
+                chat_->markRead();
                 view_ = g_.addChild(new ui::ScrollView{Rect::XYWH(0, 24, 320, 216)});
                 // load contacts as we will need them
                 Contact::forEach([this](Contact c){
@@ -434,7 +431,7 @@ namespace rckid {
                     if (reader.eof()) {
                         // TODO do something
                     } else {
-                        reader.seekEnd(-20);
+                        reader.seekEnd(-100);
                         loadMessages(reader);
                     }
                 }
@@ -537,7 +534,7 @@ namespace rckid {
             }
 
             void loadMessages(Chat::Reader & reader) {
-                reader.read(20, [this](Chat::Entry e){
+                reader.read(100, [this](Chat::Entry e){
                     LOG(LL_INFO, "Loaded message: " << e.payload);
                     addMessage(std::move(e));
                 });
@@ -728,10 +725,7 @@ namespace rckid {
                             }
                         }
                         lastOffset_ = updateId + 1;
-                        //changed = true;
                     }
-                    //if (changed)
-                    //    requestUpdate();
                 }
             }
 
@@ -755,7 +749,6 @@ namespace rckid {
                     chats_.push_back(chat);
                     chatMap_.insert(std::make_pair(chat->id_, chat));
                     saveChats();
-                    //c_->setItem(chats_.size() - 1, Direction::Up);
                     sendMessage(chatId, STR("RCKID: Chat '" << chatName << "' enabled."), false);
                 } else {
                     LOG(LL_ERROR, "Unknown command: " << command);
@@ -817,6 +810,7 @@ namespace rckid {
         private:
 
             friend class Messages;
+            friend class Chat;
 
             struct OutgoingMessage {
                 int64_t chatId;
@@ -1001,6 +995,8 @@ namespace rckid {
         }
 
         void draw() override {
+            if (c_->empty() || ! t_->chats_.empty())
+                c_->setItem(0, Direction::Up);
             if (!c_->idle()) {
                 msg_->setVisible(false);
             } else if (! t_->chats_.empty()) {
@@ -1010,6 +1006,8 @@ namespace rckid {
                 if (chat->unread()) {
                     msg_->setVisible(true);
                     msg_->setPos(c_->iconPosition() + Point{ 48, 48 });
+                } else {
+                    msg_->setVisible(false);
                 }                
             } 
             ui::Form<void>::draw();
