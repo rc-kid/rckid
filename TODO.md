@@ -107,8 +107,6 @@ Polish
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb. Checked with TME and they do have protection, cutoff at 3V. 
 
-- fix MainMenu.h:126 assert triggering
-
 - numberDialog needs icon
 
 - pngenc: https://github.com/bitbank2/PNGenc
@@ -125,13 +123,9 @@ Polish
 - callback to wifi status
 - https://github.com/raspberrypi/pico-examples/blob/master/pico_w/wifi/http_client/example_http_client_util.c
 
-- piggy bank topup-monthly, etc.
-- piggy bank data load & save
-
 - allow messages to save to existing contact as opposed to always a new one
 
 - parent mode cartridge
-
 
 - add confirmation dialog to many deletions
 - why popup menu takes pointer and not a reference? 
@@ -215,6 +209,7 @@ Polish
 - connector pcb should move the pins as close to edge as possible for better contact (or make cartridges a bit taller, and meybe both)
 - is there a way how to make the headphones work with headphones that have microphone as well? maybe by connecting tip with some large resistor to 0 (68k or so) and then connecting the tip mate via even higher resistor to VCC as a pull up. Then it will read close to 0 when not inserted and VCC when inserted. But will this upset the audio? It actually might work and I can ignore the second sleeve and it would work with all headphones! (can I make it work with current audio setup by rewiring?)
 - might get super pretty front panels from here: https://www.hopesens-glass.com/
+- IR led needs pull-up, not pull-down
 
 ## AVR
 

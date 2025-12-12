@@ -123,9 +123,10 @@ namespace rckid {
             ui::Form<ui::Action>::update();
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                 auto action = c_->currentItem();
-                ASSERT(action->isAction());
-                exit(action->action());
-                history_ = c_->detachHistory();
+                if (action->isAction()) {
+                    exit(action->action());
+                    history_ = c_->detachHistory();
+                }
             }
             if (btnPressed(Btn::Start)) {
                 RAMHeap::traceChunks();
