@@ -141,6 +141,7 @@ namespace rckid::ui {
         }
 
         void setItem(uint32_t index, Direction direction = Direction::None) {
+            empty_ = false;
             i_ = index;
             doSetItem(index, direction);
         }

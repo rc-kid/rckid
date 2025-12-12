@@ -146,14 +146,20 @@ public:
     void inc() {
         if (++day_ > daysInMonth()) {
             day_ = 1;
-            uint8_t m = month() + 1;
-            if (m > 12) {
-                m = 1;
-                uint16_t y = year() + 1;
-                set(day_, m, y);
-            } else {
-                set(day_, m, year());
-            }
+            incMonth();
+        }
+    }
+
+    /** Increments the date by one month.
+     */
+    void incMonth() {
+        uint8_t m = month() + 1;
+        if (m > 12) {
+            m = 1;
+            uint16_t y = year() + 1;
+            set(day_, m, y);
+        } else {
+            set(day_, m, year());
         }
     }
 

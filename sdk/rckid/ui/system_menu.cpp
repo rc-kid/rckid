@@ -88,8 +88,7 @@ namespace rckid::ui {
             ui::ActionMenu::Item("Stopwatch", assets::icons_64::chronometer, App::run<Stopwatch>),
             // TODO write the app
             //ui::ActionMenu::Item("Timer", assets::icons_64::hourglass, nullptr),
-            // TODO enable (monthly topup, update via telegram api)
-            //ui::ActionMenu::Item("Piggy Bank", assets::icons_64::piggy_bank, App::run<PiggyBank>),
+            ui::ActionMenu::Item("Piggy Bank", assets::icons_64::piggy_bank, App::run<PiggyBank>),
             // TODO enable proper file browser (once we have actual files)
             //ui::ActionMenu::Item("Files", assets::icons_64::folder, App::run<FileDialog>),
             ui::ActionMenu::Item("Data Sync", assets::icons_64::pen_drive, App::run<DataSync>),

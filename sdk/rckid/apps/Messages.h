@@ -19,6 +19,7 @@
 #include "../apps/dialogs/FileDialog.h"
 #include "../apps/dialogs/TextDialog.h"
 #include "Friends.h"
+#include "utils/PiggyBank.h"
 
 
 namespace rckid {
@@ -750,6 +751,10 @@ namespace rckid {
                     chatMap_.insert(std::make_pair(chat->id_, chat));
                     saveChats();
                     sendMessage(chatId, STR("RCKID: Chat '" << chatName << "' enabled."), false);
+                } else if (command.startsWith("/piggybank ")) {
+                    int32_t by = std::atoi(command.substr(11));
+                    int32_t value = PiggyBank::updateAllowance(by);
+                    sendMessage(chatId, STR("RCKID: Piggybank current allowance: " << value), false);
                 } else {
                     LOG(LL_ERROR, "Unknown command: " << command);
                     sendMessage(chatId, STR("RCKID: Unknown command: " << command << ", use /help for list of available commands."), false);
@@ -995,7 +1000,7 @@ namespace rckid {
         }
 
         void draw() override {
-            if (c_->empty() || ! t_->chats_.empty())
+            if (c_->empty() && ! t_->chats_.empty())
                 c_->setItem(0, Direction::Up);
             if (!c_->idle()) {
                 msg_->setVisible(false);

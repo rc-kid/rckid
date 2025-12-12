@@ -309,6 +309,7 @@ namespace rckid {
             setRegister(REG_PWR_MGMT_2, RHPEN | LHPEN | LADCEN | LBSTEN | LPGAEN);
             // enable ALC on the left channel
             //setRegister(REG_ALC_CTRL_1, 0);
+            
             setRegister(REG_ALC_CTRL_1, ALCEN_LEFT | ALC_MAX_GAIN_35 | ALC_MIN_GAIN_NEG_12);
             setRegister(REG_ALC_CTRL_2, 0b000001011);
 

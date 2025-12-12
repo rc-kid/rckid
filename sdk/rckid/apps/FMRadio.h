@@ -60,7 +60,7 @@ namespace rckid {
             if (fs::isMounted()) {
                 String path = fs::join(homeFolder(), "settings.ini");
                 if (fs::exists(path)) {
-                    ini::Reader ini{fs::fileRead(fs::join(homeFolder(), "settings.ini"))};
+                    ini::Reader ini{fs::fileRead(path)};
                     while (auto section = ini.nextSection()) {
                         if (section.value() == "settings") {
                             while (auto kv = ini.nextValue()) {

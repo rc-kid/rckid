@@ -67,7 +67,7 @@ Nice extras would include:
 - [X] pin locking
 - [X] parent mode
 - [X] parent mode lock
-- [ ] piggy bank
+- [X] piggy bank
 - [X] owner info
 - [X] theme style settings (colors & background) 
 - [X] settings menu for button lights
@@ -109,8 +109,9 @@ Polish
 
 - fix MainMenu.h:126 assert triggering
 
+- numberDialog needs icon
+
 - pngenc: https://github.com/bitbank2/PNGenc
-- scrollview scrolling when focused
 - keep the offset so that we can go back
 - check wifi available, etc. 
 - make more robust
@@ -140,6 +141,7 @@ Polish
 - move brightness and audio settings from avr status
 - update & processEvents are not really honoured in the ui 
 
+- scrollview scrolling when focused
 - update scrollview to be able to scroll horizontally as well, check its update method for scrolling handling, cleanup the code
 
 - for the flashlight, somehow at the beginning there is a faint glow even when turned off, this seems to disappear after a while
@@ -172,8 +174,6 @@ Polish
 
 - add counters, namely how long the redraw of the screen takes, from the beginning of render to the end of render
 
-- critical battery error
-- add RGB signalization to the avr mkIII
 - avr int as serial tx mabe add 0r resistor on the line to avoid bleeding into rp2350
 
 - improve audio fidelity for GBCEmu
