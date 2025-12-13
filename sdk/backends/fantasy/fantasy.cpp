@@ -179,7 +179,7 @@ namespace rckid {
         StackProtection::currentSize();
         SystemMallocGuard::enable();
         curl_global_init(CURL_GLOBAL_DEFAULT);
-        InitWindow(640, 480, "RCKid");
+        InitWindow(320 * RCKID_DISPLAY_ZOOM, 240 * RCKID_DISPLAY_ZOOM, "RCKid");
         display::img = GenImageColor(RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT, BLACK);
         display::texture = LoadTextureFromImage(display::img);
         display::lastVSyncTime = std::chrono::steady_clock::now();
@@ -481,7 +481,7 @@ namespace rckid {
         }
         UpdateTexture(display::texture, display::img.data);
         BeginDrawing();
-        DrawTextureEx(display::texture, {0, 0}, 0, 2.0f, WHITE);
+        DrawTextureEx(display::texture, {0, 0}, 0, RCKID_DISPLAY_ZOOM, WHITE);
     
         DrawText(TextFormat("FPS: %d", display::fps), 540, 240, 20, RED);
         DrawText(TextFormat("MEM: %d", memoryFree() / 1024), 540, 260, 20, RED);

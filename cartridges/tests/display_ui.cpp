@@ -7,6 +7,9 @@
 #include <rckid/apps/FMRadio.h>
 #include <rckid/ui/system_menu.h>
 
+
+#include <rckid/apps/Drawing.h>
+
 using namespace rckid;
 
 ui::ActionMenu * gamesGenerator() {
@@ -25,6 +28,7 @@ ui::ActionMenu * mainMenu() {
         ui::ActionMenu::Item("Messages", assets::icons_64::chat, App::run<Messages>),
         ui::ActionMenu::Generator("Utilities", assets::icons_64::configuration, ui::utilsMenuGenerator),
         ui::ActionMenu::Generator("Settings", assets::icons_64::settings, ui::settingsMenuGenerator),
+        ui::ActionMenu::Item("Drawing", assets::icons_64::paint_palette, App::run<Drawing>),
     };
     if (debugMode()) {
         result->add(ui::ActionMenu::Generator("Devel", assets::icons_64::ladybug, ui::develMenuGenerator));

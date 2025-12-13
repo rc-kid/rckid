@@ -222,6 +222,8 @@ Polish
 - when updating multiple attributes of a widget the recalculate after each one of them is not necessary
 - also maybe change the resize to change and make it general method for ui change stuff
 - review dialogs & how they are configured and used (custom title, context menu for file dialog, etc.)
+- isBorder from drawing editors & palette should be part of some common widget (same as border drawing)
+- 
 
 ## Audio
 
