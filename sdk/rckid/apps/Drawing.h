@@ -2,6 +2,7 @@
 
 #include "../app.h"
 #include "../graphics/canvas.h"
+#include "../graphics/png.h"
 #include "../ui/form.h"
 #include "../ui/image.h"
 #include "../ui/geometry.h"
@@ -25,7 +26,7 @@ namespace rckid {
             // TODO implement
             g_.enableBgImage(false);
             g_.setBg(ColorRGB::Black());
-            image_ = g_.addChild(new ui::Image{Rect::XYWH(22, 24, 64, 64),Bitmap{64, 64, 16}});
+            image_ = g_.addChild(new ui::Image{Rect::XYWH(22, 24, 64, 64),Bitmap{16, 16, 16}});
             editor_ = g_.addChild(new ZoomedEditor{Point{116, 32}, image_});
             palette_ = g_.addChild(new Palette{Point{8, 128}});
             fg_ = g_.addChild(new ui::Panel{Rect::XYWH(16,96,32,24)});
@@ -35,18 +36,19 @@ namespace rckid {
 
             blink_.startContinuous();
             editor_->focus();
+            image_->bitmap()->fill(palette_->bg().toRaw());
         }
 
     protected:
 
         void focus() override {
             ui::Form<void>::focus();
-            btnEnableRapidFire(true);
+            //btnEnableRapidFire(true);
         }
 
         void blur() override {
             ui::Form<void>::blur();
-            btnEnableRapidFire(false);
+            //btnEnableRapidFire(false);
         }
 
         void update() override {
@@ -61,24 +63,36 @@ namespace rckid {
             if (btnPressed(Btn::Select)) {
                 ui::ActionMenu popup{
                     ui::ActionMenu::Item("Clear", [&](){
-                        Bitmap & bmp = *image_->bitmap();
-                        for (Coord y = 0; y < bmp.height(); ++y) {
-                            for (Coord x = 0; x < bmp.width(); ++x) {
-                                bmp.setPixelAt(x, y, 0);
-                            }
-                        }
+                        image_->bitmap()->fill(palette_->bg().toRaw());
                     }),
                     ui::ActionMenu::Item("New small (8x8)", [&](){
-                        setBitmap(Bitmap{8, 8, 16});
+                        Bitmap b{8, 8, 16};
+                        b.fill(palette_->bg().toRaw());
+                        setBitmap(std::move(b));
                     }),
                     ui::ActionMenu::Item("New medium (16x16)", [&](){
-                        setBitmap(Bitmap{16, 16, 16});
+                        Bitmap b{16, 16, 16};
+                        b.fill(palette_->bg().toRaw());
+                        setBitmap(std::move(b));
                     }),
                     ui::ActionMenu::Item("New large (32x32)", [&](){
-                        setBitmap(Bitmap{32, 32, 16});
+                        Bitmap b{32, 32, 16};
+                        b.fill(palette_->bg().toRaw());
+                        setBitmap(std::move(b));
                     }),
                     ui::ActionMenu::Item("New huge (64x64)", [&](){
-                        setBitmap(Bitmap{64, 64, 16});
+                        Bitmap b{64, 64, 16};
+                        b.fill(palette_->bg().toRaw());
+                        setBitmap(std::move(b));
+                    }),
+                    ui::ActionMenu::Item("Load", [&](){
+                        auto icon = App::run<FileDialog>("Select friend icon", "/files/icons");
+                        if (icon.has_value()) {
+                            PNG decoder = PNG::fromStream(fs::fileRead(icon.value()));
+                            Bitmap bmp{decoder.width(), decoder.height(), 16};
+                            bmp.loadImage(std::move(decoder));
+                            setBitmap(std::move(bmp));
+                        }
                     }),
                 };
                 auto x = App::run<PopupMenu<ui::Action>>(& popup);
@@ -130,7 +144,23 @@ namespace rckid {
                 ui::Widget{Rect::XYWH(pos.x, pos.y, 196, 196)},
                 source_{source}
             {
-                cursor_ = addChild(new ui::Rectangle{Rect::WH(5, 5)});
+                switch (source->bitmap()->width()) {
+                    case 8:
+                        zoom_ = 24;
+                        break;
+                    case 16:
+                        zoom_ = 12;
+                        break;
+                    case 32:
+                        zoom_ = 6; ;
+                        break;
+                    case 64:
+                        zoom_ = 3;
+                        break;
+                    default:
+                        UNREACHABLE; // unsupported size
+                }
+                cursor_ = addChild(new ui::Rectangle{Rect::WH(zoom_ + 2, zoom_ + 2)});
                 setCursor(Point{0,0});
             }
 
@@ -162,7 +192,8 @@ namespace rckid {
             Coord zoom() const { return zoom_; }
             void setZoom(Coord value) { 
                 zoom_ = value; 
-                cursor_->setRect(Rect::XYWH(cursorPos_.x * zoom_ + 1, cursorPos_.y * zoom_ + 1, zoom_ + 2, zoom_ + 2));
+                setCursor(cursorPos_);
+                //cursor_->setRect(Rect::XYWH(cursorPos_.x * zoom_ + 1, cursorPos_.y * zoom_ + 1, zoom_ + 2, zoom_ + 2));
             }
 
         protected:

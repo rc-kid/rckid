@@ -109,6 +109,28 @@ namespace rckid {
             }
         }
 
+        void fill(uint32_t rawValue) {
+            switch(bpp_) {
+                case 1:
+                    rawValue = rawValue | (rawValue << 1);
+                    [[fallthrough]];
+                case 2:
+                    rawValue = rawValue | (rawValue << 2);
+                    [[fallthrough]];
+                case 4:
+                    rawValue = rawValue | (rawValue << 4);                          
+                    [[fallthrough]];
+                case 8:
+                    rawValue = rawValue | (rawValue << 8);
+                    [[fallthrough]];
+                case 16:
+                    break;
+                default:
+                    UNREACHABLE; // invalid bpp
+            }
+            memset16(pixels_, static_cast<uint16_t>(rawValue), numHalfWords());
+        }
+
         // 285 kb left with 16bpp only
         void loadImage(ImageDecoder && decoder) {
             clear();
