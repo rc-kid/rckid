@@ -146,7 +146,7 @@ namespace rckid::fs {
 
     /** File with write access. 
      */
-    class FileWrite : public WriteStream {
+    class FileWrite : public RandomWriteStream {
     public:
 
         bool good() const { return drive_ != 0; }
@@ -159,6 +159,8 @@ namespace rckid::fs {
         void close();
 
         uint32_t write(uint8_t const * buffer, uint32_t numBytes) override;
+
+        uint32_t seek(uint32_t position) override;
 
         ~FileWrite() override { close(); }
 

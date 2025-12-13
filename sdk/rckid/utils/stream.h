@@ -88,6 +88,19 @@ namespace rckid {
         virtual uint32_t seek(uint32_t position) = 0;
     }; // rckid::RandomReadStream
 
+    /** Random write stream. 
+     
+        Extends the basic WriteStream with the ability to seek within the stream.
+     */
+    class RandomWriteStream : public WriteStream {
+    public:
+        /** Seeks the read cursor to the given position.
+         
+            Returns the actual position, which is identical to the argument on success, but can be the end of the stream if the position specified was outside of the stream's size. 
+         */
+        virtual uint32_t seek(uint32_t position) = 0;
+    }; // rckid::RandomWriteStream
+
     /** Random read stream from memory buffer. 
      
         Provides the RandomReadStream interface for memory buffers. Does not own the buffer it reads from, so it must be kept alive by the user. 

@@ -311,6 +311,26 @@ namespace rckid::fs {
 #endif
     }
 
+    uint32_t FileWrite::seek(uint32_t position) {
+#if RCKID_ENABLE_HOST_FILESYSTEM
+        ASSERT(host_ != nullptr);
+        host_->seekp(position, std::ios::beg);
+        std::streamsize size = host_->tellp();
+        return static_cast<uint32_t>(size);
+#else
+        switch (drive_) {
+            case static_cast<unsigned>(Drive::SD):
+                f_lseek(& sd_, position);
+                return static_cast<uint32_t>(sd_.fptr);
+            case static_cast<unsigned>(Drive::Cartridge):
+                lfs_file_seek(& lfs_, & cart_, position, 0);
+                return lfs_file_tell(& lfs_, & cart_);
+            default:
+                ASSERT(false); // seeking invalid file is not allowed
+        }
+#endif
+    }
+
     // Folder
 
     Folder::~Folder() {
