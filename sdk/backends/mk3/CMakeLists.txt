@@ -57,6 +57,7 @@ function(link_with_librckid target_name)
         FatFS
         littlefs
         PNGdec
+        PNGenc
         libhelix-mp3
     )
 endfunction()

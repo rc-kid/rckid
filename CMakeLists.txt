@@ -64,6 +64,7 @@ include_directories("gbcemu")
 
 # Add 3rd party libraries (note that these are part of the repo as they often required changes to be made)
 add_subdirectory("libs/PNGdec")
+add_subdirectory("libs/PNGenc")
 add_subdirectory("libs/FatFS")
 add_subdirectory("libs/littlefs")
 add_subdirectory("libs/libhelix-mp3")

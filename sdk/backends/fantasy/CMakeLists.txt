@@ -30,6 +30,7 @@ function(link_with_librckid target_name)
             FatFS
             littlefs
             PNGdec
+            PNGenc
             libhelix-mp3
             ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
         )
