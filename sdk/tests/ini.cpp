@@ -4,7 +4,7 @@
 using namespace rckid;
 
 TEST(ini, sections) {
-    MemoryReadStream s{""
+    MemoryStream s{""
         "[section1]\n"
         "key1=value1\n"
         "key2=value2\n"

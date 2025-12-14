@@ -582,7 +582,7 @@ namespace rckid::json {
     /** Parses JSON object from given buffer. Internally wraps the buffer in a read stream and calls the streamed parser.
      */
     inline Object parse(char const * json) {
-        auto s = MemoryReadStream(reinterpret_cast<uint8_t const *>(json), strlen(json));
+        auto s = MemoryStream(reinterpret_cast<uint8_t const *>(json), strlen(json));
         return parse(s);
     }
 

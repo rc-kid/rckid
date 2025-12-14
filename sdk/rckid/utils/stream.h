@@ -101,16 +101,19 @@ namespace rckid {
         virtual uint32_t seek(uint32_t position) = 0;
     }; // rckid::RandomWriteStream
 
+    class RandomReadWriteStream : public RandomReadStream, public RandomWriteStream {
+    }; // rckid::RandomReadWriteStream
+
     /** Random read stream from memory buffer. 
      
         Provides the RandomReadStream interface for memory buffers. Does not own the buffer it reads from, so it must be kept alive by the user. 
      */
-    class MemoryReadStream : public RandomReadStream {
+    class MemoryStream : public RandomReadWriteStream {
     public:
 
         /** Creates new stream from given buffer and sets the reading cursor to the beginning. 
          */
-        MemoryReadStream(uint8_t const * buffer, uint32_t bufferSize):
+        MemoryStream(uint8_t const * buffer, uint32_t bufferSize):
             buffer_{buffer},
             bufferSize_{bufferSize},
             pos_{0} {
@@ -118,14 +121,14 @@ namespace rckid {
 
         /** Create memory read strem from given null terminaed string.
          */
-        MemoryReadStream(char const * buffer):
-            MemoryReadStream(reinterpret_cast<uint8_t const *>(buffer), static_cast<uint32_t>(strlen(buffer))) {
+        MemoryStream(char const * buffer):
+            MemoryStream(reinterpret_cast<uint8_t const *>(buffer), static_cast<uint32_t>(strlen(buffer))) {
         }
 
         /** Creates new stream from given buffer and sets the reading cusror to the beginning. 
          */
         template<uint32_t SIZE>
-        MemoryReadStream(uint8_t const (&buffer)[SIZE]): MemoryReadStream(buffer, SIZE) {}
+        MemoryStream(uint8_t const (&buffer)[SIZE]): MemoryStream(buffer, SIZE) {}
 
         /** Reads up to bufferSize bytes into the buffer and returns the number of bytes read. This is 0 if at the end of the time. Also advances the read cursor by the actal bytes read. 
          */
@@ -133,6 +136,15 @@ namespace rckid {
             uint32_t available = bufferSize < (bufferSize_ - pos_) ? bufferSize : (bufferSize_ - pos_);
             if (available != 0) {
                 memcpy(buffer, buffer_ + pos_, available);
+                pos_ += available;
+            }
+            return available;
+        }
+
+        uint32_t write(uint8_t const * buffer, uint32_t bufferSize) override {
+            uint32_t available = bufferSize < (bufferSize_ - pos_) ? bufferSize : (bufferSize_ - pos_);
+            if (available != 0) {
+                memcpy(const_cast<uint8_t *>(buffer_) + pos_, buffer, available);
                 pos_ += available;
             }
             return available;
@@ -162,7 +174,7 @@ namespace rckid {
         uint8_t const * buffer_;
         uint32_t bufferSize_;
         uint32_t pos_;
-    }; // rckid::MemoryReadStream
+    }; // rckid::MemoryStream
 
     // serialization functions
 

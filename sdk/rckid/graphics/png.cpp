@@ -1,6 +1,9 @@
 #include <PNGdec/src/PNGdec.h>
+#include <PNGenc/src/PNGenc.h>
 
 #include "png.h"
+
+// PNG decode helpers
 
 int32_t readStream(PNGFILE * pFile, uint8_t * pBuf, int32_t iLen) {
     rckid::RandomReadStream * s = static_cast<rckid::RandomReadStream*>(pFile->fHandle);
@@ -18,6 +21,28 @@ void closeStream(void * handle) {
 }
 
 typedef int32_t (PNG_SEEK_CALLBACK)(PNGFILE *pFile, int32_t iPosition);
+
+// PNG encode helpers
+
+int32_t readEncodeStream(PNGFILE * pFile, uint8_t * pBuf, int32_t iLen) {
+    rckid::RandomReadStream * s = static_cast<rckid::RandomReadStream*>(pFile->fHandle);
+    return s->read(pBuf, iLen);
+}
+
+int32_t seekEncodeStream(PNGFILE * pFile, int32_t iPosition) {
+    rckid::RandomReadStream * s = static_cast<rckid::RandomReadStream*>(pFile->fHandle);
+    return s->seek(iPosition);
+}
+
+int32_t writeEncodeStream(PNGFILE * pFile, uint8_t * pBuf, int32_t iLen) {
+    rckid::RandomReadWriteStream * s = static_cast<rckid::RandomReadWriteStream*>(pFile->fHandle);
+    return s->write(pBuf, iLen);
+}
+
+void closeEncodeStream(void * handle) {
+    rckid::RandomReadWriteStream * s = static_cast<rckid::RandomReadWriteStream*>(handle);
+    delete s;
+}
 
 namespace rckid {
 
@@ -151,4 +176,46 @@ namespace rckid {
         delete line_;
     }
 
-}
+    // PNG encoder
+
+
+
+
+
+    bool PNGEncoder::beginEncode(Coord width, Coord height, uint8_t compressionLevel) {
+        return PNG_encodeBegin(
+            img_, 
+            static_cast<int>(width), 
+            static_cast<int>(height), 
+            0, // pixel type 0 = RGB
+            16, // bpp
+            nullptr, // palette
+            compressionLevel
+        ) == 0;
+    }
+
+    bool PNGEncoder::addLine(uint16_t * pixels) {
+        return PNG_addRGB565Line(
+            img_,
+            pixels,
+            nullptr,
+            linesEncoded_++
+        ) == 0;
+    }
+
+    bool PNGEncoder::setTransparentColor(uint32_t color) {
+        return PNG_setTransparentColor(img_, color) == 0;
+    }
+
+    PNGEncoder::~PNGEncoder() {
+        PNG_encodeEnd(img_);
+        PNG_close(img_);
+        delete img_;
+    }
+
+    PNGEncoder::PNGEncoder() {
+        img_ = new pngenc_image_tag{};
+        memset(img_, 0, sizeof(pngenc_image_tag));
+    }
+
+ }

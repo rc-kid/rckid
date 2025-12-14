@@ -153,7 +153,10 @@ typedef struct png_image_tag
     uint8_t ucFileBuf[PNG_FILE_BUF_SIZE]; // holds temp file data
 } PNGIMAGE;
 
+#ifndef PNG_STATIC
 #define PNG_STATIC
+#endif
+
 int PNGInit(PNGIMAGE *pPNG); // missing in upstream
 int PNG_openRAM(PNGIMAGE *pPNG, uint8_t *pData, int iDataSize);
 int PNG_openFile(PNGIMAGE *pPNG, const char *szFilename);

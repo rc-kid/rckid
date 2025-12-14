@@ -150,40 +150,20 @@ typedef struct pngenc_image_tag
     uint8_t ucFileBuf[PNG_FILE_BUF_SIZE]; // holds temp file data
 } PNGENCIMAGE;
 
-#ifdef __cplusplus
+#ifndef PNG_STATIC
 #define PNG_STATIC static
-//
-// The PNGENC class wraps portable C code which does the actual work
-//
-class PNGENC
-{
-  public:
-    int open(const char *szFilename, PNGENC_OPEN_CALLBACK *pfnOpen, PNGENC_CLOSE_CALLBACK *pfnClose, PNGENC_READ_CALLBACK *pfnRead, PNGENC_WRITE_CALLBACK *pfnWrite, PNGENC_SEEK_CALLBACK *pfnSeek);
-    int open(uint8_t *pOutput, int iBufferSize);
-    int close();
-    int encodeBegin(int iWidth, int iHeight, uint8_t iPixelType, uint8_t iBpp, uint8_t *pPalette, uint8_t iCompLevel);
-    int addLine(uint8_t *pPixels);
-    int addRGB565Line(uint16_t *pPixels, void *pTempLine, bool bBigEndian = false);
-    int setTransparentColor(uint32_t u32Color);
-    int setAlphaPalette(uint8_t *pPalette);
-    int getLastError();
+#endif
 
-  private:
-    PNGENCIMAGE _png;
-};
-#else
-#define PNG_STATIC
 int PNG_openRAM(PNGENCIMAGE *pPNG, uint8_t *pData, int iDataSize);
 int PNG_openFile(PNGENCIMAGE *pPNG, const char *szFilename, PNGENC_OPEN_CALLBACK *pfnOpen, PNGENC_CLOSE_CALLBACK *pfnClose, PNGENC_READ_CALLBACK *pfnRead, PNGENC_WRITE_CALLBACK *pfnWrite, PNGENC_SEEK_CALLBACK *pfnSeek);
 int PNG_close(PNGENCIMAGE *pPNG);
 int PNG_encodeBegin(PNGENCIMAGE *pPNG, int iWidth, int iHeight, uint8_t ucPixelType, uint8_t ucBpp, uint8_t *pPalette, uint8_t ucCompLevel);
 void PNG_encodeEnd(PNGENCIMAGE *pPNG);
-int PNG_addLine(PNGIMAGE *, uint8_t *pPixels, int y);
+int PNG_addLine(PNGENCIMAGE *, uint8_t *pPixels, int y);
 int PNG_addRGB565Line(PNGENCIMAGE *, uint16_t *pPixels, void *pTempLine, int y);
 int PNG_setTransparentColor(PNGENCIMAGE *pPNG, uint32_t u32Color);
 int PNG_setAlphaPalette(PNGENCIMAGE *pPNG, uint8_t *pPalette);
 int PNG_getLastError(PNGENCIMAGE *pPNG);
-#endif // __cplusplus
 
 // Due to unaligned memory causing an exception, we have to do these macros the slow way
 #ifndef MOTOLONG
