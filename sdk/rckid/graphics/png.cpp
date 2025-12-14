@@ -39,8 +39,8 @@ int32_t writeEncodeStream(PNGFILE * pFile, uint8_t * pBuf, int32_t iLen) {
     return s->write(pBuf, iLen);
 }
 
-void closeEncodeStream(void * handle) {
-    rckid::RandomReadWriteStream * s = static_cast<rckid::RandomReadWriteStream*>(handle);
+void closeEncodeStream(PNGFILE * pFile) {
+    rckid::RandomReadWriteStream * s = static_cast<rckid::RandomReadWriteStream*>(pFile->fHandle);
     delete s;
 }
 
@@ -178,17 +178,31 @@ namespace rckid {
 
     // PNG encoder
 
+    PNGEncoder PNGEncoder::fromStream(RandomReadWriteStream * stream) {
+        PNGEncoder enc;
+        enc.img_->pfnRead = readEncodeStream;
+        enc.img_->pfnWrite = writeEncodeStream;
+        enc.img_->pfnSeek = seekEncodeStream;
+        enc.img_->pfnClose = closeEncodeStream;        
+        enc.img_->PNGFile.fHandle = stream;
+        return enc;
+    }
 
-
-
+    PNGEncoder PNGEncoder::fromBuffer(uint8_t * buffer, uint32_t bufferSize) {
+        PNGEncoder enc;
+        enc.img_->pOutput = buffer;
+        enc.img_->iBufferSize = bufferSize;        
+        return enc;
+    }
 
     bool PNGEncoder::beginEncode(Coord width, Coord height, uint8_t compressionLevel) {
+        tempLine_ = new uint8_t[width * 3];
         return PNG_encodeBegin(
             img_, 
             static_cast<int>(width), 
             static_cast<int>(height), 
-            0, // pixel type 0 = RGB
-            16, // bpp
+            PNG_PIXEL_TRUECOLOR,
+            24, // bpp
             nullptr, // palette
             compressionLevel
         ) == 0;
@@ -198,24 +212,32 @@ namespace rckid {
         return PNG_addRGB565Line(
             img_,
             pixels,
-            nullptr,
-            linesEncoded_++
+            tempLine_,
+            linesEncoded_++,
+            0
         ) == 0;
     }
 
-    bool PNGEncoder::setTransparentColor(uint32_t color) {
-        return PNG_setTransparentColor(img_, color) == 0;
+    uint32_t PNGEncoder::finalize() {
+        if (img_ == nullptr)
+            return 0;
+        //PNG_encodeEnd(img_);
+        PNG_close(img_);
+        uint32_t result = img_->iDataSize;
+        delete img_;
+        img_ = nullptr;
+        return result;
     }
 
     PNGEncoder::~PNGEncoder() {
-        PNG_encodeEnd(img_);
-        PNG_close(img_);
-        delete img_;
+        finalize();
+        delete [] tempLine_;
     }
 
     PNGEncoder::PNGEncoder() {
         img_ = new pngenc_image_tag{};
         memset(img_, 0, sizeof(pngenc_image_tag));
+        img_->iTransparent = -1;
     }
 
  }

@@ -94,6 +94,7 @@ namespace rckid {
         PNGEncoder & operator = (PNGEncoder &&) = delete;
 
         static PNGEncoder fromStream(RandomReadWriteStream * stream);
+        static PNGEncoder fromBuffer(uint8_t * buffer, uint32_t bufferSize); 
 
         template<typename STREAM>
         static typename std::enable_if<std::is_base_of<RandomReadWriteStream, STREAM>::value, PNGEncoder>::type fromStream(STREAM && stream) {
@@ -106,7 +107,7 @@ namespace rckid {
 
         bool addLine(uint16_t * pixels);
 
-        bool setTransparentColor(uint32_t color);
+        uint32_t finalize(); 
 
         ~PNGEncoder();
 
@@ -120,6 +121,7 @@ namespace rckid {
         PNGEncoder();
 
         pngenc_image_tag * img_;
+        uint8_t * tempLine_ = nullptr;
         int linesEncoded_ = 0;
 
     }; // rckid::PNGEncoder

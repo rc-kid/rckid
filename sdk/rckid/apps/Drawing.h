@@ -7,6 +7,9 @@
 #include "../ui/image.h"
 #include "../ui/geometry.h"
 #include "../assets/icons_64.h"
+#include "../apps/dialogs/PopupMenu.h"
+#include "../apps/dialogs/FileDialog.h"
+#include "../apps/dialogs/TextDialog.h"
 
 namespace rckid {
 
@@ -94,6 +97,31 @@ namespace rckid {
                             setBitmap(std::move(bmp));
                         }
                     }),
+                    ui::ActionMenu::Item("Save", [&](){
+                        auto name = App::run<TextDialog>("Icon name", "");
+                        if (name.has_value() && ! name.value().empty()) {
+                            String path{STR("/files/icons/my own/" <<  name.value() << ".png")};
+                            fs::createFolders("/files/icons/my own");
+                            
+                            uint8_t buffer[1024 * 12]; // should be large enough a 64x64 icon
+                            uint16_t lineBuffer[64];
+                            PNGEncoder encoder = PNGEncoder::fromBuffer(buffer, sizeof(buffer));
+                            encoder.beginEncode(image_->bitmap()->width(), image_->bitmap()->height(), 6);
+                            Coord e = image_->bitmap()->height();
+                            ASSERT(image_->bitmap()->width() == e);
+                            for (Coord y = 0; y < e; ++y) {
+                                for (Coord x = 0; x < e; ++x) {
+                                    lineBuffer[x] = image_->bitmap()->colorAt(x, y).toRaw();
+                                }
+                                encoder.addLine(lineBuffer);
+                            }
+                            uint32_t size = encoder.finalize();
+                            LOG(LL_INFO, "Encoded PNG size: " << size << " bytes");
+                            fs::FileWrite f{fs::fileWrite(path)};
+                            f.write(buffer, size);
+                            f.close();
+                        }
+                    })
                 };
                 auto x = App::run<PopupMenu<ui::Action>>(& popup);
                 if (x.has_value()) {
@@ -259,6 +287,22 @@ namespace rckid {
         public:
             Palette(Point pos):
                 ui::Widget{Rect::XYWH(pos.x, pos.y, 100, 100)} {
+                    /*
+                uint8_t values[8] = {32, 64, 96, 128, 160, 192, 224, 255};
+                for (uint8_t i = 0; i < 8; ++i) {
+                    uint8_t v = values[i];
+                    colors_[i] = ColorRGB(v, 0, 0);
+                    colors_[i + 8] = ColorRGB(0, v, 0);
+                    colors_[i + 16] = ColorRGB(0, 0, v);
+                    colors_[i + 24] = ColorRGB(v, v, 0);
+                    colors_[i + 32] = ColorRGB(0, v, v);
+                    colors_[i + 40] = ColorRGB(v, 0, v);
+                }
+                for (uint8_t i = 0; i < 16; ++i) {
+                    uint8_t v = (i << 4) | i;
+                    colors_[i + 48] = ColorRGB(v, v, v);
+                }
+                    */
                 uint32_t idx = 0;
                 uint8_t levels[4] = {0, 85, 170, 255}; // evenly spaced values
                 for (uint8_t r : levels)
