@@ -55,7 +55,18 @@ namespace rckid {
 
         int textWidth(String const & str) const { return textWidth(str.c_str()); }
 
-        GlyphInfo const & glyphInfoFor(char glyph) const { return glyphs[glyph - 32]; }
+        /** Returns glyph for given character. 
+         
+            The character is expected to be in the printable range, i.e numGlyphs characters from index 32, inclusive. If outside of the range, glyph infor for a question mark is returned instead. 
+         */
+        GlyphInfo const & glyphInfoFor(char glyph) const { 
+            if (glyph < 32)
+                return glyphs['?' - 32];
+            glyph -= 32;
+            if (glyph >= numGlyphs)
+                return glyphs['?' - 32];
+            return glyphs[static_cast<uint32_t>(glyph)]; 
+        }
 
         /** Takes a color and converts it to an array of 4 colors corresponding to the 2BPP of font glyphs. 
          
