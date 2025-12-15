@@ -80,7 +80,7 @@ Nice extras would include:
 - [ ] alarm app
 - [ ] port more games (15 puzzle at least)
 - [ ] add high scores
-- [ ] app for creating icons (64x64) so that kids can design their own. Eventually this can go larger and larger
+- [X] app for creating icons (64x64) so that kids can design their own. Eventually this can go larger and larger
 
 Must-have before wider release
 
@@ -106,9 +106,6 @@ Polish
 # TODO
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb. Checked with TME and they do have protection, cutoff at 3V. 
-
-- encode icons into PNG
-- allow zoom in image, if zoomed  
 
 - numberDialog needs icon
 - rapid fire not working

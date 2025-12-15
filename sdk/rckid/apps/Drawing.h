@@ -25,6 +25,8 @@ namespace rckid {
 
         String name() const override { return "Drawing"; }
 
+        String title() const { return filename_.empty() ? String{"Drawing"} : fs::stem(filename_); }
+
         Drawing() : ui::Form<void>{} {
             // TODO implement
             g_.enableBgImage(false);
@@ -67,26 +69,31 @@ namespace rckid {
                 ui::ActionMenu popup{
                     ui::ActionMenu::Item("Clear", [&](){
                         image_->bitmap()->fill(palette_->bg().toRaw());
+                        editor_->setDirty(true);
                     }),
                     ui::ActionMenu::Item("New small (8x8)", [&](){
                         Bitmap b{8, 8, 16};
                         b.fill(palette_->bg().toRaw());
                         setBitmap(std::move(b));
+                        editor_->setDirty(false);
                     }),
                     ui::ActionMenu::Item("New medium (16x16)", [&](){
                         Bitmap b{16, 16, 16};
                         b.fill(palette_->bg().toRaw());
                         setBitmap(std::move(b));
+                        editor_->setDirty(false);
                     }),
                     ui::ActionMenu::Item("New large (32x32)", [&](){
                         Bitmap b{32, 32, 16};
                         b.fill(palette_->bg().toRaw());
                         setBitmap(std::move(b));
+                        editor_->setDirty(false);
                     }),
                     ui::ActionMenu::Item("New huge (64x64)", [&](){
                         Bitmap b{64, 64, 16};
                         b.fill(palette_->bg().toRaw());
                         setBitmap(std::move(b));
+                        editor_->setDirty(false);
                     }),
                     ui::ActionMenu::Item("Load", [&](){
                         auto icon = App::run<FileDialog>("Select friend icon", "/files/icons");
@@ -95,14 +102,15 @@ namespace rckid {
                             Bitmap bmp{decoder.width(), decoder.height(), 16};
                             bmp.loadImage(std::move(decoder));
                             setBitmap(std::move(bmp));
+                            editor_->setDirty(false);
                         }
                     }),
                     ui::ActionMenu::Item("Save", [&](){
                         auto name = App::run<TextDialog>("Icon name", "");
                         if (name.has_value() && ! name.value().empty()) {
-                            String path{STR("/files/icons/my own/" <<  name.value() << ".png")};
+                            filename_ = name.value();
+                            String path{STR("/files/icons/my own/" <<  filename_ << ".png")};
                             fs::createFolders("/files/icons/my own");
-                            
                             uint8_t buffer[1024 * 12]; // should be large enough a 64x64 icon
                             uint16_t lineBuffer[64];
                             PNGEncoder encoder = PNGEncoder::fromBuffer(buffer, sizeof(buffer));
@@ -120,6 +128,7 @@ namespace rckid {
                             fs::FileWrite f{fs::fileWrite(path)};
                             f.write(buffer, size);
                             f.close();
+                            editor_->setDirty(false);
                         }
                     })
                 };
@@ -224,6 +233,9 @@ namespace rckid {
                 //cursor_->setRect(Rect::XYWH(cursorPos_.x * zoom_ + 1, cursorPos_.y * zoom_ + 1, zoom_ + 2, zoom_ + 2));
             }
 
+            bool dirty() const { return dirty_; }
+            void setDirty(bool value = true) { dirty_ = value; }
+
         protected:
 
             void processEvents() override {
@@ -238,9 +250,11 @@ namespace rckid {
                     setCursor(cursorPos_ + Point{0, 1});
                 if (btnDown(Btn::A)) {
                     source_->bitmap()->setPixelAt(cursorPos_.x, cursorPos_.y, colorFg_.toRaw());
+                    dirty_ = true;
                 }
                 if (btnDown(Btn::B)) {
                     source_->bitmap()->setPixelAt(cursorPos_.x, cursorPos_.y, colorBg_.toRaw());
+                    dirty_ = true;
                 }
             }
 
@@ -275,6 +289,7 @@ namespace rckid {
             uint32_t zoom_ = 3;
             ColorRGB colorFg_ = ColorRGB::White();
             ColorRGB colorBg_ = ColorRGB::Black();
+            bool dirty_ = false;
         }; 
 
         /** Palette visualization. 
@@ -396,8 +411,9 @@ namespace rckid {
         Palette * palette_;
         ui::Panel * fg_;
         ui::Panel * bg_;
-    
 
+        String filename_; 
+    
     }; // rckid::Drawing
 
 } // namespace rckid 

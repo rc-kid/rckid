@@ -55,12 +55,14 @@ namespace rckid::ui {
             if (direction == Direction::None) {
                 aImg_ = icon;
                 aImg_.setTransparent(true);
+                aImg_.setZoomToRect(64, 64);
                 aText_.setText(text);
                 aText_.setColor(ui::Style::fg());
                 repositionElements(aImg_, aText_);
             } else {
                 bImg_ = icon;
                 bImg_.setTransparent(true);
+                bImg_.setZoomToRect(64, 64);
                 bText_.setText(text);
                 bText_.setColor(ui::Style::fg());
                 repositionElements(bImg_, bText_);

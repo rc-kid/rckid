@@ -54,10 +54,27 @@ namespace rckid::ui {
         ColorRGB transparentColor() const { return ColorRGB::fromRaw(transparent_); }
         void setTransparentColor(ColorRGB color) { transparent_ = color.toRaw(); }
 
+        uint32_t zoom() const { return zoom_; }
+        void setZoom(uint32_t value) {
+            ASSERT(value != 0);
+            zoom_ = value;
+            reposition();
+        }
+
+        void setZoomToRect(Coord width, Coord height) {
+            setWidth(width);
+            setHeight(height);
+            if (bmp_ == nullptr)
+                return;
+            uint32_t zoomx = width / bmp_->width();
+            uint32_t zoomy = height / bmp_->height();
+            setZoom((zoomx < zoomy) ? zoomx : zoomy);
+        }
+
         void reposition() {
             if (bmp_ == nullptr)
                 return;
-            Point x = justifyRectangle(Rect::WH(bmp_->width() , bmp_->height()), hAlign_, vAlign_);
+            Point x = justifyRectangle(Rect::WH(bmp_->width() * zoom_ , bmp_->height() * zoom_), hAlign_, vAlign_);
             imgX_ = x.x;
             imgY_ = x.y;
         }
@@ -69,7 +86,7 @@ namespace rckid::ui {
                 return;
             // the image should not be repeated, translate the actual bitmap's rectangle as if it were a child widget and then use its column rendering
             if (!repeat_) {
-                adjustRenderParams(Rect::XYWH(imgX_, imgY_, bmp_->width(), bmp_->height()), column, buffer, starty, numPixels);
+                adjustRenderParams(Rect::XYWH(imgX_, imgY_, bmp_->width() * zoom_, bmp_->height() * zoom_), column, buffer, starty, numPixels);
                 if (numPixels != 0)  
                     renderBitmapColumn(column, buffer, starty, numPixels);
             // if repeated, adjust column to always fit into the image, figure out starty and then draw the column over and over the entire height
@@ -122,10 +139,18 @@ namespace rckid::ui {
     private:
 
         void renderBitmapColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) {
-            if (transparent_ < 0xffff)
-                bmp_->renderColumn(column, starty, numPixels, buffer, transparent_);
-            else 
-                bmp_->renderColumn(column, starty, numPixels, buffer);
+            if (zoom_ == 1) {
+                if (transparent_ <= 0xffff)
+                    bmp_->renderColumn(column, starty, numPixels, buffer, transparent_);
+                else 
+                    bmp_->renderColumn(column, starty, numPixels, buffer);
+            } else {
+                for (Coord y = 0; y < numPixels; ++y) {
+                    uint16_t color = bmp_->colorAt(column / zoom_, (starty + y) / zoom_).toRaw();
+                    if (color != transparent_)
+                        buffer[y] = color;
+                }
+            }
         }
 
         HAlign hAlign_ = HAlign::Center;
@@ -136,6 +161,7 @@ namespace rckid::ui {
 
         static constexpr uint32_t NO_TRANSPARENCY = 0xffffffff;
         uint32_t transparent_ = 0; // black
+        uint32_t zoom_ = 1;
 
     }; // rckid::ui::CustomImage
 

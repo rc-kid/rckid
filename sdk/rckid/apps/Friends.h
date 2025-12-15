@@ -34,6 +34,10 @@ namespace rckid {
                 c_{c}
             {
                 image_ = g_.addChild(new ui::Image{8, 18, c.image});
+                image_->setZoomToRect(64, 64);
+                uint32_t zoomx = image_->width() / image_->bitmap()->width();
+                uint32_t zoomy = image_->height() / image_->bitmap()->height();
+                image_->setZoom((zoomx < zoomy) ? zoomx : zoomy);
                 name_ = g_.addChild(new ui::Label{80, 20, c.name});
                 contents_ = g_.addChild(new ui::ScrollView{Rect::XYWH(0, 90, 320, 150)});
                 bdayImg_ = contents_->addChild(new ui::Image{50, 0, Icon{assets::icons_24::birthday_cake}});

@@ -110,7 +110,7 @@ namespace rckid::ui {
                     String fullPath = fs::join(path_, entry.name());
                     // if the file has size we need (64x64), use the file as its own icon
                     PNG png = PNG::fromStream(fs::fileRead(fullPath));
-                    if (png.width() == 64 && png.height() == 64) {
+                    if (png.width() <= 64 && png.height() <= 64) {
                         return Icon{fs::join(path_, entry.name()).c_str()};
                     } else {
                         return Icon{assets::icons_64::paint_palette};
