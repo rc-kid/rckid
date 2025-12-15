@@ -46,6 +46,29 @@ namespace rckid {
 
     protected:
 
+        void save() {
+            String path{STR("/files/icons/my own/" <<  filename_ << ".png")};
+            fs::createFolders("/files/icons/my own");
+            uint8_t buffer[1024 * 12]; // should be large enough a 64x64 icon
+            uint16_t lineBuffer[64];
+            PNGEncoder encoder = PNGEncoder::fromBuffer(buffer, sizeof(buffer));
+            encoder.beginEncode(image_->bitmap()->width(), image_->bitmap()->height(), 6);
+            Coord e = image_->bitmap()->height();
+            ASSERT(image_->bitmap()->width() == e);
+            for (Coord y = 0; y < e; ++y) {
+                for (Coord x = 0; x < e; ++x) {
+                    lineBuffer[x] = image_->bitmap()->colorAt(x, y).toRaw();
+                }
+                encoder.addLine(lineBuffer);
+            }
+            uint32_t size = encoder.finalize();
+            LOG(LL_INFO, "Encoded PNG size: " << size << " bytes");
+            fs::FileWrite f{fs::fileWrite(path)};
+            f.write(buffer, size);
+            f.close();
+            editor_->setDirty(false);
+        }
+
         void focus() override {
             ui::Form<void>::focus();
             //btnEnableRapidFire(true);
@@ -103,35 +126,36 @@ namespace rckid {
                             bmp.loadImage(std::move(decoder));
                             setBitmap(std::move(bmp));
                             editor_->setDirty(false);
+                            if (icon.value().startsWith(STR("/files/icons/my_own/")))
+                                filename_ = icon.value().substr(20);
+                            else
+                                filename_.clear();
                         }
                     }),
+                    // save, which either stores under given filename, if any, or asks for a new name if not saved yet
                     ui::ActionMenu::Item("Save", [&](){
-                        auto name = App::run<TextDialog>("Icon name", "");
-                        if (name.has_value() && ! name.value().empty()) {
-                            filename_ = name.value();
-                            String path{STR("/files/icons/my own/" <<  filename_ << ".png")};
-                            fs::createFolders("/files/icons/my own");
-                            uint8_t buffer[1024 * 12]; // should be large enough a 64x64 icon
-                            uint16_t lineBuffer[64];
-                            PNGEncoder encoder = PNGEncoder::fromBuffer(buffer, sizeof(buffer));
-                            encoder.beginEncode(image_->bitmap()->width(), image_->bitmap()->height(), 6);
-                            Coord e = image_->bitmap()->height();
-                            ASSERT(image_->bitmap()->width() == e);
-                            for (Coord y = 0; y < e; ++y) {
-                                for (Coord x = 0; x < e; ++x) {
-                                    lineBuffer[x] = image_->bitmap()->colorAt(x, y).toRaw();
-                                }
-                                encoder.addLine(lineBuffer);
+                        if (filename_.empty()) {
+                            auto name = App::run<TextDialog>("Enter icon name", fs::stem(filename_));
+                            if (name.has_value() && ! name.value().empty()) {
+                                // TODO check the filename does not exist yet
+                                filename_ = name.value();
+                            } else {
+                                return; // cancelled
                             }
-                            uint32_t size = encoder.finalize();
-                            LOG(LL_INFO, "Encoded PNG size: " << size << " bytes");
-                            fs::FileWrite f{fs::fileWrite(path)};
-                            f.write(buffer, size);
-                            f.close();
-                            editor_->setDirty(false);
                         }
+                        save();
                     })
                 };
+                if (! filename_.empty()) {
+                    popup.add(ui::ActionMenu::Item("Save As...", [&](){
+                        auto name = App::run<TextDialog>("Enter icon name", fs::stem(filename_));
+                        if (name.has_value() && ! name.value().empty()) {
+                            // TODO check the filename does not exist yet
+                            filename_ = name.value();
+                            save();
+                        }
+                    }));
+                }
                 auto x = App::run<PopupMenu<ui::Action>>(& popup);
                 if (x.has_value()) {
                     x.value()();

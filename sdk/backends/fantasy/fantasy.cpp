@@ -132,7 +132,7 @@ namespace rckid {
     }
 
     namespace budgetInfo {
-        uint32_t budget_ = 120;
+        uint32_t budget_ = 3600;
         uint32_t budgetDaily_ = 3600;
     }
 

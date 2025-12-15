@@ -126,8 +126,7 @@ namespace rckid {
         }
 
         void clear() {
-            str_.setSize(1);
-            str_[0] = '\0';
+            str_ = LazyBuffer<char>{"", 1};
         }
 
         String & operator += (char c) {
