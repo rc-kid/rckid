@@ -365,7 +365,7 @@ namespace rckid::gbcemu {
                     for (uint32_t i = 0; i < 4; ++i) {
                         m->add(ui::ActionMenu::Item(
                             STR("Color " << i),
-                            assets::icons_64::poo,
+                            assets::icons_64::color_picker,
                             [this, i](){
                                 auto c = App::run<ColorPicker>(palette_[i]);
                                 if (c.has_value())

@@ -27,7 +27,7 @@ namespace rckid {
         {
             using namespace ui;
             g_.setBg(ColorRGB::White().withAlpha(32));
-            icon_ = g_.addChild(new ui::Image{Rect::WH(110, 96), Icon{assets::icons_64::poo}});
+            icon_ = g_.addChild(new ui::Image{Rect::WH(110, 96), Icon{assets::icons_64::numpad}});
             tileMap_ = g_.addChild(new ui::Tilemap<Tile<12,24,Color16>>{15, 4, assets::System24, palette_});
             selRect_ = g_.addChild(new ui::Rectangle{Rect::WH(24, 24)});
             tileMap_->setPos(110, 0);

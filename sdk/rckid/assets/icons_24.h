@@ -131,10 +131,22 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons24/notes.inc.h"
     };
 
+    // File: assets/icons/24/079-pocket-knife.png
+    // Size: 867
+    static constexpr uint8_t pocket_knife[] = {
+        #include "raw/icons24/pocket_knife.inc.h"
+    };
+
     // File: assets/icons/24/013-wifi.png
     // Size: 856
     static constexpr uint8_t wifi[] = {
         #include "raw/icons24/wifi.inc.h"
+    };
+
+    // File: assets/icons/24/077-microchip.png
+    // Size: 1076
+    static constexpr uint8_t microchip[] = {
+        #include "raw/icons24/microchip.inc.h"
     };
 
     // File: assets/icons/24/001-rc-car.png
@@ -273,6 +285,18 @@ namespace rckid::assets::icons_24 {
     // Size: 857
     static constexpr uint8_t music_note[] = {
         #include "raw/icons24/music_note.inc.h"
+    };
+
+    // File: assets/icons/24/078-numpad.png
+    // Size: 1045
+    static constexpr uint8_t numpad[] = {
+        #include "raw/icons24/numpad.inc.h"
+    };
+
+    // File: assets/icons/24/076-down-arrow.png
+    // Size: 644
+    static constexpr uint8_t down_arrow[] = {
+        #include "raw/icons24/down_arrow.inc.h"
     };
 
     // File: assets/icons/24/043-sad-face.png

@@ -168,7 +168,7 @@ namespace rckid::ui {
                         ui::Style::save();
                         }
                     }),
-                    ui::ActionMenu::Item("Key", assets::icons_64::poo, [](){
+                    ui::ActionMenu::Item("Key", assets::icons_64::down_arrow, [](){
                         auto c = App::run<ColorPicker>(ui::Style::rgbColor());
                         if (c.has_value()) {
                             ui::Style::setRgbColor(c.value());
@@ -176,7 +176,7 @@ namespace rckid::ui {
                             ui::Style::save();
                         }
                     }),
-                    ui::ActionMenu::Item("Rainbow Key", assets::icons_64::poo, [](){
+                    ui::ActionMenu::Item("Rainbow Key", assets::icons_64::rainbow, [](){
                         ui::Style::setRgbStyle(ui::RGBStyle::RainbowKey);
                         ui::Style::save();
                     }),
