@@ -55,7 +55,7 @@ namespace rckid {
             String holidayName;
             Icon holidayIcon;
 
-            Contact::forEach([&](Contact c) {
+            std::function<void(Contact)> f = [&](Contact c){
                 uint32_t days = c.daysTillBirthday();
                 if (days < bdayDays) {
                     bdayDays = days;
@@ -63,7 +63,11 @@ namespace rckid {
                 } else if (days == bdayDays) {
                     bdayName = STR(bdayName << ", " << c.name);
                 }
-            });
+            };
+
+            Contact::forEach(f);
+            // and do the same for ourselves
+            f(Myself::contact());
 
             Holiday::forEach([&](Holiday h) {
                 uint32_t days = h.daysTillHoliday();

@@ -292,8 +292,7 @@ namespace rckid {
                 }
                 nextBirthdaysAttached_ = true;
             }
-            // fill next birthdays list
-            for (Contact & c : contacts_) {
+            auto f = [&](Contact & c) {
                 uint32_t days = c.daysTillBirthday();
                 for (uint32_t i = 0; i < NUM_NEXT_BIRTHDAYS; ++i) {
                     if (days < nextBirthdays_[i].numDays_) {
@@ -310,7 +309,12 @@ namespace rckid {
                         break;
                     }
                 }
-            }
+            };
+            // fill next birthdays list
+            for (Contact & c : contacts_)
+                f(c);
+            f(Myself::contact());
+
             for (NextBirthday & nb: nextBirthdays_) {
                 if (nb.numDays_ >= 366) {
                     nb.icon_->setVisible(false);
