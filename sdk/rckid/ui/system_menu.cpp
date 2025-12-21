@@ -275,7 +275,7 @@ namespace rckid::ui {
                 }
             }),
             ui::ActionMenu::Item("Background", assets::icons_64::picture, [](){
-                auto icon = App::run<FileDialog>("/files/images");
+                auto icon = App::run<FileDialog>("Select image", "/files/images");
                 if (icon.has_value()) {
                     ui::Style::setBackground(Icon{icon.value().c_str()});
                     ui::Style::refreshAndSave();
