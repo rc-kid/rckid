@@ -79,7 +79,7 @@ add_subdirectory("tests")
 
 add_subdirectory("gbcemu")
 
-add_subdirectory("cartridges/tests")
+add_subdirectory("cartridges")
 #add_subdirectory("cartridges/hello-world")
 #add_subdirectory("cartridges/gbcemu")
 
