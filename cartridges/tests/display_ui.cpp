@@ -20,19 +20,20 @@ ui::ActionMenu * gamesGenerator() {
 }
 
 ui::ActionMenu * mainMenu() {
-    auto result = new ui::ActionMenu{
-        ui::ActionMenu::Generator("Games", assets::icons_64::game_controller, gamesGenerator),
-        ui::ActionMenu::Item("Music", assets::icons_64::music, App::run<MusicPlayer>),
-        ui::ActionMenu::Item("Radio", assets::icons_64::radio_cassette, App::run<FMRadio>),
-        ui::ActionMenu::Item("Friends", assets::icons_64::birthday_cake, App::run<Friends>),
-        ui::ActionMenu::Item("Messages", assets::icons_64::chat, App::run<Messages>),
-        ui::ActionMenu::Item("Drawing", assets::icons_64::paint_palette, App::run<Drawing>),
-        ui::ActionMenu::Generator("Utilities", assets::icons_64::configuration, ui::utilsMenuGenerator),
-        ui::ActionMenu::Generator("Settings", assets::icons_64::settings, ui::settingsMenuGenerator),
-    };
-    if (debugMode()) {
+    std::unordered_set<String> blacklist{ui::getBlacklistedApps()};
+    auto result = new ui::ActionMenu{};
+    result->add(ui::ActionMenu::Generator("Games", assets::icons_64::game_controller, gamesGenerator));
+    ui::addAppToMenu(result, "Music", assets::icons_64::music, App::run<MusicPlayer>, blacklist);
+    ui::addAppToMenu(result, "Radio", assets::icons_64::radio_cassette, App::run<FMRadio>, blacklist);
+    ui::addAppToMenu(result, "Friends", assets::icons_64::birthday_cake, App::run<Friends>, blacklist);
+    ui::addAppToMenu(result, "Messages", assets::icons_64::chat, App::run<Messages>, blacklist);
+    // TODO should drawing move to its own submenu with other image/asset stuff? 
+    ui::addAppToMenu(result, "Drawing", assets::icons_64::paint_palette, App::run<Drawing>, blacklist);
+    result->add(ui::ActionMenu::Generator("Audio", assets::icons_64::music_2, ui::audioMenuGenerator));
+    result->add(ui::ActionMenu::Generator("Utilities", assets::icons_64::configuration, ui::utilsMenuGenerator));
+    result->add(ui::ActionMenu::Generator("Settings", assets::icons_64::settings, ui::settingsMenuGenerator));
+    if (debugMode())
         result->add(ui::ActionMenu::Generator("Devel", assets::icons_64::ladybug, ui::develMenuGenerator));
-    }
     return result;
 }
 

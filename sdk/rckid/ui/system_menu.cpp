@@ -25,6 +25,8 @@
 #include "../apps/devel/SDTest.h"
 #include "../apps/devel/WiFiScan.h"
 
+#include "../utils/ini.h"
+
 #include "system_menu.h"
 
 namespace rckid::ui {
@@ -48,25 +50,42 @@ namespace rckid::ui {
         }
     }
 
+    std::unordered_set<String> getBlacklistedApps() {
+        std::unordered_set<String> result;
+        ini::Reader ini{fs::fileRead("/apps.ini")};
+        if (! ini.eof()) {
+            while (auto section = ini.nextSection()) {
+                if (section.has_value() && section.value() == "blacklist") {
+                    // ignore the keys, just collect the values
+                    while (auto pair = ini.nextValue())
+                        result.insert(pair->second);
+                }
+            }
+        }
+        return result;
+    }
+
+    void addAppToMenu(ui::ActionMenu * menu, String const & appName, Icon const & icon, std::function<void()> launchFunc, std::unordered_set<String> const & blacklist) {
+        if (blacklist.find(appName) == blacklist.end()) {
+            menu->add(ui::ActionMenu::Item(appName, icon, std::move(launchFunc)));
+        }
+    }
 
     ui::ActionMenu * mainMenuGenerator() {
-        auto result = new ui::ActionMenu{
-            ui::ActionMenu::Generator("Games", assets::icons_64::game_controller, gamesMenuGenerator),
-            ui::ActionMenu::Item("Music", assets::icons_64::music, App::run<MusicPlayer>),
-            ui::ActionMenu::Item("Radio", assets::icons_64::radio_cassette, App::run<FMRadio>),
-            ui::ActionMenu::Item("Friends", assets::icons_64::birthday_cake, App::run<Friends>),
-            ui::ActionMenu::Item("Messages", assets::icons_64::chat, App::run<Messages>),
-            // TODO friends & messages are top level apps for now
-            //ui::ActionMenu::Generator("Comms", assets::icons_64::chat, commsMenuGenerator),
-            //ui::ActionMenu::Generator("Audio", assets::icons_64::music_wave, audioMenuGenerator),
-            //ui::ActionMenu::Generator("Images", assets::icons_64::picture, imagesMenuGenerator),
-            //ui::ActionMenu::Item("Remote", assets::icons_64::rc_car, nullptr),
-            ui::ActionMenu::Generator("Utilities", assets::icons_64::configuration, utilsMenuGenerator),
-            ui::ActionMenu::Generator("Settings", assets::icons_64::settings, settingsMenuGenerator),
-        };
-        if (debugMode()) {
+        std::unordered_set<String> blacklist{getBlacklistedApps()};
+        auto result = new ui::ActionMenu{};
+        result->add(ui::ActionMenu::Generator("Games", assets::icons_64::game_controller, gamesMenuGenerator));
+        addAppToMenu(result, "Music", assets::icons_64::music, App::run<MusicPlayer>, blacklist);
+        addAppToMenu(result, "Radio", assets::icons_64::radio_cassette, App::run<FMRadio>, blacklist);
+        addAppToMenu(result, "Friends", assets::icons_64::birthday_cake, App::run<Friends>, blacklist);
+        addAppToMenu(result, "Messages", assets::icons_64::chat, App::run<Messages>, blacklist);
+        // TODO should drawing move to its own submenu with other image/asset stuff? 
+        addAppToMenu(result, "Drawing", assets::icons_64::paint_palette, App::run<Drawing>, blacklist);
+        result->add(ui::ActionMenu::Generator("Audio", assets::icons_64::music_2, audioMenuGenerator));
+        result->add(ui::ActionMenu::Generator("Utilities", assets::icons_64::configuration, utilsMenuGenerator));
+        result->add(ui::ActionMenu::Generator("Settings", assets::icons_64::settings, settingsMenuGenerator));
+        if (debugMode())
             result->add(ui::ActionMenu::Generator("Devel", assets::icons_64::ladybug, develMenuGenerator));
-        }
         return result;
     }
 
@@ -82,36 +101,38 @@ namespace rckid::ui {
     }
 
     ui::ActionMenu * utilsMenuGenerator() {
-        return new ui::ActionMenu{
-            ui::ActionMenu::Item("Flashlight", assets::icons_64::flashlight, App::run<Flashlight>),
-            ui::ActionMenu::Item("Clock", assets::icons_64::alarm_clock, App::run<Clock>),
-            ui::ActionMenu::Item("Stopwatch", assets::icons_64::chronometer, App::run<Stopwatch>),
-            // TODO write the app
-            //ui::ActionMenu::Item("Timer", assets::icons_64::hourglass, nullptr),
-            ui::ActionMenu::Item("Piggy Bank", assets::icons_64::piggy_bank, App::run<PiggyBank>),
-            // TODO enable proper file browser (once we have actual files)
-            //ui::ActionMenu::Item("Files", assets::icons_64::folder, App::run<FileDialog>),
-            ui::ActionMenu::Item("Data Sync", assets::icons_64::pen_drive, App::run<DataSync>),
-        };
+        std::unordered_set<String> blacklist{getBlacklistedApps()};
+        auto result = new ui::ActionMenu{};
+        addAppToMenu(result, "Flashlight", assets::icons_64::flashlight, App::run<Flashlight>, blacklist);
+        addAppToMenu(result, "Clock", assets::icons_64::alarm_clock, App::run<Clock>, blacklist);
+        addAppToMenu(result, "Stopwatch", assets::icons_64::chronometer, App::run<Stopwatch>, blacklist);
+        // TODO add piggy bank
+        //addAppToMenu(result, "Timer", assets::icons_64::hourglass, App::run<Timer>, blacklist);
+        addAppToMenu(result, "Piggy Bank", assets::icons_64::piggy_bank, App::run<PiggyBank>, blacklist);
+        // TODO add proper file manager
+        //addAppToMenu(result, "Files", assets::icons_64::folder, App::run<FileDialog>, blacklist);
+        addAppToMenu(result, "Data Sync", assets::icons_64::pen_drive, App::run<DataSync>, blacklist);
+        return result;
     }
 
     ui::ActionMenu * commsMenuGenerator() {
-        return new ui::ActionMenu{
-            ui::ActionMenu::Item("Messages", assets::icons_64::chat, nullptr),
-            // TODO NRF or LoRa cartridges, libopus encoding/decoding, recording 
-            //ui::ActionMenu::Item("WalkieTalkie", assets::icons_64::baby_monitor, nullptr),
-            ui::ActionMenu::Item("Friends", assets::icons_64::birthday_cake, App::run<Friends>),
-        };
+        std::unordered_set<String> blacklist{getBlacklistedApps()};
+        auto result = new ui::ActionMenu{};
+        addAppToMenu(result, "Friends", assets::icons_64::birthday_cake, App::run<Friends>, blacklist); 
+        addAppToMenu(result, "Messages", assets::icons_64::chat, App::run<Messages>, blacklist);
+        // TODO NRF or LoRa cartridges, libopus encoding/decoding, recording 
+        //addAppToMenu(result, "WalkieTalkie", assets::icons_64::baby_monitor, nullptr, blacklist);
+        return result;
     }
 
     ui::ActionMenu * audioMenuGenerator() {
-        return new ui::ActionMenu{
-            // TODO enable when microphone working
-            //ui::ActionMenu::Item("Recorder", assets::icons_64::microphone, App::run<Recorder>),
-            // TODO needs to write
-            // ui::ActionMenu::Item("Composer", assets::icons_64::music_2, nullptr),
-            // TODO browser for audio files alone
-        };
+        std::unordered_set<String> blacklist{getBlacklistedApps()};
+        auto result = new ui::ActionMenu{};
+        // TODO recorder not ready yet, microphone is doing silly things
+        addAppToMenu(result, "Recorder", assets::icons_64::microphone, App::run<Recorder>, blacklist);
+        // TODO composer app
+        // addAppToMenu(result, "Composer", assets::icons_64::music_2, nullptr, blacklist);
+        return result;
     }
 
     ui::ActionMenu * imagesMenuGenerator() {
