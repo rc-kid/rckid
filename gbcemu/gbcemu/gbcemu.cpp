@@ -391,7 +391,30 @@ namespace rckid::gbcemu {
         };
     }
 
+    void GBCEmu::saveExternalRam() {
+        uint32_t numPages = externalRamPages();
+        if (numPages == 0)
+            return;
+        auto f = fs::fileWrite(fs::join(homeFolder(), "eram.dat"));
+        for (uint32_t i = 0; i < numPages; ++i)
+            f.write(eram_[i], 8192);
+   }
+
+    void GBCEmu::loadExternalRam() {
+        uint32_t numPages = externalRamPages();
+        if (numPages == 0)
+            return;
+        auto f = fs::fileRead(fs::join(homeFolder(), "eram.dat"));
+        if (! f.good())
+            return;
+        for (uint32_t i = 0; i < numPages; ++i)
+            f.read(eram_[i], 8192);
+    }
+
     GBCEmu::~GBCEmu() {
+        // save external ram, if any
+        if (gamepak_ != nullptr)
+            saveExternalRam();
         clear();
         for (uint32_t i = 0; i < 2; ++i)
             delete [] vram_[i];
@@ -431,11 +454,14 @@ namespace rckid::gbcemu {
         serialize(into, getExternalRamPage());
         // save the APU state
         serialize(into, apu_);
+        // v2 - add the RTCMapping
+        serialize(into, rtcMapping_);
         // we do not have to save the PPU state as we only allow interrupting the game during a VBLANK period
     }
 
     void GBCEmu::load(ReadStream & from) {
-        if (deserialize<uint8_t>(from) != VERSION) {
+        uint8_t version = deserialize<uint8_t>(from);
+        if (version > VERSION) {
             LOG(LL_WARN,  "Unsupported save version, skipping");
             return;
         }
@@ -467,6 +493,10 @@ namespace rckid::gbcemu {
         setExternalRamPage(deserialize<uint32_t>(from));
         // load the APU state
         deserialize(from, apu_);
+        // v2 - load the RTCMapping
+        if (version >= 2) {
+            deserialize(from, rtcMapping_);
+        }
         // we do not have to load the PPU state as we only allow interrupting the game during a VBLANK period
     }
 
@@ -608,7 +638,7 @@ namespace rckid::gbcemu {
                     break;
             }
             // figure out the size of the external RAM and allocate accordingly
-            uint32_t eramSize = gamepak_->cartridgeRAMSize() / 8192;
+            uint32_t eramSize = externalRamPages();
             for (uint32_t i = 0; i < eramSize; ++i)
                 eram_[i] = new uint8_t[0x2000];
             // initialize memory mapping defaults
@@ -699,6 +729,8 @@ namespace rckid::gbcemu {
         apu_.enable(true);
         // set the initial values for the IO registers 
         IO_LY = 0; // ensure we'll start with new frame
+        // load external ram from previous, if we have it
+        loadExternalRam();
         LOG(LL_INFO, "Cartridge load done, free memory: " << memoryFree());
     #if (GBCEMU_INTERACTIVE_DEBUG == 1)
         resetVisited();
@@ -1583,7 +1615,13 @@ namespace rckid::gbcemu {
                     setRomPage(value);
                 } else if (addr < 0x6000) {
                     // set the eram page, or RTC clock register
-                    // TODO
+                    if (value < 0x08) {
+                      setExternalRamPage(value % 4);
+                      rtcMapping_ = RTC_MAPPING_NONE;
+                    } else {
+                        // rtc registers are mapped to the eram values
+                        rtcMapping_ = value;
+                    }
                 } else {
                     ASSERT((addr < 0x8000)); 
                     // RTC latch
@@ -1630,7 +1668,7 @@ namespace rckid::gbcemu {
                 UNIMPLEMENTED;
             case MBC::Type3:
                 // TODO checkif we are writing the RTC clock instead
-                if (eramActive_)
+                if (eramActive_ && rtcMapping_ == RTC_MAPPING_NONE)
                     memMap_[10][offset] = value;
                 break;
             case MBC::Type5:
@@ -1655,6 +1693,19 @@ namespace rckid::gbcemu {
             case MBC::Type2:
                 UNIMPLEMENTED;
             case MBC::Type3:
+                switch (rtcMapping_) {
+                    case RTC_MAPPING_NONE:
+                        return eramActive_ ? memMap_[10][offset] : 0xff;
+                    case RTC_MAPPING_SECONDS:
+                    case RTC_MAPPING_MINUTES:
+                    case RTC_MAPPING_HOURS:
+                    case RTC_MAPPING_DAYS_LOW:
+                    case RTC_MAPPING_DAYS_HIGH:
+                        // TODO
+                        return 0xff;
+                    default:
+                        UNREACHABLE;
+                }
                 // TODO checkif we are reading the RTC clock instead
                 return eramActive_ ? memMap_[10][offset] : 0xff;
             case MBC::Type5:

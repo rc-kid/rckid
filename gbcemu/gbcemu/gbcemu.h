@@ -56,7 +56,11 @@ namespace rckid::gbcemu {
          */
         bool isBudgeted() const override { return true; }
 
-        static constexpr uint8_t VERSION = 1;
+        /** GBCEmu version
+         
+            version 2: adds RTC mapping into the persistent storage, adds support for loading old version values too
+         */
+        static constexpr uint8_t VERSION = 2;
 
         static constexpr uint32_t SCALED_WIDTH = 267;
         static constexpr uint32_t SCALED_HEIGHT = 240;
@@ -138,7 +142,7 @@ namespace rckid::gbcemu {
 
         /** Performs single instruction step and returns the number of cycles it took. 
          */
-        uint32_t  step();
+        uint32_t step();
 
 #ifdef GBCEMU_INTERACTIVE_DEBUG
 
@@ -193,6 +197,18 @@ namespace rckid::gbcemu {
         void draw() override {}
 
         ui::ActionMenu::MenuGenerator homeMenuGenerator() override;
+
+        /** Saves the external RAM to the app folder. 
+         */
+        void saveExternalRam();
+
+        /** Loads the external RAM from the app folder. 
+         */
+        void loadExternalRam();
+
+        /** Returns the number of external RAM pages available in the current cartridge.
+         */
+        uint32_t externalRamPages() const { return gamepak_->cartridgeRAMSize() / 8192; }
 
     private:
 
@@ -384,6 +400,15 @@ namespace rckid::gbcemu {
         // eram of up to 128kb (16 banks of 8kb)
         uint8_t * eram_[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
         bool eramActive_ = false;
+
+        static constexpr uint8_t RTC_MAPPING_NONE = 0x00;
+        static constexpr uint8_t RTC_MAPPING_SECONDS = 0x08;
+        static constexpr uint8_t RTC_MAPPING_MINUTES = 0x09;
+        static constexpr uint8_t RTC_MAPPING_HOURS = 0x0a;
+        static constexpr uint8_t RTC_MAPPING_DAYS_LOW = 0x0b;
+        static constexpr uint8_t RTC_MAPPING_DAYS_HIGH = 0x0c;
+
+        uint8_t rtcMapping_ = RTC_MAPPING_NONE;
 
         // memory mapping information. For fast access, the memory is divided into 16 4kb regions with pointers to beginning in the array. This is true for all but the last block, which is a bit more complex as it contains echo ram, oam memory, io regs and hram.
         uint8_t * memMap_[16] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };

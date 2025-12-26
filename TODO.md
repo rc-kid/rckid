@@ -100,12 +100,14 @@ Polish
 - [ ] RGB dimming that preserves colors (? is possible)
 - [ ] in header, show volume value, not just bar when changing (?)
 - [ ] some way app can show which buttons it reacts to (faint glow for key press, only use the effect on valid keys otherwise)
-- [ ] extra settings (colors, etc. for system & gbcemu)
 - [ ] accelerometer controller background & background selection
 
 # TODO
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb. Checked with TME and they do have protection, cutoff at 3V. 
+
+- drawing preserves state like games
+- allow messages to send images
 
 - rapid fire not working
 - main menu generation not that well modular with the game menu being extended - add wrappers instead? 
@@ -117,7 +119,6 @@ Polish
 - Friends::ContactViewer should be own dialog, not part of friends ideally
 
 - add airplane mode & sleep function (also uncomment the options in home menu)
-- figure out how debug mode for gbcemu should work now
 
 - a more polished and reasonable palette for the header
 - callback to wifi status
@@ -164,14 +165,11 @@ Polish
 
 - avr int as serial tx mabe add 0r resistor on the line to avoid bleeding into rp2350
 
-- improve audio fidelity for GBCEmu
 
 - file browswer can also use the new carouselMenu?
 
 - TODO would be good if image could work immediately with static in memory pictures
 - do we need bitmap in graphics now? its more like bitmap is now image really
-
-- allow saving external ram to cartridge when gbc game exits? 
 
 - how to blitting & stuff? (bitmap is multi bpp, while surfaces such as canvas are fixed bpp), this makes blitting harder a bit
 
@@ -239,7 +237,11 @@ Polish
 
 ### GBCEmu
 
+- RTC is not implemented and will not read values well, nor can it write them
 - tearing is kinda ugly, can be fixed by framebuffer, will cost around 23k, but then scaling & rendering can be done by other core
+- extra settings (colors, etc. for system & gbcemu)
+- improve audio fidelity for GBCEmu
+- figure out how debug mode for gbcemu should work now
 
 ## Others
 
