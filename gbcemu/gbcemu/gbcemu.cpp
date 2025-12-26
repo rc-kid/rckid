@@ -600,6 +600,7 @@ namespace rckid::gbcemu {
                 case MBC::Type1:
                 case MBC::Type2:
                 case MBC::Type3:
+                case MBC::Type5:
                     break;
                 default:
                     LOG(LL_ERROR, "Unsupported MBC type " << static_cast<uint8_t>(mbc_));
@@ -698,6 +699,7 @@ namespace rckid::gbcemu {
         apu_.enable(true);
         // set the initial values for the IO registers 
         IO_LY = 0; // ensure we'll start with new frame
+        LOG(LL_INFO, "Cartridge load done, free memory: " << memoryFree());
     #if (GBCEMU_INTERACTIVE_DEBUG == 1)
         resetVisited();
     #endif
@@ -1588,7 +1590,26 @@ namespace rckid::gbcemu {
                     // TODO
                 }
                 break;
+            /** MBC5 is the first MBC compatible with GBC speeds. It supports ROM banks of up to 0x1ff and RAM sizes of 8, 32, or 128KB. The following registers are supported:
+
+                0000-1fff - writing 0x0a to this enables the external ram, anything else disables it
+                2000-2fff - lower 8 bits of the bank number
+                3000-3fff - bit 9 of the bank number
+                4000-5fff - RAM bank number (if any) and rumbler
+             */
             case MBC::Type5:
+                if (addr < 0x2000) {
+                    eramActive_ = (value & 0xf) == 0xa;
+                } else if (addr < 0x3000) {
+                    uint32_t page = (romPage_ & 0x00) | value;
+                    setRomPage(page);
+                } else if (addr < 0x4000) {
+                    uint32_t page = (romPage_ & 0xff) | (value << 8);
+                    setRomPage(page);
+                } else if (addr < 0x6000) {
+                    // TODO
+                }
+                break;
             case MBC::Type6:
             case MBC::Type7:
             default:
@@ -1613,6 +1634,9 @@ namespace rckid::gbcemu {
                     memMap_[10][offset] = value;
                 break;
             case MBC::Type5:
+                if (eramActive_)
+                    memMap_[10][offset] = value;
+                break;
             case MBC::Type6:
             case MBC::Type7:
                 UNIMPLEMENTED;
@@ -1634,6 +1658,7 @@ namespace rckid::gbcemu {
                 // TODO checkif we are reading the RTC clock instead
                 return eramActive_ ? memMap_[10][offset] : 0xff;
             case MBC::Type5:
+                return eramActive_ ? memMap_[10][offset] : 0xff;
             case MBC::Type6:
             case MBC::Type7:
                 UNIMPLEMENTED;
