@@ -206,9 +206,14 @@ namespace rckid::gbcemu {
          */
         void loadExternalRam();
 
+        /** Returns the number of ROM pages available in the current cartridge.
+         */
+        uint32_t romPages() const { return gamepak_->cartridgeROMSize() / 16384; }
+
         /** Returns the number of external RAM pages available in the current cartridge.
          */
         uint32_t externalRamPages() const { return gamepak_->cartridgeRAMSize() / 8192; }
+
 
     private:
 

@@ -1307,6 +1307,7 @@ namespace rckid::gbcemu {
     void GBCEmu::setRomPage(uint32_t page) {
         LOG(LL_GBCEMU_ROMBANK, "Setting ROM page to " << page << ", from pc " << hex<uint16_t>(PC - 1));
         romPage_ = page;
+        ASSERT(romPage_ < romPages());
         memMap_[4] = const_cast<uint8_t *>(gamepak_->getPage(page));
         memMap_[5] = memMap_[4] + 0x1000;
         memMap_[6] = memMap_[4] + 0x2000;
@@ -1343,7 +1344,9 @@ namespace rckid::gbcemu {
     }
 
     void GBCEmu::setExternalRamPage(uint32_t page) {
-        ASSERT((page < 16));
+        // wrap around the page number
+        uint32_t numPages = externalRamPages();
+        page = page % numPages;
         memMap_[10] = eram_[page];
         memMap_[11] = eram_[page] + 4096;
     }
@@ -1584,14 +1587,16 @@ namespace rckid::gbcemu {
                     uint32_t page = (romPage_ & 0xe0) | value;
                     setRomPage(page);
                 } else if (addr < 0x6000) {
-                    // set the upper 2 bits of the rom bank
-                    uint32_t page = (romPage_ & 0x1f) | ((value & 3) << 5);
-                    setRomPage(page);
+                    // set the upper 2 bits of the rom bank or the eram bank. This only works if the advanced banking mode is selected below in the register below
+                    // TODO we ignore this for now and treat this as always choosing eram page
+                    // uint32_t page = (romPage_ & 0x1f) | ((value & 3) << 5);
+                    // setRomPage(page);
+                    setExternalRamPage(value & 3);
                 } else {
                     ASSERT((addr < 0x8000)); 
                     // we do not support advanced banking yet
-                    if (value & 1)
-                        UNIMPLEMENTED;
+                    //if (value & 1)
+                    //    UNIMPLEMENTED;
                 }
                 break;
             /** MBC2 supports ROM Banks (0..15) and 512bytes of RAM built into the chip. The 512 ERAM bytes are echoed across the range. There is only single register 0x0000 - 0x3fff which enables / disables the eram and sets the ROM page.
