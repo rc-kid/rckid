@@ -72,12 +72,15 @@ namespace rckid {
         }
 
         void draw() override {
-            if (connected_)
+            if (connected_) {
                 status_->setText(STR("Connected, r: " << blocksRead_ << ", w: " << blocksWrite_));
-            else if (attached_)
+                // keep RCKid alive when connected over USB MSC
+                keepAlive();
+            } else if (attached_) {
                 status_->setText(STR("Disconnected, r: " << blocksRead_ << ", w: " << blocksWrite_));
-            else 
+            } else {
                 status_->setText(STR("Not Attached, r: " << blocksRead_ << ", w: " << blocksWrite_));
+            }
             ui::Form<void>::draw();
         }
 

@@ -43,7 +43,7 @@ namespace rckid {
         }   
 
         void draw() override {
-            //time_.setText(STR(min_ << " -- " << max_ << ", " << delta_));
+            //time_->setText(STR(min_ << " -- " << max_ << ", " << delta_));
             ui::Form<void>::draw();
         }
 
