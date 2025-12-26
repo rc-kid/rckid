@@ -125,8 +125,6 @@ Polish
 
 - allow messages to save to existing contact as opposed to always a new one
 
-- parent mode cartridge
-
 - add confirmation dialog to many deletions
 - why popup menu takes pointer and not a reference? 
 
@@ -150,8 +148,6 @@ Polish
 - clean-up the code around display initialization
 - document host file system
 
-- maybe have the icon editor use 32x32 and double sized pixels? Will be easier to use and simpler, for now... or wait till we have assets editor proper? 
-
 - add some onPowerOff event that will be called when device decides to power off *and* when avr decides to power the device off as well (so that we can save state, etc)
 
 - would be nice to have menu-like transitions between apps (i.e. multimain menu stuff)
@@ -166,8 +162,6 @@ Polish
 - platform string utils should not be used, instead everything should run off rckid::String
 - verify other std::string uses
 
-- add counters, namely how long the redraw of the screen takes, from the beginning of render to the end of render
-
 - avr int as serial tx mabe add 0r resistor on the line to avoid bleeding into rp2350
 
 - improve audio fidelity for GBCEmu
@@ -178,8 +172,6 @@ Polish
 - do we need bitmap in graphics now? its more like bitmap is now image really
 
 - allow saving external ram to cartridge when gbc game exits? 
-
-- for messages, add widgets for the various message types that can be viewed
 
 - how to blitting & stuff? (bitmap is multi bpp, while surfaces such as canvas are fixed bpp), this makes blitting harder a bit
 

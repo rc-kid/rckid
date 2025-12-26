@@ -181,7 +181,7 @@ namespace rckid {
             if (updating_ == 0)
                 cb_ = nullptr; // be done with the update
             // updating_ is volatile, but this is ok - it is only main app code (here), or from an IRQ
-            updating_ = updating_ + 1;
+            ++updating_;
             dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
         }
 
@@ -191,7 +191,7 @@ namespace rckid {
             enterUpdateMode();
             cb_ = cb;
             // updating_ is volatile, but this is ok - it is only main app code (here), or from an IRQ
-            updating_ = updating_ + 1;
+            ++updating_;
             dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
         }
 

@@ -36,7 +36,7 @@
             "request": "launch",
             "cwd": "${workspaceFolder}",
             //"program": "${workspaceFolder}/build/cartridges/tests/audiotest",
-            "program": "${workspaceFolder}/build/cartridges/tests/display-ui",
+            "program": "${workspaceFolder}/build/cartridges/rckid-default",
             //"program": "${workspaceFolder}/build/cartridges/tests/bsodtest",
             "args": [],
             "stopAtEntry": false,

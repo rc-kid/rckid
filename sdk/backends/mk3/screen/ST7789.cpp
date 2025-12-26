@@ -1,3 +1,5 @@
+#include <hardware/dma.h>
+
 #include "ST7789.h"
 #include "ST7789_rgb16.pio.h"
 
@@ -154,15 +156,16 @@ namespace rckid {
 
     void ST7789::enterCommandMode() {
         if (pio_sm_is_enabled(RCKID_ST7789_PIO, sm_)) {
-            // let the last display update finish (blocking)
-            waitUpdateDone();  
-            // wait for the pio tx to be empty
-            while (!pio_sm_is_tx_fifo_empty(RCKID_ST7789_PIO, sm_)) {};
-            cb_ = nullptr; // to be sure
+            // instead of blocking wait, cancel the current update and then reset the display
+            dma_channel_set_irq0_enabled(dma_, false);
+            dma_channel_abort(dma_);
             pio_sm_set_enabled(RCKID_ST7789_PIO, sm_, false);
             end(); // end the RAMWR command
+            dma_channel_set_irq0_enabled(dma_, true);
             // mark pins at bitbanged
             initializePinsBitBang();
+            // and clear the display update status
+            updating_ = 0;
         }
     }
 
@@ -240,7 +243,7 @@ namespace rckid {
         if (cb_) 
             cb_();
         if (updating_ > 0)
-            updating_ = updating_ - 1;
+            --updating_;
         //gpio::outputLow(gpio::Pin{21});
     }
 
