@@ -1306,9 +1306,8 @@ namespace rckid::gbcemu {
 
     void GBCEmu::setRomPage(uint32_t page) {
         LOG(LL_GBCEMU_ROMBANK, "Setting ROM page to " << page << ", from pc " << hex<uint16_t>(PC - 1));
-        romPage_ = page;
-        ASSERT(romPage_ < romPages());
-        memMap_[4] = const_cast<uint8_t *>(gamepak_->getPage(page));
+        romPage_ = page % romPages();
+        memMap_[4] = const_cast<uint8_t *>(gamepak_->getPage(romPage_));
         memMap_[5] = memMap_[4] + 0x1000;
         memMap_[6] = memMap_[4] + 0x2000;
         memMap_[7] = memMap_[4] + 0x3000;

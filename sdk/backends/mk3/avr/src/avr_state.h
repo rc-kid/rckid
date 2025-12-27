@@ -67,9 +67,9 @@ namespace rckid {
                 c_ = c_ | other.c_;
             }
 
-            /** Clears the interrupts.
-             */
-            void clearInterrupts() { c_ = 0; }
+            void clearInterrupts() { c_ &= ~(PWR_INT | ACCEL_INT | SECOND_INT); }
+
+            void clearAlarmInterrupt() { c_ &= ~ALARM_INT; }
 
             /** Clears the pressed state of all buttons. This method is useful for rapidfire where every interval, we reset the button state in last state giving us btnPressed again.
              */
@@ -101,6 +101,10 @@ namespace rckid {
             }
 
         private:
+
+        /** Clears the interrupts.
+             */
+            void clearAllInterrupts() { c_ = 0; }
 
             void setPwrInt() { c_ |= PWR_INT; }
             void setAccelInt() { c_ |= ACCEL_INT; }

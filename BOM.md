@@ -8,7 +8,7 @@ Most of the electronic BOM is done by ordering assembled boards (currently from 
 - [1x speaker](), hand soldered wires to the pcb
 - [3x buttons](https://cz.mouser.com/ProductDetail/Omron-Electronics/B3U-3000P-B?qs=AO7BQMcsEu4JAdtnbsGArA%3D%3D), hand soldered for home button and volume up & down
 - [6x screws](https://www.nerezka.cz/sroub-m-2-x-4-din-965tx-a2), M2x10
-- [6x screw inserts](https://www.prusa3d.com/product/threaded-inserts-m2-short-100-pcs/) 
+- [6x screw inserts](https://www.prusa3d.com/product/threaded-inserts-m2-short-100-pcs/) or in case of using thermoset plastics (such as the clear case, use the following [inserts](https://www.tme.eu/cz/en/details/b2_bn1054/threaded-insertions/bossard/1386727/) which may work even with thermoplastics)
 - [battery connector, female](https://www.tme.eu/cz/en/details/ds1002-01-1x16r13/pin-headers/connfly/ds1002-01-1-16r13/)
 - [battery connector, male](https://www.gme.cz/v/1498961/connfly-prs132g-v12-kolikova-lista)
 - [headphones connector, sinking](https://cz.mouser.com/ProductDetail/490-SJ-43504-SMT-TR)
@@ -21,6 +21,6 @@ Most of the electronic BOM is done by ordering assembled boards (currently from 
 
 Optional cartridge extras
 
-- [Flashlight LED](https://www.tme.eu/cz/details/hl-as2835-3cpct-ww/vykonove-diody-led-emiter/hongli-zhihui/hl-as-2835h466w-3c-s1-08l-pct-hr3/)
+- [Flashlight LED](https://www.tme.eu/cz/details/l128-4080ca3500001/vykonove-diody-led-emiter/lumileds/)
 - [LED Driver](https://www.tme.eu/cz/details/ap2502ktr-g1/stabilizator-napeti-obvody-dc-dc/diodes-incorporated/) or from [mouser](https://cz.mouser.com/ProductDetail/Diodes-Incorporated/AP2502KTR-G1)
 - [IR LED](https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/)

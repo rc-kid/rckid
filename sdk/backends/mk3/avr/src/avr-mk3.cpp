@@ -686,7 +686,8 @@ public:
                 // only change the pin state if we are not using it for serial TX
                 gpio::outputFloat(AVR_PIN_AVR_INT);
 #endif
-                state_.status.clearInterrupts();
+                // clear all our interrupts - RP2350 is now in charge of keepin them
+                state_.status.clearAllInterrupts();
             }
             // TODO send nack when done sending all state
         // a byte has been received from master. Store it and send either ACK if we can store more, or NACK if we can't store more

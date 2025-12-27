@@ -17,70 +17,12 @@
 
 # MkIII Checklist
 
-- [X] verify rumbler
-- [X] verify battery operation works 
-- [X] add missing AVR features (charging detection, etc.)
-- [ ] determine the actual speed & how to set it to 8MHz? Or even 5? 
-- [X] buy torx M2x10mm (https://www.nerezka.cz/sroub-m-2-x-10-din-965tx-a2) 
-- [X] buy threaded inserts for thermosets (https://www.tme.eu/cz/en/details/b2_bn1054/threaded-insertions/bossard/1386727/)
-- [X] buy LEDs with proper forward voltage (https://www.tme.eu/cz/details/l128-4080ca3500001/vykonove-diody-led-emiter/lumileds/)
-- [X] order extra batteries (TME)
-- [X] order extra enclosures
-- [X] order headphone jacks (mouser)
-- [X] order AP2502 extras (mouser)
-
-# XMas delivery checklist
-
-- [X] audio player keeps button presses - fix
-- [X] repeat function
-- [X] automatic next function
-- [X] header
-  - [X] show budget
-  - [X] show time
-  - [X] show volume
-  - [X] allow showing header even if not part of the renderable area
-- [X] fm radio app fixes (display frequency)
-- [X] rm radio rds, 
-- [X] fm radio signal quality, stereo
-- [X] time apps
-  - [X] clock settings
-  - [X] stopwatch
-- [X] improve text input dialog
-- [X] screen lock (double home tap)
-- [X] preserve volume settings
-- [X] low battery error and device won't power on
-- [X] AVR debouncing
-- [X] multiple saves for apps
-- [X] remove non-used / non-functioning apps
-
 Nice extras would include:
 
-- [X] LED flashlight
-- [X] make the LED flashlight more user friendly
-- [X] make start negate the state regardless of its value
-- [X] shuffle function in audio playback
-- [X] birthdays & PIM
-- [X] select icon for contacts
-- [X] larger font in contact details
-- [X] rumbler effects on button presses
-- [X] allow background playback
-- [X] pin locking
-- [X] parent mode
-- [X] parent mode lock
-- [X] piggy bank
-- [X] owner info
-- [X] theme style settings (colors & background) 
-- [X] settings menu for button lights
-- [X] fm radio rds time setting
-- [ ] fm radio rds in background
-- [X] fm radio embedded antenna (tested)
-- [X] fm radio presets
-- [X] data sync app
 - [ ] timer app
 - [ ] alarm app
 - [ ] port more games (15 puzzle at least)
 - [ ] add high scores
-- [X] app for creating icons (64x64) so that kids can design their own. Eventually this can go larger and larger
 
 Must-have before wider release
 
@@ -252,10 +194,6 @@ Polish
 # PCB Things To Fix
 
 # PCB
-
-> This is updated TODO list for mkIII. It's split into 
-
-- 2.8" 320x240 with fpc: https://www.aliexpress.com/item/1005004629215040.html?pdp_npi=4%40dis%21CZK%21CZK%208.90%21CZK%208.90%21%21%210.36%210.36%21%402103891017375828457015857e954c%2112000035688288567%21sh%21CZ%213305825785%21X&spm=a2g0o.store_pc_allItems_or_groupList.new_all_items_2007508297226.1005004629215040
 
 > MK III ideas
 - can use DMA & control blocks to do the 256 palette lookup with FB w/o involving the CPU

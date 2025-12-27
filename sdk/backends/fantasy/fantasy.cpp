@@ -374,6 +374,14 @@ namespace rckid {
 
     void setTimeNow(TinyDateTime const & t) { time::time_ = t; }
 
+    bool alarm() { 
+        // TODO support alarm correctly
+        static bool result = true;
+        bool x = result;
+        result = false;
+        return x;
+    }
+
     TinyAlarm timeAlarm() { return time::alarm_; }
 
     void setTimeAlarm(TinyAlarm alarm) { time::alarm_ = alarm; }

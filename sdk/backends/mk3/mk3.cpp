@@ -288,7 +288,6 @@ namespace rckid {
         if (status.secondInt()) {
             io::avrState_.time.inc();
         }
-        // TODO alarm
         // TODO accel
         // finally clear the interrupts once we have processed them
         io::avrState_.status.clearInterrupts();
@@ -683,12 +682,19 @@ namespace rckid {
         io::avrState_.time = dt;
     }
 
+    bool alarm() {
+        StackProtection::check();
+        bool result = io::avrState_.status.alarmInt();
+        io::avrState_.status.clearAlarmInterrupt();
+        return result;
+    }
+
     TinyAlarm timeAlarm() {
         StackProtection::check();
         return io::avrState_.alarm;
     }
 
-    void timeSetAlarm(TinyAlarm const & alarm) {
+    void setTimeAlarm(TinyAlarm alarm) {
         StackProtection::check();
         i2c::sendAvrCommand(cmd::SetAlarm{alarm});
         io::avrState_.alarm = alarm;

@@ -299,6 +299,13 @@ public:
 PACKED(class TinyAlarm {
 public:
 
+    TinyAlarm() = default;
+    TinyAlarm(TinyTime const & t) {
+        setHour(t.hour());
+        setMinute(t.minute());
+        setEnabled(true);
+    }
+
     uint8_t hour() const { return raw_[0]; }
     uint8_t minute() const { return raw_[1]; }
     bool enabled() const { return raw_[2] != 0; }

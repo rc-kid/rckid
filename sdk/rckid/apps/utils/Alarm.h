@@ -1,50 +1,53 @@
 #pragma once
 
 #include "../../app.h"
+#include "../../filesystem.h"
 #include "../../ui/form.h"
 #include "../../ui/label.h"
 #include "../../ui/image.h"
-#include "../../assets/fonts/OpenDyslexic128.h"
-#include "../../assets/icons_24.h"
-
-
+#include "../../assets/icons_64.h"
+#include "../../assets/fonts/OpenDyslexic64.h"
 
 namespace rckid {
 
-    /** Alarm app
-     
+    /** Alarm 
      */
     class Alarm : public ui::Form<void> {
     public:
-    
+
         String name() const override { return "Alarm"; }
 
-        Alarm(): 
+        Alarm():
             ui::Form<void>{}
         {
-            h_ = g_.addChild(new ui::Label{Rect::XYWH(0, 30, 150, 130), ""});
-            h_->setFont(Font::fromROM<assets::OpenDyslexic128>());
-            h_->setHAlign(HAlign::Right);
-            m_ = g_.addChild(new ui::Label{Rect::XYWH(170, 30, 150, 130), ""});
-            m_->setFont(Font::fromROM<assets::OpenDyslexic128>());
-            m_->setHAlign(HAlign::Left);
-            colon_ = g_.addChild(new ui::Label{Rect::XYWH(150, 30, 20, 130), ":"});
-            colon_->setFont(Font::fromROM<assets::OpenDyslexic128>());
+            icon_ = g_.addChild(new ui::Image{Icon{assets::icons_64::alarm_clock}});
+            status_ = g_.addChild(new ui::Label{Rect::XYWH(0, 130, 320, 64), "Wake Up!"});
+            status_->setFont(Font::fromROM<assets::OpenDyslexic64>());
+            icon_->setTransparent(true);
+            icon_->setPos(160 - icon_->width() / 2, 60);
+            status_->setHAlign(HAlign::Center);
+        }
 
-            contextMenu_.add(ui::ActionMenu::Item("Set alarm"));
+        ~Alarm() {
+        }
+
+        static void check() {
+            if (alarm())
+                App::run<Alarm>();
         }
 
     protected:
 
+        void update() override {
+            ui::Form<void>::update();
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                exit();
+            }
+        }
 
     private:
-        ui::Label * h_;
-        ui::Label * m_;
-        ui::Label * colon_;
-        ui::ActionMenu contextMenu_;
+        ui::Image * icon_;
+        ui::Label * status_;
 
-    }; // rckid::Alarm
-
-
-
+    }; // Alarm
 } // namespace rckid

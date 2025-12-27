@@ -136,6 +136,11 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
+    bool alarm() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
     TinyAlarm timeAlarm() {
         StackProtection::check();
         UNIMPLEMENTED;

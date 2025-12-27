@@ -160,6 +160,12 @@ namespace rckid {
     /** Sets the current time. */
     void setTimeNow(TinyDateTime const & t);
 
+    /** Returns true if alarm is currently active. 
+     
+        Once true is returned the alarm flag is cleared automatically. The cartridge should check periodically if the alarm condition is set to show the alarm notification (if supported).
+     */
+    bool alarm(); 
+
     /** Returns the current alarm settings. 
      */
     TinyAlarm timeAlarm();

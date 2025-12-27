@@ -57,7 +57,17 @@ namespace rckid {
                     }
                 }));
             }
-            contextMenu_.add(ui::ActionMenu::Item("Set alarm"));
+            contextMenu_.add(ui::ActionMenu::Item("Set Alarm", [this]() {
+                TinyAlarm ta = timeAlarm();
+                auto t = App::run<TimeDialog>("Select alarm time", TinyTime{ta.hour(), ta.minute()});
+                if (t.has_value())
+                    setTimeAlarm(t.value());
+            }));
+            contextMenu_.add(ui::ActionMenu::Item("Disable Alarm", []() {
+                TinyAlarm ta = timeAlarm();
+                ta.setEnabled(false);
+                setTimeAlarm(ta);
+            }));
         }
 
         void update() override {
@@ -75,7 +85,7 @@ namespace rckid {
             if (btnPressed(Btn::B) || btnPressed(Btn::Down))
                 exit();
 
-            if (btnPressed(Btn::Select)) {
+            if (btnPressed(Btn::Select) && contextMenu_.size() != 0) {
                 auto action = App::run<PopupMenu<ui::Action>>(&contextMenu_);
                 if (action.has_value())
                     action.value()();
