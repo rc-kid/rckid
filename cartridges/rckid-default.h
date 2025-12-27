@@ -6,6 +6,7 @@
 #include <gbcemu/gbcemu.h>
 #include <rckid/apps/FMRadio.h>
 #include <rckid/ui/system_menu.h>
+#include <rckid/apps/utils/Alarm.h>
 
 
 #include <rckid/apps/Drawing.h>

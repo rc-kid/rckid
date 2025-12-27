@@ -4,6 +4,7 @@ using namespace rckid;
 
 int main() {
     initialize();
+    Alarm::checkEvent();
     ui::runSystemMenu(mainMenu);
 }
 

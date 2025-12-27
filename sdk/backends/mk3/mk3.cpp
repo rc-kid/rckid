@@ -1066,7 +1066,7 @@ namespace rckid {
 
     void rumblerEffect(RumblerEffect const & effect) {
         StackProtection::check();
-       i2c::sendAvrCommand(cmd::Rumbler{effect});
+        i2c::sendAvrCommand(cmd::Rumbler{effect});
     }
 
     // rgb

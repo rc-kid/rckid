@@ -48,6 +48,9 @@ Polish
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb. Checked with TME and they do have protection, cutoff at 3V. 
 
+- rumblerOff does not actually turn the rumbler off
+- images for games
+
 - drawing preserves state like games
 - allow messages to send images
 

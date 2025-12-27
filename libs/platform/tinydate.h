@@ -274,6 +274,76 @@ public:
         }
         return false;
     }
+
+    bool setFromString(char const * str) {
+        // expected format: HH : MM : SS
+        int h = platform::parseInt(str);
+        if (*str != ':' || h < 0 || h > 23)
+            return false;
+        ++str;
+        int m = platform::parseInt(str);
+        if (*str == '\0') {
+            // only hours and minutes provided, set seconds to 0
+            set(static_cast<uint8_t>(h), static_cast<uint8_t>(m), 0);
+            return true;
+        }
+        if (*str != ':')
+            return false;
+        ++str;
+        int s = platform::parseInt(str);
+        if (s < 0 || s > 59)
+            return false;
+        set(static_cast<uint8_t>(h), static_cast<uint8_t>(m), static_cast<uint8_t>(s));
+        return true;
+    }
+
+    bool operator < (TinyTime const & other) const {
+        if (hour_ < other.hour_)
+            return true;
+        if (hour_ > other.hour_)
+            return false;
+        if (minute_ < other.minute_)
+            return true;
+        if (minute_ > other.minute_)
+            return false;
+        return second_ < other.second_;
+    }
+
+    bool operator <= (TinyTime const & other) const {
+        if (hour_ < other.hour_)
+            return true;
+        if (hour_ > other.hour_)
+            return false;
+        if (minute_ < other.minute_)
+            return true;
+        if (minute_ > other.minute_)
+            return false;
+        return second_ <= other.second_;
+    }
+
+    bool operator > (TinyTime const & other) const {
+        if (hour_ > other.hour_)
+            return true;
+        if (hour_ < other.hour_)
+            return false;
+        if (minute_ > other.minute_)
+            return true;
+        if (minute_ < other.minute_)
+            return false;
+        return second_ > other.second_;
+    }
+
+    bool operator >= (TinyTime const & other) const {
+        if (hour_ > other.hour_)
+            return true;
+        if (hour_ < other.hour_)
+            return false;
+        if (minute_ > other.minute_)
+            return true;
+        if (minute_ < other.minute_)
+            return false;
+        return second_ >= other.second_;
+    }
     
 private:
     uint8_t hour_;

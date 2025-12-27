@@ -7,9 +7,12 @@
 #include "../../assets/fonts/OpenDyslexic128.h"
 #include "../../assets/fonts/OpenDyslexic64.h"
 #include "../../assets/icons_24.h"
+#include "../dialogs/InfoDialog.h"
 #include "../dialogs/TimeDialog.h"
 #include "../dialogs/DateDialog.h"
+#include "../dialogs/FileDialog.h"
 #include "../dialogs/PopupMenu.h"
+#include "../utils/Alarm.h"
 
 namespace rckid {
     class Clock : public ui::Form<void> {
@@ -56,17 +59,37 @@ namespace rckid {
                         setTimeNow(now);
                     }
                 }));
+                contextMenu_.add(ui::ActionMenu::Item("Set silent period", [this]() {
+                    Alarm::Settings settings = Alarm::Settings::load();
+                    auto start = App::run<TimeDialog>("Start", settings.silentStart());
+                    if (!start.has_value())
+                        return;
+                    auto end = App::run<TimeDialog>("End", settings.silentEnd());
+                    if (!end.has_value())
+                        return;
+                    settings.setSilentPeriod(start.value(), end.value()).save();
+                }));
             }
             contextMenu_.add(ui::ActionMenu::Item("Set Alarm", [this]() {
                 TinyAlarm ta = timeAlarm();
                 auto t = App::run<TimeDialog>("Select alarm time", TinyTime{ta.hour(), ta.minute()});
-                if (t.has_value())
-                    setTimeAlarm(t.value());
+                if (t.has_value()) {
+                    if (Alarm::Settings::load().isSilentPeriod(t.value()))
+                        InfoDialog::error("Invalid time", "Alarm time is within silent period!");
+                    else
+                        setTimeAlarm(t.value());
+                }
             }));
             contextMenu_.add(ui::ActionMenu::Item("Disable Alarm", []() {
                 TinyAlarm ta = timeAlarm();
                 ta.setEnabled(false);
                 setTimeAlarm(ta);
+            }));
+            contextMenu_.add(ui::ActionMenu::Item("Set alarm sound", []() {
+                auto result = App::run<FileDialog>("Select alarm sound", "/files/music/");
+                if (result.has_value()) {
+                    Alarm::Settings::load().setSound(result.value()).save();
+                }
             }));
         }
 
