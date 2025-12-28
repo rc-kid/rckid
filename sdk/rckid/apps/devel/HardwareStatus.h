@@ -44,6 +44,7 @@ namespace rckid {
             text_->text(27, 2) << (btnDown(Btn::Select) ? "Sel " : "    ");
             text_->text(31, 2) << (btnDown(Btn::Start) ? "Start " : "      ");
 
+            text_->text(15, 3) << "X:" << accelX() << " Y:" << accelY(); // << " Z:" << accelZ() << " ";
             text_->text(15, 4) << (audioPlayback() ? "P " : "  ");
             text_->text(17, 4) << (audioRecording() ? "R " : "  ");
             text_->text(19, 4) << (audioHeadphones() ? "HP " : "   ");

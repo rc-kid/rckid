@@ -34,8 +34,8 @@ extern "C" {
     #include <hardware/clocks.h>
 }
 
-#include <platform/peripherals/ltr390uv.h>
 #include <platform/peripherals/si4705.h>
+#include "accelerometer/lsm6dsv.h"
 
 #include <rckid/rckid.h>
 #include <rckid/radio.h>
@@ -129,6 +129,9 @@ namespace rckid {
 
     namespace io {
         Si4705 radio_;
+
+        LSM6DSV accel_;
+        LSM6DSV::Orientation3D accelState_;
 
         AVRState avrState_;
         AVRState::Status lastStatus_;
@@ -257,6 +260,15 @@ namespace rckid {
         }
     }
 
+    void updateAccelStatus([[maybe_unused]] uint8_t numBytes) {
+        i2c::getTransactionResponse(reinterpret_cast<uint8_t*>(&io::accelState_), sizeof(LSM6DSV::Orientation3D));
+        /*
+        platform::swapBytesInPlace(reinterpret_cast<uint16_t&>(io::accelState_.x));
+        platform::swapBytesInPlace(reinterpret_cast<uint16_t&>(io::accelState_.y));
+        platform::swapBytesInPlace(reinterpret_cast<uint16_t&>(io::accelState_.z));
+        */
+    }
+
     /** Updates the AVR status based on the status information received in the I2C buffer (callback function for getting AVR status). 
      */
     void updateAvrStatus([[maybe_unused]] uint8_t numBytes) {
@@ -288,7 +300,7 @@ namespace rckid {
         if (status.secondInt()) {
             io::avrState_.time.inc();
         }
-        // TODO accel
+        // TODO accel interrupt
         // finally clear the interrupts once we have processed them
         io::avrState_.status.clearInterrupts();
     }
@@ -299,6 +311,9 @@ namespace rckid {
      */
     void requestAvrStatus() {
         i2c::enqueue(RCKID_AVR_I2C_ADDRESS, nullptr, 0, sizeof(AVRState::Status), updateAvrStatus);
+        // now schedule the accelerometer read  
+        uint8_t cmd = LSM6DSV16X_OUTX_L_A; 
+        i2c::enqueue(0x6a, & cmd, 1, 6, updateAccelStatus);
     }
 
     void __not_in_flash_func(irqDMADone_)() {
@@ -470,8 +485,13 @@ namespace rckid {
 
         // initialize the other peripherals we have
         Radio::initialize();
-        // TODO initialize the accelerometer 
-
+        // initialize the accelerometer 
+        if (io::accel_.initialize()) {
+            LOG(LL_INFO, "LSM6DSV accelerometer initialized");
+            io::accel_.enableAccelerometer(true);
+        } else {
+            LOG(LL_ERROR, "Failed to initialize LSM6DSV accelerometer");
+        }
 
         // initialize the SD card communication & sd card itself if present
         sdInitialize();
@@ -493,7 +513,7 @@ namespace rckid {
         // enable I2C interrupts so that we can start processing the I2C packet queues
         //i2c0->hw->intr_mask = I2C_IC_INTR_MASK_M_RX_FULL_BITS | I2C_IC_INTR_MASK_M_TX_ABRT_BITS;
 
-        RAMHeap::traceChunks();
+        //RAMHeap::traceChunks();
 
         // initialize the interrupt pins and set the interrupt handlers (enable pull-up as AVR pulls it low or leaves floating)
         gpio_set_irq_callback(irqGPIO_);
@@ -760,17 +780,17 @@ namespace rckid {
 
     int16_t accelX() {
         StackProtection::check();
-        UNIMPLEMENTED;
+        return io::accelState_.x;
     }
 
     int16_t accelY() {
         StackProtection::check();
-        UNIMPLEMENTED;
+        return io::accelState_.y;
     }
 
     int16_t accelZ() {
         StackProtection::check();
-        UNIMPLEMENTED;
+        return io::accelState_.z;
     }
 
     int16_t gyroX() {
