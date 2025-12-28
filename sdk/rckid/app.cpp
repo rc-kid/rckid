@@ -6,10 +6,7 @@
 #include "apps/utils/Alarm.h"
 #include "ui/header.h"
 
-
-
 namespace rckid {
-
 
     void App::saveState(String const & name) {
         if (!fs::isMounted())
@@ -79,7 +76,6 @@ namespace rckid {
             }));
         }
     }
-
 
     extern volatile bool avrStatusRequest_;
 

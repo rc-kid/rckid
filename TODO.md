@@ -20,7 +20,6 @@
 Nice extras would include:
 
 - [ ] timer app
-- [ ] alarm app
 - [ ] port more games (15 puzzle at least)
 - [ ] add high scores
 
@@ -150,6 +149,11 @@ Polish
 
 - see if we can run at 5MHz and still talk to neopixel
 
+## Accelerometer
+
+- there is some arduino code that I can look at here: https://github.com/stm32duino/LSM6DSV16X/tree/main
+- looks relatively easy to port using the ST driver
+
 ## UI
 
 - proper palette rendering, do offsets
@@ -157,8 +161,7 @@ Polish
 - when updating multiple attributes of a widget the recalculate after each one of them is not necessary
 - also maybe change the resize to change and make it general method for ui change stuff
 - review dialogs & how they are configured and used (custom title, context menu for file dialog, etc.)
-- isBorder from drawing editors & palette should be part of some common widget (same as border drawing)
-- 
+- isBorder from drawing editors & palette should be part of some common widget (same as border drawing) 
 
 ## Audio
 

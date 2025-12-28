@@ -7,6 +7,7 @@
 #include "../apps/utils/Stopwatch.h"
 #include "../apps/utils/Timer.h"
 #include "../apps/utils/PiggyBank.h"
+#include "../apps/utils/About.h"
 #include "../apps/DataSync.h"
 
 #include "../apps/MainMenu.h"
@@ -245,7 +246,8 @@ namespace rckid::ui {
                 pinSet(newPin);
                 InfoDialog::success("Done", "PIN changed successfully");
             }),
-            ui::ActionMenu::Generator("Parent Mode", assets::icons_64::family, parentMenuGenerator)
+            ui::ActionMenu::Generator("Parent Mode", assets::icons_64::family, parentMenuGenerator),
+            ui::ActionMenu::Item("About", assets::icons_64::microchip, App::run<About>),
         };
     }
 
