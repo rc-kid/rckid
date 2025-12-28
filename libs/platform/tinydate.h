@@ -191,6 +191,10 @@ public:
         return result;
     }
 
+    bool isAnnualEqual(TinyDate const & other) const {
+        return (day_ == other.day_) && (month() == other.month());
+    }
+
     /** Returns the day of week for given date. 
      
         Only works for dates in range. Returns 0 for Monday and 6 for Sunday. 

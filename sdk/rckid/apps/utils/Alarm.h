@@ -9,6 +9,7 @@
 #include "../../assets/fonts/OpenDyslexic64.h"
 #include "../../audio/audio.h"
 #include "../../utils/ini.h"
+#include "../../pim.h"
 
 namespace rckid {
 
@@ -140,7 +141,7 @@ namespace rckid {
             event.save(writer);
         }
 
-        static void check() {
+        static void checkAlarm() {
             if (active_ & ALARM_ACTIVE)
                 return;
             // if there is active alarm, it has the highest priority, get the audio alarm sound
@@ -152,7 +153,7 @@ namespace rckid {
         static void checkEvent() {
             if (active_ & ALARM_ACTIVE)
                 return;
-            check();
+            checkAlarm();
             // if there is special event, show that now
             {
                 ini::Reader reader{fs::fileRead("/alarm-event.ini")};
@@ -165,7 +166,18 @@ namespace rckid {
                 // remove the event file
                 fs::eraseFile("/alarm-event.ini");
             }
-            // todo bday song
+            // play happy bday *if* its our bday and if birthday event is defined
+            if (fs::isFile("/alarm-birthday.ini")) {
+                if (timeNow().date.isAnnualEqual(Myself::contact().birthday)) {
+                    ini::Reader reader{fs::fileRead("/alarm-birthday.ini")};
+                    while (auto section = reader.nextSection()) {
+                        if (section.value() == "Event") {
+                            Event event{reader};
+                            App::run<Alarm>(event);
+                        }
+                    }
+                }
+            }
         }
 
     protected:

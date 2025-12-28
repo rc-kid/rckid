@@ -376,7 +376,7 @@ namespace rckid {
 
     bool alarm() { 
         // TODO support alarm correctly
-        static bool result = true;
+        static bool result = false;
         bool x = result;
         result = false;
         return x;

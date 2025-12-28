@@ -93,7 +93,7 @@ namespace rckid {
         focus();
         // now run the app
         while (app_ == this) {
-            Alarm::check();
+            Alarm::checkAlarm();
             update();
             // ticks happen right after update as they request current state from the AVR and this minimizes the likelihood of the arrival of new state during the next update cycle
             displayWaitUpdateDone();
