@@ -11,6 +11,10 @@
 
 #include <rckid/apps/Drawing.h>
 
+
+#include <rckid/apps/devel/MicTest.h>
+
+
 namespace rckid {
 
     ui::ActionMenu * gamesGenerator() {
@@ -30,11 +34,13 @@ namespace rckid {
         ui::addAppToMenu(result, "Messages", assets::icons_64::chat, App::run<Messages>, blacklist);
         // TODO should drawing move to its own submenu with other image/asset stuff? 
         ui::addAppToMenu(result, "Drawing", assets::icons_64::paint_palette, App::run<Drawing>, blacklist);
-        result->add(ui::ActionMenu::Generator("Audio", assets::icons_64::music_2, ui::audioMenuGenerator));
+        //result->add(ui::ActionMenu::Generator("Audio", assets::icons_64::music_2, ui::audioMenuGenerator));
         result->add(ui::ActionMenu::Generator("Utilities", assets::icons_64::configuration, ui::utilsMenuGenerator));
         result->add(ui::ActionMenu::Generator("Settings", assets::icons_64::settings, ui::settingsMenuGenerator));
         if (debugMode())
             result->add(ui::ActionMenu::Generator("Devel", assets::icons_64::ladybug, ui::develMenuGenerator));
+        // TODO delete delete delete
+        //result->add(ui::ActionMenu::Item("Mic test", assets::icons_64::microphone, App::run<MicTest>));
         return result;
     }
 } // namespace rckid

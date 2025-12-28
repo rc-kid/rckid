@@ -136,6 +136,9 @@ Polish
 
 ## HW
 
+- maybe microphone is reversed, in which case this is easy to check by detecting if brass case is gnd or not
+- also can try different microphones (https://jlcpcb.com/partdetail/SAMZO-MIC_4013_GG00/C42371093)
+
 - RM2 cartridges do not connect flash to 3v3(!!)
 - side buttons are too thin
 - pull-up for the headphone detect is too weak, try sth like 40kOhm? 

@@ -1,7 +1,5 @@
 #pragma once
 
-#pragma once
-
 #include "../../app.h"
 #include "../../filesystem.h"
 #include "../../ui/form.h"
@@ -41,7 +39,6 @@ namespace rckid {
         }
 
     private:
-        String title_;
         ui::Image * icon_;
         ui::Label * status_;
         ui::Label * budget_;

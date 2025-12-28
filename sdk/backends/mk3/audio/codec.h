@@ -311,10 +311,14 @@ namespace rckid {
             //setRegister(REG_ALC_CTRL_1, 0);
             
             // enable ALC on the left channel, set min and max gains to full scale
+            // this records taps, but not much more
             setRegister(REG_ALC_CTRL_1, ALCEN_LEFT | ALC_MAX_GAIN_35 | ALC_MIN_GAIN_NEG_12);
             setRegister(REG_ALC_CTRL_2, 0b000001111);
             //setRegister(REG_ALC_CTRL_2, 0b000001011);
 
+            // set the left PGA gain to some known value
+            //setRegister(REG_ALC_CTRL_1, 0b100111111);
+            //setRegister(REG_ALC_CTRL_2, 0b000001111);
 
             //setRegister(REG_LINPUT_PGA_GAIN, 0b100111111);
 
