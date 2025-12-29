@@ -244,6 +244,8 @@ namespace rckid {
     int16_t gyroY();
     int16_t gyroZ();
 
+    uint32_t pedometerCount();
+
     /** \page sdk
         \section display Display Driver
 

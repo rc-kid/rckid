@@ -1,6 +1,7 @@
 #pragma once
 
-#include "platform.h"
+#include <platform.h>
+#include <rckid/log.h>
 
 #include "lsm6dsv16x_reg.h"
 
@@ -26,11 +27,13 @@ namespace rckid {
             G16 = LSM6DSV16X_16g,
         };
 
-        struct Orientation3D {
+        PACKED(struct Orientation3D {
             int16_t x;
             int16_t y;
             int16_t z;
-        };
+        });
+
+        static_assert(sizeof(Orientation3D) == 6);
 
         /** Creates the accelerometer driver. Does not perform any communication with the chip, for this use the initialize() method below. 
          */
@@ -45,7 +48,7 @@ namespace rckid {
                 return 0;
             };
             reg_ctx.read_reg = [](void *handle, uint8_t reg, uint8_t *bufp, uint16_t len) -> int32_t {
-                i2c_read_blocking(i2c0, I2C_ADDRESS, & reg, 1, true);
+                i2c_write_blocking(i2c0, I2C_ADDRESS, & reg, 1, true);
                 i2c_read_blocking(i2c0, I2C_ADDRESS, bufp, len, false);
                 return 0;
             };
@@ -69,13 +72,31 @@ namespace rckid {
                 return false;
             if (lsm6dsv16x_gy_data_rate_set(&reg_ctx, LSM6DSV16X_ODR_OFF) != LSM6DSV16X_OK)
                 return false;
-            // set accelerometer scale to full 16G
-            setAccelerometerScale(AccelScale::G16);
+            // set accelerometer scale to 2G scale (required by the pedometer)
+            setAccelerometerScale(AccelScale::G2);
             return true;
         }
 
+        /** Gets the device ID, (WHO AM I register), which is supposed to be fixed at 0x70. Can be used to verify communiation.
+         */
+        uint8_t getDeviceId() {
+            uint8_t whoami = 0;
+            if (lsm6dsv16x_device_id_get(&reg_ctx, & whoami) != LSM6DSV16X_OK)
+                return 0;
+            return whoami;
+        }
+
+        /** Enables or disables the accelerometer. The accelerometer runs at 30Hz when enabled as this value is required by the pedometer.
+         */
         void enableAccelerometer(bool value) {
-            lsm6dsv16x_xl_data_rate_set(&reg_ctx, value ? LSM6DSV16X_ODR_AT_120Hz : LSM6DSV16X_ODR_OFF);
+            lsm6dsv16x_xl_data_rate_set(&reg_ctx, value ? LSM6DSV16X_ODR_AT_30Hz : LSM6DSV16X_ODR_OFF);
+        }
+
+        bool isAccelerometerEnabled() {
+            lsm6dsv16x_data_rate_t rate;
+            if (lsm6dsv16x_xl_data_rate_get(&reg_ctx, & rate) != LSM6DSV16X_OK)
+                return false;
+            return rate != LSM6DSV16X_ODR_OFF;
         }
 
         AccelScale getAccelerometerScale() {
@@ -100,21 +121,32 @@ namespace rckid {
 
         }
 
-        void enablePedometer(bool value) {
-
+        Orientation3D readGyroscopeRaw() {
+            Orientation3D result;
+            lsm6dsv16x_angular_rate_raw_get(&reg_ctx, reinterpret_cast<int16_t *>(& result));
+            return result;
         }
 
-
-        Orientation3D readGyroscope() {
-
+        /** Enables, or disables the pedometer function. 
+         
+            The pedometer requires the accelerometer to run at 30Hz and 2G sensitivity scale. 
+         */
+        void enablePedometer(bool value) {
+            lsm6dsv16x_stpcnt_mode_t mode;            
+            lsm6dsv16x_stpcnt_mode_get(&reg_ctx, &mode);
+            mode.step_counter_enable = value ? PROPERTY_ENABLE : PROPERTY_DISABLE;
+            mode.false_step_rej = value ? PROPERTY_ENABLE : PROPERTY_DISABLE;
+            lsm6dsv16x_stpcnt_mode_set(&reg_ctx, mode);
         }
 
         uint16_t readStepCount() {
-
+            uint16_t result = 0;
+            lsm6dsv16x_stpcnt_steps_get(&reg_ctx, & result);
+           return result;
         }
 
         void resetStepCount() {
-
+            lsm6dsv16x_stpcnt_rst_step_set(&reg_ctx, PROPERTY_ENABLE);
         }
 
     private:

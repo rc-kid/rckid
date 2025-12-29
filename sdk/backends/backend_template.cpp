@@ -228,6 +228,11 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
+    uint32_t pedometerCount() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
     // display
 
     void displayOn() {

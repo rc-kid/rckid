@@ -132,6 +132,7 @@ namespace rckid {
 
         LSM6DSV accel_;
         LSM6DSV::Orientation3D accelState_;
+        uint16_t pedometerCount_;
 
         AVRState avrState_;
         AVRState::Status lastStatus_;
@@ -486,12 +487,17 @@ namespace rckid {
         // initialize the other peripherals we have
         Radio::initialize();
         // initialize the accelerometer 
-        if (io::accel_.initialize()) {
+        if (io::accel_.isAccelerometerEnabled()) {
+            LOG(LL_INFO, "Accelerometer already enabled, skipping initialization");
+        } else if (! io::accel_.initialize()) {
+            LOG(LL_ERROR, "Failed to initialize LSM6DSV accelerometer");
+        } else {
             LOG(LL_INFO, "LSM6DSV accelerometer initialized");
             io::accel_.enableAccelerometer(true);
-        } else {
-            LOG(LL_ERROR, "Failed to initialize LSM6DSV accelerometer");
+            io::accel_.enablePedometer(true);
         }
+        io::pedometerCount_ = io::accel_.readStepCount();
+        io::accelState_ = io::accel_.readAccelerometerRaw();
 
         // initialize the SD card communication & sd card itself if present
         sdInitialize();
@@ -806,6 +812,11 @@ namespace rckid {
     int16_t gyroZ() {
         StackProtection::check();
         UNIMPLEMENTED;
+    }
+
+    uint32_t pedometerCount() {
+        StackProtection::check();
+        return io::pedometerCount_;
     }
 
     // display

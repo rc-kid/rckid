@@ -473,6 +473,11 @@ namespace rckid {
         return io::gyroZ_; 
     }
 
+    uint32_t pedometerCount() {
+        StackProtection::check();
+        return 0;
+    }
+
     // display 
 
     void displayDraw() {

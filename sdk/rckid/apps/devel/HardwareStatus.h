@@ -21,13 +21,13 @@ namespace rckid {
             ui::Form<void>{} {
             text_ = g_.addChild(new ui::Tilemap<Tile<8, 16, Color16>>{40,15, assets::System16, palette_});
             text_->setPos(0, 16);
-            text_->text(0,0) << "Hardware Status";
-            text_->text(0, 2) << "Buttons:";
-            text_->text(0, 3) << "Accel:";
-            text_->text(0, 4) << "Audio:";
-            text_->text(0, 5) << "Time:";
-            text_->text(0, 6) << "Budget:";
-            text_->text(0, 7) << "Power:";
+            text_->text(0, 1) << "Buttons:";
+            text_->text(0, 2) << "Accel:";
+            text_->text(0, 5) << "Steps:";
+            text_->text(0, 6) << "Audio:";
+            text_->text(0, 7) << "Time:";
+            text_->text(0, 8) << "Budget:";
+            text_->text(0, 9) << "Power:";
         }
 
         ~HardwareStatus() override {
@@ -35,30 +35,35 @@ namespace rckid {
 
         void update() override {
             ui::Form<void>::update();
-            text_->text(15, 2) << (btnDown(Btn::Up) ? "U " : "  ");
-            text_->text(17, 2) << (btnDown(Btn::Down) ? "D " : "  ");
-            text_->text(19, 2) << (btnDown(Btn::Left) ? "L " : "  ");
-            text_->text(21, 2) << (btnDown(Btn::Right) ? "R " : "  ");
-            text_->text(23, 2) << (btnDown(Btn::A) ? "A " : "  ");
-            text_->text(25, 2) << (btnDown(Btn::B) ? "B " : "  ");
-            text_->text(27, 2) << (btnDown(Btn::Select) ? "Sel " : "    ");
-            text_->text(31, 2) << (btnDown(Btn::Start) ? "Start " : "      ");
+            text_->text(15, 1) << (btnDown(Btn::Up) ? "U " : "  ");
+            text_->text(17, 1) << (btnDown(Btn::Down) ? "D " : "  ");
+            text_->text(19, 1) << (btnDown(Btn::Left) ? "L " : "  ");
+            text_->text(21, 1) << (btnDown(Btn::Right) ? "R " : "  ");
+            text_->text(23, 1) << (btnDown(Btn::A) ? "A " : "  ");
+            text_->text(25, 1) << (btnDown(Btn::B) ? "B " : "  ");
+            text_->text(27, 1) << (btnDown(Btn::Select) ? "Sel " : "    ");
+            text_->text(31, 1) << (btnDown(Btn::Start) ? "Start " : "      ");
 
-            text_->text(15, 3) << "X:" << accelX() << " Y:" << accelY(); // << " Z:" << accelZ() << " ";
-            text_->text(15, 4) << (audioPlayback() ? "P " : "  ");
-            text_->text(17, 4) << (audioRecording() ? "R " : "  ");
-            text_->text(19, 4) << (audioHeadphones() ? "HP " : "   ");
-            text_->text(22, 4) << audioVolume() << "  ";
+            text_->text(15, 2) << "X: " << accelX() << "    ";
+            text_->text(15, 3) << "Y: " << accelY() << "    ";
+            text_->text(15, 4) << "Z: " << accelZ() << "    ";
+
+            text_->text(15, 5) << pedometerCount() << "    ";
+
+            text_->text(15, 6) << (audioPlayback() ? "P " : "  ");
+            text_->text(17, 6) << (audioRecording() ? "R " : "  ");
+            text_->text(19, 6) << (audioHeadphones() ? "HP " : "   ");
+            text_->text(22, 6) << audioVolume() << "  ";
 
             //text_->text(15, 5) << timeNow() << "      ";
-            text_->text(25, 5) << uptimeUs64() / 1000000;
+            text_->text(25, 7) << uptimeUs64() / 1000000;
 
-            text_->text(15, 6) << (isBudgeted() ? "Y " : "N  ");
-            text_->text(17, 6) << budget();
+            text_->text(15, 8) << (isBudgeted() ? "Y " : "N  ");
+            text_->text(17, 8) << budget();
 
-            text_->text(15, 7) << (powerUsbConnected() ? "USB " : "    ");
-            text_->text(19, 7) << (powerCharging() ? "CHRG " : "     ");
-            text_->text(24, 7) << powerVcc();
+            text_->text(15, 9) << (powerUsbConnected() ? "USB " : "    ");
+            text_->text(19, 9) << (powerCharging() ? "CHRG " : "     ");
+            text_->text(24, 9) << powerVcc();
 
         }
 
