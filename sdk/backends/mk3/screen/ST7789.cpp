@@ -193,40 +193,12 @@ namespace rckid {
         }
     }
 
-
-    //void ST7789::beginDMAUpdate() {
-
-    //}
-
-    //void ST7789::endDMAUpdate() {
-
-    //}
-
     void ST7789::initializePinsBitBang() {
 
         constexpr uint64_t outputPinsMask = 0xffff_u64 << RP_PIN_DISP_DB15; // DB0..DB15 are consecutive
         gpio_set_dir_masked64(outputPinsMask, 0xffffffffffffffffll); // set all pins to output
         gpio_put_masked64(outputPinsMask, 0);
         gpio_set_function_masked64(outputPinsMask, GPIO_FUNC_SIO);
-        //gpio_init_mask(outputPinsMask);
-        //gpio_set_dir_masked64(outputPinsMask, outputPinsMask);
-        //gpio_put_masked(outputPinsMask, false);
-
-        /*
-        gpio_init(RP_PIN_DISP_DB0);
-        gpio_init(RP_PIN_DISP_DB1);
-        gpio_init(RP_PIN_DISP_DB2);
-        gpio_init(RP_PIN_DISP_DB3);
-        gpio_init(RP_PIN_DISP_DB4);
-        gpio_init(RP_PIN_DISP_DB5);
-        gpio_set_dir(RP_PIN_DISP_DB0, GPIO_OUT);
-        gpio_set_dir(RP_PIN_DISP_DB1, GPIO_OUT);
-        gpio_set_dir(RP_PIN_DISP_DB2, GPIO_OUT);
-        gpio_set_dir(RP_PIN_DISP_DB3, GPIO_OUT);
-        gpio_set_dir(RP_PIN_DISP_DB4, GPIO_OUT);
-        gpio_set_dir(RP_PIN_DISP_DB5, GPIO_OUT);
-        */
-
 
         gpio_init(RP_PIN_DISP_WRX);
         gpio_set_dir(RP_PIN_DISP_WRX, GPIO_OUT);
@@ -239,12 +211,10 @@ namespace rckid {
     }
 
     void ST7789::irqHandler() {
-        //gpio::outputHigh(gpio::Pin{21});
         if (cb_) 
             cb_();
         if (updating_ > 0)
             --updating_;
-        //gpio::outputLow(gpio::Pin{21});
     }
 
 } // namespace rckid

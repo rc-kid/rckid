@@ -503,7 +503,6 @@ namespace rckid {
         sdInitialize();
         sdInitializeCard();
 
-
         // initialize the filesystem and mount the SD card
         fs::initialize();
 

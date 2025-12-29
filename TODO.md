@@ -47,6 +47,10 @@ Polish
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb. Checked with TME and they do have protection, cutoff at 3V. 
 
+- accelerometer is actually a bit simpler than expected, I might be able to easily ditch the low level driver and write what I need myself for less code footprint
+- level app
+- pedometer app (once pedometer is working) - this will require getting absolute hold of the I2C bus as getting the steps couynt is a sequence of 3 events, or maybe I can just issue three events in succession?
+
 - rumblerOff does not actually turn the rumbler off
 - images for games
 

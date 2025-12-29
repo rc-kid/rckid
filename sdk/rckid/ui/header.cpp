@@ -155,6 +155,8 @@ namespace rckid::ui {
         instance_->refresh();
         Rect oldRegion = displayUpdateRegion();
         DisplayRefreshDirection oldDirection = displayRefreshDirection();
+        // ensure we 
+        displayWaitUpdateDone();
         displaySetRefreshDirection(DisplayRefreshDirection::ColumnFirst);
         displaySetUpdateRegion(Rect::XYWH(0, 0, RCKID_DISPLAY_WIDTH, 16));
         DoubleBuffer<uint16_t> buffer{16};
@@ -169,6 +171,7 @@ namespace rckid::ui {
             if (column > 0)
                 instance_->renderRawColumn(column - 1, buffer.back(), 0, 16);
         });
+        displayWaitUpdateDone();
         displaySetRefreshDirection(oldDirection);
         displaySetUpdateRegion(oldRegion);
     }
