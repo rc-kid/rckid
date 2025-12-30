@@ -35,7 +35,7 @@ namespace rckid {
     void audioPlay(AudioStream & stream);
 
 
-    /** Base class for audio players of differeht formats. 
+    /** Base class for audio players of different formats. 
      */
     class AudioStream {
     public:

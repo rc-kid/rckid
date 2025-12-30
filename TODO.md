@@ -2,15 +2,9 @@
 
 > X means done, - means cannot be done
 
-- [-] check accelerometer works (using different accelerometer)
 - [ ] check SD card insertion detection
 - [X] check powered from real battery works
-- [-] check USB detection works when powered from battery
-- [-] check DataSync app
-- [-] check the above still works if we add USB ESD protection
-- [ ] disable debug mode on by default on AVR (end of initialize)
 - [ ] check that tilting dpad is better 
-- [X] mk3 idle and keepalive timers are too high, move lower again
 - [ ] add way to clear memory when necessary (e.g. remove background, etc.)
 - [ ] draw LoRA cartridge
 - [ ] add board for debug connectors
@@ -47,9 +41,9 @@ Polish
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb. Checked with TME and they do have protection, cutoff at 3V. 
 
-- accelerometer is actually a bit simpler than expected, I might be able to easily ditch the low level driver and write what I need myself for less code footprint
+- gbcemu save does not preserve if sound is enabled or not (probably)
 - level app
-- pedometer app (once pedometer is working) - this will require getting absolute hold of the I2C bus as getting the steps couynt is a sequence of 3 events, or maybe I can just issue three events in succession?
+- pedometer seems to be not working, not sure why
 
 - rumblerOff does not actually turn the rumbler off
 - images for games
@@ -155,11 +149,6 @@ Polish
 ## AVR
 
 - see if we can run at 5MHz and still talk to neopixel
-
-## Accelerometer
-
-- there is some arduino code that I can look at here: https://github.com/stm32duino/LSM6DSV16X/tree/main
-- looks relatively easy to port using the ST driver
 
 ## UI
 

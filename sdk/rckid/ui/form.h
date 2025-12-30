@@ -50,13 +50,18 @@ namespace rckid::ui {
             header_ = value;
         }
 
-        void loadBackgroundImage() {
+        static void loadBackgroundImage() {
             if (bg_ != nullptr)
                 delete bg_;
             bg_ = new Image{Style::loadBackgroundImage()};
             bg_->setRect(Rect::WH(320, 240));
             bg_->setRepeat(true);
             bg_->setTransparent(false);
+        }
+
+        static void clearBackgroundImage() {
+            delete bg_;
+            bg_ = nullptr;
         }
 
         void initialize() {

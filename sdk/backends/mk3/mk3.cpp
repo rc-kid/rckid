@@ -585,7 +585,7 @@ namespace rckid {
             --time::idleTimeout_;
             if (time::idleTimeoutKeepalive_ == 0 || time::idleTimeout_ == 0)
                 i2c::sendAvrCommand(cmd::PowerOff{});
-            App::onSecondTick();
+            App::secondTick();
         }
         // update headphones status (this ensures that we detect headphones as any other button)
         audio::lastHeadphones_ = audio::headphones_;

@@ -100,6 +100,8 @@ namespace rckid {
          */
         void result() const {}
 
+        static void enableStandaloneMode();
+
     protected:
 
         /** Called when the application should gain focus. 
@@ -193,7 +195,7 @@ namespace rckid {
 
         friend void tick();
 
-        static void onSecondTick();
+        static void secondTick();
 
         /** Verifies there is enough budget to play the app and returns true if ok.
          

@@ -35,7 +35,7 @@ RCKid is based on the [RP2030B](datasheets/rp2350-datasheet.pdf) (80 pin QFN) an
              (rumbler)-----/       <I2C> ||          \----| MCP73832  |----(battery)
                           <PWM>          ||               | (charger) | 
                                     +----------+          +-----------+
-                                    | MPU6500  | 
+                                    | LSM6DSV  | 
                                     | (Accel)  | 
                                     +----------+
 

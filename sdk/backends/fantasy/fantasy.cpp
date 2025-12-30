@@ -291,7 +291,7 @@ namespace rckid {
         while (now > time::nextSecond_) {
             time::nextSecond_ += 1000000;
             time::time_.inc();
-            App::onSecondTick();
+            App::secondTick();
         }
         // and get button states
         io::lastButtons_ = io::buttons_;

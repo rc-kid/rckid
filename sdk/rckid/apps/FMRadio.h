@@ -8,6 +8,7 @@
 #include "../assets/fonts/OpenDyslexic128.h"
 
 #include "dialogs/InfoDialog.h"
+#include "Recorder.h"
 
 namespace rckid {
 
@@ -107,6 +108,10 @@ namespace rckid {
             refresh_ = radio_->update();
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 exit();
+            }
+            if (btnPressed(Btn::A)) {
+                // start recording from radio
+                App::run<Recorder>(Recorder::Source::Radio);
             }
             // left and right to seek directly
             if (btnPressed(Btn::Left))

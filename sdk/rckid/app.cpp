@@ -5,6 +5,7 @@
 #include "apps/dialogs/HomeMenu.h"
 #include "apps/utils/Alarm.h"
 #include "ui/header.h"
+#include "task.h"
 
 namespace rckid {
 
@@ -77,6 +78,12 @@ namespace rckid {
         }
     }
 
+    void App::enableStandaloneMode() {
+        ui::FormWidget::clearBackgroundImage();
+        ui::Header::clearInstance();
+        Task::killAllTasks();
+    }
+
     extern volatile bool avrStatusRequest_;
 
     void App::loop() {
@@ -107,7 +114,7 @@ namespace rckid {
         btnClear();
     }
 
-    void App::onSecondTick() {
+    void App::secondTick() {
         ui::Header::refresh();
         checkBudget_ = true;
         fps_ = redraws_;

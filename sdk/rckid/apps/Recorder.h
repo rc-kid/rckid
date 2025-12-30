@@ -9,33 +9,41 @@
 
 namespace rckid {
 
-
     class Recorder : public ui::Form<void> {
     public:
 
-        String name() const override { return "InfoDialog"; }
+        enum class Source {
+            Mic,
+            Radio,
+        };
 
-        Recorder(): 
+        String name() const override { return "Recording"; }
+
+        Recorder(Source source = Source::Mic): 
             ui::Form<void>{Rect::XYWH(0, 144, 320, 96), /* raw */ true}
         {
             time_ = g_.addChild(new ui::Label{Rect::XYWH(0, 0, 320, 20), ""});
             waveform_ = g_.addChild(new Waveform{});
-            audioRecordMic(8000, [this](int16_t * & samples, uint32_t & numSamples) {
-                if (samples == nullptr) {
-                    // provide buffer to fill
-                    samples = buf_.front();
-                    numSamples = buf_.size() / 2;
-                    buf_.swap();
-                } else {
-                    waveform_->processSamples(samples, numSamples);
-                }
-            });
+            auto f = [this](int16_t * & samples, uint32_t & numSamples) {
+                    if (samples == nullptr) {
+                        // provide buffer to fill
+                        samples = buf_.front();
+                        numSamples = buf_.size() / 2;
+                        buf_.swap();
+                    } else {
+                        waveform_->processSamples(samples, numSamples);
+                    }
+                };
+            if (source == Source::Mic) {
+                audioRecordMic(8000, f);
+            } else {
+                audioRecordLineIn(8000, f);
+            }
         }
 
         ~Recorder() override {
             audioStop();
         }
-
 
         void update() override {
             if (!btnDown(Btn::A))

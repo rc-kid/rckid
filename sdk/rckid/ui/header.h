@@ -64,6 +64,11 @@ namespace rckid::ui {
             return instance_;
         }
 
+        static void clearInstance() {
+            delete instance_;
+            instance_ = nullptr;
+        }
+
         /** Gathers the displayed data and updates the header. 
          
             If there is no header, but the displayed data are important, creates the header so that it can be displayed by the current app. This is called by the application's second tick handler.

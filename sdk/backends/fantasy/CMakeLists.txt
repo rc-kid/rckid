@@ -32,6 +32,7 @@ function(link_with_librckid target_name)
             PNGdec
             PNGenc
             libhelix-mp3
+            opus
             ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
         )
     endif()
