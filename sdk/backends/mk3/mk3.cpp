@@ -35,7 +35,7 @@ extern "C" {
 }
 
 #include <platform/peripherals/si4705.h>
-#include "accelerometer/lsm6dsv.h"
+#include <platform/peripherals/lsm6dsv.h>
 
 #include <rckid/rckid.h>
 #include <rckid/radio.h>
@@ -132,7 +132,7 @@ namespace rckid {
 
         LSM6DSV accel_;
         LSM6DSV::Orientation3D accelState_;
-        uint16_t pedometerCount_;
+        volatile uint32_t pedometerCount_;
 
         AVRState avrState_;
         AVRState::Status lastStatus_;
@@ -313,8 +313,8 @@ namespace rckid {
     void requestAvrStatus() {
         i2c::enqueue(RCKID_AVR_I2C_ADDRESS, nullptr, 0, sizeof(AVRState::Status), updateAvrStatus);
         // now schedule the accelerometer read  
-        uint8_t cmd = LSM6DSV16X_OUTX_L_A; 
-        i2c::enqueue(0x6a, & cmd, 1, 6, updateAccelStatus);
+        uint8_t cmd = LSM6DSV::REG_OUTX_L_A; 
+        i2c::enqueue(LSM6DSV::I2C_ADDRESS, & cmd, 1, 6, updateAccelStatus);
     }
 
     void __not_in_flash_func(irqDMADone_)() {
@@ -489,6 +489,8 @@ namespace rckid {
         // initialize the accelerometer 
         if (io::accel_.isAccelerometerEnabled()) {
             LOG(LL_INFO, "Accelerometer already enabled, skipping initialization");
+            if (! io::accel_.isPedometerEnabled())
+                LOG(LL_ERROR, "Pedometer not enabled");
         } else if (! io::accel_.initialize()) {
             LOG(LL_ERROR, "Failed to initialize LSM6DSV accelerometer");
         } else {
@@ -815,6 +817,21 @@ namespace rckid {
 
     uint32_t pedometerCount() {
         StackProtection::check();
+        io::pedometerCount_ = 0xffffffff;
+        uint8_t cmd[2] = { LSM6DSV::REG_FUNC_CFG_ACCESS, LSM6DSV::FUNC_CFG_ACCESS_EMB };
+        i2c::enqueue(LSM6DSV::I2C_ADDRESS, cmd, 2, 0, nullptr);
+        cmd[0] = LSM6DSV::REG_EMB_FUNC_STEP_COUNTER_L;
+        i2c::enqueue(LSM6DSV::I2C_ADDRESS, cmd, 1, 2, [](uint8_t numBytes) {
+            uint8_t response[2];
+            i2c::getTransactionResponse(response, 2);
+            io::pedometerCount_ = static_cast<uint32_t>(response[0]) | (static_cast<uint32_t>(response[1]) << 8);
+        });
+        cmd[0] = LSM6DSV::REG_FUNC_CFG_ACCESS;
+        cmd[1] = 0x00;
+        i2c::enqueue(LSM6DSV::I2C_ADDRESS, cmd, 2, 0, nullptr);
+        // wait for completion
+        while (io::pedometerCount_ == 0xffffffff)
+            yield();
         return io::pedometerCount_;
     }
 

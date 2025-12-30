@@ -8,6 +8,7 @@
 #include "../apps/utils/Timer.h"
 #include "../apps/utils/PiggyBank.h"
 #include "../apps/utils/About.h"
+#include "../apps/utils/Steps.h"
 #include "../apps/DataSync.h"
 
 #include "../apps/MainMenu.h"
@@ -107,6 +108,7 @@ namespace rckid::ui {
         addAppToMenu(result, "Flashlight", assets::icons_64::flashlight, App::run<Flashlight>, blacklist);
         addAppToMenu(result, "Clock", assets::icons_64::alarm_clock, App::run<Clock>, blacklist);
         addAppToMenu(result, "Stopwatch", assets::icons_64::chronometer, App::run<Stopwatch>, blacklist);
+        addAppToMenu(result, "Steps", assets::icons_64::footprint, App::run<Steps>, blacklist);
         // TODO add piggy bank
         //addAppToMenu(result, "Timer", assets::icons_64::hourglass, App::run<Timer>, blacklist);
         addAppToMenu(result, "Piggy Bank", assets::icons_64::piggy_bank, App::run<PiggyBank>, blacklist);
@@ -247,7 +249,7 @@ namespace rckid::ui {
                 InfoDialog::success("Done", "PIN changed successfully");
             }),
             ui::ActionMenu::Generator("Parent Mode", assets::icons_64::family, parentMenuGenerator),
-            ui::ActionMenu::Item("About", assets::icons_64::microchip, App::run<About>),
+            ui::ActionMenu::Item("About", assets::icons_64::info, App::run<About>),
         };
     }
 

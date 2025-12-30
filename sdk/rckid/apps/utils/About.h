@@ -19,7 +19,7 @@ namespace rckid {
         About():
             ui::Form<void>{}
         {
-            icon_ = g_.addChild(new ui::Image{Icon{assets::icons_64::microchip}});
+            icon_ = g_.addChild(new ui::Image{Icon{assets::icons_64::info}});
             icon_->setTransparent(true);
             icon_->setPos(160 - icon_->width() / 2, 60);
             status_ = g_.addChild(new ui::Label{Rect::XYWH(0, 130, 320, 20), "RCKid mkIII, v. 0.9.0"});

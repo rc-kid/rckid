@@ -149,6 +149,14 @@ namespace rckid::ui {
 
         friend class Header;
 
+        void draw() override {
+            Panel::draw();
+            /* TODO re-enable when we have extra background effects in place
+            bg_->setImgX(accelX() / 512);
+            bg_->setImgY(accelY() / 512);
+            */
+        }
+
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
             if (bgImage_) {
                 ASSERT(bg_ != nullptr);
