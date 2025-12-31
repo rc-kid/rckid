@@ -247,7 +247,8 @@ namespace rckid::gbcemu {
 
     private:
 
-        static constexpr uint32_t MAX_ACTIVE_PAGES = 14;
+        // TODO temporarily lowered to 10 to keep memory high at times of need
+        static constexpr uint32_t MAX_ACTIVE_PAGES = 10;
 
         mutable PageInfo * cache_ = nullptr;
         mutable PageInfo * page0_ = nullptr;

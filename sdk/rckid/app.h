@@ -170,6 +170,12 @@ namespace rckid {
             app_ = nullptr; 
         }
 
+        /** Called every second. 
+         */
+        virtual void onSecondTick() {
+            // do nothing by default
+        }
+
         /** Current number of redraws. Reset automatically every second, should be incremented at each display redraw. 
          */
         static inline uint32_t redraws_ = 0;

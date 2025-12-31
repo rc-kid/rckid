@@ -41,12 +41,15 @@ Polish
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb. Checked with TME and they do have protection, cutoff at 3V. 
 
-- gbcemu save does not preserve if sound is enabled or not (probably)
+- gbcemu->home menu has crashes in fantasy, but not on device (?)
+- lowered ROM page cache to 10 to ease memory pressure, would be nice to increase this later 
+
 - level app
-- pedometer seems to be not working, not sure why
+- reset step count every day (once we have midnight reset stuff)
 
 - rumblerOff does not actually turn the rumbler off
 - images for games
+- and use unpacked icons with no heap allocs for the system icons
 
 - drawing preserves state like games
 - allow messages to send images

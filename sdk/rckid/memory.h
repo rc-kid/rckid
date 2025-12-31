@@ -166,8 +166,24 @@ namespace rckid {
 
     class StackProtection {
     public:
-        static uint32_t currentSize() {
+        static uint32_t currentStackSize() {
             return stackStart() - currentStack();
+        }
+
+        static uint32_t currentAvailableMemory() {
+    #ifdef RCKID_BACKEND_FANTASY
+            uint32_t cur = currentStackSize();
+            cur += RAMHeap::usedBytes();
+            if (cur >= RCKID_MEMORY_SIZE)
+                return 0;
+            return RCKID_MEMORY_SIZE - cur;
+    #else
+            char * stack = currentStack();
+            char * heap = reinterpret_cast<char*>(RAMHeap::heapEnd_);
+            if (stack < heap)
+                return 0;
+            return stack - heap;
+    #endif
         }
 
         static uint32_t maxSize() { return maxSize_; }
@@ -176,7 +192,7 @@ namespace rckid {
 
         static void check() {
 #if RCKID_ENABLE_STACK_PROTECTION == 1
-            uint32_t cur = currentSize();
+            uint32_t cur = currentStackSize();
             if (cur > maxSize_)
                 maxSize_ = cur;
     #ifdef RCKID_BACKEND_FANTASY

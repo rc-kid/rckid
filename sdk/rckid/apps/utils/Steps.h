@@ -39,6 +39,10 @@ namespace rckid {
                 exit();
         }
 
+        void onSecondTick() override {
+            status_->setText(STR(pedometerCount()));
+        }
+
     private:
         ui::Image * icon_;
         ui::Label * status_;

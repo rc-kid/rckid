@@ -760,19 +760,17 @@ namespace rckid::gbcemu {
         /** Loads APU state from given stream. 
          */
         friend void deserialize(ReadStream & from, APU & apu) {
+            if (apu.enabled_)
+                apu.enable(false);
             deserialize(from, apu.ch1_);
             deserialize(from, apu.ch2_);
             deserialize(from, apu.ch3_);
             deserialize(from, apu.ch4_);
-            deserialize(from, apu.enabled_);
+            bool enableApu = false;
+            deserialize(from, enableApu);
             deserialize(from, apu.volumeLeft_);
             deserialize(from, apu.volumeRight_);
-            if (apu.enabled_) {
-                audioStop();
-                apu.enabled_ = false;
-                apu.enable(true);
-                audioPause();
-            }
+            apu.enable(enableApu);
        }
 
     private:

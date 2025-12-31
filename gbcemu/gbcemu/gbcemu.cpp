@@ -491,7 +491,7 @@ namespace rckid::gbcemu {
         setVideoRamPage(deserialize<uint32_t>(from));
         setWorkRamPage(deserialize<uint32_t>(from));
         setExternalRamPage(deserialize<uint32_t>(from));
-        // load the APU state
+        // load the APU state and turn APU on if necessary (or off)
         deserialize(from, apu_);
         // v2 - load the RTCMapping
         if (version >= 2) {

@@ -486,6 +486,7 @@ namespace rckid {
 
         // initialize the other peripherals we have
         Radio::initialize();
+        //io::accel_.reset();
         // initialize the accelerometer 
         if (io::accel_.isAccelerometerEnabled()) {
             LOG(LL_INFO, "Accelerometer already enabled, skipping initialization");

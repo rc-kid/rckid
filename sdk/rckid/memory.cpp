@@ -115,7 +115,7 @@ namespace rckid {
 
     uint32_t memoryUnclaimed() {
 #ifdef RCKID_BACKEND_FANTASY
-        return RCKID_MEMORY_SIZE - (RAMHeap::usedBytes() + StackProtection::currentSize());
+        return RCKID_MEMORY_SIZE - (RAMHeap::usedBytes() + StackProtection::currentStackSize());
 #else
         return StackProtection::currentStack() - reinterpret_cast<char*>(RAMHeap::heapEnd_);
         StackProtection::check();

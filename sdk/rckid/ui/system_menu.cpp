@@ -108,7 +108,7 @@ namespace rckid::ui {
         addAppToMenu(result, "Flashlight", assets::icons_64::flashlight, App::run<Flashlight>, blacklist);
         addAppToMenu(result, "Clock", assets::icons_64::alarm_clock, App::run<Clock>, blacklist);
         addAppToMenu(result, "Stopwatch", assets::icons_64::chronometer, App::run<Stopwatch>, blacklist);
-        addAppToMenu(result, "Steps", assets::icons_64::footprint, App::run<Steps>, blacklist);
+        //addAppToMenu(result, "Steps", assets::icons_64::footprint, App::run<Steps>, blacklist);
         // TODO add piggy bank
         //addAppToMenu(result, "Timer", assets::icons_64::hourglass, App::run<Timer>, blacklist);
         addAppToMenu(result, "Piggy Bank", assets::icons_64::piggy_bank, App::run<PiggyBank>, blacklist);
@@ -325,7 +325,7 @@ namespace rckid::ui {
                     auto result = App::run<TimeDialog>("Daily Budget", TinyTime{budgetDaily()});
                     if (result.has_value()) {
                         // store the daily budget in both *avr* and in the ini file on the SD card
-                        budgetDailySet(result.value().hour() * 60 + result.value().minute());
+                        budgetDailySet((result.value().hour() * 60 + result.value().minute()) * 60);
                         Myself::save();
                     }
                 }),

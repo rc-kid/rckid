@@ -12,7 +12,6 @@
 #include <rckid/apps/Drawing.h>
 
 
-#include <rckid/apps/devel/MicTest.h>
 
 
 namespace rckid {

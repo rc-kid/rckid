@@ -176,7 +176,7 @@ namespace rckid {
     }
 
     void initialize(int argc, char const * argv[]) {
-        StackProtection::currentSize();
+        StackProtection::currentStackSize();
         SystemMallocGuard::enable();
         curl_global_init(CURL_GLOBAL_DEFAULT);
         InitWindow(320 * RCKID_DISPLAY_ZOOM, 240 * RCKID_DISPLAY_ZOOM, "RCKid");
@@ -264,11 +264,11 @@ namespace rckid {
         initialized_ = true;
         LOG(LL_INFO, "Initialization done.");
         LOG(LL_INFO, "Heap used  " << RAMHeap::usedBytes());
-        LOG(LL_INFO, "Stack size " << StackProtection::currentSize());
+        LOG(LL_INFO, "Stack size " << StackProtection::currentStackSize());
     }
 
     void initializeNoWindow([[maybe_unused]] int argc, [[maybe_unused]] char * argv[]) {
-        StackProtection::currentSize();
+        StackProtection::currentStackSize();
         SystemMallocGuard::enable();
         std::cout << "RCKid initialization w/o window" << std::endl;
         SystemMallocGuard::disable();

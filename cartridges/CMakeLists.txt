@@ -17,6 +17,11 @@ add_executable(rckid-parent "rckid-parent.cpp")
 target_link_libraries(rckid-parent PRIVATE libgbcemu)
 link_with_librckid(rckid-parent)
 
+# rc-kid in alpha state with extra apps and features that are currently being worked on
+add_executable(rckid-alpha "rckid-alpha.cpp")
+target_link_libraries(rckid-alpha PRIVATE libgbcemu)
+link_with_librckid(rckid-alpha)
+
 # simple COM port logging verification
 add_executable(logging "tests/logging.cpp")
 link_with_librckid(logging)

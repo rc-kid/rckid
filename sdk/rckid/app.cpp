@@ -119,6 +119,8 @@ namespace rckid {
         checkBudget_ = true;
         fps_ = redraws_;
         redraws_ = 0;
+        if (app_ != nullptr)
+            app_->onSecondTick();
     }
 
     bool App::verifyBudgetAllowance(bool decrement) {

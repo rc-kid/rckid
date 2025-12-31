@@ -7,7 +7,7 @@ namespace rckid {
     /** LSM6DSV Accelerometer, gyroscope & pedometer driver.
      
 
-        See here: https://github.com/stm32duino/LSM6DSV16X/tree/main
+        Official ST driver (which I found after I wrote the below code:) https://github.com/STMicroelectronics/lsm6dsv-pid
 
     */
     class LSM6DSV : public i2c::Device {
@@ -47,6 +47,15 @@ namespace rckid {
             // set accelerometer scale to 2G scale (required by the pedometer)
             setAccelerometerScale(AccelScale::G2);
             return true;
+        }
+
+        /** Performs software triggered power-on reset of the acdelerometer. 
+         
+            Note that aside of the SW_POR there is also boot bit and sw reset bits in CTRL_3 that seem to do some resetting as well.
+         */
+        void reset() {
+            i2c::writeRegister<uint8_t>(address, REG_FUNC_CFG_ACCESS, FUNC_CFG_ACCESS_SW_POR);
+            cpu::delayMs(30);
         }
 
         /** Gets the device ID, (WHO AM I register), which is supposed to be fixed at 0x70. Can be used to verify communiation.
@@ -143,6 +152,7 @@ namespace rckid {
     public:
         static constexpr uint8_t REG_FUNC_CFG_ACCESS = 0x01;
         static constexpr uint8_t FUNC_CFG_ACCESS_EMB = 0x80;
+        static constexpr uint8_t FUNC_CFG_ACCESS_SW_POR = 0b00000100;
 
         static constexpr uint8_t REG_FIFO_CTRL4 = 0x0a; // FIFO mode
 
@@ -155,8 +165,9 @@ namespace rckid {
 
 
         static constexpr uint8_t REG_CTRL3 = 0x12; // block data update, auto increment
-        static constexpr uint8_t CTRL3_BDU = 0b01000000;
-        static constexpr uint8_t CTRL3_IF_INC = 0b00000100;
+        static constexpr uint8_t CTRL3_BDU      = 0b01000000;
+        static constexpr uint8_t CTRL3_IF_INC   = 0b00000100;
+        static constexpr uint8_t CTRL3_SW_RESET = 0b00000001;
 
         static constexpr uint8_t REG_CTRL8 = 0x17; // accelerometer scale, low pass filter
 
