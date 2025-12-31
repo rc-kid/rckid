@@ -17,6 +17,12 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons64/film_slate.inc.h"
     };
 
+    // File: assets/icons/64/083-level.png
+    // Size: 2821
+    static constexpr uint8_t level[] = {
+        #include "raw/icons64/level.inc.h"
+    };
+
     // File: assets/icons/64/074-up-arrow.png
     // Size: 1384
     static constexpr uint8_t up_arrow[] = {
@@ -195,6 +201,12 @@ namespace rckid::assets::icons_64 {
     // Size: 2357
     static constexpr uint8_t exchange[] = {
         #include "raw/icons64/exchange.inc.h"
+    };
+
+    // File: assets/icons/64/082-controller.png
+    // Size: 2604
+    static constexpr uint8_t controller[] = {
+        #include "raw/icons64/controller.inc.h"
     };
 
     // File: assets/icons/64/056-phone.png

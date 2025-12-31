@@ -47,5 +47,5 @@ namespace rckid {
         ui::Image * icon_;
         ui::Label * status_;
 
-    }; // Alarm
+    }; // Steps
 } // namespace rckid

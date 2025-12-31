@@ -44,7 +44,8 @@ Polish
 - gbcemu->home menu has crashes in fantasy, but not on device (?)
 - lowered ROM page cache to 10 to ease memory pressure, would be nice to increase this later 
 
-- level app
+- swap accelerometer X axis
+- make level app draw circle and look prettier, maybe draw angles even
 - reset step count every day (once we have midnight reset stuff)
 
 - rumblerOff does not actually turn the rumbler off
