@@ -40,11 +40,10 @@ Polish
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb. Checked with TME and they do have protection, cutoff at 3V. 
 
-- gbcemu->home menu has crashes in fantasy, but not on device (?)
-
-- swap accelerometer X axis
 - make level app draw circle and look prettier, maybe draw angles even
 - reset step count every day (once we have midnight reset stuff)
+
+- PNG decoder should change to use heap again as there is more chance to find the space in heap
 
 - rumblerOff does not actually turn the rumbler off
 - images for games

@@ -425,6 +425,8 @@ namespace rckid::gbcemu {
     }
 
     void GBCEmu::save(WriteStream & into) {
+        if (apu_.enabled())
+            audioPause();
         serialize(into, VERSION);
         // serialize the CPU state
         serialize(into, regs8_, 8);
@@ -457,6 +459,8 @@ namespace rckid::gbcemu {
         // v2 - add the RTCMapping
         serialize(into, rtcMapping_);
         // we do not have to save the PPU state as we only allow interrupting the game during a VBLANK period
+        if (apu_.enabled())
+            audioResume();
     }
 
     void GBCEmu::load(ReadStream & from) {
@@ -604,6 +608,8 @@ namespace rckid::gbcemu {
         App::focus();
         setSpeedMax();
         initializeDisplay();
+        // reload current page (it could have been cleared from cache when blurred) 
+        setRomPage(romPage_);
         // continue playing audio if enabled
         if (apu_.enabled())
             audioResume();
@@ -614,6 +620,13 @@ namespace rckid::gbcemu {
         if (apu_.enabled())
             audioPause();
         setSpeedPct(100);
+        // clear gamepak caches so that the home menu has the maximum memory available
+        if (gamepak_ != nullptr) {
+            gamepak_->clearCaches();
+            //LOG(LL_INFO, "Cleared caches");
+            //LOG(LL_INFO, "Unallocated memory: " << StackProtection::currentAvailableMemory());
+            //RAMHeap::traceChunks();
+        }
         App::blur();
     }
 

@@ -104,6 +104,10 @@ namespace rckid::gbcemu {
             }
         }
 
+        virtual void clearCaches() {
+            // do nothing by default
+        }
+
     protected:
         static constexpr uint32_t PAGE_SIZE = 16 * 1024;
 
@@ -149,13 +153,21 @@ namespace rckid::gbcemu {
         }
 
         ~CachedGamePak() override {
+            clearCaches();
+            delete page0_;
+        }
+
+        /** Clears all but the last loaded ROM page and the page 0, i.e. those that are currently mapped in the emulator.
+         */
+        void clearCaches() override {
             PageInfo * p = cache_;
             while (p != nullptr) {
                 PageInfo * next = p->last;
                 delete p;
+                --numPages_;
                 p = next;
             }
-            delete page0_;
+            cache_ = nullptr;
         }
 
     protected:
@@ -224,7 +236,7 @@ namespace rckid::gbcemu {
                 p = p->last;
             }
             // see if creating new page is a possibility
-            if (numPages_ < MAX_ACTIVE_PAGES) {
+            if (StackProtection::currentAvailableMemory() > MIN_UNALLOCATED + PAGE_SIZE) {
                 uint8_t * buffer = new uint8_t[PAGE_SIZE];
                 ASSERT(buffer != nullptr);
                 ++numPages_;
@@ -247,8 +259,7 @@ namespace rckid::gbcemu {
 
     private:
 
-        // TODO temporarily lowered to 10 to keep memory high at times of need
-        static constexpr uint32_t MAX_ACTIVE_PAGES = 14;
+        static constexpr uint32_t MIN_UNALLOCATED = 10 * 1024;
 
         mutable PageInfo * cache_ = nullptr;
         mutable PageInfo * page0_ = nullptr;
