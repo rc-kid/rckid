@@ -1271,7 +1271,7 @@ namespace rckid::gbcemu {
                 }
             }
         }
-
+        displayWaitUpdateDone();
         switch (displayMode_) {
             case DisplayMode::Native:
                 displayUpdate(buffer, 160);

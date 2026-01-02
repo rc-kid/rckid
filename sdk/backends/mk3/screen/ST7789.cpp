@@ -160,10 +160,10 @@ namespace rckid {
             dma_channel_set_irq0_enabled(dma_, false);
             dma_channel_abort(dma_);
             pio_sm_set_enabled(RCKID_ST7789_PIO, sm_, false);
-            end(); // end the RAMWR command
             dma_channel_set_irq0_enabled(dma_, true);
             // mark pins at bitbanged
             initializePinsBitBang();
+            end(); // end the RAMWR command
             // and clear the display update status
             updating_ = 0;
         }
