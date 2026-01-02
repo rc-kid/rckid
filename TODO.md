@@ -5,7 +5,6 @@
 - [ ] check SD card insertion detection
 - [X] check powered from real battery works
 - [ ] check that tilting dpad is better 
-- [ ] add way to clear memory when necessary (e.g. remove background, etc.)
 - [ ] draw LoRA cartridge
 - [ ] add board for debug connectors
 
@@ -42,7 +41,6 @@ Polish
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb. Checked with TME and they do have protection, cutoff at 3V. 
 
 - gbcemu->home menu has crashes in fantasy, but not on device (?)
-- lowered ROM page cache to 10 to ease memory pressure, would be nice to increase this later 
 
 - swap accelerometer X axis
 - make level app draw circle and look prettier, maybe draw angles even
@@ -122,7 +120,6 @@ Polish
 - when stack protection fails, it will fail in the error code as well forever, update stack on device, do new thread on rckid? 
 - perfect fit strategy seems to be less wasteful, but will have to add fallback
 - merging chunks/splitting large ones? 
-- add comments to memory 
 
 - ColorRGB is weird, should be colorRGBA and then have Color565 as a version that wraps around 15bpp? Then change uint16_t everywhere in palettes
 
@@ -131,7 +128,6 @@ Polish
 - add version of background wher the background just bounces so that the background can be some actual image
 
 - fix/check device fatal eror & stack protection
-- improve memory allocator (heap)
 
 - add events for getting icon for files & on file selected for file browser
 - add actions for file browser such as rename, copy, mkdir, etc.  
@@ -193,7 +189,6 @@ Polish
 
 ## Others
 
-- memory leaks via reusing large parts for small items, this way we eventually run out of memory
 - waiting for display update done could make the cpu sleep
 - serialize & deserialize vs load & save
 

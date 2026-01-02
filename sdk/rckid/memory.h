@@ -70,7 +70,7 @@ namespace rckid {
 
             uint32_t payloadSize() const { return headerSize_ * sizeof(Chunk) - 4; }
 
-            bool isFree() const { return (headerPrevSize_ & 0x8000) != 0; }
+            bool isFree() const { return (headerPrevSize_ & FREE_BIT) != 0; }
 
             Chunk * nextFree() { return offsetToPtr(nextFree_); }
             Chunk * prevFree() { return offsetToPtr(prevFree_); }
@@ -114,6 +114,36 @@ namespace rckid {
             void makeAllocated() {
                 ASSERT(isFree());
                 headerPrevSize_ &= ~FREE_BIT;
+            }
+
+            /** Takes a chunk and enlarges it by given size. 
+                
+                The size must be equivalent to the sum of one or more chunks immediately after it as the new chunk cannot be created in the middle of existing allocations. Furthermore the new chunk size must be smaller than the max chunk size (0x7fff chunks) so that we can still keep the prev chunk size in the header prev size field for quick coalescing. 
+             */
+            void enlargeBy(uint16_t by) {
+                ASSERT((headerSize_ + by) < FREE_BIT); // otherwise we would create too large a chunk to store in the prev size field together with the free bit
+                uint32_t ownSize = headerSize_;
+                headerSize_ += by;
+                Chunk * next = nextAllocation();
+                ASSERT(next < RAMHeap::heapEnd_); // we do not expect to enlarge the last chunk
+                next->headerPrevSize_ += ownSize;
+            }
+
+            /** Splits the chunk into two. 
+             
+                Resizes itself to the given size and returns the newly created chunk that follows it with the remainder of the size. 
+             */
+            Chunk * splitBy(uint16_t newSize) {
+                ASSERT(newSize < headerSize_);
+                ASSERT(! isFree()); // the chunk is not expected to be in freelist when split
+                Chunk * next = this + newSize;
+                next->headerSize_ = headerSize_ - newSize;
+                next->headerPrevSize_ = newSize;
+                headerSize_ = newSize;
+                Chunk * nextNext = next->nextAllocation();
+                if (nextNext < RAMHeap::heapEnd_)
+                    nextNext->headerPrevSize_ = next->headerSize_;
+                return next;
             }
 
             void * data() { return reinterpret_cast<uint8_t*>(this) + 4; }

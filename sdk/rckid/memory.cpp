@@ -3,6 +3,7 @@
 namespace rckid {
 
     void * RAMHeap::alloc(uint32_t numBytes) {
+        ASSERT(heapEnd_ >= heapStart());
         // first determine how many bytes we actually need by adding the extra header size (4 bytes) and then convert bytes to chunk sizes granularity
         numBytes += 4;
         uint32_t numChunks = (numBytes % 8 == 0) ? (numBytes >> 3) : ((numBytes >> 3) + 1);
@@ -25,19 +26,27 @@ namespace rckid {
             }
             x = x->prevFree();
         }
-        if (bestFit != nullptr && bestFit->headerSize_ == numChunks) {
+        // if we have found a chunk we can put the value in, do so. If the chunk is too large, siply split it and add the remainder back to the freelist. 
+        if (bestFit != nullptr) {
             LOG(LL_HEAP, "Alloc " << (numChunks * 8) << " from freelist " << bestFit);
             ASSERT(bestFit->isFree());
             bestFit->detachFromFreelist();
             bestFit->makeAllocated();
+            if (bestFit->headerSize_ > numChunks) {
+                Chunk * next = bestFit->splitBy(numChunks);
+                next->addToFreelist();
+            }
             return bestFit->data();
+        // if we can't fit the chunk into the current heap, allocate new, if possible.
         } else {
             LOG(LL_HEAP, "Alloc " << (numChunks * 8) << " from " << heapEnd_); 
             // allocate new chunk at the end of the heap
             Chunk * result = heapEnd_;
             heapEnd_ += numChunks;
+            // verify that we have not overrun the stack
+            // TODO actually return nullptr? 
+            StackProtection::check();
             LOG(LL_HEAP, "End of heap " << heapEnd_);
-            // TODO check that we have not overrun the stack limit, this will differ for fantasy and device  
             result->initializeAllocated(numChunks, lastSize_);
             lastSize_ = numChunks;
             return result->data();
@@ -47,7 +56,6 @@ namespace rckid {
 
     void RAMHeap::free(void * ptr) {
         LOG(LL_HEAP, "Freeing " << ptr);
-
         ASSERT(contains(ptr));
         // get the actual chunk pointer
         Chunk * chunk = reinterpret_cast<Chunk*>(reinterpret_cast<uint8_t*>(ptr) - 4);
@@ -67,9 +75,26 @@ namespace rckid {
                 chunk = chunk->prevAllocation();
                 ASSERT(chunk == nullptr || RAMHeap::contains(chunk));
             }
-        // if not the last chunk, simply add it to the freelist
+        // if not the last chunk, simply add it to the freelist, but join with adjacent chunks, if they are free. Note that we only have to do this for the single previous and single next chunks as there cannot be any longer sequeces as long as every chunk does this check when freed.
+        // also note that sice last chunk can never be free itself (this is handled above), we do not have to update the last allocation size either 
         } else {
             LOG(LL_HEAP, "Freeing middle chunk, adding to freelist " << chunk);
+            Chunk * x = chunk->nextAllocation();
+            ASSERT(x < heapEnd_);
+            if ((x < heapEnd_) && x->isFree()) {
+                if (chunk->headerSize_ + x->headerSize_ < 0x8000) {
+                    LOG(LL_HEAP, "Joining with next free chunk " << x);
+                    x->detachFromFreelist();
+                    chunk->enlargeBy(x->headerSize_);
+                }
+
+            }
+            x = chunk->prevAllocation();
+            if ((x != nullptr) && x->isFree() && ((chunk->headerSize_ + x->headerSize_) < 0x8000)) {
+                LOG(LL_HEAP, "Joining with previous free chunk " << x);
+                x->enlargeBy(chunk->headerSize_);
+                return; // don't add the chunk into the freelist as we have simply enlarged the previous chunk which already was in the freelist
+            } 
             chunk->addToFreelist();
         }
     }

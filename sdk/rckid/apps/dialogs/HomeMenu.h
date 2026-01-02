@@ -32,7 +32,8 @@ namespace rckid {
             c_->setFont(Font::fromROM<assets::OpenDyslexic64>());
             customGenerator_ = std::move(generator);
             active_ = true;
-            LOG(LL_INFO, "Free memory " << StackProtection::currentAvailableMemory() << " bytes");
+            LOG(LL_INFO, "Unallocated memory: " << StackProtection::currentAvailableMemory());
+            LOG(LL_INFO, "Free heap:          " << RAMHeap::freeBytes());
         }
 
         ~HomeMenu() {

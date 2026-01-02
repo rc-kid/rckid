@@ -30,7 +30,7 @@ extern "C" {
     void * malloc(size_t numBytes) {
         if (rckid::SystemMallocGuard::isDefault())
             return __libc_malloc(numBytes);
-        else 
+        else
             return rckid::RAMHeap::alloc(numBytes);
     }
 
