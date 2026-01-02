@@ -263,11 +263,8 @@ namespace rckid {
 
     void updateAccelStatus([[maybe_unused]] uint8_t numBytes) {
         i2c::getTransactionResponse(reinterpret_cast<uint8_t*>(&io::accelState_), sizeof(LSM6DSV::Orientation3D));
-        /*
-        platform::swapBytesInPlace(reinterpret_cast<uint16_t&>(io::accelState_.x));
-        platform::swapBytesInPlace(reinterpret_cast<uint16_t&>(io::accelState_.y));
-        platform::swapBytesInPlace(reinterpret_cast<uint16_t&>(io::accelState_.z));
-        */
+        // fix the X axis orientation
+        io::accelState_.x *= -1;
     }
 
     /** Updates the AVR status based on the status information received in the I2C buffer (callback function for getting AVR status). 
@@ -501,6 +498,8 @@ namespace rckid {
         }
         io::pedometerCount_ = io::accel_.readStepCount();
         io::accelState_ = io::accel_.readAccelerometerRaw();
+        // fix the X axis orientation
+        io::accelState_.x *= -1;
 
         // initialize the SD card communication & sd card itself if present
         sdInitialize();
