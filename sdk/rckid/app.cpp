@@ -29,11 +29,8 @@ namespace rckid {
             if (!verifyBudgetAllowance(true))
                 return;
         }
-        if (! HomeMenu::active() && btnReleased(Btn::Home)) {
-            std::optional<ui::Action> a = App::run<HomeMenu>(homeMenuGenerator());
-            if (a.has_value())
-                a.value()();
-        }
+        if (! HomeMenu::active() && btnReleased(Btn::Home))
+            showHomeMenu();
         if (btnPressed(Btn::VolumeUp)) {
             btnClear(Btn::VolumeUp);
             audioSetVolume(audioVolume() + 1);
@@ -45,7 +42,14 @@ namespace rckid {
         }
     }
 
-    void App::addDefaultHomeActionsInto(ui::ActionMenu * menu) {
+    void App::showHomeMenu() {
+        std::optional<ui::Action> a = App::run<HomeMenu>([this]() { return createHomeMenu(); });
+        if (a.has_value())
+            a.value()();
+    }
+
+    ui::ActionMenu * App::createHomeMenu() {
+        ui::ActionMenu * menu = new ui::ActionMenu{};
         // application exit 
         menu->add(ui::ActionMenu::Item("Exit", assets::icons_64::logout, [this](){
             exit();
@@ -76,6 +80,7 @@ namespace rckid {
                 return m;
             }));
         }
+        return menu;
     }
 
     void App::enableStandaloneMode() {

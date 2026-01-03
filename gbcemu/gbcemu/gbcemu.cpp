@@ -324,71 +324,79 @@ namespace rckid::gbcemu {
         // TODO some more cleanup would be good here
     }
 
-    ui::ActionMenu::MenuGenerator GBCEmu::homeMenuGenerator() {
-        return [this](){
+    void GBCEmu::showHomeMenu() {
+        ASSERT(gamepak_ != nullptr);
+        // clear gamepak caches so that the home menu has the maximum memory available
+        gamepak_->clearCaches();
+        //LOG(LL_INFO, "Cleared caches");
+        //LOG(LL_INFO, "Unallocated memory: " << StackProtection::currentAvailableMemory());
+        //RAMHeap::traceChunks();
+        ModalApp<void>::showHomeMenu();
+        setRomPage(romPage_);
+    }
+
+    ui::ActionMenu * GBCEmu::createHomeMenu() {
+        ui::ActionMenu * m = ModalApp<void>::createHomeMenu();
+        m->add(ui::ActionMenu::Generator("Style", assets::icons_64::paint_palette, [this]() {
             ui::ActionMenu * m = new ui::ActionMenu{};
-            addDefaultHomeActionsInto(m);
-            m->add(ui::ActionMenu::Generator("Style", assets::icons_64::paint_palette, [this]() {
+            m->add(ui::ActionMenu::Item(
+                "Classic",
+                assets::icons_64::gameboy,
+                [this](){
+                    palette_[0] = ColorRGB{155, 188, 15};
+                    palette_[1] = ColorRGB{139, 172, 15};
+                    palette_[2] = ColorRGB{48, 98, 48};
+                    palette_[3] = ColorRGB{15, 56, 15};
+                }
+            ));
+            m->add(ui::ActionMenu::Item(
+                "Pocket",
+                assets::icons_64::gameboy,
+                [this](){
+                    palette_[0] = ColorRGB{255, 255, 255};
+                    palette_[1] = ColorRGB{170, 170, 170};
+                    palette_[2] = ColorRGB{85, 85, 85};
+                    palette_[3] = ColorRGB{0, 0, 0};
+                }
+            ));
+            m->add(ui::ActionMenu::Item(
+                "White on Black",
+                assets::icons_64::gameboy,
+                [this](){
+                    palette_[0] = ColorRGB{0, 0, 0};
+                    palette_[1] = ColorRGB{85, 85, 85};
+                    palette_[2] = ColorRGB{170, 170, 170};
+                    palette_[3] = ColorRGB{255, 255, 255};
+                }
+            ));
+            m->add(ui::ActionMenu::Generator("Customize", assets::icons_64::paint_palette, [this]() {
                 ui::ActionMenu * m = new ui::ActionMenu{};
-                m->add(ui::ActionMenu::Item(
-                    "Classic",
-                    assets::icons_64::gameboy,
-                    [this](){
-                        palette_[0] = ColorRGB{155, 188, 15};
-                        palette_[1] = ColorRGB{139, 172, 15};
-                        palette_[2] = ColorRGB{48, 98, 48};
-                        palette_[3] = ColorRGB{15, 56, 15};
-                    }
-                ));
-                m->add(ui::ActionMenu::Item(
-                    "Pocket",
-                    assets::icons_64::gameboy,
-                    [this](){
-                        palette_[0] = ColorRGB{255, 255, 255};
-                        palette_[1] = ColorRGB{170, 170, 170};
-                        palette_[2] = ColorRGB{85, 85, 85};
-                        palette_[3] = ColorRGB{0, 0, 0};
-                    }
-                ));
-                m->add(ui::ActionMenu::Item(
-                    "White on Black",
-                    assets::icons_64::gameboy,
-                    [this](){
-                        palette_[0] = ColorRGB{0, 0, 0};
-                        palette_[1] = ColorRGB{85, 85, 85};
-                        palette_[2] = ColorRGB{170, 170, 170};
-                        palette_[3] = ColorRGB{255, 255, 255};
-                    }
-                ));
-                m->add(ui::ActionMenu::Generator("Customize", assets::icons_64::paint_palette, [this]() {
-                    ui::ActionMenu * m = new ui::ActionMenu{};
-                    for (uint32_t i = 0; i < 4; ++i) {
-                        m->add(ui::ActionMenu::Item(
-                            STR("Color " << i),
-                            assets::icons_64::color_picker,
-                            [this, i](){
-                                auto c = App::run<ColorPicker>(palette_[i]);
-                                if (c.has_value())
-                                    palette_[i] = c.value();
-                            }
-                        ));
-                    }
-                    return m;
-                }));
+                for (uint32_t i = 0; i < 4; ++i) {
+                    m->add(ui::ActionMenu::Item(
+                        STR("Color " << i),
+                        assets::icons_64::color_picker,
+                        [this, i](){
+                            auto c = App::run<ColorPicker>(palette_[i]);
+                            if (c.has_value())
+                                palette_[i] = c.value();
+                        }
+                    ));
+                }
                 return m;
             }));
-            // only allow entering debug mode when the device itself is in debug mode
-            if (debugMode()) {
-                m->add(ui::ActionMenu::Item(
-                    "Debug Mode",
-                    assets::icons_64::ladybug,
-                    [this](){
-                        debug_ = true;
-                    }
-                ));
-                }
             return m;
-        };
+        }));
+        // only allow entering debug mode when the device itself is in debug mode
+        if (debugMode()) {
+            m->add(ui::ActionMenu::Item(
+                "Debug Mode",
+                assets::icons_64::ladybug,
+                [this](){
+                    debug_ = true;
+                }
+            ));
+            }
+        return m;
     }
 
     void GBCEmu::saveExternalRam() {
@@ -608,8 +616,6 @@ namespace rckid::gbcemu {
         App::focus();
         setSpeedMax();
         initializeDisplay();
-        // reload current page (it could have been cleared from cache when blurred) 
-        setRomPage(romPage_);
         // continue playing audio if enabled
         if (apu_.enabled())
             audioResume();
@@ -620,13 +626,6 @@ namespace rckid::gbcemu {
         if (apu_.enabled())
             audioPause();
         setSpeedPct(100);
-        // clear gamepak caches so that the home menu has the maximum memory available
-        if (gamepak_ != nullptr) {
-            gamepak_->clearCaches();
-            //LOG(LL_INFO, "Cleared caches");
-            //LOG(LL_INFO, "Unallocated memory: " << StackProtection::currentAvailableMemory());
-            //RAMHeap::traceChunks();
-        }
         App::blur();
     }
 
@@ -1548,24 +1547,28 @@ namespace rckid::gbcemu {
                 // ROM bank switching, depending on the MBC used
                 writeRom(addr, value);
                 break;
+            case 8:
+            case 9:
+                // for VRAM we only allow writes during PPU mode 3
+                //if ((IO_STAT & STAT_PPU_MODE) != 3)
+                    memMap_[page][offset] = value;
+                break;
             case 10:
             case 11:
                 writeERam(addr - ERAM_START, value);
                 break;
-            case 8:
-            case 9:
             case 12:
             case 13:
             case 14:
-                // vram and wram are always there so we can do what we want, the shadow mem is implemented having the shadow pages identical to the real ones
+                // wram are always there so we can do what we want, the shadow mem is implemented having the shadow pages identical to the real ones
                 memMap_[page][offset] = value;
                 break;
             case 15:
                 if (offset >= 0xf00) {
                     setIORegisterOrHRAM(offset - 0xf00, value);
                 } else if (offset >= 0xe00) {
-                    // otherwise there is the prohibited region after OAM and before HRAM
-                    if (offset < 0xea0)
+                    // otherwise there is the prohibited region after OAM and before HRAM, also OAM is only accessible during blank modes
+                    if ((offset < 0xea0) ) // && (IO_STAT & STAT_PPU_MODE) <= 1)
                         oam_[offset - 0xe00] = value;
                 } else {
                     memMap_[page][offset] = value;

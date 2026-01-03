@@ -100,6 +100,10 @@ namespace rckid {
          */
         void result() const {}
 
+        /** Enters standalone app mode. 
+         
+            The standalone app mode diverts all resources to the currently running app. All background tasks are stopped and destroyed and any visual caches, such as background are cleared too, ensuring the current app has the most memory & cpu available to itself.
+         */
         static void enableStandaloneMode();
 
     protected:
@@ -136,23 +140,17 @@ namespace rckid {
          */
         virtual void update();
 
-        /** Overriding this function allows the app to specify its own items for the home menu. 
+        /** Shows the main menu. 
          
-            The home menu for the application is created by calling the generator this function returns first, which is then updated by the general home menu options (exit, power off, brightness & volume, etc.)
+            The method can be overriden to intercept the app change for main manu so that unnecessary memory can be freed, etc. By default, the method simply runs the home menu created by createHomeMenu().
          */
-        virtual ui::ActionMenu::MenuGenerator homeMenuGenerator() {
-            return [this](){ 
-                ui::ActionMenu * m =  new ui::ActionMenu{}; 
-                addDefaultHomeActionsInto(m);
-                return m;
-            };
-        }
+        virtual void showHomeMenu();
 
-        /** Adds default app actions to given home menu. 
+        /** Returns the home menu for the application. 
          
-            This function is to be called from the custom home menu generators where it generates the default app actions, such as exit, or state loads & saves where applicable. 
+            By default, this generates the Exit action as well as load & save state options if state saves are supported. Note that this is then augmented by the non app-specific menu options added by the home menu itself.
          */
-        void addDefaultHomeActionsInto(ui::ActionMenu * menu);
+        virtual ui::ActionMenu * createHomeMenu();
 
         /** Method responsible for drawing the app contents on the screen. 
          

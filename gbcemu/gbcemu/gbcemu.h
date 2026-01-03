@@ -196,7 +196,13 @@ namespace rckid::gbcemu {
          */
         void draw() override {}
 
-        ui::ActionMenu::MenuGenerator homeMenuGenerator() override;
+        /** Shows the home menu. Clears the gamepak caches beforehand to free up memory for the home menu and the selected action. 
+         */        
+        void showHomeMenu() override;
+
+        /** Returns the home menu, which is basic app menu with load & save states as well as  GBCEmu specific items such as visuals.
+         */
+        ui::ActionMenu * createHomeMenu() override;
 
         /** Saves the external RAM to the app folder. 
          */
@@ -490,7 +496,7 @@ namespace rckid::gbcemu {
         void initializeDisplay();
 
         void setPPUMode(unsigned mode);
-        
+       
         /** Sets the Y LCD coordinate (currently drawn row)
          */
         //void setLY(uint8_t value);

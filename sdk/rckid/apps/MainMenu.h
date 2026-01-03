@@ -139,8 +139,8 @@ namespace rckid {
 
         /** Main menu does not support any extra home menu actions (including the exit). 
          */
-        ui::ActionMenu::MenuGenerator homeMenuGenerator() override {
-            return [](){ return new ui::ActionMenu{}; };
+        ui::ActionMenu * createHomeMenu() override {
+            return new ui::ActionMenu{};
         }
 
     private:

@@ -40,6 +40,8 @@ Polish
 
 > !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb. Checked with TME and they do have protection, cutoff at 3V. 
 
+- likely there is an issue with timing & drawing of the lines on GBCemu we have VBLANK first then start drawing line, also songbird does not work well during transitions...
+
 - make level app draw circle and look prettier, maybe draw angles even
 - reset step count every day (once we have midnight reset stuff)
 
