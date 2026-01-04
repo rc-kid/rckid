@@ -492,15 +492,11 @@ namespace rckid::gbcemu {
         static constexpr uint32_t DOTS_MODE_2 = 80;
         static constexpr uint32_t DOTS_MODE_3 = 172;
         static constexpr uint32_t DOTS_MODE_0 = 204;
-
+        
         void initializeDisplay();
 
         void setPPUMode(unsigned mode);
        
-        /** Sets the Y LCD coordinate (currently drawn row)
-         */
-        //void setLY(uint8_t value);
-
         void moveToNextScanline();
 
         /** Graphics rendering for a single line.

@@ -524,7 +524,6 @@ namespace rckid::gbcemu {
             if (mem8(PC) == 0xfd) // bkpt
                 break; 
 #endif
-            moveToNextScanline();
             setPPUMode(2); // OAM scan
             runCPU(cgb_ ? DOTS_MODE_2 * 2 : DOTS_MODE_2);
 #if (GBCEMU_ENABLE_BKPT == 1)
@@ -540,9 +539,11 @@ namespace rckid::gbcemu {
 #endif
             setPPUMode(0); // HBlank
             runCPU(cgb_ ? DOTS_MODE_0 * 2 : DOTS_MODE_0);
+
+            moveToNextScanline();
             // if we have reached the end of the frame, check the home menu during the VBLANL period
-            if (IO_LY == 144)
-                ModalApp::update();
+            //if (IO_LY == 144)
+            //    ModalApp::update();
         }
 
         // we are done, should blur ourselves, and refocus parent (if any)
@@ -1081,6 +1082,9 @@ namespace rckid::gbcemu {
         // if we are in a vblank technically, don't do anything. This works well because moveToNextScanline sets vblank before updating the line
         if (IO_LY >= 144)
             return;
+        // keep mode at 0 when lcd is disabled, do no interrupts
+        if ((IO_LCDC & LCDC_LCD_ENABLE) == 0)
+            return;
         IO_STAT &= ~ STAT_PPU_MODE; 
         IO_STAT |= (mode & STAT_PPU_MODE);
         // check the interrupts
@@ -1109,6 +1113,9 @@ namespace rckid::gbcemu {
             setPPUMode(1); // VBlank
             updateIO_JOYP();
             tick();
+        }
+        if (IO_LY == 153) {
+            ModalApp::update();
 #ifndef GBCEMU_NO_SPEED_LIMIT
             // TODO do we want a finer grained control here, or is it ok to wait after each frame only? 
             displayWaitVSync();
@@ -1149,16 +1156,8 @@ namespace rckid::gbcemu {
         uint16_t * buffer = pixels_.front();
 
         uint8_t * vram = memMap_[MEMMAP_VRAM_0];
-        // and determine the tileset address. Note the second address is off by 0x800 as the tileIndex is 128 at least now, so doing it here saves us the adjustment in the loop
-        uint16_t * tilesetAddress1;
-        uint16_t * tilesetAddress2;
-        if (IO_LCDC & LCDC_BG_WIN_TILEDATA) {
-            tilesetAddress1 = reinterpret_cast<uint16_t *>(vram + 0x0000);
-            tilesetAddress2 = reinterpret_cast<uint16_t *>(vram + 0x0000);
-        } else {
-            tilesetAddress1 = reinterpret_cast<uint16_t *>(vram + 0x1000);
-            tilesetAddress2 = reinterpret_cast<uint16_t *>(vram + 0x0000);
-        }
+        // and determine the tileset address, which could be either signed or unsigned addressing.
+        uint16_t * tilesetAddress = reinterpret_cast<uint16_t *>(vram + ((IO_LCDC & LCDC_BG_WIN_TILEDATA) ? 0x0000 : 0x1000));
         // determine if we should draw window, or background. Window is visible when enabled and the current LY is greater or equal the WY register. The WX must also fit within the screen (160 pixels, the WX is +7 from the actual position )
         bool drawWindow = (IO_LCDC & LCDC_WINDOW_ENABLE) && (IO_LY >= IO_WY) && (IO_WX < 167);
         // where the window starts x-wise
@@ -1187,7 +1186,9 @@ namespace rckid::gbcemu {
                     tilemapAddress = vram + ((IO_LCDC & LCDC_BG_TILEMAP) ? 0x1c00 : 0x1800);
                     tilemapAddress += ty * 32; 
                 }
-                uint16_t * tileAddress = ((tileIndex < 128) ? tilesetAddress1 : tilesetAddress2) + tileIndex * 8;
+                uint16_t * tileAddress = (IO_LCDC & LCDC_BG_WIN_TILEDATA) ? 
+                    tilesetAddress + tileIndex * 8 :
+                    tilesetAddress + (int8_t)tileIndex * 8;
                 uint16_t tileRow =  *(tileAddress + tr);
                 // we have the tile pixels, figure out the palette indices, the tile pixels are 2 bits each in 2 panes so we need to first put them together
                 uint8_t upper = tileRow >> 8;
@@ -1225,7 +1226,9 @@ namespace rckid::gbcemu {
                     tilemapAddress = vram + ((IO_LCDC & LCDC_BG_TILEMAP) ? 0x1c00 : 0x1800);
                     tilemapAddress += ty * 32; 
                 }
-                uint16_t * tileAddress = ((tileIndex < 128) ? tilesetAddress1 : tilesetAddress2) + tileIndex * 8;
+                uint16_t * tileAddress = (IO_LCDC & LCDC_BG_WIN_TILEDATA) ? 
+                    tilesetAddress + tileIndex * 8 :
+                    tilesetAddress + (int8_t)tileIndex * 8;
                 uint16_t tileRow =  *(tileAddress + tr);
                 uint8_t upper = tileRow >> 8;
                 uint8_t lower = tileRow & 0xff;
@@ -1239,47 +1242,52 @@ namespace rckid::gbcemu {
         }
 
         // now render the sprites. For now, we are just rendering any and all sprites that cross the line we are drawing, as opposed to scanning and prioritizing them so that only 10 will be displayed. The idea is that this is both simpler algorithm and if the sprite limit is not reached by the game also faster to draw. 
-        OAMSprite * sprites = reinterpret_cast<OAMSprite *>(oam_);
-        // TODO on CGB this changes and can be second bank as well
-        uint16_t * tilesetAddress = reinterpret_cast<uint16_t *>(vram_[0]);
-        uint32_t objectSize = IO_LCDC & LCDC_OBJ_SIZE ? 16 : 8;
-        for (uint32_t i = NUM_SPRITES - 1; i < NUM_SPRITES; --i) {
-            OAMSprite & s = sprites[i];
-            // Calculate the row address of the sprite's tile
-            int32_t sy = ly - s.y();
-            // if the sprite does not intersect the current line, skip it
-            if (sy < 0 || sy >= objectSize)
-                continue;
-            // flip the sprite on horizontal axis
-            if (s.yFlip())
-                sy = objectSize - sy;
-            uint16_t tileRow = (sy >= 8) ? 
-                *(tilesetAddress + (s.tile + 1) * 8 + (sy - 8)) :
-                *(tilesetAddress + s.tile * 8 + sy);
-            // we have the tile pixels, figure out the palette indices, the tile pixels are 2 bits each in 2 panes so we need to first put them together
-            uint8_t upper = tileRow >> 8;
-            uint8_t lower = tileRow & 0xff;
-            uint32_t x = s.x();
-            // update palette for the sprite
-            uint8_t bgp = s.palette() ? IO_OBP1 : IO_OBP0;
-            palette[0] = palette_[bgp & 3].raw16();
-            palette[1] = palette_[(bgp >> 2) & 3].raw16();
-            palette[2] = palette_[(bgp >> 4) & 3].raw16();
-            palette[3] = palette_[(bgp >> 6) & 3].raw16();
-            // and draw the sprite
-            if (s.xFlip()) {
-                for (int i = 0; i < 8; ++i) {
-                    uint8_t colorIndex = ((lower >> i) & 1) | (((upper >> i) & 1) << 1);
-                    if (colorIndex != 0 && x >= 0 && x < 160) // color 0 is transparent
-                        buffer[x] = palette[colorIndex];
-                    ++x;
-                }
-            } else {
-                for (int i = 7; i >= 0; --i) {
-                    uint8_t colorIndex = ((lower >> i) & 1) | (((upper >> i) & 1) << 1);
-                    if (colorIndex != 0 && x >= 0 && x < 160) // color 0 is transparent
-                        buffer[x] = palette[colorIndex];
-                    ++x;
+        // sprites are only rendered if their rendering is enabled in LCDC (bit 1)
+        if (IO_LCDC & LCDC_OBJ_ENABLE) {
+            OAMSprite * sprites = reinterpret_cast<OAMSprite *>(oam_);
+            // TODO on CGB this changes and can be second bank as well
+            uint16_t * tilesetAddress = reinterpret_cast<uint16_t *>(vram_[0]);
+            uint32_t objectSize = IO_LCDC & LCDC_OBJ_SIZE ? 16 : 8;
+            for (uint32_t i = NUM_SPRITES - 1; i < NUM_SPRITES; --i) {
+                OAMSprite & s = sprites[i];
+                // Calculate the row address of the sprite's tile
+                int32_t sy = ly - s.y();
+                // if the sprite does not intersect the current line, skip it
+                if (sy < 0 || sy >= objectSize)
+                    continue;
+                // flip the sprite on horizontal axis
+                if (s.yFlip())
+                    sy = objectSize - sy;
+                // for 8x16 tiles the LSB of the tile index should be ignored
+                uint8_t tileIndex = (objectSize == 8) ? s.tile : (s.tile & 0b11111110);
+                uint16_t tileRow = (sy >= 8) ? 
+                    *(tilesetAddress + (tileIndex + 1) * 8 + (sy - 8)) :
+                    *(tilesetAddress + tileIndex * 8 + sy);
+                // we have the tile pixels, figure out the palette indices, the tile pixels are 2 bits each in 2 panes so we need to first put them together
+                uint8_t upper = tileRow >> 8;
+                uint8_t lower = tileRow & 0xff;
+                uint32_t x = s.x();
+                // update palette for the sprite
+                uint8_t bgp = s.palette() ? IO_OBP1 : IO_OBP0;
+                palette[0] = palette_[bgp & 3].raw16();
+                palette[1] = palette_[(bgp >> 2) & 3].raw16();
+                palette[2] = palette_[(bgp >> 4) & 3].raw16();
+                palette[3] = palette_[(bgp >> 6) & 3].raw16();
+                // and draw the sprite
+                if (s.xFlip()) {
+                    for (int i = 0; i < 8; ++i) {
+                        uint8_t colorIndex = ((lower >> i) & 1) | (((upper >> i) & 1) << 1);
+                        if (colorIndex != 0 && x >= 0 && x < 160) // color 0 is transparent
+                            buffer[x] = palette[colorIndex];
+                        ++x;
+                    }
+                } else {
+                    for (int i = 7; i >= 0; --i) {
+                        uint8_t colorIndex = ((lower >> i) & 1) | (((upper >> i) & 1) << 1);
+                        if (colorIndex != 0 && x >= 0 && x < 160) // color 0 is transparent
+                            buffer[x] = palette[colorIndex];
+                        ++x;
+                    }
                 }
             }
         }
@@ -1549,8 +1557,8 @@ namespace rckid::gbcemu {
                 break;
             case 8:
             case 9:
-                // for VRAM we only allow writes during PPU mode 3
-                //if ((IO_STAT & STAT_PPU_MODE) != 3)
+                // for VRAM we only allow writes when not in mode 3, but this does not seem to be used and so saves us the check for now
+                //if ((IO_STAT & STAT_PPU_MODE) < 3)
                     memMap_[page][offset] = value;
                 break;
             case 10:
@@ -1567,8 +1575,9 @@ namespace rckid::gbcemu {
                 if (offset >= 0xf00) {
                     setIORegisterOrHRAM(offset - 0xf00, value);
                 } else if (offset >= 0xe00) {
-                    // otherwise there is the prohibited region after OAM and before HRAM, also OAM is only accessible during blank modes
-                    if ((offset < 0xea0) ) // && (IO_STAT & STAT_PPU_MODE) <= 1)
+                    // otherwise there is the prohibited region after OAM and before HRAM, also OAM is only accessible during blank modes, again does not seem to be used in reality
+                    //if ((offset < 0xea0) && ((IO_STAT & STAT_PPU_MODE) <= 1))
+                    if (offset < 0xea0)
                         oam_[offset - 0xe00] = value;
                 } else {
                     memMap_[page][offset] = value;

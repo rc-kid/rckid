@@ -75,11 +75,12 @@ namespace rckid {
             };
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                 auto action = c_->currentItem();
-                ASSERT(action->isAction());
+                if (action->isAction()) {
                 if (isCurrentItemCustom())
                     exit(action->action());
                 else 
                     action->action()();
+                }
             };
         }
 
