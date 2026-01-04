@@ -1,15 +1,11 @@
 #pragma once
 
 #include "../../app.h"
-#include "../../filesystem.h"
 #include "../../ui/form.h"
 #include "../../ui/label.h"
 #include "../../ui/image.h"
 #include "../../assets/icons_64.h"
 #include "../../assets/fonts/OpenDyslexic64.h"
-#include "../../audio/audio.h"
-#include "../../utils/ini.h"
-#include "../../pim.h"
 
 namespace rckid {
 

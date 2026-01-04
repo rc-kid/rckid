@@ -49,4 +49,21 @@ namespace rckid::interpolation {
         return x; 
     }
 
+    /**  
+     */
+    inline FixedInt cosineNudge(Timer const & t, int min, int max) {
+        FixedInt i = t.t();
+        FixedInt period = t.duration();
+        FixedInt halfPeriod = period / 2;
+        uint32_t size = sizeof(assets::WaveformSin) / sizeof(int16_t);
+        int value = 1;
+        if (i < halfPeriod) {
+            value = custom(i, halfPeriod, assets::WaveformSin + size / 4, size / 2) + 32768;
+            return min + FixedInt{(65536 - value) * (max - min)} / 65535;
+        } else {
+            value = custom(i - halfPeriod, halfPeriod, assets::WaveformSin + size / 4, size / 2) + 32768;
+            return max - FixedInt{(65536 - value) * (max - min)} / 65535;
+        }
+    }
+
 } // namespace rckid::interpolation

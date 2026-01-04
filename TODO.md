@@ -1,10 +1,23 @@
+# Version 3.2 Checklist
+
+First add a board that can verify the last missing features and DFM improvements, namely:
+
+- [ ] microphone sensing
+- [ ] headphone detection via switches, *not* extra ground link
+- [ ] speaker without housing connected via spring contacts
+- [ ] SMT soldered vibration motor
+- [ ] battery connectors for nokia-like batteries, etc.
+- [ ] smaller board size for cheaper assembly
+
+Software features:
+
+
+
 # DevBoard Checklist
 
 > X means done, - means cannot be done
 
 - [ ] check SD card insertion detection
-- [X] check powered from real battery works
-- [ ] check that tilting dpad is better 
 - [ ] draw LoRA cartridge
 - [ ] add board for debug connectors
 
@@ -34,7 +47,7 @@ Polish
 - [ ] RGB dimming that preserves colors (? is possible)
 - [ ] in header, show volume value, not just bar when changing (?)
 - [ ] some way app can show which buttons it reacts to (faint glow for key press, only use the effect on valid keys otherwise)
-- [ ] accelerometer controller background & background selection
+- [X] accelerometer controller background & background selection
 
 # TODO
 
@@ -57,7 +70,7 @@ Polish
 - rapid fire not working
 - main menu generation not that well modular with the game menu being extended - add wrappers instead? 
 
-- keep the offset so that we can go back
+- keep the offset so that we can go back (in messages)
 - check wifi available, etc. 
 - make more robust
 - music player disables background tasks, yet uses own bg tasks, which of course does not work
@@ -74,8 +87,6 @@ Polish
 - add confirmation dialog to many deletions
 - why popup menu takes pointer and not a reference? 
 
-- bootloader cartridge (this will only flash the memory)
-
 - move brightness and audio settings from avr status
 - update & processEvents are not really honoured in the ui 
 
@@ -85,7 +96,6 @@ Polish
 - for the flashlight, somehow at the beginning there is a faint glow even when turned off, this seems to disappear after a while
 
 - for rumbler in AVR, ignore the values that are below some threshold that is observable on mk3
-- icons for rgb light, key and rainbow kay, breathe & solid effects
 - allow breathing to start at specified offset in the animation
 
 - make ini writing use writers interface instead of the strings

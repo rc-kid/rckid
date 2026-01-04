@@ -107,6 +107,10 @@ namespace rckid::ui {
                     auto v = o.value();
                     if (v.first == "file") {
                         background_ = Icon{v.second.c_str()};
+                    } else if (v.first == "tilt") {
+                        backgroundTilt_ = (v.second == "1" || v.second == "true" || v.second == "yes");
+                    } else if (v.first == "scroll") {
+                        backgroundScroll_ = backgroundScrollStyleFromString(v.second);
                     } else {
                         LOG(LL_ERROR, "Unknown background style property " << v.first);
                     }
@@ -149,6 +153,8 @@ namespace rckid::ui {
         writer.writeValue("bg", accentBg_.toString());
         writer.writeSection(SECTION_BACKGROUND);
         writer.writeValue("file", background_.filename() != nullptr ? String{background_.filename()} : ""); 
+        writer.writeValue("tilt", backgroundTilt_ ? "true" : "false");
+        writer.writeValue("scroll", STR(backgroundScroll_));
         writer.writeSection(SECTION_RGB);
         writer.writeValue("brightness", rgbBrightness());
         writer.writeValue("style", STR(rgbStyle()));

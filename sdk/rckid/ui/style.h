@@ -19,6 +19,12 @@ namespace rckid::ui {
         RainbowKey,
     }; 
 
+    enum class BackgroundScrollStyle : uint8_t {
+        Off,
+        Scroll,
+        Nudge,
+    };
+
     /** Basic UI style for the device. 
      
         The style consists of a background image, default text and background colors and two accent colors (foreground and background).
@@ -42,6 +48,8 @@ namespace rckid::ui {
         static uint8_t rgbBrightness() { return rgbBrightness_; }
         static RGBStyle rgbStyle() { return rgbStyle_; }
         static ColorRGB rgbColor() { return rgbColor_; }
+        static BackgroundScrollStyle backgroundScroll() { return backgroundScroll_; }
+        static bool backgroundTilt() { return backgroundTilt_; }
 
         static uint8_t rumblerKeyPressIntensity() { return rumblerKeyPressIntensity_; }
         
@@ -71,6 +79,14 @@ namespace rckid::ui {
 
         static void setBackground(Icon icon) {
             background_ = Icon{std::move(icon)};
+        }
+
+        static void setBackgroundScroll(BackgroundScrollStyle style) {
+            backgroundScroll_ = style;
+        }
+
+        static void setBackgroundTilt(bool value) {
+            backgroundTilt_ = value;
         }
 
         static void setRgbBrightness(uint8_t value) {
@@ -114,6 +130,8 @@ namespace rckid::ui {
     private:
 
         static inline Icon background_{assets::background16};
+        static inline BackgroundScrollStyle backgroundScroll_ = BackgroundScrollStyle::Nudge;
+        static inline bool backgroundTilt_ = true;
         static inline ColorRGB fg_{ColorRGB::White()};
         static inline ColorRGB bg_{ColorRGB::RGB(32, 32, 32)};
         static inline ColorRGB accentFg_{ColorRGB::RGB(0, 255, 0)};
@@ -181,6 +199,34 @@ namespace rckid::ui {
         }
     }
 
+    inline Writer & operator << (Writer & w, BackgroundScrollStyle style) {
+        switch (style) {
+            case BackgroundScrollStyle::Off:
+                w << "off";
+                break;
+            case BackgroundScrollStyle::Scroll:
+                w << "scroll";
+                break;
+            case BackgroundScrollStyle::Nudge:
+                w << "nudge";
+                break;
+            default:
+                UNREACHABLE;
+        }
+        return w;
+    }
 
+    inline BackgroundScrollStyle backgroundScrollStyleFromString(String const & str) {
+        if (str == "scroll")
+            return BackgroundScrollStyle::Scroll;
+        else if (str == "nudge")
+            return BackgroundScrollStyle::Nudge;
+        else if (str == "off")
+            return BackgroundScrollStyle::Off;
+        else {
+            LOG(LL_ERROR, "Invalid background scroll style " << str);
+            return BackgroundScrollStyle::Off;
+        }
+    }
 
 } // rckid::ui

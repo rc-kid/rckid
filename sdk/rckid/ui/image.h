@@ -49,6 +49,16 @@ namespace rckid::ui {
         void setImgX(Coord value) { imgX_ = value % (bmp_ != nullptr ? bmp_->width() : 1); }
         void setImgY(Coord value) { imgY_ = value % (bmp_ != nullptr ? bmp_->height() : 1); }
 
+        void setImgPos(Point pos) {
+            if (bmp_ == nullptr) {
+                imgX_ = pos.x;
+                imgY_ = pos.y;
+            } else {
+                imgX_ = pos.x % bmp_->width();
+                imgY_ = pos.y % bmp_->height();
+            }
+        }
+
         bool transparent() const { return transparent_ <= 0xffff; }
         void setTransparent(bool value) { transparent_ = value ? 0 : NO_TRANSPARENCY; }
         ColorRGB transparentColor() const { return ColorRGB::fromRaw(transparent_); }

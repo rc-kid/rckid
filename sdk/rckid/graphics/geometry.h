@@ -54,6 +54,12 @@ namespace rckid {
             y += other.y;
             return *this;
         }
+
+        constexpr TPoint & operator -= (TPoint other) {
+            x -= other.x;
+            y -= other.y;
+            return *this;
+        }
         
         constexpr bool operator == (TPoint other) const { return x == other.x && y == other.y; }
 

@@ -83,7 +83,7 @@ namespace rckid {
                     case 1:
                     case 2:
                     case 3:
-                        insert('0' + select_.x + 5);
+                        insert('0' + select_.x + 6);
                         break;
                     case 4:
                         insert('0');

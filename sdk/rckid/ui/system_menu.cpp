@@ -306,6 +306,36 @@ namespace rckid::ui {
                     ui::Style::refreshAndSave();
                 }
             }),
+            ui::ActionMenu::Item("Background Tilt", assets::icons_64::poo, [](){
+                ui::ActionMenu m{
+                    ui::ActionMenu::Item("On", []() {
+                        ui::Style::setBackgroundTilt(true);
+                        ui::Style::refreshAndSave();
+                    }),
+                    ui::ActionMenu::Item("On", []() {
+                        ui::Style::setBackgroundTilt(true);
+                        ui::Style::refreshAndSave();
+                    })
+                };
+                PopupMenu<ui::Action>::runAndExecute(&m);
+            }),
+            ui::ActionMenu::Item("Background scroll", assets::icons_64::poo, [](){
+                ui::ActionMenu m{
+                    ui::ActionMenu::Item("Off", []() {
+                        ui::Style::setBackgroundScroll(BackgroundScrollStyle::Off);
+                        ui::Style::refreshAndSave();
+                    }),
+                    ui::ActionMenu::Item("Scroll", []() {
+                        ui::Style::setBackgroundScroll(BackgroundScrollStyle::Scroll);
+                        ui::Style::refreshAndSave();
+                    }),
+                    ui::ActionMenu::Item("Nudge", []() {
+                        ui::Style::setBackgroundScroll(BackgroundScrollStyle::Nudge);
+                        ui::Style::refreshAndSave();
+                    })
+                };
+                PopupMenu<ui::Action>::runAndExecute(&m);
+            }),
         };
     }
 

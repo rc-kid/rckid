@@ -55,6 +55,7 @@ namespace rckid::ui {
                 delete bg_;
             bg_ = new Image{Style::loadBackgroundImage()};
             bg_->setRect(Rect::WH(320, 240));
+            //bg_->setRepeat(Style::backgroundScroll() == BackgroundScrollStyle::Scroll);
             bg_->setRepeat(true);
             bg_->setTransparent(false);
         }
@@ -100,16 +101,16 @@ namespace rckid::ui {
                 return;
             switch (dir) {
                 case Direction::Left:
-                    bg_->setImgX(bgX_ + interpolation::cosine(t, 0, 80).round());
+                    bgPos_ = bgStart_ + Point(backgroundTransitionUpdate(t, 80), 0);
                     break;
                 case Direction::Right:
-                    bg_->setImgX(bgX_ - interpolation::cosine(t, 0, 80).round());
+                    bgPos_ = bgStart_ - Point(backgroundTransitionUpdate(t, 80), 0);
                     break;
                 case Direction::Up:
-                    bg_->setImgY(bgY_ + interpolation::cosine(t, 0, 60).round());
+                    bgPos_ = bgStart_ + Point(0, backgroundTransitionUpdate(t, 60));
                     break;
                 case Direction::Down:
-                    bg_->setImgY(bgY_ - interpolation::cosine(t, 0, 60).round());
+                    bgPos_ = bgStart_ - Point(0, backgroundTransitionUpdate(t, 60));
                     break;
                 case Direction::None:
                     // don't do anything for no direction
@@ -118,16 +119,16 @@ namespace rckid::ui {
                     UNIMPLEMENTED;
                     break;
             }
-            if (! t.running()) {
-                bgX_ = bg_->imgX();
-                bgY_ = bg_->imgY();
-            }
+            if (! t.running())
+                bgStart_ = bgPos_;
         }
 
         static void refreshStyle() {
             if (bg_ != nullptr) {
                 bg_->clear();
                 (*bg_) = Style::loadBackgroundImage();
+                //bg_->setRepeat(Style::backgroundScroll() == BackgroundScrollStyle::Scroll);
+                bgPos_ = Point{0,0};
             }
         }
 
@@ -156,10 +157,13 @@ namespace rckid::ui {
 
         void draw() override {
             Panel::draw();
-            /* TODO re-enable when we have extra background effects in place
-            bg_->setImgX(accelX() / 512);
-            bg_->setImgY(accelY() / 512);
-            */
+            // if background tilt is enabled, update the actual image size by the current accelerometer values
+            if (bg_ != nullptr) {
+                if (Style::backgroundTilt())
+                    bg_->setImgPos(bgPos_ + Point{accelX() / 512, accelY() / 512});
+                else
+                    bg_->setImgPos(bgPos_);
+            }
         }
 
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
@@ -174,6 +178,20 @@ namespace rckid::ui {
                 renderChild(Header::instance(), column, buffer, starty, numPixels);
         }
 
+        static Coord backgroundTransitionUpdate(Timer & t, Coord magnitude) {
+            switch (Style::backgroundScroll()) {
+                case BackgroundScrollStyle::Off:
+                    return 0;
+                case BackgroundScrollStyle::Scroll:
+                    return interpolation::cosine(t, 0, magnitude).round();
+                case BackgroundScrollStyle::Nudge:
+                    return interpolation::cosineNudge(t, 0, magnitude / 2).round();
+                default:
+                    UNREACHABLE;
+                    return 0;
+            }
+        }
+
         DoubleBuffer<uint16_t> buffer_;
         Coord column_;
         bool bgImage_ = true;
@@ -181,8 +199,9 @@ namespace rckid::ui {
 
         Widget * focused_ = nullptr;
 
-        static inline Coord bgX_ = 0;
-        static inline Coord bgY_ = 0;
+        static inline Point bgStart_{0,0};
+        // position of the background
+        static inline Point bgPos_{0,0};
         static inline Image * bg_ = nullptr;
     }; 
 

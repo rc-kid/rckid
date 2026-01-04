@@ -22,6 +22,18 @@ namespace rckid {
         static constexpr Coord TileWidth = 12;
         static constexpr Coord TileHeight = 24;
 
+        static bool runAndExecute(ui::Menu<PAYLOAD> * menu) {
+            auto result = App::run<PopupMenu<PAYLOAD>>(menu);
+            if (result.has_value()) {
+                auto & action = result.value();
+                if (action != nullptr) {
+                    action();
+                    return true;
+                }
+            }
+            return false;
+        }
+
         PopupMenu(ui::Menu<PAYLOAD> * menu):
             ui::Form<PAYLOAD>{Rect::XYWH(0, 240 - getNumRows(menu) * TileHeight - 4, getLongestText(menu) * TileWidth + 4, getNumRows(menu) * TileHeight + 4), /* raw */ true},
             menu_{menu} {
