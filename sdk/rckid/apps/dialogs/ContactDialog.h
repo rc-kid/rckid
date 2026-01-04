@@ -47,8 +47,8 @@ namespace rckid {
             }
         }
 
-        void focus() override {
-            ui::Form<Contact>::focus();
+        void onFocus() override {
+            ui::Form<Contact>::onFocus();
             c_->focus();
             // if we have contact
             loadContacts();
@@ -66,7 +66,8 @@ namespace rckid {
                 c_->showEmpty();
         }
 
-        void blur() {
+        void onBlur() override {
+            ui::Form<Contact>::onBlur();
             // cleanup for the next app
             contacts_.clear();
         }

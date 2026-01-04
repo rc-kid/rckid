@@ -513,13 +513,12 @@ namespace rckid::gbcemu {
     }
 
     void GBCEmu::loop() {
-        // set the current app in focus. If there is previous app, it will be blurred. The focus method also updates the parent app so that we can go back with the apps
+        // focus itself & blur parent
         focus();
-
         //clearTilemap();
         //clearTileset();
         //setBreakpoint(0xc2a6);
-        while (currentApp() == this) {
+        while (!shouldExit()) {
 #if (GBCEMU_ENABLE_BKPT == 1)
             if (mem8(PC) == 0xfd) // bkpt
                 break; 
@@ -545,7 +544,6 @@ namespace rckid::gbcemu {
             //if (IO_LY == 144)
             //    ModalApp::update();
         }
-
         // we are done, should blur ourselves, and refocus parent (if any)
         blur();
     }
@@ -613,8 +611,8 @@ namespace rckid::gbcemu {
         }
     }
 
-    void GBCEmu::focus() {
-        App::focus();
+    void GBCEmu::onFocus() {
+        App::onFocus();
         setSpeedMax();
         initializeDisplay();
         // continue playing audio if enabled
@@ -622,12 +620,12 @@ namespace rckid::gbcemu {
             audioResume();
     }
 
-    void GBCEmu::blur() {
+    void GBCEmu::onBlur() {
         // pause audio (w/o the game running there is no-one to generate samples)
         if (apu_.enabled())
             audioPause();
         setSpeedPct(100);
-        App::blur();
+        App::onBlur();
     }
 
     void GBCEmu::loadCartridge(GamePak * game) {

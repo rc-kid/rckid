@@ -333,6 +333,7 @@ namespace rckid {
     }
 
     void powerOff() {
+        App::onPowerOff();
         std::exit(0);
     }
 

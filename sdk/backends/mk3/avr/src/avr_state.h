@@ -41,7 +41,11 @@ namespace rckid {
             bool btnVolumeUp()   const { return b_ & BTN_VOLUMEUP; }
             bool btnVolumeDown() const { return b_ & BTN_VOLUMEDOWN; }
 
-            bool pwrInt()        const { return c_ & PWR_INT; }
+            /** Power off interrupt. 
+             
+                When received, the RP2350 should finalize all its tasks, save state, etc. and then turn the device off via sending the poweroff command. Once the power off interrupt is received, it cannot be cleared. If the power off command is not received in time (see RCKID_POWEROFF_TIMEOUT_FPS), the AVR will forcibly power off the device anyways. 
+             */
+            bool powerOffInt()        const { return c_ & PWROFF_INT; }
             bool accelInt()      const { return c_ & ACCEL_INT; }
             bool alarmInt()      const { return c_ & ALARM_INT; }
             bool secondInt()     const { return c_ & SECOND_INT; }
@@ -67,7 +71,7 @@ namespace rckid {
                 c_ = c_ | other.c_;
             }
 
-            void clearInterrupts() { c_ &= ~(PWR_INT | ACCEL_INT | SECOND_INT); }
+            void clearInterrupts() { c_ &= ~(PWROFF_INT | ACCEL_INT | SECOND_INT); }
 
             void clearAlarmInterrupt() { c_ &= ~ALARM_INT; }
 
@@ -106,7 +110,7 @@ namespace rckid {
              */
             void clearAllInterrupts() { c_ = 0; }
 
-            void setPwrInt() { c_ |= PWR_INT; }
+            void setPowerOffInt() { c_ |= PWROFF_INT; }
             void setAccelInt() { c_ |= ACCEL_INT; }
             void setAlarmInt() { c_ |= ALARM_INT; }
             void setSecondInt() { c_ |= SECOND_INT; }
@@ -171,7 +175,7 @@ namespace rckid {
             static constexpr uint8_t BOOTLOADER_MODE = 128;
             uint8_t b_ = 0;
 
-            static constexpr uint8_t PWR_INT         = 1;
+            static constexpr uint8_t PWROFF_INT      = 1;
             static constexpr uint8_t ACCEL_INT       = 2;
             static constexpr uint8_t ALARM_INT       = 4;
             static constexpr uint8_t SECOND_INT      = 8;

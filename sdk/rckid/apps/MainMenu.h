@@ -118,8 +118,8 @@ namespace rckid {
         }
 
     protected:
-        void focus() override {
-            ui::Form<ui::Action>::focus();
+        void onFocus() override {
+            ui::Form<ui::Action>::onFocus();
             c_->focus();
         }
 

@@ -264,8 +264,8 @@ namespace rckid {
 
         protected:
 
-            void focus() override {
-                ui::Form<Preset>::focus();
+            void onFocus() override {
+                ui::Form<Preset>::onFocus();
                 c_->focus();
             }
 

@@ -69,13 +69,13 @@ namespace rckid {
             editor_->setDirty(false);
         }
 
-        void focus() override {
-            ui::Form<void>::focus();
+        void onFocus() override {
+            ui::Form<void>::onFocus();
             //btnEnableRapidFire(true);
         }
 
-        void blur() override {
-            ui::Form<void>::blur();
+        void onBlur() override {
+            ui::Form<void>::onBlur();
             //btnEnableRapidFire(false);
         }
 

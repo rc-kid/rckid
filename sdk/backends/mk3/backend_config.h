@@ -28,6 +28,10 @@
  */
 #define RCKID_HOME_BUTTON_LONG_PRESS_FPS 120
 
+/** Timeout for the RP2350 to issue power off command *after* the power off interrupt has been issued. If power off command is not received in this time, the AVR will forcibly power off the device anyways.
+ */
+#define RCKID_POWEROFF_TIMEOUT_FPS 600
+
 /** Default speed of the breathing effect for system notifications (power, debug mode, purple, etc.)
  */
 #define RCKID_RGB_NOTIFICATION_SPEED 6

@@ -91,16 +91,34 @@ namespace rckid {
 
     extern volatile bool avrStatusRequest_;
 
-    void App::loop() {
+
+    void App::focus() {
+        if (parent_ != nullptr)
+            parent_->onBlur();
         btnClear();
         // wait for the previous display update to finish to avoid interfering with the old app unloading
         displayWaitUpdateDone();
         // require header refresh when app starts
         ui::Header::requireRefresh();
         // set the current app in focus. If there is previous app, it will be blurred. The focus method also updates the parent app so that we can go back with the apps
+        onFocus();
+    }
+
+    void App::blur() {
+        onBlur();
+        btnClear();
+        displayWaitUpdateDone();
+        // require header refresh when app starts
+        ui::Header::requireRefresh();
+        if (parent_ != nullptr)
+            parent_->focus();
+    }
+
+    void App::loop() {
+        // focus itself (and blur parent)
         focus();
         // now run the app
-        while (app_ == this) {
+        while (! shouldExit()) {
             Alarm::checkAlarm();
             update();
             // ticks happen right after update as they request current state from the AVR and this minimizes the likelihood of the arrival of new state during the next update cycle
@@ -109,14 +127,11 @@ namespace rckid {
             ui::Header::renderIfRequired();
             draw();
             ++redraws_;
+            // if we are powering down, exit the app
+            
         }
-        // wait for the last display update to finish so that the display routine does not interfere with the app unloading
-        displayWaitUpdateDone();
-        // we are done, should blur ourselves, and refocus parent (if any)
+        // blur itself (and focus parent)
         blur();
-        // ensure that we will display header in the parent app as well
-        ui::Header::requireRefresh();
-        btnClear();
     }
 
     void App::secondTick() {

@@ -189,8 +189,8 @@ namespace rckid::gbcemu {
          */
         void clear();
 
-        void focus() override;
-        void blur() override;
+        void onFocus() override;
+        void onBlur() override;
 
         /** Draw does nothing as drawing is part of the emulators custom loop, but draw is abstract in the base class so we have to provide it here. 
          */

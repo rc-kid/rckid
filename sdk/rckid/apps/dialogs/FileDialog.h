@@ -34,8 +34,8 @@ namespace rckid {
 
     protected:
 
-        void focus() override {
-            ui::Form<String>::focus();
+        void onFocus() override {
+            ui::Form<String>::onFocus();
             c_->focus();
         }
 

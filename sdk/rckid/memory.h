@@ -42,13 +42,17 @@ namespace rckid {
 
         static void traceChunks();
 
+        /** Simple RAII object to trace memory leaks. 
+         
+            Checks that the number of used bytes in the heap (active used) when destroying is not larger than than constructing.
+         */
         class LeakGuard {
         public:
             LeakGuard(): usedHeap_{usedBytes() - freeBytes()} {}
 
             ~LeakGuard() {
                 uint32_t newUsed = usedBytes() - freeBytes();
-                if (newUsed < usedHeap_)
+                if (newUsed > usedHeap_)
                     LOG(LL_ERROR, "Memory leak: " << (usedHeap_ - newUsed) << " bytes lost");
             }
 

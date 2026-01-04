@@ -157,7 +157,10 @@ public:
     static constexpr uint8_t POWER_MODE_ON = 8;
     static inline uint8_t powerMode_ = 0;
 
+    // flag that tells us the device turned off because of critical battery level - reset when charger is connected
     static inline bool criticalBattery_ = false;
+
+    static inline uint16_t powerOffTimeout_ = 0;
     
     static void setPowerMode(uint8_t mode) {
         if (powerMode_ & mode)
@@ -214,6 +217,8 @@ public:
                     setNotification(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
                 else
                     setNotification(RGBEffect::Off());
+                // reset the poweroff timeout
+                powerOffTimeout_ = 0;
                 break;
             case POWER_MODE_DC:
                 state_.status.setVUsb(false);
@@ -1013,7 +1018,9 @@ public:
 
     static void homeBtnLongPress() {
         if (powerMode_ & POWER_MODE_ON) {
-            powerOff();
+            // set power off interrupt and start the timeout
+            powerOffTimeout_ = RCKID_POWEROFF_TIMEOUT_FPS;
+            state_.status.setPowerOffInt();
         } else {
             ASSERT(powerMode_ & POWER_MODE_WAKEUP);
             powerOn();
@@ -1052,6 +1059,9 @@ public:
                 }
                 NO_ISR(setIrq());
             }
+            // check if we have power off timeout and forcibly power off the device
+            if ((powerOffTimeout_ > 0) && --powerOffTimeout_ == 0)
+                powerOff();
         } else if (powerMode_ & POWER_MODE_WAKEUP) {
             // 
             if (! state_.status.btnHome())
@@ -1194,7 +1204,9 @@ public:
                 // emergency shutdown if battery too low
                 if (value < RCKID_POWER_ON_THRESHOLD && (powerMode_ & POWER_MODE_ON)) {
                     // TODO we might need a ring buffer for this to elliminate spurious shutdowns etc
-                    powerOff();
+                    powerOffTimeout_ = RCKID_POWEROFF_TIMEOUT_FPS;
+                    state_.status.setPowerOffInt();
+                    // inform user the shutdown is because of critical battery level
                     criticalBattery();
                 }
                 break;

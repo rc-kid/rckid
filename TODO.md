@@ -55,6 +55,8 @@ Polish
 
 - likely there is an issue with timing & drawing of the lines on GBCemu we have VBLANK first then start drawing line, also songbird does not work well during transitions...
 
+- background image, if not repeated should draw black or something
+
 - make level app draw circle and look prettier, maybe draw angles even
 - reset step count every day (once we have midnight reset stuff)
 
@@ -103,8 +105,6 @@ Polish
 
 - clean-up the code around display initialization
 - document host file system
-
-- add some onPowerOff event that will be called when device decides to power off *and* when avr decides to power the device off as well (so that we can save state, etc)
 
 - would be nice to have menu-like transitions between apps (i.e. multimain menu stuff)
 

@@ -298,6 +298,9 @@ namespace rckid {
         if (status.secondInt()) {
             io::avrState_.time.inc();
         }
+        // if there is power off interrupt, we should power off immediately
+        if (status.powerOffInt())
+            powerOff();
         // TODO accel interrupt
         // finally clear the interrupts once we have processed them
         io::avrState_.status.clearInterrupts();
@@ -639,7 +642,7 @@ namespace rckid {
     }
 
     void powerOff() {
-        StackProtection::check();
+        App::onPowerOff();
         i2c::sendAvrCommand(cmd::PowerOff{});
     }
 

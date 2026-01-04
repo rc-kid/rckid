@@ -108,8 +108,8 @@ namespace rckid {
             MusicPlayer * player_;
         }; // MusicPlayer::FileBrowser
 
-        void focus() override {
-            ui::Form<void>::focus();
+        void onFocus() override {
+            ui::Form<void>::onFocus();
             c_->focus();
         }
 

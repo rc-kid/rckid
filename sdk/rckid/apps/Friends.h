@@ -358,8 +358,8 @@ namespace rckid {
             }
         }
 
-        void focus() override {
-            ui::Form<void>::focus();
+        void onFocus() override {
+            ui::Form<void>::onFocus();
             c_->focus();
             if (firstRun_) {
                 if (contacts_.size() > 0)

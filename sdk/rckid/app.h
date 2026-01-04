@@ -20,7 +20,14 @@ namespace rckid {
 
         static constexpr char const * LATEST_SLOT = "Latest";
 
-        virtual ~App() = default;
+        App():
+            parent_{app_} {
+        }
+
+        virtual ~App() {
+            if (app_ == this)
+                app_ = nullptr;
+        };
 
         virtual String title() const { return name(); }
 
@@ -77,7 +84,7 @@ namespace rckid {
          */
         virtual bool supportsSaveState() const { return false; }
 
-        /** Returns the current (active) application. May also return nullptr during app transitions, or when the system code not managed by the App class (which should be exceedingly rare).
+        /** Returns the current (active) application. May also return nullptr when the system code not managed by the App class (which should be exceedingly rare).
          */
         static App * currentApp() { return app_; }
 
@@ -108,18 +115,10 @@ namespace rckid {
 
     protected:
 
-        /** Called when the application should gain focus. 
-         
-            There can only be one focused app at a time. When the app gains focus, it first blurs existing app. If there is existing app, it will become parent of the current app. Then the app resumes own state if suspended and finally sets itself as the focused app. 
+        /** Called when the application should gain focus. There can only be one focused app at a time. 
          */
-        virtual void focus() {
-            // if parent is null, then this is new app that is replacing current app (if any). This is called from the run() loop so we should call blur of current app and set our parent to it. Then install ourselves as the current app. 
-            if (parent_ == nullptr) {
-                parent_ = app_;
-                if (app_ != nullptr)
-                    app_->blur();
-            }
-            // otherwise we are the current app and simply should focus ourselves, so continue with setting ourselves as the app and resuming
+        virtual void onFocus() { 
+            ASSERT(app_ == nullptr);
             app_ = this;
         }
 
@@ -127,11 +126,9 @@ namespace rckid {
          
             When loosing focus the app should clear all its resources that can be easily recreated when focused again. 
          */
-        virtual void blur() {
-            // there are two cases when blur occurs - when we are suspending current ap to launch a new child app, in which case the app_ points to the current app. This happens via focus() of the child and so we just blur ourselves and do nothing. Otherwise if the app is empty, we are closing this app and should terefore focus the parent app 
-            if (app_ == nullptr)
-                if (parent_ != nullptr)
-                    parent_->focus();
+        virtual void onBlur() {
+            ASSERT(app_ == this);
+            app_ = nullptr;
         }
 
         /** Basic app update functionality. 
@@ -165,7 +162,7 @@ namespace rckid {
         virtual void exit() {
             if (supportsSaveState())
                 saveState(LATEST_SLOT);
-            app_ = nullptr; 
+            exit_ = true;
         }
 
         /** Called every second. 
@@ -195,9 +192,39 @@ namespace rckid {
             return ini::Reader{fs::fileRead(path)};
         }
 
+        /** Returns true if the app should exit. Useful for apps that provide their own main loop function.
+         */
+        bool shouldExit() const { return exit_; }
+
+        /** Focuses the current app. 
+         
+            Ensures the proper app transition, blurs the parent, clears button states, waits for display update and then focuses itself. This function is useful for apps that provide their own main loop function.
+         */
+        void focus();
+
+        /** Blurs the current app. 
+         
+            Blurs itself, waits for display update to finish, then clears the buttons state and focuses the parent app if any. This function is useful for apps that provide their own main loop function.
+         */
+        void blur();
+
+        /** Power off handler. This should be called from the powerOff() function SDK implementation. Simply walks all the apps starting from the current app calls their exit() methods allowing them to react to the situation.
+         */
+        static void onPowerOff() {
+            if (app_ == nullptr)
+                return;
+            app_->exit();
+            App * x = app_->parent_;
+            while (x != nullptr) {
+                x->exit();
+                x = x->parent_;
+            }
+        }
+
     private:
 
         friend void tick();
+        friend void powerOff();
 
         static void secondTick();
 
@@ -208,6 +235,7 @@ namespace rckid {
         bool verifyBudgetAllowance(bool decrement);
 
         App * parent_ = nullptr;
+        bool exit_ = false;
 
         static inline App * app_ = nullptr;
 
@@ -282,9 +310,9 @@ namespace rckid {
         RenderableApp(RenderableApp const &) = delete;
         RenderableApp(RenderableApp &&) = delete;
 
-        void focus() override {
+        void onFocus() override {
             g_.initialize();
-            App::focus();
+            App::onFocus();
         }
 
         void update() override {
