@@ -57,6 +57,9 @@ Polish
 
 - background image, if not repeated should draw black or something
 
+- add hours during which budget apps cannot run
+- add steps to budget seconds conversion
+
 - make level app draw circle and look prettier, maybe draw angles even
 - reset step count every day (once we have midnight reset stuff)
 

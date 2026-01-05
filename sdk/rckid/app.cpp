@@ -111,7 +111,7 @@ namespace rckid {
         // require header refresh when app starts
         ui::Header::requireRefresh();
         if (parent_ != nullptr)
-            parent_->focus();
+            parent_->onFocus();
     }
 
     void App::loop() {
