@@ -63,7 +63,7 @@ namespace rckid {
         template<typename T, typename ... ARGS>
         static typename T::MODAL_RESULT run(ARGS &&... args) {
             T app{std::forward<ARGS>(args)...};
-            if (app.verifyBudgetAllowance(false))
+            if (app.verifyBudgetAllowance())
                 app.loop();
             return app.result();
         }
@@ -228,11 +228,11 @@ namespace rckid {
 
         static void secondTick();
 
-        /** Verifies there is enough budget to play the app and returns true if ok.
+        /** Verifies there is enough budget to play the app and returns true if the app can continue running.
          
             If the app is over budget, shows a dialog and causes the app to exit. If decrement is true, the system budget allowance will be decreased by 1 if the app is budgeted and there is budget (this is to be executed regularly every second).
          */
-        bool verifyBudgetAllowance(bool decrement);
+        bool verifyBudgetAllowance();
 
         App * parent_ = nullptr;
         bool exit_ = false;
@@ -255,7 +255,8 @@ namespace rckid {
          */
         void run(std::function<void(T)> callback) {
             callback_ = std::move(callback);
-            loop();
+            if (verifyBudgetAllowance())
+                loop();
         }
 
         /** Returns the app's return value (if any).

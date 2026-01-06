@@ -132,7 +132,7 @@ namespace rckid {
     }
 
     namespace budgetInfo {
-        uint32_t budget_ = 3600;
+        uint32_t budget_ = 300;
         uint32_t budgetDaily_ = 3600;
     }
 
@@ -961,7 +961,7 @@ namespace rckid {
     }
 
     DailyIntervalHM budgetProhibitedInterval() {
-        UNIMPLEMENTED;
+        return DailyIntervalHM{};
     }
 
     void budgetSet(uint32_t seconds) {

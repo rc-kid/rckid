@@ -23,12 +23,6 @@ namespace rckid {
     }
 
     void App::update() {
-        if (checkBudget_) {
-            checkBudget_ = false;
-            // verify the budget allowance for the app (if the app is exitting due to expired budget, exit the method immediately)
-            if (!verifyBudgetAllowance(true))
-                return;
-        }
         if (! HomeMenu::active() && btnReleased(Btn::Home))
             showHomeMenu();
         if (btnPressed(Btn::VolumeUp)) {
@@ -139,26 +133,30 @@ namespace rckid {
         checkBudget_ = true;
         fps_ = redraws_;
         redraws_ = 0;
-        if (app_ != nullptr)
+        if (app_ != nullptr) {
             app_->onSecondTick();
+            // if the app is budgeted and can run, decrease the budget
+            if (app_->isBudgeted()) {
+                if (app_->verifyBudgetAllowance())
+                    budgetSet(budget() - 1);
+                else
+                    app_->exit();
+            } 
+        }
     }
 
-    bool App::verifyBudgetAllowance(bool decrement) {
+    bool App::verifyBudgetAllowance() {
         if (!isBudgeted())
             return true;
         if (budgetProhibitedInterval().contains(timeNow().time)) {
             InfoDialog::error("Cannot be used now", "App usage is not allowed at this time");
-            exit();
             return false;
         }
         uint32_t b = budget();
         if (b == 0) {
             InfoDialog::error("No more budget", "Wait till midnight when budget is reset, or get more");
-            exit(); // exit saves to latest slot
             return false;
         } else {
-            if (decrement)
-                budgetSet(b - 1);
             return true;
         }
     }
