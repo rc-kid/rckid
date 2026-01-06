@@ -238,10 +238,14 @@ private:
     uint8_t year_;
 }); // TinyDate
 
+class TinyTimeHM;
+
 PACKED(class TinyTime {
 public:
 
     TinyTime() : hour_{0}, minute_{0}, second_{0} {}
+
+    TinyTime(TinyTimeHM const & t);
 
     TinyTime(uint32_t seconds): 
         hour_{static_cast<uint8_t>((seconds / 3600) % 24)},
@@ -364,6 +368,78 @@ public:
         if (time.inc())
             date.inc();
     }
+});
+
+PACKED(class TinyTimeHM {
+public:
+    TinyTimeHM() : hour_{0}, minute_{0} {}
+    TinyTimeHM(uint8_t h, uint8_t m) : hour_{static_cast<uint8_t>(h % 24)}, minute_{static_cast<uint8_t>(m % 60)} {}
+
+    TinyTimeHM(TinyTime const & t) : hour_{t.hour()}, minute_{t.minute()} {}
+
+    uint8_t hour() const { return hour_; }
+    uint8_t minute() const { return minute_; }
+    
+    void set(uint8_t h, uint8_t m) {
+        hour_ = h % 24;
+        minute_ = m % 60;
+    }
+
+    bool operator < (TinyTimeHM const & other) const {
+        if (hour_ < other.hour_)
+            return true;
+        if (hour_ > other.hour_)
+            return false;
+        return minute_ < other.minute_;
+    }
+
+    bool operator <= (TinyTimeHM const & other) const {
+        if (hour_ < other.hour_)
+            return true;
+        if (hour_ > other.hour_)
+            return false;
+        return minute_ <= other.minute_;
+    }
+
+    bool operator > (TinyTimeHM const & other) const {
+        if (hour_ > other.hour_)
+            return true;
+        if (hour_ < other.hour_)
+            return false;
+        return minute_ > other.minute_;
+    }
+
+    bool operator >= (TinyTimeHM const & other) const {
+        if (hour_ > other.hour_)
+            return true;
+        if (hour_ < other.hour_)
+            return false;
+        return minute_ >= other.minute_;
+    }
+
+private:
+    uint8_t hour_;
+    uint8_t minute_;
+});
+
+/** Daily interval specified by two HH : MM values. 
+ 
+    If start is smaller than stop, then the interval is considered to be [start, stop), otherwise the interval is considered to wrap around midnight, i.e. [start, midnight) and [midnight, stop).
+ */
+PACKED(class DailyIntervalHM {
+public:
+    TinyTimeHM start;
+    TinyTimeHM end;
+
+    bool contains(TinyTimeHM const & time) const {
+        if (start <= end)
+            return (time >= start) && (time < end);
+        else
+            return (time >= start) || (time <= end);
+    }
+
+    bool contains(TinyTime const & time) const { return contains(TinyTimeHM{time.hour(), time.minute()}); }
+
 });
 
 /** Simple alarm. 
@@ -495,3 +571,5 @@ inline WRITER & operator << (WRITER & writer, TinyDate::Month m) {
             return writer << "Unknown";
     }
 } // operator << (Month)
+
+inline TinyTime::TinyTime(TinyTimeHM const & t) : hour_{t.hour()}, minute_{t.minute()}, second_{0} {}

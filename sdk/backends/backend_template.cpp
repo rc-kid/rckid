@@ -471,12 +471,22 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
+    DailyIntervalHM budgetProhibitedInterval() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
     void budgetSet(uint32_t seconds) {
         StackProtection::check();
         UNIMPLEMENTED;
     }
 
     void budgetDailySet(uint32_t seconds) {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
+    void budgetProhibitedIntervalSet(DailyIntervalHM interval) {
         StackProtection::check();
         UNIMPLEMENTED;
     }

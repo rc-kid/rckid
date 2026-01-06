@@ -12,8 +12,13 @@ namespace rckid {
         The AVR version is returned as part of the AVR extended state right after status itself so that it can be used by cartridges to refuse to run on devices with incompatible AVR firmware, which can lead to different commands being issued, etc. 
 
         Ensure to bump the version whenever there are backwards incompatible changes to the AVR firmware such as new commands, status layout changes, etc.
+
+        Changelist
+
+        01 - prohibited interval support added to budget, SetBudget command sets entire budget settings, PowerOffAck command added and commands renumbered 
+
      */
-    static constexpr uint8_t AVR_VERSION = 0x00;
+    static constexpr uint8_t AVR_VERSION = 0x01;
 
     /** AVR State information */
 
@@ -200,6 +205,21 @@ namespace rckid {
 
         }); // AVRState::AudioSettings
 
+        PACKED(struct BudgetSettings {
+            /** Budget in seconds for budgeted apps. This is kept by the AVR and reset at midnight each day. Certain apps count their run time towards the budget.
+             */
+            uint32_t remainingSeconds;
+
+            /** Daily budget, value to which the budget resets automatically every midnight. 
+             */
+            uint32_t dailySeconds = 3600; 
+
+            /** Budget prohibited interval
+             */
+            DailyIntervalHM prohibitedInterval;
+
+        }); // AVRState::BudgetSettings
+
         Status status;
 
         /** AVR version to ensure incompatible cartridge & device will not talk to each other.
@@ -210,13 +230,9 @@ namespace rckid {
          */
         int16_t temp;
 
-        /** Budget in seconds for budgeted apps. This is kept by the AVR and reset at midnight each day. Certain apps count their run time towards the budget.
+        /** Game budget settings.
          */
-        uint32_t budget;
-
-        /** Daily budget, value to which the budget resets automatically every midnight. 
-         */
-        uint32_t dailyBudget = 3600; 
+        BudgetSettings budget;
 
         TinyDateTime time;
 

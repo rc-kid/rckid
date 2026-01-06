@@ -476,9 +476,9 @@ namespace rckid {
 
     //@}
 
-    /** \page sdk
-        \section user User Information
-     
+    /** \page sdk 
+        \section budget Application Budget     
+
 
      */
     //@{
@@ -491,6 +491,10 @@ namespace rckid {
      */
     uint32_t budgetDaily();
 
+    /** Returns the interval during which budgeted apps are *not* allowed to run. 
+     */
+    DailyIntervalHM budgetProhibitedInterval();
+
     /** Sets the budget to given value. 
      */
     void budgetSet(uint32_t value);
@@ -498,6 +502,10 @@ namespace rckid {
     /** Sets the daily budget allowance to the given value. 
      */
     void budgetDailySet(uint32_t value);
+
+    /** Sets the prohibited interval during which budgeted apps are not allowed to run.
+     */
+    void budgetProhibitedIntervalSet(DailyIntervalHM interval);
 
     /** Performs manual budget allowance reset, i.e. what the device does automatically at midnight.
      */

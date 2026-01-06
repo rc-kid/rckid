@@ -146,11 +146,15 @@ namespace rckid {
     bool App::verifyBudgetAllowance(bool decrement) {
         if (!isBudgeted())
             return true;
+        if (budgetProhibitedInterval().contains(timeNow().time)) {
+            InfoDialog::error("Cannot be used now", "App usage is not allowed at this time");
+            exit();
+            return false;
+        }
         uint32_t b = budget();
         if (b == 0) {
-            // TODO save to latest slot?
             InfoDialog::error("No more budget", "Wait till midnight when budget is reset, or get more");
-            exit();
+            exit(); // exit saves to latest slot
             return false;
         } else {
             if (decrement)

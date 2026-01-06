@@ -960,6 +960,10 @@ namespace rckid {
         return budgetInfo::budgetDaily_;
     }
 
+    DailyIntervalHM budgetProhibitedInterval() {
+        UNIMPLEMENTED;
+    }
+
     void budgetSet(uint32_t seconds) {
         StackProtection::check();
         budgetInfo::budget_ = seconds;
@@ -968,6 +972,10 @@ namespace rckid {
     void budgetDailySet(uint32_t seconds) {
         StackProtection::check();
         budgetInfo::budgetDaily_ = seconds;
+    }
+
+    void budgetProhibitedIntervalSet(DailyIntervalHM interval) {
+        UNIMPLEMENTED;
     }
 
     void budgetReset() {

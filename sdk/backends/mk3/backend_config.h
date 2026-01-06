@@ -32,6 +32,10 @@
  */
 #define RCKID_POWEROFF_TIMEOUT_FPS 600
 
+/** Timeout for the RP2350 to acknowledge the power interrupt request.  
+ */
+#define RCKID_POWEROFF_ACK_TIMEOUT_FPS 10
+
 /** Default speed of the breathing effect for system notifications (power, debug mode, purple, etc.)
  */
 #define RCKID_RGB_NOTIFICATION_SPEED 6

@@ -567,7 +567,7 @@ public:
         if (budgetResetCountdown_ > 0) {
             --budgetResetCountdown_;
         } else if (state_.time.time.hour() == 0) {
-            state_.budget = state_.dailyBudget;
+            state_.budget.remainingSeconds = state_.budget.dailySeconds;
             budgetResetCountdown_ = 3600 * 24;
         }
     }
@@ -731,6 +731,11 @@ public:
             case cmd::PowerOff::ID:
                 powerOff();
                 break;
+            /* When power off interrupt has been acknowledged, increases the power off timeout to allow extra time for RCKid to store state, etc.
+             */
+            case cmd::PowerOffAck::ID:
+                powerOffTimeout_ = RCKID_POWEROFF_TIMEOUT_FPS;
+                break;
             case cmd::Sleep::ID:
                 // TODO
                 break;
@@ -774,20 +779,16 @@ public:
                 break;
             }
             case cmd::SetBudget::ID: {
-                state_.budget = cmd::SetBudget::fromBuffer(state_.buffer).seconds;
-                break;
-            }
-            case cmd::SetDailyBudget::ID: {
-                state_.dailyBudget = cmd::SetDailyBudget::fromBuffer(state_.buffer).seconds;
+                state_.budget = cmd::SetBudget::fromBuffer(state_.buffer).budget;
                 break;
             }
             case cmd::DecBudget::ID: {
-                if (state_.budget > 0)
-                    --state_.budget;
+                if (state_.budget.remainingSeconds > 0)
+                    --state_.budget.remainingSeconds;
                 break;
             }
             case cmd::ResetBudget::ID: {
-                state_.budget = state_.dailyBudget;
+                state_.budget.remainingSeconds = state_.budget.dailySeconds;
                 budgetResetCountdown_ = 3600 * 24; // reset the countdown to 24 hours
                 break;
             }
@@ -1018,8 +1019,8 @@ public:
 
     static void homeBtnLongPress() {
         if (powerMode_ & POWER_MODE_ON) {
-            // set power off interrupt and start the timeout
-            powerOffTimeout_ = RCKID_POWEROFF_TIMEOUT_FPS;
+            // set power off interrupt and start the acknowledge timeout
+            powerOffTimeout_ = RCKID_POWEROFF_ACK_TIMEOUT_FPS;
             state_.status.setPowerOffInt();
         } else {
             ASSERT(powerMode_ & POWER_MODE_WAKEUP);
@@ -1204,7 +1205,7 @@ public:
                 // emergency shutdown if battery too low
                 if (value < RCKID_POWER_ON_THRESHOLD && (powerMode_ & POWER_MODE_ON)) {
                     // TODO we might need a ring buffer for this to elliminate spurious shutdowns etc
-                    powerOffTimeout_ = RCKID_POWEROFF_TIMEOUT_FPS;
+                    powerOffTimeout_ = RCKID_POWEROFF_ACK_TIMEOUT_FPS;
                     state_.status.setPowerOffInt();
                     // inform user the shutdown is because of critical battery level
                     criticalBattery();

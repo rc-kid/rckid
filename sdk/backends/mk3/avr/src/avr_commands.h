@@ -21,14 +21,19 @@ namespace rckid::cmd {
 
     COMMAND(0, Nop);
     COMMAND(1, PowerOff);
-    COMMAND(2, Sleep);
-    COMMAND(3, ResetRP);
-    COMMAND(4, BootloaderRP);
-    COMMAND(5, ResetAVR);
-    COMMAND(6, BootloaderAVR);
-    COMMAND(7, DebugModeOn);
-    COMMAND(8, DebugModeOff);
-
+    /** Acknowledges the power off interrupt request from AVR. 
+     
+        This command is sent to inform AVR that RP2350 is in responsive state and is currently working towards shutting the device down. AVR thus increases the 
+     */
+    COMMAND(2, PowerOffAck);
+    COMMAND(3, Sleep);
+    COMMAND(4, ResetRP);
+    COMMAND(5, BootloaderRP);
+    COMMAND(6, ResetAVR);
+    COMMAND(7, BootloaderAVR);
+    COMMAND(8, DebugModeOn);
+    COMMAND(9, DebugModeOff);
+    
     COMMAND(27, ReadFlashPage,
         uint16_t page;
         ReadFlashPage(uint16_t page): page{page} {}
@@ -60,8 +65,6 @@ namespace rckid::cmd {
         }
     );
 
-
-
     COMMAND(32, SetNotification,
         RGBEffect effect;
         SetNotification(RGBEffect const & effect): effect{effect} {}
@@ -90,35 +93,27 @@ namespace rckid::cmd {
         SetAudioSettings(AVRState::AudioSettings const & settings): settings{settings} {}
     );
 
-    /** Explicitly sets the budget to given value. Note that setting the budget does not affect the reset counter. This command can be used to update the budget value when counting down, or top-up the budget when appropriate.
+    /** Explicitly sets budget settings to given values. Note that setting the budget does not affect the reset counter. This command can be used to update the budget value when counting down, or top-up the budget when appropriate.
      */
-    COMMAND(37, SetBudget, 
-        uint32_t seconds;
-        SetBudget(uint32_t value): seconds{value} {}
-    );
-
-    /** Sets the daily budget allowance. This is the value to which budget is reset at midnight. 
-     */
-    COMMAND(38, SetDailyBudget, 
-        uint32_t seconds;
-        SetDailyBudget(uint32_t value): seconds{value} {}
+    COMMAND(37, SetBudget,
+        AVRState::BudgetSettings budget; 
+        SetBudget(AVRState::BudgetSettings const & budget): budget{budget} {}
     );
 
     /** Decrements budget by single second. This message is sent to the AVR every second during which a budget counted app is active. This ensures that (a) if there is RP crash, the budget will be valid, and (b) at midnight, there will be no data race between budget update and budget decrement.
      */
-    COMMAND(39, DecBudget);
+    COMMAND(38, DecBudget);
 
     /** Resets the budget to its daily allowance. 
      */
-    COMMAND(40, ResetBudget);
-
+    COMMAND(39, ResetBudget);
 
     
-    COMMAND(41, RGBOff);
+    COMMAND(40, RGBOff);
 
     /** Specifies the RGB effect for a particular LED. 
     */
-    COMMAND(42, SetRGBEffect, 
+    COMMAND(41, SetRGBEffect, 
         uint8_t index;
         RGBEffect effect;
         SetRGBEffect(uint8_t index, RGBEffect const & effect): index{index}, effect{effect} {}
@@ -128,7 +123,7 @@ namespace rckid::cmd {
         
         As the DPAD contains multiple LEDs, the DPAD effect is applied to all DPAD LEDs at once. For finer control over the DPAD LEDs, eithe select the individual LEDs using SetRGBEffect, or use the SetRGBEffectDPAD command to control just the DPAD LEDs.
      */
-    COMMAND(43, SetRGBEffects, 
+    COMMAND(42, SetRGBEffects, 
         RGBEffect a;
         RGBEffect b;
         RGBEffect dpad;
@@ -140,7 +135,7 @@ namespace rckid::cmd {
 
     /** Sets RGB effects on the DPAD LEDs alone.
      */
-    COMMAND(44, SetRGBEffectDPAD, 
+    COMMAND(43, SetRGBEffectDPAD, 
         RGBEffect topLeft;
         RGBEffect topRight;
         RGBEffect bottomLeft;
@@ -149,12 +144,12 @@ namespace rckid::cmd {
             topLeft{topLeft}, topRight{topRight}, bottomLeft{bottomLeft}, bottomRight{bottomRight} {}
     );
 
-    COMMAND(45, Rumbler,
+    COMMAND(44, Rumbler,
         RumblerEffect effect;
         Rumbler(RumblerEffect const & effect): effect{effect} {}
     );
 
-    COMMAND(46, SetPin, 
+    COMMAND(45, SetPin, 
         uint16_t pin;
         SetPin(uint16_t pin): pin{pin} {}
     );

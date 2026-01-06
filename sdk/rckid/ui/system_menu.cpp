@@ -359,6 +359,19 @@ namespace rckid::ui {
                         Myself::save();
                     }
                 }),
+                ui::ActionMenu::Item("Prohibited Time", assets::icons_64::poo, [](){
+                    DailyIntervalHM prohibited = budgetProhibitedInterval();
+                    auto start = App::run<TimeDialog>("Start", prohibited.start);
+                    if (! start.has_value())
+                        return;
+                    auto end = App::run<TimeDialog>("End", prohibited.end);
+                    if (! end.has_value())
+                        return;
+                    prohibited.start = start.value();
+                    prohibited.end = end.value();
+                    budgetProhibitedIntervalSet(prohibited);
+                    Myself::save();
+                }),
                 ui::ActionMenu::Item("Clear Pin", assets::icons_64::lock, [](){
                     pinSet(0xffff);
                 }),

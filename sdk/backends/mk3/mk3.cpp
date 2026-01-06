@@ -1157,34 +1157,44 @@ namespace rckid {
 
     uint32_t budget() {
         StackProtection::check();
-        return io::avrState_.budget;
+        return io::avrState_.budget.remainingSeconds;
     }
 
     uint32_t budgetDaily() {
         StackProtection::check();
-        return io::avrState_.dailyBudget;
+        return io::avrState_.budget.dailySeconds;
+    }
+
+    DailyIntervalHM budgetProhibitedInterval() {
+        return io::avrState_.budget.prohibitedInterval;
     }
 
     void budgetSet(uint32_t seconds) {
         StackProtection::check();
-        if (seconds == io::avrState_.budget - 1) {
-            --io::avrState_.budget;
+        if (seconds == io::avrState_.budget.remainingSeconds - 1) {
+            --io::avrState_.budget.remainingSeconds;
             i2c::sendAvrCommand(cmd::DecBudget{});
         } else {
-            io::avrState_.budget = seconds;
-            i2c::sendAvrCommand(cmd::SetBudget{seconds});
+            io::avrState_.budget.remainingSeconds = seconds;
+            i2c::sendAvrCommand(cmd::SetBudget{io::avrState_.budget});
         }
     }
 
     void budgetDailySet(uint32_t seconds) {
         StackProtection::check();
-        io::avrState_.dailyBudget = seconds;
-        i2c::sendAvrCommand(cmd::SetDailyBudget{seconds});
+        io::avrState_.budget.dailySeconds = seconds;
+        i2c::sendAvrCommand(cmd::SetBudget{io::avrState_.budget});
+    }
+
+    void budgetProhibitedIntervalSet(DailyIntervalHM interval) {
+        StackProtection::check();
+        io::avrState_.budget.prohibitedInterval = interval;
+        i2c::sendAvrCommand(cmd::SetBudget{io::avrState_.budget});
     }
 
     void budgetReset() {
         StackProtection::check();
-        io::avrState_.budget = io::avrState_.dailyBudget;
+        io::avrState_.budget.remainingSeconds = io::avrState_.budget.dailySeconds;
         i2c::sendAvrCommand(cmd::ResetBudget{});
     }
 
