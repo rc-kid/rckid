@@ -4,6 +4,7 @@
 #include "../graphics/font.h"
 #include "../graphics/color.h"
 #include "../utils/string.h"
+#include "../utils/interpolation.h"
 #include "widget.h"
 #include "style.h"
 
@@ -55,6 +56,7 @@ namespace rckid::ui {
                 resizeToText();
             else
                 reposition();
+            a_.startContinuous();
             return true;
         }
 
@@ -145,7 +147,20 @@ namespace rckid::ui {
 
     protected:
 
+        void draw() override {
+            // if the text is too long to fit, use the animation
+            a_.update();
+            if (!hints_.empty()) {
+                Coord w = hints_.front().right - hints_.back().left;
+                if (w > width())
+                  scrollOffset_ = interpolation::cosineNudge(a_, 0, -(width() - w)).round();
+                else
+                  scrollOffset_ = 0;
+            } 
+        }
+
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
+            column += scrollOffset_;
             // don't do anything we are vertically off 
             if (starty >= textTopLeft_.y + font_.size)
                 return;
@@ -214,6 +229,8 @@ namespace rckid::ui {
         Point textTopLeft_;
         std::vector<Hint> hints_;
         bool autosize_ = true;
+        Timer a_{2000};
+        Coord scrollOffset_ = 0;
     }; //rckid::ui::Label
 
 } // namespace rckid::ui

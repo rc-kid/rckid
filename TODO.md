@@ -55,6 +55,8 @@ Polish
 
 - likely there is an issue with timing & drawing of the lines on GBCemu we have VBLANK first then start drawing line, also songbird does not work well during transitions...
 
+- make label scrolling nicer to configure so that inside audio player when refresh rate is 1s we can still do nice things, or can we increase refresh rate? 
+
 - background image, if not repeated should draw black or something
 
 - add steps to budget seconds conversion
@@ -138,8 +140,6 @@ Polish
 
 - comment PNG loading stuff
 
-- add version of background wher the background just bounces so that the background can be some actual image
-
 - fix/check device fatal eror & stack protection
 
 - add events for getting icon for files & on file selected for file browser
@@ -189,7 +189,6 @@ Polish
 
 ### AudioPlayer
 
-- label scrolling
 - image picture
 
 ### GBCEmu

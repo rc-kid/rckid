@@ -26,25 +26,31 @@ namespace rckid::ui {
         static constexpr uint32_t defaultTransitionTimeMs = 500;
 
         Carousel() {
-            aText_.setHAlign(HAlign::Left);
-            aText_.setVAlign(VAlign::Top);
-            aText_.setHeight(aText_.font().size);
-            bText_.setHAlign(HAlign::Left);
-            bText_.setVAlign(VAlign::Top);
-            bText_.setHeight(bText_.font().size);
+            aText_ = addChild(new Label());
+            bText_ = addChild(new Label());
+            aImg_ = addChild(new Image());
+            bImg_ = addChild(new Image());
+            aText_->setHAlign(HAlign::Left);
+            aText_->setVAlign(VAlign::Top);
+            aText_->setHeight(aText_->font().size);
+            bText_->setHAlign(HAlign::Left);
+            bText_->setVAlign(VAlign::Top);
+            bText_->setHeight(bText_->font().size);
         }
 
         bool idle() const { return ! a_.running(); }
 
-        Font const & font() { return aText_.font(); }
+        Font const & font() { return aText_->font(); }
 
         void setFont(Font const & f) {
-            aText_.setFont(f);
-            bText_.setFont(f);
-            aText_.setHeight(aText_.font().size);
-            bText_.setHeight(bText_.font().size);
+            aText_->setFont(f);
+            bText_->setFont(f);
+            aText_->setHeight(aText_->font().size);
+            bText_->setHeight(bText_->font().size);
             repositionElements(aImg_, aText_);
             repositionElements(bImg_, bText_);
+            aText_->setAutosize(false);
+            bText_->setAutosize(false);
         } 
 
         /** Sets the carousel's current element to given text and icon. 
@@ -53,18 +59,18 @@ namespace rckid::ui {
             // whenever we call set, we are not empty (if called via showEmpty, we'll set empty later)
             empty_ = false;
             if (direction == Direction::None) {
-                aImg_ = icon;
-                aImg_.setTransparent(true);
-                aImg_.setZoomToRect(64, 64);
-                aText_.setText(text);
-                aText_.setColor(ui::Style::fg());
+                *aImg_ = icon;
+                aImg_->setTransparent(true);
+                aImg_->setZoomToRect(64, 64);
+                aText_->setText(text);
+                aText_->setColor(ui::Style::fg());
                 repositionElements(aImg_, aText_);
             } else {
-                bImg_ = icon;
-                bImg_.setTransparent(true);
-                bImg_.setZoomToRect(64, 64);
-                bText_.setText(text);
-                bText_.setColor(ui::Style::fg());
+                *bImg_ = icon;
+                bImg_->setTransparent(true);
+                bImg_->setZoomToRect(64, 64);
+                bText_->setText(text);
+                bText_->setColor(ui::Style::fg());
                 repositionElements(bImg_, bText_);
             }
             if (initialized_ < 2)
@@ -73,33 +79,33 @@ namespace rckid::ui {
         }
 
         void draw() override {
-            if (dir_ == Direction::None)
-                return;
-            if (a_.update()) {
-                a_.stop();
-                FormWidget::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
-                dir_ = Direction::None;
-                aImgOffset_ = 0;
-                aTextOffset_ = 0;
-                std::swap(aImg_, bImg_);
-                std::swap(aText_, bText_);
-            } else {
-                FormWidget::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
-                updateOffsets();
+            if (dir_ != Direction::None) {
+                if (a_.update()) {
+                    a_.stop();
+                    FormWidget::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
+                    dir_ = Direction::None;
+                    aImgOffset_ = 0;
+                    aTextOffset_ = 0;
+                    std::swap(aImg_, bImg_);
+                    std::swap(aText_, bText_);
+                } else {
+                    FormWidget::backgroundTransition(initialized_ >= 2 ? dir_ : Direction::None, a_);
+                    updateOffsets();
+                }
             }
             Widget::draw();
         }
 
         void clear() {
-            aImg_.clear();
-            aText_.clear();
-            bImg_.clear();
-            bText_.clear();
+            aImg_->clear();
+            aText_->clear();
+            bImg_->clear();
+            bText_->clear();
         }
 
         void showEmpty(Direction d = Direction::None) {
             set("Empty", Icon{assets::icons_64::empty_box}, d);
-            bText_.setColor(ColorRGB::RGB(64, 64, 64));
+            bText_->setColor(ColorRGB::RGB(64, 64, 64));
             empty_ = true;
         }
 
@@ -148,8 +154,8 @@ namespace rckid::ui {
             doSetItem(index, direction);
         }
 
-        Point iconPosition() const { return aImg_.pos() + pos(); }
-        Point textPosition() const { return aText_.pos() + pos(); }
+        Point iconPosition() const { return aImg_->pos() + pos(); }
+        Point textPosition() const { return aText_->pos() + pos(); }
 
     protected:
 
@@ -159,24 +165,24 @@ namespace rckid::ui {
             switch (dir_) {
                 case Direction::Left:
                 case Direction::Right:
-                    renderChild(& bImg_, column, buffer, starty, numPixels, Point(bImgOffset_, 0));
-                    renderChild(& bText_, column, buffer, starty, numPixels, Point(bTextOffset_, 0));
+                    renderChild(bImg_, column, buffer, starty, numPixels, Point(bImgOffset_, 0));
+                    renderChild(bText_, column, buffer, starty, numPixels, Point(bTextOffset_, 0));
                     [[fallthrough]];
                 case Direction::None:
-                    renderChild(& aImg_, column, buffer, starty, numPixels, Point(aImgOffset_, 0));
-                    renderChild(& aText_, column, buffer, starty, numPixels, Point(aTextOffset_, 0));
+                    renderChild(aImg_, column, buffer, starty, numPixels, Point(aImgOffset_, 0));
+                    renderChild(aText_, column, buffer, starty, numPixels, Point(aTextOffset_, 0));
                     break;                      
                 case Direction::Up:
-                    renderChild(& aImg_, column, buffer, starty, numPixels, Point(0, aImgOffset_));
-                    renderChild(& aText_, column, buffer, starty, numPixels, Point(0, aTextOffset_));
-                    renderChild(& bImg_, column, buffer, starty, numPixels, Point(bImgOffset_, 0));
-                    renderChild(& bText_, column, buffer, starty, numPixels, Point(bTextOffset_, 0));
+                    renderChild(aImg_, column, buffer, starty, numPixels, Point(0, aImgOffset_));
+                    renderChild(aText_, column, buffer, starty, numPixels, Point(0, aTextOffset_));
+                    renderChild(bImg_, column, buffer, starty, numPixels, Point(bImgOffset_, 0));
+                    renderChild(bText_, column, buffer, starty, numPixels, Point(bTextOffset_, 0));
                     break;
                 case Direction::Down:
-                    renderChild(& aImg_, column, buffer, starty, numPixels, Point(aImgOffset_, 0));
-                    renderChild(& aText_, column, buffer, starty, numPixels, Point(aTextOffset_, 0));
-                    renderChild(& bImg_, column, buffer, starty, numPixels, Point(0, bImgOffset_));
-                    renderChild(& bText_, column, buffer, starty, numPixels, Point(0, bTextOffset_));
+                    renderChild(aImg_, column, buffer, starty, numPixels, Point(aImgOffset_, 0));
+                    renderChild(aText_, column, buffer, starty, numPixels, Point(aTextOffset_, 0));
+                    renderChild(bImg_, column, buffer, starty, numPixels, Point(0, bImgOffset_));
+                    renderChild(bText_, column, buffer, starty, numPixels, Point(0, bTextOffset_));
                     break;
                 default:
                     UNREACHABLE;
@@ -184,14 +190,16 @@ namespace rckid::ui {
             }
         }
 
-        void repositionElements(Image & imgInto, Label & labelInto) {
+        void repositionElements(Image * imgInto, Label * labelInto) {
+            Coord maxTextWidth = 320 - iconToTextSpacerPx - imgInto->width();
+            Coord tw = labelInto->textWidth();
             // set the position of the icon and the text label
-            Coord tw = labelInto.textWidth();
-            labelInto.setWidth(tw);
-            Coord x = (width() - (tw + imgInto.width() + iconToTextSpacerPx)) / 2;
-            imgInto.setPos(x, (height() - imgInto.height()) / 2);
-            x = x + iconToTextSpacerPx + imgInto.width();
-            labelInto.setPos(x, (height() - labelInto.font().size) / 2);
+            tw = std::min(tw, maxTextWidth);
+            labelInto->setWidth(tw);
+            Coord x = (width() - (tw + imgInto->width() + iconToTextSpacerPx)) / 2;
+            imgInto->setPos(x, (height() - imgInto->height()) / 2);
+            x = x + iconToTextSpacerPx + imgInto->width();
+            labelInto->setPos(x, (height() - labelInto->font().size) / 2);
         }
 
         void setTransition(Direction direction) {
@@ -244,10 +252,10 @@ namespace rckid::ui {
 
     private:
         uint32_t initialized_ = 0;
-        Image aImg_;
-        Label aText_;
-        Image bImg_;
-        Label bText_;
+        Image * aImg_;
+        Label * aText_;
+        Image * bImg_;
+        Label * bText_;
 
         Direction dir_ = Direction::None;
         Coord aImgOffset_;
