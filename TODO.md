@@ -124,7 +124,6 @@ Polish
 
 - avr int as serial tx mabe add 0r resistor on the line to avoid bleeding into rp2350
 
-
 - file browswer can also use the new carouselMenu?
 
 - TODO would be good if image could work immediately with static in memory pictures
@@ -133,8 +132,6 @@ Polish
 - how to blitting & stuff? (bitmap is multi bpp, while surfaces such as canvas are fixed bpp), this makes blitting harder a bit
 
 - when stack protection fails, it will fail in the error code as well forever, update stack on device, do new thread on rckid? 
-- perfect fit strategy seems to be less wasteful, but will have to add fallback
-- merging chunks/splitting large ones? 
 
 - ColorRGB is weird, should be colorRGBA and then have Color565 as a version that wraps around 15bpp? Then change uint16_t everywhere in palettes
 

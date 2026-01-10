@@ -75,7 +75,6 @@ namespace rckid {
         {
             title_ = g_.addChild(new ui::Label{88, 18, ""});
             title_->setWidth(320 - 88);
-            title_->setAutosize(false);
             elapsed_ = g_.addChild(new ui::Label{88, 62, ""});
             icon_ = g_.addChild(new ui::Image{8, 16, Icon{assets::icons_64::play_button}});
             repeatIcon_ = g_.addChild(new ui::Image{50, 58, Icon{assets::icons_24::exchange}});

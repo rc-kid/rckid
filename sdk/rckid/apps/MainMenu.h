@@ -87,14 +87,14 @@ namespace rckid {
             if (bdayDays <= holidayDays) {
                 if (bdayDays < 366) {
                     *anniversaryIcons_[0] = Icon{assets::icons_24::birthday_cake};
-                    anniversaryLabels_[0]->setText(STR(bdayName << " (" << bdayDays << " days)"));
+                    anniversaryLabels_[0]->setText(STR(bdayName << " (" << bdayDays << " days)"), true);
                 } else {
                     anniversaryIcons_[0]->setVisible(false);
                     anniversaryLabels_[0]->setVisible(false);
                 }
                 if (holidayDays < 366) {
                     *anniversaryIcons_[1] = holidayIcon;
-                    anniversaryLabels_[1]->setText(STR(holidayName << " (" << holidayDays << " days)"));
+                    anniversaryLabels_[1]->setText(STR(holidayName << " (" << holidayDays << " days)"), true);
                 } else {
                     anniversaryIcons_[1]->setVisible(false);
                     anniversaryLabels_[1]->setVisible(false);
@@ -102,14 +102,14 @@ namespace rckid {
             } else {
                 if (holidayDays < 366) {
                     *anniversaryIcons_[0] = holidayIcon;
-                    anniversaryLabels_[0]->setText(STR(holidayName << " (" << holidayDays << " days)"));
+                    anniversaryLabels_[0]->setText(STR(holidayName << " (" << holidayDays << " days)"), true);
                 } else {
                     anniversaryIcons_[0]->setVisible(false);
                     anniversaryLabels_[0]->setVisible(false);
                 }
                 if (bdayDays < 366) {
                     *anniversaryIcons_[1] = Icon{assets::icons_24::birthday_cake};
-                    anniversaryLabels_[1]->setText(STR(bdayName << " (" << bdayDays << " days)"));
+                    anniversaryLabels_[1]->setText(STR(bdayName << " (" << bdayDays << " days)"), true);
                 } else {
                     anniversaryIcons_[1]->setVisible(false);
                     anniversaryLabels_[1]->setVisible(false);

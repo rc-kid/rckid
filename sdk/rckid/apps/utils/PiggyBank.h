@@ -40,7 +40,7 @@ namespace rckid {
                 TinyDate now = timeNow().date;
                 TinyDate topUp{1, static_cast<uint8_t>((now.month() == 12) ? 1 : (now.month() + 1)), now.year()};
                 uint32_t daysTillTopUp = now.daysTillNextAnnual(topUp);
-                topUp_->setText(STR("+" << settings_.allowance << " in " << daysTillTopUp << " days"));
+                topUp_->setText(STR("+" << settings_.allowance << " in " << daysTillTopUp << " days"), true);
                 Coord w = topUp_->textWidth() + 24;
                 topupIcon_->setPos(160 - (w / 2), 144);
                 topUp_->setPos(160 - (w / 2) + 24, 140);
@@ -61,7 +61,7 @@ namespace rckid {
                         TinyDate now = timeNow().date;
                         TinyDate topUp{1, static_cast<uint8_t>((now.month() == 12) ? 1 : (now.month() + 1)), now.year()};
                         uint32_t daysTillTopUp = now.daysTillNextAnnual(topUp);
-                        topUp_->setText(STR("+" << settings_.allowance << " in " << daysTillTopUp << " days"));
+                        topUp_->setText(STR("+" << settings_.allowance << " in " << daysTillTopUp << " days"), true);
                         saveSettings(settings_);
                     }
                 }));

@@ -49,8 +49,6 @@ namespace rckid::ui {
             bText_->setHeight(bText_->font().size);
             repositionElements(aImg_, aText_);
             repositionElements(bImg_, bText_);
-            aText_->setAutosize(false);
-            bText_->setAutosize(false);
         } 
 
         /** Sets the carousel's current element to given text and icon. 

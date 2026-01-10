@@ -51,14 +51,14 @@ namespace rckid {
                 email_ = contents_->addChild(new ui::Label{80, 60, c.email});
                 address_ = contents_->addChild(new ui::Label{80, 90, c.address});
                 note_ = contents_->addChild(new ui::Label{80, 120, c.note});
-                birthday_->setFont(Font::fromROM<assets::Iosevka24>());
-                phone_->setFont(Font::fromROM<assets::Iosevka24>());
-                email_->setFont(Font::fromROM<assets::Iosevka24>());
-                address_->setFont(Font::fromROM<assets::Iosevka24>());
-                note_->setFont(Font::fromROM<assets::Iosevka24>());
-                bdayExtras_->setFont(Font::fromROM<assets::Iosevka24>());
+                birthday_->setFont(Font::fromROM<assets::Iosevka24>(), true);
+                phone_->setFont(Font::fromROM<assets::Iosevka24>(), true);
+                email_->setFont(Font::fromROM<assets::Iosevka24>(), true);
+                address_->setFont(Font::fromROM<assets::Iosevka24>(), true);
+                note_->setFont(Font::fromROM<assets::Iosevka24>(), true);
+                bdayExtras_->setFont(Font::fromROM<assets::Iosevka24>(), true);
                 image_->setTransparentColor(ColorRGB::Black());
-                name_->setFont(Font::fromROM<assets::OpenDyslexic64>());
+                name_->setFont(Font::fromROM<assets::OpenDyslexic64>(), true);
                 bdayExtras_->setColor(ui::Style::accentFg());
                 contextMenu_.add(ui::ActionMenu::Item("Edit name", [this]() {
                     auto n = App::run<TextDialog>( "Name", c_.name);
@@ -320,7 +320,7 @@ namespace rckid {
                     nb.icon_->setVisible(false);
                     nb.label_->setVisible(false);
                 } else {
-                    nb.label_->setText(STR(nb.label_->text() << " (" << nb.numDays_ << " days)"));
+                    nb.label_->setText(STR(nb.label_->text() << " (" << nb.numDays_ << " days)"), true);
                 }
             }
         }

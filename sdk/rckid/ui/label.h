@@ -20,39 +20,27 @@ namespace rckid::ui {
         Label(Coord x, Coord y, String text):
             Widget{x, y}, 
             text_{std::move(text)} {
-            if (autosize_)
-                resizeToText();
-            else
-                reposition();
+            resizeToText();
         }
 
         Label(Point pos, String text): Label{pos.x, pos.y, std::move(text)} {}
 
         Label(Rect rect, String text):
             Widget{rect}, 
-            text_{std::move(text)},
-            autosize_{false} {
+            text_{std::move(text)} 
+        {
             reposition();
         }
 
         String const & text() { return text_; }
 
-        bool autosize() const { return autosize_; }
-        void setAutosize(bool value) { 
-            if (autosize_ != value) {
-                autosize_ = value;
-                if (autosize_)
-                    resizeToText();
-            }
-        }
-
         /** Sets the text of the label and returns true if the text differs from previous value, false otherwise. Setting text that is already in the label is a no-op.
          */
-        bool setText(String value) { 
+        bool setText(String value, bool resize = false) { 
             if (value == text_)
                 return false;
             text_ = std::move(value);
-            if (autosize_)
+            if (resize)
                 resizeToText();
             else
                 reposition();
@@ -113,9 +101,9 @@ namespace rckid::ui {
         void setColor(ColorRGB value) { color_ = value; }
 
         Font const & font() const { return font_; }
-        void setFont(Font const & value) { 
+        void setFont(Font const & value, bool resize = false) { 
             font_ = value;
-            if (autosize_)
+            if (resize)
                 resizeToText();
             else
                 reposition();
@@ -228,7 +216,6 @@ namespace rckid::ui {
         ColorRGB color_{Style::fg()};
         Point textTopLeft_;
         std::vector<Hint> hints_;
-        bool autosize_ = true;
         Timer a_{2000};
         Coord scrollOffset_ = 0;
     }; //rckid::ui::Label
