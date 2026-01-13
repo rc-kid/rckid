@@ -20,7 +20,7 @@ namespace rckid {
             title_ = g_.addChild(new ui::Label{96, 0, std::move(title)});
             slider_ = g_.addChild(new ui::ProgressBar{Rect::XYWH(96, 58, 200, 20), min, max, value});
             icon_->setTransparentColor(ColorRGB::Black());
-            title_->setFont(Font::fromROM<assets::OpenDyslexic64>());
+            title_->setFont(Font::fromROM<assets::OpenDyslexic64>(), true);
         }
 
         void setAnimation(Point iconStart, Point textStart, uint32_t durationMs = 500) {

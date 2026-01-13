@@ -70,7 +70,7 @@ namespace rckid {
         StackProtection::check();
         UNIMPLEMENTED;
     }
-
+    
     uint16_t powerVcc() {
         StackProtection::check();
         UNIMPLEMENTED;

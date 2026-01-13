@@ -20,6 +20,15 @@
  */
 #define RCKID_IDLE_TIMEOUT 300
 
+/** Heartbeat mode is periodic wakeup when the device is not used during which the device can process periodic tasks such as checking for new messages, synchronizing time, etc. To disable heartbeats altogether, set this value to 0.
+ */
+//#define RCKID_HEARTBEAT_PERIOD 180
+#define RCKID_HEARTBEAT_PERIOD 0
+
+/** Heartbeat service timeout. If the heartbeat task takes longer than this number of ticks (60fps) and the device is *not* turned on by the user, the device turns itself off forcefully.
+ */
+#define RCKID_HEARTBEAT_TIMEOUT_FPS (60 * 60)
+
 /** Idle timeout fallback that is not affected by the keepalive function call. I.e. no matter what the application does, after this time, the device will power itself off. Note that when in debug mode, the device is automatically in keepalive mode for all applications.
  */
 #define RCKID_IDLE_TIMEOUT_KEEPALIVE 3600
@@ -30,7 +39,7 @@
 
 /** Timeout for the RP2350 to issue power off command *after* the power off interrupt has been issued. If power off command is not received in this time, the AVR will forcibly power off the device anyways.
  */
-#define RCKID_POWEROFF_TIMEOUT_FPS 600
+#define RCKID_POWEROFF_TIMEOUT_FPS (10 * 60)
 
 /** Timeout for the RP2350 to acknowledge the power interrupt request.  
  */

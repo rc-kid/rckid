@@ -51,13 +51,16 @@ Polish
 
 # TODO
 
-> !!! It does look like the new batteries do *not* have protection circuits in them. To compensate, I can add battery protection circuit to the protection PCB. This could be from BQ2970 and CSD16406, both available from jlcpcb. Checked with TME and they do have protection, cutoff at 3V. 
+- first home button press in heartbeat mode ignored, second one works though
+- home menu is hit immediately when powering on from heartbeat menu
+- when powered on from heartbeat menu, the automated power off for heartbeat is not cleared it seems
+
+- display power on routine - do no turn brightness in AVR unless debug mode, do not turn brightness in RP in bootloader mode
 
 - likely there is an issue with timing & drawing of the lines on GBCemu we have VBLANK first then start drawing line, also songbird does not work well during transitions...
 
+- or maybe add circular scrolling to labels?
 - make label scrolling nicer to configure so that inside audio player when refresh rate is 1s we can still do nice things, or can we increase refresh rate? 
-
-- background image, if not repeated should draw black or something
 
 - add steps to budget seconds conversion
 
@@ -79,7 +82,6 @@ Polish
 - keep the offset so that we can go back (in messages)
 - check wifi available, etc. 
 - make more robust
-- music player disables background tasks, yet uses own bg tasks, which of course does not work
 - Friends::ContactViewer should be own dialog, not part of friends ideally
 
 - add airplane mode & sleep function (also uncomment the options in home menu)
@@ -112,8 +114,6 @@ Polish
 
 - would be nice to have menu-like transitions between apps (i.e. multimain menu stuff)
 
-- bg tasks have to be properly closed when some app says it is not compatible with them
-
 - the color settings should be stored, perhaps per game?  (gameboy)
 - and when colors are updated, different colors should be update-able at the same time
 
@@ -121,8 +121,6 @@ Polish
 
 - platform string utils should not be used, instead everything should run off rckid::String
 - verify other std::string uses
-
-- avr int as serial tx mabe add 0r resistor on the line to avoid bleeding into rp2350
 
 - file browswer can also use the new carouselMenu?
 
@@ -159,6 +157,7 @@ Polish
 ## AVR
 
 - see if we can run at 5MHz and still talk to neopixel
+- avr int as serial tx mabe add 0r resistor on the line to avoid bleeding into rp2350
 
 ## UI
 
@@ -181,6 +180,10 @@ Polish
 
 - optimize surface functions for common cases
 - add specialization for 16 bpp bitmap renderColumn that simply does memcopy
+
+## Known performance issues
+
+- when clearing drawing buffers with bg color, this is very inefficient and can be done with DMA right after screen is updated
 
 ## Apps
 

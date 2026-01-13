@@ -47,7 +47,7 @@ namespace rckid::gbcemu {
 
         Most of this builds on a very good GB/GBC reference available at https://gbdev.io/pandocs/About.html
      */
-    class GBCEmu : public ModalApp<void> {
+    class GBCEmu : public ModalApp<void>, App::StandaloneModeGuard {
     public:
 
         String name() const override { return STR("GBCEmu_" << appName_); }
@@ -519,9 +519,6 @@ namespace rckid::gbcemu {
         // interrupts enabled flag (cannot be read, only set by insns)
         // TODO is this necessary or can I just use the last high mem byte?
         bool ime_ = false;
-
-        // disables background tasks while the emulator is running
-        Task::DisableGuard taskDisableGuard_;
 
 #ifdef GBCEMU_INTERACTIVE_DEBUG
         // breakpoint at which the main loop pauses

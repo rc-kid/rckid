@@ -159,8 +159,11 @@ public:
 
     // flag that tells us the device turned off because of critical battery level - reset when charger is connected
     static inline bool criticalBattery_ = false;
+    static inline bool lowBattery_ = false;
 
     static inline uint16_t powerOffTimeout_ = 0;
+
+    static inline uint32_t heartbeatTimeout_ = RCKID_HEARTBEAT_PERIOD;
     
     static void setPowerMode(uint8_t mode) {
         if (powerMode_ & mode)
@@ -173,10 +176,8 @@ public:
             startSystemTicks();
         }
         powerMode_ |= mode;
-        // if turning on, clear any notification (power when off)
         switch (mode) {
             case POWER_MODE_ON:
-                setNotification(RGBEffect::Off());
                 break;
             case POWER_MODE_DC:
                 // clear the critical battery flag when DC power is connected
@@ -246,13 +247,16 @@ public:
             powerIOVDD(true);
             // initialize the PWM subsystem for baclight & rumbler
             initializePWM();
+            // TODO do this only when in debug mode
             setBacklightPWM(state_.brightness);
             ADC0.CTRLA |= ADC_RUNSTBY_bm;
         );
-        for (int i = 0; i < NUM_RGB_LEDS; ++i)
-            rgbEffect_[i] = RGBEffect::Off();
-        setRumblerEffect(RumblerEffect::OK());
-
+        // turn the RGB LEDs off
+        if (! state_.status.heartbeatMode()) {
+            setNotification(RGBEffect::Off());
+            for (int i = 0; i < NUM_RGB_LEDS; ++i)
+                rgbEffect_[i] = RGBEffect::Off();
+        }
     }
 
     /** Initializes the device power off state. 
@@ -268,21 +272,16 @@ public:
             // clear IRQ
             irq_ = false;
         );
-        // disable debug mode (only exists in power on mode)
+        // disable debug mode (only exists in power on mode) as well as heartbeat mode
         state_.status.setDebugMode(false);
-    }
-
-    static void lowBatteryWarning() {
-        setNotification(RGBEffect::Breathe(platform::Color::Red().withBrightness(RCKID_RGB_BRIGHTNESS), 8));
+        state_.status.setHeartbeatMode(false);
     }
 
     static void enterDebugMode() {
         LOG("Debug mode on");
         state_.status.setDebugMode(true);
         if (powerMode_ & POWER_MODE_ON) {
-            if (state_.brightness < 128)
-                setBacklightPWM(128);
-            // TODO TODO TODO
+            setBacklightPWM(state_.brightness > 128 ? state_.brightness : 128);
             for (uint8_t i = 0; i < NUM_RGB_LEDS; ++i)
                 rgbEffect_[i] = RGBEffect::Breathe(platform::Color::Purple().withBrightness(RCKID_RGB_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED);
             rgbOn(true);
@@ -537,14 +536,30 @@ public:
         secondTick_ = false;
         ++state_.uptime;
         state_.time.inc();
-        if (state_.alarm.check(state_.time)) {
-            // power the device on, if not on yet
+        // see if we should trigger heartbeat mode
+        if ((heartbeatTimeout_ > 0) && (--heartbeatTimeout_ == 0)) {
+            heartbeatTimeout_ = RCKID_HEARTBEAT_PERIOD;
+            NO_ISR(
+                state_.status.setHeartbeatInt();
+                setIrq();
+            );
+            // if we are not on, set heartbeat mode letting the RP know that it's not normal power on
+            if (! (powerMode_ & POWER_MODE_ON)) {
+                state_.status.setHeartbeatMode(true);
+                powerOffTimeout_ = RCKID_HEARTBEAT_TIMEOUT_FPS;
+            }
             powerOn();
+        };
+        // check alarm too
+        if (state_.alarm.check(state_.time)) {
             // and set the IRQ to notify the RP2350
             NO_ISR(
                 state_.status.setAlarmInt();
                 setIrq();
             );
+            // power the device on, if not on yet, disable heartbeat mode in case we are in it
+            state_.status.setHeartbeatMode(false);
+            powerOn();
         }
         if (powerMode_ != 0) {
             if (powerMode_ & POWER_MODE_ON) {
@@ -890,7 +905,9 @@ public:
             }
             case cmd::SetNotification::ID: {
                 auto & c = cmd::SetNotification::fromBuffer(state_.buffer);
-                setNotification(c.effect);;
+                // only set the notification if we are not showing low battery warning, which takes precedence over any user defined notifications
+                if (!lowBattery_)
+                    setNotification(c.effect);;
                 break;
             }
             default:
@@ -1018,17 +1035,23 @@ public:
     }
 
     static void homeBtnLongPress() {
-        if (powerMode_ & POWER_MODE_ON) {
+        // if we are in power on mode (and not in heartbeat), power off
+        if ((powerMode_ & POWER_MODE_ON) && ! state_.status.heartbeatMode()) {
             // set power off interrupt and start the acknowledge timeout
             powerOffTimeout_ = RCKID_POWEROFF_ACK_TIMEOUT_FPS;
             state_.status.setPowerOffInt();
+        // otherwise power on, noting that we could alreaady be technically on & in heartbeat mode, in which case clear the heartbeat mode letting the app know that user requested full power on
         } else {
-            ASSERT(powerMode_ & POWER_MODE_WAKEUP);
+            ASSERT(powerMode_ & POWER_MODE_WAKEUP || ! state_.status.heartbeatMode());
+            state_.status.setHeartbeatMode(false);
+            powerOffTimeout_ = 0;
             powerOn();
             clearPowerMode(POWER_MODE_WAKEUP);
             // if we are in debug mode at this point, re-enable it again now that we have powered the IOVDD rail. This will turn on the LEDs and set backlight as well 
             if (state_.status.debugMode())
                 enterDebugMode();
+            // rumble to indicate power on
+            setRumblerEffect(RumblerEffect::OK());
         }
     }
 
@@ -1198,9 +1221,15 @@ public:
                         clearPowerMode(POWER_MODE_CHARGING);
                     }
                 }
-                if (state_.status.lowBattery() != (value < RCKID_LOW_BATTERY_THRESHOLD)) {
-                    state_.status.setLowBattery(value < RCKID_LOW_BATTERY_THRESHOLD);
-                    setIrq();
+                if (lowBattery_ != (value < RCKID_LOW_BATTERY_THRESHOLD)) {
+                    lowBattery_ = (value < RCKID_LOW_BATTERY_THRESHOLD);
+                    if (lowBattery_) {
+                        setIrq();
+                        // add red notification 
+                        setNotification(RGBEffect::Breathe(platform::Color::Red().withBrightness(RCKID_RGB_BRIGHTNESS)));
+                    } else {
+                        setNotification(RGBEffect::Off());
+                    }
                 }
                 // emergency shutdown if battery too low
                 if (value < RCKID_POWER_ON_THRESHOLD && (powerMode_ & POWER_MODE_ON)) {

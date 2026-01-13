@@ -1,5 +1,7 @@
 #include "rckid-default.h"
 
+#include <rckid/heartbeat.h>
+
 
 #include <rckid/apps/devel/MicTest.h>
 #include <rckid/apps/utils/Steps.h>
@@ -25,6 +27,9 @@ ui::ActionMenu * alphaMenu() {
 
 
 int main() {
+    Task::registerHeartbeatTask([]() -> Task* {
+        return new rckid::HeartbeatTask{};
+    });
     initialize();
     Alarm::checkEvent();
     ui::runSystemMenu(alphaMenu);

@@ -46,20 +46,21 @@ namespace rckid {
             bool btnVolumeUp()   const { return b_ & BTN_VOLUMEUP; }
             bool btnVolumeDown() const { return b_ & BTN_VOLUMEDOWN; }
 
-            /** Power off interrupt. 
-             
-                When received, the RP2350 should finalize all its tasks, save state, etc. and then turn the device off via sending the poweroff command. Once the power off interrupt is received, it cannot be cleared. If the power off command is not received in time (see RCKID_POWEROFF_TIMEOUT_FPS), the AVR will forcibly power off the device anyways. 
-             */
-            bool powerOffInt()        const { return c_ & PWROFF_INT; }
-            bool accelInt()      const { return c_ & ACCEL_INT; }
-            bool alarmInt()      const { return c_ & ALARM_INT; }
-            bool secondInt()     const { return c_ & SECOND_INT; }
-
-            bool lowBattery()     const { return b_ & LOW_BATT; }
             bool vusb()           const { return b_ & VUSB; }
             bool charging()       const { return b_ & CHARGING; }
             bool debugMode()      const { return b_ & DEBUG_MODE; }
             bool bootloaderMode() const { return b_ & BOOTLOADER_MODE; }
+            bool heartbeatMode()  const { return b_ & HEARTBEAT_MODE; }
+
+            /** Power off interrupt. 
+             
+                When received, the RP2350 should finalize all its tasks, save state, etc. and then turn the device off via sending the poweroff command. Once the power off interrupt is received, it cannot be cleared. If the power off command is not received in time (see RCKID_POWEROFF_TIMEOUT_FPS), the AVR will forcibly power off the device anyways. 
+             */
+            bool powerOffInt()   const { return c_ & PWROFF_INT; }
+            bool accelInt()      const { return c_ & ACCEL_INT; }
+            bool alarmInt()      const { return c_ & ALARM_INT; }
+            bool secondInt()     const { return c_ & SECOND_INT; }
+            bool heartbeatInt()  const { return c_ & HEARTBEAT_INT; }
 
             uint16_t vcc() const {
                 return (vcc_ == 0) ? 0 : (vcc_ + 245);
@@ -79,6 +80,8 @@ namespace rckid {
             void clearInterrupts() { c_ &= ~(PWROFF_INT | ACCEL_INT | SECOND_INT); }
 
             void clearAlarmInterrupt() { c_ &= ~ALARM_INT; }
+
+            void clearHeartbeatInterrupt() { c_ &= ~HEARTBEAT_INT; }
 
             /** Clears the pressed state of all buttons. This method is useful for rapidfire where every interval, we reset the button state in last state giving us btnPressed again.
              */
@@ -119,6 +122,7 @@ namespace rckid {
             void setAccelInt() { c_ |= ACCEL_INT; }
             void setAlarmInt() { c_ |= ALARM_INT; }
             void setSecondInt() { c_ |= SECOND_INT; }
+            void setHeartbeatInt() { c_ |= HEARTBEAT_INT; }
 
             bool setDPadButtons(bool left, bool right, bool up, bool down) {
                 uint8_t aa = (a_ & 0xf0) | ((left ? BTN_LEFT : 0) | (right ? BTN_RIGHT : 0) | (up ? BTN_UP : 0) | (down ? BTN_DOWN : 0));
@@ -143,11 +147,11 @@ namespace rckid {
                 return true;
             }
 
-            void setLowBattery(bool value) { value ? (b_ |= LOW_BATT) : (b_ &= ~LOW_BATT); }
             void setVUsb(bool value) { value ? (b_ |= VUSB) : (b_ &= ~VUSB); }
             void setCharging(bool value) { value ? (b_ |= CHARGING) : (b_ &= ~CHARGING); }
             void setDebugMode(bool value) { value ? (b_ |= DEBUG_MODE) : (b_ &= ~DEBUG_MODE); }
             void setBootloaderMode(bool value) { value ? (b_ |= BOOTLOADER_MODE) : (b_ &= ~BOOTLOADER_MODE); }
+            void setHeartbeatMode(bool value) { value ? (b_ |= HEARTBEAT_MODE) : (b_ &= ~HEARTBEAT_MODE); }
 
             void setVcc(uint16_t vx100) {
                 if (vx100 < 250)
@@ -173,7 +177,7 @@ namespace rckid {
             static constexpr uint8_t BTN_HOME        = 1;
             static constexpr uint8_t BTN_VOLUMEUP    = 2;
             static constexpr uint8_t BTN_VOLUMEDOWN  = 4;
-            static constexpr uint8_t LOW_BATT        = 8;
+            static constexpr uint8_t HEARTBEAT_MODE  = 8;
             static constexpr uint8_t VUSB            = 16;
             static constexpr uint8_t CHARGING        = 32;
             static constexpr uint8_t DEBUG_MODE      = 64;
@@ -184,6 +188,7 @@ namespace rckid {
             static constexpr uint8_t ACCEL_INT       = 2;
             static constexpr uint8_t ALARM_INT       = 4;
             static constexpr uint8_t SECOND_INT      = 8;
+            static constexpr uint8_t HEARTBEAT_INT   = 16;
             uint8_t c_ = 0;
 
             uint8_t vcc_ = 0;

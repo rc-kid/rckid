@@ -24,7 +24,7 @@
 
 namespace rckid {
 
-    class Messages : public ui::Form<void> {
+    class Messages : public ui::Form<void>, App::StandaloneModeGuard {
     public:
 
         class Task;

@@ -107,13 +107,19 @@ namespace rckid {
          */
         void result() const {}
 
-        /** Enters standalone app mode. 
+    protected:
+
+        /** Standalone app RAII guard.
          
             The standalone app mode diverts all resources to the currently running app. All background tasks are stopped and destroyed and any visual caches, such as background are cleared too, ensuring the current app has the most memory & cpu available to itself.
-         */
-        static void enableStandaloneMode();
 
-    protected:
+            Tasks are re-enabled when the guard exits, background and other caches are re-enabled on request (i.e. they can still be re-enabled by the very app later if desired, or not careful).
+         */
+        class StandaloneModeGuard {
+        public:
+            StandaloneModeGuard();
+            ~StandaloneModeGuard();
+        }; // App::StandaloneModeGuard
 
         /** Called when the application should gain focus. There can only be one focused app at a time. 
          */

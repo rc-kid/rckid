@@ -23,9 +23,13 @@ namespace rckid::ui {
         }
 
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
+            fillBackground(buffer, numPixels);
+            Widget::renderColumn(column, buffer, starty, numPixels);
+        }
+
+        void fillBackground(uint16_t * buffer, Coord numPixels) {
             for (Coord i = 0; i < numPixels; ++i)
                 buffer[i] = bg_.raw16();
-            Widget::renderColumn(column, buffer, starty, numPixels);
         }
 
     private:

@@ -55,8 +55,8 @@ namespace rckid::ui {
                 delete bg_;
             bg_ = new Image{Style::loadBackgroundImage()};
             bg_->setRect(Rect::WH(320, 240));
-            //bg_->setRepeat(Style::backgroundScroll() == BackgroundScrollStyle::Scroll);
-            bg_->setRepeat(true);
+            bg_->setRepeat(Style::backgroundScroll() == BackgroundScrollStyle::Scroll);
+            bgPos_ = Point{(320 - bg_->bitmap()->width()) / 2, (240 - bg_->bitmap()->height()) / 2};
             bg_->setTransparent(false);
         }
 
@@ -96,38 +96,19 @@ namespace rckid::ui {
             });
         }
 
-        static void backgroundTransition(Direction dir, Timer & t) {
+        static void backgroundTransition(Direction dir, uint32_t duration = 500) {
             if (bg_ == nullptr)
                 return;
-            switch (dir) {
-                case Direction::Left:
-                    bgPos_ = bgStart_ + Point(backgroundTransitionUpdate(t, 80), 0);
-                    break;
-                case Direction::Right:
-                    bgPos_ = bgStart_ - Point(backgroundTransitionUpdate(t, 80), 0);
-                    break;
-                case Direction::Up:
-                    bgPos_ = bgStart_ + Point(0, backgroundTransitionUpdate(t, 60));
-                    break;
-                case Direction::Down:
-                    bgPos_ = bgStart_ - Point(0, backgroundTransitionUpdate(t, 60));
-                    break;
-                case Direction::None:
-                    // don't do anything for no direction
-                    break;
-                default:
-                    UNIMPLEMENTED;
-                    break;
-            }
-            if (! t.running())
-                bgStart_ = bgPos_;
+            bgStart_ = bgPos_;
+            bgTimer_.start(duration);
+            bgDir_ = dir;
         }
 
         static void refreshStyle() {
             if (bg_ != nullptr) {
                 bg_->clear();
                 (*bg_) = Style::loadBackgroundImage();
-                //bg_->setRepeat(Style::backgroundScroll() == BackgroundScrollStyle::Scroll);
+                bg_->setRepeat(Style::backgroundScroll() == BackgroundScrollStyle::Scroll);
                 bgPos_ = Point{0,0};
             }
         }
@@ -159,6 +140,32 @@ namespace rckid::ui {
             Panel::draw();
             // if background tilt is enabled, update the actual image size by the current accelerometer values
             if (bg_ != nullptr) {
+                // update the bgPos_ if we are transitioning
+                bgTimer_.update();
+                switch (bgDir_) {
+                    case Direction::Left:
+                        bgPos_ = bgStart_ + Point{backgroundTransitionUpdate(bgTimer_, 80), 0};
+                        break;
+                    case Direction::Right:
+                        bgPos_ = bgStart_ - Point{backgroundTransitionUpdate(bgTimer_, 80), 0};
+                        break;
+                    case Direction::Up:
+                        bgPos_ = bgStart_ + Point{0, backgroundTransitionUpdate(bgTimer_, 60)};
+                        break;
+                    case Direction::Down:
+                        bgPos_ = bgStart_ - Point{0, backgroundTransitionUpdate(bgTimer_, 60)};
+                        break;
+                    case Direction::None:
+                        // don't do anything for no direction
+                        break;
+                    default:
+                        UNIMPLEMENTED;
+                        break;
+                }
+                // reset the bg position when done in case we are not scrolling
+                if (! bgTimer_.running() && Style::backgroundScroll() != BackgroundScrollStyle::Scroll)
+                    bgPos_ = Point{(320 - bg_->bitmap()->width()) / 2, (240 - bg_->bitmap()->height()) / 2};
+                // add tilt
                 if (Style::backgroundTilt())
                     bg_->setImgPos(bgPos_ + Point{accelX() / 512, accelY() / 512});
                 else
@@ -167,15 +174,25 @@ namespace rckid::ui {
         }
 
         void renderColumn(Coord column, uint16_t * buffer, Coord starty, Coord numPixels) override {
+            // fill the background first
+            // TODO this is technically not necessary if the background covers completely, and even if it does not can be sped up via DMA resetting the buffer after draw, but for now this is ok
+            fillBackground(buffer, numPixels);
+            // draw the image
             if (bgImage_) {
                 ASSERT(bg_ != nullptr);
                 renderChild(bg_, column, buffer, starty, numPixels);
-                Widget::renderColumn(column, buffer, starty, numPixels);
-            } else {
-                Panel::renderColumn(column, buffer, starty, numPixels);    
-            }
+            } 
+            // render our children (skip the panel's draw as it would refill the background)
+            Widget::renderColumn(column, buffer, starty, numPixels);
+            // and draw header if we should
             if (header_)
                 renderChild(Header::instance(), column, buffer, starty, numPixels);
+        }
+
+        static void fillBackgroundColor(uint16_t * buffer, Coord numPixels) {
+            uint16_t bg = Style::bg().raw16();
+            for (Coord i = 0; i < numPixels; ++i)
+                buffer[i] = bg;
         }
 
         static Coord backgroundTransitionUpdate(Timer & t, Coord magnitude) {
@@ -203,6 +220,8 @@ namespace rckid::ui {
         // position of the background
         static inline Point bgPos_{0,0};
         static inline Image * bg_ = nullptr;
+        static inline Timer bgTimer_{500};
+        static inline Direction bgDir_{Direction::None};
     }; 
 
 

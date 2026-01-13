@@ -16,7 +16,7 @@ namespace rckid {
      
         This will be simple file browser and when a file is selected, it will start audio decoding and playback.
      */
-    class MusicPlayer : public ui::Form<void> {
+    class MusicPlayer : public ui::Form<void>, App::StandaloneModeGuard {
     public:
 
         String name() const override { return "AudioPlayer"; }
@@ -115,9 +115,6 @@ namespace rckid {
 
         FileBrowser * c_;
         AudioPlayerMode mode_ = AudioPlayerMode::Normal;
-
-        // disables background tasks while the music player is running
-        Task::DisableGuard taskDisableGuard_;
 
     }; // rckid::MusicPlayer
 

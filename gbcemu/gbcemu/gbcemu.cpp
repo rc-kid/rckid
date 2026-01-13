@@ -630,7 +630,6 @@ namespace rckid::gbcemu {
 
     void GBCEmu::loadCartridge(GamePak * game) {
         clear();
-        App::enableStandaloneMode();
         gamepak_ = game;
         if (gamepak_ == nullptr) {
             mbc_ = MBC::None;

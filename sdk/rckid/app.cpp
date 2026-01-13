@@ -77,10 +77,14 @@ namespace rckid {
         return menu;
     }
 
-    void App::enableStandaloneMode() {
+    App::StandaloneModeGuard::StandaloneModeGuard() {
         ui::FormWidget::clearBackgroundImage();
         ui::Header::clearInstance();
-        Task::killAllTasks();
+        Task::disableTasks();
+    }
+
+    App::StandaloneModeGuard::~StandaloneModeGuard() {
+        Task::enableTasks();
     }
 
     extern volatile bool avrStatusRequest_;

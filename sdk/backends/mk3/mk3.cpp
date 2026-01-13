@@ -50,6 +50,7 @@ extern "C" {
 #include <rckid/filesystem.h>
 #include <rckid/ui/header.h>
 #include <rckid/ui/style.h>
+#include "heartbeat_app.h"
 
 #include <rckid/apps/dialogs/InfoDialog.h>
 #include <rckid/apps/dialogs/PinDialog.h>
@@ -278,7 +279,8 @@ namespace rckid {
         uint32_t downMask = status.buttonChangeDown(io::avrState_.status);
         uint32_t upMask = status.buttonChangeUp(io::avrState_.status);
 
-        if (downMask != 0 || upMask != 0) {
+        // rumble when keys are pressed 
+        if (! status.heartbeatMode() && (downMask != 0 || upMask != 0)) {
             time::idleTimeout_ = RCKID_IDLE_TIMEOUT;
             time::idleTimeoutKeepalive_ = RCKID_IDLE_TIMEOUT_KEEPALIVE;
             // if rumbling enabled, rumble
@@ -301,6 +303,11 @@ namespace rckid {
         // if there is power off interrupt, we should power off immediately
         if (status.powerOffInt())
             powerOff();
+        // if there is heartbeat interrupt, run the heartbeat task if tasks are allowed, otherwise keep the interrupt flag set so that next tick will try scheduling. Note this can only happen in normal power mode as in heartbeat mode the task is scheduled by the heartbeat app in initialize 
+        if (status.heartbeatInt() && Task::runHeartbeatTask()) {
+            ASSERT(! io::avrState_.status.bootloaderMode());
+            io::avrState_.status.clearHeartbeatInterrupt();
+        }
         // TODO accel interrupt
         // finally clear the interrupts once we have processed them
         io::avrState_.status.clearInterrupts();
@@ -430,11 +437,10 @@ namespace rckid {
 
         i2c::initialize();
 
-
         LOG(LL_INFO, "\n\n\nSYSTEM RESET DETECTED (RP2350): ");
         LOG(LL_INFO, "RP2350 chip version: " << rp2350_chip_version());
         
-        RAMHeap::traceChunks();
+        //RAMHeap::traceChunks();
 
         // initialize the display
         ST7789::initialize();
@@ -533,6 +539,10 @@ namespace rckid {
         gpio::setAsInputPullUp(RP_PIN_HEADSET_DETECT);
 
         LOG(LL_INFO, "Initialization done");
+
+        // check if we should start the heartbeat app
+        if (io::avrState_.status.heartbeatInt())
+            App::run<HeartbeatApp>();
 
         while (io::avrState_.pin != 0xffff) {
             LOG(LL_INFO, "Pin lock");
