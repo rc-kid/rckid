@@ -23,8 +23,15 @@ namespace rckid {
     }
 
     void App::update() {
-        if (! HomeMenu::active() && btnReleased(Btn::Home))
-            showHomeMenu();
+        // for home menu, first arm when home button is pressed, then show when released. This is to avoid home menu invocation long home button press should turn the device off
+        if (! HomeMenu::active()) {
+            if (homeMenuArmed_ && btnReleased(Btn::Home)) {
+                homeMenuArmed_ = false;
+                showHomeMenu();
+            } else if (btnPressed(Btn::Home)) {
+                homeMenuArmed_ = true;
+            }
+        }
         if (btnPressed(Btn::VolumeUp)) {
             btnClear(Btn::VolumeUp);
             audioSetVolume(audioVolume() + 1);

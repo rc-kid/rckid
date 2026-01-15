@@ -23,7 +23,7 @@ namespace rckid {
             return offset;
         }
 
-        uint32_t ticks_ = 120 * 60;
+        uint32_t ticks_ = 20 * 60;
     };
 
 } // namespace rckid

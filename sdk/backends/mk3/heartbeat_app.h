@@ -38,6 +38,7 @@ namespace rckid {
             // if we are out of heartbeat mode, in which case the app should exit
             if (! io::avrState_.status.heartbeatMode()) {
                 LOG(LL_INFO, "Exiting heartbeat app");
+                displaySetBrightness(io::avrState_.brightness);
                 exit();
             }
             // if the heartbeat task is done is done, in which case power off 

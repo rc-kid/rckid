@@ -445,6 +445,29 @@ namespace rckid {
         // initialize the display
         ST7789::initialize();
 
+        // try talking to the AVR chip and see that all is well
+        // read the full AVR state (including time information). Do not process the interrupts here, but wait for the first tick, which will or them with the ones obtained here and process when the device is fully initialized
+        {
+            int n = i2c_read_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, (uint8_t *) & io::avrState_, sizeof(AVRState), false);
+            if (n != sizeof(AVRState))
+                FATAL_ERROR(Error::hardwareFailure, static_cast<uint32_t>(n));
+            if (io::avrState_.avrVersion != AVR_VERSION) {
+                LOG(LL_ERROR, "Incompatible AVR version detected: " << static_cast<uint32_t>(io::avrState_.avrVersion) << ", expected " << static_cast<uint32_t>(AVR_VERSION));
+                FATAL_ERROR(Error::hardwareFailure, static_cast<uint32_t>(io::avrState_.avrVersion), "Incompatible AVR version");
+            }
+            LOG(LL_INFO, "AVR uptime: " << io::avrState_.uptime);
+            LOG(LL_INFO, "Current time: " << io::avrState_.time);
+            // update the volume on the audio codec based on the values received from AVR (last settings)
+            Codec::setVolumeSpeaker(io::avrState_.audio.volumeSpeaker());
+            Codec::setVolumeHeadphones(io::avrState_.audio.volumeHeadphones());
+        }
+
+        // set brightness to last known value unless we are in a heartbeat mode
+        if (! io::avrState_.status.heartbeatMode()) {
+            cmd::SetBrightness cmd{io::avrState_.brightness};
+            i2c_write_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, reinterpret_cast<uint8_t*>(&cmd), sizeof(cmd), false);
+        }
+
         // initialize next second counter for on device time keeping. This is not 100% precise as we do not know the time at which the second should actually be updated, but will incur in at most 1s imprecision at each start. Those do not add up as AVR keeps track of the time correctly and will reset the RP clock again on next device start
         time::nextSecond_ = uptimeUs64() + 1000000;
 
@@ -473,6 +496,7 @@ namespace rckid {
         LOG(LL_INFO, "  NAU88C22YG (0x1a): " << (::i2c::isPresent(0x1a) ? "ok" : "not found"));
         LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
 
+    #ifdef FOO
         // try talking to the AVR chip and see that all is well
         // read the full AVR state (including time information). Do not process the interrupts here, but wait for the first tick, which will or them with the ones obtained here and process when the device is fully initialized
         {
@@ -489,6 +513,8 @@ namespace rckid {
             Codec::setVolumeSpeaker(io::avrState_.audio.volumeSpeaker());
             Codec::setVolumeHeadphones(io::avrState_.audio.volumeHeadphones());
         }
+
+    #endif
 
         // initialize the other peripherals we have
         Radio::initialize();

@@ -245,6 +245,8 @@ namespace rckid {
 
         static inline App * app_ = nullptr;
 
+        static inline bool homeMenuArmed_ = false;
+
         /** Falg that tells the update() method to check the app budget.  */
         static inline bool checkBudget_ = false;
 

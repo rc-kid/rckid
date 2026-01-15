@@ -247,8 +247,6 @@ public:
             powerIOVDD(true);
             // initialize the PWM subsystem for baclight & rumbler
             initializePWM();
-            // TODO do this only when in debug mode
-            setBacklightPWM(state_.brightness);
             ADC0.CTRLA |= ADC_RUNSTBY_bm;
         );
         // turn the RGB LEDs off
@@ -547,6 +545,8 @@ public:
             if (! (powerMode_ & POWER_MODE_ON)) {
                 state_.status.setHeartbeatMode(true);
                 powerOffTimeout_ = RCKID_HEARTBEAT_TIMEOUT_FPS;
+                // reset home button timer so that home button press can be registered during heartbeat mode and turn the device on 
+                homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
             }
             powerOn();
         };

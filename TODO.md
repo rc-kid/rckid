@@ -51,12 +51,6 @@ Polish
 
 # TODO
 
-- first home button press in heartbeat mode ignored, second one works though
-- home menu is hit immediately when powering on from heartbeat menu
-- when powered on from heartbeat menu, the automated power off for heartbeat is not cleared it seems
-
-- display power on routine - do no turn brightness in AVR unless debug mode, do not turn brightness in RP in bootloader mode
-
 - likely there is an issue with timing & drawing of the lines on GBCemu we have VBLANK first then start drawing line, also songbird does not work well during transitions...
 
 - or maybe add circular scrolling to labels?
