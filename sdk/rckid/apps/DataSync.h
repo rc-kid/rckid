@@ -22,8 +22,10 @@ namespace rckid {
     /** SD Card as USB MSC
 
         Note that due to the USB speeds reachable with RP2350, the USB MSC performance is just barely useable. For any larger transfers, it is recommended to remove the SD card and use a proper card reader.
+
+        DataSync is standalone mode app to ensure to attempts to read/write SD card from user code may happen while it is active.
      */
-    class DataSync : public ui::Form<void> {
+    class DataSync : public ui::Form<void>, App::StandaloneModeGuard {
     public:
 
         String name() const override { return "DataSync"; }

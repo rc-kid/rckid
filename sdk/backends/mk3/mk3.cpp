@@ -301,10 +301,13 @@ namespace rckid {
             io::avrState_.time.inc();
         }
         // if there is power off interrupt, we should power off immediately
-        if (status.powerOffInt())
+        if (status.powerOffInt()) {
+            LOG(LL_INFO, "PowerOff Int");
             powerOff();
+        }
         // if there is heartbeat interrupt, run the heartbeat task if tasks are allowed, otherwise keep the interrupt flag set so that next tick will try scheduling. Note this can only happen in normal power mode as in heartbeat mode the task is scheduled by the heartbeat app in initialize 
         if (status.heartbeatInt() && Task::runHeartbeatTask()) {
+            LOG(LL_INFO, "Heartbeat Int");
             ASSERT(! io::avrState_.status.bootloaderMode());
             io::avrState_.status.clearHeartbeatInterrupt();
         }

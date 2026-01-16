@@ -4,12 +4,22 @@
 #include "task.h"
 #include "assets/tiles/System16.h"
 
+#include "filesystem.h"
+
 namespace rckid {
 
     class HeartbeatTask : public Task {
     public:
 
-        HeartbeatTask() = default;  
+        HeartbeatTask() {
+            // add current time to some file
+            fs::FileWrite f{fs::fileAppend("/heartbeat_log.txt")};
+            if (f.good()) {
+                TinyDateTime now = timeNow();
+                f.writer() << now.date.day() << "/" << now.date.month() << "/" << now.date.year() << " "
+                           << now.time.hour() << ":" << now.time.minute() << ":" << now.time.second() << "\n";
+            }
+        }
 
     protected: 
 
@@ -23,7 +33,7 @@ namespace rckid {
             return offset;
         }
 
-        uint32_t ticks_ = 20 * 60;
+        uint32_t ticks_ = 60 * 60;
     };
 
 } // namespace rckid

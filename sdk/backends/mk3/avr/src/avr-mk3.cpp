@@ -541,14 +541,15 @@ public:
                 state_.status.setHeartbeatInt();
                 setIrq();
             );
-            // if we are not on, set heartbeat mode letting the RP know that it's not normal power on
+            // if we are not on, set heartbeat mode letting the RP know that it's not normal power on, set power off timeout to heartbeat timeout (if heartbeat takes longer than this, AVR will power off), reset home button state (not pressed and reset long press timeout) so that *if* there is button long press in heartbeat mode, it will be detected properly
+            // TODO what if the end of heartbeat happens while we are counting towards the long press (then we'll miss it as rp will power off before the log press ends). This should register as home button not pressed, which is probably ok for now 
             if (! (powerMode_ & POWER_MODE_ON)) {
                 state_.status.setHeartbeatMode(true);
                 powerOffTimeout_ = RCKID_HEARTBEAT_TIMEOUT_FPS;
-                // reset home button timer so that home button press can be registered during heartbeat mode and turn the device on 
                 homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
+                state_.status.setControlButtons(false, false, false); // clear any button presses
+                powerOn();
             }
-            powerOn();
         };
         // check alarm too
         if (state_.alarm.check(state_.time)) {

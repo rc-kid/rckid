@@ -30,6 +30,8 @@ namespace rckid {
             icon_->setTransparent(true);
             icon_->setPos(160 - icon_->width() / 2, 60);
             Task::runHeartbeatTask();
+            //displaySetBrightness(io::avrState_.brightness);
+            LOG(LL_INFO, "Heartbeat node: " << io::avrState_.status.heartbeatMode());
         }
 
     protected:
