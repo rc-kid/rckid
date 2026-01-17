@@ -18,7 +18,6 @@ ui::ActionMenu * alphaMenu() {
     auto result = mainMenu();
     // insert mic test at the start
     result->add(ui::ActionMenu::Item("Mic test", assets::icons_64::microphone, App::run<MicTest>));
-    result->add(ui::ActionMenu::Item("Steps", assets::icons_64::footprint, App::run<Steps>));
     result->add(ui::ActionMenu::Item("Level", assets::icons_64::level, App::run<Level>));
     result->add(ui::ActionMenu::Item("IR Remote", assets::icons_64::controller, App::run<IRRemote>));
     result->add(ui::ActionMenu::Item("RP Bootloader", assets::icons_64::microchip, App::run<RPBootloader>));

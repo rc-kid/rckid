@@ -600,7 +600,7 @@ namespace rckid {
         if (io::avrState_.status.debugMode())
             keepAlive();
         ++time::numTicks_;
-        // if second tick interrupt is on, we must advance our timekeeping. Note that it is remotely possible that we will get an extra second tick interrupt when synchronizing the clock (we'll transmit the updated value, as well as the second tick at the same time) so that time on RP can be one second off at worst. 
+        // check the interrupts from last AVR status sync, if second tick interrupt is on, we must advance our timekeeping. Note that it is remotely possible that we will get an extra second tick interrupt when synchronizing the clock (we'll transmit the updated value, as well as the second tick at the same time) so that time on RP can be one second off at worst. 
         if (io::avrState_.status.secondInt()) {
             io::avrState_.time.inc();
         }
@@ -609,7 +609,7 @@ namespace rckid {
             LOG(LL_INFO, "PowerOff Int");
             powerOff();
         }
-        // check the interrupts from last AVR status sync
+        // if we have heartbeat interrupt *and* can run the heartbeat task, clear the interrupt - this makes the heartbeat task run immediately after we exit standalone app mode, or enable background tasks in general 
         if (io::avrState_.status.heartbeatInt() && Task::runHeartbeatTask()) {
             LOG(LL_INFO, "Heartbeat Int");
             ASSERT(! io::avrState_.status.bootloaderMode());
