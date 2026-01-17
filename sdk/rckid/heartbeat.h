@@ -3,6 +3,7 @@
 #include "ui/header.h"
 #include "task.h"
 #include "assets/tiles/System16.h"
+#include "apps/utils/Steps.h"
 
 #include "filesystem.h"
 
@@ -19,6 +20,8 @@ namespace rckid {
                 f.writer() << now.date.day() << "/" << now.date.month() << "/" << now.date.year() << " "
                            << now.time.hour() << ":" << now.time.minute() << ":" << now.time.second() << "\n";
             }
+            // clear pedometer
+            Steps::onHeartbeat();
         }
 
     protected: 

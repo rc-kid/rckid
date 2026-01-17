@@ -59,7 +59,6 @@ Polish
 - add steps to budget seconds conversion
 
 - make level app draw circle and look prettier, maybe draw angles even
-- reset step count every day (once we have midnight reset stuff)
 
 - PNG decoder should change to use heap again as there is more chance to find the space in heap
 

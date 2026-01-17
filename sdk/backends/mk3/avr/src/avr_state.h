@@ -73,7 +73,7 @@ namespace rckid {
                 a_ = other.a_;
                 b_ = other.b_;
                 vcc_ = other.vcc_;
-                // or interrupts, but update the debug & bootloader states
+                // use or for interrupts, but update the debug & bootloader states
                 c_ = c_ | other.c_;
             }
 

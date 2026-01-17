@@ -233,6 +233,11 @@ namespace rckid {
         UNIMPLEMENTED;
     }
 
+    void pedometerReset() {
+        StackProtection::check();
+        UNIMPLEMENTED;
+    }
+
     // display
 
     void displayOn() {

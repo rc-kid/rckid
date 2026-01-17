@@ -22,7 +22,7 @@
 
 /** Heartbeat mode is periodic wakeup when the device is not used during which the device can process periodic tasks such as checking for new messages, synchronizing time, etc. To disable heartbeats altogether, set this value to 0.
  */
-#define RCKID_HEARTBEAT_PERIOD 180
+#define RCKID_HEARTBEAT_PERIOD 3600
 
 /** Heartbeat service timeout. If the heartbeat task takes longer than this number of ticks (60fps) and the device is *not* turned on by the user, the device turns itself off forcefully.
  */

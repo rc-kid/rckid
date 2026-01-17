@@ -296,24 +296,7 @@ namespace rckid {
             io::lastStatus_.clearButtons();
         // copy the new one, we take the buttons as is and or the interrupts to make sure none is ever lost, then process them immediately
         io::avrState_.status.updateWith(status);
-        // if second tick interrupt is on, we must advance our timekeeping. Note that it is remotely possible that we will get an extra second tick interrupt when synchronizing the clock (we'll transmit the updated value, as well as the second tick at the same time) so that time on RP can be one second off at worst. 
-        if (status.secondInt()) {
-            io::avrState_.time.inc();
-        }
-        // if there is power off interrupt, we should power off immediately
-        if (status.powerOffInt()) {
-            LOG(LL_INFO, "PowerOff Int");
-            powerOff();
-        }
-        // if there is heartbeat interrupt, run the heartbeat task if tasks are allowed, otherwise keep the interrupt flag set so that next tick will try scheduling. Note this can only happen in normal power mode as in heartbeat mode the task is scheduled by the heartbeat app in initialize 
-        if (status.heartbeatInt() && Task::runHeartbeatTask()) {
-            LOG(LL_INFO, "Heartbeat Int");
-            ASSERT(! io::avrState_.status.bootloaderMode());
-            io::avrState_.status.clearHeartbeatInterrupt();
-        }
-        // TODO accel interrupt
-        // finally clear the interrupts once we have processed them
-        io::avrState_.status.clearInterrupts();
+        // we do not react to any interrupts here - see the tick function for this, which is to ensure that the the interrupts are handled in main thread, not RP2350 interrupt handlers (as this can cause deadlocks with I2C subsystem, etc.)
     }
 
     /** Requests AVR status update. 
@@ -396,7 +379,7 @@ namespace rckid {
 #else
             if (x == '\n') {
                 tud_cdc_write("\r\n", 2);
-                tud_cdc_write_flush();            
+                tud_cdc_write_flush();
             } else {
                 tud_cdc_write(& x, 1);
             }
@@ -617,6 +600,24 @@ namespace rckid {
         if (io::avrState_.status.debugMode())
             keepAlive();
         ++time::numTicks_;
+        // if second tick interrupt is on, we must advance our timekeeping. Note that it is remotely possible that we will get an extra second tick interrupt when synchronizing the clock (we'll transmit the updated value, as well as the second tick at the same time) so that time on RP can be one second off at worst. 
+        if (io::avrState_.status.secondInt()) {
+            io::avrState_.time.inc();
+        }
+        // if there is power off interrupt, we should power off immediately
+        if (io::avrState_.status.powerOffInt()) {
+            LOG(LL_INFO, "PowerOff Int");
+            powerOff();
+        }
+        // check the interrupts from last AVR status sync
+        if (io::avrState_.status.heartbeatInt() && Task::runHeartbeatTask()) {
+            LOG(LL_INFO, "Heartbeat Int");
+            ASSERT(! io::avrState_.status.bootloaderMode());
+            io::avrState_.status.clearHeartbeatInterrupt();
+        }
+        // clear the interrupts, now that we have processed them
+        io::avrState_.status.clearInterrupts();
+        // and request new status
         requestAvrStatus();
         yield();
         Task::tickAll();
@@ -876,6 +877,20 @@ namespace rckid {
         while (io::pedometerCount_ == 0xffffffff)
             yield();
         return io::pedometerCount_;
+    }
+
+    void pedometerReset() {
+        LOG(LL_INFO, "PedometerReset");
+        StackProtection::check();
+        uint8_t cmd[2] = { LSM6DSV::REG_FUNC_CFG_ACCESS, LSM6DSV::FUNC_CFG_ACCESS_EMB };
+        i2c::enqueue(LSM6DSV::I2C_ADDRESS, cmd, 2, 0, nullptr);
+        cmd[0] = LSM6DSV::REG_EMB_FUNC_SRC;
+        cmd[1] = LSM6DSV::EMB_FUNC_SRC_STEP_RESET;
+        i2c::enqueue(LSM6DSV::I2C_ADDRESS, cmd, 2, 0, nullptr);
+        cmd[0] = LSM6DSV::REG_FUNC_CFG_ACCESS;
+        cmd[1] = 0x00;
+        i2c::enqueue(LSM6DSV::I2C_ADDRESS, cmd, 2, 0, nullptr);
+        io::pedometerCount_ = 0;
     }
 
     // display

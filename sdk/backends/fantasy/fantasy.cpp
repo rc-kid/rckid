@@ -479,6 +479,10 @@ namespace rckid {
         return 0;
     }
 
+    void pedometerReset() {
+        StackProtection::check();
+    }
+
     // display 
 
     void displayDraw() {

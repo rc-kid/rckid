@@ -81,7 +81,7 @@ namespace rckid {
             writer.writeValue("name", name);
             if (image.isFile())
                 writer.writeValue("image", image.filename());
-            writer.writeValue("birthday", STR(birthday.day() << "/" << birthday.month() << "/" << birthday.year()));
+            writer.writeValue("birthday", STR(birthday));
             writer.writeValue("email", email);
             writer.writeValue("phone", phone);
             writer.writeValue("address", address);

@@ -246,6 +246,8 @@ namespace rckid {
 
     uint32_t pedometerCount();
 
+    void pedometerReset();
+
     /** \page sdk
         \section display Display Driver
 

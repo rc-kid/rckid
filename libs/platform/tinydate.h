@@ -503,9 +503,9 @@ private:
  */
 template<typename WRITER>
 inline WRITER & operator << (WRITER & writer, TinyDateTime const & date) {
-    return writer << date.date.year() << '-' 
-                  << date.date.month() << '-' 
-                  << date.date.day() << ' '
+    return writer << date.date.day() << '/' 
+                  << date.date.month() << '/' 
+                  << date.date.year() << ' '
                   << date.time.hour() << ':' 
                   << date.time.minute() << ':' 
                   << date.time.second();
@@ -513,9 +513,9 @@ inline WRITER & operator << (WRITER & writer, TinyDateTime const & date) {
 
 template<typename WRITER>
 inline WRITER & operator << (WRITER & writer, TinyDate const & date) {
-    return writer << date.year() << '-' 
-                  << date.month() << '-' 
-                  << date.day();
+    return writer << date.day() << '/' 
+                  << date.month() << '/' 
+                  << date.year();
 } // operator <<
 
 template<typename WRITER>
