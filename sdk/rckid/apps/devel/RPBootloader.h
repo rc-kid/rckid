@@ -40,6 +40,7 @@ namespace rckid {
         void update() override {
             if (enter_) {
 #if (defined PLATFORM_RP2350)
+                displayWaitUpdateDone();
                 rom_reset_usb_boot(0, 0);
 #else
                 ui::Form<void>::update();

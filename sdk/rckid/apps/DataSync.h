@@ -41,6 +41,8 @@ namespace rckid {
             status_->setHAlign(HAlign::Center);
             fs::mount(fs::Drive::SD);
             if (fs::isMounted()) {
+                // load the bg image from SD card before we unmount it.
+                ui::FormWidget::loadBackgroundImage();
                 info_->setText(STR("SD card: " << sdCapacity() / 2 / 1024 << "MB, label " << fs::getLabel()));
                 fs::unmount();
                 connected_ = false;

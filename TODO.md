@@ -51,8 +51,6 @@ Polish
 
 # TODO
 
-- audio volume not set properly (likely due to the ordering change)
-
 - likely there is an issue with timing & drawing of the lines on GBCemu we have VBLANK first then start drawing line, also songbird does not work well during transitions...
 
 - or maybe add circular scrolling to labels?

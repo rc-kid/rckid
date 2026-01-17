@@ -460,9 +460,6 @@ namespace rckid {
             }
             LOG(LL_INFO, "AVR uptime: " << io::avrState_.uptime);
             LOG(LL_INFO, "Current time: " << io::avrState_.time);
-            // update the volume on the audio codec based on the values received from AVR (last settings)
-            Codec::setVolumeSpeaker(io::avrState_.audio.volumeSpeaker());
-            Codec::setVolumeHeadphones(io::avrState_.audio.volumeHeadphones());
         }
 
         // set brightness to last known value unless we are in a heartbeat mode
@@ -488,6 +485,10 @@ namespace rckid {
         Codec::initialize();
         Codec::reset();
         Codec::powerUp();
+        // update the volume on the audio codec based on the values received from AVR (last settings)
+        Codec::setVolumeSpeaker(io::avrState_.audio.volumeSpeaker());
+        Codec::setVolumeHeadphones(io::avrState_.audio.volumeHeadphones());
+
 
         // reset radio chip so that we can detect its presence - note this must happen after codec initialization as codec's GPIO1 is wired to the radio reset pin
         Radio::reset();
