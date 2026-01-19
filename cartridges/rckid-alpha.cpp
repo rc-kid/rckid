@@ -30,6 +30,7 @@ int main() {
         return new rckid::HeartbeatTask{};
     });
     initialize();
+    ASSERT(false);
     Alarm::checkEvent();
     ui::runSystemMenu(alphaMenu);
 }

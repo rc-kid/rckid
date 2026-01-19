@@ -45,3 +45,11 @@ Each application has its own folder under the `apps` root folder. The folder has
        |-- saves
 
 The `data` folder is the app home and is completely in the application's control. The SDK does not understand what it is, nor does it  
+
+
+
+## Simplification Ideas
+
+The SDK only works with apps and tasks. The app is the only thing that has access to screen and it must periodically call tick() method every frame or roughly 60 times per second. The tasks on the other hand specify onTick() method, which will be called by the SDK during the tick itself. 
+
+- have two kinds of taks - heavy and light tasks. Light tasks can run always, while heavy tasks will be killed when standalone mode requested by the app

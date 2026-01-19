@@ -57,6 +57,8 @@ endif()
 # adds the specific backend definition so that the code knows as well which backend we are using
 add_compile_definitions("RCKID_BACKEND_${RCKID_BACKEND}")
 
+add_compile_options(-fmacro-prefix-map=/home/peta/devel/rckid/=/)
+
 # setup general include directories
 include_directories("sdk")
 include_directories("libs")

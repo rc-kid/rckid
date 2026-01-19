@@ -483,26 +483,6 @@ namespace rckid {
         LOG(LL_INFO, "  NAU88C22YG (0x1a): " << (::i2c::isPresent(0x1a) ? "ok" : "not found"));
         LOG(LL_INFO, "  SI4705 (0x11):     " << (::i2c::isPresent(0x11) ? "ok" : "not found"));
 
-    #ifdef FOO
-        // try talking to the AVR chip and see that all is well
-        // read the full AVR state (including time information). Do not process the interrupts here, but wait for the first tick, which will or them with the ones obtained here and process when the device is fully initialized
-        {
-            int n = i2c_read_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, (uint8_t *) & io::avrState_, sizeof(AVRState), false);
-            if (n != sizeof(AVRState))
-                FATAL_ERROR(Error::hardwareFailure, static_cast<uint32_t>(n));
-            if (io::avrState_.avrVersion != AVR_VERSION) {
-                LOG(LL_ERROR, "Incompatible AVR version detected: " << static_cast<uint32_t>(io::avrState_.avrVersion) << ", expected " << static_cast<uint32_t>(AVR_VERSION));
-                FATAL_ERROR(Error::hardwareFailure, static_cast<uint32_t>(io::avrState_.avrVersion), "Incompatible AVR version");
-            }
-            LOG(LL_INFO, "AVR uptime: " << io::avrState_.uptime);
-            LOG(LL_INFO, "Current time: " << io::avrState_.time);
-            // update the volume on the audio codec based on the values received from AVR (last settings)
-            Codec::setVolumeSpeaker(io::avrState_.audio.volumeSpeaker());
-            Codec::setVolumeHeadphones(io::avrState_.audio.volumeHeadphones());
-        }
-
-    #endif
-
         // initialize the other peripherals we have
         Radio::initialize();
         //io::accel_.reset();
@@ -552,10 +532,22 @@ namespace rckid {
         gpio::setAsInputPullUp(RP_PIN_HEADSET_DETECT);
 
         LOG(LL_INFO, "Initialization done");
+        LOG(LL_INFO, "PowerOff int: " << io::avrState_.status.powerOffInt());
+        LOG(LL_INFO, "SecondTick int: " << io::avrState_.status.secondInt());
+        LOG(LL_INFO, "Heartbeat int: " << io::avrState_.status.heartbeatInt());
+        LOG(LL_INFO, "Debug mode: " << io::avrState_.status.debugMode());
+        LOG(LL_INFO, "Bootloader mode: " << io::avrState_.status.bootloaderMode());
+        LOG(LL_INFO, "Heartbeat mode: " << io::avrState_.status.heartbeatMode());   
+        if (io::avrState_.status.powerOffInt()) {
+            LOG(LL_INFO, "PowerOff int set on init, powering off");
+            io::avrState_.status.clearPowerOffInt();
+        }
+        //while (true)
+        //    yield();
 
-        // check if we should start the heartbeat app
-        if (io::avrState_.status.heartbeatInt())
-            App::run<HeartbeatApp>();
+        // run first tick to process startup interrupts before anything else
+        tick();
+        cpu::delayMs(10);
 
         while (io::avrState_.pin != 0xffff) {
             LOG(LL_INFO, "Pin lock");

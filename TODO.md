@@ -51,6 +51,9 @@ Polish
 
 # TODO
 
+- turn brightness *on* in avr forever and then try it looks like only problem when not DC connected
+- and only every second turn on is a problem
+
 - likely there is an issue with timing & drawing of the lines on GBCemu we have VBLANK first then start drawing line, also songbird does not work well during transitions...
 
 - or maybe add circular scrolling to labels?
@@ -229,3 +232,7 @@ Polish
 - speaker at default volume 100mA @ 5V
 - with extra power, we get at 120mA @5V
 - headphones are small, ~82mA
+
+
+
+- silicone rubber dome to test: https://www.aliexpress.com/item/1005008583229786.html?spm=a2g0o.productlist.main.17.5598382eMHHANJ&algo_pvid=4a0a441a-0334-4e4e-918b-2aa777b6d8ae&algo_exp_id=4a0a441a-0334-4e4e-918b-2aa777b6d8ae-16&pdp_ext_f=%7B%22order%22%3A%222%22%2C%22eval%22%3A%221%22%2C%22fromPage%22%3A%22search%22%7D&pdp_npi=6%40dis%21CZK%21397.26%21397.26%21%21%2118.55%2118.55%21%402103892f17687548884142661e9e70%2112000045830733759%21sea%21CZ%210%21ABX%211%210%21n_tag%3A-29910%3Bd%3A3793dd73%3Bm03_new_user%3A-29895&curPageLogUid=cINl4yvQZdTP&utparam-url=scene%3Asearch%7Cquery_from%3A%7Cx_object_id%3A1005008583229786%7C_p_origin_prod%3A#nav-specification

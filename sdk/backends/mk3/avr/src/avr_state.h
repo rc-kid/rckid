@@ -81,6 +81,8 @@ namespace rckid {
 
             void clearAlarmInterrupt() { c_ &= ~ALARM_INT; }
 
+            void clearPowerOffInt() { c_ &= ~PWROFF_INT; }
+
             void clearHeartbeatInterrupt() { c_ &= ~HEARTBEAT_INT; }
 
             /** Clears the pressed state of all buttons. This method is useful for rapidfire where every interval, we reset the button state in last state giving us btnPressed again.
