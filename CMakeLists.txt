@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 3.12)
 set(CMAKE_CXX_STANDARD 17)  
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_COLOR_DIAGNOSTICS ON)
+
 # RCKid backend selection
 #
 # This is done via the RCKID_BACKEND flag. When not specified, FANTASY is selected for fantasy backend. The following options are supported:
@@ -60,7 +62,7 @@ add_compile_definitions("RCKID_BACKEND_${RCKID_BACKEND}")
 add_compile_options(-fmacro-prefix-map=/home/peta/devel/rckid/=/)
 
 # setup general include directories
-include_directories("sdk")
+include_directories("sdk2")
 include_directories("libs")
 include_directories("gbcemu")
 
@@ -73,15 +75,15 @@ add_subdirectory("libs/libhelix-mp3")
 add_subdirectory("libs/libopus")
 
 # add the SDK itself
-add_subdirectory("sdk")
+add_subdirectory("sdk2")
 
 # add tests for various projects
-add_subdirectory("tests")
+#add_subdirectory("tests")
 
 
-add_subdirectory("gbcemu")
+#add_subdirectory("gbcemu")
 
-add_subdirectory("cartridges")
+add_subdirectory("cartridges2")
 #add_subdirectory("cartridges/hello-world")
 #add_subdirectory("cartridges/gbcemu")
 
