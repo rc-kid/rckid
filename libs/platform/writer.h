@@ -5,40 +5,33 @@
 #include <functional>
 #include <type_traits>
 
-/** A very simple formatter for both human-readable texts and binary representations. 
+/** Abysmally simple and extensible formatter. 
  
-    To make sure the writer is available even on very low level platforms such as ATTiny chips, it does not use C++'s lambda captures, but rely on passing a void * context pointer to the PutChar function. 
+    The writer is created with a closure that knows how to write a single character at a time, the task of the writer is then to break down various data types into series of characters. 
  */
 class Writer {
 public:
+    using PutCharCallback = std::function<void(char)>;
+
     class Converter{};
 
-    typedef void (*CharWriter)(char, void *);
-    #define PUTCHAR(...) putChar_(__VA_ARGS__, arg_)
+    explicit Writer(PutCharCallback putChar): putChar_{putChar} {}
 
-    static constexpr char endl = '\n';
-
-    explicit Writer(CharWriter putChar, void * arg = nullptr):putChar_{putChar}, arg_{arg} {}
-
-    void putChar(char c) { PUTCHAR(c); }
-
-    Writer & operator << (char const * str) {
-        while (*str != 0)
-            PUTCHAR(*(str++));
-        return *this;
-    }
-
-    Writer & operator << (std::string const & str) {
-        return *this << str.c_str();
-    }
-
+    void putChar(char c) { putChar_(c); }
+    
     Writer & operator << (char c) { 
-        PUTCHAR(c); 
+        putChar_(c);
         return *this; 
     }
 
+    Writer & operator << (char const * str) {
+        while (*str != 0)
+            putChar_( *(str++) );
+        return *this;
+    }
+
     Writer & operator << (bool b) {
-        PUTCHAR(b ? 'T' : 'F');
+        putChar_(b ? 'T' : 'F');
         return *this;
     }
 
@@ -49,54 +42,31 @@ public:
         while (x < order && order > 1)
             order = order / 10;
         while (order >= 10) {
-            PUTCHAR(static_cast<char>((x / order)) + '0');
+            putChar_(static_cast<char>((x / order)) + '0');
             x = x % order;
             order = order / 10;
         }
-        PUTCHAR(static_cast<char>(x) + '0');
+        putChar_(static_cast<char>(x) + '0');
         return *this;
     }
     Writer & operator << (uint64_t x) {
-        uint64_t order = 10000000000000000000ul;
+        uint64_t order = 1000000000000000000ull;
         while (x < order && order > 1)
             order = order / 10;
         while (order >= 10) {
-            PUTCHAR(static_cast<char>((x / order)) + '0');
+            putChar_(static_cast<char>((x / order)) + '0');
             x = x % order;
             order = order / 10;
         }
-        PUTCHAR(static_cast<char>(x) + '0');
+        putChar_(static_cast<char>(x) + '0');
         return *this;
-        return *this;
     }
 
-    Writer & operator << (void * address) {
-        static_assert(sizeof(void*) <= 8);
-        if constexpr (sizeof(void*) > 4)
-            return (*this) << reinterpret_cast<uint64_t>(address);
-        else
-            return (*this) << static_cast<uint32_t>(reinterpret_cast<uint64_t>(address));
-    }
-
-    Writer & operator << (int8_t value) { 
-        if (value < 0) {
-            PUTCHAR('-');
-            value *= -1;
-        }
-        return (*this) << static_cast<uint8_t>(value);
-    }
-
-    Writer & operator << (int16_t value) { 
-        if (value < 0) {
-            PUTCHAR('-');
-            value *= -1;
-        }
-        return (*this) << static_cast<uint16_t>(value);
-    }
-
+    Writer & operator << (int8_t value) { return *this << (int32_t)value; }
+    Writer & operator << (int16_t value) { return *this << (int32_t)value; }
     Writer & operator << (int32_t value) { 
         if (value < 0) {
-            PUTCHAR('-');
+            putChar_('-');
             value *= -1;
         }
         return (*this) << static_cast<uint32_t>(value);
@@ -104,17 +74,10 @@ public:
 
     Writer & operator << (int64_t value) { 
         if (value < 0) {
-            PUTCHAR('-');
+            putChar_('-');
             value *= -1;
         }
         return (*this) << static_cast<uint64_t>(value);
-    }
-
-    Writer & operator << (double value) {
-        char buffer[32];
-        snprintf(buffer, sizeof(buffer), "%g", value);
-        *this << buffer;
-        return *this;
     }
 
     template<typename T>
@@ -130,98 +93,8 @@ public:
     }
 
 private:
-
-    CharWriter putChar_;
-    void * arg_;
-}; // Writer
-
-#undef PUTCHAR
-
-class BufferedWriter : protected Writer {
-public:
-    BufferedWriter():
-        Writer{[](char c, void * self) { ((BufferedWriter*)self)->append(c); }, this} {
-    }
-
-    ~BufferedWriter() {
-        delete[] buffer_;
-    }
-
-    template<typename T>
-    BufferedWriter & operator << (T x) {
-        (*(Writer*)this) << x;
-        return *this; 
-    }
-
-    uint32_t size() const { return size_; }
-
-    uint32_t capacity() const { return capacity_; }
-
-    char const * c_str() { return buffer_; }
-private:
-
-    void append(char c) {
-        if (size_ == capacity_) {
-            capacity_ *= 2;
-            char * newBuffer = new char[capacity_];
-            std::memcpy(newBuffer, buffer_, size_);
-            delete[] buffer_;
-            buffer_ = newBuffer;
-        }
-        buffer_[size_++] = c;
-        buffer_[size_] = 0;
-    }
-
-    char * buffer_ = new char[17];;
-    uint32_t size_ = 0;
-    uint32_t capacity_ = 16; 
-}; // BufferedWriter
-
-template<typename T>
-class fillLeft : public Writer::Converter {
-public:
-    fillLeft(T const & what, uint32_t width, char fill = ' '):
-        what_{what}, width_{width}, fill_{fill} {
-    }
-
-    void operator () (Writer & writer) {
-        BufferedWriter bw;
-        bw << what_;
-        while (bw.size() < width_) {
-            writer << fill_;
-            --width_;
-        }
-        writer << bw.c_str();;
-    }
-
-private:
-    T const & what_;
-    uint32_t width_;
-    char fill_;
-}; // fillLeft
-
-template<typename T>
-class fillRight : public Writer::Converter {
-public:
-    fillRight(T const & what, uint32_t width, char fill = ' '):
-        what_{what}, width_{width}, fill_{fill} {
-    }
-
-    void operator () (Writer & writer) {
-        BufferedWriter bw;
-        bw << what_;
-        writer << bw.c_str();
-        while (bw.size() < width_) {
-            writer << fill_;
-            --width_;
-        }
-    }
-    
-private:
-    T const & what_;
-    uint32_t width_;
-    char fill_;
-}; // fillRight
+    PutCharCallback putChar_;
+}; 
 
 /** Converter that displays numbers in hexadecimal. 
     
@@ -232,118 +105,44 @@ class hex : public Writer::Converter {
 public:
     hex(T what, bool header = true): what_{what}, header_{header} {}
 
-    void operator () (Writer & writer);
+    void operator () (Writer & writer) {
+        if (header_)
+            writer << '0' << 'x';
+        unsigned bits = sizeof(T) * 8;
+        uint64_t what = reinterpret_cast<uint64_t>(what_);
+        for (int shift = bits - 4; shift >= 0; shift -= 4)
+            writer << "0123456789abcdef"[(what >> shift) & 0xf];
+    }
+
 private:
     T what_;
     bool header_;
 }; // hex
 
-
-template<>
-inline void hex<uint8_t>::operator()(Writer & writer) {
-    if (header_)
-        writer << '0' << 'x';
-    writer << "0123456789abcdef"[(what_ >> 4) & 0xf];
-    writer << "0123456789abcdef"[what_ & 0xf];
-}
-
-template<>
-inline void hex<uint16_t>::operator()(Writer & writer) {
-    if (header_)
-        writer << '0' << 'x';
-    writer << "0123456789abcdef"[what_ >> 12];
-    writer << "0123456789abcdef"[(what_ >> 8) & 0xf];
-    writer << "0123456789abcdef"[(what_ >> 4) & 0xf];
-    writer << "0123456789abcdef"[what_ & 0xf];
-}
-
-template<>
-inline void hex<uint32_t>::operator()(Writer & writer) {
-    if (header_)
-        writer << '0' << 'x';
-    writer << "0123456789abcdef"[what_ >> 28];
-    writer << "0123456789abcdef"[(what_ >> 24) & 0xf];
-    writer << "0123456789abcdef"[(what_ >> 20) & 0xf];
-    writer << "0123456789abcdef"[(what_ >> 16) & 0xf];
-    writer << "0123456789abcdef"[(what_ >> 12) & 0xf];
-    writer << "0123456789abcdef"[(what_ >> 8) & 0xf];
-    writer << "0123456789abcdef"[(what_ >> 4) & 0xf];
-    writer << "0123456789abcdef"[what_ & 0xf];
-}
-
-template<typename T>
-class urlEncode : public Writer::Converter {
-public:
-    urlEncode(T what): what_{what} {}
-    void operator () (Writer & writer);
-private:
-    T what_;
-}; // urlEncode
-
-template<>
-inline void urlEncode<char const *>::operator()(Writer & writer) {
-    char const * str = what_;
-    while (*str != 0) {
-        char c = *(str++);
-        if ((c >= 'a' && c <= 'z') ||
-            (c >= 'A' && c <= 'Z') ||
-            (c >= '0' && c <= '9') ||
-            c == '-' || c == '_' || c == '.' || c == '~') {
-            writer << c;
-        } else if (c == ' ') {
-            writer << '+';
-        } else {
-            writer << '%';
-            writer << hex<uint8_t>(static_cast<uint8_t>(c), false);
-        }
-    }
-}
-
-/** Binary converter. 
+/** Converter that displays numbers in binary. 
+    
+    The numbers are aligned based on their size and by default contain the `0b` prefix, which can be disabled for more compact output
  */
 template<typename T>
 class bin : public Writer::Converter {
 public:
     bin(T what, bool header = true): what_{what}, header_{header} {}
 
-    void operator () (Writer & writer);
+    void operator () (Writer & writer) {
+        if (header_)
+            writer << '0' << 'b';
+        unsigned bits = sizeof(T) * 8;
+        uint64_t what = static_cast<uint64_t>(what_);
+        for (unsigned shift = bits - 1; shift >= 0; shift -= 1)
+            writer << "01"[(what >> shift) & 0x1];
+    }
+
 private:
     T what_;
     bool header_;
 }; // bin
 
-template<>
-inline void bin<uint8_t>::operator()(Writer & writer) {
-    if (header_)
-        writer << '0' << 'b';
-    writer << ((what_ & 128) ? '1' : '0');
-    writer << ((what_ & 64) ? '1' : '0');
-    writer << ((what_ & 32) ? '1' : '0');
-    writer << ((what_ & 16) ? '1' : '0');
-    writer << ((what_ & 8) ? '1' : '0');
-    writer << ((what_ & 4) ? '1' : '0');
-    writer << ((what_ & 2) ? '1' : '0');
-    writer << ((what_ & 1) ? '1' : '0');
-}
-
-template<>
-inline void bin<uint16_t>::operator()(Writer & writer) {
-    if (header_)
-        writer << '0' << 'b';
-    writer << ((what_ & 32768) ? '1' : '0');
-    writer << ((what_ & 16384) ? '1' : '0');
-    writer << ((what_ & 8192) ? '1' : '0');
-    writer << ((what_ & 4096) ? '1' : '0');
-    writer << ((what_ & 2048) ? '1' : '0');
-    writer << ((what_ & 1024) ? '1' : '0');
-    writer << ((what_ & 512) ? '1' : '0');
-    writer << ((what_ & 256) ? '1' : '0');
-    writer << ((what_ & 128) ? '1' : '0');
-    writer << ((what_ & 64) ? '1' : '0');
-    writer << ((what_ & 32) ? '1' : '0');
-    writer << ((what_ & 16) ? '1' : '0');
-    writer << ((what_ & 8) ? '1' : '0');
-    writer << ((what_ & 4) ? '1' : '0');
-    writer << ((what_ & 2) ? '1' : '0');
-    writer << ((what_ & 1) ? '1' : '0');
+inline Writer & operator << (Writer & w, void * ptr) {
+    w << hex(ptr);
+    return w;
 }
