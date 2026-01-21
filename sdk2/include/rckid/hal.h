@@ -12,7 +12,7 @@ namespace rckid {
     void onWakeup(uint32_t payload);
     void onPowerOff();
     void onSecondTick();
-    void onFatalError(char const * file, uint32_t line, char const * msg, uint32_t payload);
+    [[noreturn]] void onFatalError(char const * file, uint32_t line, char const * msg, uint32_t payload);
 
 } // namespace rckid
 
@@ -111,7 +111,7 @@ namespace rckid::hal {
          
             This function does not return and powers the device off immediately. Any necessary cleanup should have been done before calling this function, e.g. by calling the rckid::powerOff() function, which performs the cleanup and then calls the hal::powerOff() function to actually cut the power.
         */
-        void powerOff();
+        [[noreturn]] void powerOff();
 
         /** Puts the device to sleep. 
          
@@ -143,9 +143,9 @@ namespace rckid::hal {
 
         /** Fatal error. 
          
-            Fatal error should stop all device functionality and only display the error. Note that the function can be called from all kinds of contexts, and care should be taken that it always displays the requested error information. This includes, but is not limited to situations with out of memory problems. 
+            Fatal error should stop all device functionality and only display the error. The purpose of the function is to restore the device state into something that can be operated on safely and then call the onFatalError() SDK handler than performs the actual error reporting. 
          */
-        void fatalError(char const * file, uint32_t line, char const * msg, uint32_t payload = 0);
+        [[noreturn]] void fatalError(char const * file, uint32_t line, char const * msg, uint32_t payload = 0);
         
         /** Returns a format writer than can be used to output debug information. 
          
