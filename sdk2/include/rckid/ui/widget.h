@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include <rckid/rckid.h>
 #include <rckid/memory.h>
 #include <rckid/graphics/color.h>
 #include <rckid/graphics/geometry.h>

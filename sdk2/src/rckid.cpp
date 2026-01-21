@@ -27,10 +27,6 @@ namespace rckid {
         Task::runAll();
     }
 
-    void yield() {
-        hal::device::onYield();
-    }
-
     // io
 
     bool btnDown(Btn btn) {
@@ -55,21 +51,7 @@ namespace rckid {
 
     // time
 
-    uint64_t uptimeUs() {
-        return hal::time::uptimeUs();
-    }
-
     // debugging
-
-    // TODO should we log in file here as well?
-    Writer debugWrite() {
-        return hal::device::debugWrite();
-    }   
-
-    uint8_t debugRead() {
-        return hal::device::debugRead();
-    }
-
 
     // hal layer events
 

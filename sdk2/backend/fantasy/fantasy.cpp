@@ -10,6 +10,7 @@
 
 
 #include <rckid/hal.h>
+#include <rckid/error.h>
 #include <rckid/graphics/color.h>
 
 #define RCKID_DISPLAY_ZOOM 4
@@ -90,215 +91,231 @@ namespace rckid::internal {
 
 namespace rckid::hal {
 
-    // device
+    namespace device {
 
-    void device::initialize() {
-        InitWindow(320 * RCKID_DISPLAY_ZOOM, 240 * RCKID_DISPLAY_ZOOM, "RCKid");
-        internal::display::img = GenImageColor(display::WIDTH, display::HEIGHT, BLACK);
-        internal::display::texture = LoadTextureFromImage(internal::display::img);
+        void initialize() {
+            InitWindow(320 * RCKID_DISPLAY_ZOOM, 240 * RCKID_DISPLAY_ZOOM, "RCKid");
+            internal::display::img = GenImageColor(display::WIDTH, display::HEIGHT, BLACK);
+            internal::display::texture = LoadTextureFromImage(internal::display::img);
 
-    }
-
-    void device::powerOff() {
-
-    }
-
-    void device::sleep() {
-
-    }
-
-    void device::scheduleWakeup(uint32_t timeoutSeconds, uint32_t payload) {
-
-    }
-
-    void device::onTick() {
-
-    }
-
-    void device::onYield() {
-        // do nothing on yield
-    }
-
-    void device::fatalError(char const * file, uint32_t line, char const * msg, uint32_t payload) {
-        // fatal error is simple on fantasy console as we do not have to worry about weird hardware states
-        // stop audio playback, which is the only async stuff we can have
-        audio::stop();
-        // and call the SDKs default handler
-        onFatalError(file, line, msg, payload);
-    }
-
-    Writer device::debugWrite() {
-        return Writer{[](char c) {
-            std::cout << c;
-            if (c == '\n')
-                std::cout << std::flush;
-        }};
-    }
-
-    uint8_t device::debugRead() {
-        while (true) {
-            int x = GetCharPressed();
-            // skip non ASCII characters on the input
-            if (x > 0xff)
-                continue;
-            return static_cast<uint8_t>(x);
         }
-    }
 
-    // time 
-
-    uint64_t time::uptimeUs() {
-        using namespace std::chrono;
-        return static_cast<uint64_t>(duration_cast<microseconds>(steady_clock::now() - internal::time::start).count()); 
-    }
-
-    TinyDateTime time::now() {
-        return internal::time::now;
-    }
-
-    // io
-
-    State io::state() {
-        return internal::io::state;
-    }
-
-    Point3D io::accelerometerState() {
-
-    }
-
-    Point3D io::gyroscopeState() {
-
-    }
-
-    void display::enable(Rect rect, RefreshDirection direction) {
-        internal::display::rect = rect;
-        internal::display::direction = direction;
-        switch (direction) {
-            case RefreshDirection::ColumnFirst:
-                internal::display::x = rect.right() - 1;
-                internal::display::y = rect.top();
-                break;
-            case RefreshDirection::RowFirst:
-                internal::display::x = rect.left();
-                internal::display::y = rect.top();
-                break;
+        void powerOff() {
+            UNIMPLEMENTED;
         }
-    }
 
-    void display::disable() {
-
-    }
-
-    void display::setBrightness(uint8_t value) {
-        internal::display::brightness = value;
-    }
-
-    bool display::vSync() {
-        // simulate the mkIII display driver by mimicking the vsync timing
-        // TODO
-    }
-
-    void display::update(Callback callback) {
-        Color::RGB565 * buffer = nullptr;
-        uint32_t bufferSize = 0;
-        while (true) {
-            callback(buffer, bufferSize);
-            if (buffer == nullptr)
-                break;
-            // append the pixels from the buffer, 
-            for (uint32_t i = 0; i < bufferSize; ++i)
-                internal::display::writePixel(buffer[i]);
+        void sleep() {
+            UNIMPLEMENTED;
         }
-    }
 
-    bool display::updateActive() {
-        // in fantasy backend, update is always synchronous with the main thread, so it is *never* active when this function can be called
-        return false;
-    }
+        void scheduleWakeup(uint32_t timeoutSeconds, uint32_t payload) {
+            UNIMPLEMENTED;
+        }
 
-    // audio
+        void onTick() {
 
-    void audio::setVolumeHeadphones(uint8_t value) {
+        }
 
-    }
+        void onYield() {
+            // do nothing on yield
+        }
 
-    void audio::setVolumeSpeaker(uint8_t value) {
+        void fatalError(char const * file, uint32_t line, char const * msg, uint32_t payload) {
+            // fatal error is simple on fantasy console as we do not have to worry about weird hardware states
+            // stop audio playback, which is the only async stuff we can have
+            audio::stop();
+            // and call the SDKs default handler
+            onFatalError(file, line, msg, payload);
+        }
 
-    }
+        Writer debugWrite() {
+            return Writer{[](char c) {
+                std::cout << c;
+                if (c == '\n')
+                    std::cout << std::flush;
+            }};
+        }
 
-    void audio::play(uint32_t sampleRate, Callback cb) {
+        uint8_t debugRead() {
+            while (true) {
+                int x = GetCharPressed();
+                // skip non ASCII characters on the input
+                if (x > 0xff)
+                    continue;
+                return static_cast<uint8_t>(x);
+            }
+        }
 
-    }
+    } // namespace rckid::hal::device
 
-    void audio::recordMic(uint32_t sampleRate, Callback cb) {
+    namespace time {
 
-    }
+        uint64_t uptimeUs() {
+            using namespace std::chrono;
+            return static_cast<uint64_t>(duration_cast<microseconds>(steady_clock::now() - internal::time::start).count()); 
+        }
 
-    void audio::recordLineIn(uint32_t sampleRate, Callback cb) {
+        TinyDateTime now() {
+            return internal::time::now;
+        }
 
-    }
+    } // namespace rckid::hal::time
 
-    void audio::pause() {
+    namespace io {
 
-    }
+        State state() {
+            return internal::io::state;
+        }
 
-    void audio::resume() {
+        Point3D accelerometerState() {
 
-    }
+        }
 
-    void audio::stop() {
+        Point3D gyroscopeState() {
 
-    }
+        }
 
-    // filesystem
+    } // namespace rckid::hal::io
 
-    uint32_t fs::sdCapacityBlocks() {
+    namespace display {
 
-    }
+        void enable(Rect rect, RefreshDirection direction) {
+            internal::display::rect = rect;
+            internal::display::direction = direction;
+            switch (direction) {
+                case RefreshDirection::ColumnFirst:
+                    internal::display::x = rect.right() - 1;
+                    internal::display::y = rect.top();
+                    break;
+                case RefreshDirection::RowFirst:
+                    internal::display::x = rect.left();
+                    internal::display::y = rect.top();
+                    break;
+            }
+        }
 
-    bool fs::sdReadBlocks(uint32_t blockNum, uint8_t * buffer, uint32_t numBlocks) {
+        void disable() {
 
-    }
+        }
 
-    bool fs::sdWriteBlocks(uint32_t blockNum, uint8_t const * buffer, uint32_t numBlocks) {
+        void setBrightness(uint8_t value) {
+            internal::display::brightness = value;
+        }
 
-    }
+        bool vSync() {
+            // simulate the mkIII display driver by mimicking the vsync timing
+            // TODO
+        }
 
-    uint32_t fs::cartridgeCapacityBytes() {
+        void update(Callback callback) {
+            Color::RGB565 * buffer = nullptr;
+            uint32_t bufferSize = 0;
+            while (true) {
+                callback(buffer, bufferSize);
+                if (buffer == nullptr)
+                    break;
+                // append the pixels from the buffer, 
+                for (uint32_t i = 0; i < bufferSize; ++i)
+                    internal::display::writePixel(buffer[i]);
+            }
+        }
 
-    }
+        bool updateActive() {
+            // in fantasy backend, update is always synchronous with the main thread, so it is *never* active when this function can be called
+            return false;
+        }
 
-    uint32_t fs::cartridgeWriteSizeBytes() {
+    } // namespace rckid::hal::display
 
-    }
+    namespace audio {
 
-    uint32_t fs::cartridgeEraseSize() {
+        void setVolumeHeadphones(uint8_t value) {
 
-    }
+        }
 
-    void fs::cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
+        void setVolumeSpeaker(uint8_t value) {
 
-    }
+        }
 
-    void fs::cartridgeWrite(uint32_t start, uint8_t const * buffer) {
+        void play(uint32_t sampleRate, Callback cb) {
 
-    }
+        }
 
-    void fs::cartridgeErase(uint32_t start) {
+        void recordMic(uint32_t sampleRate, Callback cb) {
 
-    }
+        }
 
-    // memory
+        void recordLineIn(uint32_t sampleRate, Callback cb) {
 
-    uint8_t * memory::heapStart() {
-        return internal::memory::heap;
+        }
 
-    }
+        void pause() {
 
-    uint8_t * memory::heapEnd() {
-        // TODO should we account for stack size here as well? 
-        return internal::memory::heap + sizeof(internal::memory::heap);
-    }
+        }
+
+        void resume() {
+
+        }
+
+        void stop() {
+
+        }
+
+    } // namespace rckid::hal::audio
+
+    namespace fs {
+
+        uint32_t sdCapacityBlocks() {
+
+        }
+
+        bool sdReadBlocks(uint32_t blockNum, uint8_t * buffer, uint32_t numBlocks) {
+
+        }
+
+        bool sdWriteBlocks(uint32_t blockNum, uint8_t const * buffer, uint32_t numBlocks) {
+
+        }
+
+        uint32_t cartridgeCapacityBytes() {
+
+        }
+
+        uint32_t cartridgeWriteSizeBytes() {
+
+        }
+
+        uint32_t cartridgeEraseSize() {
+
+        }
+
+        void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
+
+        }
+
+        void cartridgeWrite(uint32_t start, uint8_t const * buffer) {
+
+        }
+
+        void cartridgeErase(uint32_t start) {
+
+        }
+
+    } // namespace rckid::hal::fs
+
+    namespace memory {
+
+        uint8_t * heapStart() {
+            return internal::memory::heap;
+
+        }
+
+        uint8_t * heapEnd() {
+            // TODO should we account for stack size here as well? 
+            return internal::memory::heap + sizeof(internal::memory::heap);
+        }
+
+    } // namespace rckid::hal::memory
 
 } // namespace rckid::hal
 
