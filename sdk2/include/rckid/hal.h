@@ -1,6 +1,9 @@
 #pragma once
 
-#include <rckid/rckid.h>
+#include <platform.h>
+#include <platform/writer.h>
+#include <platform/tinydate.h>
+
 #include <rckid/graphics/color.h>
 #include <rckid/graphics/geometry.h>
 
@@ -97,25 +100,24 @@ namespace rckid::hal {
 
     static_assert(sizeof(State) == 4, "Required so that State can be read/written as a single 32bit value");
 
-    class device {
-    public:
+    namespace device {
         /** Initializes the hardware abstraction layer, and brings up the device.
          
             This must be the *first* HAL function called.
         */
-        static void initialize();
+        void initialize();
 
         /** Powers the device off immediately
          
             This function does not return and powers the device off immediately. Any necessary cleanup should have been done before calling this function, e.g. by calling the rckid::powerOff() function, which performs the cleanup and then calls the hal::powerOff() function to actually cut the power.
         */
-        static void powerOff();
+        void powerOff();
 
         /** Puts the device to sleep. 
          
             When in sleep mode, the cartridge and all peripherals remain powered, but the CPU is put to sleep to save power. The only way to wake the device up is either via scheduled wakeup, or via home button press. When sleep is over, the function returns so that normal execution can continue.
         */
-        static void sleep();
+        void sleep();
 
         /** Schedules wakeup with given timeout in seconds and optional payload.
          
@@ -125,65 +127,63 @@ namespace rckid::hal {
 
             A wakeup can be parametrized with a 32bit payload. This allows to identify the wakeup source, etc.
         */
-        static void scheduleWakeup(uint32_t timeoutSeconds, uint32_t payload = 0);
+        void scheduleWakeup(uint32_t timeoutSeconds, uint32_t payload = 0);
 
         /** This function is called by the SDK every app tick. 
          
             This allows the HAL to tap into the ticks and execute some periodic code every frame.
         */
-        static void onTick();
+        void onTick();
 
         /** This function is called every time the SDK's yield() function is called. 
          
             This allows the HAL to perform any necessary background processing. Unlike onTick(), this function is not guaranteed to be called periodically. Since each tick also yields, onYield() is called at least as often as onTick(), but usually much more.
         */
-        static void onYield();
+        void onYield();
 
         /** Fatal error. 
          
             Fatal error should stop all device functionality and only display the error. Note that the function can be called from all kinds of contexts, and care should be taken that it always displays the requested error information. This includes, but is not limited to situations with out of memory problems. 
          */
-        static void fatalError(char const * file, uint32_t line, char const * msg, uint32_t payload);
-
+        void fatalError(char const * file, uint32_t line, char const * msg, uint32_t payload = 0);
+        
         /** Returns a format writer than can be used to output debug information. 
          
             Useful for logging, mostly corresponds to either USB serial adapter, or direct serial out via cartridge pins on the device. 
          */
-        static Writer debugWrite();
+        Writer debugWrite();
 
         /** Reads a byte from the debug input. 
          
             Useful for receiving commands from the debug console. Should be non-blocking and return 0 if no data is available. 
          */
-        static uint8_t debugRead();
+        uint8_t debugRead();
         
-    }; // rckid::hal::device
+    } // namespace rckid::hal::device
 
-    class time {
-    public:
+    namespace time {
 
         /** Returns system uptime in microseconds. 
          */
-        static uint64_t uptimeUs();
+        uint64_t uptimeUs();
 
         /** Returns the current date and time. 
          */
-        static TinyDateTime now();
+        TinyDateTime now();
 
-    }; // rckid::hal::time
+    } // namespace rckid::hal::time
 
-    class io {
-    public:
+    namespace io {
 
         /** Returns the current device state.
          */
-        static State state();
+        State state();
         
-        static Point3D accelerometerState();
+        Point3D accelerometerState();
 
-        static Point3D gyroscopeState();
+        Point3D gyroscopeState();
 
-    }; // rckid::hal::io
+    } // namespace rckid::hal::io
 
     /** Display access. 
      
@@ -195,10 +195,10 @@ namespace rckid::hal {
 
         TODO should the API for display updates be changed to use the audio buffers as well? 
      */
-    class display {
-    public:
-        static constexpr int16_t WIDTH = 320;
-        static constexpr int16_t HEIGHT = 240;
+    namespace display {
+
+        constexpr int16_t WIDTH = 320;
+        constexpr int16_t HEIGHT = 240;
 
         /** Buffer rendering callback.
          */
@@ -209,49 +209,48 @@ namespace rckid::hal {
             RowFirst,
         }; 
 
-        static void enable(Rect rect, RefreshDirection direction);
+        void enable(Rect rect, RefreshDirection direction); 
 
-        static void disable();
+        void disable();
 
-        static void setBrightness(uint8_t value);
+        void setBrightness(uint8_t value);
 
-        static bool vSync();
+        bool vSync();
 
-        static void update(Callback callback);
+        void update(Callback callback);
 
-        static bool updateActive();
+        bool updateActive();
 
-    }; // rckid::hal::display
+    } // namespace rckid::hal::display
 
     /** Audio playback and recording.
      
         
         
      */
-    class audio {
-    public:
+    namespace audio {
 
         /** Audio callback function. 
          */
         using Callback = std::function<void(int16_t * & buffer, uint32_t & stereoSamples)>;
 
-        static void setVolumeHeadphones(uint8_t value);
+        void setVolumeHeadphones(uint8_t value);
 
-        static void setVolumeSpeaker(uint8_t value);
+        void setVolumeSpeaker(uint8_t value);
 
-        static void play(uint32_t sampleRate, Callback cb);
+        void play(uint32_t sampleRate, Callback cb);
 
-        static void recordMic(uint32_t sampleRate, Callback cb);
+        void recordMic(uint32_t sampleRate, Callback cb);
 
-        static void recordLineIn(uint32_t sampleRate, Callback cb);
+        void recordLineIn(uint32_t sampleRate, Callback cb);
 
-        static void pause();
+        void pause();
 
-        static void resume();
+        void resume();
 
-        static void stop();
+        void stop();
 
-    }; // rckid::hal::audio
+    } // namespace rckid::hal::audio
 
     /** Filesystem access. 
      
@@ -261,41 +260,40 @@ namespace rckid::hal {
 
         Whenever the capacity function returns 0 (either blocks for SD or bytes for cartridge), the particular drive is presumed non-existent.
      */
-    class fs {
-    public:
-        static uint32_t sdCapacityBlocks();
+    namespace fs {
 
-        static bool sdReadBlocks(uint32_t blockNum, uint8_t * buffer, uint32_t numBlocks);
+        uint32_t sdCapacityBlocks();
 
-        static bool sdWriteBlocks(uint32_t blockNum, uint8_t const * buffer, uint32_t numBlocks);
+        bool sdReadBlocks(uint32_t blockNum, uint8_t * buffer, uint32_t numBlocks);
+
+        bool sdWriteBlocks(uint32_t blockNum, uint8_t const * buffer, uint32_t numBlocks);
 
         // TODO async variants
 
-        static uint32_t cartridgeCapacityBytes();
+        uint32_t cartridgeCapacityBytes();
 
-        static uint32_t cartridgeWriteSizeBytes();
+        uint32_t cartridgeWriteSizeBytes();
 
-        static uint32_t cartridgeEraseSize();
+        uint32_t cartridgeEraseSize();
 
-        static void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes);
+        void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes);
 
-        static void cartridgeWrite(uint32_t start, uint8_t const * buffer);
+        void cartridgeWrite(uint32_t start, uint8_t const * buffer);
 
-        static void cartridgeErase(uint32_t start);
+        void cartridgeErase(uint32_t start);
 
-    }; // rckid::hal::fs
+    } // namespace rckid::hal::fs
 
     /** Heap configuration. 
      
         The HAL must provide heap boundaries and swap the global malloc & free functions to those using the allocators provided in the memory.h file, which is platform agnostic. The expectation here is that heap starts at the heapStart() address, which is *fixed* during the entire execution and extends up to heapEnd(), which may change depending on the platform (namely due to stack growth).
      */
-    class memory {
-    public:
+    namespace memory {
 
-        static uint8_t * heapStart();
+        uint8_t * heapStart();
 
-        static uint8_t * heapEnd();
+        uint8_t * heapEnd();
 
-    }; // rckid::memory
+    } // namespace rckid::hal::memory
 
 } // namespace rckid

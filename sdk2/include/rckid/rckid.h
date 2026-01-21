@@ -3,6 +3,8 @@
 #include <platform.h>
 #include <platform/tinydate.h>
 
+#include <rckid/hal.h>
+#include <rckid/error.h>
 #include <rckid/util/log.h>
 
 /** RCKid SDK
@@ -45,7 +47,7 @@ namespace rckid {
         
         This function allows other tasks to run and should be called periodically from long-running operations to keep the system responsive. It is guaranteed to run at least once every tick.
      */
-    void yield();
+    inline void yield() { hal::device::onYield(); }
 
     // io
 
@@ -82,10 +84,7 @@ namespace rckid {
      
         The function is a direct wrapper over hal::time::uptimeUs().
      */
-    uint64_t uptimeUs();
-
-
-
+    inline uint64_t uptimeUs() { return hal::time::uptimeUs(); }
 
     // debugging
 
@@ -93,13 +92,13 @@ namespace rckid {
      
         This is a direct wrapper over the hal::device::debugWrite() function that allows writing dbeug information to preferred debug outputs, such as USB serial adpater, or direct serial output via cartridge pins.
      */
-    Writer debugWrite();
+    inline Writer debugWrite() { return hal::device::debugWrite(); }
 
     /** Reads characters from debug input.
      
         The call is non-blocking and returns 0 if no data is available. The function is a direct wrapper over the hal::device::debugRead() function.
      */
-    uint8_t debugRead();
+    inline uint8_t debugRead() { return hal::device::debugRead(); }
 
 } // namespace rckid
 
