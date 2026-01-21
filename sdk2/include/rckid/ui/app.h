@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../app.h"
-#include "../memory.h"
-#include "panel.h"
+#include <rckid/app.h>
+#include <rckid/memory.h>
+#include <rckid/ui/root_widget.h>
 
 namespace rckid::ui {
 
@@ -13,7 +13,7 @@ namespace rckid::ui {
     public:
         App(Rect rect): root_{rect} {}
 
-        App(): root_{Rect::FullScreen()} {}
+        App() = default;
 
 
 
@@ -35,7 +35,7 @@ namespace rckid::ui {
 
     private:
 
-        Panel root_;
+        RootWidget root_;
 
     }; // ui::App<RESULT>
 

@@ -61,5 +61,10 @@ namespace rckid {
 
     }; // rckid::Rect
 
+    inline Writer & operator << (Writer & w, Rect const & r) {
+        w << "Rect[" << r.x << ", " << r.y << ", " << r.w << ", " << r.h << "]";
+        return w;
+    }
+
 
 } // namespace rckid

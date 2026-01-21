@@ -1,6 +1,6 @@
 #pragma once
 
-#include "widget.h"
+#include <rckid/ui/widget.h>
 
 namespace rckid::ui {
 

@@ -1,6 +1,6 @@
 #include <rckid/hal.h>
 #include <rckid/graphics/color.h>
-#include <rckid/utils/log.h>
+#include <rckid/util/log.h>
 
 using namespace rckid;
 

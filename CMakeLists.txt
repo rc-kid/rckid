@@ -62,7 +62,7 @@ add_compile_definitions("RCKID_BACKEND_${RCKID_BACKEND}")
 add_compile_options(-fmacro-prefix-map=/home/peta/devel/rckid/=/)
 
 # setup general include directories
-include_directories("sdk2")
+include_directories("sdk2/include")
 include_directories("libs")
 include_directories("gbcemu")
 

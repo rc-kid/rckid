@@ -1,4 +1,4 @@
-#include "app.h"
+#include <rckid/app.h>
 
 namespace rckid {
 

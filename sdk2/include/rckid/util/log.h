@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../rckid.h"
+#include <rckid/rckid.h>
 
 /** Logging 
  

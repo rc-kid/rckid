@@ -1,7 +1,7 @@
 #pragma once
 
 #include <optional>
-#include "rckid.h"
+#include <rckid/rckid.h>
 
 namespace rckid {
 
