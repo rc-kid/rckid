@@ -11,12 +11,33 @@
 
 #include <rckid/hal.h>
 #include <rckid/error.h>
+#include <rckid/memory.h>
 #include <rckid/graphics/color.h>
 
 #define RCKID_DISPLAY_ZOOM 4
 
 
 namespace rckid::internal {
+
+    namespace memory {
+
+        uint8_t heap[512 * 1024];
+
+        bool useSystemMalloc = true;
+
+        class SystemMallocGuard {
+        public:
+            SystemMallocGuard() {
+                ASSERT(useSystemMalloc == false);
+                useSystemMalloc = true;
+            }
+
+            ~SystemMallocGuard() {
+                useSystemMalloc = false;
+            }
+        }; // SystemMallocGuard
+
+    } // rckid::internal::memory
 
     namespace time {
         TinyDateTime now;
@@ -40,6 +61,7 @@ namespace rckid::internal {
         uint64_t lastRefresh = 0;
 
         void refresh() {
+            internal::memory::SystemMallocGuard g_;
             UpdateTexture(texture, img.data);
             BeginDrawing();
             DrawTextureEx(texture, {0,0}, 0, RCKID_DISPLAY_ZOOM, WHITE);
@@ -56,7 +78,10 @@ namespace rckid::internal {
             // write the pixel
             Color c = Color::RGB565(pixel);
             // TODO and change according to brightness value
-            ImageDrawPixel(&img, x, y, { c.r, c.g, c.b, 255});
+            {
+                internal::memory::SystemMallocGuard g_;
+                ImageDrawPixel(&img, x, y, { c.r, c.g, c.b, 255});
+            }
             // update the x & y coordinates and refresh if necessary
             switch (direction) {
                 case hal::display::RefreshDirection::ColumnFirst:
@@ -81,13 +106,31 @@ namespace rckid::internal {
         }
     } // rckid::internal::display
 
-    namespace memory {
-
-        uint8_t heap[512 * 1024];
-
-    } // rckid::internal::memory
-
 } // namespace rckid::internal
+
+extern "C" {
+    extern void *__libc_malloc(size_t);
+    extern void __libc_free(void *);
+
+    //depending on whether we are in system malloc, or not use libc malloc, or RCKid's heap
+    void * malloc(size_t numBytes) {
+        if (rckid::internal::memory::useSystemMalloc)
+            return __libc_malloc(numBytes);
+        else
+            return rckid::Heap::alloc(numBytes);
+    }
+
+    // if the pointer to be freed belongs to RCKId's heap, we should use own heap free, otherwise use normal free (and assert it does not belong to fantasy heap in general as that would be weird)
+    void free(void * ptr) {
+        if (rckid::Heap::contains(ptr)) {
+            rckid::Heap::free(ptr);
+        // otherwise this is a libc pointer and should be deleted accordingly
+        } else {
+            __libc_free(ptr);
+        }
+   }
+} // extern C
+
 
 namespace rckid::hal {
 
@@ -97,6 +140,8 @@ namespace rckid::hal {
             InitWindow(320 * RCKID_DISPLAY_ZOOM, 240 * RCKID_DISPLAY_ZOOM, "RCKid");
             internal::display::img = GenImageColor(display::WIDTH, display::HEIGHT, BLACK);
             internal::display::texture = LoadTextureFromImage(internal::display::img);
+
+            internal::memory::useSystemMalloc = false;
 
         }
 
@@ -130,6 +175,7 @@ namespace rckid::hal {
 
         Writer debugWrite() {
             return Writer{[](char c) {
+                internal::memory::SystemMallocGuard g_;
                 std::cout << c;
                 if (c == '\n')
                     std::cout << std::flush;
@@ -138,7 +184,11 @@ namespace rckid::hal {
 
         uint8_t debugRead() {
             while (true) {
-                int x = GetCharPressed();
+                int x;
+                {
+                    internal::memory::SystemMallocGuard g_;
+                    x = GetCharPressed();
+                }
                 // skip non ASCII characters on the input
                 if (x > 0xff)
                     continue;
