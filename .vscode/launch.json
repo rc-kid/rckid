@@ -36,7 +36,7 @@
             "request": "launch",
             "cwd": "${workspaceFolder}",
             //"program": "${workspaceFolder}/build/cartridges/tests/audiotest",
-            "program": "${workspaceFolder}/build/cartridges2/test/display-fill",
+            "program": "${workspaceFolder}/build/cartridges2/test/ui-app",
             //"program": "${workspaceFolder}/build/cartridges/tests/bsodtest",
             "args": [],
             "stopAtEntry": false,

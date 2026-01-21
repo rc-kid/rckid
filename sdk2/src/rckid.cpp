@@ -1,7 +1,6 @@
-#include "rckid.h"
-#include "hal.h"
-#include "task.h"
-#include "utils/log.h"
+#include <rckid/rckid.h>
+#include <rckid/hal.h>
+#include <rckid/task.h>
 
 namespace rckid {
 

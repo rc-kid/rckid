@@ -22,6 +22,10 @@ namespace rckid::internal {
         std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
     } // rckid::internal::time
 
+    namespace io {
+        hal::State state;
+    }
+
     namespace display {
         hal::display::RefreshDirection direction;
         Rect rect;
@@ -155,7 +159,7 @@ namespace rckid::hal {
     // io
 
     State io::state() {
-
+        return internal::io::state;
     }
 
     Point3D io::accelerometerState() {

@@ -3,6 +3,8 @@
 #include <platform.h>
 #include <platform/tinydate.h>
 
+#include <rckid/util/log.h>
+
 /** RCKid SDK
 
  */

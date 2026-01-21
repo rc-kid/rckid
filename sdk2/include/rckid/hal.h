@@ -1,8 +1,8 @@
 #pragma once
 
-#include "rckid.h"
-#include "graphics/color.h"
-#include "graphics/geometry.h"
+#include <rckid/rckid.h>
+#include <rckid/graphics/color.h>
+#include <rckid/graphics/geometry.h>
 
 namespace rckid {
 
@@ -200,6 +200,8 @@ namespace rckid::hal {
         static constexpr int16_t WIDTH = 320;
         static constexpr int16_t HEIGHT = 240;
 
+        /** Buffer rendering callback.
+         */
         using Callback = std::function<void(Color::RGB565 * & buffer, uint32_t & bufferSize)>; 
 
         enum class RefreshDirection {
