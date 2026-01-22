@@ -31,10 +31,7 @@ namespace rckid::ui {
         }
 
         template<typename T>
-        T * addChild(T * child) { return root_.addChild(child); }
-
-        template<typename T>
-        T * addChild(with<T> const & w) { return root_.addChild(w); }
+        with<T> addChild(T * child) { return root_.addChild(child); }
 
     private:
 

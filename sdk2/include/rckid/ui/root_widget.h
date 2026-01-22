@@ -11,9 +11,8 @@ namespace rckid::ui {
         RootWidget();
 
         RootWidget(Rect rect): 
-            Panel{rect},
-            renderBuffer_{static_cast<uint32_t>(height())} {
-            // TODO add rendering buffer
+            renderBuffer_{static_cast<uint32_t>(rect.height())} {
+            setRect(rect);
         }
 
         void initializeDisplay();

@@ -7,10 +7,6 @@ namespace rckid::ui {
     class Panel : public Widget {
     public:
 
-        Panel() = default;
-
-        Panel(Rect rect, Color bg = Color::Black()): Widget{rect}, bg_{bg} {}
-
         Color bg() const { return bg_; }
 
         void setBg(Color value) { bg_ = value; }
@@ -26,15 +22,10 @@ namespace rckid::ui {
 
     }; // ui::Panel
 
-
-    struct SetBg {
-        Color value;
-
-        SetBg(Color value): value{value} {}
-
-        void operator () (Panel * w) const { 
-            w->setBg(value); 
-        }
-    };
+    /** Sets panel's background color.
+     */
+    inline auto SetBg(Color value) {
+        return [=](Panel * p) { p->setBg(value); };
+    }
 
 } // namespace rckid::ui

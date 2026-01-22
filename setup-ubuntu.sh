@@ -8,7 +8,7 @@ sudo apt update -qq
 sudo apt-get install -y -qq cmake gcc-arm-none-eabi libnewlib-arm-none-eabi build-essential libstdc++-arm-none-eabi-newlib ninja-build doxygen graphviz exfat-fuse
 
 echo "    installing pico-sdk..."
-cd ${RCKID_DIR}/libs
+cd ${RCKID_DIR}/lib
 git clone https://github.com/raspberrypi/pico-sdk.git --branch master -o pico-sdk
 cd pico-sdk
 git submodule update --init
@@ -22,7 +22,7 @@ echo "        curl..."
 sudo apt-get install -y -qq libcurl4-openssl-dev curl
 
 echo "        raylib..."
-cd ${RCKID_DIR}/libs
+cd ${RCKID_DIR}/lib
 #sudo apt-get install vlc alsa-utils
 git clone https://github.com/raysan5/raylib.git
 #cd raylib/src

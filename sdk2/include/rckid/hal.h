@@ -192,8 +192,6 @@ namespace rckid::hal {
         The bulk of the SDK supports precisely this rendering, but the HAL must also provide an option to use the potentially tearing, but more common row-first approach. 
 
         In either modes, first the display must be enable and the update rectangle & direction specified. After this, subsequent calls to update() should push the pixels to the selected area. The updates are wrapped, i.e. after the whole selected rectangle is updated, the next pixel goes to the start of the rectangle again. 
-
-        TODO should the API for display updates be changed to use the audio buffers as well? 
      */
     namespace display {
 
