@@ -15,9 +15,9 @@ namespace rckid::ui {
 
         void setBg(Color value) { bg_ = value; }
 
-        void renderColumn(Coord column, Color::RGB565 * buffer, Coord starty, Coord numPixels) override {
+        void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) override {
             memset16(reinterpret_cast<uint16_t*>(buffer), bg_.toRGB565(), numPixels);
-            Widget::renderColumn(column, buffer, starty, numPixels);
+            Widget::renderColumn(column, startRow, buffer, numPixels);
         }
 
     protected:

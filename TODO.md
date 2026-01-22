@@ -1,3 +1,8 @@
+# SDK 1.0
+
+- make addChild accept only pointers and return with, so that we can use special operators such as CenterInParent, etc. 
+- this can be a good simple layouting stuff
+
 # Version 3.2 Checklist
 
 First add a board that can verify the last missing features and DFM improvements, namely:
