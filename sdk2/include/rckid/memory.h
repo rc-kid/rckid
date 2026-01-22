@@ -139,10 +139,16 @@ namespace rckid {
     class immutable_ptr {
     public:
 
-        constexpr immutable_ptr(T const * ptr = nullptr): ptr_{ptr} {}
+        constexpr immutable_ptr(T const * ptr = nullptr): ptr_{ptr} {
+            ASSERT(Heap::contains(ptr) || hal::memory::isImmutableDataPtr(ptr));
+        }
 
-        /** Immutable pointers can be created from existing values as well */
+        /** Immutable pointers can be created from existing values as well. 
+         
+            But in this case the value must belong to the immutable data pool as defined by the HW abstraction layer. This is because otherwise there could be subtle lifetime issues, such as when immutable_ptr would point to a stack variable that gets out of scope. 
+         */
         constexpr immutable_ptr(T const & value): ptr_{& value } {
+            ASSERT(hal::memory::isImmutableDataPtr(ptr));
             ASSERT(! Heap::contains(ptr_));
         }
 
