@@ -51,6 +51,13 @@ namespace rckid {
         constexpr Coord width() const { return w; }
         constexpr Coord height() const { return h; }
 
+        /** Returns true if the other rectangle fits completely inside this one.
+         */
+        bool contains(Rect const & other) const {
+            return left() <= other.left() && top() <= other.top() && right() >= other.right() && bottom() >= other.bottom();
+        }
+
+
         constexpr Rect() = default;
 
         static constexpr Rect WH(Coord width, Coord height) {

@@ -195,8 +195,8 @@ namespace rckid::hal {
      */
     namespace display {
 
-        constexpr int16_t WIDTH = 320;
-        constexpr int16_t HEIGHT = 240;
+        constexpr Coord WIDTH = 320;
+        constexpr Coord HEIGHT = 240;
 
         /** Buffer rendering callback.
          */
@@ -291,6 +291,8 @@ namespace rckid::hal {
         uint8_t * heapStart();
 
         uint8_t * heapEnd();
+
+        bool isImmutableDataPtr(void const * ptr);
 
     } // namespace rckid::hal::memory
 

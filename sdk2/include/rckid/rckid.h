@@ -100,6 +100,44 @@ namespace rckid {
      */
     inline uint8_t debugRead() { return hal::device::debugRead(); }
 
+
+
+    /** Display manipulation.
+        
+     */
+    class display {
+    public:
+        using RefreshDirection = hal::display::RefreshDirection;
+        using Callback = hal::display::Callback;
+
+        static constexpr Coord WIDTH = hal::display::WIDTH;
+        static constexpr Coord HEIGHT = hal::display::HEIGHT;
+            
+        static void waitUpdateDone() {
+            while (hal::display::updateActive())
+                yield();
+        }
+
+        static void enable(Rect rect, RefreshDirection  direction) {
+            ASSERT(Rect::WH(WIDTH, HEIGHT).contains(rect));
+            waitUpdateDone();
+            hal::display::enable(rect, direction);
+            rect_ = rect;
+            refreshDirection_ = direction;
+        }
+
+        static void update(Callback cb) { 
+            hal::display::update(cb);
+        }
+    
+    private:
+        // state so that we can query display state
+        static inline Rect rect_;
+        static inline RefreshDirection refreshDirection_;
+
+    }; // rckid::display
+
+
 } // namespace rckid
 
 /** Following are potentially accelerated hardware primitives. 

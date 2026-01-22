@@ -14,6 +14,7 @@ function(link_with_librckid target_name)
     get_target_property(target_type ${target_name} TYPE)
     target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/lib/platform/rckid-fantasy")
     target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/sdk2/backend/fantasy")
+    target_link_options(${target_name} PRIVATE "-Wl,-T,${CMAKE_SOURCE_DIR}/sdk2/backend/fantasy/linker.ld" )    
     if (target_type STREQUAL "EXECUTABLE")
         target_link_libraries(${target_name} PRIVATE 
             librckid

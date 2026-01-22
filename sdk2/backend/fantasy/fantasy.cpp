@@ -117,6 +117,10 @@ namespace rckid::internal {
 } // namespace rckid::internal
 
 extern "C" {
+
+    extern uint8_t __rodata_start; 
+    extern uint8_t __rodata_end;    
+    
     extern void *__libc_malloc(size_t);
     extern void __libc_free(void *);
 
@@ -139,7 +143,6 @@ extern "C" {
    }
 } // extern C
 
-
 namespace rckid::hal {
 
     namespace device {
@@ -149,7 +152,7 @@ namespace rckid::hal {
         void initializeNoWindow() {
             internal::display::noWindow = true;
             internal::memory::useSystemMalloc = false;
-            LOG(LL_WARN, "RCKid initailizing w/o app window");
+            LOG(LL_WARN, "Immutable memory: " << & __rodata_start << " - " << & __rodata_end);
         }
 
         void initialize() {
@@ -381,6 +384,11 @@ namespace rckid::hal {
             // TODO should we account for stack size here as well? 
             return internal::memory::heap + sizeof(internal::memory::heap);
         }
+
+        bool isImmutableDataPtr(void const * ptr) {
+            return (ptr >= & __rodata_start) && (ptr < & __rodata_end);
+        }
+
 
     } // namespace rckid::hal::memory
 

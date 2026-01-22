@@ -1,6 +1,17 @@
 #include <platform/tests.h>
 #include <rckid/memory.h>
 
+
+uint8_t const x[] = { 1, 2, 3, 4 };
+uint8_t y[] = { 1, 2, 3, 4 };
+
+TEST(memory, immutable) {
+    EXPECT(sizeof(x) == 4);
+    EXPECT(sizeof(y) == 4);
+    EXPECT(rckid::hal::memory::isImmutableDataPtr(& x) == true);
+    EXPECT(rckid::hal::memory::isImmutableDataPtr(& y) == false);
+}
+
 TEST(memory, heapAlloc) {
     using namespace rckid;
 
