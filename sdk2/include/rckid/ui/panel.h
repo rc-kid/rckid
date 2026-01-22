@@ -7,9 +7,13 @@ namespace rckid::ui {
     class Panel : public Widget {
     public:
 
-        Panel(Rect rect): Widget{rect} {}
+        Panel() = default;
+
+        Panel(Rect rect, Color bg = Color::Black()): Widget{rect}, bg_{bg} {}
 
         Color bg() const { return bg_; }
+
+        void setBg(Color value) { bg_ = value; }
 
         void renderColumn(Coord column, Color::RGB565 * buffer, Coord starty, Coord numPixels) override {
             memset16(reinterpret_cast<uint16_t*>(buffer), bg_.toRGB565(), numPixels);
@@ -21,5 +25,16 @@ namespace rckid::ui {
         Color bg_ = Color::RGB(0, 0, 0);
 
     }; // ui::Panel
+
+
+    struct SetBg {
+        Color value;
+
+        SetBg(Color value): value{value} {}
+
+        void operator () (Panel * w) const { 
+            w->setBg(value); 
+        }
+    };
 
 } // namespace rckid::ui

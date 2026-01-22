@@ -6,11 +6,14 @@
 #include <rckid/memory.h>
 #include <rckid/graphics/color.h>
 #include <rckid/graphics/geometry.h>
+#include <rckid/ui/with.h>
 
 namespace rckid::ui {
 
     class Widget {
     public:
+
+        Widget() = default;
 
         Widget(Rect rect): rect_{rect} {
             if (rect_.w < 0 || rect_.h < 0) {
@@ -42,13 +45,29 @@ namespace rckid::ui {
             return rect_.height(); 
         }
 
+        Point position() const {
+            return rect_.topLeft();
+        }
+
+        void setPosition(Point pos) {
+            rect_.setTopLeft(pos);
+        }
+
         bool visible() const { return visible_; }
 
+        void setVisible(bool value) { 
+            visible_ = value; 
+        }
 
         template<typename T>
         T * addChild(T * child) {
             children_.push_back(unique_ptr<Widget>(child));
             return child;
+        }
+
+        template<typename T>
+        T * addChild(with<T> const & child) {
+            return addChild(static_cast<T*>(child));
         }
 
         /** Renders vertical column of the the widget to given color buffer. 
@@ -76,6 +95,23 @@ namespace rckid::ui {
         std::vector<unique_ptr<Widget>> children_;
 
     }; // ui::Widget
+
+
+    struct SetPosition {
+        Point pos;
+
+        SetPosition(Point p) : pos{p} {}
+        SetPosition(Coord x, Coord y) : pos{x, y} {}
+
+        void operator () (Widget * w) const { w->setPosition(pos); }
+    };
+
+    struct SetVisibility {
+        bool value;
+
+        void operator () (Widget * w) const { w->setVisible(value); }
+    }; 
+
 
 
 } // namespace rckid

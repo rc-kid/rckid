@@ -54,6 +54,11 @@ namespace rckid {
         uint8_t g;
         uint8_t b;
 
+        static constexpr Color Black() { return Color{0,0,0}; }
+        static constexpr Color White() { return Color{255,255,255}; }
+        static constexpr Color Red()   { return Color{255,0,0}; }
+        static constexpr Color Green() { return Color{0,255,0}; }
+        static constexpr Color Blue()  { return Color{0,0,255}; }
 
     private:
 
