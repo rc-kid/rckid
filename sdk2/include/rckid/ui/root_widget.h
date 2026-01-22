@@ -1,7 +1,7 @@
 #pragma once
 
 #include <rckid/ui/panel.h>
-#include <rckid/util/buffer.h>
+#include <rckid/buffer.h>
 
 namespace rckid::ui {
 

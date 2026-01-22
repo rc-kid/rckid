@@ -39,6 +39,13 @@ namespace rckid::internal {
 
     } // rckid::internal::memory
 
+    namespace device {
+        // part of a mechanism to exit the app during a yield in fatal error mode. fatalError sets this to true if we do not have window (indicating cli execution) and then onYield kills the app immediately.
+        // has no effect in GUI mode when we simulate the BSOD from the device
+        bool exitAtYield = false;
+
+    } // rckid::internal::device
+
     namespace time {
         TinyDateTime now;
         std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
@@ -49,6 +56,7 @@ namespace rckid::internal {
     }
 
     namespace display {
+        bool noWindow = false;
         hal::display::RefreshDirection direction;
         Rect rect;
         
@@ -136,13 +144,20 @@ namespace rckid::hal {
 
     namespace device {
 
+        /** Initialize version useful for tests that initializes the fantasy backend, but without the visible window. Very useful for tests. 
+         */
+        void initializeNoWindow() {
+            internal::display::noWindow = true;
+            internal::memory::useSystemMalloc = false;
+            LOG(LL_WARN, "RCKid initailizing w/o app window");
+        }
+
         void initialize() {
             InitWindow(320 * RCKID_DISPLAY_ZOOM, 240 * RCKID_DISPLAY_ZOOM, "RCKid");
             internal::display::img = GenImageColor(display::WIDTH, display::HEIGHT, BLACK);
             internal::display::texture = LoadTextureFromImage(internal::display::img);
 
-            internal::memory::useSystemMalloc = false;
-
+            initializeNoWindow();
         }
 
         void powerOff() {
@@ -162,14 +177,16 @@ namespace rckid::hal {
         }
 
         void onYield() {
-            // do nothing on yield
+            if (internal::device::exitAtYield)
+                exit(-1);
         }
 
         void fatalError(char const * file, uint32_t line, char const * msg, uint32_t payload) {
             // fatal error is simple on fantasy console as we do not have to worry about weird hardware states
             // stop audio playback, which is the only async stuff we can have
             audio::stop();
-            // and call the SDKs default handler
+            // and call the SDKs default handler, setting exitAtYield to true if we lack app window
+            internal::device::exitAtYield = internal::display::noWindow;
             onFatalError(file, line, msg, payload);
         }
 

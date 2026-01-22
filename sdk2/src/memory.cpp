@@ -1,6 +1,7 @@
 #include <rckid/error.h>
-#include <rckid/util/log.h>
+#include <rckid/log.h>
 #include <rckid/memory.h>
+#include <rckid/hal.h>
 
 
 namespace rckid {
@@ -9,9 +10,7 @@ namespace rckid {
      
         Heap chunks are tailored towards very little memory waste. Each chunk consists of a header that is only 4 bytes and contains current chunk's size in Chunks (8 bytes) as well as previous chunk's size in chunks. As the MSB of previous chunk's size is occupied by a free bit, we can allocate at most 32767 chunks (262136 bytes) in a single allocation, of which 4 bytes are used by the header itself, leaving 262132 bytes for user data.
 
-        Minimal allocation physical allocation is 8 bytes, so that when the chunk is free, its data can hold 2 pointers for the free list in the data portion. Minimal user allocation is 4 bytes with increments by 8 (chunk header + min 4 bytes of payload, then incremented by ectra "chunks"). 
-
-        
+        Minimal allocation physical allocation is 8 bytes, so that when the chunk is free, its data can hold 2 pointers for the free list in the data portion. Minimal user allocation is 4 bytes with increments by 8 (chunk header + min 4 bytes of payload, then incremented by extra "chunks"). 
      */
     class Heap::Chunk {
     public:
@@ -223,6 +222,17 @@ namespace rckid {
             } 
             chunk->addToFreelist();
         }
+    }
+
+    uint32_t Heap::usedBytes() {
+        uint32_t used = 0;
+        Chunk * x = freelist_;
+        while (x != nullptr) {
+            ASSERT(x->isFree());
+            used += x->headerSize_ * sizeof(Chunk);
+            x = x->prevFree();
+        }
+        return reservedBytes() - used;
     }
 
 }

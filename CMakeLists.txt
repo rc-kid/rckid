@@ -38,7 +38,7 @@ if (RCKID_BACKEND STREQUAL "MK3")
     # skip the pico malloc library setup
     set(SKIP_PICO_MALLOC 1)
     # Pull in SDK (must be before project)
-    include(${CMAKE_SOURCE_DIR}/libs/pico-sdk/pico_sdk_init.cmake)
+    include(${CMAKE_SOURCE_DIR}/lib/pico-sdk/pico_sdk_init.cmake)
     project(rckid C CXX ASM)
     # Tell pico SDK we are using 16MB cartridges
     add_compile_definitions(PICO_FLASH_SIZE_BYTES=16777216)
@@ -51,10 +51,12 @@ elseif (RCKID_BACKEND STREQUAL "FANTASY")
     message("RCKID: Building for the fantasy console (with Raylib)")
     project(rckid)
     add_definitions(-DSUPPORT_CUSTOM_FRAME_CONTROL)
-    add_subdirectory(libs/raylib)
+    add_subdirectory(lib/raylib)
 else()
     message(FATAL_ERROR "Unknown RCKid backend selected: ${RCKID_BACKEND}. Supported backends: FANTASY, MK3")
 endif()
+
+add_compile_options(-Wall -Wextra)
 
 # adds the specific backend definition so that the code knows as well which backend we are using
 add_compile_definitions("RCKID_BACKEND_${RCKID_BACKEND}")
@@ -63,16 +65,16 @@ add_compile_options(-fmacro-prefix-map=/home/peta/devel/rckid/=/)
 
 # setup general include directories
 include_directories("sdk2/include")
-include_directories("libs")
+include_directories("lib")
 include_directories("gbcemu")
 
 # Add 3rd party libraries (note that these are part of the repo as they often required changes to be made)
-add_subdirectory("libs/PNGdec")
-add_subdirectory("libs/PNGenc")
-add_subdirectory("libs/FatFS")
-add_subdirectory("libs/littlefs")
-add_subdirectory("libs/libhelix-mp3")
-add_subdirectory("libs/libopus")
+add_subdirectory("lib/PNGdec")
+add_subdirectory("lib/PNGenc")
+add_subdirectory("lib/FatFS")
+add_subdirectory("lib/littlefs")
+add_subdirectory("lib/libhelix-mp3")
+add_subdirectory("lib/libopus")
 
 # add the SDK itself
 add_subdirectory("sdk2")
@@ -86,12 +88,6 @@ add_subdirectory("sdk2")
 add_subdirectory("cartridges2")
 #add_subdirectory("cartridges/hello-world")
 #add_subdirectory("cartridges/gbcemu")
-
-
-# add utils target if we are building for the fantasy architecture (needs raylib)
-#if(${RCKID_BACKEND} STREQUAL "FANTASY")
-#    add_subdirectory("sdk/utils")
-#endif()
 
 # doxygen documentation
 add_custom_target(docs

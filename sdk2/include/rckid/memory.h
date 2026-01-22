@@ -1,6 +1,11 @@
 #pragma once
 
 #include <platform.h>
+
+#include <rckid/error.h>
+#include <rckid/hal.h>
+#include <rckid/log.h>
+
 namespace rckid {
 
     /** Unique pointer.
@@ -70,6 +75,52 @@ namespace rckid {
             Internally this takes the reservedBytes and then subtracts from it all the chunks found in the freelist. As such its complexity is linear wrt the number of free chunks. 
          */
         static uint32_t usedBytes();
+
+        /** Guard that ensures memory is not leaking. 
+         
+            This is the simplest of the guard that merely ensures that used heap memory at exit is not greater than used memory at the beginning. 
+
+            For debugging purposes, the guard provides the usedDelta() function that returns currently used heap bytes *above* the used bytes at the time of guard creation. In other words the guard fails if usedDelta() is positive at the time of guard destruction.
+         */
+        class UseGuard {
+        public:
+            UseGuard() = default;
+            ~UseGuard() {
+                ASSERT(usedDelta() <= 0);
+            }
+            
+            int32_t usedDelta() const {
+                return static_cast<int32_t>(usedBytes()) - static_cast<int32_t>(usedAtStart_);
+            }
+
+        private:
+            uint32_t usedAtStart_ = usedBytes();
+
+        }; // Heap::UseGuard
+
+        class ReserveGuard {
+        public:
+            ReserveGuard() = default;
+            ~ReserveGuard() {
+                ASSERT(reservedDelta() <= 0);
+            }
+
+            int32_t reservedDelta() const {
+                return static_cast<int32_t>(reservedBytes()) - static_cast<int32_t>(reservedAtStart_);
+            }
+
+        private:
+            uint32_t reservedAtStart_ = reservedBytes();
+        }; // Heap::ReserveGuard
+
+        class UseAndReserveGuard {
+        public:
+            int32_t usedDelta() const { return use_.usedDelta(); }
+            int32_t reservedDelta() const { return reserve_.reservedDelta(); }
+        private:
+            UseGuard use_;
+            ReserveGuard reserve_;
+        };
 
     private:
         class Chunk;
