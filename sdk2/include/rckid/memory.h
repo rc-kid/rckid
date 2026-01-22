@@ -8,15 +8,6 @@
 
 namespace rckid {
 
-    /** Unique pointer.
-     
-        Just a wrapper around std::unique_ptr for easier future replacement and consistency together with other smart pointers below.
-     */
-    template<typename T>
-    using unique_ptr = std::unique_ptr<T>;
-
-
-
     /** Heap Manager
      
         As heap is a scarce resource on embedded devices, RCKid provides its own heap manager implementation that optimizes the total memory used for the heap as the remainder of RAM can be used for stack. This is done via aggresive de-reservation of latest allocated chunks when freed and chunk merging & splitting during free & malloc respectively to curb unnecessary heap growth at the expense of potential fragmentation. 
@@ -130,6 +121,61 @@ namespace rckid {
         static inline Chunk * freelist_ = nullptr;
         static inline uint32_t lastSize_ = 0;
         
-    }; // rckid::heap
+    }; // rckid::Heap
+
+
+    /** Unique pointer.
+     
+        Just a wrapper around std::unique_ptr for easier future replacement and consistency together with other smart pointers below.
+     */
+    template<typename T>
+    using unique_ptr = std::unique_ptr<T>;
+
+    /** Immutable, unique pointer that can point to non-heap objects as well.
+     
+        
+     */
+    template<typename T>
+    class immutable_ptr {
+    public:
+
+        constexpr immutable_ptr(T const * ptr = nullptr): ptr_{ptr} {}
+
+        /** Immutable pointers can be created from existing values as well */
+        constexpr immutable_ptr(T const & value): ptr_{& value } {
+            ASSERT(! Heap::contains(ptr_));
+        }
+
+        immutable_ptr(immutable_ptr const & ) = delete;
+        immutable_ptr & operator = (immutable_ptr const &) = delete;
+
+        immutable_ptr(immutable_ptr && other) noexcept : ptr_{other.ptr_} { other.ptr_ = nullptr; }
+
+        immutable_ptr & operator = (immutable_ptr && other) {
+            if (this == & other)
+                return *this;
+            deletePtr();
+            ptr_ = other.ptr_;
+            other.ptr_ = nullptr;
+            return *this;
+        }
+
+        ~immutable_ptr() { deletePtr(); }
+
+        T const & operator * () const { return * ptr_; } 
+        T const * operator -> () const { return ptr_; } 
+        T const * get() const { return ptr_; }
+
+    private:
+
+        void deletePtr() {
+            if (Heap::contains(ptr_))
+                Heap::free(ptr_);
+        }
+
+        T const * ptr_ = nullptr;
+    }; 
+
+
 
 } // namespace rckid
