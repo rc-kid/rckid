@@ -16,7 +16,12 @@ namespace rckid::ui {
 
         Widget() = default;
 
-        Widget(Rect rect): rect_{rect} {
+        virtual ~Widget() = default;
+
+        Rect rect() const { return rect_; }
+
+        void setRect(Rect rect) {
+            rect_ = rect;
             if (rect_.w < 0 || rect_.h < 0) {
                 LOG(LL_ERROR, "Widget rectangle has negative size " << rect);
                 if (rect_.w < 0)
@@ -26,9 +31,7 @@ namespace rckid::ui {
             }
         }
 
-        virtual ~Widget() = default;
-
-        Rect rect() const { return rect_; }
+        Widget * parent() const { return parent_; }
 
         /** Returns the width of the widget.
          
@@ -46,29 +49,18 @@ namespace rckid::ui {
             return rect_.height(); 
         }
 
-        Point position() const {
-            return rect_.topLeft();
-        }
-
-        void setPosition(Point pos) {
-            rect_.setTopLeft(pos);
-        }
-
         bool visible() const { return visible_; }
 
-        void setVisible(bool value) { 
+        void setVisibility(bool value) { 
             visible_ = value; 
         }
 
         template<typename T>
-        T * addChild(T * child) {
+        with<T> addChild(T * child) {
+            ASSERT(child->parent_ == nullptr);
+            child->parent_ = this;            
             children_.push_back(unique_ptr<Widget>(child));
-            return child;
-        }
-
-        template<typename T>
-        T * addChild(with<T> const & child) {
-            return addChild(static_cast<T*>(child));
+            return with<T>(child);
         }
 
         /** Renders vertical column of the the widget to given color buffer. 
@@ -126,13 +118,11 @@ namespace rckid::ui {
             return true;
         }
 
-        /** Adjusts the rendeing parameters so that they'll be relative to the given rectangle.
+        /** Adjusts the rendering parameters so that they'll be relative to the given rectangle.
          
             This is simple process for the column, where we simply adjust the column based on the rectangle's position and deal with out of bound values later as the new column value can be negative, or greater than the rectangle's width it such case. 
 
-            The rest of the render parameters are independent of the column and need to be adjusted together. 
-
-
+            The rest of the render parameters are independent of the column and need to be adjusted together. We determine the row offset, based on which the buffer, starRow and number of pixels to draw is adjusted. 
 
             TODO can the row calculations be cached for each frame? 
          */
@@ -159,32 +149,64 @@ namespace rckid::ui {
         friend class App;
 
         Rect rect_;
+        Widget * parent_ = nullptr;
         bool visible_ = true;
 
         std::vector<unique_ptr<Widget>> children_;
 
     }; // ui::Widget
 
-
-    /** Operator for setting widget's position.
+    /** Sets the full position rectangle of the widget (i.e. position and size).
      */
-    struct SetPosition {
-        Point pos;
+    inline auto SetRect(Rect rect) {
+        return [=](Widget * w) { w->setRect(rect); };
+    }
 
-        SetPosition(Point p) : pos{p} {}
-        SetPosition(Coord x, Coord y) : pos{x, y} {}
-
-        void operator () (Widget * w) const { w->setPosition(pos); }
-    };
-
-    /** Operator for setting widget's visibility. 
+    /** Sets position of the widget, leaving its size intact. 
      */
-    struct SetVisibility {
-        bool value;
+    inline auto SetPosition(Point pos) {
+        return [=](Widget * w) { 
+            Rect r = w->rect();
+            r.setTopLeft(pos);
+            w->setRect(r); 
+        };
+    }
 
-        void operator () (Widget * w) const { w->setVisible(value); }
-    }; 
+    /** Centers the widget horizontally inside its parent. 
+     */
+    inline auto CenterHorizontally() {
+        return [](Widget * w) {
+            ASSERT(w->parent() != nullptr);
+            Point pos = w->rect().topLeft();
+            pos.x = (w->parent()->width() - w->width()) / 2;
+            SetPosition(pos)(w);
+        };
+    }
 
+    /** Centers the widget vertically inside its parent.
+     */
+    inline auto CenterVertically() {
+        return [](Widget * w) {
+            ASSERT(w->parent() != nullptr);
+            Point pos = w->rect().topLeft();
+            pos.y = (w->parent()->height() - w->height()) / 2;
+            SetPosition(pos)(w);
+        };
+    }
 
+    /** Centers the widget both horizontally and vertically inside its parent.
+     */
+    inline auto Center() {
+        return [](Widget * w) {
+            CenterHorizontally()(w);
+            CenterVertically()(w);
+        };
+    }
+
+    /** Sets widget's visibility.
+     */
+    inline auto SetVisibility(bool value) {
+        return [=](Widget * w) { w->setVisibility(value); };
+    }
 
 } // namespace rckid
