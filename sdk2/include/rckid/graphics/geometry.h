@@ -43,6 +43,11 @@ namespace rckid {
         constexpr Point topLeft() const { return Point{x, y}; }
         constexpr Point bottomRight() const { return Point{right(), bottom()}; }
 
+        void setTopLeft(Point pos) {
+            x = pos.x;
+            y = pos.y;
+        }
+
         constexpr Coord width() const { return w; }
         constexpr Coord height() const { return h; }
 
