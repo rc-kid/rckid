@@ -4,6 +4,16 @@
 
 namespace rckid {
 
+    template<typename T>
+    class Buffer {
+    public:
+    
+    private:
+        uint32_t size_ = 0;
+        uint32_t capacity_ = 0;
+        mutable_ptr<T> data_ = nullptr;
+    }; // rckid::Buffer<T>
+
     /** Very simple double buffer. 
      */
     template<typename T>
@@ -55,6 +65,9 @@ namespace rckid {
 
     }; // rckid::DoubleBuffer<T>
 
+    // TODO CountedBuffer
+
+    // TODO MultiBuffer
 
 
 } // namespace rckid

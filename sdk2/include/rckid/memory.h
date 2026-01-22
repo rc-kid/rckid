@@ -133,7 +133,9 @@ namespace rckid {
 
     /** Immutable, unique pointer that can point to non-heap objects as well.
      
-        
+        Special version of unique pointer that can point to both heap allocated objects as well as to immutable data (i.e. data stored in flash memory or ROM). The pointer takes ownership of heap allocated objects and will free them when destroyed, but will not attempt to free pointers to immutable data.
+
+        Unlike its mutable_ptr counterpart, immutable_ptr does not allow mutable access to the data it points to (as the data can in theory be in flash as well). This means the pointer does not need to employ lazy copy-on-write semantics.
      */
     template<typename T>
     class immutable_ptr {
@@ -148,7 +150,7 @@ namespace rckid {
             But in this case the value must belong to the immutable data pool as defined by the HW abstraction layer. This is because otherwise there could be subtle lifetime issues, such as when immutable_ptr would point to a stack variable that gets out of scope. 
          */
         constexpr immutable_ptr(T const & value): ptr_{& value } {
-            ASSERT(hal::memory::isImmutableDataPtr(ptr));
+            ASSERT(hal::memory::isImmutableDataPtr(ptr_));
             ASSERT(! Heap::contains(ptr_));
         }
 
@@ -171,16 +173,119 @@ namespace rckid {
         T const & operator * () const { return * ptr_; } 
         T const * operator -> () const { return ptr_; } 
         T const * get() const { return ptr_; }
+        T const & operator [] (uint32_t index) const { return ptr_[index]; }
 
     private:
 
         void deletePtr() {
             if (Heap::contains(ptr_))
-                Heap::free(ptr_);
+                Heap::free(const_cast<T*>(ptr_));
         }
 
         T const * ptr_ = nullptr;
-    }; 
+    }; // rckid::immutable_ptr<T>
+
+    /** Mutable unique pointer
+     
+        Special version of unique pointer that can, similarly to immutable_ptr, point to both heap allocated *and* immutable flash data. However, when mutable access is requested *and* the data is stored in flash, the pointer performs heap allocation and copies the data over, so that mutable access is possible. 
+
+        This makes the mutable_ptr a bit heavier as it has to store the size of the data it points to in order to be able to perform the copy-on-write when mutable access is requested. Due to peculiarities of the new[] and delete[] operators in C++, the mutable_ptr can only be used with trivially copyable and trivially destructible types to avoid issues with array cookies and destructors not being called properly.
+     */
+    template<typename T>
+    class mutable_ptr {
+    public:
+
+        static_assert(std::is_trivially_copy_constructible_v<T>);
+        static_assert(std::is_trivially_destructible_v<T>);
+
+        constexpr mutable_ptr(T * ptr, uint32_t count) :
+            ptr_{ptr},
+            count_{count} {
+            ASSERT(Heap::contains(ptr));
+        }
+
+        constexpr mutable_ptr(T const * ptr, uint32_t count) :
+            ptr_{const_cast<T*>(ptr)},
+            count_{count} {
+            ASSERT(Heap::contains(ptr) || hal::memory::isImmutableDataPtr(ptr));
+        }
+
+        template<uint32_t SIZE>
+        constexpr mutable_ptr(T const (&ptr)[SIZE]):
+            ptr_{const_cast<T*>(ptr)},
+            count_{SIZE} {
+            ASSERT(Heap::contains(ptr) || hal::memory::isImmutableDataPtr(ptr));
+        }
+
+        template<typename U = T, typename = std::enable_if_t<std::is_same_v<U,char>>>
+        constexpr mutable_ptr(char const* s) : 
+            ptr_{const_cast<char*>(s)},
+            count_{static_cast<uint32_t>(std::strlen(s) + 1)}
+        {
+            ASSERT(hal::memory::isImmutableDataPtr(s));
+        }
+
+        mutable_ptr(mutable_ptr const & ) = delete;
+        mutable_ptr & operator = (mutable_ptr const &) = delete;
+
+        template<typename U = T, typename = std::enable_if_t<std::is_same_v<U,char>>>
+        mutable_ptr & operator = (char const * s) {
+            deletePtr();
+            ptr_ = const_cast<char*>(s);
+            count_ = static_cast<uint32_t>(std::strlen(s) + 1);
+            ASSERT(hal::memory::isImmutableDataPtr(s));
+            return *this;
+        }
+
+        mutable_ptr(mutable_ptr && other) noexcept : 
+            ptr_{other.ptr_}, 
+            count_{other.count_} 
+        { 
+            other.ptr_ = nullptr; 
+            other.count_ = 0;
+        }
+
+        mutable_ptr & operator = (mutable_ptr && other) {
+            if (this == & other)
+                return *this;
+            deletePtr();
+            ptr_ = other.ptr_;
+            count_ = other.count_;
+            other.ptr_ = nullptr;
+            other.count_ = 0;
+            return *this;
+        }
+
+        ~mutable_ptr() { deletePtr(); }
+
+        T const * ptr() const { return ptr_; }
+
+        T * mut() {
+            if (! Heap::contains(ptr_)) {
+                T * newPtr = new T[count_];
+                memcpy(newPtr, ptr_, sizeof(T) * count_);
+                deletePtr();
+                ptr_ = newPtr;
+            }
+            return ptr_;
+        }
+
+        bool isMutable() const { return Heap::contains(ptr_); }
+
+        uint32_t count() const { return count_; }
+
+    private:
+
+        void deletePtr() {
+            if (Heap::contains(ptr_))
+                // this is safe since we only work with trivially destructible types where no array cookies are stored
+                Heap::free(ptr_);
+        }
+
+        T * ptr_ = nullptr;
+        uint32_t count_ = 0;
+
+    }; // rckid::mutable_ptr<T>
 
 
 
