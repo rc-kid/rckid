@@ -1,0 +1,32 @@
+if (RCKID_BACKEND STREQUAL "FANTASY")
+
+    file(
+        GLOB_RECURSE SDK_SRC 
+        "${CMAKE_SOURCE_DIR}/sdk2/test/*.cpp"
+        "${CMAKE_SOURCE_DIR}/sdk2/test/*.h"
+    )
+    file(
+        GLOB_RECURSE PLATFORM_SRC 
+        "${CMAKE_SOURCE_DIR}/libs/platform/tests/*.cpp"
+        "${CMAKE_SOURCE_DIR}/libs/platform/tests/*.h"
+    )
+    #file(
+    #    GLOB_RECURSE GBCEMU_SRC 
+    #    "${CMAKE_SOURCE_DIR}/gbcemu/tests/*.cpp" 
+    #    "${CMAKE_SOURCE_DIR}/gbcemu/tests/*.h"
+    #)
+    add_executable(tests-sdk ${SDK_SRC} ${PLATFORM_SRC} ${GBCEMU_SRC})
+    target_link_libraries(tests-sdk PRIVATE libgbcemu)
+    link_with_librckid(tests-sdk)
+
+    add_custom_target(run-tests
+        COMMAND tests-sdk
+        DEPENDS tests-sdk
+        COMMENT "Run tests..."
+    )    
+else()
+    message("Tests are only available in RCKID_BACKEND=FANTASY, skipping")
+endif()
+
+
+

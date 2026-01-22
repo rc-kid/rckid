@@ -3,9 +3,9 @@
 #include <platform.h>
 #include <platform/tinydate.h>
 
-#include <rckid/hal.h>
 #include <rckid/error.h>
-#include <rckid/util/log.h>
+#include <rckid/hal.h>
+#include <rckid/log.h>
 
 /** RCKid SDK
 

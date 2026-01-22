@@ -2,10 +2,10 @@ build*
 docs/sdk
 sd.iso
 cartridge.iso
-libs/raylib
-libs/pico-sdk
+lib/raylib
+lib/pico-sdk
 old*
 gbcemu/tests/insns_json
-/sd
+sd
 cartridge
 .Zone.Identifier

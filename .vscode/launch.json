@@ -62,7 +62,7 @@
             "type": "cppdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/build/tests/tests-sdk",
+            "program": "${workspaceFolder}/build/sdk2/tests-sdk",
             "args": [],
             "stopAtEntry": false,
             "externalConsole": false,
