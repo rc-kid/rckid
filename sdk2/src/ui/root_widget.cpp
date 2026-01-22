@@ -27,7 +27,7 @@ namespace rckid::ui {
                 buffer = renderBuffer_.frontAndSwap();
                 bufferSize = height();
             }
-            renderColumn(renderCol_--, buffer, 0, height());
+            renderColumn(renderCol_--, 0, buffer, height());
         });
     }
 
