@@ -125,6 +125,16 @@ namespace rckid {
          */
         static StringBuilder withCapacity(uint32_t capacity) { return StringBuilder{capacity}; }
 
+        /** Appends a single character to the string being built. 
+         
+            For anything more complete, use the writer() method to get to a writer interface backed by the string builder.
+         */
+        void appendChar(char c) {
+            if (size_ == capacity_)
+                grow();
+            data_.get()[size_++] = c;
+        }
+
         /** Returns a writer for the string builder. 
          */
         Writer writer() { return Writer([this](char c) { appendChar(c); }); }
@@ -151,12 +161,6 @@ namespace rckid {
         StringBuilder(uint32_t capacity):
             data_{new char[capacity]},
             capacity_{capacity} {
-        }
-
-        void appendChar(char c) {
-            if (size_ == capacity_)
-                grow();
-            data_.get()[size_++] = c;
         }
 
         void grow() {

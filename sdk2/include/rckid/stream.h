@@ -3,8 +3,11 @@
 #include <optional>
 
 #include <platform.h>
+#include <platform/writer.h>
 
-#include <string.h>
+#include <rckid/error.h>
+#include <rckid/memory.h>
+#include <rckid/string.h>
 
 namespace rckid {
 
@@ -23,7 +26,7 @@ namespace rckid {
          */
         virtual bool eof() const = 0;
 
-        std::optional<uint8_t> read() {
+        std::optional<uint8_t> readByte() {
             uint8_t result;
             uint32_t numBytes = read(& result, 1);
             if (numBytes == 1)
@@ -35,11 +38,11 @@ namespace rckid {
         String readLine() {
             StringBuilder result;
             while (true) {
-                auto c = read();
+                auto c = readByte();
                 if (!c || *c == '\n')
                     break;
                 if (*c != '\r')
-                    result.appendChar(*c);
+                    result.appendChar(static_cast<char>(*c));
             }
             return result.str();
         }
@@ -48,7 +51,6 @@ namespace rckid {
     class BufferedReadStream : public ReadStream {
     public:
         virtual std::optional<uint8_t> peek() = 0;
-
     }; 
 
     class WriteStream {
@@ -63,25 +65,76 @@ namespace rckid {
                 FATAL_ERROR("Partial Write", written);
         }
 
-        void write(uint8_t value) {
+        void writeByte(uint8_t value) {
             write(&value, 1);
         }
 
         Writer writer() {
-            return Writer([this](char c) { write(c); });
+            return Writer([this](char c) { writeByte(static_cast<uint8_t>(c)); });
         }
     };
 
-    class ReadWriteStream : public ReadStream, public WriteStream {
-
-    };
-
-    class RandomReadStream : public ReadStream {
-
+    class RandomReadStream : public BufferedReadStream {
+    public:
+        virtual uint32_t size() const = 0;
+        virtual uint32_t seek(uint32_t position) = 0;
     };
 
     class RandomWriteStream : public WriteStream {
+    public:
+        virtual uint32_t seek(uint32_t position) = 0;
+    }; 
 
+    class MemoryStream : public RandomReadStream, public RandomWriteStream {
+    public:
+        MemoryStream(uint8_t * buffer, uint32_t bufferSize) :
+            buffer_{buffer, bufferSize},
+            pos_{0} {
+        }
+
+        MemoryStream(uint8_t const * buffer, uint32_t bufferSize) :
+            buffer_{buffer, bufferSize},
+            pos_{0} {
+        }
+
+        uint32_t read(uint8_t * buffer, uint32_t bufferSize) override {
+            uint32_t toRead = std::min(bufferSize, buffer_.count() - pos_);
+            std::memcpy(buffer, buffer_.ptr() + pos_, toRead);
+            pos_ += toRead;
+            return toRead;
+        }
+
+        bool eof() const override {
+            return pos_ >= buffer_.count();
+        }
+
+        std::optional<uint8_t> peek() override {
+            if (pos_ >= buffer_.count())
+                return std::nullopt;
+            return buffer_.ptr()[pos_];
+        }
+
+        uint32_t tryWrite(uint8_t const * buffer, uint32_t bufferSize) override {
+            uint32_t toWrite = std::min(bufferSize, buffer_.count() - pos_);
+            std::memcpy(buffer_.mut() + pos_, buffer, toWrite);
+            pos_ += toWrite;
+            return toWrite;
+        }
+
+        uint32_t size() const override {
+            return buffer_.count();
+        }
+
+        uint32_t seek(uint32_t position) override {
+            if (position > buffer_.count())
+                pos_ = buffer_.count();
+            else 
+                pos_ = position;
+            return pos_;
+        }
+    private:
+        mutable_ptr<uint8_t> buffer_;
+        uint32_t pos_;
     }; 
 
 } // namespace rckid
