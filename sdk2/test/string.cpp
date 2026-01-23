@@ -63,3 +63,9 @@ TEST(string, addition) {
     EXPECT(g_.reservedDelta() == 32); // because of the intermediate allocation in the addition
 }
 
+TEST(string, builder) {
+    using namespace rckid;
+    Heap::UseAndReserveGuard g_;
+    String s = STR("foo " << 42);
+    EXPECT(s == "foo 42");
+}
