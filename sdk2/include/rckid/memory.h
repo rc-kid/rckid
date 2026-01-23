@@ -274,6 +274,17 @@ namespace rckid {
 
         uint32_t count() const { return count_; }
 
+        mutable_ptr<T> clone() const {
+            if (Heap::contains(ptr_)) {
+                T * newPtr = new T[count_];
+                memcpy(newPtr, ptr_, sizeof(T) * count_);
+                return mutable_ptr<T>{newPtr, count_};
+            } else {
+                // use ptr() so that we get const correctness in constructor
+                return mutable_ptr<T>{ptr(), count_};
+            }
+        }
+
     private:
 
         void deletePtr() {
