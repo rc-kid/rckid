@@ -4,6 +4,26 @@
 #include <functional>
 
 
+
+class Reader {
+public:
+    using GetCharCallback = std::function<char()>;
+    using PeekCharCallback = std::function<char()>;
+
+    Reader(GetCharCallback getChar, PeekCharCallback peekChar):
+        getChar_{getChar},
+        peekChar_{peekChar} {
+    }
+
+    char getChar() { return getChar_(); }
+
+private:
+
+    GetCharCallback getChar_;
+    PeekCharCallback peekChar_;
+}; 
+
+
 // TODO verify how this works and if it works at all and then change the APIs accordingly to mirrow the writer that changed a lot
 
 class Reader {

@@ -35,7 +35,7 @@ namespace rckid::ui {
         }
 
         template<typename OP>
-        with & operator<<(OP const & op) {
+        with & operator << (OP const & op) {
             op(widget_);
             return *this;
         }
