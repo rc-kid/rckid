@@ -198,6 +198,8 @@ namespace rckid {
         static_assert(std::is_trivially_copy_constructible_v<T>);
         static_assert(std::is_trivially_destructible_v<T>);
 
+        constexpr mutable_ptr(): ptr_{nullptr}, count_{0} {}
+
         constexpr mutable_ptr(T * ptr, uint32_t count) :
             ptr_{ptr},
             count_{count} {

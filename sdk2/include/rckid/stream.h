@@ -36,17 +36,18 @@ namespace rckid {
                 return std::nullopt;
         }
 
-        String readLine() {
+        String readString(char until = '\0') {
             StringBuilder result;
             while (true) {
                 auto c = readByte();
-                if (!c || *c == '\n')
+                if (!c || *c == until)
                     break;
-                if (*c != '\r')
-                    result.appendChar(static_cast<char>(*c));
+                result.appendChar(static_cast<char>(*c));
             }
             return result.str();
         }
+
+        String readLine() { return readString('\n'); }
     }; 
 
     class BufferedReadStream : public ReadStream {
@@ -182,5 +183,38 @@ namespace rckid {
         mutable_ptr<uint8_t> buffer_;
         uint32_t pos_;
     }; 
+
+    // TODO is there a need for ReaderStream, BinaryReaderStream, WriterStream, BinaryWriterStream ?
+
+    class ReaderStream : public BufferedReadStream {
+    public:
+        explicit ReaderStream(Reader & from): from_{from} {}
+
+        uint32_t read(uint8_t * buffer, uint32_t bufferSize) override {
+            uint32_t bytesRead = 0;
+            while (bytesRead < bufferSize) {
+                int32_t c = from_.rawCallback(true);
+                if (c == Reader::EOFMarker)
+                    break;
+                buffer[bytesRead++] = static_cast<uint8_t>(c);
+            }
+            return bytesRead;
+        }
+
+        bool eof() const override {
+            int32_t c = from_.rawCallback(false);
+            return c == Reader::EOFMarker;
+        }
+
+        std::optional<uint8_t> peek() override {
+            int32_t c = from_.rawCallback(false);
+            if (c == Reader::EOFMarker)
+                return std::nullopt;
+            return static_cast<uint8_t>(c);
+        }
+
+    private:
+        Reader & from_;
+    }; // rckid::ReaderStream
 
 } // namespace rckid

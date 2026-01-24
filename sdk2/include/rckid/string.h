@@ -28,7 +28,7 @@ namespace rckid {
         String(String const & other): data_{other.data_.clone()} {}
 
         String(String && other) noexcept : data_{std::move(other.data_)} {}
-        
+
         String & operator = (char const * s) {
             data_ = s;
             return *this;
@@ -56,10 +56,21 @@ namespace rckid {
             return data_.ptr();
         }
 
+        /** Returns true if the string is empty. 
+         */
+        bool empty() const { return size() == 0; }
+
         /** Returns the size of the stringm, excluding the null character at the end.
          */
         uint32_t size() const {
             return data_.count() ? data_.count() - 1 : 0;
+        }
+
+        bool startsWith(String const & prefix) const {
+            uint32_t prefixSize = prefix.size();
+            if (size() < prefixSize)
+                return false;
+            return std::strncmp(data_.ptr(), prefix.data_.ptr(), prefixSize) == 0;
         }
 
         bool operator == (String const & other) const {
@@ -86,6 +97,12 @@ namespace rckid {
             return std::strcmp(data_.ptr(), other.data_.ptr()) >= 0;
         }
 
+        char operator [] (uint32_t index) const {
+            if (index >= size())
+                return 0;
+            return data_.ptr()[index];
+        }
+
         /** Creates new string by concatenating two existing ones. 
          
             Note that this is a convenience function only - for any non-trivial string manipulations the string builder writer interface (STR macro) should be used for better ergonomics *and* performance.
@@ -106,7 +123,7 @@ namespace rckid {
         Reader reader(uint32_t pos = 0) const {
             return Reader([this, pos] (bool advance) mutable -> int32_t {
                 if (pos >= size())
-                    return -1;
+                    return Reader::EOFMarker;
                 char c = data_.ptr()[pos];
                 if (advance)
                     ++pos;
@@ -190,4 +207,28 @@ namespace rckid {
         uint32_t size_ = 0;
         uint32_t capacity_ = 0;
     }; // StringBuilder
+
+    inline Writer operator << (Writer w, String const & s) {
+        for (uint32_t i = 0; i < s.size(); ++i) {
+            w.putChar(s.c_str()[i]);
+        }
+        return w;
+    }
+
+    inline BinaryWriter operator << (BinaryWriter w, String const & s) {
+        w << static_cast<uint32_t>(s.size());
+        for (uint32_t i = 0; i < s.size(); ++i)
+            w.putByte(s.c_str()[i]);
+        return w;
+    }
+
 } // namespace rckid
+
+namespace std {
+    template<>
+    struct hash<rckid::String> {
+        size_t operator () (rckid::String const & s) const {
+            return hash<std::string_view>()(std::string_view{s.c_str(), s.size()});
+        }
+    };
+}
