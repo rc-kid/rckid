@@ -12,6 +12,9 @@
 
 namespace rckid {
 
+    // pull platform's writer to RCKid namespace
+    using Writer = ::Writer;
+
     /** Simple text reader (deserializer)
      
         The reader is the counterpart to the Writer class, allowing reading characters from a source one at a time. The reader is created with a closure that knows how to read a single character at a time. Operator >> should be overloaded on Reader to provide deserialization for various types. 
@@ -119,6 +122,28 @@ namespace rckid {
         c = r.getChar();
         return r;
     }
+
+    inline Reader operator >> (Reader r, bool & b) {
+        char c = r.getChar();
+        b = (c != 0 && c != '0' && c != 'F' && c != 'f');
+        return r;
+    }
+
+    inline Reader operator >> (Reader r, uint32_t & into) {
+        uint32_t result = 0;
+        while (!r.eof()) {
+            char c = r.peekChar();
+            if (c >= '0' && c <= '9') {
+                r.getChar();
+                result = result * 10 + (c - '0');
+            } else {
+                break;
+            }
+        }
+        into = result;
+        return r;
+    }
+
 
     // TODO do others
 

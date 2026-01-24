@@ -1,5 +1,7 @@
 # SDK 1.0
 
+- improve value parsing in Reader (bool, ints, etc.)
+
 # Version 3.2 Checklist
 
 First add a board that can verify the last missing features and DFM improvements, namely:
@@ -12,8 +14,6 @@ First add a board that can verify the last missing features and DFM improvements
 - [ ] smaller board size for cheaper assembly
 
 Software features:
-
-
 
 # DevBoard Checklist
 
