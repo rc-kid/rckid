@@ -97,6 +97,11 @@ namespace rckid {
             pos_{0} {
         }
 
+        static MemoryStream withCapacity(uint32_t capacity) {
+            uint8_t * buffer = new uint8_t[capacity];
+            return MemoryStream{buffer, capacity};
+        }
+
         uint32_t read(uint8_t * buffer, uint32_t bufferSize) override {
             uint32_t toRead = std::min(bufferSize, buffer_.count() - pos_);
             std::memcpy(buffer, buffer_.ptr() + pos_, toRead);
