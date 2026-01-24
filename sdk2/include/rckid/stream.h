@@ -8,6 +8,7 @@
 #include <rckid/error.h>
 #include <rckid/memory.h>
 #include <rckid/string.h>
+#include <rckid/serialization.h>
 
 namespace rckid {
 
@@ -51,6 +52,38 @@ namespace rckid {
     class BufferedReadStream : public ReadStream {
     public:
         virtual std::optional<uint8_t> peek() = 0;
+
+        /** Returns reader that will read from the stream.
+         
+            The reader starts reading at the current position of the stream.
+         */
+        Reader reader() {
+            return Reader([this](bool advance) -> int32_t {
+                if (eof())
+                    return Reader::EOFMarker;
+                auto c = advance ? readByte() : peek();
+                if (c)
+                    return static_cast<int32_t>(*c);
+                else
+                    return Reader::EOFMarker;
+            });
+        }
+
+        /** Returns binary reader for the stream. 
+         
+            The binary reader starts reading at the current position of the stream.
+         */
+        BinaryReader binaryReader() {
+            return BinaryReader([this](bool advance) -> uint32_t {
+                if (eof())
+                    return BinaryReader::EOFMarker;
+                auto c = advance ? readByte() : peek();
+                if (c)
+                    return static_cast<uint32_t>(*c);
+                else
+                    return BinaryReader::EOFMarker;
+            });
+        }
     }; 
 
     class WriteStream {
@@ -69,8 +102,16 @@ namespace rckid {
             write(&value, 1);
         }
 
+        /** Returns text writer that will output to the stream. 
+         */
         Writer writer() {
             return Writer([this](char c) { writeByte(static_cast<uint8_t>(c)); });
+        }
+
+        /** Returns binary writer that will output to the stream. 
+         */
+        BinaryWriter binaryWriter() {
+            return BinaryWriter([this](uint8_t c) { writeByte(c); });
         }
     };
 
