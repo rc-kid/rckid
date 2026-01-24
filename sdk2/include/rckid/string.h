@@ -3,6 +3,7 @@
 #include <platform/writer.h>
 
 #include <rckid/memory.h>
+#include <rckid/serialization.h>
 
 #define STR(...) [&](){ rckid::StringBuilder sb{}; sb.writer() << __VA_ARGS__; return sb.str(); }()
 
@@ -96,6 +97,21 @@ namespace rckid {
             std::memcpy(newData + size(), other.data_.ptr(), other.size());
             newData[newSize] = '\0';
             return String{newData, newSize + 1};
+        }
+
+        /** Returns reader constructed from the string.
+         
+            Optionally the reader can start at a specific position, which defaults to the beginning of the string.
+         */
+        Reader reader(uint32_t pos = 0) const {
+            return Reader([this, pos] (bool advance) mutable -> int32_t {
+                if (pos >= size())
+                    return -1;
+                char c = data_.ptr()[pos];
+                if (advance)
+                    ++pos;
+                return static_cast<int32_t>(c);
+            });
         }
 
     private:
