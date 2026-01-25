@@ -282,6 +282,4 @@ namespace rckid::ini {
         return *this;
     }
 
-
-
 } // namespace rckid
