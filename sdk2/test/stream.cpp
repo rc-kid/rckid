@@ -10,7 +10,7 @@ namespace {
 TEST(stream, memoryStream) {
     using namespace rckid;
     Heap::UseAndReserveGuard g_;
-    MemoryStream s{foo, sizeof(foo)};
+    MemoryStream s{mutable_ptr<uint8_t>{foo, sizeof(foo)}};
     EXPECT(g_.usedDelta() == 0);
     EXPECT(g_.reservedDelta() == 0);
     EXPECT(s.size() == sizeof(foo));

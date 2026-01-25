@@ -141,19 +141,15 @@ namespace rckid {
 
     class MemoryStream : public RandomReadStream, public RandomWriteStream {
     public:
-        MemoryStream(uint8_t * buffer, uint32_t bufferSize) :
-            buffer_{buffer, bufferSize},
-            pos_{0} {
-        }
 
-        MemoryStream(uint8_t const * buffer, uint32_t bufferSize) :
-            buffer_{buffer, bufferSize},
+        MemoryStream(mutable_ptr<uint8_t> buffer) :
+            buffer_{std::move(buffer)},
             pos_{0} {
         }
 
         static MemoryStream withCapacity(uint32_t capacity) {
             uint8_t * buffer = new uint8_t[capacity];
-            return MemoryStream{buffer, capacity};
+            return MemoryStream{mutable_ptr<uint8_t>{buffer, capacity}};
         }
 
         uint32_t read(uint8_t * buffer, uint32_t bufferSize) override {

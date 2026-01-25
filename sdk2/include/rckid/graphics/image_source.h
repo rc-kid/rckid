@@ -21,9 +21,8 @@ namespace rckid {
         ImageSource(String path, fs::Drive drive = fs::Drive::SD):
             size_{(drive == fs::Drive::SD) ? FILE_SD : FILE_CARTRIDGE} 
         {
-            uint32_t size = path.size() + 1;
             uint8_t const * pathData = reinterpret_cast<uint8_t const *>(path.release());
-            data_ = mutable_ptr<uint8_t>{pathData, size};
+            data_ = immutable_ptr<uint8_t>{pathData};
         }
 
         /** Creates image source pointing to given data buffer in flash memory.
@@ -44,7 +43,7 @@ namespace rckid {
          */
         ImageSource(mutable_ptr<uint8_t> data):
             size_{data.count()},
-            data_{std::move(data)} {
+            data_{data.releasePtr()} {
         }
 
         /** Type of the image source. 
@@ -75,7 +74,7 @@ namespace rckid {
             ImageSource is valid from its construction until it decays to a stream via the toStream() method. 
          */        
         bool good() const {
-            return data_.ptr() != nullptr;
+            return data_.get() != nullptr;
         }
 
         /** Decays the image source into a stream from which the image can be read.
@@ -84,9 +83,14 @@ namespace rckid {
          */
         unique_ptr<RandomReadStream> toStream();
 
+        uint32_t size() const {
+            ASSERT(type() == Type::Memory);
+            return size_;
+        }
+
         /** Releases the data buffer held by the image source.
          */
-        mutable_ptr<uint8_t> releaseData() {
+        immutable_ptr<uint8_t> releaseData() {
             ASSERT(type() == Type::Memory);
             size_ = 0;
             return std::move(data_);
@@ -110,11 +114,16 @@ namespace rckid {
         static constexpr uint32_t FILE_SD = 0xffffffff;
         static constexpr uint32_t FILE_CARTRIDGE = 0xfffffffe;
 
+        void invalidate() {
+            data_.release();
+            size_ = 0;
+        }
+
         // size of the raw data in bytes, or magic value indicating file source
         uint32_t size_;
 
         // either pointer to the data itself, or path to the file
-        mutable_ptr<uint8_t> data_;
+        immutable_ptr<uint8_t> data_;
 
     }; // rckid::ImageSource
 
