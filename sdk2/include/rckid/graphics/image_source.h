@@ -22,7 +22,7 @@ namespace rckid {
             size_{(drive == fs::Drive::SD) ? FILE_SD : FILE_CARTRIDGE} 
         {
             uint32_t size = path.size() + 1;
-            uint8_t const * pathData = reinterpret_cast<uint8_t const *>(path.releasePtr());
+            uint8_t const * pathData = reinterpret_cast<uint8_t const *>(path.release());
             data_ = mutable_ptr<uint8_t>{pathData, size};
         }
 

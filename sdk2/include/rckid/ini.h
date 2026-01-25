@@ -181,6 +181,7 @@ namespace rckid::ini {
             if (i == sections_.end()) {
                 LOG(LL_ERROR, "INI section not found: " << section.name_);
                 current_ = nullptr;
+                return *this;
             }
             current_ = i->second.get();
             ASSERT(current_->next == nullptr); // use section arrays instead
