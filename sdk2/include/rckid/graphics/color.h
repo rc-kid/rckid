@@ -2,12 +2,22 @@
 
 #include <platform.h>
 
+#include <rckid/error.h>
+
 namespace rckid {
 
     /** Defines the colorspace.
      */
     class Color {
     public:
+
+        enum class Representation {
+            RGB565,
+            RGB233,
+            Index256,
+            Index16,
+        }; 
+
         class RGB565 {
         public:
             constexpr RGB565() = default;
@@ -69,5 +79,21 @@ namespace rckid {
         constexpr Color(uint8_t r_, uint8_t g_, uint8_t b_): r{r_}, g{g_}, b{b_} {}
 
     }; // rckid::Color
+
+
+    inline uint32_t colorRepresentationBpp(Color::Representation rep) {
+        switch (rep) {
+            case Color::Representation::RGB565:
+                return 16;
+            case Color::Representation::RGB233:
+                return 8;
+            case Color::Representation::Index256:
+                return 8;
+            case Color::Representation::Index16:
+                return 4;
+            default:
+                UNREACHABLE;
+        }
+    }
 
 } // namespace rckid

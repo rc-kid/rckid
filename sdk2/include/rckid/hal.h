@@ -145,7 +145,11 @@ namespace rckid::hal {
          
             Fatal error should stop all device functionality and only display the error. The purpose of the function is to restore the device state into something that can be operated on safely and then call the onFatalError() SDK handler than performs the actual error reporting. 
          */
-        [[noreturn]] void fatalError(char const * file, uint32_t line, char const * msg, uint32_t payload = 0);
+        [[noreturn]] void fatalError(char const * file, uint32_t line, char const * msg, uint32_t payload);
+        // can't use default arguments because of multiple declarations
+        [[noreturn]] inline void fatalError(char const * file, uint32_t line, char const * msg_) {
+            fatalError(file, line, msg_, 0);
+        }
         
         /** Returns a format writer than can be used to output debug information. 
          
