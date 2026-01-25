@@ -142,7 +142,7 @@ namespace rckid {
     public:
 
         constexpr immutable_ptr(T const * ptr = nullptr): ptr_{ptr} {
-            ASSERT(Heap::contains(ptr) || hal::memory::isImmutableDataPtr(ptr));
+            ASSERT(ptr == nullptr || Heap::contains(ptr) || hal::memory::isImmutableDataPtr(ptr));
         }
 
         /** Immutable pointers can be created from existing values as well. 
@@ -174,6 +174,12 @@ namespace rckid {
         T const * operator -> () const { return ptr_; } 
         T const * get() const { return ptr_; }
         T const & operator [] (uint32_t index) const { return ptr_[index]; }
+
+        T const * release() {
+            T const * result = ptr_;
+            ptr_ = nullptr;
+            return result;
+        }
 
     private:
 
@@ -313,7 +319,5 @@ namespace rckid {
         uint32_t count_ = 0;
 
     }; // rckid::mutable_ptr<T>
-
-
 
 } // namespace rckid
