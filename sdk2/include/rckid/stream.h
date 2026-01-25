@@ -118,13 +118,25 @@ namespace rckid {
 
     class RandomReadStream : public BufferedReadStream {
     public:
+
+        std::optional<uint8_t> peek() override {
+            if (eof())
+                return std::nullopt;
+            uint32_t currentPos = tell();
+            auto c = readByte();
+            seek(currentPos);
+            return c;
+        }
+
         virtual uint32_t size() const = 0;
         virtual uint32_t seek(uint32_t position) = 0;
+        virtual uint32_t tell() const = 0;
     };
 
     class RandomWriteStream : public WriteStream {
     public:
         virtual uint32_t seek(uint32_t position) = 0;
+        virtual uint32_t tell() const = 0;
     }; 
 
     class MemoryStream : public RandomReadStream, public RandomWriteStream {
@@ -179,6 +191,11 @@ namespace rckid {
                 pos_ = position;
             return pos_;
         }
+
+        uint32_t tell() const override {
+            return pos_;
+        }
+
     private:
         mutable_ptr<uint8_t> buffer_;
         uint32_t pos_;

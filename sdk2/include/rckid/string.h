@@ -20,14 +20,21 @@ namespace rckid {
     class String {
     public:
 
-        String() = default;
+        /** Default string constructor creates an empty string. 
+         
+            The empty string literal does not cost us anything as it will be stored in flash memory and hence just use pointer to it w/o any copying. 
+         */
+        String() : String{emptyLiteral_} { }
+        
         constexpr String(char const * s) : data_{s} { }
 
         ~String() = default;
 
         String(String const & other): data_{other.data_.clone()} {}
 
-        String(String && other) noexcept : data_{std::move(other.data_)} {}
+        String(String && other) noexcept : data_{std::move(other.data_)} {
+            other.data_ = mutable_ptr<char>{emptyLiteral_};
+        }
 
         String & operator = (char const * s) {
             data_ = s;
@@ -45,6 +52,7 @@ namespace rckid {
             if (this == & other)
                 return *this;
             data_ = std::move(other.data_);
+            other.data_ = mutable_ptr<char>{emptyLiteral_};
             return *this;
         }
 
@@ -63,7 +71,8 @@ namespace rckid {
         /** Returns the size of the stringm, excluding the null character at the end.
          */
         uint32_t size() const {
-            return data_.count() ? data_.count() - 1 : 0;
+            ASSERT(data_.count() > 0); // there is always at least the empty string 
+            return data_.count() - 1;
         }
 
         bool startsWith(String const & prefix) const {
@@ -71,6 +80,31 @@ namespace rckid {
             if (size() < prefixSize)
                 return false;
             return std::strncmp(data_.ptr(), prefix.data_.ptr(), prefixSize) == 0;
+        }
+
+        bool endsWith(String const & suffix) const {
+            uint32_t suffixSize = suffix.size();
+            if (size() < suffixSize)
+                return false;
+            return std::strncmp(data_.ptr() + size() - suffixSize, suffix.data_.ptr(), suffixSize) == 0;
+        }
+
+        bool endsWith(char c) const {
+            if (size() == 0)
+                return false;
+            return data_.ptr()[size() - 1] == c;
+        }
+
+        String substr(uint32_t pos, uint32_t count = UINT32_MAX) const {
+            if (pos >= size())
+                return String{};
+            uint32_t available = size() - pos;
+            if (count > available)
+                count = available;
+            char * newData = new char[count + 1];
+            std::memcpy(newData, data_.ptr() + pos, count);
+            newData[count] = '\0';
+            return String{newData, count + 1};
         }
 
         bool operator == (String const & other) const {
@@ -134,6 +168,8 @@ namespace rckid {
     private:
 
         friend class StringBuilder;
+
+        static constexpr char const * emptyLiteral_ = "";
 
         // private constructor to utilize the already calculated size
         String(char * s, uint32_t count) : data_{s, count} { }

@@ -87,6 +87,37 @@ TEST(string, startsWith) {
     EXPECT(s1.startsWith(""));
 }
 
+TEST(string, endsWith) {
+    using namespace rckid;
+    Heap::UseAndReserveGuard g_;
+    String s1{foo};
+    EXPECT(s1.endsWith("foo"));
+    EXPECT(s1.endsWith("oo"));
+    EXPECT(s1.endsWith("o"));
+    EXPECT(!s1.endsWith("foobar"));
+    EXPECT(!s1.endsWith("bar"));
+    EXPECT(s1.endsWith(String{}));
+    EXPECT(s1.endsWith(""));
+    // character versions
+    EXPECT(!s1.endsWith('b'));
+    EXPECT(s1.endsWith('o'));
+}
+
+TEST(string, substr) {
+    using namespace rckid;
+    Heap::UseAndReserveGuard g_;
+    String s1{foo};
+    String s2 = s1.substr(0, 2);
+    EXPECT(s2.size() == 2);
+    EXPECT(s2 ==  "fo");
+    String s3 = s1.substr(1);
+    EXPECT(s3.size() == 2);
+    EXPECT(s3 == "oo");
+    String s4 = s1.substr(3);
+    EXPECT(s4.size() == 0);
+    EXPECT(s4 == "");
+}
+
 TEST(string, reader) {
     using namespace rckid;
     Heap::UseAndReserveGuard g_;
