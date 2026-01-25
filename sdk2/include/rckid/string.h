@@ -26,7 +26,13 @@ namespace rckid {
          */
         String() : String{emptyLiteral_} { }
         
-        constexpr String(char const * s) : data_{s} { }
+        String(char const * s) : data_{s} {
+            ASSERT(hal::memory::isImmutableDataPtr(s));
+        }
+
+        String(mutable_ptr<char> data) : data_{std::move(data)} {
+            ASSERT(data_.ptr() != nullptr);
+        }
 
         ~String() = default;
 
@@ -37,6 +43,7 @@ namespace rckid {
         }
 
         String & operator = (char const * s) {
+            ASSERT(hal::memory::isImmutableDataPtr(s));
             data_ = s;
             return *this;
         }
@@ -163,6 +170,24 @@ namespace rckid {
                     ++pos;
                 return static_cast<int32_t>(c);
             });
+        }
+
+        /** Releases the  stored pointer as const. 
+         */
+        char const * releasePtr() { 
+            char const * result = data_.releasePtr();
+            data_ = mutable_ptr<char>{emptyLiteral_};
+            return result;
+        }
+
+        /** Releases the stored pointer as mutable. 
+         
+            Note that this may require copying the data to heap memory if the string was originally created from a flash literal.
+         */
+        char * releaseMut() { 
+            char * result = data_.releaseMut(); 
+            data_ = mutable_ptr<char>{emptyLiteral_};
+            return result;
         }
 
     private:

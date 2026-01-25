@@ -287,6 +287,20 @@ namespace rckid {
             }
         }
 
+        T const * releasePtr() {
+            T * result = ptr_;
+            ptr_ = nullptr;
+            count_ = 0;
+            return result;
+        }
+
+        T * releaseMut() {
+            T * result = mut();
+            ptr_ = nullptr;
+            count_ = 0;
+            return result;
+        }
+
     private:
 
         void deletePtr() {
