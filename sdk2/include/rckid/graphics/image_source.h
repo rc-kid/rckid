@@ -37,6 +37,16 @@ namespace rckid {
             ASSERT(hal::memory::isImmutableDataPtr(data));
         }
 
+        /** Creates  */
+        template<uint32_t SIZE>
+        ImageSource(uint16_t const (&data)[SIZE]) :
+            size_{static_cast<uint32_t>(sizeof(data))},
+            data_{reinterpret_cast<uint8_t const *>(data)} 
+        {
+            ASSERT(hal::memory::isImmutableDataPtr(data));
+            ASSERT(SIZE == data[SIZE-1] * data[SIZE-2] + 2);
+        }
+
         /** Creates image source pointing to given data buffer.
          
             The data buffer is owned by the ImageSource after this call and must contain the actual image data in the specified format. This is the least useable version that allows even dynamic data to be creates as the source of the image. 

@@ -141,8 +141,12 @@ namespace rckid {
     class immutable_ptr {
     public:
 
-        constexpr immutable_ptr(T const * ptr = nullptr): ptr_{ptr} {
-            ASSERT(ptr == nullptr || Heap::contains(ptr) || hal::memory::isImmutableDataPtr(ptr));
+        constexpr immutable_ptr() : ptr_{nullptr} {}
+        constexpr immutable_ptr(nullptr_t) : ptr_{nullptr} {}
+
+
+        constexpr immutable_ptr(T const * ptr): ptr_{ptr} {
+            ASSERT(Heap::contains(ptr) || hal::memory::isImmutableDataPtr(ptr));
         }
 
         /** Immutable pointers can be created from existing values as well. 
@@ -205,6 +209,8 @@ namespace rckid {
         static_assert(std::is_trivially_destructible_v<T>);
 
         constexpr mutable_ptr(): ptr_{nullptr}, count_{0} {}
+
+        constexpr mutable_ptr(nullptr_t) : ptr_{nullptr}, count_{0} {}
 
         constexpr mutable_ptr(T * ptr, uint32_t count) :
             ptr_{ptr},

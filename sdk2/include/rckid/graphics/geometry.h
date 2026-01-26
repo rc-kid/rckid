@@ -6,6 +6,12 @@ namespace rckid {
 
     using Coord = int16_t;
 
+    /** Maps coordinates into a 2D array into one dimensional array in a column first manner where the first indes is mapped to the last column, first row. This mapping is tailored to the native display rendering where column by column rendering means simply incrementing the array index after the first one.  
+     */
+    constexpr inline uint32_t mapIndexColumnFirst(Coord x, Coord y, Coord width, Coord height) {
+        return (width - x - 1) * height + y;
+    }
+
     class Point {
     public:
         Coord x = 0;
