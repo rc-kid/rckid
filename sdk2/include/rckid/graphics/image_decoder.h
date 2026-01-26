@@ -11,6 +11,8 @@ namespace rckid {
      */
     class ImageDecoder {
     public:
+        virtual ~ImageDecoder() = default;
+
         virtual Coord width() const = 0;
         virtual Coord height() const = 0;
         virtual Color::Representation colorRepresentation() const = 0;
@@ -31,10 +33,9 @@ namespace rckid {
         RawBitmapDecoder(ImageSource && src) {
             ASSERT(src.good());
             if (src.type() == ImageSource::Type::Memory) {
-                ASSERT(src.size() % 2 == 0);
-                uint32_t dataSize = src.size() / sizeof(uint16_t);
-                data_ = mutable_ptr<uint16_t>{reinterpret_cast<uint16_t const *>(src.releaseData().release()), dataSize};
-                ASSERT(dataSize == width() * height() + 2);
+                uint32_t dataSize = src.size();
+                data_ = mutable_ptr<uint8_t>{(src.releaseData().release()), dataSize};
+                ASSERT(dataSize == (width() * height() + 2) * sizeof(uint16_t));
             } else {
                 // TODO do we want to support file based raw bitmaps?
                 UNIMPLEMENTED;
@@ -43,12 +44,12 @@ namespace rckid {
 
         Coord width() const override { 
             ASSERT(good());
-            return static_cast<Coord>(data_.ptr()[data_.count() - 2]);
+            return static_cast<Coord>(reinterpret_cast<uint16_t const *>(data_.ptr())[data_.count() / sizeof(uint16_t) - 2]);
         }
 
         Coord height() const override { 
             ASSERT(good());
-            return static_cast<Coord>(data_.ptr()[data_.count() - 1]);
+            return static_cast<Coord>(reinterpret_cast<uint16_t const *>(data_.ptr())[data_.count() / sizeof(uint16_t) - 1]);
         }
 
         Color::Representation colorRepresentation() const override {
@@ -65,7 +66,7 @@ namespace rckid {
         }
 
     private:
-        mutable_ptr<uint16_t> data_;
+        mutable_ptr<uint8_t> data_;
     }; // RawBitmapDecoder
 
 } // namespace rckid

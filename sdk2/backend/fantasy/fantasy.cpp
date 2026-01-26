@@ -152,7 +152,7 @@ namespace rckid::hal {
         void initializeNoWindow() {
             internal::display::noWindow = true;
             internal::memory::useSystemMalloc = false;
-            LOG(LL_WARN, "Immutable memory: " << & __rodata_start << " - " << & __rodata_end);
+            LOG(LL_INFO, "Immutable memory: " << hex(& __rodata_start) << " - " << hex(& __rodata_end));
         }
 
         void initialize() {
