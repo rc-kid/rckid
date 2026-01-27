@@ -20,7 +20,7 @@ namespace rckid {
 
         enum class Representation {
             RGB565,
-            RGB233,
+            RGB332,
             Index256,
             Index16,
         }; 
@@ -60,10 +60,118 @@ namespace rckid {
                 reinterpret_cast<uint16_t *>(buffer)[mapIndexColumnFirst(x, y, w, h)] = static_cast<uint16_t>(color);
             }
 
+            static uint32_t getPixelArraySize(Coord width, Coord height) {
+                return width * height * sizeof(uint16_t);
+            }
+
         private:
             uint16_t raw_ = 0;
 
         } __attribute__((packed, aligned(2))); // Color::RGB565
+
+        class RGB332 {
+        public:
+
+            constexpr RGB332() = default;
+            explicit constexpr RGB332(uint16_t raw): 
+                raw_{static_cast<uint8_t>(raw)}
+            {
+                ASSERT(raw < 256);
+            }
+
+            constexpr uint8_t r() const { return ((raw_ >> 5) & 0x7) * 255 / 7; }
+            constexpr uint8_t g() const { return ((raw_ >> 2) & 0x7) * 255 / 7; }
+            constexpr uint8_t b() const { return (raw_ & 0x3) * 255 / 3; }
+
+            constexpr operator uint8_t() const { return raw_; }
+
+            constexpr operator uint16_t() const {
+                uint8_t r5 = (r() >> 3) & 0x1f;
+                uint8_t g6 = (g() >> 2) & 0x3f;
+                uint8_t b5 = (b() >> 3) & 0x1f;
+                return static_cast<uint16_t>((r5 << 11) | (g6 << 5) | b5);
+            }
+
+            static RGB332 getPixel(uint8_t const * buffer, Coord w, Coord h, Coord x, Coord y) {
+                return RGB332{buffer[mapIndexColumnFirst(x, y, w, h)]};
+            }
+
+            static void setPixel(uint8_t * buffer, Coord w, Coord h, Coord x, Coord y, RGB332 color) {
+                buffer[mapIndexColumnFirst(x, y, w, h)] = static_cast<uint8_t>(color);
+            }
+
+            static uint32_t getPixelArraySize(Coord width, Coord height) {
+                return width * height * sizeof(uint8_t);
+            }
+
+        private:
+            uint8_t raw_ = 0;
+        } __attribute__((packed)); // Color::RGB332
+
+        class Index256 {
+        public:
+            constexpr Index256() = default;
+            explicit constexpr Index256(uint16_t raw): 
+                raw_{static_cast<uint8_t>(raw)} 
+            {
+                ASSERT(raw < 256);
+            }
+
+            uint8_t index() const { return raw_; }
+
+            constexpr operator uint8_t() const { return raw_; }
+
+            static Index256 getPixel(uint8_t const * buffer, Coord w, Coord h, Coord x, Coord y) {
+                return Index256{buffer[mapIndexColumnFirst(x, y, w, h)]};
+            }
+
+            static void setPixel(uint8_t * buffer, Coord w, Coord h, Coord x, Coord y, Index256 color) {
+                buffer[mapIndexColumnFirst(x, y, w, h)] = static_cast<uint8_t>(color);
+            }
+
+            static uint32_t getPixelArraySize(Coord width, Coord height) {
+                return width * height * sizeof(uint8_t);
+            }
+
+        private:
+            uint8_t raw_ = 0;
+
+        } __attribute__((packed));
+        
+        class Index16 {
+        public:
+            constexpr Index16() = default;
+            explicit constexpr Index16(uint16_t raw): 
+                raw_{static_cast<uint8_t>(raw)}
+            {
+                ASSERT(raw < 16);
+            }
+
+            uint8_t index() const { return raw_; }
+
+            constexpr operator uint8_t() const { return raw_; }
+
+            static Index16 getPixel(uint8_t const * buffer, Coord w, Coord h, Coord x, Coord y) {
+                uint32_t offset = mapIndexColumnFirst(x, y, w, h);
+                uint8_t byte = buffer[offset / 2];
+                byte = byte >> ((offset & 1) * 4);
+                return Index16{byte & 0xf};
+            }
+
+            static void setPixel(uint8_t * buffer, Coord w, Coord h, Coord x, Coord y, Index16 color) {
+                uint32_t offset = mapIndexColumnFirst(x, y, w, h);
+                uint8_t & byte = buffer[offset / 2];
+                byte = byte & ((offset & 1) ? 0x0f : 0xf0);
+                byte |= static_cast<uint8_t>(color) << ((offset & 1) * 4);
+            }
+
+            static uint32_t getPixelArraySize(Coord width, Coord height) {
+                return (width * height) * sizeof(uint8_t) / 2;
+            }
+
+        private:
+            uint8_t raw_ = 0;
+        };
 
         static_assert(sizeof(RGB565) == 2, "Color::RGB565 must be exactly 2 bytes");
 
@@ -97,22 +205,42 @@ namespace rckid {
             switch (r) {
                 case Representation::RGB565:
                     return RGB565::getPixel(buffer, w, h, x, y);
-                case Representation::RGB233:
+                case Representation::RGB332:
+                    return RGB332::getPixel(buffer, w, h, x, y);
                 case Representation::Index256:
+                    return Index256::getPixel(buffer, w, h, x, y);
                 case Representation::Index16:
-                    UNIMPLEMENTED;
+                    return Index16::getPixel(buffer, w, h, x, y);
             }
+            UNREACHABLE;
         }
 
         static void setPixel(Representation r, uint8_t * buffer, Coord w, Coord h, Coord x, Coord y, uint16_t color) {
             switch (r) {
                 case Representation::RGB565:
                     return RGB565::setPixel(buffer, w, h, x, y, RGB565{color});
-                case Representation::RGB233:
+                case Representation::RGB332:
+                    return RGB332::setPixel(buffer, w, h, x, y, RGB332{color});
                 case Representation::Index256:
+                    return Index256::setPixel(buffer, w, h, x, y, Index256{color});
                 case Representation::Index16:
-                    UNIMPLEMENTED;
+                    return Index16::setPixel(buffer, w, h, x, y, Index16{color});
             }
+            UNREACHABLE;
+        }
+
+        static uint32_t getPixelArraySize(Representation r, Coord width, Coord height) {
+            switch (r) {
+                case Representation::RGB565:
+                    return RGB565::getPixelArraySize(width, height);
+                case Representation::RGB332:
+                    return RGB332::getPixelArraySize(width, height);
+                case Representation::Index256:
+                    return Index256::getPixelArraySize(width, height);
+                case Representation::Index16:
+                    return Index16::getPixelArraySize(width, height);
+            }
+            UNREACHABLE;
         }
 
     private:
@@ -126,7 +254,7 @@ namespace rckid {
         switch (rep) {
             case Color::Representation::RGB565:
                 return 16;
-            case Color::Representation::RGB233:
+            case Color::Representation::RGB332:
                 return 8;
             case Color::Representation::Index256:
                 return 8;

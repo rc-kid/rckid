@@ -93,8 +93,45 @@ namespace rckid {
 
     void PNGImageDecoder::decodeLine_(png_draw_tag * pDraw) {
         DecodeContext * ctx = static_cast<DecodeContext*>(pDraw->pUser);
+        switch (pDraw->iBpp) {
+            case 16: {
+                PNGRGB565(pDraw, ctx->line.get(), PNG_RGB565_LITTLE_ENDIAN, 0x0, pDraw->iHasAlpha);
+                for (uint32_t x = 0; x < static_cast<uint32_t>(pDraw->iWidth); ++x)
+                    ctx->bmp->setPixel(x, pDraw->y, static_cast<uint16_t>(ctx->line.get()[x]));
+                break;
+            }
+            case 8: {
+                switch (pDraw->iPixelType) {
+                    case PNG_PIXEL_INDEXED: {
+                        uint8_t * data = pDraw->pPixels;
+                        for (uint32_t x = 0; x < static_cast<uint32_t>(pDraw->iWidth); ++x)
+                            ctx->bmp->setPixel(x, pDraw->y, static_cast<uint16_t>(*(data++)));
+                        break;
+                    }
+                    default:
+                        UNIMPLEMENTED;
+                }
+                break;
+            }
+            case 4: {
+                switch (pDraw->iPixelType) {
+                    case PNG_PIXEL_INDEXED: {
+                        uint8_t * data = pDraw->pPixels;
+                        for (uint32_t x = 0; x < static_cast<uint32_t>(pDraw->iWidth); x += 2) {
+                            uint8_t c = *(data++);
+                            ctx->bmp->setPixel(x, pDraw->y, static_cast<uint16_t>((c >> 4)));
+                            ctx->bmp->setPixel(x + 1, pDraw->y, static_cast<uint16_t>(c & 0xf));   
+                        }
+                        break;
+                    }
+                    default:
+                        UNIMPLEMENTED;
+                }
+                break;
+            }
+            default:
+                UNIMPLEMENTED;
+        }
     }
-
-
 
 }
