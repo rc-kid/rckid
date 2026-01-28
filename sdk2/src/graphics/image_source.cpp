@@ -19,7 +19,7 @@ namespace rckid {
             if (! hal::memory::isImmutableDataPtr(path))
                 invalidate();
             String sourceFile{immutable_ptr<char>{path}};
-            return fs::openRead(sourceFile, type() == Type::SD ? fs::Drive::SD : fs::Drive::Cartridge);
+            return fs::readFile(sourceFile, type() == Type::SD ? fs::Drive::SD : fs::Drive::Cartridge);
         }
     }
 

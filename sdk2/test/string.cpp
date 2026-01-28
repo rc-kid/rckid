@@ -19,6 +19,16 @@ TEST(string, fromLiteral) {
     EXPECT(g_.reservedDelta() == 0);
 }
 
+TEST(string, fromArray) {
+    using namespace rckid;
+    char str[] = { 'h', 'e', 'l', 'l', 'o', '\0'};
+    Heap::UseAndReserveGuard g_;
+    String s{str};
+    EXPECT(g_.usedDelta() == 16);
+    EXPECT(g_.reservedDelta() == 16);
+    EXPECT(s == "hello");
+}
+
 TEST(string, literalClone) {
     using namespace rckid;
     Heap::UseAndReserveGuard g_;

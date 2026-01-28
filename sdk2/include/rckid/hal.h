@@ -266,9 +266,9 @@ namespace rckid::hal {
 
         uint32_t sdCapacityBlocks();
 
-        bool sdReadBlocks(uint32_t blockNum, uint8_t * buffer, uint32_t numBlocks);
+        void sdReadBlocks(uint32_t blockNum, uint8_t * buffer, uint32_t numBlocks);
 
-        bool sdWriteBlocks(uint32_t blockNum, uint8_t const * buffer, uint32_t numBlocks);
+        void sdWriteBlocks(uint32_t blockNum, uint8_t const * buffer, uint32_t numBlocks);
 
         // TODO async variants
 
@@ -276,11 +276,11 @@ namespace rckid::hal {
 
         uint32_t cartridgeWriteSizeBytes();
 
-        uint32_t cartridgeEraseSize();
+        uint32_t cartridgeEraseSizeBytes();
 
         void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes);
 
-        void cartridgeWrite(uint32_t start, uint8_t const * buffer);
+        void cartridgeWrite(uint32_t start, uint8_t const * buffer, uint32_t numBytes);
 
         void cartridgeErase(uint32_t start);
 

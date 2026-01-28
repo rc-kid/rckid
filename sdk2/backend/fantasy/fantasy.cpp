@@ -14,8 +14,13 @@
 #include <rckid/memory.h>
 #include <rckid/graphics/color.h>
 
+#include "system_malloc_guard.h"
+
 #define RCKID_DISPLAY_ZOOM 4
 
+namespace rckid::fs {
+    void initializeFilesystem();
+}
 
 namespace rckid::internal {
 
@@ -24,18 +29,6 @@ namespace rckid::internal {
         uint8_t heap[512 * 1024];
 
         bool useSystemMalloc = true;
-
-        class SystemMallocGuard {
-        public:
-            SystemMallocGuard() {
-                ASSERT(useSystemMalloc == false);
-                useSystemMalloc = true;
-            }
-
-            ~SystemMallocGuard() {
-                useSystemMalloc = false;
-            }
-        }; // SystemMallocGuard
 
     } // rckid::internal::memory
 
@@ -114,6 +107,14 @@ namespace rckid::internal {
         }
     } // rckid::internal::display
 
+    namespace fs {
+        std::fstream sd_;
+        uint32_t sdBlocks_ = 0;
+        std::fstream cartridge_;
+        uint32_t cartridgeSize_ = 0;
+
+    } // rckid::internal::fs
+
 } // namespace rckid::internal
 
 extern "C" {
@@ -153,6 +154,34 @@ namespace rckid::hal {
             internal::display::noWindow = true;
             internal::memory::useSystemMalloc = false;
             LOG(LL_INFO, "Immutable memory: " << hex(& __rodata_start) << " - " << hex(& __rodata_end));
+    #ifndef RCKID_CUSTOM_FILESYSTEM
+            // if we are not using custom filesystem, see if we have the image files available, open them for read/write access and initialize the hal::fs mechanics
+            internal::fs::sd_.open("sd.iso", std::ios::in |  std::ios::out | std::ios::binary);
+            if (internal::fs::sd_.is_open()) {
+                internal::fs::sd_.seekg(0,  std::ios::end);
+                size_t sizeBytes = internal::fs::sd_.tellg();
+                LOG(LL_INFO, "sd.iso file found, mounting SD card - " << sizeBytes << " bytes");
+                if (sizeBytes % 512 == 0 && sizeBytes != 0) {
+                    internal::fs::sdBlocks_ = static_cast<uint32_t>(sizeBytes / 512);
+                    LOG(LL_INFO, "    blocks: " << internal::fs::sdBlocks_);
+                } else {
+                    LOG(LL_INFO, "    invalid file size (multiples of 512 bytes allowed)");
+                }
+            }
+            internal::fs::cartridge_.open("flash.iso", std::ios::in |  std::ios::out | std::ios::binary);
+            if (internal::fs::cartridge_.is_open()) {
+                internal::fs::cartridge_.seekg(0,  std::ios::end);
+                size_t sizeBytes = internal::fs::cartridge_.tellg();
+                LOG(LL_INFO, "flash.iso file found, mounting cartridge store - " << sizeBytes << " bytes");
+                if (sizeBytes % 4096 == 0 && sizeBytes != 0) {
+                    internal::fs::cartridgeSize_ = static_cast<uint32_t>(sizeBytes);
+                    LOG(LL_INFO, "    size: " << internal::fs::cartridgeSize_);
+                } else {
+                    LOG(LL_INFO, "    invalid file size (multiples of 4096 bytes allowed)");
+                }
+            }
+    #endif
+            rckid::fs::initializeFilesystem();
         }
 
         void initialize() {
@@ -188,6 +217,11 @@ namespace rckid::hal {
             // fatal error is simple on fantasy console as we do not have to worry about weird hardware states
             // stop audio playback, which is the only async stuff we can have
             audio::stop();
+            // deallocate SD and cartridge filesystems
+            if (internal::fs::sd_.good())   
+                internal::fs::sd_.close();
+            if (internal::fs::cartridge_.good())
+                internal::fs::cartridge_.close();
             // and call the SDKs default handler, setting exitAtYield to true if we lack app window
             internal::device::exitAtYield = internal::display::noWindow;
             onFatalError(file, line, msg, payload);
@@ -195,7 +229,7 @@ namespace rckid::hal {
 
         Writer debugWrite() {
             return Writer{[](char c) {
-                internal::memory::SystemMallocGuard g_;
+                internal::memory::SystemMallocGuard g_{/* reentrant */ true};
                 std::cout << c;
                 if (c == '\n')
                     std::cout << std::flush;
@@ -336,39 +370,82 @@ namespace rckid::hal {
     namespace fs {
 
         uint32_t sdCapacityBlocks() {
-
+            return internal::fs::sdBlocks_;
         }
 
-        bool sdReadBlocks(uint32_t blockNum, uint8_t * buffer, uint32_t numBlocks) {
-
+        void sdReadBlocks(uint32_t blockNum, uint8_t * buffer, uint32_t numBlocks) {
+            ASSERT(internal::fs::sd_.good());
+            try {
+                internal::memory::SystemMallocGuard g;
+                internal::fs::sd_.seekg(static_cast<std::streamoff>(blockNum) * 512);
+                internal::fs::sd_.read(reinterpret_cast<char *>(buffer), static_cast<std::streamsize>(numBlocks) * 512);
+            } catch (std::exception const & e) {
+                LOG(LL_ERROR, "SD card read error: " << e.what());
+                FATAL_ERROR("io");
+            }
         }
 
-        bool sdWriteBlocks(uint32_t blockNum, uint8_t const * buffer, uint32_t numBlocks) {
-
+        void sdWriteBlocks(uint32_t blockNum, uint8_t const * buffer, uint32_t numBlocks) {
+            ASSERT(internal::fs::sd_.good());
+            try {
+                internal::memory::SystemMallocGuard g;
+                internal::fs::sd_.seekp(static_cast<std::streamoff>(blockNum) * 512);
+                internal::fs::sd_.write(reinterpret_cast<char const *>(buffer), static_cast<std::streamsize>(numBlocks) * 512);
+            } catch (std::exception const & e) {
+                LOG(LL_ERROR, "SD card read error: " << e.what());
+                FATAL_ERROR("io");
+            }
         }
 
         uint32_t cartridgeCapacityBytes() {
-
+            return internal::fs::cartridgeSize_;
         }
 
         uint32_t cartridgeWriteSizeBytes() {
-
+            return 256; // default value on mkIII
         }
 
-        uint32_t cartridgeEraseSize() {
-
+        uint32_t cartridgeEraseSizeBytes() {
+            return 4096; // defult valye on mkIII
         }
 
         void cartridgeRead(uint32_t start, uint8_t * buffer, uint32_t numBytes) {
-
+            ASSERT(internal::fs::cartridge_.good());
+            try {
+                internal::memory::SystemMallocGuard g;
+                internal::fs::cartridge_.seekg(start);
+                internal::fs::cartridge_.read(reinterpret_cast<char *>(buffer), numBytes);
+            } catch (std::exception const & e) {
+                LOG(LL_ERROR, "SD card read error: " << e.what());
+                FATAL_ERROR("io");
+            }
         }
 
-        void cartridgeWrite(uint32_t start, uint8_t const * buffer) {
-
+        void cartridgeWrite(uint32_t start, uint8_t const * buffer, uint32_t numBytes) {
+            ASSERT(internal::fs::cartridge_.good());
+            try {
+                internal::memory::SystemMallocGuard g;
+                internal::fs::cartridge_.seekp(start);
+                internal::fs::cartridge_.write(reinterpret_cast<char const *>(buffer), numBytes);
+            } catch (std::exception const & e) {
+                LOG(LL_ERROR, "SD card read error: " << e.what());
+                FATAL_ERROR("io");
+            }
         }
 
         void cartridgeErase(uint32_t start) {
-
+            ASSERT(start % 4096 == 0);
+            ASSERT(start + 4096 <= internal::fs::cartridgeSize_);
+            try {
+                internal::memory::SystemMallocGuard g;
+                internal::fs::cartridge_.seekp(start);
+                uint8_t buffer[4096];
+                std::memset(buffer, 4096, 0xff);
+                internal::fs::cartridge_.write(reinterpret_cast<char const *>(buffer), 4096);
+            } catch (std::exception const & e) {
+                LOG(LL_ERROR, "Cartridge flash erase error: " << e.what());
+                FATAL_ERROR("io");
+            }
         }
 
     } // namespace rckid::hal::fs
@@ -377,7 +454,6 @@ namespace rckid::hal {
 
         uint8_t * heapStart() {
             return internal::memory::heap;
-
         }
 
         uint8_t * heapEnd() {
