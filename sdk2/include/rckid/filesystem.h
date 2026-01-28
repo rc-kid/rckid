@@ -71,11 +71,13 @@ namespace rckid::fs {
      */
     bool isMounted(Drive dr = Drive::SD);
 
-    /** Returns the capacity of the selected drive in bytes. 
+    /** Formats the drive. 
      
-        The drive does not have to be mounted for this function to work. 
+        For the SD card, formats the card using the ExFAT filesystem, while LittleFS is used for cartridge's flash memory where wear levelling is important. 
+
+        NOTE that the drive can only be formatted when not mounted. 
      */
-    uint64_t getCapacity(Drive dr = Drive::SD);
+    bool format(Drive dr = Drive::SD); 
 
     /** Mounts the specified drive. 
      
@@ -89,12 +91,57 @@ namespace rckid::fs {
      */
     void unmount(Drive dr = Drive::SD);
 
+    /** Returns the capacity of the selected drive in bytes. 
+     
+        The drive must be mounted for this function to work. 
+     */
+    uint64_t getCapacity(Drive dr = Drive::SD);
+
     /** Returns the available free capacity on the drive.
      
         Depending on the underlying filesystem and its size, this can take time and shouldnot be overly trusted as it inly represents the best effort. 
      */
     uint64_t getFreeCapacity(Drive dr = Drive::SD);  
 
+    /** Returns the filesystem used on the given drive.
+
+        Not very important from the user's perspective as all the formats are abstracted away. Always returns LittleFS for the cartridge drive.
+     */
+    Filesystem getFormat(Drive dr = Drive::SD);
+
+    /** Returns the drive label. 
+      
+        For SD card it's the filesystem label, but for the cartridge returns always "Cartridge" (labels are not supported by the cartridge filesystem .
+     */
+    String getLabel(Drive dr = Drive::SD); 
+
+    /** Returns true if the given path exists (i.e. either directory, or file).
+     */
+    bool exists(String const & path, Drive dr = Drive::SD);
+
+    /** Returns true if  the given path is a valid file. 
+     */
+    bool isFolder(String const & path, Drive dr = Drive::SD);
+
+    /** Returns true if the given path is a valid directory. 
+     */
+    bool isFile(String const & path, Drive dr = Drive::SD); 
+    /** Creates given folder.
+     */
+    bool createFolder(String const & path, Drive dr = Drive::SD);
+
+    /** Creates all folders in the given path that do not yet exist.
+     */
+    bool createFolders(String const & path, Drive dr = Drive::SD);
+    /** Deletes given file.
+     */
+    bool eraseFile(String const & path, Drive dr = Drive::SD);
+
+    unique_ptr<RandomReadStream> readFile(String const & path, Drive dr = Drive::SD);
+
+    unique_ptr<RandomWriteStream> writeFile(String const & path, Drive dr = Drive::SD);
+
+    unique_ptr<RandomWriteStream> appendFile(String const & path, Drive dr = Drive::SD);
 
     uint32_t readFolder(String const & path, Drive dr, std::function<void(FolderEntry const &)> callback);
 
@@ -102,11 +149,6 @@ namespace rckid::fs {
         return readFolder(path, Drive::SD, callback);
     }
 
-    unique_ptr<RandomReadStream> openRead(String const & path, Drive dr = Drive::SD);
-
-    unique_ptr<RandomWriteStream> openWrite(String const & path, Drive dr = Drive::SD);
-
-    unique_ptr<RandomWriteStream> openAppend(String const & path, Drive dr = Drive::SD);
     
 
 

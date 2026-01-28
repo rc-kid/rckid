@@ -11,7 +11,7 @@ namespace rckid {
      
         Colors in RCKid are represented using the Color class, which corresponds to a 24bit RGB color. However, due to hardware limitations, this is neither the color RCKid can display, nor the color that users are most likely to utilize due to its relatively large memory size. 
 
-        THe color class thus provides general color manipulations for which the 24bit RGB format is well suited, butt also provides subclasses corresponding to the actual color representations used by the RCKid. Those include the native RGB565 format used by the display as well as more memory efficient indexed and lower RGB formats. Those color representations then provide methods for reading and writing puxel data from pixel buffers as well as pixel buffer creation. 
+        The color class thus provides general color manipulations for which the 24bit RGB format is well suited, but also provides subclasses corresponding to the actual color representations used by the RCKid. Those include the native RGB565 format used by the display as well as more memory efficient indexed and lower RGB formats. Those color representations then provide methods for reading and writing puxel data from pixel buffers as well as pixel buffer creation. 
 
         For convenience, Color class itself defines their representation aware variants, which return and take uint16_t as pixel values as this is the largest color representation used.
      */
@@ -155,7 +155,7 @@ namespace rckid {
                 uint32_t offset = mapIndexColumnFirst(x, y, w, h);
                 uint8_t byte = buffer[offset / 2];
                 byte = byte >> ((offset & 1) * 4);
-                return Index16{byte & 0xf};
+                return Index16{static_cast<uint8_t>(byte & 0xf)};
             }
 
             static void setPixel(uint8_t * buffer, Coord w, Coord h, Coord x, Coord y, Index16 color) {

@@ -26,9 +26,20 @@ namespace rckid {
          */
         String() : String{emptyLiteral_} { }
         
-        String(char const * s) : data_{s} {
-            ASSERT(hal::memory::isImmutableDataPtr(s));
-            size_ = static_cast<uint32_t>(std::strlen(s));
+        /** Creates string from given character literal. 
+         
+            The character literal *must* be null terminated and will be copied if not stored in immutable flash memory. To create string from owned heap data, use the constructor taking immutable_ptr<char>.
+         */
+        String(char const * s) : 
+            size_{static_cast<uint32_t>(std::strlen(s))}
+        {
+            if (hal::memory::isImmutableDataPtr(s)) {
+                data_ = immutable_ptr<char>{s};
+            } else {
+                char * data = new char[size_ + 1];
+                std::memcpy(data, s, size_ + 1);
+                data_ = immutable_ptr<char>{data};
+            }
         }
 
         String(immutable_ptr<char> data) : data_{std::move(data)} {

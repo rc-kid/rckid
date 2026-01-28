@@ -145,7 +145,7 @@ namespace rckid {
         constexpr immutable_ptr(nullptr_t) : ptr_{nullptr} {}
 
 
-        constexpr immutable_ptr(T const * ptr): ptr_{ptr} {
+        constexpr explicit immutable_ptr(T const * ptr): ptr_{ptr} {
             ASSERT(Heap::contains(ptr) || hal::memory::isImmutableDataPtr(ptr));
         }
 
