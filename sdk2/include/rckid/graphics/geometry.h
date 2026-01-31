@@ -4,7 +4,9 @@
 
 namespace rckid {
 
-    using Coord = int16_t;
+    /** Coordinates in RCKid use platform's native integer type, even though much smaller range is generally required, this makes arithemtic operations faster and simpler (no typecasts). 
+     */
+    using Coord = int32_t;
 
     /** Maps coordinates into a 2D array into one dimensional array in a column first manner where the first indes is mapped to the last column, first row. This mapping is tailored to the native display rendering where column by column rendering means simply incrementing the array index after the first one.  
      */

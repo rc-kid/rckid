@@ -184,7 +184,7 @@ namespace rckid {
         }
 
         constexpr Color withBrightness(uint8_t a) {
-            return Color{r * a / 255, g * a / 255, b * a / 255};
+            return Color{static_cast<uint8_t>(r * a / 255), static_cast<uint8_t>(g * a / 255), static_cast<uint8_t>(b * a / 255)};
         }
 
         constexpr RGB565 toRGB565() const {
