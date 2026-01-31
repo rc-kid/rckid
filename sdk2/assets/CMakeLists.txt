@@ -11,6 +11,7 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
     endfunction()
 
     add_utility("font-converter" "font_converter.cpp")
+    add_utility("binary-folder" "binary_folder.cpp")
 
     # Generates the SDK assets
     #
@@ -22,6 +23,9 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
         COMMAND $<TARGET_FILE:font-converter> fonts/OpenDyslexic.otf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/OpenDyslexic32.h 32
         COMMAND $<TARGET_FILE:font-converter> fonts/OpenDyslexic.otf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/OpenDyslexic64.h 64
         COMMAND $<TARGET_FILE:font-converter> fonts/OpenDyslexic.otf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/OpenDyslexic128.h 128
+
+        COMMAND $<TARGET_FILE:binary-folder> images ${CMAKE_SOURCE_DIR}/sdk2/include/assets/images.h --raw-path raw/images
+
 
         DEPENDS font-converter
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

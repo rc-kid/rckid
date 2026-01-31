@@ -7,6 +7,8 @@
 #define BLACK (::Color){0, 0, 0, 255}
 #undef WHITE
 #define WHITE (::Color){255, 255, 255, 255}
+#undef RED
+#define RED (::Color){255, 0, 0, 255}
 
 
 #include <rckid/hal.h>
@@ -68,6 +70,9 @@ namespace rckid::internal {
             DrawTextureEx(texture, {0,0}, 0, RCKID_DISPLAY_ZOOM, WHITE);
 
             // TODO print FPS, memory or some other stat overlays we might want to 
+
+            DrawText(TextFormat("Heap reserved: %d", Heap::reservedBytes() / 1024), 540, 260, 20, RED);
+            DrawText(TextFormat("Heap usd:      %d", Heap::usedBytes() / 1024), 540, 280, 20, RED);
 
             EndDrawing();
             SwapScreenBuffer();
