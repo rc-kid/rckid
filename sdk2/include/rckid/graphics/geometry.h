@@ -12,6 +12,18 @@ namespace rckid {
         return (width - x - 1) * height + y;
     }
 
+    enum class HAlign {
+        Left,
+        Center,
+        Right
+    };
+
+    enum class VAlign {
+        Top,
+        Center,
+        Bottom
+    };
+
     class Point {
     public:
         Coord x = 0;

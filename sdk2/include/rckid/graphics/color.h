@@ -28,7 +28,7 @@ namespace rckid {
         class RGB565 {
         public:
             constexpr RGB565() = default;
-            explicit constexpr RGB565(uint16_t raw): raw_{raw} {}
+            constexpr RGB565(uint16_t raw): raw_{raw} {}
 
 
             constexpr uint8_t r() const {
@@ -73,7 +73,7 @@ namespace rckid {
         public:
 
             constexpr RGB332() = default;
-            explicit constexpr RGB332(uint16_t raw): 
+            constexpr RGB332(uint16_t raw): 
                 raw_{static_cast<uint8_t>(raw)}
             {
                 ASSERT(raw < 256);
@@ -181,6 +181,10 @@ namespace rckid {
 
         static constexpr Color RGB(uint8_t r, uint8_t g, uint8_t b) {
             return Color{r, g, b};
+        }
+
+        constexpr Color withBrightness(uint8_t a) {
+            return Color{r * a / 255, g * a / 255, b * a / 255};
         }
 
         constexpr RGB565 toRGB565() const {

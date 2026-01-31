@@ -1,4 +1,5 @@
 #include <rckid/ui/app.h>
+#include <rckid/ui/label.h>
 
 class TestApp : public rckid::ui::App<void> {
 public:
@@ -24,6 +25,13 @@ public:
             << SetRect(Rect::XYWH(50, 50, 20, 20))
             << Center()
             << SetBg(Color::Magenta());
+        p_->addChild(new rckid::ui::Label())
+            << SetRect(Rect::XYWH(0, 0, 240, 160))
+            << CenterHorizontally()
+            << SetText("Hello, RCKid UI!")
+            << SetTextHAlign(HAlign::Center)
+            << SetTextVAlign(VAlign::Center)
+            << SetFont(rckid::assets::Iosevka16);
     }
 private:
     rckid::ui::Panel * p_;

@@ -20,7 +20,7 @@ namespace rckid::ui {
 
         Rect rect() const { return rect_; }
 
-        void setRect(Rect rect) {
+        virtual void setRect(Rect rect) {
             rect_ = rect;
             if (rect_.w < 0 || rect_.h < 0) {
                 LOG(LL_ERROR, "Widget rectangle has negative size " << rect);
@@ -172,26 +172,62 @@ namespace rckid::ui {
         };
     }
 
+    /** Sets horizontal alignment of the widget inside its parent. 
+     */
+    inline auto SetHAlign(HAlign align) {
+        return [=](Widget * w) {
+            ASSERT(w->parent() != nullptr);
+            Point pos = w->rect().topLeft();
+            switch (align) {
+                case HAlign::Left:
+                    pos.x = 0;
+                    break;
+                case HAlign::Center:
+                    pos.x = (w->parent()->width() - w->width()) / 2;
+                    break;
+                case HAlign::Right:
+                    pos.x = w->parent()->width() - w->width();
+                    break;
+                default:
+                    UNREACHABLE;
+            }
+            SetPosition(pos)(w);
+        };
+    }
+
+    /** Sets vertical alignment of the widget inside its parent.
+     */
+    inline auto SetVAlign(VAlign align) {
+        return [=](Widget * w) {
+            ASSERT(w->parent() != nullptr);
+            Point pos = w->rect().topLeft();
+            switch (align) {
+                case VAlign::Top:
+                    pos.y = 0;
+                    break;
+                case VAlign::Center:
+                    pos.y = (w->parent()->height() - w->height()) / 2;
+                    break;
+                case VAlign::Bottom:
+                    pos.y = w->parent()->height() - w->height();
+                    break;
+                default:
+                    UNREACHABLE;
+            }
+            SetPosition(pos)(w);
+        };
+    }
+
     /** Centers the widget horizontally inside its parent. 
      */
     inline auto CenterHorizontally() {
-        return [](Widget * w) {
-            ASSERT(w->parent() != nullptr);
-            Point pos = w->rect().topLeft();
-            pos.x = (w->parent()->width() - w->width()) / 2;
-            SetPosition(pos)(w);
-        };
+        return SetHAlign(HAlign::Center);
     }
 
     /** Centers the widget vertically inside its parent.
      */
     inline auto CenterVertically() {
-        return [](Widget * w) {
-            ASSERT(w->parent() != nullptr);
-            Point pos = w->rect().topLeft();
-            pos.y = (w->parent()->height() - w->height()) / 2;
-            SetPosition(pos)(w);
-        };
+        return SetVAlign(VAlign::Center);
     }
 
     /** Centers the widget both horizontally and vertically inside its parent.

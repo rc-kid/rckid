@@ -90,6 +90,12 @@ namespace rckid {
             return *this;
         }
 
+        char operator [] (uint32_t index) const {
+            if (index >= size_)
+                return 0;
+            return data_.get()[index];
+        }
+
         char const * c_str() const {
             return data_.get();
         }
@@ -160,12 +166,6 @@ namespace rckid {
 
         bool operator >= (String const & other) const {
             return std::strcmp(data_.get(), other.data_.get()) >= 0;
-        }
-
-        char operator [] (uint32_t index) const {
-            if (index >= size())
-                return 0;
-            return data_.get()[index];
         }
 
         /** Creates new string by concatenating two existing ones. 

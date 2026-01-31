@@ -185,6 +185,9 @@ namespace rckid {
             return result;
         }
 
+        bool operator == (T const * other) const { return ptr_ == other; }
+        bool operator != (T const * other) const { return ptr_ != other; }
+
     private:
 
         void deletePtr() {
