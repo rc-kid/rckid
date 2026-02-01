@@ -161,14 +161,18 @@ namespace rckid {
         immutable_ptr(immutable_ptr const & ) = delete;
         immutable_ptr & operator = (immutable_ptr const &) = delete;
 
-        immutable_ptr(immutable_ptr && other) noexcept : ptr_{other.ptr_} { other.ptr_ = nullptr; }
+        immutable_ptr(immutable_ptr && other) noexcept : ptr_{other.ptr_} { 
+            if (! hal::memory::isImmutableDataPtr(other.ptr_))
+                other.ptr_ = nullptr; 
+        }
 
         immutable_ptr & operator = (immutable_ptr && other) {
             if (this == & other)
                 return *this;
             deletePtr();
             ptr_ = other.ptr_;
-            other.ptr_ = nullptr;
+            if (! hal::memory::isImmutableDataPtr(other.ptr_))
+                other.ptr_ = nullptr;
             return *this;
         }
 

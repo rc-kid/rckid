@@ -1,5 +1,7 @@
 #include <rckid/ui/app.h>
 #include <rckid/ui/label.h>
+#include <rckid/ui/image.h>
+#include <assets/images.h>
 
 class TestApp : public rckid::ui::App<void> {
 public:
@@ -9,6 +11,9 @@ public:
         p_ = addChild(new Panel())
             << SetRect(Rect::XYWH(40, 40, 240, 160))
             << SetBg(Color::Blue());
+        p_->addChild(new Image())
+            << SetRect(Rect::XYWH(0, 0, 240, 160))
+            << SetBitmap(ImageSource{assets::logo});
         p_->addChild(new Panel())
             << SetRect(Rect::XYWH(-10, -10, 20, 20))
             << SetBg(Color::Red());

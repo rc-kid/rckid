@@ -4,7 +4,6 @@
 #include <rckid/graphics/geometry.h>
 #include <rckid/graphics/color.h>
 #include <rckid/graphics/blit.h>
-
 #include <rckid/graphics/image_source.h>
 
 namespace rckid {
@@ -13,6 +12,10 @@ namespace rckid {
      */
     class Bitmap {
     public:
+
+        Bitmap() = default;
+
+        Bitmap(ImageSource && src);
 
         Bitmap(Coord w, Coord h, Color::Representation colorRep, mutable_ptr<uint8_t> pixels, mutable_ptr<Color::RGB565> palette = nullptr) :
             w_{w}, h_{h}, colorRepresentation_{colorRep}, pixels_{std::move(pixels)}, palette_{std::move(palette)} {
@@ -24,6 +27,33 @@ namespace rckid {
             uint32_t size = Color::getPixelArraySize(colorRep, w, h);
             pixels_ = mutable_ptr<uint8_t>{new uint8_t[size], size};
             // TODO use standard palette? 
+        }
+
+        Bitmap(Bitmap const &) = delete;
+        Bitmap & operator = (Bitmap const &) = delete;
+
+        Bitmap(Bitmap && other) noexcept :
+            w_{other.w_},
+            h_{other.h_},
+            colorRepresentation_{other.colorRepresentation_},
+            pixels_{std::move(other.pixels_)},
+            palette_{std::move(other.palette_)}
+        {
+            other.w_ = 0;
+            other.h_ = 0;
+        }
+
+        Bitmap & operator = (Bitmap && other) {
+            if (this == & other)
+                return *this;
+            w_ = other.w_;
+            h_ = other.h_;
+            colorRepresentation_ = other.colorRepresentation_;
+            pixels_ = std::move(other.pixels_);
+            palette_ = std::move(other.palette_);
+            other.w_ = 0;
+            other.h_ = 0;
+            return *this;
         }
 
         Coord width() const { return w_; }
@@ -78,9 +108,9 @@ namespace rckid {
         }
 
     private:
-        Coord const w_;
-        Coord const h_;
-        Color::Representation const colorRepresentation_;
+        Coord w_ = 0;
+        Coord h_ = 0;
+        Color::Representation colorRepresentation_ = Color::Representation::RGB565;
         mutable_ptr<uint8_t> pixels_;
         mutable_ptr<Color::RGB565> palette_;
     }; 

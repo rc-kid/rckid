@@ -7,6 +7,8 @@
 
 namespace rckid {
 
+    class ImageDecoder;
+
     /** Describes the source of an image and provides its type decoding.
      
         Image source can be either pointer to region of memory containing the image data directly, or a path to the image file on either SD card, or cartridge.
@@ -93,6 +95,12 @@ namespace rckid {
          */
         unique_ptr<RandomReadStream> toStream();
 
+        /** Decays the image source to a corresponding decoder. 
+         
+            Returns nullptr if the image type is not supported.
+         */
+        unique_ptr<ImageDecoder> toDecoder();
+
         uint32_t size() const {
             ASSERT(type() == Type::Memory);
             return size_;
@@ -114,11 +122,18 @@ namespace rckid {
             Unknown,
         };
 
-        /** Detects the image type of given stream. 
+        /** Returns the image type. 
          
-            The stream is reset to the beginning after the detection takes place.
+            This is a very primitive check that looks at the magic header of the image data to determine its type:
+
+            - 0x89 0x50 for PNG (although there is more to the PNG header)
+            - 0xff 0xd8 for JPG
+            - 0x71 0x6f for QOI (again there is more)
+
+            If none of the above is true, but the data correspond to the raw memory format, then raw memory is returned. Otherwise unknown is returned.  
          */
-        static ImageType getImageType(RandomReadStream & stream);
+        ImageType getImageType() const;
+
         
     private:
         static constexpr uint32_t FILE_SD = 0xffffffff;

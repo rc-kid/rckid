@@ -34,11 +34,12 @@ namespace rckid {
     uint32_t blit_index16(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, Color::RGB565 const * palette) {
         ASSERT(numPixels % 2 == 0);
         uint16_t * destination = reinterpret_cast<uint16_t *>(dst);
-        for (uint32_t i = 0; i < numPixels; numPixels += 2) {
-            *(destination++) = palette[static_cast<uint8_t>(src[i] >> 4)];
+        numPixels = numPixels / 2;
+        for (uint32_t i = 0; i < numPixels; ++i) {
             *(destination++) = palette[static_cast<uint8_t>(src[i] & 0x0f)];
+            *(destination++) = palette[static_cast<uint8_t>(src[i] >> 4)];
         }
-        return numPixels / 2; // bpp is just 4
+        return numPixels; // bpp is just 4
     }
 
 

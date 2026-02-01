@@ -1,6 +1,7 @@
 #include <platform/tests.h>
 
 #include <rckid/graphics/bitmap.h>
+#include <rckid/graphics/image_source.h>
 
 namespace {
     constexpr uint16_t bmp[] = {

@@ -88,6 +88,21 @@ namespace rckid {
         DecodeContext ctx{result};
         img_->pfnDraw = decodeLine_;
         DecodePNG(img_, & ctx, 0);
+        if (Color::requiresPalette(result.colorRepresentation())) {
+            uint8_t * p = PNG_getPalette(img_);
+            if (p != nullptr) {
+                uint32_t numColors = 1 << PNG_getBpp(img_);
+                Color::RGB565 * palette = new Color::RGB565[numColors];
+                for (uint32_t i = 0; i < numColors; ++i) {
+                    palette[i] = Color::RGB(  
+                            p[i * 3], 
+                            p[i * 3 + 1],
+                            p[i * 3 + 2]
+                        ).toRGB565();
+                }
+                result.setPalette(mutable_ptr<Color::RGB565>{palette, numColors});
+            }
+        }
         return result;
     }
 

@@ -10,8 +10,12 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
         target_link_libraries(${util_name} raylib opus libhelix-mp3 FatFS littlefs)
     endfunction()
 
+    # converts font to glyphinfos & pixels
     add_utility("font-converter" "font_converter.cpp")
+    # converts all files in a folder into binary arrays of their contents
     add_utility("binary-folder" "binary_folder.cpp")
+    # converts given image into raw image in rom (see ImageDecoder.h for details)
+    add_utility("raw-image-converter" "raw_image_converter.cpp")
 
     # Generates the SDK assets
     #
@@ -25,7 +29,6 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
         COMMAND $<TARGET_FILE:font-converter> fonts/OpenDyslexic.otf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/OpenDyslexic128.h 128
 
         COMMAND $<TARGET_FILE:binary-folder> images ${CMAKE_SOURCE_DIR}/sdk2/include/assets/images.h --raw-path raw/images
-
 
         DEPENDS font-converter
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

@@ -30,12 +30,26 @@ namespace rckid {
     class RawBitmapDecoder : public ImageDecoder {
     public:
 
+        /** Verifies whether the given data buffer conforms to raw bitmap format.
+         
+            This means its size must be at least 4 bytes, and the last four bytes must be the width & height values corresponsing to the pixel data size.
+         */
+        static bool verify(uint8_t const * data, uint32_t size) {
+            uint16_t const * pixelData = reinterpret_cast<uint16_t const *>(data);
+            size = size / 2; // size in uint16_t
+            if (size < 2)
+                return false;
+            uint16_t width = pixelData[size - 2];
+            uint16_t height = pixelData[size - 1];
+            return (size == static_cast<uint32_t>((width * height + 2)));
+        }
+
         RawBitmapDecoder(ImageSource && src) {
             ASSERT(src.good());
             if (src.type() == ImageSource::Type::Memory) {
                 uint32_t dataSize = src.size();
                 data_ = mutable_ptr<uint8_t>{(src.releaseData().release()), dataSize};
-                ASSERT(dataSize == (width() * height() + 2) * sizeof(uint16_t));
+                ASSERT(verify(data_.ptr(), dataSize));
             } else {
                 // TODO do we want to support file based raw bitmaps?
                 UNIMPLEMENTED;

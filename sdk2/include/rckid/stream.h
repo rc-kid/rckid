@@ -139,6 +139,54 @@ namespace rckid {
         virtual uint32_t tell() const = 0;
     }; 
 
+    class MemoryReadStream : public RandomReadStream {
+    public:
+    
+        MemoryReadStream(immutable_ptr<uint8_t> buffer, uint32_t size) :
+            buffer_{std::move(buffer)},
+            size_{size},
+            pos_{0} {
+        }
+
+        uint32_t read(uint8_t * buffer, uint32_t bufferSize) override {
+            uint32_t toRead = std::min(bufferSize, size_ - pos_);
+            std::memcpy(buffer, buffer_.get() + pos_, toRead);
+            pos_ += toRead;
+            return toRead;
+        }
+
+        bool eof() const override {
+            return pos_ >= size_;
+        }
+
+        std::optional<uint8_t> peek() override {
+            if (pos_ >= size_)
+                return std::nullopt;
+            return buffer_.get()[pos_];
+        }
+
+        uint32_t size() const override {
+            return size_;
+        }
+
+        uint32_t seek(uint32_t position) override {
+            if (position > size_)
+                pos_ = size_;
+            else 
+                pos_ = position;
+            return pos_;
+        }
+
+        uint32_t tell() const override {
+            return pos_;
+        }
+
+    private:
+        immutable_ptr<uint8_t> buffer_;
+        uint32_t size_;
+        uint32_t pos_;
+    }; // rckid::MemoryReadStream
+
     class MemoryStream : public RandomReadStream, public RandomWriteStream {
     public:
 

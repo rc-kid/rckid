@@ -247,6 +247,18 @@ namespace rckid {
             UNREACHABLE;
         }
 
+        static bool requiresPalette(Representation r) {
+            switch (r) {
+                case Representation::RGB565:
+                case Representation::RGB332:
+                    return false;
+                case Representation::Index256:
+                case Representation::Index16:
+                    return true;
+            }
+            UNREACHABLE;
+        }
+
     private:
 
         constexpr Color(uint8_t r_, uint8_t g_, uint8_t b_): r{r_}, g{g_}, b{b_} {}
