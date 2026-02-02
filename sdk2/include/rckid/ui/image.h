@@ -41,6 +41,13 @@ namespace rckid::ui {
             bitmapRepeat_ = value;
         }
 
+        Point bitmapOffset() const { return bitmapOffset_; }
+
+        void setBitmapOffset(Point value) {
+            bitmapOffset_ = value;
+            adjustBitmapPosition();
+        }
+
         void renderColumn(Coord column, Coord starty, Color::RGB565 * buffer, Coord numPixels) override {
             Widget::renderColumn(column, starty, buffer, numPixels);
             if (bitmapRepeat_) {
@@ -69,8 +76,8 @@ namespace rckid::ui {
     private:
 
         void adjustBitmapPosition() {
-            Coord x;
-            Coord y;
+            Coord x = bitmapOffset_.x;
+            Coord y = bitmapOffset_.y;
             switch (bitmapHAlign_) {
                 case HAlign::Left:
                     x = 0;
@@ -80,6 +87,8 @@ namespace rckid::ui {
                     break;
                 case HAlign::Right:
                     x = width() - bitmap_.width();
+                    break;
+                case HAlign::Manual: // do not change
                     break;
                 default:
                     UNREACHABLE;
@@ -93,6 +102,8 @@ namespace rckid::ui {
                     break;
                 case VAlign::Bottom:
                     y = height() - bitmap_.height();
+                    break;
+                case VAlign::Manual: // do not change
                     break;
                 default:
                     UNREACHABLE;
@@ -133,6 +144,12 @@ namespace rckid::ui {
     inline auto SetBitmapRepeat(bool repeat) {
         return [repeat](Image * img) {
             img->setBitmapRepeat(repeat);
+        };
+    }
+
+    inline auto SetBitmapOffset(Point offset) {
+        return [offset](Image * img) {
+            img->setBitmapOffset(offset);
         };
     }
 

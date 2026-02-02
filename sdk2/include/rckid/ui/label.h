@@ -52,13 +52,20 @@ namespace rckid::ui {
             font_->createFontPalette(textPalette_, textColor_);
         }
 
+        Point textOffset() const { return textOffset_; }
+
+        void setTextOffset(Point value) {
+            textOffset_ = value;
+            recalculateHint();
+        }
+
         void renderColumn(Coord column, Coord starty, Color::RGB565 * buffer, Coord numPixels) override {
             Widget::renderColumn(column, starty, buffer, numPixels);
             // recalculate starty based on the vertical positioning, do not change starty as we assume it is always relative to the actual text top
-            numPixels -= rowOffset_;
+            numPixels -= textOffset_.y;
             if (numPixels <= 0)
                 return;
-            buffer += rowOffset_;
+            buffer += textOffset_.y;
             // move to previous hint if needed
             if (column < currentHint_.leftColumn) {
                 if (currentHint_.charOffset == 0) // no more characters left
@@ -108,26 +115,30 @@ namespace rckid::ui {
                 GlyphInfo const * gi = font_->glyphInfoFor(text_[text_.size() - 1]);
                 switch (textHAlign_) {
                     case HAlign::Left:
-                        rightmostHint_ = Hint{textWidth_, gi, text_.size() - 1};
+                        rightmostHint_ = Hint{textWidth_ + textOffset_.x, gi, text_.size() - 1};
                         break;
                     case HAlign::Center:
-                        rightmostHint_ = Hint{(width() - (width() - textWidth_) / 2), gi, text_.size() - 1};
+                        rightmostHint_ = Hint{(width() - (width() - textWidth_) / 2) + textOffset_.x, gi, text_.size() - 1};
                         break;
                     case HAlign::Right:
-                        rightmostHint_ = Hint{width(), gi, text_.size() - 1};
+                        rightmostHint_ = Hint{width() + textOffset_.x, gi, text_.size() - 1};
+                        break;
+                    case HAlign::Manual: // do not change
                         break;
                     default:
                         UNREACHABLE;
                 }
                 switch (textVAlign_) {
                     case VAlign::Top:
-                        rowOffset_ = 0;
+                        textOffset_.y = 0;
                         break;
                     case VAlign::Center:
-                        rowOffset_ = (height() - font_->size) / 2;
+                        textOffset_.y = (height() - font_->size) / 2;
                         break;
                     case VAlign::Bottom:
-                        rowOffset_ = height() - font_->size;
+                        textOffset_.y = height() - font_->size;
+                        break;
+                    case VAlign::Manual: // do not change
                         break;
                     default:
                         UNREACHABLE;
@@ -151,7 +162,7 @@ namespace rckid::ui {
         Hint currentHint_;
         // this is where we store the rightmost character hint (the first one to be rendered due to right to left top to bottom rendering)
         Hint rightmostHint_;
-        Coord rowOffset_ = 0;
+        Point textOffset_{0,0};
 
     }; // ui::Label
 
@@ -177,5 +188,17 @@ namespace rckid::ui {
     private:        
         mutable Font font_;
     };
+
+    inline auto SetTextColor(Color color) {
+        return [color](Label * l) {
+            l->setTextColor(color);
+        };
+    }
+
+    inline auto SetTextOffset(Point offset) {
+        return [offset](Label * l) {
+            l->setTextOffset(offset);
+        };
+    }
 
 } // namespace rckid::ui

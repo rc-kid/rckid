@@ -17,13 +17,22 @@ namespace rckid {
     enum class HAlign {
         Left,
         Center,
-        Right
+        Right,
+        Manual,
     };
 
     enum class VAlign {
         Top,
         Center,
-        Bottom
+        Bottom,
+        Manual,
+    };
+
+    enum class Direction {
+        Left,
+        Right,
+        Up,
+        Down,
     };
 
     class Point {

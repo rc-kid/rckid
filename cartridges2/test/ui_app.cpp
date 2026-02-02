@@ -1,7 +1,10 @@
 #include <rckid/ui/app.h>
 #include <rckid/ui/label.h>
 #include <rckid/ui/image.h>
+#include <rckid/ui/animation.h>
 #include <assets/images.h>
+
+using namespace rckid;
 
 class TestApp : public rckid::ui::App<void> {
 public:
@@ -26,7 +29,7 @@ public:
         p_->addChild(new Panel())
             << SetRect(Rect::XYWH(-10, 150, 20, 20))
             << SetBg(Color::Cyan());
-        p_->addChild(new Panel())
+        ap_ = p_->addChild(new Panel())
             << SetRect(Rect::XYWH(50, 50, 20, 20))
             << Center()
             << SetBg(Color::Magenta());
@@ -37,9 +40,26 @@ public:
             << SetTextHAlign(HAlign::Center)
             << SetTextVAlign(VAlign::Center)
             << SetFont(rckid::assets::Iosevka16);
+        
+        ax_
+            .setOnUpdate([this](float progress) {
+                Coord x = static_cast<rckid::Coord>(progress * (240 - 20));
+                ui::with(ap_) << ui::SetPosition(x, ap_->rect().y);
+            })
+            .start(2000, Animation::Mode::Oscillate);
+        ay_
+            .setOnUpdate([this](float progress) {
+                Coord y = static_cast<rckid::Coord>(progress * (160 - 20));
+                ui::with(ap_) << ui::SetPosition(ap_->rect().x, y);
+            })
+            .start(3000, Animation::Mode::Oscillate);
     }
+
 private:
     rckid::ui::Panel * p_;
+    rckid::ui::Panel * ap_;
+    rckid::ui::Animation ax_;
+    rckid::ui::Animation ay_;
 };
 
 

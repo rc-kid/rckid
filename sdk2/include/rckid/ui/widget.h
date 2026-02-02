@@ -172,6 +172,8 @@ namespace rckid::ui {
         };
     }
 
+    inline auto SetPosition(Coord x, Coord y) { return SetPosition({Point{x, y}}); }
+
     /** Sets horizontal alignment of the widget inside its parent. 
      */
     inline auto SetHAlign(HAlign align) {

@@ -1,4 +1,5 @@
 
+#include <rckid/ui/animation.h>
 #include <rckid/ui/root_widget.h>
 
 namespace rckid::ui {
@@ -14,6 +15,8 @@ namespace rckid::ui {
     void RootWidget::render() {
         if (! visible())
             return;
+        // update all animations
+        Animation::updateAll();
         // tell the widgets that we are about to render
         onRender();
         // start rendering from rightmost column
