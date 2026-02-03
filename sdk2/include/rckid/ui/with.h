@@ -22,30 +22,27 @@ namespace rckid::ui {
         For details about operator implementation, see the respctive widgets and their operators. Here is just the simplest contract:
 
             struct SomeOperator {
-                void operator () (Widget * w) const { ... }
+                uint32_t someParamater;
+                SomeOperator(uint32_t someParameter): someParameter{someParameter} {}
             };
-
-        Alternatively, std::function can be used for even shorter operations:
-
-            auto SomeOtherOperator() {
-                return [](Widget * w) { ... };
+            template<typename T>
+            inline with<T> operator << (with<T> w, SomeOperator so) {
+                w->someMethod(so.someParameter);
+                return w;
             }
-        
-        The lambdas can capture variables as needed to pass them to the operator itself. Note that due to C++ limitations, when move semantics is required for the operator arguments, the struct approach above has to be used (move-only lambdas cannot be used here (C++20 feature).
+
+        While this is slightly wordlier than simple method call with overloaded operator(), it allows unrealated widgets to share the same property setters.
+
      */
     template<typename T>
     class with {
     public:
 
-        with(T * widget):
-            widget_{widget} {
-        }
+        with(T * widget): widget_{widget} { }
 
-        template<typename OP>
-        with & operator << (OP const & op) {
-            op(widget_);
-            return *this;
-        }
+        with(T & widget): widget_{ & widget } { }
+
+        T * operator -> () const { return widget_; }
 
         operator T * () const { return widget_; }
 

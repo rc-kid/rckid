@@ -21,16 +21,16 @@ namespace rckid::ui {
             adjustBitmapPosition();
         }
 
-        HAlign bitmapHAlign() const { return bitmapHAlign_; }
+        HAlign hAlign() const { return bitmapHAlign_; }
 
-        void setBitmapHAlign(HAlign value) {
+        void setHAlign(HAlign value) {
             bitmapHAlign_ = value;
             adjustBitmapPosition();
         }
 
-        VAlign bitmapVAlign() const { return bitmapVAlign_; }
+        VAlign vAlign() const { return bitmapVAlign_; }
 
-        void setBitmapVAlign(VAlign value) {
+        void setVAlign(VAlign value) {
             bitmapVAlign_ = value;
             adjustBitmapPosition();
         }
@@ -120,37 +120,34 @@ namespace rckid::ui {
     }; // ui::Image
 
     struct SetBitmap {
-        // this cannot be function as we need move-only functions which only exist in C++20 and higher
-        SetBitmap(Bitmap bitmap): bitmap_{std::move(bitmap)} {}
-        void operator () (Image * img) const {
-            img->setBitmap(std::move(bitmap_));
-        }
-    private:
-        mutable Bitmap bitmap_;
-    }; 
-
-    inline auto SetBitmapHAlign(HAlign align) {
-        return [align](Image * img) {
-            img->setBitmapHAlign(align);
-        };
+        Bitmap bitmap;
+        SetBitmap(Bitmap bitmap): bitmap{std::move(bitmap)} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetBitmap sb) {
+        w->setBitmap(std::move(sb.bitmap));
+        return w;
     }
 
-    inline auto SetBitmapVAlign(VAlign align) {
-        return [align](Image * img) {
-            img->setBitmapVAlign(align);
-        };
+    struct SetBitmapRepeat {
+        bool repeat;
+        SetBitmapRepeat(bool repeat): repeat{repeat} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetBitmapRepeat sbr) {
+        w->setBitmapRepeat(sbr.repeat);
+        return w;
     }
 
-    inline auto SetBitmapRepeat(bool repeat) {
-        return [repeat](Image * img) {
-            img->setBitmapRepeat(repeat);
-        };
+    struct SetBitmapOffset {
+        Point offset;
+        SetBitmapOffset(Point offset): offset{offset} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetBitmapOffset sbo) {
+        w->setBitmapOffset(sbo.offset);
+        return w;
     }
 
-    inline auto SetBitmapOffset(Point offset) {
-        return [offset](Image * img) {
-            img->setBitmapOffset(offset);
-        };
-    }
 
 } // namespace rckid::ui

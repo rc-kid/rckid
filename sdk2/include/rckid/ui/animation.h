@@ -6,6 +6,7 @@
 
 #include <rckid/rckid.h>
 #include <rckid/fixedint.h>
+#include <rckid/ui/with.h>
 
 namespace rckid::ui {
 
@@ -61,18 +62,20 @@ namespace rckid::ui {
             return durationMs_;
         }
 
+        void setDurationMs(uint32_t durationMs) {
+            durationMs_ = durationMs;
+        }
+
         OnUpdate const & onUpdate() const { return onUpdate_; }
 
-        Animation & setOnUpdate(OnUpdate onUpdate) {
+        void setOnUpdate(OnUpdate onUpdate) {
             onUpdate_ = std::move(onUpdate);
-            return *this;
         }
 
         OnDone const & onDone() const { return onDone_; }
 
-        Animation & setOnDone(OnDone onDone) {
+        void setOnDone(OnDone onDone) {
             onDone_ = std::move(onDone);
-            return *this;
         }
 
         Mode mode() const { return mode_; }
@@ -83,22 +86,23 @@ namespace rckid::ui {
 
         bool active() const { return active_; }
 
-        Animation & start(uint32_t durationMs, Mode mode) {
+        void start(uint32_t durationMs, Mode mode) {
             mode_ = mode;
-            startUs_ = uptimeUs();
             durationMs_ = durationMs;
-            active_ = true;
-            return *this;
+            start();
         }
 
-        Animation & stop() {
-            active_ = false;
-            return *this;
-        }
-
-        Animation & reset() {
+        void start() {
             startUs_ = uptimeUs();
-            return *this;
+            active_ = true;
+        }
+
+        void stop() {
+            active_ = false;
+        }
+
+        void reset() {
+            startUs_ = uptimeUs();
         }
 
         static void updateAll() {
@@ -160,5 +164,52 @@ namespace rckid::ui {
         static inline Animation * head_ = nullptr;
 
     }; // ui::Animation
+
+    struct SetAnimationOnUpdate {
+        Animation::OnUpdate onUpdate;
+        SetAnimationOnUpdate(Animation::OnUpdate onUpdate): onUpdate{std::move(onUpdate)} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetAnimationOnUpdate sou) {
+        w->setOnUpdate(std::move(sou.onUpdate));
+        return w;
+    }
+
+    struct SetAnimationOnDone {
+        Animation::OnDone onDone;
+        SetAnimationOnDone(Animation::OnDone onDone): onDone{std::move(onDone)} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetAnimationOnDone sod) {
+        w->setOnDone(std::move(sod.onDone));
+        return w;
+    }
+
+    struct SetAnimationMode {
+        Animation::Mode mode;
+        SetAnimationMode(Animation::Mode mode): mode{mode} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetAnimationMode sam) {
+        w->setMode(sam.mode);
+        return w;
+    }
+
+    struct SetDurationMs {
+        uint32_t durationMs;
+        SetDurationMs(uint32_t durationMs): durationMs{durationMs} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetDurationMs sd) {
+        w->setDurationMs(sd.durationMs);
+        return w;
+    }
+
+    struct Start {};
+    template<typename T>
+    inline with<T> operator << (with<T> w, Start) {
+        w->start();
+        return w;
+    }
 
 } // namespace rckid::ui

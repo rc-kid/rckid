@@ -31,23 +31,23 @@ namespace rckid::ui {
             recalculateHint();
         }
 
-        HAlign textHAlign() const { return textHAlign_; }
+        HAlign hAlign() const { return textHAlign_; }
 
-        void setTextHAlign(HAlign value) {
+        void setHAlign(HAlign value) {
             textHAlign_ = value;
             recalculateHint();
         }
 
-        VAlign textVAlign() const { return textVAlign_; }
+        VAlign vAlign() const { return textVAlign_; }
 
-        void setTextVAlign(VAlign value) {
+        void setVAlign(VAlign value) {
             textVAlign_ = value;
             recalculateHint();
         }
 
-        Color textColor() const { return textColor_; }
+        Color color() const { return textColor_; }
 
-        void setTextColor(Color value) {
+        void setColor(Color value) {
             textColor_ = value;
             font_->createFontPalette(textPalette_, textColor_);
         }
@@ -166,39 +166,24 @@ namespace rckid::ui {
 
     }; // ui::Label
 
-    inline auto SetText(String text) {
-        return [t = std::move(text)](Label * l) { l->setText(std::move(t)); };
-    }
-
-    inline auto SetTextHAlign(HAlign align) {
-        return [=](Label * l) { l->setTextHAlign(align); };
-    }
-
-    inline auto SetTextVAlign(VAlign align) {
-        return [=](Label * l) { l->setTextVAlign(align); };
-    }
-
-    struct SetFont {
-        // this cannot be function as we need move-only functions which only exist in C++20 and higher
-        SetFont(Font font) : font_{std::move(font)} {}
-
-        void operator () (Label * l) const {
-            l->setFont(std::move(font_));
-        }
-    private:        
-        mutable Font font_;
+    struct SetText {
+        String text;
+        SetText(String text): text{std::move(text)} {}
     };
-
-    inline auto SetTextColor(Color color) {
-        return [color](Label * l) {
-            l->setTextColor(color);
-        };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetText st) {
+        w->setText(std::move(st.text));
+        return w;
     }
 
-    inline auto SetTextOffset(Point offset) {
-        return [offset](Label * l) {
-            l->setTextOffset(offset);
-        };
+    struct SetTextOffset {
+        Point offset;
+        SetTextOffset(Point offset): offset{offset} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetTextOffset sto) {
+        w->setTextOffset(sto.offset);
+        return w;
     }
 
 } // namespace rckid::ui

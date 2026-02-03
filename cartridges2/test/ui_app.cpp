@@ -37,22 +37,25 @@ public:
             << SetRect(Rect::XYWH(0, 0, 240, 160))
             << CenterHorizontally()
             << SetText("Hello, RCKid UI!")
-            << SetTextHAlign(HAlign::Center)
-            << SetTextVAlign(VAlign::Center)
+            << SetHAlign(HAlign::Center)
+            << SetVAlign(VAlign::Center)
             << SetFont(rckid::assets::Iosevka16);
-        
-        ax_
-            .setOnUpdate([this](FixedRatio progress) {
+        with(ax_)
+            << SetAnimationOnUpdate([this](FixedRatio progress) {
                 Coord x = static_cast<rckid::Coord>(progress * (240 - 20));
                 ui::with(ap_) << ui::SetPosition(x, ap_->rect().y);
             })
-            .start(2000, Animation::Mode::Oscillate);
-        ay_
-            .setOnUpdate([this](FixedRatio progress) {
+            << SetAnimationMode(Animation::Mode::Oscillate)
+            << SetDurationMs(2000)
+            << Start();
+        with(ay_)
+            << SetAnimationOnUpdate([this](FixedRatio progress) {
                 Coord y = static_cast<rckid::Coord>(progress * (160 - 20));
                 ui::with(ap_) << ui::SetPosition(ap_->rect().x, y);
             })
-            .start(3000, Animation::Mode::Oscillate);
+            << SetAnimationMode(Animation::Mode::Oscillate)
+            << SetDurationMs(2000)
+            << Start();
     }
 
 private:

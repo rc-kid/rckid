@@ -6,6 +6,7 @@
 #include <rckid/rckid.h>
 #include <rckid/memory.h>
 #include <rckid/graphics/color.h>
+#include <rckid/graphics/font.h>
 #include <rckid/graphics/geometry.h>
 #include <rckid/ui/with.h>
 
@@ -158,118 +159,214 @@ namespace rckid::ui {
 
     /** Sets the full position rectangle of the widget (i.e. position and size).
      */
-    inline auto SetRect(Rect rect) {
-        return [=](Widget * w) { w->setRect(rect); };
+    struct SetRect {
+        Rect rect;
+        SetRect(Rect rect): rect{rect} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetRect sr) {
+        w->setRect(sr.rect);
+        return w;
     }
 
     /** Sets position of the widget, leaving its size intact. 
      */
-    inline auto SetPosition(Point pos) {
-        return [=](Widget * w) { 
-            Rect r = w->rect();
-            r.setTopLeft(pos);
-            w->setRect(r); 
-        };
+    struct SetPosition {
+        Point pos;
+        SetPosition(Point pos): pos{pos} {}
+        SetPosition(Coord x, Coord y): pos{x,y} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetPosition sp) {
+        Rect r = w->rect();
+        r.setTopLeft(sp.pos);
+        w->setRect(r);
+        return w;
     }
 
-    inline auto SetWidth(Coord width) {
-        return [=](Widget * w) {
-            Rect r = w->rect();
-            r.w = width;
-            w->setRect(r);
-        };
+    /** Sets width of the widget, leaving other position & size unchanged.
+     */
+    struct SetWidth {
+        Coord const width;
+        SetWidth(Coord width): width{width} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetWidth sw) {
+        Rect r = w->rect();
+        r.w = sw.width;
+        w->setRect(r);
+        return w;
     }
 
-    inline auto SetHeight(Coord height) {
-        return [=](Widget * w) {
-            Rect r = w->rect();
-            r.h = height;
-            w->setRect(r);
-        };
+    /** Sets width of the widget, leaving other position & size unchanged.
+     */
+    struct SetHeight {
+        Coord const height;
+        SetHeight(Coord height): height{height} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetHeight sh) {
+        Rect r = w->rect();
+        r.h = sh.height;
+        w->setRect(r);
+        return w;
     }
 
-    inline auto SetSize(Coord width, Coord height) {
-        return [=](Widget * w) {
-            Rect r = w->rect();
-            r.w = width;
-            r.h = height;
-            w->setRect(r);
-        };
+    /** Sets size of the widget without changing its position.
+     */
+    struct SetSize {
+        Coord width;
+        Coord height;
+        SetSize(Coord width, Coord height): width{width}, height{height} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetSize ss) {
+        Rect r = w->rect();
+        r.w = ss.width;
+        r.h = ss.height;
+        w->setRect(r);
+        return w;
     }
-
-    inline auto SetPosition(Coord x, Coord y) { return SetPosition({Point{x, y}}); }
 
     /** Sets horizontal alignment of the widget inside its parent. 
      */
-    inline auto SetHAlign(HAlign align) {
-        return [=](Widget * w) {
-            ASSERT(w->parent() != nullptr);
-            Point pos = w->rect().topLeft();
-            switch (align) {
-                case HAlign::Left:
-                    pos.x = 0;
-                    break;
-                case HAlign::Center:
-                    pos.x = (w->parent()->width() - w->width()) / 2;
-                    break;
-                case HAlign::Right:
-                    pos.x = w->parent()->width() - w->width();
-                    break;
-                default:
-                    UNREACHABLE;
-            }
-            SetPosition(pos)(w);
-        };
+    struct AlignHorizontally {
+        HAlign align;
+        AlignHorizontally(HAlign align): align{align} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, AlignHorizontally ah) {
+        ASSERT(w->parent() != nullptr);
+        Point pos = w->rect().topLeft();
+        switch (ah.align) {
+            case HAlign::Left:
+                pos.x = 0;
+                break;
+            case HAlign::Center:
+                pos.x = (w->parent()->width() - w->width()) / 2;
+                break;
+            case HAlign::Right:
+                pos.x = w->parent()->width() - w->width();
+                break;
+            default:
+                UNREACHABLE;
+        }
+        w << SetPosition(pos);
+        return w;
     }
 
     /** Sets vertical alignment of the widget inside its parent.
      */
-    inline auto SetVAlign(VAlign align) {
-        return [=](Widget * w) {
-            ASSERT(w->parent() != nullptr);
-            Point pos = w->rect().topLeft();
-            switch (align) {
-                case VAlign::Top:
-                    pos.y = 0;
-                    break;
-                case VAlign::Center:
-                    pos.y = (w->parent()->height() - w->height()) / 2;
-                    break;
-                case VAlign::Bottom:
-                    pos.y = w->parent()->height() - w->height();
-                    break;
-                default:
-                    UNREACHABLE;
-            }
-            SetPosition(pos)(w);
-        };
+    struct AlignVertically {
+        VAlign align;
+        AlignVertically(VAlign align): align{align} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, AlignVertically av) {
+        ASSERT(w->parent() != nullptr);
+        Point pos = w->rect().topLeft();
+        switch (av.align) {
+            case VAlign::Top:
+                pos.y = 0;
+                break;
+            case VAlign::Center:    
+                pos.y = (w->parent()->height() - w->height()) / 2;
+                break;
+            case VAlign::Bottom:
+                pos.y = w->parent()->height() - w->height();
+                break;
+            default:
+                UNREACHABLE;
+        }
+        w << SetPosition(pos);
+        return w;
     }
 
     /** Centers the widget horizontally inside its parent. 
      */
-    inline auto CenterHorizontally() {
-        return SetHAlign(HAlign::Center);
+    struct CenterHorizontally {};
+    template<typename T> 
+    inline with<T> operator << (with<T> w, CenterHorizontally) {
+        w << AlignHorizontally(HAlign::Center);
+        return w;
     }
 
     /** Centers the widget vertically inside its parent.
      */
-    inline auto CenterVertically() {
-        return SetVAlign(VAlign::Center);
+    struct CenterVertically {};
+    template<typename T> 
+    inline with<T> operator << (with<T> w, CenterVertically) {
+        w << AlignVertically(VAlign::Center);
+        return w;
     }
 
     /** Centers the widget both horizontally and vertically inside its parent.
      */
-    inline auto Center() {
-        return [](Widget * w) {
-            CenterHorizontally()(w);
-            CenterVertically()(w);
-        };
+    struct Center {};
+    template<typename T>
+    inline with<T> operator << (with<T> w, Center) {
+        w << CenterHorizontally();
+        w << CenterVertically();
+        return w;
     }
 
     /** Sets widget's visibility.
      */
-    inline auto SetVisibility(bool value) {
-        return [=](Widget * w) { w->setVisibility(value); };
+    struct SetVisibility {
+        bool visible;
+        SetVisibility(bool visible): visible{visible} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetVisibility sv) {
+        w->setVisibility(sv.visible);
+        return w;
     }
+
+
+    // common, but not directly widget related properties
+
+    struct SetColor {
+        Color color;
+        SetColor(Color color): color{color} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetColor sc) {
+        w->setColor(sc.color);
+        return w;
+    }
+
+    struct SetFont {
+        Font font;
+        // this cannot be function as we need move-only functions which only exist in C++20 and higher
+        SetFont(Font font) : font{std::move(font)} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetFont sf) {
+        w->setFont(std::move(sf.font));
+        return w;
+    }
+
+
+
+    struct SetHAlign {
+        HAlign align;
+        SetHAlign(HAlign align): align{align} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetHAlign sha) {
+        w->setHAlign(sha.align);
+        return w;
+    }
+
+    struct SetVAlign {
+        VAlign align;
+        SetVAlign(VAlign align): align{align} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetVAlign sva) {
+        w->setVAlign(sva.align);
+        return w;
+    }
+
 
 } // namespace rckid

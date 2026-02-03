@@ -1,6 +1,7 @@
 #pragma once
 
 #include <rckid/memory.h>
+#include <rckid/string.h>
 
 namespace rckid {
 
