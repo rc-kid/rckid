@@ -14,6 +14,10 @@ namespace rckid {
         return (width - x - 1) * height + y;
     }
 
+    /** Horizontal alignment. 
+     
+        Used for widget placement and resizing. Can either be manual (in which case no automatic adjustments will be done), or the usual left, center, and right values.
+     */
     enum class HAlign {
         Left,
         Center,
@@ -21,6 +25,10 @@ namespace rckid {
         Manual,
     };
 
+    /** Vertical alignment. 
+     
+        Used for widget placement and resizing. Can either be manual (in which case no automatic adjustments will be done), or the usual top, center, and bottom values.
+     */
     enum class VAlign {
         Top,
         Center,
@@ -28,6 +36,8 @@ namespace rckid {
         Manual,
     };
 
+    /** Direction. 
+     */
     enum class Direction {
         Left,
         Right,

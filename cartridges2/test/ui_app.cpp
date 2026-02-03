@@ -42,13 +42,13 @@ public:
             << SetFont(rckid::assets::Iosevka16);
         
         ax_
-            .setOnUpdate([this](float progress) {
+            .setOnUpdate([this](FixedRatio progress) {
                 Coord x = static_cast<rckid::Coord>(progress * (240 - 20));
                 ui::with(ap_) << ui::SetPosition(x, ap_->rect().y);
             })
             .start(2000, Animation::Mode::Oscillate);
         ay_
-            .setOnUpdate([this](float progress) {
+            .setOnUpdate([this](FixedRatio progress) {
                 Coord y = static_cast<rckid::Coord>(progress * (160 - 20));
                 ui::with(ap_) << ui::SetPosition(ap_->rect().x, y);
             })

@@ -172,6 +172,31 @@ namespace rckid::ui {
         };
     }
 
+    inline auto SetWidth(Coord width) {
+        return [=](Widget * w) {
+            Rect r = w->rect();
+            r.w = width;
+            w->setRect(r);
+        };
+    }
+
+    inline auto SetHeight(Coord height) {
+        return [=](Widget * w) {
+            Rect r = w->rect();
+            r.h = height;
+            w->setRect(r);
+        };
+    }
+
+    inline auto SetSize(Coord width, Coord height) {
+        return [=](Widget * w) {
+            Rect r = w->rect();
+            r.w = width;
+            r.h = height;
+            w->setRect(r);
+        };
+    }
+
     inline auto SetPosition(Coord x, Coord y) { return SetPosition({Point{x, y}}); }
 
     /** Sets horizontal alignment of the widget inside its parent. 

@@ -5,6 +5,7 @@
 #include <platform.h>
 
 #include <rckid/rckid.h>
+#include <rckid/fixedint.h>
 
 namespace rckid::ui {
 
@@ -25,9 +26,12 @@ namespace rckid::ui {
             Oscillate,
         }; 
 
-        using OnUpdate = std::function<void(float)>;
+        using OnUpdate = std::function<void(FixedRatio)>;
+        using OnDone = std::function<void()>;
 
         /** Creates new animation. 
+         
+            The constructor simply registers the animtion in the global list without setting any properties. Use the build functions for that instead.
          */
         Animation() {
             // insert into the list
@@ -54,7 +58,7 @@ namespace rckid::ui {
         }
 
         uint32_t durationMs() const {
-            return durationUs_ / 1000;
+            return durationMs_;
         }
 
         OnUpdate const & onUpdate() const { return onUpdate_; }
@@ -64,24 +68,31 @@ namespace rckid::ui {
             return *this;
         }
 
+        OnDone const & onDone() const { return onDone_; }
+
+        Animation & setOnDone(OnDone onDone) {
+            onDone_ = std::move(onDone);
+            return *this;
+        }
+
         Mode mode() const { return mode_; }
 
         void setMode(Mode mode) {
             mode_ = mode;
         }
 
-        bool enabled() const { return enabled_; }
+        bool active() const { return active_; }
 
         Animation & start(uint32_t durationMs, Mode mode) {
             mode_ = mode;
             startUs_ = uptimeUs();
-            durationUs_ = durationMs * 1000;
-            enabled_ = true;
+            durationMs_ = durationMs;
+            active_ = true;
             return *this;
         }
 
         Animation & stop() {
-            enabled_ = false;
+            active_ = false;
             return *this;
         }
 
@@ -96,7 +107,7 @@ namespace rckid::ui {
             uint32_t currentUs = uptimeUs();
             Animation * x = head_;
             do {
-                if (x->enabled_)
+                if (x->active_)
                     x->update(currentUs);
                 x = x->next_;
             } while (x != nullptr);
@@ -105,38 +116,41 @@ namespace rckid::ui {
     private:
 
         void update(uint32_t currentUs) {
-            ASSERT(enabled_ == true);
-            uint32_t elapsedUs = currentUs - startUs_;
-            uint32_t duration = mode_ == Mode::Oscillate ? durationUs_ * 2 : durationUs_;
-            if (elapsedUs >= duration) {
+            ASSERT(active_ == true);
+            uint32_t elapsedMs = (currentUs - startUs_) / 1000;
+            uint32_t duration = mode_ == Mode::Oscillate ? durationMs_ * 2 : durationMs_;
+            if (elapsedMs >= duration) {
                 if (mode_ == Mode::Single) {
                     if (onUpdate_)
-                        onUpdate_(1.0f);
-                    enabled_ = false;
+                        onUpdate_(FixedRatio::Full());
+                    if (onDone_)
+                        onDone_();
+                    active_ = false;
                     return;
                 } else {
                     do {
-                        startUs_ += duration;
-                        elapsedUs -= duration;
-                    } while (elapsedUs >= duration);
+                        startUs_ += (duration * 1000);
+                        elapsedMs -= duration;
+                        if (onDone_)
+                            onDone_();
+                    } while (elapsedMs >= duration);
                 }
             }
 
             if (onUpdate_) {
-                float f = static_cast<float>(elapsedUs) / static_cast<float>(durationUs_);
-                // oscillate mode
-                if (f > 1.0f)
-                    f = 2.0f - f;
-                onUpdate_(f);
+                if (elapsedMs > durationMs_)
+                    elapsedMs = duration - elapsedMs;
+                onUpdate_(FixedRatio{elapsedMs, durationMs_});
             }
         }
 
         OnUpdate onUpdate_;
+        OnDone onDone_;
 
         uint32_t startUs_ = 0;
-        uint32_t durationUs_ = 0;
+        uint32_t durationMs_ = 0;
         Mode mode_ = Mode::Single;
-        bool enabled_ = true;
+        bool active_ = true;
 
         // next animation in the chain
         Animation * next_ = nullptr;
