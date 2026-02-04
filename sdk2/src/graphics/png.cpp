@@ -55,6 +55,7 @@ namespace rckid {
     Color::Representation PNGImageDecoder::colorRepresentation() const {
         switch (PNG_getPixelType(img_)) {
             case PNG_PIXEL_TRUECOLOR:
+            case PNG_PIXEL_TRUECOLOR_ALPHA:
                 return Color::Representation::RGB565;
             case PNG_PIXEL_INDEXED:
                 switch (PNG_getBpp(img_)) {
@@ -108,29 +109,23 @@ namespace rckid {
 
     void PNGImageDecoder::decodeLine_(png_draw_tag * pDraw) {
         DecodeContext * ctx = static_cast<DecodeContext*>(pDraw->pUser);
-        switch (pDraw->iBpp) {
-            case 16: {
+        switch (pDraw->iPixelType) {
+            case PNG_PIXEL_TRUECOLOR:
+            case PNG_PIXEL_TRUECOLOR_ALPHA: {
                 PNGRGB565(pDraw, ctx->line.get(), PNG_RGB565_LITTLE_ENDIAN, 0x0, pDraw->iHasAlpha);
                 for (uint32_t x = 0; x < static_cast<uint32_t>(pDraw->iWidth); ++x)
                     ctx->bmp->setPixel(x, pDraw->y, static_cast<uint16_t>(ctx->line.get()[x]));
                 break;
             }
-            case 8: {
-                switch (pDraw->iPixelType) {
-                    case PNG_PIXEL_INDEXED: {
+            case PNG_PIXEL_INDEXED:
+                switch (pDraw->iBpp) {
+                    case 8: {
                         uint8_t * data = pDraw->pPixels;
                         for (uint32_t x = 0; x < static_cast<uint32_t>(pDraw->iWidth); ++x)
                             ctx->bmp->setPixel(x, pDraw->y, static_cast<uint16_t>(*(data++)));
                         break;
                     }
-                    default:
-                        UNIMPLEMENTED;
-                }
-                break;
-            }
-            case 4: {
-                switch (pDraw->iPixelType) {
-                    case PNG_PIXEL_INDEXED: {
+                    case 4: {
                         uint8_t * data = pDraw->pPixels;
                         for (uint32_t x = 0; x < static_cast<uint32_t>(pDraw->iWidth); x += 2) {
                             uint8_t c = *(data++);
@@ -143,7 +138,6 @@ namespace rckid {
                         UNIMPLEMENTED;
                 }
                 break;
-            }
             default:
                 UNIMPLEMENTED;
         }

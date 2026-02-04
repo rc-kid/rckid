@@ -4,6 +4,8 @@
 #include <rckid/ui/animation.h>
 #include <assets/images.h>
 
+#include <rckid/apps/steps.h>
+
 using namespace rckid;
 
 class TestApp : public rckid::ui::App<void> {
@@ -16,7 +18,7 @@ public:
             << SetBg(Color::Blue());
         p_->addChild(new Image())
             << SetRect(Rect::XYWH(0, 0, 240, 160))
-            << SetBitmap(ImageSource{assets::logo});
+            << SetBitmap(assets::images::logo);
         p_->addChild(new Panel())
             << SetRect(Rect::XYWH(-10, -10, 20, 20))
             << SetBg(Color::Red());
@@ -68,6 +70,7 @@ private:
 
 int main() {
     rckid::initialize();
-    TestApp app;
+    Steps app;
+    //TestApp app;
     app.run();
 }

@@ -1,6 +1,8 @@
 # SDK 1.0
 
 - improve value parsing in Reader (bool, ints, etc.)
+- how to do heartbeat? (static initializers?)
+- instead of loading pngs and outputting the text, it might be easier to transcode the png into the binary format and then use the binary folder exporter 
 
 # Version 3.2 Checklist
 

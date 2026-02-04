@@ -17,7 +17,8 @@ namespace rckid::ui {
             aImg_{addChild(new Image())},
             aText_{addChild(new Label())},
             bImg_{addChild(new Image())},
-            bText_{addChild(new Label())} {
+            bText_{addChild(new Label())} 
+        {
             a_.setMode(Animation::Mode::Single);
             with(aImg_)
                 << SetHeight(height())

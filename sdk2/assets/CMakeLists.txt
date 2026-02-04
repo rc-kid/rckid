@@ -28,7 +28,11 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
         COMMAND $<TARGET_FILE:font-converter> fonts/OpenDyslexic.otf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/OpenDyslexic64.h 64
         COMMAND $<TARGET_FILE:font-converter> fonts/OpenDyslexic.otf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/OpenDyslexic128.h 128
 
-        COMMAND $<TARGET_FILE:binary-folder> images ${CMAKE_SOURCE_DIR}/sdk2/include/assets/images.h --raw-path raw/images
+        # images (logo, default background, etc)
+        COMMAND $<TARGET_FILE:binary-folder> images ${CMAKE_SOURCE_DIR}/sdk2/include/assets/images.h --raw-path raw/images --namespace rckid::assets::images
+
+        # 64x64 icons (mostly for UI)
+        COMMAND $<TARGET_FILE:binary-folder> icons/icons_64 ${CMAKE_SOURCE_DIR}/sdk2/include/assets/icons_64.h --raw-path raw/icons_64 --namespace rckid::assets::icons_64
 
         DEPENDS font-converter
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
