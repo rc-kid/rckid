@@ -9,31 +9,34 @@
 #include <rckid/graphics/font.h>
 #include <rckid/graphics/geometry.h>
 #include <rckid/ui/with.h>
-#include <rckid/ui/animation.h>
 
 namespace rckid::ui {
 
+    class Animation;
+
     class Widget {
     public:
+
+        class AnimationBuilder {
+        public:
+            AnimationBuilder operator << (Animation * animation);
+        private:
+            friend class Widget;
+
+            AnimationBuilder(Widget * widget): target_{widget} {}
+
+            Widget * target_;
+
+        }; // Widget::AnimationBuilder
 
         Widget() = default;
 
         virtual ~Widget() = default;
 
         Rect rect() const { return rect_; }
-
-        virtual void setRect(Rect rect) {
-            rect_ = rect;
-            if (rect_.w < 0 || rect_.h < 0) {
-                LOG(LL_ERROR, "Widget rectangle has negative size " << rect);
-                if (rect_.w < 0)
-                    rect_.w = 0;
-                if (rect_.h < 0)
-                    rect_.h = 0;
-            }
-        }
-
-        Widget * parent() const { return parent_; }
+        Point position() const { return Point{rect_.x, rect_.y}; }
+        Coord x() const { return rect_.x; }
+        Coord y() const { return rect_.y; }
 
         /** Returns the width of the widget.
          
@@ -51,6 +54,21 @@ namespace rckid::ui {
             return rect_.height(); 
         }
 
+
+        virtual void setRect(Rect rect) {
+            rect_ = rect;
+            if (rect_.w < 0 || rect_.h < 0) {
+                LOG(LL_ERROR, "Widget rectangle has negative size " << rect);
+                if (rect_.w < 0)
+                    rect_.w = 0;
+                if (rect_.h < 0)
+                    rect_.h = 0;
+            }
+        }
+
+        Widget * parent() const { return parent_; }
+
+
         bool visible() const { return visible_; }
 
         void setVisibility(bool value) { 
@@ -67,7 +85,7 @@ namespace rckid::ui {
 
         bool idle() const { return activeAnimations_ == 0; }
 
-        Animation::Builder animate() { return Animation::Builder(this); }
+        AnimationBuilder animate() { return AnimationBuilder{this}; }
 
         /** Cancels all animations registered on the widget. 
          */

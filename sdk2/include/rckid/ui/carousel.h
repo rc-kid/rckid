@@ -47,8 +47,6 @@ namespace rckid::ui {
             bText_->setFont(font);
         }
 
-        bool idle() const { return ! aImg_->idle(); }
-
         void set(String text, ImageSource icon) {
             if (! idle())
                 return;
@@ -63,7 +61,43 @@ namespace rckid::ui {
             if (! idle())
                 return;
             setCurrent(std::move(text), std::move(icon));
-            // TODO start the animation
+            // start the appropriate animation
+            switch (dir) {
+                case Direction::Up:
+                    // old goes down, new comes from the sides
+                    animate()
+                        << MoveHorizontally(aImg_, aImg_->x() - width(), aImg_->x(), 300)
+                        << MoveHorizontally(aText_, aText_->x() + width(), aText_->x(), 300)
+                        << MoveVertically(bImg_, bImg_->y() + height(), bImg_->y(), 300)
+                        << MoveVertically(bText_, bText_->y() + height(), bText_->y(), 300);
+                    break;
+                case Direction::Down:
+                    // old goes to the sides, new comes from the bottom
+                    animate()
+                        << MoveVertically(aImg_, aImg_->y() - height(), aImg_->y(), 300)
+                        << MoveVertically(aText_, aText_->y() - height(), aText_->y(), 300)
+                        << MoveHorizontally(bImg_, bImg_->x(), bImg_->x() - width(), 300)
+                        << MoveHorizontally(bText_, bText_->x(), bText_->x() + width(), 300);
+                    break;
+                case Direction::Left:
+                    // old goes to the right, new comes from the left
+                    animate()
+                        << MoveHorizontally(aImg_, aImg_->x() - width() * 2, aImg_->x(), 300)
+                        << MoveHorizontally(aText_, aText_->x() - width(), aText_->x(), 300)
+                        << MoveHorizontally(bImg_, bImg_->x(), bImg_->x() + width(), 300)
+                        << MoveHorizontally(bText_, bText_->x(), bText_->x() + width() * 2, 300);
+                    break;
+                case Direction::Right:
+                    // old goes to the left, new comes from right
+                    animate()
+                        << MoveHorizontally(aImg_, aImg_->x() + width(), aImg_->x(), 300)
+                        << MoveHorizontally(aText_, aText_->x() + width() * 2, aText_->x(), 300)
+                        << MoveHorizontally(bImg_, bImg_->x(), bImg_->x() - width() * 2, 300)
+                        << MoveHorizontally(bText_, bText_->x(), bText_->x() - width(), 300);
+                    break;
+                default:
+                    UNREACHABLE;
+            }
         }
 
         /** Returns the image and label widgets for the currently selected element. 
@@ -76,6 +110,14 @@ namespace rckid::ui {
         //@}
 
     protected:
+
+        void onIdle() override {
+            // when animations are done, hide the previous elements
+            with(bImg_)
+                << SetVisibility(false);
+            with(bText_)
+                << SetVisibility(false);
+        }
 
         void setCurrent(String text, ImageSource icon) {
             std::swap(aImg_, bImg_);
@@ -108,17 +150,12 @@ namespace rckid::ui {
         Image * prevImage() const { return bImg_; }
         Label * prevLabel() const { return bText_; }
         //@}
-    
-        
-        
 
     private:
         Image * aImg_ = nullptr;
         Label * aText_ = nullptr;
         Image * bImg_ = nullptr;
         Label * bText_ = nullptr;
-        // Direction of the widget transitions
-        Direction dir_;
 
     }; // rckid::ui::Carousel
 

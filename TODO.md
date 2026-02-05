@@ -1,6 +1,10 @@
 # SDK 1.0
 
 - add to & from animation (0...1...0, stop)
+- add easing curves & add them to move animations
+- add input handling to fantasy
+- determine how ui reacts to events (how to do menus and focus and stuff)
+- repeating image rendering
 - improve value parsing in Reader (bool, ints, etc.)
 - how to do heartbeat? (static initializers?)
 - instead of loading pngs and outputting the text, it might be easier to transcode the png into the binary format and then use the binary folder exporter 

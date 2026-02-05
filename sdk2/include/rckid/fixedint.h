@@ -173,11 +173,11 @@ namespace rckid {
     }; // rckid::FixedRatio
 
     inline int32_t operator * (FixedRatio ratio, int32_t value) {
-        return (value * ratio.raw() + 32767) >> 16;
+        return (value * static_cast<int32_t>(ratio.raw()) + 32767) >> 16;
     }
 
     inline int32_t operator * (int32_t value, FixedRatio ratio) {
-        return (value * ratio.raw() + 32767) >> 16;
+        return (value * static_cast<int32_t>(ratio.raw()) + 32767) >> 16;
     }
 
 } // namespace rckid
