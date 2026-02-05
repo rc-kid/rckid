@@ -5,6 +5,8 @@
 #include <rckid/ui/label.h>
 #include <rckid/ui/animation.h>
 
+#include <assets/OpenDyslexic64.h>
+
 namespace rckid::ui {
 
     /** Carousel menu
@@ -13,33 +15,55 @@ namespace rckid::ui {
      */
     class Carousel : public Widget {
     public:
+
+        static constexpr Coord ICON_SEPARATOR_WIDTH = 5;
+
         Carousel():
             aImg_{addChild(new Image())},
             aText_{addChild(new Label())},
             bImg_{addChild(new Image())},
             bText_{addChild(new Label())} 
         {
-            a_.setMode(Animation::Mode::Single);
             with(aImg_)
-                << SetHeight(height())
+                << SetVAlign(VAlign::Center)
+                << SetHAlign(HAlign::Center);
+            with(bImg_)
                 << SetVAlign(VAlign::Center)
                 << SetHAlign(HAlign::Center);
             with(aText_)
-                << SetHeight(height())
                 << SetVAlign(VAlign::Center)
-                << SetHAlign(HAlign::Left);
+                << SetHAlign(HAlign::Left)
+                << SetFont(assets::OpenDyslexic64);
+            with(bText_)
+                << SetVAlign(VAlign::Center)
+                << SetHAlign(HAlign::Left)
+                << SetFont(assets::OpenDyslexic64);
         }
 
-        bool idle() const { return ! a_.active(); }
+        Font font() const { return aText_->font(); }
 
-    protected:
+        void setFont(Font font) {
+            aText_->setFont(font);
+            bText_->setFont(font);
+        }
+
+        bool idle() const { return ! aImg_->idle(); }
+
+        void set(String text, ImageSource icon) {
+            if (! idle())
+                return;
+            setCurrent(std::move(text), std::move(icon));
+            with(bImg_)
+                << SetVisibility(false);
+            with(bText_)
+                << SetVisibility(false);
+        }
 
         void set(String text, ImageSource icon, Direction dir) {
             if (! idle())
                 return;
-            // first set up the widgets and resize them
-            Bitmap bmp{std::move(icon)};
-
+            setCurrent(std::move(text), std::move(icon));
+            // TODO start the animation
         }
 
         /** Returns the image and label widgets for the currently selected element. 
@@ -51,14 +75,38 @@ namespace rckid::ui {
         Label * currentLabel() const { return aText_; }
         //@}
 
+    protected:
+
+        void setCurrent(String text, ImageSource icon) {
+            std::swap(aImg_, bImg_);
+            std::swap(aText_, bText_);
+            // first set up the widgets so that we can calculate their size
+            Bitmap bmp{std::move(icon)};
+            with(aText_)
+                << SetText(std::move(text));
+            Coord iconWidth = bmp.width();
+            Coord textWidth = aText_->textWidth();
+            // determine the final positions
+            Coord iconLeft = (width() - (iconWidth + textWidth + ICON_SEPARATOR_WIDTH)) / 2;
+            Coord textLeft = iconLeft + iconWidth + ICON_SEPARATOR_WIDTH;
+            // and place & adjust the the widgets
+            with(aImg_) 
+                << SetBitmap(std::move(bmp))
+                << SetRect(Rect::XYWH(iconLeft, 0, iconWidth, height()))
+                << SetVisibility(true);
+            with(aText_)
+                << SetRect(Rect::XYWH(textLeft, 0, width() - textLeft, height())) 
+                << SetVisibility(true);
+        }
+
         /** Returns the image and label widgets for the next element. 
          
             Those elements are not visible when idle. When animated, those elements are getting into the view. When the animation is finished, those widgets will replace the current mage and label. 
          */
 
          //@{
-        Image * nextImage() const { return bImg_; }
-        Label * nextLabel() const { return bText_; }
+        Image * prevImage() const { return bImg_; }
+        Label * prevLabel() const { return bText_; }
         //@}
     
         
@@ -69,8 +117,6 @@ namespace rckid::ui {
         Label * aText_ = nullptr;
         Image * bImg_ = nullptr;
         Label * bText_ = nullptr;
-        // animation for the widget transitions
-        Animation a_;
         // Direction of the widget transitions
         Direction dir_;
 

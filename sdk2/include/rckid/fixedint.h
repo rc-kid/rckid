@@ -176,4 +176,8 @@ namespace rckid {
         return (value * ratio.raw() + 32767) >> 16;
     }
 
+    inline int32_t operator * (int32_t value, FixedRatio ratio) {
+        return (value * ratio.raw() + 32767) >> 16;
+    }
+
 } // namespace rckid

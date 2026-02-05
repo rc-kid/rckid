@@ -9,6 +9,7 @@
 #include <rckid/graphics/font.h>
 #include <rckid/graphics/geometry.h>
 #include <rckid/ui/with.h>
+#include <rckid/ui/animation.h>
 
 namespace rckid::ui {
 
@@ -64,6 +65,14 @@ namespace rckid::ui {
             return with<T>(child);
         }
 
+        bool idle() const { return activeAnimations_ == 0; }
+
+        Animation::Builder animate() { return Animation::Builder(this); }
+
+        /** Cancels all animations registered on the widget. 
+         */
+        void cancelAnimations();
+
         /** Renders vertical column of the the widget to given color buffer. 
          
             Takes the column that should be rendered (relative to the widget's left edge), the row at which the rendering should start (relative to widget's top), pointer to the color buffer where the rendering should happen, and the number of pixels to render.
@@ -82,6 +91,12 @@ namespace rckid::ui {
             for (auto & child : children_)
                 if (child->visible())
                     child->onRender();
+        }
+
+        /** Called when the widget transitions to idle state, i.e. has no animations attached to it.
+         */
+        virtual void onIdle() {
+            // nop
         }
 
         /** Renders column of given child. 
@@ -148,6 +163,10 @@ namespace rckid::ui {
 
         template<typename T>
         friend class App;
+
+        friend class Animation;
+
+        uint32_t activeAnimations_ = 0;
 
         Rect rect_;
         Widget * parent_ = nullptr;
@@ -334,18 +353,6 @@ namespace rckid::ui {
         w->setColor(sc.color);
         return w;
     }
-
-    struct SetFont {
-        Font font;
-        // this cannot be function as we need move-only functions which only exist in C++20 and higher
-        SetFont(Font font) : font{std::move(font)} {}
-    };
-    template<typename T>
-    inline with<T> operator << (with<T> w, SetFont sf) {
-        w->setFont(std::move(sf.font));
-        return w;
-    }
-
 
 
     struct SetHAlign {

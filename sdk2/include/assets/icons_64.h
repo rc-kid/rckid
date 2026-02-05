@@ -5,6 +5,12 @@
 
 namespace rckid::assets::icons_64 {
 
+    // File: icons/icons_64/036-empty-box.png
+    // Size: 2821
+    static constexpr uint8_t empty_box[] = {
+        #include "raw/icons_64/empty_box.inc.h"
+    };
+
     // File: icons/icons_64/081-footprint.png
     // Size: 2991
     static constexpr uint8_t footprint[] = {

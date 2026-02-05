@@ -10,7 +10,7 @@ namespace rckid::ui {
         
         Example usage:
 
-            Panel * p = addChild(with(new Panel())
+            Panel * p = addChild(new Panel())
                 << SetPosition(10, 10)
                 << SetBg(Color::Blue())
             );

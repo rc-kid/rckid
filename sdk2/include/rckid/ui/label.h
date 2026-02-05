@@ -59,6 +59,8 @@ namespace rckid::ui {
             recalculateHint();
         }
 
+        Coord textWidth() const { return textWidth_; }
+
         void renderColumn(Coord column, Coord starty, Color::RGB565 * buffer, Coord numPixels) override {
             Widget::renderColumn(column, starty, buffer, numPixels);
             // recalculate starty based on the vertical positioning, do not change starty as we assume it is always relative to the actual text top
@@ -173,6 +175,17 @@ namespace rckid::ui {
     template<typename T>
     inline with<T> operator << (with<T> w, SetText st) {
         w->setText(std::move(st.text));
+        return w;
+    }
+
+    struct SetFont {
+        Font font;
+        // this cannot be function as we need move-only functions which only exist in C++20 and higher
+        SetFont(Font font) : font{std::move(font)} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetFont sf) {
+        w->setFont(std::move(sf.font));
         return w;
     }
 

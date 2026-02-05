@@ -134,12 +134,32 @@ namespace rckid {
         }
     }; 
 
-    /** Font is an immutable pointer to FontData structure.
+    /** Font is a simple non-owning wrapper over FontData.
         
-        This allows font itself to be extremely lightweight object (single pointer) and can be used with either flash based fonts, or in theory with dynamic fonts as well. Once the font is used though, it must become immutable as font users usually cache glyph information for faster rendering.
+        This allows font itself to be extremely lightweight object (single pointer) and can be used with either flash based fonts, or in theory with dynamic fonts as well. 
 
         See the FontData class above for more information.
      */
-    using Font = immutable_ptr<FontData>;
+    class Font {
+    public:
+        constexpr Font(FontData const * f): f_{f} {}
+        constexpr Font(FontData const & f): f_{& f} {}
+        constexpr Font(Font const & other): f_{other.f_} {}
+
+        Font & operator = (Font const & other) {
+            if (this != & other)
+                f_ = other.f_;
+            return *this;
+        }
+
+        FontData const * operator -> () const { return f_; }
+
+        bool operator == (Font const & other) const { return f_ == other.f_; }
+        bool operator != (Font const & other) const { return f_ != other.f_; }
+
+
+    private:
+        FontData const * f_;
+    }; // rckid::Font
 
 } // namespace rckid

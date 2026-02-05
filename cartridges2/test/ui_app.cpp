@@ -2,7 +2,10 @@
 #include <rckid/ui/label.h>
 #include <rckid/ui/image.h>
 #include <rckid/ui/animation.h>
+#include <rckid/ui/animation_effects.h>
+#include <rckid/ui/carousel.h>
 #include <assets/images.h>
+#include <assets/icons_64.h>
 
 #include <rckid/apps/steps.h>
 
@@ -18,7 +21,10 @@ public:
             << SetBg(Color::Blue());
         p_->addChild(new Image())
             << SetRect(Rect::XYWH(0, 0, 240, 160))
+            //<< SetVisibility(false)
             << SetBitmap(assets::images::logo);
+        c_ = p_->addChild(new Carousel()) 
+            << SetRect(Rect::XYWH(0, 60, 240, 100));
         p_->addChild(new Panel())
             << SetRect(Rect::XYWH(-10, -10, 20, 20))
             << SetBg(Color::Red());
@@ -42,35 +48,27 @@ public:
             << SetHAlign(HAlign::Center)
             << SetVAlign(VAlign::Center)
             << SetFont(rckid::assets::Iosevka16);
-        with(ax_)
-            << SetAnimationOnUpdate([this](FixedRatio progress) {
-                Coord x = static_cast<rckid::Coord>(progress * (240 - 20));
-                ui::with(ap_) << ui::SetPosition(x, ap_->rect().y);
-            })
+        ap_->animate()
+            << SetAnimationMode(Animation::Mode::Oscillate)
+            << SetDurationMs(3000)
+            << MoveHorizontally(0, 240 - 20);
+        ap_->animate()
             << SetAnimationMode(Animation::Mode::Oscillate)
             << SetDurationMs(2000)
-            << Start();
-        with(ay_)
-            << SetAnimationOnUpdate([this](FixedRatio progress) {
-                Coord y = static_cast<rckid::Coord>(progress * (160 - 20));
-                ui::with(ap_) << ui::SetPosition(ap_->rect().x, y);
-            })
-            << SetAnimationMode(Animation::Mode::Oscillate)
-            << SetDurationMs(2000)
-            << Start();
+            << MoveVertically(0, 160 - 20);
+        c_->set("Empty", assets::icons_64::empty_box);
     }
 
 private:
     rckid::ui::Panel * p_;
     rckid::ui::Panel * ap_;
-    rckid::ui::Animation ax_;
-    rckid::ui::Animation ay_;
+    rckid::ui::Carousel * c_;
 };
 
 
 int main() {
     rckid::initialize();
-    Steps app;
-    //TestApp app;
+    //Steps app;
+    TestApp app;
     app.run();
 }
