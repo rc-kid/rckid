@@ -9,6 +9,20 @@
 
 namespace rckid {
 
+    enum class Btn : uint32_t {
+        Left       = 1 << 0, 
+        Right      = 1 << 1,
+        Up         = 1 << 2, 
+        Down       = 1 << 3, 
+        A          = 1 << 4, 
+        B          = 1 << 5, 
+        Select     = 1 << 6, 
+        Start      = 1 << 7,
+        Home       = 1 << 8, 
+        VolumeUp   = 1 << 9, 
+        VolumeDown = 1 << 10,
+    }; // rckid::Btn
+
     void onWakeup(uint32_t payload);
     void onPowerOff();
     void onSecondTick();
@@ -32,6 +46,14 @@ namespace rckid::hal {
     /** Represents the basic device state. 
      
         The state holds information about buttons and power state. This is a short value that is expected to be read very often (every tick) and contains all of the information needed to drive the basic functionality. 
+
+        The first byte corresponds to the current state of the 8 control buttons (dpad, a, b, sel and start). 
+
+        The second byte corresponds to side buttons (home, vol up and down) and device states (debug mode, parent mode, chargingm headphones, etc.)
+
+        Third byte is current voltage. 
+
+        Fourth byte is interrupts and is cleared specifically
 
         - 8 bits for dpad, a, b, sel, start buttons
         
@@ -57,31 +79,25 @@ namespace rckid::hal {
     class State {
     public:
 
-        /** Returns the raw state value. 
-         */
-        uint32_t rawState() const {
-            return (static_cast<uint32_t>(a_) << 0) |
-                   (static_cast<uint32_t>(b_) << 8) |
-                   (static_cast<uint32_t>(c_) << 16) |
-                   (static_cast<uint32_t>(d_) << 24);
-        }
-
-        uint16_t buttons() const {
-            return (static_cast<uint16_t>(a_) << 0) |
-                   (static_cast<uint16_t>(b_) << 8);
-        }
-
         /** Updates the device state with new state value. The operation is slightly more involved as the interrupt flags must be ORed in. 
          */
         void updateWith(State const & other) {
-            // TODO
+            a_ = other.a_;
+            b_ = other.b_;
+            c_ = other.c_;
+            d_ |= other.d_;
         }
 
-        /** Sets state of given button explicitly. 
-         
-            Buttons are identified by their bitmask value as defined in the rckid::Btn enum.
-         */
-        void setButtonState(uint16_t btnId, bool state) {
+        bool button(Btn btn) {
+            uint16_t btnId = static_cast<uint16_t>(btn);
+            if (btnId > 255)
+                return (b_ & (btnId >> 8)) != 0;
+            else
+                return (a_ & btnId) != 0;
+        }
+
+        void setButton(Btn btn, bool state) {
+            uint16_t btnId = static_cast<uint16_t>(btn);
             if (btnId > 255) {
                 btnId >>= 8;
                 state ? (b_ |= static_cast<uint8_t>(btnId)) : (b_ &= ~static_cast<uint8_t>(btnId));
@@ -89,6 +105,8 @@ namespace rckid::hal {
                 state ? (a_ |= static_cast<uint8_t>(btnId)) : (a_ &= ~static_cast<uint8_t>(btnId));
             }
         }
+
+
 
     private:
         uint8_t a_ = 0; 

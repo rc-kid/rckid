@@ -42,6 +42,10 @@ namespace rckid {
          */
         virtual void loop() = 0;
 
+        /** Application rendering routine.
+          
+            Called by the run() method immediately after loop finishes. 
+         */
         virtual void render() = 0;
 
         /** Flags the application to exit. 

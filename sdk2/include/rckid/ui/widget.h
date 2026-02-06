@@ -9,6 +9,7 @@
 #include <rckid/graphics/font.h>
 #include <rckid/graphics/geometry.h>
 #include <rckid/ui/with.h>
+#include <rckid/ui/style.h>
 
 namespace rckid::ui {
 
@@ -412,5 +413,11 @@ namespace rckid::ui {
         return w;
     }
 
+    template<typename T>
+    inline with<T> operator << (with<T> w, Style const & style) {
+        w->setStyle(style);
+        return w;
+    }
 
+    
 } // namespace rckid

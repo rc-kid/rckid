@@ -7,6 +7,7 @@
 #include <assets/icons_64.h>
 
 #include <rckid/apps/steps.h>
+#include <rckid/apps/launcher.h>
 
 using namespace rckid;
 
@@ -64,6 +65,7 @@ private:
 int main() {
     rckid::initialize();
     //Steps app;
-    TestApp app;
+    //TestApp app;
+    Launcher app;
     app.run();
 }

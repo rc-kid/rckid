@@ -210,7 +210,9 @@ namespace rckid::hal {
         }
 
         void onTick() {
-
+            internal::memory::SystemMallocGuard g;
+            if (WindowShouldClose())
+                std::exit(-1);
         }
 
         void onYield() {
@@ -273,6 +275,20 @@ namespace rckid::hal {
     namespace io {
 
         State state() {
+            internal::memory::SystemMallocGuard g;
+            PollInputEvents();
+            internal::io::state.setButton(Btn::Up, IsKeyDown(KEY_UP));
+            internal::io::state.setButton(Btn::Down, IsKeyDown(KEY_DOWN));
+            internal::io::state.setButton(Btn::Left, IsKeyDown(KEY_LEFT));
+            internal::io::state.setButton(Btn::Right, IsKeyDown(KEY_RIGHT));
+            internal::io::state.setButton(Btn::A, IsKeyDown(KEY_A));
+            internal::io::state.setButton(Btn::B, IsKeyDown(KEY_B));
+            internal::io::state.setButton(Btn::Select, IsKeyDown(KEY_SPACE));
+            internal::io::state.setButton(Btn::Start, IsKeyDown(KEY_ENTER));    
+            internal::io::state.setButton(Btn::Home, IsKeyDown(KEY_H));
+            internal::io::state.setButton(Btn::VolumeUp, IsKeyDown(KEY_PAGE_UP));
+            internal::io::state.setButton(Btn::VolumeDown, IsKeyDown(KEY_PAGE_DOWN));
+            // TODO deal with interrupts, vcc and stuff
             return internal::io::state;
         }
 
@@ -314,6 +330,7 @@ namespace rckid::hal {
         bool vSync() {
             // simulate the mkIII display driver by mimicking the vsync timing
             // TODO
+            return true;
         }
 
         void update(Callback callback) {

@@ -30,22 +30,20 @@ namespace rckid {
     // io
 
     bool btnDown(Btn btn) {
-        return (state_.buttons() & static_cast<uint16_t>(btn)) != 0;
+        return state_.button(btn);
     }
 
     bool btnPressed(Btn btn) {
-        return ((state_.buttons() & static_cast<uint16_t>(btn)) != 0) &&
-               ((lastState_.buttons() & static_cast<uint16_t>(btn)) == 0);
+        return state_.button(btn) && !lastState_.button(btn);
     }
 
     bool btnReleased(Btn btn) {
-        return ((state_.buttons() & static_cast<uint16_t>(btn)) == 0) &&
-               ((lastState_.buttons() & static_cast<uint16_t>(btn)) != 0);
+        return !state_.button(btn) && lastState_.button(btn);
     }
 
     void btnClear(Btn btn) {
         // simply ensure last state is identical to current state
-        lastState_.setButtonState(static_cast<uint16_t>(btn), btnDown(btn));
+        lastState_.setButton(btn, btnDown(btn));
     }
 
 

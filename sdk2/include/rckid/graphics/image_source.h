@@ -16,6 +16,10 @@ namespace rckid {
     class ImageSource {
     public:
 
+        /** Empty image source (no image).
+         */
+        ImageSource() = default;
+
         /** Creates image source pointing to the given file and drive.
          
             This version should be used for loading images from files on either the SD card, or the cartridge filesystems.
