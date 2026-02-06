@@ -11,6 +11,7 @@ namespace rckid {
         while (!shouldExit_) {
             tick();
             loop();
+            render();
         }
         onBlur();
         current_ = parent_;

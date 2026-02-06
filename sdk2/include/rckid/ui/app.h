@@ -15,9 +15,19 @@ namespace rckid::ui {
 
         App() = default;
 
-
+        Widget * focusedWidget() const { return focusedWidget_; }
 
     protected:
+
+        void focusWidget(Widget * w) {
+            if (w == focusedWidget_)
+                return;
+            if (focusedWidget_ != nullptr)
+                focusedWidget_->onBlur();
+            focusedWidget_ = w;
+            if (focusedWidget_ != nullptr)
+                focusedWidget_->onFocus();
+        }
 
         void onFocus() override {
             ModalApp<RESULT>::onFocus();
@@ -27,6 +37,11 @@ namespace rckid::ui {
         /** Renders the widget tree. 
          */
         void loop() override {
+            if (focusedWidget_ != nullptr)
+                focusedWidget_->processEvents();
+        }
+
+        void render() override {
             root_.render();
         }
 
@@ -36,6 +51,7 @@ namespace rckid::ui {
     private:
 
         RootWidget root_;
+        Widget * focusedWidget_ = nullptr;
 
     }; // ui::App<RESULT>
 

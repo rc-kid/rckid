@@ -103,6 +103,16 @@ namespace rckid::ui {
                 renderChildColumn(child.get(), column, startRow, buffer, numPixels);
         }
 
+        /** Can be called to make the widget process any relevant input events.
+         
+            This can be called manually, or if the widget is focused is called automatically by the application.
+         */
+        virtual void processEvents() {
+            // nop
+        }
+
+        bool focused() const { return focused_; }
+
     protected:
 
         virtual void onRender() {
@@ -114,6 +124,14 @@ namespace rckid::ui {
         /** Called when the widget transitions to idle state, i.e. has no animations attached to it.
          */
         virtual void onIdle() {
+            // nop
+        }
+
+        virtual void onFocus() {
+            // nop
+        }
+
+        virtual void onBlur() {
             // nop
         }
 
@@ -189,6 +207,7 @@ namespace rckid::ui {
         Rect rect_;
         Widget * parent_ = nullptr;
         bool visible_ = true;
+        bool focused_ = false;
 
         std::vector<unique_ptr<Widget>> children_;
 

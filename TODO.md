@@ -9,6 +9,9 @@
 - how to do heartbeat? (static initializers?)
 - instead of loading pngs and outputting the text, it might be easier to transcode the png into the binary format and then use the binary folder exporter 
 
+- apply style
+- pre-loop so that I can add things to before loop as well? How to design this
+
 # Version 3.2 Checklist
 
 First add a board that can verify the last missing features and DFM improvements, namely:

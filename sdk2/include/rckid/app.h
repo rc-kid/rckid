@@ -42,6 +42,8 @@ namespace rckid {
          */
         virtual void loop() = 0;
 
+        virtual void render() = 0;
+
         /** Flags the application to exit. 
          
             Note that the app does not exit immediately, but rather after the end of its current loop() iteration. When app exists, the control is returned to the parent app, if any.
