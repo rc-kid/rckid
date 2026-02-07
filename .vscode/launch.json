@@ -6,31 +6,6 @@
     "configurations": [
 
         {
-            "name": "gbcemu-app [fantasy]",
-            "type": "cppdbg",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/build/cartridges/tests/gbcemu-app",
-            "args": [],
-            "stopAtEntry": false,
-            "externalConsole": false,
-            //"targetArchitecture": "arm64",
-            "MIMode": "gdb",
-            "miDebuggerPath": "/usr/bin/gdb",
-            "setupCommands": [
-                {
-                    "description": "Enable pretty-printing for gdb",
-                    "text": "-enable-pretty-printing",
-                    "ignoreFailures": true
-                },
-                {
-                    "description":  "Set Disassembly Flavor to Intel",
-                    "text": "-gdb-set disassembly-flavor intel",
-                    "ignoreFailures": true
-                },
-            ],
-        },
-        {
             "name": "cartridge [fantasy]",
             "type": "cppdbg",
             "request": "launch",
@@ -62,7 +37,7 @@
             "type": "cppdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/build/sdk2/tests-sdk",
+            "program": "${workspaceFolder}/build/sdk2/test/tests-sdk",
             "args": [],
             "stopAtEntry": false,
             "externalConsole": false,

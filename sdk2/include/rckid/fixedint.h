@@ -113,24 +113,25 @@ namespace rckid {
     class FixedRatio {
     public:
         static constexpr uint32_t PRECISION = 16;
+        static constexpr uint32_t HALF_VALUE = 1 << (PRECISION - 1);
 
         constexpr FixedRatio() = default;
-        constexpr FixedRatio(float value): value_{static_cast<uint32_t>(value * ((1 << PRECISION) - 1))} {
+        constexpr FixedRatio(float value): value_{static_cast<uint32_t>(value * (1 << PRECISION))} {
             ASSERT(value <= 1.0f && value >= 0.0f);
-            ASSERT(value < ((1 << PRECISION) - 1)); // overflow in the above calculation
+            ASSERT(value <= (1 << PRECISION)); // overflow in the above calculation
         }
-        constexpr FixedRatio(uint32_t value, uint32_t max): value_{(value * ((1 << PRECISION) - 1)) / max} {
+        constexpr FixedRatio(uint32_t value, uint32_t max): value_{(value * (1 << PRECISION)) / max} {
             ASSERT(value <= max);
-            ASSERT(value < ((1 << PRECISION) - 1)); // overflow in the above calculation
+            ASSERT(value <= (1 << PRECISION)); // overflow in the above calculation
         }
 
         constexpr FixedRatio(uint32_t rawValue): value_{rawValue} {
-            ASSERT(rawValue <= ((1 << PRECISION) - 1));
+            ASSERT(rawValue <= (1 << PRECISION));
         }
 
         constexpr FixedRatio(FixedRatio const &) = default;
 
-        static FixedRatio Full() { return FixedRatio{static_cast<uint32_t>((1 << PRECISION) - 1)}; }
+        static FixedRatio Full() { return FixedRatio{static_cast<uint32_t>(1 << PRECISION)}; }
 
         static FixedRatio Empty() { return FixedRatio{0U}; }
 
@@ -142,6 +143,16 @@ namespace rckid {
         bool operator <= (FixedRatio other) const { return value_ <= other.value_; }
         bool operator > (FixedRatio other) const { return value_ > other.value_; }
         bool operator >= (FixedRatio other) const { return value_ >= other.value_; }
+
+        template<typename T>
+        T scale(T value) const {
+            T result = value * value_;
+            if (result < 0)
+                result -= HALF_VALUE;
+            else
+                result += HALF_VALUE;
+            return result / (1 << PRECISION);
+        }
 
         /** Converts the float ratio to an integer with given bit precision.
          
@@ -156,8 +167,8 @@ namespace rckid {
             uint32_t result = value_ + (1 << (cutoff - 1));
             result = result >> cutoff;
             // and clamp the result
-            if (result >= (1 << BITS))
-                result = (1 << BITS) - 1;
+            if (result > (1 << BITS))
+                result = (1 << BITS);
             return result;
         }
 
@@ -172,12 +183,37 @@ namespace rckid {
 
     }; // rckid::FixedRatio
 
-    inline int32_t operator * (FixedRatio ratio, int32_t value) {
-        return (value * static_cast<int32_t>(ratio.raw()) + 32767) >> 16;
+
+    inline FixedRatio operator * (FixedRatio a, FixedRatio b) {
+        if (a.raw() == 1 << FixedRatio::PRECISION)
+            return b;
+        if (b.raw() == 1 << FixedRatio::PRECISION)
+            return a;
+        return FixedRatio{(static_cast<uint32_t>(a.raw()) * static_cast<uint32_t>(b.raw())) >> FixedRatio::PRECISION};
     }
 
-    inline int32_t operator * (int32_t value, FixedRatio ratio) {
-        return (value * static_cast<int32_t>(ratio.raw()) + 32767) >> 16;
+    inline FixedRatio operator + (FixedRatio a, FixedRatio b) {
+        uint32_t raw = a.raw() + b.raw();
+        if (raw > ((1 << FixedRatio::PRECISION) - 1))
+            raw = (1 << FixedRatio::PRECISION) - 1;
+        return FixedRatio{raw};
     }
+
+    inline FixedRatio operator - (FixedRatio a, FixedRatio b) {
+        uint32_t raw = (a.raw() > b.raw()) ? (a.raw() - b.raw()) : 0;
+        return FixedRatio{raw};
+    }
+
+    inline FixedRatio operator * (FixedRatio a, uint32_t b) {
+        uint32_t value = a.raw() * b;
+        if (value > (1 << FixedRatio::PRECISION))
+            value = (1 << FixedRatio::PRECISION);
+        return FixedRatio{value};
+    }
+
+    inline FixedRatio operator / (FixedRatio a, uint32_t b) {
+        uint32_t value = a.raw() / b;
+        return FixedRatio{value};
+    }   
 
 } // namespace rckid

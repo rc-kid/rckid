@@ -32,9 +32,25 @@ TEST(fixedRatio, fromFloat) {
     FixedRatio r{0.5f};
     EXPECT(r >= FixedRatio{0.5f});
     EXPECT(r <= FixedRatio{0.5f});
-    EXPECT(r.toInt<16>() == 32767);
+    EXPECT(r.toInt<16>() == 32768);
     EXPECT(r.toInt<8>() == 128);
     r = 1.0f;
-    EXPECT(r.toInt<16>() == 65535);
-    EXPECT(r.toInt<8>() == 255);
+    EXPECT(r.toInt<16>() == 65536);
+    EXPECT(r.toInt<8>() == 256);
+}
+
+TEST(fixedRatio, arithmetic) {
+    EXPECT(FixedRatio{0.5f} + FixedRatio{0.25f} == FixedRatio{0.75f});
+    EXPECT(FixedRatio{0.5f} - FixedRatio{0.25f} == FixedRatio{0.25f});
+    EXPECT(FixedRatio{0.5f} * FixedRatio{0.5f} == FixedRatio{0.25f});
+    EXPECT(FixedRatio{1.0f} * FixedRatio{1.0f} == FixedRatio{1.0f});
+}
+
+TEST(fixedRatio, scale) {
+    EXPECT(FixedRatio{0.5f}.scale(100) == 50);
+    EXPECT(FixedRatio{0.25f}.scale(100) == 25);
+    EXPECT(FixedRatio{0.75f}.scale(100) == 75);
+    EXPECT(FixedRatio{0.5f}.scale(-100) == -50);
+    EXPECT(FixedRatio{0.25f}.scale(-100) == -25);
+    EXPECT(FixedRatio{0.75f}.scale(-100) == -75);
 }

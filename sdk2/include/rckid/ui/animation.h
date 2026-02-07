@@ -11,6 +11,30 @@
 
 namespace rckid::ui {
 
+    namespace easing {
+
+        inline FixedRatio identity(FixedRatio progress) { return progress; }
+
+        inline FixedRatio in(FixedRatio progress) {
+            return progress * progress;
+        }
+
+        inline FixedRatio out(FixedRatio progress) {
+            FixedRatio inv{FixedRatio::Full() - progress};
+            return FixedRatio::Full() - inv * inv;
+        }
+
+        inline FixedRatio inOut(FixedRatio progress) {
+            if (progress < FixedRatio{0.5f}) {
+                return progress * progress * 2;
+            } else {
+                FixedRatio inv{FixedRatio::Full() - progress};
+                return FixedRatio::Full() - inv * inv * 2;
+            }
+        }
+
+    } // rckid::ui::easing
+
     /** Animations. 
      
         Animations in the UI are simple objects that can only exist on heap and chain themselves into a global list. The animation system is called be ty the root widget before each frame rendering. 
@@ -30,6 +54,8 @@ namespace rckid::ui {
         }; 
 
         using OnUpdate = std::function<void(Widget *, FixedRatio)>;
+
+        typedef FixedRatio (*EasingFunction)(FixedRatio);
 
         /** Creates new animation for given widget.  
          
@@ -114,6 +140,13 @@ namespace rckid::ui {
 
         OnUpdate const & onUpdate() const { return onUpdate_; }
 
+        EasingFunction easingFunction() const { return easingFunction_; }
+
+        Animation * setEasingFunction(EasingFunction easingFunction) { 
+            easingFunction_ = easingFunction; 
+            return this;
+        }
+
     private:
 
         friend class Widget::AnimationBuilder;
@@ -145,7 +178,7 @@ namespace rckid::ui {
             if (onUpdate_) {
                 if (elapsedMs > durationMs_)
                     elapsedMs = duration - elapsedMs;
-                onUpdate_(w_, FixedRatio{elapsedMs, durationMs_});
+                onUpdate_(w_, easingFunction_(FixedRatio{elapsedMs, durationMs_}));
             }
             return true;
         }
@@ -157,6 +190,7 @@ namespace rckid::ui {
         uint32_t startUs_ = 0;
         uint32_t durationMs_ = 0;
         Mode mode_ = Mode::Single;
+        EasingFunction easingFunction_ = easing::identity;
 
         // next animation in the chain
         Animation * next_ = nullptr;
@@ -168,69 +202,66 @@ namespace rckid::ui {
     }; // ui::Animation
 
     inline Animation * Move(Point from, Point to, uint32_t durationMs) {
-        return new Animation{
+        return (new Animation{
             [from, to](Widget * w, FixedRatio progress) {
-                Coord x = from.x + ((to.x - from.x) * progress);
-                Coord y = from.y + ((to.y - from.y) * progress);
+                Coord x = from.x + progress.scale(to.x - from.x);
+                Coord y = from.y + progress.scale(to.y - from.y);
                 w->setRect(Rect::XYWH(x, y, w->width(), w->height()));
             },
             durationMs
-        };
+        })->setEasingFunction(easing::inOut);
     }
 
     inline Animation * Move(Widget * target, Point from, Point to, uint32_t durationMs) {
-        return new Animation{
+        return (new Animation{
             [from, to, target](Widget *, FixedRatio progress) {
-                Coord x = from.x + ((to.x - from.x) * progress);
-                Coord y = from.y + ((to.y - from.y) * progress);
+                Coord x = from.x + progress.scale(to.x - from.x);
+                Coord y = from.y + progress.scale(to.y - from.y);
                 target->setRect(Rect::XYWH(x, y, target->width(), target->height()));
             },
             durationMs
-        };
+        })->setEasingFunction(easing::inOut);
     }
 
     inline Animation * MoveHorizontally(Coord fromX, Coord toX, uint32_t durationMs) {
-        return new Animation{
+        return (new Animation{
             [fromX, toX](Widget * w, FixedRatio progress) {
-                Coord x = fromX + ((toX - fromX) * progress);
+                Coord x = fromX + progress.scale(toX - fromX);
                 w->setRect(Rect::XYWH(x, w->rect().y, w->width(), w->height()));
             },
             durationMs
-        };
+        })->setEasingFunction(easing::inOut);
     }
 
     inline Animation * MoveHorizontally(Widget * target, Coord fromX, Coord toX, uint32_t durationMs) {
-        return new Animation{
+        return (new Animation{
             [fromX, toX, target](Widget *, FixedRatio progress) {
-                Coord x = fromX + ((toX - fromX) * progress);
+                Coord x = fromX + progress.scale(toX - fromX);
                 target->setRect(Rect::XYWH(x, target->rect().y, target->width(), target->height()));
             },
             durationMs
-        };
+        })->setEasingFunction(easing::inOut);
     }
 
     inline Animation * MoveVertically(Coord fromY, Coord toY, uint32_t durationMs) {
-        return new Animation{
+        return (new Animation{
             [fromY, toY](Widget * w, FixedRatio progress) {
-                Coord y = fromY + ((toY - fromY) * progress);
+                Coord y = fromY + progress.scale(toY - fromY);
                 w->setRect(Rect::XYWH(w->rect().x, y, w->width(), w->height()));
             },
             durationMs
-        };
+        })->setEasingFunction(easing::inOut);
     }
 
     inline Animation * MoveVertically(Widget * target, Coord fromY, Coord toY, uint32_t durationMs) {
-        return new Animation{
+        return (new Animation{
             [fromY, toY, target](Widget *, FixedRatio progress) {
-                Coord y = fromY + ((toY - fromY) * progress);
+                Coord y = fromY + progress.scale(toY - fromY);
                 target->setRect(Rect::XYWH(target->rect().x, y, target->width(), target->height()));
             },
             durationMs
-        };
+        })->setEasingFunction(easing::inOut);
     }
-
-
-
 
 
     struct SetAnimationSpeed {
@@ -243,5 +274,8 @@ namespace rckid::ui {
         w->setAnimationSpeed(sas.speedMs);
         return w;
     }
+
+    // easing curves
+
 
 } // namespace rckid::ui
