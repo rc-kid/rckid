@@ -27,12 +27,9 @@ namespace rckid {
     public:
 
         Launcher() {
-            carousel_ = addChild(new ui::Carousel())
-                << ui::SetRect(Rect::XYWH(0, 140, 320, 100));
-
-            
-            carousel_->set("Empty", assets::icons_64::empty_box, Direction::Up);
-
+            carousel_ = addChild(new ui::CarouselMenu())
+                << ui::SetRect(Rect::XYWH(0, 140, 320, 100))
+                << ui::SetMenu(mainMenuGenerator(), Direction::Up);
         }
 
 
@@ -47,6 +44,10 @@ namespace rckid {
         void loop() override {
             if (btnPressed(Btn::B) || btnPressed(Btn::Down))
                 exit();
+            if (btnPressed(Btn::Left))
+                carousel_->moveLeft();
+            if (btnPressed(Btn::Right))
+                carousel_->moveRight();
         }
 
         class State {
@@ -61,7 +62,7 @@ namespace rckid {
 
         State * state_ = nullptr;
 
-        ui::Carousel * carousel_ = nullptr;
+        ui::CarouselMenu * carousel_ = nullptr;
 
     }; // rckid::Launcher
 

@@ -2,7 +2,12 @@ include_directories(${CMAKE_SOURCE_DIR}/libs/raylib/src)
 find_package(Threads REQUIRED)
 find_package(CURL REQUIRED)
 
-file(GLOB_RECURSE SRC "fantasy.cpp" "virtual_filesystem.cpp" "${CMAKE_SOURCE_DIR}/sdk2/src/*.cpp")
+file(GLOB_RECURSE SRC 
+    "fantasy.cpp" 
+    "virtual_filesystem.cpp" 
+    "${CMAKE_SOURCE_DIR}/sdk2/src/*.cpp"
+    "capabilities/*.cpp"
+)
 add_library(librckid STATIC ${SRC})
 target_include_directories(librckid PRIVATE "${CMAKE_SOURCE_DIR}/lib/raylib/src")
 target_link_libraries(librckid PUBLIC CURL::libcurl)

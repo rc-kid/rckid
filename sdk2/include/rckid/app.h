@@ -19,6 +19,8 @@ namespace rckid {
         }
 
         /** Runs the application. 
+         
+            The run method is responsible for transitioning between apps and for running the main loop of the app itself. When called, it first blurs the previous app (if any), then focuses the current app, runs the main loop which cosists of calling the system tick, and applications loop() and render(). When the app exits, it is blurred and the previous app is re-focused.
          */
         void run();
 

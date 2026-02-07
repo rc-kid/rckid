@@ -4,8 +4,10 @@
 #include <rckid/ui/image.h>
 #include <rckid/ui/label.h>
 #include <rckid/ui/animation.h>
+#include <rckid/ui/menu.h>
 
 #include <assets/OpenDyslexic64.h>
+#include <assets/icons_64.h>
 
 namespace rckid::ui {
 
@@ -47,6 +49,18 @@ namespace rckid::ui {
             bText_->setFont(font);
         }
 
+        uint32_t animationSpeed() const { return animationSpeed_; }
+
+        void setAnimationSpeed(uint32_t speed) { animationSpeed_ = speed; }
+
+        void setEmpty() {
+            set("Empty", assets::icons_64::empty_box);
+        }
+
+        void setEmpty(Direction dir) {
+            set("Empty", assets::icons_64::empty_box, dir);
+        }
+
         void set(String text, ImageSource icon) {
             if (! idle())
                 return;
@@ -66,34 +80,34 @@ namespace rckid::ui {
                 case Direction::Up:
                     // old goes down, new comes from the sides
                     animate()
-                        << MoveHorizontally(aImg_, aImg_->x() - width(), aImg_->x(), 300)
-                        << MoveHorizontally(aText_, aText_->x() + width(), aText_->x(), 300)
-                        << MoveVertically(bImg_, bImg_->y() + height(), bImg_->y(), 300)
-                        << MoveVertically(bText_, bText_->y() + height(), bText_->y(), 300);
+                        << MoveHorizontally(aImg_, aImg_->x() - width(), aImg_->x(), animationSpeed_)
+                        << MoveHorizontally(aText_, aText_->x() + width(), aText_->x(), animationSpeed_)
+                        << MoveVertically(bImg_, bImg_->y() + height(), bImg_->y(), animationSpeed_)
+                        << MoveVertically(bText_, bText_->y() + height(), bText_->y(), animationSpeed_);
                     break;
                 case Direction::Down:
                     // old goes to the sides, new comes from the bottom
                     animate()
-                        << MoveVertically(aImg_, aImg_->y() - height(), aImg_->y(), 300)
-                        << MoveVertically(aText_, aText_->y() - height(), aText_->y(), 300)
-                        << MoveHorizontally(bImg_, bImg_->x(), bImg_->x() - width(), 300)
-                        << MoveHorizontally(bText_, bText_->x(), bText_->x() + width(), 300);
+                        << MoveVertically(aImg_, aImg_->y() - height(), aImg_->y(), animationSpeed_)
+                        << MoveVertically(aText_, aText_->y() - height(), aText_->y(), animationSpeed_)
+                        << MoveHorizontally(bImg_, bImg_->x(), bImg_->x() - width(), animationSpeed_)
+                        << MoveHorizontally(bText_, bText_->x(), bText_->x() + width(), animationSpeed_);
                     break;
                 case Direction::Left:
                     // old goes to the right, new comes from the left
                     animate()
-                        << MoveHorizontally(aImg_, aImg_->x() - width() * 2, aImg_->x(), 300)
-                        << MoveHorizontally(aText_, aText_->x() - width(), aText_->x(), 300)
-                        << MoveHorizontally(bImg_, bImg_->x(), bImg_->x() + width(), 300)
-                        << MoveHorizontally(bText_, bText_->x(), bText_->x() + width() * 2, 300);
+                        << MoveHorizontally(aImg_, aImg_->x() - width() * 2, aImg_->x(), animationSpeed_)
+                        << MoveHorizontally(aText_, aText_->x() - width(), aText_->x(), animationSpeed_)
+                        << MoveHorizontally(bImg_, bImg_->x(), bImg_->x() + width(), animationSpeed_)
+                        << MoveHorizontally(bText_, bText_->x(), bText_->x() + width() * 2, animationSpeed_);
                     break;
                 case Direction::Right:
                     // old goes to the left, new comes from right
                     animate()
-                        << MoveHorizontally(aImg_, aImg_->x() + width(), aImg_->x(), 300)
-                        << MoveHorizontally(aText_, aText_->x() + width() * 2, aText_->x(), 300)
-                        << MoveHorizontally(bImg_, bImg_->x(), bImg_->x() - width() * 2, 300)
-                        << MoveHorizontally(bText_, bText_->x(), bText_->x() - width(), 300);
+                        << MoveHorizontally(aImg_, aImg_->x() + width(), aImg_->x(), animationSpeed_)
+                        << MoveHorizontally(aText_, aText_->x() + width() * 2, aText_->x(), animationSpeed_)
+                        << MoveHorizontally(bImg_, bImg_->x(), bImg_->x() - width() * 2, animationSpeed_)
+                        << MoveHorizontally(bText_, bText_->x(), bText_->x() - width(), animationSpeed_);
                     break;
                 default:
                     UNREACHABLE;
@@ -157,6 +171,91 @@ namespace rckid::ui {
         Image * bImg_ = nullptr;
         Label * bText_ = nullptr;
 
+        uint32_t animationSpeed_ = 1000; 
+
     }; // rckid::ui::Carousel
+
+    class CarouselMenu : public Carousel {
+    public:
+
+        Menu * menu() { return menu_.get(); }
+
+        uint32_t index() const { return index_; }
+
+        void setMenu(unique_ptr<Menu> menu, uint32_t index = 0) {
+            menu_ = std::move(menu);
+            index_ = index;
+            if (menu_ == nullptr)
+                setEmpty();
+            else
+                set(menu_->at(index_).text, menu_->at(index_).icon);
+        }
+
+        void setMenu(unique_ptr<Menu> menu, Direction dir, uint32_t index = 0) {
+            menu_ = std::move(menu);
+            index_ = index;
+            if (menu_ == nullptr)
+                setEmpty(dir);
+            else
+                set(menu_->at(index_).text, menu_->at(index_).icon, dir);
+        }
+
+        void setItem(uint32_t index) {
+            if (menu_ == nullptr || index >= menu_->size())
+                return;
+            index_ = index;
+            set(menu_->at(index_).text, menu_->at(index_).icon);
+        }
+
+        void setItem(uint32_t index, Direction dir) {
+            if (menu_ == nullptr || index >= menu_->size())
+                return;
+            index_ = index;
+            set(menu_->at(index_).text, menu_->at(index_).icon, dir);
+        }
+
+        void moveLeft() {
+            if (menu_ == nullptr || menu_->size() == 0)
+                return;
+            index_ = (index_ + menu_->size() - 1) % menu_->size();
+            setItem(index_, Direction::Left);
+        }
+
+        void moveRight() {
+            if (menu_ == nullptr || menu_->size() == 0)
+                return;
+            index_ = (index_ + 1) % menu_->size();
+            setItem(index_, Direction::Right);
+        }
+
+    private:
+
+        unique_ptr<Menu> menu_;
+        uint32_t index_ = 0;
+
+    }; // rckid::ui::CarouselMenu
+
+    struct SetMenu {
+        unique_ptr<Menu> menu;
+        std::optional<Direction> direction;
+
+        SetMenu(unique_ptr<Menu> menu, Direction direction):
+            menu{std::move(menu)}, direction{direction} {
+        }
+
+        SetMenu(unique_ptr<Menu> menu):
+            menu{std::move(menu)} {
+        }
+    };
+
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetMenu && menu) {
+        if (menu.direction.has_value())
+            w->setMenu(std::move(menu.menu), menu.direction.value());
+        else
+            w->setMenu(std::move(menu.menu));
+        return w;
+    }
+
 
 } // namespace rckid::ui

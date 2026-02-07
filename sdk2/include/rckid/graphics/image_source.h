@@ -62,6 +62,25 @@ namespace rckid {
             data_{data.releasePtr()} {
         }
 
+        /** Creates copy of the image source. 
+         
+            This is a trivial operation of the image source points to immutable data (either string, or data buffer). If the data is mutable, it is cloned first.
+         */
+        ImageSource(ImageSource const & from):
+            size_{from.size_} {
+            if (hal::memory::isImmutableDataPtr(from.data_.get())) {
+                data_ = immutable_ptr<uint8_t>{from.data_.get()};
+            } else {
+                uint32_t memSize = from.size_;
+                if (memSize == FILE_SD || memSize == FILE_CARTRIDGE)
+                    memSize = std::strlen(reinterpret_cast<char const *>(from.data_.get())) + 1; // null terminated
+                // for memory sources we need to make a copy of the data
+                uint8_t * newData = new uint8_t[memSize];
+                std::memcpy(newData, from.data_.get(), memSize);
+                data_ = immutable_ptr<uint8_t>{newData};
+            }
+        }
+
         /** Type of the image source. 
          
             Can be either memory buffer (flash or RAM), or a file (SD card or cartridge stored).

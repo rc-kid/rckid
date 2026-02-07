@@ -216,4 +216,19 @@ namespace rckid::ui {
         };
     }
 
+
+
+
+
+    struct SetAnimationSpeed {
+        uint32_t speedMs;
+        SetAnimationSpeed(uint32_t speedMs): speedMs{speedMs} {}
+    };
+
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetAnimationSpeed sas) {       
+        w->setAnimationSpeed(sas.speedMs);
+        return w;
+    }
+
 } // namespace rckid::ui
