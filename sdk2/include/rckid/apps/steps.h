@@ -38,8 +38,10 @@ namespace rckid {
     protected:
         void loop() override {
             using namespace ui;
-            with(steps_) << SetText(STR(pedometer_->count()));
             App<void>::loop();
+            with(steps_) << SetText(STR(pedometer_->count()));
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down))
+                exit();
         }
 
     private:

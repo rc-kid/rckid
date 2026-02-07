@@ -76,16 +76,12 @@ namespace rckid {
 
         /** Renders column of given glyph. 
          
-            This corresponds to the renderColumn function common in other ui elements. The coordinates (column and startRow) are expected to be relative to the top left corner of the glyph bounding box.
+            This corresponds to the renderColumn function common in other ui elements. The coordinates (column and startRow) are expected to be relative to the top left corner of the glyph bounding box (i.e. not the glyph data itself). 
          */
         void renderColumn(Coord column, Coord startRow, Coord numPixels, GlyphInfo const * gi,  Color::RGB565 * buffer, Color::RGB565 const * palette) const {
             // first updte the coordinates from the bounding box to the glyph space
             column -= gi->x;
             startRow -= gi->y;
-            // update the number of pixels to render so that we do not render after the glyph
-            if (numPixels > startRow + gi->height)
-                numPixels = gi->height - startRow;
-            // advance buffer if startRow is before the glyph start
             if (startRow < 0) {
                 buffer += -startRow;
                 numPixels += startRow; // startRow is negative
@@ -103,11 +99,12 @@ namespace rckid {
             if (colHeight % 4 != 0)
                 colHeight += 4 - (colHeight % 4);
             glyphPixels += column * colHeight / 4;
-            // draw 
-            int y = 0;
+            // draw, 
+            Coord y = 0;
             uint32_t bits = 0;
             uint32_t val = 0;
-            while (numPixels > 0) {
+            Coord maxY = std::min(static_cast<Coord>(gi->height), numPixels);
+            while (y < maxY) {
                 if (bits == 0) {
                     val = *glyphPixels++;
                     bits = 8;
@@ -118,11 +115,11 @@ namespace rckid {
                     if (a != 0)
                         *buffer = palette[a];
                     ++buffer;
-                    --numPixels;
                 }
                 val <<= 2;
                 bits -= 2;
                 ++y;
+                --numPixels;
             }
         }
 

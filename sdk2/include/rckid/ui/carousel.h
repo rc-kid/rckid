@@ -62,8 +62,8 @@ namespace rckid::ui {
         }
 
         void set(String text, ImageSource icon) {
-            if (! idle())
-                return;
+            if (!idle())
+                cancelAnimations();
             setCurrent(std::move(text), std::move(icon));
             with(bImg_)
                 << SetVisibility(false);
@@ -72,29 +72,29 @@ namespace rckid::ui {
         }
 
         void set(String text, ImageSource icon, Direction dir) {
-            if (! idle())
-                return;
+            if (!idle())
+                cancelAnimations();
             setCurrent(std::move(text), std::move(icon));
             // start the appropriate animation
             switch (dir) {
                 case Direction::Up:
-                    // old goes down, new comes from the sides
+                    // new comes from the sides, old goes down
                     animate()
                         << MoveHorizontally(aImg_, aImg_->x() - width(), aImg_->x(), animationSpeed_)
                         << MoveHorizontally(aText_, aText_->x() + width(), aText_->x(), animationSpeed_)
-                        << MoveVertically(bImg_, bImg_->y() + height(), bImg_->y(), animationSpeed_)
-                        << MoveVertically(bText_, bText_->y() + height(), bText_->y(), animationSpeed_);
+                        << MoveVertically(bImg_, bImg_->y(), bImg_->y() + height(), animationSpeed_)
+                        << MoveVertically(bText_, bText_->y(), bText_->y() + height(), animationSpeed_);
                     break;
                 case Direction::Down:
-                    // old goes to the sides, new comes from the bottom
+                    // new comes from bottom, old goes to the sides
                     animate()
-                        << MoveVertically(aImg_, aImg_->y() - height(), aImg_->y(), animationSpeed_)
-                        << MoveVertically(aText_, aText_->y() - height(), aText_->y(), animationSpeed_)
+                        << MoveVertically(aImg_, aImg_->y() + height(), aImg_->y(), animationSpeed_)
+                        << MoveVertically(aText_, aText_->y() + height(), aText_->y(), animationSpeed_)
                         << MoveHorizontally(bImg_, bImg_->x(), bImg_->x() - width(), animationSpeed_)
                         << MoveHorizontally(bText_, bText_->x(), bText_->x() + width(), animationSpeed_);
                     break;
                 case Direction::Left:
-                    // old goes to the right, new comes from the left
+                    // new comes from the left, old goes to the right
                     animate()
                         << MoveHorizontally(aImg_, aImg_->x() - width() * 2, aImg_->x(), animationSpeed_)
                         << MoveHorizontally(aText_, aText_->x() - width(), aText_->x(), animationSpeed_)
@@ -102,7 +102,7 @@ namespace rckid::ui {
                         << MoveHorizontally(bText_, bText_->x(), bText_->x() + width() * 2, animationSpeed_);
                     break;
                 case Direction::Right:
-                    // old goes to the left, new comes from right
+                    // new comes from the right, old goes to the left
                     animate()
                         << MoveHorizontally(aImg_, aImg_->x() + width(), aImg_->x(), animationSpeed_)
                         << MoveHorizontally(aText_, aText_->x() + width() * 2, aText_->x(), animationSpeed_)
@@ -171,18 +171,24 @@ namespace rckid::ui {
         Image * bImg_ = nullptr;
         Label * bText_ = nullptr;
 
-        uint32_t animationSpeed_ = 1000; 
+        uint32_t animationSpeed_ = 500; 
 
     }; // rckid::ui::Carousel
 
     class CarouselMenu : public Carousel {
     public:
 
-        Menu * menu() { return menu_.get(); }
+        Menu * menu() const { return menu_.get(); }
 
         uint32_t index() const { return index_; }
 
+        bool empty() const { return menu_ == nullptr || menu_->size() == 0; }
+
+        MenuItem * currentItem() const { return empty() ? nullptr : & menu_->at(index_); }
+
         void setMenu(unique_ptr<Menu> menu, uint32_t index = 0) {
+            if (!idle())
+                cancelAnimations();
             menu_ = std::move(menu);
             index_ = index;
             if (menu_ == nullptr)
@@ -192,6 +198,8 @@ namespace rckid::ui {
         }
 
         void setMenu(unique_ptr<Menu> menu, Direction dir, uint32_t index = 0) {
+            if (!idle())
+                cancelAnimations();
             menu_ = std::move(menu);
             index_ = index;
             if (menu_ == nullptr)
@@ -201,6 +209,8 @@ namespace rckid::ui {
         }
 
         void setItem(uint32_t index) {
+            if (!idle())
+                cancelAnimations();
             if (menu_ == nullptr || index >= menu_->size())
                 return;
             index_ = index;
@@ -208,6 +218,8 @@ namespace rckid::ui {
         }
 
         void setItem(uint32_t index, Direction dir) {
+            if (!idle())
+                cancelAnimations();
             if (menu_ == nullptr || index >= menu_->size())
                 return;
             index_ = index;
@@ -217,6 +229,8 @@ namespace rckid::ui {
         void moveLeft() {
             if (menu_ == nullptr || menu_->size() == 0)
                 return;
+            if (!idle())
+                cancelAnimations();
             index_ = (index_ + menu_->size() - 1) % menu_->size();
             setItem(index_, Direction::Left);
         }
@@ -224,6 +238,8 @@ namespace rckid::ui {
         void moveRight() {
             if (menu_ == nullptr || menu_->size() == 0)
                 return;
+            if (!idle())
+                cancelAnimations();
             index_ = (index_ + 1) % menu_->size();
             setItem(index_, Direction::Right);
         }

@@ -196,6 +196,16 @@ namespace rckid::ui {
             }
         }
 
+        void adjustRenderParams(Point offset, Coord & column, Coord & startRow, Color::RGB565 * & buffer, Coord & numPixels) {
+            column -= offset.x;
+            startRow -= offset.y;
+            if (startRow < 0) {
+                buffer -= startRow;
+                numPixels += startRow; // start row is really negative
+                startRow = 0;
+            }
+        }
+
     private:
 
         template<typename T>

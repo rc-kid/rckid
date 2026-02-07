@@ -37,6 +37,7 @@ namespace rckid::ui {
         /** Renders the widget tree. 
          */
         void loop() override {
+            rckid::display::waitUpdateDone();
             if (focusedWidget_ != nullptr)
                 focusedWidget_->processEvents();
         }

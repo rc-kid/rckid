@@ -54,20 +54,15 @@ namespace rckid::ui {
                 UNIMPLEMENTED;
             } else {
                 // adjust the column & starty based on the bitmap position
-                column -= bitmapOffset_.x;
-                starty -= bitmapOffset_.y;
-                //
-                if (starty < 0) {
-                    buffer += -starty;
-                    numPixels += starty;
-                    starty = 0;
-                }
+                adjustRenderParams(bitmapOffset_, column, starty, buffer, numPixels);
                 // check if we are outside of the bitmap
                 if (column < 0 || column >= bitmap_.width() || starty >= bitmap_.height())
                     return;
                 // adjust numPixels if we exceed bitmap height
                 if (starty + numPixels > bitmap_.height())
                     numPixels = bitmap_.height() - starty;
+                if (numPixels <= 0)
+                    return;
                 // render the bitmap column
                 bitmap_.renderColumn(column, starty, numPixels, buffer);
             }

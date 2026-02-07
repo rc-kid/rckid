@@ -83,6 +83,19 @@ namespace rckid::ui {
             } while (x != nullptr);
         }
 
+        static void cancelAnimationsFor(Widget * w) {
+            Animation * x = head_;
+            while (x != nullptr) {
+                if (x->w_ == w) {
+                    Animation * toDelete = x;
+                    x = x->next_;
+                    delete toDelete;
+                } else {
+                    x = x->next_;
+                }
+            }
+        }
+
         Widget * widget() const { return w_; }
 
         uint32_t durationMs() const { return durationMs_; }
