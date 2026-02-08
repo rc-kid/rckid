@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include <rckid/graphics/bitmap.h>
 #include <rckid/ui/widget.h>
 
@@ -48,6 +50,20 @@ namespace rckid::ui {
             adjustBitmapPosition();
         }
 
+        std::optional<uint32_t> transparentColor() const { 
+            if (transparentColor_ == NO_TRANSPARENCY)
+                return std::nullopt;
+            return transparentColor_;
+        }
+
+        /** Sets or clears transparent color for the rendering. 
+         
+            Transparent color is unsigned number that is interpreted as the raw value of the corresponding pixel format in the bitmap. When set, all pixels matching the transparent color will not be rendered.
+         */
+        void setTransparentColor(std::optional<uint32_t> value) {
+            transparentColor_ = value.has_value() ? value.value() : NO_TRANSPARENCY;
+        }
+
         void renderColumn(Coord column, Coord starty, Color::RGB565 * buffer, Coord numPixels) override {
             Widget::renderColumn(column, starty, buffer, numPixels);
             if (bitmapRepeat_) {
@@ -64,7 +80,10 @@ namespace rckid::ui {
                 if (numPixels <= 0)
                     return;
                 // render the bitmap column
-                bitmap_.renderColumn(column, starty, numPixels, buffer);
+                if (transparentColor_ <= 0xffff)
+                    bitmap_.renderColumn(column, starty, numPixels, buffer, transparentColor_);
+                else
+                    bitmap_.renderColumn(column, starty, numPixels, buffer);
             }
         }
 
@@ -112,6 +131,10 @@ namespace rckid::ui {
         Point bitmapOffset_ = Point{0,0};
         bool bitmapRepeat_ = false;
 
+        uint32_t transparentColor_ = 0;
+
+        static constexpr uint32_t NO_TRANSPARENCY = 0xFFFFFFFF;
+
     }; // ui::Image
 
     struct SetBitmap {
@@ -143,6 +166,18 @@ namespace rckid::ui {
     template<typename T>
     inline with<T> operator << (with<T> w, SetBitmapOffset sbo) {
         w->setBitmapOffset(sbo.offset);
+        return w;
+    }
+
+    /** Fluent builder for setting transparent color. See Image::setTransparentColor() for more details.
+     */
+    struct SetTransparentColor {
+        std::optional<uint32_t> color;
+        SetTransparentColor(std::optional<uint32_t> color): color{color} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetTransparentColor stc) {
+        w->setTransparentColor(stc.color);
         return w;
     }
 

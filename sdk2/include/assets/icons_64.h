@@ -5,10 +5,46 @@
 
 namespace rckid::assets::icons_64 {
 
+    // File: icons/icons_64/042-happy-face.png
+    // Size: 2583
+    static constexpr uint8_t happy_face[] = {
+        #include "raw/icons_64/happy_face.inc.h"
+    };
+
+    // File: icons/icons_64/053-configuration.png
+    // Size: 2729
+    static constexpr uint8_t configuration[] = {
+        #include "raw/icons_64/configuration.inc.h"
+    };
+
     // File: icons/icons_64/036-empty-box.png
     // Size: 2821
     static constexpr uint8_t empty_box[] = {
         #include "raw/icons_64/empty_box.inc.h"
+    };
+
+    // File: icons/icons_64/080-info.png
+    // Size: 2856
+    static constexpr uint8_t info[] = {
+        #include "raw/icons_64/info.inc.h"
+    };
+
+    // File: icons/icons_64/022-game-controller.png
+    // Size: 3058
+    static constexpr uint8_t game_controller[] = {
+        #include "raw/icons_64/game_controller.inc.h"
+    };
+
+    // File: icons/icons_64/002-music.png
+    // Size: 2532
+    static constexpr uint8_t music[] = {
+        #include "raw/icons_64/music.inc.h"
+    };
+
+    // File: icons/icons_64/043-sad-face.png
+    // Size: 3316
+    static constexpr uint8_t sad_face[] = {
+        #include "raw/icons_64/sad_face.inc.h"
     };
 
     // File: icons/icons_64/081-footprint.png

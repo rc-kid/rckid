@@ -27,18 +27,18 @@ namespace rckid {
 
     void InfoDialog::onLoopStart() {
         animate()
-            << ui::FlyIn(icon_, 300, Point{-320, 0})
-            << ui::FlyIn(title_, 300, Point{320, 0})->setDelayMs(50)
-            << ui::FlyIn(message_, 300, Point{320, 0})->setDelayMs(150);
+            << ui::FlyIn(icon_, 300, Point{-100, 0})
+            << ui::FlyIn(title_, 300, Point{220, 0})->setDelayMs(50)
+            << ui::FlyIn(message_, 300, Point{220, 0})->setDelayMs(150);
     }
 
     void InfoDialog::loop() {
         ui::App<void>::loop();
         if (btnPressed(Btn::B) || btnPressed(Btn::Down) || btnPressed(Btn::A) || btnPressed(Btn::Up)) {
             animate()
-                << ui::FlyOut(icon_, 300, Point{-320, 0})->setDelayMs(150)
-                << ui::FlyOut(title_, 300, Point{320, 0})->setDelayMs(50)
-                << ui::FlyOut(message_, 300, Point{320, 0});
+                << ui::FlyOut(icon_, 300, Point{-100, 0})->setDelayMs(150)
+                << ui::FlyOut(title_, 300, Point{220, 0})->setDelayMs(100)
+                << ui::FlyOut(message_, 300, Point{220, 0});
             waitUntilIdle();
             exit();
         }

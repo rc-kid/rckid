@@ -107,6 +107,31 @@ namespace rckid {
             UNREACHABLE;
         }
 
+        uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, Color::RGB565 * buffer, uint32_t transparentColor) {
+            ASSERT(column < width());
+            ASSERT(startRow + numPixels <= height());
+            // if using less than 8 bpp, we must ensure that the coordinates & number of pixels to render are aligned properly
+            if (colorRepresentation_ == Color::Representation::Index16) {
+                ASSERT(startRow % 2 == 0);
+                ASSERT(numPixels % 2 == 0);
+            } else {
+                ASSERT(bpp() >= 8);
+            }
+            // get source start pointer
+            uint8_t const * start = rawPixelArray(column) + startRow * bpp() / 8;
+            switch (colorRepresentation_) {
+                case Color::Representation::RGB565:
+                    return blit_rgb565(start, buffer, numPixels, transparentColor);
+                case Color::Representation::RGB332:
+                    return blit_rgb332(start, buffer, numPixels, transparentColor);
+                case Color::Representation::Index256:
+                    return blit_index256(start, buffer, numPixels, palette_.ptr(), transparentColor);
+                case Color::Representation::Index16:
+                    return blit_index16(start, buffer, numPixels, palette_.ptr(), transparentColor);
+            }
+            UNREACHABLE;
+        }
+
     private:
         Coord w_ = 0;
         Coord h_ = 0;

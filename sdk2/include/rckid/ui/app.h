@@ -67,9 +67,10 @@ namespace rckid::ui {
 
         Widget::AnimationBuilder animate() { return root_.animate(); }
 
+        RootWidget root_;
+
     private:
 
-        RootWidget root_;
         Widget * focusedWidget_ = nullptr;
 
     }; // ui::App<RESULT>

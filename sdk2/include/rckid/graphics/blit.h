@@ -19,4 +19,14 @@ namespace rckid {
 
     uint32_t blit_index16(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, Color::RGB565 const * palette);
     //@}
+
+    uint32_t blit_rgb565(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, uint32_t transparentColor); 
+
+    uint32_t blit_rgb332(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, uint32_t transparentColor);
+
+    uint32_t blit_index256(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, Color::RGB565 const * palette, uint32_t transparentColor);
+    
+    uint32_t blit_index16(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, Color::RGB565 const * palette, uint32_t transparentColor);
+
+
 }

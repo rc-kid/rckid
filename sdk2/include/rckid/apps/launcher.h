@@ -7,9 +7,19 @@
 
 namespace rckid {
 
+    /** Generator of the default main menu. 
+     */
     unique_ptr<ui::Menu> mainMenuGenerator();
 
-    /** App launchaer (main menu)
+    /** Generator for the games submenu.
+     */
+    unique_ptr<ui::Menu> gamesMenuGenerator();
+
+    /** Utilities submenu generator. 
+     */
+    unique_ptr<ui::Menu> utilitiesMenuGenerator();
+
+    /** App launcher (main menu)
      
         This is the first app that automatically runs when RCKid SDK built cartridges boot up. It is responsible for showing the main menu and launching the selected apps. 
      */
@@ -48,7 +58,6 @@ namespace rckid {
             void resetMenu(ui::MenuItem::GeneratorEvent generator) {
                 carousel_->clearContext(root_);
                 carousel_->moveUp(std::move(generator));
-                // TODO
             }
             void moveLeft() { 
                 ASSERT(context() != nullptr);
@@ -77,7 +86,7 @@ namespace rckid {
             ui::CarouselMenu * borrowedCarousel() const { return carousel_; }
 
             void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) override {
-                // move the coordinates & stuff
+                // TODO move the coordinates & stuff
                 carousel_->renderColumn(column, startRow, buffer, numPixels);
             }
 
@@ -100,7 +109,6 @@ namespace rckid {
         }
 
         void onBlur() override {
-            // TODO this is called twice if the app exists immediately which is bad
             if (! carouselBorrowed_) {
                 carousel_->moveUp(emptyMenuGenerator);
                 waitUntilIdle(carousel_);
@@ -124,10 +132,9 @@ namespace rckid {
             // nothing to process in empty menu
             if (item == nullptr)
                 return;
-            // if the item is action, we are launching new app 
+            // if the item is action, we are launching new app
             if (item->isAction()) {
-                //state_->index = carousel_->index();
-                // TODO fly out desktop animations
+                // TODO flyout animations of non carousel contents
                 item->action()();
                 carousel_->moveDown();
             // if the item is generator, update current state index and start a new one according to the generator
@@ -136,11 +143,16 @@ namespace rckid {
             }
         }
 
+        // the carousel itself
         ui::CarouselMenu * carousel_ = nullptr;
+
+        // whether carousel has been borrowed by the next running app (this changes the animations and the way we reset the menu when the app exits)
         bool carouselBorrowed_ = false;
 
+        // launcher instance
         static inline Launcher * instance_ = nullptr;
 
+        // empty menu generator (used when the carousel is borrowed by the next app to show empty menu w/o any visible items, but we need to provide an empty item so that the empty menu visualiation inside carousel will not trigger)
         static unique_ptr<ui::Menu> emptyMenuGenerator() {
             auto result = std::make_unique<ui::Menu>();
             (*result)
