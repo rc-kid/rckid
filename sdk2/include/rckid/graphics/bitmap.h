@@ -60,6 +60,8 @@ namespace rckid {
 
         Coord height() const { return h_;}
 
+        bool empty() const { return w_ == 0 || h_ == 0; }
+
         Color::Representation colorRepresentation() const { return colorRepresentation_; }
 
         uint32_t bpp() const { return colorRepresentationBpp(colorRepresentation_); }

@@ -1,7 +1,6 @@
 # SDK 1.0
 
 - add to & from animation (0...1...0, stop)
-- repeating image rendering
 - improve value parsing in Reader (bool, ints, etc.)
 - how to do heartbeat? (static initializers?)
 - instead of loading pngs and outputting the text, it might be easier to transcode the png into the binary format and then use the binary folder exporter 
@@ -75,7 +74,6 @@ Polish
 
 - rumblerOff does not actually turn the rumbler off
 - images for games
-- and use unpacked icons with no heap allocs for the system icons
 
 - drawing preserves state like games
 - allow messages to send images
@@ -110,34 +108,16 @@ Polish
 - for rumbler in AVR, ignore the values that are below some threshold that is observable on mk3
 - allow breathing to start at specified offset in the animation
 
-- make ini writing use writers interface instead of the strings
-- would be nice to have some simple way of specifying ini file parsing...
-
 - clean-up the code around display initialization
-- document host file system
-
-- would be nice to have menu-like transitions between apps (i.e. multimain menu stuff)
 
 - the color settings should be stored, perhaps per game?  (gameboy)
 - and when colors are updated, different colors should be update-able at the same time
 
 - some avr commands are longer than 16 bytes, which means it cannot be stored via the I2C async commands
 
-- platform string utils should not be used, instead everything should run off rckid::String
-- verify other std::string uses
-
 - file browswer can also use the new carouselMenu?
 
-- TODO would be good if image could work immediately with static in memory pictures
-- do we need bitmap in graphics now? its more like bitmap is now image really
-
-- how to blitting & stuff? (bitmap is multi bpp, while surfaces such as canvas are fixed bpp), this makes blitting harder a bit
-
 - when stack protection fails, it will fail in the error code as well forever, update stack on device, do new thread on rckid? 
-
-- ColorRGB is weird, should be colorRGBA and then have Color565 as a version that wraps around 15bpp? Then change uint16_t everywhere in palettes
-
-- comment PNG loading stuff
 
 - fix/check device fatal eror & stack protection
 

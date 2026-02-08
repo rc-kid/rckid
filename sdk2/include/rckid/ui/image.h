@@ -66,9 +66,10 @@ namespace rckid::ui {
 
         void renderColumn(Coord column, Coord starty, Color::RGB565 * buffer, Coord numPixels) override {
             Widget::renderColumn(column, starty, buffer, numPixels);
-            if (bitmapRepeat_) {
-                UNIMPLEMENTED;
-            } else {
+            if (bitmap_.empty())
+                return;
+            // if we are no repeating the bitmap, we must adjust the rendering parameters based on the bitmap position and size for the shared rendering to work
+            if (! bitmapRepeat_) {
                 // adjust the column & starty based on the bitmap position
                 adjustRenderParams(bitmapOffset_, column, starty, buffer, numPixels);
                 // check if we are outside of the bitmap
@@ -79,11 +80,26 @@ namespace rckid::ui {
                     numPixels = bitmap_.height() - starty;
                 if (numPixels <= 0)
                     return;
-                // render the bitmap column
+            } else {
+                // adjust the column to be a valid bitmap column
+                column = (column - bitmapOffset_.x) % bitmap_.width();
+                if (column < 0)
+                    column += bitmap_.width();
+                // similiarly adjust startx to corresponding bitmap row
+                starty = (starty - bitmapOffset_.y) % bitmap_.height();
+                if (starty < 0)                    
+                    starty += bitmap_.height();
+            }
+            // render as many pixels as we have to by repeating the image (numPixels were updated accordingly if no repeat is required)
+            while (numPixels > 0) {
+                Coord n = std::min(numPixels, bitmap_.height() - starty);
                 if (transparentColor_ <= 0xffff)
-                    bitmap_.renderColumn(column, starty, numPixels, buffer, transparentColor_);
+                    bitmap_.renderColumn(column, starty, n, buffer, transparentColor_);
                 else
-                    bitmap_.renderColumn(column, starty, numPixels, buffer);
+                    bitmap_.renderColumn(column, starty, n, buffer);
+                numPixels -= n;
+                buffer += n;
+                starty = 0; // after the first iteration, we will always start at the
             }
         }
 

@@ -33,6 +33,5 @@ namespace rckid {
             }};
         return result;
     }
-    
 
 } // namespace rckid
