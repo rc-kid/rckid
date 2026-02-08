@@ -1367,7 +1367,7 @@ namespace rckid::assets {
         }; // OpenDyslexic24::pixels
     }; // class rckid::assets::OpenDyslexic24
 
-    inline constexpr rckid::FontData OpenDyslexic24 __attribute__((section(".rodata"))) = {
+    inline constexpr rckid::FontData const OpenDyslexic24 = {
         OpenDyslexic24FontData::size,
         95,
         OpenDyslexic24FontData::glyphs,

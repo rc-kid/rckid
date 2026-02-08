@@ -15,7 +15,7 @@ namespace rckid {
     public:
 
         virtual ~App() {
-            // TODO assert that we are not current app
+            ASSERT(current_ != this);
         }
 
         /** Runs the application. 
@@ -37,6 +37,12 @@ namespace rckid {
             The default implementation is empty. Should be overriden in derived classes for extra functionality. Note that when overriden the base class's onBlur() *must* be called as well.
          */
         virtual void onBlur() {}
+
+        /** Called when the application loop starts (and only if the application loop starts). 
+         
+            This function is a good place to start any animations that should be played when the app starts to preserve correct timing. Default implementation is empty.
+         */
+        virtual void onLoopStart() {}
 
         /** Main loop of the application. 
          

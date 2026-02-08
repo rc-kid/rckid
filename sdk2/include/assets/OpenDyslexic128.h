@@ -5256,7 +5256,7 @@ namespace rckid::assets {
         }; // OpenDyslexic128::pixels
     }; // class rckid::assets::OpenDyslexic128
 
-    inline constexpr rckid::FontData OpenDyslexic128 __attribute__((section(".rodata"))) = {
+    inline constexpr rckid::FontData const OpenDyslexic128 = {
         OpenDyslexic128FontData::size,
         95,
         OpenDyslexic128FontData::glyphs,

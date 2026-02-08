@@ -7,7 +7,6 @@
 - instead of loading pngs and outputting the text, it might be easier to transcode the png into the binary format and then use the binary folder exporter 
 
 - apply style
-- add WidgetMirror
 
 # Version 3.2 Checklist
 

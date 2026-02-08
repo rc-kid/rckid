@@ -77,28 +77,6 @@ namespace rckid::ui {
             // recalculate column & starty relative to the text position
             column -= currentHint_.leftColumn;
             font_->renderColumn(column, starty, numPixels, currentHint_.gi, buffer, textPalette_);
-
-            /*
-
-            // recalculate starty based on the vertical positioning, do not change starty as we assume it is always relative to the actual text top
-            numPixels -= textOffset_.y;
-            if (numPixels <= 0)
-                return;
-            buffer += textOffset_.y;
-            // move to previous hint if needed
-            if (column < currentHint_.leftColumn) {
-                if (currentHint_.charOffset == 0) // no more characters left
-                    return;
-                GlyphInfo const * gi = font_->glyphInfoFor(text_[currentHint_.charOffset - 1]);
-                currentHint_ = Hint{currentHint_.leftColumn, gi, currentHint_.charOffset - 1};
-            }
-            // don't render if we are too far
-            if (column >= currentHint_.rightColumn)
-                return;
-            // recalculate column & starty relative to the text position
-            column -= currentHint_.leftColumn;
-            font_->renderColumn(column, starty, numPixels, currentHint_.gi, buffer, textPalette_);
-        */
         }
 
     protected:
@@ -185,6 +163,11 @@ namespace rckid::ui {
         Point textOffset_{0,0};
 
     }; // ui::Label
+
+
+    class MultiLabel : public Widget {
+
+    }; // ui::MultiLabel
 
     struct SetText {
         String text;

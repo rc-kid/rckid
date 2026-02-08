@@ -11,12 +11,16 @@ namespace rckid {
     public:
         MusicPlayer() {
             using namespace ui;
-            carousel_ = addChild(new Launcher::BorrowedCarousel())
-                << ResetMenu(mainMenuGenerator /*[]() -> unique_ptr<ui::Menu> { return nullptr; } */);
+            carousel_ = addChild(new Launcher::BorrowedCarousel());
         }
 
-
     protected:
+
+        void onLoopStart() override {
+            using namespace ui;
+            with(carousel_)
+                << ResetMenu(mainMenuGenerator /*[]() -> unique_ptr<ui::Menu> { return nullptr; } */);
+        }
 
         void loop() override {
             ui::App<void>::loop();

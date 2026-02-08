@@ -100,6 +100,7 @@ namespace rckid {
         }
 
         void onBlur() override {
+            // TODO this is called twice if the app exists immediately which is bad
             if (! carouselBorrowed_) {
                 carousel_->moveUp(emptyMenuGenerator);
                 waitUntilIdle(carousel_);

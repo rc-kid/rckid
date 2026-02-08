@@ -72,7 +72,7 @@ int main(int argc, char const * argv[]) {
     ofile << pixelData.str() << std::endl;
     ofile << indent << "    }; // " << className << "::pixels" << std::endl;
     ofile << indent << "}; // class " << ns.value() << "::" << className << std::endl << std::endl;
-    ofile << indent << "inline constexpr rckid::FontData " << className << " __attribute__((section(\".rodata\"))) = {"  << std::endl;
+    ofile << indent << "inline constexpr rckid::FontData const " << className << " = {"  << std::endl;
     ofile << indent << "    " << className << "FontData::size," << std::endl;
     ofile << indent << "    " << fontGlyphs.size() << "," << std::endl;
     ofile << indent << "    " << className << "FontData::glyphs," << std::endl;

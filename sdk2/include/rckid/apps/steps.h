@@ -6,6 +6,8 @@
 #include <rckid/ui/animation.h>
 #include <rckid/capabilities/pedometer.h>
 
+#include <rckid/apps/dialogs/info_dialog.h>
+
 #include <assets/OpenDyslexic64.h>
 #include <assets/icons_64.h>
 
@@ -23,6 +25,12 @@ namespace rckid {
             pedometer_{Pedometer::instance()}
         {
             using namespace ui;
+            // when not available, show error message and exit the app
+            if (pedometer_ == nullptr | true) {
+                InfoDialog::error("Not available", "Step counter not supported by the device");
+                exit();
+                return;
+            }
             icon_ = addChild(new Image())
                 << SetRect(Rect::XYWH(0, 60, 320, 64))
                 << SetBitmap(assets::icons_64::footprint);
@@ -31,15 +39,16 @@ namespace rckid {
                 << SetText("Steps Counter")
                 << SetFont(assets::OpenDyslexic64)
                 << SetHAlign(HAlign::Center);
-            // TODO when not available, show error message and exit the app
-            if (pedometer_ == nullptr)
-                ASSERT(false);
+        }
+
+    protected:
+
+        void onLoopStart() override {
             animate()
                 << ui::FlyIn(icon_, 600)
                 << ui::FlyIn(steps_, 500);
         }
 
-    protected:
         void loop() override {
             using namespace ui;
             App<void>::loop();

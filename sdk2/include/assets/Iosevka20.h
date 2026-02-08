@@ -1515,7 +1515,7 @@ namespace rckid::assets {
         }; // Iosevka20::pixels
     }; // class rckid::assets::Iosevka20
 
-    inline constexpr rckid::FontData Iosevka20 __attribute__((section(".rodata"))) = {
+    inline constexpr rckid::FontData const Iosevka20 = {
         Iosevka20FontData::size,
         95,
         Iosevka20FontData::glyphs,
