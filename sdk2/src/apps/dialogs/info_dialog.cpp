@@ -18,7 +18,7 @@ namespace rckid {
             << SetFont(assets::OpenDyslexic32)
             << SetVAlign(VAlign::Center)
             << SetHAlign(HAlign::Left);
-        addChild(new Label())
+        message_ = addChild(new Label())
             << SetRect(Rect::XYWH(100, 40, 220, 60))
             << SetText(message)
             << SetVAlign(VAlign::Center)
@@ -27,16 +27,18 @@ namespace rckid {
 
     void InfoDialog::onLoopStart() {
         animate()
-            << ui::FlyIn(icon_, 500, Point{-320, 0})
-            << ui::FlyIn(title_, 600, Point{320, 0});
+            << ui::FlyIn(icon_, 300, Point{-320, 0})
+            << ui::FlyIn(title_, 300, Point{320, 0})->setDelayMs(50)
+            << ui::FlyIn(message_, 300, Point{320, 0})->setDelayMs(150);
     }
 
     void InfoDialog::loop() {
         ui::App<void>::loop();
         if (btnPressed(Btn::B) || btnPressed(Btn::Down) || btnPressed(Btn::A) || btnPressed(Btn::Up)) {
             animate()
-                << ui::FlyOut(icon_, 500, Point{-320, 0})
-                << ui::FlyOut(title_, 600, Point{320, 0});
+                << ui::FlyOut(icon_, 300, Point{-320, 0})->setDelayMs(150)
+                << ui::FlyOut(title_, 300, Point{320, 0})->setDelayMs(50)
+                << ui::FlyOut(message_, 300, Point{320, 0});
             waitUntilIdle();
             exit();
         }

@@ -147,6 +147,13 @@ namespace rckid::ui {
             return this;
         }
 
+        uint32_t delayMs() const { return delayMs_; }
+
+        Animation * setDelayMs(uint32_t delayMs) { 
+            delayMs_ = delayMs; 
+            return this;
+        }
+
         Mode mode() const { return mode_; }
 
         Animation * setMode(Mode mode) { 
@@ -177,6 +184,9 @@ namespace rckid::ui {
 
         bool update(uint32_t currentUs) {
             uint32_t elapsedMs = (currentUs - startUs_) / 1000;
+            if (elapsedMs < delayMs_)
+                return true;
+            elapsedMs -= delayMs_;
             uint32_t duration = mode_ == Mode::Oscillate ? durationMs_ * 2 : durationMs_;
             if (elapsedMs >= duration) {
                 if (mode_ == Mode::Single) {
@@ -204,6 +214,7 @@ namespace rckid::ui {
         OnUpdate onUpdate_;
         
         uint32_t startUs_ = 0;
+        uint32_t delayMs_ = 0;
         uint32_t durationMs_ = 0;
         Mode mode_ = Mode::Single;
         EasingFunction easingFunction_ = easing::identity;

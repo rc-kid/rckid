@@ -35,7 +35,7 @@ namespace rckid {
 
         ui::Image * icon_;
         ui::Label * title_;
-        ui::MultiLabel * message_;
+        ui::Label * message_;
 
     }; 
 }
