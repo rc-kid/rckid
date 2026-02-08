@@ -178,52 +178,34 @@ namespace rckid::ui {
     class CarouselMenu : public Carousel {
     public:
 
+        struct Context {
+        public:
+            uint32_t index = 0;
+            MenuItem::GeneratorEvent generator;
+            Context * previous;
+        private:
+            friend class CarouselMenu;
+            Context(MenuItem::GeneratorEvent generator, Context * previous):
+                generator{generator}, previous{previous} {}
+        }; 
+
+        ~CarouselMenu() override {
+            clearContext();
+        }
+
         Menu * menu() const { return menu_.get(); }
 
         uint32_t index() const { return index_; }
+
+        Context const * context() const { return context_; }
 
         bool empty() const { return menu_ == nullptr || menu_->size() == 0; }
 
         MenuItem * currentItem() const { return empty() ? nullptr : & menu_->at(index_); }
 
-        void setMenu(unique_ptr<Menu> menu, uint32_t index = 0) {
-            if (!idle())
-                cancelAnimations();
-            menu_ = std::move(menu);
-            index_ = index;
-            if (menu_ == nullptr)
-                setEmpty();
-            else
-                set(menu_->at(index_).text, menu_->at(index_).icon);
-        }
-
-        void setMenu(unique_ptr<Menu> menu, Direction dir, uint32_t index = 0) {
-            if (!idle())
-                cancelAnimations();
-            menu_ = std::move(menu);
-            index_ = index;
-            if (menu_ == nullptr)
-                setEmpty(dir);
-            else
-                set(menu_->at(index_).text, menu_->at(index_).icon, dir);
-        }
-
-        void setItem(uint32_t index) {
-            if (!idle())
-                cancelAnimations();
-            if (menu_ == nullptr || index >= menu_->size())
-                return;
-            index_ = index;
-            set(menu_->at(index_).text, menu_->at(index_).icon);
-        }
-
-        void setItem(uint32_t index, Direction dir) {
-            if (!idle())
-                cancelAnimations();
-            if (menu_ == nullptr || index >= menu_->size())
-                return;
-            index_ = index;
-            set(menu_->at(index_).text, menu_->at(index_).icon, dir);
+        void resetMenu(MenuItem::GeneratorEvent generator) {
+            clearContext();
+            moveUp(generator);
         }
 
         void moveLeft() {
@@ -244,32 +226,76 @@ namespace rckid::ui {
             setItem(index_, Direction::Right);
         }
 
+        void moveUp(MenuItem::GeneratorEvent generator) {
+            if (context_ != nullptr)
+                context_->index = index_;
+            context_ = new Context{generator, context_};
+            setMenu(context_->generator(), context_->index, Direction::Up);
+        }
+
+        void moveDown() {
+            ASSERT(context_ != nullptr);
+            if (!idle())
+                cancelAnimations();
+            // do not do anything if there is nowhere to go
+            if (context_->previous == nullptr)
+                return;
+            Context * old = context_;
+            context_ = context_->previous;
+            delete old;
+            setMenu(context_->generator(), context_->index, Direction::Down);
+        }
+
+protected:
+
+        void clearContext() {
+            while (context_ != nullptr) {
+                Context * c = context_;
+                context_ = context_->previous;
+                delete c;
+            }
+            ASSERT(context_ == nullptr);
+        }
+
+        void setMenu(unique_ptr<Menu> menu, uint32_t index, Direction dir) {
+            if (!idle())
+                cancelAnimations();
+            menu_ = std::move(menu);
+            index_ = index;
+            if (menu_ == nullptr || menu_->empty())
+                setEmpty(dir);
+            else
+                set(menu_->at(index_).text, menu_->at(index_).icon, dir);
+        }
+
+        void setItem(uint32_t index, Direction dir) {
+            if (!idle())
+                cancelAnimations();
+            if (menu_ == nullptr || index >= menu_->size())
+                return;
+            index_ = index;
+            set(menu_->at(index_).text, menu_->at(index_).icon, dir);
+        }
+
+
     private:
 
         unique_ptr<Menu> menu_;
         uint32_t index_ = 0;
+        Context * context_ = nullptr;
 
     }; // rckid::ui::CarouselMenu
 
-    struct SetMenu {
-        unique_ptr<Menu> menu;
-        std::optional<Direction> direction;
+    struct ResetMenu {
+        MenuItem::GeneratorEvent menu;
 
-        SetMenu(unique_ptr<Menu> menu, Direction direction):
-            menu{std::move(menu)}, direction{direction} {
-        }
+        ResetMenu(MenuItem::GeneratorEvent menu): menu{std::move(menu)} { }
 
-        SetMenu(unique_ptr<Menu> menu):
-            menu{std::move(menu)} {
-        }
     };
 
     template<typename T>
-    inline with<T> operator << (with<T> w, SetMenu && menu) {
-        if (menu.direction.has_value())
-            w->setMenu(std::move(menu.menu), menu.direction.value());
-        else
-            w->setMenu(std::move(menu.menu));
+    inline with<T> operator << (with<T> w, ResetMenu && menu) {
+        w->resetMenu(std::move(menu.menu));
         return w;
     }
 

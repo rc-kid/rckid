@@ -3,6 +3,7 @@
 #include <rckid/ui/app.h>
 #include <rckid/ui/label.h>
 #include <rckid/ui/image.h>
+#include <rckid/ui/animation.h>
 #include <rckid/capabilities/pedometer.h>
 
 #include <assets/OpenDyslexic64.h>
@@ -22,7 +23,7 @@ namespace rckid {
             pedometer_{Pedometer::instance()}
         {
             using namespace ui;
-            addChild(new Image())
+            icon_ = addChild(new Image())
                 << SetRect(Rect::XYWH(0, 60, 320, 64))
                 << SetBitmap(assets::icons_64::footprint);
             steps_ = addChild(new Label())
@@ -33,6 +34,9 @@ namespace rckid {
             // TODO when not available, show error message and exit the app
             if (pedometer_ == nullptr)
                 ASSERT(false);
+            animate()
+                << ui::FlyIn(icon_, 600)
+                << ui::FlyIn(steps_, 500);
         }
 
     protected:
@@ -40,13 +44,18 @@ namespace rckid {
             using namespace ui;
             App<void>::loop();
             with(steps_) << SetText(STR(pedometer_->count()));
-            if (btnPressed(Btn::B) || btnPressed(Btn::Down))
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                animate()
+                    << ui::FlyOut(icon_, 500)
+                    << ui::FlyOut(steps_, 600);
+                waitUntilIdle();
                 exit();
+            }
         }
 
     private:
 
-        // step counter
+        ui::Image * icon_ = nullptr;
         ui::Label * steps_ = nullptr;
 
         Pedometer * pedometer_;

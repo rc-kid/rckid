@@ -53,6 +53,14 @@ namespace rckid {
         constexpr Point() = default;
         constexpr Point(Coord x_, Coord y_): x{x_}, y{y_} {}
 
+        Point operator + (Point other) const {
+            return Point{x + other.x, y + other.y};
+        }
+
+        Point operator - (Point other) const {
+            return Point{x - other.x, y - other.y};
+        }
+
     }; // rckid::Point
 
     class Point3D {

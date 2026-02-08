@@ -13,17 +13,25 @@ namespace rckid::ui {
 
     namespace easing {
 
+        /** Identity easing function (sentinel value).
+         */
         inline FixedRatio identity(FixedRatio progress) { return progress; }
 
+        /** Quadratic ease in (starts slow, then goes fast).
+         */
         inline FixedRatio in(FixedRatio progress) {
             return progress * progress;
         }
 
+        /** Quadratic ease out (starts fast, then goes slow).
+         */
         inline FixedRatio out(FixedRatio progress) {
             FixedRatio inv{FixedRatio::Full() - progress};
             return FixedRatio::Full() - inv * inv;
         }
 
+        /** Quadratic ease in-out (starts slow, then goes fast, then goes slow again).
+         */
         inline FixedRatio inOut(FixedRatio progress) {
             if (progress < FixedRatio{0.5f}) {
                 return progress * progress * 2;
@@ -53,8 +61,16 @@ namespace rckid::ui {
             Oscillate,
         }; 
 
+        /** Animation update callback type. 
+         
+            The callback is std::function so that capture can be used and takes the target widget and the animation progress ratio (between 0 and 1) as parameters. It is guaranteed that the callback is first called with ratio 0 when the animation stars and the last call of the callback function is with progress equal to 1.
+         */
         using OnUpdate = std::function<void(Widget *, FixedRatio)>;
 
+        /** Easing function type. 
+         
+            This is just a a simple function that takes the progress ratio and adjusts it to a different ratio. As the easing functions are intended to be simple value transformers, function pointer instead of std::function is used to avoid unnecessary overhead.
+         */
         typedef FixedRatio (*EasingFunction)(FixedRatio);
 
         /** Creates new animation for given widget.  
@@ -263,16 +279,13 @@ namespace rckid::ui {
         })->setEasingFunction(easing::inOut);
     }
 
+    inline Animation * FlyIn(Widget * target, uint32_t durationMs, Point distance = Point{0, -240}) {
+        return Move(target, target->position() + distance, target->position(), durationMs);
+    }
 
-    struct SetAnimationSpeed {
-        uint32_t speedMs;
-        SetAnimationSpeed(uint32_t speedMs): speedMs{speedMs} {}
-    };
+    inline Animation *FlyOut(Widget * target, uint32_t durationMs, Point distance = Point{0, -240}) {
+        return Move(target, target->position(), target->position() + distance, durationMs);
 
-    template<typename T>
-    inline with<T> operator << (with<T> w, SetAnimationSpeed sas) {       
-        w->setAnimationSpeed(sas.speedMs);
-        return w;
     }
 
     // easing curves

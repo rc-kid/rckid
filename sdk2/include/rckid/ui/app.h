@@ -13,9 +13,12 @@ namespace rckid::ui {
     public:
         App(Rect rect): root_{rect} {}
 
-        App() = default;
+        App(): root_{Rect::XYWH(0, 0, 320, 240)} {}
 
         Widget * focusedWidget() const { return focusedWidget_; }
+
+        Coord width() const { return root_.width(); }
+        Coord height() const { return root_.height(); }
 
     protected:
 
@@ -28,6 +31,19 @@ namespace rckid::ui {
             if (focusedWidget_ != nullptr)
                 focusedWidget_->onFocus();
         }
+
+        /** Waits until the given widget becomes idle (all its aniations are finished). 
+         
+            Internally this just runs the render & system tick parts of the application loop without ever going to the loop function. Very useful for synchronous animation events, such as app exit.
+         */
+        void waitUntilIdle(Widget * w) {
+            while (! w->idle()) {
+                render();
+                tick();    
+            }
+        }
+
+        void waitUntilIdle() { waitUntilIdle(& root_); }
 
         void onFocus() override {
             ModalApp<RESULT>::onFocus();
@@ -48,6 +64,8 @@ namespace rckid::ui {
 
         template<typename T>
         with<T> addChild(T * child) { return root_.addChild(child); }
+
+        Widget::AnimationBuilder animate() { return root_.animate(); }
 
     private:
 

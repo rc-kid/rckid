@@ -32,7 +32,10 @@ namespace rckid::ui {
 
         Widget() = default;
 
-        virtual ~Widget() = default;
+        virtual ~Widget() {
+            // cancel any animations attached to the widget
+            cancelAnimations();
+        }
 
         Rect rect() const { return rect_; }
         Point position() const { return Point{rect_.x, rect_.y}; }
@@ -402,7 +405,6 @@ namespace rckid::ui {
         return w;
     }
 
-
     struct SetHAlign {
         HAlign align;
         SetHAlign(HAlign align): align{align} {}
@@ -428,6 +430,18 @@ namespace rckid::ui {
         w->setStyle(style);
         return w;
     }
+
+    struct SetAnimationSpeed {
+        uint32_t speedMs;
+        SetAnimationSpeed(uint32_t speedMs): speedMs{speedMs} {}
+    };
+
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetAnimationSpeed sas) {       
+        w->setAnimationSpeed(sas.speedMs);
+        return w;
+    }
+
 
     
 } // namespace rckid

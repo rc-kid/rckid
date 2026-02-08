@@ -28,17 +28,37 @@ namespace rckid {
     public:
 
         Launcher() {
+            ASSERT(instance_ == nullptr);
+            instance_ = this;
             carousel_ = addChild(new ui::CarouselMenu())
                 << ui::SetRect(Rect::XYWH(0, 140, 320, 100))
-                << ui::SetMenu(mainMenuGenerator(), Direction::Up);
-            state_ = new State(mainMenuGenerator, nullptr);
+                << ui::ResetMenu(mainMenuGenerator);
         }
 
         ~Launcher() override {
-            // TODO delete states
+            // detach from the instance
+            ASSERT(instance_ == this);
+            instance_ = nullptr;
+        }
+
+        ui::CarouselMenu * borrowCarousel() {
+            ASSERT(carouselBorrowed_ == false); // can be borrowed only once
+            return carousel_;
         }
 
     private:
+
+        void onFocus() override {
+            ui::App<void>::onFocus();
+            carouselBorrowed_ = false;
+        }
+
+        void onBlur() override {
+            if (! carouselBorrowed_) {
+                carousel_->moveUp(emptyMenuGenerator);
+                waitUntilIdle(carousel_);
+            }
+        }
 
         void loop() override {
             ui::App<void>::loop();
@@ -49,7 +69,7 @@ namespace rckid {
             if (btnPressed(Btn::A) || btnPressed(Btn::Up))
                 moveUp();
             if (btnPressed(Btn::B) || btnPressed(Btn::Down))
-                moveDown();
+                carousel_->moveDown();
         }
 
         void moveUp() {
@@ -57,44 +77,31 @@ namespace rckid {
             // nothing to process in empty menu
             if (item == nullptr)
                 return;
-            // if the item is action, do it
+            // if the item is action, we are launching new app 
             if (item->isAction()) {
+                //state_->index = carousel_->index();
+                // TODO fly out desktop animations
                 item->action()();
+                carousel_->moveDown();
             // if the item is generator, update current state index and start a new one according to the generator
             } else {
-                ASSERT(state_ != nullptr);
-                state_->index = carousel_->index();
-                state_ = new State(item->generator(), state_);
-                carousel_->setMenu(item->generator()(), Direction::Up);
+                carousel_->moveUp(item->generator());
             }
         }
 
-        void moveDown() {
-            ASSERT(state_ != nullptr);
-            // do not do anything if there is nowhere to go
-            if (state_->previous == nullptr)
-                return; 
-            // move to next state and delete the current one
-            State * prevState = state_;
-            state_ = state_->previous;
-            delete prevState;
-            // update the menu according to the new state
-            carousel_->setMenu(state_->generator(), Direction::Down, state_->index);
-        }
-
-        class State {
-        public:
-            uint32_t index = 0;
-            ui::MenuItem::GeneratorEvent generator;
-            State * previous;
-
-            State(ui::MenuItem::GeneratorEvent generator, State * previous): 
-                generator{std::move(generator)}, previous{previous} {}
-        }; 
-
-        State * state_ = nullptr;
-
         ui::CarouselMenu * carousel_ = nullptr;
+        bool carouselBorrowed_ = false;
+
+        static inline Launcher * instance_ = nullptr;
+
+        static unique_ptr<ui::Menu> emptyMenuGenerator() {
+            auto result = std::make_unique<ui::Menu>();
+            (*result)
+                << ui::MenuItem{"", []() {
+                    UNREACHABLE;
+                }};
+            return result;
+        }
 
     }; // rckid::Launcher
 
