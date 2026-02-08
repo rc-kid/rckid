@@ -46,6 +46,10 @@ namespace rckid {
         lastState_.setButton(btn, btnDown(btn));
     }
 
+    void btnClearAll() {
+        lastState_ = state_;
+    }
+
 
     // time
 

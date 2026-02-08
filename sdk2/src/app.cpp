@@ -17,6 +17,8 @@ namespace rckid {
         current_ = parent_;
         if (current_ != nullptr)
             current_->onFocus();
+        // clear all button events so that the previous app can't react to them any more
+        btnClearAll();
     }
 
 } // namespace rckid

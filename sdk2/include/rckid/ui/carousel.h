@@ -235,27 +235,34 @@ namespace rckid::ui {
 
         void moveDown() {
             ASSERT(context_ != nullptr);
-            if (!idle())
-                cancelAnimations();
             // do not do anything if there is nowhere to go
             if (context_->previous == nullptr)
                 return;
+            if (!idle())
+                cancelAnimations();
             Context * old = context_;
             context_ = context_->previous;
             delete old;
             setMenu(context_->generator(), context_->index, Direction::Down);
         }
 
-protected:
+        /** Returns true if the carousel is at its root level.
+         */
+        bool atRoot() const {
+            return context_->previous == nullptr;
+        }
 
-        void clearContext() {
-            while (context_ != nullptr) {
+        void clearContext(Context const * until = nullptr) {
+            while (context_ != until && context_ != nullptr) {
                 Context * c = context_;
                 context_ = context_->previous;
                 delete c;
             }
-            ASSERT(context_ == nullptr);
+            ASSERT(context_ == until || context_ == nullptr);
         }
+
+    protected:
+
 
         void setMenu(unique_ptr<Menu> menu, uint32_t index, Direction dir) {
             if (!idle())

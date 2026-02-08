@@ -60,6 +60,10 @@ namespace rckid {
      */
     void btnClear(Btn btn);
 
+    /** Clears all button state events. 
+     */
+    void btnClearAll();
+
     // TODO rapid fire
 
 

@@ -4,21 +4,10 @@
 #include <rckid/ui/carousel.h>
 #include <rckid/ui/menu.h>
 
+
 namespace rckid {
 
-    inline unique_ptr<ui::Menu> mainMenuGenerator() {
-        auto result = std::make_unique<ui::Menu>();
-        (*result)
-            << ui::MenuItem{"Steps Counter", assets::icons_64::footprint, []() {
-                Steps{}.run();
-            }}
-            << ui::MenuItem::Generator("More Apps", assets::icons_64::footprint, mainMenuGenerator)
-            << ui::MenuItem{"Steps Two", assets::icons_64::footprint, []() {
-                Steps{}.run();
-            }};
-        return result;
-     }
-
+    unique_ptr<ui::Menu> mainMenuGenerator();
 
     /** App launchaer (main menu)
      
@@ -41,10 +30,67 @@ namespace rckid {
             instance_ = nullptr;
         }
 
-        ui::CarouselMenu * borrowCarousel() {
-            ASSERT(carouselBorrowed_ == false); // can be borrowed only once
-            return carousel_;
-        }
+        class BorrowedCarousel : public ui::Widget {
+        public:
+            BorrowedCarousel() {
+                ASSERT(Launcher::instance_ != nullptr);
+                carousel_ = Launcher::instance_->carousel_;
+                Launcher::instance_->carouselBorrowed_ = true;
+                root_ = carousel_->context();
+                setRect(carousel_->rect());
+            }
+
+            ui::Menu * menu() const { return carousel_->menu(); }
+            uint32_t index() const { return carousel_->index(); }
+            ui::CarouselMenu::Context const * context() const { return carousel_->context() == root_ ? nullptr : carousel_->context(); }
+            bool empty() const { return carousel_->empty(); }
+            ui::MenuItem * currentItem() const { return carousel_->currentItem(); }
+            void resetMenu(ui::MenuItem::GeneratorEvent generator) {
+                carousel_->clearContext(root_);
+                carousel_->moveUp(std::move(generator));
+                // TODO
+            }
+            void moveLeft() { 
+                ASSERT(context() != nullptr);
+                carousel_->moveLeft(); 
+            }
+            void moveRight() {
+                ASSERT(context() != nullptr);
+                carousel_->moveRight();
+            }
+            void moveUp(ui::MenuItem::GeneratorEvent generator) {
+                ASSERT(context() != nullptr);
+                carousel_->moveUp(std::move(generator));
+            }
+
+            void moveDown() {
+                ASSERT(context() != nullptr);
+                if (context()->previous == root_)
+                    return;
+                carousel_->moveDown();
+            }
+
+            bool atRoot() const {
+                return carousel_->context()->previous == root_;
+            }
+
+            ui::CarouselMenu * borrowedCarousel() const { return carousel_; }
+
+            void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) override {
+                // move the coordinates & stuff
+                carousel_->renderColumn(column, startRow, buffer, numPixels);
+            }
+
+        protected:
+            void onRender() override {
+                Widget::onRender();
+                triggerOnRender(carousel_);
+            }
+
+        private:
+            ui::CarouselMenu * carousel_;
+            ui::CarouselMenu::Context const * root_;
+        }; // rckid::Launcher::BorrowedCarousel
 
     private:
 

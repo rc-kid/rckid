@@ -209,6 +209,11 @@ namespace rckid::ui {
             }
         }
 
+        /** Helper function that allows triggering onRender() in other widgets w/o making the function public. This is very usefuyl for wrapper widgets, such as Launcher::BorrowedCarousel, that do not have their own rendering logic, but simply delegate the rendering to the wrapped widget.
+         */
+        void triggerOnRender(Widget * w) { w->onRender();}
+
+
     private:
 
         template<typename T>
