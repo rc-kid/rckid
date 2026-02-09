@@ -195,8 +195,9 @@ namespace rckid::ini {
             auto i = current_->fields.find(field.name_);
             if (i == current_->fields.end())
                 LOG(LL_ERROR, "INI field not found: " << field.name_);
-            // convert field's string value to the requested type now
-            i->second.reader() >> field.value_;
+            else 
+                // convert field's string value to the requested type now
+                i->second.reader() >> field.value_;
             return *this;
         }
 
@@ -273,7 +274,7 @@ namespace rckid::ini {
     };
 
     template<>
-    Reader & Reader::operator >> (WritableField<String> && field) {
+    inline Reader & Reader::operator >> (WritableField<String> && field) {
         if (current_ == nullptr)
             return *this;
         auto i = current_->fields.find(field.name_);

@@ -299,6 +299,19 @@ namespace rckid {
         return w;
     }
 
+    inline Reader operator >> (Reader r, String & str) {
+        StringBuilder builder;
+        while (!r.eof()) {
+            char c = r.peekChar();
+            if (c == '\n' || c == '\r')
+                break;
+            builder.appendChar(r.getChar());
+        }
+        str = builder.str();
+        return r;
+    }
+
+
 } // namespace rckid
 
 namespace std {

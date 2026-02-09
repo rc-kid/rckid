@@ -3,6 +3,7 @@
 #include <platform.h>
 
 #include <rckid/error.h>
+#include <rckid/serialization.h>
 #include <rckid/graphics/geometry.h>
 
 namespace rckid {
@@ -279,6 +280,33 @@ namespace rckid {
             default:
                 UNREACHABLE;
         }
+    }
+
+    inline Writer operator << (Writer w, Color color) {
+        w << "#" << hex2(color.r) << hex2(color.g) << hex2(color.b);
+        return w;
+    }
+
+    inline Reader operator >> (Reader reader, Color & color) {
+        color = Color::Black(); // reset color in case of error
+        if (reader.peekChar() != '#')
+            return reader;
+        uint8_t r = 0;
+        uint8_t g = 0;
+        uint8_t b = 0;
+        auto readHexByte = [&reader](uint8_t & into) -> bool {
+            if (! platform::isHexDigit(reader.peekChar()))
+                return false;
+            into = platform::fromHex(reader.getChar()) << 4;
+            if (! platform::isHexDigit(reader.peekChar()))
+                return false;
+            into |= platform::fromHex(reader.getChar());
+            return true;
+        };
+        if (! readHexByte(r) || ! readHexByte(g) || ! readHexByte(b))
+            return reader;
+        color = Color::RGB(r, g, b);
+        return reader;
     }
 
 } // namespace rckid

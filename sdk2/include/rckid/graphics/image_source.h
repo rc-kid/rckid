@@ -1,5 +1,7 @@
 #pragma once
 
+#include <platform/writer.h>
+
 #include <rckid/rckid.h>
 #include <rckid/memory.h>
 #include <rckid/stream.h>
@@ -66,19 +68,15 @@ namespace rckid {
          
             This is a trivial operation of the image source points to immutable data (either string, or data buffer). If the data is mutable, it is cloned first.
          */
-        ImageSource(ImageSource const & from):
-            size_{from.size_} {
-            if (hal::memory::isImmutableDataPtr(from.data_.get())) {
-                data_ = immutable_ptr<uint8_t>{from.data_.get()};
-            } else {
-                uint32_t memSize = from.size_;
-                if (memSize == FILE_SD || memSize == FILE_CARTRIDGE)
-                    memSize = std::strlen(reinterpret_cast<char const *>(from.data_.get())) + 1; // null terminated
-                // for memory sources we need to make a copy of the data
-                uint8_t * newData = new uint8_t[memSize];
-                std::memcpy(newData, from.data_.get(), memSize);
-                data_ = immutable_ptr<uint8_t>{newData};
-            }
+        ImageSource(ImageSource const & from) {
+            clone(from);
+        }
+
+        ImageSource & operator = (ImageSource const & other) {
+            if (this == & other)
+                return *this;
+            clone(other);            
+            return *this;
         }
 
         /** Type of the image source. 
@@ -129,6 +127,14 @@ namespace rckid {
             return size_;
         }
 
+        /** Returns pointer to the stored data.
+         
+            This is either the actual image data if kind is memory, or a string (null ternimated) path to the file on either SD card or cartridge.
+         */
+        uint8_t const * data() const {
+            return data_.get();
+        }
+
         /** Releases the data buffer held by the image source.
          */
         immutable_ptr<uint8_t> releaseData() {
@@ -162,6 +168,21 @@ namespace rckid {
         static constexpr uint32_t FILE_SD = 0xffffffff;
         static constexpr uint32_t FILE_CARTRIDGE = 0xfffffffe;
 
+        void clone(ImageSource const & from) {
+            size_ = from.size_;
+            if (hal::memory::isImmutableDataPtr(from.data_.get())) {
+                data_ = immutable_ptr<uint8_t>{from.data_.get()};
+            } else {
+                uint32_t memSize = from.size_;
+                if (memSize == FILE_SD || memSize == FILE_CARTRIDGE)
+                    memSize = std::strlen(reinterpret_cast<char const *>(from.data_.get())) + 1; // null terminated
+                // for memory sources we need to make a copy of the data
+                uint8_t * newData = (memSize == 0) ? nullptr : new uint8_t[memSize];
+                std::memcpy(newData, from.data_.get(), memSize);
+                data_ = immutable_ptr<uint8_t>{newData};
+            }
+        }
+
         void invalidate() {
             data_.release();
             size_ = 0;
@@ -174,5 +195,46 @@ namespace rckid {
         immutable_ptr<uint8_t> data_;
 
     }; // rckid::ImageSource
+
+    inline Writer operator << (Writer w, ImageSource const & img) {
+        if (! img.good()) {
+            w << "<invalid>";
+            return w;
+        }
+        switch (img.type()) {
+            case ImageSource::Type::Memory:
+                w << "<memory>";
+                break;
+            case ImageSource::Type::SD:
+                w << "sd:" << reinterpret_cast<char const *>(img.data());
+                break;
+            case ImageSource::Type::Cartridge:
+                w << "cartridge:" << reinterpret_cast<char const *>(img.data());
+                break;
+            default:
+                UNREACHABLE;
+        }
+        return w;
+    }
+
+    inline Reader operator >> (Reader r, ImageSource & img) {
+        String path;
+        // TODO this is brittle and only works till end of line
+        r >> path;
+        if (path.size() > 0) {
+            if (path.startsWith("sd:")) {
+                img = ImageSource{path.substr(3), fs::Drive::SD};
+            } else if (path.startsWith("cartridge:")) {
+                img = ImageSource{path.substr(10), fs::Drive::Cartridge};
+            } else {
+                // for memory sources we cannot do much, so we just create an empty image source
+                img = ImageSource{};
+            }
+        } else {
+            // likely was memory
+            img = ImageSource{};
+        }
+        return r;
+    }
 
 } // namespace rckid

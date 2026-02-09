@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstring>
+#include <cstdint>
 #include <string>
 #include <functional>
 #include <type_traits>
@@ -123,7 +124,13 @@ public:
         if (header_)
             writer << '0' << 'x';
         unsigned bits = sizeof(T) * 8;
-        uint64_t what = reinterpret_cast<uint64_t>(what_);
+        uint64_t what;
+        if constexpr (std::is_pointer_v<T>)
+            what = static_cast<int64_t>(reinterpret_cast<std::uintptr_t>(what_));
+        else if constexpr (std::is_integral_v<T>)
+            what = static_cast<int64_t>(what_);
+        else
+            static_assert(false, "T must be a pointer or an integral type");
         for (int shift = bits - 4; shift >= 0; shift -= 4)
             writer << "0123456789abcdef"[(what >> shift) & 0xf];
     }
@@ -132,6 +139,20 @@ private:
     T what_;
     bool header_;
 }; // hex
+
+/** Hex writer for a single byte that always uses 2 digits and emits no header. 
+ */
+class hex2 : public Writer::Converter {
+public:
+    hex2(uint8_t what): what_{what} {}
+
+    void operator () (Writer & writer) {
+        writer << "0123456789abcdef"[(what_ >> 4) & 0xf];
+        writer << "0123456789abcdef"[what_ & 0xf];
+    }
+private:
+    uint8_t what_;
+}; // hex2
 
 /** Converter that displays numbers in binary. 
     
@@ -146,7 +167,13 @@ public:
         if (header_)
             writer << '0' << 'b';
         unsigned bits = sizeof(T) * 8;
-        uint64_t what = static_cast<uint64_t>(what_);
+        uint64_t what;
+        if constexpr (std::is_pointer_v<T>)
+            what = static_cast<int64_t>(reinterpret_cast<std::uintptr_t>(what_));
+        else if constexpr (std::is_integral_v<T>)
+            what = static_cast<int64_t>(what_);
+        else
+            static_assert(false, "T must be a pointer or an integral type");
         for (unsigned shift = bits - 1; shift >= 0; shift -= 1)
             writer << "01"[(what >> shift) & 0x1];
     }

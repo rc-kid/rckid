@@ -53,4 +53,10 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/footprint.inc.h"
     };
 
+    // File: icons/icons_64/034-pen-drive.png
+    // Size: 1184
+    static constexpr uint8_t pen_drive[] = {
+        #include "raw/icons_64/pen_drive.inc.h"
+    };
+
 } // namespace rckid::assets::icons_64

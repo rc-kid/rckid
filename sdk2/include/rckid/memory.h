@@ -148,7 +148,7 @@ namespace rckid {
 
 
         constexpr explicit immutable_ptr(T const * ptr): ptr_{ptr} {
-            ASSERT(Heap::contains(ptr) || hal::memory::isImmutableDataPtr(ptr));
+            ASSERT(Heap::contains(ptr) || hal::memory::isImmutableDataPtr(ptr) || ptr == nullptr);
         }
 
         /** Immutable pointers can be created from existing values as well. 

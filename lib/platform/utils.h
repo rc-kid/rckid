@@ -18,6 +18,14 @@ namespace platform {
         return reinterpret_cast<T>(__builtin_assume_aligned(x, 4));
     }
 
+    inline bool isDigit(char c) {
+        return c >= '0' && c <= '9';
+    }
+
+    inline bool isHexDigit(char c) {
+        return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+    }
+
     inline constexpr uint8_t fromHex(char c) {
         if (c >= '0' && c <= '9')
             return c - '0';
@@ -118,7 +126,6 @@ namespace platform {
     void writeMask(T & where, T mask, bool value) {
         where = value ? (where | mask) : (where & ~mask);
     }
-
 
     /** Calculates number of 1s in given 32bit number. 
      */

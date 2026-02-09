@@ -45,5 +45,49 @@ namespace std {
     public:
         static constexpr bool value = sizeof(test(static_cast<Derived*>(nullptr))) == sizeof(char);
     };
+
+    template <typename T>
+    struct is_pointer {
+        static constexpr bool value = false;
+    };
+
+    template <typename T>
+    struct is_pointer<T*> {
+        static constexpr bool value = true;
+    };
+
+    template<typename T>
+    inline constexpr bool is_pointer_v = is_pointer<T>::value;
+
+    template <typename T>
+    struct is_integral {
+        static constexpr bool value = false;
+    };
+
+    #define MAKE_INTEGRAL(T) \
+        template <> struct is_integral<T> { static constexpr bool value = true; };
+
+    MAKE_INTEGRAL(bool)
+    MAKE_INTEGRAL(char)
+    MAKE_INTEGRAL(signed char)
+    MAKE_INTEGRAL(unsigned char)
+    MAKE_INTEGRAL(short)
+    MAKE_INTEGRAL(unsigned short)
+    MAKE_INTEGRAL(int)
+    MAKE_INTEGRAL(unsigned int)
+    MAKE_INTEGRAL(long)
+    MAKE_INTEGRAL(unsigned long)
+    MAKE_INTEGRAL(long long)
+    MAKE_INTEGRAL(unsigned long long)
+    MAKE_INTEGRAL(char8_t)
+    MAKE_INTEGRAL(char16_t)
+    MAKE_INTEGRAL(char32_t)
+    MAKE_INTEGRAL(wchar_t)
+
+    #undef MAKE_INTEGRAL
+
+    template <typename T>
+    inline constexpr bool is_integral_v = is_integral<T>::value;
+
     
 }

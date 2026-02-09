@@ -1,6 +1,7 @@
 
 #include <rckid/apps/music_player.h>
 #include <rckid/apps/steps.h>
+#include <rckid/apps/data_sync.h>
 
 #include <rckid/apps/launcher.h>
 
@@ -30,7 +31,11 @@ namespace rckid {
         (*result)
             << ui::MenuItem{"Steps", assets::icons_64::footprint, []() {
                 Steps{}.run();
+            }}
+            << ui::MenuItem{"Data Sync", assets::icons_64::pen_drive, []() {
+                DataSync{}.run();
             }};
+
         return result;
     }
 

@@ -9,6 +9,12 @@
 
 - mk3 code not cleaned up and not working
 
+
+## Link Capability
+
+- direct connection to other device
+- via usb cable/wifi/nrf or other means, when activated user can select which link implementation to use if multiple are possible so that the API is the same and does not care with implementation
+
 # Version 3.2 Checklist
 
 First add a board that can verify the last missing features and DFM improvements, namely:

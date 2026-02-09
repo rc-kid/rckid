@@ -64,6 +64,8 @@ private:
 
 int main() {
     rckid::initialize();
+    ui::Style::loadDefaultStyle();
+    ui::Style::saveDefaultStyle();
     //Steps app;
     //TestApp app;
     Launcher app;
