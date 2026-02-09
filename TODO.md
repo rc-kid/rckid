@@ -7,6 +7,8 @@
 
 - apply style
 
+- mk3 code not cleaned up and not working
+
 # Version 3.2 Checklist
 
 First add a board that can verify the last missing features and DFM improvements, namely:

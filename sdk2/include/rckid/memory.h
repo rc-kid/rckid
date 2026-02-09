@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include <platform.h>
 
 #include <rckid/error.h>

@@ -133,7 +133,7 @@ namespace rckid {
 
         static FixedRatio Full() { return FixedRatio{static_cast<uint32_t>(1 << PRECISION)}; }
 
-        static FixedRatio Empty() { return FixedRatio{0U}; }
+        static FixedRatio Empty() { return FixedRatio{static_cast<uint32_t>(0)}; }
 
         FixedRatio & operator = (FixedRatio const &) = default;
 

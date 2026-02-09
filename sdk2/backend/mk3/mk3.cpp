@@ -159,11 +159,11 @@ namespace rckid::hal {
 
         }
 
-        bool sdReadBlocks(uint32_t blockNum, uint8_t * buffer, uint32_t numBlocks) {
+        void sdReadBlocks(uint32_t blockNum, uint8_t * buffer, uint32_t numBlocks) {
 
         }
 
-        bool sdWriteBlocks(uint32_t blockNum, uint8_t const * buffer, uint32_t numBlocks) {
+        void sdWriteBlocks(uint32_t blockNum, uint8_t const * buffer, uint32_t numBlocks) {
 
         }
 

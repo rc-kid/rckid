@@ -19,3 +19,7 @@ namespace rckid::hal::device {
     [[noreturn]] void fatalError(char const * file, uint32_t line, char const * msg_);
     [[noreturn]] void fatalError(char const * file, uint32_t line, char const * msg_, uint32_t payload);
 }
+
+namespace rckid::error {
+    constexpr char const * HW_FAIL = "HW_FAIL";
+}
