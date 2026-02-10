@@ -4,6 +4,7 @@
 #include <rckid/rckid.h>
 #include <rckid/string.h>
 #include <rckid/filesystem.h>
+#include <rckid/ui/menu.h>
 
 namespace rckid {
 
@@ -48,6 +49,8 @@ namespace rckid {
          */
         void run();
 
+        App * parent() const { return parent_; }
+
         /** Returns the name of the application. 
          
             Each application should have an unique name that is both used to visually identify the app to the user as well as a path to the app specific part of the filesystem for persistent data storage. The name *must* be unique across all apps.
@@ -63,6 +66,8 @@ namespace rckid {
         }
 
     protected:
+
+        friend class HomeMenu; // for access to home menu generator
 
         /** Called when the application gains focus. 
          
@@ -84,9 +89,9 @@ namespace rckid {
 
         /** Main loop of the application. 
          
-            This method is called repeatedly until exit() is called. The method must be overriden in derived classes to provide the actual application logic.
+            This method is called repeatedly until exit() is called. The method should be overriden in derived classes to provide the actual application logic.
          */
-        virtual void loop() = 0;
+        virtual void loop();
 
         /** Application rendering routine.
           
@@ -133,6 +138,8 @@ namespace rckid {
         virtual void releaseResources() {
             // nop
         }
+
+        virtual unique_ptr<ui::Menu> homeMenu() const;
 
         /** Flags the application to exit. 
          

@@ -1,3 +1,4 @@
+#include <rckid/apps/home_menu.h>
 #include <rckid/app.h>
 
 namespace rckid {
@@ -25,6 +26,22 @@ namespace rckid {
         // and call onFocus of the parent application
         if (current_ != nullptr)
             current_->onFocus();
+    }
+
+    void App::loop() {
+        rckid::display::waitUpdateDone();
+        if (! HomeMenu::active() && btnReleased(Btn::Home)) {
+            HomeMenu app;
+            app.run();
+        }
+    }
+
+    unique_ptr<ui::Menu> App::homeMenu() const{
+        auto result = std::make_unique<ui::Menu>();
+        // TODO add app specific home menu items here based on the capabilities
+        // load & save state
+        // take screenshot, etc.
+        return result;
     }
 
     String App::homeFolder() const {
