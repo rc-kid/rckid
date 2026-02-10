@@ -2,6 +2,8 @@
 
 #include <optional>
 #include <rckid/rckid.h>
+#include <rckid/string.h>
+#include <rckid/filesystem.h>
 
 namespace rckid {
 
@@ -9,7 +11,9 @@ namespace rckid {
      
         Application is the code that controls the screen, reacts to the user input, and generally has the command of all of RCKid's resources. The SDK is designed to run a single application at any given time, but applications themselves can stack on top of another, so that the application on top has the control, which will return to the app below when the app exits.
         
-        The base class provides common functionality for all apps, such as main loop, basic events and app lifecycle management. Specific apps derive from this class and implement their own extra logic.
+        The base class provides common functionality for all apps, such as main loop, basic events and app lifecycle management. Specific apps derive from this class and implement their own extra logic. 
+
+        Note that the App class exists only as a base class for the modal apps templated by their type to provide common base type irrespective of the result. Unless there is extremely complelling reason to do so, it should not be inherited directly (use ModalApp<> instead).
      */
     class App {
     public:
@@ -23,6 +27,12 @@ namespace rckid {
             The run method is responsible for transitioning between apps and for running the main loop of the app itself. When called, it first blurs the previous app (if any), then focuses the current app, runs the main loop which cosists of calling the system tick, and applications loop() and render(). When the app exits, it is blurred and the previous app is re-focused.
          */
         void run();
+
+        /** Returns the name of the application. 
+         
+            Each application should have an unique name that is both used to visually identify the app to the user as well as a path to the app specific part of the filesystem for persistent data storage. The name *must* be unique across all apps.
+         */
+        virtual String name() const = 0;
 
     protected:
 
@@ -67,6 +77,41 @@ namespace rckid {
         App() {
         }
 
+
+        /** \name Virtual filesystem access
+         
+            Each app has its own folder in which it can store its data. The functions below provide the identification of the app's home folder and drive on the actual filesystems as well as convenience wrappers around the filesystem function that automatically resolve the paths given to the app's home folder and drive.
+
+            NOTE that the app's home folder is now always located on the SD card, but this can change in the future. 
+         */
+        //@{
+        String homeFolder() const;
+
+        fs::Drive homeDrive() const;
+
+        String resolvePath(String const & relativePath) const;
+
+        bool exists(String const & path) const;
+
+        bool isFolder(String const & path) const;
+
+        bool isFile(String const & path) const;
+
+        bool createFolder(String const & path) const;
+
+        bool createFolders(String const & path);
+
+        bool eraseFile(String const & path);
+
+        unique_ptr<RandomReadStream> readFile(String const & path) const;
+
+        unique_ptr<RandomWriteStream> writeFile(String const & path);
+
+        unique_ptr<RandomWriteStream> appendFile(String const & path);
+
+        uint32_t readFolder(String const & path, std::function<void(fs::FolderEntry const &)> callback) const;
+        //@}
+
     private:
 
         App * parent_ = nullptr;
@@ -78,6 +123,10 @@ namespace rckid {
 
     }; // rckid::App
 
+    /** App with result value 
+
+        Allows the generic app to return an optional value at its completion (exit() method call). 
+     */
     template<typename T>
     class ModalApp : public App {
     public:
@@ -100,6 +149,8 @@ namespace rckid {
 
     }; // rckid::ModalApp<T>
 
+    /** Specialization for apps that return nothing.
+     */
     template<>
     class ModalApp<void> : public App {
     public:

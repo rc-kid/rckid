@@ -148,6 +148,10 @@ namespace rckid::fs {
             return bytesWritten;
         }
 
+        uint32_t size() const override {
+            return static_cast<uint32_t>(f_size(&f_));
+        }
+
         uint32_t seek(uint32_t position) override {
             f_lseek(& f_, position);
             return static_cast<uint32_t>(f_.fptr);
@@ -207,6 +211,10 @@ namespace rckid::fs {
 
         uint32_t tryWrite(uint8_t const * buffer, uint32_t numBytes) override {
             return lfs_file_write(& lfs_, & f_, buffer, numBytes);
+        }
+
+        uint32_t size() const override {
+            return lfs_file_size(& lfs_, & f_);
         }
 
         uint32_t seek(uint32_t position) override {

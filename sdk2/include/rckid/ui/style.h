@@ -8,6 +8,16 @@
 
 namespace rckid::ui {
 
+    /** Style theme selector.
+     */
+    enum class Theme {
+        Default,
+        Accent,
+        Info,
+        Error,
+        Success,
+    };
+
     /** Style for ui widgets. 
      
         Styles are object that define general widget visualization properties, such as colors, accents, fonts, etc. Widgets then support applying styles to themselves. The styling is simple, as the style merely holds the properties and the widgets determines what properties from the style to apply and how. 

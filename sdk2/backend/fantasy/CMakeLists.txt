@@ -17,6 +17,7 @@ target_link_libraries(librckid PUBLIC CURL::libcurl)
 # This must be called for libraries as well as executables (cartridges). For cartridges, an extra argument specifying th cartridge type must be supplied. 
 function(link_with_librckid target_name)
     get_target_property(target_type ${target_name} TYPE)
+    # TODO remove this and make it a compile time decision
     target_compile_definitions(${target_name} PRIVATE "RCKID_CUSTOM_FILESYSTEM")
     target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/lib/platform/rckid-fantasy")
     target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/sdk2/backend/fantasy")

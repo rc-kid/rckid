@@ -23,6 +23,7 @@ namespace rckid {
             << SetText(message)
             << SetVAlign(VAlign::Center)
             << SetHAlign(HAlign::Left);
+        root_.useBackgroundImage(false);
     }
 
     void InfoDialog::onLoopStart() {

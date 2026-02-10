@@ -92,7 +92,7 @@ namespace rckid {
         /** Returns the type of the image source. 
          */
         Type type() const {
-            ASSERT(good());
+            ASSERT(!empty());
             if (size_ == FILE_SD)
                 return Type::SD;
             else if (size_ == FILE_CARTRIDGE)
@@ -101,13 +101,12 @@ namespace rckid {
                 return Type::Memory;
         }
 
-
         /** Returns true if the image source is valid. 
          
             ImageSource is valid from its construction until it decays to a stream via the toStream() method. 
          */        
-        bool good() const {
-            return data_.get() != nullptr;
+        bool empty() const {
+            return data_.get() == nullptr;
         }
 
         /** Decays the image source into a stream from which the image can be read.
@@ -132,7 +131,13 @@ namespace rckid {
             This is either the actual image data if kind is memory, or a string (null ternimated) path to the file on either SD card or cartridge.
          */
         uint8_t const * data() const {
+            ASSERT(type() == Type::Memory);
             return data_.get();
+        }
+
+        char const * path() const {
+            ASSERT(type() == Type::SD || type() == Type::Cartridge);
+            return reinterpret_cast<char const *>(data_.get());
         }
 
         /** Releases the data buffer held by the image source.
@@ -197,44 +202,24 @@ namespace rckid {
     }; // rckid::ImageSource
 
     inline Writer operator << (Writer w, ImageSource const & img) {
-        if (! img.good()) {
-            w << "<invalid>";
+        if (img.empty()) {
+            w << "<empty>";
             return w;
         }
         switch (img.type()) {
             case ImageSource::Type::Memory:
-                w << "<memory>";
+                w << "memory:" << img.size() << "@" << hex<uint8_t const *>(img.data());
                 break;
             case ImageSource::Type::SD:
-                w << "sd:" << reinterpret_cast<char const *>(img.data());
+                w << "sd:" << img.path();
                 break;
             case ImageSource::Type::Cartridge:
-                w << "cartridge:" << reinterpret_cast<char const *>(img.data());
+                w << "cartridge:" << img.path();
                 break;
             default:
                 UNREACHABLE;
         }
         return w;
-    }
-
-    inline Reader operator >> (Reader r, ImageSource & img) {
-        String path;
-        // TODO this is brittle and only works till end of line
-        r >> path;
-        if (path.size() > 0) {
-            if (path.startsWith("sd:")) {
-                img = ImageSource{path.substr(3), fs::Drive::SD};
-            } else if (path.startsWith("cartridge:")) {
-                img = ImageSource{path.substr(10), fs::Drive::Cartridge};
-            } else {
-                // for memory sources we cannot do much, so we just create an empty image source
-                img = ImageSource{};
-            }
-        } else {
-            // likely was memory
-            img = ImageSource{};
-        }
-        return r;
     }
 
 } // namespace rckid

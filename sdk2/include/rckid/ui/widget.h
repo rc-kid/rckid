@@ -37,6 +37,11 @@ namespace rckid::ui {
             cancelAnimations();
         }
 
+        virtual void applyStyle([[maybe_unused]] Style const * style) {
+            // do nothing
+            // TODO or should this be nreachable 
+        }
+
         Rect rect() const { return rect_; }
         Point position() const { return Point{rect_.x, rect_.y}; }
         Coord x() const { return rect_.x; }
@@ -430,9 +435,15 @@ namespace rckid::ui {
         return w;
     }
 
+
+    struct ApplyStyle {
+        Style const * style;
+        ApplyStyle(Style const * style): style{style} {}
+    };
+
     template<typename T>
-    inline with<T> operator << (with<T> w, Style const & style) {
-        w->setStyle(style);
+    inline with<T> operator << (with<T> w, ApplyStyle as) {
+        w->applyStyle(as.style);
         return w;
     }
 

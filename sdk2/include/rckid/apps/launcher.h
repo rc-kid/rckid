@@ -26,9 +26,12 @@ namespace rckid {
     class Launcher : public ui::App<void> {
     public:
 
+        String name() const override { return "Launcher"; }
+
         Launcher() {
             ASSERT(instance_ == nullptr);
             instance_ = this;
+            root_.applyStyle(ui::Style::loadDefaultStyle());
             carousel_ = addChild(new ui::CarouselMenu())
                 << ui::SetRect(Rect::XYWH(0, 140, 320, 100))
                 << ui::ResetMenu(mainMenuGenerator);

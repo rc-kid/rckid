@@ -11,6 +11,8 @@ namespace rckid {
     class InfoDialog : public ui::App<void> {
     public:
 
+        String name() const override { return "Info Dialog"; }
+
         InfoDialog(String title, String message, ImageSource icon);
 
         static void info(String title, String message) {

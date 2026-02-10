@@ -9,6 +9,9 @@ namespace rckid {
      */
     class MusicPlayer : public ui::App<void> {
     public:
+
+        String name() const override { return "Music"; }
+
         MusicPlayer() {
             using namespace ui;
             carousel_ = addChild(new Launcher::BorrowedCarousel());

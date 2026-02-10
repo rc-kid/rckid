@@ -5,9 +5,11 @@
 
 /** Serialization & Deserialization
 
-    RCKid SDK provides simple and extensible serialization and deserialization framework via the Writer and Reader classes. Two basic serializers are provided - text based Writer and Reader and their binary based counterparts BinaryWriter and BinaryReader. Operators << and >> are used for serialization and deserialization respectively and types that allow themselves to be serialized should overload those for the applicable reader and writer classes.
+    RCKid SDK provides simple and extensible serialization and deserialization framework the Writer and Reader classes. Two basic serializers are provided - text based Writer and Reader and their binary based counterparts BinaryWriter and BinaryReader. Operators << and >> are used for serialization and deserialization respectively and types that allow themselves to be serialized should overload those for the applicable reader and writer classes.
 
-    TODO add more documentation
+    The API has been designed to minimize code explosing from templating overhead and conceptually follows the Writer from platform library where a single writer is configured with a function capable of writing a single byte. 
+
+    
  */
 
 namespace rckid {

@@ -156,6 +156,7 @@ namespace rckid::ui {
     struct SetBitmap {
         Bitmap bitmap;
         SetBitmap(Bitmap bitmap): bitmap{std::move(bitmap)} {}
+        SetBitmap(ImageSource src): bitmap{std::move(src)} {}
         template<size_t SIZE>
         SetBitmap(uint8_t const (& data)[SIZE]): bitmap{ImageSource{data}} {}
     };

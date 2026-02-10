@@ -41,12 +41,15 @@ namespace rckid::ui {
                 >> ini::Field("bg", errorBg_)
             >> ini::Section("success")
                 >> ini::Field("fg", successFg_)
-                >> ini::Field("bg", successBg_)
+                >> ini::Field("bg", successBg_);
+        String str;
+        reader
             >> ini::Section("background")
-                >> ini::Field("image", backgroundImage_);
-        // reset background image todefault is the loaded one is not valid
-        if (! backgroundImage_.good())
+                >> ini::Field("image", str);
+        if (str.empty())
             backgroundImage_ = ImageSource{assets::images::logo};
+        else 
+            backgroundImage_ = ImageSource{str, fs::Drive::SD};
     }
 
     void Style::save(ini::Writer & writer) {
@@ -67,7 +70,7 @@ namespace rckid::ui {
                 << ini::Field("fg", successFg_)
                 << ini::Field("bg", successBg_)
             << ini::Section("background")
-                << ini::Field("image", backgroundImage_);
+                << ini::Field("image", backgroundImage_.type() == ImageSource::Type::Memory ? "" : backgroundImage_.path());
     }
 
 

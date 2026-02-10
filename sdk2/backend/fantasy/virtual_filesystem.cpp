@@ -71,6 +71,14 @@ namespace rckid::fs {
             return numBytes;
         }
 
+        uint32_t size() const override {
+            std::streampos currentPos = f_.tellp();
+            f_.seekp(0, std::ios::end);
+            std::streamsize size = f_.tellp();
+            f_.seekp(currentPos);
+            return static_cast<uint32_t>(size);
+        }
+
         uint32_t seek(uint32_t position) override {
             f_.seekp(position, std::ios::beg);
             std::streamsize size = f_.tellp();

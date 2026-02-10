@@ -21,6 +21,9 @@ namespace rckid {
      */
     class Steps : public ui::App<void> {
     public:
+
+        String name() const override { return "Steps"; }
+
         Steps():
             pedometer_{Pedometer::instance()}
         {

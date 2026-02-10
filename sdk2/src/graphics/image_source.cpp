@@ -5,7 +5,8 @@
 namespace rckid {
 
     unique_ptr<RandomReadStream> ImageSource::toStream() {
-        ASSERT(good());
+        if (empty())   
+            return nullptr;
         if (type() == Type::Memory) {
             // create memory stream from this data
             unique_ptr<RandomReadStream> result{new MemoryReadStream{std::move(data_), size_}};
@@ -25,7 +26,8 @@ namespace rckid {
     }
 
     unique_ptr<ImageDecoder> ImageSource::toDecoder() {
-        ASSERT(good());
+        if (empty())   
+            return nullptr;
         switch (getImageType()) {
             case ImageType::PNG:
                 return std::make_unique<PNGImageDecoder>(std::move(*this));
@@ -45,7 +47,7 @@ namespace rckid {
     }
 
     ImageSource::ImageType ImageSource::getImageType() const {
-        ASSERT(good());
+        ASSERT(!empty());
         // data is in memory, this becomes simple
         if (type() == Type::Memory) {
             uint8_t const * d = data_.get();

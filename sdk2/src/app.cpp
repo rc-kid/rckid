@@ -26,4 +26,57 @@ namespace rckid {
         btnClearAll();
     }
 
+    String App::homeFolder() const {
+        return STR("/apps/" << name());
+    }
+
+    fs::Drive App::homeDrive() const {
+        return fs::Drive::SD;
+    }
+
+    String App::resolvePath(String const & relativePath) const {
+        return fs::join(homeFolder(), relativePath);
+    }
+
+    bool App::exists(String const & path) const {
+        return fs::exists(resolvePath(path), homeDrive());
+    }
+
+    bool App::isFolder(String const & path) const {
+        return fs::isFolder(resolvePath(path), homeDrive());
+    }
+
+    bool App::isFile(String const & path) const {
+        return fs::isFile(resolvePath(path), homeDrive());
+    }
+
+    bool App::createFolder(String const & path) const {
+        return fs::createFolder(resolvePath(path), homeDrive());
+    }
+
+    bool App::createFolders(String const & path) {
+        return fs::createFolders(resolvePath(path), homeDrive());
+    }
+
+    bool App::eraseFile(String const & path) {
+        return fs::eraseFile(resolvePath(path), homeDrive());
+    }
+
+    unique_ptr<RandomReadStream> App::readFile(String const & path) const {
+        return fs::readFile(resolvePath(path), homeDrive());
+    }
+
+    unique_ptr<RandomWriteStream> App::writeFile(String const & path) {
+        return fs::writeFile(resolvePath(path), homeDrive());
+    }
+
+    unique_ptr<RandomWriteStream> App::appendFile(String const & path) {
+        return fs::appendFile(resolvePath(path), homeDrive());
+    }
+
+    uint32_t App::readFolder(String const & path, std::function<void(fs::FolderEntry const &)> callback) const {
+        return fs::readFolder(resolvePath(path), homeDrive(), std::move(callback));
+    }
+
+
 } // namespace rckid

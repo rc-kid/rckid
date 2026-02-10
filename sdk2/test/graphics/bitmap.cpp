@@ -22,7 +22,7 @@ TEST(graphics, imageSourceMemory) {
     ImageSource img{bmp};
     EXPECT(g_.usedDelta() == 0);
     EXPECT(g_.reservedDelta() == 0);
-    EXPECT(img.good());
+    EXPECT(!img.empty());
     EXPECT(img.type() == ImageSource::Type::Memory);
     EXPECT(img.size() == sizeof(bmp));
 }

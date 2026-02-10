@@ -4,7 +4,9 @@
 namespace rckid {
 
     Bitmap::Bitmap(ImageSource && src) {
-        ASSERT(src.good());
+        // if the source is empty, do nothing
+        if (src.empty())
+            return;
         std::unique_ptr<ImageDecoder> decoder = src.toDecoder();
         if (decoder)
             *this = decoder->decode();

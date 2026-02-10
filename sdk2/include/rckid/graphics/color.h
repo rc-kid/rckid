@@ -291,6 +291,7 @@ namespace rckid {
         color = Color::Black(); // reset color in case of error
         if (reader.peekChar() != '#')
             return reader;
+        reader.getChar(); // consume '#'
         uint8_t r = 0;
         uint8_t g = 0;
         uint8_t b = 0;

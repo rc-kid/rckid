@@ -45,7 +45,7 @@ namespace rckid {
         }
 
         RawBitmapDecoder(ImageSource && src) {
-            ASSERT(src.good());
+            ASSERT(!src.empty());
             if (src.type() == ImageSource::Type::Memory) {
                 uint32_t dataSize = src.size();
                 data_ = mutable_ptr<uint8_t>{(src.releaseData().release()), dataSize};
