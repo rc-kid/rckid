@@ -74,9 +74,7 @@ namespace rckid {
             shouldExit_ = true;
         }
 
-        App() {
-        }
-
+        App() = default;
 
         /** \name Virtual filesystem access
          

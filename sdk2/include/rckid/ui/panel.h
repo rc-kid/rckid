@@ -7,11 +7,26 @@ namespace rckid::ui {
     class Panel : public Widget {
     public:
 
-        void applyStyle(Style const * style) override {
+        void applyStyle(Style const * style, Theme theme) override {
             if (style == nullptr)
                 return;
-            Widget::applyStyle(style);
-            bg_ = style->defaultBg();
+            Widget::applyStyle(style, theme);
+            switch (theme) {
+                case Theme::Default:
+                    bg_ = style->defaultBg();
+                    break;
+                case Theme::Info:
+                    bg_ = style->infoBg();
+                    break;
+                case Theme::Success:
+                    bg_ = style->successBg();
+                    break;
+                case Theme::Error:
+                    bg_ = style->errorBg();
+                    break;
+                default:
+                    UNREACHABLE;
+            }
         }
 
         Color bg() const { return bg_; }

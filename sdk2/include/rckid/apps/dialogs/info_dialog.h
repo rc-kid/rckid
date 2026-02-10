@@ -13,23 +13,20 @@ namespace rckid {
 
         String name() const override { return "Info Dialog"; }
 
-        InfoDialog(String title, String message, ImageSource icon);
+        InfoDialog(String title, String message, ImageSource icon, ui::Theme theme = ui::Theme::Default);
 
         static void info(String title, String message) {
-            InfoDialog dlg{std::move(title), std::move(message), assets::icons_64::info};
-            dlg.setBg(Color::RGB(0, 0, 64));
+            InfoDialog dlg{std::move(title), std::move(message), assets::icons_64::info, ui::Theme::Info};
             dlg.run();
         }
 
         static void success(String title, String message) {
-            InfoDialog dlg{std::move(title), std::move(message), assets::icons_64::happy_face};
-            dlg.setBg(Color::RGB(0, 64, 0));
+            InfoDialog dlg{std::move(title), std::move(message), assets::icons_64::happy_face, ui::Theme::Success};
             dlg.run();
         }
 
         static void error(String title, String message) {
-            InfoDialog dlg{std::move(title), std::move(message), assets::icons_64::sad_face};
-            dlg.setBg(Color::RGB(64, 0, 0));
+            InfoDialog dlg{std::move(title), std::move(message), assets::icons_64::sad_face, ui::Theme::Error};
             dlg.run();
         }
 

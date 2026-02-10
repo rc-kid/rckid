@@ -11,9 +11,15 @@ namespace rckid::ui {
 
         RootWidget();
 
-        RootWidget(Rect rect): 
-            renderBuffer_{static_cast<uint32_t>(rect.height())} {
+        RootWidget(Rect rect, Theme theme): 
+            renderBuffer_{static_cast<uint32_t>(rect.height())},
+            theme_{theme} 
+        {
             setRect(rect);
+        }
+
+        ui::Theme theme() const override {
+            return theme_;
         }
 
         bool useBackrgoundImage() const { return useBackgroundImage_; }
@@ -26,17 +32,21 @@ namespace rckid::ui {
 
         void render();
 
-        void applyStyle(Style const * style) override {
+        void applyStyle(Style const * style, Theme theme) override {
+            theme_ = theme;
             if (style == nullptr)
                 return;
-            Panel::applyStyle(style);
+            Panel::applyStyle(style, theme);
+        }
+
+        void setBackgroundImage(Style const * style) {
             if (style->backgroundImage().empty()) {
                 background_ = nullptr;
             } else {
                 background_.reset(new Image());
                 with(background_.get())
                     << SetBitmap(style->backgroundImage())
-                    << SetRect(Rect::XYWH(0, 0, width(), height()))
+                    << SetRect(Rect::XYWH(0, 0, hal::display::WIDTH, hal::display::HEIGHT))
                     << SetTransparentColor(std::nullopt)
                     << SetHAlign(HAlign::Center)
                     << SetVAlign(VAlign::Center);
@@ -59,6 +69,7 @@ namespace rckid::ui {
         DoubleBuffer<Color::RGB565> renderBuffer_;
         Coord renderCol_;
 
+        Theme theme_;
         bool useBackgroundImage_ = true;
 
         /** Background image (wallpaper)

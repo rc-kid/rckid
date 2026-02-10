@@ -31,7 +31,7 @@ namespace rckid {
         Launcher() {
             ASSERT(instance_ == nullptr);
             instance_ = this;
-            root_.applyStyle(ui::Style::loadDefaultStyle());
+            root_.setBackgroundImage(ui::Style::defaultStyle());
             carousel_ = addChild(new ui::CarouselMenu())
                 << ui::SetRect(Rect::XYWH(0, 140, 320, 100))
                 << ui::ResetMenu(mainMenuGenerator);

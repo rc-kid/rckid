@@ -3,8 +3,8 @@
 
 namespace rckid {
 
-    InfoDialog::InfoDialog(String title, String message, ImageSource icon):
-        ui::App<void>{Rect::XYWH(0, 140, 320, 100)} 
+    InfoDialog::InfoDialog(String title, String message, ImageSource icon, ui::Theme theme):
+        ui::App<void>{Rect::XYWH(0, 140, 320, 100), theme} 
     {
         using namespace ui;
         icon_ = addChild(new Image())

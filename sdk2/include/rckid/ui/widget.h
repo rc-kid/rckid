@@ -37,9 +37,22 @@ namespace rckid::ui {
             cancelAnimations();
         }
 
-        virtual void applyStyle([[maybe_unused]] Style const * style) {
+        virtual ui::Theme theme() const {
+            if (parent_ == nullptr)
+                return ui::Theme::Default;
+            Widget const * w = this;
+            while (w->parent_ != nullptr)
+                w = w->parent_;
+            return w->theme();
+        }
+
+        virtual void applyStyle([[maybe_unused]] Style const * style, [[maybe_unused]] Theme theme) {
             // do nothing
             // TODO or should this be nreachable 
+        }
+
+        void applyStyleFromParent(Style const * style) {
+            applyStyle(style, theme());
         }
 
         Rect rect() const { return rect_; }
@@ -88,6 +101,7 @@ namespace rckid::ui {
         with<T> addChild(T * child) {
             ASSERT(child->parent_ == nullptr);
             child->parent_ = this;            
+            child->applyStyleFromParent(Style::defaultStyle());
             children_.push_back(unique_ptr<Widget>(child));
             return with<T>(child);
         }
@@ -438,12 +452,17 @@ namespace rckid::ui {
 
     struct ApplyStyle {
         Style const * style;
+        std::optional<Theme> theme;
         ApplyStyle(Style const * style): style{style} {}
+        ApplyStyle(Style const * style, Theme theme): style{style}, theme{theme} {}
     };
 
     template<typename T>
     inline with<T> operator << (with<T> w, ApplyStyle as) {
-        w->applyStyle(as.style);
+        if (as.theme.has_value())
+            w->applyStyle(as.style, as.theme.value());
+        else
+            w->applyStyleFromParent(as.style);
         return w;
     }
 

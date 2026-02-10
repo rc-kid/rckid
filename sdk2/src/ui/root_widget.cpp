@@ -5,7 +5,7 @@
 namespace rckid::ui {
 
     RootWidget::RootWidget(): 
-        RootWidget(Rect::WH(hal::display::WIDTH, hal::display::HEIGHT)) {
+        RootWidget(Rect::WH(hal::display::WIDTH, hal::display::HEIGHT), ui::Theme::Default) {
     }
 
     void RootWidget::initializeDisplay() {

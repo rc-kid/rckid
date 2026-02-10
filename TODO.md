@@ -8,6 +8,9 @@
 - apply style to all widgets at addChild
 
 - start widgets with peferred style? This allows them to set the style properly from style (maybe call it theme)
+
+
+
 - mk3 code not cleaned up and not working
 
 ## Link Capability
