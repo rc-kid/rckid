@@ -20,10 +20,11 @@ namespace rckid {
         }
         onBlur();
         current_ = parent_;
-        if (current_ != nullptr)
-            current_->onFocus();
         // clear all button events so that the previous app can't react to them any more
         btnClearAll();
+        // and call onFocus of the parent application
+        if (current_ != nullptr)
+            current_->onFocus();
     }
 
     String App::homeFolder() const {

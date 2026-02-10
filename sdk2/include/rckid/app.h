@@ -18,6 +18,26 @@ namespace rckid {
     class App {
     public:
 
+        /** Describes capabilities of the app. 
+         
+            Apps declare their capabilities via the capabilities() virtual method to allow the SDK determine what features and behaviors are expected from the application.  
+         */
+        class Capabilities {
+        public:
+            /** If true, the app is capable of loading and saving its state via the loadState and saveState methods. 
+             */
+            bool canPersistState = false;
+            /** If true, the app can capture image of its current screen via the captureScreen method.
+             */
+            bool canCaptureScreen = false;
+            /** If true, the app requires Bits (RCKid's budgeting currency) in order to run.
+             */
+            bool consumesBits = false;
+            /** If an app is standalone, it requires all available system resources. Starting such an app will cancel all current asks and tell all applications on the stack to release their resources via the releaseResources() method call. 
+             */
+            bool standalone = false;
+        };
+
         virtual ~App() {
             ASSERT(current_ != this);
         }
@@ -33,6 +53,14 @@ namespace rckid {
             Each application should have an unique name that is both used to visually identify the app to the user as well as a path to the app specific part of the filesystem for persistent data storage. The name *must* be unique across all apps.
          */
         virtual String name() const = 0;
+
+        /** Returns the capabilities of the application.
+         
+            Default app behavior is *no* capabilities. Override this method in apps to declare supported or requires capabilities.
+         */
+        virtual Capabilities capabilities() const {
+            return {};
+        }
 
     protected:
 
@@ -65,6 +93,46 @@ namespace rckid {
             Called by the run() method immediately after loop finishes. 
          */
         virtual void render() = 0;
+
+        /** Loads app state from given stream. 
+         
+            Returns true if the state was loaded successfully, false otherwise. Override this method in apps that support state persistence. Note that the app must declare the canPersistState capability in order for the method to be called.
+
+            The method can be called any time after the onLoopStart() method returns. 
+         */
+        virtual bool loadState([[maybe_unused]] ReadStream & stream) {
+            UNREACHABLE;
+            return false;
+        }
+
+        /** Saves app state to given stream. 
+         
+            Override this method in apps that support state persistence. Note that the app must declare the canPersistState capability in order for the method to be called.
+            
+            The method can be called any time after the onLoopStart() method returns.
+         */
+        virtual void saveState([[maybe_unused]] WriteStream & stream) const {
+            UNREACHABLE;
+        }
+
+        /** Saves screen capture in any of the SDK supported image formats to the given stream.
+         
+            Override this method in apps that support screen capture. Note that the app must declare the canCaptureScreen capability in order for the method to be called. Returns true of the screen capture was successful, false otherwise.
+
+            The method can be called any time after the onLoopStart() method returns.
+         */
+        virtual bool captureScreen([[maybe_unused]] WriteStream & stream) const {
+            UNREACHABLE;
+            return false;
+        }
+
+        /** Called by the system when standalone app is about to be started. 
+         
+            When called, the app should release all of its resources (memory, file handles, HW resources, etc.) if supported in order to give the standalone app as much of the system available resources as possible. The default implementation is empty (no support). 
+         */
+        virtual void releaseResources() {
+            // nop
+        }
 
         /** Flags the application to exit. 
          

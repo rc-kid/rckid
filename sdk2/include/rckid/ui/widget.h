@@ -37,20 +37,24 @@ namespace rckid::ui {
             cancelAnimations();
         }
 
+        /** Returns style theme associated with the widget. 
+         
+            By default, themes are inherited from the parent widgets. If there is no parent widget, returns the default theme. This method is then overriden in widgets that store/change themes (e..g. RootWidget) to return the actual theme.
+         */
         virtual ui::Theme theme() const {
             if (parent_ == nullptr)
                 return ui::Theme::Default;
-            Widget const * w = this;
-            while (w->parent_ != nullptr)
-                w = w->parent_;
-            return w->theme();
+            return parent_->theme();
         }
 
+        /** Applies given style and theme. 
+         */
         virtual void applyStyle([[maybe_unused]] Style const * style, [[maybe_unused]] Theme theme) {
             // do nothing
-            // TODO or should this be nreachable 
         }
 
+        /** Applies given style using the inherited theme from the parent widget. 
+         */
         void applyStyleFromParent(Style const * style) {
             applyStyle(style, theme());
         }
@@ -100,8 +104,10 @@ namespace rckid::ui {
         template<typename T>
         with<T> addChild(T * child) {
             ASSERT(child->parent_ == nullptr);
-            child->parent_ = this;            
-            child->applyStyleFromParent(Style::defaultStyle());
+            child->parent_ = this;       
+            Style * style = Style::defaultStyle();
+            if (style)     
+                child->applyStyleFromParent(style);
             children_.push_back(unique_ptr<Widget>(child));
             return with<T>(child);
         }
@@ -449,7 +455,6 @@ namespace rckid::ui {
         return w;
     }
 
-
     struct ApplyStyle {
         Style const * style;
         std::optional<Theme> theme;
@@ -459,6 +464,10 @@ namespace rckid::ui {
 
     template<typename T>
     inline with<T> operator << (with<T> w, ApplyStyle as) {
+        // do not apply empty style
+        if (as.style == nullptr)  
+            return w;
+        // either apply style with parent theme, or use the explicitly provided one (if any)
         if (as.theme.has_value())
             w->applyStyle(as.style, as.theme.value());
         else

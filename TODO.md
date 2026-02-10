@@ -5,11 +5,16 @@
 - how to do heartbeat? (static initializers?)
 - instead of loading pngs and outputting the text, it might be easier to transcode the png into the binary format and then use the binary folder exporter 
 
-- apply style to all widgets at addChild
-
-- start widgets with peferred style? This allows them to set the style properly from style (maybe call it theme)
+- apply style to existing widgets
 
 
+- multilabel widget
+- displa image in all rows, including 4bpp and odd ones
+- save and load state
+- badges and icons in carousels (maybe via onShown menu item?, or maybe this should be intercepted at carousel's level?)
+- home menu
+- header
+- audio playback
 
 - mk3 code not cleaned up and not working
 
