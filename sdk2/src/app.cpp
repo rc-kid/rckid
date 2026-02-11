@@ -32,7 +32,9 @@ namespace rckid {
         rckid::display::waitUpdateDone();
         if (! HomeMenu::active() && btnReleased(Btn::Home)) {
             HomeMenu app;
-            app.run();
+            auto action = app.run();
+            if (action.has_value())
+                action.value()();
         }
     }
 

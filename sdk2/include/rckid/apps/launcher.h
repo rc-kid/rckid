@@ -99,6 +99,14 @@ namespace rckid {
                 triggerOnRender(carousel_);
             }
 
+            void processEvents() override {
+                if (btnPressed(Btn::Down) || btnPressed(Btn::B)) {
+                    if (atRoot())
+                        return;
+                }
+                triggerProcessedEvents(carousel_);
+            }
+
         private:
             ui::CarouselMenu * carousel_;
             ui::CarouselMenu::Context const * root_;
@@ -109,30 +117,24 @@ namespace rckid {
         void onFocus() override {
             ui::App<void>::onFocus();
             carouselBorrowed_ = false;
-            if (moveDownOnFocus_) {
-                carousel_->moveDown();
-                moveDownOnFocus_ = false;
-            }
+            carousel_->moveDown();
+            focusWidget(carousel_);
         }
 
         void onBlur() override {
             if (! carouselBorrowed_) {
                 carousel_->moveUp(nullptr);
-                moveDownOnFocus_ = true;
                 waitUntilIdle(carousel_);
             }
         }
 
         void loop() override {
             ui::App<void>::loop();
-            if (btnPressed(Btn::Left))
-                carousel_->moveLeft();
-            if (btnPressed(Btn::Right))
-                carousel_->moveRight();
-            if (btnPressed(Btn::A) || btnPressed(Btn::Up))
-                moveUp();
-            if (btnPressed(Btn::B) || btnPressed(Btn::Down))
-                carousel_->moveDown();
+            if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                auto item = carousel_->currentItem();
+                ASSERT(item->isAction());
+                item->action()();
+            }
         }
 
         /** The launcher's home menu has no elements as exitting the app is not possible and launcher has no capabilities on its own.
@@ -160,7 +162,6 @@ namespace rckid {
 
         // whether carousel has been borrowed by the next running app (this changes the animations and the way we reset the menu when the app exits)
         bool carouselBorrowed_ = false;
-        bool moveDownOnFocus_ = false;
 
         // launcher instance
         static inline Launcher * instance_ = nullptr;

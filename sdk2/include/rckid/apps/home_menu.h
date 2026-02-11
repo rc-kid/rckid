@@ -52,43 +52,35 @@ namespace rckid {
                 });
         }
 
+        void onFocus() override {
+            ui::App<ui::MenuItem::ActionEvent>::onFocus();
+            focusWidget(carousel_);
+        }
+
         void loop() override {
             ui::App<ui::MenuItem::ActionEvent>::loop();
-            if (btnPressed(Btn::Left)) {
-                carousel_->moveLeft();
-            } else if (btnPressed(Btn::Right)) {
-                carousel_->moveRight();
-            } else if (btnPressed(Btn::Up) || btnPressed(Btn::A)) {
+            if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                 auto item = carousel_->currentItem();
-                if (item != nullptr) {
-                    if (item->isGenerator()) {
-                        carousel_->moveUp(item->generator());
-                    } else {
-                        // execute the action immediately in the menu context
+                ASSERT(item != nullptr);
+                // and then exit or not based on the payload
+                switch (item->payload) {
+                    case ExecuteInApp:
+                        exit(std::move(item->action()));
+                        break;
+                    case ExecuteInMenuAndExit:
                         item->action()();
-                        // and then exit or not based on the payload
-                        switch (item->payload) {
-                            case ExecuteInApp:
-                                exit(std::move(item->action()));
-                                break;
-                            case ExecuteInMenuAndExit:
-                                item->action()();
-                                exit();
-                                break;
-                            case ExecuteInMenu:
-                                item->action()();
-                                break;
-                            default:
-                                LOG(LL_ERROR, "Unknown home menu item execution policy " << item->payload);
-                        }
-                    }
+                        exit();
+                        break;
+                    case ExecuteInMenu:
+                        item->action()();
+                        break;
+                    default:
+                        LOG(LL_ERROR, "Unknown home menu item execution policy " << item->payload);
                 }
-            } else if (btnPressed(Btn::Down) || btnPressed(Btn::B)) {
-                if (carousel_->atRoot()) {
-                    exit();
-                } else {
-                    carousel_->moveDown();
-                }
+            }
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                ASSERT(carousel_->atRoot());
+                exit();
             }
         }
 

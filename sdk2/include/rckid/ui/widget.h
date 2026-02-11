@@ -248,6 +248,8 @@ namespace rckid::ui {
          */
         void triggerOnRender(Widget * w) { w->onRender();}
 
+        void triggerProcessedEvents(Widget * w) { w->processEvents(); }
+
 
     private:
 

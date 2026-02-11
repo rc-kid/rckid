@@ -267,6 +267,45 @@ namespace rckid::ui {
 
     protected:
 
+        void processEvents() override {
+            Carousel::processEvents();
+            if (btnPressed(Btn::Left))
+                moveLeft();
+            if (btnPressed(Btn::Right))
+                moveRight();
+            if (btnPressed(Btn::Up) || btnPressed(Btn::A)) {
+                if (processMoveUp()) {
+                    btnClear(Btn::Up);
+                    btnClear(Btn::Down);
+                }
+            }
+            if (btnPressed(Btn::Down) || btnPressed(Btn::B)) {
+                if (processMoveDown()) {
+                    btnClear(Btn::Up);
+                    btnClear(Btn::Down);
+                }
+            }
+        }
+
+        bool processMoveUp() {
+            auto item = currentItem();
+            // if there is nothing to do there is nothing to do even for the main app (empty carousel)
+            if (item == nullptr)
+                return true;
+            // if the item is action, let the app handle it
+            if (item->isAction()) 
+                return false;
+            // otherwise its generator, we can handle it ourselves
+            moveUp(item->generator());
+            return true;
+        }
+
+        bool processMoveDown() {
+            if (atRoot())
+                return false;
+            moveDown();
+            return true;
+        }
 
         void setMenu(unique_ptr<Menu> menu, uint32_t index, Direction dir) {
             menu_ = std::move(menu);

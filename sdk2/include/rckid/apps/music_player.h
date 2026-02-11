@@ -25,20 +25,18 @@ namespace rckid {
                 << ResetMenu(mainMenuGenerator /*[]() -> unique_ptr<ui::Menu> { return nullptr; } */);
         }
 
+        void onFocus() override {
+            ui::App<void>::onFocus();
+            focusWidget(carousel_);
+        }
+
         void loop() override {
             ui::App<void>::loop();
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
-                if (carousel_->atRoot()) {
-                    // TODO terminate music, etc
-                    exit();
-                } else {
-                    carousel_->moveDown();
-                }
+                ASSERT(carousel_->atRoot());
+                // TODO terminate music, etc
+                exit();
             }
-            if (btnPressed(Btn::Left))
-                carousel_->moveLeft();
-            if (btnPressed(Btn::Right))
-                carousel_->moveRight();
         }
 
     private:
