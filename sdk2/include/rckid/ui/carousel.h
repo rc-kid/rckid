@@ -227,8 +227,12 @@ namespace rckid::ui {
         }
 
         void moveUp(MenuItem::GeneratorEvent generator) {
+            if (!idle())
+                cancelAnimations();
             if (context_ != nullptr)
                 context_->index = index_;
+            if (generator == nullptr)
+                generator = emptyMenuGenerator;
             context_ = new Context{generator, context_};
             setMenu(context_->generator(), context_->index, Direction::Up);
         }
@@ -265,27 +269,39 @@ namespace rckid::ui {
 
 
         void setMenu(unique_ptr<Menu> menu, uint32_t index, Direction dir) {
-            if (!idle())
-                cancelAnimations();
             menu_ = std::move(menu);
             index_ = index;
-            if (menu_ == nullptr || menu_->empty())
+            if (menu_ == nullptr || menu_->empty()) {
+                ASSERT(index_ == 0);
+                index_ = 0;
                 setEmpty(dir);
-            else
+            } else {
                 set(menu_->at(index_).text, menu_->at(index_).icon, dir);
+            }
         }
 
         void setItem(uint32_t index, Direction dir) {
-            if (!idle())
-                cancelAnimations();
             if (menu_ == nullptr || index >= menu_->size())
                 return;
             index_ = index;
-            set(menu_->at(index_).text, menu_->at(index_).icon, dir);
+            MenuItem & m = menu_->at(index_);
+            set(m.text, m.icon, dir);
+            if (m.decorator() != nullptr)
+                m.decorator()(m, currentImage(), currentLabel());
         }
 
 
     private:
+
+        // empty menu generator (used when the carousel is borrowed by the next app to show empty menu w/o any visible items, but we need to provide an empty item so that the empty menu visualiation inside carousel will not trigger)
+        static unique_ptr<ui::Menu> emptyMenuGenerator() {
+            auto result = std::make_unique<ui::Menu>();
+            (*result)
+                << ui::MenuItem{"", []() {
+                    UNREACHABLE;
+                }};
+            return result;
+        }
 
         unique_ptr<Menu> menu_;
         uint32_t index_ = 0;

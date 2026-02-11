@@ -9,13 +9,18 @@
 
 namespace rckid::ui {
 
+    class Image;
+    class Label;
+
     class MenuItem {
     public:
         using ActionEvent = std::function<void()>;
         using GeneratorEvent = std::function<unique_ptr<std::vector<MenuItem>>()>;
+        using DecoratorEvent = std::function<void(MenuItem &, Image *, Label *)>;
 
         String text;
         ImageSource icon;
+        uint32_t payload = 0;
 
         bool isAction() const { return isAction_; }
 
@@ -46,6 +51,16 @@ namespace rckid::ui {
             return MenuItem{std::move(text), ImageSource{}, std::move(generator)};
         }
 
+        MenuItem withPayload(uint32_t payload) && {
+            this->payload = payload;
+            return std::move(*this);
+        }
+
+        MenuItem withDecorator(DecoratorEvent decorator) && {
+            this->decorator_ = std::move(decorator);
+            return std::move(*this);
+        }
+
         ~MenuItem() {
             if (isAction())
                 action_.~ActionEvent();
@@ -63,6 +78,10 @@ namespace rckid::ui {
             return generator_;
         }
 
+        DecoratorEvent & decorator() {
+            return decorator_;
+        }
+
     private:
 
         MenuItem(String text, ImageSource icon, GeneratorEvent generator):
@@ -75,7 +94,9 @@ namespace rckid::ui {
             GeneratorEvent generator_;
             ActionEvent action_;
         }; 
-    };
+
+        DecoratorEvent decorator_;
+    }; // rckid::ui::MenuItem
 
     using Menu = std::vector<MenuItem>;
 
@@ -83,4 +104,4 @@ namespace rckid::ui {
         menu.push_back(std::move(item));
         return menu;
     }
-}
+} // rckid::ui

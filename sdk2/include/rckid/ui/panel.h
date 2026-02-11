@@ -15,6 +15,9 @@ namespace rckid::ui {
                 case Theme::Default:
                     bg_ = style->defaultBg();
                     break;
+                case Theme::Accent:
+                    bg_ = style->accentBg();
+                    break;
                 case Theme::Info:
                     bg_ = style->infoBg();
                     break;

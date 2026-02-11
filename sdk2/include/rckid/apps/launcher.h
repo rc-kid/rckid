@@ -109,11 +109,16 @@ namespace rckid {
         void onFocus() override {
             ui::App<void>::onFocus();
             carouselBorrowed_ = false;
+            if (moveDownOnFocus_) {
+                carousel_->moveDown();
+                moveDownOnFocus_ = false;
+            }
         }
 
         void onBlur() override {
             if (! carouselBorrowed_) {
-                carousel_->moveUp(emptyMenuGenerator);
+                carousel_->moveUp(nullptr);
+                moveDownOnFocus_ = true;
                 waitUntilIdle(carousel_);
             }
         }
@@ -135,11 +140,9 @@ namespace rckid {
             // nothing to process in empty menu
             if (item == nullptr)
                 return;
-            // if the item is action, we are launching new app
+            // if the item is action, we are launching new app (fly in & out animations handled by onBlur and onFocus events where it is clear what animation to perform, if any)
             if (item->isAction()) {
-                // TODO flyout animations of non carousel contents
                 item->action()();
-                carousel_->moveDown();
             // if the item is generator, update current state index and start a new one according to the generator
             } else {
                 carousel_->moveUp(item->generator());
@@ -151,19 +154,10 @@ namespace rckid {
 
         // whether carousel has been borrowed by the next running app (this changes the animations and the way we reset the menu when the app exits)
         bool carouselBorrowed_ = false;
+        bool moveDownOnFocus_ = false;
 
         // launcher instance
         static inline Launcher * instance_ = nullptr;
-
-        // empty menu generator (used when the carousel is borrowed by the next app to show empty menu w/o any visible items, but we need to provide an empty item so that the empty menu visualiation inside carousel will not trigger)
-        static unique_ptr<ui::Menu> emptyMenuGenerator() {
-            auto result = std::make_unique<ui::Menu>();
-            (*result)
-                << ui::MenuItem{"", []() {
-                    UNREACHABLE;
-                }};
-            return result;
-        }
 
     }; // rckid::Launcher
 
