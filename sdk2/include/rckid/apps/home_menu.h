@@ -46,7 +46,10 @@ namespace rckid {
             ui::App<ui::MenuItem::ActionEvent>::onLoopStart();
             ASSERT(parent() != nullptr);
             ui::with(carousel_)
-                << ui::ResetMenu([app = parent()] () { return app->homeMenu(); });
+                << ui::ResetMenu([app = parent()] () { 
+                    auto menu = app->homeMenu();
+                    return menu;
+                });
         }
 
         void loop() override {
@@ -55,27 +58,29 @@ namespace rckid {
                 carousel_->moveLeft();
             } else if (btnPressed(Btn::Right)) {
                 carousel_->moveRight();
-            } else if (btnPressed(Btn::Up)) {
+            } else if (btnPressed(Btn::Up) || btnPressed(Btn::A)) {
                 auto item = carousel_->currentItem();
-                if (item->isGenerator()) {
-                    carousel_->moveUp(item->generator());
-                } else {
-                    // execute the action immediately in the menu context
-                    item->action()();
-                    // and then exit or not based on the payload
-                    switch (item->payload) {
-                        case ExecuteInApp:
-                            exit(std::move(item->action()));
-                            break;
-                        case ExecuteInMenuAndExit:
-                            item->action()();
-                            exit();
-                            break;
-                        case ExecuteInMenu:
-                            item->action()();
-                            break;
-                        default:
-                            LOG(LL_ERROR, "Unknown home menu item execution policy " << item->payload);
+                if (item != nullptr) {
+                    if (item->isGenerator()) {
+                        carousel_->moveUp(item->generator());
+                    } else {
+                        // execute the action immediately in the menu context
+                        item->action()();
+                        // and then exit or not based on the payload
+                        switch (item->payload) {
+                            case ExecuteInApp:
+                                exit(std::move(item->action()));
+                                break;
+                            case ExecuteInMenuAndExit:
+                                item->action()();
+                                exit();
+                                break;
+                            case ExecuteInMenu:
+                                item->action()();
+                                break;
+                            default:
+                                LOG(LL_ERROR, "Unknown home menu item execution policy " << item->payload);
+                        }
                     }
                 }
             } else if (btnPressed(Btn::Down) || btnPressed(Btn::B)) {

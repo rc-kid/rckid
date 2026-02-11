@@ -69,7 +69,7 @@ namespace rckid {
             if (glyph < 32)
                 return & glyphs['?' - 32];
             glyph -= 32;
-            if (glyph >= numGlyphs)
+            if (static_cast<uint32_t>(glyph) >= numGlyphs)
                 return & glyphs['?' - 32];
             return & glyphs[static_cast<uint32_t>(glyph)]; 
         }

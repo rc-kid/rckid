@@ -36,11 +36,22 @@ namespace rckid {
         }
     }
 
-    unique_ptr<ui::Menu> App::homeMenu() const{
+    unique_ptr<ui::Menu> App::homeMenu() {
         auto result = std::make_unique<ui::Menu>();
+        Capabilities caps = capabilities();
         // TODO add app specific home menu items here based on the capabilities
         // load & save state
         // take screenshot, etc.
+        (*result)
+            << ui::MenuItem("Exit", assets::icons_64::empty_box, [this]() { 
+                exit(); 
+            });
+        if (caps.canPersistState) {
+            // TODO generate load & save state menus here
+        }
+        if (caps.canCaptureScreen) {
+            // TODO generate screenshot option
+        }
         return result;
     }
 

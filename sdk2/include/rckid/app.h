@@ -139,7 +139,7 @@ namespace rckid {
             // nop
         }
 
-        virtual unique_ptr<ui::Menu> homeMenu() const;
+        virtual unique_ptr<ui::Menu> homeMenu();
 
         /** Flags the application to exit. 
          

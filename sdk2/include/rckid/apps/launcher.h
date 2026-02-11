@@ -135,6 +135,12 @@ namespace rckid {
                 carousel_->moveDown();
         }
 
+        /** The launcher's home menu has no elements as exitting the app is not possible and launcher has no capabilities on its own.
+         */
+        unique_ptr<ui::Menu> homeMenu() {
+            return std::make_unique<ui::Menu>();
+        }
+
         void moveUp() {
             auto item = carousel_->currentItem();
             // nothing to process in empty menu

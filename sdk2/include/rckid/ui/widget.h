@@ -114,11 +114,21 @@ namespace rckid::ui {
 
         bool idle() const { return activeAnimations_ == 0; }
 
+        /** Returns animation builder for the current widget. 
+          
+            All animations created through it will be registered to the widget (and hence affect its idle status).
+         */
         AnimationBuilder animate() { return AnimationBuilder{this}; }
 
         /** Cancels all animations registered on the widget. 
          */
         void cancelAnimations();
+
+        /** Clears all children of the widget.
+         */
+        void clearChildren() {
+            children_.clear();
+        }
 
         /** Renders vertical column of the the widget to given color buffer. 
          

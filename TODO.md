@@ -6,7 +6,7 @@
 - instead of loading pngs and outputting the text, it might be easier to transcode the png into the binary format and then use the binary folder exporter 
 
 - apply style to existing widgets
-
+- processEvents in carousel is not really used
 
 - multilabel widget
 - displa image in all rows, including 4bpp and odd ones
