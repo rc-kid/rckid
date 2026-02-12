@@ -16,6 +16,9 @@ namespace rckid::ui {
     class Wrapper : public Widget {
     public:
 
+        Wrapper() = default;
+        Wrapper(T contents): contents_{std::move(contents)} {}
+
         T const & contents() const { return contents_; }
 
         void setContents(T contents) {

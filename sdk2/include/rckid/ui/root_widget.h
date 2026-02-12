@@ -64,11 +64,11 @@ namespace rckid::ui {
         /** Starts background transition effect in given direction and duration.
          */
         static void backgroundEffect(Direction dir, uint32_t durationMs) {
+            // do not animate when the background is not idle as otherwise we can get artefacts due to inavlid start position
             if (background_ == nullptr || ! background_->idle())
                 return;
-            //background_->cancelAnimations();
             background_->animate()
-                << OffsetContents(background_.get(), background_->contentsOffset(), background_->contentsOffset() + dir * -100, durationMs)->setEasingFunction(easing::inOutIn);
+                << OffsetContents(background_.get(), background_->contentsOffset(), background_->contentsOffset() + dir * -25, durationMs)->setEasingFunction(easing::inOutIn);
         }
 
         /** Root widget overrides the panel's render column in order to properly render the background image and header. 

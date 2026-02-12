@@ -2,7 +2,7 @@
 
 > This is the software design of RCKid part and presents the generic part of the SDK.  See [HARDWARE.md](HARDWARE.md) for details about the hardware architecture and readme files in the respective app folders for their details.
 
-RCKid sits between a complex device running an operating system and single app cartridge systems of the gaming handhelds of the past. While there is no OS and multitasking is not supported (with a few notable exceptions below), the SDK does provide 
+RCKid sits between a complex device running an operating system and single app cartridge systems of the gaming handhelds of the past. While there is no OS and multitasking is not supported (with a few notable exceptions below), the SDK does provide many of the features traditionally associated with operating systems and desktop environments, albeit at a very limited scope, hence this document.  
 
 ## Backends
 

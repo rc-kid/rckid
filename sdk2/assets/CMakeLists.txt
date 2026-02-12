@@ -12,6 +12,8 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
 
     # converts font to glyphinfos & pixels
     add_utility("font-converter" "font_converter.cpp")
+    # converts font to tileset
+    add_utility("font-tile-generator" "font_tile_generator.cpp")
     # converts all files in a folder into binary arrays of their contents
     add_utility("binary-folder" "binary_folder.cpp")
     # converts given image into raw image in rom (see ImageDecoder.h for details)

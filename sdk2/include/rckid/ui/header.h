@@ -1,10 +1,10 @@
 #pragma once
 
-#include <rckid/ui/tilemap.h>
+#include <rckid/ui/tile_grid.h>
 
 namespace rckid::ui {
 
-    class Header : public Tilemap<Tile<8, 8, Color::Index256>> {
+    class Header : public TileGrid {
 
     }; // rckid::ui::Header
 
