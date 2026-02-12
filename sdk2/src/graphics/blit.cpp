@@ -34,14 +34,19 @@ namespace rckid {
 
     __attribute__((weak))
     uint32_t blit_index16(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, Color::RGB565 const * palette) {
-        ASSERT(numPixels % 2 == 0);
         uint16_t * destination = reinterpret_cast<uint16_t *>(dst);
-        numPixels = numPixels / 2;
-        for (uint32_t i = 0; i < numPixels; ++i) {
-            *(destination++) = palette[static_cast<uint8_t>(src[i] & 0x0f)];
-            *(destination++) = palette[static_cast<uint8_t>(src[i] >> 4)];
+        uint32_t pixelsToDraw = numPixels;
+        while (pixelsToDraw >= 2) {
+            uint8_t byte = *src++;
+            *(destination++) = palette[byte & 0x0f];
+            *(destination++) = palette[byte >> 4];
+            pixelsToDraw -= 2;
         }
-        return numPixels; // bpp is just 4
+        if (pixelsToDraw == 1) {
+            uint8_t byte = *src;
+            *destination = palette[byte & 0x0f];
+        }
+        return numPixels / 2;
     }
 
     // transparent blitting
@@ -79,20 +84,26 @@ namespace rckid {
 
     __attribute__((weak))
     uint32_t blit_index16(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, Color::RGB565 const * palette, uint32_t transparentColor) {
-        ASSERT(numPixels % 2 == 0);
         uint16_t * destination = reinterpret_cast<uint16_t *>(dst);
-        numPixels = numPixels / 2;
-        for (uint32_t i = 0; i < numPixels; ++i) {
-            if ((src[i] & 0x0f) != transparentColor)
-                 *(destination++) = palette[static_cast<uint8_t>(src[i] & 0x0f)];
+        uint32_t pixelsToDraw = numPixels;
+        while (pixelsToDraw >= 2) {
+            uint8_t byte = *src++;
+            if ((byte & 0x0f) != transparentColor)
+                 *(destination++) = palette[byte & 0x0f];
             else
                 destination++;
-            if ((src[i] >> 4) != transparentColor)
-                 *(destination++) = palette[static_cast<uint8_t>(src[i] >> 4)];
+            if ((byte >> 4) != transparentColor)
+                 *(destination++) = palette[byte >> 4];
             else
                 destination++;
+            pixelsToDraw -= 2;
         }
-        return numPixels; // bpp is just 4
+        if (pixelsToDraw == 1) {
+            uint8_t byte = *src;
+            if ((byte & 0x0f) != transparentColor)
+                 *destination = palette[byte & 0x0f];
+        }   
+        return numPixels / 2; 
     }
 
 

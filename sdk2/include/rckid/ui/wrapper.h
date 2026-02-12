@@ -152,6 +152,7 @@ namespace rckid::ui {
     struct SetContentsOffset {
         Point offset;
         SetContentsOffset(Point offset): offset{offset} {}
+        SetContentsOffset(Coord x, Coord y): offset{x,y} {}
     };
     template<typename T>
     inline with<T> operator << (with<T> w, SetContentsOffset sco) {

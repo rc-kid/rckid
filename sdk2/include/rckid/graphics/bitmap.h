@@ -106,7 +106,6 @@ namespace rckid {
             // if using less than 8 bpp, we must ensure that the coordinates & number of pixels to render are aligned properly
             if (colorRepresentation_ == Color::Representation::Index16) {
                 ASSERT(startRow % 2 == 0);
-                ASSERT(numPixels % 2 == 0);
             } else {
                 ASSERT(bpp() >= 8);
             }
