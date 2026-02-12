@@ -17,6 +17,15 @@ namespace rckid::ui {
          */
         inline FixedRatio identity(FixedRatio progress) { return progress; }
 
+        /** Converts the progress from 0..1 into values from 0..1..0 (i.e. forth and back).
+         */
+        inline FixedRatio mirror(FixedRatio progress) {
+            if (progress < FixedRatio{0.5f})
+                return progress * 2;
+            else
+                return (FixedRatio::Full() - progress) * 2;
+        }
+
         /** Quadratic ease in (starts slow, then goes fast).
          */
         inline FixedRatio in(FixedRatio progress) {
@@ -41,6 +50,11 @@ namespace rckid::ui {
             }
         }
 
+        /** Applies mirror and inOut transformation that first accelerates from 0 decelerating towards 1, then accelerates from 1 decelerating towards 0. */
+        inline FixedRatio inOutIn(FixedRatio progress) {
+            return inOut(mirror(progress));
+        }
+
     } // rckid::ui::easing
 
     /** Animations. 
@@ -52,14 +66,6 @@ namespace rckid::ui {
      */
     class Animation {
     public:
-
-        /** Animation mode, which can be either a single shot (0...1 and then disable), repeat (0...1 -> 0...1 -> ...), or oscillate (0...1 -> 1...0 -> ...) 
-         */
-        enum class Mode {
-            Single,
-            Repeat,
-            Oscillate,
-        }; 
 
         /** Animation update callback type. 
          
@@ -154,10 +160,10 @@ namespace rckid::ui {
             return this;
         }
 
-        Mode mode() const { return mode_; }
+        bool repeat() const { return repeat_;}
 
-        Animation * setMode(Mode mode) { 
-            mode_ = mode; 
+        Animation * setRepeat(bool value = true) { 
+            repeat_ = value; 
             return this;
         }
 
@@ -187,23 +193,21 @@ namespace rckid::ui {
             if (elapsedMs < delayMs_)
                 return true;
             elapsedMs -= delayMs_;
-            uint32_t duration = mode_ == Mode::Oscillate ? durationMs_ * 2 : durationMs_;
-            if (elapsedMs >= duration) {
-                if (mode_ == Mode::Single) {
-                    if (onUpdate_)
-                        onUpdate_(w_, FixedRatio::Full());
-                    return false;
-                } else {
+            if (elapsedMs >= durationMs_) {
+                if (repeat_) {
                     do {
-                        startUs_ += (duration * 1000);
-                        elapsedMs -= duration;
-                    } while (elapsedMs >= duration);
+                        startUs_ += (durationMs_ * 1000);
+                        elapsedMs -= durationMs_;
+                    } while (elapsedMs >= durationMs_);
+                } else {
+                    if (onUpdate_)
+                        onUpdate_(w_, easingFunction_(FixedRatio::Full()));
+                    return false;
                 }
             }
-
             if (onUpdate_) {
                 if (elapsedMs > durationMs_)
-                    elapsedMs = duration - elapsedMs;
+                    elapsedMs = durationMs_ - elapsedMs;
                 onUpdate_(w_, easingFunction_(FixedRatio{elapsedMs, durationMs_}));
             }
             return true;
@@ -216,7 +220,7 @@ namespace rckid::ui {
         uint32_t startUs_ = 0;
         uint32_t delayMs_ = 0;
         uint32_t durationMs_ = 0;
-        Mode mode_ = Mode::Single;
+        bool repeat_ = false;
         EasingFunction easingFunction_ = easing::identity;
 
         // next animation in the chain

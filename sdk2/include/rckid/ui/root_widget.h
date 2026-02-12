@@ -49,8 +49,26 @@ namespace rckid::ui {
                     << SetBitmap(style->backgroundImage()).withoutTransparency()
                     << SetRect(Rect::XYWH(0, 0, hal::display::WIDTH, hal::display::HEIGHT))
                     << SetHAlign(HAlign::Center)
-                    << SetVAlign(VAlign::Center);
+                    << SetVAlign(VAlign::Center)
+                    << SetContentsRepeat(true);
+                // reset background centering to manual so that it can be properly animated by the background effects
+                with(background_.get())
+                    << SetHAlign(HAlign::Manual)
+                    << SetVAlign(VAlign::Manual);
+                // and start background animation for the first 100ms so that the first carousel page transition will not trigger
+                background_->animate()
+                    << Move(background_->position(), background_->position(), 100);
             }
+        }
+
+        /** Starts background transition effect in given direction and duration.
+         */
+        static void backgroundEffect(Direction dir, uint32_t durationMs) {
+            if (background_ == nullptr || ! background_->idle())
+                return;
+            //background_->cancelAnimations();
+            background_->animate()
+                << OffsetContents(background_.get(), background_->contentsOffset(), background_->contentsOffset() + dir * -100, durationMs)->setEasingFunction(easing::inOutIn);
         }
 
         /** Root widget overrides the panel's render column in order to properly render the background image and header. 

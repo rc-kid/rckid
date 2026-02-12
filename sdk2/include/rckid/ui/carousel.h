@@ -112,6 +112,7 @@ namespace rckid::ui {
                 default:
                     UNREACHABLE;
             }
+            RootWidget::backgroundEffect(dir, animationSpeed_);
         }
 
         /** Returns the image and label widgets for the currently selected element. 

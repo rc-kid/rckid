@@ -64,6 +64,26 @@ namespace rckid {
 
     }; // rckid::Point
 
+
+    inline Point operator * (Direction dir, Coord magnitude) {
+        switch (dir) {
+            case Direction::Left:
+                return Point{-magnitude, 0};
+            case Direction::Right:
+                return Point{magnitude, 0};
+            case Direction::Up:
+                return Point{0, -magnitude};
+            case Direction::Down:
+                return Point{0, magnitude};
+            default:
+                UNREACHABLE;
+        }
+    }
+
+    inline Point operator * (Coord magnitude, Direction dir) {
+        return dir * magnitude;
+    }
+
     class Point3D {
     public:
         Coord x = 0;
