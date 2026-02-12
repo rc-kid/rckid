@@ -48,9 +48,8 @@ namespace rckid::ui {
                 with(background_.get())
                     << SetBitmap(style->backgroundImage()).withoutTransparency()
                     << SetRect(Rect::XYWH(0, 0, hal::display::WIDTH, hal::display::HEIGHT))
-                    << SetHAlign(HAlign::Manual)
-                    << SetVAlign(VAlign::Manual)
-                    << SetContentsOffset(0, 1);
+                    << SetHAlign(HAlign::Center)
+                    << SetVAlign(VAlign::Center);
             }
         }
 

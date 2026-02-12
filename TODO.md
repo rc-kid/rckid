@@ -9,7 +9,6 @@
 - button press repeat (configurable)
 
 - multilabel widget
-- display image in all rows, including 4bpp and odd ones
 - save and load state
 - decorator event in menu items for badges (& their clearing in carousel selection)
 - home menu

@@ -103,12 +103,6 @@ namespace rckid {
         void renderColumn(Coord column, Coord startRow, Coord numPixels, Color::RGB565 * buffer) {
             ASSERT(column < width());
             ASSERT(startRow + numPixels <= height());
-            // if using less than 8 bpp, we must ensure that the coordinates & number of pixels to render are aligned properly
-            if (colorRepresentation_ == Color::Representation::Index16) {
-                ASSERT(startRow % 2 == 0);
-            } else {
-                ASSERT(bpp() >= 8);
-            }
             // get source start pointer
             uint8_t const * start = rawPixelArray(column) + startRow * bpp() / 8;
             if (transparentColor_ != NO_TRANSPARENCY) {
@@ -120,7 +114,7 @@ namespace rckid {
                     case Color::Representation::Index256:
                         return blit_index256(start, buffer, numPixels, palette_.ptr(), transparentColor_);
                     case Color::Representation::Index16:
-                        return blit_index16(start, buffer, numPixels, palette_.ptr(), transparentColor_);
+                        return blit_index16(start, buffer, numPixels, palette_.ptr(), transparentColor_, startRow % 2);
                 }
             } else {
                 switch (colorRepresentation_) {
@@ -131,7 +125,7 @@ namespace rckid {
                     case Color::Representation::Index256:
                         return blit_index256(start, buffer, numPixels, palette_.ptr());
                     case Color::Representation::Index16:
-                        return blit_index16(start, buffer, numPixels, palette_.ptr());
+                        return blit_index16(start, buffer, numPixels, palette_.ptr(), startRow % 2);
                 }
             }
             UNREACHABLE;

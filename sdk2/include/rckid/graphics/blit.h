@@ -17,7 +17,7 @@ namespace rckid {
 
     void blit_index256(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, Color::RGB565 const * palette);
 
-    void blit_index16(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, Color::RGB565 const * palette);
+    void blit_index16(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, Color::RGB565 const * palette, bool startOdd);
     //@}
 
     void blit_rgb565(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, uint32_t transparentColor); 
@@ -26,7 +26,7 @@ namespace rckid {
 
     void blit_index256(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, Color::RGB565 const * palette, uint32_t transparentColor);
     
-    void blit_index16(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, Color::RGB565 const * palette, uint32_t transparentColor);
+    void blit_index16(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, Color::RGB565 const * palette, uint32_t transparentColor, bool startOdd);
 
 
 }

@@ -30,9 +30,14 @@ namespace rckid {
     }
 
     __attribute__((weak))
-    void blit_index16(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, Color::RGB565 const * palette) {
+    void blit_index16(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, Color::RGB565 const * palette, bool startOdd) {
         uint16_t * destination = reinterpret_cast<uint16_t *>(dst);
         uint32_t pixelsToDraw = numPixels;
+        if (startOdd) {
+            uint8_t byte = *src++;
+            *(destination++) = palette[byte >> 4];
+            --pixelsToDraw;
+        }
         while (pixelsToDraw >= 2) {
             uint8_t byte = *src++;
             *(destination++) = palette[byte & 0x0f];
@@ -76,9 +81,17 @@ namespace rckid {
     }
 
     __attribute__((weak))
-    void blit_index16(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, Color::RGB565 const * palette, uint32_t transparentColor) {
+    void blit_index16(uint8_t const * src, Color::RGB565 * dst, uint32_t numPixels, Color::RGB565 const * palette, uint32_t transparentColor, bool startOdd) {
         uint16_t * destination = reinterpret_cast<uint16_t *>(dst);
         uint32_t pixelsToDraw = numPixels;
+        if (startOdd) {
+            uint8_t byte = *src++;
+            if ((byte >> 4) != transparentColor)
+                *(destination++) = palette[byte >> 4];
+            else
+                destination++;
+            --pixelsToDraw;
+        }
         while (pixelsToDraw >= 2) {
             uint8_t byte = *src++;
             if ((byte & 0x0f) != transparentColor)
