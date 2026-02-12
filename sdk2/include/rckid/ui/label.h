@@ -11,16 +11,12 @@ namespace rckid::ui {
     class Label : public Widget {
     public:
 
-        void setRect(Rect rect) override {
-            Widget::setRect(rect);
-            recalculateHint();
-        }
 
         String const & text() const { return text_; }
 
         void setText(String value) {
             text_ = std::move(value);
-            recalculateHint();
+            onResize();
         }
 
         Font const & font() const { return font_; }
@@ -28,21 +24,21 @@ namespace rckid::ui {
         void setFont(Font value) {
             ASSERT(value != nullptr);
             font_ = std::move(value);
-            recalculateHint();
+            onResize();
         }
 
         HAlign hAlign() const { return textHAlign_; }
 
         void setHAlign(HAlign value) {
             textHAlign_ = value;
-            recalculateHint();
+            onResize();
         }
 
         VAlign vAlign() const { return textVAlign_; }
 
         void setVAlign(VAlign value) {
             textVAlign_ = value;
-            recalculateHint();
+            onResize();
         }
 
         Color color() const { return textColor_; }
@@ -56,7 +52,7 @@ namespace rckid::ui {
 
         void setTextOffset(Point value) {
             textOffset_ = value;
-            recalculateHint();
+            onResize();
         }
 
         Coord textWidth() const { return textWidth_; }
@@ -104,7 +100,7 @@ namespace rckid::ui {
             Hint() = default;
         };
 
-        void recalculateHint() {
+        void onResize() override {
             if (text_.empty()) {
                 textWidth_ = 0;
                 rightmostHint_ = Hint{};

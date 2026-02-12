@@ -1,11 +1,10 @@
 #pragma once
 
-#include <rckid/ui/widget.h>
+#include <rckid/ui/tilemap.h>
 
 namespace rckid::ui {
 
-
-    class Header : public Widget {
+    class Header : public Tilemap<Tile<8, 8, Color::Index256>> {
 
     }; // rckid::ui::Header
 

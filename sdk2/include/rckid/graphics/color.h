@@ -61,7 +61,7 @@ namespace rckid {
                 reinterpret_cast<uint16_t *>(buffer)[mapIndexColumnFirst(x, y, w, h)] = static_cast<uint16_t>(color);
             }
 
-            static uint32_t getPixelArraySize(Coord width, Coord height) {
+            static constexpr uint32_t getPixelArraySize(Coord width, Coord height) {
                 return width * height * sizeof(uint16_t);
             }
 
@@ -101,7 +101,7 @@ namespace rckid {
                 buffer[mapIndexColumnFirst(x, y, w, h)] = static_cast<uint8_t>(color);
             }
 
-            static uint32_t getPixelArraySize(Coord width, Coord height) {
+            static constexpr uint32_t getPixelArraySize(Coord width, Coord height) {
                 return width * height * sizeof(uint8_t);
             }
 
@@ -111,6 +111,8 @@ namespace rckid {
 
         class Index256 {
         public:
+            static constexpr bool Indexed = true;
+
             constexpr Index256() = default;
             explicit constexpr Index256(uint16_t raw): 
                 raw_{static_cast<uint8_t>(raw)} 
@@ -130,7 +132,7 @@ namespace rckid {
                 buffer[mapIndexColumnFirst(x, y, w, h)] = static_cast<uint8_t>(color);
             }
 
-            static uint32_t getPixelArraySize(Coord width, Coord height) {
+            static constexpr uint32_t getPixelArraySize(Coord width, Coord height) {
                 return width * height * sizeof(uint8_t);
             }
 
@@ -141,6 +143,8 @@ namespace rckid {
         
         class Index16 {
         public:
+            static constexpr bool Indexed = true;
+
             constexpr Index16() = default;
             explicit constexpr Index16(uint16_t raw): 
                 raw_{static_cast<uint8_t>(raw)}
@@ -166,7 +170,7 @@ namespace rckid {
                 byte |= static_cast<uint8_t>(color) << ((offset & 1) * 4);
             }
 
-            static uint32_t getPixelArraySize(Coord width, Coord height) {
+            static constexpr uint32_t getPixelArraySize(Coord width, Coord height) {
                 return (width * height) * sizeof(uint8_t) / 2;
             }
 

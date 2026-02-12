@@ -2,6 +2,7 @@
 
 #include <rckid/ui/panel.h>
 #include <rckid/ui/image.h>
+#include <rckid/ui/header.h>
 #include <rckid/buffer.h>
 
 namespace rckid::ui {
@@ -45,9 +46,8 @@ namespace rckid::ui {
             } else {
                 background_.reset(new Image());
                 with(background_.get())
-                    << SetBitmap(style->backgroundImage())
+                    << SetBitmap(style->backgroundImage()).withoutTransparency()
                     << SetRect(Rect::XYWH(0, 0, hal::display::WIDTH, hal::display::HEIGHT))
-                    << SetTransparentColor(std::nullopt)
                     << SetHAlign(HAlign::Center)
                     << SetVAlign(VAlign::Center);
             }

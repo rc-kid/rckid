@@ -81,7 +81,7 @@ namespace rckid::ui {
         }
 
 
-        virtual void setRect(Rect rect) {
+        void setRect(Rect rect) {
             rect_ = rect;
             if (rect_.w < 0 || rect_.h < 0) {
                 LOG(LL_ERROR, "Widget rectangle has negative size " << rect);
@@ -90,6 +90,7 @@ namespace rckid::ui {
                 if (rect_.h < 0)
                     rect_.h = 0;
             }
+            onResize();
         }
 
         Widget * parent() const { return parent_; }
@@ -158,6 +159,10 @@ namespace rckid::ui {
             for (auto & child : children_)
                 if (child->visible())
                     child->onRender();
+        }
+
+        virtual void onResize() {
+            // nop
         }
 
         /** Called when the widget transitions to idle state, i.e. has no animations attached to it.

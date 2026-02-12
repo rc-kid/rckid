@@ -37,7 +37,8 @@ namespace rckid {
             h_{other.h_},
             colorRepresentation_{other.colorRepresentation_},
             pixels_{std::move(other.pixels_)},
-            palette_{std::move(other.palette_)}
+            palette_{std::move(other.palette_)},
+            transparentColor_{other.transparentColor_}
         {
             other.w_ = 0;
             other.h_ = 0;
@@ -51,6 +52,7 @@ namespace rckid {
             colorRepresentation_ = other.colorRepresentation_;
             pixels_ = std::move(other.pixels_);
             palette_ = std::move(other.palette_);
+            transparentColor_ = other.transparentColor_;
             other.w_ = 0;
             other.h_ = 0;
             return *this;
@@ -70,6 +72,20 @@ namespace rckid {
 
         void setPalette(mutable_ptr<Color::RGB565> palette) {
             palette_ = std::move(palette);
+        }
+
+        std::optional<uint32_t> transparentColor() const { 
+            if (transparentColor_ == NO_TRANSPARENCY)
+                return std::nullopt;
+            return transparentColor_;
+        }
+
+        /** Sets or clears transparent color for the rendering. 
+         
+            Transparent color is unsigned number that is interpreted as the raw value of the corresponding pixel format in the bitmap. When set, all pixels matching the transparent color will not be rendered.
+         */
+        void setTransparentColor(std::optional<uint32_t> value) {
+            transparentColor_ = value.has_value() ? value.value() : NO_TRANSPARENCY;
         }
 
         uint16_t getPixel(Coord x, Coord y) const {
@@ -96,40 +112,28 @@ namespace rckid {
             }
             // get source start pointer
             uint8_t const * start = rawPixelArray(column) + startRow * bpp() / 8;
-            switch (colorRepresentation_) {
-                case Color::Representation::RGB565:
-                    return blit_rgb565(start, buffer, numPixels);
-                case Color::Representation::RGB332:
-                    return blit_rgb332(start, buffer, numPixels);
-                case Color::Representation::Index256:
-                    return blit_index256(start, buffer, numPixels, palette_.ptr());
-                case Color::Representation::Index16:
-                    return blit_index16(start, buffer, numPixels, palette_.ptr());
-            }
-            UNREACHABLE;
-        }
-
-        uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, Color::RGB565 * buffer, uint32_t transparentColor) {
-            ASSERT(column < width());
-            ASSERT(startRow + numPixels <= height());
-            // if using less than 8 bpp, we must ensure that the coordinates & number of pixels to render are aligned properly
-            if (colorRepresentation_ == Color::Representation::Index16) {
-                ASSERT(startRow % 2 == 0);
-                ASSERT(numPixels % 2 == 0);
+            if (transparentColor_ != NO_TRANSPARENCY) {
+                switch (colorRepresentation_) {
+                    case Color::Representation::RGB565:
+                        return blit_rgb565(start, buffer, numPixels, transparentColor_);
+                    case Color::Representation::RGB332:
+                        return blit_rgb332(start, buffer, numPixels, transparentColor_);
+                    case Color::Representation::Index256:
+                        return blit_index256(start, buffer, numPixels, palette_.ptr(), transparentColor_);
+                    case Color::Representation::Index16:
+                        return blit_index16(start, buffer, numPixels, palette_.ptr(), transparentColor_);
+                }
             } else {
-                ASSERT(bpp() >= 8);
-            }
-            // get source start pointer
-            uint8_t const * start = rawPixelArray(column) + startRow * bpp() / 8;
-            switch (colorRepresentation_) {
-                case Color::Representation::RGB565:
-                    return blit_rgb565(start, buffer, numPixels, transparentColor);
-                case Color::Representation::RGB332:
-                    return blit_rgb332(start, buffer, numPixels, transparentColor);
-                case Color::Representation::Index256:
-                    return blit_index256(start, buffer, numPixels, palette_.ptr(), transparentColor);
-                case Color::Representation::Index16:
-                    return blit_index16(start, buffer, numPixels, palette_.ptr(), transparentColor);
+                switch (colorRepresentation_) {
+                    case Color::Representation::RGB565:
+                        return blit_rgb565(start, buffer, numPixels);
+                    case Color::Representation::RGB332:
+                        return blit_rgb332(start, buffer, numPixels);
+                    case Color::Representation::Index256:
+                        return blit_index256(start, buffer, numPixels, palette_.ptr());
+                    case Color::Representation::Index16:
+                        return blit_index16(start, buffer, numPixels, palette_.ptr());
+                }
             }
             UNREACHABLE;
         }
@@ -140,6 +144,9 @@ namespace rckid {
         Color::Representation colorRepresentation_ = Color::Representation::RGB565;
         mutable_ptr<uint8_t> pixels_;
         mutable_ptr<Color::RGB565> palette_;
+
+        static constexpr uint32_t NO_TRANSPARENCY = 0xFFFFFFFF;
+        uint32_t transparentColor_ = 0;
     }; 
 
 

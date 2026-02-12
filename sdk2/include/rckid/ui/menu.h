@@ -6,10 +6,10 @@
 #include <rckid/string.h>
 #include <rckid/memory.h>
 #include <rckid/graphics/bitmap.h>
+#include <rckid/ui/image.h>
 
 namespace rckid::ui {
 
-    class Image;
     class Label;
 
     class MenuItem {
