@@ -100,7 +100,7 @@ namespace rckid {
             return pixels_.ptr() + mapIndexColumnFirst(column, 0, w_, h_) * bpp() / 8;
         }
 
-        uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, Color::RGB565 * buffer) {
+        void renderColumn(Coord column, Coord startRow, Coord numPixels, Color::RGB565 * buffer) {
             ASSERT(column < width());
             ASSERT(startRow + numPixels <= height());
             // if using less than 8 bpp, we must ensure that the coordinates & number of pixels to render are aligned properly
