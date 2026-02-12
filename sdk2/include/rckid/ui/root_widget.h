@@ -57,7 +57,7 @@ namespace rckid::ui {
                     << SetVAlign(VAlign::Manual);
                 // and start background animation for the first 100ms so that the first carousel page transition will not trigger
                 background_->animate()
-                    << Move(background_->position(), background_->position(), 100);
+                    << Move(background_.get(), background_->position(), background_->position(), 100);
             }
         }
 

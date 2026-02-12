@@ -165,7 +165,7 @@ namespace rckid::ui {
     template<typename T>
     inline Animation * OffsetContents(Wrapper<T> * target, Point from, Point to, uint32_t durationMs) {
         return (new Animation{
-            [from, to, target](Widget *, FixedRatio progress) {
+            [from, to, target](FixedRatio progress) {
                 Coord x = from.x + progress.scale(to.x - from.x);
                 Coord y = from.y + progress.scale(to.y - from.y);
                 target->setContentsOffset(Point{x, y});

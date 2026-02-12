@@ -49,9 +49,9 @@ public:
             << SetVAlign(VAlign::Center)
             << SetFont(rckid::assets::Iosevka16);
         ap_->animate()
-            << MoveHorizontally(0, 240 - 20, 3000)->setRepeat(true)->setEasingFunction(easing::mirror);
+            << MoveHorizontally(ap_, 0, 240 - 20, 3000)->setRepeat(true)->setEasingFunction(easing::mirror);
         ap_->animate()
-            << MoveVertically(0, 160 - 20, 2000)->setRepeat(true)->setEasingFunction(easing::mirror);
+            << MoveVertically(ap_, 0, 160 - 20, 2000)->setRepeat(true)->setEasingFunction(easing::mirror);
         c_->set("Empty", assets::icons_64::empty_box, Direction::Up);
     }
 

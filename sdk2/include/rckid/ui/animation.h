@@ -71,7 +71,7 @@ namespace rckid::ui {
          
             The callback is std::function so that capture can be used and takes the target widget and the animation progress ratio (between 0 and 1) as parameters. It is guaranteed that the callback is first called with ratio 0 when the animation stars and the last call of the callback function is with progress equal to 1.
          */
-        using OnUpdate = std::function<void(Widget *, FixedRatio)>;
+        using OnUpdate = std::function<void(FixedRatio)>;
 
         /** Easing function type. 
          
@@ -185,7 +185,7 @@ namespace rckid::ui {
             if (w_ != nullptr)
                 ++w_->activeAnimations_;
             if (onUpdate_)
-                onUpdate_(w_, FixedRatio::Empty());
+                onUpdate_(FixedRatio::Empty());
         }
 
         bool update(uint32_t currentUs) {
@@ -201,14 +201,14 @@ namespace rckid::ui {
                     } while (elapsedMs >= durationMs_);
                 } else {
                     if (onUpdate_)
-                        onUpdate_(w_, easingFunction_(FixedRatio::Full()));
+                        onUpdate_(easingFunction_(FixedRatio::Full()));
                     return false;
                 }
             }
             if (onUpdate_) {
                 if (elapsedMs > durationMs_)
                     elapsedMs = durationMs_ - elapsedMs;
-                onUpdate_(w_, easingFunction_(FixedRatio{elapsedMs, durationMs_}));
+                onUpdate_(easingFunction_(FixedRatio{elapsedMs, durationMs_}));
             }
             return true;
         }
@@ -232,20 +232,9 @@ namespace rckid::ui {
 
     }; // ui::Animation
 
-    inline Animation * Move(Point from, Point to, uint32_t durationMs) {
-        return (new Animation{
-            [from, to](Widget * w, FixedRatio progress) {
-                Coord x = from.x + progress.scale(to.x - from.x);
-                Coord y = from.y + progress.scale(to.y - from.y);
-                w->setRect(Rect::XYWH(x, y, w->width(), w->height()));
-            },
-            durationMs
-        })->setEasingFunction(easing::inOut);
-    }
-
     inline Animation * Move(Widget * target, Point from, Point to, uint32_t durationMs) {
         return (new Animation{
-            [from, to, target](Widget *, FixedRatio progress) {
+            [from, to, target](FixedRatio progress) {
                 Coord x = from.x + progress.scale(to.x - from.x);
                 Coord y = from.y + progress.scale(to.y - from.y);
                 target->setRect(Rect::XYWH(x, y, target->width(), target->height()));
@@ -254,19 +243,9 @@ namespace rckid::ui {
         })->setEasingFunction(easing::inOut);
     }
 
-    inline Animation * MoveHorizontally(Coord fromX, Coord toX, uint32_t durationMs) {
-        return (new Animation{
-            [fromX, toX](Widget * w, FixedRatio progress) {
-                Coord x = fromX + progress.scale(toX - fromX);
-                w->setRect(Rect::XYWH(x, w->rect().y, w->width(), w->height()));
-            },
-            durationMs
-        })->setEasingFunction(easing::inOut);
-    }
-
     inline Animation * MoveHorizontally(Widget * target, Coord fromX, Coord toX, uint32_t durationMs) {
         return (new Animation{
-            [fromX, toX, target](Widget *, FixedRatio progress) {
+            [fromX, toX, target](FixedRatio progress) {
                 Coord x = fromX + progress.scale(toX - fromX);
                 target->setRect(Rect::XYWH(x, target->rect().y, target->width(), target->height()));
             },
@@ -274,19 +253,9 @@ namespace rckid::ui {
         })->setEasingFunction(easing::inOut);
     }
 
-    inline Animation * MoveVertically(Coord fromY, Coord toY, uint32_t durationMs) {
-        return (new Animation{
-            [fromY, toY](Widget * w, FixedRatio progress) {
-                Coord y = fromY + progress.scale(toY - fromY);
-                w->setRect(Rect::XYWH(w->rect().x, y, w->width(), w->height()));
-            },
-            durationMs
-        })->setEasingFunction(easing::inOut);
-    }
-
     inline Animation * MoveVertically(Widget * target, Coord fromY, Coord toY, uint32_t durationMs) {
         return (new Animation{
-            [fromY, toY, target](Widget *, FixedRatio progress) {
+            [fromY, toY, target](FixedRatio progress) {
                 Coord y = fromY + progress.scale(toY - fromY);
                 target->setRect(Rect::XYWH(target->rect().x, y, target->width(), target->height()));
             },
