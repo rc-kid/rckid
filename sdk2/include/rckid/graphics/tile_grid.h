@@ -7,6 +7,47 @@
 
 namespace rckid {
 
+    class TileIcon {
+    public:
+
+        Coord size() const { return raw_[3]; }
+
+        static TileIcon batteryFull() { return TileIcon{0, 1, 2}; }
+        static TileIcon batteryTwoThirds() { return TileIcon{0, 1, 5}; }
+        static TileIcon batteryOneThird() { return TileIcon{0, 4, 5}; } 
+        static TileIcon batteryEmpty() { return TileIcon{3, 4, 5}; }
+        static TileIcon batteryChargingFull() { return TileIcon{0, 6, 2}; }
+        static TileIcon batteryChargingEmpty() { return TileIcon{3, 6, 5}; }
+        static TileIcon batteryDCFull() { return TileIcon{0, 7, 2}; }
+        static TileIcon batteryDCEmpty() { return TileIcon{3, 7, 5}; }
+        static TileIcon headphones() { return TileIcon{9, 10}; }
+        static TileIcon speaker() { return TileIcon{11, 12}; }
+        static TileIcon wifi() { return TileIcon{13, 14}; }
+        static TileIcon heartEmpty() { return TileIcon{15, 16}; }
+        static TileIcon sdCard() { return TileIcon{17, 18}; }
+        static TileIcon fill1() { return TileIcon{19}; }
+        static TileIcon fill2() { return TileIcon{20}; }
+        static TileIcon fill3() { return TileIcon{21}; }
+        static TileIcon fill4() { return TileIcon{22}; }
+        static TileIcon fill5() { return TileIcon{23}; }
+        static TileIcon fill6() { return TileIcon{24}; }
+        static TileIcon message() { return TileIcon{25, 26}; }
+
+    private:
+        friend class TileGrid;
+
+        TileIcon() = default;
+        TileIcon(uint8_t a): raw_{a, 0, 0, 1} {}
+        TileIcon(uint8_t a, uint8_t b): raw_{a, b, 0, 2} {}
+        TileIcon(uint8_t a, uint8_t b, uint8_t c): raw_{a, b, c, 3} {}
+
+        uint8_t raw_[4] = { 0, 0, 0, 0 };
+    }; 
+
+    static_assert(sizeof(TileIcon) == 4);
+
+
+
     /** Tile grid is a more primitive counterpart to a tilemap.
      
         It provides a single tile layer for a tiles of fixed size (8x16 pixels), which is just enough for a readable fornt on RCKid. Its purpose is to provide cheap and efficient rendering of larger-ish text-like features, such as multi-line labels, headers, etc. 
@@ -28,9 +69,8 @@ namespace rckid {
              */
             TileInfo & operator = (char c) { tile_ = c - 32; return *this; }
 
-            TileInfo & operator = (uint32_t tileIndex) { 
-                ASSERT(tileIndex <= 255);
-                tile_ = static_cast<uint8_t>(tileIndex); 
+            TileInfo & operator = (uint8_t tileIndex) { 
+                tile_ = tileIndex; 
                 return *this; 
             }
 
@@ -101,7 +141,6 @@ namespace rckid {
             return grid_.get()[mapIndexColumnFirst(x, y, cols_, rows_)];
         }
 
-
         /** Returns writer for outputting single-line text to the tilemap. 
          
             The text *must* fill into the tile grid's dimensions, otherwise the behavior is undefined (there will be memory corruption). 
@@ -111,6 +150,12 @@ namespace rckid {
             return Writer{[this, x, y](char c) mutable {
                 at(x++, y) = c;
             }};
+        }
+
+        void setTileIcon(Coord x, Coord y, TileIcon icon, uint8_t paletteOffset = 0, bool altTileset = true) {
+            for (uint8_t i = 0, e = icon.size(); i != e; ++i)
+                at(x + i, y).setTileset(altTileset).setPaletteOffset(paletteOffset) = icon.raw_[i];
+
         }
 
         void renderColumn(Coord column, Coord startRow, Coord numPixels, Color::RGB565 * buffer) {
