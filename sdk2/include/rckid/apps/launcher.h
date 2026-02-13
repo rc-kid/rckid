@@ -117,11 +117,15 @@ namespace rckid {
         void onFocus() override {
             ui::App<void>::onFocus();
             carouselBorrowed_ = false;
-            carousel_->moveDown();
             focusWidget(carousel_);
+            if (!launch_)
+                return;
+            carousel_->moveDown();
         }
 
         void onBlur() override {
+            if (!launch_)
+                return;
             if (! carouselBorrowed_) {
                 carousel_->moveUp(nullptr);
                 waitUntilIdle(carousel_);
@@ -133,7 +137,10 @@ namespace rckid {
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                 auto item = carousel_->currentItem();
                 ASSERT(item->isAction());
+                ASSERT(launch_ == false);
+                launch_ = true;
                 item->action()();
+                launch_ = false;
             }
         }
 
@@ -143,25 +150,13 @@ namespace rckid {
             return std::make_unique<ui::Menu>();
         }
 
-        void moveUp() {
-            auto item = carousel_->currentItem();
-            // nothing to process in empty menu
-            if (item == nullptr)
-                return;
-            // if the item is action, we are launching new app (fly in & out animations handled by onBlur and onFocus events where it is clear what animation to perform, if any)
-            if (item->isAction()) {
-                item->action()();
-            // if the item is generator, update current state index and start a new one according to the generator
-            } else {
-                carousel_->moveUp(item->generator());
-            }
-        }
-
         // the carousel itself
         ui::CarouselMenu * carousel_ = nullptr;
 
         // whether carousel has been borrowed by the next running app (this changes the animations and the way we reset the menu when the app exits)
         bool carouselBorrowed_ = false;
+        // true if we are launching an app as user action (so that we play animations), otherwise no focus & blur animations are played (such as when home menu is shown)
+        bool launch_ = false;
 
         // launcher instance
         static inline Launcher * instance_ = nullptr;

@@ -17,8 +17,10 @@ namespace rckid::ui {
             theme_{theme} 
         {
             setRect(rect);
-            if (header_ == nullptr)
-                header_ = std::make_unique<Header>();
+            if (Header::instance_ == nullptr) {
+                Header::instance_ = new Header{};
+                Header::instance_->applyStyle(Style::defaultStyle(), Theme::Default);
+            }
         }
 
         ui::Theme theme() const override {
@@ -31,19 +33,6 @@ namespace rckid::ui {
             useBackgroundImage_ = value;
         }
 
-        void useHeader(bool value) {
-            useHeader_ = value;
-            if (globalUseHeader_ != value) {
-                globalUseHeader_ = value;
-                if (value)
-                    header_->animate()
-                        << Move(header_.get(), Point{0, -20}, Point{0,0}, animationSpeed_);
-                else
-                    header_->animate()
-                        << Move(header_.get(), Point{0,0}, Point{0, -20}, animationSpeed_);
-            }
-        }
-
         void initializeDisplay();
 
         void render();
@@ -53,7 +42,6 @@ namespace rckid::ui {
             if (style == nullptr)
                 return;
             Panel::applyStyle(style, theme);
-            animationSpeed_ = style->animationSpeed();
         }
 
         uint32_t animationSpeed() const { return animationSpeed_; }
@@ -77,7 +65,7 @@ namespace rckid::ui {
                     << SetVAlign(VAlign::Manual);
                 // and start background animation for the first 100ms so that the first carousel page transition will not trigger
                 background_->animate()
-                    << Move(background_.get(), background_->position(), background_->position(), 100);
+                    << Move(background_.get(), background_->position(), background_->position(), animationSpeed_);
             }
         }
 
@@ -102,8 +90,8 @@ namespace rckid::ui {
 
             Widget::renderColumn(column, startRow, buffer, numPixels);
 
-            if (y() == 0 && (globalUseHeader_ || ! header_->idle()))
-                renderChildColumn(header_.get(), column, startRow, buffer, numPixels);
+            if (y() == 0 && Header::shouldShow())
+                renderChildColumn(Header::instance_, column, startRow, buffer, numPixels);
         }
         
     private:
@@ -115,9 +103,6 @@ namespace rckid::ui {
         bool useBackgroundImage_ = true;
         bool useHeader_ = true;
         uint32_t animationSpeed_ = 500;
-
-        static inline unique_ptr<Header> header_;
-        static inline bool globalUseHeader_ = false;
 
         /** Background image (wallpaper)
          

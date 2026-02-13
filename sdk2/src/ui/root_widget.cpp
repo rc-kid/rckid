@@ -16,8 +16,8 @@ namespace rckid::ui {
         if (! visible())
             return;
         // update whether to use header or not
-        if (globalUseHeader_ != useHeader_)
-            useHeader(useHeader_);
+        if (Header::shouldShow() != useHeader_)
+            Header::show(useHeader_);
         // update all animations
         Animation::updateAll();
         // tell the widgets that we are about to render
