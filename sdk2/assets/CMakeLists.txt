@@ -36,7 +36,9 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
         # 64x64 icons (mostly for UI)
         COMMAND $<TARGET_FILE:binary-folder> icons/icons_64 ${CMAKE_SOURCE_DIR}/sdk2/include/assets/icons_64.h --raw-path raw/icons_64 --namespace rckid::assets::icons_64
 
-        DEPENDS font-converter
+        COMMAND $<TARGET_FILE:font-tile-generator> fonts/Iosevka.ttf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/Iosevka16Tiles.h 16 8 16
+
+        DEPENDS font-converter font-tile-generator binary-folder raw-image-converter
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
 

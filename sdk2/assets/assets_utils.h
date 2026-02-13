@@ -97,10 +97,6 @@ inline Glyphs getDefaultGlyphs() {
  */
 inline Glyphs getDefaultTileGlyphs () {
     Glyphs result;
-    for (int i = 0; i < 32; ++i) {
-        result.names.push_back(" ");
-        result.codepoints.push_back(32);
-    }
     for (int i = 32; i < 127; ++i) {
         result.names.push_back(STR((char)i));
         result.codepoints.push_back(i);
