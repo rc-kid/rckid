@@ -5,14 +5,14 @@
 
 - instead of loading pngs and outputting the text, it might be easier to transcode the png into the binary format and then use the binary folder exporter 
 
-- apply style to existing widgets (Label, etc.)
+- apply style to existing widgets (Label, etc.) (...)
 - button press repeat (configurable)
 
 - multilabel widget
-- save and load state
-- decorator event in menu items for badges (& their clearing in carousel selection)
-- home menu
-- header
+- save and load state (...)
+- decorator event in menu items for badges (& their clearing in carousel selection) (...)
+- home menu (...)
+- header (...)
 - audio playback
 
 - mk3 code not cleaned up and not working

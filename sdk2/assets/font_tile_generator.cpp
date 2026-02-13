@@ -34,7 +34,6 @@ inline void drawTileConstructor(GlyphInfo & gi, int w, int h, int fontHeight, st
         s << "\n";
     }
     s << indent << "}},\n";
-    
 }
 
 /** Takes font in ttf or otf format and creates from it tiles of given width and height. 
@@ -78,14 +77,14 @@ int main(int argc, char const * argv[]) {
     ofile << indent << " */" << std::endl;
     std::string className = convertToClassName(std::filesystem::path{outputFile.value()}.stem().string());
     ofile << indent << "static constexpr Tile<" << tileWidth.value() << "," << tileHeight.value() << ",Color::Index" << (1 << bpp.value()) << "> " << className << "[] = {" << std::endl;     
-    ofile << indent << "#define __ 0" << std::endl;
+    ofile << indent << "    #define __ 0" << std::endl;
     
     for (size_t i = 0, e = fontGlyphs.size(); i < e; ++i) {
-        ofile << indent << "// " << i << ": '" << fontGlyphs.names[i] << "', codepoint " << fontGlyphs.codepoints[i] << ", utf8: `" << encodeUTF8(fontGlyphs.codepoints[i]) << "`\n";
-        drawTileConstructor(ginfos[i], tileWidth.value(), tileHeight.value(), fontSize.value(), ofile, indent, bpp.value());
+        ofile << indent << "    // " << i << ": '" << fontGlyphs.names[i] << "', codepoint " << fontGlyphs.codepoints[i] << ", utf8: `" << encodeUTF8(fontGlyphs.codepoints[i]) << "`\n";
+        drawTileConstructor(ginfos[i], tileWidth.value(), tileHeight.value(), fontSize.value(), ofile, indent + "    ", bpp.value());
     }
 
-    ofile << indent << "#undef __" << std::endl;
+    ofile << indent << "    #undef __" << std::endl;
     ofile << indent << "};" << std::endl;
     if (! ns.value().empty())
         ofile << "} // namespace " << ns.value() << std::endl;

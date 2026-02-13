@@ -53,7 +53,10 @@ namespace rckid::ui {
         Color successFg() const { return successFg_; }
         Color successBg() const { return successBg_; }
 
+        uint32_t animationSpeed() const { return animationSpeed_; }
+
         ImageSource const & backgroundImage() const { return backgroundImage_; }
+
 
     private:
         Color defaultFg_ = Color::White();
@@ -71,7 +74,11 @@ namespace rckid::ui {
         Color successFg_ = Color::White();
         Color successBg_ = Color::RGB(0, 48, 0);
 
+        uint32_t animationSpeed_ = 500;
+
         ImageSource backgroundImage_{assets::images::logo};
+
+
 
         static inline Style * defaultStyle_ = nullptr;
 

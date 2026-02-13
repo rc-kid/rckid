@@ -2,6 +2,9 @@
 
 #include <rckid/graphics/tile.h>
 
+#include <assets/Iosevka16Tiles.h>
+#include <assets/System16Tiles.h>
+
 namespace rckid {
 
     /** Tile grid is a more primitive counterpart to a tilemap.
@@ -34,7 +37,7 @@ namespace rckid {
             uint8_t tile() const { return tile_; }
             uint8_t paletteOffset() const { return paletteOffset_; }
             bool transparent() const { return (flags_ & TRANSPARENT_MASK) != 0; }
-            uint8_t tileset() const { return flags_ & ALT_TILESET_MASK; }
+            bool  altTileset() const { return flags_ & ALT_TILESET_MASK; }
 
             TileInfo & setPaletteOffset(uint8_t paletteOffset) { 
                 paletteOffset_ = paletteOffset; 
@@ -62,8 +65,8 @@ namespace rckid {
                 return *this;
             }
         private:
-            static constexpr uint8_t TRANSPARENT_MASK = 0x04;
-            static constexpr uint8_t ALT_TILESET_MASK = 0x03;
+            static constexpr uint8_t TRANSPARENT_MASK = 0x02;
+            static constexpr uint8_t ALT_TILESET_MASK = 0x01;
 
             uint8_t tile_ = 0;
             uint8_t paletteOffset_ = 0;
@@ -74,11 +77,11 @@ namespace rckid {
         static_assert(sizeof(TileInfo) == 4);
 
 
-        TileGrid(Coord cols, Coord rows):
+        TileGrid(Coord cols, Coord rows, mutable_ptr<Color::RGB565> palette):
             cols_{cols}, 
             rows_{rows}, 
             grid_{new TileInfo[cols * rows]},
-            palette_{nullptr} 
+            palette_{std::move(palette)} 
         {
         }
 
@@ -122,12 +125,12 @@ namespace rckid {
                 startRow %= Tile::height();
             }
             while (numPixels > 0) {
-                Tile const * tileset = tileSet_[ti->tileset()];
+                Tile const * tileset = ti->altTileset() ? assets::System16Tiles : assets::Iosevka16Tiles;
                 Coord drawPixels = std::min(numPixels, Tile::height() - startRow);
                 if (ti->transparent())
-                    tileset->renderColumn(tileCol, startRow, drawPixels, buffer, palette_.ptr() + ti->paletteOffset(), 0);
+                    tileset[ti->tile()].renderColumn(tileCol, startRow, drawPixels, buffer, palette_.ptr() + ti->paletteOffset(), 0);
                 else
-                    tileset->renderColumn(tileCol, startRow, drawPixels, buffer, palette_.ptr() + ti->paletteOffset());
+                    tileset[ti->tile()].renderColumn(tileCol, startRow, drawPixels, buffer, palette_.ptr() + ti->paletteOffset());
                 numPixels -= drawPixels;
                 startRow = 0;
                 buffer += drawPixels;
@@ -140,7 +143,6 @@ namespace rckid {
         Coord rows_;
         unique_ptr<TileInfo> grid_;
         mutable_ptr<Color::RGB565> palette_;
-        Tile const * tileSet_[4];
 
     }; // rckid::TileGrid
 

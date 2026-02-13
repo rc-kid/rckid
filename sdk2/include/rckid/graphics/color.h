@@ -112,6 +112,7 @@ namespace rckid {
         class Index256 {
         public:
             static constexpr bool Indexed = true;
+            static constexpr uint32_t BPP = 8;
 
             constexpr Index256() = default;
             explicit constexpr Index256(uint16_t raw): 
@@ -144,6 +145,7 @@ namespace rckid {
         class Index16 {
         public:
             static constexpr bool Indexed = true;
+            static constexpr uint32_t BPP = 4;
 
             constexpr Index16() = default;
             explicit constexpr Index16(uint16_t raw): 

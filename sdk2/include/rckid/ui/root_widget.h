@@ -17,6 +17,8 @@ namespace rckid::ui {
             theme_{theme} 
         {
             setRect(rect);
+            if (header_ == nullptr)
+                header_ = std::make_unique<Header>();
         }
 
         ui::Theme theme() const override {
@@ -29,6 +31,19 @@ namespace rckid::ui {
             useBackgroundImage_ = value;
         }
 
+        void useHeader(bool value) {
+            useHeader_ = value;
+            if (globalUseHeader_ != value) {
+                globalUseHeader_ = value;
+                if (value)
+                    header_->animate()
+                        << Move(header_.get(), Point{0, -20}, Point{0,0}, animationSpeed_);
+                else
+                    header_->animate()
+                        << Move(header_.get(), Point{0,0}, Point{0, -20}, animationSpeed_);
+            }
+        }
+
         void initializeDisplay();
 
         void render();
@@ -38,7 +53,12 @@ namespace rckid::ui {
             if (style == nullptr)
                 return;
             Panel::applyStyle(style, theme);
+            animationSpeed_ = style->animationSpeed();
         }
+
+        uint32_t animationSpeed() const { return animationSpeed_; }
+
+        void setAnimationSpeed(uint32_t speed) { animationSpeed_ = speed; }
 
         void setBackgroundImage(Style const * style) {
             if (style->backgroundImage().empty()) {
@@ -79,7 +99,11 @@ namespace rckid::ui {
             } else {
                 memset16(reinterpret_cast<uint16_t*>(buffer), bg_.toRGB565(), numPixels);
             }
+
             Widget::renderColumn(column, startRow, buffer, numPixels);
+
+            if (y() == 0 && (globalUseHeader_ || ! header_->idle()))
+                renderChildColumn(header_.get(), column, startRow, buffer, numPixels);
         }
         
     private:
@@ -89,6 +113,11 @@ namespace rckid::ui {
 
         Theme theme_;
         bool useBackgroundImage_ = true;
+        bool useHeader_ = true;
+        uint32_t animationSpeed_ = 500;
+
+        static inline unique_ptr<Header> header_;
+        static inline bool globalUseHeader_ = false;
 
         /** Background image (wallpaper)
          

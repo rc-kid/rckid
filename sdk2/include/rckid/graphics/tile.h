@@ -25,12 +25,28 @@ namespace rckid {
         constexpr Tile(uint8_t const (& colors)[WIDTH * HEIGHT]);
 
 
-        uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, Color::RGB565 * buffer, Color::RGB565 const * palette) const {
-            UNIMPLEMENTED;
+        void renderColumn(Coord column, Coord startRow, Coord numPixels, Color::RGB565 * buffer, Color::RGB565 const * palette) const {
+            uint8_t const * src = pixels_ + mapIndexColumnFirst(column, startRow, WIDTH, HEIGHT) * PIXEL::BPP / 8;
+            switch (PIXEL::BPP) {
+                case 8:
+                    return blit_index256(src, buffer, numPixels, palette);
+                case 4:
+                    return blit_index16(src, buffer, numPixels, palette, startRow % 2);
+                default:
+                    UNREACHABLE;
+            }
         }
 
-        uint32_t renderColumn(Coord column, Coord startRow, Coord numPixels, Color::RGB565 * buffer, Color::RGB565 const * palette, uint32_t transparentColor) const {
-            UNIMPLEMENTED;
+        void renderColumn(Coord column, Coord startRow, Coord numPixels, Color::RGB565 * buffer, Color::RGB565 const * palette, uint32_t transparentColor) const {
+            uint8_t const * src = pixels_ + mapIndexColumnFirst(column, startRow, WIDTH, HEIGHT) * PIXEL::BPP / 8;
+            switch (PIXEL::BPP) {
+                case 8:
+                    return blit_index256(src, buffer, numPixels, palette, transparentColor);
+                case 4:
+                    return blit_index16(src, buffer, numPixels, palette, transparentColor, startRow % 2);
+                default:
+                    UNREACHABLE;
+            }
         }
 
     private:

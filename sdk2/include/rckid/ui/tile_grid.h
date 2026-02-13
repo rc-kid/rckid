@@ -9,18 +9,14 @@ namespace rckid::ui {
     class TileGrid : public Wrapper<rckid::TileGrid> {
     public:
 
-        TileGrid(Coord cols, Coord rows):
-            Wrapper{rckid::TileGrid{cols, rows}}
+        static constexpr Coord tileWidth() { return rckid::TileGrid::Tile::width(); };
+        static constexpr Coord tileHeight() { return rckid::TileGrid::Tile::height(); };
+
+        TileGrid(Coord cols, Coord rows, mutable_ptr<Color::RGB565> palette):
+            Wrapper{rckid::TileGrid{cols, rows, std::move(palette)}}
         {
 
         }
-
-        
-
-        void renderColumn(Coord column, Coord starty, Color::RGB565 * buffer, Coord numPixels) override {
-            contents_.renderColumn(column, starty, numPixels, buffer);
-        }
-
     };
 
 } // namespace rckid::ui

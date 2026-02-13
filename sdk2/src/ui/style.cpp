@@ -41,7 +41,10 @@ namespace rckid::ui {
                 >> ini::Field("bg", errorBg_)
             >> ini::Section("success")
                 >> ini::Field("fg", successFg_)
-                >> ini::Field("bg", successBg_);
+                >> ini::Field("bg", successBg_)
+            >> ini::Section("animation")
+                >> ini::Field("speed", animationSpeed_);
+
         String str;
         reader
             >> ini::Section("background")
@@ -69,6 +72,8 @@ namespace rckid::ui {
             << ini::Section("success")
                 << ini::Field("fg", successFg_)
                 << ini::Field("bg", successBg_)
+            << ini::Section("animation")
+                << ini::Field("speed", animationSpeed_)
             << ini::Section("background")
                 << ini::Field("image", backgroundImage_.type() == ImageSource::Type::Memory ? "" : backgroundImage_.path());
     }
