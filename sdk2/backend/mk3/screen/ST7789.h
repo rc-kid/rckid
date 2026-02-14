@@ -85,15 +85,9 @@ namespace rckid {
             FPS_40 = 0x1e,  
         };
 
-        /** Initializes the display. 
-         
-            Performs a full reset and initializes the display to 320x240 format with 565 RGB colors and clears the entire display black. 
-         */
-        static void initialize();
-
         /** Performs reeset of the display into bitbanging mode. 
          
-            Called by the initialize function and might be useful in cases the display is in an unknown state, such as when the blue screen of death might occur. 
+            Configures the display into a know state, big banging mode, 320x240 resolution, RGB565 color, column first update mode and full screen update region. Must be the first function called. 
          */
         static void reset();
 

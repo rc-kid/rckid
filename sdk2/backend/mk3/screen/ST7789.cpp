@@ -11,7 +11,7 @@
 
 namespace rckid {
 
-    void ST7789::initialize() {
+    //void ST7789::initialize() {
         // load and initialize the PIO programs for single and double precission
         //pio_set_gpio_base(RCKID_ST7789_PIO, 16);
         //sm_ = pio_claim_unused_sm(RCKID_ST7789_PIO, true);
@@ -33,8 +33,8 @@ namespace rckid {
         //irq_add_shared_handler(DMA_IRQ_0, irqDMADone,  PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY);
 
         // reset the display
-        reset();
-    }
+    //    reset();
+    //}
 
     void ST7789::reset() {
         // reset updating - forcefully since we are resetting the display anyways
