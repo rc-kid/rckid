@@ -18,6 +18,14 @@
 - mk3 code not cleaned up and not working
 - st7789 driver uses just bitbanging, DMA is dealt with in the hal layer, TODO, use ping-pong
 
+
+- add support for overclocking, and in the missing adjustment for display pio in the hal layer:
+
+        static void adjustSpeed() {
+            pio_sm_set_clock_speed(RCKID_ST7789_PIO, sm_, RCKID_ST7789_SPEED * 4); // 2 cycles per pixel
+        }
+
+
 ## Link Capability
 
 - direct connection to other device

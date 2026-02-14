@@ -28,6 +28,7 @@
 #include "tusb.h"
 
 #include "screen/ST7789.h"
+#include "ST7789_rgb16.pio.h"
 
 
 namespace rckid::fs {
@@ -39,6 +40,7 @@ namespace rckid::internal {
     namespace device {
         // set to true once we have debugging cpability (otherwise if there were debugging prints in static initializations, they crash the device)
         bool debugReady = false;
+
     }
 
     namespace time {
@@ -46,15 +48,109 @@ namespace rckid::internal {
     } // rckid::internal::time
 
     namespace display {
+        hal::display::Callback cb;
+        int32_t sm;
+        int32_t pioOffset;
+        int32_t pixelsToWrite = 0;
 
+
+        struct DMA {
+            int32_t channel = -1;
+            Color::RGB565 * buffer = nullptr;
+            uint32_t bufferSize = 0;
+
+            void reset() {
+                buffer = nullptr;
+                bufferSize = 0;
+            }
+
+            void configure(DMA & other) {
+                auto dmaConf = dma_channel_get_default_config(channel);
+                channel_config_set_transfer_data_size(&dmaConf, DMA_SIZE_16); // transfer 16 bits at a time (single pixel)
+                channel_config_set_read_increment(&dmaConf, true); // increment the read address (pixel buffer) after each transfer
+                channel_config_set_write_increment(&dmaConf, false); // do not increment the write address (PIO FIFO)
+                channel_config_set_chain_to(&dmaConf, other.channel);
+                channel_config_set_dreq(&dmaConf, pio_get_dreq(RCKID_ST7789_PIO, sm, true));
+                dma_channel_configure(channel, & dmaConf, &RCKID_ST7789_PIO->txf[sm], nullptr, 0, false);
+                dma_channel_set_irq0_enabled(channel, true);
+            }
+
+            void update() {
+                dma_channel_set_read_addr(channel, buffer, false);
+                dma_channel_set_trans_count(channel, bufferSize, false);
+            }
+        };
+
+        DMA dma1;
+        DMA dma2;
+
+        void enterCommandMode() {
+            // drop any ongoing transfer
+            if (pio_sm_is_enabled(RCKID_ST7789_PIO, sm)) {
+                {
+                    cpu::DisableInterruptsGuard g_;
+                    dma_channel_set_irq0_enabled(dma1.channel, false);
+                    dma_channel_set_irq0_enabled(dma2.channel, false);
+                }
+                dma_channel_abort(dma1.channel);
+                dma_channel_abort(dma2.channel);
+                pio_sm_set_enabled(RCKID_ST7789_PIO, sm, false);
+            }
+            // initialize bitbanging driver and exit the RAMWR command
+            ST7789::initializePinsBitBang();
+            ST7789::leaveUpdateMode();
+        }
+
+        void enterUpdateMode() {
+            ASSERT(! pio_sm_is_enabled(RCKID_ST7789_PIO, sm));
+            // start the RAMWR command in bitbank mode
+            ST7789::enterUpdateMode();
+            // configure the DMA channels, but do not start them
+            dma1.configure(dma2);
+            dma2.configure(dma1);
+            // initialize the PIO program
+            ST7789_rgb16_program_init(RCKID_ST7789_PIO, sm, pioOffset, RP_PIN_DISP_WRX, RP_PIN_DISP_DB15);
+            // and start the pio, which will put it immediately into a stall mode on tx
+            pio_sm_set_enabled(RCKID_ST7789_PIO, sm, true);
+        }
+
+        void initialize() {
+            LOG(LL_INFO, "display::initialize");
+            // reset the physical display
+            ST7789::reset();
+            pio_set_gpio_base(RCKID_ST7789_PIO, 16);
+            sm = pio_claim_unused_sm(RCKID_ST7789_PIO, true);
+            pioOffset = pio_add_program(RCKID_ST7789_PIO, & ST7789_rgb16_program);
+            dma1.channel = dma_claim_unused_channel(true);
+            dma2.channel = dma_claim_unused_channel(true);
+            LOG(LL_INFO, "sm: " << sm);
+            LOG(LL_INFO, "offset: " << pioOffset);
+            LOG(LL_INFO, "dma1: " << dma1.channel);
+            LOG(LL_INFO, "dma2: " << dma2.channel);
+            // enter update mode for full screen 320x240 col-first (native) 
+            enterUpdateMode();
+        }
     }
 
     namespace fs {
 
     }
 
-    void irqDMADone() {
-
+    void __not_in_flash_func(irqDMADone)() {
+        unsigned irqs = dma_hw->ints0;
+        dma_hw->ints0 = irqs;
+        if (display::pixelsToWrite > 0) {
+            if (irqs & (1u << display::dma1.channel)) {
+                display::pixelsToWrite -= display::dma1.bufferSize;
+                display::cb(display::dma1.buffer, display::dma1.bufferSize);
+                display::dma1.update();
+            }
+            if (irqs & (1u << display::dma2.channel)) {
+                display::cb(display::dma2.buffer, display::dma2.bufferSize);
+                display::pixelsToWrite -= display::dma2.bufferSize;
+                display::dma2.update();
+            }
+        }
     }
 
 } // namespace rckid::internal
@@ -76,17 +172,15 @@ extern "C" {
         */   
 
     void *__wrap_malloc(size_t numBytes) {
-        auto x = save_and_disable_interrupts();
+        cpu::DisableInterruptsGuard g_;
         void * result = rckid::Heap::alloc(numBytes);
-        restore_interrupts(x);
         return result;
     }
 
     void __wrap_free(void * ptr) { 
-        auto x = save_and_disable_interrupts();
+        cpu::DisableInterruptsGuard g_;
         if (rckid::Heap::contains(ptr))
             rckid::Heap::free(ptr); 
-        restore_interrupts(x);
     }
 
     void *__wrap_calloc(size_t numElements, size_t elementSize) {
@@ -129,7 +223,7 @@ namespace rckid::hal {
             // TODO enable the async I2C driver
 
             // enable the screen
-            ST7789::reset();            
+            internal::display::initialize();
 
 
 
@@ -174,6 +268,10 @@ namespace rckid::hal {
             // fatal error is simple on fantasy console as we do not have to worry about weird hardware states
             // stop audio playback, which is the only async stuff we can have
             audio::stop();
+            // reset display driver
+            internal::display::enterCommandMode();
+            ST7789::reset();
+            internal::display::enterUpdateMode();
             // and call the SDKs default handler
             onFatalError(file, line, msg, payload);
         }
@@ -240,21 +338,56 @@ namespace rckid::hal {
     namespace display {
 
         void enable(Rect rect, RefreshDirection direction) {
+            // cancel any ongoing DMA update
+            internal::display::enterCommandMode();
+            // leave the update mode so that we can send commands
+            ST7789::setRefreshDirection(direction);
+            ST7789::setUpdateRegion(rect);
+            // and enter the update mode again
+            internal::display::enterUpdateMode();
         }
 
         void disable() {
+            // TODO
         }
 
         void setBrightness(uint8_t value) {
+            // TODO
         }
 
         bool vSync() {
+            // vSync is active when the TE pin is high
+            return gpio_get(RP_PIN_DISP_TE) == 1;
         }
 
         void update(Callback callback) {
+            using namespace internal::display;
+            ASSERT(! updateActive());
+            cb = callback;
+            dma1.reset();
+            dma2.reset();
+            pixelsToWrite = ST7789::updateRegion().w * ST7789::updateRegion().h;
+            cb(dma1.buffer, dma1.bufferSize);
+            pixelsToWrite -= dma1.bufferSize;
+            dma1.update();
+            if (pixelsToWrite > 0) {
+                cb(dma2.buffer, dma2.bufferSize);
+                dma2.update();
+                pixelsToWrite -= dma2.bufferSize;
+            }
+            dma_channel_start(dma1.channel);
         }
 
         bool updateActive() {
+            using namespace internal::display;
+            // if we have pixels to write, we better be active
+            if (pixelsToWrite > 0)
+                return true;
+            // if any of the display DMAs are running, we are active
+            if (dma_channel_is_busy(dma1.channel) || dma_channel_is_busy(dma2.channel))
+                return true;
+            // if the dma channels are idle, the sm must still be sending the last pixels
+            return ! pio_sm_is_stalled(RCKID_ST7789_PIO, sm);
         }
 
     } // namespace rckid::hal::display
@@ -333,9 +466,10 @@ namespace rckid::hal {
             ASSERT(start + FLASH_PAGE_SIZE <= cartridgeCapacityBytes());
             uint32_t offset = reinterpret_cast<uint32_t>(& __cartridge_filesystem_start) - XIP_BASE + start;
             LOG(LL_LFS, "flash_range_program(" << offset << ", " << (uint32_t)FLASH_PAGE_SIZE << ") - start " << start);
-            uint32_t ints = save_and_disable_interrupts();
-            flash_range_program(offset, buffer, FLASH_PAGE_SIZE);
-            restore_interrupts(ints);
+            {
+                cpu::DisableInterruptsGuard g_;
+                flash_range_program(offset, buffer, FLASH_PAGE_SIZE);
+            }
         }
 
         void cartridgeErase(uint32_t start) {
@@ -345,9 +479,10 @@ namespace rckid::hal {
             //TRACE_LITTLEFS("cart_fs_start: " << (uint32_t)(& __cartridge_filesystem_start));         
             //TRACE_LITTLEFS("XIP_BASE:      " << (uint32_t)(XIP_BASE));
             LOG(LL_LFS, "flash_range_erase(" << offset << ", " << (uint32_t)FLASH_SECTOR_SIZE << ") -- start " << start);
-            uint32_t ints = save_and_disable_interrupts();
-            flash_range_erase(offset, FLASH_SECTOR_SIZE);
-            restore_interrupts(ints);
+            {
+                cpu::DisableInterruptsGuard g_;
+                flash_range_erase(offset, FLASH_SECTOR_SIZE);
+            }
         }
 
     } // namespace rckid::hal::fs

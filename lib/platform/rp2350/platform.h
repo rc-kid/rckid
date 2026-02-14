@@ -191,8 +191,20 @@ inline bool pio_sm_is_enabled(PIO pio, uint sm) {
     return pio->ctrl & (1u << sm);
 }
 
+/** Returns true if the given pio sm is stalled on either tx or rx queues.
+ 
+    This happens when the pio is waiting for new data to consume (tx fifo empty), or cannot produce any more data (rx fifo full).
+ */
+inline bool pio_sm_is_stalled(PIO pio, uint sm) {
+    uint32_t fdebug = pio->fdebug;
+    bool tx_stall   = fdebug & (1u << (PIO_FDEBUG_TXSTALL_LSB + sm));
+    bool rx_stall   = fdebug & (1u << (PIO_FDEBUG_RXSTALL_LSB + sm));
+    return tx_stall || rx_stall;
+}
+
 /** Returns trye if the  given PWM is active. 
  */
 inline bool pwm_is_enabled(uint slice_num) {
     return (pwm_hw->slice[slice_num].csr) & (1 << PWM_CH0_CSR_EN_LSB);
 }
+
