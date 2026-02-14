@@ -7,9 +7,17 @@
 #error "Invalid build settings, Rpi Pico SDK must be set to RP2350B"
 #endif
 
+#include <platform.h>
+
+
+#include <hardware/uart.h>
+#include <hardware/clocks.h>
+
+
 
 #include <rckid/hal.h>
 #include <rckid/error.h>
+#include <rckid/memory.h>
 #include <rckid/graphics/color.h>
 
 #define RCKID_DISPLAY_ZOOM 4
@@ -19,6 +27,35 @@ extern "C" {
     extern uint8_t __cartridge_filesystem_start;
     extern uint8_t __cartridge_filesystem_end;
     
+    // implement not really working entropy function to silence the linker warning
+    /*
+    int _getentropy([[maybe_unused]] void *buffer, [[maybe_unused]] size_t length) {
+        errno = ENOSYS;
+        return -1;
+    } 
+        */   
+
+    void *__wrap_malloc(size_t numBytes) {
+        auto x = save_and_disable_interrupts();
+        void * result = rckid::Heap::alloc(numBytes);
+        restore_interrupts(x);
+        return result;
+    }
+
+    void __wrap_free(void * ptr) { 
+        auto x = save_and_disable_interrupts();
+        if (rckid::Heap::contains(ptr))
+            rckid::Heap::free(ptr); 
+        restore_interrupts(x);
+    }
+
+    void *__wrap_calloc(size_t numElements, size_t elementSize) {
+        size_t numBytes = numElements * elementSize;
+        void * result = __wrap_malloc(numBytes);
+        memset(result, 0, numBytes);
+        return result;
+    }
+
 }
 
 namespace rckid::internal {
@@ -202,6 +239,13 @@ namespace rckid::hal {
         uint8_t * heapEnd() {
             UNIMPLEMENTED;
         }
+
+        bool isImmutableDataPtr(void const * ptr) {
+            uint32_t addr = reinterpret_cast<uint32_t>(ptr);
+            return ((addr >= 0x10000000) && (addr < 0x20000000)) || (ptr == nullptr);
+        }
+
+
 
     } // namespace rckid::hal::memory
 

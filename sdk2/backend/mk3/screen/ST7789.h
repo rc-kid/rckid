@@ -13,7 +13,7 @@
 
 namespace rckid {
 
-    void irqDMADone_();
+    //void irqDMADone_();
 
     /** Low level driver for the ST7789 display driver. 
      
@@ -125,43 +125,52 @@ namespace rckid {
          */
         //@{
 
-        static void enterCommandMode(); 
+        static void enterUpdateMode() {
+            beginCommand(RAMWR);
+            gpio_put(RP_PIN_DISP_DCX, true);
+        }
 
-        static void enterUpdateMode();
+        static void leaveUpdateMode() {
+            end(); // end the RAMWR command
+        }
+
+        //static void enterCommandMode(); 
+
+        //static void enterUpdateMode();
 
         /** Returns true if there is a screen update in progress. This is whenever the DMA is active, but can also be between DMA transfers if the callback function indicated more data to come. 
          */
-        static bool dmaUpdateInProgress() { return updating_ != 0; }
+        //static bool dmaUpdateInProgress() { return updating_ != 0; }
 
         /** Writes given pixels to the srceeen using the DMA. 
          
             If the DMA update is active, it reuses the callback function set with the first call, otherwise the update is treated as a single update. 
          */
-        static void dmaUpdateAsync(uint16_t const * pixels, size_t numPixels) {
-            enterUpdateMode();    
-            if (updating_ == 0)
-                cb_ = nullptr; // be done with the update
-            // updating_ is volatile, but this is ok - it is only main app code (here), or from an IRQ
-            ++updating_;
-            dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
-        }
+        //static void dmaUpdateAsync(uint16_t const * pixels, size_t numPixels) {
+        //    enterUpdateMode();    
+        //    if (updating_ == 0)
+        //        cb_ = nullptr; // be done with the update
+        //    // updating_ is volatile, but this is ok - it is only main app code (here), or from an IRQ
+        //    ++updating_;
+        //    dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
+        //}
 
         /** Writes given pixels and provides a callback function to be called when the DMA transfer finishes. 
          */
-        static void dmaUpdateAsync(uint16_t const * pixels, uint32_t numPixels, hal::display::Callback cb) {
-            enterUpdateMode();
-            cb_ = cb;
-            // updating_ is volatile, but this is ok - it is only main app code (here), or from an IRQ
-            ++updating_;
-            dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
-        }
+        //static void dmaUpdateAsync(uint16_t const * pixels, uint32_t numPixels, hal::display::Callback cb) {
+        //    enterUpdateMode();
+        //    cb_ = cb;
+        //    // updating_ is volatile, but this is ok - it is only main app code (here), or from an IRQ
+        //    ++updating_;
+        //    dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
+        //}
 
         /** Busy waits until the display finishes updating. Only useful in DMA update async mode, otherwise returns immediately.
          */
-        static void waitUpdateDone() { 
-            while (updating_ != 0)
-                yield();
-        }
+        //static void waitUpdateDone() { 
+        //    while (updating_ != 0)
+        //        yield();
+        //}
 
         /** Busy waits for the rising edge on the TE display pin, signalling the beginning of the V-blank period. 
          */
@@ -171,15 +180,15 @@ namespace rckid {
                 yield();
         }
 
-        static void adjustSpeed() {
-            pio_sm_set_clock_speed(RCKID_ST7789_PIO, sm_, RCKID_ST7789_SPEED * 4); // 2 cycles per pixel
-        }
+        //static void adjustSpeed() {
+        //    pio_sm_set_clock_speed(RCKID_ST7789_PIO, sm_, RCKID_ST7789_SPEED * 4); // 2 cycles per pixel
+        //}
 
     private:
 
-        friend void irqDMADone_();
+        //friend void irqDMADone_();
 
-        static void irqHandler();
+        //static void irqHandler();
 
         /** Sets the columns range for RAM updates. Columns are referenced in the native mode and can be from 0 to 239 inclusive. 
         */
@@ -196,7 +205,7 @@ namespace rckid {
         static void initializePinsBitBang();
 
         static void beginCommand(uint8_t cmd) {
-            ASSERT(!pio_sm_is_enabled(RCKID_ST7789_PIO, sm_)); // Commands are bitbanged so the pins can't belong to the pio
+            //ASSERT(!pio_sm_is_enabled(RCKID_ST7789_PIO, sm_)); // Commands are bitbanged so the pins can't belong to the pio
             gpio_put(RP_PIN_DISP_CSX, false);
             gpio_put(RP_PIN_DISP_DCX, false);
             // RP_PIN_DISP_WRX is expected to be low 
@@ -264,17 +273,17 @@ namespace rckid {
         }
 
         // PIO settings including the DMA used for the display and the addresses for the pio drivers for normal and double modes.
-        static inline uint sm_;
-        static inline uint offsetSingle_;
-        static inline uint offsetDouble_;
-        static inline uint dma_ = -1;
-        static inline dma_channel_config dmaConf_;
+        //static inline uint sm_;
+        //static inline uint offsetSingle_;
+        //static inline uint offsetDouble_;
+        //static inline uint dma_ = -1;
+        //static inline dma_channel_config dmaConf_;
 
         static inline hal::display::RefreshDirection refreshDir_ = hal::display::RefreshDirection::ColumnFirst;
         static inline Rect updateRegion_ = Rect::WH(hal::display::WIDTH, hal::display::HEIGHT);
         // Update bookkeeping - the callback, whether update is active or not, the current display mode and the update region
-        static inline hal::display::Callback cb_;
-        static inline volatile uint32_t updating_ = 0;
+        //static inline hal::display::Callback cb_;
+        //static inline volatile uint32_t updating_ = 0;
 
         // Low level driver constants
         static constexpr uint8_t SWRESET = 0x01;
