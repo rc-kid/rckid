@@ -6,6 +6,6 @@ lib/raylib
 lib/pico-sdk
 old*
 gbcemu/tests/insns_json
-sd
+/sd
 cartridge
 .Zone.Identifier
