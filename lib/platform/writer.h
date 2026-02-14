@@ -24,7 +24,7 @@ private:
     PutCharCallback putChar_;
 }; 
 
-inline Writer operator << (Writer w, uint64_t x) {
+inline Writer operator << (Writer w, unsigned long long x) {
     uint64_t order = 1000000000000000000ull;
     while (x < order && order > 1)
         order = order / 10;
@@ -37,8 +37,7 @@ inline Writer operator << (Writer w, uint64_t x) {
     return w;
 }
 
-
-inline Writer operator << (Writer w, uint32_t x) {
+inline Writer operator << (Writer w, unsigned x) {
     uint32_t order = 1000000000;
     while (x < order && order > 1)
         order = order / 10;
@@ -51,36 +50,50 @@ inline Writer operator << (Writer w, uint32_t x) {
     return w;
 }
 
-inline Writer operator << (Writer w, uint16_t value) {
-    return w << static_cast<uint32_t>(value);
+inline Writer operator << (Writer w, unsigned long value) { 
+    if (sizeof(unsigned long) == 4)
+        return w << static_cast<unsigned>(value);
+    else 
+        return w << static_cast<unsigned long long>(value);
 }
 
-inline Writer operator << (Writer w, uint8_t value) {
-    return w << static_cast<uint32_t>(value);
+inline Writer operator << (Writer w, unsigned short value) {
+    return w << static_cast<unsigned>(value);
 }
 
-inline Writer operator << (Writer w, int64_t value) { 
+inline Writer operator << (Writer w, unsigned char value) {
+    return w << static_cast<unsigned>(value);
+}
+
+inline Writer operator << (Writer w, long long value) { 
     if (value < 0) {
         w.putChar('-');
         value *= -1;
     }
-    return w << static_cast<uint64_t>(value);
+    return w << static_cast<unsigned long long>(value);
 }   
 
-inline Writer operator << (Writer w, int32_t value) { 
+inline Writer operator << (Writer w, int value) { 
     if (value < 0) {
         w.putChar('-');
         value *= -1;
     }
-    return w << static_cast<uint64_t>(value);
+    return w << static_cast<unsigned>(value);
 }
 
-inline Writer operator << (Writer w, int16_t value) {
-    return w << static_cast<int32_t>(value);
+inline Writer operator << (Writer w, long value) {
+    if (sizeof(long) == 4)
+        return w << static_cast<int>(value);
+    else
+        return w << static_cast<long long>(value);
 }
 
-inline Writer operator << (Writer w, int8_t value) {
-    return w << static_cast<int32_t>(value);
+inline Writer operator << (Writer w, short value) {
+    return w << static_cast<int>(value);
+}
+
+inline Writer operator << (Writer w, signed char value) {
+    return w << static_cast<int>(value);
 }
 
 inline Writer operator << (Writer w, char c) {
