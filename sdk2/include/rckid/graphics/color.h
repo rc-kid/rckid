@@ -1,6 +1,7 @@
 #pragma once
 
 #include <platform.h>
+#include <platform/utils.h>
 
 #include <rckid/error.h>
 #include <rckid/serialization.h>

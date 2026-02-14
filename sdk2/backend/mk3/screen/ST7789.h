@@ -9,8 +9,7 @@
 #include <rckid/graphics/color.h>
 #include <rckid/graphics/geometry.h>
 
-#define RCKID_BACKEND_CONFIG_INTERNALS
-#include "backend_internals.h"
+#include "config.h"
 
 namespace rckid {
 
@@ -72,14 +71,11 @@ namespace rckid {
         1   | 0   | 1   | 3line 9bit  
         1   | 1   | 0   | 4line 8bit
 
-        For sending the raw data bytes, the full width of the display bus is used, but for the command interface, only the lower bits are used. From the display datasheet and ST7789S datasheet, it looks like the actual interface used is MCU 16bit II (IM3 being set to high inside the display).   
+        For sending the raw data bytes, the full width of the display bus is used, but for the command interface, only the lower bits are used. From the display datasheet and ST7789S datasheet, it looks like the actual interface used is MCU 16bit II (IM3 being set to high inside the display).
+
      */
     class ST7789 {
     public:
-        enum class Resolution {
-            Full, 
-            Half,
-        }; 
 
         /** Supported FPS values for the display. 
          */
@@ -103,23 +99,12 @@ namespace rckid {
 
         static void clear(uint16_t color);
 
-        static Resolution resolution() { 
-            return static_cast<Resolution>(mode_ & 0xf); 
-        }
-
         static hal::display::RefreshDirection refreshDirection() {
-            return static_cast<hal::display::RefreshDirection>(mode_ >> 4);
+            return refreshDir_;
         }
 
-        static void setResolution(Resolution res) {
-            setDisplayMode(res, refreshDirection());
-        }
+        static void setRefreshDirection(hal::display::RefreshDirection dir);
 
-        static void setRefreshDirection(hal::display::RefreshDirection dir) {
-            setDisplayMode(resolution(), dir);
-        }
-
-        static void setDisplayMode(Resolution res, hal::display::RefreshDirection dir);
         static Rect updateRegion() { return updateRegion_; }
 
         static void setUpdateRegion(Rect rect); 
@@ -132,23 +117,6 @@ namespace rckid {
             sendCommand(FRCTRL2, static_cast<uint8_t>(fps));
         }
 
-        /** Clears the entire display with given color. 
-    
-            Mostly useful for barebones clearing the screen in debug mode as the fill rate is rather slow. A much better approach is to enter the continous mode and fill the screen using the pio & dma.  
-         */
-        //static void fill(ColorRGB color);
-
-        /** \name Update mode
-         * 
-         */
-        //@{
-
-        //static void beginUpdate();
-        //static void endUpdate();
-
-        //static void update(ColorRGB const * pixels, uint32_t numPixels);
-        //@}
-
         /** \name DMA update mode 
 
             The DMA mode does not send any commands to the display and only updates the selected display area. When data for the display area are sent, new frame will begin. The DMA mode uses 32bit PIO tuned to high speed for fast updates with minimal CPU intervention. 
@@ -160,14 +128,6 @@ namespace rckid {
         static void enterCommandMode(); 
 
         static void enterUpdateMode();
-
-        /** Enters the DMA update mode, takes the display pins for the pio. 
-         */
-        //static void beginDMAUpdate();
-
-        /** Leaves the DMA update mode and returns the display pins back to GPIO. 
-         */
-        //static void endDMAUpdate();
 
         /** Returns true if there is a screen update in progress. This is whenever the DMA is active, but can also be between DMA transfers if the callback function indicated more data to come. 
          */
@@ -195,14 +155,6 @@ namespace rckid {
             ++updating_;
             dma_channel_transfer_from_buffer_now(dma_, pixels, numPixels);
         }
-
-        //static void dmaUpdateBlocking(ColorRGB const * pixels, uint32_t numPixels) {
-        //    ASSERT(!dmaUpdateInProgress() && "Blocking DMA update must be the first in frame");
-        //    dmaUpdateAsync(pixels, numPixels);
-        //    while (dmaUpdateInProgress()) 
-        //        yield();
-        //}
-        //@}
 
         /** Busy waits until the display finishes updating. Only useful in DMA update async mode, otherwise returns immediately.
          */
@@ -318,18 +270,11 @@ namespace rckid {
         static inline uint dma_ = -1;
         static inline dma_channel_config dmaConf_;
 
-        static inline uint8_t mode_ = 0; // norma & native
+        static inline hal::display::RefreshDirection refreshDir_ = hal::display::RefreshDirection::ColumnFirst;
         static inline Rect updateRegion_ = Rect::WH(hal::display::WIDTH, hal::display::HEIGHT);
         // Update bookkeeping - the callback, whether update is active or not, the current display mode and the update region
         static inline hal::display::Callback cb_;
         static inline volatile uint32_t updating_ = 0;
-
-        /*
-        static constexpr uint8_t MODE_FULL_NATURAL = static_cast<uint8_t>(Resolution::Full) | (static_cast<uint8_t>(hal::display::RefreshDirection::RowFirst) << 4);
-        static constexpr uint8_t MODE_FULL_NATIVE = static_cast<uint8_t>(Resolution::Full) | (static_cast<uint8_t>(hal::display::RefreshDirection::ColumnFirst) << 4);
-        static constexpr uint8_t MODE_HALF_NATURAL = static_cast<uint8_t>(Resolution::Half) | (static_cast<uint8_t>(hal::display::RefreshDirection::RowFirst) << 4);
-        static constexpr uint8_t MODE_HALF_NATIVE = static_cast<uint8_t>(Resolution::Half) | (static_cast<uint8_t>(hal::display::RefreshDirection::ColumnFirst) << 4);
-    */
 
         // Low level driver constants
         static constexpr uint8_t SWRESET = 0x01;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <platform.h>
+#include <platform/writer.h>
 #include <functional>
 
 /** Serialization & Deserialization

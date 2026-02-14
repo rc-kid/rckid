@@ -7,7 +7,7 @@
 #include <rckid/graphics/png.h>
 #include <assets/images.h>
 
-#include "../backend_internals.h"
+#include "../config.h"
 
 namespace rckid {
 
@@ -57,7 +57,7 @@ namespace rckid {
         sendCommand(SWRESET);
         busy_wait_ms(150);
         sendCommand(VSCSAD, (uint8_t)0);
-        setDisplayMode(Resolution::Full, hal::display::RefreshDirection::ColumnFirst);
+        setRefreshDirection(hal::display::RefreshDirection::ColumnFirst);
         sendCommand(TEON, TE_VSYNC);
         sendCommand(SLPOUT);
         busy_wait_ms(150);
@@ -66,7 +66,7 @@ namespace rckid {
         //sendCommand(MADCTL, (uint8_t)(MADCTL_MV));
         //sendCommand(MADCTL, (uint8_t)(MADCTL_MY | MADCTL_MV ));
         //sendCommand(MADCTL, 0_u8);
-        //setDisplayMode(ST7789::DisplayMode::Native);
+        //setRefreshDirection(ST7789::DisplayMode::Native);
         sendCommand(INVON);
         updateRegion_ = Rect::WH(hal::display::WIDTH, hal::display::HEIGHT);
         setUpdateRegion(updateRegion_);
@@ -75,7 +75,7 @@ namespace rckid {
 #if (RCKID_SPLASHSCREEN_OFF == 1)
         clear(0x0000);
 #else
-        setDisplayMode(Resolution::Full, hal::display::RefreshDirection::RowFirst);
+        setRefreshDirection(hal::display::RefreshDirection::RowFirst);
         setUpdateRegion(updateRegion_);
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
@@ -86,45 +86,35 @@ namespace rckid {
         });
         gpio_put(RP_PIN_DISP_DCX, false);
         end();
-        setDisplayMode(Resolution::Full, hal::display::RefreshDirection::ColumnFirst);
+        setRefreshDirection(hal::display::RefreshDirection::ColumnFirst);
         setUpdateRegion(updateRegion_);
 #endif
     }
 
-    void ST7789::setDisplayMode(Resolution res, hal::display::RefreshDirection dir) {
-        mode_ = static_cast<uint8_t>(res) | (static_cast<uint8_t>(dir) << 4); 
+    void ST7789::setRefreshDirection(hal::display::RefreshDirection dir) {
+        refreshDir_ = dir;
         enterCommandMode();
-        switch (mode_) {
-            case MODE_FULL_NATIVE:
-            case MODE_HALF_NATIVE:
+        switch (dir) {
+            case hal::display::RefreshDirection::ColumnFirst:
                 sendCommand(COLMOD, COLMOD_565);
                 sendCommand(MADCTL, 0_u8);
                 break;
-            case MODE_FULL_NATURAL:
-            case MODE_HALF_NATURAL:
-                sendCommand(COLMOD, COLMOD_565);
+            case hal::display::RefreshDirection::RowFirst:
+                 sendCommand(COLMOD, COLMOD_565);
                 sendCommand(MADCTL, static_cast<uint8_t>(MADCTL_MY | MADCTL_MV));
                 break;
-            /*
-            case DisplayMode::Native_RGB666:
-                sendCommand(COLMOD, COLMOD_666);
-                sendCommand(MADCTRL, 0);
-                break;
-            case DisplayMode::Native_BGR666:
-                sendCommand(COLMOD, COLMOD_66);
-                sendCommand(MADCTRL, MADCTL_BGR);
-                break;
-            */
+            default:
+                UNREACHABLE;
         }
     }
 
     void ST7789::clear(uint16_t color) {
-        setDisplayMode(Resolution::Full, hal::display::RefreshDirection::RowFirst);
-        setUpdateRegion(Rect::WH(RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT));
+        setRefreshDirection(hal::display::RefreshDirection::ColumnFirst);
+        setUpdateRegion(Rect::WH(hal::display::WIDTH, hal::display::HEIGHT));
         enterCommandMode();
         beginCommand(RAMWR);
         gpio_put(RP_PIN_DISP_DCX, true);
-        for (size_t i = 0, e = RCKID_DISPLAY_WIDTH * RCKID_DISPLAY_HEIGHT; i < e; ++i)
+        for (size_t i = 0, e = hal::display::WIDTH * hal::display::HEIGHT; i < e; ++i)
             sendWord(color);
 
         gpio_put(RP_PIN_DISP_DCX, false);
@@ -134,23 +124,18 @@ namespace rckid {
     void ST7789::setUpdateRegion(Rect rect) {
         enterCommandMode();
         updateRegion_ = rect;
-        switch (mode_) {
-            case MODE_FULL_NATIVE: {
+        switch (refreshDir_) {
+            case hal::display::RefreshDirection::ColumnFirst: {
                 Coord offset = 320 - rect.right();
                 setColumnRange(rect.top(), rect.bottom() - 1);
                 setRowRange(rect.left() + offset, rect.right() + offset - 1);
                 break;
             }
-            case MODE_HALF_NATIVE:
-                UNIMPLEMENTED;
-                break;
-            case MODE_FULL_NATURAL:
+            case hal::display::RefreshDirection::RowFirst: {
                 setRowRange(rect.top(), rect.bottom() - 1);
                 setColumnRange(rect.left(), rect.right() - 1);
                 break;
-            case MODE_HALF_NATURAL:
-                UNIMPLEMENTED;
-                break;
+            }
             default:
                 UNREACHABLE;
         }
@@ -175,21 +160,8 @@ namespace rckid {
         if (!pio_sm_is_enabled(RCKID_ST7789_PIO, sm_)) {
             beginCommand(RAMWR);
             gpio_put(RP_PIN_DISP_DCX, true);
-            // initialize the corresponding PIO program
-            switch (mode_) {
-                case MODE_FULL_NATIVE:
-                case MODE_FULL_NATURAL:
-                    ST7789_rgb16_program_init(RCKID_ST7789_PIO, sm_, offsetSingle_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB15);
-                    break;
-                /*
-                case MODE_HALF_NATIVE:
-                case MODE_HALF_NATURAL:
-                    ST7789_rgb_double_program_initRCKID_ST7789_PIO, sm_, offsetDouble_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB8);
-                    break;
-                */
-                default:
-                    UNREACHABLE;
-            }
+            // initialize the PIO program
+            ST7789_rgb16_program_init(RCKID_ST7789_PIO, sm_, offsetSingle_, RP_PIN_DISP_WRX, RP_PIN_DISP_DB15);
             // and start the pio
             pio_sm_set_enabled(RCKID_ST7789_PIO, sm_, true);
         }
