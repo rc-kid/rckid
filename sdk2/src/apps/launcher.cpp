@@ -2,6 +2,7 @@
 #include <rckid/apps/music_player.h>
 #include <rckid/apps/steps.h>
 #include <rckid/apps/data_sync.h>
+#include <rckid/apps/file_browser.h>
 
 #include <rckid/apps/launcher.h>
 
@@ -34,7 +35,10 @@ namespace rckid {
             }}
             << ui::MenuItem{"Data Sync", assets::icons_64::pen_drive, []() {
                 DataSync{}.run();
-            }};
+            }}
+            << ui::MenuItem("File Browser", assets::icons_64::folder, []() {
+                FileBrowser{}.run();
+            });
 
         return result;
     }

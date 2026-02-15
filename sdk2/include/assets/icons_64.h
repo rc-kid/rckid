@@ -35,6 +35,18 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/game_controller.inc.h"
     };
 
+    // File: icons/icons_64/015-poo.png
+    // Size: 2396
+    static constexpr uint8_t poo[] = {
+        #include "raw/icons_64/poo.inc.h"
+    };
+
+    // File: icons/icons_64/025-folder.png
+    // Size: 2621
+    static constexpr uint8_t folder[] = {
+        #include "raw/icons_64/folder.inc.h"
+    };
+
     // File: icons/icons_64/002-music.png
     // Size: 2532
     static constexpr uint8_t music[] = {

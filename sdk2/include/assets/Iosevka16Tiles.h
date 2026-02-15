@@ -17,7 +17,7 @@ namespace rckid::assets {
        tiles:          95
      */
     static constexpr Tile<8,16,Color::Index16> Iosevka16Tiles[] = {
-    #define __ 0
+        #define __ 0
         // 0: ' ', codepoint 32, utf8: ` `
         Tile<8,16,Color::Index16>{{
             __, __, __, __, __, __, __, __, 
@@ -1823,6 +1823,6 @@ namespace rckid::assets {
             __, __, __, __, __, __, __, __, 
             __, __, __, __, __, __, __, __, 
         }},
-    #undef __
+        #undef __
     };
 } // namespace rckid::assets

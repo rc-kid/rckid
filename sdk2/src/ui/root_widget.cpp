@@ -29,8 +29,10 @@ namespace rckid::ui {
                 buffer = nullptr;
                 return;
             } else if (buffer == nullptr) {
-                buffer = renderBuffer_.frontAndSwap();
+                buffer = renderBuffer_.front().data();
                 bufferSize = height();
+                ASSERT(bufferSize <= renderBuffer_.size());
+                renderBuffer_.swap();
             }
             renderColumn(renderCol_--, 0, buffer, height());
         });

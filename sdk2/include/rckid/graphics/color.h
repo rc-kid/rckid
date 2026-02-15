@@ -27,7 +27,7 @@ namespace rckid {
             Index16,
         }; 
 
-        class RGB565 {
+        class alignas(2) RGB565 {
         public:
             constexpr RGB565() = default;
             constexpr RGB565(uint16_t raw): raw_{raw} {}
@@ -69,7 +69,7 @@ namespace rckid {
         private:
             uint16_t raw_ = 0;
 
-        } __attribute__((packed, aligned(2))); // Color::RGB565
+        } __attribute__((packed)); // Color::RGB565
 
         class RGB332 {
         public:

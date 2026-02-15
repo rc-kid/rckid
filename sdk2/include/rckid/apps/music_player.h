@@ -2,6 +2,9 @@
 
 #include <rckid/ui/app.h>
 #include <rckid/apps/launcher.h>
+#include <rckid/apps/file_browser.h>
+
+#include <rckid/audio/mp3.h>
 
 namespace rckid {
 
@@ -22,7 +25,7 @@ namespace rckid {
         void onLoopStart() override {
             using namespace ui;
             with(carousel_)
-                << ResetMenu(mainMenuGenerator /*[]() -> unique_ptr<ui::Menu> { return nullptr; } */);
+                << ResetMenu([]() { return FileBrowser::folderMenuGenerator(nullptr, "/files/music", fs::Drive::SD); });
         }
 
         void onFocus() override {

@@ -110,7 +110,54 @@ namespace rckid::internal {
                     break;
             }
         }
-    } // rckid::internal::display
+    } // namespace rckid::internal::display
+
+    namespace audio {
+
+        AudioStream stream;
+        hal::audio::Callback cb;        
+
+        int16_t * currentBuffer = nullptr;
+        uint32_t currentBufferSize = 0;
+        int16_t * nextBuffer = nullptr;
+        uint32_t nextBufferSize = 0;
+
+        uint32_t currentBufferIndex = 0;
+
+        uint8_t volume = 10;
+
+        /** Raylib stream refill callback.
+         */
+        void refillStream(void * buffer, unsigned int samples) {
+            // get the stereo view of the input buffer
+            int16_t * stereo = reinterpret_cast<int16_t*>(buffer);
+            while (samples-- != 0) {
+                if (currentBufferIndex >= currentBufferSize * 2) {
+                    // go for the next buffer which should already be preloaded
+                    std::swap(currentBuffer, nextBuffer);
+                    std::swap(currentBufferSize, nextBufferSize);
+                    currentBufferIndex = 0;
+                    // inform the callback that we have retired the current buffer and ask for replacement, which will be our next buffer
+                    audio::cb(nextBuffer, nextBufferSize);
+                }
+                int16_t l = currentBuffer[currentBufferIndex++];
+                int16_t r = currentBuffer[currentBufferIndex++];
+                if (audio::volume == 0) {
+                    l = 0;
+                    r = 0;
+                } else {
+                    l >>= (10 - audio::volume);
+                    l = l & 0xfff0;
+                    r >>= (10 - audio::volume);
+                    r = r & 0xfff0;
+                }
+                *(stereo++) = l;
+                *(stereo++) = r;
+            }
+        }
+        
+
+    } // namespace rckid::internal::audio
 
     namespace fs {
         std::fstream sd_;
@@ -118,7 +165,7 @@ namespace rckid::internal {
         std::fstream cartridge_;
         uint32_t cartridgeSize_ = 0;
 
-    } // rckid::internal::fs
+    } // namespace rckid::internal::fs
 
 } // namespace rckid::internal
 
@@ -193,6 +240,8 @@ namespace rckid::hal {
             InitWindow(320 * RCKID_DISPLAY_ZOOM, 240 * RCKID_DISPLAY_ZOOM, "RCKid");
             internal::display::img = GenImageColor(display::WIDTH, display::HEIGHT, BLACK);
             internal::display::texture = LoadTextureFromImage(internal::display::img);
+            // initialize the audio device
+            InitAudioDevice();
 
             initializeNoWindow();
         }
@@ -356,36 +405,71 @@ namespace rckid::hal {
     namespace audio {
 
         void setVolumeHeadphones(uint8_t value) {
-
+            internal::audio::volume = value;
         }
 
         void setVolumeSpeaker(uint8_t value) {
-
+            internal::audio::volume = value;
         }
 
         void play(uint32_t sampleRate, Callback cb) {
+            internal::audio::cb = cb;
+            internal::audio::currentBuffer = nullptr;
+            internal::audio::currentBufferSize = 0;
+            internal::audio::nextBuffer = nullptr;
+            internal::audio::nextBufferSize = 0;
+            internal::audio::currentBufferIndex = 0;
 
+            cb(internal::audio::currentBuffer, internal::audio::currentBufferSize);
+            ASSERT(internal::audio::currentBuffer != nullptr);
+            ASSERT(internal::audio::currentBufferSize != 0);
+            cb(internal::audio::nextBuffer, internal::audio::nextBufferSize);
+            {
+                internal::memory::SystemMallocGuard g;
+                internal::audio::stream = LoadAudioStream(sampleRate, 16, 2);
+                SetAudioStreamCallback(internal::audio::stream, internal::audio::refillStream);   
+                PlayAudioStream(internal::audio::stream);
+            }
         }
 
         void recordMic(uint32_t sampleRate, Callback cb) {
-
+            UNIMPLEMENTED;
         }
 
         void recordLineIn(uint32_t sampleRate, Callback cb) {
-
+            UNIMPLEMENTED;
         }
 
         void pause() {
-
+            if (IsAudioStreamValid(internal::audio::stream))
+                PauseAudioStream(internal::audio::stream);
         }
 
         void resume() {
-
+            if (IsAudioStreamValid(internal::audio::stream))
+                ResumeAudioStream(internal::audio::stream);
         }
 
         void stop() {
-
+            if (IsAudioStreamValid(internal::audio::stream)) {
+                StopAudioStream(internal::audio::stream);
+                UnloadAudioStream(internal::audio::stream);
+            }
         }
+
+        bool isPlaying() {
+            return IsAudioStreamValid(internal::audio::stream);
+        }
+
+        bool isRecording(){
+            return false;
+        }
+
+        bool isPaused() {
+            if (isPlaying())
+                return IsAudioStreamPlaying(internal::audio::stream) == false;
+        }
+
 
     } // namespace rckid::hal::audio
 

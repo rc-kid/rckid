@@ -270,6 +270,12 @@ namespace rckid::hal {
 
         void stop();
 
+        bool isPlaying();
+
+        bool isRecording();
+
+        bool isPaused();
+
     } // namespace rckid::hal::audio
 
     /** Filesystem access. 

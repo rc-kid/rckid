@@ -13,7 +13,7 @@
 - decorator event in menu items for badges (& their clearing in carousel selection) (...)
 - home menu (...)
 - header (...)
-- audio playback
+- audio playback (...)
 
 - mk3 code not cleaned up and not working
 - st7789 driver uses just bitbanging, DMA is dealt with in the hal layer, TODO, use ping-pong

@@ -67,9 +67,14 @@ namespace rckid {
         }
 
         String & operator = (char const * s) {
-            ASSERT(hal::memory::isImmutableDataPtr(s));
-            data_ = immutable_ptr<char>{s};
             size_ = static_cast<uint32_t>(std::strlen(s));
+            if (hal::memory::isImmutableDataPtr(s)) {   
+                data_ = immutable_ptr<char>{s};
+            } else {
+                char * data = new char[size_ + 1];
+                std::memcpy(data, s, size_ + 1);
+                data_ = immutable_ptr<char>{data};
+            }
             return *this;
         }
 
