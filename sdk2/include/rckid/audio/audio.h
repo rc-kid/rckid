@@ -3,6 +3,7 @@
 #include <platform.h>
 
 #include <rckid/task.h>
+#include <rckid/audio/decoder_stream.h>
 
 namespace rckid::audio {
 
@@ -18,9 +19,44 @@ namespace rckid::audio {
         }
     }
 
+    /** Playlist interface
+     
+        Interface for the playback task that allows it to move between tracks. 
+
+        TODO the playlist can also have events from the playback task
+     */
+    class Playlist {
+    public:
+
+        virtual ~Playlist() = default;
+
+        virtual unique_ptr<DecoderStream> next() = 0;
+
+        virtual unique_ptr<DecoderStream> prev() = 0;
+
+    }; // rckid::audio::Playlist
+
     /** Audio playback task. 
+     
      */
     class Playback : public Task {
+    public:
+        Playback(Playlist * playlist): playlist_{playlist} {
+        }
+
+        bool next() {
+            UNIMPLEMENTED;
+        }
+
+        bool prev() {
+            UNIMPLEMENTED;
+        }
+
+    private:
+
+        Playlist * playlist_ = nullptr;
+
+        unique_ptr<DecoderStream> currentStream_;
 
     }; // rckid::audio::Playback
 

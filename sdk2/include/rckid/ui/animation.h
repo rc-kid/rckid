@@ -118,7 +118,7 @@ namespace rckid::ui {
         static void updateAll() {
             if (head_ == nullptr)
                 return;
-            uint32_t currentUs = uptimeUs();
+            uint32_t currentUs = time::uptimeUs();
             Animation * x = head_;
             do {
                 if (! x->update(currentUs)) {
@@ -181,7 +181,7 @@ namespace rckid::ui {
         friend class Widget::AnimationBuilder;
 
         void start() {
-            startUs_ = uptimeUs();
+            startUs_ = time::uptimeUs();
             if (w_ != nullptr)
                 ++w_->activeAnimations_;
             if (onUpdate_)

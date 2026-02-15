@@ -1,5 +1,5 @@
+#include <rckid/rckid.h>
 #include <rckid/hal.h>
-#include <rckid/log.h>
 #include <rckid/graphics/color.h>
 
 using namespace rckid;

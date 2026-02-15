@@ -26,6 +26,7 @@ namespace rckid::ui {
     }
 
     void Style::load(ini::Reader & reader) {
+        backgroundImage_ = ImageSource{assets::images::logo};
         reader 
             >> ini::Section("default")
                 >> ini::Field("fg", defaultFg_)
@@ -43,16 +44,9 @@ namespace rckid::ui {
                 >> ini::Field("fg", successFg_)
                 >> ini::Field("bg", successBg_)
             >> ini::Section("animation")
-                >> ini::Field("speed", animationSpeed_);
-
-        String str;
-        reader
+                >> ini::Field("speed", animationSpeed_)
             >> ini::Section("background")
-                >> ini::Field("image", str);
-        if (str.empty())
-            backgroundImage_ = ImageSource{assets::images::logo};
-        else 
-            backgroundImage_ = ImageSource{str, fs::Drive::SD};
+                >> ini::Field("image", backgroundImage_);
     }
 
     void Style::save(ini::Writer & writer) {
@@ -75,7 +69,7 @@ namespace rckid::ui {
             << ini::Section("animation")
                 << ini::Field("speed", animationSpeed_)
             << ini::Section("background")
-                << ini::Field("image", backgroundImage_.type() == ImageSource::Type::Memory ? "" : backgroundImage_.path());
+                << ini::Field("image", backgroundImage_);
     }
 
 

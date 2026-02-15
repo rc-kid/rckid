@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "definitions.h"
 #include "utils.h"
+#include "writer.h"
 
 
 /** Day, month and year stored in 3 bytes. 
@@ -498,11 +499,9 @@ private:
     uint8_t raw_[3] = { 0, 0, 0};
 
 }); 
-
 /** Helper function for tiny date serialization to writer-like classes (writer stream, stdout, etc).
  */
-template<typename WRITER>
-inline WRITER & operator << (WRITER & writer, TinyDateTime const & date) {
+inline Writer operator << (Writer writer, TinyDateTime const & date) {
     return writer << date.date.day() << '/' 
                   << date.date.month() << '/' 
                   << date.date.year() << ' '
@@ -511,15 +510,13 @@ inline WRITER & operator << (WRITER & writer, TinyDateTime const & date) {
                   << date.time.second();
 } // operator <<
 
-template<typename WRITER>
-inline WRITER & operator << (WRITER & writer, TinyDate const & date) {
+inline Writer operator << (Writer writer, TinyDate const & date) {
     return writer << date.day() << '/' 
                   << date.month() << '/' 
                   << date.year();
 } // operator <<
 
-template<typename WRITER>
-inline WRITER & operator << (WRITER & writer, TinyDate::DayOfWeek d) {
+inline Writer operator << (Writer writer, TinyDate::DayOfWeek d) {
     switch (d) {
         case TinyDate::DayOfWeek::Monday:
             return writer << "Monday";
@@ -540,8 +537,7 @@ inline WRITER & operator << (WRITER & writer, TinyDate::DayOfWeek d) {
     }
 } // operator << (DayOfWeek)
 
-template<typename WRITER>
-inline WRITER & operator << (WRITER & writer, TinyDate::Month m) {
+inline Writer operator << (Writer writer, TinyDate::Month m) {
     switch (m) {
         case TinyDate::Month::January:
             return writer << "January";

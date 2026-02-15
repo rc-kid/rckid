@@ -2,7 +2,9 @@
 
 #include <platform.h>
 #include <platform/writer.h>
+#include <platform/tinydate.h>
 #include <functional>
+#include <rckid/log.h>
 
 /** Serialization & Deserialization
 
@@ -132,8 +134,10 @@ namespace rckid {
         return r;
     }
 
-    inline Reader operator >> (Reader r, uint32_t & into) {
-        uint32_t result = 0;
+    template<typename T>
+    std::enable_if_t<std::is_integral<T>::value && std::is_unsigned<T>::value, Reader> 
+    operator >> (Reader r, T & into) {
+        T result = 0;
         while (!r.eof()) {
             char c = r.peekChar();
             if (c >= '0' && c <= '9') {
@@ -144,6 +148,43 @@ namespace rckid {
             }
         }
         into = result;
+        return r;
+    }
+
+    template<typename T>
+    std::enable_if_t<std::is_integral<T>::value && std::is_signed<T>::value, Reader> 
+    operator >> (Reader r, T & into) {
+        T result = 0;
+        bool negative = (r.peekChar() == '-');
+        if (negative)
+            r.getChar();
+        while (!r.eof()) {
+            char c = r.peekChar();
+            if (c >= '0' && c <= '9') {
+                r.getChar();
+                result = result * 10 + (c - '0');
+            } else {
+                break;
+            }
+        }
+        into = negative ? -result : result;
+        return r;
+    }
+
+    inline Reader operator >> (Reader r, TinyDate & date) {
+        uint32_t day, month, year;
+        r >> day;
+        if (r.getChar() != '/') {
+            LOG(LL_ERROR, "Expected '/' after day in date");
+            return r;
+        }
+        r >> month;
+        if (r.getChar() != '/') {
+            LOG(LL_ERROR, "Expected '/' after day in date");
+            return r;
+        }
+        r >> year;
+        date.set(day, month, year);
         return r;
     }
 

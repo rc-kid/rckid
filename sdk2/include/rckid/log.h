@@ -1,6 +1,6 @@
 #pragma once
 
-#include <rckid/rckid.h>
+//#include <rckid/rckid.h>
 
 /** Logging 
  
@@ -52,3 +52,7 @@
 #ifndef LL_DEBUG
 #define LL_DEBUG 0
 #endif
+
+namespace rckid {
+    Writer debugWrite();
+}

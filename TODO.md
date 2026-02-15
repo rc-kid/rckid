@@ -14,9 +14,9 @@
 - home menu (...)
 - header (...)
 - audio playback (...)
+- audio playback, figure how to stop the playback. Playlist is the only interface of the playback task
 
 - mk3 code not cleaned up and not working
-- st7789 driver uses just bitbanging, DMA is dealt with in the hal layer, TODO, use ping-pong
 
 
 - add support for overclocking, and in the missing adjustment for display pio in the hal layer:

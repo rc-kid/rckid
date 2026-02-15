@@ -2,11 +2,14 @@
 
 #include <rckid/task.h>
 #include <rckid/buffer.h>
+#include <rckid/filesystem.h>
 
 namespace rckid::audio {
 
     class DecoderStream {
     public:
+
+        unique_ptr<DecoderStream> fromFile(String const & path, fs::Drive drive);
 
         virtual ~DecoderStream() = default;
 
@@ -19,6 +22,8 @@ namespace rckid::audio {
                 playbackBuffer_.markReady(buffer);
             }
         }
+
+        virtual uint32_t sampleRate() const = 0;
 
     protected:
         DecoderStream(uint32_t bufferStereoSamples, uint32_t numBuffers = 8):

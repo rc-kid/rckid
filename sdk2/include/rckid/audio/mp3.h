@@ -9,9 +9,9 @@
 
 namespace rckid::audio {
 
-    class MP3Decoder : public DecoderStream {
+    class MP3DecoderStream : public DecoderStream {
     public:
-        MP3Decoder(std::unique_ptr<ReadStream> input, uint32_t numBuffers = 8):
+        MP3DecoderStream(unique_ptr<ReadStream> input, uint32_t numBuffers = 8):
             DecoderStream{1152 * 4, numBuffers},
             in_{std::move(input)}, 
             buffer_{new uint8_t[MP3_BUFFER_SIZE]},
@@ -25,9 +25,9 @@ namespace rckid::audio {
             err_ = MP3GetNextFrameInfo(dec_, &fInfo_, buffer_ + sw);
         }
 
-        MP3Decoder(MP3Decoder const &) = delete;
+        MP3DecoderStream(MP3DecoderStream const &) = delete;
 
-        ~MP3Decoder() override {
+        ~MP3DecoderStream() override {
             delete [] buffer_;
             MP3FreeDecoder(dec_);
         }
@@ -49,9 +49,9 @@ namespace rckid::audio {
             return res / 2;
         };
 
-        //uint32_t sampleRate() const override { 
-        //    return fInfo_.samprate; 
-        //}
+        uint32_t sampleRate() const override { 
+            return fInfo_.samprate; 
+        }
 
         int lastError() const { return err_; }
 
@@ -121,7 +121,7 @@ namespace rckid::audio {
                 bufferSize_ = 0;
                 return 0;
             }
-            LOG(LL_MP3, "Sync word at " << (int32_t)sw << ", bufferSize " << bufferSize_);
+            LOG(LL_MP3, "Sync word at " << sw << ", bufferSize " << bufferSize_);
             uint8_t * buf;
             int remaining;
             // we have found sync word, try decoding starting from the sync word
@@ -131,7 +131,7 @@ namespace rckid::audio {
                 LOG(LL_MP3, "Before: " << platform::hash(buffer_, bufferSize_));
                 err_ = MP3Decode(dec_, & buf,  & remaining, out, 0);
                 LOG(LL_MP3, "      : " << platform::hash(buffer_, bufferSize_));
-                LOG(LL_MP3, "Decoding: " << (int32_t)err_ << " buffer hash " << platform::hash(buffer_ + sw, bufferSize_ - sw - remaining) << ", output hash " << platform::hash((uint8_t *)out, 1152 * 4) << " remaining: " << (int32_t)remaining << ", sw: " << (int32_t)sw << ", bs: " << bufferSize_);
+                LOG(LL_MP3, "Decoding: " << err_ << " buffer hash " << platform::hash(buffer_ + sw, bufferSize_ - sw - remaining) << ", output hash " << platform::hash((uint8_t *)out, 1152 * 4) << " remaining: " << remaining << ", sw: " << sw << ", bs: " << bufferSize_);
                 // input data underflow, read some more and try again - if refill buffer returns 0, we can't really refill thebufer and should terminate as there is no more data
                 // the same goes for free bitrate sync errors, just load more data so that the sync word can be found
                 switch (err_) {
@@ -164,7 +164,7 @@ namespace rckid::audio {
                         break;
                 }
                 ++frameErrors_;
-                LOG(LL_MP3, "frame error: " << (int32_t)err_ << ", remaining " << (int32_t)remaining);
+                LOG(LL_MP3, "frame error: " << err_ << ", remaining " << remaining);
                 //return 0;
                 if (remaining == static_cast<int>(bufferSize_ - sw))
                     remaining -= 3; // MP3 sync word length 
@@ -197,7 +197,7 @@ namespace rckid::audio {
 
     private:
     
-        std::unique_ptr<ReadStream> in_;
+        unique_ptr<ReadStream> in_;
         String name_;
 
         static constexpr uint32_t MP3_BUFFER_SIZE = 2048;
@@ -211,6 +211,6 @@ namespace rckid::audio {
         uint32_t frames_ = 0;
         bool eof_ = false;
 
-    }; // rckid::MP3Player
+    }; // rckid::audio::MP3DecodeStream
 
-} // namespac rckid
+} // namespace rckid::audio

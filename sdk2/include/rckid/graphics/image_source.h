@@ -202,13 +202,11 @@ namespace rckid {
     }; // rckid::ImageSource
 
     inline Writer operator << (Writer w, ImageSource const & img) {
-        if (img.empty()) {
-            w << "<empty>";
+        if (img.empty())
             return w;
-        }
         switch (img.type()) {
             case ImageSource::Type::Memory:
-                w << "memory:" << img.size() << "@" << hex<uint8_t const *>(img.data());
+                //w << "memory:" << img.size() << "@" << hex<uint8_t const *>(img.data());
                 break;
             case ImageSource::Type::SD:
                 w << "sd:" << img.path();
@@ -220,6 +218,19 @@ namespace rckid {
                 UNREACHABLE;
         }
         return w;
+    }
+
+    inline Reader operator >> (Reader r, ImageSource & img) {
+        String sourceStr;
+        r >> sourceStr;
+        if (sourceStr.startsWith("sd:")) {
+            img = ImageSource{sourceStr.substr(3), fs::Drive::SD};
+        } else if (sourceStr.startsWith("cartridge:")) {
+            img = ImageSource{sourceStr.substr(10), fs::Drive::Cartridge};
+        } else {
+            // leave as is if not path (memory based image sources do not persist)
+        }
+        return r;
     }
 
 } // namespace rckid

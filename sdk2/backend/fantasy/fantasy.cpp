@@ -274,10 +274,12 @@ namespace rckid::hal {
             // stop audio playback, which is the only async stuff we can have
             audio::stop();
             // deallocate SD and cartridge filesystems
+#ifndef RCKID_CUSTOM_FILESYSTEM            
             if (internal::fs::sd_.good())   
                 internal::fs::sd_.close();
             if (internal::fs::cartridge_.good())
                 internal::fs::cartridge_.close();
+#endif
             // and call the SDKs default handler, setting exitAtYield to true if we lack app window
             internal::device::exitAtYield = internal::display::noWindow;
             onFatalError(file, line, msg, payload);

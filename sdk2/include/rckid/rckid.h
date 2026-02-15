@@ -4,8 +4,8 @@
 #include <platform/tinydate.h>
 
 #include <rckid/error.h>
-#include <rckid/hal.h>
 #include <rckid/log.h>
+#include <rckid/hal.h>
 
 /** RCKid SDK
 
@@ -69,11 +69,18 @@ namespace rckid {
 
     // time
 
-    /** Returns system uptime in microseconds. 
-     
-        The function is a direct wrapper over hal::time::uptimeUs().
-     */
-    inline uint64_t uptimeUs() { return hal::time::uptimeUs(); }
+    namespace time {
+
+        /** Returns system uptime in microseconds. 
+         
+            The function is a direct wrapper over hal::time::uptimeUs().
+        */
+        inline uint64_t uptimeUs() { return hal::time::uptimeUs(); }
+
+        TinyDateTime now();
+
+    } // namespace time
+
 
     // debugging
 
