@@ -9,9 +9,11 @@ namespace rckid::audio {
     class DecoderStream {
     public:
 
-        unique_ptr<DecoderStream> fromFile(String const & path, fs::Drive drive);
+        static unique_ptr<DecoderStream> fromFile(String const & path, fs::Drive drive);
 
         virtual ~DecoderStream() = default;
+
+        virtual uint32_t sampleRate() const = 0;
 
         void update() {
             for (uint32_t i = 0, e = playbackBuffer_.numBuffers(); i < e; ++i) {
@@ -23,7 +25,18 @@ namespace rckid::audio {
             }
         }
 
-        virtual uint32_t sampleRate() const = 0;
+        void callback(int16_t * & buffer, uint32_t & numStereoSamples) {
+            if (buffer != nullptr)
+                playbackBuffer_.markFree(buffer);
+            Buffer<int16_t> * b = playbackBuffer_.nextReady();
+            if (b == nullptr) {
+                buffer = nullptr;
+                numStereoSamples = 0;
+            } else {
+                buffer = b->data();
+                numStereoSamples = b->used() / 2;
+            }
+        }
 
     protected:
         DecoderStream(uint32_t bufferStereoSamples, uint32_t numBuffers = 8):

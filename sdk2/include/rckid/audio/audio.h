@@ -2,10 +2,40 @@
 
 #include <platform.h>
 
+#include <rckid/hal.h>
 #include <rckid/task.h>
 #include <rckid/audio/decoder_stream.h>
 
 namespace rckid::audio {
+
+    using Callback = hal::audio::Callback;
+
+    inline void play(uint32_t sampleRate, Callback cb) { hal::audio::play(sampleRate, cb); }
+
+    inline void play(DecoderStream * stream) {
+        // ensure the stream's playback buffer is filled
+        stream->update();
+        // start the playback
+        play(stream->sampleRate(), [stream](int16_t * & buffer, uint32_t & stereoSamples) {
+            stream->callback(buffer, stereoSamples);
+        });
+    }
+
+    inline void recordMic(uint32_t sampleRate, Callback cb) { hal::audio::recordMic(sampleRate, cb); }
+
+    inline void recordLineIn(uint32_t sampleRate, Callback cb) { hal::audio::recordLineIn(sampleRate, cb); }
+
+    inline void pause() { hal::audio::pause(); }
+
+    inline void resume() { hal::audio::resume(); }
+
+    inline void stop() { hal::audio::stop(); }
+
+    inline bool isPlaying() { return hal::audio::isPlaying(); }
+
+    inline bool isRecording() { return hal::audio::isRecording(); }
+
+    inline bool isPaused() { return hal::audio::isPaused(); }
 
     /** Converts mono buffer into stereo one, duplicating all samples in it in place.
      
@@ -42,6 +72,9 @@ namespace rckid::audio {
     class Playback : public Task {
     public:
         Playback(Playlist * playlist): playlist_{playlist} {
+            currentStream_ = playlist_->next();
+            if (currentStream_ != nullptr)
+                play(currentStream_.get());
         }
 
         bool next() {
@@ -50,6 +83,12 @@ namespace rckid::audio {
 
         bool prev() {
             UNIMPLEMENTED;
+        }
+
+    protected:
+        void onTick() override {
+            if (currentStream_ != nullptr)
+                currentStream_->update();
         }
 
     private:

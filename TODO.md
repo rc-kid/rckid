@@ -18,6 +18,8 @@
 
 - mk3 code not cleaned up and not working
 
+- contact into contacts.h
+
 
 - add support for overclocking, and in the missing adjustment for display pio in the hal layer:
 

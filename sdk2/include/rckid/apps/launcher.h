@@ -55,6 +55,8 @@ namespace rckid {
 
             ui::Menu * menu() const { return carousel_->menu(); }
             uint32_t index() const { return carousel_->index(); }
+            uint32_t prevIndex() const { return carousel_->prevIndex(); }
+            uint32_t nextIndex() const { return carousel_->nextIndex(); }
             ui::CarouselMenu::Context const * context() const { return carousel_->context() == root_ ? nullptr : carousel_->context(); }
             bool empty() const { return carousel_->empty(); }
             ui::MenuItem * currentItem() const { return carousel_->currentItem(); }

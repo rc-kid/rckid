@@ -198,6 +198,22 @@ namespace rckid::ui {
 
         uint32_t index() const { return index_; }
 
+        /** Returns previous index (wrapped at carousel start). 
+         */
+        uint32_t prevIndex() const {
+            if (menu_ == nullptr || menu_->size() == 0)
+                return 0;
+            return (index_ + menu_->size() - 1) % menu_->size();
+        }
+
+        /** Returns next index (wrapped at carousel end)
+         */
+        uint32_t nextIndex() const {
+            if (menu_ == nullptr || menu_->size() == 0)
+                return 0;
+            return (index_ + 1) % menu_->size();
+        }
+
         Context const * context() const { return context_; }
 
         bool empty() const { return menu_ == nullptr || menu_->size() == 0; }
@@ -214,7 +230,7 @@ namespace rckid::ui {
                 return;
             if (!idle())
                 cancelAnimations();
-            index_ = (index_ + menu_->size() - 1) % menu_->size();
+            index_ = prevIndex();
             setItem(index_, Direction::Left);
         }
 
@@ -223,7 +239,7 @@ namespace rckid::ui {
                 return;
             if (!idle())
                 cancelAnimations();
-            index_ = (index_ + 1) % menu_->size();
+            index_ = nextIndex();
             setItem(index_, Direction::Right);
         }
 

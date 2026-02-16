@@ -1,11 +1,36 @@
 #pragma once
 
+#include <rckid/error.h>
+
 namespace rckid {
 
     class Task {
     public:
-        /** Every task must support being killed.  */
-        virtual ~Task() = default;
+
+        /** Creates a new task and adds it to the task stack.
+         */
+        Task() {
+            // add to the task stack
+            next_ = top_;
+            top_ = this;
+        }
+
+        /** Every task must support being killed.
+         
+            Task destructor simply removes the task from task stack.
+         */
+        virtual ~Task() {
+            // remove from the task stack
+            if (top_ == this) {
+                top_ = next_;
+            } else {
+                Task * x = top_;
+                while (x != nullptr && x->next_ != this)
+                    x = x->next_;
+                ASSERT(x != nullptr);
+                x->next_ = next_;
+            }
+        }
 
         /** Returns true if the task is lightweight. 
          */
