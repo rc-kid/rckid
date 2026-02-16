@@ -3,6 +3,7 @@
 #include <rckid/apps/steps.h>
 #include <rckid/apps/data_sync.h>
 #include <rckid/apps/file_browser.h>
+#include <rckid/apps/friends.h>
 
 #include <rckid/apps/launcher.h>
 
@@ -16,8 +17,8 @@ namespace rckid {
                 MusicPlayer{}.run();
             }}
             << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator)
-            << ui::MenuItem{"Steps Two", assets::icons_64::footprint, []() {
-                Steps{}.run();
+            << ui::MenuItem{"Friends", assets::icons_64::footprint, []() {
+                Friends{}.run();
             }};
         return result;
     }

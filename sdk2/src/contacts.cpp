@@ -1,4 +1,4 @@
-#include <rckid/pim.h>
+#include <rckid/contacts.h>
 
 #include <assets/icons_64.h>
 
@@ -38,5 +38,22 @@ namespace rckid {
                 << ini::Field("bgColor", bgColor)
                 << ini::Field("telegramId", telegramId);
     }
+
+    uint32_t Contact::readAll(std::function<void(unique_ptr<Contact>)> callback) {
+        if (!fs::exists(CONTACTS_PATH))
+            return 0;
+        auto f = fs::readFile(CONTACTS_PATH);
+        if (f == nullptr)
+            return 0;
+        ini::Reader reader{*f};
+        uint32_t count = 0;
+        reader 
+            >> ini::SectionArray("contact", [&](ini::Reader & r) {
+                callback(std::make_unique<Contact>(r));
+                ++count;
+            });
+        return count;
+    }
+
     
 } // namespace rckid

@@ -35,6 +35,24 @@ namespace rckid {
 
         void save(ini::Writer & writer) const;
 
+        static uint32_t readAll(std::function<void(unique_ptr<Contact>)> callback);
+
+
+        template<typename It>
+        static void saveAll(It begin, It end) {
+            auto f = fs::writeFile(CONTACTS_PATH);
+            if (f == nullptr) {
+                LOG(LL_ERROR, "Failed to open contacts file for writing");
+                return;
+            }
+            ini::Writer writer{*f};
+            for (auto it = begin; it != end; ++it) {
+                Contact * c = it->get();
+                c->save(writer);
+            }
+        }
+
+        static constexpr char const * CONTACTS_PATH = "/contacts.ini";
     }; // rckid::Contact
 
 } // namespace rckid
