@@ -34,7 +34,7 @@ namespace rckid::audio {
                 numStereoSamples = 0;
             } else {
                 buffer = b->data();
-                numStereoSamples = b->used() / 2;
+                numStereoSamples = b->used();
             }
         }
 

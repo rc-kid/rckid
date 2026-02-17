@@ -18,7 +18,6 @@
 
 - mk3 code not cleaned up and not working
 
-- ini array reading does not seem to work
 - should ini reader and writer own the stream? Might simplify things a bit in the API
 
 - add support for overclocking, and in the missing adjustment for display pio in the hal layer:

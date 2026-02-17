@@ -260,6 +260,12 @@ namespace rckid::ini {
                     ReaderStream rs{rd};
                     String fieldName = rs.readString('=');
                     String fieldValue = rs.readString();
+                    // if the value is in quotes, remove them first
+                    if (! fieldValue.empty()) {
+                        if (fieldValue[0] == fieldValue[fieldValue.size() - 1])
+                            if (fieldValue[0] == '"' || fieldValue[0] == '\'')
+                                fieldValue = fieldValue.substr(1, fieldValue.size() - 2);
+                    }
                     auto i = current_->fields.find(fieldName);
                     if (i != current_->fields.end())
                         LOG(LL_ERROR, "Duplicate INI field: " << fieldName);

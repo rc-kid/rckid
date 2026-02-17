@@ -77,6 +77,11 @@ namespace rckid::audio {
                 play(currentStream_.get());
         }
 
+        ~Playback() override {
+            // stop audio playback when exitting
+            stop();
+        }
+
         bool next() {
             UNIMPLEMENTED;
         }
