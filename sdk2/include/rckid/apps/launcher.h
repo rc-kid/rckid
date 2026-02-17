@@ -53,6 +53,10 @@ namespace rckid {
                 setRect(carousel_->rect());
             }
 
+            bool idle() const override {
+                return ui::Widget::idle() && carousel_->idle();
+            }
+
             ui::Menu * menu() const { return carousel_->menu(); }
             uint32_t index() const { return carousel_->index(); }
             uint32_t prevIndex() const { return carousel_->prevIndex(); }

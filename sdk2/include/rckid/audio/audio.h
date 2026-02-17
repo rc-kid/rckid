@@ -83,17 +83,28 @@ namespace rckid::audio {
         }
 
         bool next() {
-            UNIMPLEMENTED;
+            currentStream_ = playlist_->next();
+            if (currentStream_ == nullptr)
+                return false;
+            play(currentStream_.get());
+            return true;
         }
 
         bool prev() {
-            UNIMPLEMENTED;
+            currentStream_ = playlist_->prev();
+            if (currentStream_ == nullptr)
+                return false;
+            play(currentStream_.get());
+            return true;
         }
 
     protected:
         void onTick() override {
             if (currentStream_ != nullptr)
                 currentStream_->update();
+            // if we are done playing the current file, move to the next one, if we can
+            if (!audio::isPlaying())
+                next();
         }
 
     private:

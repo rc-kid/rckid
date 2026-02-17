@@ -21,6 +21,9 @@ namespace rckid::audio {
                 if (buffer == nullptr)
                     break;
                 buffer->setUsed(refillSamples(buffer->data(), playbackBuffer_.size() / 2));
+                // break prematurely, if use bytes in the buffer is 0 (we are done decoding)
+                if (buffer->used() == 0)
+                    break;
                 playbackBuffer_.markReady(buffer);
             }
         }
@@ -48,7 +51,6 @@ namespace rckid::audio {
             Given is the buffer that is larger enough to hold numStereoSamples stereo samples (a stereo sample is 2 int16_t). The function should fill the buffer and return the number of stereo samples written to the buffer.
          */
         virtual uint32_t refillSamples(int16_t * buffer, uint32_t numStereoSamples) = 0;
-
 
     private:
 

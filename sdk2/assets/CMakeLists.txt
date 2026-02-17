@@ -24,7 +24,7 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
     # The assets are expressed and constexpr uint8_t arrays. See the description of appropriate utilities for the actual tranformation, which depends on the utility/contents used.
     add_custom_target(generate-sdk-assets
         COMMAND $<TARGET_FILE:font-converter> fonts/Iosevka.ttf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/Iosevka16.h 16
-        COMMAND $<TARGET_FILE:font-converter> fonts/Iosevka.ttf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/Iosevka20.h 20
+        COMMAND $<TARGET_FILE:font-converter> fonts/Iosevka.ttf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/Iosevka24.h 24
         COMMAND $<TARGET_FILE:font-converter> fonts/OpenDyslexic.otf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/OpenDyslexic24.h 24
         COMMAND $<TARGET_FILE:font-converter> fonts/OpenDyslexic.otf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/OpenDyslexic32.h 32
         COMMAND $<TARGET_FILE:font-converter> fonts/OpenDyslexic.otf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/OpenDyslexic64.h 64
@@ -35,6 +35,8 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
 
         # 64x64 icons (mostly for UI)
         COMMAND $<TARGET_FILE:binary-folder> icons/icons_64 ${CMAKE_SOURCE_DIR}/sdk2/include/assets/icons_64.h --raw-path raw/icons_64 --namespace rckid::assets::icons_64
+        # 24x24 icons (mostly for UI)
+        COMMAND $<TARGET_FILE:binary-folder> icons/icons_24 ${CMAKE_SOURCE_DIR}/sdk2/include/assets/icons_24.h --raw-path raw/icons_24 --namespace rckid::assets::icons_24
 
         COMMAND $<TARGET_FILE:font-tile-generator> fonts/Iosevka.ttf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/Iosevka16Tiles.h 16 8 16
 

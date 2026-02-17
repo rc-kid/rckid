@@ -113,7 +113,7 @@ namespace rckid::ui {
             return with<T>(child);
         }
 
-        bool idle() const { return activeAnimations_ == 0; }
+        virtual bool idle() const { return activeAnimations_ == 0; }
 
         /** Returns animation builder for the current widget. 
           

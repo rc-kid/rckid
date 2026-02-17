@@ -136,12 +136,14 @@ namespace rckid::internal {
                     // go for the next buffer which should already be preloaded
                     std::swap(currentBuffer, nextBuffer);
                     std::swap(currentBufferSize, nextBufferSize);
+                    if (currentBuffer == nullptr) {
+                        hal::audio::stop();
+                        return;
+                    }
                     currentBufferIndex = 0;
                     // inform the callback that we have retired the current buffer and ask for replacement, which will be our next buffer
                     audio::cb(nextBuffer, nextBufferSize);
                 }
-                if (currentBuffer == nullptr)
-                    break;
                 int16_t l = currentBuffer[currentBufferIndex++];
                 int16_t r = currentBuffer[currentBufferIndex++];
                 if (audio::volume == 0) {

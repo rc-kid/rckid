@@ -4,6 +4,7 @@
 #include <rckid/contacts.h>
 #include <rckid/ui/app.h>
 #include <rckid/apps/launcher.h>
+#include <rckid/apps/dialogs/contact_dialog.h>
 
 namespace rckid {
 
@@ -32,9 +33,11 @@ namespace rckid {
                 << ResetMenu([this]() { 
                     auto menu = std::make_unique<ui::Menu>();
                     for (auto & contact : contacts_) {
-                        menu->emplace_back(contact->name, contact->image, [contact = contact.get()]() {
-                            // TODO show contact details
-                        });
+                        (*menu)
+                            << ui::MenuItem{contact->name, contact->image, [this, contact = contact.get()]() {
+                                auto x = ContactDialog{contact}.run();
+                                dirty_ = dirty_ || (x.has_value() && x.value());
+                            }};
                     }
                     return menu;
                 });
@@ -43,10 +46,26 @@ namespace rckid {
         void onFocus() override {
             ui::App<void>::onFocus();
             focusWidget(carousel_);
+            if (!launch_)
+                return;
+            carousel_->moveDown();
+        }
+
+        void onBlur() override {
+            if (!launch_)
+                return;
+            carousel_->moveUp(nullptr);
+            waitUntilIdle(carousel_);
         }
 
         void loop() override {
             ui::App<void>::loop();
+            if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                auto action = carousel_->currentItem()->action();
+                launch_ = true;
+                action();
+                launch_ = false;
+            }
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 ASSERT(carousel_->atRoot());
                 // TODO terminate music, etc
@@ -58,6 +77,7 @@ namespace rckid {
         Launcher::BorrowedCarousel * carousel_;
         std::vector<std::unique_ptr<Contact>> contacts_;
         bool dirty_ = false;
+        bool launch_ = false;
 
 
 
