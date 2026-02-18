@@ -7,6 +7,9 @@
 #include <rckid/log.h>
 #include <rckid/hal.h>
 
+
+#define RCKID_DEFAULT_ANIMATION_DURATION_MS 500
+
 /** RCKid SDK
 
  */

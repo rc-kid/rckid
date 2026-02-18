@@ -17,4 +17,27 @@ namespace rckid::ui {
         return *this;
     }
 
+    void Widget::flyIn(Point distance) {
+        Coord maxY = 0;
+        for (auto & child : children_)
+            if (child->y() > maxY)
+                maxY = child->y();
+        maxY = std::min(maxY, height());
+        for (auto & child : children_)
+            if (child->visibleInParent())
+                animate() << FlyIn(child.get(), distance)->setDelayMs(maxY - child->y());
+    }
+
+    void Widget::flyOut(Point distance) {
+        Coord minY = height();
+        for (auto & child : children_)
+            if (child->y() < minY)
+                minY = child->y();
+        minY = std::min(minY, 0);
+        for (auto & child : children_)
+            if (child->visibleInParent())
+                animate() << FlyOut(child.get(), distance)->setDelayMs(child->y()-minY);
+    }
+
+
 } // namespace rckid::ui

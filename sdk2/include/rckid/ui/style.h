@@ -74,7 +74,7 @@ namespace rckid::ui {
         Color successFg_ = Color::White();
         Color successBg_ = Color::RGB(0, 48, 0);
 
-        uint32_t animationSpeed_ = 500;
+        uint32_t animationSpeed_ = RCKID_DEFAULT_ANIMATION_DURATION_MS;
 
         ImageSource backgroundImage_{assets::images::logo};
 

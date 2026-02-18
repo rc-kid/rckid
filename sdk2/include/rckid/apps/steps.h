@@ -29,7 +29,7 @@ namespace rckid {
         {
             using namespace ui;
             // when not available, show error message and exit the app
-            if (pedometer_ == nullptr || true) {
+            if (pedometer_ == nullptr) {
                 InfoDialog::error("Not available", "Step counter not supported by the device");
                 exit();
                 return;
@@ -47,9 +47,7 @@ namespace rckid {
     protected:
 
         void onLoopStart() override {
-            animate()
-                << ui::FlyIn(icon_, 300)->setDelayMs(100)
-                << ui::FlyIn(steps_, 300);
+            root_.flyIn();
         }
 
         void loop() override {
@@ -57,9 +55,7 @@ namespace rckid {
             App<void>::loop();
             with(steps_) << SetText(STR(pedometer_->count()));
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
-                animate()
-                    << ui::FlyOut(icon_, 300)
-                    << ui::FlyOut(steps_, 300)->setDelayMs(100);
+                root_.flyOut();
                 waitUntilIdle();
                 exit();
             }

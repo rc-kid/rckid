@@ -232,43 +232,43 @@ namespace rckid::ui {
 
     }; // ui::Animation
 
-    inline Animation * Move(Widget * target, Point from, Point to, uint32_t durationMs) {
+    inline Animation * Move(Widget * target, Point from, Point to) {
         return (new Animation{
             [from, to, target](FixedRatio progress) {
                 Coord x = from.x + progress.scale(to.x - from.x);
                 Coord y = from.y + progress.scale(to.y - from.y);
                 target->setRect(Rect::XYWH(x, y, target->width(), target->height()));
             },
-            durationMs
+            target->animationSpeed()
         })->setEasingFunction(easing::inOut);
     }
 
-    inline Animation * MoveHorizontally(Widget * target, Coord fromX, Coord toX, uint32_t durationMs) {
+    inline Animation * MoveHorizontally(Widget * target, Coord fromX, Coord toX) {
         return (new Animation{
             [fromX, toX, target](FixedRatio progress) {
                 Coord x = fromX + progress.scale(toX - fromX);
                 target->setRect(Rect::XYWH(x, target->rect().y, target->width(), target->height()));
             },
-            durationMs
+            target->animationSpeed()
         })->setEasingFunction(easing::inOut);
     }
 
-    inline Animation * MoveVertically(Widget * target, Coord fromY, Coord toY, uint32_t durationMs) {
+    inline Animation * MoveVertically(Widget * target, Coord fromY, Coord toY) {
         return (new Animation{
             [fromY, toY, target](FixedRatio progress) {
                 Coord y = fromY + progress.scale(toY - fromY);
                 target->setRect(Rect::XYWH(target->rect().x, y, target->width(), target->height()));
             },
-            durationMs
+            target->animationSpeed()
         })->setEasingFunction(easing::inOut);
     }
 
-    inline Animation * FlyIn(Widget * target, uint32_t durationMs, Point distance = Point{0, -240}) {
-        return Move(target, target->position() + distance, target->position(), durationMs);
+    inline Animation * FlyIn(Widget * target, Point distance = Point{0, -240}) {
+        return Move(target, target->position() + distance, target->position());
     }
 
-    inline Animation *FlyOut(Widget * target, uint32_t durationMs, Point distance = Point{0, -240}) {
-        return Move(target, target->position(), target->position() + distance, durationMs);
+    inline Animation *FlyOut(Widget * target, Point distance = Point{0, -240}) {
+        return Move(target, target->position(), target->position() + distance);
     }
     // easing curves
 

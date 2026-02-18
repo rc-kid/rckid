@@ -166,14 +166,14 @@ namespace rckid::ui {
     }
 
     template<typename T>
-    inline Animation * OffsetContents(Wrapper<T> * target, Point from, Point to, uint32_t durationMs) {
+    inline Animation * OffsetContents(Wrapper<T> * target, Point from, Point to) {
         return (new Animation{
             [from, to, target](FixedRatio progress) {
                 Coord x = from.x + progress.scale(to.x - from.x);
                 Coord y = from.y + progress.scale(to.y - from.y);
                 target->setContentsOffset(Point{x, y});
             },
-            durationMs
+            target->animationSpeed()
         })->setEasingFunction(easing::inOut);
     }
 

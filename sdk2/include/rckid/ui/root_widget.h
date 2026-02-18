@@ -37,17 +37,6 @@ namespace rckid::ui {
 
         void render();
 
-        void applyStyle(Style const * style, Theme theme) override {
-            theme_ = theme;
-            if (style == nullptr)
-                return;
-            Panel::applyStyle(style, theme);
-        }
-
-        uint32_t animationSpeed() const { return animationSpeed_; }
-
-        void setAnimationSpeed(uint32_t speed) { animationSpeed_ = speed; }
-
         void setBackgroundImage(Style const * style) {
             if (style->backgroundImage().empty()) {
                 background_ = nullptr;
@@ -65,7 +54,7 @@ namespace rckid::ui {
                     << SetVAlign(VAlign::Manual);
                 // and start background animation for the first 100ms so that the first carousel page transition will not trigger
                 background_->animate()
-                    << Move(background_.get(), background_->position(), background_->position(), animationSpeed_);
+                    << Move(background_.get(), background_->position(), background_->position());
             }
         }
 
@@ -76,7 +65,7 @@ namespace rckid::ui {
             if (background_ == nullptr || ! background_->idle())
                 return;
             background_->animate()
-                << OffsetContents(background_.get(), background_->contentsOffset(), background_->contentsOffset() + dir * -25, durationMs)->setEasingFunction(easing::inOutIn);
+                << OffsetContents(background_.get(), background_->contentsOffset(), background_->contentsOffset() + dir * -25)->setEasingFunction(easing::inOutIn)->setDurationMs(durationMs);
         }
 
         /** Root widget overrides the panel's render column in order to properly render the background image and header. 
@@ -93,6 +82,13 @@ namespace rckid::ui {
             if (y() == 0 && Header::shouldShow())
                 renderChildColumn(Header::instance_, column, startRow, buffer, numPixels);
         }
+
+    protected:
+
+        void doApplyStyle(Style const & style, Theme theme) override {
+            theme_ = theme;
+            Panel::doApplyStyle(style, theme);
+        }
         
     private:
 
@@ -102,7 +98,6 @@ namespace rckid::ui {
         Theme theme_;
         bool useBackgroundImage_ = true;
         bool useHeader_ = true;
-        uint32_t animationSpeed_ = 500;
 
         /** Background image (wallpaper)
          

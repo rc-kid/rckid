@@ -119,12 +119,24 @@ namespace rckid {
         constexpr Coord width() const { return w; }
         constexpr Coord height() const { return h; }
 
+        constexpr bool empty() const { return w <= 0 || h <= 0; }
+
         /** Returns true if the other rectangle fits completely inside this one.
          */
         bool contains(Rect const & other) const {
             return left() <= other.left() && top() <= other.top() && right() >= other.right() && bottom() >= other.bottom();
         }
 
+        Rect intersectWith(Rect const & other) const {
+            Rect result;
+            result.x = std::max(left(), other.left());
+            result.y = std::max(top(), other.top());
+            result.w = std::min(right(), other.right()) - result.x;
+            result.h = std::min(bottom(), other.bottom()) - result.y;
+            if (result.w < 0 || result.h < 0)
+                return Rect{};
+            return result;
+        }
 
         constexpr Rect() = default;
 
@@ -135,6 +147,8 @@ namespace rckid {
         static constexpr Rect XYWH(Coord x, Coord y, Coord width, Coord height) {
             return Rect{x, y, width, height};
         }
+
+
 
     private:
         constexpr Rect(Coord x_, Coord y_, Coord w_, Coord h_): x{x_}, y{y_}, w{w_}, h{h_} {}

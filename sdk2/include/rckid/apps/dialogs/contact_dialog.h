@@ -79,40 +79,16 @@ namespace rckid {
 
         void onLoopStart() override {
             ui::App<bool>::onLoopStart();
-            animate()
-                << ui::FlyIn(note_, 300)
-                << ui::FlyIn(noteImg_, 300)
-                << ui::FlyIn(address_, 300)->setDelayMs(50)
-                << ui::FlyIn(addressImg_, 300)->setDelayMs(50)
-                << ui::FlyIn(email_, 300)->setDelayMs(100)
-                << ui::FlyIn(emailImg_, 300)->setDelayMs(100)
-                << ui::FlyIn(phone_, 300)->setDelayMs(50)
-                << ui::FlyIn(phoneImg_, 300)->setDelayMs(150)
-                << ui::FlyIn(bday_, 300)->setDelayMs(200)
-                << ui::FlyIn(bdayImg_, 300)->setDelayMs(200)
-                << ui::FlyIn(name_, 300)->setDelayMs(250)
-                << ui::FlyIn(image_, 300)->setDelayMs(250);
+            root_.flyIn();
         }
 
         void loop() {
             ui::App<bool>::loop();
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 exit(std::move(dirty_));
+                // wait for idle to make sure we are exiting from known state
                 waitUntilIdle();
-                animate()
-                    << ui::FlyOut(note_, 300)->setDelayMs(250)
-                    << ui::FlyOut(noteImg_, 300)->setDelayMs(250)
-                    << ui::FlyOut(address_, 300)->setDelayMs(200)
-                    << ui::FlyOut(addressImg_, 300)->setDelayMs(200)
-                    << ui::FlyOut(email_, 300)->setDelayMs(150)
-                    << ui::FlyOut(emailImg_, 300)->setDelayMs(150)
-                    << ui::FlyOut(phone_, 300)->setDelayMs(100)
-                    << ui::FlyOut(phoneImg_, 300)->setDelayMs(100)
-                    << ui::FlyOut(bday_, 300)->setDelayMs(50)
-                    << ui::FlyOut(bdayImg_, 300)->setDelayMs(50)
-                    << ui::FlyOut(name_, 300)->setDelayMs(0)
-                    << ui::FlyOut(image_, 300)->setDelayMs(0);
-
+                root_.flyOut();
                 waitUntilIdle();
             }
         }

@@ -18,10 +18,10 @@ namespace rckid::ui {
                 show_ = value;
                 if (value)
                     instance_->animate()
-                        << Move(instance_, Point{0, -20}, Point{0,0}, instance_->animationSpeed_);
+                        << Move(instance_, Point{0, -20}, Point{0,0});
                 else
                     instance_->animate()
-                        << Move(instance_, Point{0,0}, Point{0, -20}, instance_->animationSpeed_);
+                        << Move(instance_, Point{0,0}, Point{0, -20});
             }
         }
 
@@ -30,11 +30,11 @@ namespace rckid::ui {
 
         void setAnimationSpeed(uint32_t speed) { animationSpeed_ = speed; }
 
-        void applyStyle(Style const * style, Theme theme) override {
-            if (style == nullptr)
-                return;
-            TileGrid::applyStyle(style, theme);
-            animationSpeed_ = style->animationSpeed();
+    protected:
+
+        void doApplyStyle(Style const & style, Theme theme) override {
+            TileGrid::doApplyStyle(style, theme);
+            animationSpeed_ = style.animationSpeed();
         }
 
     private:

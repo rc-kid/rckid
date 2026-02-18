@@ -7,30 +7,6 @@ namespace rckid::ui {
     class Panel : public Widget {
     public:
 
-        void applyStyle(Style const * style, Theme theme) override {
-            if (style == nullptr)
-                return;
-            Widget::applyStyle(style, theme);
-            switch (theme) {
-                case Theme::Default:
-                    bg_ = style->defaultBg();
-                    break;
-                case Theme::Accent:
-                    bg_ = style->accentBg();
-                    break;
-                case Theme::Info:
-                    bg_ = style->infoBg();
-                    break;
-                case Theme::Success:
-                    bg_ = style->successBg();
-                    break;
-                case Theme::Error:
-                    bg_ = style->errorBg();
-                    break;
-                default:
-                    UNREACHABLE;
-            }
-        }
 
         Color bg() const { return bg_; }
 
@@ -42,6 +18,29 @@ namespace rckid::ui {
         }
 
     protected:
+
+        void doApplyStyle(Style const & style, Theme theme) override {
+            Widget::doApplyStyle(style, theme);
+            switch (theme) {
+                case Theme::Default:
+                    bg_ = style.defaultBg();
+                    break;
+                case Theme::Accent:
+                    bg_ = style.accentBg();
+                    break;
+                case Theme::Info:
+                    bg_ = style.infoBg();
+                    break;
+                case Theme::Success:
+                    bg_ = style.successBg();
+                    break;
+                case Theme::Error:
+                    bg_ = style.errorBg();
+                    break;
+                default:
+                    UNREACHABLE;
+            }
+        }
 
         Color bg_ = Color::RGB(0, 0, 0);
 

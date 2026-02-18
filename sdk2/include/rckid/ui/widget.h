@@ -47,16 +47,20 @@ namespace rckid::ui {
             return parent_->theme();
         }
 
-        /** Applies given style and theme. 
-         */
-        virtual void applyStyle([[maybe_unused]] Style const * style, [[maybe_unused]] Theme theme) {
-            // do nothing
+        void applyStyle(Style const * style, Theme theme) {
+            if (style != nullptr)
+                doApplyStyle(*style, theme);
         }
 
         /** Applies given style using the inherited theme from the parent widget. 
          */
+        void applyStyleFromParent(Style const & style) {
+            doApplyStyle(style, theme());
+        }
+
         void applyStyleFromParent(Style const * style) {
-            applyStyle(style, theme());
+            if (style != nullptr)
+                applyStyleFromParent(*style);
         }
 
         Rect rect() const { return rect_; }
@@ -79,8 +83,7 @@ namespace rckid::ui {
         Coord height() const { 
             return rect_.height(); 
         }
-
-
+        
         void setRect(Rect rect) {
             rect_ = rect;
             if (rect_.w < 0 || rect_.h < 0) {
@@ -95,11 +98,48 @@ namespace rckid::ui {
 
         Widget * parent() const { return parent_; }
 
-
         bool visible() const { return visible_; }
 
         void setVisibility(bool value) { 
             visible_ = value; 
+        }
+
+        bool visibleInParent() const {
+            if (!visible_)
+                return false;
+            if (parent_ == nullptr)
+                return true;
+            return ! Rect::WH(parent_->width(), parent_->height()).intersectWith(rect()).empty();
+        }
+
+        uint32_t animationSpeed() const { return animationSpeed_; }
+
+        void setAnimationSpeed(uint32_t animationSpeed) { 
+            animationSpeed_ = animationSpeed; 
+        }
+
+        /** Animates entrance of widget contents. 
+         
+            Takes all immediate children of the widgets and animates them using flyIn animation with the specified distance. The widgets are delayed based on their y coordinate. This method is useful when called on a root widget for an application to easily animate its entire contents on app start.
+         */
+        void flyIn(Point distance);
+
+        /** Animates exit of widget contents. 
+         
+            Takes all immediate children of the widgets and animates them using flyOut animation with the specified distance. The widgets are delayed based on their y coordinate. Very useful for root widgets to animate app ui fly out when the app closes.
+         */
+        void flyOut(Point distance);
+
+        /** Shorthand for flyIn animation for widget contents with the distance being from the top of the screen (contents come from above the screen).
+         */
+        void flyIn() {
+            flyIn(Point{0, -height()});
+        }
+
+        /** Shorthand for flyOut animation for widget contents with the distance being from the top of the screen (contents disappear above screen)
+         */
+        void flyOut() {
+            flyOut(Point{0, -height()});
         }
 
         template<typename T>
@@ -154,6 +194,13 @@ namespace rckid::ui {
         bool focused() const { return focused_; }
 
     protected:
+
+        /** Applies given style and theme. 
+         */
+        virtual void doApplyStyle([[maybe_unused]] Style const & style, [[maybe_unused]] Theme theme) {
+            // do nothing
+            animationSpeed_ = style.animationSpeed();
+        }
 
         virtual void onRender() {
             for (auto & child : children_)
@@ -269,6 +316,7 @@ namespace rckid::ui {
         Widget * parent_ = nullptr;
         bool visible_ = true;
         bool focused_ = false;
+        uint32_t animationSpeed_ = RCKID_DEFAULT_ANIMATION_DURATION_MS;
 
         std::vector<unique_ptr<Widget>> children_;
 
