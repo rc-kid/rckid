@@ -64,6 +64,7 @@ namespace rckid {
             ui::CarouselMenu::Context const * context() const { return carousel_->context() == root_ ? nullptr : carousel_->context(); }
             bool empty() const { return carousel_->empty(); }
             ui::MenuItem * currentItem() const { return carousel_->currentItem(); }
+            void setItem(uint32_t index) { carousel_->setItem(index); }
             void resetMenu(ui::MenuItem::GeneratorEvent generator) {
                 carousel_->clearContext(root_);
                 carousel_->moveUp(std::move(generator));

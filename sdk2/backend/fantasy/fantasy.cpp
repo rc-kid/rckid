@@ -447,16 +447,20 @@ namespace rckid::hal {
         }
 
         void pause() {
+            internal::memory::SystemMallocGuard g;
             if (IsAudioStreamValid(internal::audio::stream))
                 PauseAudioStream(internal::audio::stream);
         }
 
         void resume() {
+            internal::memory::SystemMallocGuard g;
             if (IsAudioStreamValid(internal::audio::stream))
                 ResumeAudioStream(internal::audio::stream);
         }
 
+        // TODO when called multiple times, the function segfaults on stream uload
         void stop() {
+            internal::memory::SystemMallocGuard g;
             if (IsAudioStreamValid(internal::audio::stream)) {
                 StopAudioStream(internal::audio::stream);
                 UnloadAudioStream(internal::audio::stream);

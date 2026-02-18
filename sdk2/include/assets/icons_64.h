@@ -11,6 +11,12 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/happy_face.inc.h"
     };
 
+    // File: icons/icons_64/071-family.png
+    // Size: 4909
+    static constexpr uint8_t family[] = {
+        #include "raw/icons_64/family.inc.h"
+    };
+
     // File: icons/icons_64/053-configuration.png
     // Size: 2729
     static constexpr uint8_t configuration[] = {
@@ -21,6 +27,12 @@ namespace rckid::assets::icons_64 {
     // Size: 2821
     static constexpr uint8_t empty_box[] = {
         #include "raw/icons_64/empty_box.inc.h"
+    };
+
+    // File: icons/icons_64/052-play-button.png
+    // Size: 1710
+    static constexpr uint8_t play_button[] = {
+        #include "raw/icons_64/play_button.inc.h"
     };
 
     // File: icons/icons_64/080-info.png
@@ -69,6 +81,12 @@ namespace rckid::assets::icons_64 {
     // Size: 1184
     static constexpr uint8_t pen_drive[] = {
         #include "raw/icons_64/pen_drive.inc.h"
+    };
+
+    // File: icons/icons_64/037-pause.png
+    // Size: 2488
+    static constexpr uint8_t pause[] = {
+        #include "raw/icons_64/pause.inc.h"
     };
 
 } // namespace rckid::assets::icons_64

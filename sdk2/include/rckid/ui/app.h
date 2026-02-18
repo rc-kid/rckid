@@ -26,6 +26,8 @@ namespace rckid::ui {
 
     protected:
 
+        uint32_t animationSpeed() const { return root_.animationSpeed(); }
+
         void focusWidget(Widget * w) {
             if (w == focusedWidget_)
                 return;

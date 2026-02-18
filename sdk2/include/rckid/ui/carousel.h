@@ -220,6 +220,19 @@ namespace rckid::ui {
 
         MenuItem * currentItem() const { return empty() ? nullptr : & menu_->at(index_); }
 
+        /** Moves the carousel immediately to the given item.
+         */
+        void setItem(uint32_t index) {
+            if (menu_ == nullptr || index >= menu_->size())
+                return;
+            index_ = index;
+            MenuItem & m = menu_->at(index_);
+            set(m.text, m.icon);
+            if (m.decorator() != nullptr)
+                m.decorator()(m, currentImage(), currentLabel());
+        }
+
+
         void resetMenu(MenuItem::GeneratorEvent generator) {
             clearContext();
             moveUp(generator);

@@ -6,6 +6,11 @@
 
 #include <rckid/audio/mp3.h>
 
+#include <assets/icons_64.h>
+#include <assets/icons_24.h>
+#include <assets/OpenDyslexic32.h>
+#include <assets/Iosevka24.h>
+
 namespace rckid {
 
     /** Simple music player. 
@@ -18,6 +23,32 @@ namespace rckid {
         MusicPlayer() {
             using namespace ui;
             carousel_ = addChild(new Launcher::BorrowedCarousel());
+
+            playbackInfo_ = addChild(new Panel{})
+                << SetRect(Rect::XYWH(0, 140, 320, 100))
+                << ApplyStyle(ui::Style::defaultStyle(), ui::Theme::Accent)
+                << SetVisibility(false);
+            playIcon_ = playbackInfo_->addChild(new Image{})
+                << SetRect(Rect::XYWH(-100, 0, 100, 100))
+                << SetBitmap(assets::icons_64::play_button)
+                << SetVisibility(false);
+            pauseIcon_ = playbackInfo_->addChild(new Image{})
+                << SetRect(Rect::XYWH(-100, 0, 100, 100))
+                << SetBitmap(assets::icons_64::pause);
+            shuffleIcon_ = playbackInfo_->addChild(new Image{})
+                << SetRect(Rect::XYWH(-40, 60, 24, 24))
+                << SetBitmap(assets::icons_24::shuffle)
+                << SetVisibility(false);
+            repeatIcon_ = playbackInfo_->addChild(new Image{})
+                << SetRect(Rect::XYWH(-40, 60, 24, 24))
+                << SetBitmap(assets::icons_24::exchange)
+                << SetVisibility(false);
+            playbackTitle_ = playbackInfo_->addChild(new Label{})
+                << SetRect(Rect::XYWH(320, 5, 220, 32))
+                << SetFont(assets::OpenDyslexic32);
+            playbackDuration_ = playbackInfo_->addChild(new Label{})
+                << SetRect(Rect::XYWH(320, 40, 220, 24))
+                << SetFont(assets::Iosevka24);
         }
 
 
@@ -51,6 +82,8 @@ namespace rckid {
                     moveToNext();
                 // calling the action will set our path
                 player_->carousel_->menu()->at(index_).action()();
+                player_->playbackTitle_->setText(fs::stem(player_->playlist_->currentPath_));
+                // create and return the stream
                 return audio::DecoderStream::fromFile(currentPath_, fs::Drive::SD);
             }
 
@@ -63,6 +96,7 @@ namespace rckid {
                     moveToPrev();
                 // calling the action will set our path
                 player_->carousel_->menu()->at(index_).action()();
+                player_->playbackTitle_->setText(fs::stem(player_->playlist_->currentPath_));
                 // create and return the stream
                 return audio::DecoderStream::fromFile(currentPath_, fs::Drive::SD);
             }
@@ -80,6 +114,7 @@ namespace rckid {
                     index_ = rand() % player_->carousel_->menu()->size();
                 else if (! player_->repeat_)
                     index_ = player_->carousel_->nextIndex();
+                player_->carousel_->setItem(index_);
             }
 
             void moveToPrev() {
@@ -87,6 +122,7 @@ namespace rckid {
                     index_ = rand() % player_->carousel_->menu()->size();
                 else if (! player_->repeat_)
                     index_ = player_->carousel_->prevIndex();
+                player_->carousel_->setItem(index_);
             }
 
             static constexpr uint32_t NOT_INITIALIZED = 0xffffffff;
@@ -115,16 +151,78 @@ namespace rckid {
 
         void loop() override {
             ui::App<void>::loop();
-            // when file is selected, simply ensure that the playlist is created and start the playback. This will call the action via next
-            if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
-                ASSERT(playlist_ == nullptr);
-                playlist_ = std::make_unique<FolderPlaylist>(this);
-                playlist_->start();
-            }
-            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
-                ASSERT(carousel_->atRoot());
-                ASSERT(playlist_ == nullptr);
-                exit();
+                if (playlist_ == nullptr) {
+                // when file is selected, simply ensure that the playlist is created and start the playback. This will call the action via next
+                if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                    btnClear(Btn::A);
+                    btnClear(Btn::Up);
+                    focusWidget(nullptr);
+                    ASSERT(playlist_ == nullptr);
+                    // animate the transition to playback
+                    playbackInfo_->setVisibility(true);
+                    shuffleIcon_->setVisibility(shuffle_);
+                    repeatIcon_->setVisibility(repeat_);
+                    playlist_ = std::make_unique<FolderPlaylist>(this);
+                    playlist_->start();
+                    animate()
+                        << ui::FlyOut(pauseIcon_, Point{100, 0})
+                        << ui::FlyOut(playIcon_, Point{100, 0})
+                        << ui::FlyOut(shuffleIcon_, Point{100, 0})->setDelayMs(animationSpeed() / 2)
+                        << ui::FlyOut(repeatIcon_, Point{100, 0})->setDelayMs(animationSpeed() / 2)
+                        << ui::FlyOut(playbackTitle_, Point{-220, 0})
+                        << ui::FlyOut(playbackDuration_, Point{-220, 0})->setDelayMs(animationSpeed() / 2);
+                    waitUntilIdle();
+                }
+                if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                    ASSERT(carousel_->atRoot());
+                    ASSERT(playlist_ == nullptr);
+                    exit();
+                }
+            } else {
+                if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                    if (audio::isPaused()) {
+                        audio::resume();
+                        pauseIcon_->setVisibility(true);
+                        playIcon_->setVisibility(false);
+                    } else {
+                        audio::pause();
+                        pauseIcon_->setVisibility(false);
+                        playIcon_->setVisibility(true);
+                    }
+                }
+                if (btnPressed(Btn::Start)) {
+                    if (repeat_) {
+                        repeat_ = false;
+                        shuffle_ = true;
+                    } else if (shuffle_) {
+                        shuffle_ = false;
+                    } else {
+                        repeat_ = true;
+                    }
+                    shuffleIcon_->setVisibility(shuffle_);
+                    repeatIcon_->setVisibility(repeat_);
+                }
+                if (btnPressed(Btn::Left))
+                    playlist_->playbackTask_->prev();
+                if (btnPressed(Btn::Right))
+                    playlist_->playbackTask_->next();
+                if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                    btnClear(Btn::B);
+                    btnClear(Btn::Down);
+                    // delete playlist, which also destroys the playback task and stops the music
+                    playlist_ = nullptr;
+                    focusWidget(carousel_);
+                    // animate the transition back to carousel
+                    animate()
+                        << ui::FlyOut(pauseIcon_, Point{-100, 0})->setDelayMs(animationSpeed() / 2)
+                        << ui::FlyOut(playIcon_, Point{-100, 0})->setDelayMs(animationSpeed() / 2)
+                        << ui::FlyOut(shuffleIcon_, Point{-100, 0})
+                        << ui::FlyOut(repeatIcon_, Point{-100, 0})
+                        << ui::FlyOut(playbackTitle_, Point{220, 0})->setDelayMs(animationSpeed() / 2)
+                        << ui::FlyOut(playbackDuration_, Point{220, 0});
+                    waitUntilIdle();
+                    playbackInfo_->setVisibility(false);
+                }
             }
         }
 
@@ -133,6 +231,15 @@ namespace rckid {
         bool repeat_ = false;
         bool shuffle_ = false;
         unique_ptr<FolderPlaylist> playlist_;
+
+        ui::Panel * playbackInfo_;
+        ui::Image * playIcon_;
+        ui::Image * pauseIcon_;
+        ui::Image * shuffleIcon_;
+        ui::Image * repeatIcon_;
+        ui::Label * playbackTitle_;
+        ui::Label * playbackDuration_;
+
     }; // rckid::MusicPlayer
 
 } // namespace rckid

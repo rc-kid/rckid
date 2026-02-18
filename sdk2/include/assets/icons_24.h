@@ -17,10 +17,22 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons_24/email.inc.h"
     };
 
+    // File: icons/icons_24/060-exchange.png
+    // Size: 949
+    static constexpr uint8_t exchange[] = {
+        #include "raw/icons_24/exchange.inc.h"
+    };
+
     // File: icons/icons_24/056-phone.png
     // Size: 930
     static constexpr uint8_t phone[] = {
         #include "raw/icons_24/phone.inc.h"
+    };
+
+    // File: icons/icons_24/059-shuffle.png
+    // Size: 1005
+    static constexpr uint8_t shuffle[] = {
+        #include "raw/icons_24/shuffle.inc.h"
     };
 
     // File: icons/icons_24/016-birthday-cake.png
