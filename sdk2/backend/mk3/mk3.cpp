@@ -262,7 +262,8 @@ namespace rckid::hal {
         }
 
         void onTick() {
-
+            onYield();
+            // TODO add more
         }
 
         void onYield() {
@@ -356,10 +357,12 @@ namespace rckid::hal {
 
         void disable() {
             // TODO
+            UNIMPLEMENTED;
         }
 
         void setBrightness(uint8_t value) {
             // TODO
+            UNIMPLEMENTED;
         }
 
         bool vSync() {
@@ -407,35 +410,36 @@ namespace rckid::hal {
     namespace audio {
 
         void setVolumeHeadphones(uint8_t value) {
+            UNIMPLEMENTED;
 
         }
 
         void setVolumeSpeaker(uint8_t value) {
-
+            UNIMPLEMENTED;
         }
 
         void play(uint32_t sampleRate, Callback cb) {
-
+            UNIMPLEMENTED;
         }
 
         void recordMic(uint32_t sampleRate, Callback cb) {
-
+            UNIMPLEMENTED;
         }
 
         void recordLineIn(uint32_t sampleRate, Callback cb) {
-
-        }
+            UNIMPLEMENTED;
+        }   
 
         void pause() {
-
+            UNIMPLEMENTED;
         }
 
         void resume() {
-
+            UNIMPLEMENTED;
         }
 
         void stop() {
-
+            UNIMPLEMENTED;
         }
 
         bool isPlaying() {
@@ -456,15 +460,15 @@ namespace rckid::hal {
     namespace fs {
 
         uint32_t sdCapacityBlocks() {
-
+            UNIMPLEMENTED;
         }
 
         void sdReadBlocks(uint32_t blockNum, uint8_t * buffer, uint32_t numBlocks) {
-
+            UNIMPLEMENTED;
         }
 
         void sdWriteBlocks(uint32_t blockNum, uint8_t const * buffer, uint32_t numBlocks) {
-
+            UNIMPLEMENTED;
         }
 
         uint32_t cartridgeCapacityBytes() {
@@ -526,8 +530,6 @@ namespace rckid::hal {
             uint32_t addr = reinterpret_cast<uint32_t>(ptr);
             return ((addr >= 0x10000000) && (addr < 0x20000000)) || (ptr == nullptr);
         }
-
-
 
     } // namespace rckid::hal::memory
 

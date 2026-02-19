@@ -17,7 +17,7 @@ namespace rckid {
                 MusicPlayer{}.run();
             }}
             << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator)
-            << ui::MenuItem{"Friends", assets::icons_64::family, []() {
+            << ui::MenuItem{"Friends", assets::icons_64::birthday_cake, []() {
                 Friends{}.run();
             }};
         return result;

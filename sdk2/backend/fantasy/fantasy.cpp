@@ -258,7 +258,7 @@ namespace rckid::hal {
             UNIMPLEMENTED;
         }
 
-        void scheduleWakeup(uint32_t timeoutSeconds, uint32_t payload) {
+        void scheduleWakeup([[maybe_unused]] uint32_t timeoutSeconds, [[maybe_unused]] uint32_t payload) {
             UNIMPLEMENTED;
         }
 
@@ -348,11 +348,12 @@ namespace rckid::hal {
         }
 
         Point3D accelerometerState() {
+            UNIMPLEMENTED;
 
         }
 
         Point3D gyroscopeState() {
-
+            UNIMPLEMENTED;
         }
 
     } // namespace rckid::hal::io
@@ -375,7 +376,7 @@ namespace rckid::hal {
         }
 
         void disable() {
-
+            UNIMPLEMENTED;
         }
 
         void setBrightness(uint8_t value) {
@@ -438,11 +439,11 @@ namespace rckid::hal {
             }
         }
 
-        void recordMic(uint32_t sampleRate, Callback cb) {
+        void recordMic([[maybe_unused]] uint32_t sampleRate, [[maybe_unused]] Callback cb) {
             UNIMPLEMENTED;
         }
 
-        void recordLineIn(uint32_t sampleRate, Callback cb) {
+        void recordLineIn([[maybe_unused]] uint32_t sampleRate, [[maybe_unused]] Callback cb) {
             UNIMPLEMENTED;
         }
 
@@ -478,6 +479,7 @@ namespace rckid::hal {
         bool isPaused() {
             if (isPlaying())
                 return IsAudioStreamPlaying(internal::audio::stream) == false;
+            return false;
         }
 
 

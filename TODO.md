@@ -36,12 +36,19 @@
 
 First add a board that can verify the last missing features and DFM improvements, namely:
 
+- [ ] SMT soldered vibration motor
+- [ ] ditch radio from main board
+- [ ] radio IRQ pin can become RPI TX for debugging
+> This means debugging connector is 1 GND, 2 ARM debugging, 1 UPDI, 1 RP tx, 1 AVR tx (6)
+
+These will be tested with a simple testboard:
+
+- [ ] smaller board size for cheaper assembly
 - [ ] microphone sensing
 - [ ] headphone detection via switches, *not* extra ground link
 - [ ] speaker without housing connected via spring contacts
-- [ ] SMT soldered vibration motor
 - [ ] battery connectors for nokia-like batteries, etc.
-- [ ] smaller board size for cheaper assembly
+- [ ] rubber dome buttons
 
 Software features:
 

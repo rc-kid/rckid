@@ -11,12 +11,6 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/happy_face.inc.h"
     };
 
-    // File: icons/icons_64/071-family.png
-    // Size: 4909
-    static constexpr uint8_t family[] = {
-        #include "raw/icons_64/family.inc.h"
-    };
-
     // File: icons/icons_64/053-configuration.png
     // Size: 2729
     static constexpr uint8_t configuration[] = {
@@ -69,6 +63,12 @@ namespace rckid::assets::icons_64 {
     // Size: 3316
     static constexpr uint8_t sad_face[] = {
         #include "raw/icons_64/sad_face.inc.h"
+    };
+
+    // File: icons/icons_64/016-birthday-cake.png
+    // Size: 1876
+    static constexpr uint8_t birthday_cake[] = {
+        #include "raw/icons_64/birthday_cake.inc.h"
     };
 
     // File: icons/icons_64/081-footprint.png

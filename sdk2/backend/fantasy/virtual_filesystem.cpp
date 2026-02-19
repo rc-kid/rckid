@@ -178,8 +178,9 @@ namespace rckid::fs {
             case Drive::Cartridge:
                 cartridgeMounted_ = false;
                 break;
+            default:
+                UNREACHABLE;
         }
-        UNREACHABLE;
     }
 
     uint64_t getCapacity(Drive dr) {
