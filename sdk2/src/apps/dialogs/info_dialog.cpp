@@ -18,11 +18,11 @@ namespace rckid {
             << SetFont(assets::OpenDyslexic32)
             << SetVAlign(VAlign::Center)
             << SetHAlign(HAlign::Left);
-        message_ = addChild(new Label())
+        message_ = addChild(new MultiLabel())
             << SetRect(Rect::XYWH(100, 40, 220, 60))
-            << SetText(message)
-            << SetVAlign(VAlign::Center)
-            << SetHAlign(HAlign::Left);
+            << SetVAlign(VAlign::Top)
+            << SetHAlign(HAlign::Left)
+            << SetText(message);
         root_.useBackgroundImage(false);
     }
 

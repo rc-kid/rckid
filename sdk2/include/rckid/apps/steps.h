@@ -29,7 +29,7 @@ namespace rckid {
         {
             using namespace ui;
             // when not available, show error message and exit the app
-            if (pedometer_ == nullptr) {
+            if (pedometer_ == nullptr || true) {
                 InfoDialog::error("Not available", "Step counter not supported by the device");
                 exit();
                 return;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <rckid/memory.h>
 #include <rckid/graphics/geometry.h>
 
 namespace rckid::ui {
@@ -37,6 +38,8 @@ namespace rckid::ui {
     template<typename T>
     class with {
     public:
+
+        with(unique_ptr<T> & widget): widget_{widget.get()} { }
 
         with(T * widget): widget_{widget} { }
 

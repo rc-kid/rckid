@@ -30,7 +30,6 @@
 #include "screen/ST7789.h"
 #include "ST7789_rgb16.pio.h"
 
-
 namespace rckid::fs {
     void initializeFilesystem();
 }
@@ -137,6 +136,33 @@ namespace rckid::internal {
             // enter update mode for full screen 320x240 col-first (native) 
             enterUpdateMode();
         }
+    }
+
+    namespace audio {
+
+        uint32_t sampleRate = 44100;
+
+        struct DMA {
+            int32_t channel = -1;
+            int16_t * buffer = nullptr;
+            uint32_t bufferSize = 0;
+
+            void reset() {
+                buffer = nullptr;
+                bufferSize = 0;
+            }
+
+            void configure(DMA & other) {
+            }
+
+            void update(DMA & other) {
+            }
+
+        };
+
+        DMA dma1;
+        DMA dma2;
+
     }
 
     namespace fs {

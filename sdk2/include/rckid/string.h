@@ -209,6 +209,20 @@ namespace rckid {
             return result;
         }
 
+        /** Returns true if the given character is word separator.
+         */
+        static bool isWordSeparator(char c) {
+            if (c >= 'a' && c <= 'z')
+                return false;
+            if (c >= 'A' && c <= 'Z')
+                return false;
+            if (c >= '0' && c <= '9')
+                return false;
+            if (c == '_')
+                return false;
+            return true;
+        }
+
     private:
 
         friend class StringBuilder;

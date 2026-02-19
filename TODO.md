@@ -8,7 +8,6 @@
 - apply style to existing widgets (Label, etc.) (...)
 - button press repeat (configurable)
 
-- multilabel widget
 - save and load state (...)
 - decorator event in menu items for badges (& their clearing in carousel selection) (...)
 - home menu (...)

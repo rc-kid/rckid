@@ -19,6 +19,38 @@ namespace rckid::ui {
             onResize();
         }
 
+        /** Takes up to a line from the given string and returns the rest.
+         */
+        String setTextLine(String const & value) {
+            uint32_t end = 0; // end of the text that fits
+            uint32_t endSep = 0;
+            Coord w = 0;
+            while (end < value.size()) {
+                char c = value[end];
+                GlyphInfo const * gi = font_->glyphInfoFor(c);
+                ASSERT(gi != nullptr);
+                if (w + gi->advanceX > width())
+                    break;
+                w += gi->advanceX;
+                ++end;
+                if (String::isWordSeparator(c))
+                    endSep = end;
+                if (c == '\n')
+                    break;
+            }
+            uint32_t start; // start of the remainder
+            if ((endSep > 0) && (end < value.size() - 1)) {
+                end = endSep - 1;
+                start = endSep;
+            } else {
+                start = end;
+            }
+            String res = value.substr(start);
+            String newText = value.substr(0, end);
+            setText(std::move(newText));
+            return res;
+        }
+
         Font const & font() const { return font_; }
 
         void setFont(Font value) {
@@ -83,6 +115,8 @@ namespace rckid::ui {
         }
 
     private:
+
+        friend class MultiLabel;
 
         struct Hint {
             Coord leftColumn = -1;
@@ -160,11 +194,6 @@ namespace rckid::ui {
 
     }; // ui::Label
 
-
-    class MultiLabel : public Widget {
-
-    }; // ui::MultiLabel
-
     struct SetText {
         String text;
         SetText(String text): text{std::move(text)} {}
@@ -195,5 +224,122 @@ namespace rckid::ui {
         w->setTextOffset(sto.offset);
         return w;
     }
+
+    /** Multi-line label.
+     
+        A simple aggregate class that is merely a container for multiple labels, each label being a single line of text. This allows us a simple way of rendering multi-line text without the need of specialized drawing pipelines.
+     */
+    class MultiLabel : public Widget {
+    public:
+
+        void setText(String text) {
+            text_ = std::move(text);
+            recalculateLines();
+        }
+
+        void setFont(Font font) {
+            font_ = std::move(font);
+            recalculateLines();
+        }
+
+        HAlign hAlign() const { return textHAlign_; }
+
+        void setHAlign(HAlign value) {
+            textHAlign_ = value;
+            for (auto & line : lines_)
+                line->setHAlign(value);
+        }
+
+        VAlign vAlign() const { return textVAlign_; }
+
+        void setVAlign(VAlign value) {
+            textVAlign_ = value;
+            repositionLines();
+        }
+
+        Color color() const { return textColor_; }
+
+        void setColor(Color value) {
+            textColor_ = value;
+            for (auto & line : lines_)
+                line->setColor(value);
+        }
+
+        void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) override {
+            ASSERT(verifyRenderParams(width(), height(), column, startRow, numPixels));
+            for (auto & line : lines_)
+                renderChildColumn(line.get(), column, startRow, buffer, numPixels);
+            Widget::renderColumn(column, startRow, buffer, numPixels);
+        }
+
+    protected:
+        void onResize() override {
+            Widget::onResize();
+            recalculateLines();
+        }
+
+        void onRender() override {
+            // reset the rendering hint to the rightmost character
+            for (auto & line : lines_)
+                 line->onRender();
+            Widget::onRender();
+        }
+
+        void recalculateLines() {
+            lines_.clear();
+            String txt = text_;
+            while (!txt.empty()) {
+                unique_ptr<Label> line = std::make_unique<Label>();
+                with(line)
+                    << SetFont{font_}
+                    << SetHAlign{textHAlign_}
+                    << SetVAlign{VAlign::Top}
+                    << SetColor{textColor_}
+                    << SetRect(Rect::WH(width(), font_->size));
+                txt = line->setTextLine(txt);
+                lines_.push_back(std::move(line));
+            }
+            repositionLines();
+        }
+
+        void repositionLines() {
+            if (lines_.empty())
+                return;
+            Coord h = font_->size * lines_.size();
+            Coord y;
+            switch (textVAlign_) {
+                case VAlign::Top:
+                    y = 0;
+                    break;
+                case VAlign::Center:
+                    y = (height() - h) / 2;
+                    break;
+                case VAlign::Bottom:
+                    y = height() - h;
+                    break;
+                case VAlign::Manual:
+                    y = lines_[0]->y();
+                    break;
+                default:
+                    UNREACHABLE;
+            }
+            for (auto & line : lines_) {
+                Rect r = line->rect();
+                r.y = y;
+                line->setRect(r);
+                y += font_->size;
+            }
+        }
+
+    private:
+        String text_;
+        Font font_{assets::Iosevka16};
+        HAlign textHAlign_ = HAlign::Left;
+        VAlign textVAlign_ = VAlign::Center;
+        Color textColor_ = Color::White();
+
+        std::vector<unique_ptr<Label>> lines_;
+
+    }; // ui::MultiLabel
 
 } // namespace rckid::ui
