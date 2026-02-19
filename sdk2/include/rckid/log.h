@@ -1,6 +1,6 @@
 #pragma once
 
-//#include <rckid/rckid.h>
+#include <platform/writer.h>
 
 /** Logging 
  
@@ -15,7 +15,7 @@
 
 #define IS_LOGLEVEL_ENABLED_HELPER(X) #X
 #define IS_LOGLEVEL_ENABLED(X) (IS_LOGLEVEL_ENABLED_HELPER(X)[0] == '1')
-#define LOG(LOGLEVEL,...) do { if (IS_LOGLEVEL_ENABLED(LOGLEVEL)) rckid::debugWrite() << #LOGLEVEL << ": " << __VA_ARGS__ << '\n'; } while (false)
+#define LOG(LOGLEVEL,...) do { if (IS_LOGLEVEL_ENABLED(LOGLEVEL)) rckid::hal::device::debugWrite() << #LOGLEVEL << ": " << __VA_ARGS__ << '\n'; } while (false)
 
 /** Log level for errors.  
  
@@ -39,7 +39,7 @@
  */
 #ifndef LL_INFO
   #ifdef NDEBUG
-    #define LL_INFO 0
+    #define LL_INFO 1
   #else
     #define LL_INFO 1
   #endif
@@ -53,6 +53,6 @@
 #define LL_DEBUG 0
 #endif
 
-namespace rckid {
+namespace rckid::hal::device {
     Writer debugWrite();
 }

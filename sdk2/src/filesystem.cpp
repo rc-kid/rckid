@@ -457,7 +457,7 @@ namespace rckid::fs {
         switch (dr) {
             case Drive::SD: {
                 char * label = new char[13];
-                memset8(reinterpret_cast<uint8_t*>(label), ' ', 12);
+                memset(reinterpret_cast<uint8_t*>(label), ' ', 12);
                 label[12] = '\0';
                 f_getlabel("",label, 0);
                 return String{immutable_ptr<char>{label}};

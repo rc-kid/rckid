@@ -91,13 +91,13 @@ namespace rckid {
      
         This is a direct wrapper over the hal::device::debugWrite() function that allows writing dbeug information to preferred debug outputs, such as USB serial adpater, or direct serial output via cartridge pins.
      */
-    inline Writer debugWrite() { return hal::device::debugWrite(); }
+    using hal::device::debugWrite;
 
     /** Reads characters from debug input.
      
         The call is non-blocking and returns 0 if no data is available. The function is a direct wrapper over the hal::device::debugRead() function.
      */
-    inline uint8_t debugRead() { return hal::device::debugRead(); }
+    using hal::device::debugRead;
 
 
 

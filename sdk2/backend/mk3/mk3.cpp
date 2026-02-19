@@ -75,10 +75,17 @@ namespace rckid::internal {
                 dma_channel_set_irq0_enabled(channel, true);
             }
 
-            void update() {
+            void update(DMA & other) {
+                /*
                 dma_channel_set_read_addr(channel, buffer, false);
-                dma_channel_set_trans_count(channel, bufferSize, false);
+                dma_channel_set_transfer_count(channel, bufferSize, false);
+                dma_channel_set_chain_to(channel, other.channel);
+                */
+                auto dmaConf = dma_get_channel_config(channel);
+                channel_config_set_chain_to(&dmaConf, pixelsToWrite > 0 ? other.channel : -1);
+                dma_channel_configure(channel, & dmaConf, &RCKID_ST7789_PIO->txf[sm], buffer, bufferSize, false);
             }
+
         };
 
         DMA dma1;
@@ -141,17 +148,16 @@ namespace rckid::internal {
         dma_hw->ints0 = irqs;
         if (display::pixelsToWrite > 0) {
             if (irqs & (1u << display::dma1.channel)) {
-                display::pixelsToWrite -= display::dma1.bufferSize;
                 display::cb(display::dma1.buffer, display::dma1.bufferSize);
-                display::dma1.update();
+                display::pixelsToWrite -= display::dma1.bufferSize;
+                display::dma1.update(display::dma2);
             }
             if (irqs & (1u << display::dma2.channel)) {
                 display::cb(display::dma2.buffer, display::dma2.bufferSize);
                 display::pixelsToWrite -= display::dma2.bufferSize;
-                display::dma2.update();
+                display::dma2.update(display::dma1);
             }
-        }
-    }
+        }    }
 
 } // namespace rckid::internal
 
@@ -323,14 +329,15 @@ namespace rckid::hal {
     namespace io {
 
         State state() {
+            return internal::io::state;
         }
 
         Point3D accelerometerState() {
-
+            UNREACHABLE;
         }
 
         Point3D gyroscopeState() {
-
+            UNREACHABLE;
         }
 
     } // namespace rckid::hal::io
@@ -362,17 +369,22 @@ namespace rckid::hal {
 
         void update(Callback callback) {
             using namespace internal::display;
+            while (updateActive())
+                yield();
             ASSERT(! updateActive());
             cb = callback;
             dma1.reset();
             dma2.reset();
             pixelsToWrite = ST7789::updateRegion().w * ST7789::updateRegion().h;
+            LOG(LL_INFO, pixelsToWrite);
             cb(dma1.buffer, dma1.bufferSize);
             pixelsToWrite -= dma1.bufferSize;
-            dma1.update();
+            LOG(LL_INFO, pixelsToWrite);
+            dma1.update(dma2);
             if (pixelsToWrite > 0) {
+                LOG(LL_INFO, pixelsToWrite);
                 cb(dma2.buffer, dma2.bufferSize);
-                dma2.update();
+                dma2.update(dma1);
                 pixelsToWrite -= dma2.bufferSize;
             }
             dma_channel_start(dma1.channel);
@@ -425,6 +437,19 @@ namespace rckid::hal {
         void stop() {
 
         }
+
+        bool isPlaying() {
+            UNIMPLEMENTED;
+        }
+
+        bool isRecording(){
+            UNIMPLEMENTED;
+        }
+
+        bool isPaused() {
+            UNIMPLEMENTED;
+        }
+
 
     } // namespace rckid::hal::audio
 

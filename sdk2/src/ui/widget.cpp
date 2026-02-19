@@ -33,7 +33,7 @@ namespace rckid::ui {
         for (auto & child : children_)
             if (child->y() < minY)
                 minY = child->y();
-        minY = std::min(minY, 0);
+        minY = std::min<Coord>(minY, 0);
         for (auto & child : children_)
             if (child->visibleInParent())
                 animate() << FlyOut(child.get(), distance)->setDelayMs(child->y()-minY);

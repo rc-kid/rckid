@@ -17,15 +17,16 @@ namespace rckid {
         virtual String name() const override { return "Data Sync"; }
 
         static bool active() {
-            UNIMPLEMENTED;
+            return false;
+            //UNIMPLEMENTED;
         }
 
         static void disconnect() {
-            UNIMPLEMENTED;
+            //UNIMPLEMENTED;
         }
 
         static void connect() {
-            UNIMPLEMENTED;
+            //UNIMPLEMENTED;
         }
 
     private:
