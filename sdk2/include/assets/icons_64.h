@@ -11,6 +11,12 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/happy_face.inc.h"
     };
 
+    // File: icons/icons_64/007-brightness.png
+    // Size: 1908
+    static constexpr uint8_t brightness[] = {
+        #include "raw/icons_64/brightness.inc.h"
+    };
+
     // File: icons/icons_64/053-configuration.png
     // Size: 2729
     static constexpr uint8_t configuration[] = {
@@ -65,6 +71,18 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/sad_face.inc.h"
     };
 
+    // File: icons/icons_64/008-high-volume.png
+    // Size: 2396
+    static constexpr uint8_t high_volume[] = {
+        #include "raw/icons_64/high_volume.inc.h"
+    };
+
+    // File: icons/icons_64/009-power-off.png
+    // Size: 3139
+    static constexpr uint8_t power_off[] = {
+        #include "raw/icons_64/power_off.inc.h"
+    };
+
     // File: icons/icons_64/016-birthday-cake.png
     // Size: 1876
     static constexpr uint8_t birthday_cake[] = {
@@ -87,6 +105,12 @@ namespace rckid::assets::icons_64 {
     // Size: 2488
     static constexpr uint8_t pause[] = {
         #include "raw/icons_64/pause.inc.h"
+    };
+
+    // File: icons/icons_64/045-logout.png
+    // Size: 1420
+    static constexpr uint8_t logout[] = {
+        #include "raw/icons_64/logout.inc.h"
     };
 
 } // namespace rckid::assets::icons_64

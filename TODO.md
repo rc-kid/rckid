@@ -12,8 +12,6 @@
 - decorator event in menu items for badges (& their clearing in carousel selection) (...)
 - home menu (...)
 - header (...)
-- audio playback (...)
-- audio playback, figure how to stop the playback. Playlist is the only interface of the playback task
 
 - mk3 code not cleaned up and not working
 

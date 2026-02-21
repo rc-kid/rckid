@@ -48,6 +48,21 @@ namespace rckid {
             ui::with(carousel_)
                 << ui::ResetMenu([app = parent()] () { 
                     auto menu = app->homeMenu();
+                    (*menu)
+                        << ui::MenuItem("Brightness", assets::icons_64::brightness, []() {
+                            // TODO add brightness control
+                        })
+                        << ui::MenuItem("Volume", assets::icons_64::high_volume, []() {
+                            // TODO add brightness control
+                        })
+                        << ui::MenuItem("Power Off", assets::icons_64::power_off, []() {
+                            //rckid::device::powerOff();
+                        });
+                    if (app->parent() != nullptr)
+                        (*menu)
+                            << ui::MenuItem("Exit", assets::icons_64::logout, [app]() {
+                                app->exit();
+                            });
                     return menu;
                 });
         }
