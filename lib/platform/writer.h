@@ -200,3 +200,55 @@ inline Writer & operator << (Writer & w, void * ptr) {
     w << hex(ptr);
     return w;
 }
+template<typename T>
+class alignRight : public Writer::Converter {
+public:
+    alignRight(T value, size_t width, char pad = ' ') : value_{value}, width_{width}, pad_{pad} {}
+
+    void operator () (Writer & writer) {
+        switch (width_) {
+            default:
+            // TODO more & signed
+                [[fallthrough]];
+            case 5: 
+                if (value_ < 10000)
+                    writer << pad_;
+                [[fallthrough]];
+            case 4: 
+                if (value_ < 1000)
+                    writer << pad_;
+                [[fallthrough]];
+            case 3: 
+                if (value_ < 100)
+                    writer << pad_;
+                [[fallthrough]];
+            case 2:
+                if (value_ < 10)
+                    writer << pad_;
+                [[fallthrough]];
+            case 1:
+                break;
+        }
+        writer << value_;
+    }
+
+private:
+    T value_;
+    size_t width_;
+    char pad_;
+};
+
+template<typename T>
+class nonZero : public Writer::Converter {
+public:
+    nonZero(T value, char const * separator = ""): value_{value}, separator_{separator} {}
+
+    void operator () (Writer & writer) {
+        if (value_ != 0)
+            writer << value_ << separator_;
+    }
+
+private:
+    T value_;
+    char const * separator_;
+};

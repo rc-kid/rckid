@@ -16,10 +16,10 @@ namespace rckid {
             << ui::MenuItem{"Music", assets::icons_64::music, []() {
                 MusicPlayer{}.run();
             }}
-            << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator)
             << ui::MenuItem{"Friends", assets::icons_64::birthday_cake, []() {
                 Friends{}.run();
-            }};
+            }}
+            << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator);
         return result;
     }
 

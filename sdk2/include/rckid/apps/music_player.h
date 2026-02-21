@@ -1,5 +1,6 @@
 #pragma once
 
+#include <rckid/timer.h>
 #include <rckid/ui/app.h>
 #include <rckid/apps/launcher.h>
 #include <rckid/apps/file_browser.h>
@@ -30,11 +31,11 @@ namespace rckid {
                 << SetVisibility(false);
             playIcon_ = playbackInfo_->addChild(new Image{})
                 << SetRect(Rect::XYWH(-100, 0, 100, 100))
-                << SetBitmap(assets::icons_64::play_button)
-                << SetVisibility(false);
+                << SetBitmap(assets::icons_64::play_button);
             pauseIcon_ = playbackInfo_->addChild(new Image{})
                 << SetRect(Rect::XYWH(-100, 0, 100, 100))
-                << SetBitmap(assets::icons_64::pause);
+                << SetBitmap(assets::icons_64::pause)
+                << SetVisibility(false);
             shuffleIcon_ = playbackInfo_->addChild(new Image{})
                 << SetRect(Rect::XYWH(-40, 60, 24, 24))
                 << SetBitmap(assets::icons_24::shuffle)
@@ -50,7 +51,6 @@ namespace rckid {
                 << SetRect(Rect::XYWH(320, 40, 220, 24))
                 << SetFont(assets::Iosevka24);
         }
-
 
     protected:
 
@@ -83,6 +83,8 @@ namespace rckid {
                 // calling the action will set our path
                 player_->carousel_->menu()->at(index_).action()();
                 player_->playbackTitle_->setText(fs::stem(player_->playlist_->currentPath_));
+                // reset the timer
+                player_->timer_.start();
                 // create and return the stream
                 return audio::DecoderStream::fromFile(currentPath_, fs::Drive::SD);
             }
@@ -97,6 +99,8 @@ namespace rckid {
                 // calling the action will set our path
                 player_->carousel_->menu()->at(index_).action()();
                 player_->playbackTitle_->setText(fs::stem(player_->playlist_->currentPath_));
+                // reset the timer
+                player_->timer_.start();
                 // create and return the stream
                 return audio::DecoderStream::fromFile(currentPath_, fs::Drive::SD);
             }
@@ -141,12 +145,21 @@ namespace rckid {
                     ASSERT(playlist_ != nullptr);
                     playlist_->setCurrentPath(std::move(path));
                     // TODO and display that we are playing that file, etc.
-                }, "/files/music", fs::Drive::SD); });
+                }, "/files/music", fs::Drive::SD, FileBrowser::audioFileFilter); });
         }
 
         void onFocus() override {
             ui::App<void>::onFocus();
             focusWidget(carousel_);
+        }
+
+        void render() {
+            ui::App<void>::render();
+            if (playlist_ != nullptr) {
+                timer_.tick();
+                TinyTime t = timer_.time();
+                playbackDuration_->setText(STR(nonZero(t.hour(), ":") << alignRight(t.minute(), 2, '0') << ":" << alignRight(t.second(), 2, '0')));
+            }
         }
 
         void loop() override {
@@ -182,12 +195,14 @@ namespace rckid {
                 if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                     if (audio::isPaused()) {
                         audio::resume();
-                        pauseIcon_->setVisibility(true);
-                        playIcon_->setVisibility(false);
-                    } else {
-                        audio::pause();
                         pauseIcon_->setVisibility(false);
                         playIcon_->setVisibility(true);
+                        timer_.resume();
+                    } else {
+                        audio::pause();
+                        timer_.pause();
+                        pauseIcon_->setVisibility(true);
+                        playIcon_->setVisibility(false);
                     }
                 }
                 if (btnPressed(Btn::Start)) {
@@ -231,6 +246,7 @@ namespace rckid {
         bool repeat_ = false;
         bool shuffle_ = false;
         unique_ptr<FolderPlaylist> playlist_;
+        Timer timer_;
 
         ui::Panel * playbackInfo_;
         ui::Image * playIcon_;

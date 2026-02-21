@@ -30,7 +30,7 @@ namespace rckid::internal {
 
         uint8_t heap[512 * 1024];
 
-        bool useSystemMalloc = true;
+        uint32_t useSystemMalloc = 1;
 
     } // rckid::internal::memory
 
@@ -71,8 +71,8 @@ namespace rckid::internal {
 
             // TODO print FPS, memory or some other stat overlays we might want to 
 
-            DrawText(TextFormat("Heap reserved: %d", Heap::reservedBytes() / 1024), 540, 260, 20, RED);
-            DrawText(TextFormat("Heap usd:      %d", Heap::usedBytes() / 1024), 540, 280, 20, RED);
+            DrawText(TextFormat("Heap reserved: %d", Heap::reservedBytes() / 1024), 0, 20 * RCKID_DISPLAY_ZOOM + 5, 20, RED);
+            DrawText(TextFormat("Heap used:     %d", Heap::usedBytes() / 1024), 0, 20 * RCKID_DISPLAY_ZOOM + 25, 20, RED);
 
             EndDrawing();
             SwapScreenBuffer();
@@ -126,6 +126,8 @@ namespace rckid::internal {
 
         uint8_t volume = 10;
 
+        bool playbackShouldStop_ = false;
+
         /** Raylib stream refill callback.
          */
         void refillStream(void * buffer, unsigned int samples) {
@@ -137,7 +139,8 @@ namespace rckid::internal {
                     std::swap(currentBuffer, nextBuffer);
                     std::swap(currentBufferSize, nextBufferSize);
                     if (currentBuffer == nullptr) {
-                        hal::audio::stop();
+                        // require playback stop (we can't stop immediately as the refill function runs from the audio thread and raylib would deadlock)
+                        playbackShouldStop_ = true;
                         return;
                     }
                     currentBufferIndex = 0;
@@ -183,7 +186,7 @@ extern "C" {
 
     //depending on whether we are in system malloc, or not use libc malloc, or RCKid's heap
     void * malloc(size_t numBytes) {
-        if (rckid::internal::memory::useSystemMalloc)
+        if (rckid::internal::memory::useSystemMalloc > 0)
             return __libc_malloc(numBytes);
         else
             return rckid::Heap::alloc(numBytes);
@@ -208,7 +211,6 @@ namespace rckid::hal {
          */
         void initializeNoWindow() {
             internal::display::noWindow = true;
-            internal::memory::useSystemMalloc = false;
             LOG(LL_INFO, "Immutable memory: " << hex(& __rodata_start) << " - " << hex(& __rodata_end));
     #ifndef RCKID_CUSTOM_FILESYSTEM
             // if we are not using custom filesystem, see if we have the image files available, open them for read/write access and initialize the hal::fs mechanics
@@ -237,6 +239,7 @@ namespace rckid::hal {
                 }
             }
     #endif
+            internal::memory::useSystemMalloc = 0;
             rckid::fs::initializeFilesystem();
         }
 
@@ -271,6 +274,8 @@ namespace rckid::hal {
         void onYield() {
             if (internal::device::exitAtYield)
                 exit(-1);
+            if (internal::audio::playbackShouldStop_)
+                audio::stop();
         }
 
         void fatalError(char const * file, uint32_t line, char const * msg, uint32_t payload) {
@@ -291,7 +296,7 @@ namespace rckid::hal {
 
         Writer debugWrite() {
             return Writer{[](char c) {
-                internal::memory::SystemMallocGuard g_{/* reentrant */ true};
+                internal::memory::SystemMallocGuard g_;
                 std::cout << c;
                 if (c == '\n')
                     std::cout << std::flush;
@@ -420,6 +425,7 @@ namespace rckid::hal {
         }
 
         void play(uint32_t sampleRate, Callback cb) {
+            stop();
             internal::audio::cb = cb;
             internal::audio::currentBuffer = nullptr;
             internal::audio::currentBufferSize = 0;
@@ -465,6 +471,8 @@ namespace rckid::hal {
             if (IsAudioStreamValid(internal::audio::stream)) {
                 StopAudioStream(internal::audio::stream);
                 UnloadAudioStream(internal::audio::stream);
+                internal::audio::stream.buffer = nullptr;
+                internal::audio::playbackShouldStop_ = false;
             }
         }
 

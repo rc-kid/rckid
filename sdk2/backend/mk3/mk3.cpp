@@ -81,7 +81,7 @@ namespace rckid::internal {
                 dma_channel_set_chain_to(channel, other.channel);
                 */
                 auto dmaConf = dma_get_channel_config(channel);
-                channel_config_set_chain_to(&dmaConf, pixelsToWrite > 0 ? other.channel : -1);
+                channel_config_set_chain_to(&dmaConf, (pixelsToWrite > 0) ? other.channel : channel);
                 dma_channel_configure(channel, & dmaConf, &RCKID_ST7789_PIO->txf[sm], buffer, bufferSize, false);
             }
 
@@ -272,7 +272,7 @@ namespace rckid::hal {
 
             // TODO
 
-            rckid::fs::initializeFilesystem();
+            //rckid::fs::initializeFilesystem();
         }
 
         void powerOff() {

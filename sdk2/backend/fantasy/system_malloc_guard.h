@@ -4,32 +4,31 @@
 
 namespace rckid::internal::memory {
 
-    extern bool useSystemMalloc;
+    extern uint32_t useSystemMalloc;
 
     class SystemMallocGuard {
     public:
-        SystemMallocGuard(bool reentrant = false):
+        SystemMallocGuard():
             old_{useSystemMalloc} {
-            if (!reentrant || !old_)
-                acquire();
+            acquire();
         }
 
         ~SystemMallocGuard() {
-            if (!old_)
-                release();
+            release();
         }
 
         void release() {
-            ASSERT(useSystemMalloc == true);
-            useSystemMalloc = false;
+            ASSERT(useSystemMalloc > 0);
+            --useSystemMalloc;
+            ASSERT(old_ == useSystemMalloc);
         }
 
         void acquire() {
-            ASSERT(useSystemMalloc == false);
-            useSystemMalloc = true;
+            ASSERT(old_ == useSystemMalloc);
+            ++useSystemMalloc;
         }
     private:
-        bool old_;
+        uint32_t old_;
 
     }; // SystemMallocGuard
 

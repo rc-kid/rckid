@@ -516,6 +516,12 @@ inline Writer operator << (Writer writer, TinyDate const & date) {
                   << date.year();
 } // operator <<
 
+inline Writer operator << (Writer writer, TinyTime const & time) {
+    return writer << time.hour() << ':' 
+                  << time.minute() << ':' 
+                  << time.second();
+} // operator <<
+
 inline Writer operator << (Writer writer, TinyDate::DayOfWeek d) {
     switch (d) {
         case TinyDate::DayOfWeek::Monday:
