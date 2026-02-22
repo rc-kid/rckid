@@ -23,6 +23,9 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
     #
     # The assets are expressed and constexpr uint8_t arrays. See the description of appropriate utilities for the actual tranformation, which depends on the utility/contents used.
     add_custom_target(generate-sdk-assets
+        # prepare the system icons, which are raw converted
+        COMMAND $<TARGET_FILE:raw-image-converter> ${CMAKE_SOURCE_DIR}/sdk2/assets/icons/icons_64_png ${CMAKE_SOURCE_DIR}/sdk2/assets/icons/icons_64
+
         COMMAND $<TARGET_FILE:font-converter> fonts/Iosevka.ttf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/Iosevka16.h 16
         COMMAND $<TARGET_FILE:font-converter> fonts/Iosevka.ttf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/Iosevka24.h 24
         COMMAND $<TARGET_FILE:font-converter> fonts/OpenDyslexic.otf ${CMAKE_SOURCE_DIR}/sdk2/include/assets/OpenDyslexic24.h 24

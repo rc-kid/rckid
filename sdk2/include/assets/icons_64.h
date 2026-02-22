@@ -5,112 +5,112 @@
 
 namespace rckid::assets::icons_64 {
 
-    // File: icons/icons_64/042-happy-face.png
-    // Size: 2583
-    static constexpr uint8_t happy_face[] = {
-        #include "raw/icons_64/happy_face.inc.h"
-    };
-
-    // File: icons/icons_64/007-brightness.png
-    // Size: 1908
-    static constexpr uint8_t brightness[] = {
-        #include "raw/icons_64/brightness.inc.h"
-    };
-
-    // File: icons/icons_64/053-configuration.png
-    // Size: 2729
-    static constexpr uint8_t configuration[] = {
-        #include "raw/icons_64/configuration.inc.h"
-    };
-
-    // File: icons/icons_64/036-empty-box.png
-    // Size: 2821
-    static constexpr uint8_t empty_box[] = {
-        #include "raw/icons_64/empty_box.inc.h"
-    };
-
-    // File: icons/icons_64/052-play-button.png
-    // Size: 1710
-    static constexpr uint8_t play_button[] = {
-        #include "raw/icons_64/play_button.inc.h"
-    };
-
-    // File: icons/icons_64/080-info.png
-    // Size: 2856
-    static constexpr uint8_t info[] = {
-        #include "raw/icons_64/info.inc.h"
-    };
-
-    // File: icons/icons_64/022-game-controller.png
-    // Size: 3058
-    static constexpr uint8_t game_controller[] = {
-        #include "raw/icons_64/game_controller.inc.h"
-    };
-
-    // File: icons/icons_64/015-poo.png
-    // Size: 2396
-    static constexpr uint8_t poo[] = {
-        #include "raw/icons_64/poo.inc.h"
-    };
-
-    // File: icons/icons_64/025-folder.png
-    // Size: 2621
-    static constexpr uint8_t folder[] = {
-        #include "raw/icons_64/folder.inc.h"
-    };
-
-    // File: icons/icons_64/002-music.png
-    // Size: 2532
-    static constexpr uint8_t music[] = {
-        #include "raw/icons_64/music.inc.h"
-    };
-
-    // File: icons/icons_64/043-sad-face.png
-    // Size: 3316
-    static constexpr uint8_t sad_face[] = {
-        #include "raw/icons_64/sad_face.inc.h"
-    };
-
-    // File: icons/icons_64/008-high-volume.png
-    // Size: 2396
+    // File: icons/icons_64/008-high-volume.raw
+    // Size: 8196
     static constexpr uint8_t high_volume[] = {
         #include "raw/icons_64/high_volume.inc.h"
     };
 
-    // File: icons/icons_64/009-power-off.png
-    // Size: 3139
-    static constexpr uint8_t power_off[] = {
-        #include "raw/icons_64/power_off.inc.h"
+    // File: icons/icons_64/007-brightness.raw
+    // Size: 8196
+    static constexpr uint8_t brightness[] = {
+        #include "raw/icons_64/brightness.inc.h"
     };
 
-    // File: icons/icons_64/016-birthday-cake.png
-    // Size: 1876
-    static constexpr uint8_t birthday_cake[] = {
-        #include "raw/icons_64/birthday_cake.inc.h"
+    // File: icons/icons_64/022-game-controller.raw
+    // Size: 8196
+    static constexpr uint8_t game_controller[] = {
+        #include "raw/icons_64/game_controller.inc.h"
     };
 
-    // File: icons/icons_64/081-footprint.png
-    // Size: 2991
-    static constexpr uint8_t footprint[] = {
-        #include "raw/icons_64/footprint.inc.h"
+    // File: icons/icons_64/025-folder.raw
+    // Size: 8196
+    static constexpr uint8_t folder[] = {
+        #include "raw/icons_64/folder.inc.h"
     };
 
-    // File: icons/icons_64/034-pen-drive.png
-    // Size: 1184
+    // File: icons/icons_64/034-pen-drive.raw
+    // Size: 8196
     static constexpr uint8_t pen_drive[] = {
         #include "raw/icons_64/pen_drive.inc.h"
     };
 
-    // File: icons/icons_64/037-pause.png
-    // Size: 2488
+    // File: icons/icons_64/009-power-off.raw
+    // Size: 8196
+    static constexpr uint8_t power_off[] = {
+        #include "raw/icons_64/power_off.inc.h"
+    };
+
+    // File: icons/icons_64/036-empty-box.raw
+    // Size: 8196
+    static constexpr uint8_t empty_box[] = {
+        #include "raw/icons_64/empty_box.inc.h"
+    };
+
+    // File: icons/icons_64/002-music.raw
+    // Size: 8196
+    static constexpr uint8_t music[] = {
+        #include "raw/icons_64/music.inc.h"
+    };
+
+    // File: icons/icons_64/037-pause.raw
+    // Size: 8196
     static constexpr uint8_t pause[] = {
         #include "raw/icons_64/pause.inc.h"
     };
 
-    // File: icons/icons_64/045-logout.png
-    // Size: 1420
+    // File: icons/icons_64/042-happy-face.raw
+    // Size: 8196
+    static constexpr uint8_t happy_face[] = {
+        #include "raw/icons_64/happy_face.inc.h"
+    };
+
+    // File: icons/icons_64/015-poo.raw
+    // Size: 8196
+    static constexpr uint8_t poo[] = {
+        #include "raw/icons_64/poo.inc.h"
+    };
+
+    // File: icons/icons_64/053-configuration.raw
+    // Size: 8196
+    static constexpr uint8_t configuration[] = {
+        #include "raw/icons_64/configuration.inc.h"
+    };
+
+    // File: icons/icons_64/016-birthday-cake.raw
+    // Size: 8196
+    static constexpr uint8_t birthday_cake[] = {
+        #include "raw/icons_64/birthday_cake.inc.h"
+    };
+
+    // File: icons/icons_64/052-play-button.raw
+    // Size: 8196
+    static constexpr uint8_t play_button[] = {
+        #include "raw/icons_64/play_button.inc.h"
+    };
+
+    // File: icons/icons_64/081-footprint.raw
+    // Size: 8196
+    static constexpr uint8_t footprint[] = {
+        #include "raw/icons_64/footprint.inc.h"
+    };
+
+    // File: icons/icons_64/080-info.raw
+    // Size: 8196
+    static constexpr uint8_t info[] = {
+        #include "raw/icons_64/info.inc.h"
+    };
+
+    // File: icons/icons_64/045-logout.raw
+    // Size: 8196
     static constexpr uint8_t logout[] = {
         #include "raw/icons_64/logout.inc.h"
+    };
+
+    // File: icons/icons_64/043-sad-face.raw
+    // Size: 8196
+    static constexpr uint8_t sad_face[] = {
+        #include "raw/icons_64/sad_face.inc.h"
     };
 
 } // namespace rckid::assets::icons_64

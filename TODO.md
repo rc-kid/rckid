@@ -3,25 +3,28 @@
 - improve value parsing in Reader (bool, ints, etc.)
 - how to do heartbeat? (static initializers?)
 
-- instead of loading pngs and outputting the text, it might be easier to transcode the png into the binary format and then use the binary folder exporter 
+- use only absolutely necessary icons in the raw format to avoid extra flash bloat
 
 - apply style to existing widgets (Label, etc.) (...)
 - button press repeat (configurable)
 
 - save and load state (...)
 - decorator event in menu items for badges (& their clearing in carousel selection) (...)
-- home menu (...)
 - header (...)
+- pim (hearts, currency, pin, parent mode, etc.)
 
 - mk3 code not cleaned up and not working
-
-- should ini reader and writer own the stream? Might simplify things a bit in the API
 
 - add support for overclocking, and in the missing adjustment for display pio in the hal layer:
 
         static void adjustSpeed() {
             pio_sm_set_clock_speed(RCKID_ST7789_PIO, sm_, RCKID_ST7789_SPEED * 4); // 2 cycles per pixel
         }
+
+
+### Code Cleanup
+- should ini reader and writer own the stream? Might simplify things a bit in the API
+
 
 
 ## Link Capability
