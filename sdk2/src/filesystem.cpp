@@ -320,8 +320,6 @@ namespace rckid::fs {
         // also mount the SD card if present
         if (hal::fs::sdCapacityBlocks() != 0)
             mount(Drive::SD);
-
-
     }
 
     bool isMounted(Drive dr) {

@@ -6,7 +6,12 @@
  
     
  */
-namespace rckid {
+namespace rckid::internal::sd {
+
+    extern uint32_t sdNumBlocks_;    
+    extern uint spiSm_;
+    extern uint spiOffset_;
+
 
     /** Tells the card to go to idle state (reset) 
      */
@@ -45,9 +50,14 @@ namespace rckid {
     constexpr uint8_t SD_MAX_DELAY = 128;
     constexpr uint8_t SD_DATA_TOKEN = 0xfe;
 
-    void sdInitialize();
-    bool sdIsInserted();
-    bool sdInitializeCard();
-    void sdAdjustSpeed();
+    void initialize();
+    bool isInserted();
+    bool initializeCard();
+
+    bool readBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks);
+    bool writeBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks);
+
+    void adjustSpeed();
+
 
 } // namespace rckid

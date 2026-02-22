@@ -7,6 +7,7 @@ file(GLOB_RECURSE SRC
     "capabilities/*.cpp"
     "screen/*.cpp"
     "usb/*.cpp"
+    "sd/*.cpp"
 )
 add_library(librckid STATIC ${SRC})
 

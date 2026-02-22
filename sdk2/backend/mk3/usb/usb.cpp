@@ -221,20 +221,10 @@ extern "C" {
         - Start = 1 : active mode, if load_eject = 1 : load disk storage
     */
     bool tud_msc_start_stop_cb([[maybe_unused]] uint8_t lun, [[maybe_unused]] uint8_t power_condition, bool start, bool load_eject) {
-        //if (rckid::DataSync::instance_ != nullptr) {
-            if (start)
-                rckid::DataSync::connect();
-            if (load_eject)
-                rckid::DataSync::disconnect();
-        //}
-        /*
         if (start)
-            DataSync::connect();
-        else if (load_eject)
-            DataSync::disconnect();
-        */
-        //if (load_eject) 
-        //    start ? DataSync::connect() : DataSync::disconnect();
+            rckid::DataSync::connect();
+        if (load_eject)
+            rckid::DataSync::disconnect();
         return true;
     }
 
@@ -273,8 +263,6 @@ extern "C" {
         rckid::hal::fs::sdWriteBlocks(lba, buffer, 1);
         if (rckid::DataSync::instance_ != nullptr)
             ++rckid::DataSync::instance_->blocksWrite_;
-        //uint8_t* addr = msc_disk0[lba]  + offset;
-        //memcpy(addr, buffer, bufsize);
 
         return (int32_t) bufsize;
     }

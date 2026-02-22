@@ -1,21 +1,17 @@
 
-#include "platform.h"
+#include <platform.h>
+#include <rckid/apps/data_sync.h>
+
 #include "sd.h"
-#include "backend_config.h"
-#include "rckid/apps/DataSync.h"
-#include "../backend_internals.h"
+#include "../config.h"
 #include "sd_spi.pio.h"
 
 // debug option to use bitbanging instead of the pio SPI driver - only really useful for debugging the basic protocol
 #define RCKID_SD_SPI_BITBANG 0
 
-namespace rckid {
+namespace rckid::internal::sd {
 
     namespace {
-
-        uint32_t sdNumBlocks_ = 0;    
-        uint spiSm_;
-        uint spiOffset_;
 
         /** Bitbanged single byte write. 
          */
@@ -103,6 +99,10 @@ namespace rckid {
         }
     }; // anonymous namespace
 
+    uint32_t sdNumBlocks_ = 0;    
+    uint spiSm_;
+    uint spiOffset_;
+
     void sdEnterSPIMode() {
         LOG(LL_INFO, "SD switch to SPI mode");
         pio_sm_set_enabled(RCKID_SD_PIO, spiSm_, false);
@@ -172,7 +172,7 @@ namespace rckid {
      
         Simply loads the PIO and initializes the card detect pin.
      */
-    void sdInitialize() {
+    void initialize() {
         LOG(LL_INFO, "SD init");
         // initialize the PIO for SPI communication with the SD card, use the same pio as the display driver since its base is already set to 16
         spiSm_ = pio_claim_unused_sm(RCKID_SD_PIO, true);
@@ -185,7 +185,7 @@ namespace rckid {
 
     /** Returns true if SD card is inserted, false otherwise. 
      */
-    bool sdIsInserted() {
+    bool isInserted() {
         return gpio::read(RP_PIN_SD_CD) == 0;
     }
 
@@ -196,8 +196,8 @@ namespace rckid {
         [1] https://electronics.stackexchange.com/questions/602105/how-can-i-initialize-use-sd-cards-with-spi
         [2] http://elm-chan.org/docs/mmc/mmc_e.html#dataxfer
      */
-    bool sdInitializeCard() {
-        if (! sdIsInserted())
+    bool initializeCard() {
+        if (! isInserted())
             return false;
 
         // make the card go to SPI mode 
@@ -294,13 +294,7 @@ namespace rckid {
         pio_sm_set_enabled(RCKID_SD_PIO, spiSm_, true);
     }
 
-    // rckid API functions
-
-    uint32_t sdCapacity() {
-        return sdNumBlocks_;
-    }
-
-    bool sdReadBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {
+    bool readBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {
         while (numBlocks-- != 0) {
             uint8_t cmd[] = { 
                 0x51, 
@@ -318,7 +312,7 @@ namespace rckid {
         return true;
     }
 
-    bool sdWriteBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks) {
+    bool writeBlocks(uint32_t start, uint8_t const * buffer, uint32_t numBlocks) {
         while (numBlocks-- != 0) {
             uint8_t cmd[] = { 
                 0x58,

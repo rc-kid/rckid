@@ -18,14 +18,15 @@
 #include <hardware/clocks.h>
 #include <hardware/flash.h>
 
-
 #include <rckid/hal.h>
 #include <rckid/error.h>
 #include <rckid/memory.h>
 #include <rckid/graphics/color.h>
 
+#include "i2c.h"
 #include "tusb_config.h"
 #include "tusb.h"
+#include "sd/sd.h"
 
 #include "screen/ST7789.h"
 #include "ST7789_rgb16.pio.h"
@@ -44,7 +45,17 @@ namespace rckid::internal {
 
     namespace time {
         TinyDateTime now;
-    } // rckid::internal::time
+    } // namespace rckid::internal::time
+
+    namespace io {
+
+        hal::State state;
+
+        void initialize() {
+            // TODO
+        }
+
+    } // namespace rckid::internal::io
 
     /** Display Rendering
      
@@ -202,12 +213,6 @@ extern "C" {
 
 }
 
-namespace rckid::internal {
-
-    namespace io {
-        hal::State state;
-    }
-} // namespace rckid::internal
 
 namespace rckid::hal {
 
@@ -230,12 +235,18 @@ namespace rckid::hal {
             // enable DMA IRQ (used by display, audio, etc.)
             irq_set_enabled(DMA_IRQ_0, true);
 
-            // TODO enable the async I2C driver
-
             // enable the screen
             internal::display::initialize();
 
+            // enable the async I2C driver 
+            i2c::initialize();
+            // initalize the IO module (talk to the AVR)
+            internal::io::initialize();
 
+            // initialize the SD card, if present and the filesystem module
+            internal::sd::initialize();
+            internal::sd::initializeCard();
+            rckid::fs::initializeFilesystem();
 
 
 
@@ -245,12 +256,10 @@ namespace rckid::hal {
             // old not sure if we need in this reqrite
 
             // enable GPIO IRQ
-            irq_set_enabled(IO_IRQ_BANK0, true);
+            //irq_set_enabled(IO_IRQ_BANK0, true);
 
 
-            // TODO
-
-            //rckid::fs::initializeFilesystem();
+            LOG(LL_INFO, "Init done");
         }
 
         void powerOff() {
@@ -460,15 +469,15 @@ namespace rckid::hal {
     namespace fs {
 
         uint32_t sdCapacityBlocks() {
-            UNIMPLEMENTED;
+            return internal::sd::sdNumBlocks_;
         }
 
         void sdReadBlocks(uint32_t blockNum, uint8_t * buffer, uint32_t numBlocks) {
-            UNIMPLEMENTED;
+            internal::sd::readBlocks(blockNum, buffer, numBlocks);
         }
 
         void sdWriteBlocks(uint32_t blockNum, uint8_t const * buffer, uint32_t numBlocks) {
-            UNIMPLEMENTED;
+            internal::sd::writeBlocks(blockNum, buffer, numBlocks);
         }
 
         uint32_t cartridgeCapacityBytes() {
