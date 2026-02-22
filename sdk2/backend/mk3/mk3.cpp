@@ -46,60 +46,30 @@ namespace rckid::internal {
         TinyDateTime now;
     } // rckid::internal::time
 
+    /** Display Rendering
+     
+        
+     */
     namespace display {
         hal::display::Callback cb;
         int32_t sm;
         int32_t pioOffset;
         int32_t pixelsToWrite = 0;
 
-
-        struct DMA {
-            int32_t channel = -1;
-            Color::RGB565 * buffer = nullptr;
-            uint32_t bufferSize = 0;
-
-            void reset() {
-                buffer = nullptr;
-                bufferSize = 0;
-            }
-
-            void configure(DMA & other) {
-                auto dmaConf = dma_channel_get_default_config(channel);
-                channel_config_set_transfer_data_size(&dmaConf, DMA_SIZE_16); // transfer 16 bits at a time (single pixel)
-                channel_config_set_read_increment(&dmaConf, true); // increment the read address (pixel buffer) after each transfer
-                channel_config_set_write_increment(&dmaConf, false); // do not increment the write address (PIO FIFO)
-                channel_config_set_chain_to(&dmaConf, other.channel);
-                channel_config_set_dreq(&dmaConf, pio_get_dreq(RCKID_ST7789_PIO, sm, true));
-                dma_channel_configure(channel, & dmaConf, &RCKID_ST7789_PIO->txf[sm], nullptr, 0, false);
-                dma_channel_set_irq0_enabled(channel, true);
-            }
-
-            void update(DMA & other) {
-                /*
-                dma_channel_set_read_addr(channel, buffer, false);
-                dma_channel_set_transfer_count(channel, bufferSize, false);
-                dma_channel_set_chain_to(channel, other.channel);
-                */
-                auto dmaConf = dma_get_channel_config(channel);
-                channel_config_set_chain_to(&dmaConf, (pixelsToWrite > 0) ? other.channel : channel);
-                dma_channel_configure(channel, & dmaConf, &RCKID_ST7789_PIO->txf[sm], buffer, bufferSize, false);
-            }
-
-        };
-
-        DMA dma1;
-        DMA dma2;
+        int32_t dmaChannel = -1;
+        Color::RGB565 * buffer = nullptr;
+        uint32_t bufferSize = 0;
+        Color::RGB565 * backBuffer = nullptr;
+        uint32_t backBufferSize = 0;
 
         void enterCommandMode() {
             // drop any ongoing transfer
             if (pio_sm_is_enabled(RCKID_ST7789_PIO, sm)) {
                 {
                     cpu::DisableInterruptsGuard g_;
-                    dma_channel_set_irq0_enabled(dma1.channel, false);
-                    dma_channel_set_irq0_enabled(dma2.channel, false);
+                    dma_channel_set_irq0_enabled(dmaChannel, false);
                 }
-                dma_channel_abort(dma1.channel);
-                dma_channel_abort(dma2.channel);
+                dma_channel_abort(dmaChannel);
                 pio_sm_set_enabled(RCKID_ST7789_PIO, sm, false);
             }
             // initialize bitbanging driver and exit the RAMWR command
@@ -111,9 +81,14 @@ namespace rckid::internal {
             ASSERT(! pio_sm_is_enabled(RCKID_ST7789_PIO, sm));
             // start the RAMWR command in bitbank mode
             ST7789::enterUpdateMode();
-            // configure the DMA channels, but do not start them
-            dma1.configure(dma2);
-            dma2.configure(dma1);
+            // configure the DMA channel, but do not start it yet
+            auto dmaConf = dma_channel_get_default_config(dmaChannel);
+            channel_config_set_transfer_data_size(&dmaConf, DMA_SIZE_16); // transfer 16 bits at a time (single pixel)
+            channel_config_set_read_increment(&dmaConf, true); // increment the read address (pixel buffer) after each transfer
+            channel_config_set_write_increment(&dmaConf, false); // do not increment the write address (PIO FIFO)
+            channel_config_set_dreq(&dmaConf, pio_get_dreq(RCKID_ST7789_PIO, sm, true));
+            dma_channel_configure(dmaChannel, & dmaConf, &RCKID_ST7789_PIO->txf[sm], nullptr, 0, false);
+            dma_channel_set_irq0_enabled(dmaChannel, true);
             // initialize the PIO program
             ST7789_rgb16_program_init(RCKID_ST7789_PIO, sm, pioOffset, RP_PIN_DISP_WRX, RP_PIN_DISP_DB15);
             // and start the pio, which will put it immediately into a stall mode on tx
@@ -127,12 +102,10 @@ namespace rckid::internal {
             pio_set_gpio_base(RCKID_ST7789_PIO, 16);
             sm = pio_claim_unused_sm(RCKID_ST7789_PIO, true);
             pioOffset = pio_add_program(RCKID_ST7789_PIO, & ST7789_rgb16_program);
-            dma1.channel = dma_claim_unused_channel(true);
-            dma2.channel = dma_claim_unused_channel(true);
+            dmaChannel = dma_claim_unused_channel(true);
             LOG(LL_INFO, "sm: " << sm);
             LOG(LL_INFO, "offset: " << pioOffset);
-            LOG(LL_INFO, "dma1: " << dma1.channel);
-            LOG(LL_INFO, "dma2: " << dma2.channel);
+            LOG(LL_INFO, "dma: " << dmaChannel);
             // enter update mode for full screen 320x240 col-first (native) 
             enterUpdateMode();
         }
@@ -172,18 +145,22 @@ namespace rckid::internal {
     void __not_in_flash_func(irqDMADone)() {
         unsigned irqs = dma_hw->ints0;
         dma_hw->ints0 = irqs;
-        if (display::pixelsToWrite > 0) {
-            if (irqs & (1u << display::dma1.channel)) {
-                display::cb(display::dma1.buffer, display::dma1.bufferSize);
-                display::pixelsToWrite -= display::dma1.bufferSize;
-                display::dma1.update(display::dma2);
+        if (irqs & (1u << display::dmaChannel)) {
+            std::swap(display::buffer, display::backBuffer);
+            std::swap(display::bufferSize, display::backBufferSize);
+            // if there are pixels to send, restart the DMA immediately
+            if (display::buffer != nullptr) {
+                dma_channel_set_read_addr(display::dmaChannel, display::buffer, false);
+                dma_channel_set_transfer_count(display::dmaChannel, display::bufferSize, true);
             }
-            if (irqs & (1u << display::dma2.channel)) {
-                display::cb(display::dma2.buffer, display::dma2.bufferSize);
-                display::pixelsToWrite -= display::dma2.bufferSize;
-                display::dma2.update(display::dma1);
+            if (display::pixelsToWrite > 0) {
+                display::cb(display::backBuffer, display::backBufferSize);
+                display::pixelsToWrite -= display::bufferSize;
+            } else {
+                display::backBuffer = nullptr;
+                display::backBufferSize = 0;
             }
-        }    
+        }
     }
 
 } // namespace rckid::internal
@@ -402,22 +379,18 @@ namespace rckid::hal {
             while (updateActive())
                 yield();
             ASSERT(! updateActive());
+            ASSERT(buffer == nullptr);
+            ASSERT(backBuffer == nullptr);
             cb = callback;
-            dma1.reset();
-            dma2.reset();
             pixelsToWrite = ST7789::updateRegion().w * ST7789::updateRegion().h;
-            LOG(LL_INFO, pixelsToWrite);
-            cb(dma1.buffer, dma1.bufferSize);
-            pixelsToWrite -= dma1.bufferSize;
-            LOG(LL_INFO, pixelsToWrite);
-            dma1.update(dma2);
+            cb(buffer, bufferSize);
+            pixelsToWrite -= bufferSize;
             if (pixelsToWrite > 0) {
-                LOG(LL_INFO, pixelsToWrite);
-                cb(dma2.buffer, dma2.bufferSize);
-                dma2.update(dma1);
-                pixelsToWrite -= dma2.bufferSize;
+                cb(backBuffer, backBufferSize);
+                pixelsToWrite -= backBufferSize;
             }
-            dma_channel_start(dma1.channel);
+            dma_channel_set_read_addr(dmaChannel, buffer, false);
+            dma_channel_set_transfer_count(dmaChannel, bufferSize, true);
         }
 
         bool updateActive() {
@@ -426,7 +399,7 @@ namespace rckid::hal {
             if (pixelsToWrite > 0)
                 return true;
             // if any of the display DMAs are running, we are active
-            if (dma_channel_is_busy(dma1.channel) || dma_channel_is_busy(dma2.channel))
+            if (dma_channel_is_busy(dmaChannel))
                 return true;
             // if the dma channels are idle, the sm must still be sending the last pixels
             return ! pio_sm_is_stalled(RCKID_ST7789_PIO, sm);
