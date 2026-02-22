@@ -46,16 +46,4 @@ namespace rckid::ui {
 
     }; // ui::Panel
 
-    /** Sets panel's background color.
-     */
-    struct SetBg {
-        Color color;
-        SetBg(Color color): color{color} {}
-    };
-    template<typename T>
-    inline with<T> operator << (with<T> w, SetBg sb) {
-        w->setBg(sb.color);
-        return w;
-    }
-
 } // namespace rckid::ui

@@ -2,6 +2,7 @@
 
 #include <rckid/ui/app.h>
 #include <rckid/ui/carousel.h>
+#include <rckid/ui/progress_bar.h>
 
 #include <assets/icons_64.h>
 
@@ -46,15 +47,21 @@ namespace rckid {
             ui::App<ui::MenuItem::ActionEvent>::onLoopStart();
             ASSERT(parent() != nullptr);
             ui::with(carousel_)
-                << ui::ResetMenu([app = parent()] () { 
+                << ui::ResetMenu([app = parent(), this] () { 
                     auto menu = app->homeMenu();
                     (*menu)
-                        << ui::MenuItem("Brightness", assets::icons_64::brightness, []() {
-                            // TODO add brightness control
-                        })
-                        << ui::MenuItem("Volume", assets::icons_64::high_volume, []() {
-                            // TODO add brightness control
-                        })
+                        << ui::MenuItem("Brightness", assets::icons_64::brightness, [this]() {
+                            showProgressBar(0, 15, display::brightness() >> 4, [](int32_t value) {
+                                 display::setBrightness(value * 16 + value); 
+                            });
+                        }).withPayload(ExecuteInMenu)
+                        /*
+                        << ui::MenuItem("Volume", assets::icons_64::high_volume, [this]() {
+                            showProgressBar(0, 15, audio::volume(), [](int32_t value) { 
+                                audio::setVolume(value); 
+                            });
+                        }).withPayload(ExecuteInMenu)
+                        */
                         << ui::MenuItem("Power Off", assets::icons_64::power_off, []() {
                             //rckid::device::powerOff();
                         });
@@ -74,28 +81,39 @@ namespace rckid {
 
         void loop() override {
             ui::App<ui::MenuItem::ActionEvent>::loop();
-            if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
-                auto item = carousel_->currentItem();
-                ASSERT(item != nullptr);
-                // and then exit or not based on the payload
-                switch (item->payload) {
-                    case ExecuteInApp:
-                        exit(std::move(item->action()));
-                        break;
-                    case ExecuteInMenuAndExit:
-                        item->action()();
-                        exit();
-                        break;
-                    case ExecuteInMenu:
-                        item->action()();
-                        break;
-                    default:
-                        LOG(LL_ERROR, "Unknown home menu item execution policy " << item->payload);
+            if (carousel_->focused()) {
+                if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                    auto item = carousel_->currentItem();
+                    ASSERT(item != nullptr);
+                    // and then exit or not based on the payload
+                    switch (item->payload) {
+                        case ExecuteInApp:
+                            exit(std::move(item->action()));
+                            break;
+                        case ExecuteInMenuAndExit:
+                            item->action()();
+                            exit();
+                            break;
+                        case ExecuteInMenu:
+                            item->action()();
+                            break;
+                        default:
+                            LOG(LL_ERROR, "Unknown home menu item execution policy " << item->payload);
+                    }
                 }
-            }
-            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
-                ASSERT(carousel_->atRoot());
-                exit();
+                if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                    ASSERT(carousel_->atRoot());
+                    exit();
+                }
+            } else if (progressBar_ != nullptr && progressBar_->idle()) {
+                if (btnPressed(Btn::B) || btnPressed(Btn::Down))
+                    hideProgressBar();
+                if (btnPressed(Btn::Left)) 
+                    if (progressBar_->changeValueBy(-1))
+                        onProgressBarChange_(progressBar_->value());
+                if (btnPressed(Btn::Right)) 
+                    if (progressBar_->changeValueBy(1))
+                        onProgressBarChange_(progressBar_->value());
             }
         }
 
@@ -108,9 +126,39 @@ namespace rckid {
                 ui::App<ui::MenuItem::ActionEvent>::exit();
         }
 
+        /** Shows progress bar in given menu
+         */
+        void showProgressBar(int32_t min, int32_t max, int32_t value, std::function<void(int32_t)> onChange) {
+            ui::Label * label = carousel_->currentLabel();
+            progressBar_ = label->addChild(new ui::ProgressBar{})
+                << ui::SetRect(Rect::XYWH(0, label->textOffset().y + label->font()->size - 6, label->textWidth(), 20)) 
+                << ui::SetRange(min, max)
+                << ui::SetValue(value);
+            onProgressBarChange_ = onChange;
+            progressBar_->animate()
+                << ui::FlyIn(progressBar_, Point{0, label->height()})
+                << ui::FlyOut(label, Point{0, -18});
+            focusWidget(progressBar_);
+            waitUntilIdle(progressBar_);
+        }
+
+        void hideProgressBar() {
+            ASSERT(progressBar_ != nullptr);
+            ui::Label * label = carousel_->currentLabel();
+            progressBar_->animate()
+                << ui::FlyOut(progressBar_, Point{0, label->height()})
+                << ui::FlyOut(label, Point{0, 18});
+            waitUntilIdle(progressBar_);
+            focusWidget(carousel_);
+            progressBar_ = nullptr;
+            label->clearChildren();
+        }
+
     private:
 
         ui::CarouselMenu * carousel_;
+        ui::ProgressBar * progressBar_ = nullptr;
+        std::function<void(int32_t)> onProgressBarChange_;
 
         static inline bool active_ = false;
 

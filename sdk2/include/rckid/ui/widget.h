@@ -219,10 +219,14 @@ namespace rckid::ui {
         }
 
         virtual void onFocus() {
+            ASSERT(focused_ == false);
+            focused_ = true;
             // nop
         }
 
         virtual void onBlur() {
+            ASSERT(focused_ == true);
+            focused_ = false;
             // nop
         }
 
@@ -487,7 +491,6 @@ namespace rckid::ui {
         return w;
     }
 
-
     // common, but not directly widget related properties
 
     struct SetColor {
@@ -499,6 +502,27 @@ namespace rckid::ui {
         w->setColor(sc.color);
         return w;
     }
+
+    struct SetBg {
+        Color color;
+        SetBg(Color color): color{color} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetBg sb) {
+        w->setBg(sb.color);
+        return w;
+    }
+
+    struct SetFg {
+        Color color;
+        SetFg(Color color): color{color} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetFg sf) {
+        w->setFg(sf.color);
+        return w;
+    }
+
 
     struct SetHAlign {
         HAlign align;

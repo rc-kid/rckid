@@ -99,9 +99,7 @@ namespace rckid {
 
         static void clear(uint16_t color);
 
-        static hal::display::RefreshDirection refreshDirection() {
-            return refreshDir_;
-        }
+        static hal::display::RefreshDirection refreshDirection() { return refreshDir_; }
 
         static void setRefreshDirection(hal::display::RefreshDirection dir);
 

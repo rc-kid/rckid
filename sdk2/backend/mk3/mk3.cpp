@@ -183,7 +183,8 @@ namespace rckid::internal {
                 display::pixelsToWrite -= display::dma2.bufferSize;
                 display::dma2.update(display::dma1);
             }
-        }    }
+        }    
+    }
 
 } // namespace rckid::internal
 

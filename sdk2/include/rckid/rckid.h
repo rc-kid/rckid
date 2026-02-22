@@ -128,11 +128,19 @@ namespace rckid {
         static void update(Callback cb) { 
             hal::display::update(cb);
         }
+
+        static uint8_t brightness() { return brightness_; }
+
+        static void setBrightness(uint8_t value) {
+            hal::display::setBrightness(value);
+            brightness_ = value;
+        }
     
     private:
         // state so that we can query display state
         static inline Rect rect_;
         static inline RefreshDirection refreshDirection_;
+        static inline uint8_t brightness_ = 128;
 
     }; // rckid::display
 

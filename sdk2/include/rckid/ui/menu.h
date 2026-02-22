@@ -35,7 +35,7 @@ namespace rckid::ui {
         }
 
         MenuItem(MenuItem && from) noexcept :
-            text{std::move(from.text)}, icon{std::move(from.icon)}, isAction_{from.isAction_} 
+            text{std::move(from.text)}, icon{std::move(from.icon)}, payload{from.payload}, isAction_{from.isAction_} 
         {
             if (isAction_)
                 new (&action_) ActionEvent(std::move(from.action_));
