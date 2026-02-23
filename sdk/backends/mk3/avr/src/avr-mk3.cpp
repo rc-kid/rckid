@@ -535,6 +535,7 @@ public:
         ++state_.uptime;
         state_.time.inc();
         // see if we should trigger heartbeat mode
+        /*
         if ((heartbeatTimeout_ > 0) && (--heartbeatTimeout_ == 0)) {
             heartbeatTimeout_ = RCKID_HEARTBEAT_PERIOD;
             NO_ISR(
@@ -551,6 +552,7 @@ public:
                 powerOn();
             }
         };
+        */
         // check alarm too
         if (state_.alarm.check(state_.time)) {
             // and set the IRQ to notify the RP2350

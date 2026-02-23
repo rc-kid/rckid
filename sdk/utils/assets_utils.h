@@ -116,7 +116,9 @@ inline GlyphInfo * loadFontGlyphs(std::string const & fontFile, int fontSize, Gl
          (std::istreambuf_iterator<char>(input)),
          (std::istreambuf_iterator<char>()));
     input.close();   
-    GlyphInfo * glyphInfos = LoadFontData(bytes.data(), (int) bytes.size(), fontSize, const_cast<int*>(glyphs.codepoints.data()), (int) glyphs.size(), FONT_DEFAULT);
+    int glyphCount = 0;
+    GlyphInfo * glyphInfos = LoadFontData(bytes.data(), (int) bytes.size(), fontSize, const_cast<int*>(glyphs.codepoints.data()), (int) glyphs.size(), FONT_DEFAULT, &glyphCount);
+    //ASSERT(glyphCount == (int) glyphs.size());
     std::cout << "            loaded " << glyphs.size() << " glyphs" << std::endl;
     return glyphInfos;
 }
