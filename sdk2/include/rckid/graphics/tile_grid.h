@@ -1,5 +1,7 @@
 #pragma once
 
+#include <rckid/memory.h>
+#include <rckid/graphics/color.h>
 #include <rckid/graphics/tile.h>
 
 #include <assets/Iosevka16Tiles.h>
@@ -75,6 +77,7 @@ namespace rckid {
             }
 
             uint8_t tile() const { return tile_; }
+            char tileAsChar() const { return tile_ + 32; }
             uint8_t paletteOffset() const { return paletteOffset_; }
             bool transparent() const { return (flags_ & TRANSPARENT_MASK) != 0; }
             bool  altTileset() const { return flags_ & ALT_TILESET_MASK; }
@@ -92,7 +95,7 @@ namespace rckid {
                 return *this;
             }
 
-            TileInfo & setTileset(uint8_t altTileset) {
+            TileInfo & setAltTileset(uint8_t altTileset) {
                 ASSERT(altTileset <= ALT_TILESET_MASK);
                 flags_ = (flags_ & ~ALT_TILESET_MASK) | altTileset;
                 return *this;
@@ -152,10 +155,19 @@ namespace rckid {
             }};
         }
 
-        void setTileIcon(Coord x, Coord y, TileIcon icon, uint8_t paletteOffset = 0, bool altTileset = true) {
-            for (uint8_t i = 0, e = icon.size(); i != e; ++i)
-                at(x + i, y).setTileset(altTileset).setPaletteOffset(paletteOffset) = icon.raw_[i];
-
+        /** Displays the given icon at the selected coordinates. 
+         
+            Returns true if the update has changed the tile grid, false otherwise.
+         */
+        bool setTileIcon(Coord x, Coord y, TileIcon icon, uint8_t paletteOffset = 0, bool altTileset = true) {
+            bool changed = false;
+            for (uint8_t i = 0, e = icon.size(); i != e; ++i) {
+                auto & t = at(x + i, y);
+                changed = (t.altTileset() != altTileset) || (t.paletteOffset() != paletteOffset) || (t.tileAsChar() != static_cast<uint8_t>(icon.raw_[i])) || changed;
+                if (changed)
+                    t.setAltTileset(altTileset).setPaletteOffset(paletteOffset) = icon.raw_[i];
+            }
+            return changed;
         }
 
         void renderColumn(Coord column, Coord startRow, Coord numPixels, Color::RGB565 * buffer) {

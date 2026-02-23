@@ -1,3 +1,4 @@
+#include <rckid/ui/header.h>
 #include <rckid/audio/audio.h>
 
 namespace rckid::audio {
@@ -17,6 +18,8 @@ namespace rckid::audio {
     }
 
     void setVolume(uint8_t value) {
+        if (value == 255) // 0 - 1
+            value = 0;
         if (value > 15)
             value = 15;
         if (headphonesConnected()) {
@@ -26,11 +29,15 @@ namespace rckid::audio {
             speakerVolume_ = value;
             hal::audio::setVolumeSpeaker(value);
         }
+        ui::Header::update();
     }
 }
 
 namespace rckid {
     void onHeadphonesChange(bool connected) {
+        if (audio::headphonesConnected_ == connected)
+            return;
         audio::headphonesConnected_ = connected;
+        ui::Header::update();
     }
 }

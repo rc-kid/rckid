@@ -16,12 +16,13 @@ namespace rckid::ui {
         if (! visible())
             return;
         // update whether to use header or not
-        if (Header::shouldShow() != useHeader_)
-            Header::show(useHeader_);
+        Header::setVisibility(useHeader_ ? Header::Visibility::Always : Header::Visibility::OnChange);
         // update all animations
         Animation::updateAll();
         // tell the widgets that we are about to render
         onRender();
+        if (Header::shouldRender())
+            triggerOnRender(Header::instance_);
         // start rendering from rightmost column
         renderCol_ = width() - 1;
         display::update([&](Color::RGB565 * & buffer, uint32_t & bufferSize) {

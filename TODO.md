@@ -3,6 +3,9 @@
 - improve value parsing in Reader (bool, ints, etc.)
 - how to do heartbeat? (static initializers?)
 
+- move header visibikity setting to app on focus (and the useheader as well)
+- and make header visible always work (uncomment in header.h)
+
 - use only absolutely necessary icons in the raw format to avoid extra flash bloat
 
 - apply style to existing widgets (Label, etc.) (...)

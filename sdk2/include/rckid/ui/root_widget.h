@@ -79,7 +79,7 @@ namespace rckid::ui {
 
             Widget::renderColumn(column, startRow, buffer, numPixels);
 
-            if (y() == 0 && Header::shouldShow())
+            if (y() == 0 && Header::shouldRender())
                 renderChildColumn(Header::instance_, column, startRow, buffer, numPixels);
         }
 

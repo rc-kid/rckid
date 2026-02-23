@@ -243,6 +243,10 @@ namespace rckid::ui {
         })->setEasingFunction(easing::inOut);
     }
 
+    inline Animation * MoveTo(Widget * target, Point to) {
+        return Move(target, target->position(), to);
+    }
+
     inline Animation * MoveHorizontally(Widget * target, Coord fromX, Coord toX) {
         return (new Animation{
             [fromX, toX, target](FixedRatio progress) {

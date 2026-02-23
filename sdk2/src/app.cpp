@@ -1,3 +1,5 @@
+
+#include <rckid/audio/audio.h>
 #include <rckid/apps/home_menu.h>
 #include <rckid/app.h>
 
@@ -36,6 +38,10 @@ namespace rckid {
             if (action.has_value())
                 action.value()();
         }
+        if (btnPressed(Btn::VolumeUp))
+            audio::setVolume(audio::volume() + 1);
+        if (btnPressed(Btn::VolumeDown))
+            audio::setVolume(audio::volume() - 1);
     }
 
     unique_ptr<ui::Menu> App::homeMenu() {
