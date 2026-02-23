@@ -26,6 +26,7 @@ namespace rckid {
     void onWakeup(uint32_t payload);
     void onPowerOff();
     void onSecondTick();
+    void onHeadphonesChange(bool connected);
     [[noreturn]] void onFatalError(char const * file, uint32_t line, char const * msg, uint32_t payload);
 
 } // namespace rckid
@@ -245,6 +246,7 @@ namespace rckid::hal {
 
     /** Audio playback and recording.
      
+        Audio volume is 0..15
         
         
      */

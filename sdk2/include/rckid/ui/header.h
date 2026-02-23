@@ -8,6 +8,10 @@ namespace rckid::ui {
     public:
 
         static constexpr uint8_t PaletteOffsetGreen = 14;
+        static constexpr uint8_t PaletteOffsetRed = 16;
+        static constexpr uint8_t PaletteOffsetBlue = 18;
+        static constexpr uint8_t PaletteOffsetCyan = 20;
+        static constexpr uint8_t PaletteOffsetViolet = 22;
 
         static bool shouldShow() {
             return show_ || ! instance_->idle();
@@ -25,10 +29,12 @@ namespace rckid::ui {
             }
         }
 
+        static void update();
 
         uint32_t animationSpeed() const { return animationSpeed_; }
 
         void setAnimationSpeed(uint32_t speed) { animationSpeed_ = speed; }
+
 
     protected:
 
@@ -44,9 +50,16 @@ namespace rckid::ui {
         Header():
             TileGrid{display::WIDTH / TileGrid::tileWidth(), 1, defaultPalette()}
         {
+            ASSERT(instance_ == nullptr);
+            instance_ = this;
             setRect(Rect::WH(display::WIDTH, TileGrid::tileHeight()));
-            contents_.text(0,0) << "RCKid SDK 1.0";
-            contents_.setTileIcon(37, 0, TileIcon::batteryFull(), PaletteOffsetGreen);
+            update();
+        }
+
+        Coord addIcon(Coord x, TileIcon icon, uint8_t paletteOffset) {
+            x -= icon.size();
+            contents_.setTileIcon(x, 0, icon, paletteOffset);
+            return x;
         }
 
         static mutable_ptr<Color::RGB565> defaultPalette() {

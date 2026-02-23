@@ -10,6 +10,12 @@ namespace rckid::audio {
 
     using Callback = hal::audio::Callback;
 
+    bool headphonesConnected();
+
+    uint8_t volume();
+
+    void setVolume(uint8_t value);
+
     inline void play(uint32_t sampleRate, Callback cb) { hal::audio::play(sampleRate, cb); }
 
     inline void play(DecoderStream * stream) {
