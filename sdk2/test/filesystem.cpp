@@ -25,8 +25,8 @@ TEST(filesystem, pathStem) {
 TEST(filesystem, pathExt) {
     using namespace rckid;
     Heap::UseAndReserveGuard g_;
-    EXPECT(fs::ext("foo.bar") == ".bar");
-    EXPECT(fs::ext("foo.bar.baz") == ".baz");
+    EXPECT(fs::ext("foo.bar") == "bar");
+    EXPECT(fs::ext("foo.bar.baz") == "baz");
     EXPECT(fs::ext("foobar") == "");
     EXPECT(fs::ext(".bar") == "");
 }

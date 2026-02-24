@@ -9,6 +9,11 @@
 
 namespace rckid {
 
+    enum class PowerMode {
+        Normal,
+        Boost,
+    }; // rckid::PowerMode
+
     enum class Btn : uint32_t {
         Left       = 1 << 0, 
         Right      = 1 << 1,
@@ -125,6 +130,12 @@ namespace rckid::hal {
             This must be the *first* HAL function called.
         */
         void initialize();
+        
+        /** Sets the device power mode. 
+         
+            Under the hood, the boost power mode corresponds the CPU to highest sustainable frequency. Has no effect on the fantasy console.
+         */
+        void setPowerMode(PowerMode mode);
 
         /** Powers the device off immediately
          
@@ -241,6 +252,8 @@ namespace rckid::hal {
         void update(Callback callback);
 
         void update(Color::RGB565 const * buffer, uint32_t bufferSize);
+        
+        void updateDouble(Color::RGB565 const * buffer, uint32_t bufferSize);
 
         bool updateActive();
 

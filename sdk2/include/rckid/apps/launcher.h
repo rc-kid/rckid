@@ -7,9 +7,12 @@
 
 namespace rckid {
 
-    /** Generator of the default main menu. 
-     */
-    unique_ptr<ui::Menu> mainMenuGenerator();
+    struct MainMenuOptions {
+        ui::MenuExtender gamesExtender = nullptr;
+    };
+
+    ui::MenuItem::GeneratorEvent mainMenuGenerator(MainMenuOptions options = {});
+
 
     /** Generator for the games submenu.
      */
@@ -28,13 +31,13 @@ namespace rckid {
 
         String name() const override { return "Launcher"; }
 
-        Launcher() {
+        Launcher(ui::MenuItem::GeneratorEvent rootMenuGenerator = mainMenuGenerator()) {
             ASSERT(instance_ == nullptr);
             instance_ = this;
             root_.setBackgroundImage(ui::Style::defaultStyle());
             carousel_ = addChild(new ui::CarouselMenu())
                 << ui::SetRect(Rect::XYWH(0, 140, 320, 100))
-                << ui::ResetMenu(mainMenuGenerator);
+                << ui::ResetMenu(rootMenuGenerator);
         }
 
         ~Launcher() override {

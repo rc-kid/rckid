@@ -5,7 +5,7 @@
 //#define GBCEMU_NO_SPEED_LIMIT
 
 
-#define GBCEMU_INTERACTIVE_DEBUG 1
+#define GBCEMU_INTERACTIVE_DEBUG 0
 
 #define GBCEMU_ENABLE_BKPT 1
 
@@ -75,6 +75,11 @@ namespace rckid::gbcemu {
             The menu item actions will start GBCEmu with the selected game loaded as cartridge. Any file with `gb` extension in the provided folder is assumed to be a compatible ROM.
          */
         static void appendGamesFrom(char const * path, ui::Menu * into);
+
+        static unique_ptr<ui::Menu> gamesMenuExtender(unique_ptr<ui::Menu> gamesMenu) {
+            appendGamesFrom("/games", gamesMenu.get());
+            return gamesMenu;
+        }
 
         enum class DisplayMode {
             Native,

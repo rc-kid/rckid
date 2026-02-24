@@ -253,6 +253,10 @@ namespace rckid::hal {
             initializeNoWindow();
         }
 
+        void setPowerMode(PowerMode mode) {
+            // no power management on fantasy console
+        }
+
         void powerOff() {
             UNIMPLEMENTED;
         }
@@ -389,9 +393,11 @@ namespace rckid::hal {
         }
 
         bool vSync() {
-            // simulate the mkIII display driver by mimicking the vsync timing
             // TODO
-            return true;
+            // simulate the mkIII display driver by mimicking the vsync timing. For now we just alternate between vsync and not vsync to simulate vsync in progress and done
+            static bool value = true;
+            value = ! value;
+            return value;
         }
 
         void update(Callback callback) {
@@ -410,6 +416,11 @@ namespace rckid::hal {
         void update(Color::RGB565 const * buffer, uint32_t bufferSize) {
             for (uint32_t i = 0; i < bufferSize; ++i)
                 internal::display::writePixel(buffer[i]);
+        }
+
+        void updateDouble(Color::RGB565 const * buffer, uint32_t bufferSize) {
+            update(buffer, bufferSize);
+            update(buffer, bufferSize);
         }
 
         bool updateActive() {

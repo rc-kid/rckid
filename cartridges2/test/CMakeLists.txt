@@ -5,5 +5,6 @@ link_with_librckid(display-fill)
 
 # very simple ui app test with basic rendeing & event loop
 add_executable(ui-app "ui_app.cpp")
+target_link_libraries(ui-app PRIVATE libgbcemu)
 link_with_librckid(ui-app)
 

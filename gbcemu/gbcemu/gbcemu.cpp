@@ -1,6 +1,8 @@
 #include <rckid/audio/audio.h>
 #include <rckid/apps/dialogs/color_picker.h>
 
+#include <assets/icons_64.h>
+
 #include "gbcemu.h"
 
 #define A (regs8_[REG_INDEX_A])
@@ -274,7 +276,22 @@ static constexpr int val_1 = 1;
 namespace rckid::gbcemu {
 
     void GBCEmu::appendGamesFrom(char const * path, ui::Menu * into) {
-        UNIMPLEMENTED;
+        fs::readFolder(path, [into](fs::FolderEntry const & entry){
+            if (! entry.isFolder && (fs::ext(entry.name) == "gb")) {
+                LOG(LL_INFO, "Found game: " << entry.name);
+                String eName = entry.name;
+                (*into) << ui::MenuItem(
+                    fs::stem(eName),
+                    assets::icons_64::poo,
+                    [eName](){
+                        LOG(LL_INFO, "running game: " << eName);
+                        GamePak * gamepak = new gbcemu::CachedGamePak{fs::readFile(STR("/games/" << eName))};
+                        GBCEmu{fs::stem(eName), gamepak}.run();
+                        //App::run<GBCEmu>(fs::stem(eName), gamepak);
+                    }
+                );
+            }
+        });
         /*
         fs::Folder games = fs::folderRead(path);
         for (auto & entry : games) {
@@ -300,7 +317,6 @@ namespace rckid::gbcemu {
 
 
     GBCEmu::GBCEmu(String appName):
-        appName_{std::move(appName)},
         vram_{
             new uint8_t[0x2000],
             new uint8_t[0x2000],
@@ -317,7 +333,9 @@ namespace rckid::gbcemu {
         },
         oam_{ new uint8_t[160]},
         hram_{new uint8_t[256]},
-        pixels_{320} {
+        appName_{std::move(appName)},
+        pixels_{320}
+    {
         apu_.initialize(hram_ + ADDR_WAVE_RAM);
     }
 
@@ -341,7 +359,7 @@ namespace rckid::gbcemu {
     }
 
     unique_ptr<ui::Menu> GBCEmu::homeMenu() {
-        UNIMPLEMENTED;
+        return ModalApp::homeMenu();
         /*
         ui::ActionMenu * m = ModalApp<void>::createHomeMenu();
         m->add(ui::ActionMenu::Generator("Style", assets::icons_64::paint_palette, [this]() {
@@ -559,7 +577,6 @@ namespace rckid::gbcemu {
 
     uint32_t GBCEmu::convertAddressToAbsolute(uint16_t addr) {
         uint32_t page = addr >> 12;
-        uint32_t offset = addr & 0xfff;
         switch (page) {
             case 0: // rom bank 0
             case 1:
@@ -622,7 +639,7 @@ namespace rckid::gbcemu {
 
     void GBCEmu::onFocus() {
         App::onFocus();
-        setSpeedMax();
+        hal::device::setPowerMode(PowerMode::Boost);
         initializeDisplay();
         // continue playing audio if enabled
         if (apu_.enabled())
@@ -633,7 +650,7 @@ namespace rckid::gbcemu {
         // pause audio (w/o the game running there is no-one to generate samples)
         if (apu_.enabled())
             audio::pause();
-        setSpeedPct(100);
+        hal::device::setPowerMode(PowerMode::Normal);
         App::onBlur();
     }
 
@@ -1071,7 +1088,7 @@ namespace rckid::gbcemu {
                 display::enable(Rect::Centered(160, 144, display::WIDTH, display::HEIGHT), display::RefreshDirection::RowFirst);
                 break;
             case DisplayMode::Scaled:
-                display::enable(Rect::Centered(267, 340, display::WIDTH, display::HEIGHT), display::RefreshDirection::RowFirst);
+                display::enable(Rect::Centered(267, 240, display::WIDTH, display::HEIGHT), display::RefreshDirection::RowFirst);
                 break;
             case DisplayMode::X2:
                 display::enable(Rect::WH(320, 240), display::RefreshDirection::RowFirst);
@@ -1134,7 +1151,7 @@ namespace rckid::gbcemu {
             tick();
         }
         if (IO_LY == 153) {
-            ModalApp::tick();
+            ModalApp::loop();
 #ifndef GBCEMU_NO_SPEED_LIMIT
             // TODO do we want a finer grained control here, or is it ok to wait after each frame only? 
             display::waitVSync();
@@ -1224,7 +1241,7 @@ namespace rckid::gbcemu {
         }
         // draw the window now. We always start drawing the window from window 0, 0 and the x and y coordinates only tell us where to draw the window on the screen
         if (drawWindow) {
-            uint16_t * winBuffer = buffer + ((wx < 0) ? 0 : wx); 
+            Color::RGB565 * winBuffer = buffer + ((wx < 0) ? 0 : wx); 
             int16_t winLength = 160 - wx;
             uint32_t wy = IO_LY - IO_WY;
             // determine the row and the row of tiles we will be using, window always starts from the first column
@@ -1254,7 +1271,7 @@ namespace rckid::gbcemu {
                 for (int i = 7; i >= 0; --i) {
                     uint8_t colorIndex = ((lower >> i) & 1) | (((upper >> i) & 1) << 1);
                     if (wx >= 0 && wx < winLength)
-                        buffer[wx] = palette[colorIndex];
+                        winBuffer[wx] = palette[colorIndex];
                     ++wx;
                 }
             }
@@ -1313,7 +1330,7 @@ namespace rckid::gbcemu {
         display::waitUpdateDone();
         switch (displayMode_) {
             case DisplayMode::Native:
-                display::update(buffer, 160);
+                hal::display::update(buffer, 160);
                 break;
             case DisplayMode::Scaled: {
                 uint32_t si = SCALED_WIDTH - 1;
@@ -1323,19 +1340,15 @@ namespace rckid::gbcemu {
                         buffer[si--] = buffer[i];
                 }
                 if (rowScaling_[ly] == 1) {
-                    display::update(buffer, 267);
+                    hal::display::update(buffer, 267);
                 } else {
-                    displayUpdate(buffer, 267, [buffer](){
-                        displayUpdate(buffer, 267, nullptr);
-                    });
+                    hal::display::updateDouble(buffer, 267);
                 }
                 break;
             }
             case DisplayMode::X2:
                 if (ly >= displayX2Start_ && ly < displayX2Start_ + 120) {
-                    displayUpdate(buffer, 160, [buffer](){
-                        displayUpdate(buffer, 160, nullptr);
-                    });
+                    hal::display::updateDouble(buffer, 320);
                 }
                 break;
             }
@@ -1810,7 +1823,7 @@ namespace rckid::gbcemu {
                 bool alreadyEnabled = IO_LCDC & LCDC_LCD_ENABLE;
                 IO_LCDC = value;
                 if (alreadyEnabled) {
-                    if (value & LCDC_LCD_ENABLE == 0) {
+                    if ((value & LCDC_LCD_ENABLE) == 0) {
                         IO_LY = 0; // set LY to 0 and keep it there
                         IO_STAT = (IO_STAT & ~STAT_PPU_MODE) & STAT_INT_MODE0; // set stat mode to hblank
                     }

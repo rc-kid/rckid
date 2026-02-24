@@ -262,6 +262,10 @@ namespace rckid::hal {
             LOG(LL_INFO, "Init done");
         }
 
+        void setPowerMode(PowerMode mode) {
+            UNIMPLEMENTED;
+        }
+
         void powerOff() {
             UNIMPLEMENTED;
         }
@@ -415,6 +419,23 @@ namespace rckid::hal {
             pixelsToWrite = 0;
             dma_channel_set_read_addr(dmaChannel, buffer, false);
             dma_channel_set_transfer_count(dmaChannel, bufferSize, true);
+        }
+
+        void updateDouble(Color::RGB565 const * buffer, uint32_t bufferSize) {
+            using namespace internal::display;
+            while (updateActive())
+                yield();
+            ASSERT(! updateActive());
+            ASSERT(buffer == nullptr);
+            ASSERT(backBuffer == nullptr);
+            cb = nullptr;
+            internal::display::buffer = const_cast<Color::RGB565 *>(buffer);
+            internal::display::bufferSize = bufferSize;
+            internal::display::backBuffer = const_cast<Color::RGB565 *>(buffer);
+            internal::display::backBufferSize = bufferSize;
+            pixelsToWrite = 0;
+            dma_channel_set_read_addr(dmaChannel, internal::display::buffer, false);
+            dma_channel_set_transfer_count(dmaChannel, internal::display::bufferSize, true);
         }
 
         bool updateActive() {

@@ -28,6 +28,8 @@
 - [ ] fill right and some formatting stuffs
 - [ ] double pixel update mode (draw buffer twice)
 
+- would be good to start CI, just to be sure stuff works
+
 
 ### Code Cleanup
 - should ini reader and writer own the stream? Might simplify things a bit in the API

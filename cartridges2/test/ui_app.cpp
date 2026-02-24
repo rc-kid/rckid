@@ -9,6 +9,8 @@
 #include <rckid/apps/steps.h>
 #include <rckid/apps/launcher.h>
 
+#include <gbcemu/gbcemu.h>
+
 using namespace rckid;
 
 class TestApp : public rckid::ui::App<void> {
@@ -68,6 +70,6 @@ int main() {
     //ui::Style::saveDefaultStyle();
     //Steps app;
     //TestApp app;
-    Launcher app;
+    Launcher app{mainMenuGenerator({ .gamesExtender = gbcemu::GBCEmu::gamesMenuExtender })};
     app.run();
 }

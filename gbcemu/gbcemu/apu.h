@@ -1,6 +1,7 @@
 #pragma once
 
 #include <rckid/rckid.h>
+#include <rckid/audio/audio.h>
 
 namespace rckid::gbcemu {
 
@@ -148,44 +149,48 @@ namespace rckid::gbcemu {
             uint16_t periodCounter_;
             uint8_t sampleIndex_ = 0;
 
-            friend void serialize(WriteStream & into, APU::SquareChannel const & ch) {
-                serialize(into, ch.enableLeft);
-                serialize(into, ch.enableRight);
-                serialize(into, ch.initialVolume);
-                serialize(into, ch.envelopeDirection);
-                serialize(into, ch.envelopePace);
-                serialize(into, ch.initialLength);
-                serialize(into, ch.period);
-                serialize(into, ch.dutyCycle);
-                serialize(into, ch.lengthEnabled);
-                serialize(into, ch.active_);
-                serialize(into, ch.lengthCounter_);
-                serialize(into, ch.volume_);
-                serialize(into, ch.volumeDir_);
-                serialize(into, ch.volumeSweepPace_);
-                serialize(into, ch.volumeSweepCounter_);
-                serialize(into, ch.periodCounter_);
-                serialize(into, ch.sampleIndex_);
+            friend BinaryWriter operator << (BinaryWriter into, APU::SquareChannel const & ch) {
+                into
+                    << ch.enableLeft
+                    << ch.enableRight
+                    << ch.initialVolume
+                    << ch.envelopeDirection
+                    << ch.envelopePace
+                    << ch.initialLength
+                    << ch.period
+                    << ch.dutyCycle
+                    << ch.lengthEnabled
+                    << ch.active_
+                    << ch.lengthCounter_
+                    << ch.volume_
+                    << ch.volumeDir_
+                    << ch.volumeSweepPace_
+                    << ch.volumeSweepCounter_
+                    << ch.periodCounter_
+                    << ch.sampleIndex_;
+                return into;
             }
 
-            friend void deserialize(ReadStream & from, APU::SquareChannel & ch) {
-                deserialize(from, ch.enableLeft);
-                deserialize(from, ch.enableRight);
-                deserialize(from, ch.initialVolume);
-                deserialize(from, ch.envelopeDirection);
-                deserialize(from, ch.envelopePace);
-                deserialize(from, ch.initialLength);
-                deserialize(from, ch.period);
-                deserialize(from, ch.dutyCycle);
-                deserialize(from, ch.lengthEnabled);
-                deserialize(from, ch.active_);
-                deserialize(from, ch.lengthCounter_);
-                deserialize(from, ch.volume_);
-                deserialize(from, ch.volumeDir_);
-                deserialize(from, ch.volumeSweepPace_);
-                deserialize(from, ch.volumeSweepCounter_);
-                deserialize(from, ch.periodCounter_);
-                deserialize(from, ch.sampleIndex_);
+            friend BinaryReader operator >> (BinaryReader from, APU::SquareChannel & ch) {
+                from
+                    >> ch.enableLeft
+                    >> ch.enableRight
+                    >> ch.initialVolume
+                    >> ch.envelopeDirection
+                    >> ch.envelopePace
+                    >> ch.initialLength
+                    >> ch.period
+                    >> ch.dutyCycle
+                    >> ch.lengthEnabled
+                    >> ch.active_
+                    >> ch.lengthCounter_
+                    >> ch.volume_
+                    >> ch.volumeDir_
+                    >> ch.volumeSweepPace_
+                    >> ch.volumeSweepCounter_
+                    >> ch.periodCounter_
+                    >> ch.sampleIndex_;
+                return from;
             }
 
 
@@ -265,34 +270,38 @@ namespace rckid::gbcemu {
             uint8_t sampleIndex_ = 0;
             int16_t lastSample_ = 0;
 
-            friend void serialize(WriteStream & into, APU::WaveChannel const & ch) {
-                serialize(into, ch.enableLeft);
-                serialize(into, ch.enableRight);
-                // waveTable is not serialized
-                serialize(into, ch.outputLevel);
-                serialize(into, ch.initialLength);
-                serialize(into, ch.period);
-                serialize(into, ch.lengthEnabled);
-                serialize(into, ch.active_);
-                serialize(into, ch.lengthCounter_);
-                serialize(into, ch.periodCounter_);
-                serialize(into, ch.sampleIndex_);
-                serialize(into, ch.lastSample_);
+            friend BinaryWriter operator << (BinaryWriter into, APU::WaveChannel const & ch) {
+                into
+                    << ch.enableLeft
+                    << ch.enableRight
+                    // waveTable is not serialized
+                    << ch.outputLevel
+                    << ch.initialLength
+                    << ch.period
+                    << ch.lengthEnabled
+                    << ch.active_
+                    << ch.lengthCounter_
+                    << ch.periodCounter_
+                    << ch.sampleIndex_
+                    << ch.lastSample_;
+                return into;
             }
 
-            friend void deserialize(ReadStream & from, APU::WaveChannel & ch) {
-                deserialize(from, ch.enableLeft);
-                deserialize(from, ch.enableRight);
-                // waveTable is not serialized
-                deserialize(from, ch.outputLevel);
-                deserialize(from, ch.initialLength);
-                deserialize(from, ch.period);
-                deserialize(from, ch.lengthEnabled);
-                deserialize(from, ch.active_);
-                deserialize(from, ch.lengthCounter_);
-                deserialize(from, ch.periodCounter_);
-                deserialize(from, ch.sampleIndex_);
-                deserialize(from, ch.lastSample_);
+            friend BinaryReader operator >> (BinaryReader from, APU::WaveChannel & ch) {
+                from 
+                    >> ch.enableLeft
+                    >> ch.enableRight
+                    // waveTable is not serialized
+                    >> ch.outputLevel
+                    >> ch.initialLength
+                    >> ch.period
+                    >> ch.lengthEnabled
+                    >> ch.active_
+                    >> ch.lengthCounter_
+                    >> ch.periodCounter_
+                    >> ch.sampleIndex_
+                    >> ch.lastSample_;
+                return from;
             }
 
         }; // APU::WaveChannel
@@ -430,48 +439,52 @@ namespace rckid::gbcemu {
             int32_t period_;
             uint16_t lfsr_;
 
-            friend void serialize(WriteStream & into, APU::NoiseChannel const & ch) {
-                serialize(into, ch.enableLeft);
-                serialize(into, ch.enableRight);
-                serialize(into, ch.initialVolume);
-                serialize(into, ch.envelopeDirection);
-                serialize(into, ch.envelopePace);
-                serialize(into, ch.initialLength);
-                serialize(into, ch.lfsrMask);
-                serialize(into, ch.clkShift);
-                serialize(into, ch.clkDiv);
-                serialize(into, ch.lengthEnabled);
-                serialize(into, ch.active_);
-                serialize(into, ch.lengthCounter_);
-                serialize(into, ch.volume_);
-                serialize(into, ch.volumeDir_);
-                serialize(into, ch.volumeSweepPace_);
-                serialize(into, ch.volumeSweepCounter_);
-                serialize(into, ch.periodCounter_);
-                serialize(into, ch.period_);
-                serialize(into, ch.lfsr_);
+            friend BinaryWriter operator << (BinaryWriter into, APU::NoiseChannel const & ch) {
+                into
+                    << ch.enableLeft
+                    << ch.enableRight
+                    << ch.initialVolume
+                    << ch.envelopeDirection
+                    << ch.envelopePace
+                    << ch.initialLength
+                    << ch.lfsrMask
+                    << ch.clkShift
+                    << ch.clkDiv
+                    << ch.lengthEnabled
+                    << ch.active_
+                    << ch.lengthCounter_
+                    << ch.volume_
+                    << ch.volumeDir_
+                    << ch.volumeSweepPace_
+                    << ch.volumeSweepCounter_
+                    << ch.periodCounter_
+                    << ch.period_
+                    << ch.lfsr_;
+                return into;
             }
 
-            friend void deserialize(ReadStream & from, APU::NoiseChannel & ch) {
-                deserialize(from, ch.enableLeft);
-                deserialize(from, ch.enableRight);
-                deserialize(from, ch.initialVolume);
-                deserialize(from, ch.envelopeDirection);
-                deserialize(from, ch.envelopePace);
-                deserialize(from, ch.initialLength);
-                deserialize(from, ch.lfsrMask);
-                deserialize(from, ch.clkShift);
-                deserialize(from, ch.clkDiv);
-                deserialize(from, ch.lengthEnabled);
-                deserialize(from, ch.active_);
-                deserialize(from, ch.lengthCounter_);
-                deserialize(from, ch.volume_);
-                deserialize(from, ch.volumeDir_);
-                deserialize(from, ch.volumeSweepPace_);
-                deserialize(from, ch.volumeSweepCounter_);
-                deserialize(from, ch.periodCounter_);
-                deserialize(from, ch.period_);
-                deserialize(from, ch.lfsr_);
+            friend BinaryReader operator >> (BinaryReader from, APU::NoiseChannel & ch) {
+                from
+                    >> ch.enableLeft
+                    >> ch.enableRight
+                    >> ch.initialVolume
+                    >> ch.envelopeDirection
+                    >> ch.envelopePace
+                    >> ch.initialLength
+                    >> ch.lfsrMask
+                    >> ch.clkShift
+                    >> ch.clkDiv
+                    >> ch.lengthEnabled
+                    >> ch.active_
+                    >> ch.lengthCounter_
+                    >> ch.volume_
+                    >> ch.volumeDir_
+                    >> ch.volumeSweepPace_
+                    >> ch.volumeSweepCounter_
+                    >> ch.periodCounter_
+                    >> ch.period_
+                    >> ch.lfsr_;
+                return from;
             }
 
         }; // APU::NoiseChannel
@@ -493,9 +506,9 @@ namespace rckid::gbcemu {
             if (value == enabled_)
                 return;
             if (value) {
-                audioPlay(32768, [this](int16_t * & buffer, uint32_t & size){
+                audio::play(32768, [this](int16_t * & buffer, uint32_t & size){
                     if (buffer == nullptr) {
-                        buffer = soundBuffer_.front();
+                        buffer = soundBuffer_.front().data();
                         size = APU_STEREO_SAMPLES;
                         soundBuffer_.swap();
                     }
@@ -515,7 +528,7 @@ namespace rckid::gbcemu {
                     envelopeTick();
                 });
             } else {
-                audioStop();
+                audio::stop();
             }
             enabled_ = value;
         }
@@ -747,30 +760,34 @@ namespace rckid::gbcemu {
 
         /** Saves the current APU state into given stream (useful for saving game states).
          */
-        friend void serialize(WriteStream & into, APU const & apu) {
-            serialize(into, apu.ch1_);
-            serialize(into, apu.ch2_);
-            serialize(into, apu.ch3_);
-            serialize(into, apu.ch4_);
-            serialize(into, apu.enabled_);
-            serialize(into, apu.volumeLeft_);
-            serialize(into, apu.volumeRight_);
-        }
+        friend BinaryWriter operator << (BinaryWriter into, APU const & apu) {
+            into
+                << apu.ch1_
+                << apu.ch2_
+                << apu.ch3_
+                << apu.ch4_
+                << apu.enabled_
+                << apu.volumeLeft_
+                << apu.volumeRight_;
+            return into;
+        } 
 
         /** Loads APU state from given stream. 
          */
-        friend void deserialize(ReadStream & from, APU & apu) {
+        friend BinaryReader operator >> (BinaryReader from, APU & apu) {
             if (apu.enabled_)
                 apu.enable(false);
-            deserialize(from, apu.ch1_);
-            deserialize(from, apu.ch2_);
-            deserialize(from, apu.ch3_);
-            deserialize(from, apu.ch4_);
             bool enableApu = false;
-            deserialize(from, enableApu);
-            deserialize(from, apu.volumeLeft_);
-            deserialize(from, apu.volumeRight_);
+            from
+                >> apu.ch1_
+                >> apu.ch2_
+                >> apu.ch3_
+                >> apu.ch4_
+                >> enableApu
+                >> apu.volumeLeft_
+                >> apu.volumeRight_;
             apu.enable(enableApu);
+            return from;
        }
 
     private:

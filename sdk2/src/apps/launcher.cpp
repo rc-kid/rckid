@@ -8,7 +8,30 @@
 #include <rckid/apps/launcher.h>
 
 namespace rckid {
+
+    ui::MenuItem::GeneratorEvent mainMenuGenerator(MainMenuOptions options) {
+        return [options]() {
+            auto result = std::make_unique<ui::Menu>();
+            (*result)
+                << ui::MenuItem::Generator("Games", assets::icons_64::game_controller, [extend = options.gamesExtender]() {
+                    auto gamesMenu = gamesMenuGenerator();
+                    if (extend != nullptr)
+                        return extend(std::move(gamesMenu));
+                    else 
+                        return gamesMenu;
+                })
+                << ui::MenuItem{"Music", assets::icons_64::music, []() {
+                    MusicPlayer{}.run();
+                }}
+                << ui::MenuItem{"Friends", assets::icons_64::birthday_cake, []() {
+                    Friends{}.run();
+                }}
+                << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator);
+            return result;
+        };
+    }
    
+    /*
     unique_ptr<ui::Menu> mainMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();
         (*result)
@@ -21,7 +44,7 @@ namespace rckid {
             }}
             << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator);
         return result;
-    }
+    }*/
 
     unique_ptr<ui::Menu> gamesMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();

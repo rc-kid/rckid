@@ -236,7 +236,7 @@ namespace rckid::gbcemu {
                 p = p->last;
             }
             // see if creating new page is a possibility
-            uint8_t * buffer = Heap::tryAlloc(PAGE_SIZE);
+            uint8_t * buffer = (uint8_t*) Heap::tryAlloc(PAGE_SIZE);
             if (buffer != nullptr) {
                 ++numPages_;
                 LOG(LL_INFO, "Active pages: " << numPages_);
@@ -252,8 +252,8 @@ namespace rckid::gbcemu {
 
         void fetchPage(uint32_t page, PageInfo * p) const {
             uint32_t offset = page * PAGE_SIZE;
-            s_.seek(offset);
-            s_.read(p->buffer, PAGE_SIZE);
+            s_->seek(offset);
+            s_->read(p->buffer, PAGE_SIZE);
             p->page = page;
         }
 

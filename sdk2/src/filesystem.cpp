@@ -257,7 +257,7 @@ namespace rckid::fs {
         if (path.size() > 1) {    
             for (size_t i = path.size() - 1; i > 0; --i) {
                 if (path[i] == '.')
-                    return path.substr(i);
+                    return path.substr(i + 1);
             }
         }
         return "";

@@ -81,7 +81,7 @@ add_subdirectory("sdk2")
 #add_subdirectory("tests")
 
 
-# add_subdirectory("gbcemu")
+add_subdirectory("gbcemu")
 
 add_subdirectory("cartridges2")
 #add_subdirectory("cartridges/hello-world")

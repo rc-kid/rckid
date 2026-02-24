@@ -121,6 +121,25 @@ namespace rckid {
 
     }; // BinaryReader
 
+    // extra formatters
+
+    template<typename T>
+    class fillRight : public Writer::Converter {
+    public:
+        fillRight(T value, size_t width, char pad = ' '): value_{value}, width_{width}, pad_{pad} {}
+
+        void operator () (Writer & writer) {
+            uint32_t size = 0;
+            Writer{[&size, writer](char c) mutable { ++size; writer.putChar(c); }} << value_;
+            for (size_t i = size; i < width_; ++i)
+                writer << pad_;
+        }
+    private:
+        T value_;
+        size_t width_;
+        char pad_;
+    }; // fillRight
+
     // below are various overloads for << and >> operators for the readers and writers specified above
 
     inline Reader operator >> (Reader r, char & c) {
