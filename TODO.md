@@ -22,6 +22,13 @@
         }
 
 
+- for gbcemu:
+- [ ] speed control
+- [ ] standalone app, budget app
+- [ ] fill right and some formatting stuffs
+- [ ] double pixel update mode (draw buffer twice)
+
+
 ### Code Cleanup
 - should ini reader and writer own the stream? Might simplify things a bit in the API
 

@@ -402,6 +402,21 @@ namespace rckid::hal {
             dma_channel_set_transfer_count(dmaChannel, bufferSize, true);
         }
 
+        void update(Color::RGB565 const * buffer, uint32_t bufferSize) {
+            using namespace internal::display;
+            while (updateActive())
+                yield();
+            ASSERT(! updateActive());
+            ASSERT(buffer == nullptr);
+            ASSERT(backBuffer == nullptr);
+            cb = nullptr;
+            internal::display::buffer = const_cast<Color::RGB565 *>(buffer);
+            internal::display::bufferSize = bufferSize;
+            pixelsToWrite = 0;
+            dma_channel_set_read_addr(dmaChannel, buffer, false);
+            dma_channel_set_transfer_count(dmaChannel, bufferSize, true);
+        }
+
         bool updateActive() {
             using namespace internal::display;
             // if we have pixels to write, we better be active

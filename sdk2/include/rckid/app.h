@@ -149,6 +149,8 @@ namespace rckid {
             shouldExit_ = true;
         }
 
+        bool shouldExit() const { return shouldExit_; }
+
         App() = default;
 
         /** \name Virtual filesystem access

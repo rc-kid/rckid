@@ -240,6 +240,8 @@ namespace rckid::hal {
 
         void update(Callback callback);
 
+        void update(Color::RGB565 const * buffer, uint32_t bufferSize);
+
         bool updateActive();
 
     } // namespace rckid::hal::display

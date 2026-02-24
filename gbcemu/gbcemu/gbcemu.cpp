@@ -527,10 +527,6 @@ namespace rckid::gbcemu {
     }
 
     void GBCEmu::loop() {
-        // focus itself & blur parent
-        focus();
-        //clearTilemap();
-        //clearTileset();
         //setBreakpoint(0xc2a6);
         while (!shouldExit()) {
 #if (GBCEMU_ENABLE_BKPT == 1)
@@ -558,8 +554,7 @@ namespace rckid::gbcemu {
             //if (IO_LY == 144)
             //    ModalApp::update();
         }
-        // we are done, should blur ourselves, and refocus parent (if any)
-        blur();
+        ASSERT(shouldExit());
     }
 
     uint32_t GBCEmu::convertAddressToAbsolute(uint16_t addr) {
@@ -1177,7 +1172,7 @@ namespace rckid::gbcemu {
         palette[2] = palette_[(bgp >> 4) & 3];
         palette[3] = palette_[(bgp >> 6) & 3];
 
-        uint16_t * buffer = pixels_.front().data();
+        Color::RGB565 * buffer = pixels_.front().data();
 
         uint8_t * vram = memMap_[MEMMAP_VRAM_0];
         // and determine the tileset address, which could be either signed or unsigned addressing.
@@ -1318,7 +1313,7 @@ namespace rckid::gbcemu {
         display::waitUpdateDone();
         switch (displayMode_) {
             case DisplayMode::Native:
-                displayUpdate(buffer, 160);
+                display::update(buffer, 160);
                 break;
             case DisplayMode::Scaled: {
                 uint32_t si = SCALED_WIDTH - 1;
@@ -1328,7 +1323,7 @@ namespace rckid::gbcemu {
                         buffer[si--] = buffer[i];
                 }
                 if (rowScaling_[ly] == 1) {
-                    displayUpdate(buffer, 267);
+                    display::update(buffer, 267);
                 } else {
                     displayUpdate(buffer, 267, [buffer](){
                         displayUpdate(buffer, 267, nullptr);

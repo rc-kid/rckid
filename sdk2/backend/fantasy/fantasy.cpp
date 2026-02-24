@@ -407,6 +407,11 @@ namespace rckid::hal {
             }
         }
 
+        void update(Color::RGB565 const * buffer, uint32_t bufferSize) {
+            for (uint32_t i = 0; i < bufferSize; ++i)
+                internal::display::writePixel(buffer[i]);
+        }
+
         bool updateActive() {
             // in fantasy backend, update is always synchronous with the main thread, so it is *never* active when this function can be called
             return false;

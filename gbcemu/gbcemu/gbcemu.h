@@ -110,7 +110,7 @@ namespace rckid::gbcemu {
          */
         void loop() override;
 
-         uint32_t elapsedCycles() const { return timerCycles_; }
+        uint32_t elapsedCycles() const { return timerCycles_; }
 
         uint8_t a() const { return regs8_[REG_INDEX_A]; }
         uint8_t b() const { return regs8_[REG_INDEX_B]; }
@@ -197,7 +197,7 @@ namespace rckid::gbcemu {
 
         /** Render does nothing as drawing is part of the emulators custom loop, but as it is abstract in the base class, we have to define something. 
          */
-        void render() override { UNREACHABLE; }
+        void render() override { }
 
         /** Clears the gamepak caches to free up memory 
          */        
@@ -540,7 +540,7 @@ namespace rckid::gbcemu {
         void debugInteractive();
 #endif
 
-        DoubleBuffer<uint16_t> pixels_;
+        DoubleBuffer<Color::RGB565> pixels_;
 
         Color::RGB565 palette_[4] = {
             // the default DMG green palette
