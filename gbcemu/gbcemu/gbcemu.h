@@ -29,7 +29,9 @@
 
 #include <rckid/app.h>
 #include <rckid/task.h>
-#include <rckid/utils/fixedint.h>
+#include <rckid/buffer.h>
+#include <rckid/fixedint.h>
+
 #include "gamepak.h"
 #include "apu.h"
 
@@ -47,14 +49,17 @@ namespace rckid::gbcemu {
 
         Most of this builds on a very good GB/GBC reference available at https://gbdev.io/pandocs/About.html
      */
-    class GBCEmu : public ModalApp<void>, App::StandaloneModeGuard {
+    class GBCEmu : public ModalApp<void> {
     public:
 
         String name() const override { return STR("GBCEmu_" << appName_); }
 
-        /** Games are buddgeted.
-         */
-        bool isBudgeted() const override { return true; }
+        Capabilities capabilities() const override {
+            return {
+                .canPersistState = true,
+                .standalone = true
+            };
+        }
 
         /** GBCEmu version
          
@@ -69,7 +74,7 @@ namespace rckid::gbcemu {
          
             The menu item actions will start GBCEmu with the selected game loaded as cartridge. Any file with `gb` extension in the provided folder is assumed to be a compatible ROM.
          */
-        static void appendGamesFrom(char const * path, ui::ActionMenu * into);
+        static void appendGamesFrom(char const * path, ui::Menu * into);
 
         enum class DisplayMode {
             Native,
@@ -84,15 +89,13 @@ namespace rckid::gbcemu {
 
         ~GBCEmu() override;
         
-        bool supportsSaveState() const override { return true; }
-
         /** Saves the game state to the provided savefile stream. 
          */
-        void save(WriteStream & into) override;
+        void saveState(WriteStream & into) const override;
         
         /** Loads the game state from the given savefile. 
          */
-        void load(ReadStream & from) override;
+        bool loadState(ReadStream & from) override;
 
         /** Laods the given gamepak in the emulator. 
          
@@ -192,17 +195,19 @@ namespace rckid::gbcemu {
         void onFocus() override;
         void onBlur() override;
 
-        /** Draw does nothing as drawing is part of the emulators custom loop, but draw is abstract in the base class so we have to provide it here. 
+        /** Render does nothing as drawing is part of the emulators custom loop, but as it is abstract in the base class, we have to define something. 
          */
-        void draw() override {}
+        void render() override { UNREACHABLE; }
 
-        /** Shows the home menu. Clears the gamepak caches beforehand to free up memory for the home menu and the selected action. 
+        /** Clears the gamepak caches to free up memory 
          */        
-        void showHomeMenu() override;
+        void releaseResources() override;
 
-        /** Returns the home menu, which is basic app menu with load & save states as well as  GBCEmu specific items such as visuals.
+        /** Returns the home menu
+         
+            TODO
          */
-        ui::ActionMenu * createHomeMenu() override;
+        unique_ptr<ui::Menu> homeMenu() override;
 
         /** Saves the external RAM to the app folder. 
          */
@@ -537,12 +542,12 @@ namespace rckid::gbcemu {
 
         DoubleBuffer<uint16_t> pixels_;
 
-        ColorRGB palette_[4] = {
+        Color::RGB565 palette_[4] = {
             // the default DMG green palette
-            ColorRGB{155, 188, 15},
-            ColorRGB{139, 172, 15},
-            ColorRGB{48, 98, 48},
-            ColorRGB{15, 56, 15},            
+            Color::RGB(155, 188, 15).toRGB565(),
+            Color::RGB(139, 172, 15).toRGB565(),
+            Color::RGB(48, 98, 48).toRGB565(),
+            Color::RGB(15, 56, 15).toRGB565(),            
             // Game Boy Pocket-ish palette
             /*
             ColorRGB{255, 255, 255}, 

@@ -4,9 +4,11 @@
 
 #ifdef RCKID_BACKEND_FANTASY
 
+#include <system_malloc_guard.h>
+
 namespace rckid::gbcemu {
     FileGamePak::FileGamePak(String const & filename) {
-        SystemMallocGuard g;
+        internal::memory::SystemMallocGuard g;
         try {
             std::ifstream input(filename.c_str(), std::ios::binary | std::ios::ate);
             std::streamsize fileSize = input.tellg();

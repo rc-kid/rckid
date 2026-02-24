@@ -1,4 +1,6 @@
-#include <rckid/apps/dialogs/ColorPicker.h>
+#include <rckid/audio/audio.h>
+#include <rckid/apps/dialogs/color_picker.h>
+
 #include "gbcemu.h"
 
 #define A (regs8_[REG_INDEX_A])
@@ -271,13 +273,15 @@ static constexpr int val_1 = 1;
 
 namespace rckid::gbcemu {
 
-    void GBCEmu::appendGamesFrom(char const * path, ui::ActionMenu * into) {
+    void GBCEmu::appendGamesFrom(char const * path, ui::Menu * into) {
+        UNIMPLEMENTED;
+        /*
         fs::Folder games = fs::folderRead(path);
         for (auto & entry : games) {
             if (entry.isFile() && (fs::ext(entry.name()) == ".gb")) {
                 LOG(LL_INFO, "Found game: " << entry.name());
                 String eName = entry.name();
-                into->add(ui::ActionMenu::Item(
+                (*into) << ui::MenuItem(
                     fs::stem(eName),
                     assets::icons_64::gameboy,
                     [eName](){
@@ -288,9 +292,10 @@ namespace rckid::gbcemu {
                         //app.loadCartridge(new gbcemu::CachedGamePak{fs::fileRead(STR("/games/" << eName))});    
                         //app.loop();
                     }
-                ));
+                );
             }
         }
+            */
     }
 
 
@@ -324,18 +329,20 @@ namespace rckid::gbcemu {
         // TODO some more cleanup would be good here
     }
 
-    void GBCEmu::showHomeMenu() {
+    void GBCEmu::releaseResources() {
         ASSERT(gamepak_ != nullptr);
         // clear gamepak caches so that the home menu has the maximum memory available
         gamepak_->clearCaches();
         //LOG(LL_INFO, "Cleared caches");
         //LOG(LL_INFO, "Unallocated memory: " << StackProtection::currentAvailableMemory());
         //RAMHeap::traceChunks();
-        ModalApp<void>::showHomeMenu();
+        ModalApp<void>::releaseResources();
         setRomPage(romPage_);
     }
 
-    ui::ActionMenu * GBCEmu::createHomeMenu() {
+    unique_ptr<ui::Menu> GBCEmu::homeMenu() {
+        UNIMPLEMENTED;
+        /*
         ui::ActionMenu * m = ModalApp<void>::createHomeMenu();
         m->add(ui::ActionMenu::Generator("Style", assets::icons_64::paint_palette, [this]() {
             ui::ActionMenu * m = new ui::ActionMenu{};
@@ -397,26 +404,27 @@ namespace rckid::gbcemu {
             ));
             }
         return m;
+        */
     }
 
     void GBCEmu::saveExternalRam() {
         uint32_t numPages = externalRamPages();
         if (numPages == 0)
             return;
-        auto f = fs::fileWrite(fs::join(homeFolder(), "eram.dat"));
+        auto f = writeFile("eram.dat");
         for (uint32_t i = 0; i < numPages; ++i)
-            f.write(eram_[i], 8192);
+            f->write(eram_[i], 8192);
    }
 
     void GBCEmu::loadExternalRam() {
         uint32_t numPages = externalRamPages();
         if (numPages == 0)
             return;
-        auto f = fs::fileRead(fs::join(homeFolder(), "eram.dat"));
-        if (! f.good())
+        auto f = readFile("eram.dat");
+        if (f == nullptr)
             return;
         for (uint32_t i = 0; i < numPages; ++i)
-            f.read(eram_[i], 8192);
+            f->read(eram_[i], 8192);
     }
 
     GBCEmu::~GBCEmu() {
@@ -432,7 +440,9 @@ namespace rckid::gbcemu {
         delete [] hram_;
     }
 
-    void GBCEmu::save(WriteStream & into) {
+    void GBCEmu::saveState(WriteStream & into) const {
+        UNIMPLEMENTED;
+        /*
         if (apu_.enabled())
             audioPause();
         serialize(into, VERSION);
@@ -469,9 +479,12 @@ namespace rckid::gbcemu {
         // we do not have to save the PPU state as we only allow interrupting the game during a VBLANK period
         if (apu_.enabled())
             audioResume();
+        */
     }
 
-    void GBCEmu::load(ReadStream & from) {
+    bool GBCEmu::loadState(ReadStream & from) {
+        UNIMPLEMENTED;
+        /*
         uint8_t version = deserialize<uint8_t>(from);
         if (version > VERSION) {
             LOG(LL_WARN,  "Unsupported save version, skipping");
@@ -510,6 +523,7 @@ namespace rckid::gbcemu {
             deserialize(from, rtcMapping_);
         }
         // we do not have to load the PPU state as we only allow interrupting the game during a VBLANK period
+        */
     }
 
     void GBCEmu::loop() {
@@ -617,13 +631,13 @@ namespace rckid::gbcemu {
         initializeDisplay();
         // continue playing audio if enabled
         if (apu_.enabled())
-            audioResume();
+            audio::resume();
     }
 
     void GBCEmu::onBlur() {
         // pause audio (w/o the game running there is no-one to generate samples)
         if (apu_.enabled())
-            audioPause();
+            audio::pause();
         setSpeedPct(100);
         App::onBlur();
     }
@@ -742,7 +756,7 @@ namespace rckid::gbcemu {
         IO_LY = 0; // ensure we'll start with new frame
         // load external ram from previous, if we have it
         loadExternalRam();
-        LOG(LL_INFO, "Cartridge load done, free memory: " << memoryFree());
+        //LOG(LL_INFO, "Cartridge load done, free memory: " << memoryFree());
     #if (GBCEMU_INTERACTIVE_DEBUG == 1)
         resetVisited();
     #endif
@@ -1057,6 +1071,20 @@ namespace rckid::gbcemu {
 #endif
 
     void GBCEmu::initializeDisplay() {
+        switch (displayMode_) {
+            case DisplayMode::Native:
+                display::enable(Rect::Centered(160, 144, display::WIDTH, display::HEIGHT), display::RefreshDirection::RowFirst);
+                break;
+            case DisplayMode::Scaled:
+                display::enable(Rect::Centered(267, 340, display::WIDTH, display::HEIGHT), display::RefreshDirection::RowFirst);
+                break;
+            case DisplayMode::X2:
+                display::enable(Rect::WH(320, 240), display::RefreshDirection::RowFirst);
+                break;
+        }
+        // set the render line to last of the VBLANK so that we will start drawing from the top immediately in the next scanline
+        IO_LY = 153;
+        /*
         displayClear();
         // set the display to row-first mode, which is what gameboy is expecting and set the resolution to 160x144
         displaySetRefreshDirection(DisplayRefreshDirection::RowFirst);
@@ -1071,8 +1099,7 @@ namespace rckid::gbcemu {
                 displaySetUpdateRegion(320, 240);
                 break;
         }
-        // set the render line to last of the VBLANK so that we will start drawing from the top immediately in the next scanline
-        IO_LY = 153;
+                */
     }
 
     void GBCEmu::setPPUMode(unsigned mode) {
@@ -1112,10 +1139,10 @@ namespace rckid::gbcemu {
             tick();
         }
         if (IO_LY == 153) {
-            ModalApp::update();
+            ModalApp::tick();
 #ifndef GBCEMU_NO_SPEED_LIMIT
             // TODO do we want a finer grained control here, or is it ok to wait after each frame only? 
-            displayWaitVSync();
+            display::waitVSync();
 #endif
         }
         IO_LY = IO_LY == 153 ? 0 : IO_LY + 1;
@@ -1145,12 +1172,12 @@ namespace rckid::gbcemu {
         // figure out the palette we will be using for the row
         uint16_t palette[4];
         uint8_t bgp = IO_BGP;
-        palette[0] = palette_[bgp & 3].raw16();
-        palette[1] = palette_[(bgp >> 2) & 3].raw16();
-        palette[2] = palette_[(bgp >> 4) & 3].raw16();
-        palette[3] = palette_[(bgp >> 6) & 3].raw16();
+        palette[0] = palette_[bgp & 3];
+        palette[1] = palette_[(bgp >> 2) & 3];
+        palette[2] = palette_[(bgp >> 4) & 3];
+        palette[3] = palette_[(bgp >> 6) & 3];
 
-        uint16_t * buffer = pixels_.front();
+        uint16_t * buffer = pixels_.front().data();
 
         uint8_t * vram = memMap_[MEMMAP_VRAM_0];
         // and determine the tileset address, which could be either signed or unsigned addressing.
@@ -1266,10 +1293,10 @@ namespace rckid::gbcemu {
                 uint32_t x = s.x();
                 // update palette for the sprite
                 uint8_t bgp = s.palette() ? IO_OBP1 : IO_OBP0;
-                palette[0] = palette_[bgp & 3].raw16();
-                palette[1] = palette_[(bgp >> 2) & 3].raw16();
-                palette[2] = palette_[(bgp >> 4) & 3].raw16();
-                palette[3] = palette_[(bgp >> 6) & 3].raw16();
+                palette[0] = palette_[bgp & 3];
+                palette[1] = palette_[(bgp >> 2) & 3];
+                palette[2] = palette_[(bgp >> 4) & 3];
+                palette[3] = palette_[(bgp >> 6) & 3];
                 // and draw the sprite
                 if (s.xFlip()) {
                     for (int i = 0; i < 8; ++i) {
@@ -1288,7 +1315,7 @@ namespace rckid::gbcemu {
                 }
             }
         }
-        displayWaitUpdateDone();
+        display::waitUpdateDone();
         switch (displayMode_) {
             case DisplayMode::Native:
                 displayUpdate(buffer, 160);

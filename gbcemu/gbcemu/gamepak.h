@@ -6,8 +6,8 @@
 #include <fstream>
 #endif
 
-#include <rckid/utils/string.h>
-#include <rckid/utils/stream.h>
+#include <rckid/string.h>
+#include <rckid/stream.h>
 
 namespace rckid::gbcemu {
 
@@ -236,18 +236,18 @@ namespace rckid::gbcemu {
                 p = p->last;
             }
             // see if creating new page is a possibility
-            if (StackProtection::currentAvailableMemory() > MIN_UNALLOCATED + PAGE_SIZE) {
-                uint8_t * buffer = new uint8_t[PAGE_SIZE];
-                ASSERT(buffer != nullptr);
+            uint8_t * buffer = Heap::tryAlloc(PAGE_SIZE);
+            if (buffer != nullptr) {
                 ++numPages_;
                 LOG(LL_INFO, "Active pages: " << numPages_);
                 p = new PageInfo{buffer};
                 return p;
+            } else {
+                // otherwise recycle the last page
+                prev->last = nullptr;
+                p->reset();
+                return p;
             }
-            // otherwise recycle the last page
-            prev->last = nullptr;
-            p->reset();
-            return p;
         }
 
         void fetchPage(uint32_t page, PageInfo * p) const {

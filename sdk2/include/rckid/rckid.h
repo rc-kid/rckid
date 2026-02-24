@@ -117,6 +117,13 @@ namespace rckid {
                 yield();
         }
 
+        static void waitVSync() {
+            while (hal::display::vSync())
+                yield();
+            while (! hal::display::vSync())
+                yield();
+        }
+
         static void enable(Rect rect, RefreshDirection  direction) {
             ASSERT(Rect::WH(WIDTH, HEIGHT).contains(rect));
             waitUpdateDone();

@@ -148,6 +148,10 @@ namespace rckid {
             return Rect{x, y, width, height};
         }
 
+        static constexpr Rect Centered(Coord w, Coord h, Coord parentWidth, Coord parentHeight) {
+            return Rect{(parentWidth - w) / 2, (parentHeight - h) / 2, w, h};
+        }
+
 
 
     private:
