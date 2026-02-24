@@ -50,8 +50,6 @@ namespace rckid::ui {
         else
            ADD_ICON(TileIcon::speaker(), audio::volume() == 0 ? (PaletteOffsetRed + 1) : PaletteOffsetGreen);
 
-
-
         if (update) {
             instance_->show();
             if (instance_->remainingTicks_ < TicksToShowOnChange)

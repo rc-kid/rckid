@@ -28,11 +28,9 @@ namespace rckid::ui {
             switch (visibility) {
                 // if the header is to be always visible,
                 case Visibility::Always:
-                    /*
                     instance_->remainingTicks_ = TicksToShowOnChange + 1;
                     instance_->show();
                     break;
-                    */
                 case Visibility::OnChange:
                     if (instance_->visible()) {
                         if (instance_->remainingTicks_ > TicksToShowOnChange)
@@ -53,6 +51,11 @@ namespace rckid::ui {
         static constexpr uint8_t PaletteOffsetBlue = 18;
         static constexpr uint8_t PaletteOffsetCyan = 20;
         static constexpr uint8_t PaletteOffsetViolet = 22;
+
+
+        void renderRow(Coord row, Coord startCol, Color::RGB565 * buffer, Coord numPixels) {
+            UNIMPLEMENTED;
+        }
 
     protected:
 

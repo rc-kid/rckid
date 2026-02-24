@@ -23,7 +23,7 @@ namespace rckid::ui {
             }
         }
 
-        ui::Theme theme() const override {
+        Theme theme() const override {
             return theme_;
         }
 
@@ -31,6 +31,15 @@ namespace rckid::ui {
 
         void useBackgroundImage(bool value) {
             useBackgroundImage_ = value;
+        }
+
+        Header::Visibility useHeader() const { return useHeader_; }
+
+        void setUseHeader(Header::Visibility value) {
+            if (value == useHeader_)
+                return;
+            useHeader_ = value;
+            Header::setVisibility(value);
         }
 
         void initializeDisplay();
@@ -97,7 +106,7 @@ namespace rckid::ui {
 
         Theme theme_;
         bool useBackgroundImage_ = true;
-        bool useHeader_ = true;
+        Header::Visibility useHeader_ = ui::Header::Visibility::Always;
 
         /** Background image (wallpaper)
          

@@ -54,6 +54,7 @@ namespace rckid::ui {
         void onFocus() override {
             ModalApp<RESULT>::onFocus();
             root_.initializeDisplay();
+            Header::setVisibility(root_.useHeader());
         }
 
         /** Renders the widget tree. 

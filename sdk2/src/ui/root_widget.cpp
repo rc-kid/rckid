@@ -15,8 +15,6 @@ namespace rckid::ui {
     void RootWidget::render() {
         if (! visible())
             return;
-        // update whether to use header or not
-        Header::setVisibility(useHeader_ ? Header::Visibility::Always : Header::Visibility::OnChange);
         // update all animations
         Animation::updateAll();
         // tell the widgets that we are about to render
