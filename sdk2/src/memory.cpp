@@ -235,5 +235,14 @@ namespace rckid {
         return reservedBytes() - used;
     }
 
+    void Heap::traceChunks() {
+        LOG(LL_HEAP, "Heap chunks:");
+        Chunk * x = heapStart_;
+        while (x < heapEnd_) {
+            LOG(LL_INFO, "@" << hex(x) << " size " << x->headerSize_ * sizeof(Chunk) << " free: " << x->isFree());
+            x = x->nextAllocation();
+        }
+    }
+
 }
 

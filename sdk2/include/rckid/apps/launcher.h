@@ -13,7 +13,6 @@ namespace rckid {
 
     ui::MenuItem::GeneratorEvent mainMenuGenerator(MainMenuOptions options = {});
 
-
     /** Generator for the games submenu.
      */
     unique_ptr<ui::Menu> gamesMenuGenerator();

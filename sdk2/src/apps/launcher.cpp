@@ -21,10 +21,10 @@ namespace rckid {
                         return gamesMenu;
                 })
                 << ui::MenuItem{"Music", assets::icons_64::music, []() {
-                    MusicPlayer{}.run();
+                    App::run<MusicPlayer>();
                 }}
                 << ui::MenuItem{"Friends", assets::icons_64::birthday_cake, []() {
-                    Friends{}.run();
+                    App::run<Friends>();
                 }}
                 << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator);
             return result;
@@ -55,13 +55,13 @@ namespace rckid {
         auto result = std::make_unique<ui::Menu>();
         (*result)
             << ui::MenuItem{"Steps", assets::icons_64::footprint, []() {
-                Steps{}.run();
+                App::run<Steps>();
             }}
             << ui::MenuItem{"Data Sync", assets::icons_64::pen_drive, []() {
-                DataSync{}.run();
+                App::run<DataSync>();
             }}
             << ui::MenuItem("File Browser", assets::icons_64::folder, []() {
-                FileBrowser{}.run();
+                App::run<FileBrowser>();
             });
 
         return result;

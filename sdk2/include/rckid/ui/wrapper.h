@@ -21,6 +21,8 @@ namespace rckid::ui {
 
         T const & contents() const { return contents_; }
 
+        T & contents() { return contents_; }
+
         void setContents(T contents) {
             contents_ = std::move(contents);
             onResize();

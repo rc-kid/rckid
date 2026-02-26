@@ -8,6 +8,13 @@
 
 namespace rckid {
 
+    template<typename, typename = void>
+    struct has_modal_result : std::false_type {};
+
+    template<typename T>
+    struct has_modal_result<T, std::void_t<typename T::MODAL_RESULT>> : std::true_type {};
+    
+
     /** RCKid application. 
      
         Application is the code that controls the screen, reacts to the user input, and generally has the command of all of RCKid's resources. The SDK is designed to run a single application at any given time, but applications themselves can stack on top of another, so that the application on top has the control, which will return to the app below when the app exits.
@@ -39,15 +46,66 @@ namespace rckid {
             bool standalone = false;
         };
 
+        /** Runs the application. 
+         
+            The run method is responsible for startingthe application and transferring focus between apps. First the newapplication is ceated, after which the old app is blurred, which allows the creation of the new application affect the blur method of the old one (such as when launcher's carousel is borrowed). Then the new app's onFocus is called, followed by onLoopStart. The loop of the application executes as long as the app does not call its exit function, after which first the onBlur method is called, followed by the destruction of the application (the only surviving thing from its time is the result, if any). Finally the onFocus of the old application is called as it becomes current. This is to ensure that all memory deallocations of the new app happen before the onFocus of the old one, which helps with memory fragmentation.
+         */
+        template<typename T, typename... ARGS>
+        typename T::MODAL_RESULT run(ARGS &&... args) {
+            typename T::MODAL_RESULT result;
+            {
+                T app{std::forward<ARGS>(args)...};
+                if (current_ != nullptr)
+                    current_->onBlur();
+                app.parent_ = current_;
+                current_ = & app;
+                current_->onFocus();
+                current_->onLoopStart();
+                while (! app.shouldExit()) {
+                    tick();
+                    current_->loop();
+                    current_->render();
+                }
+                current_->onBlur();
+                current_ = current_->parent_;
+                result = std::move(app.result());
+            }
+            btnClearAll();
+            if (current_ != nullptr)
+                current_->onFocus();
+            return result;
+        }
+
+        /** Specialization of run method for apps that return void.
+         
+            See the non-void alternative for details.
+         */
+        template<typename T, typename...ARGS>
+        std::enable_if_t<! has_modal_result<T>::value, void> static run(ARGS &&... args) {
+            {
+                T app{std::forward<ARGS>(args)...};
+                if (current_ != nullptr)
+                    current_->onBlur();
+                app.parent_ = current_;
+                current_ = & app;
+                current_->onFocus();
+                current_->onLoopStart();
+                while (! app.shouldExit()) {
+                    tick();
+                    current_->loop();
+                    current_->render();
+                }
+                current_->onBlur();
+                current_ = current_->parent_;
+            }
+            btnClearAll();
+            if (current_ != nullptr)
+                current_->onFocus();
+        }
+
         virtual ~App() {
             ASSERT(current_ != this);
         }
-
-        /** Runs the application. 
-         
-            The run method is responsible for transitioning between apps and for running the main loop of the app itself. When called, it first blurs the previous app (if any), then focuses the current app, runs the main loop which cosists of calling the system tick, and applications loop() and render(). When the app exits, it is blurred and the previous app is re-focused.
-         */
-        void run();
 
         App * parent() const { return parent_; }
 
@@ -66,7 +124,6 @@ namespace rckid {
         }
 
     protected:
-
         friend class HomeMenu; // for access to home menu generator
 
         /** Called when the application gains focus. 
@@ -206,10 +263,7 @@ namespace rckid {
     class ModalApp : public App {
     public:
 
-        std::optional<T> run() {
-            App::run();
-            return std::move(result_);
-        }
+        using MODAL_RESULT = std::optional<T>;
 
     protected:
         using App::exit;
@@ -220,6 +274,9 @@ namespace rckid {
         }
 
     private:
+        friend class App;
+        std::optional<T> result() { return std::move(result_);}
+
         std::optional<T> result_;
 
     }; // rckid::ModalApp<T>

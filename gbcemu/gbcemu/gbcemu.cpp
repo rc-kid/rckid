@@ -286,7 +286,8 @@ namespace rckid::gbcemu {
                     [eName](){
                         LOG(LL_INFO, "running game: " << eName);
                         GamePak * gamepak = new gbcemu::CachedGamePak{fs::readFile(STR("/games/" << eName))};
-                        GBCEmu{fs::stem(eName), gamepak}.run();
+                        App::run<GBCEmu>(fs::stem(eName), gamepak);
+                        //GBCEmu{fs::stem(eName), gamepak}.run();
                         //App::run<GBCEmu>(fs::stem(eName), gamepak);
                     }
                 );

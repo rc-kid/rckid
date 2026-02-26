@@ -242,12 +242,11 @@ namespace rckid::gbcemu {
                 LOG(LL_INFO, "Active pages: " << numPages_);
                 p = new PageInfo{buffer};
                 return p;
-            } else {
-                // otherwise recycle the last page
-                prev->last = nullptr;
-                p->reset();
-                return p;
             }
+            // otherwise recycle the last page
+            prev->last = nullptr;
+            p->reset();
+            return p;
         }
 
         void fetchPage(uint32_t page, PageInfo * p) const {

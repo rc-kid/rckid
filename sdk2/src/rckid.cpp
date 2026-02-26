@@ -66,6 +66,7 @@ namespace rckid {
     }
 
     void onSecondTick() {
+        
 
     }
 

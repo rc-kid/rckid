@@ -5,36 +5,10 @@
 
 namespace rckid {
 
-    void App::run() {
-        // if the app should exit already (was denied in constructor) do not even start the loop & focus transitions
-        if (shouldExit_)
-            return;
-        // transition the focus and run the main loop
-        if (current_ != nullptr)
-            current_->onBlur();
-        parent_ = current_;
-        current_ = this;
-        onFocus();
-        onLoopStart();
-        while (!shouldExit_) {
-            tick();
-            loop();
-            render();
-        }
-        onBlur();
-        current_ = parent_;
-        // clear all button events so that the previous app can't react to them any more
-        btnClearAll();
-        // and call onFocus of the parent application
-        if (current_ != nullptr)
-            current_->onFocus();
-    }
-
     void App::loop() {
         rckid::display::waitUpdateDone();
         if (! HomeMenu::active() && btnReleased(Btn::Home)) {
-            HomeMenu app;
-            auto action = app.run();
+            auto action = App::run<HomeMenu>();
             if (action.has_value())
                 action.value()();
         }

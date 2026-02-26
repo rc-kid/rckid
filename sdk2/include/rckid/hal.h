@@ -205,6 +205,10 @@ namespace rckid::hal {
          */
         TinyDateTime now();
 
+        /** Sets current time & date. 
+         */
+        void setTime(TinyDateTime dt);
+
     } // namespace rckid::hal::time
 
     namespace io {
@@ -252,7 +256,7 @@ namespace rckid::hal {
         void update(Callback callback);
 
         void update(Color::RGB565 const * buffer, uint32_t bufferSize);
-        
+
         void updateDouble(Color::RGB565 const * buffer, uint32_t bufferSize);
 
         bool updateActive();

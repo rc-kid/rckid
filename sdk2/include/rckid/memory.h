@@ -69,6 +69,10 @@ namespace rckid {
          */
         static uint32_t usedBytes();
 
+
+
+        static void traceChunks();
+
         /** Guard that ensures memory is not leaking. 
          
             This is the simplest of the guard that merely ensures that used heap memory at exit is not greater than used memory at the beginning. 

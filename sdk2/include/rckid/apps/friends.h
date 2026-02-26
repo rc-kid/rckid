@@ -35,7 +35,7 @@ namespace rckid {
                     for (auto & contact : contacts_) {
                         (*menu)
                             << ui::MenuItem{contact->name, contact->image, [this, contact = contact.get()]() {
-                                auto x = ContactDialog{contact}.run();
+                                auto x = App::run<ContactDialog>(contact);
                                 dirty_ = dirty_ || (x.has_value() && x.value());
                             }};
                     }

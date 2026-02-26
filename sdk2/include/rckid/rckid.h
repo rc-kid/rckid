@@ -80,7 +80,9 @@ namespace rckid {
         */
         inline uint64_t uptimeUs() { return hal::time::uptimeUs(); }
 
-        TinyDateTime now();
+        /** Returns current date & time.
+         */
+        inline TinyDateTime now() { return hal::time::now(); }
 
     } // namespace time
 

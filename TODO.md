@@ -8,6 +8,11 @@
 - apply style to existing widgets (Label, etc.) (...)
 - button press repeat (configurable)
 
+- popup menu
+- basic dialogs
+- basic util apps (port from old version)
+- games (port from old, or even mkII)
+
 - save and load state (...)
 - decorator event in menu items for badges (& their clearing in carousel selection) (...)
 - header (...)
@@ -21,15 +26,7 @@
             pio_sm_set_clock_speed(RCKID_ST7789_PIO, sm_, RCKID_ST7789_SPEED * 4); // 2 cycles per pixel
         }
 
-
-- for gbcemu:
-- [ ] speed control
-- [ ] standalone app, budget app
-- [ ] fill right and some formatting stuffs
-- [ ] double pixel update mode (draw buffer twice)
-
 - would be good to start CI, just to be sure stuff works
-
 
 ### Code Cleanup
 - should ini reader and writer own the stream? Might simplify things a bit in the API

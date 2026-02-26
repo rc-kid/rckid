@@ -16,18 +16,15 @@ namespace rckid {
         InfoDialog(String title, String message, ImageSource icon, ui::Theme theme = ui::Theme::Default);
 
         static void info(String title, String message) {
-            InfoDialog dlg{std::move(title), std::move(message), assets::icons_64::info, ui::Theme::Info};
-            dlg.run();
+            App::run<InfoDialog>(std::move(title), std::move(message), assets::icons_64::info, ui::Theme::Info);
         }
 
         static void success(String title, String message) {
-            InfoDialog dlg{std::move(title), std::move(message), assets::icons_64::happy_face, ui::Theme::Success};
-            dlg.run();
+            App::run<InfoDialog>(std::move(title), std::move(message), assets::icons_64::happy_face, ui::Theme::Success);
         }
 
         static void error(String title, String message) {
-            InfoDialog dlg{std::move(title), std::move(message), assets::icons_64::sad_face, ui::Theme::Error};
-            dlg.run();
+            App::run<InfoDialog>(std::move(title), std::move(message), assets::icons_64::sad_face, ui::Theme::Error);
         }
 
         void setBg(Color bg) {

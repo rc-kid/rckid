@@ -70,6 +70,5 @@ int main() {
     //ui::Style::saveDefaultStyle();
     //Steps app;
     //TestApp app;
-    Launcher app{mainMenuGenerator({ .gamesExtender = gbcemu::GBCEmu::gamesMenuExtender })};
-    app.run();
+    App::run<Launcher>(mainMenuGenerator({ .gamesExtender = gbcemu::GBCEmu::gamesMenuExtender }));
 }
