@@ -164,7 +164,7 @@ namespace rckid {
 
             The method can be called any time after the onLoopStart() method returns. 
          */
-        virtual bool loadState([[maybe_unused]] ReadStream & stream) {
+        virtual bool loadState([[maybe_unused]] RandomReadStream & stream) {
             UNREACHABLE;
             return false;
         }
@@ -175,7 +175,7 @@ namespace rckid {
             
             The method can be called any time after the onLoopStart() method returns.
          */
-        virtual void saveState([[maybe_unused]] WriteStream & stream) const {
+        virtual void saveState([[maybe_unused]] RandomWriteStream & stream) const {
             UNREACHABLE;
         }
 
@@ -185,7 +185,7 @@ namespace rckid {
 
             The method can be called any time after the onLoopStart() method returns.
          */
-        virtual bool captureScreen([[maybe_unused]] WriteStream & stream) const {
+        virtual bool captureScreen([[maybe_unused]] RandomWriteStream & stream) const {
             UNREACHABLE;
             return false;
         }

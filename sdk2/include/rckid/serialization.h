@@ -209,7 +209,6 @@ namespace rckid {
 
     // TODO do others
 
-
     inline BinaryWriter operator << (BinaryWriter w, uint8_t const & what) {
         w.putByte(what);
         return w;

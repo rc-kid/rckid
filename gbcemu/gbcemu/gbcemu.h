@@ -96,11 +96,11 @@ namespace rckid::gbcemu {
         
         /** Saves the game state to the provided savefile stream. 
          */
-        void saveState(WriteStream & into) const override;
+        void saveState(RandomWriteStream & into) const override;
         
         /** Loads the game state from the given savefile. 
          */
-        bool loadState(ReadStream & from) override;
+        bool loadState(RandomReadStream & from) override;
 
         /** Laods the given gamepak in the emulator. 
          

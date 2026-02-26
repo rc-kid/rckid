@@ -459,90 +459,115 @@ namespace rckid::gbcemu {
         delete [] hram_;
     }
 
-    void GBCEmu::saveState(WriteStream & into) const {
-        UNIMPLEMENTED;
-        /*
+    void GBCEmu::saveState(RandomWriteStream & into) const {
         if (apu_.enabled())
-            audioPause();
-        serialize(into, VERSION);
+            audio::pause();
+        into.binaryWriter()
+            << VERSION;
         // serialize the CPU state
-        serialize(into, regs8_, 8);
-        serialize(into, sp_);
-        serialize(into, pc_);
-        serialize(into, cgb_);
-        serialize(into, ime_);
+        into.write(regs8_, 8);
+        into.binaryWriter()
+            << sp_
+            << pc_
+            << cgb_
+            << ime_;
         // save the internal state of the timer
-        serialize(into, timerDIVModulo_);
-        serialize(into, timerTIMAModulo_);
-        serialize(into, timerCycles_);
-        // serialize VRAM and WRAM
-        serialize(into, vram_[0], 0x2000);
-        serialize(into, vram_[1], 0x2000);
-        for (unsigned i = 0; i < 8; ++i)
-            serialize(into, wram_[i], 0x1000);
-        // serialize OAM and HRAM
-        serialize(into, oam_, 160);
-        serialize(into, hram_, 256);
+        into.binaryWriter()
+            << timerDIVModulo_
+            << timerTIMAModulo_
+            << timerCycles_;
+        // serialize VRAM
+        into.write(vram_[0], 0x2000);
+        into.write(vram_[1], 0x2000);
+        // serialize WRAM
+        into.write(wram_[0], 0x1000);
+        into.write(wram_[1], 0x1000);
+        into.write(wram_[2], 0x1000);
+        into.write(wram_[3], 0x1000);
+        into.write(wram_[4], 0x1000);
+        into.write(wram_[5], 0x1000);
+        into.write(wram_[6], 0x1000);
+        into.write(wram_[7], 0x1000);
+        // serialize oam and hram
+        into.write(oam_, 160);
+        into.write(hram_, 256);
         // now we need to serialize the gamepak's data, which is the eram and the state of the MBC (if any). We do not need to serialize the gamepak as this should be handled by the app name already (i.e. different gamepaks go to different save folders as each gamepak appears as a different app)
         uint32_t eramSize = gamepak_->cartridgeRAMSize() / 8192;
         for (uint32_t i = 0; i < eramSize; ++i)
-            serialize(into, eram_[i], 0x2000);
-        serialize(into, getRomPage());
-        serialize(into, getVideoRamPage());
-        serialize(into, getWorkRamPage());
-        serialize(into, getExternalRamPage());
+            into.write(eram_[i], 0x2000);
+        into.binaryWriter()
+            << getRomPage()
+            << getVideoRamPage()
+            << getWorkRamPage()
+            << getExternalRamPage();
         // save the APU state
-        serialize(into, apu_);
+        into.binaryWriter()
+            << apu_;
         // v2 - add the RTCMapping
-        serialize(into, rtcMapping_);
+        into.binaryWriter()
+            << rtcMapping_;
         // we do not have to save the PPU state as we only allow interrupting the game during a VBLANK period
         if (apu_.enabled())
-            audioResume();
-        */
+            audio::resume();
     }
 
-    bool GBCEmu::loadState(ReadStream & from) {
-        UNIMPLEMENTED;
-        /*
-        uint8_t version = deserialize<uint8_t>(from);
+    bool GBCEmu::loadState(RandomReadStream & from) {
+        uint8_t version;
+        from.binaryReader() 
+            >> version;
         if (version > VERSION) {
             LOG(LL_WARN,  "Unsupported save version, skipping");
-            return;
+            return false;
         }
         // load CPU state
-        deserialize(from, regs8_, 8);
-        deserialize(from, sp_);
-        deserialize(from, pc_);
-        deserialize(from, cgb_);
-        deserialize(from, ime_);
+        from.read(regs8_, 8);
+        from.binaryReader()
+            >> sp_
+            >> pc_
+            >> cgb_
+            >> ime_;
         // load CPU internal state
-        deserialize(from, timerDIVModulo_);
-        deserialize(from, timerTIMAModulo_);
-        deserialize(from, timerCycles_);
-        // load VRAM and WRAM
-        deserialize(from, vram_[0], 0x2000);
-        deserialize(from, vram_[1], 0x2000);
-        for (unsigned i = 0; i < 8; ++i)
-            deserialize(from, wram_[i], 0x1000);
+        from.binaryReader()
+            >> timerDIVModulo_
+            >> timerTIMAModulo_
+            >> timerCycles_;
+        // load VRAM
+        from.read(vram_[0], 0x2000);
+        from.read(vram_[1], 0x2000);
+        // load WRAM
+        from.read(wram_[0], 0x1000);
+        from.read(wram_[1], 0x1000);
+        from.read(wram_[2], 0x1000);
+        from.read(wram_[3], 0x1000);
+        from.read(wram_[4], 0x1000);
+        from.read(wram_[5], 0x1000);
+        from.read(wram_[6], 0x1000);
+        from.read(wram_[7], 0x1000);
         // load oam and hram
-        deserialize(from, oam_, 160);
-        deserialize(from, hram_, 256);
+        from.read(oam_, 160);
+        from.read(hram_, 256);
         // load the eram and gamepak state and set the various memory pages properly
         uint32_t eramSize = gamepak_->cartridgeRAMSize() / 8192;
         for (uint32_t i = 0; i < eramSize; ++i)
-            deserialize(from, eram_[i], 0x2000);
-        setRomPage(deserialize<uint32_t>(from));
-        setVideoRamPage(deserialize<uint32_t>(from));
-        setWorkRamPage(deserialize<uint32_t>(from));
-        setExternalRamPage(deserialize<uint32_t>(from));
+            from.read(eram_[i], 0x2000);
+        uint32_t romPage, videoRamPage, workRamPage, externalRamPage;
+        from.binaryReader()
+            >> romPage
+            >> videoRamPage
+            >> workRamPage
+            >> externalRamPage;
+        setRomPage(romPage);
+        setVideoRamPage(videoRamPage);
+        setWorkRamPage(workRamPage);
+        setExternalRamPage(externalRamPage);
         // load the APU state and turn APU on if necessary (or off)
-        deserialize(from, apu_);
+        from.binaryReader() 
+            >> apu_;
         // v2 - load the RTCMapping
         if (version >= 2) {
-            deserialize(from, rtcMapping_);
+            from.binaryReader()
+                >> rtcMapping_;
         }
-        // we do not have to load the PPU state as we only allow interrupting the game during a VBLANK period
-        */
     }
 
     void GBCEmu::loop() {
@@ -1097,22 +1122,6 @@ namespace rckid::gbcemu {
         }
         // set the render line to last of the VBLANK so that we will start drawing from the top immediately in the next scanline
         IO_LY = 153;
-        /*
-        displayClear();
-        // set the display to row-first mode, which is what gameboy is expecting and set the resolution to 160x144
-        displaySetRefreshDirection(DisplayRefreshDirection::RowFirst);
-        switch (displayMode_) {
-            case DisplayMode::Native:
-                displaySetUpdateRegion(Rect::Centered(160, 144, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT));
-                break;
-            case DisplayMode::Scaled:
-                displaySetUpdateRegion(Rect::Centered(267, 240, RCKID_DISPLAY_WIDTH, RCKID_DISPLAY_HEIGHT));
-                break;
-            case DisplayMode::X2:
-                displaySetUpdateRegion(320, 240);
-                break;
-        }
-                */
     }
 
     void GBCEmu::setPPUMode(unsigned mode) {
