@@ -59,6 +59,7 @@ namespace rckid {
                     current_->onBlur();
                 app.parent_ = current_;
                 current_ = & app;
+                enforceCapabilities(app.capabilities());
                 current_->onFocus();
                 current_->onLoopStart();
                 while (! app.shouldExit()) {
@@ -88,6 +89,7 @@ namespace rckid {
                     current_->onBlur();
                 app.parent_ = current_;
                 current_ = & app;
+                enforceCapabilities(app.capabilities());
                 current_->onFocus();
                 current_->onLoopStart();
                 while (! app.shouldExit()) {
@@ -193,7 +195,8 @@ namespace rckid {
             When called, the app should release all of its resources (memory, file handles, HW resources, etc.) if supported in order to give the standalone app as much of the system available resources as possible. The default implementation is empty (no support). 
          */
         virtual void releaseResources() {
-            // nop
+            if (parent_ != nullptr)
+                parent_->releaseResources();
         }
 
         virtual unique_ptr<ui::Menu> homeMenu();
@@ -245,6 +248,8 @@ namespace rckid {
         //@}
 
     private:
+
+        static void enforceCapabilities(Capabilities const & caps);
 
         App * parent_ = nullptr;
         // flag indicating whether the app should exit

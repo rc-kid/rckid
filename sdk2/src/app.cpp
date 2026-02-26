@@ -1,6 +1,7 @@
 
 #include <rckid/audio/audio.h>
 #include <rckid/apps/home_menu.h>
+#include <rckid/task.h>
 #include <rckid/app.h>
 
 namespace rckid {
@@ -83,6 +84,16 @@ namespace rckid {
 
     uint32_t App::readFolder(String const & path, std::function<void(fs::FolderEntry const &)> callback) const {
         return fs::readFolder(resolvePath(path), homeDrive(), std::move(callback));
+    }
+
+    void App::enforceCapabilities(Capabilities const & caps) {
+        if (caps.standalone) {
+            if (current_->parent_ != nullptr)
+               current_->parent_->releaseResources();
+            Task::releaseTaskResources();
+        }
+        // TODO other capabilities
+
     }
 
 

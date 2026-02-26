@@ -32,11 +32,6 @@ namespace rckid {
             }
         }
 
-        /** Returns true if the task is lightweight. 
-         */
-        virtual bool lightweight() const { return false; }
-
-
         /** Runs the onTick() method for all current tasks.
          
             This is run automatically from rckid's tick() function and does *not* need to be called manually.
@@ -49,9 +44,26 @@ namespace rckid {
             }
         }
 
+        /** Releases resources held by the current tasks.
+         */
+        static void releaseTaskResources() {
+            Task * current = top_;
+            while (current != nullptr) {
+                // as tasks may also choose to delete themselves as part of releasing the resources we need to get ptr to next first
+                Task * x = current;
+                current = current->next_;
+                x->releaseResources();
+            }
+        }
+
     protected:
         virtual void onTick() = 0;
 
+        /** Releases resources held by the task. 
+         
+            This is analogous to the application's releaseResources except a task may also choose to delete itself as part of releasing the resources. In fact, deleting itself is the preferred form of releasing task resources.
+         */
+        virtual void releaseResources() { }
 
     private:
         Task * next_ = nullptr;

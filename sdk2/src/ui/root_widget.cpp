@@ -1,5 +1,6 @@
 
 #include <rckid/ui/animation.h>
+#include <rckid/ui/style.h>
 #include <rckid/ui/root_widget.h>
 
 namespace rckid::ui {
@@ -10,6 +11,8 @@ namespace rckid::ui {
 
     void RootWidget::initializeDisplay() {
         display::enable(rect(), hal::display::RefreshDirection::ColumnFirst);
+        if (useBackgroundImage_ && background_ == nullptr)
+            setBackgroundImage(Style::defaultStyle());
     }
 
     void RootWidget::render() {

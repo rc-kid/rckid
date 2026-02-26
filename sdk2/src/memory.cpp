@@ -164,7 +164,7 @@ namespace rckid {
             LOG(LL_HEAP, "Alloc " << (numChunks * 8) << " from " << heapEnd_); 
             // allocate new chunk at the end of the heap
             Chunk * result = heapEnd_;
-            if (reinterpret_cast<uint8_t*>(result) > hal::memory::heapEnd())
+            if (reinterpret_cast<uint8_t*>(result + numChunks) > hal::memory::heapEnd())
                 return nullptr;
             heapEnd_ += numChunks;
             // verify that we have not overrun the stack
@@ -239,7 +239,7 @@ namespace rckid {
         LOG(LL_HEAP, "Heap chunks:");
         Chunk * x = heapStart_;
         while (x < heapEnd_) {
-            LOG(LL_INFO, "@" << hex(x) << " size " << x->headerSize_ * sizeof(Chunk) << " free: " << x->isFree());
+            LOG(LL_INFO, "@" << hex((x - heapStart_) * sizeof(Chunk)) << " size " << x->headerSize_ * sizeof(Chunk) << " free: " << x->isFree());
             x = x->nextAllocation();
         }
     }

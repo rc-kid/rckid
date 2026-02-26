@@ -45,6 +45,11 @@ namespace rckid {
             instance_ = nullptr;
         }
 
+        void releaseResources() override {
+            root_.releaseResources();
+            ui::App<void>::releaseResources();
+        }
+
         class BorrowedCarousel : public ui::Widget {
         public:
             BorrowedCarousel() {

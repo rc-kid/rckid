@@ -47,7 +47,7 @@ namespace rckid::ui {
         void render();
 
         void setBackgroundImage(Style const * style) {
-            if (style->backgroundImage().empty()) {
+            if (style == nullptr || style->backgroundImage().empty()) {
                 background_ = nullptr;
             } else {
                 background_.reset(new Image());
@@ -90,6 +90,12 @@ namespace rckid::ui {
 
             if (y() == 0 && Header::shouldRender())
                 renderChildColumn(Header::instance_, column, startRow, buffer, numPixels);
+        }
+
+        /** Releases the resources helpd by the root widget.
+         */
+        static void releaseResources() {
+            background_ = nullptr;
         }
 
     protected:
