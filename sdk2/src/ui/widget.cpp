@@ -1,5 +1,6 @@
 #include <rckid/ui/widget.h>
 #include <rckid/ui/animation.h>
+#include <rckid/ui/header.h>
 
 namespace rckid::ui {
 
@@ -37,6 +38,12 @@ namespace rckid::ui {
         for (auto & child : children_)
             if (child->visibleInParent())
                 animate() << FlyOut(child.get(), distance)->setDelayMs(child->y()-minY);
+    }
+
+    void Widget::renderEssentials() {
+        Animation::updateAll();
+        if (Header::shouldRender())
+            triggerOnRender(Header::instance());
     }
 
 

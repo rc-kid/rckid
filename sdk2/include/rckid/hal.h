@@ -257,7 +257,7 @@ namespace rckid::hal {
 
         void update(Color::RGB565 const * buffer, uint32_t bufferSize);
 
-        void updateDouble(Color::RGB565 const * buffer, uint32_t bufferSize);
+        void update(Color::RGB565 const * buffer1, uint32_t bufferSize1, Color::RGB565 const * buffer2, uint32_t bufferSize2);
 
         bool updateActive();
 

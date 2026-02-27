@@ -18,12 +18,10 @@ namespace rckid::ui {
     void RootWidget::render() {
         if (! visible())
             return;
-        // update all animations
-        Animation::updateAll();
+        // update all animations & render essentials
+        Widget::renderEssentials();
         // tell the widgets that we are about to render
         onRender();
-        if (Header::shouldRender())
-            triggerOnRender(Header::instance_);
         // start rendering from rightmost column
         renderCol_ = width() - 1;
         display::update([&](Color::RGB565 * & buffer, uint32_t & bufferSize) {

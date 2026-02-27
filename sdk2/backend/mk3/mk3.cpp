@@ -421,7 +421,7 @@ namespace rckid::hal {
             dma_channel_set_transfer_count(dmaChannel, bufferSize, true);
         }
 
-        void updateDouble(Color::RGB565 const * buffer, uint32_t bufferSize) {
+        void update(Color::RGB565 const * buffer1, uint32_t bufferSize1, Color::RGB565 const * buffer2, uint32_t bufferSize2) {
             using namespace internal::display;
             while (updateActive())
                 yield();
@@ -429,10 +429,10 @@ namespace rckid::hal {
             ASSERT(buffer == nullptr);
             ASSERT(backBuffer == nullptr);
             cb = nullptr;
-            internal::display::buffer = const_cast<Color::RGB565 *>(buffer);
-            internal::display::bufferSize = bufferSize;
-            internal::display::backBuffer = const_cast<Color::RGB565 *>(buffer);
-            internal::display::backBufferSize = bufferSize;
+            internal::display::buffer = const_cast<Color::RGB565 *>(buffer1);
+            internal::display::bufferSize = bufferSize1;
+            internal::display::backBuffer = const_cast<Color::RGB565 *>(buffer2);
+            internal::display::backBufferSize = bufferSize2;
             pixelsToWrite = 0;
             dma_channel_set_read_addr(dmaChannel, internal::display::buffer, false);
             dma_channel_set_transfer_count(dmaChannel, internal::display::bufferSize, true);

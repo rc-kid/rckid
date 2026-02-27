@@ -53,8 +53,21 @@ namespace rckid::ui {
         static constexpr uint8_t PaletteOffsetViolet = 22;
 
 
+        static Header * instance() { 
+            ASSERT(instance_ != nullptr);
+            return instance_; 
+        }
+
         void renderRow(Coord row, Coord startCol, Color::RGB565 * buffer, Coord numPixels) {
-            UNIMPLEMENTED;
+            Coord ownRow = row - rect().y;
+            if (ownRow < 0 || ownRow >= height())
+                return;
+            // adjust numPixels if we exceed contents width
+            if (startCol + numPixels > width())      
+                numPixels = width() - startCol;
+            if (numPixels <= 0)
+                return;
+            contents().renderRow(ownRow, startCol, buffer, numPixels);
         }
 
     protected:

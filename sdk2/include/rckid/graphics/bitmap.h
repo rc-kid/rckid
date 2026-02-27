@@ -100,7 +100,7 @@ namespace rckid {
             return pixels_.ptr() + mapIndexColumnFirst(column, 0, w_, h_) * bpp() / 8;
         }
 
-        void renderColumn(Coord column, Coord startRow, Coord numPixels, Color::RGB565 * buffer) {
+        void renderColumn(Coord column, Coord startRow,  Color::RGB565 * buffer, Coord numPixels) {
             ASSERT(column < width());
             ASSERT(startRow + numPixels <= height());
             // get source start pointer

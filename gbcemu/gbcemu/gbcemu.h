@@ -546,6 +546,8 @@ namespace rckid::gbcemu {
 #endif
 
         DoubleBuffer<Color::RGB565> pixels_;
+        DoubleBuffer<Color::RGB565> pixelsBackup_;
+        Coord displayY_;
 
         Color::RGB565 palette_[4] = {
             // the default DMG green palette

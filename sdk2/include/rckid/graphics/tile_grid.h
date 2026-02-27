@@ -170,7 +170,7 @@ namespace rckid {
             return changed;
         }
 
-        void renderColumn(Coord column, Coord startRow, Coord numPixels, Color::RGB565 * buffer) {
+        void renderColumn(Coord column, Coord startRow,  Color::RGB565 * buffer, Coord numPixels) {
             Coord col = column / Tile::width();
             if (col < 0 || col >= cols_)
                 return;
@@ -192,6 +192,14 @@ namespace rckid {
                 startRow = 0;
                 buffer += drawPixels;
                 ++ti;
+            }
+        }
+
+        void renderRow(Coord row, Coord startCol, Color::RGB565 * buffer, Coord numPixels) {
+            // TODO this is very bad speed-wise, as we call own renderCOlumn for every pixel
+            for (Coord i = 0; i != numPixels; ++i) {
+                renderColumn(startCol + i, row, buffer, 1);
+                ++buffer;
             }
         }
 

@@ -82,7 +82,7 @@ namespace rckid::ui {
             // render as many pixels as we have to by repeating the image (numPixels were updated accordingly if no repeat is required)
             while (numPixels > 0) {
                 Coord n = std::min(numPixels, contents_.height() - starty);
-                contents_.renderColumn(column, starty, n, buffer);
+                contents_.renderColumn(column, starty, buffer, n);
                 numPixels -= n;
                 buffer += n;
                 starty = 0; // after the first iteration, we will always start at the

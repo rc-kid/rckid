@@ -418,9 +418,9 @@ namespace rckid::hal {
                 internal::display::writePixel(buffer[i]);
         }
 
-        void updateDouble(Color::RGB565 const * buffer, uint32_t bufferSize) {
-            update(buffer, bufferSize);
-            update(buffer, bufferSize);
+        void update(Color::RGB565 const * buffer1, uint32_t bufferSize1, Color::RGB565 const * buffer2, uint32_t bufferSize2) {
+            update(buffer1, bufferSize1);
+            update(buffer2, bufferSize2);
         }
 
         bool updateActive() {

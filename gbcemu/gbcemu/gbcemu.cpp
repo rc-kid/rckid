@@ -1,4 +1,5 @@
 #include <rckid/audio/audio.h>
+#include <rckid/ui/header.h>
 #include <rckid/apps/dialogs/color_picker.h>
 
 #include <assets/icons_64.h>
@@ -335,7 +336,8 @@ namespace rckid::gbcemu {
         oam_{ new uint8_t[160]},
         hram_{new uint8_t[256]},
         appName_{std::move(appName)},
-        pixels_{320}
+        pixels_{320},
+        pixelsBackup_{320}
     {
         apu_.initialize(hram_ + ADDR_WAVE_RAM);
     }
@@ -666,6 +668,7 @@ namespace rckid::gbcemu {
     void GBCEmu::onFocus() {
         App::onFocus();
         hal::device::setPowerMode(PowerMode::Boost);
+        ui::Header::setVisibility(ui::Header::Visibility::OnChange);
         initializeDisplay();
         // continue playing audio if enabled
         if (apu_.enabled())
@@ -764,6 +767,7 @@ namespace rckid::gbcemu {
         IO_SCY = 0;
         IO_SCX = 0;
         IO_LY = 0; // can't tell - but note this is set to 153 in initializeDisplay 
+        displayY_ = 0;
         IO_LYC = 0;
         IO_DMA = 0;
         IO_BGP = 0xfc;
@@ -791,7 +795,7 @@ namespace rckid::gbcemu {
         // enable the APU since it is on by default
         apu_.enable(true);
         // set the initial values for the IO registers 
-        IO_LY = 0; // ensure we'll start with new frame
+        // IO_LY = 0; // ensure we'll start with new frame
         // load external ram from previous, if we have it
         loadExternalRam();
         //LOG(LL_INFO, "Cartridge load done, free memory: " << memoryFree());
@@ -1114,8 +1118,6 @@ namespace rckid::gbcemu {
                 display::enable(Rect::Centered(160, 144, display::WIDTH, display::HEIGHT), display::RefreshDirection::RowFirst);
                 break;
             case DisplayMode::Scaled:
-                display::enable(Rect::Centered(267, 240, display::WIDTH, display::HEIGHT), display::RefreshDirection::RowFirst);
-                break;
             case DisplayMode::X2:
                 display::enable(Rect::WH(320, 240), display::RefreshDirection::RowFirst);
                 break;
@@ -1158,6 +1160,9 @@ namespace rckid::gbcemu {
         if (IO_LY == 143) {
             setPPUMode(1); // VBlank
             updateIO_JOYP();
+            // if we are rendeing the header, we need to do rendering essentials as the header is ui widget, while gbcemu does its own rendering
+            if (ui::Header::shouldRender())
+                ui::Widget::renderEssentials();
             tick();
         }
         if (IO_LY == 153) {
@@ -1200,6 +1205,8 @@ namespace rckid::gbcemu {
         palette[3] = palette_[(bgp >> 6) & 3];
 
         Color::RGB565 * buffer = pixels_.front().data();
+        if (displayMode_ == DisplayMode::Scaled)
+            buffer += 26;
 
         uint8_t * vram = memMap_[MEMMAP_VRAM_0];
         // and determine the tileset address, which could be either signed or unsigned addressing.
@@ -1343,23 +1350,53 @@ namespace rckid::gbcemu {
                 hal::display::update(buffer, 160);
                 break;
             case DisplayMode::Scaled: {
+                // scale the row first 
                 uint32_t si = SCALED_WIDTH - 1;
                 for (uint32_t i = 159; i < 160; --i) {
                     buffer[si--] = buffer[i];
                     if (colScaling_[i] == 2)
                         buffer[si--] = buffer[i];
                 }
-                if (rowScaling_[ly] == 1) {
-                    hal::display::update(buffer, 267);
+                // determine if we are drawing header as well, 
+                if (displayY_ < 20 && ui::Header::shouldRender()) {
+                    if (rowScaling_[ly] == 1) {
+                        memset16(reinterpret_cast<uint16_t*>(pixels_.front().data()), 0, 26);
+                        memset16(reinterpret_cast<uint16_t*>(pixels_.front().data() + 293), 0, 27);
+                        ui::Header::instance()->renderRow(displayY_, 0, pixels_.front().data(), 320);
+                        hal::display::update(pixels_.front().data(), 320);
+                    } else {
+                        memset16(reinterpret_cast<uint16_t*>(pixels_.front().data()), 0, 26);
+                        memset16(reinterpret_cast<uint16_t*>(pixels_.front().data() + 293), 0, 27);
+                        memset16(reinterpret_cast<uint16_t*>(pixelsBackup_.front().data()), 0, 26);
+                        memset16(reinterpret_cast<uint16_t*>(pixelsBackup_.front().data() + 293), 0, 27);
+                        memmove(pixelsBackup_.front().data(), pixels_.front().data(), 320 * sizeof(Color::RGB565));
+                        ui::Header::instance()->renderRow(displayY_, 0, pixels_.front().data(), 320);
+                        ui::Header::instance()->renderRow(displayY_ + 1, 0, pixelsBackup_.front().data(), 320);
+                        hal::display::update(pixels_.front().data(), 320, pixelsBackup_.front().data(), 320);
+                        pixelsBackup_.swap();
+                    }
+
                 } else {
-                    hal::display::updateDouble(buffer, 267);
+                    if (rowScaling_[ly] == 1)
+                        hal::display::update(pixels_.front().data(), 320);
+                    else
+                        hal::display::update(pixels_.front().data(), 320, pixels_.front().data(), 320);
                 }
+                displayY_ += rowScaling_[ly];
+                if (displayY_ >= 240)
+                    displayY_ = 0;
                 break;
             }
             case DisplayMode::X2:
+                if (ly < 20 && ui::Header::shouldRender())
+                    ui::Header::instance()->renderRow(ly, 0, pixels_.front().data(), 320);
                 if (ly >= displayX2Start_ && ly < displayX2Start_ + 120) {
-                    hal::display::updateDouble(buffer, 320);
+                    hal::display::update(buffer, 320, buffer, 320);
+                    pixelsBackup_.swap();
                 }
+                displayY_ += 2;
+                if (displayY_ >= 240)
+                    displayY_ = 0;
                 break;
             }
         pixels_.swap();
@@ -1835,6 +1872,7 @@ namespace rckid::gbcemu {
                 if (alreadyEnabled) {
                     if ((value & LCDC_LCD_ENABLE) == 0) {
                         IO_LY = 0; // set LY to 0 and keep it there
+                        displayY_ = 0;
                         IO_STAT = (IO_STAT & ~STAT_PPU_MODE) & STAT_INT_MODE0; // set stat mode to hblank
                     }
                 } else {
