@@ -90,8 +90,8 @@ namespace rckid::hal {
         void updateWith(State const & other) {
             a_ = other.a_;
             b_ = other.b_;
-            c_ = other.c_;
-            d_ |= other.d_;
+            c_ |= other.c_;
+            d_ = other.d_;
         }
 
         bool button(Btn btn) {
@@ -112,12 +112,74 @@ namespace rckid::hal {
             }
         }
 
+        bool headphonesConnected() const { return (b_ & HEADPHONES_MASK) != 0; }
+        bool charging() const { return (b_ & CHARGING_MASK) != 0; }
 
+
+
+
+        void setHeadphonesConnected(bool connected) { connected ? (b_ |= HEADPHONES_MASK) : (b_ &= ~HEADPHONES_MASK); }
+        void setCharging(bool charging) { charging ? (b_ |= CHARGING_MASK) : (b_ &= ~CHARGING_MASK); }
+
+
+
+
+        /** Returns the current voltage in 100mV units (i.e. volts * 10). 
+
+            The available range is 2.45V (250) to 5V (500). Anything higher than 5V will still read as 5V and anything below 2.45V will read as 0V. This is fine as the range is only used to determine li-ion batter levels (3.00V - 4.30V), or USB power plugged in (5.00V).
+         */
+        uint32_t vcc() const { return (d_ == 0) ? 0 : (d_ + 245); }
+
+        void setVcc(uint16_t vx100) {
+            if (vx100 < 245)
+                d_ = 0;
+            else if (vx100 > 500)
+                d_ = 255;
+            else
+                d_ = static_cast<uint8_t>(vx100 - 245);
+        }
 
     private:
+        /** MSB ....... LSB
+            | | | | | | | |
+            | | | | | | | --- dpad left
+            | | | | | | ----- dpad right
+            | | | | | ------- dpad up
+            | | | | --------- dpad down
+            | | | ----------- a
+            | | ------------- b
+            | --------------- select
+            ----------------- start 
+         */
         uint8_t a_ = 0; 
+        /** MSB ....... LSB
+            | | | | | | | |
+            | | | | | | | --- home
+            | | | | | | ----- volume up
+            | | | | | ------- volume down
+            | | | | --------- headphones connected
+            | | | ----------- charging
+            | | ------------- 
+            | --------------- 
+            -----------------  
+         */
         uint8_t b_ = 0; 
+        static constexpr uint8_t HEADPHONES_MASK = 1 << 3;
+        static constexpr uint8_t CHARGING_MASK = 1 << 4;
+        /** MSB ....... LSB (interrupts)
+            | | | | | | | |
+            | | | | | | | --- 
+            | | | | | | ----- 
+            | | | | | ------- 
+            | | | | --------- 
+            | | | ----------- accel interrupt
+            | | ------------- wakeup interrupt
+            | --------------- power off interrupt
+            ----------------- second interrupt  
+         */
         uint8_t c_ = 0;
+        /** Voltage 
+         */
         uint8_t d_ = 0;
 
     }; // rckid::hal::State

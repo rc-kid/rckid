@@ -1,16 +1,20 @@
 #include <rckid/rckid.h>
 #include <rckid/hal.h>
 #include <rckid/task.h>
+#include <rckid/ui/header.h>
 
 namespace rckid {
 
     hal::State lastState_;
     hal::State state_;
 
+    TinyDateTime now_;
+
     // device
 
     void initialize() {
         hal::device::initialize();
+        now_ = hal::time::now();
         // TODO
     }
 
@@ -50,8 +54,29 @@ namespace rckid {
         lastState_ = state_;
     }
 
+    namespace power {
+
+        uint32_t vcc() {
+            return state_.vcc();
+        }
+
+        bool charging() {
+            return state_.charging();
+        }
+
+        bool dcConnected() {
+            return (state_.vcc() >= 450);
+        }
+    }
 
     // time
+
+    namespace time {
+
+        TinyDateTime now() {
+            return now_;
+        }
+    }
 
     // debugging
 
@@ -66,8 +91,9 @@ namespace rckid {
     }
 
     void onSecondTick() {
-        
+        now_.inc();
 
+        ui::Header::update();
     }
 
     void onFatalError(char const * file, uint32_t line, char const * msg, uint32_t payload) {

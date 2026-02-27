@@ -44,6 +44,7 @@ namespace rckid::internal {
     namespace time {
         TinyDateTime now;
         std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+        std::chrono::steady_clock::time_point nextSecondTick; 
     } // rckid::internal::time
 
     namespace io {
@@ -241,6 +242,7 @@ namespace rckid::hal {
     #endif
             internal::memory::useSystemMalloc = 0;
             rckid::fs::initializeFilesystem();
+            internal::time::nextSecondTick = internal::time::start + std::chrono::seconds(1);
         }
 
         void initialize() {
@@ -270,9 +272,19 @@ namespace rckid::hal {
         }
 
         void onTick() {
-            internal::memory::SystemMallocGuard g;
-            if (WindowShouldClose())
-                std::exit(-1);
+            bool secondTick;
+            {
+                internal::memory::SystemMallocGuard g;
+                if (WindowShouldClose())
+                    std::exit(-1);
+                auto t = std::chrono::steady_clock::now();
+                if (t >= internal::time::nextSecondTick) {
+                    internal::time::nextSecondTick += std::chrono::seconds(1);
+                    secondTick = true;
+                }
+            }
+            if (secondTick)
+                onSecondTick();
         }
 
         void onYield() {

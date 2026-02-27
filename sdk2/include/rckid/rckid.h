@@ -70,6 +70,25 @@ namespace rckid {
     // TODO rapid fire
 
 
+    /** Power management functions & monitoring. 
+     */
+    namespace power {
+
+        /** Returns the current system voltage. This is the voltage from which the DC regulators are powered and corresponds to either the battery when running on battery, or the USB cable when power is plugged in. 
+        */
+        uint32_t vcc();
+
+        /** Returns true if the device is charging.
+         */
+        bool charging();
+
+        /** Returns true if the device is connected to external DC power (via the USB connector), whether actively charging or not.
+         */
+        bool dcConnected();
+
+    } // rckid::power
+
+
     // time
 
     namespace time {
@@ -82,7 +101,7 @@ namespace rckid {
 
         /** Returns current date & time.
          */
-        inline TinyDateTime now() { return hal::time::now(); }
+        TinyDateTime now();
 
     } // namespace time
 

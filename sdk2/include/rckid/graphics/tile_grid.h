@@ -163,7 +163,7 @@ namespace rckid {
             bool changed = false;
             for (uint8_t i = 0, e = icon.size(); i != e; ++i) {
                 auto & t = at(x + i, y);
-                changed = (t.altTileset() != altTileset) || (t.paletteOffset() != paletteOffset) || (t.tileAsChar() != static_cast<uint8_t>(icon.raw_[i])) || changed;
+                changed = (t.altTileset() != altTileset) || (t.paletteOffset() != paletteOffset) || (t.tile() != icon.raw_[i]) || changed;
                 if (changed)
                     t.setAltTileset(altTileset).setPaletteOffset(paletteOffset) = icon.raw_[i];
             }
