@@ -149,7 +149,7 @@ namespace rckid::gbcemu {
             uint16_t periodCounter_;
             uint8_t sampleIndex_ = 0;
 
-            friend BinaryWriter operator << (BinaryWriter into, APU::SquareChannel const & ch) {
+            friend void write(BinaryWriter & into, APU::SquareChannel const & ch) {
                 into
                     << ch.enableLeft
                     << ch.enableRight
@@ -168,10 +168,9 @@ namespace rckid::gbcemu {
                     << ch.volumeSweepCounter_
                     << ch.periodCounter_
                     << ch.sampleIndex_;
-                return into;
             }
 
-            friend BinaryReader operator >> (BinaryReader from, APU::SquareChannel & ch) {
+            friend void read(BinaryReader & from, APU::SquareChannel & ch) {
                 from
                     >> ch.enableLeft
                     >> ch.enableRight
@@ -190,7 +189,6 @@ namespace rckid::gbcemu {
                     >> ch.volumeSweepCounter_
                     >> ch.periodCounter_
                     >> ch.sampleIndex_;
-                return from;
             }
 
 
@@ -270,7 +268,7 @@ namespace rckid::gbcemu {
             uint8_t sampleIndex_ = 0;
             int16_t lastSample_ = 0;
 
-            friend BinaryWriter operator << (BinaryWriter into, APU::WaveChannel const & ch) {
+            friend void write(BinaryWriter & into, APU::WaveChannel const & ch) {
                 into
                     << ch.enableLeft
                     << ch.enableRight
@@ -284,10 +282,9 @@ namespace rckid::gbcemu {
                     << ch.periodCounter_
                     << ch.sampleIndex_
                     << ch.lastSample_;
-                return into;
             }
 
-            friend BinaryReader operator >> (BinaryReader from, APU::WaveChannel & ch) {
+            friend void read(BinaryReader & from, APU::WaveChannel & ch) {
                 from 
                     >> ch.enableLeft
                     >> ch.enableRight
@@ -301,7 +298,6 @@ namespace rckid::gbcemu {
                     >> ch.periodCounter_
                     >> ch.sampleIndex_
                     >> ch.lastSample_;
-                return from;
             }
 
         }; // APU::WaveChannel
@@ -439,7 +435,7 @@ namespace rckid::gbcemu {
             int32_t period_;
             uint16_t lfsr_;
 
-            friend BinaryWriter operator << (BinaryWriter into, APU::NoiseChannel const & ch) {
+            friend void write(BinaryWriter & into, APU::NoiseChannel const & ch) {
                 into
                     << ch.enableLeft
                     << ch.enableRight
@@ -460,10 +456,9 @@ namespace rckid::gbcemu {
                     << ch.periodCounter_
                     << ch.period_
                     << ch.lfsr_;
-                return into;
             }
 
-            friend BinaryReader operator >> (BinaryReader from, APU::NoiseChannel & ch) {
+            friend void read(BinaryReader & from, APU::NoiseChannel & ch) {
                 from
                     >> ch.enableLeft
                     >> ch.enableRight
@@ -484,7 +479,6 @@ namespace rckid::gbcemu {
                     >> ch.periodCounter_
                     >> ch.period_
                     >> ch.lfsr_;
-                return from;
             }
 
         }; // APU::NoiseChannel
@@ -760,7 +754,7 @@ namespace rckid::gbcemu {
 
         /** Saves the current APU state into given stream (useful for saving game states).
          */
-        friend BinaryWriter operator << (BinaryWriter into, APU const & apu) {
+        friend void write(BinaryWriter & into, APU const & apu) {
             into
                 << apu.ch1_
                 << apu.ch2_
@@ -769,12 +763,11 @@ namespace rckid::gbcemu {
                 << apu.enabled_
                 << apu.volumeLeft_
                 << apu.volumeRight_;
-            return into;
         } 
 
         /** Loads APU state from given stream. 
          */
-        friend BinaryReader operator >> (BinaryReader from, APU & apu) {
+        friend void read(BinaryReader & from, APU & apu) {
             if (apu.enabled_)
                 apu.enable(false);
             bool enableApu = false;
@@ -787,7 +780,6 @@ namespace rckid::gbcemu {
                 >> apu.volumeLeft_
                 >> apu.volumeRight_;
             apu.enable(enableApu);
-            return from;
        }
 
     private:

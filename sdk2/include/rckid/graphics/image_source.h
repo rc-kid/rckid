@@ -201,9 +201,9 @@ namespace rckid {
 
     }; // rckid::ImageSource
 
-    inline Writer operator << (Writer w, ImageSource const & img) {
+    inline void write(Writer & w, ImageSource const & img) {
         if (img.empty())
-            return w;
+            return;
         switch (img.type()) {
             case ImageSource::Type::Memory:
                 //w << "memory:" << img.size() << "@" << hex<uint8_t const *>(img.data());
@@ -217,10 +217,9 @@ namespace rckid {
             default:
                 UNREACHABLE;
         }
-        return w;
     }
 
-    inline Reader operator >> (Reader r, ImageSource & img) {
+    inline void read(Reader & r, ImageSource & img) {
         String sourceStr;
         r >> sourceStr;
         if (sourceStr.startsWith("sd:")) {
@@ -230,7 +229,6 @@ namespace rckid {
         } else {
             // leave as is if not path (memory based image sources do not persist)
         }
-        return r;
     }
 
 } // namespace rckid

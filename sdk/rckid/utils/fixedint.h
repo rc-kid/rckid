@@ -122,7 +122,7 @@ namespace rckid {
         return FixedPoint{p.x * other, p.y * other}; 
     }
 
-    inline Writer & operator << (Writer & w, FixedInt const & f) {
+    inline void write(Writer & w, FixedInt const & f) {
         w << f.clip();
         return w;
     }

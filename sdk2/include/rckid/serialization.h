@@ -63,6 +63,15 @@ namespace rckid {
         GetCharCallback getChar_;
     }; // Reader
 
+    /** Operator >> for reader, which similarly to writer's operator << translates to calling the read function that provides the deserialization logic for applicable types. 
+     */
+    template<typename W, typename T>
+    std::enable_if_t<std::is_same_v<std::decay_t<W>, Reader>, W&&>
+    operator >> (W&& w, T & arg) {
+        read(w, arg);
+        return std::forward<W>(w);
+    }
+
     /** Allows serialization of various types in binary format. 
      
         The binary writer uses the same principle as the Writer class, only its `<<` overloads should format the data in binary, *not* textual format. Instead of characters works on unsigned bytes.
@@ -81,6 +90,15 @@ namespace rckid {
         PutByteCallback putByte_;
 
     }; // BinaryWriter
+
+    /** Operator << which translates to write function that must be overriden by serializable data types.
+     */
+    template<typename W, typename T>
+    std::enable_if_t<std::is_same_v<std::decay_t<W>, BinaryWriter>, W&&>
+    operator << (W&& w, T const & arg) {
+        write(w, arg);
+        return std::forward<W>(w);
+    }
 
     /** Allows deserialization of binary data. 
      
@@ -121,6 +139,16 @@ namespace rckid {
 
     }; // BinaryReader
 
+    /** Provides >> operator for reader that translates to calling the read function, which data types that can be read must override.
+     */
+    template<typename W, typename T>
+    std::enable_if_t<std::is_same_v<std::decay_t<W>, BinaryReader>, W&&>
+    operator >> (W&& w, T & arg) {
+        read(w, arg);
+        return std::forward<W>(w);
+    }
+
+    
     // extra formatters
 
     template<typename T>
@@ -128,7 +156,7 @@ namespace rckid {
     public:
         fillRight(T value, size_t width, char pad = ' '): value_{value}, width_{width}, pad_{pad} {}
 
-        void operator () (Writer & writer) {
+        void operator () (Writer & writer) const {
             uint32_t size = 0;
             Writer{[&size, writer](char c) mutable { ++size; writer.putChar(c); }} << value_;
             for (size_t i = size; i < width_; ++i)
@@ -142,20 +170,18 @@ namespace rckid {
 
     // below are various overloads for << and >> operators for the readers and writers specified above
 
-    inline Reader operator >> (Reader r, char & c) {
+    inline void read(Reader & r, char & c) {
         c = r.getChar();
-        return r;
     }
 
-    inline Reader operator >> (Reader r, bool & b) {
+    inline void read(Reader & r, bool & b) {
         char c = r.getChar();
         b = (c != 0 && c != '0' && c != 'F' && c != 'f');
-        return r;
     }
 
     template<typename T>
-    std::enable_if_t<std::is_integral<T>::value && std::is_unsigned<T>::value, Reader> 
-    operator >> (Reader r, T & into) {
+    std::enable_if_t<std::is_integral<T>::value && std::is_unsigned<T>::value, void> 
+    read(Reader & r, T & into) {
         T result = 0;
         while (!r.eof()) {
             char c = r.peekChar();
@@ -167,12 +193,11 @@ namespace rckid {
             }
         }
         into = result;
-        return r;
     }
 
     template<typename T>
-    std::enable_if_t<std::is_integral<T>::value && std::is_signed<T>::value, Reader> 
-    operator >> (Reader r, T & into) {
+    std::enable_if_t<std::is_integral<T>::value && std::is_signed<T>::value, void> 
+    read(Reader & r, T & into) {
         T result = 0;
         bool negative = (r.peekChar() == '-');
         if (negative)
@@ -187,48 +212,43 @@ namespace rckid {
             }
         }
         into = negative ? -result : result;
-        return r;
     }
 
-    inline Reader operator >> (Reader r, TinyDate & date) {
+    inline void read(Reader & r, TinyDate & date) {
         uint32_t day, month, year;
         r >> day;
         if (r.getChar() != '/') {
             LOG(LL_ERROR, "Expected '/' after day in date");
-            return r;
+            return;
         }
         r >> month;
         if (r.getChar() != '/') {
             LOG(LL_ERROR, "Expected '/' after day in date");
-            return r;
+            return;
         }
         r >> year;
         date.set(day, month, year);
-        return r;
     }
 
     // TODO do others
 
-    inline BinaryWriter operator << (BinaryWriter w, uint8_t const & what) {
+    inline void write(BinaryWriter & w, uint8_t const & what) {
         w.putByte(what);
-        return w;
     }
 
-    inline BinaryWriter operator << (BinaryWriter w, uint16_t const & what) {
+    inline void write(BinaryWriter & w, uint16_t const & what) {
         w.putByte(static_cast<uint8_t>(what & 0xff));
         w.putByte(static_cast<uint8_t>((what >> 8) & 0xff));
-        return w;
     }
 
-    inline BinaryWriter operator << (BinaryWriter w, uint32_t const & what) {
+    inline void write(BinaryWriter & w, uint32_t const & what) {
         w.putByte(static_cast<uint8_t>(what & 0xff));
         w.putByte(static_cast<uint8_t>((what >> 8) & 0xff));
         w.putByte(static_cast<uint8_t>((what >> 16) & 0xff));
         w.putByte(static_cast<uint8_t>((what >> 24) & 0xff));
-        return w;
     }
 
-    inline BinaryWriter operator << (BinaryWriter w, uint64_t const & what) {
+    inline void write(BinaryWriter & w, uint64_t const & what) {
         w.putByte(static_cast<uint8_t>(what & 0xff));
         w.putByte(static_cast<uint8_t>((what >> 8) & 0xff));
         w.putByte(static_cast<uint8_t>((what >> 16) & 0xff));
@@ -237,99 +257,86 @@ namespace rckid {
         w.putByte(static_cast<uint8_t>((what >> 40) & 0xff));
         w.putByte(static_cast<uint8_t>((what >> 48) & 0xff));
         w.putByte(static_cast<uint8_t>((what >> 56) & 0xff));
-        return w;
     }
 
-    inline BinaryWriter operator << (BinaryWriter w, int8_t const & what) {
+    inline void write(BinaryWriter & w, int8_t const & what) {
         w.putByte(static_cast<uint8_t>(what));
-        return w;
     }
 
-    inline BinaryWriter operator << (BinaryWriter w, int16_t const & what) {
-        return w << static_cast<uint16_t>(what);
+    inline void write(BinaryWriter & w, int16_t const & what) {
+        w << static_cast<uint16_t>(what);
     }
 
-    inline BinaryWriter operator << (BinaryWriter w, int32_t const & what) {
-        return w << static_cast<uint32_t>(what);
+    inline void write(BinaryWriter & w, int32_t const & what) {
+        w << static_cast<uint32_t>(what);
     }
 
-    inline BinaryWriter operator << (BinaryWriter w, int64_t const & what) {
-        return w << static_cast<uint64_t>(what);
+    inline void write(BinaryWriter & w, int64_t const & what) {
+        w << static_cast<uint64_t>(what);
     }
 
-    inline BinaryWriter operator << (BinaryWriter w, char const & what) {
+    inline void write(BinaryWriter & w, char const & what) {
         w.putByte(static_cast<uint8_t>(what));
-        return w;
     }
 
-    inline BinaryWriter operator << (BinaryWriter w, bool const & value) {
-        return w << static_cast<uint8_t>(value ? 1 : 0);
+    inline void write(BinaryWriter & w, bool const & value) {
+        w << static_cast<uint8_t>(value ? 1 : 0);
     }
 
-    inline BinaryReader operator >> (BinaryReader r, uint8_t & into) {
+    inline void read(BinaryReader & r, uint8_t & into) {
         into = r.getByte();
-        return r;
     }
 
-    inline BinaryReader operator >> (BinaryReader r, uint16_t & into) {
+    inline void read(BinaryReader & r, uint16_t & into) {
         uint16_t lo = r.getByte();
         uint16_t hi = r.getByte();
         into = lo + (hi << 8);
-        return r;
     }   
 
-    inline BinaryReader operator >> (BinaryReader r, uint32_t & into) {
+    inline void read(BinaryReader & r, uint32_t & into) {
         uint16_t lo, hi;;
         r >> lo;
         r >> hi;
         into = lo + (static_cast<uint32_t>(hi) << 16);
-        return r;
     }
 
-    inline BinaryReader operator >> (BinaryReader r, uint64_t & into) {
+    inline void read(BinaryReader & r, uint64_t & into) {
         uint32_t lo, hi;
         r >> lo;
         r >> hi;
         into = lo + (static_cast<uint64_t>(hi) << 32);
-        return r;
     }
 
-    inline BinaryReader operator >> (BinaryReader r, int8_t & into) {
+    inline void read(BinaryReader & r, int8_t & into) {
         uint8_t x;
         r >> x;
         into = static_cast<int8_t>(x);
-        return r;
     }
 
-    inline BinaryReader operator >> (BinaryReader r, int16_t & into) {
+    inline void read(BinaryReader & r, int16_t & into) {
         uint16_t x;
         r >> x;
         into = static_cast<int16_t>(x);
-        return r;
     }
 
-    inline BinaryReader operator >> (BinaryReader r, int32_t & into) {
+    inline void read(BinaryReader & r, int32_t & into) {
         uint32_t x;
         r >> x;
         into = static_cast<int32_t>(x);
-        return r;
     }
 
-    inline BinaryReader operator >> (BinaryReader r, int64_t & into) {
+    inline void read(BinaryReader & r, int64_t & into) {
         uint64_t x;
         r >> x;
         into = static_cast<int64_t>(x);
-        return r;
     }
 
-    inline BinaryReader operator >> (BinaryReader r, char & into) {
+    inline void read(BinaryReader & r, char & into) {
         into = static_cast<char>(r.getByte());
-        return r;
     }
 
-    inline BinaryReader operator >> (BinaryReader r, bool & into) {
+    inline void read(BinaryReader & r, bool & into) {
         into = r.getByte() != 0;
-        return r;
     }
 
 } // namespace rckid

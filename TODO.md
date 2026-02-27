@@ -5,6 +5,8 @@
 
 - use only absolutely necessary icons in the raw format to avoid extra flash bloat
 
+- write converter is wrong and should return writer, which then the operator that calls the converter uses
+
 - heapend on mk3 should return current sp or something like that to verify that we are not growing over
 
 - apply style to existing widgets (Label, etc.) (...)

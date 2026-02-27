@@ -215,7 +215,7 @@ namespace rckid {
 
     }; 
 
-    inline Writer & operator << (Writer & w, WiFi::AuthMode const & mode) {
+    inline void write(Writer & w, WiFi::AuthMode const & mode) {
         switch (mode) {
             case WiFi::AuthMode::Open:
                 w << "Open";

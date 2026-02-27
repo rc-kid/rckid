@@ -151,7 +151,7 @@ namespace rckid {
         Writer text(Coord x, Coord y) {
             ASSERT(x < cols_ && y < rows_);
             return Writer{[this, x, y](char c) mutable {
-                at(x++, y) = c;
+                at(x++, y).setAltTileset(false).setPaletteOffset(0) = c;
             }};
         }
 

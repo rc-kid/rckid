@@ -289,15 +289,14 @@ namespace rckid {
         }
     }
 
-    inline Writer operator << (Writer w, Color color) {
+    inline void write(Writer & w, Color color) {
         w << "#" << hex2(color.r) << hex2(color.g) << hex2(color.b);
-        return w;
     }
 
-    inline Reader operator >> (Reader reader, Color & color) {
+    inline void read(Reader & reader, Color & color) {
         color = Color::Black(); // reset color in case of error
         if (reader.peekChar() != '#')
-            return reader;
+            return;
         reader.getChar(); // consume '#'
         uint8_t r = 0;
         uint8_t g = 0;
@@ -312,9 +311,8 @@ namespace rckid {
             return true;
         };
         if (! readHexByte(r) || ! readHexByte(g) || ! readHexByte(b))
-            return reader;
+            return;
         color = Color::RGB(r, g, b);
-        return reader;
     }
 
 } // namespace rckid

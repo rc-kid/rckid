@@ -262,7 +262,7 @@ namespace rckid::json {
 
     private:
 
-        friend Writer & operator << (Writer & writer, Object const & object) {
+        friend void write(Writer & writer, Object const & object) {
             object.write(writer);
             return writer;
         }

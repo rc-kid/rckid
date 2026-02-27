@@ -58,7 +58,7 @@ namespace rckid {
 
     }; // WiFi::ConnectionInternals
 
-    Writer & operator << (Writer & w, WiFi::ConnectionInternals const & ci) {
+    void write(Writer & w, WiFi::ConnectionInternals const & ci) {
         w << hex((uint32_t)(&ci));
         return w;
     }

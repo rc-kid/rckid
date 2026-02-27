@@ -144,7 +144,7 @@ namespace rckid::ui {
 
     }; // rckid::ui::Style
 
-    inline Writer & operator << (Writer & w, RGBStyle style) {
+    inline void write(Writer & w, RGBStyle style) {
         switch (style) {
             case RGBStyle::Off:
                 w << "off";
@@ -199,7 +199,7 @@ namespace rckid::ui {
         }
     }
 
-    inline Writer & operator << (Writer & w, BackgroundScrollStyle style) {
+    inline void write(Writer & w, BackgroundScrollStyle style) {
         switch (style) {
             case BackgroundScrollStyle::Off:
                 w << "off";

@@ -501,76 +501,79 @@ private:
 }); 
 /** Helper function for tiny date serialization to writer-like classes (writer stream, stdout, etc).
  */
-inline Writer operator << (Writer writer, TinyDateTime const & date) {
-    return writer << date.date.day() << '/' 
-                  << date.date.month() << '/' 
-                  << date.date.year() << ' '
-                  << date.time.hour() << ':' 
-                  << date.time.minute() << ':' 
-                  << date.time.second();
+inline void write(Writer & writer, TinyDateTime const & date) {
+    writer 
+        << date.date.day() << '/' 
+        << date.date.month() << '/' 
+        << date.date.year() << ' '
+        << date.time.hour() << ':' 
+        << date.time.minute() << ':' 
+        << date.time.second();
 } // operator <<
 
-inline Writer operator << (Writer writer, TinyDate const & date) {
-    return writer << date.day() << '/' 
-                  << date.month() << '/' 
-                  << date.year();
+inline void write(Writer & writer, TinyDate const & date) {
+    writer 
+        << date.day() << '/' 
+        << date.month() << '/' 
+        << date.year();
 } // operator <<
 
-inline Writer operator << (Writer writer, TinyTime const & time) {
-    return writer << time.hour() << ':' 
-                  << time.minute() << ':' 
-                  << time.second();
+inline void write(Writer & writer, TinyTime const & time) {
+    writer 
+        << time.hour() << ':' 
+        << time.minute() << ':' 
+        << time.second();
 } // operator <<
 
-inline Writer operator << (Writer writer, TinyDate::DayOfWeek d) {
+inline void write(Writer & writer, TinyDate::DayOfWeek d) {
     switch (d) {
         case TinyDate::DayOfWeek::Monday:
-            return writer << "Monday";
+            return write(writer, "Monday");
         case TinyDate::DayOfWeek::Tuesday:
-            return writer << "Tuesday";
+            return write(writer, "Tuesday");
         case TinyDate::DayOfWeek::Wednesday:
-            return writer << "Wednesday";
+            return write(writer, "Wednesday");
         case TinyDate::DayOfWeek::Thursday:
-            return writer << "Thursday";
+            return write(writer, "Thursday");
         case TinyDate::DayOfWeek::Friday:
-            return writer << "Friday";
+            return write(writer, "Friday");  
         case TinyDate::DayOfWeek::Saturday:
-            return writer << "Saturday";
+            return write(writer, "Saturday");
         case TinyDate::DayOfWeek::Sunday:
-            return writer << "Sunday";
+            return write(writer, "Sunday");
         default:
-            return writer << "Unknown";
+            return write(writer, "Unknown");
     }
 } // operator << (DayOfWeek)
 
-inline Writer operator << (Writer writer, TinyDate::Month m) {
+inline void write(Writer & writer, TinyDate::Month m) {
     switch (m) {
         case TinyDate::Month::January:
-            return writer << "January";
+            return write(writer, "January");
         case TinyDate::Month::February:
-            return writer << "February";
+            return write(writer, "February");
         case TinyDate::Month::March:
-            return writer << "March";
+            return write(writer, "March");
         case TinyDate::Month::April:
-            return writer << "April";
+            return write(writer, "April");
         case TinyDate::Month::May:
-            return writer << "May";
+            return write(writer, "May");
         case TinyDate::Month::June:
-            return writer << "June";
+            return write(writer, "June");
         case TinyDate::Month::July:
-            return writer << "July";
+            return write(writer, "July");
         case TinyDate::Month::August:
-            return writer << "August";
+            return write(writer, "August");
         case TinyDate::Month::September:
-            return writer << "September";
+            return write(writer, "September");
         case TinyDate::Month::October:
-            return writer << "October";
+            return write(writer, "October");
         case TinyDate::Month::November:
-            return writer << "November";
+            return write(writer, "November");
         case TinyDate::Month::December:
-            return writer << "December";
+            return write(writer, "December");
         default:
-            return writer << "Unknown";
+            return write(writer, "Unknown");
     }
 } // operator << (Month)
 

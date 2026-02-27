@@ -135,7 +135,7 @@ namespace rckid {
             RainbowData rainbow_;
         });
 
-        friend Writer & operator << (Writer & w, RGBEffect const & e) {
+        friend void write(Writer & w, RGBEffect const & e) {
             switch (e.kind) {
                 case Kind::Off:
                     w << "off";
@@ -179,7 +179,7 @@ namespace rckid {
 
         static RumblerEffect Off() { return RumblerEffect{}; }
 
-        friend Writer & operator << (Writer & w, RumblerEffect const & e) {
+        friend void write(Writer & w, RumblerEffect const & e) {
             return w << "strength: " << e.strength << ", tOn: " << e.timeOn << ", tOff" <<  e.timeOff << ", cycles: " << e.cycles;
         }
 

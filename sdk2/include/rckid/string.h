@@ -304,21 +304,18 @@ namespace rckid {
         uint32_t capacity_ = 0;
     }; // StringBuilder
 
-    inline Writer operator << (Writer w, String const & s) {
-        for (uint32_t i = 0; i < s.size(); ++i) {
+    inline void write(Writer & w, String const & s) {
+        for (uint32_t i = 0; i < s.size(); ++i)
             w.putChar(s.c_str()[i]);
-        }
-        return w;
     }
 
-    inline BinaryWriter operator << (BinaryWriter w, String const & s) {
+    inline void write(BinaryWriter & w, String const & s) {
         w << static_cast<uint32_t>(s.size());
         for (uint32_t i = 0; i < s.size(); ++i)
             w.putByte(s.c_str()[i]);
-        return w;
     }
 
-    inline Reader operator >> (Reader r, String & str) {
+    inline void read(Reader & r, String & str) {
         StringBuilder builder;
         while (!r.eof()) {
             char c = r.peekChar();
@@ -327,7 +324,6 @@ namespace rckid {
             builder.appendChar(r.getChar());
         }
         str = builder.str();
-        return r;
     }
 
 
