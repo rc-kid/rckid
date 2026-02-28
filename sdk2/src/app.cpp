@@ -1,12 +1,20 @@
 
 #include <rckid/audio/audio.h>
 #include <rckid/apps/home_menu.h>
+#include <rckid/apps/dialogs/info_dialog.h>
 #include <rckid/task.h>
 #include <rckid/app.h>
 
 namespace rckid {
 
     void App::loop() {
+        if (homeDriveMounted()) {
+            Capabilities caps = capabilities();
+            if (caps.canPersistState)
+                createFolders("saves");
+            if (caps.canCaptureScreen)
+                createFolders("screenshots");
+        }
         rckid::display::waitUpdateDone();
         if (! HomeMenu::active() && btnReleased(Btn::Home)) {
             auto action = App::run<HomeMenu>();
@@ -26,7 +34,27 @@ namespace rckid {
         // load & save state
         // take screenshot, etc.
         if (caps.canPersistState) {
-            // TODO generate load & save state menus here
+            (*result) << ui::MenuItem::Generator("Load", assets::icons_64::poo, [this]() {
+                auto result = std::make_unique<ui::Menu>();
+                readFolder("saves", [this, & result] (fs::FolderEntry const & entry) {
+                    if (entry.isFolder)
+                        return;
+                    (*result) << ui::MenuItem(fs::stem(entry.name), assets::icons_64::poo, [this, entryName = entry.name]() {
+                        loadState(fs::join("saves", entryName));
+                    });
+                });
+                return result;
+            });
+            (*result) << ui::MenuItem::Generator("Save", assets::icons_64::poo, [this]() {
+                auto result = std::make_unique<ui::Menu>();
+                for (uint32_t i = 1; i <= 4; ++i) {
+                    String slotName = STR(i);
+                    (*result) << ui::MenuItem(slotName, assets::icons_64::poo, [this, slotName]() {
+                        saveState(fs::join("saves", slotName));
+                    });
+                }
+                return result;
+            });
         }
         if (caps.canCaptureScreen) {
             // TODO generate screenshot option
@@ -34,12 +62,31 @@ namespace rckid {
         return result;
     }
 
+    void App::loadState(String filename) {
+        auto f = readFile(filename);
+        if (f == nullptr)
+            return InfoDialog::error("Cannot load state", STR("Unable to open file " << filename));
+        if (! loadState(*f))
+            return InfoDialog::error("Cannot load state", STR("Corrupted save file " << filename));
+    }
+
+    void App::saveState(String filename) {
+        auto f = writeFile(filename);
+        if (f == nullptr)
+            return InfoDialog::error("Cannot save state", STR("Unable to open file " << filename));
+        saveState(*f);
+    }
+
     String App::homeFolder() const {
-        return STR("/apps/" << name());
+        return fs::join("/apps", name());
     }
 
     fs::Drive App::homeDrive() const {
         return fs::Drive::SD;
+    }
+
+    bool App::homeDriveMounted() const {
+        return fs::isMounted(homeDrive());
     }
 
     String App::resolvePath(String const & relativePath) const {

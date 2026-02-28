@@ -18,6 +18,7 @@
 - save and load state (...)
 - decorator event in menu items for badges (& their clearing in carousel selection) (...)
 - header (...)
+- add extra tiles for all volume levels
 - pim (hearts, currency, pin, parent mode, etc.)
 
 - mk3 code not cleaned up and not working

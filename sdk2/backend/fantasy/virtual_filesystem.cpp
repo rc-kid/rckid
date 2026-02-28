@@ -289,14 +289,14 @@ namespace rckid::fs {
     bool createFolders(String const & path, Drive dr) {
         if (!isMounted(dr))
             return false;
-        if (path == nullptr || path[0] == 0)
+        if (path.empty() || (path[0] == 0))
             return false;
         uint32_t i = 0;
         if (path[0] == '/') 
             ++i;
         while (true) {
             if (path[i] == '/' || path[i] == 0) {
-                String p = path.substr(i);
+                String p = path.substr(0, i);
                 if (! isFolder(p.c_str(), dr) &&  (! createFolder(p.c_str(), dr)))
                     return false;
                 if (path[i] == 0)

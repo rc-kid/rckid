@@ -179,6 +179,9 @@ namespace rckid {
             UNREACHABLE;
         }
 
+        void loadState(String filename);
+        void saveState(String filename);
+
         /** Saves screen capture in any of the SDK supported image formats to the given stream.
          
             Override this method in apps that support screen capture. Note that the app must declare the canCaptureScreen capability in order for the method to be called. Returns true of the screen capture was successful, false otherwise.
@@ -223,6 +226,8 @@ namespace rckid {
         String homeFolder() const;
 
         fs::Drive homeDrive() const;
+
+        bool homeDriveMounted() const;
 
         String resolvePath(String const & relativePath) const;
 
