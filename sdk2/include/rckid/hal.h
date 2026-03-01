@@ -30,8 +30,6 @@ namespace rckid {
 
     void onWakeup(uint32_t payload);
     void onPowerOff();
-    void onSecondTick();
-    void onHeadphonesChange(bool connected);
     [[noreturn]] void onFatalError(char const * file, uint32_t line, char const * msg, uint32_t payload);
 
 } // namespace rckid
@@ -171,7 +169,7 @@ namespace rckid::hal {
             | | | ----------- accel interrupt
             | | ------------- wakeup interrupt
             | --------------- power off interrupt
-            ----------------- second interrupt  
+            -----------------  
          */
         uint8_t c_ = 0;
         /** Voltage 
@@ -402,5 +400,15 @@ namespace rckid::hal {
         bool isImmutableDataPtr(void const * ptr);
 
     } // namespace rckid::hal::memory
+
+    /** Persistent storage access.
+    
+        1kb available for storage of device specific data. On the device, this is stored in the AVR's memory, but the AVR does not really understand the data. It just provides a simple read/write access to it. 
+     */
+    namespace storage {
+        void load(uint16_t start, uint8_t * buffer, uint32_t numBytes);
+        void save(uint16_t start, uint8_t const * buffer, uint32_t numBytes);
+    } // namespace rckid::hal::store
+
 
 } // namespace rckid

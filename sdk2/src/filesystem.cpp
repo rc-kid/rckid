@@ -93,6 +93,7 @@ extern "C" {
 
 namespace rckid::fs {
 
+#ifndef RCKID_CUSTOM_FILESYSTEM
     namespace {
         FATFS * fs_ = nullptr;
         lfs_t lfs_;
@@ -234,6 +235,8 @@ namespace rckid::fs {
         mutable lfs_file_t f_;
 
     }; // LittleFSFileWriter
+
+#endif
 
     // path manipulation functions
 

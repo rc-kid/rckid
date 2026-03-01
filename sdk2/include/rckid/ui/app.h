@@ -6,8 +6,6 @@
 
 namespace rckid::ui {
 
-// TODO add root widget, that does the rendering and defines the init display & stuff
-
     template<typename RESULT>
     class App : public ModalApp<RESULT> {
     public:

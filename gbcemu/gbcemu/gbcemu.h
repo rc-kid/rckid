@@ -57,7 +57,8 @@ namespace rckid::gbcemu {
         Capabilities capabilities() const override {
             return {
                 .canPersistState = true,
-                .standalone = true
+                .consumesBudget = true,
+                .standalone = true,
             };
         }
 

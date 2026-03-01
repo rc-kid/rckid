@@ -578,5 +578,16 @@ namespace rckid::hal {
 
     } // namespace rckid::hal::memory
 
+    namespace storage {
+
+        void save(uint16_t start, uint8_t const * buffer, uint32_t numBytes) {
+            UNIMPLEMENTED;
+        }
+
+        void load(uint16_t start, uint8_t * buffer, uint32_t numBytes) {
+            UNIMPLEMENTED;
+        }
+    } // namespace rckid::hal::storage
+
 } // namespace rckid::hal
 

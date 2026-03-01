@@ -1,7 +1,9 @@
 #include <rckid/rckid.h>
 #include <rckid/hal.h>
+#include <rckid/app.h>
 #include <rckid/task.h>
 #include <rckid/ui/header.h>
+#include <rckid/apps/dialogs/info_dialog.h>
 
 namespace rckid {
 
@@ -10,11 +12,14 @@ namespace rckid {
 
     TinyDateTime now_;
 
+    uint64_t nextSecondUptime_ = 0;
+
     // device
 
     void initialize() {
         hal::device::initialize();
         now_ = hal::time::now();
+        nextSecondUptime_ = hal::time::uptimeUs() + 1000000;
         // TODO
     }
 
@@ -27,6 +32,18 @@ namespace rckid {
         // run hal's on tick & yield (this likely requests new state to be gathered as well)
         hal::device::onTick();
         hal::device::onYield();
+        // check if we need to trigger second tick
+        if (hal::time::uptimeUs() >= nextSecondUptime_) {
+            nextSecondUptime_ += 1000000;
+            now_.inc();
+            ui::Header::update();
+            if (App::current() != nullptr) {
+                if (App::current()->capabilities().consumesBudget && pim::updateBudget(-1) == 0) {
+                    InfoDialog::error("Out of budget", "No more budget today to play the game.");
+                    App::current()->exit();
+                }
+            } 
+        }
         // run tasks
         Task::runAll();
     }
@@ -88,12 +105,6 @@ namespace rckid {
 
     void onPowerOff() {
 
-    }
-
-    void onSecondTick() {
-        now_.inc();
-
-        ui::Header::update();
     }
 
     void onFatalError(char const * file, uint32_t line, char const * msg, uint32_t payload) {

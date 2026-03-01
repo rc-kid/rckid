@@ -4,24 +4,27 @@
 - how to do heartbeat? (static initializers?)
 
 - use only absolutely necessary icons in the raw format to avoid extra flash bloat
-
-- heapend on mk3 should return current sp or something like that to verify that we are not growing over
+- for game saves use different bookmark icon (red maybe?)
+- when exitting game, save latest state if it makes sense
 
 - apply style to existing widgets (Label, etc.) (...)
 - button press repeat (configurable)
 
+- settings
 - popup menu
 - basic dialogs
 - basic util apps (port from old version)
 - games (port from old, or even mkII)
 
-- save and load state (...)
 - decorator event in menu items for badges (& their clearing in carousel selection) (...)
 - header (...)
+- show header even when not full screen is rendered (home menu & friends)
 - add extra tiles for all volume levels
 - pim (hearts, currency, pin, parent mode, etc.)
 
 - mk3 code not cleaned up and not working
+- heapend on mk3 should return current sp or something like that to verify that we are not growing over
+
 
 - add support for overclocking, and in the missing adjustment for display pio in the hal layer:
 

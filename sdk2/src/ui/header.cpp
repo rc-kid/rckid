@@ -50,18 +50,30 @@ namespace rckid::ui {
         else
            ADD_ICON(TileIcon::speaker(), audio::volume() == 0 ? (PaletteOffsetRed + 1) : PaletteOffsetGreen);
 
+
+        TinyDateTime now = time::now();
+        uint32_t budget = pim::remainingBudget();
+
+        if (budget != 0 && budget < 600) {
+            update = true;
+            TinyTime budgetTime{budget};
+            instance_->contents_.setTileIcon(0, 0, TileIcon::heartEmpty(), PaletteOffsetRed + 1);
+            instance_->contents_.text(2, 0)
+                << alignRight(budgetTime.minute(), 2, '0')
+                << ((now.time.second() % 2) ? ':' : ' ')
+                << alignRight(budgetTime.second(), 2, '0');
+        } else {
+            instance_->contents().text(0, 0) 
+                << alignRight(now.time.hour(), 2, '0')
+                << ((now.time.second() % 2) ? ':' : ' ')
+                << alignRight(now.time.minute(), 2, '0');
+        }
+
         if (update) {
             instance_->show();
             if (instance_->remainingTicks_ < TicksToShowOnChange)
                 instance_->remainingTicks_ = TicksToShowOnChange;
         }
-
-        TinyDateTime now = time::now();
-
-        instance_->contents().text(0, 0) 
-            << alignRight(now.time.hour(), 2, '0')
-            << ((now.time.second() % 2) ? ':' : ' ')
-            << alignRight(now.time.minute(), 2, '0');
 
     }
 

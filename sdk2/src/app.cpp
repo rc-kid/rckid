@@ -8,13 +8,6 @@
 namespace rckid {
 
     void App::loop() {
-        if (homeDriveMounted()) {
-            Capabilities caps = capabilities();
-            if (caps.canPersistState)
-                createFolders("saves");
-            if (caps.canCaptureScreen)
-                createFolders("screenshots");
-        }
         rckid::display::waitUpdateDone();
         if (! HomeMenu::active() && btnReleased(Btn::Home)) {
             auto action = App::run<HomeMenu>();
@@ -34,22 +27,22 @@ namespace rckid {
         // load & save state
         // take screenshot, etc.
         if (caps.canPersistState) {
-            (*result) << ui::MenuItem::Generator("Load", assets::icons_64::poo, [this]() {
+            (*result) << ui::MenuItem::Generator("Load", assets::icons_64::bookmark, [this]() {
                 auto result = std::make_unique<ui::Menu>();
                 readFolder("saves", [this, & result] (fs::FolderEntry const & entry) {
                     if (entry.isFolder)
                         return;
-                    (*result) << ui::MenuItem(fs::stem(entry.name), assets::icons_64::poo, [this, entryName = entry.name]() {
+                    (*result) << ui::MenuItem(fs::stem(entry.name), assets::icons_64::bookmark, [this, entryName = entry.name]() {
                         loadState(fs::join("saves", entryName));
                     });
                 });
                 return result;
             });
-            (*result) << ui::MenuItem::Generator("Save", assets::icons_64::poo, [this]() {
+            (*result) << ui::MenuItem::Generator("Save", assets::icons_64::bookmark, [this]() {
                 auto result = std::make_unique<ui::Menu>();
                 for (uint32_t i = 1; i <= 4; ++i) {
                     String slotName = STR(i);
-                    (*result) << ui::MenuItem(slotName, assets::icons_64::poo, [this, slotName]() {
+                    (*result) << ui::MenuItem(slotName, assets::icons_64::bookmark, [this, slotName]() {
                         saveState(fs::join("saves", slotName));
                     });
                 }
@@ -133,7 +126,18 @@ namespace rckid {
         return fs::readFolder(resolvePath(path), homeDrive(), std::move(callback));
     }
 
-    void App::enforceCapabilities(Capabilities const & caps) {
+    void App::enforceCapabilities() {
+        Capabilities caps = capabilities();
+        if (caps.consumesBudget && pim::remainingBudget() == 0) {
+            InfoDialog::error("Out of budget", "No more budget today to play the game.");
+            return exit();
+        }
+        if (homeDriveMounted()) {
+            if (caps.canPersistState)
+                createFolders("saves");
+            if (caps.canCaptureScreen)
+                createFolders("screenshots");
+        }
         if (caps.standalone) {
             if (current_->parent_ != nullptr)
                current_->parent_->releaseResources();

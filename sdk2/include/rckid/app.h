@@ -59,7 +59,7 @@ namespace rckid {
                     current_->onBlur();
                 app.parent_ = current_;
                 current_ = & app;
-                enforceCapabilities(app.capabilities());
+                app.enforceCapabilities();
                 current_->onFocus();
                 current_->onLoopStart();
                 while (! app.shouldExit()) {
@@ -89,7 +89,7 @@ namespace rckid {
                     current_->onBlur();
                 app.parent_ = current_;
                 current_ = & app;
-                enforceCapabilities(app.capabilities());
+                app.enforceCapabilities();
                 current_->onFocus();
                 current_->onLoopStart();
                 while (! app.shouldExit()) {
@@ -124,6 +124,10 @@ namespace rckid {
         virtual Capabilities capabilities() const {
             return {};
         }
+
+        /** Returns the currently running app. 
+         */
+        static App * current() { return current_; }
 
     protected:
         friend class HomeMenu; // for access to home menu generator
@@ -259,7 +263,10 @@ namespace rckid {
 
     private:
 
-        static void enforceCapabilities(Capabilities const & caps);
+        // tick is friend so that it can force exit of the current app if budgeted
+        friend void tick();
+
+        void enforceCapabilities();
 
         App * parent_ = nullptr;
         // flag indicating whether the app should exit

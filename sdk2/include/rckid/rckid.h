@@ -173,6 +173,33 @@ namespace rckid {
     }; // rckid::display
 
 
+    class pim {
+    public:
+
+        static uint32_t remainingBudget() { return budget_; }
+
+        static uint32_t updateBudget(int32_t value) {
+            if (value > 0) {
+                budget_ += value;
+            } else {
+                uint32_t absValue = static_cast<uint32_t>(-value);
+                if (absValue > budget_)
+                    budget_ = 0;
+                else
+                    budget_ -= absValue;
+            }
+            return budget_;
+        }
+
+    private:
+
+        friend void onSecondTick();
+
+        static inline uint32_t budget_ = 60;
+
+    }; // rckid::pim
+
+
 } // namespace rckid
 
 /** Following are potentially accelerated hardware primitives. 

@@ -23,6 +23,12 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/game_controller.inc.h"
     };
 
+    // File: icons/icons_64/035-gameboy.raw
+    // Size: 8196
+    static constexpr uint8_t gameboy[] = {
+        #include "raw/icons_64/gameboy.inc.h"
+    };
+
     // File: icons/icons_64/025-folder.raw
     // Size: 8196
     static constexpr uint8_t folder[] = {
@@ -87,6 +93,12 @@ namespace rckid::assets::icons_64 {
     // Size: 8196
     static constexpr uint8_t play_button[] = {
         #include "raw/icons_64/play_button.inc.h"
+    };
+
+    // File: icons/icons_64/046-bookmark.raw
+    // Size: 8196
+    static constexpr uint8_t bookmark[] = {
+        #include "raw/icons_64/bookmark.inc.h"
     };
 
     // File: icons/icons_64/081-footprint.raw

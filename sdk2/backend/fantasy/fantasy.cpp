@@ -34,6 +34,10 @@ namespace rckid::internal {
 
     } // rckid::internal::memory
 
+    namespace storage {
+        uint8_t data[1024];
+    } // rckid::internal::storage
+
     namespace device {
         // part of a mechanism to exit the app during a yield in fatal error mode. fatalError sets this to true if we do not have window (indicating cli execution) and then onYield kills the app immediately.
         // has no effect in GUI mode when we simulate the BSOD from the device
@@ -44,7 +48,6 @@ namespace rckid::internal {
     namespace time {
         TinyDateTime now;
         std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
-        std::chrono::steady_clock::time_point nextSecondTick; 
     } // rckid::internal::time
 
     namespace io {
@@ -240,9 +243,16 @@ namespace rckid::hal {
                 }
             }
     #endif
+            // load the avr storage if we have the file available
+            std::fstream storageFile("avr-storage.dat", std::ios::in | std::ios::binary);
+            if (storageFile.is_open()) {
+                storageFile.read(reinterpret_cast<char*>(internal::storage::data), sizeof(internal::storage::data));
+                LOG(LL_INFO, "avr-storage.dat file found, loaded " << storageFile.gcount() << " bytes of persistent storage");
+            } else {
+                memset(internal::storage::data, 0, sizeof(internal::storage::data));
+            }
             internal::memory::useSystemMalloc = 0;
             rckid::fs::initializeFilesystem();
-            internal::time::nextSecondTick = internal::time::start + std::chrono::seconds(1);
         }
 
         void initialize() {
@@ -272,19 +282,9 @@ namespace rckid::hal {
         }
 
         void onTick() {
-            bool secondTick;
-            {
-                internal::memory::SystemMallocGuard g;
-                if (WindowShouldClose())
-                    std::exit(-1);
-                auto t = std::chrono::steady_clock::now();
-                if (t >= internal::time::nextSecondTick) {
-                    internal::time::nextSecondTick += std::chrono::seconds(1);
-                    secondTick = true;
-                }
-            }
-            if (secondTick)
-                onSecondTick();
+            internal::memory::SystemMallocGuard g;
+            if (WindowShouldClose())
+                std::exit(-1);
         }
 
         void onYield() {
@@ -621,6 +621,27 @@ namespace rckid::hal {
 
 
     } // namespace rckid::hal::memory
+
+    namespace storage {
+
+        void load(uint16_t start, uint8_t * buffer, uint32_t numBytes) {
+            ASSERT(start + numBytes <= sizeof(internal::storage::data));
+            std::memcpy(buffer, internal::storage::data + start, numBytes);
+        }
+
+        void save(uint16_t start, uint8_t const * buffer, uint32_t numBytes) {
+            ASSERT(start + numBytes <= sizeof(internal::storage::data));
+            std::memcpy(internal::storage::data + start, buffer, numBytes);
+            // save to the file system to preserve persistent storage across runs
+            std::fstream storageFile("avr-storage.dat", std::ios::out | std::ios::binary);
+            if (storageFile.is_open()) {
+                storageFile.write(reinterpret_cast<char const *>(internal::storage::data), sizeof(internal::storage::data));
+                LOG(LL_INFO, "Saved " << sizeof(internal::storage::data) << " bytes of persistent storage to avr-storage.dat file");
+            } else {
+                LOG(LL_ERROR, "Failed to save persistent storage to avr-storage.dat file"); 
+            }
+        }
+    } // namespace rckid::hal::storage
 
 } // namespace rckid::hal
 
