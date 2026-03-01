@@ -148,7 +148,7 @@ namespace rckid {
          
             This function is a good place to start any animations that should be played when the app starts to preserve correct timing. Default implementation is empty.
          */
-        virtual void onLoopStart() {}
+        virtual void onLoopStart();
 
         /** Main loop of the application. 
          
@@ -216,8 +216,12 @@ namespace rckid {
         /** Flags the application to exit. 
          
             Note that the app does not exit immediately, but rather after the end of its current loop() iteration. When app exists, the control is returned to the parent app, if any.
+
+            If app supports state persistence, the state will be automatically saved to "Latest" slot in the app's home folder before exiting.
          */
         void exit() {
+            if (capabilities().canPersistState)
+                saveState("Latest");
             shouldExit_ = true;
         }
 

@@ -3,17 +3,35 @@
 
 namespace rckid::ui {
 
-#define ADD_ICON(icon, paletteOffset) \
+#define ADD_ICON(ICON, paletteOffset) \
     do { \
+        auto icon = ICON; \
         x -= icon.size(); \
         update = instance_->contents_.setTileIcon(x, 0, icon, paletteOffset) || update; \
     } while (false)
 
     void Header::update() {
 
+        TinyDateTime now = time::now();
         bool update = false;
+
         Coord x = 40;
-        ADD_ICON(TileIcon::batteryFull(), PaletteOffsetGreen);
+        if (power::charging()) {
+            ADD_ICON(TileIcon::batteryCharging(), PaletteOffsetRed);
+        } else if (power::dcConnected()) {
+            ADD_ICON(TileIcon::batteryDC(), PaletteOffsetGreen);
+        } else {
+            uint32_t batt = power::batteryLevel();
+            if (batt >= 85) {
+                ADD_ICON(TileIcon::batteryFull(), PaletteOffsetGreen);
+            } else if (batt >= 65) {
+                ADD_ICON(TileIcon::batteryTwoThirds(), PaletteOffsetGreen);
+            } else if (batt >= 30) {
+                ADD_ICON(TileIcon::batteryOneThird(), PaletteOffsetGreen);
+            } else {
+                ADD_ICON((now.time.second() % 2) ? TileIcon::batteryOneThird() : TileIcon::batteryEmpty(), PaletteOffsetRed);
+            }
+        }
         switch (audio::volume()) {
             case 1:
             case 2:
@@ -50,10 +68,7 @@ namespace rckid::ui {
         else
            ADD_ICON(TileIcon::speaker(), audio::volume() == 0 ? (PaletteOffsetRed + 1) : PaletteOffsetGreen);
 
-
-        TinyDateTime now = time::now();
         uint32_t budget = pim::remainingBudget();
-
         if (budget != 0 && budget < 600) {
             update = true;
             TinyTime budgetTime{budget};

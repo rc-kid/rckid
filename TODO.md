@@ -5,7 +5,6 @@
 
 - use only absolutely necessary icons in the raw format to avoid extra flash bloat
 - for game saves use different bookmark icon (red maybe?)
-- when exitting game, save latest state if it makes sense
 
 - apply style to existing widgets (Label, etc.) (...)
 - button press repeat (configurable)
@@ -16,9 +15,13 @@
 - basic util apps (port from old version)
 - games (port from old, or even mkII)
 
-- decorator event in menu items for badges (& their clearing in carousel selection) (...)
-- header (...)
 - show header even when not full screen is rendered (home menu & friends)
+- add task icons to header
+
+- audio volume part of storage
+- budget is part of storage too
+
+- decorator event in menu items for badges (& their clearing in carousel selection) (...)
 - add extra tiles for all volume levels
 - pim (hearts, currency, pin, parent mode, etc.)
 

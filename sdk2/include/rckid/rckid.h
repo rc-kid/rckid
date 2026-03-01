@@ -78,6 +78,10 @@ namespace rckid {
         */
         uint32_t vcc();
 
+        /** Returns the current battery level percentage.
+         */
+        uint32_t batteryLevel();
+
         /** Returns true if the device is charging.
          */
         bool charging();
@@ -193,9 +197,7 @@ namespace rckid {
 
     private:
 
-        friend void onSecondTick();
-
-        static inline uint32_t budget_ = 60;
+        static inline uint32_t budget_ = 3600;
 
     }; // rckid::pim
 

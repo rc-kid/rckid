@@ -1,16 +1,19 @@
 #include <rckid/ui/header.h>
 #include <rckid/audio/audio.h>
 
+namespace rckid {
+    extern hal::State state_;
+} // namespace rckid
+
 namespace rckid::audio {
 
     namespace {
-        bool headphonesConnected_ = false;
         uint8_t headphonesVolume_ = 8;
         uint8_t speakerVolume_ = 8;
     }
     
     bool headphonesConnected() {
-        return headphonesConnected_;
+        return state_.headphonesConnected();
     }
 
     uint8_t volume() {
@@ -31,13 +34,4 @@ namespace rckid::audio {
         }
         ui::Header::update();
     }
-}
-
-namespace rckid {
-    void onHeadphonesChange(bool connected) {
-        if (audio::headphonesConnected_ == connected)
-            return;
-        audio::headphonesConnected_ = connected;
-        ui::Header::update();
-    }
-}
+} // namespace rckid::audio

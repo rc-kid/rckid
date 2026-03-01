@@ -18,10 +18,8 @@ namespace rckid {
         static TileIcon batteryTwoThirds() { return TileIcon{0, 1, 5}; }
         static TileIcon batteryOneThird() { return TileIcon{0, 4, 5}; } 
         static TileIcon batteryEmpty() { return TileIcon{3, 4, 5}; }
-        static TileIcon batteryChargingFull() { return TileIcon{0, 6, 2}; }
-        static TileIcon batteryChargingEmpty() { return TileIcon{3, 6, 5}; }
-        static TileIcon batteryDCFull() { return TileIcon{0, 7, 2}; }
-        static TileIcon batteryDCEmpty() { return TileIcon{3, 7, 5}; }
+        static TileIcon batteryCharging() { return TileIcon{0, 6, 2}; }
+        static TileIcon batteryDC() { return TileIcon{0, 8, 2}; }
         static TileIcon headphones() { return TileIcon{9, 10}; }
         static TileIcon speaker() { return TileIcon{11, 12}; }
         static TileIcon wifi() { return TileIcon{13, 14}; }

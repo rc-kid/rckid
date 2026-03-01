@@ -364,7 +364,28 @@ namespace rckid::hal {
             internal::io::state.setButton(Btn::Home, IsKeyDown(KEY_H));
             internal::io::state.setButton(Btn::VolumeUp, IsKeyDown(KEY_PAGE_UP));
             internal::io::state.setButton(Btn::VolumeDown, IsKeyDown(KEY_PAGE_DOWN));
-            // TODO deal with interrupts, vcc and stuff
+            // in fantasy mode, certain keys can be used to simulate other hardware events, namely:
+            if (IsKeyPressed(KEY_ONE)) {
+                uint32_t vcc = internal::io::state.vcc();
+                vcc = (vcc >= 10) ? (vcc - 10) : 0;
+                internal::io::state.setVcc(vcc);
+                LOG(LL_INFO, "VCC: " << internal::io::state.vcc());
+            }
+            if (IsKeyPressed(KEY_TWO)) {
+                uint32_t vcc = internal::io::state.vcc();
+                vcc = (vcc >= 300) ? (vcc + 10) : 300;
+                internal::io::state.setVcc(vcc);
+                LOG(LL_INFO, "VCC: " << internal::io::state.vcc());
+            }
+            if (IsKeyPressed(KEY_THREE)) {
+                internal::io::state.setHeadphonesConnected(!internal::io::state.headphonesConnected());
+                LOG(LL_INFO, "Headphones: " << (internal::io::state.headphonesConnected() ? "connected" : "disconnected"));
+            }
+            if (IsKeyPressed(KEY_FOUR)) {
+                internal::io::state.setCharging(!internal::io::state.charging());
+                LOG(LL_INFO, "Charging: " << (internal::io::state.charging() ? "on" : "off"));
+            }
+            // and return
             return internal::io::state;
         }
 

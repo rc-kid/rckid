@@ -7,6 +7,10 @@
 
 namespace rckid {
 
+    void App::onLoopStart() {
+        ui::Header::update();
+    }
+
     void App::loop() {
         rckid::display::waitUpdateDone();
         if (! HomeMenu::active() && btnReleased(Btn::Home)) {
@@ -33,7 +37,7 @@ namespace rckid {
                     if (entry.isFolder)
                         return;
                     (*result) << ui::MenuItem(fs::stem(entry.name), assets::icons_64::bookmark, [this, entryName = entry.name]() {
-                        loadState(fs::join("saves", entryName));
+                        loadState(entryName);
                     });
                 });
                 return result;
@@ -43,7 +47,7 @@ namespace rckid {
                 for (uint32_t i = 1; i <= 4; ++i) {
                     String slotName = STR(i);
                     (*result) << ui::MenuItem(slotName, assets::icons_64::bookmark, [this, slotName]() {
-                        saveState(fs::join("saves", slotName));
+                        saveState(slotName);
                     });
                 }
                 return result;
@@ -56,6 +60,7 @@ namespace rckid {
     }
 
     void App::loadState(String filename) {
+        filename = fs::join("saves", filename);
         auto f = readFile(filename);
         if (f == nullptr)
             return InfoDialog::error("Cannot load state", STR("Unable to open file " << filename));
@@ -64,6 +69,7 @@ namespace rckid {
     }
 
     void App::saveState(String filename) {
+        filename = fs::join("saves", filename);
         auto f = writeFile(filename);
         if (f == nullptr)
             return InfoDialog::error("Cannot save state", STR("Unable to open file " << filename));

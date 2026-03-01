@@ -77,6 +77,16 @@ namespace rckid {
             return state_.vcc();
         }
 
+        uint32_t batteryLevel() {
+            uint32_t v = state_.vcc();
+            if (v >= 420)
+                return 100;
+            else if (v >= 300)
+                return (v - 300) * 100 / (120);
+            else
+                return 0;
+        }
+
         bool charging() {
             return state_.charging();
         }

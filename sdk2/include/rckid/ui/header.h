@@ -102,8 +102,11 @@ namespace rckid::ui {
         }
 
         void show() {
-            if (visible())
-                return;
+            if (visible()) {
+                if (remainingTicks_ != 0)
+                    return;
+                cancelAnimations();
+            }
             Widget::setVisibility(true);
             animate()
                 << MoveTo(this, Point{0,0});
@@ -112,6 +115,7 @@ namespace rckid::ui {
         void hide() {
             if (! visible())
                 return;
+            remainingTicks_ = 0;
             animate()
                 << MoveTo(this, Point{0, -TileGrid::tileHeight()});
         }
