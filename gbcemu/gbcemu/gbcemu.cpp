@@ -570,6 +570,7 @@ namespace rckid::gbcemu {
             from.binaryReader()
                 >> rtcMapping_;
         }
+        return true;
     }
 
     void GBCEmu::loop() {
@@ -1306,7 +1307,7 @@ namespace rckid::gbcemu {
                 // Calculate the row address of the sprite's tile
                 int32_t sy = ly - s.y();
                 // if the sprite does not intersect the current line, skip it
-                if (sy < 0 || sy >= objectSize)
+                if (sy < 0 || sy >= static_cast<int32_t>(objectSize))
                     continue;
                 // flip the sprite on horizontal axis
                 if (s.yFlip())
@@ -1330,14 +1331,14 @@ namespace rckid::gbcemu {
                 if (s.xFlip()) {
                     for (int i = 0; i < 8; ++i) {
                         uint8_t colorIndex = ((lower >> i) & 1) | (((upper >> i) & 1) << 1);
-                        if (colorIndex != 0 && x >= 0 && x < 160) // color 0 is transparent
+                        if (colorIndex != 0 && x < 160) // color 0 is transparent
                             buffer[x] = palette[colorIndex];
                         ++x;
                     }
                 } else {
                     for (int i = 7; i >= 0; --i) {
                         uint8_t colorIndex = ((lower >> i) & 1) | (((upper >> i) & 1) << 1);
-                        if (colorIndex != 0 && x >= 0 && x < 160) // color 0 is transparent
+                        if (colorIndex != 0 && x < 160) // color 0 is transparent
                             buffer[x] = palette[colorIndex];
                         ++x;
                     }

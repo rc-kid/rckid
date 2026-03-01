@@ -116,12 +116,8 @@ namespace rckid::hal {
         bool charging() const { return (b_ & CHARGING_MASK) != 0; }
 
 
-
-
         void setHeadphonesConnected(bool connected) { connected ? (b_ |= HEADPHONES_MASK) : (b_ &= ~HEADPHONES_MASK); }
         void setCharging(bool charging) { charging ? (b_ |= CHARGING_MASK) : (b_ &= ~CHARGING_MASK); }
-
-
 
 
         /** Returns the current voltage in 100mV units (i.e. volts * 10). 

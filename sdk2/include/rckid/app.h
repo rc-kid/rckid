@@ -40,7 +40,7 @@ namespace rckid {
             bool canCaptureScreen = false;
             /** If true, the app requires Bits (RCKid's budgeting currency) in order to run.
              */
-            bool consumesBits = false;
+            bool consumesBudget = false;
             /** If an app is standalone, it requires all available system resources. Starting such an app will cancel all current asks and tell all applications on the stack to release their resources via the releaseResources() method call. 
              */
             bool standalone = false;
@@ -179,7 +179,12 @@ namespace rckid {
             UNREACHABLE;
         }
 
+        /** Convenience function that loads state from given filename (in the app's home folder).
+         */
         void loadState(String filename);
+
+        /** Convenience function that stores state to the given file in the app's home folder.
+         */
         void saveState(String filename);
 
         /** Saves screen capture in any of the SDK supported image formats to the given stream.
