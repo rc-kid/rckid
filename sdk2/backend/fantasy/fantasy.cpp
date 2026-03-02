@@ -265,12 +265,13 @@ namespace rckid::hal {
             initializeNoWindow();
         }
 
-        void setPowerMode(PowerMode mode) {
+        void setPowerMode([[maybe_unused]] PowerMode mode) {
             // no power management on fantasy console
         }
 
         void powerOff() {
-            UNIMPLEMENTED;
+            LOG(LL_INFO, "Shutting down");
+            std::exit(0);
         }
 
         void sleep() {
@@ -284,7 +285,7 @@ namespace rckid::hal {
         void onTick() {
             internal::memory::SystemMallocGuard g;
             if (WindowShouldClose())
-                std::exit(-1);
+                internal::io::state.setPowerOffInterrupt(true);
         }
 
         void onYield() {
@@ -386,7 +387,9 @@ namespace rckid::hal {
                 LOG(LL_INFO, "Charging: " << (internal::io::state.charging() ? "on" : "off"));
             }
             // and return
-            return internal::io::state;
+            auto result = internal::io::state;
+            internal::io::state.clearInterrupts();
+            return result;
         }
 
         Point3D accelerometerState() {

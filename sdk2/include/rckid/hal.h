@@ -28,8 +28,6 @@ namespace rckid {
         VolumeDown = 1 << 10,
     }; // rckid::Btn
 
-    void onWakeup(uint32_t payload);
-    void onPowerOff();
     [[noreturn]] void onFatalError(char const * file, uint32_t line, char const * msg, uint32_t payload);
 
 } // namespace rckid
@@ -92,6 +90,10 @@ namespace rckid::hal {
             d_ = other.d_;
         }
 
+        void clearInterrupts() {
+            c_ = 0;
+        }
+
         bool button(Btn btn) {
             uint16_t btnId = static_cast<uint16_t>(btn);
             if (btnId > 255)
@@ -117,6 +119,10 @@ namespace rckid::hal {
         void setHeadphonesConnected(bool connected) { connected ? (b_ |= HEADPHONES_MASK) : (b_ &= ~HEADPHONES_MASK); }
         void setCharging(bool charging) { charging ? (b_ |= CHARGING_MASK) : (b_ &= ~CHARGING_MASK); }
 
+
+        bool powerOffInterrupt() const { return (c_ & POWER_OFF_INTERRUPT_MASK) != 0; }
+
+        void setPowerOffInterrupt(bool requested) { requested ? (c_ |= POWER_OFF_INTERRUPT_MASK) : (c_ &= ~POWER_OFF_INTERRUPT_MASK); }
 
         /** Returns the current voltage in 100mV units (i.e. volts * 10). 
 
@@ -166,12 +172,13 @@ namespace rckid::hal {
             | | | | | | ----- 
             | | | | | ------- 
             | | | | --------- 
-            | | | ----------- accel interrupt
-            | | ------------- wakeup interrupt
-            | --------------- power off interrupt
-            -----------------  
+            | | | ----------- 
+            | | ------------- accel interrupt
+            | --------------- wake up interrupt
+            ----------------- power off interrupt 
          */
         uint8_t c_ = 0;
+        static constexpr uint8_t POWER_OFF_INTERRUPT_MASK = 1 << 7;
         /** Voltage 
          */
         uint8_t d_ = 0;

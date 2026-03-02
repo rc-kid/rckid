@@ -57,7 +57,16 @@ namespace rckid {
         lastState_ = state_;
         state_.updateWith(hal::io::state());
         // check state interrupts
-        // TODO
+        if (state_.powerOffInterrupt()) {
+            LOG(LL_INFO, "Power off requested");
+            // TODO exit all applications (saving their state)
+            // TODO save storage to avr, etc
+            // and finally, power off
+            hal::device::powerOff();
+        }
+        // TODO wakeup interrupt
+        // TODO accel interrupt
+        state_.clearInterrupts();
         // run hal's on tick & yield (this likely requests new state to be gathered as well)
         hal::device::onTick();
         hal::device::onYield();
@@ -257,14 +266,6 @@ namespace rckid {
     // debugging
 
     // hal layer events
-
-    void onWakeup(uint32_t payload) {
-
-    }
-
-    void onPowerOff() {
-
-    }
 
     void onFatalError(char const * file, uint32_t line, char const * msg, uint32_t payload) {
         LOG(LL_ERROR, "Fatal error at " << file << ":" << line << "\n" << msg << " (payload " << payload << ")");

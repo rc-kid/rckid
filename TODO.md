@@ -18,6 +18,9 @@
 - show header even when not full screen is rendered (home menu & friends)
 - add task icons to header
 
+- save state of applications on stack when powering off (and other routines)
+- deal with wakeup interrupts
+
 - budget reset & the whole wakeup business
 
 - decorator event in menu items for badges (& their clearing in carousel selection) (...)
