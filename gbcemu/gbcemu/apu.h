@@ -1,7 +1,6 @@
 #pragma once
 
 #include <rckid/rckid.h>
-#include <rckid/audio/audio.h>
 
 namespace rckid::gbcemu {
 

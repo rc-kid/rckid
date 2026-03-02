@@ -1,4 +1,3 @@
-#include <rckid/audio/audio.h>
 #include <rckid/apps/home_menu.h>
 
 #include <assets/icons_64.h>

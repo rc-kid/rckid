@@ -2,9 +2,9 @@
 
 #include <libhelix-mp3/mp3dec.h>
 
+#include <rckid/rckid.h>
 #include <rckid/memory.h>
 #include <rckid/stream.h>
-#include <rckid/audio/audio.h>
 #include <rckid/audio/decoder_stream.h>
 
 namespace rckid::audio {

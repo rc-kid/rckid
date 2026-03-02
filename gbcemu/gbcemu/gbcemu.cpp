@@ -1,4 +1,3 @@
-#include <rckid/audio/audio.h>
 #include <rckid/ui/header.h>
 #include <rckid/apps/dialogs/color_picker.h>
 

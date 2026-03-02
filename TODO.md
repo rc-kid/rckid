@@ -18,12 +18,11 @@
 - show header even when not full screen is rendered (home menu & friends)
 - add task icons to header
 
-- audio volume part of storage
-- budget is part of storage too
+- budget reset & the whole wakeup business
 
 - decorator event in menu items for badges (& their clearing in carousel selection) (...)
 - add extra tiles for all volume levels
-- pim (hearts, currency, pin, parent mode, etc.)
+- pim (pin, parent mode, etc.)
 
 - mk3 code not cleaned up and not working
 - heapend on mk3 should return current sp or something like that to verify that we are not growing over
@@ -126,16 +125,13 @@ Polish
 - allow messages to send images
 
 - rapid fire not working
-- main menu generation not that well modular with the game menu being extended - add wrappers instead? 
 
 - keep the offset so that we can go back (in messages)
 - check wifi available, etc. 
-- make more robust
 - Friends::ContactViewer should be own dialog, not part of friends ideally
 
 - add airplane mode & sleep function (also uncomment the options in home menu)
 
-- a more polished and reasonable palette for the header
 - callback to wifi status
 - https://github.com/raspberrypi/pico-examples/blob/master/pico_w/wifi/http_client/example_http_client_util.c
 
@@ -144,7 +140,6 @@ Polish
 - add confirmation dialog to many deletions
 - why popup menu takes pointer and not a reference? 
 
-- move brightness and audio settings from avr status
 - update & processEvents are not really honoured in the ui 
 
 - scrollview scrolling when focused
@@ -161,8 +156,6 @@ Polish
 - and when colors are updated, different colors should be update-able at the same time
 
 - some avr commands are longer than 16 bytes, which means it cannot be stored via the I2C async commands
-
-- file browswer can also use the new carouselMenu?
 
 - when stack protection fails, it will fail in the error code as well forever, update stack on device, do new thread on rckid? 
 

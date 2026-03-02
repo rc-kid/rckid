@@ -24,7 +24,7 @@ namespace rckid::ui {
         onRender();
         // start rendering from rightmost column
         renderCol_ = width() - 1;
-        display::update([&](Color::RGB565 * & buffer, uint32_t & bufferSize) {
+        hal::display::update([&](Color::RGB565 * & buffer, uint32_t & bufferSize) {
             if (renderCol_ < 0) {
                 buffer = nullptr;
                 return;

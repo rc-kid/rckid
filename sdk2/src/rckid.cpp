@@ -3,6 +3,7 @@
 #include <rckid/app.h>
 #include <rckid/task.h>
 #include <rckid/ui/header.h>
+#include <rckid/audio/decoder_stream.h>
 #include <rckid/apps/dialogs/info_dialog.h>
 
 namespace rckid {
@@ -14,10 +15,38 @@ namespace rckid {
 
     uint64_t nextSecondUptime_ = 0;
 
+    struct DisplaySettings {
+        uint8_t brightness = 128;
+    } __attribute__((packed));
+
+    struct AudioSettings {
+        uint8_t volumeHeadphones = 8;
+        uint8_t volumeSpeaker = 8;
+    } __attribute__((packed));
+
+    struct PimSettings {
+        uint32_t budget = 610;
+    } __attribute__((packed));
+
+    struct Settings {
+        static constexpr uint16_t VERSION = 1;
+        uint16_t version = VERSION;
+        DisplaySettings display;
+        AudioSettings audio;
+        PimSettings pim;
+    } __attribute__((packed));
+
+    Settings settings;
+
     // device
 
     void initialize() {
         hal::device::initialize();
+        hal::storage::load(0, reinterpret_cast<uint8_t *>(& settings), sizeof(settings));
+        if (settings.version != Settings::VERSION) {
+            LOG(LL_WARN, "Settings version mismatch, resettin to defaults");
+            settings = Settings{};
+        }
         now_ = hal::time::now();
         nextSecondUptime_ = hal::time::uptimeUs() + 1000000;
         // TODO
@@ -103,7 +132,87 @@ namespace rckid {
         TinyDateTime now() {
             return now_;
         }
-    }
+    } // namespace rckid::time
+
+    // display
+
+    namespace display {
+        Rect rect_;
+        RefreshDirection refreshDirection_;
+
+        void enable(Rect rect, RefreshDirection  direction) {
+            ASSERT(Rect::WH(WIDTH, HEIGHT).contains(rect));
+            waitUpdateDone();
+            hal::display::enable(rect, direction);
+            rect_ = rect;
+            refreshDirection_ = direction;
+        }
+
+        uint8_t brightness() { return settings.display.brightness; }
+
+        void setBrightness(uint8_t value) {
+            hal::display::setBrightness(value);
+            settings.display.brightness = value;
+        }
+
+    } // namespace rckid::display
+
+    // audio
+
+    namespace audio {
+
+        void play(DecoderStream * stream) {
+            // ensure the stream's playback buffer is filled
+            stream->update();
+            // start the playback
+            play(stream->sampleRate(), [stream](int16_t * & buffer, uint32_t & stereoSamples) {
+                stream->callback(buffer, stereoSamples);
+            });
+        }
+
+        bool headphonesConnected() {
+            return state_.headphonesConnected();
+        }
+
+        uint8_t volume() {
+            return headphonesConnected() ? settings.audio.volumeHeadphones : settings.audio.volumeSpeaker;
+        }
+
+        void setVolume(uint8_t value) {
+            if (value == 255) // 0 - 1
+                value = 0;
+            if (value > 15)
+                value = 15;
+            if (headphonesConnected()) {
+                settings.audio.volumeHeadphones = value;
+                hal::audio::setVolumeHeadphones(value);
+            } else {
+                settings.audio.volumeSpeaker = value;
+                hal::audio::setVolumeSpeaker(value);
+            }
+            ui::Header::update();
+        }
+
+    } // namespace rckid::audio
+
+    namespace pim {
+
+        uint32_t remainingBudget() { return settings.pim.budget; }
+
+        uint32_t updateBudget(int32_t value) {
+            if (value > 0) {
+                settings.pim.budget += value;
+            } else {
+                uint32_t absValue = static_cast<uint32_t>(-value);
+                if (absValue > settings.pim.budget)
+                    settings.pim.budget = 0;
+                else
+                    settings.pim.budget -= absValue;
+            }
+            return settings.pim.budget;
+        }
+
+    } // namespace rckid::pim
 
     // debugging
 

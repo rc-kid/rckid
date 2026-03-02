@@ -7,7 +7,6 @@
 #include <rckid/log.h>
 #include <rckid/hal.h>
 
-
 #define RCKID_DEFAULT_ANIMATION_DURATION_MS 500
 
 /** RCKid SDK
@@ -129,77 +128,87 @@ namespace rckid {
     /** Display manipulation.
         
      */
-    class display {
-    public:
+    namespace display {
+
         using RefreshDirection = hal::display::RefreshDirection;
         using Callback = hal::display::Callback;
 
         static constexpr Coord WIDTH = hal::display::WIDTH;
         static constexpr Coord HEIGHT = hal::display::HEIGHT;
             
-        static void waitUpdateDone() {
+        inline void waitUpdateDone() {
             while (hal::display::updateActive())
                 yield();
         }
 
-        static void waitVSync() {
+        inline void waitVSync() {
             while (hal::display::vSync())
                 yield();
             while (! hal::display::vSync())
                 yield();
         }
 
-        static void enable(Rect rect, RefreshDirection  direction) {
-            ASSERT(Rect::WH(WIDTH, HEIGHT).contains(rect));
-            waitUpdateDone();
-            hal::display::enable(rect, direction);
-            rect_ = rect;
-            refreshDirection_ = direction;
-        }
+        void enable(Rect rect, RefreshDirection  direction);
 
-        static void update(Callback cb) { 
-            hal::display::update(cb);
-        }
+        uint8_t brightness();
 
-        static uint8_t brightness() { return brightness_; }
-
-        static void setBrightness(uint8_t value) {
-            hal::display::setBrightness(value);
-            brightness_ = value;
-        }
+        void setBrightness(uint8_t value);
     
-    private:
-        // state so that we can query display state
-        static inline Rect rect_;
-        static inline RefreshDirection refreshDirection_;
-        static inline uint8_t brightness_ = 128;
+    } // namespace rckid::display
 
-    }; // rckid::display
+    namespace audio {
 
+        using Callback = hal::audio::Callback;
+        class DecoderStream;
 
-    class pim {
-    public:
+        bool headphonesConnected();
 
-        static uint32_t remainingBudget() { return budget_; }
+        uint8_t volume();
 
-        static uint32_t updateBudget(int32_t value) {
-            if (value > 0) {
-                budget_ += value;
-            } else {
-                uint32_t absValue = static_cast<uint32_t>(-value);
-                if (absValue > budget_)
-                    budget_ = 0;
-                else
-                    budget_ -= absValue;
+        void setVolume(uint8_t value);
+
+        inline void play(uint32_t sampleRate, Callback cb) { hal::audio::play(sampleRate, cb); }
+
+        void play(DecoderStream * stream);
+
+        inline void recordMic(uint32_t sampleRate, Callback cb) { hal::audio::recordMic(sampleRate, cb); }
+
+        inline void recordLineIn(uint32_t sampleRate, Callback cb) { hal::audio::recordLineIn(sampleRate, cb); }
+
+        inline void pause() { hal::audio::pause(); }
+
+        inline void resume() { hal::audio::resume(); }
+
+        inline void stop() { hal::audio::stop(); }
+
+        inline bool isPlaying() { return hal::audio::isPlaying(); }
+
+        inline bool isRecording() { return hal::audio::isRecording(); }
+
+        inline bool isPaused() { return hal::audio::isPaused(); }
+
+        /** Converts mono buffer into stereo one, duplicating all samples in it in place.
+         
+            Takes audio buffer and number of mono samples stored in it and expands the mono samples to stereo ones, duplicating each mono sample int two stereo samples in place. The caller must ensure the buffer is large enough to hold the resulting stereo samples. 
+        */
+        inline void convertToStereo(int16_t * buffer, uint32_t numSamples) {
+            for (; numSamples > 0; --numSamples) {
+                int16_t x = buffer[numSamples - 1];
+                buffer[numSamples * 2 - 2] = x;
+                buffer[numSamples * 2 - 1] = x;
             }
-            return budget_;
         }
 
-    private:
+    } // namespace rckid::audio
 
-        static inline uint32_t budget_ = 3600;
 
-    }; // rckid::pim
+    namespace pim {
+    
+        uint32_t remainingBudget();
+
+        uint32_t updateBudget(int32_t value);
+
+    } // namespace rckid::pim
 
 
 } // namespace rckid

@@ -1,5 +1,4 @@
 
-#include <rckid/audio/audio.h>
 #include <rckid/apps/home_menu.h>
 #include <rckid/apps/dialogs/info_dialog.h>
 #include <rckid/task.h>

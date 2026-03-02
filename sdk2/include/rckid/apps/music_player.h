@@ -5,6 +5,7 @@
 #include <rckid/apps/launcher.h>
 #include <rckid/apps/file_browser.h>
 
+#include <rckid/audio/playback.h>
 #include <rckid/audio/mp3.h>
 
 #include <assets/icons_64.h>
