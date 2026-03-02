@@ -134,6 +134,46 @@ namespace rckid {
         }
     } // namespace rckid::time
 
+    // debug
+
+    namespace debug {
+
+        bool readAndAddHexDigit(uint32_t & value) {
+            uint8_t x = read();
+            if (x >= '0' && x <= '9')
+                x = x - '0';
+            else if (x >= 'a' && x <= 'f')
+                x = x - 'a' + 10;
+            else if (x >= 'A' && x <= 'F')
+                x = x - 'A' + 10;
+            else 
+                return false;
+            value = (value << 4) | x;
+            return true;
+        }
+
+        uint8_t readHex8() {
+            uint32_t result = 0;
+            if (!readAndAddHexDigit(result))
+                return result;
+            readAndAddHexDigit(result);
+            return result;
+        }
+
+        uint16_t readHex16() {
+            uint32_t result = 0;
+            if (!readAndAddHexDigit(result))
+                return result;
+            if (!readAndAddHexDigit(result))
+                return result;
+            if (!readAndAddHexDigit(result))
+                return result;
+            readAndAddHexDigit(result);
+            return result;
+        }
+
+    } // namespace rckid::debug
+
     // display
 
     namespace display {

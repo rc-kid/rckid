@@ -647,7 +647,7 @@ namespace rckid::gbcemu {
 #if (GBCEMU_INTERACTIVE_DEBUG == 1)
             markAsVisited(PC);           
             if (PC == breakpoint_ || debug_) {
-                debugWrite() << "===== BREAKPOINT ===== (pc " << hex(pc_) << ")\n";
+                debug::write() << "===== BREAKPOINT ===== (pc " << hex(pc_) << ")\n";
                 logDisassembly(PC, PC + 10);
                 logState();
                 debugInteractive();
@@ -874,7 +874,7 @@ namespace rckid::gbcemu {
 #endif        
         uint8_t opcode = mem8(PC++);
 #if (GBCEMU_TRACE_PC_OPCODE == 1)
-        debugWrite() << hex<uint32_t>(convertAddressToAbsolute(PC - 1), false) <<  ": " << hex(opcode, false) << '\n';
+        debug::write() << hex<uint32_t>(convertAddressToAbsolute(PC - 1), false) <<  ": " << hex(opcode, false) << '\n';
         // below code depends on system malloc likely so not working yet
         //printf("%04x: %02x\n", PC - 1, opcode);
 #endif
@@ -906,68 +906,68 @@ namespace rckid::gbcemu {
 #if (GBCEMU_INTERACTIVE_DEBUG == 1)
 
     void GBCEmu::logDisassembly(uint16_t start, uint16_t end) {
-        debugWrite() << "===== DISASSEMBLY ===== (from " << hex(start) << " to " << hex(end) << ")\n";
+        debug::write() << "===== DISASSEMBLY ===== (from " << hex(start) << " to " << hex(end) << ")\n";
         for (uint16_t i = start; i < end; ) {
             i += disassembleInstruction(i);
         }
     }
 
     void GBCEmu::logMemory(uint16_t start, uint16_t end) {
-        debugWrite() << "===== MEMORY ===== (from " << hex(start) << " to " << hex(end) << ")\n";
-        debugWrite() << "      00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f\n";
+        debug::write() << "===== MEMORY ===== (from " << hex(start) << " to " << hex(end) << ")\n";
+        debug::write() << "      00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f\n";
         for (uint16_t i = start; i < end; i += 16) {
-            debugWrite() << hex(i, false) << ": ";
+            debug::write() << hex(i, false) << ": ";
             for (uint16_t j = 0; j < 16; ++j) {
-                debugWrite() << hex(mem8(i + j), false) << ' ';
+                debug::write() << hex(mem8(i + j), false) << ' ';
             }
-            debugWrite() << '\n';
+            debug::write() << '\n';
         }
     }
 
     void GBCEmu::logStack(uint32_t n) {
-        debugWrite() << "===== STACK =====\n";
+        debug::write() << "===== STACK =====\n";
         for (uint16_t i = SP, e = SP + n; i != e; i += 2) {
-            debugWrite() << hex(i, false) << ": " << hex(mem16(i), false) << '\n';
+            debug::write() << hex(i, false) << ": " << hex(mem16(i), false) << '\n';
         }
     }
 
     void GBCEmu::logState() {
-        debugWrite() << "===== CPU STATE =====\n";
-        debugWrite() <<  "af:   " <<  hex(AF, false) << " bc:   " <<  hex(BC, false) << " de:   " <<  hex(DE, false) << " hl:   " <<  hex(HL, false) << " sp:   " <<  hex(SP, false) << " pc:   " <<  hex(PC, false) << '\n';
+        debug::write() << "===== CPU STATE =====\n";
+        debug::write() <<  "af:   " <<  hex(AF, false) << " bc:   " <<  hex(BC, false) << " de:   " <<  hex(DE, false) << " hl:   " <<  hex(HL, false) << " sp:   " <<  hex(SP, false) << " pc:   " <<  hex(PC, false) << '\n';
 
-        debugWrite() << "lcdc: " << hex(IO_LCDC, false) << "   stat: " << hex(IO_STAT, false) << "   ly:   " << hex(IO_LY, false) << "   ie:   " << hex(IO_IE, false) << "   if:   " << hex(IO_IF, false) << '\n';
-        debugWrite() << "TIMA: " << hex(IO_TIMA, false) << " cycles: " << timerCycles_ << '\n';
+        debug::write() << "lcdc: " << hex(IO_LCDC, false) << "   stat: " << hex(IO_STAT, false) << "   ly:   " << hex(IO_LY, false) << "   ie:   " << hex(IO_IE, false) << "   if:   " << hex(IO_IF, false) << '\n';
+        debug::write() << "TIMA: " << hex(IO_TIMA, false) << " cycles: " << timerCycles_ << '\n';
     }
 
     void GBCEmu::logVisited() {
         uint32_t total = 0;
-        debugWrite() << "===== VISITED INSTRUCTIONS =====\n";
+        debug::write() << "===== VISITED INSTRUCTIONS =====\n";
         for (uint32_t i = 0; i < 32; ++i) {
             for (uint32_t j = 0; j < 8; ++j) {
                 if (visitedInstructions_[i] & (1 << j)) {
-                    debugWrite() << hex<uint8_t>(i * 8 + j, false) << ' ';
+                    debug::write() << hex<uint8_t>(i * 8 + j, false) << ' ';
                     ++total;
                 } else {
-                    debugWrite() << "   ";
+                    debug::write() << "   ";
                 }
             }
             if (i & 1)
-                debugWrite() << '\n';
+                debug::write() << '\n';
         }
-        debugWrite() << "Extended (0xcb) prefix:\n";
+        debug::write() << "Extended (0xcb) prefix:\n";
         for (uint32_t i = 0; i < 32; ++i) {
             for (uint32_t j = 0; j < 8; ++j) {
                 if (visitedInstructions_[i + 32] & (1 << j)) {
-                    debugWrite() << hex<uint8_t>(i * 8 + j, false) << ' ';
+                    debug::write() << hex<uint8_t>(i * 8 + j, false) << ' ';
                     ++total;
                 } else {
-                    debugWrite() << "   ";
+                    debug::write() << "   ";
                 }
             }
             if (i & 1)
-                debugWrite() << '\n';
+                debug::write() << '\n';
         }
-        debugWrite() << "Total: " << total << '\n';
+        debug::write() << "Total: " << total << '\n';
     }
 
     void GBCEmu::clearTilemap() {
@@ -1005,29 +1005,29 @@ namespace rckid::gbcemu {
     uint32_t GBCEmu::disassembleInstruction(uint16_t addr, bool state) {
         uint8_t opcode = mem8(addr);
         uint32_t size = instructionSize(opcode);
-        debugWrite() << hex(addr, false) << ": " << hex(mem8(addr), false) << ' ';
+        debug::write() << hex(addr, false) << ": " << hex(mem8(addr), false) << ' ';
         if (size == 1)
-            debugWrite() << "          ";
+            debug::write() << "          ";
         else if (size == 2) 
-            debugWrite() << hex(mem8(addr + 1), false) << "        ";
+            debug::write() << hex(mem8(addr + 1), false) << "        ";
         else if (size == 3)
-            debugWrite() << hex(mem8(addr + 1), false) << ' ' << hex(mem8(addr + 2), false) << "     ";
+            debug::write() << hex(mem8(addr + 1), false) << ' ' << hex(mem8(addr + 2), false) << "     ";
         else 
             UNREACHABLE; // invalid instruction size
         switch (opcode) {
             #define INS(OPCODE, FLAG_Z, FLAG_N, FLAG_H, FLAG_C, SIZE, CYCLES, MNEMONIC, ...) \
             case OPCODE: \
-                debugWrite() << fillRight(MNEMONIC, 15); \
+                debug::write() << fillRight(MNEMONIC, 15); \
                 break;
             #include "insns.inc.h"
             default:
-                debugWrite() << fillRight("???", 15);
+                debug::write() << fillRight("???", 15);
         };
         if (state) {
-            debugWrite() << hex(AF, false) << " " << hex(BC, false) << " " << hex(DE, false) << " " << hex(HL, false) << " " << hex(SP, false);
-            debugWrite() << " " << hex(IO_TIMA, false) << " " << timerCycles_;
+            debug::write() << hex(AF, false) << " " << hex(BC, false) << " " << hex(DE, false) << " " << hex(HL, false) << " " << hex(SP, false);
+            debug::write() << " " << hex(IO_TIMA, false) << " " << timerCycles_;
         }
-        debugWrite() << '\n';
+        debug::write() << '\n';
         return size;
     }
 
@@ -1050,11 +1050,11 @@ namespace rckid::gbcemu {
         debug_ = false;
         while (true) {
             disassembleInstruction(PC, true);
-            uint8_t cmd = debugRead(false);
+            uint8_t cmd = debug::read();
             switch (cmd) {
                 // continue running uninterrupted
                 case 'c':
-                    debugWrite() << "> continue\n";
+                    debug::write() << "> continue\n";
                     return;
                 // execute single instruction
                 case 'n':
@@ -1065,9 +1065,9 @@ namespace rckid::gbcemu {
                     return;
                 // set breakpoint
                 case 'b': {
-                    debugWrite() << "? breakpoint address ";
-                    breakpoint_ = debugReadHex16();
-                    debugWrite() << '\n';
+                    debug::write() << "? breakpoint address ";
+                    breakpoint_ = debug::readHex16();
+                    debug::write() << '\n';
                     break;
                 }
                 // display cpu info (state & stuff)
@@ -1079,10 +1079,10 @@ namespace rckid::gbcemu {
                     break;
                 // display disassembly
                 case 'd': {
-                    debugWrite() << "? disassembly start address ";
-                    uint16_t start = debugReadHex16();
-                    debugWrite() << "\n? length (default 0x10) ";
-                    uint16_t l = debugReadHex16();
+                    debug::write() << "? disassembly start address ";
+                    uint16_t start = debug::readHex16();
+                    debug::write() << "\n? length (default 0x10) ";
+                    uint16_t l = debug::readHex16();
                     if (l == 0)
                         l = 0x10;
                     logDisassembly(start, start + l);
@@ -1090,10 +1090,10 @@ namespace rckid::gbcemu {
                 }
                 // display memory
                 case 'm': {
-                    debugWrite() << "? memory start address ";
-                    uint16_t start = debugReadHex16();
-                    debugWrite() << "\n? length (default 0x10) ";
-                    uint16_t l = debugReadHex16();
+                    debug::write() << "? memory start address ";
+                    uint16_t start = debug::readHex16();
+                    debug::write() << "\n? length (default 0x10) ";
+                    uint16_t l = debug::readHex16();
                     if (l == 0)
                         l = 0x10;
                     logMemory(start, start + l);
@@ -1104,7 +1104,7 @@ namespace rckid::gbcemu {
                     logVisited();
                     break;
                 default:
-                    debugWrite() << "! invalid command '" << cmd << "'\n";
+                    debug::write() << "! invalid command '" << cmd << "'\n";
             }
         }
         UNREACHABLE;
@@ -1568,7 +1568,7 @@ namespace rckid::gbcemu {
     uint8_t GBCEmu::memRd8(uint16_t addr) {
 #if (GBCEMU_INTERACTIVE_DEBUG == 1)
         if (addr >= memoryBreakpointStart_ && addr < memoryBreakpointEnd_) {
-            debugWrite() << "===== MEMORY BREAKPOINT ===== (read address " << hex(addr) << ")\n";
+            debug::write() << "===== MEMORY BREAKPOINT ===== (read address " << hex(addr) << ")\n";
             logMemory(memoryBreakpointStart_, memoryBreakpointEnd_);
             debug_ = true;
         }
@@ -1615,7 +1615,7 @@ namespace rckid::gbcemu {
     void GBCEmu::memWr8(uint16_t addr, uint8_t value) {
 #if (GBCEMU_INTERACTIVE_DEBUG == 1)
         if (addr >= memoryBreakpointStart_ && addr < memoryBreakpointEnd_) {
-            debugWrite() << "===== MEMORY BREAKPOINT ===== (write address " << hex(addr) << ", value " << hex(value) << ")\n";
+            debug::write() << "===== MEMORY BREAKPOINT ===== (write address " << hex(addr) << ", value " << hex(value) << ")\n";
             logMemory(memoryBreakpointStart_, memoryBreakpointEnd_);
             debug_ = true;
         }

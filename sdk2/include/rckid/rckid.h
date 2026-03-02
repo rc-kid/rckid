@@ -111,19 +111,27 @@ namespace rckid {
 
     // debugging
 
-    /** Returns writer for debugging purposes. 
-     
-        This is a direct wrapper over the hal::device::debugWrite() function that allows writing dbeug information to preferred debug outputs, such as USB serial adpater, or direct serial output via cartridge pins.
-     */
-    using hal::device::debugWrite;
+    namespace debug {
 
-    /** Reads characters from debug input.
-     
-        The call is non-blocking and returns 0 if no data is available. The function is a direct wrapper over the hal::device::debugRead() function.
-     */
-    using hal::device::debugRead;
+        /** Returns writer for debugging purposes. 
+         
+            This is a direct wrapper over the hal::device::debugWrite() function that allows writing dbeug information to preferred debug outputs, such as USB serial adpater, or direct serial output via cartridge pins.
+        */
+        inline Writer write() { return hal::device::debugWrite(); }
 
+        /** Reads characters from debug input.
+         
+            The call is non-blocking and returns 0 if no data is available. The function is a direct wrapper over the hal::device::debugRead() function.
 
+            TODO should this return reader instead? 
+        */
+        inline uint8_t read() { return hal::device::debugRead(); }
+
+        uint8_t readHex8();
+
+        uint16_t readHex16();
+
+    }
 
     /** Display manipulation.
         

@@ -9,6 +9,6 @@ extern "C" {
         va_start(args, fmt);
         vsnprintf(buf, sizeof(buf), fmt, args);
         va_end(args);
-        rckid::debugWrite() << buf;
+        rckid::debug::write() << buf;
     }
 }
