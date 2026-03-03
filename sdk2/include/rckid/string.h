@@ -42,6 +42,17 @@ namespace rckid {
             }
         }
 
+        /** Creates string from existing buffer and given size. Copies the buffer instead of taking ownership and does not require null termination.
+         */
+        String(char const * s, uint32_t size): 
+            size_{size}
+        {
+            char * data = new char[size_ + 1];
+            std::memcpy(data, s, size);
+            data[size] = '\0';
+            data_ = immutable_ptr<char>{data};
+        }
+
         String(immutable_ptr<char> data) : data_{std::move(data)} {
             ASSERT(data_.get() != nullptr);
             size_ = static_cast<uint32_t>(std::strlen(data_.get()));
@@ -143,10 +154,7 @@ namespace rckid {
             uint32_t available = size() - pos;
             if (count > available)
                 count = available;
-            char * newData = new char[count + 1];
-            std::memcpy(newData, data_.get() + pos, count);
-            newData[count] = '\0';
-            return String{newData, count};
+            return String(data_.get() + pos, count);
         }
 
         bool operator == (String const & other) const {
@@ -183,7 +191,7 @@ namespace rckid {
             std::memcpy(newData, data_.get(), size());
             std::memcpy(newData + size(), other.data_.get(), other.size());
             newData[newSize] = '\0';
-            return String{newData, newSize};
+            return String{std::make_pair(newData, newSize)};
         }
 
         /** Returns reader constructed from the string.
@@ -229,8 +237,8 @@ namespace rckid {
 
         static constexpr char const * emptyLiteral_ = "";
 
-        // private constructor to utilize the already calculated size
-        String(char * s, uint32_t size) : data_{s}, size_{size} { }
+        // private constructor to utilize the already calculated size and an existing data that will be owned via the immutable pointer. This contrasts to with the String(char*, uint32_t) constructor that copies memory and ensures terminating character
+        String(std::pair<char *, uint32_t> dataAndSize) : data_{dataAndSize.first}, size_{dataAndSize.second} { }
     
         // pointer to the string data
         immutable_ptr<char> data_;
@@ -274,7 +282,7 @@ namespace rckid {
             char * buffer = new char[size_ + 1]; // for /0 at the end
             memcpy(buffer, data_.get(), size_);
             buffer[size_] = 0;
-            return String{buffer, size_};
+            return String{std::make_pair(buffer, size_)};
         }
 
         /** Returns current size of the string data accumulated by the builder. 

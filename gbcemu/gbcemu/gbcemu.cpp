@@ -287,35 +287,11 @@ namespace rckid::gbcemu {
                         LOG(LL_INFO, "running game: " << eName);
                         GamePak * gamepak = new gbcemu::CachedGamePak{fs::readFile(STR("/games/" << eName))};
                         App::run<GBCEmu>(fs::stem(eName), gamepak);
-                        //GBCEmu{fs::stem(eName), gamepak}.run();
-                        //App::run<GBCEmu>(fs::stem(eName), gamepak);
                     }
                 );
             }
         });
-        /*
-        fs::Folder games = fs::folderRead(path);
-        for (auto & entry : games) {
-            if (entry.isFile() && (fs::ext(entry.name()) == ".gb")) {
-                LOG(LL_INFO, "Found game: " << entry.name());
-                String eName = entry.name();
-                (*into) << ui::MenuItem(
-                    fs::stem(eName),
-                    assets::icons_64::gameboy,
-                    [eName](){
-                        LOG(LL_INFO, "running game: " << eName);
-                        GamePak * gamepak = new gbcemu::CachedGamePak{fs::fileRead(STR("/games/" << eName))};
-                        App::run<GBCEmu>(fs::stem(eName), gamepak);
-                        //gbcemu::GBCEmu app{fs::stem(eName), gamepak};
-                        //app.loadCartridge(new gbcemu::CachedGamePak{fs::fileRead(STR("/games/" << eName))});    
-                        //app.loop();
-                    }
-                );
-            }
-        }
-            */
     }
-
 
     GBCEmu::GBCEmu(String appName):
         vram_{
