@@ -1,3 +1,4 @@
+#include <rckid/task.h>
 #include <rckid/ui/header.h>
 
 namespace rckid::ui {
@@ -66,6 +67,16 @@ namespace rckid::ui {
            ADD_ICON(TileIcon::headphones(), audio::volume() == 0 ? (PaletteOffsetRed + 1) : PaletteOffsetGreen);
         else
            ADD_ICON(TileIcon::speaker(), audio::volume() == 0 ? (PaletteOffsetRed + 1) : PaletteOffsetGreen);
+
+        // check if the tasks have anything to add
+        Task::forAll([&x, &update](Task * task) mutable {
+            if (auto hdrIcon = task->headerIcon())
+                ADD_ICON(hdrIcon->first, hdrIcon->second);
+        });
+
+        // clear the remaining header with spaces
+        for (Coord i = 0; i < x; ++i)
+            instance_->contents_.at(i, 0).setAltTileset(false) = ' ';
 
         uint32_t budget = pim::remainingBudget();
         if (budget != 0 && budget < 600) {

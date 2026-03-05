@@ -4,6 +4,7 @@
 #include <rckid/apps/data_sync.h>
 #include <rckid/apps/file_browser.h>
 #include <rckid/apps/friends.h>
+#include <rckid/apps/messages.h>
 
 #include <rckid/apps/launcher.h>
 
@@ -26,25 +27,13 @@ namespace rckid {
                 << ui::MenuItem{"Friends", assets::icons_64::birthday_cake, []() {
                     App::run<Friends>();
                 }}
+                << ui::MenuItem{"Messages", assets::icons_64::poo, []() {
+                    App::run<Messages>();
+                }}
                 << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator);
             return result;
         };
     }
-   
-    /*
-    unique_ptr<ui::Menu> mainMenuGenerator() {
-        auto result = std::make_unique<ui::Menu>();
-        (*result)
-            << ui::MenuItem::Generator("Games", assets::icons_64::game_controller, gamesMenuGenerator)
-            << ui::MenuItem{"Music", assets::icons_64::music, []() {
-                MusicPlayer{}.run();
-            }}
-            << ui::MenuItem{"Friends", assets::icons_64::birthday_cake, []() {
-                Friends{}.run();
-            }}
-            << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator);
-        return result;
-    }*/
 
     unique_ptr<ui::Menu> gamesMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();

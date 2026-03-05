@@ -69,7 +69,6 @@ namespace rckid {
             }
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 ASSERT(carousel_->atRoot());
-                // TODO terminate music, etc
                 exit();
             }
         }

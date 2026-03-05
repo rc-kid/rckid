@@ -1,7 +1,9 @@
 #pragma once
 
 #include <rckid/ui/app.h>
+#include <rckid/capabilities/wifi.h>
 #include <rckid/apps/launcher.h>
+#include <rckid/apps/dialogs/info_dialog.h>
 
 namespace rckid {
 
@@ -13,6 +15,8 @@ namespace rckid {
         Messages() {
             using namespace ui;
             carousel_ = addChild(new Launcher::BorrowedCarousel());
+            WiFi * wifi = WiFi::instance();
+            wifi->enable();
         }
 
         class Conversation {
@@ -43,6 +47,12 @@ namespace rckid {
 
         void onLoopStart() override {
             using namespace ui;
+            with(carousel_) 
+                << ResetMenu([]() { 
+                    auto menu = std::make_unique<ui::Menu>();
+                    // TODO add conversations
+                    return menu;
+                });
         }
 
         void onFocus() override {
@@ -55,6 +65,11 @@ namespace rckid {
         }
 
         void loop() {
+            ui::App<void>::loop();
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                ASSERT(carousel_->atRoot());
+                exit();
+            }
 
         }
  

@@ -1,6 +1,9 @@
 #pragma once
 
+#include <optional>
+
 #include <rckid/error.h>
+#include <rckid/graphics/tile_grid.h>
 
 namespace rckid {
 
@@ -32,6 +35,10 @@ namespace rckid {
             }
         }
 
+        /** Returns header icon to be used for the task.
+         */
+        virtual std::optional<std::pair<TileIcon, uint8_t>> headerIcon() const { return std::nullopt; }
+
         /** Runs the onTick() method for all current tasks.
          
             This is run automatically from rckid's tick() function and does *not* need to be called manually.
@@ -40,6 +47,14 @@ namespace rckid {
             Task * current = top_;
             while (current != nullptr) {
                 current->onTick();
+                current = current->next_;
+            }
+        }
+
+        static void forAll(std::function<void(Task *)> callback) {
+            Task * current = top_;
+            while (current != nullptr) {
+                callback(current);
                 current = current->next_;
             }
         }

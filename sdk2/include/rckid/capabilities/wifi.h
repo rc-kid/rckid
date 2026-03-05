@@ -3,6 +3,7 @@
 #include <rckid/rckid.h>
 #include <rckid/task.h>
 #include <rckid/string.h>
+#include <rckid/ui/header.h>
 
 namespace rckid {
 
@@ -58,6 +59,23 @@ namespace rckid {
 
         ~WiFi() override;
 
+        /** WiFi icon for the header. 
+         */
+        std::optional<std::pair<TileIcon, uint8_t>> headerIcon() const override {
+            switch (status()) {
+                case Status::Disconnected:
+                    return std::make_pair(TileIcon::wifi(), ui::Header::PaletteOffsetRed + 1);
+                case Status::Connecting:
+                    return std::make_pair(TileIcon::wifi(), ui::Header::PaletteOffsetCyan + 1);
+                case Status::Connected:
+                    return std::make_pair(TileIcon::wifi(), ui::Header::PaletteOffsetBlue + 1);
+                default:
+                    UNREACHABLE;
+                case Status::Off:
+                    return std::nullopt;
+            }
+        }
+
         /** Returns true if the wifi is enabled, false otherwise.
          */
         bool enabled() const { return status() != Status::Off; }
@@ -96,7 +114,10 @@ namespace rckid {
 
         void onTick() override;
 
-        void releaseResources() override;
+        void releaseResources() override {
+            enable(false);
+            delete this;
+        }
 
     }; // rckid::WiFi
 
