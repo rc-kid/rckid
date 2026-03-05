@@ -53,6 +53,16 @@ namespace rckid {
             data_ = immutable_ptr<char>{data};
         }
 
+        String(unique_ptr<char> buffer, uint32_t size): 
+            data_{buffer.release()},
+            size_{size}
+        {
+            ASSERT(data_[size] == '\0');
+        }
+
+        String(unique_ptr<char> buffer): 
+            String(std::move(buffer), static_cast<uint32_t>(std::strlen(buffer.get()))) { }
+
         String(immutable_ptr<char> data) : data_{std::move(data)} {
             ASSERT(data_.get() != nullptr);
             size_ = static_cast<uint32_t>(std::strlen(data_.get()));
@@ -187,11 +197,11 @@ namespace rckid {
          */
         String operator + (String const & other) const {
             uint32_t newSize = size() + other.size();
-            char * newData = new char[newSize + 1];
-            std::memcpy(newData, data_.get(), size());
-            std::memcpy(newData + size(), other.data_.get(), other.size());
-            newData[newSize] = '\0';
-            return String{std::make_pair(newData, newSize)};
+            unique_ptr<char> newData{new char[newSize + 1]};
+            std::memcpy(newData.get(), data_.get(), size());
+            std::memcpy(newData.get() + size(), other.data_.get(), other.size());
+            newData.get()[newSize] = '\0';
+            return String{std::move(newData.release()), newSize};
         }
 
         /** Returns reader constructed from the string.
@@ -238,7 +248,7 @@ namespace rckid {
         static constexpr char const * emptyLiteral_ = "";
 
         // private constructor to utilize the already calculated size and an existing data that will be owned via the immutable pointer. This contrasts to with the String(char*, uint32_t) constructor that copies memory and ensures terminating character
-        String(std::pair<char *, uint32_t> dataAndSize) : data_{dataAndSize.first}, size_{dataAndSize.second} { }
+        //String(std::pair<char *, uint32_t> dataAndSize) : data_{dataAndSize.first}, size_{dataAndSize.second} { }
     
         // pointer to the string data
         immutable_ptr<char> data_;
@@ -279,10 +289,10 @@ namespace rckid {
         /** Call this to get the String out of the builder. 
          */
         String str() {
-            char * buffer = new char[size_ + 1]; // for /0 at the end
-            memcpy(buffer, data_.get(), size_);
-            buffer[size_] = 0;
-            return String{std::make_pair(buffer, size_)};
+            unique_ptr<char> buffer{new char[size_ + 1]}; // for /0 at the end
+            memcpy(buffer.get(), data_.get(), size_);
+            buffer.get()[size_] = 0;
+            return String{std::move(buffer), size_};
         }
 
         /** Returns current size of the string data accumulated by the builder. 
@@ -318,7 +328,7 @@ namespace rckid {
     }
 
     inline void write(BinaryWriter & w, String const & s) {
-        w << static_cast<uint32_t>(s.size());
+        w << s.size();
         for (uint32_t i = 0; i < s.size(); ++i)
             w.putByte(s.c_str()[i]);
     }
@@ -334,6 +344,15 @@ namespace rckid {
         str = builder.str();
     }
 
+    inline void read(BinaryReader & r, String & str) {
+        uint32_t size;
+        r >> size;
+        unique_ptr<char> buffer{new char[size + 1]};
+        for (uint32_t i = 0; i < size; ++i)
+            buffer.get()[i] = r.getByte();
+        buffer.get()[size] = 0;
+        str = String{std::move(buffer), size};
+    }
 
 } // namespace rckid
 

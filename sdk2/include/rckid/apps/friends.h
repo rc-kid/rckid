@@ -52,6 +52,7 @@ namespace rckid {
         }
 
         void onBlur() override {
+            ui::App<void>::onBlur();
             if (!launch_)
                 return;
             carousel_->moveUp(nullptr);

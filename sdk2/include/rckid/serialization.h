@@ -84,10 +84,13 @@ namespace rckid {
 
         explicit BinaryWriter(PutByteCallback putByte): putByte_{putByte} {}
 
-        void putByte(uint8_t c) { putByte_(c); }
+        void putByte(uint8_t c) { putByte_(c); ++bytesWritten_; }
+
+        uint32_t bytesWritten() const { return bytesWritten_; }
         
     private:
         PutByteCallback putByte_;
+        uint32_t bytesWritten_ = 0;
 
     }; // BinaryWriter
 
@@ -117,14 +120,16 @@ namespace rckid {
         uint8_t getByte() {
             uint32_t result = rawCallback(true);
             if (result == EOFMarker)
-              result = 0;
+                result = 0;
+            else
+                ++ bytesRead_;
             return static_cast<uint8_t>(result);
         }
 
         uint8_t peekByte() {
             uint32_t result = rawCallback(false);
             if (result == EOFMarker)
-              result = 0;
+                result = 0;
             return static_cast<uint8_t>(result);
         }
 
@@ -132,10 +137,16 @@ namespace rckid {
             return rawCallback(false) == EOFMarker;
         }
 
+        uint32_t bytesRead() const { return bytesRead_; }
+
+    private:
+
         int32_t rawCallback(bool advance = true) { return getByte_(advance); }
+
 
     private:
         GetByteCallback getByte_;
+        uint32_t bytesRead_ = 0;
 
     }; // BinaryReader
 
@@ -338,6 +349,45 @@ namespace rckid {
     inline void read(BinaryReader & r, bool & into) {
         into = r.getByte() != 0;
     }
+
+    // TinyDate 
+
+    inline void write(BinaryWriter & w, TinyDate const & value) {
+        w << value.day() << value.month() << value.year();
+    }
+
+    inline void read(BinaryReader & r, TinyDate & into) {
+        uint8_t d;
+        uint8_t m;
+        uint16_t y;
+        r >> d >> m >> y;
+        into = TinyDate{d, m, y};
+    }
+
+    // TinyTime
+
+    inline void write(BinaryWriter & w, TinyTime const & value) {
+        w << value.hour() << value.minute() << value.second();
+    }
+
+    inline void read(BinaryReader & r, TinyTime & into) {
+        uint8_t h;
+        uint8_t m;
+        uint8_t s;
+        r >> h >> m >> s;
+        into = TinyTime{h, m, s};
+    }
+
+    // TinyDateTime
+
+    inline void write(BinaryWriter & w, TinyDateTime const & value) {
+        w << value.date << value.time;
+    }
+
+    inline void read(BinaryReader & r, TinyDateTime & into) {
+        r >> into.date >> into.time;
+    }
+
 
 } // namespace rckid
 

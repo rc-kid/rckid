@@ -56,6 +56,7 @@ namespace rckid {
             }
         }
 
+
     protected:
         virtual void onTick() = 0;
 
