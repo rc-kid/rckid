@@ -23,7 +23,6 @@
 
 - budget reset & the whole wakeup business
 
-- decorator event in menu items for badges (& their clearing in carousel selection) (...)
 - add extra tiles for all volume levels
 - pim (pin, parent mode, etc.)
 

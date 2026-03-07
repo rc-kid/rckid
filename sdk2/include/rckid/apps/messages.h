@@ -10,7 +10,7 @@ namespace rckid {
     class Messages : public ui::App<void> {
     public: 
 
-        String name() const override { return "Friends"; }
+        String name() const override { return "Messages"; }
 
         Messages() {
             using namespace ui;
@@ -19,7 +19,7 @@ namespace rckid {
             wifi->enable();
         }
 
-        class Conversation {
+        class Chat {
         public:
             class Entry {
             public:
@@ -34,9 +34,26 @@ namespace rckid {
                 friend void write(BinaryWriter &, Entry const &);
                 friend void read(BinaryReader &, Entry &);
 
-            }; // Messages::Conversation::Entry
+            }; // Messages::Chat::Entry
 
-        }; // Messages::Conversation
+            Chat(ini::Reader & reader);
+
+            String const & name() const { return name_; }
+
+            ImageSource const & icon() const { return icon_; }
+
+            int64_t id() const { return id_; }
+
+            bool unread() const { return unread_; }
+
+        protected:
+
+            String name_;
+            int64_t id_;
+            ImageSource icon_;
+            bool unread_ = false;
+
+        }; // Messages::Chat
 
     protected:
 
@@ -45,15 +62,7 @@ namespace rckid {
 
         }; // Messages::ChatRoom
 
-        void onLoopStart() override {
-            using namespace ui;
-            with(carousel_) 
-                << ResetMenu([]() { 
-                    auto menu = std::make_unique<ui::Menu>();
-                    // TODO add conversations
-                    return menu;
-                });
-        }
+        void onLoopStart() override;
 
         void onFocus() override {
             ui::App<void>::onFocus();
@@ -77,6 +86,7 @@ namespace rckid {
     private:
 
         Launcher::BorrowedCarousel * carousel_;
+        std::vector<unique_ptr<Chat>> chats_;
 
 
 

@@ -62,8 +62,6 @@ namespace rckid::ui {
         }
 
         void set(String text, ImageSource icon) {
-            if (!idle())
-                cancelAnimations();
             setCurrent(std::move(text), std::move(icon));
             with(bImg_)
                 << SetVisibility(false);
@@ -72,10 +70,58 @@ namespace rckid::ui {
         }
 
         void set(String text, ImageSource icon, Direction dir) {
-            if (!idle())
-                cancelAnimations();
             setCurrent(std::move(text), std::move(icon));
             // start the appropriate animation
+            startAnimation(dir);
+        }
+
+        /** Returns the image and label widgets for the currently selected element. 
+         
+            When idle, those are the visible elements. During animation those are the elements that are going away.
+         */
+        //@{
+        Image * currentImage() const { return aImg_; }
+        Label * currentLabel() const { return aText_; }
+        //@}
+
+    protected:
+
+        void onIdle() override {
+            // when animations are done, hide the previous elements
+            with(bImg_)
+                << SetVisibility(false);
+            with(bText_)
+                << SetVisibility(false);
+        }
+
+        void setCurrent(String text, ImageSource icon) {
+            if (!idle())
+                cancelAnimations();
+            std::swap(aImg_, bImg_);
+            std::swap(aText_, bText_);
+            // clear any decorations (children) that may exist in the widgets
+            aImg_->clearChildren();
+            aText_->clearChildren();
+            // first set up the widgets so that we can calculate their size
+            Bitmap bmp{std::move(icon)};
+            with(aText_)
+                << SetText(std::move(text));
+            Coord iconWidth = bmp.width();
+            Coord textWidth = aText_->textWidth();
+            // determine the final positions
+            Coord iconLeft = (width() - (iconWidth + textWidth + ICON_SEPARATOR_WIDTH)) / 2;
+            Coord textLeft = iconLeft + iconWidth + ICON_SEPARATOR_WIDTH;
+            // and place & adjust the the widgets
+            with(aImg_) 
+                << SetBitmap(std::move(bmp))
+                << SetRect(Rect::XYWH(iconLeft, 0, iconWidth, height()))
+                << SetVisibility(true);
+            with(aText_)
+                << SetRect(Rect::XYWH(textLeft, 0, width() - textLeft, height())) 
+                << SetVisibility(true);
+        }
+
+        void startAnimation(Direction dir) {
             switch (dir) {
                 case Direction::Up:
                     // new comes from the sides, old goes down
@@ -113,47 +159,6 @@ namespace rckid::ui {
                     UNREACHABLE;
             }
             RootWidget::backgroundEffect(dir, animationSpeed_);
-        }
-
-        /** Returns the image and label widgets for the currently selected element. 
-         
-            When idle, those are the visible elements. During animation those are the elements that are going away.
-         */
-        //@{
-        Image * currentImage() const { return aImg_; }
-        Label * currentLabel() const { return aText_; }
-        //@}
-
-    protected:
-
-        void onIdle() override {
-            // when animations are done, hide the previous elements
-            with(bImg_)
-                << SetVisibility(false);
-            with(bText_)
-                << SetVisibility(false);
-        }
-
-        void setCurrent(String text, ImageSource icon) {
-            std::swap(aImg_, bImg_);
-            std::swap(aText_, bText_);
-            // first set up the widgets so that we can calculate their size
-            Bitmap bmp{std::move(icon)};
-            with(aText_)
-                << SetText(std::move(text));
-            Coord iconWidth = bmp.width();
-            Coord textWidth = aText_->textWidth();
-            // determine the final positions
-            Coord iconLeft = (width() - (iconWidth + textWidth + ICON_SEPARATOR_WIDTH)) / 2;
-            Coord textLeft = iconLeft + iconWidth + ICON_SEPARATOR_WIDTH;
-            // and place & adjust the the widgets
-            with(aImg_) 
-                << SetBitmap(std::move(bmp))
-                << SetRect(Rect::XYWH(iconLeft, 0, iconWidth, height()))
-                << SetVisibility(true);
-            with(aText_)
-                << SetRect(Rect::XYWH(textLeft, 0, width() - textLeft, height())) 
-                << SetVisibility(true);
         }
 
         /** Returns the image and label widgets for the next element. 
@@ -231,7 +236,6 @@ namespace rckid::ui {
             if (m.decorator() != nullptr)
                 m.decorator()(m, currentImage(), currentLabel());
         }
-
 
         void resetMenu(MenuItem::GeneratorEvent generator) {
             clearContext();
@@ -345,7 +349,7 @@ namespace rckid::ui {
                 index_ = 0;
                 setEmpty(dir);
             } else {
-                set(menu_->at(index_).text, menu_->at(index_).icon, dir);
+                setItem(index_, dir);
             }
         }
 
@@ -358,7 +362,6 @@ namespace rckid::ui {
             if (m.decorator() != nullptr)
                 m.decorator()(m, currentImage(), currentLabel());
         }
-
 
     private:
 
