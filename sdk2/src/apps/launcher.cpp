@@ -5,6 +5,7 @@
 #include <rckid/apps/file_browser.h>
 #include <rckid/apps/friends.h>
 #include <rckid/apps/messages.h>
+#include <rckid/apps/about.h>
 
 #include <rckid/apps/launcher.h>
 
@@ -30,7 +31,8 @@ namespace rckid {
                 << ui::MenuItem{"Messages", assets::icons_64::poo, []() {
                     App::run<Messages>();
                 }}
-                << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator);
+                << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator)
+                << ui::MenuItem::Generator("Settings", assets::icons_64::poo, settingsMenuGenerator);
             return result;
         };
     }
@@ -53,6 +55,15 @@ namespace rckid {
                 App::run<FileBrowser>();
             });
 
+        return result;
+    }
+
+    unique_ptr<ui::Menu> settingsMenuGenerator() {
+        auto result = std::make_unique<ui::Menu>();
+        (*result)
+            << ui::MenuItem{"About", assets::icons_64::info, []() {
+                App::run<About>();
+            }};
         return result;
     }
 

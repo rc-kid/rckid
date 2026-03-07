@@ -21,6 +21,10 @@ namespace rckid {
      */
     unique_ptr<ui::Menu> utilitiesMenuGenerator();
 
+    /** Settings menu generator. 
+     */
+    unique_ptr<ui::Menu> settingsMenuGenerator();
+
     /** App launcher (main menu)
      
         This is the first app that automatically runs when RCKid SDK built cartridges boot up. It is responsible for showing the main menu and launching the selected apps. 
