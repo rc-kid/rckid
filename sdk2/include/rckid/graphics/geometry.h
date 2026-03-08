@@ -121,6 +121,9 @@ namespace rckid {
 
         constexpr bool empty() const { return w <= 0 || h <= 0; }
 
+        constexpr Rect withHeight(Coord height) const { return Rect{x, y, w, height}; }
+        constexpr Rect withWidth(Coord width) const { return Rect{x, y, width, h}; }
+
         /** Returns true if the other rectangle fits completely inside this one.
          */
         bool contains(Rect const & other) const {

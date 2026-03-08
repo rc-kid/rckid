@@ -1,6 +1,7 @@
 #pragma once
 
 #include <rckid/ui/app.h>
+#include <rckid/ui/chat_bubble.h>
 #include <rckid/capabilities/wifi.h>
 #include <rckid/apps/launcher.h>
 #include <rckid/apps/dialogs/info_dialog.h>
@@ -17,6 +18,12 @@ namespace rckid {
             carousel_ = addChild(new Launcher::BorrowedCarousel());
             WiFi * wifi = WiFi::instance();
             wifi->enable();
+            auto l = addChild(new ui::TextChatBubble())
+                << SetRect(Rect::XYWH(5, 25, 300, 50))
+                << SetBg(Color::RGB(255, 0, 0))
+                << SetFg(Color::RGB(255, 255, 255))
+                << SetText("Hello World\nIt's a me!");
+//            l->fitToText();
         }
 
         /** Single chat. 
@@ -74,6 +81,15 @@ namespace rckid {
             A dedicated app that shows the conversation within a single chat. 
          */
         class ChatRoom : public ui::App<void> {
+        public:
+
+
+
+        protected:
+            class TextMessage : public ui::ChatBubble {
+            public:
+
+            }; // ChatRoom::TextMessage
 
         }; // Messages::ChatRoom
 

@@ -11,7 +11,6 @@ namespace rckid::ui {
     class Label : public Widget {
     public:
 
-
         String const & text() const { return text_; }
 
         void setText(String value) {
@@ -264,6 +263,18 @@ namespace rckid::ui {
             for (auto & line : lines_)
                 line->setColor(value);
         }
+
+        Coord textWidth() const { 
+            Coord result = 0;
+            for (auto & line : lines_) {
+                Coord w = line->textWidth();
+                if (w > result)
+                    result = w;
+            }
+            return result;
+        }
+
+        Coord textHeight() const { return font_->size * lines_.size(); }
 
         void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) override {
             ASSERT(verifyRenderParams(width(), height(), column, startRow, numPixels));
