@@ -231,10 +231,14 @@ namespace rckid::ui {
     class MultiLabel : public Widget {
     public:
 
+        String const & text() const { return text_; }
+
         void setText(String text) {
             text_ = std::move(text);
             recalculateLines();
         }
+
+        Font const & font() const { return font_; }
 
         void setFont(Font font) {
             font_ = std::move(font);

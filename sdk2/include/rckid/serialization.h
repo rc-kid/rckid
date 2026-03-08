@@ -381,11 +381,11 @@ namespace rckid {
     // TinyDateTime
 
     inline void write(BinaryWriter & w, TinyDateTime const & value) {
-        w << value.date << value.time;
+        w << value.time << value.date;
     }
 
     inline void read(BinaryReader & r, TinyDateTime & into) {
-        r >> into.date >> into.time;
+        r >> into.time >> into.date;
     }
 
 

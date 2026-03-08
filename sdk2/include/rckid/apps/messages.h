@@ -1,5 +1,6 @@
 #pragma once
 
+#include <rckid/stream.h>
 #include <rckid/ui/app.h>
 #include <rckid/ui/chat_bubble.h>
 #include <rckid/capabilities/wifi.h>
@@ -65,7 +66,18 @@ namespace rckid {
              */
             bool unread() const { return unread_; }
 
+            uint32_t readPrev(uint32_t offset, std::function<void(Entry)> cb, uint32_t n = 50);
+            uint32_t readNext(uint32_t offset, std::function<void(Entry)> cb, uint32_t n = 50);
+
+            uint32_t append(Entry e);
+
         protected:
+
+            unique_ptr<RandomReadStream> openRead();
+            unique_ptr<RandomWriteStream> openWrite();
+
+            uint32_t seekPrev(uint32_t n, RandomReadStream * f);
+            uint32_t seekNext(uint32_t n, RandomReadStream * f);
 
             String name_;
             int64_t id_;

@@ -94,6 +94,8 @@ namespace rckid::ui {
 
     }; // rckid::ui::ChatBubble
 
+    /** Chat bubble containing a multi-line label. 
+     */
     class TextChatBubble : public ChatBubble {
     public:
 
@@ -102,6 +104,9 @@ namespace rckid::ui {
             l_.setVAlign(VAlign::Top);
         }
 
+        String const & text() const { return l_.text(); }
+        Color color() const { return l_.color(); }
+
         void setText(String text) {
             l_.setRect(Rect::XYWH(arrowSize_ + border_, border_, width() - (arrowSize_ + border_) * 2, height() - border_ * 2));
             l_.setHAlign(isOwn() ? HAlign::Right : HAlign::Left);
@@ -109,6 +114,8 @@ namespace rckid::ui {
             bubbleWidth_ = l_.textWidth() + border_ * 2;
             setRect(rect().withHeight(l_.textHeight() + border_ * 2));
         }
+
+        void setColor(Color value) { l_.setColor(value); }
 
         void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) override {
             renderBubble(column, startRow, buffer, numPixels);
