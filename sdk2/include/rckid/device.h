@@ -9,18 +9,18 @@ namespace rckid {
         Boost,
     }; // rckid::PowerMode
 
-    enum class Btn : uint32_t {
-        Left       = 1 << 0, 
-        Right      = 1 << 1,
-        Up         = 1 << 2, 
-        Down       = 1 << 3, 
-        A          = 1 << 4, 
-        B          = 1 << 5, 
-        Select     = 1 << 6, 
-        Start      = 1 << 7,
-        Home       = 1 << 8, 
-        VolumeUp   = 1 << 9, 
-        VolumeDown = 1 << 10,
+    enum class Btn {
+        Left       = 0, 
+        Right      = 1,
+        Up         = 2, 
+        Down       = 3, 
+        A          = 4, 
+        B          = 5, 
+        Select     = 6, 
+        Start      = 7,
+        Home       = 8, 
+        VolumeUp   = 9, 
+        VolumeDown = 10,
     }; // rckid::Btn
 
     [[noreturn]] void onFatalError(char const * file, uint32_t line, char const * msg, uint32_t payload);
@@ -75,29 +75,36 @@ namespace rckid {
         }
 
         bool button(Btn btn) {
-            uint16_t btnId = static_cast<uint16_t>(btn);
-            if (btnId > 255)
-                return (b_ & (btnId >> 8)) != 0;
+            uint8_t btnId = static_cast<uint8_t>(btn);
+            if (btnId >= 8)
+                return (b_ & (1 << (btnId - 8))) != 0;
             else
-                return (a_ & btnId) != 0;
+                return (a_ & (1 << btnId)) != 0;
         }
 
-        void setButton(Btn btn, bool state) {
-            uint16_t btnId = static_cast<uint16_t>(btn);
-            if (btnId > 255) {
-                btnId >>= 8;
-                state ? (b_ |= static_cast<uint8_t>(btnId)) : (b_ &= ~static_cast<uint8_t>(btnId));
+        /** Sets the value of given button. Returns true if the state changed, false otherwise.
+         */
+        bool setButton(Btn btn, bool state) {
+            uint8_t btnId = static_cast<uint8_t>(btn);
+            if (button(btn) == state)
+                return false;
+            if (btnId >= 8) {
+                btnId -= 8;
+                state ? (b_ |= (1 << btnId)) : (b_ &= ~(1 << btnId));
             } else {
-                state ? (a_ |= static_cast<uint8_t>(btnId)) : (a_ &= ~static_cast<uint8_t>(btnId));
+                state ? (a_ |= (1 << btnId)) : (a_ &= ~(1 << btnId));
             }
+            return true;
         }
 
         bool headphonesConnected() const { return (b_ & HEADPHONES_MASK) != 0; }
         bool charging() const { return (b_ & CHARGING_MASK) != 0; }
+        bool debugMode() const { return (b_ & DEBUG_MODE_MASK) != 0; }
 
 
         void setHeadphonesConnected(bool connected) { connected ? (b_ |= HEADPHONES_MASK) : (b_ &= ~HEADPHONES_MASK); }
         void setCharging(bool charging) { charging ? (b_ |= CHARGING_MASK) : (b_ &= ~CHARGING_MASK); }
+        void setDebugMode(bool debugMode) { debugMode ? (b_ |= DEBUG_MODE_MASK) : (b_ &= ~DEBUG_MODE_MASK); }
 
 
         bool powerOffInterrupt() const { return (c_ & POWER_OFF_INTERRUPT_MASK) != 0; }
@@ -139,13 +146,14 @@ namespace rckid {
             | | | | | ------- volume down
             | | | | --------- headphones connected
             | | | ----------- charging
-            | | ------------- 
+            | | ------------- debug mode
             | --------------- 
             -----------------  
          */
         uint8_t b_ = 0; 
         static constexpr uint8_t HEADPHONES_MASK = 1 << 3;
         static constexpr uint8_t CHARGING_MASK = 1 << 4;
+        static constexpr uint8_t DEBUG_MODE_MASK = 1 << 5;
         /** MSB ....... LSB (interrupts)
             | | | | | | | |
             | | | | | | | --- 

@@ -9,7 +9,9 @@
 - apply style to existing widgets (Label, etc.) (...)
 - button press repeat (configurable)
 
-- add std::decay_t to attiny1
+- avr firmware wakeup timing
+
+- make UNREACHABLE & friends part of platform? This should make it write between mkIII, fantasy and ATTiny stuff
 
 - settings
 - popup menu
@@ -18,7 +20,6 @@
 - games (port from old, or even mkII)
 
 - show header even when not full screen is rendered (home menu & friends)
-- add task icons to header
 
 - save state of applications on stack when powering off (and other routines)
 - deal with wakeup interrupts
