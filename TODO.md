@@ -9,6 +9,8 @@
 - apply style to existing widgets (Label, etc.) (...)
 - button press repeat (configurable)
 
+- add std::decay_t to attiny1
+
 - settings
 - popup menu
 - basic dialogs

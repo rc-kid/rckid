@@ -49,7 +49,7 @@ namespace rckid::internal {
 
     namespace io {
 
-        hal::State state;
+        DeviceState state;
 
         void initialize() {
             // TODO
@@ -346,7 +346,7 @@ namespace rckid::hal {
 
     namespace io {
 
-        State state() {
+        DeviceState state() {
             return internal::io::state;
         }
 

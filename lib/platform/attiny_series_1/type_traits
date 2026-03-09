@@ -2,6 +2,17 @@
 
 namespace std {
 
+
+    struct false_type {
+        static constexpr bool value = false;
+        constexpr operator bool() const noexcept { return value; }
+    };    
+
+    struct true_type {
+        static constexpr bool value = true;
+        constexpr operator bool() const noexcept { return value; }
+    };    
+
     template<bool B, typename T = void>
     struct enable_if {};
     
@@ -46,6 +57,12 @@ namespace std {
         static constexpr bool value = sizeof(test(static_cast<Derived*>(nullptr))) == sizeof(char);
     };
 
+    template<class T, class U>
+    struct is_same : std::false_type {};
+    
+    template<class T>
+    struct is_same<T, T> : std::true_type {};    
+
     template <typename T>
     struct is_pointer {
         static constexpr bool value = false;
@@ -56,8 +73,28 @@ namespace std {
         static constexpr bool value = true;
     };
 
-    template<typename T>
-    inline constexpr bool is_pointer_v = is_pointer<T>::value;
+    template<class T> struct remove_reference { typedef T type; };
+    template<class T> struct remove_reference<T&> { typedef T type; };
+    template<class T> struct remove_reference<T&&> { typedef T type; };
+
+    template<class T> struct decay { typedef T type; };
+    template<class T> struct decay<T&> { typedef T type; };
+    template<class T> struct decay<T&&> { typedef T type; };
+
+    template<class T> struct is_lvalue_reference      { static const bool value = false; };
+    template<class T> struct is_lvalue_reference<T&>  { static const bool value = true; };    
+
+    template<class T>
+    T&& forward(typename remove_reference<T>::type& t) {
+        return static_cast<T&&>(t);
+    }
+
+    template<class T>
+    T&& forward(typename remove_reference<T>::type&& t) {
+        static_assert(!is_lvalue_reference<T>::value,
+                    "bad forward of rvalue as lvalue");
+        return static_cast<T&&>(t);
+    }
 
     template <typename T>
     struct is_integral {
@@ -79,15 +116,23 @@ namespace std {
     MAKE_INTEGRAL(unsigned long)
     MAKE_INTEGRAL(long long)
     MAKE_INTEGRAL(unsigned long long)
-    MAKE_INTEGRAL(char8_t)
-    MAKE_INTEGRAL(char16_t)
-    MAKE_INTEGRAL(char32_t)
+    //MAKE_INTEGRAL(char8_t)
+    //MAKE_INTEGRAL(char16_t)
+    //MAKE_INTEGRAL(char32_t)
     MAKE_INTEGRAL(wchar_t)
 
     #undef MAKE_INTEGRAL
 
+    template<typename T>
+    inline constexpr bool is_pointer_v = is_pointer<T>::value;
+
     template <typename T>
     inline constexpr bool is_integral_v = is_integral<T>::value;
 
+    template <typename T, typename U>
+    inline constexpr bool is_same_v = is_same<T, U>::value;
+
+    template<class T>
+    using decay_t = typename decay<T>::type;    
     
 }

@@ -51,7 +51,7 @@ namespace rckid::internal {
     } // rckid::internal::time
 
     namespace io {
-        hal::State state;
+        DeviceState state;
     }
 
     namespace display {
@@ -351,7 +351,7 @@ namespace rckid::hal {
 
     namespace io {
 
-        State state() {
+        DeviceState state() {
             internal::memory::SystemMallocGuard g;
             PollInputEvents();
             internal::io::state.setButton(Btn::Up, IsKeyDown(KEY_UP));

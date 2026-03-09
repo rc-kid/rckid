@@ -8,8 +8,8 @@
 
 namespace rckid {
 
-    hal::State lastState_;
-    hal::State state_;
+    DeviceState lastState_;
+    DeviceState state_;
 
     TinyDateTime now_;
 

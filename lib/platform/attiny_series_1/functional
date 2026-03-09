@@ -1,1 +1,28 @@
 #pragma once
+
+#include <type_traits>
+
+namespace std {
+
+    template<class>
+    class function;
+
+    template<class R, class... Args>
+    class function<R(Args...)> {
+    public:
+        using pointer = R(*)(Args...);
+
+        function() = default;
+        function(pointer p) : fn(p) {}
+
+        R operator()(Args... args) const {
+            return fn(std::forward<Args>(args)...);
+        }
+
+        explicit operator bool() const { return fn != nullptr; }
+
+    private:
+        pointer fn = nullptr;
+    };
+
+} // namespace std

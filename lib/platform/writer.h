@@ -3,8 +3,8 @@
 #include <cstring>
 #include <cstdint>
 #include <string>
-#include <functional>
 #include <type_traits>
+#include <functional>
 
 /** Abysmally simple and extensible formatter. 
  
@@ -140,12 +140,17 @@ public:
             writer << '0' << 'x';
         unsigned bits = sizeof(T) * 8;
         uint64_t what;
-        if constexpr (std::is_pointer_v<T>)
+        if constexpr (std::is_pointer_v<T>) {
             what = static_cast<int64_t>(reinterpret_cast<std::uintptr_t>(what_));
-        else if constexpr (std::is_integral_v<T>)
+        } else if constexpr (std::is_integral_v<T>) {
             what = static_cast<int64_t>(what_);
-        else
-            static_assert(false, "T must be a pointer or an integral type");
+        } else {
+            uint8_t const * x = reinterpret_cast<uint8_t const *>(&what_);
+            for (unsigned i = 0; i < sizeof(T); ++i) {
+                writer << "0123456789abcdef"[*(x++) >> 4];
+                writer << "0123456789abcdef"[*(x++) & 0xf];
+            }
+        }
         for (int shift = bits - 4; shift >= 0; shift -= 4)
             writer << "0123456789abcdef"[(what >> shift) & 0xf];
     }
@@ -183,12 +188,17 @@ public:
             writer << '0' << 'b';
         unsigned bits = sizeof(T) * 8;
         uint64_t what;
-        if constexpr (std::is_pointer_v<T>)
+        if constexpr (std::is_pointer_v<T>) {
             what = static_cast<int64_t>(reinterpret_cast<std::uintptr_t>(what_));
-        else if constexpr (std::is_integral_v<T>)
+        } else if constexpr (std::is_integral_v<T>) {
             what = static_cast<int64_t>(what_);
-        else
-            static_assert(false, "T must be a pointer or an integral type");
+        } else {
+            uint8_t const * x = reinterpret_cast<uint8_t const *>(&what_);
+            for (unsigned i = 0; i < sizeof(T); ++i) {
+                writer << "0123456789abcdef"[*(x++) >> 4];
+                writer << "0123456789abcdef"[*(x++) & 0xf];
+            }
+        }
         for (unsigned shift = bits - 1; shift >= 0; shift -= 1)
             writer << "01"[(what >> shift) & 0x1];
     }
