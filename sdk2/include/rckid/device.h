@@ -111,6 +111,9 @@ namespace rckid {
 
         void setPowerOffInterrupt(bool requested) { requested ? (c_ |= POWER_OFF_INTERRUPT_MASK) : (c_ &= ~POWER_OFF_INTERRUPT_MASK); }
 
+        bool accelInterrupt() const { return (c_ & ACCEL_INTERRUPT_MASK) != 0; }
+        void setAccelInterrupt(bool requested) { requested ? (c_ |= ACCEL_INTERRUPT_MASK) : (c_ &= ~ACCEL_INTERRUPT_MASK); }
+
         /** Returns the current voltage in 100mV units (i.e. volts * 10). 
 
             The available range is 2.45V (250) to 5V (500). Anything higher than 5V will still read as 5V and anything below 2.45V will read as 0V. This is fine as the range is only used to determine li-ion batter levels (3.00V - 4.30V), or USB power plugged in (5.00V).
@@ -161,11 +164,12 @@ namespace rckid {
             | | | | | ------- 
             | | | | --------- 
             | | | ----------- 
-            | | ------------- accel interrupt
-            | --------------- wake up interrupt
+            | | ------------- wakeup interrupt
+            | --------------- accel interrupt
             ----------------- power off interrupt 
          */
         uint8_t c_ = 0;
+        static constexpr uint8_t ACCEL_INTERRUPT_MASK = 1 << 6;
         static constexpr uint8_t POWER_OFF_INTERRUPT_MASK = 1 << 7;
         /** Voltage 
          */

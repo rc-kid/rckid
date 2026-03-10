@@ -40,10 +40,83 @@ class RCKid {
 public:
 
     static void initialize() {
+        // initialize the AVR chip
+        initializeAVR();
+        // set date to something meaningful
+        ts_.time.date.setYear(2026);
+        ts_.time.date.setMonth(1);
+        ts_.time.date.setDay(1);
 
+        // TODO some initialization routine with checks, etc.
+        LOG("\n\n\nSYSTEM RESET DETECTED (AVR): " << hex(RSTCTRL.RSTFR));
+
+        // initialize the powerOff mode
+        enableSystemTicks(false);
+        set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+
+        // force enter debug mode right after power on
+        // TODO maybe start in power on mode, etc
+        /*
+        setPowerMode(POWER_MODE_WAKEUP);
+        enterDebugMode();
+        homeBtnLongPress();
+        homeBtnLongPress_ = 0;
+        // simulate we pressed the power on button
+        ts_.status.setControlButtons(true, false, false);
+        */
     }
 
     static void loop() {
+        cpu::wdtReset();
+        // do system tick, if system tick is active and tickCounter is 0, also do the effects tick, which is roughly at 66 frames per second
+        if (systemTick() && tickCounter_ == 0) {
+            rgbTick();
+            rumblerTick();
+        }
+        secondTick();
+        // see if there are ADC measurements to process
+        measureADC();
+        // see if there were any I2C commands received and if so, execute
+        processI2CCommand();
+        // process any interrupt requests
+        processIntRequests();
+#if AVR_INT_IS_SERIAL_TX
+        // wait for any TX transmissions before going to sleep 
+        serial::waitForTx();
+#endif
+        // After everything was processed, go to sleep - we will wake up with the ACCEL or PMIC interrupts, or if in power off mode also by the HOME button interrupt
+        cpu::sei();
+        sleep_enable();
+        sleep_cpu();
+    }
+
+    /** Basic initialization of the AVR firmware. 
+     
+        Sets clock frequency, enables RTC (including interrupt) and in case debugging over serial wire is used, enables the serial out on AVR_IRQ pin as well.
+
+        Exists as a separate function from initialize to allow basic AVR initialization for test programs, etc.
+     */
+    static void initializeAVR() {
+        // enable 2 second watchdog so that the second tick resets it always with enough time to spare
+        while (WDT.STATUS & WDT_SYNCBUSY_bm); // required busy wait
+            _PROTECTED_WRITE(WDT.CTRLA, WDT_PERIOD_2KCLK_gc);      
+        // set CLK_PER prescaler to 2, i.e. 10Mhz, which is the maximum the chip supports at voltages as low as 3.0V
+        CCP = CCP_IOREG_gc;
+        CLKCTRL.MCLKCTRLB = CLKCTRL_PEN_bm;
+        // enable external crystal oscillator for the RTC
+        CCP = CCP_IOREG_gc;
+        CLKCTRL.XOSC32KCTRLA = CLKCTRL_RUNSTDBY_bm | CLKCTRL_ENABLE_bm;
+        // initialize the RTC that fires every second for a semi-accurate real time clock keeping on the AVR and start counting
+        RTC.CLKSEL = RTC_CLKSEL_TOSC32K_gc; // run from the external 32.768kHz oscillator
+        RTC.PITINTCTRL |= RTC_PI_bm; // enable the PIT interrupt
+        while (RTC.PITSTATUS & RTC_CTRLBUSY_bm);
+        RTC.PITCTRLA = RTC_PERIOD_CYC32768_gc | RTC_PITEN_bm;
+
+    #if AVR_INT_IS_SERIAL_TX
+        // initializes the AVR TX pin for serial debugging
+        serial::setAlternateLocation(true);
+        serial::initializeTx(RCKID_SERIAL_SPEED);
+    #endif
 
     }
 
@@ -66,7 +139,7 @@ public:
     // timeout the RP2350 has to power itself off before AVR cuts power forcefully
     static inline uint16_t powerOffTimeout_ = 0;
 
-    static bool isPowerOff() { return powerMode_ == 0; }
+    static bool isPowerModeOff() { return powerMode_ == 0; }
     static bool isPowerModeDC() { return powerMode_ & POWER_MODE_DC; }
     static bool isPowerModeCharging() { return powerMode_ & POWER_MODE_CHARGING; }
     static bool isPowerModeWakeup() { return powerMode_ & POWER_MODE_WAKEUP; }
@@ -84,10 +157,25 @@ public:
         }
         powerMode_ |= mode;
         switch (mode) {
-            // we never enter power on directly from off, so no need to do anything here
+            // When powering on, we need to enable the IOVDDD ocnverters to power the cartridge and RP2350. We also initialize the PWM for backlight & rumbler and enable the ADC in standby mode so that we can sleep while taking the measurements. Finally we need to reset the RGB effects as the RGB leds are under the apolication control when powered on
             case POWER_MODE_ON:
+                // TODO does this have to be in NO_ISR?
+                NO_ISR(
+                    powerIOVDD(true);
+                    enablePWM(true);
+                    ADC0.CTRLA |= ADC_RUNSTBY_bm;
+                );
+                // reset the RGB effects
+                // TODO
+                //setNotification(RGBEffect::Off());
+                //for (int i = 0; i < NUM_RGB_LEDS; ++i)
+                //    rgbEffect_[i] = RGBEffect::Off();
                 break;
-            
+            // wakeup power mode - reset the home button long press detection and enable debug mode tentatively, which allows us to disable debug mode if we detect volume button not pressed in the wakeup power mode
+            case POWER_MODE_WAKEUP:
+                startHomeButtonLongPress();
+                ts_.state.setDebugMode(true);
+                break;
             // clear the critical battery flag when DC power is connected, flash RGB LEDs if the device is not on (when on, the RGBs are controlled by the applications). No need to update state (the VCC value alone determines the DC mode as it did when calling this function)
             case POWER_MODE_DC:
                 criticalBattery_ = false;
@@ -113,7 +201,16 @@ public:
         switch (mode) {
             // when leaving power on mode, clear debug mode (will be determined on next power on). If we are  charging, or DC enabled, set the notifications accordingly.
             case POWER_MODE_ON:
-                ts_.state.setDebugMode(false);
+                NO_ISR(
+                    powerIOVDD(false);
+                    ts_.state.setDebugMode(false);
+                    enablePWM(false);
+                    // make the AVR_INT floating so that we do not leak any voltage to the now off RP2350
+                    gpio::outputFloat(AVR_PIN_AVR_INT);
+                    // clear IRQ
+                    clearIrq();
+                );
+
                 // if we are turning off, set notification according to other power modes
                 /*
                 if (powerMode_ & POWER_MODE_CHARGING)
@@ -147,9 +244,53 @@ public:
             enableSystemTicks(false);
             set_sleep_mode(SLEEP_MODE_PWR_DOWN);
         }
-
     }
 
+    /** Turns the IOVDD on or off. 
+     
+        Because the IOVDD powers the pullups on the I2C lines, we want to ensure the always on devices connected to the bus (mainly the accelerometer) will see defined state by issuing START condition immediately before power off, followed by shorting the SDA and SCL lines to GND and by issuing STOP condition and releasing the I2C lanes rigfht after power on.
+     */
+    static void powerIOVDD(bool enable) {
+        if (enable) {
+            gpio::outputFloat(AVR_PIN_AVR_INT);
+            gpio::outputHigh(AVR_PIN_IOVDD_EN);
+            // wait a bit and then release the I2C pins by issuing STOP condition
+            cpu::delayMs(5);
+            gpio::setAsInput(AVR_PIN_I2C_SCL);
+            cpu::delayUs(100);
+            gpio::setAsInput(AVR_PIN_I2C_SDA);
+            // start the I2C slave as we will be contacted by the RP2350 shortly
+            i2c::initializeSlave(RCKID_AVR_I2C_ADDRESS);
+            TWI0.SCTRLA |= TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm;
+            LOG("IOVDD on");
+        } else {
+#if !AVR_INT_IS_SERIAL_TX            
+            // clear the interrupt line to ensure we are not bleeding voltage through it
+            gpio::outputFloat(AVR_PIN_AVR_INT);
+#endif
+            // capture I2C lines and issue START condition so that the accelerometer's I2C does not float
+            i2c::disable();
+            TWI0.SCTRLA = 0;
+            gpio::outputLow(AVR_PIN_I2C_SDA);
+            cpu::delayUs(100);
+            gpio::outputLow(AVR_PIN_I2C_SCL);
+            // drive the pin low to ensure the regulator turns off immediately
+            gpio::outputLow(AVR_PIN_IOVDD_EN);
+            LOG("IOVDD off");
+        }
+    }
+
+    static void rebootRP() {
+        // TODO
+    }
+
+    static void bootloaderRP() {
+        // TODO
+    }
+
+    static void enterDebugMode() {
+        // TODO
+    }
 
     //@}
 
@@ -187,7 +328,7 @@ public:
             // do not use interrupt on charging pin either
             GPIO_PIN_PINCTRL(AVR_PIN_CHARGING) &= ~PORT_ISC_gm;
         } else {
-            // no harm disabling multiple times
+            // no harm disabling multiple times and makes the code safer
             LOG("systick - disable RTC");
             while (RTC.STATUS & RTC_CTRLABUSY_bm);
             RTC.CTRLA = 0;
@@ -250,9 +391,6 @@ public:
     }
     //@}
 
-
-
-
     /** \name I2C Communication
      
         - maybe have transferrable state that returns state, date time, all of user bytes
@@ -261,7 +399,6 @@ public:
      */
     //@{
 
-    static inline volatile bool irq_ = false;
     static inline volatile bool i2cCommandReady_ = false;
     static inline uint8_t const * i2cRxAddr_ = nullptr;
     static inline uint8_t i2cBytes_ = 0;
@@ -270,10 +407,6 @@ public:
     static void initializeComms() {
         // make sure we'll start reading the transferrable state first
         i2cRxAddr_ = reinterpret_cast<uint8_t *>(& ts_);
-    }
-
-    static void setIrq() {
-        // TODO do we want to do anything here? 
     }
 
     static void i2cSlaveIRQHandler() {
@@ -352,6 +485,66 @@ public:
             i2cBytes_ = 0;
             i2cCommandReady_ = false;
         );
+    }
+    //@}
+
+    /** \name Interrupts
+     
+        TODO
+     */
+    //@{
+    static constexpr uint8_t ACCEL_INT_REQUEST = 1;
+    static constexpr uint8_t HOME_BTN_INT_REQUEST = 2;
+    static constexpr uint8_t CHARGING_INT_REQUEST = 4;
+    static inline volatile uint8_t intRequests_ = 0;
+
+    static inline volatile bool irq_ = false;
+
+    static void setIrq() {
+        // TODO do we want to do anything here? 
+    }
+
+    static void clearIrq() {
+
+    }
+
+    static void processIntRequests() {
+        if (intRequests_ == 0)
+            return;
+        uint8_t irqs;
+        NO_ISR(
+            irqs = intRequests_;
+            intRequests_ = 0;
+        );
+        // if the accelerometer IRQ is on, we simply pass it to the RP2350 via the state. It's done here and not in the ISR routine in case in the future we want to do some processing of the accel data on AVR as well.
+        if (irqs & ACCEL_INT_REQUEST) {
+            if (isPowerModeOn()) {
+                NO_ISR(
+                    ts_.state.setAccelInterrupt(true);
+                    setIrq();
+                );
+                // TODO should the interrupt be cleared for the accelerometer?
+            }
+        }
+        // charging request can be serviced in all power modes. based on the charging pin status we set the power modes appropriately, leaving the power mode functions to deal with the actual status changes. If charging is enabled, then the DC mode must by definition be enabled as well and we ensure this by setting it on here. This is important because when in powerOff mode, we do not detect DC power directly via VCC measurements (they are ADC).
+        if (irqs & CHARGING_INT_REQUEST) {
+            bool charging = gpio::read(AVR_PIN_CHARGING);
+            if (charging) {
+                setPowerMode(POWER_MODE_DC);
+                setPowerMode(POWER_MODE_CHARGING);
+            } else {
+                clearPowerMode(POWER_MODE_CHARGING);
+            }
+        }
+        // finally the home button press, which can only happen if the device is in powered down state. If critical battery flag is on, we cannot power the device on and only display the critical battery warning flashes, exitting prematurely. Otherwise we enter the wakeup power mode, which starts the button long press detection to transition to power on state if successful.
+        if (irqs & HOME_BTN_INT_REQUEST) {
+            ASSERT(isPowerModeOff());
+            if (criticalBattery_) {
+                criticalBattery();
+                return;
+            }
+            setPowerMode(POWER_MODE_WAKEUP);
+        }
     }
     //@}
 
@@ -435,16 +628,40 @@ public:
         changed = ts_.state.setButton(Btn::VolumeDown, btnVolumeDown) || changed;
 
         // in power off mode, the buttons are not checked via the control groups, but directly via the ISR for home button
-        ASSERT(! isPowerOff());
+        ASSERT(! isPowerModeOff());
 
         // move to the next group immediately in non poweroff modes (ticks are running)
         gpio::high(AVR_PIN_BTN_CTRL);
         gpio::low(AVR_PIN_BTN_ABXY);
 
-        // TODO
+        if (changed) {
+            LOG("CTRL: " << ts_.state.button(Btn::Home) << " " << ts_.state.button(Btn::VolumeUp) << " " << ts_.state.button(Btn::VolumeDown));
+            setIrq();
 
+            // if we are in wakeup mode *and* the volume down button is not pressed, we should exit the debug mode (it was set in wakeup mode enable proactively)
+            if (isPowerModeWakeup()) {
+                if (! btnVolumeDown)
+                    ts_.state.setDebugMode(false);
+            }
 
+            // check long press of home button here to enable device power on, or power off
+            if (btnHome && (homeBtnLongPress_ == 0))
+                startHomeButtonLongPress();
+            else 
+                checkHomeButtonLongPress();
 
+            // if we are in debug mode, react to volume button presses immediately to either reboot the RP, or enter bootloader mode
+            if (isPowerModeOn() && ts_.state.debugMode()) {
+                if (btnVolumeUp) {
+                    rebootRP();
+                    return;
+                }
+                if (btnVolumeDown) {
+                    bootloaderRP();
+                    return;
+                }
+            }
+        }
     }
 
     static void readABXYGroup() {
@@ -458,7 +675,7 @@ public:
         changed = ts_.state.setButton(Btn::Start, btnStart) || changed;
 
         // move to the next group immediately to maximize the time between group mode & button read, print state change id debugging enabled. Note that this function is only expected to be called when we are not powered down (i.e. we have running ticks)
-        ASSERT(! isPowerOff());
+        ASSERT(! isPowerModeOff());
         gpio::high(AVR_PIN_BTN_ABXY);
         gpio::low(AVR_PIN_BTN_DPAD);
         if (changed) {
@@ -478,7 +695,7 @@ public:
         changed = ts_.state.setButton(Btn::Down, btnDown) || changed;
 
         // move to the next group immediately to maximize the time between group mode & button read, print state change id debugging enabled. Note that this function is only expected to be called when we are not powered down (i.e. we have running ticks)
-        ASSERT(! isPowerOff());
+        ASSERT(! isPowerModeOff());
         gpio::high(AVR_PIN_BTN_DPAD);
         gpio::low(AVR_PIN_BTN_CTRL);
         if (changed) {
@@ -486,6 +703,39 @@ public:
             setIrq();
         }
     }
+
+    static void startHomeButtonLongPress() {
+        homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
+    }
+
+    static void checkHomeButtonLongPress() {
+        if (homeBtnLongPress_ == 0)
+            return;
+        if (! ts_.state.button(Btn::Home)) {
+            homeBtnLongPress_ = 0;
+            return;
+        }
+        if (--homeBtnLongPress_ != 0)
+            return;
+        // if we are in the wakeup mode, long press mens transition to power on mode, so set power mode to ON, disable wakeup mode. We also enter debug mode if that is the case
+        if (isPowerModeWakeup()) {
+            powerOffTimeout_ = 0;
+            setPowerMode(POWER_MODE_ON);
+            clearPowerMode(POWER_MODE_WAKEUP);
+            // if we are in debug mode at this point, re-enable it again now that we have powered the IOVDD rail. This will turn on the LEDs and set backlight as well 
+            if (ts_.state.debugMode())
+                enterDebugMode();
+            // rumble to indicate power on
+            // TODO
+            //setRumblerEffect(RumblerEffect::OK());
+        // otherwise, if we are in power on mode, long press means transition to power off, so here we simply set the power off interrupt and timeout. 
+        } else if (isPowerModeOn()) {
+            powerOffTimeout_ = RCKID_POWEROFF_ACK_TIMEOUT_FPS;
+            ts_.state.setPowerOffInterrupt(true);
+            setIrq();
+        }
+    }
+
     //@}
 
     /** \name ADC (voltage and temperature)
@@ -593,6 +843,10 @@ public:
      */
     //@{
 
+    static void rgbTick() {
+
+    }
+
     static void rgbOn(bool value) {
         // TODO
     }
@@ -602,9 +856,81 @@ public:
     }
     //@}
 
+
+    /** \name Rumbler & Backlight 
+     */
+    //@{
+
+    static void enablePWM(bool value) {
+        if (value) {
+            // do not leak voltage and turn the pins as inputs
+            static_assert(AVR_PIN_PWM_BACKLIGHT == gpio::C0); // TCB0 WO, alternate position
+            PORTMUX.CTRLD |= PORTMUX_TCB0_bm;
+            gpio::outputFloat(AVR_PIN_PWM_BACKLIGHT);
+            TCB0.CTRLA = 0;
+            TCB0.CTRLB = 0; 
+            TCB0.CCMPL = 255;
+            TCB0.CCMPH = 0; 
+            static_assert(AVR_PIN_PWM_RUMBLER == gpio::A3); //TCB1 WO
+            gpio::outputFloat(AVR_PIN_PWM_RUMBLER);
+            TCB1.CTRLA = 0;
+            TCB1.CTRLB = 0; 
+            TCB1.CCMPL = 255;
+            TCB1.CCMPH = 0; 
+            // both interrupts are allowed to run in standby mode
+            TCB0.CTRLA |= TCB_RUNSTDBY_bm;
+            TCB1.CTRLA |= TCB_RUNSTDBY_bm;
+        } else {
+            TCB0.CTRLA = 0;
+            TCB0.CTRLB = 0;
+            gpio::outputFloat(AVR_PIN_PWM_BACKLIGHT);
+            TCB1.CTRLA = 0;
+            TCB1.CTRLB = 0;
+            gpio::outputFloat(AVR_PIN_PWM_RUMBLER);
+        }
+    }
+
+    static void setBacklightPWM(uint8_t value) {
+        if (value == 0) {
+            TCB0.CTRLA = 0;
+            TCB0.CTRLB = 0;
+            gpio::outputFloat(AVR_PIN_PWM_BACKLIGHT);
+        } else if (value == 255) {
+            TCB0.CTRLA = 0;
+            TCB0.CTRLB = 0;
+            gpio::outputHigh(AVR_PIN_PWM_BACKLIGHT);
+        } else {
+            gpio::outputLow(AVR_PIN_PWM_BACKLIGHT);
+            TCB0.CCMPH = value;
+            TCB0.CTRLB = TCB_CNTMODE_PWM8_gc | TCB_CCMPEN_bm;
+            //TCB0.CTRLA = TCB_CLKSEL_CLKTCA_gc | TCB_ENABLE_bm | TCB_RUNSTDBY_bm;
+            TCB0.CTRLA = TCB_CLKSEL_CLKDIV2_gc | TCB_ENABLE_bm | TCB_RUNSTDBY_bm;
+        }
+    }
+
+    static void rumblerTick() {
+        // TODO 
+    }
+    //@}
+
+
     static inline TransferrableState ts_;
 
 }; // RCKid
+
+/** Interrupt for a second tick from the RTC. We need the interrupt routine so that the CPU can wake up and increment the real time clock and uptime. 
+ */
+ISR(RTC_PIT_vect) {
+    RTC.PITINTFLAGS = RTC_PI_bm; // clear the interrupt
+    RCKid::secondTick_ = true;
+}
+
+/** RTC CNT interrupt which we use for overflow only for the system tick at ~5ms (200Hz).
+ */
+ISR(RTC_CNT_vect) {
+    RTC.INTFLAGS = RTC_OVF_bm; // clear the interrupt
+    RCKid::systemTick_ = true;
+}
 
 /** I2C slave action.
  */
@@ -612,7 +938,45 @@ ISR(TWI0_TWIS_vect) {
     RCKid::i2cSlaveIRQHandler();    
 }
 
+/** Accel pin ISR.
+ */
+ISR(PORTB_PORT_vect) {
+    static_assert(AVR_PIN_ACCEL_INT == gpio::B4);
+    VPORTB.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_ACCEL_INT));
+    // only do stuff if we are transitioning from low to high
+    if (gpio::read(AVR_PIN_ACCEL_INT))
+        RCKid::intRequests_ |= RCKid::ACCEL_INT_REQUEST;
+}
 
+/** ADC measurement done. The interrupt is necessary to ensure that the AVR wakes up from sleep.
+ */
+ISR(ADC0_RESRDY_vect) {
+    // don't change the flag, we use it, instead disable the interrupt
+    ADC0.INTCTRL = 0;
+    //ADC0.INTFLAGS = ADC_RESRDY_bm;
+}
+
+/** GPIO interrupts. 
+ 
+    We use those when the device is powered off to ensure that we wake up when either charging starts (this is a way to detect DC mode enabled as well, but unlike the charging pin, we cannot simply add ISR to it as the change is not across the 0-1 threshold), or the home button is pressed. 
+ */
+ISR(PORTA_PORT_vect) {
+    static_assert(AVR_PIN_BTN_1 == gpio::A6);
+    static_assert(AVR_PIN_CHARGING == gpio::A5);
+    if (VPORTA.INTFLAGS & (1 << GPIO_PIN_INDEX(AVR_PIN_BTN_1))) {
+        VPORTA.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_BTN_1));
+        // only do stuff if we were tranistioning from high to low (button press)
+        if (gpio::read(AVR_PIN_BTN_1) == false)
+            RCKid::intRequests_ |= RCKid::HOME_BTN_INT_REQUEST;
+    }
+    if (VPORTA.INTFLAGS & (1 << GPIO_PIN_INDEX(AVR_PIN_CHARGING))) {
+        VPORTA.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_CHARGING));
+        RCKid::intRequests_ |= RCKid::CHARGING_INT_REQUEST;
+    }
+}
+
+/** Initialization and main loop, simply calls to the RCKid's class init & loop functions. 
+ */
 int main() {
     RCKid::initialize();
     while (true)
