@@ -9,6 +9,8 @@ namespace rckid {
     class TransferrableState {
     public:
         DeviceState state;
+        uint32_t wakeupReason = 0;
+        uint32_t wakeupCounter = 0;
         TinyDateTime time;
         uint32_t uptime = 0;
         int16_t temp = 0;
@@ -70,18 +72,56 @@ namespace rckid::cmd {
         }
     );
 
-    // TODO actually implement the memory commands
-    COMMAND(6, ReadEEPROM);
-    COMMAND(7, WriteEEPROM);
+    COMMAND(6, ReadEEPROM); // TODO
+    COMMAND(7, WriteEEPROM); // TODO
 
     // power management commands
 
     /** Immediately powers off the device by cutting the 3V3 power supply for the cartridge and RP2350.
      */
-    COMMAND(8, Poweroff);
+    COMMAND(8, PowerOff);
 
     COMMAND(9, PowerOffAck);
 
+    COMMAND(10, Sleep); // TODO
 
+    COMMAND(11, WakeUp, 
+        uint32_t countdownSeconds;
+        uint32_t reason;
+        explicit WakeUp(uint32_t countdownSeconds, uint32_t reason): countdownSeconds{countdownSeconds}, reason{reason} {}
+    );
+
+    COMMAND(12, RebootRP);
+
+    COMMAND(13, BootloaderRP);
+
+    COMMAND(14, RebootAVR); // TODO
+    COMMAND(15, BootloaderAVR); // TODO
+
+    COMMAND(16, SetDebugMode, 
+        bool value;
+        explicit SetDebugMode(bool value): value{value} {}
+    );
+
+    COMMAND(17, SetBrightness,
+        uint8_t value;
+        SetBrightness(uint8_t value): value{value} {}
+    );
+
+    COMMAND(18, SetRGBEffectAll,
+        RGBEffect effect;
+        explicit SetRGBEffectAll(RGBEffect effect): effect{effect} {}
+    );
+
+    COMMAND(19, SetRGBEffect,
+        uint8_t ledIndex;
+        RGBEffect effect;
+        SetRGBEffect(uint8_t ledIndex, RGBEffect effect): ledIndex{ledIndex}, effect{effect} {}
+    );
+
+    COMMAND(20, SetRumblerEffect,
+        RumblerEffect effect;
+        explicit SetRumblerEffect(RumblerEffect effect): effect{effect} {}
+    );
 
 } // namespace rckid::cmd

@@ -6,6 +6,10 @@
  */
 #define RCKID_AVR_FIRMWARE_VERSION 1
 
+/** Default brightess. This is also the brightness that will be set by debug mode.
+ */
+#define RCKID_DEFAULT_BRIGHTNESS 128
+
 /** Frames per long press of the home button (at 60 fps). The home button long press is automatically detected by the AVR and will either turn the device on when powered off, or will force it to shutdown mode if powered on. 
  */
 #define RCKID_HOME_BUTTON_LONG_PRESS_FPS 120
@@ -14,9 +18,26 @@
  */
 #define RCKID_POWEROFF_ACK_TIMEOUT_FPS 10
 
+#define RCKID_POWEROFF_TIMEOUT_FPS (10 * 60)
+
 /** Number of ticks (roughly 1/60th of second) for button debounce (all buttons), i.e. changes in button state are ignored (delayed if permanent) for this many ticks after accepted change.
  */
 #define RCKID_BUTTON_DEBOUNCE_TICKS 4
+
+#define RCKID_RGB_TICKS_PER_SECOND 66
+#define RCKID_NUM_RGB_LEDS 8
+#define RCKID_RGB_BRIGHTNESS 32
+#define RCKID_RGB_NOTIFICATION_SPEED 100
+
+#define RCKID_RUMBLER_EFFECT_POWER_ON RumblerEffect{192, 5, 1, 1}
+
+/** When set to 1, the AVR_INT pin is used for serial debugging. 
+ */
+#define RCKID_AVR_IS_SERIAL_TX 0
+
+/** Serial speed for AVR debugging (when RCKID_AVR_IS_SERIAL_TX is 1). 
+ */
+#define RCKID_AVR_SERIAL_SPEED 115200
 
 /** Voltage above which USB power is detected. While reading the VUSB presence directly would be more precise, using this threshold is valid too and saves us one pin. This is based on the typical Li-Ion battery voltage cutoff at 4.2 volts, so anything above that must be the 5V from USB.
  */
@@ -126,4 +147,11 @@
 #define AVR_PIN_BTN_DPAD        gpio::C4
 #define AVR_PIN_QSPI_SS         gpio::C5
 
-
+#define RGB_LED_DPAD_TOP_LEFT 1
+#define RGB_LED_DPAD_TOP_RIGHT 0
+#define RGB_LED_DPAD_BOTTOM_LEFT 2
+#define RGB_LED_DPAD_BOTTOM_RIGHT 3
+#define RGB_LED_BTN_A 7
+#define RGB_LED_BTN_B 6
+#define RGB_LED_BTN_SELECT 4
+#define RGB_LED_BTN_START 5

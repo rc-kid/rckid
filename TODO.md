@@ -10,7 +10,6 @@
 - button press repeat (configurable)
 
 - avr firmware wakeup timing
-- maybe ditch notification entirely and make the RGB LEDs completely under the app control when powered on
 
 - make UNREACHABLE & friends part of platform? This should make it write between mkIII, fantasy and ATTiny stuff
 
