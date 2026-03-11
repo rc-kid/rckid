@@ -5,6 +5,8 @@ cartridge.iso
 lib/raylib
 lib/pico-sdk
 old*
+sdk-old
+cartridges-old
 gbcemu/tests/insns_json
 /sd
 cartridge

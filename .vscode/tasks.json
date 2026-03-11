@@ -70,7 +70,7 @@
                 "run"
             ],
             "options": {
-                "cwd": "${workspaceFolder}/sdk2/backend/mk3/avr",
+                "cwd": "${workspaceFolder}/sdk/backend/mk3/avr",
                 "shell": {
                     "executable": "/bin/zsh",
                     "args": [

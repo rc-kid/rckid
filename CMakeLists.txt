@@ -62,7 +62,7 @@ add_compile_definitions("RCKID_BACKEND_${RCKID_BACKEND}")
 add_compile_options(-fmacro-prefix-map=/home/peta/devel/rckid/=/)
 
 # setup general include directories
-include_directories("sdk2/include")
+include_directories("sdk/include")
 include_directories("lib")
 include_directories("gbcemu")
 
@@ -75,7 +75,7 @@ add_subdirectory("lib/libhelix-mp3")
 add_subdirectory("lib/libopus")
 
 # add the SDK itself
-add_subdirectory("sdk2")
+add_subdirectory("sdk")
 
 # add tests for various projects
 #add_subdirectory("tests")
@@ -83,7 +83,7 @@ add_subdirectory("sdk2")
 
 add_subdirectory("gbcemu")
 
-add_subdirectory("cartridges2")
+add_subdirectory("cartridges")
 #add_subdirectory("cartridges/hello-world")
 #add_subdirectory("cartridges/gbcemu")
 
