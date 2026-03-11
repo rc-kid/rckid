@@ -201,7 +201,7 @@ namespace rckid {
             std::memcpy(newData.get(), data_.get(), size());
             std::memcpy(newData.get() + size(), other.data_.get(), other.size());
             newData.get()[newSize] = '\0';
-            return String{std::move(newData.release()), newSize};
+            return String{std::move(newData), newSize};
         }
 
         /** Returns reader constructed from the string.
