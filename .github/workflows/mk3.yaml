@@ -1,0 +1,35 @@
+name: mk3
+
+on:
+  push:
+    branches-ignore:
+      - release
+
+jobs:
+  build:
+
+    runs-on: ubuntu-24.04
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: install-packages
+      run: |
+        bash setup-ubuntu.sh
+    - name: configure-debug
+      run: |
+        mkdir -p build/debug
+        cd build/debug
+        cmake ../.. -DRCKID_BACKEND=MK3
+    - name: build-debug
+      run: |
+        cd build/debug
+        cmake --build . 
+    - name: configure-release
+      run: |
+        mkdir -p build/release
+        cd build/release
+        cmake ../.. -DCMAKE_BUILD_TYPE=Release -DRCKID_BACKEND=MK3
+    - name: build-release
+      run: |
+        cd build/release
+        cmake --build . 

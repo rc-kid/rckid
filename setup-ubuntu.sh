@@ -33,7 +33,7 @@ cd ${RCKID_DIR}
 sudo apt-get -y install python3-venv
 curl -fsSL -o get-platformio.py https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py && python3 get-platformio.py
 rm get-platformio.py
-ln -s /home/YOUR_USERNAME/.platformio/penv/bin/platformio ~/.local/bin/pio
+#ln -s /home/YOUR_USERNAME/.platformio/penv/bin/platformio ~/.local/bin/pio
 
 #echo "Building RCKid & cartridges..."
 #cd ${RCKID_DIR}

@@ -1,0 +1,43 @@
+name: fantasy
+
+on:
+  push:
+    branches-ignore:
+      - release
+
+jobs:
+  build:
+
+    runs-on: ubuntu-24.04
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: install-packages
+      run: |
+        bash setup-ubuntu.sh
+    - name: configure-debug
+      run: |
+        mkdir -p build/debug
+        cd build/debug
+        cmake ../..
+    - name: build-debug
+      run: |
+        cd build/debug
+        cmake --build . 
+    - name: run-tests-debug
+      run: |
+        cd build/debug
+        cmake --build . --target run-tests   
+    - name: configure-release
+      run: |
+        mkdir -p build/release
+        cd build/release
+        cmake ../.. -DCMAKE_BUILD_TYPE=Release
+    - name: build-release
+      run: |
+        cd build/release
+        cmake --build . 
+    - name: run-tests-release
+      run: |
+        cd build/release
+        cmake --build . --target run-tests
