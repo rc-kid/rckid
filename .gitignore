@@ -2,8 +2,8 @@ build*
 docs/sdk
 sd.iso
 cartridge.iso
-lib/raylib
-lib/pico-sdk
+/lib/raylib
+/lib/pico-sdk
 old*
 sdk-old
 cartridges-old
