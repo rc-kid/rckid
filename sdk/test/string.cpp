@@ -72,7 +72,6 @@ TEST(string, addition) {
         String s2 = s1 + " " + bar;
         EXPECT(g_.usedDelta() == 16);
         EXPECT(s2.size() == 7);
-        char const * x = s2.c_str();
         EXPECT(std::strcmp(s2.c_str(), "foo bar") == 0);
         EXPECT(g_.usedDelta() == 16);
         EXPECT(g_.reservedDelta() == 32); // because of the intermediate allocation in the addition
