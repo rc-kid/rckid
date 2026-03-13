@@ -65,19 +65,15 @@ TEST(string, compare) {
 TEST(string, addition) {
     using namespace rckid;
     Heap::UseAndReserveGuard g_;
-    {
-        String s1{foo};
-        EXPECT(g_.usedDelta() == 0);
-        EXPECT(g_.reservedDelta() == 0);
-        String s2 = s1 + " " + bar;
-        EXPECT(g_.usedDelta() == 16);
-        EXPECT(s2.size() == 7);
-        EXPECT(std::strcmp(s2.c_str(), "foo bar") == 0);
-        EXPECT(g_.usedDelta() == 16);
-        EXPECT(g_.reservedDelta() == 32); // because of the intermediate allocation in the addition
-    }
+    String s1{foo};
     EXPECT(g_.usedDelta() == 0);
     EXPECT(g_.reservedDelta() == 0);
+    String s2 = s1 + " " + bar;
+    EXPECT(g_.usedDelta() == 16);
+    EXPECT(s2.size() == 7);
+    EXPECT(std::strcmp(s2.c_str(), "foo bar") == 0);
+    EXPECT(g_.usedDelta() == 16);
+    EXPECT(g_.reservedDelta() == 32); // because of the intermediate allocation in the addition
 }
 
 TEST(string, empty) {

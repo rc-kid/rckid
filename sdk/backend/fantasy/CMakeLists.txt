@@ -34,6 +34,9 @@ function(link_with_librckid target_name)
             opus
             ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
         )
+        target_sources(${target_name} PRIVATE
+            ${CMAKE_SOURCE_DIR}/sdk/backend/fantasy/global_new_delete.cpp
+        )
     endif()
 endfunction()
 

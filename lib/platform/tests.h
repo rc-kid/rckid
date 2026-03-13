@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <unordered_map>
+#include <map>
 #include <sstream>
 #include <iostream>
 #include <cstdint>
@@ -75,6 +75,10 @@ public:
         //std::cout << "Running " << TotalTests_ << " tests..." << std::flush;
         for (auto & suite : Suites_) {
             //std::cout << "Running suite " << suite.first << "..." << std::endl;
+            // order the tests by name for deterministic walkthrough
+            std::sort(suite.second.tests.begin(), suite.second.tests.end(), [](Test * a, Test * b) {
+                return std::strcmp(a->testName, b->testName) < 0;
+            });
             for (Test * t : suite.second.tests) {
                 std::cout << "\r(" << ++testIndex << "/" << TotalTests_ << "): " << t->suiteName << " - " << t->testName << "\033[K" << std::flush;
                 size_t oldFailed = FailedChecks_;
@@ -173,7 +177,7 @@ private:
         std::vector<Test*> tests;
     }; // Test::Suite
 
-    static inline std::unordered_map<std::string, Suite> Suites_;
+    static inline std::map<std::string, Suite> Suites_;
 
 }; // Test
 

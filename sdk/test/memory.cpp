@@ -18,7 +18,6 @@ namespace {
 
 } // anonymous namespace
 
-
 TEST(memory, immutable) {
     EXPECT(sizeof(x) == 4);
     EXPECT(sizeof(y) == 4);
@@ -95,61 +94,60 @@ TEST(memory, heapAlloc) {
     using namespace rckid;
 
     Heap::UseAndReserveGuard h;
-
     EXPECT(h.usedDelta() == 0);
-    uint8_t * a = new uint8_t[10];
-    EXPECT(h.usedDelta() == 16);
-    EXPECT(h.reservedDelta() == 16);
-    uint8_t * b = new uint8_t[20];
-    EXPECT(h.usedDelta() == 16 + 24);
-    EXPECT(h.reservedDelta() == 16 + 24);
-    delete [] b;
-    EXPECT(h.usedDelta() == 16);
-    EXPECT(h.reservedDelta() == 16);
-    delete [] a;
-    EXPECT(h.usedDelta() == 0);
-    EXPECT(h.reservedDelta() == 0);
-
-    a = new uint8_t[10];
-    b = new uint8_t[20];
-    EXPECT(h.reservedDelta() == 16 + 24);
-    delete [] a;
-    EXPECT(h.reservedDelta() == 16 + 24);
-    delete [] b;
-    EXPECT(h.reservedDelta() == 0);
+    // thanks to allocation ellision in C++14 and onwards, we have to call the operator explicitly here to ensure it does not get optimized away
+    uint8_t * a = static_cast<uint8_t*>(::operator new[](10));
+    EXPECT(h.usedDelta(),  16);
+    EXPECT(h.reservedDelta(),  16);
+      uint8_t * b = static_cast<uint8_t*>(::operator new[](20));
+    EXPECT(h.usedDelta(),  16 + 24);
+    EXPECT(h.reservedDelta(),  16 + 24);
+    ::operator delete [](b);
+    EXPECT(h.usedDelta(),  16);
+    EXPECT(h.reservedDelta(),  16);
+    ::operator delete [](a);
+    EXPECT(h.usedDelta(),  0);
+    EXPECT(h.reservedDelta(),  0);
+    a = static_cast<uint8_t*>(::operator new[](10));
+    b = static_cast<uint8_t*>(::operator new[](20));
+    EXPECT(h.reservedDelta(),  16 + 24);
+    ::operator delete [](a);
+    EXPECT(h.reservedDelta(),  16 + 24);
+    ::operator delete [](b);
+    EXPECT(h.reservedDelta(),  0);
 }
 
 TEST(memory, heapAllocFromFreelist) {
     using namespace rckid;
 
     Heap::UseAndReserveGuard h;
-    uint8_t * a0 = new uint8_t[10];
-    uint8_t * a1 = new uint8_t[10];
-    uint8_t * a2 = new uint8_t[10];
-    uint8_t * a3 = new uint8_t[10];
-    uint8_t * a4 = new uint8_t[10];
-    EXPECT(h.reservedDelta() == 16 * 5);
-    EXPECT(h.usedDelta() == 16 * 5);
+    uint8_t * a0 = static_cast<uint8_t*>(::operator new[](10));
+    uint8_t * a1 = static_cast<uint8_t*>(::operator new[](10));
+    uint8_t * a2 = static_cast<uint8_t*>(::operator new[](10));
+    uint8_t * a3 = static_cast<uint8_t*>(::operator new[](10));
+    uint8_t * a4 = static_cast<uint8_t*>(::operator new[](10));
+    EXPECT(h.reservedDelta(),  16 * 5);
+    EXPECT(h.usedDelta(), 16 * 5);
     // delete the chunks in non sequential order to check freelist merging when allocating large chunk at the end
-    delete [] a0;
-    EXPECT(h.reservedDelta() == 16 * 5);
-    EXPECT(h.usedDelta() == 16 * 4);
-    delete [] a1;
-    EXPECT(h.reservedDelta() == 16 * 5);
-    EXPECT(h.usedDelta() == 16 * 3);
-    delete [] a3;
-    EXPECT(h.reservedDelta() == 16 * 5);
-    EXPECT(h.usedDelta() == 16 * 2);
-    delete [] a2;
-    EXPECT(h.reservedDelta() == 16 * 5);
-    EXPECT(h.usedDelta() == 16 * 1);
+    ::operator delete[](a0);
+    EXPECT(h.reservedDelta(), 16 * 5);
+    EXPECT(h.usedDelta(), 16 * 4);
+    ::operator delete[](a1);
+    EXPECT(h.reservedDelta(), 16 * 5);
+    EXPECT(h.usedDelta(), 16 * 3);
+    ::operator delete[](a3);
+    EXPECT(h.reservedDelta(), 16 * 5);
+    EXPECT(h.usedDelta(), 16 * 2);
+    ::operator delete[](a2);
+    EXPECT(h.reservedDelta(), 16 * 5);
+    EXPECT(h.usedDelta(), 16 * 1);
     // this would increase reservation if chunks are not merged above
-    a0 = new uint8_t[40];
-    EXPECT(h.reservedDelta() == 16 * 5);
-    EXPECT(h.usedDelta() == 48 + 16);
-    delete [] a0;
-    delete [] a4;
-    EXPECT(h.usedDelta() == 0);
-    EXPECT(h.reservedDelta() == 0);
+    a0 = static_cast<uint8_t*>(::operator new[](40));
+    EXPECT(h.reservedDelta(), 16 * 5);
+    EXPECT(h.usedDelta(), 48 + 16);
+    ::operator delete[](a0);
+    ::operator delete[](a4);
+    EXPECT(h.usedDelta(), 0);
+    EXPECT(h.reservedDelta(), 0);
 }
 

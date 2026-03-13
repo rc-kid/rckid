@@ -20,6 +20,13 @@
 
 #define RCKID_DISPLAY_ZOOM 4
 
+extern "C" {
+
+    extern uint8_t __rodata_start; 
+    extern uint8_t __rodata_end;    
+    
+}
+
 namespace rckid::fs {
     void initializeFilesystem();
 }
@@ -180,32 +187,6 @@ namespace rckid::internal {
 
 } // namespace rckid::internal
 
-extern "C" {
-
-    extern uint8_t __rodata_start; 
-    extern uint8_t __rodata_end;    
-    
-    extern void *__libc_malloc(size_t);
-    extern void __libc_free(void *);
-
-    //depending on whether we are in system malloc, or not use libc malloc, or RCKid's heap
-    void * malloc(size_t numBytes) {
-        if (rckid::internal::memory::useSystemMalloc > 0)
-            return __libc_malloc(numBytes);
-        else
-            return rckid::Heap::alloc(numBytes);
-    }
-
-    // if the pointer to be freed belongs to RCKId's heap, we should use own heap free, otherwise use normal free (and assert it does not belong to fantasy heap in general as that would be weird)
-    void free(void * ptr) {
-        if (rckid::Heap::contains(ptr)) {
-            rckid::Heap::free(ptr);
-        // otherwise this is a libc pointer and should be deleted accordingly
-        } else {
-            __libc_free(ptr);
-        }
-   }
-} // extern C
 
 namespace rckid::hal {
 

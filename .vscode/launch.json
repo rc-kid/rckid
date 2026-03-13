@@ -10,7 +10,7 @@
             "request": "launch",
             "cwd": "${workspaceFolder}",
             //"program": "${workspaceFolder}/build/cartridges/tests/audiotest",
-            "program": "${workspaceFolder}/build/cartridge/test/ui-app",
+            "program": "${workspaceFolder}/build/cartridges/test/ui-app",
             //"program": "${workspaceFolder}/build/cartridges/tests/bsodtest",
             "args": [],
             "stopAtEntry": false,
