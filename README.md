@@ -1,8 +1,8 @@
 # RCKid mk3
 
-RCKid is an open‑source handheld console designed for young creators. It’s built to be the first piece of technology that feels truly personal to a child — not just a screen to consume, but a tool to imagine, build, and share. RCKid also supports kids in everyday tools like a clock, alarm, piggy bank, contacts, or music player. This balance of fun and function turns RCKid into a trusted companion, introducing kids to digital literacy, technology, and STEM skills in a way that grows with them.
+RCKid is an open‑source handheld console designed for young creators. It’s built to be the first piece of technology that feels truly personal to a child — not just a screen to consume, but a tool to imagine, build, and share. RCKid also supports kids in everyday tools like a clock, alarm, piggy bank, contacts, or music player. This balance of fun and function turns RCKid into a trusted companion, introducing kids to digital literacy, technology, and STEM skills in a way that grows with them. For more information, have a look at the [grand vision](VISION.md) 
 
-Starting at age 5, kids can design sprites, tiles, and music inside native games, learning problem‑solving naturally through play. As they grow, RCKid supports MakeCode Arcade (blocks → JavaScript/TypeScript), GBStudio for retro game creation, and finally a full C++ SDK for teens and adults ready to explore hardware and systems programming.
+Starting at age 5, kids can design sprites, tiles, and music inside native games, learning problem‑solving naturally through play. As they grow, RCKid will provide more and more complex ways of control (visual blocks, scratch-like blocks, C++, Full C++ SDK). For more details see [development ladder](LADDER.md).
 
 A defining feature is RCKid’s cartridge system — not just for games, but for extending hardware. Cartridges can add Wi‑Fi for messaging, radios for mesh networking, JACDAC peripherals, IR remotes, or even exposed pins for DIY tinkering. Each cartridge carries its own firmware, making creations tangible, shareable, and hackable.
 

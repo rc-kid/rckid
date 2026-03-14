@@ -29,7 +29,7 @@ Wait for it... It has cartridges!
 
 Cartridges add tangibility to creations. When you create a game in Scratch you save it on your parents' computer somewhere. When you create a game for RCKid, you save it on your cartridge - one you can give to a friend to play. The cartridge system also allows nearly endless hardware customization. I already have plain, WiFi and NRF24L01P cartridges, with LoRa, camera and FM radio planned.
 
-I also plan a ladder of creative tools that kids across a wide age range can use:
+I also plan a ladder of creative tools that kids across a wide age range can use (details in [Development Ladder](LADDER.md)):
 
 - Small kids without any literacy can start with asset editing - tilesets, tilemaps, sprites, sounds, music trackers - that will allow them to customize existing games. This teaches decomposition and basic game concepts without requiring reading or writing.
 - A visual editor where behavior, not just appearance, can be tweaked without literacy. This teaches decomposition of behavior into sub-actions in time.

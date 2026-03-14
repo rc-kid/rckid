@@ -12,6 +12,13 @@ Here is the brief overview of the development ladder tiers, they are then follow
 
 I plan this all to basically be C++ objects defined in the SDK with each level giving access to more API. The lower on device levels will be interpreted, while the C++ style tiers will be compiled and will extend the device's firmware.
 
+Some design principles of the whole ladder, so that I keep reminding myself:
+
+- every tier is a superset of the previous - games grow with the child
+- higher tiers extend lower ones - blocks create visual components, C++ creates blocks, etc. 
+- push towards on device editing - younger kids, less computer access. Also one part of the original success was that you could pick it up on the go for a few moments, and do things - on device editing preserves this
+- the game is the continuity - moving to higher tier should not mean abandoning the game
+
 ## Game Apps
 
 Before we jump to the details of the respective tiers, we should discuss the general requirements of the apps that will be supported by this. 
