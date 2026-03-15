@@ -10,7 +10,7 @@ static constexpr size_t FB_SIZE = 320 * 240;
 int main() {
     initialize();
     hal::display::enable(Rect::WH(320, 240), hal::display::RefreshDirection::ColumnFirst);
-    Color::RGB565 * fb = new Color::RGB565[FB_SIZE];
+    Color::RGB565 fb[FB_SIZE];
     auto updateCallback = [&](Color::RGB565 * & buffer, uint32_t & bufferSize) {
         if (buffer == nullptr) {
             buffer = fb;
