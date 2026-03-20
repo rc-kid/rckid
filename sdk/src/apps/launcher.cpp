@@ -9,6 +9,9 @@
 
 #include <rckid/apps/launcher.h>
 
+// TODO this will not be here eventyually
+#include <rckid/game/engine.h>
+
 namespace rckid {
 
     ui::MenuItem::GeneratorEvent mainMenuGenerator(MainMenuOptions options) {
@@ -39,6 +42,10 @@ namespace rckid {
 
     unique_ptr<ui::Menu> gamesMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();
+            (*result)
+                << ui::MenuItem{"Game Engine", assets::icons_64::gameboy, []() {
+                    App::run<game::Engine>("TestGame");
+                }};
         return result;
     }
 

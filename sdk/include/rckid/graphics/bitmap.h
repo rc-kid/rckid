@@ -131,6 +131,15 @@ namespace rckid {
             UNREACHABLE;
         }
 
+        /** Releases the pixel array and returns its pointer.
+         */
+        uint8_t * detachPixelArray() && {
+            uint8_t * result = pixels_.releaseMut();
+            w_ = 0;
+            h_ = 0;
+            return result;
+        }
+
     private:
         Coord w_ = 0;
         Coord h_ = 0;

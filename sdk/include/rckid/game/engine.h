@@ -1,0 +1,124 @@
+#pragma once
+
+#include <rckid/ui/app.h>
+
+#include <rckid/game/object.h>
+
+namespace rckid::game {
+
+    /** Integer type used everywhere in the game engine. 
+     */
+    using Integer = Coord;
+
+    class Asset;
+
+    /** Game Engine
+     
+        Base class for game engine mechanics.
+
+        - this is really an app, that runs the game. How the game is run depends on the objects it has, and on how the objects draw themselves, we can reuse the existing rendering pipelines for this
+        - define the metadata about eventsm objects, etc 
+        - the events
+
+        - if objects are widgets, but not all objects are widgets, how to reconcile if I do not want to deal with multiple inheritance? 
+     */
+    class Engine : public ui::App<void> {
+    public:
+
+        String name() const override { return STR("GameEngine_" << gameName_); }
+
+        Capabilities capabilities() const override {
+            return {
+                .canPersistState = true,
+                .consumesBudget = false,
+                .standalone = true,
+            };
+        }
+
+        // forward declarations of game objects and their metadata        
+
+        Engine(String gameName): 
+            gameName_{std::move(gameName)} 
+        {
+            screen_ = addChild(new GameScreen(this));
+        }
+
+        template<typename T>
+        T * createAsset(String name) {
+            // TODO static base of check
+            T * result = new T{std::move(name)};
+            registerEngineObject(result);
+            aseets_.push_back(mutable_ptr{result});
+            return result;
+        }
+
+        template<typename T>
+        T * createObject(String name) {
+            // TODO static base of check
+            T * result = new T{std::move(name)};
+            registerEngineObject(result);
+            ObjectCapabilities caps = result->capabilities();
+            if (caps.rendetable)
+                renderableObjects_.push_back(mutable_ptr{result});
+            else 
+                nonRenderableObjects_.push_back(mutable_ptr{result});
+            return result;
+        }
+
+        // TODO add method for registering dynamically via just class name
+            
+
+    protected:
+
+        /** The Game Screen widget responsible for rendering all of the rendarable game objects.
+         */
+        class GameScreen : public ui::Widget {
+        public:
+
+            GameScreen(Engine * engine): engine_{engine} {}
+
+            void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) override {
+                ASSERT(verifyRenderParams(width(), height(), column, startRow, numPixels));
+                ASSERT(startRow == 0);
+                ASSERT(numPixels == display::HEIGHT);
+                // render all renderable objects
+                for (auto & object : engine_->renderableObjects_)
+                    object->render(column, buffer);
+            }
+
+        private:
+            Engine * engine_;
+
+        }; // Engine::GameScreen
+
+
+    private:
+
+        /** Registers the given engine object into the dynamic runtime. 
+        
+            Note that the dynamic runtime does not always need to be present and is initialized lazily when the dynamic features are used. This means that if the game is writen purely in C++, we do not pay for the dynamic overhead even in memory.
+         */
+        void registerEngineObject(EngineObject * obj) {
+            // TODO 
+
+        }
+
+        String gameName_;
+
+        // game screen responsible for drawing all game elements
+        GameScreen * screen_ = nullptr;
+
+        // renderable game objects
+        std::vector<unique_ptr<Object>> renderableObjects_;
+
+        // non-renderable game objects (this is purely an optimization to avoid iterating over non-renderable objects in the render loop)
+        std::vector<unique_ptr<Object>> nonRenderableObjects_;
+
+        // game assets
+        std::vector<unique_ptr<Asset>> assets_;
+
+
+    }; // rckid::GameEngine
+
+
+} // namespace rckid

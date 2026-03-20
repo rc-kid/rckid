@@ -1,3 +1,15 @@
+# Ladder
+
+The plan is to start with a simple game - cat chase - there is a mouse and a cat, mouse moves randomly, cat chases it, controlled by the player. The aim is to program this game at the C++ level to bring all the pieces together and make sure the c++ code looks decent and easy. Once I have this I can start writing the dynamic wrapper for the layers below (blocks & visual) and asset editors. 
+
+So what I need:
+- spriteset asset
+- sound asset
+- sprite object
+- sound object
+- basic game loop & input, collisions
+
+
 # SDK 1.0
 
 - improve value parsing in Reader (bool, ints, etc.)
