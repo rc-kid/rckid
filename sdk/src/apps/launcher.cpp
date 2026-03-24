@@ -11,6 +11,7 @@
 
 // TODO this will not be here eventyually
 #include <rckid/game/engine.h>
+#include <rckid/apps/cat_chase.h>
 
 namespace rckid {
 
@@ -44,7 +45,7 @@ namespace rckid {
         auto result = std::make_unique<ui::Menu>();
             (*result)
                 << ui::MenuItem{"Game Engine", assets::icons_64::gameboy, []() {
-                    App::run<game::Engine>("TestGame");
+                    App::run<CatChase>();
                 }};
         return result;
     }

@@ -140,6 +140,10 @@ namespace rckid {
             return result;
         }
 
+        uint8_t const * pixelArray() const {
+            return pixels_.ptr();
+        }
+
     private:
         Coord w_ = 0;
         Coord h_ = 0;

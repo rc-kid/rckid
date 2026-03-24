@@ -27,7 +27,7 @@ namespace rckid {
     struct PimSettings {
         uint32_t budget = 610;
     } __attribute__((packed));
-
+    
     struct Settings {
         static constexpr uint16_t VERSION = 1;
         uint16_t version = VERSION;

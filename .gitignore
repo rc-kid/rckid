@@ -11,3 +11,6 @@ gbcemu/tests/insns_json
 /sd
 cartridge
 .Zone.Identifier
+.cache
+.tasks.el
+compile_commands.json

@@ -187,6 +187,8 @@ namespace rckid {
 
         constexpr Color(RGB565 value) : r{value.r()}, g{value.g()}, b{value.b()} {}
 
+        constexpr Color(RGB332 value):  r{value.r()}, g{value.g()}, b{value.b()} {}
+
         static constexpr Color RGB(uint8_t r, uint8_t g, uint8_t b) {
             return Color{r, g, b};
         }
@@ -197,6 +199,10 @@ namespace rckid {
 
         constexpr RGB565 toRGB565() const {
             return RGB565{static_cast<uint16_t>(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3))};
+        }
+
+        constexpr RGB332 toRGB332() const {
+            return RGB332{static_cast<uint8_t>(((r >> 5) << 5) | ((g >> 5) << 2) | (b >> 6))};
         }
 
         uint8_t r;

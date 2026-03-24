@@ -31,7 +31,7 @@ namespace rckid::game {
          
             This is used internally by the game engine to keep track of declared actions, properties and events. 
          */
-        virtual char const * className() = 0;
+        virtual char const * className() const = 0;
 
         /** Declares all metadata about the given class. 
          

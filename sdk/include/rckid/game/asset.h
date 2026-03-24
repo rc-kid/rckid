@@ -11,7 +11,10 @@ namespace rckid::game {
      */
     class Asset : public EngineObject {
     public:
-        // TODO serialization and deserialization by virtual table
+      // TODO serialization and deserialization by virtual table
+
+      Asset() = default;
+      Asset(String name): EngineObject{std::move(name)} {}      
 
     }; // rckid::game::Asset
 

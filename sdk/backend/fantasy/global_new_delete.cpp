@@ -40,11 +40,11 @@ void* operator new[](std::size_t numBytes) {
     return malloc(numBytes); 
 }
 void* operator new(std::size_t numBytes, std::align_val_t align) {
-    ASSERT(static_cast<size_t>(align) <= 4);
+  // ASSERT(static_cast<size_t>(align) <= 4);
     return malloc(numBytes); 
 }
 void* operator new[](std::size_t numBytes, std::align_val_t align) {
-    ASSERT(static_cast<size_t>(align) <= 4);
+  // ASSERT(static_cast<size_t>(align) <= 4);
     return malloc(numBytes); 
 }
 

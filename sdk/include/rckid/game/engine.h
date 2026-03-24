@@ -1,8 +1,11 @@
 #pragma once
 
+#include <vector>
+
 #include <rckid/ui/app.h>
 
 #include <rckid/game/object.h>
+#include <rckid/game/asset.h>
 
 namespace rckid::game {
 
@@ -37,7 +40,7 @@ namespace rckid::game {
 
         // forward declarations of game objects and their metadata        
 
-        Engine(String gameName): 
+        Engine(String gameName):
             gameName_{std::move(gameName)} 
         {
             screen_ = addChild(new GameScreen(this));
@@ -48,7 +51,7 @@ namespace rckid::game {
             // TODO static base of check
             T * result = new T{std::move(name)};
             registerEngineObject(result);
-            aseets_.push_back(mutable_ptr{result});
+            assets_.push_back(unique_ptr<T>{result});
             return result;
         }
 
@@ -58,10 +61,10 @@ namespace rckid::game {
             T * result = new T{std::move(name)};
             registerEngineObject(result);
             ObjectCapabilities caps = result->capabilities();
-            if (caps.rendetable)
-                renderableObjects_.push_back(mutable_ptr{result});
+            if (caps.renderable)
+                renderableObjects_.push_back(unique_ptr<T>{result});
             else 
-                nonRenderableObjects_.push_back(mutable_ptr{result});
+                nonRenderableObjects_.push_back(unique_ptr<T>{result});
             return result;
         }
 
@@ -75,7 +78,10 @@ namespace rckid::game {
         class GameScreen : public ui::Widget {
         public:
 
-            GameScreen(Engine * engine): engine_{engine} {}
+            GameScreen(Engine * engine): 
+                engine_{engine} {
+                setRect(Rect::WH(display::WIDTH, display::HEIGHT));
+            }
 
             void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) override {
                 ASSERT(verifyRenderParams(width(), height(), column, startRow, numPixels));
@@ -100,6 +106,7 @@ namespace rckid::game {
          */
         void registerEngineObject(EngineObject * obj) {
             // TODO 
+            
 
         }
 

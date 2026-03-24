@@ -19,6 +19,8 @@ namespace rckid::game {
      */
     class Object : public EngineObject {
     public:
+        Object() = default;
+        Object(String name): EngineObject{std::move(name)} {}      
 
         /** Returns the game engine object capabilities. 
          */

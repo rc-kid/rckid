@@ -13,8 +13,11 @@ namespace rckid::game {
      */
     class SpriteSet : public Asset {
     public:
+        char const * className() const override { return "SpriteSet"; }
 
         SpriteSet() = default;
+
+        SpriteSet(String name): Asset{std::move(name)} {}        
 
         SpriteSet(Integer width, Integer height, Integer size = 1):
             width_{width}, 
@@ -71,13 +74,26 @@ namespace rckid::game {
             The bitmap must have proper width and height. If the bitmap depth equals to 8, which is used in the game engine the bitmap is moved, otherwise the image is recoded to 256 colors.
          */
         void addSprite(Bitmap bitmap) {
+            if (size_ == 0) {
+                ASSERT(width_ == 0 && height_ == 0);
+                width_ = bitmap.width();
+                height_ = bitmap.height();
+            }
             ASSERT(bitmap.width() == width() && bitmap.height() == height());
             switch (bitmap.colorRepresentation()) {
-                case Color::Representation::RGB565:
-                case Color::Representation::RGB332:
-                    // TODO determine the nearest color from a palette? 
-                    UNIMPLEMENTED;
+                // for the RGB565 images, we convert them to 332 default palette indices
+                case Color::Representation::RGB565: {
+                    uint16_t const * bmp = reinterpret_cast<uint16_t const *>(bitmap.pixelArray());   
+                    Color::Index256 * sprite = new Color::Index256[width_ * height_];
+                    for (uint32_t i = 0, e = width_ * height_; i != e; ++i) {
+                        uint8_t idx = Color{Color::RGB565{bmp[i]}}.toRGB332();   
+                        sprite[i] = Color::Index256(idx);
+                    }
+                    addSprite(sprite);
                     break;
+                }
+                // for RGB332 and 256 indexed colors, just use the stored values as indices and take the pixel array, which is the same format 
+                case Color::Representation::RGB332:
                 case Color::Representation::Index256:
                     addSprite(reinterpret_cast<Color::Index256 *>(std::move(bitmap).detachPixelArray()));
                     break;
@@ -90,11 +106,13 @@ namespace rckid::game {
             }
         }
 
+        void addSprite(ImageSource src) { addSprite(Bitmap{std::move(src)}); }
+
     private:
 
         void addSprite(Color::Index256 * spriteData) {
             Color::Index256 ** old_ = sprites_;
-            sprites_ = new Color::Index256**[size_ + 1];
+            sprites_ = new Color::Index256*[size_ + 1];
             for (Integer i = 0 ; i < size_; ++i)
                 sprites_[i] = old_[i];
             sprites_[size_] = spriteData;
