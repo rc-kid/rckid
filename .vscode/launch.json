@@ -7,7 +7,7 @@
         {
             "name": "cartridge [fantasy]",
             "type": "cppdbg",
-            //"type": "lldb-vscode",
+//            "type": "lldb-vscode",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             //"program": "${workspaceFolder}/build/cartridges/tests/audiotest",

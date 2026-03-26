@@ -51,8 +51,6 @@ So what I need:
             pio_sm_set_clock_speed(RCKID_ST7789_PIO, sm_, RCKID_ST7789_SPEED * 4); // 2 cycles per pixel
         }
 
-- would be good to start CI, just to be sure stuff works
-
 ### Code Cleanup
 - should ini reader and writer own the stream? Might simplify things a bit in the API
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <rckid/game/event.h>
+
 namespace rckid::game {
 
     class Engine;

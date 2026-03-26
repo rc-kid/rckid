@@ -6,6 +6,10 @@
 
 namespace rckid {
 
+    /** A simple cat-chase game
+     
+        Serves as a demonstrator of the development ladder architecture. 
+     */
     class CatChase : public game::Engine {
     public:
         CatChase():
@@ -32,7 +36,24 @@ namespace rckid {
             mouse_->setPalette(palette_);
         }
 
+    protected:
+
+        /** Main game loop
+         */
+        void loop() override {
+            game::Engine::loop();
+            if (btnPressed(Btn::Up))
+                cat_->moveBy(Point{0, -3});
+            if (btnPressed(Btn::Down))
+                cat_->moveBy(Point{0, 3});
+            if (btnPressed(Btn::Left))
+                cat_->moveBy(Point{-3, 0});
+            if (btnPressed(Btn::Right))
+                cat_->moveBy(Point{3, 0});
+        }
+
     private:
+
         game::Palette * palette_;
         game::SpriteSet * catSprite_;
         game::SpriteSet * mouseSprite_;

@@ -62,6 +62,12 @@ namespace rckid {
             return Point{x - other.x, y - other.y};
         }
 
+        Point & operator += (Point other) { 
+            x += other.x;
+            y += other.y;
+            return *this;
+        }
+
     }; // rckid::Point
 
 

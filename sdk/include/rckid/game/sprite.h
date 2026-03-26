@@ -3,6 +3,7 @@
 #include <rckid/game/object.h>
 #include <rckid/game/sprite_set.h>
 #include <rckid/game/palette.h>
+#include <rckid/game/script.h>
 
 namespace rckid::game {
 
@@ -13,6 +14,10 @@ namespace rckid::game {
     class Sprite : public Object {
     public:
         char const * className() const override { return "Sprite"; }
+
+        /** On collision event
+         */
+        using OnCollisionEvent = Event<Object *>;
 
         Sprite(String name): Object{std::move(name)} {}
 
@@ -36,6 +41,13 @@ namespace rckid::game {
         Palette * palette() const { return palette_; }
         void setPalette(Palette * value) {
             palette_ = value;
+        }
+
+        OnCollisionEvent const & onCollisionEvent() const { return onCollisionEvent_; }
+        OnCollisionEvent & onCollisionEvent() { return onCollisionEvent_; }
+
+        void moveBy(Point by) {
+            pos_ += by;
         }
         
         /** Renders the sprite. 
@@ -66,11 +78,30 @@ namespace rckid::game {
             }
         }
 
+        void declareInterface(Engine * engine) const override {
+            Object::declareInterface(engine);
+            engine->declareFunction(this, new meta::FunctionDescriptor{
+                "moveBy",
+                Type::Void,
+                { meta::ArgumentDeclaration{"by", Type::Point}, },
+                [](std::initializer_list<meta::Value> args) {
+                    ASSERT(args.size() == 1);
+                    auto i = args.begin();
+                    Sprite * s = static_cast<Sprite*>(i->object());
+                    s->moveBy((++i)->point());
+                    return meta::Value{};
+                }
+            });            
+        }
+
     private:
         Point pos_;
         Integer spriteIndex_ = 0;
         SpriteSet * spriteSet_;
         Palette * palette_;
+
+        OnCollisionEvent onCollisionEvent_;
+
     }; // rckid::game::Sprite
 
 } // namespace rckid::game
