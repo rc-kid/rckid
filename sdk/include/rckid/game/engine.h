@@ -45,23 +45,23 @@ namespace rckid::game {
             gameName_{std::move(gameName)} 
         {
             screen_ = addChild(new GameScreen(this));
-            btnUp_ = new Button{"ButtonUp", Btn::Up};
-            btnDown_ = new Button{"ButtonDown", Btn::Down};
-            btnLeft_ = new Button{"ButtonLeft", Btn::Left};
-            btnRight_ = new Button{"ButtonRight", Btn::Right};
-            btnA_ = new Button{"ButtonA", Btn::A};
-            btnB_ = new Button{"ButtonB", Btn::B};
-            btnSelect_ = new Button{"ButtonSelect", Btn::Select};
-            btnStart_ = new Button{"ButtonStart", Btn::Start};
+            btnUp_ = new Button{"ButtonUp", this, Btn::Up};
+            btnDown_ = new Button{"ButtonDown", this, Btn::Down};
+            btnLeft_ = new Button{"ButtonLeft", this, Btn::Left};
+            btnRight_ = new Button{"ButtonRight", this, Btn::Right};
+            btnA_ = new Button{"ButtonA", this, Btn::A};
+            btnB_ = new Button{"ButtonB", this, Btn::B};
+            btnSelect_ = new Button{"ButtonSelect", this, Btn::Select};
+            btnStart_ = new Button{"ButtonStart", this, Btn::Start};
 
-            registerEngineObject(btnUp_);
-            registerEngineObject(btnDown_);
-            registerEngineObject(btnLeft_);
-            registerEngineObject(btnRight_);
-            registerEngineObject(btnA_);
-            registerEngineObject(btnB_);
-            registerEngineObject(btnSelect_);
-            registerEngineObject(btnStart_);
+            registerObject(btnUp_);
+            registerObject(btnDown_);
+            registerObject(btnLeft_);
+            registerObject(btnRight_);
+            registerObject(btnA_);
+            registerObject(btnB_);
+            registerObject(btnSelect_);
+            registerObject(btnStart_);
 
             palette_ = createAsset<Palette>("Palette");
         }
@@ -69,8 +69,8 @@ namespace rckid::game {
         template<typename T>
         T * createAsset(String name) {
             // TODO static base of check
-            T * result = new T{std::move(name)};
-            registerEngineObject(result);
+            T * result = new T{std::move(name), this};
+            registerObject(result);
             assets_.push_back(unique_ptr<T>{result});
             return result;
         }
@@ -79,16 +79,16 @@ namespace rckid::game {
             meta::ClassDescriptor * cls = getClass(className);
             if (cls == nullptr)
                 return nullptr;
-            EngineObject * obj = cls->create(std::move(name));
-            registerEngineObject(obj);
+            Object * obj = cls->create(std::move(name), this);
+            registerObject(obj);
             return static_cast<Asset*>(obj);
         }
 
         template<typename T>
         T * createObject(String name) {
             // TODO static base of check
-            T * result = new T{std::move(name)};
-            registerEngineObject(result);
+            T * result = new T{std::move(name), this};
+            registerObject(result);
             ObjectCapabilities caps = result->capabilities();
             if (caps.renderable)
                 renderableObjects_.push_back(unique_ptr<T>{result});
@@ -102,6 +102,17 @@ namespace rckid::game {
         void declareFunction(Object const * object, meta::FunctionDescriptor * action) {
 
         }
+
+        Button * btnUp() { return btnUp_; }
+        Button * btnDown() { return btnDown_; }
+        Button * btnLeft() { return btnLeft_; }
+        Button * btnRight() { return btnRight_; }
+        Button * btnA() { return btnA_; }
+        Button * btnB() { return btnB_; }
+        Button * btnSelect() { return btnSelect_; }
+        Button * btnStart() { return btnStart_; }
+
+        Palette * palette() { return palette_; }
 
     protected:
 
@@ -146,24 +157,13 @@ namespace rckid::game {
 
         }
 
-        Button * btnUp() { return btnUp_; }
-        Button * btnDown() { return btnDown_; }
-        Button * btnLeft() { return btnLeft_; }
-        Button * btnRight() { return btnRight_; }
-        Button * btnA() { return btnA_; }
-        Button * btnB() { return btnB_; }
-        Button * btnSelect() { return btnSelect_; }
-        Button * btnStart() { return btnStart_; }
-
-        Palette * palette() { return palette_; }
-        
     private:
 
         /** Registers the given engine object into the dynamic runtime. 
         
             Note that the dynamic runtime does not always need to be present and is initialized lazily when the dynamic features are used. This means that if the game is writen purely in C++, we do not pay for the dynamic overhead even in memory.
          */
-        void registerEngineObject(EngineObject * obj) {
+        void registerObject(Object * obj) {
             // TODO 
             
 

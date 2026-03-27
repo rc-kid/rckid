@@ -43,8 +43,8 @@ namespace rckid::game {
 
         friend class Engine;
 
-        Button(String name, Btn btn):
-            Object{std::move(name)},
+        Button(String name, Engine * engine, Btn btn):
+            Object{std::move(name), engine},
             btn_{btn} {
         }
 

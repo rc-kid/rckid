@@ -5,11 +5,13 @@
 
 namespace rckid::game {
 
+    class Engine;
+
     /** Integer type used everywhere in the game engine. 
      */
     using Integer = Coord;
 
-    class EngineObject;
+    class Object;
     class Object;
 
     /** Objects supported by the game script. 
@@ -53,12 +55,12 @@ namespace rckid::game::meta {
             return point_;
         }
 
-        EngineObject * object() const {
+        Object * object() const {
             // TODO check the type is valid
             return object_;
         }
 
-        EngineObject * & object() {
+        Object * & object() {
             // TODO check the type is valid
             return object_;
         }
@@ -73,7 +75,7 @@ namespace rckid::game::meta {
             Point point_;
             Color::RGB565 color_;
             String string_;
-            EngineObject * object_;
+            Object * object_;
         };
     }; // rckid::game::meta::Value
 
@@ -157,11 +159,11 @@ namespace rckid::game::meta {
     class ClassDescriptor {
     public:
 
-        typedef EngineObject * (*Constructor)(String name);
+        typedef Object * (*Constructor)(String name, Engine * engine);
 
         /** Creates instance of the given class.
          */
-        EngineObject * create(String name) { return constructor_(std::move(name)); } 
+        Object * create(String name, Engine * engine) { return constructor_(std::move(name), engine); } 
 
         FunctionDescriptor * getAction(String const & name) const {
             for (auto & action : actions_)

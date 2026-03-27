@@ -1,7 +1,7 @@
 #pragma once
 
 #include <rckid/rckid.h>
-#include <rckid/game/engine_object.h>
+#include <rckid/game/object.h>
 
 namespace rckid::game {
 
@@ -9,12 +9,20 @@ namespace rckid::game {
      
         
      */
-    class Asset : public EngineObject {
+    class Asset : public Object {
     public:
-      // TODO serialization and deserialization by virtual table
+        // TODO serialization and deserialization by virtual table
 
-      Asset() = default;
-      Asset(String name): EngineObject{std::move(name)} {}      
+        Asset() = default;
+        Asset(String name, Engine * engine): Object{std::move(name), engine} {}     
+        
+        ObjectCapabilities capabilities() const override {
+            return {
+                .renderable = false,
+                .constructible = true, 
+                .passive = true
+            };
+        }
 
     }; // rckid::game::Asset
 

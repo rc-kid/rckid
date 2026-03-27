@@ -19,7 +19,12 @@ namespace rckid::game {
          */
         using OnCollisionEvent = Event<Object *>;
 
-        Sprite(String name): Object{std::move(name)} {}
+        Sprite(String name, Engine * engine): 
+            Object{std::move(name), engine} 
+        {
+            // default palette
+            palette_ = engine->palette();
+        }
 
         Point position() const { return pos_; }
 

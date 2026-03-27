@@ -17,7 +17,7 @@ namespace rckid::game {
 
         SpriteSet() = default;
 
-        SpriteSet(String name): Asset{std::move(name)} {}        
+        SpriteSet(String name, Engine * engine): Asset{std::move(name), engine} {}        
 
         SpriteSet(Integer width, Integer height, Integer size = 1):
             width_{width}, 

@@ -24,13 +24,11 @@ namespace rckid {
             cat_->setSpriteSet(catSprite_);
             cat_->setSpriteIndex(0);
             cat_->setPosition(Point{160 - 32, 120 - 32});
-            cat_->setPalette(palette());
 
             mouse_ = createObject<game::Sprite>("Mouse");   
             mouse_->setSpriteSet(mouseSprite_);
             mouse_->setSpriteIndex(0);
             mouse_->setPosition(Point{20,20});
-            mouse_->setPalette(palette());
 
             btnUp()->onPressed += [this](){ cat_->moveBy(Point{0, -3}); };
             btnDown()->onPressed += [this](){ cat_->moveBy(Point{0, 3}); };

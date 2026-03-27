@@ -1,9 +1,10 @@
 #pragma once
 
 #include <rckid/rckid.h>
-#include <rckid/game/engine_object.h>
 
 namespace rckid::game {
+
+    class Engine;
 
     // TODO change Capabilities in App.h to AppCapabilities
     class ObjectCapabilities {
@@ -11,16 +12,24 @@ namespace rckid::game {
         /** If true, the game object is renderable and its render method will be called.
          */
         bool renderable = true;
+        /** True if the object can be created by user. 
+         */
+        bool constructible = true;
+        /** Passive objects simply hold data and they do not have to be updated every loop iteration. This is typically true for assets.
+         */
+        bool passive = false;
     }; // rckid::game::ObjectCapabilities
 
     /** Game object.
 
         Most objects will render themselves via the render() method, but this is not universally required (such as sound player) and can be disabled via capabilities.    
      */
-    class Object : public EngineObject {
+    class Object {
     public:
         Object() = default;
-        Object(String name): EngineObject{std::move(name)} {}      
+        Object(String name, [[maybe_unused]] Engine * engine): name_{std::move(name)} {}      
+
+        virtual ~Object() = default;
 
         /** Returns the game engine object capabilities. 
          */
@@ -29,6 +38,25 @@ namespace rckid::game {
                 .renderable = true,
             };
         } 
+
+        /** Returns the name of the object class. 
+         
+            This is used internally by the game engine to keep track of declared actions, properties and events. 
+         */
+        virtual char const * className() const = 0;
+
+        String const & name() const { return name_; }
+
+        void setName(String name) {
+            name_ = std::move(name);
+        }
+
+        /** Declares all metadata about the given class. 
+         
+            Note that metadata is class based, not object based. The game engine makes sure to only call this once per class name.  
+         */ 
+        virtual void declareInterface(Engine * engine) const {
+        }
 
         /** Renders the game object, if renderable.
          
@@ -42,6 +70,9 @@ namespace rckid::game {
         friend class Engine;
 
         virtual void loop() {}
+
+    private:
+        String name_;
 
     }; // rckid::game::Object
 

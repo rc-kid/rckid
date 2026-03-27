@@ -13,8 +13,8 @@ namespace rckid::game {
             fillDefaultPalette();
         }
 
-        Palette(String name):
-            Asset{std::move(name)}
+        Palette(String name, Engine * engine):
+            Asset{std::move(name), engine}
         {
             fillDefaultPalette();
         }
