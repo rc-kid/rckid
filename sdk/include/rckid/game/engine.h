@@ -71,7 +71,6 @@ namespace rckid::game {
             // TODO static base of check
             T * result = new T{std::move(name), this};
             registerObject(result);
-            assets_.push_back(unique_ptr<T>{result});
             return result;
         }
 
@@ -89,11 +88,6 @@ namespace rckid::game {
             // TODO static base of check
             T * result = new T{std::move(name), this};
             registerObject(result);
-            ObjectCapabilities caps = result->capabilities();
-            if (caps.renderable)
-                renderableObjects_.push_back(unique_ptr<T>{result});
-            else 
-                nonRenderableObjects_.push_back(unique_ptr<T>{result});
             return result;
         }
 
@@ -164,7 +158,14 @@ namespace rckid::game {
             Note that the dynamic runtime does not always need to be present and is initialized lazily when the dynamic features are used. This means that if the game is writen purely in C++, we do not pay for the dynamic overhead even in memory.
          */
         void registerObject(Object * obj) {
-            // TODO 
+            ObjectCapabilities caps = obj->capabilities();
+            if (caps.renderable)
+                renderableObjects_.push_back(unique_ptr<Object>{obj});
+            else if (caps.passive)
+                assets_.push_back(unique_ptr<Object>{obj});
+            else
+                nonRenderableObjects_.push_back(unique_ptr<Object>{obj});
+
             
 
         }
@@ -193,7 +194,7 @@ namespace rckid::game {
         std::vector<unique_ptr<Object>> nonRenderableObjects_;
 
         // game assets
-        std::vector<unique_ptr<Asset>> assets_;
+        std::vector<unique_ptr<Object>> assets_;
 
         // game classes for reflection 
         std::unordered_map<String, unique_ptr<meta::ClassDescriptor>> objectClasses_;

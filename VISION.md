@@ -34,7 +34,7 @@ I also plan a ladder of creative tools that kids across a wide age range can use
 - Small kids without any literacy can start with asset editing - tilesets, tilemaps, sprites, sounds, music trackers - that will allow them to customize existing games. This teaches decomposition and basic game concepts without requiring reading or writing.
 - A visual editor where behavior, not just appearance, can be tweaked without literacy. This teaches decomposition of behavior into sub-actions in time.
 - A block editor (like Scratch), which adds more agency, teaching control flow, modularity and so on.
-- A simple language editor - C++ like syntactically - that teaches describing algorithms textually and correctly.
+- A language editor with a DSL that teaches describing algorithms textually and correctly.
 - A C++ editor, which teaches more advanced concepts.
 - And finally, a full C++ SDK that gives complete control over the device.
 
@@ -59,3 +59,7 @@ I would like to finish the fundamentals - a solid SDK that allows painless creat
 Two beta testers are better than zero, but I would like more. A small pilot in a local school - ideally with kids aged 7-9, where the progression from asset editing toward behavior customization can be observed naturally within a single school year - is the next concrete step. Starting with motivated kids in a supported environment, learning what works, and then taking those lessons toward the kids who need it most.
 
 I hope to make this under the self-imposed deadline of my two beta testers growing out of the target group eventually:)
+
+## What about AI?
+
+We live in times when you might wonder why bother teaching kids STEM when most programming might soon be done by LLMs. But you do not teach 6 year olds how to program — you teach them the art of algorithm description. Most kids who will have RCKid will not become programmers. This was true before LLMs and remains true after. The whole point of STEM education is to teach universally useful thinking skills in ways that do not require deep technical knowledge. Decomposition, sequencing, abstraction — these are cognitive skills that predate programming and will outlast any specific technology.
