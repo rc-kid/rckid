@@ -8,7 +8,9 @@
 #include <rckid/game/script.h>
 #include <rckid/game/object.h>
 #include <rckid/game/asset.h>
-
+#include <rckid/game/event.h>
+#include <rckid/game/button.h>
+#include <rckid/game/palette.h>
 
 namespace rckid::game {
 
@@ -43,6 +45,25 @@ namespace rckid::game {
             gameName_{std::move(gameName)} 
         {
             screen_ = addChild(new GameScreen(this));
+            btnUp_ = new Button{"ButtonUp", Btn::Up};
+            btnDown_ = new Button{"ButtonDown", Btn::Down};
+            btnLeft_ = new Button{"ButtonLeft", Btn::Left};
+            btnRight_ = new Button{"ButtonRight", Btn::Right};
+            btnA_ = new Button{"ButtonA", Btn::A};
+            btnB_ = new Button{"ButtonB", Btn::B};
+            btnSelect_ = new Button{"ButtonSelect", Btn::Select};
+            btnStart_ = new Button{"ButtonStart", Btn::Start};
+
+            registerEngineObject(btnUp_);
+            registerEngineObject(btnDown_);
+            registerEngineObject(btnLeft_);
+            registerEngineObject(btnRight_);
+            registerEngineObject(btnA_);
+            registerEngineObject(btnB_);
+            registerEngineObject(btnSelect_);
+            registerEngineObject(btnStart_);
+
+            palette_ = createAsset<Palette>("Palette");
         }
 
         template<typename T>
@@ -116,6 +137,26 @@ namespace rckid::game {
         }; // Engine::GameScreen
 
 
+        void loop() override {
+            ui::App<void>::loop();
+            for (auto & obj : renderableObjects_)
+                obj->loop();
+            for (auto & obj : nonRenderableObjects_)
+                obj->loop();
+
+        }
+
+        Button * btnUp() { return btnUp_; }
+        Button * btnDown() { return btnDown_; }
+        Button * btnLeft() { return btnLeft_; }
+        Button * btnRight() { return btnRight_; }
+        Button * btnA() { return btnA_; }
+        Button * btnB() { return btnB_; }
+        Button * btnSelect() { return btnSelect_; }
+        Button * btnStart() { return btnStart_; }
+
+        Palette * palette() { return palette_; }
+        
     private:
 
         /** Registers the given engine object into the dynamic runtime. 
@@ -127,6 +168,18 @@ namespace rckid::game {
             
 
         }
+
+        // shorthands for common objects
+        Button * btnUp_;
+        Button * btnDown_;
+        Button * btnLeft_;
+        Button * btnRight_;
+        Button * btnA_;
+        Button * btnB_;
+        Button * btnSelect_;
+        Button * btnStart_;
+
+        Palette * palette_;
 
         String gameName_;
 

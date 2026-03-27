@@ -9,6 +9,10 @@ So what I need:
 - sound object
 - basic game loop & input, collisions
 
+- sprite (or really, make every game object) constructor also gets game engine as argument so that it can perform default initializations itself
+- some objects are non-user constructible (add capability, such as buttons)
+- why do I need engine object and object? (has to do with assets being dumber than objects? Maybe assets can be objects too, and just handled differently by the engine, have this again in capabilities)
+
 
 # SDK 1.0
 

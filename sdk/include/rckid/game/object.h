@@ -38,6 +38,11 @@ namespace rckid::game {
             ASSERT(capabilities().renderable);
         }
 
+    protected:
+        friend class Engine;
+
+        virtual void loop() {}
+
     }; // rckid::game::Object
 
 } // namespace rckid::game

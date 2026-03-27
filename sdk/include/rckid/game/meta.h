@@ -99,7 +99,7 @@ namespace rckid::game::meta {
     class FunctionDescriptor {
     public:
 
-        typedef Value (*Impl)(std::initializer_list<Value> args);
+        using Impl = Value (*)(std::initializer_list<Value> args);
 
         FunctionDescriptor(String name, Type returnType, std::vector<ArgumentDeclaration> arguments, Impl impl):
             name_{std::move(name)}, 
@@ -126,6 +126,16 @@ namespace rckid::game::meta {
         Impl impl_;
     }; // rckid::game::meta::FunctionDescriptor
 
+    /** Game object property descriptor. 
+     
+        Properties have name and type. A property is expected to have getter, and can also have a setter. 
+
+        TODO TODO 
+     */
+    class PropertyDescriptor {
+
+    }; // rckid::game::meta::PropertyDescriptor
+
     /** Descriptor for an event. 
      
         Unlike functions, all events must belong to some class. The event descriptor must be able to append handlers as well as fire.
@@ -139,6 +149,8 @@ namespace rckid::game::meta {
         // TODO impl functions for clearing, emiting and appending to the event. Generated during registration
 
         String name_;
+
+
 
     }; // rckid::game::meta::EventDescriptor
 
@@ -163,6 +175,12 @@ namespace rckid::game::meta {
                 if (event->name() == name)
                     return event.get();
             return nullptr;
+        }
+
+        // TODO ideally, registration should be as simple as this
+        template<typename RESULT, typename... ARGS>
+        FunctionDescriptor * registerFunction(String name, RESULT (* f)(ARGS...)) {
+            UNIMPLEMENTED;
         }
 
     private:
