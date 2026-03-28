@@ -9,7 +9,7 @@
 #include <rckid/game/object.h>
 #include <rckid/game/asset.h>
 #include <rckid/game/event.h>
-#include <rckid/game/button.h>
+#include <rckid/game/device.h>
 #include <rckid/game/palette.h>
 
 namespace rckid::game {
@@ -45,23 +45,9 @@ namespace rckid::game {
             gameName_{std::move(gameName)} 
         {
             screen_ = addChild(new GameScreen(this));
-            btnUp_ = new Button{"ButtonUp", this, Btn::Up};
-            btnDown_ = new Button{"ButtonDown", this, Btn::Down};
-            btnLeft_ = new Button{"ButtonLeft", this, Btn::Left};
-            btnRight_ = new Button{"ButtonRight", this, Btn::Right};
-            btnA_ = new Button{"ButtonA", this, Btn::A};
-            btnB_ = new Button{"ButtonB", this, Btn::B};
-            btnSelect_ = new Button{"ButtonSelect", this, Btn::Select};
-            btnStart_ = new Button{"ButtonStart", this, Btn::Start};
 
-            registerObject(btnUp_);
-            registerObject(btnDown_);
-            registerObject(btnLeft_);
-            registerObject(btnRight_);
-            registerObject(btnA_);
-            registerObject(btnB_);
-            registerObject(btnSelect_);
-            registerObject(btnStart_);
+            device_ = new Device{this};
+            registerObject(device_);
 
             palette_ = createAsset<Palette>("Palette");
         }
@@ -97,14 +83,7 @@ namespace rckid::game {
 
         }
 
-        Button * btnUp() { return btnUp_; }
-        Button * btnDown() { return btnDown_; }
-        Button * btnLeft() { return btnLeft_; }
-        Button * btnRight() { return btnRight_; }
-        Button * btnA() { return btnA_; }
-        Button * btnB() { return btnB_; }
-        Button * btnSelect() { return btnSelect_; }
-        Button * btnStart() { return btnStart_; }
+        Device * device() { return device_; }
 
         Palette * palette() { return palette_; }
 
@@ -165,20 +144,10 @@ namespace rckid::game {
                 assets_.push_back(unique_ptr<Object>{obj});
             else
                 nonRenderableObjects_.push_back(unique_ptr<Object>{obj});
-
-            
-
         }
 
         // shorthands for common objects
-        Button * btnUp_;
-        Button * btnDown_;
-        Button * btnLeft_;
-        Button * btnRight_;
-        Button * btnA_;
-        Button * btnB_;
-        Button * btnSelect_;
-        Button * btnStart_;
+        Device * device_;
 
         Palette * palette_;
 

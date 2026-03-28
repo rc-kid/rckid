@@ -81,3 +81,63 @@ This is the ultimate tier, where the kids (teenagers likely at this point) can b
 3) by using the SDK itself, you can write not just games, but also apps.
 
 > The humble beaver has travelled far. Breaking from the "shackles" of interpretation at some level, you can make the visuals next level with more sprites, more background layers, etc. To put this in perspective, my estimate is that the game engine can give you games roughly comparable to game boy color, with full C++ you can sit beween GBA and DS. But you can also write genuinely useful apps - or app engines for different game types & physics. Music players, I believe video player might be a reality too, utilities, you name it. 
+
+## Visual Editor Grammar
+
+> The following is WiP, please treat is as such. 
+
+The visual grammar is structured similar to powerline terminals. We have three possible outer block types:
+
+- `| event >`
+- `| statement |`
+- `> expression |`
+
+Program comprises of the following structure:
+
+    | event 1 > : | statement 1 |
+                  | statement 2 |
+                  ...
+    | event 2 > : ...
+
+Internally, each of the blocks is composed of subblocks, that for events and statements start with `|` and end with `|`, while for expressions they start with `>` and end with `|`. Those sub blocks are objects, event and method names, functions, values, etc.
+
+Each block thus have an *outer* shape, which defines where the block can be used, and *inner* shape, which defines what stuff can go in. Some examples:
+
+- event outer shape is `|>` by definition, its inner shape is `||`, which means that the event inside must be fully defined and its arguments matched (see below)
+- statement outer shape is `||` and its inner shape is also `||` meaning statements are complete
+- function argument outer shape is `>|` for last function argument (the call is complete), or `>>` if there are more arguments after it. The inner shape is always `>|`, meaning it has to be an expression that returns value of the argument and has to be full call if complex
+
+Some blocks do not have inner shapes, because they cannot nest properly, such as function names, object names, etc. They will however still come in different shapes, such as:
+
+- `||` function that takes no arguments and returns no arguments
+- `>|` function that takes no arguments and returns value
+- `>>` function that takes arguments (at least one) and returns a value
+- `|>` functiom that returns nothing and takes at least one argument, or an object in the position of selection (event or method)
+- `>|` object as a value
+- `>|` expression literal
+
+For events, if they have arguments, because the visual editor does not have variables, the event values must be pattern matched. 
+
+So a program can look a bit like this (say something simple like cat chase):
+
+    | Device > btnPressed > Up > :    | Cat > moveBy > Point(0, -1) |
+    | Device > btnPressed > Down > :  | Cat > moveBy > Point(0, 1) |
+    | Device > btnPressed > Left > :  | Cat > moveBy > Point(-1, 0) |
+    | Device > btnPressed > Right > : | Cat > moveBy > Point(1, 0) |
+    | Device > gameLoop > :           | Mouse > moveBy > random |
+    | Cat > collidesWith > Mouse > :  | Device > gameOver |
+    
+This is actually reasonably expressive with right set of events and rather easy to unerstand. The joining is simple (one rule). The lack of variables can in the block editor be lifted easily by adding new shape, say `(oval)` and one can then write things like this:
+
+    | Device > onButtonPress > (btn) > : | print > (btn) | 
+                                         | (b) = > random |
+
+This makes the powerline joining also part of the blocks, where the blocks simply add new shapes for composition. 
+
+Normally blocks would nest like being fully enclosed. But this will not work well for the small screen. Instead we can use colors. Whenever we include the outer - inner shape barrier, we will add a color gradient piece that starts with outer left with outer color and blends to inner left inner color. Then we will do `+` placeholder and after it the inner right -> outer right color gradient again, so sth like this:
+
+    | Player > moveByXY > > +   |> +
+                         ^  ^   ^  ^
+                         1  2   3  4
+
+Where `1` is gradient from `>>` to first argument expression, `2` is the ui button to specify this, `3` is the gradient from end of first argument expression to the call expression second argument, `4` is the placeholder for the second argument. When `4` will be expanded, it will expand to something that will have shape `>|`.  

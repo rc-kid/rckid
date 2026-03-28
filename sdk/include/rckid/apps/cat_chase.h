@@ -30,20 +30,37 @@ namespace rckid {
             mouse_->setSpriteIndex(0);
             mouse_->setPosition(Point{20,20});
 
-            btnUp()->onPressed += [this](){ cat_->moveBy(Point{0, -3}); };
-            btnDown()->onPressed += [this](){ cat_->moveBy(Point{0, 3}); };
-            btnLeft()->onPressed += [this](){ cat_->moveBy(Point{-3, 0}); };
-            btnRight()->onPressed += [this](){ cat_->moveBy(Point{3, 0}); };
+            device()->onUpPressed += [this](){ cat_->moveBy(Point{0, -3}); };
+            device()->onDownPressed += [this](){ cat_->moveBy(Point{0, 3}); };
+            device()->onLeftPressed += [this](){ cat_->moveBy(Point{-3, 0}); };
+            device()->onRightPressed += [this](){ cat_->moveBy(Point{3, 0}); };
+            device()->onGameLoop += [this]() {
+                switch (random() % 5) {
+                    case 0 :
+                        mouse_->moveBy(Point{0, -1});
+                        break;
+                    case 1:
+                        mouse_->moveBy(Point{0, 1});
+                        break;
+                    case 2:
+                        mouse_->moveBy(Point{-1, 0});
+                        break;
+                    case 3:
+                        mouse_->moveBy(Point{1, 0});
+                        break;
+                    default:
+                        break;
+                }
+                mouse_->forceInRect();
+            };
         }
 
     private:
 
-        //game::Palette * palette_;
         game::SpriteSet * catSprite_;
         game::SpriteSet * mouseSprite_;
         game::Sprite * cat_;
         game::Sprite * mouse_;
-
         
     }; // rckid::GameEngine
 }

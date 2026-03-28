@@ -17,7 +17,7 @@ namespace rckid::game {
 
         /** On collision event
          */
-        using OnCollisionEvent = Event<Object *>;
+        using CollisionEvent = Event<Object *>;
 
         Sprite(String name, Engine * engine): 
             Object{std::move(name), engine} 
@@ -48,11 +48,21 @@ namespace rckid::game {
             palette_ = value;
         }
 
-        OnCollisionEvent const & onCollisionEvent() const { return onCollisionEvent_; }
-        OnCollisionEvent & onCollisionEvent() { return onCollisionEvent_; }
-
         void moveBy(Point by) {
             pos_ += by;
+        }
+
+        void forceInRect(Rect rect = Rect::WH(display::WIDTH, display::HEIGHT)) {
+            rect.w -= spriteSet_->width();
+            rect.h -= spriteSet_->height();
+            if (pos_.x < rect.left())
+                pos_.x = rect.left();
+            else if (pos_.x > rect.right())
+                pos_.x = rect.right();
+            if (pos_.y < rect.top())
+                pos_.y = rect.top();
+            else if (pos_.y > rect.bottom())
+                pos_.y = rect.bottom();
         }
         
         /** Renders the sprite. 
@@ -99,14 +109,13 @@ namespace rckid::game {
             });            
         }
 
+        CollisionEvent onCollision;
+
     private:
         Point pos_;
         Integer spriteIndex_ = 0;
         SpriteSet * spriteSet_;
         Palette * palette_;
-
-        OnCollisionEvent onCollisionEvent_;
-
     }; // rckid::game::Sprite
 
 } // namespace rckid::game

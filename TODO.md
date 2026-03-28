@@ -9,6 +9,9 @@ So what I need:
 - sound object
 - basic game loop & input, collisions
 
+- maybe make device do onButtonPressed(Btn which btn) - this corresponds to the other events, such as onCollision(with what), etc. 
+- check what events we want to have first maybe and how & where it progresses
+
 # SDK 1.0
 
 - improve value parsing in Reader (bool, ints, etc.)
