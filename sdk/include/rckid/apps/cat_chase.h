@@ -30,10 +30,26 @@ namespace rckid {
             mouse_->setSpriteIndex(0);
             mouse_->setPosition(Point{20,20});
 
-            device()->onUpPressed += [this](){ cat_->moveBy(Point{0, -3}); };
-            device()->onDownPressed += [this](){ cat_->moveBy(Point{0, 3}); };
-            device()->onLeftPressed += [this](){ cat_->moveBy(Point{-3, 0}); };
-            device()->onRightPressed += [this](){ cat_->moveBy(Point{3, 0}); };
+            device()->onButtonPressed += [this](Btn btn) {
+                if (btn == Btn::Up)
+                    cat_->moveBy(Point{0, -3});
+            };
+
+            device()->onButtonPressed += [this](Btn btn) {
+                if (btn == Btn::Down)
+                    cat_->moveBy(Point{0, 3});
+            };
+
+            device()->onButtonPressed += [this](Btn btn) {
+                if (btn == Btn::Left)
+                    cat_->moveBy(Point{-3, 0});
+            };
+
+            device()->onButtonPressed += [this](Btn btn) {
+                if (btn == Btn::Right)
+                    cat_->moveBy(Point{3, 0});
+            };
+
             device()->onGameLoop += [this]() {
                 switch (random() % 5) {
                     case 0 :
@@ -52,6 +68,11 @@ namespace rckid {
                         break;
                 }
                 mouse_->forceInRect();
+            };
+
+            cat_->onCollision += [this](game::Object * other) {
+                if (other == mouse_)
+                    LOG(LL_INFO, "Yeah");
             };
         }
 

@@ -16,56 +16,35 @@ namespace rckid::game {
             };
         }
 
-        using ButtonStateChangedEvent = Event<>;
+        using ButtonStateChangedEvent = Event<Btn>;
         using GameLoopEvent = Event<>;
 
-        ButtonStateChangedEvent onUpPressed;
-        ButtonStateChangedEvent onDownPressed;
-        ButtonStateChangedEvent onLeftPressed;
-        ButtonStateChangedEvent onRightPressed;
-        ButtonStateChangedEvent onAPressed;
-        ButtonStateChangedEvent onBPressed;
-        ButtonStateChangedEvent onSelectPressed;
-        ButtonStateChangedEvent onStartPressed;
+        ButtonStateChangedEvent onButtonPressed;
 
-        ButtonStateChangedEvent onUpReleased;
-        ButtonStateChangedEvent onDownReleased;
-        ButtonStateChangedEvent onLeftReleased;
-        ButtonStateChangedEvent onRightReleased;
-        ButtonStateChangedEvent onAReleased;
-        ButtonStateChangedEvent onBReleased;
-        ButtonStateChangedEvent onSelectReleased;
-        ButtonStateChangedEvent onStartReleased;
+        ButtonStateChangedEvent onButtonReleased;
 
         GameLoopEvent onGameLoop;
 
-        bool buttonUpPressed() const { return btnDown(Btn::Up); }
-        bool buttonDownPressed() const { return btnDown(Btn::Down); }
-        bool buttonLeftPressed() const { return btnDown(Btn::Left); }
-        bool buttonRightPressed() const { return btnDown(Btn::Right); }
-        bool buttonAPressed() const { return btnDown(Btn::A); }
-        bool buttonBPressed() const { return btnDown(Btn::B); }
-        bool buttonSelectPressed() const { return btnDown(Btn::Select); }
-        bool buttonStartPressed() const { return btnDown(Btn::Start); }
+        bool buttonDown(Btn btn) { return btnDown(btn); }
 
     protected:
         void loop() override {
-            checkButton(Btn::Up, onUpPressed, onUpReleased);
-            checkButton(Btn::Down, onDownPressed, onDownReleased);
-            checkButton(Btn::Left, onLeftPressed, onLeftReleased);
-            checkButton(Btn::Right, onRightPressed, onRightReleased);
-            checkButton(Btn::A, onAPressed, onAReleased);
-            checkButton(Btn::B, onBPressed, onBReleased);
-            checkButton(Btn::Select, onSelectPressed, onSelectReleased);
-            checkButton(Btn::Start, onStartPressed, onStartReleased);
+            checkButton(Btn::Up);
+            checkButton(Btn::Down);
+            checkButton(Btn::Left);
+            checkButton(Btn::Right);
+            checkButton(Btn::A);
+            checkButton(Btn::B);
+            checkButton(Btn::Select);
+            checkButton(Btn::Start);
             onGameLoop.emit();
         }
 
-        void checkButton(Btn btn, ButtonStateChangedEvent & pressed, ButtonStateChangedEvent & released) {
+        void checkButton(Btn btn) {
             if (btnPressed(btn))
-                pressed.emit();
+                onButtonPressed.emit(btn);
             else if (btnReleased(btn))
-                released.emit();
+                onButtonReleased.emit(btn);
         }
 
     private:

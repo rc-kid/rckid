@@ -111,6 +111,14 @@ namespace rckid::game {
 
         CollisionEvent onCollision;
 
+    protected:
+
+        void loop() override {
+            if (onCollision.connected()) {
+                // TODO check if sprites collide and emit if that is the case
+            }
+        }
+
     private:
         Point pos_;
         Integer spriteIndex_ = 0;
