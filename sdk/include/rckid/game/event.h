@@ -51,7 +51,7 @@ namespace rckid::game {
 
         /** Returns true if the event is connected, i.e. if any handlers have been added to it. 
          */
-        bool connected() const { return cb_; }
+        bool connected() const { return cb_ ? true : false; }
 
         /** Emits the event, calling the handlers in order they were added to the event. 
          */

@@ -60,6 +60,7 @@ namespace rckid::game {
             return result;
         }
 
+        /*
         Asset * createAsset(String const & className, String name) {
             meta::ClassDescriptor * cls = getClass(className);
             if (cls == nullptr)
@@ -68,6 +69,7 @@ namespace rckid::game {
             registerObject(obj);
             return static_cast<Asset*>(obj);
         }
+            */
 
         template<typename T>
         T * createObject(String name) {
@@ -79,22 +81,20 @@ namespace rckid::game {
 
         // TODO add method for registering dynamically via just class name
             
-        void declareFunction(Object const * object, meta::FunctionDescriptor * action) {
-
-        }
-
         Device * device() { return device_; }
 
         Palette * palette() { return palette_; }
 
     protected:
 
+        /*
         meta::ClassDescriptor * getClass(String const & name) {
             auto i = objectClasses_.find(name);
             if (i == objectClasses_.end())
                 return nullptr;
             return i->second.get();
         }
+            */
 
         /** The Game Screen widget responsible for rendering all of the rendarable game objects.
          */
@@ -166,7 +166,7 @@ namespace rckid::game {
         std::vector<unique_ptr<Object>> assets_;
 
         // game classes for reflection 
-        std::unordered_map<String, unique_ptr<meta::ClassDescriptor>> objectClasses_;
+        //std::unordered_map<String, unique_ptr<meta::ClassDescriptor>> objectClasses_;
 
     }; // rckid::GameEngine
 

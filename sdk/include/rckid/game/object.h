@@ -1,6 +1,7 @@
 #pragma once
 
 #include <rckid/rckid.h>
+#include <rckid/game/descriptors.h>
 
 namespace rckid::game {
 
@@ -51,13 +52,6 @@ namespace rckid::game {
             name_ = std::move(name);
         }
 
-        /** Declares all metadata about the given class. 
-         
-            Note that metadata is class based, not object based. The game engine makes sure to only call this once per class name.  
-         */ 
-        virtual void declareInterface(Engine * engine) const {
-        }
-
         /** Renders the game object, if renderable.
          
             Rendering is column based, and is called once per column. Unlike the renderColumn method of ui::Widget, all game objects always get access to the entire column worth of data and must figure out their positioning and visibility on their own.
@@ -73,6 +67,14 @@ namespace rckid::game {
 
     private:
         String name_;
+
+    public:
+        CLASS_DESCRIPTOR(Object, assets::icons_24::bookmark,
+            "Base class for all game objects",
+            nullptr,
+            METHODS(),
+            EVENTS()
+        );
 
     }; // rckid::game::Object
 

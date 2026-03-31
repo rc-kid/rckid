@@ -4,6 +4,8 @@
 #include <rckid/game/sprite_set.h>
 #include <rckid/game/palette.h>
 #include <rckid/game/script.h>
+#include <rckid/game/descriptors.h>
+
 
 namespace rckid::game {
 
@@ -13,6 +15,7 @@ namespace rckid::game {
      */
     class Sprite : public Object {
     public:
+
         char const * className() const override { return "Sprite"; }
 
         /** On collision event
@@ -28,7 +31,30 @@ namespace rckid::game {
 
         Point position() const { return pos_; }
 
+        METHOD_DESCRIPTOR(position, assets::icons_24::bookmark,
+            "Returns the position of the sprite",
+            Type::Point(),
+            ARGS(),
+            CALL_WRAPPER([](Object * obj, Value * args){
+                static_cast<Sprite*>(obj)->position();
+                return Value{};
+            })
+        );
+
         void setPosition(Point value) { pos_ = value; }
+
+        METHOD_DESCRIPTOR(setPosition, assets::icons_24::bookmark, 
+            "Sets position of the sprite",
+            Type::Void(),
+            ARGS(
+                ARG(by, Type::Point(), assets::icons_24::bookmark, "New sprite position"),
+            ),
+            CALL_WRAPPER([](Object * obj, Value * args) {
+                static_cast<Sprite*>(obj)->setPosition(Point{0, 3});
+                return Value{};
+            })
+        );
+
 
         SpriteSet * spriteSet() const { return spriteSet_; }
 
@@ -51,6 +77,18 @@ namespace rckid::game {
         void moveBy(Point by) {
             pos_ += by;
         }
+
+        METHOD_DESCRIPTOR(moveBy, assets::icons_24::bookmark, 
+            "Moves the sprite by given coordinates",
+            Type::Void(),
+            ARGS(
+                ARG(by, Type::Point(), assets::icons_24::bookmark, "How much should the sprite move"),
+            ),
+            CALL_WRAPPER([](Object * obj, Value * args) {
+                static_cast<Sprite*>(obj)->moveBy(Point{0, 3});
+                return Value{};
+            })
+        );
 
         void forceInRect(Rect rect = Rect::WH(display::WIDTH, display::HEIGHT)) {
             rect.w -= spriteSet_->width();
@@ -93,23 +131,20 @@ namespace rckid::game {
             }
         }
 
-        void declareInterface(Engine * engine) const override {
-            Object::declareInterface(engine);
-            engine->declareFunction(this, new meta::FunctionDescriptor{
-                "moveBy",
-                Type::Void,
-                { meta::ArgumentDeclaration{"by", Type::Point}, },
-                [](std::initializer_list<meta::Value> args) {
-                    ASSERT(args.size() == 1);
-                    auto i = args.begin();
-                    Sprite * s = static_cast<Sprite*>(i->object());
-                    s->moveBy((++i)->point());
-                    return meta::Value{};
-                }
-            });            
-        }
-
         CollisionEvent onCollision;
+
+        EVENT_DESCRIPTOR(onCollision, assets::icons_24::bookmark,
+            "Fired when the sprite collides with another",
+            ARGS(
+                ARG(with, Type::Object(), assets::icons_24::bookmark, "The other sprite"),
+            ),
+            CONNECT_WRAPPER([](Object * obj, std::function<void(Value *)> handler) {
+                static_cast<Sprite*>(obj)->onCollision += [h = std::move(handler)](Object * with) {
+                    Value v;
+                    h(& v);
+                };
+            })
+        );
 
     protected:
 
@@ -124,6 +159,21 @@ namespace rckid::game {
         Integer spriteIndex_ = 0;
         SpriteSet * spriteSet_;
         Palette * palette_;
+
+    public:
+        CLASS_DESCRIPTOR(Sprite, assets::icons_24::bookmark,
+            "Sprite with position and spritesheet that can move independently and collide with other sprites",
+            PARENT(Object),
+            METHODS(
+                DESCRIPTOR(position),
+                DESCRIPTOR(setPosition),
+                DESCRIPTOR(moveBy),
+            ),
+            EVENTS(
+                DESCRIPTOR(onCollision)
+            )
+        );
+
     }; // rckid::game::Sprite
 
 } // namespace rckid::game
