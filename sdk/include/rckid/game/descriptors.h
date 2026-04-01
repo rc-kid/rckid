@@ -275,6 +275,16 @@ namespace rckid::game {
             events_{events + 1},
             createWrapper_{createWrapper} {
         }
+
+        bool inheritsFromOrSame(ClassDescriptor const & other) const {
+            ClassDescriptor const * current = this;
+            do {
+                if (current == &other)
+                    return true;
+                current = static_cast<ClassDescriptor const *>(current->parent_);
+            } while (current != nullptr);
+            return false;
+        }
     
     private:
         Descriptor const * const parent_;

@@ -19,7 +19,7 @@ namespace rckid::game {
                 ARG(with, Type::Button(), assets::icons_24::bookmark, "Newly pressed button"),
             ),
             CONNECT_WRAPPER((Object * obj, std::function<void(Value *)> handler) {
-                static_cast<Device*>(obj)->onButtonPressed += [h = std::move(handler)](Btn) {
+                obj->as<Device>()->onButtonPressed += [h = std::move(handler)](Btn) {
                     Value v;
                     h(& v);
                 };
@@ -34,7 +34,7 @@ namespace rckid::game {
                 ARG(with, Type::Button(), assets::icons_24::bookmark, "Newly released button"),
             ),
             CONNECT_WRAPPER((Object * obj, std::function<void(Value *)> handler) {
-                static_cast<Device*>(obj)->onButtonReleased += [h = std::move(handler)](Btn) {
+                obj->as<Device>()->onButtonReleased += [h = std::move(handler)](Btn) {
                     Value v;
                     h(& v);
                 };
@@ -47,7 +47,7 @@ namespace rckid::game {
             "Event triggered every iteration of the game loop",
             ARGS(),
             CONNECT_WRAPPER((Object * obj, std::function<void(Value *)> handler) {
-                static_cast<Device*>(obj)->onGameLoop += [h = std::move(handler)]() {
+                obj->as<Device>()->onGameLoop += [h = std::move(handler)]() {
                     h(nullptr);
                 };
             })
@@ -62,7 +62,7 @@ namespace rckid::game {
                 ARG(by, Type::Button(), assets::icons_24::bookmark, "Which button"),
             ),
             CALL_WRAPPER((Object * obj, Value * args) {
-                static_cast<Device*>(obj)->buttonDown(Btn::A);
+                obj->as<Device>()->buttonDown(Btn::A);
                 return Value{};
             })
         );
