@@ -9,11 +9,6 @@ file(GLOB_RECURSE SRC
 add_library(librckid STATIC ${SRC})
 target_include_directories(librckid PRIVATE "${CMAKE_SOURCE_DIR}/lib/raylib/src")
 if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
-    #set(EM_FLAGS
-    #    "-sUSE_PTHREADS=1"
-    #    "-sPTHREAD_POOL_SIZE=4"
-    #)
-    #target_link_options(librckid PRIVATE ${EM_FLAGS})
     target_compile_definitions(librckid PUBLIC "RCKID_NO_RODATA_BOUNDARIES")
 else()
     find_package(Threads REQUIRED)
@@ -43,11 +38,7 @@ function(link_with_librckid target_name)
             opus
         )
         if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
-            #set(EM_FLAGS
-            #    "-sUSE_PTHREADS=1"
-            #    "-sPTHREAD_POOL_SIZE=4"
-            #)
-            #target_link_options(${target_name} PRIVATE ${EM_FLAGS})
+            # nothing needs to be done here, emspcripten flags are set globally in the root CMakeLists.txt
         else()
             target_link_options(${target_name} PRIVATE "-Wl,-T,${CMAKE_SOURCE_DIR}/sdk/backend/fantasy/linker.ld" )    
             target_link_libraries(${target_name} PRIVATE 

@@ -50,20 +50,15 @@ if (RCKID_BACKEND STREQUAL "MK3")
     endif()
 elseif (RCKID_BACKEND STREQUAL "FANTASY")
     message("RCKID: Building for the fantasy console (with Raylib)")
+    project(rckid)
 
+    # if building for emscripten, set the necessary flags for asyncify (raylib needs this)
     if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
-        add_compile_options(
-            -sUSE_PTHREADS=1
-            -sPTHREAD_POOL_SIZE=4
-        )
-
-        add_link_options(
-            -sUSE_PTHREADS=1
-            -sPTHREAD_POOL_SIZE=4
-        )
+        message(RCKID: Building for web with Emscripten)
+        add_compile_options(-sASYNCIFY)
+        add_link_options(-sASYNCIFY)
     endif()    
 
-    project(rckid)
     add_definitions(-DSUPPORT_CUSTOM_FRAME_CONTROL)
     add_subdirectory(lib/raylib)
 

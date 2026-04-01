@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>RCKid SDK Demo</title>
+
+  <!-- Required for pthreads / OffscreenCanvas (which we do not use now) -->
+  <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
+  <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
+
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; }
+    canvas { display: block; }
+  </style>
+</head>
+
+<body>
+  <canvas id="canvas" width="800" height="450"></canvas>
+  <script>
+    // Required when using pthreads + OffscreenCanvas
+    var Module = {
+        canvas: (function() {
+        var c = document.getElementById('canvas');
+        return c;
+        })()
+    };
+  </script>
+  <!-- Emscripten-generated JS -->
+  <script src="build-wasm/cartridges/test/ui-app.js"></script>
+  <script>
+    // Optional: wait for WASM to initialize
+    Module.onRuntimeInitialized = () => {
+      console.log("Raylib WASM initialized");
+      // don't use this, it runs the main twice, causing problems
+      // if (Module._main) Module._main();
+    };
+  </script>
+</body>
+</html>
