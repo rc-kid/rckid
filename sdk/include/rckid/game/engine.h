@@ -135,9 +135,11 @@ namespace rckid::game {
         /** Registers the given engine object into the dynamic runtime. 
         
             Note that the dynamic runtime does not always need to be present and is initialized lazily when the dynamic features are used. This means that if the game is writen purely in C++, we do not pay for the dynamic overhead even in memory.
+
+            TODO override this to use the descriptors
          */
         void registerObject(Object * obj) {
-            ObjectCapabilities caps = obj->capabilities();
+            ObjectCapabilities caps = obj->typeDescriptor().capabilities();
             if (caps.renderable)
                 renderableObjects_.push_back(unique_ptr<Object>{obj});
             else if (caps.passive)

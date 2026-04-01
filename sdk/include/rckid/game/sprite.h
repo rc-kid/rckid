@@ -16,8 +16,6 @@ namespace rckid::game {
     class Sprite : public Object {
     public:
 
-        char const * className() const override { return "Sprite"; }
-
         /** On collision event
          */
         using CollisionEvent = Event<Object *>;
@@ -164,6 +162,9 @@ namespace rckid::game {
         CLASS_DESCRIPTOR(Sprite, assets::icons_24::bookmark,
             "Sprite with position and spritesheet that can move independently and collide with other sprites",
             PARENT(Object),
+            CAPABILITIES(
+                .renderable = true,
+            ),
             METHODS(
                 DESCRIPTOR(position),
                 DESCRIPTOR(setPosition),
@@ -173,6 +174,8 @@ namespace rckid::game {
                 DESCRIPTOR(onCollision)
             )
         );
+
+        ClassDescriptor const & typeDescriptor() const override { return descriptor; }
 
     }; // rckid::game::Sprite
 

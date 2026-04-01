@@ -13,8 +13,6 @@ namespace rckid::game {
      */
     class SpriteSet : public Asset {
     public:
-        char const * className() const override { return "SpriteSet"; }
-
         SpriteSet() = default;
 
         SpriteSet(String name, Engine * engine): Asset{std::move(name), engine} {}        
@@ -126,6 +124,22 @@ namespace rckid::game {
         Integer size_ = 0;
 
         Color::Index256 ** sprites_ = nullptr;
+
+    public:
+        CLASS_DESCRIPTOR(SpriteSet, assets::icons_24::bookmark,
+            "Set of sprite images of the same size",
+            PARENT(Asset),
+            CAPABILITIES(
+                .renderable = false,
+                .constructible = false,
+                .passive = true,
+            ),
+            METHODS(),
+            EVENTS()
+        );
+
+        ClassDescriptor const & typeDescriptor() const override { return descriptor; }
+
 
     }; // rckid::game::SpriteSet
 

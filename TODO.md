@@ -12,7 +12,6 @@ So what I need:
 - very basic descriptors might be working, the code needs commenting, testing.
 - type constructors for objects and stuff
 - methods for casting, type checing etc
-- remove the get class name from objects and replace with virtual method that returns the descriptor
 
 # SDK 1.0
 

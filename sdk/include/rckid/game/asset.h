@@ -16,13 +16,19 @@ namespace rckid::game {
         Asset() = default;
         Asset(String name, Engine * engine): Object{std::move(name), engine} {}     
         
-        ObjectCapabilities capabilities() const override {
-            return {
+        CLASS_DESCRIPTOR(Asset, assets::icons_24::bookmark,
+            "Base class for all assets",
+            PARENT(Object),
+            CAPABILITIES(
                 .renderable = false,
-                .constructible = true, 
-                .passive = true
-            };
-        }
+                .constructible = false,
+                .passive = true,
+            ),
+            METHODS(),
+            EVENTS()
+        );
+
+        ClassDescriptor const & typeDescriptor() const override { return descriptor; }
 
     }; // rckid::game::Asset
 

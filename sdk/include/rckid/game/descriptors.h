@@ -12,6 +12,7 @@
 #define EVENTS(...) __VA_ARGS__
 #define DESCRIPTOR(NAME) & __ ## NAME
 #define PARENT(NAME) & NAME :: descriptor
+#define CAPABILITIES(...) { __VA_ARGS__ }
 
 #define ARG(NAME, RET_TYPE, ICON, HELP) \
     ArgumentDescriptor{# NAME, RET_TYPE, ICON, HELP }
@@ -30,7 +31,7 @@ private: \
 public:
 
 
-#define CLASS_DESCRIPTOR(NAME, ICON, HELP, PARENT, METHODS, EVENTS) \
+#define CLASS_DESCRIPTOR(NAME, ICON, HELP, PARENT, CAPABILITIES, METHODS, EVENTS) \
     private: \
         static constexpr MethodDescriptor const * const methods[] = { nullptr, METHODS }; \
         static constexpr EventDescriptor const * const events[] = { nullptr, EVENTS }; \
@@ -38,6 +39,7 @@ public:
         static constexpr ClassDescriptor descriptor{ \
             # NAME, ICON, HELP, \
             PARENT, \
+            CAPABILITIES, \
             methods, \
             events \
         }
@@ -60,13 +62,17 @@ namespace rckid::game {
     public:
         enum class Kind {
             Void, 
+            Boolean,
             Integer,
             Point,
+            Button,
             Object,
         };
 
         constexpr static Type Void() { return Type{Kind::Void}; }
+        constexpr static Type Boolean() { return Type{Kind::Boolean}; }
         constexpr static Type Point() { return Type{Kind::Point}; }
+        constexpr static Type Button() { return Type{Kind::Button}; }
         constexpr static Type Object() { return Type{Kind::Object}; }
 
         Kind kind() const { return kind_; }
@@ -215,20 +221,38 @@ namespace rckid::game {
         ConnectWrapper connectWrapper_;
     }; 
 
+    // TODO change Capabilities in App.h to AppCapabilities
+    class ObjectCapabilities {
+    public:
+        /** If true, the game object is renderable and its render method will be called.
+         */
+        bool renderable = true;
+        /** True if the object can be created by user. 
+         */
+        bool constructible = true;
+        /** Passive objects simply hold data and they do not have to be updated every loop iteration. This is typically true for assets.
+         */
+        bool passive = false;
+    }; // rckid::game::ObjectCapabilities
 
     class ClassDescriptor : public Descriptor {
     public:
+
+        ObjectCapabilities const & capabilities() const { return capabilities_; }
+
         template<size_t ICON_SIZE, size_t METHODS_SIZE, size_t EVENTS_SIZE>
         constexpr ClassDescriptor(
             char const * name, 
             uint8_t const (&iconBuffer)[ICON_SIZE], 
             char const * help, 
             Descriptor const * parent,
+            ObjectCapabilities capabilities,
             MethodDescriptor const * const (&methods)[METHODS_SIZE], 
             EventDescriptor const * const (&events)[EVENTS_SIZE]
         ):
             Descriptor{name, ICON_SIZE, iconBuffer, help},
             parent_{parent},
+            capabilities_{capabilities},
             numMethods_{METHODS_SIZE - 1},
             methods_{methods + 1},
             numEvents_{EVENTS_SIZE - 1},
@@ -237,6 +261,7 @@ namespace rckid::game {
     
     private:
         Descriptor const * const parent_;
+        ObjectCapabilities const capabilities_;
         uint32_t const numMethods_;
         MethodDescriptor const * const * const methods_;
         uint32_t const numEvents_;

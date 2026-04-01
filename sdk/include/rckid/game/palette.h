@@ -7,8 +7,6 @@ namespace rckid::game {
     class Palette : public Asset {
     public:
 
-        char const * className() const override { return "Palette"; }
-
         Palette() {
             fillDefaultPalette();
         }
@@ -32,6 +30,21 @@ namespace rckid::game {
         }
 
         Color::RGB565 colors_[256];
+    public:
+
+        CLASS_DESCRIPTOR(Palette, assets::icons_24::bookmark,
+            "256 color palette",
+            PARENT(Asset),
+            CAPABILITIES(
+                .renderable = false,
+                .constructible = false,
+                .passive = true,
+            ),
+            METHODS(),
+            EVENTS()
+        );
+
+        ClassDescriptor const & typeDescriptor() const override { return descriptor; }
     }; // rckid::game::PaletteAsset
 
 }
