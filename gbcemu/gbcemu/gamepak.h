@@ -9,6 +9,12 @@
 #include <rckid/string.h>
 #include <rckid/stream.h>
 
+
+// emspcripten defines PAGE_SIZE macro
+#ifdef PAGE_SIZE
+#undef PAGE_SIZE
+#endif
+
 namespace rckid::gbcemu {
 
     /** Memory bank controller types. 

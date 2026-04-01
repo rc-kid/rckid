@@ -2,9 +2,9 @@ SECTIONS
 {
     .rodata :
     {
-        __rodata_start = .;
+        __start_rodata = .;
         *(.rodata*)
-        __rodata_end = .;
+        __stop_rodata = .;
     }
 }
 INSERT AFTER .text

@@ -19,15 +19,17 @@
 
 #define METHOD_DESCRIPTOR(NAME, ICON, HELP, RET_TYPE, METHOD_ARGS, WRAPPER_FOR_CALL) \
 private: \
+    static Value __ ## NAME ## _wrapper WRAPPER_FOR_CALL; \
     static constexpr ArgumentDescriptor __ ## NAME ## _args[] = { ArgumentDescriptor{}, METHOD_ARGS }; \
-    static constexpr MethodDescriptor __ ## NAME { # NAME, RET_TYPE, ICON, HELP, __ ## NAME ## _args, WRAPPER_FOR_CALL }; \
+    static constexpr MethodDescriptor __ ## NAME { # NAME, RET_TYPE, ICON, HELP, __ ## NAME ## _args, __ ## NAME ## _wrapper }; \
 public: 
 
 // TODO
 #define EVENT_DESCRIPTOR(NAME, ICON, HELP, EVENT_ARGS, WRAPPER_FOR_CONNECT) \
 private: \
+    static void __ ## NAME ## _wrapper WRAPPER_FOR_CONNECT; \
     static constexpr ArgumentDescriptor __ ## NAME ## _args[] = { ArgumentDescriptor{}, EVENT_ARGS }; \
-    static constexpr EventDescriptor __ ## NAME { # NAME, ICON, HELP, __ ## NAME ## _args, WRAPPER_FOR_CONNECT }; \
+    static constexpr EventDescriptor __ ## NAME { # NAME, ICON, HELP, __ ## NAME ## _args, __ ## NAME ## _wrapper }; \
 public:
 
 

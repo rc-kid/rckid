@@ -61,7 +61,7 @@ namespace rckid {
 
             TileInfo() = default;
             TileInfo(TileInfo const &) = default;
-            TileInfo(char c): tile_{c} {}
+            TileInfo(char c): tile_{static_cast<uint8_t>(c)} {}
 
             /** Sets tile info to given character. 
              

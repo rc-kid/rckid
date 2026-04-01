@@ -1,3 +1,5 @@
+#ifdef RCKID_CAPABILITY_WIFI
+
 #include <curl/curl.h>
 
 #include <rckid/capabilities/wifi.h>
@@ -131,3 +133,34 @@ namespace rckid {
     }
 
 }
+
+#else
+
+#include <rckid/capabilities/wifi.h>
+
+namespace rckid {
+
+    WiFi * WiFi::instance() { return nullptr; }
+
+    WiFi::~WiFi() = default;
+
+    WiFi::Status WiFi::status() const { return Status::Off; }
+
+    void WiFi::enable(bool) {
+    }
+
+    bool WiFi::scan(ScanCallback) {
+        return false;
+    }
+
+    bool WiFi::connect(String const & ssid, String const & password, AuthMode authMode) {
+        return false;
+    }
+
+    uint32_t WiFi::ipAddress() { 
+        return 0; 
+    }
+
+} // namespace rckid
+
+#endif

@@ -21,10 +21,10 @@
 #define RCKID_DISPLAY_ZOOM 4
 
 extern "C" {
-
-    extern uint8_t __rodata_start; 
-    extern uint8_t __rodata_end;    
-    
+#ifndef RCKID_NO_RODATA_BOUNDARIES            
+    extern uint8_t __start_rodata;
+    extern uint8_t __stop_rodata;
+#endif    
 }
 
 namespace rckid::fs {
@@ -196,8 +196,10 @@ namespace rckid::hal {
          */
         void initializeNoWindow() {
             internal::display::noWindow = true;
-            LOG(LL_INFO, "Immutable memory: " << hex(& __rodata_start) << " - " << hex(& __rodata_end));
-    #ifndef RCKID_CUSTOM_FILESYSTEM
+#ifndef RCKID_NO_RODATA_BOUNDARIES            
+            LOG(LL_INFO, "Immutable memory: " << hex(& __start_rodata) << " - " << hex(& __stop_rodata));
+#endif
+#ifndef RCKID_CUSTOM_FILESYSTEM
             // if we are not using custom filesystem, see if we have the image files available, open them for read/write access and initialize the hal::fs mechanics
             internal::fs::sd_.open("sd.iso", std::ios::in |  std::ios::out | std::ios::binary);
             if (internal::fs::sd_.is_open()) {
@@ -223,7 +225,7 @@ namespace rckid::hal {
                     LOG(LL_INFO, "    invalid file size (multiples of 4096 bytes allowed)");
                 }
             }
-    #endif
+#endif
             // load the avr storage if we have the file available
             std::fstream storageFile("avr-storage.dat", std::ios::in | std::ios::binary);
             if (storageFile.is_open()) {
@@ -621,7 +623,12 @@ namespace rckid::hal {
         }
 
         bool isImmutableDataPtr(void const * ptr) {
-            return (ptr >= & __rodata_start) && (ptr < & __rodata_end);
+#ifndef RCKID_NO_RODATA_BOUNDARIES            
+            return (ptr >= & __start_rodata) && (ptr < & __stop_rodata);
+#else
+            // if we do not have rodata boundaries, we can only check if the pointer is outside of the heap, which is a good heuristic as in fantasy console all non-heap memory is immutable
+            return (ptr < heapStart()) || (ptr >= heapEnd());
+#endif
         }
 
 

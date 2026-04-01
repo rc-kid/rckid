@@ -50,9 +50,23 @@ if (RCKID_BACKEND STREQUAL "MK3")
     endif()
 elseif (RCKID_BACKEND STREQUAL "FANTASY")
     message("RCKID: Building for the fantasy console (with Raylib)")
+
+    if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+        add_compile_options(
+            -sUSE_PTHREADS=1
+            -sPTHREAD_POOL_SIZE=4
+        )
+
+        add_link_options(
+            -sUSE_PTHREADS=1
+            -sPTHREAD_POOL_SIZE=4
+        )
+    endif()    
+
     project(rckid)
     add_definitions(-DSUPPORT_CUSTOM_FRAME_CONTROL)
     add_subdirectory(lib/raylib)
+
 else()
     message(FATAL_ERROR "Unknown RCKid backend selected: ${RCKID_BACKEND}. Supported backends: FANTASY, MK3")
 endif()
