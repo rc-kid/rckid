@@ -90,8 +90,8 @@ namespace rckid::game {
     private:
         friend class Engine;
 
-        Device(Engine * engine):
-            Object{"Device", engine} {
+        Device(String name, Engine * engine):
+            Object{std::move(name), engine} {
         }
 
     public:

@@ -10,7 +10,6 @@ So what I need:
 - basic game loop & input, collisions
 
 - very basic descriptors might be working, the code needs commenting, testing.
-- type constructors for objects and stuff
 - methods for casting, type checing etc
 
 # SDK 1.0

@@ -46,7 +46,7 @@ namespace rckid::game {
         {
             screen_ = addChild(new GameScreen(this));
 
-            device_ = new Device{this};
+            device_ = new Device{"Device", this};
             registerObject(device_);
 
             palette_ = createAsset<Palette>("Palette");

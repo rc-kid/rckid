@@ -37,13 +37,17 @@ public:
     private: \
         static constexpr MethodDescriptor const * const methods[] = { nullptr, METHODS }; \
         static constexpr EventDescriptor const * const events[] = { nullptr, EVENTS }; \
+        static Value __create_wrapper(String name, Engine * engine) { \
+            return Value{new NAME{std::move(name), engine}}; \
+        } \
     public: \
         static constexpr ClassDescriptor descriptor{ \
             # NAME, ICON, HELP, \
             PARENT, \
             CAPABILITIES, \
             methods, \
-            events \
+            events, \
+            __create_wrapper \
         }
 
 /** Main idea is that all descriptors are constexpr really and can be stored in ROM for free. Then we do not have to worry about creating them, or their memory footprint.
@@ -56,6 +60,7 @@ namespace rckid::game {
      */
     using Integer = Coord;
 
+    class Engine;
     class Object;
 
     class Descriptor;
@@ -92,6 +97,12 @@ namespace rckid::game {
 
     // TODO move this to script.h or so where the runtime will actually go, or maybe to runtime.h
     class Value {
+    public:
+        Value() = default;
+
+        Value(Object * object) {
+            UNIMPLEMENTED;
+        }
 
     };
 
@@ -240,6 +251,8 @@ namespace rckid::game {
     class ClassDescriptor : public Descriptor {
     public:
 
+        using CreateWrapper = Value (*)(String name, Engine * engine);
+
         ObjectCapabilities const & capabilities() const { return capabilities_; }
 
         template<size_t ICON_SIZE, size_t METHODS_SIZE, size_t EVENTS_SIZE>
@@ -250,7 +263,8 @@ namespace rckid::game {
             Descriptor const * parent,
             ObjectCapabilities capabilities,
             MethodDescriptor const * const (&methods)[METHODS_SIZE], 
-            EventDescriptor const * const (&events)[EVENTS_SIZE]
+            EventDescriptor const * const (&events)[EVENTS_SIZE],
+            CreateWrapper createWrapper
         ):
             Descriptor{name, ICON_SIZE, iconBuffer, help},
             parent_{parent},
@@ -258,7 +272,8 @@ namespace rckid::game {
             numMethods_{METHODS_SIZE - 1},
             methods_{methods + 1},
             numEvents_{EVENTS_SIZE - 1},
-            events_{events + 1} {
+            events_{events + 1},
+            createWrapper_{createWrapper} {
         }
     
     private:
@@ -268,6 +283,7 @@ namespace rckid::game {
         MethodDescriptor const * const * const methods_;
         uint32_t const numEvents_;
         EventDescriptor const * const * const events_;
+        CreateWrapper const createWrapper_;
     };
 
 } // namespace rckid::game
