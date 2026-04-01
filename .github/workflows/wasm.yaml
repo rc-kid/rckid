@@ -1,0 +1,36 @@
+name: wasm
+
+on:
+  push:
+    branches-ignore:
+      - release
+
+jobs:
+  build:
+
+    runs-on: ubuntu-24.04
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: install-packages
+      run: |
+        bash setup-ubuntu.sh
+    - name: install-emscripten
+      run: |
+        sudo apt-get install -y -qq python3 nodejs
+        cd lib
+        git clone https://github.com/emscripten-core/emsdk.git
+        cd emsdk
+        ./emsdk install latest
+        ./emsdk activate latest
+    - name: configure-debug
+      run: |
+        source ./lib/emsdk/emsdk_env.sh
+        mkdir -p build/debug
+        cd build/debug
+        emcmake cmake ../..
+    - name: build-debug
+      run: |
+        source ./lib/emsdk/emsdk_env.sh
+        cd build/debug
+        cmake --build . 
