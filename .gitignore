@@ -4,6 +4,7 @@ sd.iso
 cartridge.iso
 /lib/raylib
 /lib/pico-sdk
+/lib/emsdk
 old*
 sdk-old
 cartridges-old
