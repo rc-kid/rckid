@@ -32,17 +32,6 @@ namespace rckid::game {
             ASSERT(typeDescriptor().capabilities().renderable);
         }
 
-        /** Converts current object to a specific subtype. 
-         
-            Behaves like dynamic_cast, i.e. returns nullptr of the object cannot be converted.
-         */
-        template<typename T>
-        T * as() {
-            if (typeDescriptor().inheritsFromOrSame(T::descriptor))
-                return static_cast<T*>(this);
-            return nullptr;
-        }
-
     protected:
         friend class Engine;
 

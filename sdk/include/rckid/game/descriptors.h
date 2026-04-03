@@ -1,6 +1,7 @@
 #pragma once
 
 #include <rckid/graphics/image_source.h>
+#include <rckid/game/runtime.h>
 
 #include <assets/icons_24.h>
 
@@ -55,56 +56,6 @@ public:
     But to store dynamic constexpr stuff is kind of hard, so can't really use pointers. Idea is create everything into std::array and then have constexpr array joining function. Might work
  */
 namespace rckid::game {
-
-    /** Integer type used everywhere in the game engine. 
-     */
-    using Integer = Coord;
-
-    class Engine;
-    class Object;
-
-    class Descriptor;
-
-    class Type {
-    public:
-        enum class Kind {
-            Void, 
-            Boolean,
-            Integer,
-            Point,
-            Button,
-            Object,
-        };
-
-        constexpr static Type Void() { return Type{Kind::Void}; }
-        constexpr static Type Boolean() { return Type{Kind::Boolean}; }
-        constexpr static Type Point() { return Type{Kind::Point}; }
-        constexpr static Type Button() { return Type{Kind::Button}; }
-        constexpr static Type Object() { return Type{Kind::Object}; }
-
-        Kind kind() const { return kind_; }
-        Descriptor const * descriptor() const { return descriptor_; }
-
-    private:
-
-        constexpr Type(Kind kind, Descriptor const * descriptor = nullptr):
-            kind_{kind}, descriptor_{descriptor} {
-        }
-
-        Kind const kind_;
-        Descriptor const * const descriptor_;
-    }; 
-
-    // TODO move this to script.h or so where the runtime will actually go, or maybe to runtime.h
-    class Value {
-    public:
-        Value() = default;
-
-        Value(Object * object) {
-            UNIMPLEMENTED;
-        }
-
-    };
 
     /** Descriptor base. 
      

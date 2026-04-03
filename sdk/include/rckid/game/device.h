@@ -2,6 +2,7 @@
 
 #include <rckid/game/event.h>
 #include <rckid/game/object.h>
+#include <rckid/game/casts.h>
 
 namespace rckid::game {
 
@@ -19,8 +20,8 @@ namespace rckid::game {
                 ARG(with, Type::Button(), assets::icons_24::bookmark, "Newly pressed button"),
             ),
             CONNECT_WRAPPER((Object * obj, std::function<void(Value *)> handler) {
-                obj->as<Device>()->onButtonPressed += [h = std::move(handler)](Btn) {
-                    Value v;
+                as<Device>(obj)->onButtonPressed += [h = std::move(handler)](Btn btn) {
+                    Value v{btn};
                     h(& v);
                 };
             })
@@ -34,8 +35,8 @@ namespace rckid::game {
                 ARG(with, Type::Button(), assets::icons_24::bookmark, "Newly released button"),
             ),
             CONNECT_WRAPPER((Object * obj, std::function<void(Value *)> handler) {
-                obj->as<Device>()->onButtonReleased += [h = std::move(handler)](Btn) {
-                    Value v;
+                as<Device>(obj)->onButtonReleased += [h = std::move(handler)](Btn btn) {
+                    Value v{btn};
                     h(& v);
                 };
             })
@@ -47,7 +48,7 @@ namespace rckid::game {
             "Event triggered every iteration of the game loop",
             ARGS(),
             CONNECT_WRAPPER((Object * obj, std::function<void(Value *)> handler) {
-                obj->as<Device>()->onGameLoop += [h = std::move(handler)]() {
+                as<Device>(obj)->onGameLoop += [h = std::move(handler)]() {
                     h(nullptr);
                 };
             })
@@ -62,8 +63,7 @@ namespace rckid::game {
                 ARG(by, Type::Button(), assets::icons_24::bookmark, "Which button"),
             ),
             CALL_WRAPPER((Object * obj, Value * args) {
-                obj->as<Device>()->buttonDown(Btn::A);
-                return Value{};
+                return Value{as<Device>(obj)->buttonDown(as<Btn>(args[0]))};
             })
         );
 

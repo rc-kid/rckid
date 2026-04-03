@@ -5,7 +5,7 @@
 #include <rckid/game/palette.h>
 #include <rckid/game/script.h>
 #include <rckid/game/descriptors.h>
-
+#include <rckid/game/casts.h>
 
 namespace rckid::game {
 
@@ -33,9 +33,8 @@ namespace rckid::game {
             "Returns the position of the sprite",
             Type::Point(),
             ARGS(),
-            CALL_WRAPPER((Object * obj, Value * args){
-                obj->as<Sprite>()->position();
-                return Value{};
+            CALL_WRAPPER((Object * obj, Value *) {
+                return Value{as<Sprite>(obj)->position()};
             })
         );
 
@@ -48,7 +47,7 @@ namespace rckid::game {
                 ARG(by, Type::Point(), assets::icons_24::bookmark, "New sprite position"),
             ),
             CALL_WRAPPER((Object * obj, Value * args) {
-                obj->as<Sprite>()->setPosition(Point{0, 3});
+                as<Sprite>(obj)->setPosition(as<Point>(args[0]));
                 return Value{};
             })
         );
@@ -83,7 +82,7 @@ namespace rckid::game {
                 ARG(by, Type::Point(), assets::icons_24::bookmark, "How much should the sprite move"),
             ),
             CALL_WRAPPER((Object * obj, Value * args) {
-                obj->as<Sprite>()->moveBy(Point{0, 3});
+                as<Sprite>(obj)->moveBy(as<Point>(args[0]));
                 return Value{};
             })
         );
@@ -137,8 +136,8 @@ namespace rckid::game {
                 ARG(with, Type::Object(), assets::icons_24::bookmark, "The other sprite"),
             ),
             CONNECT_WRAPPER((Object * obj, std::function<void(Value *)> handler) {
-                obj->as<Sprite>()->onCollision += [h = std::move(handler)](Object * with) {
-                    Value v;
+                as<Sprite>(obj)->onCollision += [h = std::move(handler)](Object * with) {
+                    Value v{with};
                     h(& v);
                 };
             })
