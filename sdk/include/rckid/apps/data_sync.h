@@ -88,8 +88,12 @@ namespace rckid {
 
 
     private:
-        friend int32_t tud_msc_read10_cb(uint8_t, uint32_t, uint32_t, void *, uint32_t);
-        friend int32_t tud_msc_write10_cb(uint8_t, uint32_t, uint32_t, uint8_t*, uint32_t);
+        // emscripten does not undersand the ::fun_name
+        // TODO maybe this will not be necessary after data sync & usb support rewrite for mkIII
+    #ifndef __EMSCRIPTEN__
+        friend int32_t ::tud_msc_read10_cb(uint8_t, uint32_t, uint32_t, void *, uint32_t);
+        friend int32_t ::tud_msc_write10_cb(uint8_t, uint32_t, uint32_t, uint8_t*, uint32_t);
+    #endif
         
         void onLoopStart() override {
 
