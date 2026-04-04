@@ -6,7 +6,7 @@ namespace rckid::game {
 
     class Engine;
     class Object;
-    class Descriptor;
+    class ClassDescriptor;
 
     /** Integer type used everywhere in the game engine. 
      */
@@ -28,22 +28,22 @@ namespace rckid::game {
         constexpr static Type Point() { return Type{Kind::Point}; }
         constexpr static Type Button() { return Type{Kind::Button}; }
         constexpr static Type Object() { return Type{Kind::Object}; }
-        constexpr static Type Object(Descriptor const * descriptor) { return Type{Kind::Object, descriptor}; }
+        constexpr static Type Object(ClassDescriptor const * descriptor) { return Type{Kind::Object, descriptor}; }
 
         Kind kind() const { return kind_; }
-        Descriptor const & descriptor() const { return *descriptor_; }
+        ClassDescriptor const & descriptor() const { return *descriptor_; }
 
-        bool operator == (Descriptor const & other) const;
+        bool operator == (ClassDescriptor const & other) const;
 
     private:
         friend class Value;
 
-        constexpr Type(Kind kind, Descriptor const * descriptor = nullptr):
+        constexpr Type(Kind kind, ClassDescriptor const * descriptor = nullptr):
             kind_{kind}, descriptor_{descriptor} {
         }
 
         Kind const kind_;
-        Descriptor const * const descriptor_;
+        ClassDescriptor const * const descriptor_;
     }; 
 
     class Value {
@@ -55,6 +55,8 @@ namespace rckid::game {
         Value(Point value): kind_{Type::Kind::Point}, point_{value} {}
         Value(Btn value): kind_{Type::Kind::Button}, button_{value} {}
         Value(Object * object): kind_{Type::Kind::Object}, object_{object} {}
+
+        Type::Kind kind() const { return kind_; }
 
         Type type() const;
 

@@ -37,6 +37,41 @@ namespace rckid::game::ast {
         Value result_;    
     }; 
 
+    /** Integer value. 
+     */
+    class IntegerNode : public Node {
+    public:
+        IntegerNode(Integer value): value_{value} {}
+
+        Value eval() const {
+            return Value{value_};
+        }
+
+    protected:
+        Integer value_;
+    };
+
+    /** Point value.
+     */
+    class PointNode : public Node {
+    public:
+        PointNode(unique_ptr<Node> x, unique_ptr<Node> y):
+            x_{std::move(x)}, y_{std::move(y)} {
+        }
+
+        Value eval() const override {
+            Value x = x_->eval();
+            Value y = y_->eval();
+            ASSERT(x.kind() == Type::Kind::Integer);
+            ASSERT(y.kind() == Type::Kind::Integer);
+            return Value{Point{as<Integer>(x), as<Integer>(y)}};
+        }
+
+    protected:
+        unique_ptr<Node> x_;
+        unique_ptr<Node> y_;
+    }; 
+
     /** Method call. 
      
         Consists of an expression evaluating to the object on which the method is called, the method descriptor itself and the list of arguments. 

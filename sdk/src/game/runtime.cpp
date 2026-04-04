@@ -3,7 +3,7 @@
 
 namespace rckid::game {
 
-    bool Type::operator == (Descriptor const & other) const {
+    bool Type::operator == (ClassDescriptor const & other) const {
         if (kind_ != Kind::Object)
             return false;
         return descriptor().inheritsFromOrSame(other);
