@@ -51,15 +51,14 @@ public:
             __create_wrapper \
         }
 
-/** Main idea is that all descriptors are constexpr really and can be stored in ROM for free. Then we do not have to worry about creating them, or their memory footprint.
- 
-    But to store dynamic constexpr stuff is kind of hard, so can't really use pointers. Idea is create everything into std::array and then have constexpr array joining function. Might work
- */
 namespace rckid::game {
 
     /** Descriptor base. 
      
-        
+        Descriptors are at the heart of the lower tiers of writing RCKid games. They wrap around C++ game engine objects and provide run-time type information and metadata about the classes with very little overhead. This information is then used by the visual event editor, blocks editor and the DSL code to build/typechedk the application. 
+
+        All descriptors exist as constexpr objects so that they reside in the relatively abundant flash memory. They not only describe the objects, but also provide wrapper functions that map for the runtime world (Value and Type) to the underlying C++ objects and methods. This way, the runtime can call methods and connect to events. 
+       
      */
     class Descriptor {
     public:
@@ -122,7 +121,7 @@ namespace rckid::game {
 
         uint32_t numArgs() const { return numArgs_; }
         
-        Value call(Object * obj, Value * args) { return callWrapper_(obj, args); }
+        Value call(Object * obj, Value * args) const { return callWrapper_(obj, args); }
 
         template<size_t ICON_SIZE, size_t ARGS_SIZE>
         constexpr MethodDescriptor(

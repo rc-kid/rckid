@@ -31,7 +31,9 @@ namespace rckid::game {
         constexpr static Type Object(Descriptor const * descriptor) { return Type{Kind::Object, descriptor}; }
 
         Kind kind() const { return kind_; }
-        Descriptor const * descriptor() const { return descriptor_; }
+        Descriptor const & descriptor() const { return *descriptor_; }
+
+        bool operator == (Descriptor const & other) const;
 
     private:
         friend class Value;
@@ -54,12 +56,7 @@ namespace rckid::game {
         Value(Btn value): kind_{Type::Kind::Button}, button_{value} {}
         Value(Object * object): kind_{Type::Kind::Object}, object_{object} {}
 
-        /*
-        Type type() const {
-            if (kind_ == Type::Kind::Object)
-                return Type::Object(object_->typeDescriptor());
-            return Type{kind_, nullptr};
-        }*/
+        Type type() const;
 
     private:
 

@@ -3,6 +3,7 @@
 #include <rckid/game/engine.h>
 #include <rckid/game/sprite_set.h>
 #include <rckid/game/sprite.h>
+#include <rckid/game/script.h>
 
 namespace rckid {
 
