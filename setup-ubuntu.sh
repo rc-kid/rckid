@@ -29,6 +29,15 @@ git clone https://github.com/raysan5/raylib.git
 #make PLATFORM=PLATFORM_DESKTOP
 cd ${RCKID_DIR}
 
+echo "        emscripten..."
+sudo apt-get install -y -qq python3 nodejs
+cd ${RCKID_DIR}/lib
+git clone https://github.com/emscripten-core/emsdk.git
+cd emsdk
+./emsdk install latest
+./emsdk activate latest
+cd ${RCKID_DIR}
+
 #echo "Installing platformio..."
 sudo apt-get -y install python3-venv
 curl -fsSL -o get-platformio.py https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py && python3 get-platformio.py
