@@ -56,11 +56,11 @@ namespace rckid {
                 game::Sprite::descriptor.method("moveBy")
             );
             moveUp->addArgument(std::make_unique<game::ast::PointNode>(
-                std::make_unique<game::ast::IntegerNode>(0), 
-                std::make_unique<game::ast::IntegerNode>(-3)
+                std::make_unique<game::ast::IntegerNode>(3), 
+                std::make_unique<game::ast::IntegerNode>(0)
             ));
-            game::Sprite::descriptor.event("onButtonPressed")->connect(game::as<game::Object>(cat_), [moveUp, this](game::Value * args) {
-                if (game::as<Btn>(args[0]) == Btn::Up) {
+            game::Device::descriptor.event("onButtonPressed")->connect(game::as<game::Object>(device()), [moveUp, this](game::Value * args) {
+                if (game::as<Btn>(args[0]) == Btn::Right) {
                     game::Evaluator::eval(moveUp, this);
                 }
             });
