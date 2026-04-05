@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RCKid</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <canvas class="content" id="canvas"></canvas>
+    <p>
+        <a href="https://github.com/rc-kid/rckid/blob/main/VISION.md">Vision</a> 
+        - 
+        <a href="https://hackaday.io/project/205276-rckid">Hackaday</a>
+        -
+        <a href="https://github.com/rc-kid/rckid/">GitHub</a>
+        -
+        <a href="index.html">Home</a>
+    </p>
+    <p class="info">
+        Please note the demo is work in progress and things may not work as intended. <br/>
+        The demo is the latest development branch, which is proof of concept and not a polished product.<br/>
+        Icons by flat-icons, music by audiorezout (<a href="https://github.com/rc-kid/rckid/blob/main/ATTRIBUTION.md">details</a>)
+    </p>
+</div>
+
+  <script>
+    // Required when using pthreads + OffscreenCanvas
+    var Module = {
+        canvas: (function() {
+        var c = document.getElementById('canvas');
+        return c;
+        })()
+    };
+  </script>
+  <!-- Emscripten-generated JS -->
+  <script src="demo.js"></script>
+  <script>
+    // Optional: wait for WASM to initialize
+    Module.onRuntimeInitialized = () => {
+      console.log("Raylib WASM initialized");
+      // don't use this, it runs the main twice, causing problems
+      // if (Module._main) Module._main();
+    };
+  </script>
+</body>
+</html>

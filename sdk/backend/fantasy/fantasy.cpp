@@ -18,7 +18,9 @@
 
 #include "system_malloc_guard.h"
 
-#define RCKID_DISPLAY_ZOOM 4
+#ifndef RCKID_DISPLAY_ZOOM
+    #define RCKID_DISPLAY_ZOOM 4
+#endif
 
 extern "C" {
 #ifndef RCKID_NO_RODATA_BOUNDARIES            

@@ -17,6 +17,11 @@ else()
     target_compile_definitions(librckid PUBLIC "RCKID_CAPABILITY_WIFI")
 endif()
 
+# add extra options as macros, especially the RCKID_DISPLAY_ZOOM, if defined
+if (DEFINED RCKID_DISPLAY_ZOOM)
+    target_compile_definitions(librckid PUBLIC "RCKID_DISPLAY_ZOOM=${RCKID_DISPLAY_ZOOM}")
+endif()
+
 # Sets given project to be used with RCKid SDK. 
 #
 # This must be called for libraries as well as executables (cartridges). For cartridges, an extra argument specifying th cartridge type must be supplied. 
@@ -38,6 +43,9 @@ function(link_with_librckid target_name)
             opus
         )
         if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+            #target_link_options(${target_name} PRIVATE
+            #    "--preload-file" "${CMAKE_SOURCE_DIR}/sd@/sd"
+            #)
             # nothing needs to be done here, emspcripten flags are set globally in the root CMakeLists.txt
         else()
             target_link_options(${target_name} PRIVATE "-Wl,-T,${CMAKE_SOURCE_DIR}/sdk/backend/fantasy/linker.ld" )    

@@ -1,0 +1,59 @@
+
+    @font-face {
+        font-family: "OpenDyslexic";
+        src: url("OpenDyslexic.woff") format("woff");
+        font-weight: normal;
+        font-style: normal;
+        font-display: swap;
+    }    
+
+    body {
+        margin: 0;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.7) url('background.jpg');
+        background-blend-mode: darken;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: "OpenDyslexic", Arial, sans-serif;
+        font-size: 2em;
+    }
+
+    .info {
+        color: #808080;
+        font-size: 80%;
+    }
+
+    .container {
+        text-align: center;
+        color: yellow;
+    }
+
+    .content {
+        height: 50vh;
+        display: block;
+        margin: 0 auto 20px auto;
+    }
+
+    #canvas {
+        background: url('hourglass.png') center no-repeat;       
+    }
+
+    a:link {
+        color: #ff00ff; 
+    }
+
+    a:visited {
+        color: #ff00ff; 
+    }
+
+    a:hover {
+        color: #ff00ff; 
+    }
+
+    a:active {
+        color: #ff00ff; 
+    }
