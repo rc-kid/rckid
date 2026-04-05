@@ -45,11 +45,25 @@ namespace rckid {
                 if (btn == Btn::Left)
                     cat_->moveBy(Point{-3, 0});
             };
-
+            /*
             device()->onButtonPressed += [this](Btn btn) {
                 if (btn == Btn::Right)
                     cat_->moveBy(Point{3, 0});
             };
+            */
+            game::ast::MethodCallNode * moveUp = new game::ast::MethodCallNode(
+                std::make_unique<game::ast::ObjectNode>(cat_), 
+                game::Sprite::descriptor.method("moveBy")
+            );
+            moveUp->addArgument(std::make_unique<game::ast::PointNode>(
+                std::make_unique<game::ast::IntegerNode>(0), 
+                std::make_unique<game::ast::IntegerNode>(-3)
+            ));
+            game::Sprite::descriptor.event("onButtonPressed")->connect(game::as<game::Object>(cat_), [moveUp, this](game::Value * args) {
+                if (game::as<Btn>(args[0]) == Btn::Up) {
+                    game::Evaluator::eval(moveUp, this);
+                }
+            });
 
             device()->onGameLoop += [this]() {
                 switch (random() % 5) {

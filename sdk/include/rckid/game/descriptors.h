@@ -159,7 +159,7 @@ namespace rckid::game {
 
         using ConnectWrapper = void (*)(Object * obj, std::function<void(Value*)>);
 
-        void connect(Object * obj, std::function<void(Value*)> handler) {
+        void connect(Object * obj, std::function<void(Value*)> handler) const {
             connectWrapper_(obj, std::move(handler));
         }
 
@@ -234,6 +234,26 @@ namespace rckid::game {
                 current = static_cast<ClassDescriptor const *>(current->parent_);
             } while (current != nullptr);
             return false;
+        }
+
+        MethodDescriptor const * method(char const * name) const {
+            for (size_t i = 0, e = numMethods_; i < e; ++i) {
+                if (strcmp(methods_[i]->name(), name) == 0)
+                    return methods_[i];
+            }
+            if (parent_ != nullptr)
+                return static_cast<ClassDescriptor const *>(parent_)->method(name);
+            return nullptr;
+        }
+
+        EventDescriptor const * event(char const * name) const {
+            for (size_t i = 0, e = numEvents_; i < e; ++i) {
+                if (strcmp(events_[i]->name(), name) == 0)
+                    return events_[i];
+            }
+            if (parent_ != nullptr)
+                return static_cast<ClassDescriptor const *>(parent_)->event(name);
+            return nullptr;
         }
     
     private:
