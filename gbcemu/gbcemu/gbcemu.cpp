@@ -1420,7 +1420,6 @@ namespace rckid::gbcemu {
 
     void GBCEmu::setExternalRamPage(uint32_t page) {
         uint32_t numPages = externalRamPages();
-        ASSERT(numPages > 0);
         if (numPages == 0) {
             memMap_[10] = nullptr;
             memMap_[11] = nullptr;
