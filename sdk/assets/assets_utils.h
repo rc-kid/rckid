@@ -116,7 +116,22 @@ inline GlyphInfo * loadFontGlyphs(std::string const & fontFile, int fontSize, Gl
     input.close();   
     int glyphCount = 0;
     GlyphInfo * glyphInfos = LoadFontData(bytes.data(), (int) bytes.size(), fontSize, const_cast<int*>(glyphs.codepoints.data()), (int) glyphs.size(), FONT_DEFAULT, &glyphCount);
-    //ASSERT(glyphCount == (int) glyphs.size());
+    // if not all glyphs were found, we need to reconstruct them as the API expects exact glyphs at indices even if not found
+    if (static_cast<size_t>(glyphCount) != glyphs.size()) {
+        std::cout << "            Not all glyphs were found, reconstructing" << std::endl;
+        GlyphInfo * result = new GlyphInfo[glyphs.size()];
+        for (size_t i = 0; i < glyphs.size(); ++i) {
+            result[i] = glyphInfos[0];
+            for (int ii = 0; ii < glyphCount; ++ii) {
+                if (glyphs.codepoints[i] == glyphInfos[ii].value) {
+                    result[i] = glyphInfos[ii];
+                    break;
+                }
+            }
+        }
+        // this leaks left & right, be we do not care as its a simple font generator
+        glyphInfos = result;
+    }
     std::cout << "            loaded " << glyphs.size() << " glyphs" << std::endl;
     return glyphInfos;
 }

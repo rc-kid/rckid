@@ -15,7 +15,7 @@ namespace rckid::ui {
             root_.applyStyle(ui::Style::defaultStyle(), theme);
         }
 
-        explicit App(ui::Theme theme = ui::Theme::Default): App{Rect::XYWH(0, 0, 320, 240), theme} {}
+        explicit App(ui::Theme theme = ui::Theme::Default): App{Rect::WH(display::WIDTH, display::HEIGHT), theme} {}
 
         Widget * focusedWidget() const { return focusedWidget_; }
 

@@ -13,6 +13,8 @@ So what I need:
 
 # SDK 1.0
 
+- writer << Buffer (ptr, size) so that we do not have to break the << chain
+
 - improve value parsing in Reader (bool, ints, etc.)
 - how to do heartbeat? (static initializers?)
 

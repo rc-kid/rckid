@@ -7,6 +7,8 @@
 #include <rckid/apps/messages.h>
 #include <rckid/apps/about.h>
 
+#include <rckid/apps/games/blocks.h>
+
 #include <rckid/apps/launcher.h>
 
 // TODO this will not be here eventyually
