@@ -26,13 +26,21 @@ namespace rckid {
         Color::RGB565 at(Coord x, Coord y) const { return pixels_.get()[mapIndexColumnFirst(x, y, w_, h_)]; }
         Color::RGB565 & at(Coord x, Coord y) { return pixels_.get()[mapIndexColumnFirst(x, y, w_, h_)]; }
 
+        void setAt(Coord x, Coord y, Color::RGB565 color) {
+            if (x < 0 || x >= w_)
+                return;
+            if (y < 0 || y >= h_)
+                return;
+            at(x, y) = color;            
+        }
+
         /** Fills rectangle with given color. 
          */
         void fill(Rect rect, Color::RGB565 color) {
             // default, very slow implementation
             for (int x = rect.left(), xe = rect.right(); x < xe; ++x)
                 for (int y = rect.top(), ye = rect.bottom(); y < ye; ++y)
-                    at(x, y) = color;
+                    setAt(x, y, color);
         }
 
         /** Fills the entire canvas with given color.
@@ -96,7 +104,7 @@ namespace rckid {
     private:
 
         void putChar(Coord x, Coord y, GlyphInfo const * gi, Font font, Color::RGB565 const * palette) {
-            for (Coord xx = x + gi->advanceX; xx >= x; --x) {
+            for (Coord xx = x + gi->advanceX; xx >= x; --xx) {
                 if (xx < 0)
                     break; // it won't be better
                 if (xx >= w_)

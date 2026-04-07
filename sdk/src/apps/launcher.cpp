@@ -48,6 +48,9 @@ namespace rckid {
             (*result)
                 << ui::MenuItem{"Game Engine", assets::icons_64::gameboy, []() {
                     App::run<CatChase>();
+                }}
+                << ui::MenuItem{"Blocks", assets::icons_64::gameboy, []() {
+                    App::run<Blocks>();
                 }};
         return result;
     }
