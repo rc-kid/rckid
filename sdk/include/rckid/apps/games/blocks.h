@@ -40,7 +40,6 @@ namespace rckid {
 
         // TODO for cur & next we need to save also the color
         void saveState(RandomWriteStream & into) const override {
-            /*
             into.binaryWriter()
                 << VERSION
                 << static_cast<uint8_t>(mode_);
@@ -52,48 +51,35 @@ namespace rckid {
                 << levelCompacted_
                 << countdown_
                 << speed_
-                << allowDown_;
-            into.write(grid_, sizeof(grid_))
-                
-            // save the actual state - level & score
-            serialize(into, score_);
-            serialize(into, level_);
-            // save extra state info
-            serialize(into, levelCompacted_);
-            serialize(into, countdown_);
-            serialize(into, speed_);
-            serialize(into, allowDown_);
-            // save the grid & tetromino properties
-            serialize(into, grid_, sizeof(grid_));
-            serialize(into, cur_);
-            serialize(into, next_);
-            serialize(into, x_);
-            serialize(into, y_);
-            */
+                << allowDown_
+                << buffer(grid_, sizeof(grid_))
+                << cur_
+                << next_
+                << x_
+                << y_;
         }
         
         bool loadState(RandomReadStream & from) override {
-            /*
-            if (deserialize<uint8_t>(from) != VERSION) {
+            auto rd = from.binaryReader();
+            if (read<uint8_t>(rd) != VERSION) {
                 LOG(LL_WARN,  "Unsupported save version, skipping");
-                return;
+                return false;
             }
-            mode_ = static_cast<Mode>(deserialize<uint8_t>(from));
+            mode_ = static_cast<Mode>(read<uint8_t>(rd));
             if (mode_ == Mode::Game) {
-                // only deserialize state if we are in the game mode
-                deserialize(from, score_);
-                deserialize(from, level_);
-                deserialize(from, levelCompacted_);
-                deserialize(from, countdown_);
-                deserialize(from, speed_);
-                deserialize(from, allowDown_);
-                deserialize(from, grid_, sizeof(grid_));
-                deserialize(from, cur_);
-                deserialize(from, next_);
-                deserialize(from, x_);
-                deserialize(from, y_);
+                rd
+                    >> score_
+                    >> level_
+                    >> levelCompacted_
+                    >> countdown_
+                    >> speed_
+                    >> allowDown_
+                    >> buffer(grid_, sizeof(grid_))
+                    >> cur_
+                    >> next_
+                    >> x_
+                    >> y_;
             }
-            */
            return true;
         }
 

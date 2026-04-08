@@ -11,8 +11,7 @@
     RCKid SDK provides simple and extensible serialization and deserialization framework the Writer and Reader classes. Two basic serializers are provided - text based Writer and Reader and their binary based counterparts BinaryWriter and BinaryReader. Operators << and >> are used for serialization and deserialization respectively and types that allow themselves to be serialized should overload those for the applicable reader and writer classes.
 
     The API has been designed to minimize code explosing from templating overhead and conceptually follows the Writer from platform library where a single writer is configured with a function capable of writing a single byte. 
-
-    
+  
  */
 
 namespace rckid {
@@ -178,6 +177,59 @@ namespace rckid {
         size_t width_;
         char pad_;
     }; // fillRight
+
+    class WriteableBufferWrapper {
+    public:
+        WriteableBufferWrapper(uint8_t * buffer, uint32_t size): buffer_{buffer}, size_{size} {}
+
+        friend inline void write(BinaryWriter & w, WriteableBufferWrapper const & buf) {
+            for (uint32_t i = 0; i != buf.size_; ++i)
+                w.putByte(buf.buffer_[i]);
+        }
+
+        friend inline void read(BinaryReader & r, WriteableBufferWrapper & buf) {
+            for (uint32_t i = 0; i != buf.size_; ++i)
+                buf.buffer_[i] = r.getByte();
+        }
+
+    private:
+        uint8_t * buffer_;
+        uint32_t size_;
+    }; 
+
+    /** Since the buffer wrapper is only a temporary object, it makes sense to write to rvalue reference of it.
+     */
+    template<typename W>
+    std::enable_if_t<std::is_same_v<std::decay_t<W>, BinaryReader>, W&&>
+    operator >> (W&& w, WriteableBufferWrapper && arg) {
+        read(w, arg);
+        return std::forward<W>(w);
+    }
+
+    class ReadonlyBufferWrapper {
+    public:
+        ReadonlyBufferWrapper(uint8_t const * buffer, uint32_t size): buffer_{buffer}, size_{size} {}
+
+        friend inline void write(BinaryWriter & w, ReadonlyBufferWrapper const & buf) {
+            for (uint32_t i = 0; i != buf.size_; ++i)
+                w.putByte(buf.buffer_[i]);
+        }
+
+    private:
+        uint8_t const * buffer_;
+        uint32_t size_;
+    };
+
+    inline WriteableBufferWrapper buffer(uint8_t * buffer, uint32_t size) {
+        return WriteableBufferWrapper{buffer, size};
+    }
+
+    inline ReadonlyBufferWrapper buffer(uint8_t const * buffer, uint32_t size) {
+        return ReadonlyBufferWrapper{buffer, size};
+    }
+
+    template<typename T>
+    T read(BinaryReader & r) { T value; r >> value; return value; }
 
     // below are various overloads for << and >> operators for the readers and writers specified above
 
