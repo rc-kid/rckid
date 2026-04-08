@@ -52,7 +52,7 @@ namespace rckid {
                 << countdown_
                 << speed_
                 << allowDown_
-                << buffer(grid_, sizeof(grid_))
+                << wrapBuffer(grid_, sizeof(grid_))
                 << cur_
                 << next_
                 << x_
@@ -74,7 +74,7 @@ namespace rckid {
                     >> countdown_
                     >> speed_
                     >> allowDown_
-                    >> buffer(grid_, sizeof(grid_))
+                    >> wrapBuffer(grid_, sizeof(grid_))
                     >> cur_
                     >> next_
                     >> x_

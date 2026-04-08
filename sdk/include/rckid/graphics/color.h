@@ -293,6 +293,28 @@ namespace rckid {
         uint8_t g;
         uint8_t b;
 
+        /** Creates color that is blend of colors a and b.
+         
+            Third argument is the coefficient of first color. Second color is 255 - firstCoeff.
+         */
+        static constexpr Color blend(Color a, Color b, uint8_t firstCoeff) {
+            int32_t dr = b.r - a.r;
+            int32_t dg = b.g - a.g;
+            int32_t db = b.b - a.b;
+            dr = dr * firstCoeff / 255;
+            dg = dg * firstCoeff / 255;
+            db = db * firstCoeff / 255;
+            return RGB(static_cast<uint8_t>(a.r + dr), static_cast<uint8_t>(a.g + dg), static_cast<uint8_t>(a.b + db));
+        }
+
+        constexpr bool operator == (Color const & other) const {
+            return r == other.r && g == other.g && b == other.b;
+        }
+
+        constexpr bool operator != (Color const & other) const {
+            return r != other.r || g != other.g || b != other.b;
+        }
+
         static constexpr Color Black()    { return Color{  0,  0,  0}; }
         static constexpr Color White()    { return Color{255,255,255}; }
         static constexpr Color Red()      { return Color{255,  0,  0}; }

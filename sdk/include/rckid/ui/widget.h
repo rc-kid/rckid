@@ -508,6 +508,18 @@ namespace rckid::ui {
         return w;
     }
 
+    struct SetColorGradient {
+        Color a;
+        Color b;
+        SetColorGradient(Color a, Color b): a{a}, b{b} {}
+    };
+
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetColorGradient scg) {
+        w->setColorGradient(scg.a, scg.b);
+        return w;
+    }
+    
     struct SetBg {
         Color color;
         SetBg(Color color): color{color} {}

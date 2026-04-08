@@ -124,10 +124,17 @@ namespace rckid {
         }
 
         void createFontPalette(Color::RGB565 * palette, Color fg) const {
-            palette[0] = fg.withBrightness(0).toRGB565();
-            palette[1] = fg.withBrightness(85).toRGB565();
-            palette[2] = fg.withBrightness(170).toRGB565();
-            palette[3] = fg.toRGB565();
+            palette[0] = fg.withBrightness(0);
+            palette[1] = fg.withBrightness(85);
+            palette[2] = fg.withBrightness(170);
+            palette[3] = fg;
+        }
+
+        void createFontPalette(Color::RGB565 * palette, Color fg, Color bg) const {
+            palette[0] = fg;
+            palette[1] = Color::blend(fg, bg, 85);
+            palette[2] = Color::blend(fg, bg, 170);
+            palette[3] = bg;
         }
     }; 
 

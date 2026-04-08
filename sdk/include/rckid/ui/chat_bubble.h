@@ -116,6 +116,7 @@ namespace rckid::ui {
         }
 
         void setColor(Color value) { l_.setColor(value); }
+        void setColorGradient(Color fg, Color bg) { l_.setColorGradient(fg, bg); }
 
         void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) override {
             renderBubble(column, startRow, buffer, numPixels);

@@ -220,11 +220,11 @@ namespace rckid {
         uint32_t size_;
     };
 
-    inline WriteableBufferWrapper buffer(uint8_t * buffer, uint32_t size) {
+    inline WriteableBufferWrapper wrapBuffer(uint8_t * buffer, uint32_t size) {
         return WriteableBufferWrapper{buffer, size};
     }
 
-    inline ReadonlyBufferWrapper buffer(uint8_t const * buffer, uint32_t size) {
+    inline ReadonlyBufferWrapper wrapBuffer(uint8_t const * buffer, uint32_t size) {
         return ReadonlyBufferWrapper{buffer, size};
     }
 

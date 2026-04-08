@@ -13,6 +13,8 @@ So what I need:
 
 # SDK 1.0
 
+- have some on change handler that gets triggered when widget property changes so that we can react to changes (one is enough AFAIK)
+
 - improve value parsing in Reader (bool, ints, etc.)
 - how to do heartbeat? (static initializers?)
 

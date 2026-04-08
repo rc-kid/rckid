@@ -79,6 +79,11 @@ namespace rckid::ui {
             font_->createFontPalette(textPalette_, textColor_);
         }
 
+        void setColorGradient(Color fg, Color bg) {
+            textColor_ = fg;
+            font_->createFontPalette(textPalette_, textColor_, bg);
+        }
+
         Point textOffset() const { return textOffset_; }
 
         void setTextOffset(Point value) {
@@ -266,6 +271,12 @@ namespace rckid::ui {
             textColor_ = value;
             for (auto & line : lines_)
                 line->setColor(value);
+        }
+
+        void setColorGradient(Color fg, Color bg) {
+            textColor_ = fg;
+            for (auto & line : lines_)
+                line->setColorGradient(fg, bg);
         }
 
         Coord textWidth() const { 
