@@ -36,6 +36,9 @@ namespace rckid::ui {
             return true;
         }
 
+        bool inc(int32_t by = 1) { return changeValueBy(by); }
+        bool dec(int32_t by = 1) { return changeValueBy(-by); }
+
         void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) override {
             // determine the column at which we are switching from the barto background color
             Color::RGB565 c{bg_.toRGB565()};

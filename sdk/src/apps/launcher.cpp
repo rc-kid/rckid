@@ -8,6 +8,7 @@
 #include <rckid/apps/about.h>
 
 #include <rckid/apps/utils/clock.h>
+#include <rckid/apps/utils/flashlight.h>
 
 #include <rckid/apps/games/blocks.h>
 
@@ -63,6 +64,9 @@ namespace rckid {
         (*result)
             << ui::MenuItem{"Clock", assets::icons_64::poo, []() {
                 App::run<Clock>();
+            }}
+            << ui::MenuItem{"Flashlight", assets::icons_64::poo, []() {
+                App::run<Flashlight>();
             }}
             << ui::MenuItem{"Steps", assets::icons_64::footprint, []() {
                 App::run<Steps>();
