@@ -158,26 +158,6 @@ namespace rckid {
         return std::forward<W>(w);
     }
 
-    
-    // extra formatters
-
-    template<typename T>
-    class fillRight : public Writer::Converter {
-    public:
-        fillRight(T value, size_t width, char pad = ' '): value_{value}, width_{width}, pad_{pad} {}
-
-        void operator () (Writer & writer) const {
-            uint32_t size = 0;
-            Writer{[&size, writer](char c) mutable { ++size; writer.putChar(c); }} << value_;
-            for (size_t i = size; i < width_; ++i)
-                writer << pad_;
-        }
-    private:
-        T value_;
-        size_t width_;
-        char pad_;
-    }; // fillRight
-
     class WriteableBufferWrapper {
     public:
         WriteableBufferWrapper(uint8_t * buffer, uint32_t size): buffer_{buffer}, size_{size} {}

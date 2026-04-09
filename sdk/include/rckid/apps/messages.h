@@ -25,7 +25,8 @@ namespace rckid {
                 << SetRect(Rect::XYWH(5, 25, 300, 50))
                 << SetBg(Color::RGB(255, 0, 0))
                 << SetFg(Color::RGB(255, 255, 255))
-                << SetText("Hello World\nIt's a me!");
+                << SetText("Hello World\nIt's a me!")
+                << SetColorGradient(Color::White(), Color::Red());
 //            l->fitToText();
         }
 

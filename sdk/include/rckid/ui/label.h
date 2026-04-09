@@ -81,7 +81,7 @@ namespace rckid::ui {
 
         void setColorGradient(Color fg, Color bg) {
             textColor_ = fg;
-            font_->createFontPalette(textPalette_, textColor_, bg);
+            font_->createFontPalette(textPalette_, bg, textColor_);
         }
 
         Point textOffset() const { return textOffset_; }

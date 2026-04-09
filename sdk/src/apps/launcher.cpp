@@ -7,9 +7,12 @@
 #include <rckid/apps/messages.h>
 #include <rckid/apps/about.h>
 
+#include <rckid/apps/utils/clock.h>
+
 #include <rckid/apps/games/blocks.h>
 
 #include <rckid/apps/launcher.h>
+
 
 // TODO this will not be here eventyually
 #include <rckid/game/engine.h>
@@ -58,6 +61,9 @@ namespace rckid {
     unique_ptr<ui::Menu> utilitiesMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();
         (*result)
+            << ui::MenuItem{"Clock", assets::icons_64::poo, []() {
+                App::run<Clock>();
+            }}
             << ui::MenuItem{"Steps", assets::icons_64::footprint, []() {
                 App::run<Steps>();
             }}

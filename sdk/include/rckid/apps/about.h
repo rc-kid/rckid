@@ -34,6 +34,8 @@ namespace rckid {
                 << SetText(STR("Budget: " << budget))
                 << SetRect(Rect::XYWH(45, 90, 320, 24));
         }
+        
+    protected:
 
         void onLoopStart() override {
             ui::App<void>::onLoopStart();
