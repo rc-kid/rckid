@@ -32,11 +32,29 @@ So what I need:
 
 - make UNREACHABLE & friends part of platform? This should make it write between mkIII, fantasy and ATTiny stuff
 
-- settings
+Widgets
 - popup menu
-- basic dialogs
-- basic util apps (port from old version)
-- games (port from mkII)
+- numpad
+- keyboard
+- color selector
+
+Settings
+
+
+
+Basic util apps:
+- level
+- piggy bank
+- data sync (mk3 overhaul, sharing only the FAT partition, not the whole MBR)
+- steps reset (we need wakeups for this)
+- alarm in clock (for this we need wakups)
+
+Games (port from mkII)
+- sound in tetris
+- sokoban
+- space invaders
+- pong
+- sliding puzzle
 
 - show header even when not full screen is rendered (home menu & friends)
 
