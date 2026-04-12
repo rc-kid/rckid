@@ -8,9 +8,9 @@ namespace rckid {
      
         
      */
-    class Flashlight {
+    class LED {
     public:
-        static Flashlight * instance();
+        static LED * instance();
 
         bool active() const { return active_; }
 
@@ -24,7 +24,7 @@ namespace rckid {
         uint8_t brightness_ = 0;
         bool active_ = false;
 
-    }; // rckid::Flashlight
+    }; // rckid::LED
 
 
 } // namespace rckid

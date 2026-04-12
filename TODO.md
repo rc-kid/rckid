@@ -13,6 +13,10 @@ So what I need:
 
 # SDK 1.0
 
+- when app is not started and shows error diealog instead, we do double background bump on leaving
+
+- add telemetry (will be useful for the pilots, record time & app start, or end)
+
 - have some on change handler that gets triggered when widget property changes so that we can react to changes (one is enough AFAIK)
 
 - improve value parsing in Reader (bool, ints, etc.)
@@ -32,7 +36,7 @@ So what I need:
 - popup menu
 - basic dialogs
 - basic util apps (port from old version)
-- games (port from old, or even mkII)
+- games (port from mkII)
 
 - show header even when not full screen is rendered (home menu & friends)
 
@@ -188,6 +192,8 @@ Polish
 - JST-PH2 batteries from https://www.aliexpress.com/item/1005007102975858.html
 - alternatively maybe a daughterboard with pogo pins that will connect to the main board might be the simplest solution
 - raise the nylon case 1mm above the glass and round it, maybe 1mm diameter or slightly less? 
+- make cartridge cover tiny bit slimmer for that larger pcb
+- make the cartridge pcb 1.6mm standard thickness? Basically it would only simplify the jacdac stuff, otherwise unnecessary
 
 - maybe microphone is reversed, in which case this is easy to check by detecting if brass case is gnd or not
 - also can try different microphones (https://jlcpcb.com/partdetail/SAMZO-MIC_4013_GG00/C42371093)

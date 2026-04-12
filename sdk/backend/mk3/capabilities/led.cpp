@@ -1,6 +1,6 @@
 #include <platform.h>
 
-#include <rckid/capabilities/flashlight.h>
+#include <rckid/capabilities/led.h>
 
 namespace rckid {
 
@@ -9,20 +9,20 @@ namespace rckid {
         constexpr gpio::Pin FLASHLIGHT_PIN = 47;
         constexpr uint32_t PWM_SLICE = 11;
 
-        Flashlight flashlight;
+        LED led;
 
     }
 
-    Flashlight * Flashlight::instance() {
-        return & flashlight;
+    LED * LED::instance() {
+        return & led;
     }
 
-    void Flashlight::setActive(bool value) {
+    void LED::setActive(bool value) {
         active_ = value;
         UNIMPLEMENTED;
     }
 
-    void Flashlight::setBrightness(uint8_t value) {
+    void LED::setBrightness(uint8_t value) {
         if (brightness_ == value)
             return;
         brightness_ = value;

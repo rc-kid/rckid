@@ -4,6 +4,7 @@
 #include <rckid/ui/label.h>
 #include <rckid/ui/image.h>
 #include <rckid/ui/progress_bar.h>
+#include <rckid/capabilities/led.h>
 
 #include <assets/icons_64.h>
 
@@ -15,8 +16,15 @@ namespace rckid {
     public:
         String name() const override { return "Flashlight"; }
 
-        Flashlight() {
+        Flashlight():
+            led_{LED::instance()}
+        {
             using namespace ui;
+            if (led_ == nullptr) {
+                InfoDialog::error("Not available", "Step counter not supported by the device");
+                exit();
+                return;
+            }
             icon_ = addChild(new ui::Image{})
                 << SetRect(Rect::XYWH(160-32, 60, 64, 64))
                 << SetBitmap(assets::icons_64::poo);
@@ -24,11 +32,13 @@ namespace rckid {
                 << SetRect(Rect::XYWH(20, 170, 280, 30))
                 << SetRange(0, 15)
                 << SetValue(8);
+            led_->setBrightness(128);
+            led_->setActive(true);            
         }
 
         ~Flashlight() override {
-            //brightness_->setValue(0);
-            //setBrightness();
+            if (led_)
+                led_->setActive(false);
         }
 
     protected:
@@ -49,20 +59,53 @@ namespace rckid {
             }
             if (btnPressed(Btn::Left)) {
                 brightness_->dec();
+                updateBrightness();
             }
             if (btnPressed(Btn::Right)) {
                 brightness_->inc();
+                updateBrightness();
             }
             if (btnPressed(Btn::A)) {
-                // TODO turn flashlight on/off
+                on_ = ! on_;
+                icon_->setVisibility(on_);
+                updateBrightness();
             }
-
+            if (on_) {
+                if (icon_->visible() && btnDown(Btn::Start)) {
+                    icon_->setVisibility(false);
+                    updateBrightness();
+                }
+                if (! icon_->visible() && ! btnDown(Btn::Start)) {
+                    icon_->setVisibility(true);
+                    updateBrightness();
+                }
+            } else {
+                if (icon_->visible() && ! btnDown(Btn::Start)) {
+                    icon_->setVisibility(false);
+                    updateBrightness();
+                }
+                if (! icon_->visible() && btnDown(Btn::Start)) {
+                    icon_->setVisibility(true);
+                    updateBrightness();
+                }
+            }
         }
 
     private:
 
+        void updateBrightness() {
+            uint8_t level = brightness_->value() << 4 | brightness_->value();
+            if (! icon_->visible())
+                level = 0;
+            led_->setBrightness(level);
+        }
+
+        LED * led_; 
+
         ui::Image * icon_;
         ui::ProgressBar * brightness_;
+        bool on_ = true;
+
 
     }; // rckid::Flashlight
 
