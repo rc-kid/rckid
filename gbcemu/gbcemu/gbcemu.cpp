@@ -282,7 +282,7 @@ namespace rckid::gbcemu {
                 String eName = entry.name;
                 (*into) << ui::MenuItem(
                     fs::stem(eName),
-                    assets::icons_64::poo,
+                    assets::icons_64::gameboy,
                     [eName](){
                         LOG(LL_INFO, "running game: " << eName);
                         GamePak * gamepak = new gbcemu::CachedGamePak{fs::readFile(STR("/games/" << eName))};

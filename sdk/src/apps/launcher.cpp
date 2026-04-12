@@ -43,11 +43,11 @@ namespace rckid {
                 << ui::MenuItem{"Friends", assets::icons_64::birthday_cake, []() {
                     App::run<Friends>();
                 }}
-                << ui::MenuItem{"Messages", assets::icons_64::poo, []() {
+                << ui::MenuItem{"Messages", assets::icons_64::chat, []() {
                     App::run<Messages>();
                 }}
                 << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator)
-                << ui::MenuItem::Generator("Settings", assets::icons_64::poo, settingsMenuGenerator);
+                << ui::MenuItem::Generator("Settings", assets::icons_64::settings, settingsMenuGenerator);
             return result;
         };
     }
@@ -58,7 +58,7 @@ namespace rckid {
                 << ui::MenuItem{"Game Engine", assets::icons_64::gameboy, []() {
                     App::run<CatChase>();
                 }}
-                << ui::MenuItem{"Blocks", assets::icons_64::gameboy, []() {
+                << ui::MenuItem{"Blocks", assets::icons_64::tetris, []() {
                     App::run<Blocks>();
                 }};
         return result;
@@ -67,13 +67,13 @@ namespace rckid {
     unique_ptr<ui::Menu> utilitiesMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();
         (*result)
-            << ui::MenuItem{"Clock", assets::icons_64::poo, []() {
+            << ui::MenuItem{"Clock", assets::icons_64::alarm_clock, []() {
                 App::run<Clock>();
             }}
-            << ui::MenuItem{"Stopwatch", assets::icons_64::poo, []() {
+            << ui::MenuItem{"Stopwatch", assets::icons_64::chronometer, []() {
                 App::run<Stopwatch>();
             }}
-            << ui::MenuItem{"Flashlight", assets::icons_64::poo, []() {
+            << ui::MenuItem{"Flashlight", assets::icons_64::flashlight, []() {
                 App::run<Flashlight>();
             }}
             << ui::MenuItem{"Steps", assets::icons_64::footprint, []() {
@@ -92,7 +92,7 @@ namespace rckid {
     unique_ptr<ui::Menu> styleSettingsMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();
         (*result)
-            << ui::MenuItem{"Background", assets::icons_64::poo, []() {
+            << ui::MenuItem{"Background", assets::icons_64::picture, []() {
                 auto path = App::run<FileDialog>("/files/images/backgrounds");
                 if (path) {
                     ui::Style * style = ui::Style::defaultStyle();
@@ -102,10 +102,10 @@ namespace rckid {
                     ui::Style::saveDefaultStyle();
                 }
             }}
-            << ui::MenuItem{"Text Color", assets::icons_64::poo, []() {
+            << ui::MenuItem{"Text Color", assets::icons_64::light, []() {
                 App::run<DataSync>();
             }}
-            << ui::MenuItem{"Bg Color", assets::icons_64::poo, []() {
+            << ui::MenuItem{"Bg Color", assets::icons_64::light, []() {
                 App::run<DataSync>();
             }}
             << ui::MenuItem{"About", assets::icons_64::info, []() {
@@ -117,7 +117,7 @@ namespace rckid {
     unique_ptr<ui::Menu> settingsMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();
         (*result)
-            << ui::MenuItem::Generator("Style", assets::icons_64::poo, styleSettingsMenuGenerator)
+            << ui::MenuItem::Generator("Style", assets::icons_64::paint_palette, styleSettingsMenuGenerator)
             << ui::MenuItem{"About", assets::icons_64::info, []() {
                 App::run<About>();
             }};

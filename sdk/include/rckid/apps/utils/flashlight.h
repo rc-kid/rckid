@@ -27,7 +27,7 @@ namespace rckid {
             }
             icon_ = addChild(new ui::Image{})
                 << SetRect(Rect::XYWH(160-32, 60, 64, 64))
-                << SetBitmap(assets::icons_64::poo);
+                << SetBitmap(assets::icons_64::flashlight);
             brightness_ = addChild(new ui::ProgressBar{})
                 << SetRect(Rect::XYWH(20, 170, 280, 30))
                 << SetRange(0, 15)

@@ -22,7 +22,6 @@ So what I need:
 - improve value parsing in Reader (bool, ints, etc.)
 - how to do heartbeat? (static initializers?)
 
-- use only absolutely necessary icons in the raw format to avoid extra flash bloat
 - for game saves use different bookmark icon (red maybe?)
 
 - apply style to existing widgets (Label, etc.) (...)
