@@ -184,6 +184,11 @@ Polish
 
 ## HW
 
+- https://jlcpcb.com/partdetail/JST-S2B_PH_KL_LF_SN/C160237 (use this for battery connector)
+- JST-PH2 batteries from https://www.aliexpress.com/item/1005007102975858.html
+- alternatively maybe a daughterboard with pogo pins that will connect to the main board might be the simplest solution
+- raise the nylon case 1mm above the glass and round it, maybe 1mm diameter or slightly less? 
+
 - maybe microphone is reversed, in which case this is easy to check by detecting if brass case is gnd or not
 - also can try different microphones (https://jlcpcb.com/partdetail/SAMZO-MIC_4013_GG00/C42371093)
 
