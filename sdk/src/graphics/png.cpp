@@ -125,12 +125,20 @@ namespace rckid {
                             ctx->bmp->setPixel(x, pDraw->y, static_cast<uint16_t>(*(data++)));
                         break;
                     }
+                    // when we have 4 bits per pixel bit depth and odd line size, we have to be careful about the last byte storing only one pixel
                     case 4: {
                         uint8_t * data = pDraw->pPixels;
-                        for (uint32_t x = 0; x < static_cast<uint32_t>(pDraw->iWidth); x += 2) {
+                        uint32_t xe = static_cast<uint32_t>(pDraw->iWidth);
+                        uint32_t x = 0;
+                        while (x + 2 <= xe) {
                             uint8_t c = *(data++);
                             ctx->bmp->setPixel(x, pDraw->y, static_cast<uint16_t>((c >> 4)));
                             ctx->bmp->setPixel(x + 1, pDraw->y, static_cast<uint16_t>(c & 0xf));   
+                            x += 2;
+                        }
+                        if (x != xe) {
+                            uint8_t c = *(data++);
+                            ctx->bmp->setPixel(x, pDraw->y, static_cast<uint16_t>((c >> 4)));
                         }
                         break;
                     }

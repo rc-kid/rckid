@@ -57,6 +57,10 @@ namespace rckid::ui {
 
         ImageSource const & backgroundImage() const { return backgroundImage_; }
 
+        void setBackgroundImage(ImageSource img) {
+            backgroundImage_ = std::move(img);
+        }
+
 
     private:
         Color defaultFg_ = Color::White();

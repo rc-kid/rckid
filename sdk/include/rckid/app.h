@@ -51,7 +51,7 @@ namespace rckid {
             The run method is responsible for startingthe application and transferring focus between apps. First the newapplication is ceated, after which the old app is blurred, which allows the creation of the new application affect the blur method of the old one (such as when launcher's carousel is borrowed). Then the new app's onFocus is called, followed by onLoopStart. The loop of the application executes as long as the app does not call its exit function, after which first the onBlur method is called, followed by the destruction of the application (the only surviving thing from its time is the result, if any). Finally the onFocus of the old application is called as it becomes current. This is to ensure that all memory deallocations of the new app happen before the onFocus of the old one, which helps with memory fragmentation.
          */
         template<typename T, typename... ARGS>
-        typename T::MODAL_RESULT run(ARGS &&... args) {
+        static typename T::MODAL_RESULT run(ARGS &&... args) {
             typename T::MODAL_RESULT result;
             {
                 T app{std::forward<ARGS>(args)...};
@@ -82,7 +82,7 @@ namespace rckid {
             See the non-void alternative for details.
          */
         template<typename T, typename...ARGS>
-        std::enable_if_t<! has_modal_result<T>::value, void> static run(ARGS &&... args) {
+        static std::enable_if_t<! has_modal_result<T>::value, void> run(ARGS &&... args) {
             {
                 T app{std::forward<ARGS>(args)...};
                 if (current_ != nullptr)

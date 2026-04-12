@@ -57,6 +57,11 @@ namespace rckid::ui {
                     << SetHAlign(HAlign::Center)
                     << SetVAlign(VAlign::Center)
                     << SetContentsRepeat(true);
+                // if for any reason loading the image failed, delete the background
+                if (background_->contents().empty()) {
+                    background_ = nullptr;
+                    return;
+                }
                 // reset background centering to manual so that it can be properly animated by the background effects
                 with(background_.get())
                     << SetHAlign(HAlign::Manual)

@@ -1,5 +1,5 @@
 #include <rckid/ui/header.h>
-#include <rckid/apps/dialogs/color_picker.h>
+#include <rckid/apps/dialogs/color_dialog.h>
 
 #include <assets/icons_64.h>
 

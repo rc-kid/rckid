@@ -25,6 +25,8 @@ namespace rckid::fs {
     String stem(String const & path);
 
     /** Returns the extension of the file or folder at given path. The path does not have to exist. 
+     
+        The extension is returned without the leading dot that separates it from the stem.
      */
     String ext(String const & path);
 

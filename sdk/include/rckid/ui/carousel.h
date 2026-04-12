@@ -310,12 +310,12 @@ namespace rckid::ui {
             if (btnPressed(Btn::Up) || btnPressed(Btn::A)) {
                 if (processMoveUp()) {
                     btnClear(Btn::Up);
-                    btnClear(Btn::Down);
+                    btnClear(Btn::A);
                 }
             }
             if (btnPressed(Btn::Down) || btnPressed(Btn::B)) {
                 if (processMoveDown()) {
-                    btnClear(Btn::Up);
+                    btnClear(Btn::B);
                     btnClear(Btn::Down);
                 }
             }

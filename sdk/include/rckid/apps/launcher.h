@@ -130,6 +130,10 @@ namespace rckid {
             ui::CarouselMenu::Context const * root_;
         }; // rckid::Launcher::BorrowedCarousel
 
+        /** Updates the style used by the launcher. Useful for style changes previews, etc.
+         */
+        static void updateStyle(ui::Style * style);
+
     private:
 
         void onFocus() override {

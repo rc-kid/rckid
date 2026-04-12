@@ -1,4 +1,6 @@
 
+#include <rckid/ui/style.h>
+
 #include <rckid/apps/music_player.h>
 #include <rckid/apps/steps.h>
 #include <rckid/apps/data_sync.h>
@@ -10,6 +12,8 @@
 #include <rckid/apps/utils/clock.h>
 #include <rckid/apps/utils/stopwatch.h>
 #include <rckid/apps/utils/flashlight.h>
+
+#include <rckid/apps/dialogs/file_dialog.h>
 
 #include <rckid/apps/games/blocks.h>
 
@@ -85,13 +89,50 @@ namespace rckid {
         return result;
     }
 
-    unique_ptr<ui::Menu> settingsMenuGenerator() {
+    unique_ptr<ui::Menu> styleSettingsMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();
         (*result)
+            << ui::MenuItem{"Background", assets::icons_64::poo, []() {
+                auto path = App::run<FileDialog>("/files/images/backgrounds");
+                if (path) {
+                    ui::Style * style = ui::Style::defaultStyle();
+                    style->setBackgroundImage(ImageSource{path.value()});
+                    // force repaint
+                    Launcher::updateStyle(style);
+                    ui::Style::saveDefaultStyle();
+                }
+            }}
+            << ui::MenuItem{"Text Color", assets::icons_64::poo, []() {
+                App::run<DataSync>();
+            }}
+            << ui::MenuItem{"Bg Color", assets::icons_64::poo, []() {
+                App::run<DataSync>();
+            }}
             << ui::MenuItem{"About", assets::icons_64::info, []() {
                 App::run<About>();
             }};
         return result;
     }
+
+    unique_ptr<ui::Menu> settingsMenuGenerator() {
+        auto result = std::make_unique<ui::Menu>();
+        (*result)
+            << ui::MenuItem::Generator("Style", assets::icons_64::poo, styleSettingsMenuGenerator)
+            << ui::MenuItem{"About", assets::icons_64::info, []() {
+                App::run<About>();
+            }};
+        return result;
+    }
+
+
+
+
+    void Launcher::updateStyle(ui::Style * style) {
+        // only expected to be called from the launcher
+        if (instance_ == nullptr)
+            return;
+        instance_->root_.setBackgroundImage(style);
+    }
+
 
 } // namespace rckid
