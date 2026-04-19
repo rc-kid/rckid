@@ -3,8 +3,8 @@
 
 namespace rckid {
 
-    InfoDialog::InfoDialog(String title, String message, ImageSource icon, ui::Theme theme):
-        ui::App<void>{Rect::XYWH(0, 140, 320, 100), theme} 
+    InfoDialog::InfoDialog(String title, String message, ImageSource icon, Kind kind):
+        ui::App<void>{Rect::XYWH(0, 140, 320, 100)} 
     {
         using namespace ui;
         icon_ = addChild(new Image())
@@ -17,13 +17,17 @@ namespace rckid {
             << SetText(title)
             << SetFont(assets::OpenDyslexic32)
             << SetVAlign(VAlign::Center)
-            << SetHAlign(HAlign::Left);
+            << SetHAlign(HAlign::Left)
+            << SetColor(textColorFor(kind));
+
         message_ = addChild(new MultiLabel())
             << SetRect(Rect::XYWH(100, 40, 220, 60))
             << SetVAlign(VAlign::Top)
             << SetHAlign(HAlign::Left)
-            << SetText(message);
+            << SetText(message)
+            << SetColor(textColorFor(kind));
         root_.useBackgroundImage(false);
+        root_.setBg(bgColorFor(kind));
     }
 
     void InfoDialog::onLoopStart() {

@@ -111,7 +111,12 @@ namespace rckid::ui {
             font_->renderColumn(column, starty, numPixels, currentHint_.gi, buffer, textPalette_);
         }
 
-    protected:
+        void applyStyle(Style const & style) override {
+            Widget::applyStyle(style);
+            setColor(style.defaultFg());
+        }
+
+        protected:
         void onRender() override {
             // reset the rendering hint to the rightmost character
             currentHint_ = rightmostHint_;

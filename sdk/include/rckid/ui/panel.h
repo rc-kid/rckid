@@ -17,30 +17,12 @@ namespace rckid::ui {
             Widget::renderColumn(column, startRow, buffer, numPixels);
         }
 
-    protected:
-
-        void doApplyStyle(Style const & style, Theme theme) override {
-            Widget::doApplyStyle(style, theme);
-            switch (theme) {
-                case Theme::Default:
-                    bg_ = style.defaultBg();
-                    break;
-                case Theme::Accent:
-                    bg_ = style.accentBg();
-                    break;
-                case Theme::Info:
-                    bg_ = style.infoBg();
-                    break;
-                case Theme::Success:
-                    bg_ = style.successBg();
-                    break;
-                case Theme::Error:
-                    bg_ = style.errorBg();
-                    break;
-                default:
-                    UNREACHABLE;
-            }
+        void applyStyle(Style const & style) override {
+            Widget::applyStyle(style);
+            bg_ = style.accentBg();
         }
+
+    protected:
 
         Color bg_ = Color::RGB(0, 0, 0);
 

@@ -3,7 +3,7 @@
 
 namespace rckid::ui {
 
-    Style * Style::loadDefaultStyle() {
+    Style & Style::defaultStyle() {
         if (defaultStyle_ == nullptr) {
             defaultStyle_ = new Style();
             auto f = fs::readFile(STYLE_SETTINGS_FILE);
@@ -12,7 +12,7 @@ namespace rckid::ui {
                 defaultStyle_->load(reader);
             }
         }
-        return defaultStyle_;
+        return *defaultStyle_;
     }
 
     void Style::saveDefaultStyle() {
@@ -34,15 +34,6 @@ namespace rckid::ui {
             >> ini::Section("accent")
                 >> ini::Field("fg", accentFg_)
                 >> ini::Field("bg", accentBg_)
-            >> ini::Section("info")
-                >> ini::Field("fg", infoFg_)
-                >> ini::Field("bg", infoBg_)
-            >> ini::Section("error")
-                >> ini::Field("fg", errorFg_)
-                >> ini::Field("bg", errorBg_)
-            >> ini::Section("success")
-                >> ini::Field("fg", successFg_)
-                >> ini::Field("bg", successBg_)
             >> ini::Section("animation")
                 >> ini::Field("speed", animationSpeed_)
             >> ini::Section("background")
@@ -57,15 +48,6 @@ namespace rckid::ui {
             << ini::Section("accent")
                 << ini::Field("fg", accentFg_)
                 << ini::Field("bg", accentBg_)
-            << ini::Section("info")
-                << ini::Field("fg", infoFg_)
-                << ini::Field("bg", infoBg_)
-            << ini::Section("error")
-                << ini::Field("fg", errorFg_)
-                << ini::Field("bg", errorBg_)
-            << ini::Section("success")
-                << ini::Field("fg", successFg_)
-                << ini::Field("bg", successBg_)
             << ini::Section("animation")
                 << ini::Field("speed", animationSpeed_)
             << ini::Section("background")

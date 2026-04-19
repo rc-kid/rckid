@@ -9,13 +9,13 @@ namespace rckid::ui {
     template<typename RESULT>
     class App : public ModalApp<RESULT> {
     public:
-        explicit App(Rect rect, ui::Theme theme = ui::Theme::Default): 
-            root_{rect, theme} 
+        explicit App(Rect rect): 
+            root_{rect} 
         {
-            root_.applyStyle(ui::Style::defaultStyle(), theme);
+            root_.applyStyle(ui::Style::defaultStyle());
         }
 
-        explicit App(ui::Theme theme = ui::Theme::Default): App{Rect::WH(display::WIDTH, display::HEIGHT), theme} {}
+        App(): App{Rect::WH(display::WIDTH, display::HEIGHT)} {}
 
         Widget * focusedWidget() const { return focusedWidget_; }
 

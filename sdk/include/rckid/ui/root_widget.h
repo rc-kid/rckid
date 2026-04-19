@@ -12,19 +12,14 @@ namespace rckid::ui {
 
         RootWidget();
 
-        RootWidget(Rect rect, Theme theme): 
-            renderBuffer_{static_cast<uint32_t>(rect.height())},
-            theme_{theme} 
+        RootWidget(Rect rect): 
+            renderBuffer_{static_cast<uint32_t>(rect.height())}
         {
             setRect(rect);
             if (Header::instance_ == nullptr) {
                 Header::instance_ = new Header{};
-                Header::instance_->applyStyle(Style::defaultStyle(), Theme::Default);
+                Header::instance_->applyStyle(Style::defaultStyle());
             }
-        }
-
-        Theme theme() const override {
-            return theme_;
         }
 
         bool useBackrgoundImage() const { return useBackgroundImage_; }
@@ -46,13 +41,13 @@ namespace rckid::ui {
 
         void render();
 
-        void setBackgroundImage(Style const * style) {
-            if (style == nullptr || style->backgroundImage().empty()) {
+        void setBackgroundImage(Style const & style) {
+            if (style.backgroundImage().empty()) {
                 background_ = nullptr;
             } else {
                 background_.reset(new Image());
                 with(background_.get())
-                    << SetBitmap(style->backgroundImage()).withoutTransparency()
+                    << SetBitmap(style.backgroundImage()).withoutTransparency()
                     << SetRect(Rect::XYWH(0, 0, hal::display::WIDTH, hal::display::HEIGHT))
                     << SetHAlign(HAlign::Center)
                     << SetVAlign(VAlign::Center)
@@ -102,20 +97,12 @@ namespace rckid::ui {
         static void releaseResources() {
             background_ = nullptr;
         }
-
-    protected:
-
-        void doApplyStyle(Style const & style, Theme theme) override {
-            theme_ = theme;
-            Panel::doApplyStyle(style, theme);
-        }
-        
+      
     private:
 
         DoubleBuffer<Color::RGB565> renderBuffer_;
         Coord renderCol_;
 
-        Theme theme_;
         bool useBackgroundImage_ = true;
         Header::Visibility useHeader_ = ui::Header::Visibility::Always;
 

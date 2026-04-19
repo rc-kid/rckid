@@ -122,7 +122,7 @@ namespace rckid::ui {
 
         static mutable_ptr<Color::RGB565> defaultPalette() {
             mutable_ptr<Color::RGB565> result{new Color::RGB565[32], sizeof(Color::RGB565) * 32};
-            Color textFg = Style::defaultStyle()->defaultFg();
+            Color textFg = Style::defaultStyle().defaultFg();
             for (uint8_t i = 0; i < 16; ++i)
                 result.mut()[i] = textFg.withBrightness(i << 4 | i).toRGB565();
             // green (testFg before that used for index 1, offset 14)

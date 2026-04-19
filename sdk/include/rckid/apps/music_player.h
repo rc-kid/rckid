@@ -28,7 +28,6 @@ namespace rckid {
 
             playbackInfo_ = addChild(new Panel{})
                 << SetRect(Rect::XYWH(0, 140, 320, 100))
-                << ApplyStyle(ui::Style::defaultStyle(), ui::Theme::Accent)
                 << SetVisibility(false);
             playIcon_ = playbackInfo_->addChild(new Image{})
                 << SetRect(Rect::XYWH(-100, 0, 100, 100))

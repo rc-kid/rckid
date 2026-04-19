@@ -37,30 +37,8 @@ namespace rckid::ui {
             cancelAnimations();
         }
 
-        /** Returns style theme associated with the widget. 
-         
-            By default, themes are inherited from the parent widgets. If there is no parent widget, returns the default theme. This method is then overriden in widgets that store/change themes (e..g. RootWidget) to return the actual theme.
-         */
-        virtual ui::Theme theme() const {
-            if (parent_ == nullptr)
-                return ui::Theme::Default;
-            return parent_->theme();
-        }
-
-        void applyStyle(Style const * style, Theme theme) {
-            if (style != nullptr)
-                doApplyStyle(*style, theme);
-        }
-
-        /** Applies given style using the inherited theme from the parent widget. 
-         */
-        void applyStyleFromParent(Style const & style) {
-            doApplyStyle(style, theme());
-        }
-
-        void applyStyleFromParent(Style const * style) {
-            if (style != nullptr)
-                applyStyleFromParent(*style);
+        virtual void applyStyle(Style const & style) {
+            animationSpeed_ = style.animationSpeed();
         }
 
         Rect rect() const { return rect_; }
@@ -146,9 +124,7 @@ namespace rckid::ui {
         with<T> addChild(T * child) {
             ASSERT(child->parent_ == nullptr);
             child->parent_ = this;       
-            Style * style = Style::defaultStyle();
-            if (style)     
-                child->applyStyleFromParent(style);
+            child->applyStyle(Style::defaultStyle());
             children_.push_back(unique_ptr<Widget>(child));
             return with<T>(child);
         }
@@ -202,13 +178,6 @@ namespace rckid::ui {
         static void renderEssentials();
 
     protected:
-
-        /** Applies given style and theme. 
-         */
-        virtual void doApplyStyle([[maybe_unused]] Style const & style, [[maybe_unused]] Theme theme) {
-            // do nothing
-            animationSpeed_ = style.animationSpeed();
-        }
 
         virtual void onRender() {
             for (auto & child : children_)
@@ -564,22 +533,13 @@ namespace rckid::ui {
     }
 
     struct ApplyStyle {
-        Style const * style;
-        std::optional<Theme> theme;
-        ApplyStyle(Style const * style): style{style} {}
-        ApplyStyle(Style const * style, Theme theme): style{style}, theme{theme} {}
+        Style const & style;
+        ApplyStyle(Style const & style): style{style} {}
     };
 
     template<typename T>
     inline with<T> operator << (with<T> w, ApplyStyle as) {
-        // do not apply empty style
-        if (as.style == nullptr)  
-            return w;
-        // either apply style with parent theme, or use the explicitly provided one (if any)
-        if (as.theme.has_value())
-            w->applyStyle(as.style, as.theme.value());
-        else
-            w->applyStyleFromParent(as.style);
+        w->applyStyle(as.style);
         return w;
     }
 

@@ -132,7 +132,7 @@ namespace rckid {
 
         /** Updates the style used by the launcher. Useful for style changes previews, etc.
          */
-        static void updateStyle(ui::Style * style);
+        static void updateStyle(ui::Style & style);
 
     private:
 
