@@ -26,7 +26,6 @@ So what I need:
 
 - for game saves use different bookmark icon (red maybe?)
 
-- apply style to existing widgets (Label, etc.) (...)
 - button press repeat (configurable)
 
 - avr firmware wakeup timing
@@ -37,7 +36,6 @@ Widgets
 - popup menu
 - numpad
 - keyboard
-- color selector
 
 Settings
 
@@ -49,6 +47,7 @@ Basic util apps:
 - data sync (mk3 overhaul, sharing only the FAT partition, not the whole MBR)
 - steps reset (we need wakeups for this)
 - alarm in clock (for this we need wakups)
+- calculator
 
 Games (port from mkII)
 - sound in tetris

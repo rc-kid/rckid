@@ -155,6 +155,12 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/pen_drive.inc.h"
     };
 
+    // File: icons/icons_64/072-piggy-bank.png
+    // Size: 2579
+    static constexpr uint8_t piggy_bank[] = {
+        #include "raw/icons_64/piggy_bank.inc.h"
+    };
+
     // File: icons/icons_64/045-logout.raw
     // Size: 8196
     static constexpr uint8_t logout[] = {

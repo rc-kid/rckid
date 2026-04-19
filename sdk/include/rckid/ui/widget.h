@@ -455,6 +455,21 @@ namespace rckid::ui {
         return w;
     }
 
+    /** Positions the widget right of the given anchor with provided gap.
+     */
+    struct RightOf {
+        Widget * w;
+        Point gap;
+        RightOf(Widget * w, Point gap = Point{0, 0}): w{w}, gap{gap} {}
+        RightOf(Widget * w, Coord gap): w{w}, gap{Point{gap, 0}} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, RightOf r) {
+        w << SetPosition(r.w->position() + r.gap + Point{r.w->width(), 0});
+        return w;
+    }
+    // TODO left of, Above, Below
+
     /** Sets widget's visibility.
      */
     struct SetVisibility {

@@ -12,6 +12,7 @@
 #include <rckid/apps/utils/clock.h>
 #include <rckid/apps/utils/stopwatch.h>
 #include <rckid/apps/utils/flashlight.h>
+#include <rckid/apps/utils/piggy_bank.h>
 
 #include <rckid/apps/dialogs/file_dialog.h>
 #include <rckid/apps/dialogs/color_dialog.h>
@@ -21,7 +22,7 @@
 #include <rckid/apps/launcher.h>
 
 
-// TODO this will not be here eventyually
+// TODO this will not be here eventually
 #include <rckid/game/engine.h>
 #include <rckid/apps/cat_chase.h>
 
@@ -80,6 +81,9 @@ namespace rckid {
             << ui::MenuItem{"Steps", assets::icons_64::footprint, []() {
                 App::run<Steps>();
             }}
+            << ui::MenuItem{"Piggy Bank", assets::icons_64::piggy_bank, []() {
+                App::run<PiggyBank>();
+            }}
             << ui::MenuItem{"Data Sync", assets::icons_64::pen_drive, []() {
                 App::run<DataSync>();
             }}
@@ -108,42 +112,47 @@ namespace rckid {
                     }};
                 return result;
             })
-            << ui::MenuItem{"Text Color", assets::icons_64::light, []() {
-                ui::Style & style = ui::Style::defaultStyle();
-                auto color = App::run<ColorDialog>(style.defaultFg());
-                if (color) {
-                    style.setDefaultFg(color.value());
-                    Launcher::updateStyle(style);
-                    ui::Style::saveDefaultStyle();
-                }
-            }}
-            << ui::MenuItem{"Bg Color", assets::icons_64::light, []() {
-                ui::Style & style = ui::Style::defaultStyle();
-                auto color = App::run<ColorDialog>(style.defaultBg());
-                if (color) {
-                    style.setDefaultBg(color.value());
-                    Launcher::updateStyle(style);
-                    ui::Style::saveDefaultStyle();
-                }
-            }}
-            << ui::MenuItem{"Accent Text", assets::icons_64::light, []() {
-                ui::Style & style = ui::Style::defaultStyle();
-                auto color = App::run<ColorDialog>(style.accentFg());
-                if (color) {
-                    style.setAccentFg(color.value());
-                    Launcher::updateStyle(style);
-                    ui::Style::saveDefaultStyle();
-                }
-            }}
-            << ui::MenuItem{"Accent Bg", assets::icons_64::light, []() {
-                ui::Style & style = ui::Style::defaultStyle();
-                auto color = App::run<ColorDialog>(style.accentBg());
-                if (color) {
-                    style.setAccentBg(color.value());
-                    Launcher::updateStyle(style);
-                    ui::Style::saveDefaultStyle();
-                }
-            }};
+            << ui::MenuItem::Generator("Colors", assets::icons_64::light, [](){
+                auto result = std::make_unique<ui::Menu>();
+                (*result)
+                    << ui::MenuItem{"Text", assets::icons_64::light, []() {
+                        ui::Style & style = ui::Style::defaultStyle();
+                        auto color = App::run<ColorDialog>(style.defaultFg());
+                        if (color) {
+                            style.setDefaultFg(color.value());
+                            Launcher::updateStyle(style);
+                            ui::Style::saveDefaultStyle();
+                        }
+                    }}
+                    << ui::MenuItem{"Background", assets::icons_64::light, []() {
+                        ui::Style & style = ui::Style::defaultStyle();
+                        auto color = App::run<ColorDialog>(style.defaultBg());
+                        if (color) {
+                            style.setDefaultBg(color.value());
+                            Launcher::updateStyle(style);
+                            ui::Style::saveDefaultStyle();
+                        }
+                    }}
+                    << ui::MenuItem{"Accent Text", assets::icons_64::light, []() {
+                        ui::Style & style = ui::Style::defaultStyle();
+                        auto color = App::run<ColorDialog>(style.accentFg());
+                        if (color) {
+                            style.setAccentFg(color.value());
+                            Launcher::updateStyle(style);
+                            ui::Style::saveDefaultStyle();
+                        }
+                    }}
+                    << ui::MenuItem{"Accent Bg", assets::icons_64::light, []() {
+                        ui::Style & style = ui::Style::defaultStyle();
+                        auto color = App::run<ColorDialog>(style.accentBg());
+                        if (color) {
+                            style.setAccentBg(color.value());
+                            Launcher::updateStyle(style);
+                            ui::Style::saveDefaultStyle();
+                        }
+                    }};
+                return result;
+            });
         return result;
     }
 

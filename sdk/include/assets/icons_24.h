@@ -5,6 +5,12 @@
 
 namespace rckid::assets::icons_24 {
 
+    // File: icons/icons_24/038-money-bag.png
+    // Size: 901
+    static constexpr uint8_t money_bag[] = {
+        #include "raw/icons_24/money_bag.inc.h"
+    };
+
     // File: icons/icons_24/046-bookmark.png
     // Size: 613
     static constexpr uint8_t bookmark[] = {
