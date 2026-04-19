@@ -14,6 +14,7 @@
 #include <rckid/apps/utils/flashlight.h>
 
 #include <rckid/apps/dialogs/file_dialog.h>
+#include <rckid/apps/dialogs/color_dialog.h>
 
 #include <rckid/apps/games/blocks.h>
 
@@ -103,13 +104,10 @@ namespace rckid {
                 }
             }}
             << ui::MenuItem{"Text Color", assets::icons_64::light, []() {
-                App::run<DataSync>();
+                auto color = App::run<ColorDialog>(Color::Red());
             }}
             << ui::MenuItem{"Bg Color", assets::icons_64::light, []() {
-                App::run<DataSync>();
-            }}
-            << ui::MenuItem{"About", assets::icons_64::info, []() {
-                App::run<About>();
+                auto color = App::run<ColorDialog>(Color::Green());
             }};
         return result;
     }

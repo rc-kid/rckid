@@ -14,8 +14,8 @@ namespace rckid::ui {
         int32_t max() const { return max_; }
         int32_t value() const { return value_; };
 
-        void setBarColor(Color color) { fg_ = color; }
-        void setBackgroundColor(Color color) { bg_ = color; }
+        void setFg(Color color) { fg_ = color; }
+        void setBg(Color color) { bg_ = color; }
         void setMin(int32_t min) { min_ = min; }
         void setMax(int32_t max) { max_ = max; }
         void setValue(int32_t value) { value_ = value; }

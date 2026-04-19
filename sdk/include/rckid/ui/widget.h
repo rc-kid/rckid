@@ -191,6 +191,8 @@ namespace rckid::ui {
             // nop
         }
 
+        /** Returns true if the current widget is focused. 
+         */
         bool focused() const { return focused_; }
 
         /** Performs the pre-rednering essentials required for UI elements.
