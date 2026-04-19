@@ -2,13 +2,13 @@
 #include <rckid/ui/style.h>
 
 #include <rckid/apps/music_player.h>
-#include <rckid/apps/steps.h>
-#include <rckid/apps/data_sync.h>
-#include <rckid/apps/file_browser.h>
 #include <rckid/apps/friends.h>
 #include <rckid/apps/messages.h>
-#include <rckid/apps/about.h>
 
+#include <rckid/apps/utils/about.h>
+#include <rckid/apps/utils/steps.h>
+#include <rckid/apps/utils/data_sync.h>
+#include <rckid/apps/utils/file_browser.h>
 #include <rckid/apps/utils/clock.h>
 #include <rckid/apps/utils/stopwatch.h>
 #include <rckid/apps/utils/flashlight.h>
@@ -24,7 +24,7 @@
 
 // TODO this will not be here eventually
 #include <rckid/game/engine.h>
-#include <rckid/apps/cat_chase.h>
+#include <rckid/apps/games/cat_chase.h>
 
 namespace rckid {
 

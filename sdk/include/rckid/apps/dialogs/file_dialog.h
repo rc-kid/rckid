@@ -1,7 +1,7 @@
 #pragma once
 
 #include <rckid/ui/app.h>
-#include <rckid/apps/file_browser.h>
+#include <rckid/apps/utils/file_browser.h>
 
 namespace rckid {
 

@@ -37,16 +37,18 @@ Widgets
 - numpad
 - keyboard
 
+Wakeups
+- alarm clock
+- steps daily reset
+- piggy bank daily allowance top up check
+
 Settings
 
 
 
 Basic util apps:
 - level
-- piggy bank
 - data sync (mk3 overhaul, sharing only the FAT partition, not the whole MBR)
-- steps reset (we need wakeups for this)
-- alarm in clock (for this we need wakups)
 - calculator
 
 Games (port from mkII)
@@ -68,7 +70,6 @@ Games (port from mkII)
 
 - mk3 code not cleaned up and not working
 - heapend on mk3 should return current sp or something like that to verify that we are not growing over
-
 
 - add support for overclocking, and in the missing adjustment for display pio in the hal layer:
 

@@ -6,7 +6,7 @@
 #include <assets/images.h>
 #include <assets/icons_64.h>
 
-#include <rckid/apps/steps.h>
+#include <rckid/apps/utils/steps.h>
 #include <rckid/apps/launcher.h>
 
 #include <gbcemu/gbcemu.h>
