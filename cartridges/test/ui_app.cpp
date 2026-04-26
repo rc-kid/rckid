@@ -14,6 +14,9 @@
 
 #include <gbcemu/gbcemu.h>
 
+#include <rckid/ui/chevron.h>
+
+
 using namespace rckid;
 
 class TestApp : public rckid::ui::App<void> {
@@ -66,9 +69,39 @@ private:
     rckid::ui::Carousel * c_;
 };
 
+class ChevronTest : public rckid::ui::App<void> {
+public:
+
+    String name() const override { return "ChevronTest"; }
+
+    ChevronTest() {
+        using namespace rckid;
+        using namespace rckid::ui;
+        c1_ = addChild(new Chevron{})
+            << SetRect(Rect::XYWH(10, 30, 60, 24))
+            << SetRightEdge(Chevron::Edge::Out)
+            << SetBg(Color::Green());
+        c2_ = addChild(new Chevron{})
+            << SetRect(Rect::XYWH(60, 30, 40, 24))
+            << SetLeftEdge(Chevron::Edge::In)
+            << SetRightEdge(Chevron::Edge::Out)
+            << SetBg(Color::Blue());
+        c3_ = addChild(new Chevron{})
+            << SetRect(Rect::XYWH(10, 90, 100, 20))
+            << SetBg(Color::Green());
+    }
+
+private:
+    rckid::ui::Chevron * c1_;
+    rckid::ui::Chevron * c2_;
+    rckid::ui::Chevron * c3_;
+};
+
+
 
 int main() {
     rckid::initialize();
-    App::run<TextDialog>("Hello");
+    //App::run<ChevronTest>();
+    //App::run<TextDialog>("Hello");
     App::run<Launcher>(mainMenuGenerator({ .gamesExtender = gbcemu::GBCEmu::gamesMenuExtender }));
 }

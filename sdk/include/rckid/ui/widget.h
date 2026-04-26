@@ -277,6 +277,18 @@ namespace rckid::ui {
             }
         }
 
+        /** Siple pixel-based rendering & clipping function. 
+         
+            Since the column-wise rendering and clipping is rather complex for non-trivial shapes that are constructed at runtime, this function can be used for quick prototyping. It is given the y coordinate to draw, the color to draw it with and the column rendering parameters. It performs the clipping and draws the color in the appropriate place only if within the viewpoint.
+
+            Note that this is of course a lot slower than proper column vertical range clipping.
+         */
+        void renderPixelInBuffer(Coord y, Color::RGB565 color, Coord startRow, Color::RGB565 * buffer, Coord numPixels) {
+            uint32_t idx = static_cast<uint32_t>(y - startRow);
+            if (idx < static_cast<uint32_t>(numPixels))
+                buffer[idx] = color;
+        }
+
         /** Helper function that allows triggering onRender() in other widgets w/o making the function public. This is very usefuyl for wrapper widgets, such as Launcher::BorrowedCarousel, that do not have their own rendering logic, but simply delegate the rendering to the wrapped widget.
          */
         static void triggerOnRender(Widget * w) { w->onRender();}

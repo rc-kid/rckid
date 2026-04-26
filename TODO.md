@@ -10,6 +10,7 @@ So what I need:
 - basic game loop & input, collisions
 
 - very basic descriptors might be working, the code needs commenting, testing.
+- descriptor/game object infrastructure for matching arguments of events should be added 
 
 # SDK 1.0
 
