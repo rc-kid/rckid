@@ -58,8 +58,15 @@ namespace rckid {
         public:
             BorrowedCarousel() {
                 ASSERT(Launcher::instance_ != nullptr);
-                carousel_ = Launcher::instance_->carousel_;
-                Launcher::instance_->carouselBorrowed_ = true;
+                // if the carousel is already borrowed, we can't simply take it - instead create new carousel that we'll use temporarily
+                if (Launcher::instance_->carouselBorrowed_) {
+                    ownedCarousel_ = unique_ptr<ui::CarouselMenu>{new ui::CarouselMenu{}};
+                    ownedCarousel_->setRect(Rect::XYWH(0, 140, 320, 100));
+                    carousel_ = ownedCarousel_.get();
+                } else {
+                    carousel_ = Launcher::instance_->carousel_;
+                    Launcher::instance_->carouselBorrowed_ = true;
+                }
                 root_ = carousel_->context();
                 setRect(carousel_->rect());
             }
@@ -128,6 +135,7 @@ namespace rckid {
         private:
             ui::CarouselMenu * carousel_;
             ui::CarouselMenu::Context const * root_;
+            unique_ptr<ui::CarouselMenu> ownedCarousel_;
         }; // rckid::Launcher::BorrowedCarousel
 
         /** Updates the style used by the launcher. Useful for style changes previews, etc.

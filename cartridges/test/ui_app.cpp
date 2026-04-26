@@ -113,7 +113,7 @@ private:
 
 int main() {
     rckid::initialize();
-    App::run<ChevronTest>();
+    //App::run<ChevronTest>();
     //App::run<TextDialog>("Hello");
     App::run<Launcher>(mainMenuGenerator({ .gamesExtender = gbcemu::GBCEmu::gamesMenuExtender }));
 }

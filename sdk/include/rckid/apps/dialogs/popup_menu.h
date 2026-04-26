@@ -69,6 +69,10 @@ namespace rckid {
                 
         }
 
+        PopupMenu(ui::Menu & menu):
+            PopupMenu(& menu) {
+        }
+
     protected:
 
         void loop() override {
