@@ -284,10 +284,8 @@ namespace rckid::ui {
         return Move(target, target->position() + distance, target->position());
     }
 
-    inline Animation *FlyOut(Widget * target, Point distance = Point{0, -240}) {
+    inline Animation * FlyOut(Widget * target, Point distance = Point{0, -240}) {
         return Move(target, target->position(), target->position() + distance);
     }
-    // easing curves
-
 
 } // namespace rckid::ui

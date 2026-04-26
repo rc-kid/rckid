@@ -61,8 +61,7 @@ namespace rckid {
             showKeyboardMode();
 
             focus_ = addChild(new FocusRect{})
-                << SetPadding(0)
-                << SetFg(Color::Green());
+                << SetPadding(0);
             focus_->showAround(keys_[0], /* animate */ false);
             pos_ = Point{1, 0};
 

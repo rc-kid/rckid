@@ -14,7 +14,6 @@ So what I need:
 # SDK 1.0
 
 - add icons to text dialog
-- color picker, improve animations
 
 - when app is not started and shows error diealog instead, we do double background bump on leaving
 
