@@ -7,7 +7,7 @@
 #include <assets/OpenDyslexic24.h>
 #include <assets/Iosevka24.h>
 
-#include <assets/icons_24.h>
+#include <assets/icons_16.h>
 
 namespace rckid {
 
@@ -34,26 +34,30 @@ namespace rckid {
             }
 
             space_ = addChild(new Image{})
-                << SetBitmap(assets::icons_24::money_bag)
-                << SetRect(Rect::XYWH(24, 24, 24, 24));
+                << SetBitmap(assets::icons_16::text)
+                << SetRect(Rect::XYWH(24, 28, 24, 24));
             backspace_ = addChild(new Image{})
-                << SetBitmap(assets::icons_24::money_bag)
-                << SetRect(Rect::XYWH(288, 24, 24, 24));
+                << SetBitmap(assets::icons_16::backspace)
+                << SetRect(Rect::XYWH(288, 28, 24, 24));
             keyMode_ = addChild(new Image{})
-                << SetBitmap(assets::icons_24::money_bag)
-                << SetRect(Rect::XYWH(12, 48, 24, 24));
-            caps_ = addChild(new Image{})
-                << SetBitmap(assets::icons_24::money_bag)
-                << SetRect(Rect::XYWH(36, 48, 24, 24));
+                << SetBitmap(assets::icons_16::letter_a)
+                << SetRect(Rect::XYWH(12, 52, 24, 24));
+            caps_ = addChild(new Label{})
+                << SetRect(Rect::XYWH(36, 52, 24, 24))
+                << SetColor(Style::defaultStyle().accentFg())
+                << SetFont(assets::Iosevka16)
+                << SetHAlign(HAlign::Center)
+                << SetVAlign(VAlign::Center)
+                << SetText("Aa");
             enter_ = addChild(new Image{})
-                << SetBitmap(assets::icons_24::money_bag)
-                << SetRect(Rect::XYWH(276, 48, 24, 24));
+                << SetBitmap(assets::icons_16::play_button)
+                << SetRect(Rect::XYWH(276, 52, 24, 24));
             left_ = addChild(new Image{})
-                << SetBitmap(assets::icons_24::money_bag)
-                << SetRect(Rect::XYWH(24, 72, 24, 24));
+                << SetBitmap(assets::icons_16::back_arrow)
+                << SetRect(Rect::XYWH(24, 76, 24, 24));
             right_ = addChild(new Image{})
-                << SetBitmap(assets::icons_24::money_bag)
-                << SetRect(Rect::XYWH(48, 72, 24, 24));
+                << SetBitmap(assets::icons_16::right_arrow)
+                << SetRect(Rect::XYWH(48, 76, 24, 24));
 
             setKeyPosition(keys_, Point{48, 28}, 10);
             setKeyPosition(keys_ + 10, Point{60, 52}, 9);
@@ -61,6 +65,7 @@ namespace rckid {
             showKeyboardMode();
 
             focus_ = addChild(new FocusRect{})
+                << SetAnimationSpeed(100)
                 << SetPadding(0);
             focus_->showAround(keys_[0], /* animate */ false);
             pos_ = Point{1, 0};
@@ -70,6 +75,8 @@ namespace rckid {
                 << SetFg(Color::Green())
                 << SetRect(Rect::XYWH(24,2, 1, 20));
             updateCursorPosition();
+
+            root_.useBackgroundImage(false);
         }
 
     protected:
@@ -130,10 +137,12 @@ namespace rckid {
                             case 0: // keyboard mode
                                 if (keyboardMode_ == KeyboardMode::Chars) {
                                     keyboardMode_ = KeyboardMode::Numbers;
-                                    // TODO keyboard icon
+                                    ui::with(keyMode_)
+                                        << ui::SetBitmap(assets::icons_16::number_one);
                                 } else {
                                     keyboardMode_ = KeyboardMode::Chars;
-                                    // TODO keyboard icon
+                                    ui::with(keyMode_)
+                                        << ui::SetBitmap(assets::icons_16::letter_a);
                                 }
                                 showKeyboardMode();
                                 break;
@@ -142,15 +151,15 @@ namespace rckid {
                                     switch (shiftMode_) {
                                         case ShiftMode::Normal:
                                             shiftMode_ = ShiftMode::FirstOnly;
-                                            // TODO shift icon
+                                            caps_->setText("Aa");
                                             break;
                                         case ShiftMode::FirstOnly:
                                             shiftMode_ = ShiftMode::Caps;
-                                            // TODO shift icon
+                                            caps_->setText("AA");
                                             break;
                                         case ShiftMode::Caps:
                                             shiftMode_ = ShiftMode::Normal;
-                                            // TODO shift icon
+                                            caps_->setText("aa");
                                             break;
                                         default:
                                             UNREACHABLE;
@@ -207,8 +216,6 @@ namespace rckid {
             Caps,
         };
 
-        // space q w e r t y u i o p BKSP 
-        // key caps A S D 
         void showKeyboardMode() {
             switch (keyboardMode_) {
                 case KeyboardMode::Chars:
@@ -330,7 +337,7 @@ namespace rckid {
         ui::Image * space_;
         ui::Image * backspace_;
         ui::Image * keyMode_;
-        ui::Image * caps_;
+        ui::Label * caps_;
         ui::Image * enter_;
         ui::Image * left_;
         ui::Image * right_;

@@ -43,6 +43,10 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
         # 24x24 icons (mostly for UI)
         COMMAND $<TARGET_FILE:binary-folder> icons/icons_24 ${CMAKE_SOURCE_DIR}/sdk/include/assets/icons_24.h --raw-path raw/icons_24 --namespace rckid::assets::icons_24
 
+        # 16x16 icons (mostly for UI)
+        COMMAND $<TARGET_FILE:binary-folder> icons/icons_16 ${CMAKE_SOURCE_DIR}/sdk/include/assets/icons_16.h --raw-path raw/icons_16 --namespace rckid::assets::icons_16
+
+
         COMMAND $<TARGET_FILE:font-tile-generator> fonts/Iosevka.ttf ${CMAKE_SOURCE_DIR}/sdk/include/assets/Iosevka16Tiles.h 16 8 16
 
         DEPENDS font-converter font-tile-generator binary-folder raw-image-converter
