@@ -94,7 +94,7 @@ namespace rckid {
         void moveUp() {
             if (--selRow_ < 0) {
                 selRow_ = menu_->size() - 1;
-                rowOffset_ = std::max(0, selRow_ - MAX_ROWS + 1);
+                rowOffset_ = std::max<Coord>(0, selRow_ - MAX_ROWS + 1);
             } else if (selRow_ < rowOffset_) {
                 --rowOffset_;
             }
