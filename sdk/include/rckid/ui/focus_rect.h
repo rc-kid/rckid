@@ -29,9 +29,12 @@ namespace rckid::ui {
             Widget::renderColumn(column, startRow, buffer, numPixels);
         }
 
-        void showAround(Widget * w) {
-            // TODO this should be animation
-            setRect(Rect::XYWH(w->position().x - padding_, w->position().y - padding_, w->width() + padding_ * 2, w->height() + padding_ * 2));
+        void showAround(Widget * w, bool animation = true) {
+            Rect rect = Rect::XYWH(w->position().x - padding_, w->position().y - padding_, w->width() + padding_ * 2, w->height() + padding_ * 2);
+            if (animation)
+                animate() << MoveAndResize(this, rect);
+            else
+                setRect(rect);
         }
 
     protected:

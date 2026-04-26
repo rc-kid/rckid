@@ -28,7 +28,9 @@ namespace rckid::ui {
 
     inline with<Image> operator << (with<Image> w, SetBitmap sb) {
         w->setContents(std::move(sb.bitmap));
-        w->setRect(Rect::XYWH(w->position(), w->contents().width(), w->contents().height()));
+        // only update the size if the image has not been resized yet
+        if (w->width() == 0 || w->height() == 0)
+            w->setRect(Rect::XYWH(w->position(), w->contents().width(), w->contents().height()));
         return w;
     }
 } // namespace rckid::ui

@@ -47,7 +47,7 @@ namespace rckid {
             focus_ = addChild(new ui::FocusRect{});
 
 
-            focus_->showAround(r_);
+            focus_->showAround(r_, /* animate */ false);
 
             root_.useBackgroundImage(false);
             root_.setBg(color);

@@ -247,6 +247,19 @@ namespace rckid::ui {
         return Move(target, target->position(), to);
     }
 
+    inline Animation * MoveAndResize(Widget * target, Rect to) {
+        return (new Animation{
+            [from = target->rect(), to, target](FixedRatio progress) {
+                Coord x = from.x + progress.scale(to.x - from.x);
+                Coord y = from.y + progress.scale(to.y - from.y);
+                Coord width = from.width() + progress.scale(to.width() - from.width());
+                Coord height = from.height() + progress.scale(to.height() - from.height());
+                target->setRect(Rect::XYWH(x, y, width, height));
+            },
+            target->animationSpeed()
+        })->setEasingFunction(easing::inOut);
+    }
+
     inline Animation * MoveHorizontally(Widget * target, Coord fromX, Coord toX) {
         return (new Animation{
             [fromX, toX, target](FixedRatio progress) {

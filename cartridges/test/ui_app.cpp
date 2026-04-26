@@ -69,10 +69,6 @@ private:
 
 int main() {
     rckid::initialize();
-    //ui::Style::loadDefaultStyle();
-    //ui::Style::saveDefaultStyle();
-    //Steps app;
-    //TestApp app;
     App::run<TextDialog>("Hello");
     App::run<Launcher>(mainMenuGenerator({ .gamesExtender = gbcemu::GBCEmu::gamesMenuExtender }));
 }

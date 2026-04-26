@@ -6,6 +6,5 @@ using namespace rckid;
 
 int main() {
     rckid::initialize();
-    ui::Style::loadDefaultStyle();
     App::run<Launcher>(mainMenuGenerator({ .gamesExtender = gbcemu::GBCEmu::gamesMenuExtender }));
 }

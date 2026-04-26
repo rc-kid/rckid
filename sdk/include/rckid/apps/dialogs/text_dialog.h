@@ -16,7 +16,7 @@ namespace rckid {
         String name() const override { return "TextDialog"; }
 
         TextDialog(String value = ""):
-            ui::App<String>(Rect::XYWH(0, 144, 320, 96))
+            ui::App<String>(Rect::XYWH(0, 140, 320, 100))
         {
             using namespace ui;
 
@@ -55,26 +55,21 @@ namespace rckid {
                 << SetBitmap(assets::icons_24::money_bag)
                 << SetRect(Rect::XYWH(48, 72, 24, 24));
 
+            setKeyPosition(keys_, Point{48, 28}, 10);
+            setKeyPosition(keys_ + 10, Point{60, 52}, 9);
+            setKeyPosition(keys_ + 19, Point{72, 76}, 10);
+            showKeyboardMode();
+
             focus_ = addChild(new FocusRect{})
                 << SetPadding(0)
                 << SetFg(Color::Green());
-            focus_->showAround(keys_[1]);
+            focus_->showAround(keys_[0], /* animate */ false);
             pos_ = Point{1, 0};
 
             cursor_ = addChild(new FocusRect{})
                 << SetPadding(0)
                 << SetFg(Color::Green())
                 << SetRect(Rect::XYWH(24,2, 1, 20));
-
-            setKeyPosition(keys_, Point{48, 24}, 10);
-            setKeyPosition(keys_ + 10, Point{60, 48}, 9);
-            setKeyPosition(keys_ + 19, Point{72, 72}, 10);
-
-            showKeyboardMode();
-
-            focus_->showAround(keys_[0]);
-            pos_ = Point{1, 0};
-
             updateCursorPosition();
         }
 
