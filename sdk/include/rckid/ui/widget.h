@@ -155,6 +155,10 @@ namespace rckid::ui {
          */
         virtual void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) {
             ASSERT(verifyRenderParams(width(), height(), column, startRow, numPixels));
+            renderChildren(column, startRow, buffer, numPixels);
+        }
+
+        void renderChildren(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) {
             for (auto & child : children_)
                 renderChildColumn(child.get(), column, startRow, buffer, numPixels);
         }

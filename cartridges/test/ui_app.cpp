@@ -16,6 +16,8 @@
 
 #include <rckid/ui/chevron.h>
 
+#include <rckid/apps/dialogs/popup_menu.h>
+
 
 using namespace rckid;
 
@@ -89,6 +91,16 @@ public:
         c3_ = addChild(new Chevron{})
             << SetRect(Rect::XYWH(10, 90, 100, 20))
             << SetBg(Color::Green());
+
+        ui::Menu m;
+        m 
+            << ui::MenuItem{"Hello", [](){}}
+            << ui::MenuItem{"Foobar", assets::icons_16::letter_a, [](){}}
+            << ui::MenuItem{"Something", assets::icons_16::number_one, [](){}}
+            << ui::MenuItem{"Fancy that", assets::icons_16::play_button, [](){}}
+            << ui::MenuItem{"Howdy space cowboy", assets::icons_16::letter_a, [](){}}
+            << ui::MenuItem{"Baz is here for all", [](){}};
+        App::run<PopupMenu>(&m);
     }
 
 private:
@@ -101,7 +113,7 @@ private:
 
 int main() {
     rckid::initialize();
-    //App::run<ChevronTest>();
+    App::run<ChevronTest>();
     //App::run<TextDialog>("Hello");
     App::run<Launcher>(mainMenuGenerator({ .gamesExtender = gbcemu::GBCEmu::gamesMenuExtender }));
 }
