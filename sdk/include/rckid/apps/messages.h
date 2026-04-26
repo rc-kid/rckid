@@ -20,6 +20,7 @@ namespace rckid {
         Messages() {
             using namespace ui;
             carousel_ = addChild(new Launcher::BorrowedCarousel());
+            /*
             WiFi * wifi = WiFi::instance();
             wifi->enable();
             auto l = addChild(new ui::TextChatBubble())
@@ -29,6 +30,7 @@ namespace rckid {
                 << SetText("Hello World\nIt's a me!")
                 << SetColorGradient(Color::White(), Color::Red());
 //            l->fitToText();
+            */
         }
 
         /** Single chat. 
@@ -99,8 +101,6 @@ namespace rckid {
         class ChatRoom : public ui::App<void> {
         public:
 
-
-
         protected:
             class TextMessage : public ui::ChatBubble {
             public:
@@ -125,6 +125,10 @@ namespace rckid {
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 ASSERT(carousel_->atRoot());
                 exit();
+            }
+            // open the currently selected chat
+            if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+
             }
         }
 

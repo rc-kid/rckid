@@ -152,13 +152,13 @@ namespace rckid::ui {
                 GlyphInfo const * gi = font_->glyphInfoFor(text_[text_.size() - 1]);
                 switch (textHAlign_) {
                     case HAlign::Left:
-                        rightmostHint_ = Hint{textWidth_ + textOffset_.x, gi, text_.size() - 1};
+                        rightmostHint_ = Hint{textWidth_, gi, text_.size() - 1};
                         break;
                     case HAlign::Center:
-                        rightmostHint_ = Hint{(width() - (width() - textWidth_) / 2) + textOffset_.x, gi, text_.size() - 1};
+                        rightmostHint_ = Hint{(width() - (width() - textWidth_) / 2), gi, text_.size() - 1};
                         break;
                     case HAlign::Right:
-                        rightmostHint_ = Hint{width() + textOffset_.x, gi, text_.size() - 1};
+                        rightmostHint_ = Hint{width(), gi, text_.size() - 1};
                         break;
                     case HAlign::Manual: // do not change
                         break;

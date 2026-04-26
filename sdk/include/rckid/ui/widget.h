@@ -570,5 +570,16 @@ namespace rckid::ui {
     }
 
 
+    struct SetPadding {
+        Coord value;
+        SetPadding(Coord value): value{value} {}
+    };
+
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetPadding p) {       
+        w->setPadding(p.value);
+        return w;
+    }
+
     
 } // namespace rckid

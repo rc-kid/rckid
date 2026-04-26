@@ -13,6 +13,10 @@ namespace rckid::ui {
 
         void setFg(Color value) { fg_ = value; }
 
+        Coord padding() const { return padding_; }
+
+        void setPadding(Coord value) { padding_ = value; }
+
         void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) override {
             if (column == 0 || column == width() - 1) {
                 memset16(reinterpret_cast<uint16_t*>(buffer), fg_.toRGB565(), numPixels);
@@ -27,12 +31,13 @@ namespace rckid::ui {
 
         void showAround(Widget * w) {
             // TODO this should be animation
-            setRect(Rect::XYWH(w->position().x - 3, w->position().y - 3, w->width() + 6, w->height() + 6));
+            setRect(Rect::XYWH(w->position().x - padding_, w->position().y - padding_, w->width() + padding_ * 2, w->height() + padding_ * 2));
         }
 
     protected:
 
         Color fg_;
+        Coord padding_ = 3;
 
     private:
 

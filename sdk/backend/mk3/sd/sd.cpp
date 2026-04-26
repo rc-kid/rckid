@@ -1,6 +1,6 @@
 
 #include <platform.h>
-#include <rckid/apps/data_sync.h>
+#include <rckid/apps/utils/data_sync.h>
 
 #include "sd.h"
 #include "../config.h"

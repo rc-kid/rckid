@@ -42,7 +42,7 @@ namespace rckid {
             root_.flyIn();
         }
 
-        void loop() {
+        void loop() override {
             ui::App<void>::loop();
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
                 exit();

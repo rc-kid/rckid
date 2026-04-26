@@ -9,6 +9,9 @@
 #include <rckid/apps/utils/steps.h>
 #include <rckid/apps/launcher.h>
 
+
+#include <rckid/apps/dialogs/text_dialog.h>
+
 #include <gbcemu/gbcemu.h>
 
 using namespace rckid;
@@ -70,5 +73,6 @@ int main() {
     //ui::Style::saveDefaultStyle();
     //Steps app;
     //TestApp app;
+    App::run<TextDialog>("Hello");
     App::run<Launcher>(mainMenuGenerator({ .gamesExtender = gbcemu::GBCEmu::gamesMenuExtender }));
 }

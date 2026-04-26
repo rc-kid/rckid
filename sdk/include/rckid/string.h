@@ -53,6 +53,10 @@ namespace rckid {
             data_ = immutable_ptr<char>{data};
         }
 
+        /** Creates string from an unique buffer and given size. 
+         
+            The unique buffer must be at least size long and *must* be null terminated at the size limit.
+         */
         String(unique_ptr<char> buffer, uint32_t size): 
             data_{buffer.release()},
             size_{size}
@@ -60,13 +64,24 @@ namespace rckid {
             ASSERT(data_[size] == '\0');
         }
 
-        String(unique_ptr<char> buffer): 
-            String(std::move(buffer), static_cast<uint32_t>(std::strlen(buffer.get()))) { }
+        /** Creates string from an unique buffer that must contain null terminated string already.
+         */
+        String(unique_ptr<char> buffer):
+            data_{buffer.release()},
+            size_{static_cast<uint32_t>(std::strlen(data_.get()))}
+        {
+            ASSERT(data_[size_] == '\0');
+        }
 
-        String(immutable_ptr<char> data) : data_{std::move(data)} {
+        /** Creates string from immutable buffer, which must point to a null terminated string.
+         */
+        String(immutable_ptr<char> data): 
+            data_{std::move(data)} 
+        {
             ASSERT(data_.get() != nullptr);
             size_ = static_cast<uint32_t>(std::strlen(data_.get()));
-        }
+            ASSERT(data_[size_] == '\0');
+        }        
 
         ~String() = default;
 
@@ -165,6 +180,17 @@ namespace rckid {
             if (count > available)
                 count = available;
             return String(data_.get() + pos, count);
+        }
+
+        String insertAt(uint32_t pos, char what) const {
+            if (pos > size())
+                pos = size();
+            unique_ptr<char> result{new char[size() + 2]};
+            memcpy(result.get(), c_str(), pos);
+            result.get()[pos] = what;
+            memcpy(result.get() + pos + 1, c_str() + pos, size() - pos + 1);
+            ASSERT(result.get()[size() + 1] == 0);
+            return String{std::move(result), size() + 1};
         }
 
         bool operator == (String const & other) const {

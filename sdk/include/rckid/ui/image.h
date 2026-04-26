@@ -25,8 +25,10 @@ namespace rckid::ui {
             return std::move(*this);
         }
     };
+
     inline with<Image> operator << (with<Image> w, SetBitmap sb) {
         w->setContents(std::move(sb.bitmap));
+        w->setRect(Rect::XYWH(w->position(), w->contents().width(), w->contents().height()));
         return w;
     }
 } // namespace rckid::ui
