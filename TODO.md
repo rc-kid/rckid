@@ -1,3 +1,16 @@
+# Immediate Roadmap
+
+- for the PCB update the cartridge connector (and add to it the battery connector)
+- update debug pins
+- cartridge connector move spring contacts closer
+- review & order the PCB
+- review & order the 3d parts (2 top plates clear, 1 clear back plate, 1 nylon backplate)
+- need to do this soon, or I will loose the coupons I have 
+- move battery connector 3mm further
+
+- once I have the prototypes, finish the v1.0 AVR and start experimenting with what I have on the device
+- this might be better button: https://jlcpcb.com/partdetail/Yuandi-TS_1047_A2B2D2/C2689815, worth testing in the prototype (?)
+
 # Ladder
 
 The plan is to start with a simple game - cat chase - there is a mouse and a cat, mouse moves randomly, cat chases it, controlled by the player. The aim is to program this game at the C++ level to bring all the pieces together and make sure the c++ code looks decent and easy. Once I have this I can start writing the dynamic wrapper for the layers below (blocks & visual) and asset editors. 
@@ -40,6 +53,7 @@ Wakeups
 - piggy bank daily allowance top up check
 
 Settings
+- pim (pin, parent mode, etc.)
 
 
 
@@ -55,6 +69,8 @@ Games (port from mkII)
 - pong
 - sliding puzzle
 
+- canvas app can be rendered in single call technically
+
 - show header even when not full screen is rendered (home menu & friends)
 
 - save state of applications on stack when powering off (and other routines)
@@ -63,7 +79,6 @@ Games (port from mkII)
 - budget reset & the whole wakeup business
 
 - add extra tiles for all volume levels
-- pim (pin, parent mode, etc.)
 
 - mk3 code not cleaned up and not working
 - heapend on mk3 should return current sp or something like that to verify that we are not growing over
@@ -88,8 +103,8 @@ Games (port from mkII)
 
 First add a board that can verify the last missing features and DFM improvements, namely:
 
-- [ ] SMT soldered vibration motor
-- [ ] ditch radio from main board
+- [X] SMT soldered vibration motor
+- [X] ditch radio from main board
 - [ ] radio IRQ pin can become RPI TX for debugging
 > This means debugging connector is 1 GND, 2 ARM debugging, 1 UPDI, 1 RP tx, 1 AVR tx (6)
 
@@ -98,7 +113,7 @@ These will be tested with a simple testboard:
 - [ ] smaller board size for cheaper assembly
 - [ ] microphone sensing
 - [ ] headphone detection via switches, *not* extra ground link
-- [ ] speaker without housing connected via spring contacts
+- [X] speaker without housing connected via spring contacts
 - [ ] battery connectors for nokia-like batteries, etc.
 - [ ] rubber dome buttons
 
@@ -161,8 +176,6 @@ Polish
 
 - drawing preserves state like games
 - allow messages to send images
-
-- rapid fire not working
 
 - keep the offset so that we can go back (in messages)
 - check wifi available, etc. 

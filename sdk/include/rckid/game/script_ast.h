@@ -19,7 +19,7 @@ namespace rckid::game::ast {
 
     class Visitor {
     public:
-        virtual void visit(Node * node) { UNREACHABLE; }
+        virtual void visit([[maybe_unused]] Node * node) { UNREACHABLE; }
         virtual void visit(ObjectNode * node) = 0;
         virtual void visit(IntegerNode * node) = 0;
         virtual void visit(PointNode * node) = 0;

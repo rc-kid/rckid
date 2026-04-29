@@ -74,6 +74,8 @@ namespace rckid::ui {
 
         Widget::AnimationBuilder animate() { return root_.animate(); }
 
+        void cancelAnimations() { root_.cancelAnimations(); }
+
         RootWidget root_;
 
     private:

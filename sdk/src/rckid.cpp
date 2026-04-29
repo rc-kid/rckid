@@ -11,6 +11,9 @@ namespace rckid {
     DeviceState lastState_;
     DeviceState state_;
 
+    uint32_t btnRepeat_[11] = { 500 };
+    uint32_t btnRepeatCountdown_[11] = { 500 / 16 };
+
     TinyDateTime now_;
 
     uint64_t nextSecondUptime_ = 0;
@@ -38,6 +41,20 @@ namespace rckid {
 
     Settings settings;
 
+    // helpers
+
+    void checkButtonRepeat(Btn btn) {
+        if (! state_.button(btn))
+            return;
+        uint32_t const bi = static_cast<uint32_t>(btn);
+        if (btnRepeatCountdown_[bi] != 0) {
+            if (--btnRepeatCountdown_[bi] == 0) {
+                lastState_.setButton(btn, false);
+                btnRepeatCountdown_[bi] = btnRepeat_[bi] / 16;
+            }
+        }
+    }
+
     // device
 
     void initialize() {
@@ -56,6 +73,9 @@ namespace rckid {
         // move to next state
         lastState_ = state_;
         state_.updateWith(hal::io::state());
+        // update button repeat intervals
+        for (uint32_t i = 0; i < 11; ++i)
+            checkButtonRepeat(static_cast<Btn>(i));
         // check state interrupts
         if (state_.powerOffInterrupt()) {
             LOG(LL_INFO, "Power off requested");
@@ -107,6 +127,15 @@ namespace rckid {
 
     void btnClearAll() {
         lastState_ = state_;
+    }
+
+    uint32_t btnRepeat(Btn btn) {
+        return btnRepeat_[static_cast<uint32_t>(btn)];
+    }
+
+    void btnSetRepeat(Btn btn, uint32_t repeat_ms) {
+        btnRepeat_[static_cast<uint32_t>(btn)] = repeat_ms;
+        btnRepeatCountdown_[static_cast<uint32_t>(btn)] = repeat_ms / 16;
     }
 
     namespace power {

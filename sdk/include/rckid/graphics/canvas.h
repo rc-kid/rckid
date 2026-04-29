@@ -123,6 +123,10 @@ namespace rckid {
     }; // rckid::Canvas
 
 
+    /** Application that renders its contents into a canvas. 
+     
+        One of the simplest application types, the canvas app is backed by a framebuffer canvas that can be updated at each loop iteration and is then sent to the display. This is super simple, retains state between frames, which can lead to faster draw times with only changes being updated at every frame. 
+     */
     template<typename RESULT>
     class CanvasApp : public ModalApp<RESULT> {
     public:

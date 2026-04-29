@@ -123,6 +123,57 @@ namespace rckid {
             }
         }
 
+        /** Renders the font column using alpha over the existing background color. 
+         
+            This is more complex than the default rendering with predefined palette, but especially on multi-colored backgrounds leads to a much more readable font rendering.
+         */
+        void renderColumnAlpha(Coord column, Coord startRow, Coord numPixels, GlyphInfo const * gi, Color::RGB565 * buffer, Color color) const {
+            // first updte the coordinates from the bounding box to the glyph space
+            column -= gi->x;
+            startRow -= gi->y;
+            if (startRow < 0) {
+                buffer += -startRow;
+                numPixels += startRow; // startRow is negative
+                startRow = 0;
+            }
+            // since we are not rendering background, check if there is anything to render first
+            if (column < 0 || column >= gi->width)
+                return;
+            if (numPixels <= 0 || startRow >= gi->height)
+                return;
+            // move to current glyph
+            uint8_t const * glyphPixels = pixels + gi->index;
+            // move to current column
+            int colHeight = gi->height;
+            if (colHeight % 4 != 0)
+                colHeight += 4 - (colHeight % 4);
+            glyphPixels += column * colHeight / 4;
+            // draw, 
+            Coord y = 0;
+            uint32_t bits = 0;
+            uint32_t val = 0;
+            Coord maxY = std::min(static_cast<Coord>(gi->height), numPixels);
+            while (y < maxY) {
+                if (bits == 0) {
+                    val = *glyphPixels++;
+                    bits = 8;
+                }
+                unsigned a = (val >> 6) & 0x3;
+                if (y >= startRow) {
+                    if (a != 0) {
+                        uint8_t coef = (a << 6) | (a << 4) | (a << 2) | a;
+                        *buffer = Color::blend(*buffer, color, coef);
+                    }
+                    ++buffer;
+                }
+                val <<= 2;
+                bits -= 2;
+                ++y;
+                --numPixels;
+            }
+
+        }
+
         void createFontPalette(Color::RGB565 * palette, Color fg) const {
             palette[0] = fg.withBrightness(0);
             palette[1] = fg.withBrightness(85);

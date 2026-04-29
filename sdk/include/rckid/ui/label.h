@@ -74,14 +74,30 @@ namespace rckid::ui {
 
         Color color() const { return textColor_; }
 
-        void setColor(Color value) {
+        void setColor(Color value, Color bg = Color::Black()) {
             textColor_ = value;
-            font_->createFontPalette(textPalette_, textColor_);
+            font_->createFontPalette(textPalette_, bg, textColor_);
         }
 
+        /** Sets the color gradient. 
+         
+            Specifies the 4 color levels as a gradient between the foreground (font color), and background color. 
+
+            TODO remove this and use the setColor method above instead
+         */
         void setColorGradient(Color fg, Color bg) {
             textColor_ = fg;
             font_->createFontPalette(textPalette_, bg, textColor_);
+        }
+
+        /** Alpha rendering for the label means that the font pixels will not be rendered using static predefined palette, but will blend the desired font color and the existinfg pixel in the rendering buffer according to the font specification. 
+         
+            This means the rendering itself takes longer, but in cases where the rendering happens over surfaces with inconsistent background colors leads to much greater visibility.
+         */
+        bool useAlpha() const { return useAlpha_; }
+
+        void setUseAlpha(bool value) {
+            useAlpha_ = value;
         }
 
         Point textOffset() const { return textOffset_; }
@@ -108,7 +124,10 @@ namespace rckid::ui {
                 return;
             // recalculate column & starty relative to the text position
             column -= currentHint_.leftColumn;
-            font_->renderColumn(column, starty, numPixels, currentHint_.gi, buffer, textPalette_);
+            if (!useAlpha_)
+                font_->renderColumn(column, starty, numPixels, currentHint_.gi, buffer, textPalette_);
+            else 
+                font_->renderColumnAlpha(column, starty, numPixels, currentHint_.gi, buffer, textColor_);
         }
 
         void applyStyle(Style const & style) override {
@@ -199,6 +218,8 @@ namespace rckid::ui {
         Hint currentHint_;
         // this is where we store the rightmost character hint (the first one to be rendered due to right to left top to bottom rendering)
         Hint rightmostHint_;
+        // whether to use slower per pixel blending when rendering the characters
+        bool useAlpha_ = false;
         Point textOffset_{0,0};
 
     }; // ui::Label
@@ -231,6 +252,16 @@ namespace rckid::ui {
     template<typename T>
     inline with<T> operator << (with<T> w, SetTextOffset sto) {
         w->setTextOffset(sto.offset);
+        return w;
+    }
+
+    struct SetUseAlpha {
+        bool value;
+        SetUseAlpha(bool value): value{value} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetUseAlpha x) {
+        w->setUseAlpha(x.value);
         return w;
     }
 

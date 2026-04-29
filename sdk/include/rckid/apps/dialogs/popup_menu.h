@@ -61,6 +61,7 @@ namespace rckid {
                 labels_.get()[i] = view_->addChild(new Label{})
                     << SetRect(Rect::XYWH(images ? 30 : 5, i * 24, width - (images ? 35 : 5), 24))
                     << SetFont(f)
+                    << SetUseAlpha(true)
                     << SetText(mi.text)
                     << SetColorGradient(style.defaultFg(), style.accentBg());
             }
@@ -112,6 +113,7 @@ namespace rckid {
         }
 
         void updatePosition() {
+            cancelAnimations();
             animate()
                 << ui::ScrollTo(view_, Point{0, rowOffset_ * 24})
                 << ui::MoveTo(sel_, Point{2, 2 + selRow_ * 24});

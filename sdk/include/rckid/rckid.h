@@ -62,6 +62,10 @@ namespace rckid {
      */
     void btnClear(Btn btn);
 
+    uint32_t btnRepeat(Btn btn);
+
+    void btnSetRepeat(Btn btn, uint32_t repeat_ms);
+
     /** Clears all button state events. 
      */
     void btnClearAll();

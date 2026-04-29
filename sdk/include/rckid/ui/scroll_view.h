@@ -4,9 +4,14 @@
 
 namespace rckid::ui {
 
+    /** Widget that can scroll its contents. 
+     
+        Useful for showing scrollable contents. The scroll widget simply allows specifying scroll offset, which offsets rendering of all its children by given coordinates. 
+
+        TODO also add optional scrollbars? 
+     */
     class ScrollView : public Widget {
     public:
-
 
         Point scrollOffset() const { return scrollOffset_; }
 
@@ -30,6 +35,8 @@ namespace rckid::ui {
 
     }; // ui::ScrollView
 
+    /** Animation template for scrolling the view to given coordinates from the current ones. 
+     */
     inline Animation * ScrollTo(ScrollView * target, Point to) {
         return (new Animation{
             [from = target->scrollOffset(), to, target](FixedRatio progress) {
@@ -40,7 +47,5 @@ namespace rckid::ui {
             target->animationSpeed()
         })->setEasingFunction(easing::inOut);
     }
-
-
 
 } // namespace rckid::ui
