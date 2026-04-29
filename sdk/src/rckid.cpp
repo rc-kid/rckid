@@ -11,8 +11,33 @@ namespace rckid {
     DeviceState lastState_;
     DeviceState state_;
 
-    uint32_t btnRepeat_[11] = { 500 };
-    uint32_t btnRepeatCountdown_[11] = { 500 / 16 };
+    uint32_t btnRepeat_[11] = { 
+        RCKID_DEFAULT_KEY_REPEAT_MS,
+        RCKID_DEFAULT_KEY_REPEAT_MS,
+        RCKID_DEFAULT_KEY_REPEAT_MS,
+        RCKID_DEFAULT_KEY_REPEAT_MS,
+        RCKID_DEFAULT_KEY_REPEAT_MS,
+        RCKID_DEFAULT_KEY_REPEAT_MS,
+        RCKID_DEFAULT_KEY_REPEAT_MS,
+        RCKID_DEFAULT_KEY_REPEAT_MS,
+        RCKID_DEFAULT_KEY_REPEAT_MS,
+        RCKID_DEFAULT_KEY_REPEAT_MS,
+        RCKID_DEFAULT_KEY_REPEAT_MS,
+    };
+
+    uint32_t btnRepeatCountdown_[11] = {
+        RCKID_DEFAULT_KEY_REPEAT_MS / 16,
+        RCKID_DEFAULT_KEY_REPEAT_MS / 16,
+        RCKID_DEFAULT_KEY_REPEAT_MS / 16,
+        RCKID_DEFAULT_KEY_REPEAT_MS / 16,
+        RCKID_DEFAULT_KEY_REPEAT_MS / 16,
+        RCKID_DEFAULT_KEY_REPEAT_MS / 16,
+        RCKID_DEFAULT_KEY_REPEAT_MS / 16,
+        RCKID_DEFAULT_KEY_REPEAT_MS / 16,
+        RCKID_DEFAULT_KEY_REPEAT_MS / 16,
+        RCKID_DEFAULT_KEY_REPEAT_MS / 16,
+        RCKID_DEFAULT_KEY_REPEAT_MS / 16,
+    };
 
     TinyDateTime now_;
 

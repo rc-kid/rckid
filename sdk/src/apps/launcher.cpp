@@ -152,7 +152,18 @@ namespace rckid {
                         }
                     }};
                 return result;
+            })
+            << ui::MenuItem::Generator("Keys", assets::icons_64::poo, [](){
+                auto result = std::make_unique<ui::Menu>();
+                /* TODO should this really be user controllable
+                (*result)
+                    << ui::MenuItem{"Repeat", assets::icons_64::picture, []() {
+                        UNIMPLEMENTED;
+                    }};
+                */
+                return result;
             });
+
         return result;
     }
 
@@ -165,9 +176,6 @@ namespace rckid {
             }};
         return result;
     }
-
-
-
 
     void Launcher::updateStyle(ui::Style & style) {
         // only expected to be called from the launcher

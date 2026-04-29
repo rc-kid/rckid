@@ -3,6 +3,7 @@
 #include <rckid/stream.h>
 #include <rckid/ui/app.h>
 #include <rckid/ui/chat_bubble.h>
+#include <rckid/ui/scroll_view.h>
 #include <rckid/capabilities/wifi.h>
 #include <rckid/apps/launcher.h>
 #include <rckid/apps/dialogs/info_dialog.h>
@@ -100,12 +101,19 @@ namespace rckid {
          */
         class ChatRoom : public ui::App<void> {
         public:
+            String name() const override { return "Messages"; }
+
+            ChatRoom(Chat * chat):
+                chat_{chat} {
+                using namespace ui;
+                msgs_ = addChild(new ScrollView{})
+                    << SetRect(Rect::XYWH(0, 20, 320, 220));
+            }
 
         protected:
-            class TextMessage : public ui::ChatBubble {
-            public:
 
-            }; // ChatRoom::TextMessage
+            Chat * chat_;
+            ui::ScrollView * msgs_;
 
         }; // Messages::ChatRoom
 
@@ -128,7 +136,13 @@ namespace rckid {
             }
             // open the currently selected chat
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
+                auto item = carousel_->currentItem();
+                carousel_->moveUp(nullptr);
+                waitUntilIdle(carousel_);
 
+                item->action()();
+
+                carousel_->moveDown();
             }
         }
 

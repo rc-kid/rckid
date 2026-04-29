@@ -65,6 +65,7 @@ namespace rckid {
     }
 
     uint32_t Messages::Chat::append(Entry e) {
+        // TODO should we mark as unread ?
         auto f = openWrite();
         ASSERT(f != nullptr);
         f->binaryWriter() << e;
@@ -103,14 +104,14 @@ namespace rckid {
                     auto chat = std::make_unique<Chat>(r);
                     (*menu)
                         << ui::MenuItem{chat->name(), chat->icon(), [this, c = chat.get()]() {
-                            // TODO open the chat
-                    }}.withDecorator([chat = chat.get()](ui::MenuItem &, ui::Image * img, ui::Label *) {
-                        if (chat->unread()) {
-                            img->addChild(new ui::Image{})
-                                << SetRect(Rect::XYWH(0, 0, 24, 24))
-                                << SetBitmap(assets::icons_24::exchange);
-                        }
-                    });
+                                App::run<ChatRoom>(c);
+                            }}.withDecorator([chat = chat.get()](ui::MenuItem &, ui::Image * img, ui::Label *) {
+                                if (chat->unread()) {
+                                    img->addChild(new ui::Image{})
+                                        << SetRect(Rect::XYWH(0, 0, 24, 24))
+                                        << SetBitmap(assets::icons_24::exchange);
+                                }
+                            });
                     uint32_t offset = 0;
                     offset = chat->readNext(offset, [](Chat::Entry e) { 
                         LOG(LL_INFO, e.payload);

@@ -598,4 +598,18 @@ namespace rckid::ui {
     }
 
     
+    /** Sets zoom for the widget.
+     
+        Currently used for the CanvasView only, but the zoom setting looks generic enough to stay here.
+     */
+    struct SetZoom {
+        uint32_t value;
+        SetZoom(uint32_t value): value{value} {}
+    };
+    template<typename T>
+    inline with<T> operator << (with<T> w, SetZoom x) {
+        w->setZoom(x.value);
+        return w;
+    }
+
 } // namespace rckid
