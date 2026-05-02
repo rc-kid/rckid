@@ -11,6 +11,7 @@ namespace rckid {
 
     /** Rendering surface.
      
+    
      */
     class Canvas {
     public:

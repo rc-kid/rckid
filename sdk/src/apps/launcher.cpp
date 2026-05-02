@@ -4,6 +4,7 @@
 #include <rckid/apps/music_player.h>
 #include <rckid/apps/friends.h>
 #include <rckid/apps/messages.h>
+#include <rckid/apps/drawing.h>
 
 #include <rckid/apps/utils/about.h>
 #include <rckid/apps/utils/steps.h>
@@ -47,6 +48,9 @@ namespace rckid {
                 }}
                 << ui::MenuItem{"Messages", assets::icons_64::chat, []() {
                     App::run<Messages>();
+                }}
+                << ui::MenuItem{"Drawing", assets::icons_64::paint_palette, []() {
+                    App::run<Drawing>();
                 }}
                 << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator)
                 << ui::MenuItem::Generator("Settings", assets::icons_64::settings, settingsMenuGenerator);

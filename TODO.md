@@ -9,7 +9,7 @@
 - move battery connector 3mm further
 
 - once I have the prototypes, finish the v1.0 AVR and start experimenting with what I have on the device
-- this might be better button: https://jlcpcb.com/partdetail/Yuandi-TS_1047_A2B2D2/C2689815, worth testing in the prototype (?)
+- this might be better button: https://jlcpcb.com/partdetail/ALPSALPINE-SKRABCE010/C19724057
 
 # Ladder
 
@@ -39,8 +39,6 @@ So what I need:
 - how to do heartbeat? (static initializers?)
 
 - for game saves use different bookmark icon (red maybe?)
-
-- button press repeat (configurable)
 
 - avr firmware wakeup timing
 
