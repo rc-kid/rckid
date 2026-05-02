@@ -33,8 +33,6 @@ So what I need:
 
 - add telemetry (will be useful for the pilots, record time & app start, or end)
 
-- have some on change handler that gets triggered when widget property changes so that we can react to changes (one is enough AFAIK)
-
 - improve value parsing in Reader (bool, ints, etc.)
 - how to do heartbeat? (static initializers?)
 

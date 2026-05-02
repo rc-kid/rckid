@@ -71,7 +71,7 @@ namespace rckid::ui {
                 if (rect_.h < 0)
                     rect_.h = 0;
             }
-            onResize();
+            onChange();
         }
 
         Widget * parent() const { return parent_; }
@@ -92,8 +92,11 @@ namespace rckid::ui {
 
         uint32_t animationSpeed() const { return animationSpeed_; }
 
-        void setAnimationSpeed(uint32_t animationSpeed) { 
-            animationSpeed_ = animationSpeed; 
+        void setAnimationSpeed(uint32_t value) { 
+            if (animationSpeed_ != value) {
+                animationSpeed_ = value; 
+                onChange();
+            }
         }
 
         /** Animates entrance of widget contents. 
@@ -189,7 +192,13 @@ namespace rckid::ui {
                     child->onRender();
         }
 
-        virtual void onResize() {
+        /** Widget property change event. 
+         
+            Called when widget's properties change to allow the widget to recalculate its apperance.
+         
+            Every setter that changes property which might lead to visual recalculation other than redrawing (which happens every frame) should call this menthod *if* the new value is different than the one already stored.
+         */
+        virtual void onChange() {
             // nop
         }
 

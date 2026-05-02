@@ -25,21 +25,21 @@ namespace rckid::ui {
 
         void setContents(T contents) {
             contents_ = std::move(contents);
-            onResize();
+            onChange();
         }
 
         HAlign hAlign() const { return contentsHAlign_; }
 
         void setHAlign(HAlign value) {
             contentsHAlign_ = value;
-            onResize();
+            onChange();
         }
 
         VAlign vAlign() const { return contentsVAlign_; }
 
         void setVAlign(VAlign value) {
             contentsVAlign_ = value;
-            onResize();
+            onChange();
         }
 
         bool contentsRepeat() const { return contentsRepeat_; }
@@ -52,7 +52,7 @@ namespace rckid::ui {
 
         void setContentsOffset(Point value) {
             contentsOffset_ = value;
-            onResize();
+            onChange();
         }
 
         void renderColumn(Coord column, Coord starty, Color::RGB565 * buffer, Coord numPixels) override {
@@ -90,8 +90,8 @@ namespace rckid::ui {
         }
 
     protected:
-        void onResize() override {
-            Widget::onResize();
+        void onChange() override {
+            Widget::onChange();
             Coord x = contentsOffset_.x;
             Coord y = contentsOffset_.y;
             switch (contentsHAlign_) {

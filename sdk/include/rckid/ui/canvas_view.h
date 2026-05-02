@@ -17,7 +17,12 @@ namespace rckid::ui {
         void setCanvas(Canvas * canvas) { canvas_ = canvas; }
 
         uint32_t zoom() const { return zoom_; }
-        void setZoom(uint32_t value) { zoom_ = value; }
+        void setZoom(uint32_t value) { 
+            if (zoom_ != value) {
+                zoom_ = value; 
+                onChange();
+            }
+        }
 
         void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) override {
             drawCanvasContents(column, startRow, buffer, numPixels);
@@ -69,7 +74,21 @@ namespace rckid::ui {
             Widget::renderColumn(column, startRow, buffer, numPixels);
         }
 
+    protected:
+        void onChange() override {
+            CanvasView::onChange();
+            repositionFocusRect();
+            with(focusRect_)
+                << SetWidth(zoom_)
+                << SetHeight(zoom_);
+        }
+
+        void repositionFocusRect() {
+            
+        }
+
     private:
+        Point pos_{0,0};
         FocusRect focusRect_;
 
     }; // rckid::ui::CanvasEdit

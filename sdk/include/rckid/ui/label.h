@@ -15,7 +15,7 @@ namespace rckid::ui {
 
         void setText(String value) {
             text_ = std::move(value);
-            onResize();
+            onChange();
         }
 
         /** Takes up to a line from the given string and returns the rest.
@@ -55,21 +55,21 @@ namespace rckid::ui {
         void setFont(Font value) {
             ASSERT(value != nullptr);
             font_ = std::move(value);
-            onResize();
+            onChange();
         }
 
         HAlign hAlign() const { return textHAlign_; }
 
         void setHAlign(HAlign value) {
             textHAlign_ = value;
-            onResize();
+            onChange();
         }
 
         VAlign vAlign() const { return textVAlign_; }
 
         void setVAlign(VAlign value) {
             textVAlign_ = value;
-            onResize();
+            onChange();
         }
 
         Color color() const { return textColor_; }
@@ -104,7 +104,7 @@ namespace rckid::ui {
 
         void setTextOffset(Point value) {
             textOffset_ = value;
-            onResize();
+            onChange();
         }
 
         Coord textWidth() const { return textWidth_; }
@@ -162,7 +162,7 @@ namespace rckid::ui {
             Hint() = default;
         };
 
-        void onResize() override {
+        void onChange() override {
             if (text_.empty()) {
                 textWidth_ = 0;
                 rightmostHint_ = Hint{};
@@ -335,8 +335,8 @@ namespace rckid::ui {
         }
 
     protected:
-        void onResize() override {
-            Widget::onResize();
+        void onChange() override {
+            Widget::onChange();
             recalculateLines();
         }
 
