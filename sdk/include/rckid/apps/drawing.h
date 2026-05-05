@@ -32,6 +32,10 @@ namespace rckid {
 
     private:
 
+        void onFocus() override {
+            ui::App<void>::onFocus();
+            focusWidget(edit_);
+        }
         unique_ptr<Canvas> canvas_{new Canvas{64,64}};
         ui::CanvasView * view_ = nullptr;
         ui::CanvasEdit * edit_ = nullptr;

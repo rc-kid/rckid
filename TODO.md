@@ -10,6 +10,7 @@
 
 - once I have the prototypes, finish the v1.0 AVR and start experimenting with what I have on the device
 - this might be better button: https://jlcpcb.com/partdetail/ALPSALPINE-SKRABCE010/C19724057
+- figure out the side buttons if there are ones that can be soldered by jlcpcb and be better centered
 
 # Ladder
 
@@ -28,6 +29,8 @@ So what I need:
 # SDK 1.0
 
 - update the config.h to have backend config and general config to which we put things from rckid.cpp now (key repeat and other UI settings)
+
+- there are spurious double key presses (likely timing in autorepeat)
 
 - when app is not started and shows error diealog instead, we do double background bump on leaving
 

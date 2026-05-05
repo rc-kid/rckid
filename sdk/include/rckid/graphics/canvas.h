@@ -27,6 +27,8 @@ namespace rckid {
         Color::RGB565 at(Coord x, Coord y) const { return pixels_.get()[mapIndexColumnFirst(x, y, w_, h_)]; }
         Color::RGB565 & at(Coord x, Coord y) { return pixels_.get()[mapIndexColumnFirst(x, y, w_, h_)]; }
 
+        Color::RGB565 & at(Point pos) { return at(pos.x, pos.y); }
+
         void setAt(Coord x, Coord y, Color::RGB565 color) {
             if (x < 0 || x >= w_)
                 return;
@@ -34,6 +36,7 @@ namespace rckid {
                 return;
             at(x, y) = color;            
         }
+
 
         /** Fills rectangle with given color. 
          */
