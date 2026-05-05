@@ -30,8 +30,6 @@ So what I need:
 
 - update the config.h to have backend config and general config to which we put things from rckid.cpp now (key repeat and other UI settings)
 
-- there are spurious double key presses (likely timing in autorepeat)
-
 - when app is not started and shows error diealog instead, we do double background bump on leaving
 
 - add telemetry (will be useful for the pilots, record time & app start, or end)

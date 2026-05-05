@@ -69,12 +69,20 @@ namespace rckid {
     // helpers
 
     void checkButtonRepeat(Btn btn) {
+        // only matters if button is pressed
         if (! state_.button(btn))
             return;
         uint32_t const bi = static_cast<uint32_t>(btn);
-        if (btnRepeatCountdown_[bi] != 0) {
+        // repeat not enabled for the button
+        if (btnRepeat_[bi] == 0)
+            return;
+        // reset the countdown if this is actual button press 
+        if (! lastState_.button(btn)) {
+            btnRepeatCountdown_[bi] = btnRepeat_[bi] / 16;
+        } else {
             if (--btnRepeatCountdown_[bi] == 0) {
                 lastState_.setButton(btn, false);
+                // reset (the last state does not survive till next check)
                 btnRepeatCountdown_[bi] = btnRepeat_[bi] / 16;
             }
         }
