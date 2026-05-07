@@ -105,7 +105,7 @@ namespace rckid::ui {
         }
 
         String const & text() const { return l_.text(); }
-        Color color() const { return l_.color(); }
+        Color fg() const { return l_.fg(); }
 
         void setText(String text) {
             l_.setRect(Rect::XYWH(arrowSize_ + border_, border_, width() - (arrowSize_ + border_) * 2, height() - border_ * 2));
@@ -115,8 +115,8 @@ namespace rckid::ui {
             setRect(rect().withHeight(l_.textHeight() + border_ * 2));
         }
 
-        void setColor(Color value) { l_.setColor(value); }
-        void setColorGradient(Color fg, Color bg) { l_.setColorGradient(fg, bg); }
+        void setFg(Color value) { l_.setFg(value); }
+        void setFgGradient(Color fg, Color bg) { l_.setFgGradient(fg, bg); }
 
         void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) override {
             renderBubble(column, startRow, buffer, numPixels);

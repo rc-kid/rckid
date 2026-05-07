@@ -44,7 +44,11 @@ So what I need:
 - make UNREACHABLE & friends part of platform? This should make it write between mkIII, fantasy and ATTiny stuff
 
 Widgets
+
+Dialogs
 - numpad
+- date
+- time
 
 Wakeups
 - alarm clock

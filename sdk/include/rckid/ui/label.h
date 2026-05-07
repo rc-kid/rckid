@@ -72,9 +72,9 @@ namespace rckid::ui {
             onChange();
         }
 
-        Color color() const { return textColor_; }
+        Color fg() const { return textColor_; }
 
-        void setColor(Color value, Color bg = Color::Black()) {
+        void setFg(Color value, Color bg = Color::Black()) {
             textColor_ = value;
             font_->createFontPalette(textPalette_, bg, textColor_);
         }
@@ -85,7 +85,7 @@ namespace rckid::ui {
 
             TODO remove this and use the setColor method above instead
          */
-        void setColorGradient(Color fg, Color bg) {
+        void setFgGradient(Color fg, Color bg) {
             textColor_ = fg;
             font_->createFontPalette(textPalette_, bg, textColor_);
         }
@@ -132,7 +132,7 @@ namespace rckid::ui {
 
         void applyStyle(Style const & style) override {
             Widget::applyStyle(style);
-            setColor(style.defaultFg());
+            setFg(style.defaultFg());
         }
 
         protected:
@@ -301,18 +301,18 @@ namespace rckid::ui {
             repositionLines();
         }
 
-        Color color() const { return textColor_; }
+        Color fg() const { return textColor_; }
 
-        void setColor(Color value) {
+        void setFg(Color value) {
             textColor_ = value;
             for (auto & line : lines_)
-                line->setColor(value);
+                line->setFg(value);
         }
 
-        void setColorGradient(Color fg, Color bg) {
+        void setFgGradient(Color fg, Color bg) {
             textColor_ = fg;
             for (auto & line : lines_)
-                line->setColorGradient(fg, bg);
+                line->setFgGradient(fg, bg);
         }
 
         Coord textWidth() const { 
@@ -356,7 +356,7 @@ namespace rckid::ui {
                     << SetFont{font_}
                     << SetHAlign{textHAlign_}
                     << SetVAlign{VAlign::Top}
-                    << SetColor{textColor_}
+                    << SetFg{textColor_}
                     << SetRect(Rect::WH(width(), font_->size));
                 txt = line->setTextLine(txt);
                 lines_.push_back(std::move(line));

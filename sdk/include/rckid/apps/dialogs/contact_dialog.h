@@ -31,7 +31,7 @@ namespace rckid {
                 << SetRect(Rect::XYWH(0, 20, 96, 64));
             name_ = addChild(new ui::Label{})
                 << SetText(c->name)
-                << SetColor(c->color)
+                << SetFg(c->color)
                 << SetRect(Rect::XYWH(95, 20, 220, 64))
                 << SetFont(assets::OpenDyslexic64);
 
@@ -137,7 +137,7 @@ namespace rckid {
                         auto x = App::run<ColorDialog>(c_->color);
                         if (x) {
                             c_->color = x.value();
-                            name_->setColor(c_->color);
+                            name_->setFg(c_->color);
                             dirty_ = true;
                         }
                     });

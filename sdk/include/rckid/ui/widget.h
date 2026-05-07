@@ -509,25 +509,25 @@ namespace rckid::ui {
 
     // common, but not directly widget related properties
 
-    struct SetColor {
+    struct SetFg {
         Color color;
-        SetColor(Color color): color{color} {}
+        SetFg(Color color): color{color} {}
     };
     template<typename T>
-    inline with<T> operator << (with<T> w, SetColor sc) {
-        w->setColor(sc.color);
+    inline with<T> operator << (with<T> w, SetFg sc) {
+        w->setFg(sc.color);
         return w;
     }
 
-    struct SetColorGradient {
+    struct SetFgGradient {
         Color a;
         Color b;
-        SetColorGradient(Color a, Color b): a{a}, b{b} {}
+        SetFgGradient(Color a, Color b): a{a}, b{b} {}
     };
 
     template<typename T>
-    inline with<T> operator << (with<T> w, SetColorGradient scg) {
-        w->setColorGradient(scg.a, scg.b);
+    inline with<T> operator << (with<T> w, SetFgGradient scg) {
+        w->setFgGradient(scg.a, scg.b);
         return w;
     }
     
@@ -540,17 +540,6 @@ namespace rckid::ui {
         w->setBg(sb.color);
         return w;
     }
-
-    struct SetFg {
-        Color color;
-        SetFg(Color color): color{color} {}
-    };
-    template<typename T>
-    inline with<T> operator << (with<T> w, SetFg sf) {
-        w->setFg(sf.color);
-        return w;
-    }
-
 
     struct SetHAlign {
         HAlign align;

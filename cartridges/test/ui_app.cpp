@@ -11,6 +11,7 @@
 
 
 #include <rckid/apps/dialogs/text_dialog.h>
+#include <rckid/apps/dialogs/date_dialog.h>
 
 #include <gbcemu/gbcemu.h>
 
@@ -113,6 +114,7 @@ private:
 
 int main() {
     rckid::initialize();
+    App::run<DateDialog>();
     //App::run<ChevronTest>();
     //App::run<TextDialog>("Hello");
     App::run<Launcher>(mainMenuGenerator({ .gamesExtender = gbcemu::GBCEmu::gamesMenuExtender }));

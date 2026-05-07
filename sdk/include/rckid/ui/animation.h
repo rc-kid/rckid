@@ -288,4 +288,18 @@ namespace rckid::ui {
         return Move(target, target->position(), target->position() + distance);
     }
 
+    template<typename T>
+    inline Animation * BreatheFg(T * target, Color a, Color b = Color::Black()) {
+        return (new Animation{
+            [a, b, target](FixedRatio progress) {
+                target->setFg(Color::RGB(
+                    a.r + progress.scale(b.r - a.r),
+                    a.g + progress.scale(b.g - a.g),
+                    a.b + progress.scale(b.b - a.b)
+                ));
+            },
+            target->animationSpeed()
+        })->setEasingFunction(easing::inOutIn)->setRepeat(true);
+    }
+
 } // namespace rckid::ui

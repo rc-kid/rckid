@@ -63,7 +63,7 @@ namespace rckid {
                     << SetFont(f)
                     << SetUseAlpha(true)
                     << SetText(mi.text)
-                    << SetColorGradient(style.defaultFg(), style.accentBg());
+                    << SetFgGradient(style.defaultFg(), style.accentBg());
             }
 
             root_.useBackgroundImage(false);
