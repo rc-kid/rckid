@@ -40,7 +40,13 @@ namespace rckid::ui {
         }
 
         void showAround(Widget * w, bool animation = true) {
-            Rect rect = Rect::XYWH(w->position().x - padding_, w->position().y - padding_, w->width() + padding_ * 2, w->height() + padding_ * 2);
+            showAt(w->rect(), animation);
+        }
+
+        /** Shows the focus rect around given rectange, to which the requested padding is added.
+         */
+        void showAt(Rect rect, bool animation = true) {
+            rect = Rect::XYWH(rect.x - padding_, rect.y - padding_, rect.w + padding_ * 2, rect.h + padding_ * 2);
             if (animation)
                 animate() << MoveAndResize(this, rect);
             else

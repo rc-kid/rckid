@@ -46,7 +46,6 @@ So what I need:
 Widgets
 
 Dialogs
-- numpad
 
 Wakeups
 - alarm clock
