@@ -47,8 +47,6 @@ Widgets
 
 Dialogs
 - numpad
-- date
-- time
 
 Wakeups
 - alarm clock

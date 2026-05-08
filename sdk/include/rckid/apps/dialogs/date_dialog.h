@@ -139,7 +139,9 @@ namespace rckid {
                         yy_ = 0;
                     if (dd_ > TinyDate::daysInMonth(mm_, yy_))
                         dd_ = TinyDate::daysInMonth(mm_, yy_);
-                    break;                    
+                    break;
+                default:
+                    UNREACHABLE;
             }
             refreshDate();
         }
@@ -162,6 +164,8 @@ namespace rckid {
                     if (dd_ > TinyDate::daysInMonth(mm_, yy_))
                         dd_ = TinyDate::daysInMonth(mm_, yy_);
                     break;                    
+                default:
+                    UNREACHABLE;
             }
             refreshDate();
         }
