@@ -11,6 +11,7 @@
 - once I have the prototypes, finish the v1.0 AVR and start experimenting with what I have on the device
 - this might be better button: https://jlcpcb.com/partdetail/ALPSALPINE-SKRABCE010/C19724057
 - figure out the side buttons if there are ones that can be soldered by jlcpcb and be better centered
+- this might be better speaker: https://cz.mouser.com/ProductDetail/Same-Sky/CMS-160903-18S-X8
 
 # Ladder
 

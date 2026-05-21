@@ -2,12 +2,29 @@
 
 This file contains brief descriptions of all the manufactured versions of RCKid mk II. In between versions were designed, but not actually manufactured and are not shown here.
 
-## Future
 
-> This will likely be RP2350 based version with 16bit display interface some time in 2025.
+## Beaver King (MkIII v 3.2)
 
-- fix the AVR - RP2040 voltage problem
-- can we make RP2040 to be USB host & guest at the same time so that we can for instance attach keyboard? 
+Aimed at assembly & BOM simplification. Incorporates changes in SDK 1.0 from version 3.1 (no AVR_IRQ pin, etc.). Things that are to be validated by this version are:
+
+- taller front buttons with integrated stems for better tactile feel and simpler button construction
+- bigger side buttons that can be automatically soldered
+- MEMS microphone instead of electret
+- spring contacts speaker with speaker enclosure formed by the case & PCB
+- spring contacts rumbler
+- spring contacts battery connector
+
+
+
+## MkIII version 3.1
+
+> TODO
+
+> This is the xmas 25 version.
+
+## MkIII version 3.0 (development board)
+
+> TODO
 
 ## MkII version 2.3 - 19/6/24
 
