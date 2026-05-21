@@ -1,7 +1,6 @@
 /** AVR Firmware for RCKid
  
-    This is the firmware for ATTiny3217 in RCKid mkIII, specifically SDK version 1.0 and up. The main difference from the previous mkIII versions is simpler execution model with fewer commands and firmware logic as per the SDK 1.0 refactoring.
-
+    This is the firmware for ATTiny3217 in RCKid mkIII, specifically SDK version 1.0 and up, hardware revision 3.2 (Beaver King). The main difference from the previous mkIII versions is simpler execution model with fewer commands and firmware logic as per the SDK 1.0 refactoring and dedicated UART TX for debugging that can be turned on or off. 
 
  */
 #include <avr/sleep.h>
@@ -25,15 +24,11 @@ inline Writer debugWrite() {
 //@}
 
 
-#define ASSERT(...) if (!(__VA_ARGS__)) { debugWrite() << "ASSERT " << __LINE__ << "\r\n"; }
-#define UNREACHABLE do { debugWrite() << "Unreachable: " << __LINE__; while (true) {} } while (false)
-#define UNIMPLEMENTED do { debugWrite() << "Unimplemented: " << __LINE__; while (true) {} } while (false)
+#define LOG(...) do { if (ts_.debugUart) debugWrite() << __VA_ARGS__ << "\r\n"; } while (false)
 
-#if RCKID_AVR_IS_SERIAL_TX
-    #define LOG(...) debugWrite() << __VA_ARGS__ << "\r\n";
-#else
-    #define LOG(...)
-#endif
+#define ASSERT(...) do { if (!(__VA_ARGS__)) { LOG("ASSERT " << __LINE__); while (true) {}; } } while (false)
+#define UNREACHABLE do { LOG("Unreachable: " << __LINE__); while (true) {}; } while (false)
+#define UNIMPLEMENTED do { LOG("Unimplemented: " << __LINE__); while (true) {} } while (false)
 
 using namespace rckid;
 
@@ -75,10 +70,11 @@ public:
         processI2CCommand();
         // process any interrupt requests
         processIntRequests();
-#if RCKID_AVR_IS_SERIAL_TX
+
         // wait for any TX transmissions before going to sleep 
-        serial::waitForTx();
-#endif
+        if (ts_.debugUart)
+            serial::waitForTx();
+
         // After everything was processed, go to sleep - we will wake up with the ACCEL or PMIC interrupts, or if in power off mode also by the HOME button interrupt
         cpu::sei();
         sleep_enable();
@@ -107,11 +103,9 @@ public:
         while (RTC.PITSTATUS & RTC_CTRLBUSY_bm);
         RTC.PITCTRLA = RTC_PERIOD_CYC32768_gc | RTC_PITEN_bm;
 
-    #if RCKID_AVR_IS_SERIAL_TX
         // initializes the AVR TX pin for serial debugging
         serial::setAlternateLocation(true);
         serial::initializeTx(RCKID_AVR_SERIAL_SPEED);
-    #endif
 
     }
 
@@ -207,8 +201,6 @@ public:
                     powerIOVDD(false);
                     ts_.state.setDebugMode(false);
                     enablePWM(false);
-                    // make the AVR_INT floating so that we do not leak any voltage to the now off RP2350
-                    gpio::outputFloat(AVR_PIN_AVR_INT);
                     // clear IRQ
                     clearIrq();
                 );
@@ -252,7 +244,6 @@ public:
      */
     static void powerIOVDD(bool enable) {
         if (enable) {
-            gpio::outputFloat(AVR_PIN_AVR_INT);
             gpio::outputHigh(AVR_PIN_IOVDD_EN);
             // wait a bit and then release the I2C pins by issuing STOP condition
             cpu::delayMs(5);
@@ -264,10 +255,6 @@ public:
             TWI0.SCTRLA |= TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm;
             LOG("IOVDD on");
         } else {
-#if !RCKID_AVR_IS_SERIAL_TX            
-            // clear the interrupt line to ensure we are not bleeding voltage through it
-            gpio::outputFloat(AVR_PIN_AVR_INT);
-#endif
             // capture I2C lines and issue START condition so that the accelerometer's I2C does not float
             i2c::disable();
             TWI0.SCTRLA = 0;
@@ -622,6 +609,15 @@ public:
                     // TODO clear the debug more RGBs?
                     ts_.state.setDebugMode(false);
                 break;
+            case cmd::SetUartDebug::ID:
+                if (cmd::SetUartDebug::fromBuffer(i2cBuffer_).value) {
+                    ts_.debugUart = true;
+                    LOG("CMD: SetUartDebug ON");
+                } else {
+                    LOG("CMD: SetUartDebug OFF");
+                    ts_.debugUart = false;
+                }
+                break;
             case cmd::SetBrightness::ID:
                 setBacklightPWM(cmd::SetBrightness::fromBuffer(i2cBuffer_).value);
                 break;
@@ -730,7 +726,7 @@ public:
     static void initializeButtons() {
         // required to be in sync with the button sampling
         ASSERT(tickCounter_ == 0);
-        LOG("init buttons...")
+        LOG("init buttons...");
         // pull all buttons up
         gpio::setAsInputPullup(AVR_PIN_BTN_1);
         gpio::setAsInputPullup(AVR_PIN_BTN_2);

@@ -127,7 +127,7 @@
 
 /** AVR pinout
  */
-#define AVR_PIN_AVR_INT         gpio::A1
+#define AVR_PIN_UART_TX         gpio::A1
 #define AVR_PIN_VCC_SENSE       gpio::A2
 #define AVR_PIN_PWM_RUMBLER     gpio::A3
 #define AVR_PIN_5V_EN           gpio::A4

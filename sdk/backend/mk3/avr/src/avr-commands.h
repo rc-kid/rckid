@@ -15,6 +15,7 @@ namespace rckid {
         uint32_t uptime = 0;
         int16_t temp = 0;
         uint32_t const version = RCKID_AVR_FIRMWARE_VERSION;
+        bool debugUart = true;
         uint8_t storage[1024];
     } __attribute__((packed));
 
@@ -103,23 +104,28 @@ namespace rckid::cmd {
         explicit SetDebugMode(bool value): value{value} {}
     );
 
-    COMMAND(17, SetBrightness,
+    COMMAND(17, SetUartDebug,
+        bool value;
+        explicit SetUartDebug(bool value): value{value} {}
+    );
+
+    COMMAND(18, SetBrightness,
         uint8_t value;
         SetBrightness(uint8_t value): value{value} {}
     );
 
-    COMMAND(18, SetRGBEffectAll,
+    COMMAND(19, SetRGBEffectAll,
         RGBEffect effect;
         explicit SetRGBEffectAll(RGBEffect effect): effect{effect} {}
     );
 
-    COMMAND(19, SetRGBEffect,
+    COMMAND(20, SetRGBEffect,
         uint8_t ledIndex;
         RGBEffect effect;
         SetRGBEffect(uint8_t ledIndex, RGBEffect effect): ledIndex{ledIndex}, effect{effect} {}
     );
 
-    COMMAND(20, SetRumblerEffect,
+    COMMAND(21, SetRumblerEffect,
         RumblerEffect effect;
         explicit SetRumblerEffect(RumblerEffect effect): effect{effect} {}
     );
