@@ -428,7 +428,7 @@ public:
             return false;
         systemTick_ = false;
         // check the power off timeout, if we are turning off, do not count it as a system tick and do not check the buttons
-        if (powerOffTimeout_ > 0 && --powerOffTimeout_ == 0) {
+        if (powerOffTimeout_ > 0 && (--powerOffTimeout_ == 0)) {
             LOG("Power off timeout expired, powering off...");
             clearPowerMode(POWER_MODE_ON);
             return false;
@@ -569,11 +569,15 @@ public:
                 break;
             case cmd::WriteStorage::ID: {
                 auto & c = cmd::WriteStorage::fromBuffer(i2cBuffer_);
-                if (c.offset + c.numBytes <= sizeof(ts_.storage))
-                    memcpy(ts_.storage + c.offset, c.data, c.numBytes);
-                else 
-                    // since we have no error notion mechanism, just go unreachable if the bounds check fails so that in product builds it will just be ignored
-                    UNREACHABLE;
+                if (c.numBytes <= sizeof(c.data)) {
+                    if (c.offset + c.numBytes <= sizeof(ts_.storage))
+                        memcpy(ts_.storage + c.offset, c.data, c.numBytes);
+                    else 
+                        // since we have no error notion mechanism, just go unreachable if the bounds check fails so that in product builds it will just be ignored
+                        UNREACHABLE;
+                } else {
+                    LOG("CMD: Invalid WriteStorage length " << c.numBytes);
+                }
                 break;
             }
             case cmd::ReadEEPROM::ID:
@@ -586,8 +590,8 @@ public:
                 clearPowerMode(POWER_MODE_ON);
                 break;
             case cmd::PowerOffAck::ID:
-                // reset the power off timeout to give the RP2350 more time to shut down gracefully before we cut the power (note the timeout setting is in FPS while the actual timeout is in system ticks, i.e. 3x the speed)
-                powerOffTimeout_ = RCKID_POWEROFF_TIMEOUT_FPS * 3;
+                // reset the power off timeout to give the RP2350 more time to shut down gracefully before we cut the power
+                powerOffTimeout_ = RCKID_POWEROFF_TIMEOUT_TICKS;
                 break;
             case cmd::Sleep::ID:
                 UNIMPLEMENTED;
@@ -888,8 +892,7 @@ public:
             setPowerMode(POWER_MODE_ON);
         // otherwise, if we are in power on mode, long press means transition to power off, so here we simply set the power off interrupt and timeout. 
         } else if (isPowerModeOn()) {
-            // multiply by 3 as the power off timeout is in system ticks, not FPS
-            powerOffTimeout_ = RCKID_POWEROFF_ACK_TIMEOUT_FPS * 3;
+            powerOffTimeout_ = RCKID_POWEROFF_ACK_TIMEOUT_TICKS;
             ts_.state.setPowerOffInterrupt(true);
             setIrq();
         }
@@ -982,8 +985,7 @@ public:
                 // emergency shutdown if battery too low
                 if (value < RCKID_POWER_ON_THRESHOLD && (powerMode_ & POWER_MODE_ON)) {
                     // TODO we might need a ring buffer for this to elliminate spurious shutdowns etc
-                    // multiply by 3 as the timeout is in system ticks instead of FPS used in config
-                    powerOffTimeout_ = RCKID_POWEROFF_ACK_TIMEOUT_FPS * 3;
+                    powerOffTimeout_ = RCKID_POWEROFF_ACK_TIMEOUT_TICKS;
                     ts_.state.setPowerOffInterrupt(true);
                     // inform user the shutdown is because of critical battery level
                     criticalBattery();

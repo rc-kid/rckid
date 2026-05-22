@@ -16,9 +16,9 @@
 
 /** Timeout for the RP2350 to acknowledge the power interrupt request.  
  */
-#define RCKID_POWEROFF_ACK_TIMEOUT_FPS 10
+#define RCKID_POWEROFF_ACK_TIMEOUT_TICKS 30
 
-#define RCKID_POWEROFF_TIMEOUT_FPS (10 * 60)
+#define RCKID_POWEROFF_TIMEOUT_TICKS (10 * 60 * 3)
 
 /** Number of ticks (roughly 1/60th of second) for button debounce (all buttons), i.e. changes in button state are ignored (delayed if permanent) for this many ticks after accepted change.
  */
