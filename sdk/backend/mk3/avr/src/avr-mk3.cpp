@@ -508,7 +508,7 @@ public:
         #define I2C_STOP_TX (TWI_APIF_bm | TWI_DIR_bm)
         #define I2C_STOP_RX (TWI_APIF_bm)
         uint8_t status = TWI0.SSTATUS;
-        // sending data to accepting master simply starts sending the ts_.state buffer. 
+        // sending data to accepting master simply starts sending the ts_.state buffer. Thereis no memory protection and AVR will happily leak its entire memory - this is intentional.
         if ((status & I2C_DATA_MASK) == I2C_DATA_TX) {
             TWI0.SDATA = i2cTxAddr_[i2cTxBytes_++];
             TWI0.SCTRLB = TWI_SCMD_RESPONSE_gc;
@@ -542,7 +542,16 @@ public:
             return;
         // process the commands
         LOG("Cmd: " << i2cBuffer_[0]);
+        if (cmd::getCommandSize(i2cBuffer_[0]) != i2cRxBytes_) {
+            LOG("Invalid size: exp " << cmd::getCommandSize(i2cBuffer_[0]) << ", got " << i2cRxBytes_);
+            // convert the incomplete size command to NOP
+            i2cBuffer_[0] = cmd::Nop::ID;
+        }
         switch (i2cBuffer_[0]) {
+            default:
+                // unknown command, ignore for now
+                LOG("Unknown cmd: " << i2cBuffer_[0]);
+                [[fallthrough]]
             case cmd::Nop::ID:
                 i2cTxAddr_ = reinterpret_cast<uint8_t *>(& ts_);
                 break;
@@ -578,8 +587,8 @@ public:
                 clearPowerMode(POWER_MODE_ON);
                 break;
             case cmd::PowerOffAck::ID:
-                // reset the power off timeout to give the RP2350 more time to shut down gracefully before we cut the power
-                powerOffTimeout_ = RCKID_POWEROFF_TIMEOUT_FPS;
+                // reset the power off timeout to give the RP2350 more time to shut down gracefully before we cut the power (note the timeout setting is in FPS while the actual timeout is in system ticks, i.e. 3x the speed)
+                powerOffTimeout_ = RCKID_POWEROFF_TIMEOUT_FPS * 3;
                 break;
             case cmd::Sleep::ID:
                 UNIMPLEMENTED;
@@ -626,7 +635,10 @@ public:
                 break;
             case cmd::SetRGBEffect::ID: {
                 auto & c = cmd::SetRGBEffect::fromBuffer(i2cBuffer_);
-                rgbSetEffect(c.ledIndex, c.effect);
+                if (c.ledIndex < RCKID_NUM_RGB_LEDS)
+                    rgbSetEffect(c.ledIndex, c.effect);
+                else 
+                    LOG("CMD: invalid led index " << c.ledIndex);
                 break;
             }
             case cmd::SetRumblerEffect::ID: {
@@ -634,10 +646,6 @@ public:
                 setRumblerEffect(c.effect);
                 break;
             }
-            default:
-                // unknown command, ignore for now
-                LOG("Unknown cmd: " << i2cBuffer_[0]);
-                break;
         }
         // and reset the command state so that we can read more commands 
         NO_ISR(
@@ -881,7 +889,8 @@ public:
             setPowerMode(POWER_MODE_ON);
         // otherwise, if we are in power on mode, long press means transition to power off, so here we simply set the power off interrupt and timeout. 
         } else if (isPowerModeOn()) {
-            powerOffTimeout_ = RCKID_POWEROFF_ACK_TIMEOUT_FPS;
+            // multiply by 3 as the power off timeout is in system ticks, not FPS
+            powerOffTimeout_ = RCKID_POWEROFF_ACK_TIMEOUT_FPS * 3;
             ts_.state.setPowerOffInterrupt(true);
             setIrq();
         }
@@ -974,7 +983,8 @@ public:
                 // emergency shutdown if battery too low
                 if (value < RCKID_POWER_ON_THRESHOLD && (powerMode_ & POWER_MODE_ON)) {
                     // TODO we might need a ring buffer for this to elliminate spurious shutdowns etc
-                    powerOffTimeout_ = RCKID_POWEROFF_ACK_TIMEOUT_FPS;
+                    // multiply by 3 as the timeout is in system ticks instead of FPS used in config
+                    powerOffTimeout_ = RCKID_POWEROFF_ACK_TIMEOUT_FPS * 3;
                     ts_.state.setPowerOffInterrupt(true);
                     // inform user the shutdown is because of critical battery level
                     criticalBattery();

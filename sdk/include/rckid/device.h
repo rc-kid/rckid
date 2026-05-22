@@ -175,7 +175,7 @@ namespace rckid {
             ----------------- power off interrupt 
          */
         uint8_t c_ = 0;
-        static constexpr uint8_t WAKEUP_INTERRUPT_MASK = 1 << 6;
+        static constexpr uint8_t WAKEUP_INTERRUPT_MASK = 1 << 5;
         static constexpr uint8_t ACCEL_INTERRUPT_MASK = 1 << 6;
         static constexpr uint8_t POWER_OFF_INTERRUPT_MASK = 1 << 7;
         /** Voltage 
