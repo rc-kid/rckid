@@ -569,9 +569,8 @@ public:
                 break;
             case cmd::WriteStorage::ID: {
                 auto & c = cmd::WriteStorage::fromBuffer(i2cBuffer_);
-                uint8_t numBytes = i2cRxBytes_ - sizeof(c.offset) - 1;
-                if (c.offset + numBytes <= sizeof(ts_.storage))
-                    memcpy(ts_.storage + c.offset, c.data, i2cRxBytes_ - sizeof(c.offset) - 1);
+                if (c.offset + c.numBytes <= sizeof(ts_.storage))
+                    memcpy(ts_.storage + c.offset, c.data, c.numBytes);
                 else 
                     // since we have no error notion mechanism, just go unreachable if the bounds check fails so that in product builds it will just be ignored
                     UNREACHABLE;

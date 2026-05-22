@@ -33,13 +33,15 @@
     )
 
     /** Writes bytes to the storage buffer at given offset.
+     
      */
     COMMAND(5, WriteStorage,
         uint16_t offset;
-        uint8_t data[RCKID_I2C_MAX_ASYNC_MSG_SIZE - sizeof(offset) - 1];
-        WriteStorage(uint16_t offset, uint8_t const * data, uint32_t len): offset{offset} {
+        uint8_t numBytes;
+        uint8_t data[RCKID_I2C_MAX_ASYNC_MSG_SIZE - sizeof(offset) - sizeof(numBytes) - 1];
+        WriteStorage(uint16_t offset, uint8_t const * data, uint32_t numBytes): offset{offset}, numBytes{numBytes} {
             ASSERT(len <= sizeof(this->data));
-            memcpy(this->data, data, len);
+            memcpy(this->data, data, numBytes);
         }
     )
 
