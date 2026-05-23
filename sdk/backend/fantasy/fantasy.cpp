@@ -603,7 +603,7 @@ namespace rckid::hal {
                 internal::memory::SystemMallocGuard g;
                 internal::fs::cartridge_.seekp(start);
                 uint8_t buffer[4096];
-                std::memset(buffer, 4096, 0xff);
+                std::memset(buffer, 0xff, 4096);
                 internal::fs::cartridge_.write(reinterpret_cast<char const *>(buffer), 4096);
             } catch (std::exception const & e) {
                 LOG(LL_ERROR, "Cartridge flash erase error: " << e.what());

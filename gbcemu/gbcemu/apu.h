@@ -357,7 +357,7 @@ namespace rckid::gbcemu {
                 // reset lfsr when triggered
                 lfsr_ = 0;
                 static constexpr int32_t dividers[] = { 1, 2, 4, 6, 8, 10, 12, 14 };
-                period_ = dividers[clkDiv] * (2 ^ clkShift);
+                period_ = dividers[clkDiv] * (1 << clkShift);
             }
 
         private:

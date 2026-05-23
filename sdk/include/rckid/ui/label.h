@@ -37,6 +37,11 @@ namespace rckid::ui {
                 if (c == '\n')
                     break;
             }
+            // if no whole word made it, we'll break at where we got. If we got nowehere, take at least one char off.
+            if (endSep == 0)
+                endSep = end;
+            if (endSep == 0)
+                endSep = 1;
             uint32_t start; // start of the remainder
             if ((endSep > 0) && (end < value.size() - 1)) {
                 end = endSep - 1;

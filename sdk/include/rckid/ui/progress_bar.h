@@ -65,9 +65,9 @@ namespace rckid::ui {
 
         Color fg_;
         Color bg_;
-        int32_t min_;
-        int32_t max_;
-        int32_t value_;
+        int32_t min_ = 0;
+        int32_t max_ = 100;
+        int32_t value_ = 50;
 
     }; // ProgressBar
 

@@ -321,7 +321,7 @@ namespace rckid::gbcemu {
         apu_.enable(false);
         delete gamepak_;
         for (uint32_t i = 0; i < 16; ++i)
-            delete eram_[i];
+            delete [] eram_[i];
         // TODO some more cleanup would be good here
     }
 

@@ -18,6 +18,7 @@ namespace rckid::ui {
 
         uint32_t zoom() const { return zoom_; }
         void setZoom(uint32_t value) { 
+            ASSERT(value > 0);
             if (zoom_ != value) {
                 zoom_ = value; 
                 onChange();

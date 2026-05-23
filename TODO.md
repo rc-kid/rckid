@@ -100,26 +100,6 @@ Games (port from mkII)
 - direct connection to other device
 - via usb cable/wifi/nrf or other means, when activated user can select which link implementation to use if multiple are possible so that the API is the same and does not care with implementation
 
-# Version 3.2 Checklist
-
-First add a board that can verify the last missing features and DFM improvements, namely:
-
-- [X] SMT soldered vibration motor
-- [X] ditch radio from main board
-- [ ] radio IRQ pin can become RPI TX for debugging
-> This means debugging connector is 1 GND, 2 ARM debugging, 1 UPDI, 1 RP tx, 1 AVR tx (6)
-
-These will be tested with a simple testboard:
-
-- [ ] smaller board size for cheaper assembly
-- [ ] microphone sensing
-- [ ] headphone detection via switches, *not* extra ground link
-- [X] speaker without housing connected via spring contacts
-- [ ] battery connectors for nokia-like batteries, etc.
-- [ ] rubber dome buttons
-
-Software features:
-
 # DevBoard Checklist
 
 > X means done, - means cannot be done
@@ -220,19 +200,10 @@ Polish
 
 - https://jlcpcb.com/partdetail/JST-S2B_PH_KL_LF_SN/C160237 (use this for battery connector)
 - JST-PH2 batteries from https://www.aliexpress.com/item/1005007102975858.html
-- alternatively maybe a daughterboard with pogo pins that will connect to the main board might be the simplest solution
-- raise the nylon case 1mm above the glass and round it, maybe 1mm diameter or slightly less? 
-- make cartridge cover tiny bit slimmer for that larger pcb
 - make the cartridge pcb 1.6mm standard thickness? Basically it would only simplify the jacdac stuff, otherwise unnecessary
 
-- maybe microphone is reversed, in which case this is easy to check by detecting if brass case is gnd or not
-- also can try different microphones (https://jlcpcb.com/partdetail/SAMZO-MIC_4013_GG00/C42371093)
-
 - RM2 cartridges do not connect flash to 3v3(!!)
-- side buttons are too thin
-- pull-up for the headphone detect is too weak, try sth like 40kOhm? 
 - home button can be centered in the hole so that it is a bit higher up
-- connector pcb should move the pins as close to edge as possible for better contact (or make cartridges a bit taller, and meybe both)
 - is there a way how to make the headphones work with headphones that have microphone as well? maybe by connecting tip with some large resistor to 0 (68k or so) and then connecting the tip mate via even higher resistor to VCC as a pull up. Then it will read close to 0 when not inserted and VCC when inserted. But will this upset the audio? It actually might work and I can ignore the second sleeve and it would work with all headphones! (can I make it work with current audio setup by rewiring?)
 - might get super pretty front panels from here: https://www.hopesens-glass.com/
 - IR led needs pull-up, not pull-down
