@@ -56,7 +56,7 @@ namespace rckid::ui {
                     ++buffer;
                     continue;
                 }
-                if (cy > canvas_->height())
+                if (cy >= canvas_->height())
                     break;
                 *(buffer++) = canvas_->at(cx, cy);
             }
@@ -124,7 +124,7 @@ namespace rckid::ui {
                     setZoom(zoom_ - 1);
             }
             if (btnPressed(Btn::VolumeUp)) {
-                if (zoom_ < 10)
+                if (zoom_ < 24)
                     setZoom(zoom_ + 1);
             }
         }

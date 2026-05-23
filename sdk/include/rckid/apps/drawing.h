@@ -36,7 +36,8 @@ namespace rckid {
             ui::App<void>::onFocus();
             focusWidget(edit_);
         }
-        unique_ptr<Canvas> canvas_{new Canvas{64,64}};
+
+        unique_ptr<Canvas> canvas_{new Canvas{8,8}};
         ui::CanvasView * view_ = nullptr;
         ui::CanvasEdit * edit_ = nullptr;
 
