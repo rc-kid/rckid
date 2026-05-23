@@ -71,19 +71,18 @@
 #define RCKID_SD_PIO pio0
 
 
-
 /** RP2350 Pinout
  */
 #define RP_PIN_I2C_SDA 0
 #define RP_PIN_I2C_SCL 1
-#define RP_PIN_RADIO_INT 2
-#define RP_PIN_AVR_INT 3
+#define RP_PIN_RP_TX 2
+#define RP_PIN_HEADSET_DETECT 3
 #define RP_PIN_I2S_MCLK 4
 #define RP_PIN_I2S_DAC 5
 #define RP_PIN_I2S_ADC 6
 #define RP_PIN_I2S_BCLK 7
 #define RP_PIN_I2S_LRCK 8
-#define RP_PIN_HEADSET_DETECT 9
+#define RP_PIN_CARTRIDGE_AUDIO 9
 #define RP_PIN_SD_CD 10
 #define RP_PIN_DISP_RDX 11
 #define RP_PIN_GPIO_12 12

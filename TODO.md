@@ -1,12 +1,8 @@
 # Immediate Roadmap
 
-- for the PCB update the cartridge connector (and add to it the battery connector)
-- update debug pins
-- cartridge connector move spring contacts closer
 - review & order the PCB
 - review & order the 3d parts (2 top plates clear, 1 clear back plate, 1 nylon backplate)
 - need to do this soon, or I will loose the coupons I have 
-- move battery connector 3mm further
 
 - once I have the prototypes, finish the v1.0 AVR and start experimenting with what I have on the device
 - this might be better button: https://jlcpcb.com/partdetail/ALPSALPINE-SKRABCE010/C19724057

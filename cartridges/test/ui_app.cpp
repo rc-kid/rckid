@@ -116,7 +116,7 @@ private:
 
 int main() {
     rckid::initialize();
-    App::run<NumberDialog>();
+    //App::run<NumberDialog>();
     //App::run<ChevronTest>();
     //App::run<TextDialog>("Hello");
     App::run<Launcher>(mainMenuGenerator({ .gamesExtender = gbcemu::GBCEmu::gamesMenuExtender }));
