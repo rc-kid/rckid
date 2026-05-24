@@ -71,6 +71,54 @@ namespace rckid {
                 ASSERT(carousel_->atRoot());
                 exit();
             }
+            if (btnPressed(Btn::Select)) {
+                ui::Menu popup_;
+                popup_ 
+                    << ui::MenuItem("New", assets::icons_16::light, [this]() {
+                        auto name = App::run<TextDialog>();
+                        if (name) {
+                            Contact * c = new Contact{name.value()};
+                            dirty_ = true;
+                            // where to add the contact?
+                            uint32_t idx = 0;
+                            for (uint32_t e = contacts_.size(); idx < e; ++idx) {
+                                if (contacts_[idx]->name >= c->name)
+                                    break;
+                            }
+                            // insert the contact and create appropriate menu item
+                            contacts_.insert(contacts_.begin() + idx, unique_ptr<Contact>{c});
+                            carousel_->menu()->insert(
+                                carousel_->menu()->begin() + idx, 
+                                ui::MenuItem{c->name, c->image, [this, c]() {
+                                    auto x = App::run<ContactDialog>(c);
+                                    dirty_ = dirty_ || (x.has_value() && x.value());
+                                }}
+                            );
+                            carousel_->setItem(idx);
+                        }
+                    });
+                if (!carousel_->empty())
+                    popup_
+                        << ui::MenuItem("Delete", assets::icons_16::backspace, [this](){
+                            // TODO add confirmation dialog
+                            // delete the contact (and its menu item)
+                            uint32_t idx = carousel_->index();
+                            contacts_.erase(contacts_.begin() + idx);
+                            carousel_->menu()->erase(carousel_->menu()->begin() + idx);
+                            if (contacts_.empty()) {
+                                carousel_->setEmpty();
+                            } else {
+                                if (idx >= contacts_.size())
+                                  --idx;
+                                carousel_->setItem(idx);
+                            }
+                            // and flag as dirty
+                            dirty_ = true;
+                        });
+                auto action = App::run<PopupMenu>(popup_);
+                if (action)
+                    action.value()->action()();
+            }
         }
 
     private:

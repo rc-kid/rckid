@@ -43,6 +43,21 @@ namespace rckid::ui {
                 new (&generator_) GeneratorEvent(std::move(from.generator_));
         }
 
+        MenuItem & operator = (MenuItem && other) {
+            if (& other != this) {
+                text = std::move(other.text);
+                icon = std::move(other.icon);
+                payload = other.payload;
+                isAction_ = other.isAction_;
+                decorator_ = std::move(other.decorator_);
+                if (isAction_)
+                    action_ = std::move(other.action_);
+                else
+                    generator_ = std::move(other.generator_);
+            }
+            return *this;
+        }
+
         static MenuItem Generator(String text, ImageSource icon, GeneratorEvent generator) {
             return MenuItem{std::move(text), std::move(icon), std::move(generator)};
         }

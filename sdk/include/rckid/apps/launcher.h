@@ -81,6 +81,7 @@ namespace rckid {
             uint32_t nextIndex() const { return carousel_->nextIndex(); }
             ui::CarouselMenu::Context const * context() const { return carousel_->context() == root_ ? nullptr : carousel_->context(); }
             bool empty() const { return carousel_->empty(); }
+            void setEmpty() { carousel_->setEmpty(); }
             ui::MenuItem * currentItem() const { return carousel_->currentItem(); }
             void setItem(uint32_t index) { carousel_->setItem(index); }
             void resetMenu(ui::MenuItem::GeneratorEvent generator) {
@@ -141,6 +142,8 @@ namespace rckid {
         /** Updates the style used by the launcher. Useful for style changes previews, etc.
          */
         static void updateStyle(ui::Style & style);
+
+    protected:
 
     private:
 

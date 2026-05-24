@@ -19,8 +19,8 @@ namespace rckid {
         String address;
         String note;
 
-        Color color;
-        Color bgColor;
+        Color color = Color::White();
+        Color bgColor = Color::Gray();
 
         int64_t telegramId;
 
