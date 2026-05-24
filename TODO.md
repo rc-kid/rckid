@@ -10,6 +10,8 @@
 - this might be better speaker: https://cz.mouser.com/ProductDetail/Same-Sky/CMS-160903-18S-X8
 - buttons can be better printed with circular infill on the top layer & filament change
 
+- added IOVDD_EN test point which should allow me to create a simple UPDI cartridge
+
 # Icons
 
 - add contact

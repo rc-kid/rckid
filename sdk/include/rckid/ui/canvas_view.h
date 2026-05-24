@@ -19,8 +19,8 @@ namespace rckid::ui {
             onChange();
         }
 
-        uint32_t zoom() const { return zoom_; }
-        void setZoom(uint32_t value) { 
+        Coord zoom() const { return zoom_; }
+        void setZoom(Coord value) { 
             ASSERT(value > 0);
             if (zoom_ != value) {
                 zoom_ = value; 
@@ -59,10 +59,10 @@ namespace rckid::ui {
                         x = 0;
                         break;
                     case HAlign::Center:
-                        x = (width() - static_cast<Coord>(canvas_->width() * zoom_) - 2) / 2;
+                        x = (width() - canvas_->width() * zoom_ - 2) / 2;
                         break;
                     case HAlign::Right:
-                        x = width() - static_cast<Coord>(canvas_->width() * zoom_) - 2;
+                        x = width() - canvas_->width() * zoom_ - 2;
                         break;
                     case HAlign::Manual: // do not change
                         break;
@@ -74,10 +74,10 @@ namespace rckid::ui {
                         y = 0;
                         break;
                     case VAlign::Center:
-                        y = (height() - static_cast<Coord>(canvas_->height() * zoom_) - 2) / 2;
+                        y = (height() - canvas_->height() * zoom_ - 2) / 2;
                         break;
                     case VAlign::Bottom:
-                        y = height() - static_cast<Coord>(canvas_->height() * zoom_) - 2;
+                        y = height() - canvas_->height() * zoom_ - 2;
                         break;
                     case VAlign::Manual: // do not change
                         break;
@@ -104,7 +104,8 @@ namespace rckid::ui {
             }
             // adjust rendering accordingly
             adjustRenderParams(offset_, column, startRow, buffer, numPixels);
-            --column;
+            if (column < 0)
+                return;
             Coord cx = column / zoom_;
             if (cx < 0 || cx >= canvas_->width())
                 return;
@@ -123,7 +124,7 @@ namespace rckid::ui {
         // pointer to the canvas we are showing
         Canvas * canvas_ = nullptr;
         // zoom level
-        uint32_t zoom_ = 1;
+        Coord zoom_ = 1;
 
         HAlign hAlign_ = HAlign::Center;
         VAlign vAlign_ = VAlign::Center;
@@ -204,7 +205,29 @@ namespace rckid::ui {
 
         void repositionFocusRect() {
             // don't do +1 for the border here because the contents itself is shifted
-            with(focusRect_) << SetPosition(pos_.x * zoom_ + offset_.x, pos_.y * zoom_ + offset_.y);
+            Point pos = Point{
+                pos_.x * zoom_ + offset_.x, 
+                pos_.y * zoom_ + offset_.y};
+            // update the offset if we can't fit the rectangle in the view area
+            if (pos.x < 0) {
+                offset_.x -= pos.x;
+                pos.x = 0;
+            }
+            if (pos.y < 0) {
+                offset_.y -= pos.y;
+                pos.y = 0;
+            }
+            Coord posRight = pos.x + focusRect_.width();
+            if (posRight > width()) {
+                offset_.x -= posRight - width();
+                pos.x -= posRight - width(); 
+            }
+            Coord posBottom = pos.y + focusRect_.height();
+            if (posBottom > height()) {
+                offset_.y -= posBottom - height();
+                pos.y -= posBottom - height();
+            }
+            with(focusRect_) << SetPosition(pos);
         }
 
     private:
