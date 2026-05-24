@@ -11,6 +11,7 @@ namespace rckid {
 
     /** Rendering surface.
      
+        For simplicity, Canvas always works in RGB565 mode internally. 
     
      */
     class Canvas {

@@ -25,7 +25,9 @@ namespace rckid {
                 << SetCanvas(canvas_.get())
                 << SetZoom(4);
             view_ = addChild(new CanvasView{})
-                << SetRect(Rect::XYWH(5, 25, 100, 100))
+                << SetRect(Rect::XYWH(5, 25, 95, 95))
+                << SetHAlign(HAlign::Center)
+                << SetVAlign(VAlign::Center)
                 << SetCanvas(canvas_.get())
                 << SetZoom(1);
         }
@@ -37,7 +39,7 @@ namespace rckid {
             focusWidget(edit_);
         }
 
-        unique_ptr<Canvas> canvas_{new Canvas{8,8}};
+        unique_ptr<Canvas> canvas_{new Canvas{16,16}};
         ui::CanvasView * view_ = nullptr;
         ui::CanvasEdit * edit_ = nullptr;
 

@@ -14,7 +14,10 @@ namespace rckid::ui {
     public:
 
         Canvas * canvas() const { return canvas_; }
-        void setCanvas(Canvas * canvas) { canvas_ = canvas; }
+        void setCanvas(Canvas * canvas) { 
+            canvas_ = canvas; 
+            onChange();
+        }
 
         uint32_t zoom() const { return zoom_; }
         void setZoom(uint32_t value) { 
@@ -30,7 +33,60 @@ namespace rckid::ui {
             Widget::renderColumn(column, startRow, buffer, numPixels);
         }
 
+        HAlign hAlign() const { return hAlign_; }
+
+        void setHAlign(HAlign value) {
+            hAlign_ = value;
+            onChange();
+        }
+
+        VAlign vAlign() const { return vAlign_; }
+
+        void setVAlign(VAlign value) {
+            vAlign_ = value;
+            onChange();
+        }
+
     protected:
+
+        void onChange() override {
+            Widget::onChange();
+            Coord x = 0;
+            Coord y = 0;
+            if (canvas_ != nullptr) {
+                switch (hAlign_) {
+                    case HAlign::Left:
+                        x = 0;
+                        break;
+                    case HAlign::Center:
+                        x = (width() - static_cast<Coord>(canvas_->width() * zoom_) - 2) / 2;
+                        break;
+                    case HAlign::Right:
+                        x = width() - static_cast<Coord>(canvas_->width() * zoom_) - 2;
+                        break;
+                    case HAlign::Manual: // do not change
+                        break;
+                    default:
+                        UNREACHABLE;
+                }
+                switch (vAlign_) {
+                    case VAlign::Top:
+                        y = 0;
+                        break;
+                    case VAlign::Center:
+                        y = (height() - static_cast<Coord>(canvas_->height() * zoom_) - 2) / 2;
+                        break;
+                    case VAlign::Bottom:
+                        y = height() - static_cast<Coord>(canvas_->height() * zoom_) - 2;
+                        break;
+                    case VAlign::Manual: // do not change
+                        break;
+                    default:
+                        UNREACHABLE;
+                }
+            }
+            offset_ = Point{x, y};
+        }
 
         void drawCanvasContents(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) {
             if (canvas_ == nullptr)
@@ -38,7 +94,6 @@ namespace rckid::ui {
             // first and last column are reserved for the focus rect border
             if (column == 0 || column == width() - 1)
                 return;
-            --column;
             // last and first row are reserved for the focus rect border
             if (startRow + numPixels == height()) {
                 --numPixels;
@@ -47,6 +102,9 @@ namespace rckid::ui {
                 ++buffer;
                 --numPixels;
             }
+            // adjust rendering accordingly
+            adjustRenderParams(offset_, column, startRow, buffer, numPixels);
+            --column;
             Coord cx = column / zoom_;
             if (cx < 0 || cx >= canvas_->width())
                 return;
@@ -66,6 +124,12 @@ namespace rckid::ui {
         Canvas * canvas_ = nullptr;
         // zoom level
         uint32_t zoom_ = 1;
+
+        HAlign hAlign_ = HAlign::Center;
+        VAlign vAlign_ = VAlign::Center;
+
+        Point offset_{0,0};
+
 
     }; // rckid::ui::CanvasView
 
@@ -140,7 +204,7 @@ namespace rckid::ui {
 
         void repositionFocusRect() {
             // don't do +1 for the border here because the contents itself is shifted
-            with(focusRect_) << SetPosition(pos_.x * zoom_, pos_.y * zoom_);
+            with(focusRect_) << SetPosition(pos_.x * zoom_ + offset_.x, pos_.y * zoom_ + offset_.y);
         }
 
     private:

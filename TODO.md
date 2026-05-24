@@ -10,6 +10,11 @@
 - this might be better speaker: https://cz.mouser.com/ProductDetail/Same-Sky/CMS-160903-18S-X8
 - buttons can be better printed with circular infill on the top layer & filament change
 
+# Icons
+
+- add contact
+- delete contact
+
 # Ladder
 
 The plan is to start with a simple game - cat chase - there is a mouse and a cat, mouse moves randomly, cat chases it, controlled by the player. The aim is to program this game at the C++ level to bring all the pieces together and make sure the c++ code looks decent and easy. Once I have this I can start writing the dynamic wrapper for the layers below (blocks & visual) and asset editors. 
@@ -41,10 +46,6 @@ So what I need:
 
 - make UNREACHABLE & friends part of platform? This should make it write between mkIII, fantasy and ATTiny stuff
 
-Widgets
-
-Dialogs
-
 Wakeups
 - alarm clock
 - steps daily reset
@@ -52,8 +53,6 @@ Wakeups
 
 Settings
 - pim (pin, parent mode, etc.)
-
-
 
 Basic util apps:
 - level
@@ -199,16 +198,13 @@ Polish
 - JST-PH2 batteries from https://www.aliexpress.com/item/1005007102975858.html
 - make the cartridge pcb 1.6mm standard thickness? Basically it would only simplify the jacdac stuff, otherwise unnecessary
 
-- RM2 cartridges do not connect flash to 3v3(!!)
-- home button can be centered in the hole so that it is a bit higher up
 - is there a way how to make the headphones work with headphones that have microphone as well? maybe by connecting tip with some large resistor to 0 (68k or so) and then connecting the tip mate via even higher resistor to VCC as a pull up. Then it will read close to 0 when not inserted and VCC when inserted. But will this upset the audio? It actually might work and I can ignore the second sleeve and it would work with all headphones! (can I make it work with current audio setup by rewiring?)
 - might get super pretty front panels from here: https://www.hopesens-glass.com/
-- IR led needs pull-up, not pull-down
+- need to re-route NRF and loRa boards (pull-up for IR control at least, schematics is correct)
 
 ## AVR
 
 - see if we can run at 5MHz and still talk to neopixel
-- avr int as serial tx mabe add 0r resistor on the line to avoid bleeding into rp2350
 
 ## UI
 
