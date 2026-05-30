@@ -146,24 +146,18 @@ namespace rckid::ui {
                 << SetPadding(0);
         }
 
-        Color fg() const { return fg_; }
-        Color bg() const { return bg_; }
-        void setFg(Color value) { fg_ = value; }
-        void setBg(Color value) { bg_ = value; }
+        Point pos() const { return pos_; }
 
         void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) override {
             drawCanvasContents(column, startRow, buffer, numPixels);
-            renderChildColumn(& focusRect_, column, startRow, buffer, numPixels);
+            if (focused())
+                renderChildColumn(& focusRect_, column, startRow, buffer, numPixels);
             Widget::renderColumn(column, startRow, buffer, numPixels);
         }
 
         void processEvents() override {
             if (canvas_ == nullptr)
                 return;
-            if (btnPressed(Btn::A))
-                canvas_->at(pos_) = fg_;
-            if (btnPressed(Btn::B))
-                canvas_->at(pos_) = bg_;
             if (btnPressed(Btn::Left)) {
                 if (--pos_.x < 0)
                     pos_.x = canvas_->width() - 1;

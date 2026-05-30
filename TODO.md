@@ -10,7 +10,7 @@
 - this might be better speaker: https://cz.mouser.com/ProductDetail/Same-Sky/CMS-160903-18S-X8
 - buttons can be better printed with circular infill on the top layer & filament change
 
-- added IOVDD_EN test point which should allow me to create a simple UPDI cartridge
+- added IOVDD_EN test point which should allow me to create a simple UPDI cartridge, with this I can program RP2350 to function as USB to UART bridge and the cartridge can be used to program the onboard AVR, so no programmers are needed to build & flash the device technically (or one can flash other)
 
 # Icons
 
@@ -33,8 +33,11 @@ So what I need:
 
 # SDK 1.0
 
+- canvas edit rectangle is off again!
+
 - update the config.h to have backend config and general config to which we put things from rckid.cpp now (key repeat and other UI settings)
 
+- mutable ptr ptr might be called get
 - when app is not started and shows error diealog instead, we do double background bump on leaving
 
 - add telemetry (will be useful for the pilots, record time & app start, or end)

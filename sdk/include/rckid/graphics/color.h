@@ -386,6 +386,26 @@ namespace rckid {
 
     }; // rckid::Color
 
+    /** Basic 16 color palette.
+     */
+    constexpr Color::RGB565 Palette16[] = {
+        Color::RGB(242, 192, 162),
+        Color::RGB(233, 132, 114),
+        Color::RGB(216, 35, 35),
+        Color::RGB(152, 24, 60),
+        Color::RGB(31, 203, 35),
+        Color::RGB(18, 109, 48),
+        Color::RGB(38, 221, 221),
+        Color::RGB(24, 103, 160),
+        Color::RGB(147, 66, 38),
+        Color::RGB(108, 37, 30),
+        Color::RGB(247, 226, 108),
+        Color::RGB(237, 179, 41),
+        Color::RGB(231, 109, 20),
+        Color::RGB(255, 255, 255),
+        Color::RGB(106, 95, 160),
+        Color::RGB(0, 0, 0),
+    };
 
     inline uint32_t colorRepresentationBpp(Color::Representation rep) {
         switch (rep) {
