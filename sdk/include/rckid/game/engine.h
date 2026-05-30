@@ -85,6 +85,17 @@ namespace rckid::game {
 
         Palette * palette() { return palette_; }
 
+
+
+        bool loadState([[maybe_unused]] RandomReadStream & stream) override {
+            // TODO
+            return false;
+        }
+
+        void saveState([[maybe_unused]] RandomWriteStream & stream) const override {
+            // TODO
+        }
+
     protected:
 
         /*
@@ -128,6 +139,21 @@ namespace rckid::game {
             for (auto & obj : nonRenderableObjects_)
                 obj->loop();
 
+        }
+
+        /** Home menu of the game engine application. 
+         
+            This is basic home menu plus game engine actions, such as edits, etc.
+         */
+        unique_ptr<ui::Menu> homeMenu() override {
+            auto m = ui::App<void>::homeMenu();
+            m->push_back(ui::MenuItem{
+                "Edit", assets::icons_64::paint_palette,
+                []() {
+
+                }
+            });
+            return m;
         }
 
     private:
