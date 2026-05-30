@@ -25,7 +25,7 @@ namespace rckid {
             edit_ = addChild(new CanvasEdit{})
                 << SetRect(Rect::XYWH(105, 25, 210,210))
                 << SetCanvas(canvas_.get())
-                << SetZoom(4);
+                << SetZoom(8);
             view_ = addChild(new CanvasView{})
                 << SetRect(Rect::XYWH(5, 25, 95, 95))
                 << SetHAlign(HAlign::Center)

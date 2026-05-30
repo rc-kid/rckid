@@ -92,8 +92,9 @@ namespace rckid::ui {
             if (canvas_ == nullptr)
                 return;
             // first and last column are reserved for the focus rect border
-            if (column == 0 || column == width() - 1)
+            if (column < 0 || column >= width() - 1)
                 return;
+            --column;
             // last and first row are reserved for the focus rect border
             if (startRow + numPixels == height()) {
                 --numPixels;
@@ -201,7 +202,8 @@ namespace rckid::ui {
             // don't do +1 for the border here because the contents itself is shifted
             Point pos = Point{
                 pos_.x * zoom_ + offset_.x, 
-                pos_.y * zoom_ + offset_.y};
+                pos_.y * zoom_ + offset_.y
+            };
             // update the offset if we can't fit the rectangle in the view area
             if (pos.x < 0) {
                 offset_.x -= pos.x;

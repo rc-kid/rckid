@@ -33,8 +33,6 @@ So what I need:
 
 # SDK 1.0
 
-- canvas edit rectangle is off again!
-
 - update the config.h to have backend config and general config to which we put things from rckid.cpp now (key repeat and other UI settings)
 
 - mutable ptr ptr might be called get
