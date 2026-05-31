@@ -70,6 +70,8 @@ namespace rckid {
                 return ImageType::JPG;
             if (ext == "qoi")
                 return ImageType::QOI;
+            if (ext == "raw")
+                return ImageType::RawMemory;
         }
         return ImageType::Unknown;
     }

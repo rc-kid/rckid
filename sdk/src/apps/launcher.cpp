@@ -50,7 +50,8 @@ namespace rckid {
                     App::run<Messages>();
                 }}
                 << ui::MenuItem{"Drawing", assets::icons_64::paint_palette, []() {
-                    App::run<Drawing>();
+                    auto canvas = std::make_unique<Canvas>(32, 32);
+                    App::run<Drawing>(canvas.get());
                 }}
                 << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator)
                 << ui::MenuItem::Generator("Settings", assets::icons_64::settings, settingsMenuGenerator);

@@ -18,10 +18,12 @@ namespace rckid {
         CatChase():
             game::Engine("Cat") {
             catSprite_ = createAsset<game::SpriteSet>("CatSprite");
-            catSprite_->addSprite(assets::icons_64::happy_face);
+            //catSprite_->addSprite(assets::icons_64::happy_face);
 
             mouseSprite_ = createAsset<game::SpriteSet>("MouseSprite");
-            mouseSprite_->addSprite(assets::icons_64::footprint);
+            //mouseSprite_->addSprite(assets::icons_64::footprint);
+
+            reloadAssets();
 
             cat_ = createObject<game::Sprite>("Cat");   
             cat_->setSpriteSet(catSprite_);
@@ -95,13 +97,33 @@ namespace rckid {
 
     protected:
 
+        // TODO this is hacky function for demo, in reality we need proper dynamic asset management
+        void reloadAssets() {
+            catSprite_->clear();
+            mouseSprite_->clear();
+
+            catSprite_->addSprite(getSpriteBitmap("cat"));
+            mouseSprite_->addSprite(getSpriteBitmap("mouse"));
+
+        }
+
+        Bitmap getSpriteBitmap(String name) {
+            String fname = STR(homeFolder() << "/" << name << ".raw");
+            if (fs::isFile(fname)) 
+                return Bitmap{ImageSource{fname}};
+            if (name == "cat")
+                return Bitmap{ImageSource{assets::icons_64::happy_face}};
+            else
+                return Bitmap{ImageSource{assets::icons_64::footprint}};
+        }
+
         /** Home menu of the game engine application. 
          
             This is basic home menu plus game engine actions, such as edits, etc.
          */
         unique_ptr<ui::Menu> homeMenu() override {
             auto m = ui::App<void>::homeMenu();
-            m->push_back(ui::MenuItem::Generator(
+            m->insert(m->begin(), ui::MenuItem::Generator(
                 "Edit", assets::icons_64::paint_palette,
                 [this]() {
                     auto result = std::make_unique<ui::Menu>();
@@ -109,14 +131,27 @@ namespace rckid {
                         << ui::MenuItem{
                             "Cat",
                             cat_->getIcon(),
-                            [](){
-                                
+                            [this](){
+                                {
+                                    Canvas canvas{getSpriteBitmap("cat")};
+                                    App::run<Drawing>(& canvas);
+                                    auto f = writeFile("cat.raw");
+                                    canvas.saveAsRaw(*f.get());
+                                }
+                                reloadAssets();
                             }
                         }
                         << ui::MenuItem{
                             "Mouse",
                             mouse_->getIcon(),
-                            [](){
+                            [this](){
+                                {
+                                    Canvas canvas{getSpriteBitmap("mouse")};
+                                    App::run<Drawing>(& canvas);
+                                    auto f = writeFile("cat.raw");
+                                    canvas.saveAsRaw(*f.get());
+                                }
+                                reloadAssets();
                                 
                             }
                         };

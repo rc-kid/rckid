@@ -18,19 +18,20 @@ namespace rckid {
 
         String name() const override { return "Drawing"; }
 
-        Drawing():
-            ui::App<void>() 
+        Drawing(Canvas * canvas):
+            ui::App<void>(),
+            canvas_{canvas} 
         {
             using namespace ui;
             edit_ = addChild(new CanvasEdit{})
                 << SetRect(Rect::XYWH(105, 25, 210,210))
-                << SetCanvas(canvas_.get())
+                << SetCanvas(canvas_)
                 << SetZoom(8);
             view_ = addChild(new CanvasView{})
                 << SetRect(Rect::XYWH(5, 25, 95, 95))
                 << SetHAlign(HAlign::Center)
                 << SetVAlign(VAlign::Center)
-                << SetCanvas(canvas_.get())
+                << SetCanvas(canvas_)
                 << SetZoom(1);
             colorA_ = addChild(new Panel())
                 << SetRect(Rect::XYWH(5, 100, 35, 35))
@@ -74,7 +75,7 @@ namespace rckid {
             }
         }
 
-        unique_ptr<Canvas> canvas_{new Canvas{16,16}};
+        Canvas * canvas_ = nullptr;
         ui::CanvasView * view_ = nullptr;
         ui::CanvasEdit * edit_ = nullptr;
         ui::ColorPicker * colorPicker_ = nullptr;

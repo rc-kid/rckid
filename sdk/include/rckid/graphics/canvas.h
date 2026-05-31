@@ -22,6 +22,15 @@ namespace rckid {
             pixels_{new Color::RGB565[width * height]} {
         }
 
+        Canvas(Bitmap && bmp):
+            w_{bmp.width()},
+            h_{bmp.height()},
+            pixels_{reinterpret_cast<Color::RGB565 *>(std::move(bmp).detachPixelArray())} 
+        {
+            ASSERT(bmp.bpp() == 16);
+            ASSERT(Heap::contains(pixels_.get()));
+        }
+
         Coord width() const { return w_; }
         Coord height() const { return h_; }
 
@@ -104,6 +113,17 @@ namespace rckid {
             ASSERT(startRow + numPixels <= height());
             Color::RGB565 const * start = pixels_.get() + mapIndexColumnFirst(column, 0, w_, h_) + startRow;
             blit_rgb565(reinterpret_cast<uint8_t const *>(start), buffer, numPixels);
+        }
+
+        /** Saves the canvas as Raw format stream
+         
+            TODO hacky for the game engine demo
+         */
+        void saveAsRaw(WriteStream & s) {
+            s.write(reinterpret_cast<uint8_t *>(pixels_.get()), w_ * h_ * 2);
+            s.binaryWriter()
+                << static_cast<uint16_t>(w_)
+                << static_cast<uint16_t>(h_);
         }
 
     private:

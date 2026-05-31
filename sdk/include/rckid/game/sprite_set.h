@@ -35,9 +35,7 @@ namespace rckid::game {
         }
 
         ~SpriteSet() override {
-            for (Integer i = 0; i < size_; i++)
-                delete [] sprites_[i];
-            delete [] sprites_;
+            clear();
         }
 
         /** Width of each sprite in the set.
@@ -63,6 +61,16 @@ namespace rckid::game {
         Color::Index256 const * getSprite(Integer spriteIndex) const {
             ASSERT(spriteIndex >= 0 && spriteIndex < size_);
             return sprites_[spriteIndex];
+        }
+
+        void clear() {
+            for (Integer i = 0; i < size_; i++)
+                delete [] sprites_[i];
+            delete [] sprites_;
+            sprites_ = nullptr;
+            size_ = 0;
+            width_ = 0;
+            height_ = 0;
         }
 
         /** Adds new empty sprite. 

@@ -51,8 +51,10 @@ namespace rckid {
                 data_ = mutable_ptr<uint8_t>{(src.releaseData().release()), dataSize};
                 ASSERT(verify(data_.ptr(), dataSize));
             } else {
-                // TODO do we want to support file based raw bitmaps?
-                UNIMPLEMENTED;
+                auto s = src.toStream();
+                data_ = mutable_ptr<uint8_t>{new uint8_t[s->size()], s->size()};
+                s->read(data_.mut(), s->size());
+                ASSERT(verify(data_.ptr(), s->size()));
             }
         }
 
