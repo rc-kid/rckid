@@ -10,6 +10,8 @@ namespace rckid {
     /** A simple cat-chase game
      
         Serves as a demonstrator of the development ladder architecture. 
+
+
      */
     class CatChase : public game::Engine {
     public:
@@ -89,6 +91,39 @@ namespace rckid {
                 if (other == mouse_)
                     LOG(LL_INFO, "Yeah");
             };
+        }
+
+    protected:
+
+        /** Home menu of the game engine application. 
+         
+            This is basic home menu plus game engine actions, such as edits, etc.
+         */
+        unique_ptr<ui::Menu> homeMenu() override {
+            auto m = ui::App<void>::homeMenu();
+            m->push_back(ui::MenuItem::Generator(
+                "Edit", assets::icons_64::paint_palette,
+                [this]() {
+                    auto result = std::make_unique<ui::Menu>();
+                    (*result)
+                        << ui::MenuItem{
+                            "Cat",
+                            cat_->getIcon(),
+                            [](){
+                                
+                            }
+                        }
+                        << ui::MenuItem{
+                            "Mouse",
+                            mouse_->getIcon(),
+                            [](){
+                                
+                            }
+                        };
+                    return result;
+                }
+            ));
+            return m;
         }
 
     private:

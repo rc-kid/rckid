@@ -141,21 +141,6 @@ namespace rckid::game {
 
         }
 
-        /** Home menu of the game engine application. 
-         
-            This is basic home menu plus game engine actions, such as edits, etc.
-         */
-        unique_ptr<ui::Menu> homeMenu() override {
-            auto m = ui::App<void>::homeMenu();
-            m->push_back(ui::MenuItem{
-                "Edit", assets::icons_64::paint_palette,
-                []() {
-
-                }
-            });
-            return m;
-        }
-
     private:
 
         /** Registers the given engine object into the dynamic runtime. 

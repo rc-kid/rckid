@@ -71,6 +71,10 @@ namespace rckid::game {
             palette_ = value;
         }
 
+        Coord width() const { return spriteSet_->width(); }
+
+        Coord height() const { return spriteSet_->height(); }
+
         void moveBy(Point by) {
             pos_ += by;
         }
@@ -142,6 +146,24 @@ namespace rckid::game {
                 };
             })
         );
+
+
+        /** Creates ImageSource to be used in UI elements for the sprite set.
+         
+            TODO hacky, will need rewrite when unifying images, bitmaps, canvases, etc.
+         */
+        ImageSource getIcon(uint32_t index = 0) {
+            uint32_t numPixels = width() * height();
+            uint8_t const * sprite = reinterpret_cast<uint8_t const *>(spriteSet_->getSprite(index));
+
+            uint16_t * data = new uint16_t[numPixels + 2];
+            for (uint32_t i = 0; i < numPixels; ++i)
+                data[i] = palette_->colors()[sprite[i]];
+
+            data[numPixels] = width();
+            data[numPixels + 1] = height();
+            return ImageSource{mutable_ptr<uint8_t>{reinterpret_cast<uint8_t *>(data), (numPixels + 2) * 2}};
+        }
 
     protected:
 

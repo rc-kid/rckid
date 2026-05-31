@@ -60,6 +60,11 @@ namespace rckid::game {
             return sprites_[spriteIndex] + mapIndexColumnFirst(column, 0, width_, height_);
         }
 
+        Color::Index256 const * getSprite(Integer spriteIndex) const {
+            ASSERT(spriteIndex >= 0 && spriteIndex < size_);
+            return sprites_[spriteIndex];
+        }
+
         /** Adds new empty sprite. 
          */
         void addSprite() {
