@@ -10,9 +10,9 @@ namespace {
 TEST(stream, memoryStream) {
     using namespace rckid;
     Heap::UseAndReserveGuard g_;
-    MemoryStream s{mutable_ptr<uint8_t>{foo, sizeof(foo)}};
-    EXPECT(g_.usedDelta() == 0);
-    EXPECT(g_.reservedDelta() == 0);
+    MemoryStream s = MemoryStream::copyOf(foo, sizeof(foo));
+    EXPECT(g_.usedDelta() == 16);
+    EXPECT(g_.reservedDelta() == 16);
     EXPECT(s.size() == sizeof(foo));
     EXPECT(s.peek() == 1);
     EXPECT(s.peek() == 1);
@@ -33,10 +33,10 @@ TEST(stream, memoryStream) {
     EXPECT(s.peek() == 2);
     EXPECT(s.readByte() == 2);
     s.writeByte(33);
-    EXPECT(g_.usedDelta() == 16);
-    EXPECT(g_.reservedDelta() == 16);
     s.seek(0);
     EXPECT(s.readByte() == 1);
     EXPECT(s.readByte() == 2);
     EXPECT(s.readByte() == 33);
+    EXPECT(g_.usedDelta() == 16);
+    EXPECT(g_.reservedDelta() == 16);
 }   

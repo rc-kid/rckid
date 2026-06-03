@@ -230,47 +230,54 @@ namespace rckid {
     class MemoryStream : public RandomReadStream, public RandomWriteStream {
     public:
 
-        MemoryStream(mutable_ptr<uint8_t> buffer) :
+        MemoryStream(unique_ptr<uint8_t> buffer, uint32_t size) :
             buffer_{std::move(buffer)},
+            size_{size},
             pos_{0} {
         }
 
         static MemoryStream withCapacity(uint32_t capacity) {
             uint8_t * buffer = new uint8_t[capacity];
-            return MemoryStream{mutable_ptr<uint8_t>{buffer, capacity}};
+            return MemoryStream{unique_ptr<uint8_t>{buffer}, capacity};
+        }
+
+        static MemoryStream copyOf(uint8_t const * data, uint32_t size) {
+            uint8_t * buffer = new uint8_t[size];
+            memcpy(buffer, data, size);
+            return MemoryStream{unique_ptr<uint8_t>{buffer}, size};
         }
 
         uint32_t read(uint8_t * buffer, uint32_t bufferSize) override {
-            uint32_t toRead = std::min(bufferSize, buffer_.count() - pos_);
-            std::memcpy(buffer, buffer_.ptr() + pos_, toRead);
+            uint32_t toRead = std::min(bufferSize, size_ - pos_);
+            std::memcpy(buffer, buffer_.get() + pos_, toRead);
             pos_ += toRead;
             return toRead;
         }
 
         bool eof() const override {
-            return pos_ >= buffer_.count();
+            return pos_ >= size_;
         }
 
         std::optional<uint8_t> peek() override {
-            if (pos_ >= buffer_.count())
+            if (pos_ >= size_)
                 return std::nullopt;
-            return buffer_.ptr()[pos_];
+            return buffer_.get()[pos_];
         }
 
         uint32_t tryWrite(uint8_t const * buffer, uint32_t bufferSize) override {
-            uint32_t toWrite = std::min(bufferSize, buffer_.count() - pos_);
-            std::memcpy(buffer_.mut() + pos_, buffer, toWrite);
+            uint32_t toWrite = std::min(bufferSize, size_ - pos_);
+            std::memcpy(buffer_.get() + pos_, buffer, toWrite);
             pos_ += toWrite;
             return toWrite;
         }
 
         uint32_t size() const override {
-            return buffer_.count();
+            return size_;
         }
 
         uint32_t seek(uint32_t position) override {
-            if (position > buffer_.count())
-                pos_ = buffer_.count();
+            if (position > size_)
+                pos_ = size_;
             else 
                 pos_ = position;
             return pos_;
@@ -281,7 +288,8 @@ namespace rckid {
         }
 
     private:
-        mutable_ptr<uint8_t> buffer_;
+        unique_ptr<uint8_t> buffer_;
+        uint32_t size_;
         uint32_t pos_;
     }; 
 
