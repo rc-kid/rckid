@@ -43,7 +43,7 @@ TEST(memory, immutable_ptr) {
     Heap::UseAndReserveGuard h;
     EXPECT(hal::memory::isImmutableDataPtr(data) == true);
     {
-        immutable_ptr<uint8_t> p1{data};
+        immutable_ptr<uint8_t> p1{data, sizeof(data)};
         EXPECT(h.usedDelta() == 0);
         EXPECT(h.reservedDelta() == 0);
         EXPECT(p1[0] == 10);

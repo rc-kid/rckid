@@ -151,7 +151,7 @@ namespace rckid {
         constexpr immutable_ptr(nullptr_t) : ptr_{nullptr} {}
 
 
-        constexpr explicit immutable_ptr(T const * ptr): ptr_{ptr} {
+        constexpr explicit immutable_ptr(T const * ptr, uint32_t size): ptr_{ptr}, size_{size} {
             ASSERT(Heap::contains(ptr) || hal::memory::isImmutableDataPtr(ptr) || ptr == nullptr);
         }
 
@@ -159,7 +159,7 @@ namespace rckid {
          
             But in this case the value must belong to the immutable data pool as defined by the HW abstraction layer. This is because otherwise there could be subtle lifetime issues, such as when immutable_ptr would point to a stack variable that gets out of scope. 
          */
-        constexpr immutable_ptr(T const & value): ptr_{& value } {
+        constexpr immutable_ptr(T const & value): ptr_{& value }, size_{ sizeof(T) } {
             ASSERT(hal::memory::isImmutableDataPtr(ptr_));
             ASSERT(! Heap::contains(ptr_));
         }
@@ -167,9 +167,11 @@ namespace rckid {
         immutable_ptr(immutable_ptr const & ) = delete;
         immutable_ptr & operator = (immutable_ptr const &) = delete;
 
-        immutable_ptr(immutable_ptr && other) noexcept : ptr_{other.ptr_} { 
-            if (! hal::memory::isImmutableDataPtr(other.ptr_))
+        immutable_ptr(immutable_ptr && other) noexcept : ptr_{other.ptr_}, size_{other.size_} { 
+            if (! hal::memory::isImmutableDataPtr(other.ptr_)) {
                 other.ptr_ = nullptr; 
+                other.size_ = 0;
+            }
         }
 
         immutable_ptr & operator = (immutable_ptr && other) {
@@ -177,6 +179,7 @@ namespace rckid {
                 return *this;
             deletePtr();
             ptr_ = other.ptr_;
+            size_ = other.size_;
             if (! hal::memory::isImmutableDataPtr(other.ptr_))
                 other.ptr_ = nullptr;
             return *this;
@@ -187,11 +190,27 @@ namespace rckid {
         T const & operator * () const { return * ptr_; } 
         T const * operator -> () const { return ptr_; } 
         T const * get() const { return ptr_; }
+        uint32_t size() const { return size_; }        
         T const & operator [] (uint32_t index) const { return ptr_[index]; }
+
+        /** Returns immutable ptr that is either a clone, or copy of the current one. 
+         
+            If the immutable ptr holds immutable data, we can simply create new pointer to te same address, as there is no ownership involved. Otherwise we must create a copy of the data and create a new pointer to it as this would be ownership transfer otherwise. 
+
+            NOTE calling this method only works on simple types that do not have complex structures as the copy is a simple memcpy without any regard to the object structure.
+         */
+        immutable_ptr<T> cloneOrCopy() const {
+            if (hal::memory::isImmutableDataPtr(ptr_))
+                return immutable_ptr<T>{ptr_, size_};
+            T * copy = reinterpret_cast<T*>(malloc(size_));
+            memcpy(copy, ptr_, size_);
+            return immutable_ptr<T>(copy, size_);
+        }
 
         T const * release() {
             T const * result = ptr_;
             ptr_ = nullptr;
+            size_ = 0;
             return result;
         }
 
@@ -206,6 +225,8 @@ namespace rckid {
         }
 
         T const * ptr_ = nullptr;
+        // immutable ptr has the ability to clone itself if immutable to become mutable. To do this it needs to keep the size of the data points to
+        uint32_t size_ = 0;
     }; // rckid::immutable_ptr<T>
 
     /** Mutable unique pointer

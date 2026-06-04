@@ -17,12 +17,12 @@ namespace rckid {
         } else {
             // one more hack here - we know the data pointer actually holds the path to the file (null-terminated) and we need to create a string from it.
             Type t = type();
-            char const * path = reinterpret_cast<char const *>(data_.get());
+            char const * path = reinterpret_cast<char const *>(data_.release());
             // if the path is not in immutable memory, invalidate the ImageSource after creating the stream
             // NOTE this is not needed, but makes the path based image sources behave in the same way the memory based ones do, i.e. single use            
             if (! hal::memory::isImmutableDataPtr(path))
                 invalidate();
-            String sourceFile{immutable_ptr<char>{path}};
+            String sourceFile{path};
             return fs::readFile(sourceFile, t == Type::SD ? fs::Drive::SD : fs::Drive::Cartridge);
         }
     }

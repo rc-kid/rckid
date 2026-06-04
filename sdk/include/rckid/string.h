@@ -34,11 +34,11 @@ namespace rckid {
             size_{static_cast<uint32_t>(std::strlen(s))}
         {
             if (hal::memory::isImmutableDataPtr(s)) {
-                data_ = immutable_ptr<char>{s};
+                data_ = immutable_ptr<char>{s, size_ + 1};
             } else {
                 char * data = new char[size_ + 1];
                 std::memcpy(data, s, size_ + 1);
-                data_ = immutable_ptr<char>{data};
+                data_ = immutable_ptr<char>{data, size_ + 1};
             }
         }
 
@@ -50,7 +50,7 @@ namespace rckid {
             char * data = new char[size_ + 1];
             std::memcpy(data, s, size);
             data[size] = '\0';
-            data_ = immutable_ptr<char>{data};
+            data_ = immutable_ptr<char>{data, size_ + 1};
         }
 
         /** Creates string from an unique buffer and given size. 
@@ -58,7 +58,7 @@ namespace rckid {
             The unique buffer must be at least size long and *must* be null terminated at the size limit.
          */
         String(unique_ptr<char> buffer, uint32_t size): 
-            data_{buffer.release()},
+            data_{buffer.release(), size + 1},
             size_{size}
         {
             ASSERT(data_[size] == '\0');
@@ -67,9 +67,10 @@ namespace rckid {
         /** Creates string from an unique buffer that must contain null terminated string already.
          */
         String(unique_ptr<char> buffer):
-            data_{buffer.release()},
+            data_{buffer.get(), static_cast<uint32_t>(std::strlen(data_.get())) + 1},
             size_{static_cast<uint32_t>(std::strlen(data_.get()))}
         {
+            buffer.release();
             ASSERT(data_[size_] == '\0');
         }
 
@@ -85,31 +86,24 @@ namespace rckid {
 
         ~String() = default;
 
-        String(String const & other) {
-            if (hal::memory::isImmutableDataPtr(other.data_.get())) {
-                data_ = immutable_ptr<char>{other.data_.get()};
-            } else {
-                // make a copy of the heap data
-                char * newData = new char[other.size_ + 1];
-                std::memcpy(newData, other.data_.get(), other.size_ + 1);
-                data_ = immutable_ptr<char>{newData};
-            }
-            size_ = other.size_;
+        String(String const & other):
+            data_{other.data_.cloneOrCopy()},
+            size_{other.size_} {
         }
 
         String(String && other) noexcept : data_{std::move(other.data_)}, size_{other.size_} {
-            other.data_ = immutable_ptr<char>{emptyLiteral_};
+            other.data_ = immutable_ptr<char>{emptyLiteral_, 1};
             other.size_ = 0;
         }
 
         String & operator = (char const * s) {
             size_ = static_cast<uint32_t>(std::strlen(s));
             if (hal::memory::isImmutableDataPtr(s)) {   
-                data_ = immutable_ptr<char>{s};
+                data_ = immutable_ptr<char>{s, size_ + 1};
             } else {
                 char * data = new char[size_ + 1];
                 std::memcpy(data, s, size_ + 1);
-                data_ = immutable_ptr<char>{data};
+                data_ = immutable_ptr<char>{data, size_ + 1};
             }
             return *this;
         }
@@ -126,7 +120,7 @@ namespace rckid {
                 return *this;
             data_ = std::move(other.data_);
             size_ = other.size_;
-            other.data_ = immutable_ptr<char>{emptyLiteral_};
+            other.data_ = immutable_ptr<char>{emptyLiteral_, 1};
             other.size_ = 0;
             return *this;
         }
@@ -247,10 +241,15 @@ namespace rckid {
 
         /** Releases the  stored pointer as const. 
          */
-        char const * release() { 
-            char const * result = data_.release();
-            data_ = immutable_ptr<char>{emptyLiteral_};
-            return result;
+        immutable_ptr<char> release() {
+            size_ = 0;
+            return std::move(data_);
+        }
+
+        immutable_ptr<uint8_t> releaseAsBuffer() {
+            uint32_t size = data_.size();
+            uint8_t const * ptr = reinterpret_cast<uint8_t const *>(data_.release());
+            return immutable_ptr<uint8_t>{ptr, size};
         }
 
         /** Returns true if the given character is word separator.

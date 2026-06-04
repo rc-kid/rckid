@@ -27,10 +27,8 @@ namespace rckid {
             This version should be used for loading images from files on either the SD card, or the cartridge filesystems.
          */
         ImageSource(String path, fs::Drive drive = fs::Drive::SD):
-            size_{(drive == fs::Drive::SD) ? FILE_SD : FILE_CARTRIDGE} 
-        {
-            uint8_t const * pathData = reinterpret_cast<uint8_t const *>(path.release());
-            data_ = immutable_ptr<uint8_t>{pathData};
+            size_{(drive == fs::Drive::SD) ? FILE_SD : FILE_CARTRIDGE},
+            data_{path.releaseAsBuffer()} {
         }
 
         /** Creates image source pointing to given data buffer in flash memory.
@@ -40,7 +38,7 @@ namespace rckid {
         template<size_t SIZE>
         ImageSource(uint8_t const (& data)[SIZE]) :
             size_{static_cast<uint32_t>(SIZE)},
-            data_{data} 
+            data_{data, SIZE} 
         {
             ASSERT(hal::memory::isImmutableDataPtr(data));
         }
@@ -49,7 +47,7 @@ namespace rckid {
         template<uint32_t SIZE>
         ImageSource(uint16_t const (&data)[SIZE]) :
             size_{static_cast<uint32_t>(sizeof(data))},
-            data_{reinterpret_cast<uint8_t const *>(data)} 
+            data_{reinterpret_cast<uint8_t const *>(data), SIZE * 2} 
         {
             ASSERT(hal::memory::isImmutableDataPtr(data));
             ASSERT(SIZE == data[SIZE-1] * data[SIZE-2] + 2);
@@ -61,7 +59,7 @@ namespace rckid {
          */
         ImageSource(mutable_ptr<uint8_t> data):
             size_{data.count()},
-            data_{data.releasePtr()} {
+            data_{data.releasePtr(), size_} {
         }
 
         /** Creates copy of the image source. 
@@ -175,17 +173,7 @@ namespace rckid {
 
         void clone(ImageSource const & from) {
             size_ = from.size_;
-            if (hal::memory::isImmutableDataPtr(from.data_.get())) {
-                data_ = immutable_ptr<uint8_t>{from.data_.get()};
-            } else {
-                uint32_t memSize = from.size_;
-                if (memSize == FILE_SD || memSize == FILE_CARTRIDGE)
-                    memSize = std::strlen(reinterpret_cast<char const *>(from.data_.get())) + 1; // null terminated
-                // for memory sources we need to make a copy of the data
-                uint8_t * newData = (memSize == 0) ? nullptr : new uint8_t[memSize];
-                std::memcpy(newData, from.data_.get(), memSize);
-                data_ = immutable_ptr<uint8_t>{newData};
-            }
+            data_ = from.data_.cloneOrCopy();
         }
 
         void invalidate() {
