@@ -118,7 +118,7 @@ namespace rckid {
         static_assert(sizeof(TileInfo) == 4);
 
 
-        TileGrid(Coord cols, Coord rows, mutable_ptr<Color::RGB565> palette):
+        TileGrid(Coord cols, Coord rows, immutable_ptr<Color::RGB565> palette):
             cols_{cols}, 
             rows_{rows}, 
             grid_{new TileInfo[cols * rows]},
@@ -183,9 +183,9 @@ namespace rckid {
                 Tile const * tileset = ti->altTileset() ? assets::System16Tiles : assets::Iosevka16Tiles;
                 Coord drawPixels = std::min(numPixels, Tile::height() - startRow);
                 if (ti->transparent())
-                    tileset[ti->tile()].renderColumn(tileCol, startRow, drawPixels, buffer, palette_.ptr() + ti->paletteOffset(), 0);
+                    tileset[ti->tile()].renderColumn(tileCol, startRow, drawPixels, buffer, palette_.get() + ti->paletteOffset(), 0);
                 else
-                    tileset[ti->tile()].renderColumn(tileCol, startRow, drawPixels, buffer, palette_.ptr() + ti->paletteOffset());
+                    tileset[ti->tile()].renderColumn(tileCol, startRow, drawPixels, buffer, palette_.get() + ti->paletteOffset());
                 numPixels -= drawPixels;
                 startRow = 0;
                 buffer += drawPixels;
@@ -205,7 +205,7 @@ namespace rckid {
         Coord cols_;
         Coord rows_;
         unique_ptr<TileInfo> grid_;
-        mutable_ptr<Color::RGB565> palette_;
+        immutable_ptr<Color::RGB565> palette_;
 
     }; // rckid::TileGrid
 
