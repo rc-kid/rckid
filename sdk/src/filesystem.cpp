@@ -461,7 +461,7 @@ namespace rckid::fs {
                 memset(reinterpret_cast<uint8_t*>(label), ' ', 12);
                 label[12] = '\0';
                 f_getlabel("",label, 0);
-                return String{immutable_ptr<char>{label}};
+                return String{immutable_ptr<char>{label, 13}};
             }
             case Drive::Cartridge:
                 return "Cartridge";
