@@ -30,48 +30,45 @@ namespace rckid {
          
             The character literal *must* be null terminated and will be copied if not stored in immutable flash memory. To create string from owned heap data, use the constructor taking immutable_ptr<char>.
          */
-        String(char const * s) : 
-            size_{static_cast<uint32_t>(std::strlen(s))}
-        {
+        String(char const * s) {
+            uint32_t bufferSize = static_cast<uint32_t>(std::strlen(s)) + 1;
             if (hal::memory::isImmutableDataPtr(s)) {
-                data_ = immutable_ptr<char>{s, size_ + 1};
+                data_ = immutable_ptr<char>{s, bufferSize};
             } else {
-                char * data = new char[size_ + 1];
-                std::memcpy(data, s, size_ + 1);
-                data_ = immutable_ptr<char>{data, size_ + 1};
+                char * data = new char[bufferSize];
+                std::memcpy(data, s, bufferSize);
+                data_ = immutable_ptr<char>{data, bufferSize};
             }
         }
 
-        /** Creates string from existing buffer and given size. Copies the buffer instead of taking ownership and does not require null termination.
+        /** Creates string from existing buffer and given size. Copies the buffer instead of taking ownership and will ensure null termination by setting the last char to 0. 
          */
-        String(char const * s, uint32_t size): 
-            size_{size}
-        {
-            char * data = new char[size_ + 1];
+        String(char const * s, uint32_t size) {
+            ASSERT(size > 0);
+            char * data = new char[size];
             std::memcpy(data, s, size);
-            data[size] = '\0';
-            data_ = immutable_ptr<char>{data, size_ + 1};
+            data[size - 1] = '\0';
+            data_ = immutable_ptr<char>{data, size};
         }
 
         /** Creates string from an unique buffer and given size. 
          
-            The unique buffer must be at least size long and *must* be null terminated at the size limit.
+            The unique buffer must be at least size long and *must* be null terminated at the size limit. The size *includes* the null character at the end.
          */
         String(unique_ptr<char> buffer, uint32_t size): 
-            data_{buffer.release(), size + 1},
-            size_{size}
+            data_{buffer.release(), size}
         {
-            ASSERT(data_[size] == '\0');
+            ASSERT(size > 0);
+            ASSERT(data_[size - 1] == '\0');
         }
 
         /** Creates string from an unique buffer that must contain null terminated string already.
          */
         String(unique_ptr<char> buffer):
-            data_{buffer.get(), static_cast<uint32_t>(std::strlen(data_.get())) + 1},
-            size_{static_cast<uint32_t>(std::strlen(data_.get()))}
+            data_{buffer.get(), static_cast<uint32_t>(std::strlen(data_.get())) + 1}
         {
             buffer.release();
-            ASSERT(data_[size_] == '\0');
+            ASSERT(data_[size()] == '\0');
         }
 
         /** Creates string from immutable buffer, which must point to a null terminated string.
@@ -80,30 +77,27 @@ namespace rckid {
             data_{std::move(data)} 
         {
             ASSERT(data_.get() != nullptr);
-            size_ = static_cast<uint32_t>(std::strlen(data_.get()));
-            ASSERT(data_[size_] == '\0');
+            ASSERT(data_[size()] == '\0');
         }        
 
         ~String() = default;
 
         String(String const & other):
-            data_{other.data_.cloneOrCopy()},
-            size_{other.size_} {
+            data_{other.data_.cloneOrCopy()} {
         }
 
-        String(String && other) noexcept : data_{std::move(other.data_)}, size_{other.size_} {
+        String(String && other) noexcept : data_{std::move(other.data_)} {
             other.data_ = immutable_ptr<char>{emptyLiteral_, 1};
-            other.size_ = 0;
         }
 
         String & operator = (char const * s) {
-            size_ = static_cast<uint32_t>(std::strlen(s));
+            uint32_t bufferSize = static_cast<uint32_t>(std::strlen(s)) + 1;
             if (hal::memory::isImmutableDataPtr(s)) {   
-                data_ = immutable_ptr<char>{s, size_ + 1};
+                data_ = immutable_ptr<char>{s, bufferSize};
             } else {
-                char * data = new char[size_ + 1];
-                std::memcpy(data, s, size_ + 1);
-                data_ = immutable_ptr<char>{data, size_ + 1};
+                char * data = new char[bufferSize];
+                std::memcpy(data, s, bufferSize);
+                data_ = immutable_ptr<char>{data, bufferSize};
             }
             return *this;
         }
@@ -119,14 +113,12 @@ namespace rckid {
             if (this == & other)
                 return *this;
             data_ = std::move(other.data_);
-            size_ = other.size_;
             other.data_ = immutable_ptr<char>{emptyLiteral_, 1};
-            other.size_ = 0;
             return *this;
         }
 
         char operator [] (uint32_t index) const {
-            if (index >= size_)
+            if (index >= size())
                 return 0;
             return data_.get()[index];
         }
@@ -141,11 +133,17 @@ namespace rckid {
 
         /** Returns true if the string is empty. 
          */
-        bool empty() const { return size_ == 0; }
+        bool empty() const { return size() == 0; }
 
-        /** Returns the size of the stringm, excluding the null character at the end.
+        /** Returns the size of the string, excluding the null character at the end.
          */
-        uint32_t size() const { return size_; }
+        uint32_t size() const { 
+            if (data_.get() == nullptr)
+                return 0;
+            if (data_.size() == 0)
+                ASSERT(data_.size() != 0);
+            return data_.size() - 1; 
+        }
 
         bool startsWith(String const & prefix) const {
             uint32_t prefixSize = prefix.size();
@@ -164,7 +162,7 @@ namespace rckid {
         bool endsWith(char c) const {
             if (size() == 0)
                 return false;
-            return data_.get()[size_ - 1] == c;
+            return data_.get()[size() - 1] == c;
         }
 
         String substr(uint32_t pos, uint32_t count = UINT32_MAX) const {
@@ -173,7 +171,7 @@ namespace rckid {
             uint32_t available = size() - pos;
             if (count > available)
                 count = available;
-            return String(data_.get() + pos, count);
+            return String(data_.get() + pos, count + 1);
         }
 
         String insertAt(uint32_t pos, char what) const {
@@ -184,7 +182,7 @@ namespace rckid {
             result.get()[pos] = what;
             memcpy(result.get() + pos + 1, c_str() + pos, size() - pos + 1);
             ASSERT(result.get()[size() + 1] == 0);
-            return String{std::move(result), size() + 1};
+            return String{std::move(result), size() + 2};
         }
 
         bool operator == (String const & other) const {
@@ -221,7 +219,7 @@ namespace rckid {
             std::memcpy(newData.get(), data_.get(), size());
             std::memcpy(newData.get() + size(), other.data_.get(), other.size());
             newData.get()[newSize] = '\0';
-            return String{std::move(newData), newSize};
+            return String{std::move(newData), newSize + 1};
         }
 
         /** Returns reader constructed from the string.
@@ -242,7 +240,6 @@ namespace rckid {
         /** Releases the  stored pointer as const. 
          */
         immutable_ptr<char> release() {
-            size_ = 0;
             return std::move(data_);
         }
 
@@ -277,8 +274,6 @@ namespace rckid {
     
         // pointer to the string data
         immutable_ptr<char> data_;
-        // cached size of the string data
-        uint32_t size_ = 0;
 
     }; // rckid::String
 
@@ -317,7 +312,7 @@ namespace rckid {
             unique_ptr<char> buffer{new char[size_ + 1]}; // for /0 at the end
             memcpy(buffer.get(), data_.get(), size_);
             buffer.get()[size_] = 0;
-            return String{std::move(buffer), size_};
+            return String{std::move(buffer), size_ + 1};
         }
 
         /** Returns current size of the string data accumulated by the builder. 
@@ -376,7 +371,7 @@ namespace rckid {
         for (uint32_t i = 0; i < size; ++i)
             buffer.get()[i] = r.getByte();
         buffer.get()[size] = 0;
-        str = String{std::move(buffer), size};
+        str = String{std::move(buffer), size + 1};
     }
 
     // extra formatters

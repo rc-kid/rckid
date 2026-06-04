@@ -131,6 +131,16 @@ TEST(string, substr) {
     EXPECT(s4 == "");
 }
 
+TEST(string, insertAt) {
+    using namespace rckid;
+    String s1{"fobar"};
+    EXPECT(s1.insertAt(0, 'x') == "xfobar");
+    EXPECT(s1.insertAt(1, 'x') == "fxobar");
+    EXPECT(s1.insertAt(2, 'x') == "foxbar");
+    EXPECT(s1.insertAt(4, 'x') == "fobaxr");
+    EXPECT(s1.insertAt(5, 'x') == "fobarx");
+}
+
 TEST(string, reader) {
     using namespace rckid;
     Heap::UseAndReserveGuard g_;

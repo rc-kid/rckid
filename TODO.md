@@ -35,8 +35,6 @@ So what I need:
 
 - update the config.h to have backend config and general config to which we put things from rckid.cpp now (key repeat and other UI settings)
 
-- mutable ptr ptr might be called get
-- string does not need size (part of immutable ptr)
 - ImageSource does not need size(part of immutable ptr)
 - when app is not started and shows error diealog instead, we do double background bump on leaving
 
