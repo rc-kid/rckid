@@ -202,7 +202,7 @@ namespace rckid {
         immutable_ptr<T> cloneOrCopy() const {
             if (hal::memory::isImmutableDataPtr(ptr_))
                 return immutable_ptr<T>{ptr_, size_};
-            T * copy = reinterpret_cast<T*>(malloc(size_));
+            T * copy = reinterpret_cast<T*>(malloc(size_ * sizeof(T)));
             ASSERT(std::is_trivially_copy_constructible_v<T>);
             ASSERT(std::is_trivially_destructible_v<T>);
             memcpy(copy, ptr_, size_ * sizeof(T));
