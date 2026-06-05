@@ -14,6 +14,7 @@
 #include <rckid/apps/utils/stopwatch.h>
 #include <rckid/apps/utils/flashlight.h>
 #include <rckid/apps/utils/piggy_bank.h>
+#include <rckid/apps/utils/calculator.h>
 
 #include <rckid/apps/dialogs/file_dialog.h>
 #include <rckid/apps/dialogs/color_dialog.h>
@@ -76,6 +77,10 @@ namespace rckid {
         (*result)
             << ui::MenuItem{"Clock", assets::icons_64::alarm_clock, []() {
                 App::run<Clock>();
+            }}
+            // TODO replace with a dedicated calculator/keypad icon.
+            << ui::MenuItem{"Calculator", assets::icons_64::bookmark, []() {
+                App::run<Calculator>();
             }}
             << ui::MenuItem{"Stopwatch", assets::icons_64::chronometer, []() {
                 App::run<Stopwatch>();

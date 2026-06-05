@@ -16,6 +16,7 @@
 
 - add contact
 - delete contact
+- calculator app
 
 # Ladder
 
