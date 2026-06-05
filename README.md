@@ -107,6 +107,10 @@ Finally, to build RCkid for the web using the emscripten toolchain, you can do t
     emcmake cmake ..
     cmake --build . -j
 
+This creates the demo app in `build-wasm/cartridges/demo`. To view it the artifacts (`demo.data`, `demo.js` and `demo.wasm`) must be copied to `www` folder. Then run http server (wasm cannot be viewed via `file://` protocol). The easiest way to do this is start the following from the `www` folder and then point your browser to `http://localhost:8000`:
+
+    python -m http.server 8000
+
 > Note that emscripten support is now very barebones, I have basically only checked that it works and added the build to CI so that I do not do something to jeopardize it.
 
 ### Build Arguments
