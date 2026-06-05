@@ -205,7 +205,7 @@ namespace rckid {
             T * copy = reinterpret_cast<T*>(malloc(size_));
             ASSERT(std::is_trivially_copy_constructible_v<T>);
             ASSERT(std::is_trivially_destructible_v<T>);
-            memcpy(copy, ptr_, size_);
+            memcpy(copy, ptr_, size_ * sizeof(T));
             return immutable_ptr<T>(copy, size_);
         }
 
@@ -220,7 +220,7 @@ namespace rckid {
                 unique_ptr<T> result{new T[size_]};
                 ASSERT(std::is_trivially_copy_constructible_v<T>);
                 ASSERT(std::is_trivially_destructible_v<T>);
-                memcpy(result.get(), ptr_, size_);
+                memcpy(result.get(), ptr_, size_ * sizeof(T));
                 return result;
             } else {
                 unique_ptr<T> result{const_cast<T*>(ptr_)};
