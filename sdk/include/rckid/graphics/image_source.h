@@ -27,7 +27,7 @@ namespace rckid {
             This version should be used for loading images from files on either the SD card, or the cartridge filesystems.
          */
         ImageSource(String path, fs::Drive drive = fs::Drive::SD):
-            size_{(drive == fs::Drive::SD) ? FILE_SD : FILE_CARTRIDGE},
+            type_{(drive == fs::Drive::SD) ? Type::SD : Type::Cartridge},
             data_{path.releaseAsBuffer()} {
         }
 
@@ -37,7 +37,6 @@ namespace rckid {
          */
         template<size_t SIZE>
         ImageSource(uint8_t const (& data)[SIZE]) :
-            size_{static_cast<uint32_t>(SIZE)},
             data_{data, SIZE} 
         {
             ASSERT(hal::memory::isImmutableDataPtr(data));
@@ -46,7 +45,6 @@ namespace rckid {
         /** Creates  */
         template<uint32_t SIZE>
         ImageSource(uint16_t const (&data)[SIZE]) :
-            size_{static_cast<uint32_t>(sizeof(data))},
             data_{reinterpret_cast<uint8_t const *>(data), SIZE * 2} 
         {
             ASSERT(hal::memory::isImmutableDataPtr(data));
@@ -58,7 +56,6 @@ namespace rckid {
             The data buffer is owned by the ImageSource after this call and must contain the actual image data in the specified format. This is the least useable version that allows even dynamic data to be creates as the source of the image. 
          */
         ImageSource(immutable_ptr<uint8_t> data):
-            size_{data.size()},
             data_{std::move(data)} {
         }
 
@@ -91,12 +88,7 @@ namespace rckid {
          */
         Type type() const {
             ASSERT(!empty());
-            if (size_ == FILE_SD)
-                return Type::SD;
-            else if (size_ == FILE_CARTRIDGE)
-                return Type::Cartridge;
-            else
-                return Type::Memory;
+            return type_;
         }
 
         /** Returns true if the image source is valid. 
@@ -121,7 +113,7 @@ namespace rckid {
 
         uint32_t size() const {
             ASSERT(type() == Type::Memory);
-            return size_;
+            return data_.size();
         }
 
         /** Returns pointer to the stored data.
@@ -142,7 +134,7 @@ namespace rckid {
          */
         immutable_ptr<uint8_t> releaseData() {
             ASSERT(type() == Type::Memory);
-            size_ = 0;
+            type_ = Type::Memory;
             return std::move(data_);
         }
 
@@ -172,17 +164,17 @@ namespace rckid {
         static constexpr uint32_t FILE_CARTRIDGE = 0xfffffffe;
 
         void clone(ImageSource const & from) {
-            size_ = from.size_;
+            type_ = from.type_;
             data_ = from.data_.cloneOrCopy();
         }
 
         void invalidate() {
             data_.release();
-            size_ = 0;
+            type_ = Type::Memory;
         }
 
-        // size of the raw data in bytes, or magic value indicating file source
-        uint32_t size_;
+        // type, i.e. wheher the buffer is filename on sd, or cartridge, or direct data memory
+        Type type_ = Type::Memory;
 
         // either pointer to the data itself, or path to the file
         immutable_ptr<uint8_t> data_;

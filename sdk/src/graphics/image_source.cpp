@@ -9,7 +9,7 @@ namespace rckid {
             return nullptr;
         if (type() == Type::Memory) {
             // create memory stream from this data
-            unique_ptr<RandomReadStream> result{new MemoryReadStream{std::move(data_), size_}};
+            unique_ptr<RandomReadStream> result{new MemoryReadStream{std::move(data_)}};
             // if the data is not in immutable memory, release the ownership. 
             if (data_ == nullptr)
                 invalidate();
@@ -57,7 +57,7 @@ namespace rckid {
                 return ImageType::JPG;
             } else if (d[0] == 0x71 && d[1] == 0x6f) {
                 return ImageType::QOI;
-            } else if (RawBitmapDecoder::verify(d, size_)) {
+            } else if (RawBitmapDecoder::verify(d, data_.size())) {
                 return ImageType::RawMemory;
             }
         } else {

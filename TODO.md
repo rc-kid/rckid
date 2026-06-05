@@ -1,9 +1,5 @@
 # Immediate Roadmap
 
-- review & order the PCB
-- review & order the 3d parts (2 top plates clear, 1 clear back plate, 1 nylon backplate)
-- need to do this soon, or I will loose the coupons I have 
-
 - once I have the prototypes, finish the v1.0 AVR and start experimenting with what I have on the device
 - this might be better button: https://jlcpcb.com/partdetail/ALPSALPINE-SKRABCE010/C19724057
 - figure out the side buttons if there are ones that can be soldered by jlcpcb and be better centered
@@ -36,7 +32,6 @@ So what I need:
 
 - update the config.h to have backend config and general config to which we put things from rckid.cpp now (key repeat and other UI settings)
 
-- ImageSource does not need size(part of immutable ptr)
 - when app is not started and shows error diealog instead, we do double background bump on leaving
 
 - add telemetry (will be useful for the pilots, record time & app start, or end)
@@ -61,7 +56,6 @@ Settings
 Basic util apps:
 - level
 - data sync (mk3 overhaul, sharing only the FAT partition, not the whole MBR)
-- calculator
 
 Games (port from mkII)
 - sound in tetris

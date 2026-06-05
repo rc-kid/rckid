@@ -182,36 +182,35 @@ namespace rckid {
     class MemoryReadStream : public RandomReadStream {
     public:
     
-        MemoryReadStream(immutable_ptr<uint8_t> buffer, uint32_t size) :
+        MemoryReadStream(immutable_ptr<uint8_t> buffer) :
             buffer_{std::move(buffer)},
-            size_{size},
             pos_{0} {
         }
 
         uint32_t read(uint8_t * buffer, uint32_t bufferSize) override {
-            uint32_t toRead = std::min(bufferSize, size_ - pos_);
+            uint32_t toRead = std::min(bufferSize, buffer_.size() - pos_);
             std::memcpy(buffer, buffer_.get() + pos_, toRead);
             pos_ += toRead;
             return toRead;
         }
 
         bool eof() const override {
-            return pos_ >= size_;
+            return pos_ >= buffer_.size();
         }
 
         std::optional<uint8_t> peek() override {
-            if (pos_ >= size_)
+            if (pos_ >= buffer_.size())
                 return std::nullopt;
             return buffer_.get()[pos_];
         }
 
         uint32_t size() const override {
-            return size_;
+            return buffer_.size();
         }
 
         uint32_t seek(uint32_t position) override {
-            if (position > size_)
-                pos_ = size_;
+            if (position > buffer_.size())
+                pos_ = buffer_.size();
             else 
                 pos_ = position;
             return pos_;
@@ -223,7 +222,6 @@ namespace rckid {
 
     private:
         immutable_ptr<uint8_t> buffer_;
-        uint32_t size_;
         uint32_t pos_;
     }; // rckid::MemoryReadStream
 
