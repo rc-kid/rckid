@@ -230,6 +230,16 @@ namespace rckid {
             }
         }
 
+        template<typename W>
+        immutable_ptr<W> reinterpretAs() {
+            uint32_t newSize = size_ * sizeof(T) / sizeof(W);
+            ASSERT(size_ * sizeof(T) == newSize * sizeof(W));
+            immutable_ptr<W> result{reinterpret_cast<W const *>(ptr_), newSize};
+            ptr_ = 0;
+            size_ = 0;
+            return result;
+        }
+
         T const * release() {
             T const * result = ptr_;
             ptr_ = nullptr;
