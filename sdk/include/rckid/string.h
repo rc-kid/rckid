@@ -65,7 +65,7 @@ namespace rckid {
         /** Creates string from an unique buffer that must contain null terminated string already.
          */
         String(unique_ptr<char> buffer):
-            data_{buffer.get(), static_cast<uint32_t>(std::strlen(data_.get())) + 1}
+            data_{buffer.get(), static_cast<uint32_t>(std::strlen(buffer.get())) + 1}
         {
             buffer.release();
             ASSERT(data_[size()] == '\0');
