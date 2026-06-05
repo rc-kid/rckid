@@ -17,15 +17,16 @@ namespace rckid {
 
         Bitmap(ImageSource && src);
 
-        Bitmap(Coord w, Coord h, Color::Representation colorRep, mutable_ptr<uint8_t> pixels, mutable_ptr<Color::RGB565> palette = nullptr) :
+        Bitmap(Coord w, Coord h, Color::Representation colorRep, immutable_ptr<uint8_t> pixels, immutable_ptr<Color::RGB565> palette = immutable_ptr<Color::RGB565>()) :
             w_{w}, h_{h}, colorRepresentation_{colorRep}, pixels_{std::move(pixels)}, palette_{std::move(palette)} {
         }
 
+        // TODO DELETE THIS METHOD, NO POINT IN CREATING BITMAP THAT IS EMPTY (?)
         Bitmap(Coord w, Coord h, Color::Representation colorRep) :
             w_{w}, h_{h}, colorRepresentation_{colorRep} 
         {
             uint32_t size = Color::getPixelArraySize(colorRep, w, h);
-            pixels_ = mutable_ptr<uint8_t>{new uint8_t[size], size};
+            pixels_ = immutable_ptr<uint8_t>{new uint8_t[size], size};
             // TODO use standard palette? 
         }
 
@@ -68,9 +69,9 @@ namespace rckid {
 
         uint32_t bpp() const { return colorRepresentationBpp(colorRepresentation_); }
 
-        Color::RGB565 const * palette() const { return palette_.ptr(); }
+        Color::RGB565 const * palette() const { return palette_.get(); }
 
-        void setPalette(mutable_ptr<Color::RGB565> palette) {
+        void setPalette(immutable_ptr<Color::RGB565> palette) {
             palette_ = std::move(palette);
         }
 
@@ -89,15 +90,17 @@ namespace rckid {
         }
 
         uint16_t getPixel(Coord x, Coord y) const {
-            return Color::getPixel(colorRepresentation_, pixels_.ptr(), w_, h_, x, y);
+            return Color::getPixel(colorRepresentation_, pixels_.get(), w_, h_, x, y);
         }
 
+        // TODO this is a hack that needs to disappear. The idea is to make canvas multi-bpp and move this functionality to it and bitmap is intended only for rendering.
         void setPixel(Coord x, Coord y, uint16_t color) {
-            Color::setPixel(colorRepresentation_, pixels_.mut(), w_, h_, x, y, color);
+            ASSERT(Heap::contains(pixels_.get()));
+            Color::setPixel(colorRepresentation_, const_cast<uint8_t*>(pixels_.get()), w_, h_, x, y, color);
         }
 
         uint8_t const * rawPixelArray(Coord column = 0) const {
-            return pixels_.ptr() + mapIndexColumnFirst(column, 0, w_, h_) * bpp() / 8;
+            return pixels_.get() + mapIndexColumnFirst(column, 0, w_, h_) * bpp() / 8;
         }
 
         void renderColumn(Coord column, Coord startRow,  Color::RGB565 * buffer, Coord numPixels) {
@@ -112,9 +115,9 @@ namespace rckid {
                     case Color::Representation::RGB332:
                         return blit_rgb332(start, buffer, numPixels, transparentColor_);
                     case Color::Representation::Index256:
-                        return blit_index256(start, buffer, numPixels, palette_.ptr(), transparentColor_);
+                        return blit_index256(start, buffer, numPixels, palette_.get(), transparentColor_);
                     case Color::Representation::Index16:
-                        return blit_index16(start, buffer, numPixels, palette_.ptr(), transparentColor_, startRow % 2);
+                        return blit_index16(start, buffer, numPixels, palette_.get(), transparentColor_, startRow % 2);
                 }
             } else {
                 switch (colorRepresentation_) {
@@ -123,33 +126,35 @@ namespace rckid {
                     case Color::Representation::RGB332:
                         return blit_rgb332(start, buffer, numPixels);
                     case Color::Representation::Index256:
-                        return blit_index256(start, buffer, numPixels, palette_.ptr());
+                        return blit_index256(start, buffer, numPixels, palette_.get());
                     case Color::Representation::Index16:
-                        return blit_index16(start, buffer, numPixels, palette_.ptr(), startRow % 2);
+                        return blit_index16(start, buffer, numPixels, palette_.get(), startRow % 2);
                 }
             }
             UNREACHABLE;
         }
 
         /** Releases the pixel array and returns its pointer.
+         
+            TODO return immutable ptr
          */
-        uint8_t * detachPixelArray() && {
-            uint8_t * result = pixels_.releaseMut();
+        immutable_ptr<uint8_t> detachPixelArray() && {
+            immutable_ptr<uint8_t> result{std::move(pixels_)};
             w_ = 0;
             h_ = 0;
             return result;
         }
 
         uint8_t const * pixelArray() const {
-            return pixels_.ptr();
+            return pixels_.get();
         }
 
     private:
         Coord w_ = 0;
         Coord h_ = 0;
         Color::Representation colorRepresentation_ = Color::Representation::RGB565;
-        mutable_ptr<uint8_t> pixels_;
-        mutable_ptr<Color::RGB565> palette_;
+        immutable_ptr<uint8_t> pixels_;
+        immutable_ptr<Color::RGB565> palette_;
 
         static constexpr uint32_t NO_TRANSPARENCY = 0xFFFFFFFF;
         uint32_t transparentColor_ = 0;

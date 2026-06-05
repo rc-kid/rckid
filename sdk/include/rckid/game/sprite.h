@@ -162,7 +162,7 @@ namespace rckid::game {
 
             data[numPixels] = width();
             data[numPixels + 1] = height();
-            return ImageSource{mutable_ptr<uint8_t>{reinterpret_cast<uint8_t *>(data), (numPixels + 2) * 2}};
+            return ImageSource{immutable_ptr<uint8_t>{reinterpret_cast<uint8_t *>(data), (numPixels + 2) * 2}};
         }
 
     protected:

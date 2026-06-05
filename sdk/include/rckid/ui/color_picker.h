@@ -23,7 +23,7 @@ namespace rckid::ui {
             Coord cols = width() / colorSize_;
             uint32_t idx = pos_.y * cols + pos_.x;
             ASSERT(idx < paletteSize_);
-            return palette_.ptr()[idx];
+            return palette_[idx];
         }
 
         void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) override {
@@ -34,7 +34,7 @@ namespace rckid::ui {
                 if (column < cx || column >= (cx + colorSize_))
                     continue;
                 Coord cy = (i / cols) * colorSize_ + 1;
-                Color::RGB565 c = palette_.ptr()[i];
+                Color::RGB565 c = palette_[i];
                 // TODO do not draw the last line
                 for (Coord i = 0; i < colorSize_; ++i)
                     renderPixelInBuffer(cy + i, c, startRow, buffer, numPixels);
@@ -92,8 +92,7 @@ namespace rckid::ui {
         // size of every color square
         Coord colorSize_ = 10;
 
-        // TODO should we own the palette?
-        mutable_ptr<Color::RGB565> palette_ = Palette16;
+        Color::RGB565 const * palette_ = Palette16;
         // 
         uint32_t paletteSize_ = sizeof(Palette16) / sizeof(Color::RGB565);
 

@@ -101,7 +101,7 @@ namespace rckid {
                             p[i * 3 + 2]
                         ).toRGB565();
                 }
-                result.setPalette(mutable_ptr<Color::RGB565>{palette, numColors});
+                result.setPalette(immutable_ptr<Color::RGB565>{palette, numColors});
             }
         }
         return result;

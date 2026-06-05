@@ -57,9 +57,9 @@ namespace rckid {
          
             The data buffer is owned by the ImageSource after this call and must contain the actual image data in the specified format. This is the least useable version that allows even dynamic data to be creates as the source of the image. 
          */
-        ImageSource(mutable_ptr<uint8_t> data):
-            size_{data.count()},
-            data_{data.releasePtr(), size_} {
+        ImageSource(immutable_ptr<uint8_t> data):
+            size_{data.size()},
+            data_{std::move(data)} {
         }
 
         /** Creates copy of the image source. 

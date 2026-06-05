@@ -47,25 +47,25 @@ namespace rckid {
         RawBitmapDecoder(ImageSource && src) {
             ASSERT(!src.empty());
             if (src.type() == ImageSource::Type::Memory) {
-                uint32_t dataSize = src.size();
-                data_ = mutable_ptr<uint8_t>{(src.releaseData().release()), dataSize};
-                ASSERT(verify(data_.ptr(), dataSize));
+                data_ = src.releaseData();
+                ASSERT(verify(data_.get(), data_.size()));
             } else {
                 auto s = src.toStream();
-                data_ = mutable_ptr<uint8_t>{new uint8_t[s->size()], s->size()};
-                s->read(data_.mut(), s->size());
-                ASSERT(verify(data_.ptr(), s->size()));
+                uint8_t * ptr = new uint8_t[s->size()];
+                s->read(ptr, s->size());
+                data_ = immutable_ptr<uint8_t>{ptr, s->size()};
+                ASSERT(verify(data_.get(), data_.size()));
             }
         }
 
         Coord width() const override { 
             ASSERT(good());
-            return static_cast<Coord>(reinterpret_cast<uint16_t const *>(data_.ptr())[data_.count() / sizeof(uint16_t) - 2]);
+            return static_cast<Coord>(reinterpret_cast<uint16_t const *>(data_.get())[data_.size() / sizeof(uint16_t) - 2]);
         }
 
         Coord height() const override { 
             ASSERT(good());
-            return static_cast<Coord>(reinterpret_cast<uint16_t const *>(data_.ptr())[data_.count() / sizeof(uint16_t) - 1]);
+            return static_cast<Coord>(reinterpret_cast<uint16_t const *>(data_.get())[data_.size() / sizeof(uint16_t) - 1]);
         }
 
         Color::Representation colorRepresentation() const override {
@@ -78,11 +78,11 @@ namespace rckid {
         }
 
         bool good() const {
-            return data_.ptr() != nullptr;
+            return data_.get() != nullptr;
         }
 
     private:
-        mutable_ptr<uint8_t> data_;
+        immutable_ptr<uint8_t> data_;
     }; // RawBitmapDecoder
 
 } // namespace rckid

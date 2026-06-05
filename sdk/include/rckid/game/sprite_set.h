@@ -106,7 +106,9 @@ namespace rckid::game {
                 // for RGB332 and 256 indexed colors, just use the stored values as indices and take the pixel array, which is the same format 
                 case Color::Representation::RGB332:
                 case Color::Representation::Index256:
-                    addSprite(reinterpret_cast<Color::Index256 *>(std::move(bitmap).detachPixelArray()));
+                    // TODO this is hacky as we need to cast the color in the bitmap, also we need to deal with palette, 
+                    //addSprite(reinterpret_cast<Color::Index256 *>(std::move(bitmap).detachPixelArray()));
+                    UNIMPLEMENTED;
                     break;
                 case Color::Representation::Index16:
                     // TODO copy color by color

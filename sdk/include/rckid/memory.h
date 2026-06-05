@@ -207,6 +207,25 @@ namespace rckid {
             return immutable_ptr<T>(copy, size_);
         }
 
+        /** Returns owned version of the data. 
+         
+            If the pointer is immutable, creates and returns a mutable copy. If the actual data references by the pointer is already mutable, releases the data and returns it as mutable pointer with ownership.
+
+            NOTE calling this method only works on simple types that do not have complex structures as the copy is a simple memcpy without any regard to the object structure.
+         */
+        unique_ptr<T> releaseOrCopy() {
+            if (hal::memory::isImmutableDataPtr(ptr_)) {
+                unique_ptr<T> result{new T[size_]};
+                memcpy(result.get(), ptr_, size_);
+                return result;
+            } else {
+                unique_ptr<T> result{const_cast<T*>(ptr_)};
+                ptr_ = nullptr;
+                size_ = 0;
+                return result;
+            }
+        }
+
         T const * release() {
             T const * result = ptr_;
             ptr_ = nullptr;

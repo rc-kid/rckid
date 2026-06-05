@@ -24,10 +24,14 @@ namespace rckid {
 
         Canvas(Bitmap && bmp):
             w_{bmp.width()},
-            h_{bmp.height()},
-            pixels_{reinterpret_cast<Color::RGB565 *>(std::move(bmp).detachPixelArray())} 
+            h_{bmp.height()}
         {
             ASSERT(bmp.bpp() == 16);
+            // TODO this is hacky as we need to get the pointer out of bitmap and cast it to the color pointer we need internally, guarded by the assert above
+            pixels_ = unique_ptr<Color::RGB565>{
+                reinterpret_cast<Color::RGB565 *>(std::move(bmp).detachPixelArray().releaseOrCopy().release())
+            };
+            // we are canvas, must have mutable pixels
             ASSERT(Heap::contains(pixels_.get()));
         }
 
