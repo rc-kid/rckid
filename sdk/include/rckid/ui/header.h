@@ -140,7 +140,7 @@ namespace rckid::ui {
             p[23] = textFg.toRGB565();
             p[24] = Color::RGB(255, 0, 255).toRGB565();
            
-            return immutable_ptr<Color::RGB565>{p, sizeof(Color::RGB565) * 32};
+            return immutable_ptr<Color::RGB565>{p, 32};
         }
 
 

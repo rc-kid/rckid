@@ -140,8 +140,7 @@ namespace rckid {
         uint32_t size() const { 
             if (data_.get() == nullptr)
                 return 0;
-            if (data_.size() == 0)
-                ASSERT(data_.size() != 0);
+            ASSERT(data_.size() != 0);
             return data_.size() - 1; 
         }
 

@@ -180,8 +180,10 @@ namespace rckid {
             deletePtr();
             ptr_ = other.ptr_;
             size_ = other.size_;
-            if (! hal::memory::isImmutableDataPtr(other.ptr_))
+            if (! hal::memory::isImmutableDataPtr(other.ptr_)) {
                 other.ptr_ = nullptr;
+                other.size_ = 0;
+            }
             return *this;
         }
 
