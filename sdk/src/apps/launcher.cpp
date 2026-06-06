@@ -78,15 +78,15 @@ namespace rckid {
             << ui::MenuItem{"Clock", assets::icons_64::alarm_clock, []() {
                 App::run<Clock>();
             }}
-            // TODO replace with a dedicated calculator/keypad icon.
-            << ui::MenuItem{"Calculator", assets::icons_64::bookmark, []() {
-                App::run<Calculator>();
-            }}
             << ui::MenuItem{"Stopwatch", assets::icons_64::chronometer, []() {
                 App::run<Stopwatch>();
             }}
             << ui::MenuItem{"Flashlight", assets::icons_64::flashlight, []() {
                 App::run<Flashlight>();
+            }}
+            // TODO replace with a dedicated calculator/keypad icon.
+            << ui::MenuItem{"Calculator", assets::icons_64::bookmark, []() {
+                App::run<Calculator>();
             }}
             << ui::MenuItem{"Steps", assets::icons_64::footprint, []() {
                 App::run<Steps>();

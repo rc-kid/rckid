@@ -9,103 +9,135 @@
 
 namespace rckid {
 
-    /** Rendering surface.
-     
-        For simplicity, Canvas always works in RGB565 mode internally. 
-    
+    /** Canvas is editable bitmap. 
      */
     class Canvas {
     public:
-        Canvas(Coord width, Coord height):
+
+        Canvas(Coord width, Coord height, Color::Representation colorRepresentation = Color::Representation::RGB565):
             w_{width},
             h_{height},
-            pixels_{new Color::RGB565[width * height]} {
+            colorRepresentation_{colorRepresentation},
+            pixels_{new uint8_t[Color::getPixelArraySize(colorRepresentation, width, height)]} {
         }
 
         Canvas(Bitmap && bmp):
             w_{bmp.width()},
-            h_{bmp.height()}
+            h_{bmp.height()},
+            colorRepresentation_{bmp.colorRepresentation()},
+            pixels_{std::move(bmp).detachPixelArray().releaseOrCopy()}
         {
-            ASSERT(bmp.bpp() == 16);
-            // TODO this is hacky as we need to get the pointer out of bitmap and cast it to the color pointer we need internally, guarded by the assert above
-            pixels_ = unique_ptr<Color::RGB565>{
-                reinterpret_cast<Color::RGB565 *>(std::move(bmp).detachPixelArray().releaseOrCopy().release())
-            };
-            // we are canvas, must have mutable pixels
             ASSERT(Heap::contains(pixels_.get()));
         }
 
         Coord width() const { return w_; }
         Coord height() const { return h_; }
 
-        Color::RGB565 at(Coord x, Coord y) const { return pixels_.get()[mapIndexColumnFirst(x, y, w_, h_)]; }
-        Color::RGB565 & at(Coord x, Coord y) { return pixels_.get()[mapIndexColumnFirst(x, y, w_, h_)]; }
+        Color::Representation colorRepresentation() const { return colorRepresentation_; }
 
-        Color::RGB565 & at(Point pos) { return at(pos.x, pos.y); }
+        uint32_t bpp() const { return colorRepresentationBpp(colorRepresentation_); }
 
-        void setAt(Coord x, Coord y, Color::RGB565 color) {
+        Color::RGB565 const * palette() const { return palette_.get(); }
+
+        void setPalette(unique_ptr<Color::RGB565> palette) {
+            palette_ = std::move(palette);
+        }
+
+        uint16_t getPixel(Coord x, Coord y) const {
+            return Color::getPixel(colorRepresentation_, pixels_.get(), w_, h_, x, y);
+        }
+
+        uint16_t getPixel(Point pos) const { return getPixel(pos.x, pos.y); }
+
+        void setPixel(Coord x, Coord y, uint16_t rawValue) {
             if (x < 0 || x >= w_)
                 return;
             if (y < 0 || y >= h_)
                 return;
-            at(x, y) = color;            
-        }
+            Color::setPixel(colorRepresentation_, pixels_.get(), w_, h_, x, y, rawValue);
+        } 
 
+        void setPixel(Point pos, uint16_t rawValue) { setPixel(pos.x, pos.y, rawValue); }
 
         /** Fills rectangle with given color. 
          */
-        void fill(Rect rect, Color::RGB565 color) {
+        void fill(Rect rect, uint16_t color) {
             // default, very slow implementation
             for (int x = rect.left(), xe = rect.right(); x < xe; ++x)
                 for (int y = rect.top(), ye = rect.bottom(); y < ye; ++y)
-                    setAt(x, y, color);
+                    setPixel(x, y, color);
         }
 
-        /** Fills the entire canvas with given color.
-         */
-        void fill(Color::RGB565 color) {
-            memset16(reinterpret_cast<uint16_t *>(pixels_.get()), color, w_ * h_);
+        void fill(uint16_t color) {
+            switch (colorRepresentation_) {
+                case Color::Representation::RGB565:
+                    memset16(reinterpret_cast<uint16_t *>(pixels_.get()), color, w_ * h_);
+                    break;
+                default:
+                    UNIMPLEMENTED;
+            }
         }
 
         /** Writes text at given coordinates with specified font & color.
          */
-        Writer text(Coord x, Coord y, Font font, Color color) {
-            Color::RGB565 palette[4];
-            font->createFontPalette(palette, color);
-            return Writer{[this, x, y, font, color, palette, startx = x](char c) mutable {
-                if (c != '\n') {
-                    GlyphInfo const * gi = font->glyphInfoFor(c);
-                    putChar(x, y, gi, font, palette);
-                    x += gi->advanceX;
-                } else {
-                    y += font->size;
-                    x = startx;
-
-                }
-            }};
-        }
-
-        Writer text(Coord x, Coord y, Font font, std::function<Color::RGB565(uint32_t)> color) {
-            return Writer{[this, x, y, font, color, startx = x, charIndex = 0](char c) mutable {
-                if (c != '\n') {
+        Writer text(Coord x, Coord y, Font font, uint16_t color) {
+            switch (colorRepresentation_) {
+                case Color::Representation::RGB565: {
                     Color::RGB565 palette[4];
-                    font->createFontPalette(palette, color(charIndex++));
-                    GlyphInfo const * gi = font->glyphInfoFor(c);
-                    putChar(x, y, gi, font, palette);
-                    x += gi->advanceX;
-                } else {
-                    y += font->size;
-                    x = startx;
+                    font->createFontPalette(palette, Color::RGB565{color});
+                    return Writer{[this, x, y, font, color, palette, startx = x](char c) mutable {
+                        if (c != '\n') {
+                            GlyphInfo const * gi = font->glyphInfoFor(c);
+                            putChar16(x, y, gi, font, palette);
+                            x += gi->advanceX;
+                        } else {
+                            y += font->size;
+                            x = startx;
+                        }
+                    }};
+                    break;
                 }
-            }};
+                default:
+                    UNIMPLEMENTED;
+            }
         }
+
+        Writer text(Coord x, Coord y, Font font, Color color) {
+            switch (colorRepresentation_) {
+                case Color::Representation::RGB565:
+                    return text(x, y, font, static_cast<uint16_t>(Color::RGB565{color}));
+                default:
+                    UNIMPLEMENTED;
+            }
+        }
+
+        Writer text(Coord x, Coord y, Font font, std::function<uint16_t(uint32_t)> color) {
+            switch (colorRepresentation_) {
+                case Color::Representation::RGB565: {
+                    return Writer{[this, x, y, font, color, startx = x, charIndex = 0](char c) mutable {
+                        if (c != '\n') {
+                            Color::RGB565 palette[4];
+                            font->createFontPalette(palette, Color::RGB565{color(charIndex++)});
+                            GlyphInfo const * gi = font->glyphInfoFor(c);
+                            putChar16(x, y, gi, font, palette);
+                            x += gi->advanceX;
+                        } else {
+                            y += font->size;
+                            x = startx;
+                        }
+                    }};
+                }
+                default:
+                    UNIMPLEMENTED;
+            }
+        }
+
 
         Writer textRainbow(Coord x, Coord y, Font font, uint16_t hueStart, int16_t hueInc) {
             auto getColor = [hueStart, hueInc](uint32_t) mutable {
-                return Color::HSV(hueStart += hueInc, 255, 255);
+                return Color::RGB565{Color::HSV(hueStart += hueInc, 255, 255)};
             };
             return text(x, y, font, getColor);
-
         }
 
         /** Renders particular canvas column
@@ -115,8 +147,19 @@ namespace rckid {
         void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) {
             ASSERT(column < width());
             ASSERT(startRow + numPixels <= height());
-            Color::RGB565 const * start = pixels_.get() + mapIndexColumnFirst(column, 0, w_, h_) + startRow;
-            blit_rgb565(reinterpret_cast<uint8_t const *>(start), buffer, numPixels);
+            // get source start pointer
+            uint8_t const * start = rawPixelArray(column) + startRow * bpp() / 8;
+            switch (colorRepresentation_) {
+                case Color::Representation::RGB565:
+                    return blit_rgb565(start, buffer, numPixels);
+                case Color::Representation::RGB332:
+                    return blit_rgb332(start, buffer, numPixels);
+                case Color::Representation::Index256:
+                    return blit_index256(start, buffer, numPixels, palette_.get());
+                case Color::Representation::Index16:
+                    return blit_index16(start, buffer, numPixels, palette_.get(), startRow % 2);
+            }
+            UNREACHABLE;
         }
 
         /** Saves the canvas as Raw format stream
@@ -124,21 +167,26 @@ namespace rckid {
             TODO hacky for the game engine demo
          */
         void saveAsRaw(WriteStream & s) {
+            ASSERT(colorRepresentation_ == Color::Representation::RGB565);
             s.write(reinterpret_cast<uint8_t *>(pixels_.get()), w_ * h_ * 2);
             s.binaryWriter()
                 << static_cast<uint16_t>(w_)
                 << static_cast<uint16_t>(h_);
         }
 
-    private:
+    private: 
 
-        void putChar(Coord x, Coord y, GlyphInfo const * gi, Font font, Color::RGB565 const * palette) {
+        uint8_t const * rawPixelArray(Coord column = 0) const {
+            return pixels_.get() + mapIndexColumnFirst(column, 0, w_, h_) * bpp() / 8;
+        }
+
+        void putChar16(Coord x, Coord y, GlyphInfo const * gi, Font font, Color::RGB565 const * palette) {
             for (Coord xx = x + gi->advanceX; xx >= x; --xx) {
                 if (xx < 0)
                     break; // it won't be better
                 if (xx >= w_)
                     continue;
-                Color::RGB565 * buffer = pixels_.get() + mapIndexColumnFirst(xx, 0, w_, h_);
+                Color::RGB565 * buffer = reinterpret_cast<Color::RGB565* >(pixels_.get()) + mapIndexColumnFirst(xx, 0, w_, h_);
                 if (y < 0)
                     font->renderColumn(xx - x, -y, w_ + y, gi, buffer, palette);
                 else
@@ -146,11 +194,13 @@ namespace rckid {
             }
         }
 
-        Coord w_;
-        Coord h_;
-        unique_ptr<Color::RGB565> pixels_;
-    }; // rckid::Canvas
+        Coord w_ = 0;
+        Coord h_ = 0;
+        Color::Representation colorRepresentation_ = Color::Representation::RGB565;
+        unique_ptr<uint8_t> pixels_;
+        unique_ptr<Color::RGB565> palette_;
 
+    }; // rckid::Canvas
 
     /** Application that renders its contents into a canvas. 
      
@@ -162,9 +212,7 @@ namespace rckid {
         explicit CanvasApp(Rect rect):
             rect_{rect},
             canvas_{rect.width(), rect.height()},
-            renderBuffer_{static_cast<uint32_t>(rect.height())}
-        {
-
+            renderBuffer_{static_cast<uint32_t>(rect.height())} {
         }
 
         CanvasApp(): CanvasApp{Rect::WH(display::WIDTH, display::HEIGHT)} {}

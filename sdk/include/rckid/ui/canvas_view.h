@@ -118,7 +118,7 @@ namespace rckid::ui {
                 }
                 if (cy >= canvas_->height())
                     break;
-                *(buffer++) = canvas_->at(cx, cy);
+                *(buffer++) = canvas_->getPixel(cx, cy);
             }
         }
 

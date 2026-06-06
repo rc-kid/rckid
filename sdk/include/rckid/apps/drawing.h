@@ -61,14 +61,16 @@ namespace rckid {
             }
             if (btnPressed(Btn::A)) {
                 if (edit_->focused()) {
-                    canvas_->at(edit_->pos()) = colorA_->bg();
+                    // TODO this should work with palettes
+                    canvas_->setPixel(edit_->pos(), Color::RGB565{colorA_->bg()});
                 } else if (colorPicker_->focused()) {
                     colorA_->setBg(colorPicker_->selected());
                 }
             }
             if (btnPressed(Btn::B)) {
                 if (edit_->focused()) {
-                    canvas_->at(edit_->pos()) = colorB_->bg();
+                    // TODO this should work with palettes
+                    canvas_->setPixel(edit_->pos(), Color::RGB565{colorB_->bg()});
                 } else if (colorPicker_->focused()) {
                     colorB_->setBg(colorPicker_->selected());
                 }

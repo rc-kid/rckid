@@ -289,6 +289,8 @@ namespace rckid {
             return RGB565{static_cast<uint16_t>(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3))};
         }
 
+        constexpr operator uint16_t() const { return toRGB565(); }
+
         uint8_t r;
         uint8_t g;
         uint8_t b;
