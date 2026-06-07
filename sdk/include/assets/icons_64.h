@@ -5,6 +5,12 @@
 
 namespace rckid::assets::icons_64 {
 
+    // File: icons/icons_64/091-calculator.png
+    // Size: 2111
+    static constexpr uint8_t calculator[] = {
+        #include "raw/icons_64/calculator.inc.h"
+    };
+
     // File: icons/icons_64/008-high-volume.raw
     // Size: 8196
     static constexpr uint8_t high_volume[] = {
@@ -23,10 +29,22 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/power_off.inc.h"
     };
 
+    // File: icons/icons_64/093-edit.png
+    // Size: 1587
+    static constexpr uint8_t edit[] = {
+        #include "raw/icons_64/edit.inc.h"
+    };
+
     // File: icons/icons_64/042-happy-face.png
     // Size: 2583
     static constexpr uint8_t happy_face[] = {
         #include "raw/icons_64/happy_face.inc.h"
+    };
+
+    // File: icons/icons_64/092-remove.png
+    // Size: 1991
+    static constexpr uint8_t remove[] = {
+        #include "raw/icons_64/remove.inc.h"
     };
 
     // File: icons/icons_64/053-configuration.png
@@ -149,6 +167,12 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/picture.inc.h"
     };
 
+    // File: icons/icons_64/094-game-cartridge.png
+    // Size: 1550
+    static constexpr uint8_t game_cartridge[] = {
+        #include "raw/icons_64/game_cartridge.inc.h"
+    };
+
     // File: icons/icons_64/034-pen-drive.png
     // Size: 1184
     static constexpr uint8_t pen_drive[] = {
@@ -183,6 +207,12 @@ namespace rckid::assets::icons_64 {
     // Size: 2323
     static constexpr uint8_t flashlight[] = {
         #include "raw/icons_64/flashlight.inc.h"
+    };
+
+    // File: icons/icons_64/095-plus.png
+    // Size: 1766
+    static constexpr uint8_t plus[] = {
+        #include "raw/icons_64/plus.inc.h"
     };
 
 } // namespace rckid::assets::icons_64

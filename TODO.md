@@ -8,12 +8,6 @@
 
 - added IOVDD_EN test point which should allow me to create a simple UPDI cartridge, with this I can program RP2350 to function as USB to UART bridge and the cartridge can be used to program the onboard AVR, so no programmers are needed to build & flash the device technically (or one can flash other)
 
-# Icons
-
-- add contact
-- delete contact
-- calculator app
-
 # Ladder
 
 The plan is to start with a simple game - cat chase - there is a mouse and a cat, mouse moves randomly, cat chases it, controlled by the player. The aim is to program this game at the C++ level to bring all the pieces together and make sure the c++ code looks decent and easy. Once I have this I can start writing the dynamic wrapper for the layers below (blocks & visual) and asset editors. 

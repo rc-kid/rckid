@@ -85,7 +85,7 @@ namespace rckid {
                 App::run<Flashlight>();
             }}
             // TODO replace with a dedicated calculator/keypad icon.
-            << ui::MenuItem{"Calculator", assets::icons_64::bookmark, []() {
+            << ui::MenuItem{"Calculator", assets::icons_64::calculator, []() {
                 App::run<Calculator>();
             }}
             << ui::MenuItem{"Steps", assets::icons_64::footprint, []() {

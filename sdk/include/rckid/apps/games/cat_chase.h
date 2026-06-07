@@ -124,7 +124,7 @@ namespace rckid {
         unique_ptr<ui::Menu> homeMenu() override {
             auto m = ui::App<void>::homeMenu();
             m->insert(m->begin(), ui::MenuItem::Generator(
-                "Edit", assets::icons_64::paint_palette,
+                "Edit", assets::icons_64::edit,
                 [this]() {
                     auto result = std::make_unique<ui::Menu>();
                     (*result)

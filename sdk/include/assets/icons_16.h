@@ -5,6 +5,12 @@
 
 namespace rckid::assets::icons_16 {
 
+    // File: icons/icons_16/092-remove.png
+    // Size: 556
+    static constexpr uint8_t remove[] = {
+        #include "raw/icons_16/remove.inc.h"
+    };
+
     // File: icons/icons_16/088-number-one.png
     // Size: 630
     static constexpr uint8_t number_one[] = {
@@ -87,6 +93,12 @@ namespace rckid::assets::icons_16 {
     // Size: 807
     static constexpr uint8_t picture[] = {
         #include "raw/icons_16/picture.inc.h"
+    };
+
+    // File: icons/icons_16/095-plus.png
+    // Size: 540
+    static constexpr uint8_t plus[] = {
+        #include "raw/icons_16/plus.inc.h"
     };
 
 } // namespace rckid::assets::icons_16

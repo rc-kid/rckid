@@ -74,7 +74,7 @@ namespace rckid {
             if (btnPressed(Btn::Select)) {
                 ui::Menu popup_;
                 popup_ 
-                    << ui::MenuItem("New", assets::icons_16::light, [this]() {
+                    << ui::MenuItem("New", assets::icons_16::plus, [this]() {
                         auto name = App::run<TextDialog>();
                         if (name) {
                             Contact * c = new Contact{name.value()};
@@ -99,7 +99,7 @@ namespace rckid {
                     });
                 if (!carousel_->empty())
                     popup_
-                        << ui::MenuItem("Delete", assets::icons_16::backspace, [this](){
+                        << ui::MenuItem("Delete", assets::icons_16::remove, [this](){
                             // TODO add confirmation dialog
                             // delete the contact (and its menu item)
                             uint32_t idx = carousel_->index();
