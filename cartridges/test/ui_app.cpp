@@ -21,7 +21,6 @@
 
 #include <rckid/apps/dialogs/popup_menu.h>
 
-
 using namespace rckid;
 
 class TestApp : public rckid::ui::App<void> {
@@ -116,7 +115,6 @@ private:
 
 int main() {
     rckid::initialize();
-    //App::run<NumberDialog>();
     //App::run<ChevronTest>();
     //App::run<TextDialog>("Hello");
     App::run<Launcher>(mainMenuGenerator({ .gamesExtender = gbcemu::GBCEmu::gamesMenuExtender }));

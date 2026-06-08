@@ -88,7 +88,7 @@ namespace rckid::ui {
 
             Widget::renderColumn(column, startRow, buffer, numPixels);
 
-            if (y() == 0 && Header::shouldRender())
+            if (y() == 0 && Header::shouldRender() && useHeader_ != Header::Visibility::Never)
                 renderChildColumn(Header::instance_, column, startRow, buffer, numPixels);
         }
 
@@ -125,5 +125,17 @@ namespace rckid::ui {
         w->useBackgroundImage(v.value);
         return w;
     }
+
+    struct UseHeader {
+        Header::Visibility value;
+        UseHeader(Header::Visibility value = Header::Visibility::Always): value{value} {}
+    };
+    
+    template<typename T>
+    inline with<T> operator << (with<T> w, UseHeader v) {
+        w->setUseHeader(v.value);
+        return w;
+    }
+
 
 } // namespace rckid

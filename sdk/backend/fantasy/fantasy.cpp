@@ -16,6 +16,8 @@
 #include <rckid/memory.h>
 #include <rckid/graphics/color.h>
 
+#include <rckid/apps/splashscreen.h>
+
 #include "system_malloc_guard.h"
 
 #ifndef RCKID_DISPLAY_ZOOM
@@ -248,6 +250,9 @@ namespace rckid::hal {
             InitAudioDevice();
 
             initializeNoWindow();
+
+            // run the splashscreen, but all initialization has already been performed.
+            App::run<SplashScreen>(nullptr);
         }
 
         void setPowerMode([[maybe_unused]] PowerMode mode) {

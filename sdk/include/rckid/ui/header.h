@@ -16,6 +16,7 @@ namespace rckid::ui {
         enum class Visibility {
             Always,
             OnChange,
+            Never,
         }; 
 
         /** Returns true if the header should be rendered in the current frame.
@@ -36,6 +37,10 @@ namespace rckid::ui {
                         if (instance_->remainingTicks_ > TicksToShowOnChange)
                             instance_->remainingTicks_ = 1;
                     }
+                    break;
+                case Visibility::Never:
+                    instance_->remainingTicks_ = 1;
+                    instance_->hide();
                     break;
             }
         }

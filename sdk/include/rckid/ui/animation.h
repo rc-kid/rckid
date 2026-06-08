@@ -301,5 +301,19 @@ namespace rckid::ui {
             target->animationSpeed()
         })->setEasingFunction(easing::inOutIn)->setRepeat(true);
     }
+    
+    template<typename T>
+    inline Animation * ChangeFg(T * target, Color a, Color b) {
+        return (new Animation{
+            [a, b, target](FixedRatio progress) {
+                target->setFg(Color::RGB(
+                    a.r + progress.scale(b.r - a.r),
+                    a.g + progress.scale(b.g - a.g),
+                    a.b + progress.scale(b.b - a.b)
+                ));
+            },
+            target->animationSpeed()
+        })->setEasingFunction(easing::inOut);
+    }
 
 } // namespace rckid::ui
