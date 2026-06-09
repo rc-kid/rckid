@@ -83,7 +83,7 @@ public:
 
     /** Basic initialization of the AVR firmware. 
      
-        Sets clock frequency, enables RTC (including interrupt) and in case debugging over serial wire is used, enables the serial out on AVR_IRQ pin as well.
+        Sets clock frequency, enables RTC (including interrupt) and debugging over the AVR_TX UART wire.
 
         Exists as a separate function from initialize to allow basic AVR initialization for test programs, etc.
      */
@@ -201,8 +201,6 @@ public:
                     powerIOVDD(false);
                     ts_.state.setDebugMode(false);
                     enablePWM(false);
-                    // clear IRQ
-                    clearIrq();
                 );
 
                 // if we are turning off, set notification according to other power modes
@@ -468,7 +466,6 @@ public:
         if (ts_.wakeupCounter > 0 && --ts_.wakeupCounter == 0) {
             NO_ISR(
                 ts_.state.setWakeUpInterrupt(true);
-                setIrq();
             );
             ts_.state.setDebugMode(false);
             setPowerMode(POWER_MODE_ON);
@@ -668,16 +665,6 @@ public:
     static constexpr uint8_t CHARGING_INT_REQUEST = 4;
     static inline volatile uint8_t intRequests_ = 0;
 
-    static inline volatile bool irq_ = false;
-
-    static void setIrq() {
-        // atm we are not using the IRQ line, instead RP2350 polls periodically
-    }
-
-    static void clearIrq() {
-        // atm we are not using the IRQ line, instead RP2350 polls periodically
-    }
-
     static void processIntRequests() {
         if (intRequests_ == 0)
             return;
@@ -691,7 +678,6 @@ public:
             if (isPowerModeOn()) {
                 NO_ISR(
                     ts_.state.setAccelInterrupt(true);
-                    setIrq();
                 );
                 // TODO should the interrupt be cleared for the accelerometer?
             }
@@ -812,7 +798,6 @@ public:
 
         if (changed) {
             LOG("CTRL: " << ts_.state.button(Btn::Home) << " " << ts_.state.button(Btn::VolumeUp) << " " << ts_.state.button(Btn::VolumeDown));
-            setIrq();
 
             // if we are in wakeup mode *and* the volume down button is not pressed, we should exit the debug mode (it was set in wakeup mode enable proactively)
             if (isPowerModeWakeup()) {
@@ -850,7 +835,6 @@ public:
         gpio::low(AVR_PIN_BTN_DPAD);
         if (changed) {
             LOG("ABXY: " << ts_.state.button(Btn::A) << " " << ts_.state.button(Btn::B) << " " << ts_.state.button(Btn::Select) << " " << ts_.state.button(Btn::Start));
-            setIrq();
         }
     }
 
@@ -870,7 +854,6 @@ public:
         gpio::low(AVR_PIN_BTN_CTRL);
         if (changed) {
             LOG("DPAD: " << ts_.state.button(Btn::Left) << " " << ts_.state.button(Btn::Right) << " " << ts_.state.button(Btn::Up) << " " << ts_.state.button(Btn::Down));
-            setIrq();
         }
     }
 
@@ -894,7 +877,6 @@ public:
         } else if (isPowerModeOn()) {
             powerOffTimeout_ = RCKID_POWEROFF_ACK_TIMEOUT_TICKS;
             ts_.state.setPowerOffInterrupt(true);
-            setIrq();
         }
     }
 
