@@ -25,7 +25,12 @@ namespace rckid::ui {
             return instance_->visible();
         }
 
+        static Visibility visibility() { return visibility_; }
+
         static void setVisibility(Visibility visibility) {
+            if (visibility_ == visibility)
+                return;
+            visibility_ = visibility;
             switch (visibility) {
                 // if the header is to be always visible,
                 case Visibility::Always:
@@ -40,7 +45,8 @@ namespace rckid::ui {
                     break;
                 case Visibility::Never:
                     instance_->remainingTicks_ = 1;
-                    instance_->hide();
+                    with(instance_)
+                        << SetPosition(Point{0, -TileGrid::tileHeight()});
                     break;
             }
         }
@@ -107,6 +113,9 @@ namespace rckid::ui {
         }
 
         void show() {
+            // don't show when app requests no header at all
+            if (visibility_ == Visibility::Never)
+                return;
             if (visible()) {
                 if (remainingTicks_ != 0)
                     return;
@@ -153,6 +162,8 @@ namespace rckid::ui {
         
          */
         int32_t remainingTicks_ = 0;
+        
+        static inline Visibility visibility_ = Visibility::Always;
 
         static inline Header * instance_ = nullptr;
 

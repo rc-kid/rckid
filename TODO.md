@@ -24,8 +24,6 @@ So what I need:
 
 # SDK 1.0
 
-- header bisibility never does not play well with showing (right now the root widget will just not render it, but that means any show animations will show silently and the animation from hide to show does not happen)
-
 - update the config.h to have backend config and general config to which we put things from rckid.cpp now (key repeat and other UI settings)
 
 - when app is not started and shows error diealog instead, we do double background bump on leaving
