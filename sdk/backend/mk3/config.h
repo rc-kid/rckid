@@ -1,5 +1,13 @@
 #pragma once
 
+/** Enables logging to serial port. available on the debug header.
+ */
+#define RCKID_LOG_TO_SERIAL 1
+
+/** Serial speed for debugging 
+ */
+#define RCKID_RP_SERIAL_SPEED 115200
+
 /** Firmware version of the AVR chip. 
  
     NOTE this number must be bumped for every feature update to the AVR firmware that changes the communication protocol between the RP2350 and the AVR. This is used by the RP2350 firmware to determine if the AVR firmware is compatible with it or not.

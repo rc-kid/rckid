@@ -32,10 +32,12 @@ namespace rckid {
             irq_set_priority(I2C0_IRQ, 0x40); 
         }
 
-        /** Enqueues I2C transaction that can write and read from given address. When the transaction finishes, calls the optional callback function that may read the bytes received (if any) using the readResponse function.
+        /** Enqueues I2C transaction that can write and read from given address. 
+         
+            When the transaction finishes, calls the optional callback function that may read the bytes received (if any) using the readResponse function.
          */
         static void enqueue(uint8_t address, uint8_t const * wb, uint8_t wsize, uint8_t rsize = 0, Callback cb = nullptr) {
-            ASSERT(wsize <= 16 && rsize <= 16);
+            ASSERT(wsize + rsize <= 16);
             Transaction * t = reinterpret_cast<Transaction*>(malloc(sizeof(Transaction) + wsize));
             t->address = address;
             t->wsize = wsize;
@@ -54,10 +56,12 @@ namespace rckid {
                 t->transmit();
         }
 
-        /** Blocking I2C transaction. Enqueues the packet, but waits for its completion, returning the read parts into the provided buffer. 
+        /** Blocking I2C transaction.
+           
+            Enqueues the packet, but waits for its completion, returning the read parts into the provided buffer. 
          */
         static void enqueueAndWait(uint8_t address, uint8_t const * wb, uint8_t wsize, uint8_t * rb = nullptr, uint8_t rsize = 0) {
-            ASSERT(wsize <= 16 && rsize <= 16);
+            ASSERT(wsize + rsize <= 16);
             volatile bool done = false;
             BlockingTransaction * t = new BlockingTransaction{};
             t->address = address;

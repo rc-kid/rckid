@@ -18,6 +18,9 @@
 #include <hardware/clocks.h>
 #include <hardware/flash.h>
 
+#include <platform/peripherals/lsm6dsv.h>
+#include <platform/peripherals/ltr390uv.h>
+
 #include <rckid/hal.h>
 #include <rckid/error.h>
 #include <rckid/memory.h>
@@ -30,6 +33,7 @@
 
 #include "screen/ST7789.h"
 #include "ST7789_rgb16.pio.h"
+#include "avr/src/avr-commands.h"
 
 namespace rckid::fs {
     void initializeFilesystem();
@@ -51,8 +55,83 @@ namespace rckid::internal {
 
         DeviceState state;
 
+        // accelerometer
+        LSM6DSV accel;
+        LSM6DSV::Orientation3D accelState;
+        volatile uint32_t pedometerCount;
+
+        LTR390UV light;
+
         void initialize() {
+            // read the full state first
+            constexpr uint32_t TS_SIZE = sizeof(TransferrableState) - 1024;
+            TransferrableState ts;
+            int n = i2c_read_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, (uint8_t *) & ts, TS_SIZE, false);
+            if (n != TS_SIZE)
+                FATAL_ERROR("AVR READ", n);
+            if (ts.version != RCKID_AVR_FIRMWARE_VERSION)
+                FATAL_ERROR("AVR VERSION", ts.version);
+            // the data received is correct, initialize own structures
+            state = ts.state;
+            time::now = ts.time;
+            LOG(LL_INFO, "AVR version:    ", ts.version);
+            LOG(LL_INFO, "Device uptime:  ", ts.uptime);
+            LOG(LL_INFO, "Wakeup reason:  ", ts.wakeupReason);
+            LOG(LL_INFO, "Wakeup counter: ", ts.wakeupCounter);
+            LOG(LL_INFO, "AVR temp:       ", ts.temp);
+            
+            // initialize I2C devices
+            LOG(LL_INFO, "Detecting I2C devices...");
+            LOG(LL_INFO, "  AVR (0x43):        " << (::i2c::isPresent(0x43) ? "ok" : "not found"));
+            LOG(LL_INFO, "  LSM6DSV (0x6a):    " << (::i2c::isPresent(0x6a) ? "ok" : "not found"));
+            LOG(LL_INFO, "  NAU88C22YG (0x1a): " << (::i2c::isPresent(0x1a) ? "ok" : "not found"));
+            LOG(LL_INFO, "  LTR390UV (0x53):   " << (::i2c::isPresent(0x53) ? "ok" : "not found"));
+
+            // initialize the accelerometer. This is more complex as we only want to initialize the accelerometer when not initialized already as the initialization also resets the pedometer count
+            if (io::accel.isAccelerometerEnabled()) {
+                LOG(LL_INFO, "Accelerometer already enabled, skipping initialization");
+                if (! io::accel.isPedometerEnabled())
+                    LOG(LL_ERROR, "Pedometer not enabled");
+            } else if (! io::accel.initialize()) {
+                LOG(LL_ERROR, "Failed to initialize LSM6DSV accelerometer");
+            } else {
+                LOG(LL_INFO, "LSM6DSV accelerometer initialized");
+                io::accel.enableAccelerometer(true);
+                io::accel.enablePedometer(true);
+            }
+            io::pedometerCount = io::accel.readStepCount();
+            io::accelState = io::accel.readAccelerometerRaw();
+            // fix the X axis orientation
+            io::accelState.x *= -1;
+
+            // initialize the LTR390UV light sensor
             // TODO
+
+            // initialize the audio codec
+            // TODO
+
+
+
+            
+            // TODO
+        }
+
+        void updateAvrStatus(uint8_t numBytes) {
+            if (numBytes != sizeof(DeviceState)) {
+                LOG(LL_ERROR, "Corrupted AVR state: " << numBytes);
+                return;
+            }
+            i2c::getTransactionResponse(reinterpret_cast<uint8_t*>(&state), sizeof(DeviceState));
+        }
+
+        void updateAccelStatus(uint8_t numBytes) {
+            if (numBytes != sizeof(LSM6DSV::Orientation3D)) {
+                LOG(LL_ERROR, "Corrupted accel state: ", numBytes);
+                return;
+            }
+            i2c::getTransactionResponse(reinterpret_cast<uint8_t*>(&accelState), sizeof(LSM6DSV::Orientation3D));
+            // fix the X axis orientation
+            accelState.x *= -1;
         }
 
     } // namespace rckid::internal::io
@@ -223,10 +302,11 @@ namespace rckid::hal {
             board_init();
             tud_init(BOARD_TUD_RHPORT);
 #if (RCKID_LOG_TO_SERIAL == 1)
+            // initialize only TX out on GPIO2
             // initialize uart0 on pins 16 & 17 as serial out
-            uart_init(uart0, RCKID_SERIAL_SPEED);
-            gpio_set_function(RCKID_LOG_SERIAL_TX_PIN, GPIO_FUNC_UART);
-            gpio_set_function(RCKID_LOG_SERIAL_RX_PIN, GPIO_FUNC_UART);
+            // TODO this is wrong routine for the new pinout
+            uart_init(uart0, RCKID_RP_SERIAL_SPEED);
+            gpio_set_function(RP_PIN_RP_TX, GPIO_FUNC_UART);
 #endif
             internal::device::debugReady = true;
 
@@ -280,7 +360,17 @@ namespace rckid::hal {
 
         void onTick() {
             onYield();
-            // TODO add more
+            // TODO add stuff for checking hardware events in the latest state? 
+
+
+
+            // enqueue avr, accel and light sensor status updates
+            i2c::enqueue(RCKID_AVR_I2C_ADDRESS, nullptr, 0, sizeof(DeviceState), internal::io::updateAvrStatus);
+            // accel
+            uint8_t cmd = LSM6DSV::REG_OUTX_L_A; 
+            i2c::enqueue(LSM6DSV::I2C_ADDRESS, & cmd, 1, sizeof(LSM6DSV::Orientation3D), internal::io::updateAccelStatus);
+            // light
+            // TODO
         }
 
         void onYield() {
@@ -351,7 +441,8 @@ namespace rckid::hal {
         }
 
         Point3D accelerometerState() {
-            UNREACHABLE;
+            using namespace internal::io;
+            return Point3D{accelState.x, accelState.y, accelState.z};
         }
 
         Point3D gyroscopeState() {
