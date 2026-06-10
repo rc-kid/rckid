@@ -24,6 +24,9 @@ So what I need:
 
 # SDK 1.0
 
+
+- use I2C queue buffer that is fixed size and when full, wait for empty and then try again. This prevents the ugly OOM I saw in the past
+
 - update the config.h to have backend config and general config to which we put things from rckid.cpp now (key repeat and other UI settings)
 
 - when app is not started and shows error diealog instead, we do double background bump on leaving

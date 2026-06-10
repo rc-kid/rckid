@@ -520,10 +520,13 @@ public:
         // master requests to write data itself. ACK if there is no pending I2C message, NACK otherwise. The buffer is reset to 
         } else if ((status & I2C_START_MASK) == I2C_START_RX) {
             TWI0.SCTRLB = (! i2cCommandReady_) ? TWI_SCMD_RESPONSE_gc : TWI_ACKACT_NACK_gc;
-        // sending finished, reset the tx address and when in recording mode determine if more data is available
+        // sending finished, reset the tx address, clear interrupts if we have succesfully sent at least device state
         } else if ((status & I2C_STOP_MASK) == I2C_STOP_TX) {
             TWI0.SCTRLB = TWI_SCMD_COMPTRANS_gc;
-            i2cTxAddr_ = reinterpret_cast<uint8_t *>(& ts_);
+            if (i2cTxAddr_ == reinterpret_cast<uint8_t *>(& ts_) && i2cTxBytes_ >= 4)
+                ts_.clearInterrupts();
+            else 
+                i2cTxAddr_ = reinterpret_cast<uint8_t *>(& ts_);
         // receiving finished, inform main loop we have message waiting if we have received at laast one byte (0 bytes received is just I2C ping)
         } else if ((status & I2C_STOP_MASK) == I2C_STOP_RX) {
             TWI0.SCTRLB = TWI_SCMD_COMPTRANS_gc;

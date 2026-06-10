@@ -121,7 +121,9 @@ namespace rckid::internal {
                 LOG(LL_ERROR, "Corrupted AVR state: " << numBytes);
                 return;
             }
-            i2c::getTransactionResponse(reinterpret_cast<uint8_t*>(&state), sizeof(DeviceState));
+            DeviceState ds;
+            i2c::getTransactionResponse(reinterpret_cast<uint8_t*>(&ds), sizeof(DeviceState));
+            state.updateWith(ds);
         }
 
         void updateAccelStatus(uint8_t numBytes) {
@@ -437,7 +439,9 @@ namespace rckid::hal {
     namespace io {
 
         DeviceState state() {
-            return internal::io::state;
+            DeviceState result = internal::io::state;
+            internal::io::state.clearInterrupts();
+            return result;
         }
 
         Point3D accelerometerState() {
