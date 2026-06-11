@@ -33,6 +33,9 @@
 
 #include "screen/ST7789.h"
 #include "ST7789_rgb16.pio.h"
+
+#include "audio/codec.h"
+
 #include "avr/src/avr-commands.h"
 
 namespace rckid::fs {
@@ -82,9 +85,9 @@ namespace rckid::internal {
             
             // initialize I2C devices
             LOG(LL_INFO, "Detecting I2C devices...");
-            LOG(LL_INFO, "  AVR (0x43):        " << (::i2c::isPresent(0x43) ? "ok" : "not found"));
+            LOG(LL_INFO, "  AVR (0x43):        " << (::i2c::isPresent(RCKID_AVR_I2C_ADDRESS) ? "ok" : "not found"));
             LOG(LL_INFO, "  LSM6DSV (0x6a):    " << (::i2c::isPresent(0x6a) ? "ok" : "not found"));
-            LOG(LL_INFO, "  NAU88C22YG (0x1a): " << (::i2c::isPresent(0x1a) ? "ok" : "not found"));
+            LOG(LL_INFO, "  NAU88C22YG (0x1a): " << (::i2c::isPresent(RCKID_AUDIO_CODEC_I2C_ADDRESS) ? "ok" : "not found"));
             LOG(LL_INFO, "  LTR390UV (0x53):   " << (::i2c::isPresent(0x53) ? "ok" : "not found"));
 
             // initialize the accelerometer. This is more complex as we only want to initialize the accelerometer when not initialized already as the initialization also resets the pedometer count
@@ -214,28 +217,82 @@ namespace rckid::internal {
 
     namespace audio {
 
-        uint32_t sampleRate = 44100;
+        rckid::audio::Callback callback;
 
         struct DMA {
             int32_t channel = -1;
             int16_t * buffer = nullptr;
-            uint32_t bufferSize = 0;
+            uint32_t stereoSamples = 0;
 
-            void reset() {
+            void stop() {
+                dma_channel_abort(channel);
                 buffer = nullptr;
-                bufferSize = 0;
+                stereoSamples = 0;
             }
 
-            void configure(DMA & other) {
+            void update() {
+                if (Codec::isPlaybackI2S()) {
+                    callback(buffer, stereoSamples);
+                    dma_channel_set_read_addr(channel, buffer, false);
+                    dma_channel_set_trans_count(channel, stereoSamples, false);
+                } else {
+                    ASSERT(Codec::isRecordingI2S());
+                    callback(buffer, stereoSamples);
+                    dma_channel_set_write_addr(channel, buffer, false);
+                    dma_channel_set_trans_count(channel, stereoSamples, false);
+                }
             }
 
-            void update(DMA & other) {
+            void configurePlayback(DMA & other) {
+                auto dmaConf = dma_channel_get_default_config(channel);
+                channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bits (16 per channel, 2 channels)
+                channel_config_set_read_increment(& dmaConf, true);  // increment on read
+                channel_config_set_write_increment(& dmaConf, false);  // do not increment on write
+                channel_config_set_dreq(&dmaConf, Codec::playbackDReq()); // DMA is driven by the I2S playback pio
+                channel_config_set_chain_to(& dmaConf, other.channel); // chain to the other channel
+                dma_channel_configure(channel, & dmaConf, Codec::playbackTxFifo(), buffer, 0, stereoSamples); // the buffer consists of stereo samples, (32bits)
+                // enable IRQ0 on the DMA channel (shared with other framework DMA uses such as the display or the SD card)
+                dma_channel_set_irq0_enabled(channel, true);
+            }
+
+            void configureRecord(DMA & other) {
+                // TODO this is weird and should be checked before recording will be tested (!)
+                auto dmaConf = dma_channel_get_default_config(channel);
+                channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bits (16 per channel, 2 channels)
+                channel_config_set_read_increment(& dmaConf, false);  // do not increment on read
+                channel_config_set_write_increment(& dmaConf, true);  // increment on write
+                channel_config_set_dreq(&dmaConf, Codec::recordDReq()); // DMA is driven by the I2S record pio
+                channel_config_set_chain_to(& dmaConf, other.channel); // chain to the other channel
+                dma_channel_configure(channel, & dmaConf, buffer, Codec::recordRxFifo(), stereoSamples, false); // the buffer consists of stereo samples, (32bits), i.e. buffer size / 2
+                // enable IRQ0 on the DMA channel (shared with other framework DMA uses such as the display or the SD card)
+                dma_channel_set_irq0_enabled(channel, true);
             }
 
         };
 
+
+        DMA dma0;
         DMA dma1;
-        DMA dma2;
+
+
+
+        void initialize() {
+            LOG(LL_INFO, "Initializing audio codec");
+            dma0.channel = dma_claim_unused_channel(true);
+            dma1.channel = dma_claim_unused_channel(true);
+            LOG(LL_INFO, "  audio dma0: " << static_cast<uint32_t>(audio::dma0.channel));
+            LOG(LL_INFO, "  audio dma1: " << static_cast<uint32_t>(audio::dma1.channel));
+            // initialize the codec firmaware
+            Codec::initialize();
+            Codec::reset();
+            Codec::powerUp();
+            // set initial volume settings
+            //Codec::setVolumeSpeaker(io::avrState_.audio.volumeSpeaker());
+            //Codec::setVolumeHeadphones(io::avrState_.audio.volumeHeadphones());
+
+
+
+        }
 
     }
 
@@ -261,6 +318,13 @@ namespace rckid::internal {
                 display::backBuffer = nullptr;
                 display::backBufferSize = 0;
             }
+        }
+        // audio
+        if (irqs & (1u << audio::dma0.channel)) {
+            audio::dma0.update();
+        }
+        if (irqs & (1u << audio::dma1.channel)) {
+            audio::dma1.update();
         }
     }
 
@@ -560,15 +624,29 @@ namespace rckid::hal {
     namespace audio {
 
         void setVolumeHeadphones(uint8_t value) {
+            Codec::setVolumeHeadphones(value);
             UNIMPLEMENTED;
         }
 
         void setVolumeSpeaker(uint8_t value) {
+            Codec::setVolumeSpeaker(value);
             UNIMPLEMENTED;
         }
 
         void play(uint32_t sampleRate, Callback cb) {
-            UNIMPLEMENTED;
+            using namespace internal::audio;
+            stop(); 
+            callback = std::move(cb);
+            // refill the buffers
+            callback(dma0.buffer, dma0.stereoSamples);
+            callback(dma1.buffer, dma1.stereoSamples);
+            // configure the DMA
+            dma0.configurePlayback(dma1);
+            dma1.configurePlayback(dma0);
+            // start the playback on the codec
+            Codec::playbackI2S(sampleRate);
+            // and start the first DMA
+            dma_channel_start(dma0.channel);
         }
 
         void recordMic(uint32_t sampleRate, Callback cb) {
@@ -580,27 +658,29 @@ namespace rckid::hal {
         }   
 
         void pause() {
-            UNIMPLEMENTED;
+            Codec::pause();
         }
 
         void resume() {
-            UNIMPLEMENTED;
+            Codec::resume();
         }
 
         void stop() {
-            UNIMPLEMENTED;
+            Codec::stop();
+            internal::audio::dma0.stop();
+            internal::audio::dma1.stop();
         }
 
         bool isPlaying() {
-            UNIMPLEMENTED;
+            return Codec::isPlaybackI2S();
         }
 
-        bool isRecording(){
-            UNIMPLEMENTED;
+        bool isRecording() {
+            return Codec::isRecordingI2S();
         }
 
         bool isPaused() {
-            UNIMPLEMENTED;
+            return Codec::isPaused();
         }
 
 

@@ -71,6 +71,8 @@
 
 #define RCKID_AVR_I2C_ADDRESS 0x43
 
+#define RCKID_AUDIO_CODEC_I2C_ADDRESS 0x1a
+
 /** SD Card Confguration
  */
 #define RCKID_SD_SPI_INIT_SPEED 200000
