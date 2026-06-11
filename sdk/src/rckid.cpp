@@ -94,7 +94,7 @@ namespace rckid {
         hal::device::initialize();
         hal::storage::load(0, reinterpret_cast<uint8_t *>(& settings), sizeof(settings));
         if (settings.version != Settings::VERSION) {
-            LOG(LL_WARN, "Settings version mismatch, resettin to defaults");
+            LOG(LL_WARN, "Settings version mismatch, resetting to defaults");
             settings = Settings{};
         }
         now_ = hal::time::now();

@@ -119,15 +119,6 @@ namespace rckid::internal {
             // TODO
         }
 
-        /** Sends given command to the AVR. 
-         
-            Note that command sending is asynchronous.
-         */
-        template<typename T>
-        void sendCommand(T const & cmd) {
-            i2c::enqueue(RCKID_AVR_I2C_ADDRESS, reinterpret_cast<uint8_t const *>(& cmd), sizeof(T));
-        }
-
         void updateAvrStatus(uint8_t numBytes) {
             if (numBytes != sizeof(DeviceState)) {
                 LOG(LL_ERROR, "Corrupted AVR state: " << numBytes);
@@ -423,7 +414,7 @@ namespace rckid::hal {
 
         void powerOff() {
             // TODO do we want to do some more?
-            internal::io::sendCommand(cmd::PowerOff{});
+            i2c::sendAvrCommand(cmd::PowerOff{});
         }
 
         void sleep() {
@@ -547,8 +538,7 @@ namespace rckid::hal {
         }
 
         void setBrightness(uint8_t value) {
-            // TODO
-            UNIMPLEMENTED;
+            i2c::sendAvrCommand(cmd::SetBrightness{value});
         }
 
         bool vSync() {
@@ -625,12 +615,10 @@ namespace rckid::hal {
 
         void setVolumeHeadphones(uint8_t value) {
             Codec::setVolumeHeadphones(value);
-            UNIMPLEMENTED;
         }
 
         void setVolumeSpeaker(uint8_t value) {
             Codec::setVolumeSpeaker(value);
-            UNIMPLEMENTED;
         }
 
         void play(uint32_t sampleRate, Callback cb) {

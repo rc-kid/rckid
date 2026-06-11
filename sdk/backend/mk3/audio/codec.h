@@ -185,10 +185,18 @@ namespace rckid {
             }
         }
 
+        /** Sets the speaker volume on the 0..15 scale used by rckid. 
+         
+            TODO this is where the scale can be translated to raw levels in a non-linear fashion, or headphone and speaker volume translation can be different
+         */
         static void setVolumeSpeaker(uint8_t volume) {
             setVolumeSpeakerRaw((volume << 2) | (volume & 0x3));
         }
 
+        /** Sets the headphones volume on the 0..15 scale used by rckid. 
+         
+            TODO this is where the scale can be translated to raw levels in a non-linear fashion, or headphone and speaker volume translation can be different
+         */
         static void setVolumeHeadphones(uint8_t volume) {
             setVolumeHeadphonesRaw((volume << 2) | (volume & 0x3));
         }
