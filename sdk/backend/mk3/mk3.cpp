@@ -274,8 +274,6 @@ namespace rckid::internal {
         DMA dma0;
         DMA dma1;
 
-
-
         void initialize() {
             LOG(LL_INFO, "Initializing audio codec");
             dma0.channel = dma_claim_unused_channel(true);
@@ -652,11 +650,37 @@ namespace rckid::hal {
         }
 
         void recordMic(uint32_t sampleRate, Callback cb) {
-            UNIMPLEMENTED;
+            using namespace internal::audio;
+            stop();
+            callback = std::move(cb);
+            // get buffers from the callback (those are empty now)
+            callback(dma0.buffer, dma0.stereoSamples);
+            callback(dma1.buffer, dma1.stereoSamples);
+            // configure the DMA
+            dma0.configureRecord(dma1);
+            dma1.configureRecord(dma0);
+            // enable the first DMA
+            dma_channel_start(dma0.channel);
+            // instruct the codec to start the playback at given sample rate
+            Codec::recordMic(sampleRate);
         }
 
         void recordLineIn(uint32_t sampleRate, Callback cb) {
+            using namespace internal::audio;
+            stop();
+            callback = std::move(cb);
+            // get buffers from the callback (those are empty now)
+            callback(dma0.buffer, dma0.stereoSamples);
+            callback(dma1.buffer, dma1.stereoSamples);
+            // configure the DMA
+            dma0.configureRecord(dma1);
+            dma1.configureRecord(dma0);
+            // enable the audio path from cartridge to the codec line-in
             UNIMPLEMENTED;
+            // enable the first DMA
+            dma_channel_start(dma0.channel);
+            // instruct the codec to start the playback at given sample rate
+            Codec::recordLineIn(sampleRate);
         }   
 
         void pause() {
