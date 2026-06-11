@@ -24,6 +24,7 @@ So what I need:
 
 # SDK 1.0
 
+- how to detect we are done playing music? in the DMA
 
 - use I2C queue buffer that is fixed size and when full, wait for empty and then try again. This prevents the ugly OOM I saw in the past
 

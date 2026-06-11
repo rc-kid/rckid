@@ -250,7 +250,7 @@ namespace rckid::internal {
                 channel_config_set_write_increment(& dmaConf, false);  // do not increment on write
                 channel_config_set_dreq(&dmaConf, Codec::playbackDReq()); // DMA is driven by the I2S playback pio
                 channel_config_set_chain_to(& dmaConf, other.channel); // chain to the other channel
-                dma_channel_configure(channel, & dmaConf, Codec::playbackTxFifo(), buffer, 0, stereoSamples); // the buffer consists of stereo samples, (32bits)
+                dma_channel_configure(channel, & dmaConf, Codec::playbackTxFifo(), buffer, stereoSamples, false); // the buffer consists of stereo samples, (32bits)
                 // enable IRQ0 on the DMA channel (shared with other framework DMA uses such as the display or the SD card)
                 dma_channel_set_irq0_enabled(channel, true);
             }
@@ -397,6 +397,8 @@ namespace rckid::hal {
             i2c::initialize();
             // initalize the IO module (talk to the AVR)
             internal::io::initialize();
+
+            internal::audio::initialize();
 
             // initialize the SD card, if present and the filesystem module
             internal::sd::initialize();
