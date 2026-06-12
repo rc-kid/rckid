@@ -547,14 +547,14 @@ namespace rckid {
                 static_cast<uint8_t>((reg << 1) | ((value >> 8) & 0x01)),
                 static_cast<uint8_t>(value & 0xff)
             };
-            i2c::enqueueAndWait(RCKID_AUDIO_CODEC_I2C_ADDRESS, cmd, sizeof(cmd));
+            i2c::transmitSync(RCKID_AUDIO_CODEC_I2C_ADDRESS, cmd, sizeof(cmd));
             //::i2c::masterTransmit(RCKID_AUDIO_CODEC_I2C_ADDRESS, cmd, 2, nullptr, 0);
         }
 
         static uint16_t getRegister(uint8_t reg) {
             uint8_t result[2];
             reg <<= 1;
-            i2c::enqueueAndWait(RCKID_AUDIO_CODEC_I2C_ADDRESS, & reg, 1, result, 2);
+            i2c::transmitSync(RCKID_AUDIO_CODEC_I2C_ADDRESS, & reg, 1, result, 2);
             //::i2c::masterTransmit(RCKID_AUDIO_CODEC_I2C_ADDRESS, & reg, 1, result, 2);
             return (result[0] << 8) | result[1];;
         }

@@ -432,10 +432,10 @@ namespace rckid::hal {
 
 
             // enqueue avr, accel and light sensor status updates
-            i2c::enqueue(RCKID_AVR_I2C_ADDRESS, nullptr, 0, sizeof(DeviceState), internal::io::updateAvrStatus);
+            i2c::transmitAsync(RCKID_AVR_I2C_ADDRESS, nullptr, 0, sizeof(DeviceState), internal::io::updateAvrStatus);
             // accel
             uint8_t cmd = LSM6DSV::REG_OUTX_L_A; 
-            i2c::enqueue(LSM6DSV::I2C_ADDRESS, & cmd, 1, sizeof(LSM6DSV::Orientation3D), internal::io::updateAccelStatus);
+            i2c::transmitAsync(LSM6DSV::I2C_ADDRESS, & cmd, 1, sizeof(LSM6DSV::Orientation3D), internal::io::updateAccelStatus);
             // light
             // TODO
         }
@@ -443,6 +443,7 @@ namespace rckid::hal {
         void onYield() {
             tight_loop_contents();
             tud_task();
+            i2c::onYield();
         }
 
         void fatalError(char const * file, uint32_t line, char const * msg, uint32_t payload) {

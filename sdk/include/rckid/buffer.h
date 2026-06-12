@@ -187,6 +187,4 @@ namespace rckid {
 
     }; // rckid::MultiBuffer<T>
 
-
-
 } // namespace rckid
