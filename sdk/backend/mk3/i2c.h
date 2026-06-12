@@ -111,7 +111,7 @@ namespace rckid {
 
         /** Enqueues given callback function to be called when I2C hardware is idle so that the callback itself can take full control of the hardware.
          */
-        static void enqueue(uint8_t address, Callback cb) {
+        static void enqueue(Callback cb) {
             ASSERT(cb != nullptr); // this would deadlock
             uint32_t next = (wi_ + 1) % SLOTS;
             // if full, wait
@@ -175,7 +175,8 @@ namespace rckid {
                 callback{cb} 
             {
                 ASSERT(rsize + wsize <= 16);
-                memcpy(writeBuffer, wb, wsize);
+                if (wsize != 0)
+                    memcpy(writeBuffer, wb, wsize);
             }
 
             Transaction(Callback cb):
