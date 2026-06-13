@@ -779,12 +779,31 @@ namespace rckid::hal {
 
     namespace storage {
 
+        /** Saves the provided bytes to AVR memory.
+         
+            The buffer is chunked into multiple write message bytes
+         */
         void save(uint16_t start, uint8_t const * buffer, uint32_t numBytes) {
-            UNIMPLEMENTED;
+            while (numBytes > 0) {
+                uint32_t tx = numBytes < 12 ? numBytes : 12;
+                i2c::sendAvrCommand(cmd::WriteStorage{start, buffer, tx});
+                numBytes -= tx;
+                start += tx;
+                buffer += tx;
+            }
         }
 
+        /** Reads the AVR storage in one read. We use the write command write followed by I2C restart read.
+         */
         void load(uint16_t start, uint8_t * buffer, uint32_t numBytes) {
-            UNIMPLEMENTED;
+            cmd::ReadStorage command{start};
+            i2c::transmitSync(
+                RCKID_AVR_I2C_ADDRESS, 
+                reinterpret_cast<uint8_t const *>(& command),
+                sizeof(cmd::ReadStorage),
+                buffer, 
+                numBytes
+            );
         }
     } // namespace rckid::hal::storage
 
