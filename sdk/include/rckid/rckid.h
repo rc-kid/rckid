@@ -228,6 +228,30 @@ namespace rckid {
 
     } // namespace rckid::pim
 
+    /** Rumbler control. 
+     
+        The underlying HAL interface allows specifying rumbler effects to be applied via the hal::rumbler::setEffect() method. The rckid API layer wraps the most useful rumbler response types (off, nudge, success and fail) into shorthands, while full control remains possible via calling the HAL layer directly.
+     */
+    namespace rumbler {
+
+        /** Turns the rumbler motor off immediately. 
+         */
+        inline void off() { hal::rumbler::setEffect(RumblerEffect::Off()); }
+
+        /** Default nudge rumbler action. Uses configurable strength, useful for simple user feedback, such as key press. 
+         */
+        void nudge();
+
+        /** Success rumbler response. Pre-configured to be felt as one strong vibration.
+         */
+        void success();
+
+        /** Failure rumbler response. Pre-congigured as three very strong pulses.
+         */
+        void fail();
+
+    } // namespace rckid::rumbler
+
 
 } // namespace rckid
 

@@ -253,10 +253,14 @@ namespace rckid::hal {
         void save(uint16_t start, uint8_t const * buffer, uint32_t numBytes);
     } // namespace rckid::hal::store
 
+    /** Rumbler access by setting the desired effect to be executed. 
+     */
     namespace rumbler {
-        void setEffect(RumblerEffect effect);
+        void setEffect(RumblerEffect const & effect);
     } // namespace rckid::hal::rumbler
 
+    /** RGB lights effects that allows setting single effect for *all* LEDs, or specific effect ler LED. 
+     */
     namespace rgb {
         void setEffect(uint8_t index, RGBEffect const & effect);
         void setEffectAll(RGBEffect const & effect);

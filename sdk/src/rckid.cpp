@@ -55,6 +55,11 @@ namespace rckid {
     struct PimSettings {
         uint32_t budget = 610;
     } __attribute__((packed));
+
+    struct RumblerSettings {
+        uint8_t strength = 128;
+        bool keyPress = true;
+    } __attribute__((packed));
     
     struct Settings {
         static constexpr uint16_t VERSION = 1;
@@ -62,6 +67,7 @@ namespace rckid {
         DisplaySettings display;
         AudioSettings audio;
         PimSettings pim;
+        RumblerSettings rumbler;
     } __attribute__((packed));
 
     Settings settings;
@@ -106,9 +112,17 @@ namespace rckid {
         // move to next state
         lastState_ = state_;
         state_.updateWith(hal::io::state());
+        bool buttonPressed = false;
         // update button repeat intervals
-        for (uint32_t i = 0; i < 11; ++i)
+        for (uint32_t i = 0; i < 11; ++i) {
+            Btn b = static_cast<Btn>(i);
+            if (btnPressed(b))
+                buttonPressed = true;
             checkButtonRepeat(static_cast<Btn>(i));
+        }
+        // if we have new button press (any button), nudge
+        if (buttonPressed && settings.rumbler.keyPress)
+            rumbler::nudge();
         // check state interrupts
         if (state_.powerOffInterrupt()) {
             LOG(LL_INFO, "Power off requested");
@@ -331,6 +345,36 @@ namespace rckid {
         }
 
     } // namespace rckid::pim
+
+    namespace rumbler {
+        void nudge() { 
+            hal::rumbler::setEffect(RumblerEffect{
+                /* strength */ settings.rumbler.strength, 
+                /* timeOn */   5,
+                /* timeOff */  0,
+                /* cycles */   1
+            }); 
+        }
+
+        void success() { 
+            hal::rumbler::setEffect(RumblerEffect{
+                /* strength */ 192, 
+                /* timeOn */   5,
+                /* timeOff */  0,
+                /* cycles */   1
+            }); 
+        }
+
+        void fail() { 
+            hal::rumbler::setEffect(RumblerEffect{
+                /* strength */ 255, 
+                /* timeOn */   5,
+                /* timeOff */  5,
+                /* cycles */   3
+            }); 
+        }
+
+    }
 
     // debugging
 
