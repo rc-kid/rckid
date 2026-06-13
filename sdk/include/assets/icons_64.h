@@ -41,6 +41,12 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/happy_face.inc.h"
     };
 
+    // File: icons/icons_64/066-rainbow.png
+    // Size: 2430
+    static constexpr uint8_t rainbow[] = {
+        #include "raw/icons_64/rainbow.inc.h"
+    };
+
     // File: icons/icons_64/092-remove.png
     // Size: 1991
     static constexpr uint8_t remove[] = {
@@ -69,6 +75,12 @@ namespace rckid::assets::icons_64 {
     // Size: 1710
     static constexpr uint8_t play_button[] = {
         #include "raw/icons_64/play_button.inc.h"
+    };
+
+    // File: icons/icons_64/073-vibration.png
+    // Size: 1508
+    static constexpr uint8_t vibration[] = {
+        #include "raw/icons_64/vibration.inc.h"
     };
 
     // File: icons/icons_64/080-info.png
@@ -111,6 +123,18 @@ namespace rckid::assets::icons_64 {
     // Size: 2532
     static constexpr uint8_t music[] = {
         #include "raw/icons_64/music.inc.h"
+    };
+
+    // File: icons/icons_64/078-numpad.png
+    // Size: 2355
+    static constexpr uint8_t numpad[] = {
+        #include "raw/icons_64/numpad.inc.h"
+    };
+
+    // File: icons/icons_64/076-down-arrow.png
+    // Size: 1456
+    static constexpr uint8_t down_arrow[] = {
+        #include "raw/icons_64/down_arrow.inc.h"
     };
 
     // File: icons/icons_64/043-sad-face.png
@@ -159,6 +183,18 @@ namespace rckid::assets::icons_64 {
     // Size: 3077
     static constexpr uint8_t chronometer[] = {
         #include "raw/icons_64/chronometer.inc.h"
+    };
+
+    // File: icons/icons_64/075-brightness-1.png
+    // Size: 1359
+    static constexpr uint8_t brightness_1[] = {
+        #include "raw/icons_64/brightness_1.inc.h"
+    };
+
+    // File: icons/icons_64/067-turn-off.png
+    // Size: 1708
+    static constexpr uint8_t turn_off[] = {
+        #include "raw/icons_64/turn_off.inc.h"
     };
 
     // File: icons/icons_64/044-picture.png

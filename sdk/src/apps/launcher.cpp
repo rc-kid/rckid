@@ -177,10 +177,49 @@ namespace rckid {
         return result;
     }
 
+    unique_ptr<ui::Menu> rgbEffectSettingsMenuGenerator() {
+        auto result = std::make_unique<ui::Menu>();
+        (*result)
+            << ui::MenuItem{"Rainbow", assets::icons_64::rainbow, []() {
+                rgb::setKeyboardEffect(rgb::KeyboardEffect::Rainbow);
+            }}
+            << ui::MenuItem{"Off", assets::icons_64::turn_off, []() {
+                rgb::setKeyboardEffect(rgb::KeyboardEffect::Off);
+            }};
+        return result;
+    }
+
+    unique_ptr<ui::Menu> rgbSettingsMenuGenerator() {
+        auto result = std::make_unique<ui::Menu>();
+        (*result)
+            << ui::MenuItem::Generator("Effect", assets::icons_64::numpad, rgbEffectSettingsMenuGenerator)
+            << ui::MenuItem{"Color", assets::icons_64::light, []() {
+
+            }}
+            << ui::MenuItem{"Brightness", assets::icons_64::brightness, [](){
+
+            }};
+        return result;
+    }
+
+    unique_ptr<ui::Menu> rumblerSettingsMenuGenerator() {
+        auto result = std::make_unique<ui::Menu>();
+        (*result)
+            << ui::MenuItem{"Strength", assets::icons_64::vibration, []() {
+
+            }}
+            << ui::MenuItem{"Key Press", assets::icons_64::down_arrow, []() {
+
+            }};
+        return result;
+    }
+
     unique_ptr<ui::Menu> settingsMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();
         (*result)
             << ui::MenuItem::Generator("Style", assets::icons_64::paint_palette, styleSettingsMenuGenerator)
+            << ui::MenuItem::Generator("Lights", assets::icons_64::brightness_1, rgbSettingsMenuGenerator)
+            << ui::MenuItem::Generator("Rumbler", assets::icons_64::vibration, rumblerSettingsMenuGenerator)
             << ui::MenuItem{"About", assets::icons_64::info, []() {
                 App::run<About>();
             }};

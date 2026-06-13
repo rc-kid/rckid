@@ -114,7 +114,7 @@ namespace rckid {
                 } else {
                     color = settings.rgb.color.withBrightness(settings.rgb.brightness);
                 }
-                rgb::setBtnEffect(b, RGBEffect::Solid(color, 32, 0));
+                rgb::setBtnEffect(b, RGBEffect::Solid(color, 255, 0));
                 rgb::setBtnEffect(b, RGBEffect::Solid(Color::Black()));
                 break;
             }

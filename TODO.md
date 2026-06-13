@@ -40,6 +40,8 @@ So what I need:
 - make UNREACHABLE & friends part of platform? This should make it write between mkIII, fantasy and ATTiny stuff
 
 - add wave keyboard effect for rgb
+- does the start then drop immediately effect for keyboard press work? 
+- what should go to settings & what should go to style?
 
 Wakeups
 - alarm clock
