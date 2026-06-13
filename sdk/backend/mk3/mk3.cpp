@@ -811,5 +811,21 @@ namespace rckid::hal {
         }
     } // namespace rckid::hal::storage
 
+    namespace rumbler {
+        void setEffect(RumblerEffect const & effect) {
+            i2c::sendAvrCommand(cmd::SetRumblerEffect{effect});
+        }
+    } // namespace rckid::hal::rumbler
+
+    namespace rgb {
+        void setEffect(uint8_t index, RGBEffect const & effect) {
+            i2c::sendAvrCommand(cmd::SetRGBEffect{index, effect});
+        }
+
+        void setEffectAll(RGBEffect const & effect) {
+            i2c::sendAvrCommand(cmd::SetRGBEffectAll{effect});
+        }
+    } // namespace rckid::hal::rgb
+
 } // namespace rckid::hal
 

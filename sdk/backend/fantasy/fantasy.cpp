@@ -662,5 +662,27 @@ namespace rckid::hal {
         }
     } // namespace rckid::hal::storage
 
+    namespace rumbler {
+        /** As there is no rumbler, simply reports the request
+         */
+        void setEffect(RumblerEffect const & effect) {
+            LOG(LL_INFO, "Rumbler effect: " << effect);
+        }
+    } // namespace rckid::hal::rumbler
+
+    namespace rgb {
+        /** As there are noRGB lights, simply reports the request
+         */
+        void setEffect(uint8_t index, RGBEffect const & effect) {
+            LOG(LL_INFO, "RGB Effect " << index << ": " << effect);
+        }
+
+        /** As there are noRGB lights, simply reports the request
+         */
+        void setEffectAll(RGBEffect const & effect) {
+            LOG(LL_INFO, "RGB Effect All: " << effect);
+        }
+    } // namespace rckid::hal::rgb
+
 } // namespace rckid::hal
 

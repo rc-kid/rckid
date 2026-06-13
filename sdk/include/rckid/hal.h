@@ -253,5 +253,13 @@ namespace rckid::hal {
         void save(uint16_t start, uint8_t const * buffer, uint32_t numBytes);
     } // namespace rckid::hal::store
 
+    namespace rumbler {
+        void setEffect(RumblerEffect effect);
+    } // namespace rckid::hal::rumbler
+
+    namespace rgb {
+        void setEffect(uint8_t index, RGBEffect const & effect);
+        void setEffectAll(RGBEffect const & effect);
+    } // namespace rckid::hal::led
 
 } // namespace rckid
