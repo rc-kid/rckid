@@ -507,6 +507,9 @@ namespace rckid::hal {
         DeviceState state() {
             DeviceState result = internal::io::state;
             internal::io::state.clearInterrupts();
+            // acknowledge the power off iterrupt when the state has been requested. We do this on state request, not state read, to ensure that it's reset only when the user code running, not the core driver is inspecting the state
+            if (result.powerOffInterrupt())
+                i2c::sendAvrCommand(cmd::PowerOffAck());
             return result;
         }
 
@@ -797,6 +800,7 @@ namespace rckid::hal {
          */
         void load(uint16_t start, uint8_t * buffer, uint32_t numBytes) {
             cmd::ReadStorage command{start};
+            // sending this as a single I2C repeated start transaction is necessary to ensure that no-one reads the data before we get to it.
             i2c::transmitSync(
                 RCKID_AVR_I2C_ADDRESS, 
                 reinterpret_cast<uint8_t const *>(& command),

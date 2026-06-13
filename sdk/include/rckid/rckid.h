@@ -79,6 +79,10 @@ namespace rckid {
      */
     namespace power {
 
+        /** Powers the device off.
+         */
+        void powerOff();
+
         /** Returns the current system voltage. This is the voltage from which the DC regulators are powered and corresponds to either the battery when running on battery, or the USB cable when power is plugged in. 
         */
         uint32_t vcc();

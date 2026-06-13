@@ -112,10 +112,8 @@ namespace rckid {
         // check state interrupts
         if (state_.powerOffInterrupt()) {
             LOG(LL_INFO, "Power off requested");
-            // TODO exit all applications (saving their state)
-            // TODO save storage to avr, etc
-            // and finally, power off
-            hal::device::powerOff();
+            // TODO acknowledge power off request
+            power::powerOff();
         }
         // TODO wakeup interrupt
         // TODO accel interrupt
@@ -172,6 +170,15 @@ namespace rckid {
     }
 
     namespace power {
+
+        void powerOff() {
+            // exit all applications (saving their state)
+            App::onPowerOff();
+            // save settings to the storage on AVR for persistence
+            hal::storage::save(0, reinterpret_cast<uint8_t const *>(& settings), sizeof(Settings));
+            // and finally, power off
+            hal::device::powerOff();
+        }
 
         uint32_t vcc() {
             return state_.vcc();

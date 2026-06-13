@@ -6,8 +6,6 @@
 - this might be better speaker: https://cz.mouser.com/ProductDetail/Same-Sky/CMS-160903-18S-X8
 - buttons can be better printed with circular infill on the top layer & filament change
 
-- added IOVDD_EN test point which should allow me to create a simple UPDI cartridge, with this I can program RP2350 to function as USB to UART bridge and the cartridge can be used to program the onboard AVR, so no programmers are needed to build & flash the device technically (or one can flash other)
-
 # Ladder
 
 The plan is to start with a simple game - cat chase - there is a mouse and a cat, mouse moves randomly, cat chases it, controlled by the player. The aim is to program this game at the C++ level to bring all the pieces together and make sure the c++ code looks decent and easy. Once I have this I can start writing the dynamic wrapper for the layers below (blocks & visual) and asset editors. 
@@ -64,14 +62,13 @@ Games (port from mkII)
 
 - show header even when not full screen is rendered (home menu & friends)
 
-- save state of applications on stack when powering off (and other routines)
 - deal with wakeup interrupts
 
 - budget reset & the whole wakeup business
 
 - add extra tiles for all volume levels
 
-- mk3 code not cleaned up and not working
+- mk3 code not tested
 - heapend on mk3 should return current sp or something like that to verify that we are not growing over
 
 - add support for overclocking, and in the missing adjustment for display pio in the hal layer:
@@ -135,8 +132,6 @@ Polish
 
 - or maybe add circular scrolling to labels?
 - make label scrolling nicer to configure so that inside audio player when refresh rate is 1s we can still do nice things, or can we increase refresh rate? 
-
-- add steps to budget seconds conversion
 
 - make level app draw circle and look prettier, maybe draw angles even
 

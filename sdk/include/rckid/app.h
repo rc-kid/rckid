@@ -129,6 +129,19 @@ namespace rckid {
          */
         static App * current() { return current_; }
 
+        /** Power off handler. 
+         
+            This should be called from the powerOff() function SDK implementation. Simply walks all the apps starting from the current app calls their exit() methods allowing them to react to the situation.
+         */
+        static void onPowerOff() {
+            App * x = current_;
+            while (x != nullptr) {
+                // tell the app to exit, which triggers the state saving logic
+                x->exit();
+                x = x->parent_;
+            }
+        }
+
     protected:
         friend class HomeMenu; // for access to home menu generator
 
