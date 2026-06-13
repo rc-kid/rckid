@@ -2,6 +2,7 @@
 
 #include <platform.h>
 #include <platform/utils.h>
+#include <platform/color_strip.h>
 
 #include <rckid/error.h>
 #include <rckid/serialization.h>
@@ -289,11 +290,22 @@ namespace rckid {
             return RGB565{static_cast<uint16_t>(((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3))};
         }
 
+        /** Implicit conversion of color to RGB565 raw color representation as this is the native color format for the device.
+         */
         constexpr operator uint16_t() const { return toRGB565(); }
+
+        /** Implicit conversion to the platform's color (used by the AVR)
+         */
+        constexpr operator platform::Color () const { return platform::Color::RGB(r, g, b); }
 
         uint8_t r;
         uint8_t g;
         uint8_t b;
+
+    private:
+        // alpha to be used in the future, if at all, and to ensure that size is 4 bytes
+        uint8_t a_ = 0;
+    public:
 
         /** Creates color that is blend of colors a and b.
          
@@ -386,7 +398,7 @@ namespace rckid {
 
         constexpr Color(uint8_t r_, uint8_t g_, uint8_t b_): r{r_}, g{g_}, b{b_} {}
 
-    }; // rckid::Color
+    } __attribute__((packed)); // rckid::Color
 
     /** Basic 16 color palette.
      */

@@ -358,7 +358,7 @@ namespace rckid {
         static RumblerEffect Off() { return RumblerEffect{}; }
 
         friend void write(Writer & w, RumblerEffect const & e) {
-            w << "strength: " << e.strength << ", tOn: " << e.timeOn << ", tOff" <<  e.timeOff << ", cycles: " << e.cycles;
+            w << "strength: " << e.strength << ", tOn: " << e.timeOn << ", tOff: " <<  e.timeOff << ", cycles: " << e.cycles;
         }
 
     } __attribute__((packed)); // rckid::RumblerEffect

@@ -39,6 +39,8 @@ So what I need:
 
 - make UNREACHABLE & friends part of platform? This should make it write between mkIII, fantasy and ATTiny stuff
 
+- add wave keyboard effect for rgb
+
 Wakeups
 - alarm clock
 - steps daily reset

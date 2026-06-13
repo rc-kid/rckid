@@ -234,6 +234,10 @@ namespace rckid {
      */
     namespace rumbler {
 
+        uint8_t strength();
+
+        void setStrength(uint8_t value);
+
         /** Turns the rumbler motor off immediately. 
          */
         inline void off() { hal::rumbler::setEffect(RumblerEffect::Off()); }
@@ -251,6 +255,42 @@ namespace rckid {
         void fail();
 
     } // namespace rckid::rumbler
+
+    /** RGB lights control
+     
+        
+     */
+    namespace rgb {
+
+        enum class KeyboardEffect : uint8_t {
+            Off, 
+            Press,
+            RainbowPress,
+            Solid,
+            Breathe,
+            Rainbow,
+            RainbowWave,
+        }; 
+
+        void off();
+
+        uint8_t brigtness();
+
+        void setBrightness(uint8_t value);
+
+        Color color();
+
+        void setColor(Color color);
+
+        KeyboardEffect keyboardEffect();
+
+        void setKeyboardEffect(KeyboardEffect effect, Color color);
+
+        inline void setKeyboardEffect(KeyboardEffect effect) { setKeyboardEffect(effect, color()); }
+
+        void setBtnEffect(Btn btn, RGBEffect const & effect);
+
+    } // namespace rckid::rgb
 
 
 } // namespace rckid

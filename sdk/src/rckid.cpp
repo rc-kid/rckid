@@ -11,11 +11,13 @@ namespace rckid {
     DeviceState lastState_;
     DeviceState state_;
 
+    uint16_t rgbRainbowHue_ = 0;
+
     uint32_t btnRepeat_[11] = { 
         RCKID_DEFAULT_KEY_REPEAT_MS,
         RCKID_DEFAULT_KEY_REPEAT_MS,
         RCKID_DEFAULT_KEY_REPEAT_MS,
-        RCKID_DEFAULT_KEY_REPEAT_MS,
+        RCKID_DEFAULT_KEY_REPEAT_MS,    
         RCKID_DEFAULT_KEY_REPEAT_MS,
         RCKID_DEFAULT_KEY_REPEAT_MS,
         RCKID_DEFAULT_KEY_REPEAT_MS,
@@ -60,6 +62,12 @@ namespace rckid {
         uint8_t strength = 128;
         bool keyPress = true;
     } __attribute__((packed));
+
+    struct RGBSettings {
+        rgb::KeyboardEffect effect = rgb::KeyboardEffect::RainbowPress;
+        Color color = Color::Green();
+        uint8_t brightness = 32;
+    } __attribute__((packed));
     
     struct Settings {
         static constexpr uint16_t VERSION = 1;
@@ -68,6 +76,7 @@ namespace rckid {
         AudioSettings audio;
         PimSettings pim;
         RumblerSettings rumbler;
+        RGBSettings rgb;
     } __attribute__((packed));
 
     Settings settings;
@@ -94,6 +103,26 @@ namespace rckid {
         }
     }
 
+    void buttonPressRGBEffect(Btn b) {
+        switch (settings.rgb.effect) {
+            case rgb::KeyboardEffect::RainbowPress:
+            case rgb::KeyboardEffect::Press: {
+                Color color;
+                if (settings.rgb.effect == rgb::KeyboardEffect::RainbowPress) {
+                    color = Color::HSV(rgbRainbowHue_ * 256, 255, settings.rgb.brightness);
+                    rgbRainbowHue_ += 13;                
+                } else {
+                    color = settings.rgb.color.withBrightness(settings.rgb.brightness);
+                }
+                rgb::setBtnEffect(b, RGBEffect::Solid(color, 32, 0));
+                rgb::setBtnEffect(b, RGBEffect::Solid(Color::Black()));
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
     // device
 
     void initialize() {
@@ -106,6 +135,10 @@ namespace rckid {
         now_ = hal::time::now();
         nextSecondUptime_ = hal::time::uptimeUs() + 1000000;
         // TODO
+
+
+        // set the keyboard effect (if any)
+        rgb::setKeyboardEffect(settings.rgb.effect, settings.rgb.color);
     }
 
     void tick() {
@@ -116,8 +149,10 @@ namespace rckid {
         // update button repeat intervals
         for (uint32_t i = 0; i < 11; ++i) {
             Btn b = static_cast<Btn>(i);
-            if (btnPressed(b))
+            if (btnPressed(b)) {
                 buttonPressed = true;
+                buttonPressRGBEffect(b);
+            }
             checkButtonRepeat(static_cast<Btn>(i));
         }
         // if we have new button press (any button), nudge
@@ -347,6 +382,11 @@ namespace rckid {
     } // namespace rckid::pim
 
     namespace rumbler {
+
+        uint8_t strength() { return settings.rumbler.strength; }
+
+        void setStrength(uint8_t value) { settings.rumbler.strength = value; }
+
         void nudge() { 
             hal::rumbler::setEffect(RumblerEffect{
                 /* strength */ settings.rumbler.strength, 
@@ -374,7 +414,95 @@ namespace rckid {
             }); 
         }
 
-    }
+    } // namespace rckid::rumbler
+
+    namespace rgb {
+
+        void off() {
+            hal::rgb::setEffectAll(RGBEffect::Off());
+        }
+
+        uint8_t brightness() { return settings.rgb.brightness; }
+
+        void setBrightness(uint8_t value) { 
+            settings.rgb.brightness = value;
+            setKeyboardEffect(settings.rgb.effect, settings.rgb.color);
+        }
+
+        Color color() { return settings.rgb.color; }
+
+        void setColor(Color color) {
+            settings.rgb.color = color;
+            setKeyboardEffect(settings.rgb.effect, settings.rgb.color);
+        }
+
+        KeyboardEffect keyboardEffect() { return settings.rgb.effect; }
+
+        void setKeyboardEffect(KeyboardEffect effect, Color color) {
+            settings.rgb.effect = effect;
+            settings.rgb.color = color;
+            // issue the RGB commands based on the effect & settings
+            switch (effect) {
+                case KeyboardEffect::Off:
+                // turn all LEDs off for press effects as well (we'll be turning them during state changes)
+                case KeyboardEffect::Press:
+                case KeyboardEffect::RainbowPress:
+                    hal::rgb::setEffectAll(RGBEffect::Off());
+                    break;
+                case KeyboardEffect::Solid:
+                    hal::rgb::setEffectAll(RGBEffect::Solid(color.withBrightness(settings.rgb.brightness)));
+                    break;
+                case KeyboardEffect::Breathe:
+                    hal::rgb::setEffectAll(RGBEffect::Breathe(color.withBrightness(settings.rgb.brightness)));
+                    break;
+                case KeyboardEffect::Rainbow:
+                    hal::rgb::setEffectAll(RGBEffect::Rainbow(0, 1, 4, settings.rgb.brightness));
+                    break;
+                case KeyboardEffect::RainbowWave:
+                    hal::rgb::setEffect(0, RGBEffect::Rainbow(0, 1, 4, settings.rgb.brightness));
+                    hal::rgb::setEffect(1, RGBEffect::Rainbow(0, 1, 4, settings.rgb.brightness));
+                    hal::rgb::setEffect(2, RGBEffect::Rainbow(0, 1, 4, settings.rgb.brightness));
+                    hal::rgb::setEffect(3, RGBEffect::Rainbow(0, 1, 4, settings.rgb.brightness));
+                    hal::rgb::setEffect(4, RGBEffect::Rainbow(51, 1, 4, settings.rgb.brightness));
+                    hal::rgb::setEffect(5, RGBEffect::Rainbow(102, 1, 4, settings.rgb.brightness));
+                    hal::rgb::setEffect(6, RGBEffect::Rainbow(153, 1, 4, settings.rgb.brightness));
+                    hal::rgb::setEffect(7, RGBEffect::Rainbow(204, 1, 4, settings.rgb.brightness));
+                    break;
+                default:
+                    UNREACHABLE;
+            }
+        }
+
+        void setBtnEffect(Btn btn, RGBEffect const & effect) {
+            switch (btn) {
+                case Btn::Up:
+                case Btn::Down:
+                case Btn::Left:
+                case Btn::Right:
+                    hal::rgb::setEffect(0, effect);
+                    hal::rgb::setEffect(1, effect);
+                    hal::rgb::setEffect(2, effect);
+                    hal::rgb::setEffect(3, effect);
+                    break;
+                case Btn::Select:
+                    hal::rgb::setEffect(4, effect);
+                    break;
+                case Btn::Start:
+                    hal::rgb::setEffect(5, effect);
+                    break;
+                case Btn::B:
+                    hal::rgb::setEffect(6, effect);
+                    break;
+                case Btn::A:
+                    hal::rgb::setEffect(7, effect);
+                    break;
+                // side buttons (home & volume keys) do not have lights
+                default:
+                    break;
+            }
+        }
+
+    } // namespace rckid::rgb
 
     // debugging
 
