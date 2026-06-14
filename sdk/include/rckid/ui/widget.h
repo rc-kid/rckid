@@ -306,8 +306,6 @@ namespace rckid::ui {
          */
         static void triggerOnRender(Widget * w) { w->onRender();}
 
-        static void triggerProcessedEvents(Widget * w) { w->processEvents(); }
-
     private:
 
         template<typename T>

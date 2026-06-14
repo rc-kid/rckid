@@ -5,6 +5,7 @@
 #include <rckid/ui/label.h>
 #include <rckid/ui/animation.h>
 #include <rckid/ui/menu.h>
+#include <rckid/ui/progress_bar.h>
 
 #include <assets/OpenDyslexic64.h>
 #include <assets/icons_64.h>
@@ -284,6 +285,43 @@ namespace rckid::ui {
             setMenu(context_->generator(), context_->index, Direction::Down);
         }
 
+        /** Shows the given subwidget as part of the menu. The subwidget will modally respond to the carousel's controls. 
+         */
+        void showSubwidget(unique_ptr<Widget> subwidget) {
+            ASSERT(subWidget_ == nullptr);
+            ui::Label * l = currentLabel();
+            // set position for the widget so that it appears under the label
+            subWidget_ = l->addChild(subwidget.release())
+                << SetPosition(0, l->textOffset().y + l->font()->size - 6);
+            // determine the horizontal shift
+            Coord hShift = (subWidget_->width() - l->textWidth()) / 2;
+            if (hShift < 0)
+                hShift = 0;
+            // start the animation
+            subWidgetFlyOut_ = false;
+            animate()
+                << ui::FlyOut(currentImage(), Point{-hShift, 0})
+                << ui::FlyIn(subWidget_, Point{-hShift, l->height()})
+                << ui::FlyOut(l, Point{-hShift, -subWidget_->height() / 2 - 6});
+        }
+
+        void hideSubwidget() {
+            if (subWidget_ == nullptr)
+                return;
+            ui::Label * l = currentLabel();
+            // determine the horizontal shift
+            Coord hShift = (subWidget_->width() - l->textWidth()) / 2;
+            if (hShift < 0)
+                hShift = 0;
+            // start the animations
+            subWidgetFlyOut_ = true;
+            animate()
+                << ui::FlyOut(currentImage(), Point{hShift, 0})
+                << ui::FlyOut(subWidget_, Point{hShift, l->height()})
+                << ui::FlyOut(l, Point{hShift, subWidget_->height() / 2 + 6});
+            // the subwidget will be deleted when the animation is done
+        }
+
         /** Returns true if the carousel is at its root level.
          */
         bool atRoot() const {
@@ -299,10 +337,20 @@ namespace rckid::ui {
             ASSERT(context_ == until || context_ == nullptr);
         }
 
-    protected:
-
         void processEvents() override {
             Carousel::processEvents();
+            // if we have subwidget registered, let it handle the events instead
+            if (subWidget_ != nullptr) {
+                subWidget_->processEvents();
+                // clear the button events the same way carousel would (this is not menu select from app's perspective)
+                btnClear(Btn::Up);
+                btnClear(Btn::Down);
+                btnClear(Btn::A);
+                btnClear(Btn::B);
+                // no more processing of inputs here
+                return;
+            }
+            // no subwidget, process carousel navigation
             if (btnPressed(Btn::Left))
                 moveLeft();
             if (btnPressed(Btn::Right))
@@ -320,6 +368,8 @@ namespace rckid::ui {
                 }
             }
         }
+
+    protected:
 
         bool processMoveUp() {
             auto item = currentItem();
@@ -363,6 +413,15 @@ namespace rckid::ui {
                 m.decorator()(m, currentImage(), currentLabel());
         }
 
+        void onIdle() override {
+            Carousel::onIdle();
+            if ((subWidget_ != nullptr) && subWidgetFlyOut_) {
+                currentLabel()->clearChildren();
+                subWidget_ = nullptr; // deleted by clear chilren above
+                subWidgetFlyOut_ = false;
+            }
+        }
+
     private:
 
         // empty menu generator (used when the carousel is borrowed by the next app to show empty menu w/o any visible items, but we need to provide an empty item so that the empty menu visualiation inside carousel will not trigger)
@@ -379,8 +438,88 @@ namespace rckid::ui {
         uint32_t index_ = 0;
         Context * context_ = nullptr;
 
+        Widget * subWidget_ = nullptr;
+        bool subWidgetFlyOut_ = false;
+
     }; // rckid::ui::CarouselMenu
 
+
+    /** Basic carousel subwidget template.
+     
+        Remembers the parent carousel and and triggers sub widget hide when buttons down, or B are pressed. For actual in menu functionality, use the subclasses with actual UI implementation, or define own.
+     */
+    class CarouselSubWidget : public Widget {
+    public:
+
+        CarouselSubWidget(CarouselMenu * menu):
+            menu_{menu} {
+            ASSERT(menu != nullptr);
+        }
+
+        void processEvents() override {
+            Widget::processEvents();
+            if (btnPressed(Btn::Down) || btnPressed(Btn::B))
+                menu_->hideSubwidget();
+        }
+
+    private:
+        CarouselMenu * menu_;
+
+    }; // rckid::ui::CarouselSubwidget
+
+    class ProgressBarSubWidget : public CarouselSubWidget {
+    public:
+
+        ProgressBarSubWidget(CarouselMenu * menu):
+            CarouselSubWidget{menu} {
+            bar_ = addChild(new ProgressBar{});
+            setRect(Rect::WH(200, 20));
+        }
+
+        ProgressBarSubWidget(CarouselMenu * menu, int32_t min, int32_t max, int32_t value, std::function<void(int32_t)> onValueChange):
+            ProgressBarSubWidget(menu) {
+            with(bar_)
+                << SetRange(min, max)
+                << SetValue(value);
+            setOnValueChange(onValueChange);
+        }
+
+        int32_t min() const { return bar_->min(); }
+        int32_t max() const { return bar_->max(); }
+        int32_t value() const { return bar_->value(); };
+
+        void setMin(int32_t min) { bar_->setMin(min); }
+        void setMax(int32_t max) { bar_->setMax(max); }
+        void setValue(int32_t value) { bar_->setValue(value); }
+
+        void setOnValueChange(std::function<void(int32_t)> f) { onValueChange_ = f; }
+
+        void processEvents() override {
+            CarouselSubWidget::processEvents();
+            if (btnPressed(Btn::Left)) 
+                if (bar_->changeValueBy(-1) && onValueChange_)
+                    onValueChange_(bar_->value());
+            if (btnPressed(Btn::Right) && onValueChange_) 
+                if (bar_->changeValueBy(1))
+                    onValueChange_(bar_->value());
+        }
+
+    protected:
+        void onChange() override {
+            CarouselSubWidget::onChange();
+            bar_->setRect(Rect::WH(width(), height()));
+        }
+
+    private:
+
+        ProgressBar * bar_;
+
+        std::function<void(int32_t)> onValueChange_;
+
+    }; // rckid::ui::ProgressBarSubwidget
+
+    /** Carousel menu reset - clears the context and sets the menu to the provided value.
+     */
     struct ResetMenu {
         MenuItem::GeneratorEvent menu;
 
@@ -391,6 +530,17 @@ namespace rckid::ui {
     template<typename T>
     inline with<T> operator << (with<T> w, ResetMenu && menu) {
         w->resetMenu(std::move(menu.menu));
+        return w;
+    }
+
+    struct OnValueChange {
+        std::function<void(int32_t)> f;
+        OnValueChange(std::function<void(int32_t)> f): f{f} {}
+    }; 
+
+    template<typename T>
+    inline with<T> operator << (with<T> w, OnValueChange && event) {
+        w->setOnValueChange(std::move(event.f));
         return w;
     }
 

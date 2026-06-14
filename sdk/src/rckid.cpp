@@ -383,9 +383,9 @@ namespace rckid {
 
     namespace rumbler {
 
-        uint8_t strength() { return settings.rumbler.strength; }
+        uint8_t strength() { return settings.rumbler.strength >> 4; }
 
-        void setStrength(uint8_t value) { settings.rumbler.strength = value; }
+        void setStrength(uint8_t value) { settings.rumbler.strength = (value << 4) | value; }
 
         void nudge() { 
             hal::rumbler::setEffect(RumblerEffect{

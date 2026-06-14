@@ -54,6 +54,15 @@ namespace rckid {
             ui::App<void>::releaseResources();
         }
 
+        ui::CarouselMenu * carousel() const { return carousel_; }
+
+        /** Updates the style used by the launcher. Useful for style changes previews, etc.
+         */
+        static void updateStyle(ui::Style & style);
+
+        static Launcher * instance() { return instance_; }
+
+
         class BorrowedCarousel : public ui::Widget {
         public:
             BorrowedCarousel() {
@@ -130,7 +139,7 @@ namespace rckid {
                     if (atRoot())
                         return;
                 }
-                triggerProcessedEvents(carousel_);
+                carousel_->processEvents();
             }
 
         private:
@@ -138,10 +147,6 @@ namespace rckid {
             ui::CarouselMenu::Context const * root_;
             unique_ptr<ui::CarouselMenu> ownedCarousel_;
         }; // rckid::Launcher::BorrowedCarousel
-
-        /** Updates the style used by the launcher. Useful for style changes previews, etc.
-         */
-        static void updateStyle(ui::Style & style);
 
     protected:
 

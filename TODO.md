@@ -22,6 +22,8 @@ So what I need:
 
 # SDK 1.0
 
+- rumbler strength should be 0..15, brightness should be 0..15, audio should be 0..15
+
 - how to detect we are done playing music? in the DMA
 
 - update the config.h to have backend config and general config to which we put things from rckid.cpp now (key repeat and other UI settings)

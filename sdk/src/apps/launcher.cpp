@@ -203,10 +203,21 @@ namespace rckid {
     }
 
     unique_ptr<ui::Menu> rumblerSettingsMenuGenerator() {
-        auto result = std::make_unique<ui::Menu>();
+        using namespace ui;
+        auto result = std::make_unique<Menu>();
         (*result)
-            << ui::MenuItem{"Strength", assets::icons_64::vibration, []() {
-
+            << MenuItem{"Strength", assets::icons_64::vibration, []() {
+                CarouselMenu * c = Launcher::instance()->carousel();
+                c->showSubwidget(
+                    std::unique_ptr<Widget>{
+                        with(new ProgressBarSubWidget{c})
+                            << SetRange(0, 4)
+                            << SetValue(rckid::rumbler::strength())
+                            << OnValueChange([](int32_t value) {
+                                LOG(LL_INFO, "Value: " << value);
+                            })
+                    }
+                );
             }}
             << ui::MenuItem{"Key Press", assets::icons_64::down_arrow, []() {
 

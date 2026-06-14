@@ -234,6 +234,8 @@ namespace rckid {
      */
     namespace rumbler {
 
+        /** Returns the default rumbler strength (0..15).
+         */
         uint8_t strength();
 
         void setStrength(uint8_t value);

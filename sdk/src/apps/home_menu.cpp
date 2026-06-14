@@ -12,13 +12,17 @@ namespace rckid {
                 auto menu = app->homeMenu();
                 (*menu)
                     << ui::MenuItem("Brightness", assets::icons_64::brightness, [this]() {
-                        showProgressBar(0, 15, display::brightness() >> 4, [](int32_t value) {
+                        carousel_->showSubwidget(unique_ptr<ui::Widget>{
+                            new ui::ProgressBarSubWidget{carousel_, 0, 15, display::brightness() >> 4, [](int32_t value) {
                                 display::setBrightness(value * 16 + value); 
+                            }}
                         });
                     }).withPayload(ExecuteInMenu)
                     << ui::MenuItem("Volume", assets::icons_64::high_volume, [this]() {
-                        showProgressBar(0, 15, audio::volume(), [](int32_t value) { 
-                            audio::setVolume(value); 
+                        carousel_->showSubwidget(unique_ptr<ui::Widget>{
+                            new ui::ProgressBarSubWidget{carousel_, 0, 15, audio::volume(), [](int32_t value) {
+                                audio::setVolume(value); 
+                            }}
                         });
                     }).withPayload(ExecuteInMenu)
                     << ui::MenuItem("Power Off", assets::icons_64::power_off, []() {
