@@ -22,7 +22,8 @@ So what I need:
 
 # SDK 1.0
 
-- rumbler strength should be 0..15, brightness should be 0..15, audio should be 0..15
+- add extra keyboard effects to settings menu
+- add on/off subwidget for carousel
 
 - how to detect we are done playing music? in the DMA
 

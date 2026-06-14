@@ -190,14 +190,23 @@ namespace rckid {
     }
 
     unique_ptr<ui::Menu> rgbSettingsMenuGenerator() {
-        auto result = std::make_unique<ui::Menu>();
+        using namespace ui;
+        auto result = std::make_unique<Menu>();
         (*result)
             << ui::MenuItem::Generator("Effect", assets::icons_64::numpad, rgbEffectSettingsMenuGenerator)
             << ui::MenuItem{"Color", assets::icons_64::light, []() {
-
+                ui::Style & style = ui::Style::defaultStyle();
+                auto color = rckid::App::run<ColorDialog>(style.accentBg());
+                if (color)
+                    rckid::rgb::setColor(color.value());
             }}
             << ui::MenuItem{"Brightness", assets::icons_64::brightness, [](){
-
+                CarouselMenu * c = Launcher::instance()->carousel();
+                c->showSubwidget(std::unique_ptr<Widget>{
+                    new ProgressBarSubWidget{c, 0, 15, rckid::rgb::brightness(), [](int32_t value) {
+                        rckid::rgb::setBrightness(static_cast<uint8_t>(value));
+                    }}
+                });
             }};
         return result;
     }
@@ -208,19 +217,14 @@ namespace rckid {
         (*result)
             << MenuItem{"Strength", assets::icons_64::vibration, []() {
                 CarouselMenu * c = Launcher::instance()->carousel();
-                c->showSubwidget(
-                    std::unique_ptr<Widget>{
-                        with(new ProgressBarSubWidget{c})
-                            << SetRange(0, 4)
-                            << SetValue(rckid::rumbler::strength())
-                            << OnValueChange([](int32_t value) {
-                                LOG(LL_INFO, "Value: " << value);
-                            })
-                    }
-                );
+                c->showSubwidget(std::unique_ptr<Widget>{
+                    new ProgressBarSubWidget{c, 0, 15, rckid::rumbler::strength(), [](int32_t value) {
+                        rckid::rumbler::setStrength(static_cast<uint8_t>(value));
+                    }}
+                });
             }}
             << ui::MenuItem{"Key Press", assets::icons_64::down_arrow, []() {
-
+                // TODO on/off subwidget
             }};
         return result;
     }
@@ -243,6 +247,5 @@ namespace rckid {
             return;
         instance_->root_.setBackgroundImage(style);
     }
-
 
 } // namespace rckid

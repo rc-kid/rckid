@@ -618,11 +618,11 @@ namespace rckid::hal {
     namespace audio {
 
         void setVolumeHeadphones(uint8_t value) {
-            Codec::setVolumeHeadphones(value);
+            Codec::setVolumeHeadphones(value >> 2);
         }
 
         void setVolumeSpeaker(uint8_t value) {
-            Codec::setVolumeSpeaker(value);
+            Codec::setVolumeSpeaker(value >> 2);
         }
 
         void play(uint32_t sampleRate, Callback cb) {

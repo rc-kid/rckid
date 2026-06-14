@@ -276,7 +276,7 @@ namespace rckid {
 
         void off();
 
-        uint8_t brigtness();
+        uint8_t brightness();
 
         void setBrightness(uint8_t value);
 

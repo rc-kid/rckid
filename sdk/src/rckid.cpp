@@ -346,10 +346,7 @@ namespace rckid {
         }
 
         void setVolume(uint8_t value) {
-            if (value == 255) // 0 - 1
-                value = 0;
-            if (value > 15)
-                value = 15;
+            value = (value << 4) | value;
             if (headphonesConnected()) {
                 settings.audio.volumeHeadphones = value;
                 hal::audio::setVolumeHeadphones(value);
@@ -422,10 +419,10 @@ namespace rckid {
             hal::rgb::setEffectAll(RGBEffect::Off());
         }
 
-        uint8_t brightness() { return settings.rgb.brightness; }
+        uint8_t brightness() { return settings.rgb.brightness >> 4; }
 
         void setBrightness(uint8_t value) { 
-            settings.rgb.brightness = value;
+            settings.rgb.brightness = (value << 4) | value;
             setKeyboardEffect(settings.rgb.effect, settings.rgb.color);
         }
 
