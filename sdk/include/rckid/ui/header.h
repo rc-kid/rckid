@@ -103,9 +103,11 @@ namespace rckid::ui {
         friend class RootWidget;
 
         Header():
-            TileGrid{display::WIDTH / TileGrid::tileWidth(), 1, defaultPalette()}
+            TileGrid{display::WIDTH / TileGrid::tileWidth(), 1, nullptr},
+            palette_{defaultPalette()}
         {
             ASSERT(instance_ == nullptr);
+            contents().setPalette(palette_.get());
             instance_ = this;
             setRect(Rect::XYWH(0, - TileGrid::tileHeight(), display::WIDTH, TileGrid::tileHeight()));
             Widget::setVisibility(false);
@@ -162,6 +164,8 @@ namespace rckid::ui {
         
          */
         int32_t remainingTicks_ = 0;
+
+        immutable_ptr<Color::RGB565> palette_;
         
         static inline Visibility visibility_ = Visibility::Always;
 

@@ -16,6 +16,8 @@
 #include <rckid/apps/utils/piggy_bank.h>
 #include <rckid/apps/utils/calculator.h>
 
+#include <rckid/apps/debug/hwstatus.h>
+
 #include <rckid/apps/dialogs/file_dialog.h>
 #include <rckid/apps/dialogs/color_dialog.h>
 
@@ -55,7 +57,8 @@ namespace rckid {
                     App::run<Drawing>(canvas.get());
                 }}
                 << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator)
-                << ui::MenuItem::Generator("Settings", assets::icons_64::settings, settingsMenuGenerator);
+                << ui::MenuItem::Generator("Settings", assets::icons_64::settings, settingsMenuGenerator)
+                << ui::MenuItem::Generator("Debug", assets::icons_64::ladybug, debugMenuGenerator);
             return result;
         };
     }
@@ -238,6 +241,16 @@ namespace rckid {
             << ui::MenuItem{"About", assets::icons_64::info, []() {
                 App::run<About>();
             }};
+        return result;
+    }
+
+    unique_ptr<ui::Menu> debugMenuGenerator() {
+        auto result = std::make_unique<ui::Menu>();
+        (*result)
+            << ui::MenuItem{"HW Status", assets::icons_64::microchip, []() {
+                App::run<HWStatus>();
+            }};
+
         return result;
     }
 

@@ -104,14 +104,5 @@ namespace rckid::ui {
         return w;
     }
 
-    struct SetValue {
-        int32_t value;
-        SetValue(int32_t value): value{value} {}
-    };
-    template<typename T>
-    inline with<T> operator << (with<T> w, SetValue sv) {
-        w->setValue(sv.value);
-        return w;
-    }
     
 }

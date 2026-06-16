@@ -182,6 +182,12 @@ namespace rckid::ui {
 
     }; // rckid::ui::Carousel
 
+    /** Carousel augmented specifically for menu hierarchies.
+     
+        Provides handling of left/right key press to cycle through the menu, up or A to select submenu and B or down to return from the submenu. All other presses (i.e. A or up on item and B on root) are not cleared so that they can be processed by the application. 
+
+        The carousel also supports subwidgets. Subwidgets temporarily display themselves under the menu label and take the user input actions instead of the main carousel. This is very useful for small settings such as as sliders, etc.
+     */
     class CarouselMenu : public Carousel {
     public:
 
@@ -467,6 +473,8 @@ namespace rckid::ui {
 
     }; // rckid::ui::CarouselSubwidget
 
+    /** Carousel subwidget that contains a single progress bar.
+     */
     class ProgressBarSubWidget : public CarouselSubWidget {
     public:
 

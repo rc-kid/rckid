@@ -12,8 +12,8 @@ namespace rckid::ui {
         static constexpr Coord tileWidth() { return rckid::TileGrid::Tile::width(); };
         static constexpr Coord tileHeight() { return rckid::TileGrid::Tile::height(); };
 
-        TileGrid(Coord cols, Coord rows, immutable_ptr<Color::RGB565> palette):
-            Wrapper{rckid::TileGrid{cols, rows, std::move(palette)}}
+        TileGrid(Coord cols, Coord rows, Color::RGB565 const * palette):
+            Wrapper{rckid::TileGrid{cols, rows, palette}}
         {
 
         }

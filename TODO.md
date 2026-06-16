@@ -6,6 +6,12 @@
 - this might be better speaker: https://cz.mouser.com/ProductDetail/Same-Sky/CMS-160903-18S-X8
 - buttons can be better printed with circular infill on the top layer & filament change
 
+# MK3 HW
+
+- volume down not centered properly
+- make room in the top for home btn
+- maybe enlarge the top plate a bit to fit properly in the slightly large nylon bottom. Or shrink the nylon?
+
 # Ladder
 
 The plan is to start with a simple game - cat chase - there is a mouse and a cat, mouse moves randomly, cat chases it, controlled by the player. The aim is to program this game at the C++ level to bring all the pieces together and make sure the c++ code looks decent and easy. Once I have this I can start writing the dynamic wrapper for the layers below (blocks & visual) and asset editors. 
@@ -24,6 +30,8 @@ So what I need:
 
 - add extra keyboard effects to settings menu
 - add on/off subwidget for carousel
+
+- default palette can be system wide
 
 - how to detect we are done playing music? in the DMA
 

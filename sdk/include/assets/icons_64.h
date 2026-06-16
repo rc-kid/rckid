@@ -65,10 +65,22 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/chat.inc.h"
     };
 
+    // File: icons/icons_64/050-ladybug.png
+    // Size: 2701
+    static constexpr uint8_t ladybug[] = {
+        #include "raw/icons_64/ladybug.inc.h"
+    };
+
     // File: icons/icons_64/036-empty-box.png
     // Size: 2821
     static constexpr uint8_t empty_box[] = {
         #include "raw/icons_64/empty_box.inc.h"
+    };
+
+    // File: icons/icons_64/077-microchip.png
+    // Size: 3982
+    static constexpr uint8_t microchip[] = {
+        #include "raw/icons_64/microchip.inc.h"
     };
 
     // File: icons/icons_64/052-play-button.png

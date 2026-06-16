@@ -593,6 +593,17 @@ namespace rckid::ui {
         return w;
     }
 
+    template<typename V>
+    struct SetValue {
+        V value;
+        SetValue(V value): value{value} {}
+    };
+
+    template<typename T, typename V>
+    inline with<T> operator << (with<T> w, SetValue<V> sv) {
+        w->setValue(sv.value);
+        return w;
+    }
     
     /** Sets zoom for the widget.
      
