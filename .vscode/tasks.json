@@ -110,7 +110,7 @@
             "args": [
                 "pio-upload.sh",
                 "dev-server",
-                "sdk/backends/mk3/avr/.pio/build/avr-mk3/firmware.hex"
+                "sdk/backend/mk3/avr/.pio/build/avr-mk3/firmware.hex"
             ],
             "options": {
                 "cwd": ""

@@ -135,6 +135,7 @@ public:
     static bool isPowerModeOn() { return powerMode_ & POWER_MODE_ON; }
 
     static void setPowerMode(uint8_t mode) {
+        LOG("Set pwr mode: " << mode << ", current " << powerMode_);
         if (powerMode_ & mode)
             return;
         // if we are transitionioning from complete off, start system ticks and set sleep mode to standby
@@ -191,6 +192,7 @@ public:
     }
 
     static void clearPowerMode(uint8_t mode) {
+        LOG("Clear pwr mode: " << mode << ", current " << powerMode_);
         if (!(powerMode_ & mode))
             return;
         powerMode_ &= ~mode;
@@ -524,7 +526,7 @@ public:
         } else if ((status & I2C_STOP_MASK) == I2C_STOP_TX) {
             TWI0.SCTRLB = TWI_SCMD_COMPTRANS_gc;
             if (i2cTxAddr_ == reinterpret_cast<uint8_t *>(& ts_) && i2cTxBytes_ >= 4)
-                ts_.clearInterrupts();
+                ts_.state.clearInterrupts();
             else 
                 i2cTxAddr_ = reinterpret_cast<uint8_t *>(& ts_);
         // receiving finished, inform main loop we have message waiting if we have received at laast one byte (0 bytes received is just I2C ping)
@@ -783,6 +785,11 @@ public:
         bool btnVolumeUp = getDebouncedButtonValue(Btn::VolumeUp);
         bool btnVolumeDown = getDebouncedButtonValue(Btn::VolumeDown);
         bool changed = ts_.state.setButton(Btn::Home, btnHome);
+
+        // in case we are running normal system ticks, check if the home button press should be interpreted as wakeup start
+        if (changed && btnHome && ! isPowerModeOn())
+            setPowerMode(POWER_MODE_WAKEUP);
+
         changed = ts_.state.setButton(Btn::VolumeUp, btnVolumeUp) || changed;
         changed = ts_.state.setButton(Btn::VolumeDown, btnVolumeDown) || changed;
 
@@ -861,6 +868,7 @@ public:
     }
 
     static void startHomeButtonLongPress() {
+        LOG("Home long press start, pwr mode: " << powerMode_);
         homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
     }
 
@@ -873,6 +881,7 @@ public:
         }
         if (--homeBtnLongPress_ != 0)
             return;
+        LOG("Home long press, pwr mode: " << powerMode_);
         // if we are in the wakeup mode, long press mens transition to power on mode, so set power mode to ON, disable wakeup mode. We also enter debug mode if that is the case
         if (isPowerModeWakeup()) {
             setPowerMode(POWER_MODE_ON);
