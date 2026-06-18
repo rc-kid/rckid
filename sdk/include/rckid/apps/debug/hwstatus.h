@@ -46,22 +46,21 @@ namespace rckid {
             tg_->text(15, 4) << "Z: " << accelZ() << "    ";
 
             tg_->text(15, 5) << pedometerCount() << "    ";
-
-            tg_->text(15, 6) << (audioPlayback() ? "P " : "  ");
-            tg_->text(17, 6) << (audioRecording() ? "R " : "  ");
-            tg_->text(19, 6) << (audioHeadphones() ? "HP " : "   ");
-            tg_->text(22, 6) << audioVolume() << "  ";
+            */
+            tg_->text(15, 6) << (audio::isPlaying() ? "P " : "  ");
+            tg_->text(17, 6) << (audio::isRecording() ? "R " : "  ");
+            tg_->text(19, 6) << (audio::headphonesConnected() ? "HP " : "   ");
+            tg_->text(22, 6) << audio::volume() << "  ";
 
             //text_->text(15, 5) << timeNow() << "      ";
-            tg_->text(25, 7) << uptimeUs64() / 1000000;
+            tg_->text(25, 7) << time::uptimeUs() / 1000000;
 
-            tg_->text(15, 8) << (isBudgeted() ? "Y " : "N  ");
-            tg_->text(17, 8) << budget();
+            // tg_->text(15, 8) << (isBudgeted() ? "Y " : "N  ");
+            tg_->text(17, 8) << pim::remainingBudget();
 
-            tg_->text(15, 9) << (powerUsbConnected() ? "USB " : "    ");
-            tg_->text(19, 9) << (powerCharging() ? "CHRG " : "     ");
-            tg_->text(24, 9) << powerVcc();
-        */
+            tg_->text(15, 9) << (power::dcConnected() ? "USB " : "    ");
+            tg_->text(19, 9) << (power::charging() ? "CHRG " : "     ");
+            tg_->text(24, 9) << power::vcc();
 
         }
     

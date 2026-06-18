@@ -17,6 +17,7 @@
 #include <rckid/apps/utils/calculator.h>
 
 #include <rckid/apps/debug/hwstatus.h>
+#include <rckid/apps/debug/bootloader.h>
 
 #include <rckid/apps/dialogs/file_dialog.h>
 #include <rckid/apps/dialogs/color_dialog.h>
@@ -247,8 +248,11 @@ namespace rckid {
     unique_ptr<ui::Menu> debugMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();
         (*result)
-            << ui::MenuItem{"HW Status", assets::icons_64::microchip, []() {
+            << ui::MenuItem{"HW Status", assets::icons_64::gameboy, []() {
                 App::run<HWStatus>();
+            }}
+            << ui::MenuItem{"Bootloader", assets::icons_64::microchip, []() {
+                App::run<Bootloader>();
             }};
 
         return result;

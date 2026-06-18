@@ -52,7 +52,9 @@ public:
         set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 
         // turn the device on after powerup
-        ts_.state.setDebugMode(false);
+        // TODO we do not want debug mode after avr reset in production (!)
+        //ts_.state.setDebugMode(false);
+        ts_.state.setDebugMode(true);
         setPowerMode(POWER_MODE_ON);
     }
 
