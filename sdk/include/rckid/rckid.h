@@ -72,9 +72,6 @@ namespace rckid {
      */
     void btnClearAll();
 
-    // TODO rapid fire
-
-
     /** Power management functions & monitoring. 
      */
     namespace power {

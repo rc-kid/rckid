@@ -383,12 +383,12 @@ namespace rckid::hal {
         }
 
         Point3D accelerometerState() {
-            UNIMPLEMENTED;
+            return Point3D{0,0,0};
 
         }
 
         Point3D gyroscopeState() {
-            UNIMPLEMENTED;
+            return Point3D{0,0,0};
         }
 
     } // namespace rckid::hal::io

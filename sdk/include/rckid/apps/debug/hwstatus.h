@@ -40,11 +40,12 @@ namespace rckid {
             tg_->text(27, 1) << (btnDown(Btn::Select) ? "Sel " : "    ");
             tg_->text(31, 1) << (btnDown(Btn::Start) ? "Start " : "      ");
 
-            /*
-            tg_->text(15, 2) << "X: " << accelX() << "    ";
-            tg_->text(15, 3) << "Y: " << accelY() << "    ";
-            tg_->text(15, 4) << "Z: " << accelZ() << "    ";
+            Point3D acc = hal::io::accelerometerState();
+            tg_->text(15, 2) << "X: " << acc.x << "    ";
+            tg_->text(15, 3) << "Y: " << acc.y << "    ";
+            tg_->text(15, 4) << "Z: " << acc.z << "    ";
 
+            /*
             tg_->text(15, 5) << pedometerCount() << "    ";
             */
             tg_->text(15, 6) << (audio::isPlaying() ? "P " : "  ");
@@ -52,7 +53,7 @@ namespace rckid {
             tg_->text(19, 6) << (audio::headphonesConnected() ? "HP " : "   ");
             tg_->text(22, 6) << audio::volume() << "  ";
 
-            //text_->text(15, 5) << timeNow() << "      ";
+            tg_->text(15, 5) << time::now() << "      ";
             tg_->text(25, 7) << time::uptimeUs() / 1000000;
 
             // tg_->text(15, 8) << (isBudgeted() ? "Y " : "N  ");
