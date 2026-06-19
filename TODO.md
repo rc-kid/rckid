@@ -28,6 +28,8 @@ So what I need:
 
 # SDK 1.0
 
+- remove debug mode by default when AVR power on
+
 - add extra keyboard effects to settings menu
 - add on/off subwidget for carousel
 

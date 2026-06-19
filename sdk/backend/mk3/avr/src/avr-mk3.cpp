@@ -52,10 +52,10 @@ public:
         set_sleep_mode(SLEEP_MODE_PWR_DOWN);
 
         // turn the device on after powerup
-        // TODO we do not want debug mode after avr reset in production (!)
-        //ts_.state.setDebugMode(false);
-        ts_.state.setDebugMode(true);
+        ts_.state.setDebugMode(false);
         setPowerMode(POWER_MODE_ON);
+        // TODO we do not want debug mode after avr reset in production (!)
+        enterDebugMode();
     }
 
     static void loop() {
@@ -760,12 +760,12 @@ public:
             case Btn::Right:
                 current = ! gpio::read(AVR_PIN_BTN_1);
                 break;
-            case Btn::VolumeUp:
+            case Btn::VolumeDown:
             case Btn::B:
             case Btn::Up:
                 current = ! gpio::read(AVR_PIN_BTN_2);
                 break;
-            case Btn::VolumeDown:
+            case Btn::VolumeUp:
             case Btn::Start:
             case Btn::Left:
                 current = ! gpio::read(AVR_PIN_BTN_3);
