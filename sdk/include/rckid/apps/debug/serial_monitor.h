@@ -56,7 +56,7 @@ namespace rckid {
             irq_set_enabled(RCKID_USER_UART_IRQ, false);
             irq_set_exclusive_handler(RCKID_USER_UART_IRQ, nullptr);
             gpio_set_function(RCKID_USER_UART_TX_PIN, GPIO_FUNC_SIO);
-            gpio_set_function((RCKID_USER_UART_TX_PIN, GPIO_FUNC_SIO);
+            gpio_set_function(RCKID_USER_UART_TX_PIN, GPIO_FUNC_SIO);
 #endif
             instance_ = nullptr;
         }
