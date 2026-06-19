@@ -80,7 +80,6 @@
 #define RCKID_SD_SPI_SPEED 20000000
 #define RCKID_SD_PIO pio0
 
-
 /** RP2350 Pinout
  */
 #define RP_PIN_I2C_SDA 0

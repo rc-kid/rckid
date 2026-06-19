@@ -1,9 +1,7 @@
 #pragma once
 
 #include <rckid/ui/app.h>
-#include <rckid/ui/label.h>
-#include <rckid/ui/image.h>
-#include <assets/Iosevka24.h>
+#include <rckid/ui/tile_grid.h>
 
 namespace rckid {
 

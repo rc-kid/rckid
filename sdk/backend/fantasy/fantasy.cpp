@@ -76,8 +76,6 @@ namespace rckid::internal {
         int16_t y;
         uint8_t brightness;
 
-        uint64_t lastRefresh = 0;
-
         void refresh() {
             internal::memory::SystemMallocGuard g_;
             UpdateTexture(texture, img.data);
@@ -91,8 +89,6 @@ namespace rckid::internal {
 
             EndDrawing();
             SwapScreenBuffer();
-            // set last refresh time so that we can calculate vsync
-            lastRefresh = hal::time::uptimeUs();
         }
 
         void writePixel(uint16_t pixel) {
@@ -418,12 +414,11 @@ namespace rckid::hal {
             internal::display::brightness = value;
         }
 
+        /** simulate 50fps vsync signal, where for 55 ms it is off, for 5 ms it is on
+         */
         bool vSync() {
-            // TODO
-            // simulate the mkIII display driver by mimicking the vsync timing. For now we just alternate between vsync and not vsync to simulate vsync in progress and done
-            static bool value = true;
-            value = ! value;
-            return value;
+            uint64_t t = time::uptimeUs() % 16666;
+            return t > 16500;
         }
 
         void update(Callback callback) {

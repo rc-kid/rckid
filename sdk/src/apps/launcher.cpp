@@ -18,6 +18,7 @@
 
 #include <rckid/apps/debug/hwstatus.h>
 #include <rckid/apps/debug/bootloader.h>
+#include <rckid/apps/debug/serial_monitor.h>
 
 #include <rckid/apps/dialogs/file_dialog.h>
 #include <rckid/apps/dialogs/color_dialog.h>
@@ -253,6 +254,9 @@ namespace rckid {
             }}
             << ui::MenuItem{"Bootloader", assets::icons_64::microchip, []() {
                 App::run<Bootloader>();
+            }}
+            << ui::MenuItem{"Serial", assets::icons_64::microchip, []() {
+                App::run<SerialMonitor>();
             }};
 
         return result;

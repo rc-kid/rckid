@@ -11,6 +11,8 @@
 - volume down not centered properly
 - make room in the top for home btn
 - maybe enlarge the top plate a bit to fit properly in the slightly large nylon bottom. Or shrink the nylon?
+- uart is wrong because the pins available on cartridge are only uart0, which is already used by the serial out. Can be fixed by making RP_TX pin 8 (instead of SD_CD), which is UART1
+
 
 # Ladder
 
@@ -29,6 +31,7 @@ So what I need:
 # SDK 1.0
 
 - remove debug mode by default when AVR power on
+- UI style could be part of settings instead of SD card stored (but how to deal with background?)
 
 - add extra keyboard effects to settings menu
 - add on/off subwidget for carousel
@@ -94,6 +97,7 @@ Games (port from mkII)
             pio_sm_set_clock_speed(RCKID_ST7789_PIO, sm_, RCKID_ST7789_SPEED * 4); // 2 cycles per pixel
         }
 
+
 ### Code Cleanup
 - should ini reader and writer own the stream? Might simplify things a bit in the API
 
@@ -103,6 +107,7 @@ Games (port from mkII)
 
 - direct connection to other device
 - via usb cable/wifi/nrf or other means, when activated user can select which link implementation to use if multiple are possible so that the API is the same and does not care with implementation
+- the USB can also be used as serial output 
 
 # DevBoard Checklist
 

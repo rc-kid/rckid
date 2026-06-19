@@ -146,15 +146,44 @@ namespace rckid {
             return grid_.get()[mapIndexColumnFirst(x, y, cols_, rows_)];
         }
 
-        /** Returns writer for outputting single-line text to the tilemap. 
+        /** Returns writer for outputting text to the tilemap. 
          
-            The text *must* fill into the tile grid's dimensions, otherwise the behavior is undefined (there will be memory corruption). 
+            The initial coordinates must be within the grid, the grid will be scrolled and position updated according to the text.
          */
-        Writer text(Coord x, Coord y) {
-            ASSERT(x < cols_ && y < rows_);
-            return Writer{[this, x, y](char c) mutable {
-                at(x++, y).setAltTileset(false).setPaletteOffset(0) = c;
+        Writer text(Point where) {
+            ASSERT(where.x < cols_ && where.y < rows_);
+            return Writer{[this, where](char c) mutable {
+                where = appendChar(where, c);
             }};
+        }
+
+        Writer text(Coord x, Coord y) { return text(Point{x, y}); }
+
+        /** Appends single character to the text grid at given coordinates and returns the advanced coordinates.
+         
+            Accounts for newline chars ('\n') as well as text overflowing. Will scroll older lines out of view if needed. This makes this method very useful for showing continuous streams of characters, such as uart or logging.
+         */
+        Point appendChar(Point where, char c, uint8_t paletteIndex = 0) {
+            if (c == '\n' || where.x >= cols_) {
+                if (++where.y == rows_) {
+                    newline();
+                    where.y = rows_ - 1;
+                }
+                where.x = 0;
+            }
+            if (c != '\n')
+                at(where.x++, where.y).setAltTileset(false).setPaletteOffset(paletteIndex) = c;
+            return where;
+        }
+
+        /** Adds new line at the bottom of the grid, moving all the contents above
+         */
+        void newline() {
+            for (Coord y = 0; y < rows_ - 1; ++y)
+                for (Coord x = 0; x < cols_; ++x)
+                    at(x, y) = at(x, y + 1);
+            for (Coord x = 0; x < cols_; ++x)
+                at(x, rows_ - 1).clear();
         }
 
         /** Displays the given icon at the selected coordinates. 
