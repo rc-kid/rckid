@@ -11,6 +11,9 @@ namespace rckid::ui {
     } while (false)
 
     void Header::update() {
+        // if there is no header, there is nothing to update
+        if (instance_ == nullptr)
+            return;
 
         TinyDateTime now = time::now();
         bool update = false;

@@ -16,15 +16,43 @@ int main() {
     initialize();
     LOG(LL_INFO, "Init done");
     uint32_t i = 0;
-    uint32_t te = 0;
+    uint32_t fps = 0;
+    bool te = false;
+    uint32_t numTe = 0;
+    uint64_t next = time::uptimeUs() + 16666;
     while (true) {
-        while (hal::display::vSync() == false)
-            yield();
-        while (hal::display::vSync() == true)
-            yield();
-        if (++te == 60) {
-            LOG(LL_INFO, "60 te: " << ++i);
-            te = 0;
+        if (te != hal::display::vSync()) {
+            te = ! te;
+            if (te)
+                ++ numTe;
         }
+        if (time::uptimeUs() > next) {
+            ++fps;
+            next += 16666;
+            tick();
+            if (btnPressed(Btn::Left))
+                LOG(LL_INFO, "L");
+            if (btnPressed(Btn::Right))
+                LOG(LL_INFO, "R");
+            if (btnPressed(Btn::Up))
+                LOG(LL_INFO, "U");
+            if (btnPressed(Btn::Down))
+                LOG(LL_INFO, "D");
+            if (btnPressed(Btn::A))
+                LOG(LL_INFO, "A");
+            if (btnPressed(Btn::B))
+                LOG(LL_INFO, "B");
+        }
+        if (fps == 60) {
+            LOG(LL_INFO, ++i << " num te: " << numTe);
+            Point3D acc = hal::io::accelerometerState();
+            LOG(LL_INFO, "    x: " << acc.x);
+            LOG(LL_INFO, "    y: " << acc.y);
+            LOG(LL_INFO, "    z: " << acc.z);
+            LOG(LL_INFO, "   hp: " << (audio::headphonesConnected() ? "hp" : "spkr"));
+            numTe = 0;
+            fps = 0;
+        }
+        yield();
     }
 }

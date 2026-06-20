@@ -66,6 +66,8 @@ namespace rckid::internal {
         LTR390UV light;
 
         void initialize() {
+            // initialize headphones pin as input, no pullups
+            gpio::setAsInput(RP_PIN_HEADSET_DETECT);
             // read the full state first
             constexpr uint32_t TS_SIZE = sizeof(TransferrableState) - 1024;
             TransferrableState ts;
@@ -428,7 +430,6 @@ namespace rckid::hal {
             // TODO add stuff for checking hardware events in the latest state? 
 
 
-
             // enqueue avr, accel and light sensor status updates
             i2c::transmitAsync(RCKID_AVR_I2C_ADDRESS, nullptr, 0, sizeof(DeviceState), internal::io::updateAvrStatus);
             // accel
@@ -508,6 +509,8 @@ namespace rckid::hal {
             // acknowledge the power off iterrupt when the state has been requested. We do this on state request, not state read, to ensure that it's reset only when the user code running, not the core driver is inspecting the state
             if (result.powerOffInterrupt())
                 i2c::sendAvrCommand(cmd::PowerOffAck());
+            // determine the headphones
+            result.setHeadphonesConnected(gpio::read(RP_PIN_HEADSET_DETECT) == 0);
             return result;
         }
 

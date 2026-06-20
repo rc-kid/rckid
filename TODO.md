@@ -14,6 +14,14 @@
 - uart is wrong because the pins available on cartridge are only uart0, which is already used by the serial out. Can be fixed by making RP_TX pin 8 (instead of SD_CD), which is UART1
 
 
+# MK3.2 Issues
+
+- headphone detect does not seem to be working
+- one board has volume down common not connected
+- button effects I2C commands take long time to process
+- serial on debug header does not seem to be working
+- AVR turnoff often asserts at 704 and is not working great
+
 # Ladder
 
 The plan is to start with a simple game - cat chase - there is a mouse and a cat, mouse moves randomly, cat chases it, controlled by the player. The aim is to program this game at the C++ level to bring all the pieces together and make sure the c++ code looks decent and easy. Once I have this I can start writing the dynamic wrapper for the layers below (blocks & visual) and asset editors. 
