@@ -2,7 +2,7 @@
 
 /** Enables logging to serial port. available on the debug header.
  */
-#define RCKID_LOG_TO_SERIAL 1
+#define RCKID_LOG_TO_SERIAL 0
 
 /** Serial speed for debugging 
  */

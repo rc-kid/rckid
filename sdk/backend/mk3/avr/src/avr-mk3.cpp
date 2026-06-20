@@ -137,9 +137,9 @@ public:
     static bool isPowerModeOn() { return powerMode_ & POWER_MODE_ON; }
 
     static void setPowerMode(uint8_t mode) {
-        LOG("Set pwr mode: " << mode << ", current " << powerMode_);
         if (powerMode_ & mode)
             return;
+        LOG("Set pwr mode: " << mode << ", current " << powerMode_);
         // if we are transitionioning from complete off, start system ticks and set sleep mode to standby
         if (powerMode_ == 0) {
             LOG("systick start, sleep standby");
@@ -457,7 +457,7 @@ public:
         secondTick_ = false;
         ++ts_.uptime;
         ts_.time.inc();
-        // read either battery voltage, or temperature every other second using ADC0 (but only do so when in power on mode - otherwise there is no-one to use the measurements)
+        // read either battery voltage, or temperature every other second using ADC0 (but only do so when in power on mode
         if (isPowerModeOn()) {
             if ((ts_.uptime & 1) == 0) {
                 static_assert(AVR_PIN_VCC_SENSE == gpio::A2);
@@ -465,6 +465,10 @@ public:
             } else {
                 startADC(ADC_MUXPOS_TEMPSENSE_gc);
             }
+        // if we are not powered on, but in DC mode, only read the VCC value to determine if DC has been disconnected
+        } else if (isPowerModeDC()) {
+            static_assert(AVR_PIN_VCC_SENSE == gpio::A2);
+            startADC(ADC_MUXPOS_AIN2_gc);
         }
         // see if we should wake up the device via the wakeup irq
         if (ts_.wakeupCounter > 0 && --ts_.wakeupCounter == 0) {
@@ -866,6 +870,16 @@ public:
         gpio::low(AVR_PIN_BTN_CTRL);
         if (changed) {
             LOG("DPAD: " << ts_.state.button(Btn::Left) << " " << ts_.state.button(Btn::Right) << " " << ts_.state.button(Btn::Up) << " " << ts_.state.button(Btn::Down));
+        }
+
+        if (changed && btnLeft) {
+            LOG("PWR: " 
+                << (isPowerModeDC() ? "DC " : "   ") 
+                << (isPowerModeCharging() ? "CH " : "   ")
+                << (isPowerModeWakeup() ? "W " : "  ")
+                << (isPowerModeOn() ? "ON  " : "OFF ")
+            );
+            LOG("VCC: " << ts_.state.vcc());
         }
     }
 

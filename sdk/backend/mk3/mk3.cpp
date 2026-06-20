@@ -367,8 +367,6 @@ namespace rckid::hal {
             tud_init(BOARD_TUD_RHPORT);
 #if (RCKID_LOG_TO_SERIAL == 1)
             // initialize only TX out on GPIO2
-            // initialize uart0 on pins 16 & 17 as serial out
-            // TODO this is wrong routine for the new pinout
             uart_init(uart0, RCKID_RP_SERIAL_SPEED);
             gpio_set_function(RP_PIN_RP_TX, GPIO_FUNC_UART);
 #endif
