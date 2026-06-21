@@ -39,8 +39,7 @@ So what I need:
 
 # SDK 1.0
 
-
-- implement the BSOD visually
+- BSOD not working on mkIII
 
 - remove debug mode by default when AVR power on
 - UI style could be part of settings instead of SD card stored (but how to deal with background?)

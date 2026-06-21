@@ -117,7 +117,6 @@ namespace rckid {
 
         static_assert(sizeof(TileInfo) == 4);
 
-
         TileGrid(Coord cols, Coord rows, Color::RGB565 const * palette):
             cols_{cols}, 
             rows_{rows}, 

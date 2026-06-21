@@ -6,54 +6,60 @@ namespace rckid::ui {
 
     /** UI Notification area. 
      
-        Displays notifications about the system state. Supports both column & row based rendering so that it can be used also in non UI-based applications. The header is a singleton widget to which the applications do not have direct access. 
+        Displays notifications about the system state. Supports both column & row based rendering so that it can be used also in non UI-based applications. As the header is tiny, it is internally a singleton object to which the applications do not have direct access. 
 
         The header can either be always visible, or only show up when there is some change. 
      */
     class Header : public TileGrid {
     public:
 
+        static constexpr uint32_t ON_CHANGE_VISIBILITY_TICKS = 60 * 5;
+
         enum class Visibility {
-            Always,
-            OnChange,
+            Always, 
+            OnChange,  
             Never,
         }; 
+
+        /** Returns the current visibility of the header. 
+         */
+        static bool currentVisibility() {
+            return instance()->visible();
+        }
+
+        /** Returns the visibility settings for the header.
+         */
+        static Visibility visibility() { return visibility_; }
+
+        /** Sets the visibility settings for the header. 
+         */
+        static void setVisibility(Visibility visibility) {
+            // don't do anything if the visibility is the same
+            if (visibility_ == visibility)
+                return;
+            Visibility old = visibility_;
+            visibility_ = visibility;
+            instance()->updateVisibility(old);
+        }
 
         /** Returns true if the header should be rendered in the current frame.
          */
         static bool shouldRender() {
-            return instance_->visible();
-        }
-
-        static Visibility visibility() { return visibility_; }
-
-        static void setVisibility(Visibility visibility) {
-            if (visibility_ == visibility)
-                return;
-            visibility_ = visibility;
-            switch (visibility) {
-                // if the header is to be always visible,
-                case Visibility::Always:
-                    instance_->remainingTicks_ = TicksToShowOnChange + 1;
-                    instance_->show();
-                    break;
-                case Visibility::OnChange:
-                    if (instance_->visible()) {
-                        if (instance_->remainingTicks_ > TicksToShowOnChange)
-                            instance_->remainingTicks_ = 1;
-                    }
-                    break;
-                case Visibility::Never:
-                    instance_->remainingTicks_ = 1;
-                    with(instance_)
-                        << SetPosition(Point{0, -TileGrid::tileHeight()});
-                    break;
-            }
+            return instance()->visible();
         }
 
         /** Updates the header icons
          */
         static void update();
+
+
+        static Header * instance() { 
+            if (instance_ == nullptr) {
+                instance_ = new Header{};
+                instance_->applyStyle(Style::defaultStyle());
+            }
+            return instance_; 
+        }
 
         /** Palette offsets for different colors. 
          */
@@ -64,10 +70,6 @@ namespace rckid::ui {
         static constexpr uint8_t PaletteOffsetViolet = 22;
 
 
-        static Header * instance() { 
-            ASSERT(instance_ != nullptr);
-            return instance_; 
-        }
 
         void renderRow(Coord row, Coord startCol, Color::RGB565 * buffer, Coord numPixels) {
             Coord ownRow = row - rect().y;
@@ -83,24 +85,22 @@ namespace rckid::ui {
 
     protected:
 
-        static constexpr int32_t TicksToShowOnChange = 60 * 5; // show for 5 seconds after change
-      
+
         /** When rendering, determine if we should  */
         void onRender() override {
-            if (remainingTicks_ <= TicksToShowOnChange && remainingTicks_ > 0) {
-                if (--remainingTicks_ == 0)
+            if (visibility_ == Visibility::OnChange)
+                if ((remainingTicks_ > 0) && (--remainingTicks_ == 0))
                     hide();
-            }
         }
 
         void onIdle() override {
-            if (remainingTicks_ == 0)
+            if (remainingTicks_ == 0) {
                 Widget::setVisibility(false);
+                setRect(Rect::XYWH(0, - TileGrid::tileHeight(), width(), height()));
+            }
         }
 
     private:
-
-        friend class RootWidget;
 
         Header():
             TileGrid{display::WIDTH / TileGrid::tileWidth(), 1, nullptr},
@@ -114,26 +114,68 @@ namespace rckid::ui {
             update();
         }
 
+        void updateVisibility(Visibility old) {
+            switch (visibility_) {
+                case Visibility::Always:
+                    show(); // calling this before the remainingTicks set so that if in hide animation in progress, we will interrupt
+                    remainingTicks_ = ON_CHANGE_VISIBILITY_TICKS + 1;
+                    break;
+                case Visibility::OnChange:
+                    if (old == Visibility::Always)
+                        hide();
+                    if (remainingTicks_ > ON_CHANGE_VISIBILITY_TICKS)
+                        remainingTicks_ = ON_CHANGE_VISIBILITY_TICKS;
+                    // no need to show (change does that)
+                    break;
+                case Visibility::Never:
+                    remainingTicks_ = 0;
+                    hide();
+                    break;
+                default:
+                    UNREACHABLE;
+            }
+        }
+
+        /** Ensures the header is visible, bringing it into view when necessary.
+         */
         void show() {
             // don't show when app requests no header at all
             if (visibility_ == Visibility::Never)
                 return;
-            if (visible()) {
-                if (remainingTicks_ != 0)
-                    return;
-                cancelAnimations();
+            // if there are no animations in process and the header is visible, there is nothing to do
+            if (idle() && visible()) {
+                if (remainingTicks_ < ON_CHANGE_VISIBILITY_TICKS)
+                    remainingTicks_ = ON_CHANGE_VISIBILITY_TICKS;
+                return;
             }
+            // if the current animation is *showing*, there is nothing to do, we can tell by ticks being non-zero
+            if (remainingTicks_ > 0) {
+                if (remainingTicks_ < ON_CHANGE_VISIBILITY_TICKS)
+                    remainingTicks_ = ON_CHANGE_VISIBILITY_TICKS;
+                return;
+            }
+            // otherwise cancel any pending animations and start the show animation
+            cancelAnimations();
             Widget::setVisibility(true);
             animate()
                 << MoveTo(this, Point{0,0});
+            // reset the hide countdown
+            remainingTicks_ = ON_CHANGE_VISIBILITY_TICKS;
         }
 
+        /** Hides the header, if this is allowed by the setti  */
         void hide() {
-            if (! visible())
+            // nothing to do when visibility is set to always
+            if (visibility_ == Visibility::Always)
                 return;
-            remainingTicks_ = 0;
+            // if not visible already nothing to do
+            if (! visible()) {
+                setRect(Rect::XYWH(0, - TileGrid::tileHeight(), width(), height()));
+                return;
+            }
             animate()
                 << MoveTo(this, Point{0, -TileGrid::tileHeight()});
+            remainingTicks_ = 0;
         }
 
         static immutable_ptr<Color::RGB565> defaultPalette() {
@@ -163,7 +205,7 @@ namespace rckid::ui {
         /** Ticks remaining for the header to be shown. 
         
          */
-        int32_t remainingTicks_ = 0;
+        uint32_t remainingTicks_ = 0;
 
         immutable_ptr<Color::RGB565> palette_;
         

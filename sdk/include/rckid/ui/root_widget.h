@@ -16,10 +16,6 @@ namespace rckid::ui {
             renderBuffer_{static_cast<uint32_t>(rect.height())}
         {
             setRect(rect);
-            if (Header::instance_ == nullptr) {
-                Header::instance_ = new Header{};
-                Header::instance_->applyStyle(Style::defaultStyle());
-            }
         }
 
         bool useBackrgoundImage() const { return useBackgroundImage_; }
@@ -89,7 +85,7 @@ namespace rckid::ui {
             Widget::renderColumn(column, startRow, buffer, numPixels);
 
             if (y() == 0 && Header::shouldRender() && useHeader_ != Header::Visibility::Never)
-                renderChildColumn(Header::instance_, column, startRow, buffer, numPixels);
+                renderChildColumn(Header::instance(), column, startRow, buffer, numPixels);
         }
 
         /** Releases the resources helpd by the root widget.

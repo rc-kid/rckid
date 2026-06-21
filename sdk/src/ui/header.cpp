@@ -97,12 +97,8 @@ namespace rckid::ui {
                 << alignRight(now.time.minute(), 2, '0');
         }
 
-        if (update) {
+        if (update)
             instance_->show();
-            if (instance_->remainingTicks_ < TicksToShowOnChange)
-                instance_->remainingTicks_ = TicksToShowOnChange;
-        }
-
     }
 
 } // namespace rckid::ui
