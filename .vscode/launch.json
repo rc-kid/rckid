@@ -36,7 +36,7 @@
             "type": "cppdbg",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/build-mk3/cartridge/test/ui-app.elf",
+            "program": "${workspaceFolder}/build-mk3/cartridges/test/ui-app.elf",
             "args": [],
             "miDebuggerServerAddress": "10.0.0.38:3333",
             "stopAtEntry": false,

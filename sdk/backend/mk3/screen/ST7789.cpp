@@ -111,8 +111,25 @@ namespace rckid {
     }
 
     void ST7789::initializePinsBitBang() {
-
         constexpr uint64_t outputPinsMask = 0xffff_u64 << RP_PIN_DISP_DB15; // DB0..DB15 are consecutive
+        // TODO change this to masked operation 
+        // TODO verify why this is needed?
+        gpio_init(RP_PIN_DISP_DB0);
+        gpio_init(RP_PIN_DISP_DB1);
+        gpio_init(RP_PIN_DISP_DB2);
+        gpio_init(RP_PIN_DISP_DB3);
+        gpio_init(RP_PIN_DISP_DB4);
+        gpio_init(RP_PIN_DISP_DB5);
+        gpio_init(RP_PIN_DISP_DB6);
+        gpio_init(RP_PIN_DISP_DB7);
+        gpio_init(RP_PIN_DISP_DB8);
+        gpio_init(RP_PIN_DISP_DB9);
+        gpio_init(RP_PIN_DISP_DB10);
+        gpio_init(RP_PIN_DISP_DB11);
+        gpio_init(RP_PIN_DISP_DB12);
+        gpio_init(RP_PIN_DISP_DB13);
+        gpio_init(RP_PIN_DISP_DB14);
+        gpio_init(RP_PIN_DISP_DB15);
         gpio_set_dir_masked64(outputPinsMask, 0xffffffffffffffffll); // set all pins to output
         gpio_put_masked64(outputPinsMask, 0);
         gpio_set_function_masked64(outputPinsMask, GPIO_FUNC_SIO);

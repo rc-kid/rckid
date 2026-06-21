@@ -170,6 +170,7 @@ namespace rckid::internal {
             // initialize bitbanging driver and exit the RAMWR command
             ST7789::initializePinsBitBang();
             ST7789::leaveUpdateMode();
+            pixelsToWrite = 0;
         }
 
         void enterUpdateMode() {
@@ -603,6 +604,8 @@ namespace rckid::hal {
 
         bool updateActive() {
             using namespace internal::display;
+            if (! pio_sm_is_enabled(RCKID_ST7789_PIO, sm))
+                return false;
             // if we have pixels to write, we better be active
             if (pixelsToWrite > 0)
                 return true;

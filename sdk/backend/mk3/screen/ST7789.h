@@ -124,6 +124,7 @@ namespace rckid {
         //@{
 
         static void enterUpdateMode() {
+            LOG(LL_INFO, "Display update mode");
             beginCommand(RAMWR);
             // after command there are arguments (data), so DCX high
             gpio_put(RP_PIN_DISP_DCX, true);
