@@ -18,10 +18,7 @@
 - headphone detect does not seem to be working - could be is never disconnected? 
 - one board has volume down common not connected
 - button effects I2C commands take long time to process
-- serial on debug header does not seem to be working
 - AVR turnoff often asserts at 704 and is not working great
-- home button does not seem to be sent to RP2350
-
 
 # Ladder
 

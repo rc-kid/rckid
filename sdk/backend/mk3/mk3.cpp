@@ -46,7 +46,7 @@ namespace rckid::internal {
 
     namespace device {
         // set to true once we have debugging cpability (otherwise if there were debugging prints in static initializations, they crash the device)
-        bool debugReady = false;
+        volatile bool debugReady = false;
 
     }
 
@@ -369,7 +369,7 @@ namespace rckid::hal {
 #if (RCKID_LOG_TO_SERIAL == 1)
             // initialize only TX out on GPIO2
             uart_init(uart0, RCKID_RP_SERIAL_SPEED);
-            gpio_set_function(RP_PIN_RP_TX, GPIO_FUNC_UART);
+            gpio_set_function(RP_PIN_RP_TX, GPIO_FUNC_UART_AUX);
 #endif
             internal::device::debugReady = true;
 
