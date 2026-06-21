@@ -194,9 +194,9 @@ public:
     }
 
     static void clearPowerMode(uint8_t mode) {
-        LOG("Clear pwr mode: " << mode << ", current " << powerMode_);
         if (!(powerMode_ & mode))
             return;
+        LOG("Clear pwr mode: " << mode << ", current " << powerMode_);
         powerMode_ &= ~mode;
         switch (mode) {
             // when leaving power on mode, clear debug mode (will be determined on next power on). If we are  charging, or DC enabled, set the notifications accordingly.
@@ -703,9 +703,8 @@ public:
                 clearPowerMode(POWER_MODE_CHARGING);
             }
         }
-        // finally the home button press, which can only happen if the device is in powered down state. If critical battery flag is on, we cannot power the device on and only display the critical battery warning flashes, exitting prematurely. Otherwise we enter the wakeup power mode, which starts the button long press detection to transition to power on state if successful.
-        if (irqs & HOME_BTN_INT_REQUEST) {
-            ASSERT(isPowerModeOff());
+        // finally the home button press, which can only happen if the device is in powered down state. If critical battery flag is on, we cannot power the device on and only display the critical battery warning flashes, exitting prematurely. Otherwise we enter the wakeup power mode, which starts the button long press detection to transition to power on state if successful. We must ensure that we are in power off mode as the interrupt is *not* debounced and there can be spurious inits
+        if ((irqs & HOME_BTN_INT_REQUEST) && isPowerModeOff()) {
             if (criticalBattery_) {
                 criticalBattery();
                 return;
@@ -889,12 +888,18 @@ public:
     }
 
     static void checkHomeButtonLongPress() {
+        // if counter is not active, nothing to do
         if (homeBtnLongPress_ == 0)
             return;
+        // if home button is not pressed, cancel, this means also clearing the WAKEUP state if we are in it
         if (! ts_.state.button(Btn::Home)) {
+            LOG("Home btn cancel");
             homeBtnLongPress_ = 0;
+            // if we are in wakeup mode, clear it 
+            clearPowerMode(POWER_MODE_WAKEUP);
             return;
         }
+        // decrement the counter and if we reach 0, process the long home button press
         if (--homeBtnLongPress_ != 0)
             return;
         LOG("Home long press, pwr mode: " << powerMode_);

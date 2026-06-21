@@ -8,19 +8,20 @@
 
 # MK3 HW
 
+- home button 0.3mm thinner
 - volume down not centered properly
-- make room in the top for home btn
 - maybe enlarge the top plate a bit to fit properly in the slightly large nylon bottom. Or shrink the nylon?
 - uart is wrong because the pins available on cartridge are only uart0, which is already used by the serial out. Can be fixed by making RP_TX pin 8 (instead of SD_CD), which is UART1
 
-
 # MK3.2 Issues
 
-- headphone detect does not seem to be working
+- headphone detect does not seem to be working - could be is never disconnected? 
 - one board has volume down common not connected
 - button effects I2C commands take long time to process
 - serial on debug header does not seem to be working
 - AVR turnoff often asserts at 704 and is not working great
+- home button does not seem to be sent to RP2350
+
 
 # Ladder
 
@@ -38,8 +39,13 @@ So what I need:
 
 # SDK 1.0
 
+
+- implement the BSOD visually
+
 - remove debug mode by default when AVR power on
 - UI style could be part of settings instead of SD card stored (but how to deal with background?)
+
+- LTR390UV should be capability, not based in the core
 
 - add extra keyboard effects to settings menu
 - add on/off subwidget for carousel
@@ -324,3 +330,20 @@ QOI, PNG, JPG, Raw.
 Raw is interesting especially with the immutable_ptr. It is a format that first has the raw data as they would be unpacked, and this is followed by width & height. This allows no allocation for images stored in flash in the raw format. At the moment the raw format only uses RGB565 color representation. I am proposing to add third - last byte specifies the bpp/format and it can be RGB565, or indices (256, 16). Makes sense? 
 
 Finally I have canvas. Canvas at the moment only supports RGB565, but I am thinking maybe it should support multiple formats too. 
+
+
+
+
+Power on sequence:
+- PORTA int request ( sets intRequests_ HOME BTN INT REQUEST)
+- then processIntRequests, which sometimes asserts fail (when called from non-power off state)
+- critical battery (should be checked)
+- setPowerMode WAKEUP
+- this starts home button long press and tentatively sets debug mode to true
+- then control group btn changes:
+    - sets wakeup mode if not power on & btnHome is pressed <- this might screw debouncing?
+    - starts btn home press if home btn long press is 0, otherwise does check 
+- btn check long press
+    if is 0, retrurn
+    if not pressed, set to 0, return
+    otherwise decrement and if 0, go to power mode on 

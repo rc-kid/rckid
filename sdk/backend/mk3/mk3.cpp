@@ -66,8 +66,6 @@ namespace rckid::internal {
         LTR390UV light;
 
         void initialize() {
-            // initialize headphones pin as input, no pullups
-            gpio::setAsInput(RP_PIN_HEADSET_DETECT);
             // read the full state first
             constexpr uint32_t TS_SIZE = sizeof(TransferrableState) - 1024;
             TransferrableState ts;
@@ -281,7 +279,8 @@ namespace rckid::internal {
             //Codec::setVolumeSpeaker(io::avrState_.audio.volumeSpeaker());
             //Codec::setVolumeHeadphones(io::avrState_.audio.volumeHeadphones());
 
-
+            // initialize headphones pin as input, no pullups
+            gpio::setAsInput(RP_PIN_HEADSET_DETECT);
 
         }
 

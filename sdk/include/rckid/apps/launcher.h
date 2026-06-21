@@ -184,6 +184,8 @@ namespace rckid {
                 item->action()();
                 launch_ = false;
             }
+            if (btnPressed(Btn::Start))
+                ASSERT(false);
         }
 
         /** The launcher's home menu has no elements as exitting the app is not possible and launcher has no capabilities on its own.

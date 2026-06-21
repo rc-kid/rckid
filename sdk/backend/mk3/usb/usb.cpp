@@ -102,6 +102,7 @@ extern "C" {
         LOG(LL_INFO, "USB disconnected");
         rckid::DataSync::disconnect();
     }
+
 }
 
 
@@ -125,6 +126,10 @@ extern "C" {
     // Invoked when CDC interface received data from host
     void tud_cdc_rx_cb([[maybe_unused]] uint8_t itf) {
         // TODO - do we want to support reading? 
+    }
+
+    void tud_cdc_line_coding_cb(uint8_t itf, cdc_line_coding_t const* p_line_coding) {
+        // TODO deal with this (baudrate, stop bits, etc)
     }
 
 }
