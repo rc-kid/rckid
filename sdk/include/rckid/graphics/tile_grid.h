@@ -122,8 +122,7 @@ namespace rckid {
             cols_{cols}, 
             rows_{rows}, 
             grid_{new TileInfo[cols * rows]},
-            palette_{palette} 
-        {
+            palette_{palette} {
         }
 
         Color::RGB565 const * palette() const { return palette_; }
@@ -184,6 +183,11 @@ namespace rckid {
                     at(x, y) = at(x, y + 1);
             for (Coord x = 0; x < cols_; ++x)
                 at(x, rows_ - 1).clear();
+        }
+
+        void clear(char c = ' ') {
+            for (Coord i = 0, e = cols_ * rows_; i != e; ++i)
+                grid_.get()[i].clear() = c;
         }
 
         /** Displays the given icon at the selected coordinates. 

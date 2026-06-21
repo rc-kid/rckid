@@ -5,6 +5,7 @@
 #include <rckid/ui/header.h>
 #include <rckid/audio/decoder_stream.h>
 #include <rckid/apps/dialogs/info_dialog.h>
+#include <rckid/graphics/tile_grid.h>
 
 namespace rckid {
 
@@ -508,7 +509,43 @@ namespace rckid {
     void onFatalError(char const * file, uint32_t line, char const * msg, uint32_t payload) {
         LOG(LL_ERROR, "Fatal error at " << file << ":" << line << "\n" << msg << " (payload " << payload << ")");
         // TODO do the BSOD
-
+        Color::RGB565 palette[] = {
+            Color::RGB(0x00, 0x00, 0xff),
+            Color::RGB(0x11, 0x11, 0xff),
+            Color::RGB(0x22, 0x22, 0xff),
+            Color::RGB(0x33, 0x33, 0xff),
+            Color::RGB(0x44, 0x44, 0xff),
+            Color::RGB(0x55, 0x55, 0xff),
+            Color::RGB(0x66, 0x66, 0xff),
+            Color::RGB(0x77, 0x77, 0xff),
+            Color::RGB(0x88, 0x88, 0xff),
+            Color::RGB(0x99, 0x99, 0xff),
+            Color::RGB(0xaa, 0xaa, 0xff),
+            Color::RGB(0xbb, 0xbb, 0xff),
+            Color::RGB(0xcc, 0xcc, 0xff),
+            Color::RGB(0xdd, 0xdd, 0xff),
+            Color::RGB(0xee, 0xee, 0xff),
+            Color::RGB(0xff, 0xff, 0xff),
+        };
+        TileGrid g{40,15, palette};
+        g.text(0,1) 
+            << ":( RCKid fatal error\n"
+            << "   " << file << ":" << line << "\n"
+            << "   " << msg << "\n"
+            << "   (payload " << payload << ")";
+        
+        // send the BSOD tile grid data to the display
+        Color::RGB565 buffer[240];
+        for (Coord i = 319; i >= 0; --i) {
+            yield();
+            memset16(reinterpret_cast<uint16_t *>(buffer), palette[0], 240);
+            yield();
+            g.renderColumn(i, 0, buffer, 240);
+            yield();
+            hal::display::update(buffer, 240);
+            while (hal::display::updateActive())
+                yield();
+        }
         // infinite loop so that we never return, repeat the error message as long as needed
         uint64_t next = time::uptimeUs() + 1000000;
         while (true) {
