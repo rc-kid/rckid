@@ -549,10 +549,12 @@ namespace rckid {
         // infinite loop so that we never return, repeat the error message as long as needed
         uint64_t next = time::uptimeUs() + 1000000;
         while (true) {
+            /*
             if (time::uptimeUs() >= next) {
                 next += 1000000;
                 LOG(LL_ERROR, "Fatal error at " << file << ":" << line << "\n" << msg << " (payload " << payload << ")");
             }
+                */
             yield();
         }
     }

@@ -152,8 +152,11 @@ namespace rckid {
         static constexpr Coord HEIGHT = hal::display::HEIGHT;
             
         inline void waitUpdateDone() {
-            while (hal::display::updateActive())
+            uint64_t timeout = time::uptimeUs() + 1000000;
+            while (hal::display::updateActive()) {
+                ASSERT(time::uptimeUs() < timeout);
                 yield();
+            }
         }
 
         inline void waitVSync() {

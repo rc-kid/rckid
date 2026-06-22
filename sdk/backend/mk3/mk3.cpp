@@ -22,6 +22,7 @@
 #include <platform/peripherals/ltr390uv.h>
 
 #include <rckid/hal.h>
+#include <rckid/rckid.h>
 #include <rckid/error.h>
 #include <rckid/memory.h>
 #include <rckid/graphics/color.h>
@@ -295,19 +296,20 @@ namespace rckid::internal {
         unsigned irqs = dma_hw->ints0;
         dma_hw->ints0 = irqs;
         if (irqs & (1u << display::dmaChannel)) {
-            std::swap(display::buffer, display::backBuffer);
-            std::swap(display::bufferSize, display::backBufferSize);
-            // if there are pixels to send, restart the DMA immediately
-            if (display::buffer != nullptr) {
+            display::pixelsToWrite -= display::bufferSize;
+            if (display::pixelsToWrite <= 0) {
+                display::buffer = nullptr;
+                display::bufferSize = 0;
+                display::backBuffer = nullptr;
+                display::backBufferSize = 0;                
+            } else {
+                std::swap(display::buffer, display::backBuffer);
+                std::swap(display::bufferSize, display::backBufferSize);
+                ASSERT(display::buffer != nullptr);
                 dma_channel_set_read_addr(display::dmaChannel, display::buffer, false);
                 dma_channel_set_transfer_count(display::dmaChannel, display::bufferSize, true);
-            }
-            if (display::pixelsToWrite > 0) {
-                display::cb(display::backBuffer, display::backBufferSize);
-                display::pixelsToWrite -= display::bufferSize;
-            } else {
-                display::backBuffer = nullptr;
-                display::backBufferSize = 0;
+                if (display::pixelsToWrite > display::bufferSize)
+                    display::cb(display::backBuffer, display::backBufferSize);
             }
         }
         // audio
@@ -446,6 +448,17 @@ namespace rckid::hal {
         }
 
         void fatalError(char const * file, uint32_t line, char const * msg, uint32_t payload) {
+            LOG(LL_ERROR, "FATAL: " << file << ":" << line);
+            LOG(LL_ERROR, msg << "(payload " << payload << ")");
+            LOG(LL_ERROR, internal::display::pixelsToWrite);
+            LOG(LL_ERROR, dma_channel_is_busy(internal::display::dmaChannel));
+            LOG(LL_ERROR, pio_sm_is_stalled(RCKID_ST7789_PIO, internal::display::sm));
+            LOG(LL_ERROR, internal::display::buffer << " - " << internal::display::bufferSize);
+            LOG(LL_ERROR, internal::display::backBuffer << " - " << internal::display::backBufferSize);
+            while (true) {
+                yield();
+            }
+
             // fatal error is simple on fantasy console as we do not have to worry about weird hardware states
             // stop audio playback, which is the only async stuff we can have
             audio::stop();
@@ -528,6 +541,8 @@ namespace rckid::hal {
     namespace display {
 
         void enable(Rect rect, RefreshDirection direction) {
+            LOG(LL_INFO, "Display reset " << rect);
+            rckid::display::waitUpdateDone();
             // cancel any ongoing DMA update
             internal::display::enterCommandMode();
             // leave the update mode so that we can send commands
@@ -553,42 +568,36 @@ namespace rckid::hal {
 
         void update(Callback callback) {
             using namespace internal::display;
-            while (updateActive())
-                yield();
+            rckid::display::waitUpdateDone();
             ASSERT(! updateActive());
             ASSERT(buffer == nullptr);
             ASSERT(backBuffer == nullptr);
             cb = callback;
             pixelsToWrite = ST7789::updateRegion().w * ST7789::updateRegion().h;
             cb(buffer, bufferSize);
-            pixelsToWrite -= bufferSize;
-            if (pixelsToWrite > 0) {
+            if (pixelsToWrite > bufferSize)
                 cb(backBuffer, backBufferSize);
-                pixelsToWrite -= backBufferSize;
-            }
             dma_channel_set_read_addr(dmaChannel, buffer, false);
             dma_channel_set_transfer_count(dmaChannel, bufferSize, true);
         }
 
         void update(Color::RGB565 const * buffer, uint32_t bufferSize) {
             using namespace internal::display;
-            while (updateActive())
-                yield();
+            rckid::display::waitUpdateDone();
             ASSERT(! updateActive());
             ASSERT(buffer == nullptr);
             ASSERT(backBuffer == nullptr);
             cb = nullptr;
             internal::display::buffer = const_cast<Color::RGB565 *>(buffer);
             internal::display::bufferSize = bufferSize;
-            pixelsToWrite = 0;
+            pixelsToWrite = bufferSize;
             dma_channel_set_read_addr(dmaChannel, buffer, false);
             dma_channel_set_transfer_count(dmaChannel, bufferSize, true);
         }
 
         void update(Color::RGB565 const * buffer1, uint32_t bufferSize1, Color::RGB565 const * buffer2, uint32_t bufferSize2) {
             using namespace internal::display;
-            while (updateActive())
-                yield();
+            rckid::display::waitUpdateDone();
             ASSERT(! updateActive());
             ASSERT(buffer == nullptr);
             ASSERT(backBuffer == nullptr);
@@ -597,23 +606,14 @@ namespace rckid::hal {
             internal::display::bufferSize = bufferSize1;
             internal::display::backBuffer = const_cast<Color::RGB565 *>(buffer2);
             internal::display::backBufferSize = bufferSize2;
-            pixelsToWrite = 0;
+            pixelsToWrite = bufferSize1 + bufferSize2;
             dma_channel_set_read_addr(dmaChannel, internal::display::buffer, false);
             dma_channel_set_transfer_count(dmaChannel, internal::display::bufferSize, true);
         }
 
         bool updateActive() {
             using namespace internal::display;
-            if (! pio_sm_is_enabled(RCKID_ST7789_PIO, sm))
-                return false;
-            // if we have pixels to write, we better be active
-            if (pixelsToWrite > 0)
-                return true;
-            // if any of the display DMAs are running, we are active
-            if (dma_channel_is_busy(dmaChannel))
-                return true;
-            // if the dma channels are idle, the sm must still be sending the last pixels
-            return ! pio_sm_is_stalled(RCKID_ST7789_PIO, sm);
+            return pixelsToWrite > 0;
         }
 
     } // namespace rckid::hal::display

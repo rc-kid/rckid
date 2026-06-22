@@ -23,18 +23,15 @@ namespace rckid::ui {
         // tell the widgets that we are about to render
         onRender();
         // start rendering from rightmost column
-        renderCol_ = width() - 1;
-        hal::display::update([&](Color::RGB565 * & buffer, uint32_t & bufferSize) {
-            if (renderCol_ < 0) {
-                buffer = nullptr;
-                return;
-            } else if (buffer == nullptr) {
+        hal::display::update([this, renderCol = width() - 1](Color::RGB565 * & buffer, uint32_t & bufferSize) mutable {
+            ASSERT(renderCol >= 0);
+            if (buffer == nullptr) {
                 buffer = renderBuffer_.front().data();
                 bufferSize = height();
                 ASSERT(bufferSize <= renderBuffer_.size());
                 renderBuffer_.swap();
             }
-            renderColumn(renderCol_--, 0, buffer, height());
+            renderColumn(renderCol--, 0, buffer, height());
         });
     }
 

@@ -97,7 +97,6 @@ namespace rckid::ui {
     private:
 
         DoubleBuffer<Color::RGB565> renderBuffer_;
-        Coord renderCol_;
 
         bool useBackgroundImage_ = true;
         Header::Visibility useHeader_ = ui::Header::Visibility::Always;
