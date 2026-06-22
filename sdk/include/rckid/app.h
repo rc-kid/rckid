@@ -70,6 +70,8 @@ namespace rckid {
                 current_->onBlur();
                 current_ = current_->parent_;
                 result = std::move(app.result());
+                // wait for the last update to finish (otherwise it might access deleted app)
+                display::waitUpdateDone();
             }
             btnClearAll();
             if (current_ != nullptr)
@@ -99,6 +101,8 @@ namespace rckid {
                 }
                 current_->onBlur();
                 current_ = current_->parent_;
+                // wait for the last update to finish (otherwise it might access deleted app)
+                display::waitUpdateDone();
             }
             btnClearAll();
             if (current_ != nullptr)

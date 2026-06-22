@@ -159,19 +159,25 @@ namespace rckid::internal {
         uint32_t backBufferSize = 0;
 
         void enterCommandMode() {
-            // drop any ongoing transfer
-            if (pio_sm_is_enabled(RCKID_ST7789_PIO, sm)) {
+            if (pixelsToWrite > 0) {
+                ASSERT(pio_sm_is_enabled(RCKID_ST7789_PIO, sm));
+                // drop any ongoing transfer, this is fine as mostly 
                 {
                     cpu::DisableInterruptsGuard g_;
                     dma_channel_set_irq0_enabled(dmaChannel, false);
                 }
                 dma_channel_abort(dmaChannel);
-                pio_sm_set_enabled(RCKID_ST7789_PIO, sm, false);
+                // reset update counters & buffers
+                pixelsToWrite = 0;
+                buffer = nullptr;
+                bufferSize = 0;
+                backBuffer = nullptr;
+                backBufferSize = 0;
             }
+            pio_sm_set_enabled(RCKID_ST7789_PIO, sm, false);
             // initialize bitbanging driver and exit the RAMWR command
             ST7789::initializePinsBitBang();
             ST7789::leaveUpdateMode();
-            pixelsToWrite = 0;
         }
 
         void enterUpdateMode() {
@@ -455,10 +461,6 @@ namespace rckid::hal {
             LOG(LL_ERROR, pio_sm_is_stalled(RCKID_ST7789_PIO, internal::display::sm));
             LOG(LL_ERROR, internal::display::buffer << " - " << internal::display::bufferSize);
             LOG(LL_ERROR, internal::display::backBuffer << " - " << internal::display::backBufferSize);
-            while (true) {
-                yield();
-            }
-
             // fatal error is simple on fantasy console as we do not have to worry about weird hardware states
             // stop audio playback, which is the only async stuff we can have
             audio::stop();
@@ -585,8 +587,8 @@ namespace rckid::hal {
             using namespace internal::display;
             rckid::display::waitUpdateDone();
             ASSERT(! updateActive());
-            ASSERT(buffer == nullptr);
-            ASSERT(backBuffer == nullptr);
+            ASSERT(internal::display::buffer == nullptr);
+            ASSERT(internal::display::backBuffer == nullptr);
             cb = nullptr;
             internal::display::buffer = const_cast<Color::RGB565 *>(buffer);
             internal::display::bufferSize = bufferSize;
