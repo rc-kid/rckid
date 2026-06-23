@@ -136,6 +136,8 @@ namespace rckid {
         now_ = hal::time::now();
         nextSecondUptime_ = hal::time::uptimeUs() + 1000000;
         // TODO
+        LOG(LL_INFO, "Brightness " << settings.display.brightness);
+        hal::display::setBrightness(settings.display.brightness);
 
 
         // set the keyboard effect (if any)

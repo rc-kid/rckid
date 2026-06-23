@@ -18,6 +18,7 @@
 # MK3.2 Issues
 
 - headphone detect does not seem to be working
+- not all commands are sent properly & received (could be NACK on transaction when the past command is being processed still)
 
 # Ladder
 
