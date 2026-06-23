@@ -12,13 +12,12 @@
 - volume down not centered properly
 - maybe enlarge the top plate a bit to fit properly in the slightly large nylon bottom. Or shrink the nylon?
 - uart is wrong because the pins available on cartridge are only uart0, which is already used by the serial out. Can be fixed by making RP_TX pin 8 (instead of SD_CD), which is UART1
+- audio codec GPIO1 should have test point
+- verify GPIO1 is tied to ground when not used, or set output to GND
 
 # MK3.2 Issues
 
-- headphone detect does not seem to be working - could be is never disconnected? 
-- one board has volume down common not connected
-- button effects I2C commands take long time to process
-- AVR turnoff often asserts at 704 and is not working great
+- headphone detect does not seem to be working
 
 # Ladder
 
@@ -35,8 +34,6 @@ So what I need:
 - descriptor/game object infrastructure for matching arguments of events should be added 
 
 # SDK 1.0
-
-- BSOD not working on mkIII
 
 - remove debug mode by default when AVR power on
 - UI style could be part of settings instead of SD card stored (but how to deal with background?)

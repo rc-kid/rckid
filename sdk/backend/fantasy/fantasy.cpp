@@ -251,6 +251,10 @@ namespace rckid::hal {
             App::run<SplashScreen>(nullptr);
         }
 
+        void setDebugMode(bool value) {
+            LOG(LL_INFO, "Debug mode: " << value);
+        }
+
         void setPowerMode([[maybe_unused]] PowerMode mode) {
             // no power management on fantasy console
         }
@@ -423,14 +427,16 @@ namespace rckid::hal {
 
         void update(Callback callback) {
             Color::RGB565 * buffer = nullptr;
+            uint32_t numPixels = internal::display::rect.width() * internal::display::rect.height();
             uint32_t bufferSize = 0;
             while (true) {
                 callback(buffer, bufferSize);
-                if (buffer == nullptr)
-                    break;
                 // append the pixels from the buffer, 
                 for (uint32_t i = 0; i < bufferSize; ++i)
                     internal::display::writePixel(buffer[i]);
+                numPixels -= bufferSize;
+                if (numPixels == 0)
+                    break;
             }
         }
 
@@ -531,6 +537,10 @@ namespace rckid::hal {
     } // namespace rckid::hal::audio
 
     namespace fs {
+
+        bool sdCardDetect() {
+            return internal::fs::sdBlocks_ > 0;
+        }
 
         uint32_t sdCapacityBlocks() {
             return internal::fs::sdBlocks_;

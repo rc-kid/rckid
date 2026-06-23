@@ -420,6 +420,12 @@ namespace rckid::hal {
             UNIMPLEMENTED;
         }
 
+        void setDebugMode(bool value) {
+            i2c::sendAvrCommand(cmd::SetDebugMode{value});
+            if (value == false)
+                i2c::sendAvrCommand(cmd::SetUartDebug{false});
+        }
+
         void powerOff() {
             // TODO do we want to do some more?
             i2c::sendAvrCommand(cmd::PowerOff{});
@@ -710,6 +716,10 @@ namespace rckid::hal {
     } // namespace rckid::hal::audio
 
     namespace fs {
+
+        bool sdCardDetect() {
+            return ! gpio::read(RP_PIN_SD_CD);
+        }
 
         uint32_t sdCapacityBlocks() {
             return internal::sd::sdNumBlocks_;

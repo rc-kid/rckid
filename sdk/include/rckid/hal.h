@@ -36,6 +36,8 @@ namespace rckid::hal {
          */
         void setPowerMode(PowerMode mode);
 
+        void setDebugMode(bool value); 
+
         /** Powers the device off immediately
          
             This function does not return and powers the device off immediately. Any necessary cleanup should have been done before calling this function, e.g. by calling the rckid::powerOff() function, which performs the cleanup and then calls the hal::powerOff() function to actually cut the power.
@@ -207,6 +209,8 @@ namespace rckid::hal {
         Whenever the capacity function returns 0 (either blocks for SD or bytes for cartridge), the particular drive is presumed non-existent.
      */
     namespace fs {
+
+        bool sdCardDetect();
 
         uint32_t sdCapacityBlocks();
 

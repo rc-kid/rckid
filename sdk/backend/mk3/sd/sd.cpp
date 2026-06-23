@@ -173,13 +173,14 @@ namespace rckid::internal::sd {
         Simply loads the PIO and initializes the card detect pin.
      */
     void initialize() {
+        gpio::setAsInputPullUp(RP_PIN_SD_CD);
         LOG(LL_INFO, "SD init");
+        LOG(LL_INFO, "  card detect: " << hal::fs::sdCardDetect());
         // initialize the PIO for SPI communication with the SD card, use the same pio as the display driver since its base is already set to 16
         spiSm_ = pio_claim_unused_sm(RCKID_SD_PIO, true);
         spiOffset_ = pio_add_program(RCKID_SD_PIO, & sd_spi_program);
         LOG(LL_INFO, "  spi sm: " << (uint32_t)spiSm_);
         LOG(LL_INFO, "  spi offset: " << (uint32_t)spiOffset_);
-        gpio::setAsInput(RP_PIN_SD_CD);
         // TODO enable interrupt??
     }
 

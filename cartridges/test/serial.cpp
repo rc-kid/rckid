@@ -42,6 +42,8 @@ int main() {
                 LOG(LL_INFO, "A");
             if (btnPressed(Btn::B))
                 LOG(LL_INFO, "B");
+            if (btnPressed(Btn::Select))
+                hal::device::setDebugMode(false);
         }
         if (fps == 60) {
             LOG(LL_INFO, ++i << " num te: " << numTe);

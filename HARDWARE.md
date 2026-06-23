@@ -2,27 +2,23 @@
 
 > This is hardware description of RCKid mk III (version 29/7/25 and above). For brief history and to clear any confusion, mk I was much larger, hand soldered version powered by Raspberry Pi Zero 2W and mk II was slightly slimmer version powered by RP2040 with 8bit parallel screen interface.
 
-RCKid is based on the [RP2030B](datasheets/rp2350-datasheet.pdf) (80 pin QFN) and uses its requirement for external program flash chip as a feature by allowing swappable cartridges. This is the overall architecture of the system:
+RCKid is based on the [RP2350B](datasheets/rp2350-datasheet.pdf) (80 pin QFN) and uses its requirement for external program flash chip as a feature by allowing swappable cartridges. This is the overall architecture of the system:
           
                                               +-----------------+
                             + --------+       | Cartridge       |
                             | microSD |       | (flash, extras) |======\\                              
                             +---------+       +-----------------+       \\ (analog audio input)
                                    \\\\       ////                       \\                   
-                          <SPI/SDIO>\\\\     ////<8pin/HSTX,2/ADC,QSPI>   ||                        
-                                     \\\\   ////                          ||                 /---- speaker
-                                     ||||   ||||                          ||                /
-       +-----------+  <16bitMCU>   +-------------+     <I2S>       +---------------+       / (analog mono)
-       |  ST7789V  |===============|   RP2350B   |=================| NAU88C22GY    |-------
-       | (Display) |               +-------------+                 | (audio codec) |_______   
-       +-----------+                     ||                   //===+---------------+       \ (analog stereo)
-              |                          ||                  //                             \  +------------+
-              |                          ||                 //                               \-| 3.5mm jack |
-              |                          ||================//                                  +------------+
-              |                          ||
-              |                          ||
-              | <PWM>                    ||
-              | (Backlight)              ||
+                          <SPI/SDIO>\\\\     ////<8pin/HSTX,2/ADC,QSPI>  ||                        
+                                     \\\\   ////                         ||                 /---- speaker
+                                     ||||   ||||                         ||                /
+       +-----------+  <16bitMCU>   +-------------+     <I2S>       +---------------+      / (analog mono)
+       |  ST7789V  |===============|   RP2350B   |=================| NAU88C22GY    |------
+       | (Display) |               +-------------+                 | (audio codec) |_____   
+       +-----------+                     ||                   //===+---------------+     \ (analog stereo)
+              |                          ||                  //                           \  +------------+
+              | <PWM>                    ||                 //                             \-| 3.5mm jack |
+              | (Backlight)              ||================//                                +------------+
                \                         ||
                 \                        || <I2C>     
                  \                       ||           //======(buttons, 3x4 matrix)
@@ -30,13 +26,13 @@ RCKid is based on the [RP2030B](datasheets/rp2350-datasheet.pdf) (80 pin QFN) an
                    \              |    ATTiny3217   |/
                     \-------------| (IO, time, pwr) |----------(RGB)
                              /----+-----------------+
-                            /            ||         \     +-----------+
-             (rumbler)-----/       <I2C> ||          \----| MCP73832  |----(battery)
-                          <PWM>          ||               | (charger) | 
-                                    +----------+          +-----------+
-                                    | LSM6DSV  | 
-                                    | (Accel)  | 
-                                    +----------+
+                            /           /|\        \     +-----------+
+             (rumbler)-----/     <I2C> // \\        \----| MCP73832  |----(battery)
+                          <PWM>       //   \\            | (charger) | 
+                            +----------+   +----------+  +-----------+
+                            | LSM6DSV  |   | LTR390UV |
+                            | (Accel)  |   | (light)  |
+                            +----------+   +----------+
 
 Next to the control & logic elements above, there are also various power rails, their short description is below:
 
@@ -48,11 +44,15 @@ Next to the control & logic elements above, there are also various power rails, 
 
 ## I2C Bus
 
-Most of the perihperals are connected to a single I2C bus (accesible on `TP6` and `TP7`). The pull-ups of the bus go to the `IOVDD` so that the bus is only working when the device is on. To make sure eveything works, before AVR turns `IOVDD` off, it emits `START` condition on the bus, which is followed by `STOP` condition transmitted right after `IOVDD` is enabled back. 
+Most of the perihperals are connected to a single I2C bus. The pull-ups of the bus go to the `IOVDD` so that the bus is only working when the device is on. To make sure eveything works, before AVR turns `IOVDD` off, it emits `START` condition on the bus, which is followed by `STOP` condition transmitted right after `IOVDD` is enabled back. 
 
 ### Sensors
 
-The only extra sensor in mkIII is the onboard acceleromeneter [LSM6DSV](datasheets/lsm6dsv.pdf). Unlike MPU6500 or various TDK alternatives is relatively simple to use (similar to the discontinued BMI160 used in mkII). As it is also capable of working as a pedometer, it is always on, connected to the `3V3` rail. The accelerometer has its interrupt connected to AVR so that we can intercept taps, steps, etc.
+The only extra sensors in mkIII are the onboard acceleromeneter [LSM6DSV](datasheets/lsm6dsv.pdf) and ambient & UV light detector [LTR390UV](datasheets/LTR_390UV_Final_DS_V1_1.pdf). 
+
+LSM6DSV is relatively simple to use (similar to the discontinued BMI160 used in mkII). As it is also capable of working as a pedometer, it is always on, connected to the `3V3` rail. The accelerometer has its interrupt connected to AVR so that we can intercept taps, steps, etc.
+
+The ambient light detector does not have its interrupt pin connected and must be polled.
 
 Furthermore several of the devices connected to the I2C bus also supoort temperature measurements (including the AVR itself).
 
@@ -97,8 +97,6 @@ The converter is variable output resistor configuration straight from the datash
 
 We are using [HX4002](datasheets/hx4002.pdf) charge pump, same as in mk II. The pump is capable of delivering in excess of 240mA for 3.6V input voltage (it runs from VCC, which is stepped up above 3.3v). It only powers the [RGB leds](datasheets/rgb.pdf), which take at most 5mA per channel, which gives us 120mA when at full power.
 
-> TODO that the LEDs indeed sourse only that much.
-
 ### Power Consumption
 
 To share the load between the two DC-DC converters, teh display backlight and the rumbler (which can separately be turned off) are connected to the `3V3` rail. The `TPS63001` is very effective at high loads, so we assume `90%` efficiency (will be a bit higher in reality). The calculation for the maximum power that can be drawn from the battery at the lower acceptable level (`3V`) is thus:
@@ -117,7 +115,7 @@ This is within the `1C` discharge rate for the battery, which is good.
 
 ## Audio
 
-[NAU88C22GY](datasheet/nau88c22gy.pdf) chip is used, which is relatively simple, yet it offers all the features we need - 16bit audio playback & record, line-in for the radio, microphone input, integrated headphone and mono speaker (BTL) drivers. While the chip features audio jack detection and can automatically enable/disable headphones based on the jack status, it does not offer any way to report the jack status, hence the jack detection pin is shared with RP2350 which can read it. The chip also provides no interrupt (no events available) and provides one simple digital GPIO that can be set high or low (used for the radio reset line). In terms of I2S, the chip requires MCLK to be provided, but it does not have to be of the exact frequency needed as the internal PLL can adjust it - but we are not using this feature. Pinout:
+[NAU88C22GY](datasheet/nau88c22gy.pdf) chip is used, which is relatively simple, yet it offers all the features we need - 16bit audio playback & record, line-in for the radio, microphone input, integrated headphone and mono speaker (BTL) drivers. While the chip features audio jack detection and can automatically enable/disable headphones based on the jack status, it does not offer any way to report the jack status, hence the jack detection pin is shared with RP2350 which can read it. The chip also provides no interrupt (no events available) and provides one simple digital GPIO that can be set high or low (not used). In terms of I2S, the chip requires MCLK to be provided, but it does not have to be of the exact frequency needed as the internal PLL can adjust it - but we are not using this feature. Pinout:
 
 - `VDDA`, `VDDB`, `VDDC` and `VDDSPK` are all connected to the `IOVDD` 3v3 rail for simplicity, decoupled with `4u7` caps
 - `VSSA`, `VSSD` and `VSSSPK` are all connected to `GND`
@@ -130,12 +128,11 @@ This is within the `1C` discharge rate for the battery, which is good.
 - `LMICP` and `LMICN` go to positive and negative microphone terminals via `1uF` capacitors (as per the datasheet)
 - `MICBIAS` is connecte to ground via `4u7` capacitor and to positive mic input via `2k2` resistor (as per the datasheet)
 - `RMICP`, `RMICN`, `AUXOUT1` and `AUXOUT2` are left floating (as per the datasheet for unused analog inputs/outputs)
-- `GPIO1` goes to radio reset line (via `100k` pull-up)
 - `GPIO2` goes to headset detection
 - `GPIO3` is tied to ground as per the dataset for unused gpio
 - `MODE` is tied to ground for I2C selection
 
-Note that I2C communication with the chip was not working when MCLK was being generated on the breadboard. This was fixed by adding the RC filter to I2C lines as per the datasheet (220R, 33pF). 
+> Note that I2C communication with the chip did not work when MCLK was being generated on the breadboard. This was fixed by adding the RC filter to I2C lines as per the datasheet (220R, 33pF). 
 
 #### Microphone
 
@@ -150,44 +147,6 @@ Headset detection is via a `100k` resistor to the `IOVDD` line to second ground 
 We use two switch, 3 contact [headset connector](datasheets/headphone%20jack.pdf), half sinking for better profile. 
 
 > TODO the pullup is wrong (too high) and also, maybe by connecting tip with some large resistor to 0 (68k or so) and then connecting the tip mate via even higher resistor to VCC as a pull up. Then it will read close to 0 when not inserted and VCC when inserted. But will this upset the audio? It actually might work and I can ignore the second sleeve and it would work with all headphones! (can I make it work with current audio setup by rewiring?)
-
-### Radio Reset
-
-As the audio codec's `GPIO1` can be used as a general purpose digital output, we use it as a radio reset line to save pins at the RP2350B. The line pulled up by default (no reset). 
-
-### FM Radio
-
-[Si4705](datasheets/si4705.pdf) is the chip used. It is FM only receiver with ability to use both embedded and headphone integrated antenna. The FM chip also comes with [antenna guidelines](datasheets/si4705-antenna.pdf) which contains layout and typical application information. It communicated withj RP2350 via I2C and has two extra lanes - RESET and INT. We leave GPO1 unconnected so that I2C communication mode will always be selected. Finally there is the [programming manual](datasheets/si4705-programming.pdf) for the I2C setup.
-
-I've also found an [Si4705 module](https://media.elv.com/file/140984_fm_rm1_schaltplan.pdf) whose schematic can be of use. 
-
-The rest of the pins are used as follows:
-
-- `FMI` is connected to headphones antenna
-- `RFGND` goes to ground
-- `LPI` is the embedded antenna
-- `RSTB` is the RADIO_RESET to RP2350
-- `SENB` goes to ground (I2C address selection - `0b0010001`)
-- `SCLK` and `SDIO` are the I2C SCL and SDA lines to RP2350 respectively
-- `RCLK` and `GPO3` are connected to 32.768kHz crystal
-- `VD` and `VA` both go to `IOVDD`. VD has 100nF capacitor and VA has 22nF capacitor (from the app in antenna datasheet)
-- `GND` is ground
-- `ROUT` and `LOUT` are analog outputs. They go to the audio codec via 10k to ground and 100nF capacitor
-- `DOUT`, `DFS` and `DCLK/GPO3` are not used and left floating (digital audio out)
-- `GPO2` is connected to the RADIO_INT and goes to RP2350, pull-up does not seem to be necessary
-- `GPO1` is not used
-
-### Headset Antenna
-
-The headset antenna is described in the antenna datasheet, page 19. Headset ground is connected to gnd via 270nH inductor as per the datasheet and to the FMI pin via a 100pF capacitor. To insulate the ground antenna, ferrite beads are installed on both left and right audio outputs, as well as the headphone detection line. 
-
-### Embedded antenna
-
-As per the antenna application note, page 31, the embedded antenna is connected directly to the LPI pin win 120nH inductor to the ground. The inductor is 0805 so that it's hand-solderable. The ESD protection and current limiting resistor are not necessary as there is no exposed connector to the embedded antenna. 
-
-### External Crystal
-
-We are using the same crystal as AtTiny3217. The load capacitance is 12.5 pF, which is roughly in the middle of the rangle per datasheet. While the dev-board had 22pF capacitors, the crystal looked like it is not swinging fully, so we are trying 15pF for the device, which would correspond to 5pF stray capacitance. This is under the assumption that lower than ideal capacitance is better than higher than ideal, but needs to be verified. Internet says this should not degrade the crystal accuracy too much as only a few seconds per week max. 
 
 ## AVR (ATTiny3217)
 
