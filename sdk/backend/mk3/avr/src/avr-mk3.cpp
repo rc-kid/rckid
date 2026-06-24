@@ -429,6 +429,10 @@ public:
         if (! systemTick_)
             return false;
         systemTick_ = false;
+        if (i2cErrors_ > 0) {
+            LOG("I2C Errors: " << i2cErrors_);
+            i2cErrors_ = 0;
+        }
         // check the power off timeout, if we are turning off, do not count it as a system tick and do not check the buttons
         if (powerOffTimeout_ > 0 && (--powerOffTimeout_ == 0)) {
             LOG("Power off timeout expired, powering off...");
@@ -494,12 +498,14 @@ public:
     static inline uint8_t i2cTxBytes_ = 0;
     static inline uint8_t i2cRxBytes_ = 0;
     static inline uint8_t i2cBuffer_[16];
+    static inline volatile uint8_t i2cErrors_ = 0;
 
     static void initializeComms() {
         // make sure we'll start reading the transferrable state first
         i2cTxAddr_ = reinterpret_cast<uint8_t *>(& ts_);
         i2cRxBytes_ = 0;
         i2cTxBytes_ = 0;
+        i2cCommandReady_ = false;
     }
 
     static void i2cSlaveIRQHandler() {
@@ -523,11 +529,17 @@ public:
             TWI0.SCTRLB = (i2cRxBytes_ == sizeof(i2cBuffer_)) ? TWI_SCMD_COMPTRANS_gc : TWI_SCMD_RESPONSE_gc;
         // master requests slave to write data, reset the sent bytes counter, initialize the actual read address from the read start and reset the IRQ
         } else if ((status & I2C_START_MASK) == I2C_START_TX) {
-            TWI0.SCTRLB = TWI_ACKACT_ACK_gc + TWI_SCMD_RESPONSE_gc;
+            TWI0.SCTRLB = TWI_SCMD_RESPONSE_gc;
             i2cTxBytes_ = 0;
         // master requests to write data itself. ACK if there is no pending I2C message, NACK otherwise. The buffer is reset to 
         } else if ((status & I2C_START_MASK) == I2C_START_RX) {
-            TWI0.SCTRLB = (! i2cCommandReady_) ? TWI_SCMD_RESPONSE_gc : TWI_ACKACT_NACK_gc;
+            if (i2cCommandReady_) {
+                ++i2cErrors_;
+                TWI0.SCTRLB = TWI_ACKACT_NACK_gc | TWI_SCMD_RESPONSE_gc;
+            } else {
+                i2cRxBytes_ = 0;
+                TWI0.SCTRLB = TWI_SCMD_RESPONSE_gc;
+            }
         // sending finished, reset the tx address, clear interrupts if we have succesfully sent at least device state
         } else if ((status & I2C_STOP_MASK) == I2C_STOP_TX) {
             TWI0.SCTRLB = TWI_SCMD_COMPTRANS_gc;
@@ -542,6 +554,7 @@ public:
                 i2cCommandReady_ = true;
         } else {
             // error - a state we do not know how to handle
+            ++i2cErrors_;
         }
     }
 
@@ -639,6 +652,7 @@ public:
                 }
                 break;
             case cmd::SetBrightness::ID:
+                LOG("CMD: brightness " << cmd::SetBrightness::fromBuffer(i2cBuffer_).value);
                 setBacklightPWM(cmd::SetBrightness::fromBuffer(i2cBuffer_).value);
                 break;
             case cmd::SetRGBEffectAll::ID:
@@ -660,7 +674,6 @@ public:
         }
         // and reset the command state so that we can read more commands 
         NO_ISR(
-            i2cRxBytes_ = 0;
             i2cCommandReady_ = false;
         );
     }

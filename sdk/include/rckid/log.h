@@ -53,6 +53,10 @@
 #define LL_DEBUG 0
 #endif
 
+#ifndef LL_I2C
+#define LL_I2C 1
+#endif
+
 namespace rckid::hal::device {
     Writer debugWrite();
 }

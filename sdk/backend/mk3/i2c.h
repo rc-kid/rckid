@@ -1,5 +1,7 @@
 #pragma once
 
+#include <time_point.h>
+
 #include <rckid/rckid.h>
 
 #include "config.h"
@@ -136,6 +138,10 @@ namespace rckid {
         static void onYield() {
             {
                 cpu::DisableInterruptsGuard g{};
+                if ((retrigger_ != 0) && (TimePoint::now() >= retrigger_)) {
+                    triggerTransaction();
+                    return;
+                }
                 if (ri_ == wi_)
                     return;
                 if (ring_[ri_].address != MAGIC_SYNC_TRANSACTION)
@@ -187,28 +193,54 @@ namespace rckid {
 
         }); // i2c::Transaction
 
+        static constexpr uint32_t I2C_TX_ABORT = 0x40;
+        static constexpr uint32_t I2C_RD_REQ = 0x20;
+        static constexpr uint32_t I2C_TX_EMPTY = 0x10;
+        static constexpr uint32_t I2C_TX_OVER = 0x08;
+        static constexpr uint32_t I2C_RX_FULL = 0x04;
 
         /** I2C IRQ handler. 
          
             Called when the transaction is done, executes the callback function of the transaction and moves to the next transaction in the queue. 
+
+            TX_ABRT = transmit was aborted (bit 6)
+
+            RX_FULL = what was to be received was received (bit 2) 0x04
+
          */
         static void __not_in_flash_func(irqHandler)() {
             uint32_t cause = i2c0->hw->intr_stat;
             i2c0->hw->clr_intr;
             // disable the I2C interrupts (otherwise they might fire again immediately despite clearing, especially the TX_EMPTY one)
             i2c0->hw->intr_mask = 0;
-            LOG(LL_I2C, "IRQ " << hex(cause) << " -- " << hex(i2c0->hw->intr_stat));
-            // deal with teh callback
             Transaction & t = ring_[ri_];
-            if (t.callback)
-                t.callback(t.readSize); // TODO should this be the actual number of bytes received in the buffer
-            // move to the next transaction
-            moveToNext();
+            // determine if the cause for the interrupt was abort, in which case implement backoff strategy
+            if (cause & I2C_TX_ABORT) {
+                if (attempts_++ >= 10) {
+                    LOG(LL_ERROR, "Unable to perform transaction");
+                    if (t.callback)
+                        t.callback(0);
+                    moveToNext();
+                } else {
+                    retrigger_ = TimePoint::now() + attempts_ * 500;
+                    if (retrigger_ == 0)
+                        retrigger_ = retrigger_ + 1;
+                }
+            // otherwise the transaction was performed correctly (we set the mask according to the transaction type when scheduling)
+            } else {
+                // deal with teh callback
+                if (t.callback)
+                    t.callback(t.readSize); // TODO should this be the actual number of bytes received in the buffer
+                // move to the next transaction
+                moveToNext();
+            }
         }
 
         /** Moves to next transaction, triggering it if the queue is not empty.
          */
         static void moveToNext() {
+            // reset the attempts counter
+            attempts_ = 0;
             // move to the next transaction
             bool trigger = false;
             {
@@ -259,6 +291,7 @@ namespace rckid {
         }
 
         static void triggerTransaction() {
+            retrigger_ = 0;
             Transaction & t = ring_[ri_];
             if (t.address != MAGIC_SYNC_TRANSACTION)
                 triggerAsync(t);
@@ -268,6 +301,9 @@ namespace rckid {
         // index at which new transaction will be enqeueued 
         static inline volatile uint32_t wi_ = 0;
         static inline volatile uint32_t ri_ = 0;
+        // attempts made with current packet
+        static inline TimePoint retrigger_;
+        static inline volatile uint32_t attempts_ = 0;
 
     }; // class i2c
 
