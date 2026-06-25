@@ -214,6 +214,8 @@ public:
                     rgbSetEffectForAll(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
                 // reset the poweroff timeout
                 powerOffTimeout_ = 0;
+                // and reset the power off interrupt (it may not have been cleared by status read)
+                ts_.state.clearInterrupts();
                 break;
             // when leaving DC mode, no need to do anything special
             case POWER_MODE_DC:
@@ -1085,6 +1087,11 @@ public:
         rgbEffect_[led] = effect;
         if (effect.active())
             rgbOn(true);
+        // if the effect is solid color and max step, set the color immediately. This would happen anyways in the next RGB tick and doing it immediately allows adding a fade-out effect right after (otherwise the fade-out might replace the effect before RGB tick and nothing will be seen)
+        if (effect.kind == RGBEffect::Kind::Solid && effect.speed == 255) {
+            rgb_[led] = effect.nextColor(rgb_[led]);
+            rgbTarget_[led] = effect.nextColor(rgbTarget_[led]);
+        }
     }
 
     static void rgbTick() {

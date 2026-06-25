@@ -814,15 +814,13 @@ namespace rckid::hal {
         /** Reads the AVR storage in one read. We use the write command write followed by I2C restart read.
          */
         void load(uint16_t start, uint8_t * buffer, uint32_t numBytes) {
-            cmd::ReadStorage command{start};
-            // sending this as a single I2C repeated start transaction is necessary to ensure that no-one reads the data before we get to it.
-            i2c::transmitSync(
-                RCKID_AVR_I2C_ADDRESS, 
-                reinterpret_cast<uint8_t const *>(& command),
-                sizeof(cmd::ReadStorage),
-                buffer, 
-                numBytes
-            );
+            // enqueue with callback and use first address set, then wait enough time for the command to finish and then perform the actual read
+            i2c::enqueue([start, buffer, numBytes](int32_t){
+                cmd::ReadStorage cmd{start};
+                i2c_write_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, reinterpret_cast<uint8_t const *>(& cmd), sizeof(cmd), false);
+                cpu::delayMs(5);
+                i2c_read_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, buffer, numBytes, false);
+            });
         }
     } // namespace rckid::hal::storage
 

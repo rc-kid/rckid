@@ -25,7 +25,7 @@ namespace rckid {
 
         /** Callback function for I2C transactions. Called when the transaction is processed. Takes the number of bytes returned from the slave as its argument. At the call, the bytes are still in I2C HW buffers and have to be read using the getTransactionResponse() function below. 
          */
-        typedef void (*Callback)(int32_t);
+        using Callback = std::function<void(int32_t)>;
 
         /** Initialzies the I2C communucations. 
          
