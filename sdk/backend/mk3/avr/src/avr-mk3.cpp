@@ -429,6 +429,8 @@ public:
         if (! systemTick_)
             return false;
         systemTick_ = false;
+        // check I2C errors are report them, if any
+        // TODO maybe in the future we might want better observability/retaining of this, but as errors are *not* expected at all during normal operation, and there is no fallback from them happening, it does not matter now
         if (i2cErrors_ > 0) {
             LOG("I2C Errors: " << i2cErrors_);
             i2cErrors_ = 0;
@@ -534,7 +536,6 @@ public:
         // master requests to write data itself. ACK if there is no pending I2C message, NACK otherwise. The buffer is reset to 
         } else if ((status & I2C_START_MASK) == I2C_START_RX) {
             if (i2cCommandReady_) {
-                ++i2cErrors_;
                 TWI0.SCTRLB = TWI_ACKACT_NACK_gc | TWI_SCMD_RESPONSE_gc;
             } else {
                 i2cRxBytes_ = 0;
@@ -552,8 +553,8 @@ public:
             TWI0.SCTRLB = TWI_SCMD_COMPTRANS_gc;
             if (i2cRxBytes_ > 0)
                 i2cCommandReady_ = true;
+        // error - a state we do not know how to handle
         } else {
-            // error - a state we do not know how to handle
             ++i2cErrors_;
         }
     }

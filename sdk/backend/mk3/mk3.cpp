@@ -78,11 +78,11 @@ namespace rckid::internal {
             // the data received is correct, initialize own structures
             state = ts.state;
             time::now = ts.time;
-            LOG(LL_INFO, "AVR version:    ", ts.version);
-            LOG(LL_INFO, "Device uptime:  ", ts.uptime);
-            LOG(LL_INFO, "Wakeup reason:  ", ts.wakeupReason);
-            LOG(LL_INFO, "Wakeup counter: ", ts.wakeupCounter);
-            LOG(LL_INFO, "AVR temp:       ", ts.temp);
+            LOG(LL_INFO, "AVR version:    " << ts.version);
+            LOG(LL_INFO, "Device uptime:  " << ts.uptime);
+            LOG(LL_INFO, "Wakeup reason:  " << ts.wakeupReason);
+            LOG(LL_INFO, "Wakeup counter: " << ts.wakeupCounter);
+            LOG(LL_INFO, "AVR temp:       " << ts.temp);
             
             // initialize I2C devices
             LOG(LL_INFO, "Detecting I2C devices...");
@@ -120,7 +120,7 @@ namespace rckid::internal {
             // TODO
         }
 
-        void updateAvrStatus(uint8_t numBytes) {
+        void updateAvrStatus(int32_t numBytes) {
             if (numBytes != sizeof(DeviceState)) {
                 LOG(LL_ERROR, "Corrupted AVR state: " << numBytes);
                 return;
@@ -130,9 +130,9 @@ namespace rckid::internal {
             state.updateWith(ds);
         }
 
-        void updateAccelStatus(uint8_t numBytes) {
+        void updateAccelStatus(int32_t numBytes) {
             if (numBytes != sizeof(LSM6DSV::Orientation3D)) {
-                LOG(LL_ERROR, "Corrupted accel state: ", numBytes);
+                LOG(LL_ERROR, "Corrupted accel state: " << numBytes);
                 return;
             }
             i2c::getTransactionResponse(reinterpret_cast<uint8_t*>(&accelState), sizeof(LSM6DSV::Orientation3D));
@@ -150,7 +150,7 @@ namespace rckid::internal {
         hal::display::Callback cb;
         int32_t sm;
         int32_t pioOffset;
-        int32_t pixelsToWrite = 0;
+        uint32_t pixelsToWrite = 0;
 
         int32_t dmaChannel = -1;
         Color::RGB565 * buffer = nullptr;
@@ -427,7 +427,7 @@ namespace rckid::hal {
         }
 
         void powerOff() {
-            // TODO do we want to do some more?
+            // TODO do we want to do some more? - maybe do in loop if the command would be forgotten
             i2c::sendAvrCommand(cmd::PowerOff{});
         }
 

@@ -182,7 +182,7 @@ namespace rckid {
          */
         uint8_t d_ = 0;
 
-    }; // rckid::hal::State
+    } __attribute__((packed)); // rckid::hal::State
 
     static_assert(sizeof(DeviceState) == 4, "Required so that State can be read/written as a single 32bit value");
 

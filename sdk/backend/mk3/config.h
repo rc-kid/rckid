@@ -65,6 +65,19 @@
 /** I2C speed for the RP2350 master driver. 
  */
 #define RCKID_I2C_SPEED 400000
+
+/** Ring buffer size for the I2C transactions buffer, so that they can be queried quicker than we can send them for a short while.
+ */
+#define RCKID_I2C_ASYNC_SLOTS 16
+
+/** If async I2C transaction is aborted (such as NACK from slave), the driver will retry this much times.
+ */
+#define RCKID_I2C_RETRIES 10
+
+/** Backoff time for I2C async retries in microseconds. The backoff algorithm is linear, i.e. the backoff is number of attempts failed times this number. 
+ */
+#define RCKID_I2C_BACKOFF_US 500
+
 /** Maximum size of an asynchronous I2C message. 
  */
 #define RCKID_I2C_MAX_ASYNC_MSG_SIZE 16
@@ -130,8 +143,6 @@
 #define RP_PIN_SD_CSN 45
 #define RP_PIN_GPIO_46 46
 #define RP_PIN_GPIO_47 47
-
-
 
 /** AVR pinout
  */
