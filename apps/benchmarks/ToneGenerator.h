@@ -1,6 +1,6 @@
 #pragma once
 
-#include "benchmark.h"
+#include "Benchmark.h"
 
 namespace rckid {
 

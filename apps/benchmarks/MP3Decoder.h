@@ -2,7 +2,7 @@
 
 #include "rckid/filesystem.h"
 #include "rckid/audio/mp3.h"
-#include "benchmark.h"
+#include "Benchmark.h"
 
 namespace rckid {
 

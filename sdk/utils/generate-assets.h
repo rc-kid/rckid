@@ -87,6 +87,9 @@ GlyphIds getAlphaNumericGlyphs() {
 }
 
 
+//GlyphInfo *LoadFontData(const unsigned char *fileData, int dataSize, int fontSize, const int *codepoints, int codepointCount, int type, int *glyphCount)
+
+
 /** Using Raylib, loads the given font and extract given glyphs (UTF codepoints). 
  */
 GlyphInfo * loadFontGlyphs(std::string const & fontFile, int fontSize, std::vector<int> const & glyphs) {
@@ -96,7 +99,8 @@ GlyphInfo * loadFontGlyphs(std::string const & fontFile, int fontSize, std::vect
          (std::istreambuf_iterator<char>(input)),
          (std::istreambuf_iterator<char>()));
     input.close();   
-    GlyphInfo * glyphInfos = LoadFontData(bytes.data(), (int) bytes.size(), fontSize, const_cast<int*>(glyphs.data()), (int) glyphs.size(), FONT_DEFAULT);
+    int numGlyphs = 0;
+    GlyphInfo * glyphInfos = LoadFontData(bytes.data(), (int) bytes.size(), fontSize, const_cast<int*>(glyphs.data()), (int) glyphs.size(), FONT_DEFAULT, &numGlyphs);
     std::cout << "            loaded " << glyphs.size() << " glyphs" << Writer::endl;
     return glyphInfos;
 }

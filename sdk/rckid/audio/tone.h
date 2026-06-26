@@ -1,5 +1,7 @@
 #pragma once
 
+#include <limits>
+
 #include <platform/buffer.h>
 
 #include "../rckid.h"
