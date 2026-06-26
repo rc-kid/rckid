@@ -431,7 +431,7 @@ namespace rckid::hal {
         void powerOff() {
             while (true) {
                 i2c::sendAvrCommand(cmd::PowerOff{});
-                for (uint32_t i = 0; i < 50; ++i)
+                for (uint32_t i = 0; i < 50; ++i) {
                     yield();
                     cpu::delayMs(1);
                 }

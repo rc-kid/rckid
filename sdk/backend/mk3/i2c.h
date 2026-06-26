@@ -250,6 +250,7 @@ namespace rckid {
         static void moveToNext() {
             // reset the attempts counter
             attempts_ = 0;
+            ring_[ri_].callback = nullptr;
             // move to the next transaction
             bool trigger = false;
             {

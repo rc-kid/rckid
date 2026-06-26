@@ -22,6 +22,8 @@ namespace rckid::ui {
         Widget::renderEssentials();
         // tell the widgets that we are about to render
         onRender();
+        // wait for next frame to keep steady FPS
+        display::waitVSync();        
         // start rendering from rightmost column
         hal::display::update([this, renderCol = width() - 1](Color::RGB565 * & buffer, uint32_t & bufferSize) mutable {
             ASSERT(renderCol >= 0);

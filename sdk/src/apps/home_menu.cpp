@@ -27,7 +27,7 @@ namespace rckid {
                     }).withPayload(ExecuteInMenu)
                     << ui::MenuItem("Power Off", assets::icons_64::power_off, []() {
                         rckid::power::powerOff();
-                    });
+                    }).withPayload(ExecuteInMenu);
                 if (app->parent() != nullptr)
                     (*menu)
                         << ui::MenuItem("Exit", assets::icons_64::logout, [app]() {
