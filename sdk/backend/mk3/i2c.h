@@ -58,6 +58,7 @@ namespace rckid {
          */
         template<typename T>
         static void sendAvrCommand(T const & cmd) {
+            LOG(LL_INFO, "avr cmd: " << cmd.id);
             transmitAsync(RCKID_AVR_I2C_ADDRESS, reinterpret_cast<uint8_t const *>(&cmd), sizeof(T));
         }
 

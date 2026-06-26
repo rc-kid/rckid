@@ -337,6 +337,10 @@ namespace rckid::hal {
             return internal::time::now;
         }
 
+        void setTime(TinyDateTime dt) {
+            internal::time::now = dt;
+        }
+
     } // namespace rckid::hal::time
 
     namespace io {

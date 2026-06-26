@@ -426,9 +426,16 @@ namespace rckid::hal {
                 i2c::sendAvrCommand(cmd::SetUartDebug{false});
         }
 
+        /** Sends the immediate power off to AVR every 50ms waiting in between. This is to ensure that if the command is lost, it will be re-issued.
+         */
         void powerOff() {
-            // TODO do we want to do some more? - maybe do in loop if the command would be forgotten
-            i2c::sendAvrCommand(cmd::PowerOff{});
+            while (true) {
+                i2c::sendAvrCommand(cmd::PowerOff{});
+                for (uint32_t i = 0; i < 50; ++i)
+                    yield();
+                    cpu::delayMs(1);
+                }
+            }
         }
 
         void sleep() {
@@ -518,6 +525,10 @@ namespace rckid::hal {
 
         TinyDateTime now() {
             return internal::time::now;
+        }
+
+        void setTime(TinyDateTime dt) {
+            i2c::sendAvrCommand(cmd::SetTime{dt});
         }
 
     } // namespace rckid::hal::time

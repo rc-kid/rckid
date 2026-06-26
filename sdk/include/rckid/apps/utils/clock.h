@@ -5,6 +5,9 @@
 #include <rckid/ui/image.h>
 #include <rckid/ui/style.h>
 
+#include <rckid/apps/dialogs/date_dialog.h>
+#include <rckid/apps/dialogs/time_dialog.h>
+
 #include <assets/OpenDyslexic128.h>
 #include <assets/OpenDyslexic64.h>
 
@@ -66,6 +69,8 @@ namespace rckid {
                 root_.flyOut();
                 waitUntilIdle();
             }
+            if (btnPressed(Btn::Select))
+                contextMenu();
             TinyDateTime t = time::now();
 
             h_->setText(STR(fillLeft(t.time.hour(), 2, '0')));
@@ -74,6 +79,30 @@ namespace rckid {
             colon_->setVisibility(t.time.second() & 1);
             date_->setText(STR(t.date.day() << "/" << t.date.month() << "/" << t.date.year()));
 
+        }
+
+        void contextMenu() {
+            ui::Menu popup_;
+            popup_ 
+                << ui::MenuItem("Set Date", assets::icons_16::plus, [this]() {
+                    auto date = App::run<DateDialog>(time::now().date);
+                    if (date) {
+                        TinyDateTime t = time::now();
+                        t.date = date.value();
+                        hal::time::setTime(t);
+                    }
+                })
+                << ui::MenuItem("Set Time", assets::icons_16::plus, [this]() {
+                    auto time = App::run<TimeDialog>(time::now().time);
+                    if (time) {
+                        TinyDateTime t = time::now();
+                        t.time = time.value();
+                        hal::time::setTime(t);
+                    }
+                });
+            auto action = App::run<PopupMenu>(popup_);
+            if (action)
+                action.value()->action()();
         }
 
     private:

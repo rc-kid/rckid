@@ -208,7 +208,7 @@ Polish
 
 - when stack protection fails, it will fail in the error code as well forever, update stack on device, do new thread on rckid? 
 
-- fix/check device fatal eror & stack protection
+- fix/check device fatal error & stack protection
 
 - add events for getting icon for files & on file selected for file browser
 - add actions for file browser such as rename, copy, mkdir, etc.  
