@@ -289,14 +289,9 @@ namespace rckid::internal {
             Codec::initialize();
             Codec::reset();
             Codec::powerUp();
-            // set initial volume settings
-            //Codec::setVolumeSpeaker(io::avrState_.audio.volumeSpeaker());
-            //Codec::setVolumeHeadphones(io::avrState_.audio.volumeHeadphones());
-
             // initialize headphones pin as input, no pullups
             gpio::setAsInput(RP_PIN_HEADSET_DETECT);
-
-        }
+       }
 
     }
 
@@ -668,11 +663,15 @@ namespace rckid::hal {
     namespace audio {
 
         void setVolumeHeadphones(uint8_t value) {
-            Codec::setVolumeHeadphones(value >> 2);
+            if (value > 15)
+                value = 15;
+            Codec::setVolumeHeadphones((value << 2) | (value & 3));
         }
 
         void setVolumeSpeaker(uint8_t value) {
-            Codec::setVolumeSpeaker(value >> 2);
+            if (value > 15)
+                value = 15;
+            Codec::setVolumeSpeaker((value << 2) | (value & 3));
         }
 
         void play(uint32_t sampleRate, Callback cb) {

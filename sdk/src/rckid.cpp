@@ -139,6 +139,9 @@ namespace rckid {
         LOG(LL_INFO, "Brightness " << settings.display.brightness);
         hal::display::setBrightness(settings.display.brightness);
 
+        // set default volume headphones
+        hal::audio::setVolumeHeadphones(settings.audio.volumeHeadphones);
+        hal::audio::setVolumeSpeaker(settings.audio.volumeHeadphones);
 
         // set the keyboard effect (if any)
         rgb::setKeyboardEffect(settings.rgb.effect, settings.rgb.color);

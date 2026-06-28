@@ -464,10 +464,14 @@ namespace rckid::hal {
     namespace audio {
 
         void setVolumeHeadphones(uint8_t value) {
+            if (value > 15)
+                value = 15;
             internal::audio::volume = value;
         }
 
         void setVolumeSpeaker(uint8_t value) {
+            if (value > 15)
+                value = 15;
             internal::audio::volume = value;
         }
 

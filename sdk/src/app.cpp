@@ -20,7 +20,8 @@ namespace rckid {
         if (btnPressed(Btn::VolumeUp))
             audio::setVolume(audio::volume() + 1);
         if (btnPressed(Btn::VolumeDown))
-            audio::setVolume(audio::volume() - 1);
+            if (audio::volume() > 0)
+                audio::setVolume(audio::volume() - 1);
     }
 
     unique_ptr<ui::Menu> App::homeMenu() {
