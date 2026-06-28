@@ -25,6 +25,9 @@
 
 #include <rckid/apps/games/blocks.h>
 
+
+#include <rckid/apps/audio/recorder.h>
+
 #include <rckid/apps/launcher.h>
 
 
@@ -249,6 +252,9 @@ namespace rckid {
     unique_ptr<ui::Menu> debugMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();
         (*result)
+            << ui::MenuItem{"Recorder", assets::icons_64::poo, []() {
+                App::run<Recorder>();
+            }}
             << ui::MenuItem{"HW Status", assets::icons_64::gameboy, []() {
                 App::run<HWStatus>();
             }}
