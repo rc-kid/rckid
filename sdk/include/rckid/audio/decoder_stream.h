@@ -16,16 +16,23 @@ namespace rckid::audio {
         virtual uint32_t sampleRate() const = 0;
 
         void update() {
+            if (done_)
+                return;
             for (uint32_t i = 0, e = playbackBuffer_.numBuffers(); i < e; ++i) {
                 Buffer<int16_t> * buffer = playbackBuffer_.nextFree();
                 if (buffer == nullptr)
                     break;
                 buffer->setUsed(refillSamples(buffer->data(), playbackBuffer_.size() / 2));
                 // break prematurely, if use bytes in the buffer is 0 (we are done decoding)
-                if (buffer->used() == 0)
+                if (buffer->used() == 0) {
+                    done_ = true;
+                    // but still commit the buffer as silence so that we can ensure we'll play the whole stream
+                    // TODO
                     break;
+                }
                 playbackBuffer_.markReady(buffer);
             }
+
         }
 
         void callback(int16_t * & buffer, uint32_t & numStereoSamples) {
@@ -55,6 +62,7 @@ namespace rckid::audio {
     private:
 
         MultiBuffer<int16_t> playbackBuffer_;
+        bool done_ = false;
 
     }; // rckid::audio::DecoderStream
 

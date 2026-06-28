@@ -38,10 +38,8 @@ namespace rckid::audio {
             uint32_t res = 0;
             while (res == 0) {
                 res = decodeNextFrame(buffer);
-                if ((res == 0) && eof()) {
-                    //audioStop();
-                    return res / 2;
-                }
+                if ((res == 0) && eof())
+                    return 0;
             }
             int32_t crc = 0;
             for (uint32_t i = 0; i < res; ++i)

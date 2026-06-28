@@ -232,8 +232,12 @@ namespace rckid::internal {
             void update() {
                 if (Codec::isPlaybackI2S()) {
                     callback(buffer, stereoSamples);
-                    dma_channel_set_read_addr(channel, buffer, false);
-                    dma_channel_set_trans_count(channel, stereoSamples, false);
+                    if (buffer == nullptr) {
+                        hal::audio::stop();
+                    } else {
+                        dma_channel_set_read_addr(channel, buffer, false);
+                        dma_channel_set_trans_count(channel, stereoSamples, false);
+                    }
                 } else {
                     ASSERT(Codec::isRecordingI2S());
                     callback(buffer, stereoSamples);
