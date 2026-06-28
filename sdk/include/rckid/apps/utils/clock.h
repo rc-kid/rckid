@@ -89,7 +89,7 @@ namespace rckid {
                     if (date) {
                         TinyDateTime t = time::now();
                         t.date = date.value();
-                        hal::time::setTime(t);
+                        time::setTime(t);
                     }
                 })
                 << ui::MenuItem("Set Time", assets::icons_16::plus, [this]() {
@@ -97,7 +97,7 @@ namespace rckid {
                     if (time) {
                         TinyDateTime t = time::now();
                         t.time = time.value();
-                        hal::time::setTime(t);
+                        time::setTime(t);
                     }
                 });
             auto action = App::run<PopupMenu>(popup_);

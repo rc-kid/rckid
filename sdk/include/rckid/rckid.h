@@ -113,6 +113,10 @@ namespace rckid {
          */
         TinyDateTime now();
 
+        /** Sets the current date & time.
+         */
+        void setTime(TinyDateTime dt);
+
     } // namespace time
 
 

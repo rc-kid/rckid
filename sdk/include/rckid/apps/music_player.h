@@ -164,7 +164,7 @@ namespace rckid {
 
         void loop() override {
             ui::App<void>::loop();
-                if (playlist_ == nullptr) {
+            if (playlist_ == nullptr) {
                 // when file is selected, simply ensure that the playlist is created and start the playback. This will call the action via next
                 if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                     btnClear(Btn::A);

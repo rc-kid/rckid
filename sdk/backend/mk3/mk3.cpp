@@ -53,10 +53,6 @@ namespace rckid::internal {
 
     }
 
-    namespace time {
-        TinyDateTime now;
-    } // namespace rckid::internal::time
-
     namespace io {
 
         DeviceState state;
@@ -70,7 +66,6 @@ namespace rckid::internal {
 
         void initialize() {
             // read the full state first
-            constexpr uint32_t TS_SIZE = sizeof(TransferrableState) - 1024;
             TransferrableState ts;
             int n = i2c_read_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, (uint8_t *) & ts, TS_SIZE, false);
             if (n != TS_SIZE)
@@ -79,7 +74,6 @@ namespace rckid::internal {
                 FATAL_ERROR("AVR VERSION", ts.version);
             // the data received is correct, initialize own structures
             state = ts.state;
-            time::now = ts.time;
             LOG(LL_INFO, "AVR version:    " << ts.version);
             LOG(LL_INFO, "Device uptime:  " << ts.uptime);
             LOG(LL_INFO, "Wakeup reason:  " << ts.wakeupReason);
@@ -547,7 +541,17 @@ namespace rckid::hal {
         }
 
         TinyDateTime now() {
-            return internal::time::now;
+            TinyDateTime result;
+            i2c::enqueue([& result](int32_t){
+                TransferrableState ts;
+                int n = i2c_read_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, (uint8_t *) & ts, TS_SIZE, false);
+                if (n != TS_SIZE)
+                    FATAL_ERROR("AVR READ", n);
+                if (ts.version != RCKID_AVR_FIRMWARE_VERSION)
+                    FATAL_ERROR("AVR VERSION", ts.version);
+                result = ts.time;
+            });
+            return result;
         }
 
         void setTime(TinyDateTime dt) {

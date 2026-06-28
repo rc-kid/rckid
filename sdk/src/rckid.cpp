@@ -265,6 +265,11 @@ namespace rckid {
         TinyDateTime now() {
             return now_;
         }
+
+        void setTime(TinyDateTime dt) {
+            now_ = dt;
+            hal::time::setTime(dt);
+        }
     } // namespace rckid::time
 
     // debug
@@ -551,16 +556,8 @@ namespace rckid {
             while (hal::display::updateActive())
                 yield();
         }
-        // infinite loop so that we never return, repeat the error message as long as needed
-        uint64_t next = time::uptimeUs() + 1000000;
-        while (true) {
-            /*
-            if (time::uptimeUs() >= next) {
-                next += 1000000;
-                LOG(LL_ERROR, "Fatal error at " << file << ":" << line << "\n" << msg << " (payload " << payload << ")");
-            }
-                */
+        // infinite loop so that we never return
+        while (true)
             yield();
-        }
     }
 }

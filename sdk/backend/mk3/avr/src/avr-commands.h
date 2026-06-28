@@ -8,6 +8,7 @@ namespace rckid {
 
     class TransferrableState {
     public:
+
         DeviceState state;
         uint32_t wakeupReason = 0;
         uint32_t wakeupCounter = 0;
@@ -18,6 +19,9 @@ namespace rckid {
         bool debugUart = true;
         uint8_t storage[1024];
     } __attribute__((packed));
+
+    constexpr uint32_t TS_SIZE = sizeof(TransferrableState) - 1024;
+
 
 } // namespace rckid
 
