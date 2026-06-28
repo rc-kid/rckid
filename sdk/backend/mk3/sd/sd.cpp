@@ -289,7 +289,7 @@ namespace rckid::internal::sd {
         return true;
     }
 
-    void sdAdjustSpeed() {
+    void adjustSpeed() {
         pio_sm_set_enabled(RCKID_SD_PIO, spiSm_, false);
         pio_sm_set_clock_speed(RCKID_SD_PIO, spiSm_, RCKID_SD_SPI_SPEED * RCKID_SD_SPI_SPEED_MULTIPLIER);
         pio_sm_set_enabled(RCKID_SD_PIO, spiSm_, true);

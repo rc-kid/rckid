@@ -49,6 +49,8 @@ namespace rckid::internal {
         // set to true once we have debugging cpability (otherwise if there were debugging prints in static initializations, they crash the device)
         volatile bool debugReady = false;
 
+        PowerMode powerMode = PowerMode::Normal;
+
     }
 
     namespace time {
@@ -211,6 +213,10 @@ namespace rckid::internal {
             LOG(LL_INFO, "dma: " << dmaChannel);
             // enter update mode for full screen 320x240 col-first (native) 
             enterUpdateMode();
+        }
+
+        void adjustSpeed() {
+            pio_sm_set_clock_speed(RCKID_ST7789_PIO, sm, RCKID_ST7789_SPEED * 4);
         }
     }
 
@@ -417,7 +423,29 @@ namespace rckid::hal {
         }
 
         void setPowerMode(PowerMode mode) {
-            UNIMPLEMENTED;
+            if (internal::device::powerMode == mode)
+                return;
+            // make sure all peripherals that are speed dependent are not actively used
+            rckid::display::waitUpdateDone();
+            // switch the clock speed
+            switch (mode) {
+                case PowerMode::Normal:
+                    if (! set_sys_clock_khz(150000, true))
+                        return;
+                    break;
+                case PowerMode::Boost:
+                    if (! set_sys_clock_khz(250000, true))
+                        return;
+                    break;
+                default:
+                    UNREACHABLE;
+            }
+            // set mode
+            internal::device::powerMode = mode;
+            // readjust clock rate for HW systems that require it
+            Codec::adjustSpeed();
+            internal::display::adjustSpeed();
+            internal::sd::adjustSpeed();
         }
 
         void setDebugMode(bool value) {

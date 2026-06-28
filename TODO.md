@@ -14,6 +14,7 @@
 - uart is wrong because the pins available on cartridge are only uart0, which is already used by the serial out. Can be fixed by making RP_TX pin 8 (instead of SD_CD), which is UART1
 - audio codec GPIO1 should have test point
 - verify GPIO1 is tied to ground when not used, or set output to GND
+- use the old side buttons, but mount at the top? they feel better and I can replace them if faulty
 
 # MK3.2 Issues
 
