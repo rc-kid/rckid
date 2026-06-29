@@ -74,6 +74,7 @@ namespace rckid {
                 << ChangeFg(colon_, Color::Black(), Color::White())
                 << ChangeFg(D_, Color::Black(), Color::White())
                 << ChangeFg(o_, Color::Black(), Color::White());
+            hal::display::setBrightness(128);
         }
 
         void loop() override {

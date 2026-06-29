@@ -27,6 +27,8 @@
 #include <rckid/memory.h>
 #include <rckid/graphics/color.h>
 
+#include <rckid/apps/splashscreen.h>
+
 #include "i2c.h"
 #include "tusb_config.h"
 #include "tusb.h"
@@ -124,6 +126,8 @@ namespace rckid::internal {
             DeviceState ds;
             i2c::getTransactionResponse(reinterpret_cast<uint8_t*>(&ds), sizeof(DeviceState));
             state.updateWith(ds);
+            // determine the headphones
+            state.setHeadphonesConnected(gpio::read(RP_PIN_HEADSET_DETECT) == true);
         }
 
         void updateAccelStatus(int32_t numBytes) {
@@ -326,6 +330,29 @@ namespace rckid::internal {
         }
     }
 
+    void initializeDrivers() {
+        LOG(LL_INFO, "Initializing drivers");
+
+        internal::audio::initialize();
+
+        // initialize the SD card, if present and the filesystem module
+        internal::sd::initialize();
+        internal::sd::initializeCard();
+        rckid::fs::initializeFilesystem();
+
+
+
+
+
+
+        // old not sure if we need in this reqrite
+
+        // enable GPIO IRQ
+        //irq_set_enabled(IO_IRQ_BANK0, true);
+
+
+    }
+
 } // namespace rckid::internal
 
 extern "C" {
@@ -388,30 +415,17 @@ namespace rckid::hal {
 
             // enable the screen
             internal::display::initialize();
-
             // enable the async I2C driver 
             i2c::initialize();
             // initalize the IO module (talk to the AVR)
             internal::io::initialize();
 
-            internal::audio::initialize();
+            App::run<SplashScreen>(internal::initializeDrivers);
 
-            // initialize the SD card, if present and the filesystem module
-            internal::sd::initialize();
-            internal::sd::initializeCard();
-            rckid::fs::initializeFilesystem();
-
-
-
-
-
-
-            // old not sure if we need in this reqrite
-
-            // enable GPIO IRQ
-            //irq_set_enabled(IO_IRQ_BANK0, true);
-
-
+            // reset the background now that we have initialized the card, etc
+            // TODO this is likely too hacky and should be automatic-ish
+            ui::RootWidget::releaseResources();
+            ui::Style::clearDefaultStyle();
             LOG(LL_INFO, "Init done");
         }
 
@@ -572,8 +586,6 @@ namespace rckid::hal {
             // acknowledge the power off iterrupt when the state has been requested. We do this on state request, not state read, to ensure that it's reset only when the user code running, not the core driver is inspecting the state
             if (result.powerOffInterrupt())
                 i2c::sendAvrCommand(cmd::PowerOffAck());
-            // determine the headphones
-            result.setHeadphonesConnected(gpio::read(RP_PIN_HEADSET_DETECT) == 0);
             return result;
         }
 

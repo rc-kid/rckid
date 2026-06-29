@@ -46,6 +46,12 @@ namespace rckid::ui {
             backgroundImage_ = std::move(img);
         }
 
+        // TODO a hack
+        static void clearDefaultStyle() {
+            delete defaultStyle_;
+            defaultStyle_ = nullptr;
+        }
+
     private:
         static constexpr char const * STYLE_SETTINGS_FILE = "style2.ini";
 

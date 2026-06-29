@@ -37,6 +37,9 @@ So what I need:
 
 # SDK 1.0
 
+- mp3 playback often stops on mkIII
+- and reading images from SD card also seems to be buggy in a weird way
+
 - cartridgeWrite ignores numBytes, check and determine why!
 
 - remove debug mode by default when AVR power on

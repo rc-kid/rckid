@@ -296,6 +296,7 @@ namespace rckid::fs {
 #ifndef RCKID_CUSTOM_FILESYSTEM
 
     void initializeFilesystem() {
+        LOG(LL_INFO, "Initializing filesystem");
         memset(& lfs_, 0, sizeof(lfs_t));
         memset(& lfsCfg_, 0, sizeof(lfs_config));
         // initialize LittleFS settings for the cartridge
@@ -365,10 +366,12 @@ namespace rckid::fs {
                 }
                 fs_ = new FATFS();
                 if (f_mount(fs_, "", /* mount immediately */ 1) != FR_OK) {
+                    LOG(LL_ERROR, "Error mounting SD card");
                     delete fs_;
                     fs_ = nullptr;
                     return false;
                 }
+                LOG(LL_INFO, "SD card mounted");
                 return true;
             case Drive::Cartridge:
                 if (lfs_.cfg == & lfsCfg_) {
