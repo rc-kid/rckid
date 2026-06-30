@@ -217,7 +217,7 @@ extern "C" {
         Application update block count and block size. 
     */
     void tud_msc_capacity_cb([[maybe_unused]] uint8_t lun, uint32_t* block_count, uint16_t* block_size) {
-        *block_count = rckid::hal::fs::sdCapacityBlocks();
+        *block_count = rckid::DataSync::partitionSize();
         *block_size  = 512;
     }
 
@@ -244,6 +244,7 @@ extern "C" {
     */
     int32_t tud_msc_read10_cb([[maybe_unused]] uint8_t lun, uint32_t lba, uint32_t offset, void* buffer, uint32_t bufsize) {
         // out of disk
+        lba += DataSync::partitionStart();
         if (lba >= rckid::hal::fs::sdCapacityBlocks()) 
             return -1;
         if (bufsize != 512)
@@ -260,7 +261,8 @@ extern "C" {
         Process data in buffer to disk's storage and return number of written bytes
     */
     int32_t tud_msc_write10_cb([[maybe_unused]] uint8_t lun, uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_t bufsize) {
-        // out of ramdisk
+        // out of disk
+        lba += DataSync::partitionStart();
         if (lba >= rckid::hal::fs::sdCapacityBlocks()) 
             return -1;
         if (bufsize != 512)

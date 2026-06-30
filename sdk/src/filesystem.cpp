@@ -100,6 +100,26 @@ namespace rckid::fs {
         lfs_config lfsCfg_;
     } // anonymous namespace
 
+    namespace internal {
+
+        /** Returns the start of the partition (in 512 byte sectors), useful for sharing only the partition, not MBR via USB. 
+         */
+        uint32_t fatPartitionStart() { 
+            if (fs_ == nullptr)
+                return 0;
+            return fs_->volbase;
+        }
+
+        /** Returns the size of the partition, useful for sharing only the partition (in 512 byte sectors), not MBR via USB. 
+         */
+        uint32_t fatPartitionSize() {
+            if (fs_ == nullptr)
+                return 0;
+            return (fs_->n_fatent - 2) * (fs_->csize);
+        }
+
+    } // namespace rckid::fs::internal
+
     class FatFSFileReader : public RandomReadStream {
     public:
 
@@ -372,6 +392,13 @@ namespace rckid::fs {
                     return false;
                 }
                 LOG(LL_INFO, "SD card mounted");
+                LOG(LL_INFO, "  Type:    " << fs_->fs_type);
+                LOG(LL_INFO, "  CSize:   " << fs_->csize);
+                LOG(LL_INFO, "  NFatEnt: " << fs_->n_fatent);
+                LOG(LL_INFO, "  FSize:   " << fs_->fsize);
+                LOG(LL_INFO, "  Volbase: " << fs_->volbase);
+                LOG(LL_INFO, "  Fatbase: " << fs_->fatbase);
+                LOG(LL_INFO, "  Dirbase: " << fs_->dirbase);
                 return true;
             case Drive::Cartridge:
                 if (lfs_.cfg == & lfsCfg_) {

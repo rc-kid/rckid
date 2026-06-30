@@ -86,7 +86,6 @@ Settings
 
 Basic util apps:
 - level
-- data sync (mk3 overhaul, sharing only the FAT partition, not the whole MBR)
 
 Games (port from mkII)
 - sound in tetris
