@@ -96,6 +96,7 @@ static uint16_t _desc_str[32];
 extern "C" {
     void tud_mount_cb(void) {
         LOG(LL_INFO, "USB connected");
+        rckid::DataSync::connect();
     }
 
     void tud_umount_cb(void) {

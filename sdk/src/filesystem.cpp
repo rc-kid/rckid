@@ -398,8 +398,9 @@ namespace rckid::fs {
                 lfs_unmount(&lfs_);
                 lfs_.cfg = nullptr;
                 break;
+            default:
+                UNREACHABLE;
         }
-        UNREACHABLE;
     }
 
     uint64_t getCapacity(Drive dr) {

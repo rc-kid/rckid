@@ -41,7 +41,11 @@ namespace rckid {
             fs::mount(fs::Drive::SD);
             // TODO check also the SD card inserted pin
             if (fs::isMounted()) {
-                info_->setText(STR("SD card: " << hal::fs::sdCapacityBlocks() / 2 / 1024 << "MB, label " << fs::getLabel()));
+                String label = fs::getLabel();
+                info_->setText(STR(
+                    (label.empty() ? "SD card" : label.c_str())
+                    << ", " << hal::fs::sdCapacityBlocks() / 2 / 1024 << "MB"
+                ));
                 fs::unmount();
                 connected_ = false;
                 instance_ = this;
@@ -106,6 +110,10 @@ namespace rckid {
                 waitUntilIdle();
                 exit();
             }
+            if (connected_)
+                status_->setText(STR("Connected (R: " << blocksRead_ << ", W: " << blocksWrite_ << ")"));
+            else
+                status_->setText("Disconnected");
         }
 
         ui::Image * icon_ = nullptr;
