@@ -22,7 +22,10 @@ namespace rckid::audio {
             skipID3v2Tags();
             // get next frame infor for sample rate
             int32_t sw = ensureFrameInBuffer();
-            err_ = MP3GetNextFrameInfo(dec_, &fInfo_, buffer_ + sw);
+            if (sw >= 0)
+                err_ = MP3GetNextFrameInfo(dec_, &fInfo_, buffer_ + sw);
+            else
+                err_ = sw;
         }
 
         MP3DecoderStream(MP3DecoderStream const &) = delete;
@@ -79,6 +82,9 @@ namespace rckid::audio {
                     if (tagSize > bufferSize_) {
                         tagSize -= bufferSize_;
                         bufferSize_ = in_->read(buffer_, MP3_BUFFER_SIZE);
+                        // this is eof, there is nothing more, return
+                        if (bufferSize_ == 0)
+                            return;
                     } else {
                         // tag is fully in the buffer
                         memmove(buffer_, buffer_ + tagSize, bufferSize_ - tagSize);
@@ -159,6 +165,10 @@ namespace rckid::audio {
                             continue;
                         return 0;
                     default:
+                        // on any other error, we should advance past the frame. 
+                        removeConsumedBytes(buf, remaining);
+                        refillBuffer();
+                        sw = MP3FindSyncWord(buffer_, bufferSize_);
                         break;
                 }
                 ++frameErrors_;

@@ -39,6 +39,7 @@ namespace rckid::audio {
         }
 
         bool next() {
+            audio::stop();
             currentStream_ = playlist_->next();
             if (currentStream_ == nullptr)
                 return false;
@@ -47,6 +48,7 @@ namespace rckid::audio {
         }
 
         bool prev() {
+            audio::stop();
             currentStream_ = playlist_->prev();
             if (currentStream_ == nullptr)
                 return false;

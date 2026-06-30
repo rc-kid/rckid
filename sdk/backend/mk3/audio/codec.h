@@ -155,6 +155,7 @@ namespace rckid {
             // enable the audio jack detection or GPIO2 and automatic headphone & speaker switching, corresponding to high (pulled up) on no jack and low (connected to ground through 220k resistor) on jack connected
             // TODO do not do this yet, want to see headphones for testing purposes
             setRegister(REG_JACK_DETECT_1, JCKDEN | JCKDIO2);
+            // TODO move back
             setRegister(REG_JACK_DETECT_2, JCKDOEN0_SPEAKER | JCKDOEN1_HEADPHONES);
             activeSm_ = -1;
         }
