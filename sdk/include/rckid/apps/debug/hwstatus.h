@@ -38,7 +38,7 @@ namespace rckid {
             tg_->text(27, 1) << (btnDown(Btn::Select) ? "Sel " : "    ");
             tg_->text(31, 1) << (btnDown(Btn::Start) ? "Start " : "      ");
 
-            Point3D acc = hal::io::accelerometerState();
+            Point3D acc = accel();
             tg_->text(15, 2) << "X: " << acc.x << "    ";
             tg_->text(15, 3) << "Y: " << acc.y << "    ";
             tg_->text(15, 4) << "Z: " << acc.z << "    ";

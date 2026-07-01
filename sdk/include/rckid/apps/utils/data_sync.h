@@ -19,7 +19,7 @@ namespace rckid {
     class DataSync : public ui::App<void> {
     public:
 
-        virtual String name() const override { return "Data Sync"; }
+        String name() const override { return "Data Sync"; }
 
         DataSync();
 

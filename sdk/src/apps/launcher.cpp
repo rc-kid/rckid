@@ -15,6 +15,7 @@
 #include <rckid/apps/utils/flashlight.h>
 #include <rckid/apps/utils/piggy_bank.h>
 #include <rckid/apps/utils/calculator.h>
+#include <rckid/apps/utils/level.h>
 
 #include <rckid/apps/debug/hwstatus.h>
 #include <rckid/apps/debug/bootloader.h>
@@ -94,9 +95,11 @@ namespace rckid {
             << ui::MenuItem{"Flashlight", assets::icons_64::flashlight, []() {
                 App::run<Flashlight>();
             }}
-            // TODO replace with a dedicated calculator/keypad icon.
             << ui::MenuItem{"Calculator", assets::icons_64::calculator, []() {
                 App::run<Calculator>();
+            }}
+            << ui::MenuItem{"Level", assets::icons_64::level, []() {
+                App::run<Level>();
             }}
             << ui::MenuItem{"Steps", assets::icons_64::footprint, []() {
                 App::run<Steps>();

@@ -11,6 +11,12 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/calculator.inc.h"
     };
 
+    // File: icons/icons_64/083-level.png
+    // Size: 2821
+    static constexpr uint8_t level[] = {
+        #include "raw/icons_64/level.inc.h"
+    };
+
     // File: icons/icons_64/008-high-volume.raw
     // Size: 8196
     static constexpr uint8_t high_volume[] = {

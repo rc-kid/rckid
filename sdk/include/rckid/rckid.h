@@ -72,6 +72,8 @@ namespace rckid {
      */
     void btnClearAll();
 
+    inline Point3D accel() { return hal::io::accelerometerState(); }
+
     /** Power management functions & monitoring. 
      */
     namespace power {

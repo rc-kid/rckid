@@ -37,11 +37,9 @@ So what I need:
 
 # SDK 1.0
 
-- determine SD speed and how fast can I go? 
-- only right channel works (!!!!!)
+- launcher payload that moves menu down hangs on device
 
-- mp3 playback often stops on mkIII
-- and reading images from SD card also seems to be buggy in a weird way
+- determine SD speed and how fast can I go? 
 
 - cartridgeWrite ignores numBytes, check and determine why!
 
