@@ -3,6 +3,8 @@
 #include <rckid/ui/app.h>
 #include <rckid/ui/label.h>
 #include <rckid/ui/image.h>
+#include <rckid/apps/dialogs/popup_menu.h>
+
 #include <assets/Iosevka24.h>
 
 namespace rckid {
@@ -50,6 +52,20 @@ namespace rckid {
                 waitUntilIdle();
                 root_.flyOut();
                 waitUntilIdle();
+            }
+            if (btnPressed(Btn::Select)) {
+                PopupMenu::run(
+                    debug::debugMode() ? 
+                        ui::MenuItem("Leave Debug Mode", assets::icons_16::phone, [](){
+                            debug::setDebugMode(false);
+                            InfoDialog::info("Debug mode", "Debug mode disabled");
+                        })                    
+                    : 
+                        ui::MenuItem("Enter Debug Mode", assets::icons_16::phone, [](){
+                            debug::setDebugMode(true);
+                            InfoDialog::info("Debug mode", "Debug mode enabled");
+                        })
+                );
             }
         }
 

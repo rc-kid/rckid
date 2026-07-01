@@ -36,6 +36,12 @@ namespace rckid {
     class Launcher : public ui::App<void> {
     public:
 
+        /** Tells the launcher that given action should also result in moving the menu down one level.
+         
+            This is useful for menu items that are just selections from a set of options.
+         */
+        static constexpr uint32_t PAYLOAD_MOVE_DOWN = 12345678;
+
         String name() const override { return "Launcher"; }
 
         Launcher(ui::MenuItem::GeneratorEvent rootMenuGenerator = mainMenuGenerator()) {
@@ -183,6 +189,8 @@ namespace rckid {
                 launch_ = true;
                 item->action()();
                 launch_ = false;
+                if (item->payload == PAYLOAD_MOVE_DOWN)
+                    carousel_->moveDown();
             }
             if (btnPressed(Btn::Start))
                 ASSERT(false);

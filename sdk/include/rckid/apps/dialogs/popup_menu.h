@@ -16,6 +16,27 @@ namespace rckid {
     class PopupMenu : public ui::App<ui::MenuItem*> {
     public:
 
+        /** Shorthand function for executing popup menu dialog and the selected action, if any. */
+        static bool run(ui::Menu * menu) {
+            auto action = App::run<PopupMenu>(menu);
+            if (action) {
+                action.value()->action()();
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        /** Shorthand function for running popup menu comprised of given items.
+         */
+        template <typename... Items>
+        static bool run(Items &&... items) {
+            ui::Menu m;
+            m.reserve(sizeof...(items));
+            (m.emplace_back(std::forward<Items>(items)), ...);
+            return run(& m);
+        }
+
         String name() const override { return "PopupMenu"; }
 
         PopupMenu(ui::Menu * menu):

@@ -310,6 +310,15 @@ namespace rckid {
             return result;
         }
 
+        bool debugMode() {
+            return state_.debugMode();
+        }
+
+        void setDebugMode(bool value) {
+            state_.setDebugMode(value);
+            hal::device::setDebugMode(value);
+        }
+
     } // namespace rckid::debug
 
     // display
@@ -357,7 +366,9 @@ namespace rckid {
         }
 
         void setVolume(uint8_t value) {
-            value = (value << 4) | value;
+            // limit volume to 0..15
+            if (value > 15)
+                value = 15;
             if (headphonesConnected()) {
                 settings.audio.volumeHeadphones = value;
                 hal::audio::setVolumeHeadphones(value);

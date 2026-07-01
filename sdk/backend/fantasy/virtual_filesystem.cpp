@@ -10,6 +10,15 @@ namespace rckid::fs {
 
     using namespace rckid::internal::memory;
 
+
+    /** Make the partition sharing functions for data sync return 0 for the virtual filesystem (data sync does not work in fantasy mode anyways)
+     */
+    namespace internal {
+        uint32_t fatPartitionStart() { return 0; } 
+        uint32_t fatPartitionSize() { return 0; }
+    } // namespace rckid::fs::internal
+
+
     bool sdMounted_ = false;
     bool cartridgeMounted_ = false;
     std::filesystem::path sdRoot_;

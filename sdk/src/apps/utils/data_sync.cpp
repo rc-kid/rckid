@@ -10,7 +10,6 @@ namespace rckid {
 
     } // namespace rckid::fs::internal
 
-
     DataSync::DataSync() {
         using namespace ui;
         icon_ = addChild(new Image())

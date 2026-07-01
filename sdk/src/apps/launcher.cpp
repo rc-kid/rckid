@@ -62,8 +62,10 @@ namespace rckid {
                     App::run<Drawing>(canvas.get());
                 }}
                 << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator)
-                << ui::MenuItem::Generator("Settings", assets::icons_64::settings, settingsMenuGenerator)
-                << ui::MenuItem::Generator("Debug", assets::icons_64::ladybug, debugMenuGenerator);
+                << ui::MenuItem::Generator("Settings", assets::icons_64::settings, settingsMenuGenerator);
+            if (debug::debugMode())
+                (*result)
+                    << ui::MenuItem::Generator("Debug", assets::icons_64::ladybug, debugMenuGenerator);
             return result;
         };
     }
@@ -263,7 +265,11 @@ namespace rckid {
             }}
             << ui::MenuItem{"Serial", assets::icons_64::microchip, []() {
                 App::run<SerialMonitor>();
-            }};
+            }}
+            << ui::MenuItem{"Leave", assets::icons_64::logout, []() {
+                debug::setDebugMode(false);  
+                // TODO and exit the debug menu
+            }}.withPayload(Launcher::PAYLOAD_MOVE_DOWN);
 
         return result;
     }

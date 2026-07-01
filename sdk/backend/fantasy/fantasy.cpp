@@ -253,6 +253,7 @@ namespace rckid::hal {
 
         void setDebugMode(bool value) {
             LOG(LL_INFO, "Debug mode: " << value);
+            internal::io::state.setDebugMode(value);
         }
 
         void setPowerMode([[maybe_unused]] PowerMode mode) {

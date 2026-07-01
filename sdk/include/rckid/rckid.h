@@ -142,6 +142,14 @@ namespace rckid {
 
         uint16_t readHex16();
 
+        /** Returns true if the device is in debug mode.
+         */
+        bool debugMode();
+
+        /** Enters of leaves debug mode.
+         */
+        void setDebugMode(bool value = true);
+
     }
 
     /** Display manipulation.
@@ -185,8 +193,14 @@ namespace rckid {
 
         bool headphonesConnected();
 
+        /** Returns current volume settings (0..15).
+         
+            The device remembers separate volume settings for headphones and speaker.
+         */
         uint8_t volume();
 
+        /** Sets current volume (0..15).
+         */
         void setVolume(uint8_t value);
 
         inline void play(uint32_t sampleRate, Callback cb) { hal::audio::play(sampleRate, cb); }

@@ -459,6 +459,7 @@ namespace rckid::hal {
             i2c::sendAvrCommand(cmd::SetDebugMode{value});
             if (value == false)
                 i2c::sendAvrCommand(cmd::SetUartDebug{false});
+            internal::io::state.setDebugMode(value);
         }
 
         /** Sends the immediate power off to AVR every 50ms waiting in between. This is to ensure that if the command is lost, it will be re-issued.

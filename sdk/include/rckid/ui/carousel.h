@@ -410,8 +410,10 @@ namespace rckid::ui {
         }
 
         void setItem(uint32_t index, Direction dir) {
-            if (menu_ == nullptr || index >= menu_->size())
+            if (menu_ == nullptr || menu_->empty())
                 return;
+            if (index >= menu_->size())
+                index = menu_->size() - 1;
             index_ = index;
             MenuItem & m = menu_->at(index_);
             set(m.text, m.icon, dir);

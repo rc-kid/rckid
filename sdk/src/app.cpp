@@ -17,11 +17,15 @@ namespace rckid {
             if (action.has_value())
                 action.value()();
         }
-        if (btnPressed(Btn::VolumeUp))
+        if (btnPressed(Btn::VolumeUp)) {
+            LOG(LL_INFO, "Volume up ");
             audio::setVolume(audio::volume() + 1);
-        if (btnPressed(Btn::VolumeDown))
+        }
+        if (btnPressed(Btn::VolumeDown)) {
+            LOG(LL_INFO, "Volume up ");
             if (audio::volume() > 0)
                 audio::setVolume(audio::volume() - 1);
+        }
     }
 
     unique_ptr<ui::Menu> App::homeMenu() {
