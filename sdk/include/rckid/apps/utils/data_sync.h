@@ -25,6 +25,7 @@ namespace rckid {
 
         ~DataSync() override {
             if (instance_ == this) {
+                LOG(LL_INFO, "Re-mounting SD card");
                 instance_ = nullptr;
                 fs::mount(fs::Drive::SD);
             }

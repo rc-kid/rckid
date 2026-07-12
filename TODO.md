@@ -8,7 +8,7 @@
 
 # MK3 HW
 
-- home button 0.3mm thinner
+- home button thickness tested at 1.3mm
 - volume down not centered properly
 - maybe enlarge the top plate a bit to fit properly in the slightly large nylon bottom. Or shrink the nylon?
 - uart is wrong because the pins available on cartridge are only uart0, which is already used by the serial out. Can be fixed by making RP_TX pin 8 (instead of SD_CD), which is UART1
@@ -36,6 +36,8 @@ So what I need:
 - descriptor/game object infrastructure for matching arguments of events should be added 
 
 # SDK 1.0
+
+- disable the PIM hack in ui_app after demo time
 
 - launcher payload that moves menu down hangs on device
 
