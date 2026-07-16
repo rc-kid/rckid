@@ -37,8 +37,6 @@ So what I need:
 
 # SDK 1.0
 
-- disable the PIM hack in ui_app after demo time
-
 - launcher payload that moves menu down hangs on device
 
 - determine SD speed and how fast can I go? 

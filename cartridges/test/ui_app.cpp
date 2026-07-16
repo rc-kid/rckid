@@ -115,9 +115,6 @@ private:
 
 int main() {
     rckid::initialize();
-    // TODO this is hack for presentation only, disable after we have proper PIM mode
-    if (rckid::pim::remainingBudget() < 1000)
-        rckid::pim::updateBudget(3600 * 5);
     //App::run<ChevronTest>();
     //App::run<TextDialog>("Hello");
     App::run<Launcher>(mainMenuGenerator({ .gamesExtender = gbcemu::GBCEmu::gamesMenuExtender }));

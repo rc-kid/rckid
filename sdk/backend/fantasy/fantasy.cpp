@@ -21,7 +21,7 @@
 #include "system_malloc_guard.h"
 
 #ifndef RCKID_DISPLAY_ZOOM
-    #define RCKID_DISPLAY_ZOOM 4
+    #define RCKID_DISPLAY_ZOOM 2
 #endif
 
 extern "C" {
