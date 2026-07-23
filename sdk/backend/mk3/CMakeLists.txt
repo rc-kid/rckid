@@ -16,6 +16,9 @@ pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/audio/i2s_out16.pi
 pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/audio/i2s_in16.pio)
 pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/audio/i2s_mclk.pio)
 pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/sd/sd_spi.pio)
+# JACDAC SWS implementation in pio
+pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/jacdac/sws_tx.pio)
+pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/jacdac/sws_rx.pio)
 
 # Sets given project to be used with RCKid SDK. 
 #

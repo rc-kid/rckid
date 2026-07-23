@@ -1,0 +1,17 @@
+; SWS Transmit
+; 
+; Used for JACDAC capability TX. The pio handles only the actual transmit, CPU handles the rest of the protocol. The sideset pin is used for debugging purposes only, useful for checking timing by allowing sync with a scope.
+;
+; Code adapted from https://github.com/lancaster-university/codal-rp2040/blob/master/inc/jacdac.pio
+
+
+.program sws_tx
+.side_set 1 opt
+
+    pull       side 1 [7]  ; Assert stop bit, or stall with line in idle state
+    set x, 7   side 0 [7]  ; Preload bit counter, assert start bit for 8 clocks
+bitloop:                   ; This loop will run 8 times (8n1 UART)
+    out pins, 1            ; Shift 1 bit from OSR to the first OUT pin
+    jmp x-- bitloop   [6]  ; Each loop iteration is 8 cycles.
+
+

@@ -1,6 +1,5 @@
 # Immediate Roadmap
 
-- once I have the prototypes, finish the v1.0 AVR and start experimenting with what I have on the device
 - this might be better button: https://jlcpcb.com/partdetail/ALPSALPINE-SKRABCE010/C19724057
 - figure out the side buttons if there are ones that can be soldered by jlcpcb and be better centered
 - this might be better speaker: https://cz.mouser.com/ProductDetail/Same-Sky/CMS-160903-18S-X8
@@ -19,7 +18,6 @@
 # MK3.2 Issues
 
 - headphone detect does not seem to be working
-- not all commands are sent properly & received (could be NACK on transaction when the past command is being processed still)
 
 # Ladder
 
@@ -161,6 +159,7 @@ Polish
 
 # TODO
 
+- can add JACDAC as both client *and* server - needs UART on the cartridge 
 - turn brightness *on* in avr forever and then try it looks like only problem when not DC connected
 - and only every second turn on is a problem
 
@@ -174,7 +173,6 @@ Polish
 - PNG decoder should change to use heap again as there is more chance to find the space in heap
 
 - rumblerOff does not actually turn the rumbler off
-- images for games
 
 - drawing preserves state like games
 - allow messages to send images
