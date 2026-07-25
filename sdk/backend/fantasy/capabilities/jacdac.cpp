@@ -2,12 +2,12 @@
 
 namespace rckid {
 
-    JACDAC * JACDAC::instance() {
+    Jacdac * Jacdac::instance() {
         // JACDAC is not supported in fantasy build
         return nullptr;
     }
 
-    void JACDAC::onTick() {
+    void Jacdac::onTick() {
         // nothing to do
     }
 

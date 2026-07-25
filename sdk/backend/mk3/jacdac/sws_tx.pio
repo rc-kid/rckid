@@ -15,3 +15,26 @@ bitloop:                   ; This loop will run 8 times (8n1 UART)
     jmp x-- bitloop   [6]  ; Each loop iteration is 8 cycles.
 
 
+%c-sdk {
+
+inline void sws_tx_program_init(PIO pio, uint sm, uint offset, uint txPin, uint sidePin = 0xffff) {
+    // claim the resources required for the continuous mode
+    pio_gpio_init(pio, txPin);
+    pio_sm_set_consecutive_pindirs(pio, sm, txPin, 1, true);
+    pio_sm_config c = sws_tx_program_get_default_config(offset);
+    sm_config_set_out_shift(&c, true, false, 32);
+    sm_config_set_out_pins(&c, txPin, 1);
+    if (sidePin != 0xffff) {
+        pio_gpio_init(pio, sidePin);
+        pio_sm_set_consecutive_pindirs(pio, sm, sidePin, 1, true);
+        sm_config_set_sideset_pins(&c, sidePin);
+    }
+    // sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+    // limit the size of the TX fifo - it's filled by DMA anyway and we have to busy-wait for it
+    // flush
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_NONE);
+    pio_sm_init(pio, sm, offset, &c);
+}
+
+
+%}
