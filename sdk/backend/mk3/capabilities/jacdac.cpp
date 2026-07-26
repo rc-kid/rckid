@@ -1,5 +1,6 @@
 #include <hardware/dma.h>
 
+#include <rckid/buffer.h>
 #include <rckid/capabilities/jacdac.h>
 
 #include <sws_rx.pio.h>
@@ -14,30 +15,46 @@
 
 #define JACDAC_PIN 19
 
-
 namespace rckid {
 
-    namespace {
-        Jacdac instance_;
-        int sm_;
-        unsigned txOffset_;
-        unsigned rxOffset_;
-        int dma_; 
+    struct JacdacImpl {
+        Jacdac jacdac;
+        int sm;
+        unsigned txOffset;
+        unsigned rxOffset;
+        int dma; 
+        volatile bool rxReady = false;
+        // double buffer for receiving messages, large enough to store two frames
+        DoubleBuffer<uint8_t> rxBuffer{sizeof(Jacdac::Frame)};
+    }; // JacdacImpl
 
+    namespace {
+        JacdacImpl * instance_;
 
         void __not_in_flash_func(jacdacRxDone)() {
             pio_interrupt_clear(JACDAC_PIO, 0);
-            // TODO we have completed the transfer (assuming it was a valid one, check the frame)
+            // by the time we get here we can assume that the DMA has transferred everything we need, no need to wait for anything. Store the size of the received frame in the back buffer
+            instance_->rxBuffer.back().setUsed(dma_hw->ch[instance_->dma].transfer_count);
+            // swap front & back buffers and set the rxReady flag (only if the front buffer is already processed)
+            if (instance_->rxReady == false) {
+                instance_->rxBuffer.swap();
+                instance_->rxReady = true;
+            } else {
+                // have t drop the back buffer
+            }
+            // restart the DMA to receive the next frame into the back buffer
+            dma_channel_transfer_to_buffer_now(instance_->dma, instance_->rxBuffer.back().data(), sizeof(Jacdac::Frame));
+            // TODO process the frame here perhaps? 
         }
 
     }; // anonynous namespace
 
 
     Jacdac * Jacdac::instance() {
-        return &instance_;
+        if (instance_ == nullptr)
+            instance_ = new JacdacImpl();
+        return & (instance_->jacdac);
     }
-
-
 
     void Jacdac::onTick() {
         UNREACHABLE; // this should never be called, all the functionality is in the JacdacImpl class
@@ -47,28 +64,28 @@ namespace rckid {
 
     void Jacdac::doEnable() {
         // claim sm and load programs, do not initialize the programs yet - we do that when we want to use them
-        sm_ = pio_claim_unused_sm(JACDAC_PIO, true);
-        txOffset_ = pio_add_program(JACDAC_PIO, &sws_tx_program);
-        rxOffset_ = pio_add_program(JACDAC_PIO, &sws_rx_program);
+        instance_->sm = pio_claim_unused_sm(JACDAC_PIO, true);
+        instance_->txOffset = pio_add_program(JACDAC_PIO, &sws_tx_program);
+        instance_->rxOffset = pio_add_program(JACDAC_PIO, &sws_rx_program);
         // get dma channel
-        dma_ = dma_claim_unused_channel(true);
+        instance_->dma = dma_claim_unused_channel(true);
     }
 
     void Jacdac::doDisable() {
 
-        pio_sm_set_enabled(JACDAC_PIO, sm_, false);
-        pio_remove_program(JACDAC_PIO, &sws_tx_program, txOffset_);
-        pio_remove_program(JACDAC_PIO, &sws_rx_program, rxOffset_);
-        pio_sm_unclaim(JACDAC_PIO, sm_);
-        dma_channel_unclaim(dma_);
+        pio_sm_set_enabled(JACDAC_PIO, instance_->sm, false);
+        pio_remove_program(JACDAC_PIO, &sws_tx_program, instance_->txOffset);
+        pio_remove_program(JACDAC_PIO, &sws_rx_program, instance_->rxOffset);
+        pio_sm_unclaim(JACDAC_PIO, instance_->sm);
+        dma_channel_unclaim(instance_->dma);
 
     }
 
 
     bool Jacdac::doSend(uint8_t const * data, uint32_t numBytes) {
         // stop any ongoing transfers
-        pio_sm_set_enabled(JACDAC_PIO, sm_, false);
-        dma_channel_abort(dma_);
+        pio_sm_set_enabled(JACDAC_PIO, instance_->sm, false);
+        dma_channel_abort(instance_->dma);
         // wait for the pio to be idle, i.e. high
         // TODO this is wrong, the bus is idle when high consecutively for larger period of time
         gpio::setAsInput(JACDAC_PIN);
@@ -81,21 +98,21 @@ namespace rckid {
         gpio::setAsInput(JACDAC_PIN);
         cpu::delayUs(49);
         // initialize the DMA to send the data to the PIO
-        dma_channel_config c = dma_channel_get_default_config(dma_);
+        dma_channel_config c = dma_channel_get_default_config(instance_->dma);
         channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
-        channel_config_set_dreq(&c, pio_get_dreq(JACDAC_PIO, sm_, true));
+        channel_config_set_dreq(&c, pio_get_dreq(JACDAC_PIO, instance_->sm, true));
         channel_config_set_read_increment(&c, true);
         channel_config_set_write_increment(&c, false);
-        dma_channel_configure(dma_, &c, &JACDAC_PIO->txf[sm_], NULL, 0, false);
-        dma_channel_transfer_from_buffer_now(dma_, data, numBytes);
+        dma_channel_configure(instance_->dma, &c, &JACDAC_PIO->txf[instance_->sm], NULL, 0, false);
+        dma_channel_transfer_from_buffer_now(instance_->dma, data, numBytes);
         // start the PIO
-        sws_tx_program_init(JACDAC_PIO, sm_, txOffset_, JACDAC_PIN);
-        pio_sm_set_clock_speed(JACDAC_PIO, sm_, 8 * JACDAC_BAUDRATE);
-        pio_sm_set_enabled(JACDAC_PIO, sm_, true);
+        sws_tx_program_init(JACDAC_PIO, instance_->sm, instance_->txOffset, JACDAC_PIN);
+        pio_sm_set_clock_speed(JACDAC_PIO, instance_->sm, 8 * JACDAC_BAUDRATE);
+        pio_sm_set_enabled(JACDAC_PIO, instance_->sm, true);
         // wait for the DMA to finish and the PIO to be idle
-        while (! pio_sm_is_stalled(JACDAC_PIO, sm_))
+        while (! pio_sm_is_stalled(JACDAC_PIO, instance_->sm))
             ;
-        pio_sm_set_enabled(JACDAC_PIO, sm_, false);
+        pio_sm_set_enabled(JACDAC_PIO, instance_->sm, false);
         // send the final BRK
         gpio::outputHigh(JACDAC_PIN);
         cpu::delayUs(1);
@@ -107,30 +124,28 @@ namespace rckid {
         return true;
     }
 
-    void Jacdac::doReceive(uint8_t * data, uint32_t maxBytes, void (*callback)(uint8_t const * data, uint32_t numBytes)) {
-        ASSERT(callback != nullptr);
-        ASSERT(maxBytes >= sizeof(Frame));
+    void Jacdac::doReceive() {
         // stop any ongoing transfers
-        pio_sm_set_enabled(JACDAC_PIO, sm_, false);
-        dma_channel_abort(dma_);
+        pio_sm_set_enabled(JACDAC_PIO, instance_->sm, false);
+        dma_channel_abort(instance_->dma);
         // we expect we are not sending anything at the moment, load the PIO sws receiver, configure the DMA and start the PIO. 
         gpio::setAsInput(JACDAC_PIN);
         // configure the DMA
-        dma_channel_config c = dma_channel_get_default_config(dma_);
+        dma_channel_config c = dma_channel_get_default_config(instance_->dma);
         channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
-        channel_config_set_dreq(&c, pio_get_dreq(JACDAC_PIO, sm_, false));
+        channel_config_set_dreq(&c, pio_get_dreq(JACDAC_PIO, instance_->sm, false));
         channel_config_set_read_increment(&c, false);
         channel_config_set_write_increment(&c, true);
-        dma_channel_configure(dma_, &c, NULL, &JACDAC_PIO->rxf[sm_], maxBytes, false);
+        dma_channel_configure(instance_->dma, &c, NULL, &JACDAC_PIO->rxf[instance_->sm], sizeof(Frame), false);
         // load & configure the PIO program
-        sws_rx_program_init(JACDAC_PIO, sm_, rxOffset_, JACDAC_PIN);
-        pio_sm_set_clock_speed(JACDAC_PIO, sm_, 8 * JACDAC_BAUDRATE);
+        sws_rx_program_init(JACDAC_PIO, instance_->sm, instance_->rxOffset, JACDAC_PIN);
+        pio_sm_set_clock_speed(JACDAC_PIO, instance_->sm, 8 * JACDAC_BAUDRATE);
         // enable the interrupt from the pio, which is fired when the end BRK is detected
         irq_set_exclusive_handler(PIO1_IRQ_0, jacdacRxDone);
         irq_set_enabled(PIO1_IRQ_0, true);
         // enable the PIO & DMA
-        pio_sm_set_enabled(JACDAC_PIO, sm_, true);
-        dma_channel_transfer_to_buffer_now(dma_, data, maxBytes);
+        pio_sm_set_enabled(JACDAC_PIO, instance_->sm, true);
+        dma_channel_transfer_to_buffer_now(instance_->dma, instance_->rxBuffer.back().data(), sizeof(Frame));
     }
 
 } // namespace rckid

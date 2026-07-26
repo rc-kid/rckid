@@ -63,10 +63,15 @@ namespace rckid {
                     App::run<Drawing>(canvas.get());
                 }}
                 << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator)
+                // TODO change this to proper menu, using the options ideally
+                << ui::MenuItem::Generator("Jacdac", assets::icons_64::jacdac, utilitiesMenuGenerator)
                 << ui::MenuItem::Generator("Settings", assets::icons_64::settings, settingsMenuGenerator);
             if (debug::debugMode())
                 (*result)
                     << ui::MenuItem::Generator("Debug", assets::icons_64::ladybug, debugMenuGenerator);
+            // extend the menu with any cartridge specific details
+            if (options.cartridgeExtender)
+                result = options.cartridgeExtender(std::move(result));
             return result;
         };
     }
@@ -276,6 +281,7 @@ namespace rckid {
 
         return result;
     }
+
 
     void Launcher::updateStyle(ui::Style & style) {
         // only expected to be called from the launcher

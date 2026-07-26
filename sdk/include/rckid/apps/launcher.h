@@ -9,6 +9,7 @@ namespace rckid {
 
     struct MainMenuOptions {
         ui::MenuExtender gamesExtender = nullptr;
+        ui::MenuExtender cartridgeExtender = nullptr;
     };
 
     ui::MenuItem::GeneratorEvent mainMenuGenerator(MainMenuOptions options = {});

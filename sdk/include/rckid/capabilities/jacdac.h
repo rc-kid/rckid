@@ -7,6 +7,9 @@
 
 namespace rckid {
 
+    // forward declaration of the internal implementation class for friendship purposes
+    class JacdacImpl;
+
     /** Jacdac communication capability.
 
         Jacdac protocol description here: https://jacdac.github.io/jacdac-docs/reference/protocol/
@@ -40,8 +43,6 @@ namespace rckid {
          */
         void sendPacket(uint8_t const * data, uint32_t numBytes);
 
-    protected:
-
         /** Jacdac frame that is sent over the SWS wire.
          */
         struct Frame {
@@ -52,10 +53,14 @@ namespace rckid {
             uint8_t data[240]; // maximum
         } __attribute__((packed, aligned(4))); // Jacdac::Frame
 
+    protected:
+
+        friend class JacdacImpl;
+
         void onTick() override;
 
         void releaseResources() override {
-            // don't really
+            // TODO Maybe do delete this eventually
             //delete this;
         }
 
@@ -69,7 +74,7 @@ namespace rckid {
          */
         bool doSend(uint8_t const * data, uint32_t numBytes);
 
-        void doReceive(uint8_t * data, uint32_t maxBytes, void (*callback)(uint8_t const * data, uint32_t numBytes));
+        void doReceive();
 
     }; // rckid::Jacdac
 

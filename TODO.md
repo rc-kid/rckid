@@ -35,6 +35,8 @@ So what I need:
 
 # SDK 1.0
 
+- audio can use single sm for playback/recording because only one can be active at any given time
+
 - launcher payload that moves menu down hangs on device
 
 - determine SD speed and how fast can I go? 

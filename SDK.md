@@ -48,6 +48,10 @@ Each application has its own folder under the `apps` root folder. The folder has
 The `data` folder is the app home and is completely in the application's control. The SDK does not understand what it is, nor does it  
 
 
+## Resources Used
+
+- `pio0` for display and sd card (high pin bank)
+- `pio1` for audio (low pin bank, including cartridge pins)
 
 ## Simplification Ideas
 
