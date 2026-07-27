@@ -25,7 +25,7 @@ namespace rckid {
         int dma; 
         volatile bool rxReady = false;
         // double buffer for receiving messages, large enough to store two frames
-        DoubleBuffer<uint8_t> rxBuffer{sizeof(Jacdac::Frame)};
+        DoubleBuffer<uint8_t> rxBuffer{sizeof(jacdac::Frame)};
     }; // JacdacImpl
 
     namespace {
@@ -34,7 +34,7 @@ namespace rckid {
         void __not_in_flash_func(jacdacRxDone)() {
             pio_interrupt_clear(JACDAC_PIO, 0);
             // by the time we get here we can assume that the DMA has transferred everything we need, no need to wait for anything. Store the size of the received frame in the back buffer (transfer count decrements from the initial value, which we know was set to frame size)
-            instance_->rxBuffer.back().setUsed(sizeof(Jacdac::Frame) - dma_hw->ch[instance_->dma].transfer_count);
+            instance_->rxBuffer.back().setUsed(sizeof(jacdac::Frame) - dma_hw->ch[instance_->dma].transfer_count);
             // swap front & back buffers and set the rxReady flag (only if the front buffer is already processed)
             if (instance_->rxReady == false) {
                 instance_->rxBuffer.swap();
@@ -43,7 +43,7 @@ namespace rckid {
                 // have t drop the back buffer
             }
             // restart the DMA to receive the next frame into the back buffer
-            dma_channel_transfer_to_buffer_now(instance_->dma, instance_->rxBuffer.back().data(), sizeof(Jacdac::Frame));
+            dma_channel_transfer_to_buffer_now(instance_->dma, instance_->rxBuffer.back().data(), sizeof(jacdac::Frame));
             // TODO process the frame here perhaps? 
         }
 
@@ -138,7 +138,7 @@ namespace rckid {
         channel_config_set_read_increment(&c, false);
         channel_config_set_write_increment(&c, true);
         // write address is nullptr (will be set by transfer to buffer below), read address is the RX FIFO of the pio
-        dma_channel_configure(instance_->dma, &c, nullptr, &JACDAC_PIO->rxf[instance_->sm], sizeof(Frame), false);
+        dma_channel_configure(instance_->dma, &c, nullptr, &JACDAC_PIO->rxf[instance_->sm], sizeof(jacdac::Frame), false);
         // load & configure the PIO program
         sws_rx_program_init(JACDAC_PIO, instance_->sm, instance_->rxOffset, JACDAC_PIN);
         pio_sm_set_clock_speed(JACDAC_PIO, instance_->sm, 8 * JACDAC_BAUDRATE);
@@ -147,7 +147,7 @@ namespace rckid {
         irq_set_enabled(PIO1_IRQ_0, true);
         // enable the PIO & DMA
         pio_sm_set_enabled(JACDAC_PIO, instance_->sm, true);
-        dma_channel_transfer_to_buffer_now(instance_->dma, instance_->rxBuffer.back().data(), sizeof(Frame));
+        dma_channel_transfer_to_buffer_now(instance_->dma, instance_->rxBuffer.back().data(), sizeof(jacdac::Frame));
     }
 
 } // namespace rckid

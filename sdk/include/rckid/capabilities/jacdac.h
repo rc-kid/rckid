@@ -9,6 +9,64 @@ namespace rckid {
 
     // forward declaration of the internal implementation class for friendship purposes
     class JacdacImpl;
+    namespace jacdac {
+
+        /** Jacdac packet. 
+         
+            As packets are always part of a frame, the do not own their payload, but the payload comes immediately after the packet header in the frame.
+         */
+        struct Packet {
+        public:
+           uint8_t size;
+           uint8_t index;
+           uint16_t command;
+           uint8_t payload[];
+        } __attribute__((packed, aligned(4))); // Jacdac::Packet
+
+        /** Jacdac frame that is sent over the SWS wire.
+         */
+        struct Frame {
+        public:
+            uint16_t crc;
+            uint8_t size;
+            uint8_t flags;
+            uint64_t device_identifier;
+            uint8_t data[240]; // maximum
+
+            /** Calculates CRC of thhe frame (crc16_ccitt.
+             */
+            uint16_t calculateCrc() const { 
+                uint16_t crc = 0xffff;
+                uint32_t len = size + sizeof(uint8_t) + sizeof(uint8_t) + sizeof(uint64_t);
+                uint8_t const * data = reinterpret_cast<uint8_t const *>(this) + 2; // skip the crc field itself
+
+                for (uint32_t i = 0; i < len; i++) {
+                    crc ^= (uint16_t)data[i] << 8;
+                    for (int bit = 0; bit < 8; bit++) {
+                        if (crc & 0x8000)
+                            crc = (crc << 1) ^ 0x1021;
+                        else
+                            crc <<= 1;
+                        crc &= 0xffff;
+                    }
+                }
+
+                return crc;
+            }
+
+            void updateCrc() { crc = calculateCrc(); }
+
+            bool checkCrc() const { return crc == calculateCrc(); }
+
+            bool isCommand() const { return (flags & FLAG_COMMAND) != 0; }
+            bool requiresAck() const { return (flags & FLAG_ACK) != 0; }
+
+            static constexpr uint8_t FLAG_COMMAND = 1 << 0;
+            static constexpr uint8_t FLAG_ACK = 1 << 1;
+
+        } __attribute__((packed, aligned(4))); // Jacdac::Frame
+
+    } // namespace rckid::jacdac
 
     /** Jacdac communication capability.
 
@@ -42,16 +100,6 @@ namespace rckid {
         /** Sends JACDAC packet.
          */
         void sendPacket(uint8_t const * data, uint32_t numBytes);
-
-        /** Jacdac frame that is sent over the SWS wire.
-         */
-        struct Frame {
-            uint16_t crc;
-            uint8_t size;
-            uint8_t flags;
-            uint64_t device_identifier;
-            uint8_t data[240]; // maximum
-        } __attribute__((packed, aligned(4))); // Jacdac::Frame
 
     protected:
 
