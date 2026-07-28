@@ -25,32 +25,28 @@ namespace rckid {
 
         /** Returns if the codec is in a playback mode with data sent via I2S, whether paused or not
          */
-        static bool isPlaybackI2S() {
-            return activeSm_ == playbackSm_;
-        }
+        static bool isPlaybackI2S() { return mode_ == Mode::Playback; }
 
         /** Returns true if the codec is currently recording with data from ADC on I2S, whether paused or not
          */
-        static bool isRecordingI2S() {
-            return activeSm_ == recordSm_;
-        }
+        static bool isRecordingI2S() { return mode_ == Mode::Record; }
 
         static bool isPaused() {
-            if (activeSm_ == -1)
+            if (mode_ == Mode::None)
                 return false;
-            return ! pio_sm_is_enabled(pio1, activeSm_);          
+            return ! pio_sm_is_enabled(pio1, i2sSm_);          
         }
 
         static void pause() {
-            if (activeSm_ == -1)
+            if (mode_ == Mode::None)
                 return;
-            pio_sm_set_enabled(pio1, activeSm_, false);
+            pio_sm_set_enabled(pio1, i2sSm_, false);
         }
 
         static void resume() {
-            if (activeSm_ == -1)
+            if (mode_ == Mode::None)
                 return;
-            pio_sm_set_enabled(pio1, activeSm_, true);
+            pio_sm_set_enabled(pio1,i2sSm_, true);
         }
 
         static void initialize() {
@@ -65,41 +61,39 @@ namespace rckid {
             LOG(LL_INFO, "  mclk offset: " << (uint32_t)mclkOffset_);
             i2s_mclk_program_init(pio1, mclkSm_, mclkOffset_, RP_PIN_I2S_MCLK);
 
-            playbackSm_ = pio_claim_unused_sm(pio1, true);
+            i2sSm_ = pio_claim_unused_sm(pio1, true);
+            LOG(LL_INFO, "       i2s sm: " << (uint32_t)i2sSm_);
+
             playbackOffset_ = pio_add_program(pio1, & i2s_out16_program);
-            LOG(LL_INFO, "      play sm: " << (uint32_t)playbackSm_);
             LOG(LL_INFO, "  play offset: " << (uint32_t)playbackOffset_);
             //i2s_out16_program_init(pio1, playbackSm_, playbackOffset_, RP_PIN_I2S_DOUT, RP_PIN_I2S_LRCK);
 
-            recordSm_ = pio_claim_unused_sm(pio1, true);
             recordOffset_ = pio_add_program(pio1, & i2s_in16_program);
-            LOG(LL_INFO, "       rec sm: " << (uint32_t)recordSm_);
             LOG(LL_INFO, "   rec offset: " << (uint32_t)recordOffset_);
-            activeSm_ = -1;
         }
 
         static void adjustSpeed() {
             if (pio_sm_is_enabled(pio1, mclkSm_)) {
                 enableMasterClock(sampleRate_);
-                if (activeSm_ != -1)
-                    pio_sm_set_clock_speed(pio1, activeSm_, sampleRate_ * 34 * 2);
+                if (mode_ != Mode::None)
+                    pio_sm_set_clock_speed(pio1, i2sSm_, sampleRate_ * 34 * 2);
             }
         }
 
-        static uint playbackDReq() {
-            return pio_get_dreq(pio1, playbackSm_, true);
+        static uint i2sTxDReq() {
+            return pio_get_dreq(pio1, i2sSm_, true);
         }
 
-        static io_wo_32 * playbackTxFifo() {
-            return & pio1->txf[playbackSm_];
+        static uint i2sRxDReq() {
+            return pio_get_dreq(pio1, i2sSm_, false);
         }
 
-        static uint recordDReq() {
-            return pio_get_dreq(pio1, recordSm_, false);
+        static io_wo_32 * i2sTxFifo() {
+            return & pio1->txf[i2sSm_];
         }
 
-        static io_ro_32 * recordRxFifo() {
-            return & pio1->rxf[recordSm_];
+        static io_ro_32 * i2sRxFifo() {
+            return & pio1->rxf[i2sSm_];
         }
 
         /** Enables the MCLK generation for given sample rate. 
@@ -122,7 +116,8 @@ namespace rckid {
             cpu::delayMs(10);
             LOG(LL_INFO, "  rev " << hex(getRegister(REG_DEV_REVISION)));
             LOG(LL_INFO, "   id " << hex(getRegister(REG_DEV_ID)));
-            activeSm_ = -1;
+            pio_sm_set_enabled(pio1, i2sSm_, false);
+            mode_ = Mode::None;
         }
 
         /** Powers the codec up.
@@ -157,7 +152,7 @@ namespace rckid {
             setRegister(REG_JACK_DETECT_1, JCKDEN | JCKDIO2);
             // TODO move back
             setRegister(REG_JACK_DETECT_2, JCKDOEN0_SPEAKER | JCKDOEN1_HEADPHONES);
-            activeSm_ = -1;
+            mode_ = Mode::None;
         }
 
         static void powerDown() {
@@ -192,9 +187,8 @@ namespace rckid {
             LOG(LL_INFO, "Codec stop");
             // disable all pio programs, if any are running (mclk, playback, record)
             pio_sm_set_enabled(pio1, mclkSm_, false);
-            pio_sm_set_enabled(pio1, playbackSm_, false);
-            pio_sm_set_enabled(pio1, recordSm_, false);
-            activeSm_ = -1;
+            pio_sm_set_enabled(pio1, i2sSm_, false);
+            mode_ = Mode::None;
             // disable headphones, ADC boost, ADC and PGA
             setRegister(REG_PWR_MGMT_2, 0);
             // disable speaker, mixers and DAC
@@ -261,11 +255,11 @@ namespace rckid {
             // enable master clock generation for the given sample rate
             enableMasterClock(sampleRate);
             // enable the I2S playback pio program at given BCLK (which is 34 bits per sample)
-            i2s_out16_program_init(pio1, playbackSm_, playbackOffset_, RP_PIN_I2S_DAC, RP_PIN_I2S_BCLK);
-            pio_sm_set_clock_speed(pio1, playbackSm_, sampleRate * 34 * 2);
-            pio_sm_set_enabled(pio1, playbackSm_, true);
-            ASSERT(pio_sm_is_enabled(pio1, playbackSm_));
-            activeSm_ = playbackSm_;
+            i2s_out16_program_init(pio1, i2sSm_, playbackOffset_, RP_PIN_I2S_DAC, RP_PIN_I2S_BCLK);
+            pio_sm_set_clock_speed(pio1, i2sSm_, sampleRate * 34 * 2);
+            pio_sm_set_enabled(pio1, i2sSm_, true);
+            ASSERT(pio_sm_is_enabled(pio1, i2sSm_));
+            mode_ = Mode::Playback;
             sampleRate_ = sampleRate;
         }
 
@@ -286,10 +280,10 @@ namespace rckid {
             // enable master clock generation for the given sample rate
             enableMasterClock(sampleRate);
             // enable the I2S record pio program at given BCLK (34 bits per sample for I2S stereo 16bit sound)
-            i2s_in16_program_init(pio1, recordSm_, recordOffset_, RP_PIN_I2S_ADC, RP_PIN_I2S_BCLK);
-            pio_sm_set_clock_speed(pio1, recordSm_, sampleRate * 34 * 2);
-            pio_sm_set_enabled(pio1, recordSm_, true);
-            activeSm_ = recordSm_;
+            i2s_in16_program_init(pio1, i2sSm_, recordOffset_, RP_PIN_I2S_ADC, RP_PIN_I2S_BCLK);
+            pio_sm_set_clock_speed(pio1, i2sSm_, sampleRate * 34 * 2);
+            pio_sm_set_enabled(pio1, i2sSm_, true);
+            mode_ = Mode::Record;
             sampleRate_ = sampleRate;
         }
 
@@ -323,10 +317,10 @@ namespace rckid {
             // enable master clock generation for the given sample rate
             enableMasterClock(sampleRate);
             // enable the I2S record pio program at given BCLK (34 bits per sample for I2S stereo 16bit sound)
-            i2s_in16_program_init(pio1, recordSm_, recordOffset_, RP_PIN_I2S_ADC, RP_PIN_I2S_BCLK);
-            pio_sm_set_clock_speed(pio1, recordSm_, sampleRate * 34 * 2);
-            pio_sm_set_enabled(pio1, recordSm_, true);
-            activeSm_ = recordSm_;
+            i2s_in16_program_init(pio1, i2sSm_, recordOffset_, RP_PIN_I2S_ADC, RP_PIN_I2S_BCLK);
+            pio_sm_set_clock_speed(pio1, i2sSm_, sampleRate * 34 * 2);
+            pio_sm_set_enabled(pio1, i2sSm_, true);
+            mode_ = Mode::Record;
             sampleRate_ = sampleRate;
         }
 
@@ -547,13 +541,18 @@ namespace rckid {
         static inline int mclkSm_ = -1;
         static inline uint mclkOffset_ = 0;
 
-        static inline int playbackSm_ = -1;
+        static inline int i2sSm_ = -1;
         static inline uint playbackOffset_ = 0;
 
-        static inline int recordSm_ = -1;
         static inline uint recordOffset_ = 0;
 
-        static inline int activeSm_ = -1;
+        enum class Mode {
+            None, 
+            Playback,
+            Record
+        };
+
+        static inline Mode mode_ = Mode::None;
 
         static inline uint32_t sampleRate_ = 0;
 

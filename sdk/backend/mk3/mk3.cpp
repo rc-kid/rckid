@@ -255,9 +255,9 @@ namespace rckid::internal {
                 channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bits (16 per channel, 2 channels)
                 channel_config_set_read_increment(& dmaConf, true);  // increment on read
                 channel_config_set_write_increment(& dmaConf, false);  // do not increment on write
-                channel_config_set_dreq(&dmaConf, Codec::playbackDReq()); // DMA is driven by the I2S playback pio
+                channel_config_set_dreq(&dmaConf, Codec::i2sTxDReq()); // DMA is driven by the I2S playback pio
                 channel_config_set_chain_to(& dmaConf, other.channel); // chain to the other channel
-                dma_channel_configure(channel, & dmaConf, Codec::playbackTxFifo(), buffer, stereoSamples, false); // the buffer consists of stereo samples, (32bits)
+                dma_channel_configure(channel, & dmaConf, Codec::i2sTxFifo(), buffer, stereoSamples, false); // the buffer consists of stereo samples, (32bits)
                 // enable IRQ0 on the DMA channel (shared with other framework DMA uses such as the display or the SD card)
                 dma_channel_set_irq0_enabled(channel, true);
             }
@@ -268,9 +268,9 @@ namespace rckid::internal {
                 channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bits (16 per channel, 2 channels)
                 channel_config_set_read_increment(& dmaConf, false);  // do not increment on read
                 channel_config_set_write_increment(& dmaConf, true);  // increment on write
-                channel_config_set_dreq(&dmaConf, Codec::recordDReq()); // DMA is driven by the I2S record pio
+                channel_config_set_dreq(&dmaConf, Codec::i2sRxDReq()); // DMA is driven by the I2S record pio
                 channel_config_set_chain_to(& dmaConf, other.channel); // chain to the other channel
-                dma_channel_configure(channel, & dmaConf, buffer, Codec::recordRxFifo(), stereoSamples, false); // the buffer consists of stereo samples, (32bits), i.e. buffer size / 2
+                dma_channel_configure(channel, & dmaConf, buffer, Codec::i2sRxFifo(), stereoSamples, false); // the buffer consists of stereo samples, (32bits), i.e. buffer size / 2
                 // enable IRQ0 on the DMA channel (shared with other framework DMA uses such as the display or the SD card)
                 dma_channel_set_irq0_enabled(channel, true);
             }
