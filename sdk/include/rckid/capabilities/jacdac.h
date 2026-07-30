@@ -101,6 +101,9 @@ namespace rckid {
          */
         void sendPacket(uint8_t const * data, uint32_t numBytes);
 
+        void enable() { doEnable(); }
+        void disable() { doDisable(); }
+
     protected:
 
         friend class JacdacImpl;
@@ -123,6 +126,11 @@ namespace rckid {
         bool doSend(uint8_t const * data, uint32_t numBytes);
 
         void doReceive();
+
+    public:
+        // TODO reporting counters, to be deleted when more mature
+        static inline volatile uint32_t receivedPackets = 0;
+        static inline volatile uint32_t receivedBytes = 0;
 
     }; // rckid::Jacdac
 

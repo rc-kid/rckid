@@ -11,7 +11,7 @@
 
 /** By default we use pio1, which is set to service the lower pins.
  */
-#define JACDAC_PIO pio1
+#define JACDAC_PIO pio2
 
 #define JACDAC_PIN 19
 
@@ -32,15 +32,18 @@ namespace rckid {
         JacdacImpl * instance_;
 
         void __not_in_flash_func(jacdacRxDone)() {
+            Jacdac::receivedPackets++;
             pio_interrupt_clear(JACDAC_PIO, 0);
             // by the time we get here we can assume that the DMA has transferred everything we need, no need to wait for anything. Store the size of the received frame in the back buffer (transfer count decrements from the initial value, which we know was set to frame size)
             instance_->rxBuffer.back().setUsed(sizeof(jacdac::Frame) - dma_hw->ch[instance_->dma].transfer_count);
+            Jacdac::receivedPackets++;
+            Jacdac::receivedBytes += instance_->rxBuffer.back().used();
             // swap front & back buffers and set the rxReady flag (only if the front buffer is already processed)
             if (instance_->rxReady == false) {
                 instance_->rxBuffer.swap();
                 instance_->rxReady = true;
             } else {
-                // have t drop the back buffer
+                // have to drop the back buffer
             }
             // restart the DMA to receive the next frame into the back buffer
             dma_channel_transfer_to_buffer_now(instance_->dma, instance_->rxBuffer.back().data(), sizeof(jacdac::Frame));
@@ -57,10 +60,8 @@ namespace rckid {
     }
 
     void Jacdac::onTick() {
-        UNREACHABLE; // this should never be called, all the functionality is in the JacdacImpl class
+        // TODO
     }
-
-
 
     void Jacdac::doEnable() {
         // claim sm and load programs, do not initialize the programs yet - we do that when we want to use them
@@ -69,6 +70,8 @@ namespace rckid {
         instance_->rxOffset = pio_add_program(JACDAC_PIO, &sws_rx_program);
         // get dma channel
         instance_->dma = dma_claim_unused_channel(true);
+        // start the receiver
+        doReceive();
     }
 
     void Jacdac::doDisable() {
@@ -143,8 +146,10 @@ namespace rckid {
         sws_rx_program_init(JACDAC_PIO, instance_->sm, instance_->rxOffset, JACDAC_PIN);
         pio_sm_set_clock_speed(JACDAC_PIO, instance_->sm, 8 * JACDAC_BAUDRATE);
         // enable the interrupt from the pio, which is fired when the end BRK is detected
-        irq_set_exclusive_handler(PIO1_IRQ_0, jacdacRxDone);
-        irq_set_enabled(PIO1_IRQ_0, true);
+        irq_set_exclusive_handler(PIO2_IRQ_0, jacdacRxDone);
+        irq_set_enabled(PIO2_IRQ_0, true);
+        pio_set_irq0_source_enabled(JACDAC_PIO, pis_interrupt0, true);
+
         // enable the PIO & DMA
         pio_sm_set_enabled(JACDAC_PIO, instance_->sm, true);
         dma_channel_transfer_to_buffer_now(instance_->dma, instance_->rxBuffer.back().data(), sizeof(jacdac::Frame));

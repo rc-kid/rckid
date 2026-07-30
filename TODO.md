@@ -170,8 +170,6 @@ Polish
 
 - make level app draw circle and look prettier, maybe draw angles even
 
-- PNG decoder should change to use heap again as there is more chance to find the space in heap
-
 - rumblerOff does not actually turn the rumbler off
 
 - drawing preserves state like games

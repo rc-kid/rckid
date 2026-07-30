@@ -8,6 +8,7 @@
 .side_set 1 opt
 
 start:
+  ; irq set 0         side 0     ; Either a framing error or a break. Set a sticky flag,
   wait 0 pin 0                 ; Stall until start bit is asserted
   set x, 7          side 0 [7] ; Preload bit counter, then delay until halfway through
   nop                      [1]

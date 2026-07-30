@@ -20,6 +20,7 @@
 #include <rckid/apps/debug/hwstatus.h>
 #include <rckid/apps/debug/bootloader.h>
 #include <rckid/apps/debug/serial_monitor.h>
+#include <rckid/apps/debug/jacdac_monitor.h>
 
 #include <rckid/apps/dialogs/file_dialog.h>
 #include <rckid/apps/dialogs/color_dialog.h>
@@ -64,7 +65,10 @@ namespace rckid {
                 }}
                 << ui::MenuItem::Generator("Utilities", assets::icons_64::configuration, utilitiesMenuGenerator)
                 // TODO change this to proper menu, using the options ideally
-                << ui::MenuItem::Generator("Jacdac", assets::icons_64::jacdac, utilitiesMenuGenerator)
+                //<< ui::MenuItem::Generator("Jacdac", assets::icons_64::jacdac, utilitiesMenuGenerator)
+                << ui::MenuItem("Jacdac", assets::icons_64::jacdac, []() {
+                    App::run<JacdacMonitor>();
+                })
                 << ui::MenuItem::Generator("Settings", assets::icons_64::settings, settingsMenuGenerator);
             if (debug::debugMode())
                 (*result)
