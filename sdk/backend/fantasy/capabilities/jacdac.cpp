@@ -11,4 +11,12 @@ namespace rckid {
         // nothing to do
     }
 
+    void Jacdac::doEnable() {
+
+    }
+
+    void Jacdac::doDisable() {
+        
+    }
+
 } // namespace rckid

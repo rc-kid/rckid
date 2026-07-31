@@ -60,7 +60,7 @@ namespace rckid {
                 exit();
             }
             if (jacdac_) {
-                info_->setText(STR(pio1->irq << " - " << pio1->ctrl));
+                info_->setText("...");
                 status_->setText(STR("Rx (" << jacdac_->receivedPackets << ", Bytes: " << jacdac_->receivedBytes << ")"));
             } else {
                 status_->setText("No Jacdac");
