@@ -1,10 +1,11 @@
 #pragma once
 
+#include <cstdint>
 #include <vector>
 #include <map>
 #include <sstream>
 #include <iostream>
-#include <cstdint>
+#include <algorithm>
 
 #include <platform.h>
 
