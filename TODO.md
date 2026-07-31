@@ -41,7 +41,6 @@ So what I need:
 
 - cartridgeWrite ignores numBytes, check and determine why!
 
-- remove debug mode by default when AVR power on
 - UI style could be part of settings instead of SD card stored (but how to deal with background?)
 
 - LTR390UV should be capability, not based in the core

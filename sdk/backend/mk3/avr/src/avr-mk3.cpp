@@ -54,8 +54,6 @@ public:
         // turn the device on after powerup
         ts_.state.setDebugMode(false);
         setPowerMode(POWER_MODE_ON);
-        // TODO we do not want debug mode after avr reset in production (!)
-        enterDebugMode();
     }
 
     static void loop() {
