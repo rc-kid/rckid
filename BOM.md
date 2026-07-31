@@ -28,3 +28,15 @@ Optional cartridge extras
 - [Flashlight LED](https://www.tme.eu/cz/details/l128-4080ca3500001/vykonove-diody-led-emiter/lumileds/)
 - [LED Driver](https://www.tme.eu/cz/details/ap2502ktr-g1/stabilizator-napeti-obvody-dc-dc/diodes-incorporated/) or from [mouser](https://cz.mouser.com/ProductDetail/Diodes-Incorporated/AP2502KTR-G1)
 - [IR LED](https://www.tme.eu/cz/details/ir204c_h16_l10/infracervene-diody-led/everlight/)
+
+
+## BOM Optimization
+
+Current BOM for 100 units is at around 2000 USD, with the following biggest offenders:
+
+- ATTiny3217 is even more expensive than RP2350. The idea is that it can be replaced with some of the cheap Puya or similar MCUs (such as https://jlcpcb.com/partdetail/PUYA-PY32F002BF15U6TR/C7469099, or https://jlcpcb.com/partdetail/PUYA-PY32F030K28U6TR/C3018718). We need simple ADC, neopixel control, PWM for the display & rumbler, UART for debug and I2C for RP2350 communication. Those should be easy to have, the biggest task is likely the external and kinda precise RTC.
+- LSM6DSV is pretty expensive and offers really nice pedometer. We can ditch the pedometer feature, or we can make the IO MCU provide a cheap pedometer filter for the ADC itself. Especially with the larger chips this can be possible.
+- LTR390UV is another expensive sensor. Can be replaced with simple LED that can be status & light sensing (thanks to Paul Dietz's hack). Not enough pins for it in ATTiny3217, but might be enough on the Puya chips
+- the HW switch for analog cartridge to the audio codec is also pretty expensive. Does not have to be populated though
+- 220uF capacitors are expensive. Need to check if we can drop them to 100uF which gets a lot cheaper
+- side buttons are also pretty expensive and I want to replace them anyways
