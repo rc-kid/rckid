@@ -25,7 +25,7 @@ namespace rckid {
         int dma; 
         volatile bool rxReady = false;
         // double buffer for receiving messages, large enough to store two frames
-        DoubleBuffer<uint8_t> rxBuffer{sizeof(jacdac::Frame)};
+        DoubleBuffer<uint8_t> rxBuffer{sizeof(Jacdac::Frame)};
     }; // JacdacImpl
 
     namespace {
@@ -33,21 +33,33 @@ namespace rckid {
 
         void __not_in_flash_func(jacdacRxDone)() {
             Jacdac::receivedPackets++;
-            pio_interrupt_clear(JACDAC_PIO, 0);
             // by the time we get here we can assume that the DMA has transferred everything we need, no need to wait for anything. Store the size of the received frame in the back buffer (transfer count decrements from the initial value, which we know was set to frame size)
-            instance_->rxBuffer.back().setUsed(sizeof(jacdac::Frame) - dma_hw->ch[instance_->dma].transfer_count);
+            instance_->rxBuffer.back().setUsed(sizeof(Jacdac::Frame) - dma_hw->ch[instance_->dma].transfer_count);
+            uint32_t frameSize = instance_->rxBuffer.back().used();
             Jacdac::receivedPackets++;
-            Jacdac::receivedBytes += instance_->rxBuffer.back().used();
+            Jacdac::receivedBytes += frameSize;
             // swap front & back buffers and set the rxReady flag (only if the front buffer is already processed)
-            if (instance_->rxReady == false) {
+            if (instance_->rxReady == false || true) { // TODO DELETE
+                // swap the buffers
                 instance_->rxBuffer.swap();
-                instance_->rxReady = true;
+                // verify the frame is valid (size-wise, which is really fast and can be done inside ISR)
+                Jacdac::Frame * f = reinterpret_cast<Jacdac::Frame*>(instance_->rxBuffer.front().data());
+                if ((f->size + 12) != frameSize) {
+                    Jacdac::errors++;
+                    //LOG(LL_ERROR, "Jacdac: Frame size mismatch, expected " << (f->size + 12) << ", got " << frameSize);
+                } else {
+                    LOG(LL_INFO, "Jacdac: Frame received, size " << frameSize << ", device id " << f->device_identifier << ", flags " << (int)f->flags);
+                    instance_->rxReady = true;
+                }
             } else {
                 // have to drop the back buffer
             }
             // restart the DMA to receive the next frame into the back buffer
-            dma_channel_transfer_to_buffer_now(instance_->dma, instance_->rxBuffer.back().data(), sizeof(jacdac::Frame));
+            dma_channel_abort(instance_->dma);
+            dma_channel_transfer_to_buffer_now(instance_->dma, instance_->rxBuffer.back().data(), sizeof(Jacdac::Frame));
+
             // TODO process the frame here perhaps? 
+            pio_interrupt_clear(JACDAC_PIO, 0);
         }
 
     }; // anonynous namespace
@@ -141,7 +153,7 @@ namespace rckid {
         channel_config_set_read_increment(&c, false);
         channel_config_set_write_increment(&c, true);
         // write address is nullptr (will be set by transfer to buffer below), read address is the RX FIFO of the pio
-        dma_channel_configure(instance_->dma, &c, nullptr, &JACDAC_PIO->rxf[instance_->sm], sizeof(jacdac::Frame), false);
+        dma_channel_configure(instance_->dma, &c, nullptr, &JACDAC_PIO->rxf[instance_->sm], sizeof(Jacdac::Frame), false);
         // load & configure the PIO program
         sws_rx_program_init(JACDAC_PIO, instance_->sm, instance_->rxOffset, JACDAC_PIN);
         pio_sm_set_clock_speed(JACDAC_PIO, instance_->sm, 8 * JACDAC_BAUDRATE);
@@ -152,7 +164,7 @@ namespace rckid {
 
         // enable the PIO & DMA
         pio_sm_set_enabled(JACDAC_PIO, instance_->sm, true);
-        dma_channel_transfer_to_buffer_now(instance_->dma, instance_->rxBuffer.back().data(), sizeof(jacdac::Frame));
+        dma_channel_transfer_to_buffer_now(instance_->dma, instance_->rxBuffer.back().data(), sizeof(Jacdac::Frame));
     }
 
 } // namespace rckid
