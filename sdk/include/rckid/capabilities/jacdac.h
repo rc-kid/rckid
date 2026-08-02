@@ -39,9 +39,9 @@ namespace rckid {
             return std::nullopt;
         }
 
-        /** Sends JACDAC packet.
+        /** Sends JACDAC frame.
          */
-        void sendPacket(uint8_t const * data, uint32_t numBytes);
+        void sendFrame(uint8_t const * data, uint32_t numBytes);
 
         void enable() { doEnable(); }
         void disable() { doDisable(); }
@@ -102,6 +102,32 @@ namespace rckid {
         } __attribute__((packed, aligned(4))); // Jacdac::Frame
 
 
+        /** Commands
+         */
+        static constexpr uint16_t ACTION =         0x0000;
+        static constexpr uint16_t REGISTER_READ =  0x1000;
+        static constexpr uint16_t REGISTER_WRITE = 0x2000;
+        static constexpr uint16_t EVENT =          0x8000;
+
+        /** Service indices.
+         */
+        static constexpr uint8_t SERVICE_CONTROL = 0x00;
+        static constexpr uint8_t SERVICE_REGULAR = 0x01;
+        static constexpr uint8_t SERVICE_PIPE =    0x3e;
+        static constexpr uint8_t SERVICE_ACK =     0x3f;
+
+        /** Flags
+         */
+        static constexpr uint8_t FLAG_COMMAND =    1 << 0;
+        static constexpr uint8_t FLAG_ACK_REQ =    1 << 1;
+        static constexpr uint8_t FLAG_ALT_DEVID =  1 << 2;
+
+
+
+        /** Service ids 
+         */
+
+         static constexpr uint32_t SERVICE_ACCELEROMETER = 0x1f140409;
 
     protected:
 

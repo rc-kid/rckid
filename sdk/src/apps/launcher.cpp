@@ -21,6 +21,7 @@
 #include <rckid/apps/debug/bootloader.h>
 #include <rckid/apps/debug/serial_monitor.h>
 #include <rckid/apps/debug/jacdac_monitor.h>
+#include <rckid/apps/debug/jacdac_service.h>
 
 #include <rckid/apps/dialogs/file_dialog.h>
 #include <rckid/apps/dialogs/color_dialog.h>
@@ -68,6 +69,9 @@ namespace rckid {
                 //<< ui::MenuItem::Generator("Jacdac", assets::icons_64::jacdac, utilitiesMenuGenerator)
                 << ui::MenuItem("Jacdac", assets::icons_64::jacdac, []() {
                     App::run<JacdacMonitor>();
+                })
+                << ui::MenuItem("Jacdac IMU", assets::icons_64::microchip, []() {
+                    App::run<JacdacService>();
                 })
                 << ui::MenuItem::Generator("Settings", assets::icons_64::settings, settingsMenuGenerator);
             if (debug::debugMode())

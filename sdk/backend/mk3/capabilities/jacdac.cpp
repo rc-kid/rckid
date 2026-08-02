@@ -101,7 +101,7 @@ namespace rckid {
                     #ifdef JACDAC_RX_ACTIVE_PIN
                     gpio::outputHigh(JACDAC_RX_ACTIVE_PIN);
                     #endif
-                    
+
                     Jacdac::rxStatus = 3;
                 }
             }
@@ -208,6 +208,11 @@ namespace rckid {
         return & (instance_->jacdac);
     }
 
+
+    void Jacdac::sendFrame(uint8_t const * data, uint32_t numBytes) {
+        doSend(data, numBytes);
+    }
+
     void Jacdac::onTick() {
         // TODO
     }
@@ -260,6 +265,8 @@ namespace rckid {
         cpu::delayUs(12);
         gpio::setAsInput(JACDAC_PIN);
         // TODO enable rx again
+
+        //doReceive();
 
         return true;
     }
