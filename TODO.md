@@ -97,7 +97,6 @@ Games (port from mkII)
 
 - add extra tiles for all volume levels
 
-- mk3 code not tested
 - heapend on mk3 should return current sp or something like that to verify that we are not growing over
 
 - add support for overclocking, and in the missing adjustment for display pio in the hal layer:
@@ -220,10 +219,6 @@ Polish
 - might get super pretty front panels from here: https://www.hopesens-glass.com/
 - need to re-route NRF and loRa boards (pull-up for IR control at least, schematics is correct)
 
-## AVR
-
-- see if we can run at 5MHz and still talk to neopixel
-
 ## UI
 
 - proper palette rendering, do offsets
@@ -267,7 +262,6 @@ Polish
 ## Others
 
 - waiting for display update done could make the cpu sleep
-- serialize & deserialize vs load & save
 
 # PCB Things To Fix
 
@@ -310,10 +304,6 @@ Polish
 
 ## Memory Management
 
-Currently, I have unique_ptr, which is just std::unique_ptr alias. I also have immutable_ptr, which is either pointer to flash memory, or unique ptr to non-flash memory that will get released properly. Only allows immutable access because flash memory. I also have mutable_ptr, which can be either immutable ptr, or unique ptr and can lazily move from immutable to mutable by copying the immutable data from flash to ram. Thus it must know the size of the area it points to.
-
-I am proposing to remove the mutable ptr altogether. Things either explicitly allow mutability via unique_ptr, or they stay immutable forever. The transition from immutability to mutability must happen explicitly and the outside (user) must at this point provide the size. I hope it will be simpler. 
-
 Then I have images, bitmaps, canvases and ImageSources. 
 
 ImageSource is a class that can be used to identify an image. This can be done via (a) path to a file, or (b) memory buffer that contains the image data itself. Both files and memory buffers can be in different formats, namely:
@@ -323,20 +313,3 @@ QOI, PNG, JPG, Raw.
 Raw is interesting especially with the immutable_ptr. It is a format that first has the raw data as they would be unpacked, and this is followed by width & height. This allows no allocation for images stored in flash in the raw format. At the moment the raw format only uses RGB565 color representation. I am proposing to add third - last byte specifies the bpp/format and it can be RGB565, or indices (256, 16). Makes sense? 
 
 Finally I have canvas. Canvas at the moment only supports RGB565, but I am thinking maybe it should support multiple formats too. 
-
-
-
-
-Power on sequence:
-- PORTA int request ( sets intRequests_ HOME BTN INT REQUEST)
-- then processIntRequests, which sometimes asserts fail (when called from non-power off state)
-- critical battery (should be checked)
-- setPowerMode WAKEUP
-- this starts home button long press and tentatively sets debug mode to true
-- then control group btn changes:
-    - sets wakeup mode if not power on & btnHome is pressed <- this might screw debouncing?
-    - starts btn home press if home btn long press is 0, otherwise does check 
-- btn check long press
-    if is 0, retrurn
-    if not pressed, set to 0, return
-    otherwise decrement and if 0, go to power mode on 

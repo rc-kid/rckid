@@ -141,7 +141,7 @@ namespace rckid {
      
         Special version of unique pointer that can point to both heap allocated objects as well as to immutable data (i.e. data stored in flash memory or ROM). The pointer takes ownership of heap allocated objects and will free them when destroyed, but will not attempt to free pointers to immutable data.
 
-        Unlike its mutable_ptr counterpart, immutable_ptr does not allow mutable access to the data it points to (as the data can in theory be in flash as well). This means the pointer does not need to employ lazy copy-on-write semantics.
+        Immutable_ptr does not allow mutable access to the data it points to (as the data can in theory be in flash as well). This means the pointer does not need to employ lazy copy-on-write semantics.
      */
     template<typename T>
     class immutable_ptr {
