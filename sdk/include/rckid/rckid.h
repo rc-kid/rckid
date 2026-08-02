@@ -173,12 +173,11 @@ namespace rckid {
             }
         }
 
-        inline void waitVSync() {
-            while (hal::display::vSync())
-                yield();
-            while (! hal::display::vSync())
-                yield();
-        }
+        /** Waits for the VSync signal from the display. 
+         
+            Also updates the fps counter, which can be reported every second via the LOG_FPS.
+         */
+        void waitVSync();
 
         void enable(Rect rect, RefreshDirection  direction);
 

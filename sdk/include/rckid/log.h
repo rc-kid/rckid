@@ -53,6 +53,15 @@
 #define LL_DEBUG 0
 #endif
 
+/** Debugging frames per second.
+
+    When eneabled outputs at every second the number frames rendered in the past second. Rendered frames are calculated by the number of vSync waits that have been performed.
+ */
+#ifndef LL_FPS
+#define LL_FPS 0
+#endif
+
+
 #ifndef LL_I2C
 #define LL_I2C 1
 #endif

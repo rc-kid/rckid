@@ -46,6 +46,9 @@ namespace rckid {
 
     uint64_t nextSecondUptime_ = 0;
 
+    // FPS counter, which is reset every second
+    uint32_t fps_ = 0;
+
     struct DisplaySettings {
         uint8_t brightness = 128;
     } __attribute__((packed));
@@ -178,6 +181,8 @@ namespace rckid {
         hal::device::onYield();
         // check if we need to trigger second tick
         if (hal::time::uptimeUs() >= nextSecondUptime_) {
+            LOG(LL_FPS, "FPS " << fps_);
+            fps_ = 0;
             nextSecondUptime_ += 1000000;
             now_.inc();
             ui::Header::update();
@@ -326,6 +331,14 @@ namespace rckid {
     namespace display {
         Rect rect_;
         RefreshDirection refreshDirection_;
+
+        void waitVSync() {
+            while (hal::display::vSync())
+                yield();
+            while (! hal::display::vSync())
+                yield();
+            ++fps_;
+        }
 
         void enable(Rect rect, RefreshDirection  direction) {
             ASSERT(Rect::WH(WIDTH, HEIGHT).contains(rect));
