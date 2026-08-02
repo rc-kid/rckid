@@ -813,13 +813,21 @@ namespace rckid::hal {
 
         void cartridgeWrite(uint32_t start, uint8_t const * buffer, uint32_t numBytes) {
             ASSERT(start < cartridgeCapacityBytes());
-            ASSERT(start + FLASH_PAGE_SIZE <= cartridgeCapacityBytes());
+            ASSERT(numBytes % FLASH_PAGE_SIZE == 0);
+            ASSERT(start + numBytes <= cartridgeCapacityBytes());
             uint32_t offset = reinterpret_cast<uint32_t>(& __cartridge_filesystem_start) - XIP_BASE + start;
-            LOG(LL_LFS, "flash_range_program(" << offset << ", " << (uint32_t)FLASH_PAGE_SIZE << ") - start " << start);
-            {
-                cpu::DisableInterruptsGuard g_;
-                flash_range_program(offset, buffer, FLASH_PAGE_SIZE);
+            LOG(LL_LFS, "flash_range_program(" << offset << ", " << (uint32_t)FLASH_PAGE_SIZE << ") - start " << start << " numBytes " << numBytes);
+            while (numBytes > 0) {
+                {
+                    cpu::DisableInterruptsGuard g_;
+                    flash_range_program(offset, buffer, FLASH_PAGE_SIZE);
+                }
+                numBytes -= FLASH_PAGE_SIZE;
+                offset += FLASH_PAGE_SIZE;
+                buffer += FLASH_PAGE_SIZE;
             }
+            // flush the cache to ensure that the new data is visible to XIP
+            flash_flush_cache();
         }
 
         void cartridgeErase(uint32_t start) {

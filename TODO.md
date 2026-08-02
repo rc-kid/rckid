@@ -39,8 +39,6 @@ So what I need:
 
 - determine SD speed and how fast can I go? 
 
-- cartridgeWrite ignores numBytes, check and determine why!
-
 - UI style could be part of settings instead of SD card stored (but how to deal with background?)
 
 - implement light detection capability for mk3
