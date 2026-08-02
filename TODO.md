@@ -35,6 +35,9 @@ So what I need:
 
 # SDK 1.0
 
+- verify we send *everything* in JACDAC (wait for DMA and stall)
+- the G units calculation is probably wrong, feels weird in the console
+
 - launcher payload that moves menu down hangs on device
 
 - determine SD speed and how fast can I go? 

@@ -87,6 +87,7 @@ namespace rckid {
                 if (tickCounter_ % 30 == 0) {
                     uint8_t f[] = {0x86, 0xe3, 0x0c, 0x00, 0x50, 0x2b, 0x6e, 0x9c, 0x4e, 0xda, 0xa3, 0xb8, 0x08, 0x00, 0x00, 0x00, 0x2f, 0x01, 0x0b, 0x00, 0x09, 0x04, 0x14, 0x1f};
                     jacdac_->sendFrame(f, sizeof(f));
+                    cmdCount_++;
                 }
                 // a bit faster, send the update of the forces
                 if (tickCounter_ % 10 == 5) {
@@ -99,14 +100,15 @@ namespace rckid {
                     acc[1] = toInt12_20(a.y);
                     acc[2] = toInt12_20(a.z);
                     f->updateCrc();
+                    updateCount_++;
 
                     jacdac_->sendFrame(data, sizeof(data));
                 }
                 tickCounter_++;
                 /*
                 info_->setText(STR("Errors: " << jacdac_->errors << ", status: " << jacdac_->rxStatus));
-                status_->setText(STR("Rx (" << jacdac_->receivedPackets << ", Bytes: " << jacdac_->receivedBytes << ")"));
                 */
+                status_->setText(STR("Con:" << cmdCount_ << ", updates: " << updateCount_));
             } else {
                 status_->setText("No Jacdac");
             }
@@ -121,5 +123,7 @@ namespace rckid {
         uint64_t deviceId_ = 0x1122334455667788ul;
         uint32_t tickCounter_ = 0;
         uint8_t cmdIndex_ = 0;
+        uint32_t cmdCount_ = 0;
+        uint32_t updateCount_ = 0;
     };
 } // namespace rckid

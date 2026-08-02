@@ -31,8 +31,14 @@
 class cpu {
 public:
 
-    static void delayUs(unsigned value) {
-        sleep_us(value);  
+    static void delayUs(unsigned value, bool precise = false) {
+        if (precise) {
+            uint32_t start = timer_hw->timerawl;
+            while (timer_hw->timerawl - start < value)
+                ;
+        } else {
+            sleep_us(value);  
+        }
     }
 
     static void delayMs(unsigned value) {

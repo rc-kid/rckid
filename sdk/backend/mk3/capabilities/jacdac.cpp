@@ -226,22 +226,13 @@ namespace rckid {
 
     }
 
-
     bool Jacdac::doSend(uint8_t const * data, uint32_t numBytes) {
         // stop any ongoing transfers
         jacdacReset();
-        // wait for the pio to be idle, i.e. high
-        // TODO this is wrong, the bus is idle when high consecutively for larger period of time
-        gpio::setAsInput(JACDAC_PIN);
-        while (gpio::read(JACDAC_PIN) == false)
-            ;
-        // send the packet start command
-        gpio::outputLow(JACDAC_PIN);
-        cpu::delayUs(12);
-        // wait for 49us so that we can start sending the data TODO why 49us?
-        gpio::setAsInput(JACDAC_PIN);
-        cpu::delayUs(49);
-        // initialize the DMA to send the data to the PIO
+        // pre-initializing the PIO
+        sws_tx_program_init(JACDAC_PIO, instance_->sm, instance_->txOffset, JACDAC_PIN);
+        pio_sm_set_clock_speed(JACDAC_PIO, instance_->sm, 8 * JACDAC_BAUDRATE);
+        // pre-initialize the DMA
         dma_channel_config c = dma_channel_get_default_config(instance_->dma);
         channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
         channel_config_set_dreq(&c, pio_get_dreq(JACDAC_PIO, instance_->sm, true));
@@ -249,26 +240,37 @@ namespace rckid {
         channel_config_set_write_increment(&c, false);
         // write addressis the TX FIFO, read address is null here, set by transfer from buffer below explicitly
         dma_channel_configure(instance_->dma, &c, &JACDAC_PIO->txf[instance_->sm], nullptr, 0, false);
+        // start the DMA (this should fill the FIFO so that the PIO can start immediately)
         dma_channel_transfer_from_buffer_now(instance_->dma, data, numBytes);
-        // start the PIO
-        sws_tx_program_init(JACDAC_PIO, instance_->sm, instance_->txOffset, JACDAC_PIN);
-        pio_sm_set_clock_speed(JACDAC_PIO, instance_->sm, 8 * JACDAC_BAUDRATE);
+
+        // wait for the Jacdac data line to be idle
+        // TODO this is wrong, the bus is idle when high consecutively for larger period of time
+        gpio::setAsInput(JACDAC_PIN);
+        while (gpio::read(JACDAC_PIN) == false)
+            ;
+        cpu::DisableInterruptsGuard _;
+        // send the packet start command
+        gpio::outputLow(JACDAC_PIN);
+        cpu::delayUs(12, /* precise */ true);
+        // wait for 49us so that we can start sending the data TODO why 49us?
+        gpio::setAsInput(JACDAC_PIN);
+        cpu::delayUs(49, /* precise */ true);
+        // and start the transfer
+        pio_gpio_init(JACDAC_PIO, JACDAC_PIN);
         pio_sm_set_enabled(JACDAC_PIO, instance_->sm, true);
-        // wait for the DMA to finish and the PIO to be idle
-        while (! pio_sm_is_stalled(JACDAC_PIO, instance_->sm))
+        // wait for the transfer to be done and the PIO to be idle
+        while (dma_channel_is_busy(instance_->dma) || !pio_sm_is_stalled(JACDAC_PIO, instance_->sm))
             ;
         pio_sm_set_enabled(JACDAC_PIO, instance_->sm, false);
         // send the final BRK
         gpio::outputHigh(JACDAC_PIN);
-        cpu::delayUs(1);
+        cpu::delayUs(1, /* precise */ true);
         gpio::low(JACDAC_PIN);
-        cpu::delayUs(12);
+        cpu::delayUs(12, /* precise */ true);
         gpio::setAsInput(JACDAC_PIN);
-        // TODO enable rx again
-
-        //doReceive();
 
         return true;
+
     }
 
     void Jacdac::doReceive() {
