@@ -131,6 +131,7 @@ namespace rckid {
         static inline volatile uint32_t receivedPackets = 0;
         static inline volatile uint32_t receivedBytes = 0;
         static inline volatile uint32_t errors = 0;
+        static inline volatile uint32_t rxStatus = 0;
 
     }; // rckid::Jacdac
 
