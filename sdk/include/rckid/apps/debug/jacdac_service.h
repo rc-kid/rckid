@@ -26,7 +26,7 @@ namespace rckid {
 
         332d 10 00 502b6e9c4edaa3b8 0c01011100000800000008000000f8ff
         crc  s  f  device id        data
-                                    0c 01 0111 00000800000008000000f8ff
+                                    0c 01 0111 00000800 00000800 0000f8ff
                                     s  id cmd
      */
     class JacdacService : public ui::App<void> {
@@ -70,9 +70,9 @@ namespace rckid {
 
         /** Converts the accelerometer values to 12.20 fixed-point format 
          */
-        int16_t toInt12_20(int32_t value) {
+        int32_t toInt12_20(int32_t value) {
             // the values from the accelerometer are 16384 per g, the Jacdac IMU service units are in g's so we need to convert the values to 12.20 fixed-point format, which is 1048576 per g
-            return static_cast<int16_t>(value * 1048576 / 16384);
+            return static_cast<int32_t>(value * 1048576 / 16384);
         }
 
         void loop() override {
@@ -94,7 +94,7 @@ namespace rckid {
                     uint8_t data[] = {0x33, 0x2d, 0x10, 0x00, 0x50, 0x2b, 0x6e, 0x9c, 0x4e, 0xda, 0xa3, 0xb8, 0x0c, 0x01, 0x01, 0x11, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0xf8, 0xff};
                     Jacdac::Frame  * f = reinterpret_cast<Jacdac::Frame *>(data);
                     Jacdac::Packet * p = reinterpret_cast<Jacdac::Packet *>(f->data);
-                    int16_t * acc = reinterpret_cast<int16_t *>(p->payload);
+                    int32_t * acc = reinterpret_cast<int32_t *>(p->payload);
                     Point3D a = accel();
                     acc[0] = toInt12_20(a.x);
                     acc[1] = toInt12_20(a.y);

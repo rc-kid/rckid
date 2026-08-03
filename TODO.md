@@ -36,7 +36,8 @@ So what I need:
 # SDK 1.0
 
 - verify we send *everything* in JACDAC (wait for DMA and stall)
-- the G units calculation is probably wrong, feels weird in the console
+
+- sws-tx is really uart PIO, rename as such and we can use it for TX output even on current HW version which means the cartridge available UART can be used 
 
 - launcher payload that moves menu down hangs on device
 
