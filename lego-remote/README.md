@@ -181,5 +181,6 @@ By default the remote sends the device channel control information and the devic
 
 `00 02 xx` - Read control of channel `xx`
 
+## Notes
 
-    
+Can use https://jlcpcb.com/partdetail/Mixic-L9110S/C513306 for the HBridge

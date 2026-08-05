@@ -39,8 +39,6 @@ So what I need:
 
 - sws-tx is really uart PIO, rename as such and we can use it for TX output even on current HW version which means the cartridge available UART can be used 
 
-- launcher payload that moves menu down hangs on device
-
 - determine SD speed and how fast can I go? 
 
 - UI style could be part of settings instead of SD card stored (but how to deal with background?)
@@ -109,7 +107,6 @@ Games (port from mkII)
             pio_sm_set_clock_speed(RCKID_ST7789_PIO, sm_, RCKID_ST7789_SPEED * 4); // 2 cycles per pixel
         }
 
-
 ### Code Cleanup
 - should ini reader and writer own the stream? Might simplify things a bit in the API
 
@@ -159,7 +156,6 @@ Polish
 
 # TODO
 
-- can add JACDAC as both client *and* server - needs UART on the cartridge 
 - turn brightness *on* in avr forever and then try it looks like only problem when not DC connected
 - and only every second turn on is a problem
 

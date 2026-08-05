@@ -42,6 +42,8 @@ namespace rckid::ui {
          */
         void waitUntilIdle(Widget * w) {
             while (! w->idle()) {
+                // ensure we are rendering at proper intervals, i.e. wait for the display update from the previous frame to finish before rendering next
+                rckid::display::waitUpdateDone();
                 render();
                 tick();    
             }
