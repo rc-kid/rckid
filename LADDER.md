@@ -1,143 +1,229 @@
-# Development Ladder
+# Programming Ladder
 
-This describes the core ideas behind the development ladder that RCKid will expose to the children for learning. Overall this is a 5 tier ladder of progressively more complex ways to creatively interact with the device to make things (games mostly:). Every next level is a superset of the previous one in two ways. It allows more control over the device while also extending the capability of the lower tiers. Some of those tiers can be used *on* the device so that extra computer access is not necessary, while others require external computer, for both UX and technical details (it is really hard to program code on device with no keyboard, *and* there is no compiler on RCKid to compile code to begin with). That said, pushing as much of the tiers to the device is important - the younger the audience, the less likely a stable access to a PC and understanding the complexity of cartridge flashing is.
+This describes the core ideas behind the programming ladder built into RCKId's SDK that enables on-device application programming and algorithmics across wide age & skill ranges. This is powered by a single DSL that is exposed to the users via different editor levels and capability tiers. Think of this as more fine grained and on-device oriented MakeCode (which already switches between blocks and TypeScript) combined with Hedy levels. Not very editor supports every level, but the exact level & editor boundaries are not in the current scope of this document. 
 
-Here is the brief overview of the development ladder tiers, they are then followed with dedicated sections with more detail:
+The different editors are the cornerstone of the entire design. They support the users across the wide range of cognitive and literacy skills. The editors and their on-device capabilities shape the language design itself (and its levels) and give children agency as especially younger kids generally lack unconstrained access to a PC: 
 
-- *asset editors* - at this point kids are not even expected to be able to read and write, they do not change the game mechanics, but may change the visual aspects of it by changing the assets themselves. This can be quite powerful, tilemaps, sprites, level editors, music and sound editors combined can fundamentally change the feel of simple games
-- *visual editor* - the first time when kids can customize the behavior of the applications. New objects (player, enemiers, levels, etc.) can be added and their events & actions customized via simple uniform blocks (i.e. not syntax problems, any block can be used anywhere). Literacy should still not be required at this level.
-- *blocks editor* - allows conditional execution in actions & events and more forms of composition & state. Blocks can be used to create visual components that can be used on the lower level.
-- *language editor* - similarly to makecode, this simply allows expressing the blocks in a DSL, providing more ways of control flow & code composition, as well as teaching how to express algorithms textually. The language can also define new blocks that can be used at the block level below
-- *SDK* - the ultimate level, where the full RCKid SDK is accessible. Users can create entirely new game types, new hardware drivers, new applications.  
+    Editor        | Host   | Literacy | Description
+    --------------|--------|----------|-------------------------------------------
+    asset editor  | device | pre      | Edits app static assets (images, sounds, tilemaps, etc.)
+    iconic editor | device | pre      | Edits parts of code with iconic representation via chevrons
+    visual editor | device | lit      | Edits code via chevron based visual blocks (Scratch for small screens)
+    token editor  | device | lit      | Edits code with input terminal by terminal (for on-device text editing)
+    text editor   | pc (*) | lit      | Edits code as normal text editor does (can produce invalid programs)
 
-I plan this all to basically be C++ objects defined in the SDK with each level giving access to more API. The lower on device levels will be interpreted, while the C++ style tiers will be compiled and will extend the device's firmware.
+> (*) This is mostly because editing character by character on device without qwerty keyboard is really painful. I am however considering an RCKid mod where something like blackberry keyboard can be overlaid over the PCB for a full keyboard experience after which the text editor can easily run on-device. 
 
-Some design principles of the whole ladder, so that I keep reminding myself:
+All editors are just projections into single language and runtime shared across all levels. This ensures that as the children move to more complex levels and editors, they can take their creations with them, not leave them behind. 
 
-- every tier is a superset of the previous - games grow with the child
-- higher tiers extend lower ones - blocks create visual components, C++ creates blocks, etc. 
-- push towards on device editing - younger kids, less computer access. Also one part of the original success was that you could pick it up on the go for a few moments, and do things - on device editing preserves this
-- the game is the continuity - moving to higher tier should not mean abandoning the game
+The design also emphasizes extensibility and encapsulation. Children can naturally wrap more advanced functionality into simpler snippets that can be physically shared with peers (via cartridges) and used in their designs. As a simple example, a control flow requiring mechanics can be encapsulated into action and used by people at lower levels where the action hides the control flow. When the users advance to control flow, the so far hidden control flow will become visible and editable. 
 
-## Game Apps
+> Another example can be adding an icon to the action can make the action (or existing action without an icon) available in the pre-literate iconic editor as well. This allows literate child to empower pre-literate friends.
 
-Before we jump to the details of the respective tiers, we should discuss the general requirements of the apps that will be supported by this. 
+# Runtime
 
-- start with just tilemap & sprite games, which can be tweaked to a large number of visually different games
-- different physics can be provided on the visual level & above for stuff like platformers, 2d top down walkers, etc.
+The prgram is a collection of *game objects*, which are either provided by the SDK itself, or can be created in the DSL itself at more advanced levels. Some game objects are always present (such as Device), while others must be created explicitly. 
 
-The game C++ code provides the rendering, but the actual functionality will be provided via function callbacks that can later be populated by visual & block interpreters, c++ functions created by the higher tiers, etc. 
+Game objects have events and actions (like say slots & signals in QT) and free functions that do not belong to any game object are also possible. The bulk of the program is then connecting game object events to desired game object actions (or ad hoc functions). 
 
-## Tier Details
+Each game object also defines its *assets*, such as music, sprites, tilemaps and tilesets, etc. Assets themselves are game objects and so new assets can be instantiated (so that sprite game object can swap bitmap assets, etc.). 
 
-Sections below describe the tiers in slightly more detail, at least conceptually. They deal with the tier changes that are fundamental to the nature of the tiers, but more differentiators are possible. After the description I try to show it on a simple example of how a game made by the kids can be evolved throughout the tiers. 
+The language is always interpreted so that device re-flashing is not necessary and special care is taken in the runtime design to place as much of the immutable data as possible to flash memory as opposed to relatively scarce ram. 
 
-But I would like to stress that the tier system is deliberately structured as going both ways, the key is that the game will grow with the kid as they progress in the ladder. Understanding new tier even slightly can unlock new things possible in the lower tier, where the child is comfortable now and thus the transition to the higher tiers will likely be gradual and it is entirely possible that when some parts of the game are expressed in C++, there will still be some visual action leftovers from the early days that did not need any changes till now. I believe the ability of the system to support this will be a sign of good internal design.
+> Note to self: I have proof of concept of RTTI descriptors in flash, but need to verify this works for extensions and objects created at runtime in the DSL itself as well (here they will be obviously in RAM, but should work the same).
 
-> Note this is work in progress.
+The runtime is event based where game objects can also define their *events* and *actions*, akin to signals & slots in QT. An action is simply a method of the game object that can be called as a function. An event can either be assigned a handler function, or be called like a method, which raises the event and calls the handler (*).
 
-### Assets Editor
+> (*) should events be single handler, or should multiple handlers be allowed?
 
-The lowest tier, will provide asset editors for predefined types. At the minimum, those will be tilesets, tilemaps, sprites, sprite sequences, pictures, sounds and music. This is "safe" as it allows the kids to only change how the game looks. 
+# Editors
 
-Each compatible game will have a manifest that will expose all the asset resources it uses and those will be editable
+All programs are stored in their canonical form with is the text editor's character by character representation (normal text). The editors operate on a grammatical and semantic subset of the full language, which they visualize to fit their needs (such as prefix expression notation in the visual editor, etc.)
 
-> For a specific example, consider a simple platformer. The game mechanics (what happens when buttons are pressed, that a player exists, enemies exist, interaction between them, the platforms in the level themselves) are all defined at the visual level, which also defines which sprite animations and other effects & visuals are required to run the game. Kids can only change those visuals, so instead of say "Mario", you can have a Beaver, instead of platforms you can have lakes with logs and dams, and instead of turtles you can have wasps. The music and sound effects can be different too. But the beaver still jumps and walks like mario and the enemies still walk the same and they all kill the player.
+This has some important consequences for the game development:
 
-### Visual Editor
+(1) The work done at the lower levels does not have to be lost when the user advances to next representation - each layer is a superset of the layer beneath it, e.g. the visual editor can show everything the iconic editor can, etc. This means the games grow with the children, such as the beaver game used in the examples below. 
 
-The visual editor exposes game objects and their events. Game objects are things like a level, player, enemy, etc. Each object internally knows how to render/play itself (this is not exposed at this level) and defines events. Each event can be a sequence of *visual blocks*. The visual blocks can be thought of as a simplified versions of the blocks known from Scratch, etc. Say they are just squares, so they compose simply, square after square with no syntax errors. But this also means there is no communication between them in a sense and no control flow other than uncodintional execution (aka basic blocks). 
+(2) Single game does not have to exist at single level. Of course the assets will always be assets, but even the iconic/visual/text can change from event to event based on the complexity of the events, or merely the time at which it was touched.
 
-Kids at this level can add/remove objects and can add visual blocks to the events exposed by the objects. This allows fundamentally changing the game behavior. Furthermore, the visual blocks reference assets. And crucially, they can reference *new* assets, i.e. the kids can at this point add/remove assets from the game manifest. Imagine adding a visual block movement to an event, in its properties, you can choose the animation, which can be any of the existing animtion assets. You can also add a new animation asset, extending the game. 
+(3) Work done at higher abstraction levels (and presumably editors) can be encapsulates into blocks available at lower language levels/editors. This can have multiple forms, such as for instance, providing an icon (via the asset editors) for some action/event that does not have one, and thus enabling the even in the iconic editor, encapsulating control flow into an action so that it can be used in non-control flow enabled levels, etc.
 
-> For example, the beaver now cannot jump, but instead may swim and beat enemies with its tail (this adds need for new assets). The enemies may now stop being enemies, some of them can be friends (they do not kill the beaver on contact). For a more advanced uses, another tilemap can be provided for say parallax scrolling. 
+> The ultimate extension is creating new game objects using the C++ and the SDK itself. While I am not expecting the students will do that, it is very useful for extending the runtime in capabilities both software (new rendering techniques), and in hardware (game objects for peripherals, etc.).
 
-### Blocks editor
+Unlike the traditional languages, due to RCKid's limited hardware capabilities (especially screen estate, and number of input keys), the editors shape the language itself. Furthermore the editors are designed so that every new editor level requires more abstract thinking from its users, while being able to express more complex code.
 
-Think scratch or makecode. The objects and events stay, but whereas in the previous level all actions were rectangles without any interaction between them, limiting the actions, now we have real control flow with conditional executoon and crucially a state. At this point the objects also expose properties through which their inner state can be modified even further. 
+## On-Device Editing
 
-That said, the block editor adds one more functionality: A special "visual block" that contains blocks inside, but provides the interface identical to visual blocks to the outside. This means that kids can create visual blocks using the scratch blocks. Those visual blocks can then be used at the visual editor level. This is inspired by things like Delphi, where you could in Object Pascal create components that Delphi recognized as components and you could then use those without the need to understand their internals. 
+RCKid with its small non-touch screen and very limited input controls cannot use the default text editing with character by character typing on the keyboard, nor can it support the drag & drop user interface known from visual editors running on PC or tablets such as Scratch or Makecode. 
 
-While historically this has been done on computers, I would like to push this layer to the device as well - but without a mouse & dragging the blocks around, some smarter and not so frustrating way of building the blocks will be necessary.
+Instead, the iconic, visual and token editors all work around the same principle of showing the code in blocks (icons, visual blocks or tokens) with holes (denoted as `...` in the examples below) in the visualized code at places where new stuff can be added. Particular block or hole can be selected via dpad and it can be changed/filled by invoking a context menu, which will show options valid for that block (and possibly change the blocks around it as necessary).  
 
-> Now beaver can do cool things. It can build castles by changing the tilemap dynamically, it can cut trees and create dams. The interactions between enemies & friends can now be far more comples - friends can follow and help, enemies can hunt. Their movements can be expressed in much greater detail. In game state such as high scores, lives, etc. can be expressed at this level. 
+The hole based on-device editing works the best in prefix notation, whereas the hole is filled with the function/operator, which also knows how many new holes are necessary. This also avoids the clutter of parentheses, which are now not necessary. 
 
-### C++ Editor
+> I am not sure if this is the best way to go forward, but I am nore and more willing to try it out. The language itself does not have to ne prefixed and the text editor (latest tier) can be infix based with the lower tiers automatically converting to prefix.
 
-The main purpose of this is to teach the kids how to express the ideas. It likely does not expose any new fundamental aspects of the game engine, the fact that kids are dealing with programming, types, statements, etc, is enough. It does however expose new compositions where the blocks fall short - bot high level via functions, and low level via all the possible C++ statements available. 
+## Asset Editor
 
-That said, kids at this level can create functions/objects that will allow to be plugged into the blocks interface below, i.e. they can create new blocks and call those blocks from the lower levels again. 
+Each game object in the program defines assets it uses. Editing this collection requires no programming/algorithmics skills. Yet it gently teaches basic decomposition strategies (sprite is collection of pixels, sprite animation is sequence of images, music is sequence of notes, tilemap is 2D array of tiles, etc.). In terms of the language, assets can be thought of as static constexpr data (*), which can be edited in the corresponding editors. 
 
-Because this is C++ now, this tier very likely has to happen on a PC. The c++ functions will be baked into the firmware and will have to be flashed. That said, I am not completely giving up on the idea of exposing this at least in some way on the device as well. I recall how my high school graphic calculator allowed programming by predefined keywords, which sped the typing. RCKid version with some blackberry-like keyboard is indeed possible, but I will admit I gave this thought perhaps more time than it deserves by now;-D
+This is a *safe* tier as it only allows changing the looks of the game, not the code itself. Furthermore the tier is pre-literate in its nature.
 
-> Beaver can't technically do coller things than in the blocks level, *but* cooler and more complex forms of interaction are possible because of code being a lot better suited to expressing them. 
+> (*) Instead of polluting the codebase with static arrays describing the binary data, I am thinking of either some specialized constructors (like say the SDK allows editing pixels in fonts & tilemaps), or even offsetting to external files, which the asset editors can edit. 
 
-### Full C++ SDK
+> For a specific example, consider a simple platformer. The game mechanics (what happens when buttons are pressed, that a player exists, enemies exist, interaction between them, the platforms in the level themselves) are all defined at the asset level, which also defines which sprite animations and other effects & visuals are required to run the game. Kids can only change those visuals, so instead of say "Mario", you can have a Beaver, instead of platforms you can have lakes with logs and dams, and instead of turtles you can have wasps. The music and sound effects can be different too. But the beaver still jumps and walks like mario and the enemies still walk the same and they all kill the player upon touch
 
-This is the ultimate tier, where the kids (teenagers likely at this point) can break free from the game engine they have been given at the asset level editor and that has grown with them till now. At this level, you can do three fundamentally novel things:
+## Iconic Editor
 
-1) customize the game engine itself - you can create completely new objects, can change their events and the event logic itself. Can talk directly to the hardware for even more stunning visuals, etc. 
-2) you can write your *own* hardware drivers - at the previous levels, unless it was available as a block, you could not use it (or unless there was SDK for it already on the C++ editor level). Here you can write drivers properly. The RP2350 is uniquely capable at this with the pio peripherals and the cartridge connector ensures that you have enough of those pins to do great things (the full HSTX is exposed). 
-3) by using the SDK itself, you can write not just games, but also apps.
+The iconic editor is identical in form and function to the visual editor with single difference and limitation: Instead of text, all actions, events and types are visualized using their icons. This also limits the scope of the editor as actions, events, types, values, etc. that do not have corresponding icons defined cannot be used at this level.
 
-> The humble beaver has travelled far. Breaking from the "shackles" of interpretation at some level, you can make the visuals next level with more sprites, more background layers, etc. To put this in perspective, my estimate is that the game engine can give you games roughly comparable to game boy color, with full C++ you can sit beween GBA and DS. But you can also write genuinely useful apps - or app engines for different game types & physics. Music players, I believe video player might be a reality too, utilities, you name it. 
+The iconic editor is basically a simple *when-do* style programming based on the game object's event system that should be very easy for children to understand even at pre-literate stage.
 
-## Visual Editor Grammar
+For more details on the iconic editor working see the visual editor.
 
-> The following is WiP, please treat is as such. 
+> I'm thinking that control flow (other than perhaps a sequence) will not be available for this editor - but this is a deliberate decision of not to provide icon for the construct rather than fundamental limitation. I am also thinking that perhaps some values can be instantiated, such as simple text editing and numeric values. This is optional and should bridge more softly the gap between pre- and literate- children (often kids can write and read their names which they are likely to use in their creations before they can really read and write, and they understand small numbers)
 
-The visual grammar is structured similar to powerline terminals. We have three possible outer block types:
+> For our example, the children can now make sure the beaver does not die and wasps can be its friends. Instead a fox may appear that can kill the beaver, but the random moving wasps can sting the fox instead. For a more advanced uses, another tilemap can be provided for say parallax scrolling.
 
-- `| event >`
-- `| statement |`
-- `> expression |`
+## Visual Editor
 
-Program comprises of the following structure:
+The visual editor is inspired by Scratch, Makecode, Blockly, Kodu and others where different shapes can be connected together and different shapes enforce legal composition. The visualized blocks can be navigated via the dpad and highlighted block/hole can be changed as decripbed in the _On Device Editing_ section.
 
-    | event 1 > : | statement 1 |
-                  | statement 2 |
-                  ...
-    | event 2 > : ...
+As the visual level, kids should already be familiar with the when-do style of the iconic editor and will be introduced to actual programming concepts, such as expressions, control flow statements, variables, functions, etc.
 
-Internally, each of the blocks is composed of subblocks, that for events and statements start with `|` and end with `|`, while for expressions they start with `>` and end with `|`. Those sub blocks are objects, event and method names, functions, values, etc.
+The prefix nature of the language makes the editing and visualization straightforward. The visual editor uses simple chevron powerline-like visualization that saves screen real estate. Each statement starts and ends with the `|` character. If any expression part requires operands, it is followed by `>` as many times as there are operands. This is shown on the sequence below that creates a simple function call `foo.bar(4 + 5, 67)`:
 
-Each block thus have an *outer* shape, which defines where the block can be used, and *inner* shape, which defines what stuff can go in. Some examples:
+    | ... |                               # Initial hole
+    | foo > ... |                         # selected object foo, reqires action specification
+    | foo > bar > ... > ... |             # selected action, we know it takes 2 arguments
+    | foo > bar >> + > ... > ... |> ... | # added +, takes two arguments
+    | foo > bar >> + > 4 > 5 |> ... |     # addition arguments added
+    | foo > bar >> + > 4 > 5 |> 67 |      # whole expression done
 
-- event outer shape is `|>` by definition, its inner shape is `||`, which means that the event inside must be fully defined and its arguments matched (see below)
-- statement outer shape is `||` and its inner shape is also `||` meaning statements are complete
-- function argument outer shape is `>|` for last function argument (the call is complete), or `>>` if there are more arguments after it. The inner shape is always `>|`, meaning it has to be an expression that returns value of the argument and has to be full call if complex
+Note the `>>` chevron above, which indicates nesting. While in most visual editors, nesting is done by graphically increasing the height of the statements so that nesting can be visualized, on RCKid's small screen, nesting is visualized by color change of the parts, which is indicated by the `>>` chevron which indicates color change. Note that this chevron does notreally exist and is only in the ASCII "art" representing the notation. Users will instead see a color change of the blocks. 
 
-Some blocks do not have inner shapes, because they cannot nest properly, such as function names, object names, etc. They will however still come in different shapes, such as:
+When the nested call is done, it can either be followed by another operand of the parent block, in which case we see `|>` at the end, where the pipe signals the end of the nested call, and the `>` sigals continuation of the parent call, and will be drawn in the parent call. Or it can be `||` where the nested *and* parent calls end at the same block. Note that a combination of those is possible, i.e. `|||>` which closes 3 expressions and continues the fourth one. The `||` can be rendered as a small bar block of the corresponding color. Examples below:
 
-- `||` function that takes no arguments and returns no arguments
-- `>|` function that takes no arguments and returns value
-- `>>` function that takes arguments (at least one) and returns a value
-- `|>` functiom that returns nothing and takes at least one argument, or an object in the position of selection (event or method)
-- `>|` object as a value
-- `>|` expression literal
+    | foo > bar >> + >> - > b > a |> c |> d ||
+    # foo.bar(+ - b a c, d) in prefix
+    # foo.bar((b - a)) + c, d) in infix
 
-For events, if they have arguments, because the visual editor does not have variables, the event values must be pattern matched. 
+Visualized nesting happens when newly inserted element expects at least one argument, i.e. :
 
-So a program can look a bit like this (say something simple like cat chase):
+    | foo > bar > 5 |           # no nesting, 5 is literal value
+    | foo > bar >> + > 5 > 6 ||   # nesting, + expects 2 operands
+    | foo > bar >> foo > baz || # nesting (foo expects action specifier, baz expects no arguments)
 
-    | Device > btnPressed > Up > :    | Cat > moveBy > Point(0, -1) |
-    | Device > btnPressed > Down > :  | Cat > moveBy > Point(0, 1) |
-    | Device > btnPressed > Left > :  | Cat > moveBy > Point(-1, 0) |
-    | Device > btnPressed > Right > : | Cat > moveBy > Point(1, 0) |
-    | Device > gameLoop > :           | Mouse > moveBy > random |
-    | Cat > collidesWith > Mouse > :  | Device > gameOver |
-    
-This is actually reasonably expressive with right set of events and rather easy to unerstand. The joining is simple (one rule). The lack of variables can in the block editor be lifted easily by adding new shape, say `(oval)` and one can then write things like this:
+An extension of the simple visual editor is the use of control flow. The simplest control flow statement is the sequential execution of multiple statements (code block). This is visualized by a small `||` narrow block to the left with `\/` joins (visualized in ASCIIart as the joins alone):
 
-    | Device > onButtonPress > (btn) > : | print > (btn) | 
-                                         | (b) = > random |
+    \/ | log > print > "first" |          # first statement
+    \/ | log > print > "second" |         # second statement
+       | ... |                            # hole for the next, third statement, or empty
 
-This makes the powerline joining also part of the blocks, where the blocks simply add new shapes for composition. 
+The `\/` short side block can also be selected and will offer control-flow specific actions such as adding before, after, removing, etc.
 
-Normally blocks would nest like being fully enclosed. But this will not work well for the small screen. Instead we can use colors. Whenever we include the outer - inner shape barrier, we will add a color gradient piece that starts with outer left with outer color and blends to inner left inner color. Then we will do `+` placeholder and after it the inner right -> outer right color gradient again, so sth like this:
+More complex control flow such as if statements or loops is visualized similarly:
 
-    | Player > moveByXY > > +   |> +
-                         ^  ^   ^  ^
-                         1  2   3  4
+    \/ | log > print > "pre-if" |            # log.print("pre-if");
+    | if > == >> foo > bar >> 56 |           # if (foo.bar == 56) {
+    || \/ | log > print > "its 56" |         #     log.print("its 56");
+    ||    | ... |                            #     // hole for adding statements to true case
+    | else |                                 # } else {
+    |  \/ | log > print > "something else" | #     log.print("something else")
+    |     | ... |                            #     // gole for adding statements to false case
+    | end if |                               # }
+       | ... |                               # // hole for after if statements
 
-Where `1` is gradient from `>>` to first argument expression, `2` is the ui button to specify this, `3` is the gradient from end of first argument expression to the call expression second argument, `4` is the placeholder for the second argument. When `4` will be expanded, it will expand to something that will have shape `>|`.  
+Further extensions to the visual editor can be introducing function definitions and perhaps even entire game object classes. Those will follow the same princples. 
+
+It is important to note that the connection shape (always `>`) has nothing to do with types as opposed to the more conventional computer/tablet based block systems. Instead, types are used to limit the availability of options that can be selected from the input menus to ensure that a well-typed program will be produced when all `> ... ` hole types (i.e. holes in required positions) are filled in. To demonstrate, consider this example:
+
+    | ... |       # first hole to add a statement
+                  # this can be all available game objects (say log, device, player)
+                  # all control flow statements (if, switch, loop, etc.)
+                  # function definition and other global statements, etc.
+    | log > ... | # we have selected log, but simply using game object in value position is not allowed here
+                  # so action is required, where available options will be *all* actions of log
+    | log > print > ... | # we have selected print, which takes 1 argument of type string
+                          # so now *any* objects that have actions that produce string
+                          # and any string creating functions will be available
+                          # as well as string literals, variables that are strings, etc.
+    | log > print >> device > ... || # we selected device, device is not string, must cal action
+                                     # so now the options will only be device actions that return string
+    | log > print >> device > id ||
+
+The program in the visual editor is a collection of mapping between game object's events and their handlers, which form the actual source code. When events have arguments, pattern matching can be employed to only react to specific conditions, so for instance the following is possible:
+
+    | device > onKeyDown > ButtonUp > : | ... | # where we react only to button up
+
+> For the beaver game we can add a lot now, including for instance the ability of the beaver to hit back at its enemies with its powerful tail. Beaver can swim when in water and walk when on land. Instead of unique lives, we can have an HP gauge, etc. The movement of the wasps and foxes can be changed, so that foxes fear the wasps, etc.  
+
+## Token Editor
+
+The token editor works very similarly to the visual and iconic editors, with same hole editing principles. The difference here is that program code is entered as text in a token by token basis. So for instance the previous if example can be visualized as this:
+
+    log.print("pre-if")
+    if == foo.bar() 56
+        log.print("its 56")
+        ...
+    else
+        log.print("something else)
+        ...
+    ...
+
+> Note that the `.` dot operator for membership has changed to infix now. I am not sure yet if that is a feature (leaning towards yes), but enough to say that there its infix-ness is not a problem as it is still mandatory in places where types would require it, you can think of the tokenizationof the above as `log` `.print` etc. The infix dot being part of the member selector. 
+
+Thanks to the prefix notation and the DSL gramar used, this should look *very* similar to the visual representation already, just written purely as text and with operators & keywords that were missing from the visual description (such as the `.` operator, parentheses, etc.). 
+
+Despite showing the actuall DSL code as text, the editing still happens at the hole insertion. When hole (`...`) is selected, the editor shows the available options that can be used to fill the hole, determined on the place of the hole both syntactically and type-wise, in the same manner it was used in the iconic and visual editors. 
+
+Formatting will be dobe by the editor itself and the chevron style guides are no longer visible. But when selected, the call and its arguments can be highlighted in colors.
+
+> This of course depends on the exact syntax, subject to be refined later. 
+
+> For the beaver game, not that many new cool things can happen - the visual editor should already be turning complete. But the more complex the game mechanics get, the more useful the text editor can be by fitting more text on the screen and by utilizing more advanced language features (but those can in theory all exist also at the visual level). 
+
+## Text Editor
+
+This is the final tier that is identical to programming editors as we know them where the program code is entered character by character. Not expected to run on the device as the lack of qwerty keyboard makes character by character editing annoying. Yet the editor tier is pedagogically important because:
+
+- it introduces the notion of invalid programs due to the free form editing, whereas the previous editing methods never allowed inserting invalid token in place.
+- by the definition, can support the language in its entire complexity as full language simply means all productions and nonterminals are allowed.
+
+> For the beaver, the only thig that changes is that very complex game interactions are possible now with more ease.
+
+# Language Reference
+
+I am thinking event based, simple syntax that will read nicely, infix syntax in pure text (but rendered as prefix in the visual & token editors). No curly braces because of off-side rule like Python. Dot operator for membership. Pattern matching. `:=` for assignment and `==` for comparison. Static typing with inference, algebraic data types.
+
+> TODO to be done later
+
+# Levels
+
+The language itself can be viewed in *levels*, similarly to the Hedy and Racket, but more similarly to Hedy where the levels are more fine grained and introduce much more basic concepts, unlike the Racket's Beginner language which already does quite a lot. 
+
+Furthermore, certain levels can only be expressed in particular editors. It still holds that any higher-level editor can express everything te editor below it can, but only the text editor at the very end is required to be complete. 
+
+> But I hope the token-based editor can be complete, or near complete too. At the moment I am thinking the visual editor should eventually support everything up to creating functions and extending existing game objects, while maybe creating completely new game objects can be omitted. The iconic editor on the other hand will be rather restrictied, only show things for which icons will be defined and will likely lack control flow (maybe sequence ok) and variables (maybe passing them ok).
+
+The below is not in any particular order, just ideas for features that can define levels:
+
+- assets only (no code editing only static data)
+- game objects and their events & actions, explicit values
+- types, complex constructors (such as point, etc.)
+- variables
+- sequential execution
+- conditional statements
+- loops
+- writing own functions
+- extending game objects with events and actions
+- writing own game objects
+- memory management
+- collections
+
+> TODO to be done later, can get inspire dby hedy & racket stuff
+
+# History
+
+Language has switched to prefix notation to simplify the editing paradigm. The `<` chevron is no longer used to show that an expression returns value - this is not needed as the type based selectors will only show valid options anyways.
+
+In the olden days I was assuming full C++ SDK as the latest level of the mastery ladder. I have abandoned this as the full C++ SDK is arguably a diffrent programming language and experience at *all* (flashing, really complex memory management, hardware interaction, etc.). 
