@@ -183,4 +183,16 @@ By default the remote sends the device channel control information and the devic
 
 ## Notes
 
-Can use https://jlcpcb.com/partdetail/Mixic-L9110S/C513306 for the HBridge
+Can use https://jlcpcb.com/partdetail/Mixic-L9110S/C513306 for the HBridge, or maybe even better this one: https://jlcpcb.com/partdetail/Bardeen_Micro-BDR6125/C5349300, which is rated for 3A, which is plenty for my needs.
+
+Try PUYA chips as well for lower costs and same architecture across the ecosystem
+
+3x INA219 (main + m1 + m2)
+2x Hbridge
+2x 5V step-down
+1x MCU
+
+- use SMT female headers to have more PCB area on the back for the connectors
+
+- 
+
