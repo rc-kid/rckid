@@ -135,9 +135,9 @@ namespace rckid::ui {
                 font_->renderColumnAlpha(column, starty, numPixels, currentHint_.gi, buffer, textColor_);
         }
 
-        void applyStyle(Style const & style) override {
-            Widget::applyStyle(style);
-            setFg(style.defaultFg());
+        void applyStyle() override {
+            Widget::applyStyle();
+            setFg(Style::defaultFg());
         }
 
         protected:

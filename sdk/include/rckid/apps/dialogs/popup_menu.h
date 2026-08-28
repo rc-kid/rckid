@@ -67,10 +67,8 @@ namespace rckid {
                 << SetRect(Rect::WH(width, height));
 
             sel_ = view_->addChild(new Panel{}) 
-                << SetBg(Style::defaultStyle().accentFg())
+                << SetBg(Style::accentFg())
                 << SetRect(Rect::XYWH(2, 2, width - 4, 22));
-
-            Style const & style = Style::defaultStyle();
 
             for (Coord i = 0; i < rows_; ++i) {
                 MenuItem const & mi = menu->at(i);
@@ -84,7 +82,7 @@ namespace rckid {
                     << SetFont(f)
                     << SetUseAlpha(true)
                     << SetText(mi.text)
-                    << SetFgGradient(style.defaultFg(), style.accentBg());
+                    << SetFgGradient(ui::Style::defaultFg(), ui::Style::accentBg());
             }
 
             root_.useBackgroundImage(false);

@@ -30,7 +30,7 @@ namespace rckid {
 
             displayLabel_ = addChild(new ui::Label{})
                 << SetFont(assets::OpenDyslexic64)
-                << SetFg(Style::defaultStyle().accentFg())
+                << SetFg(Style::accentFg())
                 << SetHAlign(HAlign::Right)
                 << SetRect(Rect::XYWH(16, 48, 288, 64));
 

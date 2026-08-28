@@ -17,9 +17,9 @@ namespace rckid::ui {
             Widget::renderColumn(column, startRow, buffer, numPixels);
         }
 
-        void applyStyle(Style const & style) override {
-            Widget::applyStyle(style);
-            bg_ = style.accentBg();
+        void applyStyle() override {
+            Widget::applyStyle();
+            bg_ = Style::accentBg();
         }
 
     protected:

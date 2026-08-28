@@ -54,10 +54,8 @@ namespace rckid::ui {
 
 
         static Header * instance() { 
-            if (instance_ == nullptr) {
+            if (instance_ == nullptr)
                 instance_ = new Header{};
-                instance_->applyStyle(Style::defaultStyle());
-            }
             return instance_; 
         }
 
@@ -180,7 +178,7 @@ namespace rckid::ui {
 
         static immutable_ptr<Color::RGB565> defaultPalette() {
             Color::RGB565 * p = new Color::RGB565[32];
-            Color textFg = Style::defaultStyle().defaultFg();
+            Color textFg = Style::defaultFg();
             for (uint8_t i = 0; i < 16; ++i)
                 p[i] = textFg.withBrightness(i << 4 | i).toRGB565();
             // green (testFg before that used for index 1, offset 14)

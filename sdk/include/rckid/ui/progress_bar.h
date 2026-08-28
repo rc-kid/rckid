@@ -53,10 +53,10 @@ namespace rckid::ui {
             Widget::renderColumn(column, startRow, buffer, numPixels);
         }
 
-        void applyStyle(Style const & style) override {
-            Widget::applyStyle(style);
-            fg_ = style.accentFg();
-            bg_ = style.accentBg();
+        void applyStyle() override {
+            Widget::applyStyle();
+            fg_ = Style::accentFg();
+            bg_ = Style::accentBg();
         }
 
     protected:

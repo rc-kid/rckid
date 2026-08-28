@@ -146,6 +146,11 @@ namespace rckid {
             }
         }
 
+        static void refreshStyle() {
+            if (current_ != nullptr)
+                current_->doRefreshStyle();
+        }
+
     protected:
         friend class HomeMenu; // for access to home menu generator
 
@@ -226,6 +231,11 @@ namespace rckid {
         virtual void releaseResources() {
             if (parent_ != nullptr)
                 parent_->releaseResources();
+        }
+
+        virtual void doRefreshStyle() {
+            if (parent_ != nullptr)
+                parent_->doRefreshStyle();
         }
 
         virtual unique_ptr<ui::Menu> homeMenu();

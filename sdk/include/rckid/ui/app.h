@@ -10,9 +10,7 @@ namespace rckid::ui {
     class App : public ModalApp<RESULT> {
     public:
         explicit App(Rect rect): 
-            root_{rect} 
-        {
-            root_.applyStyle(ui::Style::defaultStyle());
+            root_{rect} {
         }
 
         App(): App{Rect::WH(display::WIDTH, display::HEIGHT)} {}
@@ -22,9 +20,15 @@ namespace rckid::ui {
         Coord width() const { return root_.width(); }
         Coord height() const { return root_.height(); }
 
+
     protected:
 
         uint32_t animationSpeed() const { return root_.animationSpeed(); }
+
+        void doRefreshStyle() override {
+            root_.applyStyle();
+            ModalApp<RESULT>::doRefreshStyle();
+        }
 
         void focusWidget(Widget * w) {
             if (w == focusedWidget_)
@@ -36,7 +40,7 @@ namespace rckid::ui {
                 focusedWidget_->onFocus();
         }
 
-        /** Waits until the given widget becomes idle (all its aniations are finished). 
+        /** Waits until the given widget becomes idle (all its animations are finished). 
          
             Internally this just runs the render & system tick parts of the application loop without ever going to the loop function. Very useful for synchronous animation events, such as app exit.
          */
@@ -71,7 +75,7 @@ namespace rckid::ui {
 
         template<typename T>
         with<T> addChild(T * child) { 
-            return root_.addChild(child) << ApplyStyle(ui::Style::defaultStyle()); 
+            return root_.addChild(child); 
         }
 
         Widget::AnimationBuilder animate() { return root_.animate(); }

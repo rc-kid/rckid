@@ -12,7 +12,7 @@ namespace rckid::ui {
     public:
 
         FocusRect() {
-            fg_ = Style::defaultStyle().accentFg();
+            fg_ = Style::accentFg();
             updateAnimation(Color::Black(), fg_);
         }
 

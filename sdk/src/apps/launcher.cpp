@@ -139,10 +139,9 @@ namespace rckid {
                     << ui::MenuItem{"Image", assets::icons_64::picture, []() {
                         auto path = App::run<FileDialog>("/files/images/backgrounds");
                         if (path) {
-                            ui::Style & style = ui::Style::defaultStyle();
-                            style.setBackgroundImage(ImageSource{path.value()});
+                            ui::Style::setBackgroundImage(ImageSource{path.value()});
                             // force repaint
-                            Launcher::updateStyle(style);
+                            App::refreshStyle();
                             ui::Style::saveDefaultStyle();
                         }
                     }};
@@ -152,38 +151,34 @@ namespace rckid {
                 auto result = std::make_unique<ui::Menu>();
                 (*result)
                     << ui::MenuItem{"Text", assets::icons_64::light, []() {
-                        ui::Style & style = ui::Style::defaultStyle();
-                        auto color = App::run<ColorDialog>(style.defaultFg());
+                        auto color = App::run<ColorDialog>(ui::Style::defaultFg());
                         if (color) {
-                            style.setDefaultFg(color.value());
-                            Launcher::updateStyle(style);
+                            ui::Style::setDefaultFg(color.value());
+                            App::refreshStyle();
                             ui::Style::saveDefaultStyle();
                         }
                     }}
                     << ui::MenuItem{"Background", assets::icons_64::light, []() {
-                        ui::Style & style = ui::Style::defaultStyle();
-                        auto color = App::run<ColorDialog>(style.defaultBg());
+                        auto color = App::run<ColorDialog>(ui::Style::defaultBg());
                         if (color) {
-                            style.setDefaultBg(color.value());
-                            Launcher::updateStyle(style);
+                            ui::Style::setDefaultBg(color.value());
+                            App::refreshStyle();
                             ui::Style::saveDefaultStyle();
                         }
                     }}
                     << ui::MenuItem{"Accent Text", assets::icons_64::light, []() {
-                        ui::Style & style = ui::Style::defaultStyle();
-                        auto color = App::run<ColorDialog>(style.accentFg());
+                        auto color = App::run<ColorDialog>(ui::Style::accentFg());
                         if (color) {
-                            style.setAccentFg(color.value());
-                            Launcher::updateStyle(style);
+                            ui::Style::setAccentFg(color.value());
+                            App::refreshStyle();
                             ui::Style::saveDefaultStyle();
                         }
                     }}
                     << ui::MenuItem{"Accent Bg", assets::icons_64::light, []() {
-                        ui::Style & style = ui::Style::defaultStyle();
-                        auto color = App::run<ColorDialog>(style.accentBg());
+                        auto color = App::run<ColorDialog>(ui::Style::accentBg());
                         if (color) {
-                            style.setAccentBg(color.value());
-                            Launcher::updateStyle(style);
+                            ui::Style::setAccentBg(color.value());
+                            App::refreshStyle();
                             ui::Style::saveDefaultStyle();
                         }
                     }};
@@ -221,8 +216,7 @@ namespace rckid {
         (*result)
             << ui::MenuItem::Generator("Effect", assets::icons_64::numpad, rgbEffectSettingsMenuGenerator)
             << ui::MenuItem{"Color", assets::icons_64::light, []() {
-                ui::Style & style = ui::Style::defaultStyle();
-                auto color = rckid::App::run<ColorDialog>(style.accentBg());
+                auto color = rckid::App::run<ColorDialog>(ui::Style::accentBg());
                 if (color)
                     rckid::rgb::setColor(color.value());
             }}
@@ -288,14 +282,6 @@ namespace rckid {
             }}.withPayload(Launcher::PAYLOAD_MOVE_DOWN);
 
         return result;
-    }
-
-
-    void Launcher::updateStyle(ui::Style & style) {
-        // only expected to be called from the launcher
-        if (instance_ == nullptr)
-            return;
-        instance_->root_.setBackgroundImage(style);
     }
 
 } // namespace rckid

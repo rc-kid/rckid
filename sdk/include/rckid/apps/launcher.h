@@ -48,7 +48,7 @@ namespace rckid {
         Launcher(ui::MenuItem::GeneratorEvent rootMenuGenerator = mainMenuGenerator()) {
             ASSERT(instance_ == nullptr);
             instance_ = this;
-            root_.setBackgroundImage(ui::Style::defaultStyle());
+            root_.applyStyle();
             carousel_ = addChild(new ui::CarouselMenu())
                 << ui::SetRect(Rect::XYWH(0, 140, 320, 100))
                 << ui::ResetMenu(rootMenuGenerator);
@@ -67,13 +67,8 @@ namespace rckid {
 
         ui::CarouselMenu * carousel() const { return carousel_; }
 
-        /** Updates the style used by the launcher. Useful for style changes previews, etc.
-         */
-        static void updateStyle(ui::Style & style);
-
         static Launcher * instance() { return instance_; }
-
-
+        
         class BorrowedCarousel : public ui::Widget {
         public:
             BorrowedCarousel() {

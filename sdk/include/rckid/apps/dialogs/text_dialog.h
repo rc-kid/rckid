@@ -44,7 +44,7 @@ namespace rckid {
                 << SetRect(Rect::XYWH(12, 52, 24, 24));
             caps_ = addChild(new Label{})
                 << SetRect(Rect::XYWH(36, 52, 24, 24))
-                << SetFg(Style::defaultStyle().accentFg())
+                << SetFg(Style::accentFg())
                 << SetFont(assets::Iosevka16)
                 << SetHAlign(HAlign::Center)
                 << SetVAlign(VAlign::Center)

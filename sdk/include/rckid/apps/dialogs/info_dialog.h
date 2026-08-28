@@ -51,7 +51,7 @@ namespace rckid {
                     return Color::Blue().withBrightness(48);
                 case Kind::Default:
                 default:
-                    return ui::Style::defaultStyle().defaultBg();
+                    return ui::Style::defaultBg();
             }
         }
 
@@ -63,7 +63,7 @@ namespace rckid {
                     return Color::White();
                 case Kind::Default:
                 default:
-                    return ui::Style::defaultStyle().defaultFg();
+                    return ui::Style::defaultFg();
             }
         }
 

@@ -41,11 +41,10 @@ So what I need:
 
 - determine SD speed and how fast can I go? 
 
-- UI style could be part of settings instead of SD card stored (but how to deal with background?)
-
 - implement light detection capability for mk3
 
 - add extra keyboard effects to settings menu
+- what is the keys in settings style? repeat speed? 
 - add on/off subwidget for carousel
 
 - default palette can be system wide

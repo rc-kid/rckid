@@ -12,60 +12,50 @@ namespace rckid::ui {
      
         Styles are object that define general widget visualization properties, such as colors, accents, fonts, etc. Widgets then support applying styles to themselves. The styling is simple, as the style merely holds the properties and the widgets determines what properties from the style to apply and how. 
 
-        There is no connection between styles and widgets, i.e. applying style to a widget, then changing the style does not change the widget. Applying a style to a widget is always explicit. 
+        A single global style is suppported at any time, but applications and widgets do not implicitlyrestyle on a style change - styling is always explicit, either in the constructor, or via the applyStyle method of ui::Widget.
      */
     class Style {
     public:
 
-        static Style & defaultStyle();
-
+        static void loadDefaultStyle();
         static void saveDefaultStyle();
 
-        void load(ini::Reader & reader);
+        static void load(ini::Reader & reader);
 
-        void save(ini::Writer & writer);
+        static void save(ini::Writer & writer);
 
-        Color defaultFg() const { return defaultFg_; }
-        Color defaultBg() const { return defaultBg_; }
+        static Color defaultFg() { return defaultFg_; }
+        static Color defaultBg() { return defaultBg_; }
 
-        void setDefaultFg(Color value) { defaultFg_ = value; }
-        void setDefaultBg(Color value) { defaultBg_ = value; }
+        static void setDefaultFg(Color value) { defaultFg_ = value; }
+        static void setDefaultBg(Color value) { defaultBg_ = value; }
 
-        Color accentFg() const { return accentFg_; }
-        Color accentBg() const { return accentBg_; }
+        static Color accentFg() { return accentFg_; }
+        static Color accentBg() { return accentBg_; }
 
-        void setAccentFg(Color value) { accentFg_ = value; }
-        void setAccentBg(Color value) { accentBg_ = value; }
+        static void setAccentFg(Color value) { accentFg_ = value; }
+        static void setAccentBg(Color value) { accentBg_ = value; }
 
+        static uint32_t animationSpeed() { return animationSpeed_; }
 
-        uint32_t animationSpeed() const { return animationSpeed_; }
+        static ImageSource const & backgroundImage() { return backgroundImage_; }
 
-        ImageSource const & backgroundImage() const { return backgroundImage_; }
-
-        void setBackgroundImage(ImageSource img) {
+        static void setBackgroundImage(ImageSource img) {
             backgroundImage_ = std::move(img);
         }
 
-        // TODO a hack
-        static void clearDefaultStyle() {
-            delete defaultStyle_;
-            defaultStyle_ = nullptr;
-        }
-
     private:
-        static constexpr char const * STYLE_SETTINGS_FILE = "style2.ini";
+        static constexpr char const * DEFAULT_FILE = "style2.ini";
 
-        Color defaultFg_ = Color::White();
-        Color defaultBg_ = Color::Black();
+        static inline Color defaultFg_ = Color::White();
+        static inline Color defaultBg_ = Color::Black();
         
-        Color accentFg_ = Color::White();
-        Color accentBg_ = Color::RGB(32, 32, 32);
+        static inline Color accentFg_ = Color::White();
+        static inline Color accentBg_ = Color::RGB(32, 32, 32);
         
-        uint32_t animationSpeed_ = RCKID_DEFAULT_ANIMATION_DURATION_MS;
+        static inline uint32_t animationSpeed_ = RCKID_DEFAULT_ANIMATION_DURATION_MS;
 
-        ImageSource backgroundImage_{assets::images::logo};
-
-        static inline Style * defaultStyle_ = nullptr;
+        static inline ImageSource backgroundImage_{assets::images::logo};
 
     }; // rckid::ui::Style
 

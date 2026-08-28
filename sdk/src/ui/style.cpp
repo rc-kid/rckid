@@ -3,25 +3,19 @@
 
 namespace rckid::ui {
 
-    Style & Style::defaultStyle() {
-        if (defaultStyle_ == nullptr) {
-            defaultStyle_ = new Style();
-            auto f = fs::readFile(STYLE_SETTINGS_FILE);
-            if (f != nullptr) {
-                ini::Reader reader{*f};
-                defaultStyle_->load(reader);
-            }
+    void Style::loadDefaultStyle() {
+        auto f = fs::readFile(Style::DEFAULT_FILE);
+        if (f != nullptr) {
+            ini::Reader reader{*f};
+            load(reader);
         }
-        return *defaultStyle_;
     }
 
     void Style::saveDefaultStyle() {
-        if (defaultStyle_ == nullptr)
-            return;
-        auto f = fs::writeFile(STYLE_SETTINGS_FILE);
+        auto f = fs::writeFile(Style::DEFAULT_FILE);
         if (f != nullptr) {
             ini::Writer writer{*f};
-            defaultStyle_->save(writer);
+            save(writer);
         }
     }
 
@@ -53,6 +47,5 @@ namespace rckid::ui {
             << ini::Section("background")
                 << ini::Field("image", backgroundImage_);
     }
-
 
 } // namespace rckid::ui

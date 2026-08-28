@@ -44,7 +44,7 @@ namespace rckid {
             refreshTime();
 
             h_->animate()
-                << BreatheFg(h_, ui::Style::defaultStyle().accentFg(), ui::Style::defaultStyle().accentBg());
+                << BreatheFg(h_, ui::Style::accentFg(), ui::Style::accentBg());
 
             root_.useBackgroundImage(false);
 
@@ -75,19 +75,18 @@ namespace rckid {
 
         void swapActiveElement() {
             using namespace ui;
-            Style const & style = ui::Style::defaultStyle();
             if (activeElement_ == 0) {
                 activeElement_ = 1;
                 h_->cancelAnimations();
-                h_->setFg(style.defaultFg());
+                h_->setFg(ui::Style::defaultFg());
                 m_->animate()
-                    << BreatheFg(m_, style.accentFg(), style.accentBg());
+                    << BreatheFg(m_, ui::Style::accentFg(), ui::Style::accentBg());
             } else {
                 activeElement_ = 0;
                 m_->cancelAnimations();
-                m_->setFg(style.defaultFg());
+                m_->setFg(ui::Style::defaultFg());
                 h_->animate()
-                    << BreatheFg(h_, style.accentFg(), style.accentBg());
+                    << BreatheFg(h_, ui::Style::accentFg(), ui::Style::accentBg());
             }
         }
 

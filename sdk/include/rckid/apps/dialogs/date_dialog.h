@@ -64,7 +64,7 @@ namespace rckid {
             refreshDate();
 
             d_->animate()
-                << BreatheFg(d_, ui::Style::defaultStyle().accentFg(), ui::Style::defaultStyle().accentBg());
+                << BreatheFg(d_, ui::Style::accentFg(), ui::Style::accentBg());
 
             root_.useBackgroundImage(false);
         }
@@ -112,14 +112,13 @@ namespace rckid {
                 index = 2;
             if (index > 2)
                 index = 0;
-            Style const & style = ui::Style::defaultStyle();
             Label * x = activeElement();
             x->cancelAnimations();
-            x->setFg(style.defaultFg());
+            x->setFg(ui::Style::defaultFg());
             activeElement_ = index;
             x = activeElement();
             x->animate()
-                << BreatheFg(x, style.accentFg(), style.accentBg());
+                << BreatheFg(x, ui::Style::accentFg(), ui::Style::accentBg());
         }
 
         void moveUp() {

@@ -148,6 +148,9 @@ namespace rckid {
 
         // set the keyboard effect (if any)
         rgb::setKeyboardEffect(settings.rgb.effect, settings.rgb.color);
+
+        // ensure default style is initialized (and loaded from SD card if available)
+        ui::Style::loadDefaultStyle();
     }
 
     void tick() {

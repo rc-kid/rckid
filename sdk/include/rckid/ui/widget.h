@@ -37,8 +37,12 @@ namespace rckid::ui {
             cancelAnimations();
         }
 
-        virtual void applyStyle(Style const & style) {
-            animationSpeed_ = style.animationSpeed();
+        /** Applies the global style to the widget and its children.
+         */
+        virtual void applyStyle() {
+            animationSpeed_ = Style::animationSpeed();
+            for (auto & child : children_)
+                child->applyStyle();
         }
 
         Rect rect() const { return rect_; }
@@ -126,8 +130,9 @@ namespace rckid::ui {
         template<typename T>
         with<T> addChild(T * child) {
             ASSERT(child->parent_ == nullptr);
-            child->parent_ = this;       
-            child->applyStyle(Style::defaultStyle());
+            child->parent_ = this; 
+            // apply style to the child when adding (this ensures style is applied after the widgets are fully constructed)
+            child->applyStyle();
             children_.push_back(unique_ptr<Widget>(child));
             return with<T>(child);
         }

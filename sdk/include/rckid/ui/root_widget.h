@@ -16,6 +16,7 @@ namespace rckid::ui {
             renderBuffer_{static_cast<uint32_t>(rect.height())}
         {
             setRect(rect);
+            setBackgroundImage(Style::backgroundImage());
         }
 
         bool useBackrgoundImage() const { return useBackgroundImage_; }
@@ -37,13 +38,18 @@ namespace rckid::ui {
 
         void render();
 
-        void setBackgroundImage(Style const & style) {
-            if (style.backgroundImage().empty()) {
+        void applyStyle() override {
+            Panel::applyStyle();
+            setBackgroundImage(Style::backgroundImage());
+        }
+
+        void setBackgroundImage(ImageSource image) {
+            if (image.empty()) {
                 background_ = nullptr;
             } else {
                 background_.reset(new Image());
                 with(background_.get())
-                    << SetBitmap(style.backgroundImage()).withoutTransparency()
+                    << SetBitmap(image).withoutTransparency()
                     << SetRect(Rect::XYWH(0, 0, hal::display::WIDTH, hal::display::HEIGHT))
                     << SetHAlign(HAlign::Center)
                     << SetVAlign(VAlign::Center)

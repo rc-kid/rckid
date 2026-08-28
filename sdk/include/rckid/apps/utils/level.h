@@ -18,7 +18,7 @@ namespace rckid {
             using namespace ui;
             x_ = addChild(new ui::Panel{})
                 << SetRect(Rect::XYWH(160 - 5, 120 - 5, 10, 10))
-                << SetBg(ui::Style::defaultStyle().accentFg());
+                << SetBg(ui::Style::accentFg());
         }
 
     protected:

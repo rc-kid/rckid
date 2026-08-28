@@ -12,7 +12,7 @@ namespace rckid::ui {
     void RootWidget::initializeDisplay() {
         display::enable(rect(), hal::display::RefreshDirection::ColumnFirst);
         if (useBackgroundImage_ && background_ == nullptr)
-            setBackgroundImage(Style::defaultStyle());
+            setBackgroundImage(Style::backgroundImage());
     }
 
     void RootWidget::render() {

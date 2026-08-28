@@ -25,10 +25,6 @@ namespace rckid::ui {
             renderChildren(column, startRow, buffer, numPixels);
         }
 
-        void applyStyle(Style const & style) override {
-            Widget::applyStyle(style);
-        }
-
     protected:
 
         Point scrollOffset_{0,0};
