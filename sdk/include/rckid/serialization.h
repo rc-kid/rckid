@@ -419,8 +419,7 @@ namespace rckid {
     inline void read(BinaryReader & r, TinyDateTime & into) {
         r >> into.time >> into.date;
     }
-
-
+    
 } // namespace rckid
 
 

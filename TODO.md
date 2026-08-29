@@ -37,7 +37,6 @@ So what I need:
 
 - add icons for the rgb effects
 - add on/off subwidget for carousel
-- rgb lights HAL should use buttons, not indices to set respective light
 
 - verify we send *everything* in JACDAC (wait for DMA and stall)
 

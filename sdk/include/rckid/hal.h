@@ -263,10 +263,22 @@ namespace rckid::hal {
         void setEffect(RumblerEffect const & effect);
     } // namespace rckid::hal::rumbler
 
-    /** RGB lights effects that allows setting single effect for *all* LEDs, or specific effect ler LED. 
+    /** RGB lights effects that allows setting single effect for *all* LEDs, or specific effect ler LED.
+     
+        The HAL is expected to have 8 rgb leds in total and should also provide a mapping from buttons to LED lights.
      */
     namespace rgb {
+
+        /** Sets the rgb effects for LEDs corresponding to the given button.
+          */
+        void setEffect(Btn index, RGBEffect const & effect);
+        
+        /** Sets the rgb effects for the LED at the given index (starting from 0).
+         */
         void setEffect(uint8_t index, RGBEffect const & effect);
+
+        /** Shorthand function for setting the effectof *all* lights to the given value. While technically not needed, provided for convenience as this usually requires a single I2C message.
+         */
         void setEffectAll(RGBEffect const & effect);
     } // namespace rckid::hal::led
 

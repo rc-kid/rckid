@@ -310,7 +310,7 @@ namespace rckid {
 
         /** Overrides (temporarily) the RGB effect for a specific button.
          */
-        void setBtnEffect(Btn btn, RGBEffect const & effect);
+        inline void setBtnEffect(Btn btn, RGBEffect const & effect) { hal::rgb::setEffect(btn, effect); }
 
     } // namespace rckid::rgb
 

@@ -687,6 +687,10 @@ namespace rckid::hal {
     namespace rgb {
         /** As there are noRGB lights, simply reports the request
          */
+        void setEffect(Btn index, RGBEffect const & effect) {
+            LOG(LL_INFO, "RGB Effect " << index << ": " << effect);
+        }
+
         void setEffect(uint8_t index, RGBEffect const & effect) {
             LOG(LL_INFO, "RGB Effect " << index << ": " << effect);
         }

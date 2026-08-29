@@ -27,6 +27,24 @@ namespace rckid {
         VolumeDown = 10,
     }; // rckid::Btn
 
+    // Button
+
+    inline void write(Writer & w, Btn const & value) {
+        switch (value) {
+            case Btn::Left: w << "Left"; break;
+            case Btn::Right: w << "Right"; break;
+            case Btn::Up: w << "Up"; break;
+            case Btn::Down: w << "Down"; break;
+            case Btn::A: w << "A"; break;
+            case Btn::B: w << "B"; break;
+            case Btn::Select: w << "Select"; break;
+            case Btn::Start: w << "Start"; break;
+            case Btn::Home: w << "Home"; break;
+            case Btn::VolumeUp: w << "VolumeUp"; break;
+            case Btn::VolumeDown: w << "VolumeDown"; break;
+        }
+    }
+
     [[noreturn]] void onFatalError(char const * file, uint32_t line, char const * msg, uint32_t payload);
 
     /** Represents the basic device state. 

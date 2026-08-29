@@ -898,6 +898,36 @@ namespace rckid::hal {
     } // namespace rckid::hal::rumbler
 
     namespace rgb {
+
+        void setEffect(Btn index, RGBEffect const & effect) {
+            switch (index) {
+                case Btn::Up:
+                case Btn::Down:
+                case Btn::Left:
+                case Btn::Right:
+                    i2c::sendAvrCommand(cmd::SetRGBEffect{0, effect});
+                    i2c::sendAvrCommand(cmd::SetRGBEffect{1, effect});
+                    i2c::sendAvrCommand(cmd::SetRGBEffect{2, effect});
+                    i2c::sendAvrCommand(cmd::SetRGBEffect{3, effect});
+                    break;
+                case Btn::Select:
+                    i2c::sendAvrCommand(cmd::SetRGBEffect{4, effect});
+                    break;
+                case Btn::Start:
+                    i2c::sendAvrCommand(cmd::SetRGBEffect{5, effect});
+                    break;
+                case Btn::A:
+                    i2c::sendAvrCommand(cmd::SetRGBEffect{6, effect});
+                    break;
+                case Btn::B:
+                    i2c::sendAvrCommand(cmd::SetRGBEffect{7, effect});
+                    break;
+                default:
+                    LOG(LL_WARN, "Unknown RGB index: " << static_cast<uint32_t>(index));
+                    break;
+            }
+        }
+
         void setEffect(uint8_t index, RGBEffect const & effect) {
             i2c::sendAvrCommand(cmd::SetRGBEffect{index, effect});
         }

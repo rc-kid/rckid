@@ -499,35 +499,6 @@ namespace rckid {
             }
         }
 
-        void setBtnEffect(Btn btn, RGBEffect const & effect) {
-            switch (btn) {
-                case Btn::Up:
-                case Btn::Down:
-                case Btn::Left:
-                case Btn::Right:
-                    hal::rgb::setEffect(0, effect);
-                    hal::rgb::setEffect(1, effect);
-                    hal::rgb::setEffect(2, effect);
-                    hal::rgb::setEffect(3, effect);
-                    break;
-                case Btn::Select:
-                    hal::rgb::setEffect(4, effect);
-                    break;
-                case Btn::Start:
-                    hal::rgb::setEffect(5, effect);
-                    break;
-                case Btn::B:
-                    hal::rgb::setEffect(6, effect);
-                    break;
-                case Btn::A:
-                    hal::rgb::setEffect(7, effect);
-                    break;
-                // side buttons (home & volume keys) do not have lights
-                default:
-                    break;
-            }
-        }
-
         void write(Writer & w, KeyboardEffect const & effect) {
             switch (effect) {
                 case KeyboardEffect::Off: 
