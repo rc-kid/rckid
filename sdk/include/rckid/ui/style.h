@@ -13,6 +13,8 @@ namespace rckid::ui {
         Styles are object that define general widget visualization properties, such as colors, accents, fonts, etc. Widgets then support applying styles to themselves. The styling is simple, as the style merely holds the properties and the widgets determines what properties from the style to apply and how. 
 
         A single global style is suppported at any time, but applications and widgets do not implicitlyrestyle on a style change - styling is always explicit, either in the constructor, or via the applyStyle method of ui::Widget.
+
+        System (default) style is automatically managed by the SDK (loaded during initialization and saved on change) from the SD card.
      */
     class Style {
     public:
@@ -44,6 +46,12 @@ namespace rckid::ui {
             backgroundImage_ = std::move(img);
         }
 
+        static rgb::KeyboardEffect keyboardEffect() { return keyboardEffect_; }
+        static void setKeyboardEffect(rgb::KeyboardEffect effect) { keyboardEffect_ = effect; }
+
+        static Color keyboardRGBColor() { return keyboardRGBColor_; }
+        static void setKeyboardRGBColor(Color color) { keyboardRGBColor_ = color; }
+
     private:
         static constexpr char const * DEFAULT_FILE = "style2.ini";
 
@@ -57,8 +65,9 @@ namespace rckid::ui {
 
         static inline ImageSource backgroundImage_{assets::images::logo};
 
+        static inline rgb::KeyboardEffect keyboardEffect_ = rgb::KeyboardEffect::RainbowPress;
+        static inline Color keyboardRGBColor_ = Color::RGB(255, 255, 255);
+
     }; // rckid::ui::Style
-
-
 
 } // namespace rckid::ui

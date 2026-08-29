@@ -68,11 +68,13 @@ namespace rckid {
     } __attribute__((packed));
 
     struct RGBSettings {
-        rgb::KeyboardEffect effect = rgb::KeyboardEffect::RainbowPress;
-        Color color = Color::Green();
         uint8_t brightness = 32;
     } __attribute__((packed));
     
+    /** Device settings. 
+
+        Similar to the ui::Style, settings define the device configuration. Settings are stored in the device's non-volatime memory and are expected to survive device reboots. They are mainly used for non-ui/visual configuration of more ad-hoc, or device specific nature such as display brightness, audio volume, etc.
+     */
     struct Settings {
         static constexpr uint16_t VERSION = 1;
         uint16_t version = VERSION;
@@ -108,15 +110,15 @@ namespace rckid {
     }
 
     void buttonPressRGBEffect(Btn b) {
-        switch (settings.rgb.effect) {
+        switch (ui::Style::keyboardEffect()) {
             case rgb::KeyboardEffect::RainbowPress:
             case rgb::KeyboardEffect::Press: {
                 Color color;
-                if (settings.rgb.effect == rgb::KeyboardEffect::RainbowPress) {
+                if (ui::Style::keyboardEffect() == rgb::KeyboardEffect::RainbowPress) {
                     color = Color::HSV(rgbRainbowHue_ * 256, 255, settings.rgb.brightness);
                     rgbRainbowHue_ += 13;                
                 } else {
-                    color = settings.rgb.color.withBrightness(settings.rgb.brightness);
+                    color = ui::Style::keyboardRGBColor().withBrightness(settings.rgb.brightness);
                 }
                 rgb::setBtnEffect(b, RGBEffect::Solid(color, 255, 0));
                 rgb::setBtnEffect(b, RGBEffect::Solid(Color::Black()));
@@ -146,11 +148,12 @@ namespace rckid {
         hal::audio::setVolumeHeadphones(settings.audio.volumeHeadphones);
         hal::audio::setVolumeSpeaker(settings.audio.volumeHeadphones);
 
-        // set the keyboard effect (if any)
-        rgb::setKeyboardEffect(settings.rgb.effect, settings.rgb.color);
-
         // ensure default style is initialized (and loaded from SD card if available)
         ui::Style::loadDefaultStyle();
+
+        // set the keyboard effect (if any)
+        rgb::setKeyboardEffect(ui::Style::keyboardEffect(), ui::Style::keyboardRGBColor());
+
     }
 
     void tick() {
@@ -461,21 +464,9 @@ namespace rckid {
 
         void setBrightness(uint8_t value) { 
             settings.rgb.brightness = (value << 4) | value;
-            setKeyboardEffect(settings.rgb.effect, settings.rgb.color);
         }
-
-        Color color() { return settings.rgb.color; }
-
-        void setColor(Color color) {
-            settings.rgb.color = color;
-            setKeyboardEffect(settings.rgb.effect, settings.rgb.color);
-        }
-
-        KeyboardEffect keyboardEffect() { return settings.rgb.effect; }
 
         void setKeyboardEffect(KeyboardEffect effect, Color color) {
-            settings.rgb.effect = effect;
-            settings.rgb.color = color;
             // issue the RGB commands based on the effect & settings
             switch (effect) {
                 case KeyboardEffect::Off:
@@ -537,6 +528,57 @@ namespace rckid {
             }
         }
 
+        void write(Writer & w, KeyboardEffect const & effect) {
+            switch (effect) {
+                case KeyboardEffect::Off: 
+                    w << "Off"; 
+                    break;
+                case KeyboardEffect::Press: 
+                    w << "Press"; 
+                    break;
+                case KeyboardEffect::RainbowPress: 
+                    w << "RainbowPress"; 
+                    break;
+                case KeyboardEffect::Solid: 
+                    w << "Solid"; 
+                    break;
+                case KeyboardEffect::Breathe: 
+                    w << "Breathe"; 
+                    break;
+                case KeyboardEffect::Rainbow: 
+                    w << "Rainbow"; 
+                    break;
+                case KeyboardEffect::RainbowWave: 
+                    w << "RainbowWave"; 
+                    break;
+                default:
+                    UNREACHABLE;
+                    break;
+            }
+        }
+
+        void read(Reader & r, KeyboardEffect & effect) {
+            String s;
+            r >> s;
+            if (s == "Off") 
+                effect = KeyboardEffect::Off;
+            else if (s == "Press") 
+                effect = KeyboardEffect::Press;
+            else if (s == "RainbowPress") 
+                effect = KeyboardEffect::RainbowPress;
+            else if (s == "Solid") 
+                effect = KeyboardEffect::Solid;
+            else if (s == "Breathe") 
+                effect = KeyboardEffect::Breathe;
+            else if (s == "Rainbow") 
+                effect = KeyboardEffect::Rainbow;
+            else if (s == "RainbowWave") 
+                effect = KeyboardEffect::RainbowWave;
+            else
+                UNREACHABLE;
+        }   
+
+
     } // namespace rckid::rgb
 
     // debugging
@@ -587,4 +629,5 @@ namespace rckid {
         while (true)
             yield();
     }
-}
+
+} // namespace rckid

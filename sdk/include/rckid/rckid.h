@@ -279,7 +279,7 @@ namespace rckid {
 
     /** RGB lights control
      
-        
+        The device is expected to have a controllable RGB light under every front facing button (dpad, a, b, select and start). The lights can be controlled eithger explicitly and individually, or can have a keyboard effect attached, in which case the effect determines the rgb lights behavior.
      */
     namespace rgb {
 
@@ -295,20 +295,21 @@ namespace rckid {
 
         void off();
 
+        /** Returns the brightness of the RGB lights.
+         
+            Like all brightness in the system, the value is in range from 0.15 inclusive.
+         */
         uint8_t brightness();
 
+        /** Sets the brightness of the RGB lights. The value is in range from 0..15 inclusive.
+         */
         void setBrightness(uint8_t value);
 
-        Color color();
-
-        void setColor(Color color);
-
-        KeyboardEffect keyboardEffect();
-
+        /** Sets the active keyboard effect. */
         void setKeyboardEffect(KeyboardEffect effect, Color color);
 
-        inline void setKeyboardEffect(KeyboardEffect effect) { setKeyboardEffect(effect, color()); }
-
+        /** Overrides (temporarily) the RGB effect for a specific button.
+         */
         void setBtnEffect(Btn btn, RGBEffect const & effect);
 
     } // namespace rckid::rgb
@@ -324,4 +325,10 @@ extern "C" {
     void memset8(uint8_t * buffer, uint8_t value, uint32_t size);
     void memset16(uint16_t * buffer, uint16_t value, uint32_t size);
     void memset32(uint32_t * buffer, uint32_t value, uint32_t size);
+}
+
+namespace rckid::rgb {
+    // serialization helpers
+    void write(Writer & w, KeyboardEffect const & effect);
+    void read(Reader & r, KeyboardEffect & effect);
 }

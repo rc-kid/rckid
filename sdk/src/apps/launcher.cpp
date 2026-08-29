@@ -184,6 +184,7 @@ namespace rckid {
                     }};
                 return result;
             })
+            // key settings (autorepeat speed, accel as joystick, etc)
             << ui::MenuItem::Generator("Keys", assets::icons_64::poo, [](){
                 auto result = std::make_unique<ui::Menu>();
                 /* TODO should this really be user controllable
@@ -201,11 +202,33 @@ namespace rckid {
     unique_ptr<ui::Menu> rgbEffectSettingsMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();
         (*result)
+            << ui::MenuItem{"Press", assets::icons_64::poo, []() {
+                rgb::setKeyboardEffect(rgb::KeyboardEffect::Press, ui::Style::keyboardRGBColor());
+                ui::Style::saveDefaultStyle();
+            }}
+            << ui::MenuItem{"Rainbow Press", assets::icons_64::poo, []() {
+                rgb::setKeyboardEffect(rgb::KeyboardEffect::RainbowPress, ui::Style::keyboardRGBColor());
+                ui::Style::saveDefaultStyle();
+            }}
+            << ui::MenuItem{"Solid", assets::icons_64::poo, []() {
+                rgb::setKeyboardEffect(rgb::KeyboardEffect::Solid, ui::Style::keyboardRGBColor());
+                ui::Style::saveDefaultStyle();
+            }}
+            << ui::MenuItem{"Breathe", assets::icons_64::poo, []() {
+                rgb::setKeyboardEffect(rgb::KeyboardEffect::Breathe, ui::Style::keyboardRGBColor());
+                ui::Style::saveDefaultStyle();
+            }}
             << ui::MenuItem{"Rainbow", assets::icons_64::rainbow, []() {
-                rgb::setKeyboardEffect(rgb::KeyboardEffect::Rainbow);
+                rgb::setKeyboardEffect(rgb::KeyboardEffect::Rainbow, ui::Style::keyboardRGBColor());
+                ui::Style::saveDefaultStyle();
+            }}
+            << ui::MenuItem{"Rainbow Wave", assets::icons_64::poo, []() {
+                rgb::setKeyboardEffect(rgb::KeyboardEffect::RainbowWave, ui::Style::keyboardRGBColor());
+                ui::Style::saveDefaultStyle();
             }}
             << ui::MenuItem{"Off", assets::icons_64::turn_off, []() {
-                rgb::setKeyboardEffect(rgb::KeyboardEffect::Off);
+                rgb::setKeyboardEffect(rgb::KeyboardEffect::Off, ui::Style::keyboardRGBColor());
+                ui::Style::saveDefaultStyle();
             }};
         return result;
     }
@@ -217,14 +240,18 @@ namespace rckid {
             << ui::MenuItem::Generator("Effect", assets::icons_64::numpad, rgbEffectSettingsMenuGenerator)
             << ui::MenuItem{"Color", assets::icons_64::light, []() {
                 auto color = rckid::App::run<ColorDialog>(ui::Style::accentBg());
-                if (color)
-                    rckid::rgb::setColor(color.value());
+                if (color) {
+                    ui::Style::setKeyboardRGBColor(color.value());
+                    rgb::setKeyboardEffect(ui::Style::keyboardEffect(), ui::Style::keyboardRGBColor());
+                    ui::Style::saveDefaultStyle();
+                }
             }}
             << ui::MenuItem{"Brightness", assets::icons_64::brightness, [](){
                 CarouselMenu * c = Launcher::instance()->carousel();
                 c->showSubwidget(std::unique_ptr<Widget>{
                     new ProgressBarSubWidget{c, 0, 15, rckid::rgb::brightness(), [](int32_t value) {
                         rckid::rgb::setBrightness(static_cast<uint8_t>(value));
+                        rgb::setKeyboardEffect(ui::Style::keyboardEffect(), ui::Style::keyboardRGBColor());
                     }}
                 });
             }};

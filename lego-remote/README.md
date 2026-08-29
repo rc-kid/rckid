@@ -194,5 +194,5 @@ Try PUYA chips as well for lower costs and same architecture across the ecosyste
 
 - use SMT female headers to have more PCB area on the back for the connectors
 
-- 
+- an idea: add JACDAC port and make the lego brick a simple peripheral that just exposes the attached devices as JACDAC ones so that the brick can work with JACDAC ecosystem as well
 

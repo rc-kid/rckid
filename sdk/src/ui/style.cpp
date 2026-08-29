@@ -31,7 +31,10 @@ namespace rckid::ui {
             >> ini::Section("animation")
                 >> ini::Field("speed", animationSpeed_)
             >> ini::Section("background")
-                >> ini::Field("image", backgroundImage_);
+                >> ini::Field("image", backgroundImage_)
+            >> ini::Section("rgb")
+                >> ini::Field("effect", keyboardEffect_)
+                >> ini::Field("color", keyboardRGBColor_);
     }
 
     void Style::save(ini::Writer & writer) {
@@ -45,7 +48,10 @@ namespace rckid::ui {
             << ini::Section("animation")
                 << ini::Field("speed", animationSpeed_)
             << ini::Section("background")
-                << ini::Field("image", backgroundImage_);
+                << ini::Field("image", backgroundImage_)
+            << ini::Section("rgb")
+                << ini::Field("effect", keyboardEffect_)
+                << ini::Field("color", keyboardRGBColor_);
     }
 
 } // namespace rckid::ui

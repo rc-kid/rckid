@@ -35,6 +35,10 @@ So what I need:
 
 # SDK 1.0
 
+- add icons for the rgb effects
+- add on/off subwidget for carousel
+- rgb lights HAL should use buttons, not indices to set respective light
+
 - verify we send *everything* in JACDAC (wait for DMA and stall)
 
 - sws-tx is really uart PIO, rename as such and we can use it for TX output even on current HW version which means the cartridge available UART can be used 
@@ -42,10 +46,6 @@ So what I need:
 - determine SD speed and how fast can I go? 
 
 - implement light detection capability for mk3
-
-- add extra keyboard effects to settings menu
-- what is the keys in settings style? repeat speed? 
-- add on/off subwidget for carousel
 
 - default palette can be system wide
 
@@ -68,7 +68,6 @@ So what I need:
 
 - add wave keyboard effect for rgb
 - does the start then drop immediately effect for keyboard press work? 
-- what should go to settings & what should go to style?
 
 Wakeups
 - alarm clock
