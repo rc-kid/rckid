@@ -282,6 +282,13 @@ namespace rckid {
             << ui::MenuItem::Generator("Style", assets::icons_64::paint_palette, styleSettingsMenuGenerator)
             << ui::MenuItem::Generator("Lights", assets::icons_64::brightness_1, rgbSettingsMenuGenerator)
             << ui::MenuItem::Generator("Rumbler", assets::icons_64::vibration, rumblerSettingsMenuGenerator)
+            << ui::MenuItem{"Password", assets::icons_64::poo, []() {
+                auto pwd = App::run<TextDialog>("");
+                if (pwd) {
+                    pim::setPassword(std::move(pwd.value()));
+                    InfoDialog::info("Password", "Password updated");
+                }
+            }}
             << ui::MenuItem{"About", assets::icons_64::info, []() {
                 App::run<About>();
             }};

@@ -5,6 +5,7 @@
 #include <rckid/ui/header.h>
 #include <rckid/audio/decoder_stream.h>
 #include <rckid/apps/dialogs/info_dialog.h>
+#include <rckid/apps/unlock.h>
 #include <rckid/graphics/tile_grid.h>
 #include <rckid/serialization.h>
 
@@ -196,6 +197,9 @@ namespace rckid {
         // set the keyboard effect (if any)
         rgb::setKeyboardEffect(ui::Style::keyboardEffect(), ui::Style::keyboardRGBColor());
 
+        // see if we need password protection
+        if (! settings.pim.password.empty())
+            App::run<Unlock>(settings.pim.password);
     }
 
     void tick() {
@@ -457,6 +461,12 @@ namespace rckid {
                     settings.pim.budget -= absValue;
             }
             return settings.pim.budget;
+        }
+
+        void setPassword(String password) {
+            settings.pim.password = std::move(password);
+            // just to be sure - normally this is done at exit
+            saveSettings();
         }
 
     } // namespace rckid::pim

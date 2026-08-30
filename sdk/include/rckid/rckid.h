@@ -6,6 +6,7 @@
 #include <rckid/error.h>
 #include <rckid/log.h>
 #include <rckid/hal.h>
+#include <rckid/string.h>
 
 #define RCKID_DEFAULT_ANIMATION_DURATION_MS 500
 
@@ -244,6 +245,12 @@ namespace rckid {
         uint32_t remainingBudget();
 
         uint32_t updateBudget(int32_t value);
+
+        /** Sets the password protecting the device. 
+         
+            If the password is empty, no password protection is required. The password is stored in the device's non-volatile memory and will survive device reboots. 
+         */
+        void setPassword(String password);
 
     } // namespace rckid::pim
 
