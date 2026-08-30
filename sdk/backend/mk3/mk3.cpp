@@ -423,9 +423,8 @@ namespace rckid::hal {
             App::run<SplashScreen>(internal::initializeDrivers);
 
             // reset the background now that we have initialized the card, etc
-            // TODO this is likely too hacky and should be automatic-ish
             ui::RootWidget::releaseResources();
-            ui::Style::clearDefaultStyle();
+            App::refreshStyle();
             LOG(LL_INFO, "Init done");
         }
 
