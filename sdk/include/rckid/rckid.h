@@ -252,6 +252,16 @@ namespace rckid {
          */
         void setPassword(String password);
 
+        void setParentPassword(String password);
+
+        /** Returns whether the parent mode is enabled, or not.
+         */
+        bool parentMode();
+
+        bool enterParentMode();
+
+        void leaveParentMode();
+
     } // namespace rckid::pim
 
     /** Rumbler control. 

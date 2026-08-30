@@ -276,6 +276,38 @@ namespace rckid {
         return result;
     }
 
+    unique_ptr<ui::Menu> parentModeMenuGenerator() {
+        using namespace ui;
+        auto result = std::make_unique<Menu>();
+        if (pim::parentMode()) {
+            (*result)
+                // TODO add parent mode options
+                << MenuItem{"Clear Device Password", assets::icons_64::poo, []() {
+                    pim::setPassword("");
+                    InfoDialog::info("Parent Mode", "Device password cleared");
+                }}
+                << MenuItem{"Change Parent password", assets::icons_64::poo, []() {
+                    auto pwd = rckid::App::run<TextDialog>("");
+                    if (pwd) {
+                        pim::setParentPassword(std::move(pwd.value()));
+                        InfoDialog::info("Password", "Password updated");
+                    }
+                }}
+                << MenuItem{"Leave", assets::icons_64::logout, []() {
+                    pim::leaveParentMode();
+                    InfoDialog::info("Parent Mode", "Parent mode disabled");
+                }};
+        } else {
+            (*result)
+                << MenuItem{"Enter", assets::icons_64::poo, []() {
+                    pim::enterParentMode();
+                    InfoDialog::info("Parent Mode", "Parent mode enabled");
+                }};
+        }
+        return result;
+    }
+
+
     unique_ptr<ui::Menu> settingsMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();
         (*result)
@@ -289,6 +321,7 @@ namespace rckid {
                     InfoDialog::info("Password", "Password updated");
                 }
             }}
+            << ui::MenuItem::Generator("Parent Mode", assets::icons_64::poo, parentModeMenuGenerator)
             << ui::MenuItem{"About", assets::icons_64::info, []() {
                 App::run<About>();
             }};

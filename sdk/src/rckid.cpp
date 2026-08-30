@@ -51,6 +51,8 @@ namespace rckid {
     // FPS counter, which is reset every second
     uint32_t fps_ = 0;
 
+    bool parentMode_ = false;
+
     struct DisplaySettings {
         uint8_t brightness = 128;
     };
@@ -467,6 +469,30 @@ namespace rckid {
             settings.pim.password = std::move(password);
             // just to be sure - normally this is done at exit
             saveSettings();
+        }
+
+        void setParentPassword(String password) {
+            settings.pim.parentPassword = std::move(password);
+            // just to be sure - normally this is done at exit
+            saveSettings();
+        }
+
+        bool parentMode() {
+            return parentMode_;
+        }
+
+        bool enterParentMode() {
+            if (! settings.pim.parentPassword.empty()) {
+                auto result = App::run<Unlock>(settings.pim.parentPassword, false);
+                if (! result || result.value() != true)
+                    return false;
+            }
+            parentMode_ = true;
+            return true;
+        }
+
+        void leaveParentMode() {
+            parentMode_ = false;
         }
 
     } // namespace rckid::pim

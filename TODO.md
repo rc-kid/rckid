@@ -56,8 +56,6 @@ So what I need:
 
 - how to detect we are done playing music? in the DMA
 
-- update the config.h to have backend config and general config to which we put things from rckid.cpp now (key repeat and other UI settings)
-
 - when app is not started and shows error diealog instead, we do double background bump on leaving
 
 - add telemetry (will be useful for the pilots, record time & app start, or end)
@@ -75,9 +73,6 @@ Wakeups
 - alarm clock
 - steps daily reset
 - piggy bank daily allowance top up check
-
-Settings
-- pim (pin, parent mode, etc.)
 
 Basic util apps:
 - level
