@@ -35,8 +35,14 @@ So what I need:
 
 # SDK 1.0
 
+- add extra settings item (identity, personalization, etc.)
+
 - add icons for the rgb effects
 - add on/off subwidget for carousel
+- add wave (breathe) keyboard effect for rgb, this has to be timed well on ral device
+- does the start then drop immediately effect for keyboard press work? 
+
+- verify if the brightness in rckid.h/rckid.cpp is 0..15 or more and have the 0..255 be done at the HAL level
 
 - verify we send *everything* in JACDAC (wait for DMA and stall)
 
@@ -64,9 +70,6 @@ So what I need:
 - avr firmware wakeup timing
 
 - make UNREACHABLE & friends part of platform? This should make it write between mkIII, fantasy and ATTiny stuff
-
-- add wave keyboard effect for rgb
-- does the start then drop immediately effect for keyboard press work? 
 
 Wakeups
 - alarm clock

@@ -6,6 +6,7 @@
 #include <rckid/audio/decoder_stream.h>
 #include <rckid/apps/dialogs/info_dialog.h>
 #include <rckid/graphics/tile_grid.h>
+#include <rckid/serialization.h>
 
 namespace rckid {
 
@@ -51,39 +52,67 @@ namespace rckid {
 
     struct DisplaySettings {
         uint8_t brightness = 128;
-    } __attribute__((packed));
+    };
 
     struct AudioSettings {
         uint8_t volumeHeadphones = 8;
         uint8_t volumeSpeaker = 8;
-    } __attribute__((packed));
+    };
 
     struct PimSettings {
         uint32_t budget = 610;
-    } __attribute__((packed));
+        String password;
+        String parentPassword;
+    };
 
     struct RumblerSettings {
         uint8_t strength = 128;
         bool keyPress = true;
-    } __attribute__((packed));
+    };
 
     struct RGBSettings {
         uint8_t brightness = 32;
-    } __attribute__((packed));
+    };
     
     /** Device settings. 
 
         Similar to the ui::Style, settings define the device configuration. Settings are stored in the device's non-volatime memory and are expected to survive device reboots. They are mainly used for non-ui/visual configuration of more ad-hoc, or device specific nature such as display brightness, audio volume, etc.
      */
     struct Settings {
-        static constexpr uint16_t VERSION = 1;
+        static constexpr uint16_t VERSION = 3;
         uint16_t version = VERSION;
         DisplaySettings display;
         AudioSettings audio;
         PimSettings pim;
         RumblerSettings rumbler;
         RGBSettings rgb;
-    } __attribute__((packed));
+    };
+
+    void write(BinaryWriter & w, Settings const & settings) {
+        w << settings.version
+          << settings.display.brightness
+          << settings.audio.volumeHeadphones
+          << settings.audio.volumeSpeaker
+          << settings.pim.budget
+          << settings.pim.password
+          << settings.pim.parentPassword
+          << settings.rumbler.strength
+          << settings.rumbler.keyPress
+          << settings.rgb.brightness;
+    }
+
+    void read(BinaryReader & r, Settings & settings) {
+        r >> settings.version
+          >> settings.display.brightness
+          >> settings.audio.volumeHeadphones
+          >> settings.audio.volumeSpeaker
+          >> settings.pim.budget
+          >> settings.pim.password
+          >> settings.pim.parentPassword
+          >> settings.rumbler.strength
+          >> settings.rumbler.keyPress
+          >> settings.rgb.brightness;
+    }
 
     Settings settings;
 
@@ -129,15 +158,28 @@ namespace rckid {
         }
     }
 
-    // device
-
-    void initialize() {
-        hal::device::initialize();
-        hal::storage::load(0, reinterpret_cast<uint8_t *>(& settings), sizeof(settings));
+    void loadSettings() {
+        MemoryStream s = MemoryStream::withCapacity(1024);
+        hal::storage::load(0, s.data(), s.size());
+        s.binaryReader() >> settings;
         if (settings.version != Settings::VERSION) {
             LOG(LL_WARN, "Settings version mismatch, resetting to defaults");
             settings = Settings{};
         }
+    }
+
+    void saveSettings() {
+        MemoryStream s = MemoryStream::withCapacity(1024);
+        s.binaryWriter() << settings;
+        LOG(LL_INFO, "Saving settings, size " << s.tell());
+        hal::storage::save(0, s.data(), s.tell());
+    }
+
+    // device
+
+    void initialize() {
+        hal::device::initialize();
+        loadSettings();
         now_ = hal::time::now();
         nextSecondUptime_ = hal::time::uptimeUs() + 1000000;
         // TODO
@@ -241,7 +283,7 @@ namespace rckid {
             // exit all applications (saving their state)
             App::onPowerOff();
             // save settings to the storage on AVR for persistence
-            hal::storage::save(0, reinterpret_cast<uint8_t const *>(& settings), sizeof(Settings));
+            saveSettings();
             // and finally, power off
             hal::device::powerOff();
         }

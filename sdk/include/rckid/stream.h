@@ -252,9 +252,7 @@ namespace rckid {
             return toRead;
         }
 
-        bool eof() const override {
-            return pos_ >= size_;
-        }
+        bool eof() const override { return pos_ >= size_; }
 
         std::optional<uint8_t> peek() override {
             if (pos_ >= size_)
@@ -281,9 +279,9 @@ namespace rckid {
             return pos_;
         }
 
-        uint32_t tell() const override {
-            return pos_;
-        }
+        uint32_t tell() const override { return pos_; }
+
+        uint8_t * data() const { return buffer_.get(); }
 
     private:
         unique_ptr<uint8_t> buffer_;
