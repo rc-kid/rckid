@@ -55,38 +55,14 @@ namespace rckid::ui {
             onChange();
         }
 
+        /** Renders the widget.
+         
+            Renders the wrapped contents first, then calls the widget rendering, ensuring that any widget contents (usually children) are drawn on top of the wrapper's contents.
+         */
         void renderColumn(Coord column, Coord starty, Color::RGB565 * buffer, Coord numPixels) override {
+            renderContents(column, starty, buffer, numPixels);
+            // render the widget second so that widget drawing is on top of the wrapper's contents
             Widget::renderColumn(column, starty, buffer, numPixels);
-            // if we are no repeating the contents, we must adjust the rendering parameters based on the contents position and size for the shared rendering to work
-            if (! contentsRepeat_) {
-                // adjust the column & starty based on the contents position
-                adjustRenderParams(contentsOffset_, column, starty, buffer, numPixels);
-                // check if we are outside of the contents
-                if (column < 0 || column >= contents_.width() || starty >= contents_.height())
-                    return;
-                // adjust numPixels if we exceed contents height
-                if (starty + numPixels > contents_.height())
-                    numPixels = contents_.height() - starty;
-                if (numPixels <= 0)
-                    return;
-            } else {
-                // adjust the column to be a valid contents column
-                column = (column - contentsOffset_.x) % contents_.width();
-                if (column < 0)
-                    column += contents_.width();
-                // similiarly adjust startx to corresponding contents row
-                starty = (starty - contentsOffset_.y) % contents_.height();
-                if (starty < 0)                    
-                    starty += contents_.height();
-            }
-            // render as many pixels as we have to by repeating the image (numPixels were updated accordingly if no repeat is required)
-            while (numPixels > 0) {
-                Coord n = std::min(numPixels, contents_.height() - starty);
-                contents_.renderColumn(column, starty, buffer, n);
-                numPixels -= n;
-                buffer += n;
-                starty = 0; // after the first iteration, we will always start at the
-            }
         }
 
     protected:
@@ -125,6 +101,42 @@ namespace rckid::ui {
                     UNREACHABLE;
             }
             contentsOffset_ = Point{x, y};
+        }
+
+        /** Renders the wrapped contents. 
+         */
+        void renderContents(Coord column, Coord starty, Color::RGB565 * buffer, Coord numPixels) {
+            // if we are no repeating the contents, we must adjust the rendering parameters based on the contents position and size for the shared rendering to work
+            if (! contentsRepeat_) {
+                // adjust the column & starty based on the contents position
+                adjustRenderParams(contentsOffset_, column, starty, buffer, numPixels);
+                // check if we are outside of the contents
+                if (column < 0 || column >= contents_.width() || starty >= contents_.height())
+                    return;
+                // adjust numPixels if we exceed contents height
+                if (starty + numPixels > contents_.height())
+                    numPixels = contents_.height() - starty;
+                if (numPixels <= 0)
+                    return;
+            } else {
+                // adjust the column to be a valid contents column
+                column = (column - contentsOffset_.x) % contents_.width();
+                if (column < 0)
+                    column += contents_.width();
+                // similiarly adjust startx to corresponding contents row
+                starty = (starty - contentsOffset_.y) % contents_.height();
+                if (starty < 0)                    
+                    starty += contents_.height();
+            }
+            // render as many pixels as we have to by repeating the image (numPixels were updated accordingly if no repeat is required)
+            while (numPixels > 0) {
+                Coord n = std::min(numPixels, contents_.height() - starty);
+                contents_.renderColumn(column, starty, buffer, n);
+                numPixels -= n;
+                buffer += n;
+                starty = 0; // after the first iteration, we will always start at the
+            }
+
         }
 
         T contents_;

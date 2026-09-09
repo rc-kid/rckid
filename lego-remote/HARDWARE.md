@@ -38,3 +38,14 @@ Left and right motor drivers are available both with voltage selection (directly
 ## General Pins
 
 2 left and 2 right general pins are available. They provide 5V, GND and DATA in a reversible 3 row connector. The DATA pin goes directlyto the RP2040 and as such is expected to be between 0..3.3V. The use of general pins is completely up to the firmware, but we ensure the connections go to the ADC pins so that analog input is possible.
+
+
+## BOM Optimization
+
+Run everything off a single 5V rail rated at 3A 
+
+- https://jlcpcb.com/partdetail/SilergyCorp-SY8366HQQC/C178253 is 5V buck converter rated for 6A, will power everything
+- https://jlcpcb.com/partdetail/TexasInstruments-INA180A3IDBVR/C122882 for each motor *and* gpio, as well as one for the total output, all connected to
+- https://jlcpcb.com/partdetail/TexasInstruments-TLA2528IRTER/C2866175 which is 8 channel ADC
+
+- should be cheaper BOM I would think... Let's check

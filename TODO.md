@@ -7,6 +7,7 @@
 
 # MK3 HW
 
+- there seem to be 3v3 neopixels - this could be useful for rckid proper as well (now tested in lego remote)
 - home button thickness tested at 1.3mm
 - volume down not centered properly
 - maybe enlarge the top plate a bit to fit properly in the slightly large nylon bottom. Or shrink the nylon?
@@ -38,7 +39,10 @@ So what I need:
 - add extra settings item (identity, personalization, etc.)
 
 - add icons for the rgb effects
-- add on/off subwidget for carousel
+- add icon for the check mark in menu decorator
+
+- add on/off subwidget for carousel (maybe this can be done via a dedicated widget?)
+
 - add wave (breathe) keyboard effect for rgb, this has to be timed well on ral device
 - does the start then drop immediately effect for keyboard press work? 
 

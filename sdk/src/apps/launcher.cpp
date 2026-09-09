@@ -199,37 +199,52 @@ namespace rckid {
         return result;
     }
 
+    void updateRGBEffectStyle(rgb::KeyboardEffect effect) {
+        rgb::setKeyboardEffect(effect, ui::Style::keyboardRGBColor());
+        ui::Style::setKeyboardEffect(effect);
+        ui::Style::saveDefaultStyle();
+        InfoDialog::info("RGB Effect", STR(effect << " enabled"));
+
+    }
+
     unique_ptr<ui::Menu> rgbEffectSettingsMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();
         (*result)
             << ui::MenuItem{"Press", assets::icons_64::poo, []() {
-                rgb::setKeyboardEffect(rgb::KeyboardEffect::Press, ui::Style::keyboardRGBColor());
-                ui::Style::saveDefaultStyle();
-            }}
+                updateRGBEffectStyle(rgb::KeyboardEffect::Press);
+            }}.withCheckDecorator([]() {
+                return ui::Style::keyboardEffect() == rgb::KeyboardEffect::Press;
+            })
             << ui::MenuItem{"Rainbow Press", assets::icons_64::poo, []() {
-                rgb::setKeyboardEffect(rgb::KeyboardEffect::RainbowPress, ui::Style::keyboardRGBColor());
-                ui::Style::saveDefaultStyle();
-            }}
+                updateRGBEffectStyle(rgb::KeyboardEffect::RainbowPress);
+            }}.withCheckDecorator([]() {
+                return ui::Style::keyboardEffect() == rgb::KeyboardEffect::RainbowPress;
+            })
             << ui::MenuItem{"Solid", assets::icons_64::poo, []() {
-                rgb::setKeyboardEffect(rgb::KeyboardEffect::Solid, ui::Style::keyboardRGBColor());
-                ui::Style::saveDefaultStyle();
-            }}
+                updateRGBEffectStyle(rgb::KeyboardEffect::Solid);
+            }}.withCheckDecorator([]() {
+                return ui::Style::keyboardEffect() == rgb::KeyboardEffect::Solid;
+            })
             << ui::MenuItem{"Breathe", assets::icons_64::poo, []() {
-                rgb::setKeyboardEffect(rgb::KeyboardEffect::Breathe, ui::Style::keyboardRGBColor());
-                ui::Style::saveDefaultStyle();
-            }}
+                updateRGBEffectStyle(rgb::KeyboardEffect::Breathe);
+            }}.withCheckDecorator([]() {
+                return ui::Style::keyboardEffect() == rgb::KeyboardEffect::Breathe;
+            })
             << ui::MenuItem{"Rainbow", assets::icons_64::rainbow, []() {
-                rgb::setKeyboardEffect(rgb::KeyboardEffect::Rainbow, ui::Style::keyboardRGBColor());
-                ui::Style::saveDefaultStyle();
-            }}
+                updateRGBEffectStyle(rgb::KeyboardEffect::Rainbow);
+            }}.withCheckDecorator([]() {
+                return ui::Style::keyboardEffect() == rgb::KeyboardEffect::Rainbow;
+            })
             << ui::MenuItem{"Rainbow Wave", assets::icons_64::poo, []() {
-                rgb::setKeyboardEffect(rgb::KeyboardEffect::RainbowWave, ui::Style::keyboardRGBColor());
-                ui::Style::saveDefaultStyle();
-            }}
+                updateRGBEffectStyle(rgb::KeyboardEffect::RainbowWave);
+            }}.withCheckDecorator([]() {
+                return ui::Style::keyboardEffect() == rgb::KeyboardEffect::RainbowWave;
+            })
             << ui::MenuItem{"Off", assets::icons_64::turn_off, []() {
-                rgb::setKeyboardEffect(rgb::KeyboardEffect::Off, ui::Style::keyboardRGBColor());
-                ui::Style::saveDefaultStyle();
-            }};
+                updateRGBEffectStyle(rgb::KeyboardEffect::Off);
+            }}.withCheckDecorator([]() {
+                return ui::Style::keyboardEffect() == rgb::KeyboardEffect::Off;
+            });
         return result;
     }
 

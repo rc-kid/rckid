@@ -8,6 +8,8 @@
 #include <rckid/graphics/bitmap.h>
 #include <rckid/ui/image.h>
 
+#include <assets/icons_24.h>
+
 namespace rckid::ui {
 
     class Label;
@@ -73,6 +75,18 @@ namespace rckid::ui {
 
         MenuItem withDecorator(DecoratorEvent decorator) && {
             this->decorator_ = std::move(decorator);
+            return std::move(*this);
+        }
+
+        /** Shorthand function for creating a menu item with check decorator based on a boolean condition.
+         */
+        MenuItem withCheckDecorator(std::function<bool()> isChecked) && {
+            this->decorator_ = [isChecked = std::move(isChecked)](MenuItem &, Image * icon, Label *) {
+                if (isChecked())
+                    icon->addChild(new ui::Image{})
+                        << SetRect(Rect::XYWH(0, 0, 24, 24))
+                        << SetBitmap(assets::icons_24::bookmark);
+            };
             return std::move(*this);
         }
 

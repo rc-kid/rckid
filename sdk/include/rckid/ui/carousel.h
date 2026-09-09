@@ -108,6 +108,7 @@ namespace rckid::ui {
             with(aText_)
                 << SetText(std::move(text));
             Coord iconWidth = bmp.width();
+            Coord iconHeight = bmp.width();
             Coord textWidth = aText_->textWidth();
             // determine the final positions
             Coord iconLeft = (width() - (iconWidth + textWidth + ICON_SEPARATOR_WIDTH)) / 2;
@@ -115,7 +116,7 @@ namespace rckid::ui {
             // and place & adjust the the widgets
             with(aImg_) 
                 << SetBitmap(std::move(bmp))
-                << SetRect(Rect::XYWH(iconLeft, 0, iconWidth, height()))
+                << SetRect(Rect::XYWH(iconLeft, (height() - iconHeight) / 2, iconWidth, iconHeight))
                 << SetVisibility(true);
             with(aText_)
                 << SetRect(Rect::XYWH(textLeft, 0, width() - textLeft, height())) 
