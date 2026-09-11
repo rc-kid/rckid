@@ -8,7 +8,7 @@
 # MK3 HW
 
 - there seem to be 3v3 neopixels - this could be useful for rckid proper as well (now tested in lego remote)
-- change the matrix diode to https://jlcpcb.com/partdetail/Zhengxin-1N4148WS/C19272188 (smaller, cheaper, better for matrix - verify)
+- change the matrix diode to https://jlcpcb.com/partdetail/JSMSEMI-1N4148WT/C917006 (smaller, cheaper, better for matrix - verify)
 - this could be better side button (cheaper too): https://jlcpcb.com/partdetail/XKBConnection-TS_1010_CA/C692458
 - home button thickness tested at 1.3mm
 - volume down not centered properly
@@ -50,9 +50,6 @@ So what I need:
 - add extra settings item (identity, personalization, etc.)
 
 - add icons for the rgb effects
-- add icon for the check mark in menu decorator
-
-- add on/off subwidget for carousel (maybe this can be done via a dedicated widget?)
 
 - add wave (breathe) keyboard effect for rgb, this has to be timed well on ral device
 - does the start then drop immediately effect for keyboard press work? 

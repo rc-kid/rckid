@@ -22,9 +22,9 @@ namespace rckid {
 
         InfoDialog(String title, String message, ImageSource icon, Kind kind = Kind::Default);
 
-        static void info(String title, String message) {
+        static void info(String title, String message, ImageSource icon = ImageSource{assets::icons_64::info}) {
             LOG(LL_INFO, title << ": " << message);
-            App::run<InfoDialog>(std::move(title), std::move(message), assets::icons_64::info, Kind::Info);
+            App::run<InfoDialog>(std::move(title), std::move(message), icon, Kind::Info);
         }
 
         static void success(String title, String message) {

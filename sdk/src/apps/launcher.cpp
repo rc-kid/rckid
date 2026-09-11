@@ -203,8 +203,6 @@ namespace rckid {
         rgb::setKeyboardEffect(effect, ui::Style::keyboardRGBColor());
         ui::Style::setKeyboardEffect(effect);
         ui::Style::saveDefaultStyle();
-        InfoDialog::info("RGB Effect", STR(effect << " enabled"));
-
     }
 
     unique_ptr<ui::Menu> rgbEffectSettingsMenuGenerator() {
@@ -299,33 +297,33 @@ namespace rckid {
                 // TODO add parent mode options
                 << MenuItem{"Clear Device Password", assets::icons_64::unlock, []() {
                     pim::setPassword("");
-                    InfoDialog::info("Parent Mode", "Device password cleared");
+                    InfoDialog::info("Parent Mode", "Device password cleared", assets::icons_64::unlock);
                 }}
                 << MenuItem{"Change Parent password", assets::icons_64::key, []() {
                     auto pwd = rckid::App::run<TextDialog>("");
                     if (pwd) {
+                        bool empty = pwd.value().empty();
                         pim::setParentPassword(std::move(pwd.value()));
-                        InfoDialog::info("Password", "Password updated");
+                        if (empty)
+                            InfoDialog::info("Password", "Password cleared", assets::icons_64::unlock);
+                        else
+                            InfoDialog::info("Password", "Password updated", assets::icons_64::lock);
                     }
                 }}
                 << MenuItem("Mute Speaker", assets::icons_64::silent, []() {
                     audio::setMuteSpeaker(!audio::muteSpeaker());
-                    if (audio::muteSpeaker())
-                        InfoDialog::info("Parent Mode", "Speaker muted");
-                    else
-                        InfoDialog::info("Parent Mode", "Speaker unmuted");
-                }).withCheckDecorator([]() {
+                }).withToggleDecorator([]() {
                     return audio::muteSpeaker();
                 })
                 << MenuItem{"Leave", assets::icons_64::logout, []() {
                     pim::leaveParentMode();
-                    InfoDialog::info("Parent Mode", "Parent mode disabled");
+                    InfoDialog::info("Parent Mode", "Parent mode disabled", assets::icons_64::family);
                 }};
         } else {
             (*result)
                 << MenuItem{"Enter", assets::icons_64::family, []() {
                     pim::enterParentMode();
-                    InfoDialog::info("Parent Mode", "Parent mode enabled");
+                    InfoDialog::info("Parent Mode", "Parent mode enabled", assets::icons_64::family);
                 }};
         }
         return result;

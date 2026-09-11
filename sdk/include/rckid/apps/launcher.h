@@ -187,6 +187,9 @@ namespace rckid {
                 launch_ = false;
                 if (item->payload == PAYLOAD_MOVE_DOWN)
                     carousel_->moveDown();
+                // redecorate the current item in case there has been no menu / app animations
+                else
+                    carousel_->setItem(carousel_->index());
             }
             if (btnPressed(Btn::Start))
                 ASSERT(false);

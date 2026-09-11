@@ -3,7 +3,21 @@
 This file contains brief descriptions of all the manufactured versions of RCKid mk II. In between versions were designed, but not actually manufactured and are not shown here.
 
 
-## Beaver King (MkIII v 3.2)
+## Curious Capybara (mkIII v 4.0) - planned
+
+Further BOM simplification with a major overhaul of the IO system:
+
+- ATTiny3217 replaced with Puya PY32F030, which is a lot cheaper
+- accelerometer replaced with a cheaper non-pedometer version
+- light sensor replaced with LED for both sense and emit
+- neopixels switched to 3v3 variant, which elliminates the 5V charge pump and level shifter
+- cartridge 3v3 rail replaced with high side switch
+- side buttons replaced
+- expensive 220uF caps replaced with 2x 100uF
+- further minor BOM simplifications
+- ESD on cartridge pins
+
+## Beaver King (MkIII v 3.2) - July 2026
 
 Aimed at assembly & BOM simplification. Incorporates changes in SDK 1.0 from version 3.1 (no AVR_IRQ pin, etc.). Things that are to be validated by this version are:
 
@@ -12,17 +26,18 @@ Aimed at assembly & BOM simplification. Incorporates changes in SDK 1.0 from ver
 - MEMS microphone instead of electret
 - spring contacts speaker with speaker enclosure formed by the case & PCB
 - spring contacts rumbler
-- spring contacts battery connector
+- battery connector
+- new headphone detection circuit
 
+> Front buttons are amazing, side buttons are actually worse. MEMS microphone works.Spring contacts and speaker works too, spring contacts for the rumbler works as well, but the rumbler can no longer be purchased by LCSC. Battery connector is great, but ideally would be a bit further away for the wire. The headphone detection does *not* work.
 
-
-## MkIII version 3.1
+## MkIII version 3.1 - Dec 2026
 
 > TODO
 
 > This is the xmas 25 version.
 
-## MkIII version 3.0 (development board)
+## MkIII version 3.0 (development board) 
 
 > TODO
 

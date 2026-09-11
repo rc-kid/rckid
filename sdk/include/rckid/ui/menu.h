@@ -90,6 +90,17 @@ namespace rckid::ui {
             return std::move(*this);
         }
 
+        /** Shorthand function for menu item that show toogle on/off icon, i.e. an icon even when off.
+         */
+        MenuItem withToggleDecorator(std::function<bool()> isEnabled) && {
+            this->decorator_ = [isEnabled = std::move(isEnabled)](MenuItem &, Image * icon, Label *) {
+                icon->addChild(new ui::Image{})
+                    << SetRect(Rect::XYWH(40, 40, 24, 24))
+                    << SetBitmap(isEnabled() ? ImageSource{assets::icons_24::switch_on} : ImageSource{assets::icons_24::switch_off});
+            };
+            return std::move(*this);
+        }
+
         ~MenuItem() {
             if (isAction())
                 action_.~ActionEvent();
