@@ -142,7 +142,7 @@ namespace rckid {
             // set audio interface to 16bit I2S
             setRegister(REG_AUDIO_INTERFACE, WLEN_16 | AIFMT_I2S);
 
-            enableSpeakerAndHeadphones();
+            enableHeadphonesAndSpeaker();
         }
 
         static void enableHeadphonesOnly() {
