@@ -35,6 +35,12 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/alarm_clock.inc.h"
     };
 
+    // File: icons/icons_64/105-diagram.png
+    // Size: 2229
+    static constexpr uint8_t diagram[] = {
+        #include "raw/icons_64/diagram.inc.h"
+    };
+
     // File: icons/icons_64/093-edit.png
     // Size: 1587
     static constexpr uint8_t edit[] = {
@@ -65,10 +71,28 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/ladybug.inc.h"
     };
 
+    // File: icons/icons_64/102-key.png
+    // Size: 1556
+    static constexpr uint8_t key[] = {
+        #include "raw/icons_64/key.inc.h"
+    };
+
+    // File: icons/icons_64/098-calendar.png
+    // Size: 2302
+    static constexpr uint8_t calendar[] = {
+        #include "raw/icons_64/calendar.inc.h"
+    };
+
     // File: icons/icons_64/027-paint-palette.png
     // Size: 3267
     static constexpr uint8_t paint_palette[] = {
         #include "raw/icons_64/paint_palette.inc.h"
+    };
+
+    // File: icons/icons_64/095-switch-on.png
+    // Size: 1436
+    static constexpr uint8_t switch_on[] = {
+        #include "raw/icons_64/switch_on.inc.h"
     };
 
     // File: icons/icons_64/034-pen-drive.png
@@ -87,6 +111,12 @@ namespace rckid::assets::icons_64 {
     // Size: 1766
     static constexpr uint8_t plus[] = {
         #include "raw/icons_64/plus.inc.h"
+    };
+
+    // File: icons/icons_64/069-lock.png
+    // Size: 1524
+    static constexpr uint8_t lock[] = {
+        #include "raw/icons_64/lock.inc.h"
     };
 
     // File: icons/icons_64/015-poo.png
@@ -143,6 +173,12 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/calculator.inc.h"
     };
 
+    // File: icons/icons_64/103-letter-a-1.png
+    // Size: 1537
+    static constexpr uint8_t letter_a_1[] = {
+        #include "raw/icons_64/letter_a_1.inc.h"
+    };
+
     // File: icons/icons_64/078-numpad.png
     // Size: 2355
     static constexpr uint8_t numpad[] = {
@@ -153,6 +189,12 @@ namespace rckid::assets::icons_64 {
     // Size: 1710
     static constexpr uint8_t play_button[] = {
         #include "raw/icons_64/play_button.inc.h"
+    };
+
+    // File: icons/icons_64/063-star.png
+    // Size: 2267
+    static constexpr uint8_t star[] = {
+        #include "raw/icons_64/star.inc.h"
     };
 
     // File: icons/icons_64/037-pause.png
@@ -215,10 +257,22 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/sad_face.inc.h"
     };
 
+    // File: icons/icons_64/099-file.png
+    // Size: 2414
+    static constexpr uint8_t file[] = {
+        #include "raw/icons_64/file.inc.h"
+    };
+
     // File: icons/icons_64/025-folder.png
     // Size: 2621
     static constexpr uint8_t folder[] = {
         #include "raw/icons_64/folder.inc.h"
+    };
+
+    // File: icons/icons_64/058-email.png
+    // Size: 1060
+    static constexpr uint8_t email[] = {
+        #include "raw/icons_64/email.inc.h"
     };
 
     // File: icons/icons_64/065-light.png
@@ -227,16 +281,52 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/light.inc.h"
     };
 
+    // File: icons/icons_64/096-switch-off.png
+    // Size: 1218
+    static constexpr uint8_t switch_off[] = {
+        #include "raw/icons_64/switch_off.inc.h"
+    };
+
+    // File: icons/icons_64/024-microphone.png
+    // Size: 3240
+    static constexpr uint8_t microphone[] = {
+        #include "raw/icons_64/microphone.inc.h"
+    };
+
+    // File: icons/icons_64/104-arrows.png
+    // Size: 912
+    static constexpr uint8_t arrows[] = {
+        #include "raw/icons_64/arrows.inc.h"
+    };
+
     // File: icons/icons_64/094-game-cartridge.png
     // Size: 1550
     static constexpr uint8_t game_cartridge[] = {
         #include "raw/icons_64/game_cartridge.inc.h"
     };
 
+    // File: icons/icons_64/097-checked.png
+    // Size: 1557
+    static constexpr uint8_t checked[] = {
+        #include "raw/icons_64/checked.inc.h"
+    };
+
     // File: icons/icons_64/035-gameboy.png
     // Size: 1560
     static constexpr uint8_t gameboy[] = {
         #include "raw/icons_64/gameboy.inc.h"
+    };
+
+    // File: icons/icons_64/101-unlock.png
+    // Size: 1833
+    static constexpr uint8_t unlock[] = {
+        #include "raw/icons_64/unlock.inc.h"
+    };
+
+    // File: icons/icons_64/100-silent.png
+    // Size: 2243
+    static constexpr uint8_t silent[] = {
+        #include "raw/icons_64/silent.inc.h"
     };
 
     // File: icons/icons_64/066-rainbow.png
@@ -273,6 +363,12 @@ namespace rckid::assets::icons_64 {
     // Size: 2658
     static constexpr uint8_t chat[] = {
         #include "raw/icons_64/chat.inc.h"
+    };
+
+    // File: icons/icons_64/071-family.png
+    // Size: 4909
+    static constexpr uint8_t family[] = {
+        #include "raw/icons_64/family.inc.h"
     };
 
 } // namespace rckid::assets::icons_64

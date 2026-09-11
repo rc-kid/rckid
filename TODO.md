@@ -25,26 +25,11 @@
 
 # Missing icons
 
-- speaker mute (64)
-- check mark (24)
-- lock (64)
-- calendar for date dialog (64)
-- generic file for file browser (64)
-- keys for settins->keys (64)
 - rgb effects: button press, rainbow press, Solid color, Breathe, Rainbow, Rainbow Wave, all 64, maybe can be done with decorators
-- clear password
-- change password
-- mute speaker,
-- enter parent mode
-- parent mode
-- recorder
-- messages
-
-
-
-
-
-
+- button (a) + arrow down decor
+- rainbow + arrow down
+- breathe is star
+- rainbow (diagram)
 
 # Ladder
 

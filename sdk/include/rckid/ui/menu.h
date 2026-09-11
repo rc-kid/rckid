@@ -84,8 +84,8 @@ namespace rckid::ui {
             this->decorator_ = [isChecked = std::move(isChecked)](MenuItem &, Image * icon, Label *) {
                 if (isChecked())
                     icon->addChild(new ui::Image{})
-                        << SetRect(Rect::XYWH(0, 0, 24, 24))
-                        << SetBitmap(assets::icons_24::bookmark);
+                        << SetRect(Rect::XYWH(40, 40, 24, 24))
+                        << SetBitmap(assets::icons_24::checked);
             };
             return std::move(*this);
         }

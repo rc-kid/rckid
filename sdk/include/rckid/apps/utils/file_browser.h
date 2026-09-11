@@ -39,7 +39,7 @@ namespace rckid {
                             return folderMenuGenerator(fileAction, path, drive, filter);
                         });
                 } else if (filter == nullptr || filter(fs::join(folder, entry.name))) {
-                    result->emplace_back(entry.name, assets::icons_64::poo, [fileAction, path = fs::join(folder, entry.name)]() {
+                    result->emplace_back(entry.name, assets::icons_64::file, [fileAction, path = fs::join(folder, entry.name)]() {
                         fileAction(path);
                     });
                 } 

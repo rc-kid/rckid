@@ -5,6 +5,18 @@
 
 namespace rckid::assets::icons_24 {
 
+    // File: icons/icons_24/105-diagram.png
+    // Size: 1289
+    static constexpr uint8_t diagram[] = {
+        #include "raw/icons_24/diagram.inc.h"
+    };
+
+    // File: icons/icons_24/095-switch-on.png
+    // Size: 848
+    static constexpr uint8_t switch_on[] = {
+        #include "raw/icons_24/switch_on.inc.h"
+    };
+
     // File: icons/icons_24/046-bookmark.png
     // Size: 613
     static constexpr uint8_t bookmark[] = {
@@ -41,16 +53,40 @@ namespace rckid::assets::icons_24 {
         #include "raw/icons_24/email.inc.h"
     };
 
+    // File: icons/icons_24/096-switch-off.png
+    // Size: 712
+    static constexpr uint8_t switch_off[] = {
+        #include "raw/icons_24/switch_off.inc.h"
+    };
+
+    // File: icons/icons_24/104-arrows.png
+    // Size: 671
+    static constexpr uint8_t arrows[] = {
+        #include "raw/icons_24/arrows.inc.h"
+    };
+
     // File: icons/icons_24/056-phone.png
     // Size: 930
     static constexpr uint8_t phone[] = {
         #include "raw/icons_24/phone.inc.h"
     };
 
+    // File: icons/icons_24/097-checked.png
+    // Size: 1272
+    static constexpr uint8_t checked[] = {
+        #include "raw/icons_24/checked.inc.h"
+    };
+
     // File: icons/icons_24/016-birthday-cake.png
     // Size: 824
     static constexpr uint8_t birthday_cake[] = {
         #include "raw/icons_24/birthday_cake.inc.h"
+    };
+
+    // File: icons/icons_24/071-family.png
+    // Size: 1881
+    static constexpr uint8_t family[] = {
+        #include "raw/icons_24/family.inc.h"
     };
 
 } // namespace rckid::assets::icons_24

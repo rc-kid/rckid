@@ -39,7 +39,7 @@ namespace rckid {
     }
 
     Messages::Chat::Chat(ini::Reader & reader):
-        icon_{assets::icons_64::poo}
+        icon_{assets::icons_64::email}
     {
         reader 
             >> ini::Field("name", name_) 

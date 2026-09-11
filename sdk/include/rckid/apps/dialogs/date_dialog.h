@@ -29,7 +29,7 @@ namespace rckid {
 
             icon_ = addChild(new ui::Image{})
                 << SetRect(Rect::XYWH(0, 0, 90, 100))
-                << SetBitmap(assets::icons_64::poo);
+                << SetBitmap(assets::icons_64::calendar);
 
             d_ = addChild(new ui::Label{})
                 << SetRect(Rect::XYWH(70, 20, 60, 76))

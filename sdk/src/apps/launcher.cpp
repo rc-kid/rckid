@@ -185,7 +185,7 @@ namespace rckid {
                 return result;
             })
             // key settings (autorepeat speed, accel as joystick, etc)
-            << ui::MenuItem::Generator("Keys", assets::icons_64::poo, [](){
+            << ui::MenuItem::Generator("Keys", assets::icons_64::numpad, [](){
                 auto result = std::make_unique<ui::Menu>();
                 /* TODO should this really be user controllable
                 (*result)
@@ -210,22 +210,22 @@ namespace rckid {
     unique_ptr<ui::Menu> rgbEffectSettingsMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();
         (*result)
-            << ui::MenuItem{"Press", assets::icons_64::poo, []() {
+            << ui::MenuItem{"Press", assets::icons_64::letter_a_1, []() {
                 updateRGBEffectStyle(rgb::KeyboardEffect::Press);
             }}.withCheckDecorator([]() {
                 return ui::Style::keyboardEffect() == rgb::KeyboardEffect::Press;
             })
-            << ui::MenuItem{"Rainbow Press", assets::icons_64::poo, []() {
+            << ui::MenuItem{"Rainbow Press", assets::icons_64::rainbow, []() {
                 updateRGBEffectStyle(rgb::KeyboardEffect::RainbowPress);
             }}.withCheckDecorator([]() {
                 return ui::Style::keyboardEffect() == rgb::KeyboardEffect::RainbowPress;
             })
-            << ui::MenuItem{"Solid", assets::icons_64::poo, []() {
+            << ui::MenuItem{"Solid", assets::icons_64::light, []() {
                 updateRGBEffectStyle(rgb::KeyboardEffect::Solid);
             }}.withCheckDecorator([]() {
                 return ui::Style::keyboardEffect() == rgb::KeyboardEffect::Solid;
             })
-            << ui::MenuItem{"Breathe", assets::icons_64::poo, []() {
+            << ui::MenuItem{"Breathe", assets::icons_64::star, []() {
                 updateRGBEffectStyle(rgb::KeyboardEffect::Breathe);
             }}.withCheckDecorator([]() {
                 return ui::Style::keyboardEffect() == rgb::KeyboardEffect::Breathe;
@@ -235,7 +235,7 @@ namespace rckid {
             }}.withCheckDecorator([]() {
                 return ui::Style::keyboardEffect() == rgb::KeyboardEffect::Rainbow;
             })
-            << ui::MenuItem{"Rainbow Wave", assets::icons_64::poo, []() {
+            << ui::MenuItem{"Rainbow Wave", assets::icons_64::rainbow, []() {
                 updateRGBEffectStyle(rgb::KeyboardEffect::RainbowWave);
             }}.withCheckDecorator([]() {
                 return ui::Style::keyboardEffect() == rgb::KeyboardEffect::RainbowWave;
@@ -297,18 +297,18 @@ namespace rckid {
         if (pim::parentMode()) {
             (*result)
                 // TODO add parent mode options
-                << MenuItem{"Clear Device Password", assets::icons_64::poo, []() {
+                << MenuItem{"Clear Device Password", assets::icons_64::unlock, []() {
                     pim::setPassword("");
                     InfoDialog::info("Parent Mode", "Device password cleared");
                 }}
-                << MenuItem{"Change Parent password", assets::icons_64::poo, []() {
+                << MenuItem{"Change Parent password", assets::icons_64::key, []() {
                     auto pwd = rckid::App::run<TextDialog>("");
                     if (pwd) {
                         pim::setParentPassword(std::move(pwd.value()));
                         InfoDialog::info("Password", "Password updated");
                     }
                 }}
-                << MenuItem("Mute Speaker", assets::icons_64::poo, []() {
+                << MenuItem("Mute Speaker", assets::icons_64::silent, []() {
                     audio::setMuteSpeaker(!audio::muteSpeaker());
                     if (audio::muteSpeaker())
                         InfoDialog::info("Parent Mode", "Speaker muted");
@@ -323,7 +323,7 @@ namespace rckid {
                 }};
         } else {
             (*result)
-                << MenuItem{"Enter", assets::icons_64::poo, []() {
+                << MenuItem{"Enter", assets::icons_64::family, []() {
                     pim::enterParentMode();
                     InfoDialog::info("Parent Mode", "Parent mode enabled");
                 }};
@@ -338,14 +338,14 @@ namespace rckid {
             << ui::MenuItem::Generator("Style", assets::icons_64::paint_palette, styleSettingsMenuGenerator)
             << ui::MenuItem::Generator("Lights", assets::icons_64::brightness_1, rgbSettingsMenuGenerator)
             << ui::MenuItem::Generator("Rumbler", assets::icons_64::vibration, rumblerSettingsMenuGenerator)
-            << ui::MenuItem{"Password", assets::icons_64::poo, []() {
+            << ui::MenuItem{"Password", assets::icons_64::key, []() {
                 auto pwd = App::run<TextDialog>("");
                 if (pwd) {
                     pim::setPassword(std::move(pwd.value()));
                     InfoDialog::info("Password", "Password updated");
                 }
             }}
-            << ui::MenuItem::Generator("Parent Mode", assets::icons_64::poo, parentModeMenuGenerator)
+            << ui::MenuItem::Generator("Parent Mode", assets::icons_64::family, parentModeMenuGenerator)
             << ui::MenuItem{"About", assets::icons_64::info, []() {
                 App::run<About>();
             }};
@@ -355,7 +355,7 @@ namespace rckid {
     unique_ptr<ui::Menu> debugMenuGenerator() {
         auto result = std::make_unique<ui::Menu>();
         (*result)
-            << ui::MenuItem{"Recorder", assets::icons_64::poo, []() {
+            << ui::MenuItem{"Recorder", assets::icons_64::microphone, []() {
                 App::run<Recorder>();
             }}
             << ui::MenuItem{"HW Status", assets::icons_64::gameboy, []() {

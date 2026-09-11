@@ -31,7 +31,7 @@ namespace rckid {
             using namespace ui;
             icon_ = addChild(new Image())
                 << SetRect(Rect::XYWH(0, 60, 320, 64))
-                << SetBitmap(assets::icons_64::poo);
+                << SetBitmap(assets::icons_64::lock);
         }
 
     protected:
