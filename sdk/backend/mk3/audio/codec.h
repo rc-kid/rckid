@@ -153,7 +153,7 @@ namespace rckid {
             // TODO do we need to do something more? 
         }
 
-        static void enableSpeakerAndHeadphones() {
+        static void enableHeadphonesAndSpeaker() {
             // enable speaker and headphone drivers (they are muted for now)
             setRegister(REG_PWR_MGMT_2, RHPEN | LHPEN);
             setRegister(REG_PWR_MGMT_3, RSPKEN | LSPKEN);
