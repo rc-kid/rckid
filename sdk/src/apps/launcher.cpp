@@ -308,6 +308,15 @@ namespace rckid {
                         InfoDialog::info("Password", "Password updated");
                     }
                 }}
+                << MenuItem("Mute Speaker", assets::icons_64::poo, []() {
+                    audio::setMuteSpeaker(!audio::muteSpeaker());
+                    if (audio::muteSpeaker())
+                        InfoDialog::info("Parent Mode", "Speaker muted");
+                    else
+                        InfoDialog::info("Parent Mode", "Speaker unmuted");
+                }).withCheckDecorator([]() {
+                    return audio::muteSpeaker();
+                })
                 << MenuItem{"Leave", assets::icons_64::logout, []() {
                     pim::leaveParentMode();
                     InfoDialog::info("Parent Mode", "Parent mode disabled");

@@ -133,9 +133,6 @@ namespace rckid {
             setRegister(REG_PWR_MGMT_1, REF_IMP_80K | IOBUFEN | ABIASEN);
             // wait 250ms for the charging to complete
             cpu::delayMs(250);
-            // now enable the outputs (but keep them muted)
-            setRegister(REG_PWR_MGMT_2, RHPEN | LHPEN);
-            setRegister(REG_PWR_MGMT_3, RSPKEN | LSPKEN);
             // ensure that we use mclk and not the pll (MCLK direct, no PLL, slave mode, no MCLK divider)
             setRegister(REG_CLK_CTRL_1, CLKM_MCLK); 
 
@@ -145,6 +142,21 @@ namespace rckid {
             // set audio interface to 16bit I2S
             setRegister(REG_AUDIO_INTERFACE, WLEN_16 | AIFMT_I2S);
 
+            enableSpeakerAndHeadphones();
+        }
+
+        static void enableHeadphonesOnly() {
+            // disable headphone jack detection
+            setRegister(REG_JACK_DETECT_1, 0);
+            // disable speaker drivers
+            setRegister(REG_PWR_MGMT_3, 0);
+            // TODO do we need to do something more? 
+        }
+
+        static void enableSpeakerAndHeadphones() {
+            // enable speaker and headphone drivers (they are muted for now)
+            setRegister(REG_PWR_MGMT_2, RHPEN | LHPEN);
+            setRegister(REG_PWR_MGMT_3, RSPKEN | LSPKEN);
             // enable slow clock (necessary for the jack detection)
             setRegister(REG_CLK_CTRL_2, SCLKEN);
             // enable the audio jack detection or GPIO2 and automatic headphone & speaker switching, corresponding to high (pulled up) on no jack and low (connected to ground through 220k resistor) on jack connected
@@ -152,7 +164,6 @@ namespace rckid {
             setRegister(REG_JACK_DETECT_1, JCKDEN | JCKDIO2);
             // TODO move back
             setRegister(REG_JACK_DETECT_2, JCKDOEN0_SPEAKER | JCKDOEN1_HEADPHONES);
-            mode_ = Mode::None;
         }
 
         static void powerDown() {

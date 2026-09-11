@@ -176,6 +176,8 @@ namespace rckid::hal {
          */
         using Callback = std::function<void(int16_t * & buffer, uint32_t & stereoSamples)>;
 
+        void setMuteSpeaker(bool value);
+
         void setVolumeHeadphones(uint8_t value);
 
         void setVolumeSpeaker(uint8_t value);

@@ -60,6 +60,7 @@ namespace rckid {
     struct AudioSettings {
         uint8_t volumeHeadphones = 8;
         uint8_t volumeSpeaker = 8;
+        bool muteSpeaker = false;
     };
 
     struct PimSettings {
@@ -82,7 +83,7 @@ namespace rckid {
         Similar to the ui::Style, settings define the device configuration. Settings are stored in the device's non-volatime memory and are expected to survive device reboots. They are mainly used for non-ui/visual configuration of more ad-hoc, or device specific nature such as display brightness, audio volume, etc.
      */
     struct Settings {
-        static constexpr uint16_t VERSION = 3;
+        static constexpr uint16_t VERSION = 4;
         uint16_t version = VERSION;
         DisplaySettings display;
         AudioSettings audio;
@@ -96,6 +97,7 @@ namespace rckid {
           << settings.display.brightness
           << settings.audio.volumeHeadphones
           << settings.audio.volumeSpeaker
+          << settings.audio.muteSpeaker
           << settings.pim.budget
           << settings.pim.password
           << settings.pim.parentPassword
@@ -105,16 +107,22 @@ namespace rckid {
     }
 
     void read(BinaryReader & r, Settings & settings) {
-        r >> settings.version
-          >> settings.display.brightness
-          >> settings.audio.volumeHeadphones
-          >> settings.audio.volumeSpeaker
-          >> settings.pim.budget
-          >> settings.pim.password
-          >> settings.pim.parentPassword
-          >> settings.rumbler.strength
-          >> settings.rumbler.keyPress
-          >> settings.rgb.brightness;
+        r >> settings.version;
+        if (settings.version != Settings::VERSION) {
+            LOG(LL_WARN, "Settings version mismatch, resetting to defaults");
+            settings = Settings{};
+        } else {
+            r >> settings.display.brightness
+              >> settings.audio.volumeHeadphones
+              >> settings.audio.volumeSpeaker
+              >> settings.audio.muteSpeaker
+              >> settings.pim.budget
+              >> settings.pim.password
+              >> settings.pim.parentPassword
+              >> settings.rumbler.strength
+              >> settings.rumbler.keyPress
+              >> settings.rgb.brightness;
+        }
     }
 
     Settings settings;
@@ -165,10 +173,6 @@ namespace rckid {
         MemoryStream s = MemoryStream::withCapacity(1024);
         hal::storage::load(0, s.data(), s.size());
         s.binaryReader() >> settings;
-        if (settings.version != Settings::VERSION) {
-            LOG(LL_WARN, "Settings version mismatch, resetting to defaults");
-            settings = Settings{};
-        }
     }
 
     void saveSettings() {
@@ -415,6 +419,16 @@ namespace rckid {
 
     namespace audio {
 
+        bool muteSpeaker() {
+            return settings.audio.muteSpeaker;
+        }
+
+        void setMuteSpeaker(bool value) {
+            settings.audio.muteSpeaker = value;
+            hal::audio::setMuteSpeaker(value);
+            saveSettings();
+        }
+
         void play(DecoderStream * stream) {
             // ensure the stream's playback buffer is filled
             stream->update();
@@ -425,6 +439,8 @@ namespace rckid {
         }
 
         bool headphonesConnected() {
+            if (settings.audio.muteSpeaker)
+                return true;
             return state_.headphonesConnected();
         }
 

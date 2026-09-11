@@ -205,6 +205,10 @@ namespace rckid {
          */
         void setVolume(uint8_t value);
 
+        bool muteSpeaker();
+
+        void setMuteSpeaker(bool value);
+
         inline void play(uint32_t sampleRate, Callback cb) { hal::audio::play(sampleRate, cb); }
 
         void play(DecoderStream * stream);

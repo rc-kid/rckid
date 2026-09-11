@@ -682,6 +682,13 @@ namespace rckid::hal {
 
     namespace audio {
 
+        void setMuteSpeaker(bool value) {
+            if (value)
+                Codec::enableHeadphonesOnly();
+            else
+                Codec::enableHeadphonesAndSpeaker();
+        }
+
         void setVolumeHeadphones(uint8_t value) {
             if (value > 15)
                 value = 15;

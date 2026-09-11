@@ -8,6 +8,8 @@
 # MK3 HW
 
 - there seem to be 3v3 neopixels - this could be useful for rckid proper as well (now tested in lego remote)
+- change the matrix diode to https://jlcpcb.com/partdetail/Zhengxin-1N4148WS/C19272188 (smaller, cheaper, better for matrix - verify)
+- this could be better side button (cheaper too): https://jlcpcb.com/partdetail/XKBConnection-TS_1010_CA/C692458
 - home button thickness tested at 1.3mm
 - volume down not centered properly
 - maybe enlarge the top plate a bit to fit properly in the slightly large nylon bottom. Or shrink the nylon?
@@ -19,6 +21,30 @@
 # MK3.2 Issues
 
 - headphone detect does not seem to be working
+
+
+# Missing icons
+
+- speaker mute (64)
+- check mark (24)
+- lock (64)
+- calendar for date dialog (64)
+- generic file for file browser (64)
+- keys for settins->keys (64)
+- rgb effects: button press, rainbow press, Solid color, Breathe, Rainbow, Rainbow Wave, all 64, maybe can be done with decorators
+- clear password
+- change password
+- mute speaker,
+- enter parent mode
+- parent mode
+- recorder
+- messages
+
+
+
+
+
+
 
 # Ladder
 

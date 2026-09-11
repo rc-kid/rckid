@@ -464,6 +464,11 @@ namespace rckid::hal {
 
     namespace audio {
 
+        void setMuteSpeaker(bool value) {
+            // muting the speaker is not something that is supported in the fantasy backend for now
+            LOG(LL_INFO, "Speaker mute: " << value);
+        }
+
         void setVolumeHeadphones(uint8_t value) {
             if (value > 15)
                 value = 15;
