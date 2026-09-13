@@ -77,7 +77,7 @@ namespace rckid::gbcemu {
          */
         static void appendGamesFrom(char const * path, ui::Menu * into);
 
-        static unique_ptr<ui::Menu> gamesMenuExtender(unique_ptr<ui::Menu> gamesMenu) {
+        static unique_ptr<LauncherMenu> gamesMenuExtender(unique_ptr<LauncherMenu> gamesMenu) {
             appendGamesFrom("/games", gamesMenu.get());
             return gamesMenu;
         }

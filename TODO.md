@@ -4,6 +4,8 @@
 - figure out the side buttons if there are ones that can be soldered by jlcpcb and be better centered
 - this might be better speaker: https://cz.mouser.com/ProductDetail/Same-Sky/CMS-160903-18S-X8
 - buttons can be better printed with circular infill on the top layer & filament change
+- looks like LCSC is offering very reasonable acrylic front panels with cutouts, would cost around 1 USD per unit in 100 batch, which is a lot cheaper than the transparent 3d printed case (!!!)
+
 
 # MK3 HW
 
@@ -19,6 +21,7 @@
 - use the old side buttons, but mount at the top? they feel better and I can replace them if faulty
 
 # MK3.2 Issues
+
 
 - headphone detect does not seem to be working
 
@@ -46,6 +49,8 @@ So what I need:
 - descriptor/game object infrastructure for matching arguments of events should be added 
 
 # SDK 1.0
+
+- menu extender can in theory use just Menu *, no need to force launcher
 
 - add extra settings item (identity, personalization, etc.)
 

@@ -7,28 +7,39 @@
 
 namespace rckid {
 
-    struct MainMenuOptions {
-        ui::MenuExtender gamesExtender = nullptr;
-        ui::MenuExtender cartridgeExtender = nullptr;
+    /** Launcher menu. 
+     
+        Launcher menus are normal menus (collections of menu items), but enhanced with an ability to generate menu specific overlays. The overlay is a ui::Widget that is displayed on top of the menu and can be used to show additional information.
+     */
+    class LauncherMenu : public ui::Menu {
+    public:
+        using Extender = std::function<unique_ptr<LauncherMenu>(unique_ptr<LauncherMenu>)>;
+        std::function<unique_ptr<ui::Widget>()> overlayGenerator = nullptr;
     };
+
+    struct MainMenuOptions {
+        LauncherMenu::Extender gamesExtender = nullptr;
+        LauncherMenu::Extender cartridgeExtender = nullptr;
+    };
+
 
     ui::MenuItem::GeneratorEvent mainMenuGenerator(MainMenuOptions options = {});
 
     /** Generator for the games submenu.
      */
-    unique_ptr<ui::Menu> gamesMenuGenerator();
+    unique_ptr<LauncherMenu> gamesMenuGenerator();
 
     /** Utilities submenu generator. 
      */
-    unique_ptr<ui::Menu> utilitiesMenuGenerator();
+    unique_ptr<LauncherMenu> utilitiesMenuGenerator();
 
     /** Settings menu generator. 
      */
-    unique_ptr<ui::Menu> settingsMenuGenerator();
+    unique_ptr<LauncherMenu> settingsMenuGenerator();
 
     /** Settings menu generator. 
      */
-    unique_ptr<ui::Menu> debugMenuGenerator();
+    unique_ptr<LauncherMenu> debugMenuGenerator();
 
     /** App launcher (main menu)
      

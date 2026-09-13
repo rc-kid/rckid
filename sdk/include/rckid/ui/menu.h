@@ -177,8 +177,6 @@ namespace rckid::ui {
         std::vector<MenuItem> items_;
     }; 
 
-    using MenuExtender = std::function<unique_ptr<Menu>(unique_ptr<Menu>)>;
-
     inline Menu & operator << (Menu & menu, MenuItem item) {
         menu.push_back(std::move(item));
         return menu;

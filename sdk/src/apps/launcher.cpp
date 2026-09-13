@@ -42,7 +42,7 @@ namespace rckid {
 
     ui::MenuItem::GeneratorEvent mainMenuGenerator(MainMenuOptions options) {
         return [options]() {
-            auto result = std::make_unique<ui::Menu>();
+            auto result = std::make_unique<LauncherMenu>();
             (*result)
                 << ui::MenuItem::Generator("Games", assets::icons_64::game_controller, [extend = options.gamesExtender]() {
                     auto gamesMenu = gamesMenuGenerator();
@@ -84,8 +84,8 @@ namespace rckid {
         };
     }
 
-    unique_ptr<ui::Menu> gamesMenuGenerator() {
-        auto result = std::make_unique<ui::Menu>();
+    unique_ptr<LauncherMenu> gamesMenuGenerator() {
+        auto result = std::make_unique<LauncherMenu>();
             (*result)
                 << ui::MenuItem{"Game Engine", assets::icons_64::gameboy, []() {
                     App::run<CatChase>();
@@ -96,8 +96,8 @@ namespace rckid {
         return result;
     }
 
-    unique_ptr<ui::Menu> utilitiesMenuGenerator() {
-        auto result = std::make_unique<ui::Menu>();
+    unique_ptr<LauncherMenu> utilitiesMenuGenerator() {
+        auto result = std::make_unique<LauncherMenu>();
         (*result)
             << ui::MenuItem{"Clock", assets::icons_64::alarm_clock, []() {
                 App::run<Clock>();
@@ -130,8 +130,8 @@ namespace rckid {
         return result;
     }
 
-    unique_ptr<ui::Menu> styleSettingsMenuGenerator() {
-        auto result = std::make_unique<ui::Menu>();
+    unique_ptr<LauncherMenu> styleSettingsMenuGenerator() {
+        auto result = std::make_unique<LauncherMenu>();
         (*result)
             << ui::MenuItem::Generator("Background", assets::icons_64::picture, [](){
                 auto result = std::make_unique<ui::Menu>();
@@ -205,8 +205,8 @@ namespace rckid {
         ui::Style::saveDefaultStyle();
     }
 
-    unique_ptr<ui::Menu> rgbEffectSettingsMenuGenerator() {
-        auto result = std::make_unique<ui::Menu>();
+    unique_ptr<LauncherMenu> rgbEffectSettingsMenuGenerator() {
+        auto result = std::make_unique<LauncherMenu>();
         (*result)
             << ui::MenuItem{"Press", assets::icons_64::letter_a_1, []() {
                 updateRGBEffectStyle(rgb::KeyboardEffect::Press);
@@ -246,9 +246,9 @@ namespace rckid {
         return result;
     }
 
-    unique_ptr<ui::Menu> rgbSettingsMenuGenerator() {
+    unique_ptr<LauncherMenu> rgbSettingsMenuGenerator() {
         using namespace ui;
-        auto result = std::make_unique<Menu>();
+        auto result = std::make_unique<LauncherMenu>();
         (*result)
             << ui::MenuItem::Generator("Effect", assets::icons_64::numpad, rgbEffectSettingsMenuGenerator)
             << ui::MenuItem{"Color", assets::icons_64::light, []() {
@@ -271,9 +271,9 @@ namespace rckid {
         return result;
     }
 
-    unique_ptr<ui::Menu> rumblerSettingsMenuGenerator() {
+    unique_ptr<LauncherMenu> rumblerSettingsMenuGenerator() {
         using namespace ui;
-        auto result = std::make_unique<Menu>();
+        auto result = std::make_unique<LauncherMenu>();
         (*result)
             << MenuItem{"Strength", assets::icons_64::vibration, []() {
                 CarouselMenu * c = Launcher::instance()->carousel();
@@ -289,9 +289,9 @@ namespace rckid {
         return result;
     }
 
-    unique_ptr<ui::Menu> parentModeMenuGenerator() {
+    unique_ptr<LauncherMenu> parentModeMenuGenerator() {
         using namespace ui;
-        auto result = std::make_unique<Menu>();
+        auto result = std::make_unique<LauncherMenu>();
         if (pim::parentMode()) {
             (*result)
                 // TODO add parent mode options
@@ -329,9 +329,8 @@ namespace rckid {
         return result;
     }
 
-
-    unique_ptr<ui::Menu> settingsMenuGenerator() {
-        auto result = std::make_unique<ui::Menu>();
+    unique_ptr<LauncherMenu> settingsMenuGenerator() {
+        auto result = std::make_unique<LauncherMenu>();
         (*result)
             << ui::MenuItem::Generator("Style", assets::icons_64::paint_palette, styleSettingsMenuGenerator)
             << ui::MenuItem::Generator("Lights", assets::icons_64::brightness_1, rgbSettingsMenuGenerator)
@@ -350,8 +349,8 @@ namespace rckid {
         return result;
     }
 
-    unique_ptr<ui::Menu> debugMenuGenerator() {
-        auto result = std::make_unique<ui::Menu>();
+    unique_ptr<LauncherMenu> debugMenuGenerator() {
+        auto result = std::make_unique<LauncherMenu>();
         (*result)
             << ui::MenuItem{"Recorder", assets::icons_64::microphone, []() {
                 App::run<Recorder>();
