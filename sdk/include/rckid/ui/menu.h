@@ -13,11 +13,12 @@
 namespace rckid::ui {
 
     class Label;
+    class Menu;
 
     class MenuItem {
     public:
         using ActionEvent = std::function<void()>;
-        using GeneratorEvent = std::function<unique_ptr<std::vector<MenuItem>>()>;
+        using GeneratorEvent = std::function<unique_ptr<Menu>()>;
         using DecoratorEvent = std::function<void(MenuItem &, Image *, Label *)>;
 
         String text;
@@ -138,7 +139,43 @@ namespace rckid::ui {
         DecoratorEvent decorator_;
     }; // rckid::ui::MenuItem
 
-    using Menu = std::vector<MenuItem>;
+    class Menu {
+    public:
+
+        using iterator = std::vector<MenuItem>::iterator;
+        using const_iterator = std::vector<MenuItem>::const_iterator;
+        using reference = std::vector<MenuItem>::reference;
+
+        virtual ~Menu() = default;
+
+        bool empty() const { return items_.empty(); }
+
+        uint32_t size() const { return items_.size(); }
+
+        void reserve(uint32_t size) { items_.reserve(size); }
+
+        const_iterator begin() const { return items_.begin(); }
+        const_iterator end() const { return items_.end(); }
+        iterator begin() { return items_.begin(); }
+        iterator end() { return items_.end(); }
+
+        void push_back(MenuItem item) { items_.push_back(std::move(item)); }
+
+        template< class... Args >
+        reference emplace_back( Args&&... args ) {
+            return items_.emplace_back(std::forward<Args>(args)...);
+        }
+
+        iterator insert(iterator pos, MenuItem item) { return items_.insert(pos, std::move(item)); }
+
+        iterator erase(iterator pos) { return items_.erase(pos); }
+
+        MenuItem & at(uint32_t index) { return items_[index]; }
+
+
+    private:
+        std::vector<MenuItem> items_;
+    }; 
 
     using MenuExtender = std::function<unique_ptr<Menu>(unique_ptr<Menu>)>;
 

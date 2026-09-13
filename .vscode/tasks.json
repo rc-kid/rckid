@@ -104,6 +104,23 @@
             ]
         },
         {
+            "type" : "shell",
+            "label": "cloc",
+            "detail": "Runs cloc on the relavant parts of the project",
+            "command": "cloc",
+            "args" : [
+                "cartridges",
+                "gbcemu/gbcemu",
+                "sdk",
+                "sdk/backend/fantasy",
+                "sdk/backend/mk3",
+                "sdk/include/rckid",
+                "sdk/src"           
+            ],
+            "problemMatcher": []
+        }, 
+        {
+            "type" : "shell",
             "label": "mk 3  - upload avr",
             "detail": "Builds the AVR firmware for mk III on the dev server and uploads it to the device immediately.",
             "command": "bash",
