@@ -301,6 +301,19 @@ namespace rckid::fs {
         return "/";
     }
 
+    String filename(String const & path) {
+        if (path.empty())
+            return path;
+        size_t i = path.size() - 1;
+        for (; i > 0; --i) {
+            if (path[i] == '/')
+                break;
+        }
+        if (path[i] == '/')
+            ++i;
+        return path.substr(i);
+    }
+
     String root(String const & path) {
         if (path.empty())
             return path;

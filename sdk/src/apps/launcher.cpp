@@ -51,11 +51,11 @@ namespace rckid {
                     else 
                         return gamesMenu;
                 })
-                << ui::MenuItem{"Music", assets::icons_64::music, []() {
-                    App::run<MusicPlayer>();
-                }}
+                << ui::MenuItem::Generator("Music", assets::icons_64::music, 
+                    MusicPlayer2::generateLauncherMenu
+                )
                 << ui::MenuItem::Generator("Friends", assets::icons_64::birthday_cake,
-                    Friends2::generateLauncherMenu
+                    Friends::generateLauncherMenu
                 )
                 << ui::MenuItem{"Messages", assets::icons_64::chat, []() {
                     App::run<Messages>();

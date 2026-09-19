@@ -38,6 +38,10 @@ namespace rckid::fs {
      */
     String parent(String const & path);
 
+    /** Returns the full filename of the path (i.e. the last component, the stem and extension)
+     */
+    String filename(String const & path);
+
     /** Returns the first component of the path (i.e. the root folder). If the path has only one component, returns that component.
      */
     String root(String const & path);

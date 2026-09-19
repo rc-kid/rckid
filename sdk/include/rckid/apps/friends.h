@@ -10,12 +10,12 @@
 namespace rckid {
 
 
-    class Friends2 : public ui::Widget {
+    class Friends : public ui::Widget {
     public:
 
         static unique_ptr<LauncherMenu> generateLauncherMenu() {
             auto menu = std::make_unique<LauncherMenu>();
-            auto overlay = std::make_unique<Friends2>();
+            auto overlay = std::make_unique<Friends>();
             ui::with(overlay.get())
                 << ui::SetRect(Rect::XYWH(0, 0, 320, 240));
 
@@ -37,7 +37,7 @@ namespace rckid {
             return menu;
         }
 
-        ~Friends2() override {
+        ~Friends() override {
             if (dirty_)
                 Contact::saveAll(contacts_.begin(), contacts_.end());
         }
@@ -91,13 +91,15 @@ namespace rckid {
 
     }; // rckid::Friends
 
+#ifdef HAHA
+
     class Friends : public ui::App<void> {
     public:
         String name() const override { return "Friends"; }
 
         Friends() {
             using namespace ui;
-            carousel_ = addChild(new Launcher::BorrowedCarousel());
+            carousel_ = addChild(new Launcher::B_orrowedCarousel());
         }
 
         ~Friends() override {
@@ -213,4 +215,6 @@ namespace rckid {
 
 
     }; // rckid::Friends
+
+    #endif
 } // namespace rckid

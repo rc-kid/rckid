@@ -50,6 +50,7 @@ So what I need:
 
 # SDK 1.0
 
+- support changing app name via the overlay mechanism
 - rename Launcher2 to Launcher, delete old Launcher
 - rename CarouselMenu2 to CarouselMenu, old CarouselMenu
 
