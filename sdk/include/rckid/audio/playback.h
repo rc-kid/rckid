@@ -5,20 +5,36 @@
 
 namespace rckid::audio {
 
-    class Playlist2 {
+    /** Playlist interface.
+     
+        A playlist is a collection of audio files. The playlist is generic interface to any such collection and provides the API for knowing the size of the playlist, getting the audio stream for a given index and getting the track title for given index. 
+     */
+    class Playlist {
     public:
         
-        virtual ~Playlist2() = default;
+        virtual ~Playlist() = default;
 
+        /** Returns the size of the playlist (number of tracks).
+         */
         virtual uint32_t size() const = 0;
 
+        /** Returns the audio stream for the given index.
+         */
         virtual unique_ptr<DecoderStream> at(uint32_t index) = 0;
 
+        /** Returns the title of the track at the given index.
+         
+            This is the fallback title in case the audio stream does not provide any metadata for the track.
+         */
         virtual String titleAt(uint32_t index) const = 0;
 
     }; // rckid::audio::Playlist 
 
-    class FolderPlaylist : public Playlist2 {
+    /** Playlist created from a folder of audio files.
+     
+        Audio playlist created from all audio files in a given folder (non-recursive). File names without the extension are the default track titles.
+     */
+    class FolderPlaylist : public Playlist {
     public:
 
         FolderPlaylist(String folder, fs::Drive drive = fs::Drive::SD): 
@@ -62,16 +78,25 @@ namespace rckid::audio {
 
         std::vector<String> files_;
 
+    }; // rckid::audio::FolderPlaylist
 
-    }; // 
 
+    /** Audio playback task.
+     
+        Given an audio playlist, the task plays it in succession and supports pausing, resuming and track control. The task is designed to be run in the background and will automatically play the next track when the current one finishes. It also supports shuffle and repeat modes. 
 
+        No uservisible controls are available (for a simple user interface, see the audio::Player app instead).
+     */
     class PlaybackTask : public Task {
     public:
 
+        /** Event triggered when the track changes. 
+         
+            Has the playlist index of the new track as the parameter.
+         */
         std::function<void(uint32_t)> onTrackChanged;
 
-        PlaybackTask(Playlist2 * playlist, uint32_t index = 0): 
+        PlaybackTask(Playlist * playlist, uint32_t index = 0): 
             playlist_{playlist}, 
             index_{index}
         {
@@ -168,7 +193,7 @@ namespace rckid::audio {
 
     private:
 
-        Playlist2 * playlist_ = nullptr;
+        Playlist * playlist_ = nullptr;
         std::vector<uint32_t> indices_;
         Timer t_;
         uint32_t index_ = 0;
@@ -179,98 +204,5 @@ namespace rckid::audio {
 
     }; // rckid::audio::PlaybackTask
 
-
-    /** Playlist interface
-     
-        Interface for the playback task that allows it to move between tracks. 
-
-        TODO the playlist can also have events from the playback task
-     */
-    class Playlist {
-    public:
-
-        virtual ~Playlist() = default;
-
-        virtual unique_ptr<DecoderStream> next() = 0;
-
-        virtual unique_ptr<DecoderStream> prev() = 0;
-
-
-    protected:
-
-    }; // rckid::audio::Playlist
-
-    /** Audio playback task. 
-     
-        The task takes given playlist and plays it independently. 
-     */
-    class Playback : public Task {
-    public:
-        Playback(Playlist * playlist): playlist_{playlist} {
-            currentStream_ = playlist_->next();
-            if (currentStream_ != nullptr)
-                play(currentStream_.get());
-        }
-
-        ~Playback() override {
-            // stop audio playback when exitting
-            stop();
-        }
-
-        bool next() {
-            audio::stop();
-            currentStream_ = playlist_->next();
-            if (currentStream_ == nullptr)
-                return false;
-            t_.start();
-            play(currentStream_.get());
-            return true;
-        }
-
-        bool prev() {
-            audio::stop();
-            currentStream_ = playlist_->prev();
-            if (currentStream_ == nullptr)
-                return false;
-            t_.start();
-            play(currentStream_.get());
-            return true;
-        }
-
-        void pause() {
-            if (audio::isPaused())
-                return;
-            audio::pause();
-            t_.pause();
-        }
-
-        void resume() {
-            if (! audio::isPaused())
-                return;
-            audio::resume();
-            t_.resume();
-        }
-
-        TinyTime elapsed() const { return t_.time(); }
-
-    protected:
-        void onTick() override {
-            if (currentStream_ != nullptr)
-                currentStream_->update();
-            // if we are done playing the current file, move to the next one, if we can
-            if (!audio::isPlaying())
-                next();
-            else
-                t_.tick();
-        }
-
-    private:
-
-        Playlist * playlist_ = nullptr;
-        Timer t_;
-
-        unique_ptr<DecoderStream> currentStream_;
-
-    }; // rckid::audio::Playback
 
 } // namespace rckid::audio

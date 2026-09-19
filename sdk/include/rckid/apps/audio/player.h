@@ -23,7 +23,7 @@ namespace rckid::audio {
 
         String name() const override { return "AudioPlayer"; }
 
-        Player(Playlist2 * playlist, uint32_t index = 0):
+        Player(Playlist * playlist, uint32_t index = 0):
             ui::App<void>{Rect::XYWH(0, 140, 320, 100)},
             playlist_{playlist},
             index_{index},
@@ -110,7 +110,7 @@ namespace rckid::audio {
             ui::App<void>::render();
         }
 
-        Playlist2 * playlist_ = nullptr;
+        Playlist * playlist_ = nullptr;
         uint32_t index_ = 0;
         // TODO can task be just normal value and not a pointer? 
         unique_ptr<PlaybackTask> task_;
