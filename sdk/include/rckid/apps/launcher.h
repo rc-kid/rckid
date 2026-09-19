@@ -58,23 +58,37 @@ namespace rckid {
             root_.applyStyle();
             overlay_ = addChild(new ui::NonOwningWrapper())
                 << ui::SetRect(Rect::XYWH(0, 0, 320, 240));
-            carousel_ = addChild(new ui::Carousel())
+            carousel_ = addChild(new ui::CarouselMenu2())
                 << ui::SetRect(Rect::XYWH(0, 140, 320, 100));
-            enterMenu(std::move(rootMenuGenerator));
+
+
+            carousel_->onMenuChange = [this] {
+                updateOverlayWidget();
+            };
+            carousel_->onItemSelected = [this](ui::MenuItem const & mi) {
+                carousel_->animate()
+                    << ui::FlyOut(carousel_, Point{0, 100});
+                waitUntilIdle(carousel_);
+                mi.action()();
+                carousel_->animate()
+                    << ui::FlyOut(carousel_, Point{0, -100});
+                waitUntilIdle(carousel_);
+            };
+            carousel_->enterMenu(std::move(rootMenuGenerator));
         }
 
         void releaseResources() override {
             root_.releaseResources();
             ui::App<void>::releaseResources();
-            menu_.releaseResources();
+            carousel_->menu().releaseResources();
         }
 
     protected:
 
         void onFocus() override {
             ui::App<void>::onFocus();
-            if (! menu_.populated())
-                menu_.populate();
+            if (! carousel_->menu().populated())
+                carousel_->menu().populate();
         }
 
         void onBlur() override {
@@ -83,86 +97,15 @@ namespace rckid {
 
         void loop() override {
             ui::App<void>::loop();
-            if (btnPressed(Btn::Left))
-                moveLeft();
-            if (btnPressed(Btn::Right))
-                moveRight();  
-            if (btnPressed(Btn::Up))
-                moveUp();
-            if (btnPressed(Btn::Down))
-                moveDown();
+            carousel_->processEvents();
             if (overlay_->contents() != nullptr)
                 overlay_->contents()->processEvents();
         }
 
-        void enterMenu(ui::MenuItem::GeneratorEvent generator) {
-            if (!carousel_->idle())
-                carousel_->cancelAnimations();
-            menu_.openNew(std::move(generator));
-            menu_.populate();
-            if (menu_.menu()->empty()) {
-                carousel_->setEmpty(Direction::Up);
-            } else {
-                ui::MenuItem const * mi = menu_.currentItem();
-                carousel_->set(mi->text,mi->icon, Direction::Up);
-            }
-        }
-
-        void moveLeft() {
-            if (menu_.empty() || menu_.menu()->empty())
-                return;
-            if (!carousel_->idle())
-                carousel_->cancelAnimations();
-            menu_.setIndex((menu_.index() + menu_.menu()->size() - 1) % menu_.menu()->size());
-            ui::MenuItem const * mi = menu_.currentItem();
-            carousel_->set(mi->text,mi->icon, Direction::Left);            
-        }
-
-        void moveRight() {
-            if (menu_.empty() || menu_.menu()->empty())
-                return;
-            if (!carousel_->idle())
-                carousel_->cancelAnimations();
-            menu_.setIndex((menu_.index() + 1) % menu_.menu()->size());
-            ui::MenuItem const * mi = menu_.currentItem();
-            carousel_->set(mi->text,mi->icon, Direction::Right);            
-        }
-
-        void moveUp() {
-            if (menu_.empty() || menu_.menu()->empty())
-                return;
-            if (!carousel_->idle())
-                carousel_->cancelAnimations();
-            ui::MenuItem const * mi = menu_.currentItem();
-            if (mi->isAction()) {
-                carousel_->animate()
-                    << ui::FlyOut(carousel_, Point{0, 100});
-                waitUntilIdle(carousel_);
-                mi->action()();
-                carousel_->animate()
-                    << ui::FlyOut(carousel_, Point{0, -100});
-                waitUntilIdle(carousel_);
-            } else {
-                enterMenu(mi->generator());
-                updateOverlayWidget();
-            }
-        }
-
-        void moveDown() {
-            if (menu_.parent() != nullptr) {
-                if (!carousel_->idle())
-                    carousel_->cancelAnimations();
-                menu_.pop();
-                updateOverlayWidget();
-                ui::MenuItem const * mi = menu_.currentItem();
-                carousel_->set(mi->text,mi->icon, Direction::Down);
-            }
-        }
-
         void updateOverlayWidget() {
-            ASSERT(menu_.populated());
+            ASSERT(carousel_->menu().populated());
             overlay_->setContents(nullptr);
-            ui::Menu::Context * ctx = & menu_;
+            ui::Menu::Context * ctx = & carousel_->menu();
             while (ctx != nullptr && overlay_->contents() == nullptr) {
                 // TODO this should be checked cast
                 LauncherMenu * lm = static_cast<LauncherMenu *>(ctx->menu());
@@ -178,9 +121,7 @@ namespace rckid {
             return std::make_unique<ui::Menu>();
         }
 
-        ui::Menu::Context menu_;
-
-        ui::Carousel * carousel_ = nullptr;
+        ui::CarouselMenu2 * carousel_ = nullptr;
         ui::NonOwningWrapper * overlay_ = nullptr;
 
     }; // rckid::Launcher

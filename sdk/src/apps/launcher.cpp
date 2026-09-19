@@ -134,7 +134,7 @@ namespace rckid {
         auto result = std::make_unique<LauncherMenu>();
         (*result)
             << ui::MenuItem::Generator("Background", assets::icons_64::picture, [](){
-                auto result = std::make_unique<ui::Menu>();
+                auto result = std::make_unique<LauncherMenu>();
                 (*result)
                     << ui::MenuItem{"Image", assets::icons_64::picture, []() {
                         auto path = App::run<FileDialog>("/files/images/backgrounds");
@@ -148,7 +148,7 @@ namespace rckid {
                 return result;
             })
             << ui::MenuItem::Generator("Colors", assets::icons_64::light, [](){
-                auto result = std::make_unique<ui::Menu>();
+                auto result = std::make_unique<LauncherMenu>();
                 (*result)
                     << ui::MenuItem{"Text", assets::icons_64::light, []() {
                         auto color = App::run<ColorDialog>(ui::Style::defaultFg());

@@ -50,8 +50,8 @@ So what I need:
 
 # SDK 1.0
 
-- file dialog is proper app (no menu transition, this actually feels a lot better)
-- requires abstracting the carousel and its contexts into a dedicated app (sth like carousel menu, but actually with the launcher's niceties)
+- rename Launcher2 to Launcher, delete old Launcher
+- rename CarouselMenu2 to CarouselMenu, old CarouselMenu
 
 - save contacts after new (& refresh contacts menu)
 - menu extender can in theory use just Menu *, no need to force launcher

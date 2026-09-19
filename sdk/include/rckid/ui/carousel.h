@@ -189,9 +189,12 @@ namespace rckid::ui {
 
         ui::Menu::Context & menu() { return menu_; }
 
-        std::function<void()> onOverlayChange;
+        std::function<void()> onMenuChange;
 
-        std::function<void(ui::MenuItem const &)> onItemSelected;
+        std::function<void(ui::MenuItem const &)> onItemSelected = [] (ui::MenuItem const & item) {
+            if (item.isAction())
+                item.action()();
+        };
 
         void processEvents() {
             if (btnPressed(Btn::Left))
@@ -231,20 +234,12 @@ namespace rckid::ui {
                 cancelAnimations();
             ui::MenuItem const * mi = menu_.currentItem();
             if (mi->isAction()) {
-                if (onItemSelected != nullptr)
+                if (onItemSelected)
                     onItemSelected(*mi);
-                /*
-                carousel_->animate()
-                    << ui::FlyOut(carousel_, Point{0, 100});
-                waitUntilIdle(carousel_);
-                mi->action()();
-                carousel_->animate()
-                    << ui::FlyOut(carousel_, Point{0, -100});
-                waitUntilIdle(carousel_);
-                */
             } else {
                 enterMenu(mi->generator());
-                updateOverlayWidget();
+                if (onMenuChange)
+                    onMenuChange();
             }
         }
 
@@ -253,12 +248,12 @@ namespace rckid::ui {
                 if (!idle())
                     cancelAnimations();
                 menu_.pop();
-                updateOverlayWidget();
+                if (onMenuChange)
+                    onMenuChange();
                 ui::MenuItem const * mi = menu_.currentItem();
                 set(mi->text,mi->icon, Direction::Down);
             }
         }
-    protected:
 
         void enterMenu(ui::MenuItem::GeneratorEvent generator) {
             if (!idle())
@@ -273,26 +268,9 @@ namespace rckid::ui {
             }
         }
 
-
-        void updateOverlayWidget() {
-            ASSERT(menu_.populated());
-            Widget * last = overlay_; 
-            overlay_ = nullptr;
-            ui::Menu::Context * ctx = & menu_;
-            while (ctx != nullptr && overlay_ == nullptr) {
-                // TODO this should be checked cast
-                LauncherMenu * lm = static_cast<LauncherMenu *>(ctx->menu());
-                ASSERT(lm != nullptr);
-                overlay_ = lm->overlay();
-                ctx = ctx->parent();
-            }
-            if (overlay_ != last && onOverlayChange != nullptr)
-                onOverlayChange();
-        }
-
+    protected:
 
         ui::Menu::Context menu_;
-        Widget * overlay_ = nullptr;
 
     }; // CarouselMenu
 

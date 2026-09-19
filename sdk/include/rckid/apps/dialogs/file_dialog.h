@@ -15,42 +15,38 @@ namespace rckid {
             root_{std::move(root)} 
         {
             using namespace ui;
-            carousel_ = addChild(new Launcher::BorrowedCarousel());
+            carousel_ = addChild(new ui::CarouselMenu2())
+                << SetRect(Rect::XYWH(0, 140, 320, 100));
         }
 
     protected:
 
         void onLoopStart() override {
             using namespace ui;
-            with(carousel_)
-                << ResetMenu([this]() { return FileBrowser::folderMenuGenerator([this](String path){
-                    exit(std::move(path));
-                }, root_, fs::Drive::SD); });
+            carousel_->enterMenu([this]() { return FileBrowser::folderMenuGenerator([this](String path){
+                exit(std::move(path));
+            }, root_, drive_); });
         }
 
         void onFocus() override {
             ui::App<String>::onFocus();
-            focusWidget(carousel_);
         }
 
         void loop() override {
             ui::App<String>::loop();
             if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
-                ASSERT(carousel_->atRoot());
-                // TODO terminate music, etc
-                exit();
+                if (carousel_->menu().parent() == nullptr) {
+                    exit();
+                    return;
+                }
             }
-            if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
-                auto item = carousel_->currentItem();
-                ASSERT(item->isAction());
-                item->action()();
-            }
+            carousel_->processEvents();
         }
 
     private:
         fs::Drive drive_;
         String root_;
-        Launcher::BorrowedCarousel * carousel_;
+        ui::CarouselMenu2 * carousel_ = nullptr;
         
     }; // rckid::FileDialog
 
