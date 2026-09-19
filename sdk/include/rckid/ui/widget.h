@@ -307,7 +307,7 @@ namespace rckid::ui {
                 buffer[idx] = color;
         }
 
-        /** Helper function that allows triggering onRender() in other widgets w/o making the function public. This is very usefuyl for wrapper widgets, such as Launcher::BorrowedCarousel, that do not have their own rendering logic, but simply delegate the rendering to the wrapped widget.
+        /** Helper function that allows triggering onRender() in other widgets w/o making the function public. This is very useful for wrapper widgets.
          */
         static void triggerOnRender(Widget * w) { w->onRender();}
 

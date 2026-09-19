@@ -54,9 +54,9 @@ namespace rckid {
                 << ui::MenuItem{"Music", assets::icons_64::music, []() {
                     App::run<MusicPlayer>();
                 }}
-                << ui::MenuItem{"Friends", assets::icons_64::birthday_cake, []() {
-                    App::run<Friends>();
-                }}
+                << ui::MenuItem::Generator("Friends", assets::icons_64::birthday_cake,
+                    Friends2::generateLauncherMenu
+                )
                 << ui::MenuItem{"Messages", assets::icons_64::chat, []() {
                     App::run<Messages>();
                 }}
@@ -123,9 +123,9 @@ namespace rckid {
             << ui::MenuItem{"Data Sync", assets::icons_64::pen_drive, []() {
                 App::run<DataSync>();
             }}
-            << ui::MenuItem("File Browser", assets::icons_64::folder, []() {
-                App::run<FileBrowser>();
-            });
+            << ui::MenuItem::Generator("File Browser", assets::icons_64::folder,
+                FileBrowser::rootMenuGenerator
+            );
 
         return result;
     }

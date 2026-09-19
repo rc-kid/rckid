@@ -1,7 +1,7 @@
 #pragma once
 
 #include <rckid/graphics/tile_grid.h>
-#include <rckid/ui/wrapper.h>
+#include <rckid/ui/wrappers.h>
 
 namespace rckid::ui {
 

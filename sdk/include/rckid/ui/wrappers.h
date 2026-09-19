@@ -6,6 +6,47 @@
 
 namespace rckid::ui {
 
+    /** Non-owning wrapper of another widget.
+     
+        The wrapper delegates rendering and event processing 
+     */
+    class NonOwningWrapper : public Widget {
+    public:
+        NonOwningWrapper() = default;
+        NonOwningWrapper(Widget * contents): contents_{contents} {}
+
+        Widget * contents() const { return contents_; }
+
+        void setContents(Widget * contents) {
+            contents_ = contents;
+            if (contents_ != nullptr)
+                setRect(contents_->rect());
+        }
+
+        void processEvents() override {
+            if (contents_ != nullptr)
+                contents_->processEvents();
+        }
+
+        void renderColumn(Coord column, Coord starty, Color::RGB565 * buffer, Coord numPixels) override {
+            if (contents_ != nullptr)
+                contents_->renderColumn(column, starty, buffer, numPixels);
+            Widget::renderColumn(column, starty, buffer, numPixels);
+        }
+
+    protected:
+
+        void onRender() {
+            Widget::onRender();
+            if (contents_ != nullptr)
+                triggerOnRender(contents_);
+        }
+        
+    private:
+        Widget * contents_ = nullptr;
+
+    }; // NonOwningWrapper
+
     /** Wraps anything with  width & height & renderColumn into a widget.
      
         A simple little class that takes something that is renderable, i.e. what has width(), height() and renderColumn() methods and wraps it into a widget. The wrapper class also support alignment of its contents in the widget itself as well as its optional repeating. 

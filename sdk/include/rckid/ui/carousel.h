@@ -183,6 +183,119 @@ namespace rckid::ui {
 
     }; // rckid::ui::Carousel
 
+
+    class CarouselMenu2 : public Carousel {
+    public:
+
+        ui::Menu::Context & menu() { return menu_; }
+
+        std::function<void()> onOverlayChange;
+
+        std::function<void(ui::MenuItem const &)> onItemSelected;
+
+        void processEvents() {
+            if (btnPressed(Btn::Left))
+                moveLeft();
+            if (btnPressed(Btn::Right))
+                moveRight();  
+            if (btnPressed(Btn::Up))
+                moveUp();
+            if (btnPressed(Btn::Down))
+                moveDown();
+        }
+
+        void moveLeft() {
+            if (menu_.empty() || menu_.menu()->empty())
+                return;
+            if (!idle())
+                cancelAnimations();
+            menu_.setIndex((menu_.index() + menu_.menu()->size() - 1) % menu_.menu()->size());
+            ui::MenuItem const * mi = menu_.currentItem();
+            set(mi->text,mi->icon, Direction::Left);            
+        }
+
+        void moveRight() {
+            if (menu_.empty() || menu_.menu()->empty())
+                return;
+            if (!idle())
+                cancelAnimations();
+            menu_.setIndex((menu_.index() + 1) % menu_.menu()->size());
+            ui::MenuItem const * mi = menu_.currentItem();
+            set(mi->text,mi->icon, Direction::Right);            
+        }
+
+        void moveUp() {
+            if (menu_.empty() || menu_.menu()->empty())
+                return;
+            if (!idle())
+                cancelAnimations();
+            ui::MenuItem const * mi = menu_.currentItem();
+            if (mi->isAction()) {
+                if (onItemSelected != nullptr)
+                    onItemSelected(*mi);
+                /*
+                carousel_->animate()
+                    << ui::FlyOut(carousel_, Point{0, 100});
+                waitUntilIdle(carousel_);
+                mi->action()();
+                carousel_->animate()
+                    << ui::FlyOut(carousel_, Point{0, -100});
+                waitUntilIdle(carousel_);
+                */
+            } else {
+                enterMenu(mi->generator());
+                updateOverlayWidget();
+            }
+        }
+
+        void moveDown() {
+            if (menu_.parent() != nullptr) {
+                if (!idle())
+                    cancelAnimations();
+                menu_.pop();
+                updateOverlayWidget();
+                ui::MenuItem const * mi = menu_.currentItem();
+                set(mi->text,mi->icon, Direction::Down);
+            }
+        }
+    protected:
+
+        void enterMenu(ui::MenuItem::GeneratorEvent generator) {
+            if (!idle())
+                cancelAnimations();
+            menu_.openNew(std::move(generator));
+            menu_.populate();
+            if (menu_.menu()->empty()) {
+                setEmpty(Direction::Up);
+            } else {
+                ui::MenuItem const * mi = menu_.currentItem();
+                set(mi->text,mi->icon, Direction::Up);
+            }
+        }
+
+
+        void updateOverlayWidget() {
+            ASSERT(menu_.populated());
+            Widget * last = overlay_; 
+            overlay_ = nullptr;
+            ui::Menu::Context * ctx = & menu_;
+            while (ctx != nullptr && overlay_ == nullptr) {
+                // TODO this should be checked cast
+                LauncherMenu * lm = static_cast<LauncherMenu *>(ctx->menu());
+                ASSERT(lm != nullptr);
+                overlay_ = lm->overlay();
+                ctx = ctx->parent();
+            }
+            if (overlay_ != last && onOverlayChange != nullptr)
+                onOverlayChange();
+        }
+
+
+        ui::Menu::Context menu_;
+        Widget * overlay_ = nullptr;
+
+    }; // CarouselMenu
+
     /** Carousel augmented specifically for menu hierarchies.
      
         Provides handling of left/right key press to cycle through the menu, up or A to select submenu and B or down to return from the submenu. All other presses (i.e. A or up on item and B on root) are not cleared so that they can be processed by the application. 

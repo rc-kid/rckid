@@ -3,7 +3,7 @@
 #include <optional>
 
 #include <rckid/graphics/bitmap.h>
-#include <rckid/ui/wrapper.h>
+#include <rckid/ui/wrappers.h>
 
 namespace rckid::ui {
 

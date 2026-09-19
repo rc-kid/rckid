@@ -10,18 +10,15 @@ namespace rckid {
      
         Basic app that can perform basic file browsing operations on both the SD card and the cartridge flash memory. 
      */
-    class FileBrowser : public ui::App<void> {
+    class FileBrowser : public ui::Widget {
     public:
 
         using FileFilter = std::function<bool(String const & path)>;
 
         using FileActionEvent = std::function<void(String path)>;
 
-        String name() const override { return "FileBrowser"; }
-
-        FileBrowser() {
-            using namespace ui;
-            carousel_ = addChild(new Launcher::BorrowedCarousel());
+        static unique_ptr<LauncherMenu> rootMenuGenerator() {
+            return folderMenuGenerator(nullptr, "", fs::Drive::SD);            
         }
 
         /** Menu generator for given folder. 
@@ -30,8 +27,8 @@ namespace rckid {
             TODO add icon settings for different file types
             TODO add decorator support as well
          */
-        static unique_ptr<ui::Menu> folderMenuGenerator(FileActionEvent fileAction, String folder, fs::Drive drive, FileFilter filter = nullptr) {
-            auto result = std::make_unique<ui::Menu>();
+        static unique_ptr<LauncherMenu> folderMenuGenerator(FileActionEvent fileAction, String folder, fs::Drive drive, FileFilter filter = nullptr) {
+            auto result = std::make_unique<LauncherMenu>();
             fs::readFolder(folder, drive, [fileAction, folder, drive, filter, & result](fs::FolderEntry const & entry) {
                 if (entry.isFolder) {
                     (*result)
@@ -54,29 +51,6 @@ namespace rckid {
         }
 
     protected:
-
-        void onLoopStart() override {
-            using namespace ui;
-            with(carousel_)
-                << ResetMenu([]() { return folderMenuGenerator(nullptr, "", fs::Drive::SD); });
-        }
-
-        void onFocus() override {
-            ui::App<void>::onFocus();
-            focusWidget(carousel_);
-        }
-
-        void loop() override {
-            ui::App<void>::loop();
-            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
-                ASSERT(carousel_->atRoot());
-                // TODO terminate music, etc
-                exit();
-            }
-        }
-
-    private:
-        Launcher::BorrowedCarousel * carousel_;
 
     }; // rckid::FileBrowser
 

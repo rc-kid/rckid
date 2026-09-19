@@ -109,17 +109,17 @@ namespace rckid::ui {
                 generator_.~GeneratorEvent();
         }
 
-        ActionEvent & action() {
+        ActionEvent const & action() const{
             ASSERT(isAction());
             return action_;
         }
 
-        GeneratorEvent & generator() {
+        GeneratorEvent const & generator() const {
             ASSERT(! isAction());
             return generator_;
         }
 
-        DecoratorEvent & decorator() {
+        DecoratorEvent const & decorator() const{
             return decorator_;
         }
 
@@ -171,6 +171,65 @@ namespace rckid::ui {
         iterator erase(iterator pos) { return items_.erase(pos); }
 
         MenuItem & at(uint32_t index) { return items_[index]; }
+
+        class Context {
+        public:
+            bool empty() const { return generator_ == nullptr; }
+
+            Context * parent() const { return parent_.get(); }
+
+            bool populated() const { return menu_ != nullptr; }
+
+            Menu * menu() const { return menu_.get(); }
+            uint32_t index() const { return index_; }
+
+            MenuItem const * currentItem() const { 
+                ASSERT(populated());
+                if (index_ >= menu_->size())
+                    return nullptr;
+                return & menu_->at(index_);
+            }
+
+            void openNew(MenuItem::GeneratorEvent generator) {
+                if (! empty()) {
+                    auto newParent = std::make_unique<Context>(std::move(*this));
+                    parent_ = std::move(newParent);
+                }
+                generator_ = std::move(generator);
+                menu_ = nullptr;
+                index_ = 0;
+            }
+
+            void pop() {
+                ASSERT(parent_ != nullptr);
+                *this = std::move(*parent_);
+            }
+
+            void setIndex(uint32_t index) {
+                ASSERT(! empty());
+                index_ = index;
+            }
+
+            void releaseResources() {
+                menu_.reset();
+                if (parent_ != nullptr)
+                    parent_->releaseResources();
+            }
+
+            void populate() {
+                ASSERT(menu_ == nullptr);
+                if (parent_!= nullptr && ! parent_->populated())
+                    parent_->populate();
+                menu_ = generator_();
+            }
+
+        private:
+
+            MenuItem::GeneratorEvent generator_;
+            std::unique_ptr<Menu> menu_;
+            uint32_t index_ = 0;
+            std::unique_ptr<Context> parent_;
+        }; // Menu::Context
 
 
     private:

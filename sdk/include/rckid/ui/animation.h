@@ -280,10 +280,14 @@ namespace rckid::ui {
         })->setEasingFunction(easing::inOut);
     }
 
+    /** Animate a widget flying from a given offset to its current position. 
+     */
     inline Animation * FlyIn(Widget * target, Point distance = Point{0, -240}) {
         return Move(target, target->position() + distance, target->position());
     }
 
+    /** Animate a widget flying from its current position to a given offset. 
+     */
     inline Animation * FlyOut(Widget * target, Point distance = Point{0, -240}) {
         return Move(target, target->position(), target->position() + distance);
     }

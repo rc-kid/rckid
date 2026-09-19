@@ -50,7 +50,13 @@ So what I need:
 
 # SDK 1.0
 
+- file dialog is proper app (no menu transition, this actually feels a lot better)
+- requires abstracting the carousel and its contexts into a dedicated app (sth like carousel menu, but actually with the launcher's niceties)
+
+- save contacts after new (& refresh contacts menu)
 - menu extender can in theory use just Menu *, no need to force launcher
+- simplify the launcher, menus are preserved across all levels and the generators are only used when persisting, which can happen when the app requires standalone, for normal apps, this always stays in memory. This should greatly simplify the carousel design
+- rewrite the existing borrowed carousel apps to use overlays
 
 - add extra settings item (identity, personalization, etc.)
 
