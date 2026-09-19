@@ -57,9 +57,9 @@ namespace rckid {
                 << ui::MenuItem::Generator("Friends", assets::icons_64::birthday_cake,
                     Friends::generateLauncherMenu
                 )
-                << ui::MenuItem{"Messages", assets::icons_64::chat, []() {
-                    App::run<Messages>();
-                }}
+                << ui::MenuItem::Generator("Messages", assets::icons_64::chat, 
+                    Messages::generateLauncherMenu
+                )
                 << ui::MenuItem{"Drawing", assets::icons_64::paint_palette, []() {
                     auto canvas = std::make_unique<Canvas>(32, 32);
                     App::run<Drawing>(canvas.get());

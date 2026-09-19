@@ -58,8 +58,8 @@ So what I need:
 
 - save contacts after new (& refresh contacts menu)
 - menu extender can in theory use just Menu *, no need to force launcher
-- simplify the launcher, menus are preserved across all levels and the generators are only used when persisting, which can happen when the app requires standalone, for normal apps, this always stays in memory. This should greatly simplify the carousel design
-- rewrite the existing borrowed carousel apps to use overlays
+- need to remove subwidgets (can be extra dialogs), then I can remove CarouselMenu and Launcher (as there are subwidgets to be dealt with)
+
 
 - add extra settings item (identity, personalization, etc.)
 

@@ -91,36 +91,38 @@ namespace rckid {
         return f->tell();
     }
 
-    void Messages::onLoopStart() {
+
+    unique_ptr<LauncherMenu> Messages::generateLauncherMenu() {
         using namespace ui;
-        with(carousel_) 
-            << ResetMenu([this]() { 
-                auto menu = std::make_unique<ui::Menu>();
-                auto f = readFile("chats.ini");
-                if (f == nullptr)
-                    return menu;
-                ini::Reader reader{*f};
-                reader >> ini::SectionArray("chat", [&, this](ini::Reader & r) {
-                    auto chat = std::make_unique<Chat>(r);
-                    (*menu)
-                        << ui::MenuItem{chat->name(), chat->icon(), [this, c = chat.get()]() {
-                                App::run<ChatRoom>(c);
-                            }}.withDecorator([chat = chat.get()](ui::MenuItem &, ui::Image * img, ui::Label *) {
-                                if (chat->unread()) {
-                                    img->addChild(new ui::Image{})
-                                        << SetRect(Rect::XYWH(0, 0, 24, 24))
-                                        << SetBitmap(assets::icons_24::exchange);
-                                }
-                            });
-                    uint32_t offset = 0;
-                    offset = chat->readNext(offset, [](Chat::Entry e) { 
-                        LOG(LL_INFO, e.payload);
-                    });
-                    LOG(LL_INFO, "Final offset: " << offset);
-                    chats_.push_back(std::move(chat));
+        auto menu = std::make_unique<LauncherMenu>();
+        auto overlay = std::make_unique<Messages>();
+
+        auto f = fs::readFile("/apps/Messages/chats.ini");
+        if (f != nullptr) {
+            ini::Reader reader{*f};
+            reader >> ini::SectionArray("chat", [&](ini::Reader & r) {
+                auto chat = std::make_unique<Chat>(r);
+                (*menu)
+                    << ui::MenuItem{chat->name(), chat->icon(), [c = chat.get()]() {
+                            rckid::App::run<ChatRoom>(c);
+                        }}.withDecorator([chat = chat.get()](ui::MenuItem &, ui::Image * img, ui::Label *) {
+                            if (chat->unread()) {
+                                img->addChild(new ui::Image{})
+                                    << SetRect(Rect::XYWH(0, 0, 24, 24))
+                                    << SetBitmap(assets::icons_24::exchange);
+                            }
+                        });
+                uint32_t offset = 0;
+                offset = chat->readNext(offset, [](Chat::Entry e) { 
+                    LOG(LL_INFO, e.payload);
                 });
-                return menu;
+                LOG(LL_INFO, "Final offset: " << offset);
+                overlay->chats_.push_back(std::move(chat));
             });
+        }
+
+        menu->setOverlay(std::move(overlay));
+        return menu;
     }
 
 }

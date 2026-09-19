@@ -13,14 +13,14 @@ namespace rckid {
     /** Messaging App
      
      */
-    class Messages : public ui::App<void> {
+    class Messages : public ui::Widget {
     public: 
 
-        String name() const override { return "Messages"; }
+        static unique_ptr<LauncherMenu> generateLauncherMenu();
 
         Messages() {
-            using namespace ui;
-            carousel_ = addChild(new Launcher::BorrowedCarousel());
+            //using namespace ui;
+            //carousel_ = addChild(new Launcher::BorrowedCarousel());
             /*
             WiFi * wifi = WiFi::instance();
             wifi->enable();
@@ -117,38 +117,8 @@ namespace rckid {
 
         }; // Messages::ChatRoom
 
-        void onLoopStart() override;
-
-        void onFocus() override {
-            ui::App<void>::onFocus();
-            focusWidget(carousel_);
-        }
-
-        void onBlur() override {
-            ui::App<void>::onBlur();
-        }
-
-        void loop() {
-            ui::App<void>::loop();
-            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
-                ASSERT(carousel_->atRoot());
-                exit();
-            }
-            // open the currently selected chat
-            if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
-                auto item = carousel_->currentItem();
-                carousel_->moveUp(nullptr);
-                waitUntilIdle(carousel_);
-
-                item->action()();
-
-                carousel_->moveDown();
-            }
-        }
-
     private:
 
-        Launcher::BorrowedCarousel * carousel_;
         std::vector<unique_ptr<Chat>> chats_;
 
     }; // rckid::Messages
