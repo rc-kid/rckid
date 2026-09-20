@@ -72,12 +72,10 @@ namespace rckid::audio {
             ui::App<void>::loop();
             if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
                 if (audio::isPaused()) {
-                    audio::resume();
                     pauseIcon_->setVisibility(false);
                     playIcon_->setVisibility(true);
                     task_->resume();
                 } else {
-                    audio::pause();
                     task_->pause();
                     pauseIcon_->setVisibility(true);
                     playIcon_->setVisibility(false);

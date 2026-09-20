@@ -51,8 +51,16 @@ namespace rckid::ui {
                 text = std::move(other.text);
                 icon = std::move(other.icon);
                 payload = other.payload;
-                isAction_ = other.isAction_;
+                // if action & generator differ, first delete the current generator or action
+                if (isAction_ != other.isAction_) {
+                    if (isAction_)
+                        action_.~ActionEvent();
+                    else
+                        generator_.~GeneratorEvent();
+                    isAction_ = other.isAction_;
+                }
                 decorator_ = std::move(other.decorator_);
+                // assign the action or generator
                 if (isAction_)
                     action_ = std::move(other.action_);
                 else

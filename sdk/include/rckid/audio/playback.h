@@ -132,6 +132,10 @@ namespace rckid::audio {
                 return;
             if (indices_.empty())   
                 return;
+            if (indices_.empty())
+                return;
+            if (index_ >= indices_.size())
+                index_ = 0;
             currentStream_ = playlist_->at(indices_[index_]);
             if (currentStream_ != nullptr) {
                 t_.start();
@@ -143,6 +147,8 @@ namespace rckid::audio {
 
         void next() {
             audio::stop();
+            if (indices_.empty())
+                return;
             currentStream_ = nullptr;
             if (! repeat_)
                 index_ = (index_ + 1) % indices_.size();
@@ -151,6 +157,8 @@ namespace rckid::audio {
 
         void prev() {
             audio::stop();
+            if (indices_.empty())
+                return;
             currentStream_ = nullptr;
             if (! repeat_)
                 index_ = index_ == 0 ? indices_.size() - 1 : index_ - 1;

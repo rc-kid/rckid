@@ -52,6 +52,7 @@ So what I need:
 
 - icons for audio files
 - animations for apps in general
+- shuffle in music player (playback)
 
 - no check of the LauncherMenu type so we get overlay even when none should be there (segfaults)
 
@@ -60,7 +61,6 @@ So what I need:
 
 - save contacts after new (& refresh contacts menu)
 - menu extender can in theory use just Menu *, no need to force launcher
-
 
 - add extra settings item (identity, personalization, etc.)
 
