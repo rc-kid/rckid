@@ -201,9 +201,9 @@ namespace rckid::ui {
                 moveLeft();
             if (btnPressed(Btn::Right))
                 moveRight();  
-            if (btnPressed(Btn::Up))
+            if (btnPressed(Btn::Up) || btnPressed(Btn::A))
                 moveUp();
-            if (btnPressed(Btn::Down))
+            if (btnPressed(Btn::Down) || btnPressed(Btn::B))
                 moveDown();
         }
 
