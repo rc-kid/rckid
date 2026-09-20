@@ -118,5 +118,5 @@ int main() {
     //App::run<ChevronTest>();
     //App::run<TextDialog>("Hello");
 
-    App::run<Launcher2>(mainMenuGenerator({ .gamesExtender = gbcemu::GBCEmu::gamesMenuExtender }));
+    App::run<Launcher>(mainMenuGenerator({ .gamesExtender = gbcemu::GBCEmu::gamesMenuExtender }));
 }

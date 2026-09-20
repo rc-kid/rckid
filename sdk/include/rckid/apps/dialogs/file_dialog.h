@@ -15,7 +15,7 @@ namespace rckid {
             root_{std::move(root)} 
         {
             using namespace ui;
-            carousel_ = addChild(new ui::CarouselMenu2())
+            carousel_ = addChild(new ui::CarouselMenu())
                 << SetRect(Rect::XYWH(0, 140, 320, 100));
         }
 
@@ -46,7 +46,7 @@ namespace rckid {
     private:
         fs::Drive drive_;
         String root_;
-        ui::CarouselMenu2 * carousel_ = nullptr;
+        ui::CarouselMenu * carousel_ = nullptr;
         
     }; // rckid::FileDialog
 

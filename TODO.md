@@ -51,14 +51,13 @@ So what I need:
 # SDK 1.0
 
 - icons for audio files
+- animations for apps in general
 
 - support changing app name via the overlay mechanism
-- rename Launcher2 to Launcher, delete old Launcher
-- rename CarouselMenu2 to CarouselMenu, old CarouselMenu
+- debug menu & parent menu, figure out how to do the leave action properly (this includes things like how to refresh menu after action, etc.)
 
 - save contacts after new (& refresh contacts menu)
 - menu extender can in theory use just Menu *, no need to force launcher
-- need to remove subwidgets (can be extra dialogs), then I can remove CarouselMenu and Launcher (as there are subwidgets to be dealt with)
 
 
 - add extra settings item (identity, personalization, etc.)

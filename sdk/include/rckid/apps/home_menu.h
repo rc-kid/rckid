@@ -33,6 +33,31 @@ namespace rckid {
             root_.useBackgroundImage(false);
             carousel_ = addChild(new ui::CarouselMenu())
                 << ui::SetRect(Rect::XYWH(0, 0, 320, 100));
+
+            carousel_->onItemSelected = [this](ui::MenuItem const & item) {
+                ASSERT(item.isAction());
+                switch (item.payload) {
+                    case ExecuteInApp:
+                        exit(std::move(item.action()));
+                        break;
+                    case ExecuteInMenuAndExit:
+                        // TODO do we want some animations here?
+                        item.action()();
+                        exit();
+                        break;
+                    case ExecuteInMenu:
+                        carousel_->animate()
+                            << ui::FlyOut(carousel_, Point{0, 100});
+                        waitUntilIdle(carousel_);
+                        item.action()();
+                        carousel_->animate()
+                            << ui::FlyOut(carousel_, Point{0, -100});
+                        waitUntilIdle(carousel_);
+                        break;
+                    default:
+                        LOG(LL_ERROR, "Unknown home menu item execution policy " << item.payload);
+                }
+            };
         }
 
         ~HomeMenu() override {
@@ -45,34 +70,18 @@ namespace rckid {
 
         void onFocus() override {
             ui::App<ui::MenuItem::ActionEvent>::onFocus();
-            focusWidget(carousel_);
+            //focusWidget(carousel_);
         }
 
         void loop() override {
             ui::App<ui::MenuItem::ActionEvent>::loop();
-            if (btnPressed(Btn::A) || btnPressed(Btn::Up)) {
-                auto item = carousel_->currentItem();
-                ASSERT(item != nullptr);
-                // and then exit or not based on the payload
-                switch (item->payload) {
-                    case ExecuteInApp:
-                        exit(std::move(item->action()));
-                        break;
-                    case ExecuteInMenuAndExit:
-                        item->action()();
-                        exit();
-                        break;
-                    case ExecuteInMenu:
-                        item->action()();
-                        break;
-                    default:
-                        LOG(LL_ERROR, "Unknown home menu item execution policy " << item->payload);
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
+                if (carousel_->menu().parent() == nullptr) {
+                    exit();
+                    return;
                 }
             }
-            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
-                ASSERT(carousel_->atRoot());
-                exit();
-            }
+            carousel_->processEvents();
         }
 
         void exit(std::optional<ui::MenuItem::ActionEvent> action = std::nullopt) {

@@ -25,6 +25,7 @@
 
 #include <rckid/apps/dialogs/file_dialog.h>
 #include <rckid/apps/dialogs/color_dialog.h>
+#include <rckid/apps/dialogs/slider_dialog.h>
 
 #include <rckid/apps/games/blocks.h>
 
@@ -260,12 +261,9 @@ namespace rckid {
                 }
             }}
             << ui::MenuItem{"Brightness", assets::icons_64::brightness, [](){
-                CarouselMenu * c = Launcher::instance()->carousel();
-                c->showSubwidget(std::unique_ptr<Widget>{
-                    new ProgressBarSubWidget{c, 0, 15, rckid::rgb::brightness(), [](int32_t value) {
-                        rckid::rgb::setBrightness(static_cast<uint8_t>(value));
-                        rgb::setKeyboardEffect(ui::Style::keyboardEffect(), ui::Style::keyboardRGBColor());
-                    }}
+                rckid::App::run<SliderDialog>("Brightness", assets::icons_64::brightness, 0, 15, rckid::rgb::brightness(), [](int32_t value) {
+                    rckid::rgb::setBrightness(static_cast<uint8_t>(value));
+                    rgb::setKeyboardEffect(ui::Style::keyboardEffect(), ui::Style::keyboardRGBColor());
                 });
             }};
         return result;
@@ -276,11 +274,8 @@ namespace rckid {
         auto result = std::make_unique<LauncherMenu>();
         (*result)
             << MenuItem{"Strength", assets::icons_64::vibration, []() {
-                CarouselMenu * c = Launcher::instance()->carousel();
-                c->showSubwidget(std::unique_ptr<Widget>{
-                    new ProgressBarSubWidget{c, 0, 15, rckid::rumbler::strength(), [](int32_t value) {
-                        rckid::rumbler::setStrength(static_cast<uint8_t>(value));
-                    }}
+                rckid::App::run<SliderDialog>("Rumbler Strength", assets::icons_64::vibration, 0, 15, rckid::rumbler::strength(), [](int32_t value) {
+                    rckid::rumbler::setStrength(static_cast<uint8_t>(value));
                 });
             }}
             << ui::MenuItem{"Key Press", assets::icons_64::down_arrow, []() {
@@ -367,7 +362,7 @@ namespace rckid {
             << ui::MenuItem{"Leave", assets::icons_64::logout, []() {
                 debug::setDebugMode(false);  
                 // TODO and exit the debug menu
-            }}.withPayload(Launcher::PAYLOAD_MOVE_DOWN);
+            }};
 
         return result;
     }
