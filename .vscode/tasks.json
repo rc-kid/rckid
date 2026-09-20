@@ -111,9 +111,7 @@
             "args" : [
                 "cartridges",
                 "gbcemu/gbcemu",
-                "sdk",
-                "sdk/backend/fantasy",
-                "sdk/backend/mk3",
+                "sdk/backend",
                 "sdk/include/rckid",
                 "sdk/src"           
             ],
