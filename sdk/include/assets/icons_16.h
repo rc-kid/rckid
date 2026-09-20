@@ -11,6 +11,12 @@ namespace rckid::assets::icons_16 {
         #include "raw/icons_16/picture.inc.h"
     };
 
+    // File: icons/icons_16/050-ladybug.png
+    // Size: 931
+    static constexpr uint8_t ladybug[] = {
+        #include "raw/icons_16/ladybug.inc.h"
+    };
+
     // File: icons/icons_16/088-number-one.png
     // Size: 630
     static constexpr uint8_t number_one[] = {
