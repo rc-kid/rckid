@@ -52,6 +52,17 @@ namespace rckid {
     class Launcher : public ui::App<void> {
     public:
 
+        /** Item payload forcing a close of the current submenu. Useful when a submenu is a list of actions and once action is applied, the submenu should be closed.
+         */
+        static constexpr uint32_t CloseSubmenu = 0xffff0000;
+        
+        /** Triggers a menu refresh *after* the action is performed. Normally menus are refreshed only when coming back (context pop).
+         */
+        static constexpr uint32_t RefreshMenu = 0xffff0001;
+
+        /** Disables animations for the crrent action. Useful for non-visual actions, such as decorator changes, etc. where no visible app is launched by the action. */
+        static constexpr uint32_t NoAnimation = 0xffff0002;
+
         String name() const override { return "Launcher"; }
 
         Launcher(ui::MenuItem::GeneratorEvent rootMenuGenerator = mainMenuGenerator()) {
@@ -66,13 +77,25 @@ namespace rckid {
                 updateOverlayWidget();
             };
             carousel_->onItemSelected = [this](ui::MenuItem const & mi) {
-                carousel_->animate()
-                    << ui::FlyOut(carousel_, Point{0, 100});
-                waitUntilIdle(carousel_);
+                if (mi.payload != NoAnimation) {
+                    carousel_->animate()
+                        << ui::FlyOut(carousel_, Point{0, 100});
+                    waitUntilIdle(carousel_);
+                }
                 mi.action()();
-                carousel_->animate()
-                    << ui::FlyOut(carousel_, Point{0, -100});
-                waitUntilIdle(carousel_);
+                switch (mi.payload) {
+                    case CloseSubmenu:
+                        carousel_->moveDown(false);
+                        break;
+                    case RefreshMenu:
+                        carousel_->refresh();
+                        break;
+                }
+                if (mi.payload != NoAnimation) {
+                    carousel_->animate()
+                        << ui::FlyOut(carousel_, Point{0, -100});
+                    waitUntilIdle(carousel_);
+                }
             };
             carousel_->enterMenu(std::move(rootMenuGenerator));
         }

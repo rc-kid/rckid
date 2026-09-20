@@ -231,6 +231,12 @@ namespace rckid::ui {
                 menu_ = generator_();
             }
 
+            void refresh() {
+                menu_ = generator_();
+                if (index_ >= menu_->size())
+                    index_ = menu_->empty() ? 0 : (menu_->size() -1);
+            }
+
         private:
 
             MenuItem::GeneratorEvent generator_;

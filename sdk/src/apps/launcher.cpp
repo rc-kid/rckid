@@ -213,37 +213,37 @@ namespace rckid {
                 updateRGBEffectStyle(rgb::KeyboardEffect::Press);
             }}.withCheckDecorator([]() {
                 return ui::Style::keyboardEffect() == rgb::KeyboardEffect::Press;
-            })
+            }).withPayload(Launcher::NoAnimation)
             << ui::MenuItem{"Rainbow Press", assets::icons_64::rainbow, []() {
                 updateRGBEffectStyle(rgb::KeyboardEffect::RainbowPress);
             }}.withCheckDecorator([]() {
                 return ui::Style::keyboardEffect() == rgb::KeyboardEffect::RainbowPress;
-            })
+            }).withPayload(Launcher::NoAnimation)
             << ui::MenuItem{"Solid", assets::icons_64::light, []() {
                 updateRGBEffectStyle(rgb::KeyboardEffect::Solid);
             }}.withCheckDecorator([]() {
                 return ui::Style::keyboardEffect() == rgb::KeyboardEffect::Solid;
-            })
+            }).withPayload(Launcher::NoAnimation)
             << ui::MenuItem{"Breathe", assets::icons_64::star, []() {
                 updateRGBEffectStyle(rgb::KeyboardEffect::Breathe);
             }}.withCheckDecorator([]() {
                 return ui::Style::keyboardEffect() == rgb::KeyboardEffect::Breathe;
-            })
+            }).withPayload(Launcher::NoAnimation)
             << ui::MenuItem{"Rainbow", assets::icons_64::rainbow, []() {
                 updateRGBEffectStyle(rgb::KeyboardEffect::Rainbow);
             }}.withCheckDecorator([]() {
                 return ui::Style::keyboardEffect() == rgb::KeyboardEffect::Rainbow;
-            })
+            }).withPayload(Launcher::NoAnimation)  
             << ui::MenuItem{"Rainbow Wave", assets::icons_64::rainbow, []() {
                 updateRGBEffectStyle(rgb::KeyboardEffect::RainbowWave);
             }}.withCheckDecorator([]() {
                 return ui::Style::keyboardEffect() == rgb::KeyboardEffect::RainbowWave;
-            })
+            }).withPayload(Launcher::NoAnimation)
             << ui::MenuItem{"Off", assets::icons_64::turn_off, []() {
                 updateRGBEffectStyle(rgb::KeyboardEffect::Off);
             }}.withCheckDecorator([]() {
                 return ui::Style::keyboardEffect() == rgb::KeyboardEffect::Off;
-            });
+            }).withPayload(Launcher::NoAnimation);
         return result;
     }
 
@@ -309,17 +309,17 @@ namespace rckid {
                     audio::setMuteSpeaker(!audio::muteSpeaker());
                 }).withToggleDecorator([]() {
                     return audio::muteSpeaker();
-                })
+                }).withPayload(Launcher::NoAnimation)
                 << MenuItem{"Leave", assets::icons_64::logout, []() {
                     pim::leaveParentMode();
                     InfoDialog::info("Parent Mode", "Parent mode disabled", assets::icons_64::family);
-                }};
+                }}.withPayload(Launcher::CloseSubmenu);
         } else {
             (*result)
                 << MenuItem{"Enter", assets::icons_64::family, []() {
                     pim::enterParentMode();
                     InfoDialog::info("Parent Mode", "Parent mode enabled", assets::icons_64::family);
-                }};
+                }}.withPayload(Launcher::RefreshMenu);
         }
         return result;
     }
@@ -362,7 +362,7 @@ namespace rckid {
             << ui::MenuItem{"Leave", assets::icons_64::logout, []() {
                 debug::setDebugMode(false);  
                 // TODO and exit the debug menu
-            }};
+            }}.withPayload(Launcher::CloseSubmenu);
 
         return result;
     }

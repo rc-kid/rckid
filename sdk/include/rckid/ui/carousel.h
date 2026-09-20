@@ -238,9 +238,7 @@ namespace rckid::ui {
                     onItemSelected(*mi);
                 // refresh & redecorate the current item
                 ui::MenuItem const * item = menu_.currentItem();
-                set(item->text, item->icon);
-                if (item->decorator() != nullptr)
-                    item->decorator()(*item, currentImage(), currentLabel());            
+                setItem(item);
             } else {
                 enterMenu(mi->generator());
                 if (onMenuChange)
@@ -248,15 +246,19 @@ namespace rckid::ui {
             }
         }
 
-        void moveDown() {
+        void moveDown(bool animate = true) {
             if (menu_.parent() != nullptr) {
                 if (!idle())
                     cancelAnimations();
                 menu_.pop();
+                menu_.refresh();
                 if (onMenuChange)
                     onMenuChange();
                 ui::MenuItem const * mi = menu_.currentItem();
-                setItem(mi, Direction::Down);
+                if (animate)
+                    setItem(mi, Direction::Down);
+                else
+                    setItem(mi);
             }
         }
 
@@ -273,11 +275,28 @@ namespace rckid::ui {
             }
         }
 
+        /** Refreshes the curret menu.
+         
+            Repopulates the current menu context and resets & redecorates the current item. This is useful when we expect menu to change due to some action (e.g. entering or leaving a mode, etc.)
+         */
+        void refresh() {
+            menu_.refresh();
+            setItem(menu_.currentItem());
+        }
+
 
     protected:
 
         void setItem(ui::MenuItem const * item, Direction dir) {
             set(item->text, item->icon, dir);
+            if (item->decorator() != nullptr)
+                item->decorator()(*item, currentImage(), currentLabel());            
+        }
+
+        /** Sets the item immediately without any animations.
+         */
+        void setItem(ui::MenuItem const * item) {
+            set(item->text, item->icon);
             if (item->decorator() != nullptr)
                 item->decorator()(*item, currentImage(), currentLabel());            
         }
