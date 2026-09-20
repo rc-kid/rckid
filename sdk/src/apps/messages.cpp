@@ -105,7 +105,7 @@ namespace rckid {
                 (*menu)
                     << ui::MenuItem{chat->name(), chat->icon(), [c = chat.get()]() {
                             rckid::App::run<ChatRoom>(c);
-                        }}.withDecorator([chat = chat.get()](ui::MenuItem &, ui::Image * img, ui::Label *) {
+                        }}.withDecorator([chat = chat.get()](ui::MenuItem const &, ui::Image * img, ui::Label *) {
                             if (chat->unread()) {
                                 img->addChild(new ui::Image{})
                                     << SetRect(Rect::XYWH(0, 0, 24, 24))

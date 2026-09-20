@@ -187,7 +187,7 @@ namespace rckid {
             })
             // key settings (autorepeat speed, accel as joystick, etc)
             << ui::MenuItem::Generator("Keys", assets::icons_64::numpad, [](){
-                auto result = std::make_unique<ui::Menu>();
+                auto result = std::make_unique<LauncherMenu>();
                 /* TODO should this really be user controllable
                 (*result)
                     << ui::MenuItem{"Repeat", assets::icons_64::picture, []() {

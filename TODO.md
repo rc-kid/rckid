@@ -53,6 +53,8 @@ So what I need:
 - icons for audio files
 - animations for apps in general
 
+- no check of the LauncherMenu type so we get overlay even when none should be there (segfaults)
+
 - support changing app name via the overlay mechanism
 - debug menu & parent menu, figure out how to do the leave action properly (this includes things like how to refresh menu after action, etc.)
 

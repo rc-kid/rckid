@@ -214,7 +214,7 @@ namespace rckid::ui {
                 cancelAnimations();
             menu_.setIndex((menu_.index() + menu_.menu()->size() - 1) % menu_.menu()->size());
             ui::MenuItem const * mi = menu_.currentItem();
-            set(mi->text,mi->icon, Direction::Left);            
+            setItem(mi, Direction::Left);     
         }
 
         void moveRight() {
@@ -224,7 +224,7 @@ namespace rckid::ui {
                 cancelAnimations();
             menu_.setIndex((menu_.index() + 1) % menu_.menu()->size());
             ui::MenuItem const * mi = menu_.currentItem();
-            set(mi->text,mi->icon, Direction::Right);            
+            setItem(mi, Direction::Right);            
         }
 
         void moveUp() {
@@ -236,6 +236,11 @@ namespace rckid::ui {
             if (mi->isAction()) {
                 if (onItemSelected)
                     onItemSelected(*mi);
+                // refresh & redecorate the current item
+                ui::MenuItem const * item = menu_.currentItem();
+                set(item->text, item->icon);
+                if (item->decorator() != nullptr)
+                    item->decorator()(*item, currentImage(), currentLabel());            
             } else {
                 enterMenu(mi->generator());
                 if (onMenuChange)
@@ -251,7 +256,7 @@ namespace rckid::ui {
                 if (onMenuChange)
                     onMenuChange();
                 ui::MenuItem const * mi = menu_.currentItem();
-                set(mi->text,mi->icon, Direction::Down);
+                setItem(mi, Direction::Down);
             }
         }
 
@@ -264,12 +269,18 @@ namespace rckid::ui {
                 setEmpty(Direction::Up);
             } else {
                 ui::MenuItem const * mi = menu_.currentItem();
-                set(mi->text,mi->icon, Direction::Up);
+                setItem(mi, Direction::Up);
             }
         }
 
 
     protected:
+
+        void setItem(ui::MenuItem const * item, Direction dir) {
+            set(item->text, item->icon, dir);
+            if (item->decorator() != nullptr)
+                item->decorator()(*item, currentImage(), currentLabel());            
+        }
 
         ui::Menu::Context menu_;
 

@@ -19,7 +19,7 @@ namespace rckid::ui {
     public:
         using ActionEvent = std::function<void()>;
         using GeneratorEvent = std::function<unique_ptr<Menu>()>;
-        using DecoratorEvent = std::function<void(MenuItem &, Image *, Label *)>;
+        using DecoratorEvent = std::function<void(MenuItem const &, Image *, Label *)>;
 
         String text;
         ImageSource icon;
@@ -82,7 +82,7 @@ namespace rckid::ui {
         /** Shorthand function for creating a menu item with check decorator based on a boolean condition.
          */
         MenuItem withCheckDecorator(std::function<bool()> isChecked) && {
-            this->decorator_ = [isChecked = std::move(isChecked)](MenuItem &, Image * icon, Label *) {
+            this->decorator_ = [isChecked = std::move(isChecked)](MenuItem const &, Image * icon, Label *) {
                 if (isChecked())
                     icon->addChild(new ui::Image{})
                         << SetRect(Rect::XYWH(40, 40, 24, 24))
@@ -94,7 +94,7 @@ namespace rckid::ui {
         /** Shorthand function for menu item that show toogle on/off icon, i.e. an icon even when off.
          */
         MenuItem withToggleDecorator(std::function<bool()> isEnabled) && {
-            this->decorator_ = [isEnabled = std::move(isEnabled)](MenuItem &, Image * icon, Label *) {
+            this->decorator_ = [isEnabled = std::move(isEnabled)](MenuItem const &, Image * icon, Label *) {
                 icon->addChild(new ui::Image{})
                     << SetRect(Rect::XYWH(40, 40, 24, 24))
                     << SetBitmap(isEnabled() ? ImageSource{assets::icons_24::switch_on} : ImageSource{assets::icons_24::switch_off});
