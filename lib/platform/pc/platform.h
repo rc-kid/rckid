@@ -33,12 +33,20 @@ inline constexpr uint16_t platform__builtin_bswap16(uint16_t x) {
 
 namespace cpu {
 
+    inline void initialize() {
+        std::srand(static_cast<unsigned>(std::time(nullptr)));
+    }
+
     inline void delayMs(size_t value) {
         std::this_thread::sleep_for(std::chrono::milliseconds(value));
     }
 
     inline void delayUs(size_t value) {
         std::this_thread::sleep_for(std::chrono::microseconds(value));
+    }
+
+    inline unsigned random() {
+        return static_cast<unsigned>(std::rand());
     }
 
 }

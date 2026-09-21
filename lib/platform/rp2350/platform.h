@@ -45,6 +45,10 @@ public:
         sleep_ms(value);  
     }
 
+    static uint32_t random() {
+        return static_cast<int>(get_rand_32());
+    }
+
     FORCE_INLINE(static void nop() __attribute__((always_inline)) {
         __asm__ volatile ("nop");
     })

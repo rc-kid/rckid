@@ -51,7 +51,6 @@ So what I need:
 # SDK 1.0
 
 - animations for apps in general
-- shuffle in music player (playback)
 
 - no check of the LauncherMenu type so we get overlay even when none should be there (segfaults)
 

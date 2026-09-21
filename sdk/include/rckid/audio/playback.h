@@ -41,7 +41,7 @@ namespace rckid::audio {
             drive_{drive},
             folder_{std::move(folder)}
         {
-            // TODO scan the folder and find all audio files
+            // scan the folder and find all audio files
             fs::readFolder(folder_, drive_, [this](fs::FolderEntry const & entry) {
                 if (! entry.isFolder && FileBrowser::audioFileFilter(fs::join(folder_, entry.name)))
                     files_.push_back(entry.name);
@@ -120,7 +120,10 @@ namespace rckid::audio {
             shuffle_ = value;
             if (shuffle_) {
                 // shuffle the indices
-                // TODO
+                for (uint32_t i = 0, e = indices_.size(); i < e; ++i) {
+                    uint32_t j = cpu::random() % e;
+                    std::swap(indices_[i], indices_[j]);
+                }
             } else {
                 for (uint32_t i = 0, e = playlist_->size(); i < e; ++i)
                     indices_[i] = i;

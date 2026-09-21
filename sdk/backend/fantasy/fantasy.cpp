@@ -195,6 +195,7 @@ namespace rckid::hal {
         /** Initialize version useful for tests that initializes the fantasy backend, but without the visible window. Very useful for tests. 
          */
         void initializeNoWindow() {
+            cpu::initialize(); // platform initialization
             internal::display::noWindow = true;
 #ifndef RCKID_NO_RODATA_BOUNDARIES            
             LOG(LL_INFO, "Immutable memory: " << hex(& __start_rodata) << " - " << hex(& __stop_rodata));
