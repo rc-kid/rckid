@@ -54,14 +54,11 @@ So what I need:
 
 - no check of the LauncherMenu type so we get overlay even when none should be there (segfaults)
 
-- support changing app name via the overlay mechanism
-
-- save contacts after new (& refresh contacts menu)
-- menu extender can in theory use just Menu *, no need to force launcher
+- support changing app name via the overlay mechanism (maybe?)
 
 - add extra settings item (identity, personalization, etc.)
 
-- add icons for the rgb effects
+- add icons for the rgb effects (decorators)
 
 - add wave (breathe) keyboard effect for rgb, this has to be timed well on ral device
 - does the start then drop immediately effect for keyboard press work? 
@@ -72,7 +69,7 @@ So what I need:
 
 - sws-tx is really uart PIO, rename as such and we can use it for TX output even on current HW version which means the cartridge available UART can be used 
 
-- determine SD speed and how fast can I go? 
+- determine SD speed and how fast can I go? -- do this only for the newer version with different protection
 
 - implement light detection capability for mk3
 

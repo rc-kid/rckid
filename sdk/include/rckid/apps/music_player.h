@@ -22,7 +22,7 @@ namespace rckid {
 
         TODO At the moment does not have any useful overlay, but eventually the overlay would display the selected track information (perhaps the album art?)
      */
-    class MusicPlayer : public ui::Widget {
+    class MusicPlayer : public LauncherOverlay {
     public:
         static unique_ptr<LauncherMenu> generateLauncherMenu() {
             auto menu = FileBrowser::folderMenuGenerator([](String path){

@@ -7,22 +7,40 @@
 
 namespace rckid {
 
+    class Launcher;
+
+    class LauncherOverlay : public ui::Widget {
+    protected:
+
+        Launcher * launcher() const { return launcher_; }
+
+    private:
+        friend class Launcher;
+
+        void setLauncher(Launcher * launcher) {
+            launcher_ = launcher;
+        }
+
+        Launcher * launcher_ = nullptr;
+
+    }; 
+
     /** Launcher menu. 
      
         Launcher menus are normal menus (collections of menu items), but enhanced with an ability to generate menu specific overlays. The overlay is a ui::Widget that is displayed on top of the menu and can be used to show additional information.
      */
     class LauncherMenu : public ui::Menu {
     public:
-        using Extender = std::function<unique_ptr<LauncherMenu>(unique_ptr<LauncherMenu>)>;
+        using Extender = std::function<unique_ptr<Menu>(unique_ptr<Menu>)>;
         
-        ui::Widget * overlay() const { return overlay_.get(); }
+        LauncherOverlay * overlay() const { return overlay_.get(); }
 
-        void setOverlay(unique_ptr<ui::Widget> overlay) {
+        void setOverlay(unique_ptr<LauncherOverlay> overlay) {
             overlay_ = std::move(overlay);
         }
 
     protected:
-        unique_ptr<ui::Widget> overlay_ = nullptr;
+        unique_ptr<LauncherOverlay> overlay_ = nullptr;
     };
 
     struct MainMenuOptions {
@@ -103,7 +121,18 @@ namespace rckid {
         void releaseResources() override {
             root_.releaseResources();
             ui::App<void>::releaseResources();
+            if (overlay_->contents() != nullptr)
+                overlay_->setContents(nullptr);
             carousel_->menu().releaseResources();
+        }
+
+        void refreshMenu() {
+            carousel_->refresh();
+            updateOverlayWidget();
+        }
+
+        uint32_t currentIndex() {
+            return carousel_->menu().index();
         }
 
     protected:
@@ -129,12 +158,17 @@ namespace rckid {
             ASSERT(carousel_->menu().populated());
             overlay_->setContents(nullptr);
             ui::Menu::Context * ctx = & carousel_->menu();
-            while (ctx != nullptr && overlay_->contents() == nullptr) {
+            LauncherOverlay * overlay = nullptr;
+            while (ctx != nullptr && overlay == nullptr) {
                 // TODO this should be checked cast
                 LauncherMenu * lm = static_cast<LauncherMenu *>(ctx->menu());
                 ASSERT(lm != nullptr);
-                overlay_->setContents(lm->overlay());
+                overlay = lm->overlay();
                 ctx = ctx->parent();
+            }
+            if (overlay) {
+                overlay->setLauncher(this);
+                overlay_->setContents(overlay);
             }
         }
 

@@ -50,7 +50,7 @@ namespace rckid {
                     if (extend != nullptr)
                         return extend(std::move(gamesMenu));
                     else 
-                        return gamesMenu;
+                        return unique_ptr<ui::Menu>(std::move(gamesMenu));
                 })
                 << ui::MenuItem::Generator("Music", assets::icons_64::music, 
                     MusicPlayer::generateLauncherMenu
@@ -80,8 +80,8 @@ namespace rckid {
                     << ui::MenuItem::Generator("Debug", assets::icons_64::ladybug, debugMenuGenerator);
             // extend the menu with any cartridge specific details
             if (options.cartridgeExtender)
-                result = options.cartridgeExtender(std::move(result));
-            return result;
+                return options.cartridgeExtender(std::move(result));
+            return unique_ptr<ui::Menu>(std::move(result));
         };
     }
 

@@ -13,7 +13,7 @@ namespace rckid {
     /** Messaging App
      
      */
-    class Messages : public ui::Widget {
+    class Messages : public LauncherOverlay {
     public: 
 
         static unique_ptr<LauncherMenu> generateLauncherMenu();

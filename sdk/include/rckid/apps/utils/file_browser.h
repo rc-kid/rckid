@@ -12,7 +12,7 @@ namespace rckid {
      
         Basic app that can perform basic file browsing operations on both the SD card and the cartridge flash memory. 
      */
-    class FileBrowser : public ui::Widget {
+    class FileBrowser : public LauncherOverlay {
     public:
 
         using FileFilter = std::function<bool(String const & path)>;
@@ -28,6 +28,7 @@ namespace rckid {
             TODO and some options, such as sorting, etc.
             TODO add icon settings for different file types
             TODO add decorator support as well
+            TODO should actually go to file dialog
          */
         static unique_ptr<LauncherMenu> folderMenuGenerator(FileActionEvent fileAction, String folder, fs::Drive drive, FileFilter filter = nullptr) {
             auto result = std::make_unique<LauncherMenu>();
