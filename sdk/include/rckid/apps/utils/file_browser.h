@@ -4,6 +4,8 @@
 #include <rckid/ui/app.h>
 #include <rckid/apps/launcher.h>
 
+#include <assets/icons_64.h>
+
 namespace rckid {
 
     /** Simple file browser application. 
@@ -36,7 +38,7 @@ namespace rckid {
                             return folderMenuGenerator(fileAction, path, drive, filter);
                         });
                 } else if (filter == nullptr || filter(fs::join(folder, entry.name))) {
-                    result->emplace_back(entry.name, assets::icons_64::file, [fileAction, path = fs::join(folder, entry.name)]() {
+                    result->emplace_back(entry.name, fileIcon(entry.name), [fileAction, path = fs::join(folder, entry.name)]() {
                         fileAction(path);
                     });
                 } 
@@ -48,6 +50,15 @@ namespace rckid {
             if (path.endsWith(".mp3"))
                 return true;
             return false;
+        }
+
+        static ImageSource fileIcon(String const & path) {
+            String ext = fs::ext(path);
+            if (ext == "mp3")
+                return assets::icons_64::music_1;
+            if (ext == "png")
+                return assets::icons_64::picture;
+            return assets::icons_64::file;
         }
 
     protected:

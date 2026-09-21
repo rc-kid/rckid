@@ -50,7 +50,6 @@ So what I need:
 
 # SDK 1.0
 
-- icons for audio files
 - animations for apps in general
 - shuffle in music player (playback)
 

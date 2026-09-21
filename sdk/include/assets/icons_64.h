@@ -311,6 +311,12 @@ namespace rckid::assets::icons_64 {
         #include "raw/icons_64/checked.inc.h"
     };
 
+    // File: icons/icons_64/019-music-1.png
+    // Size: 2182
+    static constexpr uint8_t music_1[] = {
+        #include "raw/icons_64/music_1.inc.h"
+    };
+
     // File: icons/icons_64/035-gameboy.png
     // Size: 1560
     static constexpr uint8_t gameboy[] = {
