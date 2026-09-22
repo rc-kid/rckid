@@ -1,54 +1,15 @@
-# Immediate Roadmap
+# Checklist
 
-- this might be better button: https://jlcpcb.com/partdetail/ALPSALPINE-SKRABCE010/C19724057
-- figure out the side buttons if there are ones that can be soldered by jlcpcb and be better centered
-- this might be better speaker: https://cz.mouser.com/ProductDetail/Same-Sky/CMS-160903-18S-X8
-- buttons can be better printed with circular infill on the top layer & filament change
 - looks like LCSC is offering very reasonable acrylic front panels with cutouts, would cost around 1 USD per unit in 100 batch, which is a lot cheaper than the transparent 3d printed case (!!!)
-
-
-# MK3 HW
-
 - there seem to be 3v3 neopixels - this could be useful for rckid proper as well (now tested in lego remote)
-- change the matrix diode to https://jlcpcb.com/partdetail/JSMSEMI-1N4148WT/C917006 (smaller, cheaper, better for matrix - verify)
-- this could be better side button (cheaper too): https://jlcpcb.com/partdetail/XKBConnection-TS_1010_CA/C692458
-- home button thickness tested at 1.3mm
 - volume down not centered properly
 - maybe enlarge the top plate a bit to fit properly in the slightly large nylon bottom. Or shrink the nylon?
 - uart is wrong because the pins available on cartridge are only uart0, which is already used by the serial out. Can be fixed by making RP_TX pin 8 (instead of SD_CD), which is UART1
 - audio codec GPIO1 should have test point
 - verify GPIO1 is tied to ground when not used, or set output to GND
-- use the old side buttons, but mount at the top? they feel better and I can replace them if faulty
+- headphone jack soldered by JLCPCB? 
 
-# MK3.2 Issues
-
-
-- headphone detect does not seem to be working
-
-
-# Missing icons
-
-- rgb effects: button press, rainbow press, Solid color, Breathe, Rainbow, Rainbow Wave, all 64, maybe can be done with decorators
-- button (a) + arrow down decor
-- rainbow + arrow down
-- breathe is star
-- rainbow (diagram)
-
-# Ladder
-
-The plan is to start with a simple game - cat chase - there is a mouse and a cat, mouse moves randomly, cat chases it, controlled by the player. The aim is to program this game at the C++ level to bring all the pieces together and make sure the c++ code looks decent and easy. Once I have this I can start writing the dynamic wrapper for the layers below (blocks & visual) and asset editors. 
-
-So what I need:
-- spriteset asset
-- sound asset
-- sprite object
-- sound object
-- basic game loop & input, collisions
-
-- very basic descriptors might be working, the code needs commenting, testing.
-- descriptor/game object infrastructure for matching arguments of events should be added 
-
-# SDK 1.0
+# General SDK
 
 - implement the left-right animation style for widgets
 
@@ -65,17 +26,7 @@ So what I need:
 
 - verify if the brightness in rckid.h/rckid.cpp is 0..15 or more and have the 0..255 be done at the HAL level
 
-- verify we send *everything* in JACDAC (wait for DMA and stall)
-
-- sws-tx is really uart PIO, rename as such and we can use it for TX output even on current HW version which means the cartridge available UART can be used 
-
-- determine SD speed and how fast can I go? -- do this only for the newer version with different protection
-
-- implement light detection capability for mk3
-
 - default palette can be system wide
-
-- how to detect we are done playing music? in the DMA
 
 - add telemetry (will be useful for the pilots, record time & app start, or end)
 
@@ -84,9 +35,25 @@ So what I need:
 
 - for game saves use different bookmark icon (red maybe?)
 
-- avr firmware wakeup timing
-
 - make UNREACHABLE & friends part of platform? This should make it write between mkIII, fantasy and ATTiny stuff
+
+- canvas app can be rendered in single call technically
+
+- show header even when not full screen is rendered (home menu & friends)
+
+- deal with wakeup interrupts
+
+- budget reset & the whole wakeup business
+
+- add extra tiles for all volume levels
+
+- should ini reader and writer own the stream? Might simplify things a bit in the API
+
+- when clearing drawing buffers with bg color, this is very inefficient and can be done with DMA right after screen is updated
+
+- waiting for display update done could make the cpu sleep
+
+# Apps
 
 Wakeups
 - alarm clock
@@ -103,15 +70,39 @@ Games (port from mkII)
 - pong
 - sliding puzzle
 
-- canvas app can be rendered in single call technically
+## GBCEmu
 
-- show header even when not full screen is rendered (home menu & friends)
+- RTC is not implemented and will not read values well, nor can it write them
+- tearing is kinda ugly, can be fixed by framebuffer, will cost around 23k, but then scaling & rendering can be done by other core
+- extra settings (colors, etc. for system & gbcemu)
+- improve audio fidelity for GBCEmu
+- figure out how debug mode for gbcemu should work now
 
-- deal with wakeup interrupts
+# Programming & Editors & Ladder
 
-- budget reset & the whole wakeup business
+The plan is to start with a simple game - cat chase - there is a mouse and a cat, mouse moves randomly, cat chases it, controlled by the player. The aim is to program this game at the C++ level to bring all the pieces together and make sure the c++ code looks decent and easy. Once I have this I can start writing the dynamic wrapper for the layers below (blocks & visual) and asset editors. 
 
-- add extra tiles for all volume levels
+So what I need:
+- spriteset asset
+- sound asset
+- sprite object
+- sound object
+- basic game loop & input, collisions
+
+- very basic descriptors might be working, the code needs commenting, testing.
+- descriptor/game object infrastructure for matching arguments of events should be added 
+
+# Backend - MK3
+
+- sws-tx is really uart PIO, rename as such and we can use it for TX output even on current HW version which means the cartridge available UART can be used 
+
+- determine SD speed and how fast can I go? -- do this only for the newer version with different protection
+
+- implement light detection capability for mk3
+
+- how to detect we are done playing music? in the DMA
+
+- avr firmware wakeup timing
 
 - heapend on mk3 should return current sp or something like that to verify that we are not growing over
 
@@ -121,16 +112,39 @@ Games (port from mkII)
             pio_sm_set_clock_speed(RCKID_ST7789_PIO, sm_, RCKID_ST7789_SPEED * 4); // 2 cycles per pixel
         }
 
-### Code Cleanup
-- should ini reader and writer own the stream? Might simplify things a bit in the API
+# Backend - Fantasy
 
+# Hardware
 
+- headphone detect does not seem to be working (revert to GND second ring testing)
 
-## Link Capability
+# Hardware - Features
+
+### JACDAC
+
+- verify we send *everything* in JACDAC (wait for DMA and stall)
+
+### USB Link Cable
 
 - direct connection to other device
 - via usb cable/wifi/nrf or other means, when activated user can select which link implementation to use if multiple are possible so that the API is the same and does not care with implementation
 - the USB can also be used as serial output 
+
+
+
+
+----------------------------------------------------------------------------------------------------------
+
+# Immediate Roadmap
+
+- this might be better button: https://jlcpcb.com/partdetail/ALPSALPINE-SKRABCE010/C19724057
+- figure out the side buttons if there are ones that can be soldered by jlcpcb and be better centered
+- this might be better speaker: https://cz.mouser.com/ProductDetail/Same-Sky/CMS-160903-18S-X8
+
+# MK3 HW
+
+- this could be better side button (cheaper too): https://jlcpcb.com/partdetail/XKBConnection-TS_1010_CA/C692458
+- home button thickness tested at 1.3mm
 
 # DevBoard Checklist
 
@@ -254,30 +268,6 @@ Polish
 
 - optimize surface functions for common cases
 - add specialization for 16 bpp bitmap renderColumn that simply does memcopy
-
-## Known performance issues
-
-- when clearing drawing buffers with bg color, this is very inefficient and can be done with DMA right after screen is updated
-
-## Apps
-
-### AudioPlayer
-
-- image picture
-
-### GBCEmu
-
-- RTC is not implemented and will not read values well, nor can it write them
-- tearing is kinda ugly, can be fixed by framebuffer, will cost around 23k, but then scaling & rendering can be done by other core
-- extra settings (colors, etc. for system & gbcemu)
-- improve audio fidelity for GBCEmu
-- figure out how debug mode for gbcemu should work now
-
-## Others
-
-- waiting for display update done could make the cpu sleep
-
-# PCB Things To Fix
 
 # PCB
 

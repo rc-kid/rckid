@@ -54,6 +54,8 @@ namespace rckid {
         static typename T::MODAL_RESULT run(ARGS &&... args) {
             typename T::MODAL_RESULT result;
             {
+                // wait for any pending display updates from the previous app
+                ASSERT(hal::display::updateActive() == false);
                 T app{std::forward<ARGS>(args)...};
                 if (current_ != nullptr)
                     current_->onBlur();

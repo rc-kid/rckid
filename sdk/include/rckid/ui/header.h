@@ -89,6 +89,7 @@ namespace rckid::ui {
             if (visibility_ == Visibility::OnChange)
                 if ((remainingTicks_ > 0) && (--remainingTicks_ == 0))
                     hide();
+            
         }
 
         void onIdle() override {

@@ -42,6 +42,7 @@ namespace rckid::game {
         // forward declarations of game objects and their metadata        
 
         Engine(String gameName):
+            ui::App<void>{ui::InOutDirection::None},
             gameName_{std::move(gameName)} 
         {
             screen_ = addChild(new GameScreen(this));

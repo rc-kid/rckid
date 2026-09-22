@@ -23,7 +23,6 @@ namespace rckid::ui {
         Coord width() const { return root_.width(); }
         Coord height() const { return root_.height(); }
 
-
     protected:
 
         uint32_t animationSpeed() const { return root_.animationSpeed(); }
@@ -54,6 +53,7 @@ namespace rckid::ui {
                 render();
                 tick();    
             }
+            rckid::display::waitUpdateDone();
         }
 
         void waitUntilIdle() { waitUntilIdle(& root_); }

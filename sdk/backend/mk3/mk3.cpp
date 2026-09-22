@@ -139,7 +139,7 @@ namespace rckid::internal {
         hal::display::Callback cb;
         int32_t sm;
         int32_t pioOffset;
-        uint32_t pixelsToWrite = 0;
+        volatile uint32_t pixelsToWrite = 0;
 
         int32_t dmaChannel = -1;
         Color::RGB565 * buffer = nullptr;
