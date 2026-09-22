@@ -39,20 +39,10 @@ namespace rckid {
         
     protected:
 
-        void onLoopStart() override {
-            ui::App<void>::onLoopStart();
-            root_.flyIn();
-        }
-
         void loop() override {
             ui::App<void>::loop();
-            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
-                exit();
-                // wait for idle to make sure we are exiting from known state
-                waitUntilIdle();
-                root_.flyOut();
-                waitUntilIdle();
-            }
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down))
+                return exit();
             if (btnPressed(Btn::Select)) {
                 PopupMenu::run(
                     debug::debugMode() ? 

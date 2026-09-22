@@ -105,17 +105,6 @@ namespace rckid::internal {
             io::accelState = io::accel.readAccelerometerRaw();
             // fix the X axis orientation
             io::accelState.x *= -1;
-
-            // initialize the LTR390UV light sensor
-            // TODO
-
-            // initialize the audio codec
-            // TODO
-
-
-
-            
-            // TODO
         }
 
         void updateAvrStatus(int32_t numBytes) {
@@ -263,7 +252,7 @@ namespace rckid::internal {
             }
 
             void configureRecord(DMA & other) {
-                // TODO this is weird and should be checked before recording will be tested (!)
+                // FIXME this is weird and should be checked before recording will be tested (!)
                 auto dmaConf = dma_channel_get_default_config(channel);
                 channel_config_set_transfer_data_size(& dmaConf, DMA_SIZE_32); // transfer 32 bits (16 per channel, 2 channels)
                 channel_config_set_read_increment(& dmaConf, false);  // do not increment on read
@@ -483,7 +472,7 @@ namespace rckid::hal {
 
         void onTick() {
             onYield();
-            // TODO add stuff for checking hardware events in the latest state? 
+            // FIXME add stuff for checking hardware events in the latest state? 
 
 
             // enqueue avr, accel and light sensor status updates
@@ -492,7 +481,7 @@ namespace rckid::hal {
             uint8_t cmd = LSM6DSV::REG_OUTX_L_A; 
             i2c::transmitAsync(LSM6DSV::I2C_ADDRESS, & cmd, 1, sizeof(LSM6DSV::Orientation3D), internal::io::updateAccelStatus);
             // light
-            // TODO
+            // FIXME
         }
 
         void onYield() {
@@ -615,7 +604,7 @@ namespace rckid::hal {
         }
 
         void disable() {
-            // TODO
+            // FIXME
             UNIMPLEMENTED;
         }
 

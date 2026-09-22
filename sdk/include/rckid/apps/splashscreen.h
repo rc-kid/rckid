@@ -23,6 +23,7 @@ namespace rckid {
         /** Creates the splashscreen application with the given callback for initialization routine after the initial fade in.
          */
         SplashScreen(InitCallback cb):
+            ui::App<void>{ui::InOutDirection::None},
             cb_{cb}
         {
             using namespace ui;

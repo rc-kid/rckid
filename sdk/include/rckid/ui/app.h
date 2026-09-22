@@ -9,11 +9,14 @@ namespace rckid::ui {
     template<typename RESULT>
     class App : public ModalApp<RESULT> {
     public:
-        explicit App(Rect rect): 
-            root_{rect} {
+        explicit App(Rect rect, InOutDirection animationDirection = InOutDirection::Top): 
+            root_{rect}, 
+            inOutAnimationDirection_{animationDirection} {
         }
 
-        App(): App{Rect::WH(display::WIDTH, display::HEIGHT)} {}
+        App(InOutDirection animationDirection = InOutDirection::Top): 
+            App{Rect::WH(display::WIDTH, display::HEIGHT), animationDirection} {
+        }
 
         Widget * focusedWidget() const { return focusedWidget_; }
 
@@ -61,6 +64,21 @@ namespace rckid::ui {
             Header::setVisibility(root_.useHeader());
         }
 
+        void onLoopStart() override {
+            ModalApp<RESULT>::onLoopStart();
+            root_.animateIn(inOutAnimationDirection_);
+        }
+
+        void onExit() override {
+            ModalApp<RESULT>::onExit();
+            if (inOutAnimationDirection_ != InOutDirection::None) {
+                // wait for idle to make sure we are exiting from known state
+                waitUntilIdle();
+                root_.animateOut(inOutAnimationDirection_);
+                waitUntilIdle();
+            }
+        }
+
         /** Renders the widget tree. 
          */
         void loop() override {
@@ -85,6 +103,8 @@ namespace rckid::ui {
         RootWidget root_;
 
     private:
+
+        InOutDirection inOutAnimationDirection_ = InOutDirection::Top;
 
         Widget * focusedWidget_ = nullptr;
 

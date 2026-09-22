@@ -80,17 +80,9 @@ namespace rckid {
         friend int32_t ::tud_msc_write10_cb(uint8_t, uint32_t, uint32_t, uint8_t*, uint32_t);
     #endif
         
-        void onLoopStart() override {
-
-            root_.flyIn();
-        }
-
         void loop() override {
-            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
-                root_.flyOut();
-                waitUntilIdle();
-                exit();
-            }
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down))
+                return exit();
             if (connected_)
                 status_->setText(STR("Connected (R: " << blocksRead_ << ", W: " << blocksWrite_ << ")"));
             else

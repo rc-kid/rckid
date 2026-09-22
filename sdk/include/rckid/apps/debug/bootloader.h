@@ -34,10 +34,6 @@ namespace rckid {
 
     protected:
 
-        void onLoopStart() override {
-            root_.flyIn();
-        }
-
         void loop() override {
             using namespace ui;
             App<void>::loop();

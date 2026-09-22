@@ -57,26 +57,15 @@ namespace rckid {
 
         void onLoopStart() override {
             ui::App<Color>::onLoopStart();
-            root_.flyIn();
             current_ = r_;
         }
 
         void loop() override {
             ui::App<Color>::loop();
-            if (btnPressed(Btn::B)) {
-                exit();
-                // wait for idle to make sure we are exiting from known state
-                waitUntilIdle();
-                root_.flyOut();
-                waitUntilIdle();
-            }
-            if (btnPressed(Btn::A)) {
-                exit(root_.bg());
-                // wait for idle to make sure we are exiting from known state
-                waitUntilIdle();
-                root_.flyOut();
-                waitUntilIdle();
-            }
+            if (btnPressed(Btn::B))
+                return exit();
+            if (btnPressed(Btn::A))
+                return exit(root_.bg());
             if (btnPressed(Btn::Left)) {
                 current_->changeValueBy(-1);
                 updateColor();

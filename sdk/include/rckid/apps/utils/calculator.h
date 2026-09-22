@@ -60,20 +60,10 @@ namespace rckid {
 
     protected:
 
-        void onLoopStart() override {
-            ui::App<void>::onLoopStart();
-            root_.flyIn();
-        }
-
         void loop() override {
             ui::App<void>::loop();
-            if (btnPressed(Btn::B)) {
-                exit();
-                waitUntilIdle();
-                root_.flyOut();
-                waitUntilIdle();
-                return;
-            }
+            if (btnPressed(Btn::B))
+                return exit();
             if (btnPressed(Btn::Left))
                 moveFocus(-1, 0);
             if (btnPressed(Btn::Right))

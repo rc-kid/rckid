@@ -36,10 +36,6 @@ namespace rckid {
 
     protected:
 
-        void onLoopStart() override {
-            root_.flyIn();
-        }
-
         void loop() override {
             using namespace ui;
             waitUntilIdle();
@@ -52,29 +48,19 @@ namespace rckid {
                         pim::enterParentMode();
                     })                    
                 );
-                if (pim::parentMode()) {
-                    root_.flyOut();
-                    waitUntilIdle();
-                    exit(true);
-                    return;
-                }
+                if (pim::parentMode())
+                    return exit(true);
             }
             auto pwd = App::run<TextDialog>("");
             if (pwd) {
                 if (pwd.value() == expected_) {
-                    root_.flyOut();
-                    waitUntilIdle();
-                    exit(true);
-                    return;
+                    return exit(true);
                 } else {
                     InfoDialog::error("Wrong password", "The password you entered is incorrect");
                 }
             }
-            if (! unlimitedRetries_) {
-                root_.flyOut();
-                waitUntilIdle();
-                exit(false);
-            }
+            if (! unlimitedRetries_)
+                return exit(false);
         }
 
     private:

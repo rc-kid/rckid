@@ -46,19 +46,12 @@ namespace rckid {
 
     protected:
 
-        void onLoopStart() override {
-            root_.flyIn();
-        }
-
         void loop() override {
             using namespace ui;
             App<void>::loop();
             with(steps_) << SetText(STR(pedometer_->count()));
-            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
-                root_.flyOut();
-                waitUntilIdle();
-                exit();
-            }
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down))
+                return exit();
         }
 
     private:

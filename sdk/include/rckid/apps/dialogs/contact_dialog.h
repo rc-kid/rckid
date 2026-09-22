@@ -145,20 +145,10 @@ namespace rckid {
 
     protected:
 
-        void onLoopStart() override {
-            ui::App<bool>::onLoopStart();
-            root_.flyIn();
-        }
-
         void loop() {
             ui::App<bool>::loop();
-            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
-                exit(std::move(dirty_));
-                // wait for idle to make sure we are exiting from known state
-                waitUntilIdle();
-                root_.flyOut();
-                waitUntilIdle();
-            }
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down))
+                return exit(std::move(dirty_));
             if (btnPressed(Btn::Select)) {
                 auto action = App::run<PopupMenu>(contextMenu_);
                 if (action)

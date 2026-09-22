@@ -63,11 +63,6 @@ namespace rckid {
 
     private:
         
-        void onLoopStart() override {
-
-            root_.flyIn();
-        }
-
         /** Converts the accelerometer values to 12.20 fixed-point format 
          */
         int32_t toInt12_20(int32_t value) {
@@ -76,11 +71,8 @@ namespace rckid {
         }
 
         void loop() override {
-            if (btnPressed(Btn::B) || btnPressed(Btn::Down)) {
-                root_.flyOut();
-                waitUntilIdle();
-                exit();
-            }
+            if (btnPressed(Btn::B) || btnPressed(Btn::Down))
+                return exit();
             if (jacdac_) {
                 
                 // every 500ms, send the service packet

@@ -27,7 +27,7 @@ namespace rckid {
         static bool active() { return active_; }
 
         HomeMenu():
-            ui::App<ui::MenuItem::ActionEvent>{Rect::XYWH(0, 140, 320, 100)} 
+            ui::App<ui::MenuItem::ActionEvent>{Rect::XYWH(0, 140, 320, 100), ui::InOutDirection::None} 
         {
             active_ = true;
             root_.useBackgroundImage(false);

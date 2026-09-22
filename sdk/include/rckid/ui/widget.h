@@ -15,6 +15,13 @@ namespace rckid::ui {
 
     class Animation;
 
+    enum class InOutDirection {
+        None,
+        Top,
+        LeftRight,
+        // TODO more directions
+    };
+
     class Widget {
     public:
 
@@ -107,24 +114,25 @@ namespace rckid::ui {
          
             Takes all immediate children of the widgets and animates them using flyIn animation with the specified distance. The widgets are delayed based on their y coordinate. This method is useful when called on a root widget for an application to easily animate its entire contents on app start.
          */
-        void flyIn(Point distance);
+        void animateIn(Point distance, InOutDirection dir = InOutDirection::Top);
 
         /** Animates exit of widget contents. 
          
             Takes all immediate children of the widgets and animates them using flyOut animation with the specified distance. The widgets are delayed based on their y coordinate. Very useful for root widgets to animate app ui fly out when the app closes.
          */
-        void flyOut(Point distance);
+        void animateOut(Point distance, InOutDirection dir = InOutDirection::Top);
+
 
         /** Shorthand for flyIn animation for widget contents with the distance being from the top of the screen (contents come from above the screen).
          */
-        void flyIn() {
-            flyIn(Point{0, -height()});
+        void animateIn(InOutDirection dir = InOutDirection::Top) {
+            animateIn(Point{0, -height()}, dir);
         }
 
         /** Shorthand for flyOut animation for widget contents with the distance being from the top of the screen (contents disappear above screen)
          */
-        void flyOut() {
-            flyOut(Point{0, -height()});
+        void animateOut(InOutDirection dir = InOutDirection::Top) {
+            animateOut(Point{0, -height()}, dir);
         }
 
         template<typename T>

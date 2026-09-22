@@ -246,11 +246,14 @@ namespace rckid {
 
             If app supports state persistence, the state will be automatically saved to "Latest" slot in the app's home folder before exiting.
          */
-        void exit() {
+        void exit() { 
             if (capabilities().canPersistState)
                 saveState("Latest");
             shouldExit_ = true;
+            onExit(); 
         }
+
+        virtual void onExit() { }
 
         bool shouldExit() const { return shouldExit_; }
 

@@ -83,7 +83,9 @@ namespace rckid {
 
         String name() const override { return "Launcher"; }
 
-        Launcher(ui::MenuItem::GeneratorEvent rootMenuGenerator = mainMenuGenerator()) {
+        Launcher(ui::MenuItem::GeneratorEvent rootMenuGenerator = mainMenuGenerator()):
+            ui::App<void>(ui::InOutDirection::None)
+        {
             root_.applyStyle();
             overlay_ = addChild(new ui::NonOwningWrapper())
                 << ui::SetRect(Rect::XYWH(0, 0, 320, 240));
