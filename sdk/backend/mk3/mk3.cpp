@@ -912,10 +912,10 @@ namespace rckid::hal {
                     i2c::sendAvrCommand(cmd::SetRGBEffect{5, effect});
                     break;
                 case Btn::A:
-                    i2c::sendAvrCommand(cmd::SetRGBEffect{6, effect});
+                    i2c::sendAvrCommand(cmd::SetRGBEffect{7, effect});
                     break;
                 case Btn::B:
-                    i2c::sendAvrCommand(cmd::SetRGBEffect{7, effect});
+                    i2c::sendAvrCommand(cmd::SetRGBEffect{6, effect});
                     break;
                 default:
                     LOG(LL_WARN, "Unknown RGB index: " << static_cast<uint32_t>(index));
