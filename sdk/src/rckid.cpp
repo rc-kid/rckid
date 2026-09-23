@@ -195,7 +195,7 @@ namespace rckid {
 
         // set default volume headphones
         hal::audio::setVolumeHeadphones(settings.audio.volumeHeadphones);
-        hal::audio::setVolumeSpeaker(settings.audio.volumeHeadphones);
+        hal::audio::setVolumeSpeaker(settings.audio.volumeSpeaker);
 
         // ensure default style is initialized (and loaded from SD card if available)
         ui::Style::loadDefaultStyle();
@@ -405,6 +405,10 @@ namespace rckid {
             rect_ = rect;
             refreshDirection_ = direction;
         }
+
+        Rect rect() { return rect_; }
+
+        RefreshDirection refreshDirection() { return refreshDirection_; }
 
         uint8_t brightness() { return settings.display.brightness; }
 

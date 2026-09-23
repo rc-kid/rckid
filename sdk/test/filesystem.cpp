@@ -29,6 +29,7 @@ TEST(filesystem, pathExt) {
     EXPECT(fs::ext("foo.bar.baz") == "baz");
     EXPECT(fs::ext("foobar") == "");
     EXPECT(fs::ext(".bar") == "");
+    EXPECT(fs::ext("foo/bar.baz/bar") == "");
 }
 
 TEST(filesystem, pathParent) {

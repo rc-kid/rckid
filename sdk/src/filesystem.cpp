@@ -23,7 +23,7 @@ extern "C" {
 
     DRESULT disk_read(BYTE pdrv, BYTE * buff, LBA_t sector, UINT count) {
         ASSERT(pdrv == 0);
-        if (! rckid::hal::fs::sdCapacityBlocks() != 0)
+        if (rckid::hal::fs::sdCapacityBlocks() == 0)
             return RES_NOTRDY;
         rckid::hal::fs::sdReadBlocks(static_cast<uint32_t>(sector), buff, count);
         return RES_OK;
@@ -31,7 +31,7 @@ extern "C" {
 
     DRESULT disk_write(BYTE pdrv, BYTE const * buff, LBA_t sector, UINT count) {
         ASSERT(pdrv == 0);
-        if (! rckid::hal::fs::sdCapacityBlocks())
+        if (rckid::hal::fs::sdCapacityBlocks() == 0)
             return RES_NOTRDY;
         rckid::hal::fs::sdWriteBlocks(static_cast<uint32_t>(sector), buff, count);
         return RES_OK;
@@ -39,7 +39,7 @@ extern "C" {
 
     DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void * buff) {
         ASSERT(pdrv == 0);
-        if (!rckid::hal::fs::sdCapacityBlocks())
+        if (rckid::hal::fs::sdCapacityBlocks() == 0)
             return RES_NOTRDY;
         switch (cmd) {
             // no need to do anything for CTRL_SYNC as the FatFS exposed API is blocking
@@ -54,6 +54,7 @@ extern "C" {
                 break;
             // Sector size is fixed to 512 bytes so no need to set anything here
             case GET_SECTOR_SIZE:
+                break;
             // CTRL_TRIM is not supported, all other ioctls are not supported as well
             case CTRL_TRIM:
             default:
@@ -278,9 +279,11 @@ namespace rckid::fs {
 
     String ext(String const & path) {
         if (path.size() > 1) {    
-            for (size_t i = path.size() - 1; i > 0; --i) {
+            for (size_t i = path.size() - 1; i > 0 ; --i) {
                 if (path[i] == '.')
                     return path.substr(i + 1);
+                if (path[i] == '/')
+                    break;
             }
         }
         return "";
@@ -294,9 +297,11 @@ namespace rckid::fs {
     }
 
     String parent(String const & path) {
-        for (size_t i = path.size() - 1; i > 0; --i) {
-            if (path[i] == '/')
-                return path.substr(0, i);
+        if (! path.empty()) {
+            for (size_t i = path.size() - 1; i > 0; --i) {
+                if (path[i] == '/')
+                    return path.substr(0, i);
+            }
         }
         return "/";
     }
@@ -501,11 +506,11 @@ namespace rckid::fs {
             return "";
         switch (dr) {
             case Drive::SD: {
-                char * label = new char[13];
+                char label[13];
                 memset(reinterpret_cast<uint8_t*>(label), ' ', 12);
-                label[12] = '\0';
-                f_getlabel("",label, 0);
-                return String{immutable_ptr<char>{label, 13}};
+                f_getlabel("", label, 0);
+                label[12] = '\0'; // ensure null termination
+                return String{label};
             }
             case Drive::Cartridge:
                 return "Cartridge";
@@ -586,14 +591,14 @@ namespace rckid::fs {
     bool createFolders(String const & path, Drive dr) {
         if (!isMounted(dr))
             return false;
-        if (path == nullptr || path[0] == 0)
+        if (path.empty() || path[0] == 0)
             return false;
         uint32_t i = 0;
         if (path[0] == '/') 
             ++i;
         while (true) {
             if (path[i] == '/' || path[i] == 0) {
-                String p = path.substr(i);
+                String p = path.substr(0, i);
                 if (! isFolder(p.c_str(), dr) &&  (! createFolder(p.c_str(), dr)))
                     return false;
                 if (path[i] == 0)

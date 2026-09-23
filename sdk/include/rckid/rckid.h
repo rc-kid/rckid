@@ -182,6 +182,10 @@ namespace rckid {
 
         void enable(Rect rect, RefreshDirection  direction);
 
+        Rect rect();
+
+        RefreshDirection refreshDirection();
+
         uint8_t brightness();
 
         void setBrightness(uint8_t value);

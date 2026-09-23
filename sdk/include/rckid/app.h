@@ -54,26 +54,10 @@ namespace rckid {
         static typename T::MODAL_RESULT run(ARGS &&... args) {
             typename T::MODAL_RESULT result;
             {
-                // wait for any pending display updates from the previous app
                 ASSERT(hal::display::updateActive() == false);
                 T app{std::forward<ARGS>(args)...};
-                if (current_ != nullptr)
-                    current_->onBlur();
-                app.parent_ = current_;
-                current_ = & app;
-                app.enforceCapabilities();
-                current_->onFocus();
-                current_->onLoopStart();
-                while (! app.shouldExit()) {
-                    tick();
-                    current_->loop();
-                    current_->render();
-                }
-                current_->onBlur();
-                current_ = current_->parent_;
+                runImpl(app);
                 result = std::move(app.result());
-                // wait for the last update to finish (otherwise it might access deleted app)
-                display::waitUpdateDone();
             }
             btnClearAll();
             if (current_ != nullptr)
@@ -88,23 +72,9 @@ namespace rckid {
         template<typename T, typename...ARGS>
         static std::enable_if_t<! has_modal_result<T>::value, void> run(ARGS &&... args) {
             {
+                ASSERT(hal::display::updateActive() == false);
                 T app{std::forward<ARGS>(args)...};
-                if (current_ != nullptr)
-                    current_->onBlur();
-                app.parent_ = current_;
-                current_ = & app;
-                app.enforceCapabilities();
-                current_->onFocus();
-                current_->onLoopStart();
-                while (! app.shouldExit()) {
-                    tick();
-                    current_->loop();
-                    current_->render();
-                }
-                current_->onBlur();
-                current_ = current_->parent_;
-                // wait for the last update to finish (otherwise it might access deleted app)
-                display::waitUpdateDone();
+                runImpl(app);
             }
             btnClearAll();
             if (current_ != nullptr)
@@ -249,6 +219,8 @@ namespace rckid {
             If app supports state persistence, the state will be automatically saved to "Latest" slot in the app's home folder before exiting.
          */
         void exit() { 
+            if (shouldExit_) // if we are already exiting, do not exit again
+                return;
             if (capabilities().canPersistState)
                 saveState("Latest");
             shouldExit_ = true;
@@ -298,6 +270,27 @@ namespace rckid {
         //@}
 
     private:
+
+        static void runImpl(App & app) {
+            if (current_ != nullptr)
+                current_->onBlur();
+            app.parent_ = current_;
+            current_ = & app;
+            app.onFocus();
+            app.enforceCapabilities();
+            if (! app.shouldExit()) {
+                app.onLoopStart();
+                while (! app.shouldExit()) {
+                    tick();
+                    app.loop();
+                    app.render();
+                }
+            }
+            app.onBlur();
+            current_ = app.parent_;
+            // wait for the last update to finish (otherwise it might access deleted app)
+            display::waitUpdateDone();
+        }
 
         // tick is friend so that it can force exit of the current app if budgeted
         friend void tick();

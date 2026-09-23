@@ -48,6 +48,10 @@ namespace rckid::ui {
             return instance()->visible();
         }
 
+        static bool shouldUpdate() {
+            return instance_ != nullptr && instance_->update_;
+        }
+
         /** Updates the header icons
          */
         static void update();
@@ -79,6 +83,34 @@ namespace rckid::ui {
             if (numPixels <= 0)
                 return;
             contents().renderRow(ownRow, startCol, buffer, numPixels);
+            update_ = false;
+        }
+
+        static void renderStandalone(Color::RGB565 * buffer) {
+            if (instance_ == nullptr)
+                return;
+            display::waitUpdateDone();
+            Rect rect = display::rect();
+            display::RefreshDirection dir = display::refreshDirection();
+            display::enable(Rect::WH(320, TileGrid::tileHeight()), display::RefreshDirection::RowFirst);
+
+            for (Coord row = 0, re = TileGrid::tileHeight(); row < re; ++row) {
+                // TODO resetting to bg color for each row is simple, but not ideal, however, displaying the background color is non-trivial as we do not know if the rest of the screen had bg on it, nor do we know the bg position, so there could be tearing
+                memset16(reinterpret_cast<uint16_t*>(buffer), ui::Style::defaultBg().toRGB565(), 320);
+                instance()->renderRow(row, 0, buffer, 320);
+                hal::display::update(buffer, 320);
+                while (hal::display::updateActive())
+                    yield();
+            }
+
+            display::enable(rect, dir);
+        }
+
+        static void renderStandalone() {
+            if (instance_ == nullptr)
+                return;
+            Color::RGB565 buffer[320];
+            renderStandalone(buffer);
         }
 
     protected:
@@ -86,6 +118,7 @@ namespace rckid::ui {
 
         /** When rendering, determine if we should  */
         void onRender() override {
+            update_ = false;
             if (visibility_ == Visibility::OnChange)
                 if ((remainingTicks_ > 0) && (--remainingTicks_ == 0))
                     hide();
@@ -138,6 +171,7 @@ namespace rckid::ui {
         /** Ensures the header is visible, bringing it into view when necessary.
          */
         void show() {
+            update_ = true;
             // don't show when app requests no header at all
             if (visibility_ == Visibility::Never)
                 return;
@@ -200,11 +234,11 @@ namespace rckid::ui {
             return immutable_ptr<Color::RGB565>{p, 32};
         }
 
-
         /** Ticks remaining for the header to be shown. 
-        
          */
         uint32_t remainingTicks_ = 0;
+
+        bool update_ = false;
 
         immutable_ptr<Color::RGB565> palette_;
         

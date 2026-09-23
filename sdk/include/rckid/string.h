@@ -331,6 +331,8 @@ namespace rckid {
 
         void grow() {
             capacity_ *= 2;
+            if (capacity_ < 8)
+                capacity_ = 8;
             char * newData = new char[capacity_];
             memcpy(newData, data_.get(), size_);
             data_ = unique_ptr<char>(newData);

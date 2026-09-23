@@ -195,7 +195,7 @@ namespace rckid::ui {
          
             This function must be called before any widgets are being drawn as it updates any existing animations and calls onRender for the non owned widgets (such as the Header bar). By default the RootWidget calls this automatically, so any ui::App classes do not have to do anything. But if an app uses custom rendering loop *and* uses UI elements as well, it must call this method before any frame.
          */
-        static void renderEssentials();
+        static void renderEssentials(Rect rect);
 
     protected:
 

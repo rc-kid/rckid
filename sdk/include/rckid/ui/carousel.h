@@ -50,10 +50,6 @@ namespace rckid::ui {
             bText_->setFont(font);
         }
 
-        uint32_t animationSpeed() const { return animationSpeed_; }
-
-        void setAnimationSpeed(uint32_t speed) { animationSpeed_ = speed; }
-
         void setEmpty() {
             set("Empty", assets::icons_64::empty_box);
         }
@@ -108,7 +104,7 @@ namespace rckid::ui {
             with(aText_)
                 << SetText(std::move(text));
             Coord iconWidth = bmp.width();
-            Coord iconHeight = bmp.width();
+            Coord iconHeight = bmp.height();
             Coord textWidth = aText_->textWidth();
             // determine the final positions
             Coord iconLeft = (width() - (iconWidth + textWidth + ICON_SEPARATOR_WIDTH)) / 2;
@@ -128,39 +124,39 @@ namespace rckid::ui {
                 case Direction::Up:
                     // new comes from the sides, old goes down
                     animate()
-                        << MoveHorizontally(aImg_, aImg_->x() - width(), aImg_->x())->setDurationMs(animationSpeed_)
-                        << MoveHorizontally(aText_, aText_->x() + width(), aText_->x())->setDurationMs(animationSpeed_)
-                        << MoveVertically(bImg_, bImg_->y(), bImg_->y() + height())->setDurationMs(animationSpeed_)
-                        << MoveVertically(bText_, bText_->y(), bText_->y() + height())->setDurationMs(animationSpeed_);
+                        << MoveHorizontally(aImg_, aImg_->x() - width(), aImg_->x())->setDurationMs(animationSpeed())
+                        << MoveHorizontally(aText_, aText_->x() + width(), aText_->x())->setDurationMs(animationSpeed())
+                        << MoveVertically(bImg_, bImg_->y(), bImg_->y() + height())->setDurationMs(animationSpeed())
+                        << MoveVertically(bText_, bText_->y(), bText_->y() + height())->setDurationMs(animationSpeed());
                     break;
                 case Direction::Down:
                     // new comes from bottom, old goes to the sides
                     animate()
-                        << MoveVertically(aImg_, aImg_->y() + height(), aImg_->y())->setDurationMs(animationSpeed_)
-                        << MoveVertically(aText_, aText_->y() + height(), aText_->y())->setDurationMs(animationSpeed_)
-                        << MoveHorizontally(bImg_, bImg_->x(), bImg_->x() - width())->setDurationMs(animationSpeed_)
-                        << MoveHorizontally(bText_, bText_->x(), bText_->x() + width())->setDurationMs(animationSpeed_);
+                        << MoveVertically(aImg_, aImg_->y() + height(), aImg_->y())->setDurationMs(animationSpeed())
+                        << MoveVertically(aText_, aText_->y() + height(), aText_->y())->setDurationMs(animationSpeed())
+                        << MoveHorizontally(bImg_, bImg_->x(), bImg_->x() - width())->setDurationMs(animationSpeed())
+                        << MoveHorizontally(bText_, bText_->x(), bText_->x() + width())->setDurationMs(animationSpeed());
                     break;
                 case Direction::Left:
                     // new comes from the left, old goes to the right
                     animate()
-                        << MoveHorizontally(aImg_, aImg_->x() - width() * 2, aImg_->x())->setDurationMs(animationSpeed_)
-                        << MoveHorizontally(aText_, aText_->x() - width(), aText_->x())->setDurationMs(animationSpeed_)
-                        << MoveHorizontally(bImg_, bImg_->x(), bImg_->x() + width())->setDurationMs(animationSpeed_)
-                        << MoveHorizontally(bText_, bText_->x(), bText_->x() + width() * 2)->setDurationMs(animationSpeed_);
+                        << MoveHorizontally(aImg_, aImg_->x() - width() * 2, aImg_->x())->setDurationMs(animationSpeed())
+                        << MoveHorizontally(aText_, aText_->x() - width(), aText_->x())->setDurationMs(animationSpeed())
+                        << MoveHorizontally(bImg_, bImg_->x(), bImg_->x() + width())->setDurationMs(animationSpeed())
+                        << MoveHorizontally(bText_, bText_->x(), bText_->x() + width() * 2)->setDurationMs(animationSpeed());
                     break;
                 case Direction::Right:
                     // new comes from the right, old goes to the left
                     animate()
-                        << MoveHorizontally(aImg_, aImg_->x() + width(), aImg_->x())->setDurationMs(animationSpeed_)
-                        << MoveHorizontally(aText_, aText_->x() + width() * 2, aText_->x())->setDurationMs(animationSpeed_)
-                        << MoveHorizontally(bImg_, bImg_->x(), bImg_->x() - width() * 2)->setDurationMs(animationSpeed_)
-                        << MoveHorizontally(bText_, bText_->x(), bText_->x() - width())->setDurationMs(animationSpeed_);
+                        << MoveHorizontally(aImg_, aImg_->x() + width(), aImg_->x())->setDurationMs(animationSpeed())
+                        << MoveHorizontally(aText_, aText_->x() + width() * 2, aText_->x())->setDurationMs(animationSpeed())
+                        << MoveHorizontally(bImg_, bImg_->x(), bImg_->x() - width() * 2)->setDurationMs(animationSpeed())
+                        << MoveHorizontally(bText_, bText_->x(), bText_->x() - width())->setDurationMs(animationSpeed());
                     break;
                 default:
                     UNREACHABLE;
             }
-            RootWidget::backgroundEffect(dir, animationSpeed_);
+            RootWidget::backgroundEffect(dir, animationSpeed());
         }
 
         /** Returns the image and label widgets for the next element. 
@@ -178,8 +174,6 @@ namespace rckid::ui {
         Label * aText_ = nullptr;
         Image * bImg_ = nullptr;
         Label * bText_ = nullptr;
-
-        uint32_t animationSpeed_ = 500; 
 
     }; // rckid::ui::Carousel
 

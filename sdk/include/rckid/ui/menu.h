@@ -62,9 +62,9 @@ namespace rckid::ui {
                 decorator_ = std::move(other.decorator_);
                 // assign the action or generator
                 if (isAction_)
-                    action_ = std::move(other.action_);
+                    new (&action_) ActionEvent(std::move(other.action_));
                 else
-                    generator_ = std::move(other.generator_);
+                    new (&generator_) GeneratorEvent(std::move(other.generator_));
             }
             return *this;
         }

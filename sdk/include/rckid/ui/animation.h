@@ -101,11 +101,6 @@ namespace rckid::ui {
         /** Deletes the animation and removes it from the global list.
          */
         ~Animation() {
-            if (w_ != nullptr) {
-                ASSERT(w_->activeAnimations_ > 0);
-                if (--w_->activeAnimations_ == 0)
-                    w_->onIdle();
-            }
             // remove from the list
             if (prev_ != nullptr)
                 prev_->next_ = next_;
@@ -113,6 +108,12 @@ namespace rckid::ui {
                 head_ = next_;
             if (next_ != nullptr)
                 next_->prev_ = prev_;
+            // tell the widget the animation is done, make sure this is done after the animation is removed from the list so that it is inaccessible from the onIdle() callback
+            if (w_ != nullptr) {
+                ASSERT(w_->activeAnimations_ > 0);
+                if (--w_->activeAnimations_ == 0)
+                    w_->onIdle();
+            }
         }
 
         static void updateAll() {
@@ -194,7 +195,7 @@ namespace rckid::ui {
                 return true;
             elapsedMs -= delayMs_;
             if (elapsedMs >= durationMs_) {
-                if (repeat_) {
+                if (repeat_ && durationMs_ > 0) {
                     do {
                         startUs_ += (durationMs_ * 1000);
                         elapsedMs -= durationMs_;

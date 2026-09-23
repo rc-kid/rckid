@@ -46,16 +46,18 @@ namespace rckid {
         static void runAll() {
             Task * current = top_;
             while (current != nullptr) {
-                current->onTick();
+                Task * x = current; // tasks could delete themselves from the onTick() method
                 current = current->next_;
+                x->onTick();
             }
         }
 
         static void forAll(std::function<void(Task *)> callback) {
             Task * current = top_;
             while (current != nullptr) {
-                callback(current);
+                Task * x = current; // task could delete itself as part of the callback
                 current = current->next_;
+                callback(x);
             }
         }
 

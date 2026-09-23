@@ -49,10 +49,10 @@ namespace rckid::ui {
                 for (auto & child : children_)
                     if (child->y() < minY)
                         minY = child->y();
-                minY = std::min<Coord>(minY, 0);
+                minY = std::max<Coord>(minY, 0);
                 for (auto & child : children_)
                     if (child->visibleInParent())
-                        animate() << FlyOut(child.get(), distance)->setDelayMs(child->y()-minY);
+                        animate() << FlyOut(child.get(), distance)->setDelayMs(child->y() - minY);
                 break;
             }
             case InOutDirection::LeftRight: {
@@ -62,9 +62,9 @@ namespace rckid::ui {
         }
     }
 
-    void Widget::renderEssentials() {
+    void Widget::renderEssentials(Rect rect) {
         Animation::updateAll();
-        if (Header::shouldRender())
+        if (Header::shouldRender() && rect.y == 0)
             triggerOnRender(Header::instance());
     }
 

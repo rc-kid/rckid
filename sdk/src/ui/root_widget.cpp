@@ -19,7 +19,7 @@ namespace rckid::ui {
         if (! visible())
             return;
         // update all animations & render essentials
-        Widget::renderEssentials();
+        Widget::renderEssentials(rect());
         // tell the widgets that we are about to render
         onRender();
         // wait for next frame to keep steady FPS

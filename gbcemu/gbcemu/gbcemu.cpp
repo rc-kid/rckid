@@ -1138,7 +1138,7 @@ namespace rckid::gbcemu {
             updateIO_JOYP();
             // if we are rendeing the header, we need to do rendering essentials as the header is ui widget, while gbcemu does its own rendering
             if (ui::Header::shouldRender())
-                ui::Widget::renderEssentials();
+                ui::Widget::renderEssentials(Rect::WH(320, 240));
             tick();
         }
         if (IO_LY == 153) {

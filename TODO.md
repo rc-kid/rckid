@@ -39,8 +39,6 @@
 
 - canvas app can be rendered in single call technically
 
-- show header even when not full screen is rendered (home menu & friends)
-
 - deal with wakeup interrupts
 
 - budget reset & the whole wakeup business
@@ -93,6 +91,9 @@ So what I need:
 - descriptor/game object infrastructure for matching arguments of events should be added 
 
 # Backend - MK3
+
+- tick updates for display do not seem to be working every second
+- audio plays only in R
 
 - sws-tx is really uart PIO, rename as such and we can use it for TX output even on current HW version which means the cartridge available UART can be used 
 

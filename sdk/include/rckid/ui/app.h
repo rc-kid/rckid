@@ -89,6 +89,8 @@ namespace rckid::ui {
 
         void render() override {
             root_.render();
+            if (Header::shouldUpdate())
+                Header::renderStandalone();
         }
 
         template<typename T>
