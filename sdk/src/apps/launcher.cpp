@@ -28,6 +28,10 @@
 #include <rckid/apps/dialogs/slider_dialog.h>
 
 #include <rckid/apps/games/blocks.h>
+#include <rckid/apps/games/crate_critters.h>
+#include <rckid/apps/games/pong.h>
+#include <rckid/apps/games/sliding_puzzle.h>
+#include <rckid/apps/games/space_attack.h>
 
 
 #include <rckid/apps/audio/recorder.h>
@@ -93,6 +97,18 @@ namespace rckid {
                 }}
                 << ui::MenuItem{"Blocks", assets::icons_64::tetris, []() {
                     App::run<Blocks>();
+                }}
+                << ui::MenuItem{"Crate Critters", assets::games::crate_critters::icon, []() {
+                    App::run<CrateCritters>();
+                }}
+                << ui::MenuItem{"Space Attack", assets::games::space_attack::icon, []() {
+                    App::run<SpaceAttack>();
+                }}
+                << ui::MenuItem{"Pong", assets::icons_64::game_controller, []() {
+                    App::run<Pong>();
+                }}
+                << ui::MenuItem{"Sliding Puzzle", assets::icons_64::picture, []() {
+                    App::run<SlidingPuzzle>();
                 }};
         return result;
     }

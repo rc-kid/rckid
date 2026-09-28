@@ -59,6 +59,19 @@ namespace rckid::ui {
         }
 
         void set(String text, ImageSource icon) {
+            set(std::move(text), Bitmap{std::move(icon)});
+        }
+
+        void set(String text, ImageSource icon, Direction dir) {
+            set(std::move(text), Bitmap{std::move(icon)}, dir);
+        }
+
+        /** Sets the carousel item to an already decoded bitmap. 
+         
+            Useful for icons that are generated at runtime rather than loaded from an image source, such as the level previews in the games.
+         */
+        //@{
+        void set(String text, Bitmap icon) {
             setCurrent(std::move(text), std::move(icon));
             with(bImg_)
                 << SetVisibility(false);
@@ -66,11 +79,12 @@ namespace rckid::ui {
                 << SetVisibility(false);
         }
 
-        void set(String text, ImageSource icon, Direction dir) {
+        void set(String text, Bitmap icon, Direction dir) {
             setCurrent(std::move(text), std::move(icon));
             // start the appropriate animation
             startAnimation(dir);
         }
+        //@}
 
         /** Returns the image and label widgets for the currently selected element. 
          
@@ -91,7 +105,7 @@ namespace rckid::ui {
                 << SetVisibility(false);
         }
 
-        void setCurrent(String text, ImageSource icon) {
+        void setCurrent(String text, Bitmap bmp) {
             if (!idle())
                 cancelAnimations();
             std::swap(aImg_, bImg_);
@@ -100,7 +114,6 @@ namespace rckid::ui {
             aImg_->clearChildren();
             aText_->clearChildren();
             // first set up the widgets so that we can calculate their size
-            Bitmap bmp{std::move(icon)};
             with(aText_)
                 << SetText(std::move(text));
             Coord iconWidth = bmp.width();

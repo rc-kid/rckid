@@ -84,8 +84,12 @@ namespace rckid::internal {
 
             // TODO print FPS, memory or some other stat overlays we might want to 
 
+            /*
+
             DrawText(TextFormat("Heap reserved: %d", Heap::reservedBytes() / 1024), 0, 20 * RCKID_DISPLAY_ZOOM + 5, 20, RED);
             DrawText(TextFormat("Heap used:     %d", Heap::usedBytes() / 1024), 0, 20 * RCKID_DISPLAY_ZOOM + 25, 20, RED);
+
+            */
 
             EndDrawing();
             SwapScreenBuffer();

@@ -5,6 +5,7 @@
 #include <rckid/graphics/geometry.h>
 #include <rckid/graphics/color.h>
 #include <rckid/graphics/blit.h>
+#include <rckid/graphics/bitmap.h>
 #include <rckid/graphics/image_source.h>
 
 namespace rckid {
@@ -77,6 +78,47 @@ namespace rckid {
                     UNIMPLEMENTED;
             }
         }
+
+        /** \name Blitting
+
+            Copies pixels of the given bitmap, or a part of another canvas to the canvas at given position. The source is clipped to its own bounds and then to the bounds of the canvas so that any position (including negative and out of bounds coordinates) is safe to use.
+
+            As blitting reuses the renderColumn API of the source, all color representations, palettes and transparent colors supported by the SDK work out of the box. The destination canvas must be RGB565 (which is the canvas default).
+         */
+        //@{
+        void blit(Point where, Bitmap & src) {
+            blit(where, src, Rect::WH(src.width(), src.height()));
+        }
+
+        void blit(Point where, Bitmap & src, Rect srcRect) {
+            ASSERT(colorRepresentation_ == Color::Representation::RGB565);
+            if (! clipBlit(where, srcRect, src.width(), src.height()))
+                return;
+            for (Coord i = 0; i < srcRect.width(); ++i)
+                src.renderColumn(srcRect.x + i, srcRect.y, columnBuffer(where.x + i) + where.y, srcRect.height());
+        }
+
+        /** Copies a rectangle of another canvas (which can be the canvas itself) to given position.
+
+            When blitting a canvas onto itself the overlapping regions are handled correctly (the semantics are that of a memmove, not memcpy).
+         */
+        void blit(Point where, Canvas const & src, Rect srcRect) {
+            ASSERT(colorRepresentation_ == Color::Representation::RGB565);
+            ASSERT(src.colorRepresentation_ == Color::Representation::RGB565);
+            if (! clipBlit(where, srcRect, src.w_, src.h_))
+                return;
+            // if we are blitting on top of ourselves and the destination is to the right of the source, the columns must be copied back to front so that we never overwrite a column we have not read yet
+            bool backwards = (& src == this) && (where.x > srcRect.x);
+            for (Coord n = srcRect.width(), j = 0; j < n; ++j) {
+                Coord i = backwards ? (n - j - 1) : j;
+                memmove(
+                    columnBuffer(where.x + i) + where.y,
+                    src.columnBuffer(srcRect.x + i) + srcRect.y,
+                    static_cast<size_t>(srcRect.height()) * sizeof(Color::RGB565)
+                );
+            }
+        }
+        //@}
 
         /** Writes text at given coordinates with specified font & color.
          */
@@ -174,10 +216,47 @@ namespace rckid {
                 << static_cast<uint16_t>(h_);
         }
 
-    private: 
+        /** Returns pointer to the first row of the given column of an RGB565 canvas. 
+         
+            Rows within a column are contiguous, so this is the buffer the SDK renderColumn() API writes into, which is what makes the blitting routines above simple and what allows arbitrary renderable objects (bitmaps, tile grids, UI widgets) to be drawn into the canvas.
+         */
+        Color::RGB565 * columnBuffer(Coord column) const {
+            ASSERT(colorRepresentation_ == Color::Representation::RGB565);
+            ASSERT(column >= 0 && column < w_);
+            return reinterpret_cast<Color::RGB565 *>(pixels_.get()) + mapIndexColumnFirst(column, 0, w_, h_);
+        }
+
+    private:
 
         uint8_t const * rawPixelArray(Coord column = 0) const {
             return pixels_.get() + mapIndexColumnFirst(column, 0, w_, h_) * bpp() / 8;
+        }
+
+        /** Clips a blit operation against the source and the destination (this canvas).
+
+            Updates both the destination position and the source rectangle in place and returns false if there is nothing left to draw.
+         */
+        bool clipBlit(Point & where, Rect & srcRect, Coord srcWidth, Coord srcHeight) const {
+            srcRect = srcRect.intersectWith(Rect::WH(srcWidth, srcHeight));
+            if (srcRect.empty())
+                return false;
+            // clip against the left & top edge of the canvas, moving the source rectangle accordingly
+            if (where.x < 0) {
+                srcRect.x -= where.x;
+                srcRect.w += where.x;
+                where.x = 0;
+            }
+            if (where.y < 0) {
+                srcRect.y -= where.y;
+                srcRect.h += where.y;
+                where.y = 0;
+            }
+            // and against the right & bottom edge, where only the size changes
+            if (where.x + srcRect.w > w_)
+                srcRect.w = w_ - where.x;
+            if (where.y + srcRect.h > h_)
+                srcRect.h = h_ - where.y;
+            return ! srcRect.empty();
         }
 
         void putChar16(Coord x, Coord y, GlyphInfo const * gi, Font font, Color::RGB565 const * palette) {

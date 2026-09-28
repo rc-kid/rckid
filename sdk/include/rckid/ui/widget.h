@@ -11,6 +11,10 @@
 #include <rckid/ui/with.h>
 #include <rckid/ui/style.h>
 
+namespace rckid {
+    class Canvas;
+}
+
 namespace rckid::ui {
 
     class Animation;
@@ -190,6 +194,14 @@ namespace rckid::ui {
         /** Returns true if the current widget is focused. 
          */
         bool focused() const { return focused_; }
+
+        /** Renders the widget and its children into the given canvas at the given position.
+         
+            This is what allows canvas apps (the games, mostly) to use the UI widgets without building an entire widget tree app around them. The widget is clipped against the canvas, so any position is safe to use, and it composites onto whatever the canvas already holds - the plain widget does not paint its own background, only a Panel does.
+
+            NOTE the widget must be rendered exactly once per frame and always in full, as some widgets (most notably the Label) keep rendering state between the columns of a single frame that this method is responsible for resetting. Like any other custom rendering loop, the app must also call renderEssentials() once per frame before rendering anything.
+         */
+        void renderOn(Canvas & canvas, Point where);
 
         /** Performs the pre-rednering essentials required for UI elements.
          

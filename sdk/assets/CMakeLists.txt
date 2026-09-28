@@ -33,9 +33,11 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
         COMMAND $<TARGET_FILE:font-converter> fonts/OpenDyslexic.otf ${CMAKE_SOURCE_DIR}/sdk/include/assets/OpenDyslexic64.h 64
         COMMAND $<TARGET_FILE:font-converter> fonts/OpenDyslexic.otf ${CMAKE_SOURCE_DIR}/sdk/include/assets/OpenDyslexic128.h 128
 
+        COMMAND $<TARGET_FILE:font-converter> fonts/Baloo.ttf ${CMAKE_SOURCE_DIR}/sdk/include/assets/Baloo64.h 64
         COMMAND $<TARGET_FILE:font-converter> fonts/Baloo.ttf ${CMAKE_SOURCE_DIR}/sdk/include/assets/Baloo128.h 128
 
         COMMAND $<TARGET_FILE:font-converter> fonts/MetalLord.ttf ${CMAKE_SOURCE_DIR}/sdk/include/assets/MetalLord64.h 64
+
 
         # images (logo, default background, etc)
         COMMAND $<TARGET_FILE:binary-folder> images ${CMAKE_SOURCE_DIR}/sdk/include/assets/images.h --raw-path raw/images --namespace rckid::assets::images
@@ -48,6 +50,10 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
         # 16x16 icons (mostly for UI)
         COMMAND $<TARGET_FILE:binary-folder> icons/icons_16 ${CMAKE_SOURCE_DIR}/sdk/include/assets/icons_16.h --raw-path raw/icons_16 --namespace rckid::assets::icons_16
 
+
+        # per game assets - one file per game so that the games do not add their art to the shared SDK icon sets
+        COMMAND $<TARGET_FILE:binary-folder> games/crate_critters ${CMAKE_SOURCE_DIR}/sdk/include/assets/games/crate_critters.h --raw-path raw/crate_critters --namespace rckid::assets::games::crate_critters
+        COMMAND $<TARGET_FILE:binary-folder> games/space_attack ${CMAKE_SOURCE_DIR}/sdk/include/assets/games/space_attack.h --raw-path raw/space_attack --namespace rckid::assets::games::space_attack
 
         COMMAND $<TARGET_FILE:font-tile-generator> fonts/Iosevka.ttf ${CMAKE_SOURCE_DIR}/sdk/include/assets/Iosevka16Tiles.h 16 8 16
 

@@ -5,6 +5,7 @@
 #include <platform/tinydate.h>
 #include <functional>
 #include <rckid/log.h>
+#include <rckid/fixedint.h>
 
 /** Serialization & Deserialization
 
@@ -419,7 +420,19 @@ namespace rckid {
     inline void read(BinaryReader & r, TinyDateTime & into) {
         r >> into.time >> into.date;
     }
-    
+
+    // FixedInt
+
+    inline void write(BinaryWriter & w, FixedInt const & value) {
+        w << value.raw();
+    }
+
+    inline void read(BinaryReader & r, FixedInt & into) {
+        int32_t raw;
+        r >> raw;
+        into = FixedInt::fromRaw(raw);
+    }
+
 } // namespace rckid
 
 

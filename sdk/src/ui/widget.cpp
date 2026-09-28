@@ -1,3 +1,5 @@
+#include <rckid/app.h>
+#include <rckid/graphics/canvas.h>
 #include <rckid/ui/widget.h>
 #include <rckid/ui/animation.h>
 #include <rckid/ui/header.h>
@@ -59,6 +61,28 @@ namespace rckid::ui {
                 UNIMPLEMENTED;
                 break;
             }
+        }
+    }
+
+    void Widget::renderOn(Canvas & canvas, Point where) {
+        if (! visible())
+            return;
+        // reset any per frame rendering state of the widget and its children (the Label's render hint)
+        triggerOnRender(this);
+        // clip the widget's rows against the canvas. startRow is relative to the widget's top, the buffer is offset by where the widget starts in the canvas column
+        Coord startRow = (where.y < 0) ? -where.y : 0;
+        Coord bufferOffset = (where.y < 0) ? 0 : where.y;
+        Coord numPixels = std::min(height() - startRow, canvas.height() - bufferOffset);
+        if (numPixels <= 0)
+            return;
+        // render right to left, which is both the native refresh direction and what the widgets with per frame rendering state expect
+        for (Coord column = width() - 1; column >= 0; --column) {
+            Coord x = where.x + column;
+            if (x < 0)
+                break; // no column to our left can be visible either
+            if (x >= canvas.width())
+                continue;
+            renderColumn(column, startRow, canvas.columnBuffer(x) + bufferOffset, numPixels);
         }
     }
 

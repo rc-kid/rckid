@@ -3,6 +3,8 @@
 #include <platform.h>
 #include <platform/writer.h>
 
+#include <rckid/fixedint.h>
+
 namespace rckid {
 
     /** Coordinates in RCKid use platform's native integer type, even though much smaller range is generally required, this makes arithemtic operations faster and simpler (no typecasts). 
@@ -89,6 +91,42 @@ namespace rckid {
     inline Point operator * (Coord magnitude, Direction dir) {
         return dir * magnitude;
     }
+
+    /** Point with fixed point coordinates.
+
+        Useful for games and other simulations where things move by less than a pixel per frame. Converted to an ordinary Point via the round() method when it is time to draw.
+     */
+    class FixedPoint {
+    public:
+        FixedInt x;
+        FixedInt y;
+
+        constexpr FixedPoint() = default;
+        constexpr FixedPoint(FixedInt x_, FixedInt y_): x{x_}, y{y_} {}
+
+        constexpr FixedPoint operator + (FixedPoint other) const { return FixedPoint{x + other.x, y + other.y}; }
+        constexpr FixedPoint operator - (FixedPoint other) const { return FixedPoint{x - other.x, y - other.y}; }
+        constexpr FixedPoint operator * (FixedInt other) const { return FixedPoint{x * other, y * other}; }
+
+        // NOTE the explicit casts - Coord is int32_t, which is a distinct type from int on some of the supported platforms, in which case its conversion to FixedInt would be ambiguous (int or float)
+        constexpr FixedPoint operator + (Point other) const { 
+            return FixedPoint{x + FixedInt{static_cast<int>(other.x)}, y + FixedInt{static_cast<int>(other.y)}}; 
+        }
+        constexpr FixedPoint operator - (Point other) const { 
+            return FixedPoint{x - FixedInt{static_cast<int>(other.x)}, y - FixedInt{static_cast<int>(other.y)}}; 
+        }
+
+        constexpr FixedPoint & operator += (FixedPoint other) {
+            x += other.x;
+            y += other.y;
+            return *this;
+        }
+
+        /** Rounds the fixed point coordinates to the nearest whole pixel.
+         */
+        constexpr Point round() const { return Point{x.round(), y.round()}; }
+
+    }; // rckid::FixedPoint
 
     class Point3D {
     public:

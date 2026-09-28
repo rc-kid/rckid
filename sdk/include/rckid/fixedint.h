@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 #include <platform.h>
 #include <rckid/error.h>
 
@@ -15,7 +17,15 @@ namespace rckid {
         static constexpr uint32_t FRACTION_HALF = 1 << (FRACTION_BITS - 1);
 
         constexpr FixedInt() = default;
-        constexpr FixedInt(int value): value_{value << FRACTION_BITS} {}
+        /** Creates fixed int from an integer value. 
+         
+            NOTE this is a template over all integral types on purpose - Coord is int32_t, which is a distinct type from int on some of the supported platforms and a plain FixedInt(int) constructor would make its conversion ambiguous with the float constructor below.
+         */
+        template<typename T, typename = std::enable_if_t<std::is_integral_v<T>>>
+        constexpr FixedInt(T value): value_{static_cast<int32_t>(value) << FRACTION_BITS} {}
+        /** Creates fixed int from separate integer and fractional parts, where the fraction is expressed in the units of 1 / (1 << FRACTION_BITS).
+         */
+        constexpr FixedInt(int value, uint32_t fraction): value_{static_cast<int>((value << FRACTION_BITS) + fraction)} {}
         constexpr FixedInt(float value): value_{static_cast<int>(value * static_cast<float>(1 << FRACTION_BITS))} {}
         constexpr FixedInt(FixedInt const &) = default;
 
@@ -88,6 +98,14 @@ namespace rckid {
         }
 
         constexpr int32_t raw() const { return value_; }
+
+        /** Creates fixed int from its raw representation, which is what raw() returns. Useful for serialization.
+         */
+        static constexpr FixedInt fromRaw(int32_t rawValue) {
+            FixedInt result;
+            result.value_ = rawValue;
+            return result;
+        }
 
     private:
 
