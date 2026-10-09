@@ -312,6 +312,9 @@ namespace rckid {
         }
 
         void render() override {
+            // wait for next frame to keep steady FPS
+            display::waitVSync();        
+            // render the canvas column by column
             renderCol_ = width() - 1;
             hal::display::update([this](Color::RGB565 * & buffer, uint32_t & bufferSize) {
                 if (renderCol_ < 0) {
