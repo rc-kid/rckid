@@ -1,0 +1,459 @@
+# do Language
+
+The `do` language is the language that powers the kidDo's dynamic execution system. The language is designed to be simple to learn and use, especially with the on-device editors. 
+
+## Lexical
+
+Instead of symbollic or keyword based block delimiters, _doLang_ uses indentation for block nesting as this provides cleaner mapping to the chevron based editors. Whitespace in any other position that the beginning of the line is ignored. 
+
+Comments start with `#` characters and are always single line, i.e. from the comment character to the end of the line.
+
+### Literal Values
+
+Boolean values `true` and `false` are available. Text must be enclosed in double quotes (`"`) with standard support for escape characters (`\n`, `\r`, `\t`, `\\`, `\"`) and character encoding `\imm` where `imm` is valid natural number immediate.
+
+Numbers can be entered in either integer, or floating point notation, but both are stored internally as rational numbers. Rational values cannot be entered as immediate values, but can be constructed via the division operator, e.g. `2/3` for two thirds, etc. Floating points will be converted to their rational representation, i.e. `1.567` will become `1567/1000`.
+
+Decimal, hexadecimal `0x`, binary `0b` and octal `0o` values are supported for integers. Underscore can be used to separate thousands and their multiplies, i.e. `1_000_000`.
+
+As there is no character type, single characters can be represented as text values of length 1. 
+
+### Keywords
+
+The following are reserved keywords and cannot be used as identifiers:
+
+    enum, let, const, fun, bool, num, true, false
+
+> TODO and others
+
+## Built-in Types
+
+_doLang_ supports rational numbers, boolean values, text strings and simple enumerations as primitive types. Generic arrays, maps and tuples are supported as well. Contrary to mainstream languages, floating point values are *not* supported. 
+
+### `num`
+
+The basic numeric types. All numbers in the language are rational numbers underneath. Uses the `/` (division) character to differentiate between numerator and denominator. This works nicely as the division is *exactly* what constructs the rational number. 
+
+When the numbers are printed or visualized, the same notion is used, i.e. `3/4`. Note that this conflicts with the operator precedence, i.e. `1 + 3/4` read from left to right would evaluate to `1.0` instead of the "obvious" `1.75`. In the chevron based editors, this can be fixed by having the `3/4` as immediate value inside a single chevron, while at the token level and above, parentheses must be added around the value.
+
+An iconic representation of a number is the number itself. 
+
+> I am thinking as an extension, very small numbers can be displayed as the number of the dots.
+
+### `bool`
+
+Boolean values, `true` or `false`.
+
+### `text`
+
+The "string" type for the language, uses double quotes. Everything is UTF-8 encoded. 
+
+### `enum`
+
+_doLang_ supports simple enums (similar to C++ `enum class`) with named options, but without an ability of the options to contain values. Keyword `enum` is used to declare new enum types and distinct enum values are separated by `|`:
+
+    enum Btn = 
+        Up | Down | Left | Right | A | B | Select | Start
+
+To specify enum values one can either use the `EnumName.Value` syntax, or can use `Value` only for shorthand. Note that this does not make the value names available in global scope in general as those values can only be used when assigning or comparing the enum.
+
+### `tuple`
+
+Tuple is sequence of *named* values:
+
+    let t : ( foo : num, bar : num) = ( foo = 1, bar = 56)
+
+### `array`
+
+A simple array. Array is generic so we can have arrays of other types and even arrays of arrays. Arrays are created with `[]`, i.e. :
+
+    let a : [num]
+
+All types in the array have to be identical. Type inference can be used where the type of the first item will be the type all types of the array. Arrays are growable and shrinkable and support a few methods themselves.
+
+Inline array initialization is possible with the `[]` parentheses as well:
+
+    let a = [1, 2, 3]
+
+### `map`
+
+This is the associative array. Generic on key and value. Maps are created with `{}`, i.e. the following is a map from number to text:
+
+    let m : {num, text}
+
+All types in the map have to be identical. Type inference can be used from the first type. The `{}` parentheses can also be used for inline initialization, such as:
+
+    let m = {
+        1 = "foo",
+        2 = "bar",
+    }
+
+### Special value types
+
+_doLang_ supports a variety of special purpose value type, but object-like types, such as `Point`, `Color`, etc. They can be used the same way user defined objects can be, but they are *not* user defined objects, cannot be inherited from, cannot have extra methods created, etc. And unlike the user defined types, those are value types, i.e. passed, returned and assigned by value.
+
+## Functions
+
+Functions can be either named:
+
+    fun myFirstFunction(arg : num) =
+        ...
+
+or anonymous:
+
+    let a : fun(arg : num) =
+        ...
+
+If the function returns value, the `->` notation is used, e.g.:
+
+    fun min(a : num, b: num) -> num = 
+        if a <= b
+            return a
+        else
+            return b
+
+When the `->` part is omitted the function type is expected to not return anything (`void` in C/C++). Note that contrary to most mainstream languages, names of the arguments are technically part of the function _type_. This means that the following code is valid:
+
+    let inc : fun(x : num) -> num
+    inc = 
+       return x + 1
+
+However, it is also possible to rename the argument values by providing new function definition as part of the assignment, as long as the function definitionis compatible. So continuing the example from above, one can write:
+
+    inc = fun(a : num) -> num
+        return a + 1
+
+Since the function type is already known from `a`'s definition, type inference can be used and a shorter version can be typed:
+
+    inc = fun(a)
+        return a + 1
+
+Functions can have default values for some of their arguments, in which case those do not have to be specified when calling a function. The default value is part of the _type_. When a function is called, arguments can also be provided using their names as per the type, i.e. we can call all of the `inc` functions from above using this:
+
+    inc(x = 56)
+
+### Overloading
+
+Functions can be overloaded, i.e. single function name can be used with different argument types and arities. Similar to mainstream programming languages, overloading on the return type alone is *not* allowed. 
+
+## Events
+
+Events are like functions in the sense that they can be called like a function and they can be assigned functions. The difference is that an event can be assigned multiple functions. When the event is called, *all* the associated functions (handlers) will be called as well, in the order in which they were added to the event.
+
+Events can either be used as types, i.e.:
+
+    let a : event(a : num, b : num) 
+
+Or as named events inside objects. Note that named events are onky available in object definitions, not in anonymous tuples:
+
+    type Object = (
+        field1 : num,
+        event onSomething(a : num) -> num
+    )
+
+Like functions, events can return values, or nothing (`->` missing) and they may even provide default values for their arguments. 
+
+Unlike functions, when an event is assigned a function, that function is *added* to the event:
+
+    let a : event(a : num, b : num) 
+    a =
+        ... # first
+    a = 
+        ... # second
+
+    a(1, 2) # both first and second will be called
+    
+Events use value matching to allow for conditional dispatch, i.e. unlike the example above, consider the following:
+
+    let a : event(a : num, b : num) 
+    a =
+        ... # first
+    a = fun(a, 56)
+        ... # second
+
+    a(1, 2) # only first will be called
+    a(1, 56) # first and second will be called
+
+> Should I add the ability to clear the event from all its handlers? I do not wish to clear particular event handlers from the event, but maybe clearing them all is useful.
+
+## Objects
+
+User defined object types, which must always be named and may contain fields. Note that an object is, in its simplest form just a named tuple, which is reflected in the declaration syntax:
+
+    type ObjectName = (
+        field1 : num = 67,
+    )
+
+When the field is event, the canonical declaration is using the `event` keyword, which is a shorthand for actual type definition as shown below
+
+    type ObjectWithEvent = (
+        field1 : num = 67,
+        event onDone(status : num), # shorthand
+        eventField : event(status : num), # long form
+    )
+
+Every object has default constructor which assigns the fields with the values provided at their declaration (or their default constructors transitively). Fields of an object are accessed with the `.` notation.
+
+> There are no visibility specifiers for the language, everything is public. I might consider adding them later, but for now I do not see a need for them in a teaching language.
+
+### Methods
+
+The classic object definition only specifies the object's fields. Object methods are defined outside of the object itself, similar to how functions are defined, but with the following extras:
+
+- when declared, the method's name is `ObjectType.MethodName`
+- all methods have _implicit_ `self` argument that *must* be used to access the field members
+
+So for example:
+
+    type Complex = (
+        re : num = 0,
+        im : num = 0,
+    )
+
+    fun Complex.increaseBy(other : Complex) =
+        self.re += other.re
+        self.im += other.im
+
+The out-of-declaration syntax is useful so that functionality of objects can be extended without touching the objects themselves, i.e. a child may extend say a sprite with method functionality at any point.
+
+### Inheritance
+
+Object can inherit from others. Onky single inheritance is supported and _doLang_ does *not* support virtual methods, meaning that while objects can be extended, their base functionality cannot be changed. A child object can however be used in place of its parent object types:
+
+    type FancyComplex extends Complex = (
+        fancy : num,
+    )
+
+### Constructors
+
+To create an object, the name of the object type is used as if it were a function. Empty arguments will create the object using the default initialization defined for its fields (either via `=`, or if absent via the default initialization for their respective type). Alternatively, a keyword style arguments can be provided as if the type was a function call. Only keyword style arguments are allowed:
+
+    let x = Complex() # re == 0, im == 0
+    let i = Complex(im = 1) # re == 0, im == 1
+
+User defined constructors are not supported, instead free functions can be defined with intended maning, such as:
+
+    fun Im(a : num) -> Complex =
+        return Complex(im = a)
+
+    let a = Im(56)
+
+However, this simple arcitecture makes construction of invalid object states possible. Canonical example of this is the rational number - and even though it makes no sense in _doLang_ context where rational is built-in - we will thus use it to illustrate as well. The problem is that certain values are invalid without fallback (denominator being zero), while some must be normalized. This can be done by specifying a `constructor` block in the type definition, where the block is a function that is guaranteed to run after the object is created:
+
+    type Rational = (
+        n = 0,
+        d = 1,
+        constructor = 
+            test self.d != 0
+            if self.d < 0
+                self.d *= -1
+                self.n *= -1
+            self.normalize()
+    )
+
+    fun Rational.normalize() =
+        ...
+
+Constructor blocks can only be used in named objects, not anonymous pairs.
+
+## Binding
+
+_doLang_ supports two binding types: `let` and `const`. For assignments, function arguments and return values, objects, arrays and maps are passed by reference, while the other types are passed by value. This *cannot* be changed in the language.
+
+### `let`
+
+`let` creates new variable. When a let bound variable is assigned, it always performs a deep copy.
+
+    let mySprite = globalSprite
+    # mySprite and globalSprite are two different sprite objects
+
+### `const`
+
+`const` is a let binding for which assignment *after* the initial definition is not allowed. Note that this behaves differently based on whether the const object is primitive, or not. For primitive types the `const` binding simply means the value of the variable will never change, and is useful for creating constants, etc:
+
+    const pi = 3.14
+
+For objects (and arrays and maps) the meaning is slightly different and it means the identity of the object will never change, but the contents of the object might. This is very useful for creating global objects, such as:
+
+    const device = Device()
+    # now device can have fields changed, etc., but it will always point to the device object
+
+### Cloning
+
+Because objects, arrays and maps are always passed by reference, any assignment creates an alias. In cases this is not wanted, and we do want a copy of the object, the `clone` keyword can be used, which instead of by reference assignment triggers a deep copy:
+
+    let a = clone b # assuming b is an object array or map
+
+## Operators
+
+Unlike traditional languages, _doLang_ puts operators into different groups, which are treated differently. The operator groups are ordered as follows:
+
+- assignment operators (their precedence is enforced statically as they can only appear at expression root, one per expression)
+- logical operators
+- comparison operators
+- arithmetic operators
+
+This means the following groupings are possible:
+
+    let a = 2 + 3 < 7 and 8 > 10
+
+### Assignments
+
+The following assignment operators are supported:
+
+    =, +=, -=, *=, /=, %=
+
+Assignment operators work as expected, but restrictions are placed on their placement as they can only be at the root position of standalone expressions or inside let and const statements. This also enforces only one assignment operator per expression. 
+
+> Note that the assignment inside `fun`, `enum` and `type` definitions is not really assignment operator, but part of the specific rules with distinct semantic meaning.
+
+### Logical Operators
+
+Logical operators use their keyword forms, i.e. unary `not` and binary `and`, `or` and `xor`. Logical operators have no precedence between themselves and can be chained left to right:
+
+    a or b and c or d # means ((a or b) and c) or d
+
+Note that because of the lack of operator precedence inside the group, the following will *not* evaluate as expected:
+
+    a or b and b or c # means ((a or b) and b) or c, not the mainstream (a or b) and (b or c)
+
+### Comparisons
+
+The following comparison operators are supported:
+
+    ==, !=, <, <=, >, >=
+
+Comparison operators always evaluate to boolean values and can be "chained", i.e.: `2 < a < 10` is equivalent to `(2 < a) and (a < 10)`, which reflects how kids learn them in mathematics.
+
+### Arithmetic Operators
+
+Arithmetic operators include the standard set `+`, `-`, `*` and  `/`. The operators follow the standard precedence, i.e. division and multiplication have priority over addition and subtraction:
+
+    let a = 2 + 3 * 4 # a is 14
+
+### Indexing Operator
+
+Special indexing operator `[]` exists for both arrays and maps:
+
+    array[67] # returns 67th element of the array
+
+    map["key"] # returns value corresponding to the key
+
+### Text concatenation
+
+The `+` operator can be used with text values for simple concatenation. Text values can be concatenated with other values as well and those will be pretty printed.
+
+## Statements
+
+### `if`
+
+The `if` statement supports conditional execution and can be optionally followed by else case. There is a special case of the statement that deals with the index operators:
+
+    if let a = map["key"]
+        ... # a is bound to value of key in map, which is guaranteed to exist
+    else
+        ... # key not in map
+
+Optionally, `let` binding can be used as well in this context. This is the only `if` form where assignment operator is allowed inside the if expression.
+
+### `while` and `do-while`
+
+Those are simple loops available in the language. Their syntax is fairly straightforward:
+
+    while a < 10
+        a += 1
+
+    do
+        a += 1
+    while a < 20
+
+The loops also support `break` and `continue` statements, which do what they are expected to, i.e. stop the loop immediately and move to the next iteration respectively. 
+
+### `for` loop
+
+The `for` loop serves a double duty. First the sequence iterator, which automatically creates let binding of the induction variable. 
+
+    for i in 1 <= i < 100
+        ... # simple loop with induction variable
+
+    for i in 1 <= i < 100 step 2
+        ... # custom step
+
+This notation neatly solves the inclusivity or exclusivity of the bounds, but has limitations such as both lower and upper bounds must be present and the middle value *must* be the induction variable itself.
+
+Then a for-each variant for arrays and maps:
+
+    for value in array
+        ...
+
+    for value, index in array:
+        ...
+
+    for key in map.keys
+        ...
+
+    for value in map
+        ...
+
+    for key, value in map
+
+During the for each loop variants, any access to the arry or map itself other than the element is *not* allowed.
+
+For loop supports the `break` and `continue` statements as well.
+
+### `match`
+
+This is _doLang_'s switch on pattern-matching steroids. No fallback between different cases is allowed and each case is its own block:
+
+    match value
+        case a
+            ...
+        case b
+            ...
+        else
+            ...
+
+The `else` case is executed if *none* of the cases above applies. The case statements must be disjunctive, i.e. for any value, only one can apply. Case descriptors support extremely simple form of pattern matching to existing values, similar to that of the event handlers:
+
+- primitive values can be matched by their values
+- arrays and tuples can be matched by their contents
+
+As an example:
+
+    match complexTuple
+        case (re : 1, im):
+            ... # we now have re and im in scope
+
+    match array
+        case [1, a, b]:
+            ... # we have a and b in scope
+
+## `return`
+
+Returns from the function, optionally returning value of required type. 
+
+## `write`
+
+`write` is a simple statement that allows debug printing to the output (serial to usb on the device usually). It is followed by a text expression.
+
+## `test`
+
+`test` followed by a boolean evaluating expression is _doLang_'s version of assertion. Upon test failure, the program is paused and user is informed of the invariant problem.
+
+## Type Inference
+
+While _doLang_ uses static typing and every binding as well as function can be typed, type inference is heavily used to avoid the need for writing the types. Crucially, let bindings and tuple and object fields do not have to be explicitly typed if their type can be inferred from the assignment (which is most cases, except an empty array or map). 
+
+When declaring new functions, the functions themselves must be typed explicitly, but note that function definition is fairly complex task already so the need for explicit typing is likely ok.
+
+## Standard Library
+
+- mod(x, y)
+- pow(x, y)
+- sqrt(x)
+
+
+
+# Appendix A - Future Extensions
+
+- byte type and bitwise operators
