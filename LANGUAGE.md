@@ -132,6 +132,16 @@ Functions can have default values for some of their arguments, in which case tho
 
     inc(x = 56)
 
+### Optional return types
+
+A function return type can be declared as `optional`, which means the function may either return value of the given type, or `None`. Functions like this can only even be called using the `if let =` syntax and they serve as a primitive maybe type - i.e. functions (including user defined ones) can return it and we force the matching and check, but the optional values cannot be propagated, or stored. This makes the feature a lot simpler to understand:
+
+    fun safeDivide(a : num, d : num) -> optional num = 
+        if d != 0
+            return a / d
+        else 
+            return None
+
 ### Overloading
 
 Functions can be overloaded, i.e. single function name can be used with different argument types and arities. Similar to mainstream programming languages, overloading on the return type alone is *not* allowed. 
@@ -284,20 +294,7 @@ Because objects, arrays and maps are always passed by reference, any assignment 
 
     let a = clone b # assuming b is an object array or map
 
-## Operators
-
-Unlike traditional languages, _doLang_ puts operators into different groups, which are treated differently. The operator groups are ordered as follows:
-
-- assignment operators (their precedence is enforced statically as they can only appear at expression root, one per expression)
-- logical operators
-- comparison operators
-- arithmetic operators
-
-This means the following groupings are possible:
-
-    let a = 2 + 3 < 7 and 8 > 10
-
-### Assignments
+## Assignments
 
 The following assignment operators are supported:
 
@@ -307,29 +304,43 @@ Assignment operators work as expected, but restrictions are placed on their plac
 
 > Note that the assignment inside `fun`, `enum` and `type` definitions is not really assignment operator, but part of the specific rules with distinct semantic meaning.
 
-### Logical Operators
+## Operators
 
-Logical operators use their keyword forms, i.e. unary `not` and binary `and`, `or` and `xor`. Logical operators have no precedence between themselves and can be chained left to right:
+_doLang_ follows standard operator precedence so as not to confuse kids with specific evaluation rules, namely:
 
-    a or b and c or d # means ((a or b) and c) or d
+- field access operator `.` (or enum value selection)
+- indexing operator `[]`
+- unary `-` and unary `not`
+- multiplication and division (`*`, `/`)
+- addition and subtraction (`+`, `-`), text concatenation (also `+`)
+- comparison operators (`<`, `<=`, `>`, `>=`)
+- equality comparisons (`==`, `!=`)
+- logical `or`
+- logical `and`
 
-Note that because of the lack of operator precedence inside the group, the following will *not* evaluate as expected:
+Short-circuiting of logical operators is supported. 
 
-    a or b and b or c # means ((a or b) and b) or c, not the mainstream (a or b) and (b or c)
+The comparison operators can be chained, i.e. one can write the following:
 
-### Comparisons
+    A < B < C
 
-The following comparison operators are supported:
+which is equivalent to the following code:
 
-    ==, !=, <, <=, >, >=
+    let a = A # evaluate the values exactly once
+    let b = B
+    let c = C  
+    a < b and b < c
 
-Comparison operators always evaluate to boolean values and can be "chained", i.e.: `2 < a < 10` is equivalent to `(2 < a) and (a < 10)`, which reflects how kids learn them in mathematics.
+The equality (`==`, not the inequality `!=`) operator can also be chained i.e.:
 
-### Arithmetic Operators
+    A == B == C
+    # is identical to
+    let a = A # evaluate the values exactly once
+    let b = B
+    let c = C  
+    a == b and b == c
 
-Arithmetic operators include the standard set `+`, `-`, `*` and  `/`. The operators follow the standard precedence, i.e. division and multiplication have priority over addition and subtraction:
-
-    let a = 2 + 3 * 4 # a is 14
+Comparison operators only work on numbers. Equality operators work on all types, comparing the value for value types and the object identity for the reference types (objects, arrays and maps).
 
 ### Indexing Operator
 
@@ -347,14 +358,21 @@ The `+` operator can be used with text values for simple concatenation. Text val
 
 ### `if`
 
-The `if` statement supports conditional execution and can be optionally followed by else case. There is a special case of the statement that deals with the index operators:
+The `if` statement supports conditional execution and can be optionally followed by else case. There is a special case of the statement that deals with the `optional` returning functions and map index operator:
 
     if let a = map["key"]
-        ... # a is bound to value of key in map, which is guaranteed to exist
+        ... # a is bound to value of key in map, if one existed
     else
-        ... # key not in map
+        ... # key not in map (the index operator returned None)
 
-Optionally, `let` binding can be used as well in this context. This is the only `if` form where assignment operator is allowed inside the if expression.
+This is the only `if` form where assignment operator is allowed inside the if expression.
+
+`if` statement can also be used as an expression, i.e. one can write for instance:
+
+    fun min(a : num, b : num) -> num =
+        return if a <= b a else b
+
+In the expression form the `if` statemet *must* include the `else` clause and only a single expression is allowed in either true or false case. Both expressions must return same type. 
 
 ### `while` and `do-while`
 
@@ -415,7 +433,7 @@ This is _doLang_'s switch on pattern-matching steroids. No fallback between diff
 
 The `else` case is executed if *none* of the cases above applies. The case statements must be disjunctive, i.e. for any value, only one can apply. Case descriptors support extremely simple form of pattern matching to existing values, similar to that of the event handlers:
 
-- primitive values can be matched by their values
+- primitive values can be matched by their values, including enums
 - arrays and tuples can be matched by their contents
 
 As an example:
@@ -445,6 +463,18 @@ Returns from the function, optionally returning value of required type.
 While _doLang_ uses static typing and every binding as well as function can be typed, type inference is heavily used to avoid the need for writing the types. Crucially, let bindings and tuple and object fields do not have to be explicitly typed if their type can be inferred from the assignment (which is most cases, except an empty array or map). 
 
 When declaring new functions, the functions themselves must be typed explicitly, but note that function definition is fairly complex task already so the need for explicit typing is likely ok.
+
+## Libraries & Code Organization
+
+Libraries can be imported using the `use` statement, which can only be used at top level:
+
+    use libraryName
+
+This loads the library of given name from the system and makes its functions and objects available to the current file. A library is nothing else than a _doLang_ file. Libraries can come from the project itself (then file `libraryName.do` must exist at the same level as the file in which the `use` statement is), or system libraries, in which case the file must exist in the system's libraries folder, or be known to the runtime. Local libraries take precedence over system ones.
+
+Because of the on-device limitations, _doLang_ programs are expected to be single `.do` files as the editors allow the user to browse & select the function, type and event handler definitions one by one. The practice should be that reusable code should become libraries, while the full application code, i.e. all that is intended for the application alone should be in the single `.do` file. 
+
+_doLang_ does not suppport namespaces. The reason for this is that namespaces complicate things and force kids thing about ambiguity resolution. Instead _doLang_ does not allow ambiguity to exist at all, which is probably fine as the projects in the language are not expected to be enormous.
 
 ## Standard Library
 
