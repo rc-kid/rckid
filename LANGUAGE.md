@@ -132,6 +132,8 @@ Functions can have default values for some of their arguments, in which case tho
 
     inc(x = 56)
 
+A function variable can be set to nothing by calling its `clear()` method. It also automatically casts to a boolean returning true if containing a handler, and false otherwise.
+
 ### Optional return types
 
 A function return type can be declared as `optional`, which means the function may either return value of the given type, or `None`. Functions like this can only even be called using the `if let =` syntax and they serve as a primitive maybe type - i.e. functions (including user defined ones) can return it and we force the matching and check, but the optional values cannot be propagated, or stored. This makes the feature a lot simpler to understand:
@@ -141,6 +143,10 @@ A function return type can be declared as `optional`, which means the function m
             return a / d
         else 
             return None
+
+### Capture
+
+Unnamed function is a closure that can capture local variables. Local variables are captured is if by creating identically named variables inside the closure and assigning to them the outside variables, i.e. primitive types and pairs by value, objects, arrays and maps by reference.
 
 ### Overloading
 
@@ -163,12 +169,12 @@ Or as named events inside objects. Note that named events are onky available in 
 
 Like functions, events can return values, or nothing (`->` missing) and they may even provide default values for their arguments. 
 
-Unlike functions, when an event is assigned a function, that function is *added* to the event:
+When an event is assigned a function, that function becomes is sole handler. But unlike functions, events also support the `+=` assignment, in which case the handler is *added* to the event:
 
     let a : event(a : num, b : num) 
-    a =
+    a +=
         ... # first
-    a = 
+    a += 
         ... # second
 
     a(1, 2) # both first and second will be called
@@ -176,15 +182,22 @@ Unlike functions, when an event is assigned a function, that function is *added*
 Events use value matching to allow for conditional dispatch, i.e. unlike the example above, consider the following:
 
     let a : event(a : num, b : num) 
-    a =
+    a +=
         ... # first
-    a = fun(a, 56)
+    a += fun(a, 56)
         ... # second
 
     a(1, 2) # only first will be called
     a(1, 56) # first and second will be called
 
-> Should I add the ability to clear the event from all its handlers? I do not wish to clear particular event handlers from the event, but maybe clearing them all is useful.
+### API
+
+Event can be called (fires the event), assigned to (adds the handler) or have its object-like methods called:
+
+- `event.clear()` clears all handlers registerd for the event.
+- `event.numHandlers() -> num` returns the number of handlers associated with the event
+
+Events implicitly cast to booleans, `false` if no handler, `true` if at least one handler is assigned.
 
 ## Objects
 
@@ -272,7 +285,7 @@ _doLang_ supports two binding types: `let` and `const`. For assignments, functio
 
 ### `let`
 
-`let` creates new variable. When a let bound variable is assigned, it always performs a deep copy.
+`let` creates new variable. When a let bound variable is assigned, the effect depends on the type. Primitive values and pairs are copied, while arrays, maps and objects will be referenced.
 
     let mySprite = globalSprite
     # mySprite and globalSprite are two different sprite objects
@@ -483,7 +496,12 @@ _doLang_ does not suppport namespaces. The reason for this is that namespaces co
 - sqrt(x)
 
 
+# Appendix A - Program Execution
 
-# Appendix A - Future Extensions
+There is no main function per se.
+
+
+# Appendix B - Future Extensions
 
 - byte type and bitwise operators
+
