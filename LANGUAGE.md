@@ -148,6 +148,8 @@ A function return type can be declared as `optional`, which means the function m
 
 Unnamed function is a closure that can capture local variables. Local variables are captured is if by creating identically named variables inside the closure and assigning to them the outside variables, i.e. primitive types and pairs by value, objects, arrays and maps by reference.
 
+Global variables do not need to be captured and can be referenced directly.
+
 ### Overloading
 
 Functions can be overloaded, i.e. single function name can be used with different argument types and arities. Similar to mainstream programming languages, overloading on the return type alone is *not* allowed. 
@@ -281,25 +283,32 @@ Constructor blocks can only be used in named objects, not anonymous pairs.
 
 ## Binding
 
-_doLang_ supports two binding types: `let` and `const`. For assignments, function arguments and return values, objects, arrays and maps are passed by reference, while the other types are passed by value. This *cannot* be changed in the language.
+_doLang_ supports three binding types: `let`, `const` and `global`. For assignments, function arguments and return values the following hold true and *cannot* be changed in the language:
+
+- objects, arrays and maps are passed by reference, 
+- the other types are passed by value.
+
+### `global`
+
+Declares new global mutable variable. Only valid at the top level. Syntactically `global` is identical to `let`, e.g.:
+    
+    global foo : num = 67 # type is optional if deducible from the assignment rhs
+
 
 ### `let`
 
-`let` creates new variable. When a let bound variable is assigned, the effect depends on the type. Primitive values and pairs are copied, while arrays, maps and objects will be referenced.
+`let` creates new local variable, only available inside functions and methods. When a let bound variable is assigned, the effect depends on the type. Primitive values and pairs are copied, while arrays, maps and objects will be referenced.
 
     let mySprite = globalSprite
     # mySprite and globalSprite are two different sprite objects
 
 ### `const`
 
-`const` is a let binding for which assignment *after* the initial definition is not allowed. Note that this behaves differently based on whether the const object is primitive, or not. For primitive types the `const` binding simply means the value of the variable will never change, and is useful for creating constants, etc:
+Declares constant primitive value (anything but object, array or map). Can be used in both global and local scopes (i.e. whenever `let` or `global` can be used). Value of a constant variable cannot be changed after the initial assignment.
 
     const pi = 3.14
 
-For objects (and arrays and maps) the meaning is slightly different and it means the identity of the object will never change, but the contents of the object might. This is very useful for creating global objects, such as:
-
-    const device = Device()
-    # now device can have fields changed, etc., but it will always point to the device object
+_doLang_ does not support constant objects, maps and arrays. 
 
 ### Cloning
 
