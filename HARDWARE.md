@@ -1,64 +1,65 @@
 # Hardware Design
 
-> This is hardware description of RCKid mk III (version 29/7/25 and above). For brief history and to clear any confusion, mk I was much larger, hand soldered version powered by Raspberry Pi Zero 2W and mk II was slightly slimmer version powered by RP2040 with 8bit parallel screen interface.
+> This is hardware description of RCKid mk IV (version 17/10/26 and above). For brief history and to clear any confusion, mk I was much larger, hand soldered version powered by Raspberry Pi Zero 2W and mk II was slightly slimmer version powered by RP2040 with 8bit parallel screen interface. MkIII used RP2350 for the CPU, but kept using the AtTiny3217 for the secondary always on IO MCU. 
 
 RCKid is based on the [RP2350B](datasheets/rp2350-datasheet.pdf) (80 pin QFN) and uses its requirement for external program flash chip as a feature by allowing swappable cartridges. This is the overall architecture of the system:
           
                                               +-----------------+
                             + --------+       | Cartridge       |
-                            | microSD |       | (flash, extras) |======\\                              
-                            +---------+       +-----------------+       \\ (analog audio input)
-                                   \\\\       ////                       \\                   
-                          <SPI/SDIO>\\\\     ////<8pin/HSTX,2/ADC,QSPI>  ||                        
-                                     \\\\   ////                         ||                 /---- speaker
-                                     ||||   ||||                         ||                /
-       +-----------+  <16bitMCU>   +-------------+     <I2S>       +---------------+      / (analog mono)
-       |  ST7789V  |===============|   RP2350B   |=================| NAU88C22GY    |------
-       | (Display) |               +-------------+                 | (audio codec) |_____   
-       +-----------+                     ||                   //===+---------------+     \ (analog stereo)
-              |                          ||                  //                           \  +------------+
-              | <PWM>                    ||                 //                             \-| 3.5mm jack |
-              | (Backlight)              ||================//                                +------------+
-               \                         ||
-                \                        || <I2C>     
-                 \                       ||           //======(buttons, 3x4 matrix)
-                  \               +-----------------+//
-                   \              |    ATTiny3217   |/
-                    \-------------| (IO, time, pwr) |----------(RGB)
-                             /----+-----------------+
-                            /           /|\        \     +-----------+
-             (rumbler)-----/     <I2C> // \\        \----| MCP73832  |----(battery)
-                          <PWM>       //   \\            | (charger) | 
-                            +----------+   +----------+  +-----------+
-                            | LSM6DSV  |   | LTR390UV |
-                            | (Accel)  |   | (light)  |
-                            +----------+   +----------+
+                            | microSD |       | (flash, extras) |                              
+                            +---------+       +-----------------+      
+                                   \\\\       ////                   
+                          <SPI/SDIO>\\\\     ////<8pin/HSTX,2/ADC,QSPI>
+                                     \\\\   ////                                    /- speaker
+                                     ||||   ||||                                   /   (analog mono)
+       +-----------+  <16bitMCU>   +-------------+  <I2S>  +---------------+      /
+       |  ST7789V  |===============|   RP2350B   |=========| NAU88C22GY    |------
+       | (Display) |---------------+-------------+         | (audio codec) |_____   
+       +-----------+ <PWM backlight>     ||           //===+---------------+     \   (analog stereo)
+                                         ||          //        \                  \  +------------+
+                                         ||         //          \                  \-| 3.5mm jack |
+                                         ||========//            \--(mic)            +------------+
+                                         ||
+                                         || <I2C>     
+                                         ||
+                                  +-----------------+
+                                  |    PY32F030     |
+                  (rumbler)-------| (IO, time, pwr) |======(buttons, 3x4 matrix)
+                                  +-----------------+
+                                    |||     |   \  \--- (RGB LED)
+                              <SPI> |||     |    \
+                                    |||     |     \---- (LED, sense)
+                                    |||     |    
+                            +----------+   +-----------+ 
+                            | SC7A20   |   | MCP73832  |---(battery)
+                            | (Accel)  |   | (charger) |
+                            +----------+   +-----------+
 
 Next to the control & logic elements above, there are also various power rails, their short description is below:
 
 - `VUSB` is the +5V coming from the USB port, active when USB is connected, used for charging
 - `VBATT` is the battery terminal 
-- `VCC` is the main system rail. This comes either from the battery, or from the USB when connected. Valid voltages are from 3v to 5v. This rail is measured by the AVR to determine battery status / USB presence and is fed to the 3 DC-DC converters below:
-- `3V3` and `IOVDD` are identical buck-boost converters to 3v3. The `3V3` rail is always on and powers the AVR, accelerometer, display backlight and rumbler. The `IOVDD` can be enabled by the AVR and powers the RP2350B, cartridge and audio system
-- `5V` is a charge pump to 5V required by the RGB lights (controlled by AVR)
+- `VCC` is the main system rail. This comes either from the battery, or from the USB when connected. Valid voltages are from 3v to 5v. This rail is measured by the IO MCU to determine battery status / USB presence and is fed to a DC-DC converter below:
+- `3V3` is the main system voltage, always on, 3.3V from DC-DC converter
+- `IOVDD` is 3V3 after a switch that powers the RP2350, Display, Cartridge, SD card and the audio system (i.e. the device)
 
 ## I2C Bus
 
-Most of the perihperals are connected to a single I2C bus. The pull-ups of the bus go to the `IOVDD` so that the bus is only working when the device is on. To make sure eveything works, before AVR turns `IOVDD` off, it emits `START` condition on the bus, which is followed by `STOP` condition transmitted right after `IOVDD` is enabled back. 
+The RP2350 uses I2C bus to communicate with the IO MCU and the audio codec chip. The I2C bus is powered from the `IOVDD` and so only works when the device is powered on. The IO MCU pulls the lines to ground when turning device off to prevent leakage.
 
 ### Sensors
 
-The only extra sensors in mkIII are the onboard acceleromeneter [LSM6DSV](datasheets/lsm6dsv.pdf) and ambient & UV light detector [LTR390UV](datasheets/LTR_390UV_Final_DS_V1_1.pdf). 
+The only extra digital sensor in mkIV is the onboard acceleromeneter [SC7A20](). This is a very basic cost effective accelerometer with no additional functionality. It is always on, powered from the `3V3` rail as the IO MCU. It communicates with it using SPI to stay clear of the I2C bus that does not work when the device is turned off.
 
-LSM6DSV is relatively simple to use (similar to the discontinued BMI160 used in mkII). As it is also capable of working as a pedometer, it is always on, connected to the `3V3` rail. The accelerometer has its interrupt connected to AVR so that we can intercept taps, steps, etc.
+Furthermore several of the devices connected to the I2C bus also supoort temperature measurements (including the PY32F030 itself).
 
-The ambient light detector does not have its interrupt pin connected and must be polled.
-
-Furthermore several of the devices connected to the I2C bus also supoort temperature measurements (including the AVR itself).
+> The ambient light detector from previous versions has been replaced with a reverse connected single LED controlled by the IO MCU. 
 
 ## Power Management
 
-Power management consists of a standalone Li-Ion battery charger [MCP73832](datasheets/MCP73832.pdf) and a power path via a MOSFET and diode that enables DC power when connected, and battery otherwise. MCP73832 *must* be used as the AVR runs on 3.3V while the charger runs at 5V so outputting charger high when charge is complete as the 73831 does could destroy the chip. There is no such danger with MCP73832 as the STAT pin behavior is HiZ when not charging and low when charging.
+Power management consists of a standalone Li-Ion battery charger [MCP73832](datasheets/MCP73832.pdf) and a power path via a MOSFET and diode that enables DC power when connected, and battery otherwise. 
+
+> MCP73832 *must* be used as the IO MCU runs on 3.3V while the charger runs at 5V so outputting charger high when charge is complete as the 73831 does could destroy the chip. There is no such danger with MCP73832 as the STAT pin behavior is HiZ when not charging and low when charging.
 
 The charger pinout is as follows:
 
@@ -67,51 +68,68 @@ The charger pinout is as follows:
 - `VBAT` goes to the battery
 - `PROG` is connected to `2k2` resistor for `???` max charge current
 
-The AVR monitors the `VCC` rail (after power path), which enables it to determine battery voltage when powered from battery (value <= `4.2V`) and if USB is connected (VCC above `4.2V`). This is done through a `100k/200k` voltage divider that is always on. This seeps negligible battery power and is above the `50k` input impedance of the AVR adc, but we compensate for this by longer capture times. Charger status is monitored via the `STAT` pin that is connected to a `100k/200k` voltage divider on the `VUSB` (so that it is pulled high at `3v3` when USB connected, `0` otherwise). As per the datasheet, the `STAT` pin is floating when not charging and goes to `0` while charging. This gives the following power scenarios:
+The IO MCU monitors the `VCC` rail (after power path), which enables it to determine battery voltage when powered from battery (value <= `4.2V`) and if USB is connected (VCC above `4.2V`). This is done through a `100k/200k` voltage divider that is always on. This seeps negligible battery power, and while being rather hard impedance for ADC input, the voltage signal is very slow changing so we should be fine. Charger status is monitored via the `STAT` pin that is connected to a `100k/200k` voltage divider on the `VUSB` (so that it is pulled high at `3v3` when USB connected, `0` otherwise). As per the datasheet, the `STAT` pin is floating when not charging and goes to `0` while charging. This gives the following power scenarios:
 
 - `VCC<=4.2V` battery is connected, `STAT` should be 0 (but can really be ignored)
-- `VCC>4.2V` and `STAT` is low means USB is connected and the device is charged
-- `VCC>4.2V` and `STAT` is high means USB is connected, but charging is done
+- `VCC>4.2V` and `STAT` is low means USB is connected and the device is charging (pulled down by the charger IC)
+- `VCC>4.2V` and `STAT` is high means USB is connected, but charging is done (via the ladder)
+
+> TODO add 0.1uF cap from VCC sense midpointto gnd to smooth the measurements.
 
 ### Li-Po Battery
 
-By default the device runs from a LiPo battery such as [503759](https://www.tme.eu/cz/details/aky-lp503759/akumulatory/akyga-battery/aky0107/).
+By default the device runs from a LiPo battery such as [503759](https://www.aliexpress.com/item/1005007102975858.html). Important is the JST-PH2 connector and cable length which make it simple to use the battery with the PCB and case dimensions. Those batteries come at different capacities from 1200 to 1400mAh, we are assuming the lowest - 1200mAh for the rest of the document.
 
-### Running from AAA batteries
+The battery supports continuous discharging at 1C. 
 
-The device also supports a different configuration when it can be powered via 3 `AAA` batteries in series. This gives maximum voltage of `4.5V` (for alkaline, will be around `3.6` for NiMH) and minimum voltage can go *very* low for alkaline, or about `3V` for NiMH. In those settings the cutoff voltage is defined by the minimal input voltage of the DC-DC regulators, and particularly the `5V` charge pump, whose minimal voltage is `2.7V`
+### Power Envelope
 
-To enable the `AAA` mode, the charger chip simply should not be soldered. 
+Below is the expected power envelope for the system:
 
-> If the batteries are replaced while the device is powered by USB, there is no data loss wrt timekeeping, or user information. 
+- 100mA for the RP2350B (overclocked 250MHz, both cores)
+- 100mA for the display (full brightness)
+- 150mA for the audio (speaker at full reasonable volume)
+- 72mA for all white RGB leds powered at 25%
+- 500mA for the cartridge (budget)
 
-> The plan is to use clip-on contacts on the batteries for lowest possible clearance, those will be added to two extra pcbs that will slide to the extended case and connected by wires to the +/- BATT terminals
+This gives total 1A per the device with some slack. 500mA for the device itself and 500mA for the cartridge. That said, the normal budget is a *lot* lower. Bench testing shows draw at the 3.7V to be around 130mA for normal use without fancy cartridges.
 
-### 3.3V Buck-Boost converters
+> TODO verify this number with the newest prototype.
 
-The design uses two identical step down converters - [TPS631000](datasheets/tps631000.pdf). This is newer chip than the original designs in mkII and devboard and provides greater efficience and range. As per its datasheet, it is capable of providing `800mA` in boost mode (and `1.2A` in buck), which is within the limits (500mA cartridge + 300mA for RP2350B and audio is the limiting factor here). 
+### 3.3V Buck-Boost converter
 
-The converter is variable output resistor configuration straight from the datasheet is used for `3v3` output. So is the inductor and the recommended layout. The two DC-DC blocks are almost identical with the exception of the on switch, which for `3v3` is tied to input voltage for always enable, while for the `IOVDD` is pulled down with `100k` resistor for default off behavior and will be pulled high to `3v3` by the AVR when enabled (this is well above the logic high threshold for the chip at `1.2V`. The chip tolerates up to `7V` on the `EN` pin regardless of the input voltage, so even with very low VCC (technically we can go as low as `2.4V` the chip will work).
+Single DC-DC buck-boost converter is used - [TPS631000](datasheets/tps631000.pdf). As per the datasheet, the converter is capable of 1.5A of 3v3 output from voltages as low as 2.7V, which is above the 1A we need from the power budget. At this level the efficiency is at 90%, we overshoot the 1C discharge limit by 2%:
 
-### 5V Charge Pump
+    1000 / (3.0 / 3.3) * 0.9 = 
+    1000 / 0.818181818 =
+    1222
 
-We are using [HX4002](datasheets/hx4002.pdf) charge pump, same as in mk II. The pump is capable of delivering in excess of 240mA for 3.6V input voltage (it runs from VCC, which is stepped up above 3.3v). It only powers the [RGB leds](datasheets/rgb.pdf), which take at most 5mA per channel, which gives us 120mA when at full power.
+This is acceptable as the absolute worst case scenario since the budget very generous.
 
-### Power Consumption
+The converter is variable output resistor configuration straight from the datasheet is used for `3v3` output. So is the inductor and the recommended layout. The converter is always on as it powers the IO MCU, accelerometer and other always on circuitry. 
 
-To share the load between the two DC-DC converters, teh display backlight and the rumbler (which can separately be turned off) are connected to the `3V3` rail. The `TPS63001` is very effective at high loads, so we assume `90%` efficiency (will be a bit higher in reality). The calculation for the maximum power that can be drawn from the battery at the lower acceptable level (`3V`) is thus:
+### IOVDD Switch
 
-    MAX = (800 * 3.3 / 3.0 / 0.9 * 2) + (240 * 5 / 3 / 0.8)
-    MAX = 1955 +                        500
-    MAX = 2455 [mA] @ 3V
+To enable the device, the IO MCU must power on the `IOVDD` rail that powers the RP2350, cartridge, display and audio subsystems. Since this powers also the cartridge, which is external to the device, this is done by the [TPS2553D](datasheets/tps2553d.pdf) USB switch, which is rated up to 1.7A. 
 
-For a more realistic example, let's assume full utilization of the `IOVDD` converter (i.e. 300mA for the RP2350 and 500mA for the cartridge), 110mA utilization for the `3V3` converter (100mA brightness, 10mA for rumbler as mostly off), and 50mA for the RGBs (red at 50%):
+The switch also functions as a current limiter, set to the following value (page 15):
 
-    REAL_MAX = (800 * 3.3 / 3 / 0.9) + (110 * 3.3 / 3 / 0.9) + (50 * 5 / 3 / 0.8)
-    REAL_MAX = 977                    + 134                   + 104
-    REAL_MAX = 1215 [mA] @ 3V
+    Inorm = 22980 / ( Rlim ^ 0.977)
+    Inorm = 22980 / ( 27 ^ 0.977)
+    Inorm = 22980 / 25.03
+    Inorm = 918 [mA]
 
-This is within the `1C` discharge rate for the battery, which is good. 
+Which is around the limit expected from the cartridge, display, RP2350 and audio. This ensures that cartridge shorts are protected as well as large current inrush on poweron for large capacitance cartridges.
+
+The switch is connected to the IO MCU via two pins, one for control and one for reading a fault state so the IO MCU can determine cartridge problem and act accordingly.
+
+### Neopixels
+
+The device uses 8 neopixel RGB LEDs [WS2812B](datasheets/WS2812B.pdf), which offer three significant benefits over the most common WS2812 parts:
+
+- they support running from 3.3V, which removes the need for the 5V charge pump previous used
+- standby current is only 1uA which removes the need for switchable power rail
+- max power draw is 36mA per LED, 12 per channel
 
 ## Audio
 
@@ -124,49 +142,50 @@ This is within the `1C` discharge rate for the battery, which is good.
 - `MCLK` is connected to the master clock generated from the RP2350
 - `LHP` and `RHP` are connected to headphones via large `220uF` capacitors
 - `LSPKOUT` and `RSPKOUT` are connected to directly to the speaker in BTL mode
-- `RAUXIN` and `LAUXIN` are connected via `1uF` capacitors to the radio analog output (as per the datasheet)
 - `LMICP` and `LMICN` go to positive and negative microphone terminals via `1uF` capacitors (as per the datasheet)
-- `MICBIAS` is connecte to ground via `4u7` capacitor and to positive mic input via `2k2` resistor (as per the datasheet)
-- `RMICP`, `RMICN`, `AUXOUT1` and `AUXOUT2` are left floating (as per the datasheet for unused analog inputs/outputs)
+- `MICBIAS` is used as a power source for the MEMS microphone (so no biasing resistor is needed)
+- `RMICP`, `RMICN`, `AUXOUT1`, `AUXOUT2`, `RAUXIN` and `LAUXIN` are left floating (as per the datasheet for unused analog inputs/outputs)
 - `GPIO2` goes to headset detection
 - `GPIO3` is tied to ground as per the dataset for unused gpio
 - `MODE` is tied to ground for I2C selection
 
 > Note that I2C communication with the chip did not work when MCLK was being generated on the breadboard. This was fixed by adding the RC filter to I2C lines as per the datasheet (220R, 33pF). 
 
+> TODO GPIO1 
+
 #### Microphone
 
-As per the typical application, the microphone is connected differentially to `LMICP` and `LMICN` with `2k2` from MICBIAS to positive mic, 0.1uF capacitor on the positive output to right channel and direct connection to ground on the negative channel, which also goes to the left input via 0.1uF capacitor.
+Since we are using MEMS microphone, not electret, the `MICBIAS` is used simply as a power line to the microphone. The microiphone is connected between `GND` (connected toi `LMICN`) and `LMICP` via `1uF` capacitors. 0.1uF capacitor is next to the microphone for smoothness.
 
 > TODO Verify the microphone works
 
 #### Headset detection
 
-Headset detection is via a `100k` resistor to the `IOVDD` line to second ground terminal of the headphone jack. This will read high when headphones are not detected and will go to `0` when headphones are inserted as the ground will be connected to both terminals. The headset detection line is then fed to the audio codec for automatic speaker/headhone switching and to the RP2350 as well to determine the headphone status. 
+Headset detection is via a `10k` pull-up resistor (to `IOVDD`) connected to the second ground terminal of the headphone connectr. This will read high when headphones are not detected and will go to `0` when headphones are inserted as the ground will be connected to both terminals. The headset detection line is then fed to the audio codec for automatic speaker/headhone switching and to the RP2350 as well to determine the headphone status. 
 
 We use two switch, 3 contact [headset connector](datasheets/headphone%20jack.pdf), half sinking for better profile. 
 
-> TODO the pullup is wrong (too high) and also, maybe by connecting tip with some large resistor to 0 (68k or so) and then connecting the tip mate via even higher resistor to VCC as a pull up. Then it will read close to 0 when not inserted and VCC when inserted. But will this upset the audio? It actually might work and I can ignore the second sleeve and it would work with all headphones! (can I make it work with current audio setup by rewiring?)
+## IO MCU
 
-## AVR (ATTiny3217)
+We are using the [PY32F030]() which is much cheaper than the originally used AtTiny3217, while providing nearly the same functionality. The chip has a rather complex pinout, with analog & special lines added first and the digital rest filled later to simplify trace widths. This gives us the following pin assignment:
 
-[ATTiny3217](datasheets/ATTiny3217.pdf) is used in QFN package and is responsible for power management, input & output (buttons, rumbler and display PWM) and some sensors (RTC clock, temperature sensor). All pins are used, the AVR_INT pin plays double duty as AVR interrupt to RP2350 and serial TX from the AVR chip for debugging (on RPI the pin matches alt UART0 RX). The chip also runs from 3.3V as well, so it can't use VCC measurement to check battery levels (instead it uses dedicated 100/200kOhm divider into a pin for voltage measurements. Pinout is as follows:
+- I2C communication with RP2350 on `PB6` and `PB7`
+- SPI communication with the accelerometer on `PB5`, `PB4`, `PB3` and `PA15`
+- rumbler PWM via `PA11`, which corresponds to `TIM1_CH4`
+- RGB led via `PA2`, which corresponds to `TIM3_CH1`
+- VCC sense on `PB0`, i.e. `ADC_IN8`
+- LED for light sensing via `PF0` and `PA0` (`ADC_IN0`)
+- external crystal for RTC (`PA9` and `PA10`)
+- debug & sys BOOT0, NRST, TX, SWD, SWCLK (`PF4`,`PF2`,`PF3`,`PA14`,`PA13`), where the TX corresponds to `USART1_TX`
 
-- display backlight PWM on `PC0` (TCB0 WO alt)
-- rumbler PWM on `PA3` (TCB1 WO)
-- I2C SCL and SDA on `PB0` and `PB1` (default)
-- AVR_INT (and TX) on `PA1` (UART TxD alt)
-- 32.768kHz ext oscillator at `PB2` and `PB3`
-- VCC_SENSE at `PA2` (which is AIN2 for ADC0 in AAA battery mode)
+Remaining functionality (simple digital pins):
 
-Remaining functionality is interchangeable as they are used simple digital pins, namely:
-- BTN_1, BTN_2, BTN_3 and BTN_4 for button matrix rows (`PA6`, `PB7`, `PA7` and `PC2` respectively)
-- BTN_DPAD, BTN_ABXY, BTN_CTRL for button matrix cols (`PC4`, `PB6` and `PB5` respectively)
-- ACCEL_INT (input from accel) at `PB4`
-- CHARGING detection (low when not charging, high when charging) at `PA5`
-- IOVDD_EN and 5V_EN for IOVDD and 5V power rails at `PC1` and `PA4`
-- RGB for neopixel control at `PC3`
-- QSPI_SS, connected to RP2350 QSPI_SS pin to boot into bootloader at `PC5`
+- button matrix rows BTN_1 - BTN_4 (`PA4`, `PA1`, `PA12` and `PA8`)
+- button matrox columns BTN_DPAD, BTN_CTRL, BTN_ABXY (`PA6`, `PB2` and `PA7`)
+- accelerometer interrupt at `PB8`
+- CHARGING detection (low when not charging, high when charging) at `PB1`
+- IOVDD_EN at `PF1` and IOVDD_FAULT (input) at `PA5`
+- QSPI_SS, connected to RP2350 QSPI_SS pin to boot into bootloader at `PA3`
 
 ### Buttons
 
@@ -174,23 +193,29 @@ Due to low number of pins available, a classic button matrix is used. Buttons ar
 
 ### RTC
 
-In mkII the internal oscillator was used for RTC which led to inaccuracies of up to 10 minutes per day. This time we are using external 32.768 kHz oscillator for better accuracy. The crystal load capacitance per the datasheet (page 511) is max 12.5pF which is the value used, so the same circuit as for the radio should work. 
+In mkII the internal oscillator was used for RTC which led to inaccuracies of up to 10 minutes per day. This time we are using external 32.768 kHz oscillator for better accuracy. 
+
+> TODO Determinal crystal load as per datasheet and calculate
+
+### Light sensor
+
+> TODO this is done by a reverse diode that is sampled via internal ADC
 
 ### Rumbler
 
-Rumbler is connected to 3V3 and triggered by AVR PWM. Protective diode is used as well. 
+Rumbler is connected to 3V3 and triggered by IO MCU PWM. Protective diode is used as well. 
 
 ## RP2350B
 
 [RP2350B](datasheets/rp2350-datasheet.pdf) - 2 Cortex M33 core @150Mhz, 520KB RAM, PIO and so on. Arguably, there are chips that are more powerful (high-end STM, ESP32 would provide WiFi for "free"), but none I have tried beats the fun of programming RP2350:) So I am sticking with it. Further details of how the HW requirements for the chip should look can be found in [HW Design Notes](datasheets/hardware-design-with-rp2350.pdf). Basic pinout is below, for more details see the desciption of subsystems below
 
 - I2C SDA & SCL (gpio `0` and `1`)
-- Radio interrupt (`2`)
-- AVR interrupt (and debug UART TX) at `3`
+- RP_TX at `10`, which is `UART1_TX` (via F11) to stand clear of UART0 which is available on the cartridge pins
+- PWM_BACKLIGHT at `2` (`PWM1`)
 - I2S MCLK at `4` (its own pio sm)
 - I2S DIN, DOUT, BCLK and LRCLK (`5`, `6`, `7`, `8`) (record & playback sms)
-- HEADSET_DETECT (`9`)
-- SD_CD (card detect) `10`
+- HEADSET_DETECT (`3`)
+- SD_CD (card detect) `9`
 - display RDX at `11`
 - cartridge HSTX (`12`-`19`)
 - display DB15-DB0 (`20`-`35`)
@@ -213,32 +238,32 @@ Although the SD card supports SPI protocol, in is not connected to any of the HW
 
 SD card detect works ising internal pull-up on the `SD_CD` line. When no card is present, it will read high, but when card is inserted this is connected to ground and will read low. The internal pull-up is high enough to make the power draw for this negligible. 
 
+The SD card is protected with ESD diodes and has pull-ups on `RX`, `TX`, `CSN`, `SDIO_1` and `SDIO_2` as per the specification (10k). 
+
 ### Display
 
-[ST7789v](datasheets/ST7789V.pdf) in 16bit parallel MCU interface is used with FPC connector for easier assembly. The display uses both power supplies, `IOVDD` for the digital interface and `IOVDD` for backlight. This allows for a better load distribution (otherwise the `3v3` always on SMPS has not much to do most of the time with only the AVR connected). The display uses 16bit parallel interface to speed up the data transfer process, which is extremely useful especially in framebuffer applications. The RDX line is also available so that the CPU can read from the display as well (can be used in the future for visua effects). 
+[ST7789v](datasheets/ST7789V.pdf) in 16bit parallel MCU interface is used with FPC connector for easier assembly. The display uses the `IOVDD` power rail for both logic and backlight (which is controlled by the RP2350). The display uses 16bit parallel interface to speed up the data transfer process, which is extremely useful especially in framebuffer applications. The RDX line is also available so that the CPU can read from the display as well (can be used in the future for visua effects). 
 
 For backlight, we use [AP2502](datasheets/AP2502), which can sink up to 80mA of current in total of 4 channels. This is less bright than the max of 100mA recommended by the display datasheet, but is still comfortably high. 
 
+## Cartridge Connector
+
+> TODO describe
+
 ## Programming & Debugging
 
-The device provides 2 programming & debugging ports for the AVR and RP2350 chips. The RP2350 uses the standard 3pin SWD interface known from the Pico boards. The AVR chip has a 2 wire UPDI programming interface (UPDI & GND). Both are unpopulated, but as they use standard 2.54" spaced holes, they can be populated with connectors and are located in places where case cutouts can be made for easy access.
+Two standardized SWD debug ports are provided, one for the RP2350 and one for the PY32F030. They contain the ARM SWD (clock & data), GND, UART TX for debug prints and RST signal. They can be either populated with connectors (precision milled headers), for which there is room left in the enclosure, or used with pogo pins. 
 
-> TODO in the future, if we use I2C bootloader for the AVR chip, there should be no need for an user accessing UPDI connector any more, but maybe it is still convenient to have.
+Both connectors have identical layout.
 
 ## Test Points
 
 - `SDA` and `SCL` lines for I2C
-- `INT/TX` for the AVR_INT/TX line to be able to debug the AVR chip
 
-## DFM & DFA
+# Appendix A - Running from AAA batteries
 
-At this stage the PCB is still fairly prototype stage as there is a reasonably high amount of hand soldering and careful steps to manufacture & assemble the device:
+It is technically possible to run the device from 3 AAA batteries instead of the li-po cell. This requires changing the IO MCU firmware to accomodate for the lack of charging behavior and different voltage ranges as 3 AAA batteries provide anywhere from 4.5 to a bit below 3.0V on their output. The li-ion charger must not be soldered. 
 
-- the biggest problem is probably the custom cartridge connector which consists of a separate board and has to be hand soldered. For a large run - perhaps a better spring contact can be found that can attach to the bottom of the PCB and can be soldered automatically with 2 sided assembly
-- bottom side buttons - will be fixed by 2 sided assembly
-- battery connector is again a custom PCB connected via hand soldered wires and connectors. If we get battery with standard connector, this too can be fixed by a bottom side soldered connector (another option would be to use cell phone batteries)
-- speaker - requires soldering of the wires, maybe for plarge production can use speaker that has spring contects to the pcb (but how would the sound box work?)
-- rumbler - can be had with connector in large quantities
+As we keep the power path switch between USB and batteries, if the batteries are replaced while the USB is powered there should be no power loss. 
 
-
-
+Mechanically I was thinking of running two small pcbs with clips perpendicular to the bottom of the PCB with battery contacts being soldered to the current battery terminals. 
