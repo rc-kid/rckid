@@ -26,6 +26,30 @@ The following are reserved keywords and cannot be used as identifiers:
 
 > TODO and others
 
+### Indentation
+
+_doLang_ uses indentation to denote nesting, similarly to Python. One extra rule is that many expressions that fit into `()` and `{}` parentheses can be written either broken out on different lines:
+
+    foo(
+        a
+        b
+        c
+    )
+
+or as a one-liner separated by commas:
+
+    foo(a, b, c)
+
+This can happen in every context, so for instance map definition can look like this:
+
+    let m = { "a" = 1, "b" = 2, "c" = 3}
+    # or
+    let m = {
+        "a" = 1
+        "b" = 2
+        "c" = 3
+    }
+
 ## Built-in Types
 
 _doLang_ supports rational numbers, boolean values, text strings and simple enumerations as primitive types. Generic arrays, maps and tuples are supported as well. Contrary to mainstream languages, floating point values are *not* supported. 
@@ -166,7 +190,7 @@ Or as named events inside objects. Note that named events are onky available in 
 
     type Object = (
         field1 : num,
-        event onSomething(a : num) -> num
+        onSomething : event(a : num) -> num
     )
 
 Like functions, events can return values, or nothing (`->` missing) and they may even provide default values for their arguments. 
@@ -205,16 +229,9 @@ Events implicitly cast to booleans, `false` if no handler, `true` if at least on
 
 User defined object types, which must always be named and may contain fields. Note that an object is, in its simplest form just a named tuple, which is reflected in the declaration syntax:
 
-    type ObjectName = (
-        field1 : num = 67,
-    )
-
-When the field is event, the canonical declaration is using the `event` keyword, which is a shorthand for actual type definition as shown below
-
     type ObjectWithEvent = (
-        field1 : num = 67,
-        event onDone(status : num), # shorthand
-        eventField : event(status : num), # long form
+        field1 : num = 67
+        onDone: event(status : num)
     )
 
 Every object has default constructor which assigns the fields with the values provided at their declaration (or their default constructors transitively). Fields of an object are accessed with the `.` notation.
@@ -231,8 +248,8 @@ The classic object definition only specifies the object's fields. Object methods
 So for example:
 
     type Complex = (
-        re : num = 0,
-        im : num = 0,
+        re : num = 0
+        im : num = 0
     )
 
     fun Complex.increaseBy(other : Complex) =
@@ -246,7 +263,7 @@ The out-of-declaration syntax is useful so that functionality of objects can be 
 Object can inherit from others. Onky single inheritance is supported and _doLang_ does *not* support virtual methods, meaning that while objects can be extended, their base functionality cannot be changed. A child object can however be used in place of its parent object types:
 
     type FancyComplex extends Complex = (
-        fancy : num,
+        fancy : num
     )
 
 ### Constructors
@@ -266,8 +283,8 @@ User defined constructors are not supported, instead free functions can be defin
 However, this simple arcitecture makes construction of invalid object states possible. Canonical example of this is the rational number - and even though it makes no sense in _doLang_ context where rational is built-in - we will thus use it to illustrate as well. The problem is that certain values are invalid without fallback (denominator being zero), while some must be normalized. This can be done by specifying a `constructor` block in the type definition, where the block is a function that is guaranteed to run after the object is created:
 
     type Rational = (
-        n = 0,
-        d = 1,
+        n = 0
+        d = 1
         constructor = 
             test self.d != 0
             if self.d < 0
