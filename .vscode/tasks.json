@@ -104,6 +104,46 @@
             ]
         },
         {
+            "label": "mk4 - build Puya",
+            "detail": "Builds the PY32F030 firmware (external project of the mk3 build).",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                ".",
+                "--target",
+                "mk4_puya",
+                "--parallel"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/build-mk3"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "mk4 - build Puya & flash",
+            "detail": "Builds the PY32F030 firmware and flashes it via pyocd.",
+            "type": "shell",
+            "command": "sudo",
+            "args": [
+                "${env:HOME}/.python-env/bin/pyocd",
+                "flash",
+                "mk4_puya.elf",
+                "-t",
+                "py32f030x8"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/build-mk3/sdk/backend/mk3/puya"
+            },
+            "dependsOn": [
+                "mk4 - build Puya"
+            ],
+            "problemMatcher": []
+        },
+
+        {
             "type" : "shell",
             "label": "cloc",
             "detail": "Runs cloc on the relavant parts of the project",

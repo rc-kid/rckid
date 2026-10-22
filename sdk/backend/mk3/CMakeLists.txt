@@ -1,6 +1,16 @@
 # Set general compiler options, C++ standard and warning levels
 message("RCKID: mk3 backend selected (RP2350)")
 
+# The PY32F030 firmware uses a different CPU (cortex-m0+) and toolchain, so it is built as a separate CMake project
+include(ExternalProject)
+ExternalProject_Add(mk4_puya
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/puya
+    BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR}/puya
+    CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    BUILD_ALWAYS ON
+    INSTALL_COMMAND ""
+)
+
 file(GLOB_RECURSE SRC 
     "mk3.cpp" 
     "${CMAKE_SOURCE_DIR}/sdk/src/*.cpp"

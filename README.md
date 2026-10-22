@@ -38,7 +38,8 @@ The project is organized into a few top level folders that branch into subfolder
 - `sdk/backend` : the supported backends (implementation of the hardware abstraction layer)
 - `sdk/backend/fantasy` : the fantasy backend for RCKid. This allows running RCKid cartridges virtually on the PC
 - `sdk/backend/mk3` : the RP2350 and the device specific code
-- `sdk/backend/avr` : firmware for the ATTiny3217 MCU responsible for IO, power management, etc
+- `sdk/backend/mk3/avr` : firmware for the ATTiny3217 MCU responsible for IO, power management, etc in mkIII
+- `sdk/backend/mk3/puya` : firmware for the PY32F030 MCU responsible for IO, power management, etc in mkIV
 - `sdk/include/rckid` : SDK headers to be included into cartridges (the SDK API). Some code in this folder, rest in subfolders
 - `sdk/include/rckid/apps` : applications for RCKid (pedometer, audio player, clock, etc.)
 - `sdk/include/rckid/audio` : audio recording / playback, codecs, etc.
@@ -84,7 +85,6 @@ Although there is technically nothing that should prevent building the software 
 
 The build builds all libraries and the creates the executables/uf2 images in the `cartridges` subfolder. `platformio` is used for the ATTiny3217 firmware, which is independent project and can be built using the CLI. Useful source of build information is also the `.vscode/tasks.json` file, which contains tasks for building different targets. It also contains upload targets, which copy the build artifacts to another machine from which they are flashed.
 
-
 RCKid uses `cmake` so the following builds the fantasy console & all cartridges on linux:
 
     mkdir -p build
@@ -126,6 +126,71 @@ The SDK library is at the core of RCKid as it provides an abstraction layer over
 > For now, fantasy console via raylib (Windows and Linux) and  RCKid mk3 (RP2350) are supported. There are plans for future platforms & variations. Note that the fantasy platform is mostly for debugging only.
 
 ## Debugging on the Device
+
+First we need to install pyOCD and the corresponding packs for the Puya chips:
+
+    python -m pip install pyocd
+    python -m pyocd pack install PY32F030x8
+
+### Installing on WSL
+
+On WSL the situation is a bit more complicated as we have to use python virtual environments to install the pyOCD:
+
+    python3 -m venv ~/.python-env
+    source ~/.python-env/bin/activate
+    pip3 install pyocd
+    sudo ~/.python-env/bin/pyocd pack install PY32F030x8    
+
+Now to be able to see the USB device, we need to make it available in the WSL, which can be done via [`usbipd-win`](https://github.com/dorssel/usbipd-win). First the device needs to be enabled as shared in administrator mode in windows. This needs to happens only once and persists reboots:
+
+    usbipd list 
+    usbipd bind --busid 1-2 # or whatever the bus id actually is
+
+Then in order for the device to appear in WSL, this needs to be executed, can be made by normal user.
+
+    usbipd attach --wsl --busid=1-2 # or whatever
+
+This can be executed from WSL as well, just say:
+
+    usbipd.exe attach --wsl --busid=1-2 # or whatever
+
+### Flashing
+
+To flash, run the following:
+
+    python4 -m pyocd flash ELF_TARGET_PATH -t py32f030x8
+
+or in WSL:
+
+    sudo ~/.python-env/bin/pyocd flash ELF_TARGET_PATH -t py32f030x8
+
+> I am sure this could be set up so that normal user can do this, just did not have the time/will to investigate how exactly.
+
+### GDB Server
+
+To run GDB server via pyOCD, run the following:
+
+    python -m pyocd gdbserver --target PY32F030x8
+
+or in WSL and virtual environments:
+
+    sudo ~/.python-env/bin/pyocd gdbserver --target PY32F030x8
+
+### Serial Monitor
+
+Picocom is the simplest, so run:
+
+    picocom -b 115200 /dev/ttyACM0
+
+(use `C-a` `C-x` to exit)
+
+On WSL, `picocom` must be executed in `sudo` mode *and* before running, the USB to serial capability has to be loaded into kernel by running:
+
+    sudo modprobe cdc_acm
+
+## Old OpenOCD -- TODO remove this eventually
+
+> TODO This is the older version for RP2350 and openOCD, which should eventually be deleted, once pyOCD is verified working with RP2350 as well.
 
     sudo apt-get install pkg-config libjim-dev libudev-dev
     git clone https://github.com/raspberrypi/openocd.git

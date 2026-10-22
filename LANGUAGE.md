@@ -22,13 +22,13 @@ As there is no character type, single characters can be represented as text valu
 
 The following are reserved keywords and cannot be used as identifiers:
 
-    enum, let, const, fun, bool, num, true, false
+    and, bool, break, case, clone, const, constructor, continue, do, else, enum, event, extends, false, for, fun, global, if, in, let, match, None, not, num, optional, or, return, self, step, test, text, true, type, use, while, write, xor
 
 > TODO and others
 
 ### Indentation
 
-_doLang_ uses indentation to denote nesting, similarly to Python. One extra rule is that many expressions that fit into `()` and `{}` parentheses can be written either broken out on different lines:
+_doLang_ uses indentation to denote nesting, similarly to Python. One extra rule is that many expressions that fit into `()`, `[]` and `{}` parentheses can be written either broken out on different lines:
 
     foo(
         a
@@ -195,7 +195,7 @@ Or as named events inside objects. Note that named events are onky available in 
 
 Like functions, events can return values, or nothing (`->` missing) and they may even provide default values for their arguments. 
 
-When an event is assigned a function, that function becomes is sole handler. But unlike functions, events also support the `+=` assignment, in which case the handler is *added* to the event:
+When an event is assigned a function, that function becomes its sole handler. But unlike functions, events also support the `+=` assignment, in which case the handler is *added* to the event:
 
     let a : event(a : num, b : num) 
     a +=
@@ -220,7 +220,7 @@ Events use value matching to allow for conditional dispatch, i.e. unlike the exa
 
 Event can be called (fires the event), assigned to (adds the handler) or have its object-like methods called:
 
-- `event.clear()` clears all handlers registerd for the event.
+- `event.clear()` clears all handlers registered for the event.
 - `event.numHandlers() -> num` returns the number of handlers associated with the event
 
 Events implicitly cast to booleans, `false` if no handler, `true` if at least one handler is assigned.
@@ -273,7 +273,7 @@ To create an object, the name of the object type is used as if it were a functio
     let x = Complex() # re == 0, im == 0
     let i = Complex(im = 1) # re == 0, im == 1
 
-User defined constructors are not supported, instead free functions can be defined with intended maning, such as:
+User defined constructors are not supported, instead free functions can be defined with intended meaning, such as:
 
     fun Im(a : num) -> Complex =
         return Complex(im = a)
@@ -513,7 +513,7 @@ This loads the library of given name from the system and makes its functions and
 
 Because of the on-device limitations, _doLang_ programs are expected to be single `.do` files as the editors allow the user to browse & select the function, type and event handler definitions one by one. The practice should be that reusable code should become libraries, while the full application code, i.e. all that is intended for the application alone should be in the single `.do` file. 
 
-_doLang_ does not suppport namespaces. The reason for this is that namespaces complicate things and force kids thing about ambiguity resolution. Instead _doLang_ does not allow ambiguity to exist at all, which is probably fine as the projects in the language are not expected to be enormous.
+_doLang_ does not support namespaces. The reason for this is that namespaces complicate things and force kids think about ambiguity resolution. Instead _doLang_ does not allow ambiguity to exist at all, which is probably fine as the projects in the language are not expected to be enormous.
 
 ## Standard Library
 
