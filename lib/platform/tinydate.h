@@ -138,7 +138,7 @@ public:
     
     void setMonth(Month month) { setMonth(static_cast<uint8_t>(month)); }
 
-    DayOfWeek dayOfWeek() const { return dayOfWeek(day_, month_, year()); }
+    DayOfWeek dayOfWeek() const { return dayOfWeek(day_, month(), year()); }
 
     uint8_t daysInMonth() const { return daysInMonth(month(), year()); }
 
