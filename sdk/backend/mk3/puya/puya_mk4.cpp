@@ -50,6 +50,10 @@ public:
 
     }
 
+    static void secondTick() {
+        updateDateTime();
+    }
+
 private:
     /** Initializes the GPIO pins to their default values.
      */
@@ -59,11 +63,39 @@ private:
         LOG("  gpio");
     }
 
+    /** RTC & wakeup alarm
+     */
+    //@{
+
+    static constexpr uint32_t EPOCH_START_MJD = 58119; // 2018/1/1 
+    static constexpr uint32_t SECONDS_PER_DAY = 3600 * 24;
+
     static void initializeRTC() {
         rtc::enable();
         // TODO set the puya RTC values correctly
         LOG("  rtc " << rtc::enabled());
     }
+
+    static void setDateTime(TinyDateTime const & dt) {
+        ts_.time = dt;
+        rtc::setCounter(
+            (dt.date.mjd() - EPOCH_START_MJD) * SECONDS_PER_DAY + 
+            dt.time.hour() * 3600 + dt.time.minute() * 60 + dt.time.second()
+        );
+        // TODO update the alarm
+    }
+
+    static void updateDateTime() {
+        uint32_t seconds = rtc::counter();
+        ts_.time.date = TinyDate{EPOCH_START_MJD + seconds / SECONDS_PER_DAY};
+        ts_.time.time = TinyTime{seconds % SECONDS_PER_DAY};
+    }
+
+    static void setWakeupAlarm(uint32_t seconds) {
+        rtc::setAlarmCounter(rtc::counter() + seconds);
+    }
+
+    //@}
 
     /** I2C Communications with the RP2350
      */
@@ -166,6 +198,19 @@ private:
     //@}
 
 }; // class KidDo
+
+extern "C" {
+    void RTC_IRQHandler(void) {
+        if (LL_RTC_IsActiveFlag_SEC(RTC)) {
+            LL_RTC_ClearFlag_SEC(RTC);
+            KidDo::secondTick();
+        }
+        if (LL_RTC_IsActiveFlag_ALR(RTC)) {
+            LL_RTC_ClearFlag_ALR(RTC);
+            // TODO code
+        }
+    }
+}
 
 int main() {
     KidDo::initialize();

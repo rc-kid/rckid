@@ -9,6 +9,11 @@
 - verify GPIO1 is tied to ground when not used, or set output to GND
 - headphone jack soldered by JLCPCB? 
 
+
+# Puya
+
+- determine if alarm register can be read (RTC)
+
 # General SDK
 
 - implement the left-right animation style for widgets

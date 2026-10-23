@@ -54,3 +54,44 @@ TEST(tinydate, ModifiedJulianDay) {
     EXPECT(d1.month() == d2.month());
     EXPECT(d1.year() == d2.year());
 }
+
+TEST(tinydate, ToModifiedJulianDay) {
+    EXPECT(TinyDate(17, 11, 1858).mjd() == 0);
+    EXPECT(TinyDate(1, 1, 1970).mjd() == 40587);
+    EXPECT(TinyDate(1, 1, 2000).mjd() == 51544);
+    EXPECT(TinyDate(30, 1, 2000).mjd() == 51573);
+    // leap day and the days around it
+    EXPECT(TinyDate(28, 2, 2024).mjd() == 60368);
+    EXPECT(TinyDate(29, 2, 2024).mjd() == 60369);
+    EXPECT(TinyDate(1, 3, 2024).mjd() == 60370);
+    // 1900 is not a leap year, 2000 is
+    EXPECT(TinyDate(1, 3, 1900).mjd() - TinyDate(28, 2, 1900).mjd() == 1);
+    EXPECT(TinyDate(1, 3, 2000).mjd() - TinyDate(28, 2, 2000).mjd() == 2);
+    EXPECT(TinyDate(31, 12, 2024).mjd() == 60675);
+    EXPECT(TinyDate(1, 1, 2025).mjd() == 60676);
+}
+
+TEST(tinydate, FromModifiedJulianDay) {
+    TinyDate d{0};
+    EXPECT(d == TinyDate(17, 11, 1858));
+    d = TinyDate{51544};
+    EXPECT(d == TinyDate(1, 1, 2000));
+    d = TinyDate{60369};
+    EXPECT(d == TinyDate(29, 2, 2024));
+    d = TinyDate{60370};
+    EXPECT(d == TinyDate(1, 3, 2024));
+    d = TinyDate{60676};
+    EXPECT(d == TinyDate(1, 1, 2025));
+}
+
+TEST(tinydate, ModifiedJulianDayRoundtrip) {
+    // every day from 17/11/1858 to the end of the 12bit year range, checking mjd -> date -> mjd and that consecutive days increment the date
+    uint32_t last = TinyDate(31, 12, 2200).mjd();
+    TinyDate prev{0};
+    for (uint32_t mjd = 0; mjd <= last; mjd += 1000) {
+        TinyDate d{mjd};
+        CHECK(d.mjd() == mjd);
+        d.inc();
+        CHECK(d.mjd() == mjd + 1);
+    }
+}

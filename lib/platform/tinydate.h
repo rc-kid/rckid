@@ -40,11 +40,11 @@ public:
         set(1, 1, 0);
     }
 
-    TinyDate(uint8_t d, uint8_t m, uint16_t y) {
+    constexpr TinyDate(uint8_t d, uint8_t m, uint16_t y) {
         set(d, m, y);
     }
 
-    TinyDate(uint32_t mjd) {
+    constexpr TinyDate(uint32_t mjd) {
         // convert MJD to day, month, year
         // algorithm from https://en.wikipedia.org/wiki/Julian_day
         uint32_t j = mjd + 2400001 + 68569;
@@ -75,7 +75,26 @@ public:
     Month monthName() const { return static_cast<Month>(month()); }
     uint16_t year() const { return ((month_ & 0xf0) << 4) | year_; }
 
-    void set(uint8_t day, uint8_t month, uint16_t year) {
+    /** Converts the date to Modified Julian Day (MJD).
+
+        Note this only works for dates after 17/11/1858 (MJD 0). Dates before that will return a negative value, which is not representable in uint32_t and will wrap around to a large positive value.
+
+        See https://howardhinnant.github.io/date_algorithms.html#days_from_civil
+    */
+    constexpr uint32_t mjd() const {
+        uint32_t y = year();
+        uint32_t m = month();
+        if (m <= 2)
+            --y;
+        uint32_t era = y / 400;
+        uint32_t yoe = y - era * 400;
+        uint32_t doy = (153 * (m > 2 ? m - 3 : m + 9) + 2) / 5 + day() - 1;
+        uint32_t doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+        // 678881 = days from 1/3/0000 to 17/11/1858 (MJD 0)
+        return era * 146097 + doe - 678881;
+    }
+
+    constexpr void set(uint8_t day, uint8_t month, uint16_t year) {
         if (month == 0)
             month = 1;
         if (month > 12)
@@ -234,9 +253,9 @@ public:
     }    
 
 private:
-    uint8_t day_;
-    uint8_t month_;
-    uint8_t year_;
+    uint8_t day_ = 0;
+    uint8_t month_ = 0;
+    uint8_t year_ = 0;
 }); // TinyDate
 
 class TinyTimeHM;
@@ -248,13 +267,13 @@ public:
 
     TinyTime(TinyTimeHM const & t);
 
-    TinyTime(uint32_t seconds): 
+    constexpr TinyTime(uint32_t seconds): 
         hour_{static_cast<uint8_t>((seconds / 3600) % 24)},
         minute_{static_cast<uint8_t>((seconds / 60) % 60)},
         second_{static_cast<uint8_t>(seconds % 60)} {
     }
 
-    TinyTime(uint8_t h, uint8_t m, uint8_t s = 0) {
+    constexpr TinyTime(uint8_t h, uint8_t m, uint8_t s = 0) {
         set(h, m, s);
     }
 
@@ -262,7 +281,7 @@ public:
     uint8_t minute() const { return minute_; }
     uint8_t second() const { return second_; }
 
-    void set(uint8_t h, uint8_t m, uint8_t s = 0) {
+    constexpr void set(uint8_t h, uint8_t m, uint8_t s = 0) {
         hour_ = h % 24;
         minute_ = m % 60;
         second_ = s % 60;
@@ -355,9 +374,9 @@ public:
     }
     
 private:
-    uint8_t hour_;
-    uint8_t minute_;
-    uint8_t second_;
+    uint8_t hour_ = 0;
+    uint8_t minute_ = 0;
+    uint8_t second_ = 0;
 }); // TinyTime
 
 PACKED(class TinyDateTime {
