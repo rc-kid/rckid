@@ -5,7 +5,7 @@
 
 namespace platform {
 
-    PACKED(class Color {
+    class Color {
     public:
         uint8_t g;
         uint8_t r;
@@ -197,7 +197,7 @@ namespace platform {
                 channel -= step;
             return true;
         }
-    }); // Color
+    } __attribute__((__packed__)); // Color
 
     /** Array of N pixels that supports basic drawing and effects. 
      */

@@ -382,7 +382,7 @@ public:
         LL_GPIO_Init(gpio::pinBank(pin), & cfg);
     }
 
-    //#include "../common/gpio_common.h"
+    #include "../common/gpio_common.h"
 
 }; 
 
@@ -544,6 +544,7 @@ public:
             while (LL_RCC_LSI_IsReady() != 1);
         } else {
             LL_RCC_LSE_Enable();
+            // TODO timeout wait? 
             while (LL_RCC_LSE_IsReady() != 1);
         }
         LL_RCC_SetRTCClockSource(internal ? LL_RCC_RTC_CLKSOURCE_LSI : LL_RCC_RTC_CLKSOURCE_LSE);
@@ -557,6 +558,10 @@ public:
             .OutPutSource = LL_RTC_CALIB_OUTPUT_NONE
         };
         LL_RTC_Init(RTC, &init);
+    }
+
+    static bool enabled() {
+        return LL_RCC_LSE_IsReady() == 1;
     }
 
     /** Enables or disables the second interrupt. 

@@ -170,38 +170,38 @@
 /** PUYA pinout 
  */
 
-#define PUYA_LED_A          gpio::PF0
-#define PUYA_IOVDD_EN       gpio::PF1
-//#define PUYA_RST          gpio::PF2  // reserved
-#define PUYA_TX             gpio::PF3
-// #define PUYA_BOOT0       gpio::PF4  // reserved
+#define PUYA_PIN_LED_A           gpio::PF0
+#define PUYA_PIN_IOVDD_EN        gpio::PF1
+//#define PUYA_PIN_RST           gpio::PF2  // reserved
+#define PUYA_PIN_TX              gpio::PF3
+// #define PUYA_PIN_BOOT0        gpio::PF4  // reserved
 
-#define PUYA_LED_K          gpio::PA0  // ADC channel 0
-#define PUYA_BTN_2          gpio::PA1
-#define PUYA_BTN_1          gpio::PA2
-#define PUYA_QSPI_SS        gpio::PA3
-#define PUYA_RGB            gpio::PA4  // SPI2 MOSI
-#define PUYA_IOVDD_FAULT    gpio::PA5
-#define PUYA_BTN_DPAD       gpio::PA6
-#define PUYA_BTN_ABXY       gpio::PA7
-#define PUYA_BTN4           gpio::PA8
-//#define PUYA_OSC32_OUT    gpio::PA9  // reserved
-//#define PUYA_OSC32_IN     gpio::PA10 // reserved
-#define PUYA_PWM_RUMBLER    gpio::PA11 // Timer 1 CH 4
-#define PUYA_BTN_3          gpio::PA12
-//#define PUYA_SWDIO        gpio::PA13 // reserved
-//#define PUYA_SWCLK        gpio::PA14 // reserved
-#define PUYA_SPI_CS         gpio::PA15 // SPI1 NSS
+#define PUYA_PIN_LED_K           gpio::PA0  // ADC channel 0
+#define PUYA_PIN_BTN_2           gpio::PA1
+#define PUYA_PIN_BTN_1           gpio::PA2
+#define PUYA_PIN_QSPI_SS         gpio::PA3
+#define PUYA_PIN_RGB             gpio::PA4  // SPI2 MOSI
+#define PUYA_PIN_IOVDD_FAULT     gpio::PA5
+#define PUYA_PIN_BTN_DPAD        gpio::PA6
+#define PUYA_PIN_BTN_ABXY        gpio::PA7
+#define PUYA_PIN_BTN_4           gpio::PA8
+//#define PUYA_PIN_OSC32_OUT     gpio::PA9  // reserved
+//#define PUYA_PIN_OSC32_IN      gpio::PA10 // reserved
+#define PUYA_PIN_PWM_RUMBLER     gpio::PA11 // Timer 1 CH 4
+#define PUYA_PIN_BTN_3           gpio::PA12
+//#define PUYA_PIN_SWDIO         gpio::PA13 // reserved
+//#define PUYA_PIN_SWCLK         gpio::PA14 // reserved
+#define PUYA_PIN_SPI_CS          gpio::PA15 // SPI1 NSS
 
-#define PUYA_VCC_SENSE      gpio::PB0  // ADC channel 8
-#define PUYA_CHARGING       gpio::PB1
-#define PUYA_BTN_CTRL       gpio::PB2
-#define PUYA_SPI_SCK        gpio::PB3  // SPI1 SCK
-#define PUYA_SPI_MISO       gpio::PB4  // SPI1 MISO
-#define PUYA_SPI_MOSI       gpio::PB5  // SPI1 MOSI
-#define PUYA_I2C_SCL        gpio::PB6  // I2C SCL
-#define PUYA_I2C_SDA        gpio::PB7  // I2C SDA
-#define PUYA_ACCEL_INT      gpio::PB8
+#define PUYA_PIN_VCC_SENSE       gpio::PB0  // ADC channel 8
+#define PUYA_PIN_CHARGING        gpio::PB1
+#define PUYA_PIN_BTN_CTRL        gpio::PB2
+#define PUYA_PIN_SPI_SCK         gpio::PB3  // SPI1 SCK
+#define PUYA_PIN_SPI_MISO        gpio::PB4  // SPI1 MISO
+#define PUYA_PIN_SPI_MOSI        gpio::PB5  // SPI1 MOSI
+#define PUYA_PIN_I2C_SCL         gpio::PB6  // I2C SCL
+#define PUYA_PIN_I2C_SDA         gpio::PB7  // I2C SDA
+#define PUYA_PIN_ACCEL_INT       gpio::PB8
 
 #define RGB_LED_DPAD_TOP_LEFT 1
 #define RGB_LED_DPAD_TOP_RIGHT 0
