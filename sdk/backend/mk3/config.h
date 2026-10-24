@@ -203,6 +203,13 @@
 #define PUYA_PIN_I2C_SDA         gpio::PB7  // I2C SDA
 #define PUYA_PIN_ACCEL_INT       gpio::PB8
 
+
+/** Clock speed for the Puya MCU
+ */
+#define PUYA_CLOCKSPEED cpu::ClockSpeed::MHz8
+
+#define PUYA_RUMBLER_PWM_FREQUENCY 20000
+
 #define RGB_LED_DPAD_TOP_LEFT 1
 #define RGB_LED_DPAD_TOP_RIGHT 0
 #define RGB_LED_DPAD_BOTTOM_LEFT 2

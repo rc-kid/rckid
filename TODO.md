@@ -10,9 +10,10 @@
 - headphone jack soldered by JLCPCB? 
 
 
-# Puya
+# Puya & mkIV
 
 - determine if alarm register can be read (RTC)
+- ensure all sliding values (brightness, rgb brightness, volume, rumbler pwm, etc.) are from 0 to 10
 
 # General SDK
 

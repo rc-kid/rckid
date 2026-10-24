@@ -24,6 +24,7 @@ inline Writer debugWrite() {
     - powering the device on & off
 
 
+
  */
 
 
@@ -34,7 +35,7 @@ class KidDo {
 public:
 
     static void initialize() {
-        cpu::initialize();
+        cpu::initialize(PUYA_CLOCKSPEED);
         // TODO initialize watchdog
         serial::initializeTx(RCKID_RP_SERIAL_SPEED, PUYA_PIN_TX);
         LOG("PY32F030 initialize");
@@ -188,13 +189,45 @@ private:
     //@}
 
     /** \name RGB LEDs
+     
+        The RGB LEDs are connected to SPI2, where we are using only MOSI to drive the 1 wire interface.
      */
     //@{
     //@}
 
     /** \name PWM (Rumbler)
+     
+        Rumbler is connected to PA11, which is Timer 1 channel 4. The timer is configured to run at 20kHz, which is a good compromise between audible noise and power consumption. The duty cycle can be set from 0 to 10, where 0 means full off and 10 means full on. 
      */
     //@{
+
+    static constexpr uint8_t RUMBLER_DUTY_PWM [] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 99};
+
+    static void intializeRumbler() {
+        // enable the timer1 to run at 20 kHz
+        if (PUYA_CLOCKSPEED == cpu::ClockSpeed::MHz8) {
+            timer1::enable(100, 4); // 8 MHz / 4 / 100 == 20 kHz
+        } else {
+            UNIMPLEMENTED;
+        }
+    }
+
+    /** Sets the rumbler PWM by converting the duty cycle from 0 to 10 to the actual PWM comparison values.
+     */
+    static void setRumblerPWM(uint32_t duty) {
+        ASSERT(duty <= 10);
+        static_assert(PUYA_PIN_PWM_RUMBLER == gpio::PA11, "Rumbler pin must be PA11 (timner 1 channel 4)");
+        if (duty == 0) {
+            timer1::disableChannel(4);
+            gpio::outputLow(PUYA_PIN_PWM_RUMBLER);
+        } else if (duty >= 10) {
+            timer1::disableChannel(4);
+            gpio::outputHigh(PUYA_PIN_PWM_RUMBLER);
+        } else {
+            gpio::configureAsAlternate(PUYA_PIN_PWM_RUMBLER, gpio::AlternateFunction::TIM1_CH4);
+            timer1::enableChannelPWM(4, RUMBLER_DUTY_PWM[duty]);
+        }
+    }
     //@}
 
 }; // class KidDo
@@ -207,7 +240,7 @@ extern "C" {
         }
         if (LL_RTC_IsActiveFlag_ALR(RTC)) {
             LL_RTC_ClearFlag_ALR(RTC);
-            // TODO code
+            // TODO code for device wakeup
         }
     }
 }
