@@ -24,7 +24,37 @@ inline Writer debugWrite() {
     - powering the device on & off
 
 
+    States
 
+    *Off*: The off state is the only one in which the IO MCU sleeps as well. It will wake up on the following conditions:
+
+    - DC power is plugged in, in which case it transitions to the OffDC state
+    - Alarm is triggered -> Alarm state
+    - Home button is pressed, in which case the device transition to the Wake state
+
+    *OffDC*: The off state (RP2350 is off) with DC power plugged in. The IO MCU is alive and runs the normal loop checking buttons, monitors battery charging / DC power and flashes the RGB LEDs as intended to indicate statuss. This state is necessary so that RGB light effects and charging monitoring can take place. Transitions from this state are as follows:
+
+    - DC power removed -> go to Off state and sleep
+    - Home button pressed -> go to wake state 
+    - Alarm triggered -> go to Alarm state
+
+    *Wake*: An intermediate state where the device runs the puya main loop so that we have precise timing available and can time long press of a home button. The transitions are as follows:
+
+    - Alarm triggered - go to Alarm state
+    - Home button long press detected - go to On state
+    - Home button released - go to Off state, or OffDC state if DC power is plugged in
+
+    *Alarm*: Alarm is a state when a powered off device (or waking device) is woken up by an alarm. Alarm state immediately turns on the RP2350, but otherwise behaves as a combination of Off and Wake states, i.e. it detects long press, to power on, etc. In other words in this state the RP2350 is *on*, but should not exercise full control over the device.
+
+    - home button long press detected - to go On state
+    - wakeup state timeouts or power down is requested - go to PowerDown state
+    - RP2350 requests transition to On state - go to On state
+
+    *On*: This is the state when the RP2350 is powered on and the control of the device's I/O is handed over to the big chip & cartridge firmware. The on state can only transition to Power down state either on request, or on timeout. 
+
+    *PowerDown*: In this state device is preparing to power the RP2350 down. The RP2350 is still powered on, but the IO chip informs it of the transition. The RP2350 now *must* initiate its own shutdown sequence, but *if* it acknowledges the power down request, it is given a generous timeout to complete the shutdown. When the timeout expries (either the short one, or the ecxtended one after ack), or when immediate power off is requested by the RP2350, the IO chip powers the RP2350 down and goes to Off or OffDC state depending on whether the DC power is plugged in or not. 
+
+    One small drawback is that the PowerDown state does not check for home button presses, i.e. if a device is powered on immediately after it is powered off, the home button press will be ignored. This is not a big deal as the user can simply press the home button again to power on the device. Since the press is ignored completely, users won't even get the rumbler feedback from it, masking as a failed press in this very unlikely situation.
  */
 
 
