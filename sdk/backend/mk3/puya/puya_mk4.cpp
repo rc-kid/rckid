@@ -61,6 +61,11 @@ inline Writer debugWrite() {
 using namespace rckid;
 
 
+extern "C" {
+    void TIM3_IRQHandler();
+    void RTC_IRQHandler();
+}
+
 class KidDo {
 public:
 
@@ -69,20 +74,35 @@ public:
         // TODO initialize watchdog
         serial::initializeTx(RCKID_RP_SERIAL_SPEED, PUYA_PIN_TX);
         LOG("PY32F030 initialize");
+
+        ts_.setState(mkIV::DeviceState::State::On);
         initializeGPIO();
         initializeRTC();
         initializeI2C();
 
 
-        
+        initializeButtons();
+        enableSystemTick(true);
+
+        /*
+        initializeRumbler();
+        setRumblerPWM(0);
+        setRumblerPWM(5);
+        setRumblerPWM(1);
+        */
+
+        LOG("done.");        
     }
 
     static void loop() {
-
-    }
-
-    static void secondTick() {
-        updateDateTime();
+        if (systemTick_)
+            systemTick();
+        if (secondTick_)
+            secondTick();
+        if (ts_.alarmInterrupt()) {
+            ts_.setAlarmInterrupt(false);
+            LOG("Alarm interrupt");
+        }
     }
 
 private:
@@ -94,15 +114,107 @@ private:
         LOG("  gpio");
     }
 
-    /** RTC & wakeup alarm
+    /** \name DeviceState, power management and system ticks
+     */
+    //@{
+    static inline mkIV::TransferrableState ts_;
+    static inline volatile bool systemTick_ = false;
+    static inline uint32_t systemTickId_ = 0;
+
+    //@}
+    static void setState(mkIV::DeviceState::State s) {
+        switch (s) {
+            case mkIV::DeviceState::State::Off:
+                ASSERT(ts_.dcPower() == false);
+                enableIOVDD(false);
+                enableSystemTick(false);
+
+                break;
+            case mkIV::DeviceState::State::OffDC:
+                // TODO power off the RP2350
+                break;
+            case mkIV::DeviceState::State::Wake:
+                // TODO power on the RP2350
+                break;
+            case mkIV::DeviceState::State::Alarm:
+                // TODO power on the RP2350
+                break;
+            case mkIV::DeviceState::State::PowerDown:
+                // TODO request power down from the RP2350
+                break;
+            case mkIV::DeviceState::State::On:
+                // TODO power on the RP2350
+                break;
+        }
+    }
+
+    static void enableIOVDD(bool value = true) {
+        if (value) {
+            // enable IOVDD
+            // ebable I2C
+        } else {
+            // disable I2C
+            // disable IOVDD
+        }
+
+    }
+
+    /** System tick is driven by TIM3's update interrupt. The timer is prescaled to 1MHz and reloads every 1MHz / SYSTEM_TICK_HZ ticks (5000 for 200Hz, fits the 16bit counter).
+     */
+    static void enableSystemTick(bool value = true) {
+        if (value) {
+            ASSERT(PUYA_CLOCKSPEED == cpu::ClockSpeed::MHz8);
+            timer3::enable(1000000 / PUYA_SYSTEM_TICK_HZ, 8); // 8 MHz / 8 / 5000 == 200 Hz
+            LL_TIM_EnableIT_UPDATE(TIM3);
+            NVIC_SetPriority(TIM3_IRQn, 1);
+            NVIC_EnableIRQ(TIM3_IRQn);
+        } else {
+            NVIC_DisableIRQ(TIM3_IRQn);
+            LL_TIM_DisableIT_UPDATE(TIM3);
+            timer3::disable();
+            LL_TIM_ClearFlag_UPDATE(TIM3);
+            NVIC_ClearPendingIRQ(TIM3_IRQn);
+            // disable ADC
+            // reset buttons to control group reading
+            rgbOff();
+            
+        }
+
+    }
+
+    /** Called from the TIM3 interrupt at SYSTEM_TICK_HZ when system tick is enabled.
+     */
+    static void systemTick() { 
+        systemTick_ = false;
+        switch (systemTickId_++) {
+            case 0:
+                readControlGroup();
+                break;
+            case 1:
+                readABXYGroup();
+                break;
+            default:
+                readDPadGroup();
+                systemTickId_ = 0;
+                break;
+        }
+    }
+
+
+    /** RTC timekeeping and wakeup alarm
      */
     //@{
 
     static constexpr uint32_t EPOCH_START_MJD = 58119; // 2018/1/1 
     static constexpr uint32_t SECONDS_PER_DAY = 3600 * 24;
+    static volatile inline bool secondTick_ = false;
 
     static void initializeRTC() {
         rtc::enable();
+        rtc::setCounter(0);
+        rtc::setAlarmCounter(0);
+        rtc::enableAlarmInterrupt(false);
+        rtc::enableSecondInterrupt(true);
         // TODO set the puya RTC values correctly
         LOG("  rtc " << rtc::enabled());
     }
@@ -126,12 +238,19 @@ private:
         rtc::setAlarmCounter(rtc::counter() + seconds);
     }
 
+    static void secondTick() {
+        secondTick_ = false;
+        updateDateTime();
+
+        //LOG(ts_.time.time);
+    }
+
+
     //@}
 
     /** I2C Communications with the RP2350
      */
     //@{
-    static inline TransferrableState ts_;
 
     static void initializeI2C() {
 
@@ -167,7 +286,7 @@ private:
     }
 
     static bool getDebouncedButtonValue(Btn btn) {
-        bool last = ts_.state.button(btn);
+        bool last = ts_.button(btn);
         bool current; 
 
         if (debounceCounters_[static_cast<uint8_t>(btn)] != 0) {
@@ -201,6 +320,111 @@ private:
             debounceCounters_[static_cast<uint8_t>(btn)] = RCKID_BUTTON_DEBOUNCE_TICKS;
         return current;
     }
+
+    static void readControlGroup() {
+        bool btnHome = getDebouncedButtonValue(Btn::Home);
+        bool btnVolumeUp = getDebouncedButtonValue(Btn::VolumeUp);
+        bool btnVolumeDown = getDebouncedButtonValue(Btn::VolumeDown);
+
+        bool changed = ts_.setButton(Btn::Home, btnHome);
+             changed = ts_.setButton(Btn::VolumeUp, btnVolumeUp) || changed;
+             changed = ts_.setButton(Btn::VolumeDown, btnVolumeDown) || changed;
+
+
+        // move to the next group immediately to maximize the time between group mode & button read, print state change id debugging enabled. Note that this function is only expected to be called when we are not powered down (i.e. we have running ticks)
+        ASSERT(ts_.state() != mkIV::DeviceState::State::Off);
+        gpio::high(PUYA_PIN_BTN_CTRL);
+        gpio::low(PUYA_PIN_BTN_ABXY);
+
+        if (changed) {
+            LOG("CTRL: " << ts_.button(Btn::Home) << " " << ts_.button(Btn::VolumeUp) << " " << ts_.button(Btn::VolumeDown));
+        }
+        
+#ifdef HAHA        
+        bool changed = ts_.state.setButton(Btn::Home, btnHome);
+
+        // in case we are running normal system ticks, check if the home button press should be interpreted as wakeup start
+        if (changed && btnHome && ! isPowerModeOn())
+            setPowerMode(POWER_MODE_WAKEUP);
+
+        changed = ts_.state.setButton(Btn::VolumeUp, btnVolumeUp) || changed;
+        changed = ts_.state.setButton(Btn::VolumeDown, btnVolumeDown) || changed;
+
+        // in power off mode, the buttons are not checked via the control groups, but directly via the ISR for home button
+        ASSERT(! isPowerModeOff());
+
+        // move to the next group immediately in non poweroff modes (ticks are running)
+        gpio::high(AVR_PIN_BTN_CTRL);
+        gpio::low(AVR_PIN_BTN_ABXY);
+
+        // check long press of home button here to enable device power on, or power off
+        if (btnHome && (homeBtnLongPress_ == 0))
+            startHomeButtonLongPress();
+        else 
+            checkHomeButtonLongPress();
+
+        if (changed) {
+            LOG("CTRL: " << ts_.state.button(Btn::Home) << " " << ts_.state.button(Btn::VolumeUp) << " " << ts_.state.button(Btn::VolumeDown));
+
+            // if we are in wakeup mode *and* the volume down button is not pressed, we should exit the debug mode (it was set in wakeup mode enable proactively)
+            if (isPowerModeWakeup()) {
+                if (! btnVolumeDown)
+                    ts_.state.setDebugMode(false);
+            }
+
+            // if we are in debug mode, react to volume button presses immediately to either reboot the RP, or enter bootloader mode
+            if (isPowerModeOn() && ts_.state.debugMode()) {
+                if (btnVolumeUp) {
+                    rebootRP();
+                    return;
+                }
+                if (btnVolumeDown) {
+                    bootloaderRP();
+                    return;
+                }
+            }
+        }
+#endif
+    }
+
+    static void readABXYGroup() {
+        bool btnA = getDebouncedButtonValue(Btn::A);
+        bool btnB = getDebouncedButtonValue(Btn::B);
+        bool btnSelect = getDebouncedButtonValue(Btn::Select);
+        bool btnStart = getDebouncedButtonValue(Btn::Start);
+        bool changed = ts_.setButton(Btn::A, btnA);
+             changed = ts_.setButton(Btn::B, btnB) || changed;
+             changed = ts_.setButton(Btn::Select, btnSelect) || changed;
+             changed = ts_.setButton(Btn::Start, btnStart) || changed;
+
+        // move to the next group immediately to maximize the time between group mode & button read, print state change id debugging enabled. Note that this function is only expected to be called when we are not powered down (i.e. we have running ticks)
+        ASSERT(ts_.state() != mkIV::DeviceState::State::Off);
+        gpio::high(PUYA_PIN_BTN_ABXY);
+        gpio::low(PUYA_PIN_BTN_DPAD);
+        if (changed) {
+            LOG("ABXY: " << ts_.button(Btn::A) << " " << ts_.button(Btn::B) << " " << ts_.button(Btn::Select) << " " << ts_.button(Btn::Start));
+        }
+    }
+
+    static void readDPadGroup() {
+        bool btnLeft = getDebouncedButtonValue(Btn::Left);
+        bool btnRight = getDebouncedButtonValue(Btn::Right);
+        bool btnUp = getDebouncedButtonValue(Btn::Up);
+        bool btnDown = getDebouncedButtonValue(Btn::Down);
+        bool changed = ts_.setButton(Btn::Left, btnLeft);
+             changed = ts_.setButton(Btn::Right, btnRight) || changed;
+             changed = ts_.setButton(Btn::Up, btnUp) || changed;
+             changed = ts_.setButton(Btn::Down, btnDown) || changed;
+
+        // move to the next group immediately to maximize the time between group mode & button read, print state change id debugging enabled. Note that this function is only expected to be called when we are not powered down (i.e. we have running ticks)
+        ASSERT(ts_.state() != mkIV::DeviceState::State::Off);
+        gpio::high(PUYA_PIN_BTN_DPAD);
+        gpio::low(PUYA_PIN_BTN_CTRL);
+        if (changed) {
+            LOG("DPAD: " << ts_.button(Btn::Left) << " " << ts_.button(Btn::Right) << " " << ts_.button(Btn::Up) << " " << ts_.button(Btn::Down));
+        }
+    }
+
     //@}
 
     /** \name ADC (voltage and temperature)
@@ -223,6 +447,9 @@ private:
         The RGB LEDs are connected to SPI2, where we are using only MOSI to drive the 1 wire interface.
      */
     //@{
+    static void rgbOff() {
+        // clear effects, send black to all LEDs to power them off
+    }
     //@}
 
     /** \name PWM (Rumbler)
@@ -233,7 +460,7 @@ private:
 
     static constexpr uint8_t RUMBLER_DUTY_PWM [] = {0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 99};
 
-    static void intializeRumbler() {
+    static void initializeRumbler() {
         // enable the timer1 to run at 20 kHz
         if (PUYA_CLOCKSPEED == cpu::ClockSpeed::MHz8) {
             timer1::enable(100, 4); // 8 MHz / 4 / 100 == 20 kHz
@@ -260,16 +487,28 @@ private:
     }
     //@}
 
+
+    friend void TIM3_IRQHandler();
+    friend void RTC_IRQHandler();
+
 }; // class KidDo
 
 extern "C" {
-    void RTC_IRQHandler(void) {
+    void TIM3_IRQHandler() {
+        if (LL_TIM_IsActiveFlag_UPDATE(TIM3)) {
+            LL_TIM_ClearFlag_UPDATE(TIM3);
+            KidDo::systemTick_ = true;
+        }
+    }
+
+    void RTC_IRQHandler() {
         if (LL_RTC_IsActiveFlag_SEC(RTC)) {
             LL_RTC_ClearFlag_SEC(RTC);
-            KidDo::secondTick();
+            KidDo::secondTick_ = true;
         }
         if (LL_RTC_IsActiveFlag_ALR(RTC)) {
             LL_RTC_ClearFlag_ALR(RTC);
+            // KidDo::ts_.setAlarmInterrupt(true);
             // TODO code for device wakeup
         }
     }

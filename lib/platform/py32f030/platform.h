@@ -445,7 +445,10 @@ public:
         LL_TIM_SetPrescaler(TIM1, prescaler - 1);
         LL_TIM_SetAutoReload(TIM1, resolution - 1);
         LL_TIM_SetRepetitionCounter(TIM1, 0);
-        
+        // prescaler & repetition counter are only loaded on update event, force one so that the first period is correct too, then clear the flag so that it does not fire the update interrupt if enabled
+        LL_TIM_GenerateEvent_UPDATE(TIM1);
+        LL_TIM_ClearFlag_UPDATE(TIM1);
+
         // enable software control of outputs
         LL_TIM_EnableAllOutputs(TIM1);
         // enable the timer
@@ -493,6 +496,9 @@ public:
         LL_TIM_SetPrescaler(TIM3, prescaler - 1);
         LL_TIM_SetAutoReload(TIM3, resolution - 1);
         LL_TIM_SetRepetitionCounter(TIM3, 0);
+        // prescaler is only loaded on update event, force one so that the first period is correct too, then clear the flag so that it does not fire the update interrupt if enabled
+        LL_TIM_GenerateEvent_UPDATE(TIM3);
+        LL_TIM_ClearFlag_UPDATE(TIM3);
 
         LL_TIM_EnableAllOutputs(TIM3);
         LL_TIM_EnableCounter(TIM3);
@@ -599,11 +605,10 @@ public:
         LL_RTC_TIME_SetCounter(RTC, value);
     }
 
-    static uint32_t alarmCounter() {
-        // TODO maybe this does not work and returns garbage (the datasheet says the register is write only, but that sounds odd)
-        return (RTC->ALRH << 16) | (RTC->ALRL & 0xffff);
-    }
-
+    /** Sets the alarm counter. 
+     
+        When the counter is identical to that of the alarm counter, the alarm interrupt is triggered. It is not possible to read the alarm counter from the HW. 
+     */
     static void setAlarmCounter(uint32_t value) {
         LL_RTC_ALARM_SetCounter(RTC, value);
     }

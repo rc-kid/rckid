@@ -208,6 +208,8 @@
  */
 #define PUYA_CLOCKSPEED cpu::ClockSpeed::MHz8
 
+#define PUYA_SYSTEM_TICK_HZ 200
+
 #define PUYA_RUMBLER_PWM_FREQUENCY 20000
 
 #define RGB_LED_DPAD_TOP_LEFT 1
