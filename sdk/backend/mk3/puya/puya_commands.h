@@ -125,9 +125,7 @@ namespace rckid {
     public:
         bool debugUart = true;
         uint16_t bufferUsed = 0;
-        uint8_t buffer[1024];
-        uint8_t cmdBuffer[32];
-
+        uint8_t buffer[256];
     } __attribute__((packed)); // rckid::TransferrableState
 
     }   // namespace mkIV

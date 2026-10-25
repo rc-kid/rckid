@@ -1,4 +1,7 @@
 #include <platform.h>
+#include <py32f0xx_ll_i2c.h>
+#include <py32f0xx_ll_dma.h>
+#include <py32f0xx_ll_system.h>
 #include <writer.h>
 #include <config.h>
 
@@ -64,6 +67,8 @@ using namespace rckid;
 extern "C" {
     void TIM3_IRQHandler();
     void RTC_IRQHandler();
+    void I2C1_IRQHandler();
+    void DMA1_Channel1_IRQHandler();
 }
 
 class KidDo {
@@ -99,6 +104,9 @@ public:
             systemTick();
         if (secondTick_)
             secondTick();
+        if (i2cRxBytes_ > 0)
+            processI2CCommand();
+        // TODO not this:
         if (ts_.alarmInterrupt()) {
             ts_.setAlarmInterrupt(false);
             LOG("Alarm interrupt");
@@ -249,15 +257,149 @@ private:
     //@}
 
     /** I2C Communications with the RP2350
-     */
+     
+        Uses simplified DMA based protocol that allows for the following actions: 
+        
+        - master reads, always read from the beginning of the transferrable state as many bytes as the master wants. 
+        - master writes, always write to the command buffer. If the command buffer is full, the write will be NACKed.
+    */
     //@{
 
-    static void initializeI2C() {
+    static volatile inline uint32_t i2cRxBytes_ = 0;
 
+    static void initializeI2C() {
+        i2cRxBytes_ = 0;
+        LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_I2C1);
+        LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_SYSCFG);
+        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+        // SCL & SDA as open drain alternate functions
+        static_assert(PUYA_PIN_I2C_SCL == gpio::PB6 && PUYA_PIN_I2C_SDA == gpio::PB7, "I2C must be on PB6 (SCL) and PB7 (SDA), AF6");
+        LL_GPIO_InitTypeDef cfg{};
+        cfg.Pin = gpio::pinMask(PUYA_PIN_I2C_SCL) | gpio::pinMask(PUYA_PIN_I2C_SDA);
+        cfg.Mode = LL_GPIO_MODE_ALTERNATE;
+        cfg.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+        cfg.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+        cfg.Pull = LL_GPIO_PULL_UP;
+        cfg.Alternate = LL_GPIO_AF6_I2C;
+        LL_GPIO_Init(GPIOB, & cfg);
+        // set the DMA channel 1 peripheral address to I2C1 data register
+        LL_DMA_SetPeriphAddress(DMA1, LL_DMA_CHANNEL_1, reinterpret_cast<uint32_t>(& I2C1->DR));
+        LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_1);
+        NVIC_SetPriority(DMA1_Channel1_IRQn, 0);
+        NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+        NVIC_SetPriority(I2C1_IRQn, 0);
+        NVIC_EnableIRQ(I2C1_IRQn);
+        i2cReset();
         LOG("  i2c");
     }
-    //@}
 
+    static void processI2CCommand() {
+        if (i2cRxBytes_ == 0)
+            return;
+
+
+        i2cRxBytes_ = 0;
+    }
+
+
+    static void i2cReset() {
+        LL_I2C_EnableReset(I2C1);
+        LL_I2C_DisableReset(I2C1);
+        LL_I2C_ConfigSpeed(I2C1, SystemCoreClock, RCKID_I2C_SPEED, LL_I2C_DUTYCYCLE_2);
+        LL_I2C_SetOwnAddress1(I2C1, RCKID_AVR_I2C_ADDRESS << 1, 0);
+        LL_I2C_EnableClockStretching(I2C1);
+        LL_I2C_EnableIT_EVT(I2C1);
+        LL_I2C_EnableIT_ERR(I2C1);
+        LL_I2C_Enable(I2C1);
+        // ACK is cleared by hardware while PE=0, so must be set after enabling
+        LL_I2C_AcknowledgeNextData(I2C1, LL_I2C_ACK);
+    }
+
+    /** Stops the DMA transfer, if any. If the DMA was enabled and receiving, a master write has just finished, so the number of received bytes is stored in i2cRxBytes_ for the main loop (0 bytes is just an I2C ping). Checking the enabled flag ensures stale DMA configuration from previous transactions is ignored.
+     */
+    static void i2cStopDMA() {
+        if (LL_DMA_IsEnabledChannel(DMA1, LL_DMA_CHANNEL_1) && LL_DMA_GetDataTransferDirection(DMA1, LL_DMA_CHANNEL_1) == LL_DMA_DIRECTION_PERIPH_TO_MEMORY) {
+            ASSERT(i2cRxBytes_ == 0);
+            i2cRxBytes_ = sizeof(ts_.buffer) - LL_DMA_GetDataLength(DMA1, LL_DMA_CHANNEL_1);
+        }
+        LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_1);
+        // single DMAEN bit for both directions
+        LL_I2C_DisableDMAReq_RX(I2C1);
+    }
+
+    static void i2cIRQHandler() {
+        // SR2 is read before SR1 so that we get the direction without clearing ADDR (cleared by reading SR1 followed by SR2), which keeps SCL stretched while we set up the DMA
+        uint32_t sr2 = I2C1->SR2;
+        uint32_t sr1 = I2C1->SR1;
+        // if there are any errors, abandon whatever transaction is in progress and reset the I2C (disabling the DMA first discards any partially received command)
+        if (sr1 & (I2C_SR1_BERR | I2C_SR1_ARLO | I2C_SR1_OVR)) {
+            LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_1);
+            i2cStopDMA();
+            i2cReset();
+            return;
+        }
+        // address match, start of new transaction. Repeated start does not generate STOPF, so stop the previous transfer first (registering the command if it was a write), as the DMA can't be reconfigured while enabled
+        if (sr1 & I2C_SR1_ADDR) {
+            i2cStopDMA();
+            // master read, initialize the DMA to send the bytes from the transferrable state, looping if master reads more
+            if (sr2 & I2C_SR2_TRA) {
+                LL_SYSCFG_SetDMARemap_CH1(LL_SYSCFG_DMA_MAP_I2C_TX);
+                LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_1,
+                    LL_DMA_DIRECTION_MEMORY_TO_PERIPH |
+                    LL_DMA_MODE_CIRCULAR |
+                    LL_DMA_PERIPH_NOINCREMENT |
+                    LL_DMA_MEMORY_INCREMENT |
+                    LL_DMA_PDATAALIGN_BYTE |
+                    LL_DMA_MDATAALIGN_BYTE |
+                    LL_DMA_PRIORITY_LOW
+                );
+                LL_DMA_SetMemoryAddress(DMA1, LL_DMA_CHANNEL_1, reinterpret_cast<uint32_t>(& ts_));
+                LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, sizeof(ts_));
+                LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
+                LL_I2C_EnableDMAReq_RX(I2C1);
+            // master write, NACK if we are already processing a command, otherwise initialize the DMA to receive the bytes into the command buffer
+            } else if (i2cRxBytes_ != 0) {
+                LL_I2C_AcknowledgeNextData(I2C1, LL_I2C_NACK);
+            } else {
+                LL_SYSCFG_SetDMARemap_CH1(LL_SYSCFG_DMA_MAP_I2C_RX);
+                LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_1,
+                    LL_DMA_DIRECTION_PERIPH_TO_MEMORY |
+                    LL_DMA_PERIPH_NOINCREMENT |
+                    LL_DMA_MEMORY_INCREMENT |
+                    LL_DMA_PDATAALIGN_BYTE |
+                    LL_DMA_MDATAALIGN_BYTE |
+                    LL_DMA_PRIORITY_LOW
+                );
+                LL_DMA_SetMemoryAddress(DMA1, LL_DMA_CHANNEL_1, reinterpret_cast<uint32_t>(ts_.buffer));
+                LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_1, sizeof(ts_.buffer));
+                LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
+                LL_I2C_EnableDMAReq_RX(I2C1);
+            }
+            // clears ADDR as SR1 has already been read, releasing SCL
+            (void) I2C1->SR2;
+        }
+        // master read finished, master nacked the last byte it wanted, i.e. master read is finished 
+        if (sr1 & I2C_SR1_AF) {
+            LL_I2C_ClearFlag_AF(I2C1);
+            i2cStopDMA();
+            // reset the I2C peripheral for the next transaction (also gets rid of any stale byte in the DR)
+            i2cReset();
+        }
+        // master write finished, master sent STOP. Note how many bytes we received
+        if (sr1 & I2C_SR1_STOPF) {
+            LL_I2C_ClearFlag_STOP(I2C1);
+            i2cStopDMA();
+            // reset the I2C peripheral for the next transaction (also gets rid of any NACKed byte in the DR)
+            i2cReset();
+        }
+    }
+
+    static void i2cDMAComplete() {
+        // if we were receiving data, NACK anything else master sends
+        if (LL_DMA_GetDataTransferDirection(DMA1, LL_DMA_CHANNEL_1) == LL_DMA_DIRECTION_PERIPH_TO_MEMORY)
+            LL_I2C_AcknowledgeNextData(I2C1, LL_I2C_NACK);
+    }
+    //@}
 
     /** \name Buttons 
 
@@ -490,6 +632,8 @@ private:
 
     friend void TIM3_IRQHandler();
     friend void RTC_IRQHandler();
+    friend void I2C1_IRQHandler();
+    friend void DMA1_Channel1_IRQHandler();
 
 }; // class KidDo
 
@@ -510,6 +654,17 @@ extern "C" {
             LL_RTC_ClearFlag_ALR(RTC);
             // KidDo::ts_.setAlarmInterrupt(true);
             // TODO code for device wakeup
+        }
+    }
+
+    void I2C1_IRQHandler() {
+        KidDo::i2cIRQHandler();
+    }
+
+    void DMA1_Channel1_IRQHandler() {
+        if (LL_DMA_IsActiveFlag_TC1(DMA1)) {
+            LL_DMA_ClearFlag_TC1(DMA1);
+            KidDo::i2cDMAComplete();
         }
     }
 }
