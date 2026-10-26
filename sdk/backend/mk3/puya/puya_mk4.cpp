@@ -69,6 +69,8 @@ extern "C" {
     void RTC_IRQHandler();
     void I2C1_IRQHandler();
     void DMA1_Channel1_IRQHandler();
+    void EXTI0_1_IRQHandler();
+    void EXTI2_3_IRQHandler();
 }
 
 class KidDo {
@@ -113,8 +115,18 @@ private:
     /** Initializes the GPIO pins to their default values.
      */
     static void initializeGPIO() {
-
-
+        // initialkize the charging interrupt pin (this is active at all times)
+        static_assert(PUYA_PIN_CHARGING == gpio::PB1, "Charging signal must be on PB1 (EXTI line 1)");
+        // TODO verify pull against the charger's status output
+        gpio::setAsInputPullup(PUYA_PIN_CHARGING);
+        LL_EXTI_SetEXTISource(LL_EXTI_CONFIG_PORTB, LL_EXTI_CONFIG_LINE1);
+        // TODO I need to figure which one (this only fires when charging starts)
+        LL_EXTI_EnableRisingTrig(LL_EXTI_LINE_1);
+        LL_EXTI_EnableFallingTrig(LL_EXTI_LINE_1);
+        LL_EXTI_ClearFlag(LL_EXTI_LINE_1);
+        LL_EXTI_EnableIT(LL_EXTI_LINE_1);
+        NVIC_SetPriority(EXTI0_1_IRQn, 1);
+        NVIC_EnableIRQ(EXTI0_1_IRQn);
         LOG("  gpio");
     }
 
@@ -146,17 +158,18 @@ private:
                 // when going to the power off state, we must ensure that everything is truly off, as the next loop cycle will enter the sleep method and put the device to sleep.
                 ASSERT(! poweredOn());
                 ASSERT(ts_.dcPower() == false);
+                ts_.setState(s);
                 enableSystemTick(false);
                 // if we have pending alarm interrupt, ener the alarm state instead
                 if (ts_.alarmInterrupt()) {
                     ts_.setState(s);
                     setState(mkIV::DeviceState::State::Alarm);
-                    return;
                 }
-                break;
+                return; // we already set the state above
             case mkIV::DeviceState::State::OffDC:
                 ASSERT(! poweredOn());
-                ASSERT(ts_.dcPower() == true);
+                // force the DC power flag to true - it will be updated by the ADCs later, but we need to set it now so that the state is consistent with the actual power state
+                ts_.setDcPower(true);
                 // system tick already enabled bythe above, if moving from Off state
                 // if we have pending alarm interrupt, ener the alarm state instead
                 if (ts_.alarmInterrupt()) {
@@ -246,12 +259,19 @@ private:
     /** System tick is driven by TIM3's update interrupt. The timer is prescaled to 1MHz and reloads every 1MHz / SYSTEM_TICK_HZ ticks (5000 for 200Hz, fits the 16bit counter).
      */
     static void enableSystemTick(bool value = true) {
+        static_assert(PUYA_PIN_BTN_1 == gpio::PA2, "Home button must be on PA2 (EXTI line 2)");
         if (value) {
             ASSERT(PUYA_CLOCKSPEED == cpu::ClockSpeed::MHz8);
             timer3::enable(1000000 / PUYA_SYSTEM_TICK_HZ, 8); // 8 MHz / 8 / 5000 == 200 Hz
             LL_TIM_EnableIT_UPDATE(TIM3);
             NVIC_SetPriority(TIM3_IRQn, 1);
             NVIC_EnableIRQ(TIM3_IRQn);
+            // disable the home button interrupt as we are now reading entire button matrix via the system ticks
+            NVIC_DisableIRQ(EXTI2_3_IRQn);
+            LL_EXTI_DisableIT(LL_EXTI_LINE_2);
+            LL_EXTI_DisableFallingTrig(LL_EXTI_LINE_2);
+            LL_EXTI_ClearFlag(LL_EXTI_LINE_2);
+            NVIC_ClearPendingIRQ(EXTI2_3_IRQn);
         } else {
             NVIC_DisableIRQ(TIM3_IRQn);
             LL_TIM_DisableIT_UPDATE(TIM3);
@@ -259,13 +279,25 @@ private:
             LL_TIM_ClearFlag_UPDATE(TIM3);
             NVIC_ClearPendingIRQ(TIM3_IRQn);
             // disable ADC
-            // reset buttons to control group reading
             rgbOff();
             // ensure any pending system tick is cleared so that we do not run stale ticks in power off mode
             systemTick_ = false;
-            
+            // if we were in the middle of a long press counter detection when powering off, cancel it
+            homeBtnLongPressCounter_ = 0;
+            // reset buttons to control group reading so that the home button can be detected by the interrupt, and the control group is the first one read when ticks are enabled again
+            gpio::high(PUYA_PIN_BTN_DPAD);
+            gpio::high(PUYA_PIN_BTN_ABXY);
+            gpio::low(PUYA_PIN_BTN_CTRL);
+            cpu::delayMs(1); // give time to stabilize
+            systemTickId_ = 0;
+            // enable the home button interrupt so that we can wake up the device from power off state
+            LL_EXTI_SetEXTISource(LL_EXTI_CONFIG_PORTA, LL_EXTI_CONFIG_LINE2);
+            LL_EXTI_EnableFallingTrig(LL_EXTI_LINE_2);
+            LL_EXTI_ClearFlag(LL_EXTI_LINE_2);
+            LL_EXTI_EnableIT(LL_EXTI_LINE_2);
+            NVIC_SetPriority(EXTI2_3_IRQn, 1);
+            NVIC_EnableIRQ(EXTI2_3_IRQn);
         }
-
     }
 
     /** Called from the TIM3 interrupt at SYSTEM_TICK_HZ when system tick is enabled.
@@ -298,16 +330,18 @@ private:
         // check if we have home button long press on our hands
         if (homeBtnLongPressCounter_ > 0 && --homeBtnLongPressCounter_ == 0)
             btnHomeLongPress();
+        // TODO deal with charging checks
+
         // TODO if we are *not* in the On state, we should display charging notification if DC is on 
         // if (ts_.state() != mkIV::DeviceState::State::On && ts_.state() != mkIV::DeviceState::State::Off)
             
     }
 
     static void sleep() {
+        // TODO there is a race now - we can have wakeup because of charging enabled between the check and sleeping and we will miss it. My future self will solve this properly once we start sleeping
         ASSERT(ts_.state() == mkIV::DeviceState::State::Off);
         // TODO ensure the system is in state from which it can wakeup by the home button press
     }
-
 
     /** RTC timekeeping and wakeup alarm
      */
@@ -644,9 +678,13 @@ private:
 
         bool changed = ts_.setButton(Btn::Home, btnHome);
     
-        // if btnHome has changed to pressed and we are in the On or Alarm states, arm the long press detection counter
-        if (changed && (ts_.state() == mkIV::DeviceState::State::On || ts_.state() == mkIV::DeviceState::State::Alarm) && btnHome)
+        // if btnHome has changed to pressed, arm the long press detection counter (let the actual detection decide what to do with it)
+        if (changed &&  btnHome) {
             homeBtnLongPressCounter_ = RCKID_HOME_BUTTON_LONG_PRESS_MS / (1000 / PUYA_SYSTEM_TICK_HZ);
+            // if we are off, detecting home button press should wake us up
+            if (ts_.state() == mkIV::DeviceState::State::OffDC)
+                setState(mkIV::DeviceState::State::Wake);
+        }
 
         changed = ts_.setButton(Btn::VolumeUp, btnVolumeUp) || changed;
         changed = ts_.setButton(Btn::VolumeDown, btnVolumeDown) || changed;
@@ -658,52 +696,6 @@ private:
 
         if (changed)
             LOG("CTRL: " << btnHome << " " << btnVolumeUp << " " << btnVolumeDown);
-        
-#ifdef HAHA        
-        bool changed = ts_.state.setButton(Btn::Home, btnHome);
-
-        // in case we are running normal system ticks, check if the home button press should be interpreted as wakeup start
-        if (changed && btnHome && ! isPowerModeOn())
-            setPowerMode(POWER_MODE_WAKEUP);
-
-        changed = ts_.state.setButton(Btn::VolumeUp, btnVolumeUp) || changed;
-        changed = ts_.state.setButton(Btn::VolumeDown, btnVolumeDown) || changed;
-
-        // in power off mode, the buttons are not checked via the control groups, but directly via the ISR for home button
-        ASSERT(! isPowerModeOff());
-
-        // move to the next group immediately in non poweroff modes (ticks are running)
-        gpio::high(AVR_PIN_BTN_CTRL);
-        gpio::low(AVR_PIN_BTN_ABXY);
-
-        // check long press of home button here to enable device power on, or power off
-        if (btnHome && (homeBtnLongPress_ == 0))
-            startHomeButtonLongPress();
-        else 
-            checkHomeButtonLongPress();
-
-        if (changed) {
-            LOG("CTRL: " << ts_.state.button(Btn::Home) << " " << ts_.state.button(Btn::VolumeUp) << " " << ts_.state.button(Btn::VolumeDown));
-
-            // if we are in wakeup mode *and* the volume down button is not pressed, we should exit the debug mode (it was set in wakeup mode enable proactively)
-            if (isPowerModeWakeup()) {
-                if (! btnVolumeDown)
-                    ts_.state.setDebugMode(false);
-            }
-
-            // if we are in debug mode, react to volume button presses immediately to either reboot the RP, or enter bootloader mode
-            if (isPowerModeOn() && ts_.state.debugMode()) {
-                if (btnVolumeUp) {
-                    rebootRP();
-                    return;
-                }
-                if (btnVolumeDown) {
-                    bootloaderRP();
-                    return;
-                }
-            }
-        }
-#endif
     }
 
     static void readABXYGroup() {
@@ -823,6 +815,8 @@ private:
     friend void RTC_IRQHandler();
     friend void I2C1_IRQHandler();
     friend void DMA1_Channel1_IRQHandler();
+    friend void EXTI0_1_IRQHandler();
+    friend void EXTI2_3_IRQHandler();
 
 }; // class KidDo
 
@@ -854,6 +848,25 @@ extern "C" {
         if (LL_DMA_IsActiveFlag_TC1(DMA1)) {
             LL_DMA_ClearFlag_TC1(DMA1);
             KidDo::i2cDMAComplete();
+        }
+    }
+
+    /** Charging interrupt. The only thing we have to do is switch the state to OffDC. The system ticks will start ADC sampler for the voltage, and continue monitoring the charging status and the dc voltage to determine the rest of the transitions and state changes. 
+     */
+    void EXTI0_1_IRQHandler() {
+        if (LL_EXTI_IsActiveFlag(LL_EXTI_LINE_1)) {
+            LL_EXTI_ClearFlag(LL_EXTI_LINE_1);
+            if (KidDo::ts_.state() == mkIV::DeviceState::State::Off)
+                KidDo::setState(mkIV::DeviceState::State::OffDC);
+        }
+    }
+
+    /** Home button interrupt - fired when from high to low (button press), we set state to Wake. 
+     */
+    void EXTI2_3_IRQHandler() {
+        if (LL_EXTI_IsActiveFlag(LL_EXTI_LINE_2)) {
+            LL_EXTI_ClearFlag(LL_EXTI_LINE_2);
+            KidDo::setState(mkIV::DeviceState::State::Wake);
         }
     }
 }
