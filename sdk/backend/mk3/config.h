@@ -224,7 +224,15 @@
  */
 #define RCKID_POWERDOWN_TIMEOUT_MS 300
 
+/** Extended timeout for the powerdown state. This is the number of milliseconds the firmware has to actually turn itself off properly *after* it acknowledges the power down request. 
+ */
 #define RCKID_POWERDOWN_EXTENDED_TIMEOUT_MS 10000
+
+/** Duration of a long press of the home button. Long press when powered off turns the device on, while long press in powered on mode turns the device off.
+ */
+#define RCKID_HOME_BUTTON_LONG_PRESS_MS 2000
+
+
 
 #define RGB_LED_DPAD_TOP_LEFT 1
 #define RGB_LED_DPAD_TOP_RIGHT 0

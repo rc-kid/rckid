@@ -166,7 +166,9 @@ private:
                 }
                 break;
             case mkIV::DeviceState::State::Wake:
-                // when waking up, ensure that the Btn::Home is considered pressed and reset the long press counter                
+                // when waking up, ensure that the Btn::Home is considered pressed and reset the long press counter 
+                ts_.setButton(Btn::Home, true);
+                homeBtnLongPressCounter_ = RCKID_HOME_BUTTON_LONG_PRESS_MS / (1000 / PUYA_SYSTEM_TICK_HZ);
                 break;
             case mkIV::DeviceState::State::Alarm:
                 // power the device on (we canonly reach alarm state if the device is off)
@@ -178,6 +180,8 @@ private:
             case mkIV::DeviceState::State::PowerDown:
                 // the power down state is a hint for the rp2350 to power itself down. We reset the rp watchog to the power down timeout to ensure timely compliance. In the power down mode the watchdog counter is not reset on I2C transactions and can only be explicitly extended via the power down acknowledge message 
                 ASSERT(poweredOn());
+                // no need for debug mode anymore
+                ts_.setDebugMode(false);
                 // set the state early to ensure we do not extend the watchog during I2C reads
                 ts_.setState(s);
                 reloadRpWatchdogCounter(RCKID_POWERDOWN_TIMEOUT_MS);
@@ -195,6 +199,11 @@ private:
         }
         // set the state
         ts_.setState(s);
+    }
+
+    static void setDebugMode(bool enabled) {
+        // TODO do more things here?
+        ts_.setDebugMode(enabled);
     }
 
     static void reloadRpWatchdogCounter(uint32_t time_ms) {
@@ -286,6 +295,9 @@ private:
                 // TODO some fancy RGB to tell us this happened
             }
         }
+        // check if we have home button long press on our hands
+        if (homeBtnLongPressCounter_ > 0 && --homeBtnLongPressCounter_ == 0)
+            btnHomeLongPress();
         // TODO if we are *not* in the On state, we should display charging notification if DC is on 
         // if (ts_.state() != mkIV::DeviceState::State::On && ts_.state() != mkIV::DeviceState::State::Off)
             
@@ -566,7 +578,7 @@ private:
         gpio::outputHigh(PUYA_PIN_BTN_ABXY);
         gpio::outputLow(PUYA_PIN_BTN_CTRL);
         // reset home button long press
-        homeBtnLongPressCounter_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
+        homeBtnLongPressCounter_ = 0;
     }
 
     static bool getDebouncedButtonValue(Btn btn) {
@@ -610,19 +622,42 @@ private:
         bool btnVolumeUp = getDebouncedButtonValue(Btn::VolumeUp);
         bool btnVolumeDown = getDebouncedButtonValue(Btn::VolumeDown);
 
-        bool changed = ts_.setButton(Btn::Home, btnHome);
-             changed = ts_.setButton(Btn::VolumeUp, btnVolumeUp) || changed;
-             changed = ts_.setButton(Btn::VolumeDown, btnVolumeDown) || changed;
+        // if we are in debug mode, volume up & down button presses are interpreted as reboot and reboot to bootloader respctively
+        if (ts_.debugMode()) {
+            ASSERT(ts_.state() == mkIV::DeviceState::State::On);
+            if (! ts_.button(Btn::VolumeUp) && btnVolumeUp)
+                reboot();
+            if (! ts_.button(Btn::VolumeDown) && btnVolumeDown)
+                rebootToBootloader();
+        }
 
+        // if the home button is released, reset the long press counter and if we are in wake state go to off/offDC immediately (it was a false wakeup)
+        if (! btnHome) {
+            homeBtnLongPressCounter_ = 0;
+            if (ts_.state() == mkIV::DeviceState::State::Wake) {
+                setState(ts_.dcPower() ? mkIV::DeviceState::State::OffDC : mkIV::DeviceState::State::Off);
+                // return early so that we do not hit the assert that we are not off below when switching the button matrix for next group read
+                if (ts_.state() == mkIV::DeviceState::State::Off)
+                    return;
+            }
+        }
+
+        bool changed = ts_.setButton(Btn::Home, btnHome);
+    
+        // if btnHome has changed to pressed and we are in the On or Alarm states, arm the long press detection counter
+        if (changed && (ts_.state() == mkIV::DeviceState::State::On || ts_.state() == mkIV::DeviceState::State::Alarm) && btnHome)
+            homeBtnLongPressCounter_ = RCKID_HOME_BUTTON_LONG_PRESS_MS / (1000 / PUYA_SYSTEM_TICK_HZ);
+
+        changed = ts_.setButton(Btn::VolumeUp, btnVolumeUp) || changed;
+        changed = ts_.setButton(Btn::VolumeDown, btnVolumeDown) || changed;
 
         // move to the next group immediately to maximize the time between group mode & button read, print state change id debugging enabled. Note that this function is only expected to be called when we are not powered down (i.e. we have running ticks)
         ASSERT(ts_.state() != mkIV::DeviceState::State::Off);
         gpio::high(PUYA_PIN_BTN_CTRL);
         gpio::low(PUYA_PIN_BTN_ABXY);
 
-        if (changed) {
-            LOG("CTRL: " << ts_.button(Btn::Home) << " " << ts_.button(Btn::VolumeUp) << " " << ts_.button(Btn::VolumeDown));
-        }
+        if (changed)
+            LOG("CTRL: " << btnHome << " " << btnVolumeUp << " " << btnVolumeDown);
         
 #ifdef HAHA        
         bool changed = ts_.state.setButton(Btn::Home, btnHome);
@@ -685,9 +720,9 @@ private:
         ASSERT(ts_.state() != mkIV::DeviceState::State::Off);
         gpio::high(PUYA_PIN_BTN_ABXY);
         gpio::low(PUYA_PIN_BTN_DPAD);
-        if (changed) {
-            LOG("ABXY: " << ts_.button(Btn::A) << " " << ts_.button(Btn::B) << " " << ts_.button(Btn::Select) << " " << ts_.button(Btn::Start));
-        }
+
+        if (changed)
+            LOG("ABXY: " << btnA << " " << btnB << " " << btnSelect << " " << btnStart);
     }
 
     static void readDPadGroup() {
@@ -704,8 +739,20 @@ private:
         ASSERT(ts_.state() != mkIV::DeviceState::State::Off);
         gpio::high(PUYA_PIN_BTN_DPAD);
         gpio::low(PUYA_PIN_BTN_CTRL);
-        if (changed) {
-            LOG("DPAD: " << ts_.button(Btn::Left) << " " << ts_.button(Btn::Right) << " " << ts_.button(Btn::Up) << " " << ts_.button(Btn::Down));
+
+        if (changed)
+            LOG("DPAD: " << btnLeft << " " << btnRight << " " << btnUp << " " << btnDown);
+    }
+
+    static void btnHomeLongPress() {
+        // if we are in the wakeup state, we should exit the wakeup state and enter the on state
+        if (ts_.state() == mkIV::DeviceState::State::Wake || ts_.state() == mkIV::DeviceState::State::Alarm) {
+            setState(mkIV::DeviceState::State::On);
+            // set debug mode according to the state of the volume down
+            setDebugMode(ts_.button(Btn::VolumeDown));
+        } else if (ts_.state() == mkIV::DeviceState::State::On) {
+            // if we are in the on state, we should enter the power down state
+            setState(mkIV::DeviceState::State::PowerDown);
         }
     }
 
