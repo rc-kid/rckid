@@ -5,18 +5,44 @@
     #endif
 
     /** No operation. 
-     
-        Also resets the read address to the beginning of the device status (default).
      */
     COMMAND(0, Nop)
 
-    /** Returns the version of the AVR firmware.
+    /** Enters the power down state if powered on. When sent second time (i.e. while in the PowerDown mode) will immediately turn the device off. When used in the Alarm state, powers the device off immediately (since in the alarm state the user input reading main loop at RP2350 is not supposed to run)
      */
-    COMMAND(1, GetVersion)
-    
-    /** Sets the read address for the next I2C read to the beginning of the time information.
+    COMMAND(1, PowerOff)
+
+    /** Acknowledges the PowerDown state transition, which extends the power down state timeout to the extended value. Can only be used once. Further acknowledges will not have any effect.
      */
-    COMMAND(2, GetTime)
+    COMMAND(2, PowerDownAck)
+
+    /** Useful only in the Alarm state, makes the device to enter normal power on state. No effect in any other state.
+     */
+    COMMAND(3, PowerOn)
+
+    /** Forces hardware reboot of the RP2350 and cartridge by cycling the power. 
+     */
+    COMMAND(4, RebootRP);
+
+    /** Reboots the RP2350 in bootloader mode so that when connected to a PC it will present the cartridge's flash as UF2 device.
+     */
+    COMMAND(5, BootloaderRP);
+
+    COMMAND(6, SetAlarm,
+        uint32_t secondsFromNow;
+        uint32_t reason;
+        explicit SetAlarm(uint32_t value, uint32_t reason = 0): secondsFromNow{value}, reason{reason} {}
+    )
+
+    /** Sets the date & time kept by the RTC.
+     */
+    COMMAND(7, SetTime,
+        TinyDateTime value;
+        explicit SetTime(TinyDateTime value): value{value} {}
+    )
+
+
+    #ifdef FOOBAR
     
     /** Sets the date & time kept by the AVR.
      */
@@ -96,5 +122,7 @@
         RumblerEffect effect;
         explicit SetRumblerEffect(RumblerEffect effect): effect{effect} {}
     )
+
+    #endif
 
     #undef COMMAND

@@ -212,6 +212,20 @@
 
 #define PUYA_RUMBLER_PWM_FREQUENCY 20000
 
+/** RP2350 watchdog. If there is no I2C status read from the device in a given time, the IO MCU will immediately turn the device off.
+ */
+#define RCKID_RP2350_WATCHDOG_TIMEOUT_MS 1000 
+
+/** Device alarm state timeout. If the device spends more than this time in the Alarm state, it will be immediately powered down. 
+ */
+#define RCKID_ALARM_TIMEOUT_MS 60000
+
+/** Powerdown state timeout. When device enters the power down state, it has a short window to acknowledge this, after which the power down timeout is extended to the POWERDOWN_EXTENDED_TIMEOUT_MS, during which the device must power down. Without the acknowledge the device will immediately enter power off state after this interval to preserve snapiness of the controls in case the Rp2350 firmware is stuck.
+ */
+#define RCKID_POWERDOWN_TIMEOUT_MS 300
+
+#define RCKID_POWERDOWN_EXTENDED_TIMEOUT_MS 10000
+
 #define RGB_LED_DPAD_TOP_LEFT 1
 #define RGB_LED_DPAD_TOP_RIGHT 0
 #define RGB_LED_DPAD_BOTTOM_LEFT 2

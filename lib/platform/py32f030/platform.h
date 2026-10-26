@@ -87,20 +87,43 @@ public:
     }
 
     static void wdtReset() __attribute__((always_inline)) {
-//        __asm__ __volatile__ ("wdr"::);
-    }
-
-    static void cli() __attribute__((always_inline)) { 
-//        __asm__ __volatile__ ("cli"::);
-    }
-
-    static void sei()  __attribute__((always_inline)){ 
-//        __asm__ __volatile__ ("sei"::);
+        //__asm__ __volatile__ ("wdr"::);
     }
 
     static void nop()  __attribute__((always_inline)) { __NOP(); }
 
 //    #include "../common/cpu_common.h"
+
+    /** Disables interrupts for the lifetime of the guard. The previous PRIMASK value is saved and restored, so that the guards can be nested (or used where interrupts are already disabled) without re-enabling interrupts prematurely.
+     */
+    class DisableInterruptsGuard {
+    public:
+        DisableInterruptsGuard():
+            primask_{__get_PRIMASK()} {
+            __disable_irq();
+        }
+
+        ~DisableInterruptsGuard() {
+            release();
+        }
+
+        /** Restores the interrupt state from before the guard was created, ahead of the guard's destruction. Subsequent calls (and the destructor) have no effect.
+         */
+        void release() {
+            if (active_) {
+                __set_PRIMASK(primask_);
+                active_ = false;
+            }
+        }
+
+        DisableInterruptsGuard(DisableInterruptsGuard const &) = delete;
+        DisableInterruptsGuard & operator=(DisableInterruptsGuard const &) = delete;
+    private:
+        uint32_t primask_;
+        bool active_ = true;
+
+    }; // cpu::DisableInterruptsGuard
+
 
 };
 

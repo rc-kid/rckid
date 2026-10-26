@@ -43,11 +43,11 @@ inline Writer debugWrite() {
 
     *Wake*: An intermediate state where the device runs the puya main loop so that we have precise timing available and can time long press of a home button. The transitions are as follows:
 
-    - Alarm triggered - go to Alarm state
     - Home button long press detected - go to On state
     - Home button released - go to Off state, or OffDC state if DC power is plugged in
+    - note that we do not allow transition to alarm state from the wake state - if the wake is successful, then the wakeup is reflected in the interrupts and the RP will react to it as if happens during the on state. If unsuccessful then the revert from wake to Off/OffDC will instead trigger the alarm state immediately.
 
-    *Alarm*: Alarm is a state when a powered off device (or waking device) is woken up by an alarm. Alarm state immediately turns on the RP2350, but otherwise behaves as a combination of Off and Wake states, i.e. it detects long press, to power on, etc. In other words in this state the RP2350 is *on*, but should not exercise full control over the device.
+    *Alarm*: Alarm is a state when a powered off device is woken up by an alarm. Alarm state immediately turns on the RP2350, but otherwise behaves as a combination of Off and Wake states, i.e. it detects long press, to power on, etc. In other words in this state the RP2350 is *on*, but should not exercise full control over the device.
 
     - home button long press detected - to go On state
     - wakeup state timeouts or power down is requested - go to PowerDown state
@@ -79,15 +79,17 @@ public:
         // TODO initialize watchdog
         serial::initializeTx(RCKID_RP_SERIAL_SPEED, PUYA_PIN_TX);
         LOG("PY32F030 initialize");
-
-        ts_.setState(mkIV::DeviceState::State::On);
         initializeGPIO();
         initializeRTC();
-        initializeI2C();
+
+        setState(mkIV::DeviceState::State::On);
+        // TODO remove this when ready testing on the device
+        ts_.setDebugMode(true);
+        //initializeI2C();
 
 
-        initializeButtons();
-        enableSystemTick(true);
+        //initializeButtons();
+        //enableSystemTick(true);
 
         /*
         initializeRumbler();
@@ -100,17 +102,11 @@ public:
     }
 
     static void loop() {
-        if (systemTick_)
-            systemTick();
-        if (secondTick_)
-            secondTick();
-        if (i2cRxBytes_ > 0)
-            processI2CCommand();
-        // TODO not this:
-        if (ts_.alarmInterrupt()) {
-            ts_.setAlarmInterrupt(false);
-            LOG("Alarm interrupt");
-        }
+        systemTick();
+        secondTick();
+        processI2CCommand();
+        if (ts_.state() == mkIV::DeviceState::State::Off)
+            sleep();
     }
 
 private:
@@ -129,42 +125,113 @@ private:
     static inline volatile bool systemTick_ = false;
     static inline uint32_t systemTickId_ = 0;
 
+    static inline volatile uint32_t rpWatchdogCounter_ = 0;
+    static inline bool powerDownAck_ = false;
+
     //@}
     static void setState(mkIV::DeviceState::State s) {
+        // ensure this is indeed a transition
+        ASSERT(ts_.state() != s);
+        // ifthe current state is Off, we must be moving to a state that requires the system ticks and therefore must enable them
+        if (ts_.state() == mkIV::DeviceState::State::Off)
+            enableSystemTick();
+        // if we are leaving alarm state, clear the alarm interrupt
+        if (ts_.state() == mkIV::DeviceState::State::Alarm) {
+            ts_.setAlarmInterrupt(false);
+            // TODO we might want to schedule some default alarm for next here, if not set by the rp to deal with daily allowances, etc? Or deal with this on the PUYA on its own? 
+        }
+        // switch what we do based on the desired state
         switch (s) {
             case mkIV::DeviceState::State::Off:
+                // when going to the power off state, we must ensure that everything is truly off, as the next loop cycle will enter the sleep method and put the device to sleep.
+                ASSERT(! poweredOn());
                 ASSERT(ts_.dcPower() == false);
-                enableIOVDD(false);
                 enableSystemTick(false);
-
+                // if we have pending alarm interrupt, ener the alarm state instead
+                if (ts_.alarmInterrupt()) {
+                    ts_.setState(s);
+                    setState(mkIV::DeviceState::State::Alarm);
+                    return;
+                }
                 break;
             case mkIV::DeviceState::State::OffDC:
-                // TODO power off the RP2350
+                ASSERT(! poweredOn());
+                ASSERT(ts_.dcPower() == true);
+                // system tick already enabled bythe above, if moving from Off state
+                // if we have pending alarm interrupt, ener the alarm state instead
+                if (ts_.alarmInterrupt()) {
+                    ts_.setState(s);
+                    setState(mkIV::DeviceState::State::Alarm);
+                    return;
+                }
                 break;
             case mkIV::DeviceState::State::Wake:
-                // TODO power on the RP2350
+                // when waking up, ensure that the Btn::Home is considered pressed and reset the long press counter                
                 break;
             case mkIV::DeviceState::State::Alarm:
-                // TODO power on the RP2350
+                // power the device on (we canonly reach alarm state if the device is off)
+                ASSERT(ts_.state() == mkIV::DeviceState::State::Off || ts_.state() == mkIV::DeviceState::State::OffDC);
+                powerOn();
+                // reload the watchdog state to the alarm timeout
+                reloadRpWatchdogCounter(RCKID_ALARM_TIMEOUT_MS);
                 break;
             case mkIV::DeviceState::State::PowerDown:
-                // TODO request power down from the RP2350
-                break;
+                // the power down state is a hint for the rp2350 to power itself down. We reset the rp watchog to the power down timeout to ensure timely compliance. In the power down mode the watchdog counter is not reset on I2C transactions and can only be explicitly extended via the power down acknowledge message 
+                ASSERT(poweredOn());
+                // set the state early to ensure we do not extend the watchog during I2C reads
+                ts_.setState(s);
+                reloadRpWatchdogCounter(RCKID_POWERDOWN_TIMEOUT_MS);
+                powerDownAck_ = false;
+                // we altready set the state above, return immediately, no need to set again at the end
+                return;
             case mkIV::DeviceState::State::On:
-                // TODO power on the RP2350
+                // power on RP2350 if we are not coming from the Alarm state
+                if (ts_.state() != mkIV::DeviceState::State::Alarm)
+                    powerOn();
+                reloadRpWatchdogCounter(RCKID_RP2350_WATCHDOG_TIMEOUT_MS);
+                // if the RGB lights are doing anything go to black (they are controlled by the device when powered on)
+                // TODO
                 break;
         }
+        // set the state
+        ts_.setState(s);
     }
 
-    static void enableIOVDD(bool value = true) {
-        if (value) {
-            // enable IOVDD
-            // ebable I2C
-        } else {
-            // disable I2C
-            // disable IOVDD
-        }
+    static void reloadRpWatchdogCounter(uint32_t time_ms) {
+        rpWatchdogCounter_ = time_ms / (1000 / PUYA_SYSTEM_TICK_HZ);
+    }
 
+    static bool poweredOn() {
+        return gpio::read(PUYA_PIN_IOVDD_EN);
+    }
+
+    /** Powers the device on, but does not set the state. 
+     */
+    static void powerOn() {
+        // enable IOVDD
+        // ebable I2C
+    }
+
+    /** Powers the device off and sets the appropriate off state (Off or OffDC)
+     */
+    static void powerOff() {
+        // disable I2C
+        // disable IOVDD
+        // set the counter to 0 so that it stops firing
+        rpWatchdogCounter_ = 0;
+        setState(ts_.dcPower() ? mkIV::DeviceState::State::OffDC : mkIV::DeviceState::State::Off);
+    }
+
+    static void reboot() {
+        // TODO cycle power
+        reloadRpWatchdogCounter(RCKID_RP2350_WATCHDOG_TIMEOUT_MS);
+    }
+
+    static void rebootToBootloader() {
+        // TODO cycle power with bootloader select
+
+        // disable the watchdog for debugging purposes - during the bootloader there will be no I2C reads, and when the device reboots, the first I2C read will reset the watchdog to a standard timeout
+        rpWatchdogCounter_ = 0;
     }
 
     /** System tick is driven by TIM3's update interrupt. The timer is prescaled to 1MHz and reloads every 1MHz / SYSTEM_TICK_HZ ticks (5000 for 200Hz, fits the 16bit counter).
@@ -185,6 +252,8 @@ private:
             // disable ADC
             // reset buttons to control group reading
             rgbOff();
+            // ensure any pending system tick is cleared so that we do not run stale ticks in power off mode
+            systemTick_ = false;
             
         }
 
@@ -193,6 +262,8 @@ private:
     /** Called from the TIM3 interrupt at SYSTEM_TICK_HZ when system tick is enabled.
      */
     static void systemTick() { 
+        if (! systemTick_)
+            return;
         systemTick_ = false;
         switch (systemTickId_++) {
             case 0:
@@ -206,6 +277,23 @@ private:
                 systemTickId_ = 0;
                 break;
         }
+        // if the watchdog has failed, power the device off immediately - but only do so if we are not in the debug mode
+        if (! ts_.debugMode()) {
+            cpu::DisableInterruptsGuard g_;
+            if (rpWatchdogCounter_ > 0 && --rpWatchdogCounter_ == 0) {
+                g_.release();
+                powerOff();
+                // TODO some fancy RGB to tell us this happened
+            }
+        }
+        // TODO if we are *not* in the On state, we should display charging notification if DC is on 
+        // if (ts_.state() != mkIV::DeviceState::State::On && ts_.state() != mkIV::DeviceState::State::Off)
+            
+    }
+
+    static void sleep() {
+        ASSERT(ts_.state() == mkIV::DeviceState::State::Off);
+        // TODO ensure the system is in state from which it can wakeup by the home button press
     }
 
 
@@ -247,13 +335,13 @@ private:
     }
 
     static void secondTick() {
+        if (!secondTick_)
+            return;
         secondTick_ = false;
         updateDateTime();
 
         //LOG(ts_.time.time);
     }
-
-
     //@}
 
     /** I2C Communications with the RP2350
@@ -296,11 +384,60 @@ private:
     static void processI2CCommand() {
         if (i2cRxBytes_ == 0)
             return;
+        if (cmd::getCommandSize(ts_.buffer[0]) != i2cRxBytes_) {
+            LOG("Invalid size: exp " << cmd::getCommandSize(ts_.buffer[0]) << ", got " << i2cRxBytes_);
+            // convert the incomplete size command to NOP
+            ts_.buffer[0] = cmd::Nop::ID;
+        }
+        switch (ts_.buffer[0]) {
+            case cmd::Nop::ID:
+                break;
+            case cmd::PowerOff::ID:
+                switch (ts_.state()) {
+                    case mkIV::DeviceState::State::PowerDown:
+                    case mkIV::DeviceState::State::Alarm:
+                        powerOff();
+                        break;
+                    case mkIV::DeviceState::State::On:
+                        setState(mkIV::DeviceState::State::PowerDown);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case cmd::PowerDownAck::ID:
+                if (ts_.state() == mkIV::DeviceState::State::PowerDown) {
+                    if (! powerDownAck_) {
+                        powerDownAck_ = true;
+                        reloadRpWatchdogCounter(RCKID_POWERDOWN_EXTENDED_TIMEOUT_MS);
+                    }
+                }
+                break;
+            case cmd::PowerOn::ID:
+                if (ts_.state() == mkIV::DeviceState::State::Alarm)
+                    setState(mkIV::DeviceState::State::On);
+                break;
+            case cmd::RebootRP::ID:
+                if (ts_.state() == mkIV::DeviceState::State::On)
+                    reboot();
+                break;
+            case cmd::BootloaderRP::ID:
+                if (ts_.state() == mkIV::DeviceState::State::On)
+                    rebootToBootloader();
+                break;
+            case cmd::SetAlarm::ID:
+                UNIMPLEMENTED;
+                break;
+            case cmd::SetTime::ID:
+                UNIMPLEMENTED;
+                //ts_.time = cmd::SetTime::fromBuffer(ts_.buffer).value;
+                // TODO 
+                break;
 
 
+        }
         i2cRxBytes_ = 0;
     }
-
 
     static void i2cReset() {
         LL_I2C_EnableReset(I2C1);
@@ -325,6 +462,14 @@ private:
         LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_1);
         // single DMAEN bit for both directions
         LL_I2C_DisableDMAReq_RX(I2C1);
+    }
+
+    /** Called by the DMA IRQ when complete, i.e. we have command buffer overrun and should nack everything master sends afterwards.
+     */
+    static void i2cDMAComplete() {
+        // if we were receiving data, NACK anything else master sends
+        if (LL_DMA_GetDataTransferDirection(DMA1, LL_DMA_CHANNEL_1) == LL_DMA_DIRECTION_PERIPH_TO_MEMORY)
+            LL_I2C_AcknowledgeNextData(I2C1, LL_I2C_NACK);
     }
 
     static void i2cIRQHandler() {
@@ -384,6 +529,9 @@ private:
             i2cStopDMA();
             // reset the I2C peripheral for the next transaction (also gets rid of any stale byte in the DR)
             i2cReset();
+            // if we are in the on state, reading a state resets the watchdog timeout automatically
+            if (ts_.state() == mkIV::DeviceState::State::On)
+                reloadRpWatchdogCounter(RCKID_RP2350_WATCHDOG_TIMEOUT_MS);
         }
         // master write finished, master sent STOP. Note how many bytes we received
         if (sr1 & I2C_SR1_STOPF) {
@@ -392,12 +540,6 @@ private:
             // reset the I2C peripheral for the next transaction (also gets rid of any NACKed byte in the DR)
             i2cReset();
         }
-    }
-
-    static void i2cDMAComplete() {
-        // if we were receiving data, NACK anything else master sends
-        if (LL_DMA_GetDataTransferDirection(DMA1, LL_DMA_CHANNEL_1) == LL_DMA_DIRECTION_PERIPH_TO_MEMORY)
-            LL_I2C_AcknowledgeNextData(I2C1, LL_I2C_NACK);
     }
     //@}
 
@@ -410,7 +552,7 @@ private:
         All button pins are digital and are read as part of system tick. 
      */
     //@{
-    static inline uint32_t homeBtnLongPress_ = 0;
+    static inline uint32_t homeBtnLongPressCounter_ = 0;
     static inline uint32_t debounceCounters_[11] = {0};
 
     static void initializeButtons() {
@@ -424,7 +566,7 @@ private:
         gpio::outputHigh(PUYA_PIN_BTN_ABXY);
         gpio::outputLow(PUYA_PIN_BTN_CTRL);
         // reset home button long press
-        homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
+        homeBtnLongPressCounter_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
     }
 
     static bool getDebouncedButtonValue(Btn btn) {
@@ -652,7 +794,7 @@ extern "C" {
         }
         if (LL_RTC_IsActiveFlag_ALR(RTC)) {
             LL_RTC_ClearFlag_ALR(RTC);
-            // KidDo::ts_.setAlarmInterrupt(true);
+            //KidDo::ts_.setAlarmInterrupt(true);
             // TODO code for device wakeup
         }
     }
