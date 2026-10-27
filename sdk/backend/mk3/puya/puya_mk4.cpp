@@ -107,6 +107,7 @@ public:
         systemTick();
         secondTick();
         processI2CCommand();
+        adcMeasure();
         if (ts_.state() == mkIV::DeviceState::State::Off)
             sleep();
     }
@@ -127,6 +128,8 @@ private:
         LL_EXTI_EnableIT(LL_EXTI_LINE_1);
         NVIC_SetPriority(EXTI0_1_IRQn, 1);
         NVIC_EnableIRQ(EXTI0_1_IRQn);
+        // VCC sense is an ADC input
+        gpio::setAsAnalog(PUYA_PIN_VCC_SENSE);
         LOG("  gpio");
     }
 
@@ -170,7 +173,7 @@ private:
                 ASSERT(! poweredOn());
                 // force the DC power flag to true - it will be updated by the ADCs later, but we need to set it now so that the state is consistent with the actual power state
                 ts_.setDcPower(true);
-                // system tick already enabled bythe above, if moving from Off state
+                // system tick already enabled by the above, if moving from Off state
                 // if we have pending alarm interrupt, ener the alarm state instead
                 if (ts_.alarmInterrupt()) {
                     ts_.setState(s);
@@ -244,6 +247,28 @@ private:
         setState(ts_.dcPower() ? mkIV::DeviceState::State::OffDC : mkIV::DeviceState::State::Off);
     }
 
+    static void dcPowerConnected(bool value = true) {
+        if (value) {
+            // if enabling DC power, we should not be in the Off or OffDC state - here the charging enabled pin interrupt should trigger the transition to OffDC first, which also proactively enables the DC power flag even without the ADC readout
+            ASSERT(ts_.state() != mkIV::DeviceState::State::Off);
+            ASSERT(ts_.state() != mkIV::DeviceState::State::OffDC);
+            ts_.setDcPower(true);
+        } else {
+            // do nothing if we are currently charging (means ADC glitch)
+            if (ts_.charging())
+                return;
+            // change the state
+            ts_.setDcPower(false);
+            // if we are in the OffDC state, go to off state instead, in all other states the DC power flag is enough
+            if (ts_.state() == mkIV::DeviceState::State::OffDC)
+                setState(mkIV::DeviceState::State::Off);
+        }
+    }
+
+    static void criticalBattery() {
+
+    }
+
     static void reboot() {
         // TODO cycle power
         reloadRpWatchdogCounter(RCKID_RP2350_WATCHDOG_TIMEOUT_MS);
@@ -272,13 +297,21 @@ private:
             LL_EXTI_DisableFallingTrig(LL_EXTI_LINE_2);
             LL_EXTI_ClearFlag(LL_EXTI_LINE_2);
             NVIC_ClearPendingIRQ(EXTI2_3_IRQn);
+            // enable the RTC second tick and since it was off, update the time from the RTC
+            rtc::enableSecondInterrupt(true);
+            updateDateTime();
         } else {
             NVIC_DisableIRQ(TIM3_IRQn);
             LL_TIM_DisableIT_UPDATE(TIM3);
             timer3::disable();
             LL_TIM_ClearFlag_UPDATE(TIM3);
             NVIC_ClearPendingIRQ(TIM3_IRQn);
-            // disable ADC
+            // disable the RTC second tick (alarm interrupt is not affected), clear any pending one
+            rtc::enableSecondInterrupt(false);
+            secondTick_ = false;
+            // disable ADC, cancelling any measurement in progress
+            adcChannel_ = ADC_OFF;
+            adc::disable();
             rgbOff();
             // ensure any pending system tick is cleared so that we do not run stale ticks in power off mode
             systemTick_ = false;
@@ -305,16 +338,31 @@ private:
     static void systemTick() { 
         if (! systemTick_)
             return;
+        // charging is active low, so the value is effectively negated
+        if (ts_.charging() == gpio::read(PUYA_PIN_CHARGING)) {
+            ts_.setCharging(! ts_.charging());
+            // set power DC to on as well - it has to be if we are charging even if we did not hear from the ADC yet
+            if (ts_.charging())
+                ts_.setDcPower(true);
+            LOG("Charging: " << ts_.charging());
+            // TODO some rgb effects? 
+        }
         systemTick_ = false;
         switch (systemTickId_++) {
             case 0:
+                if (adcPrimed())
+                    adcStartConversion();
                 readControlGroup();
                 break;
             case 1:
+                if (adcActive())
+                    adc::enable();
                 readABXYGroup();
                 break;
             default:
                 readDPadGroup();
+                if (adcActive())
+                    adc::singleConversion(adcChannel_);
                 systemTickId_ = 0;
                 break;
         }
@@ -344,6 +392,7 @@ private:
     }
 
     /** RTC timekeeping and wakeup alarm
+        
      */
     //@{
 
@@ -356,7 +405,8 @@ private:
         rtc::setCounter(0);
         rtc::setAlarmCounter(0);
         rtc::enableAlarmInterrupt(false);
-        rtc::enableSecondInterrupt(true);
+        // the second interrupt is enabled together with system ticks
+        rtc::enableSecondInterrupt(false);
         // TODO set the puya RTC values correctly
         LOG("  rtc " << rtc::enabled());
     }
@@ -383,9 +433,10 @@ private:
     static void secondTick() {
         if (!secondTick_)
             return;
+        ASSERT(ts_.state() != mkIV::DeviceState::State::Off);
         secondTick_ = false;
         updateDateTime();
-
+        adcPrime(); // prime the ADC for a conversion start
         //LOG(ts_.time.time);
     }
     //@}
@@ -752,10 +803,87 @@ private:
 
     /** \name ADC (voltage and temperature)
 
-        The ADC is used to measure battery voltage and temperature, alternating every second between the two. This should be a compromise between the latency of the measurements and power consumption. The ADC works in a single converstion mode, is triggered manually and we are notified about the result via interrupt (the ADC can run in standby mode).
+        The ADC is used to measure battery voltage and temperature, alternating every second between the two. This should be a compromise between the latency of the measurements and power consumption. On the Puya chips the ADC has to be started for every conversion. 
+
+        Because the ADC does a few busy waits in its setup for stabilization, etc. The ADC measurement is split into stages which are triggered in the system ticks. Every second the ADC is primed. Then the system ticks will pick up the prime information at tick 0, and will configure & calibrate in tick 0, enable in tick 1 and start the conversion in tick 2, using the tick spacing as ADC stabilization delays. The adcMeasure function then simply checks if we have ADC result ready and if so, processes it accordingly. 
+
+        The temperature is measured from the device and stored in the transferrable state as a 16bit integer with values corresponding to temperature in 0.1 degress centigrade, i.e. value of 265 means 26.5 C. 
+
+        The voltage is sampled via a 1:1 voltage divder, giving the maximum range 2x VCC, i.e. 6.6V. The voltage itself is encoded in 0.01 V, i.e. value of 330 means 3.3V. 
+        
      */
     //@{
 
+    static_assert(PUYA_PIN_VCC_SENSE == gpio::PB0, "VCC sense must be PB0 for the ADC to work");
+
+    // we are using small values because the adc channel values are large integers on puya so those values are free
+    static constexpr uint32_t ADC_OFF = 0xff0000;
+    static constexpr uint32_t ADC_PRIME = 0xfe0000;
+    static inline uint32_t adcChannel_ = ADC_OFF;
+
+    /** Puya's supply voltage, which is also the ADC reference voltage, in mV.
+     */
+    static constexpr int32_t ADC_VREF_MV = 3300;
+
+    static void adcPrime() {
+        ASSERT(adcChannel_ == ADC_OFF);
+        adcChannel_ = ADC_PRIME;
+    }
+
+    static void adcStartConversion() {
+        if (ts_.time.time.second() % 2 == 0)
+            adcChannel_ = adc::pinToChannel(PUYA_PIN_VCC_SENSE); // VCC sense
+        else
+            adcChannel_ = LL_ADC_CHANNEL_TEMPSENSOR;
+        adc::configure();
+    }
+
+    static bool adcActive() { return adcChannel_ != ADC_OFF && adcChannel_ != ADC_PRIME; }
+
+    static bool adcPrimed() { return adcChannel_ == ADC_PRIME; }
+
+    static void adcMeasure() {
+        if (adcChannel_ == ADC_OFF)
+            return;
+        if (! adc::conversionComplete())
+            return;
+        // read the value and prepare adc for next action
+        uint32_t channel = adcChannel_;
+        uint16_t value = adc::read();
+        adcChannel_ = ADC_OFF;
+        adc::disable();
+        // process the value
+        switch (channel) {
+            case LL_ADC_CHANNEL_TEMPSENSOR: {
+                // the factory calibration values were taken with 3.3V reference, scale the reading to it first
+                int32_t raw = static_cast<int32_t>(value) * ADC_VREF_MV / static_cast<int32_t>(TEMPSENSOR_CAL_VREFANALOG);
+                int32_t cal1 = *TEMPSENSOR_CAL1_ADDR;
+                int32_t cal2 = *TEMPSENSOR_CAL2_ADDR;
+                // linear interpolation between the two calibration points, in 0.1 C
+                int16_t temp = static_cast<int16_t>(TEMPSENSOR_CAL1_TEMP * 10 + (raw - cal1) * (TEMPSENSOR_CAL2_TEMP - TEMPSENSOR_CAL1_TEMP) * 10 / (cal2 - cal1));
+                // store in ts_
+                ts_.setTemp(temp);
+                break;
+            }
+            case adc::pinToChannel(PUYA_PIN_VCC_SENSE): {
+                // 1:1 divider, so full scale (4095) is 2x VREF, in 0.01V, rounded
+                uint16_t vcc = static_cast<uint16_t>((value * (ADC_VREF_MV * 2 / 10) + 2047) / 4095);
+                // TODO smoothing of the values is important
+                // store in ts_
+                ts_.setVcc(vcc);
+                // depending on the value, we might need state changes, i.e. if the value is above the DC threshold and we are in Off, change to OffDC. If on the other hand we are in the OffDC and the value drops below the threshold, we should go to Off.
+                if (vcc >= RCKID_VUSB_THRESHOLD && ! ts_.dcPower())
+                    dcPowerConnected(true);
+                else if (vcc < RCKID_VUSB_THRESHOLD && ts_.dcPower())
+                    dcPowerConnected(false);
+                if (vcc < RCKID_POWER_ON_THRESHOLD && ts_.state() == mkIV::DeviceState::State::On)
+                    criticalBattery();
+                break;
+            }
+            default:
+                ASSERT(false);
+        }
+    }
     //@}
 
     /** \name Accelerometer

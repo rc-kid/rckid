@@ -78,6 +78,10 @@ namespace rckid {
             return true;
         }
 
+        void setVcc(uint32_t value) {
+            
+        }
+
     private:
         static constexpr uint8_t STATE_MASK           = 0x07;
         static constexpr uint8_t DEBUG_MODE_MASK      = 0x08;
@@ -104,13 +108,16 @@ namespace rckid {
         uint32_t const version = RCKID_AVR_FIRMWARE_VERSION;
         TinyDateTime time;
 
-        uint16_t temp() const { return temp_; }
+        int16_t temp() const { return temp_; }
 
     protected:
 
+        friend class ::KidDo;
+
+        void setTemp(int16_t value) { temp_ = value; }
+
+        // TODO uptime
     
-
-
         uint32_t uptime = 0;
         int16_t temp_ = 0;
 

@@ -9,6 +9,7 @@
 #include <py32f0xx_ll_rtc.h>
 #include <py32f0xx_ll_pwr.h>
 #include <py32f0xx_ll_exti.h>
+#include <py32f0xx_ll_adc.h>
 
 /** PY32F030 Platform Implementation
  */
@@ -241,6 +242,13 @@ public:
     static void setAsInputPulldown(Pin pin) {
         LL_GPIO_SetPinMode(pinBank(pin), pinMask(pin), LL_GPIO_MODE_INPUT);
         LL_GPIO_SetPinPull(pinBank(pin), pinMask(pin), LL_GPIO_PULL_DOWN);
+    }
+
+    /** Sets the pin to analog mode (digital input buffer off), required for ADC inputs.
+     */
+    static void setAsAnalog(Pin pin) {
+        LL_GPIO_SetPinMode(pinBank(pin), pinMask(pin), LL_GPIO_MODE_ANALOG);
+        LL_GPIO_SetPinPull(pinBank(pin), pinMask(pin), LL_GPIO_PULL_NO);
     }
 
     static void write(Pin pin, bool value) {
@@ -665,3 +673,134 @@ public:
     }
 
 }; // rtc
+
+class adc {
+public:
+
+    static constexpr uint32_t pinToChannel(gpio::Pin pin) {
+        switch (pin) {
+            case gpio::PA0: return LL_ADC_CHANNEL_0;
+            case gpio::PA1: return LL_ADC_CHANNEL_1;
+            case gpio::PA2: return LL_ADC_CHANNEL_2;
+            case gpio::PA3: return LL_ADC_CHANNEL_3;
+            case gpio::PA4: return LL_ADC_CHANNEL_4;
+            case gpio::PA5: return LL_ADC_CHANNEL_5;
+            case gpio::PA6: return LL_ADC_CHANNEL_6;
+            case gpio::PA7: return LL_ADC_CHANNEL_7;
+            case gpio::PB0: return LL_ADC_CHANNEL_8;
+            case gpio::PB1: return LL_ADC_CHANNEL_9;
+            default:
+                return 0xff;
+        }
+    }
+
+    enum class Resolution : uint32_t {
+        B12 = LL_ADC_RESOLUTION_12B,
+        B10 = LL_ADC_RESOLUTION_10B,
+        B8  = LL_ADC_RESOLUTION_8B,
+        B6  = LL_ADC_RESOLUTION_6B
+    };
+
+    /** Enables the ADC clock, calibrates the ADC and enables it.
+
+        The ADC is configured for 12bit right aligned single conversions triggered by software. The ADC clock is PCLK / 4 and the sampling time is the longest available (239.5 ADC cycles) as we are not after speed, but want precise results even from high impedance sources such as voltage dividers. The internal temperature sensor and voltage reference paths are enabled here as well, because they can only be changed while the ADC is disabled.
+     */
+    static void start(Resolution resolution = Resolution::B12) {
+        configure(resolution);
+        // busy wait for the calibration to finish
+        while (LL_ADC_IsCalibrationOnGoing(ADC1));
+        // delay between end of calibration and enable, then the ADC stabilization time (tSTAB), which also covers the internal paths stabilization
+        cpu::delayMs(1);
+        LL_ADC_Enable(ADC1);
+        cpu::delayMs(1);
+    }
+
+    static void configure(Resolution resolution = Resolution::B12) {
+        LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_ADC1);
+        // calibration and configuration require the ADC to be disabled
+        if (LL_ADC_IsEnabled(ADC1))
+            LL_ADC_Disable(ADC1);
+        LL_ADC_SetClock(ADC1, LL_ADC_CLOCK_SYNC_PCLK_DIV4);
+        LL_ADC_SetResolution(ADC1, static_cast<uint32_t>(resolution));
+        LL_ADC_SetDataAlignment(ADC1, LL_ADC_DATA_ALIGN_RIGHT);
+        LL_ADC_SetLowPowerMode(ADC1, LL_ADC_LP_MODE_NONE);
+        LL_ADC_SetSamplingTimeCommonChannels(ADC1, LL_ADC_SAMPLINGTIME_239CYCLES_5);
+        LL_ADC_REG_SetTriggerSource(ADC1, LL_ADC_REG_TRIG_SOFTWARE);
+        LL_ADC_REG_SetContinuousMode(ADC1, LL_ADC_REG_CONV_SINGLE);
+        LL_ADC_REG_SetOverrun(ADC1, LL_ADC_REG_OVR_DATA_OVERWRITTEN);
+        LL_ADC_SetCommonPathInternalCh(ADC1_COMMON, LL_ADC_PATH_INTERNAL_TEMPSENSOR | LL_ADC_PATH_INTERNAL_VREFINT);
+        // calibrate
+        LL_ADC_StartCalibration(ADC1);
+    }
+
+    /** Enables the ADC. Expects the calibration has long finished. 
+     */
+    static void enable() {
+        while (LL_ADC_IsCalibrationOnGoing(ADC1));
+        LL_ADC_Enable(ADC1);
+    }
+
+    /** Disables the ADC completely - the ADC itself, the internal temperature sensor and voltage reference paths and the ADC clock. Use configure() & enable(), or start() to use the ADC again.
+
+        Note that the vendor's LL_ADC_Disable() unconditionally re-enables interrupts (it does a dummy start/stop conversion with interrupts disabled) so this should not be called from within a DisableInterruptsGuard.
+     */
+    static void disable() {
+        // calibration cannot be interrupted
+        while (LL_ADC_IsCalibrationOnGoing(ADC1));
+        LL_ADC_Disable(ADC1);
+        // internal paths can only be changed when the ADC is disabled
+        LL_ADC_SetCommonPathInternalCh(ADC1_COMMON, LL_ADC_PATH_INTERNAL_NONE);
+        LL_APB1_GRP2_DisableClock(LL_APB1_GRP2_PERIPH_ADC1);
+    }
+
+    /** Converts the given pin. The pin is switched to analog mode first.
+     */
+    static void singleConversion(gpio::Pin channel) {
+        gpio::setAsAnalog(channel);
+        return singleConversion(pinToChannel(channel));
+    }
+
+    /** Starts a single conversion of the given channel (LL_ADC_CHANNEL_XXX, including LL_ADC_CHANNEL_TEMPSENSOR and LL_ADC_CHANNEL_VREFINT).
+
+        The function returns immediately, the result can be read via LL_ADC_REG_ReadConversionData12(ADC1) when the EOC flag is set, or in the interrupt handler if enabled:
+
+        extern "C" {
+            void ADC_COMP_IRQHandler(void) {
+                if (LL_ADC_IsActiveFlag_EOC(ADC1)) {
+                    LL_ADC_ClearFlag_EOC(ADC1);
+                    uint16_t value = LL_ADC_REG_ReadConversionData12(ADC1);
+                    // code
+                }
+            }
+        }
+     */
+    static void singleConversion(uint32_t channel) {
+        // the channel selection can only be changed when there is no conversion ongoing
+        while (LL_ADC_REG_IsConversionOngoing(ADC1));
+        LL_ADC_REG_SetSequencerChannels(ADC1, channel);
+        LL_ADC_ClearFlag_EOC(ADC1);
+        LL_ADC_REG_StartConversion(ADC1);
+    }
+
+    /** Enables the end of conversion interrupt.
+     */
+    static void enableInterrupt() {
+        LL_ADC_ClearFlag_EOC(ADC1);
+        LL_ADC_EnableIT_EOC(ADC1);
+        NVIC_SetPriority(ADC_COMP_IRQn, 0);
+        NVIC_EnableIRQ(ADC_COMP_IRQn);
+    }
+
+    static void disableInterrupt() {
+        LL_ADC_DisableIT_EOC(ADC1);
+    }
+
+    static bool conversionComplete() {
+        return LL_ADC_IsActiveFlag_EOC(ADC1) == 1;
+    }
+
+    static uint16_t read() {
+        return LL_ADC_REG_ReadConversionData12(ADC1);
+    }
+
+}; // adc
