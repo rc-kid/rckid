@@ -71,6 +71,7 @@ extern "C" {
     void DMA1_Channel1_IRQHandler();
     void EXTI0_1_IRQHandler();
     void EXTI2_3_IRQHandler();
+    void ADC_COMP_IRQHandler();
 }
 
 class KidDo {
@@ -82,6 +83,7 @@ public:
         serial::initializeTx(RCKID_RP_SERIAL_SPEED, PUYA_PIN_TX);
         LOG("PY32F030 initialize");
         initializeGPIO();
+        initializeButtons();
         initializeRTC();
 
         setState(mkIV::DeviceState::State::On);
@@ -128,8 +130,6 @@ private:
         LL_EXTI_EnableIT(LL_EXTI_LINE_1);
         NVIC_SetPriority(EXTI0_1_IRQn, 1);
         NVIC_EnableIRQ(EXTI0_1_IRQn);
-        // VCC sense is an ADC input
-        gpio::setAsAnalog(PUYA_PIN_VCC_SENSE);
         LOG("  gpio");
     }
 
@@ -145,6 +145,7 @@ private:
 
     //@}
     static void setState(mkIV::DeviceState::State s) {
+        LOG("State: " << static_cast<uint32_t>(ts_.state()) << " -> " << static_cast<uint32_t>(s));
         // ensure this is indeed a transition
         ASSERT(ts_.state() != s);
         // ifthe current state is Off, we must be moving to a state that requires the system ticks and therefore must enable them
@@ -233,15 +234,16 @@ private:
     /** Powers the device on, but does not set the state. 
      */
     static void powerOn() {
-        // enable IOVDD
+        gpio::outputHigh(PUYA_PIN_IOVDD_EN);
         // ebable I2C
+        initializeI2C();
     }
 
     /** Powers the device off and sets the appropriate off state (Off or OffDC)
      */
     static void powerOff() {
-        // disable I2C
-        // disable IOVDD
+        disableI2C();
+        gpio::outputLow(PUYA_PIN_IOVDD_EN);
         // set the counter to 0 so that it stops firing
         rpWatchdogCounter_ = 0;
         setState(ts_.dcPower() ? mkIV::DeviceState::State::OffDC : mkIV::DeviceState::State::Off);
@@ -266,7 +268,8 @@ private:
     }
 
     static void criticalBattery() {
-
+        LOG("vcc critical");
+        // TODO fancy RGB, power off and remember not to power on
     }
 
     static void reboot() {
@@ -300,6 +303,7 @@ private:
             // enable the RTC second tick and since it was off, update the time from the RTC
             rtc::enableSecondInterrupt(true);
             updateDateTime();
+            initializeADC();
         } else {
             NVIC_DisableIRQ(TIM3_IRQn);
             LL_TIM_DisableIT_UPDATE(TIM3);
@@ -310,8 +314,7 @@ private:
             rtc::enableSecondInterrupt(false);
             secondTick_ = false;
             // disable ADC, cancelling any measurement in progress
-            adcChannel_ = ADC_OFF;
-            adc::disable();
+            disableADC();
             rgbOff();
             // ensure any pending system tick is cleared so that we do not run stale ticks in power off mode
             systemTick_ = false;
@@ -355,14 +358,10 @@ private:
                 readControlGroup();
                 break;
             case 1:
-                if (adcActive())
-                    adc::enable();
                 readABXYGroup();
                 break;
             default:
                 readDPadGroup();
-                if (adcActive())
-                    adc::singleConversion(adcChannel_);
                 systemTickId_ = 0;
                 break;
         }
@@ -476,6 +475,13 @@ private:
         NVIC_EnableIRQ(I2C1_IRQn);
         i2cReset();
         LOG("  i2c");
+    }
+
+    static void disableI2C() {
+        LL_I2C_Disable(I2C1);
+        LL_APB1_GRP1_DisableClock(LL_APB1_GRP1_PERIPH_I2C1);
+        LL_APB1_GRP2_DisableClock(LL_APB1_GRP2_PERIPH_SYSCFG);
+        LL_AHB1_GRP1_DisableClock(LL_AHB1_GRP1_PERIPH_DMA1);
     }
 
     static void processI2CCommand() {
@@ -817,72 +823,81 @@ private:
     static_assert(PUYA_PIN_VCC_SENSE == gpio::PB0, "VCC sense must be PB0 for the ADC to work");
 
     // we are using small values because the adc channel values are large integers on puya so those values are free
-    static constexpr uint32_t ADC_OFF = 0xff0000;
-    static constexpr uint32_t ADC_PRIME = 0xfe0000;
-    static inline uint32_t adcChannel_ = ADC_OFF;
 
     /** Puya's supply voltage, which is also the ADC reference voltage, in mV.
      */
     static constexpr int32_t ADC_VREF_MV = 3300;
 
+    static constexpr uint32_t ADC_MEASURE_VCC = 0;
+    static constexpr uint32_t ADC_MEASURE_TEMP = 1;
+    static constexpr uint32_t ADC_DONE = 2;
+    static constexpr uint32_t ADC_OFF = 3;
+    static constexpr uint32_t ADC_PRIME = 4;
+
+    static inline uint32_t adcResult_[2];
+    static inline volatile uint32_t adcResultIndex_ = ADC_OFF;
+
+    static void initializeADC() {
+        // VCC sense is an ADC input
+        gpio::setAsAnalog(PUYA_PIN_VCC_SENSE);
+        adc::initialize();
+        LL_ADC_REG_SetSequencerChannels(ADC1, adc::pinToChannel(PUYA_PIN_VCC_SENSE) | LL_ADC_CHANNEL_TEMPSENSOR);
+        adc::enableInterrupt();
+        LOG("  adc");
+    }
+
+    static void disableADC() {
+        adc::disableInterrupt();
+        adc::disable();
+        adcResultIndex_ = ADC_OFF;
+    }
+
+    static bool adcPrimed() {
+        return adcResultIndex_ == ADC_PRIME;
+    }
+
     static void adcPrime() {
-        ASSERT(adcChannel_ == ADC_OFF);
-        adcChannel_ = ADC_PRIME;
+        ASSERT(adcResultIndex_ == ADC_OFF);
+        adcResultIndex_ = ADC_PRIME;
+        adc::enable();
     }
 
     static void adcStartConversion() {
-        if (ts_.time.time.second() % 2 == 0)
-            adcChannel_ = adc::pinToChannel(PUYA_PIN_VCC_SENSE); // VCC sense
-        else
-            adcChannel_ = LL_ADC_CHANNEL_TEMPSENSOR;
-        adc::configure();
+        ASSERT(adcResultIndex_ == ADC_PRIME);
+        adcResultIndex_ = ADC_MEASURE_VCC;
+        adc::startConversion();
     }
 
-    static bool adcActive() { return adcChannel_ != ADC_OFF && adcChannel_ != ADC_PRIME; }
-
-    static bool adcPrimed() { return adcChannel_ == ADC_PRIME; }
-
     static void adcMeasure() {
-        if (adcChannel_ == ADC_OFF)
+        if (adcResultIndex_ != ADC_DONE)
             return;
-        if (! adc::conversionComplete())
-            return;
-        // read the value and prepare adc for next action
-        uint32_t channel = adcChannel_;
-        uint16_t value = adc::read();
-        adcChannel_ = ADC_OFF;
-        adc::disable();
-        // process the value
-        switch (channel) {
-            case LL_ADC_CHANNEL_TEMPSENSOR: {
-                // the factory calibration values were taken with 3.3V reference, scale the reading to it first
-                int32_t raw = static_cast<int32_t>(value) * ADC_VREF_MV / static_cast<int32_t>(TEMPSENSOR_CAL_VREFANALOG);
-                int32_t cal1 = *TEMPSENSOR_CAL1_ADDR;
-                int32_t cal2 = *TEMPSENSOR_CAL2_ADDR;
-                // linear interpolation between the two calibration points, in 0.1 C
-                int16_t temp = static_cast<int16_t>(TEMPSENSOR_CAL1_TEMP * 10 + (raw - cal1) * (TEMPSENSOR_CAL2_TEMP - TEMPSENSOR_CAL1_TEMP) * 10 / (cal2 - cal1));
-                // store in ts_
-                ts_.setTemp(temp);
-                break;
-            }
-            case adc::pinToChannel(PUYA_PIN_VCC_SENSE): {
-                // 1:1 divider, so full scale (4095) is 2x VREF, in 0.01V, rounded
-                uint16_t vcc = static_cast<uint16_t>((value * (ADC_VREF_MV * 2 / 10) + 2047) / 4095);
-                // TODO smoothing of the values is important
-                // store in ts_
-                ts_.setVcc(vcc);
-                // depending on the value, we might need state changes, i.e. if the value is above the DC threshold and we are in Off, change to OffDC. If on the other hand we are in the OffDC and the value drops below the threshold, we should go to Off.
-                if (vcc >= RCKID_VUSB_THRESHOLD && ! ts_.dcPower())
-                    dcPowerConnected(true);
-                else if (vcc < RCKID_VUSB_THRESHOLD && ts_.dcPower())
-                    dcPowerConnected(false);
-                if (vcc < RCKID_POWER_ON_THRESHOLD && ts_.state() == mkIV::DeviceState::State::On)
-                    criticalBattery();
-                break;
-            }
-            default:
-                ASSERT(false);
+        // process the vcc
+        {
+            // 1:1 divider, so full scale (4095) is 2x VREF, in 0.01V, rounded
+            uint16_t vcc = static_cast<uint16_t>((adcResult_[0] * (ADC_VREF_MV * 2 / 10) + 2047) / 4095);
+            // TODO smoothing of the values is important
+            // store in ts_
+            ts_.setVcc(vcc);
+            // depending on the value, we might need state changes, i.e. if the value is above the DC threshold and we are in Off, change to OffDC. If on the other hand we are in the OffDC and the value drops below the threshold, we should go to Off.
+            if (vcc >= RCKID_VUSB_THRESHOLD && ! ts_.dcPower())
+                dcPowerConnected(true);
+            else if (vcc < RCKID_VUSB_THRESHOLD && ts_.dcPower())
+                dcPowerConnected(false);
+            if (vcc < RCKID_POWER_ON_THRESHOLD && ts_.state() == mkIV::DeviceState::State::On)
+                criticalBattery();
         }
+        // process the temperature
+        {
+            // the factory calibration values were taken with 3.3V reference, scale the reading to it first
+            int32_t raw = static_cast<int32_t>(adcResult_[1]) * ADC_VREF_MV / static_cast<int32_t>(TEMPSENSOR_CAL_VREFANALOG);
+            int32_t cal1 = *TEMPSENSOR_CAL1_ADDR;
+            int32_t cal2 = *TEMPSENSOR_CAL2_ADDR;
+            // linear interpolation between the two calibration points, in 0.1 C
+            int16_t temp = static_cast<int16_t>(TEMPSENSOR_CAL1_TEMP * 10 + (raw - cal1) * (TEMPSENSOR_CAL2_TEMP - TEMPSENSOR_CAL1_TEMP) * 10 / (cal2 - cal1));
+            // store in ts_
+            ts_.setTemp(temp);
+        }
+        adcResultIndex_ = ADC_OFF;
     }
     //@}
 
@@ -945,6 +960,8 @@ private:
     friend void DMA1_Channel1_IRQHandler();
     friend void EXTI0_1_IRQHandler();
     friend void EXTI2_3_IRQHandler();
+    friend void ADC_COMP_IRQHandler();
+
 
 }; // class KidDo
 
@@ -997,6 +1014,18 @@ extern "C" {
             KidDo::setState(mkIV::DeviceState::State::Wake);
         }
     }
+
+    /** ADC result ready
+     */
+    void ADC_COMP_IRQHandler() {
+        if (LL_ADC_IsActiveFlag_EOC(ADC1)) {
+            LL_ADC_ClearFlag_EOC(ADC1);
+            ASSERT(KidDo::adcResultIndex_ < 2);
+            KidDo::adcResult_[KidDo::adcResultIndex_] = LL_ADC_REG_ReadConversionData12(ADC1);
+            ++KidDo::adcResultIndex_;
+        }
+    }
+
 }
 
 int main() {

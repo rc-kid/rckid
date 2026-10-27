@@ -701,6 +701,25 @@ public:
         B6  = LL_ADC_RESOLUTION_6B
     };
 
+    static void initialize(Resolution resolution = Resolution::B12) {
+        LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_ADC1);
+        // calibration and configuration require the ADC to be disabled
+        if (LL_ADC_IsEnabled(ADC1))
+            LL_ADC_Disable(ADC1);
+        LL_ADC_SetClock(ADC1, LL_ADC_CLOCK_SYNC_PCLK_DIV4);
+        LL_ADC_SetResolution(ADC1, static_cast<uint32_t>(resolution));
+        LL_ADC_SetDataAlignment(ADC1, LL_ADC_DATA_ALIGN_RIGHT);
+        LL_ADC_SetLowPowerMode(ADC1, LL_ADC_LP_MODE_NONE);
+        LL_ADC_SetSamplingTimeCommonChannels(ADC1, LL_ADC_SAMPLINGTIME_239CYCLES_5);
+        LL_ADC_REG_SetTriggerSource(ADC1, LL_ADC_REG_TRIG_SOFTWARE);
+        LL_ADC_REG_SetContinuousMode(ADC1, LL_ADC_REG_CONV_SINGLE);
+        LL_ADC_REG_SetOverrun(ADC1, LL_ADC_REG_OVR_DATA_OVERWRITTEN);
+        LL_ADC_SetCommonPathInternalCh(ADC1_COMMON, LL_ADC_PATH_INTERNAL_TEMPSENSOR | LL_ADC_PATH_INTERNAL_VREFINT);
+        // calibrate
+        LL_ADC_StartCalibration(ADC1);
+        while (LL_ADC_IsCalibrationOnGoing(ADC1));
+    }
+
     /** Enables the ADC clock, calibrates the ADC and enables it.
 
         The ADC is configured for 12bit right aligned single conversions triggered by software. The ADC clock is PCLK / 4 and the sampling time is the longest available (239.5 ADC cycles) as we are not after speed, but want precise results even from high impedance sources such as voltage dividers. The internal temperature sensor and voltage reference paths are enabled here as well, because they can only be changed while the ADC is disabled.
@@ -736,8 +755,11 @@ public:
     /** Enables the ADC. Expects the calibration has long finished. 
      */
     static void enable() {
-        while (LL_ADC_IsCalibrationOnGoing(ADC1));
         LL_ADC_Enable(ADC1);
+    }
+
+    static void startConversion() {
+        LL_ADC_REG_StartConversion(ADC1);
     }
 
     /** Disables the ADC completely - the ADC itself, the internal temperature sensor and voltage reference paths and the ADC clock. Use configure() & enable(), or start() to use the ADC again.
