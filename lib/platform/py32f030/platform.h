@@ -666,6 +666,17 @@ public:
         LL_RTC_TIME_SetCounter(RTC, 0);
     }
 
+    /** Resumes access to an already running RTC after a system reset (e.g. watchdog) without touching the counter.
+
+        The backup domain (RTC clock source, counter, alarm and prescaler) survives system resets, but the RTC & PWR bus clocks and the backup domain access do not, so they are re-enabled here, followed by waiting for the RTC registers to synchronize, otherwise the counter reads are stale.
+     */
+    static void resume() {
+        LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
+        LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_RTC);
+        LL_PWR_EnableBkUpAccess();
+        LL_RTC_WaitForSynchro(RTC);
+    }
+
     static bool enabled() {
         return LL_RCC_IsEnabledRTC() == 1;
     }

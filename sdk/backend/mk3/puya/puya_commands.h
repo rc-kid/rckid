@@ -123,7 +123,6 @@ namespace rckid {
 
         int16_t temp() const { return temp_; }
 
-
     protected:
 
         friend class ::KidDo;

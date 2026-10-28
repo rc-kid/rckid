@@ -84,36 +84,32 @@ public:
         LOG("PY32F030 initialize");
         initializeGPIO();
         initializeButtons();
-        if (LL_RCC_IsActiveFlag_IWDGRST()) {
+        bool wdtReset = LL_RCC_IsActiveFlag_IWDGRST();
+        if (wdtReset) {
             LOG("  wdt triggered reset - rtc unchanged");
-            LL_RCC_ClearResetFlags();
+            rtc::resume();
             updateDateTime();
         } else {
             initializeRTC();
         }
+        LL_RCC_ClearResetFlags();
         cpu::wdtReset();
         cpu::wdtEnable(RCKID_PUYA_WATCHDOG_TIMEOUT_MS);
         LOG("  wdt");
-        // enable the RTC second tick and since it was off, update the time from the RTC
+        // the RTC second tick runs in all states, in the Off state its wakeups are what keeps resetting the watchdog
         rtc::enableSecondInterrupt(true);
 
-
-        setState(mkIV::DeviceState::State::On);
-        // TODO remove this when ready testing on the device
-        ts_.setDebugMode(true);
-        //initializeI2C();
-
-
-        //initializeButtons();
-        //enableSystemTick(true);
-
-        /*
-        initializeRumbler();
-        setRumblerPWM(0);
-        setRumblerPWM(5);
-        setRumblerPWM(1);
-        */
-
+        if (wdtReset) {
+            // we have crashed or hung, so do not power the RP2350 on (the device might have been off). Stay in the default Off state with the wakeup sources configured, or go to OffDC if charging (active low). Note that DC power without charging is not detected here as the ADC does not run in the Off state
+            gpio::outputLow(PUYA_PIN_IOVDD_EN);
+            enableSystemTick(false);
+            if (! gpio::read(PUYA_PIN_CHARGING))
+                setState(mkIV::DeviceState::State::OffDC);
+        } else {
+            setState(mkIV::DeviceState::State::On);
+            // TODO remove this when ready testing on the device
+            ts_.setDebugMode(true);
+        }
         LOG("done.");        
     }
 
@@ -415,7 +411,7 @@ private:
         rtc::setCounter(0);
         rtc::setAlarmCounter(0);
         rtc::enableAlarmInterrupt(false);
-        // the second interrupt is enabled together with system ticks
+        // the second interrupt is enabled by initialize() once the watchdog is running
         rtc::enableSecondInterrupt(false);
         // TODO set the puya RTC values correctly
         LOG("  rtc " << rtc::enabled());
@@ -965,7 +961,6 @@ private:
     }
     //@}
 
-
     friend void TIM3_IRQHandler();
     friend void RTC_IRQHandler();
     friend void I2C1_IRQHandler();
@@ -973,7 +968,6 @@ private:
     friend void EXTI0_1_IRQHandler();
     friend void EXTI2_3_IRQHandler();
     friend void ADC_COMP_IRQHandler();
-
 
 }; // class KidDo
 
