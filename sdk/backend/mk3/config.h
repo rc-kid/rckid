@@ -216,6 +216,10 @@
  */
 #define RCKID_RP2350_WATCHDOG_TIMEOUT_MS 1000 
 
+/** PUYA watchdog timeout (HW). Must be longer then 1s because the watchdog works even in sleep mode, where we wake up every 1s.
+ */
+#define RCKID_PUYA_WATCHDOG_TIMEOUT_MS 1500
+
 /** Device alarm state timeout. If the device spends more than this time in the Alarm state, it will be immediately powered down. 
  */
 #define RCKID_ALARM_TIMEOUT_MS 60000

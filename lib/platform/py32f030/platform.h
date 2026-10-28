@@ -10,6 +10,8 @@
 #include <py32f0xx_ll_pwr.h>
 #include <py32f0xx_ll_exti.h>
 #include <py32f0xx_ll_adc.h>
+#include <py32f0xx_ll_iwdg.h>
+#include <py32f0xx_ll_cortex.h>
 
 /** PY32F030 Platform Implementation
  */
@@ -67,28 +69,73 @@ public:
 
     }
 
+    /** Busy waits for the given number of microseconds.
+
+        Uses the SysTick counter set up by LL_Init1msTick in initialize() (counting down from HCLK / 1000 - 1 at HCLK), accumulating elapsed ticks so that the reload wrap is handled. Only the VAL register is read, which unlike CTRL does not clear the COUNTFLAG LL_mDelay relies on. At low clock speeds the loop overhead makes very short delays longer than requested.
+     */
     static void delayUs(uint16_t value) {
-//        _delay_us(value);
+        uint32_t reload = SysTick->LOAD + 1;
+        uint32_t ticks = value * (SystemCoreClock / 1000000);
+        uint32_t last = SysTick->VAL;
+        uint32_t elapsed = 0;
+        while (elapsed < ticks) {
+            uint32_t now = SysTick->VAL;
+            elapsed += (now <= last) ? (last - now) : (last + reload - now);
+            last = now;
+        }
     }
 
     static void delayMs(uint16_t value) {
         LL_mDelay(value);
     }
 
+    /** Enters the Stop mode (the deepest sleep the chip has, there is no standby on PY32F030).
+
+        HSI is stopped, SRAM and registers are retained and the low power regulator is used. Only EXTI lines can wake the chip up - GPIO, RTC (line 19), COMP, PVD and LPTIM, other peripherals (timers, ADC, USART, SysTick) are frozen. The IWDG keeps running and if enabled resets the chip from stop when it expires. After wakeup the system clock is HSISYS, which is what initialize() selects anyway, so no clock reconfiguration is needed.
+
+        The function can (and to avoid races should) be called with interrupts disabled: WFI wakes up when an interrupt becomes pending even if masked by PRIMASK, and the handler then runs when interrupts are re-enabled. I.e. check the sleep condition and call sleep() inside a DisableInterruptsGuard so that a wakeup event arriving between the check and the WFI is not lost. Conversely any interrupt already pending in the NVIC makes the WFI return immediately.
+
+        Note that SWD debugging does not work in Stop mode unless DBGMCU_CR_DBG_STOP is set.
+     */
     static void sleep() {
-/*
-        set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-        sleep_enable();
-        sleep_cpu();
-*/
+        LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
+        LL_PWR_EnableLowPowerRunMode();
+        LL_LPM_EnableDeepSleep();
+        __WFI();
+        LL_LPM_EnableSleep();
     }
 
     static void reset() {
-        // reset the device by writing to the software reset register
+        NVIC_SystemReset();
+    }
+
+    /** Enables the independent watchdog with the given timeout in milliseconds (max ~32 seconds).
+
+        Once enabled, the IWDG cannot be stopped other than by a reset. It runs off the LSI (32.768kHz), which is enabled here, and keeps running in the Stop mode as well, so when sleeping with the watchdog enabled, the chip must be periodically woken up (e.g. by RTC) to reset the watchdog. Calling the function again with the watchdog running just changes the timeout.
+     */
+    static void wdtEnable(uint32_t timeoutMs = 1000) {
+        // reload value for the smallest prescaler (/4), then find the smallest prescaler for which it fits the 12bit reload register
+        uint32_t reload = timeoutMs * (32768 / 4) / 1000;
+        uint32_t prescaler = LL_IWDG_PRESCALER_4;
+        while (reload > 0xfff && prescaler < LL_IWDG_PRESCALER_256) {
+            reload /= 2;
+            ++prescaler;
+        }
+        if (reload > 0xfff)
+            reload = 0xfff;
+        // unlike STM32, writing the enable key does not start the LSI on PY32, which must be enabled manually. Without LSI the IWDG does not count and the prescaler & reload update flags never clear as they are synchronized to the LSI domain
+        LL_RCC_LSI_Enable();
+        while (LL_RCC_LSI_IsReady() != 1);
+        LL_IWDG_Enable(IWDG);
+        LL_IWDG_EnableWriteAccess(IWDG);
+        LL_IWDG_SetPrescaler(IWDG, prescaler);
+        LL_IWDG_SetReloadCounter(IWDG, reload);
+        while (LL_IWDG_IsReady(IWDG) != 1);
+        LL_IWDG_ReloadCounter(IWDG);
     }
 
     static void wdtReset() __attribute__((always_inline)) {
-        //__asm__ __volatile__ ("wdr"::);
+        LL_IWDG_ReloadCounter(IWDG);
     }
 
     static void nop()  __attribute__((always_inline)) { __NOP(); }
@@ -451,7 +498,12 @@ public:
     }
 
     static void waitForTx() {
-        while(LL_USART_IsActiveFlag_TXE(USART1) != 1);
+        while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
+    }
+
+    static void flush() {
+        while (LL_USART_IsActiveFlag_TXE(USART1) != 1);
+        while (LL_USART_IsActiveFlag_TC(USART1) != 1);
     }
 
     static void write(char c) {
@@ -484,7 +536,6 @@ public:
         LL_TIM_EnableAllOutputs(TIM1);
         // enable the timer
         LL_TIM_EnableCounter(TIM1);
-
     }
 
     static void disable() {

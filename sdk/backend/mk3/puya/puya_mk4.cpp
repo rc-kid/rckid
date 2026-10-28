@@ -84,7 +84,19 @@ public:
         LOG("PY32F030 initialize");
         initializeGPIO();
         initializeButtons();
-        initializeRTC();
+        if (LL_RCC_IsActiveFlag_IWDGRST()) {
+            LOG("  wdt triggered reset - rtc unchanged");
+            LL_RCC_ClearResetFlags();
+            updateDateTime();
+        } else {
+            initializeRTC();
+        }
+        cpu::wdtReset();
+        cpu::wdtEnable(RCKID_PUYA_WATCHDOG_TIMEOUT_MS);
+        LOG("  wdt");
+        // enable the RTC second tick and since it was off, update the time from the RTC
+        rtc::enableSecondInterrupt(true);
+
 
         setState(mkIV::DeviceState::State::On);
         // TODO remove this when ready testing on the device
@@ -106,12 +118,12 @@ public:
     }
 
     static void loop() {
+        cpu::wdtReset();
         systemTick();
         secondTick();
         processI2CCommand();
         adcMeasure();
-        if (ts_.state() == mkIV::DeviceState::State::Off)
-            sleep();
+        trySleep();
     }
 
 private:
@@ -300,9 +312,6 @@ private:
             LL_EXTI_DisableFallingTrig(LL_EXTI_LINE_2);
             LL_EXTI_ClearFlag(LL_EXTI_LINE_2);
             NVIC_ClearPendingIRQ(EXTI2_3_IRQn);
-            // enable the RTC second tick and since it was off, update the time from the RTC
-            rtc::enableSecondInterrupt(true);
-            updateDateTime();
             initializeADC();
         } else {
             NVIC_DisableIRQ(TIM3_IRQn);
@@ -310,9 +319,6 @@ private:
             timer3::disable();
             LL_TIM_ClearFlag_UPDATE(TIM3);
             NVIC_ClearPendingIRQ(TIM3_IRQn);
-            // disable the RTC second tick (alarm interrupt is not affected), clear any pending one
-            rtc::enableSecondInterrupt(false);
-            secondTick_ = false;
             // disable ADC, cancelling any measurement in progress
             disableADC();
             rgbOff();
@@ -370,6 +376,7 @@ private:
             cpu::DisableInterruptsGuard g_;
             if (rpWatchdogCounter_ > 0 && --rpWatchdogCounter_ == 0) {
                 g_.release();
+                LOG("watchdog");
                 powerOff();
                 // TODO some fancy RGB to tell us this happened
             }
@@ -384,10 +391,14 @@ private:
             
     }
 
-    static void sleep() {
-        // TODO there is a race now - we can have wakeup because of charging enabled between the check and sleeping and we will miss it. My future self will solve this properly once we start sleeping
-        ASSERT(ts_.state() == mkIV::DeviceState::State::Off);
-        // TODO ensure the system is in state from which it can wakeup by the home button press
+    static void trySleep() {
+        cpu::DisableInterruptsGuard g_;
+        if (ts_.state() != mkIV::DeviceState::State::Off)
+            return;
+        LOG("sleep");
+        serial::flush();
+        cpu::sleep();
+        LOG("  wakeup");
     }
 
     /** RTC timekeeping and wakeup alarm
@@ -432,11 +443,12 @@ private:
     static void secondTick() {
         if (!secondTick_)
             return;
-        ASSERT(ts_.state() != mkIV::DeviceState::State::Off);
         secondTick_ = false;
-        updateDateTime();
-        adcPrime(); // prime the ADC for a conversion start
-        //LOG(ts_.time.time);
+        ts_.time.inc();
+        ++ts_.uptime_;
+        if (ts_.state() != mkIV::DeviceState::State::Off) {
+            adcPrime(); // prime the ADC for a conversion start
+        }
     }
     //@}
 

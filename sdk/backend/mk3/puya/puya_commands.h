@@ -34,6 +34,13 @@ namespace rckid {
         bool dcPower() const { return (device_ & DC_POWER_MASK) != 0; }
         bool charging() const { return (device_ & CHARGING_MASK) != 0; }
 
+        uint32_t vcc() const { 
+            if (vcc_ == 0)
+                return 0;
+            else
+                return 245 + vcc_;
+        }
+
         bool button(Btn b) const { return (buttons_ & (1 << static_cast<uint32_t>(b))) != 0; }
 
     protected:
@@ -79,7 +86,12 @@ namespace rckid {
         }
 
         void setVcc(uint32_t value) {
-            
+            if (value <= 245)
+                vcc_ = 0;
+            else if (value >= 500)
+                vcc_ = 255;
+            else
+                vcc_ = value - 245;
         }
 
     private:
@@ -105,20 +117,20 @@ namespace rckid {
      */
     class ExtendedState : public DeviceState {
     public:
-        uint32_t const version = RCKID_AVR_FIRMWARE_VERSION;
         TinyDateTime time;
 
+        uint32_t uptime() const { return uptime_; }
+
         int16_t temp() const { return temp_; }
+
 
     protected:
 
         friend class ::KidDo;
 
         void setTemp(int16_t value) { temp_ = value; }
-
-        // TODO uptime
-    
-        uint32_t uptime = 0;
+   
+        uint32_t uptime_ = 0;
         int16_t temp_ = 0;
 
     protected:
@@ -130,6 +142,7 @@ namespace rckid {
      */
     class TransferrableState : public ExtendedState {
     public:
+        uint32_t const version = RCKID_AVR_FIRMWARE_VERSION;
         bool debugUart = true;
         uint16_t bufferUsed = 0;
         uint8_t buffer[256];
