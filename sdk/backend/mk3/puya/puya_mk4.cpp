@@ -110,7 +110,7 @@ public:
             // TODO remove this when ready testing on the device
             ts_.setDebugMode(true);
         }
-        LOG("done.");        
+        LOG("done.");     
     }
 
     static void loop() {
@@ -499,6 +499,8 @@ private:
             LOG("Invalid size: exp " << cmd::getCommandSize(ts_.buffer[0]) << ", got " << i2cRxBytes_);
             // convert the incomplete size command to NOP
             ts_.buffer[0] = cmd::Nop::ID;
+        } else {
+            LOG("i2c cmd: " << static_cast<uint32_t>(ts_.buffer[0]) << ", size " << i2cRxBytes_);
         }
         switch (ts_.buffer[0]) {
             case cmd::Nop::ID:
@@ -584,11 +586,12 @@ private:
     }
 
     static void i2cIRQHandler() {
-        // SR2 is read before SR1 so that we get the direction without clearing ADDR (cleared by reading SR1 followed by SR2), which keeps SCL stretched while we set up the DMA
-        uint32_t sr2 = I2C1->SR2;
+        // SR1 must be read before SR2, which clears ADDR (read SR1 followed by read SR2). Reading SR2 first does not work, as an earlier SR1 read (e.g. the AF flag clear in the previous transaction, which survives SWRST) together with the SR2 read clears ADDR before we see it. Clearing ADDR before the DMA is set up is safe as SCL stays stretched until DR is written (master read), or the first received byte is read (master write)
         uint32_t sr1 = I2C1->SR1;
+        uint32_t sr2 = I2C1->SR2;
         // if there are any errors, abandon whatever transaction is in progress and reset the I2C (disabling the DMA first discards any partially received command)
         if (sr1 & (I2C_SR1_BERR | I2C_SR1_ARLO | I2C_SR1_OVR)) {
+            //LOG("  error");
             LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_1);
             i2cStopDMA();
             i2cReset();
@@ -631,8 +634,6 @@ private:
                 LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_1);
                 LL_I2C_EnableDMAReq_RX(I2C1);
             }
-            // clears ADDR as SR1 has already been read, releasing SCL
-            (void) I2C1->SR2;
         }
         // master read finished, master nacked the last byte it wanted, i.e. master read is finished 
         if (sr1 & I2C_SR1_AF) {
