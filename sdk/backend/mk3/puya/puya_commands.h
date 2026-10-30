@@ -147,6 +147,97 @@ namespace rckid {
         uint8_t buffer[256];
     } __attribute__((packed)); // rckid::TransferrableState
 
+    /** Neopixel RGB Effect 
+     
+        Different effect kinds are provided. Each can be customized with effect speed (i.e. how fast the color changes that are part of the effect are) and duration (i.e. how long, the effect should be rendered). Certain effects can also have their own custom settings, such as the effect color specification.
+     */
+    class RGBEffect {
+    public:
+    
+        enum class Kind : uint8_t {
+            Solid,
+            Breathe,
+            Flash,
+            Rainbow,
+        };
+
+        /** Turns the LED off. 
+         
+            This is identical to solid effect with black color.
+         */
+        static RGBEffect Off(uint8_t speed) {
+            return RGBEffect{Kind::Solid, speed, 0, 0, 0, 0};
+        }
+
+        /** Displays specified color. 
+         */
+        static RGBEffect Solid(platform::Color color) {
+            return RGBEffect{Kind::Solid, 8, 0, color.r, color.g, color.b};
+        }
+
+        /** Shows a breathing effect where the specified color gradually brightens and dims at given speed for the specified duration. 
+         */
+        static RGBEffect Breathe(platform::Color color) {
+            return RGBEffect{Kind::Breathe, 8, 0, color.r, color.g, color.b};
+        }
+
+        /** Shows a rainbow effect that cycles through the color wheel starting at given hue with given speed. 
+         */
+        static RGBEffect Rainbow(uint8_t hue, uint8_t speed, uint8_t brigthness, uint8_t duration) {
+            return RGBEffect{Kind::Rainbow, speed, duration, hue, 0, 0};
+        }
+
+        RGBEffect & speed(uint8_t value) & { speed_ = value; return *this; }
+        RGBEffect && speed(uint8_t value) && { speed_ = value; return std::move(*this); }
+
+        RGBEffect & duration(uint8_t value) & { duration_ = value; return *this; }
+        RGBEffect && duration(uint8_t value) && { duration_ = value; return std::move(*this); }
+
+
+        /** Type of the effect. 
+         */
+        Kind kind() const { return kind_; }
+
+        /** Duration of the effect in milliseconds. 
+         */
+        uint32_t duration() const { return duration_ * 10; }
+
+        platform::Color color() const { 
+            ASSERT(kind_ != Kind::Rainbow);
+            return platform::Color::RGB(data_[0], data_[1], data_[2]); 
+        }
+
+        uint8_t hue() const { 
+            ASSERT(kind_ == Kind::Rainbow);
+            return data_[0]; 
+        }
+
+    private:
+
+        RGBEffect(Kind kind, uint8_t duration, uint8_t speed, uint8_t a, uint8_t b, uint8_t c):
+            kind_{kind}, duration_{duration}, speed_{speed}, data_{a, b, c} {}
+
+        Kind kind_ = Kind::Solid;
+
+        uint8_t duration_ = 0;
+
+        uint8_t speed_ = 0;
+
+        // either rainbow settings, or rgb color
+        uint8_t data_[3] = {0, 0, 0};
+
+    } __attribute__((packed)); // class RGBEffect
+
+    /** Rumbler effect. 
+     */
+    class RumblerEffect {
+    public:
+        class Step {
+        public:
+        } __attribute__((packed)); 
+
+    } __attribute__((packed)); // class RumblerEffect
+
     }   // namespace mkIV
 
 } // namespace rckid
