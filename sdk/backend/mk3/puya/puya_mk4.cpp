@@ -1,6 +1,7 @@
 #include <platform.h>
 #include <py32f0xx_ll_i2c.h>
 #include <py32f0xx_ll_dma.h>
+#include <py32f0xx_ll_spi.h>
 #include <py32f0xx_ll_system.h>
 #include <writer.h>
 #include <config.h>
@@ -69,6 +70,7 @@ extern "C" {
     void RTC_IRQHandler();
     void I2C1_IRQHandler();
     void DMA1_Channel1_IRQHandler();
+    void DMA1_Channel2_3_IRQHandler();
     void EXTI0_1_IRQHandler();
     void EXTI2_3_IRQHandler();
     void ADC_COMP_IRQHandler();
@@ -84,6 +86,7 @@ public:
         LOG("PY32F030 initialize");
         initializeGPIO();
         initializeButtons();
+        initializeRGB();
         bool wdtReset = LL_RCC_IsActiveFlag_IWDGRST();
         if (wdtReset) {
             LOG("  wdt triggered reset - rtc unchanged");
@@ -318,6 +321,7 @@ private:
             // disable ADC, cancelling any measurement in progress
             disableADC();
             rgbOff();
+            while (rgbUpdateInProgress());
             // ensure any pending system tick is cleared so that we do not run stale ticks in power off mode
             systemTick_ = false;
             // if we were in the middle of a long press counter detection when powering off, cancel it
@@ -488,8 +492,7 @@ private:
     static void disableI2C() {
         LL_I2C_Disable(I2C1);
         LL_APB1_GRP1_DisableClock(LL_APB1_GRP1_PERIPH_I2C1);
-        LL_APB1_GRP2_DisableClock(LL_APB1_GRP2_PERIPH_SYSCFG);
-        LL_AHB1_GRP1_DisableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+        // SYSCFG and DMA1 clocks stay enabled as the RGB LEDs use DMA channel 2 in the off states as well
     }
 
     static void processI2CCommand() {
@@ -920,10 +923,106 @@ private:
     /** \name RGB LEDs
      
         The RGB LEDs are connected to SPI2, where we are using only MOSI to drive the 1 wire interface.
+
      */
     //@{
+
+    static constexpr uint32_t RGB_LED_COUNT = 8;
+
+    static inline mkIV::RGBEffect rgbEffects_[RGB_LED_COUNT];
+    static inline platform::Color rgb_[RGB_LED_COUNT];
+    static inline uint32_t rgbRaw_[RGB_LED_COUNT * 3];// 4 bits per bit, 
+
+    static void initializeRGB() {
+        LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_SPI2);
+        LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_SYSCFG);
+        LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA1);
+        // initialize SPI2 so that it uses only PUYA_PIN_RGB to send data to the neopixels. The pull-down keeps the data line low before the SPI drives it, after each transfer MOSI holds the last bit, which is always 0 as every encoded nibble ends with 0
+        static_assert(PUYA_PIN_RGB == gpio::PA4, "RGB must be on PA4 (SPI2 MOSI, AF2)");
+        LL_GPIO_InitTypeDef cfg{};
+        cfg.Pin = gpio::pinMask(PUYA_PIN_RGB);
+        cfg.Mode = LL_GPIO_MODE_ALTERNATE;
+        cfg.Speed = LL_GPIO_SPEED_FREQ_HIGH;
+        cfg.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+        cfg.Pull = LL_GPIO_PULL_DOWN;
+        cfg.Alternate = LL_GPIO_AF2_SPI2;
+        LL_GPIO_Init(GPIOA, & cfg);
+        // 8MHz / 2 = 4MHz, i.e. 250ns per SPI bit, 1us per encoded neopixel bit
+        ASSERT(PUYA_CLOCKSPEED == cpu::ClockSpeed::MHz8);
+        LL_SPI_InitTypeDef spi{};
+        spi.TransferDirection = LL_SPI_FULL_DUPLEX; // no MISO pin assigned, so effectively transmit only
+        spi.Mode = LL_SPI_MODE_MASTER;
+        spi.DataWidth = LL_SPI_DATAWIDTH_8BIT;
+        spi.ClockPolarity = LL_SPI_POLARITY_LOW;
+        spi.ClockPhase = LL_SPI_PHASE_1EDGE;
+        spi.NSS = LL_SPI_NSS_SOFT;
+        spi.BaudRate = LL_SPI_BAUDRATEPRESCALER_DIV2;
+        spi.BitOrder = LL_SPI_MSB_FIRST;
+        LL_SPI_Init(SPI2, & spi);
+        LL_SPI_EnableDMAReq_TX(SPI2);
+        LL_SPI_Enable(SPI2);
+        // initialize DMA second channel to send the data to SPI2, the transfer starts when the channel is enabled in updateRGB()
+        LL_SYSCFG_SetDMARemap_CH2(LL_SYSCFG_DMA_MAP_SPI2_TX);
+        LL_DMA_ConfigTransfer(DMA1, LL_DMA_CHANNEL_2,
+            LL_DMA_DIRECTION_MEMORY_TO_PERIPH |
+            LL_DMA_MODE_NORMAL |
+            LL_DMA_PERIPH_NOINCREMENT |
+            LL_DMA_MEMORY_INCREMENT |
+            LL_DMA_PDATAALIGN_BYTE |
+            LL_DMA_MDATAALIGN_BYTE |
+            LL_DMA_PRIORITY_LOW
+        );
+        LL_DMA_SetPeriphAddress(DMA1, LL_DMA_CHANNEL_2, reinterpret_cast<uint32_t>(& SPI2->DR));
+        LL_DMA_SetMemoryAddress(DMA1, LL_DMA_CHANNEL_2, reinterpret_cast<uint32_t>(rgbRaw_));
+        // enable the IRQ for the DMA channel 2 transfer complete, which is used to detect when the RGB update is finished
+        LL_DMA_EnableIT_TC(DMA1, LL_DMA_CHANNEL_2);
+        NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0);
+        NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
+        LOG("  rgb");
+    }
+
+    static bool rgbUpdateInProgress() {
+        return LL_DMA_IsEnabledChannel(DMA1, LL_DMA_CHANNEL_2);
+    }
+
     static void rgbOff() {
-        // clear effects, send black to all LEDs to power them off
+        // clear all effects and set all rgbs to black
+        for (uint32_t i = 0; i < RGB_LED_COUNT; ++i) {
+            rgbEffects_[i] = mkIV::RGBEffect::Off();
+            rgb_[i] = platform::Color::RGB(0, 0, 0);
+        }
+        updateRGB();
+    }
+
+    static void updateRGB() {
+        ASSERT(! rgbUpdateInProgress());
+        encodeRGBRaw();
+        // the channel can only be reconfigured while disabled
+        LL_DMA_SetDataLength(DMA1, LL_DMA_CHANNEL_2, sizeof(rgbRaw_));
+        LL_DMA_EnableChannel(DMA1, LL_DMA_CHANNEL_2);
+    }
+
+
+    /** Takes the current rgb values (stored in rgb_) and encodes them into the rgbRaw_, 4 bits per 1 source bit using the following formula:
+     
+        0 = 1000
+        1 = 1110
+     */
+    static void encodeRGBRaw() {
+        auto encodeByte = [](uint8_t byte) {
+            uint32_t result = 0;
+            for (int i = 0; i < 8; ++i) {
+                result <<= 4;
+                result |= ((byte & (1 << (7 - i))) ? 0b1110 : 0b1000);
+            }
+            // the DMA sends byte by byte from the little endian uint32_t, so swap to get the MSB nibbles out first
+            return __REV(result);
+        };
+        for (uint32_t i = 0; i < RGB_LED_COUNT; ++i) {
+            rgbRaw_[i * 3 + 0] = encodeByte(rgb_[i].g);
+            rgbRaw_[i * 3 + 1] = encodeByte(rgb_[i].r);
+            rgbRaw_[i * 3 + 2] = encodeByte(rgb_[i].b);
+        }
     }
     //@}
 
@@ -966,6 +1065,7 @@ private:
     friend void RTC_IRQHandler();
     friend void I2C1_IRQHandler();
     friend void DMA1_Channel1_IRQHandler();
+    friend void DMA1_Channel2_3_IRQHandler();
     friend void EXTI0_1_IRQHandler();
     friend void EXTI2_3_IRQHandler();
     friend void ADC_COMP_IRQHandler();
@@ -1000,6 +1100,15 @@ extern "C" {
         if (LL_DMA_IsActiveFlag_TC1(DMA1)) {
             LL_DMA_ClearFlag_TC1(DMA1);
             KidDo::i2cDMAComplete();
+        }
+    }
+
+    /** Second DMA channel used for neopixels. Called when the DMA finishes. On Puya this is shared with channel 3, which we use for the SPI accelerometer.
+     */
+    void DMA1_Channel2_3_IRQHandler() {
+        if (LL_DMA_IsActiveFlag_TC2(DMA1)) {
+            LL_DMA_ClearFlag_TC2(DMA1);
+            LL_DMA_DisableChannel(DMA1, LL_DMA_CHANNEL_2);
         }
     }
 

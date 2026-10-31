@@ -161,11 +161,15 @@ namespace rckid {
             Rainbow,
         };
 
+        /** Defaukt constructor, identical to Off.
+         */
+        RGBEffect(): RGBEffect(Kind::Solid, 255, 0, 0, 0, 0) {}
+
         /** Turns the LED off. 
          
             This is identical to solid effect with black color.
          */
-        static RGBEffect Off(uint8_t speed) {
+        static RGBEffect Off(uint8_t speed = 255) {
             return RGBEffect{Kind::Solid, speed, 0, 0, 0, 0};
         }
 
@@ -187,11 +191,15 @@ namespace rckid {
             return RGBEffect{Kind::Rainbow, speed, duration, hue, 0, 0};
         }
 
-        RGBEffect & speed(uint8_t value) & { speed_ = value; return *this; }
-        RGBEffect && speed(uint8_t value) && { speed_ = value; return std::move(*this); }
+        /** Sets the speed of the effect. 
+         
+            Speed is set in 0..255 range and means that largest increase in the effect's color value per tick. 
+          */
+        RGBEffect & withSpeed(uint8_t value) & { speed_ = value; return *this; }
+        RGBEffect && withSpeed(uint8_t value) && { speed_ = value; return std::move(*this); }
 
-        RGBEffect & duration(uint8_t value) & { duration_ = value; return *this; }
-        RGBEffect && duration(uint8_t value) && { duration_ = value; return std::move(*this); }
+        RGBEffect & withDuration(uint8_t value) & { duration_ = value; return *this; }
+        RGBEffect && withDuration(uint8_t value) && { duration_ = value; return std::move(*this); }
 
 
         /** Type of the effect. 
