@@ -103,13 +103,13 @@ Inline array initialization is possible with the `[]` parentheses as well:
 
 This is the associative array. Generic on key and value. Maps are created with `{}`, i.e. the following is a map from number to text:
 
-    let m : {num, text}
+    let m : {num -> text}
 
 All types in the map have to be identical. Type inference can be used from the first type. The `{}` parentheses can also be used for inline initialization, such as:
 
     let m = {
-        1 = "foo",
-        2 = "bar",
+        1 -> "foo",
+        2 -> "bar",
     }
 
 ### Special value types
@@ -190,10 +190,10 @@ Or as named events inside objects. Note that named events are onky available in 
 
     type Object = (
         field1 : num,
-        onSomething : event(a : num) -> num
+        onSomething : event(a : num)
     )
 
-Like functions, events can return values, or nothing (`->` missing) and they may even provide default values for their arguments. 
+Unlike functions, events may notreturn values (`->` missing), but they may provide default values for their arguments. 
 
 When an event is assigned a function, that function becomes its sole handler. But unlike functions, events also support the `+=` assignment, in which case the handler is *added* to the event:
 
@@ -354,8 +354,8 @@ _doLang_ follows standard operator precedence so as not to confuse kids with spe
 - addition and subtraction (`+`, `-`), text concatenation (also `+`)
 - comparison operators (`<`, `<=`, `>`, `>=`)
 - equality comparisons (`==`, `!=`)
-- logical `or`
 - logical `and`
+- logical `or`
 
 Short-circuiting of logical operators is supported. 
 
@@ -452,7 +452,7 @@ Then a for-each variant for arrays and maps:
     for value in map
         ...
 
-    for key, value in map
+    for value, key in map
 
 During the for each loop variants, any access to the arry or map itself other than the element is *not* allowed.
 
@@ -478,7 +478,7 @@ The `else` case is executed if *none* of the cases above applies. The case state
 As an example:
 
     match complexTuple
-        case (re : 1, im):
+        case (re = 1, im):
             ... # we now have re and im in scope
 
     match array
@@ -522,12 +522,14 @@ _doLang_ does not support namespaces. The reason for this is that namespaces com
 - sqrt(x)
 
 
-# Appendix A - Program Execution
+# Appendix A - Grammar
+
+
+# Appendix B - Program Execution
 
 There is no main function per se.
 
-
-# Appendix B - Future Extensions
+# Appendix C - Future Extensions
 
 - byte type and bitwise operators
 
