@@ -33,6 +33,8 @@
 #include <rckid/apps/games/sliding_puzzle.h>
 #include <rckid/apps/games/space_attack.h>
 
+#include <rckid/apps/benchmarks/dolang/num.h>
+
 
 #include <rckid/apps/audio/recorder.h>
 
@@ -49,6 +51,9 @@ namespace rckid {
         return [options]() {
             auto result = std::make_unique<LauncherMenu>();
             (*result)
+                << ui::MenuItem{"dolang-num", assets::icons_64::calculator, []() {
+                    App::run<DoLangNumBenchmark>();
+                }}
                 << ui::MenuItem::Generator("Games", assets::icons_64::game_controller, [extend = options.gamesExtender]() {
                     auto gamesMenu = gamesMenuGenerator();
                     if (extend != nullptr)
