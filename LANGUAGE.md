@@ -70,7 +70,7 @@ This works in every context, so for instance map definition can look like this:
         "c" -> 3
     }
 
-Blocks (bodies of `if`, loops, functions, etc.) always start on a new line that is indented more than the statement that introduced them. The statements that have a block end with a keyword (`if ... then`, `while ... do`, `for ... do`, `is ... then`), so their headers can span multiple lines as well. Function bodies use indentation inside parentheses too. Such a body starts on a new line indented more than the line where it was introduced and ends at the first line indented less than the body. As the next item starts at the item column, no comma is needed after the body:
+Blocks (bodies of `if`, loops, functions, etc.) always start on a new line that is indented more than the statement that introduced them. The statements that have a block end with a keyword (`if ... then`, `while ... do`, `for ... do`, `is ... then`), so their headers can span multiple lines as well. Function bodies always follow the `fun` keyword, either directly, or after the function signature (`fun(...)`). Function bodies use indentation inside parentheses too. Such a body starts on a new line indented more than the line where it was introduced and ends at the first line indented less than the body. As the next item starts at the item column, no comma is needed after the body:
 
     type Player = (
         onHit = fun(damage : num)
@@ -78,7 +78,7 @@ Blocks (bodies of `if`, loops, functions, etc.) always start on a new line that 
                 playSound(ouch)
             self.lives -= damage
         lives = 3
-        constructor =
+        constructor = fun
             test self.lives > 0
     )
 
@@ -99,15 +99,13 @@ It is always the indentation that decides where an item ends, the comma is only 
 
 A comma at the end of a line must be followed by a line at the item column, or by the closing parenthesis. A line indented more than the item column after such comma is an error, as the comma says a new item follows, while the indentation says the current item continues.
 
-Parsing of function bodies can be a bit more complex as it breaks the context free nature of the grammar. Assigning to a function means that the `=` (or `+=` for events) operator followed by a newline and increased indentation is *not* continuation of the statement, but a function block. This means that same code will be parsed differently based on the assignment target type:
+A block of statements is always introduced by a keyword (`then`, `do`, `fun`, or the function signature following it), never by an operator. In particular, a newline after `=` (or any other assignment operator) is always a continuation of the statement, regardless of the type of the assignment target. Function bodies must always start with the `fun` keyword:
 
-    # if n is function, the function body will be block of 2 statements (1 and + 42)
-    n =
-        1     # beginning of a block
+    d =
+        1     # continuation of the statement, d is assigned 43
         + 42
-    # if d is not a function, but a number, it will be assigned 43:
-    d = 
-        1    # continuation of a statement
+    n = fun
+        1     # function body, block of 2 statements (1 and + 42)
         + 42
 
 ## Built-in Types
@@ -188,14 +186,17 @@ or anonymous:
     let a = fun(arg : num)
         ...
 
-A function _body_ can appear in two places:
+A function _body_ is always an indented block of statements starting on a new line, and always follows the `fun` keyword. There is no `=` between the signature and the body. The anonymous function can be written in two forms:
 
-- after a function signature, i.e. `fun(...)` with optional return type, as an indented block of statements starting on a new line. There is no `=` between the signature and the body.
-- after `=` (or `+=` for events) when the left hand side is a function (or event) whose type is known, such as named function declarations, function and event variables, or object constructors. In this case the body is given without the signature, which is taken from the type.
+- with explicit signature, i.e. `fun(...)` with optional return type, followed by the body
+- with implicit signature, i.e. just `fun` followed by the body, in which case the signature is taken from the type known from the context, such as function and event variables, or object constructors
 
 The following are all equivalent ways of creating a function variable `a`:
 
-    let a : fun(arg : num) =
+    let a : fun(arg : num) = fun
+        ...
+
+    let a : fun(arg : num) = fun(arg)
         ...
 
     let a = fun(arg : num)
@@ -211,27 +212,22 @@ If the function returns value, the `->` notation is used, e.g.:
 
 When the `->` part is omitted the function type is expected to not return anything (`void` in C/C++).
 
-Function that is variable can be assigned a lambda, existing global function, or method of an particulkar object as long as the arguments arity, their types and return value are identical. The function variable can be set to nothing by being assinged `none`. When function that holds `none` is called, it is not a runtime error, but instead the following happens: 
-
-- all arguments given to the function evaluate as if there was a call
-- if the function should return value, it returns the default value of that type
-
-Function values implicitly cast to boolean. Function holding `none` casts to `false`, all others cast to `true`. 
+Function that is variable can be assigned a lambda, existing global function, or method of an particulkar object as long as the arguments arity, their types and return value are identical. Function variable must *always* pointto a valid function and hence be callable. For otentionally empty function-like variables one can use events instead. 
 
 ### Argument names
 
-Contrary to most mainstream languages, names are described when typing the function, but are *not* part of the function type itself, but its signature. Function compatibility depends only on the number of arguments (arity) and their types as well as the return type of the function. Argument names affect keyword calls, editor visualizaton and implicit bindings: When a body is given without a signature, the arguments are automatically bound under the names from the type. This means that the following code is valid:
+Contrary to most mainstream languages, names are described when typing the function, but are *not* part of the function type itself, but its signature. Function compatibility depends only on the number of arguments (arity) and their types as well as the return type of the function. Argument names affect keyword calls, editor visualizaton and implicit bindings: When a body is given with the implicit signature (`fun` without parentheses), the arguments are automatically bound under the names from the type. This means that the following code is valid:
 
     let inc : fun(x : num) -> num
-    inc = 
+    inc = fun
        return x + 1 # x is bound from inc's type
 
 This is very useful for function variables and events, especially those declared elsewhere (such as in objects or libraries), as the handler can be written without repeating the signature:
 
-    button.onPress =
+    button.onPress = fun
         ... # arguments of onPress available under their declared names
 
-However, it is also possible to rename the arguments by providing the signature explicitly, as long as it is compatible with the type. So continuing the example from above, one can write:
+However, it is also possible to rename the arguments by providing the signature explicitly in parentheses, as long as it is compatible with the type. So continuing the example from above, one can write:
 
     inc = fun(a : num) -> num
         return a + 1
@@ -243,7 +239,7 @@ Since the function type is already known from `inc`'s definition, type inference
 
 When the signature is given, it must list *all* the arguments, i.e. it is not possible to rename only some of them and keep the others implicit.
 
-Implicitly bound arguments must not hide any other variable visible at the place of the body. For example, if there is a global variable `x`, the `inc = ` body from above is an error and the arguments must be renamed using the explicit signature. This prevents the confusing situation where `x` in the body looks like the global variable, but is in fact the argument.
+Implicitly bound arguments must not hide any other variable visible at the place of the body. For example, if there is a global variable `x`, the `inc = fun` body from above is an error and the arguments must be renamed using the explicit signature. This prevents the confusing situation where `x` in the body looks like the global variable, but is in fact the argument.
 
 > The editors should always display the implicitly bound arguments, e.g. as a greyed out signature above the body, so that the argument names are visible even if they are not part of the code.
 
@@ -291,9 +287,9 @@ Unlike functions, events may not return values (`->` missing), but they may prov
 When an event is assigned a function, that function becomes its sole handler. But unlike functions, events also support the `+=` assignment, in which case the handler is *added* to the event. When multiple handlers for the event exist, they are called in the order in which they were added to the event:
 
     let a : event(a : num, b : num) 
-    a +=
+    a += fun
         ... # first
-    a += 
+    a += fun
         ... # second
 
     a(1, 2) # both first and second will be called, in this order
@@ -303,7 +299,7 @@ All event handlers can be cleared if they are assigned `none` (`+=` assignment o
 Events use value matching to allow for conditional dispatch, i.e. unlike the example above, consider the following:
 
     let a : event(a : num, b : num) 
-    a +=
+    a += fun
         ... # first
     a += fun(a, 56)
         ... # second
@@ -368,12 +364,12 @@ User defined constructors are not supported, instead free functions can be defin
 
     let a = Im(56)
 
-However, this simple arcitecture makes construction of invalid object states possible. Canonical example of this is the rational number - and even though it makes no sense in _doLang_ context where rational is built-in - we will thus use it to illustrate as well. The problem is that certain values are invalid without fallback (denominator being zero), while some must be normalized. This can be done by specifying a `constructor` body in the type definition, where the body is a function that is guaranteed to run after the object is created. As with any other function body, it is indented even though it is inside the parentheses:
+However, this simple arcitecture makes construction of invalid object states possible. Canonical example of this is the rational number - and even though it makes no sense in _doLang_ context where rational is built-in - we will thus use it to illustrate as well. The problem is that certain values are invalid without fallback (denominator being zero), while some must be normalized. This can be done by specifying a `constructor` in the type definition, which is a function that is guaranteed to run after the object is created. As with any other function body, it starts with `fun` and is indented even though it is inside the parentheses:
 
     type Rational = (
         n = 0,
         d = 1,
-        constructor = 
+        constructor = fun
             test self.d != 0
             if self.d < 0 then
                 self.d *= -1
@@ -632,7 +628,7 @@ Inside `()`, `[]` and `{}` parentheses, the columns of the tokens are not checke
 The line breaks in the grammar are denoted by the following symbols, which do not consume any tokens, but check the position of the next token:
 
 - `newline` the next token is the first on its line and its column is `B`
-- `indent` the next token is the first on its line and its column is greater than the reference column `R`. The column of the token becomes `B` of the new block. Outside of parentheses `R` is the `B` of the enclosing block, inside parentheses `R` is the column of the first token on the line where the block was introduced (i.e. the line with the `=` or the function signature)
+- `indent` the next token is the first on its line and its column is greater than the reference column `R`. The column of the token becomes `B` of the new block. Outside of parentheses `R` is the `B` of the enclosing block, inside parentheses `R` is the column of the first token on the line where the block was introduced (i.e. the line with the `fun` keyword or the function signature)
 - `dedent` the next token is the first on its line and its column is smaller than `B` (or end of file). The block ends and `B` of the enclosing block is restored
 
 Empty lines and comments are ignored. Tabs are not allowed for indentation.
@@ -649,11 +645,7 @@ Lists of items inside parentheses use the following parametrized rule:
 
 Items are separated by commas and an optional trailing comma is allowed. As an exception, the comma after an item that ends with a `BLOCK` is optional, as the end of the block already separates the items.
 
-The right hand side of `=` (and `+=`) is either an expression, or a block. As `BLOCK` always starts with `indent`, the two can be differentiated with a single token lookahead:
-
-    INIT := BLOCK | EXPR
-
-The parser does not need to know the type of the left hand side. Whether the right hand side is a value, or a function body (and whether it is valid) is decided semantically based on the type of the left hand side, see [Functions](#functions). A `BLOCK` consisting of a single expression statement is treated as that expression.
+`BLOCK` is only ever introduced by a keyword (`then`, `do`, `else`, `fun`) or a function signature, never by an operator. The right hand side of `=` (and other assignment operators) is therefore always an `EXPR` and a line break after `=` is an ordinary continuation. Function bodies on the right hand side are function literals, see `FUN_LITERAL`. The grammar is thus context free and the parser never needs to know the type of the left hand side.
 
 ## Top Level Statements
 
@@ -665,24 +657,24 @@ Program consists of global or constant declarations, function and type declarati
 
 `use` declaration is simply name of library to be used. Each library must be on separate line and with its own `use` keyword.
 
-    GLOBAL_DECL := 'global' ident [ ':' TYPE ] [ '=' INIT ]
+    GLOBAL_DECL := 'global' ident [ ':' TYPE ] [ '=' EXPR ]
     CONST_DECL := 'const' ident [ ':' TYPE ] [ '=' EXPR ]
 
-Global variable declaration starts with `global` keyword and has name, optional type and initialization value. The value is optional and when omitted default constructor is used. When the global variable is a function or event, the value can be the function body. Constant declaration is the same, just starts with `const` keyword. As constants can only be primitive values, they cannot be initialized with function body.
+Global variable declaration starts with `global` keyword and has name, optional type and initialization value. The value is optional and when omitted default constructor is used. When the global variable is a function or event, the value can be a function literal. Constant declaration is the same, just starts with `const` keyword. As constants can only be primitive values, they cannot be initialized with function literals.
 
-    FUN_DECL := 'fun' ident [ '.' ident ] '(' LIST(ARG) ')' [ '->' [ 'optional' ] TYPE ] '=' INIT
+    FUN_DECL := 'fun' ident [ '.' ident ] '(' LIST(ARG) ')' [ '->' [ 'optional' ] TYPE ] BLOCK
 
-Function declaration has a name, which for methods is prefixed with the object type name, arguments, optional return type and the body. Unlike anonymous functions, named functions use `=` before the body as the body is attached to the name. As with any other function assignment, the body can be either a block, or a single expression (`fun double(x : num) -> num = x * 2`).
+Function declaration has a name, which for methods is prefixed with the object type name, arguments, optional return type and the body. Same as anonymous functions, there is no `=` between the signature and the body. The declaration is distinguished from the function literal by the identifier following the `fun` keyword.
 
-    EVENT_ASSIGN := POSTFIX_EXPR ( '=' | '+=' ) INIT
+    EVENT_ASSIGN := POSTFIX_EXPR ( '=' | '+=' ) EXPR
 
-Event (or function variable) assignment at the top level, such as `button.onPress +=` followed by the handler body. The handler can be either a body with the arguments bound implicitly from the event type, or an anonymous function with explicit signature. 
+Event (or function variable) assignment at the top level, such as `button.onPress += fun` followed by the handler body. The handler is usually a function literal, either with implicit signature (arguments bound from the event type), or with explicit signature. 
 
     TYPE_DECL := 'type' ident [ 'extends' ident ] '=' '(' LIST(FIELD_DECL) ')'
-    FIELD_DECL := ident [ ':' TYPE ] [ '=' INIT ] 
-               |= 'constructor' '=' BLOCK
+    FIELD_DECL := ident [ ':' TYPE ] [ '=' EXPR ] 
+               |= 'constructor' '=' FUN_LITERAL
 
-Object type declaration is a list of fields, each with name, optional type and optional default value, and optionally the constructor body. Both the constructor and function or event fields may use `BLOCK` inside the parentheses as described above.
+Object type declaration is a list of fields, each with name, optional type and optional default value, and optionally the constructor. Both the constructor and function or event fields may use function literals inside the parentheses, whose `BLOCK` uses layout as described above. The constructor must use the implicit signature form, i.e. `constructor = fun`.
 
 ## Statements
 
@@ -691,8 +683,8 @@ Object type declaration is a list of fields, each with name, optional type and o
 
 Statements that can appear inside function bodies.
 
-    LET_STMT := ( 'let' | 'const' ) ident [ ':' TYPE ] [ '=' INIT ]
-    EXPR_STMT := EXPR [ ( '=' | '+=' | '-=' | '*=' | '/=' ) INIT ]
+    LET_STMT := ( 'let' | 'const' ) ident [ ':' TYPE ] [ '=' EXPR ]
+    EXPR_STMT := EXPR [ ( '=' | '+=' | '-=' | '*=' | '/=' ) EXPR ]
     RETURN_STMT := 'return' [ EXPR ]
 
 Local variable declarations, assignments and standalone expressions. Assignment is only allowed at the root of the expression statement. Whether the left hand side can be assigned to is a semantic check. `return` value is optional, and since the statement ends at the end of the line, the parser knows there is no value when the next token is on a new line.
@@ -707,11 +699,11 @@ The `if` statement condition is terminated by `then`, so it can span multiple li
 Loops, both terminated by the `do` keyword. The range form of the `for` loop (`for i in 1 <= i < 100 do`) is parsed as regular expression and its validity (chained comparison with the induction variable in the middle) is checked semantically.
 
     MATCH_STMT := 'match' EXPR indent CASE { newline CASE } [ newline 'else' BLOCK ] dedent
-    CASE := 'case' PATTERN 'then' BLOCK
+    CASE := 'is' PATTERN 'then' BLOCK
     PATTERN := LITERAL | '-' number | ident { '.' ident } 
             |= '(' LIST(ident [ '=' PATTERN ]) ')' | '[' LIST(PATTERN) ']'
 
-The `match` header does not need any terminating keyword as it is always followed by the cases, and `case` cannot continue an expression. Each case is terminated by `then`. Patterns are restricted to literals, identifiers (and enum values), and tuple and array patterns. Whether an identifier binds a new value, or matches an existing one is decided semantically.
+The `match` header does not need any terminating keyword as it is always followed by the cases, and `is` cannot continue an expression. Each case is terminated by `then`. Patterns are restricted to literals, identifiers (and enum values), and tuple and array patterns. Whether an identifier binds a new value, or matches an existing one is decided semantically.
 
 
 
@@ -787,7 +779,7 @@ Field access (or enum value selection), indexing and function call all share the
 The primary expressions are literals of the primitive types, identifiers (variables, functions, types when used as constructors and enum values in their shorthand form), `self` inside methods, `none` inside functions returning `optional` values and the compound literals.
 
     PAREN_EXPR := '(' LIST(NAMED_EXPR) ')'
-    NAMED_EXPR := EXPR [ '=' INIT ]
+    NAMED_EXPR := EXPR [ '=' EXPR ]
 
 Parentheses serve multiple purposes: grouping of expressions (`(a + b)`), tuple literals (`(foo = 1, bar = 56)`) and function call arguments (`foo(a, 56)` or `inc(x = 56)`). All are parsed by the same rule and differentiated afterwards: a single item without `=` is a grouping, otherwise all items must be in the `ident '=' EXPR` form to form a tuple literal. When used as call arguments, both forms can be used. This way the grammar stays LL(1) even though we only know which form is used after the first expression has been parsed. Note that the `=` here is not an assignment operator. 
 
@@ -797,10 +789,12 @@ Parentheses serve multiple purposes: grouping of expressions (`(a + b)`), tuple 
 
 Array literals are list of values in square brackets, map literals are list of key-value pairs separated by the arrow operator in curly brackets. Empty `[]` and `{}` are valid, but their types must be known from the context.
 
-    FUN_LITERAL := 'fun' '(' LIST(LAMBDA_ARG) ')' [ '->' [ 'optional' ] TYPE ] BLOCK
+    FUN_LITERAL := 'fun' [ '(' LIST(LAMBDA_ARG) ')' [ '->' [ 'optional' ] TYPE ] ] BLOCK
     LAMBDA_ARG := ident [ ':' TYPE ] [ '=' EXPR ] | LITERAL
 
-Anonymous function starts with the `fun` keyword, followed by arguments, optional return type and then the function body, which is a `BLOCK` of statements starting on a new line (and therefore with `indent`). Unlike named functions, there is no `=` between the signature and the body. Argument types may be omitted when the function type is known from the context, but all arguments must always be listed. Literal arguments are only valid for event handlers where they are used for the value matching.
+Anonymous function starts with the `fun` keyword, optionally followed by the signature (arguments and optional return type) and then the function body, which is a `BLOCK` of statements starting on a new line (and therefore with `indent`). The two forms are differentiated with a single token lookahead after `fun`: `(` starts the explicit signature, `indent` starts the body. There is no `=` between the signature and the body. 
+
+When the signature is omitted, it is taken from the function type known from the context and the arguments are bound under their names from the type. When the signature is given, argument types may be omitted if the function type is known from the context, but all arguments must always be listed. Literal arguments are only valid for event handlers where they are used for the value matching. Whether the function type is known from the context, and therefore which parts of the signature may be omitted, is decided semantically.
 
 Outside of parentheses, the function body ends with `dedent`, so an anonymous function must always be the last part of the statement it appears in, and the `dedent` also terminates the statement. Inside parentheses, the body ends at the first line indented less than the body, after which the list continues as usual (with the comma being optional).
 
@@ -811,5 +805,5 @@ There is no main function per se.
 
 # Appendix C - Future Extensions
 
-- byte type and bitwise operators
+- int type and bitwise operators
 
