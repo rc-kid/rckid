@@ -22,7 +22,7 @@ As there is no character type, single characters can be represented as text valu
 
 The following are reserved keywords and cannot be used as identifiers:
 
-    and, bool, break, clone, const, constructor, continue, do, else, enum, event, extends, false, for, fun, global, if, in, is, let, match, none, not, num, optional, or, return, self, step, test, text, then, true, type, use, while, write, xor
+    and, bool, break, clone, const, constructor, continue, do, else, enum, event, extends, false, for, fun, global, if, in, is, let, match, none, not, num, optional, or, orelse, return, self, step, test, text, then, true, type, use, while, write, xor
 
 > TODO and others. Note that `xor` is reserved for the future bitwise operators.
 
@@ -70,7 +70,7 @@ This works in every context, so for instance map definition can look like this:
         "c" -> 3
     }
 
-Blocks (bodies of `if`, loops, functions, etc.) always start on a new line that is indented more than the statement that introduced them. The statements that have a block end with a keyword (`if ... then`, `while ... do`, `for ... do`, `is ... then`), so their headers can span multiple lines as well. Function bodies always follow the `fun` keyword, either directly, or after the function signature (`fun(...)`). Function bodies use indentation inside parentheses too. Such a body starts on a new line indented more than the line where it was introduced and ends at the first line indented less than the body. As the next item starts at the item column, no comma is needed after the body:
+Blocks (bodies of `if`, loops, functions, etc.) always start on a new line that is indented more than the line that introduced them. The statements that have a block end with a keyword (`if ... then`, `while ... do`, `for ... do`, `is ... then`), so their headers can span multiple lines as well. A line break directly after a keyword that may introduce a block (`then`, `else`, `do`, `orelse`, `fun`) therefore always starts a block, never a continuation of an expression. Function bodies always follow the `fun` keyword, either directly, or after the function signature (`fun(...)`). Function bodies use indentation inside parentheses too. Such a body starts on a new line indented more than the line where it was introduced and ends at the first line indented less than the body. As the next item starts at the item column, no comma is needed after the body:
 
     type Player = (
         onHit = fun(damage : num)
@@ -99,7 +99,7 @@ It is always the indentation that decides where an item ends, the comma is only 
 
 A comma at the end of a line must be followed by a line at the item column, or by the closing parenthesis. A line indented more than the item column after such comma is an error, as the comma says a new item follows, while the indentation says the current item continues.
 
-A block of statements is always introduced by a keyword (`then`, `do`, `fun`, or the function signature following it), never by an operator. In particular, a newline after `=` (or any other assignment operator) is always a continuation of the statement, regardless of the type of the assignment target. Function bodies must always start with the `fun` keyword:
+A block of statements is always introduced by a keyword (`then`, `else`, `do`, `orelse`, `fun`, or the function signature following it), never by an operator. In particular, a newline after `=` (or any other assignment operator) is always a continuation of the statement, regardless of the type of the assignment target. Function bodies must always start with the `fun` keyword:
 
     d =
         1     # continuation of the statement, d is assigned 43
@@ -169,6 +169,27 @@ All types in the map have to be identical. Type inference can be used from the f
         1 -> "foo",
         2 -> "bar",
     }
+
+Following the `key -> value` notion, a map is read by calling it as if it were a function taking the key and returning `optional` value, i.e. the call must be followed by `orelse` (see Optional return types) as the key might not be in the map. The argument is called `key` and can be used by name as well:
+
+    let a = m(1) orelse "" # "foo"
+    let b = m(key = 3) orelse "none" # "none"
+
+Calling the map is a shorthand for its `get(key : K) -> optional V` method, i.e. `m(1)` and `m.get(1)` are the same. All other operations on the map are methods as well:
+
+    m.get(1) orelse "" # same as m(1) orelse ""
+    m.set(3, "baz") # inserts, or overwrites the value for the key
+    m.has(3) # true if the key is in the map
+    m.remove(3) # removes the key from the map, if present
+
+The call is only a shorthand for the lookup and not a function value, i.e. a map cannot be used where a function is expected. When a function is needed, the `get` method can be used instead, as like any other method it can be assigned to function variables (the other map methods can be added to events as well, but `get` cannot, as events do not return values):
+
+    let lookup : fun(key : num) -> optional text = m.get
+    let x = lookup(1) orelse ""
+
+As maps are reference types, the function refers to the map itself, not its copy, i.e. later changes of `m` are visible through `lookup`.
+
+Assigning to the call result (`m(1) = "foo"`) is an error, `set` must be used instead. Note that for maps of functions, the fallback of `orelse` would be called with the arguments, i.e. `m(1) orelse foo(2)` calls `foo(2)` when key is missing. To call the value from the map, parentheses must be used: `(m(1) orelse foo)(2)`.
 
 ### Special value types
 
@@ -249,13 +270,38 @@ Functions can have default values for some of their arguments, in which case tho
 
 ### Optional return types
 
-A function return type can be declared as `optional`, which means the function may either return value of the given type, or `none`. Functions like this can only even be called using the `if let =` syntax and they serve as a primitive maybe type - i.e. functions (including user defined ones) can return it and we force the matching and check, but the optional values cannot be propagated, or stored. This makes the feature a lot simpler to understand:
+A function return type can be declared as `optional`, which means the function may either return value of the given type, or `none`. Optional is a primitive maybe type - functions (including user defined ones) can return it and the caller is forced to handle the `none` case right at the call site, but the optional values themselves cannot be stored, or passed around. This makes the feature a lot simpler to understand:
 
     fun safeDivide(a : num, d : num) -> optional num
         if d != 0 then
             return a / d
         else 
             return none
+
+Every call of a function returning `optional` must be immediately followed by the `orelse` operator, which provides the value to be used when the function returns `none`:
+
+    let x = safeDivide(a, b) orelse 0
+
+The fallback value must be of the same type as the optional value and it is only evaluated when the function returned `none`. The `orelse` binds as tightly as the call itself and its right hand side is a single unary expression (i.e. a literal, a variable, or a postfix expression such as another call, optionally prefixed with `-` or `clone`). More complex fallbacks must be put in parentheses:
+
+    let y = a + safeDivide(a, b) orelse 1 + 2  # a + (safeDivide(a, b) orelse 1) + 2
+    let z = safeDivide(a, b) orelse (c + d)
+    let w = safeDivide(a, b) orelse safeDivide(a, c) orelse 0 # orelse can be chained
+
+Instead of a value, the fallback can also be `return`, `break` or `continue`, in which case the execution leaves the expression when `none` was returned. This is particularly useful for early returns and `none` propagation:
+
+    fun average(values : {text -> num}, a : text, b : text) -> optional num
+        let x = values(a) orelse return none
+        let y = values(b) orelse return none
+        return (x + y) / 2
+
+When more statements are needed to handle the `none` case, `orelse` can be followed by a block of statements. As with any block used as an expression (see Blocks as Expressions), the block must either consist of a single expression, or never finish normally, i.e. always end with `return`, `break` or `continue`:
+
+    let x = values("key") orelse
+        write "key not found"
+        return none
+
+Like with function literals, the block ends with `dedent` and therefore must be the last part of the statement it appears in. To compute the fallback value with multiple statements, an anonymous function can be created and immediately called.
 
 ### Calling Functions
 
@@ -431,7 +477,7 @@ Assignment operators work as expected, but restrictions are placed on their plac
 
 _doLang_ follows standard operator precedence so as not to confuse kids with specific evaluation rules, namely:
 
-- postfix operators: field access `.` (or enum value selection), indexing `[]` and function call `()`
+- postfix operators: field access `.` (or enum value selection), indexing `[]`, function call `()` and `orelse`
 - prefix operators: unary `-` and `clone`
 - multiplication and division (`*`, `/`)
 - addition and subtraction (`+`, `-`), text concatenation (also `+`)
@@ -458,7 +504,7 @@ which is equivalent to the following code:
     let c = C  
     a < b and b < c
 
-The equality (`==`, not the inequality `!=`) operator can also be chained i.e.:
+The equality (`==`) operator can also be chained i.e.:
 
     A == B == C
     # is identical to
@@ -467,15 +513,23 @@ The equality (`==`, not the inequality `!=`) operator can also be chained i.e.:
     let c = C  
     a == b and b == c
 
+Inequality operators can be chained too, with the meaning that all values bound by the inequality must be distinct, i.e. :
+
+    A != B != C
+    # true for 1 2 3
+    # false for 1 2 1
+
+It is not allowed to mix `==` and `!=` chains in a single expression. 
+
 Comparison operators only work on numbers. Equality operators work on all types, comparing the value for value types and the object identity for the reference types (objects, arrays and maps).
 
 ### Indexing Operator
 
-Special indexing operator `[]` exists for both arrays and maps:
+Special indexing operator `[]` exists for arrays:
 
     array[67] # returns 67th element of the array
 
-    map["key"] # returns value corresponding to the key
+Maps do not support the indexing operator, values are read by calling the map instead (see `map`).
 
 ### Text concatenation
 
@@ -494,21 +548,22 @@ The `if` statement supports conditional execution and can be optionally followed
     else
         ...
 
-There is a special case of the statement that deals with the `optional` returning functions and map index operator:
-
-    if let a = map["key"] then
-        ... # a is bound to value of key in map, if one existed
-    else
-        ... # key not in map (the index operator returned none)
-
-This is the only `if` form where assignment operator is allowed inside the if expression.
-
 `if` statement can also be used as an expression, i.e. one can write for instance:
 
     fun min(a : num, b : num) -> num
         return if a <= b then a else b
 
-In the expression form the `if` statemet *must* include both `then` and `else` clauses and only a single expression is allowed in either true or false case. Both expressions must return same type. 
+In the expression form the `else` clause is mandatory and both cases must have the same type. The cases are either written on the same line as the keyword (`then`, or `else`), or as blocks, which must follow the rules for blocks used as expressions (see below). The two forms can be mixed:
+
+    let x = if a < b then a else b
+    let y = if a < b then
+        a
+    else if a < c then
+        c
+    else
+        return none
+
+When the cases are written as blocks, the `else` must be at the same column as the first token of the line on which the `if` is (`let` in the example above). As the last block ends with `dedent`, an `if` expression with blocks must be the last part of the statement it appears in.
 
 ### `while`
 
@@ -576,9 +631,35 @@ As an example:
         is [1, a, b] then
             ... # we have a and b in scope
 
+Match statement can be used inside expression as well, e.g. one can write the following:
+
+    let x = match y
+        is (re = 1, im) then
+            "real is one"
+        else
+            "real is not one"
+
+The cases are indented more than the line on which the `match` is. Similar to the `if` expression, each case can either be written on the same line as its `then` (or `else`), or as a block, in which case it must follow the rules for blocks used as expressions (see below). All cases must have the same type and the `else` case is mandatory, unless the cases cover all possible values (such as all values of an enum). Since the cases end with `dedent`, the `match` expression must always be the last part of the statement it appears in:
+
+    let name = match direction
+        is Direction.Left then "left"
+        is Direction.Right then "right"
+
+### Blocks as Expressions
+
+Whenever a block is used as a part of an expression (cases of `if` and `match` expressions and the `orelse` block), it must be one of:
+
+1. a block consisting of a single expression, whose value is the value of the block. The expression can itself be an `if`, or `match` expression, whose blocks follow the same rules.
+2. a block that never finishes normally, i.e. all paths through the block end with `return`, `break` or `continue`.
+
+A block that never finishes normally does not produce any value, so it is compatible with any type. This is why the cases may mix values and early returns, e.g. `if a > 0 then a else return none` is of type `num`. Same goes for the `orelse` operator followed by `return`, `break`, or `continue`. Any other block (such as several statements followed by a value) is an error. If a value needs to be computed by multiple statements, an anonymous function can be created and immediately called.
+
 ## `return`
 
-Returns from the function, optionally returning value of required type. 
+Returns from the function, optionally returning value of required type. `return` (as well as `break` and `continue`) can also be used as the fallback of the `orelse` operator. This is particularly useful for early returns and `none` propagation:
+
+    let x = map("key") orelse return none
+    # do some more with x
 
 ## `write`
 
@@ -628,8 +709,9 @@ Inside `()`, `[]` and `{}` parentheses, the columns of the tokens are not checke
 The line breaks in the grammar are denoted by the following symbols, which do not consume any tokens, but check the position of the next token:
 
 - `newline` the next token is the first on its line and its column is `B`
-- `indent` the next token is the first on its line and its column is greater than the reference column `R`. The column of the token becomes `B` of the new block. Outside of parentheses `R` is the `B` of the enclosing block, inside parentheses `R` is the column of the first token on the line where the block was introduced (i.e. the line with the `fun` keyword or the function signature)
+- `indent` the next token is the first on its line and its column is greater than the reference column `R`. The column of the token becomes `B` of the new block. Outside of parentheses `R` is the `B` of the enclosing block, inside parentheses `R` is the column of the first token on the line where the block was introduced (i.e. the line with the keyword, or the function signature introducing the block)
 - `dedent` the next token is the first on its line and its column is smaller than `B` (or end of file). The block ends and `B` of the enclosing block is restored
+- `aligned` the next token is the first on its line and its column is equal to the column of the first token on the line where the construct (such as `if`) started. Used for `else` after a block, both inside and outside of parentheses
 
 Empty lines and comments are ignored. Tabs are not allowed for indentation.
 
@@ -645,7 +727,11 @@ Lists of items inside parentheses use the following parametrized rule:
 
 Items are separated by commas and an optional trailing comma is allowed. As an exception, the comma after an item that ends with a `BLOCK` is optional, as the end of the block already separates the items.
 
-`BLOCK` is only ever introduced by a keyword (`then`, `do`, `else`, `fun`) or a function signature, never by an operator. The right hand side of `=` (and other assignment operators) is therefore always an `EXPR` and a line break after `=` is an ordinary continuation. Function bodies on the right hand side are function literals, see `FUN_LITERAL`. The grammar is thus context free and the parser never needs to know the type of the left hand side.
+`BLOCK` is only ever introduced by a keyword (`then`, `do`, `else`, `fun`, `orelse`) or a function signature, never by an operator. Where the keyword allows either a block, or an expression, the block is chosen if and only if the next token is on a new line, i.e. a line break after such keyword is never a continuation of an expression:
+
+    BODY := BLOCK | EXPR
+
+Since blocks are never introduced by an operator, the right hand side of `=` (and other assignment operators) is always an `EXPR` and a line break after `=` is an ordinary continuation. Function bodies on the right hand side are function literals, see `FUN_LITERAL`. The grammar is thus context free and the parser never needs to know the type of the left hand side. Whether a `BLOCK` used as an expression consists of a single expression, or never finishes normally (see Blocks as Expressions) is a semantic check.
 
 ## Top Level Statements
 
@@ -678,7 +764,7 @@ Object type declaration is a list of fields, each with name, optional type and o
 
 ## Statements
 
-    STATEMENT := LET_STMT | IF_STMT | WHILE_STMT | FOR_STMT | MATCH_STMT | RETURN_STMT 
+    STATEMENT := LET_STMT | IF | WHILE_STMT | FOR_STMT | MATCH | RETURN_STMT 
               |= 'break' | 'continue' | 'write' EXPR | 'test' EXPR | EXPR_STMT
 
 Statements that can appear inside function bodies.
@@ -689,21 +775,22 @@ Statements that can appear inside function bodies.
 
 Local variable declarations, assignments and standalone expressions. Assignment is only allowed at the root of the expression statement. Whether the left hand side can be assigned to is a semantic check. `return` value is optional, and since the statement ends at the end of the line, the parser knows there is no value when the next token is on a new line.
 
-    IF_STMT := 'if' ( EXPR | 'let' ident '=' EXPR ) 'then' BLOCK [ newline 'else' ( BLOCK | IF_STMT ) ]
+    IF := 'if' EXPR 'then' ( BLOCK [ aligned 'else' ELSE ] | EXPR [ 'else' ELSE ] )
+    ELSE := BODY | IF
 
-The `if` statement condition is terminated by `then`, so it can span multiple lines. The `else` keyword must be at the same column as the `if`. The `else` is followed either by a block, or directly by another `if` statement to form `else if` chains. Statement `if` is distinguished from the inline `if` expression by being at the beginning of the statement.
+The same rule is used for both the `if` statement and the `if` expression. The condition is terminated by `then`, so it can span multiple lines. The `else` is followed either by a body, or directly by another `if` to form `else if` chains. When the preceding body is a `BLOCK`, the `else` must be `aligned`, i.e. the first token on its line, at the column of the first token of the line containing the `if` (for the `if` statement this is the same as `newline`). Otherwise the `else` continues the expression on the same line (or on a continuation line). An `if` at the beginning of a statement is the `if` statement, whose bodies must be blocks (of any statements) and the `else` is optional. Anywhere else, it is the `if` expression, whose `else` is mandatory and whose blocks must follow the Blocks as Expressions rules. Both are semantic checks.
 
     WHILE_STMT := 'while' EXPR 'do' BLOCK
     FOR_STMT := 'for' ident [ ',' ident ] 'in' EXPR [ 'step' EXPR ] 'do' BLOCK
 
 Loops, both terminated by the `do` keyword. The range form of the `for` loop (`for i in 1 <= i < 100 do`) is parsed as regular expression and its validity (chained comparison with the induction variable in the middle) is checked semantically.
 
-    MATCH_STMT := 'match' EXPR indent CASE { newline CASE } [ newline 'else' BLOCK ] dedent
-    CASE := 'is' PATTERN 'then' BLOCK
+    MATCH := 'match' EXPR indent CASE { newline CASE } [ newline 'else' BODY ] dedent
+    CASE := 'is' PATTERN 'then' BODY
     PATTERN := LITERAL | '-' number | ident { '.' ident } 
             |= '(' LIST(ident [ '=' PATTERN ]) ')' | '[' LIST(PATTERN) ']'
 
-The `match` header does not need any terminating keyword as it is always followed by the cases, and `is` cannot continue an expression. Each case is terminated by `then`. Patterns are restricted to literals, identifiers (and enum values), and tuple and array patterns. Whether an identifier binds a new value, or matches an existing one is decided semantically.
+The `match` header does not need any terminating keyword as it is always followed by the cases, and `is` cannot continue an expression. Each case is terminated by `then`. Patterns are restricted to literals, identifiers (and enum values), and tuple and array patterns. Whether an identifier binds a new value, or matches an existing one is decided semantically. Same as with `if`, a `match` at the beginning of a statement is the `match` statement whose case bodies must be blocks, anywhere else it is the `match` expression, whose cases follow the Blocks as Expressions rules and must be exhaustive, or have the `else` case. As the `match` always ends with `dedent`, the `match` expression must be the last part of the statement.
 
 
 
@@ -739,13 +826,9 @@ Event types are linke function types without return value, and start withe `even
 
 ## Expressions
 
-    EXPR := INLINE_IF | OR_EXPR
+    EXPR := IF | MATCH | OR_EXPR
 
-An expression is either inline `if`, or it recurses into standard expressions based on operator precedence: 
-
-    INLINE_IF := 'if' EXPR 'then' EXPR 'else' EXPR
-
-The inline `if` expression is equivalent to a ternary operator in C++. Both `then` and `else` are mandatory and both then and else case return values must be of same type. 
+An expression is either `if` expression, `match` expression, or it recurses into standard expressions based on operator precedence. The `if` and `match` rules are shared with the statements (see above). The single line `if` expression is equivalent to a ternary operator in C++. 
 
     OR_EXPR := AND_EXPR { 'or' AND_EXPR }
     AND_EXPR := NOT_EXPR { 'and' NOT_EXPR }
@@ -754,9 +837,9 @@ The inline `if` expression is equivalent to a ternary operator in C++. Both `the
 Logical operators, no surprise here. `not` has lower precedence than the binary ones, so `not a and b` is equivalent to `(not a) and b`. 
 
     EQ_EXPR := CMP_EXPR { '==' CMP_EXPR }
-            |= CMP_EXPR '!=' CMP_EXPR
+            |= CMP_EXPR { '!=' CMP_EXPR }
 
-Equality comparisons are as expected from other languages. Note that only `==` can be chained, which is ensured at the grammar level. Shortcircuiting works based on the underlying traslation.  
+Equality comparisons are as expected from other languages. Shortcircuiting works based on the underlying traslation.  
 
     CMP_EXPR := ADD_EXPR { ( '<' | '<=' | '>' | '>=' ) ADD_EXPR }
 
@@ -768,15 +851,18 @@ Note that relation operators can be chained. And the semantics require that each
 
 Arithmetic operators, all left associative, and the prefix operators, which apply to the entire postfix expression that follows them.
 
-    POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | CALL_EXPR }
+    POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | CALL_EXPR | 'orelse' ORELSE_RHS }
+    ORELSE_RHS := UNARY_EXPR | 'return' [ EXPR ] | 'break' | 'continue' | BLOCK
 
-Field access (or enum value selection), indexing and function call all share the same precedence and are applied left to right. Function call arguments use the same rule as parenthesized expressions and tuple literals, see below.
+Field access (or enum value selection), indexing, function call and `orelse` all share the same precedence and are applied left to right. Function call arguments use the same rule as parenthesized expressions and tuple literals, see below.
+
+The right hand side of `orelse` is a unary expression, so that `a + foo() orelse 1 + 2` is `a + (foo() orelse 1) + 2`. Since the unary expression itself contains postfix expressions, chained `orelse` is right associative, i.e. `foo() orelse bar() orelse 0` is `foo() orelse (bar() orelse 0)`, which has the same meaning. When followed by `return`, its value extends to the end of the statement. When `orelse` is followed by a new line, the right hand side is a `BLOCK`, which (same as the function literals) must be the last part of the statement. That the `orelse` is used exactly on optional values (calls of `optional` returning functions and maps) and that the block follows the Blocks as Expressions rules are semantic checks.
 
     PRIMARY := LITERAL | ident | 'self' | 'none' | '(' EXPR ')' 
     LITERAL := number | string | 'true' | 'false'
             |= ARRAY_LITERAL | MAP_LITERAL | FUN_LITERAL
 
-The primary expressions are literals of the primitive types, identifiers (variables, functions, types when used as constructors and enum values in their shorthand form), `self` inside methods, `none` inside functions returning `optional` values and the compound literals.
+The primary expressions are literals of the primitive types, identifiers (variables, functions, types when used as constructors and enum values in their shorthand form), `self` inside methods and `none`.
 
     PAREN_EXPR := '(' LIST(NAMED_EXPR) ')'
     NAMED_EXPR := EXPR [ '=' EXPR ]
