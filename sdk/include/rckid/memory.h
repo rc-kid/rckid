@@ -69,7 +69,32 @@ namespace rckid {
          */
         static uint32_t usedBytes();
 
+        /** Returns the offset of the given pointer from the start of the heap. 
+         
+            The pointer *must* be within the currently active heap range. Useful for crossplatform 32bit heap pointers.
+         */
+        static uint32_t ptrToOffset(void const * ptr) {
+            if constexpr (sizeof(void*) == 4) {
+                return reinterpret_cast<uintptr_t>(ptr);
+            } else {
+                ASSERT(contains(ptr));
+                return reinterpret_cast<uint8_t const *>(ptr) - reinterpret_cast<uint8_t const *>(heapStart_);
+            }
+        }
 
+        /** Given an offset to heap, converts this to valid pointer. 
+         
+            Only works for offsets that were produced with the ptrToOffset() function from identical type (otherwise we are looking at undefined behavior as with pointer casts).
+         */
+        template<typename T>
+        static T * offsetToPtr(uint32_t offset) {
+            if constexpr (sizeof(void*) == 4) {
+                return reinterpret_cast<T*>(offset);
+            } else {
+                ASSERT(offset < reservedBytes());
+                return reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(heapStart_) + offset);
+            }
+        }
 
         static void traceChunks();
 

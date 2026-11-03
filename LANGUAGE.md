@@ -22,7 +22,7 @@ As there is no character type, single characters can be represented as text valu
 
 The following are reserved keywords and cannot be used as identifiers:
 
-    and, bool, break, clone, const, constructor, continue, do, else, enum, event, extends, false, for, fun, global, if, in, is, let, match, none, not, num, optional, or, orelse, return, self, step, test, text, then, true, type, use, while, write, xor
+    and, bool, break, clone, const, constructor, continue, do, else, enum, event, extends, false, for, fun, global, if, in, is, let, match, none, not, num, optional, or, orelse, return, self, step, test, text, then, true, type, use, while, with, write, xor
 
 > TODO and others. Note that `xor` is reserved for the future bitwise operators.
 
@@ -70,7 +70,7 @@ This works in every context, so for instance map definition can look like this:
         "c" -> 3
     }
 
-Blocks (bodies of `if`, loops, functions, etc.) always start on a new line that is indented more than the line that introduced them. The statements that have a block end with a keyword (`if ... then`, `while ... do`, `for ... do`, `is ... then`), so their headers can span multiple lines as well. A line break directly after a keyword that may introduce a block (`then`, `else`, `do`, `orelse`, `fun`) therefore always starts a block, never a continuation of an expression. Function bodies always follow the `fun` keyword, either directly, or after the function signature (`fun(...)`). Function bodies use indentation inside parentheses too. Such a body starts on a new line indented more than the line where it was introduced and ends at the first line indented less than the body. As the next item starts at the item column, no comma is needed after the body:
+Blocks (bodies of `if`, loops, functions, etc.) always start on a new line that is indented more than the line that introduced them. The statements that have a block end with a keyword (`if ... then`, `while ... do`, `for ... do`, `match ... with`, `is ... then`), so their headers can span multiple lines as well. A line break directly after a keyword that may introduce a block (`then`, `else`, `do`, `orelse`, `with`, `fun`) therefore always starts a block, never a continuation of an expression. Function bodies always follow the `fun` keyword, either directly, or after the function signature (`fun(...)`). Function bodies use indentation inside parentheses too. Such a body starts on a new line indented more than the line where it was introduced and ends at the first line indented less than the body. As the next item starts at the item column, no comma is needed after the body:
 
     type Player = (
         onHit = fun(damage : num)
@@ -82,7 +82,7 @@ Blocks (bodies of `if`, loops, functions, etc.) always start on a new line that 
             test self.lives > 0
     )
 
-It is always the indentation that decides where an item ends, the comma is only a separator between items. It is therefore possible to write the comma at the end of the last line of an item, regardless of whether that line is a continuation of a multi-line expression, or the last line of a function body:
+It is always the indentation that decides where an item ends, the comma is only a separator between items. A comma may be written at the end of a line that continues a multi-line item, but not after a function body (or any other block), as the block only ends on the next line:
 
     foo(
         a
@@ -90,16 +90,12 @@ It is always the indentation that decides where an item ends, the comma is only 
         c
     )
 
-    type Player = (
-        onHit = fun(damage : num)
-            if damage > 10 then
-                playSound(ouch),     # comma after the whole onHit body
-        lives = 3
-    )
+When the first item is on the same line as the opening bracket, the list is in its single line form, even if it spans multiple lines. Line breaks inside are then always continuations and the items must be separated by commas:
 
-A comma at the end of a line must be followed by a line at the item column, or by the closing parenthesis. A line indented more than the item column after such comma is an error, as the comma says a new item follows, while the indentation says the current item continues.
+    foo(a, b,
+        c)           # three arguments
 
-A block of statements is always introduced by a keyword (`then`, `else`, `do`, `orelse`, `fun`, or the function signature following it), never by an operator. In particular, a newline after `=` (or any other assignment operator) is always a continuation of the statement, regardless of the type of the assignment target. Function bodies must always start with the `fun` keyword:
+A block of statements is always introduced by a keyword (`then`, `else`, `do`, `orelse`, `with`, `fun`, or the function signature following it), never by an operator. In particular, a newline after `=` (or any other assignment operator) is always a continuation of the statement, regardless of the type of the assignment target. Function bodies must always start with the `fun` keyword:
 
     d =
         1     # continuation of the statement, d is assigned 43
@@ -606,9 +602,9 @@ For loop supports the `break` and `continue` statements as well.
 
 ### `match`
 
-This is _doLang_'s switch on pattern-matching steroids. No fallback between different cases is allowed and each case is its own block. Each case starts with the `is` keyword followed by a pattern and is terminated by the `then` keyword, while the `match` itself is not, as it is always followed by the cases:
+This is _doLang_'s switch on pattern-matching steroids. No fallback between different cases is allowed and each case is its own block. The matched value is terminated by the `with` keyword. Each case starts with the `is` keyword followed by a pattern and is terminated by the `then` keyword:
 
-    match value
+    match value with
         is a then
             ...
         is b then
@@ -623,27 +619,33 @@ The `else` case is executed if *none* of the cases above applies. The cases must
 
 As an example:
 
-    match complexTuple
+    match complexTuple with
         is (re = 1, im) then
             ... # we now have re and im in scope
 
-    match array
+    match array with
         is [1, a, b] then
             ... # we have a and b in scope
 
 Match statement can be used inside expression as well, e.g. one can write the following:
 
-    let x = match y
+    let x = match y with
         is (re = 1, im) then
             "real is one"
         else
             "real is not one"
 
-The cases are indented more than the line on which the `match` is. Similar to the `if` expression, each case can either be written on the same line as its `then` (or `else`), or as a block, in which case it must follow the rules for blocks used as expressions (see below). All cases must have the same type and the `else` case is mandatory, unless the cases cover all possible values (such as all values of an enum). Since the cases end with `dedent`, the `match` expression must always be the last part of the statement it appears in:
+Similar to the `if` expression, each case can either be written on the same line as its `then` (or `else`), or as a block, in which case it must follow the rules for blocks used as expressions (see below). All cases must have the same type and the `else` case is mandatory, unless the cases cover all possible values (such as all values of an enum). When the cases are on separate lines, they end with `dedent` and the `match` expression must be the last part of the statement it appears in:
 
-    let name = match direction
+    let name = match direction with
         is Direction.Left then "left"
         is Direction.Right then "right"
+
+The `match` expression can also be written on a single line, in which case all case values must be on the same line as their `then`:
+
+    let name = match direction with is Left then "left" is Right then "right"
+
+Since `is` cannot continue an expression, it always starts the next case. When an inline `match` is nested inside a case of another inline `match`, the following cases belong to the inner one, same as an `else` belongs to the nearest `if`, or `match`. Parentheses must be used otherwise.
 
 ### Blocks as Expressions
 
@@ -694,52 +696,100 @@ _doLang_ does not support namespaces. The reason for this is that namespaces com
 - sqrt(x)
 
 
-# Appendix A - Grammar
+# Appendix A - Lexer
 
-The lexer does not produce any newline or indentation tokens. Instead, every token remembers its column and whether it is the first token on its line. Line breaks are ignored by the parser, except where the grammar explicitly mentions them, in which case the position of the next token is checked. This is known as the _offside rule_.
+The lexer turns the source into a stream of tokens. It also handles all of the layout: indentation is converted to `indent`, `dedent` and `newline` tokens, so that the parser never needs to look at columns.
 
-The parser keeps track of the column of the current block, `B` (`0` for the top level). Outside of parentheses, the following holds for the first token on a line:
+## Tokens
 
-- column greater than `B` continues the current statement (or header)
-- column equal to `B` cannot continue the current statement, the statement must end and a new one starts
-- column smaller than `B` cannot continue the current statement and ends the current block. It must be equal to the column of one of the enclosing blocks
+- *identifiers* start with a letter or `_`, followed by letters, digits and `_`. Identifiers are case sensitive. Keywords (see Keywords) are not identifiers.
+- *numbers* are decimal (`123`, `1_000`, `1.567`), hexadecimal (`0x7f`), binary (`0b101`) or octal (`0o17`). Floating point requires digits on both sides of the `.`. A `-` is never part of the number, negative values are the unary minus.
+- *text* is enclosed in `"` and may contain the escapes described in Literal Values. Text cannot span multiple lines.
+- *operators and punctuation*, longest match wins (i.e. `->` is never `-` followed by `>`):
 
-Inside `()`, `[]` and `{}` parentheses, the columns of the tokens are not checked at all, with the exception of `BLOCK` (see below).
+        +  -  *  /  =  +=  -=  *=  /=  ==  !=  <  <=  >  >=  ->  .  ,  :  |  (  )  [  ]  {  }
 
-The line breaks in the grammar are denoted by the following symbols, which do not consume any tokens, but check the position of the next token:
+Whitespace between tokens is ignored. Comments (`#` to the end of the line), empty lines and lines with only a comment are ignored entirely and do not affect the layout. Only spaces may be used for indentation, a tab in the indentation is an error. Since columns are only ever measured on the first token of a line, they are simply the number of leading spaces.
 
-- `newline` the next token is the first on its line and its column is `B`
-- `indent` the next token is the first on its line and its column is greater than the reference column `R`. The column of the token becomes `B` of the new block. Outside of parentheses `R` is the `B` of the enclosing block, inside parentheses `R` is the column of the first token on the line where the block was introduced (i.e. the line with the keyword, or the function signature introducing the block)
-- `dedent` the next token is the first on its line and its column is smaller than `B` (or end of file). The block ends and `B` of the enclosing block is restored
-- `aligned` the next token is the first on its line and its column is equal to the column of the first token on the line where the construct (such as `if`) started. Used for `else` after a block, both inside and outside of parentheses
+## Layout
 
-Empty lines and comments are ignored. Tabs are not allowed for indentation.
+The lexer keeps a stack of layout contexts. A context is either a block of statements, or a bracket (`()`, `[]`, `{}`), and may have a column. Blocks always have a column, brackets only when they are written in the multi-line form (see below). The stack starts with the top level block at column `0`. The reference column `R` is the column of the topmost context that has one.
+
+Only line breaks are interesting, i.e. the lexer only acts when the next token is the first on its line, at column `c`. The rules are checked in the following order:
+
+1. *Closing bracket.* If the line starts with a closing bracket, nothing is emitted for the line break. The bracket token itself is handled as described below.
+2. *Opening a context.* If the last token of the previous line is one of the following and `c > R`, `indent` is emitted and a new context with column `c` is pushed:
+    - `then`, `else`, `do`, `orelse`, `with`, or `fun` - a block. If `c <= R` it is an error, as a block is expected
+    - the end of a function signature, i.e. the `)` closing the bracket that directly follows `fun`, `fun ident`, or `fun ident.ident`, optionally followed by `->` and a type - a block. If `c <= R` nothing happens, as a function type may end the line (e.g. `let inc : fun(x : num) -> num`)
+    - an opening bracket - the bracket becomes multi-line and gets column `c`
+3. *Same column.* If `c` equals the column of the top context, `newline` is emitted. This separates statements in blocks, and lines of items in brackets.
+4. *Continuation.* If `c` is greater than the column of the top context, or the top context is a bracket without a column, nothing is emitted.
+5. *Smaller column.* `dedent` is emitted and the top context is popped, as long as it is a block with column greater than `c`. Then rule 3 or 4 applies to the new top context. If the new top is a bracket with column greater than `c`, it is an error (brackets can only be closed by their closing token).
+
+When a closing bracket arrives (anywhere on the line), the lexer pops all contexts down to and including the matching bracket, and emits `dedent` for each popped context that has a column, i.e. for every block inside the bracket, as well as for the bracket itself if it is multi-line. Brackets that do not match are an error.
+
+At the end of file, `dedent` is emitted for every open block except the top level one. An unclosed bracket is an error.
+
+Note that `indent` is only emitted for the block keywords, function signatures and brackets, never just because a line is indented more. Any other line indented more than the column of the top context is a continuation.
+
+### Example
+
+    type Player = (
+        onHit = fun(damage : num)
+            if damage > 10 then
+                playSound(ouch)
+            self.lives -= damage
+        lives = 3
+    )
+
+produces the following tokens:
+
+    'type' ident '=' '('
+    indent ident '=' 'fun' '(' ident ':' 'num' ')'
+    indent 'if' ident '>' number 'then'
+    indent ident '(' ident ')'
+    dedent newline 'self' '.' ident '-=' ident
+    dedent newline ident '=' number
+    dedent ')'
+
+### Consequences for the grammar
+
+- statements, as well as lines of items in multi-line brackets, are separated by `newline`
+- `else` after a block arrives as `dedent newline 'else'`, unless it is inside a bracket without a column, where it arrives as `dedent 'else'`. The parser must look one token past the `newline` to decide whether the statement continues
+- multi-line brackets are `indent` ... `dedent` inside the bracket tokens, single line brackets contain no layout tokens at all, unless they contain blocks
+
+# Appendix B - Grammar
+
+The grammar works on the tokens produced by the lexer (see Appendix A). Nonterminals are uppercase, terminals are either quoted (`'if'`, `'('`), or lowercase: `ident`, `number`, `string` and the layout tokens `newline`, `indent` and `dedent`. `[ X ]` is optional, `{ X }` is repeated zero or more times and `|` separates alternatives (`|=` continues the alternatives on the next line).
+
+The grammar is LL(1) with a single exception: after an `if` with a `BLOCK` body, `newline 'else'` continues the `if`, while `newline` alone ends the statement (or the line of items). The parser must therefore look at the token after `newline` (see `IF`).
+
+## Common Rules
 
     BLOCK := indent STATEMENT { newline STATEMENT } dedent
 
-A block of statements is the only place where the layout matters, i.e. blocks use layout even inside parentheses. Once the block ends, the columns are again ignored for the rest of the parentheses. Since the conditions are checked on the token's position, it does not matter that the token might have been already read as lookahead before the parser knew a block is expected.
-
-All statements end at the end of the line, i.e. the next token must satisfy either `newline`, or `dedent`, and a token that cannot continue the statement on the same line is an error. Statements ending with `BLOCK` are already terminated by its `dedent`.
-
-Lists of items inside parentheses use the following parametrized rule:
-
-    LIST(X) := [ X { ',' X } [ ',' ] ]
-
-Items are separated by commas and an optional trailing comma is allowed. As an exception, the comma after an item that ends with a `BLOCK` is optional, as the end of the block already separates the items.
-
-`BLOCK` is only ever introduced by a keyword (`then`, `do`, `else`, `fun`, `orelse`) or a function signature, never by an operator. Where the keyword allows either a block, or an expression, the block is chosen if and only if the next token is on a new line, i.e. a line break after such keyword is never a continuation of an expression:
+A block is a sequence of statements, each starting on its own line. As the lexer emits `newline` only for lines at the column of the block, statements continued on further lines need no special handling. Statements ending with a nested `BLOCK` are followed by `newline` as any other statement, since the lexer emits it after the `dedent` tokens.
 
     BODY := BLOCK | EXPR
 
-Since blocks are never introduced by an operator, the right hand side of `=` (and other assignment operators) is always an `EXPR` and a line break after `=` is an ordinary continuation. Function bodies on the right hand side are function literals, see `FUN_LITERAL`. The grammar is thus context free and the parser never needs to know the type of the left hand side. Whether a `BLOCK` used as an expression consists of a single expression, or never finishes normally (see Blocks as Expressions) is a semantic check.
+Where a keyword allows either a block, or an expression (`then`, `else`), the parser decides by the next token: `indent` starts the block, anything else is the expression. Whether a `BLOCK` used as an expression consists of a single expression, or never finishes normally (see Blocks as Expressions) is a semantic check.
+
+    LIST(X) := indent LINE(X) { newline LINE(X) } dedent
+             | LINE(X)
+    LINE(X) := [ X { ',' X } [ ',' ] ]
+
+Items inside brackets are either in the single line form, separated by commas, or in the multi-line form (the first item is on a new line), in which the lexer emits `indent` after the opening bracket, `newline` between lines and `dedent` before the closing bracket. Each line may contain multiple comma separated items and an optional trailing comma. An item that continues on further lines, or ends with a block, needs no special handling.
+
+Blocks are only ever introduced by a keyword (`then`, `else`, `do`, `orelse`, `with`, `fun`), or a function signature, never by an operator. The right hand side of `=` (and other assignment operators) is therefore always an `EXPR`, function bodies on the right hand side are function literals (see `FUN_LITERAL`). The grammar is thus context free and the parser never needs to know the type of the left hand side.
 
 ## Top Level Statements
 
-    PROGRAM := { USE_DECL } { GLOBAL_DECL | CONST_DECL | FUN_DECL | TYPE_DECL | EVENT_ASSIGN }
+    PROGRAM := [ TOP_DECL { newline TOP_DECL } ]
+    TOP_DECL := USE_DECL | GLOBAL_DECL | CONST_DECL | FUN_DECL | TYPE_DECL | ENUM_DECL | EVENT_ASSIGN
 
-Program consists of global or constant declarations, function and type declarations, event assignments and `use` declarations, which must come first:
+Program consists of `use` declarations, global or constant declarations, function, type and enum declarations and event assignments, all starting at column `0`. That the `use` declarations come before all others is a semantic check.
 
-    USE_DECL := 'use' ident newline
+    USE_DECL := 'use' ident
 
 `use` declaration is simply name of library to be used. Each library must be on separate line and with its own `use` keyword.
 
@@ -750,50 +800,52 @@ Global variable declaration starts with `global` keyword and has name, optional 
 
     FUN_DECL := 'fun' ident [ '.' ident ] '(' LIST(ARG) ')' [ '->' [ 'optional' ] TYPE ] BLOCK
 
-Function declaration has a name, which for methods is prefixed with the object type name, arguments, optional return type and the body. Same as anonymous functions, there is no `=` between the signature and the body. The declaration is distinguished from the function literal by the identifier following the `fun` keyword.
+Function declaration has a name, which for methods is prefixed with the object type name, arguments, optional return type and the body. Same as anonymous functions, there is no `=` between the signature and the body.
 
-    EVENT_ASSIGN := POSTFIX_EXPR ( '=' | '+=' ) EXPR
+    EVENT_ASSIGN := ident { '.' ident } ( '=' | '+=' ) EXPR
 
-Event (or function variable) assignment at the top level, such as `button.onPress += fun` followed by the handler body. The handler is usually a function literal, either with implicit signature (arguments bound from the event type), or with explicit signature. 
+Event (or function variable) assignment at the top level, such as `button.onPress += fun` followed by the handler body. The handler is usually a function literal, either with implicit signature (arguments bound from the event type), or with explicit signature. The target is restricted to a chain of identifiers, so that all top level declarations can be told apart by their first token.
 
     TYPE_DECL := 'type' ident [ 'extends' ident ] '=' '(' LIST(FIELD_DECL) ')'
     FIELD_DECL := ident [ ':' TYPE ] [ '=' EXPR ] 
                |= 'constructor' '=' FUN_LITERAL
 
-Object type declaration is a list of fields, each with name, optional type and optional default value, and optionally the constructor. Both the constructor and function or event fields may use function literals inside the parentheses, whose `BLOCK` uses layout as described above. The constructor must use the implicit signature form, i.e. `constructor = fun`.
+Object type declaration is a list of fields, each with name, optional type and optional default value, and optionally the constructor. Both the constructor and function or event fields may use function literals inside the parentheses. The constructor must use the implicit signature form, i.e. `constructor = fun`.
+
+    ENUM_DECL := 'enum' ident '=' ident { '|' ident }
+
+Enum declaration is a list of its values separated by `|`. As a line break after `=` is a continuation, the values may start on the next line.
 
 ## Statements
 
     STATEMENT := LET_STMT | IF | WHILE_STMT | FOR_STMT | MATCH | RETURN_STMT 
               |= 'break' | 'continue' | 'write' EXPR | 'test' EXPR | EXPR_STMT
 
-Statements that can appear inside function bodies.
+Statements that can appear inside function bodies. Although `EXPR` may start with `if`, or `match` as well, at the beginning of a statement these are always parsed as the `IF` and `MATCH` statements.
 
     LET_STMT := ( 'let' | 'const' ) ident [ ':' TYPE ] [ '=' EXPR ]
     EXPR_STMT := EXPR [ ( '=' | '+=' | '-=' | '*=' | '/=' ) EXPR ]
     RETURN_STMT := 'return' [ EXPR ]
 
-Local variable declarations, assignments and standalone expressions. Assignment is only allowed at the root of the expression statement. Whether the left hand side can be assigned to is a semantic check. `return` value is optional, and since the statement ends at the end of the line, the parser knows there is no value when the next token is on a new line.
+Local variable declarations, assignments and standalone expressions. Assignment is only allowed at the root of the expression statement. Whether the left hand side can be assigned to is a semantic check. `return` value is optional, there is no value when the next token is `newline`, or `dedent`.
 
-    IF := 'if' EXPR 'then' ( BLOCK [ aligned 'else' ELSE ] | EXPR [ 'else' ELSE ] )
-    ELSE := BODY | IF
+    IF := 'if' EXPR 'then' ( BLOCK [ [ newline ] 'else' BODY ] | EXPR [ 'else' BODY ] )
 
-The same rule is used for both the `if` statement and the `if` expression. The condition is terminated by `then`, so it can span multiple lines. The `else` is followed either by a body, or directly by another `if` to form `else if` chains. When the preceding body is a `BLOCK`, the `else` must be `aligned`, i.e. the first token on its line, at the column of the first token of the line containing the `if` (for the `if` statement this is the same as `newline`). Otherwise the `else` continues the expression on the same line (or on a continuation line). An `if` at the beginning of a statement is the `if` statement, whose bodies must be blocks (of any statements) and the `else` is optional. Anywhere else, it is the `if` expression, whose `else` is mandatory and whose blocks must follow the Blocks as Expressions rules. Both are semantic checks.
+The same rule is used for both the `if` statement and the `if` expression. The condition is terminated by `then`, so it can span multiple lines. `else if` chains need no special rule, as `BODY` can be an `EXPR`, which can be another `IF`. After a `BLOCK`, the `else` is preceded by `newline` outside of brackets, but not inside them (see Appendix A). An `if` at the beginning of a statement is the `if` statement, whose bodies must be blocks (of any statements) and the `else` is optional. Anywhere else, it is the `if` expression, whose `else` is mandatory and whose blocks must follow the Blocks as Expressions rules. Both are semantic checks.
 
     WHILE_STMT := 'while' EXPR 'do' BLOCK
     FOR_STMT := 'for' ident [ ',' ident ] 'in' EXPR [ 'step' EXPR ] 'do' BLOCK
 
 Loops, both terminated by the `do` keyword. The range form of the `for` loop (`for i in 1 <= i < 100 do`) is parsed as regular expression and its validity (chained comparison with the induction variable in the middle) is checked semantically.
 
-    MATCH := 'match' EXPR indent CASE { newline CASE } [ newline 'else' BODY ] dedent
+    MATCH := 'match' EXPR 'with' ( indent CASE { newline ( CASE | 'else' BODY ) } dedent
+                                 | INLINE_CASE { INLINE_CASE } [ 'else' EXPR ] )
     CASE := 'is' PATTERN 'then' BODY
+    INLINE_CASE := 'is' PATTERN 'then' EXPR
     PATTERN := LITERAL | '-' number | ident { '.' ident } 
             |= '(' LIST(ident [ '=' PATTERN ]) ')' | '[' LIST(PATTERN) ']'
 
-The `match` header does not need any terminating keyword as it is always followed by the cases, and `is` cannot continue an expression. Each case is terminated by `then`. Patterns are restricted to literals, identifiers (and enum values), and tuple and array patterns. Whether an identifier binds a new value, or matches an existing one is decided semantically. Same as with `if`, a `match` at the beginning of a statement is the `match` statement whose case bodies must be blocks, anywhere else it is the `match` expression, whose cases follow the Blocks as Expressions rules and must be exhaustive, or have the `else` case. As the `match` always ends with `dedent`, the `match` expression must be the last part of the statement.
-
-
-
+The matched value is terminated by `with`. When it is followed by `indent`, the cases are on separate lines, otherwise all cases are on the same line. The `else` case must be the last one, which is a semantic check. In the single line form, `is` cannot continue the `EXPR` of the previous case, so it always starts a new case, and the `else` binds to the nearest `match`, or `if`. Each case is terminated by `then`. Patterns are restricted to literals, identifiers (and enum values), and tuple and array patterns. Whether an identifier binds a new value, or matches an existing one is decided semantically. Same as with `if`, a `match` at the beginning of a statement is the `match` statement whose case bodies must be blocks, anywhere else it is the `match` expression, whose cases follow the Blocks as Expressions rules and must be exhaustive, or have the `else` case.
 
 ## Types
 
@@ -828,7 +880,7 @@ Event types are linke function types without return value, and start withe `even
 
     EXPR := IF | MATCH | OR_EXPR
 
-An expression is either `if` expression, `match` expression, or it recurses into standard expressions based on operator precedence. The `if` and `match` rules are shared with the statements (see above). The single line `if` expression is equivalent to a ternary operator in C++. 
+An expression is either `if` expression, `match` expression, or it recurses into standard expressions based on operator precedence. The `if` and `match` rules are shared with the statements (see above). The single line `if` expression is equivalent to a ternary operator in C++. Inside brackets, an `if` or `match` expression ending with a `BLOCK` may be followed by further tokens (e.g. `(if c then` ... `else` ... `) + 1`). Outside of brackets this is not possible, as the lexer emits `newline` (or `dedent`) after the block.
 
     OR_EXPR := AND_EXPR { 'or' AND_EXPR }
     AND_EXPR := NOT_EXPR { 'and' NOT_EXPR }
@@ -851,14 +903,14 @@ Note that relation operators can be chained. And the semantics require that each
 
 Arithmetic operators, all left associative, and the prefix operators, which apply to the entire postfix expression that follows them.
 
-    POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | CALL_EXPR | 'orelse' ORELSE_RHS }
+    POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | PAREN_EXPR | 'orelse' ORELSE_RHS }
     ORELSE_RHS := UNARY_EXPR | 'return' [ EXPR ] | 'break' | 'continue' | BLOCK
 
 Field access (or enum value selection), indexing, function call and `orelse` all share the same precedence and are applied left to right. Function call arguments use the same rule as parenthesized expressions and tuple literals, see below.
 
-The right hand side of `orelse` is a unary expression, so that `a + foo() orelse 1 + 2` is `a + (foo() orelse 1) + 2`. Since the unary expression itself contains postfix expressions, chained `orelse` is right associative, i.e. `foo() orelse bar() orelse 0` is `foo() orelse (bar() orelse 0)`, which has the same meaning. When followed by `return`, its value extends to the end of the statement. When `orelse` is followed by a new line, the right hand side is a `BLOCK`, which (same as the function literals) must be the last part of the statement. That the `orelse` is used exactly on optional values (calls of `optional` returning functions and maps) and that the block follows the Blocks as Expressions rules are semantic checks.
+The right hand side of `orelse` is a unary expression, so that `a + foo() orelse 1 + 2` is `a + (foo() orelse 1) + 2`. Since the unary expression itself contains postfix expressions, chained `orelse` is right associative, i.e. `foo() orelse bar() orelse 0` is `foo() orelse (bar() orelse 0)`, which has the same meaning. When followed by `return`, its value extends to the end of the statement. When `orelse` is followed by `indent`, the right hand side is a `BLOCK`. That the `orelse` is used exactly on optional values (calls of `optional` returning functions and maps) and that the block follows the Blocks as Expressions rules are semantic checks.
 
-    PRIMARY := LITERAL | ident | 'self' | 'none' | '(' EXPR ')' 
+    PRIMARY := LITERAL | ident | 'self' | 'none' | PAREN_EXPR
     LITERAL := number | string | 'true' | 'false'
             |= ARRAY_LITERAL | MAP_LITERAL | FUN_LITERAL
 
@@ -867,7 +919,7 @@ The primary expressions are literals of the primitive types, identifiers (variab
     PAREN_EXPR := '(' LIST(NAMED_EXPR) ')'
     NAMED_EXPR := EXPR [ '=' EXPR ]
 
-Parentheses serve multiple purposes: grouping of expressions (`(a + b)`), tuple literals (`(foo = 1, bar = 56)`) and function call arguments (`foo(a, 56)` or `inc(x = 56)`). All are parsed by the same rule and differentiated afterwards: a single item without `=` is a grouping, otherwise all items must be in the `ident '=' EXPR` form to form a tuple literal. When used as call arguments, both forms can be used. This way the grammar stays LL(1) even though we only know which form is used after the first expression has been parsed. Note that the `=` here is not an assignment operator. 
+Parentheses serve multiple purposes: grouping of expressions (`(a + b)`), tuple literals (`(foo = 1, bar = 56)`) and function call arguments (`foo(a, 56)` or `inc(x = 56)`). All are parsed by the same rule and differentiated afterwards: in `PRIMARY` position, a single item without `=` is a grouping, otherwise all items must be in the `ident '=' EXPR` form to form a tuple literal. In `POSTFIX_EXPR` position, it is a function call. When used as call arguments, both forms can be used. This way the grammar stays LL(1) even though we only know which form is used after the first expression has been parsed. Note that the `=` here is not an assignment operator. 
 
     ARRAY_LITERAL := '[' LIST(EXPR) ']'
     MAP_LITERAL := '{' LIST(MAP_ITEM) '}'
@@ -878,18 +930,18 @@ Array literals are list of values in square brackets, map literals are list of k
     FUN_LITERAL := 'fun' [ '(' LIST(LAMBDA_ARG) ')' [ '->' [ 'optional' ] TYPE ] ] BLOCK
     LAMBDA_ARG := ident [ ':' TYPE ] [ '=' EXPR ] | LITERAL
 
-Anonymous function starts with the `fun` keyword, optionally followed by the signature (arguments and optional return type) and then the function body, which is a `BLOCK` of statements starting on a new line (and therefore with `indent`). The two forms are differentiated with a single token lookahead after `fun`: `(` starts the explicit signature, `indent` starts the body. There is no `=` between the signature and the body. 
+Anonymous function starts with the `fun` keyword, optionally followed by the signature (arguments and optional return type) and then the function body, which is a `BLOCK`. The two forms are differentiated with a single token lookahead after `fun`: `(` starts the explicit signature, `indent` starts the body. There is no `=` between the signature and the body. 
 
 When the signature is omitted, it is taken from the function type known from the context and the arguments are bound under their names from the type. When the signature is given, argument types may be omitted if the function type is known from the context, but all arguments must always be listed. Literal arguments are only valid for event handlers where they are used for the value matching. Whether the function type is known from the context, and therefore which parts of the signature may be omitted, is decided semantically.
 
-Outside of parentheses, the function body ends with `dedent`, so an anonymous function must always be the last part of the statement it appears in, and the `dedent` also terminates the statement. Inside parentheses, the body ends at the first line indented less than the body, after which the list continues as usual (with the comma being optional).
+Outside of brackets, the function body is followed by `newline` (or `dedent`), so an anonymous function must always be the last part of the statement it appears in. Inside brackets, the body is closed by the lexer at the next line of items, or by the closing bracket, after which the list continues as usual.
 
 
-# Appendix B - Runtime
+# Appendix C - Runtime
 
 There is no main function per se.
 
-# Appendix C - Future Extensions
+# Appendix D - Future Extensions
 
 - int type and bitwise operators
 

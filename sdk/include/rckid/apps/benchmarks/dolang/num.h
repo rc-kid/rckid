@@ -6,7 +6,7 @@
 
 namespace rckid {
 
-    /** Benchmark of the doLang rational numbers (dolang::num) against int32_t and float.
+    /** Benchmark of the doLang rational numbers (dolang::Num) against int32_t and float.
 
         Runs the same templated workloads for all three types and displays the time each took in microseconds. The workloads are written for rationals, so for int32_t the fractions truncate (e.g. 1/60 becomes 0) and the computed values are meaningless. Only the timings are of interest, as they show the cost of the same sequence of operations in each type.
 
@@ -58,7 +58,7 @@ namespace rckid {
                 switch (t) {
                     case 0: us = runWorkload<int32_t>(w); break;
                     case 1: us = runWorkload<float>(w); break;
-                    case 2: us = runWorkload<dolang::num>(w); break;
+                    case 2: us = runWorkload<dolang::Num>(w); break;
                 }
                 tg_->text(NAME_WIDTH + t * COL_WIDTH, FIRST_ROW + w) << us << "        ";
                 ++next_;
@@ -241,10 +241,10 @@ namespace rckid {
 
     template<> inline int32_t DoLangNumBenchmark::make<int32_t>(int32_t n, int32_t d) { return n / d; }
     template<> inline float DoLangNumBenchmark::make<float>(int32_t n, int32_t d) { return static_cast<float>(n) / static_cast<float>(d); }
-    template<> inline dolang::num DoLangNumBenchmark::make<dolang::num>(int32_t n, int32_t d) { return dolang::num{n, d}; }
+    template<> inline dolang::Num DoLangNumBenchmark::make<dolang::Num>(int32_t n, int32_t d) { return dolang::Num{n, d}; }
 
     template<> inline int32_t DoLangNumBenchmark::checksum<int32_t>(int32_t x) { return x; }
     template<> inline int32_t DoLangNumBenchmark::checksum<float>(float x) { return static_cast<int32_t>(x * 1000); }
-    template<> inline int32_t DoLangNumBenchmark::checksum<dolang::num>(dolang::num x) { return x.n() ^ x.d(); }
+    template<> inline int32_t DoLangNumBenchmark::checksum<dolang::Num>(dolang::Num x) { return x.n() ^ x.d(); }
 
 } // namespace rckid
