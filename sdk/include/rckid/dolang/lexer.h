@@ -12,6 +12,14 @@ namespace rckid::dolang {
     public:
         uint16_t line;
         uint16_t col;
+
+        bool operator == (Location const & other) const { 
+            return line == other.line && col == other.col; 
+        }
+        bool operator != (Location const & other) const { 
+            return line != other.line || col != other.col; 
+        }
+        
     } __attribute__((packed)); // rckid::dolang::Location
 
     static_assert(sizeof(Location) == 4, "Location should be 4 bytes");
@@ -111,12 +119,38 @@ namespace rckid::dolang {
         Token(TokenKind kind, Location loc, Symbol symbol): 
             kind{kind}, payload{static_cast<int32_t>(symbol.id_)}, loc{loc} { }
 
+        Token(TokenKind kind, Location loc, TextLiteral text): 
+            kind{kind}, payload{static_cast<int32_t>(text.id_)}, loc{loc} { }
+
+        Token(TokenKind kind, Location loc, Num num): 
+            kind{kind}, payload{num.n()}, payload2{num.d()}, loc{loc} { }
+
+        bool operator == (TokenKind k) const { return kind == k; }
+        bool operator != (TokenKind k) const { return kind != k; }
+
+        bool isKeyword() const { return kind >= TokenKind::kwAnd && kind <= TokenKind::kwXor; }
+
+        /** Identifiers and keywords carry the symbol of their name. */
         Symbol asSymbol() const {
+            ASSERT(kind == TokenKind::Identifier || isKeyword());
             return Symbol{static_cast<uint32_t>(payload)};
         }
 
+        /** Text literals and comments carry their text (comments including the leading #). */
+        char const * asText() const {
+            ASSERT(kind == TokenKind::Text || kind == TokenKind::Comment);
+            return TextLiteral{static_cast<uint32_t>(payload)}.c_str();
+        }
+
         Num asNum() const {
+            ASSERT(kind == TokenKind::Number);
             return Num{payload, payload2};
+        }
+
+        /** Indentation (number of leading spaces) of the line that starts with this newline token. */
+        int32_t indent() const {
+            ASSERT(kind == TokenKind::Newline);
+            return payload;
         }
 
     }; 
@@ -178,17 +212,16 @@ namespace rckid::dolang {
                         return condPop('=') ? Token{TokenKind::opGreaterEquals, l} : Token{TokenKind::opGreater, l};
                     // text literal  
                     case '"':
-                        UNIMPLEMENTED;
+                        return parseText(l);
                     // comment
                     case '#':
-                        UNIMPLEMENTED;
+                        return parseComment(l);
                     // newline 
                     case '\n':
                         return parseNewline();
                     // whitespace, which we simply ignore (indentation whitespace is handled in parseNewline)
                     case ' ':
                     case '\t':
-                    case '\r':
                         l = loc_;
                         break;
                     // otherwise it can be either numeric literal, identifier, or keyword
@@ -198,7 +231,7 @@ namespace rckid::dolang {
                         else if (isIdentifierStart(c))
                             return parseIdentifier(c, l);
                         else
-                            UNIMPLEMENTED;
+                            return Token{TokenKind::Error, l};
                 }
             }
             return Token{TokenKind::EndOfFile, l};
@@ -225,28 +258,45 @@ namespace rckid::dolang {
         /** End of input is only reached when there is no lookahead character stored either. */
         bool eof() { return last_ == '\0' && from_.eof(); }
 
-        char pop() {
-            // TODO update loc
-            if (last_ != '\0') {
-                char result = last_;
-                last_ = '\0';
-                return result;
-            }
+        char readNext() {
             auto c = from_.readByte();
             if (!c)
                 return '\0';
             return c.value();
         }
 
+        char pop() {
+            char result = last_;
+            last_ = '\0';
+            if (result == '\0')
+                result = readNext();
+            if (result == '\r') {
+                last_ = readNext();
+                if (last_ == '\n')
+                    last_ = '\0';
+                result = '\n';
+            }
+            if (result == '\n') {
+                loc_.line++;
+                loc_.col = 1;
+            } else {
+                loc_.col++;
+            }
+            return result;
+        }
+
+        /** Returns the next character withouut consuming it
+         */
         char top() {
             if (last_ == '\0')
-                last_ = pop();
-            return last_;
+                last_ = readNext();
+            // convert all newlines to single \n character
+            return last_ == '\r' ? '\n' : last_;
         }
 
         bool condPop(char expected) {
             if (top() == expected) {
-                last_ = '\0';
+                pop();
                 return true;
             }
             return false;
@@ -264,23 +314,118 @@ namespace rckid::dolang {
                 int32_t indent = 0;
                 while (condPop(' '))
                     indent++;
-                // if the next character is newline, we ignore the empty line and parse the next one (handles CRLF too)
-                condPop('\r');
+                // a line with only spaces at the end of input is not a new line
+                if (eof())
+                    break;
+                // if the next character is newline, we ignore the empty line and parse the next one
                 if (condPop('\n'))
                     continue;
                 // if next character is whitespace, its an error as only spaces can be used to indent
                 if (isWhitespace(top()))
                     return Token{TokenKind::Error, loc_};
-                // if next character is # (comment start), we just parse the comment ?
-                // TODO
+                // if next character is # (comment start), we just parse the comment, or ignore the line
+                if (top() == '#') {
+                    if (parseComments_) {
+                        Location l = loc_;
+                        pop();
+                        return parseComment(l);
+                    }
+                    // skip the comment line here instead of in parseComment() to avoid recursion over consecutive comment lines
+                    while (! eof() && top() != '\n')
+                        pop();
+                    condPop('\n');
+                    continue;
+                }
                 // otherwise simply emit the newline token with indent as payload - the parser will then translate those tokens into the indent/dedent pairs, etc.
                 return Token{TokenKind::Newline, loc_, indent};
             }
             return Token{TokenKind::EndOfFile, loc_};
         }
 
+        Token parseComment(Location loc) {
+            if (parseComments_) {
+                StringBuilder str;
+                str.appendChar('#');
+                while (! eof() && top() != '\n')
+                    str.appendChar(pop());
+                return Token{TokenKind::Comment, loc, TextLiteral{str.str()}};
+            } else {
+                while (! eof() && top() != '\n') {
+                    pop();
+                }
+                return next();
+            }
+        }
+
+        Token parseText(Location loc) {
+            StringBuilder str;
+            while (! eof()) {
+                char c = pop();
+                switch (c) {
+                    case '\\':
+                        if (eof())
+                            return Token{TokenKind::Error, loc};
+                        c = pop();
+                        switch (c) {
+                            case 'n':
+                                str.appendChar('\n');
+                                break;
+                            case 'r':
+                                str.appendChar('\r');
+                                break;
+                            case 't':
+                                str.appendChar('\t');
+                                break;
+                            case '"':
+                                str.appendChar('"');
+                                break;
+                            case '\\':
+                                str.appendChar('\\');
+                                break;
+                            default:
+                                return Token{TokenKind::Error, loc};
+                        }
+                        break;
+                    case '\n':
+                        return Token{TokenKind::Error, loc};
+                    case '"':
+                        return Token{TokenKind::Text, loc, TextLiteral{str.str()}};
+                    default:
+                        str.appendChar(c);
+                }
+            }
+            return Token{TokenKind::Error, loc};
+        }
+
         Token parseNumber(char first, Location loc) {
-            UNIMPLEMENTED;
+            int32_t value = first - '0';
+            while (! eof() && (isDigit(top()) || top() == '_')) {
+                if (condPop('_'))
+                    continue;
+                // check if we would have overflowed (must be done before the signed overflow UB)
+                if (value > (Num::MAX - (top() - '0')) / 10)
+                    return Token{TokenKind::Error, loc};
+                value = value * 10 + (pop() - '0');
+            }
+            if (condPop('.')) {
+                if (! isDigit(top()))
+                    return Token{TokenKind::Error, loc};
+                int32_t frac = 0;
+                int64_t fracDivider = 1;
+                while (! eof() && (isDigit(top()) || top() == '_')) {
+                    if (condPop('_'))
+                        continue;
+                    // if fracDiider
+                    fracDivider *= 10;
+                    if (fracDivider > Num::MAX)
+                        return Token{TokenKind::Error, loc};
+                    frac = frac * 10 + (pop() - '0');
+                }
+                // now we need to decrease
+                return Token{TokenKind::Number, loc, Num{value * fracDivider + frac, fracDivider}};
+            } else {
+                return Token{TokenKind::Number, loc, Num{value}};
+            }
         }
 
         Token parseIdentifier(char first, Location loc) {
@@ -299,6 +444,7 @@ namespace rckid::dolang {
         ReadStream & from_;
         Location loc_{1, 1};
         char last_ = '\0';
+        bool parseComments_ = true;
 
         std::unordered_map<String, TokenKind> keywords_ = {
             {"and", TokenKind::kwAnd},

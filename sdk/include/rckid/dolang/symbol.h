@@ -39,7 +39,8 @@ namespace rckid::dolang {
 
         /** Removes all interned strings. Any existing values of the pool are invalidated (their c_str() points to freed memory), so must only be called when no values of the pool exist. */
         static void clear() {
-            values_.clear();
+            // assigning an empty set releases the bucket array as well, which clear() would keep
+            values_ = std::unordered_set<String>{};
         }
 
         bool operator == (Interner const & other) const { return id_ == other.id_; }
