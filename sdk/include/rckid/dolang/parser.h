@@ -183,7 +183,16 @@ namespace rckid::dolang {
 
     class Parser {
     public:
+        Parser(ReadStream & from): lexer_{from} {
+            // contract from lexer is first token is new line which we use to initialize the indent stack 
+            Token t = lexer_.next();
+            ASSERT(t == TokenKind::Newline);
+            indentStack_.push_back(t.payload);
+        }
 
+        std::unique_ptr<ast::Program> parse() {
+            return PROGRAM();
+        }
 
     private:
 
@@ -352,15 +361,97 @@ namespace rckid::dolang {
 #undef POP
 #undef TRY
 
+
+        /** \name Token handling and newline translation
+
+            The parser provides the basic eof(), top(), pop() and condPop() interface for querying the tokenized sources. For the doLang this is complicated by the off side rule, which means that we also need to translate the newline tokens emited by the lexer into indent/dedent/newline variants, or swallow them.
+            
+            This translation is relatively simple though: 
+
+
+
+         */
+        //@{
+
+        bool atBlockStart_ = false;
+
+        Token next_; 
+
+        std::vector<int32_t> indentStack_;
+
         bool eof() {
             return top() == TokenKind::EndOfFile;
         }
 
-        Token const & top() {
-
+        Token top() {
+            if (next_.kind == TokenKind::EndOfFile)
+                next_ = lexer_.next();
+            while (next_.kind == TokenKind::Newline) {
+                // if the indentation of the newline is the same as the current indentation, we emit it as it is the end of statement
+                if (next_.payload == indentStack_.back()) {
+                    return next_;
+                // if the indentation is greater than the current indentation, we are either converting the newline to indent if we are at the beginning of a block expecting statement, or we are swallowing the newline as it is a continuation of the previous statement
+                } else if (next_.payload > indentStack_.back()) {
+                    if (atBlockStart_) {
+                        next_.kind = TokenKind::Indent;
+                        return next_;
+                    } else {
+                        // swallow the newline
+                        next_ = lexer_.next();
+                        continue;
+                    } 
+                // if the the indentation is less than the current indentation, we are converting it to dedents. The issue is that multiple dedents can be generated for a single newline, so we need to manufacture the enough number of dedents
+                } else if (next_.payload < indentStack_.back()) {
+                    // first check we can actually dedent
+                    if (indentStack_.size() == 1) {
+                        // we are at the top level, so this is an error
+                        next_.kind = TokenKind::Error;
+                        return next_;
+                    }
+                    Token result{next_};
+                    result.kind = TokenKind::Dedent;
+                    result.payload =  indentStack_[indentStack_.size() - 2];
+                    // if the level to which we are dedenting will be smaller than the newline indentation, its an error
+                    if (next_.payload > result.payload) {
+                        next_.kind = TokenKind::Error;
+                        return next_;
+                    }
+                    return result;
+                }
+            }
+            // non-newline token, just return it
+            return next_;
         }
 
         Token pop() {
+            Token x = top();
+            atBlockStart_ = false;
+            switch (x.kind) {
+                case TokenKind::Indent:
+                    indentStack_.push_back(x.payload);
+                    break;
+                case TokenKind::Dedent:
+                    indentStack_.pop_back();
+                    // return immediately so that we dn't consume the next token as there might be another dedent coming from it
+                    return x;
+                    break;
+                case TokenKind::opParOpen:
+                    // TODO I am not sure if we want this - means after every open paren, including inside an expression we will start with statements and indents and dedents. Not sure I like that, but at this point not sure what to do with it
+                case TokenKind::opCurlyOpen:
+                case TokenKind::opSquareOpen:
+                case TokenKind::kwThen:
+                case TokenKind::kwElse:
+                case TokenKind::kwDo:
+                case TokenKind::kwOrElse:
+                case TokenKind::kwWith:
+                    atBlockStart_ = true;
+                    break;
+                default:
+                    break;
+            }
+            // so that next top will reload
+            next_.kind = TokenKind::EndOfFile;
+            return x;
         }
 
         bool condPop(TokenKind kind) {
@@ -371,8 +462,8 @@ namespace rckid::dolang {
                 return false;
             }
         }
+        //@}
       
-        Token next_;
         Lexer lexer_;
 
     }; // dolang::Parser

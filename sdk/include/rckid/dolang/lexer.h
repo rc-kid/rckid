@@ -113,6 +113,9 @@ namespace rckid::dolang {
         int32_t payload2 = 0;
         Location loc;
 
+        Token(): kind{TokenKind::EndOfFile} { }
+        Token(Token const & other) = default;
+
         Token(TokenKind kind, Location loc, int32_t payload = 0, int32_t payload2 = 0): 
             kind{kind}, payload{payload}, payload2{payload2}, loc{loc} { }
 
@@ -161,6 +164,15 @@ namespace rckid::dolang {
         Lexer(ReadStream & from): from_{from} {}
 
         Token next() {
+            // if we are at the beginning of the input, always parse newline telling the initial indent
+            if (loc_.line == 0) {
+                loc_.line = 1;
+                // skip blank lines
+                while (condPop('\n'));
+                // determine first non-blank indentation
+                while (condPop(' '));
+                return Token{TokenKind::Newline, loc_, loc_.col - 1};
+            }
             Location l = loc_;
             if (eof())
                 return Token{TokenKind::EndOfFile, l};
@@ -442,7 +454,7 @@ namespace rckid::dolang {
         }
 
         ReadStream & from_;
-        Location loc_{1, 1};
+        Location loc_{0, 1};
         char last_ = '\0';
         bool parseComments_ = true;
 

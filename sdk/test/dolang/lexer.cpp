@@ -9,9 +9,9 @@ using namespace rckid::dolang;
 
 namespace {
 
-    /** Lexes the given source until the end of file and returns all tokens (without the final EndOfFile).
+    /** Lexes the given source until the end of file and returns all tokens (without the final EndOfFile), including the initial newline.
      */
-    std::vector<Token> lex(char const * source) {
+    std::vector<Token> lexAll(char const * source) {
         MemoryReadStream stream{immutable_ptr<uint8_t>{reinterpret_cast<uint8_t const *>(source), static_cast<uint32_t>(std::strlen(source))}};
         Lexer lexer{stream};
         std::vector<Token> result;
@@ -23,6 +23,25 @@ namespace {
             result.push_back(t);
         }
         return result;
+    }
+
+    /** Lexes the given source and returns all tokens after the initial newline, which the lexer always emits first (it gives the indentation of the first line).
+
+        If the initial newline is missing, returns a single Error token instead, so that any test using the helper fails.
+     */
+    std::vector<Token> lex(char const * source) {
+        std::vector<Token> result = lexAll(source);
+        if (result.empty() || result[0] != TokenKind::Newline)
+            return { Token{TokenKind::Error, Location{0, 0}} };
+        result.erase(result.begin());
+        return result;
+    }
+
+    /** Returns the initial newline token of the source (or EndOfFile if there are no tokens at all).
+     */
+    Token initial(char const * source) {
+        auto tokens = lexAll(source);
+        return tokens.empty() ? Token{TokenKind::EndOfFile, Location{0, 0}} : tokens[0];
     }
 
     /** Returns the kinds of all tokens in the source, for checking token sequences.
@@ -333,12 +352,43 @@ TEST(dolang, lexer_trailingNewlines) {
     EXPECT(kinds("a\r\n") == std::vector<TokenKind>{TokenKind::Identifier});
 }
 
+// ------------------------------------------------------------------------------------------------
+// initial newline
+// ------------------------------------------------------------------------------------------------
+
+TEST(dolang, lexer_initialNewline) {
+    ClearPools clear_;
+    // the first token is always a newline with the indentation of the first line, located at its first token
+    EXPECT(isNewline(initial("a"), 0));
+    EXPECT(isAt(initial("a"), 1, 1));
+    EXPECT(isNewline(initial("  a"), 2));
+    EXPECT(isAt(initial("  a"), 1, 3));
+    // the first token after it is where it actually is
+    auto t = lex("  a");
+    CHECK(t.size() == 1);
+    EXPECT(isAt(t[0], 1, 3));
+}
+
+TEST(dolang, lexer_initialNewlineOfEmptyInput) {
+    ClearPools clear_;
+    EXPECT(initial("") == TokenKind::Newline);
+    EXPECT(initial("   ") == TokenKind::Newline);
+    EXPECT(initial("\n\n") == TokenKind::Newline);
+    EXPECT(lexAll("").size() == 1);
+    EXPECT(lexAll("   ").size() == 1);
+    EXPECT(lexAll("\n\n").size() == 1);
+}
+
 TEST(dolang, lexer_leadingEmptyLines) {
     ClearPools clear_;
+    // empty lines before the first one do not count, the initial newline gives the indentation of the first non-empty line
+    EXPECT(isNewline(initial("\n\n  a"), 2));
+    EXPECT(isAt(initial("\n\n  a"), 3, 3));
+    EXPECT(isNewline(initial("    \n    a"), 4));
     auto t = lex("\n\n  a");
-    CHECK(t.size() == 2);
-    EXPECT(isNewline(t[0], 2));
-    EXPECT(isAt(t[1], 3, 3));
+    CHECK(t.size() == 1);
+    EXPECT(isIdentifier(t[0], "a"));
+    EXPECT(isAt(t[0], 3, 3));
 }
 
 TEST(dolang, lexer_tabIndentIsError) {
