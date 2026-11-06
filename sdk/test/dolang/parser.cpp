@@ -125,12 +125,11 @@ TEST(dolang, parser_functionDefinition) {
     EXPECT(roundTrips("fun f() -> num\n    break\n"));
     EXPECT(roundTrips("fun f() -> optional num\n    break\n"));
 }
-/*
+
 TEST(dolang, parser_twoFunctions) {
     ClearPools clear_;
-    EXPECT(roundTrips("fun f()\n    break\nfun g() -> num\n    break\n   continue\n"));
+    EXPECT(roundTrips("fun f()\n    break\n    continue\nfun g() -> num\n    break\n    continue\n"));
 }
-    */
 
 // ------------------------------------------------------------------------------------------------
 // errors

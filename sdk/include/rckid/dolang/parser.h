@@ -106,6 +106,7 @@ namespace rckid::dolang {
                     result->setOptionalReturn(true);
                 result->setReturnType(TRY(TYPE()));
             }
+            atBlockStart();
             result->setBody(TRY(BLOCK()));
             return result;
         }
@@ -494,6 +495,9 @@ namespace rckid::dolang {
             This translation is relatively simple though: 
 
 
+            We also need the ability to tell the parser that we are at the beginning of a block, which means that the next newline will be converted to an indent instead of swallowed. This is done by calling atBlockStart(). But when we do, there could have already been a newline token analyzed and ignored (because we were *not* at the beginning of a block). To fight this, when a newline is swallowed, we add that newline to special variable newlineBackup_. 
+
+            When adBlockStart() is called, we check newlineBackup_. If it is a newline, we need to recalculate the next token and we swap the backup and next tokens. This means next top will process the newline into the indent. When we pop indent, if there is something in the newlineBackup_, we will swap it back into next_ so that the next top will process it as the next token after the newline.
 
          */
         //@{
@@ -501,6 +505,7 @@ namespace rckid::dolang {
         bool atBlockStart_ = false;
 
         Token next_; 
+        Token newlineBackup_;
 
         std::vector<int32_t> indentStack_;
 
@@ -510,7 +515,7 @@ namespace rckid::dolang {
 
         Token top() {
             if (next_.kind == TokenKind::EndOfFile)
-                next_ = lexer_.next();
+                    next_ = lexer_.next();
             while (next_.kind == TokenKind::Newline) {
                 // if the indentation of the newline is the same as the current indentation, we emit it as it is the end of statement
                 if (next_.payload == indentStack_.back()) {
@@ -522,6 +527,7 @@ namespace rckid::dolang {
                         return next_;
                     } else {
                         // swallow the newline
+                        newlineBackup_ = next_;
                         next_ = lexer_.next();
                         continue;
                     } 
@@ -543,6 +549,13 @@ namespace rckid::dolang {
                     }
                     return result;
                 }
+            }
+            // if next token is end of file *and* there are still indents on the stack, we need to manufacture dedents until we reach the top level
+            if (next_.kind == TokenKind::EndOfFile && indentStack_.size() > 1) {
+                Token result{next_};
+                result.kind = TokenKind::Dedent;
+                result.payload =  indentStack_[indentStack_.size() - 2];
+                return result;
             }
             // non-newline token, just return it
             return next_;
@@ -574,8 +587,12 @@ namespace rckid::dolang {
                 default:
                     break;
             }
-            // so that next top will reload
-            next_.kind = TokenKind::EndOfFile;
+            // so that next top will reload fresh
+            if (next_ == TokenKind::Indent && newlineBackup_ != TokenKind::EndOfFile)
+                next_ = newlineBackup_;
+            else
+                next_.kind = TokenKind::EndOfFile;
+            newlineBackup_.kind = TokenKind::EndOfFile;
             return x;
         }
 
@@ -585,6 +602,14 @@ namespace rckid::dolang {
                 return true;
             } else {
                 return false;
+            }
+        }
+
+        void atBlockStart() {
+            atBlockStart_ = true;
+            if (newlineBackup_ == TokenKind::Newline) {
+                // swap the backup and next tokens so that next top will process the newline into indent
+                std::swap(newlineBackup_, next_);
             }
         }
         //@}
