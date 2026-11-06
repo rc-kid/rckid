@@ -160,3 +160,14 @@ TEST(string, builder) {
     EXPECT(s == "foo 42");
 }
 
+
+TEST(string, replace) {
+    using namespace rckid;
+    EXPECT(String{"hello world"}.replace("o", "0") == "hell0 w0rld");
+    EXPECT(String{"aaa"}.replace("a", "bb") == "bbbbbb");
+    EXPECT(String{"foobarfoo"}.replace("foo", "") == "bar");
+    EXPECT(String{"abc"}.replace("x", "y") == "abc");
+    EXPECT(String{"abc"}.replace("", "y") == "abc");
+    EXPECT(String{"aaaa"}.replace("aa", "a") == "aa");
+    EXPECT(String{""}.replace("a", "b") == "");
+}

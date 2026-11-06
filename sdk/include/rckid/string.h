@@ -208,6 +208,12 @@ namespace rckid {
             return std::strcmp(data_.get(), other.data_.get()) >= 0;
         }
 
+        /** Replaces the occurences of what in string with the string literal stored in with. 
+         
+            Does not change the original string, returns the result instead.
+         */
+        String replace(char const * what, char const * with) const;
+
         /** Creates new string by concatenating two existing ones. 
          
             Note that this is a convenience function only - for any non-trivial string manipulations the string builder writer interface (STR macro) should be used for better ergonomics *and* performance.

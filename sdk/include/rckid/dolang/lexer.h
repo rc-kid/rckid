@@ -116,6 +116,11 @@ namespace rckid::dolang {
         Token(): kind{TokenKind::EndOfFile} { }
         Token(Token const & other) = default;
 
+        static Token error(Location loc, String msg) {
+            TextLiteral text{std::move(msg)};
+            return Token{TokenKind::Error, loc, text};
+        }
+
         Token(TokenKind kind, Location loc, int32_t payload = 0, int32_t payload2 = 0): 
             kind{kind}, payload{payload}, payload2{payload2}, loc{loc} { }
 
@@ -141,7 +146,7 @@ namespace rckid::dolang {
 
         /** Text literals and comments carry their text (comments including the leading #). */
         char const * asText() const {
-            ASSERT(kind == TokenKind::Text || kind == TokenKind::Comment);
+            ASSERT(kind == TokenKind::Text || kind == TokenKind::Comment || kind == TokenKind::Error);
             return TextLiteral{static_cast<uint32_t>(payload)}.c_str();
         }
 
@@ -157,7 +162,6 @@ namespace rckid::dolang {
         }
 
     }; 
-
 
     class Lexer {
     public:
@@ -239,7 +243,7 @@ namespace rckid::dolang {
                         else if (isIdentifierStart(c))
                             return parseIdentifier(c, l);
                         else
-                            return Token{TokenKind::Error, l};
+                            return Token::error(l, STR("Invalid token start  - char " << c));
                 }
             }
             return Token{TokenKind::EndOfFile, l};
@@ -330,7 +334,7 @@ namespace rckid::dolang {
                     continue;
                 // if next character is whitespace, its an error as only spaces can be used to indent
                 if (isWhitespace(top()))
-                    return Token{TokenKind::Error, loc_};
+                    return Token::error(loc_, STR("Invalid whitespace character " << top() << " at the beginning of a line"));
                 // if next character is # (comment start), we just parse the comment, or ignore the line
                 if ((top() == '#')  && ! force) {
                     if (parseComments_) {
@@ -375,7 +379,7 @@ namespace rckid::dolang {
                 switch (c) {
                     case '\\':
                         if (eof())
-                            return Token{TokenKind::Error, loc};
+                            return Token::error(loc_, "unterminated escape sequence");
                         c = pop();
                         switch (c) {
                             case 'n':
@@ -394,18 +398,18 @@ namespace rckid::dolang {
                                 str.appendChar('\\');
                                 break;
                             default:
-                                return Token{TokenKind::Error, loc};
+                                return Token::error(loc_, STR("Invalid escape sequence \\" << c));
                         }
                         break;
                     case '\n':
-                        return Token{TokenKind::Error, loc};
+                        return Token::error(loc_, "Unexpected newline in text literal");
                     case '"':
                         return Token{TokenKind::Text, loc, TextLiteral{str.str()}};
                     default:
                         str.appendChar(c);
                 }
             }
-            return Token{TokenKind::Error, loc};
+            return Token::error(loc_, "Unterminated text literal");
         }
 
         Token parseNumber(char first, Location loc) {
@@ -415,12 +419,12 @@ namespace rckid::dolang {
                     continue;
                 // check if we would have overflowed (must be done before the signed overflow UB)
                 if (value > (Num::MAX - (top() - '0')) / 10)
-                    return Token{TokenKind::Error, loc};
+                    return Token::error(loc, "Number literal is too large");
                 value = value * 10 + (pop() - '0');
             }
             if (condPop('.')) {
                 if (! isDigit(top()))
-                    return Token{TokenKind::Error, loc};
+                    return Token::error(loc, "Expected digit after decimal point");
                 int32_t frac = 0;
                 int64_t fracDivider = 1;
                 while (! eof() && (isDigit(top()) || top() == '_')) {
@@ -429,7 +433,7 @@ namespace rckid::dolang {
                     // if fracDiider
                     fracDivider *= 10;
                     if (fracDivider > Num::MAX)
-                        return Token{TokenKind::Error, loc};
+                        return Token::error(loc, "Number literal is too large");
                     frac = frac * 10 + (pop() - '0');
                 }
                 // now we need to decrease
@@ -501,5 +505,28 @@ namespace rckid::dolang {
         };
 
     }; // rckid::dolang::Lexer
+
+    inline void write(Writer & w, TokenKind kind) {
+        switch (kind) {
+            case TokenKind::EndOfFile: w << "EOF"; break;
+            case TokenKind::Newline: w << "Newline"; break;
+            case TokenKind::Indent: w << "Indent"; break;
+            case TokenKind::Dedent: w << "Dedent"; break;
+            case TokenKind::Error: w << "Error"; break;
+            case TokenKind::Identifier: w << "Identifier"; break;
+            case TokenKind::Number: w << "Number"; break;
+            case TokenKind::Text: w << "Text"; break;
+            case TokenKind::Comment: w << "Comment"; break;
+            default:
+                if (kind >= TokenKind::kwAnd && kind <= TokenKind::kwXor)
+                    w << "Keyword(" << static_cast<int>(kind) << ")";
+                else
+                    w << "Operator(" << static_cast<int>(kind) << ")";
+        }
+    }
+
+    inline void write(Writer & w, Token const & t) {
+        w << "Token(" << t.kind << ", " << t.payload << ", " << t.payload2 << ", (" << t.loc.line << ":" << t.loc.col << "))";
+    }
 
 } // namespace rckid::dolang

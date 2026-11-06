@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <cstring>
 #include <string>
 
@@ -9,33 +10,39 @@ using namespace rckid::dolang;
 
 namespace {
 
-    /** Parses the source and prints the resulting AST back to text. Returns "<error>" if the source does not parse.
-
-        As the printer is meant to reproduce the source exactly, the round trip tests compare the result to the source itself.
+    /** Parses the source
      */
-    std::string roundTrip(char const * source) {
+    unique_ptr<ast::Node> parse(char const * source) {
         MemoryReadStream stream{immutable_ptr<uint8_t>{reinterpret_cast<uint8_t const *>(source), static_cast<uint32_t>(std::strlen(source))}};
         Parser parser{stream};
-        auto program = parser.parse();
-        if (program == nullptr)
-            return "<error>";
-        std::string result;
-        Writer w{[&result](char c) { result.push_back(c); }};
-        w << *program;
-        return result;
+        return parser.parse();
     }
 
-    /** True if parsing the source and printing it back gives the same source. */
+    /** Returns the text with newlines and tabs escaped, so that the whole of it fits on a single line of the test output. 
+     */
+    String escaped(String const & text) {
+        return text.replace("\n", "\\n").replace("\t", "\\t");
+    }
+
+    /** True if parsing the source and printing it back gives the same source. If not, prints both, so that the failure can be seen in the test output. 
+     */
     bool roundTrips(char const * source) {
-        return roundTrip(source) == source;
+        String result{STR(*parse(source))};
+        if (result == source)
+            return true;
+        std::cout << std::endl << "    expected: " << escaped(source).c_str() << std::endl << "    actual:   " << escaped(result).c_str() << std::endl;
+        return false;
     }
 
-    /** True if the source does not parse. */
+    /** True if the source does not parse. 
+     */
     bool fails(char const * source) {
-        return roundTrip(source) == "<error>";
+        auto result = parse(source);
+        return result->kind == ast::Kind::Error;
     }
 
-    /** Clears the interned symbols and texts at the end of a test, so that the heap is left as it was found. */
+    /** Clears the interned symbols and texts at the end of a test, so that the heap is left as it was found. 
+    */
     class ClearPools {
     public:
         ~ClearPools() {
@@ -52,7 +59,7 @@ namespace {
 
 TEST(dolang, parser_empty) {
     ClearPools clear_;
-    EXPECT(roundTrips(""));
+    EXPECT(roundTrips("\n"));
 }
 
 TEST(dolang, parser_use) {
@@ -102,6 +109,23 @@ TEST(dolang, parser_mapTypes) {
     EXPECT(roundTrips("global m : {num -> {text -> bool}}\n"));
     EXPECT(roundTrips("global m : [{num -> text}]\n"));
 }
+
+
+// basic function declaration
+
+TEST(dolang, parser_functionDefinition) {
+    ClearPools clear_;
+    EXPECT(roundTrips("fun f()\n    break\n"));
+    EXPECT(roundTrips("fun f() -> num\n    break\n"));
+    EXPECT(roundTrips("fun f() -> optional num\n    break\n"));
+}
+
+/*
+TEST(dolang, parser_twoFunctions) {
+    ClearPools clear_;
+    EXPECT(roundTrips("fun f()\n    break\nfun g() -> num\n    break\n   continue\n"));
+}
+*/
 
 // ------------------------------------------------------------------------------------------------
 // errors

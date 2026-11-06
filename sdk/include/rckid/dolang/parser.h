@@ -15,8 +15,11 @@ namespace rckid::dolang {
             indentStack_.push_back(t.payload);
         }
 
-        std::unique_ptr<ast::Program> parse() {
-            return PROGRAM();
+        std::unique_ptr<ast::Node> parse() {
+            auto result = PROGRAM();
+            if (result != nullptr)
+                return result;
+            return  std::make_unique<ast::Error>(error_);
         }
 
     private:
@@ -25,8 +28,9 @@ namespace rckid::dolang {
  */
 #define TRY(X) ({ auto result = X; if (! result) return nullptr; std::move(result); })
 
-#define POP(TOKEN_KIND) ({ auto result = pop(); if (result.kind != TOKEN_KIND) return nullptr; std::move(result); })
-
+#define POP(TOKEN_KIND) ({ auto result = pop(); if (result.kind != TOKEN_KIND) { \
+    error_ = Token::error(result.loc, STR("Expected " << TOKEN_KIND << ", got " << result.kind)); \
+    return nullptr; } std::move(result); })
 
         /** PROGRAM := [ TOP_DECL { newline TOP_DECL } ] 
          */
@@ -59,7 +63,7 @@ namespace rckid::dolang {
                 case TokenKind::Identifier:
                     return EVENT_ASSIGN();
                 default:
-                    // TODO error
+                    error_ = Token::error(top().loc, STR("Expected top-level declaration, got " << top().kind));
                     return nullptr;
             }
         }
@@ -89,25 +93,183 @@ namespace rckid::dolang {
         /** FUN_DECL := 'fun' ident [ '.' ident ] '(' LIST(ARG) ')' [ '->' [ 'optional' ] TYPE ] BLOCK
          */
         unique_ptr<ast::FunDecl> FUN_DECL() {
-            return nullptr;
+            Token fun = POP(TokenKind::kwFun);
+            Token name = POP(TokenKind::Identifier);
+            auto result = std::make_unique<ast::FunDecl>(fun.loc, name.asSymbol());
+            if (condPop(TokenKind::opDot))
+                result->setMethodName(POP(TokenKind::Identifier).asSymbol());
+            POP(TokenKind::opParOpen);
+            // TODO parse args
+            POP(TokenKind::opParClose);
+            if (condPop(TokenKind::opArrow)) {
+                if (condPop(TokenKind::kwOptional))
+                    result->setOptionalReturn(true);
+                result->setReturnType(TRY(TYPE()));
+            }
+            result->setBody(TRY(BLOCK()));
+            return result;
         }
 
         /** TYPE_DECL := 'type' ident [ 'extends' ident ] '=' '(' LIST(FIELD_DECL) ')'
          */
         unique_ptr<ast::TypeDecl> TYPE_DECL() {
-            return nullptr;
+            UNIMPLEMENTED;
+        }
+
+        /** FIELD_DECL := ident [ ':' TYPE ] [ '=' EXPR ]
+                       |= 'constructor' '=' FUN_LITERAL
+         */
+        unique_ptr<ast::Node> FIELD_DECL() {
+            UNIMPLEMENTED;
         }
 
         /** ENUM_DECL := 'enum' ident '=' ident { '|' ident }
          */
         unique_ptr<ast::EnumDecl> ENUM_DECL() {
-            return nullptr;
+            UNIMPLEMENTED;
         }
 
         /** EVENT_ASSIGN := ident { '.' ident } ( '=' | '+=' ) EXPR
          */
         unique_ptr<ast::Assign> EVENT_ASSIGN() {
-            return nullptr;
+            UNIMPLEMENTED;
+        }
+
+        /** BLOCK := indent STATEMENT { newline STATEMENT } dedent
+                  |= STATEMENT
+         */
+        unique_ptr<ast::Block> BLOCK() {
+            auto result = std::make_unique<ast::Block>(top().loc);
+            if (condPop(TokenKind::Indent)) {
+                result->addChild(TRY(STATEMENT()));
+                while (condPop(TokenKind::Newline))
+                    result->addChild(TRY(STATEMENT()));
+                POP(TokenKind::Dedent);
+            } else {
+                result->addChild(TRY(STATEMENT()));
+            }
+            return result;
+        }
+
+        /** BODY := BLOCK | EXPR
+
+            Decided by the next token, indent starts the block, anything else is the expression.
+         */
+        unique_ptr<ast::Node> BODY() {
+            UNIMPLEMENTED;
+        }
+
+        /** LIST(X) := indent LINE(X) { newline LINE(X) } dedent
+                     | LINE(X)
+            LINE(X) := [ X { ',' X } [ ',' ] ]
+
+            Parses the items of a bracketed list, calling item() to parse each X. The opening bracket is expected to be already popped and the closing bracket is left to the caller. Returns false on error.
+         */
+        template<typename ITEM>
+        bool LIST(ITEM item) {
+            UNIMPLEMENTED;
+        }
+
+        /** STATEMENT := LET_STMT | IF | WHILE_STMT | FOR_STMT | MATCH | RETURN_STMT
+                       |= 'break' | 'continue' | 'write' EXPR | 'test' EXPR | EXPR_STMT
+
+            LET_STMT is parsed by VAR_DECL. At the beginning of a statement, `if` and `match` are always the IF and MATCH statements.
+         */
+        unique_ptr<ast::Node> STATEMENT() {
+            switch (top().kind) {
+                case TokenKind::kwLet:
+                case TokenKind::kwConst:
+                    return VAR_DECL(top().kind);
+                case TokenKind::kwIf:
+                    return IF();
+                case TokenKind::kwWhile:
+                    return WHILE_STMT();
+                case TokenKind::kwFor:
+                    return FOR_STMT();
+                case TokenKind::kwMatch:
+                    return MATCH();
+                case TokenKind::kwReturn:
+                    return RETURN_STMT();
+                case TokenKind::kwBreak:
+                    return std::make_unique<ast::Break>(POP(TokenKind::kwBreak).loc);
+                case TokenKind::kwContinue:
+                    return std::make_unique<ast::Continue>(POP(TokenKind::kwContinue).loc);
+                case TokenKind::kwWrite: {
+                    auto result = std::make_unique<ast::Write>(POP(TokenKind::kwWrite).loc);
+                    result->setValue(TRY(EXPR()));
+                    return result;
+                }
+                case TokenKind::kwTest: {
+                    auto result = std::make_unique<ast::Test>(POP(TokenKind::kwTest).loc);
+                    result->setValue(TRY(EXPR()));
+                    return result;
+                }
+                default:
+                    return EXPR_STMT();
+            }
+            UNIMPLEMENTED;
+        }
+
+        /** EXPR_STMT := EXPR [ ( '=' | '+=' | '-=' | '*=' | '/=' ) EXPR ]
+         */
+        unique_ptr<ast::Node> EXPR_STMT() {
+            UNIMPLEMENTED;
+        }
+
+        /** RETURN_STMT := 'return' [ EXPR ]
+
+            There is no value when the next token is newline, or dedent.
+         */
+        unique_ptr<ast::Node> RETURN_STMT() {
+            UNIMPLEMENTED;
+        }
+
+        /** IF := 'if' EXPR 'then' ( BLOCK [ [ newline ] 'else' BODY ] | EXPR [ 'else' BODY ] )
+
+            Shared by the if statement and the if expression.
+         */
+        unique_ptr<ast::Node> IF() {
+            UNIMPLEMENTED;
+        }
+
+        /** WHILE_STMT := 'while' EXPR 'do' BLOCK
+         */
+        unique_ptr<ast::Node> WHILE_STMT() {
+            UNIMPLEMENTED;
+        }
+
+        /** FOR_STMT := 'for' ident [ ',' ident ] 'in' EXPR [ 'step' EXPR ] 'do' BLOCK
+         */
+        unique_ptr<ast::Node> FOR_STMT() {
+            UNIMPLEMENTED;
+        }
+
+        /** MATCH := 'match' EXPR 'with' ( indent CASE { newline ( CASE | 'else' BODY ) } dedent
+                                         | INLINE_CASE { INLINE_CASE } [ 'else' EXPR ] )
+
+            Shared by the match statement and the match expression.
+         */
+        unique_ptr<ast::Node> MATCH() {
+            UNIMPLEMENTED;
+        }
+
+        /** CASE := 'is' PATTERN 'then' BODY
+         */
+        unique_ptr<ast::Node> CASE() {
+            UNIMPLEMENTED;
+        }
+
+        /** INLINE_CASE := 'is' PATTERN 'then' EXPR
+         */
+        unique_ptr<ast::Node> INLINE_CASE() {
+            UNIMPLEMENTED;
+        }
+
+        /** PATTERN := LITERAL | '-' number | ident { '.' ident }
+                     |= '(' LIST(ident [ '=' PATTERN ]) ')' | '[' LIST(PATTERN) ']'
+         */
+        unique_ptr<ast::Node> PATTERN() {
+            UNIMPLEMENTED;
         }
 
         /** TYPE := POD_TYPE | ARRAY_TYPE | TUPLE_TYPE | MAP_TYPE | FUN_TYPE | EVENT_TYPE
@@ -140,6 +302,7 @@ namespace rckid::dolang {
                 case TokenKind::Identifier:
                     return std::make_unique<ast::SymbolName>(l, pop().asSymbol());
                 default:
+                    error_ = Token::error(l, STR("Expected POD type, got " << top().kind));
                     return nullptr;
             }
         }
@@ -154,10 +317,15 @@ namespace rckid::dolang {
         }
 
         /** TUPLE_TYPE := '(' LIST(FIELD_TYPE) ')'
-            FIELD_TYPE := ident [ ':' TYPE ]
          */
         unique_ptr<ast::TupleType> TUPLE_TYPE() {
-            return nullptr;
+            UNIMPLEMENTED;
+        }
+
+        /** FIELD_TYPE := ident [ ':' TYPE ]
+         */
+        unique_ptr<ast::Node> FIELD_TYPE() {
+            UNIMPLEMENTED;
         }
 
         /** MAP_TYPE := '{' POD_TYPE '->' TYPE '}'
@@ -171,16 +339,148 @@ namespace rckid::dolang {
             return result;
         }
 
+        /** FUN_TYPE := 'fun' '(' LIST(ARG) ')' [ '->' [ 'optional' ] TYPE ]
+         */
         unique_ptr<ast::FunType> FUN_TYPE() {
-            return nullptr;
+            UNIMPLEMENTED;
         }
 
+        /** ARG := ident ':' TYPE [ '=' EXPR ]
+         */
+        unique_ptr<ast::Node> ARG() {
+            UNIMPLEMENTED;
+        }
+
+        /** EVENT_TYPE := 'event' '(' LIST(ARG) ')'
+         */
         unique_ptr<ast::EventType> EVENT_TYPE() {
-            return nullptr;
+            UNIMPLEMENTED;
         }
 
+        /** EXPR := IF | MATCH | OR_EXPR
+         */
         unique_ptr<ast::Node> EXPR() {
-            return nullptr;
+            UNIMPLEMENTED;
+        }
+
+        /** OR_EXPR := AND_EXPR { 'or' AND_EXPR }
+         */
+        unique_ptr<ast::Node> OR_EXPR() {
+            UNIMPLEMENTED;
+        }
+
+        /** AND_EXPR := NOT_EXPR { 'and' NOT_EXPR }
+         */
+        unique_ptr<ast::Node> AND_EXPR() {
+            UNIMPLEMENTED;
+        }
+
+        /** NOT_EXPR := 'not' NOT_EXPR | EQ_EXPR
+         */
+        unique_ptr<ast::Node> NOT_EXPR() {
+            UNIMPLEMENTED;
+        }
+
+        /** EQ_EXPR := CMP_EXPR { '==' CMP_EXPR }
+                     |= CMP_EXPR { '!=' CMP_EXPR }
+
+            Mixing == and != in a single chain is an error.
+         */
+        unique_ptr<ast::Node> EQ_EXPR() {
+            UNIMPLEMENTED;
+        }
+
+        /** CMP_EXPR := ADD_EXPR { ( '<' | '<=' | '>' | '>=' ) ADD_EXPR }
+         */
+        unique_ptr<ast::Node> CMP_EXPR() {
+            UNIMPLEMENTED;
+        }
+
+        /** ADD_EXPR := MUL_EXPR { ( '+' | '-' ) MUL_EXPR }
+         */
+        unique_ptr<ast::Node> ADD_EXPR() {
+            UNIMPLEMENTED;
+        }
+
+        /** MUL_EXPR := UNARY_EXPR { ( '*' | '/' ) UNARY_EXPR }
+         */
+        unique_ptr<ast::Node> MUL_EXPR() {
+            UNIMPLEMENTED;
+        }
+
+        /** UNARY_EXPR := ( '-' | 'clone' ) UNARY_EXPR | POSTFIX_EXPR
+         */
+        unique_ptr<ast::Node> UNARY_EXPR() {
+            UNIMPLEMENTED;
+        }
+
+        /** POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | PAREN_EXPR | 'orelse' ORELSE_RHS }
+         */
+        unique_ptr<ast::Node> POSTFIX_EXPR() {
+            UNIMPLEMENTED;
+        }
+
+        /** ORELSE_RHS := UNARY_EXPR | 'return' [ EXPR ] | 'break' | 'continue' | BLOCK
+         */
+        unique_ptr<ast::Node> ORELSE_RHS() {
+            UNIMPLEMENTED;
+        }
+
+        /** PRIMARY := LITERAL | ident | 'self' | 'none' | PAREN_EXPR
+         */
+        unique_ptr<ast::Node> PRIMARY() {
+            UNIMPLEMENTED;
+        }
+
+        /** LITERAL := number | string | 'true' | 'false'
+                     |= ARRAY_LITERAL | MAP_LITERAL | FUN_LITERAL
+         */
+        unique_ptr<ast::Node> LITERAL() {
+            UNIMPLEMENTED;
+        }
+
+        /** PAREN_EXPR := '(' LIST(NAMED_EXPR) ')'
+
+            Grouping, tuple literal, or call arguments, differentiated after parsing.
+         */
+        unique_ptr<ast::Node> PAREN_EXPR() {
+            UNIMPLEMENTED;
+        }
+
+        /** NAMED_EXPR := EXPR [ '=' EXPR ]
+         */
+        unique_ptr<ast::Node> NAMED_EXPR() {
+            UNIMPLEMENTED;
+        }
+
+        /** ARRAY_LITERAL := '[' LIST(EXPR) ']'
+         */
+        unique_ptr<ast::Node> ARRAY_LITERAL() {
+            UNIMPLEMENTED;
+        }
+
+        /** MAP_LITERAL := '{' LIST(MAP_ITEM) '}'
+         */
+        unique_ptr<ast::Node> MAP_LITERAL() {
+            UNIMPLEMENTED;
+        }
+
+        /** MAP_ITEM := EXPR '->' EXPR
+         */
+        unique_ptr<ast::Node> MAP_ITEM() {
+            UNIMPLEMENTED;
+        }
+
+        /** FUN_LITERAL := 'fun' [ '(' LIST(LAMBDA_ARG) ')' [ '->' [ 'optional' ] TYPE ] ] BLOCK
+         */
+        unique_ptr<ast::Node> FUN_LITERAL() {
+            UNIMPLEMENTED;
+        }
+
+        /** LAMBDA_ARG := ident [ ':' TYPE ] [ '=' EXPR ] | LITERAL
+         */
+        unique_ptr<ast::Node> LAMBDA_ARG() {
+            UNIMPLEMENTED;
         }
 
 #undef POP
@@ -230,7 +530,7 @@ namespace rckid::dolang {
                     // first check we can actually dedent
                     if (indentStack_.size() == 1) {
                         // we are at the top level, so this is an error
-                        next_.kind = TokenKind::Error;
+                        next_ = Token::error(next_.loc, "Unexpected dedent");
                         return next_;
                     }
                     Token result{next_};
@@ -238,7 +538,7 @@ namespace rckid::dolang {
                     result.payload =  indentStack_[indentStack_.size() - 2];
                     // if the level to which we are dedenting will be smaller than the newline indentation, its an error
                     if (next_.payload > result.payload) {
-                        next_.kind = TokenKind::Error;
+                        next_ = Token::error(next_.loc, "Unexpected dedent");
                         return next_;
                     }
                     return result;
@@ -290,6 +590,8 @@ namespace rckid::dolang {
         //@}
       
         Lexer lexer_;
+
+        Token error_;
 
     }; // dolang::Parser
 
