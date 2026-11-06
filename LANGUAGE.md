@@ -709,7 +709,7 @@ The lexer turns the source into a stream of tokens. It also handles all of the l
 
         +  -  *  /  =  +=  -=  *=  /=  ==  !=  <  <=  >  >=  ->  .  ,  :  |  (  )  [  ]  {  }
 
-Whitespace between tokens is ignored. Comments (`#` to the end of the line), empty lines and lines with only a comment are ignored entirely and do not affect the layout. Only spaces may be used for indentation, a tab in the indentation is an error. Since columns are only ever measured on the first token of a line, they are simply the number of leading spaces.
+Whitespace between tokens is ignored. Comments (`#` to the end of the line), empty lines and lines with only a comment are ignored entirely and do not affect the layout, with one exception: if the first non-empty line of the file is a comment, its indentation is the indentation of the top level. Only spaces may be used for indentation, a tab in the indentation is an error. Since columns are only ever measured on the first token of a line, they are simply the number of leading spaces.
 
 ## Layout
 

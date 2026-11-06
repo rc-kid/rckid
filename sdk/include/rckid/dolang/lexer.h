@@ -167,11 +167,7 @@ namespace rckid::dolang {
             // if we are at the beginning of the input, always parse newline telling the initial indent
             if (loc_.line == 0) {
                 loc_.line = 1;
-                // skip blank lines
-                while (condPop('\n'));
-                // determine first non-blank indentation
-                while (condPop(' '));
-                return Token{TokenKind::Newline, loc_, loc_.col - 1};
+                return parseNewline(true);
             }
             Location l = loc_;
             if (eof())
@@ -318,7 +314,7 @@ namespace rckid::dolang {
          
             The trick is that newline followed by an indentation (spaces) has different meaning based on the context of the lexer. 
          */
-        Token parseNewline() {
+        Token parseNewline(bool force = false) {
             while (! eof()) {
                 // we should be at the beginning of a line, so column should be 1
                 ASSERT(loc_.col == 1);
@@ -336,7 +332,7 @@ namespace rckid::dolang {
                 if (isWhitespace(top()))
                     return Token{TokenKind::Error, loc_};
                 // if next character is # (comment start), we just parse the comment, or ignore the line
-                if (top() == '#') {
+                if ((top() == '#')  && ! force) {
                     if (parseComments_) {
                         Location l = loc_;
                         pop();
@@ -351,7 +347,10 @@ namespace rckid::dolang {
                 // otherwise simply emit the newline token with indent as payload - the parser will then translate those tokens into the indent/dedent pairs, etc.
                 return Token{TokenKind::Newline, loc_, indent};
             }
-            return Token{TokenKind::EndOfFile, loc_};
+            if (force)
+                return Token{TokenKind::Newline, loc_, loc_.col - 1};
+            else
+                return Token{TokenKind::EndOfFile, loc_};
         }
 
         Token parseComment(Location loc) {

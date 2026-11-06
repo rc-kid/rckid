@@ -391,8 +391,22 @@ TEST(dolang, lexer_leadingEmptyLines) {
     EXPECT(isAt(t[0], 3, 3));
 }
 
+TEST(dolang, lexer_leadingCommentDefinesIndent) {
+    ClearPools clear_;
+    // if the first non-empty line is a comment, its indentation is the top level indentation
+    EXPECT(isNewline(initial("    # c\n    a"), 4));
+    EXPECT(isNewline(initial("\n  # c\na"), 2));
+    auto t = lex("  # c\n  a");
+    CHECK(t.size() == 3);
+    EXPECT(isComment(t[0], "# c"));
+    EXPECT(isNewline(t[1], 2));
+    EXPECT(isIdentifier(t[2], "a"));
+}
+
 TEST(dolang, lexer_tabIndentIsError) {
     ClearPools clear_;
+    EXPECT(initial("\ta") == TokenKind::Error);
+    EXPECT(initial("  \ta") == TokenKind::Error);
     EXPECT(kinds("a\n\tb") == std::vector<TokenKind>{TokenKind::Identifier, TokenKind::Error, TokenKind::Identifier});
     EXPECT(kinds("a\n  \tb") == std::vector<TokenKind>{TokenKind::Identifier, TokenKind::Error, TokenKind::Identifier});
 }
