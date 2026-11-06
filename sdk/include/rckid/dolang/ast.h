@@ -44,6 +44,24 @@ namespace rckid::dolang::ast {
 
         Node * parent() const { return parent_; }
 
+        void prettyPrint(Writer && w) const {
+            prettyPrint((Writer &)w);
+        }
+
+        /** Prints the node as source code, i.e. parsing the output gives the same AST.
+         */
+        virtual void prettyPrint(Writer & w, uint32_t indent = 0) const = 0;
+
+        void debugPrint(Writer && w) const {
+            debugPrint((Writer &)w);
+        }
+
+        virtual void debugPrint(Writer & w, uint32_t indent = 0) const {
+            for (uint32_t i = 0; i < indent; ++i)
+                w.putChar(' ');
+            w << kind << "@" << loc;
+        }
+
     protected:
 
         void markAsChild(Node * child) {
@@ -51,16 +69,6 @@ namespace rckid::dolang::ast {
                 return;
             ASSERT(child->parent_ == nullptr);
             child->parent_ = this;
-        }
-
-        void writeChild(Writer & w, Node const * child, uint32_t indent) const {
-            child->writeInto(w, indent);
-        }
-
-        virtual void writeInto(Writer & w, uint32_t indent) const = 0;
-
-        friend inline void write(Writer & w, Node const & node) {
-            node.writeInto(w, 0);
         }
 
         Node * parent_ = nullptr;
@@ -75,12 +83,9 @@ namespace rckid::dolang::ast {
 
         TextLiteral msg;
 
-    protected: 
-
-        void writeInto(Writer & w, [[maybe_unused]] uint32_t indent) const override {
+        void prettyPrint(Writer & w, [[maybe_unused]] uint32_t indent = 0) const override {
             w << "ERROR at (" << loc.line << ":" << loc.col << "): " << msg.c_str();
         }
-
     }; 
 
     class SequenceNode : public Node {
@@ -92,11 +97,7 @@ namespace rckid::dolang::ast {
             children_.push_back(std::move(child));
         }
 
-    protected:
-        
-        std::vector<std::unique_ptr<Node>> children_;
-
-        void writeInto(Writer & w, uint32_t indent) const override {
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             bool first = true;
             for (auto const & child : children_) {
                 if (first)
@@ -105,20 +106,30 @@ namespace rckid::dolang::ast {
                     w.putChar('\n');
                 for (uint32_t i = 0; i < indent; ++i)
                     w.putChar(' ');
-                writeChild(w, child.get(), indent + 2);
+                child->prettyPrint(w, indent + 2);
             }
         }
 
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << "\n";
+            for (auto const & child : children_) {
+                child->debugPrint(w, indent + 2);
+                w << "\n";
+            }
+        }
+
+    protected:
+        
+        std::vector<std::unique_ptr<Node>> children_;
     }; 
 
     class Program : public SequenceNode {
     public:
         Program(Location loc): SequenceNode{Kind::Program, loc} { }
-    
-    protected:
 
-        void writeInto(Writer & w, uint32_t indent) const override {
-            SequenceNode::writeInto(w, indent);
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            SequenceNode::prettyPrint(w, indent);
             w << "\n";
         }
     };
@@ -133,9 +144,7 @@ namespace rckid::dolang::ast {
         SymbolName(Location loc, Symbol name): Node{Kind::SymbolName, loc}, name{name} { }
         Symbol name;
 
-    protected:
-
-        void writeInto(Writer & w, uint32_t indent) const override {
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             w << name.c_str();
         }
     };
@@ -144,10 +153,8 @@ namespace rckid::dolang::ast {
     public:
         UseDecl(Location loc, Symbol module): Node{Kind::UseDecl, loc}, module{module} { }
         Symbol module;
-    
-    protected:
-        
-        void writeInto(Writer & w, uint32_t indent) const override {
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             w << "use " << module.c_str();
         }
    };
@@ -175,12 +182,7 @@ namespace rckid::dolang::ast {
             value_ = std::move(child);
         }
 
-    protected:
-
-        unique_ptr<Node> type_;
-        unique_ptr<Node> value_;
-
-        void writeInto(Writer & w, uint32_t indent) const override {
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             switch (binding) {
                 case TokenKind::kwGlobal:
                     w << "global ";
@@ -197,14 +199,18 @@ namespace rckid::dolang::ast {
             w << name.c_str();
             if (type_ != nullptr) {
                 w << " : ";
-                writeChild(w, type_.get(), indent);
+                type_->prettyPrint(w, indent);
             }
             if (value_ != nullptr) {
                 w << " = ";
-                writeChild(w, value_.get(), indent);
+                value_->prettyPrint(w, indent);
             }
         }
 
+    protected:
+
+        unique_ptr<Node> type_;
+        unique_ptr<Node> value_;
     };
 
     class FunDecl : public Node {
@@ -236,15 +242,7 @@ namespace rckid::dolang::ast {
             body_ = std::move(child);
         }
 
-    protected:
-
-        Symbol name_;
-        Symbol className_;
-        unique_ptr<Node> returnType_;
-        bool optionalReturn_ = false;
-        unique_ptr<Block> body_;
-    
-        void writeInto(Writer & w, uint32_t indent) const override {
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             w << "fun " << name_.c_str() << "(";
             // TODO ags
             w << ")";
@@ -252,21 +250,36 @@ namespace rckid::dolang::ast {
                 w << " -> ";
                 if (optionalReturn_)
                     w << "optional ";
-                writeChild(w, returnType_.get(), indent);
+                returnType_->prettyPrint(w, indent);
             }
             ASSERT(body_ != nullptr);
             w << "\n";
-            writeChild(w, body_.get(), indent + 2);
+            body_->prettyPrint(w, indent + 2);
         }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            if (isMethod())
+                w << className_.c_str() << ".";
+            w << name_.c_str();
+            w << "\n";
+            body_->debugPrint(w, indent + 2);
+        }
+
+    protected:
+
+        Symbol name_;
+        Symbol className_;
+        unique_ptr<Node> returnType_;
+        bool optionalReturn_ = false;
+        unique_ptr<Block> body_;
     };
 
     class TypeDecl : public Node {
     public:
         TypeDecl(Location loc): Node{Kind::TypeDecl, loc} { } 
 
-    protected:
-    
-        void writeInto(Writer & w, uint32_t indent) const override {
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             UNIMPLEMENTED;
         }
     };
@@ -275,9 +288,7 @@ namespace rckid::dolang::ast {
     public:
         EnumDecl(Location loc): Node{Kind::EnumDecl, loc} { }
 
-    protected:
-    
-        void writeInto(Writer & w, uint32_t indent) const override {
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             UNIMPLEMENTED;
         }
     };
@@ -292,26 +303,23 @@ namespace rckid::dolang::ast {
             elementType_ = std::move(child);
         }
 
-    protected:
-        unique_ptr<Node> elementType_;
-
-        void writeInto(Writer & w, uint32_t indent) const override {
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             w << "[";
-            writeChild(w, elementType_.get(), indent);
+            elementType_->prettyPrint(w, indent);
             w << "]";
         }
+
+    protected:
+        unique_ptr<Node> elementType_;
     };
 
     class TupleType : public SequenceNode {
     public:
         TupleType(Location loc): SequenceNode{Kind::TupleType, loc} { }
 
-    protected:
-    
-        void writeInto(Writer & w, uint32_t indent) const override {
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             UNIMPLEMENTED;
         }
-
     };
 
     class MapType : public Node {
@@ -330,36 +338,31 @@ namespace rckid::dolang::ast {
             valueType_ = std::move(child);
         }
 
-    protected:
-        unique_ptr<Node> keyType_;
-        unique_ptr<Node> valueType_;
-
-        void writeInto(Writer & w, uint32_t indent) const override {
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             w << "{";
-            writeChild(w, keyType_.get(), indent);
+            keyType_->prettyPrint(w, indent);
             w << " -> ";
-            writeChild(w, valueType_.get(), indent);
+            valueType_->prettyPrint(w, indent);
             w << "}";
         }
 
+    protected:
+        unique_ptr<Node> keyType_;
+        unique_ptr<Node> valueType_;
     };
 
     class FunType : public Node {
+    public:
 
-    protected:
-    
-        void writeInto(Writer & w, uint32_t indent) const override {
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             UNIMPLEMENTED;
         }
-
     };
 
     class EventType : public Node {
+    public:
 
-
-    protected:
-    
-        void writeInto(Writer & w, uint32_t indent) const override {
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             UNIMPLEMENTED;
         }
     };
@@ -370,9 +373,7 @@ namespace rckid::dolang::ast {
     public:
         Assign(Location loc): Node{Kind::Assign, loc} { }
 
-    protected:
-    
-        void writeInto(Writer & w, uint32_t indent) const override {
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             UNIMPLEMENTED;
         }
     };
@@ -383,9 +384,7 @@ namespace rckid::dolang::ast {
     public:
         Break(Location loc): Node{Kind::Break, loc} { }
 
-    protected:
-    
-        void writeInto(Writer & w, uint32_t indent) const override {
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             w << "break";
         }
     };
@@ -394,9 +393,7 @@ namespace rckid::dolang::ast {
     public:
         Continue(Location loc): Node{Kind::Continue, loc} { }
 
-    protected:
-    
-        void writeInto(Writer & w, uint32_t indent) const override {
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             w << "continue";
         }
     };
@@ -409,14 +406,15 @@ namespace rckid::dolang::ast {
             markAsChild(child.get());
             value_ = std::move(child);
         }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << "test ";
+            value_->prettyPrint(w, indent);
+        }
+
     protected:
     
         unique_ptr<Node> value_;
-   
-        void writeInto(Writer & w, uint32_t indent) const override {
-            w << "test ";
-            writeChild(w, value_.get(), indent);
-        }
     };
 
     class Write : public Node {
@@ -428,14 +426,46 @@ namespace rckid::dolang::ast {
             markAsChild(child.get());
             value_ = std::move(child);
         }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << "write ";
+            value_->prettyPrint(w, indent);
+        }
+
     protected:
     
         unique_ptr<Node> value_;
-
-        void writeInto(Writer & w, uint32_t indent) const override {
-            w << "write ";
-            writeChild(w, value_.get(), indent);
-        }
     }; 
 
 } // namespace rckid::dolang::ast
+
+inline void write(Writer & w, rckid::dolang::ast::Kind kind) {
+    using namespace rckid::dolang::ast;
+    switch (kind) {
+        case Kind::ArrayType: w << "ArrayType"; break;
+        case Kind::Assign: w << "Assign"; break;
+        case Kind::Block: w << "Block"; break;
+        case Kind::Break: w << "Break"; break;
+        case Kind::Continue: w << "Continue"; break;
+        case Kind::Error: w << "Error"; break;
+        case Kind::EventType: w << "EventType"; break;
+        case Kind::FunDecl: w << "FunDecl"; break;
+        case Kind::FunType: w << "FunType"; break;
+        case Kind::MapType: w << "MapType"; break;
+        case Kind::Program: w << "Program"; break;
+        case Kind::SymbolName: w << "SymbolName"; break;
+        case Kind::Test: w << "Test"; break;
+        case Kind::TupleType: w << "TupleType"; break;
+        case Kind::TypeDecl: w << "TypeDecl"; break;
+        case Kind::UseDecl: w << "UseDecl"; break;
+        case Kind::VarDecl: w << "VarDecl"; break;
+        case Kind::Write: w << "Write"; break;
+        default: w << "unknown (id " << static_cast<int>(kind) << ")"; break;
+    }
+}
+
+inline void write(Writer & w, rckid::dolang::ast::Node const * node) {
+    using namespace rckid::dolang::ast;
+    node->debugPrint(w);
+}
+

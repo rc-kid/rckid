@@ -24,6 +24,10 @@ namespace rckid::dolang {
 
     static_assert(sizeof(Location) == 4, "Location should be 4 bytes");
 
+    inline void write(Writer & w, Location const & loc) {
+        w << "(" << loc.line << ":" << loc.col << ")";
+    }   
+
     enum class TokenKind {
         EndOfFile,
         Newline,

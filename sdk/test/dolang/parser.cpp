@@ -27,10 +27,16 @@ namespace {
     /** True if parsing the source and printing it back gives the same source. If not, prints both, so that the failure can be seen in the test output. 
      */
     bool roundTrips(char const * source) {
-        String result{STR(*parse(source))};
+        StringBuilder sb;
+        auto parsed = parse(source);
+        parsed->prettyPrint(sb.writer());
+        String result{sb.str()};
         if (result == source)
             return true;
         std::cout << std::endl << "    expected: " << escaped(source).c_str() << std::endl << "    actual:   " << escaped(result).c_str() << std::endl;
+        StringBuilder dbg;
+        parsed->debugPrint(dbg.writer());
+        std::cout << dbg.str().c_str();
         return false;
     }
 
@@ -119,13 +125,12 @@ TEST(dolang, parser_functionDefinition) {
     EXPECT(roundTrips("fun f() -> num\n    break\n"));
     EXPECT(roundTrips("fun f() -> optional num\n    break\n"));
 }
-
 /*
 TEST(dolang, parser_twoFunctions) {
     ClearPools clear_;
     EXPECT(roundTrips("fun f()\n    break\nfun g() -> num\n    break\n   continue\n"));
 }
-*/
+    */
 
 // ------------------------------------------------------------------------------------------------
 // errors
