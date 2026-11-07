@@ -26,11 +26,14 @@ namespace rckid::dolang::ast {
 
 
         Assign,
+        BinaryOp,
+        UnaryOp,
 
         Break,
         Continue,
         Test,
         Write,
+        Return,
 
     };
     
@@ -144,7 +147,17 @@ namespace rckid::dolang::ast {
         SymbolName(Location loc, Symbol name): Node{Kind::SymbolName, loc}, name{name} { }
         Symbol name;
 
+        SymbolName(Token const & t): 
+            Node{Kind::SymbolName, t.loc}, 
+            name{t.asSymbol()} {
+        }
+
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << name.c_str();
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
             w << name.c_str();
         }
     };
@@ -204,6 +217,19 @@ namespace rckid::dolang::ast {
             if (value_ != nullptr) {
                 w << " = ";
                 value_->prettyPrint(w, indent);
+            }
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << binding << " " << name.c_str();
+            if (type_ != nullptr) {
+                w << "\n";
+                type_->debugPrint(w, indent + 2);
+            }
+            if (value_ != nullptr) {
+                w << "\n";
+                value_->debugPrint(w, indent + 2);
             }
         }
 
@@ -371,12 +397,118 @@ namespace rckid::dolang::ast {
 
     class Assign : public Node {
     public:
-        Assign(Location loc): Node{Kind::Assign, loc} { }
+        Assign(Token const & op): 
+            Node{Kind::Assign, op.loc},
+            op_{op.kind}
+        {
+            ASSERT(op.isAssignmentOperator());
+        }
+
+        Node * left() const { return left_.get(); }
+        void setLeft(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            left_ = std::move(child);
+        }
+
+        Node * right() const { return right_.get(); }
+        void setRight(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            right_ = std::move(child);
+        }
 
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
-            UNIMPLEMENTED;
+            left_->prettyPrint(w, indent);
+            w << " " << op_ << " ";
+            right_->prettyPrint(w, indent);
         }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << op_ << "\n";
+            left_->debugPrint(w, indent + 2);
+            w << "\n";
+            right_->debugPrint(w, indent + 2);
+        }
+
+    private:
+        TokenKind op_;
+        unique_ptr<Node> left_;
+        unique_ptr<Node> right_;
     };
+
+    class BinaryOp : public Node {
+    public:
+        BinaryOp(Token const & op): 
+            Node{Kind::BinaryOp, op.loc},
+            op_{op.kind} 
+        { 
+            ASSERT(op.isBinaryOperator());
+        }
+
+        Node * left() const { return left_.get(); }
+        void setLeft(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            left_ = std::move(child);
+        }
+
+        Node * right() const { return right_.get(); }
+        void setRight(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            right_ = std::move(child);
+        }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            left_->prettyPrint(w, indent);
+            w << " " << op_ << " ";
+            right_->prettyPrint(w, indent);
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << op_ << "\n";
+            left_->debugPrint(w, indent + 2);
+            w << "\n";
+            right_->debugPrint(w, indent + 2);
+        }
+
+    protected:
+        TokenKind op_;
+        unique_ptr<Node> left_;
+        unique_ptr<Node> right_;
+    }; 
+
+    class UnaryOp : public Node {
+    public:
+        UnaryOp(Token const & op): 
+            Node{Kind::UnaryOp, op.loc},
+            op_{op.kind} 
+        { 
+            ASSERT(op.isUnaryOperator());
+        }
+
+        Node * operand() const { return operand_.get(); }
+        void setOperand(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            operand_ = std::move(child);
+        }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << op_;
+            if (op_ != TokenKind::opSub) // no space for minus sign
+                w << " ";
+            operand_->prettyPrint(w, indent);
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << op_ << "\n";
+            operand_->debugPrint(w, indent + 2);
+        }
+
+    protected:
+        TokenKind op_;
+        unique_ptr<Node> operand_;
+    }; 
 
 
 
@@ -396,6 +528,36 @@ namespace rckid::dolang::ast {
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             w << "continue";
         }
+    };
+
+    class Return : public Node {
+    public:
+        Return(Location loc): Node{Kind::Return, loc} { }
+
+        Node * value() const { return value_.get(); }
+        void setValue(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            value_ = std::move(child);
+        }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << "return";
+            if (value_ != nullptr) {
+                w << " ";
+                value_->prettyPrint(w, indent);
+            }
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            if (value_ != nullptr) {
+                w << "\n";
+                value_->debugPrint(w, indent + 2);
+            }
+        }
+
+    protected:
+        unique_ptr<Node> value_;
     };
 
     class Test : public Node {
@@ -444,6 +606,7 @@ inline void write(Writer & w, rckid::dolang::ast::Kind kind) {
     switch (kind) {
         case Kind::ArrayType: w << "ArrayType"; break;
         case Kind::Assign: w << "Assign"; break;
+        case Kind::BinaryOp: w << "BinaryOp"; break;
         case Kind::Block: w << "Block"; break;
         case Kind::Break: w << "Break"; break;
         case Kind::Continue: w << "Continue"; break;
@@ -453,10 +616,12 @@ inline void write(Writer & w, rckid::dolang::ast::Kind kind) {
         case Kind::FunType: w << "FunType"; break;
         case Kind::MapType: w << "MapType"; break;
         case Kind::Program: w << "Program"; break;
+        case Kind::Return: w << "Return"; break;
         case Kind::SymbolName: w << "SymbolName"; break;
         case Kind::Test: w << "Test"; break;
         case Kind::TupleType: w << "TupleType"; break;
         case Kind::TypeDecl: w << "TypeDecl"; break;
+        case Kind::UnaryOp: w << "UnaryOp"; break;
         case Kind::UseDecl: w << "UseDecl"; break;
         case Kind::VarDecl: w << "VarDecl"; break;
         case Kind::Write: w << "Write"; break;

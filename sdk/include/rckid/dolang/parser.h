@@ -214,7 +214,21 @@ namespace rckid::dolang {
         /** EXPR_STMT := EXPR [ ( '=' | '+=' | '-=' | '*=' | '/=' ) EXPR ]
          */
         unique_ptr<ast::Node> EXPR_STMT() {
-            UNIMPLEMENTED;
+            auto result = TRY(EXPR());
+            switch (top().kind) {
+                case TokenKind::opAssign:
+                case TokenKind::opAddAssign:
+                case TokenKind::opSubAssign:
+                case TokenKind::opMulAssign:
+                case TokenKind::opDivAssign: {
+                    auto assign = std::make_unique<ast::Assign>(pop());
+                    assign->setLeft(std::move(result));
+                    assign->setRight(TRY(EXPR()));
+                    return assign;
+                }
+                default:
+                    return result;
+            }
         }
 
         /** RETURN_STMT := 'return' [ EXPR ]
@@ -222,7 +236,10 @@ namespace rckid::dolang {
             There is no value when the next token is newline, or dedent.
          */
         unique_ptr<ast::Node> RETURN_STMT() {
-            UNIMPLEMENTED;
+            auto result = std::make_unique<ast::Return>(POP(TokenKind::kwReturn).loc);
+            if (top().kind != TokenKind::Newline && top().kind != TokenKind::Dedent)
+                result->setValue(TRY(EXPR()));
+            return result;
         }
 
         /** IF := 'if' EXPR 'then' ( BLOCK [ [ newline ] 'else' BODY ] | EXPR [ 'else' BODY ] )
@@ -361,25 +378,52 @@ namespace rckid::dolang {
         /** EXPR := IF | MATCH | OR_EXPR
          */
         unique_ptr<ast::Node> EXPR() {
-            UNIMPLEMENTED;
+            switch (top().kind) {
+                case TokenKind::kwIf:
+                    return IF();
+                case TokenKind::kwMatch:
+                    return MATCH();
+                default:
+                    return OR_EXPR();
+            }
         }
 
         /** OR_EXPR := AND_EXPR { 'or' AND_EXPR }
          */
         unique_ptr<ast::Node> OR_EXPR() {
-            UNIMPLEMENTED;
+            auto result = TRY(AND_EXPR());
+            while (top() == TokenKind::kwOr) {
+                auto orExpr = std::make_unique<ast::BinaryOp>(pop());
+                orExpr->setLeft(std::move(result));
+                orExpr->setRight(TRY(AND_EXPR()));
+                result = std::move(orExpr);
+            }
+            return result;
         }
 
         /** AND_EXPR := NOT_EXPR { 'and' NOT_EXPR }
          */
         unique_ptr<ast::Node> AND_EXPR() {
-            UNIMPLEMENTED;
+            auto result = TRY(NOT_EXPR());
+            while (top() == TokenKind::kwAnd) {
+                auto orExpr = std::make_unique<ast::BinaryOp>(pop());
+                orExpr->setLeft(std::move(result));
+                orExpr->setRight(TRY(NOT_EXPR()));
+                result = std::move(orExpr);
+            }
+            return result;
         }
 
         /** NOT_EXPR := 'not' NOT_EXPR | EQ_EXPR
          */
         unique_ptr<ast::Node> NOT_EXPR() {
-            UNIMPLEMENTED;
+            if (top() == TokenKind::kwNot) {
+                auto notExpr = std::make_unique<ast::UnaryOp>(pop());
+                notExpr->setOperand(TRY(NOT_EXPR()));
+                return notExpr;
+            } else {
+                return EQ_EXPR();
+            }
         }
 
         /** EQ_EXPR := CMP_EXPR { '==' CMP_EXPR }
@@ -388,37 +432,119 @@ namespace rckid::dolang {
             Mixing == and != in a single chain is an error.
          */
         unique_ptr<ast::Node> EQ_EXPR() {
-            UNIMPLEMENTED;
+            auto result = TRY(CMP_EXPR());
+            if (top() == TokenKind::opEquals) {
+                do {
+                    auto eqExpr = std::make_unique<ast::BinaryOp>(pop());
+                    eqExpr->setLeft(std::move(result));
+                    eqExpr->setRight(TRY(CMP_EXPR()));
+                    result = std::move(eqExpr);
+                } while (top() == TokenKind::opEquals);
+            } else if (top() == TokenKind::opNotEquals) {
+                do {
+                    auto neqExpr = std::make_unique<ast::BinaryOp>(pop());
+                    neqExpr->setLeft(std::move(result));
+                    neqExpr->setRight(TRY(CMP_EXPR()));
+                    result = std::move(neqExpr);
+                } while (top() == TokenKind::opNotEquals);
+            } else {
+                return result;
+            }
+            return result;
         }
 
         /** CMP_EXPR := ADD_EXPR { ( '<' | '<=' | '>' | '>=' ) ADD_EXPR }
          */
         unique_ptr<ast::Node> CMP_EXPR() {
-            UNIMPLEMENTED;
+            auto result = TRY(ADD_EXPR());
+            while (true) {
+                switch (top().kind) {
+                    case TokenKind::opLess:
+                    case TokenKind::opLessEquals:
+                    case TokenKind::opGreater:
+                    case TokenKind::opGreaterEquals: {
+                        auto cmpExpr = std::make_unique<ast::BinaryOp>(pop());
+                        cmpExpr->setLeft(std::move(result));
+                        cmpExpr->setRight(TRY(ADD_EXPR()));
+                        result = std::move(cmpExpr);
+                        break;
+                    }
+                    default:
+                        return result;
+                }
+            }
         }
 
         /** ADD_EXPR := MUL_EXPR { ( '+' | '-' ) MUL_EXPR }
          */
         unique_ptr<ast::Node> ADD_EXPR() {
-            UNIMPLEMENTED;
+            auto result = TRY(MUL_EXPR());
+            while (true) {
+                switch (top().kind) {
+                    case TokenKind::opAdd:
+                    case TokenKind::opSub: { 
+                        auto cmpExpr = std::make_unique<ast::BinaryOp>(pop());
+                        cmpExpr->setLeft(std::move(result));
+                        cmpExpr->setRight(TRY(MUL_EXPR()));
+                        result = std::move(cmpExpr);
+                        break;
+                    }
+                    default:
+                        return result;
+                }
+            }
         }
 
         /** MUL_EXPR := UNARY_EXPR { ( '*' | '/' ) UNARY_EXPR }
          */
         unique_ptr<ast::Node> MUL_EXPR() {
-            UNIMPLEMENTED;
-        }
+           auto result = TRY(UNARY_EXPR());
+            while (true) {
+                switch (top().kind) {
+                    case TokenKind::opMul:
+                    case TokenKind::opDiv: { 
+                        auto cmpExpr = std::make_unique<ast::BinaryOp>(pop());
+                        cmpExpr->setLeft(std::move(result));
+                        cmpExpr->setRight(TRY(UNARY_EXPR()));
+                        result = std::move(cmpExpr);
+                        break;
+                    }
+                    default:
+                        return result;
+                }
+            }
+         }
 
         /** UNARY_EXPR := ( '-' | 'clone' ) UNARY_EXPR | POSTFIX_EXPR
          */
         unique_ptr<ast::Node> UNARY_EXPR() {
-            UNIMPLEMENTED;
+            switch (top().kind) {
+                case TokenKind::opSub:
+                case TokenKind::kwClone: {
+                    auto unaryExpr = std::make_unique<ast::UnaryOp>(pop());
+                    unaryExpr->setOperand(TRY(UNARY_EXPR()));
+                    return unaryExpr;
+                }
+                default:
+                    return POSTFIX_EXPR();
+            }
         }
 
         /** POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | PAREN_EXPR | 'orelse' ORELSE_RHS }
          */
         unique_ptr<ast::Node> POSTFIX_EXPR() {
-            UNIMPLEMENTED;
+            auto result = TRY(PRIMARY());
+            while (true) {
+                switch (top().kind) {
+                    case TokenKind::opDot:
+                    case TokenKind::opSquareOpen:
+                    case TokenKind::opParOpen:
+                    case TokenKind::kwOrElse: // TODO really here, thegrammar seems wrong
+                        UNIMPLEMENTED;
+                    default:
+                        return result;
+                }
+            }
         }
 
         /** ORELSE_RHS := UNARY_EXPR | 'return' [ EXPR ] | 'break' | 'continue' | BLOCK
@@ -428,15 +554,26 @@ namespace rckid::dolang {
         }
 
         /** PRIMARY := LITERAL | ident | 'self' | 'none' | PAREN_EXPR
+            LITERAL := number | string | 'true' | 'false'
+                    |= ARRAY_LITERAL | MAP_LITERAL | FUN_LITERAL
          */
         unique_ptr<ast::Node> PRIMARY() {
-            UNIMPLEMENTED;
-        }
-
-        /** LITERAL := number | string | 'true' | 'false'
-                     |= ARRAY_LITERAL | MAP_LITERAL | FUN_LITERAL
-         */
-        unique_ptr<ast::Node> LITERAL() {
+            switch (top().kind) {
+                case TokenKind::Number:
+                case TokenKind::Text:
+                    UNIMPLEMENTED;  
+                case TokenKind::kwTrue:
+                case TokenKind::kwFalse:
+                case TokenKind::kwNone:
+                case TokenKind::kwSelf:
+                case TokenKind::Identifier:
+                    return std::make_unique<ast::SymbolName>(pop());
+                case TokenKind::opParOpen:
+                    return PAREN_EXPR();
+                default:
+                    error_ = Token::error(top().loc, STR("Expected primary expression, got " << top().kind));
+                    return nullptr;
+            }
             UNIMPLEMENTED;
         }
 

@@ -140,7 +140,65 @@ namespace rckid::dolang {
         bool operator == (TokenKind k) const { return kind == k; }
         bool operator != (TokenKind k) const { return kind != k; }
 
-        bool isKeyword() const { return kind >= TokenKind::kwAnd && kind <= TokenKind::kwXor; }
+        bool isKeyword() const { return isKeyword(kind); }
+        bool isBinaryOperator() const { return isBinaryOperator(kind); }
+        bool isUnaryOperator() const { return isUnaryOperator(kind); }
+        bool isAssignmentOperator() const { return isAssignmentOperator(kind); }
+
+        static bool isKeyword(TokenKind k) { 
+            return k >= TokenKind::kwAnd && k <= TokenKind::kwXor; 
+        }
+
+        static bool isBinaryOperator(TokenKind k) {
+            switch (k) {
+                case TokenKind::opAdd:
+                case TokenKind::opSub:
+                case TokenKind::opMul:
+                case TokenKind::opDiv:
+                case TokenKind::opPipe:
+                case TokenKind::opAssign:
+                case TokenKind::opAddAssign:
+                case TokenKind::opSubAssign:
+                case TokenKind::opMulAssign:
+                case TokenKind::opDivAssign:
+                case TokenKind::opEquals:
+                case TokenKind::opNotEquals:
+                case TokenKind::opLess:
+                case TokenKind::opLessEquals:
+                case TokenKind::opGreater:
+                case TokenKind::opGreaterEquals:
+                case TokenKind::kwAnd:
+                case TokenKind::kwOr:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        static bool isUnaryOperator(TokenKind k) {
+            switch (k) {
+                case TokenKind::opNot:
+                case TokenKind::opSub:
+                case TokenKind::kwNot:
+                case TokenKind::kwClone:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        static bool isAssignmentOperator(TokenKind k) {
+            switch (k) {
+                case TokenKind::opAssign:
+                case TokenKind::opAddAssign:
+                case TokenKind::opSubAssign:
+                case TokenKind::opMulAssign:
+                case TokenKind::opDivAssign:
+                    return true;
+                default:
+                    return false;
+            }
+        }
 
         /** Identifiers and keywords carry the symbol of their name. */
         Symbol asSymbol() const {
@@ -521,11 +579,73 @@ namespace rckid::dolang {
             case TokenKind::Number: w << "Number"; break;
             case TokenKind::Text: w << "Text"; break;
             case TokenKind::Comment: w << "Comment"; break;
-            default:
-                if (kind >= TokenKind::kwAnd && kind <= TokenKind::kwXor)
-                    w << "Keyword(" << static_cast<int>(kind) << ")";
-                else
-                    w << "Operator(" << static_cast<int>(kind) << ")";
+            case TokenKind::opAdd: w << '+'; break;
+            case TokenKind::opSub: w << '-'; break;
+            case TokenKind::opMul: w << '*'; break;
+            case TokenKind::opDiv: w << '/'; break;
+            case TokenKind::opPipe: w << '|'; break;
+            case TokenKind::opAssign: w << '='; break;
+            case TokenKind::opAddAssign: w << "+="; break;
+            case TokenKind::opSubAssign: w << "-="; break;
+            case TokenKind::opMulAssign: w << "*="; break;
+            case TokenKind::opDivAssign: w << "/="; break;
+            case TokenKind::opColon: w << ':'; break;
+            case TokenKind::opComma: w << ','; break;
+            case TokenKind::opDot: w << '.'; break;
+            case TokenKind::opArrow: w << "->"; break;
+            case TokenKind::opParOpen: w << '('; break;
+            case TokenKind::opParClose: w << ')'; break;
+            case TokenKind::opSquareOpen: w << '['; break;
+            case TokenKind::opSquareClose: w << ']'; break;
+            case TokenKind::opCurlyOpen: w << '{'; break;
+            case TokenKind::opCurlyClose: w << '}'; break;
+            case TokenKind::opEquals: w << "=="; break;
+            case TokenKind::opNotEquals: w << "!="; break;
+            case TokenKind::opLess: w << '<'; break;
+            case TokenKind::opLessEquals: w << "<="; break;
+            case TokenKind::opGreater: w << '>'; break;
+            case TokenKind::opGreaterEquals: w << ">="; break;
+            case TokenKind::opNot: w << '!'; break;
+            case TokenKind::kwAnd: w << "and"; break;
+            case TokenKind::kwBool: w << "bool"; break;
+            case TokenKind::kwBreak: w << "break"; break;
+            case TokenKind::kwClone: w << "clone"; break;
+            case TokenKind::kwConst: w << "const"; break;
+            case TokenKind::kwConstructor: w << "constructor"; break;
+            case TokenKind::kwContinue: w << "continue"; break;
+            case TokenKind::kwDo: w << "do"; break;
+            case TokenKind::kwElse: w << "else"; break;
+            case TokenKind::kwEnum: w << "enum"; break;
+            case TokenKind::kwEvent: w << "event"; break;
+            case TokenKind::kwExtends: w << "extends"; break;
+            case TokenKind::kwFalse: w << "false"; break;
+            case TokenKind::kwFor: w << "for"; break;
+            case TokenKind::kwFun: w << "fun"; break;
+            case TokenKind::kwGlobal: w << "global"; break;
+            case TokenKind::kwIf: w << "if"; break;
+            case TokenKind::kwIn: w << "in"; break;
+            case TokenKind::kwIs: w << "is"; break;
+            case TokenKind::kwLet: w << "let"; break;
+            case TokenKind::kwMatch: w << "match"; break;
+            case TokenKind::kwNone: w << "none"; break;
+            case TokenKind::kwNot: w << "not"; break;
+            case TokenKind::kwNum: w << "num"; break;
+            case TokenKind::kwOptional: w << "optional"; break;
+            case TokenKind::kwOr: w << "or"; break;
+            case TokenKind::kwOrElse: w << "orelse"; break;
+            case TokenKind::kwReturn: w << "return"; break;
+            case TokenKind::kwSelf: w << "self"; break;
+            case TokenKind::kwStep: w << "step"; break;
+            case TokenKind::kwTest: w << "test"; break;
+            case TokenKind::kwText: w << "text"; break;
+            case TokenKind::kwThen: w << "then"; break;
+            case TokenKind::kwTrue: w << "true"; break;
+            case TokenKind::kwType: w << "type"; break;
+            case TokenKind::kwUse: w << "use"; break;
+            case TokenKind::kwWhile: w << "while"; break;
+            case TokenKind::kwWith: w << "with"; break;
+            case TokenKind::kwWrite: w << "write"; break;
+            case TokenKind::kwXor: w << "xor"; break;
         }
     }
 

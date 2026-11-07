@@ -70,10 +70,10 @@ public:
         return (day_ != other.day_) || (month_ != other.month_) || (year_ != other.year_);
     };
 
-    uint8_t day() const { return day_; }
-    uint8_t month() const { return month_ & 0x0f; }
-    Month monthName() const { return static_cast<Month>(month()); }
-    uint16_t year() const { return ((month_ & 0xf0) << 4) | year_; }
+    constexpr uint8_t day() const { return day_; }
+    constexpr uint8_t month() const { return month_ & 0x0f; }
+    constexpr Month monthName() const { return static_cast<Month>(month()); }
+    constexpr uint16_t year() const { return ((month_ & 0xf0) << 4) | year_; }
 
     /** Converts the date to Modified Julian Day (MJD).
 
@@ -159,7 +159,7 @@ public:
 
     DayOfWeek dayOfWeek() const { return dayOfWeek(day_, month(), year()); }
 
-    uint8_t daysInMonth() const { return daysInMonth(month(), year()); }
+    constexpr uint8_t daysInMonth() const { return daysInMonth(month(), year()); }
 
     /** Increments the date by one day.
      */
@@ -231,7 +231,7 @@ public:
         return (year % 100 != 0) || (year % 400 == 0);
     }
 
-    static uint8_t daysInMonth(uint8_t month, uint16_t year) {
+    constexpr static uint8_t daysInMonth(uint8_t month, uint16_t year) {
         switch (month) {
             case 1: // Jan
             case 3: // Mar
