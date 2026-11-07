@@ -704,7 +704,7 @@ The parser keeps a stack of indentations, starting with the indentation of the t
 
 A `newline` with indentation `c` is translated as follows:
 
-1. `c == I`: `newline` is emitted, i.e. a new statement (or a new line of items) starts.
+1. `c == I`: `newline` is emitted, i.e. a new statement (or a new line of items) starts. The only exception is a line starting with `else`, which never starts a statement, so no `newline` is emitted and the `else` continues the `if` (or `match`) statement.
 2. `c > I`: if the block start flag is set, `indent` is emitted and `c` is pushed on the stack. Otherwise the line is a continuation and nothing is emitted.
 3. `c < I`: `dedent` is emitted and `I` is popped from the stack. This is repeated as long as `c < I`, after which rule 1 applies. If `c` falls between two indentations on the stack, it is an error.
 
@@ -737,13 +737,13 @@ produces the following tokens:
 - statements, as well as lines of items in multi-line brackets, are separated by `newline`
 - multi-line brackets are `indent` ... `dedent` inside the bracket tokens, followed by `newline` when the closing bracket is on its own line at the indentation of the line with the opening bracket
 - single line brackets contain no layout tokens at all, unless they contain blocks
-- `else` after a block arrives as `dedent newline 'else'`. The parser must look one token past the `newline` to decide whether the `if` statement continues
+- `else` after a block arrives as `dedent 'else'`, without `newline`
 
 # Appendix B - Grammar
 
 The grammar works on the tokens produced by the lexer (see Appendix A). Nonterminals are uppercase, terminals are either quoted (`'if'`, `'('`), or lowercase: `ident`, `number`, `string` and the layout tokens `newline`, `indent` and `dedent`. `[ X ]` is optional, `{ X }` is repeated zero or more times and `|` separates alternatives (`|=` continues the alternatives on the next line).
 
-The grammar is LL(1) with a single exception: after an `if` statement with a `BLOCK` body, `newline 'else'` continues the `if`, while `newline` alone ends the statement. The parser must therefore look at the token after `newline` (see `IF_STMT`).
+The grammar is LL(1). Note that a line starting with `else` never produces `newline` (see Appendix A), so `else` after a block follows its `dedent` directly.
 
 ## Common Rules
 
@@ -807,21 +807,21 @@ Statements that can appear inside function bodies. The `if` and `match` expressi
 
 Local variable declarations, assignments and standalone expressions. Assignment is only allowed at the root of the expression statement. Whether the left hand side can be assigned to is a semantic check. `return` value is optional, there is no value when the next token is `newline`, or `dedent`. The same holds for `return` used as the fallback of `orelse`, where the value is also absent when the next token ends the enclosing list (`)`, `]`, `}`, or `,`).
 
-    IF_STMT := 'if' EXPR 'then' BLOCK [ [ newline ] 'else' BLOCK ]
+    IF_STMT := 'if' EXPR 'then' BLOCK [ 'else' BLOCK ]
 
-The `if` statement. The condition is terminated by `then`, so it can span multiple lines. `else if` chains need no special rule, as the single statement form of `BLOCK` can be another `IF_STMT`. When the case is a block on its own lines, the `else` is preceded by `newline` (see Appendix A). The `if` expression is described under expressions.
+The `if` statement. The condition is terminated by `then`, so it can span multiple lines. `else if` chains need no special rule, as the single statement form of `BLOCK` can be another `IF_STMT`. As a line starting with `else` produces no `newline`, the `else` follows the `dedent` of the block directly. The `if` expression is described under expressions.
 
     WHILE_STMT := 'while' EXPR 'do' BLOCK
     FOR_STMT := 'for' ident [ ',' ident ] 'in' EXPR [ 'step' EXPR ] 'do' BLOCK
 
 Loops, both terminated by the `do` keyword. The range form of the `for` loop (`for i in 1 <= i < 100 do`) is parsed as regular expression and its validity (chained comparison with the induction variable in the middle) is checked semantically.
 
-    MATCH_STMT := 'match' EXPR 'with' indent CASE_STMT { newline ( CASE_STMT | 'else' BLOCK ) } dedent
+    MATCH_STMT := 'match' EXPR 'with' indent CASE_STMT { newline CASE_STMT } [ 'else' BLOCK ] dedent
     CASE_STMT := 'is' PATTERN 'then' BLOCK
     PATTERN := LITERAL | '-' number | ident { '.' ident } 
             |= '(' LIST(ident [ '=' PATTERN ]) ')' | '[' LIST(PATTERN) ']'
 
-The `match` statement. The matched value is terminated by `with`, which is followed by a block of cases, each on its own line. The `else` case must be the last one, which is a semantic check. Each case is terminated by `then`. Patterns are restricted to literals, identifiers (and enum values), and tuple and array patterns. Whether an identifier binds a new value, or matches an existing one is decided semantically. The `match` expression is described under expressions.
+The `match` statement. The matched value is terminated by `with`, which is followed by a block of cases, each on its own line. The `else` case is the last one and, as a line starting with `else` produces no `newline`, follows the last case directly. Each case is terminated by `then`. Patterns are restricted to literals, identifiers (and enum values), and tuple and array patterns. Whether an identifier binds a new value, or matches an existing one is decided semantically. The `match` expression is described under expressions.
 
 ## Types
 

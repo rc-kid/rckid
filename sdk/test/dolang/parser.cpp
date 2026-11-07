@@ -58,7 +58,12 @@ namespace {
      */
     bool fails(char const * source) {
         auto result = parse(source);
-        return result->kind == ast::Kind::Error;
+        if (result->kind == ast::Kind::Error)
+            return true;
+        StringBuilder sb;
+        result->prettyPrint(sb.writer());
+        std::cout << std::endl << "    expected error, parsed as: " << escaped(sb.str()).c_str() << std::endl;
+        return false;
     }
 
     /** Clears the interned symbols and texts at the end of a test, so that the heap is left as it was found. 
@@ -135,14 +140,14 @@ TEST(dolang, parser_mapTypes) {
 
 TEST(dolang, parser_functionDefinition) {
     ClearPools clear_;
-    EXPECT(roundTrips("fun f()\n    break\n"));
-    EXPECT(roundTrips("fun f() -> num\n    break\n"));
-    EXPECT(roundTrips("fun f() -> optional num\n    break\n"));
+    EXPECT(roundTrips("fun f()\n  break\n"));
+    EXPECT(roundTrips("fun f() -> num\n  break\n"));
+    EXPECT(roundTrips("fun f() -> optional num\n  break\n"));
 }
 
 TEST(dolang, parser_twoFunctions) {
     ClearPools clear_;
-    EXPECT(roundTrips("fun f()\n    break\n    continue\nfun g() -> num\n    break\n    continue\n"));
+    EXPECT(roundTrips("fun f()\n  break\n  continue\nfun g() -> num\n  break\n  continue\n"));
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -159,46 +164,46 @@ TEST(dolang, parser_globalWithValue) {
 
 TEST(dolang, parser_letStatement) {
     ClearPools clear_;
-    EXPECT(roundTrips("fun f()\n    let x\n"));
-    EXPECT(roundTrips("fun f()\n    let x : num\n"));
-    EXPECT(roundTrips("fun f()\n    let x = a\n"));
-    EXPECT(roundTrips("fun f()\n    let x : bool = a and b\n"));
-    EXPECT(roundTrips("fun f()\n    const x = true\n"));
+    EXPECT(roundTrips("fun f()\n  let x\n"));
+    EXPECT(roundTrips("fun f()\n  let x : num\n"));
+    EXPECT(roundTrips("fun f()\n  let x = a\n"));
+    EXPECT(roundTrips("fun f()\n  let x : bool = a and b\n"));
+    EXPECT(roundTrips("fun f()\n  const x = true\n"));
 }
 
 TEST(dolang, parser_returnStatement) {
     ClearPools clear_;
-    EXPECT(roundTrips("fun f()\n    return\n"));
-    EXPECT(roundTrips("fun f()\n    return a\n"));
-    EXPECT(roundTrips("fun f()\n    return a + b\n"));
+    EXPECT(roundTrips("fun f()\n  return\n"));
+    EXPECT(roundTrips("fun f()\n  return a\n"));
+    EXPECT(roundTrips("fun f()\n  return a + b\n"));
     // return without value followed by another statement, and as the last statement before another function
-    EXPECT(roundTrips("fun f()\n    return\n    break\n"));
-    EXPECT(roundTrips("fun f()\n    return\nfun g()\n    return\n"));
+    EXPECT(roundTrips("fun f()\n  return\n  break\n"));
+    EXPECT(roundTrips("fun f()\n  return\nfun g()\n  return\n"));
 }
 
 TEST(dolang, parser_writeAndTest) {
     ClearPools clear_;
-    EXPECT(roundTrips("fun f()\n    write a\n"));
-    EXPECT(roundTrips("fun f()\n    test a\n"));
-    EXPECT(roundTrips("fun f()\n    test a == b\n"));
+    EXPECT(roundTrips("fun f()\n  write a\n"));
+    EXPECT(roundTrips("fun f()\n  test a\n"));
+    EXPECT(roundTrips("fun f()\n  test a == b\n"));
 }
 
 TEST(dolang, parser_expressionStatement) {
     ClearPools clear_;
-    EXPECT(roundTrips("fun f()\n    a\n"));
-    EXPECT(roundTrips("fun f()\n    a + b\n"));
-    EXPECT(roundTrips("fun f()\n    a\n    b\n    c\n"));
+    EXPECT(roundTrips("fun f()\n  a\n"));
+    EXPECT(roundTrips("fun f()\n  a + b\n"));
+    EXPECT(roundTrips("fun f()\n  a\n  b\n  c\n"));
 }
 
 TEST(dolang, parser_assignments) {
     ClearPools clear_;
-    EXPECT(roundTrips("fun f()\n    a = b\n"));
-    EXPECT(roundTrips("fun f()\n    a += b\n"));
-    EXPECT(roundTrips("fun f()\n    a -= b\n"));
-    EXPECT(roundTrips("fun f()\n    a *= b\n"));
-    EXPECT(roundTrips("fun f()\n    a /= b\n"));
-    EXPECT(roundTrips("fun f()\n    a = b + c\n"));
-    EXPECT(roundTrips("fun f()\n    a = b\n    c = d\n"));
+    EXPECT(roundTrips("fun f()\n  a = b\n"));
+    EXPECT(roundTrips("fun f()\n  a += b\n"));
+    EXPECT(roundTrips("fun f()\n  a -= b\n"));
+    EXPECT(roundTrips("fun f()\n  a *= b\n"));
+    EXPECT(roundTrips("fun f()\n  a /= b\n"));
+    EXPECT(roundTrips("fun f()\n  a = b + c\n"));
+    EXPECT(roundTrips("fun f()\n  a = b\n  c = d\n"));
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -207,70 +212,76 @@ TEST(dolang, parser_assignments) {
 
 TEST(dolang, parser_keywordPrimaries) {
     ClearPools clear_;
-    EXPECT(roundTrips("fun f()\n    a = true\n"));
-    EXPECT(roundTrips("fun f()\n    a = false\n"));
-    EXPECT(roundTrips("fun f()\n    a = none\n"));
-    EXPECT(roundTrips("fun f()\n    a = self\n"));
+    EXPECT(roundTrips("fun f()\n  let a = true\n"));
+    EXPECT(roundTrips("fun f()\n  let a = false\n"));
+    EXPECT(roundTrips("fun f()\n  let a = none\n"));
+    EXPECT(roundTrips("fun f()\n  let a = self\n"));
 }
 
 TEST(dolang, parser_arithmeticOperators) {
     ClearPools clear_;
-    EXPECT(roundTrips("fun f()\n    a + b\n"));
-    EXPECT(roundTrips("fun f()\n    a - b\n"));
-    EXPECT(roundTrips("fun f()\n    a * b\n"));
-    EXPECT(roundTrips("fun f()\n    a / b\n"));
-    EXPECT(roundTrips("fun f()\n    a + b - c\n"));
-    EXPECT(roundTrips("fun f()\n    a * b / c\n"));
-    EXPECT(roundTrips("fun f()\n    a + b * c - d / e\n"));
+    EXPECT(roundTrips("fun f()\n  a + b\n"));
+    EXPECT(roundTrips("fun f()\n  a - b\n"));
+    EXPECT(roundTrips("fun f()\n  a * b\n"));
+    EXPECT(roundTrips("fun f()\n  a / b\n"));
+    EXPECT(roundTrips("fun f()\n  a + b - c\n"));
+    EXPECT(roundTrips("fun f()\n  a * b / c\n"));
+    EXPECT(roundTrips("fun f()\n  a + b * c - d / e\n"));
 }
 
 TEST(dolang, parser_comparisonOperators) {
     ClearPools clear_;
-    EXPECT(roundTrips("fun f()\n    a < b\n"));
-    EXPECT(roundTrips("fun f()\n    a <= b\n"));
-    EXPECT(roundTrips("fun f()\n    a > b\n"));
-    EXPECT(roundTrips("fun f()\n    a >= b\n"));
+    EXPECT(roundTrips("fun f()\n  a < b\n"));
+    EXPECT(roundTrips("fun f()\n  a <= b\n"));
+    EXPECT(roundTrips("fun f()\n  a > b\n"));
+    EXPECT(roundTrips("fun f()\n  a >= b\n"));
     // comparisons can be chained
-    EXPECT(roundTrips("fun f()\n    a < b <= c\n"));
-    EXPECT(roundTrips("fun f()\n    a + b < c * d\n"));
+    EXPECT(roundTrips("fun f()\n  a < b <= c\n"));
+    EXPECT(roundTrips("fun f()\n  a + b < c * d\n"));
 }
 
 TEST(dolang, parser_equalityOperators) {
     ClearPools clear_;
-    EXPECT(roundTrips("fun f()\n    a == b\n"));
-    EXPECT(roundTrips("fun f()\n    a != b\n"));
+    EXPECT(roundTrips("fun f()\n  a == b\n"));
+    EXPECT(roundTrips("fun f()\n  a != b\n"));
     // equality can be chained, but not mixed
-    EXPECT(roundTrips("fun f()\n    a == b == c\n"));
-    EXPECT(roundTrips("fun f()\n    a != b != c\n"));
-    EXPECT(roundTrips("fun f()\n    a < b == c > d\n"));
+    EXPECT(roundTrips("fun f()\n  a == b == c\n"));
+    EXPECT(roundTrips("fun f()\n  a != b != c\n"));
+    EXPECT(roundTrips("fun f()\n  a < b == c > d\n"));
 }
 
 TEST(dolang, parser_logicalOperators) {
     ClearPools clear_;
-    EXPECT(roundTrips("fun f()\n    a and b\n"));
-    EXPECT(roundTrips("fun f()\n    a or b\n"));
-    EXPECT(roundTrips("fun f()\n    not a\n"));
-    EXPECT(roundTrips("fun f()\n    a and b and c\n"));
-    EXPECT(roundTrips("fun f()\n    a or b or c\n"));
-    EXPECT(roundTrips("fun f()\n    a or b and c\n"));
-    EXPECT(roundTrips("fun f()\n    not a and b\n"));
-    EXPECT(roundTrips("fun f()\n    not not a\n"));
-    EXPECT(roundTrips("fun f()\n    not a == b\n"));
+    EXPECT(roundTrips("fun f()\n  a and b\n"));
+    EXPECT(roundTrips("fun f()\n  a or b\n"));
+    EXPECT(roundTrips("fun f()\n  not a\n"));
+    EXPECT(roundTrips("fun f()\n  a and b and c\n"));
+    EXPECT(roundTrips("fun f()\n  a or b or c\n"));
+    EXPECT(roundTrips("fun f()\n  a or b and c\n"));
+    EXPECT(roundTrips("fun f()\n  not a and b\n"));
+    EXPECT(roundTrips("fun f()\n  not not a\n"));
+    EXPECT(roundTrips("fun f()\n  not a == b\n"));
 }
 
 TEST(dolang, parser_unaryOperators) {
     ClearPools clear_;
-    EXPECT(roundTrips("fun f()\n    -a\n"));
-    EXPECT(roundTrips("fun f()\n    clone a\n"));
-    EXPECT(roundTrips("fun f()\n    a = -b\n"));
-    EXPECT(roundTrips("fun f()\n    a = clone b\n"));
-    EXPECT(roundTrips("fun f()\n    -a * b\n"));
-    EXPECT(roundTrips("fun f()\n    a - -b\n"));
+    EXPECT(roundTrips("fun f()\n  -a\n"));
+    EXPECT(roundTrips("fun f()\n  clone a\n"));
+    EXPECT(roundTrips("fun f()\n  a = -b\n"));
+    EXPECT(roundTrips("fun f()\n  a = clone b\n"));
+    EXPECT(roundTrips("fun f()\n  -a * b\n"));
+    EXPECT(roundTrips("fun f()\n  a - -b\n"));
 }
 
 TEST(dolang, parser_mixedPrecedence) {
     ClearPools clear_;
-    EXPECT(roundTrips("fun f()\n    a or b and not c == d < e + f * -g\n"));
+    EXPECT(roundTrips("fun f()\n  a or b and not c == d < e + f * -g\n"));
+}
+
+TEST(dolan, parser_ifStatement) {
+    ClearPools clear_;
+    EXPECT(roundTrips("fun f()\n  if a then\n    b\n    bb\n  c\n"));
+    EXPECT(roundTrips("fun f()\n  if a then\n    b\n  else\n    c\n"));
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -422,17 +433,17 @@ TEST(dolang, parser_precedenceAssignment) {
 TEST(dolang, parser_expressionErrors) {
     ClearPools clear_;
     // missing operands
-    EXPECT(fails("fun f()\n    a +\n"));
-    EXPECT(fails("fun f()\n    a = \n"));
-    EXPECT(fails("fun f()\n    * a\n"));
-    EXPECT(fails("fun f()\n    not\n"));
-    EXPECT(fails("fun f()\n    global x =\n"));
+    EXPECT(fails("fun f()\n  a +\n"));
+    EXPECT(fails("fun f()\n  a = \n"));
+    EXPECT(fails("fun f()\n  * a\n"));
+    EXPECT(fails("fun f()\n  not\n"));
+    EXPECT(fails("fun f()\n  global x =\n"));
     // only one assignment per statement
-    EXPECT(fails("fun f()\n    a = b = c\n"));
-    EXPECT(fails("fun f()\n    a = b += c\n"));
+    EXPECT(fails("fun f()\n  a = b = c\n"));
+    EXPECT(fails("fun f()\n  a = b += c\n"));
     // == and != cannot be mixed in a single chain
-    EXPECT(fails("fun f()\n    a == b != c\n"));
-    EXPECT(fails("fun f()\n    a != b == c\n"));
+    EXPECT(fails("fun f()\n  a == b != c\n"));
+    EXPECT(fails("fun f()\n  a != b == c\n"));
     // top level value without a declaration
     EXPECT(fails("global x = "));
 }

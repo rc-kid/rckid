@@ -108,13 +108,9 @@ namespace rckid::dolang::ast {
         }
 
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
-            bool first = true;
             for (auto const & child : children_) {
-                if (first)
-                    first = false;
-                else
-                    w.putChar('\n');
-                for (uint32_t i = 0; i < indent; ++i)
+                w.putChar('\n');
+                for (uint32_t i = 0; i < indent + 2; ++i)
                     w.putChar(' ');
                 child->prettyPrint(w, indent + 2);
             }
@@ -139,8 +135,15 @@ namespace rckid::dolang::ast {
         Program(Location loc): SequenceNode{Kind::Program, loc} { }
 
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
-            SequenceNode::prettyPrint(w, indent);
-            w << "\n";
+            // program does not extra indent
+            for (auto const & child : children_) {
+                for (uint32_t i = 0; i < indent; ++i)
+                    w.putChar(' ');
+                child->prettyPrint(w, indent);
+                w.putChar('\n');
+            }
+            if (children_.empty())
+                w.putChar('\n');
         }
     };
 
@@ -356,8 +359,7 @@ namespace rckid::dolang::ast {
                 returnType_->prettyPrint(w, indent);
             }
             ASSERT(body_ != nullptr);
-            w << "\n";
-            body_->prettyPrint(w, indent + 2);
+            body_->prettyPrint(w, indent);
         }
 
         void debugPrint(Writer & w, uint32_t indent = 0) const override {
@@ -642,11 +644,34 @@ namespace rckid::dolang::ast {
         If(Location loc): Node{Kind::If, loc} { }
 
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
-            UNIMPLEMENTED;
+            w << "if ";
+            condition_->prettyPrint(w, indent);
+            w << " then";
+            thenCase()->prettyPrint(w, indent);
+            if (elseCase() != nullptr) {
+                // else case is on a new line, indented same as the if
+                w.putChar('\n');
+                for (uint32_t i = 0; i < indent; ++i)
+                    w.putChar(' ');
+                w << "else";
+                elseCase()->prettyPrint(w, indent);
+            }
         }
 
         void debugPrint(Writer & w, uint32_t indent = 0) const override {
-            UNIMPLEMENTED;
+            Node::debugPrint(w, indent);
+            if (condition_ != nullptr) {
+                w << "\n";
+                condition_->debugPrint(w, indent + 2);
+            }
+            if (then_ != nullptr) {
+                w << "\n";
+                then_->debugPrint(w, indent + 2);
+            }
+            if (else_ != nullptr) {
+                w << "\n";
+                else_->debugPrint(w, indent + 2);
+            }
         }
 
         Node * condition() const { return condition_.get(); }
@@ -740,6 +765,13 @@ inline void write(Writer & w, rckid::dolang::ast::Kind kind) {
         case Kind::UseDecl: w << "UseDecl"; break;
         case Kind::VarDecl: w << "VarDecl"; break;
         case Kind::Write: w << "Write"; break;
+        case Kind::If: w << "If"; break;
+        case Kind::While: w << "While"; break;
+        case Kind::For: w << "For"; break;
+        case Kind::Match: w << "Match"; break;
+        case Kind::Number: w << "Number"; break;
+        case Kind::Text: w << "Text"; break;
+        case Kind::EnumDecl: w << "EnumDecl"; break;
         default: w << "unknown (id " << static_cast<int>(kind) << ")"; break;
     }
 }

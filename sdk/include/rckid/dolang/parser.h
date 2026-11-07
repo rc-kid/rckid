@@ -137,18 +137,14 @@ namespace rckid::dolang {
         }
 
         /** BLOCK := indent STATEMENT { newline STATEMENT } dedent
-                  |= STATEMENT
          */
         unique_ptr<ast::Block> BLOCK() {
             auto result = std::make_unique<ast::Block>(top().loc);
-            if (condPop(TokenKind::Indent)) {
+            POP(TokenKind::Indent);
+            result->addChild(TRY(STATEMENT()));
+            while (condPop(TokenKind::Newline))
                 result->addChild(TRY(STATEMENT()));
-                while (condPop(TokenKind::Newline))
-                    result->addChild(TRY(STATEMENT()));
-                POP(TokenKind::Dedent);
-            } else {
-                result->addChild(TRY(STATEMENT()));
-            }
+            POP(TokenKind::Dedent);
             return result;
         }
 
@@ -234,12 +230,21 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** IF_STMT := 'if' EXPR 'then' BLOCK [ [ newline ] 'else' BLOCK ]
+        /** IF_STMT := 'if' EXPR 'then' BLOCK [ 'else' BLOCK ]
 
-            `else if` chains are the single statement form of BLOCK. The `newline 'else'` after a block on its own lines needs a look past the newline to decide whether the statement continues.
+            `else if` chains are the single statement form of BLOCK. A line starting with `else` produces no newline, so the else follows the dedent of the block directly.
          */
         unique_ptr<ast::Node> IF_STMT() {
-            UNIMPLEMENTED;
+            auto result = std::make_unique<ast::If>(POP(TokenKind::kwIf).loc);
+            result->setCondition(TRY(EXPR()));
+            POP(TokenKind::kwThen);
+            atBlockStart();
+            result->setThenCase(TRY(BLOCK()));
+            if (condPop(TokenKind::kwElse)) {
+                atBlockStart();
+                result->setElseCase(TRY(BLOCK()));
+            }
+            return result;
         }
 
         /** WHILE_STMT := 'while' EXPR 'do' BLOCK
@@ -254,9 +259,9 @@ namespace rckid::dolang {
             UNIMPLEMENTED;
         }
 
-        /** MATCH_STMT := 'match' EXPR 'with' indent CASE_STMT { newline ( CASE_STMT | 'else' BLOCK ) } dedent
+        /** MATCH_STMT := 'match' EXPR 'with' indent CASE_STMT { newline CASE_STMT } [ 'else' BLOCK ] dedent
 
-            The else case must be the last one, which is a semantic check.
+            A line starting with `else` produces no newline, so the else case follows the last case directly.
          */
         unique_ptr<ast::Node> MATCH_STMT() {
             UNIMPLEMENTED;
@@ -640,25 +645,31 @@ namespace rckid::dolang {
 #undef POP
 #undef TRY
 
-
         /** \name Token handling and newline translation
 
             The parser provides the basic eof(), top(), pop() and condPop() interface for querying the tokenized sources. For the doLang this is complicated by the off side rule, which means that we also need to translate the newline tokens emited by the lexer into indent/dedent/newline variants, or swallow them.
             
             This translation is relatively simple though: 
 
+            - every block of statements has its *indentation*, the column at which all its statements start. A line starting exactly at this column starts a new statement
+            - a line indented *more* continues the current statement
+            - except when the line follows a keyword that starts a block (`then`, `else`, `do`, `with`), the `fun` keyword, or a function signature. Then the more indented line starts a new block whose indentation is the column of the line
+            - a line indented *less* ends the block (or blocks) and must start exactly at the indentation of one of the enclosing blocks
 
-            We also need the ability to tell the parser that we are at the beginning of a block, which means that the next newline will be converted to an indent instead of swallowed. This is done by calling atBlockStart(). But when we do, there could have already been a newline token analyzed and ignored (because we were *not* at the beginning of a block). To fight this, when a newline is swallowed, we add that newline to special variable newlineBackup_. 
+            We also need the ability to tell the parser that we are at the beginning of a block, which means that the next newline will be converted to an indent instead of swallowed. This is done by calling atBlockStart(). But when we do, there could have already been a newline token analyzed and ignored (because we were *not* at the beginning of a block). To fight this, when a newline is swallowed, we keep that newline in pending_. 
 
-            When adBlockStart() is called, we check newlineBackup_. If it is a newline, we need to recalculate the next token and we swap the backup and next tokens. This means next top will process the newline into the indent. When we pop indent, if there is something in the newlineBackup_, we will swap it back into next_ so that the next top will process it as the next token after the newline.
+            When atBlockStart() is called, we check pending_. If it is a newline, we need to recalculate the next token and we swap the pending and next tokens. This means next top will process the newline into the indent. When we pop the indent, the token in pending_ is moved back into next_ so that the next top will process it as the next token after the newline.
 
+            A line at the current indentation is a newline, unless it starts with `else`, which can never start a statement and therefore continues the if statement (or the match statement). To tell, we read the token after the newline into pending_. If it is `else`, it replaces the newline in next_, otherwise the newline is returned and the token in pending_ is moved to next_ when the newline is popped.
+
+            So pending_ is either empty (EndOfFile), a swallowed newline (and next_ is the token after it), or the token that follows the newline (or indent) in next_.
          */
         //@{
 
         bool atBlockStart_ = false;
 
         Token next_; 
-        Token newlineBackup_;
+        Token pending_;
 
         std::vector<int32_t> indentStack_;
 
@@ -670,8 +681,14 @@ namespace rckid::dolang {
             if (next_.kind == TokenKind::EndOfFile)
                     next_ = lexer_.next();
             while (next_.kind == TokenKind::Newline) {
-                // if the indentation of the newline is the same as the current indentation, we emit it as it is the end of statement
+                // if the indentation of the newline is the same as the current indentation, we emit it as it is the end of statement, unless the next line starts with else, which continues the if (or match) statement
                 if (next_.payload == indentStack_.back()) {
+                    if (pending_ == TokenKind::EndOfFile)
+                        pending_ = lexer_.next();
+                    if (pending_ == TokenKind::kwElse) {
+                        next_ = pending_;
+                        pending_.kind = TokenKind::EndOfFile;
+                    }
                     return next_;
                 // if the indentation is greater than the current indentation, we are either converting the newline to indent if we are at the beginning of a block expecting statement, or we are swallowing the newline as it is a continuation of the previous statement
                 } else if (next_.payload > indentStack_.back()) {
@@ -680,7 +697,7 @@ namespace rckid::dolang {
                         return next_;
                     } else {
                         // swallow the newline
-                        newlineBackup_ = next_;
+                        pending_ = next_;
                         next_ = lexer_.next();
                         continue;
                     } 
@@ -739,12 +756,12 @@ namespace rckid::dolang {
                 default:
                     break;
             }
-            // so that next top will reload fresh
-            if (next_ == TokenKind::Indent && newlineBackup_ != TokenKind::EndOfFile)
-                next_ = newlineBackup_;
+            // if we have popped newline (or indent) and have the token after it in pending, it becomes the next token, otherwise next top will reload fresh
+            if ((x == TokenKind::Indent || x == TokenKind::Newline) && pending_ != TokenKind::EndOfFile)
+                next_ = pending_;
             else
                 next_.kind = TokenKind::EndOfFile;
-            newlineBackup_.kind = TokenKind::EndOfFile;
+            pending_.kind = TokenKind::EndOfFile;
             return x;
         }
 
@@ -759,9 +776,9 @@ namespace rckid::dolang {
 
         void atBlockStart() {
             atBlockStart_ = true;
-            if (newlineBackup_ == TokenKind::Newline) {
-                // swap the backup and next tokens so that next top will process the newline into indent
-                std::swap(newlineBackup_, next_);
+            if (pending_ == TokenKind::Newline) {
+                // swap the pending and next tokens so that next top will process the newline into indent
+                std::swap(pending_, next_);
             }
         }
         //@}
