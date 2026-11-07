@@ -10,6 +10,8 @@ namespace rckid::dolang::ast {
         Program,
         Block,
         SymbolName,
+        Number,
+        Text,
         UseDecl,
         VarDecl,
         FunDecl,
@@ -34,6 +36,11 @@ namespace rckid::dolang::ast {
         Test,
         Write,
         Return,
+        If,
+        While,
+        For,
+        Match,
+        Case,
 
     };
     
@@ -161,6 +168,76 @@ namespace rckid::dolang::ast {
             w << name.c_str();
         }
     };
+
+    class Number : public Node {
+    public:
+        
+        Number(Location loc, Num num): Node{Kind::Number, loc}, num{num} { }
+
+        Number(Token const & t): 
+            Node{Kind::Number, t.loc}, 
+            num{t.asNum()} {
+        }
+
+        Num num;
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << num.n();
+            // TODO we want a lot better printing here (floats, etc.)
+            if (! num.isInteger())
+                w << "/" << num.d();
+        } 
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << num.n();
+            if (! num.isInteger())
+                w << "/" << num.d();
+        }
+    };         
+
+    class Text : public Node {
+    public:
+        
+        Text(Location loc, TextLiteral text): Node{Kind::Text, loc}, text{text} { }
+
+        Text(Token const & t): 
+            Node{Kind::Text, t.loc}, 
+            text{t.asText()} {
+        }
+        
+        TextLiteral text;
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << "\"";
+            for (char const * p = text.c_str(); *p != '\0'; ++p) {
+                switch (*p) {
+                    case '\n':
+                        w << "\\n";
+                        break;
+                    case '\r':
+                        w << "\\r";
+                        break;
+                    case '\t':
+                        w << "\\t";
+                        break;
+                    case '"':
+                        w << "\\\"";
+                        break;
+                    case '\\':
+                        w << "\\\\";
+                        break;
+                    default:
+                        w.putChar(*p);
+                }
+            }
+            w << "\"";
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            prettyPrint(w, indent);
+        }
+    }; 
 
     class UseDecl : public Node {
     public:
@@ -559,6 +636,44 @@ namespace rckid::dolang::ast {
     protected:
         unique_ptr<Node> value_;
     };
+
+    class If : public Node {
+    public:
+        If(Location loc): Node{Kind::If, loc} { }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            UNIMPLEMENTED;
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            UNIMPLEMENTED;
+        }
+
+        Node * condition() const { return condition_.get(); }
+        void setCondition(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            condition_ = std::move(child);
+        }
+
+        Node * thenCase() const { return then_.get(); }
+        void setThenCase(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            then_ = std::move(child);
+        }
+
+        Node * elseCase() const { return else_.get(); }
+        void setElseCase(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            else_ = std::move(child);
+        }
+
+    protected:
+
+        unique_ptr<Node> condition_;
+        unique_ptr<Node> then_;
+        unique_ptr<Node> else_;
+
+    }; 
 
     class Test : public Node {
     public:

@@ -152,15 +152,7 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** BODY := BLOCK | EXPR
-
-            Decided by the next token, indent starts the block, anything else is the expression.
-         */
-        unique_ptr<ast::Node> BODY() {
-            UNIMPLEMENTED;
-        }
-
-        /** LIST(X) := indent LINE(X) { newline LINE(X) } dedent
+        /** LIST(X) := indent LINE(X) { newline LINE(X) } dedent [ newline ]
                      | LINE(X)
             LINE(X) := [ X { ',' X } [ ',' ] ]
 
@@ -171,10 +163,10 @@ namespace rckid::dolang {
             UNIMPLEMENTED;
         }
 
-        /** STATEMENT := LET_STMT | IF | WHILE_STMT | FOR_STMT | MATCH | RETURN_STMT
+        /** STATEMENT := LET_STMT | IF_STMT | WHILE_STMT | FOR_STMT | MATCH_STMT | RETURN_STMT
                        |= 'break' | 'continue' | 'write' EXPR | 'test' EXPR | EXPR_STMT
 
-            LET_STMT is parsed by VAR_DECL. At the beginning of a statement, `if` and `match` are always the IF and MATCH statements.
+            LET_STMT is parsed by VAR_DECL. The if and match expressions can only appear inside parentheses, so a statement starting with `if`, or `match` is always the IF_STMT, or MATCH_STMT.
          */
         unique_ptr<ast::Node> STATEMENT() {
             switch (top().kind) {
@@ -182,13 +174,13 @@ namespace rckid::dolang {
                 case TokenKind::kwConst:
                     return VAR_DECL(top().kind);
                 case TokenKind::kwIf:
-                    return IF();
+                    return IF_STMT();
                 case TokenKind::kwWhile:
                     return WHILE_STMT();
                 case TokenKind::kwFor:
                     return FOR_STMT();
                 case TokenKind::kwMatch:
-                    return MATCH();
+                    return MATCH_STMT();
                 case TokenKind::kwReturn:
                     return RETURN_STMT();
                 case TokenKind::kwBreak:
@@ -242,11 +234,11 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** IF := 'if' EXPR 'then' ( BLOCK [ [ newline ] 'else' BODY ] | EXPR [ 'else' BODY ] )
+        /** IF_STMT := 'if' EXPR 'then' BLOCK [ [ newline ] 'else' BLOCK ]
 
-            Shared by the if statement and the if expression.
+            `else if` chains are the single statement form of BLOCK. The `newline 'else'` after a block on its own lines needs a look past the newline to decide whether the statement continues.
          */
-        unique_ptr<ast::Node> IF() {
+        unique_ptr<ast::Node> IF_STMT() {
             UNIMPLEMENTED;
         }
 
@@ -262,24 +254,17 @@ namespace rckid::dolang {
             UNIMPLEMENTED;
         }
 
-        /** MATCH := 'match' EXPR 'with' ( indent CASE { newline ( CASE | 'else' BODY ) } dedent
-                                         | INLINE_CASE { INLINE_CASE } [ 'else' EXPR ] )
+        /** MATCH_STMT := 'match' EXPR 'with' indent CASE_STMT { newline ( CASE_STMT | 'else' BLOCK ) } dedent
 
-            Shared by the match statement and the match expression.
+            The else case must be the last one, which is a semantic check.
          */
-        unique_ptr<ast::Node> MATCH() {
+        unique_ptr<ast::Node> MATCH_STMT() {
             UNIMPLEMENTED;
         }
 
-        /** CASE := 'is' PATTERN 'then' BODY
+        /** CASE_STMT := 'is' PATTERN 'then' BLOCK
          */
-        unique_ptr<ast::Node> CASE() {
-            UNIMPLEMENTED;
-        }
-
-        /** INLINE_CASE := 'is' PATTERN 'then' EXPR
-         */
-        unique_ptr<ast::Node> INLINE_CASE() {
+        unique_ptr<ast::Node> CASE_STMT() {
             UNIMPLEMENTED;
         }
 
@@ -375,17 +360,12 @@ namespace rckid::dolang {
             UNIMPLEMENTED;
         }
 
-        /** EXPR := IF | MATCH | OR_EXPR
+        /** EXPR := OR_EXPR
+
+            The if and match expressions are not EXPR, they can only appear inside parentheses (see VALUE).
          */
         unique_ptr<ast::Node> EXPR() {
-            switch (top().kind) {
-                case TokenKind::kwIf:
-                    return IF();
-                case TokenKind::kwMatch:
-                    return MATCH();
-                default:
-                    return OR_EXPR();
-            }
+            return OR_EXPR();
         }
 
         /** OR_EXPR := AND_EXPR { 'or' AND_EXPR }
@@ -530,7 +510,9 @@ namespace rckid::dolang {
             }
         }
 
-        /** POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | PAREN_EXPR | 'orelse' ORELSE_RHS }
+        /** POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | PAREN_EXPR [ 'orelse' ORELSE_RHS ] }
+
+            orelse can only follow a call. Its right hand side takes everything, so the postfix expression always ends with it. That the call returns an optional value is a semantic check.
          */
         unique_ptr<ast::Node> POSTFIX_EXPR() {
             auto result = TRY(PRIMARY());
@@ -539,7 +521,6 @@ namespace rckid::dolang {
                     case TokenKind::opDot:
                     case TokenKind::opSquareOpen:
                     case TokenKind::opParOpen:
-                    case TokenKind::kwOrElse: // TODO really here, thegrammar seems wrong
                         UNIMPLEMENTED;
                     default:
                         return result;
@@ -547,7 +528,11 @@ namespace rckid::dolang {
             }
         }
 
-        /** ORELSE_RHS := UNARY_EXPR | 'return' [ EXPR ] | 'break' | 'continue' | BLOCK
+        /** ORELSE_RHS := EXPR | 'return' [ EXPR ] | 'break' | 'continue'
+
+            Takes everything, i.e. `foo() orelse 4 + 2` is `foo() orelse (4 + 2)`.
+
+            No value for return when the next token is newline, dedent, or ends the enclosing list.
          */
         unique_ptr<ast::Node> ORELSE_RHS() {
             UNIMPLEMENTED;
@@ -560,8 +545,9 @@ namespace rckid::dolang {
         unique_ptr<ast::Node> PRIMARY() {
             switch (top().kind) {
                 case TokenKind::Number:
+                    return std::make_unique<ast::Number>(pop());
                 case TokenKind::Text:
-                    UNIMPLEMENTED;  
+                    return std::make_unique<ast::Text>(pop());
                 case TokenKind::kwTrue:
                 case TokenKind::kwFalse:
                 case TokenKind::kwNone:
@@ -577,7 +563,7 @@ namespace rckid::dolang {
             UNIMPLEMENTED;
         }
 
-        /** PAREN_EXPR := '(' LIST(NAMED_EXPR) ')'
+        /** PAREN_EXPR := '(' LIST(NAMED_VALUE) ')'
 
             Grouping, tuple literal, or call arguments, differentiated after parsing.
          */
@@ -585,9 +571,39 @@ namespace rckid::dolang {
             UNIMPLEMENTED;
         }
 
-        /** NAMED_EXPR := EXPR [ '=' EXPR ]
+        /** NAMED_VALUE := VALUE [ '=' VALUE ]
          */
-        unique_ptr<ast::Node> NAMED_EXPR() {
+        unique_ptr<ast::Node> NAMED_VALUE() {
+            UNIMPLEMENTED;
+        }
+
+        /** VALUE := IF_EXPR | MATCH_EXPR | EXPR
+
+            The only place where the if and match expressions can appear.
+         */
+        unique_ptr<ast::Node> VALUE() {
+            UNIMPLEMENTED;
+        }
+
+        /** IF_EXPR := 'if' EXPR 'then' EXPR 'else' ( IF_EXPR | EXPR )
+
+            Cases are expressions only. The block start flag must be cleared after `then` and `else`, so that line breaks inside are continuations.
+         */
+        unique_ptr<ast::Node> IF_EXPR() {
+            UNIMPLEMENTED;
+        }
+
+        /** MATCH_EXPR := 'match' EXPR 'with' CASE_EXPR { CASE_EXPR } [ 'else' EXPR ]
+
+            Cases are expressions only. The block start flag must be cleared after `with`, `then` and `else`, so that line breaks inside are continuations. Exhaustiveness (or the else case) is a semantic check.
+         */
+        unique_ptr<ast::Node> MATCH_EXPR() {
+            UNIMPLEMENTED;
+        }
+
+        /** CASE_EXPR := 'is' PATTERN 'then' EXPR
+         */
+        unique_ptr<ast::Node> CASE_EXPR() {
             UNIMPLEMENTED;
         }
 
@@ -717,7 +733,6 @@ namespace rckid::dolang {
                 case TokenKind::kwThen:
                 case TokenKind::kwElse:
                 case TokenKind::kwDo:
-                case TokenKind::kwOrElse:
                 case TokenKind::kwWith:
                     atBlockStart_ = true;
                     break;
