@@ -100,8 +100,8 @@ namespace rckid::dolang {
             Symbol{"true"}; 
             Symbol{"type"}; 
             Symbol{"use"}; 
+            Symbol{"when"}; 
             Symbol{"while"}; 
-            Symbol{"with"}; 
             Symbol{"write"}; 
             Symbol{"xor"};
         }

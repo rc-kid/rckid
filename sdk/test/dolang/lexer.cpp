@@ -175,7 +175,7 @@ TEST(dolang, lexer_keywords) {
     EXPECT(single("let", TokenKind::kwLet));
     EXPECT(single("fun", TokenKind::kwFun));
     EXPECT(single("match", TokenKind::kwMatch));
-    EXPECT(single("with", TokenKind::kwWith));
+    EXPECT(single("when", TokenKind::kwWhen));
     EXPECT(single("is", TokenKind::kwIs));
     EXPECT(single("orelse", TokenKind::kwOrElse));
     EXPECT(single("xor", TokenKind::kwXor));

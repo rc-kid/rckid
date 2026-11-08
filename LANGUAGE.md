@@ -22,7 +22,7 @@ As there is no character type, single characters can be represented as text valu
 
 The following are reserved keywords and cannot be used as identifiers:
 
-    and, bool, break, clone, const, constructor, continue, do, else, enum, event, extends, false, for, fun, global, if, in, is, let, match, none, not, num, optional, or, orelse, return, self, step, test, text, then, true, type, use, while, with, write, xor
+    and, bool, break, clone, const, constructor, continue, do, else, enum, event, extends, false, for, fun, global, if, in, is, let, match, none, not, num, optional, or, orelse, return, self, step, test, text, then, true, type, use, when, while, write, xor
 
 > TODO and others. Note that `xor` is reserved for the future bitwise operators.
 
@@ -32,7 +32,7 @@ _doLang_ uses indentation to denote nesting. Only spaces can be used for indenta
 
 1. Every block of statements has its *indentation*, the column at which all its statements start. A line starting exactly at this column starts a new statement.
 2. A line indented *more* continues the current statement.
-3. Except when the line follows a keyword that starts a block (`then`, `else`, `do`, `with`), the `fun` keyword, or a function signature. Then the more indented line starts a new block whose indentation is the column of the line.
+3. Except when the line follows a keyword that starts a block (`then`, `else`, `do`, `when`), the `fun` keyword, or a function signature. Then the more indented line starts a new block whose indentation is the column of the line.
 4. A line indented *less* ends the block (or blocks) and must start exactly at the indentation of one of the enclosing blocks.
 
 So statements can span multiple lines, as long as the continuation lines are indented more than the beginning of the statement:
@@ -43,7 +43,7 @@ So statements can span multiple lines, as long as the continuation lines are ind
 
 This means that a line starting at the same column as the statement always starts a new statement, so there is no confusion whether the line belongs to the previous statement or not. The indentation of the top level is the indentation of the first line of the file.
 
-Blocks always start on a new line that is indented more than the line that introduced them. The statements that have a block end with a keyword (`if ... then`, `while ... do`, `for ... do`, `match ... with`, `is ... then`), so their headers can span multiple lines as well. Function bodies always follow the `fun` keyword, either directly, or after the function signature (`fun(...)`). A block is only ever introduced by these keywords, or the function signature, never by an operator. In particular, a newline after `=` (or any other assignment operator) is always a continuation of the statement:
+Blocks always start on a new line that is indented more than the line that introduced them. The statements that have a block end with a keyword (`if ... then`, `while ... do`, `for ... do`, `match ... when`, `is ... then`), so their headers can span multiple lines as well. Function bodies always follow the `fun` keyword, either directly, or after the function signature (`fun(...)`). A block is only ever introduced by these keywords, or the function signature, never by an operator. In particular, a newline after `=` (or any other assignment operator) is always a continuation of the statement:
 
     d =
         1     # continuation of the statement, d is assigned 43
@@ -486,10 +486,30 @@ _doLang_ follows standard operator precedence so as not to confuse kids with spe
 - logical `not`
 - logical `and`
 - logical `or`
+- pattern test `is` (and `is not`)
 
 All postfix operators share the same precedence and are applied left to right, so that expressions such as `a[i].x` or `foo().bar[2]` work as expected. Prefix operators apply to the whole postfix expression that follows them, i.e. `-a.x` negates `a.x` and `clone a.items[2]` clones the element of `a.items`, not `a` itself.
 
 Unlike the arithmetic negation, logical `not` has lower precedence than comparisons, so that `not a == b` means `not (a == b)`, which is how it reads in English.
+
+### `is`
+
+The `is` operator tests whether a value matches a pattern (the same patterns as used by `match`, see below) and evaluates to `bool`:
+
+    let isOrigin = point is (x = 0, y = 0)
+    if direction is not Left then
+        ...
+
+`is` has the lowest precedence of all operators and cannot be chained, so its left hand side is always the whole expression before it and it can only be combined with other operators inside parentheses: `a + b is 3` is `(a + b) is 3`, while `(a is 1) and (b is 2)` needs the parentheses. Note that this also means `not x is P` is `(not x) is P`, use `x is not P` instead.
+
+When the `is` test is the whole condition of an `if` (statement or expression), or a `while` loop, the pattern may also bind values, which are then available in the `then` case, or in the loop body:
+
+    if complexTuple is (re = 1, im) then
+        ... # im is in scope here
+    while it.next() is (key, value) do
+        ...
+
+Anywhere else, including the `is not` form, patterns that bind values are an error.
 
 Short-circuiting of logical operators `and` and `or` is supported. 
 
@@ -555,16 +575,16 @@ When the case is a single statement, it can be written on the same line as the k
 `if` can also be used as an expression, i.e. one can write for instance:
 
     fun min(a : num, b : num) -> num
-        return (if a <= b then a else b)
+        return if a <= b then a else b
 
-The `if` expression must always be enclosed in parentheses (the parentheses of a function call, or a tuple are enough, e.g. `foo(if a then 1 else 2)`). Unlike the statement, the `else` case is mandatory, both cases must have the same type and they can only be expressions, not blocks of statements. The parentheses make it always clear where the expression ends, so there is no need for any special precedence rules. As the `if` expression cannot contain blocks, any line break inside it is a continuation and long expressions can thus be broken into multiple lines:
+Unlike the statement, the `else` case of the `if` expression is mandatory, both cases must have the same type and they can only be expressions, not blocks of statements. Same as the fallback of `orelse`, the `else` case takes *everything* after it, i.e. `if c then 1 else 2 + 3` is `if c then 1 else (2 + 3)`, and the whole `if` expression must be put in parentheses to be used as an operand: `(if c then 1 else 2) + 3`. As the `if` expression cannot contain blocks, any line break inside it is a continuation and long expressions can thus be broken into multiple lines:
 
-    let x = (if a < b then a else b)
-    let y = (if a < b then a
+    let x = if a < b then a else b
+    let y = if a < b then a
         else if a < c then c
-        else b)
+        else b
 
-The parentheses also mean that a statement can never start with an `if` expression, so a statement starting with `if` is always the `if` statement.
+A statement starting with `if` is always the `if` statement, so to use the `if` expression as a statement, it must be put in parentheses.
 
 ### `while`
 
@@ -607,9 +627,9 @@ For loop supports the `break` and `continue` statements as well.
 
 ### `match`
 
-This is _doLang_'s switch on pattern-matching steroids. No fallback between different cases is allowed and each case is its own block. The matched value is terminated by the `with` keyword, followed by a block of cases. Each case starts with the `is` keyword followed by a pattern and is terminated by the `then` keyword:
+This is _doLang_'s switch on pattern-matching steroids. No fallback between different cases is allowed and each case is its own block. The matched value is terminated by the `when` keyword, followed by a block of cases. Each case starts with the `is` keyword followed by a pattern and is terminated by the `then` keyword:
 
-    match value with
+    match value when
         is a then
             ...
         is b then
@@ -624,26 +644,32 @@ The `else` case is executed if *none* of the cases above applies. The cases must
 
 As an example:
 
-    match complexTuple with
+    match complexTuple when
         is (re = 1, im) then
             ... # we now have re and im in scope
 
-    match array with
+    match array when
         is [1, a, b] then
             ... # we have a and b in scope
 
-Same as `if`, `match` can be used as an expression, which must be enclosed in parentheses and whose cases (including `else`) can only be expressions. All cases must have the same type and the `else` case is mandatory, unless the cases cover all possible values (such as all values of an enum). As the `match` expression cannot contain blocks, line breaks inside it are continuations, so the cases can be written on the same line, or each on its own line:
+A case may also have a guard, a condition after `and`, which must hold for the case to apply. The guard sees the values bound by the pattern:
 
-    let name = (match direction with is Left then "left" is Right then "right")
-    let x = (match y with
+    match point when
+        is (x, y) and x == y then
+            ... # on the diagonal
+
+Same as `if`, `match` can be used as an expression, whose cases (including `else`) can only be expressions. All cases must have the same type and the `else` case is mandatory, unless the cases cover all possible values (such as all values of an enum). As the `match` expression cannot contain blocks, line breaks inside it are continuations, so the cases can be written on the same line, or each on its own line:
+
+    let name = match direction when is Left then "left" is Right then "right"
+    let x = match y when
         is (re = 1, im) then "real is one"
-        else "real is not one")
+        else "real is not one"
 
-Since `is` cannot continue an expression, it always starts the next case.
+The case values (and guards) of the `match` expression cannot use the `is` operator, unless in parentheses, so that `is` always starts the next case. A nested `match` expression in a case value must be put in parentheses too, otherwise it would take the remaining cases.
 
 ## `return`
 
-Returns from the function, optionally returning value of required type. `return` (as well as `break` and `continue`) can also be used as the fallback of the `orelse` operator. This is particularly useful for early returns and `none` propagation:
+Returns from the function, optionally returning value of required type. `return` (as well as `break` and `continue`) is an expression, so it can also be used as the fallback of the `orelse` operator, or a case of the `if` and `match` expressions. This is particularly useful for early returns and `none` propagation:
 
     let x = map("key") orelse return none
     # do some more with x
@@ -700,7 +726,7 @@ Whitespace between tokens is ignored. Comments (`#` to the end of the line), emp
 
 The lexer always starts with a `newline` token that gives the indentation of the first non-empty line, which is the indentation of the top level. After that, a `newline` token is emitted for every line break (empty lines and lines with only comments do not count), with the indentation of the line that follows.
 
-The parser keeps a stack of indentations, starting with the indentation of the top level. The top of the stack, `I`, is the indentation of the current block. It also keeps a *block start* flag, which is set when it consumes one of the keywords `then`, `else`, `do`, `with`, or an opening bracket, and cleared when it consumes any other token. The function rules set the flag explicitly after `fun` and after the function signature, and the `if` and `match` expressions clear it after `then`, `else` and `with`, as they cannot contain blocks.
+The parser keeps a stack of indentations, starting with the indentation of the top level. The top of the stack, `I`, is the indentation of the current block. It also keeps a *block start* flag, which is set when it consumes one of the keywords `then`, `else`, `do`, `when`, or an opening bracket, and cleared when it consumes any other token. The function rules set the flag explicitly after `fun` and after the function signature, and the `if` and `match` expressions clear it after `then`, `else` and `when`, as they cannot contain blocks.
 
 A `newline` with indentation `c` is translated as follows:
 
@@ -758,7 +784,7 @@ A block is a sequence of statements, each starting on its own line. As `newline`
 
 Items inside brackets are either in the single line form, separated by commas, or in the multi-line form (the first item is on a new line), in which `indent` is emitted after the opening bracket, `newline` between lines and `dedent` before the closing bracket. When the closing bracket is on its own line at the indentation of the line with the opening bracket, `newline` follows the `dedent`. Each line may contain multiple comma separated items and an optional trailing comma. An item that continues on further lines, or ends with a block, needs no special handling.
 
-Blocks are only ever introduced by a keyword (`then`, `else`, `do`, `with`, `fun`), or a function signature, never by an operator. The right hand side of `=` (and other assignment operators) is therefore always an `EXPR`, function bodies on the right hand side are function literals (see `FUN_LITERAL`). The grammar is thus context free and the parser never needs to know the type of the left hand side.
+Blocks are only ever introduced by a keyword (`then`, `else`, `do`, `when`, `fun`), or a function signature, never by an operator. The right hand side of `=` (and other assignment operators) is therefore always an `EXPR`, function bodies on the right hand side are function literals (see `FUN_LITERAL`). The grammar is thus context free and the parser never needs to know the type of the left hand side.
 
 ## Top Level Statements
 
@@ -799,13 +825,13 @@ Enum declaration is a list of its values separated by `|`. As a line break after
     STATEMENT := LET_STMT | IF_STMT | WHILE_STMT | FOR_STMT | MATCH_STMT | RETURN_STMT 
               |= 'break' | 'continue' | 'write' EXPR | 'test' EXPR | EXPR_STMT
 
-Statements that can appear inside function bodies. The `if` and `match` expressions can only appear inside parentheses, so an expression statement never starts with `if`, or `match`.
+Statements that can appear inside function bodies. A statement starting with `if`, or `match` is always the `IF_STMT`, or `MATCH_STMT`, the `if` and `match` expressions are only parsed inside an expression.
 
     LET_STMT := ( 'let' | 'const' ) ident [ ':' TYPE ] [ '=' EXPR ]
     EXPR_STMT := EXPR [ ( '=' | '+=' | '-=' | '*=' | '/=' ) EXPR ]
     RETURN_STMT := 'return' [ EXPR ]
 
-Local variable declarations, assignments and standalone expressions. Assignment is only allowed at the root of the expression statement. Whether the left hand side can be assigned to is a semantic check. `return` value is optional, there is no value when the next token is `newline`, or `dedent`. The same holds for `return` used as the fallback of `orelse`, where the value is also absent when the next token ends the enclosing list (`)`, `]`, `}`, or `,`).
+Local variable declarations, assignments and standalone expressions. Assignment is only allowed at the root of the expression statement. Whether the left hand side can be assigned to is a semantic check. `return` value is optional, there is no value when the next token is `newline`, or `dedent`. As `return` is also an expression (see `PRIMARY`), the value is in general absent whenever the next token cannot start an expression, such as `)`, `]`, `}`, `,`, `then`, or `else`.
 
     IF_STMT := 'if' EXPR 'then' BLOCK [ 'else' BLOCK ]
 
@@ -816,12 +842,12 @@ The `if` statement. The condition is terminated by `then`, so it can span multip
 
 Loops, both terminated by the `do` keyword. The range form of the `for` loop (`for i in 1 <= i < 100 do`) is parsed as regular expression and its validity (chained comparison with the induction variable in the middle) is checked semantically.
 
-    MATCH_STMT := 'match' EXPR 'with' indent CASE_STMT { newline CASE_STMT } [ 'else' BLOCK ] dedent
-    CASE_STMT := 'is' PATTERN 'then' BLOCK
+    MATCH_STMT := 'match' EXPR 'when' indent CASE_STMT { newline CASE_STMT } [ 'else' BLOCK ] dedent
+    CASE_STMT := 'is' PATTERN [ 'and' EXPR ] 'then' BLOCK
     PATTERN := LITERAL | '-' number | ident { '.' ident } 
             |= '(' LIST(ident [ '=' PATTERN ]) ')' | '[' LIST(PATTERN) ']'
 
-The `match` statement. The matched value is terminated by `with`, which is followed by a block of cases, each on its own line. The `else` case is the last one and, as a line starting with `else` produces no `newline`, follows the last case directly. Each case is terminated by `then`. Patterns are restricted to literals, identifiers (and enum values), and tuple and array patterns. Whether an identifier binds a new value, or matches an existing one is decided semantically. The `match` expression is described under expressions.
+The `match` statement. The matched value is terminated by `when`, which is followed by a block of cases, each on its own line. The `else` case is the last one and, as a line starting with `else` produces no `newline`, follows the last case directly. Each case is terminated by `then` and may have a guard after `and`, which sees the values bound by the pattern. Patterns are restricted to literals, identifiers (and enum values), and tuple and array patterns. Whether an identifier binds a new value, or matches an existing one is decided semantically. The `match` expression is described under expressions.
 
 ## Types
 
@@ -854,9 +880,9 @@ Event types are linke function types without return value, and start withe `even
 
 ## Expressions
 
-    EXPR := OR_EXPR
+    EXPR := OR_EXPR [ 'is' [ 'not' ] PATTERN ]
 
-An expression recurses into standard expressions based on operator precedence. The `if` and `match` expressions are not part of `EXPR`, they can only appear inside parentheses (see `PAREN_EXPR`).
+An expression recurses into standard expressions based on operator precedence. The `is` operator has the lowest precedence and is not associative, so it can only appear at the top of an expression (or inside parentheses). Patterns may bind values only when the `is` is the whole condition of `IF_STMT`, `IF_EXPR`, or `WHILE_STMT` and is not negated, which is a semantic check.
 
     OR_EXPR := AND_EXPR { 'or' AND_EXPR }
     AND_EXPR := NOT_EXPR { 'and' NOT_EXPR }
@@ -879,32 +905,31 @@ Note that relation operators can be chained. And the semantics require that each
 
 Arithmetic operators, all left associative, and the prefix operators, which apply to the entire postfix expression that follows them.
 
-    POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | PAREN_EXPR [ 'orelse' ORELSE_RHS ] }
-    ORELSE_RHS := EXPR | 'return' [ EXPR ] | 'break' | 'continue'
+    POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | PAREN_EXPR [ 'orelse' EXPR ] }
 
 Field access (or enum value selection), indexing and function call all share the same precedence and are applied left to right. Function call arguments use the same rule as parenthesized expressions and tuple literals, see below.
 
 The function call can be followed by `orelse`, so that only a call (including the map lookup, which is a call as well) can have the fallback. The right hand side of `orelse` takes everything, i.e. `foo() orelse 4 + 2` is `foo() orelse (4 + 2)`, `a + foo() orelse 1 + 2` is `a + (foo() orelse (1 + 2))` and `foo() orelse return 2 + 3` returns `2 + 3`. Chained `orelse` is right associative, i.e. `foo() orelse bar() orelse 0` is `foo() orelse (bar() orelse 0)`. As the right hand side takes everything, the postfix expression always ends with the `orelse`. That the call returns an optional value (and that every such call has the `orelse`) is a semantic check.
 
-    PRIMARY := LITERAL | ident | 'self' | 'none' | PAREN_EXPR
+    PRIMARY := LITERAL | ident | 'self' | 'none'
+            |= PAREN_EXPR | IF_EXPR | MATCH_EXPR | RETURN_STMT | 'break' | 'continue'
     LITERAL := number | string | 'true' | 'false'
             |= ARRAY_LITERAL | MAP_LITERAL | FUN_LITERAL
 
-The primary expressions are literals of the primitive types, identifiers (variables, functions, types when used as constructors and enum values in their shorthand form), `self` inside methods and `none`.
+The primary expressions are literals of the primitive types, identifiers (variables, functions, types when used as constructors and enum values in their shorthand form), `self` inside methods, `none`, parenthesized expressions and the `if`, `match`, `return`, `break` and `continue` expressions. The last five take everything after them, the same as the fallback of `orelse`. That `return`, `break` and `continue` only appear where leaving the expression makes sense is a semantic check.
 
     PAREN_EXPR := '(' LIST(NAMED_VALUE) ')'
-    NAMED_VALUE := VALUE [ '=' VALUE ]
-    VALUE := IF_EXPR | MATCH_EXPR | EXPR
+    NAMED_VALUE := EXPR [ '=' EXPR ]
 
-Parentheses serve multiple purposes: grouping of expressions (`(a + b)`), tuple literals (`(foo = 1, bar = 56)`) and function call arguments (`foo(a, 56)` or `inc(x = 56)`). All are parsed by the same rule and differentiated afterwards: in `PRIMARY` position, a single item without `=` is a grouping, otherwise all items must be in the `ident '=' VALUE` form to form a tuple literal. In `POSTFIX_EXPR` position, it is a function call. When used as call arguments, both forms can be used. This way the grammar stays LL(1) even though we only know which form is used after the first expression has been parsed. Note that the `=` here is not an assignment operator. 
+Parentheses serve multiple purposes: grouping of expressions (`(a + b)`), tuple literals (`(foo = 1, bar = 56)`) and function call arguments (`foo(a, 56)` or `inc(x = 56)`). All are parsed by the same rule and differentiated afterwards: in `PRIMARY` position, a single item without `=` is a grouping, otherwise all items must be in the `ident '=' EXPR` form to form a tuple literal. In `POSTFIX_EXPR` position, it is a function call. When used as call arguments, both forms can be used. This way the grammar stays LL(1) even though we only know which form is used after the first expression has been parsed. Note that the `=` here is not an assignment operator. 
 
-Parentheses are also the only place where the `if` and `match` expressions can appear, as a whole item, or the value of a named item:
+The `if` and `match` expressions:
 
-    IF_EXPR := 'if' EXPR 'then' EXPR 'else' ( IF_EXPR | EXPR )
-    MATCH_EXPR := 'match' EXPR 'with' CASE_EXPR { CASE_EXPR } [ 'else' EXPR ]
-    CASE_EXPR := 'is' PATTERN 'then' EXPR
+    IF_EXPR := 'if' EXPR 'then' EXPR 'else' EXPR
+    MATCH_EXPR := 'match' EXPR 'when' CASE_EXPR { CASE_EXPR } [ 'else' OR_EXPR ]
+    CASE_EXPR := 'is' PATTERN [ 'and' OR_EXPR ] 'then' OR_EXPR
 
-The cases of `if` and `match` expressions can only be expressions, never blocks. The parser clears the block start flag after `then`, `else` and `with` in these rules, so any line break inside them is a continuation. `else if` chains are allowed directly in the `else` case, any other nested `if`, or `match` expression must be in its own parentheses. Since `is` cannot continue an expression, it always starts the next case. That the `match` expression is exhaustive, or has the `else` case is a semantic check.
+The cases of `if` and `match` expressions can only be expressions, never blocks. The parser clears the block start flag after `then`, `else` and `when` in these rules, so any line break inside them is a continuation. `else if` chains need no special rule as `IF_EXPR` is an `EXPR`. The guards and values of the `match` cases are `OR_EXPR`, so that they cannot contain `is` (unless in parentheses) and `is` always starts the next case. That the `match` expression is exhaustive, or has the `else` case is a semantic check.
 
     ARRAY_LITERAL := '[' LIST(EXPR) ']'
     MAP_LITERAL := '{' LIST(MAP_ITEM) '}'

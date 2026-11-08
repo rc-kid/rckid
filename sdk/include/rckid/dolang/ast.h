@@ -30,6 +30,7 @@ namespace rckid::dolang::ast {
         Assign,
         BinaryOp,
         UnaryOp,
+        Is,
 
         Break,
         Continue,
@@ -589,11 +590,65 @@ namespace rckid::dolang::ast {
         unique_ptr<Node> operand_;
     }; 
 
+    /** The `X is PATTERN` and `X is not PATTERN` test. 
+     
+        Evaluates to bool. When it is the whole condition of an if, or while, the pattern may also bind values, otherwise binding patterns are a semantic error. The negated form never binds.
+     */
+    class Is : public Node {
+    public:
+        Is(Token const & t): 
+            Node{Kind::Is, t.loc} 
+        {
+            ASSERT(t == TokenKind::kwIs);
+        }
+
+        Node * value() const { return value_.get(); }
+        void setValue(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            value_ = std::move(child);
+        }
+
+        Node * pattern() const { return pattern_.get(); }
+        void setPattern(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            pattern_ = std::move(child);
+        }
+
+        bool negated() const { return negated_; }
+        void setNegated(bool value) { negated_ = value; }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            value_->prettyPrint(w, indent);
+            w << (negated_ ? " is not " : " is ");
+            pattern_->prettyPrint(w, indent);
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            if (negated_)
+                w << " not";
+            w << "\n";
+            value_->debugPrint(w, indent + 2);
+            w << "\n";
+            pattern_->debugPrint(w, indent + 2);
+        }
+
+    protected:
+        unique_ptr<Node> value_;
+        unique_ptr<Node> pattern_;
+        bool negated_ = false;
+    };
+
 
 
     class Break : public Node {
     public:
         Break(Location loc): Node{Kind::Break, loc} { }
+        Break(Token const & t): 
+            Node{Kind::Break, t.loc} 
+        {
+            ASSERT(t == TokenKind::kwBreak);
+        }
 
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             w << "break";
@@ -603,6 +658,11 @@ namespace rckid::dolang::ast {
     class Continue : public Node {
     public:
         Continue(Location loc): Node{Kind::Continue, loc} { }
+        Continue(Token const & t): 
+            Node{Kind::Continue, t.loc} 
+        {
+            ASSERT(t == TokenKind::kwContinue);
+        }
 
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             w << "continue";
@@ -762,6 +822,7 @@ inline void write(Writer & w, rckid::dolang::ast::Kind kind) {
         case Kind::TupleType: w << "TupleType"; break;
         case Kind::TypeDecl: w << "TypeDecl"; break;
         case Kind::UnaryOp: w << "UnaryOp"; break;
+        case Kind::Is: w << "Is"; break;
         case Kind::UseDecl: w << "UseDecl"; break;
         case Kind::VarDecl: w << "VarDecl"; break;
         case Kind::Write: w << "Write"; break;

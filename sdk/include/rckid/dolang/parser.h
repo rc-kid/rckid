@@ -162,7 +162,7 @@ namespace rckid::dolang {
         /** STATEMENT := LET_STMT | IF_STMT | WHILE_STMT | FOR_STMT | MATCH_STMT | RETURN_STMT
                        |= 'break' | 'continue' | 'write' EXPR | 'test' EXPR | EXPR_STMT
 
-            LET_STMT is parsed by VAR_DECL. The if and match expressions can only appear inside parentheses, so a statement starting with `if`, or `match` is always the IF_STMT, or MATCH_STMT.
+            LET_STMT is parsed by VAR_DECL. A statement starting with `if`, or `match` is always the IF_STMT, or MATCH_STMT. The IF_EXPR and MATCH_EXPR forms are only parsed when they appear inside an expression.
          */
         unique_ptr<ast::Node> STATEMENT() {
             switch (top().kind) {
@@ -246,6 +246,21 @@ namespace rckid::dolang {
             }
             return result;
         }
+        
+        /** IF_EXPR := 'if' EXPR 'then' EXPR 'else' EXPR
+
+            Cases are expressions only. The block start flag must be cleared after `then` and `else`, so that line breaks inside are continuations.
+         */
+        unique_ptr<ast::Node> IF_EXPR() {
+            auto result = std::make_unique<ast::If>(POP(TokenKind::kwIf).loc);
+            result->setCondition(TRY(EXPR()));
+            POP(TokenKind::kwThen);
+            result->setThenCase(TRY(EXPR()));
+            POP(TokenKind::kwElse);
+            result->setElseCase(TRY(EXPR()));
+            return result;
+        }
+
 
         /** WHILE_STMT := 'while' EXPR 'do' BLOCK
          */
@@ -259,7 +274,7 @@ namespace rckid::dolang {
             UNIMPLEMENTED;
         }
 
-        /** MATCH_STMT := 'match' EXPR 'with' indent CASE_STMT { newline CASE_STMT } [ 'else' BLOCK ] dedent
+        /** MATCH_STMT := 'match' EXPR 'when' indent CASE_STMT { newline CASE_STMT } [ 'else' BLOCK ] dedent
 
             A line starting with `else` produces no newline, so the else case follows the last case directly.
          */
@@ -267,7 +282,20 @@ namespace rckid::dolang {
             UNIMPLEMENTED;
         }
 
-        /** CASE_STMT := 'is' PATTERN 'then' BLOCK
+        /** MATCH_EXPR := 'match' EXPR 'when' CASE_EXPR { CASE_EXPR } [ 'else' OR_EXPR ]
+            CASE_EXPR := 'is' PATTERN [ 'and' OR_EXPR ] 'then' OR_EXPR
+
+            Cases are expressions only. The block start flag must be cleared after `when`, `then` and `else`, so that line breaks inside are continuations. Exhaustiveness (or the else case) is a semantic check.
+
+            The guard and the case values are OR_EXPR, not EXPR, so that they cannot contain the `is` operator (unless in parentheses) and the next `is` therefore always starts the next case. The guard sees the bindings of the case's pattern.
+         */
+        unique_ptr<ast::Node> MATCH_EXPR() {
+            UNIMPLEMENTED;
+        }
+
+        /** CASE_STMT := 'is' PATTERN [ 'and' EXPR ] 'then' BLOCK
+
+            The guard sees the bindings of the case's pattern.
          */
         unique_ptr<ast::Node> CASE_STMT() {
             UNIMPLEMENTED;
@@ -365,12 +393,22 @@ namespace rckid::dolang {
             UNIMPLEMENTED;
         }
 
-        /** EXPR := OR_EXPR
+        /** EXPR := OR_EXPR [ 'is' [ 'not' ] PATTERN ]
 
-            The if and match expressions are not EXPR, they can only appear inside parentheses (see VALUE).
+            The `is` operator has the lowest precedence and is non-associative, so it can only appear at the top of an expression, or inside parentheses. It evaluates to bool. When it is the whole condition of an if, or while, the pattern may also bind values visible in the then case, or the loop body, everywhere else (and in the negated form) binding patterns are a semantic error.
+
+            The if, match, return, break and continue expressions are parsed as PRIMARY.
          */
         unique_ptr<ast::Node> EXPR() {
-            return OR_EXPR();
+            auto result = TRY(OR_EXPR());
+            if (top() != TokenKind::kwIs)
+                return result;
+            auto isExpr = std::make_unique<ast::Is>(pop());
+            isExpr->setValue(std::move(result));
+            if (condPop(TokenKind::kwNot))
+                isExpr->setNegated(true);
+            isExpr->setPattern(TRY(PATTERN()));
+            return isExpr;
         }
 
         /** OR_EXPR := AND_EXPR { 'or' AND_EXPR }
@@ -515,7 +553,7 @@ namespace rckid::dolang {
             }
         }
 
-        /** POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | PAREN_EXPR [ 'orelse' ORELSE_RHS ] }
+        /** POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | PAREN_EXPR [ 'orelse' EXPR ] }
 
             orelse can only follow a call. Its right hand side takes everything, so the postfix expression always ends with it. That the call returns an optional value is a semantic check.
          */
@@ -533,17 +571,8 @@ namespace rckid::dolang {
             }
         }
 
-        /** ORELSE_RHS := EXPR | 'return' [ EXPR ] | 'break' | 'continue'
-
-            Takes everything, i.e. `foo() orelse 4 + 2` is `foo() orelse (4 + 2)`.
-
-            No value for return when the next token is newline, dedent, or ends the enclosing list.
-         */
-        unique_ptr<ast::Node> ORELSE_RHS() {
-            UNIMPLEMENTED;
-        }
-
-        /** PRIMARY := LITERAL | ident | 'self' | 'none' | PAREN_EXPR
+        /** PRIMARY := LITERAL | ident | 'self' | 'none'
+                   |= PAREN_EXPR | IF_EXPR | MATCH_EXPR | RETURN_STMT | 'break' | 'continue'
             LITERAL := number | string | 'true' | 'false'
                     |= ARRAY_LITERAL | MAP_LITERAL | FUN_LITERAL
          */
@@ -561,6 +590,16 @@ namespace rckid::dolang {
                     return std::make_unique<ast::SymbolName>(pop());
                 case TokenKind::opParOpen:
                     return PAREN_EXPR();
+                case TokenKind::kwIf:
+                    return IF_EXPR();
+                case TokenKind::kwMatch:
+                    return MATCH_EXPR();
+                case TokenKind::kwReturn:
+                    return RETURN_STMT();
+                case TokenKind::kwBreak:
+                    return std::make_unique<ast::Break>(pop());
+                case TokenKind::kwContinue:
+                    return std::make_unique<ast::Continue>(pop());
                 default:
                     error_ = Token::error(top().loc, STR("Expected primary expression, got " << top().kind));
                     return nullptr;
@@ -576,39 +615,9 @@ namespace rckid::dolang {
             UNIMPLEMENTED;
         }
 
-        /** NAMED_VALUE := VALUE [ '=' VALUE ]
+        /** NAMED_VALUE := EXPR [ '=' EXPR ]
          */
         unique_ptr<ast::Node> NAMED_VALUE() {
-            UNIMPLEMENTED;
-        }
-
-        /** VALUE := IF_EXPR | MATCH_EXPR | EXPR
-
-            The only place where the if and match expressions can appear.
-         */
-        unique_ptr<ast::Node> VALUE() {
-            UNIMPLEMENTED;
-        }
-
-        /** IF_EXPR := 'if' EXPR 'then' EXPR 'else' ( IF_EXPR | EXPR )
-
-            Cases are expressions only. The block start flag must be cleared after `then` and `else`, so that line breaks inside are continuations.
-         */
-        unique_ptr<ast::Node> IF_EXPR() {
-            UNIMPLEMENTED;
-        }
-
-        /** MATCH_EXPR := 'match' EXPR 'with' CASE_EXPR { CASE_EXPR } [ 'else' EXPR ]
-
-            Cases are expressions only. The block start flag must be cleared after `with`, `then` and `else`, so that line breaks inside are continuations. Exhaustiveness (or the else case) is a semantic check.
-         */
-        unique_ptr<ast::Node> MATCH_EXPR() {
-            UNIMPLEMENTED;
-        }
-
-        /** CASE_EXPR := 'is' PATTERN 'then' EXPR
-         */
-        unique_ptr<ast::Node> CASE_EXPR() {
             UNIMPLEMENTED;
         }
 
@@ -653,7 +662,7 @@ namespace rckid::dolang {
 
             - every block of statements has its *indentation*, the column at which all its statements start. A line starting exactly at this column starts a new statement
             - a line indented *more* continues the current statement
-            - except when the line follows a keyword that starts a block (`then`, `else`, `do`, `with`), the `fun` keyword, or a function signature. Then the more indented line starts a new block whose indentation is the column of the line
+            - except when the line follows a keyword that starts a block (`then`, `else`, `do`, `when`), the `fun` keyword, or a function signature. Then the more indented line starts a new block whose indentation is the column of the line
             - a line indented *less* ends the block (or blocks) and must start exactly at the indentation of one of the enclosing blocks
 
             We also need the ability to tell the parser that we are at the beginning of a block, which means that the next newline will be converted to an indent instead of swallowed. This is done by calling atBlockStart(). But when we do, there could have already been a newline token analyzed and ignored (because we were *not* at the beginning of a block). To fight this, when a newline is swallowed, we keep that newline in pending_. 
@@ -750,7 +759,7 @@ namespace rckid::dolang {
                 case TokenKind::kwThen:
                 case TokenKind::kwElse:
                 case TokenKind::kwDo:
-                case TokenKind::kwWith:
+                case TokenKind::kwWhen:
                     atBlockStart_ = true;
                     break;
                 default:

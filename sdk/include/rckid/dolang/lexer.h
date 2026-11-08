@@ -104,8 +104,8 @@ namespace rckid::dolang {
         kwTrue, 
         kwType, 
         kwUse, 
+        kwWhen, 
         kwWhile, 
-        kwWith, 
         kwWrite, 
         kwXor, // reserved
     }; // rckid::dolang::TokenKind
@@ -560,8 +560,8 @@ namespace rckid::dolang {
             {"true", TokenKind::kwTrue},
             {"type", TokenKind::kwType},
             {"use", TokenKind::kwUse},
+            {"when", TokenKind::kwWhen},
             {"while", TokenKind::kwWhile},
-            {"with", TokenKind::kwWith},
             {"write", TokenKind::kwWrite},
             {"xor", TokenKind::kwXor}
         };
@@ -642,8 +642,8 @@ namespace rckid::dolang {
             case TokenKind::kwTrue: w << "true"; break;
             case TokenKind::kwType: w << "type"; break;
             case TokenKind::kwUse: w << "use"; break;
+            case TokenKind::kwWhen: w << "when"; break;
             case TokenKind::kwWhile: w << "while"; break;
-            case TokenKind::kwWith: w << "with"; break;
             case TokenKind::kwWrite: w << "write"; break;
             case TokenKind::kwXor: w << "xor"; break;
         }
