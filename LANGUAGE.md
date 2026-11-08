@@ -60,12 +60,15 @@ Going back to a column that is not the indentation of any of the enclosing block
 
 ### Brackets
 
-Lists of items inside `()`, `[]` and `{}` brackets can be written in two forms. When the first item is on the same line as the opening bracket, the list is in its *single line* form. All items are separated by commas and the whole list is a single logical line, i.e. any line break inside it is a continuation and must be indented more than the statement:
+Lists of items inside `()`, `[]` and `{}` brackets can be written in two forms. When the first item is on the same line as the opening bracket, the list is in its *single line* form. All items are separated by commas and a trailing comma after the last item is allowed. The whole list is a single logical line, i.e. the standard rules for an expression spanning multiple lines apply and any line break inside it is a continuation, which must be indented more than the statement. For the same reason, a single line list cannot contain function bodies, or other lists in the multi-line form:
 
     foo(a, b,
         c)           # three arguments
+    foo(a, b,
+        c,
+    )                # the closing bracket can be on its own line too
 
-When the opening bracket is the last token on its line, the list is in its *multi-line* form and the items behave the same as statements in a block: the indentation of the first item is the indentation of the list, a line starting at this column starts a new item and a line indented more continues the current item. Items on the same line are separated by commas, but commas at the end of the lines are optional and a trailing comma after the last item is allowed. The closing bracket can be on its own line at the column of the line with the opening bracket:
+When the opening bracket is the last token on its line, the list is in its *multi-line* form and the items behave the same as statements in a block: the indentation of the first item is the indentation of the list, a line starting at this column starts a new item and a line indented more continues the current item. Items on the same line are separated by commas, while at the end of the line the comma is optional (and a trailing comma after the last item is allowed). The closing bracket is on its own line, at the indentation of the statement (or of the enclosing list item) the list is part of:
 
     foo(a, b, c)
     # or
@@ -80,6 +83,11 @@ When the opening bracket is the last token on its line, the list is in its *mult
         b,
         c,
     )
+    # or, with multiple items per line
+    let m = [
+        1, 2, 3
+        4, 5, 6
+    ]
 
 Since the items follow the same rules as statements, a line at the item column is always a new item:
 
@@ -99,7 +107,7 @@ This works in every context, so for instance map definition can look like this:
         "c" -> 3
     }
 
-Function bodies can appear inside brackets too. As any other block, a function body ends with the first line indented less than the body, so no comma is needed after it. Since only the line break ends a block, the closing bracket can never follow the body on the same line. Lists that contain function bodies therefore use the multi-line form:
+Function bodies can appear inside brackets too, but only in the multi-line form. As any other block, a function body ends with the first line indented less than the body, i.e. the next item, or the line with the closing bracket. The line break is thus the only separator after a function body. A comma at the end of the body's last line would be part of its last statement, which is an error:
 
     type Player = (
         onHit = fun(damage : num)
@@ -726,11 +734,11 @@ Whitespace between tokens is ignored. Comments (`#` to the end of the line), emp
 
 The lexer always starts with a `newline` token that gives the indentation of the first non-empty line, which is the indentation of the top level. After that, a `newline` token is emitted for every line break (empty lines and lines with only comments do not count), with the indentation of the line that follows.
 
-The parser keeps a stack of indentations, starting with the indentation of the top level. The top of the stack, `I`, is the indentation of the current block. It also keeps a *block start* flag, which the grammar rules that introduce a block set explicitly after the keyword that starts it (`then`, `else`, `do`, `when` in the statements, `fun` and the function signature), or after an opening bracket, and which is cleared when the next token is consumed. The flag is never set by the keyword alone, so the `if` and `match` expressions, which use the same keywords but cannot contain blocks, simply do not set it.
+The parser keeps a stack of indentations, starting with the indentation of the top level. The top of the stack, `I`, is the indentation of the current block. It also keeps a *block start* flag, which the grammar rules that introduce a block set explicitly after the keyword that starts it (`then`, `else`, `do`, `when` in the statements, `fun` and the function signature), or after an opening bracket, and which is cleared when the next token is consumed. The flag is never set by the keyword alone, so the `if` and `match` expressions, which use the same keywords but cannot contain blocks, simply do not set it. Inside a single line list, an `indent` after a block keyword, or an opening bracket is an error, as single line lists cannot contain blocks, or multi-line lists.
 
 A `newline` with indentation `c` is translated as follows:
 
-1. `c == I`: `newline` is emitted, i.e. a new statement (or a new line of items) starts. The only exception is a line starting with `else`, which never starts a statement, so no `newline` is emitted and the `else` continues the `if` (or `match`) statement.
+1. `c == I`: `newline` is emitted, i.e. a new statement (or a new line of items) starts. The only exceptions are lines starting with `else`, or a closing bracket (`)`, `]`, or `}`), which never start a statement, so no `newline` is emitted and the `else` continues the `if` (or `match`) statement, while the closing bracket closes the list.
 2. `c > I`: if the block start flag is set, `indent` is emitted and `c` is pushed on the stack. Otherwise the line is a continuation and nothing is emitted.
 3. `c < I`: `dedent` is emitted and `I` is popped from the stack. This is repeated as long as `c < I`, after which rule 1 applies. If `c` falls between two indentations on the stack, it is an error.
 
@@ -756,20 +764,20 @@ produces the following tokens:
     indent ident '(' ident ')'
     dedent newline 'self' '.' ident '-=' ident
     dedent newline ident '=' number
-    dedent newline ')'
+    dedent ')'
 
 ### Consequences for the grammar
 
-- statements, as well as lines of items in multi-line brackets, are separated by `newline`
-- multi-line brackets are `indent` ... `dedent` inside the bracket tokens, followed by `newline` when the closing bracket is on its own line at the indentation of the line with the opening bracket
-- single line brackets contain no layout tokens at all, unless they contain blocks
-- `else` after a block arrives as `dedent 'else'`, without `newline`
+- statements, as well as lines of items in multi-line lists, are separated by `newline`
+- multi-line lists are `indent` ... `dedent` inside the bracket tokens
+- single line lists contain no layout tokens at all
+- `else` after a block arrives as `dedent 'else'`, and the closing bracket after a multi-line list as `dedent ')'`, without `newline`
 
 # Appendix B - Grammar
 
 The grammar works on the tokens produced by the lexer (see Appendix A). Nonterminals are uppercase, terminals are either quoted (`'if'`, `'('`), or lowercase: `ident`, `number`, `string` and the layout tokens `newline`, `indent` and `dedent`. `[ X ]` is optional, `{ X }` is repeated zero or more times and `|` separates alternatives (`|=` continues the alternatives on the next line).
 
-The grammar is LL(1). Note that a line starting with `else` never produces `newline` (see Appendix A), so `else` after a block follows its `dedent` directly.
+The grammar is LL(1). Note that a line starting with `else`, or a closing bracket never produces `newline` (see Appendix A), so `else` after a block, or the closing bracket after a multi-line list follows its `dedent` directly.
 
 ## Common Rules
 
@@ -778,11 +786,11 @@ The grammar is LL(1). Note that a line starting with `else` never produces `newl
 
 A block is a sequence of statements, each starting on its own line. As `newline` is only emitted for lines at the indentation of the block, statements continued on further lines need no special handling. Statements ending with a nested `BLOCK` are followed by `newline` as any other statement, since it is emitted after the `dedent` tokens. A block consisting of a single statement can also be written on the same line as the keyword that introduces it (e.g. `if a then foo()`).
 
-    LIST(X) := indent LINE(X) { newline LINE(X) } dedent [ newline ]
-             | LINE(X)
-    LINE(X) := [ X { ',' X } [ ',' ] ]
+    LIST(X) := [ X { ',' X } [ ',' ] ]
+             | indent LINE(X) { [ ',' ] newline LINE(X) } [ ',' ] dedent
+    LINE(X) := X { ',' X }
 
-Items inside brackets are either in the single line form, separated by commas, or in the multi-line form (the first item is on a new line), in which `indent` is emitted after the opening bracket, `newline` between lines and `dedent` before the closing bracket. When the closing bracket is on its own line at the indentation of the line with the opening bracket, `newline` follows the `dedent`. Each line may contain multiple comma separated items and an optional trailing comma. An item that continues on further lines, or ends with a block, needs no special handling.
+Items inside brackets are either in the single line form, separated by commas with optional trailing comma, or in the multi-line form (the first item is on a new line), in which `indent` is emitted after the opening bracket, `newline` between lines and `dedent` before the closing bracket. Items on the same line are separated by commas, the comma at the end of a line is optional. After an item and an optional comma, `newline` starts the next line of items, `dedent` ends the list and any other token is the next item on the same line, which requires the comma. An item that continues on further lines, or ends with a block, needs no special handling. Blocks (function bodies) and multi-line lists cannot appear inside a single line list, the parser reports both as errors. The closing bracket is part of the rules that use `LIST`.
 
 Blocks are only ever introduced by a keyword (`then`, `else`, `do`, `when`, `fun`), or a function signature, never by an operator. The right hand side of `=` (and other assignment operators) is therefore always an `EXPR`, function bodies on the right hand side are function literals (see `FUN_LITERAL`). The grammar is thus context free and the parser never needs to know the type of the left hand side.
 
@@ -939,7 +947,7 @@ The cases of `if` and `match` expressions can only be expressions, never blocks.
     MAP_LITERAL := '{' LIST(MAP_ITEM) '}'
     MAP_ITEM := EXPR '->' EXPR
 
-Array literals are list of values in square brackets, map literals are list of key-value pairs separated by the arrow operator in curly brackets. Empty `[]` and `{}` are valid, but their types must be known from the context.
+Array literals are list of values in square brackets, map literals are list of key-value pairs separated by the arrow operator in curly brackets. Empty `[]` and `{}` are valid (an opening bracket immediately followed by a line with the closing bracket is an empty list as well), but their types must be known from the context.
 
     FUN_LITERAL := 'fun' [ '(' LIST(LAMBDA_ARG) ')' [ '->' [ 'optional' ] TYPE ] ] BLOCK
     LAMBDA_ARG := ident [ ':' TYPE ] [ '=' EXPR ] | LITERAL
@@ -948,7 +956,7 @@ Anonymous function starts with the `fun` keyword, optionally followed by the sig
 
 When the signature is omitted, it is taken from the function type known from the context and the arguments are bound under their names from the type. When the signature is given, argument types may be omitted if the function type is known from the context, but all arguments must always be listed. Literal arguments are only valid for event handlers where they are used for the value matching. Whether the function type is known from the context, and therefore which parts of the signature may be omitted, is decided semantically.
 
-Outside of brackets, the function body is followed by `newline` (or `dedent`), so an anonymous function must always be the last part of the statement it appears in. Inside brackets, the body ends at the next line of items, or at the line with the closing bracket, after which the list continues as usual. As only line breaks end blocks, the closing bracket cannot follow the body on the same line.
+Outside of brackets, the function body is followed by `newline` (or `dedent`), so an anonymous function must always be the last part of the statement it appears in. Inside brackets, which must be in the multi-line form, the body ends at the next line of items, or at the line with the closing bracket, after which the list continues as usual. As only line breaks end blocks, neither a comma, nor the closing bracket can follow the body on the same line.
 
 
 # Appendix C - Runtime

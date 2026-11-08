@@ -149,8 +149,14 @@ namespace rckid::dolang {
         /** BLOCK := indent STATEMENT { newline STATEMENT } dedent
 
             Sets the block start flag itself, so that the next line indented more is the indent of the block. This must happen before the first top() call as that is where the newline is translated.
+
+            Blocks are not allowed inside single line lists (layoutAllowed_ is false there).
          */
         unique_ptr<ast::Block> BLOCK() {
+            if (! layoutAllowed_) {
+                error_ = Token::error(top().loc, "Function body is only allowed in a multi-line list");
+                return nullptr;
+            }
             atBlockStart();
             auto result = std::make_unique<ast::Block>(top().loc);
             POP(TokenKind::Indent);
@@ -161,15 +167,53 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** LIST(X) := indent LINE(X) { newline LINE(X) } dedent [ newline ]
-                     | LINE(X)
-            LINE(X) := [ X { ',' X } [ ',' ] ]
+        /** LIST(X) := [ X { ',' X } [ ',' ] ]
+                     |= indent LINE(X) { [ ',' ] newline LINE(X) } [ ',' ] dedent
+            LINE(X) := X { ',' X }
 
-            Parses the items of a bracketed list, calling item() to parse each X. The opening bracket is expected to be already popped and the closing bracket is left to the caller. Returns false on error.
+            Parses the items of a bracketed list, calling the item parser method to parse each X, and returns them as ast::List, which also remembers the form used. The opening bracket is expected to be already popped and the closing bracket (close) is left to the caller, but the single line form must know it to tell when the items end.
+
+            The form is decided right after the opening bracket: if the next token is indent, the list is multi-line, otherwise single line. 
+            
+            Single line form: items separated by commas, optional trailing comma. The list is a single logical line, so no layout is allowed inside (blocks and nested multi-line lists are errors) and all other line breaks are continuations. The closing bracket on its own line at the current indentation produces no newline (see top()).
+            
+            Multi-line form: block rules, items on the same line separated by commas, at the end of the line the comma is optional. After an item and optional comma, newline starts the next line of items, dedent ends the list and anything else is the next item on the same line, which requires the comma. Blocks are allowed in the items, but as the block ends with a line break, no comma can follow it. The closing bracket follows the dedent directly (see top()).
          */
-        template<typename ITEM>
-        bool LIST(ITEM item) {
-            UNIMPLEMENTED;
+        unique_ptr<ast::List> LIST(TokenKind close, unique_ptr<ast::Node> (Parser::*item)()) {
+            // always check for the multi-line form, so that we can report it as an error inside single line lists instead of silently treating the line break as a continuation
+            atBlockStart();
+            auto result = std::make_unique<ast::List>(top().loc);
+            if (top() == TokenKind::Indent) {
+                if (! layoutAllowed_) {
+                    error_ = Token::error(top().loc, "Multi-line list is not allowed inside a single line list");
+                    return nullptr;
+                }
+                result->multiLine = true;
+                pop();
+                while (true) {
+                    result->addChild(TRY((this->*item)()));
+                    bool comma = condPop(TokenKind::opComma);
+                    if (condPop(TokenKind::Newline))
+                        continue;
+                    if (condPop(TokenKind::Dedent))
+                        return result;
+                    if (! comma) {
+                        error_ = Token::error(top().loc, STR("Expected , or new line, got " << top().kind));
+                        return nullptr;
+                    }
+                }
+            } else {
+                LayoutGuard g_{*this, false};
+                if (top() == close)
+                    return result;
+                while (true) {
+                    result->addChild(TRY((this->*item)()));
+                    if (! condPop(TokenKind::opComma))
+                        return result;
+                    if (top() == close)
+                        return result;
+                }
+            }
         }
 
         /** STATEMENT := LET_STMT | IF_STMT | WHILE_STMT | FOR_STMT | MATCH_STMT | RETURN_STMT
@@ -209,7 +253,6 @@ namespace rckid::dolang {
                 default:
                     return EXPR_STMT();
             }
-            UNIMPLEMENTED;
         }
 
         /** EXPR_STMT := EXPR [ ( '=' | '+=' | '-=' | '*=' | '/=' ) EXPR ]
@@ -418,13 +461,19 @@ namespace rckid::dolang {
         /** TUPLE_TYPE := '(' LIST(FIELD_TYPE) ')'
          */
         unique_ptr<ast::TupleType> TUPLE_TYPE() {
-            UNIMPLEMENTED;
+            auto result = std::make_unique<ast::TupleType>(POP(TokenKind::opParOpen).loc);
+            result->setElements(TRY(LIST(TokenKind::opParClose, &Parser::FIELD_TYPE)));
+            POP(TokenKind::opParClose);
+            return result;
         }
 
         /** FIELD_TYPE := ident [ ':' TYPE ]
          */
         unique_ptr<ast::Node> FIELD_TYPE() {
-            UNIMPLEMENTED;
+            auto result = std::make_unique<ast::FieldType>(POP(TokenKind::Identifier));
+            if (condPop(TokenKind::opColon))
+                result->setType(TRY(TYPE()));
+            return result;
         }
 
         /** MAP_TYPE := '{' POD_TYPE '->' TYPE '}'
@@ -653,6 +702,8 @@ namespace rckid::dolang {
                     return std::make_unique<ast::SymbolName>(pop());
                 case TokenKind::opParOpen:
                     return PAREN_EXPR();
+                case TokenKind::opSquareOpen:
+                    return ARRAY_LITERAL();
                 case TokenKind::kwIf:
                     return IF_EXPR();
                 case TokenKind::kwMatch:
@@ -667,7 +718,6 @@ namespace rckid::dolang {
                     error_ = Token::error(top().loc, STR("Expected primary expression, got " << top().kind));
                     return nullptr;
             }
-            UNIMPLEMENTED;
         }
 
         /** PAREN_EXPR := '(' LIST(NAMED_VALUE) ')'
@@ -687,7 +737,10 @@ namespace rckid::dolang {
         /** ARRAY_LITERAL := '[' LIST(EXPR) ']'
          */
         unique_ptr<ast::Node> ARRAY_LITERAL() {
-            UNIMPLEMENTED;
+            auto result = std::make_unique<ast::ArrayLiteral>(POP(TokenKind::opSquareOpen).loc);
+            result->setItems(TRY(LIST(TokenKind::opSquareClose, &Parser::EXPR)));
+            POP(TokenKind::opSquareClose);
+            return result;
         }
 
         /** MAP_LITERAL := '{' LIST(MAP_ITEM) '}'
@@ -732,13 +785,28 @@ namespace rckid::dolang {
 
             When atBlockStart() is called, we check pending_. If it is a newline, we need to recalculate the next token and we swap the pending and next tokens. This means next top will process the newline into the indent. When we pop the indent, the token in pending_ is moved back into next_ so that the next top will process it as the next token after the newline.
 
-            A line at the current indentation is a newline, unless it starts with `else`, which can never start a statement and therefore continues the if statement (or the match statement). To tell, we read the token after the newline into pending_. If it is `else`, it replaces the newline in next_, otherwise the newline is returned and the token in pending_ is moved to next_ when the newline is popped.
+            A line at the current indentation is a newline, unless it starts with `else`, or a closing bracket, which can never start a statement. The `else` therefore continues the if statement (or the match statement), while the closing bracket closes the list (after the dedent of a multi-line list, or as the continuation of a single line list). To tell, we read the token after the newline into pending_. If it is `else`, or a closing bracket, it replaces the newline in next_, otherwise the newline is returned and the token in pending_ is moved to next_ when the newline is popped.
+
+            Finally, layoutAllowed_ is false inside single line lists, where both BLOCK() and LIST() report an error when they would start a block, or a multi-line list. Single line lists set (and restore) the flag via LayoutGuard.
 
             So pending_ is either empty (EndOfFile), a swallowed newline (and next_ is the token after it), or the token that follows the newline (or indent) in next_.
          */
         //@{
 
         bool atBlockStart_ = false;
+
+        /** False inside single line lists, where blocks and multi-line lists are not allowed. */
+        bool layoutAllowed_ = true;
+
+        /** Sets layoutAllowed_ for its lifetime and restores the previous value afterwards. */
+        class LayoutGuard {
+        public:
+            LayoutGuard(Parser & p, bool allowed): p_{p}, old_{p.layoutAllowed_} { p_.layoutAllowed_ = allowed; }
+            ~LayoutGuard() { p_.layoutAllowed_ = old_; }
+        private:
+            Parser & p_;
+            bool old_;
+        };
 
         Token next_; 
         Token pending_;
@@ -753,11 +821,11 @@ namespace rckid::dolang {
             if (next_.kind == TokenKind::EndOfFile)
                     next_ = lexer_.next();
             while (next_.kind == TokenKind::Newline) {
-                // if the indentation of the newline is the same as the current indentation, we emit it as it is the end of statement, unless the next line starts with else, which continues the if (or match) statement
+                // if the indentation of the newline is the same as the current indentation, we emit it as it is the end of statement, unless the next line starts with else, which continues the if (or match) statement, or a closing bracket, which closes the list
                 if (next_.payload == indentStack_.back()) {
                     if (pending_ == TokenKind::EndOfFile)
                         pending_ = lexer_.next();
-                    if (pending_ == TokenKind::kwElse) {
+                    if (pending_ == TokenKind::kwElse || pending_ == TokenKind::opParClose || pending_ == TokenKind::opSquareClose || pending_ == TokenKind::opCurlyClose) {
                         next_ = pending_;
                         pending_.kind = TokenKind::EndOfFile;
                     }

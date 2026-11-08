@@ -40,6 +40,18 @@ namespace {
         return false;
     }
 
+    /** True if parsing the source and printing it back gives the expected text. For sources that have multiple valid layouts which print the same, such as optional commas in lists.
+     */
+    bool printsAs(char const * source, char const * expected) {
+        StringBuilder sb;
+        parse(source)->prettyPrint(sb.writer());
+        String result{sb.str()};
+        if (result == expected)
+            return true;
+        std::cout << std::endl << "    expected: " << escaped(expected).c_str() << std::endl << "    actual:   " << escaped(result).c_str() << std::endl;
+        return false;
+    }
+
     /** True if the debug print of the parsed source is the expected text. If not, prints both, so that the failure can be seen in the test output.
 
         Pretty printing should be used for most tests as eventually it should keep the formatting of the source. Debug prints are for the tests where the structure of the tree matters, such as operator precedence, which the pretty print does not show.
@@ -124,6 +136,83 @@ TEST(dolang, parser_arrayTypes) {
     EXPECT(roundTrips("global a : [num]\n"));
     EXPECT(roundTrips("global a : [Player]\n"));
     EXPECT(roundTrips("global a : [[text]]\n"));
+}
+
+TEST(dolang, parser_tupleTypes) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x : ()\n"));
+    EXPECT(roundTrips("global x : (a)\n"));
+    EXPECT(roundTrips("global x : (a : num)\n"));
+    EXPECT(roundTrips("global x : (a : num, b : text)\n"));
+    // field types are optional
+    EXPECT(roundTrips("global x : (a, b : bool, c)\n"));
+    // any type can be a field type, tuples can be part of other types
+    EXPECT(roundTrips("global x : (a : [num], b : {num -> text}, c : Player)\n"));
+    EXPECT(roundTrips("global x : (a : (b : num, c), d)\n"));
+    EXPECT(roundTrips("global x : [(a : num)]\n"));
+    EXPECT(roundTrips("global m : {num -> (a : num)}\n"));
+    // with value and in functions
+    EXPECT(roundTrips("global x : (a : num) = y\n"));
+    EXPECT(roundTrips("fun f()\n  let x : (a : num, b) = y\n"));
+    // trailing comma
+    EXPECT(printsAs("global x : (a : num, b,)\n", "global x : (a : num, b)\n"));
+}
+
+TEST(dolang, parser_tupleTypesMultiLine) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x : (\n  a : num\n  b : text\n)\n"));
+    EXPECT(roundTrips("fun f()\n  let x : (\n    a : num\n    b\n  ) = y\n"));
+    // nested multi-line tuple types
+    EXPECT(roundTrips("global x : (\n  a : (\n    b : num\n    c\n  )\n  d\n)\n"));
+    // commas
+    EXPECT(printsAs("global x : (\n  a : num, b\n  c,\n)\n", "global x : (\n  a : num\n  b\n  c\n)\n"));
+    // continuation of the field type
+    EXPECT(printsAs("global x : (\n  a :\n    num\n  b\n)\n", "global x : (\n  a : num\n  b\n)\n"));
+}
+
+TEST(dolang, parser_tupleTypesStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("global x : (a : num, b)\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    TupleType@(1:12)\n"
+        "      List@(1:13)\n"
+        "        FieldType@(1:13) a\n"
+        "          SymbolName@(1:17) num\n"
+        "        FieldType@(1:22) b\n"
+    ));
+    EXPECT(debugPrints("global x : (\n  a : num\n  b\n)\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    TupleType@(1:12)\n"
+        "      List@(2:3) multi-line\n"
+        "        FieldType@(2:3) a\n"
+        "          SymbolName@(2:7) num\n"
+        "        FieldType@(3:3) b\n"
+    ));
+}
+
+TEST(dolang, parser_tupleTypesErrors) {
+    ClearPools clear_;
+    // unclosed
+    EXPECT(fails("global x : (a : num\n"));
+    EXPECT(fails("global x : (\n  a : num\n"));
+    // field names must be identifiers, types must be present after :
+    EXPECT(fails("global x : (1)\n"));
+    EXPECT(fails("global x : (num)\n"));
+    EXPECT(fails("global x : (a : )\n"));
+    EXPECT(fails("global x : (a : 1)\n"));
+    // missing or doubled separators
+    EXPECT(fails("global x : (a b)\n"));
+    EXPECT(fails("global x : (a : num b : num)\n"));
+    EXPECT(fails("global x : (a,, b)\n"));
+    EXPECT(fails("global x : (, a)\n"));
+    EXPECT(fails("global x : (\n  a b\n)\n"));
+    // multi-line must close on its own line, and cannot be inside a single line list
+    EXPECT(fails("global x : (\n  a\n  b)\n"));
+    EXPECT(fails("global x : (a : (\n    b\n  ))\n"));
+    // mismatched brackets
+    EXPECT(fails("global x : (a]\n"));
 }
 
 TEST(dolang, parser_mapTypes) {
@@ -595,6 +684,112 @@ TEST(dolang, parser_isOperatorErrors) {
     EXPECT(fails("global x = a is B and c\n"));
     EXPECT(fails("global x = a is B + c\n"));
     EXPECT(fails("global x = is B\n"));
+}
+
+// ------------------------------------------------------------------------------------------------
+// lists (via array literals)
+// ------------------------------------------------------------------------------------------------
+
+TEST(dolang, parser_listSingleLine) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = []\n"));
+    EXPECT(roundTrips("global x = [a]\n"));
+    EXPECT(roundTrips("global x = [a, b, c]\n"));
+    EXPECT(roundTrips("global x = [a + b, -c, [d, e]]\n"));
+    EXPECT(roundTrips("fun f()\n  let x = [a, b]\n  c\n"));
+    // trailing comma
+    EXPECT(printsAs("global x = [a, b,]\n", "global x = [a, b]\n"));
+    // line breaks are continuations
+    EXPECT(printsAs("global x = [a,\n    b]\n", "global x = [a, b]\n"));
+    EXPECT(printsAs("global x = [a\n    , b]\n", "global x = [a, b]\n"));
+    EXPECT(printsAs("global x = [a, b +\n    c]\n", "global x = [a, b + c]\n"));
+    // closing bracket on its own line at the statement indentation, or as a continuation
+    EXPECT(printsAs("global x = [a,\n    b\n]\n", "global x = [a, b]\n"));
+    EXPECT(printsAs("global x = [a,\n    b,\n]\n", "global x = [a, b]\n"));
+    EXPECT(printsAs("fun f()\n  let x = [a,\n      b\n  ]\n", "fun f()\n  let x = [a, b]\n"));
+    EXPECT(printsAs("global x = [a,\n    b\n  ]\n", "global x = [a, b]\n"));
+}
+
+TEST(dolang, parser_listMultiLine) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = [\n  a\n]\n"));
+    EXPECT(roundTrips("global x = [\n  a\n  b\n  c\n]\n"));
+    EXPECT(roundTrips("fun f()\n  let x = [\n    a\n    b\n  ]\n"));
+    // statement after the list
+    EXPECT(roundTrips("fun f()\n  let x = [\n    a\n  ]\n  b\n"));
+    // nested lists
+    EXPECT(roundTrips("global x = [\n  [\n    a\n    b\n  ]\n  c\n]\n"));
+    EXPECT(roundTrips("global x = [\n  [a, b]\n  c\n]\n"));
+    // a line at the item column is always a new item
+    EXPECT(roundTrips("global x = [\n  a\n  -b\n]\n"));
+    // while a line indented more is a continuation
+    EXPECT(printsAs("global x = [\n  a\n    + b\n  c\n]\n", "global x = [\n  a + b\n  c\n]\n"));
+    EXPECT(printsAs("global x = [\n  a,\n    b\n]\n", "global x = [\n  a\n  b\n]\n"));
+}
+
+TEST(dolang, parser_listMultiLineCommas) {
+    ClearPools clear_;
+    // items on the same line are separated by commas
+    EXPECT(printsAs("global x = [\n  a, b\n  c\n]\n", "global x = [\n  a\n  b\n  c\n]\n"));
+    EXPECT(printsAs("global x = [\n  a, b, c\n  d, e\n]\n", "global x = [\n  a\n  b\n  c\n  d\n  e\n]\n"));
+    // comma at the end of the line is optional, including after the last item
+    EXPECT(printsAs("global x = [\n  a,\n  b,\n]\n", "global x = [\n  a\n  b\n]\n"));
+    EXPECT(printsAs("global x = [\n  a,\n  b\n]\n", "global x = [\n  a\n  b\n]\n"));
+    EXPECT(printsAs("global x = [\n  a, b,\n  c\n]\n", "global x = [\n  a\n  b\n  c\n]\n"));
+}
+
+TEST(dolang, parser_listEmpty) {
+    ClearPools clear_;
+    EXPECT(printsAs("global x = [\n]\n", "global x = []\n"));
+    EXPECT(printsAs("fun f()\n  let x = [\n  ]\n", "fun f()\n  let x = []\n"));
+}
+
+TEST(dolang, parser_listStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("global x = [a, b]\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    ArrayLiteral@(1:12)\n"
+        "      List@(1:13)\n"
+        "        SymbolName@(1:13) a\n"
+        "        SymbolName@(1:16) b\n"
+    ));
+    EXPECT(debugPrints("global x = [\n  a, b\n  c\n]\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    ArrayLiteral@(1:12)\n"
+        "      List@(2:3) multi-line\n"
+        "        SymbolName@(2:3) a\n"
+        "        SymbolName@(2:6) b\n"
+        "        SymbolName@(3:3) c\n"
+    ));
+}
+
+TEST(dolang, parser_listErrors) {
+    ClearPools clear_;
+    // missing commas
+    EXPECT(fails("global x = [a b]\n"));
+    EXPECT(fails("global x = [\n  a b\n]\n"));
+    // missing, or doubled items
+    EXPECT(fails("global x = [, a]\n"));
+    EXPECT(fails("global x = [a,, b]\n"));
+    EXPECT(fails("global x = [\n  a,,\n]\n"));
+    EXPECT(fails("global x = [\n  , a\n]\n"));
+    // unclosed lists
+    EXPECT(fails("global x = [a, b\n"));
+    EXPECT(fails("global x = [\n  a\n"));
+    EXPECT(fails("global x = [a,\n"));
+    // multi-line list must end on its own line
+    EXPECT(fails("global x = [\n  a\n  b]\n"));
+    // at the statement indentation, not less, or more
+    EXPECT(fails("fun f()\n  let x = [\n    a\n]\n"));
+    EXPECT(fails("global x = [\n  a\n    ]\n"));
+    // continuation of a single line list must be indented more than the statement
+    EXPECT(fails("global x = [a,\nb]\n"));
+    // single line list cannot contain multi-line lists
+    EXPECT(fails("global x = [a, [\n    b\n  ]]\n"));
+    EXPECT(fails("global x = [a, [\n    b]]\n"));
+    EXPECT(fails("global x = [[\n    b\n  ]]\n"));
 }
 
 // ------------------------------------------------------------------------------------------------
