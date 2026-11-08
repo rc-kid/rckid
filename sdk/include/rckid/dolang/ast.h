@@ -41,7 +41,7 @@ namespace rckid::dolang::ast {
         While,
         For,
         Match,
-        Case,
+        MatchCase,
 
     };
     
@@ -117,12 +117,13 @@ namespace rckid::dolang::ast {
             }
         }
 
+        /** Children are on their own lines. Same as other nodes, there is no newline after the last child, so that sequences can nest. 
+         */
         void debugPrint(Writer & w, uint32_t indent = 0) const override {
             Node::debugPrint(w, indent);
-            w << "\n";
             for (auto const & child : children_) {
-                child->debugPrint(w, indent + 2);
                 w << "\n";
+                child->debugPrint(w, indent + 2);
             }
         }
 
@@ -145,6 +146,13 @@ namespace rckid::dolang::ast {
             }
             if (children_.empty())
                 w.putChar('\n');
+        }
+
+        /** The whole program ends with a newline, as it is the root.
+         */
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            SequenceNode::debugPrint(w, indent);
+            w << "\n";
         }
     };
 
@@ -169,7 +177,7 @@ namespace rckid::dolang::ast {
 
         void debugPrint(Writer & w, uint32_t indent = 0) const override {
             Node::debugPrint(w, indent);
-            w << name.c_str();
+            w << " " << name.c_str();
         }
     };
 
@@ -193,7 +201,7 @@ namespace rckid::dolang::ast {
         } 
         void debugPrint(Writer & w, uint32_t indent = 0) const override {
             Node::debugPrint(w, indent);
-            w << num.n();
+            w << " " << num.n();
             if (! num.isInteger())
                 w << "/" << num.d();
         }
@@ -239,6 +247,7 @@ namespace rckid::dolang::ast {
 
         void debugPrint(Writer & w, uint32_t indent = 0) const override {
             Node::debugPrint(w, indent);
+            w << " ";
             prettyPrint(w, indent);
         }
     }; 
@@ -303,7 +312,7 @@ namespace rckid::dolang::ast {
 
         void debugPrint(Writer & w, uint32_t indent = 0) const override {
             Node::debugPrint(w, indent);
-            w << binding << " " << name.c_str();
+            w << " " << binding << " " << name.c_str();
             if (type_ != nullptr) {
                 w << "\n";
                 type_->debugPrint(w, indent + 2);
@@ -365,6 +374,7 @@ namespace rckid::dolang::ast {
 
         void debugPrint(Writer & w, uint32_t indent = 0) const override {
             Node::debugPrint(w, indent);
+            w << " ";
             if (isMethod())
                 w << className_.c_str() << ".";
             w << name_.c_str();
@@ -394,9 +404,37 @@ namespace rckid::dolang::ast {
     public:
         EnumDecl(Location loc): Node{Kind::EnumDecl, loc} { }
 
-        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
-            UNIMPLEMENTED;
+        void addValue(Symbol value) {
+            values_.push_back(value);
         }
+
+        void prettyPrint(Writer & w, [[maybe_unused]] uint32_t indent = 0) const override {
+            w << "enum " << name.c_str() << " = ";
+            bool first = true;
+            for (auto const & value : values_) {
+                if (first)
+                    first = false;
+                else
+                    w << " | ";
+                w << value.c_str();
+            }
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << " " << name.c_str();
+            for (auto const & value : values_) {
+                w << "\n";
+                for (uint32_t i = 0; i < indent + 2; ++i)
+                    w.putChar(' ');
+                w << value.c_str();
+            }
+        }
+
+        Symbol name;
+
+    protected:
+        std::vector<Symbol> values_;
     };
 
     class ArrayType : public Node {
@@ -504,7 +542,7 @@ namespace rckid::dolang::ast {
 
         void debugPrint(Writer & w, uint32_t indent = 0) const override {
             Node::debugPrint(w, indent);
-            w << op_ << "\n";
+            w << " " << op_ << "\n";
             left_->debugPrint(w, indent + 2);
             w << "\n";
             right_->debugPrint(w, indent + 2);
@@ -545,7 +583,7 @@ namespace rckid::dolang::ast {
 
         void debugPrint(Writer & w, uint32_t indent = 0) const override {
             Node::debugPrint(w, indent);
-            w << op_ << "\n";
+            w << " " << op_ << "\n";
             left_->debugPrint(w, indent + 2);
             w << "\n";
             right_->debugPrint(w, indent + 2);
@@ -581,7 +619,7 @@ namespace rckid::dolang::ast {
 
         void debugPrint(Writer & w, uint32_t indent = 0) const override {
             Node::debugPrint(w, indent);
-            w << op_ << "\n";
+            w << " " << op_ << "\n";
             operand_->debugPrint(w, indent + 2);
         }
 
@@ -760,6 +798,217 @@ namespace rckid::dolang::ast {
 
     }; 
 
+    class Match : public Node {
+    public:
+        Match(Location loc): Node{Kind::Match, loc} { }
+
+        Node * value() const { return value_.get(); }
+        void setValue(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            value_ = std::move(child);
+        }
+
+        Node * elseCase() const { return else_.get(); }
+        void setElseCase(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            else_ = std::move(child);
+        }
+
+        void addCase(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            cases_.push_back(std::move(child));
+        }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << "match ";
+            value_->prettyPrint(w, indent);
+            w << " when";
+            for (auto const & c : cases_)
+                c->prettyPrint(w, indent);
+            if (else_ != nullptr) {
+                // match statement has the else case on its own line, at the indentation of the cases, while the expression is all on a single line
+                if (else_->kind == Kind::Block) {
+                    w.putChar('\n');
+                    for (uint32_t i = 0; i < indent + 2; ++i)
+                        w.putChar(' ');
+                    w << "else";
+                    else_->prettyPrint(w, indent + 2);
+                } else {
+                    w << " else ";
+                    else_->prettyPrint(w, indent);
+                }
+            }
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            if (value_ != nullptr) {
+                w << "\n";
+                value_->debugPrint(w, indent + 2);
+            }
+            for (auto const & c : cases_) {
+                w << "\n";
+                c->debugPrint(w, indent + 2);
+            }
+            if (else_ != nullptr) {
+                w << "\n";
+                else_->debugPrint(w, indent + 2);
+            }
+        }
+
+    private:
+        unique_ptr<Node> value_;
+        unique_ptr<Node> else_;
+        std::vector<std::unique_ptr<Node>> cases_;
+    }; 
+
+    class MatchCase : public Node {
+    public:
+        MatchCase(Location loc): Node{Kind::MatchCase, loc} { }
+
+        Node * pattern() const { return pattern_.get(); }
+        void setPattern(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            pattern_ = std::move(child);
+        }
+
+        Node * body() const { return body_.get(); }
+        void setBody(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            body_ = std::move(child);
+        }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            // case of the match statement is on its own line, indented from the match, while the expression is all on a single line
+            if (body_->kind == Kind::Block) {
+                w.putChar('\n');
+                for (uint32_t i = 0; i < indent + 2; ++i)
+                    w.putChar(' ');
+                w << "is ";
+                pattern_->prettyPrint(w, indent);
+                w << " then";
+                body_->prettyPrint(w, indent + 2);
+            } else {
+                w << " is ";
+                pattern_->prettyPrint(w, indent);
+                w << " then ";
+                body_->prettyPrint(w, indent);
+            }
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << "\n";
+            pattern_->debugPrint(w, indent + 2);
+            w << "\n";
+            body_->debugPrint(w, indent + 2);
+        }
+
+    private:
+        unique_ptr<Node> pattern_;
+        unique_ptr<Node> body_;
+
+    };
+
+    class While : public Node {
+    public:
+
+        While(Location loc): Node{Kind::While, loc} { }
+
+        Node * condition() const { return condition_.get(); }
+        void setCondition(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            condition_ = std::move(child);
+        }
+
+        Node * body() const { return body_.get(); }
+        void setBody(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            body_ = std::move(child);
+        }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << "while ";
+            condition_->prettyPrint(w, indent);
+            w << " do";
+            body_->prettyPrint(w, indent);
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << "\n";
+            condition_->debugPrint(w, indent + 2);
+            w << "\n";
+            body_->debugPrint(w, indent + 2);
+        }
+
+
+    protected:
+    
+        unique_ptr<Node> condition_;
+        unique_ptr<Node> body_;
+    };
+
+    class For : public Node {
+    public:
+        For(Location loc): Node{Kind::For, loc} { }
+        Node * container() const { return container_.get(); }
+        void setContainer(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            container_ = std::move(child);
+        }
+
+        Node * step() const { return step_.get(); }
+        void setStep(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            step_ = std::move(child);
+        }
+
+        Node * body() const { return body_.get(); }
+        void setBody(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            body_ = std::move(child);   
+        };
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << "for " << iter.c_str();
+            if (iter2 != Symbol{})
+                w << ", " << iter2.c_str();
+            w << " in ";
+            container_->prettyPrint(w, indent);
+            if (step_ != nullptr) {
+                w << " step ";
+                step_->prettyPrint(w, indent);
+            }
+            w << " do";
+            body_->prettyPrint(w, indent);
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << " " << iter.c_str();
+            if (iter2 != Symbol{}) {
+                w << ", " << iter2.c_str();
+            }
+            w << "\n";
+            container_->debugPrint(w, indent + 2);
+            if (step_ != nullptr) {
+                w << "\n";
+                step_->debugPrint(w, indent + 2);
+            }
+            w << "\n";
+            body_->debugPrint(w, indent + 2);
+        }
+
+        Symbol iter;
+        Symbol iter2;
+
+    protected:
+        unique_ptr<Node> container_;
+        unique_ptr<Node> step_;
+        unique_ptr<Node> body_;
+    };
+
     class Test : public Node {
     public:
         Test(Location loc): Node{Kind::Test, loc} { }
@@ -830,6 +1079,7 @@ inline void write(Writer & w, rckid::dolang::ast::Kind kind) {
         case Kind::While: w << "While"; break;
         case Kind::For: w << "For"; break;
         case Kind::Match: w << "Match"; break;
+        case Kind::MatchCase: w << "MatchCase"; break;
         case Kind::Number: w << "Number"; break;
         case Kind::Text: w << "Text"; break;
         case Kind::EnumDecl: w << "EnumDecl"; break;

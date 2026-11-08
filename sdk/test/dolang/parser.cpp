@@ -150,6 +150,65 @@ TEST(dolang, parser_twoFunctions) {
     EXPECT(roundTrips("fun f()\n  break\n  continue\nfun g() -> num\n  break\n  continue\n"));
 }
 
+TEST(dolang, parser_enumDecl) {
+    ClearPools clear_;
+    EXPECT(roundTrips("enum Color = Red\n"));
+    EXPECT(roundTrips("enum Color = Red | Green | Blue\n"));
+    // among other declarations
+    EXPECT(roundTrips("enum A = X | Y\nenum B = Z\nglobal a = X\n"));
+    EXPECT(roundTrips("fun f()\n  break\nenum A = X | Y\n"));
+}
+
+TEST(dolang, parser_enumDeclMultiline) {
+    ClearPools clear_;
+    // a line break after = (or anywhere else) is a continuation
+    EXPECT(debugPrints("enum Btn =\n    Up | Down\n",
+        "Program@(1:1)\n"
+        "  EnumDecl@(1:1) Btn\n"
+        "    Up\n"
+        "    Down\n"
+    ));
+    EXPECT(debugPrints("enum Btn = Up\n    | Down\n",
+        "Program@(1:1)\n"
+        "  EnumDecl@(1:1) Btn\n"
+        "    Up\n"
+        "    Down\n"
+    ));
+}
+
+TEST(dolang, parser_enumStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("enum Color = Red | Green | Blue\n",
+        "Program@(1:1)\n"
+        "  EnumDecl@(1:1) Color\n"
+        "    Red\n"
+        "    Green\n"
+        "    Blue\n"
+    ));
+}
+
+TEST(dolang, parser_enumErrors) {
+    ClearPools clear_;
+    // missing name, =, or values
+    EXPECT(fails("enum"));
+    EXPECT(fails("enum Color"));
+    EXPECT(fails("enum = Red"));
+    EXPECT(fails("enum Color Red"));
+    EXPECT(fails("enum Color ="));
+    // dangling, doubled or missing separators
+    EXPECT(fails("enum Color = Red |"));
+    EXPECT(fails("enum Color = | Red"));
+    EXPECT(fails("enum Color = Red || Green"));
+    EXPECT(fails("enum Color = Red Green"));
+    EXPECT(fails("enum Color = Red, Green"));
+    // names must be identifiers
+    EXPECT(fails("enum 1 = Red"));
+    EXPECT(fails("enum Color = 1"));
+    EXPECT(fails("enum Color = Red | if"));
+    // enums are top level declarations only
+    EXPECT(fails("fun f()\n  enum Color = Red\n"));
+}
+
 // ------------------------------------------------------------------------------------------------
 // statements
 // ------------------------------------------------------------------------------------------------
@@ -284,6 +343,260 @@ TEST(dolan, parser_ifStatement) {
     EXPECT(roundTrips("fun f()\n  if a then\n    b\n  else\n    c\n"));
 }
 
+TEST(dolang, parser_whileStatement) {
+    ClearPools clear_;
+    EXPECT(roundTrips("fun f()\n  while a do\n    b\n"));
+    EXPECT(roundTrips("fun f()\n  while a do\n    b\n    c\n"));
+    EXPECT(roundTrips("fun f()\n  while a < b and not c do\n    b\n"));
+    // statement after the loop
+    EXPECT(roundTrips("fun f()\n  while a do\n    b\n  c\n"));
+    // nested loops
+    EXPECT(roundTrips("fun f()\n  while a do\n    while b do\n      c\n    d\n"));
+    // break and continue in the body
+    EXPECT(roundTrips("fun f()\n  while a do\n    break\n    continue\n"));
+}
+
+TEST(dolang, parser_forStatement) {
+    ClearPools clear_;
+    EXPECT(roundTrips("fun f()\n  for x in a do\n    b\n"));
+    EXPECT(roundTrips("fun f()\n  for k, v in a do\n    b\n"));
+    EXPECT(roundTrips("fun f()\n  for x in a step b do\n    c\n"));
+    EXPECT(roundTrips("fun f()\n  for k, v in a step b do\n    c\n"));
+    // range form is an ordinary expression
+    EXPECT(roundTrips("fun f()\n  for i in 1 <= i < 10 step 2 do\n    b\n"));
+    // statement after the loop, nested loops
+    EXPECT(roundTrips("fun f()\n  for x in a do\n    b\n  c\n"));
+    EXPECT(roundTrips("fun f()\n  for x in a do\n    for y in x do\n      b\n    c\n"));
+}
+
+TEST(dolang, parser_whileStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("fun f()\n  while a do\n    b\n",
+        "Program@(1:1)\n"
+        "  FunDecl@(1:1) f\n"
+        "    Block@(2:3)\n"
+        "      While@(2:3)\n"
+        "        SymbolName@(2:9) a\n"
+        "        Block@(3:5)\n"
+        "          SymbolName@(3:5) b\n"
+    ));
+}
+
+TEST(dolang, parser_forStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("fun f()\n  for x in a do\n    b\n",
+        "Program@(1:1)\n"
+        "  FunDecl@(1:1) f\n"
+        "    Block@(2:3)\n"
+        "      For@(2:3) x\n"
+        "        SymbolName@(2:12) a\n"
+        "        Block@(3:5)\n"
+        "          SymbolName@(3:5) b\n"
+    ));
+    EXPECT(debugPrints("fun f()\n  for k, v in a step b do\n    c\n",
+        "Program@(1:1)\n"
+        "  FunDecl@(1:1) f\n"
+        "    Block@(2:3)\n"
+        "      For@(2:3) k, v\n"
+        "        SymbolName@(2:15) a\n"
+        "        SymbolName@(2:22) b\n"
+        "        Block@(3:5)\n"
+        "          SymbolName@(3:5) c\n"
+    ));
+}
+
+TEST(dolang, parser_loopsMultilineHeader) {
+    ClearPools clear_;
+    // a line break in the header is a continuation, as the block only starts after do
+    auto w = parse("fun f()\n  while a and\n      b do\n    c\n");
+    EXPECT(w->kind != ast::Kind::Error);
+    auto f = parse("fun f()\n  for x in a\n      step b do\n    c\n");
+    EXPECT(f->kind != ast::Kind::Error);
+}
+
+TEST(dolang, parser_loopErrors) {
+    ClearPools clear_;
+    // missing do, condition, or body
+    EXPECT(fails("fun f()\n  while a\n    b\n"));
+    EXPECT(fails("fun f()\n  while do\n    b\n"));
+    EXPECT(fails("fun f()\n  while a do\n  b\n"));
+    // missing or invalid induction variables
+    EXPECT(fails("fun f()\n  for in a do\n    b\n"));
+    EXPECT(fails("fun f()\n  for 1 in a do\n    b\n"));
+    EXPECT(fails("fun f()\n  for k, in a do\n    b\n"));
+    EXPECT(fails("fun f()\n  for a, b, c in d do\n    e\n"));
+    // missing in, container, step value, or do
+    EXPECT(fails("fun f()\n  for x a do\n    b\n"));
+    EXPECT(fails("fun f()\n  for x in do\n    b\n"));
+    EXPECT(fails("fun f()\n  for x in a step do\n    b\n"));
+    EXPECT(fails("fun f()\n  for x in a\n    b\n"));
+}
+
+TEST(dolang, parser_matchStatement) {
+    ClearPools clear_;
+    EXPECT(roundTrips("fun f()\n  match a when\n    is X then\n      b\n"));
+    EXPECT(roundTrips("fun f()\n  match a when\n    is X then\n      b\n      c\n"));
+    EXPECT(roundTrips("fun f()\n  match a when\n    is X then\n      b\n    is Y then\n      c\n"));
+    EXPECT(roundTrips("fun f()\n  match a when\n    is X then\n      b\n    else\n      c\n"));
+    EXPECT(roundTrips("fun f()\n  match a when\n    is X then\n      b\n    is Y then\n      c\n    else\n      d\n"));
+    // matched value is any expression
+    EXPECT(roundTrips("fun f()\n  match a + b when\n    is X then\n      c\n"));
+    // statement after the match
+    EXPECT(roundTrips("fun f()\n  match a when\n    is X then\n      b\n  c\n"));
+    EXPECT(roundTrips("fun f()\n  match a when\n    is X then\n      b\n    else\n      c\n  d\n"));
+    // only the else case
+    EXPECT(roundTrips("fun f()\n  match a when\n    else\n      b\n"));
+    // nested match
+    EXPECT(roundTrips("fun f()\n  match a when\n    is X then\n      match b when\n        is Y then\n          c\n    is Z then\n      d\n"));
+}
+
+TEST(dolang, parser_matchStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("fun f()\n  match a when\n    is X then\n      b\n    else\n      c\n",
+        "Program@(1:1)\n"
+        "  FunDecl@(1:1) f\n"
+        "    Block@(2:3)\n"
+        "      Match@(2:3)\n"
+        "        SymbolName@(2:9) a\n"
+        "        MatchCase@(3:5)\n"
+        "          SymbolName@(3:8) X\n"
+        "          Block@(4:7)\n"
+        "            SymbolName@(4:7) b\n"
+        "        Block@(6:7)\n"
+        "          SymbolName@(6:7) c\n"
+    ));
+}
+
+TEST(dolang, parser_matchErrors) {
+    ClearPools clear_;
+    // missing when, is, then, or case body
+    EXPECT(fails("fun f()\n  match a\n    is X then\n      b\n"));
+    EXPECT(fails("fun f()\n  match a when\n    X then\n      b\n"));
+    EXPECT(fails("fun f()\n  match a when\n    is X\n      b\n"));
+    EXPECT(fails("fun f()\n  match a when\n    is X then\n    is Y then\n      b\n"));
+    // cases must be on their own lines in a block
+    EXPECT(fails("fun f()\n  match a when is X then\n    b\n"));
+    // at least one case (which can be the else case) is required
+    EXPECT(fails("fun f()\n  match a when\n  b\n"));
+    EXPECT(fails("fun f()\n  match a when\n"));
+    // else is the last case, only once, and at the indentation of the cases
+    EXPECT(fails("fun f()\n  match a when\n    else\n      b\n    is X then\n      c\n"));
+    EXPECT(fails("fun f()\n  match a when\n    is X then\n      b\n    else\n      c\n    else\n      d\n"));
+    EXPECT(fails("fun f()\n  match a when\n    is X then\n      b\n  else\n    c\n"));
+    // patterns are identifiers for now
+    EXPECT(fails("fun f()\n  match a when\n    is 1 then\n      b\n"));
+}
+
+TEST(dolang, parser_matchExpression) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = match a when is X then b\n"));
+    EXPECT(roundTrips("global x = match a when is X then b is Y then c\n"));
+    EXPECT(roundTrips("global x = match a when is X then b else c\n"));
+    EXPECT(roundTrips("global x = match a when else c\n"));
+    EXPECT(roundTrips("fun f()\n  let x = match a when is X then b is Y then c else d\n"));
+    EXPECT(roundTrips("fun f()\n  return match a when is X then b else c\n"));
+    // case values are expressions
+    EXPECT(roundTrips("global x = match a when is X then b + 1 is Y then c * 2 else -d\n"));
+}
+
+TEST(dolang, parser_matchExpressionStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("global x = match a when is X then b else c\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Match@(1:12)\n"
+        "      SymbolName@(1:18) a\n"
+        "      MatchCase@(1:25)\n"
+        "        SymbolName@(1:28) X\n"
+        "        SymbolName@(1:35) b\n"
+        "      SymbolName@(1:42) c\n"
+    ));
+    // is always starts the next case, it does not continue the case value
+    EXPECT(debugPrints("global x = match a when is X then b is Y then c\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Match@(1:12)\n"
+        "      SymbolName@(1:18) a\n"
+        "      MatchCase@(1:25)\n"
+        "        SymbolName@(1:28) X\n"
+        "        SymbolName@(1:35) b\n"
+        "      MatchCase@(1:37)\n"
+        "        SymbolName@(1:40) Y\n"
+        "        SymbolName@(1:47) c\n"
+    ));
+}
+
+TEST(dolang, parser_matchExpressionMultiline) {
+    ClearPools clear_;
+    // line breaks inside the match expression are continuations
+    auto a = parse("fun f()\n  let x = match a when\n    is X then b\n    is Y then c\n    else d\n");
+    EXPECT(a->kind != ast::Kind::Error);
+    auto b = parse("fun f()\n  let x = match a when is X then\n      b\n    else\n      c\n");
+    EXPECT(b->kind != ast::Kind::Error);
+}
+
+TEST(dolang, parser_matchExpressionErrors) {
+    ClearPools clear_;
+    // missing when, then, case value, or else value
+    EXPECT(fails("global x = match a is X then b\n"));
+    EXPECT(fails("global x = match a when is X b\n"));
+    EXPECT(fails("global x = match a when is X then\n"));
+    EXPECT(fails("global x = match a when is X then b else\n"));
+    // at least one case (which can be the else case) is required
+    EXPECT(fails("global x = match a when\n"));
+    // else is the last case
+    EXPECT(fails("global x = match a when else b is X then c\n"));
+}
+
+TEST(dolang, parser_isOperator) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = a is B\n"));
+    EXPECT(roundTrips("global x = a is not B\n"));
+    EXPECT(roundTrips("fun f()\n  if a is B then\n    c\n"));
+    EXPECT(roundTrips("fun f()\n  while a is not B do\n    c\n"));
+}
+
+TEST(dolang, parser_isOperatorStructure) {
+    ClearPools clear_;
+    // is has the lowest precedence
+    EXPECT(debugPrints("global x = a + b is C\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Is@(1:18)\n"
+        "      BinaryOp@(1:14) +\n"
+        "        SymbolName@(1:12) a\n"
+        "        SymbolName@(1:16) b\n"
+        "      SymbolName@(1:21) C\n"
+    ));
+    // even lower than not, i.e. not a is B is (not a) is B
+    EXPECT(debugPrints("global x = not a is B\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Is@(1:18)\n"
+        "      UnaryOp@(1:12) not\n"
+        "        SymbolName@(1:16) a\n"
+        "      SymbolName@(1:21) B\n"
+    ));
+    EXPECT(debugPrints("global x = a is not B\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Is@(1:14) not\n"
+        "      SymbolName@(1:12) a\n"
+        "      SymbolName@(1:21) B\n"
+    ));
+}
+
+TEST(dolang, parser_isOperatorErrors) {
+    ClearPools clear_;
+    // missing pattern, is is not associative, and cannot be combined without parentheses
+    EXPECT(fails("global x = a is\n"));
+    EXPECT(fails("global x = a is not\n"));
+    EXPECT(fails("global x = a is B is C\n"));
+    EXPECT(fails("global x = a is B and c\n"));
+    EXPECT(fails("global x = a is B + c\n"));
+    EXPECT(fails("global x = is B\n"));
+}
+
 // ------------------------------------------------------------------------------------------------
 // precedence (via debug prints, as the pretty print does not show the tree structure)
 // ------------------------------------------------------------------------------------------------
@@ -292,21 +605,21 @@ TEST(dolang, parser_precedenceMulOverAdd) {
     ClearPools clear_;
     EXPECT(debugPrints("global x = a + b * c\n",
         "Program@(1:1)\n"
-        "  VarDecl@(1:1)global x\n"
-        "    BinaryOp@(1:14)+\n"
-        "      SymbolName@(1:12)a\n"
-        "      BinaryOp@(1:18)*\n"
-        "        SymbolName@(1:16)b\n"
-        "        SymbolName@(1:20)c\n"
+        "  VarDecl@(1:1) global x\n"
+        "    BinaryOp@(1:14) +\n"
+        "      SymbolName@(1:12) a\n"
+        "      BinaryOp@(1:18) *\n"
+        "        SymbolName@(1:16) b\n"
+        "        SymbolName@(1:20) c\n"
     ));
     EXPECT(debugPrints("global x = a * b + c\n",
         "Program@(1:1)\n"
-        "  VarDecl@(1:1)global x\n"
-        "    BinaryOp@(1:18)+\n"
-        "      BinaryOp@(1:14)*\n"
-        "        SymbolName@(1:12)a\n"
-        "        SymbolName@(1:16)b\n"
-        "      SymbolName@(1:20)c\n"
+        "  VarDecl@(1:1) global x\n"
+        "    BinaryOp@(1:18) +\n"
+        "      BinaryOp@(1:14) *\n"
+        "        SymbolName@(1:12) a\n"
+        "        SymbolName@(1:16) b\n"
+        "      SymbolName@(1:20) c\n"
     ));
 }
 
@@ -315,22 +628,22 @@ TEST(dolang, parser_precedenceLeftAssociative) {
     // a - b - c is (a - b) - c
     EXPECT(debugPrints("global x = a - b - c\n",
         "Program@(1:1)\n"
-        "  VarDecl@(1:1)global x\n"
-        "    BinaryOp@(1:18)-\n"
-        "      BinaryOp@(1:14)-\n"
-        "        SymbolName@(1:12)a\n"
-        "        SymbolName@(1:16)b\n"
-        "      SymbolName@(1:20)c\n"
+        "  VarDecl@(1:1) global x\n"
+        "    BinaryOp@(1:18) -\n"
+        "      BinaryOp@(1:14) -\n"
+        "        SymbolName@(1:12) a\n"
+        "        SymbolName@(1:16) b\n"
+        "      SymbolName@(1:20) c\n"
     ));
     // a / b / c is (a / b) / c
     EXPECT(debugPrints("global x = a / b / c\n",
         "Program@(1:1)\n"
-        "  VarDecl@(1:1)global x\n"
-        "    BinaryOp@(1:18)/\n"
-        "      BinaryOp@(1:14)/\n"
-        "        SymbolName@(1:12)a\n"
-        "        SymbolName@(1:16)b\n"
-        "      SymbolName@(1:20)c\n"
+        "  VarDecl@(1:1) global x\n"
+        "    BinaryOp@(1:18) /\n"
+        "      BinaryOp@(1:14) /\n"
+        "        SymbolName@(1:12) a\n"
+        "        SymbolName@(1:16) b\n"
+        "      SymbolName@(1:20) c\n"
     ));
 }
 
@@ -338,12 +651,12 @@ TEST(dolang, parser_precedenceAndOverOr) {
     ClearPools clear_;
     EXPECT(debugPrints("global x = a or b and c\n",
         "Program@(1:1)\n"
-        "  VarDecl@(1:1)global x\n"
-        "    BinaryOp@(1:14)or\n"
-        "      SymbolName@(1:12)a\n"
-        "      BinaryOp@(1:19)and\n"
-        "        SymbolName@(1:17)b\n"
-        "        SymbolName@(1:23)c\n"
+        "  VarDecl@(1:1) global x\n"
+        "    BinaryOp@(1:14) or\n"
+        "      SymbolName@(1:12) a\n"
+        "      BinaryOp@(1:19) and\n"
+        "        SymbolName@(1:17) b\n"
+        "        SymbolName@(1:23) c\n"
     ));
 }
 
@@ -352,20 +665,20 @@ TEST(dolang, parser_precedenceNot) {
     // not is below comparisons, so not a == b is not (a == b)
     EXPECT(debugPrints("global x = not a == b\n",
         "Program@(1:1)\n"
-        "  VarDecl@(1:1)global x\n"
-        "    UnaryOp@(1:12)not\n"
-        "      BinaryOp@(1:18)==\n"
-        "        SymbolName@(1:16)a\n"
-        "        SymbolName@(1:21)b\n"
+        "  VarDecl@(1:1) global x\n"
+        "    UnaryOp@(1:12) not\n"
+        "      BinaryOp@(1:18) ==\n"
+        "        SymbolName@(1:16) a\n"
+        "        SymbolName@(1:21) b\n"
     ));
     // but above and, so not a and b is (not a) and b
     EXPECT(debugPrints("global x = not a and b\n",
         "Program@(1:1)\n"
-        "  VarDecl@(1:1)global x\n"
-        "    BinaryOp@(1:18)and\n"
-        "      UnaryOp@(1:12)not\n"
-        "        SymbolName@(1:16)a\n"
-        "      SymbolName@(1:22)b\n"
+        "  VarDecl@(1:1) global x\n"
+        "    BinaryOp@(1:18) and\n"
+        "      UnaryOp@(1:12) not\n"
+        "        SymbolName@(1:16) a\n"
+        "      SymbolName@(1:22) b\n"
     ));
 }
 
@@ -374,22 +687,22 @@ TEST(dolang, parser_precedenceComparisons) {
     // arithmetic binds tighter than comparison
     EXPECT(debugPrints("global x = a < b + c\n",
         "Program@(1:1)\n"
-        "  VarDecl@(1:1)global x\n"
-        "    BinaryOp@(1:14)<\n"
-        "      SymbolName@(1:12)a\n"
-        "      BinaryOp@(1:18)+\n"
-        "        SymbolName@(1:16)b\n"
-        "        SymbolName@(1:20)c\n"
+        "  VarDecl@(1:1) global x\n"
+        "    BinaryOp@(1:14) <\n"
+        "      SymbolName@(1:12) a\n"
+        "      BinaryOp@(1:18) +\n"
+        "        SymbolName@(1:16) b\n"
+        "        SymbolName@(1:20) c\n"
     ));
     // comparison binds tighter than equality
     EXPECT(debugPrints("global x = a == b < c\n",
         "Program@(1:1)\n"
-        "  VarDecl@(1:1)global x\n"
-        "    BinaryOp@(1:14)==\n"
-        "      SymbolName@(1:12)a\n"
-        "      BinaryOp@(1:19)<\n"
-        "        SymbolName@(1:17)b\n"
-        "        SymbolName@(1:21)c\n"
+        "  VarDecl@(1:1) global x\n"
+        "    BinaryOp@(1:14) ==\n"
+        "      SymbolName@(1:12) a\n"
+        "      BinaryOp@(1:19) <\n"
+        "        SymbolName@(1:17) b\n"
+        "        SymbolName@(1:21) c\n"
     ));
 }
 
@@ -398,19 +711,19 @@ TEST(dolang, parser_precedenceUnary) {
     // prefix operators bind tighter than binary ones
     EXPECT(debugPrints("global x = -a * b\n",
         "Program@(1:1)\n"
-        "  VarDecl@(1:1)global x\n"
-        "    BinaryOp@(1:15)*\n"
-        "      UnaryOp@(1:12)-\n"
-        "        SymbolName@(1:13)a\n"
-        "      SymbolName@(1:17)b\n"
+        "  VarDecl@(1:1) global x\n"
+        "    BinaryOp@(1:15) *\n"
+        "      UnaryOp@(1:12) -\n"
+        "        SymbolName@(1:13) a\n"
+        "      SymbolName@(1:17) b\n"
     ));
     EXPECT(debugPrints("global x = clone a + b\n",
         "Program@(1:1)\n"
-        "  VarDecl@(1:1)global x\n"
-        "    BinaryOp@(1:20)+\n"
-        "      UnaryOp@(1:12)clone\n"
-        "        SymbolName@(1:18)a\n"
-        "      SymbolName@(1:22)b\n"
+        "  VarDecl@(1:1) global x\n"
+        "    BinaryOp@(1:20) +\n"
+        "      UnaryOp@(1:12) clone\n"
+        "        SymbolName@(1:18) a\n"
+        "      SymbolName@(1:22) b\n"
     ));
 }
 
@@ -419,14 +732,13 @@ TEST(dolang, parser_precedenceAssignment) {
     // assignment is the root of the statement
     EXPECT(debugPrints("fun f()\n    a = b + c\n",
         "Program@(1:1)\n"
-        "  FunDecl@(1:1)f\n"
+        "  FunDecl@(1:1) f\n"
         "    Block@(2:5)\n"
-        "      Assign@(2:7)=\n"
-        "        SymbolName@(2:5)a\n"
-        "        BinaryOp@(2:11)+\n"
-        "          SymbolName@(2:9)b\n"
-        "          SymbolName@(2:13)c\n"
-        "\n"
+        "      Assign@(2:7) =\n"
+        "        SymbolName@(2:5) a\n"
+        "        BinaryOp@(2:11) +\n"
+        "          SymbolName@(2:9) b\n"
+        "          SymbolName@(2:13) c\n"
     ));
 }
 

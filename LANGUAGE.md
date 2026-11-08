@@ -726,7 +726,7 @@ Whitespace between tokens is ignored. Comments (`#` to the end of the line), emp
 
 The lexer always starts with a `newline` token that gives the indentation of the first non-empty line, which is the indentation of the top level. After that, a `newline` token is emitted for every line break (empty lines and lines with only comments do not count), with the indentation of the line that follows.
 
-The parser keeps a stack of indentations, starting with the indentation of the top level. The top of the stack, `I`, is the indentation of the current block. It also keeps a *block start* flag, which is set when it consumes one of the keywords `then`, `else`, `do`, `when`, or an opening bracket, and cleared when it consumes any other token. The function rules set the flag explicitly after `fun` and after the function signature, and the `if` and `match` expressions clear it after `then`, `else` and `when`, as they cannot contain blocks.
+The parser keeps a stack of indentations, starting with the indentation of the top level. The top of the stack, `I`, is the indentation of the current block. It also keeps a *block start* flag, which the grammar rules that introduce a block set explicitly after the keyword that starts it (`then`, `else`, `do`, `when` in the statements, `fun` and the function signature), or after an opening bracket, and which is cleared when the next token is consumed. The flag is never set by the keyword alone, so the `if` and `match` expressions, which use the same keywords but cannot contain blocks, simply do not set it.
 
 A `newline` with indentation `c` is translated as follows:
 
@@ -842,12 +842,14 @@ The `if` statement. The condition is terminated by `then`, so it can span multip
 
 Loops, both terminated by the `do` keyword. The range form of the `for` loop (`for i in 1 <= i < 100 do`) is parsed as regular expression and its validity (chained comparison with the induction variable in the middle) is checked semantically.
 
-    MATCH_STMT := 'match' EXPR 'when' indent CASE_STMT { newline CASE_STMT } [ 'else' BLOCK ] dedent
+    MATCH_STMT := 'match' EXPR 'when' indent MATCH_STMT_CASES dedent
+    MATCH_STMT_CASES := CASE_STMT { newline CASE_STMT } [ 'else' BLOCK ]
+                     |= 'else' BLOCK
     CASE_STMT := 'is' PATTERN [ 'and' EXPR ] 'then' BLOCK
     PATTERN := LITERAL | '-' number | ident { '.' ident } 
             |= '(' LIST(ident [ '=' PATTERN ]) ')' | '[' LIST(PATTERN) ']'
 
-The `match` statement. The matched value is terminated by `when`, which is followed by a block of cases, each on its own line. The `else` case is the last one and, as a line starting with `else` produces no `newline`, follows the last case directly. Each case is terminated by `then` and may have a guard after `and`, which sees the values bound by the pattern. Patterns are restricted to literals, identifiers (and enum values), and tuple and array patterns. Whether an identifier binds a new value, or matches an existing one is decided semantically. The `match` expression is described under expressions.
+The `match` statement. The matched value is terminated by `when`, which is followed by a block of cases, each on its own line. There must be at least one case, which can be the `else` case alone. The `else` case is the last one and, as a line starting with `else` produces no `newline`, follows the last case directly. Each case is terminated by `then` and may have a guard after `and`, which sees the values bound by the pattern. Patterns are restricted to literals, identifiers (and enum values), and tuple and array patterns. Whether an identifier binds a new value, or matches an existing one is decided semantically. The `match` expression is described under expressions.
 
 ## Types
 
@@ -926,10 +928,12 @@ Parentheses serve multiple purposes: grouping of expressions (`(a + b)`), tuple 
 The `if` and `match` expressions:
 
     IF_EXPR := 'if' EXPR 'then' EXPR 'else' EXPR
-    MATCH_EXPR := 'match' EXPR 'when' CASE_EXPR { CASE_EXPR } [ 'else' OR_EXPR ]
+    MATCH_EXPR := 'match' EXPR 'when' MATCH_EXPR_CASES
+    MATCH_EXPR_CASES := CASE_EXPR { CASE_EXPR } [ 'else' EXPR ]
+                     |= 'else' EXPR
     CASE_EXPR := 'is' PATTERN [ 'and' OR_EXPR ] 'then' OR_EXPR
 
-The cases of `if` and `match` expressions can only be expressions, never blocks. The parser clears the block start flag after `then`, `else` and `when` in these rules, so any line break inside them is a continuation. `else if` chains need no special rule as `IF_EXPR` is an `EXPR`. The guards and values of the `match` cases are `OR_EXPR`, so that they cannot contain `is` (unless in parentheses) and `is` always starts the next case. That the `match` expression is exhaustive, or has the `else` case is a semantic check.
+The cases of `if` and `match` expressions can only be expressions, never blocks. These rules do not set the block start flag, so any line break inside them is a continuation. `else if` chains need no special rule as `IF_EXPR` is an `EXPR`. The guards and values of the `match` cases are `OR_EXPR`, so that they cannot contain `is` (unless in parentheses) and `is` always starts the next case. The `else` value is always last, so it can be any `EXPR`. There must be at least one case, which can be the `else` case alone. That the `match` expression is exhaustive, or has the `else` case is a semantic check.
 
     ARRAY_LITERAL := '[' LIST(EXPR) ']'
     MAP_LITERAL := '{' LIST(MAP_ITEM) '}'

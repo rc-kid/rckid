@@ -41,6 +41,11 @@ namespace rckid::dolang {
                 while (condPop(TokenKind::Newline))
                     result->addChild(TRY(TOP_DECL()));
             }
+            // nothing but the end of file can follow the last declaration
+            if (! eof()) {
+                error_ = Token::error(top().loc, STR("Expected end of line, got " << top().kind));
+                return nullptr;
+            }
             return result;
         }
 
@@ -106,7 +111,6 @@ namespace rckid::dolang {
                     result->setOptionalReturn(true);
                 result->setReturnType(TRY(TYPE()));
             }
-            atBlockStart();
             result->setBody(TRY(BLOCK()));
             return result;
         }
@@ -127,7 +131,13 @@ namespace rckid::dolang {
         /** ENUM_DECL := 'enum' ident '=' ident { '|' ident }
          */
         unique_ptr<ast::EnumDecl> ENUM_DECL() {
-            UNIMPLEMENTED;
+            auto result = std::make_unique<ast::EnumDecl>(POP(TokenKind::kwEnum).loc);
+            result->name = POP(TokenKind::Identifier).asSymbol();
+            POP(TokenKind::opAssign);
+            result->addValue(POP(TokenKind::Identifier).asSymbol());
+            while (condPop(TokenKind::opPipe))
+                result->addValue(POP(TokenKind::Identifier).asSymbol());
+            return result;
         }
 
         /** EVENT_ASSIGN := ident { '.' ident } ( '=' | '+=' ) EXPR
@@ -137,8 +147,11 @@ namespace rckid::dolang {
         }
 
         /** BLOCK := indent STATEMENT { newline STATEMENT } dedent
+
+            Sets the block start flag itself, so that the next line indented more is the indent of the block. This must happen before the first top() call as that is where the newline is translated.
          */
         unique_ptr<ast::Block> BLOCK() {
+            atBlockStart();
             auto result = std::make_unique<ast::Block>(top().loc);
             POP(TokenKind::Indent);
             result->addChild(TRY(STATEMENT()));
@@ -238,10 +251,8 @@ namespace rckid::dolang {
             auto result = std::make_unique<ast::If>(POP(TokenKind::kwIf).loc);
             result->setCondition(TRY(EXPR()));
             POP(TokenKind::kwThen);
-            atBlockStart();
             result->setThenCase(TRY(BLOCK()));
             if (condPop(TokenKind::kwElse)) {
-                atBlockStart();
                 result->setElseCase(TRY(BLOCK()));
             }
             return result;
@@ -249,7 +260,7 @@ namespace rckid::dolang {
         
         /** IF_EXPR := 'if' EXPR 'then' EXPR 'else' EXPR
 
-            Cases are expressions only. The block start flag must be cleared after `then` and `else`, so that line breaks inside are continuations.
+            Cases are expressions only. As the block start flag is not set, line breaks inside are continuations.
          */
         unique_ptr<ast::Node> IF_EXPR() {
             auto result = std::make_unique<ast::If>(POP(TokenKind::kwIf).loc);
@@ -261,51 +272,103 @@ namespace rckid::dolang {
             return result;
         }
 
-
         /** WHILE_STMT := 'while' EXPR 'do' BLOCK
          */
         unique_ptr<ast::Node> WHILE_STMT() {
-            UNIMPLEMENTED;
+            auto result = std::make_unique<ast::While>(POP(TokenKind::kwWhile).loc);
+            result->setCondition(TRY(EXPR()));
+            POP(TokenKind::kwDo);
+            result->setBody(TRY(BLOCK()));
+            return result;
         }
 
         /** FOR_STMT := 'for' ident [ ',' ident ] 'in' EXPR [ 'step' EXPR ] 'do' BLOCK
          */
         unique_ptr<ast::Node> FOR_STMT() {
-            UNIMPLEMENTED;
+            auto result = std::make_unique<ast::For>(POP(TokenKind::kwFor).loc);
+            result->iter = POP(TokenKind::Identifier).asSymbol();
+            if (condPop(TokenKind::opComma))
+                result->iter2 = POP(TokenKind::Identifier).asSymbol();
+            POP(TokenKind::kwIn);
+            result->setContainer(TRY(EXPR()));
+            if (condPop(TokenKind::kwStep))
+                result->setStep(TRY(EXPR()));
+            POP(TokenKind::kwDo);
+            result->setBody(TRY(BLOCK()));
+            return result;
         }
 
-        /** MATCH_STMT := 'match' EXPR 'when' indent CASE_STMT { newline CASE_STMT } [ 'else' BLOCK ] dedent
+        /** MATCH_STMT := 'match' EXPR 'when' indent MATCH_STMT_CASES dedent
+            MATCH_STMT_CASES := CASE_STMT { newline CASE_STMT } [ 'else' BLOCK ]
+                             |= 'else' BLOCK
 
-            A line starting with `else` produces no newline, so the else case follows the last case directly.
+            There must be at least one case, which can be the else case. A line starting with `else` produces no newline, so the else case follows the last case directly.
          */
         unique_ptr<ast::Node> MATCH_STMT() {
-            UNIMPLEMENTED;
+            auto result = std::make_unique<ast::Match>(POP(TokenKind::kwMatch).loc);
+            result->setValue(TRY(EXPR()));
+            POP(TokenKind::kwWhen);
+            atBlockStart();
+            POP(TokenKind::Indent);
+            if (top() != TokenKind::kwElse) {
+                result->addCase(TRY(CASE_STMT()));
+                while (condPop(TokenKind::Newline))
+                    result->addCase(TRY(CASE_STMT()));
+            }
+            if (condPop(TokenKind::kwElse)) {
+                result->setElseCase(TRY(BLOCK()));
+            }
+            POP(TokenKind::Dedent);
+            return result;
         }
 
-        /** MATCH_EXPR := 'match' EXPR 'when' CASE_EXPR { CASE_EXPR } [ 'else' OR_EXPR ]
-            CASE_EXPR := 'is' PATTERN [ 'and' OR_EXPR ] 'then' OR_EXPR
+        /** MATCH_EXPR := 'match' EXPR 'when' MATCH_EXPR_CASES
+            MATCH_EXPR_CASES := CASE_EXPR { CASE_EXPR } [ 'else' EXPR ]
+                             |= 'else' EXPR
+            CASE_EXPR := 'is' PATTERN 'then' OR_EXPR
 
-            Cases are expressions only. The block start flag must be cleared after `when`, `then` and `else`, so that line breaks inside are continuations. Exhaustiveness (or the else case) is a semantic check.
+            There must be at least one case, which can be the else case. Cases are expressions only. As the block start flag is not set, line breaks inside are continuations. Exhaustiveness (or the else case) is a semantic check.
 
-            The guard and the case values are OR_EXPR, not EXPR, so that they cannot contain the `is` operator (unless in parentheses) and the next `is` therefore always starts the next case. The guard sees the bindings of the case's pattern.
+            The case values are OR_EXPR, not EXPR, so that they cannot contain the `is` operator (unless in parentheses) and the next `is` therefore always starts the next case. The else value is last, so it can be any EXPR.
          */
         unique_ptr<ast::Node> MATCH_EXPR() {
-            UNIMPLEMENTED;
+            auto result = std::make_unique<ast::Match>(POP(TokenKind::kwMatch).loc);
+            result->setValue(TRY(EXPR()));
+            POP(TokenKind::kwWhen);
+            if (top() != TokenKind::kwElse) {
+                do {
+                    auto matchCase = std::make_unique<ast::MatchCase>(POP(TokenKind::kwIs).loc);
+                    matchCase->setPattern(TRY(PATTERN()));
+                    POP(TokenKind::kwThen);
+                    matchCase->setBody(TRY(OR_EXPR()));
+                    result->addCase(std::move(matchCase));
+                } while (top() == TokenKind::kwIs);
+            }
+            if (condPop(TokenKind::kwElse))
+                result->setElseCase(TRY(EXPR()));
+            return result;
         }
 
-        /** CASE_STMT := 'is' PATTERN [ 'and' EXPR ] 'then' BLOCK
-
-            The guard sees the bindings of the case's pattern.
+        /** CASE_STMT := 'is' PATTERN 'then' BLOCK
          */
         unique_ptr<ast::Node> CASE_STMT() {
-            UNIMPLEMENTED;
+            auto result = std::make_unique<ast::MatchCase>(POP(TokenKind::kwIs).loc);
+            result->setPattern(TRY(PATTERN()));
+            POP(TokenKind::kwThen);
+            result->setBody(TRY(BLOCK()));
+            return result;
         }
 
-        /** PATTERN := LITERAL | '-' number | ident { '.' ident }
+        /** PATTERN := ident
+           
+           Old ones:
+           
+           LITERAL | '-' number | ident { '.' ident }
                      |= '(' LIST(ident [ '=' PATTERN ]) ')' | '[' LIST(PATTERN) ']'
          */
         unique_ptr<ast::Node> PATTERN() {
-            UNIMPLEMENTED;
+            // TODO implement proper pattern matching and parsing, for now we just assume a name in the pattern which as a name of a type is always valid
+            return std::make_unique<ast::SymbolName>(POP(TokenKind::Identifier));
         }
 
         /** TYPE := POD_TYPE | ARRAY_TYPE | TUPLE_TYPE | MAP_TYPE | FUN_TYPE | EVENT_TYPE
@@ -665,7 +728,7 @@ namespace rckid::dolang {
             - except when the line follows a keyword that starts a block (`then`, `else`, `do`, `when`), the `fun` keyword, or a function signature. Then the more indented line starts a new block whose indentation is the column of the line
             - a line indented *less* ends the block (or blocks) and must start exactly at the indentation of one of the enclosing blocks
 
-            We also need the ability to tell the parser that we are at the beginning of a block, which means that the next newline will be converted to an indent instead of swallowed. This is done by calling atBlockStart(). But when we do, there could have already been a newline token analyzed and ignored (because we were *not* at the beginning of a block). To fight this, when a newline is swallowed, we keep that newline in pending_. 
+            We also need the ability to tell the parser that we are at the beginning of a block, which means that the next newline will be converted to an indent instead of swallowed. This is done by calling atBlockStart(), always explicitly by the grammar rules that introduce a block (and not automatically when one of the keywords is popped, as the same keywords are also used by the if and match expressions, which cannot contain blocks). The flag is cleared by the next pop(). But when we do, there could have already been a newline token analyzed and ignored (because we were *not* at the beginning of a block). To fight this, when a newline is swallowed, we keep that newline in pending_. 
 
             When atBlockStart() is called, we check pending_. If it is a newline, we need to recalculate the next token and we swap the pending and next tokens. This means next top will process the newline into the indent. When we pop the indent, the token in pending_ is moved back into next_ so that the next top will process it as the next token after the newline.
 
@@ -751,16 +814,6 @@ namespace rckid::dolang {
                     indentStack_.pop_back();
                     // return immediately so that we dn't consume the next token as there might be another dedent coming from it
                     return x;
-                    break;
-                case TokenKind::opParOpen:
-                    // TODO I am not sure if we want this - means after every open paren, including inside an expression we will start with statements and indents and dedents. Not sure I like that, but at this point not sure what to do with it
-                case TokenKind::opCurlyOpen:
-                case TokenKind::opSquareOpen:
-                case TokenKind::kwThen:
-                case TokenKind::kwElse:
-                case TokenKind::kwDo:
-                case TokenKind::kwWhen:
-                    atBlockStart_ = true;
                     break;
                 default:
                     break;
