@@ -14,7 +14,8 @@ namespace rckid::dolang::ast {
         Text,
         UseDecl,
         VarDecl,
-        FunDecl,
+        Function,
+        NamedFunction,
         TypeDecl,
         EnumDecl,
 
@@ -379,19 +380,9 @@ namespace rckid::dolang::ast {
         unique_ptr<Node> value_;
     };
 
-    class FunDecl : public Node {
+    class Function : public Node {
     public:
-        FunDecl(Location loc, Symbol name): Node{Kind::FunDecl, loc}, name_{name} { }
-
-        Symbol name() const { return name_; }
-        Symbol className() const { return className_; }
-
-        bool isMethod() const { return className_ != Symbol{}; }
-
-        void setMethodName(Symbol methodName) {
-            className_ = name_;
-            name_ = methodName; 
-        }
+        Function(Location loc): Node{Kind::Function, loc} { }
 
         Node * returnType() const { return returnType_.get(); }
         void setReturnType(unique_ptr<Node> child) {
@@ -406,6 +397,50 @@ namespace rckid::dolang::ast {
         void setBody(unique_ptr<Block> child) {
             markAsChild(child.get());
             body_ = std::move(child);
+        }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << "fun (";
+            // TODO ags
+            w << ")";
+            if (returnType_ != nullptr) {
+                w << " -> ";
+                if (optionalReturn_)
+                    w << "optional ";
+                returnType_->prettyPrint(w, indent);
+            }
+            ASSERT(body_ != nullptr);
+            body_->prettyPrint(w, indent);
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            // TODO args
+            w << "\n";
+            body_->debugPrint(w, indent + 2);
+        }
+
+    protected:
+
+        Function(Location loc, Kind kind): Node{kind, loc} { }
+
+        unique_ptr<Node> returnType_;
+        bool optionalReturn_ = false;
+        unique_ptr<Block> body_;
+    };
+
+    class NamedFunction : public Function {
+    public:
+        NamedFunction(Location loc, Symbol name): Function{loc, Kind::NamedFunction}, name_{name} {}
+
+        Symbol name() const { return name_; }
+        Symbol className() const { return className_; }
+
+        bool isMethod() const { return className_ != Symbol{}; }
+
+        void setMethodName(Symbol methodName) {
+            className_ = name_;
+            name_ = methodName; 
         }
 
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
@@ -433,12 +468,9 @@ namespace rckid::dolang::ast {
         }
 
     protected:
-
         Symbol name_;
         Symbol className_;
-        unique_ptr<Node> returnType_;
-        bool optionalReturn_ = false;
-        unique_ptr<Block> body_;
+
     };
 
     class TypeDecl : public Node {
@@ -1207,7 +1239,8 @@ inline void write(Writer & w, rckid::dolang::ast::Kind kind) {
         case Kind::Continue: w << "Continue"; break;
         case Kind::Error: w << "Error"; break;
         case Kind::EventType: w << "EventType"; break;
-        case Kind::FunDecl: w << "FunDecl"; break;
+        case Kind::Function: w << "Function"; break;
+        case Kind::NamedFunction: w << "NamedFunction"; break;
         case Kind::FunType: w << "FunType"; break;
         case Kind::MapType: w << "MapType"; break;
         case Kind::Program: w << "Program"; break;

@@ -460,7 +460,7 @@ TEST(dolang, parser_whileStructure) {
     ClearPools clear_;
     EXPECT(debugPrints("fun f()\n  while a do\n    b\n",
         "Program@(1:1)\n"
-        "  FunDecl@(1:1) f\n"
+        "  NamedFunction@(1:1) f\n"
         "    Block@(2:3)\n"
         "      While@(2:3)\n"
         "        SymbolName@(2:9) a\n"
@@ -473,7 +473,7 @@ TEST(dolang, parser_forStructure) {
     ClearPools clear_;
     EXPECT(debugPrints("fun f()\n  for x in a do\n    b\n",
         "Program@(1:1)\n"
-        "  FunDecl@(1:1) f\n"
+        "  NamedFunction@(1:1) f\n"
         "    Block@(2:3)\n"
         "      For@(2:3) x\n"
         "        SymbolName@(2:12) a\n"
@@ -482,7 +482,7 @@ TEST(dolang, parser_forStructure) {
     ));
     EXPECT(debugPrints("fun f()\n  for k, v in a step b do\n    c\n",
         "Program@(1:1)\n"
-        "  FunDecl@(1:1) f\n"
+        "  NamedFunction@(1:1) f\n"
         "    Block@(2:3)\n"
         "      For@(2:3) k, v\n"
         "        SymbolName@(2:15) a\n"
@@ -541,7 +541,7 @@ TEST(dolang, parser_matchStructure) {
     ClearPools clear_;
     EXPECT(debugPrints("fun f()\n  match a when\n    is X then\n      b\n    else\n      c\n",
         "Program@(1:1)\n"
-        "  FunDecl@(1:1) f\n"
+        "  NamedFunction@(1:1) f\n"
         "    Block@(2:3)\n"
         "      Match@(2:3)\n"
         "        SymbolName@(2:9) a\n"
@@ -1007,7 +1007,7 @@ TEST(dolang, parser_precedenceAssignment) {
     // assignment is the root of the statement
     EXPECT(debugPrints("fun f()\n    a = b + c\n",
         "Program@(1:1)\n"
-        "  FunDecl@(1:1) f\n"
+        "  NamedFunction@(1:1) f\n"
         "    Block@(2:5)\n"
         "      Assign@(2:7) =\n"
         "        SymbolName@(2:5) a\n"

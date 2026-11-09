@@ -97,10 +97,10 @@ namespace rckid::dolang {
 
         /** FUN_DECL := 'fun' ident [ '.' ident ] '(' LIST(ARG) ')' [ '->' [ 'optional' ] TYPE ] BLOCK
          */
-        unique_ptr<ast::FunDecl> FUN_DECL() {
+        unique_ptr<ast::NamedFunction> FUN_DECL() {
             Token fun = POP(TokenKind::kwFun);
             Token name = POP(TokenKind::Identifier);
-            auto result = std::make_unique<ast::FunDecl>(fun.loc, name.asSymbol());
+            auto result = std::make_unique<ast::NamedFunction>(fun.loc, name.asSymbol());
             if (condPop(TokenKind::opDot))
                 result->setMethodName(POP(TokenKind::Identifier).asSymbol());
             POP(TokenKind::opParOpen);
