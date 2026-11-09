@@ -163,18 +163,30 @@ namespace rckid::dolang {
         /** TYPE_DECL := 'type' ident [ 'extends' ident ] '=' '(' LIST(FIELD_DECL) ')'
          */
         unique_ptr<ast::TypeDecl> TYPE_DECL() {
-            UNIMPLEMENTED;
+            Location l = POP(TokenKind::kwType).loc;
+            auto result = std::make_unique<ast::TypeDecl>(l, POP(TokenKind::Identifier).asSymbol());
+            if (condPop(TokenKind::kwExtends))
+                result->setBase(POP(TokenKind::Identifier).asSymbol());
+            POP(TokenKind::opAssign);
+            auto fields = std::make_unique<ast::List>(POP(TokenKind::opParOpen).loc);
+            if (! LIST(fields.get(), TokenKind::opParClose, &Parser::FIELD_DECL))
+                return nullptr;
+            POP(TokenKind::opParClose);
+            result->setFields(std::move(fields));
+            return result;
         }
 
         /** FIELD_DECL := ident [ ':' TYPE ] [ '=' EXPR ]
                        |= 'constructor' '=' FUN_LITERAL
 
-            Unlike function arguments, the field type is optional when it can be inferred from the default value.
+            Unlike function arguments, the field type is optional when it can be inferred from the default value. The constructor is stored as an Arg named `constructor` with the function literal as its value.
          */
         unique_ptr<ast::Node> FIELD_DECL() {
-            if (condPop(TokenKind::kwConstructor)) {
+            if (top() == TokenKind::kwConstructor) {
+                auto result = std::make_unique<ast::Arg>(pop());
                 POP(TokenKind::opAssign);
-                return FUN_LITERAL();
+                result->setValue(TRY(FUN_LITERAL()));
+                return result;
             }
             auto result = std::make_unique<ast::Arg>(POP(TokenKind::Identifier));
             if (condPop(TokenKind::opColon))
@@ -722,7 +734,7 @@ namespace rckid::dolang {
             }
         }
 
-        /** POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | PAREN_EXPR [ 'orelse' EXPR ] }
+        /** POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | CALL_EXPR [ 'orelse' EXPR ] }
 
             orelse can only follow a call. Its right hand side takes everything, so the postfix expression always ends with it. That the call returns an optional value is a semantic check.
          */
@@ -731,8 +743,21 @@ namespace rckid::dolang {
             while (true) {
                 switch (top().kind) {
                     case TokenKind::opDot:
-                    case TokenKind::opSquareOpen:
+                    {
+                        Location loc = pop().loc;
+                        Symbol name = POP(TokenKind::Identifier).asSymbol();
+                        result = std::make_unique<ast::Member>(loc, std::move(result), name);
+                        break;
+                    }
+                    case TokenKind::opSquareOpen: {
+                        auto index = std::make_unique<ast::BinaryOp>(pop(), std::move(result));
+                        index->setRight(TRY(EXPR()));
+                        POP(TokenKind::opSquareClose);
+                        result = std::move(index);
+                        break;
+                    }
                     case TokenKind::opParOpen:
+                        //return CALL_EXPR(std::move(result));
                         UNIMPLEMENTED;
                     default:
                         return result;

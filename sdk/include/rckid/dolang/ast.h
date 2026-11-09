@@ -33,6 +33,7 @@ namespace rckid::dolang::ast {
         Assign,
         BinaryOp,
         UnaryOp,
+        Member,
         Is,
         List,
         ArrayLiteral,
@@ -597,13 +598,48 @@ namespace rckid::dolang::ast {
         unique_ptr<Node> pattern_;
     };
 
+    /** Type declaration, i.e. the name, the optional base type it extends and the list of fields (Arg nodes). The constructor is also in the fields list, as an Arg named `constructor` whose value is the function literal. As constructor is a keyword, it cannot clash with a field name.
+     */
     class TypeDecl : public Node {
     public:
-        TypeDecl(Location loc): Node{Kind::TypeDecl, loc} { } 
+        TypeDecl(Location loc, Symbol name): Node{Kind::TypeDecl, loc}, name_{name} { } 
+
+        Symbol name() const { return name_; }
+
+        /** Name of the type this one extends, or empty symbol if none. 
+         */
+        Symbol base() const { return base_; }
+        void setBase(Symbol base) { base_ = base; }
+        bool hasBase() const { return base_ != Symbol{}; }
+
+        List * fields() const { return fields_.get(); }
+        void setFields(unique_ptr<List> child) {
+            markAsChild(child.get());
+            fields_ = std::move(child);
+        }
 
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
-            UNIMPLEMENTED;
+            w << "type " << name_.c_str();
+            if (hasBase())
+                w << " extends " << base_.c_str();
+            w << " = (";
+            fields_->prettyPrint(w, indent);
+            w << ")";
         }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << " " << name_.c_str();
+            if (hasBase())
+                w << " extends " << base_.c_str();
+            w << "\n";
+            fields_->debugPrint(w, indent + 2);
+        }
+
+    private:
+        Symbol name_;
+        Symbol base_;
+        unique_ptr<List> fields_;
     };
 
     class EnumDecl : public Node {
@@ -795,6 +831,15 @@ namespace rckid::dolang::ast {
             ASSERT(op.isBinaryOperator());
         }
 
+        BinaryOp(Token const & op, unique_ptr<Node> left): 
+            Node{Kind::BinaryOp, op.loc},
+            op_{op.kind},
+            left_{std::move(left)}
+        { 
+            ASSERT(op.isBinaryOperator());
+            markAsChild(left_.get());
+        }
+
         Node * left() const { return left_.get(); }
         void setLeft(unique_ptr<Node> child) {
             markAsChild(child.get());
@@ -809,6 +854,12 @@ namespace rckid::dolang::ast {
 
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             left_->prettyPrint(w, indent);
+            if (op_ == TokenKind::opSquareOpen) {
+                w << "[";
+                right_->prettyPrint(w, indent);
+                w << "]";
+                return;
+            }
             w << " " << op_ << " ";
             right_->prettyPrint(w, indent);
         }
@@ -858,6 +909,42 @@ namespace rckid::dolang::ast {
     protected:
         TokenKind op_;
         unique_ptr<Node> operand_;
+    }; 
+
+    class Member : public Node {
+    public:
+        Member(Location loc, unique_ptr<Node> object, Symbol memberName): Node{Kind::Member, loc}, object_(std::move(object)), memberName_(memberName) { 
+            markAsChild(object_.get());
+        }
+
+        Node * object() const { return object_.get(); }
+        void setObject(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            object_ = std::move(child);
+        }
+
+        Symbol memberName() const { return memberName_; }
+        void setMemberName(Symbol name) { memberName_ = name; }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            object_->prettyPrint(w, indent);
+            w << "." << memberName_.c_str();
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << "\n";
+            object_->debugPrint(w, indent + 2);
+            w << "\n";
+            for (uint32_t i = 0; i < indent + 2; ++i)
+                w.putChar(' ');
+            w << "member: " << memberName_.c_str();
+        }
+
+    private:
+        unique_ptr<Node> object_;
+        Symbol memberName_;
+
     }; 
 
     /** The `X is PATTERN` and `X is not PATTERN` test. 
@@ -1365,6 +1452,7 @@ inline void write(Writer & w, rckid::dolang::ast::Kind kind) {
         case Kind::TupleType: w << "TupleType"; break;
         case Kind::TypeDecl: w << "TypeDecl"; break;
         case Kind::UnaryOp: w << "UnaryOp"; break;
+        case Kind::Member: w << "Member"; break;
         case Kind::Is: w << "Is"; break;
         case Kind::List: w << "List"; break;
         case Kind::ArrayLiteral: w << "ArrayLiteral"; break;

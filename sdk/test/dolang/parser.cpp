@@ -363,6 +363,81 @@ TEST(dolang, parser_functionLiteralsErrors) {
     EXPECT(fails("global f = [fun\n  break\n]\n"));
 }
 
+TEST(dolang, parser_typeDecl) {
+    ClearPools clear_;
+    EXPECT(roundTrips("type Point = ()\n"));
+    EXPECT(roundTrips("type Point = (x : num, y : num)\n"));
+    // types are optional when there is a default value, and defaults are optional
+    EXPECT(roundTrips("type Point = (x = 0, y : num = 0, z : num)\n"));
+    // any type can be used for the fields
+    EXPECT(roundTrips("type T = (a : [num], b : {text -> Point}, c : (x : num), d : fun(a : num) -> num, e : event(x : num))\n"));
+    // extends
+    EXPECT(roundTrips("type Point3D extends Point = (z : num)\n"));
+    // trailing comma is dropped
+    EXPECT(printsAs("type Point = (x : num, y : num,)\n", "type Point = (x : num, y : num)\n"));
+    // among other declarations
+    EXPECT(roundTrips("type A = (x : num)\ntype B extends A = (y : num)\nglobal b : B\n"));
+    EXPECT(roundTrips("fun f()\n  break\ntype A = (x : num)\n"));
+}
+
+TEST(dolang, parser_typeDeclMultiLine) {
+    ClearPools clear_;
+    EXPECT(roundTrips("type Point = (\n  x : num\n  y : num\n)\n"));
+    EXPECT(printsAs("type Point = (\n  x : num, y : num\n  z : num,\n)\n", "type Point = (\n  x : num\n  y : num\n  z : num\n)\n"));
+    // the constructor body is a block, so it needs the multi-line form
+    EXPECT(roundTrips("type Point = (\n  x : num\n  constructor = fun(a : num)\n    x = a\n)\n"));
+    EXPECT(roundTrips("type Point = (\n  constructor = fun\n    break\n  x : num\n)\n"));
+}
+
+TEST(dolang, parser_typeDeclStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("type B extends A = (x : num, y = 1)\n",
+        "Program@(1:1)\n"
+        "  TypeDecl@(1:1) B extends A\n"
+        "    List@(1:20)\n"
+        "      Arg@(1:21) x\n"
+        "        SymbolName@(1:25) num\n"
+        "      Arg@(1:30) y\n"
+        "        Number@(1:34) 1\n"
+    ));
+    // the constructor is an argument named constructor with the function as its value
+    EXPECT(debugPrints("type A = (\n  constructor = fun\n    break\n)\n",
+        "Program@(1:1)\n"
+        "  TypeDecl@(1:1) A\n"
+        "    List@(1:10) multi-line\n"
+        "      Arg@(2:3) constructor\n"
+        "        Function@(2:17)\n"
+        "          Block@(3:5)\n"
+        "            Break@(3:5)\n"
+    ));
+}
+
+TEST(dolang, parser_typeDeclErrors) {
+    ClearPools clear_;
+    // missing parts
+    EXPECT(fails("type"));
+    EXPECT(fails("type = (x : num)\n"));
+    EXPECT(fails("type A (x : num)\n"));
+    EXPECT(fails("type A =\n"));
+    EXPECT(fails("type A extends = (x : num)\n"));
+    // fields must be in parentheses
+    EXPECT(fails("type A = x : num\n"));
+    EXPECT(fails("type A = [x : num]\n"));
+    EXPECT(fails("type A = (x : num\n"));
+    // fields must be named, with valid types
+    EXPECT(fails("type A = (num)\n"));
+    EXPECT(fails("type A = (x : 12)\n"));
+    EXPECT(fails("type A = (x :)\n"));
+    // only a single base type
+    EXPECT(fails("type A extends B, C = (x : num)\n"));
+    // the constructor must be a function literal with a body
+    EXPECT(fails("type A = (constructor = 1)\n"));
+    EXPECT(fails("type A = (constructor fun\n  break\n)\n"));
+    EXPECT(fails("type A = (constructor = fun\n  break\n)\n"));
+    // types are only allowed at the top level
+    EXPECT(fails("fun f()\n  type A = (x : num)\n"));
+}
+
 TEST(dolang, parser_enumDecl) {
     ClearPools clear_;
     EXPECT(roundTrips("enum Color = Red\n"));
@@ -1146,6 +1221,104 @@ TEST(dolang, parser_precedenceAssignment) {
         "          SymbolName@(2:9) b\n"
         "          SymbolName@(2:13) c\n"
     ));
+}
+
+TEST(dolang, parser_member) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = a.b\n"));
+    EXPECT(roundTrips("global x = a.b.c\n"));
+    EXPECT(roundTrips("global x = a.b + c.d\n"));
+    EXPECT(roundTrips("fun f()\n  a.b = c\n"));
+}
+
+TEST(dolang, parser_index) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = a[1]\n"));
+    EXPECT(roundTrips("global x = a[1][2]\n"));
+    EXPECT(roundTrips("global x = a[i + 1]\n"));
+    EXPECT(roundTrips("global x = a[b[c]]\n"));
+    EXPECT(roundTrips("global x = [1, 2][0]\n"));
+    EXPECT(roundTrips("fun f()\n  a[i] = c\n"));
+    // a list on a new line at the item column is a new item, not an index
+    EXPECT(roundTrips("global x = [\n  a\n  [b]\n]\n"));
+}
+
+TEST(dolang, parser_memberAndIndex) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = a.b[1].c\n"));
+    EXPECT(roundTrips("global x = a[1].b[2]\n"));
+}
+
+TEST(dolang, parser_memberStructure) {
+    ClearPools clear_;
+    // member access is left associative
+    EXPECT(debugPrints("global x = a.b.c\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Member@(1:15)\n"
+        "      Member@(1:13)\n"
+        "        SymbolName@(1:12) a\n"
+        "        member: b\n"
+        "      member: c\n"
+    ));
+}
+
+TEST(dolang, parser_indexStructure) {
+    ClearPools clear_;
+    // indexing is left associative
+    EXPECT(debugPrints("global x = a[1][2]\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    BinaryOp@(1:16) [\n"
+        "      BinaryOp@(1:13) [\n"
+        "        SymbolName@(1:12) a\n"
+        "        Number@(1:14) 1\n"
+        "      Number@(1:17) 2\n"
+    ));
+}
+
+TEST(dolang, parser_precedencePostfix) {
+    ClearPools clear_;
+    // postfix operators bind tighter than prefix ones
+    EXPECT(debugPrints("global x = -a.b\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    UnaryOp@(1:12) -\n"
+        "      Member@(1:14)\n"
+        "        SymbolName@(1:13) a\n"
+        "        member: b\n"
+    ));
+    EXPECT(debugPrints("global x = -a[1]\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    UnaryOp@(1:12) -\n"
+        "      BinaryOp@(1:14) [\n"
+        "        SymbolName@(1:13) a\n"
+        "        Number@(1:15) 1\n"
+    ));
+    // and tighter than binary ones
+    EXPECT(debugPrints("global x = a * b.c\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    BinaryOp@(1:14) *\n"
+        "      SymbolName@(1:12) a\n"
+        "      Member@(1:17)\n"
+        "        SymbolName@(1:16) b\n"
+        "        member: c\n"
+    ));
+}
+
+TEST(dolang, parser_memberAndIndexErrors) {
+    ClearPools clear_;
+    // member name must be an identifier
+    EXPECT(fails("global x = a."));
+    EXPECT(fails("global x = a.1\n"));
+    EXPECT(fails("global x = a.[1]\n"));
+    // index must be a single expression, closed by ]
+    EXPECT(fails("global x = a[]\n"));
+    EXPECT(fails("global x = a[1\n"));
+    EXPECT(fails("global x = a[1)\n"));
+    EXPECT(fails("global x = a[1, 2]\n"));
 }
 
 TEST(dolang, parser_expressionErrors) {

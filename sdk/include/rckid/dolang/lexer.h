@@ -167,6 +167,7 @@ namespace rckid::dolang {
                 case TokenKind::opLessEquals:
                 case TokenKind::opGreater:
                 case TokenKind::opGreaterEquals:
+                case TokenKind::opSquareOpen:
                 case TokenKind::kwAnd:
                 case TokenKind::kwOr:
                     return true;
