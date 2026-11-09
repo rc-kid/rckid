@@ -171,7 +171,7 @@ namespace rckid::dolang {
                      |= indent LINE(X) { [ ',' ] newline LINE(X) } [ ',' ] dedent
             LINE(X) := X { ',' X }
 
-            Parses the items of a bracketed list, calling the item parser method to parse each X, and returns them as ast::List, which also remembers the form used. The opening bracket is expected to be already popped and the closing bracket (close) is left to the caller, but the single line form must know it to tell when the items end.
+            Parses the items of a bracketed list into the given list node (either plain ast::List, or a node inheriting from it), calling the item parser method to parse each X, and remembers the form used in the list. Returns true on success, false on error (with error_ set), so callers must check the result explicitly instead of using TRY. The opening bracket is expected to be already popped and the closing bracket (close) is left to the caller, but the single line form must know it to tell when the items end.
 
             The form is decided right after the opening bracket: if the next token is indent, the list is multi-line, otherwise single line. 
             
@@ -179,39 +179,44 @@ namespace rckid::dolang {
             
             Multi-line form: block rules, items on the same line separated by commas, at the end of the line the comma is optional. After an item and optional comma, newline starts the next line of items, dedent ends the list and anything else is the next item on the same line, which requires the comma. Blocks are allowed in the items, but as the block ends with a line break, no comma can follow it. The closing bracket follows the dedent directly (see top()).
          */
-        unique_ptr<ast::List> LIST(TokenKind close, unique_ptr<ast::Node> (Parser::*item)()) {
+        bool LIST(ast::List * list, TokenKind close, unique_ptr<ast::Node> (Parser::*item)()) {
             // always check for the multi-line form, so that we can report it as an error inside single line lists instead of silently treating the line break as a continuation
             atBlockStart();
-            auto result = std::make_unique<ast::List>(top().loc);
             if (top() == TokenKind::Indent) {
                 if (! layoutAllowed_) {
                     error_ = Token::error(top().loc, "Multi-line list is not allowed inside a single line list");
-                    return nullptr;
+                    return false;
                 }
-                result->multiLine = true;
+                list->multiLine = true;
                 pop();
                 while (true) {
-                    result->addChild(TRY((this->*item)()));
+                    auto x = (this->*item)();
+                    if (x == nullptr)
+                        return false;
+                    list->addChild(std::move(x));
                     bool comma = condPop(TokenKind::opComma);
                     if (condPop(TokenKind::Newline))
                         continue;
                     if (condPop(TokenKind::Dedent))
-                        return result;
+                        return true;
                     if (! comma) {
                         error_ = Token::error(top().loc, STR("Expected , or new line, got " << top().kind));
-                        return nullptr;
+                        return false;
                     }
                 }
             } else {
                 LayoutGuard g_{*this, false};
                 if (top() == close)
-                    return result;
+                    return true;
                 while (true) {
-                    result->addChild(TRY((this->*item)()));
+                    auto x = (this->*item)();
+                    if (x == nullptr)
+                        return false;
+                    list->addChild(std::move(x));
                     if (! condPop(TokenKind::opComma))
-                        return result;
+                        return true;
                     if (top() == close)
-                        return result;
+                        return true;
                 }
             }
         }
@@ -462,7 +467,8 @@ namespace rckid::dolang {
          */
         unique_ptr<ast::TupleType> TUPLE_TYPE() {
             auto result = std::make_unique<ast::TupleType>(POP(TokenKind::opParOpen).loc);
-            result->setElements(TRY(LIST(TokenKind::opParClose, &Parser::FIELD_TYPE)));
+            if (! LIST(result.get(), TokenKind::opParClose, &Parser::FIELD_TYPE))
+                return nullptr;
             POP(TokenKind::opParClose);
             return result;
         }
@@ -704,6 +710,8 @@ namespace rckid::dolang {
                     return PAREN_EXPR();
                 case TokenKind::opSquareOpen:
                     return ARRAY_LITERAL();
+                case TokenKind::opCurlyOpen:
+                    return MAP_LITERAL();
                 case TokenKind::kwIf:
                     return IF_EXPR();
                 case TokenKind::kwMatch:
@@ -738,7 +746,8 @@ namespace rckid::dolang {
          */
         unique_ptr<ast::Node> ARRAY_LITERAL() {
             auto result = std::make_unique<ast::ArrayLiteral>(POP(TokenKind::opSquareOpen).loc);
-            result->setItems(TRY(LIST(TokenKind::opSquareClose, &Parser::EXPR)));
+            if (! LIST(result.get(), TokenKind::opSquareClose, &Parser::EXPR))
+                return nullptr;
             POP(TokenKind::opSquareClose);
             return result;
         }
@@ -746,13 +755,21 @@ namespace rckid::dolang {
         /** MAP_LITERAL := '{' LIST(MAP_ITEM) '}'
          */
         unique_ptr<ast::Node> MAP_LITERAL() {
-            UNIMPLEMENTED;
+            auto result = std::make_unique<ast::MapLiteral>(POP(TokenKind::opCurlyOpen).loc);
+            if (! LIST(result.get(), TokenKind::opCurlyClose, &Parser::MAP_ITEM))
+                return nullptr;
+            POP(TokenKind::opCurlyClose);
+            return result;
         }
 
         /** MAP_ITEM := EXPR '->' EXPR
          */
         unique_ptr<ast::Node> MAP_ITEM() {
-            UNIMPLEMENTED;
+            auto key = TRY(EXPR());
+            auto result = std::make_unique<ast::MapItem>(POP(TokenKind::opArrow).loc);
+            result->setKey(std::move(key));
+            result->setValue(TRY(EXPR()));
+            return result;
         }
 
         /** FUN_LITERAL := 'fun' [ '(' LIST(LAMBDA_ARG) ')' [ '->' [ 'optional' ] TYPE ] ] BLOCK
@@ -819,7 +836,7 @@ namespace rckid::dolang {
 
         Token top() {
             if (next_.kind == TokenKind::EndOfFile)
-                    next_ = lexer_.next();
+                next_ = lexer_.next();
             while (next_.kind == TokenKind::Newline) {
                 // if the indentation of the newline is the same as the current indentation, we emit it as it is the end of statement, unless the next line starts with else, which continues the if (or match) statement, or a closing bracket, which closes the list
                 if (next_.payload == indentStack_.back()) {

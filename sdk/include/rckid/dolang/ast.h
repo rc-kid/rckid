@@ -34,6 +34,8 @@ namespace rckid::dolang::ast {
         Is,
         List,
         ArrayLiteral,
+        MapLiteral,
+        MapItem,
 
         Break,
         Continue,
@@ -162,6 +164,51 @@ namespace rckid::dolang::ast {
     class Block : public SequenceNode {
     public:
         Block(Location loc): SequenceNode{Kind::Block, loc} { }
+    };
+
+    /** Items of a bracketed list. Remembers whether the list was written in the multi-line form, so that it can be pretty printed in the same form (one item per line). Prints only the items. Nodes that are lists themselves (array literal, tuple type, etc.) inherit from List, provide their own kind and print the brackets around the items. Nodes that contain a list as one of their parts (function arguments, etc.) embed a plain List and print the brackets themselves. In the multi-line form, the items are printed on their own lines indented from the parent and the output ends with a new line at the parent's indentation, so that the closing bracket follows.
+     */
+    class List : public SequenceNode {
+    public:
+        List(Location loc): SequenceNode{Kind::List, loc} { }
+
+        bool multiLine = false;
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            if (multiLine) {
+                for (auto const & child : children_) {
+                    w.putChar('\n');
+                    for (uint32_t i = 0; i < indent + 2; ++i)
+                        w.putChar(' ');
+                    child->prettyPrint(w, indent + 2);
+                }
+                w.putChar('\n');
+                for (uint32_t i = 0; i < indent; ++i)
+                    w.putChar(' ');
+            } else {
+                bool first = true;
+                for (auto const & child : children_) {
+                    if (first)
+                        first = false;
+                    else
+                        w << ", ";
+                    child->prettyPrint(w, indent);
+                }
+            }
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            if (multiLine)
+                w << " multi-line";
+            for (auto const & child : children_) {
+                w << "\n";
+                child->debugPrint(w, indent + 2);
+            }
+        }
+
+    protected:
+        List(Kind kind, Location loc): SequenceNode{kind, loc} { }
     };
 
     class SymbolName : public Node {
@@ -460,34 +507,15 @@ namespace rckid::dolang::ast {
         unique_ptr<Node> elementType_;
     };
 
-    class TupleType : public Node {
+    class TupleType : public List {
     public:
-        TupleType(Location loc): Node{Kind::TupleType, loc} { }
-
-        Node * elements() const { return elements_.get(); }
-        void setElements(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            elements_ = std::move(child);
-        }
+        TupleType(Location loc): List{Kind::TupleType, loc} { }
 
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             w << "(";
-            if (elements_ != nullptr) {
-                elements_->prettyPrint(w, indent);
-            }
+            List::prettyPrint(w, indent);
             w << ")";
         }
-
-        void debugPrint(Writer & w, uint32_t indent = 0) const override {
-            Node::debugPrint(w, indent);
-            if (elements_ != nullptr) {
-                w << "\n";
-                elements_->debugPrint(w, indent + 2);
-            }
-        }
-
-    private:
-        unique_ptr<Node> elements_; // list type of the elements
     };
 
     class FieldType : public Node {
@@ -738,72 +766,63 @@ namespace rckid::dolang::ast {
 
 
 
-    /** Items of a bracketed list. Remembers whether the list was written in the multi-line form, so that it can be pretty printed in the same form (one item per line). Prints only the items, the brackets are printed by the parent node, which gives the list its meaning (array literal, call arguments, etc.). In the multi-line form, the items are printed on their own lines indented from the parent and the output ends with a new line at the parent's indentation, so that the closing bracket follows.
-     */
-    class List : public SequenceNode {
+    class ArrayLiteral : public List {
     public:
-        List(Location loc): SequenceNode{Kind::List, loc} { }
-
-        bool multiLine = false;
-
-        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
-            if (multiLine) {
-                for (auto const & child : children_) {
-                    w.putChar('\n');
-                    for (uint32_t i = 0; i < indent + 2; ++i)
-                        w.putChar(' ');
-                    child->prettyPrint(w, indent + 2);
-                }
-                w.putChar('\n');
-                for (uint32_t i = 0; i < indent; ++i)
-                    w.putChar(' ');
-            } else {
-                bool first = true;
-                for (auto const & child : children_) {
-                    if (first)
-                        first = false;
-                    else
-                        w << ", ";
-                    child->prettyPrint(w, indent);
-                }
-            }
-        }
-
-        void debugPrint(Writer & w, uint32_t indent = 0) const override {
-            Node::debugPrint(w, indent);
-            if (multiLine)
-                w << " multi-line";
-            for (auto const & child : children_) {
-                w << "\n";
-                child->debugPrint(w, indent + 2);
-            }
-        }
-    };
-
-    class ArrayLiteral : public Node {
-    public:
-        ArrayLiteral(Location loc): Node{Kind::ArrayLiteral, loc} { }
-
-        List * items() const { return items_.get(); }
-        void setItems(unique_ptr<List> items) {
-            markAsChild(items.get());
-            items_ = std::move(items);
-        }
+        ArrayLiteral(Location loc): List{Kind::ArrayLiteral, loc} { }
 
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             w << "[";
-            items_->prettyPrint(w, indent);
+            List::prettyPrint(w, indent);
             w << "]";
+        }
+    };
+
+    class MapLiteral : public List {
+    public:
+        MapLiteral(Location loc): List{Kind::MapLiteral, loc} { }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << "{";
+            List::prettyPrint(w, indent);
+            w << "}";
+        }
+    };
+
+    /** Single key -> value pair of a map literal. The location is that of the arrow.
+     */
+    class MapItem : public Node {
+    public:
+        MapItem(Location loc): Node{Kind::MapItem, loc} { }
+
+        Node * key() const { return key_.get(); }
+        void setKey(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            key_ = std::move(child);
+        }
+
+        Node * value() const { return value_.get(); }
+        void setValue(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            value_ = std::move(child);
+        }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            key_->prettyPrint(w, indent);
+            w << " -> ";
+            value_->prettyPrint(w, indent);
         }
 
         void debugPrint(Writer & w, uint32_t indent = 0) const override {
             Node::debugPrint(w, indent);
             w << "\n";
-            items_->debugPrint(w, indent + 2);
+            key_->debugPrint(w, indent + 2);
+            w << "\n";
+            value_->debugPrint(w, indent + 2);
         }
 
     protected:
-        unique_ptr<List> items_;
+        unique_ptr<Node> key_;
+        unique_ptr<Node> value_;
     };
 
     class Break : public Node {
@@ -1202,6 +1221,8 @@ inline void write(Writer & w, rckid::dolang::ast::Kind kind) {
         case Kind::Is: w << "Is"; break;
         case Kind::List: w << "List"; break;
         case Kind::ArrayLiteral: w << "ArrayLiteral"; break;
+        case Kind::MapLiteral: w << "MapLiteral"; break;
+        case Kind::MapItem: w << "MapItem"; break;
         case Kind::UseDecl: w << "UseDecl"; break;
         case Kind::VarDecl: w << "VarDecl"; break;
         case Kind::Write: w << "Write"; break;

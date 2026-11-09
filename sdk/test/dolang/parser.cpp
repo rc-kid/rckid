@@ -176,19 +176,17 @@ TEST(dolang, parser_tupleTypesStructure) {
         "Program@(1:1)\n"
         "  VarDecl@(1:1) global x\n"
         "    TupleType@(1:12)\n"
-        "      List@(1:13)\n"
-        "        FieldType@(1:13) a\n"
-        "          SymbolName@(1:17) num\n"
-        "        FieldType@(1:22) b\n"
+        "      FieldType@(1:13) a\n"
+        "        SymbolName@(1:17) num\n"
+        "      FieldType@(1:22) b\n"
     ));
     EXPECT(debugPrints("global x : (\n  a : num\n  b\n)\n",
         "Program@(1:1)\n"
         "  VarDecl@(1:1) global x\n"
-        "    TupleType@(1:12)\n"
-        "      List@(2:3) multi-line\n"
-        "        FieldType@(2:3) a\n"
-        "          SymbolName@(2:7) num\n"
-        "        FieldType@(3:3) b\n"
+        "    TupleType@(1:12) multi-line\n"
+        "      FieldType@(2:3) a\n"
+        "        SymbolName@(2:7) num\n"
+        "      FieldType@(3:3) b\n"
     ));
 }
 
@@ -750,18 +748,16 @@ TEST(dolang, parser_listStructure) {
         "Program@(1:1)\n"
         "  VarDecl@(1:1) global x\n"
         "    ArrayLiteral@(1:12)\n"
-        "      List@(1:13)\n"
-        "        SymbolName@(1:13) a\n"
-        "        SymbolName@(1:16) b\n"
+        "      SymbolName@(1:13) a\n"
+        "      SymbolName@(1:16) b\n"
     ));
     EXPECT(debugPrints("global x = [\n  a, b\n  c\n]\n",
         "Program@(1:1)\n"
         "  VarDecl@(1:1) global x\n"
-        "    ArrayLiteral@(1:12)\n"
-        "      List@(2:3) multi-line\n"
-        "        SymbolName@(2:3) a\n"
-        "        SymbolName@(2:6) b\n"
-        "        SymbolName@(3:3) c\n"
+        "    ArrayLiteral@(1:12) multi-line\n"
+        "      SymbolName@(2:3) a\n"
+        "      SymbolName@(2:6) b\n"
+        "      SymbolName@(3:3) c\n"
     ));
 }
 
@@ -790,6 +786,90 @@ TEST(dolang, parser_listErrors) {
     EXPECT(fails("global x = [a, [\n    b\n  ]]\n"));
     EXPECT(fails("global x = [a, [\n    b]]\n"));
     EXPECT(fails("global x = [[\n    b\n  ]]\n"));
+}
+
+// ------------------------------------------------------------------------------------------------
+// map literals
+// ------------------------------------------------------------------------------------------------
+
+TEST(dolang, parser_mapLiteral) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = {}\n"));
+    EXPECT(roundTrips("global x = {a -> b}\n"));
+    EXPECT(roundTrips("global x = {1 -> \"foo\", 2 -> \"bar\"}\n"));
+    EXPECT(roundTrips("global x = {a + b -> c * d, -e -> not f}\n"));
+    EXPECT(roundTrips("fun f()\n  let x = {a -> b}\n  c\n"));
+    // nested maps and arrays
+    EXPECT(roundTrips("global x = {a -> {b -> c}, d -> [e, f]}\n"));
+    EXPECT(roundTrips("global x = [{a -> b}, {}]\n"));
+    // trailing comma
+    EXPECT(printsAs("global x = {a -> b,}\n", "global x = {a -> b}\n"));
+    // line breaks are continuations, including around the arrow
+    EXPECT(printsAs("global x = {a -> b,\n    c -> d}\n", "global x = {a -> b, c -> d}\n"));
+    EXPECT(printsAs("global x = {a\n    -> b}\n", "global x = {a -> b}\n"));
+    EXPECT(printsAs("global x = {a ->\n    b}\n", "global x = {a -> b}\n"));
+    EXPECT(printsAs("global x = {a -> b,\n    c -> d\n}\n", "global x = {a -> b, c -> d}\n"));
+}
+
+TEST(dolang, parser_mapLiteralMultiLine) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = {\n  a -> b\n}\n"));
+    EXPECT(roundTrips("global x = {\n  1 -> \"foo\"\n  2 -> \"bar\"\n}\n"));
+    EXPECT(roundTrips("fun f()\n  let x = {\n    a -> b\n    c -> d\n  }\n  e\n"));
+    // nested multi-line map
+    EXPECT(roundTrips("global x = {\n  a -> {\n    b -> c\n  }\n  d -> e\n}\n"));
+    // commas
+    EXPECT(printsAs("global x = {\n  a -> b, c -> d\n  e -> f,\n}\n", "global x = {\n  a -> b\n  c -> d\n  e -> f\n}\n"));
+    // continuation of the item
+    EXPECT(printsAs("global x = {\n  a ->\n    b\n  c -> d\n}\n", "global x = {\n  a -> b\n  c -> d\n}\n"));
+    // empty
+    EXPECT(printsAs("global x = {\n}\n", "global x = {}\n"));
+}
+
+TEST(dolang, parser_mapLiteralStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("global x = {a -> b, c -> d}\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    MapLiteral@(1:12)\n"
+        "      MapItem@(1:15)\n"
+        "        SymbolName@(1:13) a\n"
+        "        SymbolName@(1:18) b\n"
+        "      MapItem@(1:23)\n"
+        "        SymbolName@(1:21) c\n"
+        "        SymbolName@(1:26) d\n"
+    ));
+    EXPECT(debugPrints("global x = {\n  a -> b + c\n}\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    MapLiteral@(1:12) multi-line\n"
+        "      MapItem@(2:5)\n"
+        "        SymbolName@(2:3) a\n"
+        "        BinaryOp@(2:10) +\n"
+        "          SymbolName@(2:8) b\n"
+        "          SymbolName@(2:12) c\n"
+    ));
+}
+
+TEST(dolang, parser_mapLiteralErrors) {
+    ClearPools clear_;
+    // missing key, value, or arrow
+    EXPECT(fails("global x = {a}\n"));
+    EXPECT(fails("global x = {a ->}\n"));
+    EXPECT(fails("global x = {-> b}\n"));
+    EXPECT(fails("global x = {a b}\n"));
+    EXPECT(fails("global x = {a -> b -> c}\n"));
+    // missing commas
+    EXPECT(fails("global x = {a -> b c -> d}\n"));
+    EXPECT(fails("global x = {\n  a -> b c -> d\n}\n"));
+    // unclosed, or wrongly closed
+    EXPECT(fails("global x = {a -> b\n"));
+    EXPECT(fails("global x = {\n  a -> b\n"));
+    EXPECT(fails("global x = {a -> b]\n"));
+    // multi-line map must end on its own line
+    EXPECT(fails("global x = {\n  a -> b}\n"));
+    // single line map cannot contain multi-line lists
+    EXPECT(fails("global x = {a -> {\n    b -> c\n  }}\n"));
 }
 
 // ------------------------------------------------------------------------------------------------
