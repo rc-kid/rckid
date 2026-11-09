@@ -962,23 +962,32 @@ Note that relation operators can be chained. And the semantics require that each
 
 Arithmetic operators, all left associative, and the prefix operators, which apply to the entire postfix expression that follows them.
 
-    POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | PAREN_EXPR [ 'orelse' EXPR ] }
+    POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | CALL_EXPR [ 'orelse' EXPR ] }
+    CALL_EXPR := '(' LIST(CALL_ARG) ')'
 
-Field access (or enum value selection), indexing and function call all share the same precedence and are applied left to right. Function call arguments use the same rule as parenthesized expressions and tuple literals, see below.
+Field access (or enum value selection), indexing and function call all share the same precedence and are applied left to right. Function call arguments are positional (`foo(a, 56)`), named (`inc(x = 56)`), or both (`foo(1, 2, bar = 67)`), see `CALL_ARG` below. That the positional arguments come first and that each argument is given at most once is a semantic check.
 
 The function call can be followed by `orelse`, so that only a call (including the map lookup, which is a call as well) can have the fallback. The right hand side of `orelse` takes everything, i.e. `foo() orelse 4 + 2` is `foo() orelse (4 + 2)`, `a + foo() orelse 1 + 2` is `a + (foo() orelse (1 + 2))` and `foo() orelse return 2 + 3` returns `2 + 3`. Chained `orelse` is right associative, i.e. `foo() orelse bar() orelse 0` is `foo() orelse (bar() orelse 0)`. As the right hand side takes everything, the postfix expression always ends with the `orelse`. That the call returns an optional value (and that every such call has the `orelse`) is a semantic check.
 
     PRIMARY := LITERAL | ident | 'self' | 'none'
-            |= PAREN_EXPR | IF_EXPR | MATCH_EXPR | RETURN_STMT | 'break' | 'continue'
+            |= PAREN_OR_TUPLE | IF_EXPR | MATCH_EXPR | RETURN_STMT | 'break' | 'continue'
     LITERAL := number | string | 'true' | 'false'
             |= ARRAY_LITERAL | MAP_LITERAL | FUN_LITERAL
 
-The primary expressions are literals of the primitive types, identifiers (variables, functions, types when used as constructors and enum values in their shorthand form), `self` inside methods, `none`, parenthesized expressions and the `if`, `match`, `return`, `break` and `continue` expressions. The last five take everything after them, the same as the fallback of `orelse`. That `return`, `break` and `continue` only appear where leaving the expression makes sense is a semantic check.
+The primary expressions are literals of the primitive types, identifiers (variables, functions, types when used as constructors and enum values in their shorthand form), `self` inside methods, `none`, parenthesized expressions, tuple literals and the `if`, `match`, `return`, `break` and `continue` expressions. The last five take everything after them, the same as the fallback of `orelse`. That `return`, `break` and `continue` only appear where leaving the expression makes sense is a semantic check.
 
-    PAREN_EXPR := '(' LIST(NAMED_VALUE) ')'
-    NAMED_VALUE := EXPR [ '=' EXPR ]
+    PAREN_OR_TUPLE := '(' LIST(CALL_ARG) ')'
+    CALL_ARG := EXPR [ '=' EXPR ]
 
-Parentheses serve multiple purposes: grouping of expressions (`(a + b)`), tuple literals (`(foo = 1, bar = 56)`) and function call arguments (`foo(a, 56)` or `inc(x = 56)`). All are parsed by the same rule and differentiated afterwards: in `PRIMARY` position, a single item without `=` is a grouping, otherwise all items must be in the `ident '=' EXPR` form to form a tuple literal. In `POSTFIX_EXPR` position, it is a function call. When used as call arguments, both forms can be used. This way the grammar stays LL(1) even though we only know which form is used after the first expression has been parsed. Note that the `=` here is not an assignment operator. 
+Parentheses serve multiple purposes: grouping of expressions (`(a + b)`), tuple literals (`(foo = 1, bar = 56)`) and function call arguments (`foo(a, 56)` or `inc(x = 56)`). Their items all use the same `CALL_ARG` rule, which is either an expression (positional item), or a named value. In the named value, the expression before `=` must be a single identifier (not a keyword such as `self`), which the parser checks. Only `=` is allowed, i.e. `foo(x += 1)` is a syntax error. Note that the `=` here is not an assignment operator. Assignment is only allowed at the root of the expression statement (see `EXPR_STMT`) and has no value, so `(a = 1)` can never be an assignment in parentheses.
+
+In `POSTFIX_EXPR` position, the parentheses are the function call (`CALL_EXPR`) and both positional and named items can be used. In `PRIMARY` position, the form is decided after the items have been parsed, so that the grammar stays LL(1) even though we only know which form is used after the first expression:
+
+- when all items are named values, it is a tuple literal, including the empty tuple `()`
+- when there is exactly one positional item, it is a parenthesized expression, also with a trailing comma, i.e. `(a,)` is the same as `(a)`
+- anything else, such as `(a, b)`, or `(a = 1, b)`, is a syntax error, as tuple values must always be named
+
+Line breaks in parentheses follow the `LIST` rules, i.e. a multi-line parenthesized expression is written the same way as a multi-line list with a single item.
 
 The `if` and `match` expressions:
 

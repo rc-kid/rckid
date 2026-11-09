@@ -34,6 +34,11 @@ namespace rckid::dolang::ast {
         BinaryOp,
         UnaryOp,
         Member,
+        Call,
+        NamedValue,
+        TupleLiteral,
+        Orelse,
+        Paren,
         Is,
         List,
         ArrayLiteral,
@@ -90,6 +95,15 @@ namespace rckid::dolang::ast {
             child->parent_ = this;
         }
 
+        /** Clears the parent of a child that is being moved out of this node, so that it can be adopted by another one. 
+         */
+        void unmarkAsChild(Node * child) {
+            if (child == nullptr)
+                return;
+            ASSERT(child->parent_ == this);
+            child->parent_ = nullptr;
+        }
+
         Node * parent_ = nullptr;
     };
 
@@ -133,6 +147,19 @@ namespace rckid::dolang::ast {
                 w << "\n";
                 child->debugPrint(w, indent + 2);
             }
+        }
+
+        uint32_t size() const { return static_cast<uint32_t>(children_.size()); }
+
+        Node * child(uint32_t i) const { return children_[i].get(); }
+
+        /** Removes the i-th child from the sequence and returns it, without a parent.
+         */
+        unique_ptr<Node> releaseChild(uint32_t i) {
+            unique_ptr<Node> result = std::move(children_[i]);
+            children_.erase(children_.begin() + i);
+            unmarkAsChild(result.get());
+            return result;
         }
 
     protected:
@@ -947,6 +974,151 @@ namespace rckid::dolang::ast {
 
     }; 
 
+    /** Call of the callee with the arguments, which are the list items. Positional arguments are plain expressions, named arguments are NamedValue nodes. 
+     */
+    class Call : public List {
+    public:
+        Call(Location loc, unique_ptr<Node> callee): List{Kind::Call, loc}, callee_{std::move(callee)} { 
+            markAsChild(callee_.get());
+        }
+
+        Node * callee() const { return callee_.get(); }
+        void setCallee(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            callee_ = std::move(child);
+        }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            callee_->prettyPrint(w, indent);
+            w << "(";
+            List::prettyPrint(w, indent);
+            w << ")";
+        }
+
+        /** The callee is the first child, followed by the arguments.
+         */
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            if (multiLine)
+                w << " multi-line";
+            w << "\n";
+            callee_->debugPrint(w, indent + 2);
+            for (auto const & child : children_) {
+                w << "\n";
+                child->debugPrint(w, indent + 2);
+            }
+        }
+
+    private:
+        unique_ptr<Node> callee_;
+    };
+
+    /** `name = value`, used for named call arguments and for the items of tuple literals.
+     */
+    class NamedValue : public Node {
+    public:
+        NamedValue(Location loc, Symbol name): Node{Kind::NamedValue, loc}, name_{name} { }
+
+        Symbol name() const { return name_; }
+
+        Node * value() const { return value_.get(); }
+        void setValue(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            value_ = std::move(child);
+        }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << name_.c_str() << " = ";
+            value_->prettyPrint(w, indent);
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << " " << name_.c_str() << "\n";
+            value_->debugPrint(w, indent + 2);
+        }
+
+    private:
+        Symbol name_;
+        unique_ptr<Node> value_;
+    };
+
+    /** Tuple literal, i.e. list of NamedValue items in parentheses. 
+     */
+    class TupleLiteral : public List {
+    public:
+        TupleLiteral(Location loc): List{Kind::TupleLiteral, loc} { }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << "(";
+            List::prettyPrint(w, indent);
+            w << ")";
+        }
+    };
+
+    /** `CALL orelse VALUE`, the value is used when the call returns no value. 
+     */
+    class Orelse : public Node {
+    public:
+        Orelse(Location loc, unique_ptr<Node> call): Node{Kind::Orelse, loc}, call_{std::move(call)} { 
+            markAsChild(call_.get());
+        }
+
+        Node * call() const { return call_.get(); }
+
+        Node * value() const { return value_.get(); }
+        void setValue(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            value_ = std::move(child);
+        }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            call_->prettyPrint(w, indent);
+            w << " orelse ";
+            value_->prettyPrint(w, indent);
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << "\n";
+            call_->debugPrint(w, indent + 2);
+            w << "\n";
+            value_->debugPrint(w, indent + 2);
+        }
+
+    private:
+        unique_ptr<Node> call_;
+        unique_ptr<Node> value_;
+    };
+
+    /** Parenthesized expression. Kept in the tree so that the pretty print preserves the grouping (and with it the meaning) of the source. 
+     */
+    class Paren : public Node {
+    public:
+        Paren(Location loc): Node{Kind::Paren, loc} { }
+
+        Node * value() const { return value_.get(); }
+        void setValue(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            value_ = std::move(child);
+        }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << "(";
+            value_->prettyPrint(w, indent);
+            w << ")";
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << "\n";
+            value_->debugPrint(w, indent + 2);
+        }
+
+    private:
+        unique_ptr<Node> value_;
+    };
+
     /** The `X is PATTERN` and `X is not PATTERN` test. 
      
         Evaluates to bool. When it is the whole condition of an if, or while, the pattern may also bind values, otherwise binding patterns are a semantic error. The negated form never binds.
@@ -1453,6 +1625,11 @@ inline void write(Writer & w, rckid::dolang::ast::Kind kind) {
         case Kind::TypeDecl: w << "TypeDecl"; break;
         case Kind::UnaryOp: w << "UnaryOp"; break;
         case Kind::Member: w << "Member"; break;
+        case Kind::Call: w << "Call"; break;
+        case Kind::NamedValue: w << "NamedValue"; break;
+        case Kind::TupleLiteral: w << "TupleLiteral"; break;
+        case Kind::Orelse: w << "Orelse"; break;
+        case Kind::Paren: w << "Paren"; break;
         case Kind::Is: w << "Is"; break;
         case Kind::List: w << "List"; break;
         case Kind::ArrayLiteral: w << "ArrayLiteral"; break;

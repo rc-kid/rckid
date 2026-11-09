@@ -1321,6 +1321,244 @@ TEST(dolang, parser_memberAndIndexErrors) {
     EXPECT(fails("global x = a[1, 2]\n"));
 }
 
+TEST(dolang, parser_parentheses) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = (a)\n"));
+    EXPECT(roundTrips("global x = (a + b) * c\n"));
+    EXPECT(roundTrips("global x = a * (b + c)\n"));
+    EXPECT(roundTrips("global x = ((a))\n"));
+    EXPECT(roundTrips("global x = -(a + b)\n"));
+    EXPECT(roundTrips("global x = not (a is A)\n"));
+    EXPECT(roundTrips("global x = (a + b).c\n"));
+    EXPECT(roundTrips("global x = (a + b)[0]\n"));
+    // line breaks inside are continuations
+    EXPECT(printsAs("global x = (a\n  + b)\n", "global x = (a + b)\n"));
+    // parentheses can be multi-line, which is not kept
+    EXPECT(printsAs("global x = (\n  a + b\n)\n", "global x = (a + b)\n"));
+}
+
+TEST(dolang, parser_parenthesesStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("global x = (a + b) * c\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    BinaryOp@(1:20) *\n"
+        "      Paren@(1:12)\n"
+        "        BinaryOp@(1:15) +\n"
+        "          SymbolName@(1:13) a\n"
+        "          SymbolName@(1:17) b\n"
+        "      SymbolName@(1:22) c\n"
+    ));
+}
+
+TEST(dolang, parser_tupleLiteral) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = (a = 1)\n"));
+    EXPECT(roundTrips("global x = (a = 1, b = c + 2)\n"));
+    EXPECT(roundTrips("global x = ()\n"));
+    // nested tuples, and tuples in other expressions
+    EXPECT(roundTrips("global x = (a = (b = 1), c = [1, 2])\n"));
+    EXPECT(roundTrips("global x = f((a = 1), b = (c = 2))\n"));
+    EXPECT(roundTrips("global x = (a = 1).a\n"));
+    // trailing comma is dropped
+    EXPECT(printsAs("global x = (a = 1, b = 2,)\n", "global x = (a = 1, b = 2)\n"));
+    // multi-line
+    EXPECT(roundTrips("global x = (\n  a = 1\n  b = 2\n)\n"));
+    EXPECT(roundTrips("fun f()\n  x = (\n    a = fun\n      break\n  )\n"));
+}
+
+TEST(dolang, parser_tupleLiteralStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("global x = (a = 1, b = c)\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    TupleLiteral@(1:12)\n"
+        "      NamedValue@(1:13) a\n"
+        "        Number@(1:17) 1\n"
+        "      NamedValue@(1:20) b\n"
+        "        SymbolName@(1:24) c\n"
+    ));
+    EXPECT(debugPrints("global x = ()\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    TupleLiteral@(1:12)\n"
+    ));
+    // a single unnamed item is parenthesized expression, not a tuple
+    EXPECT(debugPrints("global x = (a)\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Paren@(1:12)\n"
+        "      SymbolName@(1:13) a\n"
+    ));
+}
+
+TEST(dolang, parser_tupleLiteralErrors) {
+    ClearPools clear_;
+    // all items must be named, unless there is only one
+    EXPECT(fails("global x = (a, b)\n"));
+    EXPECT(fails("global x = (a = 1, b)\n"));
+    EXPECT(fails("global x = (a, b = 1)\n"));
+    // names must be plain names
+    EXPECT(fails("global x = (a.b = 1)\n"));
+    EXPECT(fails("global x = ((a) = 1)\n"));
+    EXPECT(fails("global x = (none = 1)\n"));
+    // incomplete
+    EXPECT(fails("global x = (a = )\n"));
+    EXPECT(fails("global x = (a = 1\n"));
+    EXPECT(fails("global x = (a = 1 b = 2)\n"));
+}
+
+TEST(dolang, parser_call) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = f()\n"));
+    EXPECT(roundTrips("global x = f(a)\n"));
+    EXPECT(roundTrips("global x = f(a, b + 1, \"c\")\n"));
+    // named arguments, can be mixed with positional
+    EXPECT(roundTrips("global x = f(a = 1, b = 2)\n"));
+    EXPECT(roundTrips("global x = f(a, b = 2)\n"));
+    // nested calls and calls in expressions
+    EXPECT(roundTrips("global x = f(g(a), h(b = g()))\n"));
+    EXPECT(roundTrips("global x = f(a) + g(b) * 2\n"));
+    // trailing comma is dropped
+    EXPECT(printsAs("global x = f(a, b,)\n", "global x = f(a, b)\n"));
+    // call statements
+    EXPECT(roundTrips("fun f()\n  g()\n  h(a, b)\n"));
+    EXPECT(roundTrips("f()\n"));
+}
+
+TEST(dolang, parser_callPostfix) {
+    ClearPools clear_;
+    // methods, chaining with member access and indexing
+    EXPECT(roundTrips("global x = a.f(b)\n"));
+    EXPECT(roundTrips("global x = a.f(b).g(c)\n"));
+    EXPECT(roundTrips("global x = f()()\n"));
+    EXPECT(roundTrips("global x = f()[0]\n"));
+    EXPECT(roundTrips("global x = f().a\n"));
+    EXPECT(roundTrips("global x = a[0](b)\n"));
+    EXPECT(roundTrips("global x = (f)(a)\n"));
+    EXPECT(roundTrips("fun f()\n  a.b(c).d = e\n"));
+}
+
+TEST(dolang, parser_callMultiLine) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = f(\n  a\n  b = 2\n)\n"));
+    EXPECT(printsAs("global x = f(\n  a, b,\n  c\n)\n", "global x = f(\n  a\n  b\n  c\n)\n"));
+    // function literals as arguments need the multi-line form
+    EXPECT(roundTrips("fun f()\n  g(\n    fun(a)\n      break\n    x = fun\n      break\n  )\n"));
+    // line break in a single line call is a continuation
+    EXPECT(printsAs("global x = f(a,\n  b)\n", "global x = f(a, b)\n"));
+}
+
+TEST(dolang, parser_orelse) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = f() orelse 0\n"));
+    EXPECT(roundTrips("global x = a.f(b) orelse c + 1\n"));
+    EXPECT(roundTrips("global x = f() orelse g() orelse 1\n"));
+    EXPECT(roundTrips("fun f()\n  x = g() orelse return\n"));
+    EXPECT(roundTrips("fun f()\n  x = g() orelse break\n"));
+    EXPECT(roundTrips("global x = (f() orelse 1) + 2\n"));
+}
+
+TEST(dolang, parser_callStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("global x = a.f(b, c = 1)\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Call@(1:15)\n"
+        "      Member@(1:13)\n"
+        "        SymbolName@(1:12) a\n"
+        "        member: f\n"
+        "      SymbolName@(1:16) b\n"
+        "      NamedValue@(1:19) c\n"
+        "        Number@(1:23) 1\n"
+    ));
+    // calls are left associative
+    EXPECT(debugPrints("global x = f()(a)\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Call@(1:15)\n"
+        "      Call@(1:13)\n"
+        "        SymbolName@(1:12) f\n"
+        "      SymbolName@(1:16) a\n"
+    ));
+    // call binds tighter than prefix operators
+    EXPECT(debugPrints("global x = -f(a)\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    UnaryOp@(1:12) -\n"
+        "      Call@(1:14)\n"
+        "        SymbolName@(1:13) f\n"
+        "        SymbolName@(1:15) a\n"
+    ));
+}
+
+TEST(dolang, parser_orelseStructure) {
+    ClearPools clear_;
+    // the right hand side of orelse takes everything
+    EXPECT(debugPrints("global x = f() orelse a + b\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Orelse@(1:16)\n"
+        "      Call@(1:13)\n"
+        "        SymbolName@(1:12) f\n"
+        "      BinaryOp@(1:25) +\n"
+        "        SymbolName@(1:23) a\n"
+        "        SymbolName@(1:27) b\n"
+    ));
+    // including the binary operators to the left of the call
+    EXPECT(debugPrints("global x = a + f() orelse b\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    BinaryOp@(1:14) +\n"
+        "      SymbolName@(1:12) a\n"
+        "      Orelse@(1:20)\n"
+        "        Call@(1:17)\n"
+        "          SymbolName@(1:16) f\n"
+        "        SymbolName@(1:27) b\n"
+    ));
+    // so chained orelse is right associative
+    EXPECT(debugPrints("global x = f() orelse g() orelse c\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Orelse@(1:16)\n"
+        "      Call@(1:13)\n"
+        "        SymbolName@(1:12) f\n"
+        "      Orelse@(1:27)\n"
+        "        Call@(1:24)\n"
+        "          SymbolName@(1:23) g\n"
+        "        SymbolName@(1:34) c\n"
+    ));
+}
+
+TEST(dolang, parser_callErrors) {
+    ClearPools clear_;
+    // unclosed or mismatched
+    EXPECT(fails("global x = f(\n"));
+    EXPECT(fails("global x = f(a\n"));
+    EXPECT(fails("global x = f(a]\n"));
+    // missing arguments or separators
+    EXPECT(fails("global x = f(a b)\n"));
+    EXPECT(fails("global x = f(, a)\n"));
+    EXPECT(fails("global x = f(a,, b)\n"));
+    // incomplete named arguments
+    EXPECT(fails("global x = f(a =)\n"));
+    EXPECT(fails("global x = f(= 1)\n"));
+    EXPECT(fails("global x = f(a = b = c)\n"));
+    // argument names must be plain names, and only = is allowed
+    EXPECT(fails("global x = f(a.b = 1)\n"));
+    EXPECT(fails("global x = f(a[0] = 1)\n"));
+    EXPECT(fails("global x = f(1 = 1)\n"));
+    EXPECT(fails("global x = f(self = 1)\n"));
+    EXPECT(fails("global x = f(a += 1)\n"));
+    // orelse only follows a call and needs a value
+    EXPECT(fails("global x = a orelse b\n"));
+    EXPECT(fails("global x = a.b orelse c\n"));
+    EXPECT(fails("global x = f() orelse\n"));
+    EXPECT(fails("global x = (a\n"));
+    // function literal argument in a single line call
+    EXPECT(fails("global x = f(fun\n  break\n)\n"));
+}
+
 TEST(dolang, parser_expressionErrors) {
     ClearPools clear_;
     // missing operands

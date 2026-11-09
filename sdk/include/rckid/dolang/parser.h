@@ -735,6 +735,7 @@ namespace rckid::dolang {
         }
 
         /** POSTFIX_EXPR := PRIMARY { '.' ident | '[' EXPR ']' | CALL_EXPR [ 'orelse' EXPR ] }
+            CALL_EXPR := '(' LIST(CALL_ARG) ')'
 
             orelse can only follow a call. Its right hand side takes everything, so the postfix expression always ends with it. That the call returns an optional value is a semantic check.
          */
@@ -756,9 +757,20 @@ namespace rckid::dolang {
                         result = std::move(index);
                         break;
                     }
-                    case TokenKind::opParOpen:
-                        //return CALL_EXPR(std::move(result));
-                        UNIMPLEMENTED;
+                    case TokenKind::opParOpen: {
+                        auto call = std::make_unique<ast::Call>(pop().loc, std::move(result));
+                        if (! LIST(call.get(), TokenKind::opParClose, &Parser::CALL_ARG))
+                            return nullptr;
+                        POP(TokenKind::opParClose);
+                        // the EXPR eats everything so no need to recurse, we can return the orelse immediately
+                        if (top() == TokenKind::kwOrElse) {
+                            auto orelse = std::make_unique<ast::Orelse>(pop().loc, std::move(call));
+                            orelse->setValue(TRY(EXPR()));
+                            return orelse;
+                        } 
+                        result = std::move(call);
+                        break;
+                    }
                     default:
                         return result;
                 }
@@ -766,9 +778,12 @@ namespace rckid::dolang {
         }
 
         /** PRIMARY := LITERAL | ident | 'self' | 'none'
-                   |= PAREN_EXPR | IF_EXPR | MATCH_EXPR | RETURN_STMT | 'break' | 'continue'
+                    |= PAREN_OR_TUPLE | IF_EXPR | MATCH_EXPR | RETURN_STMT | 'break' | 'continue'
             LITERAL := number | string | 'true' | 'false'
                     |= ARRAY_LITERAL | MAP_LITERAL | FUN_LITERAL
+
+            Parenthesized expression and tuple literal both start with '(' so they are parsed together, see PAREN_OR_TUPLE.
+
          */
         unique_ptr<ast::Node> PRIMARY() {
             switch (top().kind) {
@@ -783,7 +798,7 @@ namespace rckid::dolang {
                 case TokenKind::Identifier:
                     return std::make_unique<ast::SymbolName>(pop());
                 case TokenKind::opParOpen:
-                    return PAREN_EXPR();
+                    return PAREN_OR_TUPLE();
                 case TokenKind::opSquareOpen:
                     return ARRAY_LITERAL();
                 case TokenKind::opCurlyOpen:
@@ -806,18 +821,50 @@ namespace rckid::dolang {
             }
         }
 
-        /** PAREN_EXPR := '(' LIST(NAMED_VALUE) ')'
+        /** PAREN_OR_TUPLE := '(' LIST(CALL_ARG) ')'
 
-            Grouping, tuple literal, or call arguments, differentiated after parsing.
+            Parses the parenthesized expression, or tuple literal. When all items are named values, this is a tuple literal (including the empty one). Otherwise there must be only one item, which is the expression in parentheses. Mixing named and unnamed items, or multiple unnamed items is an error.
+
+            This works because assignment has no value in dolang, so `(a = b)` cannot be an assignment in parentheses.
          */
-        unique_ptr<ast::Node> PAREN_EXPR() {
-            UNIMPLEMENTED;
+        unique_ptr<ast::Node> PAREN_OR_TUPLE() {
+            Location l = POP(TokenKind::opParOpen).loc;
+            auto tuple = std::make_unique<ast::TupleLiteral>(l);
+            if (! LIST(tuple.get(), TokenKind::opParClose, &Parser::CALL_ARG))
+                return nullptr;
+            POP(TokenKind::opParClose);
+            for (uint32_t i = 0, e = tuple->size(); i < e; ++i) {
+                if (tuple->child(i)->kind == ast::Kind::NamedValue)
+                    continue;
+                if (e != 1) {
+                    error_ = Token::error(tuple->child(i)->loc, "Tuple literal items must be in the name = value form");
+                    return nullptr;
+                }
+                auto result = std::make_unique<ast::Paren>(l);
+                result->setValue(tuple->releaseChild(0));
+                return result;
+            }
+            return tuple;
         }
 
-        /** NAMED_VALUE := EXPR [ '=' EXPR ]
+        /** CALL_ARG := EXPR [ '=' EXPR ]
+
+            Argument of calls and item of tuple literals. Without the '=', the expression itself is returned. With the '=', the left hand side must be a name and the NamedValue is returned. Only '=' is allowed, compound assignments are errors.
          */
-        unique_ptr<ast::Node> NAMED_VALUE() {
-            UNIMPLEMENTED;
+        unique_ptr<ast::Node> CALL_ARG() {
+            // keywords such as self or true parse as SymbolName as well, so check the token itself, this ensures the assignment itself is a user defined name, not a keyword or a value.
+            bool startsWithIdentifier = top() == TokenKind::Identifier;
+            auto first = TRY(EXPR());
+            if (top() != TokenKind::opAssign)
+                return first;
+            if (! startsWithIdentifier || first->kind != ast::Kind::SymbolName) {
+                error_ = Token::error(first->loc, "Expected name before =");
+                return nullptr;
+            }
+            pop();
+            auto result = std::make_unique<ast::NamedValue>(first->loc, static_cast<ast::SymbolName *>(first.get())->name);
+            result->setValue(TRY(EXPR()));
+            return result;
         }
 
         /** ARRAY_LITERAL := '[' LIST(EXPR) ']'
