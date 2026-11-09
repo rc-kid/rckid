@@ -16,6 +16,7 @@ namespace rckid::dolang::ast {
         VarDecl,
         Function,
         NamedFunction,
+        Arg,
         TypeDecl,
         EnumDecl,
 
@@ -380,9 +381,13 @@ namespace rckid::dolang::ast {
         unique_ptr<Node> value_;
     };
 
-    class Function : public Node {
+    /** Function type, i.e. the signature of a function without a body: arguments (a List of Arg nodes) and optional return type. Base class for function literals, named functions and event types, which all print and store the signature the same way. 
+
+        The arguments list is null for function literals with implicit signature (just `fun` followed by the body), where the whole signature comes from the expected type.
+     */
+    class FunType : public Node {
     public:
-        Function(Location loc): Node{Kind::Function, loc} { }
+        FunType(Location loc): Node{Kind::FunType, loc} { }
 
         Node * returnType() const { return returnType_.get(); }
         void setReturnType(unique_ptr<Node> child) {
@@ -390,8 +395,70 @@ namespace rckid::dolang::ast {
             returnType_ = std::move(child);
         }
 
+        List * args() const { return args_.get(); }
+        void setArgs(unique_ptr<List> child) {
+            markAsChild(child.get());
+            args_ = std::move(child);
+        }
+
         bool optionalReturn() const { return optionalReturn_; }
         void setOptionalReturn(bool optional) { optionalReturn_ = optional; }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << (kind == Kind::EventType ? "event" : "fun");
+            prettyPrintSignature(w, indent);
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            debugPrintSignature(w, indent);
+        }
+
+    protected:
+
+        FunType(Location loc, Kind kind): Node{kind, loc} { }
+
+        /** Prints the arguments in parentheses (if any) and the return type (if any). 
+         */
+        void prettyPrintSignature(Writer & w, uint32_t indent) const {
+            if (args_ != nullptr) {
+                w << "(";
+                args_->prettyPrint(w, indent);
+                w << ")";
+            }
+            if (returnType_ != nullptr) {
+                w << " -> ";
+                if (optionalReturn_)
+                    w << "optional ";
+                returnType_->prettyPrint(w, indent);
+            }
+        }
+
+        /** Prints the optional return flag on the node's line, followed by the arguments and the return type as children. 
+         */
+        void debugPrintSignature(Writer & w, uint32_t indent) const {
+            if (optionalReturn_)
+                w << " optional";
+            if (args_ != nullptr) {
+                w << "\n";
+                args_->debugPrint(w, indent + 2);
+            }
+            if (returnType_ != nullptr) {
+                w << "\n";
+                returnType_->debugPrint(w, indent + 2);
+            }
+        }
+
+        unique_ptr<List> args_;
+        unique_ptr<Node> returnType_;
+        bool optionalReturn_ = false;
+    };
+
+    /** Function literal (lambda), i.e. function type with body. 
+     */
+    class Function : public FunType {
+    public:
+        Function(Location loc): FunType{loc, Kind::Function} { }
 
         Block * body() const { return body_.get(); }
         void setBody(unique_ptr<Block> child) {
@@ -400,35 +467,26 @@ namespace rckid::dolang::ast {
         }
 
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
-            w << "fun (";
-            // TODO ags
-            w << ")";
-            if (returnType_ != nullptr) {
-                w << " -> ";
-                if (optionalReturn_)
-                    w << "optional ";
-                returnType_->prettyPrint(w, indent);
-            }
+            FunType::prettyPrint(w, indent);
             ASSERT(body_ != nullptr);
             body_->prettyPrint(w, indent);
         }
 
         void debugPrint(Writer & w, uint32_t indent = 0) const override {
-            Node::debugPrint(w, indent);
-            // TODO args
+            FunType::debugPrint(w, indent);
             w << "\n";
             body_->debugPrint(w, indent + 2);
         }
 
     protected:
 
-        Function(Location loc, Kind kind): Node{kind, loc} { }
+        Function(Location loc, Kind kind): FunType{loc, kind} { }
 
-        unique_ptr<Node> returnType_;
-        bool optionalReturn_ = false;
         unique_ptr<Block> body_;
     };
 
+    /** Named function, or method declaration. Unlike function literals, always has the arguments list.
+     */
     class NamedFunction : public Function {
     public:
         NamedFunction(Location loc, Symbol name): Function{loc, Kind::NamedFunction}, name_{name} {}
@@ -444,15 +502,11 @@ namespace rckid::dolang::ast {
         }
 
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
-            w << "fun " << name_.c_str() << "(";
-            // TODO ags
-            w << ")";
-            if (returnType_ != nullptr) {
-                w << " -> ";
-                if (optionalReturn_)
-                    w << "optional ";
-                returnType_->prettyPrint(w, indent);
-            }
+            w << "fun ";
+            if (isMethod())
+                w << className_.c_str() << ".";
+            w << name_.c_str();
+            prettyPrintSignature(w, indent);
             ASSERT(body_ != nullptr);
             body_->prettyPrint(w, indent);
         }
@@ -463,6 +517,7 @@ namespace rckid::dolang::ast {
             if (isMethod())
                 w << className_.c_str() << ".";
             w << name_.c_str();
+            debugPrintSignature(w, indent);
             w << "\n";
             body_->debugPrint(w, indent + 2);
         }
@@ -471,6 +526,75 @@ namespace rckid::dolang::ast {
         Symbol name_;
         Symbol className_;
 
+    };
+
+    /** Named argument (or field). Used for arguments of named functions, function and event types (name, type and default value), arguments of function literals (name, type and the pattern of event handlers after `is`) and fields of type declarations (name, type and default value). Which of the parts can be present is decided by the parser rule that creates the argument. 
+     */
+    class Arg : public Node {
+    public:
+        Arg(Token const & name): Node{Kind::Arg, name.loc}, name_{name.asSymbol()} { }
+
+        Symbol name() const { return name_; }
+
+        Node * type() const { return type_.get(); }
+        void setType(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            type_ = std::move(child);
+        }
+
+        /** Default value. 
+         */
+        Node * value() const { return value_.get(); }
+        void setValue(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            value_ = std::move(child);
+        }
+
+        /** Pattern the argument must match for event handlers. 
+         */
+        Node * pattern() const { return pattern_.get(); }
+        void setPattern(unique_ptr<Node> child) {
+            markAsChild(child.get());
+            pattern_ = std::move(child);
+        }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << name_.c_str();
+            if (type_ != nullptr) {
+                w << " : ";
+                type_->prettyPrint(w, indent);
+            }
+            if (value_ != nullptr) {
+                w << " = ";
+                value_->prettyPrint(w, indent);
+            }
+            if (pattern_ != nullptr) {
+                w << " is ";
+                pattern_->prettyPrint(w, indent);
+            }
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << " " << name_.c_str();
+            if (type_ != nullptr) {
+                w << "\n";
+                type_->debugPrint(w, indent + 2);
+            }
+            if (value_ != nullptr) {
+                w << "\n";
+                value_->debugPrint(w, indent + 2);
+            }
+            if (pattern_ != nullptr) {
+                w << "\n";
+                pattern_->debugPrint(w, indent + 2);
+            }
+        }
+    protected:
+        Symbol name_;
+        unique_ptr<Node> type_;
+        unique_ptr<Node> value_;
+        unique_ptr<Node> pattern_;
     };
 
     class TypeDecl : public Node {
@@ -614,23 +738,12 @@ namespace rckid::dolang::ast {
         unique_ptr<Node> valueType_;
     };
 
-    class FunType : public Node {
+    /** Event type is a function type without the return value, printed with the `event` keyword (see FunType).
+     */
+    class EventType : public FunType {
     public:
-
-        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
-            UNIMPLEMENTED;
-        }
+        EventType(Location loc): FunType{loc, Kind::EventType} { }
     };
-
-    class EventType : public Node {
-    public:
-
-        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
-            UNIMPLEMENTED;
-        }
-    };
-
-
 
     class Assign : public Node {
     public:
@@ -1241,6 +1354,7 @@ inline void write(Writer & w, rckid::dolang::ast::Kind kind) {
         case Kind::EventType: w << "EventType"; break;
         case Kind::Function: w << "Function"; break;
         case Kind::NamedFunction: w << "NamedFunction"; break;
+        case Kind::Arg: w << "Arg"; break;
         case Kind::FunType: w << "FunType"; break;
         case Kind::MapType: w << "MapType"; break;
         case Kind::Program: w << "Program"; break;

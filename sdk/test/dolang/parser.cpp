@@ -237,6 +237,132 @@ TEST(dolang, parser_twoFunctions) {
     EXPECT(roundTrips("fun f()\n  break\n  continue\nfun g() -> num\n  break\n  continue\n"));
 }
 
+TEST(dolang, parser_functionArgs) {
+    ClearPools clear_;
+    EXPECT(roundTrips("fun f(a : num)\n  break\n"));
+    EXPECT(roundTrips("fun f(a : num, b : [text]) -> num\n  break\n"));
+    EXPECT(roundTrips("fun f(a : num, b : num = c)\n  break\n"));
+    EXPECT(printsAs("fun f(a : num, b : num = c,)\n  break\n", "fun f(a : num, b : num = c)\n  break\n"));
+    EXPECT(roundTrips("fun Complex.add(other : Complex)\n  break\n"));
+    EXPECT(roundTrips("fun f(\n  a : num\n  b : num = c\n)\n  break\n"));
+}
+
+TEST(dolang, parser_functionArgsStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("fun f(a : num = b) -> optional num\n  break\n",
+        "Program@(1:1)\n"
+        "  NamedFunction@(1:1) f optional\n"
+        "    List@(1:6)\n"
+        "      Arg@(1:7) a\n"
+        "        SymbolName@(1:11) num\n"
+        "        SymbolName@(1:17) b\n"
+        "    SymbolName@(1:32) num\n"
+        "    Block@(2:3)\n"
+        "      Break@(2:3)\n"
+    ));
+}
+
+TEST(dolang, parser_functionArgsErrors) {
+    ClearPools clear_;
+    // named function arguments must have types
+    EXPECT(fails("fun f(a)\n  break\n"));
+    EXPECT(fails("fun f(a = 1)\n  break\n"));
+    // and cannot have patterns
+    EXPECT(fails("fun f(a : num is 1)\n  break\n"));
+    // named functions must have the arguments list
+    EXPECT(fails("fun f\n  break\n"));
+}
+
+TEST(dolang, parser_functionTypes) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global f : fun()\n"));
+    EXPECT(roundTrips("global f : fun(a : num) -> num\n"));
+    EXPECT(roundTrips("global f : fun(a : num, b : num = 1) -> optional text\n"));
+    EXPECT(roundTrips("global f : fun(a : fun(b : num) -> num)\n"));
+    // arguments must have types
+    EXPECT(fails("global f : fun(a)\n"));
+    EXPECT(fails("global f : fun(a = 1)\n"));
+    EXPECT(fails("global f : fun\n"));
+}
+
+TEST(dolang, parser_eventTypes) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global e : event()\n"));
+    EXPECT(roundTrips("global e : event(a : num, b : num = 1)\n"));
+    // events do not return values and arguments must have types
+    EXPECT(fails("global e : event(a : num) -> num\n"));
+    EXPECT(fails("global e : event(a)\n"));
+    EXPECT(fails("global e : event\n"));
+}
+
+TEST(dolang, parser_functionLiterals) {
+    ClearPools clear_;
+    // implicit signature
+    EXPECT(roundTrips("global f = fun\n  break\n"));
+    // explicit signature, types are optional
+    EXPECT(roundTrips("global f = fun()\n  break\n"));
+    EXPECT(roundTrips("global f = fun(a)\n  break\n"));
+    EXPECT(roundTrips("global f = fun(a : num, b) -> num\n  break\n"));
+    // event handler patterns
+    EXPECT(roundTrips("global f = fun(a is A, b)\n  break\n"));
+    EXPECT(roundTrips("global f = fun(a : Btn is A)\n  break\n"));
+    // inside function bodies
+    EXPECT(roundTrips("fun f()\n  let g : fun(a : num) = fun\n    break\n"));
+    EXPECT(roundTrips("fun f()\n  g = fun(a)\n    break\n"));
+}
+
+TEST(dolang, parser_functionLiteralsStructure) {
+    ClearPools clear_;
+    // implicit signature has no arguments list, while the empty signature has an empty one
+    EXPECT(debugPrints("global f = fun\n  break\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global f\n"
+        "    Function@(1:12)\n"
+        "      Block@(2:3)\n"
+        "        Break@(2:3)\n"
+    ));
+    EXPECT(debugPrints("global f = fun()\n  break\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global f\n"
+        "    Function@(1:12)\n"
+        "      List@(1:15)\n"
+        "      Block@(2:3)\n"
+        "        Break@(2:3)\n"
+    ));
+    EXPECT(debugPrints("global f = fun(a is A)\n  break\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global f\n"
+        "    Function@(1:12)\n"
+        "      List@(1:15)\n"
+        "        Arg@(1:16) a\n"
+        "          SymbolName@(1:21) A\n"
+        "      Block@(2:3)\n"
+        "        Break@(2:3)\n"
+    ));
+}
+
+TEST(dolang, parser_topLevelAssignments) {
+    ClearPools clear_;
+    EXPECT(roundTrips("onPress = fun\n  break\n"));
+    EXPECT(roundTrips("onPress += fun(btn is A)\n  break\n"));
+    EXPECT(roundTrips("global x : num\nonPress += fun\n  break\nfun f()\n  break\n"));
+    // any expression statement parses at the top level, only event and function assignments are valid, but that is a semantic check
+    EXPECT(roundTrips("12\n"));
+    EXPECT(roundTrips("a -= b + c\n"));
+}
+
+TEST(dolang, parser_functionLiteralsErrors) {
+    ClearPools clear_;
+    // function literals cannot have default values
+    EXPECT(fails("global f = fun(a = 1)\n  break\n"));
+    EXPECT(fails("global f = fun(a : num = 1)\n  break\n"));
+    // body is mandatory
+    EXPECT(fails("global f = fun(a)\n"));
+    EXPECT(fails("global f = fun\n"));
+    // and is not allowed in single line lists
+    EXPECT(fails("global f = [fun\n  break\n]\n"));
+}
+
 TEST(dolang, parser_enumDecl) {
     ClearPools clear_;
     EXPECT(roundTrips("enum Color = Red\n"));
@@ -461,6 +587,7 @@ TEST(dolang, parser_whileStructure) {
     EXPECT(debugPrints("fun f()\n  while a do\n    b\n",
         "Program@(1:1)\n"
         "  NamedFunction@(1:1) f\n"
+        "    List@(1:6)\n"
         "    Block@(2:3)\n"
         "      While@(2:3)\n"
         "        SymbolName@(2:9) a\n"
@@ -474,6 +601,7 @@ TEST(dolang, parser_forStructure) {
     EXPECT(debugPrints("fun f()\n  for x in a do\n    b\n",
         "Program@(1:1)\n"
         "  NamedFunction@(1:1) f\n"
+        "    List@(1:6)\n"
         "    Block@(2:3)\n"
         "      For@(2:3) x\n"
         "        SymbolName@(2:12) a\n"
@@ -483,6 +611,7 @@ TEST(dolang, parser_forStructure) {
     EXPECT(debugPrints("fun f()\n  for k, v in a step b do\n    c\n",
         "Program@(1:1)\n"
         "  NamedFunction@(1:1) f\n"
+        "    List@(1:6)\n"
         "    Block@(2:3)\n"
         "      For@(2:3) k, v\n"
         "        SymbolName@(2:15) a\n"
@@ -542,6 +671,7 @@ TEST(dolang, parser_matchStructure) {
     EXPECT(debugPrints("fun f()\n  match a when\n    is X then\n      b\n    else\n      c\n",
         "Program@(1:1)\n"
         "  NamedFunction@(1:1) f\n"
+        "    List@(1:6)\n"
         "    Block@(2:3)\n"
         "      Match@(2:3)\n"
         "        SymbolName@(2:9) a\n"
@@ -1008,6 +1138,7 @@ TEST(dolang, parser_precedenceAssignment) {
     EXPECT(debugPrints("fun f()\n    a = b + c\n",
         "Program@(1:1)\n"
         "  NamedFunction@(1:1) f\n"
+        "    List@(1:6)\n"
         "    Block@(2:5)\n"
         "      Assign@(2:7) =\n"
         "        SymbolName@(2:5) a\n"
@@ -1054,8 +1185,6 @@ TEST(dolang, parser_errors) {
     EXPECT(fails("global m : {num -> text)"));
     // map keys must be POD types
     EXPECT(fails("global m : {[num] -> text}"));
-    // not a top level declaration
-    EXPECT(fails("12"));
     // let is only allowed in function bodies
     EXPECT(fails("let x : num"));
 }

@@ -213,15 +213,48 @@ Functions can be either named:
     fun myFirstFunction(arg : num)
         ...
 
-or anonymous:
+or anonymous (function literals, or lambdas):
 
     let a = fun(arg : num)
         ...
 
-A function _body_ is always an indented block of statements starting on a new line, and always follows the `fun` keyword. There is no `=` between the signature and the body. The anonymous function can be written in two forms:
+A function _body_ is always an indented block of statements starting on a new line, and always follows the `fun` keyword, either directly, or after the signature. There is no `=` between the signature and the body.
 
-- with explicit signature, i.e. `fun(...)` with optional return type, followed by the body
-- with implicit signature, i.e. just `fun` followed by the body, in which case the signature is taken from the type known from the context, such as function and event variables, or object constructors
+If the function returns value, the `->` notation is used, e.g.:
+
+    fun min(a : num, b : num) -> num
+        if a <= b then
+            return a
+        else
+            return b
+
+When the `->` part is omitted, the function does not return anything (`void` in C/C++).
+
+Function variables can be assigned a lambda, existing global function, or method of a particular object as long as their types are identical (see below). Function variable must *always* point to a valid function and hence be callable. For potentially empty function-like variables one can use events instead.
+
+### Function types and signatures
+
+Contrary to most mainstream languages, argument names are *not* part of the function type. We distinguish:
+
+- the function _type_, which consists of the number of arguments (arity), their types and the return type. Only the type decides whether functions are compatible (i.e. whether a function can be assigned to a function variable) and whether two functions are different overloads.
+- the function _signature_, which is the type together with the argument names and their default values.
+
+Signatures are written in named function declarations, function types (`fun(a : num, b : num = 1) -> num`) and event types. In all of these, every argument must have its type, and may have a default value:
+
+    fun inc(x : num, by : num = 1) -> num
+        return x + by
+
+    let f : fun(x : num, by : num = 1) -> num = inc
+
+Calls always use the signature of what is being called, i.e. of the named function, of the declared type of the function variable, or of the event. That is where the names for keyword arguments and the default values come from (see Calling Functions). So a function with default values can be assigned to a function variable whose type has no defaults, or different ones, as their types are the same. Calls of the variable then use the variable's signature.
+
+### Function literals
+
+Function literals (lambdas) are almost always used in a context in which their type is known, such as when assigned to a function variable, or an event, or passed as an argument to a function. This is the _expected type_. Therefore all parts of the lambda's signature are optional and the missing ones are taken from the expected type:
+
+- `fun` followed directly by the body takes the whole signature from the expected type and the arguments are available in the body under their names from the expected type (see Argument names below)
+- `fun(...)` with argument names renames the arguments. All arguments must always be listed
+- argument types and the return type can be given, or left out, in which case they are taken from the expected type
 
 The following are all equivalent ways of creating a function variable `a`:
 
@@ -231,24 +264,33 @@ The following are all equivalent ways of creating a function variable `a`:
     let a : fun(arg : num) = fun(arg)
         ...
 
+    let a : fun(arg : num) = fun(arg : num)
+        ...
+
+When the expected type is not known, as in the example below, the lambda itself gives the type of the variable and must therefore specify all argument types. If the return type is missing, the function does not return anything, the same as named functions:
+
     let a = fun(arg : num)
         ...
 
-If the function returns value, the `->` notation is used, e.g.:
+Any part of the signature given explicitly must match the expected type, only the argument names can differ. A missing part that cannot be taken from the expected type, or a lambda without the signature with no expected type at all, is an error.
 
-    fun min(a : num, b: num) -> num
-        if a <= b then
-            return a
-        else
-            return b
+Lambdas cannot specify default values for their arguments. If a function variable needs default values, they must be specified in its type:
 
-When the `->` part is omitted the function type is expected to not return anything (`void` in C/C++).
+    let a : fun(x : num, by : num = 1) -> num = fun
+        return x + by
 
-Function that is variable can be assigned a lambda, existing global function, or method of an particulkar object as long as the arguments arity, their types and return value are identical. Function variable must *always* pointto a valid function and hence be callable. For otentionally empty function-like variables one can use events instead. 
+The expected type comes from:
+
+- the type of the variable in assignments and `let`, `const` and `global` declarations
+- the event or function in event assignments (`button.onPress += fun`)
+- the argument type when the lambda is passed as an argument of a function call
+- the field type when used as the default value of a field in type declaration
+- the return type when returned from a function
+- the element type of an array, or the value type of a map literal, if known
 
 ### Argument names
 
-Contrary to most mainstream languages, names are described when typing the function, but are *not* part of the function type itself, but its signature. Function compatibility depends only on the number of arguments (arity) and their types as well as the return type of the function. Argument names affect keyword calls, editor visualizaton and implicit bindings: When a body is given with the implicit signature (`fun` without parentheses), the arguments are automatically bound under the names from the type. This means that the following code is valid:
+Argument names affect keyword calls, editor visualizaton and implicit bindings: When a body is given with the implicit signature (`fun` without parentheses), the arguments are automatically bound under the names from the expected type. This means that the following code is valid:
 
     let inc : fun(x : num) -> num
     inc = fun
@@ -259,25 +301,21 @@ This is very useful for function variables and events, especially those declared
     button.onPress = fun
         ... # arguments of onPress available under their declared names
 
-However, it is also possible to rename the arguments by providing the signature explicitly in parentheses, as long as it is compatible with the type. So continuing the example from above, one can write:
+However, it is also possible to rename the arguments by providing the signature explicitly in parentheses. So continuing the example from above, one can write:
 
     inc = fun(a : num) -> num
         return a + 1
 
-Since the function type is already known from `inc`'s definition, type inference can be used and a shorter version without argument types can be typed:
+or, without the parts known from `inc`'s type:
 
     inc = fun(a)
         return a + 1
-
-When the signature is given, it must list *all* the arguments, i.e. it is not possible to rename only some of them and keep the others implicit.
 
 Implicitly bound arguments must not hide any other variable visible at the place of the body. For example, if there is a global variable `x`, the `inc = fun` body from above is an error and the arguments must be renamed using the explicit signature. This prevents the confusing situation where `x` in the body looks like the global variable, but is in fact the argument.
 
 > The editors should always display the implicitly bound arguments, e.g. as a greyed out signature above the body, so that the argument names are visible even if they are not part of the code.
 
-Functions can have default values for some of their arguments, in which case those do not have to be specified when calling a function. The default value is part of the _type_. When a function is called, arguments can also be provided using their names as per the type, i.e. we can call all of the `inc` functions from above using this:
-
-    inc(x = 56)
+Note that renaming the arguments in the lambda does not change the signature of the variable it is assigned to, i.e. all of the `inc` functions above are called with `inc(x = 56)`.
 
 ### Optional return types
 
@@ -313,9 +351,11 @@ The fallback cannot be a block of statements. When more statements are needed to
 
 ### Calling Functions
 
-When a function is called, all non-default arguments must be given value. Arguments can be specified either positionally, or via their names (as described in the function type itself). Argument matching can start positional and then shift to keyword based:
+When a function is called, all arguments without default values must be given value. Arguments can be specified either positionally, or via their names from the signature of what is called (see Function types and signatures). Argument matching can start positional and then shift to keyword based:
 
     foo(1, 2, bar = 67)
+
+The positional arguments must come first, i.e. once an argument is given by name, all arguments after it must be given by name as well. Each argument can only be given once, i.e. specifying an argument both positionally and by name is an error. Note that the call arguments look the same as the tuple literal, i.e. the call can be thought of as passing a tuple of values to the function's arguments.
 
 ### Capture
 
@@ -325,7 +365,9 @@ Global variables do not need to be captured and can be referenced directly.
 
 ### Overloading
 
-Functions can be overloaded, i.e. single function name can be used with different argument types and arities. Similar to mainstream programming languages, overloading on the return type alone is *not* allowed. Overloading on the argument names alone is not allowed either.
+Functions can be overloaded, i.e. single function name can be used with different argument types and arities. Similar to mainstream programming languages, overloading on the return type alone is *not* allowed. Overloading on the argument names (or default values) alone is not allowed either, as those are not part of the function type.
+
+When an overloaded function is called, the overloads are first selected by the number of arguments and by the names of the keyword arguments and then by the argument types. When a lambda is passed as an argument and more than one overload has a function argument at its position, the expected type of the lambda is not known and the lambda must specify all argument types itself. Similarly, an overloaded function can only be assigned to a function variable whose type is known, i.e. `let f = foo` is an error if `foo` is overloaded.
 
 ## Events
 
@@ -336,7 +378,7 @@ Events are like functions in the sense that they can be called like a function a
         onSomething : event(a : num)
     )
 
-Unlike functions, events may not return values (`->` missing), but they may provide default values for their arguments. To trigger an event, the event should be called as if it were a function, i.e. the arguments must begiven. Events also implicitly cast to boolean values. An event with no handler is `false`, all other events are `true`
+Unlike functions, events may not return values (`->` missing), but they may provide default values for their arguments. Same as function types, every event argument must have its type. To trigger an event, the event should be called as if it were a function, i.e. the arguments must begiven. Events also implicitly cast to boolean values. An event with no handler is `false`, all other events are `true`
 
 When an event is assigned a function, that function becomes its sole handler. But unlike functions, events also support the `+=` assignment, in which case the handler is *added* to the event. When multiple handlers for the event exist, they are called in the order in which they were added to the event:
 
@@ -350,18 +392,23 @@ When an event is assigned a function, that function becomes its sole handler. Bu
 
 All event handlers can be cleared if they are assigned `none` (`+=` assignment of `none` is syntax error). An event can also be queried about the number of its handlers vioa the `numHandlers() -> num` method. 
     
-Events use value matching to allow for conditional dispatch, i.e. unlike the example above, consider the following:
+Event handlers can use pattern matching to allow for conditional dispatch. Any argument of the handler's signature can be followed by `is` and a pattern (the same patterns as used by `match` and the `is` operator), in which case the handler is only called when the argument matches the pattern, i.e. unlike the example above, consider the following:
 
     let a : event(a : num, b : num) 
     a += fun
         ... # first
-    a += fun(a, 56)
+    a += fun(a, b is 56)
         ... # second
 
     a(1, 2) # only first will be called
     a(1, 56) # first and second will be called
 
-Value matching requires the explicit signature, as the matched values take place of the argument names.
+This is particularly useful for enums, such as:
+
+    button.onPress += fun(btn is A, pressed)
+        ...
+
+Pattern matching requires the explicit signature and patterns are only allowed in handlers assigned to events, not in lambdas assigned to function variables. Note that the `=` is never used for matching in the handler's signature, as it would look like a default value, which lambdas cannot have.
 
 ## Objects
 
@@ -694,7 +741,7 @@ Returns from the function, optionally returning value of required type. `return`
 
 While _doLang_ uses static typing and every binding as well as function can be typed, type inference is heavily used to avoid the need for writing the types. Crucially, let bindings and tuple and object fields do not have to be explicitly typed if their type can be inferred from the assignment (which is most cases, except an empty array or map). 
 
-When declaring new functions, the functions themselves must be typed explicitly, but note that function definition is fairly complex task already so the need for explicit typing is likely ok.
+When declaring new functions, the functions themselves must be typed explicitly, i.e. all arguments of named functions must have types, but note that function definition is fairly complex task already so the need for explicit typing is likely ok. Lambdas on the other hand take the missing parts of their signature from the expected type (see Function literals).
 
 ## Libraries & Code Organization
 
@@ -797,9 +844,11 @@ Blocks are only ever introduced by a keyword (`then`, `else`, `do`, `when`, `fun
 ## Top Level Statements
 
     PROGRAM := [ TOP_DECL { newline TOP_DECL } ]
-    TOP_DECL := USE_DECL | GLOBAL_DECL | CONST_DECL | FUN_DECL | TYPE_DECL | ENUM_DECL | EVENT_ASSIGN
+    TOP_DECL := USE_DECL | GLOBAL_DECL | CONST_DECL | FUN_DECL | TYPE_DECL | ENUM_DECL | EXPR_STMT
 
 Program consists of `use` declarations, global or constant declarations, function, type and enum declarations and event assignments, all starting at column `0`. That the `use` declarations come before all others is a semantic check.
+
+Anything that does not start with a declaration keyword is parsed as `EXPR_STMT` (see Statements). Only assignments to events and function variables with `=`, or `+=`, such as `button.onPress += fun` followed by the handler, are valid at the top level, but that is a semantic check. The parser thus accepts any expression statement, including standalone expressions and other assignments, which are reported as errors by the type checker. The grammar stays LL(1), as the declaration keywords are checked first. A top level line starting with `fun` is always the `FUN_DECL`, never a function literal.
 
     USE_DECL := 'use' ident
 
@@ -810,19 +859,15 @@ Program consists of `use` declarations, global or constant declarations, functio
 
 Global variable declaration starts with `global` keyword and has name, optional type and initialization value. The value is optional and when omitted default constructor is used. When the global variable is a function or event, the value can be a function literal. Constant declaration is the same, just starts with `const` keyword. As constants can only be primitive values, they cannot be initialized with function literals.
 
-    FUN_DECL := 'fun' ident [ '.' ident ] '(' LIST(ARG) ')' [ '->' [ 'optional' ] TYPE ] BLOCK
+    FUN_DECL := 'fun' ident [ '.' ident ] SIGNATURE(PARAM) BLOCK
 
-Function declaration has a name, which for methods is prefixed with the object type name, arguments, optional return type and the body. Same as anonymous functions, there is no `=` between the signature and the body.
-
-    EVENT_ASSIGN := ident { '.' ident } ( '=' | '+=' ) EXPR
-
-Event (or function variable) assignment at the top level, such as `button.onPress += fun` followed by the handler body. The handler is usually a function literal, either with implicit signature (arguments bound from the event type), or with explicit signature. The target is restricted to a chain of identifiers, so that all top level declarations can be told apart by their first token.
+Function declaration has a name, which for methods is prefixed with the object type name, the signature (arguments and optional return type) and the body. Same as anonymous functions, there is no `=` between the signature and the body. The `SIGNATURE` and `PARAM` rules are described with the function types below.
 
     TYPE_DECL := 'type' ident [ 'extends' ident ] '=' '(' LIST(FIELD_DECL) ')'
     FIELD_DECL := ident [ ':' TYPE ] [ '=' EXPR ] 
                |= 'constructor' '=' FUN_LITERAL
 
-Object type declaration is a list of fields, each with name, optional type and optional default value, and optionally the constructor. Both the constructor and function or event fields may use function literals inside the parentheses. The constructor must use the implicit signature form, i.e. `constructor = fun`.
+Object type declaration is a list of fields, each with name, optional type and optional default value, and optionally the constructor. Unlike function arguments, the field type can be omitted when it can be inferred from the default value. Both the constructor and function or event fields may use function literals inside the parentheses. The constructor must use the implicit signature form, i.e. `constructor = fun`.
 
     ENUM_DECL := 'enum' ident '=' ident { '|' ident }
 
@@ -879,14 +924,16 @@ Tuple is list of comma separated fields defined inside parentheses. Field has na
 
 Map type is defined by the key type followed by arrow and the value type. Only POD types and objects can be keys in the map. 
 
-    FUN_TYPE := 'fun' '(' LIST(ARG) ')' [ '->' [ 'optional' ] TYPE ]
-    ARG := ident ':' TYPE [ '=' EXPR ] 
+    FUN_TYPE := 'fun' SIGNATURE(PARAM)
+    SIGNATURE(X) := ARGS(X) [ '->' [ 'optional' ] TYPE ]
+    ARGS(X) := '(' LIST(X) ')'
+    PARAM := ident ':' TYPE [ '=' EXPR ]
 
-Function types start with the `fun` keyword followed by the argument lists and optional return type after arror operator, or the function returns void. Return type may be prefixed with `optional` keyword. Function arguments are comma separated and they may contain default values.
+Function types start with the `fun` keyword followed by the signature, i.e. the argument list and optional return type after arrow operator, or the function returns void. Return type may be prefixed with `optional` keyword. All arguments lists (of named functions, function and event types and function literals) are the same list, only the rule for its items differs. Arguments of function types (and of named functions and event types) must have types and may have default values.
 
-    EVENT_TYPE := 'event' '(' LIST(ARG) ')'
+    EVENT_TYPE := 'event' ARGS(PARAM)
 
-Event types are linke function types without return value, and start withe `event` keyword instead.
+Event types are like function types without return value, and start with the `event` keyword instead.
 
 ## Expressions
 
@@ -949,12 +996,12 @@ The cases of `if` and `match` expressions can only be expressions, never blocks.
 
 Array literals are list of values in square brackets, map literals are list of key-value pairs separated by the arrow operator in curly brackets. Empty `[]` and `{}` are valid (an opening bracket immediately followed by a line with the closing bracket is an empty list as well), but their types must be known from the context.
 
-    FUN_LITERAL := 'fun' [ '(' LIST(LAMBDA_ARG) ')' [ '->' [ 'optional' ] TYPE ] ] BLOCK
-    LAMBDA_ARG := ident [ ':' TYPE ] [ '=' EXPR ] | LITERAL
+    FUN_LITERAL := 'fun' [ SIGNATURE(LAMBDA_ARG) ] BLOCK
+    LAMBDA_ARG := ident [ ':' TYPE ] [ 'is' PATTERN ]
 
 Anonymous function starts with the `fun` keyword, optionally followed by the signature (arguments and optional return type) and then the function body, which is a `BLOCK`. The two forms are differentiated with a single token lookahead after `fun`: `(` starts the explicit signature, `indent` starts the body. There is no `=` between the signature and the body. 
 
-When the signature is omitted, it is taken from the function type known from the context and the arguments are bound under their names from the type. When the signature is given, argument types may be omitted if the function type is known from the context, but all arguments must always be listed. Literal arguments are only valid for event handlers where they are used for the value matching. Whether the function type is known from the context, and therefore which parts of the signature may be omitted, is decided semantically.
+When the signature is omitted, it is taken from the expected type and the arguments are bound under their names from the type. When the signature is given, all arguments must always be listed, but their types and the return type may be omitted and are then taken from the expected type. Lambda arguments never have default values. The pattern after `is` is only valid for event handlers where it is used for the conditional dispatch. Whether the expected type is known, and therefore which parts of the signature may be omitted, as well as whether patterns are allowed, is decided semantically.
 
 Outside of brackets, the function body is followed by `newline` (or `dedent`), so an anonymous function must always be the last part of the statement it appears in. Inside brackets, which must be in the multi-line form, the body ends at the next line of items, or at the line with the closing bracket, after which the list continues as usual. As only line breaks end blocks, neither a comma, nor the closing bracket can follow the body on the same line.
 

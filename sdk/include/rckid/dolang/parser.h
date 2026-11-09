@@ -49,7 +49,9 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** TOP_DECL := USE_DECL | GLOBAL_DECL | CONST_DECL | FUN_DECL | TYPE_DECL | ENUM_DECL | EVENT_ASSIGN
+        /** TOP_DECL := USE_DECL | GLOBAL_DECL | CONST_DECL | FUN_DECL | TYPE_DECL | ENUM_DECL | EXPR_STMT
+
+            Anything that does not start with a declaration keyword is parsed as expression statement. Only event and function variable assignments are valid at the top level, but that is a semantic check.
          */
         unique_ptr<ast::Node> TOP_DECL() {
             switch (top().kind) {
@@ -65,11 +67,8 @@ namespace rckid::dolang {
                     return TYPE_DECL();
                 case TokenKind::kwEnum:
                     return ENUM_DECL();
-                case TokenKind::Identifier:
-                    return EVENT_ASSIGN();
                 default:
-                    error_ = Token::error(top().loc, STR("Expected top-level declaration, got " << top().kind));
-                    return nullptr;
+                    return EXPR_STMT();
             }
         }
 
@@ -95,7 +94,7 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** FUN_DECL := 'fun' ident [ '.' ident ] '(' LIST(ARG) ')' [ '->' [ 'optional' ] TYPE ] BLOCK
+        /** FUN_DECL := 'fun' ident [ '.' ident ] SIGNATURE(PARAM) BLOCK
          */
         unique_ptr<ast::NamedFunction> FUN_DECL() {
             Token fun = POP(TokenKind::kwFun);
@@ -103,15 +102,61 @@ namespace rckid::dolang {
             auto result = std::make_unique<ast::NamedFunction>(fun.loc, name.asSymbol());
             if (condPop(TokenKind::opDot))
                 result->setMethodName(POP(TokenKind::Identifier).asSymbol());
-            POP(TokenKind::opParOpen);
-            // TODO parse args
-            POP(TokenKind::opParClose);
+            if (! SIGNATURE(result.get(), &Parser::PARAM))
+                return nullptr;
+            result->setBody(TRY(BLOCK()));
+            return result;
+        }
+
+        /** SIGNATURE(X) := ARGS(X) [ '->' [ 'optional' ] TYPE ]
+
+            Parses the arguments and the optional return type into the given function type (or function). Returns the function type on success and nullptr on error, so callers must check the result explicitly, same as with LIST.
+         */
+        ast::FunType * SIGNATURE(ast::FunType * f, unique_ptr<ast::Node> (Parser::*item)()) {
+            f->setArgs(TRY(ARGS(item)));
             if (condPop(TokenKind::opArrow)) {
                 if (condPop(TokenKind::kwOptional))
-                    result->setOptionalReturn(true);
-                result->setReturnType(TRY(TYPE()));
+                    f->setOptionalReturn(true);
+                f->setReturnType(TRY(TYPE()));
             }
-            result->setBody(TRY(BLOCK()));
+            return f;
+        }
+
+        /** ARGS(X) := '(' LIST(X) ')'
+
+            Arguments of named functions, function and event types and function literals. They are all lists of arguments, only the item rule (X) differs. 
+         */
+        unique_ptr<ast::List> ARGS(unique_ptr<ast::Node> (Parser::*item)()) {
+            auto result = std::make_unique<ast::List>(POP(TokenKind::opParOpen).loc);
+            if (! LIST(result.get(), TokenKind::opParClose, item))
+                return nullptr;
+            POP(TokenKind::opParClose);
+            return result;
+        }
+
+        /** PARAM := ident ':' TYPE [ '=' EXPR ]
+
+            Argument of named functions, function types and event types. The type is mandatory, the default value is optional.
+         */
+        unique_ptr<ast::Node> PARAM() {
+            auto result = std::make_unique<ast::Arg>(POP(TokenKind::Identifier));
+            POP(TokenKind::opColon);
+            result->setType(TRY(TYPE()));
+            if (condPop(TokenKind::opAssign))
+                result->setValue(TRY(EXPR()));
+            return result;
+        }
+
+        /** LAMBDA_ARG := ident [ ':' TYPE ] [ 'is' PATTERN ]
+
+            Argument of function literals. The type is optional (taken from the expected type when missing), there is no default value. The pattern is only valid for event handlers, which is a semantic check.
+         */
+        unique_ptr<ast::Node> LAMBDA_ARG() {
+            auto result = std::make_unique<ast::Arg>(POP(TokenKind::Identifier));
+            if (condPop(TokenKind::opColon))
+                result->setType(TRY(TYPE()));
+            if (condPop(TokenKind::kwIs))
+                result->setPattern(TRY(PATTERN()));
             return result;
         }
 
@@ -123,9 +168,20 @@ namespace rckid::dolang {
 
         /** FIELD_DECL := ident [ ':' TYPE ] [ '=' EXPR ]
                        |= 'constructor' '=' FUN_LITERAL
+
+            Unlike function arguments, the field type is optional when it can be inferred from the default value.
          */
         unique_ptr<ast::Node> FIELD_DECL() {
-            UNIMPLEMENTED;
+            if (condPop(TokenKind::kwConstructor)) {
+                POP(TokenKind::opAssign);
+                return FUN_LITERAL();
+            }
+            auto result = std::make_unique<ast::Arg>(POP(TokenKind::Identifier));
+            if (condPop(TokenKind::opColon))
+                result->setType(TRY(TYPE()));
+            if (condPop(TokenKind::opAssign))
+                result->setValue(TRY(EXPR()));
+            return result;
         }
 
         /** ENUM_DECL := 'enum' ident '=' ident { '|' ident }
@@ -138,12 +194,6 @@ namespace rckid::dolang {
             while (condPop(TokenKind::opPipe))
                 result->addValue(POP(TokenKind::Identifier).asSymbol());
             return result;
-        }
-
-        /** EVENT_ASSIGN := ident { '.' ident } ( '=' | '+=' ) EXPR
-         */
-        unique_ptr<ast::Assign> EVENT_ASSIGN() {
-            UNIMPLEMENTED;
         }
 
         /** BLOCK := indent STATEMENT { newline STATEMENT } dedent
@@ -493,22 +543,23 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** FUN_TYPE := 'fun' '(' LIST(ARG) ')' [ '->' [ 'optional' ] TYPE ]
+        /** FUN_TYPE := 'fun' SIGNATURE(PARAM)
          */
         unique_ptr<ast::FunType> FUN_TYPE() {
-            UNIMPLEMENTED;
+            auto result = std::make_unique<ast::FunType>(POP(TokenKind::kwFun).loc);
+            if (! SIGNATURE(result.get(), &Parser::PARAM))
+                return nullptr;
+            return result;
         }
 
-        /** ARG := ident ':' TYPE [ '=' EXPR ]
-         */
-        unique_ptr<ast::Node> ARG() {
-            UNIMPLEMENTED;
-        }
+        /** EVENT_TYPE := 'event' ARGS(PARAM)
 
-        /** EVENT_TYPE := 'event' '(' LIST(ARG) ')'
+            Events never return values, so there is no return type.
          */
         unique_ptr<ast::EventType> EVENT_TYPE() {
-            UNIMPLEMENTED;
+            auto result = std::make_unique<ast::EventType>(POP(TokenKind::kwEvent).loc);
+            result->setArgs(TRY(ARGS(&Parser::PARAM)));
+            return result;
         }
 
         /** EXPR := OR_EXPR [ 'is' [ 'not' ] PATTERN ]
@@ -722,6 +773,8 @@ namespace rckid::dolang {
                     return std::make_unique<ast::Break>(pop());
                 case TokenKind::kwContinue:
                     return std::make_unique<ast::Continue>(pop());
+                case TokenKind::kwFun:
+                    return FUN_LITERAL();
                 default:
                     error_ = Token::error(top().loc, STR("Expected primary expression, got " << top().kind));
                     return nullptr;
@@ -772,16 +825,16 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** FUN_LITERAL := 'fun' [ '(' LIST(LAMBDA_ARG) ')' [ '->' [ 'optional' ] TYPE ] ] BLOCK
+        /** FUN_LITERAL := 'fun' [ SIGNATURE(LAMBDA_ARG) ] BLOCK
+
+            The signature is optional, `(` starts it and `indent` starts the body. When the signature is missing, the function has no arguments list (args() is nullptr), which is different from the empty one (`fun()`).
          */
         unique_ptr<ast::Node> FUN_LITERAL() {
-            UNIMPLEMENTED;
-        }
-
-        /** LAMBDA_ARG := ident [ ':' TYPE ] [ '=' EXPR ] | LITERAL
-         */
-        unique_ptr<ast::Node> LAMBDA_ARG() {
-            UNIMPLEMENTED;
+            auto result = std::make_unique<ast::Function>(POP(TokenKind::kwFun).loc);
+            if (top() == TokenKind::opParOpen && ! SIGNATURE(result.get(), &Parser::LAMBDA_ARG))
+                return nullptr;
+            result->setBody(TRY(BLOCK()));
+            return result;
         }
 
 #undef POP
