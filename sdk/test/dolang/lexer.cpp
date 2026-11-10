@@ -127,13 +127,11 @@ TEST(dolang, lexer_operators) {
     EXPECT(single("-", TokenKind::opSub));
     EXPECT(single("*", TokenKind::opMul));
     EXPECT(single("/", TokenKind::opDiv));
-    EXPECT(single("|", TokenKind::opPipe));
     EXPECT(single("=", TokenKind::opAssign));
     EXPECT(single("+=", TokenKind::opAddAssign));
     EXPECT(single("-=", TokenKind::opSubAssign));
     EXPECT(single("*=", TokenKind::opMulAssign));
     EXPECT(single("/=", TokenKind::opDivAssign));
-    EXPECT(single(":", TokenKind::opColon));
     EXPECT(single(",", TokenKind::opComma));
     EXPECT(single(".", TokenKind::opDot));
     EXPECT(single("->", TokenKind::opArrow));
@@ -259,6 +257,10 @@ TEST(dolang, lexer_invalidCharacters) {
     ClearPools clear_;
     EXPECT(first("@") == TokenKind::Error);
     EXPECT(first("$") == TokenKind::Error);
+    // colon is not used, types are declared with is
+    EXPECT(first(":") == TokenKind::Error);
+    // pipe is not used, enum values are a list
+    EXPECT(first("|") == TokenKind::Error);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -493,9 +495,9 @@ TEST(dolang, lexer_memberAccess) {
 
 TEST(dolang, lexer_functionSignature) {
     ClearPools clear_;
-    EXPECT(kinds("fun(a : num, b : text) -> bool") == std::vector<TokenKind>{
-        TokenKind::kwFun, TokenKind::opParOpen, TokenKind::Identifier, TokenKind::opColon, TokenKind::kwNum, TokenKind::opComma,
-        TokenKind::Identifier, TokenKind::opColon, TokenKind::kwText, TokenKind::opParClose, TokenKind::opArrow, TokenKind::kwBool
+    EXPECT(kinds("fun(a is num, b is text) -> bool") == std::vector<TokenKind>{
+        TokenKind::kwFun, TokenKind::opParOpen, TokenKind::Identifier, TokenKind::kwIs, TokenKind::kwNum, TokenKind::opComma,
+        TokenKind::Identifier, TokenKind::kwIs, TokenKind::kwText, TokenKind::opParClose, TokenKind::opArrow, TokenKind::kwBool
     });
 }
 

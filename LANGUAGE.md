@@ -43,7 +43,16 @@ So statements can span multiple lines, as long as the continuation lines are ind
 
 This means that a line starting at the same column as the statement always starts a new statement, so there is no confusion whether the line belongs to the previous statement or not. The indentation of the top level is the indentation of the first line of the file.
 
-Blocks always start on a new line that is indented more than the line that introduced them. The statements that have a block end with a keyword (`if ... then`, `while ... do`, `for ... do`, `match ... when`, `is ... then`), so their headers can span multiple lines as well. Function bodies always follow the `fun` keyword, either directly, or after the function signature (`fun(...)`). A block is only ever introduced by these keywords, or the function signature, never by an operator. In particular, a newline after `=` (or any other assignment operator) is always a continuation of the statement:
+Blocks always start on a new line that is indented more than the line that introduced them. The statements that have a block end with a keyword (`if ... then`, `while ... do`, `for ... do`, `match ... when`, `is ... then`), so their headers can span multiple lines as well. Function bodies always follow the `fun` keyword, either directly, or after the function signature (`fun(...)`).
+
+A line indented more than the previous one is a continuation of the statement, unless the previous line ended with something that starts a block, or a list:
+
+- a block keyword (`then`, `else`, `do`, `when`)
+- `fun`, or the function signature
+- an opening bracket (see Brackets)
+- the `=` of an enum declaration (see `enum`)
+
+In particular, a line break after the `=` of an assignment (or any other assignment operator) is a continuation:
 
     d =
         1     # continuation of the statement, d is assigned 43
@@ -110,7 +119,7 @@ This works in every context, so for instance map definition can look like this:
 Function bodies can appear inside brackets too, but only in the multi-line form. As any other block, a function body ends with the first line indented less than the body, i.e. the next item, or the line with the closing bracket. The line break is thus the only separator after a function body. A comma at the end of the body's last line would be part of its last statement, which is an error:
 
     type Player = (
-        onHit = fun(damage : num)
+        onHit = fun(damage is num)
             if damage > 10 then
                 playSound(ouch)
             self.lives -= damage
@@ -122,6 +131,13 @@ Function bodies can appear inside brackets too, but only in the multi-line form.
 ## Built-in Types
 
 _doLang_ supports rational numbers, boolean values, text strings and simple enumerations as primitive types. Generic arrays, maps and tuples are supported as well. Contrary to mainstream languages, floating point values are *not* supported. 
+
+Types of variables, arguments and fields are declared with the `is` keyword, the same one used for testing values against patterns (see `is`):
+
+    let x is num = 78
+    fun inc(x is num) -> num
+
+Types are patterns, too, and the declaration and the test mean the same thing, only for a different time: `let x is num` says that `x` is always a number, while `if x is Circle then` checks that `x` is a circle right now. Only types can be used in declarations, i.e. `let x is 5` is an error (use `let x = 5` to give `x` its value).
 
 ### `num`
 
@@ -143,10 +159,18 @@ The "string" type for the language, uses double quotes. Everything is UTF-8 enco
 
 ### `enum`
 
-_doLang_ supports simple enums (similar to C++ `enum class`) with named options, but without an ability of the options to contain values. Keyword `enum` is used to declare new enum types and distinct enum values are separated by `|`:
+_doLang_ supports simple enums (similar to C++ `enum class`) with named options, but without an ability of the options to contain values. Keyword `enum` is used to declare new enum types, followed by the list of its values. The values are not in brackets, as brackets are reserved for the types they stand for (tuples, arrays and maps). Short enums can be written on a single line, with values separated by commas:
 
-    enum Btn = 
-        Up | Down | Left | Right | A | B | Select | Start
+    enum Dir = Up, Down, Left, Right
+
+When the line ends right after the `=`, the values follow on the lines indented more, the same as the items of a multi-line list (see Brackets), i.e. one or more values per line, the comma at the end of the line is optional:
+
+    enum Btn =
+        Up, Down, Left, Right
+        A
+        B
+        Select
+        Start
 
 To specify enum values one can either use the `EnumName.Value` syntax, or can use `Value` only for shorthand. Note that this does not make the value names available in global scope in general as those values can only be used when assigning or comparing the enum.
 
@@ -154,7 +178,7 @@ To specify enum values one can either use the `EnumName.Value` syntax, or can us
 
 A simple array. Array is generic so we can have arrays of other types and even arrays of arrays. Arrays are created with `[]`, i.e. :
 
-    let a : [num]
+    let a is [num]
 
 All types in the array have to be identical. Type inference can be used where the type of the first item will be the type all types of the array. Arrays are growable and shrinkable and support a few methods themselves.
 
@@ -166,13 +190,13 @@ Inline array initialization is possible with the `[]` parentheses as well:
 
 Tuple is sequence of *named* values. Tuples are value types, i.e. they are copied when assigned, passed as arguments or returned:
 
-    let t : ( foo : num, bar : num) = ( foo = 1, bar = 56)
+    let t is ( foo is num, bar is num) = ( foo = 1, bar = 56)
 
 ### `map`
 
 This is the associative array. Generic on key and value. Maps are created with `{}`, i.e. the following is a map from number to text:
 
-    let m : {num -> text}
+    let m is {num -> text}
 
 All types in the map have to be identical. Type inference can be used from the first type. The `{}` parentheses can also be used for inline initialization, such as:
 
@@ -186,7 +210,7 @@ Following the `key -> value` notion, a map is read by calling it as if it were a
     let a = m(1) orelse "" # "foo"
     let b = m(key = 3) orelse "none" # "none"
 
-Calling the map is a shorthand for its `get(key : K) -> optional V` method, i.e. `m(1)` and `m.get(1)` are the same. All other operations on the map are methods as well:
+Calling the map is a shorthand for its `get(key is K) -> optional V` method, i.e. `m(1)` and `m.get(1)` are the same. All other operations on the map are methods as well:
 
     m.get(1) orelse "" # same as m(1) orelse ""
     m.set(3, "baz") # inserts, or overwrites the value for the key
@@ -195,7 +219,7 @@ Calling the map is a shorthand for its `get(key : K) -> optional V` method, i.e.
 
 The call is only a shorthand for the lookup and not a function value, i.e. a map cannot be used where a function is expected. When a function is needed, the `get` method can be used instead, as like any other method it can be assigned to function variables (the other map methods can be added to events as well, but `get` cannot, as events do not return values):
 
-    let lookup : fun(key : num) -> optional text = m.get
+    let lookup is fun(key is num) -> optional text = m.get
     let x = lookup(1) orelse ""
 
 As maps are reference types, the function refers to the map itself, not its copy, i.e. later changes of `m` are visible through `lookup`.
@@ -210,19 +234,19 @@ _doLang_ supports a variety of special purpose value type, but object-like types
 
 Functions can be either named:
 
-    fun myFirstFunction(arg : num)
+    fun myFirstFunction(arg is num)
         ...
 
 or anonymous (function literals, or lambdas):
 
-    let a = fun(arg : num)
+    let a = fun(arg is num)
         ...
 
 A function _body_ is always an indented block of statements starting on a new line, and always follows the `fun` keyword, either directly, or after the signature. There is no `=` between the signature and the body.
 
 If the function returns value, the `->` notation is used, e.g.:
 
-    fun min(a : num, b : num) -> num
+    fun min(a is num, b is num) -> num
         if a <= b then
             return a
         else
@@ -239,12 +263,12 @@ Contrary to most mainstream languages, argument names are *not* part of the func
 - the function _type_, which consists of the number of arguments (arity), their types and the return type. Only the type decides whether functions are compatible (i.e. whether a function can be assigned to a function variable) and whether two functions are different overloads.
 - the function _signature_, which is the type together with the argument names and their default values.
 
-Signatures are written in named function declarations, function types (`fun(a : num, b : num = 1) -> num`) and event types. In all of these, every argument must have its type, and may have a default value:
+Signatures are written in named function declarations, function types (`fun(a is num, b is num = 1) -> num`) and event types. In all of these, every argument must have its type, and may have a default value:
 
-    fun inc(x : num, by : num = 1) -> num
+    fun inc(x is num, by is num = 1) -> num
         return x + by
 
-    let f : fun(x : num, by : num = 1) -> num = inc
+    let f is fun(x is num, by is num = 1) -> num = inc
 
 Calls always use the signature of what is being called, i.e. of the named function, of the declared type of the function variable, or of the event. That is where the names for keyword arguments and the default values come from (see Calling Functions). So a function with default values can be assigned to a function variable whose type has no defaults, or different ones, as their types are the same. Calls of the variable then use the variable's signature.
 
@@ -258,25 +282,25 @@ Function literals (lambdas) are almost always used in a context in which their t
 
 The following are all equivalent ways of creating a function variable `a`:
 
-    let a : fun(arg : num) = fun
+    let a is fun(arg is num) = fun
         ...
 
-    let a : fun(arg : num) = fun(arg)
+    let a is fun(arg is num) = fun(arg)
         ...
 
-    let a : fun(arg : num) = fun(arg : num)
+    let a is fun(arg is num) = fun(arg is num)
         ...
 
 When the expected type is not known, as in the example below, the lambda itself gives the type of the variable and must therefore specify all argument types. If the return type is missing, the function does not return anything, the same as named functions:
 
-    let a = fun(arg : num)
+    let a = fun(arg is num)
         ...
 
 Any part of the signature given explicitly must match the expected type, only the argument names can differ. A missing part that cannot be taken from the expected type, or a lambda without the signature with no expected type at all, is an error.
 
 Lambdas cannot specify default values for their arguments. If a function variable needs default values, they must be specified in its type:
 
-    let a : fun(x : num, by : num = 1) -> num = fun
+    let a is fun(x is num, by is num = 1) -> num = fun
         return x + by
 
 The expected type comes from:
@@ -292,7 +316,7 @@ The expected type comes from:
 
 Argument names affect keyword calls, editor visualizaton and implicit bindings: When a body is given with the implicit signature (`fun` without parentheses), the arguments are automatically bound under the names from the expected type. This means that the following code is valid:
 
-    let inc : fun(x : num) -> num
+    let inc is fun(x is num) -> num
     inc = fun
        return x + 1 # x is bound from inc's type
 
@@ -303,7 +327,7 @@ This is very useful for function variables and events, especially those declared
 
 However, it is also possible to rename the arguments by providing the signature explicitly in parentheses. So continuing the example from above, one can write:
 
-    inc = fun(a : num) -> num
+    inc = fun(a is num) -> num
         return a + 1
 
 or, without the parts known from `inc`'s type:
@@ -321,7 +345,7 @@ Note that renaming the arguments in the lambda does not change the signature of 
 
 A function return type can be declared as `optional`, which means the function may either return value of the given type, or `none`. Optional is a primitive maybe type - functions (including user defined ones) can return it and the caller is forced to handle the `none` case right at the call site, but the optional values themselves cannot be stored, or passed around. This makes the feature a lot simpler to understand:
 
-    fun safeDivide(a : num, d : num) -> optional num
+    fun safeDivide(a is num, d is num) -> optional num
         if d != 0 then
             return a / d
         else 
@@ -342,7 +366,7 @@ As `orelse` can only follow a call, something like `foo() + 3 orelse 4` is a syn
 
 Instead of a value, the fallback can also be `return` (with optional value), `break` or `continue`, in which case the execution leaves the expression when `none` was returned. This is particularly useful for early returns and `none` propagation:
 
-    fun average(values : {text -> num}, a : text, b : text) -> optional num
+    fun average(values is {text -> num}, a is text, b is text) -> optional num
         let x = values(a) orelse return none
         let y = values(b) orelse return none
         return (x + y) / 2
@@ -374,15 +398,15 @@ When an overloaded function is called, the overloads are first selected by the n
 Events are like functions in the sense that they can be called like a function and they can be assigned functions. Events are particularly useful as fields of objects:
 
     type Object = (
-        field1 : num,
-        onSomething : event(a : num)
+        field1 is num,
+        onSomething is event(a is num)
     )
 
 Unlike functions, events may not return values (`->` missing), but they may provide default values for their arguments. Same as function types, every event argument must have its type. To trigger an event, the event should be called as if it were a function, i.e. the arguments must begiven. Events also implicitly cast to boolean values. An event with no handler is `false`, all other events are `true`
 
 When an event is assigned a function, that function becomes its sole handler. But unlike functions, events also support the `+=` assignment, in which case the handler is *added* to the event. When multiple handlers for the event exist, they are called in the order in which they were added to the event:
 
-    let a : event(a : num, b : num) 
+    let a is event(a is num, b is num) 
     a += fun
         ... # first
     a += fun
@@ -394,7 +418,7 @@ All event handlers can be cleared if they are assigned `none` (`+=` assignment o
     
 Event handlers can use pattern matching to allow for conditional dispatch. Any argument of the handler's signature can be followed by `is` and a pattern (the same patterns as used by `match` and the `is` operator), in which case the handler is only called when the argument matches the pattern, i.e. unlike the example above, consider the following:
 
-    let a : event(a : num, b : num) 
+    let a is event(a is num, b is num) 
     a += fun
         ... # first
     a += fun(a, b is 56)
@@ -415,8 +439,8 @@ Pattern matching requires the explicit signature and patterns are only allowed i
 User defined object types, which must always be named and may contain fields. Note that an object is, in its simplest form just a named tuple, which is reflected in the declaration syntax:
 
     type ObjectWithEvent = (
-        field1 : num = 67,
-        onDone: event(status : num),
+        field1 is num = 67,
+        onDone is event(status is num),
     )
 
 Every object has default constructor which assigns the fields with the values provided at their declaration (or their default constructors transitively). Fields of an object are accessed with the `.` notation.
@@ -433,11 +457,11 @@ The classic object definition only specifies the object's fields. Object methods
 So for example:
 
     type Complex = (
-        re : num = 0,
-        im : num = 0,
+        re is num = 0,
+        im is num = 0,
     )
 
-    fun Complex.increaseBy(other : Complex)
+    fun Complex.increaseBy(other is Complex)
         self.re += other.re
         self.im += other.im
 
@@ -448,7 +472,7 @@ The out-of-declaration syntax is useful so that functionality of objects can be 
 Object can inherit from others. Onky single inheritance is supported and _doLang_ does *not* support virtual methods, meaning that while objects can be extended, their base functionality cannot be changed. A child object can however be used in place of its parent object types:
 
     type FancyComplex extends Complex = (
-        fancy : num
+        fancy is num
     )
 
 ### Constructors
@@ -460,7 +484,7 @@ To create an object, the name of the object type is used as if it were a functio
 
 User defined constructors are not supported, instead free functions can be defined with intended meaning, such as:
 
-    fun Im(a : num) -> Complex
+    fun Im(a is num) -> Complex
         return Complex(im = a)
 
     let a = Im(56)
@@ -494,7 +518,7 @@ _doLang_ supports three binding types: `let`, `const` and `global`. For assignme
 
 Declares new global mutable variable. Only valid at the top level. Syntactically `global` is identical to `let`, e.g.:
     
-    global foo : num = 67 # type is optional if deducible from the assignment rhs
+    global foo is num = 67 # type is optional if deducible from the assignment rhs
 
 
 ### `let`
@@ -629,7 +653,7 @@ When the case is a single statement, it can be written on the same line as the k
 
 `if` can also be used as an expression, i.e. one can write for instance:
 
-    fun min(a : num, b : num) -> num
+    fun min(a is num, b is num) -> num
         return if a <= b then a else b
 
 Unlike the statement, the `else` case of the `if` expression is mandatory, both cases must have the same type and they can only be expressions, not blocks of statements. Same as the fallback of `orelse`, the `else` case takes *everything* after it, i.e. `if c then 1 else 2 + 3` is `if c then 1 else (2 + 3)`, and the whole `if` expression must be put in parentheses to be used as an operand: `(if c then 1 else 2) + 3`. As the `if` expression cannot contain blocks, any line break inside it is a continuation and long expressions can thus be broken into multiple lines:
@@ -773,7 +797,7 @@ The lexer turns the source into a stream of tokens. Line breaks are reported as 
 - *text* is enclosed in `"` and may contain the escapes described in Literal Values. Text cannot span multiple lines.
 - *operators and punctuation*, longest match wins (i.e. `->` is never `-` followed by `>`):
 
-        +  -  *  /  =  +=  -=  *=  /=  ==  !=  <  <=  >  >=  ->  .  ,  :  |  (  )  [  ]  {  }
+        +  -  *  /  =  +=  -=  *=  /=  ==  !=  <  <=  >  >=  ->  .  ,  (  )  [  ]  {  }
 
 Whitespace between tokens is ignored. Comments (`#` to the end of the line), empty lines and lines with only a comment are ignored entirely and do not affect the layout, with one exception: if the first non-empty line of the file is a comment, its indentation is the indentation of the top level. Only spaces may be used for indentation, a tab in the indentation is an error. Since columns are only ever measured on the first token of a line, they are simply the number of leading spaces.
 
@@ -781,7 +805,7 @@ Whitespace between tokens is ignored. Comments (`#` to the end of the line), emp
 
 The lexer always starts with a `newline` token that gives the indentation of the first non-empty line, which is the indentation of the top level. After that, a `newline` token is emitted for every line break (empty lines and lines with only comments do not count), with the indentation of the line that follows.
 
-The parser keeps a stack of indentations, starting with the indentation of the top level. The top of the stack, `I`, is the indentation of the current block. It also keeps a *block start* flag, which the grammar rules that introduce a block set explicitly after the keyword that starts it (`then`, `else`, `do`, `when` in the statements, `fun` and the function signature), or after an opening bracket, and which is cleared when the next token is consumed. The flag is never set by the keyword alone, so the `if` and `match` expressions, which use the same keywords but cannot contain blocks, simply do not set it. Inside a single line list, an `indent` after a block keyword, or an opening bracket is an error, as single line lists cannot contain blocks, or multi-line lists.
+The parser keeps a stack of indentations, starting with the indentation of the top level. The top of the stack, `I`, is the indentation of the current block. It also keeps a *block start* flag, which is set by the grammar rules that may start with `indent` (see Appendix B) right before they look at the next token, and which is cleared when the next token is consumed. The flag is never set by a keyword alone, so the `if` and `match` expressions, which use the same keywords as the statements, but cannot contain blocks, simply do not set it. Inside a single line list, an `indent` is an error, as single line lists cannot contain blocks, or multi-line lists.
 
 A `newline` with indentation `c` is translated as follows:
 
@@ -796,7 +820,7 @@ Note that `indent` is only emitted after the block keywords, function signatures
 ### Example
 
     type Player = (
-        onHit = fun(damage : num)
+        onHit = fun(damage is num)
             if damage > 10 then
                 playSound(ouch)
             self.lives -= damage
@@ -806,7 +830,7 @@ Note that `indent` is only emitted after the block keywords, function signatures
 produces the following tokens:
 
     'type' ident '=' '('
-    indent ident '=' 'fun' '(' ident ':' 'num' ')'
+    indent ident '=' 'fun' '(' ident 'is' 'num' ')'
     indent 'if' ident '>' number 'then'
     indent ident '(' ident ')'
     dedent newline 'self' '.' ident '-=' ident
@@ -816,7 +840,7 @@ produces the following tokens:
 ### Consequences for the grammar
 
 - statements, as well as lines of items in multi-line lists, are separated by `newline`
-- multi-line lists are `indent` ... `dedent` inside the bracket tokens
+- multi-line lists are `indent` ... `dedent` inside the bracket tokens (enum values have no brackets, so the `dedent` ends the declaration)
 - single line lists contain no layout tokens at all
 - `else` after a block arrives as `dedent 'else'`, and the closing bracket after a multi-line list as `dedent ')'`, without `newline`
 
@@ -825,6 +849,8 @@ produces the following tokens:
 The grammar works on the tokens produced by the lexer (see Appendix A). Nonterminals are uppercase, terminals are either quoted (`'if'`, `'('`), or lowercase: `ident`, `number`, `string` and the layout tokens `newline`, `indent` and `dedent`. `[ X ]` is optional, `{ X }` is repeated zero or more times and `|` separates alternatives (`|=` continues the alternatives on the next line).
 
 The grammar is LL(1). Note that a line starting with `else`, or a closing bracket never produces `newline` (see Appendix A), so `else` after a block, or the closing bracket after a multi-line list follows its `dedent` directly.
+
+The `indent` token only appears in the `BLOCK`, `LIST` and `MATCH_STMT` rules, which set the block start flag (see Appendix A) before looking at the next token. A line indented more is therefore only ever an `indent` where the grammar uses one of these rules, everywhere else it is a continuation.
 
 ## Common Rules
 
@@ -837,9 +863,9 @@ A block is a sequence of statements, each starting on its own line. As `newline`
              | indent LINE(X) { [ ',' ] newline LINE(X) } [ ',' ] dedent
     LINE(X) := X { ',' X }
 
-Items inside brackets are either in the single line form, separated by commas with optional trailing comma, or in the multi-line form (the first item is on a new line), in which `indent` is emitted after the opening bracket, `newline` between lines and `dedent` before the closing bracket. Items on the same line are separated by commas, the comma at the end of a line is optional. After an item and an optional comma, `newline` starts the next line of items, `dedent` ends the list and any other token is the next item on the same line, which requires the comma. An item that continues on further lines, or ends with a block, needs no special handling. Blocks (function bodies) and multi-line lists cannot appear inside a single line list, the parser reports both as errors. The closing bracket is part of the rules that use `LIST`.
+Items inside brackets are either in the single line form, separated by commas with optional trailing comma, or in the multi-line form (the first item is on a new line), in which `indent` is emitted after the opening bracket, `newline` between lines and `dedent` before the closing bracket. Items on the same line are separated by commas, the comma at the end of a line is optional. After an item and an optional comma, `newline` starts the next line of items, `dedent` ends the list and any other token is the next item on the same line, which requires the comma. An item that continues on further lines, or ends with a block, needs no special handling. Blocks (function bodies) and multi-line lists cannot appear inside a single line list, the parser reports both as errors. The closing bracket is part of the rules that use `LIST`. Enum values are the only list without brackets: the end of the line (or of the file) acts as the closing bracket of the single line form, while the multi-line form simply ends with the `dedent`.
 
-Blocks are only ever introduced by a keyword (`then`, `else`, `do`, `when`, `fun`), or a function signature, never by an operator. The right hand side of `=` (and other assignment operators) is therefore always an `EXPR`, function bodies on the right hand side are function literals (see `FUN_LITERAL`). The grammar is thus context free and the parser never needs to know the type of the left hand side.
+The right hand side of `=` (and other assignment operators) is always an `EXPR`, function bodies on the right hand side are function literals (see `FUN_LITERAL`). The grammar is thus context free and the parser never needs to know the type of the left hand side.
 
 ## Top Level Statements
 
@@ -854,8 +880,8 @@ Anything that does not start with a declaration keyword is parsed as `EXPR_STMT`
 
 `use` declaration is simply name of library to be used. Each library must be on separate line and with its own `use` keyword.
 
-    GLOBAL_DECL := 'global' ident [ ':' TYPE ] [ '=' EXPR ]
-    CONST_DECL := 'const' ident [ ':' TYPE ] [ '=' EXPR ]
+    GLOBAL_DECL := 'global' ident [ 'is' TYPE ] [ '=' EXPR ]
+    CONST_DECL := 'const' ident [ 'is' TYPE ] [ '=' EXPR ]
 
 Global variable declaration starts with `global` keyword and has name, optional type and initialization value. The value is optional and when omitted default constructor is used. When the global variable is a function or event, the value can be a function literal. Constant declaration is the same, just starts with `const` keyword. As constants can only be primitive values, they cannot be initialized with function literals.
 
@@ -864,14 +890,14 @@ Global variable declaration starts with `global` keyword and has name, optional 
 Function declaration has a name, which for methods is prefixed with the object type name, the signature (arguments and optional return type) and the body. Same as anonymous functions, there is no `=` between the signature and the body. The `SIGNATURE` and `PARAM` rules are described with the function types below.
 
     TYPE_DECL := 'type' ident [ 'extends' ident ] '=' '(' LIST(FIELD_DECL) ')'
-    FIELD_DECL := ident [ ':' TYPE ] [ '=' EXPR ] 
+    FIELD_DECL := ident [ 'is' TYPE ] [ '=' EXPR ] 
                |= 'constructor' '=' FUN_LITERAL
 
 Object type declaration is a list of fields, each with name, optional type and optional default value, and optionally the constructor. Unlike function arguments, the field type can be omitted when it can be inferred from the default value. Both the constructor and function or event fields may use function literals inside the parentheses. The constructor must use the implicit signature form, i.e. `constructor = fun`.
 
-    ENUM_DECL := 'enum' ident '=' ident { '|' ident }
+    ENUM_DECL := 'enum' ident '=' LIST(ident)
 
-Enum declaration is a list of its values separated by `|`. As a line break after `=` is a continuation, the values may start on the next line.
+Enum declaration is a list of at least one value without brackets. When the next line after the `=` is indented more, the values are in the multi-line form, which ends with `dedent`. Otherwise the values are in the single line form, which ends at the end of the line (or file). A trailing comma is allowed in both forms.
 
 ## Statements
 
@@ -880,7 +906,7 @@ Enum declaration is a list of its values separated by `|`. As a line break after
 
 Statements that can appear inside function bodies. A statement starting with `if`, or `match` is always the `IF_STMT`, or `MATCH_STMT`, the `if` and `match` expressions are only parsed inside an expression.
 
-    LET_STMT := ( 'let' | 'const' ) ident [ ':' TYPE ] [ '=' EXPR ]
+    LET_STMT := ( 'let' | 'const' ) ident [ 'is' TYPE ] [ '=' EXPR ]
     EXPR_STMT := EXPR [ ( '=' | '+=' | '-=' | '*=' | '/=' ) EXPR ]
     RETURN_STMT := 'return' [ EXPR ]
 
@@ -916,7 +942,7 @@ A type is either number, boolean, text, or user defined type, which is parsed as
 Array type is simply a type encosed in square brackets. Nested arrays are thus supported.
 
     TUPLE_TYPE := '(' LIST(FIELD_TYPE) ')'
-    FIELD_TYPE := ident [ ':' TYPE ]
+    FIELD_TYPE := ident [ 'is' TYPE ]
 
 Tuple is list of comma separated fields defined inside parentheses. Field has name and may specify a type.
 
@@ -927,7 +953,7 @@ Map type is defined by the key type followed by arrow and the value type. Only P
     FUN_TYPE := 'fun' SIGNATURE(PARAM)
     SIGNATURE(X) := ARGS(X) [ '->' [ 'optional' ] TYPE ]
     ARGS(X) := '(' LIST(X) ')'
-    PARAM := ident ':' TYPE [ '=' EXPR ]
+    PARAM := ident 'is' TYPE [ '=' EXPR ]
 
 Function types start with the `fun` keyword followed by the signature, i.e. the argument list and optional return type after arrow operator, or the function returns void. Return type may be prefixed with `optional` keyword. All arguments lists (of named functions, function and event types and function literals) are the same list, only the rule for its items differs. Arguments of function types (and of named functions and event types) must have types and may have default values.
 
@@ -997,7 +1023,7 @@ The `if` and `match` expressions:
                      |= 'else' EXPR
     CASE_EXPR := 'is' PATTERN [ 'and' OR_EXPR ] 'then' OR_EXPR
 
-The cases of `if` and `match` expressions can only be expressions, never blocks. These rules do not set the block start flag, so any line break inside them is a continuation. `else if` chains need no special rule as `IF_EXPR` is an `EXPR`. The guards and values of the `match` cases are `OR_EXPR`, so that they cannot contain `is` (unless in parentheses) and `is` always starts the next case. The `else` value is always last, so it can be any `EXPR`. There must be at least one case, which can be the `else` case alone. That the `match` expression is exhaustive, or has the `else` case is a semantic check.
+The cases of `if` and `match` expressions can only be expressions, never blocks. These rules contain no `indent`, so any line break inside them is a continuation. `else if` chains need no special rule as `IF_EXPR` is an `EXPR`. The guards and values of the `match` cases are `OR_EXPR`, so that they cannot contain `is` (unless in parentheses) and `is` always starts the next case. The `else` value is always last, so it can be any `EXPR`. There must be at least one case, which can be the `else` case alone. That the `match` expression is exhaustive, or has the `else` case is a semantic check.
 
     ARRAY_LITERAL := '[' LIST(EXPR) ']'
     MAP_LITERAL := '{' LIST(MAP_ITEM) '}'
@@ -1006,11 +1032,11 @@ The cases of `if` and `match` expressions can only be expressions, never blocks.
 Array literals are list of values in square brackets, map literals are list of key-value pairs separated by the arrow operator in curly brackets. Empty `[]` and `{}` are valid (an opening bracket immediately followed by a line with the closing bracket is an empty list as well), but their types must be known from the context.
 
     FUN_LITERAL := 'fun' [ SIGNATURE(LAMBDA_ARG) ] BLOCK
-    LAMBDA_ARG := ident [ ':' TYPE ] [ 'is' PATTERN ]
+    LAMBDA_ARG := ident [ 'is' PATTERN ]
 
 Anonymous function starts with the `fun` keyword, optionally followed by the signature (arguments and optional return type) and then the function body, which is a `BLOCK`. The two forms are differentiated with a single token lookahead after `fun`: `(` starts the explicit signature, `indent` starts the body. There is no `=` between the signature and the body. 
 
-When the signature is omitted, it is taken from the expected type and the arguments are bound under their names from the type. When the signature is given, all arguments must always be listed, but their types and the return type may be omitted and are then taken from the expected type. Lambda arguments never have default values. The pattern after `is` is only valid for event handlers where it is used for the conditional dispatch. Whether the expected type is known, and therefore which parts of the signature may be omitted, as well as whether patterns are allowed, is decided semantically.
+When the signature is omitted, it is taken from the expected type and the arguments are bound under their names from the type. When the signature is given, all arguments must always be listed, but their types and the return type may be omitted and are then taken from the expected type. Lambda arguments never have default values. As types are patterns too, each lambda argument has at most one `is`, followed by a pattern. When the expected type is not known, the pattern must be a type and gives the argument its type. When the expected type is known, the pattern must match the argument's type, and in event handlers it is used for the conditional dispatch, i.e. `fun(s is Circle)` added to an event whose argument is a `Shape` is only called for circles. Whether the expected type is known, and therefore which parts of the signature may be omitted, as well as whether patterns are allowed, is decided semantically.
 
 Outside of brackets, the function body is followed by `newline` (or `dedent`), so an anonymous function must always be the last part of the statement it appears in. Inside brackets, which must be in the multi-line form, the body ends at the next line of items, or at the line with the closing bracket, after which the list continues as usual. As only line breaks end blocks, neither a comma, nor the closing bracket can follow the body on the same line.
 

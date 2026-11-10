@@ -79,15 +79,15 @@ namespace rckid::dolang {
             return std::make_unique<ast::UseDecl>(l, POP(TokenKind::Identifier).asSymbol());
         }
 
-        /** GLOBAL_DECL := 'global' ident [ ':' TYPE ] [ '=' EXPR ]
-            CONST_DECL := 'const' ident [ ':' TYPE ] [ '=' EXPR ]
-            LET_STMT := ( 'let' | 'const' ) ident [ ':' TYPE ] [ '=' EXPR ]
+        /** GLOBAL_DECL := 'global' ident [ 'is' TYPE ] [ '=' EXPR ]
+            CONST_DECL := 'const' ident [ 'is' TYPE ] [ '=' EXPR ]
+            LET_STMT := ( 'let' | 'const' ) ident [ 'is' TYPE ] [ '=' EXPR ]
 
          */
         unique_ptr<ast::Node> VAR_DECL(TokenKind kind) {
             auto l = POP(kind).loc;
             auto result = std::make_unique<ast::VarDecl>(kind, l, POP(TokenKind::Identifier).asSymbol());
-            if (condPop(TokenKind::opColon))
+            if (condPop(TokenKind::kwIs))
                 result->setType(TRY(TYPE()));
             if (condPop(TokenKind::opAssign))
                 result->setValue(TRY(EXPR()));
@@ -134,27 +134,25 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** PARAM := ident ':' TYPE [ '=' EXPR ]
+        /** PARAM := ident 'is' TYPE [ '=' EXPR ]
 
             Argument of named functions, function types and event types. The type is mandatory, the default value is optional.
          */
         unique_ptr<ast::Node> PARAM() {
             auto result = std::make_unique<ast::Arg>(POP(TokenKind::Identifier));
-            POP(TokenKind::opColon);
+            POP(TokenKind::kwIs);
             result->setType(TRY(TYPE()));
             if (condPop(TokenKind::opAssign))
                 result->setValue(TRY(EXPR()));
             return result;
         }
 
-        /** LAMBDA_ARG := ident [ ':' TYPE ] [ 'is' PATTERN ]
+        /** LAMBDA_ARG := ident [ 'is' PATTERN ]
 
-            Argument of function literals. The type is optional (taken from the expected type when missing), there is no default value. The pattern is only valid for event handlers, which is a semantic check.
+            Argument of function literals, there is no default value. As types are patterns too, the part after `is` is always parsed as a pattern (and stored as the pattern of the Arg). When the expected type is known, the pattern must match its argument type and for event handlers it is used for conditional dispatch. When the expected type is not known, the pattern must be a type and gives the argument its type. Both are semantic checks.
          */
         unique_ptr<ast::Node> LAMBDA_ARG() {
             auto result = std::make_unique<ast::Arg>(POP(TokenKind::Identifier));
-            if (condPop(TokenKind::opColon))
-                result->setType(TRY(TYPE()));
             if (condPop(TokenKind::kwIs))
                 result->setPattern(TRY(PATTERN()));
             return result;
@@ -176,7 +174,7 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** FIELD_DECL := ident [ ':' TYPE ] [ '=' EXPR ]
+        /** FIELD_DECL := ident [ 'is' TYPE ] [ '=' EXPR ]
                        |= 'constructor' '=' FUN_LITERAL
 
             Unlike function arguments, the field type is optional when it can be inferred from the default value. The constructor is stored as an Arg named `constructor` with the function literal as its value.
@@ -189,23 +187,35 @@ namespace rckid::dolang {
                 return result;
             }
             auto result = std::make_unique<ast::Arg>(POP(TokenKind::Identifier));
-            if (condPop(TokenKind::opColon))
+            if (condPop(TokenKind::kwIs))
                 result->setType(TRY(TYPE()));
             if (condPop(TokenKind::opAssign))
                 result->setValue(TRY(EXPR()));
             return result;
         }
 
-        /** ENUM_DECL := 'enum' ident '=' ident { '|' ident }
+        /** ENUM_DECL := 'enum' ident '=' LIST(ENUM_VALUE)
+            ENUM_VALUE := ident
+
+            The values are a list without brackets. When the values start right after the `=`, the list is in the single line form and ends with the line. When the line ends after the `=` and the values follow on lines indented more, it is in the multi-line form, which ends with the dedent. As there is no closing bracket, the end of the line serves as one for the single line form. There must be at least one value.
          */
         unique_ptr<ast::EnumDecl> ENUM_DECL() {
-            auto result = std::make_unique<ast::EnumDecl>(POP(TokenKind::kwEnum).loc);
-            result->name = POP(TokenKind::Identifier).asSymbol();
-            POP(TokenKind::opAssign);
-            result->addValue(POP(TokenKind::Identifier).asSymbol());
-            while (condPop(TokenKind::opPipe))
-                result->addValue(POP(TokenKind::Identifier).asSymbol());
+            Location l = POP(TokenKind::kwEnum).loc;
+            auto result = std::make_unique<ast::EnumDecl>(l, POP(TokenKind::Identifier).asSymbol());
+            // must not call top() before LIST, which needs to set the block start flag before the newline after = is translated
+            auto values = std::make_unique<ast::List>(POP(TokenKind::opAssign).loc);
+            if (! LIST(values.get(), TokenKind::Newline, &Parser::ENUM_VALUE))
+                return nullptr;
+            if (values->size() == 0) {
+                error_ = Token::error(top().loc, "Enum must have at least one value");
+                return nullptr;
+            }
+            result->setValues(std::move(values));
             return result;
+        }
+
+        unique_ptr<ast::Node> ENUM_VALUE() {
+            return std::make_unique<ast::SymbolName>(POP(TokenKind::Identifier));
         }
 
         /** BLOCK := indent STATEMENT { newline STATEMENT } dedent
@@ -268,7 +278,7 @@ namespace rckid::dolang {
                 }
             } else {
                 LayoutGuard g_{*this, false};
-                if (top() == close)
+                if (isListEnd(close))
                     return true;
                 while (true) {
                     auto x = (this->*item)();
@@ -277,10 +287,18 @@ namespace rckid::dolang {
                     list->addChild(std::move(x));
                     if (! condPop(TokenKind::opComma))
                         return true;
-                    if (top() == close)
+                    if (isListEnd(close))
                         return true;
                 }
             }
+        }
+
+        /** True if the next token ends the single line form of a list. Lists without brackets (enum values) use the end of the line as their closing bracket, which at the end of the file is the end of file itself, as no newline is produced there.
+         */
+        bool isListEnd(TokenKind close) {
+            if (top() == close)
+                return true;
+            return close == TokenKind::Newline && top() == TokenKind::EndOfFile;
         }
 
         /** STATEMENT := LET_STMT | IF_STMT | WHILE_STMT | FOR_STMT | MATCH_STMT | RETURN_STMT
@@ -469,16 +487,31 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** PATTERN := ident
-           
-           Old ones:
-           
-           LITERAL | '-' number | ident { '.' ident }
-                     |= '(' LIST(ident [ '=' PATTERN ]) ')' | '[' LIST(PATTERN) ']'
+        /** PATTERN := # TODO
+
+            Unlike traditional programming languages, patterns in doLang are simpler and they cannot bind or deconstruct values. They can however check types and shapes via the following mechanism:
+
+            - a value can be matched against a type name
+            - a value can be matched against a literal that produces it (or expression? we loose totality checks, but maybe not that important?) In this case two special characters can be used to match any value (_) and to match everything else (*)
+            
+            Examples:
+
+            x is num     # matches any number
+            x is [num]   # matches any array of numbers
+            x is (x is num, y is num)  # matches any tuple with two numbers
+            x is (x is 67, y is _) # matches any tuple with 67 in the first position and anything in the second position
+            x is [1, 2, 3] # matches array of three elements 1, 2 and 3
+            x is [_, 2, _] # matches array of three elements with 2 in the middle
+            x is [1, 2, *] # matches array of at least two elements 1 and 2 in the beginning
+            x is Point     # matches any value of type Point (how about subclasses? - maybe the rule could be that if there are matches like this then the closest of the present will be selected, or we can say that it matches any subtype of point as well and say that matches proceed in order they are defined)
+            x is Point(x is 1, y is _) # matches any Point with x=1 and any y
+
+            At least for now, matching on maps is not allowed. Note that `is` is used inside the patterns instead of `=`. For tuples names must be used, positional matching only works for arrays. 
+
          */
         unique_ptr<ast::Node> PATTERN() {
-            // TODO implement proper pattern matching and parsing, for now we just assume a name in the pattern which as a name of a type is always valid
-            return std::make_unique<ast::SymbolName>(POP(TokenKind::Identifier));
+            // TODO implement proper pattern parsing, for now only types are supported (which includes plain names, such as enum values)
+            return TYPE();
         }
 
         /** TYPE := POD_TYPE | ARRAY_TYPE | TUPLE_TYPE | MAP_TYPE | FUN_TYPE | EVENT_TYPE
@@ -535,11 +568,11 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** FIELD_TYPE := ident [ ':' TYPE ]
+        /** FIELD_TYPE := ident [ 'is' TYPE ]
          */
         unique_ptr<ast::Node> FIELD_TYPE() {
             auto result = std::make_unique<ast::FieldType>(POP(TokenKind::Identifier));
-            if (condPop(TokenKind::opColon))
+            if (condPop(TokenKind::kwIs))
                 result->setType(TRY(TYPE()));
             return result;
         }

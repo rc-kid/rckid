@@ -381,7 +381,7 @@ namespace rckid::dolang::ast {
             }
             w << name.c_str();
             if (type_ != nullptr) {
-                w << " : ";
+                w << " is ";
                 type_->prettyPrint(w, indent);
             }
             if (value_ != nullptr) {
@@ -556,7 +556,7 @@ namespace rckid::dolang::ast {
 
     };
 
-    /** Named argument (or field). Used for arguments of named functions, function and event types (name, type and default value), arguments of function literals (name, type and the pattern of event handlers after `is`) and fields of type declarations (name, type and default value). Which of the parts can be present is decided by the parser rule that creates the argument. 
+    /** Named argument (or field). Used for arguments of named functions, function and event types (name, type and default value), arguments of function literals (name and the pattern after `is`, which is often just a type) and fields of type declarations (name, type and default value). Which of the parts can be present is decided by the parser rule that creates the argument. 
      */
     class Arg : public Node {
     public:
@@ -589,7 +589,7 @@ namespace rckid::dolang::ast {
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             w << name_.c_str();
             if (type_ != nullptr) {
-                w << " : ";
+                w << " is ";
                 type_->prettyPrint(w, indent);
             }
             if (value_ != nullptr) {
@@ -669,41 +669,44 @@ namespace rckid::dolang::ast {
         unique_ptr<List> fields_;
     };
 
+    /** Enum declaration, i.e. the name and the list of values (SymbolName nodes). The values list has no brackets, its multi-line form is printed as a block of values, one per line. 
+     */
     class EnumDecl : public Node {
     public:
-        EnumDecl(Location loc): Node{Kind::EnumDecl, loc} { }
+        EnumDecl(Location loc, Symbol name): Node{Kind::EnumDecl, loc}, name_{name} { }
 
-        void addValue(Symbol value) {
-            values_.push_back(value);
+        Symbol name() const { return name_; }
+
+        List * values() const { return values_.get(); }
+        void setValues(unique_ptr<List> child) {
+            markAsChild(child.get());
+            values_ = std::move(child);
         }
 
-        void prettyPrint(Writer & w, [[maybe_unused]] uint32_t indent = 0) const override {
-            w << "enum " << name.c_str() << " = ";
-            bool first = true;
-            for (auto const & value : values_) {
-                if (first)
-                    first = false;
-                else
-                    w << " | ";
-                w << value.c_str();
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << "enum " << name_.c_str() << " =";
+            if (values_->multiLine) {
+                for (uint32_t i = 0, e = values_->size(); i < e; ++i) {
+                    w.putChar('\n');
+                    for (uint32_t j = 0; j < indent + 2; ++j)
+                        w.putChar(' ');
+                    values_->child(i)->prettyPrint(w, indent + 2);
+                }
+            } else {
+                w << " ";
+                values_->prettyPrint(w, indent);
             }
         }
 
         void debugPrint(Writer & w, uint32_t indent = 0) const override {
             Node::debugPrint(w, indent);
-            w << " " << name.c_str();
-            for (auto const & value : values_) {
-                w << "\n";
-                for (uint32_t i = 0; i < indent + 2; ++i)
-                    w.putChar(' ');
-                w << value.c_str();
-            }
+            w << " " << name_.c_str() << "\n";
+            values_->debugPrint(w, indent + 2);
         }
 
-        Symbol name;
-
-    protected:
-        std::vector<Symbol> values_;
+    private:
+        Symbol name_;
+        unique_ptr<List> values_;
     };
 
     class ArrayType : public Node {
@@ -752,7 +755,7 @@ namespace rckid::dolang::ast {
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             w << name.c_str();
             if (type_ != nullptr) {
-                w << " : ";
+                w << " is ";
                 type_->prettyPrint(w, indent);
             }
         }

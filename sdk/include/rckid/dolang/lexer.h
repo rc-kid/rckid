@@ -44,13 +44,11 @@ namespace rckid::dolang {
         opSub,
         opMul,
         opDiv,
-        opPipe,
         opAssign,
         opAddAssign,
         opSubAssign,
         opMulAssign,
         opDivAssign,
-        opColon,
         opComma,
         opDot,
         opArrow,
@@ -155,7 +153,6 @@ namespace rckid::dolang {
                 case TokenKind::opSub:
                 case TokenKind::opMul:
                 case TokenKind::opDiv:
-                case TokenKind::opPipe:
                 case TokenKind::opAssign:
                 case TokenKind::opAddAssign:
                 case TokenKind::opSubAssign:
@@ -257,12 +254,8 @@ namespace rckid::dolang {
                         return condPop('=') ? Token{TokenKind::opMulAssign, l} : Token{TokenKind::opMul, l};
                     case '/':
                         return condPop('=') ? Token{TokenKind::opDivAssign, l} : Token{TokenKind::opDiv, l};
-                    case '|':
-                        return Token{TokenKind::opPipe, l};
                     case '=':
                         return condPop('=') ? Token{TokenKind::opEquals, l} : Token{TokenKind::opAssign, l};
-                    case ':':
-                        return Token{TokenKind::opColon, l};
                     case ',':
                         return Token{TokenKind::opComma, l};
                     case '.':
@@ -584,13 +577,11 @@ namespace rckid::dolang {
             case TokenKind::opSub: w << '-'; break;
             case TokenKind::opMul: w << '*'; break;
             case TokenKind::opDiv: w << '/'; break;
-            case TokenKind::opPipe: w << '|'; break;
             case TokenKind::opAssign: w << '='; break;
             case TokenKind::opAddAssign: w << "+="; break;
             case TokenKind::opSubAssign: w << "-="; break;
             case TokenKind::opMulAssign: w << "*="; break;
             case TokenKind::opDivAssign: w << "/="; break;
-            case TokenKind::opColon: w << ':'; break;
             case TokenKind::opComma: w << ','; break;
             case TokenKind::opDot: w << '.'; break;
             case TokenKind::opArrow: w << "->"; break;

@@ -108,14 +108,14 @@ TEST(dolang, parser_use) {
 TEST(dolang, parser_varDeclWithoutValue) {
     ClearPools clear_;
     EXPECT(roundTrips("global x\n"));
-    EXPECT(roundTrips("global x : num\n"));
-    EXPECT(roundTrips("const x : bool\n"));
+    EXPECT(roundTrips("global x is num\n"));
+    EXPECT(roundTrips("const x is bool\n"));
 }
 
 TEST(dolang, parser_multipleDeclarations) {
     ClearPools clear_;
     EXPECT(roundTrips("use foo\nuse bar\n"));
-    EXPECT(roundTrips("use foo\nglobal x : num\nconst y : text\n"));
+    EXPECT(roundTrips("use foo\nglobal x is num\nconst y is text\n"));
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -124,68 +124,68 @@ TEST(dolang, parser_multipleDeclarations) {
 
 TEST(dolang, parser_podTypes) {
     ClearPools clear_;
-    EXPECT(roundTrips("global x : num\n"));
-    EXPECT(roundTrips("global x : bool\n"));
-    EXPECT(roundTrips("global x : text\n"));
+    EXPECT(roundTrips("global x is num\n"));
+    EXPECT(roundTrips("global x is bool\n"));
+    EXPECT(roundTrips("global x is text\n"));
     // user defined types are identifiers
-    EXPECT(roundTrips("global x : Player\n"));
+    EXPECT(roundTrips("global x is Player\n"));
 }
 
 TEST(dolang, parser_arrayTypes) {
     ClearPools clear_;
-    EXPECT(roundTrips("global a : [num]\n"));
-    EXPECT(roundTrips("global a : [Player]\n"));
-    EXPECT(roundTrips("global a : [[text]]\n"));
+    EXPECT(roundTrips("global a is [num]\n"));
+    EXPECT(roundTrips("global a is [Player]\n"));
+    EXPECT(roundTrips("global a is [[text]]\n"));
 }
 
 TEST(dolang, parser_tupleTypes) {
     ClearPools clear_;
-    EXPECT(roundTrips("global x : ()\n"));
-    EXPECT(roundTrips("global x : (a)\n"));
-    EXPECT(roundTrips("global x : (a : num)\n"));
-    EXPECT(roundTrips("global x : (a : num, b : text)\n"));
+    EXPECT(roundTrips("global x is ()\n"));
+    EXPECT(roundTrips("global x is (a)\n"));
+    EXPECT(roundTrips("global x is (a is num)\n"));
+    EXPECT(roundTrips("global x is (a is num, b is text)\n"));
     // field types are optional
-    EXPECT(roundTrips("global x : (a, b : bool, c)\n"));
+    EXPECT(roundTrips("global x is (a, b is bool, c)\n"));
     // any type can be a field type, tuples can be part of other types
-    EXPECT(roundTrips("global x : (a : [num], b : {num -> text}, c : Player)\n"));
-    EXPECT(roundTrips("global x : (a : (b : num, c), d)\n"));
-    EXPECT(roundTrips("global x : [(a : num)]\n"));
-    EXPECT(roundTrips("global m : {num -> (a : num)}\n"));
+    EXPECT(roundTrips("global x is (a is [num], b is {num -> text}, c is Player)\n"));
+    EXPECT(roundTrips("global x is (a is (b is num, c), d)\n"));
+    EXPECT(roundTrips("global x is [(a is num)]\n"));
+    EXPECT(roundTrips("global m is {num -> (a is num)}\n"));
     // with value and in functions
-    EXPECT(roundTrips("global x : (a : num) = y\n"));
-    EXPECT(roundTrips("fun f()\n  let x : (a : num, b) = y\n"));
+    EXPECT(roundTrips("global x is (a is num) = y\n"));
+    EXPECT(roundTrips("fun f()\n  let x is (a is num, b) = y\n"));
     // trailing comma
-    EXPECT(printsAs("global x : (a : num, b,)\n", "global x : (a : num, b)\n"));
+    EXPECT(printsAs("global x is (a is num, b,)\n", "global x is (a is num, b)\n"));
 }
 
 TEST(dolang, parser_tupleTypesMultiLine) {
     ClearPools clear_;
-    EXPECT(roundTrips("global x : (\n  a : num\n  b : text\n)\n"));
-    EXPECT(roundTrips("fun f()\n  let x : (\n    a : num\n    b\n  ) = y\n"));
+    EXPECT(roundTrips("global x is (\n  a is num\n  b is text\n)\n"));
+    EXPECT(roundTrips("fun f()\n  let x is (\n    a is num\n    b\n  ) = y\n"));
     // nested multi-line tuple types
-    EXPECT(roundTrips("global x : (\n  a : (\n    b : num\n    c\n  )\n  d\n)\n"));
+    EXPECT(roundTrips("global x is (\n  a is (\n    b is num\n    c\n  )\n  d\n)\n"));
     // commas
-    EXPECT(printsAs("global x : (\n  a : num, b\n  c,\n)\n", "global x : (\n  a : num\n  b\n  c\n)\n"));
+    EXPECT(printsAs("global x is (\n  a is num, b\n  c,\n)\n", "global x is (\n  a is num\n  b\n  c\n)\n"));
     // continuation of the field type
-    EXPECT(printsAs("global x : (\n  a :\n    num\n  b\n)\n", "global x : (\n  a : num\n  b\n)\n"));
+    EXPECT(printsAs("global x is (\n  a is\n    num\n  b\n)\n", "global x is (\n  a is num\n  b\n)\n"));
 }
 
 TEST(dolang, parser_tupleTypesStructure) {
     ClearPools clear_;
-    EXPECT(debugPrints("global x : (a : num, b)\n",
+    EXPECT(debugPrints("global x is (a is num, b)\n",
         "Program@(1:1)\n"
         "  VarDecl@(1:1) global x\n"
-        "    TupleType@(1:12)\n"
-        "      FieldType@(1:13) a\n"
-        "        SymbolName@(1:17) num\n"
-        "      FieldType@(1:22) b\n"
+        "    TupleType@(1:13)\n"
+        "      FieldType@(1:14) a\n"
+        "        SymbolName@(1:19) num\n"
+        "      FieldType@(1:24) b\n"
     ));
-    EXPECT(debugPrints("global x : (\n  a : num\n  b\n)\n",
+    EXPECT(debugPrints("global x is (\n  a is num\n  b\n)\n",
         "Program@(1:1)\n"
         "  VarDecl@(1:1) global x\n"
-        "    TupleType@(1:12) multi-line\n"
+        "    TupleType@(1:13) multi-line\n"
         "      FieldType@(2:3) a\n"
-        "        SymbolName@(2:7) num\n"
+        "        SymbolName@(2:8) num\n"
         "      FieldType@(3:3) b\n"
     ));
 }
@@ -193,33 +193,33 @@ TEST(dolang, parser_tupleTypesStructure) {
 TEST(dolang, parser_tupleTypesErrors) {
     ClearPools clear_;
     // unclosed
-    EXPECT(fails("global x : (a : num\n"));
-    EXPECT(fails("global x : (\n  a : num\n"));
+    EXPECT(fails("global x is (a is num\n"));
+    EXPECT(fails("global x is (\n  a is num\n"));
     // field names must be identifiers, types must be present after :
-    EXPECT(fails("global x : (1)\n"));
-    EXPECT(fails("global x : (num)\n"));
-    EXPECT(fails("global x : (a : )\n"));
-    EXPECT(fails("global x : (a : 1)\n"));
+    EXPECT(fails("global x is (1)\n"));
+    EXPECT(fails("global x is (num)\n"));
+    EXPECT(fails("global x is (a is )\n"));
+    EXPECT(fails("global x is (a is 1)\n"));
     // missing or doubled separators
-    EXPECT(fails("global x : (a b)\n"));
-    EXPECT(fails("global x : (a : num b : num)\n"));
-    EXPECT(fails("global x : (a,, b)\n"));
-    EXPECT(fails("global x : (, a)\n"));
-    EXPECT(fails("global x : (\n  a b\n)\n"));
+    EXPECT(fails("global x is (a b)\n"));
+    EXPECT(fails("global x is (a is num b is num)\n"));
+    EXPECT(fails("global x is (a,, b)\n"));
+    EXPECT(fails("global x is (, a)\n"));
+    EXPECT(fails("global x is (\n  a b\n)\n"));
     // multi-line must close on its own line, and cannot be inside a single line list
-    EXPECT(fails("global x : (\n  a\n  b)\n"));
-    EXPECT(fails("global x : (a : (\n    b\n  ))\n"));
+    EXPECT(fails("global x is (\n  a\n  b)\n"));
+    EXPECT(fails("global x is (a is (\n    b\n  ))\n"));
     // mismatched brackets
-    EXPECT(fails("global x : (a]\n"));
+    EXPECT(fails("global x is (a]\n"));
 }
 
 TEST(dolang, parser_mapTypes) {
     ClearPools clear_;
-    EXPECT(roundTrips("global m : {num -> text}\n"));
-    EXPECT(roundTrips("global m : {Player -> num}\n"));
-    EXPECT(roundTrips("global m : {text -> [num]}\n"));
-    EXPECT(roundTrips("global m : {num -> {text -> bool}}\n"));
-    EXPECT(roundTrips("global m : [{num -> text}]\n"));
+    EXPECT(roundTrips("global m is {num -> text}\n"));
+    EXPECT(roundTrips("global m is {Player -> num}\n"));
+    EXPECT(roundTrips("global m is {text -> [num]}\n"));
+    EXPECT(roundTrips("global m is {num -> {text -> bool}}\n"));
+    EXPECT(roundTrips("global m is [{num -> text}]\n"));
 }
 
 
@@ -239,24 +239,24 @@ TEST(dolang, parser_twoFunctions) {
 
 TEST(dolang, parser_functionArgs) {
     ClearPools clear_;
-    EXPECT(roundTrips("fun f(a : num)\n  break\n"));
-    EXPECT(roundTrips("fun f(a : num, b : [text]) -> num\n  break\n"));
-    EXPECT(roundTrips("fun f(a : num, b : num = c)\n  break\n"));
-    EXPECT(printsAs("fun f(a : num, b : num = c,)\n  break\n", "fun f(a : num, b : num = c)\n  break\n"));
-    EXPECT(roundTrips("fun Complex.add(other : Complex)\n  break\n"));
-    EXPECT(roundTrips("fun f(\n  a : num\n  b : num = c\n)\n  break\n"));
+    EXPECT(roundTrips("fun f(a is num)\n  break\n"));
+    EXPECT(roundTrips("fun f(a is num, b is [text]) -> num\n  break\n"));
+    EXPECT(roundTrips("fun f(a is num, b is num = c)\n  break\n"));
+    EXPECT(printsAs("fun f(a is num, b is num = c,)\n  break\n", "fun f(a is num, b is num = c)\n  break\n"));
+    EXPECT(roundTrips("fun Complex.add(other is Complex)\n  break\n"));
+    EXPECT(roundTrips("fun f(\n  a is num\n  b is num = c\n)\n  break\n"));
 }
 
 TEST(dolang, parser_functionArgsStructure) {
     ClearPools clear_;
-    EXPECT(debugPrints("fun f(a : num = b) -> optional num\n  break\n",
+    EXPECT(debugPrints("fun f(a is num = b) -> optional num\n  break\n",
         "Program@(1:1)\n"
         "  NamedFunction@(1:1) f optional\n"
         "    List@(1:6)\n"
         "      Arg@(1:7) a\n"
-        "        SymbolName@(1:11) num\n"
-        "        SymbolName@(1:17) b\n"
-        "    SymbolName@(1:32) num\n"
+        "        SymbolName@(1:12) num\n"
+        "        SymbolName@(1:18) b\n"
+        "    SymbolName@(1:33) num\n"
         "    Block@(2:3)\n"
         "      Break@(2:3)\n"
     ));
@@ -268,31 +268,31 @@ TEST(dolang, parser_functionArgsErrors) {
     EXPECT(fails("fun f(a)\n  break\n"));
     EXPECT(fails("fun f(a = 1)\n  break\n"));
     // and cannot have patterns
-    EXPECT(fails("fun f(a : num is 1)\n  break\n"));
+    EXPECT(fails("fun f(a is num is 1)\n  break\n"));
     // named functions must have the arguments list
     EXPECT(fails("fun f\n  break\n"));
 }
 
 TEST(dolang, parser_functionTypes) {
     ClearPools clear_;
-    EXPECT(roundTrips("global f : fun()\n"));
-    EXPECT(roundTrips("global f : fun(a : num) -> num\n"));
-    EXPECT(roundTrips("global f : fun(a : num, b : num = 1) -> optional text\n"));
-    EXPECT(roundTrips("global f : fun(a : fun(b : num) -> num)\n"));
+    EXPECT(roundTrips("global f is fun()\n"));
+    EXPECT(roundTrips("global f is fun(a is num) -> num\n"));
+    EXPECT(roundTrips("global f is fun(a is num, b is num = 1) -> optional text\n"));
+    EXPECT(roundTrips("global f is fun(a is fun(b is num) -> num)\n"));
     // arguments must have types
-    EXPECT(fails("global f : fun(a)\n"));
-    EXPECT(fails("global f : fun(a = 1)\n"));
-    EXPECT(fails("global f : fun\n"));
+    EXPECT(fails("global f is fun(a)\n"));
+    EXPECT(fails("global f is fun(a = 1)\n"));
+    EXPECT(fails("global f is fun\n"));
 }
 
 TEST(dolang, parser_eventTypes) {
     ClearPools clear_;
-    EXPECT(roundTrips("global e : event()\n"));
-    EXPECT(roundTrips("global e : event(a : num, b : num = 1)\n"));
+    EXPECT(roundTrips("global e is event()\n"));
+    EXPECT(roundTrips("global e is event(a is num, b is num = 1)\n"));
     // events do not return values and arguments must have types
-    EXPECT(fails("global e : event(a : num) -> num\n"));
-    EXPECT(fails("global e : event(a)\n"));
-    EXPECT(fails("global e : event\n"));
+    EXPECT(fails("global e is event(a is num) -> num\n"));
+    EXPECT(fails("global e is event(a)\n"));
+    EXPECT(fails("global e is event\n"));
 }
 
 TEST(dolang, parser_functionLiterals) {
@@ -302,12 +302,12 @@ TEST(dolang, parser_functionLiterals) {
     // explicit signature, types are optional
     EXPECT(roundTrips("global f = fun()\n  break\n"));
     EXPECT(roundTrips("global f = fun(a)\n  break\n"));
-    EXPECT(roundTrips("global f = fun(a : num, b) -> num\n  break\n"));
-    // event handler patterns
+    EXPECT(roundTrips("global f = fun(a is num, b) -> num\n  break\n"));
+    EXPECT(roundTrips("global f = fun(a is [num], b is (x is num)) -> num\n  break\n"));
+    // event handler patterns use the same is as the types
     EXPECT(roundTrips("global f = fun(a is A, b)\n  break\n"));
-    EXPECT(roundTrips("global f = fun(a : Btn is A)\n  break\n"));
     // inside function bodies
-    EXPECT(roundTrips("fun f()\n  let g : fun(a : num) = fun\n    break\n"));
+    EXPECT(roundTrips("fun f()\n  let g is fun(a is num) = fun\n    break\n"));
     EXPECT(roundTrips("fun f()\n  g = fun(a)\n    break\n"));
 }
 
@@ -345,7 +345,7 @@ TEST(dolang, parser_topLevelAssignments) {
     ClearPools clear_;
     EXPECT(roundTrips("onPress = fun\n  break\n"));
     EXPECT(roundTrips("onPress += fun(btn is A)\n  break\n"));
-    EXPECT(roundTrips("global x : num\nonPress += fun\n  break\nfun f()\n  break\n"));
+    EXPECT(roundTrips("global x is num\nonPress += fun\n  break\nfun f()\n  break\n"));
     // any expression statement parses at the top level, only event and function assignments are valid, but that is a semantic check
     EXPECT(roundTrips("12\n"));
     EXPECT(roundTrips("a -= b + c\n"));
@@ -355,7 +355,9 @@ TEST(dolang, parser_functionLiteralsErrors) {
     ClearPools clear_;
     // function literals cannot have default values
     EXPECT(fails("global f = fun(a = 1)\n  break\n"));
-    EXPECT(fails("global f = fun(a : num = 1)\n  break\n"));
+    EXPECT(fails("global f = fun(a is num = 1)\n  break\n"));
+    // there is only one is per argument, as types are patterns too
+    EXPECT(fails("global f = fun(a is Btn is A)\n  break\n"));
     // body is mandatory
     EXPECT(fails("global f = fun(a)\n"));
     EXPECT(fails("global f = fun\n"));
@@ -366,39 +368,39 @@ TEST(dolang, parser_functionLiteralsErrors) {
 TEST(dolang, parser_typeDecl) {
     ClearPools clear_;
     EXPECT(roundTrips("type Point = ()\n"));
-    EXPECT(roundTrips("type Point = (x : num, y : num)\n"));
+    EXPECT(roundTrips("type Point = (x is num, y is num)\n"));
     // types are optional when there is a default value, and defaults are optional
-    EXPECT(roundTrips("type Point = (x = 0, y : num = 0, z : num)\n"));
+    EXPECT(roundTrips("type Point = (x = 0, y is num = 0, z is num)\n"));
     // any type can be used for the fields
-    EXPECT(roundTrips("type T = (a : [num], b : {text -> Point}, c : (x : num), d : fun(a : num) -> num, e : event(x : num))\n"));
+    EXPECT(roundTrips("type T = (a is [num], b is {text -> Point}, c is (x is num), d is fun(a is num) -> num, e is event(x is num))\n"));
     // extends
-    EXPECT(roundTrips("type Point3D extends Point = (z : num)\n"));
+    EXPECT(roundTrips("type Point3D extends Point = (z is num)\n"));
     // trailing comma is dropped
-    EXPECT(printsAs("type Point = (x : num, y : num,)\n", "type Point = (x : num, y : num)\n"));
+    EXPECT(printsAs("type Point = (x is num, y is num,)\n", "type Point = (x is num, y is num)\n"));
     // among other declarations
-    EXPECT(roundTrips("type A = (x : num)\ntype B extends A = (y : num)\nglobal b : B\n"));
-    EXPECT(roundTrips("fun f()\n  break\ntype A = (x : num)\n"));
+    EXPECT(roundTrips("type A = (x is num)\ntype B extends A = (y is num)\nglobal b is B\n"));
+    EXPECT(roundTrips("fun f()\n  break\ntype A = (x is num)\n"));
 }
 
 TEST(dolang, parser_typeDeclMultiLine) {
     ClearPools clear_;
-    EXPECT(roundTrips("type Point = (\n  x : num\n  y : num\n)\n"));
-    EXPECT(printsAs("type Point = (\n  x : num, y : num\n  z : num,\n)\n", "type Point = (\n  x : num\n  y : num\n  z : num\n)\n"));
+    EXPECT(roundTrips("type Point = (\n  x is num\n  y is num\n)\n"));
+    EXPECT(printsAs("type Point = (\n  x is num, y is num\n  z is num,\n)\n", "type Point = (\n  x is num\n  y is num\n  z is num\n)\n"));
     // the constructor body is a block, so it needs the multi-line form
-    EXPECT(roundTrips("type Point = (\n  x : num\n  constructor = fun(a : num)\n    x = a\n)\n"));
-    EXPECT(roundTrips("type Point = (\n  constructor = fun\n    break\n  x : num\n)\n"));
+    EXPECT(roundTrips("type Point = (\n  x is num\n  constructor = fun(a is num)\n    x = a\n)\n"));
+    EXPECT(roundTrips("type Point = (\n  constructor = fun\n    break\n  x is num\n)\n"));
 }
 
 TEST(dolang, parser_typeDeclStructure) {
     ClearPools clear_;
-    EXPECT(debugPrints("type B extends A = (x : num, y = 1)\n",
+    EXPECT(debugPrints("type B extends A = (x is num, y = 1)\n",
         "Program@(1:1)\n"
         "  TypeDecl@(1:1) B extends A\n"
         "    List@(1:20)\n"
         "      Arg@(1:21) x\n"
-        "        SymbolName@(1:25) num\n"
-        "      Arg@(1:30) y\n"
-        "        Number@(1:34) 1\n"
+        "        SymbolName@(1:26) num\n"
+        "      Arg@(1:31) y\n"
+        "        Number@(1:35) 1\n"
     ));
     // the constructor is an argument named constructor with the function as its value
     EXPECT(debugPrints("type A = (\n  constructor = fun\n    break\n)\n",
@@ -416,62 +418,72 @@ TEST(dolang, parser_typeDeclErrors) {
     ClearPools clear_;
     // missing parts
     EXPECT(fails("type"));
-    EXPECT(fails("type = (x : num)\n"));
-    EXPECT(fails("type A (x : num)\n"));
+    EXPECT(fails("type = (x is num)\n"));
+    EXPECT(fails("type A (x is num)\n"));
     EXPECT(fails("type A =\n"));
-    EXPECT(fails("type A extends = (x : num)\n"));
+    EXPECT(fails("type A extends = (x is num)\n"));
     // fields must be in parentheses
-    EXPECT(fails("type A = x : num\n"));
-    EXPECT(fails("type A = [x : num]\n"));
-    EXPECT(fails("type A = (x : num\n"));
+    EXPECT(fails("type A = x is num\n"));
+    EXPECT(fails("type A = [x is num]\n"));
+    EXPECT(fails("type A = (x is num\n"));
     // fields must be named, with valid types
     EXPECT(fails("type A = (num)\n"));
-    EXPECT(fails("type A = (x : 12)\n"));
-    EXPECT(fails("type A = (x :)\n"));
+    EXPECT(fails("type A = (x is 12)\n"));
+    EXPECT(fails("type A = (x is)\n"));
     // only a single base type
-    EXPECT(fails("type A extends B, C = (x : num)\n"));
+    EXPECT(fails("type A extends B, C = (x is num)\n"));
     // the constructor must be a function literal with a body
     EXPECT(fails("type A = (constructor = 1)\n"));
     EXPECT(fails("type A = (constructor fun\n  break\n)\n"));
     EXPECT(fails("type A = (constructor = fun\n  break\n)\n"));
     // types are only allowed at the top level
-    EXPECT(fails("fun f()\n  type A = (x : num)\n"));
+    EXPECT(fails("fun f()\n  type A = (x is num)\n"));
 }
 
 TEST(dolang, parser_enumDecl) {
     ClearPools clear_;
     EXPECT(roundTrips("enum Color = Red\n"));
-    EXPECT(roundTrips("enum Color = Red | Green | Blue\n"));
+    EXPECT(roundTrips("enum Color = Red, Green, Blue\n"));
+    // trailing comma is dropped
+    EXPECT(printsAs("enum Color = Red, Green,\n", "enum Color = Red, Green\n"));
+    EXPECT(printsAs("enum Color = Red, Green,\nglobal x = Red\n", "enum Color = Red, Green\nglobal x = Red\n"));
+    // line break in the single line form is a continuation
+    EXPECT(printsAs("enum Color = Red,\n    Green\n", "enum Color = Red, Green\n"));
     // among other declarations
-    EXPECT(roundTrips("enum A = X | Y\nenum B = Z\nglobal a = X\n"));
-    EXPECT(roundTrips("fun f()\n  break\nenum A = X | Y\n"));
+    EXPECT(roundTrips("enum A = X, Y\nenum B = Z\nglobal a = X\n"));
+    EXPECT(roundTrips("fun f()\n  break\nenum A = X, Y\n"));
 }
 
-TEST(dolang, parser_enumDeclMultiline) {
+TEST(dolang, parser_enumDeclMultiLine) {
     ClearPools clear_;
-    // a line break after = (or anywhere else) is a continuation
-    EXPECT(debugPrints("enum Btn =\n    Up | Down\n",
-        "Program@(1:1)\n"
-        "  EnumDecl@(1:1) Btn\n"
-        "    Up\n"
-        "    Down\n"
-    ));
-    EXPECT(debugPrints("enum Btn = Up\n    | Down\n",
-        "Program@(1:1)\n"
-        "  EnumDecl@(1:1) Btn\n"
-        "    Up\n"
-        "    Down\n"
-    ));
+    // values on lines indented more than the declaration
+    EXPECT(roundTrips("enum Btn =\n  Up\n  Down\n"));
+    EXPECT(roundTrips("enum Btn =\n  Up\n  Down\n  Left\n  Right\n"));
+    // more values on a line need commas, at the end of the line the comma is optional
+    EXPECT(printsAs("enum Btn =\n  Up, Down\n  Left,\n  Right,\n", "enum Btn =\n  Up\n  Down\n  Left\n  Right\n"));
+    // the indentation of the values is up to the source
+    EXPECT(printsAs("enum Btn =\n      Up\n      Down\n", "enum Btn =\n  Up\n  Down\n"));
+    // among other declarations
+    EXPECT(roundTrips("enum A =\n  X\n  Y\nenum B = Z\nfun f()\n  break\n"));
+    EXPECT(roundTrips("global a = 1\nenum A =\n  X\n"));
 }
 
 TEST(dolang, parser_enumStructure) {
     ClearPools clear_;
-    EXPECT(debugPrints("enum Color = Red | Green | Blue\n",
+    EXPECT(debugPrints("enum Color = Red, Green, Blue\n",
         "Program@(1:1)\n"
         "  EnumDecl@(1:1) Color\n"
-        "    Red\n"
-        "    Green\n"
-        "    Blue\n"
+        "    List@(1:12)\n"
+        "      SymbolName@(1:14) Red\n"
+        "      SymbolName@(1:19) Green\n"
+        "      SymbolName@(1:26) Blue\n"
+    ));
+    EXPECT(debugPrints("enum Btn =\n  Up\n  Down\n",
+        "Program@(1:1)\n"
+        "  EnumDecl@(1:1) Btn\n"
+        "    List@(1:10) multi-line\n"
+        "      SymbolName@(2:3) Up\n"
+        "      SymbolName@(3:3) Down\n"
     ));
 }
 
@@ -483,16 +495,26 @@ TEST(dolang, parser_enumErrors) {
     EXPECT(fails("enum = Red"));
     EXPECT(fails("enum Color Red"));
     EXPECT(fails("enum Color ="));
+    EXPECT(fails("enum Color =\n"));
+    EXPECT(fails("enum Color =\nglobal x = 1\n"));
     // dangling, doubled or missing separators
-    EXPECT(fails("enum Color = Red |"));
-    EXPECT(fails("enum Color = | Red"));
-    EXPECT(fails("enum Color = Red || Green"));
-    EXPECT(fails("enum Color = Red Green"));
-    EXPECT(fails("enum Color = Red, Green"));
+    EXPECT(fails("enum Color = , Red\n"));
+    EXPECT(fails("enum Color = Red,, Green\n"));
+    EXPECT(fails("enum Color = Red Green\n"));
+    EXPECT(fails("enum Color =\n  Red Green\n"));
+    EXPECT(fails("enum Color =\n  Red,, Green\n"));
+    // the old separator is gone
+    EXPECT(fails("enum Color = Red | Green\n"));
+    // no brackets around the values
+    EXPECT(fails("enum Color = (Red, Green)\n"));
+    EXPECT(fails("enum Color = [Red, Green]\n"));
     // names must be identifiers
-    EXPECT(fails("enum 1 = Red"));
-    EXPECT(fails("enum Color = 1"));
-    EXPECT(fails("enum Color = Red | if"));
+    EXPECT(fails("enum 1 = Red\n"));
+    EXPECT(fails("enum Color = 1\n"));
+    EXPECT(fails("enum Color = Red, if\n"));
+    EXPECT(fails("enum Color =\n  Red\n  if\n"));
+    // the multi-line form cannot have nested blocks
+    EXPECT(fails("enum Color =\n  Red\n    Green\n"));
     // enums are top level declarations only
     EXPECT(fails("fun f()\n  enum Color = Red\n"));
 }
@@ -504,7 +526,7 @@ TEST(dolang, parser_enumErrors) {
 TEST(dolang, parser_globalWithValue) {
     ClearPools clear_;
     EXPECT(roundTrips("global x = a\n"));
-    EXPECT(roundTrips("global x : bool = true\n"));
+    EXPECT(roundTrips("global x is bool = true\n"));
     EXPECT(roundTrips("const x = false\n"));
     EXPECT(roundTrips("global x = a + b\n"));
 }
@@ -512,9 +534,9 @@ TEST(dolang, parser_globalWithValue) {
 TEST(dolang, parser_letStatement) {
     ClearPools clear_;
     EXPECT(roundTrips("fun f()\n  let x\n"));
-    EXPECT(roundTrips("fun f()\n  let x : num\n"));
+    EXPECT(roundTrips("fun f()\n  let x is num\n"));
     EXPECT(roundTrips("fun f()\n  let x = a\n"));
-    EXPECT(roundTrips("fun f()\n  let x : bool = a and b\n"));
+    EXPECT(roundTrips("fun f()\n  let x is bool = a and b\n"));
     EXPECT(roundTrips("fun f()\n  const x = true\n"));
 }
 
@@ -1587,15 +1609,15 @@ TEST(dolang, parser_errors) {
     // missing names
     EXPECT(fails("use"));
     EXPECT(fails("global"));
-    EXPECT(fails("global : num"));
+    EXPECT(fails("global is num"));
     // missing or invalid types
-    EXPECT(fails("global x :"));
-    EXPECT(fails("global x : 12"));
+    EXPECT(fails("global x is"));
+    EXPECT(fails("global x is 12"));
     // unclosed or mismatched brackets
-    EXPECT(fails("global a : [num"));
-    EXPECT(fails("global m : {num -> text)"));
+    EXPECT(fails("global a is [num"));
+    EXPECT(fails("global m is {num -> text)"));
     // map keys must be POD types
-    EXPECT(fails("global m : {[num] -> text}"));
+    EXPECT(fails("global m is {[num] -> text}"));
     // let is only allowed in function bodies
-    EXPECT(fails("let x : num"));
+    EXPECT(fails("let x is num"));
 }
