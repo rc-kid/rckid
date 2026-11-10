@@ -10,11 +10,11 @@ Comments start with `#` characters and are always single line, i.e. from the com
 
 ### Literal Values
 
-Boolean values `true` and `false` are available. Text must be enclosed in double quotes (`"`) with standard support for escape characters (`\n`, `\r`, `\t`, `\\`, `\"`) and character encoding `\imm` where `imm` is valid natural number immediate.
+Boolean values `true` and `false` are available. Text must be enclosed in double quotes (`"`) with support for escape characters (`\n`, `\r`, `\t`, `\\`, `\"`).
 
 Numbers can be entered in either integer, or floating point notation, but both are stored internally as rational numbers. Rational values cannot be entered as immediate values, but can be constructed via the division operator, e.g. `2/3` for two thirds, etc. Floating points will be converted to their rational representation, i.e. `1.567` will become `1567/1000`.
 
-Decimal, hexadecimal `0x`, binary `0b` and octal `0o` values are supported for integers. Underscore can be used to separate thousands and their multiplies, i.e. `1_000_000`.
+Numbers are decimal. Underscore can be used to separate the digits, such as thousands and their multiplies, i.e. `1_000_000`.
 
 As there is no character type, single characters can be represented as text values of length 1. 
 
@@ -55,11 +55,11 @@ A line indented more than the previous one is a continuation of the statement, u
 In particular, a line break after the `=` of an assignment (or any other assignment operator) is a continuation:
 
     d =
-        1     # continuation of the statement, d is assigned 43
-        + 42
+        1     # continuation of the statement, d is assigned -41
+        - 42
     n = fun
-        1     # function body, block of 2 statements (1 and + 42)
-        + 42
+        1     # function body, block of 2 statements (1 and - 42)
+        - 42
 
 Going back to a column that is not the indentation of any of the enclosing blocks is an error:
 
@@ -103,7 +103,7 @@ Since the items follow the same rules as statements, a line at the item column i
     foo(
         a
         -b      # second argument, not a - b
-        + c     # continues the second argument, i.e. -b + c
+            + c # continues the second argument (indented more), i.e. -b + c
     )
 
 This works in every context, so for instance map definition can look like this:
@@ -261,7 +261,7 @@ Signatures are written in named function declarations, function types (`fun(a : 
     fun inc(x : num, by : num = 1) -> num
         return x + by
 
-    let f : fun(x : num, by : num = 1) -> num = inc
+    global f : fun(x : num, by : num = 1) -> num = inc
 
 Calls always use the signature of what is being called, i.e. of the named function, of the declared type of the function variable, or of the event. That is where the names for keyword arguments and the default values come from (see Calling Functions). So a function with default values can be assigned to a function variable whose type has no defaults, or different ones, as their types are the same. Calls of the variable then use the variable's signature.
 
@@ -409,7 +409,7 @@ When an event is assigned a function, that function becomes its sole handler. Bu
 
 All event handlers can be cleared if they are assigned `none` (`+=` assignment of `none` is syntax error). An event can also be queried about the number of its handlers vioa the `numHandlers() -> num` method. 
     
-Event handlers can use pattern matching to allow for conditional dispatch. Any argument of the handler's signature can be followed by `is` and a pattern (the same patterns as used by `match` and the `is` operator), in which case the handler is only called when the argument matches the pattern, i.e. unlike the example above, consider the following:
+Event handlers can use pattern matching to allow for conditional dispatch. Any argument of the handler's signature can be followed by `is` and a pattern (the same patterns as used by `match` and the `is` operator, see Patterns), in which case the handler is only called when the argument matches the pattern, i.e. unlike the example above, consider the following:
 
     let a : event(a : num, b : num) 
     a += fun
@@ -480,7 +480,7 @@ User defined constructors are not supported, instead free functions can be defin
     fun Im(a : num) -> Complex
         return Complex(im = a)
 
-    let a = Im(56)
+    global a = Im(56)
 
 However, this simple arcitecture makes construction of invalid object states possible. Canonical example of this is the rational number - and even though it makes no sense in _doLang_ context where rational is built-in - we will thus use it to illustrate as well. The problem is that certain values are invalid without fallback (denominator being zero), while some must be normalized. This can be done by specifying a `constructor` in the type definition, which is a function that is guaranteed to run after the object is created. As with any other function body, it starts with `fun` and is indented even though it is inside the parentheses:
 
@@ -566,22 +566,38 @@ Unlike the arithmetic negation, logical `not` has lower precedence than comparis
 
 ### `is`
 
-The `is` operator tests whether a value matches a pattern (the same patterns as used by `match`, see below) and evaluates to `bool`:
+The `is` operator tests whether a value matches a pattern (see Patterns below, the same patterns are used by `match` and event handlers) and evaluates to `bool`:
 
-    let isOrigin = point is (x = 0, y = 0)
+    let isOrigin = point is (x is 0, y is 0)
     if direction is not Left then
         ...
 
 `is` has the lowest precedence of all operators and cannot be chained, so its left hand side is always the whole expression before it and it can only be combined with other operators inside parentheses: `a + b is 3` is `(a + b) is 3`, while `(a is 1) and (b is 2)` needs the parentheses. Note that this also means `not x is P` is `(not x) is P`, use `x is not P` instead.
 
-When the `is` test is the whole condition of an `if` (statement or expression), or a `while` loop, the pattern may also bind values, which are then available in the `then` case, or in the loop body:
+### Patterns
 
-    if complexTuple is (re = 1, im) then
-        ... # im is in scope here
-    while it.next() is (key, value) do
-        ...
+Patterns in _doLang_ are simpler than in most languages with pattern matching: they test values, but never bind, or deconstruct them. As _doLang_ is statically typed, the type of every value is known at compile time, with the exception of objects, which can be of a subtype. Patterns therefore never contain types, except for the type pattern, which checks the type of an object. A pattern is one of:
 
-Anywhere else, including the `is not` form, patterns that bind values are an error.
+- a constant value, i.e. a literal (`5`, `"foo"`, `true`), an enum value (`Left`, or `Dir.Left`), a constant, or arithmetic on these (`-1`, `1/2`, `(MAX - 1) * 2`)
+- a tuple pattern, which matches the fields of a tuple by their names (`(x is 0, y is _)`). All fields must be listed, unless the pattern ends with `*`, which matches the rest of the fields (`(x is 0, *)`)
+- an array pattern, which matches the elements of an array by their positions (`[1, _, 3]`). The array must have exactly the listed elements, unless the pattern ends with `*`, which matches the rest of the elements, if any (`[1, 2, *]`)
+- a type pattern, which matches objects of the given type, or its subtypes, followed by the tuple pattern for its fields (`Point(x is 0, *)`). To match any object of the type, use `Point(*)`
+
+`_` matches any single value, it can be used for the fields of tuples and objects and for the elements of arrays. Patterns can be nested, i.e. the fields and elements are patterns too:
+
+    shape is Circle(center is (x is 0, y is 0), *)
+    buttons is [A, _, *]
+
+Values can be combined with `or` and negated with `not`, with the same precedence as in expressions, i.e. `not` binds tighter than `or`. Parentheses group them:
+
+    x is 5 or 6           # 5, or 6
+    x is not 5            # anything but 5
+    x is not (5 or 6)     # anything but 5 and 6
+    x is not 5 or 6       # (not 5) or 6, i.e. anything but 5
+
+Type patterns cannot be negated, or combined with `or`, they are always the whole pattern (or the whole pattern of a field, or an element). A name of a type alone is not a pattern, i.e. `shape is Circle` is an error, use `shape is Circle(*)` instead.
+
+Note that `is` is used inside the patterns, never `=`, or `:`. Matching on maps is not supported.
 
 Short-circuiting of logical operators `and` and `or` is supported. 
 
@@ -635,14 +651,13 @@ The `if` statement supports conditional execution and can be optionally followed
 
     if a < 10 then
         ...
-    else if a < 20 then
-        ...
     else
-        ...
+        if a < 20 then
+            ...
+        else
+            ...
 
-When the case is a single statement, it can be written on the same line as the keyword:
-
-    if a < b then foo() else bar()
+Both cases are always blocks, i.e. they start on a new line, indented more than the `if`. There is no special form for `else if` chains, the `if` is simply the only statement of the `else` block.
 
 `if` can also be used as an expression, i.e. one can write for instance:
 
@@ -709,35 +724,28 @@ This is _doLang_'s switch on pattern-matching steroids. No fallback between diff
         else
             ...
 
-The `else` case is executed if *none* of the cases above applies. The cases must be disjunctive, i.e. for any value, only one can apply. Case patterns support extremely simple form of pattern matching to existing values, similar to that of the event handlers:
-
-- primitive values can be matched by their values, including enums
-- arrays and tuples can be matched by their contents
-
-As an example:
+The `else` case is executed if *none* of the cases above applies. The cases must be disjunctive, i.e. for any value, only one can apply. Cases use the same patterns as the `is` operator (see Patterns):
 
     match complexTuple when
-        is (re = 1, im) then
-            ... # we now have re and im in scope
+        is (re is 1, im is 0) then
+            ... # exactly one
+        is (re is 1, *) then
+            ... # real part is one
 
     match array when
-        is [1, a, b] then
-            ... # we have a and b in scope
-
-A case may also have a guard, a condition after `and`, which must hold for the case to apply. The guard sees the values bound by the pattern:
-
-    match point when
-        is (x, y) and x == y then
-            ... # on the diagonal
+        is [] then
+            ... # empty
+        is [1, *] then
+            ... # starts with 1
 
 Same as `if`, `match` can be used as an expression, whose cases (including `else`) can only be expressions. All cases must have the same type and the `else` case is mandatory, unless the cases cover all possible values (such as all values of an enum). As the `match` expression cannot contain blocks, line breaks inside it are continuations, so the cases can be written on the same line, or each on its own line:
 
     let name = match direction when is Left then "left" is Right then "right"
     let x = match y when
-        is (re = 1, im) then "real is one"
+        is (re is 1, *) then "real is one"
         else "real is not one"
 
-The case values (and guards) of the `match` expression cannot use the `is` operator, unless in parentheses, so that `is` always starts the next case. A nested `match` expression in a case value must be put in parentheses too, otherwise it would take the remaining cases.
+The case values of the `match` expression cannot use the `is` operator, unless in parentheses, so that `is` always starts the next case. A nested `match` expression in a case value must be put in parentheses too, otherwise it would take the remaining cases.
 
 ## `return`
 
@@ -745,6 +753,8 @@ Returns from the function, optionally returning value of required type. `return`
 
     let x = map("key") orelse return none
     # do some more with x
+
+`return` without a value must end the line (or the block), anywhere else the value is expected after it, i.e. `if c then return else 1` is an error, while `if c then return 0 else 1` is valid.
 
 ## `write`
 
@@ -786,7 +796,7 @@ The lexer turns the source into a stream of tokens. Line breaks are reported as 
 ## Tokens
 
 - *identifiers* start with a letter or `_`, followed by letters, digits and `_`. Identifiers are case sensitive. Keywords (see Keywords) are not identifiers.
-- *numbers* are decimal (`123`, `1_000`, `1.567`), hexadecimal (`0x7f`), binary (`0b101`) or octal (`0o17`). Floating point requires digits on both sides of the `.`. A `-` is never part of the number, negative values are the unary minus.
+- *numbers* are decimal (`123`, `1_000`, `1.567`). Floating point requires digits on both sides of the `.`. A `-` is never part of the number, negative values are the unary minus.
 - *text* is enclosed in `"` and may contain the escapes described in Literal Values. Text cannot span multiple lines.
 - *operators and punctuation*, longest match wins (i.e. `->` is never `-` followed by `>`):
 
@@ -848,12 +858,11 @@ The `indent` token only appears in the `BLOCK`, `LIST` and `MATCH_STMT` rules, w
 ## Common Rules
 
     BLOCK := indent STATEMENT { newline STATEMENT } dedent
-           |= STATEMENT
 
-A block is a sequence of statements, each starting on its own line. As `newline` is only emitted for lines at the indentation of the block, statements continued on further lines need no special handling. Statements ending with a nested `BLOCK` are followed by `newline` as any other statement, since it is emitted after the `dedent` tokens. A block consisting of a single statement can also be written on the same line as the keyword that introduces it (e.g. `if a then foo()`).
+A block is a sequence of statements, each starting on its own line. As `newline` is only emitted for lines at the indentation of the block, statements continued on further lines need no special handling. Statements ending with a nested `BLOCK` are followed by `newline` as any other statement, since it is emitted after the `dedent` tokens.
 
     LIST(X) := [ X { ',' X } [ ',' ] ]
-             | indent LINE(X) { [ ',' ] newline LINE(X) } [ ',' ] dedent
+             |= indent LINE(X) { [ ',' ] newline LINE(X) } [ ',' ] dedent
     LINE(X) := X { ',' X }
 
 Items inside brackets are either in the single line form, separated by commas with optional trailing comma, or in the multi-line form (the first item is on a new line), in which `indent` is emitted after the opening bracket, `newline` between lines and `dedent` before the closing bracket. Items on the same line are separated by commas, the comma at the end of a line is optional. After an item and an optional comma, `newline` starts the next line of items, `dedent` ends the list and any other token is the next item on the same line, which requires the comma. An item that continues on further lines, or ends with a block, needs no special handling. Blocks (function bodies) and multi-line lists cannot appear inside a single line list, the parser reports both as errors. The closing bracket is part of the rules that use `LIST`. Enum values are the only list without brackets: the end of the line (or of the file) acts as the closing bracket of the single line form, while the multi-line form simply ends with the `dedent`.
@@ -903,11 +912,11 @@ Statements that can appear inside function bodies. A statement starting with `if
     EXPR_STMT := EXPR [ ( '=' | '+=' | '-=' | '*=' | '/=' ) EXPR ]
     RETURN_STMT := 'return' [ EXPR ]
 
-Local variable declarations, assignments and standalone expressions. Assignment is only allowed at the root of the expression statement. Whether the left hand side can be assigned to is a semantic check. `return` value is optional, there is no value when the next token is `newline`, or `dedent`. As `return` is also an expression (see `PRIMARY`), the value is in general absent whenever the next token cannot start an expression, such as `)`, `]`, `}`, `,`, `then`, or `else`.
+Local variable declarations, assignments and standalone expressions. Assignment is only allowed at the root of the expression statement. Whether the left hand side can be assigned to is a semantic check. `return` value is optional, there is no value when the next token is `newline`, or `dedent`. As `return` is also an expression (see `PRIMARY`), it can appear inside other expressions, but a `return` without a value must still be followed by `newline`, or `dedent`.
 
     IF_STMT := 'if' EXPR 'then' BLOCK [ 'else' BLOCK ]
 
-The `if` statement. The condition is terminated by `then`, so it can span multiple lines. `else if` chains need no special rule, as the single statement form of `BLOCK` can be another `IF_STMT`. As a line starting with `else` produces no `newline`, the `else` follows the `dedent` of the block directly. The `if` expression is described under expressions.
+The `if` statement. The condition is terminated by `then`, so it can span multiple lines. There is no special rule for `else if` chains, the nested `IF_STMT` is a statement of the `else` block. As a line starting with `else` produces no `newline`, the `else` follows the `dedent` of the block directly. The `if` expression is described under expressions.
 
     WHILE_STMT := 'while' EXPR 'do' BLOCK
     FOR_STMT := 'for' ident [ ',' ident ] 'in' EXPR [ 'step' EXPR ] 'do' BLOCK
@@ -917,11 +926,31 @@ Loops, both terminated by the `do` keyword. The range form of the `for` loop (`f
     MATCH_STMT := 'match' EXPR 'when' indent MATCH_STMT_CASES dedent
     MATCH_STMT_CASES := CASE_STMT { newline CASE_STMT } [ 'else' BLOCK ]
                      |= 'else' BLOCK
-    CASE_STMT := 'is' PATTERN [ 'and' EXPR ] 'then' BLOCK
-    PATTERN := LITERAL | '-' number | ident { '.' ident } 
-            |= '(' LIST(ident [ '=' PATTERN ]) ')' | '[' LIST(PATTERN) ']'
+    CASE_STMT := 'is' PATTERN 'then' BLOCK
 
-The `match` statement. The matched value is terminated by `when`, which is followed by a block of cases, each on its own line. There must be at least one case, which can be the `else` case alone. The `else` case is the last one and, as a line starting with `else` produces no `newline`, follows the last case directly. Each case is terminated by `then` and may have a guard after `and`, which sees the values bound by the pattern. Patterns are restricted to literals, identifiers (and enum values), and tuple and array patterns. Whether an identifier binds a new value, or matches an existing one is decided semantically. The `match` expression is described under expressions.
+The `match` statement. The matched value is terminated by `when`, which is followed by a block of cases, each on its own line. There must be at least one case, which can be the `else` case alone. The `else` case is the last one and, as a line starting with `else` produces no `newline`, follows the last case directly. Each case is terminated by `then`. Patterns are described below. The `match` expression is described under expressions.
+
+## Patterns
+
+    PATTERN := PATTERN_EXPR
+            |= ident { '.' ident } TUPLE_PATTERN
+    PATTERN_EXPR := NOT_PATTERN { 'or' NOT_PATTERN }
+    NOT_PATTERN := { 'not' } ADD_PATTERN
+    ADD_PATTERN := MUL_PATTERN { ( '+' | '-' ) MUL_PATTERN }
+    MUL_PATTERN := UNARY_PATTERN { ( '*' | '/' ) UNARY_PATTERN }
+    UNARY_PATTERN := { '-' } PATTERN_FACTOR
+    PATTERN_FACTOR := number | string | 'true' | 'false' | TUPLE_PATTERN | ARRAY_PATTERN | '(' PATTERN_EXPR ')'
+                   |= ident { '.' ident }
+    TUPLE_PATTERN := '(' LIST(TUPLE_ITEM) ')'
+    TUPLE_ITEM := ident 'is' ( PATTERN | '_' ) | '*'
+    ARRAY_PATTERN := '[' LIST(ARRAY_ITEM) ']'
+    ARRAY_ITEM := PATTERN | '_' | '*'
+
+Patterns have their own small expression grammar with `or`, `not` and the arithmetic operators, but no comparisons, calls, or indexing. The precedence of `not` and `or` is the same as in expressions. There is no `and`. Names are always values (enum values, or constants), types only appear in the type pattern (`ident { '.' ident } TUPLE_PATTERN`). The parser parses `PATTERN_EXPR` first, in which a name is a `PATTERN_FACTOR` ending at `(`. When the whole `PATTERN_EXPR` is a (qualified) name and the next token is `(`, the type pattern follows. Type patterns therefore cannot be negated, or combined with `or`.
+
+`(` at the start of `PATTERN_FACTOR` is either the tuple pattern, or the parenthesized pattern. Both are parsed as a list (same as the tuple literal and the parenthesized expression, see `PAREN_OR_TUPLE`): when all items are tuple items, it is the tuple pattern (including `()`), otherwise there must be a single item, which is the parenthesized pattern. A plain name followed by `is` is always the name of a tuple item, so `(x)` is the parenthesized value `x`, while `(x is 1)` is the tuple pattern.
+
+`_` is an ordinary identifier for the lexer, the parser checks its name where it can be an item. `*` is the rest of the tuple, or array only at the start of an item, otherwise it is the multiplication (`[a, *]` vs `[a * b]`). The parser checks that `*` is the last item. That names are constants (or enum values), that the type in the type pattern is an object type and that tuple and type patterns list all fields unless they end with `*` are semantic checks.
 
 ## Types
 
@@ -956,9 +985,9 @@ Event types are like function types without return value, and start with the `ev
 
 ## Expressions
 
-    EXPR := OR_EXPR [ 'is' [ 'not' ] PATTERN ]
+    EXPR := OR_EXPR [ 'is' PATTERN ]
 
-An expression recurses into standard expressions based on operator precedence. The `is` operator has the lowest precedence and is not associative, so it can only appear at the top of an expression (or inside parentheses). Patterns may bind values only when the `is` is the whole condition of `IF_STMT`, `IF_EXPR`, or `WHILE_STMT` and is not negated, which is a semantic check.
+An expression recurses into standard expressions based on operator precedence. The `is` operator has the lowest precedence and is not associative, so it can only appear at the top of an expression (or inside parentheses). The `is not` form is `is` followed by a negated pattern, as `not` is part of `PATTERN`.
 
     OR_EXPR := AND_EXPR { 'or' AND_EXPR }
     AND_EXPR := NOT_EXPR { 'and' NOT_EXPR }
@@ -1014,9 +1043,9 @@ The `if` and `match` expressions:
     MATCH_EXPR := 'match' EXPR 'when' MATCH_EXPR_CASES
     MATCH_EXPR_CASES := CASE_EXPR { CASE_EXPR } [ 'else' EXPR ]
                      |= 'else' EXPR
-    CASE_EXPR := 'is' PATTERN [ 'and' OR_EXPR ] 'then' OR_EXPR
+    CASE_EXPR := 'is' PATTERN 'then' OR_EXPR
 
-The cases of `if` and `match` expressions can only be expressions, never blocks. These rules contain no `indent`, so any line break inside them is a continuation. `else if` chains need no special rule as `IF_EXPR` is an `EXPR`. The guards and values of the `match` cases are `OR_EXPR`, so that they cannot contain `is` (unless in parentheses) and `is` always starts the next case. The `else` value is always last, so it can be any `EXPR`. There must be at least one case, which can be the `else` case alone. That the `match` expression is exhaustive, or has the `else` case is a semantic check.
+The cases of `if` and `match` expressions can only be expressions, never blocks. These rules contain no `indent`, so any line break inside them is a continuation. `else if` chains need no special rule as `IF_EXPR` is an `EXPR`. The values of the `match` cases are `OR_EXPR`, so that they cannot contain `is` (unless in parentheses) and `is` always starts the next case. The `else` value is always last, so it can be any `EXPR`. There must be at least one case, which can be the `else` case alone. That the `match` expression is exhaustive, or has the `else` case is a semantic check.
 
     ARRAY_LITERAL := '[' LIST(EXPR) ']'
     MAP_LITERAL := '{' LIST(MAP_ITEM) '}'
@@ -1041,6 +1070,10 @@ There is no main function per se.
 # Appendix D - Future Extensions
 
 - int type and bitwise operators
+- hexadecimal (`0x7f`), binary (`0b101`) and octal (`0o17`) number literals and the `\imm` character code escape in text
+- single statement blocks on the same line as the keyword that introduces them (`if a then foo()`), which would also allow `else if` chains without nesting
+- guards of `match` cases, i.e. a condition after the pattern (`is (x is 0, *) and point.y > 0 then`)
+- `return` without a value inside other expressions, i.e. before `)`, `]`, `}`, `,`, `then`, or `else`
 
 # Appendix E - Design Rationale
 

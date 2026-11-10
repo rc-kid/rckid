@@ -40,6 +40,11 @@ namespace rckid::dolang::ast {
         Orelse,
         Paren,
         Is,
+        TuplePattern,
+        ArrayPattern,
+        TypePattern,
+        AnyPattern,
+        RestPattern,
         List,
         ArrayLiteral,
         MapLiteral,
@@ -561,6 +566,7 @@ namespace rckid::dolang::ast {
     class Arg : public Node {
     public:
         Arg(Token const & name): Node{Kind::Arg, name.loc}, name_{name.asSymbol()} { }
+        Arg(Location loc, Symbol name): Node{Kind::Arg, loc}, name_{name} { }
 
         Symbol name() const { return name_; }
 
@@ -1122,9 +1128,7 @@ namespace rckid::dolang::ast {
         unique_ptr<Node> value_;
     };
 
-    /** The `X is PATTERN` and `X is not PATTERN` test. 
-     
-        Evaluates to bool. When it is the whole condition of an if, or while, the pattern may also bind values, otherwise binding patterns are a semantic error. The negated form never binds.
+    /** The `X is PATTERN` test. Evaluates to bool. The negated form (`X is not PATTERN`) is the test against negated pattern, i.e. the `not` is part of the pattern.
      */
     class Is : public Node {
     public:
@@ -1146,19 +1150,14 @@ namespace rckid::dolang::ast {
             pattern_ = std::move(child);
         }
 
-        bool negated() const { return negated_; }
-        void setNegated(bool value) { negated_ = value; }
-
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             value_->prettyPrint(w, indent);
-            w << (negated_ ? " is not " : " is ");
+            w << " is ";
             pattern_->prettyPrint(w, indent);
         }
 
         void debugPrint(Writer & w, uint32_t indent = 0) const override {
             Node::debugPrint(w, indent);
-            if (negated_)
-                w << " not";
             w << "\n";
             value_->debugPrint(w, indent + 2);
             w << "\n";
@@ -1168,10 +1167,80 @@ namespace rckid::dolang::ast {
     protected:
         unique_ptr<Node> value_;
         unique_ptr<Node> pattern_;
-        bool negated_ = false;
     };
 
+    /** Tuple pattern, i.e. list of fields (Arg nodes with name and pattern) in parentheses, optionally ending with the rest pattern (`*`). Also used for the fields of the type pattern.
+     */
+    class TuplePattern : public List {
+    public:
+        TuplePattern(Location loc): List{Kind::TuplePattern, loc} { }
 
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << "(";
+            List::prettyPrint(w, indent);
+            w << ")";
+        }
+    };
+
+    /** Array pattern, i.e. list of patterns matching the array elements by their positions, optionally ending with the rest pattern (`*`). 
+     */
+    class ArrayPattern : public List {
+    public:
+        ArrayPattern(Location loc): List{Kind::ArrayPattern, loc} { }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            w << "[";
+            List::prettyPrint(w, indent);
+            w << "]";
+        }
+    };
+
+    /** Type pattern, i.e. the (qualified) name of an object type (SymbolName, or Member) followed by the tuple pattern of its fields (`Point(x is 1, *)`). 
+     */
+    class TypePattern : public Node {
+    public:
+        TypePattern(Location loc, unique_ptr<Node> typeName): Node{Kind::TypePattern, loc}, typeName_{std::move(typeName)} {
+            markAsChild(typeName_.get());
+        }
+
+        Node * typeName() const { return typeName_.get(); }
+
+        TuplePattern * fields() const { return fields_.get(); }
+        void setFields(unique_ptr<TuplePattern> child) {
+            markAsChild(child.get());
+            fields_ = std::move(child);
+        }
+
+        void prettyPrint(Writer & w, uint32_t indent = 0) const override {
+            typeName_->prettyPrint(w, indent);
+            fields_->prettyPrint(w, indent);
+        }
+
+        void debugPrint(Writer & w, uint32_t indent = 0) const override {
+            Node::debugPrint(w, indent);
+            w << "\n";
+            typeName_->debugPrint(w, indent + 2);
+            w << "\n";
+            fields_->debugPrint(w, indent + 2);
+        }
+
+    private:
+        unique_ptr<Node> typeName_;
+        unique_ptr<TuplePattern> fields_;
+    };
+
+    /** The `_` (any value, Kind::AnyPattern) and `*` (rest of the tuple, or array, Kind::RestPattern) patterns. 
+     */
+    class Wildcard : public Node {
+    public:
+        Wildcard(Kind kind, Location loc): Node{kind, loc} {
+            ASSERT(kind == Kind::AnyPattern || kind == Kind::RestPattern);
+        }
+
+        void prettyPrint(Writer & w, [[maybe_unused]] uint32_t indent = 0) const override {
+            w << (kind == Kind::AnyPattern ? "_" : "*");
+        }
+    };
 
     class ArrayLiteral : public List {
     public:
@@ -1634,6 +1703,11 @@ inline void write(Writer & w, rckid::dolang::ast::Kind kind) {
         case Kind::Orelse: w << "Orelse"; break;
         case Kind::Paren: w << "Paren"; break;
         case Kind::Is: w << "Is"; break;
+        case Kind::TuplePattern: w << "TuplePattern"; break;
+        case Kind::ArrayPattern: w << "ArrayPattern"; break;
+        case Kind::TypePattern: w << "TypePattern"; break;
+        case Kind::AnyPattern: w << "AnyPattern"; break;
+        case Kind::RestPattern: w << "RestPattern"; break;
         case Kind::List: w << "List"; break;
         case Kind::ArrayLiteral: w << "ArrayLiteral"; break;
         case Kind::MapLiteral: w << "MapLiteral"; break;

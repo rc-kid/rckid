@@ -556,8 +556,224 @@ namespace rckid::dolang {
 
          */
         unique_ptr<ast::Node> PATTERN() {
-            // TODO implement proper pattern parsing, for now only plain names (such as enum values) are supported
-            return std::make_unique<ast::SymbolName>(POP(TokenKind::Identifier));
+            bool startsWithIdentifier = top() == TokenKind::Identifier;
+            auto result = TRY(PATTERN_EXPR());
+            // a (qualified) name followed by ( is the type pattern
+            if (top() == TokenKind::opParOpen && startsWithIdentifier && isQualifiedName(result.get())) {
+                auto typePattern = std::make_unique<ast::TypePattern>(result->loc, std::move(result));
+                typePattern->setFields(TRY(TUPLE_PATTERN()));
+                return typePattern;
+            }
+            return result;
+        }
+
+        /** PATTERN_EXPR := NOT_PATTERN { 'or' NOT_PATTERN }
+         */
+        unique_ptr<ast::Node> PATTERN_EXPR() {
+            auto result = TRY(NOT_PATTERN());
+            while (top() == TokenKind::kwOr) {
+                auto orPattern = std::make_unique<ast::BinaryOp>(pop(), std::move(result));
+                orPattern->setRight(TRY(NOT_PATTERN()));
+                result = std::move(orPattern);
+            }
+            return result;
+        }
+
+        /** NOT_PATTERN := { 'not' } ADD_PATTERN
+         */
+        unique_ptr<ast::Node> NOT_PATTERN() {
+            if (top() != TokenKind::kwNot)
+                return ADD_PATTERN();
+            auto result = std::make_unique<ast::UnaryOp>(pop());
+            result->setOperand(TRY(NOT_PATTERN()));
+            return result;
+        }
+
+        /** ADD_PATTERN := MUL_PATTERN { ( '+' | '-' ) MUL_PATTERN }
+         */
+        unique_ptr<ast::Node> ADD_PATTERN() {
+            auto result = TRY(MUL_PATTERN());
+            while (top() == TokenKind::opAdd || top() == TokenKind::opSub) {
+                auto op = std::make_unique<ast::BinaryOp>(pop(), std::move(result));
+                op->setRight(TRY(MUL_PATTERN()));
+                result = std::move(op);
+            }
+            return result;
+        }
+
+        /** MUL_PATTERN := UNARY_PATTERN { ( '*' | '/' ) UNARY_PATTERN }
+         */
+        unique_ptr<ast::Node> MUL_PATTERN() {
+            auto result = TRY(UNARY_PATTERN());
+            while (top() == TokenKind::opMul || top() == TokenKind::opDiv) {
+                auto op = std::make_unique<ast::BinaryOp>(pop(), std::move(result));
+                op->setRight(TRY(UNARY_PATTERN()));
+                result = std::move(op);
+            }
+            return result;
+        }
+
+        /** UNARY_PATTERN := { '-' } PATTERN_FACTOR
+         */
+        unique_ptr<ast::Node> UNARY_PATTERN() {
+            if (top() != TokenKind::opSub)
+                return PATTERN_FACTOR();
+            auto result = std::make_unique<ast::UnaryOp>(pop());
+            result->setOperand(TRY(UNARY_PATTERN()));
+            return result;
+        }
+
+        /** PATTERN_FACTOR := number | string | 'true' | 'false' | TUPLE_PATTERN | ARRAY_PATTERN | '(' PATTERN_EXPR ')'
+                           |= ident { '.' ident }
+         */
+        unique_ptr<ast::Node> PATTERN_FACTOR() {
+            switch (top().kind) {
+                case TokenKind::Number:
+                    return std::make_unique<ast::Number>(pop());
+                case TokenKind::Text:
+                    return std::make_unique<ast::Text>(pop());
+                case TokenKind::kwTrue:
+                case TokenKind::kwFalse:
+                    return std::make_unique<ast::SymbolName>(pop());
+                case TokenKind::Identifier: {
+                    unique_ptr<ast::Node> result = std::make_unique<ast::SymbolName>(pop());
+                    while (top() == TokenKind::opDot) {
+                        Location l = pop().loc;
+                        Symbol name = POP(TokenKind::Identifier).asSymbol();
+                        result = std::make_unique<ast::Member>(l, std::move(result), name);
+                    }
+                    return result;
+                }
+                case TokenKind::opSquareOpen:
+                    return ARRAY_PATTERN();
+                case TokenKind::opParOpen:
+                    return TUPLE_OR_PAREN_PATTERN();
+                default:
+                    error_ = Token::error(top().loc, STR("Expected pattern, got " << top().kind));
+                    return nullptr;
+            }
+        }
+
+        /** TUPLE_PATTERN | '(' PATTERN_EXPR ')'
+
+            The tuple pattern and the parenthesized pattern both start with '(', so they are parsed together, same as tuple literals and parenthesized expressions in PAREN_OR_TUPLE. The items are parsed as a list (so that both forms can be multi-line) and then, when all items are fields, or the rest pattern, this is the tuple pattern (including the empty one). Otherwise there must be a single item, which is the parenthesized pattern. Mixing fields and other patterns, or multiple non-field patterns is an error. 
+         */
+        unique_ptr<ast::Node> TUPLE_OR_PAREN_PATTERN() {
+            Location l = POP(TokenKind::opParOpen).loc;
+            auto tuple = std::make_unique<ast::TuplePattern>(l);
+            if (! LIST(tuple.get(), TokenKind::opParClose, &Parser::TUPLE_OR_PAREN_ITEM))
+                return nullptr;
+            POP(TokenKind::opParClose);
+            for (uint32_t i = 0, e = tuple->size(); i < e; ++i) {
+                ast::Kind k = tuple->child(i)->kind;
+                if (k == ast::Kind::Arg || k == ast::Kind::RestPattern)
+                    continue;
+                if (e != 1) {
+                    error_ = Token::error(tuple->child(i)->loc, "Tuple pattern items must be in the name is pattern form, or *");
+                    return nullptr;
+                }
+                auto result = std::make_unique<ast::Paren>(l);
+                result->setValue(tuple->releaseChild(0));
+                return result;
+            }
+            if (! checkRestIsLast(tuple.get()))
+                return nullptr;
+            return tuple;
+        }
+
+        /** Item of the tuple pattern (TUPLE_ITEM), or the parenthesized PATTERN_EXPR. When the parsed PATTERN_EXPR is a plain name followed by `is`, the name is the name of the tuple item.
+         */
+        unique_ptr<ast::Node> TUPLE_OR_PAREN_ITEM() {
+            if (top() == TokenKind::opMul)
+                return std::make_unique<ast::Wildcard>(ast::Kind::RestPattern, pop().loc);
+            bool startsWithIdentifier = top() == TokenKind::Identifier;
+            auto first = TRY(PATTERN_EXPR());
+            if (top() != TokenKind::kwIs || ! startsWithIdentifier || first->kind != ast::Kind::SymbolName)
+                return first;
+            pop();
+            auto result = std::make_unique<ast::Arg>(first->loc, static_cast<ast::SymbolName *>(first.get())->name);
+            result->setPattern(TRY(PATTERN_OR_ANY()));
+            return result;
+        }
+
+        /** TUPLE_PATTERN := '(' LIST(TUPLE_ITEM) ')'
+
+            The fields of the type pattern, where the parentheses are always the tuple pattern.
+         */
+        unique_ptr<ast::TuplePattern> TUPLE_PATTERN() {
+            auto result = std::make_unique<ast::TuplePattern>(POP(TokenKind::opParOpen).loc);
+            if (! LIST(result.get(), TokenKind::opParClose, &Parser::TUPLE_ITEM))
+                return nullptr;
+            POP(TokenKind::opParClose);
+            if (! checkRestIsLast(result.get()))
+                return nullptr;
+            return result;
+        }
+
+        /** TUPLE_ITEM := ident 'is' ( PATTERN | '_' ) | '*'
+         */
+        unique_ptr<ast::Node> TUPLE_ITEM() {
+            if (top() == TokenKind::opMul)
+                return std::make_unique<ast::Wildcard>(ast::Kind::RestPattern, pop().loc);
+            auto result = std::make_unique<ast::Arg>(POP(TokenKind::Identifier));
+            POP(TokenKind::kwIs);
+            result->setPattern(TRY(PATTERN_OR_ANY()));
+            return result;
+        }
+
+        /** ARRAY_PATTERN := '[' LIST(ARRAY_ITEM) ']'
+         */
+        unique_ptr<ast::Node> ARRAY_PATTERN() {
+            auto result = std::make_unique<ast::ArrayPattern>(POP(TokenKind::opSquareOpen).loc);
+            if (! LIST(result.get(), TokenKind::opSquareClose, &Parser::ARRAY_ITEM))
+                return nullptr;
+            POP(TokenKind::opSquareClose);
+            if (! checkRestIsLast(result.get()))
+                return nullptr;
+            return result;
+        }
+
+        /** ARRAY_ITEM := PATTERN | '_' | '*'
+         */
+        unique_ptr<ast::Node> ARRAY_ITEM() {
+            if (top() == TokenKind::opMul)
+                return std::make_unique<ast::Wildcard>(ast::Kind::RestPattern, pop().loc);
+            return PATTERN_OR_ANY();
+        }
+
+        /** PATTERN | '_'
+
+            The `_` is an ordinary identifier for the lexer, so its name is checked here.
+         */
+        unique_ptr<ast::Node> PATTERN_OR_ANY() {
+            if (top() == TokenKind::Identifier && isUnderscore(top()))
+                return std::make_unique<ast::Wildcard>(ast::Kind::AnyPattern, pop().loc);
+            return PATTERN();
+        }
+
+        static bool isUnderscore(Token const & t) {
+            char const * name = t.asSymbol().c_str();
+            return name[0] == '_' && name[1] == '\0';
+        }
+
+        /** True if the node is a plain (SymbolName), or qualified (Member chain of SymbolNames) name. 
+         */
+        static bool isQualifiedName(ast::Node * node) {
+            while (node->kind == ast::Kind::Member)
+                node = static_cast<ast::Member *>(node)->object();
+            return node->kind == ast::Kind::SymbolName;
+        }
+
+        /** Checks that the rest pattern (`*`), if present, is the last item of the list.
+         */
+        bool checkRestIsLast(ast::List * list) {
+            for (uint32_t i = 0, e = list->size(); i + 1 < e; ++i) {
+                if (list->child(i)->kind == ast::Kind::RestPattern) {
+                    error_ = Token::error(list->child(i)->loc, "* can only be the last item");
+                    return false;
+                }
+            }
+            return true;
         }
 
         /** TYPE := POD_TYPE | ARRAY_TYPE | TUPLE_TYPE | MAP_TYPE | FUN_TYPE | EVENT_TYPE
@@ -653,9 +869,9 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** EXPR := OR_EXPR [ 'is' [ 'not' ] PATTERN ]
+        /** EXPR := OR_EXPR [ 'is' PATTERN ]
 
-            The `is` operator has the lowest precedence and is non-associative, so it can only appear at the top of an expression, or inside parentheses. It evaluates to bool. When it is the whole condition of an if, or while, the pattern may also bind values visible in the then case, or the loop body, everywhere else (and in the negated form) binding patterns are a semantic error.
+            The `is` operator has the lowest precedence and is non-associative, so it can only appear at the top of an expression, or inside parentheses. It evaluates to bool. The `is not` form is `is` followed by a negated pattern, as `not` is part of the PATTERN.
 
             The if, match, return, break and continue expressions are parsed as PRIMARY.
          */
@@ -665,8 +881,6 @@ namespace rckid::dolang {
                 return result;
             auto isExpr = std::make_unique<ast::Is>(pop());
             isExpr->setValue(std::move(result));
-            if (condPop(TokenKind::kwNot))
-                isExpr->setNegated(true);
             isExpr->setPattern(TRY(PATTERN()));
             return isExpr;
         }

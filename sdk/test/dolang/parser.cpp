@@ -799,8 +799,8 @@ TEST(dolang, parser_matchErrors) {
     EXPECT(fails("fun f()\n  match a when\n    else\n      b\n    is X then\n      c\n"));
     EXPECT(fails("fun f()\n  match a when\n    is X then\n      b\n    else\n      c\n    else\n      d\n"));
     EXPECT(fails("fun f()\n  match a when\n    is X then\n      b\n  else\n    c\n"));
-    // patterns are identifiers for now
-    EXPECT(fails("fun f()\n  match a when\n    is 1 then\n      b\n"));
+    // pattern is mandatory
+    EXPECT(fails("fun f()\n  match a when\n    is then\n      b\n"));
 }
 
 TEST(dolang, parser_matchExpression) {
@@ -893,12 +893,14 @@ TEST(dolang, parser_isOperatorStructure) {
         "        SymbolName@(1:16) a\n"
         "      SymbolName@(1:21) B\n"
     ));
+    // is not is is followed by the negated pattern
     EXPECT(debugPrints("global x = a is not B\n",
         "Program@(1:1)\n"
         "  VarDecl@(1:1) global x\n"
-        "    Is@(1:14) not\n"
+        "    Is@(1:14)\n"
         "      SymbolName@(1:12) a\n"
-        "      SymbolName@(1:21) B\n"
+        "      UnaryOp@(1:17) not\n"
+        "        SymbolName@(1:21) B\n"
     ));
 }
 
@@ -909,8 +911,231 @@ TEST(dolang, parser_isOperatorErrors) {
     EXPECT(fails("global x = a is not\n"));
     EXPECT(fails("global x = a is B is C\n"));
     EXPECT(fails("global x = a is B and c\n"));
-    EXPECT(fails("global x = a is B + c\n"));
+    EXPECT(fails("global x = a is B < c\n"));
     EXPECT(fails("global x = is B\n"));
+}
+
+// ------------------------------------------------------------------------------------------------
+// patterns
+// ------------------------------------------------------------------------------------------------
+
+TEST(dolang, parser_patternValues) {
+    ClearPools clear_;
+    // literals
+    EXPECT(roundTrips("global x = a is 5\n"));
+    EXPECT(roundTrips("global x = a is \"foo\"\n"));
+    EXPECT(roundTrips("global x = a is true\n"));
+    EXPECT(roundTrips("global x = a is -1\n"));
+    // names, enum values and constants
+    EXPECT(roundTrips("global x = a is Left\n"));
+    EXPECT(roundTrips("global x = a is Dir.Left\n"));
+    EXPECT(roundTrips("global x = a is lib.Dir.Left\n"));
+    // constant arithmetic, including grouping
+    EXPECT(roundTrips("global x = a is 1 / 2\n"));
+    EXPECT(roundTrips("global x = a is MAX - 1\n"));
+    EXPECT(roundTrips("global x = a is (MAX - 1) * 2\n"));
+    EXPECT(roundTrips("global x = a is -(MAX - 1)\n"));
+    EXPECT(roundTrips("global x = a is --1\n"));
+}
+
+TEST(dolang, parser_patternOrNot) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = a is 5 or 6\n"));
+    EXPECT(roundTrips("global x = a is Left or Right or Up\n"));
+    EXPECT(roundTrips("global x = a is not 5\n"));
+    EXPECT(roundTrips("global x = a is not not 5\n"));
+    EXPECT(roundTrips("global x = a is not 5 or 6\n"));
+    EXPECT(roundTrips("global x = a is 5 or not 6\n"));
+    EXPECT(roundTrips("global x = a is not (5 or 6)\n"));
+    EXPECT(roundTrips("global x = a is ((5))\n"));
+    // parenthesized pattern can be multi-line, which is not kept
+    EXPECT(printsAs("global x = a is (\n  5 or 6\n)\n", "global x = a is (5 or 6)\n"));
+}
+
+TEST(dolang, parser_patternTuples) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = a is (x is 1)\n"));
+    EXPECT(roundTrips("global x = a is (x is 1, y is _)\n"));
+    EXPECT(roundTrips("global x = a is (x is 1 or 2, y is not 3)\n"));
+    EXPECT(roundTrips("global x = a is (x is 1, *)\n"));
+    EXPECT(roundTrips("global x = a is (*)\n"));
+    EXPECT(roundTrips("global x = a is ()\n"));
+    // nested patterns
+    EXPECT(roundTrips("global x = a is (p is (x is 1, *), q is [1, *])\n"));
+    EXPECT(roundTrips("global x = a is (x is (MAX - 1) * 2)\n"));
+    // trailing comma, multi-line
+    EXPECT(printsAs("global x = a is (x is 1, *,)\n", "global x = a is (x is 1, *)\n"));
+    EXPECT(roundTrips("global x = a is (\n  x is 1\n  y is _\n  *\n)\n"));
+}
+
+TEST(dolang, parser_patternArrays) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = a is []\n"));
+    EXPECT(roundTrips("global x = a is [1, 2, 3]\n"));
+    EXPECT(roundTrips("global x = a is [_, 2, _]\n"));
+    EXPECT(roundTrips("global x = a is [1, 2, *]\n"));
+    EXPECT(roundTrips("global x = a is [*]\n"));
+    EXPECT(roundTrips("global x = a is [Left]\n"));
+    EXPECT(roundTrips("global x = a is [Left or Right, not Up]\n"));
+    EXPECT(roundTrips("global x = a is [[1, *], (x is 1), *]\n"));
+    // * is multiplication when it does not start an item
+    EXPECT(roundTrips("global x = a is [MAX * 2, *]\n"));
+    // trailing comma, multi-line
+    EXPECT(printsAs("global x = a is [1, *,]\n", "global x = a is [1, *]\n"));
+    EXPECT(roundTrips("global x = a is [\n  1\n  _\n  *\n]\n"));
+}
+
+TEST(dolang, parser_patternTypes) {
+    ClearPools clear_;
+    EXPECT(roundTrips("global x = a is Point(*)\n"));
+    EXPECT(roundTrips("global x = a is Point()\n"));
+    EXPECT(roundTrips("global x = a is Point(x is 1 or 2, y is _)\n"));
+    EXPECT(roundTrips("global x = a is Point(x is not 0, *)\n"));
+    EXPECT(roundTrips("global x = a is shapes.Circle(r is 5, *)\n"));
+    // nested in other patterns
+    EXPECT(roundTrips("global x = a is [Circle(*), *]\n"));
+    EXPECT(roundTrips("global x = a is (s is Circle(*), *)\n"));
+    EXPECT(roundTrips("global x = a is Line(from is Point(*), to is Point(x is 0, *))\n"));
+    EXPECT(roundTrips("global x = a is Point(\n  x is 1\n  *\n)\n"));
+}
+
+TEST(dolang, parser_patternContexts) {
+    ClearPools clear_;
+    EXPECT(roundTrips("fun f()\n  if a is [1, *] then\n    b\n"));
+    EXPECT(roundTrips("fun f()\n  while a is not (5 or 6) do\n    b\n"));
+    EXPECT(roundTrips("fun f()\n  match a when\n    is 1 or 2 then\n      b\n    is Point(x is 0, *) then\n      c\n    is [_, *] then\n      d\n"));
+    EXPECT(roundTrips("global x = match a when is 1 or 2 then b is (x is 1, *) then c else d\n"));
+    // event handler patterns
+    EXPECT(roundTrips("global f = fun(a is 5 or 6, b : [num] is [_, *])\n  break\n"));
+}
+
+TEST(dolang, parser_patternStructure) {
+    ClearPools clear_;
+    // not binds tighter than or, same as in expressions
+    EXPECT(debugPrints("global x = a is not 5 or 6\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Is@(1:14)\n"
+        "      SymbolName@(1:12) a\n"
+        "      BinaryOp@(1:23) or\n"
+        "        UnaryOp@(1:17) not\n"
+        "          Number@(1:21) 5\n"
+        "        Number@(1:26) 6\n"
+    ));
+    // arithmetic precedence
+    EXPECT(debugPrints("global x = a is 1 + 2 * 3\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Is@(1:14)\n"
+        "      SymbolName@(1:12) a\n"
+        "      BinaryOp@(1:19) +\n"
+        "        Number@(1:17) 1\n"
+        "        BinaryOp@(1:23) *\n"
+        "          Number@(1:21) 2\n"
+        "          Number@(1:25) 3\n"
+    ));
+    // qualified names
+    EXPECT(debugPrints("global x = a is Dir.Left\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Is@(1:14)\n"
+        "      SymbolName@(1:12) a\n"
+        "      Member@(1:20)\n"
+        "        SymbolName@(1:17) Dir\n"
+        "        member: Left\n"
+    ));
+    // tuple pattern with fields and rest
+    EXPECT(debugPrints("global x = a is (x is 1, *)\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Is@(1:14)\n"
+        "      SymbolName@(1:12) a\n"
+        "      TuplePattern@(1:17)\n"
+        "        Arg@(1:18) x\n"
+        "          Number@(1:23) 1\n"
+        "        RestPattern@(1:26)\n"
+    ));
+    // a single item without is is the parenthesized pattern
+    EXPECT(debugPrints("global x = a is (5)\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Is@(1:14)\n"
+        "      SymbolName@(1:12) a\n"
+        "      Paren@(1:17)\n"
+        "        Number@(1:18) 5\n"
+    ));
+    // type pattern
+    EXPECT(debugPrints("global x = a is Point(x is _)\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Is@(1:14)\n"
+        "      SymbolName@(1:12) a\n"
+        "      TypePattern@(1:17)\n"
+        "        SymbolName@(1:17) Point\n"
+        "        TuplePattern@(1:22)\n"
+        "          Arg@(1:23) x\n"
+        "            AnyPattern@(1:28)\n"
+    ));
+    // array pattern
+    EXPECT(debugPrints("global x = a is [_, 2, *]\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Is@(1:14)\n"
+        "      SymbolName@(1:12) a\n"
+        "      ArrayPattern@(1:17)\n"
+        "        AnyPattern@(1:18)\n"
+        "        Number@(1:21) 2\n"
+        "        RestPattern@(1:24)\n"
+    ));
+}
+
+TEST(dolang, parser_patternErrors) {
+    ClearPools clear_;
+    // missing or incomplete patterns
+    EXPECT(fails("global x = a is\n"));
+    EXPECT(fails("global x = a is not\n"));
+    EXPECT(fails("global x = a is 5 or\n"));
+    EXPECT(fails("global x = a is 1 +\n"));
+    EXPECT(fails("global x = a is Dir.\n"));
+    EXPECT(fails("global x = a is Dir.1\n"));
+    // things that are not patterns
+    EXPECT(fails("global x = a is {1 -> 2}\n"));
+    EXPECT(fails("global x = a is fun\n  break\n"));
+    EXPECT(fails("global x = a is x[0]\n"));
+    EXPECT(fails("global x = a is 1 < 2\n"));
+    EXPECT(fails("global x = a is 1 and 2\n"));
+    // _ and * are only items of tuples and arrays
+    EXPECT(fails("global x = a is *\n"));
+    EXPECT(fails("global x = a is 1 or *\n"));
+    EXPECT(fails("global x = a is [1 *]\n"));
+    EXPECT(fails("global x = a is [_ + 1]\n"));
+    // * must be the last item
+    EXPECT(fails("global x = a is [*, 1]\n"));
+    EXPECT(fails("global x = a is (*, x is 1)\n"));
+    EXPECT(fails("global x = a is Point(*, x is 1)\n"));
+    // tuple items are all fields, unless it is a single parenthesized pattern
+    EXPECT(fails("global x = a is (5, 6)\n"));
+    EXPECT(fails("global x = a is (x, y)\n"));
+    EXPECT(fails("global x = a is (x is 1, 5)\n"));
+    EXPECT(fails("global x = a is (5, x is 1)\n"));
+    EXPECT(fails("global x = a is (x is)\n"));
+    EXPECT(fails("global x = a is (x.y is 1)\n"));
+    EXPECT(fails("global x = a is (x = 1)\n"));
+    // fields of type patterns always use is
+    EXPECT(fails("global x = a is Point(5)\n"));
+    EXPECT(fails("global x = a is Point(x)\n"));
+    EXPECT(fails("global x = a is Point(x = 1)\n"));
+    // type patterns are the whole pattern, they cannot be negated, combined, or parenthesized
+    EXPECT(fails("global x = a is not Point(*)\n"));
+    EXPECT(fails("global x = a is Point(*) or Circle(*)\n"));
+    EXPECT(fails("global x = a is 1 or Point(*)\n"));
+    EXPECT(fails("global x = a is (Point(*))\n"));
+    EXPECT(fails("global x = a is 1 + Point(*)\n"));
+    EXPECT(fails("global x = a is 5(*)\n"));
+    // unclosed or mismatched brackets
+    EXPECT(fails("global x = a is [1, 2\n"));
+    EXPECT(fails("global x = a is (x is 1\n"));
+    EXPECT(fails("global x = a is Point(x is 1]\n"));
 }
 
 // ------------------------------------------------------------------------------------------------
