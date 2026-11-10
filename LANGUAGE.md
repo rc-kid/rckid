@@ -468,6 +468,8 @@ Object can inherit from others. Onky single inheritance is supported and _doLang
         fancy : num
     )
 
+> Inheritance in _doLang_ is very different from the inheritance in mainstream languages, where it is often coupled which polymorphism which _doLang_ lacks. Instead inheritance is used as an data extension of existing objects - new functionality can be added to existing types by defining the out of block methods, while inheritance must be used if new data members are to be added as well.
+
 ### Constructors
 
 To create an object, the name of the object type is used as if it were a function. Empty arguments will create the object using the default initialization defined for its fields (either via `=`, or if absent via the default initialization for their respective type). Alternatively, a keyword style arguments can be provided as if the type was a function call. Only keyword style arguments are allowed:
@@ -558,11 +560,18 @@ _doLang_ follows standard operator precedence so as not to confuse kids with spe
 - logical `not`
 - logical `and`
 - logical `or`
-- pattern test `is` (and `is not`)
+- pattern test `is`
+- typecast `as`
 
 All postfix operators share the same precedence and are applied left to right, so that expressions such as `a[i].x` or `foo().bar[2]` work as expected. Prefix operators apply to the whole postfix expression that follows them, i.e. `-a.x` negates `a.x` and `clone a.items[2]` clones the element of `a.items`, not `a` itself.
 
 Unlike the arithmetic negation, logical `not` has lower precedence than comparisons, so that `not a == b` means `not (a == b)`, which is how it reads in English.
+
+### `as`
+
+The `as` operator casts the left hand side to the *type* specified as the right hand side. This is extremely useful for types, where one can cast a parent type to child type. As such cast may not always succeed, the `as` operator must be followed by the `orelse` keyword for default value, or abort mechanism in case of a cast failure, similar to `optional` returning functions.
+
+> Casts can be used for casting different types as well, but when a cast cannot fail, the `orelse` is not necessary. At this point though, we do not have enough castable types to actually make this useful.
 
 ### `is`
 
@@ -985,9 +994,9 @@ Event types are like function types without return value, and start with the `ev
 
 ## Expressions
 
-    EXPR := OR_EXPR [ 'is' PATTERN ]
+    EXPR := OR_EXPR [ 'is' PATTERN ] [ 'as' TYPE [ 'orelse' EXPR ]]
 
-An expression recurses into standard expressions based on operator precedence. The `is` operator has the lowest precedence and is not associative, so it can only appear at the top of an expression (or inside parentheses). The `is not` form is `is` followed by a negated pattern, as `not` is part of `PATTERN`.
+An expression recurses into standard expressions based on operator precedence. The `as` operator has the lowest precedence, follwed by the `is` operatorand both are not associative, so can only appear at the top of an expression (or inside parentheses). 
 
     OR_EXPR := AND_EXPR { 'or' AND_EXPR }
     AND_EXPR := NOT_EXPR { 'and' NOT_EXPR }

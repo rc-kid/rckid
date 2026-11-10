@@ -4,6 +4,7 @@
 
 #include <platform/tests.h>
 #include <rckid/dolang/parser.h>
+#include <rckid/dolang/pretty_printer.h>
 
 using namespace rckid;
 using namespace rckid::dolang;
@@ -29,13 +30,13 @@ namespace {
     bool roundTrips(char const * source) {
         StringBuilder sb;
         auto parsed = parse(source);
-        parsed->prettyPrint(sb.writer());
+        ast::PrettyPrinter::print(sb.writer(), parsed.get());
         String result{sb.str()};
         if (result == source)
             return true;
         std::cout << std::endl << "    expected: " << escaped(source).c_str() << std::endl << "    actual:   " << escaped(result).c_str() << std::endl;
         StringBuilder dbg;
-        parsed->debugPrint(dbg.writer());
+        ast::DebugPrinter::print(dbg.writer(), parsed.get());
         std::cout << dbg.str().c_str();
         return false;
     }
@@ -44,7 +45,7 @@ namespace {
      */
     bool printsAs(char const * source, char const * expected) {
         StringBuilder sb;
-        parse(source)->prettyPrint(sb.writer());
+        ast::PrettyPrinter::print(sb.writer(), parse(source).get());
         String result{sb.str()};
         if (result == expected)
             return true;
@@ -58,7 +59,7 @@ namespace {
      */
     bool debugPrints(char const * source, char const * expected) {
         StringBuilder sb;
-        parse(source)->debugPrint(sb.writer());
+        ast::DebugPrinter::print(sb.writer(), parse(source).get());
         String result{sb.str()};
         if (result == expected)
             return true;
@@ -73,7 +74,7 @@ namespace {
         if (result->kind == ast::Kind::Error)
             return true;
         StringBuilder sb;
-        result->prettyPrint(sb.writer());
+        ast::PrettyPrinter::print(sb.writer(), result.get());
         std::cout << std::endl << "    expected error, parsed as: " << escaped(sb.str()).c_str() << std::endl;
         return false;
     }
@@ -103,6 +104,14 @@ TEST(dolang, parser_use) {
     ClearPools clear_;
     EXPECT(roundTrips("use foo\n"));
     EXPECT(roundTrips("use std_lib2\n"));
+}
+
+TEST(dolang, parser_useStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("use foo\n",
+        "Program@(1:1)\n"
+        "  UseDecl@(1:1) foo\n"
+    ));
 }
 
 TEST(dolang, parser_varDeclWithoutValue) {
@@ -136,6 +145,23 @@ TEST(dolang, parser_arrayTypes) {
     EXPECT(roundTrips("global a : [num]\n"));
     EXPECT(roundTrips("global a : [Player]\n"));
     EXPECT(roundTrips("global a : [[text]]\n"));
+}
+
+TEST(dolang, parser_arrayTypesStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("global a : [num]\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global a\n"
+        "    ArrayType@(1:12)\n"
+        "      SymbolName@(1:13) num\n"
+    ));
+    EXPECT(debugPrints("global a : [[text]]\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global a\n"
+        "    ArrayType@(1:12)\n"
+        "      ArrayType@(1:13)\n"
+        "        SymbolName@(1:14) text\n"
+    ));
 }
 
 TEST(dolang, parser_tupleTypes) {
@@ -220,6 +246,26 @@ TEST(dolang, parser_mapTypes) {
     EXPECT(roundTrips("global m : {text -> [num]}\n"));
     EXPECT(roundTrips("global m : {num -> {text -> bool}}\n"));
     EXPECT(roundTrips("global m : [{num -> text}]\n"));
+}
+
+TEST(dolang, parser_mapTypesStructure) {
+    ClearPools clear_;
+    // key type first, value type second
+    EXPECT(debugPrints("global m : {num -> text}\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global m\n"
+        "    MapType@(1:12)\n"
+        "      SymbolName@(1:13) num\n"
+        "      SymbolName@(1:20) text\n"
+    ));
+    EXPECT(debugPrints("global m : {num -> [text]}\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global m\n"
+        "    MapType@(1:12)\n"
+        "      SymbolName@(1:13) num\n"
+        "      ArrayType@(1:20)\n"
+        "        SymbolName@(1:21) text\n"
+    ));
 }
 
 
@@ -557,6 +603,28 @@ TEST(dolang, parser_writeAndTest) {
     EXPECT(roundTrips("fun f()\n  write a\n"));
     EXPECT(roundTrips("fun f()\n  test a\n"));
     EXPECT(roundTrips("fun f()\n  test a == b\n"));
+}
+
+TEST(dolang, parser_writeAndTestStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("fun f()\n  write a\n",
+        "Program@(1:1)\n"
+        "  NamedFunction@(1:1) f\n"
+        "    List@(1:6)\n"
+        "    Block@(2:3)\n"
+        "      Write@(2:3)\n"
+        "        SymbolName@(2:9) a\n"
+    ));
+    EXPECT(debugPrints("fun f()\n  test a == b\n",
+        "Program@(1:1)\n"
+        "  NamedFunction@(1:1) f\n"
+        "    List@(1:6)\n"
+        "    Block@(2:3)\n"
+        "      Test@(2:3)\n"
+        "        BinaryOp@(2:10) ==\n"
+        "          SymbolName@(2:8) a\n"
+        "          SymbolName@(2:13) b\n"
+    ));
 }
 
 TEST(dolang, parser_expressionStatement) {
