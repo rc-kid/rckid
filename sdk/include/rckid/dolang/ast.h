@@ -381,7 +381,7 @@ namespace rckid::dolang::ast {
             }
             w << name.c_str();
             if (type_ != nullptr) {
-                w << " is ";
+                w << " : ";
                 type_->prettyPrint(w, indent);
             }
             if (value_ != nullptr) {
@@ -556,7 +556,7 @@ namespace rckid::dolang::ast {
 
     };
 
-    /** Named argument (or field). Used for arguments of named functions, function and event types (name, type and default value), arguments of function literals (name and the pattern after `is`, which is often just a type) and fields of type declarations (name, type and default value). Which of the parts can be present is decided by the parser rule that creates the argument. 
+    /** Named argument (or field). Used for arguments of named functions, function and event types (name, type and default value), arguments of function literals (name, type and the pattern of event handlers after `is`) and fields of type declarations (name, type and default value). Which of the parts can be present is decided by the parser rule that creates the argument. 
      */
     class Arg : public Node {
     public:
@@ -589,7 +589,7 @@ namespace rckid::dolang::ast {
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             w << name_.c_str();
             if (type_ != nullptr) {
-                w << " is ";
+                w << " : ";
                 type_->prettyPrint(w, indent);
             }
             if (value_ != nullptr) {
@@ -755,7 +755,7 @@ namespace rckid::dolang::ast {
         void prettyPrint(Writer & w, uint32_t indent = 0) const override {
             w << name.c_str();
             if (type_ != nullptr) {
-                w << " is ";
+                w << " : ";
                 type_->prettyPrint(w, indent);
             }
         }

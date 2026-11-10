@@ -49,6 +49,7 @@ namespace rckid::dolang {
         opSubAssign,
         opMulAssign,
         opDivAssign,
+        opColon,
         opComma,
         opDot,
         opArrow,
@@ -256,6 +257,8 @@ namespace rckid::dolang {
                         return condPop('=') ? Token{TokenKind::opDivAssign, l} : Token{TokenKind::opDiv, l};
                     case '=':
                         return condPop('=') ? Token{TokenKind::opEquals, l} : Token{TokenKind::opAssign, l};
+                    case ':':
+                        return Token{TokenKind::opColon, l};
                     case ',':
                         return Token{TokenKind::opComma, l};
                     case '.':
@@ -582,6 +585,7 @@ namespace rckid::dolang {
             case TokenKind::opSubAssign: w << "-="; break;
             case TokenKind::opMulAssign: w << "*="; break;
             case TokenKind::opDivAssign: w << "/="; break;
+            case TokenKind::opColon: w << ':'; break;
             case TokenKind::opComma: w << ','; break;
             case TokenKind::opDot: w << '.'; break;
             case TokenKind::opArrow: w << "->"; break;

@@ -119,7 +119,7 @@ This works in every context, so for instance map definition can look like this:
 Function bodies can appear inside brackets too, but only in the multi-line form. As any other block, a function body ends with the first line indented less than the body, i.e. the next item, or the line with the closing bracket. The line break is thus the only separator after a function body. A comma at the end of the body's last line would be part of its last statement, which is an error:
 
     type Player = (
-        onHit = fun(damage is num)
+        onHit = fun(damage : num)
             if damage > 10 then
                 playSound(ouch)
             self.lives -= damage
@@ -131,13 +131,6 @@ Function bodies can appear inside brackets too, but only in the multi-line form.
 ## Built-in Types
 
 _doLang_ supports rational numbers, boolean values, text strings and simple enumerations as primitive types. Generic arrays, maps and tuples are supported as well. Contrary to mainstream languages, floating point values are *not* supported. 
-
-Types of variables, arguments and fields are declared with the `is` keyword, the same one used for testing values against patterns (see `is`):
-
-    let x is num = 78
-    fun inc(x is num) -> num
-
-Types are patterns, too, and the declaration and the test mean the same thing, only for a different time: `let x is num` says that `x` is always a number, while `if x is Circle then` checks that `x` is a circle right now. Only types can be used in declarations, i.e. `let x is 5` is an error (use `let x = 5` to give `x` its value).
 
 ### `num`
 
@@ -178,7 +171,7 @@ To specify enum values one can either use the `EnumName.Value` syntax, or can us
 
 A simple array. Array is generic so we can have arrays of other types and even arrays of arrays. Arrays are created with `[]`, i.e. :
 
-    let a is [num]
+    let a : [num]
 
 All types in the array have to be identical. Type inference can be used where the type of the first item will be the type all types of the array. Arrays are growable and shrinkable and support a few methods themselves.
 
@@ -190,13 +183,13 @@ Inline array initialization is possible with the `[]` parentheses as well:
 
 Tuple is sequence of *named* values. Tuples are value types, i.e. they are copied when assigned, passed as arguments or returned:
 
-    let t is ( foo is num, bar is num) = ( foo = 1, bar = 56)
+    let t : ( foo : num, bar : num) = ( foo = 1, bar = 56)
 
 ### `map`
 
 This is the associative array. Generic on key and value. Maps are created with `{}`, i.e. the following is a map from number to text:
 
-    let m is {num -> text}
+    let m : {num -> text}
 
 All types in the map have to be identical. Type inference can be used from the first type. The `{}` parentheses can also be used for inline initialization, such as:
 
@@ -210,7 +203,7 @@ Following the `key -> value` notion, a map is read by calling it as if it were a
     let a = m(1) orelse "" # "foo"
     let b = m(key = 3) orelse "none" # "none"
 
-Calling the map is a shorthand for its `get(key is K) -> optional V` method, i.e. `m(1)` and `m.get(1)` are the same. All other operations on the map are methods as well:
+Calling the map is a shorthand for its `get(key : K) -> optional V` method, i.e. `m(1)` and `m.get(1)` are the same. All other operations on the map are methods as well:
 
     m.get(1) orelse "" # same as m(1) orelse ""
     m.set(3, "baz") # inserts, or overwrites the value for the key
@@ -219,7 +212,7 @@ Calling the map is a shorthand for its `get(key is K) -> optional V` method, i.e
 
 The call is only a shorthand for the lookup and not a function value, i.e. a map cannot be used where a function is expected. When a function is needed, the `get` method can be used instead, as like any other method it can be assigned to function variables (the other map methods can be added to events as well, but `get` cannot, as events do not return values):
 
-    let lookup is fun(key is num) -> optional text = m.get
+    let lookup : fun(key : num) -> optional text = m.get
     let x = lookup(1) orelse ""
 
 As maps are reference types, the function refers to the map itself, not its copy, i.e. later changes of `m` are visible through `lookup`.
@@ -234,19 +227,19 @@ _doLang_ supports a variety of special purpose value type, but object-like types
 
 Functions can be either named:
 
-    fun myFirstFunction(arg is num)
+    fun myFirstFunction(arg : num)
         ...
 
 or anonymous (function literals, or lambdas):
 
-    let a = fun(arg is num)
+    let a = fun(arg : num)
         ...
 
 A function _body_ is always an indented block of statements starting on a new line, and always follows the `fun` keyword, either directly, or after the signature. There is no `=` between the signature and the body.
 
 If the function returns value, the `->` notation is used, e.g.:
 
-    fun min(a is num, b is num) -> num
+    fun min(a : num, b : num) -> num
         if a <= b then
             return a
         else
@@ -263,12 +256,12 @@ Contrary to most mainstream languages, argument names are *not* part of the func
 - the function _type_, which consists of the number of arguments (arity), their types and the return type. Only the type decides whether functions are compatible (i.e. whether a function can be assigned to a function variable) and whether two functions are different overloads.
 - the function _signature_, which is the type together with the argument names and their default values.
 
-Signatures are written in named function declarations, function types (`fun(a is num, b is num = 1) -> num`) and event types. In all of these, every argument must have its type, and may have a default value:
+Signatures are written in named function declarations, function types (`fun(a : num, b : num = 1) -> num`) and event types. In all of these, every argument must have its type, and may have a default value:
 
-    fun inc(x is num, by is num = 1) -> num
+    fun inc(x : num, by : num = 1) -> num
         return x + by
 
-    let f is fun(x is num, by is num = 1) -> num = inc
+    let f : fun(x : num, by : num = 1) -> num = inc
 
 Calls always use the signature of what is being called, i.e. of the named function, of the declared type of the function variable, or of the event. That is where the names for keyword arguments and the default values come from (see Calling Functions). So a function with default values can be assigned to a function variable whose type has no defaults, or different ones, as their types are the same. Calls of the variable then use the variable's signature.
 
@@ -282,25 +275,25 @@ Function literals (lambdas) are almost always used in a context in which their t
 
 The following are all equivalent ways of creating a function variable `a`:
 
-    let a is fun(arg is num) = fun
+    let a : fun(arg : num) = fun
         ...
 
-    let a is fun(arg is num) = fun(arg)
+    let a : fun(arg : num) = fun(arg)
         ...
 
-    let a is fun(arg is num) = fun(arg is num)
+    let a : fun(arg : num) = fun(arg : num)
         ...
 
 When the expected type is not known, as in the example below, the lambda itself gives the type of the variable and must therefore specify all argument types. If the return type is missing, the function does not return anything, the same as named functions:
 
-    let a = fun(arg is num)
+    let a = fun(arg : num)
         ...
 
 Any part of the signature given explicitly must match the expected type, only the argument names can differ. A missing part that cannot be taken from the expected type, or a lambda without the signature with no expected type at all, is an error.
 
 Lambdas cannot specify default values for their arguments. If a function variable needs default values, they must be specified in its type:
 
-    let a is fun(x is num, by is num = 1) -> num = fun
+    let a : fun(x : num, by : num = 1) -> num = fun
         return x + by
 
 The expected type comes from:
@@ -316,7 +309,7 @@ The expected type comes from:
 
 Argument names affect keyword calls, editor visualizaton and implicit bindings: When a body is given with the implicit signature (`fun` without parentheses), the arguments are automatically bound under the names from the expected type. This means that the following code is valid:
 
-    let inc is fun(x is num) -> num
+    let inc : fun(x : num) -> num
     inc = fun
        return x + 1 # x is bound from inc's type
 
@@ -327,7 +320,7 @@ This is very useful for function variables and events, especially those declared
 
 However, it is also possible to rename the arguments by providing the signature explicitly in parentheses. So continuing the example from above, one can write:
 
-    inc = fun(a is num) -> num
+    inc = fun(a : num) -> num
         return a + 1
 
 or, without the parts known from `inc`'s type:
@@ -345,7 +338,7 @@ Note that renaming the arguments in the lambda does not change the signature of 
 
 A function return type can be declared as `optional`, which means the function may either return value of the given type, or `none`. Optional is a primitive maybe type - functions (including user defined ones) can return it and the caller is forced to handle the `none` case right at the call site, but the optional values themselves cannot be stored, or passed around. This makes the feature a lot simpler to understand:
 
-    fun safeDivide(a is num, d is num) -> optional num
+    fun safeDivide(a : num, d : num) -> optional num
         if d != 0 then
             return a / d
         else 
@@ -366,7 +359,7 @@ As `orelse` can only follow a call, something like `foo() + 3 orelse 4` is a syn
 
 Instead of a value, the fallback can also be `return` (with optional value), `break` or `continue`, in which case the execution leaves the expression when `none` was returned. This is particularly useful for early returns and `none` propagation:
 
-    fun average(values is {text -> num}, a is text, b is text) -> optional num
+    fun average(values : {text -> num}, a : text, b : text) -> optional num
         let x = values(a) orelse return none
         let y = values(b) orelse return none
         return (x + y) / 2
@@ -398,15 +391,15 @@ When an overloaded function is called, the overloads are first selected by the n
 Events are like functions in the sense that they can be called like a function and they can be assigned functions. Events are particularly useful as fields of objects:
 
     type Object = (
-        field1 is num,
-        onSomething is event(a is num)
+        field1 : num,
+        onSomething : event(a : num)
     )
 
 Unlike functions, events may not return values (`->` missing), but they may provide default values for their arguments. Same as function types, every event argument must have its type. To trigger an event, the event should be called as if it were a function, i.e. the arguments must begiven. Events also implicitly cast to boolean values. An event with no handler is `false`, all other events are `true`
 
 When an event is assigned a function, that function becomes its sole handler. But unlike functions, events also support the `+=` assignment, in which case the handler is *added* to the event. When multiple handlers for the event exist, they are called in the order in which they were added to the event:
 
-    let a is event(a is num, b is num) 
+    let a : event(a : num, b : num) 
     a += fun
         ... # first
     a += fun
@@ -418,7 +411,7 @@ All event handlers can be cleared if they are assigned `none` (`+=` assignment o
     
 Event handlers can use pattern matching to allow for conditional dispatch. Any argument of the handler's signature can be followed by `is` and a pattern (the same patterns as used by `match` and the `is` operator), in which case the handler is only called when the argument matches the pattern, i.e. unlike the example above, consider the following:
 
-    let a is event(a is num, b is num) 
+    let a : event(a : num, b : num) 
     a += fun
         ... # first
     a += fun(a, b is 56)
@@ -439,8 +432,8 @@ Pattern matching requires the explicit signature and patterns are only allowed i
 User defined object types, which must always be named and may contain fields. Note that an object is, in its simplest form just a named tuple, which is reflected in the declaration syntax:
 
     type ObjectWithEvent = (
-        field1 is num = 67,
-        onDone is event(status is num),
+        field1 : num = 67,
+        onDone: event(status : num),
     )
 
 Every object has default constructor which assigns the fields with the values provided at their declaration (or their default constructors transitively). Fields of an object are accessed with the `.` notation.
@@ -457,11 +450,11 @@ The classic object definition only specifies the object's fields. Object methods
 So for example:
 
     type Complex = (
-        re is num = 0,
-        im is num = 0,
+        re : num = 0,
+        im : num = 0,
     )
 
-    fun Complex.increaseBy(other is Complex)
+    fun Complex.increaseBy(other : Complex)
         self.re += other.re
         self.im += other.im
 
@@ -472,7 +465,7 @@ The out-of-declaration syntax is useful so that functionality of objects can be 
 Object can inherit from others. Onky single inheritance is supported and _doLang_ does *not* support virtual methods, meaning that while objects can be extended, their base functionality cannot be changed. A child object can however be used in place of its parent object types:
 
     type FancyComplex extends Complex = (
-        fancy is num
+        fancy : num
     )
 
 ### Constructors
@@ -484,7 +477,7 @@ To create an object, the name of the object type is used as if it were a functio
 
 User defined constructors are not supported, instead free functions can be defined with intended meaning, such as:
 
-    fun Im(a is num) -> Complex
+    fun Im(a : num) -> Complex
         return Complex(im = a)
 
     let a = Im(56)
@@ -518,7 +511,7 @@ _doLang_ supports three binding types: `let`, `const` and `global`. For assignme
 
 Declares new global mutable variable. Only valid at the top level. Syntactically `global` is identical to `let`, e.g.:
     
-    global foo is num = 67 # type is optional if deducible from the assignment rhs
+    global foo : num = 67 # type is optional if deducible from the assignment rhs
 
 
 ### `let`
@@ -653,7 +646,7 @@ When the case is a single statement, it can be written on the same line as the k
 
 `if` can also be used as an expression, i.e. one can write for instance:
 
-    fun min(a is num, b is num) -> num
+    fun min(a : num, b : num) -> num
         return if a <= b then a else b
 
 Unlike the statement, the `else` case of the `if` expression is mandatory, both cases must have the same type and they can only be expressions, not blocks of statements. Same as the fallback of `orelse`, the `else` case takes *everything* after it, i.e. `if c then 1 else 2 + 3` is `if c then 1 else (2 + 3)`, and the whole `if` expression must be put in parentheses to be used as an operand: `(if c then 1 else 2) + 3`. As the `if` expression cannot contain blocks, any line break inside it is a continuation and long expressions can thus be broken into multiple lines:
@@ -797,7 +790,7 @@ The lexer turns the source into a stream of tokens. Line breaks are reported as 
 - *text* is enclosed in `"` and may contain the escapes described in Literal Values. Text cannot span multiple lines.
 - *operators and punctuation*, longest match wins (i.e. `->` is never `-` followed by `>`):
 
-        +  -  *  /  =  +=  -=  *=  /=  ==  !=  <  <=  >  >=  ->  .  ,  (  )  [  ]  {  }
+        +  -  *  /  =  +=  -=  *=  /=  ==  !=  <  <=  >  >=  ->  .  ,  :  (  )  [  ]  {  }
 
 Whitespace between tokens is ignored. Comments (`#` to the end of the line), empty lines and lines with only a comment are ignored entirely and do not affect the layout, with one exception: if the first non-empty line of the file is a comment, its indentation is the indentation of the top level. Only spaces may be used for indentation, a tab in the indentation is an error. Since columns are only ever measured on the first token of a line, they are simply the number of leading spaces.
 
@@ -820,7 +813,7 @@ Note that `indent` is only emitted after the block keywords, function signatures
 ### Example
 
     type Player = (
-        onHit = fun(damage is num)
+        onHit = fun(damage : num)
             if damage > 10 then
                 playSound(ouch)
             self.lives -= damage
@@ -830,7 +823,7 @@ Note that `indent` is only emitted after the block keywords, function signatures
 produces the following tokens:
 
     'type' ident '=' '('
-    indent ident '=' 'fun' '(' ident 'is' 'num' ')'
+    indent ident '=' 'fun' '(' ident ':' 'num' ')'
     indent 'if' ident '>' number 'then'
     indent ident '(' ident ')'
     dedent newline 'self' '.' ident '-=' ident
@@ -880,8 +873,8 @@ Anything that does not start with a declaration keyword is parsed as `EXPR_STMT`
 
 `use` declaration is simply name of library to be used. Each library must be on separate line and with its own `use` keyword.
 
-    GLOBAL_DECL := 'global' ident [ 'is' TYPE ] [ '=' EXPR ]
-    CONST_DECL := 'const' ident [ 'is' TYPE ] [ '=' EXPR ]
+    GLOBAL_DECL := 'global' ident [ ':' TYPE ] [ '=' EXPR ]
+    CONST_DECL := 'const' ident [ ':' TYPE ] [ '=' EXPR ]
 
 Global variable declaration starts with `global` keyword and has name, optional type and initialization value. The value is optional and when omitted default constructor is used. When the global variable is a function or event, the value can be a function literal. Constant declaration is the same, just starts with `const` keyword. As constants can only be primitive values, they cannot be initialized with function literals.
 
@@ -890,7 +883,7 @@ Global variable declaration starts with `global` keyword and has name, optional 
 Function declaration has a name, which for methods is prefixed with the object type name, the signature (arguments and optional return type) and the body. Same as anonymous functions, there is no `=` between the signature and the body. The `SIGNATURE` and `PARAM` rules are described with the function types below.
 
     TYPE_DECL := 'type' ident [ 'extends' ident ] '=' '(' LIST(FIELD_DECL) ')'
-    FIELD_DECL := ident [ 'is' TYPE ] [ '=' EXPR ] 
+    FIELD_DECL := ident [ ':' TYPE ] [ '=' EXPR ] 
                |= 'constructor' '=' FUN_LITERAL
 
 Object type declaration is a list of fields, each with name, optional type and optional default value, and optionally the constructor. Unlike function arguments, the field type can be omitted when it can be inferred from the default value. Both the constructor and function or event fields may use function literals inside the parentheses. The constructor must use the implicit signature form, i.e. `constructor = fun`.
@@ -906,7 +899,7 @@ Enum declaration is a list of at least one value without brackets. When the next
 
 Statements that can appear inside function bodies. A statement starting with `if`, or `match` is always the `IF_STMT`, or `MATCH_STMT`, the `if` and `match` expressions are only parsed inside an expression.
 
-    LET_STMT := ( 'let' | 'const' ) ident [ 'is' TYPE ] [ '=' EXPR ]
+    LET_STMT := ( 'let' | 'const' ) ident [ ':' TYPE ] [ '=' EXPR ]
     EXPR_STMT := EXPR [ ( '=' | '+=' | '-=' | '*=' | '/=' ) EXPR ]
     RETURN_STMT := 'return' [ EXPR ]
 
@@ -942,7 +935,7 @@ A type is either number, boolean, text, or user defined type, which is parsed as
 Array type is simply a type encosed in square brackets. Nested arrays are thus supported.
 
     TUPLE_TYPE := '(' LIST(FIELD_TYPE) ')'
-    FIELD_TYPE := ident [ 'is' TYPE ]
+    FIELD_TYPE := ident [ ':' TYPE ]
 
 Tuple is list of comma separated fields defined inside parentheses. Field has name and may specify a type.
 
@@ -953,7 +946,7 @@ Map type is defined by the key type followed by arrow and the value type. Only P
     FUN_TYPE := 'fun' SIGNATURE(PARAM)
     SIGNATURE(X) := ARGS(X) [ '->' [ 'optional' ] TYPE ]
     ARGS(X) := '(' LIST(X) ')'
-    PARAM := ident 'is' TYPE [ '=' EXPR ]
+    PARAM := ident ':' TYPE [ '=' EXPR ]
 
 Function types start with the `fun` keyword followed by the signature, i.e. the argument list and optional return type after arrow operator, or the function returns void. Return type may be prefixed with `optional` keyword. All arguments lists (of named functions, function and event types and function literals) are the same list, only the rule for its items differs. Arguments of function types (and of named functions and event types) must have types and may have default values.
 
@@ -1032,11 +1025,11 @@ The cases of `if` and `match` expressions can only be expressions, never blocks.
 Array literals are list of values in square brackets, map literals are list of key-value pairs separated by the arrow operator in curly brackets. Empty `[]` and `{}` are valid (an opening bracket immediately followed by a line with the closing bracket is an empty list as well), but their types must be known from the context.
 
     FUN_LITERAL := 'fun' [ SIGNATURE(LAMBDA_ARG) ] BLOCK
-    LAMBDA_ARG := ident [ 'is' PATTERN ]
+    LAMBDA_ARG := ident [ ':' TYPE ] [ 'is' PATTERN ]
 
 Anonymous function starts with the `fun` keyword, optionally followed by the signature (arguments and optional return type) and then the function body, which is a `BLOCK`. The two forms are differentiated with a single token lookahead after `fun`: `(` starts the explicit signature, `indent` starts the body. There is no `=` between the signature and the body. 
 
-When the signature is omitted, it is taken from the expected type and the arguments are bound under their names from the type. When the signature is given, all arguments must always be listed, but their types and the return type may be omitted and are then taken from the expected type. Lambda arguments never have default values. As types are patterns too, each lambda argument has at most one `is`, followed by a pattern. When the expected type is not known, the pattern must be a type and gives the argument its type. When the expected type is known, the pattern must match the argument's type, and in event handlers it is used for the conditional dispatch, i.e. `fun(s is Circle)` added to an event whose argument is a `Shape` is only called for circles. Whether the expected type is known, and therefore which parts of the signature may be omitted, as well as whether patterns are allowed, is decided semantically.
+When the signature is omitted, it is taken from the expected type and the arguments are bound under their names from the type. When the signature is given, all arguments must always be listed, but their types and the return type may be omitted and are then taken from the expected type. Lambda arguments never have default values. The pattern after `is` is only valid for event handlers where it is used for the conditional dispatch. Whether the expected type is known, and therefore which parts of the signature may be omitted, as well as whether patterns are allowed, is decided semantically.
 
 Outside of brackets, the function body is followed by `newline` (or `dedent`), so an anonymous function must always be the last part of the statement it appears in. Inside brackets, which must be in the multi-line form, the body ends at the next line of items, or at the line with the closing bracket, after which the list continues as usual. As only line breaks end blocks, neither a comma, nor the closing bracket can follow the body on the same line.
 
@@ -1049,3 +1042,21 @@ There is no main function per se.
 
 - int type and bitwise operators
 
+# Appendix E - Design Rationale
+
+Reasons behind some of the design decisions, especially those where an alternative was tried, or seriously considered, and rejected. 
+
+## `:` declares types, `is` matches patterns
+
+Types of variables, arguments and fields are declared with `:`, while values are matched against patterns with `is`. Together with `=`, which gives values, each of the three has exactly one job and they never appear in the same position:
+
+    let p : (x : num, y : num)       # ':' declares the type
+    p = (x = 1, y = 2)               # '=' gives the value
+    if p is (x is 1, *) then         # 'is' matches the value against a pattern
+        ...
+
+Using `is` for both was tried (`let x is num = 78`). It reads naturally aloud ("let x is a number") and it removes the chance of using one where the other was meant. The argument for it was that types are patterns, too, and that `let x is num` (x is always a number) and `if x is num` (x is a number right now) say the same thing, only for a different time. It was rejected because:
+
+- _doLang_ is statically typed, so the type of every value is known at compile time, with the exception of objects, which can be of a subtype. Matching against a type is therefore almost always decided before the program runs (`x is num` is always true for a number). Patterns thus never contain types, with the exception of the type pattern (`Point(x is 1, *)`) for objects, and the reason for the declaration and the test to share the keyword is gone.
+- Arguments of function literals need both: the type when the expected type is not known, and the pattern for event handler dispatch (`fun(btn : Btn is A)`). With a single keyword, `fun(a is X)` is either the type, or the pattern, depending on whether the expected type is known, which is only decided semantically. The parser would have to parse everything after `is` in a form valid for both (`[Point]` is both an array type and an array pattern) and the meaning would be decided later.
+- With separate symbols, a tuple type (`(x : num)`) and a tuple pattern (`(x is 1)`) never look the same.

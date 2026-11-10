@@ -79,15 +79,15 @@ namespace rckid::dolang {
             return std::make_unique<ast::UseDecl>(l, POP(TokenKind::Identifier).asSymbol());
         }
 
-        /** GLOBAL_DECL := 'global' ident [ 'is' TYPE ] [ '=' EXPR ]
-            CONST_DECL := 'const' ident [ 'is' TYPE ] [ '=' EXPR ]
-            LET_STMT := ( 'let' | 'const' ) ident [ 'is' TYPE ] [ '=' EXPR ]
+        /** GLOBAL_DECL := 'global' ident [ ':' TYPE ] [ '=' EXPR ]
+            CONST_DECL := 'const' ident [ ':' TYPE ] [ '=' EXPR ]
+            LET_STMT := ( 'let' | 'const' ) ident [ ':' TYPE ] [ '=' EXPR ]
 
          */
         unique_ptr<ast::Node> VAR_DECL(TokenKind kind) {
             auto l = POP(kind).loc;
             auto result = std::make_unique<ast::VarDecl>(kind, l, POP(TokenKind::Identifier).asSymbol());
-            if (condPop(TokenKind::kwIs))
+            if (condPop(TokenKind::opColon))
                 result->setType(TRY(TYPE()));
             if (condPop(TokenKind::opAssign))
                 result->setValue(TRY(EXPR()));
@@ -134,25 +134,27 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** PARAM := ident 'is' TYPE [ '=' EXPR ]
+        /** PARAM := ident ':' TYPE [ '=' EXPR ]
 
             Argument of named functions, function types and event types. The type is mandatory, the default value is optional.
          */
         unique_ptr<ast::Node> PARAM() {
             auto result = std::make_unique<ast::Arg>(POP(TokenKind::Identifier));
-            POP(TokenKind::kwIs);
+            POP(TokenKind::opColon);
             result->setType(TRY(TYPE()));
             if (condPop(TokenKind::opAssign))
                 result->setValue(TRY(EXPR()));
             return result;
         }
 
-        /** LAMBDA_ARG := ident [ 'is' PATTERN ]
+        /** LAMBDA_ARG := ident [ ':' TYPE ] [ 'is' PATTERN ]
 
-            Argument of function literals, there is no default value. As types are patterns too, the part after `is` is always parsed as a pattern (and stored as the pattern of the Arg). When the expected type is known, the pattern must match its argument type and for event handlers it is used for conditional dispatch. When the expected type is not known, the pattern must be a type and gives the argument its type. Both are semantic checks.
+            Argument of function literals. The type is optional (taken from the expected type when missing), there is no default value. The pattern is only valid for event handlers, which is a semantic check.
          */
         unique_ptr<ast::Node> LAMBDA_ARG() {
             auto result = std::make_unique<ast::Arg>(POP(TokenKind::Identifier));
+            if (condPop(TokenKind::opColon))
+                result->setType(TRY(TYPE()));
             if (condPop(TokenKind::kwIs))
                 result->setPattern(TRY(PATTERN()));
             return result;
@@ -174,7 +176,7 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** FIELD_DECL := ident [ 'is' TYPE ] [ '=' EXPR ]
+        /** FIELD_DECL := ident [ ':' TYPE ] [ '=' EXPR ]
                        |= 'constructor' '=' FUN_LITERAL
 
             Unlike function arguments, the field type is optional when it can be inferred from the default value. The constructor is stored as an Arg named `constructor` with the function literal as its value.
@@ -187,7 +189,7 @@ namespace rckid::dolang {
                 return result;
             }
             auto result = std::make_unique<ast::Arg>(POP(TokenKind::Identifier));
-            if (condPop(TokenKind::kwIs))
+            if (condPop(TokenKind::opColon))
                 result->setType(TRY(TYPE()));
             if (condPop(TokenKind::opAssign))
                 result->setValue(TRY(EXPR()));
@@ -487,31 +489,75 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** PATTERN := # TODO
+        /** PATTERN := PATTERN_EXPR
+                    |= ident { '.' ident } TUPLE_PATTERN
 
-            Unlike traditional programming languages, patterns in doLang are simpler and they cannot bind or deconstruct values. They can however check types and shapes via the following mechanism:
+            PATTERN_EXPR := NOT_PATTERN { 'or' NOT_PATTERN }
+            NOT_PATTERN := { 'not' } ADD_PATTERN
+            ADD_PATTERN := MUL_PATTERN { ( '+' | '-' ) MUL_PATTERN }
+            MUL_PATTERN := UNARY_PATTERN { ( '*' | '/' ) UNARY_PATTERN }
+            UNARY_PATTERN := { '-' } PATTERN_FACTOR
 
-            - a value can be matched against a type name
-            - a value can be matched against a literal that produces it (or expression? we loose totality checks, but maybe not that important?) In this case two special characters can be used to match any value (_) and to match everything else (*)
+            PATTERN_FACTOR := number | string | 'true' | 'false' | TUPLE_PATTERN | ARRAY_PATTERN | '(' PATTERN_EXPR ')'
+                           |= ident { '.' ident }
+
+            TUPLE_PATTERN := '(' LIST(TUPLE_ITEM) ')'
+            TUPLE_ITEM := ident 'is' ( PATTERN | '_' ) | '*'
+
+            ARRAY_PATTERN := '[' LIST(ARRAY_ITEM) ']'
+            ARRAY_ITEM := PATTERN | '_' | '*'
+
+            Unlike traditional programming languages, patterns in doLang are simpler and they cannot bind or deconstruct values. As the language is statically typed, the type of every value is known at compile time, with the exception of objects, which can be of a subtype. Patterns therefore never contain types, except for the type pattern, which checks that an object is of the given type (or its subtype) and optionally matches its fields:
+
+            - a value can be matched against a constant (in parser this is an expression, but we check its constness semantically later)
+            - tuples, arrays and objects can be matched by their contents, `_` matches any value and `*` the rest of the tuple, array, or object
+            - values can be combined with `or` and negated with `not`, type patterns cannot
             
             Examples:
 
-            x is num     # matches any number
-            x is [num]   # matches any array of numbers
-            x is (x is num, y is num)  # matches any tuple with two numbers
-            x is (x is 67, y is _) # matches any tuple with 67 in the first position and anything in the second position
+            x is 5 or 6  # matches either 5 or 6
+            x is not (5 or 6)  # matches anything but 5 and 6
+            x is (MAX - 1) * 2 # matches the value of the constant expression
+            x is Left    # matches the enum value
+            x is (x is 67, y is _) # matches any tuple with fields x and y, x being 67 and y anything
+            x is (x is 67, *) # matches any tuple with x being 67, regardless of the other fields
             x is [1, 2, 3] # matches array of three elements 1, 2 and 3
             x is [_, 2, _] # matches array of three elements with 2 in the middle
             x is [1, 2, *] # matches array of at least two elements 1 and 2 in the beginning
-            x is Point     # matches any value of type Point (how about subclasses? - maybe the rule could be that if there are matches like this then the closest of the present will be selected, or we can say that it matches any subtype of point as well and say that matches proceed in order they are defined)
-            x is Point(x is 1, y is _) # matches any Point with x=1 and any y
+            x is [Left]  # matches array of a single element Left
+            x is Point(*)  # matches any value of type Point and its subclasses
+            x is Point(x is 1 or 2, y is _) # matches any Point with x=1, or x=2 and any y
+            x is Point(x is not 0, *) # matches any Point with x other than 0
+            x is [Circle(*), *] # matches array whose first element is a Circle
 
-            At least for now, matching on maps is not allowed. Note that `is` is used inside the patterns instead of `=`. For tuples names must be used, positional matching only works for arrays. 
+            At least for now, matching on maps is not allowed. Note that `is` is used inside the patterns instead of `=`, or `:`. For tuples and objects names must be used, positional matching only works for arrays. 
+
+            Precedence:
+
+            `not` and `or` have the same precedence as in expressions, i.e. `not` binds tighter and `x is not 5 or 6` is `x is (not 5) or 6`, which matches anything but 5. Parentheses group the patterns, so `x is not (5 or 6)` matches anything but 5 and 6. There is no `and` in patterns, as `and` starts the guard of a match case. 
+
+            As `not` is part of the pattern, the `is not` of the EXPR rule is simply `is` followed by a negated pattern, i.e. EXPR := OR_EXPR [ 'is' PATTERN ]. Type patterns can only be the whole pattern, so they can be neither negated, nor combined with `or` (`x is not Circle(*)` is an error).
+
+            Parsing:
+
+            The first token decides the form for most patterns: `not` is the negation, `-` the unary minus, `[` the array pattern, literals and names are PATTERN_FACTORs. Names are always values (enum values, or constants), types only appear in the type pattern, which is a (qualified) name followed by the tuple pattern. The parser parses the PATTERN_EXPR first, in which the name is a PATTERN_FACTOR that ends at `(`, as there are no calls in patterns. When the whole PATTERN_EXPR is a (qualified) name and the next token is `(`, the tuple pattern follows and this is the type pattern. Elsewhere (i.e. after `not`, or inside `or`, or arithmetic), the `(` after a name is an error.
+
+            `(` at the start of PATTERN_FACTOR is either the tuple pattern, or the parenthesized PATTERN_EXPR, which cannot be decided by the first token. The parser decides after the `(`: `)` is the empty tuple pattern and `*` the tuple pattern. Otherwise it parses the PATTERN_EXPR and when it turns out to be a plain name followed by `is`, the name was the name of the first tuple item and the tuple pattern continues. Otherwise it is the parenthesized pattern, which must be followed by `)`. Tuple items always need `is` (or are `*`), so `(x)` is always the parenthesized value `x`, while `(x is 1)` is always the tuple. As the parentheses are a PATTERN_FACTOR, arithmetic can be grouped (`(MAX - 1) * 2`).
+
+            `_` is an ordinary identifier for the lexer, the parser checks its name where ARRAY_ITEM, or TUPLE_ITEM can be `_`. `*` is the multiplication operator, so it is the rest of the array or tuple only at the start of an item, i.e. `[a, *]` is the rest, while `[a * b]` is the multiplication and `[a *]` an error. `*` can only be the last item of the list, which the parser checks.
+
+            Semantic checks:
+
+            - names are enum values, or constants, a name of a type is an error (use `Point(*)` to match any `Point`)
+            - the type in the type pattern must be an object type, which lists all its fields, unless it ends with `*`
+            - tuple patterns must list all fields, unless they end with `*`
+            - PATTERN_EXPR must be a constant, so arithmetic is only valid on constants (`(5 or 6) * 2`, or `[1] + 2` parse, but are errors)
+            - type patterns that are always true (the static type is already the type), or never true (unrelated types) are errors
 
          */
         unique_ptr<ast::Node> PATTERN() {
-            // TODO implement proper pattern parsing, for now only types are supported (which includes plain names, such as enum values)
-            return TYPE();
+            // TODO implement proper pattern parsing, for now only plain names (such as enum values) are supported
+            return std::make_unique<ast::SymbolName>(POP(TokenKind::Identifier));
         }
 
         /** TYPE := POD_TYPE | ARRAY_TYPE | TUPLE_TYPE | MAP_TYPE | FUN_TYPE | EVENT_TYPE
@@ -568,11 +614,11 @@ namespace rckid::dolang {
             return result;
         }
 
-        /** FIELD_TYPE := ident [ 'is' TYPE ]
+        /** FIELD_TYPE := ident [ ':' TYPE ]
          */
         unique_ptr<ast::Node> FIELD_TYPE() {
             auto result = std::make_unique<ast::FieldType>(POP(TokenKind::Identifier));
-            if (condPop(TokenKind::kwIs))
+            if (condPop(TokenKind::opColon))
                 result->setType(TRY(TYPE()));
             return result;
         }
