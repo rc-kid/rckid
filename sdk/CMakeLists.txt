@@ -10,5 +10,8 @@ add_subdirectory("assets")
 # tests
 add_subdirectory("test")
 
+# dolang compiler
+add_subdirectory("dolangc")
+
 
 
