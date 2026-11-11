@@ -40,6 +40,7 @@ namespace rckid::dolang::ast {
         Orelse,
         Paren,
         Is,
+        As,
         TuplePattern,
         ArrayPattern,
         TypePattern,
@@ -72,6 +73,24 @@ namespace rckid::dolang::ast {
         virtual ~Node() = default;
 
         Node * parent() const { return parent_; }
+
+        /** Stores the child in the given slot of this node and makes this node its parent. Any previous child in the slot is deleted. The slot must be a child field of this node (`n->setChild(n->value, ...)`).
+
+            Child fields are public for reading, but must only be written through setChild and releaseChild, so that the parent pointers stay valid.
+         */
+        template<typename T, typename U>
+        void setChild(unique_ptr<T> & slot, unique_ptr<U> child) {
+            markAsChild(child.get());
+            slot = std::move(child);
+        }
+
+        /** Moves the child out of the given slot of this node and returns it without a parent, so that it can be adopted by another node. The slot is left empty.
+         */
+        template<typename T>
+        unique_ptr<T> releaseChild(unique_ptr<T> & slot) {
+            unmarkAsChild(slot.get());
+            return std::move(slot);
+        }
 
     protected:
 
@@ -108,6 +127,8 @@ namespace rckid::dolang::ast {
     public:
         SequenceNode(Kind kind, Location loc): Node{kind, loc} { }
 
+        using Node::releaseChild;
+
         void addChild(unique_ptr<Node> child) {
             markAsChild(child.get());
             children_.push_back(std::move(child));
@@ -141,7 +162,9 @@ namespace rckid::dolang::ast {
         Block(Location loc): SequenceNode{Kind::Block, loc} { }
     };
 
-    /** Items of a bracketed list. Remembers whether the list was written in the multi-line form, so that it can be pretty printed in the same form (one item per line). Prints only the items. Nodes that are lists themselves (array literal, tuple type, etc.) inherit from List, provide their own kind and print the brackets around the items. Nodes that contain a list as one of their parts (function arguments, etc.) embed a plain List and print the brackets themselves. In the multi-line form, the items are printed on their own lines indented from the parent and the output ends with a new line at the parent's indentation, so that the closing bracket follows.
+    /** Items of a bracketed list. 
+     
+        Remembers whether the list was written in the multi-line form, so that it can be pretty printed in the same form (one item per line). Prints only the items. Nodes that are lists themselves (array literal, tuple type, etc.) inherit from List, provide their own kind and print the brackets around the items. Nodes that contain a list as one of their parts (function arguments, etc.) embed a plain List and print the brackets themselves. In the multi-line form, the items are printed on their own lines indented from the parent and the output ends with a new line at the parent's indentation, so that the closing bracket follows.
      */
     class List : public SequenceNode {
     public:
@@ -208,22 +231,8 @@ namespace rckid::dolang::ast {
         TokenKind binding;
         Symbol name;
 
-        Node * type() const { return type_.get(); }
-        void setType(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            type_ = std::move(child);
-        }
-
-        Node * value() const { return value_.get(); }
-        void setValue(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            value_ = std::move(child);
-        }
-
-    protected:
-
-        unique_ptr<Node> type_;
-        unique_ptr<Node> value_;
+        unique_ptr<Node> type;
+        unique_ptr<Node> value;
     };
 
     /** Function type, i.e. the signature of a function without a body: arguments (a List of Arg nodes) and optional return type. Base class for function literals, named functions and event types, which all print and store the signature the same way. 
@@ -234,17 +243,8 @@ namespace rckid::dolang::ast {
     public:
         FunType(Location loc): Node{Kind::FunType, loc} { }
 
-        Node * returnType() const { return returnType_.get(); }
-        void setReturnType(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            returnType_ = std::move(child);
-        }
-
-        List * args() const { return args_.get(); }
-        void setArgs(unique_ptr<List> child) {
-            markAsChild(child.get());
-            args_ = std::move(child);
-        }
+        unique_ptr<List> args;
+        unique_ptr<Node> returnType;
 
         bool optionalReturn() const { return optionalReturn_; }
         void setOptionalReturn(bool optional) { optionalReturn_ = optional; }
@@ -253,8 +253,6 @@ namespace rckid::dolang::ast {
 
         FunType(Location loc, Kind kind): Node{kind, loc} { }
 
-        unique_ptr<List> args_;
-        unique_ptr<Node> returnType_;
         bool optionalReturn_ = false;
     };
 
@@ -264,17 +262,11 @@ namespace rckid::dolang::ast {
     public:
         Function(Location loc): FunType{loc, Kind::Function} { }
 
-        Block * body() const { return body_.get(); }
-        void setBody(unique_ptr<Block> child) {
-            markAsChild(child.get());
-            body_ = std::move(child);
-        }
+        unique_ptr<Block> body;
 
     protected:
 
         Function(Location loc, Kind kind): FunType{loc, kind} { }
-
-        unique_ptr<Block> body_;
     };
 
     /** Named function, or method declaration. Unlike function literals, always has the arguments list.
@@ -307,33 +299,18 @@ namespace rckid::dolang::ast {
 
         Symbol name() const { return name_; }
 
-        Node * type() const { return type_.get(); }
-        void setType(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            type_ = std::move(child);
-        }
+        unique_ptr<Node> type;
 
         /** Default value. 
          */
-        Node * value() const { return value_.get(); }
-        void setValue(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            value_ = std::move(child);
-        }
+        unique_ptr<Node> value;
 
         /** Pattern the argument must match for event handlers. 
          */
-        Node * pattern() const { return pattern_.get(); }
-        void setPattern(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            pattern_ = std::move(child);
-        }
+        unique_ptr<Node> pattern;
 
     protected:
         Symbol name_;
-        unique_ptr<Node> type_;
-        unique_ptr<Node> value_;
-        unique_ptr<Node> pattern_;
     };
 
     /** Type declaration, i.e. the name, the optional base type it extends and the list of fields (Arg nodes). The constructor is also in the fields list, as an Arg named `constructor` whose value is the function literal. As constructor is a keyword, it cannot clash with a field name.
@@ -350,16 +327,11 @@ namespace rckid::dolang::ast {
         void setBase(Symbol base) { base_ = base; }
         bool hasBase() const { return base_ != Symbol{}; }
 
-        List * fields() const { return fields_.get(); }
-        void setFields(unique_ptr<List> child) {
-            markAsChild(child.get());
-            fields_ = std::move(child);
-        }
+        unique_ptr<List> fields;
 
     private:
         Symbol name_;
         Symbol base_;
-        unique_ptr<List> fields_;
     };
 
     /** Enum declaration, i.e. the name and the list of values (SymbolName nodes). The values list has no brackets, its multi-line form is printed as a block of values, one per line. 
@@ -370,29 +342,17 @@ namespace rckid::dolang::ast {
 
         Symbol name() const { return name_; }
 
-        List * values() const { return values_.get(); }
-        void setValues(unique_ptr<List> child) {
-            markAsChild(child.get());
-            values_ = std::move(child);
-        }
+        unique_ptr<List> values;
 
     private:
         Symbol name_;
-        unique_ptr<List> values_;
     };
 
     class ArrayType : public Node {
     public:
         ArrayType(Location loc): Node{Kind::ArrayType, loc} { }
 
-        Node * elementType() const { return elementType_.get(); }
-        void setElementType(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            elementType_ = std::move(child);
-        }
-
-    protected:
-        unique_ptr<Node> elementType_;
+        unique_ptr<Node> elementType;
     };
 
     class TupleType : public List {
@@ -406,36 +366,15 @@ namespace rckid::dolang::ast {
         
         Symbol name;
 
-        Node * type() const { return type_.get(); }
-        void setType(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            type_ = std::move(child);
-        }
-
-    private:
-
-        unique_ptr<Node> type_;
+        unique_ptr<Node> type;
     }; 
 
     class MapType : public Node {
     public:
         MapType(Location loc): Node{Kind::MapType, loc} { }
 
-        Node * keyType() const { return keyType_.get(); }
-        void setKeyType(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            keyType_ = std::move(child);
-        }
-
-        Node * valueType() const { return valueType_.get(); }
-        void setValueType(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            valueType_ = std::move(child);
-        }
-
-    protected:
-        unique_ptr<Node> keyType_;
-        unique_ptr<Node> valueType_;
+        unique_ptr<Node> keyType;
+        unique_ptr<Node> valueType;
     };
 
     /** Event type is a function type without the return value, printed with the `event` keyword (see FunType).
@@ -456,22 +395,11 @@ namespace rckid::dolang::ast {
 
         TokenKind op() const { return op_; }
 
-        Node * left() const { return left_.get(); }
-        void setLeft(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            left_ = std::move(child);
-        }
-
-        Node * right() const { return right_.get(); }
-        void setRight(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            right_ = std::move(child);
-        }
+        unique_ptr<Node> left;
+        unique_ptr<Node> right;
 
     private:
         TokenKind op_;
-        unique_ptr<Node> left_;
-        unique_ptr<Node> right_;
     };
 
     class BinaryOp : public Node {
@@ -483,33 +411,21 @@ namespace rckid::dolang::ast {
             ASSERT(op.isBinaryOperator());
         }
 
-        BinaryOp(Token const & op, unique_ptr<Node> left): 
+        BinaryOp(Token const & op, unique_ptr<Node> leftOperand): 
             Node{Kind::BinaryOp, op.loc},
-            op_{op.kind},
-            left_{std::move(left)}
+            op_{op.kind}
         { 
             ASSERT(op.isBinaryOperator());
-            markAsChild(left_.get());
+            setChild(left, std::move(leftOperand));
         }
 
         TokenKind op() const { return op_; }
 
-        Node * left() const { return left_.get(); }
-        void setLeft(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            left_ = std::move(child);
-        }
-
-        Node * right() const { return right_.get(); }
-        void setRight(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            right_ = std::move(child);
-        }
+        unique_ptr<Node> left;
+        unique_ptr<Node> right;
 
     protected:
         TokenKind op_;
-        unique_ptr<Node> left_;
-        unique_ptr<Node> right_;
     }; 
 
     class UnaryOp : public Node {
@@ -523,34 +439,24 @@ namespace rckid::dolang::ast {
 
         TokenKind op() const { return op_; }
 
-        Node * operand() const { return operand_.get(); }
-        void setOperand(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            operand_ = std::move(child);
-        }
+        unique_ptr<Node> operand;
 
     protected:
         TokenKind op_;
-        unique_ptr<Node> operand_;
     }; 
 
     class Member : public Node {
     public:
-        Member(Location loc, unique_ptr<Node> object, Symbol memberName): Node{Kind::Member, loc}, object_(std::move(object)), memberName_(memberName) { 
-            markAsChild(object_.get());
+        Member(Location loc, unique_ptr<Node> obj, Symbol memberName): Node{Kind::Member, loc}, memberName_(memberName) { 
+            setChild(object, std::move(obj));
         }
 
-        Node * object() const { return object_.get(); }
-        void setObject(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            object_ = std::move(child);
-        }
+        unique_ptr<Node> object;
 
         Symbol memberName() const { return memberName_; }
         void setMemberName(Symbol name) { memberName_ = name; }
 
     private:
-        unique_ptr<Node> object_;
         Symbol memberName_;
     }; 
 
@@ -558,18 +464,11 @@ namespace rckid::dolang::ast {
      */
     class Call : public List {
     public:
-        Call(Location loc, unique_ptr<Node> callee): List{Kind::Call, loc}, callee_{std::move(callee)} { 
-            markAsChild(callee_.get());
+        Call(Location loc, unique_ptr<Node> fn): List{Kind::Call, loc} { 
+            setChild(callee, std::move(fn));
         }
 
-        Node * callee() const { return callee_.get(); }
-        void setCallee(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            callee_ = std::move(child);
-        }
-
-    private:
-        unique_ptr<Node> callee_;
+        unique_ptr<Node> callee;
     };
 
     /** `name = value`, used for named call arguments and for the items of tuple literals.
@@ -580,15 +479,10 @@ namespace rckid::dolang::ast {
 
         Symbol name() const { return name_; }
 
-        Node * value() const { return value_.get(); }
-        void setValue(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            value_ = std::move(child);
-        }
+        unique_ptr<Node> value;
 
     private:
         Symbol name_;
-        unique_ptr<Node> value_;
     };
 
     /** Tuple literal, i.e. list of NamedValue items in parentheses. 
@@ -602,21 +496,12 @@ namespace rckid::dolang::ast {
      */
     class Orelse : public Node {
     public:
-        Orelse(Location loc, unique_ptr<Node> call): Node{Kind::Orelse, loc}, call_{std::move(call)} { 
-            markAsChild(call_.get());
+        Orelse(Location loc, unique_ptr<Node> callExpr): Node{Kind::Orelse, loc} { 
+            setChild(call, std::move(callExpr));
         }
 
-        Node * call() const { return call_.get(); }
-
-        Node * value() const { return value_.get(); }
-        void setValue(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            value_ = std::move(child);
-        }
-
-    private:
-        unique_ptr<Node> call_;
-        unique_ptr<Node> value_;
+        unique_ptr<Node> call;
+        unique_ptr<Node> value;
     };
 
     /** Parenthesized expression. Kept in the tree so that the pretty print preserves the grouping (and with it the meaning) of the source. 
@@ -625,17 +510,10 @@ namespace rckid::dolang::ast {
     public:
         Paren(Location loc): Node{Kind::Paren, loc} { }
 
-        Node * value() const { return value_.get(); }
-        void setValue(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            value_ = std::move(child);
-        }
-
-    private:
-        unique_ptr<Node> value_;
+        unique_ptr<Node> value;
     };
 
-    /** The `X is PATTERN` test. Evaluates to bool. The negated form (`X is not PATTERN`) is the test against negated pattern, i.e. the `not` is part of the pattern.
+    /** The `X is PATTERN` test. Evaluates to bool. 
      */
     class Is : public Node {
     public:
@@ -645,22 +523,24 @@ namespace rckid::dolang::ast {
             ASSERT(t == TokenKind::kwIs);
         }
 
-        Node * value() const { return value_.get(); }
-        void setValue(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            value_ = std::move(child);
-        }
-
-        Node * pattern() const { return pattern_.get(); }
-        void setPattern(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            pattern_ = std::move(child);
-        }
-
-    protected:
-        unique_ptr<Node> value_;
-        unique_ptr<Node> pattern_;
+        unique_ptr<Node> value;
+        unique_ptr<Node> pattern;
     };
+
+    /** The typecast (X as type) expression. 
+     */
+    class As : public Node {
+    public:
+        As(Token const & t): 
+            Node{Kind::As, t.loc} 
+        {
+            ASSERT(t == TokenKind::kwAs);
+        }
+
+        unique_ptr<Node> source;
+        unique_ptr<Node> targetType;
+        unique_ptr<Node> orElse;
+    }; 
 
     /** Tuple pattern, i.e. list of fields (Arg nodes with name and pattern) in parentheses, optionally ending with the rest pattern (`*`). Also used for the fields of the type pattern.
      */
@@ -680,21 +560,12 @@ namespace rckid::dolang::ast {
      */
     class TypePattern : public Node {
     public:
-        TypePattern(Location loc, unique_ptr<Node> typeName): Node{Kind::TypePattern, loc}, typeName_{std::move(typeName)} {
-            markAsChild(typeName_.get());
+        TypePattern(Location loc, unique_ptr<Node> name): Node{Kind::TypePattern, loc} {
+            setChild(typeName, std::move(name));
         }
 
-        Node * typeName() const { return typeName_.get(); }
-
-        TuplePattern * fields() const { return fields_.get(); }
-        void setFields(unique_ptr<TuplePattern> child) {
-            markAsChild(child.get());
-            fields_ = std::move(child);
-        }
-
-    private:
-        unique_ptr<Node> typeName_;
-        unique_ptr<TuplePattern> fields_;
+        unique_ptr<Node> typeName;
+        unique_ptr<TuplePattern> fields;
     };
 
     /** The `_` (any value, Kind::AnyPattern) and `*` (rest of the tuple, or array, Kind::RestPattern) patterns. 
@@ -722,21 +593,8 @@ namespace rckid::dolang::ast {
     public:
         MapItem(Location loc): Node{Kind::MapItem, loc} { }
 
-        Node * key() const { return key_.get(); }
-        void setKey(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            key_ = std::move(child);
-        }
-
-        Node * value() const { return value_.get(); }
-        void setValue(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            value_ = std::move(child);
-        }
-
-    protected:
-        unique_ptr<Node> key_;
-        unique_ptr<Node> value_;
+        unique_ptr<Node> key;
+        unique_ptr<Node> value;
     };
 
     class Break : public Node {
@@ -763,60 +621,24 @@ namespace rckid::dolang::ast {
     public:
         Return(Location loc): Node{Kind::Return, loc} { }
 
-        Node * value() const { return value_.get(); }
-        void setValue(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            value_ = std::move(child);
-        }
-
-    protected:
-        unique_ptr<Node> value_;
+        unique_ptr<Node> value;
     };
 
     class If : public Node {
     public:
         If(Location loc): Node{Kind::If, loc} { }
 
-        Node * condition() const { return condition_.get(); }
-        void setCondition(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            condition_ = std::move(child);
-        }
-
-        Node * thenCase() const { return then_.get(); }
-        void setThenCase(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            then_ = std::move(child);
-        }
-
-        Node * elseCase() const { return else_.get(); }
-        void setElseCase(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            else_ = std::move(child);
-        }
-
-    protected:
-
-        unique_ptr<Node> condition_;
-        unique_ptr<Node> then_;
-        unique_ptr<Node> else_;
+        unique_ptr<Node> condition;
+        unique_ptr<Node> thenCase;
+        unique_ptr<Node> elseCase;
     }; 
 
     class Match : public Node {
     public:
         Match(Location loc): Node{Kind::Match, loc} { }
 
-        Node * value() const { return value_.get(); }
-        void setValue(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            value_ = std::move(child);
-        }
-
-        Node * elseCase() const { return else_.get(); }
-        void setElseCase(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            else_ = std::move(child);
-        }
+        unique_ptr<Node> value;
+        unique_ptr<Node> elseCase;
 
         void addCase(unique_ptr<Node> child) {
             markAsChild(child.get());
@@ -827,8 +649,6 @@ namespace rckid::dolang::ast {
         Node * caseAt(uint32_t i) const { return cases_[i].get(); }
 
     private:
-        unique_ptr<Node> value_;
-        unique_ptr<Node> else_;
         std::vector<std::unique_ptr<Node>> cases_;
     }; 
 
@@ -836,103 +656,42 @@ namespace rckid::dolang::ast {
     public:
         MatchCase(Location loc): Node{Kind::MatchCase, loc} { }
 
-        Node * pattern() const { return pattern_.get(); }
-        void setPattern(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            pattern_ = std::move(child);
-        }
-
-        Node * body() const { return body_.get(); }
-        void setBody(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            body_ = std::move(child);
-        }
-
-    private:
-        unique_ptr<Node> pattern_;
-        unique_ptr<Node> body_;
+        unique_ptr<Node> pattern;
+        unique_ptr<Node> body;
     };
 
     class While : public Node {
     public:
-
         While(Location loc): Node{Kind::While, loc} { }
 
-        Node * condition() const { return condition_.get(); }
-        void setCondition(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            condition_ = std::move(child);
-        }
-
-        Node * body() const { return body_.get(); }
-        void setBody(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            body_ = std::move(child);
-        }
-
-    protected:
-    
-        unique_ptr<Node> condition_;
-        unique_ptr<Node> body_;
+        unique_ptr<Node> condition;
+        unique_ptr<Node> body;
     };
 
     class For : public Node {
     public:
         For(Location loc): Node{Kind::For, loc} { }
-        Node * container() const { return container_.get(); }
-        void setContainer(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            container_ = std::move(child);
-        }
-
-        Node * step() const { return step_.get(); }
-        void setStep(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            step_ = std::move(child);
-        }
-
-        Node * body() const { return body_.get(); }
-        void setBody(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            body_ = std::move(child);   
-        };
 
         Symbol iter;
         Symbol iter2;
 
-    protected:
-        unique_ptr<Node> container_;
-        unique_ptr<Node> step_;
-        unique_ptr<Node> body_;
+        unique_ptr<Node> container;
+        unique_ptr<Node> step;
+        unique_ptr<Node> body;
     };
 
     class Test : public Node {
     public:
         Test(Location loc): Node{Kind::Test, loc} { }
-        Node * value() const { return value_.get(); }
-        void setValue(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            value_ = std::move(child);
-        }
 
-    protected:
-    
-        unique_ptr<Node> value_;
+        unique_ptr<Node> value;
     };
 
     class Write : public Node {
     public:
         Write(Location loc): Node{Kind::Write, loc} { }
 
-        Node * value() const { return value_.get(); }
-        void setValue(unique_ptr<Node> child) {
-            markAsChild(child.get());
-            value_ = std::move(child);
-        }
-
-    protected:
-    
-        unique_ptr<Node> value_;
+        unique_ptr<Node> value;
     }; 
 
     /** Prints the AST as an indented tree, one node per line with its kind, location and the attributes not represented by the children, which follow on their own lines indented from the parent. Used for tests and debugging where the structure of the tree matters. 
@@ -1004,6 +763,7 @@ inline void write(Writer & w, rckid::dolang::ast::Kind kind) {
         case Kind::Orelse: w << "Orelse"; break;
         case Kind::Paren: w << "Paren"; break;
         case Kind::Is: w << "Is"; break;
+        case Kind::As: w << "As"; break;
         case Kind::TuplePattern: w << "TuplePattern"; break;
         case Kind::ArrayPattern: w << "ArrayPattern"; break;
         case Kind::TypePattern: w << "TypePattern"; break;

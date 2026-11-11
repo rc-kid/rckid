@@ -984,6 +984,110 @@ TEST(dolang, parser_isOperatorErrors) {
 }
 
 // ------------------------------------------------------------------------------------------------
+// as
+// ------------------------------------------------------------------------------------------------
+
+TEST(dolang, parser_asOperator) {
+    ClearPools clear_;
+    // plain cast, cast with fallback
+    EXPECT(roundTrips("global x = a as B\n"));
+    EXPECT(roundTrips("global x = a as B orelse c\n"));
+    // any type can be the target
+    EXPECT(roundTrips("global x = a as num\n"));
+    EXPECT(roundTrips("global x = a as [num] orelse b\n"));
+    EXPECT(roundTrips("global x = a as {text -> num} orelse b\n"));
+    // fallback can leave the expression, same as with optional calls
+    EXPECT(roundTrips("fun f()\n  x = a as B orelse return\n"));
+    EXPECT(roundTrips("fun f()\n  x = a as B orelse return c\n"));
+    EXPECT(roundTrips("fun f()\n  while true do\n    x = a as B orelse break\n"));
+    // in parentheses, the cast can be part of a larger expression
+    EXPECT(roundTrips("global x = (a as B orelse c).y\n"));
+    EXPECT(roundTrips("global x = (a as B orelse c) + 1\n"));
+    EXPECT(roundTrips("global x = f(a as B orelse c)\n"));
+    EXPECT(roundTrips("fun f()\n  if (a as B orelse c).y then\n    d\n"));
+}
+
+TEST(dolang, parser_asOperatorStructure) {
+    ClearPools clear_;
+    EXPECT(debugPrints("global x = a as B\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    As@(1:14)\n"
+        "      SymbolName@(1:12) a\n"
+        "      SymbolName@(1:17) B\n"
+    ));
+    // as has the lowest precedence, so the whole expression to the left is cast
+    EXPECT(debugPrints("global x = a + b as C\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    As@(1:18)\n"
+        "      BinaryOp@(1:14) +\n"
+        "        SymbolName@(1:12) a\n"
+        "        SymbolName@(1:16) b\n"
+        "      SymbolName@(1:21) C\n"
+    ));
+    // the fallback takes everything after orelse
+    EXPECT(debugPrints("global x = a as B orelse c + d\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    As@(1:14)\n"
+        "      SymbolName@(1:12) a\n"
+        "      SymbolName@(1:17) B\n"
+        "      BinaryOp@(1:28) +\n"
+        "        SymbolName@(1:26) c\n"
+        "        SymbolName@(1:30) d\n"
+    ));
+    // including another cast, so chained casts nest to the right
+    EXPECT(debugPrints("global x = a as B orelse c as B orelse d\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    As@(1:14)\n"
+        "      SymbolName@(1:12) a\n"
+        "      SymbolName@(1:17) B\n"
+        "      As@(1:28)\n"
+        "        SymbolName@(1:26) c\n"
+        "        SymbolName@(1:31) B\n"
+        "        SymbolName@(1:40) d\n"
+    ));
+    // the call with its orelse is the cast source
+    EXPECT(debugPrints("global x = f() orelse a as B\n",
+        "Program@(1:1)\n"
+        "  VarDecl@(1:1) global x\n"
+        "    Orelse@(1:16)\n"
+        "      Call@(1:13)\n"
+        "        SymbolName@(1:12) f\n"
+        "      As@(1:25)\n"
+        "        SymbolName@(1:23) a\n"
+        "        SymbolName@(1:28) B\n"
+    ));
+}
+
+TEST(dolang, parser_asOperatorErrors) {
+    ClearPools clear_;
+    // missing parts
+    EXPECT(fails("global x = a as\n"));
+    EXPECT(fails("global x = as B\n"));
+    EXPECT(fails("global x = a as B orelse\n"));
+    // the target must be a type
+    EXPECT(fails("global x = a as 5\n"));
+    EXPECT(fails("global x = a as \"B\"\n"));
+    // nothing can follow the type, except for orelse
+    EXPECT(fails("global x = a as B + 1\n"));
+    EXPECT(fails("global x = a as B.c\n"));
+    EXPECT(fails("global x = a as B c\n"));
+    // as is not associative and cannot be combined with is without parentheses
+    EXPECT(fails("global x = a as B as C\n"));
+    EXPECT(fails("global x = a as B is C\n"));
+}
+
+TEST(dolang, parser_asOperatorContinuation) {
+    ClearPools clear_;
+    // line break after as, or orelse is a continuation, not a block
+    EXPECT(printsAs("fun f()\n  x = a as\n    B orelse c\n", "fun f()\n  x = a as B orelse c\n"));
+    EXPECT(printsAs("fun f()\n  x = a as B orelse\n    c\n", "fun f()\n  x = a as B orelse c\n"));
+}
+
+// ------------------------------------------------------------------------------------------------
 // patterns
 // ------------------------------------------------------------------------------------------------
 

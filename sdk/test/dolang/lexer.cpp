@@ -176,6 +176,7 @@ TEST(dolang, lexer_keywords) {
     EXPECT(single("match", TokenKind::kwMatch));
     EXPECT(single("when", TokenKind::kwWhen));
     EXPECT(single("is", TokenKind::kwIs));
+    EXPECT(single("as", TokenKind::kwAs));
     EXPECT(single("orelse", TokenKind::kwOrElse));
     EXPECT(single("xor", TokenKind::kwXor));
     // keywords carry their name as symbol as well
@@ -188,6 +189,7 @@ TEST(dolang, lexer_keywordLookalikes) {
     EXPECT(isIdentifier(first("orElse"), "orElse"));
     EXPECT(isIdentifier(first("If"), "If"));
     EXPECT(isIdentifier(first("iffy"), "iffy"));
+    EXPECT(isIdentifier(first("ask"), "ask"));
     EXPECT(isIdentifier(first("if_"), "if_"));
 }
 

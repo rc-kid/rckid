@@ -88,9 +88,9 @@ namespace rckid::dolang {
             auto l = POP(kind).loc;
             auto result = std::make_unique<ast::VarDecl>(kind, l, POP(TokenKind::Identifier).asSymbol());
             if (condPop(TokenKind::opColon))
-                result->setType(TRY(TYPE()));
+                result->setChild(result->type, TRY(TYPE()));
             if (condPop(TokenKind::opAssign))
-                result->setValue(TRY(EXPR()));
+                result->setChild(result->value, TRY(EXPR()));
             return result;
         }
 
@@ -104,7 +104,7 @@ namespace rckid::dolang {
                 result->setMethodName(POP(TokenKind::Identifier).asSymbol());
             if (! SIGNATURE(result.get(), &Parser::PARAM))
                 return nullptr;
-            result->setBody(TRY(BLOCK()));
+            result->setChild(result->body, TRY(BLOCK()));
             return result;
         }
 
@@ -113,11 +113,11 @@ namespace rckid::dolang {
             Parses the arguments and the optional return type into the given function type (or function). Returns the function type on success and nullptr on error, so callers must check the result explicitly, same as with LIST.
          */
         ast::FunType * SIGNATURE(ast::FunType * f, unique_ptr<ast::Node> (Parser::*item)()) {
-            f->setArgs(TRY(ARGS(item)));
+            f->setChild(f->args, TRY(ARGS(item)));
             if (condPop(TokenKind::opArrow)) {
                 if (condPop(TokenKind::kwOptional))
                     f->setOptionalReturn(true);
-                f->setReturnType(TRY(TYPE()));
+                f->setChild(f->returnType, TRY(TYPE()));
             }
             return f;
         }
@@ -141,9 +141,9 @@ namespace rckid::dolang {
         unique_ptr<ast::Node> PARAM() {
             auto result = std::make_unique<ast::Arg>(POP(TokenKind::Identifier));
             POP(TokenKind::opColon);
-            result->setType(TRY(TYPE()));
+            result->setChild(result->type, TRY(TYPE()));
             if (condPop(TokenKind::opAssign))
-                result->setValue(TRY(EXPR()));
+                result->setChild(result->value, TRY(EXPR()));
             return result;
         }
 
@@ -154,9 +154,9 @@ namespace rckid::dolang {
         unique_ptr<ast::Node> LAMBDA_ARG() {
             auto result = std::make_unique<ast::Arg>(POP(TokenKind::Identifier));
             if (condPop(TokenKind::opColon))
-                result->setType(TRY(TYPE()));
+                result->setChild(result->type, TRY(TYPE()));
             if (condPop(TokenKind::kwIs))
-                result->setPattern(TRY(PATTERN()));
+                result->setChild(result->pattern, TRY(PATTERN()));
             return result;
         }
 
@@ -172,7 +172,7 @@ namespace rckid::dolang {
             if (! LIST(fields.get(), TokenKind::opParClose, &Parser::FIELD_DECL))
                 return nullptr;
             POP(TokenKind::opParClose);
-            result->setFields(std::move(fields));
+            result->setChild(result->fields, std::move(fields));
             return result;
         }
 
@@ -185,14 +185,14 @@ namespace rckid::dolang {
             if (top() == TokenKind::kwConstructor) {
                 auto result = std::make_unique<ast::Arg>(pop());
                 POP(TokenKind::opAssign);
-                result->setValue(TRY(FUN_LITERAL()));
+                result->setChild(result->value, TRY(FUN_LITERAL()));
                 return result;
             }
             auto result = std::make_unique<ast::Arg>(POP(TokenKind::Identifier));
             if (condPop(TokenKind::opColon))
-                result->setType(TRY(TYPE()));
+                result->setChild(result->type, TRY(TYPE()));
             if (condPop(TokenKind::opAssign))
-                result->setValue(TRY(EXPR()));
+                result->setChild(result->value, TRY(EXPR()));
             return result;
         }
 
@@ -212,7 +212,7 @@ namespace rckid::dolang {
                 error_ = Token::error(top().loc, "Enum must have at least one value");
                 return nullptr;
             }
-            result->setValues(std::move(values));
+            result->setChild(result->values, std::move(values));
             return result;
         }
 
@@ -329,12 +329,12 @@ namespace rckid::dolang {
                     return std::make_unique<ast::Continue>(POP(TokenKind::kwContinue).loc);
                 case TokenKind::kwWrite: {
                     auto result = std::make_unique<ast::Write>(POP(TokenKind::kwWrite).loc);
-                    result->setValue(TRY(EXPR()));
+                    result->setChild(result->value, TRY(EXPR()));
                     return result;
                 }
                 case TokenKind::kwTest: {
                     auto result = std::make_unique<ast::Test>(POP(TokenKind::kwTest).loc);
-                    result->setValue(TRY(EXPR()));
+                    result->setChild(result->value, TRY(EXPR()));
                     return result;
                 }
                 default:
@@ -353,8 +353,8 @@ namespace rckid::dolang {
                 case TokenKind::opMulAssign:
                 case TokenKind::opDivAssign: {
                     auto assign = std::make_unique<ast::Assign>(pop());
-                    assign->setLeft(std::move(result));
-                    assign->setRight(TRY(EXPR()));
+                    assign->setChild(assign->left, std::move(result));
+                    assign->setChild(assign->right, TRY(EXPR()));
                     return assign;
                 }
                 default:
@@ -369,7 +369,7 @@ namespace rckid::dolang {
         unique_ptr<ast::Node> RETURN_STMT() {
             auto result = std::make_unique<ast::Return>(POP(TokenKind::kwReturn).loc);
             if (top().kind != TokenKind::Newline && top().kind != TokenKind::Dedent)
-                result->setValue(TRY(EXPR()));
+                result->setChild(result->value, TRY(EXPR()));
             return result;
         }
 
@@ -379,11 +379,11 @@ namespace rckid::dolang {
          */
         unique_ptr<ast::Node> IF_STMT() {
             auto result = std::make_unique<ast::If>(POP(TokenKind::kwIf).loc);
-            result->setCondition(TRY(EXPR()));
+            result->setChild(result->condition, TRY(EXPR()));
             POP(TokenKind::kwThen);
-            result->setThenCase(TRY(BLOCK()));
+            result->setChild(result->thenCase, TRY(BLOCK()));
             if (condPop(TokenKind::kwElse)) {
-                result->setElseCase(TRY(BLOCK()));
+                result->setChild(result->elseCase, TRY(BLOCK()));
             }
             return result;
         }
@@ -394,11 +394,11 @@ namespace rckid::dolang {
          */
         unique_ptr<ast::Node> IF_EXPR() {
             auto result = std::make_unique<ast::If>(POP(TokenKind::kwIf).loc);
-            result->setCondition(TRY(EXPR()));
+            result->setChild(result->condition, TRY(EXPR()));
             POP(TokenKind::kwThen);
-            result->setThenCase(TRY(EXPR()));
+            result->setChild(result->thenCase, TRY(EXPR()));
             POP(TokenKind::kwElse);
-            result->setElseCase(TRY(EXPR()));
+            result->setChild(result->elseCase, TRY(EXPR()));
             return result;
         }
 
@@ -406,9 +406,9 @@ namespace rckid::dolang {
          */
         unique_ptr<ast::Node> WHILE_STMT() {
             auto result = std::make_unique<ast::While>(POP(TokenKind::kwWhile).loc);
-            result->setCondition(TRY(EXPR()));
+            result->setChild(result->condition, TRY(EXPR()));
             POP(TokenKind::kwDo);
-            result->setBody(TRY(BLOCK()));
+            result->setChild(result->body, TRY(BLOCK()));
             return result;
         }
 
@@ -420,11 +420,11 @@ namespace rckid::dolang {
             if (condPop(TokenKind::opComma))
                 result->iter2 = POP(TokenKind::Identifier).asSymbol();
             POP(TokenKind::kwIn);
-            result->setContainer(TRY(EXPR()));
+            result->setChild(result->container, TRY(EXPR()));
             if (condPop(TokenKind::kwStep))
-                result->setStep(TRY(EXPR()));
+                result->setChild(result->step, TRY(EXPR()));
             POP(TokenKind::kwDo);
-            result->setBody(TRY(BLOCK()));
+            result->setChild(result->body, TRY(BLOCK()));
             return result;
         }
 
@@ -436,7 +436,7 @@ namespace rckid::dolang {
          */
         unique_ptr<ast::Node> MATCH_STMT() {
             auto result = std::make_unique<ast::Match>(POP(TokenKind::kwMatch).loc);
-            result->setValue(TRY(EXPR()));
+            result->setChild(result->value, TRY(EXPR()));
             POP(TokenKind::kwWhen);
             atBlockStart();
             POP(TokenKind::Indent);
@@ -446,7 +446,7 @@ namespace rckid::dolang {
                     result->addCase(TRY(CASE_STMT()));
             }
             if (condPop(TokenKind::kwElse)) {
-                result->setElseCase(TRY(BLOCK()));
+                result->setChild(result->elseCase, TRY(BLOCK()));
             }
             POP(TokenKind::Dedent);
             return result;
@@ -463,19 +463,19 @@ namespace rckid::dolang {
          */
         unique_ptr<ast::Node> MATCH_EXPR() {
             auto result = std::make_unique<ast::Match>(POP(TokenKind::kwMatch).loc);
-            result->setValue(TRY(EXPR()));
+            result->setChild(result->value, TRY(EXPR()));
             POP(TokenKind::kwWhen);
             if (top() != TokenKind::kwElse) {
                 do {
                     auto matchCase = std::make_unique<ast::MatchCase>(POP(TokenKind::kwIs).loc);
-                    matchCase->setPattern(TRY(PATTERN()));
+                    matchCase->setChild(matchCase->pattern, TRY(PATTERN()));
                     POP(TokenKind::kwThen);
-                    matchCase->setBody(TRY(OR_EXPR()));
+                    matchCase->setChild(matchCase->body, TRY(OR_EXPR()));
                     result->addCase(std::move(matchCase));
                 } while (top() == TokenKind::kwIs);
             }
             if (condPop(TokenKind::kwElse))
-                result->setElseCase(TRY(EXPR()));
+                result->setChild(result->elseCase, TRY(EXPR()));
             return result;
         }
 
@@ -483,9 +483,9 @@ namespace rckid::dolang {
          */
         unique_ptr<ast::Node> CASE_STMT() {
             auto result = std::make_unique<ast::MatchCase>(POP(TokenKind::kwIs).loc);
-            result->setPattern(TRY(PATTERN()));
+            result->setChild(result->pattern, TRY(PATTERN()));
             POP(TokenKind::kwThen);
-            result->setBody(TRY(BLOCK()));
+            result->setChild(result->body, TRY(BLOCK()));
             return result;
         }
 
@@ -561,7 +561,7 @@ namespace rckid::dolang {
             // a (qualified) name followed by ( is the type pattern
             if (top() == TokenKind::opParOpen && startsWithIdentifier && isQualifiedName(result.get())) {
                 auto typePattern = std::make_unique<ast::TypePattern>(result->loc, std::move(result));
-                typePattern->setFields(TRY(TUPLE_PATTERN()));
+                typePattern->setChild(typePattern->fields, TRY(TUPLE_PATTERN()));
                 return typePattern;
             }
             return result;
@@ -573,7 +573,7 @@ namespace rckid::dolang {
             auto result = TRY(NOT_PATTERN());
             while (top() == TokenKind::kwOr) {
                 auto orPattern = std::make_unique<ast::BinaryOp>(pop(), std::move(result));
-                orPattern->setRight(TRY(NOT_PATTERN()));
+                orPattern->setChild(orPattern->right, TRY(NOT_PATTERN()));
                 result = std::move(orPattern);
             }
             return result;
@@ -585,7 +585,7 @@ namespace rckid::dolang {
             if (top() != TokenKind::kwNot)
                 return ADD_PATTERN();
             auto result = std::make_unique<ast::UnaryOp>(pop());
-            result->setOperand(TRY(NOT_PATTERN()));
+            result->setChild(result->operand, TRY(NOT_PATTERN()));
             return result;
         }
 
@@ -595,7 +595,7 @@ namespace rckid::dolang {
             auto result = TRY(MUL_PATTERN());
             while (top() == TokenKind::opAdd || top() == TokenKind::opSub) {
                 auto op = std::make_unique<ast::BinaryOp>(pop(), std::move(result));
-                op->setRight(TRY(MUL_PATTERN()));
+                op->setChild(op->right, TRY(MUL_PATTERN()));
                 result = std::move(op);
             }
             return result;
@@ -607,7 +607,7 @@ namespace rckid::dolang {
             auto result = TRY(UNARY_PATTERN());
             while (top() == TokenKind::opMul || top() == TokenKind::opDiv) {
                 auto op = std::make_unique<ast::BinaryOp>(pop(), std::move(result));
-                op->setRight(TRY(UNARY_PATTERN()));
+                op->setChild(op->right, TRY(UNARY_PATTERN()));
                 result = std::move(op);
             }
             return result;
@@ -619,7 +619,7 @@ namespace rckid::dolang {
             if (top() != TokenKind::opSub)
                 return PATTERN_FACTOR();
             auto result = std::make_unique<ast::UnaryOp>(pop());
-            result->setOperand(TRY(UNARY_PATTERN()));
+            result->setChild(result->operand, TRY(UNARY_PATTERN()));
             return result;
         }
 
@@ -673,7 +673,7 @@ namespace rckid::dolang {
                     return nullptr;
                 }
                 auto result = std::make_unique<ast::Paren>(l);
-                result->setValue(tuple->releaseChild(0));
+                result->setChild(result->value, tuple->releaseChild(0));
                 return result;
             }
             if (! checkRestIsLast(tuple.get()))
@@ -692,7 +692,7 @@ namespace rckid::dolang {
                 return first;
             pop();
             auto result = std::make_unique<ast::Arg>(first->loc, static_cast<ast::SymbolName *>(first.get())->name);
-            result->setPattern(TRY(PATTERN_OR_ANY()));
+            result->setChild(result->pattern, TRY(PATTERN_OR_ANY()));
             return result;
         }
 
@@ -717,7 +717,7 @@ namespace rckid::dolang {
                 return std::make_unique<ast::Wildcard>(ast::Kind::RestPattern, pop().loc);
             auto result = std::make_unique<ast::Arg>(POP(TokenKind::Identifier));
             POP(TokenKind::kwIs);
-            result->setPattern(TRY(PATTERN_OR_ANY()));
+            result->setChild(result->pattern, TRY(PATTERN_OR_ANY()));
             return result;
         }
 
@@ -760,7 +760,7 @@ namespace rckid::dolang {
          */
         static bool isQualifiedName(ast::Node * node) {
             while (node->kind == ast::Kind::Member)
-                node = static_cast<ast::Member *>(node)->object();
+                node = static_cast<ast::Member *>(node)->object.get();
             return node->kind == ast::Kind::SymbolName;
         }
 
@@ -815,7 +815,7 @@ namespace rckid::dolang {
          */
         unique_ptr<ast::ArrayType> ARRAY_TYPE() {
             auto result = std::make_unique<ast::ArrayType>(POP(TokenKind::opSquareOpen).loc);
-            result->setElementType(TRY(TYPE()));
+            result->setChild(result->elementType, TRY(TYPE()));
             POP(TokenKind::opSquareClose);
             return result;
         }
@@ -835,7 +835,7 @@ namespace rckid::dolang {
         unique_ptr<ast::Node> FIELD_TYPE() {
             auto result = std::make_unique<ast::FieldType>(POP(TokenKind::Identifier));
             if (condPop(TokenKind::opColon))
-                result->setType(TRY(TYPE()));
+                result->setChild(result->type, TRY(TYPE()));
             return result;
         }
 
@@ -843,9 +843,9 @@ namespace rckid::dolang {
          */
         unique_ptr<ast::MapType> MAP_TYPE() {
             auto result = std::make_unique<ast::MapType>(POP(TokenKind::opCurlyOpen).loc);
-            result->setKeyType(TRY(POD_TYPE()));
+            result->setChild(result->keyType, TRY(POD_TYPE()));
             POP(TokenKind::opArrow);
-            result->setValueType(TRY(TYPE()));
+            result->setChild(result->valueType, TRY(TYPE()));
             POP(TokenKind::opCurlyClose);
             return result;
         }
@@ -865,7 +865,7 @@ namespace rckid::dolang {
          */
         unique_ptr<ast::EventType> EVENT_TYPE() {
             auto result = std::make_unique<ast::EventType>(POP(TokenKind::kwEvent).loc);
-            result->setArgs(TRY(ARGS(&Parser::PARAM)));
+            result->setChild(result->args, TRY(ARGS(&Parser::PARAM)));
             return result;
         }
 
@@ -877,12 +877,21 @@ namespace rckid::dolang {
          */
         unique_ptr<ast::Node> EXPR() {
             auto result = TRY(OR_EXPR());
-            if (top() != TokenKind::kwIs)
-                return result;
-            auto isExpr = std::make_unique<ast::Is>(pop());
-            isExpr->setValue(std::move(result));
-            isExpr->setPattern(TRY(PATTERN()));
-            return isExpr;
+            if (top() == TokenKind::kwIs) {
+                auto isExpr = std::make_unique<ast::Is>(pop());
+                isExpr->setChild(isExpr->value, std::move(result));
+                isExpr->setChild(isExpr->pattern, TRY(PATTERN()));
+                result = std::move(isExpr);
+            }
+            if (top() == TokenKind::kwAs) {
+                auto asExpr = std::make_unique<ast::As>(pop());
+                asExpr->setChild(asExpr->source, std::move(result));
+                asExpr->setChild(asExpr->targetType, TRY(TYPE()));
+                if (condPop(TokenKind::kwOrElse))
+                    asExpr->setChild(asExpr->orElse, TRY(EXPR()));
+                result = std::move(asExpr);
+            }
+            return result;
         }
 
         /** OR_EXPR := AND_EXPR { 'or' AND_EXPR }
@@ -891,8 +900,8 @@ namespace rckid::dolang {
             auto result = TRY(AND_EXPR());
             while (top() == TokenKind::kwOr) {
                 auto orExpr = std::make_unique<ast::BinaryOp>(pop());
-                orExpr->setLeft(std::move(result));
-                orExpr->setRight(TRY(AND_EXPR()));
+                orExpr->setChild(orExpr->left, std::move(result));
+                orExpr->setChild(orExpr->right, TRY(AND_EXPR()));
                 result = std::move(orExpr);
             }
             return result;
@@ -904,8 +913,8 @@ namespace rckid::dolang {
             auto result = TRY(NOT_EXPR());
             while (top() == TokenKind::kwAnd) {
                 auto orExpr = std::make_unique<ast::BinaryOp>(pop());
-                orExpr->setLeft(std::move(result));
-                orExpr->setRight(TRY(NOT_EXPR()));
+                orExpr->setChild(orExpr->left, std::move(result));
+                orExpr->setChild(orExpr->right, TRY(NOT_EXPR()));
                 result = std::move(orExpr);
             }
             return result;
@@ -916,7 +925,7 @@ namespace rckid::dolang {
         unique_ptr<ast::Node> NOT_EXPR() {
             if (top() == TokenKind::kwNot) {
                 auto notExpr = std::make_unique<ast::UnaryOp>(pop());
-                notExpr->setOperand(TRY(NOT_EXPR()));
+                notExpr->setChild(notExpr->operand, TRY(NOT_EXPR()));
                 return notExpr;
             } else {
                 return EQ_EXPR();
@@ -933,15 +942,15 @@ namespace rckid::dolang {
             if (top() == TokenKind::opEquals) {
                 do {
                     auto eqExpr = std::make_unique<ast::BinaryOp>(pop());
-                    eqExpr->setLeft(std::move(result));
-                    eqExpr->setRight(TRY(CMP_EXPR()));
+                    eqExpr->setChild(eqExpr->left, std::move(result));
+                    eqExpr->setChild(eqExpr->right, TRY(CMP_EXPR()));
                     result = std::move(eqExpr);
                 } while (top() == TokenKind::opEquals);
             } else if (top() == TokenKind::opNotEquals) {
                 do {
                     auto neqExpr = std::make_unique<ast::BinaryOp>(pop());
-                    neqExpr->setLeft(std::move(result));
-                    neqExpr->setRight(TRY(CMP_EXPR()));
+                    neqExpr->setChild(neqExpr->left, std::move(result));
+                    neqExpr->setChild(neqExpr->right, TRY(CMP_EXPR()));
                     result = std::move(neqExpr);
                 } while (top() == TokenKind::opNotEquals);
             } else {
@@ -961,8 +970,8 @@ namespace rckid::dolang {
                     case TokenKind::opGreater:
                     case TokenKind::opGreaterEquals: {
                         auto cmpExpr = std::make_unique<ast::BinaryOp>(pop());
-                        cmpExpr->setLeft(std::move(result));
-                        cmpExpr->setRight(TRY(ADD_EXPR()));
+                        cmpExpr->setChild(cmpExpr->left, std::move(result));
+                        cmpExpr->setChild(cmpExpr->right, TRY(ADD_EXPR()));
                         result = std::move(cmpExpr);
                         break;
                     }
@@ -981,8 +990,8 @@ namespace rckid::dolang {
                     case TokenKind::opAdd:
                     case TokenKind::opSub: { 
                         auto cmpExpr = std::make_unique<ast::BinaryOp>(pop());
-                        cmpExpr->setLeft(std::move(result));
-                        cmpExpr->setRight(TRY(MUL_EXPR()));
+                        cmpExpr->setChild(cmpExpr->left, std::move(result));
+                        cmpExpr->setChild(cmpExpr->right, TRY(MUL_EXPR()));
                         result = std::move(cmpExpr);
                         break;
                     }
@@ -1001,8 +1010,8 @@ namespace rckid::dolang {
                     case TokenKind::opMul:
                     case TokenKind::opDiv: { 
                         auto cmpExpr = std::make_unique<ast::BinaryOp>(pop());
-                        cmpExpr->setLeft(std::move(result));
-                        cmpExpr->setRight(TRY(UNARY_EXPR()));
+                        cmpExpr->setChild(cmpExpr->left, std::move(result));
+                        cmpExpr->setChild(cmpExpr->right, TRY(UNARY_EXPR()));
                         result = std::move(cmpExpr);
                         break;
                     }
@@ -1019,7 +1028,7 @@ namespace rckid::dolang {
                 case TokenKind::opSub:
                 case TokenKind::kwClone: {
                     auto unaryExpr = std::make_unique<ast::UnaryOp>(pop());
-                    unaryExpr->setOperand(TRY(UNARY_EXPR()));
+                    unaryExpr->setChild(unaryExpr->operand, TRY(UNARY_EXPR()));
                     return unaryExpr;
                 }
                 default:
@@ -1045,7 +1054,7 @@ namespace rckid::dolang {
                     }
                     case TokenKind::opSquareOpen: {
                         auto index = std::make_unique<ast::BinaryOp>(pop(), std::move(result));
-                        index->setRight(TRY(EXPR()));
+                        index->setChild(index->right, TRY(EXPR()));
                         POP(TokenKind::opSquareClose);
                         result = std::move(index);
                         break;
@@ -1058,7 +1067,7 @@ namespace rckid::dolang {
                         // the EXPR eats everything so no need to recurse, we can return the orelse immediately
                         if (top() == TokenKind::kwOrElse) {
                             auto orelse = std::make_unique<ast::Orelse>(pop().loc, std::move(call));
-                            orelse->setValue(TRY(EXPR()));
+                            orelse->setChild(orelse->value, TRY(EXPR()));
                             return orelse;
                         } 
                         result = std::move(call);
@@ -1134,7 +1143,7 @@ namespace rckid::dolang {
                     return nullptr;
                 }
                 auto result = std::make_unique<ast::Paren>(l);
-                result->setValue(tuple->releaseChild(0));
+                result->setChild(result->value, tuple->releaseChild(0));
                 return result;
             }
             return tuple;
@@ -1156,7 +1165,7 @@ namespace rckid::dolang {
             }
             pop();
             auto result = std::make_unique<ast::NamedValue>(first->loc, static_cast<ast::SymbolName *>(first.get())->name);
-            result->setValue(TRY(EXPR()));
+            result->setChild(result->value, TRY(EXPR()));
             return result;
         }
 
@@ -1185,8 +1194,8 @@ namespace rckid::dolang {
         unique_ptr<ast::Node> MAP_ITEM() {
             auto key = TRY(EXPR());
             auto result = std::make_unique<ast::MapItem>(POP(TokenKind::opArrow).loc);
-            result->setKey(std::move(key));
-            result->setValue(TRY(EXPR()));
+            result->setChild(result->key, std::move(key));
+            result->setChild(result->value, TRY(EXPR()));
             return result;
         }
 
@@ -1198,7 +1207,7 @@ namespace rckid::dolang {
             auto result = std::make_unique<ast::Function>(POP(TokenKind::kwFun).loc);
             if (top() == TokenKind::opParOpen && ! SIGNATURE(result.get(), &Parser::LAMBDA_ARG))
                 return nullptr;
-            result->setBody(TRY(BLOCK()));
+            result->setChild(result->body, TRY(BLOCK()));
             return result;
         }
 

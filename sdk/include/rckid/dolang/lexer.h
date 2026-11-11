@@ -68,6 +68,7 @@ namespace rckid::dolang {
         opNot, // reserved, not used in language
 
         kwAnd, 
+        kwAs,
         kwBool, 
         kwBreak, 
         kwClone, 
@@ -522,6 +523,7 @@ namespace rckid::dolang {
 
         std::unordered_map<String, TokenKind> keywords_ = {
             {"and", TokenKind::kwAnd},
+            {"as", TokenKind::kwAs},
             {"bool", TokenKind::kwBool},
             {"break", TokenKind::kwBreak},
             {"clone", TokenKind::kwClone},
@@ -603,6 +605,7 @@ namespace rckid::dolang {
             case TokenKind::opGreaterEquals: w << ">="; break;
             case TokenKind::opNot: w << '!'; break;
             case TokenKind::kwAnd: w << "and"; break;
+            case TokenKind::kwAs: w << "as"; break;
             case TokenKind::kwBool: w << "bool"; break;
             case TokenKind::kwBreak: w << "break"; break;
             case TokenKind::kwClone: w << "clone"; break;

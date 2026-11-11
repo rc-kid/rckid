@@ -35,13 +35,13 @@ namespace rckid::dolang::ast {
     }
 
     void PrettyPrinter::signature(FunType const * node, uint32_t indent) {
-        if (node->args() != nullptr)
-            bracketed(node->args(), '(', ')', indent);
-        if (node->returnType() != nullptr) {
+        if (node->args != nullptr)
+            bracketed(node->args.get(), '(', ')', indent);
+        if (node->returnType != nullptr) {
             w_ << " -> ";
             if (node->optionalReturn())
                 w_ << "optional ";
-            visit(node->returnType(), indent);
+            visit(node->returnType.get(), indent);
         }
     }
 
@@ -146,13 +146,13 @@ namespace rckid::dolang::ast {
                         UNREACHABLE;
                 }
                 w_ << n->name.c_str();
-                if (n->type() != nullptr) {
+                if (n->type != nullptr) {
                     w_ << " : ";
-                    visit(n->type(), indent);
+                    visit(n->type.get(), indent);
                 }
-                if (n->value() != nullptr) {
+                if (n->value != nullptr) {
                     w_ << " = ";
-                    visit(n->value(), indent);
+                    visit(n->value.get(), indent);
                 }
                 break;
             }
@@ -168,8 +168,8 @@ namespace rckid::dolang::ast {
                 auto n = static_cast<Function const *>(node);
                 w_ << "fun";
                 signature(n, indent);
-                ASSERT(n->body() != nullptr);
-                visit(n->body(), indent);
+                ASSERT(n->body != nullptr);
+                visit(n->body.get(), indent);
                 break;
             }
             case Kind::NamedFunction: {
@@ -179,24 +179,24 @@ namespace rckid::dolang::ast {
                     w_ << n->className().c_str() << ".";
                 w_ << n->name().c_str();
                 signature(n, indent);
-                ASSERT(n->body() != nullptr);
-                visit(n->body(), indent);
+                ASSERT(n->body != nullptr);
+                visit(n->body.get(), indent);
                 break;
             }
             case Kind::Arg: {
                 auto n = static_cast<Arg const *>(node);
                 w_ << n->name().c_str();
-                if (n->type() != nullptr) {
+                if (n->type != nullptr) {
                     w_ << " : ";
-                    visit(n->type(), indent);
+                    visit(n->type.get(), indent);
                 }
-                if (n->value() != nullptr) {
+                if (n->value != nullptr) {
                     w_ << " = ";
-                    visit(n->value(), indent);
+                    visit(n->value.get(), indent);
                 }
-                if (n->pattern() != nullptr) {
+                if (n->pattern != nullptr) {
                     w_ << " is ";
-                    visit(n->pattern(), indent);
+                    visit(n->pattern.get(), indent);
                 }
                 break;
             }
@@ -206,14 +206,14 @@ namespace rckid::dolang::ast {
                 if (n->hasBase())
                     w_ << " extends " << n->base().c_str();
                 w_ << " = ";
-                bracketed(n->fields(), '(', ')', indent);
+                bracketed(n->fields.get(), '(', ')', indent);
                 break;
             }
             case Kind::EnumDecl: {
                 // the values have no brackets, the multi-line form is a block of values, one per line
                 auto n = static_cast<EnumDecl const *>(node);
                 w_ << "enum " << n->name().c_str() << " =";
-                List const * values = n->values();
+                List const * values = n->values.get();
                 if (values->multiLine) {
                     for (uint32_t i = 0, e = values->size(); i < e; ++i) {
                         newLine(indent + 2);
@@ -227,44 +227,44 @@ namespace rckid::dolang::ast {
             }
             case Kind::ArrayType:
                 w_ << "[";
-                visit(static_cast<ArrayType const *>(node)->elementType(), indent);
+                visit(static_cast<ArrayType const *>(node)->elementType.get(), indent);
                 w_ << "]";
                 break;
             case Kind::FieldType: {
                 auto n = static_cast<FieldType const *>(node);
                 w_ << n->name.c_str();
-                if (n->type() != nullptr) {
+                if (n->type != nullptr) {
                     w_ << " : ";
-                    visit(n->type(), indent);
+                    visit(n->type.get(), indent);
                 }
                 break;
             }
             case Kind::MapType: {
                 auto n = static_cast<MapType const *>(node);
                 w_ << "{";
-                visit(n->keyType(), indent);
+                visit(n->keyType.get(), indent);
                 w_ << " -> ";
-                visit(n->valueType(), indent);
+                visit(n->valueType.get(), indent);
                 w_ << "}";
                 break;
             }
             case Kind::Assign: {
                 auto n = static_cast<Assign const *>(node);
-                visit(n->left(), indent);
+                visit(n->left.get(), indent);
                 w_ << " " << n->op() << " ";
-                visit(n->right(), indent);
+                visit(n->right.get(), indent);
                 break;
             }
             case Kind::BinaryOp: {
                 auto n = static_cast<BinaryOp const *>(node);
-                visit(n->left(), indent);
+                visit(n->left.get(), indent);
                 if (n->op() == TokenKind::opSquareOpen) {
                     w_ << "[";
-                    visit(n->right(), indent);
+                    visit(n->right.get(), indent);
                     w_ << "]";
                 } else {
                     w_ << " " << n->op() << " ";
-                    visit(n->right(), indent);
+                    visit(n->right.get(), indent);
                 }
                 break;
             }
@@ -273,50 +273,61 @@ namespace rckid::dolang::ast {
                 w_ << n->op();
                 if (n->op() != TokenKind::opSub) // no space for minus sign
                     w_ << " ";
-                visit(n->operand(), indent);
+                visit(n->operand.get(), indent);
                 break;
             }
             case Kind::Member: {
                 auto n = static_cast<Member const *>(node);
-                visit(n->object(), indent);
+                visit(n->object.get(), indent);
                 w_ << "." << n->memberName().c_str();
                 break;
             }
             case Kind::Call: {
                 auto n = static_cast<Call const *>(node);
-                visit(n->callee(), indent);
+                visit(n->callee.get(), indent);
                 bracketed(n, '(', ')', indent);
                 break;
             }
             case Kind::NamedValue: {
                 auto n = static_cast<NamedValue const *>(node);
                 w_ << n->name().c_str() << " = ";
-                visit(n->value(), indent);
+                visit(n->value.get(), indent);
                 break;
             }
             case Kind::Orelse: {
                 auto n = static_cast<Orelse const *>(node);
-                visit(n->call(), indent);
+                visit(n->call.get(), indent);
                 w_ << " orelse ";
-                visit(n->value(), indent);
+                visit(n->value.get(), indent);
                 break;
             }
             case Kind::Paren:
                 w_ << "(";
-                visit(static_cast<Paren const *>(node)->value(), indent);
+                visit(static_cast<Paren const *>(node)->value.get(), indent);
                 w_ << ")";
                 break;
             case Kind::Is: {
                 auto n = static_cast<Is const *>(node);
-                visit(n->value(), indent);
+                visit(n->value.get(), indent);
                 w_ << " is ";
-                visit(n->pattern(), indent);
+                visit(n->pattern.get(), indent);
+                break;
+            }
+            case Kind::As: {
+                auto n = static_cast<As const *>(node);
+                visit(n->source.get(), indent);
+                w_ << " as ";
+                visit(n->targetType.get(), indent);
+                if (n->orElse != nullptr) {
+                    w_ << " orelse ";
+                    visit(n->orElse.get(), indent);
+                }
                 break;
             }
             case Kind::TypePattern: {
                 auto n = static_cast<TypePattern const *>(node);
-                visit(n->typeName(), indent);
-                visit(n->fields(), indent);
+                visit(n->typeName.get(), indent);
+                visit(n->fields.get(), indent);
                 break;
             }
             case Kind::AnyPattern:
@@ -327,9 +338,9 @@ namespace rckid::dolang::ast {
                 break;
             case Kind::MapItem: {
                 auto n = static_cast<MapItem const *>(node);
-                visit(n->key(), indent);
+                visit(n->key.get(), indent);
                 w_ << " -> ";
-                visit(n->value(), indent);
+                visit(n->value.get(), indent);
                 break;
             }
             case Kind::Break:
@@ -341,42 +352,42 @@ namespace rckid::dolang::ast {
             case Kind::Return: {
                 auto n = static_cast<Return const *>(node);
                 w_ << "return";
-                if (n->value() != nullptr) {
+                if (n->value != nullptr) {
                     w_ << " ";
-                    visit(n->value(), indent);
+                    visit(n->value.get(), indent);
                 }
                 break;
             }
             case Kind::If: {
                 auto n = static_cast<If const *>(node);
                 w_ << "if ";
-                visit(n->condition(), indent);
+                visit(n->condition.get(), indent);
                 w_ << " then";
-                visit(n->thenCase(), indent);
-                if (n->elseCase() != nullptr) {
+                visit(n->thenCase.get(), indent);
+                if (n->elseCase != nullptr) {
                     // else case is on a new line, indented same as the if
                     newLine(indent);
                     w_ << "else";
-                    visit(n->elseCase(), indent);
+                    visit(n->elseCase.get(), indent);
                 }
                 break;
             }
             case Kind::Match: {
                 auto n = static_cast<Match const *>(node);
                 w_ << "match ";
-                visit(n->value(), indent);
+                visit(n->value.get(), indent);
                 w_ << " when";
                 for (uint32_t i = 0, e = n->numCases(); i < e; ++i)
                     visit(n->caseAt(i), indent);
-                if (n->elseCase() != nullptr) {
+                if (n->elseCase != nullptr) {
                     // match statement has the else case on its own line, at the indentation of the cases, while the expression is all on a single line
-                    if (n->elseCase()->kind == Kind::Block) {
+                    if (n->elseCase->kind == Kind::Block) {
                         newLine(indent + 2);
                         w_ << "else";
-                        visit(n->elseCase(), indent + 2);
+                        visit(n->elseCase.get(), indent + 2);
                     } else {
                         w_ << " else ";
-                        visit(n->elseCase(), indent);
+                        visit(n->elseCase.get(), indent);
                     }
                 }
                 break;
@@ -384,26 +395,26 @@ namespace rckid::dolang::ast {
             case Kind::MatchCase: {
                 // case of the match statement is on its own line, indented from the match, while the expression is all on a single line
                 auto n = static_cast<MatchCase const *>(node);
-                if (n->body()->kind == Kind::Block) {
+                if (n->body->kind == Kind::Block) {
                     newLine(indent + 2);
                     w_ << "is ";
-                    visit(n->pattern(), indent);
+                    visit(n->pattern.get(), indent);
                     w_ << " then";
-                    visit(n->body(), indent + 2);
+                    visit(n->body.get(), indent + 2);
                 } else {
                     w_ << " is ";
-                    visit(n->pattern(), indent);
+                    visit(n->pattern.get(), indent);
                     w_ << " then ";
-                    visit(n->body(), indent);
+                    visit(n->body.get(), indent);
                 }
                 break;
             }
             case Kind::While: {
                 auto n = static_cast<While const *>(node);
                 w_ << "while ";
-                visit(n->condition(), indent);
+                visit(n->condition.get(), indent);
                 w_ << " do";
-                visit(n->body(), indent);
+                visit(n->body.get(), indent);
                 break;
             }
             case Kind::For: {
@@ -412,22 +423,22 @@ namespace rckid::dolang::ast {
                 if (n->iter2 != Symbol{})
                     w_ << ", " << n->iter2.c_str();
                 w_ << " in ";
-                visit(n->container(), indent);
-                if (n->step() != nullptr) {
+                visit(n->container.get(), indent);
+                if (n->step != nullptr) {
                     w_ << " step ";
-                    visit(n->step(), indent);
+                    visit(n->step.get(), indent);
                 }
                 w_ << " do";
-                visit(n->body(), indent);
+                visit(n->body.get(), indent);
                 break;
             }
             case Kind::Test:
                 w_ << "test ";
-                visit(static_cast<Test const *>(node)->value(), indent);
+                visit(static_cast<Test const *>(node)->value.get(), indent);
                 break;
             case Kind::Write:
                 w_ << "write ";
-                visit(static_cast<Write const *>(node)->value(), indent);
+                visit(static_cast<Write const *>(node)->value.get(), indent);
                 break;
             default:
                 UNREACHABLE;

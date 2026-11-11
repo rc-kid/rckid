@@ -65,6 +65,7 @@ namespace rckid::dolang {
         static void initialize() {
             clear();
             Symbol{"and"}; 
+            Symbol{"as"}; 
             Symbol{"bool"}; 
             Symbol{"break"}; 
             Symbol{"clone"}; 
