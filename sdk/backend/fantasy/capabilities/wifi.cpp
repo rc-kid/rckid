@@ -1,8 +1,8 @@
-#ifdef RCKID_CAPABILITY_WIFI
+#ifdef KIDDO_CAPABILITY_WIFI
 
 #include <curl/curl.h>
 
-#include <rckid/capabilities/wifi.h>
+#include <kiddo/capabilities/wifi.h>
 
 namespace {
 
@@ -15,7 +15,7 @@ namespace {
 
 } // namespace
 
-namespace rckid {
+namespace kiddo {
 
     class CurlConnection : public WiFi::Connection {
     public:
@@ -49,7 +49,7 @@ namespace rckid {
                 curl_easy_setopt(curl_, CURLOPT_FOLLOWLOCATION, 1L);
                 curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, curlWriteCallback);
                 curl_easy_setopt(curl_, CURLOPT_WRITEDATA, &response_);
-                curl_easy_setopt(curl_, CURLOPT_USERAGENT, "rckid-fantasy/1.0");
+                curl_easy_setopt(curl_, CURLOPT_USERAGENT, "kiddo-fantasy/1.0");
 
                 CURLcode const result = curl_easy_perform(curl_);
                 long httpCode = 0;
@@ -77,7 +77,7 @@ namespace rckid {
         int32_t status_ = IN_PROGRESS;
         CURL * curl_ = nullptr;
         
-    }; // rckid::CurlConnection
+    }; // kiddo::CurlConnection
 
     WiFi * instance_ = nullptr;
 
@@ -100,7 +100,7 @@ namespace rckid {
     }
 
     bool WiFi::scan(WiFi::ScanCallback callback) {
-        callback("RCKid_WiFi", -50, AuthMode::WPA2_AES_PSK);
+        callback("kidDo_WiFi", -50, AuthMode::WPA2_AES_PSK);
         return true;
     }
 
@@ -136,9 +136,9 @@ namespace rckid {
 
 #else
 
-#include <rckid/capabilities/wifi.h>
+#include <kiddo/capabilities/wifi.h>
 
-namespace rckid {
+namespace kiddo {
 
     WiFi * WiFi::instance() { return nullptr; }
 
@@ -161,6 +161,6 @@ namespace rckid {
         return 0; 
     }
 
-} // namespace rckid
+} // namespace kiddo
 
 #endif

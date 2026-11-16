@@ -4,11 +4,11 @@ cmake_minimum_required(VERSION 3.12)
 #
 # The unittests are only available when building for the FANTASY console backend. 
 # TODO does it have to be? 
-if (RCKID_BACKEND STREQUAL "FANTASY")
+if (KIDDO_BACKEND STREQUAL "FANTASY")
 
     add_executable(dolangc "dolangc.cpp")
-    link_with_librckid(dolangc)
+    link_with_libkiddo(dolangc)
 
 else()
-    message("Tests are only available in RCKID_BACKEND=FANTASY, skipping")
+    message("Tests are only available in KIDDO_BACKEND=FANTASY, skipping")
 endif()

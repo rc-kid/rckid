@@ -42,6 +42,6 @@
 
 #define EXPECT_CYCLES(cycles) EXPECT(gbc.elapsedCycles(), 16 + cycles)
 
-namespace rckid::gbcemu {
+namespace kiddo::gbcemu {
 
-} // namespace rckid::gbcemu
+} // namespace kiddo::gbcemu

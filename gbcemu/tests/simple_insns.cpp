@@ -1,6 +1,6 @@
 #include "gbctests.h"
 
-namespace rckid::gbcemu {
+namespace kiddo::gbcemu {
 
     TEST(gbcemu, simple_nop) {
         GBCEmu gbc{"", nullptr};

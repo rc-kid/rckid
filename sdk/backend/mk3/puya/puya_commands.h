@@ -1,12 +1,12 @@
 #pragma once
 
-#include <rckid/device.h>
+#include <kiddo/device.h>
 #include <platform/tinydate.h>
 #include <config.h>
 
 class KidDo;
 
-namespace rckid {
+namespace kiddo {
 
     namespace mkIV {
 
@@ -111,7 +111,7 @@ namespace rckid {
         uint8_t accelY_ = 0;
         uint8_t accelZ_ = 0;
 
-    } __attribute__((packed)); // rckid::DeviceState
+    } __attribute__((packed)); // kiddo::DeviceState
 
     /** Extension of device state with less frequently required/updated information. 
      */
@@ -133,7 +133,7 @@ namespace rckid {
         int16_t temp_ = 0;
 
     protected:
-    } __attribute__((packed)); // rckid::ExtendedState 
+    } __attribute__((packed)); // kiddo::ExtendedState 
 
     /** Transferrable state is the full device state held in the IO MCU RAM that can be transferred as a continuous block of data.
      
@@ -141,11 +141,11 @@ namespace rckid {
      */
     class TransferrableState : public ExtendedState {
     public:
-        uint32_t const version = RCKID_AVR_FIRMWARE_VERSION;
+        uint32_t const version = KIDDO_AVR_FIRMWARE_VERSION;
         bool debugUart = true;
         uint16_t bufferUsed = 0;
         uint8_t buffer[256];
-    } __attribute__((packed)); // rckid::TransferrableState
+    } __attribute__((packed)); // kiddo::TransferrableState
 
     /** Neopixel RGB Effect 
      
@@ -248,9 +248,9 @@ namespace rckid {
 
     }   // namespace mkIV
 
-} // namespace rckid
+} // namespace kiddo
 
-namespace rckid::cmd {
+namespace kiddo::cmd {
     #define COMMAND(MSG_ID, NAME, ...)                               \
         PACKED(class NAME  {                                         \
         public:                                                      \
@@ -277,4 +277,4 @@ namespace rckid::cmd {
         }
     }
 
-} // namespace rckid::cmd
+} // namespace kiddo::cmd

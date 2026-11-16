@@ -1,20 +1,20 @@
 #pragma once
 
-#include <rckid/app.h>
-#include <rckid/graphics/color.h>
-#include <rckid/graphics/png.h>
-#include <rckid/graphics/canvas.h>
-#include <rckid/ui/timer.h>
-#include <rckid/utils/interpolation.h>
-#include <rckid/ui/carousel.h>
-#include <rckid/assets/fonts/OpenDyslexic48.h>
-#include <rckid/assets/fonts/OpenDyslexic32.h>
-#include <rckid/assets/icons_64.h>
-#include <rckid/filesystem.h>
-#include <rckid/assets/images.h>
+#include <kiddo/app.h>
+#include <kiddo/graphics/color.h>
+#include <kiddo/graphics/png.h>
+#include <kiddo/graphics/canvas.h>
+#include <kiddo/ui/timer.h>
+#include <kiddo/utils/interpolation.h>
+#include <kiddo/ui/carousel.h>
+#include <kiddo/assets/fonts/OpenDyslexic48.h>
+#include <kiddo/assets/fonts/OpenDyslexic32.h>
+#include <kiddo/assets/icons_64.h>
+#include <kiddo/filesystem.h>
+#include <kiddo/assets/images.h>
 
 
-namespace rckid {
+namespace kiddo {
 
     /** A simple sliding puzzle game, silimar to FifteenPuzzle. 
      
@@ -385,4 +385,4 @@ namespace rckid {
         Carousel carousel_{assets::font::OpenDyslexic48::font};
     }; 
 
-} // namespace rckid
+} // namespace kiddo

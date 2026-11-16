@@ -1,13 +1,13 @@
 #pragma once 
 
-#include <rckid/app.h>
-#include <rckid/graphics/canvas.h>
-#include <rckid/ui/gauge.h>
-#include <rckid/assets/icons_64.h>
-#include <rckid/assets/fonts/OpenDyslexic48.h>
-#include <rckid/ui/header.h>
+#include <kiddo/app.h>
+#include <kiddo/graphics/canvas.h>
+#include <kiddo/ui/gauge.h>
+#include <kiddo/assets/icons_64.h>
+#include <kiddo/assets/fonts/OpenDyslexic48.h>
+#include <kiddo/ui/header.h>
 
-namespace rckid {
+namespace kiddo {
 
     class SettingsGauge : public GraphicsApp<Canvas<ColorRGB>> {
     public:
@@ -55,7 +55,7 @@ namespace rckid {
         char const * title_;
         int titleWidth_ = 0;
 
-    }; // rckid::SettingsGauge
+    }; // kiddo::SettingsGauge
 
     void setBrightness() {
         ArenaScope _{};
@@ -69,4 +69,4 @@ namespace rckid {
         SettingsGauge::run(0, 10, audioVolume(), 1, "volume", Bitmap<ColorRGB>::fromImage(PNG::fromBuffer(assets::icons_64::high_volume)), [](int value) { audioSetVolume(value); });
     }
 
-} // namespace rckid 
+} // namespace kiddo 

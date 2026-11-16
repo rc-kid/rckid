@@ -1,7 +1,7 @@
-#include <rckid/filesystem.h>
-#include <rckid/ui/style.h>
+#include <kiddo/filesystem.h>
+#include <kiddo/ui/style.h>
 
-namespace rckid::ui {
+namespace kiddo::ui {
 
     void Style::loadDefaultStyle() {
         auto f = fs::readFile(Style::DEFAULT_FILE);
@@ -54,4 +54,4 @@ namespace rckid::ui {
                 << ini::Field("color", keyboardRGBColor_);
     }
 
-} // namespace rckid::ui
+} // namespace kiddo::ui

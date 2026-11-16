@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.12)
 
-if (RCKID_BACKEND STREQUAL "FANTASY")
+if (KIDDO_BACKEND STREQUAL "FANTASY")
 
     function(add_utility util_name sources)
         add_executable(${util_name} "${sources}")
         target_include_directories(${util_name} PRIVATE "${CMAKE_SOURCE_DIR}/libs/raylib/src")
-        target_include_directories(${util_name} PRIVATE "${CMAKE_SOURCE_DIR}/lib/platform/rckid-fantasy")
+        target_include_directories(${util_name} PRIVATE "${CMAKE_SOURCE_DIR}/lib/platform/kiddo-fantasy")
 
         target_link_libraries(${util_name} raylib opus libhelix-mp3 FatFS littlefs)
     endfunction()
@@ -40,20 +40,20 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
 
 
         # images (logo, default background, etc)
-        COMMAND $<TARGET_FILE:binary-folder> images ${CMAKE_SOURCE_DIR}/sdk/include/assets/images.h --raw-path raw/images --namespace rckid::assets::images
+        COMMAND $<TARGET_FILE:binary-folder> images ${CMAKE_SOURCE_DIR}/sdk/include/assets/images.h --raw-path raw/images --namespace kiddo::assets::images
 
         # 64x64 icons (mostly for UI)
-        COMMAND $<TARGET_FILE:binary-folder> icons/icons_64 ${CMAKE_SOURCE_DIR}/sdk/include/assets/icons_64.h --raw-path raw/icons_64 --namespace rckid::assets::icons_64
+        COMMAND $<TARGET_FILE:binary-folder> icons/icons_64 ${CMAKE_SOURCE_DIR}/sdk/include/assets/icons_64.h --raw-path raw/icons_64 --namespace kiddo::assets::icons_64
         # 24x24 icons (mostly for UI)
-        COMMAND $<TARGET_FILE:binary-folder> icons/icons_24 ${CMAKE_SOURCE_DIR}/sdk/include/assets/icons_24.h --raw-path raw/icons_24 --namespace rckid::assets::icons_24
+        COMMAND $<TARGET_FILE:binary-folder> icons/icons_24 ${CMAKE_SOURCE_DIR}/sdk/include/assets/icons_24.h --raw-path raw/icons_24 --namespace kiddo::assets::icons_24
 
         # 16x16 icons (mostly for UI)
-        COMMAND $<TARGET_FILE:binary-folder> icons/icons_16 ${CMAKE_SOURCE_DIR}/sdk/include/assets/icons_16.h --raw-path raw/icons_16 --namespace rckid::assets::icons_16
+        COMMAND $<TARGET_FILE:binary-folder> icons/icons_16 ${CMAKE_SOURCE_DIR}/sdk/include/assets/icons_16.h --raw-path raw/icons_16 --namespace kiddo::assets::icons_16
 
 
         # per game assets - one file per game so that the games do not add their art to the shared SDK icon sets
-        COMMAND $<TARGET_FILE:binary-folder> games/crate_critters ${CMAKE_SOURCE_DIR}/sdk/include/assets/games/crate_critters.h --raw-path raw/crate_critters --namespace rckid::assets::games::crate_critters
-        COMMAND $<TARGET_FILE:binary-folder> games/space_attack ${CMAKE_SOURCE_DIR}/sdk/include/assets/games/space_attack.h --raw-path raw/space_attack --namespace rckid::assets::games::space_attack
+        COMMAND $<TARGET_FILE:binary-folder> games/crate_critters ${CMAKE_SOURCE_DIR}/sdk/include/assets/games/crate_critters.h --raw-path raw/crate_critters --namespace kiddo::assets::games::crate_critters
+        COMMAND $<TARGET_FILE:binary-folder> games/space_attack ${CMAKE_SOURCE_DIR}/sdk/include/assets/games/space_attack.h --raw-path raw/space_attack --namespace kiddo::assets::games::space_attack
 
         COMMAND $<TARGET_FILE:font-tile-generator> fonts/Iosevka.ttf ${CMAKE_SOURCE_DIR}/sdk/include/assets/Iosevka16Tiles.h 16 8 16
 
@@ -62,5 +62,5 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
     )
 
 else()
-    message("SDK utils are only available in RCKID_BACKEND=FANTASY, skipping")
+    message("SDK utils are only available in KIDDO_BACKEND=FANTASY, skipping")
 endif()

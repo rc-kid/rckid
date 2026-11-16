@@ -6,34 +6,34 @@ file(GLOB_RECURSE SRC
     "${CMAKE_SOURCE_DIR}/sdk/src/*.cpp"
     "capabilities/*.cpp"
 )
-add_library(librckid STATIC ${SRC})
-target_include_directories(librckid PRIVATE "${CMAKE_SOURCE_DIR}/lib/raylib/src")
+add_library(libkiddo STATIC ${SRC})
+target_include_directories(libkiddo PRIVATE "${CMAKE_SOURCE_DIR}/lib/raylib/src")
 if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
-    target_compile_definitions(librckid PUBLIC "RCKID_NO_RODATA_BOUNDARIES")
+    target_compile_definitions(libkiddo PUBLIC "KIDDO_NO_RODATA_BOUNDARIES")
 else()
     find_package(Threads REQUIRED)
     find_package(CURL REQUIRED)
-    target_link_libraries(librckid PUBLIC CURL::libcurl)
-    target_compile_definitions(librckid PUBLIC "RCKID_CAPABILITY_WIFI")
+    target_link_libraries(libkiddo PUBLIC CURL::libcurl)
+    target_compile_definitions(libkiddo PUBLIC "KIDDO_CAPABILITY_WIFI")
 endif()
 
-# add extra options as macros, especially the RCKID_DISPLAY_ZOOM, if defined
-if (DEFINED RCKID_DISPLAY_ZOOM)
-    target_compile_definitions(librckid PUBLIC "RCKID_DISPLAY_ZOOM=${RCKID_DISPLAY_ZOOM}")
+# add extra options as macros, especially the KIDDO_DISPLAY_ZOOM, if defined
+if (DEFINED KIDDO_DISPLAY_ZOOM)
+    target_compile_definitions(libkiddo PUBLIC "KIDDO_DISPLAY_ZOOM=${KIDDO_DISPLAY_ZOOM}")
 endif()
 
-# Sets given project to be used with RCKid SDK. 
+# Sets given project to be used with KidDo SDK. 
 #
 # This must be called for libraries as well as executables (cartridges). For cartridges, an extra argument specifying th cartridge type must be supplied. 
-function(link_with_librckid target_name)
+function(link_with_libkiddo target_name)
     get_target_property(target_type ${target_name} TYPE)
     # TODO remove this and make it a compile time decision
-    target_compile_definitions(${target_name} PRIVATE "RCKID_CUSTOM_FILESYSTEM")
-    target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/lib/platform/rckid-fantasy")
+    target_compile_definitions(${target_name} PRIVATE "KIDDO_CUSTOM_FILESYSTEM")
+    target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/lib/platform/kiddo-fantasy")
     target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/sdk/backend/fantasy")
     if (target_type STREQUAL "EXECUTABLE")
         target_link_libraries(${target_name} PRIVATE 
-            librckid
+            libkiddo
             raylib
             FatFS
             littlefs
@@ -59,6 +59,6 @@ function(link_with_librckid target_name)
     endif()
 endfunction()
 
-link_with_librckid(librckid) 
+link_with_libkiddo(libkiddo) 
 
 

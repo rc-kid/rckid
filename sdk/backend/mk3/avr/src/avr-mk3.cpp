@@ -1,6 +1,6 @@
-/** AVR Firmware for RCKid
+/** AVR Firmware for KidDo
  
-    This is the firmware for ATTiny3217 in RCKid mkIII, specifically SDK version 1.0 and up, hardware revision 3.2 (Beaver King). The main difference from the previous mkIII versions is simpler execution model with fewer commands and firmware logic as per the SDK 1.0 refactoring and dedicated UART TX for debugging that can be turned on or off. 
+    This is the firmware for ATTiny3217 in KidDo mkIII, specifically SDK version 1.0 and up, hardware revision 3.2 (Beaver King). The main difference from the previous mkIII versions is simpler execution model with fewer commands and firmware logic as per the SDK 1.0 refactoring and dedicated UART TX for debugging that can be turned on or off. 
 
  */
 #include <avr/sleep.h>
@@ -30,9 +30,9 @@ inline Writer debugWrite() {
 #define UNREACHABLE do { LOG("Unreachable: " << __LINE__); while (true) {}; } while (false)
 #define UNIMPLEMENTED do { LOG("Unimplemented: " << __LINE__); while (true) {} } while (false)
 
-using namespace rckid;
+using namespace kiddo;
 
-class RCKid {
+class KidDo {
 public:
 
     static void initialize() {
@@ -105,7 +105,7 @@ public:
 
         // initializes the AVR TX pin for serial debugging
         serial::setAlternateLocation(true);
-        serial::initializeTx(RCKID_AVR_SERIAL_SPEED);
+        serial::initializeTx(KIDDO_AVR_SERIAL_SPEED);
 
     }
 
@@ -164,7 +164,7 @@ public:
                 // reset the RGB effects
                 rgbSetEffectForAll(RGBEffect::Off());
                 // rumble to indicate power on
-                setRumblerEffect(RCKID_RUMBLER_EFFECT_POWER_ON);
+                setRumblerEffect(KIDDO_RUMBLER_EFFECT_POWER_ON);
                 // no wakeup in power on, obviously
                 clearPowerMode(POWER_MODE_WAKEUP);
                 break;
@@ -177,13 +177,13 @@ public:
             case POWER_MODE_DC:
                 criticalBattery_ = false;
                 if (! (powerMode_ & POWER_MODE_ON)) 
-                    rgbSetEffectForAll(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+                    rgbSetEffectForAll(RGBEffect::Breathe(platform::Color::Green().withBrightness(KIDDO_RGB_BRIGHTNESS), KIDDO_RGB_NOTIFICATION_SPEED));
                 break;
             // update the state to indicate charging, flash the RGBs if not powered on
             case POWER_MODE_CHARGING:
                 ts_.state.setCharging(true);
                 if (! (powerMode_ & POWER_MODE_ON)) 
-                    rgbSetEffectForAll(RGBEffect::Breathe(platform::Color::Orange().withBrightness(RCKID_RGB_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+                    rgbSetEffectForAll(RGBEffect::Breathe(platform::Color::Orange().withBrightness(KIDDO_RGB_BRIGHTNESS), KIDDO_RGB_NOTIFICATION_SPEED));
                 break;
             default:
                 // no action
@@ -207,9 +207,9 @@ public:
 
                 // if we are turning off, set notification according to other power modes
                 if (powerMode_ & POWER_MODE_CHARGING)
-                    rgbSetEffectForAll(RGBEffect::Breathe(platform::Color::Orange().withBrightness(RCKID_RGB_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+                    rgbSetEffectForAll(RGBEffect::Breathe(platform::Color::Orange().withBrightness(KIDDO_RGB_BRIGHTNESS), KIDDO_RGB_NOTIFICATION_SPEED));
                 else if (powerMode_ & POWER_MODE_DC)
-                    rgbSetEffectForAll(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+                    rgbSetEffectForAll(RGBEffect::Breathe(platform::Color::Green().withBrightness(KIDDO_RGB_BRIGHTNESS), KIDDO_RGB_NOTIFICATION_SPEED));
                 // reset the poweroff timeout
                 powerOffTimeout_ = 0;
                 // and reset the power off interrupt (it may not have been cleared by status read)
@@ -225,7 +225,7 @@ public:
             case POWER_MODE_CHARGING:
                 ts_.state.setCharging(false);
                 if (! (powerMode_ & POWER_MODE_ON)) 
-                    rgbSetEffectForAll(RGBEffect::Breathe(platform::Color::Green().withBrightness(RCKID_RGB_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+                    rgbSetEffectForAll(RGBEffect::Breathe(platform::Color::Green().withBrightness(KIDDO_RGB_BRIGHTNESS), KIDDO_RGB_NOTIFICATION_SPEED));
                 break;
             // no action otherwise
             default:
@@ -253,7 +253,7 @@ public:
             cpu::delayUs(100);
             gpio::setAsInput(AVR_PIN_I2C_SDA);
             // start the I2C slave as we will be contacted by the RP2350 shortly
-            i2c::initializeSlave(RCKID_AVR_I2C_ADDRESS);
+            i2c::initializeSlave(KIDDO_AVR_I2C_ADDRESS);
             TWI0.SCTRLA |= TWI_DIEN_bm | TWI_APIEN_bm | TWI_PIEN_bm;
             LOG("IOVDD on");
         } else {
@@ -280,22 +280,22 @@ public:
                 cpu::wdtReset();
                 switch (i) {
                     case 0:
-                        rgb_[0] = platform::Color::Cyan().withBrightness(RCKID_RGB_BRIGHTNESS);
-                        rgb_[1] = platform::Color::Cyan().withBrightness(RCKID_RGB_BRIGHTNESS);
-                        rgb_[2] = platform::Color::Cyan().withBrightness(RCKID_RGB_BRIGHTNESS);
-                        rgb_[3] = platform::Color::Cyan().withBrightness(RCKID_RGB_BRIGHTNESS);
+                        rgb_[0] = platform::Color::Cyan().withBrightness(KIDDO_RGB_BRIGHTNESS);
+                        rgb_[1] = platform::Color::Cyan().withBrightness(KIDDO_RGB_BRIGHTNESS);
+                        rgb_[2] = platform::Color::Cyan().withBrightness(KIDDO_RGB_BRIGHTNESS);
+                        rgb_[3] = platform::Color::Cyan().withBrightness(KIDDO_RGB_BRIGHTNESS);
                         break;
                     case 1:
-                        rgb_[RGB_LED_BTN_B] = platform::Color::Cyan().withBrightness(RCKID_RGB_BRIGHTNESS);
+                        rgb_[RGB_LED_BTN_B] = platform::Color::Cyan().withBrightness(KIDDO_RGB_BRIGHTNESS);
                         break;
                     case 2:
-                        rgb_[RGB_LED_BTN_A] = platform::Color::Cyan().withBrightness(RCKID_RGB_BRIGHTNESS);
+                        rgb_[RGB_LED_BTN_A] = platform::Color::Cyan().withBrightness(KIDDO_RGB_BRIGHTNESS);
                         break;
                     case 3:
-                        rgb_[RGB_LED_BTN_SELECT] = platform::Color::Cyan().withBrightness(RCKID_RGB_BRIGHTNESS);
+                        rgb_[RGB_LED_BTN_SELECT] = platform::Color::Cyan().withBrightness(KIDDO_RGB_BRIGHTNESS);
                         break;
                     default:
-                        rgb_[RGB_LED_BTN_START] = platform::Color::Cyan().withBrightness(RCKID_RGB_BRIGHTNESS);
+                        rgb_[RGB_LED_BTN_START] = platform::Color::Cyan().withBrightness(KIDDO_RGB_BRIGHTNESS);
                         break;
                 }
                 rgb_.update();
@@ -327,22 +327,22 @@ public:
                 cpu::wdtReset();
                 switch (i) {
                     case 0:
-                        rgb_[0] = platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS);
-                        rgb_[1] = platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS);
-                        rgb_[2] = platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS);
-                        rgb_[3] = platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS);
+                        rgb_[0] = platform::Color::Blue().withBrightness(KIDDO_RGB_BRIGHTNESS);
+                        rgb_[1] = platform::Color::Blue().withBrightness(KIDDO_RGB_BRIGHTNESS);
+                        rgb_[2] = platform::Color::Blue().withBrightness(KIDDO_RGB_BRIGHTNESS);
+                        rgb_[3] = platform::Color::Blue().withBrightness(KIDDO_RGB_BRIGHTNESS);
                         break;
                     case 1:
-                        rgb_[RGB_LED_BTN_B] = platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS);
+                        rgb_[RGB_LED_BTN_B] = platform::Color::Blue().withBrightness(KIDDO_RGB_BRIGHTNESS);
                         break;
                     case 2:
-                        rgb_[RGB_LED_BTN_A] = platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS);
+                        rgb_[RGB_LED_BTN_A] = platform::Color::Blue().withBrightness(KIDDO_RGB_BRIGHTNESS);
                         break;
                     case 3:
-                        rgb_[RGB_LED_BTN_SELECT] = platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS);
+                        rgb_[RGB_LED_BTN_SELECT] = platform::Color::Blue().withBrightness(KIDDO_RGB_BRIGHTNESS);
                         break;
                     default:
-                        rgb_[RGB_LED_BTN_START] = platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS);
+                        rgb_[RGB_LED_BTN_START] = platform::Color::Blue().withBrightness(KIDDO_RGB_BRIGHTNESS);
                         break;
                 }
                 rgb_.update();
@@ -353,7 +353,7 @@ public:
             // reset the QSPI_SS back to float
             gpio::outputFloat(AVR_PIN_QSPI_SS);
             // since we are in the bootloader mode now, indicate by breathing all keys in green
-            rgbSetEffectForAll(RGBEffect::Breathe(platform::Color::Blue().withBrightness(RCKID_RGB_BRIGHTNESS), 7));
+            rgbSetEffectForAll(RGBEffect::Breathe(platform::Color::Blue().withBrightness(KIDDO_RGB_BRIGHTNESS), 7));
         );
     }
 
@@ -361,8 +361,8 @@ public:
         LOG("Debug mode on");
         ts_.state.setDebugMode(true);
         if (isPowerModeOn()) {
-            setBacklightPWM(RCKID_DEFAULT_BRIGHTNESS);
-            rgbSetEffectForAll(RGBEffect::Breathe(platform::Color::Purple().withBrightness(RCKID_RGB_BRIGHTNESS), RCKID_RGB_NOTIFICATION_SPEED));
+            setBacklightPWM(KIDDO_DEFAULT_BRIGHTNESS);
+            rgbSetEffectForAll(RGBEffect::Breathe(platform::Color::Purple().withBrightness(KIDDO_RGB_BRIGHTNESS), KIDDO_RGB_NOTIFICATION_SPEED));
         }
     }
 
@@ -613,7 +613,7 @@ public:
                 break;
             case cmd::PowerOffAck::ID:
                 // reset the power off timeout to give the RP2350 more time to shut down gracefully before we cut the power
-                powerOffTimeout_ = RCKID_POWEROFF_TIMEOUT_TICKS;
+                powerOffTimeout_ = KIDDO_POWEROFF_TIMEOUT_TICKS;
                 break;
             case cmd::Sleep::ID:
                 UNIMPLEMENTED;
@@ -661,7 +661,7 @@ public:
                 break;
             case cmd::SetRGBEffect::ID: {
                 auto & c = cmd::SetRGBEffect::fromBuffer(i2cBuffer_);
-                if (c.ledIndex < RCKID_NUM_RGB_LEDS)
+                if (c.ledIndex < KIDDO_NUM_RGB_LEDS)
                     rgbSetEffect(c.ledIndex, c.effect);
                 else 
                     LOG("CMD: invalid led index " << c.ledIndex);
@@ -760,7 +760,7 @@ public:
         // enable the control group
         gpio::outputLow(AVR_PIN_BTN_CTRL);
         // reset home button long press
-        homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
+        homeBtnLongPress_ = KIDDO_HOME_BUTTON_LONG_PRESS_FPS;
     }
 
     static bool getDebouncedButtonValue(Btn btn) {
@@ -795,7 +795,7 @@ public:
                 ASSERT(false);
         }
         if (current != last)
-            debounceCounters_[static_cast<uint8_t>(btn)] = RCKID_BUTTON_DEBOUNCE_TICKS;
+            debounceCounters_[static_cast<uint8_t>(btn)] = KIDDO_BUTTON_DEBOUNCE_TICKS;
         return current;
     }
 
@@ -898,7 +898,7 @@ public:
 
     static void startHomeButtonLongPress() {
         LOG("Home long press start, pwr mode: " << powerMode_);
-        homeBtnLongPress_ = RCKID_HOME_BUTTON_LONG_PRESS_FPS;
+        homeBtnLongPress_ = KIDDO_HOME_BUTTON_LONG_PRESS_FPS;
     }
 
     static void checkHomeButtonLongPress() {
@@ -922,7 +922,7 @@ public:
             setPowerMode(POWER_MODE_ON);
         // otherwise, if we are in power on mode, long press means transition to power off, so here we simply set the power off interrupt and timeout. 
         } else if (isPowerModeOn()) {
-            powerOffTimeout_ = RCKID_POWEROFF_ACK_TIMEOUT_TICKS;
+            powerOffTimeout_ = KIDDO_POWEROFF_ACK_TIMEOUT_TICKS;
             ts_.state.setPowerOffInterrupt(true);
         }
     }
@@ -1000,10 +1000,10 @@ public:
                 ts_.state.setVcc(value);
                 // if we are below VCC threshold, clear the DC and VUSB power modes, which also forces the device to go to sleep unless other power mode is enabled
                 // in the below calls, it is ok to set & clear modes even if already in the expected state as the function bail out immediately
-                if (isPowerModeDC() && (value < RCKID_VUSB_THRESHOLD)) {
+                if (isPowerModeDC() && (value < KIDDO_VUSB_THRESHOLD)) {
                     clearPowerMode(POWER_MODE_CHARGING);
                     clearPowerMode(POWER_MODE_DC);
-                } else if (value > RCKID_VUSB_THRESHOLD) {
+                } else if (value > KIDDO_VUSB_THRESHOLD) {
                     setPowerMode(POWER_MODE_DC);
                     if (gpio::read(AVR_PIN_CHARGING) == 0) {
                         setPowerMode(POWER_MODE_CHARGING);
@@ -1012,9 +1012,9 @@ public:
                     }
                 }
                 // emergency shutdown if battery too low
-                if (value < RCKID_POWER_ON_THRESHOLD && (powerMode_ & POWER_MODE_ON)) {
+                if (value < KIDDO_POWER_ON_THRESHOLD && (powerMode_ & POWER_MODE_ON)) {
                     // TODO we might need a ring buffer for this to elliminate spurious shutdowns etc
-                    powerOffTimeout_ = RCKID_POWEROFF_ACK_TIMEOUT_TICKS;
+                    powerOffTimeout_ = KIDDO_POWEROFF_ACK_TIMEOUT_TICKS;
                     ts_.state.setPowerOffInterrupt(true);
                     // inform user the shutdown is because of critical battery level
                     criticalBattery();
@@ -1036,11 +1036,11 @@ public:
 
 
     static inline bool rgbOn_ = false;
-    static inline RGBEffect rgbEffect_[RCKID_NUM_RGB_LEDS];
-    static inline uint8_t rgbEffectTimeout_[RCKID_NUM_RGB_LEDS] = {0};
-    static inline platform::ColorStrip<RCKID_NUM_RGB_LEDS> rgbTarget_;
-    static inline platform::NeopixelStrip<RCKID_NUM_RGB_LEDS> rgb_{AVR_PIN_RGB};
-    static inline uint8_t rgbTicks_ = RCKID_RGB_TICKS_PER_SECOND; 
+    static inline RGBEffect rgbEffect_[KIDDO_NUM_RGB_LEDS];
+    static inline uint8_t rgbEffectTimeout_[KIDDO_NUM_RGB_LEDS] = {0};
+    static inline platform::ColorStrip<KIDDO_NUM_RGB_LEDS> rgbTarget_;
+    static inline platform::NeopixelStrip<KIDDO_NUM_RGB_LEDS> rgb_{AVR_PIN_RGB};
+    static inline uint8_t rgbTicks_ = KIDDO_RGB_TICKS_PER_SECOND; 
 
     static void rgbOn(bool value) {
         if (rgbOn_ == value)
@@ -1056,13 +1056,13 @@ public:
             gpio::outputFloat(AVR_PIN_5V_EN);
         }
         rgbOn_ = value;
-        rgbTicks_ = RCKID_RGB_TICKS_PER_SECOND;
+        rgbTicks_ = KIDDO_RGB_TICKS_PER_SECOND;
     }
 
     /** Clears the RGBs - disables effects and sets the current and target color to black for immediate switch to black color.
      */
     static void rgbClear() {
-        for (uint8_t i = 0; i < RCKID_NUM_RGB_LEDS; ++i) {
+        for (uint8_t i = 0; i < KIDDO_NUM_RGB_LEDS; ++i) {
             rgbEffect_[i] = RGBEffect::Off();
             rgb_[i] = platform::Color::Black();
             rgbTarget_[i] = platform::Color::Black();
@@ -1073,7 +1073,7 @@ public:
     }
 
     static void rgbSetEffectForAll(RGBEffect effect) {
-        for (uint8_t i = 0; i < RCKID_NUM_RGB_LEDS; ++i) {
+        for (uint8_t i = 0; i < KIDDO_NUM_RGB_LEDS; ++i) {
             rgbEffect_[i] = effect;
         }
         if (effect.active())
@@ -1081,7 +1081,7 @@ public:
     }
 
     static void rgbSetEffect(uint8_t led, RGBEffect effect) {
-        ASSERT(led < RCKID_NUM_RGB_LEDS);
+        ASSERT(led < KIDDO_NUM_RGB_LEDS);
         rgbEffect_[led] = effect;
         if (effect.active())
             rgbOn(true);
@@ -1097,8 +1097,8 @@ public:
             return;
         // if there has been second already, decrement effect durations
         if (--rgbTicks_ == 0) {
-            rgbTicks_ = RCKID_RGB_TICKS_PER_SECOND;
-            for (int i = 0; i < RCKID_NUM_RGB_LEDS; ++i) {
+            rgbTicks_ = KIDDO_RGB_TICKS_PER_SECOND;
+            for (int i = 0; i < KIDDO_NUM_RGB_LEDS; ++i) {
                 // see if the effect should end
                 if (rgbEffect_[i].duration > 0) {
                     if (--rgbEffect_[i].duration == 0) {
@@ -1109,7 +1109,7 @@ public:
         }
         // for all LEDs, move them towards their target at speed given by their effect
         bool turnOff = true;
-        for (int i = 0; i < RCKID_NUM_RGB_LEDS; ++i) {
+        for (int i = 0; i < KIDDO_NUM_RGB_LEDS; ++i) {
             if (rgbEffectTimeout_[i] > 0) {
                 --rgbEffectTimeout_[i];
                 turnOff = false;
@@ -1142,8 +1142,8 @@ public:
             cpu::delayMs(100);
             for (uint8_t i = 0; i < 3; ++i) {
                 cpu::wdtReset();
-                for (uint8_t j = 0; j < RCKID_NUM_RGB_LEDS; ++j)
-                    rgb_[j] = platform::Color::Red().withBrightness(RCKID_RGB_BRIGHTNESS);
+                for (uint8_t j = 0; j < KIDDO_NUM_RGB_LEDS; ++j)
+                    rgb_[j] = platform::Color::Red().withBrightness(KIDDO_RGB_BRIGHTNESS);
                 rgb_.update();
                 cpu::delayMs(100);
                 rgbClear();
@@ -1273,26 +1273,26 @@ public:
 
     static inline TransferrableState ts_;
 
-}; // RCKid
+}; // KidDo
 
 /** Interrupt for a second tick from the RTC. We need the interrupt routine so that the CPU can wake up and increment the real time clock and uptime. 
  */
 ISR(RTC_PIT_vect) {
     RTC.PITINTFLAGS = RTC_PI_bm; // clear the interrupt
-    RCKid::secondTick_ = true;
+    KidDo::secondTick_ = true;
 }
 
 /** RTC CNT interrupt which we use for overflow only for the system tick at ~5ms (200Hz).
  */
 ISR(RTC_CNT_vect) {
     RTC.INTFLAGS = RTC_OVF_bm; // clear the interrupt
-    RCKid::systemTick_ = true;
+    KidDo::systemTick_ = true;
 }
 
 /** I2C slave action.
  */
 ISR(TWI0_TWIS_vect) {
-    RCKid::i2cSlaveIRQHandler();    
+    KidDo::i2cSlaveIRQHandler();    
 }
 
 /** Accel pin ISR.
@@ -1302,7 +1302,7 @@ ISR(PORTB_PORT_vect) {
     VPORTB.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_ACCEL_INT));
     // only do stuff if we are transitioning from low to high
     if (gpio::read(AVR_PIN_ACCEL_INT))
-        RCKid::intRequests_ |= RCKid::ACCEL_INT_REQUEST;
+        KidDo::intRequests_ |= KidDo::ACCEL_INT_REQUEST;
 }
 
 /** ADC measurement done. The interrupt is necessary to ensure that the AVR wakes up from sleep.
@@ -1324,18 +1324,18 @@ ISR(PORTA_PORT_vect) {
         VPORTA.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_BTN_1));
         // only do stuff if we were tranistioning from high to low (button press)
         if (gpio::read(AVR_PIN_BTN_1) == false)
-            RCKid::intRequests_ |= RCKid::HOME_BTN_INT_REQUEST;
+            KidDo::intRequests_ |= KidDo::HOME_BTN_INT_REQUEST;
     }
     if (VPORTA.INTFLAGS & (1 << GPIO_PIN_INDEX(AVR_PIN_CHARGING))) {
         VPORTA.INTFLAGS = (1 << GPIO_PIN_INDEX(AVR_PIN_CHARGING));
-        RCKid::intRequests_ |= RCKid::CHARGING_INT_REQUEST;
+        KidDo::intRequests_ |= KidDo::CHARGING_INT_REQUEST;
     }
 }
 
-/** Initialization and main loop, simply calls to the RCKid's class init & loop functions. 
+/** Initialization and main loop, simply calls to the KidDo's class init & loop functions. 
  */
 int main() {
-    RCKid::initialize();
+    KidDo::initialize();
     while (true)
-        RCKid::loop();
+        KidDo::loop();
 }

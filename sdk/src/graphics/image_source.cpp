@@ -1,8 +1,8 @@
-#include <rckid/graphics/image_source.h>
-#include <rckid/graphics/image_decoder.h>
-#include <rckid/graphics/png.h>
+#include <kiddo/graphics/image_source.h>
+#include <kiddo/graphics/image_decoder.h>
+#include <kiddo/graphics/png.h>
 
-namespace rckid {
+namespace kiddo {
 
     unique_ptr<RandomReadStream> ImageSource::toStream() {
         if (empty())   
@@ -74,4 +74,4 @@ namespace rckid {
         return ImageType::Unknown;
     }
 
-} // namespace rckid
+} // namespace kiddo

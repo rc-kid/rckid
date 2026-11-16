@@ -1,10 +1,10 @@
 #include <platform/tests.h>
 
-#include <rckid/string.h>
-#include <rckid/graphics/color.h>
+#include <kiddo/string.h>
+#include <kiddo/graphics/color.h>
 
 TEST(color, toString) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     Color c = Color::RGB(123, 45, 67);
     String s = STR(c);
@@ -12,7 +12,7 @@ TEST(color, toString) {
 }
 
 TEST(color, blend) {
-    using namespace rckid;
+    using namespace kiddo;
     Color a = Color::RGB(0, 255, 0);
     Color b = Color::RGB(255, 0, 128);
     EXPECT(Color::blend(a, b, 0) == a);

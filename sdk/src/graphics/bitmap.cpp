@@ -1,7 +1,7 @@
-#include <rckid/graphics/image_decoder.h>
-#include <rckid/graphics/bitmap.h>
+#include <kiddo/graphics/image_decoder.h>
+#include <kiddo/graphics/bitmap.h>
 
-namespace rckid {
+namespace kiddo {
 
     Bitmap::Bitmap(ImageSource && src) {
         // if the source is empty, do nothing
@@ -12,4 +12,4 @@ namespace rckid {
             *this = decoder->decode();
     }
 
-} // namespace rckid
+} // namespace kiddo

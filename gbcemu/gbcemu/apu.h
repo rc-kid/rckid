@@ -1,8 +1,8 @@
 #pragma once
 
-#include <rckid/rckid.h>
+#include <kiddo/kiddo.h>
 
-namespace rckid::gbcemu {
+namespace kiddo::gbcemu {
 
     /** Implementation of the Audio Processing Unit (APU)
      
@@ -835,5 +835,5 @@ namespace rckid::gbcemu {
     }; // gbcemu::APU
 
 
-} // namespace rckid::gbcemu
+} // namespace kiddo::gbcemu
 

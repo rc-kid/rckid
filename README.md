@@ -1,12 +1,12 @@
-# RCKid mk3
+# kidDo mk3
 
-RCKid is an open‑source handheld console designed for young creators. It’s built to be the first piece of technology that feels truly personal to a child — not just a screen to consume, but a tool to imagine, build, and share. RCKid also supports kids in everyday tools like a clock, alarm, piggy bank, contacts, or music player. This balance of fun and function turns RCKid into a trusted companion, introducing kids to digital literacy, technology, and STEM skills in a way that grows with them. For more information, have a look at the [grand vision](VISION.md) 
+kidDo is an open‑source handheld console designed for young creators. It’s built to be the first piece of technology that feels truly personal to a child — not just a screen to consume, but a tool to imagine, build, and share. kidDo also supports kids in everyday tools like a clock, alarm, piggy bank, contacts, or music player. This balance of fun and function turns kidDo into a trusted companion, introducing kids to digital literacy, technology, and STEM skills in a way that grows with them. For more information, have a look at the [grand vision](VISION.md) 
 
-Starting at age 5, kids can design sprites, tiles, and music inside native games, learning problem‑solving naturally through play. As they grow, RCKid will provide more and more complex ways of control (visual blocks, scratch-like blocks, C++, Full C++ SDK). For more details see [development ladder](LADDER.md).
+Starting at age 5, kids can design sprites, tiles, and music inside native games, learning problem‑solving naturally through play. As they grow, kidDo will provide more and more complex ways of control (visual blocks, scratch-like blocks, C++, Full C++ SDK). For more details see [development ladder](LADDER.md).
 
-A defining feature is RCKid’s cartridge system — not just for games, but for extending hardware. Cartridges can add Wi‑Fi for messaging, radios for mesh networking, JACDAC peripherals, IR remotes, or even exposed pins for DIY tinkering. Each cartridge carries its own firmware, making creations tangible, shareable, and hackable.
+A defining feature is kidDo’s cartridge system — not just for games, but for extending hardware. Cartridges can add Wi‑Fi for messaging, radios for mesh networking, JACDAC peripherals, IR remotes, or even exposed pins for DIY tinkering. Each cartridge carries its own firmware, making creations tangible, shareable, and hackable.
 
-Powered by the RP2350 MCU (dual Cortex‑M33, 520KB RAM, PIO), RCKid combines raw performance with developer‑friendly design. It features a 2.8" IPS display at 60 FPS, stereo audio up to 48kHz, SD storage, RGB‑backlit controls, accelerometer, haptics, FM radio, and flexible power (USB‑C Li‑Ion or AAA batteries). Everything is built to be fun, approachable, and resilient.
+Powered by the RP2350 MCU (dual Cortex‑M33, 520KB RAM, PIO), kidDo combines raw performance with developer‑friendly design. It features a 2.8" IPS display at 60 FPS, stereo audio up to 48kHz, SD storage, RGB‑backlit controls, accelerometer, haptics, FM radio, and flexible power (USB‑C Li‑Ion or AAA batteries). Everything is built to be fun, approachable, and resilient.
 
 ## Technical Details
 
@@ -21,13 +21,13 @@ Powered by the RP2350 MCU (dual Cortex‑M33, 520KB RAM, PIO), RCKid combines ra
 - FM radio with RDS
 - 1300mAh LiIon rechargeable battery with USB-C charging, or 3x AAA batteries, both options should give around 10 hours of active time. 
 
-![RCKid mkIII](docs/photos/mkIII-front.jpeg "RCKid prototype")
+![kidDo mkIII](docs/photos/mkIII-front.jpeg "kidDo prototype")
 
 ## Development
 
 > The readme is mostly about setting the project up and understanding its development & internal structure. 
 
-RCKid supports different backends, including a fantasy backend that allows running RCKid cartridges virtually on the PC, and the mkIII backend that runs on the actual device. Each backend provides its own implementation of the hardware abstraction layer (defined in `sdk/include/rckid/hal.h`) as well as capabilities (see below).  The fantasy backend, also includes test target (`run-tests`) that runs unit tests for the SDK and selected cartridges. It emulates the hardware of the device, including the display & sound using raylib, SD card and LittleFS on the cartridge using dedicated iso files and the FatFS and LittleFS libraries, or native folders via virtual filesystem (where the filesystem API is implemented for normal files, bypassing the fs libraries altogether for convenience). The fantasy backend also supports emspcripten.
+kidDo supports different backends, including a fantasy backend that allows running kidDo cartridges virtually on the PC, and the mkIII backend that runs on the actual device. Each backend provides its own implementation of the hardware abstraction layer (defined in `sdk/include/kiddo/hal.h`) as well as capabilities (see below).  The fantasy backend, also includes test target (`run-tests`) that runs unit tests for the SDK and selected cartridges. It emulates the hardware of the device, including the display & sound using raylib, SD card and LittleFS on the cartridge using dedicated iso files and the FatFS and LittleFS libraries, or native folders via virtual filesystem (where the filesystem API is implemented for normal files, bypassing the fs libraries altogether for convenience). The fantasy backend also supports emspcripten.
 
 ## Project Structure
 
@@ -36,26 +36,26 @@ The project is organized into a few top level folders that branch into subfolder
 - `sdk` : the SDK code (common firmware for the device, backends, ATTiny MCU, etc.)
 - `sdk/assets` : asset files in their natural form (images, sounds, etc.)
 - `sdk/backend` : the supported backends (implementation of the hardware abstraction layer)
-- `sdk/backend/fantasy` : the fantasy backend for RCKid. This allows running RCKid cartridges virtually on the PC
+- `sdk/backend/fantasy` : the fantasy backend for kidDo. This allows running kidDo cartridges virtually on the PC
 - `sdk/backend/mk3` : the RP2350 and the device specific code
 - `sdk/backend/mk3/avr` : firmware for the ATTiny3217 MCU responsible for IO, power management, etc in mkIII
 - `sdk/backend/mk3/puya` : firmware for the PY32F030 MCU responsible for IO, power management, etc in mkIV
-- `sdk/include/rckid` : SDK headers to be included into cartridges (the SDK API). Some code in this folder, rest in subfolders
-- `sdk/include/rckid/apps` : applications for RCKid (pedometer, audio player, clock, etc.)
-- `sdk/include/rckid/audio` : audio recording / playback, codecs, etc.
-- `sdk/include/rckid/capabilities` : extra hardware capabilities (WiFi, pedometer, flashlight, etc.)
-- `sdk/include/rckid/game` : game engine with C++ and dynamic bindings for kids to create their own games
-- `sdk/include/rckid/graphics` : basic graphics utilities (colors & representation, bitmaps, fonts, etc.)
-- `sdk/include/rckid/ui` : simple UI widgets toolkit 
-- `sdk/include/assets` : assets for the rckid converted to constexpr arrays to be included with cartridges
+- `sdk/include/kiddo` : SDK headers to be included into cartridges (the SDK API). Some code in this folder, rest in subfolders
+- `sdk/include/kiddo/apps` : applications for kidDo (pedometer, audio player, clock, etc.)
+- `sdk/include/kiddo/audio` : audio recording / playback, codecs, etc.
+- `sdk/include/kiddo/capabilities` : extra hardware capabilities (WiFi, pedometer, flashlight, etc.)
+- `sdk/include/kiddo/game` : game engine with C++ and dynamic bindings for kids to create their own games
+- `sdk/include/kiddo/graphics` : basic graphics utilities (colors & representation, bitmaps, fonts, etc.)
+- `sdk/include/kiddo/ui` : simple UI widgets toolkit 
+- `sdk/include/assets` : assets for the kidDo converted to constexpr arrays to be included with cartridges
 - `sdk/src` : C++ implementation for the files in `sdk/include`, same structure internally
 - `sdk/test` : unit tests (see testing chapter below)
 - `lib` : contains 3rd party libraries that are copied / cloned as part of the SDK (including pico-sdk and raylib). Do not change code in here except for the platform below
 - `lib/platform` : custom headers for different platforms (desktop, rp2350, ATTiny3217, Arduino, ...) for basic HW features and cross-platform utilities
-- `cartridges` : cartridges for the RCkid
+- `cartridges` : cartridges for the kidDo
 - `cartridges/text` : cartridges specifically for test purposes
-- `gbcemu` : Gameboy emulator implementation for RCKid
-- `datasheets` contains copies of datasheets of the hardware used in RCKid
+- `gbcemu` : Gameboy emulator implementation for kidDo
+- `datasheets` contains copies of datasheets of the hardware used in kidDo
 - `hardware` contains hardware related files, such as schematics, PCB layouts and case drawings
 - `lego-remote` AVR firmware for a remote client to control lego bricks, at the moment just parked here from mkI
 
@@ -65,12 +65,12 @@ Non-code files:
 
 - `README.md` : basic intro the the repository, build instructions, etc.
 - `VISION.md` : the vision for the project, you can read this for context when discussing non-code, but necessary for the code itself
-- `LADDER.md` : the learning ladder for the project, which I am implementing in the `sdk/include/rckid/game` folder (from asset editor for youngest kids to visual editor to blocks to code DSL to full SDK)
+- `LADDER.md` : the learning ladder for the project, which I am implementing in the `sdk/include/kiddo/game` folder (from asset editor for youngest kids to visual editor to blocks to code DSL to full SDK)
 - `HARDWARE.md` : more details about the hardware design, useful forhardware related questions
 
 Code files:
 
-- `sdk/include/rckid/hal.h` : functions that *must* be implemented by each backend to support the basic features (display, power, sound, io, etc.)
+- `sdk/include/kiddo/hal.h` : functions that *must* be implemented by each backend to support the basic features (display, power, sound, io, etc.)
 - `sdk/include/memory.h` : own memory management including custom heap on the device and virtual custom heap in fantasy mode to track memory consumption accurately
 
 
@@ -85,21 +85,21 @@ Although there is technically nothing that should prevent building the software 
 
 The build builds all libraries and the creates the executables/uf2 images in the `cartridges` subfolder. `platformio` is used for the ATTiny3217 firmware, which is independent project and can be built using the CLI. Useful source of build information is also the `.vscode/tasks.json` file, which contains tasks for building different targets. It also contains upload targets, which copy the build artifacts to another machine from which they are flashed.
 
-RCKid uses `cmake` so the following builds the fantasy console & all cartridges on linux:
+kidDo uses `cmake` so the following builds the fantasy console & all cartridges on linux:
 
     mkdir -p build
     cd build
     cmake ..
     cmake --build . -j
 
-To build RCKid for the device (mk III in this example), do the following:
+To build kidDo for the device (mk III in this example), do the following:
 
     mkdir -p build-mk3
     cd build-mk3
-    cmake .. -DRCKID_BACKEND=MK3
+    cmake .. -DKIDDO_BACKEND=MK3
     cmake --build .
 
-Finally, to build RCkid for the web using the emscripten toolchain, you can do the following:
+Finally, to build kidDo for the web using the emscripten toolchain, you can do the following:
 
     source ./lib/emsdk/emsdk_env.sh
     mkdir -p build-wasm
@@ -115,15 +115,15 @@ This creates the demo app in `build-wasm/cartridges/demo`. To view it the artifa
 
 ### Build Arguments
 
-RCKid's build can be customized using various arguments, such as the `-DARCH` showed above to build for a particular architecture. This section lists other useful build arguments:
+kidDo's build can be customized using various arguments, such as the `-DARCH` showed above to build for a particular architecture. This section lists other useful build arguments:
 
-- `-DRCKID_WAIT_FOR_SERIAL` runs RCKid to the end of the initialize() function and then waits for a single byte to be sent on the USB-Serial. This is useful to ensure that a serial monitor on the pc is up & running before RCKid's firmware starts doing stuff so that it can be captured properly.
+- `-DKIDDO_WAIT_FOR_SERIAL` runs kidDo to the end of the initialize() function and then waits for a single byte to be sent on the USB-Serial. This is useful to ensure that a serial monitor on the pc is up & running before kidDo's firmware starts doing stuff so that it can be captured properly.
 
 ## SDK
 
-The SDK library is at the core of RCKid as it provides an abstraction layer over the console's hardware. Furthermore, it makes RCKid also a fantasy console by being able to run on a PC for most of the features. Therefore the SDK comes in two folder, `rckid` where the common interface resides, and `backends` where specific implementation for the various hardware versions and fantasy consoles is implemented. 
+The SDK library is at the core of kidDo as it provides an abstraction layer over the console's hardware. Furthermore, it makes kidDo also a fantasy console by being able to run on a PC for most of the features. Therefore the SDK comes in two folder, `kiddo` where the common interface resides, and `backends` where specific implementation for the various hardware versions and fantasy consoles is implemented. 
 
-> For now, fantasy console via raylib (Windows and Linux) and  RCKid mk3 (RP2350) are supported. There are plans for future platforms & variations. Note that the fantasy platform is mostly for debugging only.
+> For now, fantasy console via raylib (Windows and Linux) and  kidDo mk3 (RP2350) are supported. There are plans for future platforms & variations. Note that the fantasy platform is mostly for debugging only.
 
 ## Debugging on the Device
 
@@ -201,7 +201,7 @@ On WSL, `picocom` must be executed in `sudo` mode *and* before running, the USB 
     make -j4
     sudo make install
 
-Connect the SWD port for the RCKid (on devel-server the wires are, from top to bottom, looking from the back, from top to bottom):
+Connect the SWD port for the kidDo (on devel-server the wires are, from top to bottom, looking from the back, from top to bottom):
 
          | GND   |
     -----|-------|---------

@@ -4,11 +4,11 @@
 #include "tusb_config.h"
 #include "tusb.h"
 
-#include <rckid/rckid.h>
-#include <rckid/log.h>
-#include <rckid/apps/utils/data_sync.h>
+#include <kiddo/kiddo.h>
+#include <kiddo/log.h>
+#include <kiddo/apps/utils/data_sync.h>
 
-using namespace rckid;
+using namespace kiddo;
 
 /** \name USB Interface
     
@@ -84,8 +84,8 @@ char serial[2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1];
 char const * string_desc_arr [] =
 {
   (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
-  "RCKid",                       // 1: Manufacturer
-  "RCKidII",                     // 2: Product
+  "kidDo",                       // 1: Manufacturer
+  "kidDoII",                     // 2: Product
   serial,                        // 3: Serials, uses the flash ID
 };
 
@@ -96,12 +96,12 @@ static uint16_t _desc_str[32];
 extern "C" {
     void tud_mount_cb(void) {
         LOG(LL_INFO, "USB connected");
-        rckid::DataSync::connect();
+        kiddo::DataSync::connect();
     }
 
     void tud_umount_cb(void) {
         LOG(LL_INFO, "USB disconnected");
-        rckid::DataSync::disconnect();
+        kiddo::DataSync::disconnect();
     }
 
 }
@@ -186,7 +186,7 @@ extern "C" {
         In theory, we can have also the LittleFS that is mounted in the flash as a LUN here, but LittleFS is not easily understood by all operating systems, and the flash storage is not expected to be user accessible anyways. 
     */
     uint8_t tud_msc_get_maxlun_cb(void) {
-        return rckid::hal::fs::sdCapacityBlocks() > 0 ? 1 : 0; 
+        return kiddo::hal::fs::sdCapacityBlocks() > 0 ? 1 : 0; 
     }
 
     /** Invoked when received SCSI_CMD_INQUIRY
@@ -195,7 +195,7 @@ extern "C" {
     */
     void tud_msc_inquiry_cb([[maybe_unused]] uint8_t lun, uint8_t vendor_id[8], uint8_t product_id[16], uint8_t product_rev[4]) {
 
-        const char vid[] = "RCKidII";
+        const char vid[] = "kidDoII";
         const char pid[] = "SD";
         const char rev[] = "1.0";
 
@@ -206,10 +206,10 @@ extern "C" {
 
     /** Invoked when received Test Unit Ready command.
         
-        Return true allowing host to read/write this LUN e.g SD card inserted. Only returns true if the DataSync app is active, otherwise the disk is not ready as it may be used by RCKid device apps. 
+        Return true allowing host to read/write this LUN e.g SD card inserted. Only returns true if the DataSync app is active, otherwise the disk is not ready as it may be used by KidDo device apps. 
     */
     bool tud_msc_test_unit_ready_cb([[maybe_unused]] uint8_t lun) {
-        return rckid::DataSync::active();
+        return kiddo::DataSync::active();
     }
 
     /** Invoked when received SCSI_CMD_READ_CAPACITY_10 and SCSI_CMD_READ_FORMAT_CAPACITY to determine the disk size
@@ -217,7 +217,7 @@ extern "C" {
         Application update block count and block size. 
     */
     void tud_msc_capacity_cb([[maybe_unused]] uint8_t lun, uint32_t* block_count, uint16_t* block_size) {
-        *block_count = rckid::DataSync::partitionSize();
+        *block_count = kiddo::DataSync::partitionSize();
         *block_size  = 512;
     }
 
@@ -228,9 +228,9 @@ extern "C" {
     */
     bool tud_msc_start_stop_cb([[maybe_unused]] uint8_t lun, [[maybe_unused]] uint8_t power_condition, bool start, bool load_eject) {
         if (start)
-            rckid::DataSync::connect();
+            kiddo::DataSync::connect();
         if (load_eject)
-            rckid::DataSync::disconnect();
+            kiddo::DataSync::disconnect();
         return true;
     }
 
@@ -245,14 +245,14 @@ extern "C" {
     int32_t tud_msc_read10_cb([[maybe_unused]] uint8_t lun, uint32_t lba, uint32_t offset, void* buffer, uint32_t bufsize) {
         // out of disk
         lba += DataSync::partitionStart();
-        if (lba >= rckid::hal::fs::sdCapacityBlocks()) 
+        if (lba >= kiddo::hal::fs::sdCapacityBlocks()) 
             return -1;
         if (bufsize != 512)
-            FATAL_ERROR(rckid::error::HW_FAIL);
+            FATAL_ERROR(kiddo::error::HW_FAIL);
 
-        rckid::hal::fs::sdReadBlocks(lba, reinterpret_cast<uint8_t*>(buffer), 1);
-        if (rckid::DataSync::instance_ != nullptr)
-            ++rckid::DataSync::instance_->blocksRead_;
+        kiddo::hal::fs::sdReadBlocks(lba, reinterpret_cast<uint8_t*>(buffer), 1);
+        if (kiddo::DataSync::instance_ != nullptr)
+            ++kiddo::DataSync::instance_->blocksRead_;
         return (int32_t) bufsize;
     }
 
@@ -263,14 +263,14 @@ extern "C" {
     int32_t tud_msc_write10_cb([[maybe_unused]] uint8_t lun, uint32_t lba, uint32_t offset, uint8_t* buffer, uint32_t bufsize) {
         // out of disk
         lba += DataSync::partitionStart();
-        if (lba >= rckid::hal::fs::sdCapacityBlocks()) 
+        if (lba >= kiddo::hal::fs::sdCapacityBlocks()) 
             return -1;
         if (bufsize != 512)
-            FATAL_ERROR(rckid::error::HW_FAIL);
+            FATAL_ERROR(kiddo::error::HW_FAIL);
 
-        rckid::hal::fs::sdWriteBlocks(lba, buffer, 1);
-        if (rckid::DataSync::instance_ != nullptr)
-            ++rckid::DataSync::instance_->blocksWrite_;
+        kiddo::hal::fs::sdWriteBlocks(lba, buffer, 1);
+        if (kiddo::DataSync::instance_ != nullptr)
+            ++kiddo::DataSync::instance_->blocksWrite_;
 
         return (int32_t) bufsize;
     }

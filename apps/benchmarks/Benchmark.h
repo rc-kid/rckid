@@ -1,11 +1,11 @@
 #pragma once
 
 #include <platform/buffer.h>
-#include <rckid/app.h>
-#include <rckid/graphics/canvas.h>
-#include <rckid/audio/tone.h>
+#include <kiddo/app.h>
+#include <kiddo/graphics/canvas.h>
+#include <kiddo/audio/tone.h>
 
-namespace rckid {
+namespace kiddo {
 
     /** A simple benchmark template. 
      
@@ -51,6 +51,6 @@ namespace rckid {
 
         bool done_ = false;
 
-    }; // rckid::Benchmark
+    }; // kiddo::Benchmark
 
-} // namespace rckid
+} // namespace kiddo

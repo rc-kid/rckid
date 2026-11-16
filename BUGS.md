@@ -56,14 +56,14 @@ But we can't wait in interrupts! The only thing we can do is to somehow signal f
         Transaction & t = ring_[ri_];
         // determine if the cause for the interrupt was abort, in which case see if we can retry & backoff accordingly. If no more retries are available, signal an error and if callback was provided, call the callback with -1 bytes received 
         if (cause & I2C_TX_ABORT) {
-            if (attempts_++ >= RCKID_I2C_RETRIES) {
+            if (attempts_++ >= KIDDO_I2C_RETRIES) {
                 LOG(LL_ERROR, "Unable to perform transaction");
                 if (t.callback)
                     t.callback(TransactionError);
                 moveToNext();
             } else {
                 // to implement the backoff strategy, we must re-trigger outside of the interrupt handler. This is done by setting the retrigger time based current time and linear backoff. This is then checked in the onYield event. Because the retrigger check verifies the retrigger time not to be 0, make sure that if we accidentally landed on it move by 1us
-                retrigger_ = TimePoint::now() + attempts_ * RCKID_I2C_BACKOFF_US;
+                retrigger_ = TimePoint::now() + attempts_ * KIDDO_I2C_BACKOFF_US;
                 if (retrigger_ == 0)
                     retrigger_ = retrigger_ + 1;
             }

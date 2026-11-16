@@ -19,7 +19,7 @@ jobs:
       run: |
         mkdir -p build/debug
         cd build/debug
-        cmake ../.. -DRCKID_BACKEND=MK3
+        cmake ../.. -DKIDDO_BACKEND=MK3
     - name: build-debug
       run: |
         cd build/debug
@@ -28,7 +28,7 @@ jobs:
       run: |
         mkdir -p build/release
         cd build/release
-        cmake ../.. -DCMAKE_BUILD_TYPE=Release -DRCKID_BACKEND=MK3
+        cmake ../.. -DCMAKE_BUILD_TYPE=Release -DKIDDO_BACKEND=MK3
     - name: build-release
       run: |
         cd build/release

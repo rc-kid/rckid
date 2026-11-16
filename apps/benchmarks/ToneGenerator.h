@@ -2,7 +2,7 @@
 
 #include "benchmark.h"
 
-namespace rckid {
+namespace kiddo {
 
     class ToneGeneratorBenchmark {
     public:
@@ -34,4 +34,4 @@ namespace rckid {
     }; 
 
 
-} // namespace rckid 
+} // namespace kiddo 

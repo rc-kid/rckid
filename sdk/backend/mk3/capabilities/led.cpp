@@ -1,8 +1,8 @@
 #include <platform.h>
 
-#include <rckid/capabilities/led.h>
+#include <kiddo/capabilities/led.h>
 
-namespace rckid {
+namespace kiddo {
 
     namespace {
 
@@ -40,5 +40,5 @@ namespace rckid {
         }
     }
 
-} // namespace rckid
+} // namespace kiddo
 

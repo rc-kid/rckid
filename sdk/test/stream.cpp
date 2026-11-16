@@ -1,14 +1,14 @@
 #include <platform/tests.h>
 
-#include <rckid/stream.h>
+#include <kiddo/stream.h>
 
 namespace {
     uint8_t const foo[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
-} // namespace rckid
+} // namespace kiddo
 
 TEST(stream, memoryStream) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     MemoryStream s = MemoryStream::copyOf(foo, sizeof(foo));
     EXPECT(g_.usedDelta() == 16);

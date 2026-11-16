@@ -1,11 +1,11 @@
 #pragma once
 
-#include <rckid/app.h>
-#include <rckid/graphics/canvas.h>
+#include <kiddo/app.h>
+#include <kiddo/graphics/canvas.h>
 
-#include <rckid/ui/header.h>
+#include <kiddo/ui/header.h>
 
-namespace rckid {
+namespace kiddo {
 
     class StatusDisplay : public GraphicsApp<Canvas<ColorRGB>> {
     public:
@@ -26,21 +26,21 @@ namespace rckid {
             g_.fill();
 
             g_.text(0, 20) <<
-                (rckid::dcPower() ? "DC " : "   ") <<
-                (rckid::charging() ? "CHRG " : "     ") << 
-                (rckid::audioEnabled() ? "AUD " : "    ") << 
-                (rckid::audioHeadphones() ? "HP " : "   ") <<
-                (rckid::btnDown(Btn::Home) ? "Home " : "     ") << 
-                (rckid::btnDown(Btn::VolumeUp) ? "V+ " : "   ") << 
-                (rckid::btnDown(Btn::VolumeDown) ? "V- " : "   ") <<
-                (rckid::btnDown(Btn::Left) ? "L " : "  ") << 
-                (rckid::btnDown(Btn::Right) ? "R " : "  ") << 
-                (rckid::btnDown(Btn::Up) ? "U " : "  ") << 
-                (rckid::btnDown(Btn::Down) ? "D " : "  ") << 
-                (rckid::btnDown(Btn::A) ? "A " : "  ") << 
-                (rckid::btnDown(Btn::B) ? "B " : "  ") << 
-                (rckid::btnDown(Btn::Select) ? "Sel " : "    ") << 
-                (rckid::btnDown(Btn::Start) ? "Start " : "      ");
+                (kiddo::dcPower() ? "DC " : "   ") <<
+                (kiddo::charging() ? "CHRG " : "     ") << 
+                (kiddo::audioEnabled() ? "AUD " : "    ") << 
+                (kiddo::audioHeadphones() ? "HP " : "   ") <<
+                (kiddo::btnDown(Btn::Home) ? "Home " : "     ") << 
+                (kiddo::btnDown(Btn::VolumeUp) ? "V+ " : "   ") << 
+                (kiddo::btnDown(Btn::VolumeDown) ? "V- " : "   ") <<
+                (kiddo::btnDown(Btn::Left) ? "L " : "  ") << 
+                (kiddo::btnDown(Btn::Right) ? "R " : "  ") << 
+                (kiddo::btnDown(Btn::Up) ? "U " : "  ") << 
+                (kiddo::btnDown(Btn::Down) ? "D " : "  ") << 
+                (kiddo::btnDown(Btn::A) ? "A " : "  ") << 
+                (kiddo::btnDown(Btn::B) ? "B " : "  ") << 
+                (kiddo::btnDown(Btn::Select) ? "Sel " : "    ") << 
+                (kiddo::btnDown(Btn::Start) ? "Start " : "      ");
             g_.text(0, 40) << 
                 "\nVBatt:   " << vBatt() << 
                 "\nTempAvr: " << tempAvr() << 
@@ -61,7 +61,7 @@ namespace rckid {
         }
         
 
-    }; // rckid::StatusDisplay
+    }; // kiddo::StatusDisplay
 
 
-} // namespace rckid
+} // namespace kiddo

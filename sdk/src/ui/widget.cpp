@@ -1,10 +1,10 @@
-#include <rckid/app.h>
-#include <rckid/graphics/canvas.h>
-#include <rckid/ui/widget.h>
-#include <rckid/ui/animation.h>
-#include <rckid/ui/header.h>
+#include <kiddo/app.h>
+#include <kiddo/graphics/canvas.h>
+#include <kiddo/ui/widget.h>
+#include <kiddo/ui/animation.h>
+#include <kiddo/ui/header.h>
 
-namespace rckid::ui {
+namespace kiddo::ui {
 
     void Widget::cancelAnimations() {
         if (activeAnimations_ > 0)
@@ -93,4 +93,4 @@ namespace rckid::ui {
     }
 
 
-} // namespace rckid::ui
+} // namespace kiddo::ui

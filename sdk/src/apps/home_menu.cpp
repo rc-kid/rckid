@@ -1,9 +1,9 @@
-#include <rckid/apps/dialogs/slider_dialog.h>
-#include <rckid/apps/home_menu.h>
+#include <kiddo/apps/dialogs/slider_dialog.h>
+#include <kiddo/apps/home_menu.h>
 
 #include <assets/icons_64.h>
 
-namespace rckid {
+namespace kiddo {
 
     void HomeMenu::onLoopStart() {
         ui::App<ui::MenuItem::ActionEvent>::onLoopStart();
@@ -22,7 +22,7 @@ namespace rckid {
                     });
                 }).withPayload(ExecuteInMenu)
                 << ui::MenuItem("Power Off", assets::icons_64::power_off, []() {
-                    rckid::power::powerOff();
+                    kiddo::power::powerOff();
                 }).withPayload(ExecuteInMenu);
             if (app->parent() != nullptr)
                 (*menu)

@@ -20,7 +20,7 @@
 #include LFS_STRINGIZE(LFS_CONFIG)
 #else
 
-// RCKID: The macros don't play nicely with MSVC
+// KIDDO: The macros don't play nicely with MSVC
 #ifdef _MSC_VER
 #define LFS_NO_DEBUG
 #define LFS_NO_ERROR

@@ -2,11 +2,11 @@
 #include <platform/string_utils.h>
 #include "gamepak.h"
 
-#ifdef RCKID_BACKEND_FANTASY
+#ifdef KIDDO_BACKEND_FANTASY
 
 #include <system_malloc_guard.h>
 
-namespace rckid::gbcemu {
+namespace kiddo::gbcemu {
     FileGamePak::FileGamePak(String const & filename) {
         internal::memory::SystemMallocGuard g;
         try {

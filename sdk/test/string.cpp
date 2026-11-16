@@ -1,6 +1,6 @@
 #include <platform/tests.h>
 
-#include <rckid/string.h>
+#include <kiddo/string.h>
 
 namespace {
 
@@ -10,7 +10,7 @@ namespace {
 } // anonymous namespace
 
 TEST(string, fromLiteral) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     String s{foo};
     EXPECT(s.size() == 3);
@@ -20,7 +20,7 @@ TEST(string, fromLiteral) {
 }
 
 TEST(string, fromArray) {
-    using namespace rckid;
+    using namespace kiddo;
     char str[] = { 'h', 'e', 'l', 'l', 'o', '\0'};
     Heap::UseAndReserveGuard g_;
     String s{str};
@@ -30,7 +30,7 @@ TEST(string, fromArray) {
 }
 
 TEST(string, literalClone) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     String s1{foo};
     String s2 = s1;
@@ -43,7 +43,7 @@ TEST(string, literalClone) {
 }
 
 TEST(string, compare) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     String s1{foo};
     String s2 = s1;
@@ -63,7 +63,7 @@ TEST(string, compare) {
 }
 
 TEST(string, addition) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     String s1{foo};
     EXPECT(g_.usedDelta() == 0);
@@ -77,7 +77,7 @@ TEST(string, addition) {
 }
 
 TEST(string, empty) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     String s1;
     EXPECT(s1.size() == 0);
@@ -90,7 +90,7 @@ TEST(string, empty) {
 }
 
 TEST(string, startsWith) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     String s1{foo};
     EXPECT(s1.startsWith("foo"));
@@ -101,7 +101,7 @@ TEST(string, startsWith) {
 }
 
 TEST(string, endsWith) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     String s1{foo};
     EXPECT(s1.endsWith("foo"));
@@ -117,7 +117,7 @@ TEST(string, endsWith) {
 }
 
 TEST(string, substr) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     String s1{foo};
     String s2 = s1.substr(0, 2);
@@ -132,7 +132,7 @@ TEST(string, substr) {
 }
 
 TEST(string, insertAt) {
-    using namespace rckid;
+    using namespace kiddo;
     String s1{"fobar"};
     EXPECT(s1.insertAt(0, 'x') == "xfobar");
     EXPECT(s1.insertAt(1, 'x') == "fxobar");
@@ -142,7 +142,7 @@ TEST(string, insertAt) {
 }
 
 TEST(string, reader) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     String s1{foo};
     auto r = s1.reader(1);
@@ -154,7 +154,7 @@ TEST(string, reader) {
 }
 
 TEST(string, builder) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     String s = STR("foo " << 42);
     EXPECT(s == "foo 42");
@@ -162,7 +162,7 @@ TEST(string, builder) {
 
 
 TEST(string, replace) {
-    using namespace rckid;
+    using namespace kiddo;
     EXPECT(String{"hello world"}.replace("o", "0") == "hell0 w0rld");
     EXPECT(String{"aaa"}.replace("a", "bb") == "bbbbbb");
     EXPECT(String{"foobarfoo"}.replace("foo", "") == "bar");

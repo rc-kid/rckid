@@ -1,8 +1,8 @@
 #include <platform/tests.h>
 
-#include <rckid/memory.h>
+#include <kiddo/memory.h>
 
-namespace rckid::hal::device {
+namespace kiddo::hal::device {
     void initializeNoWindow();
 }
 
@@ -11,6 +11,6 @@ TEST(tests, AtLeastOneTestWorks) {
 }
 
 int main(int argc, char * argv[]) {
-    rckid::hal::device::initializeNoWindow();
+    kiddo::hal::device::initializeNoWindow();
     return Test::RunAll(argc, argv);
 }    

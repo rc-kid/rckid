@@ -20,7 +20,7 @@
 
 % c-sdk {  
 
-#include "rckid/rckid.h"
+#include "kiddo/kiddo.h"
 
 inline void ST7789_rgb16_program_init(PIO pio, uint sm, uint offset, uint wrPin, uint dataPin) {
     // claim the resources required for the continuous mode
@@ -50,7 +50,7 @@ inline void ST7789_rgb16_program_init(PIO pio, uint sm, uint offset, uint wrPin,
     // enable autopull
     sm_config_set_out_shift(&c, false, true, 16);
     pio_sm_init(pio, sm, offset, &c);
-    pio_sm_set_clock_speed(pio, sm, RCKID_ST7789_SPEED * 4);
+    pio_sm_set_clock_speed(pio, sm, KIDDO_ST7789_SPEED * 4);
 }
 
 %}

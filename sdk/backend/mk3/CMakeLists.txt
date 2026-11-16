@@ -1,5 +1,5 @@
 # Set general compiler options, C++ standard and warning levels
-message("RCKID: mk3 backend selected (RP2350)")
+message("KIDDO: mk3 backend selected (RP2350)")
 
 # The PY32F030 firmware uses a different CPU (cortex-m0+) and toolchain, so it is built as a separate CMake project
 include(ExternalProject)
@@ -19,21 +19,21 @@ file(GLOB_RECURSE SRC
     "usb/*.cpp"
     "sd/*.cpp"
 )
-add_library(librckid STATIC ${SRC})
+add_library(libkiddo STATIC ${SRC})
 
-pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/screen/ST7789_rgb16.pio)
-pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/audio/i2s_out16.pio)
-pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/audio/i2s_in16.pio)
-pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/audio/i2s_mclk.pio)
-pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/sd/sd_spi.pio)
+pico_generate_pio_header(libkiddo ${CMAKE_CURRENT_SOURCE_DIR}/screen/ST7789_rgb16.pio)
+pico_generate_pio_header(libkiddo ${CMAKE_CURRENT_SOURCE_DIR}/audio/i2s_out16.pio)
+pico_generate_pio_header(libkiddo ${CMAKE_CURRENT_SOURCE_DIR}/audio/i2s_in16.pio)
+pico_generate_pio_header(libkiddo ${CMAKE_CURRENT_SOURCE_DIR}/audio/i2s_mclk.pio)
+pico_generate_pio_header(libkiddo ${CMAKE_CURRENT_SOURCE_DIR}/sd/sd_spi.pio)
 # JACDAC SWS implementation in pio
-pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/jacdac/sws_tx.pio)
-pico_generate_pio_header(librckid ${CMAKE_CURRENT_SOURCE_DIR}/jacdac/sws_rx.pio)
+pico_generate_pio_header(libkiddo ${CMAKE_CURRENT_SOURCE_DIR}/jacdac/sws_tx.pio)
+pico_generate_pio_header(libkiddo ${CMAKE_CURRENT_SOURCE_DIR}/jacdac/sws_rx.pio)
 
-# Sets given project to be used with RCKid SDK. 
+# Sets given project to be used with KidDo SDK. 
 #
 # This must be called for libraries as well as executables (cartridges). 
-function(link_with_librckid target_name)
+function(link_with_libkiddo target_name)
     get_target_property(target_type ${target_name} TYPE)
     target_compile_options(${target_name} PRIVATE "-DPICO_XOSC_STARTUP_DELAY_MULTIPLIER=128")
     target_include_directories(${target_name} PRIVATE "${CMAKE_SOURCE_DIR}/lib/platform/rp2350")
@@ -43,7 +43,7 @@ function(link_with_librckid target_name)
     if (target_type STREQUAL "EXECUTABLE")
         pico_add_extra_outputs(${target_name})
         pico_set_linker_script(${target_name} ${CMAKE_SOURCE_DIR}/sdk/backend/mk3/memmap.ld)
-        target_link_libraries(${target_name} PRIVATE librckid)
+        target_link_libraries(${target_name} PRIVATE libkiddo)
         #set_property(TARGET ${target_name} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
     endif()
 
@@ -75,10 +75,10 @@ function(link_with_librckid target_name)
     )
 endfunction()
 
-link_with_librckid(librckid) 
+link_with_libkiddo(libkiddo) 
 
-# swap rckid's malloc and free implementations for the default ones
-pico_wrap_function(librckid malloc)
-pico_wrap_function(librckid calloc)
-pico_wrap_function(librckid realloc)
-pico_wrap_function(librckid free)
+# swap kiddo's malloc and free implementations for the default ones
+pico_wrap_function(libkiddo malloc)
+pico_wrap_function(libkiddo calloc)
+pico_wrap_function(libkiddo realloc)
+pico_wrap_function(libkiddo free)

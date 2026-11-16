@@ -17,7 +17,7 @@ int main(int argc, char const * argv[]) {
     Args::Arg<std::string> outputFile{""};
     Args::Arg<unsigned> fontSize{16};
     Args::Arg<std::string> glyphs{"glyphs", ""};
-    Args::Arg<std::string> ns{"namespace", "rckid::assets"};
+    Args::Arg<std::string> ns{"namespace", "kiddo::assets"};
     Args::parse(argc, argv, { inputFile, outputFile, fontSize, glyphs, ns});
     // get the glyphs 
     Glyphs fontGlyphs = glyphs.isDefault() ? getDefaultGlyphs() :  loadGlyphIndices(glyphs.value());
@@ -28,7 +28,7 @@ int main(int argc, char const * argv[]) {
     if (!ofile.good())
         throw std::runtime_error(STR("Unable to open output file " << outputFile.value()));
     generateAssetsFileHeader(argc, argv, ofile);
-    ofile << "#include <rckid/graphics/font.h>" << std::endl<< std::endl;
+    ofile << "#include <kiddo/graphics/font.h>" << std::endl<< std::endl;
     std::string indent = "";
     if (! ns.value().empty()) {
         ofile << "namespace " << ns.value() << " {" << std::endl << std::endl;
@@ -72,7 +72,7 @@ int main(int argc, char const * argv[]) {
     ofile << pixelData.str() << std::endl;
     ofile << indent << "    }; // " << className << "::pixels" << std::endl;
     ofile << indent << "}; // class " << ns.value() << "::" << className << std::endl << std::endl;
-    ofile << indent << "inline constexpr rckid::FontData const " << className << " = {"  << std::endl;
+    ofile << indent << "inline constexpr kiddo::FontData const " << className << " = {"  << std::endl;
     ofile << indent << "    " << className << "FontData::size," << std::endl;
     ofile << indent << "    " << fontGlyphs.size() << "," << std::endl;
     ofile << indent << "    " << className << "FontData::glyphs," << std::endl;

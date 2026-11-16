@@ -10,9 +10,9 @@
 
 > A cartridge that can be used for various digital functions. Should support a simple logic analyzer (at least 4 bits), should also be able to communicate explicitly with devices via UART, SPI, I2C, etc. Should be able to pass through the UARTs into CDC USB device. The inputs would be 5V tolerant, but output will be 3v3.
 
-# RCKid Development Cartridge
+# kidDo Development Cartridge
 
-> A special cartridge that will have extra PCB on it that would allow it to connect to the debug port on another rckid. It could then be used as UPDI programmer, serial reader for the AVR and RP2350 (or passthrough for USB) and SWD debugger via USB. The connector can be on cable and we can have this as a simple GPIO out cartridge and special board with the updi stuff on it. 
+> A special cartridge that will have extra PCB on it that would allow it to connect to the debug port on another kidDo. It could then be used as UPDI programmer, serial reader for the AVR and RP2350 (or passthrough for USB) and SWD debugger via USB. The connector can be on cable and we can have this as a simple GPIO out cartridge and special board with the updi stuff on it. 
 
 # WiFi & BT
 

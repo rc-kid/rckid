@@ -50,7 +50,7 @@ int main(int argc, char const * argv[]) {
     Args::Arg<unsigned> tileWidth{16};
     Args::Arg<unsigned> tileHeight{16};
     Args::Arg<std::string> glyphs{"glyphs", ""};
-    Args::Arg<std::string> ns{"namespace", "rckid::assets"};
+    Args::Arg<std::string> ns{"namespace", "kiddo::assets"};
     Args::Arg<unsigned> bpp{"bpp", 4};
     Args::parse(argc, argv, { inputFile, outputFile, fontSize, tileWidth, tileHeight, glyphs, ns, bpp});
     // get the glyphs 
@@ -61,7 +61,7 @@ int main(int argc, char const * argv[]) {
     if (!ofile.good())
         throw std::runtime_error(STR("Unable to open output file " << outputFile.value()));
     generateAssetsFileHeader(argc, argv, ofile);
-    ofile << "#include <rckid/graphics/tile.h>" << std::endl<< std::endl;
+    ofile << "#include <kiddo/graphics/tile.h>" << std::endl<< std::endl;
     std::string indent = "";
     if (! ns.value().empty()) {
         ofile << "namespace " << ns.value() << " {" << std::endl << std::endl;

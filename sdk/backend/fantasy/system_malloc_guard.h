@@ -1,8 +1,8 @@
 #pragma once
 
-#include <rckid/error.h>
+#include <kiddo/error.h>
 
-namespace rckid::internal::memory {
+namespace kiddo::internal::memory {
 
     extern uint32_t useSystemMalloc;
 

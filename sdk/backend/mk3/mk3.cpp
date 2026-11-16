@@ -1,5 +1,5 @@
 
-#ifndef RCKID_BACKEND_MK3
+#ifndef KIDDO_BACKEND_MK3
 #error "You are building fantasy (RayLib) backend without the indicator macro"
 #endif
 
@@ -21,13 +21,13 @@
 #include <platform/peripherals/lsm6dsv.h>
 #include <platform/peripherals/ltr390uv.h>
 
-#include <rckid/hal.h>
-#include <rckid/rckid.h>
-#include <rckid/error.h>
-#include <rckid/memory.h>
-#include <rckid/graphics/color.h>
+#include <kiddo/hal.h>
+#include <kiddo/kiddo.h>
+#include <kiddo/error.h>
+#include <kiddo/memory.h>
+#include <kiddo/graphics/color.h>
 
-#include <rckid/apps/splashscreen.h>
+#include <kiddo/apps/splashscreen.h>
 
 #include "i2c.h"
 #include "tusb_config.h"
@@ -41,11 +41,11 @@
 
 #include "avr/src/avr-commands.h"
 
-namespace rckid::fs {
+namespace kiddo::fs {
     void initializeFilesystem();
 }
 
-namespace rckid::internal {
+namespace kiddo::internal {
 
     namespace device {
         // set to true once we have debugging cpability (otherwise if there were debugging prints in static initializations, they crash the device)
@@ -69,10 +69,10 @@ namespace rckid::internal {
         void initialize() {
             // read the full state first
             TransferrableState ts;
-            int n = i2c_read_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, (uint8_t *) & ts, TS_SIZE, false);
+            int n = i2c_read_blocking(i2c0, KIDDO_AVR_I2C_ADDRESS, (uint8_t *) & ts, TS_SIZE, false);
             if (n != TS_SIZE)
                 FATAL_ERROR("AVR READ", n);
-            if (ts.version != RCKID_AVR_FIRMWARE_VERSION)
+            if (ts.version != KIDDO_AVR_FIRMWARE_VERSION)
                 FATAL_ERROR("AVR VERSION", ts.version);
             // the data received is correct, initialize own structures
             state = ts.state;
@@ -84,9 +84,9 @@ namespace rckid::internal {
             
             // initialize I2C devices
             LOG(LL_INFO, "Detecting I2C devices...");
-            LOG(LL_INFO, "  AVR (0x43):        " << (::i2c::isPresent(RCKID_AVR_I2C_ADDRESS) ? "ok" : "not found"));
+            LOG(LL_INFO, "  AVR (0x43):        " << (::i2c::isPresent(KIDDO_AVR_I2C_ADDRESS) ? "ok" : "not found"));
             LOG(LL_INFO, "  LSM6DSV (0x6a):    " << (::i2c::isPresent(0x6a) ? "ok" : "not found"));
-            LOG(LL_INFO, "  NAU88C22YG (0x1a): " << (::i2c::isPresent(RCKID_AUDIO_CODEC_I2C_ADDRESS) ? "ok" : "not found"));
+            LOG(LL_INFO, "  NAU88C22YG (0x1a): " << (::i2c::isPresent(KIDDO_AUDIO_CODEC_I2C_ADDRESS) ? "ok" : "not found"));
             LOG(LL_INFO, "  LTR390UV (0x53):   " << (::i2c::isPresent(0x53) ? "ok" : "not found"));
 
             // initialize the accelerometer. This is more complex as we only want to initialize the accelerometer when not initialized already as the initialization also resets the pedometer count
@@ -129,7 +129,7 @@ namespace rckid::internal {
             accelState.x *= -1;
         }
 
-    } // namespace rckid::internal::io
+    } // namespace kiddo::internal::io
 
     /** Display Rendering
      
@@ -149,7 +149,7 @@ namespace rckid::internal {
 
         void enterCommandMode() {
             if (pixelsToWrite > 0) {
-                ASSERT(pio_sm_is_enabled(RCKID_ST7789_PIO, sm));
+                ASSERT(pio_sm_is_enabled(KIDDO_ST7789_PIO, sm));
                 // drop any ongoing transfer, this is fine as mostly 
                 {
                     cpu::DisableInterruptsGuard g_;
@@ -163,14 +163,14 @@ namespace rckid::internal {
                 backBuffer = nullptr;
                 backBufferSize = 0;
             }
-            pio_sm_set_enabled(RCKID_ST7789_PIO, sm, false);
+            pio_sm_set_enabled(KIDDO_ST7789_PIO, sm, false);
             // initialize bitbanging driver and exit the RAMWR command
             ST7789::initializePinsBitBang();
             ST7789::leaveUpdateMode();
         }
 
         void enterUpdateMode() {
-            ASSERT(! pio_sm_is_enabled(RCKID_ST7789_PIO, sm));
+            ASSERT(! pio_sm_is_enabled(KIDDO_ST7789_PIO, sm));
             // start the RAMWR command in bitbank mode
             ST7789::enterUpdateMode();
             // configure the DMA channel, but do not start it yet
@@ -178,22 +178,22 @@ namespace rckid::internal {
             channel_config_set_transfer_data_size(&dmaConf, DMA_SIZE_16); // transfer 16 bits at a time (single pixel)
             channel_config_set_read_increment(&dmaConf, true); // increment the read address (pixel buffer) after each transfer
             channel_config_set_write_increment(&dmaConf, false); // do not increment the write address (PIO FIFO)
-            channel_config_set_dreq(&dmaConf, pio_get_dreq(RCKID_ST7789_PIO, sm, true));
-            dma_channel_configure(dmaChannel, & dmaConf, &RCKID_ST7789_PIO->txf[sm], nullptr, 0, false);
+            channel_config_set_dreq(&dmaConf, pio_get_dreq(KIDDO_ST7789_PIO, sm, true));
+            dma_channel_configure(dmaChannel, & dmaConf, &KIDDO_ST7789_PIO->txf[sm], nullptr, 0, false);
             dma_channel_set_irq0_enabled(dmaChannel, true);
             // initialize the PIO program
-            ST7789_rgb16_program_init(RCKID_ST7789_PIO, sm, pioOffset, RP_PIN_DISP_WRX, RP_PIN_DISP_DB15);
+            ST7789_rgb16_program_init(KIDDO_ST7789_PIO, sm, pioOffset, RP_PIN_DISP_WRX, RP_PIN_DISP_DB15);
             // and start the pio, which will put it immediately into a stall mode on tx
-            pio_sm_set_enabled(RCKID_ST7789_PIO, sm, true);
+            pio_sm_set_enabled(KIDDO_ST7789_PIO, sm, true);
         }
 
         void initialize() {
             LOG(LL_INFO, "display::initialize");
             // reset the physical display
             ST7789::reset();
-            pio_set_gpio_base(RCKID_ST7789_PIO, 16);
-            sm = pio_claim_unused_sm(RCKID_ST7789_PIO, true);
-            pioOffset = pio_add_program(RCKID_ST7789_PIO, & ST7789_rgb16_program);
+            pio_set_gpio_base(KIDDO_ST7789_PIO, 16);
+            sm = pio_claim_unused_sm(KIDDO_ST7789_PIO, true);
+            pioOffset = pio_add_program(KIDDO_ST7789_PIO, & ST7789_rgb16_program);
             dmaChannel = dma_claim_unused_channel(true);
             LOG(LL_INFO, "sm: " << sm);
             LOG(LL_INFO, "offset: " << pioOffset);
@@ -203,13 +203,13 @@ namespace rckid::internal {
         }
 
         void adjustSpeed() {
-            pio_sm_set_clock_speed(RCKID_ST7789_PIO, sm, RCKID_ST7789_SPEED * 4);
+            pio_sm_set_clock_speed(KIDDO_ST7789_PIO, sm, KIDDO_ST7789_SPEED * 4);
         }
     }
 
     namespace audio {
 
-        rckid::audio::Callback callback;
+        kiddo::audio::Callback callback;
 
         struct DMA {
             int32_t channel = -1;
@@ -327,7 +327,7 @@ namespace rckid::internal {
         // initialize the SD card, if present and the filesystem module
         internal::sd::initialize();
         internal::sd::initializeCard();
-        rckid::fs::initializeFilesystem();
+        kiddo::fs::initializeFilesystem();
 
 
 
@@ -342,7 +342,7 @@ namespace rckid::internal {
 
     }
 
-} // namespace rckid::internal
+} // namespace kiddo::internal
 
 extern "C" {
 
@@ -362,14 +362,14 @@ extern "C" {
 
     void *__wrap_malloc(size_t numBytes) {
         cpu::DisableInterruptsGuard g_;
-        void * result = rckid::Heap::alloc(numBytes);
+        void * result = kiddo::Heap::alloc(numBytes);
         return result;
     }
 
     void __wrap_free(void * ptr) { 
         cpu::DisableInterruptsGuard g_;
-        if (rckid::Heap::contains(ptr))
-            rckid::Heap::free(ptr); 
+        if (kiddo::Heap::contains(ptr))
+            kiddo::Heap::free(ptr); 
     }
 
     void *__wrap_calloc(size_t numElements, size_t elementSize) {
@@ -382,7 +382,7 @@ extern "C" {
 }
 
 
-namespace rckid::hal {
+namespace kiddo::hal {
 
     namespace device {
 
@@ -390,9 +390,9 @@ namespace rckid::hal {
             // first initailize the board and USB stack / debugging for some basic output capability
             board_init();
             tud_init(BOARD_TUD_RHPORT);
-#if (RCKID_LOG_TO_SERIAL == 1)
+#if (KIDDO_LOG_TO_SERIAL == 1)
             // initialize only TX out on GPIO2
-            uart_init(uart0, RCKID_RP_SERIAL_SPEED);
+            uart_init(uart0, KIDDO_RP_SERIAL_SPEED);
             gpio_set_function(RP_PIN_RP_TX, GPIO_FUNC_UART_AUX);
 #endif
             internal::device::debugReady = true;
@@ -421,7 +421,7 @@ namespace rckid::hal {
             if (internal::device::powerMode == mode)
                 return;
             // make sure all peripherals that are speed dependent are not actively used
-            rckid::display::waitUpdateDone();
+            kiddo::display::waitUpdateDone();
             // switch the clock speed
             switch (mode) {
                 case PowerMode::Normal:
@@ -476,7 +476,7 @@ namespace rckid::hal {
 
 
             // enqueue avr, accel and light sensor status updates
-            i2c::transmitAsync(RCKID_AVR_I2C_ADDRESS, nullptr, 0, sizeof(DeviceState), internal::io::updateAvrStatus);
+            i2c::transmitAsync(KIDDO_AVR_I2C_ADDRESS, nullptr, 0, sizeof(DeviceState), internal::io::updateAvrStatus);
             // accel
             uint8_t cmd = LSM6DSV::REG_OUTX_L_A; 
             i2c::transmitAsync(LSM6DSV::I2C_ADDRESS, & cmd, 1, sizeof(LSM6DSV::Orientation3D), internal::io::updateAccelStatus);
@@ -495,7 +495,7 @@ namespace rckid::hal {
             LOG(LL_ERROR, msg << "(payload " << payload << ")");
             LOG(LL_ERROR, internal::display::pixelsToWrite);
             LOG(LL_ERROR, dma_channel_is_busy(internal::display::dmaChannel));
-            LOG(LL_ERROR, pio_sm_is_stalled(RCKID_ST7789_PIO, internal::display::sm));
+            LOG(LL_ERROR, pio_sm_is_stalled(KIDDO_ST7789_PIO, internal::display::sm));
             LOG(LL_ERROR, internal::display::buffer << " - " << internal::display::bufferSize);
             LOG(LL_ERROR, internal::display::backBuffer << " - " << internal::display::backBufferSize);
             // fatal error is simple on fantasy console as we do not have to worry about weird hardware states
@@ -513,7 +513,7 @@ namespace rckid::hal {
             return Writer{[](char x) {
                 if (internal::device::debugReady == false)
                     return;
-#if (RCKID_LOG_TO_SERIAL == 1)
+#if (KIDDO_LOG_TO_SERIAL == 1)
                 if (x == '\n')
                     uart_putc(uart0, '\r');
                 uart_putc(uart0, x);
@@ -530,7 +530,7 @@ namespace rckid::hal {
 
         uint8_t debugRead() {
             char cmd_ = ' ';
-#if (RCKID_LOG_TO_SERIAL == 1)
+#if (KIDDO_LOG_TO_SERIAL == 1)
             cmd_ = uart_getc(uart0);
 #else 
             while (tud_cdc_read(& cmd_, 1) != 1) { yield(); };
@@ -538,7 +538,7 @@ namespace rckid::hal {
             return static_cast<uint8_t>(cmd_);
         }
 
-    } // namespace rckid::hal::device
+    } // namespace kiddo::hal::device
 
     namespace time {
 
@@ -551,10 +551,10 @@ namespace rckid::hal {
             TinyDateTime result;
             i2c::enqueue([& result](int32_t){
                 TransferrableState ts;
-                int n = i2c_read_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, (uint8_t *) & ts, TS_SIZE, false);
+                int n = i2c_read_blocking(i2c0, KIDDO_AVR_I2C_ADDRESS, (uint8_t *) & ts, TS_SIZE, false);
                 if (n != TS_SIZE)
                     FATAL_ERROR("AVR READ", n);
-                if (ts.version != RCKID_AVR_FIRMWARE_VERSION)
+                if (ts.version != KIDDO_AVR_FIRMWARE_VERSION)
                     FATAL_ERROR("AVR VERSION", ts.version);
                 result = ts.time;
             });
@@ -565,7 +565,7 @@ namespace rckid::hal {
             i2c::sendAvrCommand(cmd::SetTime{dt});
         }
 
-    } // namespace rckid::hal::time
+    } // namespace kiddo::hal::time
 
     namespace io {
 
@@ -587,13 +587,13 @@ namespace rckid::hal {
             UNREACHABLE;
         }
 
-    } // namespace rckid::hal::io
+    } // namespace kiddo::hal::io
 
     namespace display {
 
         void enable(Rect rect, RefreshDirection direction) {
             LOG(LL_INFO, "Display reset " << rect);
-            rckid::display::waitUpdateDone();
+            kiddo::display::waitUpdateDone();
             // cancel any ongoing DMA update
             internal::display::enterCommandMode();
             // leave the update mode so that we can send commands
@@ -619,7 +619,7 @@ namespace rckid::hal {
 
         void update(Callback callback) {
             using namespace internal::display;
-            rckid::display::waitUpdateDone();
+            kiddo::display::waitUpdateDone();
             ASSERT(! updateActive());
             ASSERT(buffer == nullptr);
             ASSERT(backBuffer == nullptr);
@@ -634,7 +634,7 @@ namespace rckid::hal {
 
         void update(Color::RGB565 const * buffer, uint32_t bufferSize) {
             using namespace internal::display;
-            rckid::display::waitUpdateDone();
+            kiddo::display::waitUpdateDone();
             ASSERT(! updateActive());
             ASSERT(internal::display::buffer == nullptr);
             ASSERT(internal::display::backBuffer == nullptr);
@@ -648,7 +648,7 @@ namespace rckid::hal {
 
         void update(Color::RGB565 const * buffer1, uint32_t bufferSize1, Color::RGB565 const * buffer2, uint32_t bufferSize2) {
             using namespace internal::display;
-            rckid::display::waitUpdateDone();
+            kiddo::display::waitUpdateDone();
             ASSERT(! updateActive());
             ASSERT(buffer == nullptr);
             ASSERT(backBuffer == nullptr);
@@ -667,7 +667,7 @@ namespace rckid::hal {
             return pixelsToWrite > 0;
         }
 
-    } // namespace rckid::hal::display
+    } // namespace kiddo::hal::display
 
     namespace audio {
 
@@ -767,7 +767,7 @@ namespace rckid::hal {
         }
 
 
-    } // namespace rckid::hal::audio
+    } // namespace kiddo::hal::audio
 
     namespace fs {
 
@@ -838,7 +838,7 @@ namespace rckid::hal {
             }
         }
 
-    } // namespace rckid::hal::fs
+    } // namespace kiddo::hal::fs
 
     namespace memory {
 
@@ -855,7 +855,7 @@ namespace rckid::hal {
             return ((addr >= 0x10000000) && (addr < 0x20000000)) || (ptr == nullptr);
         }
 
-    } // namespace rckid::hal::memory
+    } // namespace kiddo::hal::memory
 
     namespace storage {
 
@@ -879,18 +879,18 @@ namespace rckid::hal {
             // enqueue with callback and use first address set, then wait enough time for the command to finish and then perform the actual read
             i2c::enqueue([start, buffer, numBytes](int32_t){
                 cmd::ReadStorage cmd{start};
-                i2c_write_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, reinterpret_cast<uint8_t const *>(& cmd), sizeof(cmd), false);
+                i2c_write_blocking(i2c0, KIDDO_AVR_I2C_ADDRESS, reinterpret_cast<uint8_t const *>(& cmd), sizeof(cmd), false);
                 cpu::delayMs(5);
-                i2c_read_blocking(i2c0, RCKID_AVR_I2C_ADDRESS, buffer, numBytes, false);
+                i2c_read_blocking(i2c0, KIDDO_AVR_I2C_ADDRESS, buffer, numBytes, false);
             });
         }
-    } // namespace rckid::hal::storage
+    } // namespace kiddo::hal::storage
 
     namespace rumbler {
         void setEffect(RumblerEffect const & effect) {
             i2c::sendAvrCommand(cmd::SetRumblerEffect{effect});
         }
-    } // namespace rckid::hal::rumbler
+    } // namespace kiddo::hal::rumbler
 
     namespace rgb {
 
@@ -930,7 +930,7 @@ namespace rckid::hal {
         void setEffectAll(RGBEffect const & effect) {
             i2c::sendAvrCommand(cmd::SetRGBEffectAll{effect});
         }
-    } // namespace rckid::hal::rgb
+    } // namespace kiddo::hal::rgb
 
-} // namespace rckid::hal
+} // namespace kiddo::hal
 

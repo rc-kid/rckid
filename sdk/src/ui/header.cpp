@@ -1,7 +1,7 @@
-#include <rckid/task.h>
-#include <rckid/ui/header.h>
+#include <kiddo/task.h>
+#include <kiddo/ui/header.h>
 
-namespace rckid::ui {
+namespace kiddo::ui {
 
 #define ADD_ICON(ICON, paletteOffset) \
     do { \
@@ -101,4 +101,4 @@ namespace rckid::ui {
             instance_->show();
     }
 
-} // namespace rckid::ui
+} // namespace kiddo::ui

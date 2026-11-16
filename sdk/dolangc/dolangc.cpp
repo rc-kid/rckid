@@ -1,14 +1,14 @@
 #include <iostream>
 
-#include <rckid/rckid.h>
-#include <rckid/dolang/parser.h>
-#include <rckid/dolang/pretty_printer.h>
+#include <kiddo/kiddo.h>
+#include <kiddo/dolang/parser.h>
+#include <kiddo/dolang/pretty_printer.h>
 
-namespace rckid::hal::device {
+namespace kiddo::hal::device {
     void initializeNoWindow();
 }
 
-using namespace rckid;
+using namespace kiddo;
 
 unique_ptr<uint8_t> readFile(char const * path, size_t & size) {
     std::ifstream f{path, std::ios::binary | std::ios::ate};

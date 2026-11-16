@@ -1,16 +1,16 @@
 #pragma once
 
-#include <rckid/app.h>
-#include <rckid/graphics/canvas.h>
-#include <rckid/assets/fonts/OpenDyslexic128.h>
-#include <rckid/assets/fonts/OpenDyslexic64.h>
-#include <rckid/assets/fonts/Iosevka32.h>
-#include <rckid/assets/fonts/Symbols64.h>
+#include <kiddo/app.h>
+#include <kiddo/graphics/canvas.h>
+#include <kiddo/assets/fonts/OpenDyslexic128.h>
+#include <kiddo/assets/fonts/OpenDyslexic64.h>
+#include <kiddo/assets/fonts/Iosevka32.h>
+#include <kiddo/assets/fonts/Symbols64.h>
 
 
-#include <rckid/ui/header.h>
+#include <kiddo/ui/header.h>
 
-namespace rckid {
+namespace kiddo {
 
     class Clock : public GraphicsApp<Canvas<ColorRGB>> {
     public:
@@ -139,5 +139,5 @@ namespace rckid {
         static constexpr unsigned AE_SAT = 8;
         static constexpr unsigned AE_SUN = 9;
         unsigned ae_ = 0;
-    }; // rckid::Clock
-} // namespace rckid
+    }; // kiddo::Clock
+} // namespace kiddo

@@ -11,31 +11,31 @@
 #define RED (::Color){255, 0, 0, 255}
 
 
-#include <rckid/hal.h>
-#include <rckid/error.h>
-#include <rckid/memory.h>
-#include <rckid/graphics/color.h>
+#include <kiddo/hal.h>
+#include <kiddo/error.h>
+#include <kiddo/memory.h>
+#include <kiddo/graphics/color.h>
 
-#include <rckid/apps/splashscreen.h>
+#include <kiddo/apps/splashscreen.h>
 
 #include "system_malloc_guard.h"
 
-#ifndef RCKID_DISPLAY_ZOOM
-    #define RCKID_DISPLAY_ZOOM 2
+#ifndef KIDDO_DISPLAY_ZOOM
+    #define KIDDO_DISPLAY_ZOOM 2
 #endif
 
 extern "C" {
-#ifndef RCKID_NO_RODATA_BOUNDARIES            
+#ifndef KIDDO_NO_RODATA_BOUNDARIES            
     extern uint8_t __start_rodata;
     extern uint8_t __stop_rodata;
 #endif    
 }
 
-namespace rckid::fs {
+namespace kiddo::fs {
     void initializeFilesystem();
 }
 
-namespace rckid::internal {
+namespace kiddo::internal {
 
     namespace memory {
 
@@ -43,23 +43,23 @@ namespace rckid::internal {
 
         uint32_t useSystemMalloc = 1;
 
-    } // rckid::internal::memory
+    } // kiddo::internal::memory
 
     namespace storage {
         uint8_t data[1024];
-    } // rckid::internal::storage
+    } // kiddo::internal::storage
 
     namespace device {
         // part of a mechanism to exit the app during a yield in fatal error mode. fatalError sets this to true if we do not have window (indicating cli execution) and then onYield kills the app immediately.
         // has no effect in GUI mode when we simulate the BSOD from the device
         bool exitAtYield = false;
 
-    } // rckid::internal::device
+    } // kiddo::internal::device
 
     namespace time {
         TinyDateTime now;
         std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
-    } // rckid::internal::time
+    } // kiddo::internal::time
 
     namespace io {
         DeviceState state;
@@ -80,14 +80,14 @@ namespace rckid::internal {
             internal::memory::SystemMallocGuard g_;
             UpdateTexture(texture, img.data);
             BeginDrawing();
-            DrawTextureEx(texture, {0,0}, 0, RCKID_DISPLAY_ZOOM, WHITE);
+            DrawTextureEx(texture, {0,0}, 0, KIDDO_DISPLAY_ZOOM, WHITE);
 
             // TODO print FPS, memory or some other stat overlays we might want to 
 
             /*
 
-            DrawText(TextFormat("Heap reserved: %d", Heap::reservedBytes() / 1024), 0, 20 * RCKID_DISPLAY_ZOOM + 5, 20, RED);
-            DrawText(TextFormat("Heap used:     %d", Heap::usedBytes() / 1024), 0, 20 * RCKID_DISPLAY_ZOOM + 25, 20, RED);
+            DrawText(TextFormat("Heap reserved: %d", Heap::reservedBytes() / 1024), 0, 20 * KIDDO_DISPLAY_ZOOM + 5, 20, RED);
+            DrawText(TextFormat("Heap used:     %d", Heap::usedBytes() / 1024), 0, 20 * KIDDO_DISPLAY_ZOOM + 25, 20, RED);
 
             */
 
@@ -125,7 +125,7 @@ namespace rckid::internal {
                     break;
             }
         }
-    } // namespace rckid::internal::display
+    } // namespace kiddo::internal::display
 
     namespace audio {
 
@@ -179,7 +179,7 @@ namespace rckid::internal {
         }
         
 
-    } // namespace rckid::internal::audio
+    } // namespace kiddo::internal::audio
 
     namespace fs {
         std::fstream sd_;
@@ -187,12 +187,12 @@ namespace rckid::internal {
         std::fstream cartridge_;
         uint32_t cartridgeSize_ = 0;
 
-    } // namespace rckid::internal::fs
+    } // namespace kiddo::internal::fs
 
-} // namespace rckid::internal
+} // namespace kiddo::internal
 
 
-namespace rckid::hal {
+namespace kiddo::hal {
 
     namespace device {
 
@@ -201,10 +201,10 @@ namespace rckid::hal {
         void initializeNoWindow() {
             cpu::initialize(); // platform initialization
             internal::display::noWindow = true;
-#ifndef RCKID_NO_RODATA_BOUNDARIES            
+#ifndef KIDDO_NO_RODATA_BOUNDARIES            
             LOG(LL_INFO, "Immutable memory: " << hex(& __start_rodata) << " - " << hex(& __stop_rodata));
 #endif
-#ifndef RCKID_CUSTOM_FILESYSTEM
+#ifndef KIDDO_CUSTOM_FILESYSTEM
             // if we are not using custom filesystem, see if we have the image files available, open them for read/write access and initialize the hal::fs mechanics
             internal::fs::sd_.open("sd.iso", std::ios::in |  std::ios::out | std::ios::binary);
             if (internal::fs::sd_.is_open()) {
@@ -240,11 +240,11 @@ namespace rckid::hal {
                 memset(internal::storage::data, 0, sizeof(internal::storage::data));
             }
             internal::memory::useSystemMalloc = 0;
-            rckid::fs::initializeFilesystem();
+            kiddo::fs::initializeFilesystem();
         }
 
         void initialize() {
-            InitWindow(320 * RCKID_DISPLAY_ZOOM, 240 * RCKID_DISPLAY_ZOOM, "RCKid");
+            InitWindow(320 * KIDDO_DISPLAY_ZOOM, 240 * KIDDO_DISPLAY_ZOOM, "kidDo");
             internal::display::img = GenImageColor(display::WIDTH, display::HEIGHT, BLACK);
             internal::display::texture = LoadTextureFromImage(internal::display::img);
             // initialize the audio device
@@ -296,7 +296,7 @@ namespace rckid::hal {
             // stop audio playback, which is the only async stuff we can have
             audio::stop();
             // deallocate SD and cartridge filesystems
-#ifndef RCKID_CUSTOM_FILESYSTEM            
+#ifndef KIDDO_CUSTOM_FILESYSTEM            
             if (internal::fs::sd_.good())   
                 internal::fs::sd_.close();
             if (internal::fs::cartridge_.good())
@@ -330,7 +330,7 @@ namespace rckid::hal {
             }
         }
 
-    } // namespace rckid::hal::device
+    } // namespace kiddo::hal::device
 
     namespace time {
 
@@ -347,7 +347,7 @@ namespace rckid::hal {
             internal::time::now = dt;
         }
 
-    } // namespace rckid::hal::time
+    } // namespace kiddo::hal::time
 
     namespace io {
 
@@ -401,7 +401,7 @@ namespace rckid::hal {
             return Point3D{0,0,0};
         }
 
-    } // namespace rckid::hal::io
+    } // namespace kiddo::hal::io
 
     namespace display {
 
@@ -465,7 +465,7 @@ namespace rckid::hal {
             return false;
         }
 
-    } // namespace rckid::hal::display
+    } // namespace kiddo::hal::display
 
     namespace audio {
 
@@ -553,7 +553,7 @@ namespace rckid::hal {
         }
 
 
-    } // namespace rckid::hal::audio
+    } // namespace kiddo::hal::audio
 
     namespace fs {
 
@@ -640,7 +640,7 @@ namespace rckid::hal {
             }
         }
 
-    } // namespace rckid::hal::fs
+    } // namespace kiddo::hal::fs
 
     namespace memory {
 
@@ -654,7 +654,7 @@ namespace rckid::hal {
         }
 
         bool isImmutableDataPtr(void const * ptr) {
-#ifndef RCKID_NO_RODATA_BOUNDARIES            
+#ifndef KIDDO_NO_RODATA_BOUNDARIES            
             return (ptr >= & __start_rodata) && (ptr < & __stop_rodata);
 #else
             // if we do not have rodata boundaries, we can only check if the pointer is outside of the heap, which is a good heuristic as in fantasy console all non-heap memory is immutable
@@ -663,7 +663,7 @@ namespace rckid::hal {
         }
 
 
-    } // namespace rckid::hal::memory
+    } // namespace kiddo::hal::memory
 
     namespace storage {
 
@@ -684,7 +684,7 @@ namespace rckid::hal {
                 LOG(LL_ERROR, "Failed to save persistent storage to avr-storage.dat file"); 
             }
         }
-    } // namespace rckid::hal::storage
+    } // namespace kiddo::hal::storage
 
     namespace rumbler {
         /** As there is no rumbler, simply reports the request
@@ -692,7 +692,7 @@ namespace rckid::hal {
         void setEffect(RumblerEffect const & effect) {
             LOG(LL_INFO, "Rumbler effect: " << effect);
         }
-    } // namespace rckid::hal::rumbler
+    } // namespace kiddo::hal::rumbler
 
     namespace rgb {
         /** As there are noRGB lights, simply reports the request
@@ -710,7 +710,7 @@ namespace rckid::hal {
         void setEffectAll(RGBEffect const & effect) {
             LOG(LL_INFO, "RGB Effect All: " << effect);
         }
-    } // namespace rckid::hal::rgb
+    } // namespace kiddo::hal::rgb
 
-} // namespace rckid::hal
+} // namespace kiddo::hal
 

@@ -1,9 +1,9 @@
-#include <rckid/app.h>
-#include <rckid/graphics/bitmap.h>
-#include <rckid/graphics/color.h>
-#include <rckid/utils/fixedint.h>
+#include <kiddo/app.h>
+#include <kiddo/graphics/bitmap.h>
+#include <kiddo/graphics/color.h>
+#include <kiddo/utils/fixedint.h>
 
-namespace rckid {
+namespace kiddo {
 
     /** Atari Pong Clone
      
@@ -241,6 +241,6 @@ namespace rckid {
             },
         };
 
-    }; // rckid::Pong
+    }; // kiddo::Pong
 
-} // namespace rckid
+} // namespace kiddo

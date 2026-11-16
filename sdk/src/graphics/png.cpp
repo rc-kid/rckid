@@ -1,28 +1,28 @@
 #include <PNGdec/src/PNGdec.h>
 
-#include <rckid/graphics/png.h>
+#include <kiddo/graphics/png.h>
 
 // PNG decode helpers
 
 int32_t readStream(PNGFILE * pFile, uint8_t * pBuf, int32_t iLen) {
-    rckid::RandomReadStream * s = static_cast<rckid::RandomReadStream*>(pFile->fHandle);
+    kiddo::RandomReadStream * s = static_cast<kiddo::RandomReadStream*>(pFile->fHandle);
     return s->read(pBuf, iLen);
 }
 
 int32_t seekStream(PNGFILE * pFile, int32_t iPosition) {
-    rckid::RandomReadStream * s = static_cast<rckid::RandomReadStream*>(pFile->fHandle);
+    kiddo::RandomReadStream * s = static_cast<kiddo::RandomReadStream*>(pFile->fHandle);
     return s->seek(iPosition);
 }
 
 void closeStream(void * handle) {
-    rckid::RandomReadStream * s = static_cast<rckid::RandomReadStream*>(handle);
+    kiddo::RandomReadStream * s = static_cast<kiddo::RandomReadStream*>(handle);
     delete s;
 }
 
 typedef int32_t (PNG_SEEK_CALLBACK)(PNGFILE *pFile, int32_t iPosition);
 
 
-namespace rckid {
+namespace kiddo {
 
     PNGImageDecoder::PNGImageDecoder(unique_ptr<RandomReadStream> && stream):
         img_{new png_image_tag{}}

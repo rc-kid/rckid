@@ -12,9 +12,9 @@
    
 % c-sdk {
 
-#include "rckid/rckid.h"
+#include "kiddo/kiddo.h"
 
-#define RCKID_SD_SPI_SPEED_MULTIPLIER 2
+#define KIDDO_SD_SPI_SPEED_MULTIPLIER 2
 
 inline void sd_spi_program_init(PIO pio, uint sm, uint offset, uint misoPin, uint mosiPin, uint clkPin) {
 

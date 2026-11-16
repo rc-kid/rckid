@@ -1,0 +1,88 @@
+#pragma once
+
+#include <kiddo/graphics/image_source.h>
+#include <kiddo/graphics/bitmap.h>
+
+namespace kiddo {
+
+    /** Interface for image decoders. 
+     
+        An image decoder is expected to be initialized with ImageSource containing the image data in its format. The decoder then provides methods to query the basic image properties as well as generating the corresponding Bitmap object. To determine which ImageDecoder implementation to use, the ImageSource::getImageType() static method can be used for the image types supported by the SDK, but custom decoders can be implemented as well.
+     */
+    class ImageDecoder {
+    public:
+        virtual ~ImageDecoder() = default;
+
+        virtual Coord width() const = 0;
+        virtual Coord height() const = 0;
+        virtual Color::Representation colorRepresentation() const = 0;
+        virtual Bitmap decode() = 0;
+    }; 
+
+    /** Simple & resource efficient raw bitmap image decoder.
+     
+        The raw bitmap decoder is extremely simple image decoder that expects the image source to point directly to pixel data in RGB565 format followed by two uint16_t values corresponding to the width and height of the bitmap data respectively.
+
+        This layout means that when creating the Bitmap, the decode can simply decode the width & height and pass the pixel data pointer directly to the bitmap without any copying orr transformation. This is extremely useful if the iage data is stored in flash memory as a binary asset, since the memory cost for those images at runtime is virtually nonexistent.
+     
+        TODO can this use other color representations that RGB565? 
+     */
+    class RawBitmapDecoder : public ImageDecoder {
+    public:
+
+        /** Verifies whether the given data buffer conforms to raw bitmap format.
+         
+            This means its size must be at least 4 bytes, and the last four bytes must be the width & height values corresponsing to the pixel data size.
+         */
+        static bool verify(uint8_t const * data, uint32_t size) {
+            uint16_t const * pixelData = reinterpret_cast<uint16_t const *>(data);
+            size = size / 2; // size in uint16_t
+            if (size < 2)
+                return false;
+            uint16_t width = pixelData[size - 2];
+            uint16_t height = pixelData[size - 1];
+            return (size == static_cast<uint32_t>((width * height + 2)));
+        }
+
+        RawBitmapDecoder(ImageSource && src) {
+            ASSERT(!src.empty());
+            if (src.type() == ImageSource::Type::Memory) {
+                data_ = src.releaseData();
+                ASSERT(verify(data_.get(), data_.size()));
+            } else {
+                auto s = src.toStream();
+                uint8_t * ptr = new uint8_t[s->size()];
+                s->read(ptr, s->size());
+                data_ = immutable_ptr<uint8_t>{ptr, s->size()};
+                ASSERT(verify(data_.get(), data_.size()));
+            }
+        }
+
+        Coord width() const override { 
+            ASSERT(good());
+            return static_cast<Coord>(reinterpret_cast<uint16_t const *>(data_.get())[data_.size() / sizeof(uint16_t) - 2]);
+        }
+
+        Coord height() const override { 
+            ASSERT(good());
+            return static_cast<Coord>(reinterpret_cast<uint16_t const *>(data_.get())[data_.size() / sizeof(uint16_t) - 1]);
+        }
+
+        Color::Representation colorRepresentation() const override {
+            return Color::Representation::RGB565;
+        }
+
+        Bitmap decode() override {
+            ASSERT(good());
+            return Bitmap{width(), height(), colorRepresentation(), std::move(data_)};
+        }
+
+        bool good() const {
+            return data_.get() != nullptr;
+        }
+
+    private:
+        immutable_ptr<uint8_t> data_;
+    }; // RawBitmapDecoder
+
+} // namespace kiddo

@@ -1,6 +1,6 @@
 #include "gbctests.h"
 
-namespace rckid::gbcemu {
+namespace kiddo::gbcemu {
 
     TEST(gbcemu, jumps_jp) {
         GBCEmu gbc{"", nullptr};
@@ -76,4 +76,4 @@ namespace rckid::gbcemu {
         EXPECT_CYCLES(8 + 4 + 12);
     }
 
-} // namespace rckid::gbcemu
+} // namespace kiddo::gbcemu

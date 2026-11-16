@@ -1,6 +1,6 @@
-#include <rckid/dolang/pretty_printer.h>
+#include <kiddo/dolang/pretty_printer.h>
 
-namespace rckid::dolang::ast {
+namespace kiddo::dolang::ast {
 
     void PrettyPrinter::spaces(uint32_t n) {
         for (uint32_t i = 0; i < n; ++i)
@@ -445,4 +445,4 @@ namespace rckid::dolang::ast {
         }
     }
 
-} // namespace rckid::dolang::ast
+} // namespace kiddo::dolang::ast

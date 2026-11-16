@@ -1,5 +1,5 @@
 #include <platform/tests.h>
-#include <rckid/memory.h>
+#include <kiddo/memory.h>
 
 namespace {
 
@@ -19,13 +19,13 @@ namespace {
 TEST(memory, immutable) {
     EXPECT(sizeof(x) == 4);
     EXPECT(sizeof(y) == 4);
-    EXPECT(rckid::hal::memory::isImmutableDataPtr(& x) == true);
-    EXPECT(rckid::hal::memory::isImmutableDataPtr(& y) == false);
+    EXPECT(kiddo::hal::memory::isImmutableDataPtr(& x) == true);
+    EXPECT(kiddo::hal::memory::isImmutableDataPtr(& y) == false);
 }
 
 
 TEST(memory, noArrayCookiesOnPODS) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard h;
     Foobar * array = new Foobar[3];
     EXPECT(h.usedDelta() == 4 + 3 * 4);
@@ -37,7 +37,7 @@ TEST(memory, noArrayCookiesOnPODS) {
 
 
 TEST(memory, immutable_ptr) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard h;
     EXPECT(hal::memory::isImmutableDataPtr(data) == true);
     {
@@ -50,7 +50,7 @@ TEST(memory, immutable_ptr) {
 }
 
 TEST(memory, heapAlloc) {
-    using namespace rckid;
+    using namespace kiddo;
 
     Heap::UseAndReserveGuard h;
     EXPECT(h.usedDelta() == 0);
@@ -77,7 +77,7 @@ TEST(memory, heapAlloc) {
 }
 
 TEST(memory, heapAllocFromFreelist) {
-    using namespace rckid;
+    using namespace kiddo;
 
     Heap::UseAndReserveGuard h;
     uint8_t * a0 = static_cast<uint8_t*>(::operator new[](10));

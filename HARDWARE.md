@@ -1,8 +1,8 @@
 # Hardware Design
 
-> This is hardware description of RCKid mk IV (version 17/10/26 and above). For brief history and to clear any confusion, mk I was much larger, hand soldered version powered by Raspberry Pi Zero 2W and mk II was slightly slimmer version powered by RP2040 with 8bit parallel screen interface. MkIII used RP2350 for the CPU, but kept using the AtTiny3217 for the secondary always on IO MCU. 
+> This is hardware description of kidDo mk IV (version 17/10/26 and above). For brief history and to clear any confusion, mk I was much larger, hand soldered version powered by Raspberry Pi Zero 2W and mk II was slightly slimmer version powered by RP2040 with 8bit parallel screen interface. MkIII used RP2350 for the CPU, but kept using the AtTiny3217 for the secondary always on IO MCU. 
 
-RCKid is based on the [RP2350B](datasheets/rp2350-datasheet.pdf) (80 pin QFN) and uses its requirement for external program flash chip as a feature by allowing swappable cartridges. This is the overall architecture of the system:
+kidDo is based on the [RP2350B](datasheets/rp2350-datasheet.pdf) (80 pin QFN) and uses its requirement for external program flash chip as a feature by allowing swappable cartridges. This is the overall architecture of the system:
           
                                               +-----------------+
                             + --------+       | Cartridge       |

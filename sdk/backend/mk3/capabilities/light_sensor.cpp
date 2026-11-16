@@ -1,6 +1,6 @@
-#include <rckid/capabilities/light_sensor.h>
+#include <kiddo/capabilities/light_sensor.h>
 
-namespace rckid {
+namespace kiddo {
 
     LightSensor lightSensor_;
 
@@ -13,4 +13,4 @@ namespace rckid {
         return 128;
     }
 
-} // namespace rckid
+} // namespace kiddo

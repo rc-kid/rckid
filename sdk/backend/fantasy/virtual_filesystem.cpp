@@ -1,14 +1,14 @@
 #include <fstream>
 #include <filesystem>
 
-#include <rckid/filesystem.h>
+#include <kiddo/filesystem.h>
 
 #include "system_malloc_guard.h"
 
-namespace rckid::fs {
+namespace kiddo::fs {
 
 
-    using namespace rckid::internal::memory;
+    using namespace kiddo::internal::memory;
 
 
     /** Make the partition sharing functions for data sync return 0 for the virtual filesystem (data sync does not work in fantasy mode anyways)
@@ -16,7 +16,7 @@ namespace rckid::fs {
     namespace internal {
         uint32_t fatPartitionStart() { return 0; } 
         uint32_t fatPartitionSize() { return 0; }
-    } // namespace rckid::fs::internal
+    } // namespace kiddo::fs::internal
 
 
     bool sdMounted_ = false;
@@ -105,7 +105,7 @@ namespace rckid::fs {
 
     };
 
-#ifdef RCKID_CUSTOM_FILESYSTEM
+#ifdef KIDDO_CUSTOM_FILESYSTEM
 
     /** Initializes the virtual filesystem. 
      
@@ -379,6 +379,6 @@ namespace rckid::fs {
         }
         return count;
     }
-#endif // RCKID_CUSTOM_FILESYSTEM
+#endif // KIDDO_CUSTOM_FILESYSTEM
 
-} // namespace rckid::fs
+} // namespace kiddo::fs

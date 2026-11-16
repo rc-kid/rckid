@@ -1,10 +1,10 @@
-#include <rckid/error.h>
-#include <rckid/log.h>
-#include <rckid/memory.h>
-#include <rckid/hal.h>
+#include <kiddo/error.h>
+#include <kiddo/log.h>
+#include <kiddo/memory.h>
+#include <kiddo/hal.h>
 
 
-namespace rckid {
+namespace kiddo {
 
     /** Heap Chunk
      

@@ -1,4 +1,4 @@
-# LEGO Remote Controller for RCKid
+# LEGO Remote Controller for kidDo
 
 > This is verbatim copy of the code I created a while ago for mkI. It should be restructured and updated to the mk3 code. Consists of the firmware for the arduino, the remote.h protocol specification and the lego-remote.h device configuration. 
 
@@ -113,9 +113,9 @@ Uses a peripheral connector. Chaining works as or so that any chained button pre
 
 # Remote Protocol
 
-# RCKid Remote Protocol
+# kidDo Remote Protocol
 
-A simple and extensible protocol that allows the RCKid to use its onboard NRF radio to remotely control various devices. The RCKid acts as a _remote_ that can control an arbitrary number of _devices_. Each device has a number of _channels_ into which all the device's functionality has to be encoded. The remote protocol supports pairing, querying devices and their channel capabilities and so on. 
+A simple and extensible protocol that allows the kidDo to use its onboard NRF radio to remotely control various devices. The kidDo acts as a _remote_ that can control an arbitrary number of _devices_. Each device has a number of _channels_ into which all the device's functionality has to be encoded. The remote protocol supports pairing, querying devices and their channel capabilities and so on. 
 
 > Note that the protocol is very simple and its main purpose is *not* security. 
 

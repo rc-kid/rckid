@@ -1,6 +1,6 @@
 # Programming Ladder
 
-This describes the core ideas behind the programming ladder built into RCKId's SDK that enables on-device application programming and algorithmics across wide age & skill ranges. This is powered by a single DSL that is exposed to the users via different editor levels and capability tiers. Think of this as more fine grained and on-device oriented MakeCode (which already switches between blocks and TypeScript) combined with Hedy levels. Not very editor supports every level, but the exact level & editor boundaries are not in the current scope of this document. 
+This describes the core ideas behind the programming ladder built into kidDo's SDK that enables on-device application programming and algorithmics across wide age & skill ranges. This is powered by a single DSL that is exposed to the users via different editor levels and capability tiers. Think of this as more fine grained and on-device oriented MakeCode (which already switches between blocks and TypeScript) combined with Hedy levels. Not very editor supports every level, but the exact level & editor boundaries are not in the current scope of this document. 
 
 The different editors are the cornerstone of the entire design. They support the users across the wide range of cognitive and literacy skills. The editors and their on-device capabilities shape the language design itself (and its levels) and give children agency as especially younger kids generally lack unconstrained access to a PC: 
 
@@ -12,7 +12,7 @@ The different editors are the cornerstone of the entire design. They support the
     token editor  | device | lit      | Edits code with input terminal by terminal (for on-device text editing)
     text editor   | pc (*) | lit      | Edits code as normal text editor does (can produce invalid programs)
 
-> (*) This is mostly because editing character by character on device without qwerty keyboard is really painful. I am however considering an RCKid mod where something like blackberry keyboard can be overlaid over the PCB for a full keyboard experience after which the text editor can easily run on-device. 
+> (*) This is mostly because editing character by character on device without qwerty keyboard is really painful. I am however considering a kidDo mod where something like blackberry keyboard can be overlaid over the PCB for a full keyboard experience after which the text editor can easily run on-device. 
 
 All editors are just projections into single language and runtime shared across all levels. This ensures that as the children move to more complex levels and editors, they can take their creations with them, not leave them behind. 
 
@@ -50,11 +50,11 @@ This has some important consequences for the game development:
 
 > The ultimate extension is creating new game objects using the C++ and the SDK itself. While I am not expecting the students will do that, it is very useful for extending the runtime in capabilities both software (new rendering techniques), and in hardware (game objects for peripherals, etc.).
 
-Unlike the traditional languages, due to RCKid's limited hardware capabilities (especially screen estate, and number of input keys), the editors shape the language itself. Furthermore the editors are designed so that every new editor level requires more abstract thinking from its users, while being able to express more complex code.
+Unlike the traditional languages, due to kidDo's limited hardware capabilities (especially screen estate, and number of input keys), the editors shape the language itself. Furthermore the editors are designed so that every new editor level requires more abstract thinking from its users, while being able to express more complex code.
 
 ## On-Device Editing
 
-RCKid with its small non-touch screen and very limited input controls cannot use the default text editing with character by character typing on the keyboard, nor can it support the drag & drop user interface known from visual editors running on PC or tablets such as Scratch or Makecode. 
+kidDo with its small non-touch screen and very limited input controls cannot use the default text editing with character by character typing on the keyboard, nor can it support the drag & drop user interface known from visual editors running on PC or tablets such as Scratch or Makecode. 
 
 Instead, the iconic, visual and token editors all work around the same principle of showing the code in blocks (icons, visual blocks or tokens) with holes (denoted as `...` in the examples below) in the visualized code at places where new stuff can be added. Particular block or hole can be selected via dpad and it can be changed/filled by invoking a context menu, which will show options valid for that block (and possibly change the blocks around it as necessary).  
 
@@ -99,7 +99,7 @@ The prefix nature of the language makes the editing and visualization straightfo
     | foo > bar >> + > 4 > 5 |> ... |     # addition arguments added
     | foo > bar >> + > 4 > 5 |> 67 |      # whole expression done
 
-Note the `>>` chevron above, which indicates nesting. While in most visual editors, nesting is done by graphically increasing the height of the statements so that nesting can be visualized, on RCKid's small screen, nesting is visualized by color change of the parts, which is indicated by the `>>` chevron which indicates color change. Note that this chevron does notreally exist and is only in the ASCII "art" representing the notation. Users will instead see a color change of the blocks. 
+Note the `>>` chevron above, which indicates nesting. While in most visual editors, nesting is done by graphically increasing the height of the statements so that nesting can be visualized, on kidDo's small screen, nesting is visualized by color change of the parts, which is indicated by the `>>` chevron which indicates color change. Note that this chevron does notreally exist and is only in the ASCII "art" representing the notation. Users will instead see a color change of the blocks. 
 
 When the nested call is done, it can either be followed by another operand of the parent block, in which case we see `|>` at the end, where the pipe signals the end of the nested call, and the `>` sigals continuation of the parent call, and will be drawn in the parent call. Or it can be `||` where the nested *and* parent calls end at the same block. Note that a combination of those is possible, i.e. `|||>` which closes 3 expressions and continues the fourth one. The `||` can be rendered as a small bar block of the corresponding color. Examples below:
 

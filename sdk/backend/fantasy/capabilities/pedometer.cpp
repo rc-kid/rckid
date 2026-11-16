@@ -1,6 +1,6 @@
-#include <rckid/capabilities/pedometer.h>
+#include <kiddo/capabilities/pedometer.h>
 
-namespace rckid {
+namespace kiddo {
 
     Pedometer pedometer_;
 

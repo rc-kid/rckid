@@ -1,10 +1,10 @@
 #include <platform/buffer.h>
-#include <rckid/app.h>
-#include <rckid/graphics/canvas.h>
-#include <rckid/assets/tests.h>
-#include <rckid/audio/tone.h>
+#include <kiddo/app.h>
+#include <kiddo/graphics/canvas.h>
+#include <kiddo/assets/tests.h>
+#include <kiddo/audio/tone.h>
 
-namespace rckid {
+namespace kiddo {
 
     class ToneAudioTest : public GraphicsApp<Canvas<ColorRGB>> {
     public:
@@ -100,6 +100,6 @@ namespace rckid {
 
         DoubleBuffer<int16_t> buffer_;
 
-    }; // rckid::RawAudiotest
+    }; // kiddo::RawAudiotest
 
-} // namespace rckid
+} // namespace kiddo

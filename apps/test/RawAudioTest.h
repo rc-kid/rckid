@@ -1,9 +1,9 @@
 #include <platform/buffer.h>
-#include <rckid/app.h>
-#include <rckid/graphics/canvas.h>
-#include <rckid/assets/tests.h>
+#include <kiddo/app.h>
+#include <kiddo/graphics/canvas.h>
+#include <kiddo/assets/tests.h>
 
-namespace rckid {
+namespace kiddo {
 
     class RawAudioTest : public GraphicsApp<Canvas<ColorRGB>> {
     public:
@@ -173,6 +173,6 @@ namespace rckid {
 //#include "test/audio/44100_16_signed.raw.data"
 //        };
 
-    }; // rckid::RawAudiotest
+    }; // kiddo::RawAudiotest
 
-} // namespace rckid
+} // namespace kiddo

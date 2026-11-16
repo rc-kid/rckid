@@ -23,23 +23,23 @@
  */
 #define GBCEMU_TRACE_INSTRUCTIONS 0
 
-/** Very fast very simple tracking of every pc and opcode executed. Note that this only works on fantasy backend as it uses printf for output instead of the debugWrite used elsewhere in rckid's logging.
+/** Very fast very simple tracking of every pc and opcode executed. Note that this only works on fantasy backend as it uses printf for output instead of the debugWrite used elsewhere in kiddo's logging.
  */
 #define GBCEMU_TRACE_PC_OPCODE 0
 
-#include <rckid/app.h>
-#include <rckid/task.h>
-#include <rckid/buffer.h>
-#include <rckid/fixedint.h>
+#include <kiddo/app.h>
+#include <kiddo/task.h>
+#include <kiddo/buffer.h>
+#include <kiddo/fixedint.h>
 
 #include "gamepak.h"
 #include "apu.h"
 
-namespace rckid::gbcemu {
+namespace kiddo::gbcemu {
 
     /** GameBoy Color Emulator App
      
-        The emulator is an rckid app that consists of the following components organized closely to the original hardware:
+        The emulator is an kiddo app that consists of the following components organized closely to the original hardware:
 
         - the cpu, including registers
         - memory (video ram, work ram, cartridge rom, cartridge ram) including bank switching 
@@ -587,7 +587,7 @@ namespace rckid::gbcemu {
 #include "colScaling.inc.h"
         };
             
-    }; // rckid::gbcemu::GBCEmu
+    }; // kiddo::gbcemu::GBCEmu
 
 
-} // namespace rckid::gbcemu
+} // namespace kiddo::gbcemu

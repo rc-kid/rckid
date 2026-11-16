@@ -1,18 +1,18 @@
 #pragma once
 
-#include <rckid/app.h>
-#include <rckid/graphics/canvas.h>
-#include <rckid/ui/header.h>
-#include <rckid/ui/alert.h>
-#include <rckid/ui/text_input.h>
-#include <rckid/ui/halloffame.h>
-#include <rckid/filesystem.h>
-#include <rckid/audio/tone.h>
+#include <kiddo/app.h>
+#include <kiddo/graphics/canvas.h>
+#include <kiddo/ui/header.h>
+#include <kiddo/ui/alert.h>
+#include <kiddo/ui/text_input.h>
+#include <kiddo/ui/halloffame.h>
+#include <kiddo/filesystem.h>
+#include <kiddo/audio/tone.h>
 
-#include <rckid/assets/fonts/OpenDyslexic24.h>
-#include <rckid/assets/fonts/MetalLord32.h>
-#include <rckid/assets/fonts/MetalLord64.h>
-namespace rckid {
+#include <kiddo/assets/fonts/OpenDyslexic24.h>
+#include <kiddo/assets/fonts/MetalLord32.h>
+#include <kiddo/assets/fonts/MetalLord64.h>
+namespace kiddo {
 
     /** A simple tetris game. 
 
@@ -571,7 +571,7 @@ namespace rckid {
             }
         }
 
-    }; // rckid::Tetris
+    }; // kiddo::Tetris
 
 
-} // namespace rckid
+} // namespace kiddo

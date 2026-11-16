@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 # Standalone project for the PY32F030 (cortex-m0+). The mk3 backend builds it via ExternalProject_Add so that it gets
 # its own toolchain instead of inheriting the RP2350 (pico SDK) one. It can also be configured on its own.
-set(RCKID_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../../..)
-set(PLATFORM_ROOT ${RCKID_ROOT}/lib/platform/py32f030)
+set(KIDDO_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../../../..)
+set(PLATFORM_ROOT ${KIDDO_ROOT}/lib/platform/py32f030)
 cmake_path(NORMAL_PATH PLATFORM_ROOT)
 
 # must be set *before* project - configure for arm-none-eabi for crosscompiling
@@ -50,9 +50,9 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${PLATFORM_ROOT}/LL/Include
     ${PLATFORM_ROOT}
     ${PLATFORM_ROOT}/..
-    ${RCKID_ROOT}/sdk/backend/mk3
-    ${RCKID_ROOT}/sdk/include
-    ${RCKID_ROOT}/lib
+    ${KIDDO_ROOT}/sdk/backend/mk3
+    ${KIDDO_ROOT}/sdk/include
+    ${KIDDO_ROOT}/lib
  )
 
 target_compile_options(${PROJECT_NAME} PRIVATE

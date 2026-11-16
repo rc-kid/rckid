@@ -1,14 +1,14 @@
 
 # very simple ui app test with basic rendeing & event loop
 add_executable(serial "serial.cpp")
-link_with_librckid(serial)
+link_with_libkiddo(serial)
 
 # the simplest program that simply cycles through red, green and blue full color on the display as fast as possible (note that in fantasy console this actually means at the preset 60 fps)
 add_executable(display-fill "display_fill.cpp")
-link_with_librckid(display-fill)
+link_with_libkiddo(display-fill)
 
 # very simple ui app test with basic rendeing & event loop
 add_executable(ui-app "ui_app.cpp")
 target_link_libraries(ui-app PRIVATE libgbcemu)
-link_with_librckid(ui-app)
+link_with_libkiddo(ui-app)
 

@@ -1,8 +1,8 @@
 #include <platform.h>
 
-#include <rckid/capabilities/led.h>
+#include <kiddo/capabilities/led.h>
 
-namespace rckid {
+namespace kiddo {
 
     namespace {
         LED led_;
@@ -20,5 +20,5 @@ namespace rckid {
         brightness_ = value;
     }
 
-} // namespace rckid
+} // namespace kiddo
 

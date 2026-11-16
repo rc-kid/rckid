@@ -1,10 +1,10 @@
 #pragma once
 
-#include <rckid/device.h>
+#include <kiddo/device.h>
 #include <platform/tinydate.h>
 #include <config.h>
 
-namespace rckid {
+namespace kiddo {
 
     class TransferrableState {
     public:
@@ -15,7 +15,7 @@ namespace rckid {
         TinyDateTime time;
         uint32_t uptime = 0;
         int16_t temp = 0;
-        uint32_t const version = RCKID_AVR_FIRMWARE_VERSION;
+        uint32_t const version = KIDDO_AVR_FIRMWARE_VERSION;
         bool debugUart = true;
         uint8_t storage[1024];
     } __attribute__((packed));
@@ -23,9 +23,9 @@ namespace rckid {
     constexpr uint32_t TS_SIZE = sizeof(TransferrableState) - 1024;
 
 
-} // namespace rckid
+} // namespace kiddo
 
-namespace rckid::cmd {
+namespace kiddo::cmd {
     #define COMMAND(MSG_ID, NAME, ...)                               \
         PACKED(class NAME  {                                         \
         public:                                                      \
@@ -52,4 +52,4 @@ namespace rckid::cmd {
         }
     }
 
-} // namespace rckid::cmd
+} // namespace kiddo::cmd

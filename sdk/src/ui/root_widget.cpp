@@ -1,9 +1,9 @@
 
-#include <rckid/ui/animation.h>
-#include <rckid/ui/style.h>
-#include <rckid/ui/root_widget.h>
+#include <kiddo/ui/animation.h>
+#include <kiddo/ui/style.h>
+#include <kiddo/ui/root_widget.h>
 
-namespace rckid::ui {
+namespace kiddo::ui {
 
     RootWidget::RootWidget(): 
         RootWidget(Rect::WH(hal::display::WIDTH, hal::display::HEIGHT)) {
@@ -37,4 +37,4 @@ namespace rckid::ui {
         });
     }
 
-} // namespace rckid::ui
+} // namespace kiddo::ui

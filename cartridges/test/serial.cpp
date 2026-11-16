@@ -1,8 +1,8 @@
-#include <rckid/rckid.h>
-#include <rckid/hal.h>
-#include <rckid/graphics/color.h>
+#include <kiddo/kiddo.h>
+#include <kiddo/hal.h>
+#include <kiddo/graphics/color.h>
 
-using namespace rckid;
+using namespace kiddo;
 
 void showStatus() {
 //    LOG(LL_INFO, "Headphones: " << hal::audio::)

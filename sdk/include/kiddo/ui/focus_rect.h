@@ -1,0 +1,81 @@
+#pragma once
+
+#include <kiddo/ui/widget.h>
+
+namespace kiddo::ui {
+
+    /** Simple focus rectangle. 
+     
+        A rectangle used to indicate focus. The rectangle show color with breathe animation.
+     */
+    class FocusRect : public Widget {
+    public:
+
+        FocusRect() {
+            fg_ = Style::accentFg();
+            updateAnimation(Color::Black(), fg_);
+        }
+
+        Color fg() const { return fg_;}
+
+        void setFg(Color value) { 
+            fg_ = value; 
+            updateAnimation(Color::Black(), fg_);
+        }
+
+        Coord padding() const { return padding_; }
+
+        void setPadding(Coord value) { padding_ = value; }
+
+        void renderColumn(Coord column, Coord startRow, Color::RGB565 * buffer, Coord numPixels) override {
+            if (column == 0 || column == width() - 1) {
+                memset16(reinterpret_cast<uint16_t*>(buffer), current_.toRGB565(), numPixels);
+            } else {
+                if (startRow == 0)
+                    buffer[0] = current_;
+                if (startRow + numPixels >= height())
+                    buffer[numPixels - 1] = current_;
+            }
+            Widget::renderColumn(column, startRow, buffer, numPixels);
+        }
+
+        void showAround(Widget * w, bool animation = true) {
+            showAt(w->rect(), animation);
+        }
+
+        /** Shows the focus rect around given rectange, to which the requested padding is added.
+         */
+        void showAt(Rect rect, bool animation = true) {
+            rect = Rect::XYWH(rect.x - padding_, rect.y - padding_, rect.w + padding_ * 2, rect.h + padding_ * 2);
+            if (animation)
+                animate() << MoveAndResize(this, rect);
+            else
+                setRect(rect);
+        }
+
+    protected:
+
+        void updateAnimation(Color a, Color b) {
+            cancelAnimations();
+            animate() 
+                << (new Animation{
+                    [this, a, b](FixedRatio progress) {
+                        current_ = Color::RGB(
+                            a.r + progress.scale(b.r - a.r),
+                            a.g + progress.scale(b.g - a.g),
+                            a.b + progress.scale(b.b - a.b)
+                        );
+                    },
+                    animationSpeed()
+                })->setEasingFunction(easing::inOutIn)->setRepeat(true);
+        }
+
+        Color fg_;
+        Color current_;
+        Coord padding_ = 3;
+
+    private:
+
+    }; // kiddo::ui::FocusRect
+
+} // namespace kiddo::ui

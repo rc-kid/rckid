@@ -1,6 +1,6 @@
-#include <rckid/capabilities/jacdac.h>
+#include <kiddo/capabilities/jacdac.h>
 
-namespace rckid {
+namespace kiddo {
 
     Jacdac * Jacdac::instance() {
         // JACDAC is not supported in fantasy build
@@ -27,4 +27,4 @@ namespace rckid {
         
     }
 
-} // namespace rckid
+} // namespace kiddo

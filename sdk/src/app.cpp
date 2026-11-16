@@ -1,17 +1,17 @@
 
-#include <rckid/apps/home_menu.h>
-#include <rckid/apps/dialogs/info_dialog.h>
-#include <rckid/task.h>
-#include <rckid/app.h>
+#include <kiddo/apps/home_menu.h>
+#include <kiddo/apps/dialogs/info_dialog.h>
+#include <kiddo/task.h>
+#include <kiddo/app.h>
 
-namespace rckid {
+namespace kiddo {
 
     void App::onLoopStart() {
         ui::Header::update();
     }
 
     void App::loop() {
-        rckid::display::waitUpdateDone();
+        kiddo::display::waitUpdateDone();
         if (! HomeMenu::active() && btnReleased(Btn::Home)) {
             auto action = App::run<HomeMenu>();
             if (action.has_value())
@@ -158,4 +158,4 @@ namespace rckid {
     }
 
 
-} // namespace rckid
+} // namespace kiddo

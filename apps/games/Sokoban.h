@@ -1,22 +1,22 @@
 #pragma once
 
-#include <rckid/app.h>
-#include <rckid/graphics/canvas.h>
-#include <rckid/ui/header.h>
-#include <rckid/ui/alert.h>
-#include <rckid/ui/carousel.h>
-#include <rckid/filesystem.h>
-#include <rckid/audio/tone.h>
+#include <kiddo/app.h>
+#include <kiddo/graphics/canvas.h>
+#include <kiddo/ui/header.h>
+#include <kiddo/ui/alert.h>
+#include <kiddo/ui/carousel.h>
+#include <kiddo/filesystem.h>
+#include <kiddo/audio/tone.h>
 
 
-#include <rckid/assets/fonts/OpenDyslexic24.h>
-#include <rckid/assets/fonts/OpenDyslexic48.h>
-#include <rckid/assets/fonts/HemiHead64.h>
-#include <rckid/assets/icons24.h>
-#include <rckid/assets/icons_64.h>
+#include <kiddo/assets/fonts/OpenDyslexic24.h>
+#include <kiddo/assets/fonts/OpenDyslexic48.h>
+#include <kiddo/assets/fonts/HemiHead64.h>
+#include <kiddo/assets/icons24.h>
+#include <kiddo/assets/icons_64.h>
 
 
-namespace rckid {
+namespace kiddo {
 
     /** Sokoban clone
      
@@ -1750,6 +1750,6 @@ namespace rckid {
         uint32_t levelStatus_[NUM_LEVELS];
 
 
-    }; // rckid::Sokoban
+    }; // kiddo::Sokoban
 
-} // namespace rckid
+} // namespace kiddo

@@ -1,7 +1,7 @@
 
 #include "gbctests.h"
 
-namespace rckid::gbcemu {
+namespace kiddo::gbcemu {
 
     /** STOP instruction 
         

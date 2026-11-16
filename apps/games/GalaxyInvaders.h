@@ -2,25 +2,25 @@
 
 #include <algorithm>
 
-#include <rckid/app.h>
-#include <rckid/graphics/canvas.h>
-#include <rckid/graphics/sprite.h>
-#include <rckid/ui/header.h>
-#include <rckid/ui/alert.h>
-#include <rckid/audio/tone.h>
-#include <rckid/audio/music.h>
-#include <rckid/assets/fonts/Symbols16.h>
-#include <rckid/assets/fonts/OpenDyslexic24.h>
-#include <rckid/assets/fonts/HemiHead32.h>
-#include <rckid/assets/fonts/HemiHead64.h>
-#include <rckid/assets/glyphs.h>
-#include <rckid/assets/icons24.h>
-#include <rckid/assets/icons16.h>
+#include <kiddo/app.h>
+#include <kiddo/graphics/canvas.h>
+#include <kiddo/graphics/sprite.h>
+#include <kiddo/ui/header.h>
+#include <kiddo/ui/alert.h>
+#include <kiddo/audio/tone.h>
+#include <kiddo/audio/music.h>
+#include <kiddo/assets/fonts/Symbols16.h>
+#include <kiddo/assets/fonts/OpenDyslexic24.h>
+#include <kiddo/assets/fonts/HemiHead32.h>
+#include <kiddo/assets/fonts/HemiHead64.h>
+#include <kiddo/assets/glyphs.h>
+#include <kiddo/assets/icons24.h>
+#include <kiddo/assets/icons16.h>
 
-#include <rckid/ui/halloffame.h>
-#include <rckid/filesystem.h>
+#include <kiddo/ui/halloffame.h>
+#include <kiddo/filesystem.h>
 
-namespace rckid {
+namespace kiddo {
 
     /** SpaceInvaders-like simple game. 
 
@@ -511,6 +511,6 @@ namespace rckid {
         uint8_t starBrightness_[NUM_STARS];
 
 
-    }; // rckid::GalaxyInvaders
+    }; // kiddo::GalaxyInvaders
 
-} // namespace rckid
+} // namespace kiddo

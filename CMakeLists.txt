@@ -7,23 +7,23 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Tell CMake to generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# RCKid backend selection
+# KidDo backend selection
 #
-# This is done via the RCKID_BACKEND flag. When not specified, FANTASY is selected for fantasy backend. The following options are supported:
+# This is done via the KIDDO_BACKEND flag. When not specified, FANTASY is selected for fantasy backend. The following options are supported:
 #
-# -DRCKID_BACKEND=FANTASY for the fantasy console using raylib for graphics and sound, should run at least on on x86 and Aarch64, Linux and Windows
-# -DRCKID_BACKEND=MK3 for the mkIII RCKid device, powered by RP2350
-if (NOT DEFINED RCKID_BACKEND)
-    message("RCKID: No backend specified, defaulting to RCKID_BACKEND_FANTASY")
-    set(RCKID_BACKEND "FANTASY")
+# -DKIDDO_BACKEND=FANTASY for the fantasy console using raylib for graphics and sound, should run at least on on x86 and Aarch64, Linux and Windows
+# -DKIDDO_BACKEND=MK3 for the mkIII KidDo device, powered by RP2350
+if (NOT DEFINED KIDDO_BACKEND)
+    message("KIDDO: No backend specified, defaulting to KIDDO_BACKEND_FANTASY")
+    set(KIDDO_BACKEND "FANTASY")
 endif()
 
 # Based on the backend selected, pull in necessary libraries and setup the cmake environment. For fantasy backend, we need to initialize raylib, while the hardware backends pull-in and initialize the Raspberry Pi Pico SDK
-if (RCKID_BACKEND STREQUAL "MK3")
+if (KIDDO_BACKEND STREQUAL "MK3")
     # if backend is mk3 ensure tell the pico SDK to use RP2350 instead of RP2040
     set(PICO_BOARD none)
     set(PICO_PLATFORM rp2350)
-    message("RCKID: Building for the mk3 (RP2350)")
+    message("KIDDO: Building for the mk3 (RP2350)")
 
     add_definitions(-DCYW43_DEFAULT_PIN_WL_DATA_OUT=15)
     add_definitions(-DCYW43_DEFAULT_PIN_WL_DATA_IN=15)
@@ -40,7 +40,7 @@ if (RCKID_BACKEND STREQUAL "MK3")
     set(SKIP_PICO_MALLOC 1)
     # Pull in SDK (must be before project)
     include(${CMAKE_SOURCE_DIR}/lib/pico-sdk/pico_sdk_init.cmake)
-    project(rckid C CXX ASM)
+    project(kiddo C CXX ASM)
     # Tell pico SDK we are using 16MB cartridges
     add_compile_definitions(PICO_FLASH_SIZE_BYTES=16777216)
     # initialize the Pico SDK
@@ -48,13 +48,13 @@ if (RCKID_BACKEND STREQUAL "MK3")
     if (PICO_SDK_VERSION_STRING VERSION_LESS "2.0.0")
         message(FATAL_ERROR "Raspberry Pi Pico SDK version 2.0.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
     endif()
-elseif (RCKID_BACKEND STREQUAL "FANTASY")
-    message("RCKID: Building for the fantasy console (with Raylib)")
-    project(rckid)
+elseif (KIDDO_BACKEND STREQUAL "FANTASY")
+    message("KIDDO: Building for the fantasy console (with Raylib)")
+    project(kiddo)
 
     # if building for emscripten, set the necessary flags for asyncify (raylib needs this)
     if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
-        message(RCKID: Building for web with Emscripten)
+        message(KIDDO: Building for web with Emscripten)
         add_compile_options(-sASYNCIFY)
         add_link_options(-sASYNCIFY)
     endif()    
@@ -63,15 +63,15 @@ elseif (RCKID_BACKEND STREQUAL "FANTASY")
     add_subdirectory(lib/raylib)
 
 else()
-    message(FATAL_ERROR "Unknown RCKid backend selected: ${RCKID_BACKEND}. Supported backends: FANTASY, MK3")
+    message(FATAL_ERROR "Unknown kidDo backend selected: ${KIDDO_BACKEND}. Supported backends: FANTASY, MK3")
 endif()
 
 add_compile_options(-Wall -Wextra)
 
 # adds the specific backend definition so that the code knows as well which backend we are using
-add_compile_definitions("RCKID_BACKEND_${RCKID_BACKEND}")
+add_compile_definitions("KIDDO_BACKEND_${KIDDO_BACKEND}")
 
-add_compile_options(-fmacro-prefix-map=/home/peta/devel/rckid/=/)
+add_compile_options(-fmacro-prefix-map=/home/peta/devel/kiddo/=/)
 
 # setup general include directories
 include_directories("sdk/include")

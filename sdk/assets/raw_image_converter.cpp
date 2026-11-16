@@ -3,7 +3,7 @@
 #include <platform.h>
 #include <platform/args.h>
 
-#include <rckid/graphics/color.h>
+#include <kiddo/graphics/color.h>
 
 #include "assets_utils.h"
 
@@ -26,7 +26,7 @@ void convertSingleFile(std::string input, std::string output) {
     for (int x = img.width - 1; x >= 0; --x) {
         for (int y = 0; y < img.height; ++y) {
             ::Color pixel = adjustToRGB(GetImageColor(img, x, y));
-            uint16_t raw = rckid::Color::RGB(pixel.r, pixel.g, pixel.b).toRGB565();  
+            uint16_t raw = kiddo::Color::RGB(pixel.r, pixel.g, pixel.b).toRGB565();  
             ofile.write(reinterpret_cast<char*>(&raw), sizeof(raw));
         }
     }

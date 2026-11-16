@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.12)
 #
 # The unittests are only available when building for the FANTASY console backend. 
 # TODO does it have to be? 
-if (RCKID_BACKEND STREQUAL "FANTASY")
+if (KIDDO_BACKEND STREQUAL "FANTASY")
 
     file(GLOB_RECURSE SDK_SRC  "*.cpp" "*.h")
     file(
@@ -13,7 +13,7 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
         "${CMAKE_SOURCE_DIR}/lib/platform/test/*.h"
     )
     add_executable(tests-sdk ${SDK_SRC} ${PLATFORM_SRC})
-    link_with_librckid(tests-sdk)
+    link_with_libkiddo(tests-sdk)
 
     add_custom_target(run-tests
         COMMAND tests-sdk
@@ -21,5 +21,5 @@ if (RCKID_BACKEND STREQUAL "FANTASY")
         COMMENT "Run tests..."
     )    
 else()
-    message("Tests are only available in RCKID_BACKEND=FANTASY, skipping")
+    message("Tests are only available in KIDDO_BACKEND=FANTASY, skipping")
 endif()

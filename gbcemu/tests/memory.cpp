@@ -1,6 +1,6 @@
 #include "gbctests.h"
 
-namespace rckid::gbcemu {
+namespace kiddo::gbcemu {
 
     TEST(gbcemu, memory_storeload8) {
         GBCEmu gbc{"", nullptr};
@@ -87,4 +87,4 @@ namespace rckid::gbcemu {
         EXPECT(gbc.a(), 12);
     }
 
-} // namespace rckid::gbcemu
+} // namespace kiddo::gbcemu

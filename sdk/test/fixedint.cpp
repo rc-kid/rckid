@@ -1,7 +1,7 @@
 #include <platform/tests.h>
-#include <rckid/fixedint.h>
+#include <kiddo/fixedint.h>
 
-using namespace rckid;
+using namespace kiddo;
 
 TEST(fixedInt, add) {
     EXPECT(FixedInt{1.5f} + FixedInt{1.5f} == FixedInt{3});

@@ -1,6 +1,6 @@
 # Hardware Changelog
 
-This file contains brief descriptions of all the manufactured versions of RCKid mk II. In between versions were designed, but not actually manufactured and are not shown here.
+This file contains brief descriptions of all the manufactured versions of kidDo mk II. In between versions were designed, but not actually manufactured and are not shown here.
 
 
 ## Curious Capybara (mkIII v 4.0) - planned

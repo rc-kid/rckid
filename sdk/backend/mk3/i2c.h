@@ -2,15 +2,15 @@
 
 #include <time_point.h>
 
-#include <rckid/rckid.h>
+#include <kiddo/kiddo.h>
 
 #include "config.h"
 
-namespace rckid {
+namespace kiddo {
 
     /** I2C Communication 
      
-        RCKid supports asynchronnous I2C communication (especially with the AVR) where commands can be enqueued and will be sent by the I2C HW buffers with minimal CPU intervention. Alternatively, the I2C transactions can be blocking - since we have no multithreading up to 1 blocking I2C communication per core can exist.
+        KidDo supports asynchronnous I2C communication (especially with the AVR) where commands can be enqueued and will be sent by the I2C HW buffers with minimal CPU intervention. Alternatively, the I2C transactions can be blocking - since we have no multithreading up to 1 blocking I2C communication per core can exist.
         
         The I2C comms maintain a ring buffer for async transactions, which essentially allows the app to use fire & forget for AVR commands that control the device behavior. If the buffer becomes full, the async request will busy wait until a slot becomes free.
 
@@ -33,7 +33,7 @@ namespace rckid {
          */
         static void initialize() {
             // initialize the I2C bus we use to talk to AVR & peripherals (unlike mkII this is not expected to be user accessible)
-            i2c_init(i2c0, RCKID_I2C_SPEED); 
+            i2c_init(i2c0, KIDDO_I2C_SPEED); 
             i2c0->hw->intr_mask = 0; // disable interrupts for now
             gpio_set_function(RP_PIN_I2C_SDA, GPIO_FUNC_I2C);
             gpio_set_function(RP_PIN_I2C_SCL, GPIO_FUNC_I2C);
@@ -45,7 +45,7 @@ namespace rckid {
 
         static bool queueEmpty() { return ri_ == wi_; }
 
-        static bool full() { return (wi_ + 1) % RCKID_I2C_ASYNC_SLOTS == ri_; }
+        static bool full() { return (wi_ + 1) % KIDDO_I2C_ASYNC_SLOTS == ri_; }
 
         /** Reads the given number of response bytes from the I2C HW buffers and stores them in the given buffer. The buffer must be at least numBytes long.
          */
@@ -59,7 +59,7 @@ namespace rckid {
         template<typename T>
         static void sendAvrCommand(T const & cmd) {
             LOG(LL_INFO, "avr cmd: " << cmd.id);
-            transmitAsync(RCKID_AVR_I2C_ADDRESS, reinterpret_cast<uint8_t const *>(&cmd), sizeof(T));
+            transmitAsync(KIDDO_AVR_I2C_ADDRESS, reinterpret_cast<uint8_t const *>(&cmd), sizeof(T));
         }
 
         /** Asynchronously tramsits the specified I2C transaction.
@@ -67,7 +67,7 @@ namespace rckid {
             Enqueues the transaction into the I2C ring buffer. When the transaction will be processed, calls the callback function, which can read any received data. Due to RP2350 I2C HW limitations, an async transaction can move at most 16 bytes (write + read).
          */
         static void transmitAsync(uint8_t address, uint8_t const * wb, uint8_t wsize, uint8_t rsize = 0, Callback cb = nullptr) {
-            uint32_t next = (wi_ + 1) % RCKID_I2C_ASYNC_SLOTS;
+            uint32_t next = (wi_ + 1) % KIDDO_I2C_ASYNC_SLOTS;
             // if full, wait
             while (next == ri_) // safe volatile uint32_t is atomic on RP2350
                 yield();
@@ -90,7 +90,7 @@ namespace rckid {
             Waits for all currently enqueued async transactions to finish, then processes the given transaction synchronously. This takes time, but as it has direct access to the I2C hardware can copy larger quantities of data. 
          */
         static void transmitSync(uint8_t address, uint8_t const * wb, uint32_t wsize, uint8_t * rb = nullptr, uint32_t rsize = 0) {
-            uint32_t next = (wi_ + 1) % RCKID_I2C_ASYNC_SLOTS;
+            uint32_t next = (wi_ + 1) % KIDDO_I2C_ASYNC_SLOTS;
             // if full, wait
             while (next == ri_) // safe volatile uint32_t is atomic on RP2350
                 yield();
@@ -121,7 +121,7 @@ namespace rckid {
          */
         static void enqueue(Callback cb) {
             ASSERT(cb != nullptr); // this would deadlock
-            uint32_t next = (wi_ + 1) % RCKID_I2C_ASYNC_SLOTS;
+            uint32_t next = (wi_ + 1) % KIDDO_I2C_ASYNC_SLOTS;
             // if full, wait
             while (next == ri_) // safe volatile uint32_t is atomic on RP2350
                 yield();
@@ -224,14 +224,14 @@ namespace rckid {
             Transaction & t = ring_[ri_];
             // determine if the cause for the interrupt was abort, in which case see if we can retry & backoff accordingly. If no more retries are available, signal an error and if callback was provided, call the callback with -1 bytes received 
             if (cause & I2C_TX_ABORT) {
-                if (attempts_++ >= RCKID_I2C_RETRIES) {
+                if (attempts_++ >= KIDDO_I2C_RETRIES) {
                     LOG(LL_ERROR, "Unable to perform transaction");
                     if (t.callback)
                         t.callback(TransactionError);
                     moveToNext();
                 } else {
                     // to implement the backoff strategy, we must re-trigger outside of the interrupt handler. This is done by setting the retrigger time based current time and linear backoff. This is then checked in the onYield event. Because the retrigger check verifies the retrigger time not to be 0, make sure that if we accidentally landed on it move by 1us
-                    retrigger_ = TimePoint::now() + attempts_ * RCKID_I2C_BACKOFF_US;
+                    retrigger_ = TimePoint::now() + attempts_ * KIDDO_I2C_BACKOFF_US;
                     if (retrigger_ == 0)
                         retrigger_ = retrigger_ + 1;
                 }
@@ -255,7 +255,7 @@ namespace rckid {
             bool trigger = false;
             {
                 // we are already in an interrupt, no need to clear them
-                ri_ = (ri_ + 1) % RCKID_I2C_ASYNC_SLOTS;
+                ri_ = (ri_ + 1) % KIDDO_I2C_ASYNC_SLOTS;
                 if (ri_ != wi_)
                     trigger = true;
             }
@@ -309,7 +309,7 @@ namespace rckid {
         }
 
         // transaction ring buffer
-        static inline Transaction ring_[RCKID_I2C_ASYNC_SLOTS];
+        static inline Transaction ring_[KIDDO_I2C_ASYNC_SLOTS];
         // index at which new transaction will be enqeueued 
         static inline volatile uint32_t wi_ = 0;
         // index at which the transactions are transmitted/processed
@@ -321,5 +321,5 @@ namespace rckid {
 
     }; // class i2c
 
-} // namespace rckid
+} // namespace kiddo
 

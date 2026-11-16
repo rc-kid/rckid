@@ -1,33 +1,33 @@
-#include <rckid/ui/app.h>
-#include <rckid/ui/label.h>
-#include <rckid/ui/image.h>
-#include <rckid/ui/animation.h>
-#include <rckid/ui/carousel.h>
+#include <kiddo/ui/app.h>
+#include <kiddo/ui/label.h>
+#include <kiddo/ui/image.h>
+#include <kiddo/ui/animation.h>
+#include <kiddo/ui/carousel.h>
 #include <assets/images.h>
 #include <assets/icons_64.h>
 
-#include <rckid/apps/utils/steps.h>
-#include <rckid/apps/launcher.h>
+#include <kiddo/apps/utils/steps.h>
+#include <kiddo/apps/launcher.h>
 
 
-#include <rckid/apps/dialogs/text_dialog.h>
-#include <rckid/apps/dialogs/date_dialog.h>
-#include <rckid/apps/dialogs/time_dialog.h>
-#include <rckid/apps/dialogs/number_dialog.h>
+#include <kiddo/apps/dialogs/text_dialog.h>
+#include <kiddo/apps/dialogs/date_dialog.h>
+#include <kiddo/apps/dialogs/time_dialog.h>
+#include <kiddo/apps/dialogs/number_dialog.h>
 
 #include <gbcemu/gbcemu.h>
 
-#include <rckid/ui/chevron.h>
+#include <kiddo/ui/chevron.h>
 
-#include <rckid/apps/dialogs/popup_menu.h>
+#include <kiddo/apps/dialogs/popup_menu.h>
 
-using namespace rckid;
+using namespace kiddo;
 
-class TestApp : public rckid::ui::App<void> {
+class TestApp : public kiddo::ui::App<void> {
 public:
     TestApp() {
-        using namespace rckid;
-        using namespace rckid::ui;
+        using namespace kiddo;
+        using namespace kiddo::ui;
         p_ = addChild(new Panel())
             << SetRect(Rect::XYWH(40, 40, 240, 160))
             << SetBg(Color::Blue());
@@ -53,13 +53,13 @@ public:
             << SetRect(Rect::XYWH(50, 50, 20, 20))
             << Center()
             << SetBg(Color::Magenta());
-        p_->addChild(new rckid::ui::Label())
+        p_->addChild(new kiddo::ui::Label())
             << SetRect(Rect::XYWH(0, 0, 240, 160))
             << CenterHorizontally()
-            << SetText("Hello, RCKid UI!")
+            << SetText("Hello, kidDo UI!")
             << SetHAlign(HAlign::Center)
             << SetVAlign(VAlign::Center)
-            << SetFont(rckid::assets::Iosevka16);
+            << SetFont(kiddo::assets::Iosevka16);
         ap_->animate()
             << MoveHorizontally(ap_, 0, 240 - 20)->setRepeat(true)->setEasingFunction(easing::mirror)->setDelayMs(3000);
         ap_->animate()
@@ -68,19 +68,19 @@ public:
     }
 
 private:
-    rckid::ui::Panel * p_;
-    rckid::ui::Panel * ap_;
-    rckid::ui::Carousel * c_;
+    kiddo::ui::Panel * p_;
+    kiddo::ui::Panel * ap_;
+    kiddo::ui::Carousel * c_;
 };
 
-class ChevronTest : public rckid::ui::App<void> {
+class ChevronTest : public kiddo::ui::App<void> {
 public:
 
     String name() const override { return "ChevronTest"; }
 
     ChevronTest() {
-        using namespace rckid;
-        using namespace rckid::ui;
+        using namespace kiddo;
+        using namespace kiddo::ui;
         c1_ = addChild(new Chevron{})
             << SetRect(Rect::XYWH(10, 30, 60, 24))
             << SetRightEdge(Chevron::Edge::Out)
@@ -106,15 +106,15 @@ public:
     }
 
 private:
-    rckid::ui::Chevron * c1_;
-    rckid::ui::Chevron * c2_;
-    rckid::ui::Chevron * c3_;
+    kiddo::ui::Chevron * c1_;
+    kiddo::ui::Chevron * c2_;
+    kiddo::ui::Chevron * c3_;
 };
 
 
 
 int main() {
-    rckid::initialize();
+    kiddo::initialize();
     //App::run<ChevronTest>();
     //App::run<TextDialog>("Hello");
 

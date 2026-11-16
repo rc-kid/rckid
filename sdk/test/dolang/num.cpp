@@ -1,8 +1,8 @@
 #include <platform/tests.h>
-#include <rckid/dolang/num.h>
+#include <kiddo/dolang/num.h>
 
-using namespace rckid;
-using namespace rckid::dolang;
+using namespace kiddo;
+using namespace kiddo::dolang;
 
 namespace {
     double toDouble(Num x) { return static_cast<double>(x.n()) / static_cast<double>(x.d()); }

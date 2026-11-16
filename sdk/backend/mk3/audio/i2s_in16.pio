@@ -96,7 +96,7 @@ rightBit:
 
 % c-sdk {  
 
-#include "rckid/rckid.h"
+#include "kiddo/kiddo.h"
 
 inline void i2s_in16_program_init(PIO pio, uint sm, uint offset, uint dataPin, uint clkPins) {
     // claim the resources required for the continuous mode

@@ -1,9 +1,9 @@
-#include <rckid/ini.h>
-#include <rckid/apps/messages.h>
+#include <kiddo/ini.h>
+#include <kiddo/apps/messages.h>
 
 #include <assets/icons_24.h>
 
-namespace rckid {
+namespace kiddo {
 
     void write(BinaryWriter & w, Messages::Chat::Entry::Kind const & kind) {
         w << static_cast<uint32_t>(kind);
@@ -104,7 +104,7 @@ namespace rckid {
                 auto chat = std::make_unique<Chat>(r);
                 (*menu)
                     << ui::MenuItem{chat->name(), chat->icon(), [c = chat.get()]() {
-                            rckid::App::run<ChatRoom>(c);
+                            kiddo::App::run<ChatRoom>(c);
                         }}.withDecorator([chat = chat.get()](ui::MenuItem const &, ui::Image * img, ui::Label *) {
                             if (chat->unread()) {
                                 img->addChild(new ui::Image{})

@@ -248,7 +248,7 @@ namespace remote {
 
         /** Default address that all devices start listening to so that automatic discovery is possible. 
          */
-        constexpr char const * DefaultAddress = "RCKID";
+        constexpr char const * DefaultAddress = "KIDDO";
 
         class Message {
         public:

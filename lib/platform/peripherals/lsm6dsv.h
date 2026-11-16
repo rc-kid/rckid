@@ -2,7 +2,7 @@
 
 #include <platform.h>
 
-namespace rckid {
+namespace kiddo {
 
     /** LSM6DSV Accelerometer, gyroscope & pedometer driver.
      
@@ -203,6 +203,6 @@ namespace rckid {
         static constexpr uint8_t REG_EMB_FUNC_INIT_A = 0x66;
         static constexpr uint8_t EMB_FUNC_INIT_A_PEDO = 0b00001000;
 
-    }; // rckid::LSM6DSV
+    }; // kiddo::LSM6DSV
 
-} // namespace rckid
+} // namespace kiddo

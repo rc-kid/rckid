@@ -1,6 +1,6 @@
 #include "gbctests.h"
 
-namespace rckid::gbcemu {
+namespace kiddo::gbcemu {
 
     TEST(gbcemu, startup_flags) {
         GBCEmu gbc{"", nullptr};
@@ -10,4 +10,4 @@ namespace rckid::gbcemu {
         EXPECT_FLAGS(Z);
     }
 
-} // namespace rckid::gbcemu
+} // namespace kiddo::gbcemu

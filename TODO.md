@@ -1,7 +1,7 @@
 # Checklist
 
 - looks like LCSC is offering very reasonable acrylic front panels with cutouts, would cost around 1 USD per unit in 100 batch, which is a lot cheaper than the transparent 3d printed case (!!!)
-- there seem to be 3v3 neopixels - this could be useful for rckid proper as well (now tested in lego remote)
+- there seem to be 3v3 neopixels - this could be useful for kidDo proper as well (now tested in lego remote)
 - volume down not centered properly
 - maybe enlarge the top plate a bit to fit properly in the slightly large nylon bottom. Or shrink the nylon?
 - uart is wrong because the pins available on cartridge are only uart0, which is already used by the serial out. Can be fixed by making RP_TX pin 8 (instead of SD_CD), which is UART1
@@ -30,7 +30,7 @@
 - add wave (breathe) keyboard effect for rgb, this has to be timed well on ral device
 - does the start then drop immediately effect for keyboard press work? 
 
-- verify if the brightness in rckid.h/rckid.cpp is 0..15 or more and have the 0..255 be done at the HAL level
+- verify if the brightness in kiddo.h/kiddo.cpp is 0..15 or more and have the 0..255 be done at the HAL level
 
 - default palette can be system wide
 
@@ -116,7 +116,7 @@ So what I need:
 - add support for overclocking, and in the missing adjustment for display pio in the hal layer:
 
         static void adjustSpeed() {
-            pio_sm_set_clock_speed(RCKID_ST7789_PIO, sm_, RCKID_ST7789_SPEED * 4); // 2 cycles per pixel
+            pio_sm_set_clock_speed(KIDDO_ST7789_PIO, sm_, KIDDO_ST7789_SPEED * 4); // 2 cycles per pixel
         }
 
 # Backend - Fantasy
@@ -237,7 +237,7 @@ Polish
 
 - some avr commands are longer than 16 bytes, which means it cannot be stored via the I2C async commands
 
-- when stack protection fails, it will fail in the error code as well forever, update stack on device, do new thread on rckid? 
+- when stack protection fails, it will fail in the error code as well forever, update stack on device, do new thread on kidDo? 
 
 - fix/check device fatal error & stack protection
 

@@ -1,6 +1,6 @@
-#include <rckid/graphics/blit.h>
+#include <kiddo/graphics/blit.h>
 
-namespace rckid {
+namespace kiddo {
 
     // simple blitting
 
@@ -112,4 +112,4 @@ namespace rckid {
     }
 
 
-} // namespace rckid
+} // namespace kiddo

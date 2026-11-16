@@ -1,12 +1,12 @@
 #pragma once
 
-#include "rckid/rckid.h"
+#include "kiddo/kiddo.h"
 
 /** SD Card SPI interface
  
     
  */
-namespace rckid::internal::sd {
+namespace kiddo::internal::sd {
 
     extern uint32_t sdNumBlocks_;    
     extern uint spiSm_;
@@ -60,4 +60,4 @@ namespace rckid::internal::sd {
     void adjustSpeed();
 
 
-} // namespace rckid
+} // namespace kiddo

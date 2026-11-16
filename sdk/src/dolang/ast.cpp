@@ -1,7 +1,7 @@
-#include <rckid/dolang/ast.h>
-#include <rckid/dolang/pretty_printer.h>
+#include <kiddo/dolang/ast.h>
+#include <kiddo/dolang/pretty_printer.h>
 
-namespace rckid::dolang::ast {
+namespace kiddo::dolang::ast {
 
     void DebugPrinter::header(Node const * node, uint32_t indent) {
         for (uint32_t i = 0; i < indent; ++i)
@@ -295,4 +295,4 @@ namespace rckid::dolang::ast {
         }
     }
 
-} // namespace rckid::dolang::ast
+} // namespace kiddo::dolang::ast

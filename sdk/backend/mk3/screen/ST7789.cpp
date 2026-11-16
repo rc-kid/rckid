@@ -3,13 +3,13 @@
 #include "ST7789.h"
 #include "ST7789_rgb16.pio.h"
 
-#include <rckid/hal.h>
-#include <rckid/graphics/png.h>
+#include <kiddo/hal.h>
+#include <kiddo/graphics/png.h>
 #include <assets/images.h>
 
 #include "../config.h"
 
-namespace rckid {
+namespace kiddo {
 
 
     void ST7789::reset() {
@@ -44,7 +44,7 @@ namespace rckid {
         setUpdateRegion(updateRegion_);
         // and now do the png file
         // now clear the entire display black
-#if (RCKID_SPLASHSCREEN_OFF == 1)
+#if (KIDDO_SPLASHSCREEN_OFF == 1)
         clear(0x0000);
 #else
         setRefreshDirection(hal::display::RefreshDirection::RowFirst);
@@ -144,4 +144,4 @@ namespace rckid {
 
     }
 
-} // namespace rckid
+} // namespace kiddo

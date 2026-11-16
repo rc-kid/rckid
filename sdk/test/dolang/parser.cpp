@@ -3,11 +3,11 @@
 #include <string>
 
 #include <platform/tests.h>
-#include <rckid/dolang/parser.h>
-#include <rckid/dolang/pretty_printer.h>
+#include <kiddo/dolang/parser.h>
+#include <kiddo/dolang/pretty_printer.h>
 
-using namespace rckid;
-using namespace rckid::dolang;
+using namespace kiddo;
+using namespace kiddo::dolang;
 
 namespace {
 

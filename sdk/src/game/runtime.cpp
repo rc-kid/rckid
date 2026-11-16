@@ -1,7 +1,7 @@
-#include <rckid/game/runtime.h>
-#include <rckid/game/object.h>
+#include <kiddo/game/runtime.h>
+#include <kiddo/game/object.h>
 
-namespace rckid::game {
+namespace kiddo::game {
 
     bool Type::operator == (ClassDescriptor const & other) const {
         if (kind_ != Kind::Object)

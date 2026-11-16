@@ -1,6 +1,6 @@
 #include <cstdarg>
 
-#include <rckid/rckid.h>
+#include <kiddo/kiddo.h>
 
 extern "C" {
     void debug_printf(char const * fmt, ...) {
@@ -9,6 +9,6 @@ extern "C" {
         va_start(args, fmt);
         vsnprintf(buf, sizeof(buf), fmt, args);
         va_end(args);
-        rckid::debug::write() << buf;
+        kiddo::debug::write() << buf;
     }
 }

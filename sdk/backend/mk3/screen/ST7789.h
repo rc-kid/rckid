@@ -4,14 +4,14 @@
 #include <platform.h>
 #include <platform/utils.h>
 
-#include <rckid/rckid.h>
-#include <rckid/hal.h>
-#include <rckid/graphics/color.h>
-#include <rckid/graphics/geometry.h>
+#include <kiddo/kiddo.h>
+#include <kiddo/hal.h>
+#include <kiddo/graphics/color.h>
+#include <kiddo/graphics/geometry.h>
 
 #include "config.h"
 
-namespace rckid {
+namespace kiddo {
 
     //void irqDMADone_();
 
@@ -279,6 +279,6 @@ namespace rckid {
         static constexpr uint8_t PORCTRL = 0xb2; // porch control
         static constexpr uint8_t FRCTRL2 = 0xc6; // framerate control
 
-    }; // rckid::ST7789
+    }; // kiddo::ST7789
 
-} // namespace rckid
+} // namespace kiddo

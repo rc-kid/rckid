@@ -1,15 +1,15 @@
 
 #include <platform.h>
-#include <rckid/apps/utils/data_sync.h>
+#include <kiddo/apps/utils/data_sync.h>
 
 #include "sd.h"
 #include "../config.h"
 #include "sd_spi.pio.h"
 
 // debug option to use bitbanging instead of the pio SPI driver - only really useful for debugging the basic protocol
-#define RCKID_SD_SPI_BITBANG 0
+#define KIDDO_SD_SPI_BITBANG 0
 
-namespace rckid::internal::sd {
+namespace kiddo::internal::sd {
 
     namespace {
 
@@ -53,22 +53,22 @@ namespace rckid::internal::sd {
         }
 
         void sd_spi_write_blocking(uint8_t const * data, uint32_t size) {
-#if (RCKID_SD_SPI_BITBANG)
+#if (KIDDO_SD_SPI_BITBANG)
             return sd_spi_write_bitbang(data, size);
 #endif
             // this is from the Pico SDK where the io_rw_8 replicates the byte to all 4 bytes from the 32bit FIFO
             // TODO not sure how the read can work
             // TODO would this work with DMA? 
-            io_rw_8 *txfifo = (io_rw_8 *) &RCKID_SD_PIO->txf[spiSm_];
-            io_rw_8 *rxfifo = (io_rw_8 *) &RCKID_SD_PIO->rxf[spiSm_];            
+            io_rw_8 *txfifo = (io_rw_8 *) &KIDDO_SD_PIO->txf[spiSm_];
+            io_rw_8 *rxfifo = (io_rw_8 *) &KIDDO_SD_PIO->rxf[spiSm_];            
             uint32_t rxlen = size;
             // Drive out all bytes and drain corresponding RX bytes (dummy data) to keep FIFOs balanced.
             while (size > 0 || rxlen > 0) {
-                if (size > 0 && !pio_sm_is_tx_fifo_full(RCKID_SD_PIO, spiSm_)) {
+                if (size > 0 && !pio_sm_is_tx_fifo_full(KIDDO_SD_PIO, spiSm_)) {
                     *txfifo = *data++;
                     --size;
                 }
-                if (rxlen > 0 && !pio_sm_is_rx_fifo_empty(RCKID_SD_PIO, spiSm_)) {
+                if (rxlen > 0 && !pio_sm_is_rx_fifo_empty(KIDDO_SD_PIO, spiSm_)) {
                     (void) *rxfifo;
                     --rxlen;
                 }
@@ -78,19 +78,19 @@ namespace rckid::internal::sd {
 
 
         void sd_spi_read_blocking(uint8_t byteToSend, uint8_t * data, uint32_t size) {
-#if (RCKID_SD_SPI_BITBANG)
+#if (KIDDO_SD_SPI_BITBANG)
             return sd_spi_read_bitbang(byteToSend, data, size);
 #endif
-            io_rw_8 *txfifo = (io_rw_8 *) &RCKID_SD_PIO->txf[spiSm_];
-            io_rw_8 *rxfifo = (io_rw_8 *) &RCKID_SD_PIO->rxf[spiSm_];            
+            io_rw_8 *txfifo = (io_rw_8 *) &KIDDO_SD_PIO->txf[spiSm_];
+            io_rw_8 *rxfifo = (io_rw_8 *) &KIDDO_SD_PIO->rxf[spiSm_];            
             uint32_t txlen = size;
             // Schedule txlen dummy bytes to clock in size bytes, then drain all RX bytes.
             while (size > 0 || txlen > 0) {
-                if (txlen > 0 && !pio_sm_is_tx_fifo_full(RCKID_SD_PIO, spiSm_)) {
+                if (txlen > 0 && !pio_sm_is_tx_fifo_full(KIDDO_SD_PIO, spiSm_)) {
                     *txfifo = byteToSend;
                     --txlen;
                 }
-                if (size > 0 && !pio_sm_is_rx_fifo_empty(RCKID_SD_PIO, spiSm_)) {
+                if (size > 0 && !pio_sm_is_rx_fifo_empty(KIDDO_SD_PIO, spiSm_)) {
                     *data++ = *rxfifo;
                     --size;
                 }
@@ -105,7 +105,7 @@ namespace rckid::internal::sd {
 
     void sdEnterSPIMode() {
         LOG(LL_INFO, "SD switch to SPI mode");
-        pio_sm_set_enabled(RCKID_SD_PIO, spiSm_, false);
+        pio_sm_set_enabled(KIDDO_SD_PIO, spiSm_, false);
         gpio::outputHigh(RP_PIN_SD_CSN); // no cs
         gpio::outputLow(RP_PIN_SD_SCK); // clock idles low
         gpio::setAsInput(RP_PIN_SD_RX);
@@ -116,10 +116,10 @@ namespace rckid::internal::sd {
             cpu::delayUs(5);
             gpio_put(RP_PIN_SD_SCK, false);
         }
-#if (RCKID_SD_SPI_BITBANG == 0)
-        sd_spi_program_init(RCKID_SD_PIO, spiSm_, spiOffset_, RP_PIN_SD_RX, RP_PIN_SD_TX, RP_PIN_SD_SCK);
-        pio_sm_set_clock_speed(RCKID_SD_PIO, spiSm_, RCKID_SD_SPI_INIT_SPEED * RCKID_SD_SPI_SPEED_MULTIPLIER);
-        pio_sm_set_enabled(RCKID_SD_PIO, spiSm_, true);
+#if (KIDDO_SD_SPI_BITBANG == 0)
+        sd_spi_program_init(KIDDO_SD_PIO, spiSm_, spiOffset_, RP_PIN_SD_RX, RP_PIN_SD_TX, RP_PIN_SD_SCK);
+        pio_sm_set_clock_speed(KIDDO_SD_PIO, spiSm_, KIDDO_SD_SPI_INIT_SPEED * KIDDO_SD_SPI_SPEED_MULTIPLIER);
+        pio_sm_set_enabled(KIDDO_SD_PIO, spiSm_, true);
 #endif
     }
 
@@ -177,8 +177,8 @@ namespace rckid::internal::sd {
         LOG(LL_INFO, "SD init");
         LOG(LL_INFO, "  card detect: " << hal::fs::sdCardDetect());
         // initialize the PIO for SPI communication with the SD card, use the same pio as the display driver since its base is already set to 16
-        spiSm_ = pio_claim_unused_sm(RCKID_SD_PIO, true);
-        spiOffset_ = pio_add_program(RCKID_SD_PIO, & sd_spi_program);
+        spiSm_ = pio_claim_unused_sm(KIDDO_SD_PIO, true);
+        spiOffset_ = pio_add_program(KIDDO_SD_PIO, & sd_spi_program);
         LOG(LL_INFO, "  spi sm: " << (uint32_t)spiSm_);
         LOG(LL_INFO, "  spi offset: " << (uint32_t)spiOffset_);
         // TODO enable interrupt??
@@ -256,9 +256,9 @@ namespace rckid::internal::sd {
             LOG(LL_ERROR, "  byte addressable not supported");
         }
         // now the card is powered up and we can increase the speed
-        pio_sm_set_enabled(RCKID_SD_PIO, spiSm_, false);
-        pio_sm_set_clock_speed(RCKID_SD_PIO, spiSm_, RCKID_SD_SPI_SPEED * RCKID_SD_SPI_SPEED_MULTIPLIER);
-        pio_sm_set_enabled(RCKID_SD_PIO, spiSm_, true);
+        pio_sm_set_enabled(KIDDO_SD_PIO, spiSm_, false);
+        pio_sm_set_clock_speed(KIDDO_SD_PIO, spiSm_, KIDDO_SD_SPI_SPEED * KIDDO_SD_SPI_SPEED_MULTIPLIER);
+        pio_sm_set_enabled(KIDDO_SD_PIO, spiSm_, true);
         // and determine the card capacity by reading the CSD register via CMD9
         status = sdBlockCommand(CMD9, buffer, 16);
         if (status != SD_NO_ERROR) {
@@ -290,9 +290,9 @@ namespace rckid::internal::sd {
     }
 
     void adjustSpeed() {
-        pio_sm_set_enabled(RCKID_SD_PIO, spiSm_, false);
-        pio_sm_set_clock_speed(RCKID_SD_PIO, spiSm_, RCKID_SD_SPI_SPEED * RCKID_SD_SPI_SPEED_MULTIPLIER);
-        pio_sm_set_enabled(RCKID_SD_PIO, spiSm_, true);
+        pio_sm_set_enabled(KIDDO_SD_PIO, spiSm_, false);
+        pio_sm_set_clock_speed(KIDDO_SD_PIO, spiSm_, KIDDO_SD_SPI_SPEED * KIDDO_SD_SPI_SPEED_MULTIPLIER);
+        pio_sm_set_enabled(KIDDO_SD_PIO, spiSm_, true);
     }
 
     bool readBlocks(uint32_t start, uint8_t * buffer, uint32_t numBlocks) {
@@ -346,4 +346,4 @@ namespace rckid::internal::sd {
         return true;
     }
 
-} // namespace rckid
+} // namespace kiddo

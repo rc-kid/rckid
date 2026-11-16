@@ -3,7 +3,7 @@
 
 #include <littlefs/lfs.h>
 
-#include <rckid/filesystem.h>
+#include <kiddo/filesystem.h>
 
 // ================================================================================================
 // FatFS device driver (using SD card)
@@ -13,33 +13,33 @@ extern "C" {
 
     DSTATUS disk_status(BYTE pdrv) {
         ASSERT(pdrv == 0);
-        return rckid::hal::fs::sdCapacityBlocks() != 0 ? RES_OK : STA_NODISK;
+        return kiddo::hal::fs::sdCapacityBlocks() != 0 ? RES_OK : STA_NODISK;
     }
 
     DSTATUS disk_initialize(BYTE pdrv) {
         ASSERT(pdrv == 0);
-        return rckid::hal::fs::sdCapacityBlocks() != 0 ? RES_OK : STA_NODISK;
+        return kiddo::hal::fs::sdCapacityBlocks() != 0 ? RES_OK : STA_NODISK;
     }
 
     DRESULT disk_read(BYTE pdrv, BYTE * buff, LBA_t sector, UINT count) {
         ASSERT(pdrv == 0);
-        if (rckid::hal::fs::sdCapacityBlocks() == 0)
+        if (kiddo::hal::fs::sdCapacityBlocks() == 0)
             return RES_NOTRDY;
-        rckid::hal::fs::sdReadBlocks(static_cast<uint32_t>(sector), buff, count);
+        kiddo::hal::fs::sdReadBlocks(static_cast<uint32_t>(sector), buff, count);
         return RES_OK;
     }
 
     DRESULT disk_write(BYTE pdrv, BYTE const * buff, LBA_t sector, UINT count) {
         ASSERT(pdrv == 0);
-        if (rckid::hal::fs::sdCapacityBlocks() == 0)
+        if (kiddo::hal::fs::sdCapacityBlocks() == 0)
             return RES_NOTRDY;
-        rckid::hal::fs::sdWriteBlocks(static_cast<uint32_t>(sector), buff, count);
+        kiddo::hal::fs::sdWriteBlocks(static_cast<uint32_t>(sector), buff, count);
         return RES_OK;
     }
 
     DRESULT disk_ioctl(BYTE pdrv, BYTE cmd, void * buff) {
         ASSERT(pdrv == 0);
-        if (rckid::hal::fs::sdCapacityBlocks() == 0)
+        if (kiddo::hal::fs::sdCapacityBlocks() == 0)
             return RES_NOTRDY;
         switch (cmd) {
             // no need to do anything for CTRL_SYNC as the FatFS exposed API is blocking
@@ -47,7 +47,7 @@ extern "C" {
                 break;
             // returns the number of SD card blocks
             case GET_SECTOR_COUNT:
-                *(LBA_t *)buff = rckid::hal::fs::sdCapacityBlocks();
+                *(LBA_t *)buff = kiddo::hal::fs::sdCapacityBlocks();
                 break;
             case GET_BLOCK_SIZE:
                 *(DWORD *)buff = 1;
@@ -67,21 +67,21 @@ extern "C" {
         return 0;
     }
 
-    // lfs wrappers for the RCKid cartridge interface
+    // lfs wrappers for the KidDo cartridge interface
 
     int lfs_device_read(lfs_config const * c, lfs_block_t block, lfs_off_t off, void * buffer, lfs_size_t size) {
-        rckid::hal::fs::cartridgeRead(block * c->block_size + off, reinterpret_cast<uint8_t *>(buffer), size);
+        kiddo::hal::fs::cartridgeRead(block * c->block_size + off, reinterpret_cast<uint8_t *>(buffer), size);
         return 0;
     }
 
     int lfs_device_write(lfs_config const * c, lfs_block_t block, lfs_off_t off, void const * buffer, lfs_size_t size) {
-        ASSERT(size == rckid::hal::fs::cartridgeWriteSizeBytes());
-        rckid::hal::fs::cartridgeWrite(block * c->block_size + off, reinterpret_cast<uint8_t const *>(buffer), size);
+        ASSERT(size == kiddo::hal::fs::cartridgeWriteSizeBytes());
+        kiddo::hal::fs::cartridgeWrite(block * c->block_size + off, reinterpret_cast<uint8_t const *>(buffer), size);
         return 0;
     }
 
     int lfs_device_erase(lfs_config const * c, lfs_block_t block) {
-        rckid::hal::fs::cartridgeErase(static_cast<uint32_t>(block * c->block_size));
+        kiddo::hal::fs::cartridgeErase(static_cast<uint32_t>(block * c->block_size));
         return 0;
     }
 
@@ -92,9 +92,9 @@ extern "C" {
 
 
 
-namespace rckid::fs {
+namespace kiddo::fs {
 
-#ifndef RCKID_CUSTOM_FILESYSTEM
+#ifndef KIDDO_CUSTOM_FILESYSTEM
     namespace {
         FATFS * fs_ = nullptr;
         lfs_t lfs_;
@@ -119,7 +119,7 @@ namespace rckid::fs {
             return (fs_->n_fatent - 2) * (fs_->csize);
         }
 
-    } // namespace rckid::fs::internal
+    } // namespace kiddo::fs::internal
 
     class FatFSFileReader : public RandomReadStream {
     public:
@@ -158,7 +158,7 @@ namespace rckid::fs {
         FIL f_;
     }; // fs::FatFSFileReader
 
-    class FatFSFileWriter : public rckid::RandomWriteStream {
+    class FatFSFileWriter : public kiddo::RandomWriteStream {
     public:
         ~FatFSFileWriter() override {
             f_close(& f_);
@@ -225,7 +225,7 @@ namespace rckid::fs {
         mutable lfs_file_t f_;
     }; // LittleFSFileReader
 
-    class LittleFSFileWriter : public rckid::RandomWriteStream {
+    class LittleFSFileWriter : public kiddo::RandomWriteStream {
     public:
         ~LittleFSFileWriter() override {
             lfs_file_close(& lfs_, & f_);
@@ -331,7 +331,7 @@ namespace rckid::fs {
     }
 
     // filesystem functions
-#ifndef RCKID_CUSTOM_FILESYSTEM
+#ifndef KIDDO_CUSTOM_FILESYSTEM
 
     void initializeFilesystem() {
         LOG(LL_INFO, "Initializing filesystem");
@@ -733,5 +733,5 @@ namespace rckid::fs {
         return count;
     }
 
-#endif // RCKID_CUSTOM_FILESYSTEM
+#endif // KIDDO_CUSTOM_FILESYSTEM
 }

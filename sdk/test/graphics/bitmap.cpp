@@ -1,7 +1,7 @@
 #include <platform/tests.h>
 
-#include <rckid/graphics/bitmap.h>
-#include <rckid/graphics/image_source.h>
+#include <kiddo/graphics/bitmap.h>
+#include <kiddo/graphics/image_source.h>
 
 namespace {
     constexpr uint16_t bmp[] = {
@@ -17,7 +17,7 @@ namespace {
 
 
 TEST(graphics, imageSourceMemory) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     ImageSource img{bmp};
     EXPECT(g_.usedDelta() == 0);

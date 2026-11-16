@@ -62,7 +62,7 @@ inline Writer debugWrite() {
  */
 
 
-using namespace rckid;
+using namespace kiddo;
 
 
 extern "C" {
@@ -82,7 +82,7 @@ public:
     static void initialize() {
         cpu::initialize(PUYA_CLOCKSPEED);
         // TODO initialize watchdog
-        serial::initializeTx(RCKID_RP_SERIAL_SPEED, PUYA_PIN_TX);
+        serial::initializeTx(KIDDO_RP_SERIAL_SPEED, PUYA_PIN_TX);
         LOG("PY32F030 initialize");
         initializeGPIO();
         initializeButtons();
@@ -97,7 +97,7 @@ public:
         }
         LL_RCC_ClearResetFlags();
         cpu::wdtReset();
-        cpu::wdtEnable(RCKID_PUYA_WATCHDOG_TIMEOUT_MS);
+        cpu::wdtEnable(KIDDO_PUYA_WATCHDOG_TIMEOUT_MS);
         LOG("  wdt");
         // the RTC second tick runs in all states, in the Off state its wakeups are what keeps resetting the watchdog
         rtc::enableSecondInterrupt(true);
@@ -196,14 +196,14 @@ private:
             case mkIV::DeviceState::State::Wake:
                 // when waking up, ensure that the Btn::Home is considered pressed and reset the long press counter 
                 ts_.setButton(Btn::Home, true);
-                homeBtnLongPressCounter_ = RCKID_HOME_BUTTON_LONG_PRESS_MS / (1000 / PUYA_SYSTEM_TICK_HZ);
+                homeBtnLongPressCounter_ = KIDDO_HOME_BUTTON_LONG_PRESS_MS / (1000 / PUYA_SYSTEM_TICK_HZ);
                 break;
             case mkIV::DeviceState::State::Alarm:
                 // power the device on (we canonly reach alarm state if the device is off)
                 ASSERT(ts_.state() == mkIV::DeviceState::State::Off || ts_.state() == mkIV::DeviceState::State::OffDC);
                 powerOn();
                 // reload the watchdog state to the alarm timeout
-                reloadRpWatchdogCounter(RCKID_ALARM_TIMEOUT_MS);
+                reloadRpWatchdogCounter(KIDDO_ALARM_TIMEOUT_MS);
                 break;
             case mkIV::DeviceState::State::PowerDown:
                 // the power down state is a hint for the rp2350 to power itself down. We reset the rp watchog to the power down timeout to ensure timely compliance. In the power down mode the watchdog counter is not reset on I2C transactions and can only be explicitly extended via the power down acknowledge message 
@@ -212,7 +212,7 @@ private:
                 ts_.setDebugMode(false);
                 // set the state early to ensure we do not extend the watchog during I2C reads
                 ts_.setState(s);
-                reloadRpWatchdogCounter(RCKID_POWERDOWN_TIMEOUT_MS);
+                reloadRpWatchdogCounter(KIDDO_POWERDOWN_TIMEOUT_MS);
                 powerDownAck_ = false;
                 // we altready set the state above, return immediately, no need to set again at the end
                 return;
@@ -220,7 +220,7 @@ private:
                 // power on RP2350 if we are not coming from the Alarm state
                 if (ts_.state() != mkIV::DeviceState::State::Alarm)
                     powerOn();
-                reloadRpWatchdogCounter(RCKID_RP2350_WATCHDOG_TIMEOUT_MS);
+                reloadRpWatchdogCounter(KIDDO_RP2350_WATCHDOG_TIMEOUT_MS);
                 // if the RGB lights are doing anything go to black (they are controlled by the device when powered on)
                 // TODO
                 break;
@@ -285,7 +285,7 @@ private:
 
     static void reboot() {
         // TODO cycle power
-        reloadRpWatchdogCounter(RCKID_RP2350_WATCHDOG_TIMEOUT_MS);
+        reloadRpWatchdogCounter(KIDDO_RP2350_WATCHDOG_TIMEOUT_MS);
     }
 
     static void rebootToBootloader() {
@@ -525,7 +525,7 @@ private:
                 if (ts_.state() == mkIV::DeviceState::State::PowerDown) {
                     if (! powerDownAck_) {
                         powerDownAck_ = true;
-                        reloadRpWatchdogCounter(RCKID_POWERDOWN_EXTENDED_TIMEOUT_MS);
+                        reloadRpWatchdogCounter(KIDDO_POWERDOWN_EXTENDED_TIMEOUT_MS);
                     }
                 }
                 break;
@@ -558,8 +558,8 @@ private:
     static void i2cReset() {
         LL_I2C_EnableReset(I2C1);
         LL_I2C_DisableReset(I2C1);
-        LL_I2C_ConfigSpeed(I2C1, SystemCoreClock, RCKID_I2C_SPEED, LL_I2C_DUTYCYCLE_2);
-        LL_I2C_SetOwnAddress1(I2C1, RCKID_AVR_I2C_ADDRESS << 1, 0);
+        LL_I2C_ConfigSpeed(I2C1, SystemCoreClock, KIDDO_I2C_SPEED, LL_I2C_DUTYCYCLE_2);
+        LL_I2C_SetOwnAddress1(I2C1, KIDDO_AVR_I2C_ADDRESS << 1, 0);
         LL_I2C_EnableClockStretching(I2C1);
         LL_I2C_EnableIT_EVT(I2C1);
         LL_I2C_EnableIT_ERR(I2C1);
@@ -646,7 +646,7 @@ private:
             i2cReset();
             // if we are in the on state, reading a state resets the watchdog timeout automatically
             if (ts_.state() == mkIV::DeviceState::State::On)
-                reloadRpWatchdogCounter(RCKID_RP2350_WATCHDOG_TIMEOUT_MS);
+                reloadRpWatchdogCounter(KIDDO_RP2350_WATCHDOG_TIMEOUT_MS);
         }
         // master write finished, master sent STOP. Note how many bytes we received
         if (sr1 & I2C_SR1_STOPF) {
@@ -716,7 +716,7 @@ private:
                 ASSERT(false);
         }
         if (current != last)
-            debounceCounters_[static_cast<uint8_t>(btn)] = RCKID_BUTTON_DEBOUNCE_TICKS;
+            debounceCounters_[static_cast<uint8_t>(btn)] = KIDDO_BUTTON_DEBOUNCE_TICKS;
         return current;
     }
 
@@ -749,7 +749,7 @@ private:
     
         // if btnHome has changed to pressed, arm the long press detection counter (let the actual detection decide what to do with it)
         if (changed &&  btnHome) {
-            homeBtnLongPressCounter_ = RCKID_HOME_BUTTON_LONG_PRESS_MS / (1000 / PUYA_SYSTEM_TICK_HZ);
+            homeBtnLongPressCounter_ = KIDDO_HOME_BUTTON_LONG_PRESS_MS / (1000 / PUYA_SYSTEM_TICK_HZ);
             // if we are off, detecting home button press should wake us up
             if (ts_.state() == mkIV::DeviceState::State::OffDC)
                 setState(mkIV::DeviceState::State::Wake);
@@ -891,11 +891,11 @@ private:
             // store in ts_
             ts_.setVcc(vcc);
             // depending on the value, we might need state changes, i.e. if the value is above the DC threshold and we are in Off, change to OffDC. If on the other hand we are in the OffDC and the value drops below the threshold, we should go to Off.
-            if (vcc >= RCKID_VUSB_THRESHOLD && ! ts_.dcPower())
+            if (vcc >= KIDDO_VUSB_THRESHOLD && ! ts_.dcPower())
                 dcPowerConnected(true);
-            else if (vcc < RCKID_VUSB_THRESHOLD && ts_.dcPower())
+            else if (vcc < KIDDO_VUSB_THRESHOLD && ts_.dcPower())
                 dcPowerConnected(false);
-            if (vcc < RCKID_POWER_ON_THRESHOLD && ts_.state() == mkIV::DeviceState::State::On)
+            if (vcc < KIDDO_POWER_ON_THRESHOLD && ts_.state() == mkIV::DeviceState::State::On)
                 criticalBattery();
         }
         // process the temperature

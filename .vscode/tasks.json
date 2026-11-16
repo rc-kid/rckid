@@ -10,7 +10,7 @@
             ],
             "group": "build",
             "problemMatcher": [],
-            "detail": "Builds RCKid and runs all tests. Only available in ARCH_FANTASY"
+            "detail": "Builds kidDo and runs all tests. Only available in ARCH_FANTASY"
         },
         {
             "type": "cmake",
@@ -32,7 +32,7 @@
             ],
             "group": "build",
             "problemMatcher": [],
-            "detail": "Generates the SDK assets for RCKid"
+            "detail": "Generates the SDK assets for kidDo"
         },
         {
             "type": "cmake",
@@ -48,7 +48,7 @@
         {
             "type": "shell",
             "label": "mk 3 - build",
-            "detail": "Generates the SDK assets for RCKid",
+            "detail": "Generates the SDK assets for kidDo",
             "options": {
                 "cwd": "${workspaceFolder}/build-mk3"
             },
@@ -152,7 +152,7 @@
                 "cartridges",
                 "gbcemu/gbcemu",
                 "sdk/backend",
-                "sdk/include/rckid",
+                "sdk/include/kiddo",
                 "sdk/src"           
             ],
             "problemMatcher": []

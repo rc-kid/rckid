@@ -1,7 +1,7 @@
-#include <rckid/audio/decoder_stream.h>
-#include <rckid/audio/mp3.h>
+#include <kiddo/audio/decoder_stream.h>
+#include <kiddo/audio/mp3.h>
 
-namespace rckid::audio {
+namespace kiddo::audio {
 
     unique_ptr<DecoderStream> DecoderStream::fromFile(String const & path, fs::Drive drive) {
         auto f = fs::readFile(path, drive); 
@@ -13,5 +13,5 @@ namespace rckid::audio {
         return nullptr;
     }
     
-} // namespace rckid::audio
+} // namespace kiddo::audio
 

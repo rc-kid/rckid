@@ -1,0 +1,25 @@
+#pragma once
+
+#include <platform.h>
+
+#define UNIMPLEMENTED do { kiddo::hal::device::fatalError(__FILE__, __LINE__, "UNIMPLEMENTED"); } while (false)
+#define UNREACHABLE do { kiddo::hal::device::fatalError(__FILE__, __LINE__,  "UNREACHABLE"); } while (false)
+
+#define ASSERT(...) do { if (!(__VA_ARGS__)) kiddo::hal::device::fatalError(__FILE__, __LINE__, "ASSERT"); } while (false)
+
+#define FATAL_ERROR(...) do {kiddo::hal::device::fatalError(__FILE__, __LINE__, __VA_ARGS__ ); } while (false)
+
+extern "C" {
+    /** printf-like wrapper around the debugWrite() kiddo function so that third party libraries can be used seamlessly.
+     */
+    void debug_printf(char const * fmt, ...);
+}
+
+namespace kiddo::hal::device {
+    [[noreturn]] void fatalError(char const * file, uint32_t line, char const * msg_);
+    [[noreturn]] void fatalError(char const * file, uint32_t line, char const * msg_, uint32_t payload);
+}
+
+namespace kiddo::error {
+    constexpr char const * HW_FAIL = "HW_FAIL";
+}

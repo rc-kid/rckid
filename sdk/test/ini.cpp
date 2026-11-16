@@ -1,9 +1,9 @@
 #include <platform/tests.h>
 
-#include <rckid/ini.h>
+#include <kiddo/ini.h>
 
 TEST(ini, basicWriter) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     MemoryStream ms = MemoryStream::withCapacity(1024);
     {
@@ -30,7 +30,7 @@ TEST(ini, basicWriter) {
 }
 
 TEST(ini, basicReader) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     MemoryStream ms = MemoryStream::withCapacity(1024);
     String iniData =

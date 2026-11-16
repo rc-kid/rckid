@@ -1,51 +1,51 @@
 
-#include <rckid/ui/style.h>
+#include <kiddo/ui/style.h>
 
-#include <rckid/apps/music_player.h>
-#include <rckid/apps/friends.h>
-#include <rckid/apps/messages.h>
-#include <rckid/apps/drawing.h>
+#include <kiddo/apps/music_player.h>
+#include <kiddo/apps/friends.h>
+#include <kiddo/apps/messages.h>
+#include <kiddo/apps/drawing.h>
 
-#include <rckid/apps/utils/about.h>
-#include <rckid/apps/utils/steps.h>
-#include <rckid/apps/utils/data_sync.h>
-#include <rckid/apps/utils/file_browser.h>
-#include <rckid/apps/utils/clock.h>
-#include <rckid/apps/utils/stopwatch.h>
-#include <rckid/apps/utils/flashlight.h>
-#include <rckid/apps/utils/piggy_bank.h>
-#include <rckid/apps/utils/calculator.h>
-#include <rckid/apps/utils/level.h>
+#include <kiddo/apps/utils/about.h>
+#include <kiddo/apps/utils/steps.h>
+#include <kiddo/apps/utils/data_sync.h>
+#include <kiddo/apps/utils/file_browser.h>
+#include <kiddo/apps/utils/clock.h>
+#include <kiddo/apps/utils/stopwatch.h>
+#include <kiddo/apps/utils/flashlight.h>
+#include <kiddo/apps/utils/piggy_bank.h>
+#include <kiddo/apps/utils/calculator.h>
+#include <kiddo/apps/utils/level.h>
 
-#include <rckid/apps/debug/hwstatus.h>
-#include <rckid/apps/debug/bootloader.h>
-#include <rckid/apps/debug/serial_monitor.h>
-#include <rckid/apps/debug/jacdac_monitor.h>
-#include <rckid/apps/debug/jacdac_service.h>
+#include <kiddo/apps/debug/hwstatus.h>
+#include <kiddo/apps/debug/bootloader.h>
+#include <kiddo/apps/debug/serial_monitor.h>
+#include <kiddo/apps/debug/jacdac_monitor.h>
+#include <kiddo/apps/debug/jacdac_service.h>
 
-#include <rckid/apps/dialogs/file_dialog.h>
-#include <rckid/apps/dialogs/color_dialog.h>
-#include <rckid/apps/dialogs/slider_dialog.h>
+#include <kiddo/apps/dialogs/file_dialog.h>
+#include <kiddo/apps/dialogs/color_dialog.h>
+#include <kiddo/apps/dialogs/slider_dialog.h>
 
-#include <rckid/apps/games/blocks.h>
-#include <rckid/apps/games/crate_critters.h>
-#include <rckid/apps/games/pong.h>
-#include <rckid/apps/games/sliding_puzzle.h>
-#include <rckid/apps/games/space_attack.h>
+#include <kiddo/apps/games/blocks.h>
+#include <kiddo/apps/games/crate_critters.h>
+#include <kiddo/apps/games/pong.h>
+#include <kiddo/apps/games/sliding_puzzle.h>
+#include <kiddo/apps/games/space_attack.h>
 
-#include <rckid/apps/benchmarks/dolang/num.h>
+#include <kiddo/apps/benchmarks/dolang/num.h>
 
 
-#include <rckid/apps/audio/recorder.h>
+#include <kiddo/apps/audio/recorder.h>
 
-#include <rckid/apps/launcher.h>
+#include <kiddo/apps/launcher.h>
 
 
 // TODO this will not be here eventually
-#include <rckid/game/engine.h>
-#include <rckid/apps/games/cat_chase.h>
+#include <kiddo/game/engine.h>
+#include <kiddo/apps/games/cat_chase.h>
 
-namespace rckid {
+namespace kiddo {
 
     ui::MenuItem::GeneratorEvent mainMenuGenerator(MainMenuOptions options) {
         return [options]() {
@@ -274,7 +274,7 @@ namespace rckid {
         (*result)
             << ui::MenuItem::Generator("Effect", assets::icons_64::numpad, rgbEffectSettingsMenuGenerator)
             << ui::MenuItem{"Color", assets::icons_64::light, []() {
-                auto color = rckid::App::run<ColorDialog>(ui::Style::accentBg());
+                auto color = kiddo::App::run<ColorDialog>(ui::Style::accentBg());
                 if (color) {
                     ui::Style::setKeyboardRGBColor(color.value());
                     rgb::setKeyboardEffect(ui::Style::keyboardEffect(), ui::Style::keyboardRGBColor());
@@ -282,8 +282,8 @@ namespace rckid {
                 }
             }}
             << ui::MenuItem{"Brightness", assets::icons_64::brightness, [](){
-                rckid::App::run<SliderDialog>("Brightness", assets::icons_64::brightness, 0, 15, rckid::rgb::brightness(), [](int32_t value) {
-                    rckid::rgb::setBrightness(static_cast<uint8_t>(value));
+                kiddo::App::run<SliderDialog>("Brightness", assets::icons_64::brightness, 0, 15, kiddo::rgb::brightness(), [](int32_t value) {
+                    kiddo::rgb::setBrightness(static_cast<uint8_t>(value));
                     rgb::setKeyboardEffect(ui::Style::keyboardEffect(), ui::Style::keyboardRGBColor());
                 });
             }};
@@ -295,8 +295,8 @@ namespace rckid {
         auto result = std::make_unique<LauncherMenu>();
         (*result)
             << MenuItem{"Strength", assets::icons_64::vibration, []() {
-                rckid::App::run<SliderDialog>("Rumbler Strength", assets::icons_64::vibration, 0, 15, rckid::rumbler::strength(), [](int32_t value) {
-                    rckid::rumbler::setStrength(static_cast<uint8_t>(value));
+                kiddo::App::run<SliderDialog>("Rumbler Strength", assets::icons_64::vibration, 0, 15, kiddo::rumbler::strength(), [](int32_t value) {
+                    kiddo::rumbler::setStrength(static_cast<uint8_t>(value));
                 });
             }}
             << ui::MenuItem{"Key Press", assets::icons_64::down_arrow, []() {
@@ -316,7 +316,7 @@ namespace rckid {
                     InfoDialog::info("Parent Mode", "Device password cleared", assets::icons_64::unlock);
                 }}
                 << MenuItem{"Change Parent password", assets::icons_64::key, []() {
-                    auto pwd = rckid::App::run<TextDialog>("");
+                    auto pwd = kiddo::App::run<TextDialog>("");
                     if (pwd) {
                         bool empty = pwd.value().empty();
                         pim::setParentPassword(std::move(pwd.value()));
@@ -388,4 +388,4 @@ namespace rckid {
         return result;
     }
 
-} // namespace rckid
+} // namespace kiddo

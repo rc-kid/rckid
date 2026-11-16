@@ -1,6 +1,6 @@
-#include <rckid/apps/utils/data_sync.h>
+#include <kiddo/apps/utils/data_sync.h>
 
-namespace rckid {
+namespace kiddo {
 
     namespace fs::internal {
 
@@ -8,7 +8,7 @@ namespace rckid {
 
         uint32_t fatPartitionSize();
 
-    } // namespace rckid::fs::internal
+    } // namespace kiddo::fs::internal
 
     DataSync::DataSync() {
         using namespace ui;
@@ -48,4 +48,4 @@ namespace rckid {
 
     }
 
-} // namespace rckid
+} // namespace kiddo

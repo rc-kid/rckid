@@ -1,9 +1,9 @@
 #include <platform/tests.h>
 
-#include <rckid/filesystem.h>
+#include <kiddo/filesystem.h>
 
 TEST(filesystem, pathJoin) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     String p1 = fs::join("folder", "file.txt");
     EXPECT(p1 == "folder/file.txt");
@@ -12,7 +12,7 @@ TEST(filesystem, pathJoin) {
 }
 
 TEST(filesystem, pathStem) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     EXPECT(fs::stem("foo.bar") == "foo");
     EXPECT(fs::stem("/foo.bar") == "foo");
@@ -23,7 +23,7 @@ TEST(filesystem, pathStem) {
 }
 
 TEST(filesystem, pathExt) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     EXPECT(fs::ext("foo.bar") == "bar");
     EXPECT(fs::ext("foo.bar.baz") == "baz");
@@ -33,7 +33,7 @@ TEST(filesystem, pathExt) {
 }
 
 TEST(filesystem, pathParent) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     EXPECT(fs::parent("foo.bar") == "/");
     EXPECT(fs::parent("foo.bar.baz") == "/");
@@ -42,7 +42,7 @@ TEST(filesystem, pathParent) {
 }
 
 TEST(filesystem, pathRoot) {
-    using namespace rckid;
+    using namespace kiddo;
     Heap::UseAndReserveGuard g_;
     EXPECT(fs::root("foo/bar/baz") == "foo");
     EXPECT(fs::root("/foo/bar/baz") == "/foo");

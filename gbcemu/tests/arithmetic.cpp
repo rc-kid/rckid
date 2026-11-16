@@ -1,6 +1,6 @@
 #include "gbctests.h"
 
-namespace rckid::gbcemu {
+namespace kiddo::gbcemu {
     TEST(gbcemu, arithmetic_add8) {
         GBCEmu gbc{"", nullptr};
         RUN(
@@ -223,4 +223,4 @@ namespace rckid::gbcemu {
 
 
     
-} // namespace rckid::gbcemu
+} // namespace kiddo::gbcemu

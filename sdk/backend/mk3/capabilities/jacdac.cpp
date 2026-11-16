@@ -1,7 +1,7 @@
 #include <hardware/dma.h>
 
-#include <rckid/buffer.h>
-#include <rckid/capabilities/jacdac.h>
+#include <kiddo/buffer.h>
+#include <kiddo/capabilities/jacdac.h>
 
 #include <sws_rx.pio.h>
 #include <sws_tx.pio.h>
@@ -25,7 +25,7 @@
  */
 #define JACDAC_RX_ACTIVE_PIN 17
 
-namespace rckid {
+namespace kiddo {
 
     struct JacdacImpl {
         Jacdac jacdac;
@@ -277,4 +277,4 @@ namespace rckid {
         jacdacRxStart();
     }
 
-} // namespace rckid
+} // namespace kiddo

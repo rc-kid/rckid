@@ -38,7 +38,7 @@
     COMMAND(5, WriteStorage,
         uint16_t offset;
         uint8_t numBytes;
-        uint8_t data[RCKID_I2C_MAX_ASYNC_MSG_SIZE - sizeof(offset) - sizeof(numBytes) - 1];
+        uint8_t data[KIDDO_I2C_MAX_ASYNC_MSG_SIZE - sizeof(offset) - sizeof(numBytes) - 1];
         WriteStorage(uint16_t offset, uint8_t const * data, uint32_t numBytes): offset{offset}, numBytes{static_cast<uint8_t>(numBytes)} {
             ASSERT(numBytes <= sizeof(this->data));
             memcpy(this->data, data, numBytes);

@@ -2,12 +2,12 @@
 
 #include <cstdint>
 
-#ifdef RCKID_BACKEND_FANTASY
+#ifdef KIDDO_BACKEND_FANTASY
 #include <fstream>
 #endif
 
-#include <rckid/string.h>
-#include <rckid/stream.h>
+#include <kiddo/string.h>
+#include <kiddo/stream.h>
 
 
 // emspcripten defines PAGE_SIZE macro
@@ -15,7 +15,7 @@
 #undef PAGE_SIZE
 #endif
 
-namespace rckid::gbcemu {
+namespace kiddo::gbcemu {
 
     /** Memory bank controller types. 
      
@@ -148,7 +148,7 @@ namespace rckid::gbcemu {
 
     /** Gamepak with ROM page caching. 
      
-        As the RCKid RAM size is much smaller than the max size of GBC cartridges, the cached gamepak employs a simple LRU caching scheme to keep the most recently used pages in RAM (arena). 
+        As the KidDo RAM size is much smaller than the max size of GBC cartridges, the cached gamepak employs a simple LRU caching scheme to keep the most recently used pages in RAM (arena). 
      */
     template<typename T>
     class CachedGamePak : public GamePak {
@@ -273,7 +273,7 @@ namespace rckid::gbcemu {
         mutable T s_;
     }; 
 
-#ifdef RCKID_BACKEND_FANTASY
+#ifdef KIDDO_BACKEND_FANTASY
 
     /** Convenience gamepak for testing in fantasy mode where entire file can be loaded to memory and then used similarly to a flash gamepak. Not available on the device because of rather small RAM size not allowing full cartridge to fit.
      */
@@ -294,7 +294,7 @@ namespace rckid::gbcemu {
     
     private:
         uint8_t * rom_;
-    }; // rckid::gbcemu::FileGamePak
+    }; // kiddo::gbcemu::FileGamePak
     #endif
 
-} // namespace rckid::gbcemu
+} // namespace kiddo::gbcemu

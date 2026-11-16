@@ -1,7 +1,7 @@
 #include <assets/OpenDyslexic32.h>
-#include <rckid/apps/dialogs/info_dialog.h>
+#include <kiddo/apps/dialogs/info_dialog.h>
 
-namespace rckid {
+namespace kiddo {
 
     InfoDialog::InfoDialog(String title, String message, ImageSource icon, Kind kind):
         ui::App<void>{Rect::XYWH(0, 140, 320, 100)} 
@@ -51,4 +51,4 @@ namespace rckid {
 
 
 
-} // namespace rckid
+} // namespace kiddo

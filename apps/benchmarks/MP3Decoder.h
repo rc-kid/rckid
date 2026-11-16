@@ -1,14 +1,14 @@
 #pragma once
 
-#include "rckid/filesystem.h"
-#include "rckid/audio/mp3.h"
+#include "kiddo/filesystem.h"
+#include "kiddo/audio/mp3.h"
 #include "benchmark.h"
 
-namespace rckid {
+namespace kiddo {
 
     /** A very simple barebones MP3 decoder benchmark. 
      
-        Results on RCKid running at normal speed are:
+        Results on KidDo running at normal speed are:
 
         320kbps : 94.5%
 
@@ -51,7 +51,7 @@ namespace rckid {
         }
 
         char const *  decodeFile(char const * filepath) {
-            namespace fs = rckid::filesystem;
+            namespace fs = kiddo::filesystem;
             if (!fs::mount())
                 return "Cannot mount SD card";
             fs::FileRead f = fs::fileRead(filepath);
@@ -121,4 +121,4 @@ namespace rckid {
     }; 
 
 
-} // namespace rckid 
+} // namespace kiddo 

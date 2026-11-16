@@ -2,96 +2,96 @@
 
 /** Enables logging to serial port. available on the debug header.
  */
-#define RCKID_LOG_TO_SERIAL 0
+#define KIDDO_LOG_TO_SERIAL 0
 
 /** Serial speed for debugging 
  */
-#define RCKID_RP_SERIAL_SPEED 115200
+#define KIDDO_RP_SERIAL_SPEED 115200
 
 /** Firmware version of the AVR chip. 
  
     NOTE this number must be bumped for every feature update to the AVR firmware that changes the communication protocol between the RP2350 and the AVR. This is used by the RP2350 firmware to determine if the AVR firmware is compatible with it or not.
  */
-#define RCKID_AVR_FIRMWARE_VERSION 1
+#define KIDDO_AVR_FIRMWARE_VERSION 1
 
 /** Default brightess. This is also the brightness that will be set by debug mode.
  */
-#define RCKID_DEFAULT_BRIGHTNESS 128
+#define KIDDO_DEFAULT_BRIGHTNESS 128
 
 /** Frames per long press of the home button (at 60 fps). The home button long press is automatically detected by the AVR and will either turn the device on when powered off, or will force it to shutdown mode if powered on. 
  */
-#define RCKID_HOME_BUTTON_LONG_PRESS_FPS 120
+#define KIDDO_HOME_BUTTON_LONG_PRESS_FPS 120
 
 /** Timeout for the RP2350 to acknowledge the power interrupt request.  
  */
-#define RCKID_POWEROFF_ACK_TIMEOUT_TICKS 30
+#define KIDDO_POWEROFF_ACK_TIMEOUT_TICKS 30
 
-#define RCKID_POWEROFF_TIMEOUT_TICKS (10 * 60 * 3)
+#define KIDDO_POWEROFF_TIMEOUT_TICKS (10 * 60 * 3)
 
 /** Number of ticks (roughly 1/60th of second) for button debounce (all buttons), i.e. changes in button state are ignored (delayed if permanent) for this many ticks after accepted change.
  */
-#define RCKID_BUTTON_DEBOUNCE_TICKS 4
+#define KIDDO_BUTTON_DEBOUNCE_TICKS 4
 
-#define RCKID_RGB_TICKS_PER_SECOND 66
-#define RCKID_NUM_RGB_LEDS 8
-#define RCKID_RGB_BRIGHTNESS 32
-#define RCKID_RGB_NOTIFICATION_SPEED 2
+#define KIDDO_RGB_TICKS_PER_SECOND 66
+#define KIDDO_NUM_RGB_LEDS 8
+#define KIDDO_RGB_BRIGHTNESS 32
+#define KIDDO_RGB_NOTIFICATION_SPEED 2
 
-#define RCKID_RUMBLER_EFFECT_POWER_ON RumblerEffect{192, 5, 1, 1}
+#define KIDDO_RUMBLER_EFFECT_POWER_ON RumblerEffect{192, 5, 1, 1}
 
 /** When set to 1, the AVR_INT pin is used for serial debugging. 
  */
-#define RCKID_AVR_IS_SERIAL_TX 0
+#define KIDDO_AVR_IS_SERIAL_TX 0
 
-/** Serial speed for AVR debugging (when RCKID_AVR_IS_SERIAL_TX is 1). 
+/** Serial speed for AVR debugging (when KIDDO_AVR_IS_SERIAL_TX is 1). 
  */
-#define RCKID_AVR_SERIAL_SPEED 115200
+#define KIDDO_AVR_SERIAL_SPEED 115200
 
 /** Voltage above which USB power is detected. While reading the VUSB presence directly would be more precise, using this threshold is valid too and saves us one pin. This is based on the typical Li-Ion battery voltage cutoff at 4.2 volts, so anything above that must be the 5V from USB.
  */
-#define RCKID_VUSB_THRESHOLD 460 
+#define KIDDO_VUSB_THRESHOLD 460 
 
 /** Voltage threshold under which the device will power off.
  */
-#define RCKID_POWER_ON_THRESHOLD 310
+#define KIDDO_POWER_ON_THRESHOLD 310
 
 /** Speed of the communication with ST7789 display when in PIO mode (for fast display data transfers). Defaults to 15MHz which is just within the display datasheet's capabilities.
  */
-#define RCKID_ST7789_SPEED 15000000
-#define RCKID_ST7789_PIO pio0
+#define KIDDO_ST7789_SPEED 15000000
+#define KIDDO_ST7789_PIO pio0
 
-#define RCKID_SPLASHSCREEN_OFF 1
+#define KIDDO_SPLASHSCREEN_OFF 1
 
 /** I2C speed for the RP2350 master driver. 
  */
-#define RCKID_I2C_SPEED 400000
+#define KIDDO_I2C_SPEED 400000
 
 /** Ring buffer size for the I2C transactions buffer, so that they can be queried quicker than we can send them for a short while.
  */
-#define RCKID_I2C_ASYNC_SLOTS 16
+#define KIDDO_I2C_ASYNC_SLOTS 16
 
 /** If async I2C transaction is aborted (such as NACK from slave), the driver will retry this much times.
  */
-#define RCKID_I2C_RETRIES 10
+#define KIDDO_I2C_RETRIES 10
 
 /** Backoff time for I2C async retries in microseconds. The backoff algorithm is linear, i.e. the backoff is number of attempts failed times this number. 
  */
-#define RCKID_I2C_BACKOFF_US 500
+#define KIDDO_I2C_BACKOFF_US 500
 
 /** Maximum size of an asynchronous I2C message. 
  */
-#define RCKID_I2C_MAX_ASYNC_MSG_SIZE 16
+#define KIDDO_I2C_MAX_ASYNC_MSG_SIZE 16
 
-#define RCKID_AVR_I2C_ADDRESS 0x43
+#define KIDDO_AVR_I2C_ADDRESS 0x43
 
-#define RCKID_AUDIO_CODEC_I2C_ADDRESS 0x1a
+#define KIDDO_AUDIO_CODEC_I2C_ADDRESS 0x1a
 
 /** SD Card Confguration
  */
-#define RCKID_SD_SPI_INIT_SPEED 200000
-//#define RCKID_SD_SPI_SPEED 12000000
-#define RCKID_SD_SPI_SPEED 10000000
-#define RCKID_SD_PIO pio0
+#define KIDDO_SD_SPI_INIT_SPEED 200000
+//#define KIDDO_SD_SPI_SPEED 12000000
+#define KIDDO_SD_SPI_SPEED 10000000
+#define KIDDO_SD_PIO pio0
 
 /** RP2350 Pinout
  */
@@ -214,27 +214,27 @@
 
 /** RP2350 watchdog. If there is no I2C status read from the device in a given time, the IO MCU will immediately turn the device off.
  */
-#define RCKID_RP2350_WATCHDOG_TIMEOUT_MS 1000 
+#define KIDDO_RP2350_WATCHDOG_TIMEOUT_MS 1000 
 
 /** PUYA watchdog timeout (HW). Must be longer then 1s because the watchdog works even in sleep mode, where we wake up every 1s.
  */
-#define RCKID_PUYA_WATCHDOG_TIMEOUT_MS 1500
+#define KIDDO_PUYA_WATCHDOG_TIMEOUT_MS 1500
 
 /** Device alarm state timeout. If the device spends more than this time in the Alarm state, it will be immediately powered down. 
  */
-#define RCKID_ALARM_TIMEOUT_MS 60000
+#define KIDDO_ALARM_TIMEOUT_MS 60000
 
 /** Powerdown state timeout. When device enters the power down state, it has a short window to acknowledge this, after which the power down timeout is extended to the POWERDOWN_EXTENDED_TIMEOUT_MS, during which the device must power down. Without the acknowledge the device will immediately enter power off state after this interval to preserve snapiness of the controls in case the Rp2350 firmware is stuck.
  */
-#define RCKID_POWERDOWN_TIMEOUT_MS 300
+#define KIDDO_POWERDOWN_TIMEOUT_MS 300
 
 /** Extended timeout for the powerdown state. This is the number of milliseconds the firmware has to actually turn itself off properly *after* it acknowledges the power down request. 
  */
-#define RCKID_POWERDOWN_EXTENDED_TIMEOUT_MS 10000
+#define KIDDO_POWERDOWN_EXTENDED_TIMEOUT_MS 10000
 
 /** Duration of a long press of the home button. Long press when powered off turns the device on, while long press in powered on mode turns the device off.
  */
-#define RCKID_HOME_BUTTON_LONG_PRESS_MS 2000
+#define KIDDO_HOME_BUTTON_LONG_PRESS_MS 2000
 
 
 

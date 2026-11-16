@@ -1,8 +1,8 @@
-#include <rckid/contacts.h>
+#include <kiddo/contacts.h>
 
 #include <assets/icons_64.h>
 
-namespace rckid {
+namespace kiddo {
 
     Contact::Contact(String name):
         name{name},
@@ -56,4 +56,4 @@ namespace rckid {
     }
 
     
-} // namespace rckid
+} // namespace kiddo

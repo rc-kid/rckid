@@ -1,5 +1,5 @@
-#include <rckid/ui/header.h>
-#include <rckid/apps/dialogs/color_dialog.h>
+#include <kiddo/ui/header.h>
+#include <kiddo/apps/dialogs/color_dialog.h>
 
 #include <assets/icons_64.h>
 
@@ -273,7 +273,7 @@ static constexpr int val__ = -1;
 static constexpr int val_0 = 0;
 static constexpr int val_1 = 1;
 
-namespace rckid::gbcemu {
+namespace kiddo::gbcemu {
 
     void GBCEmu::appendGamesFrom(char const * path, ui::Menu * into) {
         fs::readFolder(path, [into](fs::FolderEntry const & entry){
@@ -1946,6 +1946,6 @@ namespace rckid::gbcemu {
         //    debug_ = true;
     }
 
-} // namespace rckid::gbcemu
+} // namespace kiddo::gbcemu
 
 

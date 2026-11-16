@@ -2,9 +2,9 @@
 #include <lwip/apps/http_client.h>
 #include <lwip/altcp_tls.h>
 
-#include <rckid/capabilities/wifi.h>
+#include <kiddo/capabilities/wifi.h>
 
-namespace rckid {
+namespace kiddo {
 
     namespace {
 
@@ -134,7 +134,7 @@ namespace rckid {
                 */
         }    
 
-    }; // rckid::RM2Connection
+    }; // kiddo::RM2Connection
 
     /** The wifi driver uses different authentication values in the wifi scan results (not very documented) and different values for the wifi connect.
      */
@@ -178,7 +178,7 @@ namespace rckid {
 
 
     WiFi::Status WiFi::status() const {
-        // NOTE we can get the same for AP mode which currently rckid does not support
+        // NOTE we can get the same for AP mode which currently kiddo does not support
         int32_t status = cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA);
         switch (status) {
             case CYW43_LINK_DOWN:
@@ -289,4 +289,4 @@ namespace rckid {
         };
     }
 
-} // namespace rckid
+} // namespace kiddo

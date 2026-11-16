@@ -1,13 +1,13 @@
 #pragma once
 
-#include <rckid/app.h>
-#include <rckid/graphics/canvas.h>
-#include <rckid/assets/fonts/OpenDyslexic64.h>
-#include <rckid/assets/fonts/OpenDyslexic128.h>
+#include <kiddo/app.h>
+#include <kiddo/graphics/canvas.h>
+#include <kiddo/assets/fonts/OpenDyslexic64.h>
+#include <kiddo/assets/fonts/OpenDyslexic128.h>
 
-#include <rckid/ui/header.h>
+#include <kiddo/ui/header.h>
 
-namespace rckid {
+namespace kiddo {
 
     /** A simple stopwatch. 
      
@@ -79,5 +79,5 @@ namespace rckid {
         bool running_ = false;
         uint32_t lastTime_;
 
-    }; // rckid::Stopwatch
-} // namespace rckid
+    }; // kiddo::Stopwatch
+} // namespace kiddo

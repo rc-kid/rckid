@@ -1,4 +1,4 @@
-# RCKid's Story
+# kidDo's Story
 
 > I want a handheld game console targeted at kids that will be all about creation, not consumption. Something that will be their first personal digital device. Like a phone, but simpler, safer, and hackable. A device that would grow with them, both in software where they would be able to progress to more and more complex forms of creativity with it, and in hardware extensibility.
 
@@ -8,7 +8,7 @@ On Christmas 2021 I finished building an mp3 player for my kids. I really enjoye
 
 But programming for RPi Zero was no fun for me as a programmer. And when I built the device, I realized I didn't want to give it to my kids. It played lots of old games, music, movies. But it was all about consumption. So I scrapped the project and started fresh.
 
-Out of this came the current version of RCKid (RC still stands for Remote Controller - too late to change the name :). It is small enough to fit in children's pockets, polished enough to look like a real product rather than a DIY hack or an obvious STEM educational tool. Powerful enough to be genuinely useful, but designed with creation first and foremost.
+Out of this came the current version of kidDo, originally called RCKid (RC for Remote Controller), now renamed to better reflect what it has become - a device for kids to *do* things with. It is small enough to fit in children's pockets, polished enough to look like a real product rather than a DIY hack or an obvious STEM educational tool. Powerful enough to be genuinely useful, but designed with creation first and foremost.
 
 ## Current Status
 
@@ -23,11 +23,11 @@ I used the self-imposed Christmas deadline and Baby Jesus' logistical services (
 ## Growing With the Kids
 
 My vision for the future is far greater than this. I would not shy from calling it megalomaniac. But the fact that I have persisted with this for so long already gives me some hope that I can deliver on this big picture as well.
-My plan is to evolve RCKid into an educational platform for kids and teens. There are plenty of such devices already, but RCKid is unique because:
+My plan is to evolve kidDo into an educational platform for kids and teens. There are plenty of such devices already, but kidDo is unique because:
 
 Wait for it... It has cartridges! 
 
-Cartridges add tangibility to creations. When you create a game in Scratch you save it on your parents' computer somewhere. When you create a game for RCKid, you save it on your cartridge - one you can give to a friend to play. The cartridge system also allows nearly endless hardware customization. I already have plain, WiFi and NRF24L01P cartridges, with LoRa, camera and FM radio planned.
+Cartridges add tangibility to creations. When you create a game in Scratch you save it on your parents' computer somewhere. When you create a game for kidDo, you save it on your cartridge - one you can give to a friend to play. The cartridge system also allows nearly endless hardware customization. I already have plain, WiFi and NRF24L01P cartridges, with LoRa, camera and FM radio planned.
 
 I also plan a ladder of creative tools that kids across a wide age range can use (details in [Development Ladder](LADDER.md)):
 
@@ -44,13 +44,13 @@ I think this is big. A 5 year old who cannot read or write can create games that
 
 I built a device for consumption and then realized as a parent I didn't want that for my kids - so I rebuilt it for creation. As an educator I started thinking about how to nurture that creative instinct systematically, which led to the progression ladder and the personal ownership model:
 
-RCKid is intended to be *personal* device -  in fact it will likely be the *first* personal digital device for the youngest kids. It is not supposed to be a kit they leave at school after the lessons are over. It should be *theirs* to take home. That way the personal ownership blurs the line between school and home. This increases participation, which leads to creating and learning: Kids can spend their free time improving their projects and then impressing their friends with their creations - and because cartridges are physical and shareable, they can give their games to their friends who will run them on their devices. There is nothing more rewarding than seeing *your* creation being used by somebody else.  
+kidDo is intended to be *personal* device -  in fact it will likely be the *first* personal digital device for the youngest kids. It is not supposed to be a kit they leave at school after the lessons are over. It should be *theirs* to take home. That way the personal ownership blurs the line between school and home. This increases participation, which leads to creating and learning: Kids can spend their free time improving their projects and then impressing their friends with their creations - and because cartridges are physical and shareable, they can give their games to their friends who will run them on their devices. There is nothing more rewarding than seeing *your* creation being used by somebody else.  
 
-That is why I have designed RCKid to look as polished and product-like as I can and why I put emphasis on the device being generally useable - not just narrowly focused STEM educational kit. But none of the diy hackability is lost - it is literally a cartridge swap away!
+That is why I have designed kidDo to look as polished and product-like as I can and why I put emphasis on the device being generally useable - not just narrowly focused STEM educational kit. But none of the diy hackability is lost - it is literally a cartridge swap away!
 
-But the story does not end here. I have realized that personal ownership matters most to the kids who have the least. A child with hundreds of toys gets one more device. A child with few possessions takes RCKid seriously in a way that makes the whole mission work better. The kids who need it most are also the kids for whom the personal ownership model is most powerful.
+But the story does not end here. I have realized that personal ownership matters most to the kids who have the least. A child with hundreds of toys gets one more device. A child with few possessions takes kidDo seriously in a way that makes the whole mission work better. The kids who need it most are also the kids for whom the personal ownership model is most powerful.
 
-This is why one of RCKid's long term goals is to ensure that cost is never a barrier. A device given freely to a child who has little is not just a gift of a toy - if the premise works, it is a gift of a better future through learning. Validating that premise carefully and honestly, starting with what works and building toward who needs it most, is the real mission.
+This is why one of kidDo's long term goals is to ensure that cost is never a barrier. A device given freely to a child who has little is not just a gift of a toy - if the premise works, it is a gift of a better future through learning. Validating that premise carefully and honestly, starting with what works and building toward who needs it most, is the real mission.
 
 ## Future Plans
 
@@ -62,4 +62,4 @@ I hope to make this under the self-imposed deadline of my two beta testers growi
 
 ## What about AI?
 
-We live in times when you might wonder why bother teaching kids STEM when most programming might soon be done by LLMs. But you do not teach 6 year olds how to program — you teach them the art of algorithm description. Most kids who will have RCKid will not become programmers. This was true before LLMs and remains true after. The whole point of STEM education is to teach universally useful thinking skills in ways that do not require deep technical knowledge. Decomposition, sequencing, abstraction — these are cognitive skills that predate programming and will outlast any specific technology.
+We live in times when you might wonder why bother teaching kids STEM when most programming might soon be done by LLMs. But you do not teach 6 year olds how to program — you teach them the art of algorithm description. Most kids who will have kidDo will not become programmers. This was true before LLMs and remains true after. The whole point of STEM education is to teach universally useful thinking skills in ways that do not require deep technical knowledge. Decomposition, sequencing, abstraction — these are cognitive skills that predate programming and will outlast any specific technology.

@@ -1,5 +1,5 @@
 #include <platform/tests.h>
 
-#include <rckid/string.h>
-#include <rckid/serialization.h>
+#include <kiddo/string.h>
+#include <kiddo/serialization.h>
 

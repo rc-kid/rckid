@@ -1,8 +1,8 @@
 #include "platform/tests.h"
 
-#include "rckid/memory.h"
+#include "kiddo/memory.h"
 
-namespace rckid {
+namespace kiddo {
     void initializeNoWindow(int argc, char * argv[]);
 }
 
@@ -12,6 +12,6 @@ TEST(tests, AtLeastOneTestWorks) {
 }
 
 int main(int argc, char * argv[]) {
-    rckid::initializeNoWindow(argc, argv);
+    kiddo::initializeNoWindow(argc, argv);
     return Test::RunAll(argc, argv);
 }    

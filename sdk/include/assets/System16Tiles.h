@@ -1,8 +1,8 @@
 #pragma once
 
-#include <rckid/graphics/tile.h>
+#include <kiddo/graphics/tile.h>
 
-namespace rckid::assets {
+namespace kiddo::assets {
 
     /* Manually crafted system font tiles.
 
@@ -552,4 +552,4 @@ namespace rckid::assets {
 
         #undef __
     };
-} // namespace rckid::assets
+} // namespace kiddo::assets

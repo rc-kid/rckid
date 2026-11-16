@@ -2,10 +2,10 @@
 #include <vector>
 
 #include <platform/tests.h>
-#include <rckid/dolang/lexer.h>
+#include <kiddo/dolang/lexer.h>
 
-using namespace rckid;
-using namespace rckid::dolang;
+using namespace kiddo;
+using namespace kiddo::dolang;
 
 namespace {
 

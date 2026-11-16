@@ -1,6 +1,6 @@
-#include <rckid/string.h>
+#include <kiddo/string.h>
 
-namespace rckid {
+namespace kiddo {
 
     String String::replace(char const * what, char const * with) const {
         uint32_t whatLen = static_cast<uint32_t>(std::strlen(what));

@@ -1,8 +1,8 @@
 #include <platform/tests.h>
-#include <rckid/ui/animation.h>
+#include <kiddo/ui/animation.h>
 
-using namespace rckid;
-using namespace rckid::ui;
+using namespace kiddo;
+using namespace kiddo::ui;
 
 TEST(easing, identity) {
     EXPECT(easing::identity(FixedRatio{0.0f}) == FixedRatio{0.0f});
