@@ -146,6 +146,15 @@ namespace kiddo {
 
     private:
         class Chunk;
+        friend class GC;
+
+        static void markAsGC(void * ptr);
+
+        /** Frees the given allocated chunk (manual, or GC) and returns the free chunk that now covers its memory, i.e. the chunk itself, or the previous free chunk it has been joined with. Returns nullptr if the heap shrank so that the chunk is no longer part of it.
+
+            The returned chunk's nextAllocation() is the first chunk after the freed memory, which is what the GC sweep needs to continue walking the heap.
+         */
+        static Chunk * freeChunk(Chunk * chunk);
 
         static inline Chunk * heapStart_ = reinterpret_cast<Chunk*>(hal::memory::heapStart());
         static inline Chunk * heapEnd_ = heapStart_;
@@ -154,6 +163,47 @@ namespace kiddo {
         
     }; // kiddo::Heap
 
+    /** Garbage Collector.
+     
+        The garbage collector runs alongside the heap manager, using the same heap memory as for each chunk we remember where it came from (manual or gc allocation, or free) and its mark bit, if necessary. This allows the GC objects from dynamic scripts to coexist with manually allocated objects from the C++ code inside the SDK. 
+
+        The GC itself exists as a service, and the mark & sweep functions must be called by the runtime explicitly. The GC does not run automatically, nor does it have any knowledge of the runtime's object graph. It is the runtime's responsibility to call mark() on all root objects before calling sweep() to free unmarked objects.
+     */
+    class GC {
+    public:
+
+        /** Root class of any garbage-collected objects.
+         
+            Each GC object has a destructor that will deallocate all its manually owned resources and a gcTrace method that will mark all transitively reachable GC objects it points to. 
+
+            NOTE that GC objects do *not* support multiple inheritance (the GC object ptr must be the first member of the derived class, otherwise the GC will not be able to find the correct chunk header).
+         */
+        class Object {
+        public:
+            virtual ~Object() = default;
+            virtual void gcTrace() const {}
+        }; 
+
+        template<typename T, typename... Args>
+        static T * alloc(Args && ... args) {
+            static_assert(std::is_base_of_v<GC::Object, T>, "GC::alloc can only be used for GC objects");
+            void * ptr = Heap::alloc(sizeof(T));
+            auto result = new (ptr) T(std::forward<Args>(args)...);
+            Heap::markAsGC(result);
+            return result;
+        }
+
+        /** Marks the given gc object as reachable. 
+         
+            If not already marked, marks the object and then calls its gcTrace() method to mark transitively reachable objects. This method must be called on every GC root in existence before the sweep is called.
+         */
+        static void mark(Object const * obj);
+
+        /** Sweeps the heap and deletes all unmarked objects, resetting the mark on marked ones. 
+         */
+        static void sweep(); 
+
+    }; 
 
     /** Unique pointer.
      
